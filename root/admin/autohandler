@@ -1,0 +1,11 @@
+<html>
+<head>
+<title>PaperPile testing</title>
+</head>
+<body>
+% use Data::Dumper;
+
+% $m->call_next;
+
+</body>
+</html>

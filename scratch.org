@@ -1,0 +1,11 @@
+* Features
+** Export-mode, define several targets (endnote, bibtex, RSS) and constantly export in time intervals
+*** eg. also export as html, for including publication list on website. 
+** E-mail references/pdfs?
+** "Tell others about PaperPile" link
+** External information for authors (facebook??), journals (website, logo), books (amazon?)
+** Context: google ads, wiki.
+** Browse journals and give links to current issue
+** Add full text search with pdftotext and sqlite
+** Phone home feature: send message to server when specific function is used, to get statistics how people are using different features
+
