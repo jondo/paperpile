@@ -20,12 +20,14 @@ __PACKAGE__->add_columns(
   { data_type => "TEXT", is_nullable => 0, size => undef },
   "icon",
   { data_type => "TEXT", is_nullable => 0, size => undef },
+  "is_user_journal",
+  { data_type => "INTEGER", is_nullable => 0, size => undef },
 );
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-11-18 21:04:40
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:mR7IdUYpG20/KSyuwWqpAw
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-11-21 21:55:55
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:W3nT7i6dQjFOw2ATTWBOFw
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration

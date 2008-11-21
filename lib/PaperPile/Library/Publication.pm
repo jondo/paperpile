@@ -28,6 +28,7 @@ has 'editors' => ( is => 'rw', isa => 'ArrayRef[PaperPile::Library::Author]' );
 has 'journal' => ( is => 'rw', isa => 'PaperPile::Library::Journal' );
 
 sub BUILD {
+
   my ( $self, $params ) = @_;
 
   if ($params->{authors}){
@@ -46,8 +47,9 @@ sub BUILD {
     $self->editors_flat(join(',',@tmp));
   }
 
-
-
+  if ($params->{journal}){
+    $self->journal_short($params->{journal}->short);
+  }
 
   if ( $params->{authors} and $params->{title} ) {
     $self->calculate_sha1;

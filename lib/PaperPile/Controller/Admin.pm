@@ -29,32 +29,13 @@ sub index :Path :Args(0) {
 
 # Parse JabRef abbreviation files
 
-sub import_journals :Path {
+sub import_journals :Local {
   my ( $self, $c ) = @_;
 
-  if ($c->request->uploads->{userfile}){
-    open(TMP,"<". $c->request->uploads->{userfile}->tempname) || die($!);
-    my %data=();
+  #if ($c->request->uploads->{uploadfile}){
+  #open(TMP,"<". $c->request->uploads->{userfile}->tempname) || die($!);
 
-    while (<TMP>){
-      next if /^\s*\#/;
-      (my $long, my $short)=split /=/, $_;
-      $short=~s/;.*$//;
-      $short=~s/[.,-]/ /g;
-      $short=~s/(^\s+|\s+$)//g;
-      $long=~s/(^\s+|\s+$)//g;
-      $short=~s/\s+/_/g;
-
-      $short=~s/_\)/\)/g;
-
-      $c->model('DB::Journal')->find_or_create({id=>$short,name=>$long,abbrv=>$short});
-
-      $data{$short}=$long;
-    }
-
-    $c->stash->{data}={%data};
-
-  }
+  $c->model('DB')->import_journal_file("/home/wash/play/PaperPile/data/jabref.txt");
 
   $c->stash->{template} = 'admin/import_journals.mas';
 

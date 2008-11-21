@@ -38,12 +38,13 @@ suffix              TEXT
 );
 
 CREATE TABLE journal (
-id           TEXT PRIMARY KEY,
-name         TEXT,
-short        TEXT,
-issn         TEXT,
-url          TEXT,
-icon         TEXT
+id              TEXT PRIMARY KEY,
+name            TEXT,
+short           TEXT,
+issn            TEXT,
+url             TEXT,
+icon            TEXT,
+is_user_journal INTEGER
 );
 
 CREATE TABLE author_publication (

@@ -1,0 +1,8 @@
+
+<form method=post name="upform" action="import_journals" enctype="multipart/form-data">
+<input type=file name=uploadfile>
+<input type=button name="Submit" value="Submit">
+</form>
+
+
+

@@ -8,6 +8,7 @@ has 'short' => ( is => 'rw', isa => 'Str' );
 has 'issn'  => ( is => 'rw', isa => 'Str' );
 has 'url'   => ( is => 'rw', isa => 'Str' );
 has 'icon'  => ( is => 'rw', isa => 'Str' );
+has 'is_user_journal'  => ( is => 'rw', isa => 'Bool' );
 
 1;
 
