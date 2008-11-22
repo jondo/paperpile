@@ -55,8 +55,8 @@ sub import_ris {
     ( my $self, my $file ) = @_;
 
     if ( not open( RIS, "<$file" ) ) {
-        warn("Could not open file $file for reading. ($!)");
-        return;
+      warn("Could not open file $file for reading. ($!)");
+      return;
     }
 
     my $ris = '';
