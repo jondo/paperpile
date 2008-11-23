@@ -1,0 +1,17 @@
+;; Object test/
+;; SEMANTICDB Tags save file
+(semanticdb-project-database-file "test/"
+  :tables (list 
+   (semanticdb-table "grid.mas"
+    :major-mode 'html-mode
+    :tags '(("Grid-Test" section nil nil [167 245]) ("Grid-Test" section nil nil [245 316]) ("Grid-Test" section nil nil [316 378]) ("Grid-Test" section nil nil [378 411]) ("Grid Test
+
+<div id=\"container\">" section nil nil [411 416]))
+    :file "grid.mas"
+    :pointmax 474
+    )
+   )
+  :file "semantic.cache"
+  :semantic-tag-version "2.0pre4"
+  :semanticdb-version "2.0pre4"
+  )

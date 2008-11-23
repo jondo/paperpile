@@ -3,6 +3,8 @@ package PaperPile::Controller::Test;
 use strict;
 use warnings;
 use parent 'Catalyst::Controller';
+use PaperPile::Library::Source::File;
+use Data::Dumper;
 
 =head1 NAME
 
@@ -36,13 +38,31 @@ sub grid : Local {
 sub list : Local {
   my ( $self, $c ) = @_;
 
-  my $data = [
-    { FirstName => 'Stefan', LastName => 'Washietl' },
-    { FirstName => 'Hugo',   LastName => 'Habicht' },
-  ];
+  my $offset = $c->request->params->{start};
+  my $limit = $c->request->params->{limit};
 
-  $c->stash->{results} = $data;
-  $c->stash->{total}=2;
+  my $file='/home/wash/play/PaperPile/t/data/test1.ris';
+
+  my $source=PaperPile::Library::Source::File->new(file=>$file);
+  $source->connect;
+  my $counter=0;
+
+  $source->entries_per_page($limit);
+  $source->set_page_from_offset($offset,$limit);
+
+  my $entries=$source->page;
+  my @data=();
+  foreach my $pub (@$entries){
+    push @data, {pubid=>$pub->id, authors => $pub->authors_flat, journal => $pub->journal_short};
+    $counter++;
+  }
+
+  $c->log->debug("size".scalar(@$entries), "  ", $source->entries_per_page);
+
+  $c->log->debug("$offset $limit");
+
+  $c->stash->{data} = [@data];
+  $c->stash->{total_entries}=$source->total_entries;
   $c->forward('PaperPile::View::JSON');
 
 }

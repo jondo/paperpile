@@ -8,4 +8,5 @@
 ** Browse journals and give links to current issue
 ** Add full text search with pdftotext and sqlite
 ** Phone home feature: send message to server when specific function is used, to get statistics how people are using different features
+** Not only subject tags but also technical tags like 'read later', 'read', or anything else
 

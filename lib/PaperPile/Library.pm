@@ -50,25 +50,6 @@ enum 'PublicationType' => (
 );
 
 
-sub import_ris {
-
-    ( my $self, my $file ) = @_;
-
-    if ( not open( RIS, "<$file" ) ) {
-      warn("Could not open file $file for reading. ($!)");
-      return;
-    }
-
-    my $ris = '';
-    $ris .= $_ while (<RIS>);
-
-    while ( $ris =~ /(TY.*?)ER/sg ) {
-        my $pub = PaperPile::Library::Publication->new();
-        $pub->import_ris($1);
-        push @{ $self->entries }, $pub;
-      }
-
-}
 
 1;
 

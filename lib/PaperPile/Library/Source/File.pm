@@ -36,29 +36,28 @@ my %map = (
   'ID' => 'id',
 );
 
-
 sub connect {
   my $self = shift;
-  $self->_data($self->_read_file());
+  $self->_data( $self->_read_file() );
 
-  $self->total_entries(scalar(@{$self->_data}));
+  $self->total_entries( scalar( @{ $self->_data } ) );
 
-  $self->_iter(MooseX::Iterator::Array->new( collection => $self->_data ));
-  $self->_pager(Data::Page->new());
-  $self->_pager->total_entries($self->total_entries);
-  $self->_pager->entries_per_page($self->entries_per_page);
+  $self->_iter( MooseX::Iterator::Array->new( collection => $self->_data ) );
+  $self->_pager( Data::Page->new() );
+  $self->_pager->total_entries( $self->total_entries );
+  $self->_pager->entries_per_page( $self->entries_per_page );
   $self->_pager->current_page(1);
 
   return $self->total_entries;
 }
 
-sub _get_data_for_page{
+sub _get_data_for_page {
   my $self = shift;
 
-  my @output=();
+  my @output = ();
 
-  for my $i ($self->_pager->first .. $self->_pager->last){
-    push @output, $self->_data->[$i-1];
+  for my $i ( $self->_pager->first .. $self->_pager->last ) {
+    push @output, $self->_data->[ $i - 1 ];
   }
 
   return [@output];
@@ -79,7 +78,7 @@ sub _read_file {
 
   while ( $ris =~ /(TY.*?)ER/sg ) {
 
-    my $entry = $1;
+    my @lines = split( /\n/, $1 );
 
     my @authors   = ();
     my @editors   = ();
@@ -89,73 +88,84 @@ sub _read_file {
 
     my $pub = PaperPile::Library::Publication->new();
 
-    while ( $entry =~ /^\s*(\w\w)\s*-\s*(.*?)$/gs ) {
-      ( my $tag, my $value ) = ( $1, $2 );
-
-      if ( $tag =~ /(AU|A1|A2|A3|ED)/ ) {
-        ( my $lastName, my $firstName, my $suffix ) = split( /,/, $value );
-        $suffix    = '' if not defined $suffix;
-        $firstName = '' if not defined $firstName;
-        $lastName  = '' if not defined $firstName;
-
-        my $author = PaperPile::Library::Author->new(
-          last_name       => $lastName,
-          first_names_raw => $firstName,
-          suffix          => $suffix
-        );
-
-        $author->parse_initials;
-        $author->create_id;
-
-        if ( $tag =~ /(A1|AU)/ ) {
-          push @authors, $author;
+    foreach my $line (@lines) {
+      if ( $line =~ /^\s*(\w\w)\s*-\s*(.*?)$/ ) {
+        ( my $tag, my $value ) = ( $1, $2 );
+        if ( not $2 ) {
+          carp("Tag $tag has no value\n");
+          next;
         }
-        elsif ( $tag =~ /(A2|ED)/ ) {
-          push @editors, $author;
+
+        #print "$tag, $value\n------------------------------\n";
+
+        if ( $tag =~ /(AU|A1|A2|A3|ED)/ ) {
+          ( my $lastName, my $firstName, my $suffix ) = split( /,/, $value );
+          $suffix    = '' if not defined $suffix;
+          $firstName = '' if not defined $firstName;
+          $lastName  = '' if not defined $firstName;
+
+          my $author = PaperPile::Library::Author->new(
+            last_name       => $lastName,
+            first_names_raw => $firstName,
+            suffix          => $suffix
+          );
+
+          $author->parse_initials;
+          $author->create_id;
+
+          if ( $tag =~ /(A1|AU)/ ) {
+            push @authors, $author;
+          }
+          elsif ( $tag =~ /(A2|ED)/ ) {
+            push @editors, $author;
+          }
         }
-      }
-      elsif ( $tag =~ /(PY|Y1)/ ) {
+        elsif ( $tag =~ /(PY|Y1)/ ) {
 
-        # only year handled right now, the RIS file we used for testing
-        # was created by BibUtils and it gets this field wrong... TODO:
-        # do this later properly...
+          # only year handled right now, the RIS file we used for testing
+          # was created by BibUtils and it gets this field wrong... TODO:
+          # do this later properly...
 
-        ( my $year, my $month, my $day ) = split( /\//, $value );
+          ( my $year, my $month, my $day ) = split( /\//, $value );
 
-        $pub->year($year);
+          $pub->year($year);
 
-      }
-      elsif ( $tag =~ /(JO|JF|JA)/ ) {
-        $journal->name($value);
-        $value =~ s/[.,-]/ /g;
-        $value =~ s/(^\s+|\s+$)//g;
-        $value =~ s/(^\s+|\s+$)//g;
-        $value =~ s/\s+/_/g;
-        $value =~ s/_\)/\)/g;
-        $journal->id($value);
-        $journal->short($value);
-      }
-      elsif ( $tag =~ /(EP)/ ) {
-        $startPage = $value;
-      }
-      elsif ( $tag =~ /(SP)/ ) {
-        $endPage = $value;
-      }
-      else {
-        my $field = $map{$tag};
-        if ( defined $field ) {
-          $pub->$field($value);
+        }
+        elsif ( $tag =~ /(JO|JF|JA)/ ) {
+          $journal->name($value);
+          $value =~ s/[.,-]/ /g;
+          $value =~ s/(^\s+|\s+$)//g;
+          $value =~ s/(^\s+|\s+$)//g;
+          $value =~ s/\s+/_/g;
+          $value =~ s/_\)/\)/g;
+          $journal->id($value);
+          $journal->short($value);
+        }
+        elsif ( $tag =~ /(EP)/ ) {
+          $startPage = $value;
+        }
+        elsif ( $tag =~ /(SP)/ ) {
+          $endPage = $value;
         }
         else {
-          carp("Tag $tag not handled.\n");
+          my $field = $map{$tag};
+          if ( defined $field ) {
+            $pub->$field($value);
+          }
+          else {
+            carp("Tag $tag not handled.\n");
+          }
         }
       }
-      $pub->pages("$startPage-$endPage");
-      $pub->authors( [@authors] );
-      $pub->editors( [@editors] );
-      $pub->journal($journal);
-      push @data, $pub;
     }
+    $pub->pages("$startPage-$endPage");
+    $pub->authors( [@authors] );
+    $pub->editors( [@editors] );
+    $pub->journal($journal);
+    $pub->calculate_sha1;
+    $pub->refresh_fields;
+
+    push @data, $pub;
   }
 
   return [@data];
