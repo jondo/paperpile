@@ -59,14 +59,10 @@ sub set_page {
 sub set_page_from_offset {
   ( my $self, my $offset, my $limit ) = @_;
 
-  my $page = ceil( $offset / $limit );
+  my $page = floor( $offset / $limit ) + 1;
 
-  if ( $page == 0 ) {
-    $self->set_page(1);
-  }
-  else {
-    $self->set_page($page);
-  }
+  $self->set_page($page);
+  
 }
 
 1;

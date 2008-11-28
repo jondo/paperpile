@@ -59,4 +59,3 @@ $page1=$source->page;
 
 is (scalar(@{$page1}), 10, "Getting first page by offset. Checking number.");
 is_deeply ($page1, $page1_manual, "Getting first page by offset. Checking content.");
-

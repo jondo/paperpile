@@ -57,9 +57,6 @@ sub list : Local {
     $counter++;
   }
 
-  $c->log->debug("size".scalar(@$entries), "  ", $source->entries_per_page);
-
-  $c->log->debug("$offset $limit");
 
   $c->stash->{data} = [@data];
   $c->stash->{total_entries}=$source->total_entries;
