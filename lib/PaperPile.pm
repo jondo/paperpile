@@ -2,6 +2,10 @@ package PaperPile;
 
 use strict;
 use warnings;
+use Catalyst qw/ Session
+  Session::State::Cookie
+  Session::Store::File
+  /;
 
 use Catalyst::Runtime '5.70';
 
@@ -10,14 +14,14 @@ use Catalyst::Runtime '5.70';
 #         -Debug: activates the debug mode for very useful log messages
 #   ConfigLoader: will load the configuration from a Config::General file in the
 #                 application's home directory
-# Static::Simple: will serve static files from the application's root 
+# Static::Simple: will serve static files from the application's root
 #                 directory
 
 use parent qw/Catalyst/;
 
 our $VERSION = '0.01';
 
-# Configure the application. 
+# Configure the application.
 #
 # Note that settings in paperpile.conf (or other external
 # configuration file that you set up manually) take precedence
@@ -30,7 +34,6 @@ __PACKAGE__->config( name => 'PaperPile' );
 
 # Start the application
 __PACKAGE__->setup(qw/-Debug ConfigLoader Static::Simple/);
-
 
 =head1 NAME
 

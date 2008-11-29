@@ -6,95 +6,8 @@ var libListingEditorGrid;
 var libListingWindow;
 
 
-/*
 Ext.onReady(function(){
 
-    Ext.QuickTips.init();
-
-    LibDataStore = new Ext.data.Store({
-        id: 'LibDataStore',
-        proxy: new Ext.data.HttpProxy({
-            url: 'list', 
-            method: 'POST'
-        }),
-        baseParams:{task: "LISTING"}, // this parameter is passed for any HTTP request
-        reader: new Ext.data.JsonReader({
-            root: 'results',
-            totalProperty: 'total',
-            id: 'id'
-        },[ 
-            {name: 'authors', type: 'string', mapping: 'authors'},
-            {name: 'journal', type: 'string', mapping: 'journal'},
-        ]),
-    });
-    
-    LibColumnModel = new Ext.grid.ColumnModel(
-        [{
-            header: 'Authors',
-            dataIndex: 'authors',
-            width: 60,
-            editor: new Ext.form.TextField({
-                allowBlank: false,
-                maxLength: 20,
-                maskRe: /([a-zA-Z0-9\s]+)$/
-            })
-        },{
-            header: 'Journal',
-            dataIndex: 'journal',
-            width: 80,
-            editor: new Ext.form.TextField({
-                allowBlank: false,
-                maxLength: 20,
-                maskRe: /([a-zA-Z0-9\s]+)$/
-          })
-        }]
-    );
-    LibColumnModel.defaultSortable= true;
-    
-    LibListingEditorGrid =  new Ext.grid.EditorGridPanel({
-        id: 'LibListingEditorGrid',
-        store: LibDataStore,
-        cm: LibColumnModel,
-        enableColLock:false,
-        clicksToEdit:1,
-        selModel: new Ext.grid.RowSelectionModel({singleSelect:false})
-    });
-    
-    LibListingWindow = new Ext.Window({
-        id: 'LibListingWindow',
-        title: 'The Lib of the USA',
-        closable:true,
-        width:700,
-        height:350,
-        plain:true,
-        layout: 'fit',
-        items: LibListingEditorGrid
-    });
-  
-    LibDataStore.load();
-    LibListingWindow.show();
-  
-});
-*/
-
-Ext.onReady(function(){
-
-    // create the Data Store
-    /*
-    var store = new Ext.data.JsonStore({
-        root: 'data',
-        totalProperty: 'total_entries',
-        idProperty: 'pubid',
-        remoteSort: true,
-        fields: [{name: 'pubid', type: 'string', mapping: 'pubid'},
-                 {name: 'authors', type: 'string', mapping: 'authors'},
-                 {name: 'journal', type: 'string', mapping: 'journal'}],
-        //['id', 'authors', 'journal'],
-        proxy: new Ext.data.ScriptTagProxy({
-            url: 'list'
-        })
-    });
-*/
     var store = new Ext.data.Store({
         id: 'data',
         proxy: new Ext.data.HttpProxy({
@@ -112,7 +25,7 @@ Ext.onReady(function(){
           ]),
     });
 
-
+ 
     store.setDefaultSort('pubid', 'desc');
 
     var pagingBar = new Ext.PagingToolbar({
@@ -123,21 +36,20 @@ Ext.onReady(function(){
         emptyMsg: "No papers to display",
         
         items:[
-            '-', {
-                pressed: true,
-                enableToggle:true,
-                text: 'Show Preview',
-                cls: 'x-btn-text-icon details',
-                toggleHandler: function(btn, pressed){
-                    var view = grid.getView();
-                    view.showPreview = pressed;
-                    view.refresh();
+            '-',  {
+                text: 'Add to database',
+                cls: 'x-btn-text-icon add',
+                handler: function(btn, pressed){
+                    var id = grid.selected;
+                    alert(id);
                 }
             }]
     });
     
     var grid = new Ext.grid.GridPanel({
         el:'container',
+        sm: new Ext.grid.RowSelectionModel({singleSelect: false}),
+        stripeRows: true,
         width:700,
         height:500,
         title:'ExtJS.com - Browse Forums',

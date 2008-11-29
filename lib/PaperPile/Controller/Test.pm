@@ -24,8 +24,9 @@ Catalyst Controller.
 
 sub index : Path : Args(0) {
   my ( $self, $c ) = @_;
+  $c->stash->{template} = 'test/main.mas';
+  $c->forward('PaperPile::View::Mason');
 
-  $c->response->body('Matched PaperPile::Controller::Test in Test.');
 }
 
 sub grid : Local {
@@ -39,27 +40,37 @@ sub list : Local {
   my ( $self, $c ) = @_;
 
   my $offset = $c->request->params->{start};
-  my $limit = $c->request->params->{limit};
+  my $limit  = $c->request->params->{limit};
 
-  my $file='/home/wash/play/PaperPile/t/data/test1.ris';
+  my $file = '/home/wash/play/PaperPile/t/data/test1.ris';
 
-  my $source=PaperPile::Library::Source::File->new(file=>$file);
-  $source->connect;
-  my $counter=0;
+  my $source;
 
-  $source->entries_per_page($limit);
-  $source->set_page_from_offset($offset,$limit);
-
-  my $entries=$source->page;
-  my @data=();
-  foreach my $pub (@$entries){
-    push @data, {pubid=>$pub->id, authors => $pub->authors_flat, journal => $pub->journal_short};
-    $counter++;
+  if ( not defined $c->session->{source} ) {
+    $source = PaperPile::Library::Source::File->new( file => $file );
+    $source->connect;
+    $c->session->{source} = $source;
+  }
+  else {
+    $source = $c->session->{source};
   }
 
+  $source->entries_per_page($limit);
+  $source->set_page_from_offset( $offset, $limit );
 
-  $c->stash->{data} = [@data];
-  $c->stash->{total_entries}=$source->total_entries;
+  my $entries = $source->page;
+  my @data    = ();
+  foreach my $pub (@$entries) {
+    push @data,
+      {
+      pubid   => $pub->id,
+      authors => $pub->authors_flat,
+      journal => $pub->journal_short
+      };
+  }
+
+  $c->stash->{data}          = [@data];
+  $c->stash->{total_entries} = $source->total_entries;
   $c->forward('PaperPile::View::JSON');
 
 }
