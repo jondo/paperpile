@@ -1,4 +1,4 @@
-* Features
+* Feature ideas
 ** Export-mode, define several targets (endnote, bibtex, RSS) and constantly export in time intervals
 *** eg. also export as html, for including publication list on website. 
 ** E-mail references/pdfs?
@@ -9,4 +9,20 @@
 ** Add full text search with pdftotext and sqlite
 ** Phone home feature: send message to server when specific function is used, to get statistics how people are using different features
 ** Not only subject tags but also technical tags like 'read later', 'read', or anything else
+
+* Landmarks for prototype
+** TODO Backend source Interfaces
+*** TODO File
+*** TODO Database
+*** TODO Pubmed
+** TODO Crawler backend class
+** TODO PDF backend class
+** TODO Full text search on fields
+** TODO GUI
+*** TODO CRUD
+*** TODO basic representation
+*** TODO PDF window
+*** TODO Search interface
+
+
 
