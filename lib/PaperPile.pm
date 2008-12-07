@@ -9,6 +9,8 @@ use Catalyst qw/ Session
 
 use Catalyst::Runtime '5.70';
 
+use LWP;
+
 # Set flags and add plugins for the application
 #
 #         -Debug: activates the debug mode for very useful log messages
@@ -34,6 +36,10 @@ __PACKAGE__->config( name => 'PaperPile' );
 
 # Start the application
 __PACKAGE__->setup(qw/-Debug ConfigLoader Static::Simple/);
+
+
+
+
 
 =head1 NAME
 

@@ -1,0 +1,29 @@
+<driver>
+<site name="BMC">
+
+  <signature>
+    <url>!www\.biomedcentral\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(http://www.biomedcentral.com)/(\d+-\d+)/(\d+)/(\d+)!$1/content/pdf/$2-$3-$4.pdf!</rewrite>
+    </pattern>
+  </rule>
+  
+</site>
+
+<site name="PloS">
+
+  <signature>
+    <url>!plos!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!www\..*representation=PDF!</match>
+    </pattern>
+  </rule>
+  
+</site>
+</driver>
