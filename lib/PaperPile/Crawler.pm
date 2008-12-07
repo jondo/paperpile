@@ -23,12 +23,12 @@ has 'driver_file' => (
 
 has '_driver'  => ( is => 'rw', isa => 'HashRef' );
 has '_browser' => ( is => 'rw', isa => 'LWP::UserAgent' );
-has 'debug' => ( is => 'rw', isa => 'Bool', default => 1 );
+has 'debug'    => ( is => 'rw', isa => 'Bool', default => 1 );
 
 sub BUILD {
 
-  my $self     = shift;
-  $self->_browser(PaperPile::Utils->get_browser);
+  my $self = shift;
+  $self->_browser( PaperPile::Utils->get_browser );
 
 }
 
@@ -36,41 +36,68 @@ sub search_file {
 
   ( my $self, my $URL ) = @_;
 
-  my $site_rules = $self->_match_site($URL);
+  my $driver = $self->_match_site($URL);
+
+  my $site_rules = $driver->{rule};
 
   if ( not @$site_rules ) {
     croak('No driver found for URL $url.');
   }
 
-  my $ruleCount=1;
+  # Take the redirected URL (if redirection has taken place)
+  $URL = $driver->{final_url};
 
-  foreach my $rule (@{$site_rules}){
+  my $file = undef;
+
+  my $ruleCount = 1;
+
+  foreach my $rule ( @{$site_rules} ) {
 
     print "Rule $ruleCount\n" if $self->debug;
 
-    my $currURL=$URL;
+    my $currURL = $URL;
 
-    my $stepCount=1;
+    my $stepCount = 1;
 
-    foreach my $step (@{$rule->{pattern}}){
+    foreach my $step ( @{ $rule->{pattern} } ) {
       print "Step $stepCount\n" if $self->debug;
-      $currURL=$self->_followURL($currURL, $step);
-      if (not defined $currURL){
-        print "Error in process...\n";
+      $currURL = $self->_followURL( $currURL, $step );
+      if ( not defined $currURL ) {
+        print "Rule $ruleCount not successful...\n" if $self->debug;
         last;
       }
       $stepCount++;
     }
 
-    if (defined $currURL){
+    if ( defined $currURL ) {
       print "Got $currURL.\n" if $self->debug;
+      $file = $currURL;
       last;
-    } else {
+    }
+    else {
       print "Could not find PDF.\n" if $self->debug;
     }
   }
   $ruleCount++;
+  return $file;
+}
 
+sub fetch_pdf {
+
+  ( my $self, my $url, my $file ) = @_;
+
+  my $response = $self->_browser->get($url);
+  open( PDF, ">$file" );
+  binmode(PDF);
+  print PDF $response->content;
+
+  if ( $self->_check_pdf("$file") ) {
+    return 1;
+  }
+  else {
+    print "Downloaded file not a PDF.\n" if $self->debug;
+    return 0;
+  }
 }
 
 sub _match_site {
@@ -81,23 +108,29 @@ sub _match_site {
 
   # first match all patterns against the URL
 
-  my $original_url=$URL;
+  my $original_url = $URL;
 
-  for my $run ('original','redirected'){
+  for my $run ( 'original', 'redirected' ) {
 
-    if ($run eq 'redirected'){
+    if ( $run eq 'redirected' ) {
       my $response = $self->_browser->get($URL);
-      $URL=$response->request->uri;
+      $URL = $response->request->uri;
     }
 
     foreach my $siteName ( keys %{ $driver->{site} } ) {
+      foreach my $pattern (
+        @{ $driver->{site}->{$siteName}->{signature}->[0]->{url} } )
+      {
 
-      my $pattern = $driver->{site}->{$siteName}->{signature}->[0]->{url}->[0];
+        print "Matchin $URL vs. $pattern\n" if $self->debug;
 
-      $pattern =~ s/!//g;
+        $pattern =~ s/!//g;
 
-      if ( $URL =~ m!($pattern)! ) {
-        return $driver->{site}->{$siteName}->{rule};
+        if ( $URL =~ m!($pattern)! ) {
+          # save resolved URL for downstream use to avoid doing this again.
+          $driver->{site}->{$siteName}->{final_url} = $URL;
+          return $driver->{site}->{$siteName};
+        }
       }
     }
   }
@@ -116,6 +149,25 @@ sub load_driver {
   $content .= $_ foreach (<XML>);
   $self->_driver( XMLin( $content, ForceArray => 1 ) );
 
+}
+
+sub get_tests {
+
+  my $self = shift;
+
+  my $driver = $self->_driver;
+
+  my $tests = {};
+
+  foreach my $siteName ( keys %{ $driver->{site} } ) {
+    my @tmp = ();
+    foreach my $test ( @{ $driver->{site}->{$siteName}->{test}->[0]->{url} } ) {
+      push @tmp, $test;
+    }
+    $tests->{$siteName} = [@tmp];
+  }
+
+  return $tests;
 }
 
 sub _followURL {
@@ -158,14 +210,16 @@ sub _matchURL {
 
   $pattern =~ s/!//g;
 
-  print "Trying to match pattern $pattern in content of $URL...\n" if $self->debug;
+  print "Trying to match pattern $pattern in content of $URL...\n"
+    if $self->debug;
 
   if ( $content =~ m!($pattern)! ) {
     print "..and found $1...\n" if $self->debug;
     return URI->new_abs( $1, $response->base );
   }
   else {
-    croak "..but did not find anything...\n";
+    print "..but did not find anything...\n" if $self->debug;
+    return undef;
   }
 
 }
@@ -180,14 +234,33 @@ sub _rewriteURL {
 
   eval($command);
 
-  if ($newURL eq $URL){
-    croak 'Rewrite rule did not match';
+  if ( $newURL eq $URL ) {
+    print "Rewrite rule did not match: $pattern on $URL\n" if $self->debug;
+    return undef;
   }
 
   print "Rewrote $URL to $newURL...\n" if $self->debug;
 
   return $newURL;
 
+}
+
+sub _check_pdf {
+
+  ( my $self, my $file ) = @_;
+
+  open( INFILE, "<$file" );
+  binmode( INFILE, ':raw' );
+  seek( INFILE, 0, 0 );
+  my $buf;
+  read( INFILE, $buf, 255 );
+
+  if ( $buf !~ m/^\%PDF/ ) {
+    return 0;
+  }
+  else {
+    return 1;
+  }
 }
 
 1;

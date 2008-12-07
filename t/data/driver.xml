@@ -2,14 +2,27 @@
 <site name="BMC">
 
   <signature>
-    <url>!www\.biomedcentral\.com!</url>
+    <url>!biomedcentral\.com!</url>
+    <url>!genomebiology\.com!</url>
   </signature>
 
   <rule>
     <pattern>
-      <rewrite>!(http://www.biomedcentral.com)/(\d+-\d+)/(\d+)/(\d+)!$1/content/pdf/$2-$3-$4.pdf!</rewrite>
+      <rewrite>!(^.*?\.com)/(\d+-\d+)/(\d+)/(\d+)!$1/content/pdf/$2-$3-$4.pdf!</rewrite>
     </pattern>
   </rule>
+
+  <rule>
+    <pattern>
+      <rewrite>!(^.*?\.com)/(\d+)/(\d+)/(\d+)/(\w+)!$1/content/pdf/gb-$2-$3-$4-$5.pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www.biomedcentral.com/1471-2105/9/248</url>
+    <url>http://dx.doi.org/10.1186/1471-2105-9-248</url>
+    <url>http://genomebiology.com/2008/9/12/R168</url>
+  </test>
   
 </site>
 
