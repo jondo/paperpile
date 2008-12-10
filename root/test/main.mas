@@ -6,6 +6,9 @@
   <script type="text/javascript" src="/ext/ext-all-debug.js"></script>
   <script type="text/javascript" src="/js/paperpile.js"></script>
   <script type="text/javascript" src="/js/results-grid.js"></script>
+  <script type="text/javascript" src="/js/results-tabs.js"></script>
+  <script type="text/javascript" src="/js/data-tabs.js"></script>
+  <script type="text/javascript" src="/js/pub-summary.js"></script>
 
   <title>PaperPile</title>
 </head>

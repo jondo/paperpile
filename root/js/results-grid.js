@@ -1,4 +1,3 @@
-
 PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
     initComponent:function() {
@@ -10,14 +9,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                  method: 'GET'
              }),
              baseParams:{task: "LISTING"},
-             reader: new Ext.data.JsonReader({
-                 root: 'data',
-                 totalProperty: 'total_entries',
-                 id: 'pubid'
-             },[ {name: 'pubid', type: 'string', mapping: 'pubid'},
-                 {name: 'authors', type: 'string', mapping: 'authors'},
-                 {name: 'journal', type: 'string', mapping: 'journal'},
-               ]),
+             reader: new Ext.data.JsonReader(),
             }); // eof _store
 
         var _pager=new Ext.PagingToolbar({
@@ -36,21 +28,20 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                     }
             }]
         }); // eof _pager
-        
+    
+
+        var renderPub=function(value, p, record){
+            return String.format('<b>{0}</b><br>{1}',record.data.title,record.data.authors_flat);
+        }
+    
         Ext.apply(this, {
             store: _store,
             bbar: _pager,
             border:true,
             columns:[{
-                id: 'id',
-                header: "Sha1",
-                dataIndex: 'pubid',
-            },{
-                header: "Authors",
-                dataIndex: 'authors',
-            },{
-                header: "Journal",
-                dataIndex: 'journal',
+                header: "Publication",
+                width: 400,
+                renderer:renderPub
             }],
         });
 
@@ -63,7 +54,11 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.load({params:{start:0, limit:25}});
         PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
     }
+
+    
+}
+                                   
  
-});
+);
  
 Ext.reg('resultsgrid', PaperPile.ResultsGrid);

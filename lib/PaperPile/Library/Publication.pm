@@ -36,7 +36,7 @@ sub BUILD {
     foreach my $author ( @{ $params->{authors} } ) {
       push @tmp, $author->flat;
     }
-    $self->authors_flat( join( ',', @tmp ) );
+    $self->authors_flat( join( ', ', @tmp ) );
   } else {
     $self->authors_flat('');
   }
@@ -46,7 +46,7 @@ sub BUILD {
     foreach my $editor ( @{ $params->{editors} } ) {
       push @tmp, $editor->flat;
     }
-    $self->editors_flat( join( ',', @tmp ) );
+    $self->editors_flat( join( ', ', @tmp ) );
   }
 
   if ( $params->{journal} ) {
@@ -67,7 +67,7 @@ sub refresh_fields {
     foreach my $author ( @{ $self->authors } ) {
       push @tmp, $author->flat;
     }
-    $self->authors_flat( join( ',', @tmp ) );
+    $self->authors_flat( join( ', ', @tmp ) );
   }
 
   if ( $self->editors ) {
@@ -75,7 +75,7 @@ sub refresh_fields {
     foreach my $editor ( @{ $self->editors } ) {
       push @tmp, $editor->flat;
     }
-    $self->editors_flat( join( ',', @tmp ) );
+    $self->editors_flat( join( ', ', @tmp ) );
   }
 
   if ( $self->journal->short ) {
@@ -93,6 +93,24 @@ sub calculate_sha1 {
   $ctx->add( $self->authors_flat );
   $ctx->add( $self->title );
   $self->id( substr( $ctx->hexdigest, 0, 15 ) );
+
+}
+
+sub as_hash {
+
+  ( my $self ) = @_;
+
+  my %hash=();
+
+  foreach my $key ($self->meta->get_attribute_list){
+    my $value=$self->$key;
+    # take only simple scalar and not refs of any sort
+    next if ref($value);
+    $hash{$key}=$value;
+  }
+
+  return {%hash};
+
 
 }
 

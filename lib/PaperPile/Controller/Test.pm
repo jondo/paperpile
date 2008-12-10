@@ -60,17 +60,29 @@ sub list : Local {
 
   my $entries = $source->page;
   my @data    = ();
+
   foreach my $pub (@$entries) {
-    push @data,
-      {
-      pubid   => $pub->id,
-      authors => $pub->authors_flat,
-      journal => $pub->journal_short
-      };
+    push @data, $pub->as_hash;
   }
 
   $c->stash->{data}          = [@data];
   $c->stash->{total_entries} = $source->total_entries;
+
+  my @fields=();
+
+  foreach my $key (keys %{$entries->[0]}){
+    push @fields, {name=>$key};
+  }
+
+  my %metaData=(totalProperty => 'total_entries',
+                root => 'data',
+                id => 'id',
+                fields => [@fields]
+               );
+
+  $c->stash->{metaData} = {%metaData};
+
+
   $c->forward('PaperPile::View::JSON');
 
 }

@@ -38,8 +38,8 @@ sub flat {
   my $self  = shift;
   my @components=();
 
-  push @components, $self->initials if ($self->initials);
   push @components, $self->last_name if ($self->last_name);
+  push @components, $self->initials if ($self->initials);
   push @components, $self->suffix if ($self->suffix);
 
   return join(" ", @components);

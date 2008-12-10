@@ -5,6 +5,7 @@ use lib "../lib/";
 use PaperPile::Library;
 use PaperPile::Library::Publication;
 use PaperPile::Schema::Publication;
+use Data::Dumper;
 use Digest::SHA1;
 use Test::More 'no_plan';
 
@@ -56,8 +57,8 @@ foreach my $key ( keys %data ) {
 
 $pub = PaperPile::Library::Publication->new( {%data} );
 
-my $authors_flat='PF Stadler,AR Gruber';
-my $editors_flat='F Eisenhaber,M Carugo';
+my $authors_flat='Stadler PF, Gruber AR';
+my $editors_flat='Eisenhaber F, Carugo M';
 
 is( $pub->authors_flat, $authors_flat, "Transform author objects in flat string." );
 is( $pub->editors_flat, $editors_flat, "Transform editor objects in flat string." );
@@ -72,3 +73,4 @@ my $pub2 = PaperPile::Library::Publication->new( {%data} );
 #print $pub2->dump;
 is( $pub2->id, $sha1, "Autogenerate sha1 identity" );
 
+print Dumper($pub2->as_hash);

@@ -1,62 +1,91 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('PaperPile');
 
+PaperPile.Main = Ext.extend(Ext.Viewport, {
+    initComponent: function() {
+        Ext.apply(this, 
+                  {layout: 'border',
+                   renderTo: Ext.getBody(),
+                   items: [ {title: 'PaperPile',
+                             itemId:'navigation',
+                             region:'west',
+                             margins: '2 2 2 2',
+                             cmargins: '5 5 0 5',
+                             width: 200,
+                             minSize: 100,
+                             maxSize: 300,
+                             items: [{ xtype: 'button',
+                                       itemId: 'new_file_button',
+                                       text: 'New file tab',
+                                     }]
+                            },
+                            {region:'east',
+                             margins: '2 2 2 2',
+                             cmargins: '5 5 0 5',
+                             width: 400,
+                             minSize: 100,
+                             maxSize: 800
+                            }, 
+                            {itemId: 'innerpanel',
+                             region:'center',
+                             border: false,
+                             layout:'border',
+                             items: [{height:600,
+                                      border: false,
+                                      xtype: 'resultstabs',
+                                      region: 'center',
+                                      activeItem:0,
+                                     },
+                                     {border: false,
+                                      xtype: 'datatabs',
+                                      activeItem:0,
+                                      height:200,
+                                      region:'south'
+                                     }]}]});
+                               
+        PaperPile.Main.superclass.initComponent.call(this);
+
+        this.results_tabs=this.getComponent('innerpanel').getComponent('results_tabs');
+        this.data_tabs=this.getComponent('innerpanel').getComponent('data_tabs');
+        
+        var gridSM = this.results_tabs.getComponent('results_grid').getSelectionModel();
+        gridSM.on('rowselect', this.onRowSelect, this);	
+        
+	  },
+
+	  onRowSelect: function(sm, rowIdx, r) {
+        this.data_tabs.getComponent('pubsummary').updateDetail(r.data);
+        
+    }
+
+
+}
+
+);
+
+
+
 Ext.onReady(function() {
  
     Ext.QuickTips.init();
+        
+    var main=new PaperPile.Main;
     
-    var grid = new PaperPile.ResultsGrid();
+    main.show();
 
-    var tabs=new Ext.TabPanel({
-        title: 'Inner Main',
-        region:'center',
-        xtype:'resultsgrid',
-        height: 600,
-        border: false,
-        activeTab      : 0,
-        border         : false,
-        items: [{
-            title: 'File',
-            xtype:'resultsgrid',
-            height: 600,
-            border: false
-        }]
-    });
-    
-    var innerPanel = new Ext.Panel({
- 				layout:'border',
-        region:'center',
-        margins: '2 2 2 2',
-        items: [tabs,
-                {region:'south',
-                 height: 200,
-                 border: false
-                }]
-    })
+    var button=main.getComponent('navigation').getComponent('new_file_button');
 
-    var vp=new Ext.Viewport({
-        layout: 'border',
-        title: 'Ext Layout Browser',
-        items: [{
-            title: 'West Panel',
-            region:'west',
-            margins: '2 2 2 2',
-            cmargins: '5 5 0 5',
-            width: 200,
-            minSize: 100,
-            maxSize: 300
-        },{
-            title: 'East Panel',
-            region:'east',
-            margins: '2 2 2 2',
-            cmargins: '5 5 0 5',
-            width: 600,
-            minSize: 100,
-            maxSize: 800
-        }, innerPanel],
-        renderTo: Ext.getBody()
-    });
+    main.results_tabs.add({
+        title: 'New Tab',
+        iconCls: 'tabs',
+        closable:true
+    }).show();
 
-    vp.show();
- 
+
+    button.on('click', 
+              function(){main.results_tabs.add({
+                  title: 'New Tab',
+                  iconCls: 'tabs',
+                  closable:true})});
+     
 });
