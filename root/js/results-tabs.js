@@ -6,9 +6,9 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
             itemId: 'results_tabs',
             margins: '2 2 2 2',
             items: [{title: 'File',
-                     xtype:'resultsgrid',
-                     itemId:'results_grid',
-                     border: false
+                     //xtype:'resultsgrid',
+                     //itemId:'results_grid',
+                     border: true
                     }]
         });
        
@@ -16,9 +16,10 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
     },
 
     newFileTab:function(){
-        this.a({
-            title: 'New Tab ',
+        this.add({
+            title: 'New Tab',
             iconCls: 'tabs',
+            xtype:'resultsgrid',
             closable:true
         }).show();
     }

@@ -1,4 +1,4 @@
-package PaperPile::Controller::Test;
+package PaperPile::Controller::Ajax;
 
 use strict;
 use warnings;
@@ -6,53 +6,31 @@ use parent 'Catalyst::Controller';
 use PaperPile::Library::Source::File;
 use Data::Dumper;
 
-=head1 NAME
-
-PaperPile::Controller::Test - Catalyst Controller
-
-=head1 DESCRIPTION
-
-Catalyst Controller.
-
-=head1 METHODS
-
-=cut
-
-=head2 index 
-
-=cut
-
-sub index : Path : Args(0) {
-  my ( $self, $c ) = @_;
-  $c->stash->{template} = 'test/main.mas';
-  $c->forward('PaperPile::View::Mason');
-
-}
-
-sub grid : Local {
+sub resultsgrid : Local {
   my ( $self, $c ) = @_;
 
-  $c->stash->{template} = 'test/grid.mas';
-  $c->forward('PaperPile::View::Mason');
-}
+  my $source;
 
-sub list : Local {
-  my ( $self, $c ) = @_;
+  my $source_id=$c->request->params->{source_id};
+  my $source_file=$c->request->params->{source_file};
+  my $source_type=$c->request->params->{source_type};
+
+  my $task=$c->request->params->{task};
 
   my $offset = $c->request->params->{start};
   my $limit  = $c->request->params->{limit};
 
-  my $file = '/home/wash/play/PaperPile/t/data/test1.ris';
+  if ( not defined $c->session->{"source_$source_id"} ) {
 
-  my $source;
+    if ($source_type eq 'FILE'){
+      $source = PaperPile::Library::Source::File->new( file => $source_file );
+    }
 
-  if ( not defined $c->session->{source} ) {
-    $source = PaperPile::Library::Source::File->new( file => $file );
     $source->connect;
-    $c->session->{source} = $source;
+    $c->session->{"source_$source_id"} = $source;
   }
   else {
-    $source = $c->session->{source};
+    $source = $c->session->{"source_$source_id"};
   }
 
   $source->entries_per_page($limit);
@@ -64,9 +42,6 @@ sub list : Local {
   foreach my $pub (@$entries) {
     push @data, $pub->as_hash;
   }
-
-  $c->stash->{data}          = [@data];
-  $c->stash->{total_entries} = $source->total_entries;
 
   my @fields=();
 
@@ -80,12 +55,42 @@ sub list : Local {
                 fields => [@fields]
                );
 
+  $c->stash->{total_entries} = $source->total_entries;
+  $c->stash->{data}          = [@data];
   $c->stash->{metaData} = {%metaData};
 
 
   $c->forward('PaperPile::View::JSON');
 
 }
+
+
+
+
+
+=head1 NAME
+
+PaperPile::Controller::Ajax - Catalyst Controller
+
+=head1 DESCRIPTION
+
+Catalyst Controller.
+
+=head1 METHODS
+
+=cut
+
+
+=head2 index 
+
+=cut
+
+sub index :Path :Args(0) {
+    my ( $self, $c ) = @_;
+
+    $c->response->body('Matched PaperPile::Controller::Ajax in Ajax.');
+}
+
 
 =head1 AUTHOR
 

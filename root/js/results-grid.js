@@ -1,14 +1,21 @@
 PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
+    source_type: 'FILE',
+    source_file: '/home/wash/play/PaperPile/t/data/test2.ris',
+
     initComponent:function() {
 
         var _store=new Ext.data.Store(
             {id: 'data',
              proxy: new Ext.data.HttpProxy({
-                 url: '/test/list', 
+                 url: '/ajax/resultsgrid', 
                  method: 'GET'
              }),
-             baseParams:{task: "LISTING"},
+             baseParams:{task: "LISTING", 
+                         source_id: this.id,
+                         source_file: this.source_file,
+                         source_type: this.source_type
+                        },
              reader: new Ext.data.JsonReader(),
             }); // eof _store
 
@@ -26,7 +33,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                         var id = grid.selected;
                         alert(id);
                     }
-            }]
+                }]
         }); // eof _pager
     
 
@@ -44,9 +51,10 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                 renderer:renderPub
             }],
         });
-
         
         PaperPile.ResultsGrid.superclass.initComponent.apply(this, arguments);
+
+        this.getSelectionModel().on('rowselect', main.onRowSelect,main);
 
     }, // eo function initComponent
 
@@ -54,10 +62,9 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.load({params:{start:0, limit:25}});
         PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
     }
-
-    
+   
 }
-                                   
+                                
  
 );
  
