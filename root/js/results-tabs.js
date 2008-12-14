@@ -6,8 +6,6 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
             itemId: 'results_tabs',
             margins: '2 2 2 2',
             items: [{title: 'File',
-                     //xtype:'resultsgrid',
-                     //itemId:'results_grid',
                      border: true
                     }]
         });

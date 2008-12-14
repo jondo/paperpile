@@ -6,6 +6,15 @@ use parent 'Catalyst::Controller';
 use PaperPile::Library::Source::File;
 use Data::Dumper;
 
+sub insert_entry : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{return_value}          = 1;
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+
+
 sub resultsgrid : Local {
   my ( $self, $c ) = @_;
 

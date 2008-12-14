@@ -25,15 +25,16 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             displayInfo: true,
             displayMsg: 'Displaying papers {0} - {1} of {2}',
             emptyMsg: "No papers to display",
-            items:[
-                '-',  {
+            items:[ 
+                new Ext.Button({
+                    id: 'buttonx',
                     text: 'Add to database',
                     cls: 'x-btn-text-icon add',
-                    handler: function(btn, pressed){
-                        var id = grid.selected;
-                        alert(id);
+                    listeners: {
+                        click:  {fn: this.insertEntry, scope: this}
                     }
-                }]
+                })
+            ]
         }); // eof _pager
     
 
@@ -45,22 +46,43 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             store: _store,
             bbar: _pager,
             border:true,
-            columns:[{
-                header: "Publication",
-                width: 400,
-                renderer:renderPub
-            }],
+            columns:[{header: 'Imported',
+                      dataIndex: 'imported',
+                     },
+                     {header: "Publication",
+                      width: 400,
+                      renderer:renderPub
+                     }],
         });
         
         PaperPile.ResultsGrid.superclass.initComponent.apply(this, arguments);
 
+        //alert(this.bottomToolbar.items[0]);
+        //alert(this.bottomToolbar.items.each);
         this.getSelectionModel().on('rowselect', main.onRowSelect,main);
 
     }, // eo function initComponent
 
+    
+    insertEntry: function(){
+        
+        var pubid=this.getSelectionModel().getSelected().id;
+        Ext.Ajax.request({
+            url: '/ajax/insert_entry',
+            params: { pubid: pubid,
+                      gridid: this.id,
+                    },
+            method: 'GET'
+            //success: this.validateFeed,
+            //failure: this.markInvalid,
+        });
+        
+    },
+
     onRender: function() {
         this.store.load({params:{start:0, limit:25}});
         PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
+        
     }
    
 }

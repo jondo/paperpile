@@ -47,15 +47,12 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 
         this.results_tabs=this.getComponent('innerpanel').getComponent('results_tabs');
         this.data_tabs=this.getComponent('innerpanel').getComponent('data_tabs');
-        
-        //var gridSM = this.results_tabs.getComponent('results_grid').getSelectionModel();
-        //gridSM.on('rowselect', this.onRowSelect, this);	
-        
+                 
 	  },
 
 	  onRowSelect: function(sm, rowIdx, r) {
         this.data_tabs.getComponent('pubsummary').updateDetail(r.data);
-    }
+    },
 
 
 }
