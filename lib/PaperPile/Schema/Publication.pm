@@ -24,7 +24,9 @@ __PACKAGE__->add_columns(
   { data_type => "TEXT", is_nullable => 0, size => undef },
   "authors_series",
   { data_type => "TEXT", is_nullable => 0, size => undef },
-  "journal_short",
+  "journal_id",
+  { data_type => "TEXT", is_nullable => 0, size => undef },
+  "journal_flat",
   { data_type => "TEXT", is_nullable => 0, size => undef },
   "volume",
   { data_type => "TEXT", is_nullable => 0, size => undef },
@@ -67,12 +69,13 @@ __PACKAGE__->add_columns(
 );
 __PACKAGE__->set_primary_key("id");
 
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-14 10:50:55
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Vwvjbzi1NvHcrnmmM6vrtg
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-11-21 21:55:55
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lO1t1Wc/hCucd0YEeZdDVQ
-
-__PACKAGE__->has_many(author_publication => 'PaperPile::Schema::AuthorPublication', 'publication_id');
-__PACKAGE__->many_to_many(author => 'author_publication', 'author');
-
+__PACKAGE__->has_many(
+  author_publication => 'PaperPile::Schema::AuthorPublication',
+  'publication_id', {cascade_delete => 0} # We manually delete all dependencies
+);
+__PACKAGE__->many_to_many( author => 'author_publication', 'author' );
 
 1;

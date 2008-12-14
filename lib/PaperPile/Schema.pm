@@ -8,8 +8,8 @@ use base 'DBIx::Class::Schema';
 __PACKAGE__->load_classes;
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-11-21 21:55:55
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:J/Jmy4ht07iaWaUdcpQ0xA
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-14 10:50:55
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:QD7Lau5K7xqbAkA8Tr3wLg
 
 use PaperPile::Library;
 use PaperPile::Library::Publication;

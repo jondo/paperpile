@@ -54,12 +54,12 @@ $author = PaperPile::Library::Author->new(
   first_names_raw => 'Peter F.',
   initials        => 'PF',
   last_name       => 'Stadler',
-  suffix          => 'jr.'
+  suffix          => 'jr'
 );
 
-is( $author->create_id, "Stadler_PF", "create_id()" );
+is( $author->id, "STADLER_JR_PF", "Automatically create id" );
 
-is ($author->flat, "PF Stadler jr.", "flat");
+is ($author->flat, "Stadler jr PF", "flat");
 
 $author = PaperPile::Library::Author->new(
   initials        => 'H',
@@ -67,7 +67,7 @@ $author = PaperPile::Library::Author->new(
   suffix          => ''
 );
 
-is ($author->flat, "H von Hugo", "flat");
+is ($author->flat, "von Hugo H", "flat");
 
 
 

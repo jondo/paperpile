@@ -26,18 +26,17 @@ PaperPile::Controller::Root - Root Controller for PaperPile
 
 =cut
 
-sub index :Path :Args(0) {
-    my ( $self, $c ) = @_;
-
-    # Hello World
-    $c->response->body( $c->welcome_message );
+sub index : Path : Args(0) {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = 'test/main.mas';
+  $c->forward('PaperPile::View::Mason');
 }
 
-sub default :Path {
-    my ( $self, $c ) = @_;
-    $c->response->body( 'Page not found' );
-    $c->response->status(404);
-    
+sub default : Path {
+  my ( $self, $c ) = @_;
+  $c->response->body('Page not found');
+  $c->response->status(404);
+
 }
 
 =head2 end
@@ -46,7 +45,8 @@ Attempt to render a view, if needed.
 
 =cut 
 
-sub end : ActionClass('RenderView') {}
+sub end : ActionClass('RenderView') {
+}
 
 =head1 AUTHOR
 

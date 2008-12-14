@@ -28,6 +28,7 @@ my %map = (
   'VL' => 'volume',
   'IS' => 'issue',
   'CP' => 'issue',
+  'SN' => 'issn',
   'CY' => 'city',
   'PB' => 'publisher',
   'AD' => 'address',
@@ -78,7 +79,7 @@ sub _read_file {
 
   while ( $ris =~ /(TY.*?)ER/sg ) {
 
-    my @lines = split( /\n/, $1 );
+    my @lines = split( /\r?\n/, $1 ); # consider DOS line ends here.
 
     my @authors   = ();
     my @editors   = ();
@@ -146,6 +147,12 @@ sub _read_file {
         }
         elsif ( $tag =~ /(SP)/ ) {
           $endPage = $value;
+        }
+        # Content of these fields are not specified, can contain DOIs
+        elsif ( $tag =~ /(M1|M2|M3)/ ) {
+          if ($value=~/(doi\s*:\s*)?(10\.\d+\/\d+)/){
+            $pub->doi($2);
+          }
         }
         else {
           my $field = $map{$tag};

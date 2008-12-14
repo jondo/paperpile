@@ -70,7 +70,18 @@ my $sha1 = substr($ctx->hexdigest,0,15);
 
 my $pub2 = PaperPile::Library::Publication->new( {%data} );
 
-#print $pub2->dump;
 is( $pub2->id, $sha1, "Autogenerate sha1 identity" );
 
-print Dumper($pub2->as_hash);
+$ctx = Digest::SHA1->new;
+$ctx->add($authors_flat);
+$ctx->add('New Title');
+$sha1 = substr($ctx->hexdigest,0,15);
+
+$pub2->title('New Title');
+
+is( $pub2->id, $sha1, "Re-calculate sha1 identity after change" );
+
+
+
+
+

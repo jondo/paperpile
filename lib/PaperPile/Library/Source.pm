@@ -62,7 +62,16 @@ sub set_page_from_offset {
   my $page = floor( $offset / $limit ) + 1;
 
   $self->set_page($page);
-  
 }
+
+sub find_id {
+
+  ( my $self, my $id ) = @_;
+
+  foreach my $entry (@{$self->all}){
+    return $entry if ($entry->id eq $id);
+  }
+}
+
 
 1;

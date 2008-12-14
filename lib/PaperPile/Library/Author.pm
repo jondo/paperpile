@@ -3,16 +3,58 @@ use Moose;
 use Moose::Util::TypeConstraints;
 
 has 'first_names_raw' => ( is => 'rw', isa => 'Str' );
-has 'last_name'       => ( is => 'rw', isa => 'Str' );
-has 'suffix'          => ( is => 'rw', isa => 'Str' );
-has 'initials'        => ( is => 'rw', isa => 'Str' );
-has 'id'              => ( is => 'rw', isa => 'Str' );
+
+has 'last_name' => (
+  is      => 'rw',
+  isa     => 'Str',
+  trigger => sub { my $self = shift; $self->create_id }
+);
+
+has 'suffix' => (
+  is      => 'rw',
+  isa     => 'Str',
+  trigger => sub { my $self = shift; $self->create_id }
+);
+
+has 'initials' => (
+  is      => 'rw',
+  isa     => 'Str',
+  trigger => sub { my $self = shift; $self->create_id }
+);
+
+has 'id' => ( is => 'rw', isa => 'Str' );
+
+sub BUILD {
+
+  my ( $self, $params ) = @_;
+
+  if ( $params->{last_name} or $params->{initials} ) {
+    $self->create_id;
+  }
+
+}
 
 sub create_id {
   my $self = shift;
-  my $id   = $self->last_name;
-  $id =~ s/\s+/_/g;
-  return $self->id( $id . "_" . $self->initials );
+
+  my @components=();
+
+  push @components, $self->last_name if ($self->last_name);
+  push @components, $self->suffix if ($self->suffix);
+  push @components, $self->initials if ($self->initials);
+
+  #my $id = $self->last_name;
+  #$id =~ s/\s+/_/g;
+  #$id .= "_" . $self->initials;
+  #$id = uc($id);
+
+  foreach my $component (@components){
+    $component=uc($component);
+  }
+
+  my $id=join('_',@components);
+
+  return ( $self->id($id) );
 }
 
 sub parse_initials {
@@ -33,19 +75,17 @@ sub parse_initials {
   return $self->initials($initials);
 }
 
-
 sub flat {
-  my $self  = shift;
-  my @components=();
+  my $self       = shift;
+  my @components = ();
 
-  push @components, $self->last_name if ($self->last_name);
-  push @components, $self->initials if ($self->initials);
-  push @components, $self->suffix if ($self->suffix);
+  push @components, $self->last_name if ( $self->last_name );
+  push @components, $self->suffix    if ( $self->suffix );
+  push @components, $self->initials  if ( $self->initials );
 
-  return join(" ", @components);
+  return join( " ", @components );
 
 }
-
 
 #is there a built-in way of doing that?
 
