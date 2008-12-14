@@ -8,11 +8,22 @@ use Data::Dumper;
 
 sub insert_entry : Local {
   my ( $self, $c ) = @_;
+
+  my $source_id=$c->request->params->{source_id};
+  my $pub_id=$c->request->params->{pub_id};
+
+  my $source=$c->session->{"source_$source_id"};
+
+  my $pub=$source->find_id($pub_id);
+
+  $c->model('DB')->create_pub($pub);
+
+  $pub->imported(1);
+
   $c->stash->{return_value}          = 1;
   $c->forward('PaperPile::View::JSON');
 
 }
-
 
 
 sub resultsgrid : Local {

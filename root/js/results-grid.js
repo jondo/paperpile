@@ -57,8 +57,6 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         
         PaperPile.ResultsGrid.superclass.initComponent.apply(this, arguments);
 
-        //alert(this.bottomToolbar.items[0]);
-        //alert(this.bottomToolbar.items.each);
         this.getSelectionModel().on('rowselect', main.onRowSelect,main);
 
     }, // eo function initComponent
@@ -69,13 +67,16 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         var pubid=this.getSelectionModel().getSelected().id;
         Ext.Ajax.request({
             url: '/ajax/insert_entry',
-            params: { pubid: pubid,
-                      gridid: this.id,
+            params: { pub_id: pubid,
+                      source_id: this.id,
                     },
             method: 'GET'
             //success: this.validateFeed,
             //failure: this.markInvalid,
         });
+
+      this.store.getById(pubid).set('imported',1);
+
         
     },
 

@@ -6,7 +6,18 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         Ext.apply(this, 
                   {layout: 'border',
                    renderTo: Ext.getBody(),
-                   items: [ {title: 'PaperPile',
+                   items: [ new Ext.Panel({
+                       region: 'center',
+                       layout: 'border',
+                       bbar: new Ext.StatusBar({
+                           id: 'statusbar',
+                           defaultText: 'Default status text',
+                           defaultIconCls: 'default-icon',
+                           text: 'Ready',
+                           iconCls: 'ready-icon',
+                       }),
+
+                       items: [ {title: 'PaperPile',
                              itemId:'navigation',
                              region:'west',
                              margins: '2 2 2 2',
@@ -16,6 +27,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                              maxSize: 300,
                              items: [{ xtype: 'button',
                                        itemId: 'new_file_button',
+                                       id: 'new_file_button',
                                        text: 'New file tab',
                                      }]
                             },
@@ -33,20 +45,22 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                              items: [{height:600,
                                       border: false,
                                       xtype: 'resultstabs',
+                                      id: 'results_tabs',
                                       region: 'center',
                                       activeItem:0,
                                      },
                                      {border: false,
                                       xtype: 'datatabs',
+                                      id: 'data_tabs',
                                       activeItem:0,
                                       height:200,
                                       region:'south'
-                                     }]}]});
+                                     }]}]})]});
                                
         PaperPile.Main.superclass.initComponent.call(this);
 
-        this.results_tabs=this.getComponent('innerpanel').getComponent('results_tabs');
-        this.data_tabs=this.getComponent('innerpanel').getComponent('data_tabs');
+        this.results_tabs=Ext.getCmp('results_tabs');
+        this.data_tabs=Ext.getCmp('data_tabs');
                  
 	  },
 
@@ -69,8 +83,7 @@ Ext.onReady(function() {
     
     main.show();
 
-    var button=main.getComponent('navigation').getComponent('new_file_button');
-
+    var button=Ext.getCmp('new_file_button');
     button.on('click', main.results_tabs.newFileTab,main.results_tabs);
 
 
