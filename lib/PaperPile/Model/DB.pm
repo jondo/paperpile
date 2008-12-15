@@ -58,6 +58,7 @@ sub create_pub {
       { author_id => $author->id, publication_id => $pub->id } );
   }
 
+
   $journal_table->find_or_create(
     {
       id              => $pub->journal->id,
@@ -161,15 +162,19 @@ sub search {
 
     $pub->authors([@authors]);
 
-    # Get journal from joined table
-    my $journal_row=$journal_table->find($row->journal_id);
-    my $journal=PaperPile::Library::Journal->new();
 
-    $journal->id($journal_row->id);
-    $journal->short($journal_row->short);
-    $journal->name($journal_row->name);
+   # Get journal from joined table
 
-    $pub->journal($journal);
+    if ($row->journal_id){
+      my $journal_row=$journal_table->find($row->journal_id);
+      my $journal=PaperPile::Library::Journal->new();
+      $journal->id($journal_row->id);
+      $journal->short($journal_row->short);
+      $journal->name($journal_row->name);
+      $pub->journal($journal);
+    } else {
+      $pub->journal(PaperPile::Library::Journal->new(journal_id=>'undefined'));
+    }
 
     push @results, $pub;
 
@@ -209,6 +214,19 @@ sub import_journal_file {
     );
   }
 }
+
+sub empty_all {
+  ( my $self, my $file ) = @_;
+
+  $self->resultset('Journal')->delete();
+  $self->resultset('Author')->delete();
+  $self->resultset('AuthorPublication')->delete();
+  $self->resultset('Publication')->delete();
+
+}
+
+
+
 
 =head1 NAME
 

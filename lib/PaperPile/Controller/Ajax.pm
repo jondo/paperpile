@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use PaperPile::Library::Source::File;
+use PaperPile::Library::Source::DB;
 use Data::Dumper;
 
 sub insert_entry : Local {
@@ -44,8 +45,9 @@ sub resultsgrid : Local {
 
     if ($source_type eq 'FILE'){
       $source = PaperPile::Library::Source::File->new( file => $source_file );
+    } elsif ($source_type eq 'DB'){
+      $source = PaperPile::Library::Source::DB->new();
     }
-
     $source->connect;
     $c->session->{"source_$source_id"} = $source;
   }
@@ -57,6 +59,9 @@ sub resultsgrid : Local {
   $source->set_page_from_offset( $offset, $limit );
 
   my $entries = $source->page;
+
+  $c->log->debug(Dumper($entries));
+
   my @data    = ();
 
   foreach my $pub (@$entries) {

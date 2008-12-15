@@ -14,13 +14,29 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
     },
 
     newFileTab:function(){
-        this.add({
-            title: 'New Tab',
+        this.add(new PaperPile.ResultsGrid({
+            title: 'test2.ris',
             iconCls: 'tabs',
-            xtype:'resultsgrid',
+            source_file: '/home/wash/play/PaperPile/t/data/test2.ris',
+            source_type: 'FILE',
             closable:true
-        }).show();
+        })).show();
+    },
+
+    newDBtab:function(){
+        this.add(new PaperPile.ResultsGrid({
+            title: 'DB',
+            iconCls: 'tabs',
+            source_file: '',
+            source_type: 'DB',
+            closable:true
+        })).show();
     }
+
+
+
+
+
 }                                 
  
 );

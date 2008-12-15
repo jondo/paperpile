@@ -1,7 +1,7 @@
 PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
-    source_type: 'FILE',
-    source_file: '/home/wash/play/PaperPile/t/data/test2.ris',
+    source_type: '',
+    source_file: '',
 
     initComponent:function() {
 

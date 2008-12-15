@@ -2,8 +2,6 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-#use DBICx::TestDatabase;
-
 use Test::More 'no_plan';
 
 use lib "../lib";

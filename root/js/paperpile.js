@@ -25,11 +25,17 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                              width: 200,
                              minSize: 100,
                              maxSize: 300,
-                             items: [{ xtype: 'button',
+                                 items: [{ xtype: 'button',
                                        itemId: 'new_file_button',
                                        id: 'new_file_button',
                                        text: 'New file tab',
-                                     }]
+                                     },
+                                     { xtype: 'button',
+                                       itemId: 'new_db_button',
+                                       id: 'new_db_button',
+                                       text: 'New DB tab',
+                                     }
+                                    ]
                             },
                             {region:'east',
                              margins: '2 2 2 2',
@@ -85,6 +91,10 @@ Ext.onReady(function() {
 
     var button=Ext.getCmp('new_file_button');
     button.on('click', main.results_tabs.newFileTab,main.results_tabs);
+
+    var button=Ext.getCmp('new_db_button');
+    button.on('click', main.results_tabs.newDBtab,main.results_tabs);
+
 
 
 
