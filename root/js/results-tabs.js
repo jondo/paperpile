@@ -24,19 +24,23 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
     },
 
     newDBtab:function(){
-        this.add(new PaperPile.ResultsGrid({
+        var newGrid=this.add(new PaperPile.ResultsGridDB({
             title: 'DB',
             iconCls: 'tabs',
-            source_file: '',
             source_type: 'DB',
+            source_query:'',
             closable:true
+        }));
+
+        newGrid.show();
+
+    },
+
+    newPubMedTab:function(){
+        this.add(new PaperPile.ResultsGridPubMed({
+            source_query: 'Stadler PF',
         })).show();
     }
-
-
-
-
-
 }                                 
  
 );

@@ -34,7 +34,11 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                        itemId: 'new_db_button',
                                        id: 'new_db_button',
                                        text: 'New DB tab',
-                                     }
+                                     },{ xtype: 'button',
+                                         itemId: 'new_pubmed_button',
+                                         id: 'new_pubmed_button',
+                                         text: 'New PubMed tab',
+                                       }
                                     ]
                             },
                             {region:'east',
@@ -84,6 +88,12 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 Ext.onReady(function() {
  
     Ext.QuickTips.init();
+
+    Ext.Ajax.request({
+        url: '/ajax/reset_session',
+        //success: this.validateFeed,
+        //failure: this.markInvalid,
+    });
         
     main=new PaperPile.Main;
     
@@ -95,7 +105,8 @@ Ext.onReady(function() {
     var button=Ext.getCmp('new_db_button');
     button.on('click', main.results_tabs.newDBtab,main.results_tabs);
 
-
+    var button=Ext.getCmp('new_pubmed_button');
+    button.on('click', main.results_tabs.newPubMedTab,main.results_tabs);
 
 
      

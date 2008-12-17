@@ -13,6 +13,7 @@ has 'last_name' => (
 has 'suffix' => (
   is      => 'rw',
   isa     => 'Str',
+  default => '',
   trigger => sub { my $self = shift; $self->create_id }
 );
 

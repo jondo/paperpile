@@ -2,6 +2,10 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
     source_type: '',
     source_file: '',
+    source_query: '',
+
+    closable:true,
+    loadMask: true,
 
     initComponent:function() {
 
@@ -11,13 +15,13 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                  url: '/ajax/resultsgrid', 
                  method: 'GET'
              }),
-             baseParams:{task: "LISTING", 
-                         source_id: this.id,
+             baseParams:{source_id: this.id,
                          source_file: this.source_file,
-                         source_type: this.source_type
+                         source_type: this.source_type,
+                         source_query: this.source_query,
                         },
              reader: new Ext.data.JsonReader(),
-            }); // eof _store
+            }); 
 
         var _pager=new Ext.PagingToolbar({
             pageSize: 25,
@@ -35,7 +39,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                     }
                 })
             ]
-        }); // eof _pager
+        });
     
 
         var renderPub=function(value, p, record){
@@ -75,20 +79,74 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             //failure: this.markInvalid,
         });
 
-      this.store.getById(pubid).set('imported',1);
-
-        
+        this.store.getById(pubid).set('imported',1);
     },
 
-    onRender: function() {
-        this.store.load({params:{start:0, limit:25}});
-        PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
-        
-    }
+
+    // Workaround from forum to show loadMask also on first page, hopefully gets solve in Ext 3.0
+
+    //onRender: function() {
+    //    PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
+    //    this.store.load({params:{start:0, limit:25}});
+    //},
+
+    listeners : {
+        render : function(){      
+            this.loadMask.show();
+            var store = this.getStore();
+            store.load.defer(100,store, [ {params:{start:0, limit:25}} ]); 
+     },
+     delay: 400
+ }
+
+
+
+
+
    
 }
-                                
  
 );
- 
+
+PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
+
+    initComponent:function() {
+        Ext.apply(this, {
+            source_type: 'PUBMED',
+            title: 'PubMed',
+            iconCls: 'tabs',
+        });
+
+        PaperPile.ResultsGridPubMed.superclass.initComponent.apply(this, arguments);
+
+    }, // eo function initComponent
+});
+
+PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
+
+    initComponent:function() {
+        Ext.apply(this, {
+            source_type: 'DB',
+            title: 'Local library',
+            iconCls: 'tabs',
+        });
+
+        PaperPile.ResultsGridPubMed.superclass.initComponent.apply(this, arguments);
+
+    }, // eo function initComponent
+});
+
+
+
+
 Ext.reg('resultsgrid', PaperPile.ResultsGrid);
+Ext.reg('resultsgridpubmed', PaperPile.ResultsGridPubMed);
+Ext.reg('resultsgriddb', PaperPile.ResultsGridDB);
+ 
+
+
+
+
+
+
+

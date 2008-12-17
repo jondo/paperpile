@@ -5,6 +5,7 @@ use warnings;
 use parent 'Catalyst::Controller';
 use PaperPile::Library::Source::File;
 use PaperPile::Library::Source::DB;
+use PaperPile::Library::Source::PubMed;
 use Data::Dumper;
 
 sub insert_entry : Local {
@@ -26,6 +27,18 @@ sub insert_entry : Local {
 
 }
 
+sub reset_session : Local {
+
+  my ( $self, $c ) = @_;
+
+  foreach my $key (keys %{$c->session}){
+    delete($c->session->{$key}) if $key =~ /^source/;
+  }
+
+  $c->forward('PaperPile::View::JSON');
+
+}
+
 
 sub resultsgrid : Local {
   my ( $self, $c ) = @_;
@@ -34,6 +47,7 @@ sub resultsgrid : Local {
 
   my $source_id=$c->request->params->{source_id};
   my $source_file=$c->request->params->{source_file};
+  my $source_query=$c->request->params->{source_query};
   my $source_type=$c->request->params->{source_type};
 
   my $task=$c->request->params->{task};
@@ -47,8 +61,13 @@ sub resultsgrid : Local {
       $source = PaperPile::Library::Source::File->new( file => $source_file );
     } elsif ($source_type eq 'DB'){
       $source = PaperPile::Library::Source::DB->new();
+    } elsif ($source_type eq 'PUBMED'){
+      $source = PaperPile::Library::Source::PubMed->new(query => $source_query);
     }
     $source->connect;
+
+    $c->log->debug(Dumper($source));
+
     $c->session->{"source_$source_id"} = $source;
   }
   else {
@@ -56,9 +75,15 @@ sub resultsgrid : Local {
   }
 
   $source->entries_per_page($limit);
-  $source->set_page_from_offset( $offset, $limit );
 
-  my $entries = $source->page;
+  my $entries;
+
+  if ($source_type eq 'PUBMED'){
+    $entries=$source->page_from_offset($offset,$limit);
+  } else {
+    $source->set_page_from_offset( $offset, $limit );
+    $entries = $source->page;
+  }
 
   $c->log->debug(Dumper($entries));
 
