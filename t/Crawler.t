@@ -13,7 +13,9 @@ $crawler->load_driver();
 
 my $tests=$crawler->get_tests;
 
-#$tests={manual=>['http://dx.doi.org/10.1186/1471-2105-9-248']};
+# Todo: elsevier article locater, eg: http://linkinghub.elsevier.com/retrieve/pii/S1470-2045(08)70008-1
+
+$tests={manual=>['http://www.liebertonline.com/doi/pdf/10.1089/cmb.2006.0137']};
 
 foreach my $site (keys %$tests){
   foreach my $test (@{$tests->{$site}}){

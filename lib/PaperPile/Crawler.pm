@@ -38,10 +38,14 @@ sub search_file {
 
   my $driver = $self->_match_site($URL);
 
+  if ( not $driver ) {
+    croak('No driver found.');
+  }
+
   my $site_rules = $driver->{rule};
 
   if ( not @$site_rules ) {
-    croak('No driver found for URL $url.');
+    croak('No rules specified in driver.');
   }
 
   # Take the redirected URL (if redirection has taken place)
@@ -53,32 +57,32 @@ sub search_file {
 
   foreach my $rule ( @{$site_rules} ) {
 
-    print "Rule $ruleCount\n" if $self->debug;
+    print "\n Applying rule $ruleCount\n" if $self->debug;
 
     my $currURL = $URL;
 
     my $stepCount = 1;
 
     foreach my $step ( @{ $rule->{pattern} } ) {
-      print "Step $stepCount\n" if $self->debug;
+      print "  Step $stepCount\n" if $self->debug;
       $currURL = $self->_followURL( $currURL, $step );
       if ( not defined $currURL ) {
-        print "Rule $ruleCount not successful...\n" if $self->debug;
+        print "  Rule $ruleCount not successful...\n" if $self->debug;
         last;
       }
       $stepCount++;
     }
 
     if ( defined $currURL ) {
-      print "Got $currURL.\n" if $self->debug;
+      print "    Got $currURL.\n" if $self->debug;
       $file = $currURL;
       last;
     }
     else {
-      print "Could not find PDF.\n" if $self->debug;
+      print "  Could not find PDF.\n" if $self->debug;
     }
+    $ruleCount++;
   }
-  $ruleCount++;
   return $file;
 }
 
@@ -95,7 +99,7 @@ sub fetch_pdf {
     return 1;
   }
   else {
-    print "Downloaded file not a PDF.\n" if $self->debug;
+    print "  Downloaded file not a PDF.\n" if $self->debug;
     return 0;
   }
 }
@@ -122,20 +126,25 @@ sub _match_site {
         @{ $driver->{site}->{$siteName}->{signature}->[0]->{url} } )
       {
 
-        print "Matchin $URL vs. $pattern\n" if $self->debug;
+        print "Matching $URL vs. $pattern. " if $self->debug;
 
         $pattern =~ s/!//g;
 
         if ( $URL =~ m!($pattern)! ) {
           # save resolved URL for downstream use to avoid doing this again.
           $driver->{site}->{$siteName}->{final_url} = $URL;
+          print "Match. \n" if $self->debug;
           return $driver->{site}->{$siteName};
+        } else {
+          print "No match. \n" if $self->debug;
         }
+
+
       }
     }
   }
 
-  return [];
+  return undef;
 
 }
 
@@ -180,12 +189,12 @@ sub _followURL {
   # If nothing is specified, just return the original URL;
   # Useful at the start with the first URL.
   if ( ( not $match ) and ( not $rewrite ) ) {
-    print "Nothing todo for $URL...\n" if $self->debug;
+    print "  Nothing todo for $URL...\n" if $self->debug;
     return $newURL;
   }
 
   if ($match) {
-    $newURL = matchURL( $URL, $match );
+    $newURL = $self->_matchURL( $URL, $match );
     return undef if ( not defined $newURL );
   }
 
@@ -200,7 +209,8 @@ sub _followURL {
 sub _matchURL {
 
   ( my $self, my $URL, my $pattern ) = @_;
-  my $response = $self . _browser->get($URL);
+
+  my $response = $self->_browser->get($URL);
 
   my $content = $response->content;
   $content =~ s/\n//g;
@@ -210,15 +220,16 @@ sub _matchURL {
 
   $pattern =~ s/!//g;
 
-  print "Trying to match pattern $pattern in content of $URL...\n"
+  print "    Trying to match pattern $pattern in content of $URL...\n"
     if $self->debug;
 
-  if ( $content =~ m!($pattern)! ) {
-    print "..and found $1...\n" if $self->debug;
-    return URI->new_abs( $1, $response->base );
+  if ( $content =~ m!$pattern! ) {
+    my $match=$1;
+    print "    ..and found $match...\n" if $self->debug;
+    return URI->new_abs( $match, $response->base);
   }
   else {
-    print "..but did not find anything...\n" if $self->debug;
+    print "    ..but did not find anything...\n" if $self->debug;
     return undef;
   }
 
@@ -234,12 +245,17 @@ sub _rewriteURL {
 
   eval($command);
 
-  if ( $newURL eq $URL ) {
-    print "Rewrite rule did not match: $pattern on $URL\n" if $self->debug;
+  if ($@){
+    print "  Error in pattern: $@";
     return undef;
   }
 
-  print "Rewrote $URL to $newURL...\n" if $self->debug;
+  if ( $newURL eq $URL ) {
+    print "    Rewrite rule did not match: $pattern on $URL\n" if $self->debug;
+    return undef;
+  }
+
+  print "    Rewrote $URL to $newURL...\n" if $self->debug;
 
   return $newURL;
 
