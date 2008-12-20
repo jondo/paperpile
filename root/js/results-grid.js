@@ -19,6 +19,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                          source_file: this.source_file,
                          source_type: this.source_type,
                          source_query: this.source_query,
+                         limit:25
                         },
              reader: new Ext.data.JsonReader(),
             }); 
@@ -36,12 +37,11 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                     cls: 'x-btn-text-icon add',
                     listeners: {
                         click:  {fn: this.insertEntry, scope: this}
-                    }
+                    },
                 })
             ]
         });
     
-
         var renderPub=function(value, p, record){
             return String.format('<b>{0}</b><br>{1}',record.data.title,record.data.authors_flat);
         }
@@ -63,6 +63,8 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
         this.getSelectionModel().on('rowselect', main.onRowSelect,main);
 
+        this.on('beforedestroy', this.onDestroy,this);
+
     }, // eo function initComponent
 
     
@@ -82,45 +84,42 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.getById(pubid).set('imported',1);
     },
 
-
-    // Workaround from forum to show loadMask also on first page, hopefully gets solve in Ext 3.0
-
-    //onRender: function() {
-    //    PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
-    //    this.store.load({params:{start:0, limit:25}});
-    //},
-
-    listeners : {
-        render : function(){      
-            this.loadMask.show();
-            var store = this.getStore();
-            store.load.defer(100,store, [ {params:{start:0, limit:25}} ]); 
-     },
-     delay: 400
- }
-
-
-
-
-
-   
-}
- 
-);
+    onDestroy: function(cont, comp){
+        Ext.Ajax.request({
+            url: '/ajax/delete_grid',
+            params: { source_id: this.id,
+                    },
+            method: 'GET'
+            //success: this.validateFeed,
+            //failure: this.markInvalid,
+        });
+    },
+});
 
 PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
 
     initComponent:function() {
+
+        var _searchField=new Ext.app.SearchField({
+            width:320,
+        })
+
+
         Ext.apply(this, {
             source_type: 'PUBMED',
             title: 'PubMed',
             iconCls: 'tabs',
+            tbar:[_searchField],
         });
 
         PaperPile.ResultsGridPubMed.superclass.initComponent.apply(this, arguments);
 
+        _searchField.store=this.store;
+
+
     }, // eo function initComponent
 });
+
 
 PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
 
@@ -134,9 +133,32 @@ PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
         PaperPile.ResultsGridPubMed.superclass.initComponent.apply(this, arguments);
 
     }, // eo function initComponent
+
+    onRender: function() {
+        PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
+        this.store.load({params:{start:0, limit:25}});
+    }
 });
 
 
+PaperPile.ResultsGridFile = Ext.extend(PaperPile.ResultsGrid, {
+
+    initComponent:function() {
+        Ext.apply(this, {
+            source_type: 'FILE',
+            title: 'RIS',
+            iconCls: 'tabs',
+        });
+
+        PaperPile.ResultsGridPubMed.superclass.initComponent.apply(this, arguments);
+
+    }, // eo function initComponent
+
+    onRender: function() {
+        PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
+        this.store.load({params:{start:0, limit:25}});
+    }
+});
 
 
 Ext.reg('resultsgrid', PaperPile.ResultsGrid);

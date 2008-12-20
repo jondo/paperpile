@@ -52,20 +52,21 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                              region:'center',
                              border: false,
                              layout:'border',
-                             items: [{height:600,
-                                      border: false,
-                                      xtype: 'resultstabs',
-                                      id: 'results_tabs',
-                                      region: 'center',
-                                      activeItem:0,
-                                     },
-                                     {border: false,
+                             items: [{border: false,
                                       xtype: 'datatabs',
                                       id: 'data_tabs',
                                       activeItem:0,
                                       height:200,
                                       region:'south'
-                                     }]}]})]});
+                                     },
+                                     {height:600,
+                                      border: false,
+                                      xtype: 'resultstabs',
+                                      id: 'results_tabs',
+                                      region: 'center',
+                                      activeItem:0,
+                                     }
+                                     ]}]})]});
                                
         PaperPile.Main.superclass.initComponent.call(this);
 
@@ -96,6 +97,8 @@ Ext.onReady(function() {
     });
         
     main=new PaperPile.Main;
+
+    main.results_tabs.newDBtab();
     
     main.show();
 

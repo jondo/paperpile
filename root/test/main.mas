@@ -5,6 +5,7 @@
   <link rel="stylesheet" type="text/css" href="/ext/resources/css/xtheme-gray.css">
   <script type="text/javascript" src="/ext/adapter/ext/ext-base.js"></script>
   <script type="text/javascript" src="/ext/ext-all-debug.js"></script>
+  <script type="text/javascript" src="/js/search-field.js"></script>
   <script type="text/javascript" src="/js/paperpile.js"></script>
   <script type="text/javascript" src="/js/results-grid.js"></script>
   <script type="text/javascript" src="/js/results-tabs.js"></script>

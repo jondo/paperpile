@@ -5,16 +5,15 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
         Ext.apply(this, {
             itemId: 'results_tabs',
             margins: '2 2 2 2',
-            items: [{title: 'File',
-                     border: true
-                    }]
+            items: [{title:'Welcome'}],
         });
        
         PaperPile.ResultsTabs.superclass.initComponent.apply(this, arguments);
+
     },
 
     newFileTab:function(){
-        this.add(new PaperPile.ResultsGrid({
+        this.add(new PaperPile.ResultsGridFile({
             title: 'test2.ris',
             iconCls: 'tabs',
             source_file: '/home/wash/play/PaperPile/t/data/test2.ris',
@@ -38,9 +37,11 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
 
     newPubMedTab:function(){
         this.add(new PaperPile.ResultsGridPubMed({
-            source_query: 'Stadler PF',
+            source_query: '',
         })).show();
     }
+  
+
 }                                 
  
 );
