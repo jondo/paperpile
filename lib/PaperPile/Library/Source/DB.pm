@@ -17,8 +17,6 @@ sub connect {
 
   my $model = PaperPile::Model::DB->new;
 
-  #print Dumper($model->search($self->query);
-
   $self->_data( $model->search($self->query));
 
   $self->total_entries( scalar( @{ $self->_data } ) );

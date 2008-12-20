@@ -33,10 +33,18 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             items:[ 
                 new Ext.Button({
                     id: 'buttonx',
-                    text: 'Add to database',
+                    text: 'Add',
                     cls: 'x-btn-text-icon add',
                     listeners: {
                         click:  {fn: this.insertEntry, scope: this}
+                    },
+                }),
+                new Ext.Button({
+                    id: 'buttonx',
+                    text: 'Delete',
+                    cls: 'x-btn-text-icon delete',
+                    listeners: {
+                        click:  {fn: this.deleteEntry, scope: this}
                     },
                 })
             ]
@@ -50,6 +58,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             store: _store,
             bbar: _pager,
             border:true,
+            iconCls: 'tabs',
             columns:[{header: 'Imported',
                       dataIndex: 'imported',
                      },
@@ -84,6 +93,27 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.getById(pubid).set('imported',1);
     },
 
+    deleteEntry: function(){
+        
+        var pubid=this.getSelectionModel().getSelected().id;
+        Ext.Ajax.request({
+            url: '/ajax/delete_entry',
+            params: { pub_id: pubid,
+                      source_id: this.id,
+                    },
+            method: 'GET'
+            //success: this.validateFeed,
+            //failure: this.markInvalid,
+        });
+
+        this.store.remove(this.store.getById(pubid));
+    },
+
+
+
+
+
+
     onDestroy: function(cont, comp){
         Ext.Ajax.request({
             url: '/ajax/delete_grid',
@@ -104,11 +134,9 @@ PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
             width:320,
         })
 
-
         Ext.apply(this, {
             source_type: 'PUBMED',
             title: 'PubMed',
-            iconCls: 'tabs',
             tbar:[_searchField],
         });
 

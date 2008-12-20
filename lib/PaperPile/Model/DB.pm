@@ -136,7 +136,6 @@ sub search {
     }
     my $pub = PaperPile::Library::Publication->new($data);
 
-
     # Get authors from joined tables
     my @authors = ();
     my @query = (
@@ -162,8 +161,7 @@ sub search {
 
     $pub->authors([@authors]);
 
-
-   # Get journal from joined table
+    # Get journal from joined table
 
     if ($row->journal_id){
       my $journal_row=$journal_table->find($row->journal_id);
