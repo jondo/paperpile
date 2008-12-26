@@ -38,6 +38,7 @@ my $data1 = {
   pubtype      => 'JOUR',
   title        => 'Title',
   authors_flat => 'Stadler PF, Hofacker IL, Gruber AJ',
+
   #editors_flat => 'Eisenhaber F, Darwin C',
   volume    => 123,
   issue     => 3,
@@ -59,6 +60,7 @@ my $data1 = {
   pdf       => 'some/folder/to/pdfs/stadler08.pdf',
   fulltext  => 'This is the full text',
   authors   => [$author1],
+
   #editors      => [$editor1],
   journal    => $journal1,
   journal_id => $journal1->id,
@@ -78,38 +80,38 @@ my $data2 = {
 };
 
 my $pub1 = PaperPile::Library::Publication->new($data1);
-my $id1  = $pub1->{id};
+my $id1  = $pub1->{sha1};
 
 my $pub2 = PaperPile::Library::Publication->new($data2);
-my $id2  = $pub2->{id};
+my $id2  = $pub2->{sha1};
 
 my $model = PaperPile::Model::DB->new;
 
-is_deeply(
-   $model->create_pub($pub1),
-   $pub1->{id} ,
-  'Inserting test entry 1 into database'
-);
+my $rowid1 = $model->create_pub($pub1);
+my $rowid2 = $model->create_pub($pub2);
+
+$pub1->rowid($rowid1);
+$pub2->rowid($rowid2);
+
+like( $rowid1, qr/\d+/, 'Inserting test entry 1 into database' );
+
+like( $rowid2, qr/\d+/, 'Inserting test entry 2 into database' );
 
 is_deeply(
-   $model->create_pub($pub2),
-   $pub2->{id} ,
-  'Inserting test entry 2 into database'
-);
-
-is_deeply(
-  $model->search( { id => [ $pub1->{id}, $pub2->{id} ] } ),
+  $model->search( { sha1 => [ $pub1->{sha1}, $pub2->{sha1} ] } ),
   [ $pub1, $pub2 ],
   'Retrieving data from database.'
 );
 
-$model->delete_pubs([$pub1->id, $pub2->id]);
+$pub2->title('This is the updated title');
 
-is (@{$model->search( { id => [ $pub1->{id}, $pub2->{id} ] } )}, 0, 'Deleting entries');
+$rowid2=$model->update_pub($pub2);
+$pub2->rowid($rowid2);
 
-$model->create_pub($pub2);
+is ($model->search( { sha1 => [ $pub2->{sha1}]})->[0]->title,'This is the updated title','Updating entry');
 
-#print Dumper($pub2);
-#$pub2->title('This is the updated title');
-#print Dumper($pub2);
-#is ($model->search( { id => [ $pub2->{id}]})->[0]->title,'X','Updating entry');
+
+$model->delete_pubs( [ $pub1->rowid, $pub2->rowid ] );
+
+is( @{ $model->search( { sha1 => [ $pub1->{sha1}, $pub2->{sha1} ] } ) },
+  0, 'Deleting entries' );

@@ -1,5 +1,5 @@
 CREATE TABLE publication(
-id                 TEXT PRIMARY KEY,
+sha1               TEXT,
 pubtype            TEXT,
 title              TEXT,
 title2             TEXT,

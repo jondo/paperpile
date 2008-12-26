@@ -79,10 +79,10 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
     
     insertEntry: function(){
         
-        var pubid=this.getSelectionModel().getSelected().id;
+        var sha1=this.getSelectionModel().getSelected().id;
         Ext.Ajax.request({
             url: '/ajax/insert_entry',
-            params: { pub_id: pubid,
+            params: { sha1: sha1,
                       source_id: this.id,
                     },
             method: 'GET'
@@ -90,7 +90,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             //failure: this.markInvalid,
         });
 
-        this.store.getById(pubid).set('imported',1);
+        this.store.getById(sha1).set('imported',1);
     },
 
     deleteEntry: function(){

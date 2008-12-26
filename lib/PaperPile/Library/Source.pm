@@ -64,12 +64,12 @@ sub set_page_from_offset {
   $self->set_page($page);
 }
 
-sub find_id {
+sub find_sha1 {
 
-  ( my $self, my $id ) = @_;
+  ( my $self, my $sha1 ) = @_;
 
   foreach my $entry (@{$self->all}){
-    return $entry if ($entry->id eq $id);
+    return $entry if ($entry->sha1 eq $sha1);
   }
 }
 

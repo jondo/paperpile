@@ -45,7 +45,8 @@ enum 'PublicationType' => (
   'STD',        # used by BibUtils, probably "standard" ?
 );
 
-has 'id'             => ( is => 'rw');
+has 'sha1'             => ( is => 'rw');
+has 'rowid'            => ( is => 'rw', isa => 'Int');
 has 'pubtype'        => ( is => 'rw', isa => 'PublicationType');
 has 'title'          => ( is => 'rw', isa => 'Str', default => 'No title.',
                           trigger => sub { my $self=shift; $self->refresh_fields} );
@@ -127,7 +128,7 @@ sub calculate_sha1 {
 
   $ctx->add( $self->authors_flat );
   $ctx->add( $self->title);
-  $self->id( substr( $ctx->hexdigest, 0, 15 ) );
+  $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
 
 }
 
@@ -148,6 +149,114 @@ sub as_hash {
   return {%hash};
 
 }
+
+
+sub format {
+
+  (my $self, my $pattern) = @_;
+
+  my @authors=();
+
+  foreach my $a (@{$self->authors}){
+    push @authors, $a->last_name;
+  }
+
+  my $first_author=$authors[0];
+  my $last_author=$authors[$#authors];
+
+  my $YYYY=$self->year;
+  my $YY=$YYYY;
+
+  my $title=$self->title;
+
+  my @title_words=split(/\s+/,$title);
+
+  my $journal=$self->journal_flat;
+
+  if (length($YY)==4){
+    $YY=substr($YYYY,2,2);
+  }
+
+  # [firstauthor]
+  if ($pattern=~/\[(firstauthor(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/){
+    my $found_field=$1;
+    $first_author=substr($first_author,0,$3) if $2;
+    $first_author=_setcase($first_author, $4);
+    $pattern=~s/$found_field/$first_author/g;
+  }
+
+  # [lastauthor]
+  if ($pattern=~/\[(lastauthor(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/){
+    my $found_field=$1;
+    $first_author=substr($last_author,0,$3) if $2;
+    $first_author=_setcase($last_author, $4);
+    $pattern=~s/$found_field/$last_author/g;
+  }
+
+  # [authors]
+  if ($pattern=~/\[(authors(\d*)(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/){
+    my $found_field=$1;
+    my $to=@authors;
+    $to=$2 if $2;
+    foreach my $i (0..$to-1){
+      $authors[$i]=substr($authors[$i],0,$4) if ($3);
+      $authors[$i]=_setcase($authors[$i], $5);
+    }
+    my $author_string=join('_',@authors[0..$to-1]);
+    if ($to<@authors){
+      $author_string.='_et_al';
+    }
+    $pattern=~s/$found_field/$author_string/g;
+  }
+
+  # [title]
+  if ($pattern=~/\[(title(\d*)(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/){
+    my $found_field=$1;
+    my $to=@title_words;
+    $to=$2 if $2;
+    foreach my $i (0..$to-1){
+      $title_words[$i]=substr($title_words[$i],0,$4) if ($3);
+      $title_words[$i]=_setcase($title_words[$i], $5);
+    }
+    my $title_string=join('_',@title_words[0..$to-1]);
+    $pattern=~s/$found_field/$title_string/g;
+  }
+
+  # [YY] and [YYYY]
+  $pattern=~s/\[YY\]/$YY/g;
+  $pattern=~s/\[YYYY\]/$YYYY/g;
+
+  $pattern=~s/\[journal\]/$journal/g;
+
+
+  # remove brackets that are still left
+  $pattern=~s/\[//g;
+  $pattern=~s/\]//g;
+
+
+  return $pattern;
+
+}
+
+sub _setcase {
+
+  (my $field, my $format) = @_;
+
+  return $field if not defined $format;
+
+  if ($format){
+    if ($format eq ':Uc'){
+      $field=ucfirst($field);
+    } elsif ($format eq ':UC'){
+      $field=uc($field);
+    } elsif ($format eq ':lc'){
+      $field=lc($field);
+    }
+  }
+
+  return $field;
+}
+
 
 1;
 

@@ -34,7 +34,7 @@ my %map = (
   'AD' => 'address',
   'UR' => 'url',
   'L1' => 'pdf',
-  'ID' => 'id',
+  #'ID' => 'id',
 );
 
 sub connect {

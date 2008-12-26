@@ -24,7 +24,7 @@ sub import_lib {
   my @importedIds = ();
 
   foreach my $pub ( @{ $lib->entries } ) {
-    push @importedIds, $self->create_or_update_pub($pub);
+    push @importedIds, $self->create_pub($pub);
   }
 
   return [@importedIds];
@@ -50,25 +50,36 @@ sub create_pub {
 
   $data->{journal_id} = $pub->journal->id;
 
-  my $id = $publication_table->find_or_create($data)->id;
+  my $rowid = $publication_table->find_or_create($data)->get_column('rowid');
 
   foreach my $author ( @{ $pub->authors } ) {
     $author_table->find_or_create( $author->as_hash );
     $author_publication_table->find_or_create(
-      { author_id => $author->id, publication_id => $pub->id } );
+    { author_id => $author->id, publication_id => $rowid } );
   }
 
 
   $journal_table->find_or_create(
     {
-      id              => $pub->journal->id,
-      name            => $pub->journal->name,
-      short           => $pub->journal->short,
-      is_user_journal => 1,
+     id              => $pub->journal->id,
+     name            => $pub->journal->name,
+     short           => $pub->journal->short,
+     is_user_journal => 1,
     }
   );
 
-  return $id;
+  return $rowid;
+}
+
+sub update_pub {
+
+  ( my $self, my $pub ) = @_;
+
+  $self->delete_pubs([$pub->rowid]);
+  my $rowid=$self->create_pub($pub);
+
+  return $rowid;
+
 }
 
 sub delete_pubs {
@@ -83,7 +94,7 @@ sub delete_pubs {
   foreach my $pub_id (@$ids) {
 
     # Delete publication entry
-    my $pub_row=$publication_table->find( { id => $pub_id } );
+    my $pub_row=$publication_table->find( { rowid => $pub_id } );
 
     my $journal_id=$pub_row->journal_id;
 

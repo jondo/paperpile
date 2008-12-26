@@ -8,7 +8,7 @@ use base 'DBIx::Class';
 __PACKAGE__->load_components("Core");
 __PACKAGE__->table("publication");
 __PACKAGE__->add_columns(
-  "id",
+  "sha1",
   { data_type => "TEXT", is_nullable => 0, size => undef },
   "pubtype",
   { data_type => "TEXT", is_nullable => 0, size => undef },
@@ -67,15 +67,28 @@ __PACKAGE__->add_columns(
   "fulltext",
   { data_type => "TEXT", is_nullable => 0, size => undef },
 );
-__PACKAGE__->set_primary_key("id");
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-14 10:50:55
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Vwvjbzi1NvHcrnmmM6vrtg
+
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-25 20:10:48
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:0mxdf3MUevynyJDm2mPNmw
+
+
+# You can replace this text with custom content, and it will be preserved on regeneration
+
+
+__PACKAGE__->add_columns(
+  "rowid",
+  { data_type => "INTEGER", is_nullable => 0});
+
+__PACKAGE__->set_primary_key("rowid");
 
 __PACKAGE__->has_many(
   author_publication => 'PaperPile::Schema::AuthorPublication',
   'publication_id', {cascade_delete => 0} # We manually delete all dependencies
 );
 __PACKAGE__->many_to_many( author => 'author_publication', 'author' );
+
+
+
 
 1;

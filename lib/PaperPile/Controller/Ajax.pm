@@ -12,11 +12,11 @@ sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
   my $source_id = $c->request->params->{source_id};
-  my $pub_id    = $c->request->params->{pub_id};
+  my $sha1    = $c->request->params->{sha1};
 
   my $source = $c->session->{"source_$source_id"};
 
-  my $pub = $source->find_id($pub_id);
+  my $pub = $source->find_sha1($sha1);
 
   $c->model('DB')->create_pub($pub);
 
@@ -140,7 +140,7 @@ sub _resultsgrid_format{
   my %metaData = (
                   totalProperty => 'total_entries',
                   root          => 'data',
-                  id            => 'id',
+                  id            => 'sha1',
                   fields        => [@fields]
                  );
   $c->stash->{total_entries} = $total_entries;
