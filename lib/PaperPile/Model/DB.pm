@@ -2,6 +2,7 @@ package PaperPile::Model::DB;
 
 use strict;
 use Data::Dumper;
+use DBIx::Class::ResultClass::HashRefInflator;
 
 sub _dumper_hook {
   $_[0] = bless { %{ $_[0] }, result_source => undef, }, ref( $_[0] );
@@ -234,7 +235,17 @@ sub empty_all {
 
 }
 
+sub is_in_DB {
+  ( my $self, my $sha1 ) = @_;
+  my $result=$self->resultset('Publication')->find($sha1, {key=>'publication_sha1'});
 
+  if (defined($result)){
+    return 1;
+  } else {
+    return 0;
+  }
+
+}
 
 
 =head1 NAME

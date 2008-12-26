@@ -95,10 +95,10 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
     deleteEntry: function(){
         
-        var pubid=this.getSelectionModel().getSelected().id;
+        var sha1=this.getSelectionModel().getSelected().id;
         Ext.Ajax.request({
             url: '/ajax/delete_entry',
-            params: { pub_id: pubid,
+            params: { sha1: sha1,
                       source_id: this.id,
                     },
             method: 'GET'
@@ -106,12 +106,8 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             //failure: this.markInvalid,
         });
 
-        this.store.remove(this.store.getById(pubid));
+        this.store.remove(this.store.getById(sha1));
     },
-
-
-
-
 
 
     onDestroy: function(cont, comp){

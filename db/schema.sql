@@ -1,6 +1,7 @@
 CREATE TABLE publication(
 sha1               TEXT,
 pubtype            TEXT,
+key                TEXT,
 title              TEXT,
 title2             TEXT,
 title3             TEXT,

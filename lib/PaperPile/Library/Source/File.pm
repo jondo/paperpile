@@ -6,6 +6,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 
 use PaperPile::Library;
+use PaperPile::Model::DB;
 
 extends 'PaperPile::Library::Source';
 
@@ -60,6 +61,8 @@ sub _get_data_for_page {
   for my $i ( $self->_pager->first .. $self->_pager->last ) {
     push @output, $self->_data->[ $i - 1 ];
   }
+
+  
 
   return [@output];
 

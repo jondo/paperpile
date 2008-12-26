@@ -31,18 +31,27 @@ sub delete_entry : Local {
   my ( $self, $c ) = @_;
 
   my $source_id = $c->request->params->{source_id};
-  my $pub_id    = $c->request->params->{pub_id};
+  my $sha1    = $c->request->params->{sha1};
 
   my $source = $c->session->{"source_$source_id"};
 
-  $c->model('DB')->delete_pubs([$pub_id]);
+  my $pub = $source->find_sha1($sha1);
+
+  $c->model('DB')->delete_pubs([$pub->rowid]);
 
   $c->stash->{return_value} = 1;
   $c->forward('PaperPile::View::JSON');
 
 }
 
+sub import_journals :Local {
+  my ( $self, $c ) = @_;
 
+  $c->model('DB')->import_journal_file("/home/wash/play/PaperPile/data/jabref.txt");
+  $c->stash->{return_value} = 1;
+  $c->forward('PaperPile::View::JSON');
+
+}
 
 
 
@@ -117,6 +126,10 @@ sub resultsgrid : Local {
     $entries = $source->page;
   }
 
+  foreach my $pub (@$entries){
+    $pub->imported($c->model('DB')->is_in_DB($pub->sha1));
+  }
+
   _resultsgrid_format(@_, $entries, $source->total_entries);
 
 }
@@ -130,6 +143,7 @@ sub _resultsgrid_format{
   foreach my $pub (@$entries) {
     push @data, $pub->as_hash;
   }
+
 
   my @fields = ();
 

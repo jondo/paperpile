@@ -110,6 +110,9 @@ $pub2->rowid($rowid2);
 
 is ($model->search( { sha1 => [ $pub2->{sha1}]})->[0]->title,'This is the updated title','Updating entry');
 
+ok ($model->is_in_DB($pub2->{sha1}), 'is_in_DB');
+ok (!$model->is_in_DB('12345'), 'is_in_DB');
+
 
 $model->delete_pubs( [ $pub1->rowid, $pub2->rowid ] );
 

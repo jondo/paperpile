@@ -12,6 +12,8 @@ __PACKAGE__->add_columns(
   { data_type => "TEXT", is_nullable => 0, size => undef },
   "pubtype",
   { data_type => "TEXT", is_nullable => 0, size => undef },
+  "key",
+  { data_type => "TEXT", is_nullable => 0, size => undef },
   "title",
   { data_type => "TEXT", is_nullable => 0, size => undef },
   "title2",
@@ -69,8 +71,8 @@ __PACKAGE__->add_columns(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-25 20:10:48
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:0mxdf3MUevynyJDm2mPNmw
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-26 19:46:27
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:6F6xT4XWAltoCl4hMHfviA
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration
@@ -79,6 +81,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->add_columns(
   "rowid",
   { data_type => "INTEGER", is_nullable => 0});
+
+__PACKAGE__->add_unique_constraint([ qw/sha1/ ]);
 
 __PACKAGE__->set_primary_key("rowid");
 
