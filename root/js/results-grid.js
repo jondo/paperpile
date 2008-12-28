@@ -50,7 +50,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         });
     
         var renderPub=function(value, p, record){
-            return String.format('<b>{0}</b><br>{1}',record.data.title,record.data.authors_flat);
+            return String.format('<p><b>{0}</b></p>{1}',record.data.title,record.data.authors_flat);
         }
     
         Ext.apply(this, {
@@ -94,10 +94,12 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
     deleteEntry: function(){
         
+        var rowid=this.getSelectionModel().getSelected().get('rowid');
         var sha1=this.getSelectionModel().getSelected().id;
+
         Ext.Ajax.request({
             url: '/ajax/delete_entry',
-            params: { sha1: sha1,
+            params: { rowid: rowid,
                       source_id: this.id,
                     },
             method: 'GET'
@@ -106,6 +108,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         });
 
         this.store.remove(this.store.getById(sha1));
+        //this.store.remove(this.store.reload());
     },
 
 

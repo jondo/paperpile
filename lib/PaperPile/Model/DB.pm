@@ -68,6 +68,8 @@ sub create_pub {
     }
   );
 
+  $self->index_pub($rowid);
+
   return $rowid;
 }
 

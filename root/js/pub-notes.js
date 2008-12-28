@@ -1,7 +1,7 @@
 
-PaperPile.PubSummary = Ext.extend(Ext.Panel, {
+PaperPile.PubNotes = Ext.extend(Ext.Panel, {
 	  tplMarkup: [
-		    'Abstract: {abstract}<br/>',
+		    '<p>Notes: {abstract}</p>',
 	  ],
 	  startingMarkup: 'Empty',
 	  
@@ -15,12 +15,12 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
             autoScroll: true,
 			      html: this.startingMarkup
 		    });
-		    PaperPile.PubSummary.superclass.initComponent.call(this);
+		    PaperPile.PubNotes.superclass.initComponent.call(this);
 	  },
 	  updateDetail: function(data) {
 		    this.tpl.overwrite(this.body, data);		
 	  }
 });
 
-Ext.reg('pubsummary', PaperPile.PubSummary);
+Ext.reg('pubnotes', PaperPile.PubNotes);
 

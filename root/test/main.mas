@@ -14,6 +14,7 @@
   <script type="text/javascript" src="/js/results-tabs.js"></script>
   <script type="text/javascript" src="/js/data-tabs.js"></script>
   <script type="text/javascript" src="/js/pub-summary.js"></script>
+  <script type="text/javascript" src="/js/pub-notes.js"></script>
 
   <title>PaperPile</title>
 </head>

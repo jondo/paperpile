@@ -20,6 +20,8 @@ sub insert_entry : Local {
 
   $c->model('DB')->create_pub($pub);
 
+  
+
   $pub->imported(1);
 
   $c->stash->{return_value} = 1;
@@ -31,13 +33,11 @@ sub delete_entry : Local {
   my ( $self, $c ) = @_;
 
   my $source_id = $c->request->params->{source_id};
-  my $sha1    = $c->request->params->{sha1};
+  my $rowid    = $c->request->params->{rowid};
 
   my $source = $c->session->{"source_$source_id"};
 
-  my $pub = $source->find_sha1($sha1);
-
-  $c->model('DB')->delete_pubs([$pub->rowid]);
+  $c->model('DB')->delete_pubs([$rowid]);
 
   $c->stash->{return_value} = 1;
   $c->forward('PaperPile::View::JSON');

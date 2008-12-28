@@ -81,6 +81,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 
 	  onRowSelect: function(sm, rowIdx, r) {
         this.data_tabs.getComponent('pubsummary').updateDetail(r.data);
+        this.data_tabs.getComponent('pubnotes').updateDetail(r.data);
     },
 
     importJournals: function(){
@@ -107,7 +108,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 Ext.onReady(function() {
  
     Ext.QuickTips.init();
-
+    Ext.enableListenerCollection=true;
     Ext.Ajax.request({
         url: '/ajax/reset_session',
         //success: this.validateFeed,
