@@ -5,8 +5,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
     source_query: '',
 
     closable:true,
-    loadMask: true,
-
+    
     initComponent:function() {
 
         var _store=new Ext.data.Store(
@@ -148,13 +147,20 @@ PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
 PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
 
     initComponent:function() {
+        
+        var _filterField=new Ext.app.FilterField({
+            width:320,
+        })
+
         Ext.apply(this, {
             source_type: 'DB',
             title: 'Local library',
             iconCls: 'tabs',
+            tbar:[_filterField],
         });
 
-        PaperPile.ResultsGridPubMed.superclass.initComponent.apply(this, arguments);
+        PaperPile.ResultsGridDB.superclass.initComponent.apply(this, arguments);
+        _filterField.store=this.store;
 
     }, // eo function initComponent
 
@@ -166,6 +172,8 @@ PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
 
 
 PaperPile.ResultsGridFile = Ext.extend(PaperPile.ResultsGrid, {
+
+    loadMask: true,
 
     initComponent:function() {
         Ext.apply(this, {

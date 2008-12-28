@@ -95,13 +95,14 @@ sub resultsgrid : Local {
       $source = PaperPile::Library::Source::File->new( file => $source_file );
     }
     elsif ( $source_type eq 'DB' ) {
-      $source = PaperPile::Library::Source::DB->new();
+      $source = PaperPile::Library::Source::DB->new(query => $source_query);
     }
     elsif ( $source_type eq 'PUBMED' ) {
       $source =
         PaperPile::Library::Source::PubMed->new( query => $source_query );
     }
 
+    $source->entries_per_page($limit);
     $source->connect;
 
     if ($source->total_entries == 0){
@@ -114,20 +115,17 @@ sub resultsgrid : Local {
     $source = $c->session->{"source_$source_id"};
   }
 
-  $source->entries_per_page($limit);
-
   my $entries;
 
-  if ( $source_type eq 'PUBMED' ) {
-    $entries = $source->page_from_offset( $offset, $limit );
-  }
-  else {
-    $source->set_page_from_offset( $offset, $limit );
-    $entries = $source->page;
-  }
+  $entries = $source->page_from_offset( $offset, $limit );
+
 
   foreach my $pub (@$entries){
-    $pub->imported($c->model('DB')->is_in_DB($pub->sha1));
+    if (not $source_type eq 'DB'){
+      $pub->imported($c->model('DB')->is_in_DB($pub->sha1));
+    } else {
+      $pub->imported(1);
+    }
   }
 
   _resultsgrid_format(@_, $entries, $source->total_entries);

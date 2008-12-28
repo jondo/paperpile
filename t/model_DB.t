@@ -58,7 +58,7 @@ my $data1 = {
   notes     => 'These are my notes',
   tags_flat => 'important cool awesome',
   pdf       => 'some/folder/to/pdfs/stadler08.pdf',
-  fulltext  => 'This is the full text',
+  text  => 'This is the full text',
   authors   => [$author1],
 
   #editors      => [$editor1],
@@ -113,8 +113,9 @@ is ($model->search( { sha1 => [ $pub2->{sha1}]})->[0]->title,'This is the update
 ok ($model->is_in_DB($pub2->{sha1}), 'is_in_DB');
 ok (!$model->is_in_DB('12345'), 'is_in_DB');
 
-
 $model->delete_pubs( [ $pub1->rowid, $pub2->rowid ] );
 
 is( @{ $model->search( { sha1 => [ $pub1->{sha1}, $pub2->{sha1} ] } ) },
   0, 'Deleting entries' );
+
+

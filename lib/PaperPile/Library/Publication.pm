@@ -1,6 +1,7 @@
 package PaperPile::Library::Publication;
 use Moose;
 use Moose::Util::TypeConstraints;
+use MooseX::Timestamp;
 use Digest::SHA1;
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
@@ -80,7 +81,7 @@ has 'abstract'       => ( is => 'rw', isa => 'Str' );
 has 'notes'          => ( is => 'rw', isa => 'Str' );
 has 'tags_flat'      => ( is => 'rw', isa => 'Str' );
 has 'pdf'            => ( is => 'rw', isa => 'Str' );
-has 'fulltext'       => ( is => 'rw', isa => 'Str' );
+has 'text'       => ( is => 'rw', isa => 'Str' );
 has 'imported'       => ( is => 'rw', isa => 'Bool', default => 0 );
 has 'authors' => (
   is      => 'rw',
@@ -89,6 +90,10 @@ has 'authors' => (
 );
 has 'editors' => ( is => 'rw', isa => 'ArrayRef[PaperPile::Library::Author]' );
 has 'journal' => ( is => 'rw', isa => 'PaperPile::Library::Journal' );
+has 'created' => ( is => 'rw', isa => 'Timestamp' );
+has 'last_read' => ( is => 'rw', isa => 'Timestamp' );
+
+
 
 sub BUILD {
 

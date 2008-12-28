@@ -15,31 +15,37 @@ has 'query' => ( is => 'rw' );
 sub connect {
   my $self = shift;
 
-  my $model = PaperPile::Model::DB->new;
+  my $model=PaperPile::Model::DB->new;
 
-  $self->_data( $model->search($self->query));
+  my $rs=$model->get_fulltext_rs($self->query,$self->entries_per_page);
 
-  $self->total_entries( scalar( @{ $self->_data } ) );
+  $self->_pager($rs->page(1)->pager);
 
-  $self->_iter( MooseX::Iterator::Array->new( collection => $self->_data ) );
-  $self->_pager( Data::Page->new() );
-  $self->_pager->total_entries( $self->total_entries );
-  $self->_pager->entries_per_page( $self->entries_per_page );
-  $self->_pager->current_page(1);
+  $self->total_entries($self->_pager->total_entries);
+
+  #$self->_iter( MooseX::Iterator::Array->new( collection => $self->_data ) );
 
   return $self->total_entries;
 }
 
+sub page {
+  ( my $self, my $pg ) = @_;
+
+  $self->_pager->current_page($pg);
+
+  return $self->_get_data_for_page;
+}
+
+
 sub _get_data_for_page {
   my $self = shift;
 
-  my @output = ();
+  my $model=PaperPile::Model::DB->new;
 
-  for my $i ( $self->_pager->first .. $self->_pager->last ) {
-    push @output, $self->_data->[ $i - 1 ];
-  }
+  my $rs=$model->get_fulltext_rs($self->query,$self->entries_per_page);
 
-  return [@output];
+  return $model->fulltext_search($rs,$self->_pager->current_page);
+
 
 }
 

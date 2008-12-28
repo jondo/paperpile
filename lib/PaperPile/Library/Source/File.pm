@@ -62,8 +62,6 @@ sub _get_data_for_page {
     push @output, $self->_data->[ $i - 1 ];
   }
 
-  
-
   return [@output];
 
 }

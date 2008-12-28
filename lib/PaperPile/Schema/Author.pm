@@ -22,8 +22,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-26 19:46:27
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:rSXVw2wb5VWp1UKC7zAz7w
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-28 16:38:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:wWRGzzyHfa5bYn1emQtksg
 
 
 __PACKAGE__->has_many(author_publication => 'PaperPile::Schema::AuthorPublication', 'publication_id');

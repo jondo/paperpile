@@ -8,6 +8,8 @@ use base 'DBIx::Class';
 __PACKAGE__->load_components("Core");
 __PACKAGE__->table("publication");
 __PACKAGE__->add_columns(
+  "rowid",
+  { data_type => "INTEGER", is_nullable => 0, size => undef },
   "sha1",
   { data_type => "TEXT", is_nullable => 0, size => undef },
   "pubtype",
@@ -66,32 +68,30 @@ __PACKAGE__->add_columns(
   { data_type => "TEXT", is_nullable => 0, size => undef },
   "pdf",
   { data_type => "TEXT", is_nullable => 0, size => undef },
-  "fulltext",
+  "text",
   { data_type => "TEXT", is_nullable => 0, size => undef },
+  "created",
+  { data_type => "TIMESTAMP", is_nullable => 0, size => undef },
+  "last_read",
+  { data_type => "TIMESTAMP", is_nullable => 0, size => undef },
 );
+__PACKAGE__->set_primary_key("rowid");
+__PACKAGE__->add_unique_constraint("sha1_unique", ["sha1"]);
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-26 19:46:27
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:6F6xT4XWAltoCl4hMHfviA
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-28 16:38:07
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:IXQgLeEy3TkRS8i0VM0DWg
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration
 
 
-__PACKAGE__->add_columns(
-  "rowid",
-  { data_type => "INTEGER", is_nullable => 0});
-
-__PACKAGE__->add_unique_constraint([ qw/sha1/ ]);
-
-__PACKAGE__->set_primary_key("rowid");
-
 __PACKAGE__->has_many(
   author_publication => 'PaperPile::Schema::AuthorPublication',
   'publication_id', {cascade_delete => 0} # We manually delete all dependencies
 );
-__PACKAGE__->many_to_many( author => 'author_publication', 'author' );
 
+__PACKAGE__->many_to_many( author => 'author_publication', 'author' );
 
 
 

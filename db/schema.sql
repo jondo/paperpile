@@ -1,5 +1,6 @@
 CREATE TABLE publication(
-sha1               TEXT,
+rowid              INTEGER PRIMARY KEY AUTOINCREMENT,
+sha1               TEXT UNIQUE,
 pubtype            TEXT,
 key                TEXT,
 title              TEXT,
@@ -28,7 +29,9 @@ abstract           TEXT,
 notes              TEXT,
 tags_flat          TEXT,
 pdf                TEXT,
-fulltext           TEXT
+text               TEXT,
+created            TIMESTAMP,
+last_read          TIMESTAMP
 );
 
 CREATE TABLE author (
@@ -55,3 +58,4 @@ publication_id    INTEGER,
 PRIMARY KEY (author_id, publication_id)
 );
 
+CREATE VIRTUAL TABLE fulltext using fts3(title,abstract,notes,authors);

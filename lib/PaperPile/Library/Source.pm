@@ -4,6 +4,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use MooseX::Iterator;
 use Data::Dumper;
+use Data::Page;
 use POSIX qw(ceil floor);
 
 has 'entries_per_page' => (
@@ -20,6 +21,14 @@ has 'total_entries' => ( is => 'rw', isa => 'Int' );
 has '_iter'         => ( is => 'rw', isa => 'MooseX::Iterator::Array' );
 has '_pager'        => ( is => 'rw', isa => 'Data::Page' );
 has '_data'         => ( is => 'rw', isa => 'ArrayRef' );
+
+sub BUILD{
+
+  (my $self) = @_;
+
+  $self->_pager(Data::Page->new() );
+
+}
 
 sub connect {
   my $self = shift;
@@ -48,20 +57,16 @@ sub all {
 
 sub page {
   ( my $self, my $pg ) = @_;
+  $self->_pager->current_page($pg);
   return $self->_get_data_for_page;
 }
 
-sub set_page {
-  ( my $self, my $pg ) = @_;
-  $self->_pager->current_page($pg);
-}
-
-sub set_page_from_offset {
+sub page_from_offset {
   ( my $self, my $offset, my $limit ) = @_;
 
   my $page = floor( $offset / $limit ) + 1;
 
-  $self->set_page($page);
+  return $self->page($page);
 }
 
 sub find_sha1 {
