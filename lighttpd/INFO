@@ -1,0 +1,12 @@
+Compiling and installing lighttpd:
+
+tar -xzf lighttpd-1.4.20.tar.gz
+cd lighttpd-1.4.20
+./configure --prefix=/home/wash/play/PaperPile/lighttpd
+make
+make install
+
+
+starting server (from within /home/wash/play/PaperPile/lighttpd):
+
+./sbin/lighttpd -m lib -f lighttpd.conf
