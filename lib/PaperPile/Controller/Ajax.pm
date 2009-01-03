@@ -8,6 +8,13 @@ use PaperPile::Library::Source::DB;
 use PaperPile::Library::Source::PubMed;
 use Data::Dumper;
 
+sub test : Local  {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = 'test/grid.mas';
+  $c->forward('PaperPile::View::Mason');
+}
+
+
 sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
@@ -19,8 +26,6 @@ sub insert_entry : Local {
   my $pub = $source->find_sha1($sha1);
 
   $c->model('DB')->create_pub($pub);
-
-  
 
   $pub->imported(1);
 

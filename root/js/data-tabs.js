@@ -16,6 +16,11 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
                     border: true,
                     height:200
                    },
+                   {xtype:'pubedit',
+                    itemId:'pubedit',
+                    border: true,
+                    height:200
+                   }
                   ],
             bbar: [{ text: 'Summary',
                      id: 'summary_tab_button',
@@ -27,6 +32,14 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
                    },
                    { text: 'Notes',
                      id: 'notes_tab_button',
+                     enableToggle: true,
+                     toggleHandler: this.onItemToggle,
+                     toggleGroup: 'tab_buttons',
+                     allowDepress : false,
+                     pressed: false
+                   },
+                   { text: 'Edit',
+                     id: 'edit_tab_button',
                      enableToggle: true,
                      toggleHandler: this.onItemToggle,
                      toggleGroup: 'tab_buttons',
@@ -47,6 +60,10 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
 
         if (button.id == 'notes_tab_button' && pressed){
             Ext.getCmp('data_tabs').layout.setActiveItem('pubnotes');
+        }
+
+        if (button.id == 'edit_tab_button' && pressed){
+            Ext.getCmp('data_tabs').layout.setActiveItem('pubedit');
         }
         
     }

@@ -3,7 +3,6 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
     source_type: '',
     source_file: '',
     source_query: '',
-
     closable:true,
     
     initComponent:function() {
@@ -62,9 +61,11 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                       dataIndex: 'imported',
                      },
                      {header: "Publication",
+                      dataIndex: 'title',
                       width: 400,
                       renderer:renderPub
                      }],
+            
         });
         
         PaperPile.ResultsGrid.superclass.initComponent.apply(this, arguments);
@@ -168,7 +169,7 @@ PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
     }, // eo function initComponent
 
     onRender: function() {
-        PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
+        PaperPile.ResultsGridDB.superclass.onRender.apply(this, arguments);
         this.store.load({params:{start:0, limit:25}});
     }
 });
@@ -185,21 +186,16 @@ PaperPile.ResultsGridFile = Ext.extend(PaperPile.ResultsGrid, {
             iconCls: 'tabs',
         });
 
-        PaperPile.ResultsGridPubMed.superclass.initComponent.apply(this, arguments);
+        PaperPile.ResultsGridFile.superclass.initComponent.apply(this, arguments);
 
     }, // eo function initComponent
 
     onRender: function() {
-        PaperPile.ResultsGrid.superclass.onRender.apply(this, arguments);
+        PaperPile.ResultsGridFile.superclass.onRender.apply(this, arguments);
         this.store.load({params:{start:0, limit:25}});
     }
 });
 
-
-Ext.reg('resultsgrid', PaperPile.ResultsGrid);
-Ext.reg('resultsgridpubmed', PaperPile.ResultsGridPubMed);
-Ext.reg('resultsgriddb', PaperPile.ResultsGridDB);
- 
 
 
 

@@ -82,6 +82,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 	  onRowSelect: function(sm, rowIdx, r) {
         this.data_tabs.getComponent('pubsummary').updateDetail(r.data);
         this.data_tabs.getComponent('pubnotes').updateDetail(r.data);
+        this.data_tabs.getComponent('pubedit').updateDetail(r.data);
     },
 
     importJournals: function(){
