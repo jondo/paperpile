@@ -1,7 +1,13 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('PaperPile');
 
+
+
 PaperPile.Main = Ext.extend(Ext.Viewport, {
+
+    canvasWidth:null,
+    canvasHeight:null,
+    id:'MAIN',
     initComponent: function() {
         Ext.apply(this, 
                   {layout: 'border',
@@ -45,13 +51,15 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                              }
                                         ]
                                 },
-                                {region:'east',
-                                 margins: '2 2 2 2',
-                                 cmargins: '5 5 0 5',
-                                 width: 400,
-                                 minSize: 100,
-                                 maxSize: 800
-                                }, 
+                                new PaperPile.PDFviewer({
+                                    region:'east',
+                                    id: 'canvas_panel',
+                                    margins: '2 2 2 2',
+                                    cmargins: '5 5 0 5',
+                                    width: 500,
+                                    minSize: 100,
+                                    maxSize: 800,
+                                }),
                                 {itemId: 'innerpanel',
                                  region:'center',
                                  border: false,
@@ -76,6 +84,9 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 
         this.results_tabs=Ext.getCmp('results_tabs');
         this.data_tabs=Ext.getCmp('data_tabs');
+
+        this.on('afterlayout',this.onAfterLayout,this);
+
                  
 	  },
 
@@ -84,6 +95,15 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         this.data_tabs.getComponent('pubnotes').updateDetail(r.data);
         this.data_tabs.getComponent('pubedit').updateDetail(r.data);
     },
+
+    onAfterLayout: function(){
+
+       this.canvasWidth=Ext.getCmp('canvas_panel').getInnerWidth();
+       this.canvasHeight=Ext.getCmp('canvas_panel').getInnerHeight();
+
+    },
+
+
 
     importJournals: function(){
         statusBar = Ext.getCmp('statusbar');
@@ -121,6 +141,10 @@ Ext.onReady(function() {
     main.results_tabs.newDBtab();
     
     main.show();
+
+
+    Ext.getCmp('canvas_panel').initPDF();
+
 
     var button=Ext.getCmp('new_file_button');
     button.on('click', main.results_tabs.newFileTab,main.results_tabs);

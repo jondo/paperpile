@@ -16,6 +16,7 @@
   <script type="text/javascript" src="/js/pub-summary.js"></script>
   <script type="text/javascript" src="/js/pub-notes.js"></script>
   <script type="text/javascript" src="/js/pub-edit.js"></script>
+  <script type="text/javascript" src="/js/pdf-viewer.js"></script>
 
   <title>PaperPile</title>
 </head>

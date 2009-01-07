@@ -6,6 +6,7 @@ use parent 'Catalyst::Controller';
 use PaperPile::Library::Source::File;
 use PaperPile::Library::Source::DB;
 use PaperPile::Library::Source::PubMed;
+use PaperPile::PDFviewer;
 use Data::Dumper;
 
 sub test : Local  {
@@ -74,7 +75,7 @@ sub reset_session : Local {
   my ( $self, $c ) = @_;
 
   foreach my $key ( keys %{ $c->session } ) {
-    delete( $c->session->{$key} ) if $key =~ /^source/;
+    delete( $c->session->{$key} ) if $key =~ /^(source|viewer)/;
   }
 
   $c->forward('PaperPile::View::JSON');
@@ -167,6 +168,52 @@ sub _resultsgrid_format{
   $c->detach('PaperPile::View::JSON');
 
 }
+
+sub pdf_viewer : Local  {
+  my ( $self, $c ) = @_;
+
+  my $viewer_id = $c->request->params->{viewer_id};
+  my $file = $c->request->params->{file};
+  my $page = $c->request->params->{start}+1;
+  my $zoom = $c->request->params->{zoom};
+  my $canvas_width = $c->request->params->{canvas_width};
+  my $canvas_height = $c->request->params->{canvas_height};
+
+  my $pv;
+
+  if ( not defined $c->session->{"viewer_$viewer_id"} ) {
+
+    $pv = PaperPile::PDFviewer->new(
+                                    file          => $file,
+                                    canvas_width  => $canvas_width,
+                                    canvas_height => $canvas_height,
+                                   );
+    $pv->init;
+
+    $c->session->{"viewer_$viewer_id"} = $pv;
+  }
+  else {
+    $pv=$c->session->{"viewer_$viewer_id"};
+  }
+
+  my $image=$pv->render_page( $page, $zoom );
+
+  my %metaData = (totalProperty => 'total_pages',
+                  root          => 'data',
+                  fields        => [{name=>'image'}]
+                 );
+
+  $c->stash->{total_pages} = $pv->num_pages;
+  $c->stash->{data}  = [{image=>$image}];
+  $c->stash->{metaData}      = {%metaData};
+
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+
+
+
 
 
 =head1 NAME
