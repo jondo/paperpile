@@ -50,16 +50,28 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                                text: 'Import Journals',
                                              }
                                         ]
-                                },
-                                new PaperPile.PDFviewer({
+                                },{
                                     region:'east',
                                     id: 'canvas_panel',
+                                    layout: 'fit',
                                     margins: '2 2 2 2',
                                     cmargins: '5 5 0 5',
                                     width: 500,
                                     minSize: 100,
                                     maxSize: 800,
-                                }),
+                                    //items: {}
+                                        //new PaperPile.PDFviewer(
+                                        //    {id:'pdf_viewer',
+                                        //     itemId:'pdf_viewer',
+                                        //    }
+                                        //),
+                                        //new PaperPile.PubEdit(
+                                        //    {id:'pub_edit',
+                                        //     itemId:'pub_edit',
+                                        //    }
+                                        //)
+                                                                       
+                                },
                                 {itemId: 'innerpanel',
                                  region:'center',
                                  border: false,
@@ -84,6 +96,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 
         this.results_tabs=Ext.getCmp('results_tabs');
         this.data_tabs=Ext.getCmp('data_tabs');
+        this.canvas_panel=Ext.getCmp('canvas_panel');
 
         this.on('afterlayout',this.onAfterLayout,this);
 
@@ -93,7 +106,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 	  onRowSelect: function(sm, rowIdx, r) {
         this.data_tabs.getComponent('pubsummary').updateDetail(r.data);
         this.data_tabs.getComponent('pubnotes').updateDetail(r.data);
-        this.data_tabs.getComponent('pubedit').updateDetail(r.data);
+        //this.canvas_panel.getComponent('pub_edit').updateDetail(r.data);
     },
 
     onAfterLayout: function(){
@@ -117,7 +130,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
             },
             failure: this.markInvalid,
         })
-    }
+    },
 
 
 }
@@ -143,7 +156,9 @@ Ext.onReady(function() {
     main.show();
 
 
-    Ext.getCmp('canvas_panel').initPDF();
+    //Ext.getCmp('pdf_viewer').initPDF();
+    //Ext.getCmp('canvas_panel').layout.setActiveItem('pdf_viewer');
+    //Ext.getCmp('canvas_panel').layout.setActiveItem('pub_edit');
 
 
     var button=Ext.getCmp('new_file_button');

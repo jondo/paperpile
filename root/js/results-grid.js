@@ -30,7 +30,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             emptyMsg: "No papers to display",
             items:[ 
                 new Ext.Button({
-                    id: 'buttonx',
+                    id: 'grid_add_button',
                     text: 'Add',
                     cls: 'x-btn-text-icon add',
                     listeners: {
@@ -38,13 +38,22 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                     },
                 }),
                 new Ext.Button({
-                    id: 'buttonx',
+                    id: 'grid_delete_button',
                     text: 'Delete',
                     cls: 'x-btn-text-icon delete',
                     listeners: {
                         click:  {fn: this.deleteEntry, scope: this}
                     },
+                }),
+                new Ext.Button({
+                    id: 'grid_edit_button',
+                    text: 'Edit',
+                    cls: 'x-btn-text-icon edit',
+                    listeners: {
+                        click:  {fn: this.editEntry, scope: this}
+                    },
                 })
+
             ]
         });
     
@@ -112,6 +121,23 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         //this.store.remove(this.store.reload());
     },
 
+    editEntry: function(){
+        
+        var rowid=this.getSelectionModel().getSelected().get('rowid');
+        var sha1=this.getSelectionModel().getSelected().id;
+
+        var form = new PaperPile.PubEdit(
+            {id:'pub_edit',
+             itemId:'pub_edit',
+             data:this.getSelectionModel().getSelected(),
+             items: [{ fieldLabel: 'Type',  name: 'dummy', id:'dummy' }],
+            }
+        )
+        
+        Ext.getCmp('canvas_panel').add(form);
+        Ext.getCmp('canvas_panel').doLayout();
+
+    },
 
     onDestroy: function(cont, comp){
         Ext.Ajax.request({

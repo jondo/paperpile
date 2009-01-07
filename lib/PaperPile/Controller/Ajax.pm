@@ -3,6 +3,7 @@ package PaperPile::Controller::Ajax;
 use strict;
 use warnings;
 use parent 'Catalyst::Controller';
+use PaperPile::Library::Publication;
 use PaperPile::Library::Source::File;
 use PaperPile::Library::Source::DB;
 use PaperPile::Library::Source::PubMed;
@@ -211,9 +212,22 @@ sub pdf_viewer : Local  {
 
 }
 
+sub generate_edit_form : Local  {
+  my ( $self, $c ) = @_;
+
+  my $pub=PaperPile::Library::Publication->new();
+
+  my $pubtype = $c->request->params->{pubtype};
+
+  my $form=$pub->get_form($pubtype);
+
+  $c->stash->{form} = $form;
+
+  $c->forward('PaperPile::View::JSON');
 
 
 
+}
 
 
 =head1 NAME

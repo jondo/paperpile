@@ -269,5 +269,28 @@ sub _setcase {
   return $field;
 }
 
+sub get_form{
+
+  (my $self, my $type)=@_;
+
+  my @vanilla=( {fieldLabel => 'Type', name => 'pubtype'},
+                {fieldLabel => 'Title', name => 'title'},
+                {fieldLabel => 'Authors', name => 'authors_flat'},
+                {fieldLabel => 'Journal', name => 'journal_flat'},
+                {fieldLabel => 'Pages', name => 'pages'});
+
+  return [@vanilla];
+
+
+}
+
+
+
+
+
+
+
+
+
 1;
 
