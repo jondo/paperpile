@@ -6,6 +6,8 @@ use Digest::SHA1;
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
 use PaperPile::Schema::Publication;
+use 5.010;
+
 
 enum 'PublicationType' => (
   'ABST',      # Abstract
@@ -81,7 +83,7 @@ has 'abstract'       => ( is => 'rw', isa => 'Str' );
 has 'notes'          => ( is => 'rw', isa => 'Str' );
 has 'tags_flat'      => ( is => 'rw', isa => 'Str' );
 has 'pdf'            => ( is => 'rw', isa => 'Str' );
-has 'text'       => ( is => 'rw', isa => 'Str' );
+has 'text'           => ( is => 'rw', isa => 'Str' );
 has 'imported'       => ( is => 'rw', isa => 'Bool', default => 0 );
 has 'authors' => (
   is      => 'rw',
@@ -92,8 +94,6 @@ has 'editors' => ( is => 'rw', isa => 'ArrayRef[PaperPile::Library::Author]' );
 has 'journal' => ( is => 'rw', isa => 'PaperPile::Library::Journal' );
 has 'created' => ( is => 'rw', isa => 'Timestamp' );
 has 'last_read' => ( is => 'rw', isa => 'Timestamp' );
-
-
 
 sub BUILD {
 
@@ -269,28 +269,62 @@ sub _setcase {
   return $field;
 }
 
-sub get_form{
+sub get_form {
 
-  (my $self, my $type)=@_;
+  ( my $self, my $type ) = @_;
 
-  my @vanilla=( {fieldLabel => 'Type', name => 'pubtype'},
-                {fieldLabel => 'Title', name => 'title'},
-                {fieldLabel => 'Authors', name => 'authors_flat'},
-                {fieldLabel => 'Journal', name => 'journal_flat'},
-                {fieldLabel => 'Pages', name => 'pages'});
+  my %fields = (
+    'pubtype'        => { fieldLabel => 'Type'},
+    'key'            => { fieldLabel => 'Key'},
+    'title'          => { fieldLabel => 'Title'},
+    'title2'         => { fieldLabel => 'Book title'},
+    'title3'         => { fieldLabel => 'Series title'},
+    'authors_flat'   => { fieldLabel => 'Authors',},
+    'editors_flat'   => { fieldLabel => 'Editors',},
+    'authors_series' => { fieldLabel => 'Series Editors',},
+    'journal_flat'   => { fieldLabel => 'Journal',},
+    'volume'         => { fieldLabel => 'Volume',},
+    'issue'          => { fieldLabel => 'Issue (number)',},
+    'pages'          => { fieldLabel => 'Pages',},
+    'publisher'      => { fieldLabel => 'Publisher',},
+    'city'           => { fieldLabel => 'City',},
+    'address'        => { fieldLabel => 'Address',},
+    'date'           => { fieldLabel => 'Date',},
+    'year'           => { fieldLabel => 'Year',},
+    'month'          => { fieldLabel => 'Month',},
+    'day'            => { fieldLabel => 'Day',},
+    'issn'           => { fieldLabel => 'ISSN',},
+    'pmid'           => { fieldLabel => 'Pubmed ID',},
+    'doi'            => { fieldLabel => 'DOI',},
+    'url'            => { fieldLabel => 'URL',},
+    'abstract'       => { fieldLabel => 'Abstract',},
+    'pdf'            => { fieldLabel => 'PDF file',},
+    'created'        => { fieldLabel => 'Creation date',},
+    'last_read'      => { fieldLabel => 'Last read',},
+ );
 
-  return [@vanilla];
+  my @list;
 
+  given($type){
+
+    when ('JOUR'){
+      @list=('pubtype', 'key', 'title', 'authors_flat','journal_flat',
+             'volume', 'issue', 'pages', 'month', 'day', 'year',
+             'issn', 'pmid', 'url', 'abstract', 'pdf', 'created');
+    }
+  }
+
+
+  my @out;
+
+  foreach my $name (@list){
+    $fields{$name}->{name}=$name;
+    push @out, $fields{$name};
+  }
+
+  return [@out];
 
 }
-
-
-
-
-
-
-
-
 
 1;
 

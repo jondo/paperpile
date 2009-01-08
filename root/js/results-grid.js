@@ -130,6 +130,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             {id:'pub_edit',
              itemId:'pub_edit',
              data:this.getSelectionModel().getSelected(),
+             source_id: this.id, 
              items: [{ fieldLabel: 'Type',  name: 'dummy', id:'dummy' }],
             }
         )

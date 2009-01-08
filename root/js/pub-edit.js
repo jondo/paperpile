@@ -7,14 +7,26 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
 				        background: '#ffffff',
 				        padding: '7px'
 			      },
-            bbar: [{ text: 'Save',
-                     id: 'edit_save_button',
-                   },
-                   { text: 'Cancel',
-                     id: 'edit_cancel_button',
-                   }
-                  ],
             
+
+            bbar:[
+                new Ext.Button({
+                    id: 'edit_save_button',
+                    text: 'Save',
+                    cls: 'x-btn-text-icon add',
+                    listeners: {
+                        click:  {fn: this.save, scope: this}
+                    },
+                }),
+                new Ext.Button({
+                    id: 'edit_cancel_button',
+                    text: 'Cancel',
+                    cls: 'x-btn-text-icon delete',
+                    listeners: {
+                        click:  {fn: this.cancel, scope: this}
+                    },
+                }),
+            ],
             labelWidth: 75,
             width: 350,
             defaults: {width: 230},
@@ -26,7 +38,7 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
         
         Ext.Ajax.request({
             url: '/ajax/generate_edit_form',
-            params: { pubtype: 'journal',
+            params: { pubtype: 'JOUR',
                     },
             method: 'GET',
             success: this.setForm,
@@ -35,6 +47,7 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
 
 
 	  },
+
     updateDetail: function(data) {
         //this.getForm().loadRecord(data);
 
@@ -63,7 +76,39 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
         Ext.getCmp('pub_edit').getForm().loadRecord(data);
 
 
+    },
+
+    save: function(){
+
+
+
+        // Masks form instead of whole window, should set to dedicated
+        // notification area later
+        this.getForm().waitMsgTarget='pub_edit';
+
+        this.getForm().submit(
+            {   url:'/ajax/update_entry',
+                scope:this,
+                success:this.onSuccess,
+                params:{rowid:this.data.get('rowid'),
+                        source_id: this.source_id,
+                       },
+                waitMsg:'Saving...',
+            }
+        );
+    },
+
+    onSuccess: function(form,action){
+
+        Ext.getCmp('canvas_panel').remove('pub_edit');
+        Ext.getCmp('canvas_panel').doLayout();
+
+        //alert('inhere');
+
     }
+
+    
+
 
 
 });

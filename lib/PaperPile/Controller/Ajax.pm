@@ -17,48 +17,64 @@ sub test : Local  {
 }
 
 
-sub insert_entry : Local {
-  my ( $self, $c ) = @_;
+ sub insert_entry : Local {
+   my ( $self, $c ) = @_;
 
-  my $source_id = $c->request->params->{source_id};
-  my $sha1    = $c->request->params->{sha1};
+   my $source_id = $c->request->params->{source_id};
+   my $sha1    = $c->request->params->{sha1};
 
-  my $source = $c->session->{"source_$source_id"};
+   my $source = $c->session->{"source_$source_id"};
 
-  my $pub = $source->find_sha1($sha1);
+   my $pub = $source->find_sha1($sha1);
 
-  $c->model('DB')->create_pub($pub);
+   $c->model('DB')->create_pub($pub);
 
-  $pub->imported(1);
+   $pub->imported(1);
 
-  $c->stash->{return_value} = 1;
-  $c->forward('PaperPile::View::JSON');
+   $c->stash->{return_value} = 1;
+   $c->forward('PaperPile::View::JSON');
 
-}
+ }
 
-sub delete_entry : Local {
-  my ( $self, $c ) = @_;
+ sub delete_entry : Local {
+   my ( $self, $c ) = @_;
 
-  my $source_id = $c->request->params->{source_id};
-  my $rowid    = $c->request->params->{rowid};
+   my $source_id = $c->request->params->{source_id};
+   my $rowid    = $c->request->params->{rowid};
 
-  my $source = $c->session->{"source_$source_id"};
+   my $source = $c->session->{"source_$source_id"};
 
-  $c->model('DB')->delete_pubs([$rowid]);
+   $c->model('DB')->delete_pubs([$rowid]);
 
-  $c->stash->{return_value} = 1;
-  $c->forward('PaperPile::View::JSON');
+   $c->stash->{return_value} = 1;
+   $c->forward('PaperPile::View::JSON');
 
-}
+ }
 
-sub import_journals :Local {
-  my ( $self, $c ) = @_;
+ sub update_entry : Local {
+   my ( $self, $c ) = @_;
 
-  $c->model('DB')->import_journal_file("/home/wash/play/PaperPile/data/jabref.txt");
-  $c->stash->{return_value} = 1;
-  $c->forward('PaperPile::View::JSON');
+   my $source_id = $c->request->params->{source_id};
+   my $rowid    = $c->request->params->{rowid};
+   my $source = $c->session->{"source_$source_id"};
 
-}
+   $c->model('DB')->delete_pubs([$rowid]);
+
+   $c->stash->{success} = 'true';
+   $c->forward('PaperPile::View::JSON');
+
+ }
+
+
+
+ sub import_journals :Local {
+   my ( $self, $c ) = @_;
+
+   $c->model('DB')->import_journal_file("/home/wash/play/PaperPile/data/jabref.txt");
+   $c->stash->{return_value} = 1;
+   $c->forward('PaperPile::View::JSON');
+
+ }
 
 
 
@@ -139,36 +155,35 @@ sub resultsgrid : Local {
 
 }
 
-sub _resultsgrid_format{
+ sub _resultsgrid_format{
 
-  my ( $self, $c, $entries, $total_entries ) = @_;
+   my ( $self, $c, $entries, $total_entries ) = @_;
 
-  my @data = ();
+   my @data = ();
 
-  foreach my $pub (@$entries) {
-    push @data, $pub->as_hash;
-  }
+   foreach my $pub (@$entries) {
+     push @data, $pub->as_hash;
+   }
 
+   my @fields = ();
 
-  my @fields = ();
+   #foreach my $key ( keys %{ $entries->[0] } ) {
+   foreach my $key (keys %{$entries->[0]->as_hash}) {
+     push @fields, { name => $key };
+   }
 
-  foreach my $key ( keys %{ $entries->[0] } ) {
-    push @fields, { name => $key };
-  }
+   my %metaData = (
+                   totalProperty => 'total_entries',
+                   root          => 'data',
+                   id            => 'sha1',
+                   fields        => [@fields]
+                  );
+   $c->stash->{total_entries} = $total_entries;
+   $c->stash->{data}          = [@data];
+   $c->stash->{metaData}      = {%metaData};
+   $c->detach('PaperPile::View::JSON');
 
-  my %metaData = (
-                  totalProperty => 'total_entries',
-                  root          => 'data',
-                  id            => 'sha1',
-                  fields        => [@fields]
-                 );
-  $c->stash->{total_entries} = $total_entries;
-  $c->stash->{data}          = [@data];
-  $c->stash->{metaData}      = {%metaData};
-
-  $c->detach('PaperPile::View::JSON');
-
-}
+ }
 
 sub pdf_viewer : Local  {
   my ( $self, $c ) = @_;
@@ -224,8 +239,6 @@ sub generate_edit_form : Local  {
   $c->stash->{form} = $form;
 
   $c->forward('PaperPile::View::JSON');
-
-
 
 }
 
