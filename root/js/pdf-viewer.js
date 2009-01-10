@@ -11,7 +11,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 		    _store=new Ext.data.Store(
             {id: 'data',
              proxy: new Ext.data.HttpProxy({
-                 url: '/ajax/pdf_viewer', 
+                 url: '/ajax/pdf/pdf_viewer', 
                  method: 'GET'
              }),
              baseParams:{viewer_id: this.id,

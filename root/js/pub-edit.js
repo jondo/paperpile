@@ -35,7 +35,7 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
 
         
         Ext.Ajax.request({
-            url: '/ajax/generate_edit_form',
+            url: '/ajax/crud/generate_edit_form',
             params: { pubtype: 'JOUR',
                     },
             method: 'GET',
@@ -83,7 +83,7 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
         this.getForm().waitMsgTarget='pub_edit';
 
         this.getForm().submit(
-            {   url:'/ajax/update_entry',
+            {   url:'/ajax/crud/update_entry',
                 scope:this,
                 success:this.onSuccess,
                 params:{rowid:this.data.get('rowid'),

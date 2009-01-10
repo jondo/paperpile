@@ -2,7 +2,6 @@ Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('PaperPile');
 
 
-
 PaperPile.Main = Ext.extend(Ext.Viewport, {
 
     canvasWidth:null,
@@ -125,7 +124,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         statusBar.showBusy();
         statusBar.setText('Importing journals titles');
         Ext.Ajax.request({
-            url: '/ajax/import_journals',
+            url: '/ajax/misc/import_journals',
             success: function(){
                 statusBar.clearStatus();
                 statusBar.setText('Import done.');
@@ -140,7 +139,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         statusBar.showBusy();
         statusBar.setText('Resetting database');
         Ext.Ajax.request({
-            url: '/ajax/reset_db',
+            url: '/ajax/misc/reset_db',
             success: function(){
                 statusBar.clearStatus();
                 statusBar.setText('Reset finished.');
@@ -159,7 +158,7 @@ Ext.onReady(function() {
  
     Ext.QuickTips.init();
     Ext.Ajax.request({
-        url: '/ajax/reset_session',
+        url: '/ajax/misc/reset_session',
         //success: this.validateFeed,
         //failure: this.markInvalid,
     });

@@ -9,7 +9,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
         var _store=new Ext.data.Store(
             {proxy: new Ext.data.HttpProxy({
-                 url: '/ajax/resultsgrid', 
+                 url: '/ajax/grid/resultsgrid', 
                  method: 'GET'
              }),
              baseParams:{source_id: this.id,
@@ -97,7 +97,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         
         var sha1=this.getSelectionModel().getSelected().id;
         Ext.Ajax.request({
-            url: '/ajax/insert_entry',
+            url: '/ajax/crud/insert_entry',
             params: { sha1: sha1,
                       source_id: this.id,
                     },
@@ -118,7 +118,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         var sha1=this.getSelectionModel().getSelected().id;
 
         Ext.Ajax.request({
-            url: '/ajax/delete_entry',
+            url: '/ajax/crud/delete_entry',
             params: { rowid: rowid,
                       source_id: this.id,
                     },
@@ -155,7 +155,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
     onDestroy: function(cont, comp){
         Ext.Ajax.request({
-            url: '/ajax/delete_grid',
+            url: '/ajax/grid/delete_grid',
             params: { source_id: this.id,
                     },
             method: 'GET'

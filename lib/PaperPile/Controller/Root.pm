@@ -28,7 +28,7 @@ PaperPile::Controller::Root - Root Controller for PaperPile
 
 sub index : Path : Args(0) {
   my ( $self, $c ) = @_;
-  $c->stash->{template} = 'test/main.mas';
+  $c->stash->{template} = 'main.mas';
   $c->forward('PaperPile::View::Mason');
 }
 
