@@ -34,21 +34,25 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                  items: [{ xtype: 'button',
                                            itemId: 'new_file_button',
                                            id: 'new_file_button',
-                                           text: 'New file tab',
-                                         },
+                                           text: 'New file tab',}
+                                         ,{ xtype: 'button',
+                                            itemId: 'new_db_button',
+                                            id: 'new_db_button',
+                                            text: 'New DB tab',
+                                          },{ xtype: 'button',
+                                              itemId: 'new_pubmed_button',
+                                              id: 'new_pubmed_button',
+                                              text: 'New PubMed tab',
+                                            },{ xtype: 'button',
+                                                itemId: 'import_journals_button',
+                                                id: 'import_journals_button',
+                                                text: 'Import Journals',
+                                              },
                                          { xtype: 'button',
-                                           itemId: 'new_db_button',
-                                           id: 'new_db_button',
-                                           text: 'New DB tab',
-                                         },{ xtype: 'button',
-                                             itemId: 'new_pubmed_button',
-                                             id: 'new_pubmed_button',
-                                             text: 'New PubMed tab',
-                                           },{ xtype: 'button',
-                                               itemId: 'import_journals_button',
-                                               id: 'import_journals_button',
-                                               text: 'Import Journals',
-                                             }
+                                           itemId: 'reset_db_button',
+                                           id: 'reset_db_button',
+                                           text: 'Reset database',
+                                         }
                                         ]
                                 },{
                                     region:'east',
@@ -116,8 +120,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 
     },
 
-
-
     importJournals: function(){
         statusBar = Ext.getCmp('statusbar');
         statusBar.showBusy();
@@ -132,6 +134,20 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         })
     },
 
+
+    resetDB: function(){
+        statusBar = Ext.getCmp('statusbar');
+        statusBar.showBusy();
+        statusBar.setText('Resetting database');
+        Ext.Ajax.request({
+            url: '/ajax/reset_db',
+            success: function(){
+                statusBar.clearStatus();
+                statusBar.setText('Reset finished.');
+            },
+            failure: this.markInvalid,
+        })
+    },
 
 }
 
@@ -172,6 +188,10 @@ Ext.onReady(function() {
 
     var button=Ext.getCmp('import_journals_button');
     button.on('click', main.importJournals,main);
+
+    var button=Ext.getCmp('reset_db_button');
+    button.on('click', main.resetDB,main);
+    
 
      
 });

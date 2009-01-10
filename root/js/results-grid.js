@@ -8,8 +8,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
     initComponent:function() {
 
         var _store=new Ext.data.Store(
-            {id: 'data',
-             proxy: new Ext.data.HttpProxy({
+            {proxy: new Ext.data.HttpProxy({
                  url: '/ajax/resultsgrid', 
                  method: 'GET'
              }),
@@ -30,7 +29,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             emptyMsg: "No papers to display",
             items:[ 
                 new Ext.Button({
-                    id: 'grid_add_button',
+                    //id: 'grid_add_button',
                     text: 'Add',
                     cls: 'x-btn-text-icon add',
                     listeners: {
@@ -38,7 +37,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                     },
                 }),
                 new Ext.Button({
-                    id: 'grid_delete_button',
+                    //id: 'grid_delete_button',
                     text: 'Delete',
                     cls: 'x-btn-text-icon delete',
                     listeners: {
@@ -46,11 +45,12 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                     },
                 }),
                 new Ext.Button({
-                    id: 'grid_edit_button',
+                    //id: 'grid_edit_button',
                     text: 'Edit',
                     cls: 'x-btn-text-icon edit',
                     listeners: {
-                        click:  {fn: this.editEntry, scope: this}
+                        //click:  {fn: this.editEntry, scope: this}
+                        click:  {fn: function(){alert(this.id)}, scope: this}
                     },
                 })
 
@@ -58,7 +58,12 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         });
     
         var renderPub=function(value, p, record){
-            return String.format('<p><b>{0}</b></p>{1}',record.data.title,record.data.authors_flat);
+
+            var t = new Ext.Template(
+                    '<p><b>{title}</b></p>{authors}'
+            )
+            
+            return t.apply({title:record.data.title,authors:record.data.authors_flat});
         }
     
         Ext.apply(this, {
@@ -94,8 +99,11 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             params: { sha1: sha1,
                       source_id: this.id,
                     },
-            method: 'GET'
-            //success: this.validateFeed,
+            method: 'GET',
+            success: function(){
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Entry deleted.');
+            },
             //failure: this.markInvalid,
         });
 
@@ -112,7 +120,11 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             params: { rowid: rowid,
                       source_id: this.id,
                     },
-            method: 'GET'
+            method: 'GET',
+            success: function(){
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Entry deleted.');
+            },
             //success: this.validateFeed,
             //failure: this.markInvalid,
         });

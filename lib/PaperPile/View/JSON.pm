@@ -3,6 +3,20 @@ package PaperPile::View::JSON;
 use strict;
 use base 'Catalyst::View::JSON';
 
+#use JSON::XS;
+
+#sub encode_json {
+#  my($self, $c, $data) = @_;
+#  my $encoder = JSON::XS->new->ascii->pretty->allow_nonref;
+#  $encoder->encode($data);
+#}
+
+
+
+
+
+
+
 =head1 NAME
 
 PaperPile::View::JSON - Catalyst JSON View

@@ -5,18 +5,18 @@
   <link rel="stylesheet" type="text/css" href="/ext/resources/css/xtheme-gray.css">
   <link rel="stylesheet" type="text/css" href="/css/paperpile.css">
 
-  <script type="text/javascript" src="/ext/adapter/ext/ext-base.js"></script>
-  <script type="text/javascript" src="/ext/ext-all-debug.js"></script>
-  <script type="text/javascript" src="/js/search-field.js"></script>
-  <script type="text/javascript" src="/js/filter-field.js"></script>
-  <script type="text/javascript" src="/js/paperpile.js"></script>
-  <script type="text/javascript" src="/js/results-grid.js"></script>
-  <script type="text/javascript" src="/js/results-tabs.js"></script>
-  <script type="text/javascript" src="/js/data-tabs.js"></script>
-  <script type="text/javascript" src="/js/pub-summary.js"></script>
-  <script type="text/javascript" src="/js/pub-notes.js"></script>
-  <script type="text/javascript" src="/js/pub-edit.js"></script>
-  <script type="text/javascript" src="/js/pdf-viewer.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/ext/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/search-field.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/filter-field.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/paperpile.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/results-grid.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/results-tabs.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/data-tabs.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pub-summary.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pub-notes.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pub-edit.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pdf-viewer.js"></script>
 
   <title>PaperPile</title>
 </head>

@@ -18,15 +18,14 @@ has 'entries_per_page' => (
 );
 
 has 'total_entries' => ( is => 'rw', isa => 'Int' );
-has '_iter'         => ( is => 'rw', isa => 'MooseX::Iterator::Array' );
-has '_pager'        => ( is => 'rw', isa => 'Data::Page' );
-has '_data'         => ( is => 'rw', isa => 'ArrayRef' );
+has '_hash'  => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
+has '_pager' => ( is => 'rw', isa => 'Data::Page' );
 
-sub BUILD{
+sub BUILD {
 
-  (my $self) = @_;
+  ( my $self ) = @_;
 
-  $self->_pager(Data::Page->new() );
+  $self->_pager( Data::Page->new() );
 
 }
 
@@ -35,30 +34,16 @@ sub connect {
   return undef;
 }
 
-sub next {
-  my $self = shift;
-  return $self->_iter->next;
-}
-
-sub has_next {
-  my $self = shift;
-  return $self->_iter->has_next;
-}
-
-sub peek {
-  my $self = shift;
-  return $self->_iter->peek;
-}
-
-sub all {
-  my $self = shift;
-  return $self->_data;
-}
-
 sub page {
   ( my $self, my $pg ) = @_;
   $self->_pager->current_page($pg);
-  return $self->_get_data_for_page;
+
+  my $data = $self->_get_data_for_page;
+
+  $self->_save_page_to_hash($data);
+
+  return $data;
+
 }
 
 sub page_from_offset {
@@ -69,14 +54,21 @@ sub page_from_offset {
   return $self->page($page);
 }
 
+sub _save_page_to_hash {
+
+  ( my $self, my $data ) = @_;
+
+  foreach my $entry (@$data) {
+    $self->_hash->{ $entry->sha1 } = $entry;
+  }
+}
+
 sub find_sha1 {
 
   ( my $self, my $sha1 ) = @_;
 
-  foreach my $entry (@{$self->all}){
-    return $entry if ($entry->sha1 eq $sha1);
-  }
-}
+  return $self->_hash->{$sha1};
 
+}
 
 1;

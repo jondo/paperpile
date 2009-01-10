@@ -23,18 +23,9 @@ sub connect {
 
   $self->total_entries($self->_pager->total_entries);
 
-  #$self->_iter( MooseX::Iterator::Array->new( collection => $self->_data ) );
-
   return $self->total_entries;
 }
 
-sub page {
-  ( my $self, my $pg ) = @_;
-
-  $self->_pager->current_page($pg);
-
-  return $self->_get_data_for_page;
-}
 
 
 sub _get_data_for_page {

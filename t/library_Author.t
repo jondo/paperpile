@@ -59,15 +59,41 @@ $author = PaperPile::Library::Author->new(
 
 is( $author->id, "STADLER_JR_PF", "Automatically create id" );
 
-is ($author->flat, "Stadler jr PF", "flat");
+is( $author->flat, "Stadler jr PF", "flat" );
 
 $author = PaperPile::Library::Author->new(
-  initials        => 'H',
-  last_name       => 'von Hugo',
-  suffix          => ''
+  initials  => 'H',
+  last_name => 'von Hugo',
+  suffix    => ''
 );
 
-is ($author->flat, "von Hugo H", "flat");
+is( $author->flat, "von Hugo H", "flat" );
+
+$author_manual = PaperPile::Library::Author->new(
+  initials   => 'PF',
+  last_name  => 'Stadler',
+  suffix     => 'jr',
+  names_flat => 'Stadler jr PF'
+);
+
+$author_from_flat =
+  PaperPile::Library::Author->new( names_flat => 'Stadler jr PF' );
+
+is_deeply( $author_from_flat, $author_manual,
+  "Parsing object from flat name 1." );
+
+$author_manual = PaperPile::Library::Author->new(
+  initials  => 'H',
+  last_name => 'von Hugo',
+  names_flat  => 'von Hugo H'
+);
+
+$author_from_flat =
+  PaperPile::Library::Author->new( names_flat => 'von Hugo H' );
+
+is_deeply( $author_from_flat, $author_manual,
+  "Parsing object from flat name 2." );
+
 
 
 

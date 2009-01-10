@@ -79,12 +79,16 @@ __PACKAGE__->set_primary_key("rowid");
 __PACKAGE__->add_unique_constraint("sha1_unique", ["sha1"]);
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-28 16:38:07
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:IXQgLeEy3TkRS8i0VM0DWg
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-01-09 21:06:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:w/3bnt8+a38l8X0O+lgI0A
 
 
 # You can replace this text with custom content, and it will be preserved on regeneration
 
+use DBIx::Class::UTF8Columns;
+
+
+# __PACKAGE__->utf8_columns(qw/authors_flat/);
 
 __PACKAGE__->has_many(
   author_publication => 'PaperPile::Schema::AuthorPublication',

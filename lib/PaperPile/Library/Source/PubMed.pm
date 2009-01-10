@@ -43,8 +43,6 @@ sub connect {
   $self->query_key( $result->{QueryKey} );
   $self->total_entries( $result->{Count} );
 
-  #$self->_iter( MooseX::Iterator::Array->new( collection => $self->_data ) );
-
   $self->_pager( Data::Page->new() );
   $self->_pager->total_entries( $self->total_entries );
   $self->_pager->entries_per_page( $self->entries_per_page );
@@ -59,6 +57,10 @@ sub page_from_offset {
   my $xml = $self->_pubFetch( $offset, $limit );
 
   my $page = $self->_read_xml($xml);
+
+  $self->_save_page_to_hash($page);
+
+  return $page;
 
 }
 

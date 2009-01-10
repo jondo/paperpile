@@ -11,8 +11,48 @@ use PaperPile::Model::DB;
 extends 'PaperPile::Library::Source';
 
 has 'file' => ( is => 'rw', isa => 'Str' );
+has '_data'         => ( is => 'rw', isa => 'ArrayRef' );
 
-my %map = (
+
+sub connect {
+  my $self = shift;
+  $self->_data( $self->_read_file() );
+
+  $self->total_entries( scalar( @{ $self->_data } ) );
+
+  $self->_pager( Data::Page->new() );
+  $self->_pager->total_entries( $self->total_entries );
+  $self->_pager->entries_per_page( $self->entries_per_page );
+  $self->_pager->current_page(1);
+
+  return $self->total_entries;
+}
+
+sub all {
+  my $self = shift;
+  return $self->_data;
+}
+
+
+sub _get_data_for_page {
+  my $self = shift;
+
+  my @output = ();
+
+  for my $i ( $self->_pager->first .. $self->_pager->last ) {
+    push @output, $self->_data->[ $i - 1 ];
+  }
+
+  return [@output];
+
+}
+
+sub _read_file {
+
+  my $self = shift;
+  my $file = $self->file;
+
+  my %map = (
   'TY' => 'pubtype',
   'T1' => 'title',
   'TI' => 'title',
@@ -37,39 +77,6 @@ my %map = (
   'L1' => 'pdf',
   #'ID' => 'id',
 );
-
-sub connect {
-  my $self = shift;
-  $self->_data( $self->_read_file() );
-
-  $self->total_entries( scalar( @{ $self->_data } ) );
-
-  $self->_iter( MooseX::Iterator::Array->new( collection => $self->_data ) );
-  $self->_pager( Data::Page->new() );
-  $self->_pager->total_entries( $self->total_entries );
-  $self->_pager->entries_per_page( $self->entries_per_page );
-  $self->_pager->current_page(1);
-
-  return $self->total_entries;
-}
-
-sub _get_data_for_page {
-  my $self = shift;
-
-  my @output = ();
-
-  for my $i ( $self->_pager->first .. $self->_pager->last ) {
-    push @output, $self->_data->[ $i - 1 ];
-  }
-
-  return [@output];
-
-}
-
-sub _read_file {
-
-  my $self = shift;
-  my $file = $self->file;
 
   my @data;
 

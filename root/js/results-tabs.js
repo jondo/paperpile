@@ -38,7 +38,7 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
     newPubMedTab:function(){
         this.add(new PaperPile.ResultsGridPubMed({
             source_query: '',
-            iconCls: 'pubmed',
+            iconCls: 'tabs',
         })).show();
     }
   

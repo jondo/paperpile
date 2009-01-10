@@ -16,8 +16,8 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("author_id", "publication_id");
 
 
-# Created by DBIx::Class::Schema::Loader v0.04005 @ 2008-12-28 16:38:07
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:JYOnWvpoPosfJok2/CuKNg
+# Created by DBIx::Class::Schema::Loader v0.04005 @ 2009-01-09 21:06:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:JL9MoPP8xpOo0ROv7k4nqQ
 
 __PACKAGE__->belongs_to(author => 'PaperPile::Schema::Author', 'author_id');
 __PACKAGE__->belongs_to(publication => 'PaperPile::Schema::Publication', 'publication_id');

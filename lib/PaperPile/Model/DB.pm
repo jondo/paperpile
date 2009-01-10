@@ -18,6 +18,24 @@ __PACKAGE__->config(
   connect_info => [ 'dbi:SQLite:/home/wash/play/PaperPile/db/default.db', ],
 );
 
+
+
+sub reset_db{
+
+  ( my $self) = @_;
+
+  my $publication_table        = $self->resultset('Publication');
+  my $author_publication_table = $self->resultset('AuthorPublication');
+  my $author_table             = $self->resultset('Author');
+  my $journal_table            = $self->resultset('Journal');
+
+  $publication_table->delete();
+  $author_publication_table->delete();
+  $author_table->delete();
+
+
+}
+
 sub import_lib {
 
   ( my $self, my $lib ) = @_;
@@ -83,6 +101,8 @@ sub update_pub {
   return $rowid;
 
 }
+
+
 
 sub delete_pubs {
 
@@ -171,7 +191,13 @@ sub fulltext_search {
       my $column ( $self->resultset('Publication')->result_source->columns )
     {
       if ( $row->get_column($column) ) {
-        $data->{$column} = $row->get_column($column);
+        my $x=$row->get_column($column);
+        # Some unicode magic going one here. In principle perl uses utf-8 and 
+        # sqlite used utf8. Howver, strings returned by this DBIx::Class function
+        # are not perl utf-8 strings. We use here utf8::decode which seems to work, 
+        # which does not seem that everything is right unicode-wise, so take care...
+        utf8::decode($x);
+        $data->{$column} = $x;
       }
     }
     push @output, PaperPile::Library::Publication->new($data);
