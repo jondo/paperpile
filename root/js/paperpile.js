@@ -158,7 +158,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 Ext.onReady(function() {
  
     Ext.QuickTips.init();
-    Ext.enableListenerCollection=true;
     Ext.Ajax.request({
         url: '/ajax/reset_session',
         //success: this.validateFeed,
