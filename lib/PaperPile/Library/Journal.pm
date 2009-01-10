@@ -10,5 +10,21 @@ has 'url'   => ( is => 'rw', isa => 'Str' );
 has 'icon'  => ( is => 'rw', isa => 'Str' );
 has 'is_user_journal'  => ( is => 'rw', isa => 'Bool' );
 
+sub BUILD {
+
+  my ( $self, $params ) = @_;
+
+  if ( $params->{id} ) {
+    my $i=$params->{id};
+    $i=~s/_/ /g;
+    $self->short($i);
+  }
+
+
+}
+
+
+
+
 1;
 

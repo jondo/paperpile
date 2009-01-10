@@ -10,6 +10,7 @@ use PaperPile::Library::Source::PubMed;
 use PaperPile::PDFviewer;
 use Encode::JavaScript::UCS;
 use Data::Dumper;
+use 5.010;
 
 sub test : Local {
   my ( $self, $c ) = @_;
@@ -22,7 +23,6 @@ sub reset_db : Local {
   my ( $self, $c ) = @_;
 
   $c->model('DB')->reset_db;
-
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 
@@ -34,7 +34,6 @@ sub insert_entry : Local {
 
   my $source_id = $c->request->params->{source_id};
   my $sha1      = $c->request->params->{sha1};
-
   my $source = $c->session->{"source_$source_id"};
 
   my $pub = $source->find_sha1($sha1);
@@ -68,9 +67,25 @@ sub update_entry : Local {
 
   my $source_id = $c->request->params->{source_id};
   my $rowid     = $c->request->params->{rowid};
-  my $source    = $c->session->{"source_$source_id"};
+  my $sha1      = $c->request->params->{sha1};
+
+  # get old data
+  my $source = $c->session->{"source_$source_id"};
+  my $pub = $source->find_sha1($sha1);
+  my $data=$pub->as_hash;
+
+  # apply new values to old entry
+  foreach my $field (keys %{$c->request->params}){
+    next if $field=~/source_id/;
+    $data->{$field}=$c->request->params->{$field};
+  }
+
+  my $newPub=PaperPile::Library::Publication->new($data);
 
   $c->model('DB')->delete_pubs( [$rowid] );
+
+  $c->model('DB')->create_pub($newPub);
+
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
@@ -171,13 +186,7 @@ sub _resultsgrid_format {
   my @data = ();
 
   foreach my $pub (@$entries) {
-
-    my $h= $pub->as_hash;
-
-    foreach my $key (keys %$h){
-      #$h->{$key}=Encode::JavaScript::UCS::encode("JavaScript-UCS", $h->{$key});
-    }
-    push @data, $h;
+    push @data,  $pub->as_hash;
   }
 
   my @fields = ();
@@ -193,8 +202,6 @@ sub _resultsgrid_format {
     id            => 'sha1',
     fields        => [@fields]
   );
-
-  $c->log->debug($data[0]->{authors_flat});
 
   $c->component('View::JSON')->encoding('utf8');
 

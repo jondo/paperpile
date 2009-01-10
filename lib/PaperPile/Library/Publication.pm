@@ -3,6 +3,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use MooseX::Timestamp;
 use Digest::SHA1;
+use Data::Dumper;
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
 use PaperPile::Schema::Publication;
@@ -60,44 +61,58 @@ has 'title' => (
 );
 has 'title2' => ( is => 'rw', isa => 'Str', default => 'No title.' );
 has 'title3' => ( is => 'rw', isa => 'Str', default => 'No title.' );
-has 'authors_flat'   => ( is => 'rw', isa => 'Str' );
-has 'editors_flat'   => ( is => 'rw', isa => 'Str' );
-has 'authors_series' => ( is => 'rw', isa => 'Str' );
-has 'journal_flat'   => ( is => 'rw', isa => 'Str' );
-has 'journal_id'     => ( is => 'rw', isa => 'Str' );
-has 'volume'         => ( is => 'rw', isa => 'Str' );
-has 'issue'          => ( is => 'rw', isa => 'Str' );
-has 'pages'          => ( is => 'rw', isa => 'Str' );
-has 'publisher'      => ( is => 'rw', isa => 'Str' );
-has 'city'           => ( is => 'rw', isa => 'Str' );
-has 'address'        => ( is => 'rw', isa => 'Str' );
-has 'date'           => ( is => 'rw', isa => 'Str' );
-has 'year'           => ( is => 'rw', isa => 'Int' );
-has 'month'          => ( is => 'rw', isa => 'Str' );
-has 'day'            => ( is => 'rw', isa => 'Str' );
-has 'issn'           => ( is => 'rw', isa => 'Str' );
-has 'pmid'           => ( is => 'rw', isa => 'Int' );
-has 'doi'            => ( is => 'rw', isa => 'Str' );
-has 'url'            => ( is => 'rw', isa => 'Str' );
-has 'abstract'       => ( is => 'rw', isa => 'Str' );
-has 'notes'          => ( is => 'rw', isa => 'Str' );
-has 'tags_flat'      => ( is => 'rw', isa => 'Str' );
-has 'pdf'            => ( is => 'rw', isa => 'Str' );
-has 'text'           => ( is => 'rw', isa => 'Str' );
+has 'authors_flat'   => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'editors_flat'   => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'authors_series' => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'journal_flat'   => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'journal_id'     => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'volume'         => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'issue'          => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'pages'          => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'publisher'      => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'city'           => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'address'        => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'date'           => ( is => 'rw', isa => 'Maybe[Str]');
+has 'year'           => ( is => 'rw', isa => 'Maybe[Int]' );
+has 'month'          => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'day'            => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'issn'           => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'pmid'           => ( is => 'rw', isa => 'Maybe[Int]' );
+has 'doi'            => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'url'            => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'abstract'       => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'notes'          => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'tags_flat'      => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'pdf'            => ( is => 'rw', isa => 'Maybe[Str]' );
+has 'text'           => ( is => 'rw', isa => 'Maybe[Str]' );
 has 'imported'       => ( is => 'rw', isa => 'Bool', default => 0 );
 has 'authors' => (
   is      => 'rw',
   isa     => 'ArrayRef[PaperPile::Library::Author]',
   trigger => sub { my $self = shift; $self->refresh_fields }
 );
-has 'editors' => ( is => 'rw', isa => 'ArrayRef[PaperPile::Library::Author]' );
+has 'editors' => ( is => 'rw', isa => 'Maybe[ArrayRef[PaperPile::Library::Author]]' );
 has 'journal' => ( is => 'rw', isa => 'PaperPile::Library::Journal' );
 has 'created' => ( is => 'rw', isa => 'Timestamp' );
-has 'last_read' => ( is => 'rw', isa => 'Timestamp' );
+has 'last_read' => ( is => 'rw', isa => 'Maybe[Timestamp]' );
 
 sub BUILD {
 
   my ( $self, $params ) = @_;
+
+  if ($params->{authors_flat}){
+    my @authors=();
+    foreach my $a (split(/\s*,\s*/,$params->{authors_flat})){
+      push @authors, PaperPile::Library::Author->new(names_flat => $a);
+    }
+    $self->{authors}=[@authors];
+  }
+
+  if ($params->{journal_flat}){
+    my $j=$params->{journal_flat};
+    $j=~s/\s+/_/g;
+    $self->{journal}=PaperPile::Library::Journal->new(id=>$j);
+  }
 
   $self->refresh_fields;
 
@@ -310,7 +325,7 @@ sub get_form {
     when ('JOUR'){
       @list=('pubtype', 'key', 'title', 'authors_flat','journal_flat',
              'volume', 'issue', 'pages', 'month', 'day', 'year',
-             'issn', 'pmid', 'url', 'abstract', 'pdf', 'created');
+             'issn', 'pmid', 'url', 'abstract', 'pdf', 'doi');
     }
   }
 

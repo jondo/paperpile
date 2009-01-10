@@ -5,10 +5,13 @@ use Data::Page;
 use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
-use PaperPile::Library;
-use PaperPile::Utils;
 use XML::Simple;
 use 5.010;
+
+use PaperPile::Library::Publication;
+use PaperPile::Library::Author;
+use PaperPile::Library::Journal;
+use PaperPile::Utils;
 
 extends 'PaperPile::Library::Source';
 
@@ -101,7 +104,7 @@ sub _read_xml {
 
     my $cit = $article->{MedlineCitation};
 
-    my $pub = PaperPile::Library::Publication->new();
+    my $pub = PaperPile::Library::Publication->new(pubtype=>'JOUR');
 
     if (not $pub->pmid( $cit->{PMID})){
       die();
@@ -119,6 +122,8 @@ sub _read_xml {
     my $title    = $cit->{Article}->{ArticleTitle};
     my $status   = $article->{PubmedData}->{PublicationStatus};
     my $journal  = $cit->{MedlineJournalInfo}->{MedlineTA};
+
+
     my $doi =
       $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
 
@@ -132,11 +137,14 @@ sub _read_xml {
     $pub->doi($doi)           if $doi;
 
     if ($journal) {
+
+      my $jid=$journal;
+      $jid=~s/\s+/_/g;
+
       $pub->journal(
         PaperPile::Library::Journal->new(
-          id    => $journal,
+          id    => $jid,
           short => $journal,
-          name  => $journal,
         )
       );
     }

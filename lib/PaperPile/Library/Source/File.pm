@@ -5,14 +5,15 @@ use Data::Page;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-use PaperPile::Library;
+use PaperPile::Library::Publication;
+use PaperPile::Library::Author;
+use PaperPile::Library::Journal;
 use PaperPile::Model::DB;
 
 extends 'PaperPile::Library::Source';
 
-has 'file' => ( is => 'rw', isa => 'Str' );
-has '_data'         => ( is => 'rw', isa => 'ArrayRef' );
-
+has 'file'  => ( is => 'rw', isa => 'Str' );
+has '_data' => ( is => 'rw', isa => 'ArrayRef' );
 
 sub connect {
   my $self = shift;
@@ -33,7 +34,6 @@ sub all {
   return $self->_data;
 }
 
-
 sub _get_data_for_page {
   my $self = shift;
 
@@ -53,30 +53,31 @@ sub _read_file {
   my $file = $self->file;
 
   my %map = (
-  'TY' => 'pubtype',
-  'T1' => 'title',
-  'TI' => 'title',
-  'CT' => 'title',
-  'BT' => 'title',
-  'T2' => 'journal',
-  'T3' => 'journal',
-  'N1' => 'notes',
-  'AB' => 'abstract',
-  'N2' => 'abstract',
-  'JO' => 'journal_short',
-  'JF' => 'journal_short',
-  'JA' => 'journal_short',
-  'VL' => 'volume',
-  'IS' => 'issue',
-  'CP' => 'issue',
-  'SN' => 'issn',
-  'CY' => 'city',
-  'PB' => 'publisher',
-  'AD' => 'address',
-  'UR' => 'url',
-  'L1' => 'pdf',
-  #'ID' => 'id',
-);
+    'TY' => 'pubtype',
+    'T1' => 'title',
+    'TI' => 'title',
+    'CT' => 'title',
+    'BT' => 'title',
+    'T2' => 'journal',
+    'T3' => 'journal',
+    'N1' => 'notes',
+    'AB' => 'abstract',
+    'N2' => 'abstract',
+    'JO' => 'journal_short',
+    'JF' => 'journal_short',
+    'JA' => 'journal_short',
+    'VL' => 'volume',
+    'IS' => 'issue',
+    'CP' => 'issue',
+    'SN' => 'issn',
+    'CY' => 'city',
+    'PB' => 'publisher',
+    'AD' => 'address',
+    'UR' => 'url',
+    'L1' => 'pdf',
+
+    #'ID' => 'id',
+  );
 
   my @data;
 
@@ -87,7 +88,7 @@ sub _read_file {
 
   while ( $ris =~ /(TY.*?)ER/sg ) {
 
-    my @lines = split( /\r?\n/, $1 ); # consider DOS line ends here.
+    my @lines = split( /\r?\n/, $1 );    # consider DOS line ends here.
 
     my @authors   = ();
     my @editors   = ();
@@ -156,9 +157,10 @@ sub _read_file {
         elsif ( $tag =~ /(SP)/ ) {
           $endPage = $value;
         }
+
         # Content of these fields are not specified, can contain DOIs
         elsif ( $tag =~ /(M1|M2|M3)/ ) {
-          if ($value=~/(doi\s*:\s*)?(10\.\d+\/\d+)/){
+          if ( $value =~ /(doi\s*:\s*)?(10\.\d+\/\d+)/ ) {
             $pub->doi($2);
           }
         }

@@ -29,7 +29,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             emptyMsg: "No papers to display",
             items:[ 
                 new Ext.Button({
-                    //id: 'grid_add_button',
+                    id: 'grid_add_button',
                     text: 'Add',
                     cls: 'x-btn-text-icon add',
                     listeners: {
@@ -37,7 +37,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                     },
                 }),
                 new Ext.Button({
-                    //id: 'grid_delete_button',
+                    id: 'grid_delete_button',
                     text: 'Delete',
                     cls: 'x-btn-text-icon delete',
                     listeners: {
@@ -45,12 +45,11 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                     },
                 }),
                 new Ext.Button({
-                    //id: 'grid_edit_button',
+                    id: 'grid_edit_button',
                     text: 'Edit',
                     cls: 'x-btn-text-icon edit',
                     listeners: {
-                        //click:  {fn: this.editEntry, scope: this}
-                        click:  {fn: function(){alert(this.id)}, scope: this}
+                        click:  {fn: this.editEntry, scope: this}
                     },
                 })
 
@@ -73,6 +72,9 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             iconCls: 'tabs',
             columns:[{header: 'Imported',
                       dataIndex: 'imported',
+                     },
+                     {header: 'Journal',
+                      dataIndex: 'journal_flat',
                      },
                      {header: "Publication",
                       dataIndex: 'title',
@@ -102,7 +104,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             method: 'GET',
             success: function(){
                 Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Entry deleted.');
+                Ext.getCmp('statusbar').setText('Entry Inserted.');
             },
             //failure: this.markInvalid,
         });
@@ -125,7 +127,6 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry deleted.');
             },
-            //success: this.validateFeed,
             //failure: this.markInvalid,
         });
 
@@ -165,6 +166,8 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 });
 
 PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
+
+    loadMask: true,
 
     initComponent:function() {
 

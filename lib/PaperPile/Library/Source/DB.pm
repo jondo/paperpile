@@ -6,7 +6,10 @@ use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
 use PaperPile::Model::DB;
-use PaperPile::Library;
+use PaperPile::Library::Publication;
+use PaperPile::Library::Author;
+use PaperPile::Library::Journal;
+
 
 extends 'PaperPile::Library::Source';
 

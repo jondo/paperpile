@@ -7,8 +7,6 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
 				        background: '#ffffff',
 				        padding: '7px'
 			      },
-            
-
             bbar:[
                 new Ext.Button({
                     id: 'edit_save_button',
@@ -80,8 +78,6 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
 
     save: function(){
 
-
-
         // Masks form instead of whole window, should set to dedicated
         // notification area later
         this.getForm().waitMsgTarget='pub_edit';
@@ -91,12 +87,24 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
                 scope:this,
                 success:this.onSuccess,
                 params:{rowid:this.data.get('rowid'),
+                        sha1:this.data.get('sha1'),
                         source_id: this.source_id,
                        },
                 waitMsg:'Saving...',
             }
         );
     },
+
+    cancel: function(){
+
+        // Masks form instead of whole window, should set to dedicated
+        // notification area later
+
+        Ext.getCmp('canvas_panel').remove('pub_edit');
+        Ext.getCmp('canvas_panel').doLayout();
+
+    },
+
 
     onSuccess: function(form,action){
 

@@ -85,8 +85,6 @@ __PACKAGE__->add_unique_constraint("sha1_unique", ["sha1"]);
 
 # You can replace this text with custom content, and it will be preserved on regeneration
 
-use DBIx::Class::UTF8Columns;
-
 
 # __PACKAGE__->utf8_columns(qw/authors_flat/);
 

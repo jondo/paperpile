@@ -52,11 +52,15 @@ sub parse_flat {
 
   my $f=$self->names_flat;
 
+  # Remove whitespace
+  $f=~s/^\s+//;
+  $f=~s/\s+$//;
+
   # Initals are always last and uppercase
   my $initials='';
   if ($f=~/(\s*[[:upper:]]+$)/){
     $initials=$1;
-    $f=~s/([[:upper:]]+)//;
+    $f=~s/(\s*[[:upper:]]+$)//;
   }
 
   # Then test for common suffix like jr., III, possibly include more 

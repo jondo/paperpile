@@ -3,13 +3,7 @@ package PaperPile::Model::DB;
 use strict;
 use Data::Dumper;
 use DBIx::Class::ResultClass::HashRefInflator;
-
-sub _dumper_hook {
-  $_[0] = bless { %{ $_[0] }, result_source => undef, }, ref( $_[0] );
-}
-$Data::Dumper::Freezer = '_dumper_hook';
-
-use PaperPile::Library;
+use MooseX::Timestamp;
 
 use base 'Catalyst::Model::DBIC::Schema';
 
@@ -18,11 +12,9 @@ __PACKAGE__->config(
   connect_info => [ 'dbi:SQLite:/home/wash/play/PaperPile/db/default.db', ],
 );
 
+sub reset_db {
 
-
-sub reset_db{
-
-  ( my $self) = @_;
+  ( my $self ) = @_;
 
   my $publication_table        = $self->resultset('Publication');
   my $author_publication_table = $self->resultset('AuthorPublication');
@@ -33,33 +25,18 @@ sub reset_db{
   $author_publication_table->delete();
   $author_table->delete();
 
-
-}
-
-sub import_lib {
-
-  ( my $self, my $lib ) = @_;
-
-  my @importedIds = ();
-
-  foreach my $pub ( @{ $lib->entries } ) {
-    push @importedIds, $self->create_pub($pub);
-  }
-
-  return [@importedIds];
-
 }
 
 sub create_pub {
 
   ( my $self, my $pub ) = @_;
 
-  my $data = {};
-
   my $publication_table        = $self->resultset('Publication');
   my $author_publication_table = $self->resultset('AuthorPublication');
   my $author_table             = $self->resultset('Author');
   my $journal_table            = $self->resultset('Journal');
+
+  my $data = {};
 
   foreach my $column ( $publication_table->result_source->columns ) {
     if ( $pub->$column ) {
@@ -68,6 +45,7 @@ sub create_pub {
   }
 
   $data->{journal_id} = $pub->journal->id;
+  $data->{created}    = timestamp;
 
   my $rowid = $publication_table->find_or_create($data)->get_column('rowid');
 
@@ -80,9 +58,9 @@ sub create_pub {
   $journal_table->find_or_create(
     {
       id              => $pub->journal->id,
-      name            => $pub->journal->name,
       short           => $pub->journal->short,
-      is_user_journal => 1,
+      is_user_journal => 1,                     # if it does not exist yet it is
+                                                # flagged as user journal
     }
   );
 
@@ -97,12 +75,9 @@ sub update_pub {
 
   $self->delete_pubs( [ $pub->rowid ] );
   my $rowid = $self->create_pub($pub);
-
   return $rowid;
 
 }
-
-
 
 sub delete_pubs {
 
@@ -147,7 +122,6 @@ sub delete_pubs {
       $journal_table->find( { id => $journal_id, is_user_journal => 1 } )
         ->delete();
     }
-
   }
 }
 
@@ -159,7 +133,8 @@ sub get_fulltext_rs {
 
   # if nothing is searched for return whole library
   if ( not $term ) {
-    $rs=$self->resultset('Publication')->search(undef, {rows => $maxpage});
+    $rs =
+      $self->resultset('Publication')->search( undef, { rows => $maxpage } );
   }
   else {
 
@@ -191,17 +166,20 @@ sub fulltext_search {
       my $column ( $self->resultset('Publication')->result_source->columns )
     {
       if ( $row->get_column($column) ) {
-        my $x=$row->get_column($column);
-        # Some unicode magic going one here. In principle perl uses utf-8 and 
-        # sqlite used utf8. Howver, strings returned by this DBIx::Class function
-        # are not perl utf-8 strings. We use here utf8::decode which seems to work, 
-        # which does not seem that everything is right unicode-wise, so take care...
+        my $x = $row->get_column($column);
+
+    # Some unicode magic going one here. In principle perl uses utf-8 and
+    # sqlite used utf8. Howver, strings returned by this DBIx::Class function
+    # are not perl utf-8 strings. We use here utf8::decode which seems to work,
+    # which does not seem that everything is right unicode-wise, so take care...
         utf8::decode($x);
         $data->{$column} = $x;
       }
     }
     push @output, PaperPile::Library::Publication->new($data);
   }
+
+  print STDERR Dumper(@output);
 
   return [@output];
 }
@@ -391,11 +369,15 @@ sub index_pub {
   ( my $self, my $rowid ) = @_;
 
   my $result = $self->resultset('Publication')->find($rowid);
-  $self->resultset('Fulltext')
-    ->update_or_create(
-    { rowid => $rowid, title => $result->title, 
-      abstract => $result->abstract, notes => $result->notes, authors => $result->authors_flat }
-    );
+  $self->resultset('Fulltext')->update_or_create(
+    {
+      rowid    => $rowid,
+      title    => $result->title,
+      abstract => $result->abstract,
+      notes    => $result->notes,
+      authors  => $result->authors_flat
+    }
+  );
 }
 
 sub index_all {
