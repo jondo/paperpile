@@ -37,7 +37,7 @@ sub reset_session : Local {
   my ( $self, $c ) = @_;
 
   foreach my $key ( keys %{ $c->session } ) {
-    delete( $c->session->{$key} ) if $key =~ /^(source|viewer)/;
+    delete( $c->session->{$key} ) if $key =~ /^(source|viewer|tree)/;
   }
 
   $c->forward('PaperPile::View::JSON');

@@ -34,12 +34,16 @@ our $VERSION = '0.01';
 
 __PACKAGE__->config( name => 'PaperPile' );
 
+__PACKAGE__->config(
+  {
+    'View::JSON::Tree' => {
+      expose_stash => 'tree',    #show only one array of objects
+    }
+  }
+);
+
 # Start the application
 __PACKAGE__->setup(qw/-Debug ConfigLoader Static::Simple/);
-
-
-
-
 
 =head1 NAME
 

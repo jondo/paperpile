@@ -8,7 +8,6 @@ use PaperPile::Library::Source::File;
 use PaperPile::Library::Source::DB;
 use PaperPile::Library::Source::PubMed;
 use PaperPile::PDFviewer;
-use Encode::JavaScript::UCS;
 use Data::Dumper;
 use 5.010;
 

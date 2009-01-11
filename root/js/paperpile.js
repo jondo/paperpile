@@ -22,37 +22,43 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                            iconCls: 'ready-icon',
                        }),
                        
-                       items: [ {title: 'PaperPile',
-                                 itemId:'navigation',
+                       items: [ {itemId:'navigation',
                                  region:'west',
                                  margins: '2 2 2 2',
                                  cmargins: '5 5 0 5',
                                  width: 200,
                                  minSize: 100,
                                  maxSize: 300,
-                                 items: [{ xtype: 'button',
-                                           itemId: 'new_file_button',
-                                           id: 'new_file_button',
-                                           text: 'New file tab',}
-                                         ,{ xtype: 'button',
-                                            itemId: 'new_db_button',
-                                            id: 'new_db_button',
-                                            text: 'New DB tab',
-                                          },{ xtype: 'button',
-                                              itemId: 'new_pubmed_button',
-                                              id: 'new_pubmed_button',
-                                              text: 'New PubMed tab',
-                                            },{ xtype: 'button',
-                                                itemId: 'import_journals_button',
-                                                id: 'import_journals_button',
-                                                text: 'Import Journals',
-                                              },
-                                         { xtype: 'button',
-                                           itemId: 'reset_db_button',
-                                           id: 'reset_db_button',
-                                           text: 'Reset database',
-                                         }
-                                        ]
+                                 items: [ 
+                                     new PaperPile.Tree({
+                                         title: 'Search',
+                                         border: 0,
+                                         id: 'treepanel'
+                                     }
+                                                       ),
+                                     { xtype: 'button',
+                                       itemId: 'new_file_button',
+                                       id: 'new_file_button',
+                                       text: 'New file tab',}
+                                     ,{ xtype: 'button',
+                                        itemId: 'new_db_button',
+                                        id: 'new_db_button',
+                                        text: 'New DB tab',
+                                      },{ xtype: 'button',
+                                          itemId: 'new_pubmed_button',
+                                          id: 'new_pubmed_button',
+                                          text: 'New PubMed tab',
+                                        },{ xtype: 'button',
+                                            itemId: 'import_journals_button',
+                                            id: 'import_journals_button',
+                                            text: 'Import Journals',
+                                          },
+                                     { xtype: 'button',
+                                       itemId: 'reset_db_button',
+                                       id: 'reset_db_button',
+                                       text: 'Reset database',
+                                     }
+                                 ]
                                 },{
                                     region:'east',
                                     id: 'canvas_panel',
@@ -147,6 +153,11 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
             failure: this.markInvalid,
         })
     },
+
+    onNodeClick: function(node, event){
+        alert(node);
+    }
+
 
 }
 
