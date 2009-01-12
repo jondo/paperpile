@@ -11,10 +11,11 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         Ext.apply(this, 
                   {layout: 'border',
                    renderTo: Ext.getBody(),
-                   items: [ new Ext.Panel({
-                       region: 'center',
-                       layout: 'border',
-                       bbar: new Ext.StatusBar({
+                   items: [ 
+                       new Ext.Panel({
+                           region: 'center',
+                           layout: 'border',
+                           bbar: new Ext.StatusBar({
                            id: 'statusbar',
                            defaultText: 'Default status text',
                            defaultIconCls: 'default-icon',
@@ -24,40 +25,21 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                        
                        items: [ {itemId:'navigation',
                                  region:'west',
+                                 layout:'fit',
                                  margins: '2 2 2 2',
                                  cmargins: '5 5 0 5',
+                                 border:0,
                                  width: 200,
                                  minSize: 100,
                                  maxSize: 300,
                                  items: [ 
-                                     new PaperPile.Tree({
-                                         title: 'Search',
-                                         border: 0,
-                                         id: 'treepanel'
-                                     }
-                                                       ),
-                                     { xtype: 'button',
-                                       itemId: 'new_file_button',
-                                       id: 'new_file_button',
-                                       text: 'New file tab',}
-                                     ,{ xtype: 'button',
-                                        itemId: 'new_db_button',
-                                        id: 'new_db_button',
-                                        text: 'New DB tab',
-                                      },{ xtype: 'button',
-                                          itemId: 'new_pubmed_button',
-                                          id: 'new_pubmed_button',
-                                          text: 'New PubMed tab',
-                                        },{ xtype: 'button',
-                                            itemId: 'import_journals_button',
-                                            id: 'import_journals_button',
-                                            text: 'Import Journals',
-                                          },
-                                     { xtype: 'button',
-                                       itemId: 'reset_db_button',
-                                       id: 'reset_db_button',
-                                       text: 'Reset database',
-                                     }
+                                     new PaperPile.Tree(
+                                         { title: 'PaperPile',
+                                           border: 0,
+                                           rootVisible : false,
+                                           id: 'treepanel',
+                                         }
+                                     ),
                                  ]
                                 },{
                                     region:'east',
@@ -173,11 +155,15 @@ Ext.onReady(function() {
         //success: this.validateFeed,
         //failure: this.markInvalid,
     });
+
+    
         
     main=new PaperPile.Main;
 
     main.results_tabs.newDBtab();
     
+    Ext.getCmp('treepanel').expandAll();
+
     main.show();
 
 
@@ -185,22 +171,6 @@ Ext.onReady(function() {
     //Ext.getCmp('canvas_panel').layout.setActiveItem('pdf_viewer');
     //Ext.getCmp('canvas_panel').layout.setActiveItem('pub_edit');
 
-
-    var button=Ext.getCmp('new_file_button');
-    button.on('click', main.results_tabs.newFileTab,main.results_tabs);
-
-    var button=Ext.getCmp('new_db_button');
-    button.on('click', main.results_tabs.newDBtab,main.results_tabs);
-
-    var button=Ext.getCmp('new_pubmed_button');
-    button.on('click', main.results_tabs.newPubMedTab,main.results_tabs);
-
-    var button=Ext.getCmp('import_journals_button');
-    button.on('click', main.importJournals,main);
-
-    var button=Ext.getCmp('reset_db_button');
-    button.on('click', main.resetDB,main);
-    
 
      
 });

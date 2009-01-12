@@ -3,7 +3,7 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
     initComponent:function() {
         
         Ext.apply(this, {
-            itemId: 'results_tabs',
+            id: 'results_tabs',
             margins: '2 2 2 2',
             items: [{title:'Welcome'}],
         });
@@ -12,22 +12,22 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
 
     },
 
-    newFileTab:function(){
+    newFileTab:function(file){
         this.add(new PaperPile.ResultsGridFile({
             title: 'test2.ris',
             iconCls: 'tabs',
-            source_file: '/home/wash/play/PaperPile/t/data/test2.ris',
+            source_file: file,
             source_type: 'FILE',
             closable:true
         })).show();
     },
 
-    newDBtab:function(){
+    newDBtab:function(query){
         var newGrid=this.add(new PaperPile.ResultsGridDB({
             title: 'DB',
             iconCls: 'tabs',
             source_type: 'DB',
-            source_query:'',
+            source_query: query,
             closable:true
         }));
 
@@ -35,9 +35,9 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
 
     },
 
-    newPubMedTab:function(){
+    newPubMedTab:function(query){
         this.add(new PaperPile.ResultsGridPubMed({
-            source_query: '',
+            source_query: query,
             iconCls: 'tabs',
         })).show();
     }

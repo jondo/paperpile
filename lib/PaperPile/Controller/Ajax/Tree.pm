@@ -45,11 +45,36 @@ sub _get_default_tree {
 
   $tree->setUID('root');
 
-  $tree->addChild( Tree::Simple->new( { text => 'Item1' } ) );
-  $tree->addChild( Tree::Simple->new( { text => 'Item2' } ) );
-  $tree->addChild( Tree::Simple->new( { text => 'Item3' } ) );
-  my $sub_tree = Tree::Simple->new( { text => 'item4' }, $tree );
-  $sub_tree->addChild( Tree::Simple->new( { text => 'Subitem' } ) );
+  $tree->addChild( Tree::Simple->new( { text => 'Local library',
+                                        type=>'DB',
+                                        query=>'' } ) );
+
+
+  my $sub_tree = Tree::Simple->new( { text => 'Source' }, $tree );
+
+
+  $sub_tree->addChild( Tree::Simple->new( { text => 'PubMed',
+                                            type => 'PUBMED',
+                                            query=>''
+                                          } ) );
+
+  $sub_tree->addChild( Tree::Simple->new( { text => 'File',
+                                            type => 'FILE',
+                                            file => '/home/wash/play/PaperPile/t/data/test2.ris',
+                                          }
+                                        ) );
+
+  $sub_tree = Tree::Simple->new( { text => 'Admin' }, $tree );
+
+  $sub_tree->addChild( Tree::Simple->new( { text => 'Import Journals',
+                                            type => 'IMPORT_JOURNALS',
+                                          } ) );
+
+  $sub_tree->addChild( Tree::Simple->new( { text => 'Reset Database',
+                                            type => 'RESET_DB',
+                                          } ) );
+
+
 
   return $tree;
 }
@@ -65,8 +90,12 @@ sub _get_js_object {
     my $h=$child->getNodeValue();
 
     $h->{id}=$child->getUID;
-    $h->{type}='This is my type';
 
+    if ($child->isLeaf()){
+      $h->{leaf}=1;
+    } else {
+      $h->{leaf}=0;
+    }
 
     push @output, $h;
   }
