@@ -1,12 +1,13 @@
 package PaperPile::Library::Publication;
 use Moose;
-use Moose::Util::TypeConstraints;
-use MooseX::Timestamp;
 use Digest::SHA1;
 use Data::Dumper;
+
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
 use PaperPile::Schema::Publication;
+use PaperPile::Utils;
+
 use 5.010;
 
 
@@ -99,20 +100,6 @@ has 'last_read' => ( is => 'rw', isa => 'Maybe[Timestamp]' );
 sub BUILD {
 
   my ( $self, $params ) = @_;
-
-  if ($params->{authors_flat}){
-    my @authors=();
-    foreach my $a (split(/\s*,\s*/,$params->{authors_flat})){
-      push @authors, PaperPile::Library::Author->new(names_flat => $a);
-    }
-    $self->{authors}=[@authors];
-  }
-
-  if ($params->{journal_flat}){
-    my $j=$params->{journal_flat};
-    $j=~s/\s+/_/g;
-    $self->{journal}=PaperPile::Library::Journal->new(id=>$j);
-  }
 
   $self->refresh_fields;
 

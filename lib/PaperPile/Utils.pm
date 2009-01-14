@@ -4,6 +4,7 @@ use Moose::Util::TypeConstraints;
 use Carp;
 use LWP;
 use Data::Dumper;
+use FindBin;
 $Data::Dumper::Indent = 1;
 
 sub get_browser{
@@ -14,6 +15,20 @@ sub get_browser{
   return $browser;
 }
 
+=pod
+=head1 get_config()
+
+Gives access to config data when $c is not available
+
+=cut
+
+sub get_config{
+
+  my $conf = Config::General->new($FindBin::Bin."/../paperpile.conf");
+
+  return $conf->get_all;
+
+}
 
 
 1;

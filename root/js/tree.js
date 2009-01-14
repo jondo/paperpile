@@ -40,6 +40,10 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 Ext.getCmp('MAIN').resetDB();
                 break;
 
+            case 'INIT_DB':
+                Ext.getCmp('MAIN').initDB();
+                break;
+
             case 'IMPORT_JOURNALS':
                 Ext.getCmp('MAIN').importJournals();
                 break;

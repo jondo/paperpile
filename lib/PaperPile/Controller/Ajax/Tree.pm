@@ -74,6 +74,11 @@ sub _get_default_tree {
                                             type => 'RESET_DB',
                                           } ) );
 
+  $sub_tree->addChild( Tree::Simple->new( { text => 'Initialize Database',
+                                            type => 'INIT_DB',
+                                          } ) );
+
+
 
 
   return $tree;

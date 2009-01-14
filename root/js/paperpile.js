@@ -136,6 +136,26 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         })
     },
 
+
+    initDB: function(){
+        statusBar = Ext.getCmp('statusbar');
+        statusBar.showBusy();
+        statusBar.setText('Initializing database');
+        Ext.Ajax.request({
+            url: '/ajax/misc/init_db',
+            success: function(){
+                statusBar.clearStatus();
+                statusBar.setText('Initialization finished.');
+            },
+            failure: this.markInvalid,
+        })
+    },
+
+
+
+
+
+
     onNodeClick: function(node, event){
         alert(node);
     }

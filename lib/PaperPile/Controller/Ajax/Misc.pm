@@ -22,6 +22,17 @@ sub reset_db : Local {
 
 }
 
+sub init_db : Local {
+
+  my ( $self, $c ) = @_;
+
+  $c->model('DBI')->init_db($c->config->{fields});
+  $c->stash->{success} = 'true';
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+
 sub import_journals : Local {
   my ( $self, $c ) = @_;
 
@@ -43,33 +54,5 @@ sub reset_session : Local {
   $c->forward('PaperPile::View::JSON');
 
 }
-
-
-=head1 NAME
-
-PaperPile::Controller::Ajax - Catalyst Controller
-
-=head1 DESCRIPTION
-
-Catalyst Controller.
-
-=head1 METHODS
-
-=cut
-
-=head2 index 
-
-=cut
-
-=head1 AUTHOR
-
-Stefan Washietl,,,
-
-=head1 LICENSE
-
-This library is free software, you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
 
 1;
