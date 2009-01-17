@@ -8,8 +8,8 @@ use PaperPile::Library::Source::File;
 use PaperPile::Library::Source::DB;
 use PaperPile::Library::Source::PubMed;
 use PaperPile::PDFviewer;
-use Encode::JavaScript::UCS;
 use Data::Dumper;
+use MooseX::Timestamp;
 use 5.010;
 
 sub insert_entry : Local {
@@ -20,6 +20,10 @@ sub insert_entry : Local {
   my $source = $c->session->{"source_$source_id"};
 
   my $pub = $source->find_sha1($sha1);
+
+  $pub->created(timestamp);
+  $pub->times_read(0);
+  $pub->last_read(timestamp); ## for the time being
 
   $c->model('DBI')->create_pub($pub);
 
@@ -38,7 +42,7 @@ sub delete_entry : Local {
 
   my $source = $c->session->{"source_$source_id"};
 
-  $c->model('DB')->delete_pubs( [$rowid] );
+  $c->model('DBI')->delete_pubs( [$rowid] );
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
@@ -65,10 +69,7 @@ sub update_entry : Local {
 
   my $newPub=PaperPile::Library::Publication->new($data);
 
-  $c->model('DB')->delete_pubs( [$rowid] );
-
-  $c->model('DB')->create_pub($newPub);
-
+  $c->model('DBI')->update_pub($newPub);
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
@@ -83,7 +84,15 @@ sub generate_edit_form : Local {
 
   my $pubtype = $c->request->params->{pubtype};
 
-  my $form = $pub->get_form($pubtype);
+  my %config=PaperPile::Utils::get_config;
+
+  my @output=();
+
+  foreach my $field (split(/\s+/,$config{pubtypes}->{$pubtype}->{all})){
+    push @output, {name=>$field, fieldLabel=>$config{fields}->{$field}};
+  }
+
+  my $form=[@output];
 
   $c->stash->{form} = $form;
 
@@ -94,38 +103,11 @@ sub generate_edit_form : Local {
 
 
 
-
-=head1 NAME
-
-PaperPile::Controller::Ajax - Catalyst Controller
-
-=head1 DESCRIPTION
-
-Catalyst Controller.
-
-=head1 METHODS
-
-=cut
-
-=head2 index 
-
-=cut
-
 sub index : Path : Args(0) {
   my ( $self, $c ) = @_;
 
   $c->response->body('Matched PaperPile::Controller::Ajax in Ajax.');
 }
 
-=head1 AUTHOR
-
-Stefan Washietl,,,
-
-=head1 LICENSE
-
-This library is free software, you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
 
 1;

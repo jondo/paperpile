@@ -144,14 +144,22 @@ sub _read_xml {
     }
 
     foreach my $author (@tmp) {
-      push @authors, PaperPile::Library::Author->new(
-        last => $author->{LastName} ? $author->{LastName} : '',
-        first  => $author->{Initials} ? $author->{Initials} : '',
-        jr    => $author->{Suffix}   ? $author->{Suffix}   : '',
-        #collectiveName=>$author->{CollectiveName},
-      )->normalized;
-    }
 
+      if ($author->{CollectiveName}){
+        push @authors, PaperPile::Library::Author->new(
+                                                       last =>  '{'.$author->{CollectiveName}.'}',
+                                                       first  => '',
+                                                       jr    => '',
+                                                      )->normalized;
+      } else {
+        push @authors, PaperPile::Library::Author->new(
+                                                       last => $author->{LastName} ? $author->{LastName} : '',
+                                                       first  => $author->{Initials} ? $author->{Initials} : '',
+                                                       jr    => $author->{Suffix}   ? $author->{Suffix}   : '',
+                                                      )->normalized;
+      }
+
+      }
     $pub->authors( join(' and ',@authors) );
     push @output, $pub;
   }

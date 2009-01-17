@@ -73,6 +73,13 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             columns:[{header: 'Imported',
                       dataIndex: '_imported',
                      },
+                     {header: 'Row',
+                      dataIndex: '_rowid',
+                     },
+                     {header: 'SHA1',
+                      dataIndex: 'sha1',
+                     },
+
                      {header: 'Journal',
                       dataIndex: 'journal',
                      },
@@ -114,7 +121,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
     deleteEntry: function(){
         
-        var rowid=this.getSelectionModel().getSelected().get('rowid');
+        var rowid=this.getSelectionModel().getSelected().get('_rowid');
         var sha1=this.getSelectionModel().getSelected().id;
 
         Ext.Ajax.request({
@@ -136,7 +143,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
     editEntry: function(){
         
-        var rowid=this.getSelectionModel().getSelected().get('rowid');
+        var rowid=this.getSelectionModel().getSelected().get('_rowid');
         var sha1=this.getSelectionModel().getSelected().id;
 
         var form = new PaperPile.PubEdit(

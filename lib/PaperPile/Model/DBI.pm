@@ -12,6 +12,7 @@ __PACKAGE__->config(
   options  => {},
 );
 
+
 # Function: init_db(fields: HashRef)
 
 # Initializes database. Gets list with fields and adds these
@@ -41,66 +42,94 @@ sub init_db {
 
 sub create_pub {
   ( my $self,   my $pub )    = @_;
-  ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
 
+  ## Insert main entry into Publications table
+  ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
   $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
 
-  my $rowid = $self->dbh->func('last_insert_rowid');
+  ## Insert searchable fields into fulltext table
+  my $pub_rowid = $self->dbh->func('last_insert_rowid');
 
   ( $fields, $values ) = $self->_hash2sql(
     {
-      rowid    => $rowid,
+      rowid    => $pub_rowid,
       title    => $pub->title,
       abstract => $pub->abstract,
       notes    => $pub->notes,
       names  => $pub->_authors_nice,
     }
   );
+
   $self->dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
 
+  ## Insert authors
+
+  my $insert = $self->dbh->prepare("INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
+  my $search = $self->dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
+  my $insert_join = $self->dbh->prepare("INSERT INTO author_publication (author_id,publication_id) VALUES(?,?)");
+
+  foreach my $author (@{$pub->get_authors}){
+    my $author_rowid;
+    $search->execute($author->key);
+    $author_rowid=$search->fetchrow_array;
+    if (not $author_rowid){
+      my @values=($author->key,$author->first,$author->last, $author->von, $author->jr);
+      $insert->execute(@values);
+      $author_rowid = $self->dbh->func('last_insert_rowid');
+    }
+    $insert_join->execute($author_rowid, $pub_rowid);
+  }
+
+  $pub->_rowid($pub_rowid);
+
+  return $pub_rowid;
 }
+
+
+sub delete_pubs{
+
+  ( my $self, my $rowids ) = @_;
+
+  my $delete_main = $self->dbh->prepare("DELETE FROM publications WHERE rowid=?");
+  my $delete_fulltext = $self->dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
+  my $delete_author_join = $self->dbh->prepare("DELETE FROM author_publication WHERE publication_id=?");
+  my $delete_authors= $self->dbh->prepare(
+  "DELETE From authors where rowid not in (SELECT author_id FROM author_publication)");
+
+  foreach my $rowid (@$rowids){
+    $delete_main->execute($rowid);
+    $delete_fulltext->execute($rowid);
+    $delete_author_join->execute($rowid);
+    $delete_authors->execute;
+  }
+
+  return 1;
+
+}
+
+sub update_pub {
+
+  ( my $self, my $pub ) = @_;
+  $self->delete_pubs( [ $pub->_rowid ] );
+  my $rowid = $self->create_pub($pub);
+  return $rowid;
+
+}
+
 
 sub reset_db {
 
   ( my $self ) = @_;
 
   for my $table (
-    qw/publications authors author_publication fields journals fulltext/)
+                 qw/publications authors author_publication fields journals fulltext/)
   {
     $self->dbh->do("DELETE FROM $table");
   }
+
+  return 1;
 }
 
-# sub fulltext_search {
-
-#   ( my $self, my $query ) = @_;
-
-#   my @output = ();
-
-#   foreach my $row ( $rs->page($page)->all ) {
-
-#     my $data = {};
-#     foreach
-#       my $column ( $self->resultset('Publication')->result_source->columns )
-#     {
-#       if ( $row->get_column($column) ) {
-#         my $x = $row->get_column($column);
-
-#     # Some unicode magic going one here. In principle perl uses utf-8 and
-#     # sqlite used utf8. Howver, strings returned by this DBIx::Class function
-#     # are not perl utf-8 strings. We use here utf8::decode which seems to work,
-#     # which does not seem that everything is right unicode-wise, so take care...
-#         utf8::decode($x);
-#         $data->{$column} = $x;
-#       }
-#     }
-#     push @output, PaperPile::Library::Publication->new($data);
-#   }
-
-#   print STDERR Dumper(@output);
-
-#   return [@output];
-# }
 
 sub fulltext_count {
   ( my $self, my $query ) = @_;
@@ -118,7 +147,6 @@ sub fulltext_count {
     publications.rowid=fulltext.rowid $where}
   );
 
-
   return $count;
 }
 
@@ -134,7 +162,8 @@ sub fulltext_search {
     $where=''; #Return everything if query empty
   }
 
-  my $sth = $self->dbh->prepare(qq{SELECT * FROM Publications JOIN fulltext 
+  # explicitely select rowid since it is not included by *
+  my $sth = $self->dbh->prepare(qq{SELECT *,publications.rowid as _rowid FROM Publications JOIN fulltext 
 ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset});
 
   $sth->execute;
@@ -149,7 +178,7 @@ ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset});
        if ($value){
 
          # Some unicode magic going one here. In principle perl uses utf-8 and
-         # sqlite used utf8. Howver, strings returned by this DBIx::Class function
+         # sqlite used utf8. However, strings returned by the DBI driver function
          # are not perl utf-8 strings. We use here utf8::decode which seems to work,
          # which does not seem that everything is right unicode-wise, so take care...
          utf8::decode($value);
@@ -157,6 +186,7 @@ ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset});
          $pub->$field($value);
        }
      }
+     $pub->_imported(1);
      push @page, $pub;
    }
 
@@ -165,23 +195,24 @@ ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset});
 }
 
 
-
-#sub get_by_sha1 {
-#  ( my $self, my $sha1 ) = @_;
-#  my $data=$self->dbh->selectrow_hashref(qq{SELECT * FROM publications WHERE sha1="
-#$sha1 "});
-#  return $data;
-#}
-
 sub exists_pub {
-  ( my $self, my $sha1 ) = @_;
+  ( my $self, my $pubs ) = @_;
 
-  my $count=$self->dbh->selectrow_array(qq{SELECT count(*) FROM publications WHERE sha1="
-  $sha1 "});
+  my $sth = $self->dbh->prepare("SELECT sha1 FROM publications WHERE sha1=?");
 
-  $count=1  if $count>0 ;
-  return $count;
+  foreach my $pub (@$pubs){
+    $sth->execute($pub->sha1);
+
+    if ($sth->fetchrow_arrayref){
+      $pub->_imported(1);
+    } else {
+      $pub->_imported(0);
+    }
+  }
 }
+
+
+
 
 
 sub _hash2sql {
@@ -197,11 +228,12 @@ sub _hash2sql {
     # They are not stored to the database by convention
     next if $key=~/^_/;
 
-    if ($hash->{$key}){
+    if (defined $hash->{$key}){
       push @fields, $key;
       push @values, $self->dbh->quote($hash->{$key});
     }
   }
+
   my @output=(join(',',@fields), join(',',@values));
 
   return @output;

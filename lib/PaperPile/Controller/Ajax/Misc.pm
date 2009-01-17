@@ -36,8 +36,31 @@ sub init_db : Local {
 sub import_journals : Local {
   my ( $self, $c ) = @_;
 
-  $c->model('DB')
-    ->import_journal_file("/home/wash/play/PaperPile/data/jabref.txt");
+  my $file="/home/wash/play/PaperPile/data/jabref.txt";
+
+  my $sth=$c->model('DBI')->dbh->prepare("INSERT INTO Journals (key,name) VALUES(?,?)");
+
+  open( TMP, "<$file" );
+
+  my %alreadySeen = ();
+
+  while (<TMP>) {
+    next if /^\s*\#/;
+    ( my $long, my $short ) = split /=/, $_;
+    $short =~ s/;.*$//;
+    $short =~ s/[.,-]/ /g;
+    $short =~ s/(^\s+|\s+$)//g;
+    $long  =~ s/(^\s+|\s+$)//g;
+
+    if ( not $alreadySeen{$short} ) {
+      $alreadySeen{$short} = 1;
+      next;
+    }
+
+    $sth->execute($short,$long);
+
+  }
+
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 

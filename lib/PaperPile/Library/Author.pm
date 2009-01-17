@@ -8,7 +8,8 @@ has 'full' => (
   trigger => sub {
     my $self = shift;
     $self->split_full;
-    $self->parse_initials
+    $self->parse_initials;
+    $self->create_key;
   }
 );
 
@@ -16,7 +17,6 @@ has 'last' => (
   is      => 'rw',
   isa     => 'Str',
   default => '',
-  #trigger => sub { my $self = shift; $self->create_id }
 );
 
 has 'first' => ( is => 'rw',
@@ -29,8 +29,6 @@ has 'von' => (
   is      => 'rw',
   isa     => 'Str',
   default => '',
-
-  #trigger => sub { my $self = shift; $self->create_id }
 );
 
 has 'jr' => (
@@ -42,15 +40,9 @@ has 'jr' => (
 has 'initials' => (
   is  => 'rw',
   isa => 'Str',
-
-  #trigger => sub { my $self = shift; $self->create_id }
 );
 
 has 'key' => ( is => 'rw', isa => 'Str' );
-
-#sub BUILD {
-#  my ( $self, $params ) = @_;
-#}
 
 
 ### Splits BibTeX like author string into components.
@@ -62,7 +54,20 @@ sub split_full {
 
   my ($first, $von, $last, $jr);
 
-  if ($self->full eq ''){
+  # Do nothing in this trivial case
+  if (not $self->full){
+    return;
+  }
+
+  # Recognize non-human entities like collaborative names;
+  # Currently they are marked by {..}, probably add 
+  # full support of {...} as in BibTeX rather this one special
+  # case
+  if ($self->full=~/^\s*\{(.*)\}\s*$/){
+    $self->last("{$1}");
+    $self->von('');
+    $self->first('');
+    $self->jr('');
     return;
   }
 
@@ -177,7 +182,13 @@ sub nice {
   push @components, $self->jr    if ( $self->jr );
   push @components, $self->initials  if ( $self->initials );
 
-  return join( " ", @components );
+  my $output=join( " ", @components );
+
+  # Don't show groupings for collaborative names
+  $output=~s/\{//g;
+  $output=~s/\}//g;
+
+  return $output;
 
 }
 

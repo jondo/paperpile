@@ -15,7 +15,9 @@ my %tests = ( 'bb CC, AA' => { first => 'AA', von => 'bb', last => 'CC', jr=>''}
               'bb, AA' => { first => 'AA', von => '', last => 'bb', jr=>''},
               'BB,' => { first => '', von=>'', last => 'BB', jr=>''},
               'bb CC,XX, AA' => { first => 'AA', von => 'bb', last => 'CC', jr=>'XX'},
-              'BB,, AA' => { first => 'AA', von => '', last => 'BB', jr=>''});
+              'BB,, AA' => { first => 'AA', von => '', last => 'BB', jr=>''},
+              '{ENCODE consortium}' => { first => '', von => '', last => '{ENCODE consortium}', jr=>''},
+            );
 
 foreach my $key (keys %tests){
 
@@ -70,3 +72,7 @@ is( $author->nice, "Stadler PF", "nice printing" );
 
 is ($author->normalized, "Stadler, PF", "normalized");
 
+
+my $author=PaperPile::Library::Author->new(last => 'Washietl', first  => 'Stefan', jr => '')->normalized;
+
+print $author;

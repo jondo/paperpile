@@ -12,20 +12,20 @@ use 5.010;
 
 # Built-in fields
 has 'sha1'    => ( is => 'rw' );
-has 'rowid'   => ( is => 'rw', isa => 'Int' );
+has '_rowid'   => ( is => 'rw', isa => 'Int' );
 has 'created' => ( is => 'rw', isa => 'Str' );
 has 'last_read' => ( is => 'rw', isa => 'Str' );
-has 'times_read' => ( is => 'rw', isa => 'Int' );
-has 'pdf' => ( is => 'rw', isa => 'Str' );
+has 'times_read' => ( is => 'rw', isa => 'Int', default=>0 );
+has 'pdf' => ( is => 'rw', isa => 'Str', default=>'' );
 
 # Read other fields from config file
 my %config=PaperPile::Utils->get_config;
 foreach my $field (keys %{$config{fields}}){
 
-  if ($field=~/(authors|year|title)/){
+  if ($field=~/(authors|year|title$)/){
     has $field  => ( is => 'rw', isa => 'Str', trigger => sub { my $self = shift; $self->refresh_fields } );
   } else {
-    has $field  => ( is => 'rw', isa => 'Str' );
+    has $field  => ( is => 'rw', isa => 'Str', default=>'' );
   }
 }
 
@@ -42,16 +42,17 @@ sub BUILD {
 
 sub refresh_fields {
   ( my $self ) = @_;
-  $self->calculate_sha1;
 
   my @nice=();
 
   if ($self->authors){
-    foreach my $a (split(/and/,$self->authors)){
+    foreach my $a (split(/\band\b/,$self->authors)){
       push @nice,  PaperPile::Library::Author->new(full=>$a)->nice;
     }
     $self->_authors_nice(join(', ',@nice));
   }
+
+  $self->calculate_sha1;
 
 }
 
@@ -62,7 +63,7 @@ sub calculate_sha1 {
   my $ctx = Digest::SHA1->new;
 
   if ($self->authors and $self->title){
-    $ctx->add( PaperPile::Library::Author->new(full=>$self->authors)->nice);
+    $ctx->add( $self->_authors_nice);
     $ctx->add( $self->title );
     $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
   }
@@ -90,7 +91,7 @@ sub as_hash {
 sub get_authors{
   ( my $self) = @_;
   my @authors=();
-  foreach my $a ( split(/and/, $self->authors) ) {
+  foreach my $a ( split(/\band\b/, $self->authors) ) {
     $a=~s/^\s+//;
     $a=~s/\s+$//;
     push @authors, PaperPile::Library::Author->new(full=>$a);
@@ -205,63 +206,6 @@ sub _setcase {
   }
 
   return $field;
-}
-
-sub get_form {
-
-  ( my $self, my $type ) = @_;
-
-  my %fields = (
-    'pubtype'        => { fieldLabel => 'Type'},
-    'key'            => { fieldLabel => 'Key'},
-    'title'          => { fieldLabel => 'Title'},
-    'title2'         => { fieldLabel => 'Book title'},
-    'title3'         => { fieldLabel => 'Series title'},
-    'authors_flat'   => { fieldLabel => 'Authors',},
-    'editors_flat'   => { fieldLabel => 'Editors',},
-    'authors_series' => { fieldLabel => 'Series Editors',},
-    'journal_flat'   => { fieldLabel => 'Journal',},
-    'volume'         => { fieldLabel => 'Volume',},
-    'issue'          => { fieldLabel => 'Issue (number)',},
-    'pages'          => { fieldLabel => 'Pages',},
-    'publisher'      => { fieldLabel => 'Publisher',},
-    'city'           => { fieldLabel => 'City',},
-    'address'        => { fieldLabel => 'Address',},
-    'date'           => { fieldLabel => 'Date',},
-    'year'           => { fieldLabel => 'Year',},
-    'month'          => { fieldLabel => 'Month',},
-    'day'            => { fieldLabel => 'Day',},
-    'issn'           => { fieldLabel => 'ISSN',},
-    'pmid'           => { fieldLabel => 'Pubmed ID',},
-    'doi'            => { fieldLabel => 'DOI',},
-    'url'            => { fieldLabel => 'URL',},
-    'abstract'       => { fieldLabel => 'Abstract',},
-    'pdf'            => { fieldLabel => 'PDF file',},
-    'created'        => { fieldLabel => 'Creation date',},
-    'last_read'      => { fieldLabel => 'Last read',},
- );
-
-  my @list;
-
-  given($type){
-
-    when ('JOUR'){
-      @list=('pubtype', 'key', 'title', 'authors_flat','journal_flat',
-             'volume', 'issue', 'pages', 'month', 'day', 'year',
-             'issn', 'pmid', 'url', 'abstract', 'pdf', 'doi');
-    }
-  }
-
-
-  my @out;
-
-  foreach my $name (@list){
-    $fields{$name}->{name}=$name;
-    push @out, $fields{$name};
-  }
-
-  return [@out];
-
 }
 
 1;
