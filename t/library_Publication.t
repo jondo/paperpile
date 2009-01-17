@@ -2,104 +2,103 @@
 
 use lib "../lib/";
 
-use PaperPile::Library;
 use PaperPile::Library::Publication;
-use PaperPile::Schema::Publication;
 use Data::Dumper;
 use Digest::SHA1;
 use Test::More 'no_plan';
 
-my $pub = PaperPile::Library::Publication->new;
-
-my $author1 =
-  PaperPile::Library::Author->new( last_name => 'Stadler', initials => 'PF' );
-my $author2 =
-  PaperPile::Library::Author->new( last_name => 'Gruber', initials => 'AR' );
-my $editor1 =
-  PaperPile::Library::Author->new( last_name => 'Eisenhaber', initials => 'F' );
-my $editor2 =
-  PaperPile::Library::Author->new( last_name => 'Carugo', initials => 'M' );
-
-my %data = (
-  pubtype      => 'JOUR',
-  title        => 'The title of the paper',
-  journal      => 'Nature',
-  authors      => 'Stadler PF  Eisenhaber',
-  editors      => '',
-  volume       => 123,
-  issue        => 3,
-  pages        => 4 - 5,
-  publisher    => 'Nature Press',
-  city         => 'New York',
-  address      => '',
-  date         => '',
-  year         => 2008,
-  month        => 'Jan',
-  day          => '',
-  issn         => '12345-123',
-  pmid         => 123456,
-  doi          => '',
-  url          => 'www.google.com',
-  abstract     => 'This is the abstract.',
-  notes        => 'These are my notes',
-  tags_flat    => 'important cool awesome',
-  pdf          => 'some/folder/to/pdfs/stadler08.pdf',
-  text         => 'This is the full text',
-  authors      => [ $author1, $author2, $editor1, $editor2 ],
-  editors => [ $editor1, $editor2 ],
+my %book = (
+  pubtype   => 'INBOOK',
+  title     => 'Fundamental Algorithms',
+  title2    => 'The Art of Computer Programming',
+  authors   => 'Knuth, D.E.',
+  volume    => '1',
+  pages     => '10-119',
+  publisher => 'Addison-Wesley',
+  city      => 'Reading',
+  address   => "Massachusetts",
+  year      => '2007',
+  month     => 'Jan',
+  isbn      => '0-201-03803-X',
+  notes     => 'These are my notes',
+  tags      => 'programming, algorithms',
 );
 
-foreach my $key ( keys %data ) {
-  $pub->$key( $data{$key} );
-  is( $pub->$key, $data{$key}, "Get/Set on field $key" );
+my %journal = (
+  pubtype => 'JOUR',
+  title => 'Strategies for measuring evolutionary conservation of RNA secondary structures',
+  journal => 'BMC Bioinformatics',
+  authors => 'Gruber, AR and Bernhart, SH and  Hofacker, I.L. and Washietl, S.',
+  volume  => '9',
+  pages   => '122',
+  year    => '2008',
+  month   => 'Feb',
+  day     => '26',
+  issn    => '1471-2105',
+  pmid    => '18302738',
+  doi     => '10.1186/1471-2105-9-122',
+  url     => 'http://www.biomedcentral.com/1471-2105/9/122',
+  abstract =>'BACKGROUND: Evolutionary conservation of RNA secondary structure..',
+  notes     => 'These are my notes',
+  tags      => 'RNA important cool awesome',
+  pdf       => 'some/folder/to/pdfs/gruber2008.pdf',
+);
+
+my $pub;
+
+$pub=PaperPile::Library::Publication->new;
+
+foreach my $key ( keys %book ) {
+  $pub->$key( $book{$key} );
+  is( $pub->$key, $book{$key}, "Get/Set on field $key (book example)" );
 }
 
-$pub = PaperPile::Library::Publication->new( {%data} );
+$pub=PaperPile::Library::Publication->new;
 
-my $authors_flat = 'Stadler PF, Gruber AR, Eisenhaber F, Carugo M';
-my $editors_flat = 'Eisenhaber F, Carugo M';
+foreach my $key ( keys %journal ) {
+  $pub->$key( $journal{$key} );
+  is( $pub->$key, $journal{$key}, "Get/Set on field $key (journal example)" );
+}
 
-is( $pub->authors_flat, $authors_flat,
-  "Transform author objects in flat string." );
-is( $pub->editors_flat, $editors_flat,
-  "Transform editor objects in flat string." );
+
+$pub = PaperPile::Library::Publication->new( {%book} );
 
 my $ctx = Digest::SHA1->new;
-$ctx->add($authors_flat);
-$ctx->add('The title of the paper');
+$ctx->add('Knuth DE');
+$ctx->add('Fundamental Algorithms');
 my $sha1 = substr( $ctx->hexdigest, 0, 15 );
 
-my $pub2 = PaperPile::Library::Publication->new( {%data} );
-
-is( $pub2->sha1, $sha1, "Autogenerate sha1 identity" );
+is( $pub->sha1, $sha1, "Autogenerate sha1 identity" );
 
 $ctx = Digest::SHA1->new;
-$ctx->add($authors_flat);
+$ctx->add('Knuth DE');
 $ctx->add('New Title');
 $sha1 = substr( $ctx->hexdigest, 0, 15 );
 
-$pub2->title('New Title');
+$pub->title('New Title');
 
-is( $pub2->sha1, $sha1, "Re-calculate sha1 identity after change" );
+is( $pub->sha1, $sha1, "Re-calculate sha1 identity after change" );
 
-$pub2->title('The title of the paper');
+my $pub2 = PaperPile::Library::Publication->new( {%journal} );
 
-is( $pub2->format('[firstauthor]'),       'Stadler', '[firstauthor]' );
-is( $pub2->format('[firstauthor:Uc]'),    'Stadler', '[firstauthor:Uc]' );
-is( $pub2->format('[firstauthor:lc]'),    'stadler', '[firstauthor:lc]' );
-is( $pub2->format('[firstauthor:UC]'),    'STADLER', '[firstauthor:UC]' );
-is( $pub2->format('[firstauthor_abbr3]'), 'Sta',     '[firstauthor_abbr3]' );
-is( $pub2->format('[lastauthor]'),        'Carugo',  '[lastauthor]' );
+
+is( $pub2->format('[firstauthor]'),       'Gruber', '[firstauthor]' );
+is( $pub2->format('[firstauthor:Uc]'),    'Gruber', '[firstauthor:Uc]' );
+is( $pub2->format('[firstauthor:lc]'),    'gruber', '[firstauthor:lc]' );
+is( $pub2->format('[firstauthor:UC]'),    'GRUBER', '[firstauthor:UC]' );
+is( $pub2->format('[firstauthor_abbr3]'), 'Gru',     '[firstauthor_abbr3]' );
+is( $pub2->format('[lastauthor]'),        'Washietl',  '[lastauthor]' );
 is( $pub2->format('[authors]'),
-  'Stadler_Gruber_Eisenhaber_Carugo', '[authors]' );
-is( $pub2->format('[authors2]'), 'Stadler_Gruber_et_al', '[authors2]' );
+  'Gruber_Bernhart_Hofacker_Washietl', '[authors]' );
+is( $pub2->format('[authors2]'), 'Gruber_Bernhart_et_al', '[authors2]' );
 is( $pub2->format('[authors3_abbr4]'),
-  'Stad_Grub_Eise_et_al', '[authors3_abbr4]' );
-is( $pub2->format('[title]'),  'The_title_of_the_paper', '[title]' );
-is( $pub2->format('[title3]'), 'The_title_of',           '[title3]' );
-is( $pub2->format('[title3_abbr3]'), 'The_tit_of', '[title3_abbr3]' );
+  'Grub_Bern_Hofa_et_al', '[authors3_abbr4]' );
+is( $pub2->format('[title]'),  'Strategies_for_measuring_evolutionary_conservation_of_RNA_secondary_structures', '[title]' );
+is( $pub2->format('[title3]'), 'Strategies_for_measuring',           '[title3]' );
+is( $pub2->format('[title3_abbr3]'), 'Str_for_mea', '[title3_abbr3]' );
 is( $pub2->format('[YY]'),           '08',         '[YY]' );
 is( $pub2->format('[YYYY]'),         '2008',       '[YYYY]' );
-is( $pub2->format('[journal]'),      'Nature',     '[journal]' );
-is( $pub2->format('[firstauthor:UC]_[journal]:[YYYY]'),
-  'STADLER_Nature:2008', '[firstauthor:UC]_[journal]:[YYYY]' );
+is( $pub2->format('[journal]'),      'BMC_Bioinformatics',     '[journal]' );
+
+#is( $pub2->format('[firstauthor:UC]_[journal]:[YYYY]'),
+#  'STADLER_Nature:2008', '[firstauthor:UC]_[journal]:[YYYY]' );

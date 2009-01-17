@@ -10,127 +10,47 @@ use PaperPile::Utils;
 
 use 5.010;
 
-
-enum 'PublicationType' => (
-  'ABST',      # Abstract
-  'ADVS',      # Audiovisual material
-  'ART',       # Art Work
-  'BILL',      # Bill/Resolution
-  'BOOK',      # Book, Whole
-  'CASE',      # Case
-  'CHAP',      # Book chapter
-  'COMP',      # Computer program
-  'CONF',      # Conference proceeding
-  'CTLG',      # Catalog
-  'DATA',      # Data file
-  'ELEC',      # Electronic Citation
-  'GEN',       # Generic
-  'HEAR',      # Hearing
-  'ICOMM',     # Internet Communication
-  'INPR',      # In Press
-  'JFULL',     # Journal (full)
-  'JOUR',      # Journal
-  'MAP',       # Map
-  'MGZN',      # Magazine article
-  'MPCT',      # Motion picture
-  'MUSIC',     # Music score
-  'NEWS',      # Newspaper
-  'PAMP',      # Pamphlet
-  'PAT',       # Patent
-  'PCOMM',     # Personal communication
-  'RPRT',      # Report
-  'SER',       # Serial (Book, Monograph)
-  'SLIDE',     # Slide
-  'SOUND',     # Sound recording
-  'STAT',      # Statute
-  'THES',      # Thesis/Dissertation
-  'UNBILl',    # Unenacted bill/resolution
-  'UNPB',      # Unpublished work
-  'VIDEO',     # Video recording
-  'STD',       # used by BibUtils, probably "standard" ?
-);
-
+# Built-in fields
 has 'sha1'    => ( is => 'rw' );
 has 'rowid'   => ( is => 'rw', isa => 'Int' );
-has 'pubtype' => ( is => 'rw', isa => 'PublicationType' );
-has 'key'     => ( is => 'rw', isa => 'Str' );
-has 'title' => (
-  is      => 'rw',
-  isa     => 'Str',
-  default => 'No title.',
-  trigger => sub { my $self = shift; $self->refresh_fields }
-);
-has 'title2' => ( is => 'rw', isa => 'Str', default => 'No title.' );
-has 'title3' => ( is => 'rw', isa => 'Str', default => 'No title.' );
-has 'authors_flat'   => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'editors_flat'   => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'authors_series' => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'journal_flat'   => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'journal_id'     => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'volume'         => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'issue'          => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'pages'          => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'publisher'      => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'city'           => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'address'        => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'date'           => ( is => 'rw', isa => 'Maybe[Str]');
-has 'year'           => ( is => 'rw', isa => 'Maybe[Int]' );
-has 'month'          => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'day'            => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'issn'           => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'pmid'           => ( is => 'rw', isa => 'Maybe[Int]' );
-has 'doi'            => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'url'            => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'abstract'       => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'notes'          => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'tags_flat'      => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'pdf'            => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'text'           => ( is => 'rw', isa => 'Maybe[Str]' );
-has 'imported'       => ( is => 'rw', isa => 'Bool', default => 0 );
-has 'authors' => (
-  is      => 'rw',
-  isa     => 'ArrayRef[PaperPile::Library::Author]',
-  trigger => sub { my $self = shift; $self->refresh_fields }
-);
-has 'editors' => ( is => 'rw', isa => 'Maybe[ArrayRef[PaperPile::Library::Author]]' );
-has 'journal' => ( is => 'rw', isa => 'PaperPile::Library::Journal' );
-has 'created' => ( is => 'rw', isa => 'Timestamp' );
-has 'last_read' => ( is => 'rw', isa => 'Maybe[Timestamp]' );
+has 'created' => ( is => 'rw', isa => 'Str' );
+has 'last_read' => ( is => 'rw', isa => 'Str' );
+has 'times_read' => ( is => 'rw', isa => 'Int' );
+has 'pdf' => ( is => 'rw', isa => 'Str' );
+
+# Read other fields from config file
+my %config=PaperPile::Utils->get_config;
+foreach my $field (keys %{$config{fields}}){
+
+  if ($field=~/(authors|year|title)/){
+    has $field  => ( is => 'rw', isa => 'Str', trigger => sub { my $self = shift; $self->refresh_fields } );
+  } else {
+    has $field  => ( is => 'rw', isa => 'Str' );
+  }
+}
+
+# Helper fields which have no equivalent field in the database
+has '_authors_nice' => ( is => 'rw', isa => 'Str' );
+has '_imported' => ( is => 'rw', isa => 'Bool' );
+
+
 
 sub BUILD {
-
   my ( $self, $params ) = @_;
-
   $self->refresh_fields;
-
 }
 
 sub refresh_fields {
-
   ( my $self ) = @_;
+  $self->calculate_sha1;
 
-  if ( $self->authors ) {
-    my @tmp = ();
-    foreach my $author ( @{ $self->authors } ) {
-      push @tmp, $author->flat;
+  my @nice=();
+
+  if ($self->authors){
+    foreach my $a (split(/and/,$self->authors)){
+      push @nice,  PaperPile::Library::Author->new(full=>$a)->nice;
     }
-    $self->authors_flat( join( ', ', @tmp ) );
-  }
-
-  if ( $self->editors ) {
-    my @tmp = ();
-    foreach my $editor ( @{ $self->editors } ) {
-      push @tmp, $editor->flat;
-    }
-    $self->editors_flat( join( ', ', @tmp ) );
-  }
-
-  if ( $self->journal ) {
-    $self->journal_flat( $self->journal->short );
-  }
-
-  if ( $self->authors and $self->title ) {
-    $self->calculate_sha1;
+    $self->_authors_nice(join(', ',@nice));
   }
 
 }
@@ -141,9 +61,11 @@ sub calculate_sha1 {
 
   my $ctx = Digest::SHA1->new;
 
-  $ctx->add( $self->authors_flat );
-  $ctx->add( $self->title );
-  $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
+  if ($self->authors and $self->title){
+    $ctx->add( PaperPile::Library::Author->new(full=>$self->authors)->nice);
+    $ctx->add( $self->title );
+    $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
+  }
 
 }
 
@@ -165,15 +87,27 @@ sub as_hash {
 
 }
 
+sub get_authors{
+  ( my $self) = @_;
+  my @authors=();
+  foreach my $a ( split(/and/, $self->authors) ) {
+    $a=~s/^\s+//;
+    $a=~s/\s+$//;
+    push @authors, PaperPile::Library::Author->new(full=>$a);
+  }
+  return [@authors];
+}
+
+
 sub format {
 
   ( my $self, my $pattern ) = @_;
 
-  my @authors = ();
-
-  foreach my $a ( @{ $self->authors } ) {
-    push @authors, $a->last_name;
+  my @authors=();
+  foreach my $a (@{$self->get_authors}){
+    push @authors, $a->last;
   }
+
 
   my $first_author = $authors[0];
   my $last_author  = $authors[$#authors];
@@ -185,7 +119,9 @@ sub format {
 
   my @title_words = split( /\s+/, $title );
 
-  my $journal = $self->journal_flat;
+  my $journal = $self->journal;
+
+  $journal=~s/\s+/_/g;
 
   if ( length($YY) == 4 ) {
     $YY = substr( $YYYY, 2, 2 );

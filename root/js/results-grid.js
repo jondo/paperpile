@@ -62,7 +62,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                     '<p><b>{title}</b></p>{authors}'
             )
             
-            return t.apply({title:record.data.title,authors:record.data.authors_flat});
+            return t.apply({title:record.data.title,authors:record.data._authors_nice});
         }
     
         Ext.apply(this, {
@@ -71,10 +71,10 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             border:true,
             iconCls: 'tabs',
             columns:[{header: 'Imported',
-                      dataIndex: 'imported',
+                      dataIndex: '_imported',
                      },
                      {header: 'Journal',
-                      dataIndex: 'journal_flat',
+                      dataIndex: 'journal',
                      },
                      {header: "Publication",
                       dataIndex: 'title',

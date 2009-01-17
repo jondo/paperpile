@@ -49,7 +49,6 @@ sub _get_default_tree {
                                         type=>'DB',
                                         query=>'' } ) );
 
-
   my $sub_tree = Tree::Simple->new( { text => 'Source' }, $tree );
 
 
@@ -125,7 +124,7 @@ sub _get_subtree {
     $tree->traverse(
       sub {
         my ($_tree) = @_;
-        print STDERR $_tree->getUID, "\n";
+        #print STDERR $_tree->getUID, "\n";
         $subtree = $_tree if $_tree->getUID eq $UID;
       }
     );

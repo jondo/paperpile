@@ -1,7 +1,7 @@
 CREATE TABLE publications(
   sha1               TEXT UNIQUE,
   pdf                TEXT,
-  fulltext           TEXT,
+  pdftext            TEXT,
   created            TIMESTAMP,
   last_read          TIMESTAMP,
   times_read         INTEGER
@@ -20,7 +20,7 @@ CREATE TABLE authors (
   jr                  TEXT
 );
 
-CREATE TABLE journal (
+CREATE TABLE journals (
   key            TEXT UNIQUE,
   name           TEXT,
   issn           TEXT,

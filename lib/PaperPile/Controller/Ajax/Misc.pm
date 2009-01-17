@@ -16,7 +16,7 @@ sub reset_db : Local {
 
   my ( $self, $c ) = @_;
 
-  $c->model('DB')->reset_db;
+  $c->model('DBI')->reset_db;
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 

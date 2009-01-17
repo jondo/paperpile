@@ -46,15 +46,10 @@ sub connect {
   $self->query_key( $result->{QueryKey} );
   $self->total_entries( $result->{Count} );
 
-  $self->_pager( Data::Page->new() );
-  $self->_pager->total_entries( $self->total_entries );
-  $self->_pager->entries_per_page( $self->entries_per_page );
-  $self->_pager->current_page(1);
-
   return $self->total_entries;
 }
 
-sub page_from_offset {
+sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
   my $xml = $self->_pubFetch( $offset, $limit );
@@ -110,7 +105,6 @@ sub _read_xml {
       die();
     }
 
-
     $pub->pmid( $cit->{PMID} );
 
     my $volume = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
@@ -137,16 +131,8 @@ sub _read_xml {
     $pub->doi($doi)           if $doi;
 
     if ($journal) {
-
       my $jid=$journal;
-      $jid=~s/\s+/_/g;
-
-      $pub->journal(
-        PaperPile::Library::Journal->new(
-          id    => $jid,
-          short => $journal,
-        )
-      );
+      $pub->journal($journal),
     }
 
     my @authors = ();
@@ -159,14 +145,14 @@ sub _read_xml {
 
     foreach my $author (@tmp) {
       push @authors, PaperPile::Library::Author->new(
-        last_name => $author->{LastName} ? $author->{LastName} : '',
-        initials  => $author->{Initials} ? $author->{Initials} : '',
-        suffix    => $author->{Suffix}   ? $author->{Suffix}   : '',
+        last => $author->{LastName} ? $author->{LastName} : '',
+        first  => $author->{Initials} ? $author->{Initials} : '',
+        jr    => $author->{Suffix}   ? $author->{Suffix}   : '',
         #collectiveName=>$author->{CollectiveName},
-      );
+      )->normalized;
     }
 
-    $pub->authors( [@authors] );
+    $pub->authors( join(' and ',@authors) );
     push @output, $pub;
   }
   return [@output];

@@ -6,10 +6,10 @@ use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
 use PaperPile::Model::DB;
+use PaperPile::Model::DummyC;
 use PaperPile::Library::Publication;
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
-
 
 extends 'PaperPile::Library::Source';
 
@@ -18,29 +18,26 @@ has 'query' => ( is => 'rw' );
 sub connect {
   my $self = shift;
 
-  my $model=PaperPile::Model::DB->new;
+  my $model=PaperPile::Model::DBI->new(PaperPile::Model::DummyC->new());
 
-  my $rs=$model->get_fulltext_rs($self->query,$self->entries_per_page);
-
-  $self->_pager($rs->page(1)->pager);
-
-  $self->total_entries($self->_pager->total_entries);
+  $self->total_entries($model->fulltext_count($self->query));
 
   return $self->total_entries;
 }
 
 
+sub page {
+  ( my $self, my $offset, my $limit ) = @_;
 
-sub _get_data_for_page {
-  my $self = shift;
+  my $model=PaperPile::Model::DBI->new(PaperPile::Model::DummyC->new());
 
-  my $model=PaperPile::Model::DB->new;
+  my $page = $model->fulltext_search($self->query, $offset, $limit);
 
-  my $rs=$model->get_fulltext_rs($self->query,$self->entries_per_page);
+  $self->_save_page_to_hash($page);
 
-  return $model->fulltext_search($rs,$self->_pager->current_page);
-
+  return $page;
 
 }
+
 
 1;

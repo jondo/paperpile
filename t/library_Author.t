@@ -1,25 +1,37 @@
 #!/usr/bin/perl -w
 
 use lib "../lib";
-use PaperPile::Library;
 use PaperPile::Library::Author;
 use Test::More 'no_plan';
 
+BEGIN { use_ok 'PaperPile::Library::Author' }
+
 my $author = PaperPile::Library::Author->new;
 
-ok( defined $author, 'New returns object' );
 
-ok( $author->isa('PaperPile::Library::Author'), 'Object is of right class' );
+my %tests = ( 'bb CC, AA' => { first => 'AA', von => 'bb', last => 'CC', jr=>''},
+              'bb CC, aa' => { first => 'aa', von => 'bb', last => 'CC', jr=>''},
+              'bb CC dd EE, AA' => { first => 'AA', von => 'bb CC dd', last => 'EE', jr=>''},
+              'bb, AA' => { first => 'AA', von => '', last => 'bb', jr=>''},
+              'BB,' => { first => '', von=>'', last => 'BB', jr=>''},
+              'bb CC,XX, AA' => { first => 'AA', von => 'bb', last => 'CC', jr=>'XX'},
+              'BB,, AA' => { first => 'AA', von => '', last => 'BB', jr=>''});
 
-$author = PaperPile::Library::Author->new(
-  first_names_raw => 'Peter F.',
-  last_name       => 'Stadler',
-  suffix          => 'jr.'
-);
+foreach my $key (keys %tests){
 
-is( $author->first_names_raw, 'Peter F.', 'first_names_raw()' );
-is( $author->last_name,       'Stadler',  'last_name()' );
-is( $author->suffix,          'jr.',      'suffix()' );
+  my $automatic=PaperPile::Library::Author->new;
+
+  $automatic->full($key);
+
+
+  my $manual=PaperPile::Library::Author->new($tests{$key});
+
+  $automatic->full('');
+  $manual->full('');
+
+  is_deeply($automatic, $manual, "Parsing pattern '$key'");
+}
+
 
 my %initials = (
   ''                  => '',
@@ -45,55 +57,16 @@ my %initials = (
 $author = PaperPile::Library::Author->new;
 
 foreach my $input ( keys %initials ) {
-  $author->first_names_raw($input);
-  is( $author->parse_initials($input),
+  $author->first($input);
+  is( $author->parse_initials(),
     $initials{$input}, "parse_initials() for $input" );
 }
 
-$author = PaperPile::Library::Author->new(
-  first_names_raw => 'Peter F.',
-  initials        => 'PF',
-  last_name       => 'Stadler',
-  suffix          => 'jr'
-);
+$author = PaperPile::Library::Author->new(full=>'Stadler, P.F.');
 
-is( $author->id, "STADLER_JR_PF", "Automatically create id" );
+is( $author->create_key, "STADLER_PF", "Automatically create key" );
 
-is( $author->flat, "Stadler jr PF", "flat" );
+is( $author->nice, "Stadler PF", "nice printing" );
 
-$author = PaperPile::Library::Author->new(
-  initials  => 'H',
-  last_name => 'von Hugo',
-  suffix    => ''
-);
-
-is( $author->flat, "von Hugo H", "flat" );
-
-$author_manual = PaperPile::Library::Author->new(
-  initials   => 'PF',
-  last_name  => 'Stadler',
-  suffix     => 'jr',
-  names_flat => 'Stadler jr PF'
-);
-
-$author_from_flat =
-  PaperPile::Library::Author->new( names_flat => 'Stadler jr PF' );
-
-is_deeply( $author_from_flat, $author_manual,
-  "Parsing object from flat name 1." );
-
-$author_manual = PaperPile::Library::Author->new(
-  initials  => 'H',
-  last_name => 'von Hugo',
-  names_flat  => 'von Hugo H'
-);
-
-$author_from_flat =
-  PaperPile::Library::Author->new( names_flat => 'von Hugo H' );
-
-is_deeply( $author_from_flat, $author_manual,
-  "Parsing object from flat name 2." );
-
-
-
+is ($author->normalized, "Stadler, PF", "normalized");
 

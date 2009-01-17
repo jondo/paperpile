@@ -21,9 +21,9 @@ sub insert_entry : Local {
 
   my $pub = $source->find_sha1($sha1);
 
-  $c->model('DB')->create_pub($pub);
+  $c->model('DBI')->create_pub($pub);
 
-  $pub->imported(1);
+  $pub->_imported(1);
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');

@@ -12,7 +12,6 @@ use Encode::JavaScript::UCS;
 use Data::Dumper;
 use 5.010;
 
-
 sub resultsgrid : Local {
 
   my ( $self, $c ) = @_;
@@ -39,7 +38,7 @@ sub resultsgrid : Local {
         PaperPile::Library::Source::PubMed->new( query => $source_query );
     }
 
-    $source->entries_per_page($limit);
+    $source->limit($limit);
     $source->connect;
 
     if ( $source->total_entries == 0 ) {
@@ -54,14 +53,14 @@ sub resultsgrid : Local {
 
   my $entries;
 
-  $entries = $source->page_from_offset( $offset, $limit );
+  $entries = $source->page( $offset, $limit );
 
   foreach my $pub (@$entries) {
     if ( not $source_type eq 'DB' ) {
-      $pub->imported( $c->model('DB')->is_in_DB( $pub->sha1 ) );
+      $pub->_imported( $c->model('DBI')->exists_pub( $pub->sha1 ) );
     }
     else {
-      $pub->imported(1);
+      $pub->_imported(1);
     }
   }
 
