@@ -9,9 +9,9 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
         var _store=new Ext.data.Store(
             {proxy: new Ext.data.HttpProxy({
-                 url: '/ajax/grid/resultsgrid', 
-                 method: 'GET'
-             }),
+                url: '/ajax/grid/resultsgrid', 
+                method: 'GET'
+            }),
              baseParams:{source_id: this.id,
                          source_file: this.source_file,
                          source_type: this.source_type,
@@ -72,9 +72,6 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             iconCls: 'tabs',
             columns:[{header: 'Imported',
                       dataIndex: '_imported',
-                     },
-                     {header: 'Row',
-                      dataIndex: '_rowid',
                      },
                      {header: 'SHA1',
                       dataIndex: 'sha1',

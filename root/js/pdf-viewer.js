@@ -91,6 +91,8 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
      
     onRender: function() {
 
+        //consider slide in effect !!
+        
         PaperPile.PDFviewer.superclass.onRender.apply(this, arguments);
 
     },

@@ -50,7 +50,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                         new PaperPile.PDFmanager(
                                             {id:'pdf_manager',
                                              itemId:'pdf_manager',
-                                             //source_id: this.id, 
                                             }
                                         )
                                     ],
