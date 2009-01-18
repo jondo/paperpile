@@ -154,9 +154,10 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
              items: [{ fieldLabel: 'Type',  name: 'dummy', id:'dummy' }],
             }
         )
-        
+
         Ext.getCmp('canvas_panel').add(form);
         Ext.getCmp('canvas_panel').doLayout();
+        Ext.getCmp('canvas_panel').getLayout().setActiveItem('pub_edit');
 
     },
 

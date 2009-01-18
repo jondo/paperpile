@@ -5,7 +5,6 @@ use Data::Dumper;
 
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
-use PaperPile::Schema::Publication;
 use PaperPile::Utils;
 
 use 5.010;

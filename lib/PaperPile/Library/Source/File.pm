@@ -8,7 +8,6 @@ use Moose::Util::TypeConstraints;
 use PaperPile::Library::Publication;
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
-use PaperPile::Model::DB;
 
 extends 'PaperPile::Library::Source';
 

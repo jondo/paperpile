@@ -5,7 +5,6 @@ use Data::Page;
 use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
-use PaperPile::Model::DB;
 use PaperPile::Model::DummyC;
 use PaperPile::Library::Publication;
 use PaperPile::Library::Author;

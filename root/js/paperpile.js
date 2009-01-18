@@ -44,24 +44,21 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                 },{
                                     region:'east',
                                     id: 'canvas_panel',
-                                    layout: 'fit',
+                                    activeItem:0,
+                                    layout: 'card',
+                                    items: [
+                                        new PaperPile.PDFmanager(
+                                            {id:'pdf_manager',
+                                             itemId:'pdf_manager',
+                                             //source_id: this.id, 
+                                            }
+                                        )
+                                    ],
                                     margins: '2 2 2 2',
                                     cmargins: '5 5 0 5',
                                     width: 500,
                                     minSize: 100,
                                     maxSize: 800,
-                                    //items: {}
-                                        //new PaperPile.PDFviewer(
-                                        //    {id:'pdf_viewer',
-                                        //     itemId:'pdf_viewer',
-                                        //    }
-                                        //),
-                                        //new PaperPile.PubEdit(
-                                        //    {id:'pub_edit',
-                                        //     itemId:'pub_edit',
-                                        //    }
-                                        //)
-                                                                       
                                 },
                                 {itemId: 'innerpanel',
                                  region:'center',
@@ -97,7 +94,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 	  onRowSelect: function(sm, rowIdx, r) {
         this.data_tabs.getComponent('pubsummary').updateDetail(r.data);
         this.data_tabs.getComponent('pubnotes').updateDetail(r.data);
-        //this.canvas_panel.getComponent('pub_edit').updateDetail(r.data);
+        Ext.getCmp('pdf_manager').updateDetail(r.data);
     },
 
     onAfterLayout: function(){
@@ -151,11 +148,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         })
     },
 
-
-
-
-
-
     onNodeClick: function(node, event){
         alert(node);
     }
@@ -164,7 +156,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 }
 
 );
-
 
 
 Ext.onReady(function() {
@@ -176,8 +167,6 @@ Ext.onReady(function() {
         //failure: this.markInvalid,
     });
 
-    
-        
     main=new PaperPile.Main;
 
     main.results_tabs.newDBtab();
@@ -185,11 +174,6 @@ Ext.onReady(function() {
     Ext.getCmp('treepanel').expandAll();
 
     main.show();
-
-
-    //Ext.getCmp('pdf_viewer').initPDF();
-    //Ext.getCmp('canvas_panel').layout.setActiveItem('pdf_viewer');
-    //Ext.getCmp('canvas_panel').layout.setActiveItem('pub_edit');
 
 
      

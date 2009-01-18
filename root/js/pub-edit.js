@@ -46,19 +46,6 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
 
 	  },
 
-    updateDetail: function(data) {
-        //this.getForm().loadRecord(data);
-
-        /*this.getForm().findField('title').setValue(data.title);
-        this.getForm().findField('pubtype').setValue(data.pubtype);
-        this.getForm().findField('journal_id').setValue(data.journal_id);
-        this.getForm().findField('year').setValue(data.year);
-        this.getForm().findField('pages').setValue(data.pages);
-        this.getForm().findField('authors_flat').setValue(data.authors_flat);
-        */
-
-	  },
-
     setForm: function(response,options){
         var json = Ext.util.JSON.decode(response.responseText);
 
@@ -96,28 +83,23 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
     },
 
     cancel: function(){
-
-        // Masks form instead of whole window, should set to dedicated
-        // notification area later
-
-        Ext.getCmp('canvas_panel').remove('pub_edit');
-        Ext.getCmp('canvas_panel').doLayout();
-
+        this.close();
     },
-
 
     onSuccess: function(form,action){
 
+        this.close();
+
+    },
+
+    close: function(){
+
         Ext.getCmp('canvas_panel').remove('pub_edit');
         Ext.getCmp('canvas_panel').doLayout();
-
-        //alert('inhere');
+        Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_manager');
 
     }
-
     
-
-
 
 });
 
