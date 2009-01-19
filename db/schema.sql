@@ -1,4 +1,4 @@
-CREATE TABLE publications(
+CREATE TABLE Publications(
   sha1               TEXT UNIQUE,
   pdf                TEXT,
   pdftext            TEXT,
@@ -7,12 +7,12 @@ CREATE TABLE publications(
   times_read         INTEGER
 );
 
-CREATE TABLE fields(
+CREATE TABLE Fields(
   field             TEXT,
   text              TEXT
 );
 
-CREATE TABLE authors (
+CREATE TABLE Authors (
   key                 TEXT UNIQUE,
   first               TEXT,
   von                 TEXT,
@@ -20,7 +20,7 @@ CREATE TABLE authors (
   jr                  TEXT
 );
 
-CREATE TABLE journals (
+CREATE TABLE Journals (
   key            TEXT UNIQUE,
   name           TEXT,
   issn           TEXT,
@@ -28,10 +28,10 @@ CREATE TABLE journals (
   icon           TEXT
 );
 
-CREATE TABLE author_publication (
+
+CREATE TABLE Author_Publication (
   author_id         INTEGER,
   publication_id    INTEGER,
   PRIMARY KEY (author_id, publication_id)
 );
 
--- CREATE VIRTUAL TABLE fulltext using fts3(title,abstract,notes,authors);

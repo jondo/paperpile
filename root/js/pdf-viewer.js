@@ -116,6 +116,9 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
         this.client.on('mousedown', this.onMouseDown, this);
 
+        Ext.dump(Ext.getCmp('MAIN'));
+
+
         this.store.load({params:{start:0,
                                  zoom: 1.0,
                                  canvas_width: Ext.getCmp('MAIN').canvasWidth,

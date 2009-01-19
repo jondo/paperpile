@@ -26,7 +26,7 @@ sub init_db : Local {
 
   my ( $self, $c ) = @_;
 
-  $c->model('DBI')->init_db($c->config->{fields});
+  $c->model('DBI')->init_db($c->config->{fields}, $c->config->{settings});
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 

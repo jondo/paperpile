@@ -5,16 +5,15 @@ use warnings;
 use parent 'Catalyst::Controller';
 use PaperPile::Utils;
 use PaperPile::Library::Publication;
-use PaperPile::Library::Source::File;
-use PaperPile::Library::Source::DB;
-use PaperPile::Library::Source::PubMed;
-use PaperPile::PDFviewer;
 use Data::Dumper;
 use LWP::UserAgent ();
 use LWP::MediaTypes qw(guess_media_type media_suffix);
 use URI ();
 use HTTP::Date ();
 use File::Path;
+use File::Spec;
+use File::Copy;
+
 use File::stat;
 use 5.010;
 
@@ -28,8 +27,8 @@ sub get : Local {
 
   my $pub = $source->find_sha1($sha1);
 
-  my $dir="/home/wash/play/PaperPile/tmp/download/$sha1";
-  my $list;
+  my $tmp_dir=$c->model('DBI')->get_setting('tmp_dir');
+  my $dir="$tmp_dir/download/$sha1";
   rmtree($dir);
   mkpath($dir);
   my $file="$dir/paper.pdf";
@@ -44,7 +43,7 @@ sub get : Local {
         if (defined $length){
           print SIZE "$length\n";
         } else {
-          print SIZE "unknown\n";
+          print SIZE "null\n"; # Don't know size
         }
         close(SIZE);
         open(FILE, ">$file") || die "Can't open $file: $!\n";
@@ -77,22 +76,61 @@ sub get : Local {
 
 }
 
+sub finish : Local{
+  my ( $self, $c ) = @_;
+  my $source_id = $c->request->params->{source_id};
+  my $sha1      = $c->request->params->{sha1};
+
+  my $source = $c->session->{"source_$source_id"};
+  my $pub = $source->find_sha1($sha1);
+
+  my $tmp_dir=$c->model('DBI')->get_setting('tmp_dir');
+  my $tmp_file="$tmp_dir/download/$sha1/paper.pdf";
+
+  my $root=$pub->format($c->model('DBI')->get_setting('paper_root'));
+  my $pattern=$pub->format($c->model('DBI')->get_setting('paper_pattern'));
+
+  my $dest=	File::Spec->catfile($root, $pattern).".pdf";
+
+  my ($volume,$dirs,$file) = File::Spec->splitpath( $dest );
+
+  mkpath($dirs);
+  copy($tmp_file, $dest);
+
+  $c->model('DBI')->update_field($pub->_rowid, 'pdf', $pattern.'pdf');
+
+
+  $c->stash->{success} = 'true';
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+
 sub progress : Local {
   my ( $self, $c ) = @_;
 
   my $sha1  = $c->request->params->{sha1};
 
-  my $dir="/home/wash/play/PaperPile/tmp/download/$sha1";
-  my $file="$dir/paper.pdf";
+  my $tmp_dir=$c->model('DBI')->get_setting('tmp_dir');
 
-  my $current_size=stat($file)->size;
+  my $file="$tmp_dir/download/$sha1/paper.pdf";
 
-  open(SIZE,"<$file.size");
-  my $total_size=<SIZE>;
-  chomp($total_size);
+  my $current_size;
+  my $total_size;
+
+  if (-e $file){
+    $current_size=stat($file)->size;
+    open(SIZE,"<$file.size");
+    $total_size=<SIZE>;
+    chomp($total_size);
+  } else {
+    $current_size=0;
+    $total_size='null';
+  }
 
   $c->stash->{success} = 'true';
-  $c->stash->{percent} = $current_size/$total_size;
+  $c->stash->{current_size} = $current_size;
+  $c->stash->{total_size} = $total_size;
   $c->forward('PaperPile::View::JSON');
 
 }
