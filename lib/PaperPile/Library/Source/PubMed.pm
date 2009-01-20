@@ -40,11 +40,15 @@ sub connect {
 
   my $response  = $self->_browser->get( $esearch . $self->query );
   my $resultXML = $response->content;
+
+  print STDERR Dumper($resultXML);
+
   my $result    = XMLin($resultXML);
 
   $self->web_env( $result->{WebEnv} );
   $self->query_key( $result->{QueryKey} );
   $self->total_entries( $result->{Count} );
+
 
   return $self->total_entries;
 }
@@ -56,11 +60,57 @@ sub page {
 
   my $page = $self->_read_xml($xml);
 
+  $self->_linkOut($page);
+
   $self->_save_page_to_hash($page);
 
   return $page;
 
 }
+
+
+sub _linkOut {
+
+  ( my $self, my $pubs) = @_;
+
+  my %pub_hash=();
+
+  my @ids=();
+  foreach my $pub (@$pubs){
+    push @ids, $pub->{pmid};
+    $pub_hash{$pub->{pmid}}=$pub;
+  }
+
+  my $ids=join(',',@ids);
+
+  my $url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=prlinks&db=PubMed&id=$ids";
+
+  my $response  = $self->_browser->get($url);
+
+  print STDERR Dumper($url, "   " ,$response->content);
+
+  my $result = XMLin( $response->content);
+
+  #print STDERR Dumper($result->{LinkSet}->{IdUrlList}->{IdUrlSet});
+
+  #print STDERR $result->{LinkSet}->{IdUrlList}->{IdUrlSet};
+
+  foreach my $entry (@{$result->{LinkSet}->{IdUrlList}->{IdUrlSet}}){
+
+    my $id=$entry->{Id};
+
+    # got an error message
+    if (defined $entry->{Info}){
+      $pub_hash{$id}->url('');
+    } else {
+      $pub_hash{$id}->url($entry->{ObjUrl}->{Url});
+      $pub_hash{$id}->icon($entry->{ObjUrl}->{IconUrl});
+    }
+  }
+
+
+}
+
 
 sub _pubFetch {
 
