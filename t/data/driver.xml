@@ -1,20 +1,16 @@
 <driver>
+
 <site name="BMC">
 
   <signature>
     <url>!biomedcentral\.com!</url>
     <url>!genomebiology\.com!</url>
+    <body>!http://\S*/content/pdf/.*\.pdf!</body>
   </signature>
 
   <rule>
     <pattern>
-      <rewrite>!(^.*?\.com)/(\d+-\d+)/(\d+)/(\d+)!$1/content/pdf/$2-$3-$4.pdf!</rewrite>
-    </pattern>
-  </rule>
-
-  <rule>
-    <pattern>
-      <rewrite>!(^.*?\.com)/(\d+)/(\d+)/(\d+)/(\w+)!$1/content/pdf/gb-$2-$3-$4-$5.pdf!</rewrite>
+      <match>!(http://\S*/content/pdf/.*?\.pdf)!</match>
     </pattern>
   </rule>
 
@@ -23,7 +19,7 @@
     <url>http://dx.doi.org/10.1186/1471-2105-9-248</url>
     <url>http://genomebiology.com/2008/9/12/R168</url>
   </test>
-  
+
 </site>
 
 <site name="ScienceDirect">
@@ -40,28 +36,26 @@
   
 </site>
 
-<test>
-  <url>http://dx.doi.org/10.1016/j.tig.2008.09.003</url>
-</test>
 
-<site name="OxfordJournals">
-
+<site name="ElsevierHub">
   <signature>
-    <url>!oxfordjournals!</url>
+    <url>!linkinghub.elsevier.com!</url>
   </signature>
-
   <rule>
     <pattern>
-      <rewrite>!^(.*/cgi)/content/full/(.*)!$1/reprint/$2\.pdf!</rewrite>
+      <match>!(http://www\.sciencedirect\.com/science\?_ob=GatewayURL.*?)&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
     </pattern>
   </rule>
-  
-</site>
 
-<test>
-  <url>http://nar.oxfordjournals.org/cgi/content/full/34/suppl_1/D135</url>
-  <url>http://hmg.oxfordjournals.org/cgi/content/full/18/1/12</url>
-</test>
+  <test>
+    <url>http://linkinghub.elsevier.com/retrieve/pii/S1470-2045(08)70008-1</url>
+  </test>
+
+
+</site>
 
 
 <site name="PloS">
@@ -82,7 +76,6 @@
     </pattern>
   </rule>
 
-
   <test>
     <url>http://www.plosgenetics.org/article/info:doi/10.1371/journal.pgen.1000250</url>
     <url>http://biology.plosjournals.org/perlserv/?request=get-document&amp;doi=10.1371/journal.pbio.0060319</url>
@@ -94,6 +87,7 @@
   <signature>
     <url>!cshlp\.org!</url>
     <url>!pnas\.org!</url>
+    <body>!(http://\S*\.full\.pdf\+html)!</body>
   </signature>
 
   <rule>
@@ -121,14 +115,13 @@
       <rewrite>!^(.*/cgi)/content/full/(.*)!$1/reprint/$2\.pdf!</rewrite>
     </pattern>
   </rule>
+
+  <test>
+    <url>http://bloodjournal.hematologylibrary.org/cgi/content/full/111/9/4617</url>
+    <url>http://nar.oxfordjournals.org/cgi/content/full/34/suppl_1/D135</url>
+  </test>
   
 </site>
-
-<test>
-  <url>http://bloodjournal.hematologylibrary.org/cgi/content/full/111/9/4617</url>
-</test>
-
-
 
 
 <site name="Wiley">
@@ -213,20 +206,24 @@
   </test>
 </site>
 
-<site name="ACS">
+<site name="Atypon">
 
   <signature>
     <url>acs\.org/doi/(abs|full)</url>
+    <url>annualreviews\.org/doi/(abs|full)</url>
+    <url>liebertonline\.com/doi/(abs|full)</url>
   </signature>
 
   <rule>
     <pattern>
-      <rewrite>!abs!pdf!</rewrite>
+      <rewrite>!(abs|full)!pdf!</rewrite>
     </pattern>
   </rule>
 
   <test>
     <url>http://pubs.acs.org/doi/abs/10.1021/bi702132e</url>
+    <url>http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511</url>
+    <url>http://www.liebertonline.com/doi/abs/10.1089/cmb.2006.0137</url>
   </test>
 </site>
 
@@ -234,6 +231,7 @@
 <site name="AllenPress">
   <signature>
     <url>!allenpress\.com!</url>
+    <body>!(/pdfserv/\S*)&quot;!</body>
   </signature>
 
   <rule>
@@ -246,6 +244,97 @@
     <url>http://arpa.allenpress.com/arpaonline/?request=get-abstract&amp;issn=1543-2165&amp;volume=132&amp;page=273</url>
   </test>
 </site>
+
+
+<site name="deGruyter">
+  <signature>
+    <url>!reference-global\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!(/doi/pdf/\S*?)&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!(/production/\S*?\.pdf\S*?)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www.reference-global.com/doi/abs/10.1515/BC.2008.016</url>
+  </test>
+</site>
+
+
+<site name="JStage">
+  <signature>
+    <url>!jst\.go\.jp!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!(/article/\S*?/_pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  <rule>
+    <pattern>
+      <match>!(/jnlpdf.php\S*?)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www.jstage.jst.go.jp/article/mandi/51/11/51_1099/_article</url>
+    <url>http://www.journalarchive.jst.go.jp/english/jnlabstract_en.php?cdjournal=bbb1961&amp;cdvol=55&amp;noissue=12&amp;startpage=3059</url>
+  </test>
+</site>
+
+
+<site name="Metapress">
+  <signature>
+    <url>!metapress\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!(/content/\S*?/fulltext.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://versita.metapress.com/content/np2145348566n664/</url>
+  </test>
+</site>
+
+<site name="Metapress">
+  <signature>
+    <url>!metapress\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!(/content/\S*?/fulltext.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://versita.metapress.com/content/np2145348566n664/</url>
+  </test>
+</site>
+
+<site name="Medknown">
+  <signature>
+    <url>!article.asp\?issn=\S*?aulast=\S*!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <rewrite>!(.*)!$1;type=2!</rewrite>
+    </pattern>
+    <pattern>
+      <match>!(temp/\S*?\.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://www.indianjcancer.com/article.asp?issn=0019-509X;year=2007;volume=44;issue=1;spage=36;epage=37;aulast=Agrawal</url>
+  </test>
+</site>
+
+
 
 
 

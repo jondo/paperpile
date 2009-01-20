@@ -32,20 +32,25 @@ sub BUILD {
 
 }
 
+## Tries to get the PDF link for the given URL;
+## Returns undef if no PDF could be found
+
 sub search_file {
 
   ( my $self, my $URL ) = @_;
 
-  my $driver = $self->_match_site($URL);
+  my $driver = $self->_identify_site($URL);
 
   if ( not $driver ) {
-    croak('No driver found.');
+    carp('No driver found.');
+    return undef;
   }
 
   my $site_rules = $driver->{rule};
 
   if ( not @$site_rules ) {
-    croak('No rules specified in driver.');
+    carp('No rules specified in driver.');
+    return undef;
   }
 
   # Take the redirected URL (if redirection has taken place)
@@ -86,25 +91,10 @@ sub search_file {
   return $file;
 }
 
-sub fetch_pdf {
+## Finds the site drive for the given URL
+## Return undef if no driver can be found
 
-  ( my $self, my $url, my $file ) = @_;
-
-  my $response = $self->_browser->get($url);
-  open( PDF, ">$file" );
-  binmode(PDF);
-  print PDF $response->content;
-
-  if ( $self->_check_pdf("$file") ) {
-    return 1;
-  }
-  else {
-    print "  Downloaded file not a PDF.\n" if $self->debug;
-    return 0;
-  }
-}
-
-sub _match_site {
+sub _identify_site {
 
   ( my $self, my $URL ) = @_;
 
@@ -131,53 +121,55 @@ sub _match_site {
         $pattern =~ s/!//g;
 
         if ( $URL =~ m!($pattern)! ) {
+
           # save resolved URL for downstream use to avoid doing this again.
           $driver->{site}->{$siteName}->{final_url} = $URL;
-          print "Match. \n" if $self->debug;
+          print "Match. Using driver $siteName.\n" if $self->debug;
           return $driver->{site}->{$siteName};
-        } else {
+        }
+        else {
           print "No match. \n" if $self->debug;
         }
-
-
       }
     }
   }
+
+  # if we haven't found a signature in the url, we check the content of the page
+
+  my $response = $self->_browser->get($URL);
+  my $body     = $response->content;
+  $URL = $response->request->uri;
+
+  foreach my $siteName ( keys %{ $driver->{site} } ) {
+    foreach my $pattern (
+      @{ $driver->{site}->{$siteName}->{signature}->[0]->{body} } )
+    {
+
+      print "Matching page content vs. $pattern. " if $self->debug;
+
+      $pattern =~ s/!//g;
+
+      if ( $body =~ m!($pattern)! ) {
+        $driver->{site}->{$siteName}->{final_url} = $URL;
+        print "Match. Using driver $siteName.\n" if $self->debug;
+        return $driver->{site}->{$siteName};
+      }
+      else {
+        print "No match. \n" if $self->debug;
+      }
+    }
+  }
+
+  # if we haven't found anything by now, we give up
 
   return undef;
 
 }
 
-sub load_driver {
-
-  my $self = shift;
-
-  open( XML, "<" . $self->driver_file )
-    or croak( "Could not open driver file " . $self->driver_file );
-  my $content = '';
-  $content .= $_ foreach (<XML>);
-  $self->_driver( XMLin( $content, ForceArray => 1 ) );
-
-}
-
-sub get_tests {
-
-  my $self = shift;
-
-  my $driver = $self->_driver;
-
-  my $tests = {};
-
-  foreach my $siteName ( keys %{ $driver->{site} } ) {
-    my @tmp = ();
-    foreach my $test ( @{ $driver->{site}->{$siteName}->{test}->[0]->{url} } ) {
-      push @tmp, $test;
-    }
-    $tests->{$siteName} = [@tmp];
-  }
-
-  return $tests;
-}
+## Function to get from one URL to the next;
+## either rewrite the URL, find the new URL by pattern 
+## matching in the content of the page; or do both (or 
+## nothing at all)
 
 sub _followURL {
   ( my $self, my $URL, my $rule ) = @_;
@@ -206,6 +198,8 @@ sub _followURL {
 
 }
 
+## function to match URL (see _followURL for description)
+
 sub _matchURL {
 
   ( my $self, my $URL, my $pattern ) = @_;
@@ -224,9 +218,9 @@ sub _matchURL {
     if $self->debug;
 
   if ( $content =~ m!$pattern! ) {
-    my $match=$1;
+    my $match = $1;
     print "    ..and found $match...\n" if $self->debug;
-    return URI->new_abs( $match, $response->base);
+    return URI->new_abs( $match, $response->base );
   }
   else {
     print "    ..but did not find anything...\n" if $self->debug;
@@ -234,6 +228,8 @@ sub _matchURL {
   }
 
 }
+
+## function to rewrite URL (see _followURL for description)
 
 sub _rewriteURL {
 
@@ -245,7 +241,7 @@ sub _rewriteURL {
 
   eval($command);
 
-  if ($@){
+  if ($@) {
     print "  Error in pattern: $@";
     return undef;
   }
@@ -261,22 +257,80 @@ sub _rewriteURL {
 
 }
 
-sub _check_pdf {
+## Loads driver from XML file
+sub load_driver {
 
-  ( my $self, my $file ) = @_;
+  my $self = shift;
 
-  open( INFILE, "<$file" );
-  binmode( INFILE, ':raw' );
-  seek( INFILE, 0, 0 );
-  my $buf;
-  read( INFILE, $buf, 255 );
+  open( XML, "<" . $self->driver_file )
+    or croak( "Could not open driver file " . $self->driver_file );
+  my $content = '';
+  $content .= $_ foreach (<XML>);
+  $self->_driver( XMLin( $content, ForceArray => 1 ) );
 
-  if ( $buf !~ m/^\%PDF/ ) {
+}
+
+## Return test cases
+sub get_tests {
+
+  my $self = shift;
+
+  my $driver = $self->_driver;
+
+  my $tests = {};
+
+  foreach my $siteName ( keys %{ $driver->{site} } ) {
+    my @tmp = ();
+    foreach my $test ( @{ $driver->{site}->{$siteName}->{test}->[0]->{url} } ) {
+      push @tmp, $test;
+    }
+    $tests->{$siteName} = [@tmp];
+  }
+
+  return $tests;
+}
+
+sub check_pdf {
+
+  ( my $self, my $url ) = @_;
+  my $max_content = 64;
+
+  # get only the start of the file and stop after $max_content
+  my $content  = '';
+  my $response = $self->_browser->get(
+    $url,
+    ':content_cb' => sub {
+      my ( $data, $response, $protocol ) = @_;
+      $content .= $data;
+      die if length( $response > $max_content );
+      return ();
+    },
+    $max_content + 1
+  );
+
+  if ( $content !~ m/^\%PDF/ ) {
     return 0;
   }
   else {
     return 1;
   }
+
+}
+
+## Download the PDF file given in $url to file $file
+## For testing purpose only
+
+sub fetch_pdf {
+
+  ( my $self, my $url, my $file ) = @_;
+
+  my $response = $self->_browser->get($url);
+  open( PDF, ">$file" );
+  binmode(PDF);
+  print PDF $response->content;
+
+  return 1;
+
 }
 
 1;
