@@ -104,7 +104,10 @@ sub _linkOut {
       $pub_hash{$id}->url('');
     } else {
       $pub_hash{$id}->url($entry->{ObjUrl}->{Url});
-      $pub_hash{$id}->icon($entry->{ObjUrl}->{IconUrl});
+      # Adjust the url otherwise it won't get displayed correctly
+      my $icon_url=$entry->{ObjUrl}->{IconUrl};
+      $icon_url=~s/entrez/corehtml/;
+      $pub_hash{$id}->icon($icon_url);
     }
   }
 

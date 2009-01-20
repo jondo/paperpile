@@ -8,13 +8,10 @@ BEGIN { use_ok 'PaperPile::Crawler' }
 my $crawler=PaperPile::Crawler->new;
 
 $crawler->debug(0);
-
 $crawler->driver_file('../data/driver.xml');
 $crawler->load_driver();
 
 my $tests=$crawler->get_tests;
-
-# Todo: elsevier article locater, eg: http://linkinghub.elsevier.com/retrieve/pii/S1470-2045(08)70008-1
 
 #$tests={manual=>['http://www.indianjcancer.com/article.asp?issn=0019-509X;year=2007;volume=44;issue=1;spage=36;epage=37;aulast=Agrawal']};
 

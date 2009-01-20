@@ -5,6 +5,7 @@ use warnings;
 use parent 'Catalyst::Controller';
 use PaperPile::Utils;
 use PaperPile::Library::Publication;
+use PaperPile::Crawler;
 use Data::Dumper;
 use LWP::UserAgent ();
 use LWP::MediaTypes qw(guess_media_type media_suffix);
@@ -16,6 +17,35 @@ use File::Copy;
 
 use File::stat;
 use 5.010;
+
+
+sub search : Local {
+  my ( $self, $c ) = @_;
+
+  my $source_id = $c->request->params->{source_id};
+  my $sha1      = $c->request->params->{sha1};
+  my $source = $c->session->{"source_$source_id"};
+  my $url        = $c->request->params->{url};
+
+  my $pub = $source->find_sha1($sha1);
+
+  my $crawler=PaperPile::Crawler->new;
+  $crawler->debug(1);
+  $crawler->driver_file('/home/wash/play/PaperPile/t/data/driver.xml');
+  $crawler->load_driver();
+  my $pdf=$crawler->search_file($url);
+
+  if (not defined $pdf){
+    $pdf='null';
+  }
+
+  print STDERR $pdf, "\n";
+
+  $c->stash->{success} = 'true';
+  $c->stash->{pdf} = "$pdf";
+  $c->forward('PaperPile::View::JSON');
+
+}
 
 sub get : Local {
   my ( $self, $c ) = @_;
