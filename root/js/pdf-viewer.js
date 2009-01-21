@@ -1,30 +1,25 @@
 PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
-    file: '/home/wash/play/PaperPile/t/data/nature.pdf',
-    store: null,
     canvasWidth: null,
     canvasHeight: null,
     mode: 'drag',
 
     initComponent: function() {
     
-		    _store=new Ext.data.Store(
+	      var i = document.createElement('img');
+        i.src = Ext.BLANK_IMAGE_URL;
+
+        _store=new Ext.data.Store(
             {id: 'data',
              proxy: new Ext.data.HttpProxy({
                  url: '/ajax/pdf/pdf_viewer', 
                  method: 'GET'
              }),
-             baseParams:{viewer_id: this.id,
-                         file: this.file,
-                         limit:1
-                        },
+             baseParams:{},
              reader: new Ext.data.JsonReader(),
             });
 
         _store.on('datachanged', this.reloadImage,this);
-
-        var i = document.createElement('img');
-        i.src = Ext.BLANK_IMAGE_URL;
 
         var _pager=new Ext.PagingToolbar({
             pageSize: 1,
@@ -32,6 +27,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
             displayInfo: false,
         });
 
+     
         var _zoomer= new Ext.Slider({
             width: 200,
             value: 5,
@@ -42,9 +38,9 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
 
         Ext.apply(this, 
-                  {autoScroll : false,
-                   bbar: _pager,
-                   tbar: new Ext.Toolbar(
+                   {autoScroll : false,
+                    bbar:_pager,
+                    tbar: new Ext.Toolbar(
                        {items: [_zoomer,
                                 { text: 'Drag',
                                   id: 'drag_button',
@@ -69,8 +65,8 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
                                 }
                                ]}
                    ),
-                   store: _store,
-                   client: i,
+                    client: i,
+                    store:_store
                   }
                  );
 		    PaperPile.PDFviewer.superclass.initComponent.call(this);
@@ -108,16 +104,16 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
     },
 
-    initPDF: function(){
+    initPDF: function(file){
 
         this.body.appendChild(this.client);
         this.client = Ext.get(this.client);
         this.client.setStyle('cursor', 'move');
-
         this.client.on('mousedown', this.onMouseDown, this);
 
-        Ext.dump(Ext.getCmp('MAIN'));
+        this.file=file,
 
+        this.store.baseParams={viewer_id: this.id, file: this.file, limit:1};
 
         this.store.load({params:{start:0,
                                  zoom: 1.0,

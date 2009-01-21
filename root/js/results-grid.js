@@ -73,8 +73,8 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             columns:[{header: 'Imported',
                       dataIndex: '_imported',
                      },
-                     {header: 'SHA1',
-                      dataIndex: 'sha1',
+                     {header: 'PDF',
+                      dataIndex: 'pdf',
                      },
 
                      {header: 'Journal',
@@ -109,11 +109,12 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             success: function(){
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry Inserted.');
+                this.store.getById(sha1).set('_imported',1);
             },
+            scope:this
             //failure: this.markInvalid,
         });
 
-        this.store.getById(sha1).set('imported',1);
     },
 
     deleteEntry: function(){

@@ -1,17 +1,24 @@
 PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
-	  tplMarkup: [
-		    '<div id="mybox" ><p><a href="{url}"><img src="{icon}"></img></a></p>\
-         <p><a href="#" onClick="{scope}.searchPDF()">Search PDF for {sha1}</a></p>\
-         <p><div id="searching_text"></id></p>\
-         <p><div id="pbar"></id></p></div>\
-	  '],
-	  startingMarkup: 'Empty2',
+	  
+    markup: [
+		    '<div id="mybox" >',
+        '<ul>',
+        '<tpl if="url">',
+        '<li><a href="{url}">Go to publisher site</a></li>',
+        '<li><a href="#" onClick="{scope}.searchPDF()">Search PDF for {sha1}</a></li>',
+        '</tpl>',
+        '<tpl if="!url">',
+        '<li>No links available for this citation.</li>',
+        '</tpl>',
+        '<li><div id="pbar"></div></li>',
+        '</ul>',
+        '</div>',        
+	  ],
+
+	  startingMarkup: '',
 	  
     initComponent: function() {
-		    this.tpl = new Ext.XTemplate(this.tplMarkup);
-
-        
-        
+		    this.tpl = new Ext.XTemplate(this.markup);
 		    Ext.apply(this, {
 			      bodyStyle: {
 				        background: '#ffffff',
@@ -27,12 +34,13 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
         this.data=data;
         this.data.scope='Ext.getCmp(\'pdf_manager\')';
         this.source_id=Ext.getCmp('results_tabs').getActiveTab().id;
+        
         this.tpl.overwrite(this.body, data);
+
         var el = Ext.get("mybox");
         el.boxWrap();
         this.progressBar = new Ext.ProgressBar({
             id: 'progress_bar',
-            text:'Starting download...',
             hidden:true,
             applyTo: 'pbar'
         });
@@ -41,9 +49,10 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
 
     searchPDF: function(){
 
-        var el = Ext.get("searching_text");
+        this.progressBar.wait({text:"Searching PDF on publisher site", interval:100});
+        this.progressBar.show();
 
-        el.insertHtml('afterBegin','<p>Searching...<p><img src="icons/waiting.gif">');
+        //el.insertHtml('afterBegin','<p>Searching...<p><img src="icons/waiting.gif">');
 
         Ext.Ajax.request(
             {   url: '/ajax/download/search',
@@ -54,7 +63,6 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
                 method: 'GET',
                 success: this.foundPDF,
                 scope: this,
-
             });
 
     },
@@ -63,9 +71,10 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
 
         var json = Ext.util.JSON.decode(response.responseText);
 
-        var el = Ext.get("searching_text");
-
+        this.progressBar.reset();
+        
         if (json.pdf){
+            this.progressBar.text="Starting download...";
             this.downloadPDF(json.pdf);
         }
         
@@ -76,10 +85,6 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
 
     downloadPDF: function(pdf){
 
-        var pbar=Ext.getCmp('pdf_manager').progressBar;
-
-        pbar.show();
-
         Ext.Ajax.request(
             {   url: '/ajax/download/get',
                 params: { sha1: this.data.sha1,
@@ -87,11 +92,13 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
                           url:pdf,
                         },
                 method: 'GET',
-                success: this.finishDownload
+                success: this.finishDownload,
+                scope: this
             });
 
         var task = {
             run: this.checkProgress,
+            scope: this,
             interval: 500
         }
         Ext.TaskMgr.start(task);
@@ -100,18 +107,22 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
 
     finishDownload: function(){
         Ext.TaskMgr.stopAll();
-        Ext.getCmp('pdf_manager').checkProgress();
+        this.checkProgress();
         Ext.Ajax.request({
             url: '/ajax/download/finish',
-            params: { sha1: Ext.getCmp('pdf_manager').data.sha1,
-                      source_id: Ext.getCmp('pdf_manager').source_id,
+            params: { sha1: this.data.sha1,
+                      source_id: this.source_id,
                     },
             method: 'GET',
-            success: function(){
+            success: function(response){
+                var json = Ext.util.JSON.decode(response.responseText);
+                this.progressBar.hide();
+                Ext.getCmp(this.source_id).store.getById(this.data.sha1).set('pdf',json.pdf_file);
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Download finished.');
-                //Ext.getCmp('pdf_manager').showPDF('dummy');
+                //this.showPDF('dummy');
             },
+            scope: this,
         });
 
     },
@@ -120,7 +131,7 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
         
         Ext.Ajax.request({
             url: '/ajax/download/progress',
-            params: { sha1: Ext.getCmp('pdf_manager').data.sha1,
+            params: { sha1: this.data.sha1,
                      source_id: this.source_id,
             },
             method: 'GET',
@@ -133,13 +144,13 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
                 } else {
                     fraction=0;
                 }
-                var pbar=Ext.getCmp('pdf_manager').progressBar;
-
-                pbar.updateProgress(fraction, json.current_size);
+                var pbar=this.progressBar;
+                pbar.updateProgress(fraction, "Downloading ("+Ext.util.Format.fileSize(json.current_size) +" / "+ Ext.util.Format.fileSize(json.total_size)+")");
                 pbar.show();
                 
                 Ext.getCmp('statusbar').setText(fraction);
-            }
+            },
+            scope:this
         })
     },
 
@@ -156,7 +167,6 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
         Ext.getCmp('canvas_panel').doLayout();
         Ext.getCmp('pdf_viewer').initPDF();
         Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_viewer');
-
     }
 
 

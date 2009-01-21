@@ -15,13 +15,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                        new Ext.Panel({
                            region: 'center',
                            layout: 'border',
-                           bbar: new Ext.StatusBar({
-                           id: 'statusbar',
-                           defaultText: 'Default status text',
-                           defaultIconCls: 'default-icon',
-                           text: 'Ready',
-                           iconCls: 'ready-icon',
-                       }),
                        
                        items: [ {itemId:'navigation',
                                  region:'west',
@@ -32,6 +25,14 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                  width: 200,
                                  minSize: 100,
                                  maxSize: 300,
+                                 bbar: new Ext.StatusBar({
+                                     border:0,
+                                     id: 'statusbar',
+                                     defaultText: 'Default status text',
+                                     defaultIconCls: 'default-icon',
+                                     text: 'Ready',
+                                     iconCls: 'ready-icon',
+                                 }),
                                  items: [ 
                                      new PaperPile.Tree(
                                          { title: 'PaperPile',
@@ -51,8 +52,34 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                             {id:'pdf_manager',
                                              itemId:'pdf_manager',
                                             }
+                                        ),
+                                        new PaperPile.PDFviewer(
+                                            {id:'pdf_viewer',
+                                             itemId:'pdf_viewer',
+                                            }
                                         )
+
                                     ],
+                                    bbar: [{ text: 'Manage PDF',
+                                             id: 'pdf_manager_tab_button',
+                                             enableToggle: true,
+                                             toggleHandler: this.onPDFtabToggle,
+                                             toggleGroup: 'pdf_tab_buttons',
+                                             scope: this,
+                                             allowDepress : false,
+                                             pressed: true
+                                           },
+                                        { text: 'View PDF',
+                                             id: 'pdf_view_tab_button',
+                                             enableToggle: true,
+                                             toggleHandler: this.onPDFtabToggle,
+                                             toggleGroup: 'pdf_tab_buttons',
+                                             scope: this,
+                                             allowDepress : false,
+                                             pressed: false
+                                           }
+                                          ],
+
                                     margins: '2 2 2 2',
                                     cmargins: '5 5 0 5',
                                     width: 500,
@@ -94,6 +121,11 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         this.data_tabs.getComponent('pubsummary').updateDetail(r.data);
         this.data_tabs.getComponent('pubnotes').updateDetail(r.data);
         Ext.getCmp('pdf_manager').updateDetail(r.data);
+
+        if (r.data.pdf){
+            Ext.getCmp('pdf_viewer').initPDF(r.data.pdf);
+        }
+
     },
 
     onAfterLayout: function(){
@@ -102,6 +134,18 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
        this.canvasHeight=Ext.getCmp('canvas_panel').getInnerHeight();
 
     },
+
+    onPDFtabToggle: function(button, pressed){
+
+        if (button.id == 'pdf_manager_tab_button' && pressed){
+            this.canvas_panel.getLayout().setActiveItem('pdf_manager');
+        }
+
+        if (button.id == 'pdf_view_tab_button' && pressed){
+            this.canvas_panel.getLayout().setActiveItem('pdf_viewer');
+        }
+    },
+
 
     importJournals: function(){
         statusBar = Ext.getCmp('statusbar');

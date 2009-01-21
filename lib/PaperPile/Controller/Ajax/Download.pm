@@ -39,8 +39,6 @@ sub search : Local {
     $pdf='null';
   }
 
-  print STDERR $pdf, "\n";
-
   $c->stash->{success} = 'true';
   $c->stash->{pdf} = "$pdf";
   $c->forward('PaperPile::View::JSON');
@@ -127,9 +125,10 @@ sub finish : Local{
   mkpath($dirs);
   copy($tmp_file, $dest);
 
-  $c->model('DBI')->update_field($pub->_rowid, 'pdf', $pattern.'pdf');
+  $c->model('DBI')->update_field($pub->_rowid, 'pdf', $dest);
 
 
+  $c->stash->{pdf_file} = "$dest";
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 
