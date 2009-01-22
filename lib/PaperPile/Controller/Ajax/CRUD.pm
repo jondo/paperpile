@@ -77,6 +77,29 @@ sub update_entry : Local {
 }
 
 
+sub update_notes : Local {
+  my ( $self, $c ) = @_;
+
+  my $rowid     = $c->request->params->{rowid};
+  my $sha1      = $c->request->params->{sha1};
+  my $html      = $c->request->params->{html};
+
+
+  $c->model('DBI')->update_field($rowid, 'notes', $html);
+
+  $c->stash->{success} = 'true';
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+
+
+
+
+
+
+
+
 sub generate_edit_form : Local {
   my ( $self, $c ) = @_;
 

@@ -73,6 +73,7 @@ sub _resultsgrid_format {
 
   foreach my $pub (@$entries) {
     push @data,  $pub->as_hash;
+
   }
 
   my @fields = ();
@@ -90,6 +91,7 @@ sub _resultsgrid_format {
   );
 
   $c->component('View::JSON')->encoding('utf8');
+
 
   $c->stash->{total_entries} = $total_entries;
   $c->stash->{data}          = [@data];

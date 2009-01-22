@@ -13,3 +13,7 @@
 .edit .x-btn-text {
     background-image: url('/icons/silk/application_edit.png');
 }
+
+.pp-basic {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}

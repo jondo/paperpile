@@ -35,7 +35,7 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
         this.data.scope='Ext.getCmp(\'pdf_manager\')';
         this.source_id=Ext.getCmp('results_tabs').getActiveTab().id;
         
-        this.tpl.overwrite(this.body, data);
+        this.tpl.overwrite(this.body, this.data);
 
         var el = Ext.get("mybox");
         el.boxWrap();

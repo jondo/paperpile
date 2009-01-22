@@ -97,7 +97,6 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
         Ext.getCmp('canvas_panel').remove('pub_edit');
         Ext.getCmp('canvas_panel').doLayout();
         Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_manager');
-
     }
     
 

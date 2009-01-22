@@ -1,7 +1,7 @@
 
 PaperPile.PubSummary = Ext.extend(Ext.Panel, {
 	  tplMarkup: [
-		    '<div> Abstract: {abstract}<br/></div>',
+		    '<div class="pp-basic"> {abstract}<br/></div>',
 	  ],
 	  startingMarkup: 'Empty',
 	  

@@ -7,11 +7,13 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
             layout:'card',
             margins: '2 2 2 2',
             items:[{xtype:'pubsummary',
+                    id: 'pubsummary',
                     itemId:'pubsummary',
                     border: true,
                     height:200
                    },
                    {xtype:'pubnotes',
+                    id: 'pubnotes',
                     itemId:'pubnotes',
                     border: true,
                     height:200
@@ -32,7 +34,31 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
                      toggleGroup: 'tab_buttons',
                      allowDepress : false,
                      pressed: false
-                   }
+                   },
+                   { text: 'Save',
+                     id: 'save_notes_button',
+                     listeners: {
+                         click:  { fn: function()
+                                   {
+                                       Ext.getCmp('pubnotes').onSave();
+                                   },
+                                   scope: Ext.getCmp('pubnotes')}
+                     },
+
+                     hidden:true
+                   },
+                   { text: 'Cancel',
+                     id: 'cancel_notes_button',
+                     listeners: {
+                         click:  { fn: function()
+                                   {
+                                       Ext.getCmp('pubnotes').onCancel();
+                                   },
+                                   scope: Ext.getCmp('pubnotes')}
+                     },
+                     hidden:true
+                   },
+
                   ]
         });
        

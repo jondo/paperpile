@@ -53,35 +53,30 @@ sub init_db {
   # Full text search table
   $self->dbh->do('DROP TABLE IF EXISTS Fulltext');
   $self->dbh->do(
-   "CREATE VIRTUAL TABLE fulltext using fts3(title,abstract,notes,names);");
+    "CREATE VIRTUAL TABLE fulltext using fts3(title,abstract,notes,names);");
 
   # Create user settings table
   $self->dbh->do('DROP TABLE IF EXISTS Settings');
   $self->dbh->do("CREATE TABLE Settings (key TEXT, value TEXT)");
 
   foreach my $key ( keys %$settings ) {
-    my $value=$settings->{$key};
+    my $value = $settings->{$key};
     $self->dbh->do("INSERT INTO Settings (key,value) VALUES ('$key','$value')");
   }
 }
-
-
 
 sub get_setting {
 
   ( my $self, my $key ) = @_;
 
-  $key=$self->dbh->quote($key);
+  $key = $self->dbh->quote($key);
 
-  (my $value)= $self->dbh->selectrow_array("SELECT value FROM Settings WHERE key=$key ");
+  ( my $value ) =
+    $self->dbh->selectrow_array("SELECT value FROM Settings WHERE key=$key ");
 
   return $value;
 
 }
-
-
-
-
 
 sub create_pub {
   ( my $self, my $pub ) = @_;
@@ -169,15 +164,11 @@ sub update_pub {
 sub update_field {
   ( my $self, my $rowid, my $field, my $value ) = @_;
 
-  $value=$self->dbh->quote($value);
+  $value = $self->dbh->quote($value);
 
   $self->dbh->do("UPDATE Publications SET $field=$value WHERE rowid=$rowid");
 
-
 }
-
-
-
 
 sub reset_db {
 
@@ -226,8 +217,13 @@ sub fulltext_search {
 
   # explicitely select rowid since it is not included by *
   my $sth = $self->dbh->prepare(
-    qq{SELECT *,publications.rowid as _rowid FROM Publications JOIN fulltext 
-ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset}
+    "SELECT *,
+     publications.rowid as _rowid,
+     publications.title as title,
+     publications.abstract as abstract,
+     publications.notes as notes
+     FROM Publications JOIN fulltext
+     ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset"
   );
 
   $sth->execute;
@@ -239,12 +235,13 @@ ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset}
     foreach my $field ( keys %$row ) {
       next if $field eq 'names';  # is not a standard field of Publication class
       my $value = $row->{$field};
+
       if ($value) {
 
-    # Some unicode magic going one here. In principle perl uses utf-8 and
-    # sqlite used utf8. However, strings returned by the DBI driver function
-    # are not perl utf-8 strings. We use here utf8::decode which seems to work,
-    # which does not seem that everything is right unicode-wise, so take care...
+        # Some unicode magic going one here. In principle perl uses utf-8 and
+        # sqlite used utf8. However, strings returned by the DBI driver function
+        # are not perl utf-8 strings. We use here utf8::decode which seems to work,
+        # which does not seem that everything is right unicode-wise, so take care...
         utf8::decode($value);
 
         $pub->$field($value);
