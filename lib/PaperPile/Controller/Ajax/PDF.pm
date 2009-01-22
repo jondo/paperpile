@@ -23,10 +23,17 @@ sub pdf_viewer : Local {
   my $canvas_width  = $c->request->params->{canvas_width};
   my $canvas_height = $c->request->params->{canvas_height};
 
-  my $pv;
+  my $pv=undef;
 
-  if ( not defined $c->session->{"viewer_$viewer_id"} ) {
+  # If there already exists a viewer object of the same file, use it
+  if (defined $c->session->{"viewer_$viewer_id"}){
+    if ($c->session->{"viewer_$viewer_id"}->file eq $file){
+      $pv = $c->session->{"viewer_$viewer_id"};
+    }
+  }
 
+  # else create a new one
+  if ( not  $pv) {
     $pv = PaperPile::PDFviewer->new(
       file          => $file,
       canvas_width  => $canvas_width,
@@ -35,9 +42,6 @@ sub pdf_viewer : Local {
     $pv->init;
 
     $c->session->{"viewer_$viewer_id"} = $pv;
-  }
-  else {
-    $pv = $c->session->{"viewer_$viewer_id"};
   }
 
   my $image = $pv->render_page( $page, $zoom );
