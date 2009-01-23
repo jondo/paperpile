@@ -32,6 +32,33 @@ sub init_db : Local {
 
 }
 
+sub tag_list : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $tags=$c->model('DBI')->get_tags;
+
+  #my @tags=('Tag1','Tag2','Tag3');
+
+  my @data=();
+
+  foreach my $tag (@$tags){
+    push @data, {tag=>$tag};
+  }
+
+  my %metaData = (
+   root          => 'data',
+   fields        => ['tag']
+  );
+
+  $c->stash->{data}          = [@data];
+  $c->stash->{metaData}      = {%metaData};
+
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+
 
 sub import_journals : Local {
   my ( $self, $c ) = @_;

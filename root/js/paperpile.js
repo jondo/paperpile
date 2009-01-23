@@ -112,6 +112,20 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         this.data_tabs=Ext.getCmp('data_tabs');
         this.canvas_panel=Ext.getCmp('canvas_panel');
 
+        this.tagStore=new Ext.data.Store(
+            { proxy: new Ext.data.HttpProxy({
+                url: '/ajax/misc/tag_list', 
+                method: 'GET'
+            }),
+              storeId: 'tag_store',
+              baseParams:{},
+              reader: new Ext.data.JsonReader(),
+              pruneModifiedRecords:true,
+            }
+        ); 
+
+        this.tagStore.reload();
+
         this.on('afterlayout',this.onAfterLayout,this);
 
                  
@@ -120,6 +134,9 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 	  onRowSelect: function(sm, rowIdx, r) {
         //this.data_tabs.getComponent('pubsummary').updateDetail(r.data);
         //this.data_tabs.getComponent('pubnotes').updateDetail(r.data);
+
+        Ext.getCmp('statusbar').clearStatus();
+        Ext.getCmp('statusbar').setText(r.data.sha1);
 
         Ext.getCmp('pubsummary').updateDetail(r.data);
         Ext.getCmp('pdf_manager').updateDetail(r.data);

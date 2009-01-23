@@ -79,77 +79,74 @@ sub get_setting {
 }
 
 sub create_pub {
-  ( my $self, my $pub ) = @_;
+    ( my $self, my $pub ) = @_;
 
-  ## Insert main entry into Publications table
-  ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
-  $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
+    ## Insert main entry into Publications table
+    ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
+    $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
 
-  ## Insert searchable fields into fulltext table
-  my $pub_rowid = $self->dbh->func('last_insert_rowid');
+    ## Insert searchable fields into fulltext table
+    my $pub_rowid = $self->dbh->func('last_insert_rowid');
 
-  ( $fields, $values ) = $self->_hash2sql(
-    {
-      rowid    => $pub_rowid,
-      title    => $pub->title,
-      abstract => $pub->abstract,
-      notes    => $pub->notes,
-      names    => $pub->_authors_nice,
+    ( $fields, $values ) = $self->_hash2sql( {
+            rowid    => $pub_rowid,
+            title    => $pub->title,
+            abstract => $pub->abstract,
+            notes    => $pub->notes,
+            names    => $pub->_authors_nice,
+        }
+    );
+
+    $self->dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
+
+    ## Insert authors
+
+    my $insert =
+      $self->dbh->prepare("INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
+    my $search = $self->dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
+    my $insert_join =
+      $self->dbh->prepare("INSERT INTO author_publication (author_id,publication_id) VALUES(?,?)");
+
+    foreach my $author ( @{ $pub->get_authors } ) {
+        my $author_rowid;
+        $search->execute( $author->key );
+        $author_rowid = $search->fetchrow_array;
+        if ( not $author_rowid ) {
+            my @values = ( $author->key, $author->first, $author->last, $author->von, $author->jr );
+            $insert->execute(@values);
+            $author_rowid = $self->dbh->func('last_insert_rowid');
+        }
+        $insert_join->execute( $author_rowid, $pub_rowid );
     }
-  );
 
-  $self->dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
+    $pub->_rowid($pub_rowid);
 
-  ## Insert authors
-
-  my $insert = $self->dbh->prepare(
-    "INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
-  my $search = $self->dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
-  my $insert_join = $self->dbh->prepare(
-    "INSERT INTO author_publication (author_id,publication_id) VALUES(?,?)");
-
-  foreach my $author ( @{ $pub->get_authors } ) {
-    my $author_rowid;
-    $search->execute( $author->key );
-    $author_rowid = $search->fetchrow_array;
-    if ( not $author_rowid ) {
-      my @values = (
-        $author->key, $author->first, $author->last,
-        $author->von, $author->jr
-      );
-      $insert->execute(@values);
-      $author_rowid = $self->dbh->func('last_insert_rowid');
-    }
-    $insert_join->execute( $author_rowid, $pub_rowid );
-  }
-
-  $pub->_rowid($pub_rowid);
-
-  return $pub_rowid;
+    return $pub_rowid;
 }
 
 sub delete_pubs {
 
-  ( my $self, my $rowids ) = @_;
+    ( my $self, my $rowids ) = @_;
 
-  my $delete_main =
-    $self->dbh->prepare("DELETE FROM publications WHERE rowid=?");
-  my $delete_fulltext =
-    $self->dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
-  my $delete_author_join = $self->dbh->prepare(
-    "DELETE FROM author_publication WHERE publication_id=?");
-  my $delete_authors = $self->dbh->prepare(
-"DELETE From authors where rowid not in (SELECT author_id FROM author_publication)"
-  );
+    my $delete_main = $self->dbh->prepare(
+        "DELETE FROM publications WHERE rowid=?"
+    );
+    my $delete_fulltext    = $self->dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
+    my $delete_author_join = $self->dbh->prepare(
+        "DELETE FROM author_publication WHERE publication_id=?"
+    );
+    my $delete_authors = $self->dbh->prepare(
+        "DELETE From authors where rowid not in (SELECT author_id FROM author_publication)"
+    );
 
-  foreach my $rowid (@$rowids) {
-    $delete_main->execute($rowid);
-    $delete_fulltext->execute($rowid);
-    $delete_author_join->execute($rowid);
-    $delete_authors->execute;
-  }
+    foreach my $rowid (@$rowids) {
+        $delete_main->execute($rowid);
+        $delete_fulltext->execute($rowid);
+        $delete_author_join->execute($rowid);
+        $delete_authors->execute;
+    }
 
-  return 1;
+    return 1;
 
 }
 
@@ -165,22 +162,56 @@ sub update_field {
   ( my $self, my $rowid, my $field, my $value ) = @_;
 
   $value = $self->dbh->quote($value);
-
   $self->dbh->do("UPDATE Publications SET $field=$value WHERE rowid=$rowid");
 
 }
 
-sub reset_db {
+sub update_tags {
+  ( my $self, my $rowid, my $tags) = @_;
 
-  ( my $self ) = @_;
+  $self->update_field($rowid,'tags',$tags);
 
-  for my $table (
-    qw/publications authors author_publication fields journals fulltext/)
-  {
-    $self->dbh->do("DELETE FROM $table");
+  my $sth=$self->dbh->prepare("INSERT INTO Tags (tag) VALUES(?)");
+
+  my @tags=split(/,/,$tags);
+
+  foreach my $tag (@tags){
+    $sth->execute($tag);
   }
 
-  return 1;
+}
+
+sub get_tags {
+  ( my $self) = @_;
+
+  my $sth=$self->dbh->prepare("SELECT tag from Tags;");
+
+  $sth->execute();
+
+
+  my @out=();
+
+  foreach my $tag (@{$sth->fetchall_arrayref}){
+    push @out, $tag->[0];
+  }
+
+  return [@out];
+
+}
+
+
+
+sub reset_db {
+
+    ( my $self ) = @_;
+
+    for my $table (
+        qw/publications authors author_publication fields journals fulltext tags tags_publications/)
+    {
+        $self->dbh->do("DELETE FROM $table");
+    }
+
+    return 1;
 }
 
 sub fulltext_count {

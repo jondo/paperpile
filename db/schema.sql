@@ -28,6 +28,21 @@ CREATE TABLE Journals (
   icon           TEXT
 );
 
+CREATE TABLE Tags (
+  tag            TEXT UNIQUE
+);
+
+CREATE TABLE Tag_Publication (
+  tag_id         INTEGER,
+  publication_id    INTEGER,
+  PRIMARY KEY (tag_id, publication_id)
+);
+
+
+
+
+
+
 
 CREATE TABLE Author_Publication (
   author_id         INTEGER,

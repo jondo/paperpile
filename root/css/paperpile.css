@@ -17,3 +17,21 @@
 .pp-basic {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
+
+.pp-summary-abstract {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    width: 65%;
+    line-height: 1.25em;
+    text-align: justify;
+    padding: 5px 5px 5px 5px*/;
+ }
+
+.pp-summary-form {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    width: 30%;
+    float:right;
+    align:right;
+    padding: 5px 5px 5px 5px;
+
+}
+

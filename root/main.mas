@@ -4,6 +4,7 @@
   <link rel="stylesheet" type="text/css" href="/ext/resources/css/ext-all.css">
   <link rel="stylesheet" type="text/css" href="/ext/resources/css/xtheme-gray.css">
   <link rel="stylesheet" type="text/css" href="/css/paperpile.css">
+  <link rel="stylesheet" type="text/css" href="/css/boxselect.css">
 
   <script type="text/javascript" charset="utf-8" src="/ext/adapter/ext/ext-base.js"></script>
   <script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
@@ -19,6 +20,7 @@
   <script type="text/javascript" charset="utf-8" src="/js/pdf-viewer.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf-manager.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/tree.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/box-select.js"></script>
 
   <title>PaperPile</title>
 </head>
