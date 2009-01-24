@@ -25,49 +25,68 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
         this.data=data;
 		    this.tpl.overwrite(this.body, data);		
 
+        // Get application wide store with tags and make a local 
+        // copy as simple store which can be modified without
+        // affecting other things. Will not scale, once we want to 
+        // have a shared list of tags from many users here. Then 
+        // we will need a true remote lookup
+        
+        var list=[];
+        Ext.StoreMgr.lookup('tag_store').each(function(rec){
+            list.push([rec.data.tag]);
+			  }, this);
+
+        var store = new Ext.data.SimpleStore({
+			      fields: ['tag'],
+            data: list,
+		    });
+
+
+
         this.form = new Ext.form.FormPanel({
             autoHeight: true,
             hideLabels: true,
             baseCls: 'x-plain',
-			      items: [new PaperPile.BoxSelect({
-                        id: 'tag_select',
-			                  name: 'to[]',
-                 	      store: Ext.StoreMgr.lookup('tag_store'),
-                        anchor:'90%',
-			                  mode: 'local',
-			                  displayField: 'tag',
-			                  valueField: 'tag',
-			                  addUniqueValues: false,
-                        listeners: {
-                            focus:  {fn: 
-                                     function(){
-                                         Ext.getCmp('tag_save_button').show();
-                                     },
-                                     scope: this}
-                        },
-                    }),
-                    new Ext.Button({
-                        id: 'tag_save_button',
-                        text: 'Ok',
-                        hidden:true,
-                        listeners: {
-                            click:  {fn: this.updateTags, scope: this}
-                        },
-                        
-                    }),
+			      items: [
+                new PaperPile.BoxSelect({
+                    id: 'tag_select',
+			              name: 'to[]',
+                    value:this.data.tags,
+                    store: store,
+                    emptyMsg: '[Add Tags]',
+                    anchor:'90%',
+			              mode: 'local',
+			              displayField: 'tag',
+			              valueField: 'tag',
+			              addUniqueValues: false,
+                    listeners: {
+                        modified:  {fn: 
+                                    function(){
+                                        Ext.getCmp('tag_save_button').show();
+                                    },
+                                    scope: this}
+                    },
+                }),
+                new Ext.Button({
+                    id: 'tag_save_button',
+                    text: 'Ok',
+                    hidden:true,
+                    listeners: {
+                        click:  {fn: this.updateTags, scope: this}
+                    },
                     
-                   ],
+                }),
+                
+            ],
 		    });
 
         this.form.render('tags');
-        Ext.getCmp('tag_select').setValue(this.data.tags);
-
-        //Ext.dump(Ext.getCmp('tag_select').store);
-
       
     },
 
     updateTags: function(){
+
+        Ext.getCmp('tag_save_button').hide();
 
         Ext.Ajax.request({
             url: '/ajax/crud/update_tags',
@@ -78,7 +97,7 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
             success: function(){
                 //this.data.tags=Ext.getCmp('tag_select').store.reload();
                 this.data.tags=Ext.getCmp('tag_select').getValue();
-                Ext.StoreMgr.lookup('tag_store').load({
+                Ext.StoreMgr.lookup('tag_store').reload({
                     callback: function(r){
                     }
                 }

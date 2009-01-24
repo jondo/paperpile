@@ -2,22 +2,32 @@
 
 PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 
-	initComponent:function() {
-		  Ext.apply(this, {
-		      selectedValues: {},
-          enableKeyEvents: true,
-			    boxElements: {},
-			    current: false,
-			    options: {
-				      className: 'bit',
-				      separator: ','
-			    },
-			    hideTrigger: true,
-			    grow: false
-		  });
-		  PaperPile.BoxSelect.superclass.initComponent.call(this);
-      
-	},
+    initComponent:function() {
+		    Ext.apply(this, {
+		        selectedValues: {},
+            enableKeyEvents: true,
+			      boxElements: {},
+			      current: false,
+			      options: {
+				        className: 'bit',
+				        separator: ','
+			      },
+			      hideTrigger: true,
+			      grow: false
+		    });
+		    PaperPile.BoxSelect.superclass.initComponent.call(this);
+        
+        this.on('focus',
+                function(){
+                    if (this.getRawValue()==this.emptyMsg){
+                        this.setRawValue('');
+                    }
+                }
+               );
+
+        this.addEvents('modified');
+
+	  },
 	
 	onRender:function(ct, position) {
 		  PaperPile.BoxSelect.superclass.onRender.call(this, ct, position);
@@ -79,10 +89,15 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
                       this.selectedValues[val] = val;
                       this.addItem(val, val);
                       this.clearValue();
+                      this.fireEvent('modified');
                   }
               }
 	        }
       }, this);
+
+      if ( this.value == ''){
+          this.setRawValue(this.emptyMsg);
+      }
 		  
 		  this.removedRecords = {};
 	},
@@ -136,9 +151,45 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 		    this.setRawValue('');
 		    this.lastSelectionText = '';
 		    this.applyEmptyText();
-        
 		    this.autoSize();
+        this.fireEvent('modified');
+
+
 	  },
+    
+
+    /* Simply duplicated here onSelect, this version is called during initializiation
+       without firing the modified event.
+    */
+
+    onInit: function(record, index) {
+		    var val = record.data[this.valueField];
+		    
+		    this.selectedValues[val] = val;
+		
+		    if(typeof this.displayFieldTpl === 'string')
+			      this.displayFieldTpl = new Ext.XTemplate(this.displayFieldTpl);
+		    
+		    if(!this.boxElements[val]){
+			      var caption;
+			      if(this.displayFieldTpl)
+				        caption = this.displayFieldTpl.apply(record.data)
+			      else if(this.displayField)
+				        caption = record.data[this.displayField];
+			
+			      this.addItem(record.data[this.valueField], caption)
+			
+		    }
+		    this.collapse();
+		    this.setRawValue('');
+		    this.lastSelectionText = '';
+		    this.applyEmptyText();
+		    this.autoSize();
+
+	  },
+
+
+
 
 	  onEnable: function(){
 		    PaperPile.BoxSelect.superclass.onEnable.apply(this, arguments);
@@ -181,9 +232,8 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 			      if(this.mode == 'local'){
 				        Ext.each(value, function(item){
 					          var index = this.store.find(this.valueField, item.trim());
-                    
-                    console.log("Item %s, index %i",item.trim(), index);
-                    console.log(this.store.data);
+                    //console.log("Item %s, index %i",item.trim(), index);
+                    //console.log(this.store.data);
 
 					          if(index > -1){
 						            values.push(this.store.getAt(index));
@@ -202,10 +252,10 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 	  setValues: function(values){
 		    if(values){
 			      Ext.each(values, function(data){
-				        this.onSelect(data);
+				        this.onInit(data);
 			      }, this);
 		    }
-		
+		    
 		    this.value = '';
 	  },
 	
@@ -241,6 +291,7 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 			      listeners: {
 				        'remove': function(box){
 					          delete this.selectedValues[box.value];
+                    this.fireEvent('modified');
 					          var rec = this.removedRecords[box.value];
 					          if(rec){
 						            this.store.add(rec);
@@ -262,6 +313,7 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 		    },'before', true);
         
 		    this.boxElements['Box_' + id] = box;
+
 	  },
 	
 	  autoSize : function(){
