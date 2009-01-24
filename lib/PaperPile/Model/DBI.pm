@@ -167,19 +167,47 @@ sub update_field {
 }
 
 sub update_tags {
-  ( my $self, my $rowid, my $tags) = @_;
+  ( my $self, my $pub_rowid, my $tags) = @_;
 
-  $self->update_field($rowid,'tags',$tags);
-
-  my $sth=$self->dbh->prepare("INSERT INTO Tags (tag) VALUES(?)");
+  $DB::single=1;
 
   my @tags=split(/,/,$tags);
 
+
+  # First update flat field in Publication table
+  $self->update_field($pub_rowid,'tags',$tags);
+
+  # Remove all connections form Tag_Publication table
+  my $sth=$self->dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
+
+  # Then insert tags into Tag table (if not already exists) and set
+  # new connections in Tag_Publication table
+
+  my $select=$self->dbh->prepare("SELECT rowid FROM Tags WHERE tag=?");
+  my $insert=$self->dbh->prepare("INSERT INTO Tags (tag) VALUES(?)");
+  my $connection=$self->dbh->prepare("INSERT INTO Tag_Publication (tag_id, publication_id) VALUES(?,?)");
+
   foreach my $tag (@tags){
-    $sth->execute($tag);
+    my $tag_rowid=undef;
+
+    $select->bind_columns(\$tag_rowid);
+    $select->execute($tag);
+    $select->fetch;
+    if (not defined $tag_rowid){
+      $insert->execute($tag);
+      $tag_rowid = $self->dbh->func('last_insert_rowid');
+    }
+
+    $connection->execute($tag_rowid,$pub_rowid);
   }
 
+  # Delete tags that have no connectin any longer
+  $self->dbh->do("DELETE From Tags where rowid not in (SELECT tag_id FROM Tag_Publication)");
+
+
 }
+
+
 
 sub get_tags {
   ( my $self) = @_;
@@ -199,6 +227,24 @@ sub get_tags {
 
 }
 
+## Return true or false, depending whether a row with unique value
+## $value in column $column exists in table $table
+
+sub has_unique_entry {
+
+    ( my $self, my $table, my $column, my $value ) = @_;
+    $value = $self->dbh->quote($value);
+
+    my $sth = $self->dbh->prepare("SELECT $column FROM $table WHERE $column=$value");
+
+    $sth->execute();
+
+    if ( $sth->fetchrow_arrayref ) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
 
 sub reset_db {

@@ -99,7 +99,6 @@ sub update_tags : Local {
   my $sha1      = $c->request->params->{sha1};
   my $tags      = $c->request->params->{tags};
 
-
   $c->model('DBI')->update_tags($rowid, $tags);
 
   $c->stash->{success} = 'true';
