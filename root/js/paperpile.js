@@ -233,8 +233,10 @@ Ext.onReady(function() {
     main=new PaperPile.Main;
 
     main.results_tabs.newDBtab();
-    
-    Ext.getCmp('treepanel').expandAll();
+
+    var tree=Ext.getCmp('treepanel');
+
+    tree.expandAll();
 
     main.show();
 

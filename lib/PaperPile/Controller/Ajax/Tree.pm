@@ -11,6 +11,10 @@ use PaperPile::Tree::Node;
 use Data::Dumper;
 use 5.010;
 
+# Currently supported
+
+
+
 sub node : Local {
   my ( $self, $c ) = @_;
 
@@ -19,14 +23,14 @@ sub node : Local {
   my $tree;
 
   if ( not defined $c->session->{"tree"} ) {
-    $tree = $self->_get_default_tree;
+    $tree = $self->_get_default_tree($c);
     $c->session->{"tree"}=$tree;
   }
   else {
     $tree = $c->session->{"tree"};
   }
 
-  my $subtree = $self->_get_subtree( $tree, $node );
+  my $subtree = $self->_get_subtree( $c, $tree, $node );
 
   my $data=$self->_get_js_object($subtree);
 
@@ -39,6 +43,7 @@ sub node : Local {
 sub _get_default_tree {
 
   my ( $self, $c ) = @_;
+
 
   my $tree =
     Tree::Simple->new( { text => 'Root', id => 'root' }, Tree::Simple->ROOT );
@@ -63,6 +68,12 @@ sub _get_default_tree {
                                           }
                                         ) );
 
+  $sub_tree = Tree::Simple->new( { text => 'Tags', type=>"TAGS", id=>'tags' }, $tree );
+  $sub_tree->setUID('tags');
+
+  # Initialize with tags
+  $self->_get_tags($c,$sub_tree);
+
   $sub_tree = Tree::Simple->new( { text => 'Admin' }, $tree );
 
   $sub_tree->addChild( Tree::Simple->new( { text => 'Import Journals',
@@ -76,9 +87,6 @@ sub _get_default_tree {
   $sub_tree->addChild( Tree::Simple->new( { text => 'Initialize Database',
                                             type => 'INIT_DB',
                                           } ) );
-
-
-
 
   return $tree;
 }
@@ -110,7 +118,7 @@ sub _get_js_object {
 
 sub _get_subtree {
 
-  my ( $self, $tree, $UID ) = @_;
+  my ( $self, $c, $tree, $UID ) = @_;
 
   my $subtree = undef;
 
@@ -127,13 +135,38 @@ sub _get_subtree {
         #print STDERR $_tree->getUID, "\n";
         $subtree = $_tree if $_tree->getUID eq $UID;
       }
-    );
-
+    )
   }
+
+  if ($subtree->getNodeValue->{id} eq 'tags'){
+    $self->_get_tags($c,$subtree);
+  }
+
 
   return $subtree;
 
 }
+
+sub _get_tags {
+
+  my ( $self, $c,$tree ) = @_;
+
+  my @tags=@{$c->model('DBI')->get_tags};
+
+  # Remove all children (old tags) first
+
+  foreach my $child ($tree->getAllChildren){
+    $tree->removeChild($child);
+  }
+
+  # Add tags
+  foreach my $tag (@tags) {
+    $tree->addChild( Tree::Simple->new( { text => $tag, type => 'TAG' } ) );
+  }
+
+}
+
+
 
 1;
 

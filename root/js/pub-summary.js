@@ -97,11 +97,8 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
             success: function(){
                 //this.data.tags=Ext.getCmp('tag_select').store.reload();
                 this.data.tags=Ext.getCmp('tag_select').getValue();
-                Ext.StoreMgr.lookup('tag_store').reload({
-                    callback: function(r){
-                    }
-                }
-                );
+                Ext.StoreMgr.lookup('tag_store').reload();
+                Ext.getCmp('treepanel').getNodeById('tags').reload();
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Updated tags.');
             },

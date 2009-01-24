@@ -18,7 +18,8 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 id:'root'
             }
 		    });
-		    PaperPile.Tree.superclass.initComponent.call(this);
+
+		PaperPile.Tree.superclass.initComponent.call(this);
 
         this.on("click", function(node,e){
 
@@ -51,13 +52,21 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             }
 
 
-
-
-
         });
 	  },
 
+
+
 });
+
+
+
+
+
+
+
+
+
 
 
 // Extend TreeNode to allow to pass additional parameters from the server,
