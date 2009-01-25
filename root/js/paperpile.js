@@ -211,9 +211,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         })
     },
 
-    onNodeClick: function(node, event){
-        alert(node);
-    }
 
 
 }

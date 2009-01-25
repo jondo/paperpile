@@ -1,7 +1,7 @@
 PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 	  
     initComponent: function() {
-		    Ext.apply(this, {
+		Ext.apply(this, {
 
             animate: false,
             autoScroll: true,
@@ -16,10 +16,25 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 draggable:false,
                 leaf:false,
                 id:'root'
-            }
-		    });
+            },
+            treeEditor:new Ext.tree.TreeEditor(this, {
+				allowBlank:false,
+				cancelOnEsc:true,
+				completeOnEnter:true,
+				ignoreNoChange:true,
+				//selectOnFocus:this.selectOnEdit,
+			}) 
+		});
 
 		PaperPile.Tree.superclass.initComponent.call(this);
+
+        this.on({
+			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
+			dblclick:{scope:this, fn:this.onDblClick},
+			beforenodedrop:{scope:this, fn:this.onBeforeNodeDrop},
+			nodedrop:{scope:this, fn:this.onNodeDrop},
+			nodedragover:{scope:this, fn:this.onNodeDragOver},
+		});
 
         this.on("click", function(node,e){
 
@@ -53,19 +68,135 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
 
         });
-	  },
+	},
+
+    onRender:function() {
+		PaperPile.Tree.superclass.onRender.apply(this, arguments);
+
+        // Do not show browser-context menu
+        this.el.on({
+			contextmenu:{fn:function(){return false;},stopEvent:true}
+		});
+
+    },
+
+    onContextMenu:function(node, e) {
+        node.select();
+        this.contextMenu = new PaperPile.TreeMenu({node:node});
+        this.contextMenu.node = node;
+        this.showContextMenu();
+	},
+
+    showContextMenu:function() {
+        menu=this.contextMenu;
+        var alignEl =menu.node.getUI().getEl();
+		menu.showAt(menu.getEl().getAlignToXY(alignEl, 'tl-tl?', [0, 18]));
+	},
+
+    newFolder: function(node) {
+        var node = this.getSelectionModel().getSelectedNode();
+		
+	    var treeEditor = this.treeEditor;
+		var newNode;
+
+		var appendNode = node.isLeaf() ? node.parentNode : node;
+        
+		appendNode.expand(false, false, function(n) {
+		    
+			newNode = n.appendChild(new PaperPile.AsyncTreeNode({text:'New Folder', 
+                                                                 iconCls:'folder', 
+                                                                 type: 'FOLDER', 
+                                                                })
+                                   );
+
+            newNode.select();
+
+			treeEditor.on({
+				complete:{
+					scope:this,
+					single:true,
+					fn:this.onNewDir,
+				}
+            });
+                                    
+			treeEditor.creatingNewDir = true;
+			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
+		}.createDelegate(this));
+
+    },
+
+    onNewDir: function(){
+
+        var node = this.getSelectionModel().getSelectedNode();
+
+        Ext.Ajax.request({
+
+            url: '/ajax/tree/new_folder',
+            params: { node_id: node.id,
+                      parent_id: node.parentNode.id,
+                      name: node.text,
+                    },
+            success: function(){
+                
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Added new folder');
+            },
+        });
+
+        alert(node.text);
+    },
 
 
+    deleteFolder: function(){
+        var node = this.getSelectionModel().getSelectedNode();
+        node.remove();
+       
+    },
+
+    /* Debugging only */
+    reloadFolder: function(){
+        var node = this.getSelectionModel().getSelectedNode();
+        node.reload();
+    }
 
 });
 
 
+PaperPile.TreeMenu = Ext.extend(Ext.menu.Menu, {
+    
+    constructor:function(config) {
+        config = config || {};
 
+        console.log(config.node);
 
+        switch(config.node.attributes.type){
+        case 'FOLDER':
+            Ext.apply(config,{items:[
+                { id: 'context_menu_new',
+                  text:'New Folder',
+                  handler: Ext.getCmp('treepanel').newFolder,
+                  scope: Ext.getCmp('treepanel')
+                },
+                { id: 'context_menu_delete',
+                  text:'Delete',
+                  handler: Ext.getCmp('treepanel').deleteFolder,
+                  scope: Ext.getCmp('treepanel')
+                },
+                { id: 'context_menu_reload',
+                  text:'Reload',
+                  handler: Ext.getCmp('treepanel').reloadFolder,
+                  scope: Ext.getCmp('treepanel')
+                }
 
+            ]});
+            break;
+        }
+        
+        PaperPile.TreeMenu.superclass.constructor.call(this, config);
 
+    },
 
-
+});
 
 
 
@@ -89,8 +220,6 @@ PaperPile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
 	  },
 
 });
-
-
 
 // To use our custom TreeNode we also have to override TreeLoader
 PaperPile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {

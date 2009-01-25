@@ -40,53 +40,112 @@ sub node : Local {
 
 }
 
+sub new_folder : Local {
+  my ( $self, $c ) = @_;
+
+  my $node_id = $c->request->params->{node_id};
+  my $parent_id = $c->request->params->{parent_id};
+  my $name = $c->request->params->{name};
+
+  my $tree= $c->session->{"tree"};
+
+  my $sub_tree= $self->_get_subtree($c, $tree, $parent_id );
+
+
+  my $new = Tree::Simple->new( { text => $name."XXXX", type => "FOLDER",
+                                 path=> '/', id => $node_id } );
+  $new->setUID($node_id);
+
+  $sub_tree->addChild($new);
+
+  $c->stash->{success} = 'true';
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+
 sub _get_default_tree {
 
   my ( $self, $c ) = @_;
 
+  ##### Root
 
-  my $tree =
-    Tree::Simple->new( { text => 'Root', id => 'root' }, Tree::Simple->ROOT );
+  my $tree = Tree::Simple->new( { text => 'Root', id => 'root' }, Tree::Simple->ROOT );
 
   $tree->setUID('root');
 
-  $tree->addChild( Tree::Simple->new( { text => 'Local library',
-                                        type=>'DB',
-                                        query=>'' } ) );
+  $tree->addChild(
+    Tree::Simple->new( {
+        text  => 'Local library',
+        type  => 'DB',
+        query => ''
+      }
+    )
+  );
+
+  ##### Sources
 
   my $sub_tree = Tree::Simple->new( { text => 'Source' }, $tree );
 
+  $sub_tree->addChild(
+    Tree::Simple->new( {
+        text  => 'PubMed',
+        type  => 'PUBMED',
+        query => ''
+      }
+    )
+  );
 
-  $sub_tree->addChild( Tree::Simple->new( { text => 'PubMed',
-                                            type => 'PUBMED',
-                                            query=>''
-                                          } ) );
+  $sub_tree->addChild(
+    Tree::Simple->new( {
+        text => 'File',
+        type => 'FILE',
+        file => '/home/wash/play/PaperPile/t/data/test2.ris',
+      }
+    )
+  );
 
-  $sub_tree->addChild( Tree::Simple->new( { text => 'File',
-                                            type => 'FILE',
-                                            file => '/home/wash/play/PaperPile/t/data/test2.ris',
-                                          }
-                                        ) );
+  ##### Tags
 
-  $sub_tree = Tree::Simple->new( { text => 'Tags', type=>"TAGS", id=>'tags' }, $tree );
+  $sub_tree = Tree::Simple->new( { text => 'Tags', type => "TAGS", id => 'tags' }, $tree );
   $sub_tree->setUID('tags');
 
   # Initialize with tags
-  $self->_get_tags($c,$sub_tree);
+  $self->_get_tags( $c, $sub_tree );
+
+  ##### Folders
+
+  $sub_tree = Tree::Simple->new( { text => 'Folders', type => "FOLDER", path=> '/', id => 'folder_root' }, $tree );
+  $sub_tree->setUID('folder_root');
+
+
+  ##### Admin
 
   $sub_tree = Tree::Simple->new( { text => 'Admin' }, $tree );
 
-  $sub_tree->addChild( Tree::Simple->new( { text => 'Import Journals',
-                                            type => 'IMPORT_JOURNALS',
-                                          } ) );
+  $sub_tree->addChild(
+    Tree::Simple->new( {
+        text => 'Import Journals',
+        type => 'IMPORT_JOURNALS',
+      }
+    )
+  );
 
-  $sub_tree->addChild( Tree::Simple->new( { text => 'Reset Database',
-                                            type => 'RESET_DB',
-                                          } ) );
+  $sub_tree->addChild(
+    Tree::Simple->new( {
+        text => 'Reset Database',
+        type => 'RESET_DB',
+      }
+    )
+  );
 
-  $sub_tree->addChild( Tree::Simple->new( { text => 'Initialize Database',
-                                            type => 'INIT_DB',
-                                          } ) );
+  $sub_tree->addChild(
+    Tree::Simple->new( {
+        text => 'Initialize Database',
+        type => 'INIT_DB',
+      }
+    )
+  );
 
   return $tree;
 }
@@ -157,6 +216,10 @@ sub _get_tags {
 
   foreach my $child ($tree->getAllChildren){
     $tree->removeChild($child);
+  }
+
+  if (not @tags){
+    push @tags, 'No tags';
   }
 
   # Add tags
