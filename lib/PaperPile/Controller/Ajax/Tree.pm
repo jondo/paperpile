@@ -52,8 +52,8 @@ sub new_folder : Local {
   my $sub_tree= $self->_get_subtree($c, $tree, $parent_id );
 
 
-  my $new = Tree::Simple->new( { text => $name."XXXX", type => "FOLDER",
-                                 path=> '/', id => $node_id } );
+  my $new = Tree::Simple->new( { text => $name, type => "FOLDER", draggable =>"true",
+                                 path=> '/', id => $node_id },  );
   $new->setUID($node_id);
 
   $sub_tree->addChild($new);

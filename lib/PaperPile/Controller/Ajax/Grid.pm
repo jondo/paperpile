@@ -20,6 +20,7 @@ sub resultsgrid : Local {
   my $source_file  = $c->request->params->{source_file};
   my $source_query = $c->request->params->{source_query};
   my $source_type  = $c->request->params->{source_type};
+  my $source_mode  = $c->request->params->{source_mode};
   my $task         = $c->request->params->{source_task} || '';
   my $offset       = $c->request->params->{start};
   my $limit        = $c->request->params->{limit};
@@ -28,13 +29,10 @@ sub resultsgrid : Local {
 
     if ( $source_type eq 'FILE' ) {
       $source = PaperPile::Library::Source::File->new( file => $source_file );
-    }
-    elsif ( $source_type eq 'DB' ) {
-      $source = PaperPile::Library::Source::DB->new( query => $source_query );
-    }
-    elsif ( $source_type eq 'PUBMED' ) {
-      $source =
-        PaperPile::Library::Source::PubMed->new( query => $source_query );
+    } elsif ( $source_type eq 'DB' ) {
+      $source = PaperPile::Library::Source::DB->new( query => $source_query, mode => $source_mode );
+    } elsif ( $source_type eq 'PUBMED' ) {
+      $source = PaperPile::Library::Source::PubMed->new( query => $source_query );
     }
 
     $source->limit($limit);
@@ -45,8 +43,7 @@ sub resultsgrid : Local {
     }
 
     $c->session->{"source_$source_id"} = $source;
-  }
-  else {
+  } else {
     $source = $c->session->{"source_$source_id"};
   }
 
@@ -58,7 +55,7 @@ sub resultsgrid : Local {
       $pub->_imported(1);
     }
   } else {
-    $c->model('DBI')->exists_pub( $entries );
+    $c->model('DBI')->exists_pub($entries);
   }
 
   _resultsgrid_format( @_, $entries, $source->total_entries );

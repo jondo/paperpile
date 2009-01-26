@@ -252,7 +252,7 @@ sub reset_db {
     ( my $self ) = @_;
 
     for my $table (
-        qw/publications authors author_publication fields journals fulltext tags tags_publications/)
+        qw/publications authors author_publication fields journals fulltext tags tag_publication/)
     {
         $self->dbh->do("DELETE FROM $table");
     }
@@ -265,7 +265,7 @@ sub fulltext_count {
 
   my $where;
   if ($query) {
-    $query = $self->dbh->quote($query);
+    $query = $self->dbh->quote("$query*");
     $where = "WHERE fulltext MATCH $query";
   }
   else {
@@ -285,7 +285,7 @@ sub fulltext_search {
 
   my $where;
   if ($query) {
-    $query = $self->dbh->quote($query);
+    $query = $self->dbh->quote("$query*");
     $where = "WHERE fulltext MATCH $query";
   }
   else {
@@ -331,6 +331,51 @@ sub fulltext_search {
   return [@page];
 
 }
+
+
+sub standard_count {
+  ( my $self, my $query ) = @_;
+
+  my $count = $self->dbh->selectrow_array("SELECT COUNT(*) FROM Publications WHERE $query;");
+
+  return $count;
+
+}
+
+
+sub standard_search {
+  ( my $self, my $query, my $offset, my $limit) = @_;
+
+  my $sth = $self->dbh->prepare( "SELECT * FROM Publications WHERE $query;" );
+
+  $sth->execute;
+
+  my @page = ();
+
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    my $pub = PaperPile::Library::Publication->new();
+    foreach my $field ( keys %$row ) {
+      my $value = $row->{$field};
+      if ($value) {
+        utf8::decode($value);
+        $pub->$field($value);
+      }
+    }
+    $pub->_imported(1);
+    push @page, $pub;
+  }
+
+  return [@page];
+
+}
+
+
+
+
+
+
+
+
 
 sub exists_pub {
   ( my $self, my $pubs ) = @_;

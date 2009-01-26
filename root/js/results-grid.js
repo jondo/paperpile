@@ -16,6 +16,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                          source_file: this.source_file,
                          source_type: this.source_type,
                          source_query: this.source_query,
+                         source_mode: this.source_mode,
                          limit:25
                         },
              reader: new Ext.data.JsonReader(),
@@ -66,6 +67,8 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         }
     
         Ext.apply(this, {
+            ddGroup  : 'gridDD',
+            enableDragDrop   : true,
             store: _store,
             bbar: _pager,
             border:true,
@@ -218,7 +221,11 @@ PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
 
     onRender: function() {
         PaperPile.ResultsGridDB.superclass.onRender.apply(this, arguments);
-        this.store.load({params:{start:0, limit:25}});
+        this.store.load({params:{start:0, 
+                                 limit:25, 
+                                 source_query: this.source_query,
+                                 source_mode: this.source_mode,
+                                }});
     }
 });
 
@@ -240,7 +247,14 @@ PaperPile.ResultsGridFile = Ext.extend(PaperPile.ResultsGrid, {
 
     onRender: function() {
         PaperPile.ResultsGridFile.superclass.onRender.apply(this, arguments);
-        this.store.load({params:{start:0, limit:25}});
+        //this.store.load({params:{start:0, limit:25}});
+        this.store.load({params:{start:0, 
+                                 limit:25, 
+                                 source_file: this.source_file,
+                                }});
+
+
+
     }
 });
 

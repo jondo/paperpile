@@ -2,7 +2,8 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 	  
     initComponent: function() {
 		Ext.apply(this, {
-
+            enableDrop:true,
+            ddGroup: 'gridDD',
             animate: false,
             autoScroll: true,
             loader: new PaperPile.TreeLoader(
@@ -13,7 +14,6 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             root: {
                 nodeType: 'async',
                 text: 'Root',
-                draggable:false,
                 leaf:false,
                 id:'root'
             },
@@ -30,11 +30,12 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         this.on({
 			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
-			dblclick:{scope:this, fn:this.onDblClick},
-			beforenodedrop:{scope:this, fn:this.onBeforeNodeDrop},
-			nodedrop:{scope:this, fn:this.onNodeDrop},
-			nodedragover:{scope:this, fn:this.onNodeDragOver},
+			//dblclick:{scope:this, fn:this.onDblClick},
+			//beforenodedrop:{scope:this, fn:this.onBeforeNodeDrop},
+            beforenodedrop:{scope:this, fn:this.onNodeDrop},
+			//nodedragover:{scope:this, fn:this.onNodeDragOver},
 		});
+
 
         this.on("click", function(node,e){
 
@@ -64,11 +65,27 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 Ext.getCmp('MAIN').importJournals();
                 break;
 
+            case 'TAG':
+                Ext.getCmp('results_tabs').showDBQueryResults('STANDARD',
+                                                              "tags like '%"+node.text+"%'",
+                                                              node.text
+                                                             );
+                
+                break;
             }
-
 
         });
 	},
+
+
+    onNodeDrop: function(d){
+
+        alert('inhere');
+
+        console.log(d);
+
+    },
+
 
     onRender:function() {
 		PaperPile.Tree.superclass.onRender.apply(this, arguments);
@@ -77,6 +94,33 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
         this.el.on({
 			contextmenu:{fn:function(){return false;},stopEvent:true}
 		});
+
+        /*
+
+        var treeDropTargetEl =  this.body.dom;
+	
+	    var treeDropTarget = new Ext.dd.DropTarget(treeDropTargetEl, {
+		    ddGroup     : 'gridDD',
+		    notifyEnter : function(ddSource, e, data) {
+			    //this.body.stopFx();
+			    //this.body.highlight();
+		    },
+		    notifyDrop  : function(ddSource, e, data){
+			    
+			    // Reference the record (single selection) for readability
+			    var selectedRecord = ddSource.dragData.selections[0];						
+						
+			    // Load the record into the form
+			    //formPanel.getForm().loadRecord(selectedRecord);	
+				// Delete record from the grid.  not really required.
+			    //ddSource.grid.store.remove(selectedRecord);	
+
+			    return(true);
+		    }
+	    }); 	
+
+*/
+
 
     },
 
@@ -209,15 +253,15 @@ PaperPile.AsyncTreeNode = Ext.extend(Ext.tree.AsyncTreeNode, {
 
     init: function(attr) {
 		    Ext.apply(this, attr);
-	  },
+	},
 
 });
 
 PaperPile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
 
     init: function(attr) {
-		    Ext.apply(this, attr);
-	  },
+		Ext.apply(this, attr);
+	},
 
 });
 

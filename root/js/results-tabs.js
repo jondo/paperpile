@@ -27,6 +27,7 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
             title: 'DB',
             iconCls: 'tabs',
             source_type: 'DB',
+            source_mode: 'FULLTEXT',
             source_query: query,
             closable:true
         }));
@@ -40,8 +41,49 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
             source_query: query,
             iconCls: 'tabs',
         })).show();
-    }
+    },
   
+
+    showDBQueryResults: function(mode,query,tabTitle){
+
+        // If some database tab(s) is/are open choose the first of them;
+        // if not create new
+        var DBtabs=this.findBy(function(c){return c.source_type=='DB'});
+
+        var targetTab;
+
+        if (DBtabs.length>0){
+            targetTab=DBtabs[0];
+            targetTab.source_mode=mode;
+            targetTab.source_query=query;
+            targetTab.store.baseParams.source_query=query;
+            targetTab.store.baseParams.source_mode=mode;
+            targetTab.store.baseParams.source_task='NEW';
+            targetTab.store.load({params:{start:0, limit:25}});
+
+        } else {
+            targetTab=new PaperPile.ResultsGridDB({
+                title: 'DB',
+                iconCls: 'tabs',
+                source_type: 'DB',
+                source_query: query,
+                source_mode: mode,
+                closable:true
+            });
+            this.add(targetTab);
+        }                                   
+
+        targetTab.setTitle(tabTitle);
+
+        this.activate(targetTab.id);
+
+
+    }
+
+
+
+
+
 
 }                                 
  
