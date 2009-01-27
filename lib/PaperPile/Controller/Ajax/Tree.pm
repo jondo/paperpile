@@ -11,9 +11,6 @@ use PaperPile::Tree::Node;
 use Data::Dumper;
 use 5.010;
 
-# Currently supported
-
-
 
 sub node : Local {
   my ( $self, $c ) = @_;
@@ -62,6 +59,32 @@ sub new_folder : Local {
   $c->forward('PaperPile::View::JSON');
 
 }
+
+sub move_in_folder : Local {
+  my ( $self, $c ) = @_;
+
+  my $node_id = $c->request->params->{node_id};
+  my $source_id = $c->request->params->{source_id};
+  my $sha1 = $c->request->params->{sha1};
+  my $rowid = $c->request->params->{rowid};
+  my $path = $c->request->params->{path};
+
+  my $source = $c->session->{"source_$source_id"};
+  my $tree= $c->session->{"tree"};
+
+  # skip the first two levels which are "built in", might change so
+  # this might have to be adjusted in the future
+  ($path)=$path=~/\/.*?\/.*?\/(.*)/;
+
+  $c->model('DBI')->update_folders($rowid, $path);
+
+  $c->stash->{success} = 'true';
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+
+
 
 
 sub _get_default_tree {

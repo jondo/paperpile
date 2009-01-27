@@ -53,7 +53,7 @@ sub init_db {
   # Full text search table
   $self->dbh->do('DROP TABLE IF EXISTS Fulltext');
   $self->dbh->do(
-    "CREATE VIRTUAL TABLE fulltext using fts3(title,abstract,notes,names);");
+    "CREATE VIRTUAL TABLE Fulltext using fts3(title,abstract,notes,names,tags,folders);");
 
   # Create user settings table
   $self->dbh->do('DROP TABLE IF EXISTS Settings');
@@ -94,6 +94,8 @@ sub create_pub {
             abstract => $pub->abstract,
             notes    => $pub->notes,
             names    => $pub->_authors_nice,
+            tags     => $pub->tags,
+            folders  => $pub->folders,
         }
     );
 
@@ -159,10 +161,10 @@ sub update_pub {
 }
 
 sub update_field {
-  ( my $self, my $rowid, my $field, my $value ) = @_;
+  ( my $self, my $table, my $rowid, my $field, my $value ) = @_;
 
   $value = $self->dbh->quote($value);
-  $self->dbh->do("UPDATE Publications SET $field=$value WHERE rowid=$rowid");
+  $self->dbh->do("UPDATE $table SET $field=$value WHERE rowid=$rowid");
 
 }
 
@@ -173,9 +175,9 @@ sub update_tags {
 
   my @tags=split(/,/,$tags);
 
-
-  # First update flat field in Publication table
-  $self->update_field($pub_rowid,'tags',$tags);
+  # First update flat field in Publication and Fulltext tables
+  $self->update_field('Publications',$pub_rowid,'tags',$tags);
+  $self->update_field('Fulltext',$pub_rowid,'tags',$tags);
 
   # Remove all connections form Tag_Publication table
   my $sth=$self->dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
@@ -203,9 +205,51 @@ sub update_tags {
 
   # Delete tags that have no connectin any longer
   $self->dbh->do("DELETE From Tags where rowid not in (SELECT tag_id FROM Tag_Publication)");
+}
+
+sub update_folders {
+  ( my $self, my $pub_rowid, my $folders) = @_;
+
+  $DB::single=1;
+
+  my @folders=split(/,/,$folders);
+
+  # First update flat field in Publication and Fulltext tables
+  $self->update_field('Publications',$pub_rowid,'folders',$folders);
+  $self->update_field('Fulltext',$pub_rowid,'folders',$folders);
+
+  # Remove all connections form Folder_Publication table
+  my $sth=$self->dbh->do("DELETE FROM Folder_Publication WHERE publication_id=$pub_rowid");
+
+  # Then insert folders into Folder table (if not already exists) and set
+  # new connections in Folder_Publication table
+
+  my $select=$self->dbh->prepare("SELECT rowid FROM Folders WHERE folder=?");
+  my $insert=$self->dbh->prepare("INSERT INTO Folders (folder) VALUES(?)");
+  my $connection=$self->dbh->prepare("INSERT INTO Folder_Publication (folder_id, publication_id) VALUES(?,?)");
+
+  foreach my $folder (@folders){
+    my $folder_rowid=undef;
+
+    $select->bind_columns(\$folder_rowid);
+    $select->execute($folder);
+    $select->fetch;
+    if (not defined $folder_rowid){
+      $insert->execute($folder);
+      $folder_rowid = $self->dbh->func('last_insert_rowid');
+    }
+
+    $connection->execute($folder_rowid,$pub_rowid);
+  }
+
+  # Delete folders that have no connectin any longer
+  $self->dbh->do("DELETE From Folders where rowid not in (SELECT folder_id FROM Folder_Publication)");
 
 
 }
+
+
+
 
 
 
@@ -249,15 +293,14 @@ sub has_unique_entry {
 
 sub reset_db {
 
-    ( my $self ) = @_;
+  ( my $self ) = @_;
 
-    for my $table (
-        qw/publications authors author_publication fields journals fulltext tags tag_publication/)
-    {
-        $self->dbh->do("DELETE FROM $table");
-    }
+  for my $table (
+    qw/publications authors author_publication fields journals fulltext tags tag_publication folders folders publication/) {
+    $self->dbh->do("DELETE FROM $table");
+  }
 
-    return 1;
+  return 1;
 }
 
 sub fulltext_count {
@@ -302,6 +345,17 @@ sub fulltext_search {
      FROM Publications JOIN fulltext
      ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset"
   );
+
+  print STDERR "SELECT *,
+     publications.rowid as _rowid,
+     publications.title as title,
+     publications.abstract as abstract,
+     publications.notes as notes
+     FROM Publications JOIN fulltext
+     ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset";
+
+
+
 
   $sth->execute;
 

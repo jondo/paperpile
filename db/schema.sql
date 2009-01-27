@@ -38,6 +38,16 @@ CREATE TABLE Tag_Publication (
   PRIMARY KEY (tag_id, publication_id)
 );
 
+CREATE TABLE Folders (
+  folder            TEXT UNIQUE
+);
+
+CREATE TABLE Folder_Publication (
+  folder_id         INTEGER,
+  publication_id    INTEGER,
+  PRIMARY KEY (folder_id, publication_id)
+);
+
 
 
 

@@ -66,10 +66,10 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 break;
 
             case 'TAG':
-                Ext.getCmp('results_tabs').showDBQueryResults('STANDARD',
-                                                              "tags like '%"+node.text+"%'",
-                                                              node.text
-                                                             );
+                Ext.getCmp('results_tabs').showDBQueryResults('FULLTEXT',
+                                                              node.text,
+                                                              'tags:'+node.text,
+                                                              node.text);
                 
                 break;
             }
@@ -80,9 +80,28 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     onNodeDrop: function(d){
 
-        alert('inhere');
+        alert(d.target.getPath('text'));
 
-        console.log(d);
+        Ext.Ajax.request({
+
+            url: '/ajax/tree/move_in_folder',
+            params: { node_id: d.target.id,
+                      sha1: d.data.selections[0].data.sha1,
+                      rowid: d.data.selections[0].data._rowid,
+                      source_id: d.source.id,
+                      path: d.target.getPath('text')
+                    },
+            success: function(){
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Moved to folder');
+            },
+
+        });
+
+
+
+
+        console.log(d.data);
 
     },
 
@@ -94,33 +113,6 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
         this.el.on({
 			contextmenu:{fn:function(){return false;},stopEvent:true}
 		});
-
-        /*
-
-        var treeDropTargetEl =  this.body.dom;
-	
-	    var treeDropTarget = new Ext.dd.DropTarget(treeDropTargetEl, {
-		    ddGroup     : 'gridDD',
-		    notifyEnter : function(ddSource, e, data) {
-			    //this.body.stopFx();
-			    //this.body.highlight();
-		    },
-		    notifyDrop  : function(ddSource, e, data){
-			    
-			    // Reference the record (single selection) for readability
-			    var selectedRecord = ddSource.dragData.selections[0];						
-						
-			    // Load the record into the form
-			    //formPanel.getForm().loadRecord(selectedRecord);	
-				// Delete record from the grid.  not really required.
-			    //ddSource.grid.store.remove(selectedRecord);	
-
-			    return(true);
-		    }
-	    }); 	
-
-*/
-
 
     },
 
@@ -152,7 +144,6 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                                                  type: 'FOLDER', 
                                                                 })
                                    );
-
             newNode.select();
 
 			treeEditor.on({
@@ -187,7 +178,6 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             },
         });
 
-        alert(node.text);
     },
 
 

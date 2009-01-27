@@ -201,11 +201,13 @@ PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
 
 PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
 
+    base_query:'',
+    
     initComponent:function() {
         
         var _filterField=new Ext.app.FilterField({
             width:320,
-        })
+        });
 
         Ext.apply(this, {
             source_type: 'DB',
@@ -216,16 +218,15 @@ PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
 
         PaperPile.ResultsGridDB.superclass.initComponent.apply(this, arguments);
         _filterField.store=this.store;
+    
+        _filterField.base_query=this.base_query;
+
 
     }, // eo function initComponent
 
     onRender: function() {
         PaperPile.ResultsGridDB.superclass.onRender.apply(this, arguments);
-        this.store.load({params:{start:0, 
-                                 limit:25, 
-                                 source_query: this.source_query,
-                                 source_mode: this.source_mode,
-                                }});
+        this.store.load({params:{start:0, limit:25 }});
     }
 });
 

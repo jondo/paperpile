@@ -43,7 +43,7 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
             this.el.dom.value = '';
             var o = {start: 0, source_task:'NEW'};
             this.store.baseParams = this.store.baseParams || {};
-            this.store.baseParams[this.paramName] = '';
+            this.store.baseParams[this.paramName] = this.build_query('');
             this.store.reload({params:o});
             this.triggers[0].hide();
             this.hasSearch = false;
@@ -58,10 +58,31 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
         }
         var o = {start: 0, source_task:'NEW'};
         this.store.baseParams = this.store.baseParams || {};
-        this.store.baseParams['source_query'] = v;
+        
+        this.store.baseParams['source_query'] = this.build_query(v);
         this.store.reload({params:o});
         this.hasSearch = true;
         this.triggers[0].show();
-    }
+        
 
-});
+    },
+
+    build_query: function(input){
+        if (input == ''){
+            if (this.base_query == ''){
+                return('');
+            } else {
+                return(this.base_query);
+            }
+        } else {
+            if (this.base_query == ''){
+                return(input);
+            } else {
+                return(this.base_query+' AND '+input);
+            }
+        }
+    }
+}
+
+
+);

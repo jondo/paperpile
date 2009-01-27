@@ -44,39 +44,23 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
     },
   
 
-    showDBQueryResults: function(mode,query,tabTitle){
-
-        // If some database tab(s) is/are open choose the first of them;
-        // if not create new
-        var DBtabs=this.findBy(function(c){return c.source_type=='DB'});
+    showDBQueryResults: function(mode,query,base_query,tabTitle){
 
         var targetTab;
 
-        if (DBtabs.length>0){
-            targetTab=DBtabs[0];
-            targetTab.source_mode=mode;
-            targetTab.source_query=query;
-            targetTab.store.baseParams.source_query=query;
-            targetTab.store.baseParams.source_mode=mode;
-            targetTab.store.baseParams.source_task='NEW';
-            targetTab.store.load({params:{start:0, limit:25}});
+        targetTab=new PaperPile.ResultsGridDB({
+            title: 'DB',
+            iconCls: 'tabs',
+            source_type: 'DB',
+            source_query: base_query,
+            source_mode: mode,
+            base_query: base_query,
+            closable:true
+        });
 
-        } else {
-            targetTab=new PaperPile.ResultsGridDB({
-                title: 'DB',
-                iconCls: 'tabs',
-                source_type: 'DB',
-                source_query: query,
-                source_mode: mode,
-                closable:true
-            });
-            this.add(targetTab);
-        }                                   
-
+        this.add(targetTab);
         targetTab.setTitle(tabTitle);
-
         this.activate(targetTab.id);
-
 
     }
 
