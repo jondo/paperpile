@@ -207,6 +207,27 @@ sub update_tags {
   $self->dbh->do("DELETE From Tags where rowid not in (SELECT tag_id FROM Tag_Publication)");
 }
 
+
+sub insert_folder {
+  ( my $self, my $folder) = @_;
+
+  my $select=$self->dbh->prepare("SELECT rowid FROM Folders WHERE folder=?");
+  my $insert=$self->dbh->prepare("INSERT INTO Folders (folder) VALUES(?)");
+
+  my $folder_rowid=undef;
+
+  $select->bind_columns(\$folder_rowid);
+  $select->execute($folder);
+  $select->fetch;
+  if (not defined $folder_rowid){
+    $insert->execute($folder);
+    $folder_rowid = $self->dbh->func('last_insert_rowid');
+  }
+
+  return $folder_rowid;
+
+}
+
 sub update_folders {
   ( my $self, my $pub_rowid, my $folders) = @_;
 
@@ -218,7 +239,7 @@ sub update_folders {
   $self->update_field('Publications',$pub_rowid,'folders',$folders);
   $self->update_field('Fulltext',$pub_rowid,'folders',$folders);
 
-  # Remove all connections form Folder_Publication table
+  # Remove all connections from Folder_Publication table
   my $sth=$self->dbh->do("DELETE FROM Folder_Publication WHERE publication_id=$pub_rowid");
 
   # Then insert folders into Folder table (if not already exists) and set
@@ -235,18 +256,59 @@ sub update_folders {
     $select->execute($folder);
     $select->fetch;
     if (not defined $folder_rowid){
-      $insert->execute($folder);
-      $folder_rowid = $self->dbh->func('last_insert_rowid');
+      croak('Folder does not exists');
     }
 
     $connection->execute($folder_rowid,$pub_rowid);
   }
 
-  # Delete folders that have no connectin any longer
-  $self->dbh->do("DELETE From Folders where rowid not in (SELECT folder_id FROM Folder_Publication)");
+  # Delete folders that have no connection any longer
+  #$self->dbh->do("DELETE From Folders where rowid not in (SELECT folder_id FROM Folder_Publication)");
+
+}
+
+sub delete_folder {
+  ( my $self, my $folder ) = @_;
+
+  print STDERR "-----------> delete $folder\n";
+
+  # First delete all flat folder assignments in the Publication table
+  # which are below the given folder (i.e. their path starts with the
+  # folder to delete)
+
+  my $select = $self->dbh->prepare("SELECT rowid,folders FROM Publications");
+  my $update = $self->dbh->prepare("UPDATE Publications SET folders=? WHERE rowid=?");
+  my ( $rowid, $curr_folders );
+  $select->execute;
+  $select->bind_columns( \$rowid, \$curr_folders );
+
+  while ( $select->fetch ) {
+    my @folders = split( /,/, $curr_folders );
+    my @new = ();
+    print STDERR "$rowid, $curr_folders";
+    foreach my $f (@folders) {
+      if ( not $f =~ /^$folder/ ) {
+        push @new, $f;
+      }
+    }
+    my $new = join( ',', @new );
+    $update->execute( $new, $rowid );
+
+    print STDERR "----> $curr_folders\n";
+
+  }
+
+  $self->dbh->do(
+    "DELETE FROM Folder_Publication WHERE Folder_Publication.rowid in
+    (SELECT Folder_Publication.rowid FROM Folders, Folder_Publication 
+    WHERE (folder_id=Folders.rowid) and folder like '$folder%')"
+  );
+
+  $self->dbh->do( "DELETE FROM Folders WHERE folder LIKE '$folder%'" );
 
 
 }
+
 
 
 
@@ -270,6 +332,24 @@ sub get_tags {
   return [@out];
 
 }
+
+sub get_folders {
+  ( my $self) = @_;
+
+  my $sth=$self->dbh->prepare("SELECT folder from Folders;");
+
+  $sth->execute();
+  my @out=();
+
+  foreach my $folder (@{$sth->fetchall_arrayref}){
+    push @out, $folder->[0];
+  }
+  return [@out];
+}
+
+
+
+
 
 ## Return true or false, depending whether a row with unique value
 ## $value in column $column exists in table $table
@@ -296,7 +376,9 @@ sub reset_db {
   ( my $self ) = @_;
 
   for my $table (
-    qw/publications authors author_publication fields journals fulltext tags tag_publication folders folders publication/) {
+    qw/publications authors journals folders tags fulltext
+    author_publication tag_publication folder_publication/
+    ) {
     $self->dbh->do("DELETE FROM $table");
   }
 
@@ -422,14 +504,6 @@ sub standard_search {
   return [@page];
 
 }
-
-
-
-
-
-
-
-
 
 sub exists_pub {
   ( my $self, my $pubs ) = @_;

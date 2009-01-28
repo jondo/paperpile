@@ -72,7 +72,18 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                                               node.text);
                 
                 break;
+
+            case 'FOLDER':
+                Ext.getCmp('results_tabs').showDBQueryResults('FULLTEXT',
+                                                              node.text,
+                                                              'folders:'+node.text,
+                                                              node.text);
+                break;
             }
+
+
+
+
 
         });
 	},
@@ -80,15 +91,13 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     onNodeDrop: function(d){
 
-        alert(d.target.getPath('text'));
-
         Ext.Ajax.request({
 
             url: '/ajax/tree/move_in_folder',
             params: { node_id: d.target.id,
                       sha1: d.data.selections[0].data.sha1,
                       rowid: d.data.selections[0].data._rowid,
-                      source_id: d.source.id,
+                      source_id: d.source.grid.id,
                       path: d.target.getPath('text')
                     },
             success: function(){
@@ -98,10 +107,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         });
 
-
-
-
-        console.log(d.data);
+        console.log(d.source);
 
     },
 
@@ -158,6 +164,8 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
 		}.createDelegate(this));
 
+
+
     },
 
     onNewDir: function(){
@@ -170,6 +178,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             params: { node_id: node.id,
                       parent_id: node.parentNode.id,
                       name: node.text,
+                      path:node.getPath('text'),
                     },
             success: function(){
                 
@@ -183,6 +192,21 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     deleteFolder: function(){
         var node = this.getSelectionModel().getSelectedNode();
+
+        Ext.Ajax.request({
+
+            url: '/ajax/tree/delete_folder',
+            params: { node_id: node.id,
+                      parent_id: node.parentNode.id,
+                      name: node.text,
+                      path:node.getPath('text'),
+                    },
+            success: function(){
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Deleted folder');
+            },
+        });
+
         node.remove();
        
     },

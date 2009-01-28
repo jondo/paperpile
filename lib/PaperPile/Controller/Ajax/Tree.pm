@@ -37,17 +37,31 @@ sub node : Local {
 
 }
 
+sub _relative_path {
+
+  my ( $self, $path ) = @_;
+
+  # skip the first two levels which are "built in", might change so
+  # this might have to be adjusted in the future
+  ($path)=$path=~/\/.*?\/.*?\/(.*)/;
+
+  $path='/' if not $path;
+
+  return $path;
+
+}
+
 sub new_folder : Local {
   my ( $self, $c ) = @_;
 
   my $node_id = $c->request->params->{node_id};
   my $parent_id = $c->request->params->{parent_id};
+  my $path = $c->request->params->{path};
   my $name = $c->request->params->{name};
 
   my $tree= $c->session->{"tree"};
 
   my $sub_tree= $self->_get_subtree($c, $tree, $parent_id );
-
 
   my $new = Tree::Simple->new( { text => $name, type => "FOLDER", draggable =>"true",
                                  path=> '/', id => $node_id },  );
@@ -55,10 +69,33 @@ sub new_folder : Local {
 
   $sub_tree->addChild($new);
 
+  $c->model('DBI')->insert_folder($self->_relative_path($path));
+
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 
 }
+
+sub delete_folder : Local {
+  my ( $self, $c ) = @_;
+
+  my $node_id = $c->request->params->{node_id};
+  my $parent_id = $c->request->params->{parent_id};
+  my $path = $c->request->params->{path};
+  my $name = $c->request->params->{name};
+
+  $c->model('DBI')->delete_folder($self->_relative_path($path));
+
+  $c->stash->{success} = 'true';
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+
+
+
+
+
 
 sub move_in_folder : Local {
   my ( $self, $c ) = @_;
@@ -70,13 +107,20 @@ sub move_in_folder : Local {
   my $path = $c->request->params->{path};
 
   my $source = $c->session->{"source_$source_id"};
+  my $pub = $source->find_sha1($sha1);
   my $tree= $c->session->{"tree"};
 
-  # skip the first two levels which are "built in", might change so
-  # this might have to be adjusted in the future
-  ($path)=$path=~/\/.*?\/.*?\/(.*)/;
+  my $newFolder=$self->_relative_path($path);
+  my @folders=();
 
-  $c->model('DBI')->update_folders($rowid, $path);
+  @folders=split(/,/,$pub->folders);
+  push @folders, $newFolder;
+
+  my %seen = ();
+  @folders = grep { ! $seen{$_} ++ } @folders;
+
+  $c->model('DBI')->update_folders($rowid, join(',',@folders));
+  $pub->folders(join(',',@folders));
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
@@ -138,9 +182,9 @@ sub _get_default_tree {
 
   ##### Folders
 
-  $sub_tree = Tree::Simple->new( { text => 'Folders', type => "FOLDER", path=> '/', id => 'folder_root' }, $tree );
+  $sub_tree = Tree::Simple->new( { text => 'Folders', type => "FOLDER", path=> '/', id => 'folders' }, $tree );
   $sub_tree->setUID('folder_root');
-
+  $self->_get_folders( $c, $sub_tree );
 
   ##### Admin
 
@@ -224,6 +268,10 @@ sub _get_subtree {
     $self->_get_tags($c,$subtree);
   }
 
+  if ($subtree->getNodeValue->{id} eq 'folders'){
+    $self->_get_folders($c,$subtree);
+  }
+
 
   return $subtree;
 
@@ -251,6 +299,44 @@ sub _get_tags {
   }
 
 }
+
+
+sub _get_folders {
+
+  my ( $self, $c,$tree ) = @_;
+
+  my @folders=@{$c->model('DBI')->get_folders};
+
+  # Reset everything by removing all children
+  foreach my $child ($tree->getAllChildren){
+    $tree->removeChild($child);
+  }
+
+  foreach my $folder (@folders) {
+    my @parts=split(/\//,$folder);
+
+    my $t=$tree;
+    foreach my $part (@parts){
+      my $curr_node=undef;
+      foreach my $child ($t->getAllChildren){
+        if ($child->getNodeValue->{text} eq $part){
+          $curr_node=$child;
+          last;
+        }
+      }
+      if (not $curr_node){
+        my $new_node=Tree::Simple->new( { text => $part, type => 'FOLDER' } );
+        $t->addChild( $new_node );
+        $t=$new_node;
+      } else {
+        $t=$curr_node;
+      }
+
+    }
+  }
+}
+
+
 
 
 
