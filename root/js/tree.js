@@ -5,6 +5,8 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             enableDrop:true,
             ddGroup: 'gridDD',
             animate: false,
+            title: 'Paperpile Pre 1',
+            lines:false,
             autoScroll: true,
             loader: new PaperPile.TreeLoader(
                 {  url: '/ajax/tree/node',

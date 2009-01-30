@@ -45,14 +45,21 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
             applyTo: 'pbar'
         });
 
+        if (data.pdf){
+            Ext.getCmp('pdf_viewer').initPDF(data.pdf);
+            Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_viewer');
+        } else {
+            Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_manager');
+        }
+
+
+
 	  },
 
     searchPDF: function(){
 
         this.progressBar.wait({text:"Searching PDF on publisher site", interval:100});
         this.progressBar.show();
-
-        //el.insertHtml('afterBegin','<p>Searching...<p><img src="icons/waiting.gif">');
 
         Ext.Ajax.request(
             {   url: '/ajax/download/search',
@@ -118,9 +125,10 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
                 var json = Ext.util.JSON.decode(response.responseText);
                 this.progressBar.hide();
                 Ext.getCmp(this.source_id).store.getById(this.data.sha1).set('pdf',json.pdf_file);
+                Ext.getCmp('pdf_viewer').initPDF(json.pdf_file);
+                Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_viewer');
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Download finished.');
-                //this.showPDF('dummy');
             },
             scope: this,
         });
@@ -145,7 +153,9 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
                     fraction=0;
                 }
                 var pbar=this.progressBar;
-                pbar.updateProgress(fraction, "Downloading ("+Ext.util.Format.fileSize(json.current_size) +" / "+ Ext.util.Format.fileSize(json.total_size)+")");
+                pbar.updateProgress(fraction, "Downloading ("
+                                    +Ext.util.Format.fileSize(json.current_size) 
+                                    +" / "+ Ext.util.Format.fileSize(json.total_size)+")");
                 pbar.show();
                 
                 Ext.getCmp('statusbar').setText(fraction);
@@ -156,16 +166,7 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
 
     showPDF: function(file){
 
-        var viewer=new PaperPile.PDFviewer(
-            {id:'pdf_viewer',
-             itemId:'pdf_viewer',
-            }
-        );
-
-        Ext.dump(viewer);
-        Ext.getCmp('canvas_panel').add(viewer);
-        Ext.getCmp('canvas_panel').doLayout();
-        Ext.getCmp('pdf_viewer').initPDF();
+        Ext.getCmp('pdf_viewer').initPDF(file);
         Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_viewer');
     }
 

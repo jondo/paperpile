@@ -5,7 +5,11 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
         Ext.apply(this, {
             id: 'results_tabs',
             margins: '2 2 2 2',
-            items: [{title:'Welcome'}],
+            //Have at least one item on rendering to get it rendered correctly
+            items: [{title:'Welcome', 
+                     itemId: 'welcome'
+                    }
+                   ],
         });
        
         PaperPile.ResultsTabs.superclass.initComponent.apply(this, arguments);

@@ -35,7 +35,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                  }),
                                  items: [ 
                                      new PaperPile.Tree(
-                                         { title: 'PaperPile',
+                                         { //title: 'PaperPile',
                                            border: 0,
                                            rootVisible : false,
                                            id: 'treepanel',
@@ -223,13 +223,12 @@ Ext.onReady(function() {
     Ext.QuickTips.init();
     Ext.Ajax.request({
         url: '/ajax/misc/reset_session',
-        //success: this.validateFeed,
-        //failure: this.markInvalid,
     });
 
     main=new PaperPile.Main;
 
-    main.results_tabs.newDBtab();
+    main.results_tabs.remove('welcome');
+    main.results_tabs.newDBtab({closable:false});
 
     var tree=Ext.getCmp('treepanel');
 

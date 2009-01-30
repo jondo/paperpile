@@ -42,6 +42,7 @@ foreach my $field ( keys %{ $config{fields} } ) {
 
 # Helper fields which have no equivalent field in the database
 has '_authors_nice' => ( is => 'rw', isa => 'Str' );
+has '_citation_nice' => ( is => 'rw', isa => 'Str' );
 has '_imported'     => ( is => 'rw', isa => 'Bool' );
 
 sub BUILD {
@@ -61,6 +62,9 @@ sub refresh_fields {
         $self->_authors_nice( join( ', ', @nice ) );
     }
 
+
+    $self->format_citation;
+
     $self->calculate_sha1;
 
 }
@@ -78,6 +82,49 @@ sub calculate_sha1 {
     }
 
 }
+
+# Simple Pubmed like citation format
+# Replace this with proper formatting function,
+sub format_citation {
+
+  ( my $self ) = @_;
+
+  my $cit='';
+
+  if ($self->journal){
+    $cit.= '<i>'.$self->journal.'</i>. ';
+  }
+
+  if ($self->year){
+    $cit.= '('.$self->year.') ';
+  }
+
+  if ($self->month){
+    $cit.= $self->month.'; ';
+  } else {
+    $cit.= '; ';
+  }
+
+  if ($self->volume){
+    $cit.= '<b>'.$self->volume.'</b>:';
+  }
+
+  if ($self->issue){
+    $cit.= '('.$self->issue.') ';
+  }
+
+  if ($self->pages){
+    $cit.= $self->pages;
+  }
+
+
+
+
+
+  $self->_citation_nice($cit);
+
+}
+
 
 sub as_hash {
 

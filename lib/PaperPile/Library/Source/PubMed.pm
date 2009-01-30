@@ -18,7 +18,6 @@ extends 'PaperPile::Library::Source';
 has 'query'     => ( is => 'rw' );
 has 'web_env'   => ( is => 'rw' );
 has 'query_key' => ( is => 'rw' );
-has '_browser'  => ( is => 'rw', isa => 'LWP::UserAgent' );
 
 my $esearch =
 "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=PubMed&usehistory=y&retmax=1&term=";
@@ -36,9 +35,9 @@ my $epost =
 sub connect {
   my $self = shift;
 
-  $self->_browser( PaperPile::Utils->get_browser );
+  my $browser=PaperPile::Utils->get_browser;
 
-  my $response  = $self->_browser->get( $esearch . $self->query );
+  my $response  = $browser->get( $esearch . $self->query );
   my $resultXML = $response->content;
 
   print STDERR Dumper($resultXML);
@@ -48,7 +47,6 @@ sub connect {
   $self->web_env( $result->{WebEnv} );
   $self->query_key( $result->{QueryKey} );
   $self->total_entries( $result->{Count} );
-
 
   return $self->total_entries;
 }
@@ -83,9 +81,11 @@ sub _linkOut {
 
   my $ids=join(',',@ids);
 
+  my $browser= PaperPile::Utils->get_browser;
+
   my $url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=prlinks&db=PubMed&id=$ids";
 
-  my $response  = $self->_browser->get($url);
+  my $response  = $browser->get($url);
 
   print STDERR Dumper($url, "   " ,$response->content);
 
@@ -119,12 +119,13 @@ sub _pubFetch {
 
   ( my $self, my $offset, my $limit ) = @_;
 
+  my $browser= PaperPile::Utils->get_browser;
   my $query_key = $self->query_key;
   my $web_env   = $self->web_env;
 
   my $url =
 "$efetch&query_key=$query_key&WebEnv=$web_env&retstart=$offset&retmax=$limit";
-  my $response  = $self->_browser->get($url);
+  my $response  = $browser->get($url);
   my $resultXML = $response->content;
 
   return $resultXML;

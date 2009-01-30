@@ -6,7 +6,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
     initComponent: function() {
     
-	      var i = document.createElement('img');
+	    var i = document.createElement('img');
         i.src = Ext.BLANK_IMAGE_URL;
 
         _store=new Ext.data.Store(
@@ -32,7 +32,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
             width: 200,
             value: 5,
             increment: 1,
-            minValue: 0,
+            minValue: 1,
             maxValue: 10
         });
 
@@ -65,7 +65,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
                                 }
                                ]}
                    ),
-                    client: i,
+                    bitmap: i,
                     store:_store
                   }
                  );
@@ -80,8 +80,12 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
     onZoom: function(zoomer,value){
 
         value=value/5;
-        
-        this.store.reload({params:{start: this.getBottomToolbar().cursor, zoom: value}});
+
+        this.store.baseParams.zoom=value;
+
+        //this.bitmap.setSize(this.bitmap.getWidth()*value,this.bitmap.getHeight()*value);
+        //this.store.reload({params:{start: this.getBottomToolbar().cursor}});
+
 
     },
      
@@ -97,6 +101,12 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
         PaperPile.PDFviewer.superclass.afterRender.apply(this, arguments);
 
+        this.body.appendChild(this.bitmap);
+        this.bitmap = Ext.get(this.bitmap);
+        this.bitmap.setStyle('cursor', 'move');
+        this.bitmap.on('mousedown', this.onMouseDown, this);
+
+
         Ext.getCmp('drag_button').on('toggle',this.onModeToggle,this);
         Ext.getCmp('select_button').on('toggle',this.onModeToggle,this);
         Ext.getCmp('sticky_button').on('toggle',this.onModeToggle,this);
@@ -106,20 +116,17 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
     initPDF: function(file){
 
-        this.body.appendChild(this.client);
-        this.client = Ext.get(this.client);
-        this.client.setStyle('cursor', 'move');
-        this.client.on('mousedown', this.onMouseDown, this);
-
         this.file=file,
 
-        this.store.baseParams={viewer_id: this.id, file: this.file, limit:1};
+        this.store.baseParams={viewer_id: this.id, file: this.file, limit:1, zoom:1.0};
 
         this.store.load({params:{start:0,
-                                 zoom: 1.0,
                                  canvas_width: Ext.getCmp('MAIN').canvasWidth,
                                  canvas_height: Ext.getCmp('MAIN').canvasHeight,
                                 }});
+
+        
+
 
     },
 
@@ -127,29 +134,25 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         
         if (button.id == 'sticky_button' && pressed){
             this.mode='sticky';
-            this.client.setStyle('cursor', 'crosshair');
+            this.bitmap.setStyle('cursor', 'crosshair');
         }
 
         if (button.id == 'select_button' && pressed){
             this.mode='select';
-            this.client.setStyle('cursor', 'crosshair');
+            this.bitmap.setStyle('cursor', 'crosshair');
         }
 
         if (button.id == 'drag_button' && pressed){
-            this.client.setStyle('cursor', 'move');
+            this.bitmap.setStyle('cursor', 'move');
             this.mode='drag';
-
         }
-
-
     },
 
 
     reloadImage: function(store){
         var newImage=store.getAt(0).get('image');
-        this.client.set({src:newImage});
+        this.bitmap.set({src:newImage});
     },
-
 
     onMouseDown: function(e) {
 

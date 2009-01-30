@@ -7,31 +7,31 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
 				        background: '#ffffff',
 				        padding: '7px'
 			      },
-            bbar:[
-                new Ext.Button({
-                    id: 'edit_save_button',
-                    text: 'Save',
-                    cls: 'x-btn-text-icon add',
-                    listeners: {
-                        click:  {fn: this.save, scope: this}
-                    },
-                }),
-                new Ext.Button({
-                    id: 'edit_cancel_button',
-                    text: 'Cancel',
-                    cls: 'x-btn-text-icon delete',
-                    listeners: {
-                        click:  {fn: this.cancel, scope: this}
-                    },
-                }),
-            ],
-            labelWidth: 75,
-            width: 350,
-            defaults: {width: 230},
-            defaultType: 'textfield',
-            items:{id:'dummy'}, // one field is always needed
-		    });
-		    PaperPile.PubEdit.superclass.initComponent.call(this);
+              bbar:[{xtype:'tbfill'},
+                    new Ext.Button({
+                        id: 'edit_save_button',
+                        text: 'Save',
+                        cls: 'x-btn-text-icon save',
+                        listeners: {
+                            click:  {fn: this.save, scope: this}
+                        },
+                    }),
+                    new Ext.Button({
+                        id: 'edit_cancel_button',
+                        text: 'Cancel',
+                        cls: 'x-btn-text-icon cancel',
+                        listeners: {
+                            click:  {fn: this.cancel, scope: this}
+                        },
+                    }),
+                   ],
+              labelWidth: 75,
+              width: 350,
+              defaults: {width: 230},
+              defaultType: 'textfield',
+              items:{id:'dummy'}, // one field is always needed
+		  });
+		PaperPile.PubEdit.superclass.initComponent.call(this);
 
         
         Ext.Ajax.request({

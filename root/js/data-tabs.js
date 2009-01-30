@@ -35,8 +35,10 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
                      allowDepress : false,
                      pressed: false
                    },
+                   {xtype:'tbfill'},
                    { text: 'Save',
                      id: 'save_notes_button',
+                     cls: 'x-btn-text-icon save',
                      listeners: {
                          click:  { fn: function()
                                    {
@@ -49,6 +51,7 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
                    },
                    { text: 'Cancel',
                      id: 'cancel_notes_button',
+                     cls: 'x-btn-text-icon cancel',
                      listeners: {
                          click:  { fn: function()
                                    {

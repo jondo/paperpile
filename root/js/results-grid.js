@@ -4,66 +4,43 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
     source_file: '',
     source_query: '',
     closable:true,
-    
+
     initComponent:function() {
 
         var _store=new Ext.data.Store(
-            {proxy: new Ext.data.HttpProxy({
+            {  proxy: new Ext.data.HttpProxy({
                 url: '/ajax/grid/resultsgrid', 
                 method: 'GET'
             }),
-             baseParams:{source_id: this.id,
-                         source_file: this.source_file,
-                         source_type: this.source_type,
-                         source_query: this.source_query,
-                         source_mode: this.source_mode,
-                         limit:25
-                        },
-             reader: new Ext.data.JsonReader(),
+               baseParams:{source_id: this.id,
+                           source_file: this.source_file,
+                           source_type: this.source_type,
+                           source_query: this.source_query,
+                           source_mode: this.source_mode,
+                           limit:25
+                          },
+               reader: new Ext.data.JsonReader(),
             }); 
-
+        
         var _pager=new Ext.PagingToolbar({
             pageSize: 25,
             store: _store,
             displayInfo: true,
             displayMsg: 'Displaying papers {0} - {1} of {2}',
             emptyMsg: "No papers to display",
-            items:[ 
-                new Ext.Button({
-                    id: 'grid_add_button',
-                    text: 'Add',
-                    cls: 'x-btn-text-icon add',
-                    listeners: {
-                        click:  {fn: this.insertEntry, scope: this}
-                    },
-                }),
-                new Ext.Button({
-                    id: 'grid_delete_button',
-                    text: 'Delete',
-                    cls: 'x-btn-text-icon delete',
-                    listeners: {
-                        click:  {fn: this.deleteEntry, scope: this}
-                    },
-                }),
-                new Ext.Button({
-                    id: 'grid_edit_button',
-                    text: 'Edit',
-                    cls: 'x-btn-text-icon edit',
-                    listeners: {
-                        click:  {fn: this.editEntry, scope: this}
-                    },
-                })
-
-            ]
         });
     
         var renderPub=function(value, p, record){
 
             var t = new Ext.Template(
-                    '<p><b>{title}</b></p>{authors}'
-            )
-            
-            return t.apply({title:record.data.title,authors:record.data._authors_nice});
+                '<p class="pp-grid-title">{title}</p>',
+                '<p class="pp-grid-authors">{authors}</p>',
+                '<p class="pp-grid-citation">{citation}</p>'
+            );
+            return t.apply({title:record.data.title,
+                            authors:record.data._authors_nice,
+                            citation:record.data._citation_nice,
+                           });
         }
     
         Ext.apply(this, {
@@ -71,23 +48,33 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             enableDragDrop   : true,
             store: _store,
             bbar: _pager,
-            border:true,
-            iconCls: 'tabs',
-            columns:[{header: 'Imported',
-                      dataIndex: '_imported',
+            autoExpandColumn:'publication',
+            columns:[{header: 'Citation',
+                      renderer: function(value, metadata,record, rowIndex,colIndex,store){
+                          if (record.data._imported){
+                              return '<div class="pp-status-imported"></div>';
+                          } else {
+                              return '';
+                          }
+                      },
+                      width: 60,
                      },
                      {header: 'PDF',
-                      dataIndex: 'pdf',
-                     },
-
-                     {header: 'Journal',
-                      dataIndex: 'journal',
+                      renderer: function(value, metadata,record, rowIndex,colIndex,store){
+                          if (record.data.pdf){
+                              return '<div class="pp-status-pdf"></div>';
+                          } else {
+                              return '';
+                          }
+                      },
+                      width: 60,
                      },
                      {header: "Publication",
+                      id: 'publication',
                       dataIndex: 'title',
-                      width: 400,
-                      renderer:renderPub
-                     }],
+                      renderer:renderPub,
+                     }
+                    ],
             
         });
         
@@ -97,7 +84,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
         this.on('beforedestroy', this.onDestroy,this);
 
-    }, // eo function initComponent
+    },
 
     
     insertEntry: function(){
@@ -115,7 +102,6 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.store.getById(sha1).set('_imported',1);
             },
             scope:this
-            //failure: this.markInvalid,
         });
 
     },
@@ -135,11 +121,9 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry deleted.');
             },
-            //failure: this.markInvalid,
         });
 
         this.store.remove(this.store.getById(sha1));
-        //this.store.remove(this.store.reload());
     },
 
     editEntry: function(){
@@ -168,15 +152,13 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             params: { source_id: this.id,
                     },
             method: 'GET'
-            //success: this.validateFeed,
-            //failure: this.markInvalid,
         });
     },
 });
 
 PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
 
-    loadMask: true,
+    loadMask: {msg:"Searching PubMed"},
 
     initComponent:function() {
 
@@ -187,7 +169,18 @@ PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
         Ext.apply(this, {
             source_type: 'PUBMED',
             title: 'PubMed',
-            tbar:[_searchField],
+            iconCls: 'pp-icon-pubmed',
+            tbar:[_searchField,
+                    {xtype:'tbfill'},
+                    {   xtype:'button',
+                        itemId: 'add_button',
+                        text: 'Import',
+                        cls: 'x-btn-text-icon add',
+                        listeners: {
+                            click:  {fn: this.insertEntry, scope: this}
+                        },
+                    },
+                 ],
         });
 
         PaperPile.ResultsGridPubMed.superclass.initComponent.apply(this, arguments);
@@ -195,7 +188,7 @@ PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
         _searchField.store=this.store;
 
 
-    }, // eo function initComponent
+    }
 });
 
 
@@ -212,8 +205,36 @@ PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
         Ext.apply(this, {
             source_type: 'DB',
             title: 'Local library',
-            iconCls: 'tabs',
-            tbar:[_filterField],
+            iconCls: 'pp-icon-page',
+            tbar:  [_filterField, 
+                    {xtype:'tbfill'},
+                    {   xtype:'button',
+                        itemId: 'new_button',
+                        text: 'New',
+                        cls: 'x-btn-text-icon add',
+                        listeners: {
+                            click:  {fn: this.editEntry, scope: this}
+                        },
+                    },
+                    {   xtype:'button',
+                        text: 'Delete',
+                        itemId: 'delete_button',
+                        cls: 'x-btn-text-icon delete',
+                        listeners: {
+                            click:  {fn: this.deleteEntry, scope: this}
+                        },
+                    },
+                    {   xtype:'button',
+                        itemId: 'edit_button',
+                        text: 'Edit',
+                        cls: 'x-btn-text-icon edit',
+                        listeners: {
+                            click:  {fn: this.editEntry, scope: this}
+                        },
+                    },
+
+                   ]
+            
         });
 
         PaperPile.ResultsGridDB.superclass.initComponent.apply(this, arguments);
@@ -222,7 +243,7 @@ PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
         _filterField.base_query=this.base_query;
 
 
-    }, // eo function initComponent
+    },
 
     onRender: function() {
         PaperPile.ResultsGridDB.superclass.onRender.apply(this, arguments);
@@ -239,28 +260,22 @@ PaperPile.ResultsGridFile = Ext.extend(PaperPile.ResultsGrid, {
         Ext.apply(this, {
             source_type: 'FILE',
             title: 'RIS',
-            iconCls: 'tabs',
+            iconCls: 'pp-icon-page',
         });
 
         PaperPile.ResultsGridFile.superclass.initComponent.apply(this, arguments);
 
-    }, // eo function initComponent
+    },
 
     onRender: function() {
         PaperPile.ResultsGridFile.superclass.onRender.apply(this, arguments);
-        //this.store.load({params:{start:0, limit:25}});
         this.store.load({params:{start:0, 
                                  limit:25, 
                                  source_file: this.source_file,
                                 }});
 
-
-
     }
 });
-
-
-
 
 
 

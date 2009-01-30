@@ -15,6 +15,7 @@ my $tmpdir  = '/home/wash/play/PaperPile/root/tmp/PDF';
 my $rootdir = '/home/wash/play/PaperPile/root';
 
 has 'file'    => ( is => 'rw', isa => 'Str' );
+has 'root_dir' => ( is => 'rw', isa => 'Str' );
 has '_tmpdir' => ( is => 'rw', isa => 'Str' );
 has 'pages'   => ( is => 'rw', isa => 'ArrayRef[PaperPile::PDFviewer::Page]' );
 has 'curr_page'     => ( is => 'rw', isa => 'Int', default => 1 );
@@ -97,6 +98,7 @@ sub _gs {
     . "-sOutputFile=$out $in";
 
   system($call);
+  sleep(1);
 
 }
 

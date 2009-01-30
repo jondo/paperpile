@@ -93,10 +93,6 @@ sub delete_folder : Local {
 
 
 
-
-
-
-
 sub move_in_folder : Local {
   my ( $self, $c ) = @_;
 
@@ -129,92 +125,124 @@ sub move_in_folder : Local {
 
 
 
-
-
 sub _get_default_tree {
 
   my ( $self, $c ) = @_;
 
   ##### Root
 
-  my $tree = Tree::Simple->new( { text => 'Root', id => 'root' }, Tree::Simple->ROOT );
+  my $root = Tree::Simple->new( { text => 'Root', id => 'root' }, Tree::Simple->ROOT );
+  $root->setUID('root');
 
-  $tree->setUID('root');
-
-  $tree->addChild(
-    Tree::Simple->new( {
-        text  => 'Local library',
-        type  => 'DB',
-        query => ''
-      }
-    )
+  my $local_lib = Tree::Simple->new( {
+      text    => 'Local library',
+      type    => 'DB',
+      query   => '',
+      cls     => 'pp-tree-heading',
+      iconCls => 'pp-icon-empty',
+    }
   );
 
-  ##### Sources
-
-  my $sub_tree = Tree::Simple->new( { text => 'Source' }, $tree );
-
-  $sub_tree->addChild(
-    Tree::Simple->new( {
-        text  => 'PubMed',
-        type  => 'PUBMED',
-        query => ''
-      }
-    )
-  );
-
-  $sub_tree->addChild(
-    Tree::Simple->new( {
-        text => 'File',
-        type => 'FILE',
-        file => '/home/wash/play/PaperPile/t/data/test2.ris',
-      }
-    )
-  );
+  $root->addChild($local_lib);
 
   ##### Tags
 
-  $sub_tree = Tree::Simple->new( { text => 'Tags', type => "TAGS", id => 'tags' }, $tree );
-  $sub_tree->setUID('tags');
+  my $tags = Tree::Simple->new( {
+      text    => 'Tags',
+      type    => "TAGS",
+      id      => 'tags',
+      iconCls => 'pp-icon-empty',
+    },
+    $local_lib
+  );
+  $tags->setUID('tags');
 
-  # Initialize with tags
-  $self->_get_tags( $c, $sub_tree );
+  # Initialize
+  $self->_get_tags( $c, $tags );
 
   ##### Folders
 
-  $sub_tree = Tree::Simple->new( { text => 'Folders', type => "FOLDER", path=> '/', id => 'folders' }, $tree );
-  $sub_tree->setUID('folder_root');
-  $self->_get_folders( $c, $sub_tree );
+  my $folders = Tree::Simple->new( {
+      text    => 'Folders',
+      type    => "FOLDER",
+      path    => '/',
+      id      => 'folders',
+      iconCls => 'pp-icon-empty',
+    },
+    $local_lib
+  );
+
+  $folders->setUID('folder_root');
+  $self->_get_folders( $c, $folders );
+
+  ##### Sources
+
+  my $sources = Tree::Simple->new( {
+      text    => 'Online Databases',
+      cls     => 'pp-tree-heading',
+      iconCls => 'pp-icon-empty',
+    },
+    $root
+  );
+
+  $sources->addChild(
+    Tree::Simple->new( {
+        text    => 'PubMed',
+        type    => 'PUBMED',
+        query   => '',
+        iconCls => 'pp-icon-pubmed',
+      }
+    )
+  );
+
+  $sources->addChild(
+    Tree::Simple->new( {
+        text    => 'Google Scholar',
+        type    => 'GOOGLE',
+        query   => '',
+        iconCls => 'pp-icon-google',
+      }
+    )
+  );
 
   ##### Admin
 
-  $sub_tree = Tree::Simple->new( { text => 'Admin' }, $tree );
+  my $admin = Tree::Simple->new( {
+      text    => 'Debug',
+      cls     => 'pp-tree-heading',
+      iconCls => 'pp-icon-empty',
+    },
+    $root
+  );
 
-  $sub_tree->addChild(
+  $admin->addChild(
     Tree::Simple->new( {
-        text => 'Import Journals',
-        type => 'IMPORT_JOURNALS',
+        text    => 'Import Journals',
+        type    => 'IMPORT_JOURNALS',
+        iconCls => 'pp-icon-tools',
       }
     )
   );
 
-  $sub_tree->addChild(
+  $admin->addChild(
     Tree::Simple->new( {
-        text => 'Reset Database',
-        type => 'RESET_DB',
+        text    => 'Reset Database',
+        type    => 'RESET_DB',
+        iconCls => 'pp-icon-tools',
       }
     )
   );
 
-  $sub_tree->addChild(
+  $admin->addChild(
     Tree::Simple->new( {
-        text => 'Initialize Database',
-        type => 'INIT_DB',
+        text    => 'Initialize Database',
+        type    => 'INIT_DB',
+        iconCls => 'pp-icon-tools',
       }
     )
   );
 
-  return $tree;
+  return $root;
 }
 
 sub _get_js_object {
@@ -264,6 +292,8 @@ sub _get_subtree {
     )
   }
 
+  #print STDERR Dumper $subtree;
+
   if ($subtree->getNodeValue->{id} eq 'tags'){
     $self->_get_tags($c,$subtree);
   }
@@ -279,23 +309,30 @@ sub _get_subtree {
 
 sub _get_tags {
 
-  my ( $self, $c,$tree ) = @_;
+  my ( $self, $c, $tree ) = @_;
 
-  my @tags=@{$c->model('DBI')->get_tags};
+  my @tags = @{ $c->model('DBI')->get_tags };
 
   # Remove all children (old tags) first
 
-  foreach my $child ($tree->getAllChildren){
+  foreach my $child ( $tree->getAllChildren ) {
     $tree->removeChild($child);
   }
 
-  if (not @tags){
+  if ( not @tags ) {
     push @tags, 'No tags';
   }
 
   # Add tags
   foreach my $tag (@tags) {
-    $tree->addChild( Tree::Simple->new( { text => $tag, type => 'TAG' } ) );
+    $tree->addChild(
+      Tree::Simple->new( {
+          text    => $tag,
+          type    => 'TAG',
+          iconCls => 'pp-icon-tag',
+        }
+      )
+    );
   }
 
 }
@@ -303,33 +340,38 @@ sub _get_tags {
 
 sub _get_folders {
 
-  my ( $self, $c,$tree ) = @_;
+  my ( $self, $c, $tree ) = @_;
 
-  my @folders=@{$c->model('DBI')->get_folders};
+  my @folders = @{ $c->model('DBI')->get_folders };
 
   # Reset everything by removing all children
-  foreach my $child ($tree->getAllChildren){
+  foreach my $child ( $tree->getAllChildren ) {
     $tree->removeChild($child);
   }
 
   foreach my $folder (@folders) {
-    my @parts=split(/\//,$folder);
+    my @parts = split( /\//, $folder );
 
-    my $t=$tree;
-    foreach my $part (@parts){
-      my $curr_node=undef;
-      foreach my $child ($t->getAllChildren){
-        if ($child->getNodeValue->{text} eq $part){
-          $curr_node=$child;
+    my $t = $tree;
+    foreach my $part (@parts) {
+      my $curr_node = undef;
+      foreach my $child ( $t->getAllChildren ) {
+        if ( $child->getNodeValue->{text} eq $part ) {
+          $curr_node = $child;
           last;
         }
       }
-      if (not $curr_node){
-        my $new_node=Tree::Simple->new( { text => $part, type => 'FOLDER' } );
-        $t->addChild( $new_node );
-        $t=$new_node;
+      if ( not $curr_node ) {
+        my $new_node = Tree::Simple->new( {
+            text    => $part,
+            type    => 'FOLDER',
+          }
+        );
+        #$new_node->getNodeValue->{id}=$new_node->getUID;
+        $t->addChild($new_node);
+        $t = $new_node;
       } else {
-        $t=$curr_node;
+        $t = $curr_node;
       }
 
     }

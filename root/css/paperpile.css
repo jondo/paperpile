@@ -1,21 +1,36 @@
 .add .x-btn-text {
-    background-image: url('/icons/silk/add.png');
-}
-
-.tabs {
-    background-image: url('/icons/silk/page_white.png') !important;
+    background-image: url('/images/icons/add.png');
 }
 
 .delete .x-btn-text {
-    background-image: url('/icons/silk/delete.png');
+    background-image: url('/images/icons/delete.png');
 }
 
 .edit .x-btn-text {
-    background-image: url('/icons/silk/application_edit.png');
+    background-image: url('/images/icons/pencil.png');
+}
+
+.cancel .x-btn-text {
+    background-image: url('/images/icons/cancel.png');
+}
+
+.save .x-btn-text {
+    background-image: url('/images/icons/accept.png');
 }
 
 .pp-basic {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
+.pp-status-imported {
+    background: transparent url('/images/icons/down.png') no-repeat;
+    width:40px;
+    height:40px;
+}
+.pp-status-pdf {
+    background: transparent url('/images/icons/pdf.png') no-repeat;
+    width:40px;
+    height:40px;
 }
 
 .pp-summary-abstract {
@@ -23,8 +38,23 @@
     width: 65%;
     line-height: 1.25em;
     text-align: justify;
-    padding: 5px 5px 5px 5px*/;
+    padding: 5px 5px 5px 5px;
  }
+
+.pp-grid-title,.pp-grid-authors{
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    line-height: 1.25em;
+}
+
+.pp-grid-title{
+    font-weight: bold;
+}
+
+.pp-grid-citation{
+    line-height: 1.25em;
+}
+
+
 
 .pp-summary-form {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
@@ -34,4 +64,43 @@
     padding: 5px 5px 5px 5px;
 
 }
+.pp-tree-heading{
+    background:#eee url(/images/cmp-bg.gif) repeat-x;
+    font-weight: bold;
+    margin-top:4px;
+    margin-bottom:4px;
+    border-top:1px solid #ddd;
+    border-bottom:1px solid #ccc;
+    padding-top:2px;
+    padding-bottom:1px;
+}
+
+.pp-icon-empty{
+     display: none;
+}
+
+.pp-icon-page {
+    background-image: url('/images/icons/page_white_stack.png') !important;
+}
+
+.pp-icon-tags{
+  background-image: url('/images/icons/tag_orange.png')!important;
+}
+
+.pp-icon-tag{
+  background-image: url('/images/icons/tag_blue.png')!important;
+}
+
+.pp-icon-pubmed{
+  background-image: url('/images/icons/pubmed.png')!important;
+}
+
+.pp-icon-google{
+  background-image: url('/images/icons/google.png')!important;
+}
+
+.pp-icon-tools{
+  background-image: url('/images/icons/wrench.png')!important;
+}
+
 

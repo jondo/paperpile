@@ -302,21 +302,6 @@
   </test>
 </site>
 
-<site name="Metapress">
-  <signature>
-    <url>!metapress\.com!</url>
-  </signature>
-  <rule>
-    <pattern>
-      <match>!(/content/\S*?/fulltext.pdf)&quot;!</match>
-    </pattern>
-  </rule>
-
-  <test>
-    <url>http://versita.metapress.com/content/np2145348566n664/</url>
-  </test>
-</site>
-
 <site name="Medknown">
   <signature>
     <url>!article.asp\?issn=\S*?aulast=\S*!</url>

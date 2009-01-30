@@ -82,7 +82,6 @@ sub get : Local {
       }
       print FILE $data or die "Can't write to $file: $!\n";
       close FILE;
-      #select(undef, undef, undef, 0.05) # sleep 1/4 second;
     }
  );
 
@@ -125,8 +124,7 @@ sub finish : Local{
   mkpath($dirs);
   copy($tmp_file, $dest);
 
-  $c->model('DBI')->update_field($pub->_rowid, 'pdf', $dest);
-
+  $c->model('DBI')->update_field('Publications',$pub->_rowid, 'pdf', $dest);
 
   $c->stash->{pdf_file} = "$dest";
   $c->stash->{success} = 'true';

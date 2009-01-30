@@ -25,6 +25,8 @@ sub resultsgrid : Local {
   my $offset       = $c->request->params->{start};
   my $limit        = $c->request->params->{limit};
 
+  print STDERR Dumper($c->session->{"source_$source_id"});
+
   if ( not defined $c->session->{"source_$source_id"} or $task eq 'NEW' ) {
 
     if ( $source_type eq 'FILE' ) {
