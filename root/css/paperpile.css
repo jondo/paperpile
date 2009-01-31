@@ -35,15 +35,75 @@
 
 .pp-summary-abstract {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    width: 65%;
+    width: 75%;
     line-height: 1.25em;
-    text-align: justify;
+    /*text-align: justify;*/
+    float:right;
     padding: 5px 5px 5px 5px;
  }
 
+.pp-summary-form {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    width: 22%;
+    align:left;
+    float:left;
+    padding: 5px 0px 0px 0px;
+}
+
+.pp-action-add-notes a{
+    font:normal 14px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    padding-left: 64px;
+    height: 64px;
+    line-height:64px;
+    background: transparent url('/images/icons/postit.png') no-repeat;
+    color:black;
+    display:block;
+    text-decoration:none;
+}
+
+.pp-action-edit-notes a{
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    padding-left: 16px;
+    height: 16px;
+    line-height:16px;
+    background: transparent url('/images/icons/pencil.png') no-repeat;
+    color:black;
+    display:block;
+    text-decoration:none;
+    float:right;
+}
+
+
+.pp-action-add-notes a:hover{
+    background-color:#EEEEEE;
+}
+
+.pp-action-edit-notes a:hover{
+    background-color:#EEEEEE;
+}
+
+.pp-notes {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    float:left;
+}
+
+.pp-notes ul {
+    list-style-type:disc;
+    list-style-position: inside;
+}
+
+.pp-notes ol {
+    list-style-type:decimal;
+    list-style-position: inside;
+}
+
+.pp-notes li { display: list-item }
+
+
+
 .pp-grid-title,.pp-grid-authors{
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    line-height: 1.25em;
+    line-height: 1.5em;
 }
 
 .pp-grid-title{
@@ -51,19 +111,10 @@
 }
 
 .pp-grid-citation{
-    line-height: 1.25em;
+    line-height: 1.5em;
 }
 
 
-
-.pp-summary-form {
-    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    width: 30%;
-    float:right;
-    align:right;
-    padding: 5px 5px 5px 5px;
-
-}
 .pp-tree-heading{
     background:#eee url(/images/cmp-bg.gif) repeat-x;
     font-weight: bold;
@@ -91,6 +142,10 @@
   background-image: url('/images/icons/tag_blue.png')!important;
 }
 
+.pp-icon-folder{
+  background-image: url('/images/icons/folder.png')!important;
+}
+
 .pp-icon-pubmed{
   background-image: url('/images/icons/pubmed.png')!important;
 }
@@ -102,5 +157,48 @@
 .pp-icon-tools{
   background-image: url('/images/icons/wrench.png')!important;
 }
+
+
+.pp-basic {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
+
+.pp-pdf-manager li{
+    font:normal 18px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    padding:10px;
+}
+
+.pp-publisher-link a{
+    font:normal 18px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    color:black;
+    text-decoration:none;
+    display:block;
+}
+.pp-publisher-link img{
+    vertical-align:middle;
+    padding-right: 10px;
+}
+
+.pp-action-download-pdf a{
+    font:normal 18px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    padding-left: 58px;
+    height: 48px;
+    line-height:48px;
+    background: transparent url('/images/icons/acroread.png') no-repeat;
+    color:black;
+    display:block;
+    text-decoration:none;
+}
+
+.pp-action-download-pdf a:hover{
+    background-color:#CAD8F3;
+}
+
+.pp-publisher-link a:hover{
+    background-color:#CAD8F3;
+}
+
+
 
 

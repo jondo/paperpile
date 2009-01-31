@@ -82,9 +82,8 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         value=value/5;
 
         this.store.baseParams.zoom=value;
-
         //this.bitmap.setSize(this.bitmap.getWidth()*value,this.bitmap.getHeight()*value);
-        //this.store.reload({params:{start: this.getBottomToolbar().cursor}});
+        this.store.reload({params:{start: this.getBottomToolbar().cursor}});
 
 
     },

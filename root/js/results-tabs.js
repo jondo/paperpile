@@ -29,7 +29,7 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
     newDBtab:function(query){
         var newGrid=this.add(new PaperPile.ResultsGridDB({
             title: 'DB',
-            iconCls: 'tabs',
+            iconCls: 'pp-icon-page',
             source_type: 'DB',
             source_mode: 'FULLTEXT',
             source_query: query,
@@ -48,20 +48,20 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
     },
   
 
-    showDBQueryResults: function(mode,query,base_query,tabTitle){
+    showDBQueryResults: function(mode,query,base_query,tabTitle,iconCls){
 
         var targetTab;
 
         targetTab=new PaperPile.ResultsGridDB({
             title: 'DB',
-            iconCls: 'tabs',
+            iconCls: iconCls,
             source_type: 'DB',
             source_query: base_query,
             source_mode: mode,
             base_query: base_query,
             closable:true
         });
-
+        
         this.add(targetTab);
         targetTab.setTitle(tabTitle);
         this.activate(targetTab.id);

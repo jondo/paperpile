@@ -1,18 +1,18 @@
 PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
 	  
     markup: [
-		    '<div id="mybox" >',
-        '<ul>',
+        '<div id="mybox">',
+        '<ul class="pp-pdf-manager">',
         '<tpl if="url">',
-        '<li><a href="{url}">Go to publisher site</a></li>',
-        '<li><a href="#" onClick="{scope}.searchPDF()">Search PDF for {sha1}</a></li>',
+        '<li class="pp-publisher-link"><a href="{url}"><img src="{icon}"/>Go to publisher site</a></li>',
+        '<li class="pp-action-download-pdf"><a href="#" onClick="{scope}.searchPDF()">Download PDF</a></li>',
         '</tpl>',
         '<tpl if="!url">',
         '<li>No links available for this citation.</li>',
         '</tpl>',
         '<li><div id="pbar"></div></li>',
         '</ul>',
-        '</div>',        
+        '</div>',
 	  ],
 
 	  startingMarkup: '',
@@ -34,11 +34,12 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
         this.data=data;
         this.data.scope='Ext.getCmp(\'pdf_manager\')';
         this.source_id=Ext.getCmp('results_tabs').getActiveTab().id;
-        
+
         this.tpl.overwrite(this.body, this.data);
 
         var el = Ext.get("mybox");
         el.boxWrap();
+        
         this.progressBar = new Ext.ProgressBar({
             id: 'progress_bar',
             hidden:true,
@@ -51,8 +52,6 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
         } else {
             Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_manager');
         }
-
-
 
 	  },
 

@@ -1,31 +1,45 @@
 
 PaperPile.PubNotes = Ext.extend(Ext.Panel, {
-	  markup: [
-        '<div class="pp-basic" style="text-align: right;">',
+	markup: [
+        '<div class="pp-notes">{notes}</div>',
+        '<div class="pp-action-edit-notes">',
+        '<a href="#" onClick="{scope}.editNotes()">Edit Notes</a>',
+        '</div>',
+    ],
+
+    markupEmpty: [
+        '<div class="pp-action-add-notes">',
         '<a href="#" onClick="{scope}.editNotes()">Insert notes</a>',
         '</div>',
-		    '<div class="pp-basic">{notes}</div>'
     ],
-	  startingMarkup: 'Empty',
+
+	startingMarkup: 'Empty',
 	  
     initComponent: function() {
-		    this.tpl = new Ext.XTemplate(this.markup);
-		    Ext.apply(this, {
-			      bodyStyle: {
-				        background: '#ffffff',
-				        padding: '7px'
-			      },
+		this.tpl = new Ext.XTemplate(this.markup);
+		Ext.apply(this, {
+			bodyStyle: {
+				background: '#ffffff',
+				padding: '7px'
+			},
             autoScroll: true,
-			      html: this.startingMarkup
-		    });
-		    PaperPile.PubNotes.superclass.initComponent.call(this);
-	  },
-
-	  updateDetail: function(data) {
+			html: this.startingMarkup
+		});
+		PaperPile.PubNotes.superclass.initComponent.call(this);
+	},
+    
+	updateDetail: function(data) {
         this.data=data;
+
+        var tpl=new Ext.XTemplate(this.markup);
+
+        if (data.notes==''){
+            tpl=new Ext.XTemplate(this.markupEmpty);
+        }
+
         this.data.scope='Ext.getCmp(\'pubnotes\')';
-		    this.tpl.overwrite(this.body, this.data);		
-	  },
+		tpl.overwrite(this.body, this.data);		
+	},
 
     editNotes: function(){
        

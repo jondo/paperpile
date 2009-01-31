@@ -71,7 +71,9 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 Ext.getCmp('results_tabs').showDBQueryResults('FULLTEXT',
                                                               node.text,
                                                               'tags:'+node.text,
-                                                              node.text);
+                                                              node.text,
+                                                              'pp-icon-tag'
+                                                             );
                 
                 break;
 
@@ -79,7 +81,9 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 Ext.getCmp('results_tabs').showDBQueryResults('FULLTEXT',
                                                               node.text,
                                                               'folders:'+node.text,
-                                                              node.text);
+                                                              node.text,
+                                                              'pp-icon-folder'
+                                                             );
                 break;
             }
 

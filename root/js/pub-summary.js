@@ -1,30 +1,29 @@
 
 PaperPile.PubSummary = Ext.extend(Ext.Panel, {
-	  tplMarkup: [
+	tplMarkup: [
         '<div class="pp-summary-form" id="tags"></div>',
-		    '<div class="pp-summary-abstract">{abstract}</div>',
-	  ],
-	  startingMarkup: 'Empty',
+		'<div class="pp-summary-abstract">{abstract}</div>',
+	],
+	startingMarkup: 'Empty',
 	  
     initComponent: function() {
-		    this.tpl = new Ext.Template(this.tplMarkup);
-		    Ext.apply(this, {
-			      bodyStyle: {
-				        background: '#ffffff',
-				        padding: '7px'
-			      },
+		this.tpl = new Ext.Template(this.tplMarkup);
+		Ext.apply(this, {
+			bodyStyle: {
+				background: '#ffffff',
+				padding: '7px'
+			},
             autoScroll: true,
-			      html: this.startingMarkup
-		    });
-		    PaperPile.PubSummary.superclass.initComponent.call(this);
+			html: this.startingMarkup
+		});
+		PaperPile.PubSummary.superclass.initComponent.call(this);
         
-	  },
+	},
 
-	  updateDetail: function(data) {
-
+	updateDetail: function(data) {
         this.data=data;
-		    this.tpl.overwrite(this.body, data);		
-
+		this.tpl.overwrite(this.body, data);		
+        
         // Get application wide store with tags and make a local 
         // copy as simple store which can be modified without
         // affecting other things. Will not scale, once we want to 
@@ -34,31 +33,31 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
         var list=[];
         Ext.StoreMgr.lookup('tag_store').each(function(rec){
             list.push([rec.data.tag]);
-			  }, this);
-
+		}, this);
+        
         var store = new Ext.data.SimpleStore({
-			      fields: ['tag'],
+			fields: ['tag'],
             data: list,
-		    });
-
+		});
+        
 
 
         this.form = new Ext.form.FormPanel({
             autoHeight: true,
             hideLabels: true,
             baseCls: 'x-plain',
-			      items: [
+			items: [
                 new PaperPile.BoxSelect({
                     id: 'tag_select',
-			              name: 'to[]',
+			        name: 'to[]',
                     value:this.data.tags,
                     store: store,
                     emptyMsg: '[Add Tags]',
                     anchor:'90%',
-			              mode: 'local',
-			              displayField: 'tag',
-			              valueField: 'tag',
-			              addUniqueValues: false,
+			        mode: 'local',
+			        displayField: 'tag',
+			        valueField: 'tag',
+			        addUniqueValues: false,
                     listeners: {
                         modified:  {fn: 
                                     function(){
@@ -78,10 +77,10 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
                 }),
                 
             ],
-		    });
-
+		});
+        
         this.form.render('tags');
-      
+        
     },
 
     updateTags: function(){
@@ -103,13 +102,11 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
                 Ext.getCmp('statusbar').setText('Updated tags.');
             },
             scope: this,
-
-           
-            //failure: this.markInvalid,
+            
         });
-
+        
     }
-
+    
 
 });
 

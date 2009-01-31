@@ -85,7 +85,7 @@ sub update_notes : Local {
   my $html      = $c->request->params->{html};
 
 
-  $c->model('DBI')->update_field($rowid, 'notes', $html);
+  $c->model('DBI')->update_field('Publications', $rowid, 'notes', $html);
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');

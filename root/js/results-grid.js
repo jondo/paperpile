@@ -49,7 +49,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             store: _store,
             bbar: _pager,
             autoExpandColumn:'publication',
-            columns:[{header: 'Citation',
+            columns:[{header: '',
                       renderer: function(value, metadata,record, rowIndex,colIndex,store){
                           if (record.data._imported){
                               return '<div class="pp-status-imported"></div>';
@@ -57,9 +57,9 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                               return '';
                           }
                       },
-                      width: 60,
+                      width: 36,
                      },
-                     {header: 'PDF',
+                     {header: '',
                       renderer: function(value, metadata,record, rowIndex,colIndex,store){
                           if (record.data.pdf){
                               return '<div class="pp-status-pdf"></div>';
@@ -67,7 +67,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                               return '';
                           }
                       },
-                      width: 60,
+                      width: 36,
                      },
                      {header: "Publication",
                       id: 'publication',
@@ -205,7 +205,6 @@ PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
         Ext.apply(this, {
             source_type: 'DB',
             title: 'Local library',
-            iconCls: 'pp-icon-page',
             tbar:  [_filterField, 
                     {xtype:'tbfill'},
                     {   xtype:'button',
@@ -239,9 +238,9 @@ PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
 
         PaperPile.ResultsGridDB.superclass.initComponent.apply(this, arguments);
         _filterField.store=this.store;
-    
         _filterField.base_query=this.base_query;
 
+        this.getColumnModel().setHidden(0,true);
 
     },
 

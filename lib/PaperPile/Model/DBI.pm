@@ -270,8 +270,6 @@ sub update_folders {
 sub delete_folder {
   ( my $self, my $folder ) = @_;
 
-  print STDERR "-----------> delete $folder\n";
-
   # First delete all flat folder assignments in the Publication table
   # which are below the given folder (i.e. their path starts with the
   # folder to delete)
@@ -427,16 +425,6 @@ sub fulltext_search {
      FROM Publications JOIN fulltext
      ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset"
   );
-
-  print STDERR "SELECT *,
-     publications.rowid as _rowid,
-     publications.title as title,
-     publications.abstract as abstract,
-     publications.notes as notes
-     FROM Publications JOIN fulltext
-     ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset";
-
-
 
 
   $sth->execute;
