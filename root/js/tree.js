@@ -152,7 +152,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 		appendNode.expand(false, false, function(n) {
 		    
 			newNode = n.appendChild(new PaperPile.AsyncTreeNode({text:'New Folder', 
-                                                                 iconCls:'folder', 
+                                                                 iconCls:'pp-icon-folder', 
                                                                  type: 'FOLDER', 
                                                                 })
                                    );

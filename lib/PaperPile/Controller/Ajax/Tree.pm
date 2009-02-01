@@ -41,9 +41,9 @@ sub _relative_path {
 
   my ( $self, $path ) = @_;
 
-  # skip the first two levels which are "built in", might change so
+  # skip the first 3 levels which are "built in", might change so
   # this might have to be adjusted in the future
-  ($path)=$path=~/\/.*?\/.*?\/(.*)/;
+  ($path)=$path=~/\/.*?\/.*?\/.*?\/(.*)/;
 
   $path='/' if not $path;
 
@@ -365,8 +365,10 @@ sub _get_folders {
         my $new_node = Tree::Simple->new( {
             text    => $part,
             type    => 'FOLDER',
+            iconCls => 'pp-icon-folder',
           }
         );
+
         #$new_node->getNodeValue->{id}=$new_node->getUID;
         $t->addChild($new_node);
         $t = $new_node;

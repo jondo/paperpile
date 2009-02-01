@@ -63,7 +63,8 @@
 
 .pp-action-edit-notes a{
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    padding-left: 16px;
+    font-weight: bold;
+    padding-left: 20px;
     height: 16px;
     line-height:16px;
     background: transparent url('/images/icons/pencil.png') no-repeat;
@@ -118,7 +119,7 @@
 .pp-tree-heading{
     background:#eee url(/images/cmp-bg.gif) repeat-x;
     font-weight: bold;
-    margin-top:4px;
+    margin-top:2px;
     margin-bottom:4px;
     border-top:1px solid #ddd;
     border-bottom:1px solid #ccc;

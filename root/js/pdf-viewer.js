@@ -42,7 +42,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
                     bbar:_pager,
                     tbar: new Ext.Toolbar(
                        {items: [_zoomer,
-                                { text: 'Drag',
+                    /*            { text: 'Drag',
                                   id: 'drag_button',
                                   enableToggle: true,
                                   toggleGroup: 'mode_buttons',
@@ -62,7 +62,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
                                   toggleGroup: 'mode_buttons',
                                   allowDepress : false,
                                   pressed: false
-                                }
+                                }*/
                                ]}
                    ),
                     bitmap: i,
@@ -106,9 +106,9 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         this.bitmap.on('mousedown', this.onMouseDown, this);
 
 
-        Ext.getCmp('drag_button').on('toggle',this.onModeToggle,this);
-        Ext.getCmp('select_button').on('toggle',this.onModeToggle,this);
-        Ext.getCmp('sticky_button').on('toggle',this.onModeToggle,this);
+        //Ext.getCmp('drag_button').on('toggle',this.onModeToggle,this);
+        //Ext.getCmp('select_button').on('toggle',this.onModeToggle,this);
+        //Ext.getCmp('sticky_button').on('toggle',this.onModeToggle,this);
 
 
     },
