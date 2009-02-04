@@ -7,6 +7,9 @@
 #include "cairo.h"
 
 int render(char* uri, int pageNo, float scale);
+int search(char* uri, char* term);
+int text(char* uri, int pageNo, float x1, float y1, float x2, float y2);
+
 void usage();
 void fail(char* msg);
 
@@ -33,22 +36,57 @@ int main (int argc, char *argv[]){
     }
   }
 
-  if (strcmp(argv[1],"render")==0){
-    
+  /* Renders page to png */
+  
+  if (strcmp(argv[1],"RENDER")==0){
     if (argc != 5){
       usage();
     }
-
-    render(uri, atoi(argv[2]), atof(argv[3]));
-
-  } else {
-    usage();
+    if (render(uri, atoi(argv[2]), atof(argv[3]))){
+      exit(0);
+    } else {
+      exit(1);
+    }
   }
+
+  /* Search text and get coordinates of all matches */
+
+  if (strcmp(argv[1],"SEARCH")==0){
+    if (argc != 4){
+      usage();
+    }
+    if (search(uri, argv[2])){
+      exit(0);
+    } else {
+      exit(1);
+    }
+  }
+
+  /* Get text in selection */
+  
+  if (strcmp(argv[1],"TEXT")==0){
+    
+    if (argc != 8){
+      usage();
+    }
+
+    if (text(uri, atoi(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]), atof(argv[6]))){
+      exit(0);
+    } else {
+      exit(1);
+    }
+  }
+
+  /* No command was recognized */
+  usage();
 
 }
 
 void usage(){
-  fprintf(stderr, "\nusage: extpdf COMMAND PARAMETERS\n");
+  fprintf(stderr, "Usage: extpdf COMMAND PARAMETERS\n");
+  fprintf(stderr, "       extpdf RENDER page scale file\n");
+  fprintf(stderr, "       exptdf SEARCH \"searchterm\" file\n");
+  fprintf(stderr, "       exptdf TEXT page x1 y1 x2 y2 file\n");
   exit(1);
 }
 
@@ -60,23 +98,20 @@ void fail(char* msg){
 int render(char* uri, int pageNo, float scale){
 
   PopplerDocument *document;
-  PopplerBackend backend;
   PopplerPage *page;
-  GEnumValue *enum_value;
   GError *error;
   double width, height;
-  GList *list, *l;
-  char *text;
   double duration;
-  PopplerRectangle area;
   GTimer      *timer;
   cairo_surface_t *surface;
   cairo_t *cr;
 
-  timer = g_timer_new ();
+  /* timer = g_timer_new (); */
+  
   document = poppler_document_new_from_file (uri, NULL, &error);
-  printf("Page loaded in %.4f seconds\n",g_timer_elapsed (timer, NULL));
-  timer = g_timer_new ();
+  
+  /* printf("Page loaded in %.4f seconds\n",g_timer_elapsed (timer, NULL)); */
+  /* timer = g_timer_new (); */
 
   if (document == NULL){
     fail(error->message);
@@ -101,37 +136,7 @@ int render(char* uri, int pageNo, float scale){
   cairo_surface_write_to_png(surface,"/home/wash/test.png");
   cairo_destroy (cr);
 
-  printf("Page rendered in %.4f seconds\n",g_timer_elapsed (timer, NULL));
-
-  /*
-  area.x1 = 0;
-  area.y1 = 0;
-  area.x2 = width;
-  area.y2 = height;
-
-  text = poppler_page_get_text (page, POPPLER_SELECTION_GLYPH, &area);
-  if (text)
-    {
-      FILE *file = fopen ("dump.txt", "w");
-      if (file)
-	{
-	  fwrite (text, strlen (text), 1, file);
-	  fclose (file);
-	}
-      g_free (text);
-    }
-
-  list = poppler_page_find_text (page, "and");
-  printf ("\n");  
-  printf ("\tFound text \"Bitwise\" at positions:\n");
-  for (l = list; l != NULL; l = l->next)
-    {
-      PopplerRectangle *rect = (PopplerRectangle *)l->data;
-
-      printf ("  (%f,%f)-(%f,%f)\n", rect->x1, rect->y1, rect->x2, rect->y2);
-    }
-
-  */
+  /* printf("Page rendered in %.4f seconds\n",g_timer_elapsed (timer, NULL)); */
 
   g_object_unref (G_OBJECT (page));
   g_object_unref (G_OBJECT (document));
@@ -139,3 +144,54 @@ int render(char* uri, int pageNo, float scale){
   return 1;
 
 }
+
+int search(char* uri, char* term){
+  
+  GList *list, *l;
+  GError *error;
+  PopplerDocument *document;
+  PopplerPage *page;
+  int N,i;
+
+  document = poppler_document_new_from_file (uri, NULL, &error);
+
+  N=poppler_document_get_n_pages(document);
+
+  for (i=0; i < N; ++i){
+    page = poppler_document_get_page(document, i);
+    list = poppler_page_find_text (page, term);
+    
+    for (l = list; l != NULL; l = l->next){
+      PopplerRectangle *rect = (PopplerRectangle *)l->data;
+      printf ("%i %.4f %.4f %.4f %.4f\n", i, rect->x1, rect->y1, rect->x2, rect->y2);
+    }
+  }
+
+}
+
+int text(char* uri, int pageNo, float x1, float y1, float x2, float y2){  
+
+  PopplerRectangle area;
+  GError *error;
+  PopplerDocument *document;
+  PopplerPage *page;
+  char *text;
+
+  document = poppler_document_new_from_file (uri, NULL, &error);
+  page = poppler_document_get_page(document, pageNo);
+
+  area.x1 = x1;
+  area.y1 = y1;
+  area.x2 = x2;
+  area.y2 = y2;
+
+  text = poppler_page_get_text (page, POPPLER_SELECTION_LINE, &area);
+  
+  printf("%s\n",text);
+
+  return 1;
+   
+}
+
+
+

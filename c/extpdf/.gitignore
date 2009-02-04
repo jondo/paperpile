@@ -12,4 +12,6 @@ stamp-h1
 stamp-h
 extpdf*.tar.gz
 Makefile.in
+Makefile
+extpdf
 *[ao]
