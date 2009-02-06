@@ -1,0 +1,4 @@
+const char *    T_PV
+TestStruct * T_PTRREF
+param * T_PTRREF
+bibl * T_PTRREF

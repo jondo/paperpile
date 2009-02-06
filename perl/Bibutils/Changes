@@ -1,0 +1,6 @@
+Revision history for Perl extension Bibutils.
+
+0.01  Thu Feb  5 12:26:13 2009
+	- original version; created by h2xs 1.23 with options
+		-O -n Bibutils ./Bibutils/bibutils/bibutils.h
+
