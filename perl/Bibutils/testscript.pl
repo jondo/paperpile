@@ -3,6 +3,7 @@
 use strict;
 use ExtUtils::testlib;
 use Bibutils;
+use Data::Dumper;
 
 my $bu=Bibutils->new(in_file => '/home/wash/test.mods',
                      out_file => '/home/wash/test.bib',
@@ -13,5 +14,15 @@ my $bu=Bibutils->new(in_file => '/home/wash/test.mods',
 #print("----->", $bu->error);
 
 $bu->read;
+#$bu->write;
+
+my $data=$bu->get_data();
+$bu->cleanup;
+
+$bu->set_data($data);
+
 $bu->write;
+
+
+
 

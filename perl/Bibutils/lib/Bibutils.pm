@@ -19,9 +19,6 @@ sub read{
   my $self=shift;
 
   $self->_bibpointer(Bibutils::c_read($self->in_file, $self->in_format));
-
-  print "=====>", Dumper($self->_bibpointer), "\n";
-
 }
 
 sub write{
@@ -31,7 +28,69 @@ sub write{
 
 }
 
+sub get_data {
+  my $self = shift;
 
+  my @bibs = ();
+
+  my $N = Bibutils::c_get_n_entries( $self->_bibpointer );
+
+  foreach my $i ( 0 .. $N - 1 ) {
+
+    my @fields = ();
+
+    my $n = Bibutils::c_get_n_fields( $self->_bibpointer, $i );
+    foreach my $j ( 0 .. $n - 1 ) {
+
+      my ( $tag, $data, $level ) = (
+        c_get_field_tag( $self->_bibpointer, $i, $j ),
+        c_get_field_data( $self->_bibpointer, $i, $j ),
+        c_get_field_level( $self->_bibpointer, $i, $j )
+      );
+
+      push @fields, { tag => $tag, data => $data, level => $level };
+    }
+    push @bibs,[@fields];
+  }
+
+  return [@bibs];
+}
+
+sub set_data {
+  my ( $self, $data ) = @_;
+
+  my $N = @$data;
+
+  $b = Bibutils::c_new();
+
+  foreach my $i ( 0 .. $N -1 ) {
+    my $fields=Bibutils::fields_new();
+    my $n=@{$data->[$i]};
+
+    foreach my $j (0..$n-1){
+      Bibutils::fields_add($fields,
+                           $data->[$i]->[$j]->{tag},
+                           $data->[$i]->[$j]->{data},
+                           $data->[$i]->[$j]->{level},
+                          );
+    }
+
+    Bibutils::bibl_addref( $b, $fields )
+
+  }
+
+  $self->_bibpointer($b);
+
+}
+
+sub cleanup {
+  my $self = shift;
+  Bibutils::bibl_free($self->_bibpointer);
+
+  $self->_bibpointer(undef);
+
+
+}
 
 sub error{
   return Bibutils::c_get_error();

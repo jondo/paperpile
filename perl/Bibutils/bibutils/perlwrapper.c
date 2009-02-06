@@ -3,17 +3,37 @@
 #include "perlwrapper.h"
 #include "bibutils.h"
 
-
-int hello(){
-  
-  return 1;
-
-}
-
 int last_error=BIBL_OK;
 
 int c_get_error(){
   return last_error;
+}
+
+int c_get_n_entries(bibl* b){
+  return b->nrefs;
+}
+
+int c_get_n_fields(bibl* b, int index){
+  return b->ref[index]->nfields;
+}
+
+char* c_get_field_tag(bibl* b, int index1, int index2){
+  return(b->ref[index1]->tag[index2].data);
+}
+
+char* c_get_field_data(bibl* b, int index1, int index2){
+  return(b->ref[index1]->data[index2].data);
+}
+
+int c_get_field_level(bibl* b, int index1, int index2){
+  return(b->ref[index1]->level[index2]);
+}
+
+bibl* c_new(){
+  bibl *b;
+  b=(bibl*)malloc(sizeof(bibl));
+  bibl_init( b );
+  return b;
 }
 
 bibl* c_read(const char *file, int format){
@@ -76,13 +96,3 @@ void c_write(const char *file, int format, bibl* b){
 }
 
 
-TestStruct* test(){
-  TestStruct* t;
-  t=(TestStruct*)malloc(sizeof(TestStruct));
-  t->number=2;
-  return t;
-}
-
-int getField(TestStruct* t){
-  return t->number;
-}
