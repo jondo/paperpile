@@ -106,12 +106,12 @@ int render(char* uri, int pageNo, float scale){
   cairo_surface_t *surface;
   cairo_t *cr;
 
-  /* timer = g_timer_new (); */
+  timer = g_timer_new ();
   
   document = poppler_document_new_from_file (uri, NULL, &error);
   
-  /* printf("Page loaded in %.4f seconds\n",g_timer_elapsed (timer, NULL)); */
-  /* timer = g_timer_new (); */
+  printf("Page loaded in %.4f seconds\n",g_timer_elapsed (timer, NULL)); 
+  timer = g_timer_new ();
 
   if (document == NULL){
     fail(error->message);
@@ -133,10 +133,13 @@ int render(char* uri, int pageNo, float scale){
 
   poppler_page_render(page,cr);     
 
+  printf("Page rendered by poppler in %.4f seconds\n",g_timer_elapsed (timer, NULL));
+  timer = g_timer_new ();
+  
   cairo_surface_write_to_png(surface,"/home/wash/test.png");
   cairo_destroy (cr);
 
-  /* printf("Page rendered in %.4f seconds\n",g_timer_elapsed (timer, NULL)); */
+  printf("Page written to png by cairo in %.4f seconds\n",g_timer_elapsed (timer, NULL));
 
   g_object_unref (G_OBJECT (page));
   g_object_unref (G_OBJECT (document));

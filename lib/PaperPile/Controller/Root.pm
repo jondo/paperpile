@@ -32,6 +32,13 @@ sub index : Path : Args(0) {
   $c->forward('PaperPile::View::Mason');
 }
 
+sub scratch : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = 'scratch.mas';
+  $c->forward('PaperPile::View::Mason');
+}
+
+
 sub default : Path {
   my ( $self, $c ) = @_;
   $c->response->body('Page not found');
