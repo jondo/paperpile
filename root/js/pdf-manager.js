@@ -47,8 +47,8 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
         });
 
         if (data.pdf){
-            Ext.getCmp('pdf_viewer').initPDF(data.pdf);
             Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_viewer');
+            Ext.getCmp('pdf_viewer').initPDF(data.pdf);
         } else {
             Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_manager');
         }

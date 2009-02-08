@@ -51,7 +51,8 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
                                 }
                                ]}
                    ),
-                   store:store
+                   store:store,
+                   zoomer:zoomer
                   }
                  );
 
@@ -104,7 +105,6 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         PaperPile.PDFviewer.superclass.onResize.apply(this, arguments);
         this.canvasWidth=this.getInnerWidth();
         this.canvasHeight=this.getInnerHeight();
-
         this.originalWidth=this.canvasWidth;
 
     },
@@ -113,6 +113,8 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
     initPDF: function(file){
 
         this.file=file,
+
+        this.zoomer.setValue(5);
 
         this.store.baseParams={viewer_id: this.id, file: this.file, limit:1, zoom:1.0};
 
@@ -144,11 +146,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
     reloadImage: function(store){
         var newImage=store.getAt(0).get('image');
-        console.log(this.bitmap);
         this.bitmap.set({src:newImage});
-
-        console.log(this.bitmap);
-
     },
 
     onMouseDown: function(e) {
@@ -167,12 +165,9 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         var x = e.getPageX();
         var y = e.getPageY();
 
-        Ext.getCmp('statusbar').clearStatus();
-
-        var box=this.bitmap.getBox();
-
-        Ext.getCmp('statusbar').setText('('+x+','+y+')'+'    ('+box.x+','+box.y+')');
-
+        //Ext.getCmp('statusbar').clearStatus();
+        //var box=this.bitmap.getBox();
+        //Ext.getCmp('statusbar').setText('('+x+','+y+')'+'    ('+box.x+','+box.y+')');
 
         if (this.mode == 'drag'){
             e.stopEvent();

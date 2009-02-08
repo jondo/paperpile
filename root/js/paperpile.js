@@ -35,8 +35,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                  }),
                                  items: [ 
                                      new PaperPile.Tree(
-                                         { //title: 'PaperPile',
-                                           border: 0,
+                                         { border: 0,
                                            rootVisible : false,
                                            id: 'treepanel',
                                          }
@@ -131,9 +130,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                  
 	  },
 
-	  onRowSelect: function(sm, rowIdx, r) {
-        //this.data_tabs.getComponent('pubsummary').updateDetail(r.data);
-        //this.data_tabs.getComponent('pubnotes').updateDetail(r.data);
+	onRowSelect: function(sm, rowIdx, r) {
 
         Ext.getCmp('statusbar').clearStatus();
         Ext.getCmp('statusbar').setText(r.data.sha1);
@@ -142,9 +139,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         Ext.getCmp('pdf_manager').updateDetail(r.data);
         Ext.getCmp('pubnotes').updateDetail(r.data);        
 
-        if (r.data.pdf){
-            Ext.getCmp('pdf_viewer').initPDF(r.data.pdf);
-        }
 
     },
 
@@ -210,8 +204,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
             failure: this.markInvalid,
         })
     },
-
-
 
 }
 
