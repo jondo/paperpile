@@ -5,12 +5,12 @@ use Carp;
 use base 'Catalyst::Model::DBI';
 use Data::Dumper;
 
-__PACKAGE__->config(
-  dsn      => 'dbi:SQLite:/home/wash/play/PaperPile/db/default.db',
-  user     => '',
-  password => '',
-  options  => {},
-);
+#__PACKAGE__->config(
+#  dsn      => 'dbi:SQLite:/home/wash/play/PaperPile/db/default.db',
+#  user     => '',
+#  password => '',
+#  options  => {},
+#);
 
 # Function: init_db(fields: HashRef)
 

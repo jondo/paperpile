@@ -5,7 +5,6 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use File::Temp qw/ tempfile tempdir /;
 use Carp;
-use PDF::API2;
 use File::Path;
 use File::Basename;
 use File::Spec;
