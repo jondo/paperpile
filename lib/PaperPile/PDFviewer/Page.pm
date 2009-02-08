@@ -3,7 +3,6 @@ use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Carp;
-use PDF::API2;
 
 has 'width'  => ( is => 'rw', isa => 'Int' );
 has 'height' => ( is => 'rw', isa => 'Int' );
