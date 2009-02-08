@@ -2,6 +2,7 @@ package PaperPile;
 
 use strict;
 use warnings;
+use parent qw/Catalyst/;
 use Catalyst qw/ Session
   Session::State::Cookie
   Session::Store::File
@@ -19,7 +20,7 @@ use LWP;
 # Static::Simple: will serve static files from the application's root
 #                 directory
 
-use parent qw/Catalyst/;
+
 
 our $VERSION = '0.01';
 
