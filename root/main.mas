@@ -18,6 +18,7 @@
   <script type="text/javascript" charset="utf-8" src="/js/pub-notes.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pub-edit.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf-viewer.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pdf-zoomer.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf-manager.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/tree.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/box-select.js"></script>

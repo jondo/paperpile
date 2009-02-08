@@ -10,6 +10,7 @@
   <script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/scratch.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf-viewer.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pdf-zoomer.js"></script>
 
 
   <title>Paperpile</title>

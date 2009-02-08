@@ -8,7 +8,6 @@ Ext.onReady(function() {
         defaults: {
             collapsible: true,
             split: true,
-            bodyStyle: 'padding:15px'
         },
         items: [
             new Ext.Panel({

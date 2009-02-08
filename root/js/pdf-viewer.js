@@ -4,7 +4,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
     initComponent: function() {
 
-        var _store=new Ext.data.Store(
+        var store=new Ext.data.Store(
             {id: 'data',
              proxy: new Ext.data.HttpProxy({
                  url: '/ajax/pdf/pdf_viewer', 
@@ -14,27 +14,20 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
              reader: new Ext.data.JsonReader(),
             });
 
-        _store.on('datachanged', this.reloadImage,this);
-
-        var _pager=new Ext.PagingToolbar({
+        var pager=new Ext.PagingToolbar({
             pageSize: 1,
-            store: _store,
+            store: store,
             displayInfo: false,
         });
 
-        var _zoomer= new Ext.Slider({
-            width: 200,
-            value: 5,
-            increment: 1,
-            minValue: 1,
-            maxValue: 10
-        });
+        var zoomer= new PaperPile.PDFzoomer;
 
         Ext.apply(this, 
-                  {autoScroll : true,
-                   bbar:_pager,
+                  {autoScroll : false,
+                   bbar:pager,
                    tbar: new Ext.Toolbar(
-                       {items: [_zoomer,
+                       {items: [zoomer,
+                                {xtype:'tbfill'},
                                 { text: 'Drag',
                                   id: 'drag_button',
                                   enableToggle: true,
@@ -58,28 +51,34 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
                                 }
                                ]}
                    ),
-                   store:_store
+                   store:store
                   }
                  );
 
 		PaperPile.PDFviewer.superclass.initComponent.call(this);
-        
-        _zoomer.on('change',this.onZoom,this);
+
+        store.on('datachanged', this.reloadImage,this);
+        zoomer.on('change',this.onZoom,this);
+        zoomer.on('changecomplete',this.onZoomComplete,this);
         
 	  },
 
 
     onZoom: function(zoomer,value){
 
-        value=value/5;
-        this.store.baseParams.zoom=value;
-        this.store.reload({params:{start: this.getBottomToolbar().cursor}});
-        
-
-
+        scale=zoomer.map[value];
+        this.bitmap.setWidth(this.originalWidth*scale);
 
     },
-     
+
+    onZoomComplete: function(zoomer,value){
+
+        scale=zoomer.map[value];
+        this.store.baseParams.zoom=scale;
+        this.store.reload({params:{start: this.getBottomToolbar().cursor}});
+
+    },
+
     afterRender: function() {
 
         PaperPile.PDFviewer.superclass.afterRender.apply(this, arguments);
@@ -95,9 +94,9 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
         this.bitmap.on('mousedown', this.onMouseDown, this);
 
-        //Ext.getCmp('drag_button').on('toggle',this.onModeToggle,this);
-        //Ext.getCmp('select_button').on('toggle',this.onModeToggle,this);
-        //Ext.getCmp('sticky_button').on('toggle',this.onModeToggle,this);
+        Ext.getCmp('drag_button').on('toggle',this.onModeToggle,this);
+        Ext.getCmp('select_button').on('toggle',this.onModeToggle,this);
+        Ext.getCmp('sticky_button').on('toggle',this.onModeToggle,this);
 
     },
 
@@ -105,8 +104,9 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         PaperPile.PDFviewer.superclass.onResize.apply(this, arguments);
         this.canvasWidth=this.getInnerWidth();
         this.canvasHeight=this.getInnerHeight();
-        console.log(this.canvasWidth);
-        console.log(this.canvasHeight);
+
+        this.originalWidth=this.canvasWidth;
+
     },
 
 
@@ -146,11 +146,6 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         var newImage=store.getAt(0).get('image');
         console.log(this.bitmap);
         this.bitmap.set({src:newImage});
-
-        //if (this.bitmap.getWidth() < this.body.getWidth()){
-        //    console.log("Bitmap:"+this.bitmap.getWidth());
-        //    console.log("Container:"+this.body.getWidth());
-        //}
 
         console.log(this.bitmap);
 
