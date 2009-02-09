@@ -8,6 +8,7 @@ use Carp;
 use File::Path;
 use File::Basename;
 use File::Spec;
+use PDF::API2;
 
 # Must be a way to get these from Catalyst, use hardcoded dirs for now...
 my $tmpdir  = '/home/wash/play/PaperPile/root/tmp/PDF';

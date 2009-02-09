@@ -2,22 +2,10 @@ package PaperPile::Model::DBI;
 
 use strict;
 use Carp;
-use base 'Catalyst::Model::DBI';
+use base 'PaperPile::Model::DBIbase';
 use Data::Dumper;
 use Moose;
 
-__PACKAGE__->config(
-  dsn      => 'dbi:SQLite:/home/wash/play/PaperPile/db/default.db',
-  user     => '',
-  password => '',
-  options  => {},
-);
-
-sub ACCEPT_CONTEXT {
-  my ($self, $c ) = @_;
-  my $new = $self->meta->clone_object($self, path_to => $c->path_to(''));
-  return $new;
-}
 
 # Function: init_db(fields: HashRef)
 
@@ -314,12 +302,6 @@ sub delete_folder {
 
 }
 
-
-
-
-
-
-
 sub get_tags {
   ( my $self) = @_;
 
@@ -351,9 +333,6 @@ sub get_folders {
   }
   return [@out];
 }
-
-
-
 
 
 ## Return true or false, depending whether a row with unique value

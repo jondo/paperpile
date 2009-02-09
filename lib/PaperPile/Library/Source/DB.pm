@@ -5,7 +5,7 @@ use Data::Page;
 use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
-use PaperPile::Model::DummyC;
+use PaperPile::Utils;
 use PaperPile::Library::Publication;
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
@@ -15,10 +15,26 @@ extends 'PaperPile::Library::Source';
 has 'query' => ( is => 'rw' );
 has 'mode' => ( is => 'rw', default => 'FULLTEXT', isa => 'Str' );
 
+
+sub get_model {
+
+  my $self=shift;
+
+  my $file=PaperPile::Utils->path_to('db','default.db');
+
+  my $model = PaperPile::Model::DBI->new();
+  $model->set_dsn("dbi:SQLite:$file");
+
+  return $model;
+
+}
+
+
+
 sub connect {
   my $self = shift;
 
-  my $model = PaperPile::Model::DBI->new( PaperPile::Model::DummyC->new() );
+  my $model=$self->get_model;
 
   if ( $self->mode eq 'FULLTEXT' ) {
 
@@ -33,7 +49,7 @@ sub connect {
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
-  my $model = PaperPile::Model::DBI->new( PaperPile::Model::DummyC->new() );
+  my $model=$self->get_model;
 
   my $page;
 
