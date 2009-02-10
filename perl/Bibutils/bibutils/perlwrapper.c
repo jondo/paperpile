@@ -55,30 +55,10 @@ bibl* c_read(const char *file, int format){
 
   bibliography=(bibl*) malloc(sizeof(bibl));
   
-  fprintf(stderr, "Reading %s in format %i", file, format);
-
-  bibl_initparams( &bibparams, BIBL_MODSIN, BIBL_BIBTEXOUT, "program name" );
+  bibl_initparams( &bibparams, format, BIBL_MODSOUT, "Perl bindings for Bibutils" );
   bibl_init( bibliography );
-  err = bibl_read( bibliography, fh, "stdin", &bibparams );
+  last_error = bibl_read( bibliography, fh, "stdin", &bibparams );
 
-  last_error=err;
-
-  printf("Items read: %lu\n", bibliography->nrefs);
-
-  /*
-  for (i=0;i<bibliography.nrefs;i++){
-    entry=bibliography.ref[i];
-    printf("  Number of fields: %i\n", entry->nfields);
-    for (j=0;j<entry->nfields;j++){
-      printf("    %s => %s (level: %i)\n", 
-             entry->tag[j].data, 
-             entry->data[j].data,
-             entry->level[j]
-             );
-    }
-  }
-  */
-  
   return(bibliography);
 
 
@@ -88,11 +68,21 @@ void c_write(const char *file, int format, bibl* b){
 
   param bibparams;
   int err;
+  FILE *fh;
 
-  bibl_initparams( &bibparams, BIBL_MODSIN, BIBL_BIBTEXOUT, "program name" );
+  fh=fopen(file, "w");
+
+  if (fh == NULL){
+    last_error=BIBL_ERR_CANTOPEN;
+    return NULL;
+  }
+
+  bibl_initparams( &bibparams, BIBL_MODSIN, format, "Perl bindings for Bibutils" );
   
-  err = bibl_write( b, stdout, &bibparams );
+  last_error = bibl_write( b, fh, &bibparams );
 
 }
+
+
 
 

@@ -4,6 +4,10 @@ use Moose;
 use 5.010000;
 use Carp;
 use XSLoader;
+use File::Temp qw/ :seekable /;
+
+
+
 use Data::Dumper;
 
 our $VERSION = '0.01';
@@ -15,18 +19,39 @@ has 'in_format'  => ( is => 'rw', isa => 'Str' );
 has 'out_format' => ( is => 'rw', isa => 'Str' );
 has '_bibpointer' => ( is => 'rw' );
 
+
 sub read{
   my $self=shift;
-
   $self->_bibpointer(Bibutils::c_read($self->in_file, $self->in_format));
+  return 1; # Check error codes if it really was successfull
 }
 
 sub write{
   my $self=shift;
-
   Bibutils::c_write($self->out_file, $self->out_format, $self->_bibpointer);
+  return 1; # Check error codes if it really was successfull
+}
+
+sub as_string{
+  my $self=shift;
+
+  my $fh = File::Temp->new();
+  my $file = $fh->filename;
+
+  $fh->unlink_on_destroy( 1 );
+
+  Bibutils::c_write($file, $self->out_format, $self->_bibpointer);
+
+  $fh->seek(0,SEEK_SET);
+
+  my $string='';
+
+  $string.=$_ foreach  (<$fh>);
+
+  return $string;
 
 }
+
 
 sub get_data {
   my $self = shift;
