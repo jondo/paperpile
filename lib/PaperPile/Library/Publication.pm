@@ -1,5 +1,6 @@
 package PaperPile::Library::Publication;
 use Moose;
+use Moose::Util::TypeConstraints;
 use Digest::SHA1;
 use Data::Dumper;
 
@@ -9,6 +10,20 @@ use PaperPile::Utils;
 use Bibutils;
 
 use 5.010;
+
+my @types=qw( ARTICLE
+              BOOK
+              BOOKLET
+              INBOOK
+              INCOLLECTION
+              PROCEEDINGS
+              INPROCEEDINGS
+              MANUAL
+              MASTERSTHESIS
+              PHDTHESIS
+              TECHREPORT
+              UNPUBLISHED
+              MISC );
 
 # Built-in fields
 has 'sha1'       => ( is => 'rw' );
@@ -261,81 +276,204 @@ sub prepare_bibutils_fields {
 
 }
 
+sub list_types {
+  return @types;
+}
+
 sub build_from_bibutils {
 
   my ( $self, $data ) = @_;
 
+  my $type = $self->_get_type_from_bibutils($data);
+
+  ## TODO: currently not handled:
+  # CONTENTS (don't know)
+  # ASSIGNEE (for patents)
+  # CROSSREF (special for BibTeX)
+  # LCCN (library of congress card number)
+  # PAPER (not sure what this is; can obviously occur in INPROCEEDINGS but non standard BibTEX)
+  # BIBKEY (BibTeX specific)
+  # TRANSLATOR
+  # LANGUAGE
+  # REFNUM
+  # REVISION (field for type "STANDARD" which we currently have not included)
+  # LOCATION
+  # NATIONALITY (for patents)
+
+  my $map = {
+    'REFNUM'             => 'citekey',
+    'BIBKEY'             => 'sortkey',
+    'ABSTRACT'           => 'abstract',
+    'DOI'                => 'doi',
+    'DAY'                => 'day',
+    'YEAR'               => 'year',
+    'MONTH'              => 'month',
+    'PARTDAY'            => 'day',
+    'PARTYEAR'           => 'year',
+    'PARTMONTH'          => 'month',
+    'ADDRESS'            => 'address',
+    'AUTHOR'             => 'authors',
+    'EDITOR'             => 'editors',
+    'ISBN'               => 'isbn',
+    'ISSN'               => 'issn',
+    'ISSUE'              => 'issue',
+    'NUMBER'             => 'number',
+    'PAGES'              => 'pages',
+    'EDITION'            => 'edition',
+    'NOTES'              => 'notes',
+    'VOLUME'             => 'volume',
+    'URL'                => 'url',
+    'DEGREEGRANTOR:ASIS' => 'school',
+    'KEYWORD'            => 'keywords',
+    'AUTHOR:CORP'        => 'organization',
+    'PUBLISHER'          => 'publisher',
+  };
+
   foreach my $field (@$data) {
-    print "$field->{level}, $field->{tag}, $field->{data}\n";
+
+    # Already handled in function _get_type_from_bibutils
+    next if ($field->{tag} ~~ ['TYPE', 'GENRE','RESOURCE', 'ISSUANCE']);
+
+    if ( $field->{tag} eq 'TITLE' ) {
+      my $title = $field->{data};
+      my $level = $field->{level};
+
+      if ( $type eq 'ARTICLE' ) {
+        $self->journal($title);
+      }
+
+      if ( $type eq 'MASTERSTHESIS' or
+           $type eq 'PHDTHESIS' or
+           $type eq 'TECHREPORT' or
+           $type eq 'MANUAL' or
+           $type eq 'UNPUBLISHED' or
+           $type eq 'MISC') {
+
+        $self->title($title);
+
+      }
+
+      if ( $type eq 'BOOK' or $type eq 'PROCEEDINGS') {
+        $self->title($title)     if $level == 0;
+        $self->booktitle($title) if $level == 0;
+        $self->series($title)    if $level == 1;
+      }
+
+      if ( $type eq 'INBOOK') {
+        $self->chapter($title)   if $level == 0;
+        $self->booktitle($title) if $level == 1;
+        $self->title($title) if $level == 1;
+        $self->series($title)    if $level == 2;
+      }
+
+      if ( $type eq 'INCOLLECTION') {
+        $self->title($title) if $level == 0;
+        $self->chapter($title)   if $level == 0;
+        $self->booktitle($title) if $level == 1;
+        $self->series($title)    if $level == 2;
+      }
+
+      if ( $type eq 'INPROCEEDINGS') {
+        $self->title($title)   if $level == 0;
+        $self->booktitle($title) if $level == 1;
+        $self->series($title)    if $level == 2;
+      }
+      next;
+    }
+
+    my $myfield=$map->{$field->{tag}};
+
+    if ($myfield){
+      $self->$myfield($field->{data});
+    } else {
+      print STDERR "Could not handle $field->{tag} of value $field->{data}\n";
+    }
+  }
+}
+
+# this code is similar to the function
+# bibtexout_type in bibtexout.c
+
+sub _get_type_from_bibutils {
+
+  my ( $self, $data ) = @_;
+
+  my ( $genre, $level );
+  my $type = undef;
+
+  # We currently get the type only from "genre" field. Also the "type"
+  # field (which seems to depend from which format was read) can be
+  # useful and sometimes necessary for example to distinguish BibTex
+  # "book" from "booklet". The "type" field from BibTeX which is used
+  # for example to specify the type of a Techreport is ignored for now.
+  # Also the "resource" information is ignored which does not really give
+  # much information on the type.
+
+  foreach my $field (@$data) {
+
+    #print "$field->{level}, $field->{tag}, $field->{data}\n";
+    next if ( $field->{tag} ne "GENRE" && $field->{tag} ne "NGENRE" );
+    $genre = $field->{data};
+    $level = $field->{level};
+
+    if ( ( $genre eq "periodical" )
+      or ( $genre eq "academic journal" )
+      or ( $genre eq "magazine" )
+      or ( $genre eq "newspaper" ) ) {
+      $type = 'ARTICLE';
+    } elsif ( $genre eq "instruction" ) {
+      $type = 'MANUAL';
+    } elsif ( $genre eq "unpublished" ) {
+      $type = 'UNPUBLISHED';
+    } elsif ( $genre eq "conference publication" and $level == 0 ) {
+      $type = 'PROCEEDINGS';
+    } elsif ( $genre eq "conference publication" and $level == 1 ) {
+      $type = 'INPROCEEDINGS';
+    } elsif ( $genre eq "collection" and $level == 0 ) {
+      $type = 'COLLECTION';
+    } elsif ( $genre eq "collection" and $level == 1 ) {
+      $type = 'INCOLLECTION';
+    } elsif ( $genre eq "BOOK" and $level == 0 ) {
+      $type = 'BOOK';
+    } elsif ( $genre eq "BOOK" and $level == 1 ) {
+      $type = 'INBOOK';
+    } elsif ( $genre eq "report" ) {
+      $type = 'TECHREPORT';
+    } elsif ( $genre eq "thesis" ) {
+      if ( not $type ) {
+        $type = 'PHDTHESIS';
+      }
+    } elsif ( $genre eq "Ph.D. thesis" ) {
+      $type = 'PHDTHESIS';
+    } elsif ( $genre eq "Masters thesis" ) {
+      $type = 'MASTERSTHESIS';
+    }
+
+    elsif ( $genre eq "" ) {
+      $type = '';
+    } elsif ( $genre eq "" ) {
+      $type = '';
+    }
   }
 
-  my $map;
-  $map->{ ARTICLE => { AUTHOR => [ 'author', '' ],
-                       TITLE =>  [ 'title', 'journal'],
-                       TITLE =>  [ 'title', 'journal'],
+  if ( not $type ) {
+    foreach my $field (@$data) {
+      next if ( $field->{tag} ne "ISSUANCE" );
+      if ( $field->{data} eq "monographic" ) {
+        if ( $field->{level} == 0 ) {
+          $type = 'BOOK';
+        } elsif ( $field->{level} == 1 ) {
+          $type = 'INBOOK';
+        }
+      }
+    }
+  }
 
-                     },
+  if ( not $type ) {
+    $type = 'MISC';
+  }
 
-        };
-
-  $map->{ARTICLE}->{AUTHOR} = [ 'author', '' ];
-
-  #	REFTYPE( "article", article ),
-  #	REFTYPE( "booklet", book ),
-  #	REFTYPE( "book", book ),
-  #	REFTYPE( "electronic", electronic ),
-  #	REFTYPE( "inbook", inbook ),
-  # 	REFTYPE( "incollection", incollection ),
-  # 	REFTYPE( "inconference", inproceedings ),
-  # 	REFTYPE( "inproceedings", inproceedings ),
-  # 	REFTYPE( "manual", manual ),
-  # 	REFTYPE( "mastersthesis", masters ),
-  # 	REFTYPE( "misc", misc ),
-  # 	REFTYPE( "patent", patent ),
-  # 	REFTYPE( "phdthesis", phds ),
-  # 	REFTYPE( "periodical", periodical ),
-  # 	REFTYPE( "proceedings", proceedings ),
-  # 	REFTYPE( "standard", standard ),
-  # 	REFTYPE( "techreport", report ),
-  # 	REFTYPE( "unpublished", unpublished ),
-
-  #   static lookups incollection[] = {
-  # 	{ "author",    "AUTHOR",    PERSON, LEVEL_MAIN },
-  # 	{ "translator",   "TRANSLATOR",PERSON, LEVEL_MAIN },
-  # 	{ "editor",    "EDITOR",    PERSON, LEVEL_HOST },
-  # 	{ "title",     "TITLE",     TITLE,  LEVEL_MAIN },
-  # 	{ "chapter",   "TITLE",     TITLE,  LEVEL_MAIN },
-  # 	{ "booktitle", "TITLE",     TITLE,  LEVEL_HOST },
-  # 	{ "series",    "TITLE",     TITLE,  LEVEL_SERIES },
-  # 	{ "publisher", "PUBLISHER", SIMPLE, LEVEL_HOST },
-  # 	{ "address",   "ADDRESS",   SIMPLE, LEVEL_HOST },
-  # 	{ "year",      "YEAR",      SIMPLE, LEVEL_HOST },
-  # 	{ "month",     "MONTH",     SIMPLE, LEVEL_HOST },
-  # 	{ "day",       "DAY",       SIMPLE, LEVEL_HOST },
-  # 	{ "volume",    "VOLUME",    SIMPLE, LEVEL_MAIN },
-  # 	{ "number",    "NUMBER",    SIMPLE, LEVEL_MAIN },
-  # 	{ "pages",     "PAGES",     PAGES,  LEVEL_MAIN },
-  # 	{ "isbn",      "ISBN",      SIMPLE, LEVEL_HOST },
-  # 	{ "lccn",      "LCCN",      SIMPLE, LEVEL_HOST },
-  # 	{ "edition",   "EDITION",   SIMPLE, LEVEL_HOST },
-  # 	{ "abstract",  "ABSTRACT",  SIMPLE, LEVEL_MAIN },
-  # 	{ "contents",  "CONTENTS",  SIMPLE, LEVEL_HOST },
-  # 	{ "language",     "LANGUAGE",     SIMPLE, LEVEL_MAIN },
-  # 	{ "type",      "TYPE",      SIMPLE, LEVEL_MAIN },
-  # 	{ "note",         "NOTES",        SIMPLE, LEVEL_MAIN },
-  # 	{ "key",          "BIBKEY",          SIMPLE, LEVEL_MAIN },
-  # 	{ "doi",       "DOI",       SIMPLE, LEVEL_MAIN },
-  # 	{ "ftp",       "URL",       BIBTEX_URL, LEVEL_MAIN },
-  # 	{ "url",       "URL",       BIBTEX_URL, LEVEL_MAIN },
-  # 	{ "location",     "LOCATION",     SIMPLE, LEVEL_HOST },
-  # 	{ "howpublished", "URL",    BIBTEX_URL, LEVEL_MAIN },
-  # 	{ "refnum",    "REFNUM",    SIMPLE, LEVEL_MAIN },
-  # 	{ "crossref",     "CROSSREF",  SIMPLE, LEVEL_MAIN },
-  # 	{ "keywords",     "KEYWORD",   SIMPLE, LEVEL_MAIN },
-  # 	{ " ",         "TYPE|INCOLLECTION",   ALWAYS, LEVEL_MAIN },
-  # 	{ " ",         "RESOURCE|text", ALWAYS, LEVEL_MAIN },
-  # 	{ " ",         "ISSUANCE|monographic", ALWAYS, LEVEL_MAIN },
-  # 	{ " ",         "GENRE|collection",    ALWAYS, LEVEL_HOST }
+  return $type;
 
 }
 

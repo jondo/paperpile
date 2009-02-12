@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
 use lib "../lib/";
+use strict;
 
 use PaperPile::Library::Publication;
 use Bibutils;
@@ -11,7 +12,7 @@ use Test::More 'no_plan';
 my %book = (
   pubtype   => 'INBOOK',
   title     => 'Fundamental Algorithms',
-  title2    => 'The Art of Computer Programming',
+  booktitle => 'The Art of Computer Programming',
   authors   => 'Knuth, D.E.',
   volume    => '1',
   pages     => '10-119',
@@ -101,13 +102,16 @@ is( $pub2->format('[journal]'),      'BMC_Bioinformatics',       '[journal]' );
 #is( $pub2->format('[firstauthor:UC]_[journal]:[YYYY]'),
 #  'STADLER_Nature:2008', '[firstauthor:UC]_[journal]:[YYYY]' );
 
-my $bu=Bibutils->new(#in_file => 'data/test2.bib',
-                     in_file => 'data/test1.ris',
-                     out_file => 'data/new.bib',
-                     #in_format => Bibutils::BIBTEXIN,
-                     in_format => Bibutils::RISIN,
-                     out_format => Bibutils::BIBTEXOUT,
-                    );
+my $bu = Bibutils->new(
+  in_file => 'data/test.bib',
+
+  #in_file => 'data/test1.ris',
+  out_file  => 'data/new.bib',
+  in_format => Bibutils::BIBTEXIN,
+
+  #in_format => Bibutils::RISIN,
+  out_format => Bibutils::BIBTEXOUT,
+);
 
 #my $bu=Bibutils->new(in_file => 'data/test1.ris',
 #                     out_file => 'data/new.bib',
@@ -115,16 +119,30 @@ my $bu=Bibutils->new(#in_file => 'data/test2.bib',
 #                     out_format => Bibutils::BIBTEXOUT,
 #                    );
 
-
 $bu->read;
 
-my $data=$bu->get_data;
+my @data = @{ $bu->get_data };
 
 $pub = PaperPile::Library::Publication->new;
 
-foreach my $entry (@$data){
-  $pub->build_from_bibutils($entry);
+my @expected_types = qw/ARTICLE ARTICLE INBOOK INBOOK BOOK BOOK BOOK BOOKLET BOOKLET INCOLLECTION
+  INCOLLECTION BOOK MANUAL MANUAL MASTERSTHESIS MASTERSTHESIS MISC MISC INPROCEEDINGS
+  INPROCEEDINGS INPROCEEDINGS PROCEEDINGS PROCEEDINGS PROCEEDINGS PHDTHESIS PHDTHESIS
+  TECHREPORT TECHREPORT UNPUBLISHED UNPUBLISHED/;
+
+foreach my $i ( 0 .. $#data ) {
+
+  next if $expected_types[$i] eq 'BOOKLET';    # not currently handled
+  my $type = $pub->_get_type_from_bibutils( $data[$i] );
+  is( $type, $expected_types[$i],
+    "Get publication type from bibutils data (" . $expected_types[$i] . ")" );
+
 }
 
+foreach my $i ( 0 .. $#data ) {
+
+  $pub->build_from_bibutils($data[$i]);
+
+}
 
 #$pub->prepare_bibutils_fields;
