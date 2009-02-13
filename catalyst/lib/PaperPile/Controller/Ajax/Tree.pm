@@ -232,15 +232,6 @@ sub _get_default_tree {
     )
   );
 
-  $admin->addChild(
-    Tree::Simple->new( {
-        text    => 'Initialize Database',
-        type    => 'INIT_DB',
-        iconCls => 'pp-icon-tools',
-      }
-    )
-  );
-
   return $root;
 }
 

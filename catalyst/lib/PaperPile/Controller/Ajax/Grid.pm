@@ -30,7 +30,9 @@ sub resultsgrid : Local {
     if ( $source_type eq 'FILE' ) {
       $source = PaperPile::Library::Source::File->new( file => $source_file );
     } elsif ( $source_type eq 'DB' ) {
-      $source = PaperPile::Library::Source::DB->new( query => $source_query, mode => $source_mode );
+      $source = PaperPile::Library::Source::DB->new(file => $c->session->{user_db},
+                                                    query => $source_query,
+                                                    mode => $source_mode );
     } elsif ( $source_type eq 'PUBMED' ) {
       $source = PaperPile::Library::Source::PubMed->new( query => $source_query );
     }

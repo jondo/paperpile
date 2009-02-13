@@ -14,17 +14,13 @@ extends 'PaperPile::Library::Source';
 
 has 'query' => ( is => 'rw' );
 has 'mode' => ( is => 'rw', default => 'FULLTEXT', isa => 'Str' );
-
+has 'file' => ( is => 'rw' );
 
 sub get_model {
 
   my $self=shift;
-
-  my $file=PaperPile::Utils->path_to('db','default.db');
-
   my $model = PaperPile::Model::User->new();
-  $model->set_dsn("dbi:SQLite:$file");
-
+  $model->set_dsn("dbi:SQLite:".$self->file);
   return $model;
 
 }

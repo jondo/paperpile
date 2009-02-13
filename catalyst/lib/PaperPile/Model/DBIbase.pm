@@ -36,7 +36,7 @@ sub dbh {
 }
 
 
-# Sets can be set manually if not called from within catalyst where it is
+# Can be set manually if not called from within catalyst where it is
 # automatically configured from the config file
 
 sub set_dsn {

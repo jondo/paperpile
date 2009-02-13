@@ -1,4 +1,6 @@
 *~
-default.db
+user.db
+app.db
 semantic.cache
 tmp/
+user/

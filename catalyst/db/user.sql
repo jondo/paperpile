@@ -49,11 +49,6 @@ CREATE TABLE Folder_Publication (
 );
 
 
-
-
-
-
-
 CREATE TABLE Author_Publication (
   author_id         INTEGER,
   publication_id    INTEGER,

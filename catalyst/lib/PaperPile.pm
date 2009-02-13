@@ -20,8 +20,6 @@ use LWP;
 # Static::Simple: will serve static files from the application's root
 #                 directory
 
-
-
 our $VERSION = '0.01';
 
 # Configure the application.
@@ -35,10 +33,18 @@ our $VERSION = '0.01';
 
 __PACKAGE__->config( name => 'PaperPile' );
 
-__PACKAGE__->config(
-  {
+__PACKAGE__->config( {
+    'View::JSON' => {
+      expose_stash => qr/^[^_]/,    #Don't show variables starting with underscore (_)
+                                    #Is necessary to hide __instancePerContext object
+                                    #but might be useful in other context as well...
+    }
+  }
+);
+
+__PACKAGE__->config( {
     'View::JSON::Tree' => {
-      expose_stash => 'tree',    #show only one array of objects
+      expose_stash => 'tree',       #show only one array of objects
     }
   }
 );

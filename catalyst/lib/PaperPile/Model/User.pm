@@ -6,6 +6,15 @@ use base 'PaperPile::Model::DBIbase';
 use Data::Dumper;
 use Moose;
 
+with 'Catalyst::Component::InstancePerContext';
+
+sub build_per_context_instance {
+  my ($self, $c) = @_;
+  my $file=$c->session->{user_db};
+  my $model = PaperPile::Model::User->new();
+  $model->set_dsn("dbi:SQLite:$file");
+  return $model;
+}
 
 # Function: init_db(fields: HashRef)
 

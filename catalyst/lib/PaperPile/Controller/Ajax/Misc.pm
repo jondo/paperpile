@@ -9,8 +9,10 @@ use PaperPile::Library::Source::DB;
 use PaperPile::Library::Source::PubMed;
 use PaperPile::PDFviewer;
 use Data::Dumper;
+use File::Spec;
+use File::Path;
+use File::Copy;
 use 5.010;
-
 
 sub reset_db : Local {
 
@@ -26,7 +28,8 @@ sub init_db : Local {
 
   my ( $self, $c ) = @_;
 
-  $c->model('User')->init_db($c->config->{fields}, $c->config->{settings});
+  $c->model('App')->init_db($c->config->{app_settings});
+
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 
@@ -93,14 +96,52 @@ sub import_journals : Local {
 
 }
 
-sub reset_session : Local {
+sub init_session : Local {
 
   my ( $self, $c ) = @_;
 
+  # Clear session variables
   foreach my $key ( keys %{ $c->session } ) {
-    delete( $c->session->{$key} ) if $key =~ /^(source|viewer|tree)/;
+    delete( $c->session->{$key} ) if $key =~ /^(source|viewer|tree|user_db)/;
   }
 
+  # The path for the user database is given in the application database
+  my $user_db;
+
+  eval {
+    ($user_db) = $c->model('App')->dbh->selectrow_array("SELECT value FROM Settings WHERE key='user_db' ");
+  };
+
+  # If we encounter an error while reading we stop here.
+  if ($@){
+    die("Could not read application database");
+  };
+
+  # If we get and empty value this shows us that our database has not been initialized yet after install.
+  # We initialize it now.
+  if ( not $user_db ) {
+    $c->model('App')->init_db( $c->config->{app_settings} );
+  }
+
+  # If $user_db is relative, it is interpreted as relative to the catalyst
+  # home dir
+  if ( not File::Spec->file_name_is_absolute($user_db) ) {
+    $user_db = PaperPile::Utils->path_to($user_db);
+  }
+
+  # If it does not exist, we initialize it with an empty db-file from the catalyst directory
+  if ( not -e $user_db ) {
+    $c->log->info("Created user database $user_db.");
+    my ( $volume, $dir, $file ) = File::Spec->splitpath($user_db);
+    mkpath($dir);
+    copy( $c->path_to('db/user.db')->stringify, $user_db ) or die "Copy failed: $!";
+    $c->session->{user_db} = $user_db;
+    $c->model('User')->init_db( $c->config->{fields}, $c->config->{user_settings} );
+  } else {
+    $c->session->{user_db} = $user_db;
+  }
+
+  $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 
 }

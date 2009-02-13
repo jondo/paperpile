@@ -211,23 +211,23 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
 
 
 Ext.onReady(function() {
- 
-    Ext.QuickTips.init();
+    PaperPile.initMask = new Ext.LoadMask(Ext.getBody(), {msg:"Starting Paperpile Pre 1"});
+    PaperPile.initMask.show();
     Ext.Ajax.request({
-        url: '/ajax/misc/reset_session',
+        url: '/ajax/misc/init_session',
+        success: PaperPile.app
     });
-
-    main=new PaperPile.Main;
-
-    main.results_tabs.remove('welcome');
-    main.results_tabs.newDBtab({closable:false});
-
-    var tree=Ext.getCmp('treepanel');
-
-    tree.expandAll();
-
-    main.show();
-
-
      
 });
+
+PaperPile.app=function(){
+
+    Ext.QuickTips.init();
+    main=new PaperPile.Main;
+    main.results_tabs.remove('welcome');
+    main.results_tabs.newDBtab({closable:false});
+    var tree=Ext.getCmp('treepanel');
+    tree.expandAll();
+    main.show();
+    PaperPile.initMask.hide();
+}
