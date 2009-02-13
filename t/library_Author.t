@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 
 use lib "../lib";
+use strict;
+use Data::Dumper;
 use PaperPile::Library::Author;
 use Test::More 'no_plan';
 
@@ -8,32 +10,30 @@ BEGIN { use_ok 'PaperPile::Library::Author' }
 
 my $author = PaperPile::Library::Author->new;
 
+my %tests = (
+  'bb CC, AA'       => { first => 'AA', von => 'bb',       last => 'CC', jr => '' },
+  'bb CC, aa'       => { first => 'aa', von => 'bb',       last => 'CC', jr => '' },
+  'bb CC dd EE, AA' => { first => 'AA', von => 'bb CC dd', last => 'EE', jr => '' },
+  'bb, AA'          => { first => 'AA', von => '',         last => 'bb', jr => '' },
+  'BB,'             => { first => '',   von => '',         last => 'BB', jr => '' },
+  'bb CC,XX, AA'    => { first => 'AA', von => 'bb',       last => 'CC', jr => 'XX' },
+  'BB,, AA'         => { first => 'AA', von => '',         last => 'BB', jr => '' },
+  '{ENCODE consortium}' => { first => '', von => '', last => '{ENCODE consortium}', jr => '' },
+);
 
-my %tests = ( 'bb CC, AA' => { first => 'AA', von => 'bb', last => 'CC', jr=>''},
-              'bb CC, aa' => { first => 'aa', von => 'bb', last => 'CC', jr=>''},
-              'bb CC dd EE, AA' => { first => 'AA', von => 'bb CC dd', last => 'EE', jr=>''},
-              'bb, AA' => { first => 'AA', von => '', last => 'bb', jr=>''},
-              'BB,' => { first => '', von=>'', last => 'BB', jr=>''},
-              'bb CC,XX, AA' => { first => 'AA', von => 'bb', last => 'CC', jr=>'XX'},
-              'BB,, AA' => { first => 'AA', von => '', last => 'BB', jr=>''},
-              '{ENCODE consortium}' => { first => '', von => '', last => '{ENCODE consortium}', jr=>''},
-            );
+foreach my $key ( keys %tests ) {
 
-foreach my $key (keys %tests){
-
-  my $automatic=PaperPile::Library::Author->new;
+  my $automatic = PaperPile::Library::Author->new;
 
   $automatic->full($key);
 
-
-  my $manual=PaperPile::Library::Author->new($tests{$key});
+  my $manual = PaperPile::Library::Author->new( $tests{$key} );
 
   $automatic->full('');
   $manual->full('');
 
-  is_deeply($automatic, $manual, "Parsing pattern '$key'");
+  is_deeply( $automatic, $manual, "Parsing pattern '$key'" );
 }
-
 
 my %initials = (
   ''                  => '',
@@ -60,19 +60,27 @@ $author = PaperPile::Library::Author->new;
 
 foreach my $input ( keys %initials ) {
   $author->first($input);
-  is( $author->parse_initials(),
-    $initials{$input}, "parse_initials() for $input" );
+  is( $author->parse_initials(), $initials{$input}, "parse_initials() for $input" );
 }
 
-$author = PaperPile::Library::Author->new(full=>'Stadler, P.F.');
+$author = PaperPile::Library::Author->new( full => 'Stadler, Peter F.' );
 
-is( $author->create_key, "STADLER_PF", "Automatically create key" );
+is( $author->create_key, "STADLER_PF",        "Automatically create key" );
+is( $author->nice,       "Stadler PF",        "nice printing" );
+is( $author->normalized, "Stadler, PF",       "normalized" );
+is( $author->bibtex,     "Stadler, Peter F.", "as bibtex" );
 
-is( $author->nice, "Stadler PF", "nice printing" );
+$author = PaperPile::Library::Author->new();
 
-is ($author->normalized, "Stadler, PF", "normalized");
+is(
+  $author->read_bibutils('Oz|Wizard|V.')->bibtex,
+  'Oz, Wizard V.',
+  'Reading bibutils authors (Oz|Wizard|V)'
+);
 
+is(
+  $author->read_bibutils('Phony-Baloney|F.|Phidias')->bibtex,
+  'Phony-Baloney, F. Phidias',
+  'Reading bibutils authors (Phony-Baloney|F.|Phidias)'
+);
 
-my $author=PaperPile::Library::Author->new(last => 'Washietl', first  => 'Stefan', jr => '')->normalized;
-
-print $author;

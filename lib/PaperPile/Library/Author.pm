@@ -134,6 +134,28 @@ sub split_full {
 
 }
 
+sub read_bibutils{
+
+  my ($self, $string) = @_;
+  my ($first, $von, $last, $jr);
+
+  my @parts=split(/\|/,$string);
+
+
+  # von and jr currently not handled explicitely
+  # Bibutils does not seem to handle suffix (at least for pubmed)
+  $last=$parts[0];
+  $first=join(" ", @parts[1..$#parts]);
+  $von='';
+  $jr='';
+
+  $self->last($last);
+  $self->first($first);
+
+  return $self;
+}
+
+
 sub create_key {
   my $self = shift;
 
@@ -206,8 +228,24 @@ sub normalized {
   $output.=$self->initials;
 
   return $output;
-
 }
+
+sub bibtex {
+
+  my $self       = shift;
+  my @components = ();
+
+  my $output='';
+
+  $output.=$self->von if ($self->von)." ";
+
+  $output.=$self->last.", ";
+  $output.=$self->jr.", " if ($self->jr);
+  $output.=$self->first;
+
+  return $output;
+}
+
 
 #is there a built-in way of doing that?
 

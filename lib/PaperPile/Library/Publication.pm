@@ -280,6 +280,13 @@ sub list_types {
   return @types;
 }
 
+sub format_bibutils {
+
+
+
+
+}
+
 sub build_from_bibutils {
 
   my ( $self, $data ) = @_;
@@ -287,18 +294,17 @@ sub build_from_bibutils {
   my $type = $self->_get_type_from_bibutils($data);
 
   ## TODO: currently not handled:
-  # CONTENTS (don't know)
-  # ASSIGNEE (for patents)
+  # CONTENTS (don't know what it is)
+  # ASSIGNEE (for patents, patents not handled for now)
   # CROSSREF (special for BibTeX)
-  # LCCN (library of congress card number)
+  # LCCN (library of congress card number, do we need it?)
   # PAPER (not sure what this is; can obviously occur in INPROCEEDINGS but non standard BibTEX)
-  # BIBKEY (BibTeX specific)
   # TRANSLATOR
   # LANGUAGE
   # REFNUM
   # REVISION (field for type "STANDARD" which we currently have not included)
   # LOCATION
-  # NATIONALITY (for patents)
+  # NATIONALITY (for patents, patents not handled for now)
 
   my $map = {
     'REFNUM'             => 'citekey',
@@ -329,67 +335,114 @@ sub build_from_bibutils {
     'PUBLISHER'          => 'publisher',
   };
 
+
+  my ( @title_fields, @subtitle_fields );
+  my ( $page_start, $page_end );
+
   foreach my $field (@$data) {
 
-    # Already handled in function _get_type_from_bibutils
-    next if ($field->{tag} ~~ ['TYPE', 'GENRE','RESOURCE', 'ISSUANCE']);
-
-    if ( $field->{tag} eq 'TITLE' ) {
-      my $title = $field->{data};
-      my $level = $field->{level};
-
-      if ( $type eq 'ARTICLE' ) {
-        $self->journal($title);
-      }
-
-      if ( $type eq 'MASTERSTHESIS' or
-           $type eq 'PHDTHESIS' or
-           $type eq 'TECHREPORT' or
-           $type eq 'MANUAL' or
-           $type eq 'UNPUBLISHED' or
-           $type eq 'MISC') {
-
-        $self->title($title);
-
-      }
-
-      if ( $type eq 'BOOK' or $type eq 'PROCEEDINGS') {
-        $self->title($title)     if $level == 0;
-        $self->booktitle($title) if $level == 0;
-        $self->series($title)    if $level == 1;
-      }
-
-      if ( $type eq 'INBOOK') {
-        $self->chapter($title)   if $level == 0;
-        $self->booktitle($title) if $level == 1;
-        $self->title($title) if $level == 1;
-        $self->series($title)    if $level == 2;
-      }
-
-      if ( $type eq 'INCOLLECTION') {
-        $self->title($title) if $level == 0;
-        $self->chapter($title)   if $level == 0;
-        $self->booktitle($title) if $level == 1;
-        $self->series($title)    if $level == 2;
-      }
-
-      if ( $type eq 'INPROCEEDINGS') {
-        $self->title($title)   if $level == 0;
-        $self->booktitle($title) if $level == 1;
-        $self->series($title)    if $level == 2;
-      }
-      next;
+    if ( $field->{tag} ~~ ['TITLE'] ) {
+      push @title_fields, $field;
     }
 
-    my $myfield=$map->{$field->{tag}};
+    if ( $field->{tag} ~~ ['SUBTITLE'] ) {
+      push @subtitle_fields, $field;
+    }
 
-    if ($myfield){
-      $self->$myfield($field->{data});
+    $page_start = $field->{data} if $field->{tag} eq 'PAGESTART';
+    $page_end   = $field->{data} if $field->{tag} eq 'PAGEEND';
+
+    # Already handled
+    next if ( $field->{tag} ~~ [ 'TITLE', 'SUBTITLE', 'PAGESTART', 'PAGEEND',
+                                 'TYPE', 'GENRE', 'RESOURCE', 'ISSUANCE' ] );
+
+    my $myfield = $map->{ $field->{tag} };
+    my $mydata=$field->{data};
+
+    if ($myfield ~~ ['authors', 'editors']){
+      my $a=PaperPile::Library::Author->new();
+      $mydata=$a->read_bibutils($mydata)->bibtex;
+    }
+
+    if ($myfield) {
+      $self->$myfield( $mydata );
     } else {
-      print STDERR "Could not handle $field->{tag} of value $field->{data}\n";
+      print STDERR "WARNING: Could not handle $field->{tag} of value $field->{data}\n";
     }
   }
+
+  my $titles    = $self->_get_titles_from_bibutils( $type, [@title_fields] );
+  my $subtitles = $self->_get_titles_from_bibutils( $type, [@subtitle_fields] );
+
+  foreach my $title_type ( 'journal', 'title', 'booktitle', 'chapter', 'series' ) {
+    my $string = $titles->{$title_type};
+    $string .= ": " . $subtitles->{$title_type} if $subtitles->{$title_type};
+
+    if ($string) {
+      $self->$title_type($string);
+    }
+  }
+
+  print Dumper($self);
+
 }
+
+
+# Get the correct fields depending on publication type and 'level'
+# Takes a list of title (or subtitle) fields encountered in one bibutiils entry
+# and returns the appropriate fields of the Publication object as hash.
+
+sub _get_titles_from_bibutils {
+
+  my ( $self, $type, $fields ) = @_;
+
+  my %output = ();
+
+  foreach my $field (@$fields) {
+
+    my $curr_title = $field->{data};
+    my $level      = $field->{level};
+
+    if ( $type eq 'ARTICLE' ) {
+      $output{journal} = $curr_title;
+    }
+
+    if ( $type ~~ [ 'MASTERSTHESIS', 'PHDTHESIS', 'TECHREPORT', 'MANUAL', 'UNPUBLISHED', 'MISC' ] )
+    {
+      $output{title} = $curr_title;
+    }
+
+    if ( $type eq 'BOOK' or $type eq 'PROCEEDINGS' ) {
+      $output{title}     = $curr_title if $level == 0;
+      $output{booktitle} = $curr_title if $level == 0;
+      $output{series}    = $curr_title if $level == 1;
+    }
+
+    if ( $type eq 'INBOOK' ) {
+      $output{chapter}   = $curr_title if $level == 0;
+      $output{booktitle} = $curr_title if $level == 1;
+      $output{title}     = $curr_title if $level == 1;
+      $output{series}    = $curr_title if $level == 2;
+    }
+
+    if ( $type eq 'INCOLLECTION' ) {
+      $output{title}     = $curr_title if $level == 0;
+      $output{chapter}   = $curr_title if $level == 0;
+      $output{booktitle} = $curr_title if $level == 1;
+      $output{series}    = $curr_title if $level == 2;
+    }
+
+    if ( $type eq 'INPROCEEDINGS' ) {
+      $output{title}     = $curr_title if $level == 0;
+      $output{booktitle} = $curr_title if $level == 1;
+      $output{series}    = $curr_title if $level == 2;
+    }
+  }
+
+  return {%output};
+
+}
+
 
 # this code is similar to the function
 # bibtexout_type in bibtexout.c

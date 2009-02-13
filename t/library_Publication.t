@@ -131,7 +131,6 @@ my @expected_types = qw/ARTICLE ARTICLE INBOOK INBOOK BOOK BOOK BOOK BOOKLET BOO
   TECHREPORT TECHREPORT UNPUBLISHED UNPUBLISHED/;
 
 foreach my $i ( 0 .. $#data ) {
-
   next if $expected_types[$i] eq 'BOOKLET';    # not currently handled
   my $type = $pub->_get_type_from_bibutils( $data[$i] );
   is( $type, $expected_types[$i],
@@ -139,10 +138,9 @@ foreach my $i ( 0 .. $#data ) {
 
 }
 
-foreach my $i ( 0 .. $#data ) {
+# build_from_bibutils currently not tested!
 
-  $pub->build_from_bibutils($data[$i]);
+#foreach my $i ( 0 .. $#data ) {
+#  $pub->build_from_bibutils($data[$i]);
+#}
 
-}
-
-#$pub->prepare_bibutils_fields;
