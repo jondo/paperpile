@@ -25,7 +25,7 @@ sub insert_entry : Local {
   $pub->times_read(0);
   $pub->last_read(timestamp); ## for the time being
 
-  $c->model('DBI')->create_pub($pub);
+  $c->model('User')->create_pub($pub);
 
   $pub->_imported(1);
 
@@ -42,7 +42,7 @@ sub delete_entry : Local {
 
   my $source = $c->session->{"source_$source_id"};
 
-  $c->model('DBI')->delete_pubs( [$rowid] );
+  $c->model('User')->delete_pubs( [$rowid] );
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
@@ -69,7 +69,7 @@ sub update_entry : Local {
 
   my $newPub=PaperPile::Library::Publication->new($data);
 
-  $c->model('DBI')->update_pub($newPub);
+  $c->model('User')->update_pub($newPub);
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
@@ -85,7 +85,7 @@ sub update_notes : Local {
   my $html      = $c->request->params->{html};
 
 
-  $c->model('DBI')->update_field('Publications', $rowid, 'notes', $html);
+  $c->model('User')->update_field('Publications', $rowid, 'notes', $html);
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
@@ -99,7 +99,7 @@ sub update_tags : Local {
   my $sha1      = $c->request->params->{sha1};
   my $tags      = $c->request->params->{tags};
 
-  $c->model('DBI')->update_tags($rowid, $tags);
+  $c->model('User')->update_tags($rowid, $tags);
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');

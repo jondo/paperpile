@@ -4,7 +4,6 @@ package PaperPile::Model::DBIbase;
 ## Catalyst and had some other annoying things. So I use a modified
 ## copy of it here.
 
-
 use strict;
 use base 'Catalyst::Model';
 use NEXT;
@@ -14,7 +13,6 @@ use Data::Dumper;
 our $VERSION = '0.19';
 
 __PACKAGE__->mk_accessors( qw/_dbh _pid _tid/ );
-
 
 sub new {
   my $self = shift;

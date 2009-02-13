@@ -55,7 +55,7 @@ sub resultsgrid : Local {
       $pub->_imported(1);
     }
   } else {
-    $c->model('DBI')->exists_pub($entries);
+    $c->model('User')->exists_pub($entries);
   }
 
   _resultsgrid_format( @_, $entries, $source->total_entries );

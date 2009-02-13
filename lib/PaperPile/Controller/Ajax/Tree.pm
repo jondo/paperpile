@@ -69,7 +69,7 @@ sub new_folder : Local {
 
   $sub_tree->addChild($new);
 
-  $c->model('DBI')->insert_folder($self->_relative_path($path));
+  $c->model('User')->insert_folder($self->_relative_path($path));
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
@@ -84,7 +84,7 @@ sub delete_folder : Local {
   my $path = $c->request->params->{path};
   my $name = $c->request->params->{name};
 
-  $c->model('DBI')->delete_folder($self->_relative_path($path));
+  $c->model('User')->delete_folder($self->_relative_path($path));
 
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
@@ -115,7 +115,7 @@ sub move_in_folder : Local {
   my %seen = ();
   @folders = grep { ! $seen{$_} ++ } @folders;
 
-  $c->model('DBI')->update_folders($rowid, join(',',@folders));
+  $c->model('User')->update_folders($rowid, join(',',@folders));
   $pub->folders(join(',',@folders));
 
   $c->stash->{success} = 'true';
@@ -311,7 +311,7 @@ sub _get_tags {
 
   my ( $self, $c, $tree ) = @_;
 
-  my @tags = @{ $c->model('DBI')->get_tags };
+  my @tags = @{ $c->model('User')->get_tags };
 
   # Remove all children (old tags) first
 
@@ -334,7 +334,6 @@ sub _get_tags {
       )
     );
   }
-
 }
 
 
@@ -342,7 +341,7 @@ sub _get_folders {
 
   my ( $self, $c, $tree ) = @_;
 
-  my @folders = @{ $c->model('DBI')->get_folders };
+  my @folders = @{ $c->model('User')->get_folders };
 
   # Reset everything by removing all children
   foreach my $child ( $tree->getAllChildren ) {
@@ -379,9 +378,6 @@ sub _get_folders {
     }
   }
 }
-
-
-
 
 
 1;

@@ -16,7 +16,7 @@ sub reset_db : Local {
 
   my ( $self, $c ) = @_;
 
-  $c->model('DBI')->reset_db;
+  $c->model('User')->reset_db;
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 
@@ -26,7 +26,7 @@ sub init_db : Local {
 
   my ( $self, $c ) = @_;
 
-  $c->model('DBI')->init_db($c->config->{fields}, $c->config->{settings});
+  $c->model('User')->init_db($c->config->{fields}, $c->config->{settings});
   $c->stash->{success} = 'true';
   $c->forward('PaperPile::View::JSON');
 
@@ -36,7 +36,7 @@ sub tag_list : Local {
 
   my ( $self, $c ) = @_;
 
-  my $tags=$c->model('DBI')->get_tags;
+  my $tags=$c->model('User')->get_tags;
 
   #my @tags=('Tag1','Tag2','Tag3');
 
@@ -65,7 +65,7 @@ sub import_journals : Local {
 
   my $file="/home/wash/play/PaperPile/data/jabref.txt";
 
-  my $sth=$c->model('DBI')->dbh->prepare("INSERT INTO Journals (key,name) VALUES(?,?)");
+  my $sth=$c->model('User')->dbh->prepare("INSERT INTO Journals (key,name) VALUES(?,?)");
 
   open( TMP, "<$file" );
 

@@ -22,13 +22,12 @@ sub get_model {
 
   my $file=PaperPile::Utils->path_to('db','default.db');
 
-  my $model = PaperPile::Model::DBI->new();
+  my $model = PaperPile::Model::User->new();
   $model->set_dsn("dbi:SQLite:$file");
 
   return $model;
 
 }
-
 
 
 sub connect {

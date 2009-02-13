@@ -1,4 +1,4 @@
-package PaperPile::Model::DBI;
+package PaperPile::Model::User;
 
 use strict;
 use Carp;
