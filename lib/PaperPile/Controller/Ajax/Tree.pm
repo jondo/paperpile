@@ -7,7 +7,6 @@ use PaperPile::Library::Publication;
 use PaperPile::Library::Source::File;
 use PaperPile::Library::Source::DB;
 use PaperPile::Library::Source::PubMed;
-use PaperPile::Tree::Node;
 use Data::Dumper;
 use 5.010;
 
