@@ -66,6 +66,11 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             case 'IMPORT_JOURNALS':
                 Ext.getCmp('MAIN').importJournals();
                 break;
+                
+            case 'SETTINGS':
+                Ext.getCmp('MAIN').settings();
+                break;
+
 
             case 'TAG':
                 Ext.getCmp('results_tabs').showDBQueryResults('FULLTEXT',
@@ -74,7 +79,6 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                                               node.text,
                                                               'pp-icon-tag'
                                                              );
-                
                 break;
 
             case 'FOLDER':
@@ -86,11 +90,6 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                                              );
                 break;
             }
-
-
-
-
-
         });
 	},
 

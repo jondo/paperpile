@@ -31,7 +31,6 @@ our $VERSION = '0.01';
 # with a external configuration file acting as an override for
 # local deployment.
 
-__PACKAGE__->config( name => 'PaperPile' );
 
 __PACKAGE__->config( {
     'View::JSON' => {

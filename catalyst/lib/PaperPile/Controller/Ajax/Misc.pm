@@ -4,15 +4,13 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use PaperPile::Library::Publication;
-use PaperPile::Library::Source::File;
-use PaperPile::Library::Source::DB;
-use PaperPile::Library::Source::PubMed;
-use PaperPile::PDFviewer;
+use PaperPile::Utils;
 use Data::Dumper;
 use File::Spec;
 use File::Path;
 use File::Copy;
 use 5.010;
+
 
 sub reset_db : Local {
 
@@ -55,6 +53,26 @@ sub tag_list : Local {
   );
 
   $c->stash->{data}          = [@data];
+  $c->stash->{metaData}      = {%metaData};
+
+  $c->forward('PaperPile::View::JSON');
+
+}
+
+sub get_settings : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $tags=$c->model('User')->get_tags;
+
+  my %settings=(key1=>'data1',key2=>'data2');
+
+  my %metaData = (
+   root          => 'data',
+   fields        => [keys %settings]
+  );
+
+  $c->stash->{data}          = [{%settings}];
   $c->stash->{metaData}      = {%metaData};
 
   $c->forward('PaperPile::View::JSON');
@@ -121,12 +139,14 @@ sub init_session : Local {
   # We initialize it now.
   if ( not $user_db ) {
     $c->model('App')->init_db( $c->config->{app_settings} );
+    $user_db=$c->model('App')->get_setting('user_db');
   }
 
   # If $user_db is relative, it is interpreted as relative to the catalyst
   # home dir
   if ( not File::Spec->file_name_is_absolute($user_db) ) {
     $user_db = PaperPile::Utils->path_to($user_db);
+    $c->model('App')->set_setting('user_db',$user_db);
   }
 
   # If it does not exist, we initialize it with an empty db-file from the catalyst directory
@@ -145,5 +165,6 @@ sub init_session : Local {
   $c->forward('PaperPile::View::JSON');
 
 }
+
 
 1;

@@ -123,7 +123,20 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
             }
         ); 
 
+        this.settingsStore=new Ext.data.Store(
+            { proxy: new Ext.data.HttpProxy({
+                url: '/ajax/misc/get_settings', 
+                method: 'GET'
+            }),
+              storeId: 'settings_store',
+              baseParams:{},
+              reader: new Ext.data.JsonReader(),
+              pruneModifiedRecords:true,
+            }
+        ); 
+
         this.tagStore.reload();
+        this.settingsStore.reload();
 
         this.on('afterlayout',this.onAfterLayout,this);
 
@@ -205,6 +218,11 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         })
     },
 
+    settings:function(){
+        var win=new PaperPile.Settings();
+        win.show();
+
+    }
 }
 
 );
@@ -220,6 +238,7 @@ Ext.onReady(function() {
      
 });
 
+
 PaperPile.app=function(){
 
     Ext.QuickTips.init();
@@ -230,4 +249,10 @@ PaperPile.app=function(){
     tree.expandAll();
     main.show();
     PaperPile.initMask.hide();
+
+
+    //Ext.StoreMgr.lookup('tag_store').each(function(rec){console.log(rec)});
+    
+
+
 }

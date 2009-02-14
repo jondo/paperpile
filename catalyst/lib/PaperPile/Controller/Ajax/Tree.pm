@@ -232,6 +232,15 @@ sub _get_default_tree {
     )
   );
 
+  $admin->addChild(
+    Tree::Simple->new( {
+        text    => 'Settings',
+        type    => 'SETTINGS',
+        iconCls => 'pp-icon-tools',
+      }
+    )
+  );
+
   return $root;
 }
 

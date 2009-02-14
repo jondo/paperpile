@@ -11,6 +11,8 @@
   <script type="text/javascript" charset="utf-8" src="/js/search-field.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/filter-field.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/paperpile.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/forms.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/settings.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/results-grid.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/results-tabs.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/data-tabs.js"></script>

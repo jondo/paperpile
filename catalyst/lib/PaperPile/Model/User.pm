@@ -82,6 +82,29 @@ sub get_setting {
 
 }
 
+
+sub settings {
+
+  ( my $self ) = @_;
+
+  my $sth = $self->dbh->prepare("SELECT key,value FROM Settings;");
+  my ( $key, $value );
+  $sth->bind_columns( \$key, \$value );
+
+  $sth->execute;
+
+  my %output;
+
+  while ( $sth->fetch ) {
+    $output{$key} = $value;
+  }
+
+  return {%output};
+
+}
+
+
+
 sub create_pub {
     ( my $self, my $pub ) = @_;
 
@@ -528,5 +551,8 @@ sub _hash2sql {
 
   return @output;
 }
+
+
+
 
 1;

@@ -1,3 +1,4 @@
 CREATE TABLE settings(
- key      TEXT value
+ key      TEXT, 
+ value    TEXT
 );
