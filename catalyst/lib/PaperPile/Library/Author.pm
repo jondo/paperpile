@@ -246,6 +246,23 @@ sub bibtex {
   return $output;
 }
 
+sub bibutils {
+
+  my $self       = shift;
+  my @components = ();
+
+  my $output='';
+
+  $output.=$self->von if ($self->von)." ";
+  $output.=$self->last;
+  $output.=" ".$self->jr if ($self->jr);
+  $output.='|';
+  my @firsts=split(/\s+/,$self->first);
+  $output.=join('|',@firsts);
+
+  return $output;
+}
+
 
 #is there a built-in way of doing that?
 

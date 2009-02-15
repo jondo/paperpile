@@ -69,6 +69,10 @@ is( $author->create_key, "STADLER_PF",        "Automatically create key" );
 is( $author->nice,       "Stadler PF",        "nice printing" );
 is( $author->normalized, "Stadler, PF",       "normalized" );
 is( $author->bibtex,     "Stadler, Peter F.", "as bibtex" );
+is( $author->bibutils,   "Stadler|Peter|F.", "as bibutils" );
+
+$author = PaperPile::Library::Author->new( full => 'Lawrie, D H' );
+is( $author->bibutils,   "Lawrie|D|H", "as bibutils" );
 
 $author = PaperPile::Library::Author->new();
 
@@ -83,4 +87,6 @@ is(
   'Phony-Baloney, F. Phidias',
   'Reading bibutils authors (Phony-Baloney|F.|Phidias)'
 );
+
+
 
