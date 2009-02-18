@@ -11,8 +11,10 @@ use URI::URL;
 use URI::Split qw(uri_split uri_join);
 use Encode;
 use Data::Dumper;
-
+use Config::Any;
 use PaperPile::Utils;
+
+use YAML;
 
 $Data::Dumper::Indent = 1;
 
@@ -113,7 +115,7 @@ sub _identify_site {
 
     foreach my $siteName ( keys %{ $driver->{site} } ) {
       foreach my $pattern (
-        @{ $driver->{site}->{$siteName}->{signature}->[0]->{url} } )
+       @{ $driver->{site}->{$siteName}->{signature}->{url} } )
       {
 
         print STDERR "Matching $URL vs. $pattern. " if $self->debug;
@@ -175,8 +177,8 @@ sub _followURL {
   ( my $self, my $URL, my $rule ) = @_;
   my $newURL = $URL;
 
-  my $match   = $rule->{match}->[0];
-  my $rewrite = $rule->{rewrite}->[0];
+  my $match   = $rule->{match};
+  my $rewrite = $rule->{rewrite};
 
   # If nothing is specified, just return the original URL;
   # Useful at the start with the first URL.
@@ -266,7 +268,13 @@ sub load_driver {
     or croak( "Could not open driver file " . $self->driver_file );
   my $content = '';
   $content .= $_ foreach (<XML>);
-  $self->_driver( XMLin( $content, ForceArray => 1 ) );
+  $self->_driver( XMLin( $content, ForceArray => ['url','body','rule','pattern','site'] ) );
+
+  open(YAML,">/home/wash/play/PaperPile/catalyst/t/data/driver.yml");
+  print YAML YAML::Dump($self->_driver);
+
+  #print Dumper($cfg);
+
 
 }
 
@@ -281,7 +289,7 @@ sub get_tests {
 
   foreach my $siteName ( keys %{ $driver->{site} } ) {
     my @tmp = ();
-    foreach my $test ( @{ $driver->{site}->{$siteName}->{test}->[0]->{url} } ) {
+    foreach my $test ( @{ $driver->{site}->{$siteName}->{test}->{url} } ) {
       push @tmp, $test;
     }
     $tests->{$siteName} = [@tmp];

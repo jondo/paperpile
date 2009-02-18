@@ -8,6 +8,7 @@ BEGIN { use_ok 'PaperPile::Crawler' }
 my $crawler=PaperPile::Crawler->new;
 
 $crawler->debug(0);
+#$crawler->driver_file('../data/short.xml');
 $crawler->driver_file('../data/driver.xml');
 $crawler->load_driver();
 
@@ -27,6 +28,7 @@ foreach my $site (keys %$tests){
     }
     $test_no++;
   }
+  #last;
 }
 
 #print Dumper($crawler->_driver);

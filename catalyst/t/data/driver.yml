@@ -1,0 +1,141 @@
+---
+site:
+  AllenPress:
+    rule:
+      - pattern:
+          - match: '!(/pdfserv/\S*)"!'
+    signature:
+      body:
+        - '!(/pdfserv/\S*)"!'
+      url:
+        - '!allenpress\.com!'
+    test:
+      url:
+        - http://arpa.allenpress.com/arpaonline/?request=get-abstract&issn=1543-2165&volume=132&page=273
+  Atypon:
+    rule:
+      - pattern:
+          - rewrite: '!(abs|full)!pdf!'
+    signature:
+      url:
+        - acs\.org/doi/(abs|full)
+        - annualreviews\.org/doi/(abs|full)
+        - liebertonline\.com/doi/(abs|full)
+    test:
+      url:
+        - http://pubs.acs.org/doi/abs/10.1021/bi702132e
+        - http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511
+        - http://www.liebertonline.com/doi/abs/10.1089/cmb.2006.0137
+  BMC:
+    rule:
+      - pattern:
+          - match: '!(http://\S*/content/pdf/.*?\.pdf)!'
+    signature:
+      body:
+        - '!http://\S*/content/pdf/.*\.pdf!'
+      url:
+        - '!biomedcentral\.com!'
+        - '!genomebiology\.com!'
+    test:
+      url:
+        - http://www.biomedcentral.com/1471-2105/9/248
+        - http://dx.doi.org/10.1186/1471-2105-9-248
+        - http://genomebiology.com/2008/9/12/R168
+  ElsevierHub:
+    rule:
+      - pattern:
+          - match: '!(http://www\.sciencedirect\.com/science\?_ob=GatewayURL.*?)"!'
+          - match: "!window\\.open\\(\\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!"
+    signature:
+      url:
+        - '!linkinghub.elsevier.com!'
+    test:
+      url:
+        - http://linkinghub.elsevier.com/retrieve/pii/S1470-2045(08)70008-1
+  HighWire1:
+    rule:
+      - pattern:
+          - match: '!(http://\S*\.full\.pdf\+html)!'
+            rewrite: '!\+html$!!'
+    signature:
+      body:
+        - '!(http://\S*\.full\.pdf\+html)!'
+      url:
+        - '!cshlp\.org!'
+        - '!pnas\.org!'
+    test:
+      url:
+        - http://genome.cshlp.org/content/17/6/852
+        - http://genesdev.cshlp.org/content/early/2008/12/18/gad.1717309.abstract
+        - http://www.pnas.org/content/105/50/19587.abstract
+  HighWire2:
+    rule:
+      - pattern:
+          - rewrite: '!^(.*/cgi)/content/full/(.*)!$1/reprint/$2\.pdf!'
+    signature:
+      url:
+        - '!cgi/content/(full|abstract)!'
+    test:
+      url:
+        - http://bloodjournal.hematologylibrary.org/cgi/content/full/111/9/4617
+        - http://nar.oxfordjournals.org/cgi/content/full/34/suppl_1/D135
+  JStage:
+    rule:
+      - pattern:
+          - match: '!(/article/\S*?/_pdf)"!'
+      - pattern:
+          - match: '!(/jnlpdf.php\S*?)"!'
+    signature:
+      url:
+        - '!jst\.go\.jp!'
+    test:
+      url:
+        - http://www.jstage.jst.go.jp/article/mandi/51/11/51_1099/_article
+        - http://www.journalarchive.jst.go.jp/english/jnlabstract_en.php?cdjournal=bbb1961&cdvol=55&noissue=12&startpage=3059
+  Medknown:
+    rule:
+      - pattern:
+          - rewrite: '!(.*)!$1;type=2!'
+          - match: '!(temp/\S*?\.pdf)"!'
+    signature:
+      url:
+        - '!article.asp\?issn=\S*?aulast=\S*!'
+    test:
+      url:
+        - http://www.indianjcancer.com/article.asp?issn=0019-509X;year=2007;volume=44;issue=1;spage=36;epage=37;aulast=Agrawal
+  Metapress:
+    rule:
+      - pattern:
+          - match: '!(/content/\S*?/fulltext.pdf)"!'
+    signature:
+      url:
+        - '!metapress\.com!'
+    test:
+      url:
+        - http://versita.metapress.com/content/np2145348566n664/
+  NPG:
+    rule:
+      - pattern:
+          - match: '!(/\S*\.pdf)!'
+    signature:
+      url:
+        - '!nature\.com!'
+    test:
+      url:
+        - http://www.nature.com/nature/journal/v456/n7224/full/456842a.html
+        - http://www.nature.com/emboj/journal/v27/n24/abs/emboj2008242a.html
+        - http://www.nature.com/nmeth/journal/v5/n12/abs/nmeth.1266.html
+  PMC:
+    rule:
+      - pattern:
+          - match: '!(/picrender\.fcgi\S*blobtype=pdf)!'
+    signature:
+      url:
+        - '!pubmedcentral\.nih\.gov!'
+    test:
+      url:
+        - http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pubmed&pubmedid=18577231
+  PloS:
+    rule:
+      - pattern:
+          - rewrite: '!^(.*
