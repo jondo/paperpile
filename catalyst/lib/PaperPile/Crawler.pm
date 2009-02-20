@@ -264,7 +264,9 @@ sub load_driver {
 
   my $self = shift;
 
-  open( XML, "<" . $self->driver_file )
+  #open( XML, "<" . $self->driver_file )
+
+  open( XML, "</home/wash/play/PaperPile/catalyst/t/data/driver.xml")
     or croak( "Could not open driver file " . $self->driver_file );
   my $content = '';
   $content .= $_ foreach (<XML>);
