@@ -15,7 +15,7 @@ $Data::Dumper::Indent = 1;
 
 sub get_browser{
   my $browser = LWP::UserAgent->new;
-  $browser->proxy('http', 'http://localhost:8146/');
+  #$browser->proxy('http', 'http://localhost:8146/');
   $browser->cookie_jar({});
   $browser->agent('Mozilla/5.0');
   return $browser;
