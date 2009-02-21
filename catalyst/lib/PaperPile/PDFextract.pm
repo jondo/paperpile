@@ -17,7 +17,7 @@ sub match_pubmed {
 
   my $pubs=$source->page(0,10);
 
-  print STDERR Dumper($pubs);
+  print Dumper($pubs);
 
 }
 
