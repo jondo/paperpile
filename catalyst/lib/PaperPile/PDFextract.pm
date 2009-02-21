@@ -1,4 +1,4 @@
-package PaperPile::Library::PDFextract;
+package PaperPile::PDFextract;
 
 use Moose;
 use PaperPile::Library::Publication;
