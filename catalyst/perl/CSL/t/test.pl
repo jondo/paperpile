@@ -17,7 +17,7 @@ my $usage = << "JUS";
         -c      CSL input style file.
                 [REQUIRED]
 
-        -t      Output format, e.g. txt, html, bibtex
+        -f      Output format, e.g. txt, html, bibtex
                 [REQUIRED]
 
   purpose:
@@ -41,13 +41,14 @@ if ( !$opt_m || !$opt_c || !$opt_f ) {
   exit;
 }
 
-my $o = XML::CSL->new(
+my $o = Biblio::CSL->new(
   mods   => $opt_m,
   csl    => $opt_c,
   format => $opt_f
 );
 
-$o->version();
+
+#$o->version();
 print "\n--- Beispiel: txt ---\n\n";
 
 $o->transform();

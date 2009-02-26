@@ -95,8 +95,11 @@ sub transform {
 
 no Moose;
 __PACKAGE__->meta->make_immutable;
-1;
-__END__
+
 sub version {
   print "This is XML::CSL version ", $VERSION, "\n";
 }
+
+
+1;
+__END__
