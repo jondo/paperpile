@@ -1,3 +1,3 @@
 killall lighttpd
-../../lighttpd/sbin/lighttpd -m ../../lighttpd/lib -f ../../lighttpd/lighttpd.conf
+../../bin/lighttpd -m ../../bin -f ../../lighttpd.conf
 ../paperpile_fastcgi.pl -l localhost:55900 -e

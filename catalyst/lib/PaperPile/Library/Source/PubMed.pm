@@ -20,29 +20,26 @@ has 'web_env'   => ( is => 'rw' );
 has 'query_key' => ( is => 'rw' );
 
 my $esearch =
-"http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=PubMed&usehistory=y&retmax=1&term=";
-my $efetch =
-"http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmode=xml&db=PubMed";
+  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=PubMed&usehistory=y&retmax=1&term=";
+my $efetch = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmode=xml&db=PubMed";
 my $elink_linkout =
-"http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=ref&cmd=prlinks&db=PubMed&";
+  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=ref&cmd=prlinks&db=PubMed&";
 my $elink_related =
-"http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&db=pubmed&id=";
-my $espell =
-  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/espell.fcgi?&db=PubMed&term=";
-my $epost =
-  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/epost.fcgi?db=pubmed&id=";
+  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&db=pubmed&id=";
+my $espell = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/espell.fcgi?&db=PubMed&term=";
+my $epost  = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/epost.fcgi?db=pubmed&id=";
 
 sub connect {
   my $self = shift;
 
-  my $browser=PaperPile::Utils->get_browser;
+  my $browser = PaperPile::Utils->get_browser;
 
   my $response  = $browser->get( $esearch . $self->query );
   my $resultXML = $response->content;
 
   print STDERR Dumper($resultXML);
 
-  my $result    = XMLin($resultXML);
+  my $result = XMLin($resultXML);
 
   $self->web_env( $result->{WebEnv} );
   $self->query_key( $result->{QueryKey} );
@@ -66,65 +63,63 @@ sub page {
 
 }
 
-
 sub _linkOut {
 
-  ( my $self, my $pubs) = @_;
+  ( my $self, my $pubs ) = @_;
 
-  my %pub_hash=();
+  my %pub_hash = ();
 
-  my @ids=();
-  foreach my $pub (@$pubs){
+  my @ids = ();
+  foreach my $pub (@$pubs) {
     push @ids, $pub->{pmid};
-    $pub_hash{$pub->{pmid}}=$pub;
+    $pub_hash{ $pub->{pmid} } = $pub;
   }
 
-  my $ids=join(',',@ids);
+  my $ids = join( ',', @ids );
 
-  my $browser= PaperPile::Utils->get_browser;
+  my $browser = PaperPile::Utils->get_browser;
 
-  my $url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=prlinks&db=PubMed&id=$ids";
+  my $url =
+    "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=prlinks&db=PubMed&id=$ids";
 
-  my $response  = $browser->get($url);
+  my $response = $browser->get($url);
 
-  print STDERR Dumper($url, "   " ,$response->content);
+  print STDERR Dumper( $url, "   ", $response->content );
 
-  my $result = XMLin( $response->content);
+  my $result = XMLin( $response->content );
 
   #print STDERR Dumper($result->{LinkSet}->{IdUrlList}->{IdUrlSet});
 
   #print STDERR $result->{LinkSet}->{IdUrlList}->{IdUrlSet};
 
-  foreach my $entry (@{$result->{LinkSet}->{IdUrlList}->{IdUrlSet}}){
+  foreach my $entry ( @{ $result->{LinkSet}->{IdUrlList}->{IdUrlSet} } ) {
 
-    my $id=$entry->{Id};
+    my $id = $entry->{Id};
 
     # got an error message
-    if (defined $entry->{Info}){
+    if ( defined $entry->{Info} ) {
       $pub_hash{$id}->url('');
     } else {
-      $pub_hash{$id}->url($entry->{ObjUrl}->{Url});
+      $pub_hash{$id}->url( $entry->{ObjUrl}->{Url} );
+
       # Adjust the url otherwise it won't get displayed correctly
-      my $icon_url=$entry->{ObjUrl}->{IconUrl};
-      $icon_url=~s/entrez/corehtml/;
+      my $icon_url = $entry->{ObjUrl}->{IconUrl};
+      $icon_url =~ s/entrez/corehtml/;
       $pub_hash{$id}->icon($icon_url);
     }
   }
 
-
 }
-
 
 sub _pubFetch {
 
   ( my $self, my $offset, my $limit ) = @_;
 
-  my $browser= PaperPile::Utils->get_browser;
+  my $browser   = PaperPile::Utils->get_browser;
   my $query_key = $self->query_key;
   my $web_env   = $self->web_env;
 
-  my $url =
-"$efetch&query_key=$query_key&WebEnv=$web_env&retstart=$offset&retmax=$limit";
+  my $url       = "$efetch&query_key=$query_key&WebEnv=$web_env&retstart=$offset&retmax=$limit";
   my $response  = $browser->get($url);
   my $resultXML = $response->content;
 
@@ -144,8 +139,7 @@ sub _read_xml {
 
   if ( ref( $result->{PubmedArticle} ) eq 'ARRAY' ) {
     @list = @{ $result->{PubmedArticle} };
-  }
-  else {
+  } else {
     @list = ( $result->{PubmedArticle} );
   }
 
@@ -153,27 +147,25 @@ sub _read_xml {
 
     my $cit = $article->{MedlineCitation};
 
-    my $pub = PaperPile::Library::Publication->new(pubtype=>'JOUR');
+    my $pub = PaperPile::Library::Publication->new( pubtype => 'JOUR' );
 
-    if (not $pub->pmid( $cit->{PMID})){
+    if ( not $pub->pmid( $cit->{PMID} ) ) {
       die();
     }
 
     $pub->pmid( $cit->{PMID} );
 
-    my $volume = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
-    my $issue  = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
-    my $year   = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
-    my $month  = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Month};
-    my $pages  = $cit->{Article}->{Pagination}->{MedlinePgn};
+    my $volume   = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
+    my $issue    = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
+    my $year     = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
+    my $month    = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Month};
+    my $pages    = $cit->{Article}->{Pagination}->{MedlinePgn};
     my $abstract = $cit->{Article}->{Abstract}->{AbstractText};
     my $title    = $cit->{Article}->{ArticleTitle};
     my $status   = $article->{PubmedData}->{PublicationStatus};
     my $journal  = $cit->{MedlineJournalInfo}->{MedlineTA};
 
-
-    my $doi =
-      $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
+    my $doi = $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
 
     $pub->volume($volume)     if $volume;
     $pub->issue($issue)       if $issue;
@@ -185,8 +177,8 @@ sub _read_xml {
     $pub->doi($doi)           if $doi;
 
     if ($journal) {
-      my $jid=$journal;
-      $pub->journal($journal),
+      my $jid = $journal;
+      $pub->journal($journal),;
     }
 
     my @authors = ();
@@ -199,22 +191,24 @@ sub _read_xml {
 
     foreach my $author (@tmp) {
 
-      if ($author->{CollectiveName}){
-        push @authors, PaperPile::Library::Author->new(
-                                                       last =>  '{'.$author->{CollectiveName}.'}',
-                                                       first  => '',
-                                                       jr    => '',
-                                                      )->normalized;
+      if ( $author->{CollectiveName} ) {
+        push @authors,
+          PaperPile::Library::Author->new(
+          last  => '{' . $author->{CollectiveName} . '}',
+          first => '',
+          jr    => '',
+          )->normalized;
       } else {
-        push @authors, PaperPile::Library::Author->new(
-                                                       last => $author->{LastName} ? $author->{LastName} : '',
-                                                       first  => $author->{Initials} ? $author->{Initials} : '',
-                                                       jr    => $author->{Suffix}   ? $author->{Suffix}   : '',
-                                                      )->normalized;
+        push @authors,
+          PaperPile::Library::Author->new(
+          last  => $author->{LastName} ? $author->{LastName} : '',
+          first => $author->{Initials} ? $author->{Initials} : '',
+          jr    => $author->{Suffix}   ? $author->{Suffix}   : '',
+          )->normalized;
       }
 
-      }
-    $pub->authors( join(' and ',@authors) );
+    }
+    $pub->authors( join( ' and ', @authors ) );
     push @output, $pub;
   }
   return [@output];

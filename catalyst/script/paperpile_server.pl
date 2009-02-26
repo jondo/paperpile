@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 
 BEGIN { 
-    $ENV{CATALYST_ENGINE} ||= 'HTTP';
+    $ENV{CATALYST_ENGINE} ||= 'HTTP::Prefork';
     $ENV{CATALYST_SCRIPT_GEN} = 31;
-    require Catalyst::Engine::HTTP;
+    require Catalyst::Engine::HTTP::Prefork;
 }  
 
 use strict;
