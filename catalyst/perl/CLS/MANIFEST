@@ -1,0 +1,6 @@
+Makefile.PL
+MANIFEST
+README
+t/Biblio-CSL.t
+lib/Biblio/CSL.pm
+META.yml                                 Module meta-data (added by MakeMaker)
