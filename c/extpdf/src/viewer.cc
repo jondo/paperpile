@@ -10,6 +10,70 @@
 #include "extpdf.h"
 #include "viewer.h"
 
+
+mxml_node_t* info(mxml_node_t *xml){
+
+  PopplerDocument *document;
+  PopplerPage *page;
+  GError *error;
+  GTimer *timer;
+  cairo_surface_t *surface;
+  cairo_t *cr;
+  mxml_node_t *node;
+  char *in_file, *out_file, *uri;
+  int pageNo;
+  float scale;
+  double width, height;
+  char string[1000];
+  int i;
+  mxml_node_t *xmlout, *output_tag, *status_tag, *page_tag, *some_tag;
+  
+  node = mxmlFindElement(xml, xml, "inFile", NULL, NULL, MXML_DESCEND);
+  in_file=node->child->value.opaque;
+
+  uri=get_uri(in_file);
+  
+  document = poppler_document_new_from_file (uri, NULL, &error);
+  
+  if (document == NULL){
+    fail("Could not open file");
+  }
+
+  /*
+  page = poppler_document_get_page(document, pageNo);
+  if (page == NULL){
+    fail("Page not found");
+  }
+  poppler_page_get_size (page, &width, &height);
+  */
+
+  xmlout = mxmlNewXML("1.0");
+  output_tag = mxmlNewElement(xmlout, "output");
+  status_tag = mxmlNewElement(output_tag, "status");
+  mxmlNewOpaque(status_tag, "OK");
+  some_tag = mxmlNewElement(output_tag, "pageNo");
+  sprintf(string,"%i", poppler_document_get_n_pages(document));
+  mxmlNewOpaque(some_tag,string );
+  
+  for (i=0;i<poppler_document_get_n_pages(document);i++){
+    page = poppler_document_get_page(document, i);
+    if (page == NULL){
+      fail("Failed to read page.");
+    }
+    poppler_page_get_size (page, &width, &height);
+    page_tag = mxmlNewElement(output_tag, "page");
+    some_tag = mxmlNewElement(page_tag, "width");
+    sprintf(string,"%.2f", width);
+    mxmlNewOpaque(some_tag,string);
+    some_tag = mxmlNewElement(page_tag, "height");
+    sprintf(string,"%.2f", height);
+    mxmlNewOpaque(some_tag,string);
+  }
+
+  return xmlout;
+
+}
+
 mxml_node_t* render(mxml_node_t *xml){
 
   PopplerDocument *document;

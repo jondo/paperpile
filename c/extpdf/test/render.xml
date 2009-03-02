@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
-<command name="RENDER">
+<extpdf>
+  <command>RENDER</command>
   <page>0</page>
   <scale>1.0</scale>
   <inFile>../test/test.pdf</inFile>
   <outFile>../test/test.png</outFile>
-</command>
+</extpdf>

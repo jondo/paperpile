@@ -9,9 +9,42 @@ use PaperPile::Library::Source::DB;
 use PaperPile::Library::Source::PubMed;
 use PaperPile::PDFviewer;
 use Data::Dumper;
+use XML::Simple;
+use File::Temp;
+
 use 5.010;
 
+sub extpdf : Local {
 
+  my ( $self, $c ) = @_;
+
+  my $bin=$c->path_to('bin/linux64/extpdf');
+
+  if ($c->request->params->{outFile}){
+    my $new=$c->path_to('root/TMP',$c->request->params->{outFile});
+    $c->request->params->{outFile}=$new;
+  }
+
+
+  my $xml = XMLout($c->request->params, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1);
+
+  my ($fh, $filename) = File::Temp::tempfile();
+  print $fh $xml;
+  close($fh);
+
+  print STDERR $xml;
+
+  my @output=`$bin $filename`;
+
+  print STDERR @output;
+
+  my $output='';
+  $output.=$_ foreach @output;
+
+  $c->response->body( $output );
+  $c->response->content_type('text/xml');
+
+}
 
 sub pdf_viewer : Local {
   my ( $self, $c ) = @_;

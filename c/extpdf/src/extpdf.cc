@@ -17,7 +17,7 @@ int main (int argc, char *argv[]){
   mxml_node_t *xmlout;
   
   FILE *fp;
-  const char* command;
+  char command[100];
 
   g_type_init ();
   
@@ -47,10 +47,11 @@ int main (int argc, char *argv[]){
     fail("The control file must specify a command.");
   }
 
-  command=mxmlElementGetAttr(node, "name");
-  
-  if (strcmp(command,"RENDER")==0)  xmlout=render(node);
-  if (strcmp(command,"SEARCH")==0)  xmlout=search(node);
+  sprintf(command,"%s",node->child->value.opaque);
+
+  if (strcmp(command,"INFO")==0)  xmlout=info(xml);
+  if (strcmp(command,"RENDER")==0)  xmlout=render(xml);
+  if (strcmp(command,"SEARCH")==0)  xmlout=search(xml);
   
   
   mxmlSaveFile (xmlout,stdout,_white_space_cb);
@@ -119,7 +120,7 @@ const char * _white_space_cb(mxml_node_t *node, int where){
 
   name = node->value.element.name;
   
-  if (!strcmp(name, "output") || !strcmp(name, "status")){
+  if (!strcmp(name, "output") || !strcmp(name, "status") || !strcmp(name, "page")){
     if (where == MXML_WS_BEFORE_OPEN || where == MXML_WS_AFTER_CLOSE){
       return ("\n");
     }
