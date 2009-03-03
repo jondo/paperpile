@@ -3,45 +3,73 @@ package PaperPile::Controller::Ajax::PDF;
 use strict;
 use warnings;
 use parent 'Catalyst::Controller';
-use PaperPile::Library::Publication;
-use PaperPile::Library::Source::File;
-use PaperPile::Library::Source::DB;
-use PaperPile::Library::Source::PubMed;
 use PaperPile::PDFviewer;
 use Data::Dumper;
 use XML::Simple;
 use File::Temp;
+use File::Path;
+use File::Spec;
 
 use 5.010;
+
+sub render : Regex('^ajax/pdf/render/(.*\.pdf)/(\d+)/(\d+\.\d+)$') {
+  my ( $self, $c ) = @_;
+
+  my $path = $c->req->captures->[0];
+  my $root = "/";
+  my $bin = $c->path_to('bin/linux64/extpdf');
+
+  my %extpdf;
+
+  $extpdf{command} = 'RENDER';
+  $extpdf{inFile} = File::Spec->catfile( $root, $path );
+  $extpdf{page} =   $c->req->captures->[1];
+  $extpdf{scale} =  $c->req->captures->[2];
+  $extpdf{outFile} = 'STDOUT';
+
+  my $xml = XMLout( \%extpdf, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
+
+  print STDERR $xml;
+
+
+  my ( $fh, $filename ) = File::Temp::tempfile();
+  print $fh $xml;
+  close($fh);
+
+  my @out=`$bin $filename`;
+
+  my $png = '';
+  $png .= $_ foreach @out;
+
+  $c->response->body($png);
+  $c->response->content_type('image/png');
+  $c->res->headers->header('Cache-Control' => 'max-age=3600');
+
+}
 
 sub extpdf : Local {
 
   my ( $self, $c ) = @_;
 
-  my $bin=$c->path_to('bin/linux64/extpdf');
+  my $bin = $c->path_to('bin/linux64/extpdf');
 
-  if ($c->request->params->{outFile}){
-    my $new=$c->path_to('root/TMP',$c->request->params->{outFile});
-    $c->request->params->{outFile}=$new;
+  if ( $c->request->params->{outFile} ) {
+    my $new = $c->path_to( 'root/TMP', $c->request->params->{outFile} );
+    $c->request->params->{outFile} = $new;
   }
 
+  my $xml = XMLout( $c->request->params, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
 
-  my $xml = XMLout($c->request->params, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1);
-
-  my ($fh, $filename) = File::Temp::tempfile();
+  my ( $fh, $filename ) = File::Temp::tempfile();
   print $fh $xml;
   close($fh);
 
-  print STDERR $xml;
+  my @output = `$bin $filename`;
 
-  my @output=`$bin $filename`;
+  my $output = '';
+  $output .= $_ foreach @output;
 
-  print STDERR @output;
-
-  my $output='';
-  $output.=$_ foreach @output;
-
-  $c->response->body( $output );
+  $c->response->body($output);
   $c->response->content_type('text/xml');
 
 }
@@ -71,7 +99,7 @@ sub pdf_viewer : Local {
       file          => $file,
       canvas_width  => $canvas_width,
       canvas_height => $canvas_height,
-      root_dir=>$c->path_to('')->stringify,
+      root_dir      => $c->path_to('')->stringify,
     );
     $pv->init;
 

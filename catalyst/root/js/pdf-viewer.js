@@ -2,6 +2,8 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
     mode: 'drag',
     currentZoom: 1.0,
+    currentPage:1,
+    pages:[],
 
     initComponent: function() {
 
@@ -11,10 +13,40 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         //});
 
         var zoomer= new PaperPile.PDFzoomer;
-
+  
         Ext.apply(this, 
                   {autoScroll : false,
-                   //bbar:pager,
+                   bbar:new Ext.Toolbar(
+                       { items: [
+                           {  xtype:'button',
+                              tooltip: 'First page',
+                              iconCls: "x-tbar-page-first",
+                              disabled: true,
+                           },
+                           {
+                               xtype:'button',
+                               tooltip: 'Next page',
+                               iconCls: "x-tbar-page-prev",
+                               disabled: true,
+                           },
+                           {
+                               xtype:'textfield',
+                               cls: "x-tbar-page-number",
+                               disabled: true,
+                           },
+                           {
+                               tooltip: "Next page",
+                               iconCls: "x-tbar-page-next",
+                               disabled: true,
+                           },
+                           {
+                               tooltip: "Last page",
+                               iconCls: "x-tbar-page-last",
+                               disabled: true,
+                           }
+                       ]
+                       }
+                   ),
                    tbar: new Ext.Toolbar(
                        {items: [zoomer,
                                 {xtype:'tbfill'},
@@ -48,8 +80,8 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 		PaperPile.PDFviewer.superclass.initComponent.call(this);
 
         //store.on('datachanged', this.reloadImage,this);
-        //zoomer.on('change',this.onZoom,this);
-        //zoomer.on('changecomplete',this.onZoomComplete,this);
+        zoomer.on('change',this.onZoom,this);
+        zoomer.on('changecomplete',this.onZoomComplete,this);
         
 	  },
 
@@ -65,26 +97,24 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
         this.currentZoom=zoomer.map[value];
 
-        //scale=zoomer.map[value];
-        //this.store.baseParams.zoom=scale;
-        //this.store.reload({params:{start: this.getBottomToolbar().cursor}});
+        this.loadPage();
 
     },
 
     afterRender: function() {
 
         PaperPile.PDFviewer.superclass.afterRender.apply(this, arguments);
+        
+        this.bitmap = document.createElement('img');
+        this.bitmap.src = Ext.BLANK_IMAGE_URL;
+        this.body.appendChild(this.bitmap);
+        this.bitmap = Ext.get(this.bitmap);
 
-        //this.bitmap = document.createElement('img');
-        //this.bitmap.src = Ext.BLANK_IMAGE_URL;
-        //this.body.appendChild(this.bitmap);
-        //this.bitmap = Ext.get(this.bitmap);
+        this.bitmap.setStyle('cursor', 'move');
 
-        //this.bitmap.setStyle('cursor', 'move');
+        this.bitmap.addClass('pp-pdf-document');
 
-        //this.bitmap.addClass('pp-pdf-document');
-
-        //this.bitmap.on('mousedown', this.onMouseDown, this);
+        this.bitmap.on('mousedown', this.onMouseDown, this);
 
         //Ext.getCmp('drag_button').on('toggle',this.onModeToggle,this);
         //Ext.getCmp('select_button').on('toggle',this.onModeToggle,this);
@@ -97,7 +127,6 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         this.canvasWidth=this.getInnerWidth();
         this.canvasHeight=this.getInnerHeight();
         this.originalWidth=this.canvasWidth;
-
     },
 
 
@@ -115,16 +144,26 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
             success: function(response){
                 var doc = response.responseXML;
                 this.pageNo = Ext.DomQuery.selectNumber("pageNo", doc);
-                console.log(this.pageNo);
+
+                var p=Ext.DomQuery.select("page", doc);
+
+                this.pages=[];
+
+                for (var i=0;i<this.pageNo;i++){
+                    var width=Ext.DomQuery.selectNumber("width", p[i]);
+                    var height=Ext.DomQuery.selectNumber("width", p[i]);
+                    this.pages.push({width:width, height:height});
+                }
 
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Read info for PDF');
-                this.loadPage(1);
+                this.currentPage=1;
+                this.loadPage();
 
             },
             scope:this
-
         });
+
  
         //this.store.baseParams={viewer_id: this.id, file: this.file, limit:1, zoom:1.0};
 
@@ -135,26 +174,16 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
     },
 
-    loadPage: function(n){
+    loadPage: function(){
+        var scale=this.canvasWidth/this.pages[this.currentPage].width*this.currentZoom;
 
-        Ext.Ajax.request({
-            url: '/ajax/pdf/extpdf',
-            params: {
-                command: 'RENDER',
-                scale: this.currentZoom,
-                inFile: this.file,
-                outFile: "doc-"+this.id+"-"+this.currentZoom+".pdf"
-            },
-            success: function(response){
-                var doc = response.responseXML;
-                this.pageNo = Ext.DomQuery.selectValue("status", doc);
-                console.log(this.status);
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Read info for PDF');
-            },
-        });
- 
+        scale = Math.round(scale*Math.pow(10,2))/Math.pow(10,2);
+
+        var png="ajax/pdf/render/home/wash/PDFs/gesell06.pdf/"+this.currentPage+"/"+scale;
+        this.bitmap.set({src:png});
     },
+
+
 
     onModeToggle:function (button, pressed){
         

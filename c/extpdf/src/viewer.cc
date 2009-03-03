@@ -133,6 +133,13 @@ mxml_node_t* render(mxml_node_t *xml){
   //printf("Page rendered by poppler in %.4f seconds\n",g_timer_elapsed (timer, NULL));
   timer = g_timer_new ();
   
+  if (strcmp(out_file,"STDOUT")==0){
+    //cairo_surface_write_to_png(surface,stdout);
+    cairo_surface_write_to_png_stream (surface, write_png_stream,NULL);
+    
+    exit(0);
+  }
+
   cairo_surface_write_to_png(surface,out_file);
   cairo_destroy (cr);
 
@@ -266,4 +273,22 @@ mxml_node_t* text(mxml_node_t *xml){
 
   //return 1;
    
+}
+
+static cairo_status_t write_png_stream (void *in_closure, const unsigned char *data, unsigned int length){
+
+  unsigned int i;
+
+  //png_stream_to_byte_array_closure_t *closure =
+  //(png_stream_to_byte_array_closure_t *) in_closure;
+  //if ((closure->current_position + length) > (closure->end_of_array))
+  //return CAIRO_STATUS_WRITE_ERROR;
+  //memcpy (closure->current_position, data, length);
+  //closure->current_position += length;
+  
+  for (i=0;i<length;i++){
+    putc(data[i],stdout);
+  }
+  
+  return CAIRO_STATUS_SUCCESS;
 }
