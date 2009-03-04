@@ -11,7 +11,7 @@ AC_PROG_CXX
 AC_STDC_HEADERS
 AC_PROG_INSTALL
 
-PKG_CHECK_MODULES(DEPS, poppler-glib mxml)
+PKG_CHECK_MODULES(DEPS, poppler-glib poppler mxml)
 
 AC_ARG_WITH(podofo,
     [ --with-podofo=<path> prefix of podofo installation. e.g. /usr/local or /usr],

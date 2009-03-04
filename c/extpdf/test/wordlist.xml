@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<extpdf>
+  <command>WORDLIST</command>
+  <inFile>../test/test.pdf</inFile>
+  <page>1</page>
+</extpdf>

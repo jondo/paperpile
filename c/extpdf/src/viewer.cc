@@ -10,6 +10,24 @@
 #include "extpdf.h"
 #include "viewer.h"
 
+#include <goo/GooString.h>
+#include <goo/gmem.h>
+#include <GlobalParams.h>
+#include <Object.h>
+#include <Stream.h>
+#include <Array.h>
+#include <Dict.h>
+#include <XRef.h>
+#include <Catalog.h>
+#include <Page.h>
+#include <PDFDoc.h>
+#include <TextOutputDev.h>
+#include <CairoOutputDev.h>
+#include <CharTypes.h>
+#include <UnicodeMap.h>
+#include <Error.h>
+
+
 
 mxml_node_t* info(mxml_node_t *xml){
 
@@ -38,14 +56,6 @@ mxml_node_t* info(mxml_node_t *xml){
   if (document == NULL){
     fail("Could not open file");
   }
-
-  /*
-  page = poppler_document_get_page(document, pageNo);
-  if (page == NULL){
-    fail("Page not found");
-  }
-  poppler_page_get_size (page, &width, &height);
-  */
 
   xmlout = mxmlNewXML("1.0");
   output_tag = mxmlNewElement(xmlout, "output");
@@ -88,6 +98,17 @@ mxml_node_t* render(mxml_node_t *xml){
   float scale;
   double width, height;
   mxml_node_t *xmlout, *output_tag, *status_tag;
+
+  PDFDoc *newDoc;
+  Page *myPage;
+  GooString *filename_g;
+  GooString *password_g;
+  char *filename;
+  Gfx *gfx;
+  Catalog *catalog;
+  TextWordList *list;
+  TextWord *word;
+  CairoOutputDev* output_dev;
   
   node = mxmlFindElement(xml, xml, "inFile", NULL, NULL, MXML_DESCEND);
   in_file=node->child->value.opaque;
@@ -101,9 +122,7 @@ mxml_node_t* render(mxml_node_t *xml){
   //printf("Rendering page %i of %s at scale %f to %s\n",pageNo, in_file, scale, out_file); 
 
   uri=get_uri(in_file);
-  
   timer = g_timer_new ();
-  
   document = poppler_document_new_from_file (uri, NULL, &error);
   
   if (document == NULL){
@@ -152,6 +171,48 @@ mxml_node_t* render(mxml_node_t *xml){
   output_tag = mxmlNewElement(xmlout, "output");
   status_tag = mxmlNewElement(output_tag, "status");
   mxmlNewOpaque(status_tag, "OK");
+
+
+  if (!globalParams) {
+    globalParams = new GlobalParams();
+  }
+
+  filename_g = new GooString (in_file);
+  newDoc = new PDFDoc(filename_g, NULL, NULL);
+    
+  catalog = newDoc->getCatalog();
+  myPage = catalog->getPage (pageNo);
+
+  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width*scale, height*scale);
+  cr = cairo_create (surface);
+
+  if (scale != 1.0){
+    cairo_scale (cr, scale, scale);
+  }
+
+  output_dev = new CairoOutputDev ();
+  output_dev->startDoc(newDoc->getXRef ());
+  output_dev->setCairo (cr);
+  output_dev->setPrinting (0);
+
+  cairo_save (cr);
+
+  myPage->displaySlice(output_dev,
+                       72.0, 72.0, 0,
+                       gFalse, /* useMediaBox */
+                       gTrue, /* Crop */
+                       -1, -1,
+                       -1, -1,
+                       0,
+                       catalog,
+                       NULL, NULL,
+                       NULL, NULL);
+  cairo_restore (cr);
+
+  output_dev->setCairo (NULL);	
+
+  cairo_surface_write_to_png(surface,"tmp.png");
+  cairo_destroy (cr);
 
   return xmlout;
 
@@ -211,37 +272,79 @@ mxml_node_t* search(mxml_node_t *xml){
 }
 
 
-mxml_node_t* select(mxml_node_t *xml){
+mxml_node_t* wordList(mxml_node_t *xml){
   //int select(char* uri, int pageNo, float x1, float y1, float x2, float y2){  
 
   PopplerRectangle area;
   GError *error;
-  PopplerDocument *document;
-  PopplerPage *page;
-  GList *selection;
   int i;
-  char *uri;
+  char *in_file;
+  char string[1000];
+  char type[100];
   int pageNo;
-  float x1, y1, x2, y2;
+  double x1, y1, x2, y2;
+  mxml_node_t *node;
+  mxml_node_t *xmlout, *output_tag, *status_tag, *word_tag;
+  TextOutputDev *text_dev;
   
-  document = poppler_document_new_from_file (uri, NULL, &error);
-  page = poppler_document_get_page(document, pageNo);
+  PDFDoc *newDoc;
+  Page *myPage;
+  GooString *filename_g;
+  GooString *password_g;
+  char *filename;
+  Gfx *gfx;
+  Catalog *catalog;
+  TextWordList *list;
+  TextWord *word;
 
-  area.x1 = x1;
-  area.y1 = y1;
-  area.x2 = x2;
-  area.y2 = y2;
+  node = mxmlFindElement(xml, xml, "inFile", NULL, NULL, MXML_DESCEND);
+  in_file=node->child->value.opaque;
+  node = mxmlFindElement(xml, xml, "page", NULL, NULL, MXML_DESCEND);
+  pageNo=atoi(node->child->value.opaque);
 
-  //text = poppler_page_get_text (page, POPPLER_SELECTION_LINE, &area);
-
-  selection=poppler_page_get_selection_region (page, 1.0, POPPLER_SELECTION_WORD, &area);
-
-  for (i=0; i< g_list_length( selection );i++){
-    PopplerRectangle *rectangle = (PopplerRectangle *)g_list_nth( selection, i)->data; 
-    printf("%i %.2f %.2f %.2f %.2f\n", pageNo, rectangle->x1, rectangle->y1, rectangle->x2, rectangle->y2);
-    
+  if (!globalParams) {
+    globalParams = new GlobalParams();
   }
-  //return 1;
+
+  filename_g = new GooString (in_file);
+  newDoc = new PDFDoc(filename_g, NULL, NULL);
+
+  catalog = newDoc->getCatalog();
+  myPage = catalog->getPage (pageNo);
+
+  /* code to get text_dev similar to poppler-page.cc */
+  text_dev=new TextOutputDev(NULL, gTrue,gFalse,gFalse);
+
+  if (text_dev->isOk()) {
+    gfx=myPage->createGfx(text_dev,
+                          72.0, 72.0, 0,
+                          gFalse,
+                          gTrue,
+                          -1, -1, -1, -1,
+                          gFalse,
+                          newDoc->getCatalog (),
+                          NULL, NULL, NULL, NULL);
+    myPage->display(gfx);
+    text_dev->endPage();
+  }
+
+  list=text_dev->makeWordList();
+
+  xmlout = mxmlNewXML("1.0");
+  output_tag = mxmlNewElement(xmlout, "output");
+  status_tag = mxmlNewElement(output_tag, "status");
+  mxmlNewOpaque(status_tag, "OK");
+
+  for (i=0; i<list->getLength();i++){
+    word=list->get(i);
+    word->getBBox(&x1,&y1,&x2,&y2);
+    word_tag = mxmlNewElement(output_tag, "word");
+    mxmlElementSetAttr(word_tag, "text", word->getText()->getCString());
+    sprintf(string, "%.2f,%.2f,%.2f,%.2f\n", x1,y1,x2,y2);
+    mxmlNewOpaque(word_tag, string);
+  }
+
+  return xmlout;
 }
 
 

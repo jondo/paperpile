@@ -49,9 +49,10 @@ int main (int argc, char *argv[]){
 
   sprintf(command,"%s",node->child->value.opaque);
 
-  if (strcmp(command,"INFO")==0)  xmlout=info(xml);
+  if (strcmp(command,  "INFO")==0)  xmlout=info(xml);
   if (strcmp(command,"RENDER")==0)  xmlout=render(xml);
   if (strcmp(command,"SEARCH")==0)  xmlout=search(xml);
+  if (strcmp(command,"WORDLIST")==0)  xmlout=wordList(xml);
   
   
   mxmlSaveFile (xmlout,stdout,_white_space_cb);
