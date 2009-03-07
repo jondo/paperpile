@@ -432,8 +432,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
         for (var i=0; i< this.selection.length;i++){
             this.selection[i].remove();
         }
-        
-        this.selection[i]=[];
+        this.selection=[];
     },
 
     onModeToggle:function (button, pressed){
