@@ -53,11 +53,6 @@ sub extpdf : Local {
 
   my $bin = $c->path_to('bin/linux64/extpdf');
 
-  if ( $c->request->params->{outFile} ) {
-    my $new = $c->path_to( 'root/TMP', $c->request->params->{outFile} );
-    $c->request->params->{outFile} = $new;
-  }
-
   my $xml = XMLout( $c->request->params, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
 
   my ( $fh, $filename ) = File::Temp::tempfile();

@@ -86,28 +86,20 @@ mxml_node_t* info(mxml_node_t *xml){
 
 mxml_node_t* render(mxml_node_t *xml){
 
-  PopplerDocument *document;
-  PopplerPage *page;
-  GError *error;
-  GTimer *timer;
   cairo_surface_t *surface;
   cairo_t *cr;
-  mxml_node_t *node;
-  char *in_file, *out_file, *uri;
+  char *in_file, *out_file;
   int pageNo;
   float scale;
   double width, height;
-  mxml_node_t *xmlout, *output_tag, *status_tag;
+  mxml_node_t *node, *xmlout, *output_tag, *status_tag;
 
-  PDFDoc *newDoc;
-  Page *myPage;
+  PDFDoc *doc;
+  Page *page;
   GooString *filename_g;
-  GooString *password_g;
   char *filename;
   Gfx *gfx;
   Catalog *catalog;
-  TextWordList *list;
-  TextWord *word;
   CairoOutputDev* output_dev;
   
   node = mxmlFindElement(xml, xml, "inFile", NULL, NULL, MXML_DESCEND);
@@ -119,69 +111,18 @@ mxml_node_t* render(mxml_node_t *xml){
   node = mxmlFindElement(xml, xml, "scale", NULL, NULL, MXML_DESCEND);
   scale=atof(node->child->value.opaque);
 
-  //printf("Rendering page %i of %s at scale %f to %s\n",pageNo, in_file, scale, out_file); 
-
-  uri=get_uri(in_file);
-  timer = g_timer_new ();
-  document = poppler_document_new_from_file (uri, NULL, &error);
-  
-  if (document == NULL){
-    fail("Could not open file");
-  }
-
-  //printf("Page loaded in %.4f seconds\n",g_timer_elapsed (timer, NULL)); 
-  timer = g_timer_new ();
-
-
-  page = poppler_document_get_page(document, pageNo);
-  if (page == NULL){
-    fail("Page not found");
-  }
-
-  poppler_page_get_size (page, &width, &height);
-
-  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width*scale, height*scale);
-  cr = cairo_create (surface);
-
-  if (scale != 1.0){
-    cairo_scale (cr, scale, scale);
-  }
-
-  poppler_page_render(page,cr);     
-
-  //printf("Page rendered by poppler in %.4f seconds\n",g_timer_elapsed (timer, NULL));
-  timer = g_timer_new ();
-  
-  if (strcmp(out_file,"STDOUT")==0){
-    //cairo_surface_write_to_png(surface,stdout);
-    cairo_surface_write_to_png_stream (surface, write_png_stream,NULL);
-    
-    exit(0);
-  }
-
-  cairo_surface_write_to_png(surface,out_file);
-  cairo_destroy (cr);
-
-  //printf("Page written to png by cairo in %.4f seconds\n",g_timer_elapsed (timer, NULL));
-
-  g_object_unref (G_OBJECT (page));
-  g_object_unref (G_OBJECT (document));
-
-  xmlout = mxmlNewXML("1.0");
-  output_tag = mxmlNewElement(xmlout, "output");
-  status_tag = mxmlNewElement(output_tag, "status");
-  mxmlNewOpaque(status_tag, "OK");
-
-
   if (!globalParams) {
     globalParams = new GlobalParams();
   }
 
   filename_g = new GooString (in_file);
-  newDoc = new PDFDoc(filename_g, NULL, NULL);
+  doc = new PDFDoc(filename_g, NULL, NULL);
     
-  catalog = newDoc->getCatalog();
-  myPage = catalog->getPage (pageNo);
+  catalog = doc->getCatalog();
+  page = catalog->getPage (pageNo+1);
+
+  width=page->getCropWidth();
+  height=page->getCropHeight();
 
   surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width*scale, height*scale);
   cr = cairo_create (surface);
@@ -191,35 +132,36 @@ mxml_node_t* render(mxml_node_t *xml){
   }
 
   output_dev = new CairoOutputDev ();
-  output_dev->startDoc(newDoc->getXRef ());
+  output_dev->startDoc(doc->getXRef ());
   output_dev->setCairo (cr);
   output_dev->setPrinting (0);
 
   cairo_save (cr);
 
-  myPage->displaySlice(output_dev,
-                       72.0, 72.0, 0,
-                       gFalse, /* useMediaBox */
-                       gTrue, /* Crop */
-                       -1, -1,
-                       -1, -1,
-                       0,
-                       catalog,
-                       NULL, NULL,
-                       NULL, NULL);
+  page->displaySlice(output_dev, 72.0, 72.0, 0, gFalse, gTrue, -1, -1, -1, -1,
+                       0,  catalog, NULL, NULL, NULL, NULL);
   cairo_restore (cr);
 
   output_dev->setCairo (NULL);	
 
-  cairo_surface_write_to_png(surface,"tmp.png");
+  if (strcmp(out_file,"STDOUT")==0){
+    cairo_surface_write_to_png_stream (surface, write_png_stream,NULL);
+    exit(0);
+  }
+  
+  cairo_surface_write_to_png(surface,out_file);
   cairo_destroy (cr);
+
+  xmlout = mxmlNewXML("1.0");
+  output_tag = mxmlNewElement(xmlout, "output");
+  status_tag = mxmlNewElement(output_tag, "status");
+  mxmlNewOpaque(status_tag, "OK");
 
   return xmlout;
 
 }
 
 mxml_node_t* search(mxml_node_t *xml){
-  //int search(char* uri, char* term){
   
   GList *list, *l;
   GError *error;
@@ -273,9 +215,7 @@ mxml_node_t* search(mxml_node_t *xml){
 
 
 mxml_node_t* wordList(mxml_node_t *xml){
-  //int select(char* uri, int pageNo, float x1, float y1, float x2, float y2){  
 
-  PopplerRectangle area;
   GError *error;
   int i;
   char *in_file;
@@ -283,15 +223,12 @@ mxml_node_t* wordList(mxml_node_t *xml){
   char type[100];
   int pageNo;
   double x1, y1, x2, y2;
-  mxml_node_t *node;
-  mxml_node_t *xmlout, *output_tag, *status_tag, *word_tag;
+  mxml_node_t *node, *xmlout, *output_tag, *status_tag, *word_tag;
   TextOutputDev *text_dev;
   
-  PDFDoc *newDoc;
-  Page *myPage;
+  PDFDoc *doc;
+  Page *page;
   GooString *filename_g;
-  GooString *password_g;
-  char *filename;
   Gfx *gfx;
   Catalog *catalog;
   TextWordList *list;
@@ -307,24 +244,24 @@ mxml_node_t* wordList(mxml_node_t *xml){
   }
 
   filename_g = new GooString (in_file);
-  newDoc = new PDFDoc(filename_g, NULL, NULL);
+  doc = new PDFDoc(filename_g, NULL, NULL);
 
-  catalog = newDoc->getCatalog();
-  myPage = catalog->getPage (pageNo);
+  catalog = doc->getCatalog();
+  page = catalog->getPage (pageNo+1);
 
   /* code to get text_dev similar to poppler-page.cc */
-  text_dev=new TextOutputDev(NULL, gTrue,gFalse,gFalse);
+  text_dev=new TextOutputDev(NULL, gFalse,gFalse,gFalse);
 
   if (text_dev->isOk()) {
-    gfx=myPage->createGfx(text_dev,
+    gfx=page->createGfx(text_dev,
                           72.0, 72.0, 0,
                           gFalse,
                           gTrue,
                           -1, -1, -1, -1,
                           gFalse,
-                          newDoc->getCatalog (),
+                          doc->getCatalog (),
                           NULL, NULL, NULL, NULL);
-    myPage->display(gfx);
+    page->display(gfx);
     text_dev->endPage();
   }
 
@@ -340,7 +277,7 @@ mxml_node_t* wordList(mxml_node_t *xml){
     word->getBBox(&x1,&y1,&x2,&y2);
     word_tag = mxmlNewElement(output_tag, "word");
     mxmlElementSetAttr(word_tag, "text", word->getText()->getCString());
-    sprintf(string, "%.2f,%.2f,%.2f,%.2f\n", x1,y1,x2,y2);
+    sprintf(string, "%.2f,%.2f,%.2f,%.2f", x1,y1,x2,y2);
     mxmlNewOpaque(word_tag, string);
   }
 
@@ -382,13 +319,6 @@ static cairo_status_t write_png_stream (void *in_closure, const unsigned char *d
 
   unsigned int i;
 
-  //png_stream_to_byte_array_closure_t *closure =
-  //(png_stream_to_byte_array_closure_t *) in_closure;
-  //if ((closure->current_position + length) > (closure->end_of_array))
-  //return CAIRO_STATUS_WRITE_ERROR;
-  //memcpy (closure->current_position, data, length);
-  //closure->current_position += length;
-  
   for (i=0;i<length;i++){
     putc(data[i],stdout);
   }

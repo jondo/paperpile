@@ -45,7 +45,6 @@
 .pp-summary-form {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     width: 22%;
-    align:left;
     float:left;
     padding: 5px 0px 0px 0px;
 }
@@ -200,10 +199,24 @@
     background-color:#CAD8F3;
 }
 
-.pp-pdf-document {
+.pp-pdf-bitmap {
     border-color:black;
-    border-width: 2px
+    border-width: 2px;
 }
+
+.pp-pdf-container {
+    border-color:black;
+    border: 2px;
+    border-style: solid;
+}
+
+.pp-pdf-selector {
+    background-color:#6495ED;
+    border-width: 2px;
+    position: absolute;
+    opacity:0.3;
+}
+
 
 
 
