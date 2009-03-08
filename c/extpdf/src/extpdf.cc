@@ -49,10 +49,12 @@ int main (int argc, char *argv[]){
 
   sprintf(command,"%s",node->child->value.opaque);
 
-  if (strcmp(command,  "INFO")==0)  xmlout=info(xml);
+  if (strcmp(command,"INFO")==0)  xmlout=info(xml);
   if (strcmp(command,"RENDER")==0)  xmlout=render(xml);
   if (strcmp(command,"SEARCH")==0)  xmlout=search(xml);
   if (strcmp(command,"WORDLIST")==0)  xmlout=wordList(xml);
+  if (strcmp(command,"ADD_ANNOTATION")==0)  xmlout=add_annotation(xml);
+  if (strcmp(command,"GET_ANNOTATIONS")==0)  xmlout=get_annotations(xml);
   
   
   mxmlSaveFile (xmlout,stdout,_white_space_cb);
@@ -132,6 +134,38 @@ const char * _white_space_cb(mxml_node_t *node, int where){
   }
   return (NULL);
 }
+
+
+char* xmlGet(mxml_node_t* xml, const char* field){
+
+  mxml_node_t* node;
+  node = mxmlFindElement(xml, xml, field, NULL, NULL, MXML_DESCEND);
+  return node->child->value.opaque;
+}
+
+void xmlSetString(mxml_node_t* xml, const char* field, const char* string){
+  mxml_node_t* node;
+  node = mxmlNewElement(xml, field);
+  mxmlNewOpaque(node, string);
+}
+
+void xmlSetInt(mxml_node_t* xml, const char* field, int number){
+  mxml_node_t* node;
+  char string[1000];
+  sprintf(string, "%i", number);
+  node = mxmlNewElement(xml, field);
+  mxmlNewOpaque(node, string);
+}
+
+void xmlSetFloat(mxml_node_t* xml, const char* field, float number){
+  mxml_node_t* node;
+  char string[1000];
+  sprintf(string, "%.2f", number);
+  node = mxmlNewElement(xml, field);
+  mxmlNewOpaque(node, string);
+}
+
+
 
 
 

@@ -12,103 +12,171 @@
 
 using namespace PoDoFo;
 
-mxml_node_t* add_sticky(mxml_node_t *xml){
+mxml_node_t* get_annotations(mxml_node_t *xml){
 
-  char* file;
-  int pageNo;
-  float left, bottom, width, height;
-  char* text;
+  int i,j, type;
+  mxml_node_t *xmlout, *output_tag, *status_tag, 
+    *some_tag, *page_tag, *ann_tag, *rect_tag;
+  char* string;
+  PdfPage* page;
+  PdfRect rect;
+  PdfAnnotation* annotation;
 
-  printf("Reading file: %s\n", file );
-  printf("pageNo: %i; (%f,%f,%f,%f), %s\n", pageNo, left, bottom, width, height, text );
-  
-  PoDoFo::PdfMemDocument document( file );
+  PdfMemDocument document( xmlGet(xml,"inFile") );
 
-  PdfPage* page = document.GetPage( pageNo );
-  
-  //PdfAnnotation* sticky = page->CreateAnnotation( ePdfAnnotation_Text, PdfRect( left, bottom, width, height ) );
+  xmlout = mxmlNewXML("1.0");
+  output_tag = mxmlNewElement(xmlout, "output");
+  status_tag = mxmlNewElement(output_tag, "status");
+  mxmlNewOpaque(status_tag, "OK");
 
-  PdfAnnotation* sticky = page->CreateAnnotation( ePdfAnnotation_Text, PdfRect( left, bottom, width, height ) );
+  for (i=0;i < document.GetPageCount(); i++){
+    page = document.GetPage( i );
+    printf("Page: %i\n",i);
+    page_tag = mxmlNewElement(output_tag, "page");
 
-  //sticky->SetColor( 0, 0, 1, 0 );
-  sticky->SetTitle( PdfString("Sticky note:") );
-  sticky->SetContents( PdfString(text) );
-  sticky->SetOpen(1);
+    for (j=0;j<page->GetNumAnnots();j++){
+      annotation=page->GetAnnotation(j);
+      type=annotation->GetType();
+      
+      // Currently only two types are supported
+      if (type == ePdfAnnotation_Text || type == ePdfAnnotation_Highlight){
 
-  document.Write( "out.pdf" );
-  
-  //return 1;
+        if (type == ePdfAnnotation_Text){
+          ann_tag = mxmlNewElement(page_tag, "annotation");
+
+          xmlSetString(ann_tag,"type","STICKY");
+          xmlSetString(ann_tag,"title",annotation->GetTitle().GetString());
+          xmlSetString(ann_tag,"text",annotation->GetContents().GetString());
+
+          rect_tag = mxmlNewElement(ann_tag, "rect");
+          rect=annotation->GetRect();
+          
+          xmlSetFloat(rect_tag,"x1",rect.GetLeft());
+          xmlSetFloat(rect_tag,"y1",rect.GetBottom()-rect.GetHeight());
+          xmlSetFloat(rect_tag,"x2",rect.GetLeft()+rect.GetWidth());
+          xmlSetFloat(rect_tag,"y2",rect.GetBottom());
+
+        }
+
+        if (type == ePdfAnnotation_Highlight){
+            
+           
+        }
+
+        printf("Type: %i\n",type);
+          
+      }
+    }
+  }
+ 
+  return xmlout;
 }
 
-mxml_node_t* add_highlight(mxml_node_t *xml){
 
-//int add_highlight(char* file, int pageNo, float x1, float y1, float x2, float y2){  
 
-  PopplerRectangle area;
-  GError *error;
-  PopplerDocument *pdocument;
-  PopplerPage *ppage;
-  GList *selection;
-  int i;
-  gchar *uri;
-  PopplerRectangle bbox;
-  char* file;
-  int pageNo;
+
+mxml_node_t* add_annotation(mxml_node_t *xml){
+
+  int i, pageNo;
   float x1, y1, x2, y2;
+  float bbox_x1,bbox_y1,bbox_x2,bbox_y2;
+  char *type, *text, *title;
+  char *in_file, *out_file;
+  mxml_node_t *node, *xmlout, *output_tag, *status_tag;
+  float color_r, color_g, color_b;
 
-  PdfMemDocument document( file );
+  PdfArray quadPoints;
+
+  bbox_x1=bbox_y1=999999.9;
+  bbox_x2=bbox_y2=-1.0;
+
+  in_file=xmlGet(xml,"inFile");
+  out_file=xmlGet(xml,"outFile");
+  pageNo=atoi(xmlGet(xml,"page"));
+  type=xmlGet(xml,"type");
+
+  node = mxmlFindElement(xml, xml, "color", NULL, NULL,MXML_DESCEND);
+  color_r=atof(xmlGet(xml,"red"));
+  color_g=atof(xmlGet(xml,"green"));
+  color_b=atof(xmlGet(xml,"blue"));
+
+  PdfMemDocument document( in_file );
   PdfPage* page = document.GetPage( pageNo );
+  PdfAnnotation* annotation;
 
-
-  uri = g_filename_to_uri (file, NULL, &error);
-
-  if (error) {
-    fail(error->message);
-  }
-
-  pdocument = poppler_document_new_from_file (uri, NULL, &error);
-  ppage = poppler_document_get_page(pdocument, pageNo);
-
-  area.x1 = x1;
-  area.y1 = y1;
-  area.x2 = x2;
-  area.y2 = y2;
-
-  selection=poppler_page_get_selection_region (ppage, 1.0, POPPLER_SELECTION_WORD, &area);
-
-
-  /* Find bounding box */
-  bbox.x1=bbox.y1=-1;
-  bbox.x2=bbox.y2=999999.9;
-
-  for (i=0; i< g_list_length( selection );i++){
-    PopplerRectangle *rect = (PopplerRectangle *)g_list_nth( selection, i)->data; 
-    if (rect->x1<bbox.x1) bbox.x1=rect->x1;
-    if (rect->x2<bbox.x1) bbox.x1=rect->x2;
-    if (rect->y1<bbox.y1) bbox.y1=rect->y1;
-    if (rect->y2<bbox.y1) bbox.y1=rect->y2;
+  if (strcmp(type, "STICKY")==0){
+    title=xmlGet(xml,"title");
+    text=xmlGet(xml,"text");
+    node = mxmlFindElement(xml, xml, "rect", NULL, NULL,MXML_DESCEND);
+    x1=atof(xmlGet(node,"x1"));
+    y1=atof(xmlGet(node,"y1"));
+    x2=atof(xmlGet(node,"x2"));
+    y2=atof(xmlGet(node,"y2"));
     
-    if (rect->x1>bbox.x2) bbox.x2=rect->x1;
-    if (rect->x2>bbox.x2) bbox.x2=rect->x2;
-    if (rect->y1>bbox.y2) bbox.y1=rect->y2;
-    if (rect->y2>bbox.y2) bbox.y2=rect->y2;
+    annotation = page->CreateAnnotation( ePdfAnnotation_Text, PdfRect( x1, y2, x2-x2, y2-y1 ) );
+    annotation->SetTitle( PdfString(title) );
+    annotation->SetContents( PdfString(text) );
+    annotation->SetColor( color_r,color_g,color_b);
     
+    document.Write( "out.pdf" );
   }
 
-  printf("%.2f %.2f %.2f %.2f\n", bbox.x1, bbox.y1, bbox.x2, bbox.y2);
+  if (strcmp(type, "HIGHLIGHT")==0){
+    for (node = mxmlFindElement(xml, xml, "rect", NULL, NULL,MXML_DESCEND);
+         node != NULL;
+         node = mxmlFindElement(node, xml, "rect", NULL, NULL, MXML_DESCEND)){
 
-  for (i=0; i< g_list_length( selection );i++){
-    PopplerRectangle *rectangle = (PopplerRectangle *)g_list_nth( selection, i)->data; 
-    printf("%i %.2f %.2f %.2f %.2f\n", pageNo, rectangle->x1, rectangle->y1, rectangle->x2, rectangle->y2);
+      x1=atof(xmlGet(node,"x1"));
+      y1=atof(xmlGet(node,"y1"));
+      x2=atof(xmlGet(node,"x2"));
+      y2=atof(xmlGet(node,"y2"));
+      
+      /* Adobe Acrobat implementation and PDF specification (v. 1.7. p
+         404 fig 64) are inconsitent. We use the ordering that is
+         rendered correctly in Acrobat */
+
+      // BL
+      quadPoints.push_back( PdfVariant( x1 ));
+      quadPoints.push_back( PdfVariant( y2 ));
+      
+      // BR
+      quadPoints.push_back( PdfVariant( x2 ));
+      quadPoints.push_back( PdfVariant( y2 ));
+      
+      // TL
+      quadPoints.push_back( PdfVariant( x1 ));
+      quadPoints.push_back( PdfVariant( y1 ));
+      
+      // TR
+      quadPoints.push_back( PdfVariant( x2 ));
+      quadPoints.push_back( PdfVariant( y1 ));
+      
+      
+      if (x1<bbox_x1) bbox_x1=x1;
+      if (x2<bbox_x1) bbox_x1=x2;
+      if (y1<bbox_y1) bbox_y1=y1;
+      if (y2<bbox_y1) bbox_y1=y2;
+      
+      if (x1>bbox_x2) bbox_x2=x1;
+      if (x2>bbox_x2) bbox_x2=x2;
+      if (y1>bbox_y2) bbox_y2=y1;
+      if (y2>bbox_y2) bbox_y2=y2;
+      
+    }
+
+    PdfRect bbox(bbox_x1,bbox_y2,bbox_x2-bbox_x1,bbox_y2-bbox_y1);
+
+    PdfAnnotation* highlight = page->CreateAnnotation( ePdfAnnotation_Highlight, bbox ) ;
+    highlight->SetQuadPoints( quadPoints );
+    highlight->SetColor( 0, 0, 1, 0 );
+    document.Write( "out.pdf" );
+
   }
 
-  // PdfAnnotation* sticky = page->CreateAnnotation( ePdfAnnotation_Text, PdfRect( left, bottom, width, height ) );
-  // //sticky->SetColor( 0, 0, 1, 0 );
-  // sticky->SetTitle( PdfString("Sticky note:") );
-  // sticky->SetContents( PdfString(text) );
-  // sticky->SetOpen(1);
-  //document.Write( "out.pdf" );
-  
-  //return 1;
+  xmlout = mxmlNewXML("1.0");
+  output_tag = mxmlNewElement(xmlout, "output");
+  status_tag = mxmlNewElement(output_tag, "status");
+  mxmlNewOpaque(status_tag, "OK");
+
 }
 

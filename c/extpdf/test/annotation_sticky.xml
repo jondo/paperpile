@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<extpdf>
+  <command>ADD_ANNOTATION</command>
+  <page>1</page>
+  <inFile>../test/test.pdf</inFile>
+  <outFile>./out.pdf</outFile>
+
+  <color type="rgb">
+    <red>1.0</red>
+    <green>1.0</green>
+    <blue>0.0</blue>
+  </color>
+
+  <type>STICKY</type>
+  
+  <title>Paperpile Note</title>
+  <text>This is my sticky</text>
+
+  <rect>
+    <x1>100</x1>
+    <y1>100</y1>
+    <x2>400</x2>
+    <y2>120</y2>
+  </rect>
+
+  
+</extpdf>

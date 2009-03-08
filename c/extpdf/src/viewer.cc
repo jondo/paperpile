@@ -27,50 +27,38 @@
 #include <UnicodeMap.h>
 #include <Error.h>
 
-
-
 mxml_node_t* info(mxml_node_t *xml){
 
-  PopplerDocument *document;
-  PopplerPage *page;
-  GError *error;
-  GTimer *timer;
-  cairo_surface_t *surface;
-  cairo_t *cr;
-  mxml_node_t *node;
-  char *in_file, *out_file, *uri;
+  char *in_file, *out_file;
   int pageNo;
-  float scale;
   double width, height;
   char string[1000];
   int i;
-  mxml_node_t *xmlout, *output_tag, *status_tag, *page_tag, *some_tag;
-  
-  node = mxmlFindElement(xml, xml, "inFile", NULL, NULL, MXML_DESCEND);
-  in_file=node->child->value.opaque;
+  mxml_node_t *node, *xmlout, *output_tag, *status_tag, *page_tag, *some_tag;
+  PDFDoc *doc;
+  Page *page;
+  GooString *filename_g;
+  Catalog *catalog;
 
-  uri=get_uri(in_file);
-  
-  document = poppler_document_new_from_file (uri, NULL, &error);
-  
-  if (document == NULL){
-    fail("Could not open file");
-  }
+  filename_g = new GooString (xmlGet(xml,"inFile"));
+  doc = new PDFDoc(filename_g, NULL, NULL);
+    
+  catalog = doc->getCatalog();
 
   xmlout = mxmlNewXML("1.0");
   output_tag = mxmlNewElement(xmlout, "output");
   status_tag = mxmlNewElement(output_tag, "status");
   mxmlNewOpaque(status_tag, "OK");
   some_tag = mxmlNewElement(output_tag, "pageNo");
-  sprintf(string,"%i", poppler_document_get_n_pages(document));
+  sprintf(string,"%i", doc->getNumPages());
   mxmlNewOpaque(some_tag,string );
   
-  for (i=0;i<poppler_document_get_n_pages(document);i++){
-    page = poppler_document_get_page(document, i);
-    if (page == NULL){
-      fail("Failed to read page.");
-    }
-    poppler_page_get_size (page, &width, &height);
+  for (i=0;i<doc->getNumPages();i++){
+
+    page = catalog->getPage (i+1);
+    width=page->getCropWidth();
+    height=page->getCropHeight();
+
     page_tag = mxmlNewElement(output_tag, "page");
     some_tag = mxmlNewElement(page_tag, "width");
     sprintf(string,"%.2f", width);
@@ -101,7 +89,8 @@ mxml_node_t* render(mxml_node_t *xml){
   Gfx *gfx;
   Catalog *catalog;
   CairoOutputDev* output_dev;
-  
+
+    
   node = mxmlFindElement(xml, xml, "inFile", NULL, NULL, MXML_DESCEND);
   in_file=node->child->value.opaque;
   node = mxmlFindElement(xml, xml, "outFile", NULL, NULL, MXML_DESCEND);
