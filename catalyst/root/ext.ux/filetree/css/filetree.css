@@ -103,7 +103,7 @@ margin: 10px 0 10px 0;
 	height:16px;
 	vertical-align:-3px;
 	margin-right:4px;
-	background-image:url(../ext/resources/images/default/tree/leaf.gif);
+	background-image:url(/ext/resources/images/default/tree/leaf.gif);
 	float:left;
 }
 .ux-up-item-selected {
@@ -130,7 +130,7 @@ margin: 10px 0 10px 0;
 	background-image:url(../img/silk/icons/page_white_get.png);
 }
 .ux-up-icon-uploading {
-	background-image:url(../ext/resources/images/default/grid/wait.gif);
+	background-image:url(/ext/resources/images/default/grid/wait.gif);
 }
 .ux-up-icon-done {
 	background-image:url(../img/silk/icons/accept.png);
@@ -150,7 +150,7 @@ margin: 10px 0 10px 0;
 	cursor:default ! important;
 }
 .folder {
-	background-image:url(../ext/resources/images/default/tree/folder.gif) ! important;
+	background-image:url(/ext/resources/images/default/tree/folder.gif) ! important;
 /*	background-repeat:no-repeat; */
 }
 /* eof */
