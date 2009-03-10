@@ -13,7 +13,6 @@ PaperPile.Settings = Ext.extend(Ext.Window, {
             items: [form],
 		});
 		PaperPile.Settings.superclass.initComponent.call(this);
-
         
     },
 

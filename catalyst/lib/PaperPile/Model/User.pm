@@ -82,6 +82,16 @@ sub get_setting {
 
 }
 
+sub set_setting {
+
+  ( my $self, my $key, my $value ) = @_;
+  $value = $self->dbh->quote($value);
+  $key = $self->dbh->quote($key);
+  $self->dbh->do("UPDATE Settings SET value=$value WHERE key=$key ");
+
+  return $value;
+}
+
 
 sub settings {
 

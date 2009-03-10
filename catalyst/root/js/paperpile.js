@@ -1,12 +1,12 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('PaperPile');
 
-
-PaperPile.Main = Ext.extend(Ext.Viewport, {
+PaperPile.Viewport = Ext.extend(Ext.Viewport, {
 
     canvasWidth:null,
     canvasHeight:null,
     id:'MAIN',
+    globalSettings:null,
     initComponent: function() {
         Ext.apply(this, 
                   {layout: 'border',
@@ -105,7 +105,7 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
                                          }
                                         ]}]})]});
         
-        PaperPile.Main.superclass.initComponent.call(this);
+        PaperPile.Viewport.superclass.initComponent.call(this);
 
         this.results_tabs=Ext.getCmp('results_tabs');
         this.data_tabs=Ext.getCmp('data_tabs');
@@ -123,25 +123,26 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
             }
         ); 
 
-        this.settingsStore=new Ext.data.Store(
-            { proxy: new Ext.data.HttpProxy({
-                url: '/ajax/misc/get_settings', 
-                method: 'GET'
-            }),
-              storeId: 'settings_store',
-              baseParams:{},
-              reader: new Ext.data.JsonReader(),
-              pruneModifiedRecords:true,
-            }
-        ); 
-
+        
         this.tagStore.reload();
-        this.settingsStore.reload();
-
+        
         this.on('afterlayout',this.onAfterLayout,this);
-
                  
 	  },
+
+    loadSettings: function(){
+
+        Ext.Ajax.request({
+            url: '/ajax/misc/get_settings',
+            success: function(response){
+                var json = Ext.util.JSON.decode(response.responseText);
+                this.globalSettings=json.data;
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Loaded settings.');
+            },
+            scope:this,
+        });
+    },
 
 	onRowSelect: function(sm, rowIdx, r) {
 
@@ -151,7 +152,6 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
         Ext.getCmp('pubsummary').updateDetail(r.data);
         Ext.getCmp('pdf_manager').updateDetail(r.data);
         Ext.getCmp('pubnotes').updateDetail(r.data);        
-
 
     },
 
@@ -221,12 +221,10 @@ PaperPile.Main = Ext.extend(Ext.Viewport, {
     settings:function(){
         var win=new PaperPile.Settings();
         win.show();
-
     }
 }
 
 );
-
 
 Ext.onReady(function() {
     PaperPile.initMask = new Ext.LoadMask(Ext.getBody(), {msg:"Starting Paperpile Pre 1"});
@@ -242,13 +240,24 @@ Ext.onReady(function() {
 PaperPile.app=function(){
 
     Ext.QuickTips.init();
-    main=new PaperPile.Main;
+    main=new PaperPile.Viewport;
+
+    // Global alias for main application class
+    PaperPile.Main=main; 
+
+    // Note: this is asynchronous, so might not be available
+    // immediately (integrate this better in startup to make sure it
+    // is loaded when needed)
+    main.loadSettings();
+    
     main.results_tabs.remove('welcome');
     main.results_tabs.newDBtab({closable:false});
     var tree=Ext.getCmp('treepanel');
     tree.expandAll();
     main.show();
     PaperPile.initMask.hide();
+
+    /*
 
     var treepanel = new Ext.ux.FileTreePanel({
 		 height:400
@@ -271,7 +280,8 @@ PaperPile.app=function(){
         items: [treepanel],
 	});
 
-    win.show();
+   win.show();
+ */
 
 
     //Ext.StoreMgr.lookup('tag_store').each(function(rec){console.log(rec)});

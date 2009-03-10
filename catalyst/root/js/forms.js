@@ -29,21 +29,44 @@ PaperPile.Forms.Settings = Ext.extend(PaperPile.Forms, {
                   xtype:"textfield"
                 }
             ],
-            buttons: [{text:'Save'},
-                      {text:'Cancel'},
+            buttons: [{ text:'Save',
+                        handler: function(){
+                            this.getForm().submit({
+                                url:'/ajax/forms/settings',
+                                params: {action:'SUBMIT'},
+                                success: function(){
+                                    Ext.getCmp('statusbar').clearStatus();
+                                    Ext.getCmp('statusbar').setText('Saved settings.');
+                                    this.findParentByType(PaperPile.Settings).close();
+                                },
+                                scope:this,
+                                failure: function(){
+                                    alert('nope')
+                                },
+                            })
+                        },
+                        scope: this
+                      },
+                      {text:'Cancel',
+                       handler: function(){
+                           this.findParentByType(PaperPile.Settings).close();
+                       },
+                       scope:this
+                      },
                      ]
         });
 		
         PaperPile.Forms.Settings.superclass.initComponent.call(this);
-
+        
         this.load({
             url:'/ajax/forms/settings',
-            success: function(){alert('yes')},
+            params: {action:'LOAD'},
+            success: function(){
+                console.log(PaperPile.Main.globalSettings);
+            },
             failure: function(){alert('nope')},
         });
-
       
     }
-
 });
         

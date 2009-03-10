@@ -11,7 +11,6 @@ use File::Path;
 use File::Copy;
 use 5.010;
 
-
 sub reset_db : Local {
 
   my ( $self, $c ) = @_;
@@ -65,15 +64,15 @@ sub get_settings : Local {
 
   my $tags=$c->model('User')->get_tags;
 
-  my %settings=(key1=>'data1',key2=>'data2');
+  my $user_settings=$c->model('User')->settings;
+  my $app_settings=$c->model('App')->settings;
 
-  my %metaData = (
-   root          => 'data',
-   fields        => [keys %settings]
-  );
+  my @list1=%$user_settings;
+  my @list2=%$app_settings;
 
-  $c->stash->{data}          = [{%settings}];
-  $c->stash->{metaData}      = {%metaData};
+  my %merged=(@list1,@list2);
+
+  $c->stash->{data}  = {%merged};
 
   $c->forward('PaperPile::View::JSON');
 
