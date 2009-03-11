@@ -5,111 +5,56 @@ PaperPile.Viewport = Ext.extend(Ext.Viewport, {
 
     canvasWidth:null,
     canvasHeight:null,
-    id:'MAIN',
     globalSettings:null,
+    id:'MAIN',
+
     initComponent: function() {
         Ext.apply(this, 
                   {layout: 'border',
                    renderTo: Ext.getBody(),
-                   items: [ 
-                       new Ext.Panel({
-                           region: 'center',
-                           layout: 'border',
-                       
-                       items: [ {itemId:'navigation',
-                                 region:'west',
-                                 layout:'fit',
-                                 margins: '2 2 2 2',
-                                 cmargins: '5 5 0 5',
-                                 border:0,
-                                 width: 200,
-                                 minSize: 100,
-                                 maxSize: 300,
-                                 bbar: new Ext.StatusBar({
-                                     border:0,
-                                     id: 'statusbar',
-                                     defaultText: 'Default status text',
-                                     defaultIconCls: 'default-icon',
-                                     text: 'Ready',
-                                     iconCls: 'ready-icon',
-                                 }),
-                                 items: [ 
-                                     new PaperPile.Tree(
-                                         { border: 0,
-                                           rootVisible : false,
-                                           id: 'treepanel',
-                                         }
-                                     ),
-                                 ]
-                                },{
-                                    region:'east',
-                                    id: 'canvas_panel',
-                                    activeItem:0,
-                                    layout: 'card',
-                                    items: [
-                                        new PaperPile.PDFmanager(
-                                            {id:'pdf_manager',
-                                             itemId:'pdf_manager',
-                                            }
-                                        ),
-                                        new PaperPile.PDFviewer(
-                                            {id:'pdf_viewer',
-                                             itemId:'pdf_viewer',
-                                            }
-                                        )
-
-                                    ],
-                                    bbar: [{ text: 'Manage PDF',
-                                             id: 'pdf_manager_tab_button',
-                                             enableToggle: true,
-                                             toggleHandler: this.onPDFtabToggle,
-                                             toggleGroup: 'pdf_tab_buttons',
-                                             scope: this,
-                                             allowDepress : false,
-                                             pressed: true
-                                           },
-                                        { text: 'View PDF',
-                                             id: 'pdf_view_tab_button',
-                                             enableToggle: true,
-                                             toggleHandler: this.onPDFtabToggle,
-                                             toggleGroup: 'pdf_tab_buttons',
-                                             scope: this,
-                                             allowDepress : false,
-                                             pressed: false
-                                           }
-                                          ],
-
-                                    margins: '2 2 2 2',
-                                    cmargins: '5 5 0 5',
-                                    width: 500,
-                                    minSize: 100,
-                                    maxSize: 800,
-                                },
-                                {itemId: 'innerpanel',
-                                 region:'center',
-                                 border: false,
-                                 layout:'border',
-                                 items: [{border: false,
-                                          xtype: 'datatabs',
-                                          id: 'data_tabs',
-                                          activeItem:0,
-                                          height:200,
-                                          region:'south'
-                                         },
-                                         {height:600,
-                                          border: false,
-                                          xtype: 'resultstabs',
-                                          id: 'results_tabs',
-                                          region: 'center',
-                                          activeItem:0,
-                                         }
-                                        ]}]})]});
+                   items: [ { xtype:'panel',
+                              region: 'center',
+                              layout: 'border',
+                              items: [ { itemId:'navigation',
+                                         region:'west',
+                                         layout:'fit',
+                                         margins: '2 2 2 2',
+                                         cmargins: '5 5 0 5',
+                                         border:0,
+                                         width: 200,
+                                         minSize: 100,
+                                         maxSize: 300,
+                                         bbar: new Ext.StatusBar({
+                                             border:0,
+                                             id: 'statusbar',
+                                             defaultText: 'Default status text',
+                                             defaultIconCls: 'default-icon',
+                                             text: 'Ready',
+                                             iconCls: 'ready-icon',
+                                         }),
+                                         items: [ 
+                                             new PaperPile.Tree(
+                                                 { border: 0,
+                                                   rootVisible : false,
+                                                   id: 'treepanel',
+                                                 }
+                                             ),
+                                         ]
+                                       },
+                                       { region:'center',
+                                         border: false,
+                                         height:600,
+                                         border: false,
+                                         xtype: 'tabs',
+                                         id: 'tabs',
+                                         region: 'center',
+                                         activeItem:0,
+                                       }
+                                     ]}]});
         
         PaperPile.Viewport.superclass.initComponent.call(this);
 
-        this.results_tabs=Ext.getCmp('results_tabs');
-        this.data_tabs=Ext.getCmp('data_tabs');
-        this.canvas_panel=Ext.getCmp('canvas_panel');
+        this.tabs=Ext.getCmp('tabs');
 
         this.tagStore=new Ext.data.Store(
             { proxy: new Ext.data.HttpProxy({
@@ -128,7 +73,7 @@ PaperPile.Viewport = Ext.extend(Ext.Viewport, {
         
         this.on('afterlayout',this.onAfterLayout,this);
                  
-	  },
+	},
 
     loadSettings: function(){
 
@@ -157,8 +102,8 @@ PaperPile.Viewport = Ext.extend(Ext.Viewport, {
 
     onAfterLayout: function(){
 
-       this.canvasWidth=Ext.getCmp('canvas_panel').getInnerWidth();
-       this.canvasHeight=Ext.getCmp('canvas_panel').getInnerHeight();
+        //this.canvasWidth=Ext.getCmp('canvas_panel').getInnerWidth();
+        //this.canvasHeight=Ext.getCmp('canvas_panel').getInnerHeight();
 
     },
 
@@ -241,22 +186,22 @@ PaperPile.app=function(){
 
     Ext.QuickTips.init();
     main=new PaperPile.Viewport;
+    main.show();
 
+    main.tabs.newDBtab('');
     // Global alias for main application class
-    PaperPile.Main=main; 
+    PaperPile.main=main; 
 
     // Note: this is asynchronous, so might not be available
     // immediately (integrate this better in startup to make sure it
     // is loaded when needed)
     main.loadSettings();
     
-    main.results_tabs.remove('welcome');
-    main.results_tabs.newDBtab({closable:false});
     var tree=Ext.getCmp('treepanel');
     tree.expandAll();
-    main.show();
+    //main.tabs.remove('welcome');
+    
     PaperPile.initMask.hide();
-
     
     /*
     var treepanel = new Ext.ux.FileTreePanel({

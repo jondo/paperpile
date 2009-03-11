@@ -1,9 +1,9 @@
-PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
+PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
 
     initComponent:function() {
         
         Ext.apply(this, {
-            id: 'results_tabs',
+            id: 'tabs',
             margins: '2 2 2 2',
             //Have at least one item on rendering to get it rendered correctly
             items: [{title:'Welcome', 
@@ -12,7 +12,7 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
                    ],
         });
        
-        PaperPile.ResultsTabs.superclass.initComponent.apply(this, arguments);
+        PaperPile.Tabs.superclass.initComponent.apply(this, arguments);
 
     },
 
@@ -27,17 +27,20 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
     },
 
     newDBtab:function(query){
+        
         var newGrid=this.add(new PaperPile.ResultsGridDB({
-            title: 'DB',
-            iconCls: 'pp-icon-page',
             source_type: 'DB',
             source_mode: 'FULLTEXT',
             source_query: query,
-            closable:true
         }));
 
-        newGrid.show();
-
+        var newView=this.add(new PaperPile.PubView({title:'Local library', 
+                                                    grid:newGrid,
+                                                    closable:true,
+                                                    iconCls: 'pp-icon-page',
+                                                   }));
+          
+        newView.show();
     },
 
     newPubMedTab:function(query){
@@ -77,4 +80,4 @@ PaperPile.ResultsTabs = Ext.extend(Ext.TabPanel, {
  
 );
 
-Ext.reg('resultstabs', PaperPile.ResultsTabs);
+Ext.reg('tabs', PaperPile.Tabs);

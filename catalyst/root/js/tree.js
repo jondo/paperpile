@@ -44,50 +44,50 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             switch(node.type){
 
             case 'DB':
-                Ext.getCmp('results_tabs').newDBtab(node.query);
+                PaperPile.main.tabs.newDBtab(node.query);
                 break;
 
             case 'PUBMED':
-                Ext.getCmp('results_tabs').newPubMedTab(node.query);
+                PaperPile.main.tabs.newPubMedTab(node.query);
                 break;
 
             case 'FILE':
-                Ext.getCmp('results_tabs').newFileTab(node.file);
+                PaperPile.main.tabs.newFileTab(node.file);
                 break;
 
             case 'RESET_DB':
-                Ext.getCmp('MAIN').resetDB();
+                PaperPile.main.tabs.resetDB();
                 break;
 
             case 'INIT_DB':
-                Ext.getCmp('MAIN').initDB();
+                PaperPile.main.tabs.initDB();
                 break;
 
             case 'IMPORT_JOURNALS':
-                Ext.getCmp('MAIN').importJournals();
+                PaperPile.main.tabs.importJournals();
                 break;
                 
             case 'SETTINGS':
-                Ext.getCmp('MAIN').settings();
+                PaperPile.main.tabs.settings();
                 break;
 
 
             case 'TAG':
-                Ext.getCmp('results_tabs').showDBQueryResults('FULLTEXT',
-                                                              node.text,
-                                                              'tags:'+node.text,
-                                                              node.text,
-                                                              'pp-icon-tag'
-                                                             );
+                PaperPile.main.tabs.showDBQueryResults('FULLTEXT',
+                                                       node.text,
+                                                       'tags:'+node.text,
+                                                       node.text,
+                                                       'pp-icon-tag'
+                                                      );
                 break;
 
             case 'FOLDER':
-                Ext.getCmp('results_tabs').showDBQueryResults('FULLTEXT',
-                                                              node.text,
-                                                              'folders:'+node.text,
-                                                              node.text,
-                                                              'pp-icon-folder'
-                                                             );
+                PaperPile.main.tabs.showDBQueryResults('FULLTEXT',
+                                                       node.text,
+                                                       'folders:'+node.text,
+                                                       node.text,
+                                                       'pp-icon-folder'
+                                                      );
                 break;
             }
         });

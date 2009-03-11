@@ -14,7 +14,7 @@
   <script type="text/javascript" charset="utf-8" src="/js/forms.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/settings.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/results-grid.js"></script>
-  <script type="text/javascript" charset="utf-8" src="/js/results-tabs.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/tabs.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/data-tabs.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pub-summary.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pub-notes.js"></script>
@@ -22,6 +22,7 @@
   <script type="text/javascript" charset="utf-8" src="/js/pdf-viewer.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf-zoomer.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf-manager.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pub-view.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/tree.js"></script>
 
   <script type="text/javascript" charset="utf-8" src="/js/box-select.js"></script>

@@ -33,7 +33,9 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
     updateDetail: function(data) {
         this.data=data;
         this.data.scope='Ext.getCmp(\'pdf_manager\')';
-        this.source_id=Ext.getCmp('results_tabs').getActiveTab().id;
+        //this.source_id=Ext.getCmp('tabs').getActiveTab().id;
+        this.source_id=PaperPile.main.tabs.getActiveTab().id;
+        
 
         this.tpl.overwrite(this.body, this.data);
 

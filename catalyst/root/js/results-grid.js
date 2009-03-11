@@ -4,6 +4,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
     source_file: '',
     source_query: '',
     closable:true,
+    region:'center',
 
     initComponent:function() {
 
