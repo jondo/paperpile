@@ -2,7 +2,7 @@ package PaperPile::PDFextract;
 
 use Moose;
 use PaperPile::Library::Publication;
-use PaperPile::Library::Source::PubMed;
+use PaperPile::Plugin::Import::PubMed;
 use Data::Dumper;
 
 has 'file'    => ( is => 'rw', isa => 'Str' );
@@ -11,7 +11,7 @@ sub match_pubmed {
 
   my ($self) = @_;
 
-  my $source = PaperPile::Library::Source::PubMed->new( query => $self->title );
+  my $source = PaperPile::Plugin::PubMed->new( query => $self->title );
 
   $source->connect;
 

@@ -10,7 +10,6 @@ use Catalyst::Utils;
 use File::Spec;
 use Path::Class;
 
-
 $Data::Dumper::Indent = 1;
 
 sub get_browser{
@@ -20,7 +19,6 @@ sub get_browser{
   $browser->agent('Mozilla/5.0');
   return $browser;
 }
-
 
 
 ### get_config()

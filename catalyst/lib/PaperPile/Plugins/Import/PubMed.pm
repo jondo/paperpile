@@ -1,7 +1,6 @@
-package PaperPile::Library::Source::PubMed;
+package PaperPile::Plugins::Import::PubMed;
 
 use Carp;
-use Data::Page;
 use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -13,7 +12,7 @@ use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
 use PaperPile::Utils;
 
-extends 'PaperPile::Library::Source';
+extends 'PaperPile::Plugins::Import';
 
 has 'query'     => ( is => 'rw' );
 has 'web_env'   => ( is => 'rw' );

@@ -1,8 +1,7 @@
-package PaperPile::Library::Source;
+package PaperPile::Plugins::Import;
 
 use Moose;
 use Moose::Util::TypeConstraints;
-use MooseX::Iterator;
 use Data::Dumper;
 use Data::Page;
 use POSIX qw(ceil floor);

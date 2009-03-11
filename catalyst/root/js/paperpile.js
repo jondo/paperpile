@@ -258,7 +258,7 @@ PaperPile.app=function(){
     PaperPile.initMask.hide();
 
     
-
+    /*
     var treepanel = new Ext.ux.FileTreePanel({
 		height:400,
 		autoWidth:true,
@@ -279,8 +279,8 @@ PaperPile.app=function(){
         plain: true,
         items: [treepanel],
 	});
-
-   win.show();
+    win.show();
+   */
  
 
     //Ext.StoreMgr.lookup('tag_store').each(function(rec){console.log(rec)});

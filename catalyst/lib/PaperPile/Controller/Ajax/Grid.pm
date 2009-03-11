@@ -4,9 +4,9 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use PaperPile::Library::Publication;
-use PaperPile::Library::Source::File;
-use PaperPile::Library::Source::DB;
-use PaperPile::Library::Source::PubMed;
+use PaperPile::Plugins::Import::File;
+use PaperPile::Plugins::Import::DB;
+use PaperPile::Plugins::Import::PubMed;
 use PaperPile::PDFviewer;
 use Data::Dumper;
 use 5.010;
@@ -28,13 +28,13 @@ sub resultsgrid : Local {
   if ( not defined $c->session->{"source_$source_id"} or $task eq 'NEW' ) {
 
     if ( $source_type eq 'FILE' ) {
-      $source = PaperPile::Library::Source::File->new( file => $source_file );
+      $source = PaperPile::Plugins::Import::File->new( file => $source_file );
     } elsif ( $source_type eq 'DB' ) {
-      $source = PaperPile::Library::Source::DB->new(file => $c->session->{user_db},
+      $source = PaperPile::Plugins::Import::DB->new(file => $c->session->{user_db},
                                                     query => $source_query,
                                                     mode => $source_mode );
     } elsif ( $source_type eq 'PUBMED' ) {
-      $source = PaperPile::Library::Source::PubMed->new( query => $source_query );
+      $source = PaperPile::Plugins::Import::PubMed->new( query => $source_query );
     }
 
     $source->limit($limit);

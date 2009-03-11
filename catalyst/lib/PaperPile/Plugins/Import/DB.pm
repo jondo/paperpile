@@ -1,4 +1,4 @@
-package PaperPile::Library::Source::DB;
+package PaperPile::Plugins::Import::DB;
 
 use Carp;
 use Data::Page;
@@ -10,7 +10,7 @@ use PaperPile::Library::Publication;
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
 
-extends 'PaperPile::Library::Source';
+extends 'PaperPile::Plugins::Import';
 
 has 'query' => ( is => 'rw' );
 has 'mode' => ( is => 'rw', default => 'FULLTEXT', isa => 'Str' );

@@ -1,4 +1,4 @@
-package PaperPile::Library::Source::File;
+package PaperPile::Plugins::Import::File;
 
 use Carp;
 use Data::Page;
@@ -9,7 +9,7 @@ use PaperPile::Library::Publication;
 use PaperPile::Library::Author;
 use PaperPile::Library::Journal;
 
-extends 'PaperPile::Library::Source';
+extends 'PaperPile::Plugins::Import';
 
 has 'file'  => ( is => 'rw', isa => 'Str' );
 has '_data' => ( is => 'rw', isa => 'ArrayRef' );

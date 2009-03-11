@@ -4,9 +4,6 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use PaperPile::Library::Publication;
-use PaperPile::Library::Source::File;
-use PaperPile::Library::Source::DB;
-use PaperPile::Library::Source::PubMed;
 use PaperPile::PDFviewer;
 use Data::Dumper;
 use MooseX::Timestamp;
@@ -105,13 +102,6 @@ sub update_tags : Local {
   $c->forward('PaperPile::View::JSON');
 
 }
-
-
-
-
-
-
-
 
 sub generate_edit_form : Local {
   my ( $self, $c ) = @_;
