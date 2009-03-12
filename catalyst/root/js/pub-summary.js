@@ -1,7 +1,7 @@
 
 PaperPile.PubSummary = Ext.extend(Ext.Panel, {
 	tplMarkup: [
-        '<div class="pp-summary-form" id="tags"></div>',
+        '<div class="pp-summary-form" id="tags-{id}"></div>',
 		'<div class="pp-summary-abstract">{abstract}</div>',
 	],
 	startingMarkup: 'Empty',
@@ -22,6 +22,7 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
 
 	updateDetail: function(data) {
         this.data=data;
+        this.data.id=this.id;
 		this.tpl.overwrite(this.body, data);		
         
         // Get application wide store with tags and make a local 
@@ -39,8 +40,6 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
 			fields: ['tag'],
             data: list,
 		});
-        
-
 
         this.form = new Ext.form.FormPanel({
             autoHeight: true,
@@ -48,7 +47,7 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
             baseCls: 'x-plain',
 			items: [
                 new PaperPile.BoxSelect({
-                    id: 'tag_select',
+                    itemId: 'tag_select',
 			        name: 'to[]',
                     value:this.data.tags,
                     store: store,
@@ -79,7 +78,7 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
             ],
 		});
         
-        this.form.render('tags');
+        this.form.render('tags-'+this.id);
         
     },
 

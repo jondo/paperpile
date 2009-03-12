@@ -81,9 +81,16 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         
         PaperPile.ResultsGrid.superclass.initComponent.apply(this, arguments);
 
-        this.getSelectionModel().on('rowselect', main.onRowSelect,main);
-
+        
         this.on('beforedestroy', this.onDestroy,this);
+
+    },
+
+    afterRender: function(){
+
+        var container= this.findParentByType(PaperPile.PubView);
+        this.getSelectionModel().on('rowselect',container.onRowSelect,container);
+        PaperPile.ResultsGrid.superclass.afterRender.apply(this, arguments);
 
     },
 
@@ -188,7 +195,6 @@ PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
 
         _searchField.store=this.store;
 
-
     }
 });
 
@@ -273,7 +279,6 @@ PaperPile.ResultsGridFile = Ext.extend(PaperPile.ResultsGrid, {
                                  limit:25, 
                                  source_file: this.source_file,
                                 }});
-
     }
 });
 

@@ -7,31 +7,31 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
             layout:'card',
             margins: '2 2 2 2',
             items:[{xtype:'pubsummary',
-                    id: 'pubsummary',
                     itemId:'pubsummary',
-                    border: true,
+                    border: 0,
                     height:200
                    },
                    {xtype:'pubnotes',
-                    id: 'pubnotes',
                     itemId:'pubnotes',
-                    border: true,
+                    border: 0,
                     height:200
                    }
                   ],
             bbar: [{ text: 'Summary',
-                     id: 'summary_tab_button',
+                     itemId: 'summary_tab_button',
                      enableToggle: true,
                      toggleHandler: this.onItemToggle,
                      toggleGroup: 'tab_buttons',
+                     scope: this,
                      allowDepress : false,
                      pressed: true
                    },
                    { text: 'Notes',
-                     id: 'notes_tab_button',
+                     itemId: 'notes_tab_button',
                      enableToggle: true,
                      toggleHandler: this.onItemToggle,
                      toggleGroup: 'tab_buttons',
+                     scope: this,
                      allowDepress : false,
                      pressed: false
                    },
@@ -70,12 +70,12 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
 
     onItemToggle:function (button, pressed){
 
-        if (button.id == 'summary_tab_button' && pressed){
-            Ext.getCmp('data_tabs').layout.setActiveItem('pubsummary');
+        if (button.itemId == 'summary_tab_button' && pressed){
+            this.layout.setActiveItem('pubsummary');
         }
 
-        if (button.id == 'notes_tab_button' && pressed){
-            Ext.getCmp('data_tabs').layout.setActiveItem('pubnotes');
+        if (button.itemId == 'notes_tab_button' && pressed){
+            this.layout.setActiveItem('pubnotes');
         }
 
     }

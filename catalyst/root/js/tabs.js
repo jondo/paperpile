@@ -39,7 +39,6 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
                                                     closable:true,
                                                     iconCls: 'pp-icon-page',
                                                    }));
-          
         newView.show();
     },
 
@@ -70,10 +69,6 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
         this.activate(targetTab.id);
 
     }
-
-
-
-
 
 
 }                                 

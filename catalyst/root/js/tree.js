@@ -2,10 +2,10 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 	  
     initComponent: function() {
 		Ext.apply(this, {
+            title: 'Paperpile Pre 1',
             enableDrop:true,
             ddGroup: 'gridDD',
             animate: false,
-            title: 'Paperpile Pre 1',
             lines:false,
             autoScroll: true,
             loader: new PaperPile.TreeLoader(
@@ -32,12 +32,8 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         this.on({
 			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
-			//dblclick:{scope:this, fn:this.onDblClick},
-			//beforenodedrop:{scope:this, fn:this.onBeforeNodeDrop},
             beforenodedrop:{scope:this, fn:this.onNodeDrop},
-			//nodedragover:{scope:this, fn:this.onNodeDragOver},
 		});
-
 
         this.on("click", function(node,e){
 
@@ -71,7 +67,6 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 PaperPile.main.tabs.settings();
                 break;
 
-
             case 'TAG':
                 PaperPile.main.tabs.showDBQueryResults('FULLTEXT',
                                                        node.text,
@@ -92,7 +87,6 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             }
         });
 	},
-
 
     onNodeDrop: function(d){
 

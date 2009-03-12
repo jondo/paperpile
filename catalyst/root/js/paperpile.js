@@ -6,51 +6,40 @@ PaperPile.Viewport = Ext.extend(Ext.Viewport, {
     canvasWidth:null,
     canvasHeight:null,
     globalSettings:null,
-    id:'MAIN',
 
     initComponent: function() {
         Ext.apply(this, 
                   {layout: 'border',
                    renderTo: Ext.getBody(),
-                   items: [ { xtype:'panel',
-                              region: 'center',
-                              layout: 'border',
-                              items: [ { itemId:'navigation',
-                                         region:'west',
-                                         layout:'fit',
-                                         margins: '2 2 2 2',
-                                         cmargins: '5 5 0 5',
-                                         border:0,
-                                         width: 200,
-                                         minSize: 100,
-                                         maxSize: 300,
-                                         bbar: new Ext.StatusBar({
-                                             border:0,
-                                             id: 'statusbar',
-                                             defaultText: 'Default status text',
-                                             defaultIconCls: 'default-icon',
-                                             text: 'Ready',
-                                             iconCls: 'ready-icon',
-                                         }),
-                                         items: [ 
-                                             new PaperPile.Tree(
-                                                 { border: 0,
-                                                   rootVisible : false,
-                                                   id: 'treepanel',
-                                                 }
-                                             ),
-                                         ]
-                                       },
-                                       { region:'center',
-                                         border: false,
-                                         height:600,
-                                         border: false,
-                                         xtype: 'tabs',
-                                         id: 'tabs',
-                                         region: 'center',
-                                         activeItem:0,
-                                       }
-                                     ]}]});
+                   items: [ { border: 0,
+                              xtype:'tree',
+                              rootVisible : false,
+                              id: 'treepanel',
+                              itemId:'navigation',
+                              region:'west',
+                              margins: '2 2 2 2',
+                              cmargins: '5 5 0 5',
+                              width: 200,
+                              minSize: 100,
+                              maxSize: 300,
+                              bbar: new Ext.StatusBar({
+                                  border:0,
+                                  id: 'statusbar',
+                                  defaultText: 'Default status text',
+                                  defaultIconCls: 'default-icon',
+                                  text: 'Ready',
+                                  iconCls: 'ready-icon',
+                              }),
+                            },
+                            { region:'center',
+                              border: false,
+                              height:600,
+                              border: false,
+                              xtype: 'tabs',
+                              id: 'tabs',
+                              activeItem:0,
+                            }
+                          ]});
         
         PaperPile.Viewport.superclass.initComponent.call(this);
 
@@ -68,7 +57,6 @@ PaperPile.Viewport = Ext.extend(Ext.Viewport, {
             }
         ); 
 
-        
         this.tagStore.reload();
         
         this.on('afterlayout',this.onAfterLayout,this);
@@ -89,16 +77,6 @@ PaperPile.Viewport = Ext.extend(Ext.Viewport, {
         });
     },
 
-	onRowSelect: function(sm, rowIdx, r) {
-
-        Ext.getCmp('statusbar').clearStatus();
-        Ext.getCmp('statusbar').setText(r.data.sha1);
-
-        Ext.getCmp('pubsummary').updateDetail(r.data);
-        Ext.getCmp('pdf_manager').updateDetail(r.data);
-        Ext.getCmp('pubnotes').updateDetail(r.data);        
-
-    },
 
     onAfterLayout: function(){
 
@@ -199,7 +177,7 @@ PaperPile.app=function(){
     
     var tree=Ext.getCmp('treepanel');
     tree.expandAll();
-    //main.tabs.remove('welcome');
+    main.tabs.remove('welcome');
     
     PaperPile.initMask.hide();
     

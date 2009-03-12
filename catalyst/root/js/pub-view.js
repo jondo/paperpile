@@ -7,23 +7,21 @@ PaperPile.PubView = Ext.extend(Ext.Panel, {
             iconCls: 'pp-icon-page',
             items:[
                 { region:'east',
-                  id: 'canvas_panel',
+                  itemId: 'east_panel',
                   activeItem:0,
                   layout: 'card',
                   items: [
                       new PaperPile.PDFmanager(
-                          {id:'pdf_manager',
-                           itemId:'pdf_manager',
+                          {itemId:'pdf_manager',
                           }
                       ),
                       new PaperPile.PDFviewer(
-                          {id:'pdf_viewer',
-                           itemId:'pdf_viewer',
+                          {itemId:'pdf_viewer',
                           }
                       )
                   ],
                   bbar: [{ text: 'Manage PDF',
-                           id: 'pdf_manager_tab_button',
+                           itemId: 'pdf_manager_tab_button',
                            enableToggle: true,
                            toggleHandler: this.onPDFtabToggle,
                            toggleGroup: 'pdf_tab_buttons',
@@ -32,7 +30,7 @@ PaperPile.PubView = Ext.extend(Ext.Panel, {
                            pressed: true
                          },
                            { text: 'View PDF',
-                             id: 'pdf_view_tab_button',
+                             itemId: 'pdf_view_tab_button',
                              enableToggle: true,
                              toggleHandler: this.onPDFtabToggle,
                              toggleGroup: 'pdf_tab_buttons',
@@ -50,13 +48,14 @@ PaperPile.PubView = Ext.extend(Ext.Panel, {
                 },
                 { xtype:'panel',
                   region:'center',
-                  itemId: 'center',
+                  itemId: 'center_panel',
                   layout: 'border',
+                  
                   items:[
                       this.grid,
                       {border: false,
                        xtype: 'datatabs',
-                       id: 'data_tabs',
+                       itemId: 'data_tabs',
                        activeItem:0,
                        height:200,
                        region:'south'
@@ -67,5 +66,21 @@ PaperPile.PubView = Ext.extend(Ext.Panel, {
         });
        
         PaperPile.PubView.superclass.initComponent.apply(this, arguments);
+    },
 
-    }});
+    onRowSelect: function(sm, rowIdx, r) {
+
+        Ext.getCmp('statusbar').clearStatus();
+        Ext.getCmp('statusbar').setText(r.data.sha1);
+
+        var datatabs=this.items.get('center_panel').items.get('data_tabs');
+
+        datatabs.items.get('pubsummary').updateDetail(r.data);
+        datatabs.items.get('pubnotes').updateDetail(r.data);        
+
+        this.items.get('east_panel').items.get('pdf_manager').updateDetail(r.data);
+        
+
+    },
+
+});
