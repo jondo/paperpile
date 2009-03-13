@@ -119,7 +119,7 @@ sub init_session : Local {
 
   # Clear session variables
   foreach my $key ( keys %{ $c->session } ) {
-    delete( $c->session->{$key} ) if $key =~ /^(source|viewer|tree|user_db)/;
+    delete( $c->session->{$key} ) if $key =~ /^(grid|viewer|tree|user_db)/;
   }
 
   # The path for the user database is given in the application database

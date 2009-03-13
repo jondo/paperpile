@@ -186,9 +186,10 @@ sub _get_default_tree {
 
   $sources->addChild(
     Tree::Simple->new( {
+        type    => 'IMPORT_PLUGIN',
+        plugin_name   => 'PubMed',
         text    => 'PubMed',
-        type    => 'PUBMED',
-        query   => '',
+        plugin_query   => '',
         iconCls => 'pp-icon-pubmed',
       }
     )

@@ -4,7 +4,6 @@ PaperPile.PubView = Ext.extend(Ext.Panel, {
         
         Ext.apply(this, {
             layout:'border',
-            iconCls: 'pp-icon-page',
             items:[
                 { region:'east',
                   itemId: 'east_panel',

@@ -1,8 +1,6 @@
-PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
+PaperPile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
-    source_type: '',
-    source_file: '',
-    source_query: '',
+    plugin_query:'',
     closable:true,
     region:'center',
 
@@ -13,11 +11,11 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
                 url: '/ajax/grid/resultsgrid', 
                 method: 'GET'
             }),
-               baseParams:{source_id: this.id,
-                           source_file: this.source_file,
-                           source_type: this.source_type,
-                           source_query: this.source_query,
-                           source_mode: this.source_mode,
+               baseParams:{grid_id: this.id,
+                           plugin_file: this.plugin_file,
+                           plugin_type: this.plugin_type,
+                           plugin_query: this.plugin_query,
+                           plugin_mode: this.plugin_mode,
                            limit:25
                           },
                reader: new Ext.data.JsonReader(),
@@ -79,7 +77,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             
         });
         
-        PaperPile.ResultsGrid.superclass.initComponent.apply(this, arguments);
+        PaperPile.PluginGrid.superclass.initComponent.apply(this, arguments);
 
         
         this.on('beforedestroy', this.onDestroy,this);
@@ -90,7 +88,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
 
         var container= this.findParentByType(PaperPile.PubView);
         this.getSelectionModel().on('rowselect',container.onRowSelect,container);
-        PaperPile.ResultsGrid.superclass.afterRender.apply(this, arguments);
+        PaperPile.PluginGrid.superclass.afterRender.apply(this, arguments);
 
     },
 
@@ -101,7 +99,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         Ext.Ajax.request({
             url: '/ajax/crud/insert_entry',
             params: { sha1: sha1,
-                      source_id: this.id,
+                      grid_id: this.id,
                     },
             method: 'GET',
             success: function(){
@@ -122,7 +120,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
         Ext.Ajax.request({
             url: '/ajax/crud/delete_entry',
             params: { rowid: rowid,
-                      source_id: this.id,
+                      grid_id: this.id,
                     },
             method: 'GET',
             success: function(){
@@ -143,7 +141,7 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
             {id:'pub_edit',
              itemId:'pub_edit',
              data:this.getSelectionModel().getSelected(),
-             source_id: this.id, 
+             grid_id: this.id, 
              items: [{ fieldLabel: 'Type',  name: 'dummy', id:'dummy' }],
             }
         )
@@ -157,130 +155,15 @@ PaperPile.ResultsGrid = Ext.extend(Ext.grid.GridPanel, {
     onDestroy: function(cont, comp){
         Ext.Ajax.request({
             url: '/ajax/grid/delete_grid',
-            params: { source_id: this.id,
+            params: { grid_id: this.id,
                     },
             method: 'GET'
         });
     },
 });
 
-PaperPile.ResultsGridPubMed = Ext.extend(PaperPile.ResultsGrid, {
-
-    loadMask: {msg:"Searching PubMed"},
-
-    initComponent:function() {
-
-        var _searchField=new Ext.app.SearchField({
-            width:320,
-        })
-
-        Ext.apply(this, {
-            source_type: 'PUBMED',
-            title: 'PubMed',
-            iconCls: 'pp-icon-pubmed',
-            tbar:[_searchField,
-                    {xtype:'tbfill'},
-                    {   xtype:'button',
-                        itemId: 'add_button',
-                        text: 'Import',
-                        cls: 'x-btn-text-icon add',
-                        listeners: {
-                            click:  {fn: this.insertEntry, scope: this}
-                        },
-                    },
-                 ],
-        });
-
-        PaperPile.ResultsGridPubMed.superclass.initComponent.apply(this, arguments);
-
-        _searchField.store=this.store;
-
-    }
-});
 
 
-PaperPile.ResultsGridDB = Ext.extend(PaperPile.ResultsGrid, {
-
-    base_query:'',
-    
-    initComponent:function() {
-        
-        var _filterField=new Ext.app.FilterField({
-            width:320,
-        });
-
-        Ext.apply(this, {
-            source_type: 'DB',
-            title: 'Local library',
-            tbar:  [_filterField, 
-                    {xtype:'tbfill'},
-                    {   xtype:'button',
-                        itemId: 'new_button',
-                        text: 'New',
-                        cls: 'x-btn-text-icon add',
-                        listeners: {
-                            click:  {fn: this.editEntry, scope: this}
-                        },
-                    },
-                    {   xtype:'button',
-                        text: 'Delete',
-                        itemId: 'delete_button',
-                        cls: 'x-btn-text-icon delete',
-                        listeners: {
-                            click:  {fn: this.deleteEntry, scope: this}
-                        },
-                    },
-                    {   xtype:'button',
-                        itemId: 'edit_button',
-                        text: 'Edit',
-                        cls: 'x-btn-text-icon edit',
-                        listeners: {
-                            click:  {fn: this.editEntry, scope: this}
-                        },
-                    },
-
-                   ]
-            
-        });
-
-        PaperPile.ResultsGridDB.superclass.initComponent.apply(this, arguments);
-        _filterField.store=this.store;
-        _filterField.base_query=this.base_query;
-
-        this.getColumnModel().setHidden(0,true);
-
-    },
-
-    onRender: function() {
-        PaperPile.ResultsGridDB.superclass.onRender.apply(this, arguments);
-        this.store.load({params:{start:0, limit:25 }});
-    }
-});
-
-
-PaperPile.ResultsGridFile = Ext.extend(PaperPile.ResultsGrid, {
-
-    loadMask: true,
-
-    initComponent:function() {
-        Ext.apply(this, {
-            source_type: 'FILE',
-            title: 'RIS',
-            iconCls: 'pp-icon-page',
-        });
-
-        PaperPile.ResultsGridFile.superclass.initComponent.apply(this, arguments);
-
-    },
-
-    onRender: function() {
-        PaperPile.ResultsGridFile.superclass.onRender.apply(this, arguments);
-        this.store.load({params:{start:0, 
-                                 limit:25, 
-                                 source_file: this.source_file,
-                                }});
-    }
-});
 
 
 

@@ -42,9 +42,18 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             case 'DB':
                 PaperPile.main.tabs.newDBtab(node.query);
                 break;
+                
+            case 'IMPORT_PLUGIN':
 
-            case 'PUBMED':
-                PaperPile.main.tabs.newPubMedTab(node.query);
+                // pass on all parameters with 'plugin_' to plugin class
+                var pars={}
+                for (var key in node){
+                    if (key.match('plugin_')){
+                        pars[key]=node[key];
+                    }
+                }
+                
+                PaperPile.main.tabs.newPluginTab(node.plugin_name, pars);
                 break;
 
             case 'FILE':

@@ -23,7 +23,7 @@ Ext.app.SearchField = Ext.extend(Ext.form.TwinTriggerField, {
     hideTrigger1:true,
     width:180,
     hasSearch : false,
-    paramName : 'source_query',
+    paramName : 'plugin_query',
 
     onTrigger1Click : function(){
         if(this.hasSearch){
@@ -39,9 +39,9 @@ Ext.app.SearchField = Ext.extend(Ext.form.TwinTriggerField, {
             this.onTrigger1Click();
             return;
         }
-        var o = {start: 0, source_task:'NEW'};
+        var o = {start: 0, task:'NEW'};
         this.store.baseParams = this.store.baseParams || {};
-        this.store.baseParams['source_query'] = v;
+        this.store.baseParams['plugin_query'] = v;
         this.store.reload({params:o});
         this.hasSearch = true;
         this.triggers[0].show();

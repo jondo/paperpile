@@ -4,55 +4,62 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use PaperPile::Library::Publication;
-use PaperPile::Plugins::Import::File;
-use PaperPile::Plugins::Import::DB;
-use PaperPile::Plugins::Import::PubMed;
 use PaperPile::PDFviewer;
 use Data::Dumper;
 use 5.010;
+use Module::Load;
+
 
 sub resultsgrid : Local {
 
   my ( $self, $c ) = @_;
-  my $source;
 
-  my $source_id    = $c->request->params->{source_id};
-  my $source_file  = $c->request->params->{source_file};
-  my $source_query = $c->request->params->{source_query};
-  my $source_type  = $c->request->params->{source_type};
-  my $source_mode  = $c->request->params->{source_mode};
-  my $task         = $c->request->params->{source_task} || '';
-  my $offset       = $c->request->params->{start};
-  my $limit        = $c->request->params->{limit};
+  my $grid_id     = $c->request->params->{grid_id};
+  my $task        = $c->request->params->{task} || '';
+  my $offset      = $c->request->params->{start};
+  my $limit       = $c->request->params->{limit};
 
-  if ( not defined $c->session->{"source_$source_id"} or $task eq 'NEW' ) {
+  my $plugin_type = $c->request->params->{plugin_type};
+  my $plugin;
 
-    if ( $source_type eq 'FILE' ) {
-      $source = PaperPile::Plugins::Import::File->new( file => $source_file );
-    } elsif ( $source_type eq 'DB' ) {
-      $source = PaperPile::Plugins::Import::DB->new(file => $c->session->{user_db},
-                                                    query => $source_query,
-                                                    mode => $source_mode );
-    } elsif ( $source_type eq 'PUBMED' ) {
-      $source = PaperPile::Plugins::Import::PubMed->new( query => $source_query );
+  if ( not defined $c->session->{"grid_$grid_id"} or $task eq 'NEW' ) {
+
+    # Load required module dynamically
+    my $plugin_module = "PaperPile::Plugins::Import::$plugin_type";
+    load $plugin_module;
+
+    # Directly pass plugin parameters starting with "plugin_" to plugin Module
+    my %params = ();
+    foreach my $key ( keys %{ $c->request->params } ) {
+      if ( $key =~ /^plugin_/ ) {
+        my $newKey = $key;
+        $newKey =~ s/^plugin_//;
+        $params{$newKey} = $c->request->params->{$key};
+      }
     }
 
-    $source->limit($limit);
-    $source->connect;
+    if ( ( $plugin_type eq 'DB' ) and ( not $c->request->params->{plugin_file} ) ) {
+      $params{file} = $c->session->{user_db};
+    }
 
-    if ( $source->total_entries == 0 ) {
+    # create instance; can we do this more elegantly?
+    $plugin = eval( "$plugin_module->" . 'new(%params)' );
+
+    $plugin->limit($limit);
+    $plugin->connect;
+
+    if ( $plugin->total_entries == 0 ) {
       _resultsgrid_format( @_, [], 0 );
     }
 
-    $c->session->{"source_$source_id"} = $source;
+    $c->session->{"grid_$grid_id"} = $plugin;
   } else {
-    $source = $c->session->{"source_$source_id"};
+    $plugin = $c->session->{"grid_$grid_id"};
   }
 
-  my $entries;
-  $entries = $source->page( $offset, $limit );
+  my $entries = $plugin->page( $offset, $limit );
 
-  if ( $source_type eq 'DB' ) {
+  if ( $plugin_type eq 'DB' ) {
     foreach my $pub (@$entries) {
       $pub->_imported(1);
     }
@@ -60,7 +67,7 @@ sub resultsgrid : Local {
     $c->model('User')->exists_pub($entries);
   }
 
-  _resultsgrid_format( @_, $entries, $source->total_entries );
+  _resultsgrid_format( @_, $entries, $plugin->total_entries );
 
 }
 
@@ -101,9 +108,9 @@ sub _resultsgrid_format {
 
 sub delete_grid : Local {
   my ( $self, $c ) = @_;
-  my $source_id = $c->request->params->{source_id};
+  my $grid_id = $c->request->params->{grid_id};
 
-  delete( $c->session->{"source_$source_id"} );
+  delete( $c->session->{"grid_$grid_id"} );
 
   $c->forward('PaperPile::View::JSON');
 }
