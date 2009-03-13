@@ -3,7 +3,6 @@ package PaperPile::Controller::Ajax::PDF;
 use strict;
 use warnings;
 use parent 'Catalyst::Controller';
-use PaperPile::PDFviewer;
 use Data::Dumper;
 use XML::Simple;
 use File::Temp;

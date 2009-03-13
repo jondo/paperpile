@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use PaperPile::Library::Publication;
-use PaperPile::PDFviewer;
 use Data::Dumper;
 use 5.010;
 use Module::Load;
