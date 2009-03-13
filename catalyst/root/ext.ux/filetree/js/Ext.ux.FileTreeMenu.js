@@ -106,10 +106,7 @@ Ext.ux.FileTreeMenu = function(config) {
 			,hideOnClick:false
 			,cmd:'upload'
 		}
-			,new Ext.menu.Adapter(new Ext.ux.UploadPanel(uploadPanelConfig), {
-				 hideOnClick:false
-				,cmd:'upload-panel'
-			})
+
 		]
 	}); // eo apply
 	// }}}

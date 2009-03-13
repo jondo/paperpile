@@ -53,14 +53,8 @@
   <link rel="stylesheet" type="text/css" href="/ext.ux/filetree/css/Ext.ux.IconCombo.css">
   <link rel="stylesheet" type="text/css" href="/ext.ux/filetree/css/empty.css" id="theme">
   <link rel="shortcut icon" href="../img/extjs.ico">
-  <script type="text/javascript" src="/ext.ux/filetree/js/Ext.ux.form.BrowseButton.js"></script>
-  <script type="text/javascript" src="/ext.ux/filetree/js/Ext.ux.FileUploader.js"></script>
-  <script type="text/javascript" src="/ext.ux/filetree/js/Ext.ux.UploadPanel.js"></script>
   <script type="text/javascript" src="/ext.ux/filetree/js/Ext.ux.FileTreeMenu.js"></script>
   <script type="text/javascript" src="/ext.ux/filetree/js/Ext.ux.FileTreePanel.js"></script>
-  <script type="text/javascript" src="/ext.ux/filetree/js/Ext.ux.form.ThemeCombo.js"></script>
-  <script type="text/javascript" src="/ext.ux/filetree/js/Ext.ux.form.IconCombo.js"></script>
-  <script type="text/javascript" src="/ext.ux/filetree/js/Ext.ux.form.LangSelectCombo.js"></script>
 
 
   <title>Paperpile</title>

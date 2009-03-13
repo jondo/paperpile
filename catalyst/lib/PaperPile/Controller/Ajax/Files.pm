@@ -7,14 +7,27 @@ use Data::Dumper;
 use File::Spec;
 use 5.010;
 
+sub dialogue : Local {
+  my ( $self, $c ) = @_;
+
+  my $output;
+
+  if ($c->request->params->{cmd} eq 'get'){
+    $output=$c->forward('get');
+  }
+
+  $c->stash->{tree} = $output;
+
+  $c->forward('PaperPile::View::JSON::Tree');
+
+}
+
 sub get : Local {
   my ( $self, $c ) = @_;
 
-  my $path=$c->request->params->{path};
   my $root = File::Spec->rootdir();
-
+  my $path=$c->request->params->{path};
   $path=~s/^root/$root/;
-
   opendir(DIR, File::Spec->catdir($root,$path)) || die "can't open $path ($!)";
   my @contents = readdir(DIR);
   closedir DIR;
@@ -37,10 +50,7 @@ sub get : Local {
     }
   }
 
-  $c->stash->{tree} = [@output];
-
-  $c->forward('PaperPile::View::JSON::Tree');
-
+  return [@output];
 }
 
 

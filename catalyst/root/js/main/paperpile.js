@@ -181,29 +181,6 @@ PaperPile.app=function(){
     
     PaperPile.initMask.hide();
     
-    /*
-    var treepanel = new Ext.ux.FileTreePanel({
-		height:400,
-		autoWidth:true,
-		title:'FileTreePanel',
-		rootPath:'root',
-        rootText: '/',
-		topMenu:true,
-		autoScroll:true,
-		enableProgress:false,
-        url:'/ajax/files/get',
-	});
-
-    var win=new Ext.Window({
-        layout: 'fit',
-        width: 500,
-        height: 300,
-        closeAction:'hide',
-        plain: true,
-        items: [treepanel],
-	});
-    win.show();
-   */
  
 
     //Ext.StoreMgr.lookup('tag_store').each(function(rec){console.log(rec)});

@@ -3,6 +3,8 @@ Ext.ns('PaperPile');
 
 Ext.onReady(function() {
 
+    
+
     var vp=new Ext.Viewport({
         layout: 'border',
         defaults: {
@@ -44,11 +46,31 @@ Ext.onReady(function() {
 
     //vp.on('afterlayout', Ext.getCmp('pdf_viewer').onLayout, Ext.getCmp('pdf_viewer'));
     //vp.on('render', function(){alert('inhere')}, Ext.getCmp('pdf_viewer'));
+    //var viewer=Ext.getCmp('pdf_viewer');
+    //viewer.initPDF('/home/wash/PDFs/gesell06.pdf');
+    //vp.show();
 
-    var viewer=Ext.getCmp('pdf_viewer');
+    var treepanel = new Ext.ux.FileTreePanel({
+		height:400,
+		autoWidth:true,
+		title:'FileTreePanel',
+		rootPath:'root',
+        rootText: '/',
+		topMenu:true,
+		autoScroll:true,
+		enableProgress:false,
+        url:'/ajax/files/dialogue',
+	});
 
-    viewer.initPDF('/home/wash/PDFs/gesell06.pdf');
+    var win=new Ext.Window({
+        layout: 'fit',
+        width: 500,
+        height: 300,
+        closeAction:'hide',
+        plain: true,
+        items: [treepanel],
+	});
+    win.show();
 
-    vp.show();
 
 })
