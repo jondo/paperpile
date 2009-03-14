@@ -60,13 +60,13 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
                     listeners: {
                         modified:  {fn: 
                                     function(){
-                                        Ext.getCmp('tag_save_button').show();
+                                        this.form.items.get('tag_save_button').show();
                                     },
                                     scope: this}
                     },
                 }),
                 new Ext.Button({
-                    id: 'tag_save_button',
+                    itemId: 'tag_save_button',
                     text: 'Ok',
                     hidden:true,
                     listeners: {
@@ -84,17 +84,17 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
 
     updateTags: function(){
 
-        Ext.getCmp('tag_save_button').hide();
+        this.form.items.get('tag_save_button').hide();
 
         Ext.Ajax.request({
             url: '/ajax/crud/update_tags',
             params: { rowid: this.data._rowid,
-                      tags: Ext.getCmp('tag_select').getValue()
+                      tags: this.form.items.get('tag_select').getValue()
                     },
             method: 'GET',
             success: function(){
                 //this.data.tags=Ext.getCmp('tag_select').store.reload();
-                this.data.tags=Ext.getCmp('tag_select').getValue();
+                this.data.tags=this.form.items.get('tag_select').getValue();
                 Ext.StoreMgr.lookup('tag_store').reload();
                 Ext.getCmp('treepanel').getNodeById('tags').reload();
                 Ext.getCmp('statusbar').clearStatus();

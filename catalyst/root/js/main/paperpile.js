@@ -176,6 +176,7 @@ PaperPile.app=function(){
     main.loadSettings();
     
     var tree=Ext.getCmp('treepanel');
+    PaperPile.main.tree=tree;
     tree.expandAll();
     main.tabs.remove('welcome');
     

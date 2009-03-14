@@ -48,13 +48,13 @@ sub delete_entry : Local {
 sub update_entry : Local {
   my ( $self, $c ) = @_;
 
-  my $source_id = $c->request->params->{source_id};
+  my $grid_id = $c->request->params->{grid_id};
   my $rowid     = $c->request->params->{rowid};
   my $sha1      = $c->request->params->{sha1};
 
   # get old data
-  my $source = $c->session->{"source_$source_id"};
-  my $pub = $source->find_sha1($sha1);
+  my $plugin = $c->session->{"grid_$grid_id"};
+  my $pub = $plugin->find_sha1($sha1);
   my $data=$pub->as_hash;
 
   # apply new values to old entry
@@ -123,15 +123,6 @@ sub generate_edit_form : Local {
 
   $c->forward('PaperPile::View::JSON');
 
-}
-
-
-
-
-sub index : Path : Args(0) {
-  my ( $self, $c ) = @_;
-
-  $c->response->body('Matched PaperPile::Controller::Ajax in Ajax.');
 }
 
 
