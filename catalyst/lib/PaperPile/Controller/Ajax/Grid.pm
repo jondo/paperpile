@@ -8,6 +8,20 @@ use Data::Dumper;
 use 5.010;
 use Module::Load;
 
+use PaperPile::Plugins::Import;
+
+# Import plugins dynamically from directory content alone
+BEGIN{
+  foreach my $lib_dir (@INC){
+    my $plugin_dir="$lib_dir/PaperPile/Plugins/Import";
+    if (-e $plugin_dir){
+      foreach my $plugin_file (glob("$plugin_dir/*pm")){
+        (my $plugin) = ($plugin_file=~/.*[\/](.*?)\.pm/);
+        eval ("use PaperPile::Plugins::Import::$plugin;");
+      }
+    }
+  }
+}
 
 sub resultsgrid : Local {
 
@@ -25,7 +39,6 @@ sub resultsgrid : Local {
 
     # Load required module dynamically
     my $plugin_module = "PaperPile::Plugins::Import::$plugin_type";
-    load $plugin_module;
 
     # Directly pass plugin parameters starting with "plugin_" to plugin Module
     my %params = ();

@@ -11,11 +11,11 @@ use 5.010;
 sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
-  my $source_id = $c->request->params->{source_id};
+  my $grid_id = $c->request->params->{grid_id};
   my $sha1      = $c->request->params->{sha1};
-  my $source = $c->session->{"source_$source_id"};
+  my $plugin = $c->session->{"grid_$grid_id"};
 
-  my $pub = $source->find_sha1($sha1);
+  my $pub = $plugin->find_sha1($sha1);
 
   $pub->created(timestamp);
   $pub->times_read(0);
@@ -33,10 +33,10 @@ sub insert_entry : Local {
 sub delete_entry : Local {
   my ( $self, $c ) = @_;
 
-  my $source_id = $c->request->params->{source_id};
+  my $grid_id = $c->request->params->{grid_id};
   my $rowid     = $c->request->params->{rowid};
 
-  my $source = $c->session->{"source_$source_id"};
+  #my $source = $c->session->{"grid_$grid_id"};
 
   $c->model('User')->delete_pubs( [$rowid] );
 
