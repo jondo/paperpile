@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-chdir '../../db';
+chdir '../catalyst/db';
 unlink 'app.db';
 unlink 'user.db';
 my @out=`sqlite3 app.db < app.sql`;
