@@ -66,22 +66,20 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
 
     showDBQueryResults: function(mode,query,base_query,tabTitle,iconCls){
 
-        var targetTab;
-
-        targetTab=new PaperPile.PluginGridDB({
-            title: 'DB',
+        var newGrid=new PaperPile.PluginGridDB({
             iconCls: iconCls,
-            source_type: 'DB',
-            source_query: base_query,
-            source_mode: mode,
+            plugin_type: 'DB',
+            plugin_query: base_query,
+            plugin_mode: mode,
             base_query: base_query,
-            closable:true
         });
-        
-        this.add(targetTab);
-        targetTab.setTitle(tabTitle);
-        this.activate(targetTab.id);
 
+        var newView=this.add(new PaperPile.PubView({title:tabTitle, 
+                                                    grid:newGrid,
+                                                    closable:true,
+                                                    iconCls: iconCls
+                                                   }));
+        newView.show();
     }
 
 

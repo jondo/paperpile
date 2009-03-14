@@ -3,13 +3,13 @@ PaperPile.PubNotes = Ext.extend(Ext.Panel, {
 	markup: [
         '<div class="pp-notes">{notes}</div>',
         '<div class="pp-action-edit-notes">',
-        '<a href="#" onClick="{scope}.editNotes()">Edit Notes</a>',
+        '<a href="#" onClick="Ext.getCmp(\'{id}\').editNotes()">Edit Notes</a>',
         '</div>',
     ],
 
     markupEmpty: [
         '<div class="pp-action-add-notes">',
-        '<a href="#" onClick="{scope}.editNotes()">Insert notes</a>',
+        '<a href="#" onClick="Ext.getCmp(\'{id}\').editNotes()">Insert notes</a>',
         '</div>',
     ],
 
@@ -37,29 +37,32 @@ PaperPile.PubNotes = Ext.extend(Ext.Panel, {
             tpl=new Ext.XTemplate(this.markupEmpty);
         }
 
-        this.data.scope='Ext.getCmp(\'pubnotes\')';
+        this.data.id=this.id;
 		tpl.overwrite(this.body, this.data);		
 	},
 
     editNotes: function(){
        
-        var editor=new Ext.form.HtmlEditor(
-            {id:'html_editor',
-             value: this.data.notes,
+        this.editor=new Ext.form.HtmlEditor(
+            {value: this.data.notes,
              itemId:'html_editor',
             }
         );
+        
+        var dataTabs=this.findParentByType(PaperPile.DataTabs);
+        var bbar=dataTabs.getBottomToolbar();
 
-        Ext.getCmp('data_tabs').add(editor);
+        dataTabs.add(this.editor);
+        
 
-        Ext.getCmp('summary_tab_button').hide();
-        Ext.getCmp('notes_tab_button').hide();
+        bbar.items.get('summary_tab_button').hide();
+        bbar.items.get('notes_tab_button').hide();
 
-        Ext.getCmp('save_notes_button').show();
-        Ext.getCmp('cancel_notes_button').show();
+        bbar.items.get('save_notes_button').show();
+        bbar.items.get('cancel_notes_button').show();
 
-        Ext.getCmp('data_tabs').doLayout();
-        Ext.getCmp('data_tabs').getLayout().setActiveItem('html_editor');
+        dataTabs.doLayout();
+        dataTabs.getLayout().setActiveItem('html_editor');
 
         // Does not work, don't know why
         editor.focus();
@@ -67,8 +70,8 @@ PaperPile.PubNotes = Ext.extend(Ext.Panel, {
     },
 
     onSave: function(){
-
-        var newNotes= Ext.getCmp('html_editor').getValue();
+        
+        var newNotes= this.editor.getValue();
 
         Ext.Ajax.request({
             url: '/ajax/crud/update_notes',
@@ -94,14 +97,20 @@ PaperPile.PubNotes = Ext.extend(Ext.Panel, {
 
     closeEditor: function(){
 
-        Ext.getCmp('data_tabs').remove('html_editor'); 
-        Ext.getCmp('summary_tab_button').show();
-        Ext.getCmp('notes_tab_button').show();
-        Ext.getCmp('save_notes_button').hide();
-        Ext.getCmp('cancel_notes_button').hide();
+        var dataTabs=this.findParentByType(PaperPile.DataTabs);
+        var bbar=dataTabs.getBottomToolbar();
+
+        dataTabs.remove('html_editor'); 
+        bbar.items.get('summary_tab_button').show();
+        bbar.items.get('notes_tab_button').show();
+        bbar.items.get('save_notes_button').hide();
+        bbar.items.get('cancel_notes_button').hide();
         
-        Ext.getCmp('data_tabs').doLayout();
-        Ext.getCmp('data_tabs').getLayout().setActiveItem('pubnotes');
+        dataTabs.doLayout();
+        dataTabs.getLayout().setActiveItem('pubnotes');
+
+        // id changes for some unknown reasons...
+        this.data.id=dataTabs.items.get('pubnotes').id;
 
         this.tpl.overwrite(this.body, this.data);
 

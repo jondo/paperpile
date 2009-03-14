@@ -37,33 +37,34 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
                    },
                    {xtype:'tbfill'},
                    { text: 'Save',
-                     id: 'save_notes_button',
+                     itemId: 'save_notes_button',
                      cls: 'x-btn-text-icon save',
                      listeners: {
-                         click:  { fn: function()
-                                   {
-                                       Ext.getCmp('pubnotes').onSave();
-                                   },
-                                   scope: Ext.getCmp('pubnotes')}
+                         click:  { 
+                             fn: function(){
+                                 this.findByType(PaperPile.PubNotes)[0].onSave();
+                             },
+                             scope: this
+                         }
                      },
 
                      hidden:true
                    },
                    { text: 'Cancel',
-                     id: 'cancel_notes_button',
+                     itemId: 'cancel_notes_button',
                      cls: 'x-btn-text-icon cancel',
                      listeners: {
-                         click:  { fn: function()
-                                   {
-                                       Ext.getCmp('pubnotes').onCancel();
-                                   },
-                                   scope: Ext.getCmp('pubnotes')}
+                         click:  { 
+                             fn: function(){
+                                 this.findByType(PaperPile.PubNotes)[0].onCancel();
+                             },
+                             scope: this
+                         },
                      },
                      hidden:true
                    },
-
-                  ]
-        });
+                  ]}
+                 );
        
         PaperPile.DataTabs.superclass.initComponent.apply(this, arguments);
     },

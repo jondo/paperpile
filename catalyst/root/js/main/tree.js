@@ -61,19 +61,11 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 break;
 
             case 'RESET_DB':
-                PaperPile.main.tabs.resetDB();
+                PaperPile.main.resetDB();
                 break;
 
-            case 'INIT_DB':
-                PaperPile.main.tabs.initDB();
-                break;
-
-            case 'IMPORT_JOURNALS':
-                PaperPile.main.tabs.importJournals();
-                break;
-                
             case 'SETTINGS':
-                PaperPile.main.tabs.settings();
+                PaperPile.main.settings();
                 break;
 
             case 'TAG':
@@ -105,7 +97,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             params: { node_id: d.target.id,
                       sha1: d.data.selections[0].data.sha1,
                       rowid: d.data.selections[0].data._rowid,
-                      source_id: d.source.grid.id,
+                      grid_id: d.source.grid.id,
                       path: d.target.getPath('text')
                     },
             success: function(){

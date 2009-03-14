@@ -96,13 +96,13 @@ sub move_in_folder : Local {
   my ( $self, $c ) = @_;
 
   my $node_id = $c->request->params->{node_id};
-  my $source_id = $c->request->params->{source_id};
+  my $grid_id = $c->request->params->{grid_id};
   my $sha1 = $c->request->params->{sha1};
   my $rowid = $c->request->params->{rowid};
   my $path = $c->request->params->{path};
 
-  my $source = $c->session->{"source_$source_id"};
-  my $pub = $source->find_sha1($sha1);
+  my $plugin = $c->session->{"grid_$grid_id"};
+  my $pub = $plugin->find_sha1($sha1);
   my $tree= $c->session->{"tree"};
 
   my $newFolder=$self->_relative_path($path);
@@ -213,15 +213,6 @@ sub _get_default_tree {
       iconCls => 'pp-icon-empty',
     },
     $root
-  );
-
-  $admin->addChild(
-    Tree::Simple->new( {
-        text    => 'Import Journals',
-        type    => 'IMPORT_JOURNALS',
-        iconCls => 'pp-icon-tools',
-      }
-    )
   );
 
   $admin->addChild(

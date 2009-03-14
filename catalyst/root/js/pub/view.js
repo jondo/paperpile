@@ -33,6 +33,7 @@ PaperPile.PubView = Ext.extend(Ext.Panel, {
                              enableToggle: true,
                              toggleHandler: this.onPDFtabToggle,
                              toggleGroup: 'pdf_tab_buttons',
+                             disabled:true,
                              scope: this,
                              allowDepress : false,
                              pressed: false
