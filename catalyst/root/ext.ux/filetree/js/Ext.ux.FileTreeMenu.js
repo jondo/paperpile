@@ -47,7 +47,7 @@ Ext.ux.FileTreeMenu = function(config) {
 			,disabledClass:''
 			,disabled:true
 			,cmd:'nodename'
-		},{
+		},/*{
 			 text:this.openText + ' (Enter)'
 			,iconCls:this.openIconCls
 			,cmd:'open'
@@ -72,12 +72,13 @@ Ext.ux.FileTreeMenu = function(config) {
 			}
 		}
 		,new Ext.menu.Separator({cmd:'sep-open'})
-		,{
-			 text:this.reloadText + ' (Ctrl+E)'
+        ,*/
+		{
+			 text:this.reloadText
 			,iconCls:this.reloadIconCls
 			,cmd:'reload'
-		},{
-			 text:this.expandText + ' (Ctrl+&nbsp;&rarr;)'
+		},/*{
+		 	text:this.expandText + ' (Ctrl+&nbsp;&rarr;)'
 			,iconCls:this.expandIconCls
 			,cmd:'expand'
 		},{
@@ -94,20 +95,12 @@ Ext.ux.FileTreeMenu = function(config) {
 			 text:this.deleteText + ' (' + this.deleteKeyName + ')'
 			,iconCls:this.deleteIconCls
 			,cmd:'delete'
-		},{	
-			 text:this.newdirText + '... (Ctrl+N)'
+		},*/{	
+			 text:this.newdirText
 			,iconCls:this.newdirIconCls
 			,cmd:'newdir'
 		}
-		,new Ext.menu.Separator({cmd:'sep-upload'})
-		,{
-			 text:this.uploadFileText + ' (Ctrl+U)'
-			,iconCls:this.uploadIconCls
-			,hideOnClick:false
-			,cmd:'upload'
-		}
-
-		]
+     ]
 	}); // eo apply
 	// }}}
 
@@ -115,7 +108,7 @@ Ext.ux.FileTreeMenu = function(config) {
 	Ext.ux.FileTreeMenu.superclass.constructor.call(this, config);
 
 	// relay event from submenu
-	this.relayEvents(this.getItemByCmd('open').menu, ['click', 'itemclick']);
+	//this.relayEvents(this.getItemByCmd('open').menu, ['click', 'itemclick']);
 
 }; // eo constructor
 

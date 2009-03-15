@@ -85,7 +85,9 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
                                   enableToggle: true,
                                   toggleGroup: 'mode_buttons',
                                   allowDepress : false,
-                                  pressed: false
+                                  pressed: false,
+                                  disabled:true,
+                                  
                                 },
                                 { text: 'Select',
                                   id: 'select_button',
@@ -236,7 +238,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
         scale = Math.round(scale*Math.pow(10,2))/Math.pow(10,2);
 
-        var png="ajax/pdf/render/home/wash/PDFs/gesell06.pdf/"+this.currentPage+"/"+scale;
+        var png="ajax/pdf/render/"+this.file+"/"+this.currentPage+"/"+scale;
         this.bitmap.set({src:png});
 
         if (this.words[this.currentPage].length==0){

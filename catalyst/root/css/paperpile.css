@@ -205,9 +205,10 @@
 }
 
 .pp-pdf-container {
-    border-color:black;
+    /*border-color:black;
     border: 2px;
     border-style: solid;
+    */
 }
 
 .pp-pdf-selector {

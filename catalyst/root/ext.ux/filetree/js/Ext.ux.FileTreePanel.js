@@ -29,6 +29,9 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	 * propagated to lower level objects instead. Included here for convenience.
 	 */
 
+    selectionMode: 'BOTH', //FILE, DIR, or BOTH
+    showHidden:true,
+
 	/**
 	 * @cfg {String} confirmText Text to display as title of confirmation message box
 	 */
@@ -380,7 +383,10 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 		if(!this.loader) {
 			this.loader = new Ext.tree.TreeLoader({
 				 url:this.url
-				,baseParams:{cmd:'get'}
+				,baseParams:{cmd:'get', 
+                             selectionMode: this.selectionMode,
+                             showHidden: this.showHidden,
+                            }
 				,listeners:{
 					beforeload:{scope:this, fn:function(loader, node) {
 						loader.baseParams.path = this.getPath(node);
@@ -1440,22 +1446,22 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 		menu.getItemByCmd('nodename').setText(Ext.util.Format.ellipsis(node.text, 22));
 
 		// enable/disable items depending on node clicked
-		menu.setItemDisabled('open', !node.isLeaf());
+		//menu.setItemDisabled('open', !node.isLeaf());
 		menu.setItemDisabled('reload', node.isLeaf());
-		menu.setItemDisabled('expand', node.isLeaf());
-		menu.setItemDisabled('collapse', node.isLeaf());
-		menu.setItemDisabled('delete', node === this.root || node.disabled);
-		menu.setItemDisabled('rename', this.readOnly || node === this.root || node.disabled);
+		//menu.setItemDisabled('expand', node.isLeaf());
+		//menu.setItemDisabled('collapse', node.isLeaf());
+		//menu.setItemDisabled('delete', node === this.root || node.disabled);
+		//menu.setItemDisabled('rename', this.readOnly || node === this.root || node.disabled);
 		menu.setItemDisabled('newdir', this.readOnly || (node.isLeaf() ? node.parentNode.disabled : node.disabled));
-		menu.setItemDisabled('upload', node.isLeaf() ? node.parentNode.disabled : node.disabled);
-		menu.setItemDisabled('upload-panel', node.isLeaf() ? node.parentNode.disabled : node.disabled);
+		//menu.setItemDisabled('upload', node.isLeaf() ? node.parentNode.disabled : node.disabled);
+		//menu.setItemDisabled('upload-panel', node.isLeaf() ? node.parentNode.disabled : node.disabled);
 		
 		// show/hide logic
-		menu.getItemByCmd('open').setVisible(this.enableOpen);
-		menu.getItemByCmd('delete').setVisible(this.enableDelete);
+		//menu.getItemByCmd('open').setVisible(this.enableOpen);
+		//menu.getItemByCmd('delete').setVisible(this.enableDelete);
 		menu.getItemByCmd('newdir').setVisible(this.enableNewDir);
-		menu.getItemByCmd('rename').setVisible(this.enableRename);
-		menu.getItemByCmd('sep-collapse').setVisible(this.enableNewDir || this.enableDelete || this.enableRename);
+		//menu.getItemByCmd('rename').setVisible(this.enableRename);
+		//menu.getItemByCmd('sep-collapse').setVisible(this.enableNewDir || this.enableDelete || this.enableRename);
 
 		// select node
 		node.select();

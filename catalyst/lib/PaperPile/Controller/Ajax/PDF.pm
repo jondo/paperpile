@@ -15,7 +15,11 @@ sub render : Regex('^ajax/pdf/render/(.*\.pdf)/(\d+)/(\d+\.\d+)$') {
   my ( $self, $c ) = @_;
 
   my $path = $c->req->captures->[0];
-  my $root = "/";
+  my $root = File::Spec->rootdir();
+
+  # File dialogue prepends ROOT as marker for the system root
+  $path=~s/^ROOT//;
+
   my $bin = $c->path_to('bin/linux64/extpdf');
 
   my %extpdf;
@@ -51,6 +55,9 @@ sub extpdf : Local {
   my ( $self, $c ) = @_;
 
   my $bin = $c->path_to('bin/linux64/extpdf');
+
+  # File dialogue prepends ROOT as marker for the system root
+  $c->request->params->{inFile}=~s/^ROOT//;
 
   my $xml = XMLout( $c->request->params, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
 
