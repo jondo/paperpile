@@ -21,20 +21,6 @@ sub reset_db : Local {
 
 }
 
-sub init_db : Local {
-
-  my ( $self, $c ) = @_;
-
-  print STDERR "=====================> INHERE\n";
-
-  $c->model('App')->init_db($c->config->{app_settings});
-
-
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
-
-}
-
 sub tag_list : Local {
 
   my ( $self, $c ) = @_;

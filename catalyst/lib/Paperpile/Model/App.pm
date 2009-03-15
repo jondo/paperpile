@@ -7,10 +7,6 @@ use Data::Dumper;
 use Moose;
 
 
-# Function: init_db
-# Initializes database.
-# second line
-# Returns: nothing
 sub init_db {
 
   my ( $self, $settings ) = @_;

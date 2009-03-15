@@ -4,9 +4,6 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
-#use Paperpile::Library::Source::File;
-#use Paperpile::Library::Source::DB;
-#use Paperpile::Library::Source::PubMed;
 use Data::Dumper;
 use 5.010;
 
