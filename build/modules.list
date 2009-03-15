@@ -1,4 +1,4 @@
-# List was generated via scandeps:
+# List was generated via scandeps and manually adjusted
 # scandeps -V -c paperpile_test.pl / |perl -n -e 'next if (/^#/ or /\# S/ or /\?/); /^.(.*?).\s/; print "$1\n"'
 
 CGI::Simple::Cookie
@@ -20,9 +20,11 @@ Class::MOP
 Config::Any
 Config::General
 DBI
+DBD::SQLite::Amalgamation
 Data::Dump
 Data::OptList
 Data::Visitor
+Data::Page
 Devel::InnerPackage
 Devel::StackTrace
 Digest
@@ -43,7 +45,7 @@ MIME::Type
 MRO::Compat
 Module::Load
 Moose
-Moose::Meta::Method::Overriden
+#Moose::Meta::Method::Overriden
 MooseX::Timestamp
 NEXT
 Object::Signature
@@ -65,7 +67,6 @@ XML::Simple
 YAML
 if
 version
-APR
 HTTP::Request::AsCGI
 Class::Inspector
 URI
@@ -78,8 +79,7 @@ Time::Zone
 Compress::Zlib
 File::GlobMapper
 IO::Compress::Adapter::Deflate
-Net::SSLeay
 HTML::Entities
 File::Listing
-IO::Socket::SSL
 Mail::Address
+
