@@ -6,10 +6,10 @@ use Test::More 'no_plan';
 
 use lib "../lib";
 
-BEGIN { use_ok 'PaperPile::Library::Source::File' }
+BEGIN { use_ok 'Paperpile::Library::Source::File' }
 
 # test1.ris contains 67 entries
-my $source=PaperPile::Library::Source::File->new(file=>'data/test1.ris');
+my $source=Paperpile::Library::Source::File->new(file=>'data/test1.ris');
 
 $source->connect;
 

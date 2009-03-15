@@ -3,9 +3,9 @@ use Test::More 'no_plan';
 use strict;
 use Data::Dumper;
 
-BEGIN { use_ok 'PaperPile::Crawler' }
+BEGIN { use_ok 'Paperpile::Crawler' }
 
-my $crawler=PaperPile::Crawler->new;
+my $crawler=Paperpile::Crawler->new;
 
 $crawler->debug(0);
 #$crawler->driver_file('../data/short.xml');

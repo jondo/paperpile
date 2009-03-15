@@ -5,9 +5,9 @@ use Test::More 'no_plan';
 use lib "../lib";
 
 
-BEGIN { use_ok 'PaperPile::Library::Source::PubMed' }
+BEGIN { use_ok 'Paperpile::Library::Source::PubMed' }
 
-my $source=PaperPile::Library::Source::PubMed->new(query=>'Stadler PF');
+my $source=Paperpile::Library::Source::PubMed->new(query=>'Stadler PF');
 
 $source->connect;
 

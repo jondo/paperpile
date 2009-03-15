@@ -3,16 +3,16 @@ use warnings;
 use Data::Dumper;
 use Test::More 'no_plan';
 use lib "../lib";
-use PaperPile::Library::Source::File;
-use PaperPile::Model::DB;
+use Paperpile::Library::Source::File;
+use Paperpile::Model::DB;
 
 
-BEGIN { use_ok 'PaperPile::Library::Source::DB' }
+BEGIN { use_ok 'Paperpile::Library::Source::DB' }
 
-#my $fileSource=PaperPile::Library::Source::File->new(file=>'data/test1.ris');
+#my $fileSource=Paperpile::Library::Source::File->new(file=>'data/test1.ris');
 #$fileSource->connect;
 
-#my $model = PaperPile::Model::DB->new;
+#my $model = Paperpile::Model::DB->new;
 
 #$model->empty_all();
 
@@ -20,7 +20,7 @@ BEGIN { use_ok 'PaperPile::Library::Source::DB' }
 #  $model->create_pub($pub);
 #}
 
-my $dbSource=PaperPile::Library::Source::DB->new(query => 'telomerase');
+my $dbSource=Paperpile::Library::Source::DB->new(query => 'telomerase');
 $dbSource->connect;
 
 

@@ -8,7 +8,7 @@ use Test::More 'no_plan';
 
 use lib "../lib";
 
-BEGIN { use_ok 'PaperPile::Tree::Node' }
+BEGIN { use_ok 'Paperpile::Tree::Node' }
 
 # make a tree root
 my $tree = Tree::Simple->new( { text => 'Root' }, Tree::Simple->ROOT );

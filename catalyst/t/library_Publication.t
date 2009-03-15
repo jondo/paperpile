@@ -3,7 +3,7 @@
 use lib "../lib/";
 use strict;
 
-use PaperPile::Library::Publication;
+use Paperpile::Library::Publication;
 use Bibutils;
 use Data::Dumper;
 use Digest::SHA1;
@@ -50,21 +50,21 @@ my %journal = (
 
 my $pub;
 
-$pub = PaperPile::Library::Publication->new;
+$pub = Paperpile::Library::Publication->new;
 
 foreach my $key ( keys %book ) {
   $pub->$key( $book{$key} );
   is( $pub->$key, $book{$key}, "Get/Set on field $key (book example)" );
 }
 
-$pub = PaperPile::Library::Publication->new;
+$pub = Paperpile::Library::Publication->new;
 
 foreach my $key ( keys %journal ) {
   $pub->$key( $journal{$key} );
   is( $pub->$key, $journal{$key}, "Get/Set on field $key (journal example)" );
 }
 
-$pub = PaperPile::Library::Publication->new( {%book} );
+$pub = Paperpile::Library::Publication->new( {%book} );
 
 my $ctx = Digest::SHA1->new;
 $ctx->add('Knuth DE');
@@ -82,7 +82,7 @@ $pub->title('New Title');
 
 is( $pub->sha1, $sha1, "Re-calculate sha1 identity after change" );
 
-my $pub2 = PaperPile::Library::Publication->new( {%journal} );
+my $pub2 = Paperpile::Library::Publication->new( {%journal} );
 
 is( $pub2->format('[firstauthor]'),       'Gruber',   '[firstauthor]' );
 is( $pub2->format('[firstauthor:Uc]'),    'Gruber',   '[firstauthor:Uc]' );
@@ -129,7 +129,7 @@ my @data = @{ $bu->get_data };
 #exit;
 
 
-$pub = PaperPile::Library::Publication->new;
+$pub = Paperpile::Library::Publication->new;
 
 my @expected_types = qw/ARTICLE ARTICLE INBOOK INBOOK BOOK BOOK BOOK INCOLLECTION
   INCOLLECTION BOOK MANUAL MANUAL MASTERSTHESIS MASTERSTHESIS MISC MISC INPROCEEDINGS
@@ -153,7 +153,7 @@ foreach my $i ( 0 .. 27 ) {
 
   next if $i ~~ [25]; # Bibutils can't handle 'type' field in TECHREPORTS
 
-  $pub = PaperPile::Library::Publication->new;
+  $pub = Paperpile::Library::Publication->new;
   $pub->build_from_bibutils( $data[$i] );
 
   my $new_data = $pub->format_bibutils;

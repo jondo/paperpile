@@ -4,14 +4,14 @@ use Test::More 'no_plan';
 
 use Data::Dumper;
 use lib "../lib";
-use PaperPile::Library::Publication;
-use PaperPile::Model::DummyC;
+use Paperpile::Library::Publication;
+use Paperpile::Model::DummyC;
 
-BEGIN { use_ok 'PaperPile::Model::DBI' }
+BEGIN { use_ok 'Paperpile::Model::DBI' }
 
 # use a dummy $c object, otherwise we can't test
 # here DBI::Model
-my $c = PaperPile::Model::DummyC->new();
+my $c = Paperpile::Model::DummyC->new();
 
 my %journal_data = (
   pubtype => 'JOUR',
@@ -52,9 +52,9 @@ my %book_data = (
   tags      => 'programming, algorithms',
 );
 
-my $model   = PaperPile::Model::DBI->new($c);
-my $book    = PaperPile::Library::Publication->new( {%book_data} );
-my $journal = PaperPile::Library::Publication->new( {%journal_data} );
+my $model   = Paperpile::Model::DBI->new($c);
+my $book    = Paperpile::Library::Publication->new( {%book_data} );
+my $journal = Paperpile::Library::Publication->new( {%journal_data} );
 
 is ( $model->reset_db,1, 'Reset database by "reset_db"' );
 

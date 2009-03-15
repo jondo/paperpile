@@ -3,12 +3,12 @@
 use lib "../lib";
 use strict;
 use Data::Dumper;
-use PaperPile::Library::Author;
+use Paperpile::Library::Author;
 use Test::More 'no_plan';
 
-BEGIN { use_ok 'PaperPile::Library::Author' }
+BEGIN { use_ok 'Paperpile::Library::Author' }
 
-my $author = PaperPile::Library::Author->new;
+my $author = Paperpile::Library::Author->new;
 
 my %tests = (
   'bb CC, AA'       => { first => 'AA', von => 'bb',       last => 'CC', jr => '' },
@@ -23,11 +23,11 @@ my %tests = (
 
 foreach my $key ( keys %tests ) {
 
-  my $automatic = PaperPile::Library::Author->new;
+  my $automatic = Paperpile::Library::Author->new;
 
   $automatic->full($key);
 
-  my $manual = PaperPile::Library::Author->new( $tests{$key} );
+  my $manual = Paperpile::Library::Author->new( $tests{$key} );
 
   $automatic->full('');
   $manual->full('');
@@ -56,14 +56,14 @@ my %initials = (
   'Peter FM'          => 'PFM'
 );
 
-$author = PaperPile::Library::Author->new;
+$author = Paperpile::Library::Author->new;
 
 foreach my $input ( keys %initials ) {
   $author->first($input);
   is( $author->parse_initials(), $initials{$input}, "parse_initials() for $input" );
 }
 
-$author = PaperPile::Library::Author->new( full => 'Stadler, Peter F.' );
+$author = Paperpile::Library::Author->new( full => 'Stadler, Peter F.' );
 
 is( $author->create_key, "STADLER_PF",        "Automatically create key" );
 is( $author->nice,       "Stadler PF",        "nice printing" );
@@ -71,10 +71,10 @@ is( $author->normalized, "Stadler, PF",       "normalized" );
 is( $author->bibtex,     "Stadler, Peter F.", "as bibtex" );
 is( $author->bibutils,   "Stadler|Peter|F.", "as bibutils" );
 
-$author = PaperPile::Library::Author->new( full => 'Lawrie, D H' );
+$author = Paperpile::Library::Author->new( full => 'Lawrie, D H' );
 is( $author->bibutils,   "Lawrie|D|H", "as bibutils" );
 
-$author = PaperPile::Library::Author->new();
+$author = Paperpile::Library::Author->new();
 
 is(
   $author->read_bibutils('Oz|Wizard|V.')->bibtex,

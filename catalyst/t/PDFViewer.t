@@ -6,11 +6,11 @@ use Test::More 'no_plan';
 
 use lib "../lib";
 
-use PaperPile::Library;
+use Paperpile::Library;
 
-BEGIN { use_ok 'PaperPile::PDFviewer' }
+BEGIN { use_ok 'Paperpile::PDFviewer' }
 
-my $pv = PaperPile::PDFviewer->new(
+my $pv = Paperpile::PDFviewer->new(
   file          => 'data/nature.pdf',
   canvas_width  => 800,
   canvas_height => 100
