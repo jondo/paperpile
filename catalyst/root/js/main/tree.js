@@ -164,8 +164,6 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
 		}.createDelegate(this));
 
-
-
     },
 
     onNewDir: function(){

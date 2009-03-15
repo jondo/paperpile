@@ -36,7 +36,6 @@ sub connect {
   my $response  = $browser->get( $esearch . $self->query );
   my $resultXML = $response->content;
 
-  print STDERR Dumper($resultXML);
 
   my $result = XMLin($resultXML);
 
@@ -83,7 +82,7 @@ sub _linkOut {
 
   my $response = $browser->get($url);
 
-  print STDERR Dumper( $url, "   ", $response->content );
+  #print STDERR Dumper( $url, "   ", $response->content );
 
   my $result = XMLin( $response->content );
 

@@ -62,7 +62,7 @@ PaperPile.Forms.Settings = Ext.extend(PaperPile.Forms, {
             url:'/ajax/forms/settings',
             params: {action:'LOAD'},
             success: function(){
-                console.log(PaperPile.Main.globalSettings);
+                console.log(PaperPile.main.globalSettings);
             },
             failure: function(){alert('nope')},
         });
