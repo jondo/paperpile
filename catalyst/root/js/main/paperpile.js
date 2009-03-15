@@ -1,7 +1,7 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
-Ext.ns('PaperPile');
+Ext.ns('Paperpile');
 
-PaperPile.Viewport = Ext.extend(Ext.Viewport, {
+Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     canvasWidth:null,
     canvasHeight:null,
@@ -41,7 +41,7 @@ PaperPile.Viewport = Ext.extend(Ext.Viewport, {
                             }
                           ]});
         
-        PaperPile.Viewport.superclass.initComponent.call(this);
+        Paperpile.Viewport.superclass.initComponent.call(this);
 
         this.tabs=Ext.getCmp('tabs');
 
@@ -142,7 +142,7 @@ PaperPile.Viewport = Ext.extend(Ext.Viewport, {
     },
 
     settings:function(){
-        var win=new PaperPile.Settings();
+        var win=new Paperpile.Settings();
         win.show();
     }
 }
@@ -150,25 +150,25 @@ PaperPile.Viewport = Ext.extend(Ext.Viewport, {
 );
 
 Ext.onReady(function() {
-    PaperPile.initMask = new Ext.LoadMask(Ext.getBody(), {msg:"Starting Paperpile Pre 1"});
-    PaperPile.initMask.show();
+    Paperpile.initMask = new Ext.LoadMask(Ext.getBody(), {msg:"Starting Paperpile Pre 1"});
+    Paperpile.initMask.show();
     Ext.Ajax.request({
         url: '/ajax/misc/init_session',
-        success: PaperPile.app
+        success: Paperpile.app
     });
      
 });
 
 
-PaperPile.app=function(){
+Paperpile.app=function(){
 
     Ext.QuickTips.init();
-    main=new PaperPile.Viewport;
+    main=new Paperpile.Viewport;
     main.show();
 
     main.tabs.newDBtab('');
     // Global alias for main application class
-    PaperPile.main=main; 
+    Paperpile.main=main; 
 
     // Note: this is asynchronous, so might not be available
     // immediately (integrate this better in startup to make sure it
@@ -176,11 +176,11 @@ PaperPile.app=function(){
     main.loadSettings();
     
     var tree=Ext.getCmp('treepanel');
-    PaperPile.main.tree=tree;
+    Paperpile.main.tree=tree;
     tree.expandAll();
     main.tabs.remove('welcome');
     
-    PaperPile.initMask.hide();
+    Paperpile.initMask.hide();
     
  
 

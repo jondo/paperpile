@@ -1,5 +1,5 @@
 
-PaperPile.PubNotes = Ext.extend(Ext.Panel, {
+Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 	markup: [
         '<div class="pp-notes">{notes}</div>',
         '<div class="pp-action-edit-notes">',
@@ -25,7 +25,7 @@ PaperPile.PubNotes = Ext.extend(Ext.Panel, {
             autoScroll: true,
 			html: this.startingMarkup
 		});
-		PaperPile.PubNotes.superclass.initComponent.call(this);
+		Paperpile.PubNotes.superclass.initComponent.call(this);
 	},
     
 	updateDetail: function(data) {
@@ -49,7 +49,7 @@ PaperPile.PubNotes = Ext.extend(Ext.Panel, {
             }
         );
         
-        var dataTabs=this.findParentByType(PaperPile.DataTabs);
+        var dataTabs=this.findParentByType(Paperpile.DataTabs);
         var bbar=dataTabs.getBottomToolbar();
 
         dataTabs.add(this.editor);
@@ -97,7 +97,7 @@ PaperPile.PubNotes = Ext.extend(Ext.Panel, {
 
     closeEditor: function(){
 
-        var dataTabs=this.findParentByType(PaperPile.DataTabs);
+        var dataTabs=this.findParentByType(Paperpile.DataTabs);
         var bbar=dataTabs.getBottomToolbar();
 
         dataTabs.remove('html_editor'); 
@@ -120,5 +120,5 @@ PaperPile.PubNotes = Ext.extend(Ext.Panel, {
 
 });
 
-Ext.reg('pubnotes', PaperPile.PubNotes);
+Ext.reg('pubnotes', Paperpile.PubNotes);
 

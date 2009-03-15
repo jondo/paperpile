@@ -6,9 +6,9 @@ use strict;
 use warnings;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use PaperPile;
+use Paperpile;
 
-PaperPile->run;
+Paperpile->run;
 
 1;
 

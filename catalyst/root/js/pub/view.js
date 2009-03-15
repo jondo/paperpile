@@ -1,4 +1,4 @@
-PaperPile.PubView = Ext.extend(Ext.Panel, {
+Paperpile.PubView = Ext.extend(Ext.Panel, {
 
     initComponent:function() {
         
@@ -10,11 +10,11 @@ PaperPile.PubView = Ext.extend(Ext.Panel, {
                   activeItem:0,
                   layout: 'card',
                   items: [
-                      new PaperPile.PDFmanager(
+                      new Paperpile.PDFmanager(
                           {itemId:'pdf_manager',
                           }
                       ),
-                      new PaperPile.PDFviewer(
+                      new Paperpile.PDFviewer(
                           {itemId:'pdf_viewer',
                           }
                       )
@@ -65,7 +65,7 @@ PaperPile.PubView = Ext.extend(Ext.Panel, {
             ],
         });
        
-        PaperPile.PubView.superclass.initComponent.apply(this, arguments);
+        Paperpile.PubView.superclass.initComponent.apply(this, arguments);
     },
 
     onRowSelect: function(sm, rowIdx, r) {

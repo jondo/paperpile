@@ -1,4 +1,4 @@
-PaperPile.FileChooser = Ext.extend(Ext.Window, {
+Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
     title: "Select file",
     selectionMode:'BOTH',
@@ -64,7 +64,7 @@ PaperPile.FileChooser = Ext.extend(Ext.Window, {
                     }
                   ]
 	    });
-	    PaperPile.FileChooser.superclass.initComponent.call(this);
+	    Paperpile.FileChooser.superclass.initComponent.call(this);
     }
 
 

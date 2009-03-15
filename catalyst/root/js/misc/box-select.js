@@ -1,6 +1,6 @@
 // Based on Ext.ux.BoxSelect
 
-PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
+Paperpile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 
     initComponent:function() {
 		    Ext.apply(this, {
@@ -15,7 +15,7 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 			      hideTrigger: true,
 			      grow: false
 		    });
-		    PaperPile.BoxSelect.superclass.initComponent.call(this);
+		    Paperpile.BoxSelect.superclass.initComponent.call(this);
         
         this.on('focus',
                 function(){
@@ -30,7 +30,7 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 	  },
 	
 	onRender:function(ct, position) {
-		  PaperPile.BoxSelect.superclass.onRender.call(this, ct, position);
+		  Paperpile.BoxSelect.superclass.onRender.call(this, ct, position);
 		
 		  this.el.removeClass('x-form-text');
 		  this.el.className = 'maininput';
@@ -105,7 +105,7 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 	onResize : function(w, h, rw, rh){
 		this._width = w;
 		this.holder.setWidth(w-4);
-		PaperPile.BoxSelect.superclass.onResize.call(this, w, h, rw, rh);
+		Paperpile.BoxSelect.superclass.onResize.call(this, w, h, rw, rh);
 		this.autoSize();
 	},
 	
@@ -123,7 +123,7 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 
 		    this.autoSize();
 
-		    PaperPile.BoxSelect.superclass.onKeyUp.call(this, e);
+		    Paperpile.BoxSelect.superclass.onKeyUp.call(this, e);
 
 		    this.lastValue = this.el.dom.value;
 	  },
@@ -192,14 +192,14 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 
 
 	  onEnable: function(){
-		    PaperPile.BoxSelect.superclass.onEnable.apply(this, arguments);
+		    Paperpile.BoxSelect.superclass.onEnable.apply(this, arguments);
 		    for(var k in this.boxElements){
 			      this.boxElements[k].enable();
 		    }
 	  },
 
 	  onDisable: function(){
-		    PaperPile.BoxSelect.superclass.onDisable.apply(this, arguments);
+		    Paperpile.BoxSelect.superclass.onDisable.apply(this, arguments);
 		    for(var k in this.boxElements){
 			      this.boxElements[k].disable();
 		    }
@@ -280,7 +280,7 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 	  },
 	
 	  addItem: function(id, caption){
-		    var box = new PaperPile.BoxSelect.Item({
+		    var box = new Paperpile.BoxSelect.Item({
 			      id: 'Box_' + id,
 			      maininput: this.maininput,
 			      renderTo: this.holder,
@@ -342,7 +342,7 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 	  },
 	
 	  onEnable: function(){
-		    PaperPile.BoxSelect.superclass.onEnable.apply(this, arguments);
+		    Paperpile.BoxSelect.superclass.onEnable.apply(this, arguments);
 
 		    for(var k in this.boxElements){
 			      this.boxElements[k].enable();
@@ -350,7 +350,7 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 	  },
 
 	  onDisable: function(){
-		    PaperPile.BoxSelect.superclass.onDisable.apply(this, arguments);
+		    Paperpile.BoxSelect.superclass.onDisable.apply(this, arguments);
 
 		    for(var k in this.boxElements){
 			      this.boxElements[k].disable();
@@ -362,12 +362,12 @@ PaperPile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 	  }
 });
 
-Ext.reg('boxselect', PaperPile.BoxSelect);
+Ext.reg('boxselect', Paperpile.BoxSelect);
 
-PaperPile.BoxSelect.Item = Ext.extend(Ext.Component, {
+Paperpile.BoxSelect.Item = Ext.extend(Ext.Component, {
 
 	  initComponent : function(){
-		    PaperPile.BoxSelect.Item.superclass.initComponent.call(this);
+		    Paperpile.BoxSelect.Item.superclass.initComponent.call(this);
 	  },
 
 	  onElClick : function(e){
@@ -415,7 +415,7 @@ PaperPile.BoxSelect.Item = Ext.extend(Ext.Component, {
 	  },
 
 	  onRender: function(ct, position){
-		    PaperPile.BoxSelect.Item.superclass.onRender.call(this, ct, this.maininput);
+		    Paperpile.BoxSelect.Item.superclass.onRender.call(this, ct, this.maininput);
 		
 		    this.addEvents('remove');
 

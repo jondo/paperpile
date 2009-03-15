@@ -1,4 +1,4 @@
-PaperPile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
+Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     plugin_query:'',
     closable:true,
@@ -77,7 +77,7 @@ PaperPile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             
         });
         
-        PaperPile.PluginGrid.superclass.initComponent.apply(this, arguments);
+        Paperpile.PluginGrid.superclass.initComponent.apply(this, arguments);
 
         
         this.on('beforedestroy', this.onDestroy,this);
@@ -86,9 +86,9 @@ PaperPile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     afterRender: function(){
 
-        var container= this.findParentByType(PaperPile.PubView);
+        var container= this.findParentByType(Paperpile.PubView);
         this.getSelectionModel().on('rowselect',container.onRowSelect,container);
-        PaperPile.PluginGrid.superclass.afterRender.apply(this, arguments);
+        Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
 
     },
 
@@ -137,7 +137,7 @@ PaperPile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
         var sha1=this.getSelectionModel().getSelected().id;
 
-        var form = new PaperPile.PubEdit(
+        var form = new Paperpile.PubEdit(
             {id:'pub_edit',
              itemId:'pub_edit',
              data:this.getSelectionModel().getSelected(),

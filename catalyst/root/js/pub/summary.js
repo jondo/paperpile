@@ -1,5 +1,5 @@
 
-PaperPile.PubSummary = Ext.extend(Ext.Panel, {
+Paperpile.PubSummary = Ext.extend(Ext.Panel, {
 	tplMarkup: [
         '<div class="pp-summary-form" id="tags-{id}"></div>',
 		'<div class="pp-summary-abstract">{abstract}</div>',
@@ -16,7 +16,7 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
             autoScroll: true,
 			html: this.startingMarkup
 		});
-		PaperPile.PubSummary.superclass.initComponent.call(this);
+		Paperpile.PubSummary.superclass.initComponent.call(this);
         
 	},
 
@@ -46,7 +46,7 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
             hideLabels: true,
             baseCls: 'x-plain',
 			items: [
-                new PaperPile.BoxSelect({
+                new Paperpile.BoxSelect({
                     itemId: 'tag_select',
 			        name: 'to[]',
                     value:this.data.tags,
@@ -109,5 +109,5 @@ PaperPile.PubSummary = Ext.extend(Ext.Panel, {
 
 });
 
-Ext.reg('pubsummary', PaperPile.PubSummary);
+Ext.reg('pubsummary', Paperpile.PubSummary);
 

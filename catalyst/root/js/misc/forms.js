@@ -1,4 +1,4 @@
-PaperPile.Forms = Ext.extend(Ext.FormPanel, {
+Paperpile.Forms = Ext.extend(Ext.FormPanel, {
 
     initComponent: function() {
 		Ext.apply(this, {
@@ -6,11 +6,11 @@ PaperPile.Forms = Ext.extend(Ext.FormPanel, {
             bodyStyle:'padding:5px 5px 0',
             defaultType: 'textfield',
         });
-		PaperPile.Forms.superclass.initComponent.call(this);
+		Paperpile.Forms.superclass.initComponent.call(this);
     }});
 
 
-PaperPile.Forms.Settings = Ext.extend(PaperPile.Forms, {
+Paperpile.Forms.Settings = Ext.extend(Paperpile.Forms, {
 
     initComponent: function() {
 		Ext.apply(this, {
@@ -37,7 +37,7 @@ PaperPile.Forms.Settings = Ext.extend(PaperPile.Forms, {
                                 success: function(){
                                     Ext.getCmp('statusbar').clearStatus();
                                     Ext.getCmp('statusbar').setText('Saved settings.');
-                                    this.findParentByType(PaperPile.Settings).close();
+                                    this.findParentByType(Paperpile.Settings).close();
                                 },
                                 scope:this,
                                 failure: function(){
@@ -49,20 +49,20 @@ PaperPile.Forms.Settings = Ext.extend(PaperPile.Forms, {
                       },
                       {text:'Cancel',
                        handler: function(){
-                           this.findParentByType(PaperPile.Settings).close();
+                           this.findParentByType(Paperpile.Settings).close();
                        },
                        scope:this
                       },
                      ]
         });
 		
-        PaperPile.Forms.Settings.superclass.initComponent.call(this);
+        Paperpile.Forms.Settings.superclass.initComponent.call(this);
         
         this.load({
             url:'/ajax/forms/settings',
             params: {action:'LOAD'},
             success: function(){
-                console.log(PaperPile.main.globalSettings);
+                console.log(Paperpile.main.globalSettings);
             },
             failure: function(){alert('nope')},
         });

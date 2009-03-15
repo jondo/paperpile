@@ -1,4 +1,4 @@
-PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
+Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     mode: 'drag',
     currentZoom: 1.0,
@@ -13,7 +13,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
     initComponent: function() {
 
-        var zoomer= new PaperPile.PDFzoomer;
+        var zoomer= new Paperpile.PDFzoomer;
   
         Ext.apply(this, 
                   {autoScroll : false,
@@ -103,7 +103,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
                   }
                  );
 
-		PaperPile.PDFviewer.superclass.initComponent.call(this);
+		Paperpile.PDFviewer.superclass.initComponent.call(this);
 
         zoomer.on('change',this.onZoom,this);
         zoomer.on('changecomplete',this.onZoomComplete,this);
@@ -128,7 +128,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
     afterRender: function() {
 
-        PaperPile.PDFviewer.superclass.afterRender.apply(this, arguments);
+        Paperpile.PDFviewer.superclass.afterRender.apply(this, arguments);
         
         this.bitmap = document.createElement('img');
         this.bitmap.src = Ext.BLANK_IMAGE_URL;
@@ -148,7 +148,7 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
     },
 
     onResize: function(){
-        PaperPile.PDFviewer.superclass.onResize.apply(this, arguments);
+        Paperpile.PDFviewer.superclass.onResize.apply(this, arguments);
         this.canvasWidth=this.getInnerWidth();
         this.canvasHeight=this.getInnerHeight();
         this.originalWidth=this.canvasWidth;
@@ -561,4 +561,4 @@ PaperPile.PDFviewer = Ext.extend(Ext.Panel, {
 
 });
 
-Ext.reg('pdfviewer', PaperPile.PDFviewer);
+Ext.reg('pdfviewer', Paperpile.PDFviewer);

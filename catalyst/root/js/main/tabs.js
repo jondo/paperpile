@@ -1,4 +1,4 @@
-PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
+Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
     initComponent:function() {
         
@@ -12,12 +12,12 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
                    ],
         });
        
-        PaperPile.Tabs.superclass.initComponent.apply(this, arguments);
+        Paperpile.Tabs.superclass.initComponent.apply(this, arguments);
 
     },
 
     newFileTab:function(file){
-        this.add(new PaperPile.PluginGridFile({
+        this.add(new Paperpile.PluginGridFile({
             title: 'test2.ris',
             iconCls: 'tabs',
             source_file: file,
@@ -28,13 +28,13 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
 
     newDBtab:function(query){
         
-        var newGrid=new PaperPile.PluginGridDB({
+        var newGrid=new Paperpile.PluginGridDB({
             plugin_type: 'DB',
             plugin_mode: 'FULLTEXT',
             plugin_query: query,
         });
 
-        var newView=this.add(new PaperPile.PubView({title:'Local library', 
+        var newView=this.add(new Paperpile.PubView({title:'Local library', 
                                                     grid:newGrid,
                                                     closable:true,
                                                     iconCls: 'pp-icon-page',
@@ -45,9 +45,9 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
     
     newPluginTab:function(name, pars){
 
-        var newGrid=new PaperPile['PluginGrid'+name](pars);
+        var newGrid=new Paperpile['PluginGrid'+name](pars);
         
-        var newView=this.add(new PaperPile.PubView({title: newGrid.plugin_title, 
+        var newView=this.add(new Paperpile.PubView({title: newGrid.plugin_title, 
                                                     grid:newGrid,
                                                     closable:true,
                                                     iconCls: newGrid.plugin_iconCls,
@@ -57,7 +57,7 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
 
 
     newPubMedTab:function(query){
-        this.add(new PaperPile.PluginGridPubMed({
+        this.add(new Paperpile.PluginGridPubMed({
             source_query: query,
             iconCls: 'tabs',
         })).show();
@@ -66,7 +66,7 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
 
     showDBQueryResults: function(mode,query,base_query,tabTitle,iconCls){
 
-        var newGrid=new PaperPile.PluginGridDB({
+        var newGrid=new Paperpile.PluginGridDB({
             iconCls: iconCls,
             plugin_type: 'DB',
             plugin_query: base_query,
@@ -74,7 +74,7 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
             base_query: base_query,
         });
 
-        var newView=this.add(new PaperPile.PubView({title:tabTitle, 
+        var newView=this.add(new Paperpile.PubView({title:tabTitle, 
                                                     grid:newGrid,
                                                     closable:true,
                                                     iconCls: iconCls
@@ -87,4 +87,4 @@ PaperPile.Tabs = Ext.extend(Ext.TabPanel, {
  
 );
 
-Ext.reg('tabs', PaperPile.Tabs);
+Ext.reg('tabs', Paperpile.Tabs);

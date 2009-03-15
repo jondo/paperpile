@@ -1,4 +1,4 @@
-PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
+Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 	  
     markup: [
         '<div id="mybox-{id}">',
@@ -27,13 +27,13 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
             autoScroll: true,
 			      html: this.startingMarkup
 		    });
-		    PaperPile.PDFmanager.superclass.initComponent.call(this);
+		    Paperpile.PDFmanager.superclass.initComponent.call(this);
 	  },
 	  
     updateDetail: function(data) {
         this.data=data;
         this.data.id=this.id;
-        this.source_id=PaperPile.main.tabs.getActiveTab().id;
+        this.source_id=Paperpile.main.tabs.getActiveTab().id;
     
         this.tpl.overwrite(this.body, this.data);
 
@@ -173,4 +173,4 @@ PaperPile.PDFmanager = Ext.extend(Ext.Panel, {
 });
 
 
-Ext.reg('pdfmanager', PaperPile.PDFmanager);
+Ext.reg('pdfmanager', Paperpile.PDFmanager);

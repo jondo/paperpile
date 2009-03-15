@@ -1,4 +1,4 @@
-PaperPile.PluginGridDB = Ext.extend(PaperPile.PluginGrid, {
+Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
     base_query:'',
     
@@ -43,7 +43,7 @@ PaperPile.PluginGridDB = Ext.extend(PaperPile.PluginGrid, {
             
         });
 
-        PaperPile.PluginGridDB.superclass.initComponent.apply(this, arguments);
+        Paperpile.PluginGridDB.superclass.initComponent.apply(this, arguments);
         _filterField.store=this.store;
         _filterField.base_query=this.base_query;
 
@@ -52,7 +52,7 @@ PaperPile.PluginGridDB = Ext.extend(PaperPile.PluginGrid, {
     },
 
     onRender: function() {
-        PaperPile.PluginGridDB.superclass.onRender.apply(this, arguments);
+        Paperpile.PluginGridDB.superclass.onRender.apply(this, arguments);
         this.store.load({params:{start:0, limit:25 }});
     }
 });

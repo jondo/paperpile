@@ -1,8 +1,8 @@
-PaperPile.Settings = Ext.extend(Ext.Window, {
+Paperpile.Settings = Ext.extend(Ext.Window, {
 	  
     initComponent: function() {
 
-		var form=new PaperPile.Forms.Settings();
+		var form=new Paperpile.Forms.Settings();
 
         Ext.apply(this, {
             layout: 'fit',
@@ -12,7 +12,7 @@ PaperPile.Settings = Ext.extend(Ext.Window, {
             plain: true,
             items: [form],
 		});
-		PaperPile.Settings.superclass.initComponent.call(this);
+		Paperpile.Settings.superclass.initComponent.call(this);
         
     },
 

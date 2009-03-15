@@ -1,4 +1,4 @@
-PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
+Paperpile.PubEdit = Ext.extend(Ext.FormPanel, {
 	  
     initComponent: function() {
 
@@ -31,7 +31,7 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
               defaultType: 'textfield',
               items:{id:'dummy'}, // one field is always needed
 		  });
-		PaperPile.PubEdit.superclass.initComponent.call(this);
+		Paperpile.PubEdit.superclass.initComponent.call(this);
 
         
         Ext.Ajax.request({
@@ -102,4 +102,4 @@ PaperPile.PubEdit = Ext.extend(Ext.FormPanel, {
 
 });
 
-Ext.reg('pubedit', PaperPile.PubEdit);
+Ext.reg('pubedit', Paperpile.PubEdit);

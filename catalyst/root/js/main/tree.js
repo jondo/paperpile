@@ -1,4 +1,4 @@
-PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
+Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 	  
     initComponent: function() {
 		Ext.apply(this, {
@@ -8,7 +8,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             animate: false,
             lines:false,
             autoScroll: true,
-            loader: new PaperPile.TreeLoader(
+            loader: new Paperpile.TreeLoader(
                 {  url: '/ajax/tree/node',
                    requestMethod: 'GET'
                 }
@@ -28,7 +28,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 			}) 
 		});
 
-		PaperPile.Tree.superclass.initComponent.call(this);
+		Paperpile.Tree.superclass.initComponent.call(this);
 
         this.on({
 			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
@@ -40,7 +40,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
             switch(node.type){
 
             case 'DB':
-                PaperPile.main.tabs.newDBtab(node.query);
+                Paperpile.main.tabs.newDBtab(node.query);
                 break;
                 
             case 'IMPORT_PLUGIN':
@@ -53,23 +53,23 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     }
                 }
                 
-                PaperPile.main.tabs.newPluginTab(node.plugin_name, pars);
+                Paperpile.main.tabs.newPluginTab(node.plugin_name, pars);
                 break;
 
             case 'FILE':
-                PaperPile.main.tabs.newFileTab(node.file);
+                Paperpile.main.tabs.newFileTab(node.file);
                 break;
 
             case 'RESET_DB':
-                PaperPile.main.resetDB();
+                Paperpile.main.resetDB();
                 break;
 
             case 'SETTINGS':
-                PaperPile.main.settings();
+                Paperpile.main.settings();
                 break;
 
             case 'TAG':
-                PaperPile.main.tabs.showDBQueryResults('FULLTEXT',
+                Paperpile.main.tabs.showDBQueryResults('FULLTEXT',
                                                        node.text,
                                                        'tags:'+node.text,
                                                        node.text,
@@ -78,7 +78,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 break;
 
             case 'FOLDER':
-                PaperPile.main.tabs.showDBQueryResults('FULLTEXT',
+                Paperpile.main.tabs.showDBQueryResults('FULLTEXT',
                                                        node.text,
                                                        'folders:'+node.text,
                                                        node.text,
@@ -113,7 +113,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
 
     onRender:function() {
-		PaperPile.Tree.superclass.onRender.apply(this, arguments);
+		Paperpile.Tree.superclass.onRender.apply(this, arguments);
 
         // Do not show browser-context menu
         this.el.on({
@@ -124,7 +124,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     onContextMenu:function(node, e) {
         node.select();
-        this.contextMenu = new PaperPile.TreeMenu({node:node});
+        this.contextMenu = new Paperpile.TreeMenu({node:node});
         this.contextMenu.node = node;
         this.showContextMenu();
 	},
@@ -145,7 +145,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
         
 		appendNode.expand(false, false, function(n) {
 		    
-			newNode = n.appendChild(new PaperPile.AsyncTreeNode({text:'New Folder', 
+			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Folder', 
                                                                  iconCls:'pp-icon-folder', 
                                                                  type: 'FOLDER', 
                                                                 })
@@ -218,7 +218,7 @@ PaperPile.Tree = Ext.extend(Ext.tree.TreePanel, {
 });
 
 
-PaperPile.TreeMenu = Ext.extend(Ext.menu.Menu, {
+Paperpile.TreeMenu = Ext.extend(Ext.menu.Menu, {
     
     constructor:function(config) {
         config = config || {};
@@ -248,7 +248,7 @@ PaperPile.TreeMenu = Ext.extend(Ext.menu.Menu, {
             break;
         }
         
-        PaperPile.TreeMenu.superclass.constructor.call(this, config);
+        Paperpile.TreeMenu.superclass.constructor.call(this, config);
 
     },
 
@@ -261,7 +261,7 @@ PaperPile.TreeMenu = Ext.extend(Ext.menu.Menu, {
 // can't override as usual but have do define (and call) an init function 
 // for ourselves. 
 
-PaperPile.AsyncTreeNode = Ext.extend(Ext.tree.AsyncTreeNode, {
+Paperpile.AsyncTreeNode = Ext.extend(Ext.tree.AsyncTreeNode, {
 
     init: function(attr) {
 		    Ext.apply(this, attr);
@@ -269,7 +269,7 @@ PaperPile.AsyncTreeNode = Ext.extend(Ext.tree.AsyncTreeNode, {
 
 });
 
-PaperPile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
+Paperpile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
 
     init: function(attr) {
 		Ext.apply(this, attr);
@@ -278,10 +278,10 @@ PaperPile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
 });
 
 // To use our custom TreeNode we also have to override TreeLoader
-PaperPile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
+Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
 	  
     initComponent: function() {
-		    PaperPile.TreeLoader.superclass.initComponent.call(this);
+		    Paperpile.TreeLoader.superclass.initComponent.call(this);
 	  },
 
 
@@ -304,11 +304,11 @@ PaperPile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
         // Return our custom TreeNode here
 
         if (attr.leaf){
-            var node=new PaperPile.TreeNode(attr);
+            var node=new Paperpile.TreeNode(attr);
             node.init(attr);
             return node;
         } else {
-            var node=new PaperPile.AsyncTreeNode(attr);
+            var node=new Paperpile.AsyncTreeNode(attr);
             node.init(attr);
             return node;
         }
@@ -330,4 +330,4 @@ PaperPile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
 
 
 
-Ext.reg('tree', PaperPile.Tree);
+Ext.reg('tree', Paperpile.Tree);

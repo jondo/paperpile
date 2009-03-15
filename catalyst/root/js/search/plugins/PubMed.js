@@ -1,4 +1,4 @@
-PaperPile.PluginGridPubMed = Ext.extend(PaperPile.PluginGrid, {
+Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
 
     loadMask: {msg:"Searching PubMed"},
 
@@ -25,14 +25,14 @@ PaperPile.PluginGridPubMed = Ext.extend(PaperPile.PluginGrid, {
                  ],
         });
 
-        PaperPile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
+        Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
 
         _searchField.store=this.store;
 
     },
     
     onRender: function() {
-        PaperPile.PluginGridPubMed.superclass.onRender.apply(this, arguments);
+        Paperpile.PluginGridPubMed.superclass.onRender.apply(this, arguments);
         
         if (this.plugin_query != ''){
             this.store.load({params:{start:0, limit:25 }});

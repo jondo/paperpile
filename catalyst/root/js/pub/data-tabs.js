@@ -1,4 +1,4 @@
-PaperPile.DataTabs = Ext.extend(Ext.Panel, {
+Paperpile.DataTabs = Ext.extend(Ext.Panel, {
 
     initComponent:function() {
         
@@ -42,7 +42,7 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
                      listeners: {
                          click:  { 
                              fn: function(){
-                                 this.findByType(PaperPile.PubNotes)[0].onSave();
+                                 this.findByType(Paperpile.PubNotes)[0].onSave();
                              },
                              scope: this
                          }
@@ -56,7 +56,7 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
                      listeners: {
                          click:  { 
                              fn: function(){
-                                 this.findByType(PaperPile.PubNotes)[0].onCancel();
+                                 this.findByType(Paperpile.PubNotes)[0].onCancel();
                              },
                              scope: this
                          },
@@ -66,7 +66,7 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
                   ]}
                  );
        
-        PaperPile.DataTabs.superclass.initComponent.apply(this, arguments);
+        Paperpile.DataTabs.superclass.initComponent.apply(this, arguments);
     },
 
     onItemToggle:function (button, pressed){
@@ -85,4 +85,4 @@ PaperPile.DataTabs = Ext.extend(Ext.Panel, {
  
 );
 
-Ext.reg('datatabs', PaperPile.DataTabs);
+Ext.reg('datatabs', Paperpile.DataTabs);

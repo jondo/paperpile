@@ -1,4 +1,4 @@
-PaperPile.PDFzoomer = Ext.extend(Ext.Slider, {
+Paperpile.PDFzoomer = Ext.extend(Ext.Slider, {
     initComponent: function() {
 
         this.map=[0.1,0.2,0.4,0.6,0.8,
@@ -10,13 +10,13 @@ PaperPile.PDFzoomer = Ext.extend(Ext.Slider, {
                            increment: 1,
                            minValue: 0,
                            maxValue: 10,
-                           plugins: new PaperPile.PDFzoomerTip()
+                           plugins: new Paperpile.PDFzoomerTip()
                         });
 
     }
 });
 
-PaperPile.PDFzoomerTip = Ext.extend(Ext.Tip, {
+Paperpile.PDFzoomerTip = Ext.extend(Ext.Tip, {
     minWidth: 10,
     offsets : [0, -10],
     init : function(slider){

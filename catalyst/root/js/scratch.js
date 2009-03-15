@@ -1,5 +1,5 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
-Ext.ns('PaperPile');
+Ext.ns('Paperpile');
 
 Ext.onReady(function() {
 
@@ -28,7 +28,7 @@ Ext.onReady(function() {
                 }),
             }),
             
-            new PaperPile.PDFviewer(
+            new Paperpile.PDFviewer(
                 {id:'pdf_viewer',
                  itemId:'pdf_viewer',
                  region:'center'
@@ -45,7 +45,7 @@ Ext.onReady(function() {
     //vp.on('afterlayout', Ext.getCmp('pdf_viewer').onLayout, Ext.getCmp('pdf_viewer'));
     //vp.on('render', function(){alert('inhere')}, Ext.getCmp('pdf_viewer'));
 
-    win=new PaperPile.FileChooser({
+    win=new Paperpile.FileChooser({
         callback:function(button,path){
             if (button == 'OK'){
                 var viewer=Ext.getCmp('pdf_viewer');
