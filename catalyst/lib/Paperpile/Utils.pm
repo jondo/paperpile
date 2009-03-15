@@ -34,6 +34,19 @@ sub get_config{
 
 }
 
+sub get_binary{
+
+  my ($self, $name,$platform)=@_;
+
+  if ($platform =~/windows/i){
+    $name.='exe';
+  }
+
+  my $bin=File::Spec->catfile($self->path_to('bin'), $platform, $name);
+
+  return $bin;
+}
+
 
 ## Gives access to the installation dir of the application outside
 ## Catalyst classes. Uses the function from Catalyst::Utils. Copied here,

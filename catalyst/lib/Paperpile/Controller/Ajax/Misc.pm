@@ -25,7 +25,10 @@ sub init_db : Local {
 
   my ( $self, $c ) = @_;
 
+  print STDERR "=====================> INHERE\n";
+
   $c->model('App')->init_db($c->config->{app_settings});
+
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -135,8 +138,27 @@ sub init_session : Local {
   };
 
   # If we get and empty value this shows us that our database has not been initialized yet after install.
-  # We initialize it now.
+  # We initialize it now and set some application wide globals like platform.
   if ( not $user_db ) {
+
+    # Currently only support linux32, linux64 and windows32
+
+    my $platform='';
+    if ($^O=~/linux/i){
+      my @f=`file /bin/ls`; # More robust way for this??
+      if ($f[0]=~/64-bit/){
+        $platform='linux64';
+      } else {
+        $platform='linux32';
+      }
+    }
+
+    if ($^O=~/cygwin/i or $^O=~/MSWin/i){
+      $platform='windows32';
+    }
+
+    $c->config->{app_settings}->{platform}=$platform;
+
     $c->model('App')->init_db( $c->config->{app_settings} );
     $user_db=$c->model('App')->get_setting('user_db');
   }
