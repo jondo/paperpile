@@ -53,3 +53,6 @@ print "\n--- Beispiel: txt ---\n\n";
 
 $o->transform();
 
+print "\nBibliography:\n";
+$o->biblioToString();
+#print Dumper $o->{biblio}
