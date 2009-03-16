@@ -64,6 +64,7 @@ Time::HiRes
 Tree::Simple
 Tree::Simple::Visitor::FindByPath
 XML::Simple
+XML::Smart
 YAML
 if
 version
