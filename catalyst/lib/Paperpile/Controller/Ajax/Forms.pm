@@ -52,10 +52,17 @@ sub settings : Local {
     $c->forward('Paperpile::View::JSON');
 
   }
+}
+
+sub  pub_edit : Local {
+  my ( $self, $c ) = @_;
+
+
 
 
 
 
 }
+
 
 1;

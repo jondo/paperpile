@@ -1,6 +1,31 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('Paperpile');
 
+
+// Ext overrides
+
+Ext.override(Ext.Panel, {
+    hideBbar: function() {
+        this.bbar.setVisibilityMode(Ext.Element.DISPLAY);
+        this.bbar.hide();
+        this.syncSize();
+        if (this.ownerCt) {
+            this.ownerCt.doLayout();
+        }
+    },
+    showBbar: function() {
+        this.bbar.setVisibilityMode(Ext.Element.DISPLAY);
+        this.bbar.show();
+        this.syncSize();
+        if (this.ownerCt) {
+            this.ownerCt.doLayout();
+        }
+    }
+
+
+
+});
+
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     canvasWidth:null,

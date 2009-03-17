@@ -1,70 +1,107 @@
-Paperpile.PubEdit = Ext.extend(Ext.FormPanel, {
+Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
 	  
     initComponent: function() {
 
-    	  Ext.apply(this, {
-			      bodyStyle: {
-				        background: '#ffffff',
-				        padding: '7px'
-			      },
-              bbar:[{xtype:'tbfill'},
-                    new Ext.Button({
-                        id: 'edit_save_button',
-                        text: 'Save',
-                        cls: 'x-btn-text-icon save',
-                        listeners: {
-                            click:  {fn: this.save, scope: this}
-                        },
-                    }),
-                    new Ext.Button({
-                        id: 'edit_cancel_button',
-                        text: 'Cancel',
-                        cls: 'x-btn-text-icon cancel',
-                        listeners: {
-                            click:  {fn: this.cancel, scope: this}
-                        },
-                    }),
-                   ],
-              labelWidth: 75,
-              width: 350,
-              defaults: {width: 230},
-              defaultType: 'textfield',
-              items:{id:'dummy'}, // one field is always needed
-		  });
-		Paperpile.PubEdit.superclass.initComponent.call(this);
+    	Ext.apply(this, {
+			itemId:'pub_edit',
+            defaultType: 'textfield',
+            labelWidth: 75,
+            //width: 350,
+            defaults: {width: 230},
+            bodyStyle: {
+				background: '#ffffff',
+				padding: '7px'
+			},
+            
+            items:[
+                {xtype:'combo',
+                 editable:false,
+                 forceSelection:true,
+                 triggerAction: 'all',
+                 //name:'pubtype',
+                 disableKeyFilter: true,
+                 fieldLabel:'Type',
+                 mode: 'local',
+                 minListWidth:230,
+                 store:[['ARTICLE','Journal Article'],['BOOK','Book']],
+                 hiddenName: 'pubtype'
+                },
+                {name:'title', fieldLabel:'Title'},
+                {name:'authors', fieldLabel:'Authors'},
+                {name:'booktitle', fieldLabel:'Book title'},
+                {name:'series', fieldLabel:'Series'},
+                {name:'editors', fieldLabel:'Editors'},
+                {name:'journal', fieldLabel:'Journal'},
+                {name:'chapter', fieldLabel:'Chapter'},
+                {name:'volume', fieldLabel:'Volume'},
+                {name:'number', fieldLabel:'Number'},
+                {name:'issue', fieldLabel:'Issue'},
+                {name:'edition', fieldLabel:'Edition'},
+                {name:'pages', fieldLabel:'Pages'},
+                {name:'publisher', fieldLabel:'Publisher'},
+                {name:'school', fieldLabel:'University'},
+                {name:'city', fieldLabel:'City'},
+                {name:'address', fieldLabel:'Address'},
+                {name:'year', fieldLabel:'Year'},
+                {name:'month', fieldLabel:'Month'},
+                {name:'day', fieldLabel:'Day'},
+                {name:'issn', fieldLabel:'ISSN'},
+                {name:'isbn', fieldLabel:'ISBN'},
+                {name:'pmid', fieldLabel:'Pubmed ID'},
+                {name:'abstract', fieldLabel:'Abstract'},
+            ],
 
+            bbar:[{xtype:'tbfill'},
+                  new Ext.Button({
+                      id: 'edit_save_button',
+                      text: 'Save',
+                      cls: 'x-btn-text-icon save',
+                      listeners: {
+                          click:  {fn: this.save, scope: this}
+                      },
+                  }),
+                  new Ext.Button({
+                      id: 'edit_cancel_button',
+                      text: 'Cancel',
+                      cls: 'x-btn-text-icon cancel',
+                      listeners: {
+                          click:  {fn: this.cancel, scope: this}
+                      },
+                  }),
+                 ],
+		});
+		
+        Paperpile.Forms.PubEdit.superclass.initComponent.call(this);
         
-        Ext.Ajax.request({
-            url: '/ajax/crud/generate_edit_form',
-            params: { pubtype: 'JOUR',
-                    },
-            method: 'GET',
-            success: this.setForm,
-            //failure: this.markInvalid,
-        });
-
-
+        this.setValues(this.data.data);
+              
 	  },
 
-    setForm: function(response,options){
-        var json = Ext.util.JSON.decode(response.responseText);
-
-        Ext.getCmp('pub_edit').remove('dummy');
-
-        for(var i=0; i<json.form.length; i++){
-            Ext.getCmp('pub_edit').add( new Ext.form.Field(json.form[i]));
+    setValues : function(values){
+        for (var i = 0, items = this.items.items, len = items.length; i < len; i++) {
+            var field = items[i];
+            console.log(field);
+            var v = values[field.id] || values[field.hiddenName || field.name];
+            if (typeof v !== 'undefined') {
+                console.log(v);
+                field.setValue(v)
+                if(this.trackResetOnLoad){
+                    field.originalValue = field.getValue();
+                }
+            }
         }
-        Ext.getCmp('pub_edit').doLayout();
+    },
+    
 
-        var data=Ext.getCmp('pub_edit').data;
-
-        Ext.getCmp('pub_edit').getForm().loadRecord(data);
-
+    afterRender: function(){
+        Paperpile.Forms.PubEdit.superclass.afterRender.apply(this, arguments);
+        //this.getForm().loadRecord(this.data.data);
+        //this.setValues(this.data.data);
 
     },
 
-    save: function(){
 
+     save: function(){
         // Masks form instead of whole window, should set to dedicated
         // notification area later
         this.getForm().waitMsgTarget='pub_edit';
@@ -87,19 +124,21 @@ Paperpile.PubEdit = Ext.extend(Ext.FormPanel, {
     },
 
     onSuccess: function(form,action){
-
         this.close();
-
     },
 
     close: function(){
+        
+        var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
 
-        Ext.getCmp('canvas_panel').remove('pub_edit');
-        Ext.getCmp('canvas_panel').doLayout();
-        Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_manager');
+        east_panel.remove('pub_edit');
+        east_panel.doLayout();
+        east_panel.getLayout().setActiveItem('pdf_manager');
+        east_panel.showBbar();
+        
+
     }
     
 
 });
 
-Ext.reg('pubedit', Paperpile.PubEdit);
