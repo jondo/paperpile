@@ -139,19 +139,27 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         //var form = new Paperpile.Forms.Settings();
 
-        var form=new Paperpile.Forms.PubEdit({data:this.getSelectionModel().getSelected()});
+        var form=new Paperpile.Forms.PubEdit({data:this.getSelectionModel().getSelected().data,
+                                              grid_id: this.id,
+                                             });
 
         var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
         
         east_panel.hideBbar();
-
         east_panel.add(form);
-        
-        //var bbar=east_panel.getBottomToolbar();
-        //bbar.el.setVisibilityMode(Ext.Element.DISPLAY);
-        //bbar.el.hide();
-        //bbar.syncSize();
+        east_panel.doLayout();
+        east_panel.getLayout().setActiveItem('pub_edit');
 
+    },
+
+    newEntry: function(){
+
+        var form=new Paperpile.Forms.PubEdit({data:{pubtype:'ARTICLE'}, grid_id: null });
+
+        var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
+        
+        east_panel.hideBbar();
+        east_panel.add(form);
         east_panel.doLayout();
         east_panel.getLayout().setActiveItem('pub_edit');
 

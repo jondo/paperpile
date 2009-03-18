@@ -30,6 +30,34 @@ sub insert_entry : Local {
 
 }
 
+sub new_entry: Local {
+
+  my ( $self, $c ) = @_;
+
+  my %fields=();
+
+  foreach my $key (%{$c->request->params}){
+    next if $key=~/^_/;
+    $fields{$key}=$c->request->params->{$key};
+  }
+
+  my $pub=Paperpile::Library::Publication->new({%fields});
+  print STDERR Dumper($pub);
+
+  $pub->created(timestamp);
+  $pub->times_read(0);
+  $pub->last_read(timestamp); ## for the time being
+
+  $c->model('User')->create_pub($pub);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+
+
+}
+
+
 sub delete_entry : Local {
   my ( $self, $c ) = @_;
 

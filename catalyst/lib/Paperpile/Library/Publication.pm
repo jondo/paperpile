@@ -63,7 +63,7 @@ has 'pdf'        => ( is => 'rw', isa => 'Str', default => '' );
 # Read other fields from config file
 
 my $config = Paperpile::Utils->get_config;
-foreach my $field ( keys %{ $config->{fields} } ) {
+foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
   if ( $field =~ /(authors|year|title$)/ ) {
     has $field => (

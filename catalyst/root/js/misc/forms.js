@@ -4,7 +4,7 @@ Paperpile.Forms = Ext.extend(Ext.FormPanel, {
 		Ext.apply(this, {
             method: 'GET',
             bodyStyle:'padding:5px 5px 0',
-            defaultType: 'textfield',
+            //defaultType: 'textfield',
         });
 		Paperpile.Forms.superclass.initComponent.call(this);
     }});
@@ -16,6 +16,7 @@ Paperpile.Forms.Settings = Ext.extend(Paperpile.Forms, {
 		Ext.apply(this, {
             labelWidth: 150,
             url:'/ajax/forms/settings',
+            defaultType: 'textfield',
             items:[
                 { name:'user_db',
                   fieldLabel:"Paperpile database",

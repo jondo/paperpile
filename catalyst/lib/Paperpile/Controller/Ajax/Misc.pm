@@ -61,6 +61,11 @@ sub get_settings : Local {
 
   my %merged=(@list1,@list2);
 
+  print STDERR Dumper($c->config->{fields});
+
+  $merged{pub_fields}=$c->config->{pub_fields};
+  $merged{pub_types}=$c->config->{pub_types};
+
   $c->stash->{data}  = {%merged};
 
   $c->forward('Paperpile::View::JSON');
@@ -105,8 +110,6 @@ sub import_journals : Local {
 sub init_session : Local {
 
   my ( $self, $c ) = @_;
-
-  print STDERR Dumper(Paperpile::Utils->get_config());
 
   # Clear session variables
   foreach my $key ( keys %{ $c->session } ) {

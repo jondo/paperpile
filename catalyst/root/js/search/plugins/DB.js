@@ -16,9 +16,8 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                         itemId: 'new_button',
                         text: 'New',
                         cls: 'x-btn-text-icon add',
-                        disabled:true,
                         listeners: {
-                            click:  {fn: this.editEntry, scope: this}
+                            click:  {fn: this.newEntry, scope: this}
                         },
                     },
                     {   xtype:'button',

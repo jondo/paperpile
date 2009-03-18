@@ -12,7 +12,7 @@ user_settings:
 app_settings:
   user_db: "../user/default/paperpile.db" # relative to catalyst app-dir or absolute
 
-fields:
+pub_fields:
   pubtype:       "Publication Type"
   citekey:       "Citation key"
   sortkey:       "Name used for sorting"
@@ -22,7 +22,7 @@ fields:
   authors:       "Authors"
   editors:       "Editors"
   journal:       "Journal"
-  chapter:       "Chapter number"      
+  chapter:       "Chapter"      
   volume:        "Volume"
   number:        "Number"
   issue:         "Issue"
@@ -40,7 +40,7 @@ fields:
   isbn:          "ISBN"
   pmid:          "Pubmed ID"
   doi:           "DOI"
-  url:           "URL"
+  url:           "Website"
   icon:          "Icon URL"
   abstract:      "Abstract"
   keywords:      "Author key words"
@@ -49,9 +49,44 @@ fields:
   folders:       "Folders"
 
 
-pubtypes:
+pub_types:
   ARTICLE:
-    all: "title authors journal year volume issue pages month issn pmid url doi abstract"
+    name: "Journal Article"
+    fields: 
+      - title 
+      - authors 
+      - journal
+      - year 
+      - volume
+      - issue
+      - pages
+      - month
+      - issn
+      - pmid
+      - url
+      - doi
+      - abstract
+      - doi
+      - url
+
+  INCOLLECTION:
+    name: "Book Chapter"
+    fields:
+      - title
+      - authors
+      - booktitle
+      - editors
+      - chapter
+      - pages
+      - publisher
+      - year
+      - volume
+      - series
+      - address
+      - edition
+      - doi
+      - url
+
 
 
 
