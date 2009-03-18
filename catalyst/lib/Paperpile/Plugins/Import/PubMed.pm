@@ -145,7 +145,7 @@ sub _read_xml {
 
     my $cit = $article->{MedlineCitation};
 
-    my $pub = Paperpile::Library::Publication->new( pubtype => 'JOUR' );
+    my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
 
     if ( not $pub->pmid( $cit->{PMID} ) ) {
       die();

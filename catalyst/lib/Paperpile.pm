@@ -3,10 +3,7 @@ package Paperpile;
 use strict;
 use warnings;
 use parent qw/Catalyst/;
-use Catalyst qw/ Session
-  Session::State::Cookie
-  Session::Store::File
-  /;
+use Catalyst qw/Session Session::State::Cookie Session::Store::File /;
 
 use Catalyst::Runtime '5.70';
 
@@ -31,7 +28,6 @@ our $VERSION = '0.01';
 # with a external configuration file acting as an override for
 # local deployment.
 
-
 __PACKAGE__->config( {
     'View::JSON' => {
       expose_stash => qr/^[^_]/,    #Don't show variables starting with underscore (_)
@@ -42,7 +38,7 @@ __PACKAGE__->config( {
 );
 
 __PACKAGE__->config( {
-    'View::JSON::Tree' => {
+    'View::JSON::Tree'     => {
       expose_stash => 'tree',       #show only one array of objects
     }
   }
@@ -50,6 +46,8 @@ __PACKAGE__->config( {
 
 # Start the application
 __PACKAGE__->setup(qw/-Debug ConfigLoader Static::Simple/);
+
+
 
 =head1 NAME
 

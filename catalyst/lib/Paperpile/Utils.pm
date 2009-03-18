@@ -28,9 +28,13 @@ sub get_config{
 
   my $self=shift;
 
-  my $conf = Config::General->new($self->home."/paperpile.conf");
+  #my $conf = Config::General->new($self->home."/paperpile.yaml");
 
-  return $conf->getall;
+  my $file=$self->home."/paperpile.yaml";
+
+  my $conf = Config::Any->load_files({files=>[$file], flatten_to_hash => 0});
+
+  return $conf->[0]->{$file};
 
 }
 

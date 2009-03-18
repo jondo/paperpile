@@ -1,0 +1,59 @@
+---
+name: "PaperPile"
+
+Model::App:
+  dsn: "dbi:SQLite:__path_to(db/app.db)__"
+
+user_settings:
+  tmp_dir: "__path_to(tmp)__"
+  paper_root: "__path_to(../user/default/paperpile)__"
+  paper_pattern: "[firstauthor][YYYY]"
+
+app_settings:
+  user_db: "../user/default/paperpile.db" # relative to catalyst app-dir or absolute
+
+fields:
+  pubtype:       "Publication Type"
+  citekey:       "Citation key"
+  sortkey:       "Name used for sorting"
+  title:         "Title"
+  booktitle:     "Book title"
+  series:        "Series"
+  authors:       "Authors"
+  editors:       "Editors"
+  journal:       "Journal"
+  chapter:       "Chapter number"      
+  volume:        "Volume"
+  number:        "Number"
+  issue:         "Issue"
+  edition:       "edition"
+  pages:         "Pages"
+  publisher:     "Publisher"
+  organization:  "Organization"
+  school:        "University"        
+  city:          "City"
+  address:       "Address"
+  year:          "Year"
+  month:         "Month"
+  day:           "Day"
+  issn:          "ISSN"
+  isbn:          "ISBN"
+  pmid:          "Pubmed ID"
+  doi:           "DOI"
+  url:           "URL"
+  icon:          "Icon URL"
+  abstract:      "Abstract"
+  keywords:      "Author key words"
+  notes:         "Notes"
+  tags:          "Tags"
+  folders:       "Folders"
+
+
+pubtypes:
+  ARTICLE:
+    all: "title authors journal year volume issue pages month issn pmid url doi abstract"
+
+
+
+
+

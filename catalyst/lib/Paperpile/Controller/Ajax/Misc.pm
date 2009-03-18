@@ -106,6 +106,8 @@ sub init_session : Local {
 
   my ( $self, $c ) = @_;
 
+  print STDERR Dumper(Paperpile::Utils->get_config());
+
   # Clear session variables
   foreach my $key ( keys %{ $c->session } ) {
     delete( $c->session->{$key} ) if $key =~ /^(grid|viewer|tree|user_db)/;

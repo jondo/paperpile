@@ -70,7 +70,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                   }),
                  ],
 		});
-		
+
         Paperpile.Forms.PubEdit.superclass.initComponent.call(this);
         
         this.setValues(this.data.data);
@@ -91,7 +91,11 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
             }
         }
     },
-    
+
+    setFields : function(pubtype){
+        
+
+    },
 
     afterRender: function(){
         Paperpile.Forms.PubEdit.superclass.afterRender.apply(this, arguments);

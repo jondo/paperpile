@@ -22,8 +22,6 @@ Ext.override(Ext.Panel, {
         }
     }
 
-
-
 });
 
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
@@ -81,8 +79,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               pruneModifiedRecords:true,
             }
         ); 
-
         this.tagStore.reload();
+
+        
+
         
         this.on('afterlayout',this.onAfterLayout,this);
                  
