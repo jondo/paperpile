@@ -2,12 +2,18 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
 	  
     initComponent: function() {
 
-        this.pub_fields=Paperpile.main.globalSettings.pub_fields;
         this.pub_types=Paperpile.main.globalSettings.pub_types;
 
         var _type_store=[];
-        for (var type in this.pub_types){
-            _type_store.push([type,this.pub_types[type].name]);
+
+        // Give the sorted list of publication types here
+        var list=['ARTICLE','BOOK','INCOLLECTION','INBOOK',
+                  'PROCEEDINGS', 'INPROCEEDINGS', 
+                  'MASTERSTHESIS', 'PHDTHESIS',
+                  'MANUAL', 'UNPUBLISHED','MISC'];
+                  
+        for (var i=0;i<list.length;i++){
+            _type_store.push([list[i],this.pub_types[list[i]].name]);
         }
 
     	Ext.apply(this, {
@@ -25,7 +31,6 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                  editable:false,
                  forceSelection:true,
                  triggerAction: 'all',
-                 //name:'pubtype',
                  disableKeyFilter: true,
                  fieldLabel:'Type',
                  mode: 'local',
@@ -41,57 +46,31 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                      }
                  }
                 },
-                {name:'title',
-                 xtype:'textarea',
-                 height:'70',
-                },
-                {name:'authors',
-                 xtype:'textarea',
-                 height:'70',
-                },
+                {name:'title',xtype:'textarea',height:'70'},
+                {name:'authors', xtype:'textarea',height:'70'},
                 {name:'booktitle'},
                 {name:'series'},
                 {name:'editors'},
+                {name:'howpublished'},
+                {name:'school'},
                 {name:'journal'},
                 {name:'chapter'},
                 {name:'edition'},
-                {name:'volume',
-                 width:100
-                },
-
-                {name:'issue',
-                 width:100
-                },
-                {name:'pages',
-                 width:100},
+                {name:'volume', width:100},
+                {name:'issue', width:100},
+                {name:'pages', width:100},
+                {name:'year', width:100},
+                {name:'month', width:100},
+                {name:'day', width:100},
                 {name:'publisher'},
-                {name:'school'},
-                {name:'city'},
+                {name:'organization'},
                 {name:'address'},
-                {name:'year',
-                 width:100
-                },
-                {name:'month',
-                 width:100
-                },
-                {name:'day',
-                 width:100
-                },
-                {name:'issn',
-                 width:100
-                },
-                {name:'isbn',
-                 width:100
-                },
-                {name:'pmid',
-                 width:100
-                },
+                {name:'issn', width:100},
+                {name:'isbn', width:100},
+                {name:'pmid', width:100},
                 {name:'doi'},
                 {name:'url'},
-                {name:'abstract',
-                 xtype:'textarea',
-                 height:'100',
-                },
+                {name:'abstract', xtype:'textarea', height:'100'},
             ],
 
             bbar:[{xtype:'tbfill'},
@@ -113,13 +92,6 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                   }),
                  ],
 		});
-
-        for (var i=0; i<this.items.length; i++){
-            var label=this.pub_fields[this.items[i].name];
-            if (label){
-                this.items[i].fieldLabel=label;
-            }
-        }
 
         Paperpile.Forms.PubEdit.superclass.initComponent.call(this);
         
@@ -147,19 +119,27 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
 
     setFields : function(pubtype){
 
-        /* first hide everything */
-        for (var i=0; i<this.items.items.length; i++){
-            var el=this.items.items[i].getEl();
+        var items=this.items.items;
 
-            if (this.items.items[i].itemId == 'pubtype'){
+        /* first set labels and hide everything */
+        for (var i=0; i<items.length; i++){
+            var el=items[i].getEl();
+            if (items[i].itemId == 'pubtype'){
                 continue;
+            }
+            if (this.pub_types[pubtype].fields[items[i].getName()]){
+                var label=this.pub_types[pubtype].fields[items[i].getName()].label;
+                if (label){
+                    items[i].setFieldLabel(label);
+                }
             }
             el.up('div.x-form-item').setDisplayed(false);
         }
 
         /* then selectively show fields for current publication type */
-        for (var i=0; i< this.pub_types[pubtype].fields.length;i++){
-            var field=this.getForm().findField(this.pub_types[pubtype].fields[i]);
+
+        for (var f in  this.pub_types[pubtype].fields){
+            var field=this.getForm().findField(f);
             if (field){
                 el=field.getEl();
                 el.up('div.x-form-item').setDisplayed(true);
@@ -184,7 +164,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                     grid_id: this.grid_id,
                    };
         } 
-        // Else we are creating a new one
+        // else we are creating a new one
         else {
             url='/ajax/crud/new_entry';
             params:{};

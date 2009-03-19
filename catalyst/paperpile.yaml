@@ -53,42 +53,253 @@ pub_types:
   ARTICLE:
     name: "Journal Article"
     fields: 
-      - title 
-      - authors 
-      - journal
-      - year 
-      - volume
-      - issue
-      - pages
-      - month
-      - issn
-      - pmid
-      - url
-      - doi
-      - abstract
-      - doi
-      - url
+      pubtype:
+        label: "Publication Type"
+      title:
+        label: "Title"
+      authors:
+        label: "Authors"
+      journal:
+        label: "Journal"
+      volume:
+        label: "Volume"
+      issue:
+        label: "Issue"
+      pages:
+        label: "Pages"
+      year:
+        label: "Year"
+      month:
+        label: "Month"
+      issn:
+        label: "ISSN"
+      pmid:
+        label: "Pubmed ID"
+      doi:
+        label: "DOI"
+      url:
+        label: "Website"
+      abstract:
+        label: "Abstract"
 
   INCOLLECTION:
+    name: "Book Chapter (named)"
+    fields:
+      pubtype:
+        label: "Publication Type"
+      title:
+        label: "Chapter Title"
+      booktitle:
+        label: "Book Title"
+      authors:
+        label: "Authors"
+      editors:
+        label: "Editors"
+      pages:
+        label: "Pages"
+      publisher:
+        label: "Publisher"
+      year:
+        label: "Year"
+      series:
+        label: "Series"
+      address:
+        label: "Address"
+      month:
+        label: "Month"
+      issn:
+        label: "ISSN"
+      pmid:
+        label: "Pubmed ID"
+      doi:
+        label: "DOI"
+      url:
+        label: "Website"
+      abstract:
+        label: "Abstract"
+
+  BOOK:
+    name: "Book (whole)"
+    fields:
+      pubtype:
+        label: "Publication Type"
+      booktitle:
+        label: "Book Title"
+      authors:
+        label: "Authors"
+      editors:
+        label: "Editors"
+      publisher:
+        label: "Publisher"
+      year:
+        label: "Year"
+      series:
+        label: "Series"
+      address:
+        label: "Address"
+      month:
+        label: "Month"
+      issn:
+        label: "ISSN"
+      pmid:
+        label: "Pubmed ID"
+      doi:
+        label: "DOI"
+      url:
+        label: "Website"
+      abstract:
+        label: "Abstract"
+
+  INBOOK:
     name: "Book Chapter"
     fields:
-      - title
-      - authors
-      - booktitle
-      - editors
-      - chapter
-      - pages
-      - publisher
-      - year
-      - volume
-      - series
-      - address
-      - edition
-      - doi
-      - url
+      pubtype:
+        label: "Publication Type"
+      booktitle:
+        label: "Book Title"
+      authors:
+        label: "Authors"
+      editors:
+        label: "Editors"
+      pages:
+        label: "Pages"
+      chapter:
+        label: "Chapter number"
+      publisher:
+        label: "Publisher"
+      year:
+        label: "Year"
+      series:
+        label: "Series"
+      address:
+        label: "Address"
+      month:
+        label: "Month"
+      issn:
+        label: "ISSN"
+      pmid:
+        label: "Pubmed ID"
+      doi:
+        label: "DOI"
+      url:
+        label: "Website"
+      abstract:
+        label: "Abstract"
 
+  PROCEEDINGS:
+    name: "Conference Proceedings"
+    fields:
+      pubtype:
+        label: "Publication Type"
+      title:
+        label: "Title"
+      editors:
+        label: "Editors"
+      organization:
+        label: "Organizer"
+      publisher:
+        label: "Publisher"
+      year:
+        label: "Year"
+      month:
+        label: "Month"
 
+  INPROCEEDINGS:
+    name: "Conference Paper"
+    fields:
+      pubtype:
+        label: "Publication Type"
+      title:
+        label: "Title"
+      authors:
+        label: "Authors"
+      editors:
+        label: "Editors"
+      booktitle:
+        label: "Conference"
+      pages:
+        label: "Pages"
+      organization:
+        label: "Organizer"
+      publisher:
+        label: "Publisher"
+      year:
+        label: "Year"
+      month:
+        label: "Month"
 
+  MASTERSTHESIS:
+    name: "Master's Thesis"
+    fields:
+      pubtype:
+        label: "Publication Type"
+      title:
+        label: "Title"
+      authors:
+        label: "Author"
+      school: 
+        label: "University"
+      year:
+        label: "Year"
+      month:
+        label: "Month"
 
+  PHDTHESIS:
+    name: "PhD Thesis"
+    fields:
+      pubtype:
+        label: "Publication Type"
+      title:
+        label: "Title"
+      authors:
+        label: "Author"
+      school: 
+        label: "University"
+      year:
+        label: "Year"
+      month:
+        label: "Month"
 
+  MANUAL:
+    name: "Technical Documentation"
+    fields:
+      title:
+        label: "Title"
+      authors:
+        label: "Author"
+      edition:
+        label: "Version/Edition"
+      organization: 
+        label: "Organization"
+      address:
+        label: "Address"
+      year:
+        label: "Year"
+      month:
+        label: "Month"
 
+  MISC:
+    name: "Other"
+    fields:
+      title:
+        label: "Title"
+      authors:
+        label: "Author"
+      howpublished:
+        label: "How published"
+      year:
+        label: "Year"
+      month:
+        label: "Month"
+
+  UNPUBLISHED:
+    name: "Unpublished"
+    fields:
+      title:
+        label: "Title"
+      authors:
+        label: "Author"
+      year:
+        label: "Year"
+      month:
+        label: "Month"

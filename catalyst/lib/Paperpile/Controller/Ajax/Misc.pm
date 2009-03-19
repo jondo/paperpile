@@ -61,9 +61,8 @@ sub get_settings : Local {
 
   my %merged=(@list1,@list2);
 
-  print STDERR Dumper($c->config->{fields});
+  print STDERR Dumper($c->config->{pub_types});
 
-  $merged{pub_fields}=$c->config->{pub_fields};
   $merged{pub_types}=$c->config->{pub_types};
 
   $c->stash->{data}  = {%merged};
