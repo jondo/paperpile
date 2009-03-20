@@ -9,7 +9,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         });
 
         Ext.apply(this, {
-            plugin_type: 'DB',
+            plugin_name: 'DB',
             tbar:  [_filterField, 
                     {xtype:'tbfill'},
                     {   xtype:'button',

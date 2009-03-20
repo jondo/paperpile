@@ -36,14 +36,13 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
     hideTrigger2:true,
     width:180,
     hasSearch : false,
-    paramName : 'plugin_query',
 
     onTrigger1Click : function(){
         if(this.hasSearch){
             this.el.dom.value = '';
             var o = {start: 0, task:'NEW'};
             this.store.baseParams = this.store.baseParams || {};
-            this.store.baseParams[this.paramName] = this.build_query('');
+            this.store.baseParams.plugin_query = this.build_query('');
             this.store.reload({params:o});
             this.triggers[0].hide();
             this.hasSearch = false;

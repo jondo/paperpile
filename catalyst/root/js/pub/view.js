@@ -50,7 +50,6 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                   region:'center',
                   itemId: 'center_panel',
                   layout: 'border',
-                  
                   items:[
                       this.grid,
                       {border: false,

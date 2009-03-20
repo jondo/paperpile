@@ -1,6 +1,9 @@
 Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
 
+
+    plugin_title: 'PubMed',
     loadMask: {msg:"Searching PubMed"},
+    plugin_iconCls: 'pp-icon-pubmed',
 
     initComponent:function() {
 
@@ -9,9 +12,7 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
         })
 
         Ext.apply(this, {
-            plugin_type: 'PubMed',
-            plugin_title: 'PubMed',
-            plugin_iconCls: 'pp-icon-pubmed',
+            plugin_name: 'PubMed',
             tbar:[_searchField,
                   {xtype:'tbfill'},
                   {   xtype:'button',

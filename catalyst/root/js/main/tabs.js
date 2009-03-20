@@ -29,7 +29,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     newDBtab:function(query){
         
         var newGrid=new Paperpile.PluginGridDB({
-            plugin_type: 'DB',
+            plugin_name: 'DB',
             plugin_mode: 'FULLTEXT',
             plugin_query: query,
         });
@@ -68,7 +68,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
         var newGrid=new Paperpile.PluginGridDB({
             iconCls: iconCls,
-            plugin_type: 'DB',
+            plugin_name: 'DB',
             plugin_query: base_query,
             plugin_mode: mode,
             base_query: base_query,

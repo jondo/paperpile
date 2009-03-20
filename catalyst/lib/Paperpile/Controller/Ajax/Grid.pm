@@ -32,13 +32,13 @@ sub resultsgrid : Local {
   my $offset      = $c->request->params->{start};
   my $limit       = $c->request->params->{limit};
 
-  my $plugin_type = $c->request->params->{plugin_type};
+  my $plugin_name = $c->request->params->{plugin_name};
   my $plugin;
 
   if ( not defined $c->session->{"grid_$grid_id"} or $task eq 'NEW' ) {
 
     # Load required module dynamically
-    my $plugin_module = "Paperpile::Plugins::Import::$plugin_type";
+    my $plugin_module = "Paperpile::Plugins::Import::$plugin_name";
 
     # Directly pass plugin parameters starting with "plugin_" to plugin Module
     my %params = ();
@@ -50,7 +50,7 @@ sub resultsgrid : Local {
       }
     }
 
-    if ( ( $plugin_type eq 'DB' ) and ( not $c->request->params->{plugin_file} ) ) {
+    if ( ( $plugin_name eq 'DB' ) and ( not $c->request->params->{plugin_file} ) ) {
       $params{file} = $c->session->{user_db};
     }
 
@@ -71,7 +71,7 @@ sub resultsgrid : Local {
 
   my $entries = $plugin->page( $offset, $limit );
 
-  if ( $plugin_type eq 'DB' ) {
+  if ( $plugin_name eq 'DB' ) {
     foreach my $pub (@$entries) {
       $pub->_imported(1);
     }

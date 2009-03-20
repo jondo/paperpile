@@ -13,7 +13,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             }),
                baseParams:{grid_id: this.id,
                            plugin_file: this.plugin_file,
-                           plugin_type: this.plugin_type,
+                           plugin_name: this.plugin_name,
                            plugin_query: this.plugin_query,
                            plugin_mode: this.plugin_mode,
                            limit:25
@@ -45,6 +45,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         Ext.apply(this, {
             ddGroup  : 'gridDD',
             enableDragDrop   : true,
+            itemId:'grid',
             store: _store,
             bbar: _pager,
             autoExpandColumn:'publication',
