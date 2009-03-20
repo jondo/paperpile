@@ -35,43 +35,19 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             beforenodedrop:{scope:this, fn:this.onNodeDrop},
 		});
 
+
+        // Avoid selecting nodes; should be selectively turned on when right click actions.
+        this.getSelectionModel().on("beforeselect",
+                                    function(){
+                                        return false;
+                                    });
+        
+
         this.on("click", function(node,e){
 
             console.log(node);
 
             switch(node.type){
-
-            case 'DB':
-                Paperpile.main.tabs.newDBtab(node.query);
-                break;
-                
-            case 'IMPORT_PLUGIN':
-                // pass on all parameters with 'plugin_' to plugin class
-                var pars={}
-                for (var key in node){
-                    if (key.match('plugin_')){
-                        pars[key]=node[key];
-                    }
-                }
-                
-                Paperpile.main.tabs.newPluginTab(node.plugin_name, pars);
-                break;
-
-            case 'ACTIVE':
-                // pass on all parameters with 'plugin_' to plugin class
-                var pars={}
-                for (var key in node){
-                    if (key.match('plugin_')){
-                        pars[key]=node[key];
-                    }
-                }
-                
-                Paperpile.main.tabs.newPluginTab(node.plugin_name, pars);
-                break;
-
-            case 'FILE':
-                Paperpile.main.tabs.newFileTab(node.file);
-                break;
 
             case 'RESET_DB':
                 Paperpile.main.resetDB();
@@ -81,22 +57,16 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 Paperpile.main.settings();
                 break;
 
-            case 'TAG':
-                Paperpile.main.tabs.showDBQueryResults('FULLTEXT',
-                                                       node.text,
-                                                       'tags:'+node.text,
-                                                       node.text,
-                                                       'pp-icon-tag'
-                                                      );
-                break;
+            default:
 
-            case 'FOLDER':
-                Paperpile.main.tabs.showDBQueryResults('FULLTEXT',
-                                                       node.text,
-                                                       'folders:'+node.text,
-                                                       node.text,
-                                                       'pp-icon-folder'
-                                                      );
+                var pars={}
+                for (var key in node){
+                    if (key.match('plugin_')){
+                        pars[key]=node[key];
+                    }
+                }
+
+                Paperpile.main.tabs.newPluginTab(node.plugin_name, pars);
                 break;
             }
         });
@@ -188,6 +158,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         Ext.apply(pars,{text: title, 
                         plugin_title: title,
                         iconCls:'pp-icon-folder', 
+                        plugin_iconCls: 'pp-icon-folder', 
                         type: 'ACTIVE', 
                        });
 

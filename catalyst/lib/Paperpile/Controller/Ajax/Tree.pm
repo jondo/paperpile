@@ -23,9 +23,9 @@ sub node : Local {
     $tree = $c->session->{"tree"};
   }
 
-  my $subtree = $self->_get_subtree( $c, $tree, $node );
+  my $subtree = $c->forward('private/get_subtree',[$tree, $node]);
 
-  my $data=$self->_get_js_object($subtree);
+  my $data=$c->forward('private/get_js_object',[$subtree]);
 
   $c->stash->{tree} = $data;
 
@@ -57,7 +57,9 @@ sub new_folder : Local {
 
   my $tree= $c->session->{"tree"};
 
-  my $sub_tree= $self->_get_subtree($c, $tree, $parent_id );
+  #my $sub_tree= $self->_get_subtree($c, $tree, $parent_id );
+
+  my $sub_tree = $c->forward('private/get_subtree',[$tree, $parent_id]);
 
   my $new = Tree::Simple->new( { text => $name, type => "FOLDER", draggable =>"true",
                                  path=> '/', id => $node_id },  );

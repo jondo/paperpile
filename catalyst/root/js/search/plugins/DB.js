@@ -43,7 +43,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
         Paperpile.PluginGridDB.superclass.initComponent.apply(this, arguments);
         _filterField.store=this.store;
-        _filterField.base_query=this.base_query;
+        _filterField.base_query=this.plugin_base_query;
 
         this.getColumnModel().setHidden(0,true);
 

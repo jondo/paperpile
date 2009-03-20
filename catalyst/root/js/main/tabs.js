@@ -32,6 +32,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
             plugin_name: 'DB',
             plugin_mode: 'FULLTEXT',
             plugin_query: query,
+            plugin_base_query:'',
         });
 
         var newView=this.add(new Paperpile.PubView({title:'Local library', 
@@ -71,7 +72,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
             plugin_name: 'DB',
             plugin_query: base_query,
             plugin_mode: mode,
-            base_query: base_query,
+            plugin_base_query: base_query,
         });
 
         var newView=this.add(new Paperpile.PubView({title:tabTitle, 

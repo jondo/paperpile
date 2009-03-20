@@ -168,9 +168,9 @@ sub get_default_tree : Private {
 }
 
 
-sub _get_js_object {
+sub get_js_object : Private {
 
-  my ( $self, $node ) = @_;
+  my ( $self, $c, $node ) = @_;
 
   my @output=();
 
@@ -193,7 +193,7 @@ sub _get_js_object {
 
 }
 
-sub _get_subtree {
+sub get_subtree : Private {
 
   my ( $self, $c, $tree, $UID ) = @_;
 
@@ -253,6 +253,12 @@ sub _get_tags {
           text    => $tag,
           type    => 'TAG',
           iconCls => 'pp-icon-tag',
+          plugin_name => 'DB',
+          plugin_mode=> 'FULLTEXT',
+          plugin_query=> "tags: $tag",
+          plugin_base_query=> "tags: $tag",
+          plugin_title=>$tag,
+          plugin_iconCls => 'pp-icon-tag',
         }
       )
     );
@@ -285,9 +291,15 @@ sub _get_folders {
       }
       if ( not $curr_node ) {
         my $new_node = Tree::Simple->new( {
-            text    => $part,
-            type    => 'FOLDER',
-            iconCls => 'pp-icon-folder',
+            text              => $part,
+            type              => 'FOLDER',
+            iconCls           => 'pp-icon-folder',
+            plugin_name       => 'DB',
+            plugin_mode       => 'FULLTEXT',
+            plugin_query      => "folders: $part",
+            plugin_base_query => "folders: $part",
+            plugin_title      => $part,
+            plugin_iconCls    => 'pp-icon-folder',
           }
         );
 
