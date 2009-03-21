@@ -16,7 +16,13 @@ sub node : Local {
   my $tree;
 
   if ( not defined $c->session->{"tree"} ) {
-    $tree = $c->forward('private/get_default_tree');
+
+    $tree=$c->model('User')->restore_tree();
+
+    if (not defined $tree){
+      $tree = $c->forward('private/get_default_tree');
+    }
+
     $c->session->{"tree"}=$tree;
   }
   else {
@@ -114,6 +120,59 @@ sub move_in_folder : Local {
 
   $c->model('User')->update_folders($rowid, join(',',@folders));
   $pub->folders(join(',',@folders));
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+
+sub new_active : Local {
+  my ( $self, $c ) = @_;
+
+  my $node_id = $c->request->params->{node_id};
+  my $parent_id = $c->request->params->{parent_id};
+
+  my $tree= $c->session->{"tree"};
+
+  my $sub_tree = $c->forward('private/get_subtree',[$tree, $parent_id]);
+
+  my %params=();
+
+  foreach my $key (keys %{$c->request->params}){
+    next if $key=~/^_/;
+    $params{$key}=$c->request->params->{$key};
+  }
+
+  $params{id}=$node_id;
+  delete($params{node_id});
+
+  print STDERR Dumper({%params});
+
+  my $new = Tree::Simple->new({%params} );
+  $new->setUID($node_id);
+  $sub_tree->addChild($new);
+
+
+  $c->model('User')->save_tree($tree);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+sub delete_active : Local {
+  my ( $self, $c ) = @_;
+
+  my $node_id = $c->request->params->{node_id};
+
+  my $tree= $c->session->{"tree"};
+
+  my $subtree = $c->forward('private/get_subtree',[$tree, $node_id]);
+
+  $subtree->getParent->removeChild($subtree);
+
+  $c->model('User')->save_tree($tree);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');

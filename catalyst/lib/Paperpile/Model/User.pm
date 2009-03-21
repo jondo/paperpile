@@ -4,6 +4,8 @@ use strict;
 use Carp;
 use base 'Paperpile::Model::DBIbase';
 use Data::Dumper;
+use Tree::Simple;
+use FreezeThaw qw/freeze thaw/;
 use Moose;
 
 with 'Catalyst::Component::InstancePerContext';
@@ -560,6 +562,33 @@ sub _hash2sql {
   my @output = ( join( ',', @fields ), join( ',', @values ) );
 
   return @output;
+}
+
+sub save_tree {
+
+  ( my $self, my $tree ) = @_;
+
+  my $string=freeze($tree);
+
+  $self->set_setting('_tree',$string);
+
+
+}
+
+sub restore_tree{
+ ( my $self ) = @_;
+
+ my $string=$self->get_setting('_tree');
+
+ if (not $string){
+   return undef;
+ }
+
+
+ (my $tree)=thaw($string);
+
+ return $tree;
+
 }
 
 

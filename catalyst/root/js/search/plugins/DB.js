@@ -1,7 +1,8 @@
 Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
-    base_query:'',
-    
+    plugin_base_query:'',
+    plugin_iconCls: 'pp-icon-folder',
+
     initComponent:function() {
         
         var _filterField=new Ext.app.FilterField({

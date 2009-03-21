@@ -165,7 +165,7 @@ sub init_session : Local {
     mkpath($dir);
     copy( $c->path_to('db/user.db')->stringify, $user_db ) or die "Copy failed: $!";
     $c->session->{user_db} = $user_db;
-    $c->model('User')->init_db( $c->config->{fields}, $c->config->{user_settings} );
+    $c->model('User')->init_db( $c->config->{pub_fields}, $c->config->{user_settings} );
   } else {
     $c->session->{user_db} = $user_db;
   }

@@ -8,6 +8,7 @@ user_settings:
   tmp_dir: "__path_to(tmp)__"
   paper_root: "__path_to(../user/default/paperpile)__"
   paper_pattern: "[firstauthor][YYYY]"
+  _tree: ""
 
 app_settings:
   user_db: "../user/default/paperpile.db" # relative to catalyst app-dir or absolute

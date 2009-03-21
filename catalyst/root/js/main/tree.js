@@ -1,5 +1,7 @@
 Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 	  
+
+
     initComponent: function() {
 		Ext.apply(this, {
             title: 'Paperpile Pre 2',
@@ -36,16 +38,17 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 		});
 
 
-        // Avoid selecting nodes; should be selectively turned on when right click actions.
+        // Avoid selecting nodes; only allow under certain
+        // circumstances where it makes sense (e.g context menu selection)
+        
+        this.allowSelect=false;
         this.getSelectionModel().on("beforeselect",
                                     function(){
-                                        return false;
-                                    });
+                                        return this.allowSelect;
+                                    }, this);
         
 
         this.on("click", function(node,e){
-
-            console.log(node);
 
             switch(node.type){
 
@@ -90,7 +93,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         });
 
-        console.log(d.source);
 
     },
 
@@ -106,21 +108,22 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     },
 
     onContextMenu:function(node, e) {
-        node.select();
-        console.log(node);
 
         var menu=null;
         
         switch (node.type){
         
         case 'FOLDER':
+            this.allowSelect=true;
+            node.select();
             menu=new Paperpile.Tree.FolderMenu({node:node});
             break;
 
         case 'ACTIVE':
+            this.allowSelect=true;
+            node.select();
             menu=new Paperpile.Tree.ActiveMenu({node:node});
             break;
-
         }
 
         if (menu != null){
@@ -138,7 +141,17 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         var grid=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
         var treeEditor = this.treeEditor;
 
+        // Get all plugin_* parameters from search plugin grid
+        // including the lates query parameters form the data store
         var pars={};
+
+        for (var key in grid){
+            if (key.match('plugin_')){
+                console.log(key);
+                pars[key]=grid[key];
+            }
+        }
+        
         for (var key in grid.store.baseParams){
             if (key.match('plugin_')){
                 pars[key]=grid.store.baseParams[key];
@@ -146,7 +159,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         }
 
         var newNode;
-
         var title;
 
         if (pars.plugin_query !=''){
@@ -155,33 +167,35 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             title=pars.plugin_name;
         }
                 
-        Ext.apply(pars,{text: title, 
-                        plugin_title: title,
-                        iconCls:'pp-icon-folder', 
-                        plugin_iconCls: 'pp-icon-folder', 
+        Ext.apply(pars,{plugin_title: title,
+                        plugin_base_query: pars.plugin_query,
+                        plugin_iconCls: pars.plugin_iconCls, 
                         type: 'ACTIVE', 
                        });
 
         node.expand(false, false, function(n) {
+
+            console.log(pars);
 		    
-			newNode = n.appendChild(new Paperpile.AsyncTreeNode());
+		    newNode = n.appendChild(new Paperpile.AsyncTreeNode({
+                text: title, 
+                iconCls:pars.plugin_iconCls, 
+                leaf:true,
+            }));
+        
             newNode.init(pars);
             newNode.select();
 
-			treeEditor.on({
-				complete:{
-					scope:this,
-					single:true,
-					fn:this.onNewActive,
-				}
+		    treeEditor.on({
+			    complete:{
+				    scope:this,
+				    single:true,
+				    fn:this.onNewActive,
+			    }
             });
                                     
-			treeEditor.creatingNewDir = true;
-			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
+		    (function(){treeEditor.triggerEdit(newNode);}.defer(10));
 		}.createDelegate(this));
-
-        console.log(pars);
-
 
     },
 
@@ -219,7 +233,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     onNewDir: function(){
 
         var node = this.getSelectionModel().getSelectedNode();
-
+        this.getSelectionModel().clearSelections();
+        this.allowSelect=false;
+       
         Ext.Ajax.request({
 
             url: '/ajax/tree/new_folder',
@@ -241,25 +257,36 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         var node = this.getSelectionModel().getSelectedNode();
 
-        node.plugin_title=node.text;
-        /*
+        this.getSelectionModel().clearSelections();
+        this.allowSelect=false;
+
+        var pars={}
+        for (var key in node){
+            if (key.match('plugin_')){
+                pars[key]=node[key];
+            }
+        }
+
+        Ext.apply(pars,{
+            type: 'ACTIVE',
+            text: node.text,
+            plugin_title: node.text,
+            iconCls: pars.plugin_iconCls,
+            node_id: node.id,
+            parent_id: node.parentNode.id,
+        });
 
         Ext.Ajax.request({
 
-            url: '/ajax/tree/new_folder',
-            params: { node_id: node.id,
-                      parent_id: node.parentNode.id,
-                      name: node.text,
-                      path:node.getPath('text'),
-                    },
+            url: '/ajax/tree/new_active',
+            params: pars,
             success: function(){
-                
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Added new folder');
             },
         });
 
-*/
+
         Ext.getCmp('statusbar').clearStatus();
         Ext.getCmp('statusbar').setText('New Active');
 
@@ -286,6 +313,24 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             },
         });
 
+        node.remove();
+       
+    },
+
+    deleteActive: function(){
+        var node = this.getSelectionModel().getSelectedNode();
+
+        Ext.Ajax.request({
+
+            url: '/ajax/tree/delete_active',
+            params: { node_id: node.id,
+                    },
+            success: function(){
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Deleted active folder');
+            },
+        });
+        
         node.remove();
        
     },
@@ -345,7 +390,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
             },
             { id: 'context_menu_delete',
               text:'Delete',
-              //handler: tree.deleteFolder,
+              handler: tree.deleteActive,
               scope: tree
             },
             { id: 'context_menu_reload',

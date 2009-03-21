@@ -209,13 +209,10 @@ sub get_subtree : Private {
     $tree->traverse(
       sub {
         my ($_tree) = @_;
-        #print STDERR $_tree->getUID, "\n";
         $subtree = $_tree if $_tree->getUID eq $UID;
       }
     )
   }
-
-  #print STDERR Dumper $subtree;
 
   if ($subtree->getNodeValue->{id} eq 'tags'){
     $self->_get_tags($c,$subtree);
@@ -224,7 +221,6 @@ sub get_subtree : Private {
   if ($subtree->getNodeValue->{id} eq 'folders'){
     $self->_get_folders($c,$subtree);
   }
-
 
   return $subtree;
 
