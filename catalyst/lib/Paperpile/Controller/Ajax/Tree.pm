@@ -31,11 +31,30 @@ sub node : Local {
 
   my $subtree = $c->forward('private/get_subtree',[$tree, $node]);
 
-  my $data=$c->forward('private/get_js_object',[$subtree]);
+  my $data=$c->forward('private/get_js_object',[$subtree,$c->request->params->{checked}]);
 
   $c->stash->{tree} = $data;
 
   $c->forward('Paperpile::View::JSON::Tree');
+
+}
+
+sub set_visibility : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $node = $c->request->params->{node_id};
+  my $hidden =$c->request->params->{hidden};
+
+  my $tree = $c->session->{"tree"};
+  my $subtree = $c->forward('private/get_subtree',[$tree, $node]);
+
+  $subtree->getNodeValue->{hidden}=$hidden;
+
+  $c->model('User')->save_tree($tree);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
 
 }
 
