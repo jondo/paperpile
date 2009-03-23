@@ -13,20 +13,100 @@
             </role>
         </name>
         <name type="personal">
-            <namePart type="given">W.</namePart>
-            <namePart type="family">Kramer</namePart>
+            <namePart type="given">A.</namePart>
+            <namePart type="given">S.</namePart>
+            <namePart type="family">Test1</namePart>
             <role>
                 <roleTerm authority="marcrelator" type="text">author</roleTerm>
             </role>
         </name>
         <name type="personal">
             <namePart type="given">H.</namePart>
-        <namePart type="given">J.</namePart>
-            <namePart type="family">Fritz</namePart>
+            <namePart type="family">Test2</namePart>
             <role>
                 <roleTerm authority="marcrelator" type="text">author</roleTerm>
             </role>
         </name>
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test3</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test4</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test5</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>        
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test6</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test7</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test8</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test9</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test10</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test11</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>
+        <name type="personal">
+            <namePart type="given">H.</namePart>
+            <namePart type="given">J.</namePart>
+            <namePart type="family">Test6</namePart>
+            <role>
+                <roleTerm authority="marcrelator" type="text">author</roleTerm>
+            </role>
+        </name>        
         <typeOfResource>text</typeOfResource>
         <relatedItem type="host">
             <titleInfo>
