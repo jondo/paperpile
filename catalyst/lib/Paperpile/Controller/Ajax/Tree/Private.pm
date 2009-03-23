@@ -15,7 +15,8 @@ sub get_default_tree : Private {
 
   my $root = Tree::Simple->new( {
       text => 'Root',
-      id   => 'root'
+      id   => 'root',
+      hidden => 0,
     },
     Tree::Simple->ROOT
   );
@@ -30,7 +31,7 @@ sub get_default_tree : Private {
       query   => '',
       cls     => 'pp-tree-heading',
       iconCls => 'pp-icon-empty',
-      hidden  => \0,
+      hidden  => 0,
     },
     $root
   );
@@ -42,7 +43,7 @@ sub get_default_tree : Private {
       type    => "TAGS",
       id      => 'tags',
       iconCls => 'pp-icon-empty',
-      hidden  => \0,
+      hidden  => 0,
     },
     $local_lib
   );
@@ -59,7 +60,7 @@ sub get_default_tree : Private {
       path    => '/',
       id      => 'folders',
       iconCls => 'pp-icon-empty',
-      hidden  => \0,
+      hidden  => 0,
     },
     $local_lib
   );
@@ -76,7 +77,7 @@ sub get_default_tree : Private {
       id      => 'active',
       iconCls => 'pp-icon-empty',
       cls     => 'pp-tree-heading',
-      hidden  => \0,
+      hidden  => 0,
     }
   );
 
@@ -91,7 +92,7 @@ sub get_default_tree : Private {
         plugin_mode  => 'FULLTEXT',
         plugin_query => 'washietl',
         iconCls      => 'pp-icon-folder',
-        hidden       => \0,
+        hidden       => 0,
       }
     )
   );
@@ -104,7 +105,7 @@ sub get_default_tree : Private {
       text    => 'Online Databases',
       cls     => 'pp-tree-heading',
       iconCls => 'pp-icon-empty',
-      hidden  => \0,
+      hidden  => 0,
     },
     $root
   );
@@ -116,7 +117,7 @@ sub get_default_tree : Private {
         text         => 'PubMed',
         plugin_query => '',
         iconCls      => 'pp-icon-pubmed',
-        hidden       => \0,
+        hidden       => 0,
       }
     )
   );
@@ -128,7 +129,7 @@ sub get_default_tree : Private {
         text         => 'Google Scholar',
         plugin_query => '',
         iconCls      => 'pp-icon-google',
-        hidden       => \0,
+        hidden       => 0,
       }
     )
   );
@@ -139,7 +140,7 @@ sub get_default_tree : Private {
       text    => 'Debug',
       cls     => 'pp-tree-heading',
       iconCls => 'pp-icon-empty',
-      hidden  => \0,
+      hidden  => 0,
     },
     $root
   );
@@ -149,7 +150,7 @@ sub get_default_tree : Private {
         text    => 'Reset Database',
         type    => 'RESET_DB',
         iconCls => 'pp-icon-tools',
-        hidden  => \0,
+        hidden  => 0,
       }
     )
   );
@@ -159,7 +160,7 @@ sub get_default_tree : Private {
         text    => 'Settings',
         type    => 'SETTINGS',
         iconCls => 'pp-icon-tools',
-        hidden  => \0,
+        hidden  => 0,
       }
     )
   );
@@ -170,20 +171,38 @@ sub get_default_tree : Private {
 
 sub get_js_object : Private {
 
-  my ( $self, $c, $node ) = @_;
+  my ( $self, $c, $node, $checked ) = @_;
 
-  my @output=();
+  my @output = ();
 
-  foreach my $child ($node->getAllChildren){
+  foreach my $child ( $node->getAllChildren ) {
 
-    my $h=$child->getNodeValue();
+    # make deep copy to avoid touching the tree structure which gave
+    # unexpected results...
+    my $h = { %{ $child->getNodeValue() } };
 
-    $h->{id}=$child->getUID;
+    $h->{id} = $child->getUID;
 
-    if ($child->isLeaf()){
-      $h->{leaf}=1;
+    # draw a checkbox for configuration mode
+    if ($checked) {
+      if ( $h->{hidden} ) {
+        $h->{checked} = \0;
+        $h->{hidden}  = 0;    # During configuration we have to show all nodes
+      } else {
+        $h->{checked} = \1;
+      }
+    }
+
+    if ( $h->{hidden} ) {
+      $h->{hidden} = \1;
     } else {
-      $h->{leaf}=0;
+      $h->{hidden} = \0;
+    }
+
+    if ( $child->isLeaf() ) {
+      $h->{leaf} = \1;
+    } else {
+      $h->{leaf} = \0;
     }
 
     push @output, $h;
@@ -246,15 +265,16 @@ sub _get_tags {
   foreach my $tag (@tags) {
     $tree->addChild(
       Tree::Simple->new( {
-          text    => $tag,
-          type    => 'TAG',
-          iconCls => 'pp-icon-tag',
-          plugin_name => 'DB',
-          plugin_mode=> 'FULLTEXT',
-          plugin_query=> "tags: $tag",
-          plugin_base_query=> "tags: $tag",
-          plugin_title=>$tag,
-          plugin_iconCls => 'pp-icon-tag',
+          text              => $tag,
+          type              => 'TAG',
+          hidden            => 0,
+          iconCls           => 'pp-icon-tag',
+          plugin_name       => 'DB',
+          plugin_mode       => 'FULLTEXT',
+          plugin_query      => "tags: $tag",
+          plugin_base_query => "tags: $tag",
+          plugin_title      => $tag,
+          plugin_iconCls    => 'pp-icon-tag',
         }
       )
     );

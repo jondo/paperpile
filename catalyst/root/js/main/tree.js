@@ -35,6 +35,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         this.on({
 			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
             beforenodedrop:{scope:this, fn:this.onNodeDrop},
+            checkchange:{scope:this,fn:this.onCheckChange}
 		});
 
 
@@ -135,9 +136,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 	},
 
 
-    newActive: function() {
+    newActive: function(node) {
 
-        var node = this.getSelectionModel().getSelectedNode();
+        //var node = this.getSelectionModel().getSelectedNode();
         var grid=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
         var treeEditor = this.treeEditor;
 
@@ -181,6 +182,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 text: title, 
                 iconCls:pars.plugin_iconCls, 
                 leaf:true,
+                id: this.generateUID()
             }));
         
             newNode.init(pars);
@@ -190,7 +192,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 			    complete:{
 				    scope:this,
 				    single:true,
-				    fn:this.onNewActive,
+				    fn: function(){
+                        this.onNewActive(newNode);
+                    }
 			    }
             });
                                     
@@ -253,9 +257,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     },
 
-    onNewActive: function(){
+    onNewActive: function(node){
 
-        var node = this.getSelectionModel().getSelectedNode();
+        //var node = this.getSelectionModel().getSelectedNode();
 
         this.getSelectionModel().clearSelections();
         this.allowSelect=false;
@@ -339,8 +343,64 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     reloadFolder: function(){
         var node = this.getSelectionModel().getSelectedNode();
         node.reload();
-    }
+    },
 
+    generateUID: function(){
+        return ((new Date()).getTime() + "" + Math.floor(Math.random() * 1000000)).substr(0, 18);
+    },
+
+    configureSubtree: function(node){
+        console.log(node);
+        this.configureNode=node;
+        var oldLoader=node.loader;
+        var tmpLoader=new Paperpile.TreeLoader(
+            {  url: '/ajax/tree/node',
+               baseParams: {checked:true},
+               requestMethod: 'GET'
+            });
+        node.loader=tmpLoader;
+        node.reload();
+        node.loader=oldLoader;
+        
+        var div=Ext.Element.get(node.ui.getAnchor()).up('div');
+
+        var ok=Ext.DomHelper.append(div, 
+              '<a href="#" id="configure-node"><span class="pp-ok-text">&nbsp;Done</span></a>', true);
+
+        
+
+        ok.on({
+			click:{ 
+                fn:function(){
+                    this.configureNode.reload();
+                    Ext.Element.get(this.configureNode.ui.getAnchor()).up('div').select('#configure-node').remove();
+
+                },
+                stopEvent:true,
+                scope:this
+            }
+		});
+    },
+
+    onCheckChange: function(node, checked){
+
+        var hidden=1;
+        if (checked){
+            hidden=0;
+        }
+
+        Ext.Ajax.request({
+            url: '/ajax/tree/set_visibility',
+            params: { node_id: node.id,
+                      hidden: hidden
+                    },
+            success: function(){
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Hide/Show node');
+            },
+
+        });
+    }
 });
 
 
@@ -385,22 +445,43 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
         Ext.apply(config,{items:[
             { itemId: 'active_menu_new',
               text:'New from current tab',
-              handler: tree.newActive,
-              scope: tree
+              handler: function(){
+                  Paperpile.main.tree.newActive(this.node);
+              },
+              scope: this
             },
-            { id: 'context_menu_delete',
+            { itemId: 'active_menu_delete',
               text:'Delete',
               handler: tree.deleteActive,
               scope: tree
             },
-            { id: 'context_menu_reload',
+            { itemId: 'active_menu_reload',
               text:'Reload',
               //handler: tree.reloadFolder,
               scope: tree
+            },
+            { itemId: 'active_menu_configure',
+              text:'Configure',
+              handler: function(){
+                  Paperpile.main.tree.configureSubtree(this.node);
+              },
+              scope: this
             }
+
         ]});
         
         Paperpile.Tree.ActiveMenu.superclass.constructor.call(this, config);
+
+
+        this.on('beforehide',
+                function(){
+                    this.getSelectionModel().clearSelections();
+                    this.allowSelect=false;
+                },
+                tree
+               );
+
+
         
     },
 
