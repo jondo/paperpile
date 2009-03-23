@@ -222,62 +222,88 @@ sub _layoutText {
         if($mods->{name}) {
             #print Dumper $mods->{name};
             my @names = $mods->{name}->('@');
-            my $rounds = scalar(@names); 
-            my $qtNames = $rounds;
+            my $round = scalar(@names); 
+            my $qtNames = $round;
+
+            my ($et_al_min , $et_al_use_first) = (0, 0);
             
+            # read et-al options
+            my @options = $c->{style}->{bibliography}->{option}('@');
+            foreach my $o ( @options ) {
+               #print Dumper $o->pointer;
+                switch($o->pointer->{name}) {
+                    case "et-al-min" {
+                        $et_al_min = $o->pointer->{value};
+                    }
+                    case "et-al-use-first" {
+                        $et_al_use_first = $o->pointer->{value};
+                    }                    
+                }
+            }
+
             # print the names
             foreach my $n ( @names ) {
                 #print Dumper $n->pointer; exit;
-                my $c_nameEQauthor = $c->{style}->{macro}('name','eq','author') ;
-                my $family_name = $n->{namePart}('type', 'eq', 'family');
-                my @given_names = $n->{namePart}('type', 'eq', 'given');
-                #print Dumper @given_names;
+                
                 my $complete_name = "";
                 
-                my $and = "";
-                if($c_nameEQauthor->{names}->{name}->{and} eq "text" ) {
-                    $and = "and ";
-                }
-                elsif($c_nameEQauthor->{names}->{name}->{and} eq "symbol" ) {
-                    $and = "&";
-                }
-                
-                #print $c_nameEQauthor->{names}->{name}->{"name-as-sort-order"}; exit;
-                if($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
-                    #print Dumper $n->{namePart}->[1]->pointer; exit;
-                    $complete_name = $family_name.$c_nameEQauthor->{names}->{name}->{'sort-separator'};                                      
-                    foreach my $gn (@given_names) {
-                       $complete_name .= $gn;
-                   }
-                }
-                elsif($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "first") { # what does this option mean?
-                    die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'}(eq first) is not implemented yet!";
-                }
-                else { # attribute not given -> "John Doe"
-                    die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'} not given is not implemented yet!";
-                }                                    
-                
-                if($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'always') {
-                    $complete_name .= $c_nameEQauthor->{names}->{name}->{delimiter} if($rounds>1);
-                    $complete_name .= $and if($rounds==2);
-                }
-                elsif($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'never') {
-                    if($qtNames == 2 && $rounds>1) {
-                        $complete_name .= $and;
+                # either not enough for et-al or we use the first authors until we reach $et_al_use_first
+                if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) ) {
+                    my $c_nameEQauthor = $c->{style}->{macro}('name','eq','author') ;
+                    my $family_name = $n->{namePart}('type', 'eq', 'family');
+                    my @given_names = $n->{namePart}('type', 'eq', 'given');
+                    #print Dumper @given_names;
+                                        
+                    my $and = "";
+                    if($c_nameEQauthor->{names}->{name}->{and} eq "text" ) {
+                        $and = "and ";
+                    }
+                    elsif($c_nameEQauthor->{names}->{name}->{and} eq "symbol" ) {
+                        $and = "&";
+                    }
+                    
+                    #print $c_nameEQauthor->{names}->{name}->{"name-as-sort-order"}; exit;
+                    if($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
+                        #print Dumper $n->{namePart}->[1]->pointer; exit;
+                        $complete_name = $family_name.$c_nameEQauthor->{names}->{name}->{'sort-separator'};                                      
+                        foreach my $gn (@given_names) {
+                           $complete_name .= $gn;
+                       }
+                    }
+                    elsif($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "first") { # what does this option mean?
+                        die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'}(eq first) is not implemented yet!";
+                    }
+                    else { # attribute not given -> "John Doe"
+                        die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'} not given is not implemented yet!";
+                    }                                    
+                    
+                    if($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'always') {
+                        $complete_name .= $c_nameEQauthor->{names}->{name}->{delimiter} if($round>1);
+                        $complete_name .= $and if($round==2);
+                    }
+                    elsif($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'never') {
+                        if($qtNames == 2 && $round>1) {
+                            $complete_name .= $and;
+                        }
+                        else {
+                            $complete_name .= $c_nameEQauthor->{names}->{name}->{delimiter} if($round>1);
+                            $complete_name .= $and if($round==2);
+                        }
                     }
                     else {
-                        $complete_name .= $c_nameEQauthor->{names}->{name}->{delimiter} if($rounds>1);
-                        $complete_name .= $and if($rounds==2);
+                        die "ERROR: The CSL-attribute style->macro->name(eq author)->names->name->{'delimiter-precedes-last'} is not available?";
                     }
                 }
-                else {
-                    die "ERROR: The CSL-attribute style->macro->name(eq author)->names->name->{'delimiter-precedes-last'} is not available?";
-                }
                 
-                $rounds--;
+                $round--;
                 
                 #print $complete_name;
                 $self->{_biblio_str} .= $complete_name;
+            }
+            
+            # add et.al string
+            if($qtNames >= $et_al_min) {
+                $self->{_biblio_str} .= "et al.";
             }
         }
         #print Dumper @authors;
@@ -387,9 +413,229 @@ sub _layoutChoose {
                 
                 $self->{_biblio_str} .= $opt->{$o}->{text}->{suffix} if($opt->{$o}->{text}->{suffix});
             }
+            
+            if(exists $opt->{$o}->{group}) {        
+                #my @order = $c->{style}->{bibliography}->{layout}->{choose}->{$o}->{group}->order();
+                #print Dumper @order; exit;
+                $self->{_biblio_str} .= _parseGroup($mods, $c, $self, $opt->{$o}->{group}, "", 0);
+                
+                
+            }
+        }
+    }    
+}
+
+# parse csl group element
+# A group can have subgroups.
+# Therefore, we provide the groupStr
+# covering the result string.
+# At the first call of _parseGroup the string is empty.
+# In subgroups we extend the string, recursively.
+# Furhermore, we need the number of overall printed elements in the recursion
+sub _parseGroup {
+    my ($mods, $c, $self, $g, $groupStr, $elemNumber) = @_;
+    
+    #print Dumper $g;
+
+    $groupStr .= $g->{'prefix'}  if(exists $g->{'prefix'});
+    
+    foreach my $k (@{$g->{'/order'}} ) {
+        switch($k) { # formatting | delimiter | TODO:
+            #print $k, "\n";
+            case "delimiter" {
+                
+            }
+            #case "prefix" { # already done before the loop
+            #}
+            #case "suffix" { # will be done after the loop
+            #}
+            case "font-family" {
+                
+            }
+            case "font-style" {
+                
+            }
+            case "font-variant" {
+                
+            }
+            case "font-weight" {
+                
+            }            
+            case "text-decoration" {
+                
+            }
+            case "vertical-align" {
+                
+            }
+            case "text-case" {
+                
+            }
+            case "display" {
+                    
+            }
+            case "quotes" {
+                
+            }
+            case "text" {
+                $elemNumber++;
+                if($elemNumber>1) { # not the first element
+                    $groupStr .= $g->{'delimiter'} if($g->{'delimiter'});
+                }
+                if($g->{$k}->{variable}) {
+                    $groupStr .= _parseVariable($mods, $c, $self, $g->{$k}->{variable});
+                }
+                
+            }
+            case "group" {
+                
+            }
+        }        
+    }
+    
+    $groupStr .= $g->{'suffix'} if(exists $g->{'suffix'});
+    
+    return $groupStr;
+}
+
+
+
+sub _parseVariable {
+    my ($mods, $c, $self, $var) = @_;
+    
+    my $varString = "";
+    
+    switch($var) {
+        ## the primary title for the cited item
+        case "title" { 
+        }
+        ## the secondary title for the cited item; for a book chapter, this 
+        ## would be a book title, for an article the journal title, etc.
+        case "container-title" {
+        }
+        ## the tertiary title for the cited item; for example, a series title
+        case "collection-title" {
+        }
+        ## collection number; for example, series number
+        case "collection-number" {
+        }
+        ## title of a related original version; often useful in cases of translation
+        case "original-title" {
+        }
+        ## the name of the publisher
+        case "publisher" {
+        }
+        ## the location of the publisher
+        case "publisher-place" {
+        }
+        ## the name of the archive
+        case "archive" {
+        }
+        ## the location of the archive
+        case "archive-place" {
+        }
+        ## the location within an archival collection (for example, box and folder)
+        case "archive_location" {
+        }
+        ## the name or title of a related event such as a conference or hearing
+        case "event" {
+        }
+        ## the location or place for the related event
+        case "event-place" {
+        }
+        ##
+        case "page" {
+            if(exists $mods->{relatedItem}->{part}->{extent}->{unit}) {
+                if($mods->{relatedItem}->{part}->{extent}->{unit} eq "page") {
+                    if(exists $mods->{relatedItem}->{part}->{extent}->{start} && exists $mods->{relatedItem}->{part}->{extent}->{end}) {
+                           $varString = $mods->{relatedItem}->{part}->{extent}->{start}."-".$mods->{relatedItem}->{part}->{extent}->{end};
+                    }
+                    else {
+                        die "ERROR: No start and end page in the mods file?";
+                    }
+                }
+            }
+        }
+        ## a description to locate an item within some larger container or 
+        ## collection; a volume or issue number is a kind of locator, for example.
+        case "locator" {
+        }
+        ## version description
+        case "version" {
+        }
+        ## volume number for the container periodical
+        case "volume" {
+        } 
+        ## refers to the number of items in multi-volume books and such
+        case "number-of-volumes" {
+        } 
+        ## the issue number for the container publication
+        case "issue" {
+        } 
+        ##
+        case "chapter-number" {
+        } 
+        ## medium description (DVD, CD, etc.)
+        case "medium" {
+        } 
+        ## the (typically publication) status of an item; for example "forthcoming"
+        case "status" {
+        } 
+        ## an edition description
+        case "edition" {
+        } 
+        ## a section description (for newspapers, etc.)
+        case "section" {
+        } 
+        ##
+        case "genre" {
+        } 
+        ## a short inline note, often used to refer to additional details of the resource
+        case "note" {
+        } 
+        ## notes made by a reader about the content of the resource
+        case "annote" {
+        } 
+        ##
+        case "abstract" {
+        } 
+        ##
+        case "keyword" {
+        } 
+        ## a document number; useful for reports and such
+        case "number" {
+        }
+        ## for related referenced resources; this is here for legal case 
+        ## histories, but may be relevant for other contexts.
+        case "references" {
+        } 
+        ##
+        case "URL" {
+        } 
+        ##
+        case "DOI" {
+        } 
+        ##
+        case "ISBN" {
+        } 
+        ##
+        case "call-number" {
+        } 
+        ## the number used for the in-text citation mark in numeric styles
+        case "citation-number" {
+        } 
+        ## the label used for the in-text citation mark in label styles
+        case "citation-label" {
+        }
+        ## The number of a preceding note containing the first reference to
+        ## this item. Relevant only for note-based styles, and null for first references.
+        case "first-reference-note-number" {
+        }
+        ## The year suffix for author-date styles; e.g. the 'a' in '1999a'.
+        case "year-suffix" {
         }
     }
     
+    return $varString;
 }
 
 no Moose;
