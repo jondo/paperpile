@@ -83,4 +83,5 @@ IO::Compress::Adapter::Deflate
 HTML::Entities
 File::Listing
 Mail::Address
-
+XML::XPathEngine
+HTML::TreeBuilder::XPath

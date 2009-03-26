@@ -9,6 +9,7 @@ use Config::General;
 use Catalyst::Utils;
 use File::Spec;
 use Path::Class;
+use Config::Any;
 
 $Data::Dumper::Indent = 1;
 

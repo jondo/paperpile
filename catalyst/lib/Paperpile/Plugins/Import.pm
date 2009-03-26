@@ -14,6 +14,7 @@ has 'limit' => (
 
 has 'total_entries' => ( is => 'rw', isa => 'Int' );
 has '_hash'  => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
+has '_page_cache' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
 
 sub connect {
   my $self = shift;
