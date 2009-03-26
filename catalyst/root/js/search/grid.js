@@ -37,8 +37,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 '<p class="pp-grid-citation">{citation}</p>'
             );
             return t.apply({title:record.data.title,
-                            authors:record.data._authors_nice,
-                            citation:record.data._citation_nice,
+                            authors:record.data._authors_display,
+                            citation:record.data._citation_display,
                            });
         }
     

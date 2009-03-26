@@ -84,8 +84,8 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 }
 
 # Helper fields which have no equivalent field in the database
-has '_authors_nice'  => ( is => 'rw', isa => 'Str' );
-has '_citation_nice' => ( is => 'rw', isa => 'Str' );
+has '_authors_display'  => ( is => 'rw', isa => 'Str' );
+has '_citation_display' => ( is => 'rw', isa => 'Str' );
 has '_imported'      => ( is => 'rw', isa => 'Bool' );
 
 sub BUILD {
@@ -96,16 +96,20 @@ sub BUILD {
 sub refresh_fields {
   ( my $self ) = @_;
 
-  my @nice = ();
+  my @display = ();
 
   if ( $self->authors ) {
     foreach my $a ( split( /\band\b/, $self->authors ) ) {
-      push @nice, Paperpile::Library::Author->new( full => $a )->nice;
+      push @display, Paperpile::Library::Author->new( full => $a )->nice;
     }
-    $self->_authors_nice( join( ', ', @nice ) );
+    $self->_authors_display( join( ', ', @display) );
   }
 
-  $self->format_citation;
+  my $cit=$self->format_citation;
+
+  if ($cit){
+    $self->_citation_display($cit);
+  }
 
   $self->calculate_sha1;
 
@@ -118,7 +122,7 @@ sub calculate_sha1 {
   my $ctx = Digest::SHA1->new;
 
   if ( $self->authors and $self->title ) {
-    $ctx->add( $self->_authors_nice );
+    $ctx->add( $self->_authors_display );
     $ctx->add( $self->title );
     $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
   }
@@ -159,7 +163,7 @@ sub format_citation {
     $cit .= $self->pages;
   }
 
-  $self->_citation_nice($cit);
+  return $cit;
 
 }
 

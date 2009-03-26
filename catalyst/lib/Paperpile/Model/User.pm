@@ -132,7 +132,7 @@ sub create_pub {
             title    => $pub->title,
             abstract => $pub->abstract,
             notes    => $pub->notes,
-            names    => $pub->_authors_nice,
+            names    => $pub->_authors_display,
             tags     => $pub->tags,
             folders  => $pub->folders,
         }
