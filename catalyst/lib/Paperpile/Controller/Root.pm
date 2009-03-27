@@ -17,6 +17,7 @@ sub index : Path : Args(0) {
 
   foreach my $plugin (@list){
     my ($volume,$directories,$file) = File::Spec->splitpath( $plugin );
+    print STDERR "=========> $file\n";
     push @plugins, "search/plugins/$file";
   }
   $c->stash->{plugins}=[@plugins];

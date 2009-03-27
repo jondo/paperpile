@@ -1,10 +1,10 @@
-Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
+Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
 
 
-    plugin_title: 'PubMed',
-    loadMask: {msg:"Searching PubMed"},
-    plugin_iconCls: 'pp-icon-pubmed',
-    limit: 25,
+    plugin_title: 'GoogleScholar',
+    loadMask: {msg:"Searching Google Scholar"},
+    plugin_iconCls: 'pp-icon-google',
+    limit:10,
 
     initComponent:function() {
 
@@ -13,7 +13,7 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
         })
 
         Ext.apply(this, {
-            plugin_name: 'PubMed',
+            plugin_name: 'GoogleScholar',
             tbar:[_searchField,
                   {xtype:'tbfill'},
                   {   xtype:'button',
@@ -27,17 +27,17 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
                  ],
         });
 
-        Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
+        Paperpile.PluginGridGoogleScholar.superclass.initComponent.apply(this, arguments);
 
         _searchField.store=this.store;
 
     },
     
     onRender: function() {
-        Paperpile.PluginGridPubMed.superclass.onRender.apply(this, arguments);
+        Paperpile.PluginGridGoogleScholar.superclass.onRender.apply(this, arguments);
         
         if (this.plugin_query != ''){
-            this.store.load({params:{start:0, limit:this.limit }});
+            this.store.load({params:{start:0, limit:10 }});
         }
     }
 

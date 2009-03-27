@@ -8,6 +8,7 @@ use Paperpile::Library::Author;
 use Paperpile::Library::Journal;
 use Paperpile::Utils;
 use Bibutils;
+use Encode qw(encode_utf8);
 
 use 5.010;
 
@@ -87,6 +88,8 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 has '_authors_display'  => ( is => 'rw', isa => 'Str' );
 has '_citation_display' => ( is => 'rw', isa => 'Str' );
 has '_imported'      => ( is => 'rw', isa => 'Bool' );
+has '_details_link'      => ( is => 'rw', isa => 'Str' );
+
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -121,9 +124,13 @@ sub calculate_sha1 {
 
   my $ctx = Digest::SHA1->new;
 
-  if ( $self->authors and $self->title ) {
-    $ctx->add( $self->_authors_display );
-    $ctx->add( $self->title );
+  if ( ($self->authors or $self->_authors_display) and $self->title ) {
+    if ($self->authors){
+      $ctx->add( encode_utf8($self->authors) );
+    } else {
+      $ctx->add( encode_utf8($self->_authors_display) );
+    }
+    $ctx->add( encode_utf8($self->title) );
     $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
   }
 
@@ -148,7 +155,7 @@ sub format_citation {
   if ( $self->month ) {
     $cit .= $self->month . '; ';
   } else {
-    $cit .= '; ';
+    $cit .= '; ' if $cit;
   }
 
   if ( $self->volume ) {

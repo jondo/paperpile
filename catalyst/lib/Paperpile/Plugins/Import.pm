@@ -43,4 +43,19 @@ sub find_sha1 {
 
 }
 
+
+sub complete_details {
+
+  ( my $self, my $pub ) = @_;
+
+  return $pub;
+
+}
+
+
+
+
+
+
+
 1;

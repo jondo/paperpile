@@ -3,6 +3,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     plugin_query:'',
     closable:true,
     region:'center',
+    limit: 25,
 
     initComponent:function() {
 
@@ -16,13 +17,13 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                            plugin_name: this.plugin_name,
                            plugin_query: this.plugin_query,
                            plugin_mode: this.plugin_mode,
-                           limit:25
+                           limit:this.limit
                           },
                reader: new Ext.data.JsonReader(),
             }); 
         
         var _pager=new Ext.PagingToolbar({
-            pageSize: 25,
+            pageSize: this.limit,
             store: _store,
             displayInfo: true,
             displayMsg: 'Displaying papers {0} - {1} of {2}',

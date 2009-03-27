@@ -17,6 +17,8 @@ sub insert_entry : Local {
 
   my $pub = $plugin->find_sha1($sha1);
 
+  $plugin->complete_details($pub);
+
   $pub->created(timestamp);
   $pub->times_read(0);
   $pub->last_read(timestamp); ## for the time being

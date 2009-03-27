@@ -15,7 +15,8 @@ sub reset_db : Local {
 
   my ( $self, $c ) = @_;
 
-  $c->model('User')->reset_db;
+  $c->model('User')->init_db( $c->config->{pub_fields}, $c->config->{user_settings} );
+
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 

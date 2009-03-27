@@ -10,13 +10,36 @@ use Catalyst::Utils;
 use File::Spec;
 use Path::Class;
 use Config::Any;
+use HTTP::Cookies;
+use WWW::Mechanize;
 
 $Data::Dumper::Indent = 1;
 
-sub get_browser{
-  my $browser = LWP::UserAgent->new;
+sub get_browser {
+
+  my ($self, $type) = @_;
+
+  my $browser;
+
+  if (defined $type){
+    $browser = WWW::Mechanize->new() if $type eq 'mech';
+  } else {
+    $browser = LWP::UserAgent->new();
+  }
+
+
   #$browser->proxy('http', 'http://localhost:8146/');
-  $browser->cookie_jar({});
+
+  #my $cookie_jar = HTTP::Cookies->new(
+  #  file     => $self->path_to("cookies.txt"),
+  #  autosave => 1,
+  #  ignore_discard=>1
+  #);
+
+  my $cookie_jar = HTTP::Cookies->new({});
+
+  $browser->cookie_jar( $cookie_jar );
+
   $browser->agent('Mozilla/5.0');
   return $browser;
 }

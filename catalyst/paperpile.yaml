@@ -13,6 +13,7 @@ user_settings:
 app_settings:
   user_db: "../user/default/paperpile.db" # relative to catalyst app-dir or absolute
 
+
 pub_fields:
   pubtype:       "Publication Type"
   citekey:       "Citation key"
