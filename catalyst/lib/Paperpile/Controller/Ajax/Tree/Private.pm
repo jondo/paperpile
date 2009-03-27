@@ -15,7 +15,8 @@ sub get_default_tree : Private {
 
   my $root = Tree::Simple->new( {
       text => 'Root',
-      id   => 'root',
+
+      #id   => 'root',
       hidden => 0,
     },
     Tree::Simple->ROOT
@@ -39,9 +40,10 @@ sub get_default_tree : Private {
   #### / Local Library / Tags
 
   my $tags = Tree::Simple->new( {
-      text    => 'Tags',
-      type    => "TAGS",
-      id      => 'tags',
+      text => 'Tags',
+      type => "TAGS",
+
+      #id      => 'tags',
       iconCls => 'pp-icon-empty',
       hidden  => 0,
     },
@@ -71,15 +73,16 @@ sub get_default_tree : Private {
   #### / Active Folders
 
   my $active = Tree::Simple->new( {
-      text    => 'Active Folders',
-      type    => "ACTIVE",
-      path    => '/',
-      id      => 'active',
+      text => 'Active Folders',
+      type => "ACTIVE",
+      path => '/',
+      #id      => 'active',
       iconCls => 'pp-icon-empty',
       cls     => 'pp-tree-heading',
       hidden  => 0,
     }
   );
+  $active->setUID('active');
 
   $root->addChild($active);
 
@@ -125,7 +128,7 @@ sub get_default_tree : Private {
   $plugins->addChild(
     Tree::Simple->new( {
         type         => 'IMPORT_PLUGIN',
-        plugin_name  => 'Google',
+        plugin_name  => 'GoogleScholar',
         text         => 'Google Scholar',
         plugin_query => '',
         iconCls      => 'pp-icon-google',
@@ -233,11 +236,11 @@ sub get_subtree : Private {
     )
   }
 
-  if ($subtree->getNodeValue->{id} eq 'tags'){
+  if ($subtree->getUID eq 'tags'){
     $self->_get_tags($c,$subtree);
   }
 
-  if ($subtree->getNodeValue->{id} eq 'folders'){
+  if ($subtree->getUID eq 'folders'){
     $self->_get_folders($c,$subtree);
   }
 
