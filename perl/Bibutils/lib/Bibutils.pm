@@ -5,7 +5,7 @@ use 5.010000;
 use Carp;
 use XSLoader;
 use File::Temp qw/ :seekable /;
-
+use Encode qw /decode_utf8/;
 
 
 use Data::Dumper;
@@ -73,7 +73,7 @@ sub get_data {
         c_get_field_level( $self->_bibpointer, $i, $j )
       );
 
-      push @fields, { tag => $tag, data => $data, level => $level };
+      push @fields, { tag => $tag, data => decode_utf8($data), level => $level };
     }
     push @bibs,[@fields];
   }

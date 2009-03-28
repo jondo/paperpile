@@ -19,6 +19,7 @@ ok ($bu->read,'Reading file');
 
 ## Getting data
 my $data=$bu->get_data;
+
 is (scalar @$data, 30, 'Getting data from file.');
 
 my @content=split(/\n/,$bu->as_string);
