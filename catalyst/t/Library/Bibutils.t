@@ -12,7 +12,6 @@ use Test::More 'no_plan';
 use Test::Deep;
 use 5.010;
 
-
 my $bu = Bibutils->new(
   in_file => '../data/test.bib',
   out_file  => '../data/new.bib',
@@ -39,7 +38,6 @@ foreach my $i ( 0 .. $#data ) {
 
 }
 
-
 foreach my $i ( 0 .. 27 ) {
 
   next if $i ~~ [8,9]; # Bibutils has a trailing '|' for the editor
@@ -49,9 +47,9 @@ foreach my $i ( 0 .. 27 ) {
   next if $i ~~ [25]; # Bibutils can't handle 'type' field in TECHREPORTS
 
   $pub = Paperpile::Library::Publication->new;
-  $pub->build_from_bibutils( $data[$i] );
+  $pub->_build_from_bibutils( $data[$i] );
 
-  my $new_data = $pub->format_bibutils;
+  my $new_data = $pub->_format_bibutils;
 
   cmp_bag( $new_data, $data[$i], "check self-consistent input/output ($i, ".$pub->citekey.")");
 
@@ -64,5 +62,24 @@ foreach my $i ( 0 .. 27 ) {
   }
 }
 
+# This is the second entry of test.bib as string:
+my $string=<<'END';
+@ARTICLE{article-full,
+   author = "Leslie A. Aamport and Joe-Bob Missilany",
+   title = {The Gnats and Gnus Document Preparation System},
+   journal = {G-Animal's Journal},
+   year = 1986,
+   volume = 41,
+   number = 7,
+   pages = "73+",
+   month = jul,
+   note = "This is a full ARTICLE entry",
+}
+END
 
+$pub->import_string($string,'BIBTEX');
 
+my $pub1 = Paperpile::Library::Publication->new;
+$pub1->_build_from_bibutils( $data[1] );
+
+is_deeply($pub,$pub1,"Import from string.");

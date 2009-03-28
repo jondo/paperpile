@@ -8,9 +8,40 @@ use Paperpile::Library::Journal;
 use Paperpile::Utils;
 use Bibutils;
 
+use File::Temp qw/tempfile/;
+
 use 5.010;
 
-sub build_from_bibutils {
+# MODS, BIBTEX, RIS, ENDNOTE, COPAC, ISI, MEDLINE, ENDNOTEXML, BIBLATEX
+
+sub import_string {
+
+  my ( $self, $string, $format ) = @_;
+
+  my $in_format = eval( 'Bibutils::' . $format . 'IN' );
+
+  my ( $fh, $file_name ) = tempfile();
+
+  print $fh $string;
+  close($fh);
+
+  my $bu = Bibutils->new(
+    in_file    => $file_name,
+    out_file   => '',
+    in_format  => $in_format,
+    out_format => $in_format,
+  );
+
+  $bu->read;
+
+  my @data = @{ $bu->get_data };
+
+  $self->_build_from_bibutils($data[0]);
+
+}
+
+
+sub _build_from_bibutils {
 
   my ( $self, $data ) = @_;
 
@@ -168,7 +199,7 @@ sub _get_titles_from_bibutils {
 }
 
 
-sub format_bibutils {
+sub _format_bibutils {
 
   my ($self) = @_;
 
