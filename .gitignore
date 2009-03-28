@@ -4,3 +4,5 @@ app.db
 semantic.cache
 tmp/
 user/
+\#*
+.\#*

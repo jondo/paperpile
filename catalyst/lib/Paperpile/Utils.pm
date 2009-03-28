@@ -27,18 +27,15 @@ sub get_browser {
     $browser = LWP::UserAgent->new();
   }
 
-
   #$browser->proxy('http', 'http://localhost:8146/');
-
   #my $cookie_jar = HTTP::Cookies->new(
   #  file     => $self->path_to("cookies.txt"),
   #  autosave => 1,
   #  ignore_discard=>1
   #);
+  #my $cookie_jar = HTTP::Cookies->new({});
 
-  my $cookie_jar = HTTP::Cookies->new({});
-
-  $browser->cookie_jar( $cookie_jar );
+  $browser->cookie_jar( {} );
 
   $browser->agent('Mozilla/5.0');
   return $browser;

@@ -88,16 +88,58 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     afterRender: function(){
 
-        var container= this.findParentByType(Paperpile.PubView);
-        this.getSelectionModel().on('rowselect',container.onRowSelect,container);
+        this.getSelectionModel().on('rowselect',
+                                    function(sm, rowIdx, r){
+                                        var container= this.findParentByType(Paperpile.PubView);
+                                        container.onRowSelect(sm, rowIdx, r);
+                                        this.completeEntry();
+                                    },this);
+
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
 
     },
 
-    
+    // Some plugins use a two-stage process for showing entries: First
+    // only minimal info is scraped from site to build list quickly
+    // without harassing the site too much. Then the details are
+    // fetched only when user clicks the entry.
+       
+    completeEntry: function(){
+
+        // _details_link indicates if an entry still needs to be completed or not
+        if (this.getSelectionModel().getSelected().data._details_link){
+
+            var sha1=this.getSelectionModel().getSelected().data.sha1;
+        
+            Ext.getCmp('statusbar').setText('Downloading details');
+            Ext.getCmp('statusbar').showBusy();
+        
+            Ext.Ajax.request({
+                url: '/ajax/crud/complete_entry',
+                params: { sha1: sha1,
+                          grid_id: this.id,
+                        },
+                method: 'GET',
+                success: function(response){
+                    var json = Ext.util.JSON.decode(response.responseText);
+                    var record=this.store.getAt(this.store.find('sha1',sha1));
+                    record.beginEdit();
+                    for ( var i in json.data){
+                        record.set(i,json.data[i]);
+                    }
+                    record.endEdit();
+                    Ext.getCmp('statusbar').clearStatus();
+                },
+                scope:this
+            });
+        }
+    },
+
+
+   
     insertEntry: function(){
         
-        var sha1=this.getSelectionModel().getSelected().id;
+        var sha1=this.getSelectionModel().getSelected().data.sha1;
         Ext.Ajax.request({
             url: '/ajax/crud/insert_entry',
             params: { sha1: sha1,
@@ -107,7 +149,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             success: function(){
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry Inserted.');
-                this.store.getById(sha1).set('_imported',1);
+                this.store.getAt(this.store.find('sha1',sha1)).set('_imported',1);
             },
             scope:this
         });
@@ -117,7 +159,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     deleteEntry: function(){
         
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
-        var sha1=this.getSelectionModel().getSelected().id;
+        var sha1=this.getSelectionModel().getSelected().data.sha1;
 
         Ext.Ajax.request({
             url: '/ajax/crud/delete_entry',
@@ -131,13 +173,14 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             },
         });
 
-        this.store.remove(this.store.getById(sha1));
+        this.store.remove(this.store.getAt(this.store.find('sha1',sha1)));
+
     },
 
     editEntry: function(){
         
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
-        var sha1=this.getSelectionModel().getSelected().id;
+        var sha1=this.getSelectionModel().getSelected().data.sha1;
 
         //var form = new Paperpile.Forms.Settings();
 

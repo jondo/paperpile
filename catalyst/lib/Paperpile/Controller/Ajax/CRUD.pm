@@ -17,8 +17,6 @@ sub insert_entry : Local {
 
   my $pub = $plugin->find_sha1($sha1);
 
-  $plugin->complete_details($pub);
-
   $pub->created(timestamp);
   $pub->times_read(0);
   $pub->last_read(timestamp); ## for the time being
@@ -26,6 +24,23 @@ sub insert_entry : Local {
   $c->model('User')->create_pub($pub);
 
   $pub->_imported(1);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+sub complete_entry : Local{
+
+  my ( $self, $c ) = @_;
+  my $grid_id = $c->request->params->{grid_id};
+  my $sha1      = $c->request->params->{sha1};
+  my $plugin = $c->session->{"grid_$grid_id"};
+
+  my $pub = $plugin->find_sha1($sha1);
+  $pub=$plugin->complete_details($pub);
+
+  $c->stash->{data} = $pub->as_hash;
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');

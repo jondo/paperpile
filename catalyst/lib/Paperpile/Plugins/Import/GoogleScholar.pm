@@ -32,7 +32,10 @@ sub connect {
   my $browser = Paperpile::Utils->get_browser;
   $settingsUrl .= 'num=10&scisf=4';
   $browser->get($settingsUrl);
+
   $self->_session_cookie( $browser->cookie_jar );
+
+  #print STDERR Dumper($self->_session_cookie);
 
   # Then start query and parse number of hits; save first page in
   # cache to speed up call to first page afterwards
@@ -59,8 +62,8 @@ sub connect {
 
   my $stats = $tree->findnodes(q{//td[@align="right"]/font[@size='-1']});
 
-  if ( $stats =~ /Results \d+ - \d+ of about ([0123456789,]+) for/ ) {
-    my $number = $1;
+  if ( $stats =~ /Results \d+ - \d+ of\s*(about)?\s*([0123456789,]+) for/ ) {
+    my $number = $2;
     $number =~ s/,//g;
     $number = 1000 if ( $number > 1000 );    # Google does not provide more than 1000 results
     $self->total_entries($number);
@@ -171,8 +174,6 @@ sub page {
     push @$page, $pub;
   }
 
-  #print STDERR Dumper($page);
-
   $self->_save_page_to_hash($page);
 
   return $page;
@@ -187,11 +188,24 @@ sub complete_details {
   my $browser = Paperpile::Utils->get_browser;
   $browser->cookie_jar( $self->_session_cookie );
 
+  my $old_sha1=$pub->sha1;
+
   my $bibtex=$browser->get($pub->_details_link);
 
   $bibtex=$bibtex->content;
 
-  return $pub;
+  my $full_pub = Paperpile::Library::Publication->new();
+  $full_pub->import_string($bibtex,'BIBTEX');
+
+  $full_pub->url($pub->url);
+
+  my $new_sha1=$full_pub->sha1;
+
+  delete($self->_hash->{ $old_sha1 });
+
+  $self->_hash->{ $new_sha1 } = $full_pub;
+
+  return $full_pub;
 
 }
 

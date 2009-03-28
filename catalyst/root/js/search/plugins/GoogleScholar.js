@@ -39,7 +39,7 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
         if (this.plugin_query != ''){
             this.store.load({params:{start:0, limit:10 }});
         }
-    }
+    },
 
 
 });
