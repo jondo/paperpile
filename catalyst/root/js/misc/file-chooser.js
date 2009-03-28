@@ -1,7 +1,7 @@
 Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
     title: "Select file",
-    selectionMode:'BOTH',
+    selectionMode:'FILE',
     showHidden:false,
 
     callback: function(button,path){
@@ -12,6 +12,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
         var treepanel = new Ext.ux.FileTreePanel({
 		    height:400,
+            border:0,
             itemId:'filetree',
 		    autoWidth:true,
 		    selectionMode: this.selectionMode,
@@ -24,14 +25,43 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
             url:'/ajax/files/dialogue',
 	    });
 
+        var label='File';
+
+        if (this.selectionMode == 'DIR'){
+            label='Directory';
+        }
+
 		Ext.apply(this, {
-            layout: 'fit',
+            layout: 'border',
             width: 500,
             height: 300,
             closeAction:'hide',
             plain: true,
             modal:true,
-            items: [treepanel],
+            items: [
+                { xtype: 'panel',
+                  region: 'north',
+                  itemId: 'northpanel',
+                  height: 40,
+                  layout:'form',
+                  frame:true,
+                  border:false,
+                  labelAlign:'right',
+                  labelWidth: 50,
+                  items:[
+                      {xtype: 'textfield',
+                       itemId: 'textfield',
+                       fieldLabel: label,
+                       width: 400,
+                      }
+                  ],
+                },
+                { xtype: 'panel',
+                  region: 'center',
+                  layout: 'fit',
+                  items:[treepanel],
+                }
+            ],
             bbar: [  {xtype:'tbfill'},
                      { text: 'Select',
                       itemId: 'select',
@@ -65,8 +95,16 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                   ]
 	    });
 	    Paperpile.FileChooser.superclass.initComponent.call(this);
-    }
 
+        this.textfield=this.items.get('northpanel').items.get('textfield');
+
+
+    },
+
+    onSelect: function(node){
+        this.textfield.setValue(node.text);
+
+    }
 
 });
 
