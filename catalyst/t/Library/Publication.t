@@ -1,12 +1,12 @@
 #!/usr/bin/perl -w
 
-use lib "../lib/";
+use lib "../../lib/";
 use strict;
 
 use Paperpile::Library::Publication;
-use Bibutils;
 use Data::Dumper;
 use Digest::SHA1;
+use Encode qw(encode_utf8);
 use Test::More 'no_plan';
 use Test::Deep;
 use 5.010;
@@ -67,15 +67,15 @@ foreach my $key ( keys %journal ) {
 $pub = Paperpile::Library::Publication->new( {%book} );
 
 my $ctx = Digest::SHA1->new;
-$ctx->add('Knuth DE');
-$ctx->add('Fundamental Algorithms');
+$ctx->add(encode_utf8('Knuth, D.E.'));
+$ctx->add(encode_utf8('Fundamental Algorithms'));
 my $sha1 = substr( $ctx->hexdigest, 0, 15 );
 
 is( $pub->sha1, $sha1, "Autogenerate sha1 identity" );
 
 $ctx = Digest::SHA1->new;
-$ctx->add('Knuth DE');
-$ctx->add('New Title');
+$ctx->add(encode_utf8('Knuth, D.E.'));
+$ctx->add(encode_utf8('New Title'));
 $sha1 = substr( $ctx->hexdigest, 0, 15 );
 
 $pub->title('New Title');
@@ -101,71 +101,4 @@ is( $pub2->format('[YY]'),           '08',                       '[YY]' );
 is( $pub2->format('[YYYY]'),         '2008',                     '[YYYY]' );
 is( $pub2->format('[journal]'),      'BMC_Bioinformatics',       '[journal]' );
 
-#is( $pub2->format('[firstauthor:UC]_[journal]:[YYYY]'),
-#  'STADLER_Nature:2008', '[firstauthor:UC]_[journal]:[YYYY]' );
-
-my $bu = Bibutils->new(
-  in_file => 'data/test.bib',
-
-  #in_file => 'data/test1.ris',
-  out_file  => 'data/new.bib',
-  in_format => Bibutils::BIBTEXIN,
-
-  #in_format => Bibutils::RISIN,
-  out_format => Bibutils::BIBTEXOUT,
-);
-
-#my $bu=Bibutils->new(in_file => 'data/test1.ris',
-#                     out_file => 'data/new.bib',
-#                     in_format => Bibutils::RISIN,
-#                     out_format => Bibutils::BIBTEXOUT,
-#                    );
-
-$bu->read;
-
-my @data = @{ $bu->get_data };
-
-#print Dumper(@data);
-#exit;
-
-
-$pub = Paperpile::Library::Publication->new;
-
-my @expected_types = qw/ARTICLE ARTICLE INBOOK INBOOK BOOK BOOK BOOK INCOLLECTION
-  INCOLLECTION BOOK MANUAL MANUAL MASTERSTHESIS MASTERSTHESIS MISC MISC INPROCEEDINGS
-  INPROCEEDINGS INPROCEEDINGS PROCEEDINGS PROCEEDINGS PROCEEDINGS PHDTHESIS PHDTHESIS
-  TECHREPORT TECHREPORT UNPUBLISHED UNPUBLISHED/;
-
-foreach my $i ( 0 .. $#data ) {
-  next if $expected_types[$i] eq 'BOOKLET';    # not currently handled
-  my $type = $pub->_get_type_from_bibutils( $data[$i] );
-  is( $type, $expected_types[$i],
-    "Get publication type from bibutils data (" . $expected_types[$i] . ")" );
-
-}
-
-
-foreach my $i ( 0 .. 27 ) {
-
-  next if $i ~~ [8,9]; # Bibutils has a trailing '|' for the editor
-                       # (eg. Lawrie|D|) which is inconsistent because it
-                       # usually does not have it elsewhere
-
-  next if $i ~~ [25]; # Bibutils can't handle 'type' field in TECHREPORTS
-
-  $pub = Paperpile::Library::Publication->new;
-  $pub->build_from_bibutils( $data[$i] );
-
-  my $new_data = $pub->format_bibutils;
-
-  cmp_bag( $new_data, $data[$i], "check self-consistent input/output ($i, ".$pub->citekey.")");
-
-  foreach my $line (sort {$a->{tag} cmp $b->{tag}} @$new_data) {
-    #print join( " ", $line->{tag}, "'" . $line->{data} . "'", $line->{level} ), "\n";
-  }
-  #print ">>>>>>>>>>>>>>>>>\n";
-  foreach my $line ( sort {$a->{tag} cmp $b->{tag}} @{ $data[$i] } ) {
-    #print join( " ", $line->{tag}, "'" . $line->{data} . "'", $line->{level} ), "\n";
-  }
-}
 
