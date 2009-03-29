@@ -22,6 +22,7 @@ has '_bibpointer' => ( is => 'rw' );
 
 sub read {
   my $self=shift;
+
   $self->_bibpointer(Bibutils::c_read($self->in_file, $self->in_format));
   return 1; # Check error codes if it really was successfull
 }
