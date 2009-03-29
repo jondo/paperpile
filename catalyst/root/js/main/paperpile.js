@@ -1,44 +1,6 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('Paperpile');
 
-// Ext overrides
-
-Ext.override(Ext.form.Field, {
-    hideItem :function(){
-        this.formItem = Ext.Element(this.getEl()).findParent('.x-form-item');
-        this.formItem.addClass('x-hide-' + this.hideMode);             
-    },
-
-    showItem: function(){
-        this.formItem = Ext.Element(this.getEl()).findParent('.x-form-item');
-        this.formItem.removeClass('x-hide-' + this.hideMode);             
-    },
-    setFieldLabel: function(text) {
-    var ct = this.el.findParent('div.x-form-item', 3, true);
-    var label = ct.first('label.x-form-item-label');
-    label.update(text);
-  }
-});
-
-Ext.override(Ext.Panel, {
-    hideBbar: function() {
-        this.bbar.setVisibilityMode(Ext.Element.DISPLAY);
-        this.bbar.hide();
-        this.syncSize();
-        if (this.ownerCt) {
-            this.ownerCt.doLayout();
-        }
-    },
-    showBbar: function() {
-        this.bbar.setVisibilityMode(Ext.Element.DISPLAY);
-        this.bbar.show();
-        this.syncSize();
-        if (this.ownerCt) {
-            this.ownerCt.doLayout();
-        }
-    }
-
-});
 
 
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {

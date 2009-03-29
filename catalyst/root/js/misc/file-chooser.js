@@ -10,21 +10,6 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
     initComponent: function() {
 
-        var treepanel = new Ext.ux.FileTreePanel({
-		    height:400,
-            border:0,
-            itemId:'filetree',
-		    autoWidth:true,
-		    selectionMode: this.selectionMode,
-            showHidden:this.showHidden,
-		    rootPath:'ROOT',
-            rootText: '/',
-		    topMenu:false,
-		    autoScroll:true,
-		    enableProgress:false,
-            url:'/ajax/files/dialogue',
-	    });
-
         var label='File';
 
         if (this.selectionMode == 'DIR'){
@@ -58,8 +43,10 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                 },
                 { xtype: 'panel',
                   region: 'center',
+                  itemId:'centerpanel',
                   layout: 'fit',
-                  items:[treepanel],
+                  items:[{xtype:'panel', itemId:'filetree', id:'DUMMY'}],
+                  //items:[]
                 }
             ],
             bbar: [  {xtype:'tbfill'},
@@ -96,6 +83,8 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 	    });
 	    Paperpile.FileChooser.superclass.initComponent.call(this);
 
+        this.showDir("ROOT", "/");
+
         this.textfield=this.items.get('northpanel').items.get('textfield');
 
 
@@ -104,7 +93,39 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     onSelect: function(node){
         this.textfield.setValue(node.text);
 
+    },
+
+
+
+    showDir: function(root, rootText){
+
+        var cp=this.items.get('centerpanel');
+        cp.remove(cp.items.get('filetree'));
+        
+       
+        var treepanel = new Ext.ux.FileTreePanel({
+		    height:400,
+            border:0,
+            itemId:'filetree',
+		    autoWidth:true,
+		    selectionMode: this.selectionMode,
+            showHidden:this.showHidden,
+		    rootPath:root,
+            rootText: rootText,
+		    topMenu:false,
+		    autoScroll:true,
+		    enableProgress:false,
+            url:'/ajax/files/dialogue',
+	    });
+
+        cp.add(treepanel);
+
+        cp.doLayout();
+
+   
     }
+
+
 
 });
 

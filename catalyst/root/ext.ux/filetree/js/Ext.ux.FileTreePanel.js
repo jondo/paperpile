@@ -410,6 +410,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 		// call parent
 		Ext.ux.FileTreePanel.superclass.initComponent.apply(this, arguments);
 
+
 		// {{{
 		// install treeEditor event handlers 
 		if(this.treeEditor) {
@@ -426,12 +427,19 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 		// {{{
 		// install event handlers
 		this.on({
-			 contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true}
-			,dblclick:{scope:this, fn:this.onDblClick}
-			,beforenodedrop:{scope:this, fn:this.onBeforeNodeDrop}
-			,nodedrop:{scope:this, fn:this.onNodeDrop}
-			,nodedragover:{scope:this, fn:this.onNodeDragOver}
-		});
+			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
+			dblclick:{scope:this, fn:this.onDblClick},
+			beforenodedrop:{scope:this, fn:this.onBeforeNodeDrop},
+			nodedrop:{scope:this, fn:this.onNodeDrop},
+			nodedragover:{scope:this, fn:this.onNodeDragOver},
+            beforeload:{
+                fn:function(node){
+                    if (node.id != this.getRootNode().id){
+                        return false;
+                    }
+                }
+            }
+	    });
 
         this.getSelectionModel().on({
             selectionchange:{
@@ -569,6 +577,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 		// expand root node if so configured
 		if(this.expandOnRender) {
 			this.root.expand();
+
 		}
 
 		// prevent default browser context menu to appear 
@@ -1140,8 +1149,18 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	 * @private
 	 */
 	,onDblClick:function(node, e) {
-        this.setRootNode(node);
-        this.openNode(node);
+
+        
+
+        this.findParentByType(Paperpile.FileChooser).showDir('ROOT/'+node.getPath('text'),node.text);
+
+        
+        //node.expand(true, true, function(node){ });
+        //this.setRootNode(node);
+
+        //this.render();
+
+        //this.openNode(node);
 	} // eo function onDblClick
 	// }}}
 	// {{{
@@ -1515,8 +1534,9 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 			Ext.fly(node.getUI().iconNode).removeClass(this.getFileCls(oldName));
 			Ext.fly(node.getUI().iconNode).addClass(this.getFileCls(node.text));
 		}
-	}
+	},
 	// }}}
+
 
 }); // eo extend
 

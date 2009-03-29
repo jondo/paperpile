@@ -8,6 +8,8 @@
 
   <script type="text/javascript" charset="utf-8" src="/ext/adapter/ext/ext-base.js"></script>
   <script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="/js/main/overrides.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/scratch.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/misc/file-chooser.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf/viewer.js"></script>

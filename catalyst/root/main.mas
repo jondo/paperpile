@@ -12,6 +12,7 @@
   <%perl> 
   my @js = qw{
   
+  main/overrides.js
   main/paperpile.js 
   main/tabs.js 
   main/tree.js
