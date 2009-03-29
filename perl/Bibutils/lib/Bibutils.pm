@@ -20,27 +20,45 @@ has 'out_format' => ( is => 'rw', isa => 'Str' );
 has '_bibpointer' => ( is => 'rw' );
 
 
-sub read{
+sub read {
   my $self=shift;
   $self->_bibpointer(Bibutils::c_read($self->in_file, $self->in_format));
   return 1; # Check error codes if it really was successfull
 }
 
-sub write{
-  my $self=shift;
-  Bibutils::c_write($self->out_file, $self->out_format, $self->_bibpointer);
-  return 1; # Check error codes if it really was successfull
+sub write {
+  my ( $self, $settings ) = @_;
+
+  my $s=$self->_process_settings($settings);
+
+  Bibutils::c_write( $self->out_file, $self->out_format, $self->_bibpointer,
+                     $s->{charsetout},
+                     $s->{latexout},
+                     $s->{utf8out},
+                     $s->{xmlout},
+                     $s->{format_opts}
+                   );
+  return 1;    # Check error codes if it really was successfull
 }
 
 sub as_string{
-  my $self=shift;
+
+  my ( $self, $settings ) = @_;
+
+  my $s=$self->_process_settings($settings);
 
   my $fh = File::Temp->new();
   my $file = $fh->filename;
 
   $fh->unlink_on_destroy( 1 );
 
-  Bibutils::c_write($file, $self->out_format, $self->_bibpointer);
+  Bibutils::c_write($file, $self->out_format, $self->_bibpointer,
+                    $s->{charsetout},
+                    $s->{latexout},
+                    $s->{utf8out},
+                    $s->{xmlout},
+                    $s->{format_opts}
+                   );
 
   $fh->seek(0,SEEK_SET);
 
@@ -111,15 +129,57 @@ sub set_data {
 sub cleanup {
   my $self = shift;
   Bibutils::bibl_free($self->_bibpointer);
-
   $self->_bibpointer(undef);
-
-
 }
 
 sub error{
   return Bibutils::c_get_error();
 }
+
+sub _process_settings {
+
+  my ( $self, $settings ) = @_;
+
+  # 999 indicates the c-backend to use the defaults as suggested by the bibutils library
+  my $default_settings = {
+    charsetout  => 999,
+    latexout    => 999,
+    utf8out     => 999,
+    xmlout      => 999,
+    format_opts => 999
+  };
+
+  # Format options are specified via OR operations and the following options are supported
+  # (see bibtexout.h for their original definition)
+  my $format_codes = {
+    bibout_finalcomma => 2,
+    bibout_singledash => 4,
+    bibout_whitespace => 8,
+    bibout_brackets   => 16,
+    bibout_uppercase  => 32,
+    bibout_strictkey  => 64,
+    modsout_dropkey   => 2,
+    wordout_dropkey   => 2,
+  };
+
+  my $s = $default_settings;
+
+  if ($settings) {
+    for my $key ( keys %$settings ) {
+      if (exists $format_codes->{$key}){
+        # if nothing was set before init first to 0
+        $s->{format_opts}=0 if $s->{format_opts}==999;
+        # apply code to bitmask
+        $s->{format_opts}|=$format_codes->{$key};
+      }
+
+      $s->{$key} = $settings->{$key};
+    }
+  }
+
+  return {%$s};
+}
+
 
 no Moose;
 

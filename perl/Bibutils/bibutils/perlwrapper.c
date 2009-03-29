@@ -64,8 +64,11 @@ bibl* c_read(const char *file, int format){
 
 }
 
-void c_write(const char *file, int format, bibl* b){
 
+void c_write(const char *file, int format, bibl* b, 
+             int charsetout, unsigned char latexout, unsigned char utf8out, 
+             unsigned char xmlout, int format_opts){
+  
   param bibparams;
   int err;
   FILE *fh;
@@ -78,6 +81,28 @@ void c_write(const char *file, int format, bibl* b){
   }
 
   bibl_initparams( &bibparams, BIBL_MODSIN, format, "Perl bindings for Bibutils" );
+
+  if (charsetout != 999){
+    bibparams.latexout=latexout;
+  }
+
+  if (latexout != 999){
+    bibparams.latexout=latexout;
+  }
+
+  if (utf8out != 999){
+    bibparams.utf8out=latexout;
+  }
+
+  if (xmlout != 999){
+    bibparams.utf8out=latexout;
+  }
+    
+  if (format_opts != 999){
+    bibparams.format_opts=format_opts;
+  }
+
+
   
   last_error = bibl_write( b, fh, &bibparams );
 

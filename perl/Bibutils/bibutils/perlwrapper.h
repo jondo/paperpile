@@ -5,7 +5,8 @@ int c_get_error();
 
 bibl* c_new();
 bibl* c_read(const char *file, int format);
-void c_write(const char *file, int format, bibl* b);
+void c_write(const char *file, int format, bibl* b,
+             int charsetout, unsigned char latexout, unsigned char utf8out, unsigned char xmlout, int format_opts);
 
 int c_get_n_entries(bibl* b);
 int c_get_n_fields(bibl* b, int index);

@@ -24,10 +24,15 @@ bibl* c_read(file, format)
    const char * file
    int format
 
-void c_write(file, format, b)
+void c_write(file, format, b, charsetout, latexout, utf8out, xmlout, format_opts)
    const char * file
    int format
    bibl * b
+   int charsetout
+   unsigned char latexout
+   unsigned char utf8out
+   unsigned char xmlout
+   int format_opts
 
 char* c_get_field_tag(b, index1, index2)
    bibl* b

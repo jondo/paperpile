@@ -2,9 +2,9 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Test::More 'no_plan';
-use lib "../lib";
+use lib "../../../lib";
 
-BEGIN { use_ok 'Paperpile::Library::Plugins::Import::GoogleScholar' }
+BEGIN { use_ok 'Paperpile::Plugins::Import::GoogleScholar' }
 
 my $source=Paperpile::Library::Source::PubMed->new(query=>'Stadler');
 
