@@ -3,6 +3,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     title: "Select file",
     selectionMode:'FILE',
     showHidden:false,
+    currentRoot:"ROOT",
 
     callback: function(button,path){
         console.log(button, path);
@@ -27,7 +28,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                 { xtype: 'panel',
                   region: 'north',
                   itemId: 'northpanel',
-                  height: 40,
+                  height: 60,
                   layout:'form',
                   frame:true,
                   border:false,
@@ -38,6 +39,15 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                        itemId: 'textfield',
                        fieldLabel: label,
                        width: 400,
+                      },
+                      {xtype:'box',
+                       itemId: 'breadcrumbs',
+                       autoEl: {
+                           tag:'div',
+                           html:'<ul class="pp-filechooser-path"><li>inhere</li></ul>'
+                       },
+                       width:400,
+                       height:20,
                       }
                   ],
                 },
@@ -46,7 +56,6 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                   itemId:'centerpanel',
                   layout: 'fit',
                   items:[{xtype:'panel', itemId:'filetree', id:'DUMMY'}],
-                  //items:[]
                 }
             ],
             bbar: [  {xtype:'tbfill'},
@@ -81,28 +90,30 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                     }
                   ]
 	    });
-	    Paperpile.FileChooser.superclass.initComponent.call(this);
+        
+        Paperpile.FileChooser.superclass.initComponent.call(this);
 
-        this.showDir("ROOT", "/");
-
+        this.items.get('northpanel').on('afterLayout',
+                                        function(){
+                                            this.showDir("");
+                                        }, this,{single:true});
+        
         this.textfield=this.items.get('northpanel').items.get('textfield');
-
-
+        
     },
 
-    onSelect: function(node){
+     onSelect: function(node){
         this.textfield.setValue(node.text);
 
     },
 
-
-
-    showDir: function(root, rootText){
+    showDir: function(dir){
 
         var cp=this.items.get('centerpanel');
         cp.remove(cp.items.get('filetree'));
-        
-       
+
+        this.currentRoot=this.currentRoot+'/'+dir;
+
         var treepanel = new Ext.ux.FileTreePanel({
 		    height:400,
             border:0,
@@ -110,19 +121,65 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 		    autoWidth:true,
 		    selectionMode: this.selectionMode,
             showHidden:this.showHidden,
-		    rootPath:root,
-            rootText: rootText,
+		    rootPath: this.currentRoot,
+            rootText: dir,
 		    topMenu:false,
 		    autoScroll:true,
 		    enableProgress:false,
+            enableSort:false,
+            lines:false,
+            rootVisible:false,
             url:'/ajax/files/dialogue',
 	    });
 
         cp.add(treepanel);
-
         cp.doLayout();
 
-   
+        /*
+
+        var html="/ "+parts.join(" / ");
+
+        var np=this.items.get('northpanel');
+            parts.push('<a href="#">'+path[i]+'</a>');
+        var bc=np.items.get('breadcrumbs');
+
+ */
+        bc=this.items.get('northpanel').items.get('breadcrumbs');
+        parts=[{tag:'a', href:"#", html:"test2"}, {tag:'a', href:"#", html:"test2"}];
+        var dh=Ext.DomHelper;
+
+        var path=this.currentRoot;
+
+        path=path.split('/');
+
+        //bc.getEl().child('.pp-filechooser-path').remove();
+
+        var ul=dh.overwrite(bc.getEl(), {tag:'ul',cls:'pp-filechooser-path'});
+
+        var fullPath='';
+
+        for (var i=0; i<path.length;i++){
+            if (path[i]=='' || path[i]=='ROOT') continue;
+
+            var li = dh.append(ul,{tag:'li', cls:'pp-filechooser-dir', html:path[i]});
+
+            Ext.Element.get(li).on('click',
+                                   function(){
+                                       this.currentRoot=fullPath;
+                                       this.showDir(path[i]);
+                                   }, this);
+
+            dh.append(ul,{tag:'li', cls:'pp-filechooser-separator', html:"/"});
+
+            fullPath=fullPath+path[i]+'/';
+            
+        }
+
+
+
+        
+
+  
     }
 
 

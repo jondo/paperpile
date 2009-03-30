@@ -438,7 +438,12 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
                         return false;
                     }
                 }
+            },
+            beforeappend:{
+                fn:function(tree, parent,node){
+                }
             }
+            
 	    });
 
         this.getSelectionModel().on({
@@ -1150,10 +1155,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	 */
 	,onDblClick:function(node, e) {
 
-        
-
-        this.findParentByType(Paperpile.FileChooser).showDir('ROOT/'+node.getPath('text'),node.text);
-
+        this.findParentByType(Paperpile.FileChooser).showDir(node.text);
         
         //node.expand(true, true, function(node){ });
         //this.setRootNode(node);

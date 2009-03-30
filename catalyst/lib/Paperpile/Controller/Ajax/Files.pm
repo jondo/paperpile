@@ -60,7 +60,8 @@ sub get : Local {
 
   closedir DIR;
 
-  my @output=();
+  my @dirs=();
+  my @files=();
 
   foreach my $item (@contents){
 
@@ -73,10 +74,13 @@ sub get : Local {
     next if $item eq '..';
 
     if (-d File::Spec->catdir($path,$item)){
-      push @output, {text=>$item,
+      push @dirs, {text=>$item,
                      iconCls=>"folder",
                      disabled=>\0,
-                     leaf=>\0};
+                     leaf=>\1  # In the current front-end we just want
+                               # a flat list for each dir, so we also
+                               # set directories as leafs.
+                    };
     } else {
       if ($mode eq 'FILE' or $mode eq 'BOTH'){
 
@@ -90,16 +94,20 @@ sub get : Local {
           $iconCls="file-$suffix";
         }
 
-        push @output, {text=>$item,
-                       iconCls=>$iconCls,
-                       disabled=>\0,
-                       leaf=>\1};
+        push @files, {text=>$item,
+                      iconCls=>$iconCls,
+                      disabled=>\0,
+                      leaf=>\1};
       }
     }
 
   }
 
-  return [@output];
+  @dirs=sort {$a->{text} cmp $b->{text}} @dirs;
+  @files=sort {$a->{text} cmp $b->{text}} @files;
+
+
+  return [@dirs,@files];
 
 }
 

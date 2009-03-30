@@ -222,6 +222,16 @@
     color: blue !important;
 }
 
+.pp-filechooser-dir {
+    float:left;
+    color: blue !important;
+}
+
+.pp-filechooser-separator {
+    float:left;
+    margin: 0 5 0 5;
+}
+
 
 
 
