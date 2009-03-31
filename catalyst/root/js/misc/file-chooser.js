@@ -1,9 +1,11 @@
 Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
     title: "Select file",
-    selectionMode:'FILE',
-    showHidden:false,
-    currentRoot:"ROOT",
+    selectionMode: 'BOTH',
+    saveMode: true,
+    saveDefault: 'new-file.dat',
+    currentRoot: "ROOT",
+    showHidden: false,
 
     callback: function(button,path){
         console.log(button, path);
@@ -11,12 +13,16 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
     initComponent: function() {
 
-        var label='File';
+        var label='Location';
 
         if (this.selectionMode == 'DIR'){
             label='Directory';
         }
 
+        if (this.selectionMode == 'FILE'){
+            label='File';
+        }
+ 
 		Ext.apply(this, {
             layout: 'border',
             width: 500,
@@ -28,7 +34,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                 { xtype: 'panel',
                   region: 'north',
                   itemId: 'northpanel',
-                  height: 60,
+                  height: 40,
                   layout:'form',
                   frame:true,
                   border:false,
@@ -40,54 +46,82 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                        fieldLabel: label,
                        width: 400,
                       },
-                      {xtype:'box',
-                       itemId: 'breadcrumbs',
-                       autoEl: {
-                           tag:'div',
-                           html:'<ul class="pp-filechooser-path"><li>inhere</li></ul>'
-                       },
-                       width:400,
-                       height:20,
-                      }
                   ],
                 },
                 { xtype: 'panel',
                   region: 'center',
                   itemId:'centerpanel',
                   layout: 'fit',
+                  tbar:[
+                      {xtype:'box',
+                       itemId: 'breadcrumbs',
+                       autoEl: {
+                           tag:'div',
+                           html:'<ul class="pp-filechooser-path"><li>inhere</li></ul>'
+                       },
+                       width:200,
+                      },
+                  ],
                   items:[{xtype:'panel', itemId:'filetree', id:'DUMMY'}],
                 }
             ],
             bbar: [  {xtype:'tbfill'},
                      { text: 'Select',
-                      itemId: 'select',
-                      cls: 'x-btn-text-icon save',
-                      //disabled: true,
-                      listeners: {
-                          click:  { 
-                              fn: function(){
-                                  var ft=this.items.get('filetree');
-                                  var path=ft.getPath(ft.getSelectionModel().getSelectedNode());
-                                  this.callback('OK',path);
-                                  this.close();
-                              },
-                              scope: this
-                          }
-                      },
-                    },
-                    { text: 'Cancel',
-                      itemId: 'cancel',
-                      cls: 'x-btn-text-icon cancel',
-                      listeners: {
-                          click:  { 
-                              fn: function(){
-                                  this.callback('CANCEL',null);
-                                  this.close();
-                              },
-                              scope: this
-                          }
-                      },
-                    }
+                       itemId: 'ok_button',
+                       disabled: true,
+                       cls: 'x-btn-text-icon save',
+                       listeners: {
+                           click:  { 
+                               fn: function(){
+                                   var ft=this.items.get('filetree');
+                                   
+                                   var path=this.getCurrentSelection();
+
+                                   if (this.saveMode){
+                                       Ext.Ajax.request({
+                                           url: '/ajax/files/stats',
+                                           params: { location: path},
+                                           method: 'GET',
+                                           success: function(response){
+                                               var json = Ext.util.JSON.decode(response.responseText);
+                                               if (json.stats.exists){
+                                                   Ext.Msg.confirm('',path+' already exists. Overwrite?',
+                                                                   function(btn){
+                                                                       if (btn=='yes'){
+                                                                           this.callback('OK',path);
+                                                                           this.close();
+                                                                       }
+                                                                   }                                           
+                                                                  )
+                                               } else {
+                                                   this.callback('OK',path);
+                                                   this.close();
+                                               }
+                                           },
+                                           scope:this
+                                       });
+                                   } else {
+                                       this.callback('OK',path);
+                                       this.close();
+                                   }
+                               },
+                               scope: this
+                           }
+                       },
+                     },
+                     { text: 'Cancel',
+                       itemId: 'cancel',
+                       cls: 'x-btn-text-icon cancel',
+                       listeners: {
+                           click:  { 
+                               fn: function(){
+                                   this.callback('CANCEL',null);
+                                   this.close();
+                               },
+                               scope: this
+                           }
+                       },
+                     }
                   ]
 	    });
         
@@ -95,25 +129,55 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
         this.items.get('northpanel').on('afterLayout',
                                         function(){
-                                            this.showDir("");
+                                            this.showDir(this.currentRoot);
                                         }, this,{single:true});
         
         this.textfield=this.items.get('northpanel').items.get('textfield');
+
         
     },
 
-     onSelect: function(node){
-        this.textfield.setValue(node.text);
+    updateTextfield: function(value){
+        this.textfield.setValue(value);
+        if (value !=''){
+            this.getBottomToolbar().items.get('ok_button').enable();
+        } else {
+            this.getBottomToolbar().items.get('ok_button').disable();
+        }
 
     },
 
-    showDir: function(dir){
+    onSelect: function(node,path){
+        this.updateTextfield(node.text);
+        this.saveDefault='';
+        this.currentRoot=path;
+
+    },
+
+    getCurrentSelection: function(){
+
+        var parts=this.currentRoot.split('/');
+        var newParts=parts.slice(0,parts.length-1);
+        newParts.push(this.textfield.getValue());
+        return newParts.join('/');
+        
+    },
+
+    showDir: function(path){
+
+        if (this.saveMode){
+            // Add selection/focus stuff here to improve usability
+            this.updateTextfield(this.saveDefault);
+        } else {
+            this.updateTextfield('');
+        }
 
         var cp=this.items.get('centerpanel');
+        
+
+        // Remove old tree and build new one
         cp.remove(cp.items.get('filetree'));
-
-        this.currentRoot=this.currentRoot+'/'+dir;
-
+        
         var treepanel = new Ext.ux.FileTreePanel({
 		    height:400,
             border:0,
@@ -121,8 +185,8 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 		    autoWidth:true,
 		    selectionMode: this.selectionMode,
             showHidden:this.showHidden,
-		    rootPath: this.currentRoot,
-            rootText: dir,
+		    rootPath: path,
+            rootText: path,
 		    topMenu:false,
 		    autoScroll:true,
 		    enableProgress:false,
@@ -135,55 +199,39 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
         cp.add(treepanel);
         cp.doLayout();
 
-        /*
+        bc=cp.getTopToolbar().items.get('breadcrumbs');
 
-        var html="/ "+parts.join(" / ");
-
-        var np=this.items.get('northpanel');
-            parts.push('<a href="#">'+path[i]+'</a>');
-        var bc=np.items.get('breadcrumbs');
-
- */
-        bc=this.items.get('northpanel').items.get('breadcrumbs');
-        parts=[{tag:'a', href:"#", html:"test2"}, {tag:'a', href:"#", html:"test2"}];
         var dh=Ext.DomHelper;
-
-        var path=this.currentRoot;
+        var ul=dh.overwrite(bc.getEl(), {tag:'ul',cls:'pp-filechooser-path'});
 
         path=path.split('/');
 
-        //bc.getEl().child('.pp-filechooser-path').remove();
-
-        var ul=dh.overwrite(bc.getEl(), {tag:'ul',cls:'pp-filechooser-path'});
-
-        var fullPath='';
-
         for (var i=0; i<path.length;i++){
-            if (path[i]=='' || path[i]=='ROOT') continue;
 
-            var li = dh.append(ul,{tag:'li', cls:'pp-filechooser-dir', html:path[i]});
-
-            Ext.Element.get(li).on('click',
-                                   function(){
-                                       this.currentRoot=fullPath;
-                                       this.showDir(path[i]);
-                                   }, this);
-
-            dh.append(ul,{tag:'li', cls:'pp-filechooser-separator', html:"/"});
-
-            fullPath=fullPath+path[i]+'/';
+            var html=path[i];
             
+            if (path[i]=='ROOT') {
+                html='<img src="/images/icons/drive.png" valign="center"/>';
+            }
+
+            var li = dh.append(ul,{tag:'li', cls:'pp-filechooser-dir', children:[{tag:'a', 
+                                                                                  href:'#',
+                                                                                  html:html,
+                                                                                 }]});
+            
+            var link=path.slice(0,i+1).join('/');
+            
+            Ext.Element.get(li).on('click',
+                                   function(e, el, options){
+                                       this.showDir(options.link);
+                                   }, this, {link: link });
+            
+            dh.append(ul,{tag:'li', cls:'pp-filechooser-separator', html:"/"});
         }
-
-
-
-        
-
-  
     }
-
-
-
 });
+
+
+
 
 

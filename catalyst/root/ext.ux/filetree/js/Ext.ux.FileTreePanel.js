@@ -14,21 +14,8 @@
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
 
-/*global Ext, window, document, setTimeout */
-
-/**
- * @class Ext.ux.FileTreePanel
- * @extends Ext.tree.TreePanel
- */
 
 Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
-	// config variables overridable from outside
-	// {{{
-	/**
-	 * @cfg {Object} baseParams This object is not used directly by FileTreePanel but it is
-	 * propagated to lower level objects instead. Included here for convenience.
-	 */
-
     selectionMode: 'BOTH', //FILE, DIR, or BOTH
     showHidden:true,
 
@@ -449,7 +436,20 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
         this.getSelectionModel().on({
             selectionchange:{
                 fn: function(sm,node){
-                    this.findParentByType(Paperpile.FileChooser).onSelect(node);
+
+                    var allowSelect=0;
+                    var type=node.attributes.type;
+                    
+                    if (this.selectionMode == 'FILE' && type =='FILE') allowSelect=1;
+                    if (this.selectionMode == 'DIR' && type =='DIR') allowSelect=1;
+                    if (this.selectionMode == 'BOTH') allowSelect=1;
+                        
+                    if (allowSelect){
+                        var fc=this.findParentByType(Paperpile.FileChooser);
+                        var path=this.rootPath+"/"+node.text;
+                        this.findParentByType(Paperpile.FileChooser).onSelect(node, path);
+                    }
+
                 },
                 scope:this
             },
@@ -1155,7 +1155,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	 */
 	,onDblClick:function(node, e) {
 
-        this.findParentByType(Paperpile.FileChooser).showDir(node.text);
+        this.findParentByType(Paperpile.FileChooser).showDir(this.rootPath+"/"+node.text);
         
         //node.expand(true, true, function(node){ });
         //this.setRootNode(node);

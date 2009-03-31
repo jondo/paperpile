@@ -34,80 +34,84 @@ sub dialogue : Local {
 sub get : Local {
   my ( $self, $c ) = @_;
 
-  my @filetypes=qw/pdf ai txt bmp cgm dcm dds exr gif hdr ico jng jp2 jpeg jpg pbm pbmraw
-                 pcd pcx pgm pgmraw pic png pnm psd raw rgb rgba tga tif tiff xbm xcf
-                 xpm conf vim html htm sgml xhtml xml 3g2 3gp asf asx avi flc fli flv
-                 mkv mng mp4 mpeg mpg ogm rv wmp wmv ttf otf exe dll doc odt rtf xls
-                 ods xlc xll xlm xlw wpd abw js css php 7z a ace arj bz bz2 cpio gz rar
-                 tgz tnf z zip zoo ppt odp ppz ppt msg dwg sxd dhw svg ps eps wmf fig
-                 msod qpic ics chm info hlp help aac ac3 aifc aiff ape au flac m3u m4a
-                 mac mid midi mp2 mp3 ogg psid ra ram sf sid spx wav wma wv wvc asc cer
-                 cert crt der gpg gpg p10 p12 p7c p7m p7s pem sig bin cue img iso mdf nrg
-                 jar java class sql moov mov qt/;
+  my @filetypes = qw/pdf ai txt bmp cgm dcm dds exr gif hdr ico jng jp2 jpeg jpg pbm pbmraw
+    pcd pcx pgm pgmraw pic png pnm psd raw rgb rgba tga tif tiff xbm xcf
+    xpm conf vim html htm sgml xhtml xml 3g2 3gp asf asx avi flc fli flv
+    mkv mng mp4 mpeg mpg ogm rv wmp wmv ttf otf exe dll doc odt rtf xls
+    ods xlc xll xlm xlw wpd abw js css php 7z a ace arj bz bz2 cpio gz rar
+    tgz tnf z zip zoo ppt odp ppz ppt msg dwg sxd dhw svg ps eps wmf fig
+    msod qpic ics chm info hlp help aac ac3 aifc aiff ape au flac m3u m4a
+    mac mid midi mp2 mp3 ogg psid ra ram sf sid spx wav wma wv wvc asc cer
+    cert crt der gpg gpg p10 p12 p7c p7m p7s pem sig bin cue img iso mdf nrg
+    jar java class sql moov mov qt/;
 
-  my $mode=$c->request->params->{selectionMode};
+  my $mode = $c->request->params->{selectionMode};
   my $root = File::Spec->rootdir();
-  my $path=$c->request->params->{path};
-  $path=~s/^ROOT/$root/;
+  my $path = $c->request->params->{path};
+  $path =~ s/^ROOT/$root/;
 
-  my @contents=();
+  my @contents = ();
 
-  my $failure= { "success" => \0, "error" => "Could not read directory." };
+  my $failure = { "success" => \0, "error" => "Could not read directory." };
 
-  opendir(DIR, File::Spec->catdir($root,$path)) || return $failure;
+  opendir( DIR, File::Spec->catdir( $root, $path ) ) || return $failure;
 
   @contents = readdir(DIR);
 
   closedir DIR;
 
-  my @dirs=();
-  my @files=();
+  my @dirs  = ();
+  my @files = ();
 
-  foreach my $item (@contents){
+  foreach my $item (@contents) {
 
     # How can we recognize hidden files under windows?
-    if ($c->request->params->{showHidden} eq 'false'){
-      next if $item=~/^\./;
+    if ( $c->request->params->{showHidden} eq 'false' ) {
+      next if $item =~ /^\./;
     }
 
     next if $item eq '.';
     next if $item eq '..';
 
-    if (-d File::Spec->catdir($path,$item)){
-      push @dirs, {text=>$item,
-                     iconCls=>"folder",
-                     disabled=>\0,
-                     leaf=>\1  # In the current front-end we just want
-                               # a flat list for each dir, so we also
-                               # set directories as leafs.
-                    };
+    if ( -d File::Spec->catdir( $path, $item ) ) {
+      push @dirs, {
+        text     => $item,
+        iconCls  => "folder",
+        disabled => \0,
+        leaf     => \1,         # In the current front-end we just want
+                                # a flat list for each dir, so we also
+                                # set directories as leafs.
+        type     => 'DIR',
+      };
     } else {
-      if ($mode eq 'FILE' or $mode eq 'BOTH'){
+      if ( $mode eq 'FILE' or $mode eq 'BOTH' ) {
 
-        my ($dummy,$dummy2,$suffix) = fileparse($item,qr/\.[^.]*/);
+        my ( $dummy, $dummy2, $suffix ) = fileparse( $item, qr/\.[^.]*/ );
 
-        $suffix=~s/\.//;
+        $suffix =~ s/\.//;
 
-        my $iconCls="file";
+        my $iconCls = "file";
 
-        if ($suffix ~~ [@filetypes]){
-          $iconCls="file-$suffix";
+        if ( $suffix ~~ [@filetypes] ) {
+          $iconCls = "file-$suffix";
         }
 
-        push @files, {text=>$item,
-                      iconCls=>$iconCls,
-                      disabled=>\0,
-                      leaf=>\1};
+        push @files, {
+          text     => $item,
+          iconCls  => $iconCls,
+          disabled => \0,
+          leaf     => \1,
+          type     => 'FILE',
+          };
       }
     }
 
   }
 
-  @dirs=sort {$a->{text} cmp $b->{text}} @dirs;
-  @files=sort {$a->{text} cmp $b->{text}} @files;
+  @dirs  = sort { $a->{text} cmp $b->{text} } @dirs;
+  @files = sort { $a->{text} cmp $b->{text} } @files;
 
-
-  return [@dirs,@files];
+  return [ @dirs, @files ];
 
 }
 
@@ -127,6 +131,34 @@ sub newdir : Local {
   }
 
 }
+
+
+sub stats : Local {
+  my ( $self, $c ) = @_;
+
+  my $root     = File::Spec->rootdir();
+  my $location = $c->request->params->{location};
+  $location =~ s/^ROOT/$root/;
+
+  my %stats = ();
+
+  $stats{exists}     = ( -e $location ) ? \1 : \0;
+  $stats{dir}        = ( -d $location ) ? \1 : \0;
+  $stats{readable}   = ( -r $location ) ? \1 : \0;
+  $stats{writable}   = ( -w $location ) ? \1 : \0;
+  $stats{executable} = ( -x $location ) ? \1 : \0;
+
+  $c->stash->{stats} = {%stats};
+
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+
+
+
+
+
 
 
 
