@@ -568,8 +568,10 @@ sub save_tree {
 
   ( my $self, my $tree ) = @_;
 
+  # serialize the complete object
   my $string=freeze($tree);
 
+  # simply save it as user setting
   $self->set_setting('_tree',$string);
 
 
@@ -583,7 +585,6 @@ sub restore_tree{
  if (not $string){
    return undef;
  }
-
 
  (my $tree)=thaw($string);
 

@@ -1,6 +1,4 @@
 Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
-	  
-
 
     initComponent: function() {
 		Ext.apply(this, {
@@ -19,7 +17,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 nodeType: 'async',
                 text: 'Root',
                 leaf:false,
-                id:'root'
+                id:'ROOT'
             },
             treeEditor:new Ext.tree.TreeEditor(this, {
 				allowBlank:false,
@@ -61,21 +59,28 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 Paperpile.main.settings();
                 break;
 
+            // all other nodes are handled via the generic plugin mechanism
             default:
 
-                var pars={}
-                for (var key in node){
-                    if (key.match('plugin_')){
-                        pars[key]=node[key];
-                    }
-                }
+                // Skip "header" nodes 
+                if (node.id != 'ACTIVE_ROOT'){
 
-                Paperpile.main.tabs.newPluginTab(node.plugin_name, pars);
+                    // Collect plugin paramters
+                    var pars={}
+                    for (var key in node){
+                        if (key.match('plugin_')){
+                            pars[key]=node[key];
+                        }
+                    }
+
+                    // Call appropriate frontend
+                    Paperpile.main.tabs.newPluginTab(node.plugin_name, pars);
+                }
                 break;
             }
         });
 	},
-
+    
     onNodeDrop: function(d){
 
         Ext.Ajax.request({
@@ -85,7 +90,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                       sha1: d.data.selections[0].data.sha1,
                       rowid: d.data.selections[0].data._rowid,
                       grid_id: d.source.grid.id,
-                      path: d.target.getPath('text')
+                      path: this.relativeFolderPath(d.target)
                     },
             success: function(){
                 Ext.getCmp('statusbar').clearStatus();
@@ -108,6 +113,10 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     },
 
+    //
+    // Shows context menu specific for node type
+    //
+
     onContextMenu:function(node, e) {
 
         var menu=null;
@@ -129,55 +138,56 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         if (menu != null){
             menu.node=node;
-            var alignEl =menu.node.getUI().getEl();
-            menu.showAt(menu.getEl().getAlignToXY(alignEl, 'tl-tl?', [0, 18]));
+            menu.showAt(e.getXY());
         }
 
 	},
 
+    //
+    // Creates a new active folder based on the currently active tab
+    //
 
     newActive: function(node) {
 
-        //var node = this.getSelectionModel().getSelectedNode();
         var grid=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
         var treeEditor = this.treeEditor;
 
         // Get all plugin_* parameters from search plugin grid
-        // including the lates query parameters form the data store
         var pars={};
 
         for (var key in grid){
             if (key.match('plugin_')){
-                console.log(key);
                 pars[key]=grid[key];
             }
         }
-        
+
+        // include the latest query parameters form the data store that
+        // define the search
         for (var key in grid.store.baseParams){
             if (key.match('plugin_')){
                 pars[key]=grid.store.baseParams[key];
             }
         }
 
-        var newNode;
+        // Use query as default title, or plugin name if query is
+        // empty
         var title;
-
         if (pars.plugin_query !=''){
             title=pars.plugin_query;
         } else {
             title=pars.plugin_name;
         }
                 
-        Ext.apply(pars,{plugin_title: title,
-                        plugin_base_query: pars.plugin_query,
-                        plugin_iconCls: pars.plugin_iconCls, 
-                        type: 'ACTIVE', 
-                       });
+        Ext.apply(pars, { type: 'ACTIVE', 
+                          plugin_title: title,
+                          // current query becomes base query for further filtering
+                          plugin_base_query: pars.plugin_query, 
+                        });
 
+        // Now create new child
+        var newNode;
         node.expand(false, false, function(n) {
-
-            console.log(pars);
-		    
+    
 		    newNode = n.appendChild(new Paperpile.AsyncTreeNode({
                 text: title, 
                 iconCls:pars.plugin_iconCls, 
@@ -185,85 +195,39 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 id: this.generateUID()
             }));
         
+            // apply the parameters
             newNode.init(pars);
             newNode.select();
 
+            // Allow the user to edit the name of the active folder
 		    treeEditor.on({
 			    complete:{
 				    scope:this,
 				    single:true,
 				    fn: function(){
+                        newNode.plugin_title=newNode.text;
+                        // if everything is done call onNewActive
                         this.onNewActive(newNode);
                     }
 			    }
             });
-                                    
-		    (function(){treeEditor.triggerEdit(newNode);}.defer(10));
+           	(function(){treeEditor.triggerEdit(newNode);}.defer(10));
+
 		}.createDelegate(this));
-
     },
 
-    newFolder: function() {
-        var node = this.getSelectionModel().getSelectedNode();
-		
-	    var treeEditor = this.treeEditor;
-		var newNode;
-
-		var appendNode = node.isLeaf() ? node.parentNode : node;
-        
-		appendNode.expand(false, false, function(n) {
-		    
-			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Folder', 
-                                                                 iconCls:'pp-icon-folder', 
-                                                                 type: 'FOLDER', 
-                                                                })
-                                   );
-            newNode.select();
-
-			treeEditor.on({
-				complete:{
-					scope:this,
-					single:true,
-					fn:this.onNewDir,
-				}
-            });
-                                    
-			treeEditor.creatingNewDir = true;
-			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
-		}.createDelegate(this));
-
-    },
-
-    onNewDir: function(){
-
-        var node = this.getSelectionModel().getSelectedNode();
-        this.getSelectionModel().clearSelections();
-        this.allowSelect=false;
-       
-        Ext.Ajax.request({
-
-            url: '/ajax/tree/new_folder',
-            params: { node_id: node.id,
-                      parent_id: node.parentNode.id,
-                      name: node.text,
-                      path:node.getPath('text'),
-                    },
-            success: function(){
-                
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Added new folder');
-            },
-        });
-
-    },
+    //
+    // Is called after a new active folder was created. Adds node to
+    // tree representation in backend and saves it to database.
+    //
 
     onNewActive: function(node){
 
-        //var node = this.getSelectionModel().getSelectedNode();
-
+        // Selection of node during creation is no longer needed
         this.getSelectionModel().clearSelections();
         this.allowSelect=false;
 
+        // Again get all plugin_* parameters to send to server
         var pars={}
         for (var key in node){
             if (key.match('plugin_')){
@@ -271,6 +235,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             }
         }
 
+        // Set other relevant node parameters which need to be stored
         Ext.apply(pars,{
             type: 'ACTIVE',
             text: node.text,
@@ -280,25 +245,167 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             parent_id: node.parentNode.id,
         });
 
+        // Send to backend
         Ext.Ajax.request({
-
             url: '/ajax/tree/new_active',
             params: pars,
             success: function(){
                 Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Added new folder');
+                Ext.getCmp('statusbar').setText('Added new active folder');
             },
         });
+        
+    },
 
 
-        Ext.getCmp('statusbar').clearStatus();
-        Ext.getCmp('statusbar').setText('New Active');
+    //
+    // Creates new folder
+    //
+
+    newFolder: function() {
+    
+        var node = this.getSelectionModel().getSelectedNode();
+		
+	    var treeEditor = this.treeEditor;
+	    var newNode;
+        
+		node.expand(false, false, function(n) {
+		    
+			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Folder', 
+                                                                 iconCls:'pp-icon-folder', 
+                                                                 draggable:true,
+                                                                 expanded:true,
+                                                                 children:[],
+                                                                 id: this.generateUID()
+                                                                })
+                                   );
+
+            newNode.init(
+                { type: 'FOLDER', 
+                  plugin_name: 'DB',
+                  plugin_title: node.text,
+                  plugin_iconCls: 'pp-icon-folder',
+                  plugin_mode: 'FULLTEXT',
+                });
+
+            newNode.select();
+
+			treeEditor.on({
+				complete:{
+					scope:this,
+					single:true,
+					fn: function(){
+                        var path=this.relativeFolderPath(newNode);
+                        newNode.plugin_title=newNode.text;
+                        newNode.plugin_query='folders:'+ path;
+                        newNode.plugin_base_query='folders:'+ path,
+                        this.onNewFolder(newNode);
+                    }
+				}
+            });
+                                    
+			treeEditor.creatingNewDir = true;
+			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
+		}.createDelegate(this));
 
     },
 
 
+    //
+    // Is called after a new folder has been created. Writes folder
+    // information to database and updates and saves tree
+    // representation to database.
+    //
+
+    onNewFolder: function(node){
+
+        this.getSelectionModel().clearSelections();
+        this.allowSelect=false;
+
+        // Again get all plugin_* parameters to send to server
+        var pars={}
+        for (var key in node){
+            if (key.match('plugin_')){
+                pars[key]=node[key];
+            }
+        }
+
+        // Set other relevant node parameters which need to be stored
+        Ext.apply(pars,{
+            type: 'FOLDER',
+            text: node.text,
+            iconCls: 'pp-icon-folder',
+            node_id: node.id,
+            plugin_title: node.text,
+            path: this.relativeFolderPath(node),
+            parent_id: node.parentNode.id,
+        });
+
+        // Send to backend
+        Ext.Ajax.request({
+            url: '/ajax/tree/new_folder',
+            params: pars,
+            success: function(){
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Added new active folder');
+            },
+        });
+    },
+
+    //
+    // Deletes active folder 
+    //
+
+    deleteActive: function(){
+        var node = this.getSelectionModel().getSelectedNode();
+
+        Ext.Ajax.request({
+            url: '/ajax/tree/delete_active',
+            params: { node_id: node.id },
+            success: function(){
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Deleted active folder');
+            },
+        });
+
+        node.remove();
+
+    },
 
 
+    //
+    // Rename active folder 
+    //
+
+    renameActive: function(){
+        var node = this.getSelectionModel().getSelectedNode();
+
+        console.log(this);
+        
+        var treeEditor=this.treeEditor;
+
+        treeEditor.on({
+			complete:{
+				scope:this,
+				single:true,
+				fn:function(editor, newText, oldText){
+                    editor.editNode.plugin_title=newText;
+                    Ext.Ajax.request({
+                        url: '/ajax/tree/rename_active',
+                        params: { node_id: node.id,
+                                  new_text: newText
+                                },
+                        success: function(){
+                            Ext.getCmp('statusbar').clearStatus();
+                            Ext.getCmp('statusbar').setText('Renamed active folder');
+                        },
+                    });
+                },
+			}
+        });
+                                    
+		(function(){treeEditor.triggerEdit(node);}.defer(10));
+    },
 
     deleteFolder: function(){
         var node = this.getSelectionModel().getSelectedNode();
@@ -309,7 +416,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             params: { node_id: node.id,
                       parent_id: node.parentNode.id,
                       name: node.text,
-                      path:node.getPath('text'),
+                      path: this.relativeFolderPath(node),
                     },
             success: function(){
                 Ext.getCmp('statusbar').clearStatus();
@@ -321,23 +428,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
        
     },
 
-    deleteActive: function(){
-        var node = this.getSelectionModel().getSelectedNode();
-
-        Ext.Ajax.request({
-
-            url: '/ajax/tree/delete_active',
-            params: { node_id: node.id,
-                    },
-            success: function(){
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Deleted active folder');
-            },
-        });
-        
-        node.remove();
-       
-    },
 
     /* Debugging only */
     reloadFolder: function(){
@@ -350,7 +440,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     },
 
     configureSubtree: function(node){
-        console.log(node);
         this.configureNode=node;
         var oldLoader=node.loader;
         var tmpLoader=new Paperpile.TreeLoader(
@@ -400,8 +489,30 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             },
 
         });
+    },
+
+    //
+    // Returns the path for a folder relative the folder root
+    //
+
+    relativeFolderPath: function(node){
+
+        // Simple remove the first 3 levels
+        var path=node.getPath('text');
+        var parts=path.split('/');
+        path=parts.slice(3,parts.length).join('/');
+        return(path);
     }
+
+
+
 });
+
+
+
+
+
+
 
 
 Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
@@ -435,6 +546,11 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
 
 });
 
+//
+// Context menu for "active folders"
+// is called with the selected node as "node" config parameter
+//
+
 Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
     
     constructor:function(config) {
@@ -443,24 +559,25 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
         var tree=Paperpile.main.tree;
 
         Ext.apply(config,{items:[
-            { itemId: 'active_menu_new',
-              text:'New from current tab',
+            { id: 'active_menu_new', //itemId does not work here
+              text:'Save current search as active folder',
               handler: function(){
                   Paperpile.main.tree.newActive(this.node);
               },
               scope: this
             },
-            { itemId: 'active_menu_delete',
+            { id: 'active_menu_delete',
               text:'Delete',
               handler: tree.deleteActive,
               scope: tree
             },
-            { itemId: 'active_menu_reload',
-              text:'Reload',
-              //handler: tree.reloadFolder,
+            { id: 'active_menu_rename',
+              text:'Rename',
+              handler: tree.renameActive,
               scope: tree
             },
-            { itemId: 'active_menu_configure',
+
+            { id: 'active_menu_configure',
               text:'Configure',
               handler: function(){
                   Paperpile.main.tree.configureSubtree(this.node);
@@ -471,7 +588,20 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
         ]});
         
         Paperpile.Tree.ActiveMenu.superclass.constructor.call(this, config);
+        
 
+        this.on('beforeshow',
+                function(){
+                    if (this.node.id == 'ACTIVE_ROOT'){
+                        this.items.get('active_menu_delete').hide();
+                        this.items.get('active_menu_rename').hide();
+                    } else {
+                        this.items.get('active_menu_new').hide();
+                        this.items.get('active_menu_configure').hide();
+                    }
+                },
+                this
+               );
 
         this.on('beforehide',
                 function(){
@@ -480,9 +610,6 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
                 },
                 tree
                );
-
-
-        
     },
 
 });

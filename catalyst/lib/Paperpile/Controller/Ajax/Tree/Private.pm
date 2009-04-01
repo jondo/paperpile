@@ -15,14 +15,12 @@ sub get_default_tree : Private {
 
   my $root = Tree::Simple->new( {
       text => 'Root',
-
-      #id   => 'root',
       hidden => 0,
     },
     Tree::Simple->ROOT
   );
 
-  $root->setUID('root');
+  $root->setUID('ROOT');
 
   #### / Local Library
 
@@ -42,14 +40,12 @@ sub get_default_tree : Private {
   my $tags = Tree::Simple->new( {
       text => 'Tags',
       type => "TAGS",
-
-      #id      => 'tags',
       iconCls => 'pp-icon-empty',
       hidden  => 0,
     },
     $local_lib
   );
-  $tags->setUID('tags');
+  $tags->setUID('TAGS');
 
   # Initialize
   $self->_get_tags( $c, $tags );
@@ -60,14 +56,13 @@ sub get_default_tree : Private {
       text    => 'Folders',
       type    => "FOLDER",
       path    => '/',
-      id      => 'folders',
       iconCls => 'pp-icon-empty',
       hidden  => 0,
     },
     $local_lib
   );
 
-  $folders->setUID('folder_root');
+  $folders->setUID('FOLDER_ROOT');
   $self->_get_folders( $c, $folders );
 
   #### / Active Folders
@@ -76,13 +71,12 @@ sub get_default_tree : Private {
       text => 'Active Folders',
       type => "ACTIVE",
       path => '/',
-      #id      => 'active',
       iconCls => 'pp-icon-empty',
       cls     => 'pp-tree-heading',
       hidden  => 0,
     }
   );
-  $active->setUID('active');
+  $active->setUID('ACTIVE_ROOT');
 
   $root->addChild($active);
 
@@ -99,8 +93,6 @@ sub get_default_tree : Private {
       }
     )
   );
-
-  $folders->setUID('active_root');
 
   ##### / Plugins
 
@@ -184,6 +176,8 @@ sub get_js_object : Private {
     # unexpected results...
     my $h = { %{ $child->getNodeValue() } };
 
+    # we store node ids explicitely as "UID"s in backend and as
+    # "node.id" in frontend
     $h->{id} = $child->getUID;
 
     # draw a checkbox for configuration mode
@@ -203,9 +197,8 @@ sub get_js_object : Private {
     }
 
     if ( $child->isLeaf() ) {
-      $h->{leaf} = \1;
-    } else {
-      $h->{leaf} = \0;
+      $h->{expanded} = \1;
+      $h->{children}=[];
     }
 
     push @output, $h;
