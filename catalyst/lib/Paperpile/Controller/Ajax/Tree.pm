@@ -85,7 +85,7 @@ sub new_folder : Local {
   $new->setUID($node_id);
   $sub_tree->addChild($new);
 
-  $c->model('User')->insert_folder( $path );
+  $c->model('User')->insert_folder( $node_id );
 
   $c->model('User')->save_tree($tree);
 
@@ -97,12 +97,26 @@ sub new_folder : Local {
 sub delete_folder : Local {
   my ( $self, $c ) = @_;
 
-  my $node_id = $c->request->params->{node_id};
+  my $node_id   = $c->request->params->{node_id};
   my $parent_id = $c->request->params->{parent_id};
-  my $path = $c->request->params->{path};
-  my $name = $c->request->params->{name};
+  my $path      = $c->request->params->{path};
+  my $name      = $c->request->params->{name};
 
-  $c->model('User')->delete_folder($path);
+  my $tree = $c->session->{"tree"};
+  my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node_id ] );
+
+  my @to_delete=($node_id);
+
+  $subtree->traverse(
+    sub {
+      my ($_tree) = @_;
+      push @to_delete, $_tree->getUID;
+    }
+  );
+
+  $subtree->getParent->removeChild($subtree);
+  $c->model('User')->save_tree($tree);
+  $c->model('User')->delete_folder([@to_delete]);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -124,7 +138,7 @@ sub move_in_folder : Local {
   my $pub    = $plugin->find_sha1($sha1);
   my $tree   = $c->session->{"tree"};
 
-  my $newFolder = $path;
+  my $newFolder = $node_id;
   my @folders   = ();
 
   @folders = split( /,/, $pub->folders );
@@ -140,6 +154,24 @@ sub move_in_folder : Local {
   $c->forward('Paperpile::View::JSON');
 
 }
+
+sub delete_from_folder : Local {
+  my ( $self, $c ) = @_;
+
+  my $grid_id = $c->request->params->{grid_id};
+  my $rowid     = $c->request->params->{rowid};
+  my $folder_id     = $c->request->params->{folder_id};
+
+  my $plugin = $c->session->{"grid_$grid_id"};
+
+  $c->model('User')->delete_from_folder( $rowid, $folder_id );
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+
 
 sub new_active : Local {
   my ( $self, $c ) = @_;
@@ -190,7 +222,7 @@ sub delete_active : Local {
 
 }
 
-sub rename_active : Local {
+sub rename_node : Local {
   my ( $self, $c ) = @_;
 
   my $node_id = $c->request->params->{node_id};

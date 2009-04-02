@@ -39,7 +39,7 @@ CREATE TABLE Tag_Publication (
 );
 
 CREATE TABLE Folders (
-  folder            TEXT UNIQUE
+  folder_id           TEXT UNIQUE
 );
 
 CREATE TABLE Folder_Publication (

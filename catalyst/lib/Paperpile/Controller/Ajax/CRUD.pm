@@ -90,6 +90,7 @@ sub delete_entry : Local {
 
 }
 
+
 sub update_entry : Local {
   my ( $self, $c ) = @_;
 
@@ -169,6 +170,7 @@ sub generate_edit_form : Local {
   $c->forward('Paperpile::View::JSON');
 
 }
+
 
 
 1;
