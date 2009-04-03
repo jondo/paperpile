@@ -209,12 +209,10 @@
     padding:10px;
 }
 
-
-
-
-
-
-
+.pp-attachments li{
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    padding: 0 0 0 40;
+}
 
 
 

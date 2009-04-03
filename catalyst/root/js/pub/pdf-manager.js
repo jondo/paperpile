@@ -1,7 +1,7 @@
 Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 	  
     markup: [
-        '<ul class="pp-pdf-manager">',
+        '<ul class="pp-pdf-manager" id="markup-{id}">',
         
         '<tpl if="linkout">',
         '<li id="linkout-{id}"><a href="{linkout}" target="_blank">Go to publisher site</a></li>',
@@ -22,10 +22,15 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</tpl>',
         '<li id="attach-pdf-{id}"><a href="#">Attach PDF</a></li>',
         '</tpl>',
-
         '<li id="attach-file-{id}"><a href="#">Attach File</a></li>',
+       
         '<tpl if="attachments">',
-        '<li>{attachments}</li>',
+        '<ul class="pp-attachments">',
+        '<tpl for="attachments_list">',
+        '<li><a href="{link}" target="_blank">{file}</a><a href=""</li>',
+        '</tpl>',
+        '</ul>',
+        
         '</tpl>',
         '<li><div id="pbar"></div></li>',
         '</ul>',
@@ -50,24 +55,11 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     updateDetail: function(data) {
         this.data=data;
         this.data.id=this.id;
-        
+                
         this.grid_id=this.ownerCt.ownerCt.items.get('center_panel').items.get(0).id;
-    
-        this.tpl.overwrite(this.body, this.data);
 
-        var attachPDF_link=Ext.Element.get('attach-pdf-'+this.id);
-        var attachFile_link=Ext.Element.get('attach-file-'+this.id);
-
-        if (attachPDF_link){
-            attachPDF_link.on('click', this.attachFile, this, {isPDF:true});
-        }
-
-        if (attachFile_link){
-            attachFile_link.on('click', this.attachFile, this, {isPDF:false});
-        }
-
-        
-        if (this.data.attachments){
+        this.data.attachments_list=[];
+        if (this.data.attachments > 0){
             Ext.Ajax.request(
                 { url: '/ajax/attachments/list_files',
                   params: { sha1: this.data.sha1,
@@ -77,11 +69,39 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                   method: 'GET',
                   success: function(response){
                       var json = Ext.util.JSON.decode(response.responseText);
-                      console.log(json);
+                      this.data.attachments_list=json.list;
+                      this.installEvents(this.tpl.overwrite(this.body, this.data, true));
                   }, 
                   scope:this,
                 });
+        } else {
+            this.installEvents(this.tpl.overwrite(this.body, this.data, true));
         }
+
+        //var attachPDF_link=Ext.Element.get('attach-pdf-'+this.id);
+        //var attachFile_link=Ext.Element.get('attach-file-'+this.id);
+
+        //if (attachPDF_link){
+        //    attachPDF_link.on('click', this.attachFile, this, {isPDF:true});
+        //}
+
+        //if (attachFile_link){
+        //    attachFile_link.on('click', this.attachFile, this, {isPDF:false});
+        //}
+
+        //Ext.select('a').on('click', function(e, el, o){
+        //    alert('!');
+        //}); 
+        
+        //this.html.on('click', function(e,el,o){
+        ///    console.log("inhere");
+        //}, null );
+
+
+        //Ext.select('ul.pp-pdf-manager').on('click', function(e, el, o){
+       ///     console.log("inhere");
+        //});
+
 
         /*
         
@@ -99,6 +119,17 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         }
         */
 	},
+
+    //
+    // Event handling for the HTML. Is called with the Ext.Element of the HTML 
+    // after the template is written
+    //
+    
+    installEvents: function(el){
+        el.on('click', function(e, el, o){
+            console.log("inhere");
+        });
+    },
 
         
     attachFile: function(e,el,pars){

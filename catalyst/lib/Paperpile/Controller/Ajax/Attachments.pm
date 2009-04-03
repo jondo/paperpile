@@ -9,6 +9,7 @@ use Data::Dumper;
 use File::Path;
 use File::Spec;
 use File::Copy;
+use URI::file;
 
 use File::stat;
 use 5.010;
@@ -70,8 +71,31 @@ sub list_files : Local {
 
   my $rowid  = $c->request->params->{rowid};
 
+  my $sth = $c->model('User')->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+  my ( $attachment_rowid, $file_name );
+  $sth->bind_columns( \$attachment_rowid, \$file_name );
+  $sth->execute;
 
+  my $paper_root=$c->model('User')->get_setting('paper_root');
 
+  my @output=();
+  while ( $sth->fetch ) {
+
+    my $abs=File::Spec->catfile( $paper_root, $file_name );
+
+    # TODO: serve file via Catalyst
+    my $link=URI::file->new($abs)->as_string;
+
+    my ($volume,$dirs,$base_name) = File::Spec->splitpath( $abs );
+
+    push @output, {file=>$base_name, link=>$link, rowid=> $attachment_rowid};
+
+  }
+
+  $c->stash->{list}=[@output];
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
 
 }
 
