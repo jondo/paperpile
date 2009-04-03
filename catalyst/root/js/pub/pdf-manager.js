@@ -1,18 +1,34 @@
 Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 	  
     markup: [
-        '<div id="mybox-{id}">',
         '<ul class="pp-pdf-manager">',
-        '<tpl if="url">',
-        '<li class="pp-publisher-link"><a href="{url}" target="_blank"><img src="{icon}"/>Go to publisher site</a></li>',
-        //'<li class="pp-action-download-pdf"><a href="#" onClick="Ext.getCmp(\'{id}\').searchPDF()">Download PDF</a></li>',
+        
+        '<tpl if="linkout">',
+        '<li id="linkout-{id}"><a href="{linkout}" target="_blank">Go to publisher site</a></li>',
         '</tpl>',
-        '<tpl if="!url">',
+
+        '<tpl if="!linkout">',
         '<li>No links available for this citation.</li>',
+        '</tpl>',
+        
+        '<tpl if="pdf">',
+        '<li id="open-pdf-{id}"><a href="#">Open PDF</a></li>',
+        '<li id="delete-pdf-{id}"><a href="#">Delete PDF</a></li>',
+        '</tpl>',
+
+        '<tpl if="!pdf">',
+        '<tpl if="linkout">',
+        '<li id="download-pdf-{id}"><a href="#">Download PDF</a></li>',
+        '</tpl>',
+        '<li id="attach-pdf-{id}"><a href="#">Attach PDF</a></li>',
+        '</tpl>',
+
+        '<li id="attach-file-{id}"><a href="#">Attach File</a></li>',
+        '<tpl if="attachments">',
+        '<li>{attachments}</li>',
         '</tpl>',
         '<li><div id="pbar"></div></li>',
         '</ul>',
-        '</div>',
 	  ],
 
 	  startingMarkup: '',
@@ -20,25 +36,54 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     initComponent: function() {
 		    this.tpl = new Ext.XTemplate(this.markup);
 		    Ext.apply(this, {
-			      bodyStyle: {
-				        background: '#ffffff',
-				        padding: '7px'
-			      },
-            autoScroll: true,
-			      html: this.startingMarkup
+			    bodyStyle: {
+				    background: '#ffffff',
+				    padding: '7px'
+			    },
+                autoScroll: true,
+			    html: this.startingMarkup
 		    });
-		    Paperpile.PDFmanager.superclass.initComponent.call(this);
-	  },
+		
+        Paperpile.PDFmanager.superclass.initComponent.call(this);
+	},
 	  
     updateDetail: function(data) {
         this.data=data;
         this.data.id=this.id;
-        this.source_id=Paperpile.main.tabs.getActiveTab().id;
+        
+        this.grid_id=this.ownerCt.ownerCt.items.get('center_panel').items.get(0).id;
     
         this.tpl.overwrite(this.body, this.data);
 
-        var el = Ext.get("mybox-"+this.id);
-        el.boxWrap();
+        var attachPDF_link=Ext.Element.get('attach-pdf-'+this.id);
+        var attachFile_link=Ext.Element.get('attach-file-'+this.id);
+
+        if (attachPDF_link){
+            attachPDF_link.on('click', this.attachFile, this, {isPDF:true});
+        }
+
+        if (attachFile_link){
+            attachFile_link.on('click', this.attachFile, this, {isPDF:false});
+        }
+
+        
+        if (this.data.attachments){
+            Ext.Ajax.request(
+                { url: '/ajax/attachments/list_files',
+                  params: { sha1: this.data.sha1,
+                            rowid: this.data._rowid,
+                            grid_id: this.grid_id,
+                          },
+                  method: 'GET',
+                  success: function(response){
+                      var json = Ext.util.JSON.decode(response.responseText);
+                      console.log(json);
+                  }, 
+                  scope:this,
+                });
+        }
+
+        /*
         
         this.progressBar = new Ext.ProgressBar({
             id: 'progress_bar',
@@ -52,7 +97,44 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         } else {
             this.ownerCt.getLayout().setActiveItem('pdf_manager');
         }
+        */
 	},
+
+        
+    attachFile: function(e,el,pars){
+
+        var fc=new Paperpile.FileChooser({
+            callback:function(button,path){
+                console.log(this);
+                if (button == 'OK'){
+                    Ext.Ajax.request(
+                        { url: '/ajax/attachments/attach_file',
+                          params: { sha1: this.data.sha1,
+                                    rowid: this.data._rowid,
+                                    grid_id: this.grid_id,
+                                    file:path,
+                                    is_pdf: (pars.isPDF) ? 1:0
+                                  },
+                          method: 'GET',
+                          success: function(response){
+                              var json = Ext.util.JSON.decode(response.responseText);
+                              if (json.pdf_file){
+                                  Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf',json.pdf_file);
+                                  this.updateDetail(this.data);
+                              }
+                              
+                          }, 
+                          scope:this,
+                        });
+                }
+            },
+            scope:this
+        });
+        
+        fc.show();
+
+    },
+
 
     searchPDF: function(){
 
@@ -63,7 +145,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             {   url: '/ajax/download/search',
                 params: { sha1: this.data.sha1,
                           source_id: this.source_id,
-                          url:this.data.url,
+                          linkout:this.data.linkout,
                         },
                 method: 'GET',
                 success: this.foundPDF,

@@ -25,10 +25,19 @@ Paperpile.Forms.Settings = Ext.extend(Paperpile.Forms, {
                   fieldLabel:"PDF folder",
                   xtype:"textfield"
                 },
-                { name:"paper_pattern",
+                { name:"key_pattern",
+                  fieldLabel:"Citation key pattern",
+                  xtype:"textfield"
+                },
+                { name:"pdf_pattern",
                   fieldLabel:"PDF file name pattern",
                   xtype:"textfield"
-                }
+                },
+                { name:"attachment_pattern",
+                  fieldLabel:"Supplementary files directory",
+                  xtype:"textfield"
+                },
+
             ],
             buttons: [{ text:'Save',
                         handler: function(){

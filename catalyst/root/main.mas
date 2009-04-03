@@ -24,6 +24,7 @@
   misc/forms.js 
   misc/settings.js 
   misc/box-select.js
+  misc/file-chooser.js
                
   pub/summary.js 
   pub/notes.js 

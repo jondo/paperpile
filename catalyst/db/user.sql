@@ -1,12 +1,3 @@
-CREATE TABLE Publications(
-  sha1               TEXT UNIQUE,
-  pdf                TEXT,
-  pdftext            TEXT,
-  created            TIMESTAMP,
-  last_read          TIMESTAMP,
-  times_read         INTEGER
-);
-
 CREATE TABLE Fields(
   field             TEXT,
   text              TEXT
@@ -55,3 +46,7 @@ CREATE TABLE Author_Publication (
   PRIMARY KEY (author_id, publication_id)
 );
 
+CREATE TABLE Attachments (
+  file_name         TEXT,
+  publication_id    INTEGER
+);

@@ -1,8 +1,8 @@
 Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
     title: "Select file",
-    selectionMode: 'BOTH',
-    saveMode: true,
+    selectionMode: 'FILE',
+    saveMode: false,
     saveDefault: 'new-file.dat',
     currentRoot: "ROOT",
     showHidden: false,
@@ -88,20 +88,21 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                                    Ext.Msg.confirm('',path+' already exists. Overwrite?',
                                                                    function(btn){
                                                                        if (btn=='yes'){
-                                                                           this.callback('OK',path);
+                                                                           console.log(this.scope);
+                                                                           this.callback.createDelegate(this.scope,['OK',path])();
                                                                            this.close();
                                                                        }
                                                                    }                                           
                                                                   )
                                                } else {
-                                                   this.callback('OK',path);
+                                                   this.callback.createDelegate(this.scope,['OK',path])();
                                                    this.close();
                                                }
                                            },
                                            scope:this
                                        });
                                    } else {
-                                       this.callback('OK',path);
+                                       this.callback.createDelegate(this.scope,['OK',path])();
                                        this.close();
                                    }
                                },
@@ -115,7 +116,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                        listeners: {
                            click:  { 
                                fn: function(){
-                                   this.callback('CANCEL',null);
+                                   this.callback.createDelegate(this.scope,['CANCEL',null])();
                                    this.close();
                                },
                                scope: this
@@ -127,12 +128,19 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
         
         Paperpile.FileChooser.superclass.initComponent.call(this);
 
+        if (!this.scope){
+            this.scope=this;
+        }
+
         this.items.get('northpanel').on('afterLayout',
                                         function(){
                                             this.showDir(this.currentRoot);
                                         }, this,{single:true});
         
         this.textfield=this.items.get('northpanel').items.get('textfield');
+
+        
+
 
         
     },

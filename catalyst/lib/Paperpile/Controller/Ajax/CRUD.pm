@@ -63,6 +63,7 @@ sub new_entry: Local {
 
   $pub->created(timestamp);
   $pub->times_read(0);
+  $pub->attachments(0);
   $pub->last_read(timestamp); ## for the time being
 
   $c->model('User')->create_pub($pub);

@@ -7,7 +7,9 @@ Model::App:
 user_settings:
   tmp_dir: "__path_to(tmp)__"
   paper_root: "__path_to(../user/default/paperpile)__"
-  paper_pattern: "[firstauthor][YYYY]"
+  key_pattern: "[firstauthor][YYYY]"
+  pdf_pattern: "[key]"
+  attachment_pattern: "[key]_supplements"
   _tree: ""
 
 app_settings:
@@ -30,6 +32,7 @@ pub_fields:
   issue:         "Issue"
   edition:       "edition"
   pages:         "Pages"
+  url:           "URL"
   publisher:     "Publisher"
   organization:  "Organization"
   school:        "University"        
@@ -42,10 +45,11 @@ pub_fields:
   isbn:          "ISBN"
   pmid:          "Pubmed ID"
   doi:           "DOI"
-  url:           "Website"
   icon:          "Icon URL"
   abstract:      "Abstract"
   keywords:      "Author key words"
+  linkout:       "Website"
+  pdf:           "PDF"
   notes:         "Notes"
   tags:          "Tags"
   folders:       "Folders"

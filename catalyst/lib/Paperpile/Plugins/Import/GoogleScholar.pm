@@ -168,7 +168,7 @@ sub page {
     $pub->title( $data{titles}->[$i] );
     $pub->_authors_display( $data{authors}->[$i] );
     $pub->_citation_display( $data{citations}->[$i] );
-    $pub->url( $data{urls}->[$i] );
+    $pub->linkout( $data{urls}->[$i] );
     $pub->_details_link( $data{bibtex}->[$i] );
     $pub->refresh_fields;
     push @$page, $pub;
@@ -197,7 +197,7 @@ sub complete_details {
   my $full_pub = Paperpile::Library::Publication->new();
   $full_pub->import_string($bibtex,'BIBTEX');
 
-  $full_pub->url($pub->url);
+  $full_pub->linkout($pub->linkout);
 
   my $new_sha1=$full_pub->sha1;
 

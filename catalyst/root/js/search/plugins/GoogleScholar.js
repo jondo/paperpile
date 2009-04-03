@@ -29,6 +29,9 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
 
         Paperpile.PluginGridGoogleScholar.superclass.initComponent.apply(this, arguments);
 
+        // hide key field
+        this.getColumnModel().setHidden(2,true);
+
         _searchField.store=this.store;
 
     },

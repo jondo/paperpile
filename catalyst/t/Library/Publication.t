@@ -84,21 +84,21 @@ is( $pub->sha1, $sha1, "Re-calculate sha1 identity after change" );
 
 my $pub2 = Paperpile::Library::Publication->new( {%journal} );
 
-is( $pub2->format('[firstauthor]'),       'Gruber',   '[firstauthor]' );
-is( $pub2->format('[firstauthor:Uc]'),    'Gruber',   '[firstauthor:Uc]' );
-is( $pub2->format('[firstauthor:lc]'),    'gruber',   '[firstauthor:lc]' );
-is( $pub2->format('[firstauthor:UC]'),    'GRUBER',   '[firstauthor:UC]' );
-is( $pub2->format('[firstauthor_abbr3]'), 'Gru',      '[firstauthor_abbr3]' );
-is( $pub2->format('[lastauthor]'),        'Washietl', '[lastauthor]' );
-is( $pub2->format('[authors]'),        'Gruber_Bernhart_Hofacker_Washietl', '[authors]' );
-is( $pub2->format('[authors2]'),       'Gruber_Bernhart_et_al',             '[authors2]' );
-is( $pub2->format('[authors3_abbr4]'), 'Grub_Bern_Hofa_et_al',              '[authors3_abbr4]' );
-is( $pub2->format('[title]'),
+is( $pub2->format_pattern('[firstauthor]'),       'Gruber',   '[firstauthor]' );
+is( $pub2->format_pattern('[firstauthor:Uc]'),    'Gruber',   '[firstauthor:Uc]' );
+is( $pub2->format_pattern('[firstauthor:lc]'),    'gruber',   '[firstauthor:lc]' );
+is( $pub2->format_pattern('[firstauthor:UC]'),    'GRUBER',   '[firstauthor:UC]' );
+is( $pub2->format_pattern('[firstauthor_abbr3]'), 'Gru',      '[firstauthor_abbr3]' );
+is( $pub2->format_pattern('[lastauthor]'),        'Washietl', '[lastauthor]' );
+is( $pub2->format_pattern('[authors]'),        'Gruber_Bernhart_Hofacker_Washietl', '[authors]' );
+is( $pub2->format_pattern('[authors2]'),       'Gruber_Bernhart_et_al',             '[authors2]' );
+is( $pub2->format_pattern('[authors3_abbr4]'), 'Grub_Bern_Hofa_et_al',              '[authors3_abbr4]' );
+is( $pub2->format_pattern('[title]'),
   'Strategies_for_measuring_evolutionary_conservation_of_RNA_secondary_structures', '[title]' );
-is( $pub2->format('[title3]'),       'Strategies_for_measuring', '[title3]' );
-is( $pub2->format('[title3_abbr3]'), 'Str_for_mea',              '[title3_abbr3]' );
-is( $pub2->format('[YY]'),           '08',                       '[YY]' );
-is( $pub2->format('[YYYY]'),         '2008',                     '[YYYY]' );
-is( $pub2->format('[journal]'),      'BMC_Bioinformatics',       '[journal]' );
-
+is( $pub2->format_pattern('[title3]'),       'Strategies_for_measuring', '[title3]' );
+is( $pub2->format_pattern('[title3_abbr3]'), 'Str_for_mea',              '[title3_abbr3]' );
+is( $pub2->format_pattern('[YY]'),           '08',                       '[YY]' );
+is( $pub2->format_pattern('[YYYY]'),         '2008',                     '[YYYY]' );
+is( $pub2->format_pattern('[journal]'),      'BMC_Bioinformatics',       '[journal]' );
+is( $pub2->format_pattern('[key]', {key=>'Test'}),      'Test',       'Custom substitution [key]' );
 

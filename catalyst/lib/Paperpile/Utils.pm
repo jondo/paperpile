@@ -119,3 +119,16 @@ sub path_to {
   else { return Path::Class::File->new( $self->home, @path ) }
 }
 
+## We store root as explicit 'ROOT/' in database and frontend. Adjust
+## it to system root.
+
+sub adjust_root {
+
+  (my $self, my $path) = @_;
+
+  my $root = File::Spec->rootdir();
+  $path =~ s/^ROOT/$root/;
+
+  return $path;
+
+}

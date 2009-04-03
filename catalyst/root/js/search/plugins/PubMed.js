@@ -29,6 +29,9 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
 
         Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
 
+        // hide key field
+        this.getColumnModel().setHidden(2,true);
+
         _searchField.store=this.store;
 
     },

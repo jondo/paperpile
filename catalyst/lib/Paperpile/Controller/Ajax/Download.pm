@@ -25,7 +25,7 @@ sub search : Local {
   my $source_id = $c->request->params->{source_id};
   my $sha1      = $c->request->params->{sha1};
   my $source = $c->session->{"source_$source_id"};
-  my $url        = $c->request->params->{url};
+  my $url        = $c->request->params->{linkout};
 
   my $pub = $source->find_sha1($sha1);
 

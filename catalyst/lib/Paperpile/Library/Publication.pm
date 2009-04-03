@@ -59,6 +59,8 @@ has '_rowid'     => ( is => 'rw', isa => 'Int' );
 has 'created'    => ( is => 'rw', isa => 'Str' );
 has 'last_read'  => ( is => 'rw', isa => 'Str' );
 has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
+has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
+
 has 'pdf'        => ( is => 'rw', isa => 'Str', default => '' );
 
 # Read other fields from config file
@@ -203,9 +205,9 @@ sub get_authors {
   return [@authors];
 }
 
-sub format {
+sub format_pattern {
 
-  ( my $self, my $pattern ) = @_;
+  ( my $self, my $pattern, my $substitutions ) = @_;
 
   my @authors = ();
   foreach my $a ( @{ $self->get_authors } ) {
@@ -280,6 +282,16 @@ sub format {
   $pattern =~ s/\[YYYY\]/$YYYY/g;
 
   $pattern =~ s/\[journal\]/$journal/g;
+
+
+  # Custom susbstitutions, given as parameter
+
+  if (defined $substitutions){
+    foreach my $key (keys %$substitutions){
+      my $value=$substitutions->{$key};
+      $pattern =~ s/\[$key\]/$value/g;
+    }
+  }
 
   # remove brackets that are still left
   $pattern =~ s/\[//g;

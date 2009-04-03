@@ -46,15 +46,18 @@ sub get : Local {
     jar java class sql moov mov qt/;
 
   my $mode = $c->request->params->{selectionMode};
-  my $root = File::Spec->rootdir();
   my $path = $c->request->params->{path};
-  $path =~ s/^ROOT/$root/;
+
+  $path=Paperpile::Utils->adjust_root($path);
 
   my @contents = ();
 
   my $failure = { "success" => \0, "error" => "Could not read directory." };
 
-  opendir( DIR, File::Spec->catdir( $root, $path ) ) || return $failure;
+  #opendir( DIR, File::Spec->catdir( $root, $path ) ) || return $failure;
+
+  opendir( DIR, $path ) || return $failure;
+
 
   @contents = readdir(DIR);
 
@@ -118,9 +121,9 @@ sub get : Local {
 sub newdir : Local {
   my ( $self, $c ) = @_;
 
-  my $root = File::Spec->rootdir();
   my $dir  = $c->request->params->{dir};
-  $dir =~ s/^ROOT/$root/;
+
+  $dir=Paperpile::Utils->adjust_root($dir);
 
   eval { mkpath($dir); };
 
@@ -136,9 +139,8 @@ sub newdir : Local {
 sub stats : Local {
   my ( $self, $c ) = @_;
 
-  my $root     = File::Spec->rootdir();
   my $location = $c->request->params->{location};
-  $location =~ s/^ROOT/$root/;
+  $location=Paperpile::Utils->adjust_root($location);
 
   my %stats = ();
 
@@ -153,12 +155,6 @@ sub stats : Local {
   $c->forward('Paperpile::View::JSON');
 
 }
-
-
-
-
-
-
 
 
 

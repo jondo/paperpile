@@ -40,7 +40,8 @@ sub init_db {
     pdftext            TEXT,
     created            TIMESTAMP,
     last_read          TIMESTAMP,
-    times_read         INTEGER)"
+    times_read         INTEGER,
+    attachments        INTEGER)"
   );
 
   # Read other fields from config file, write it to the Fields table and
@@ -59,7 +60,7 @@ sub init_db {
   # Full text search table
   $self->dbh->do('DROP TABLE IF EXISTS Fulltext');
   $self->dbh->do(
-    "CREATE VIRTUAL TABLE Fulltext using fts3(title,abstract,notes,names,tags,folders);");
+    "CREATE VIRTUAL TABLE Fulltext using fts3(title,key,abstract,notes,author,tag,folders,year,journal);");
 
   # Create user settings table
   $self->dbh->do('DROP TABLE IF EXISTS Settings');
@@ -116,53 +117,88 @@ sub settings {
 }
 
 
-
 sub create_pub {
-    ( my $self, my $pub ) = @_;
+  ( my $self, my $pub ) = @_;
 
-    ## Insert main entry into Publications table
-    ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
-    $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
+  # First generate citation key
+  my $pattern = $self->get_setting('key_pattern');
+  my $key     = $pub->format_pattern($pattern);
 
-    ## Insert searchable fields into fulltext table
-    my $pub_rowid = $self->dbh->func('last_insert_rowid');
+  # Check if key already exists
+  my $sth = $self->dbh->prepare("SELECT key FROM fulltext WHERE fulltext MATCH 'key:$key*'");
+  my $existing_key;
+  $sth->bind_columns( \$existing_key);
+  $sth->execute;
 
-    ( $fields, $values ) = $self->_hash2sql( {
-            rowid    => $pub_rowid,
-            title    => $pub->title,
-            abstract => $pub->abstract,
-            notes    => $pub->notes,
-            names    => $pub->_authors_display,
-            tags     => $pub->tags,
-            folders  => $pub->folders,
-        }
-    );
+  my @suffix=();
+  my $unique=1;
 
-    $self->dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
+  while ( $sth->fetch ) {
+    $unique=0; # if we found something in the DB it is not unique
 
-    ## Insert authors
-
-    my $insert =
-      $self->dbh->prepare("INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
-    my $search = $self->dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
-    my $insert_join =
-      $self->dbh->prepare("INSERT INTO author_publication (author_id,publication_id) VALUES(?,?)");
-
-    foreach my $author ( @{ $pub->get_authors } ) {
-        my $author_rowid;
-        $search->execute( $author->key );
-        $author_rowid = $search->fetchrow_array;
-        if ( not $author_rowid ) {
-            my @values = ( $author->key, $author->first, $author->last, $author->von, $author->jr );
-            $insert->execute(@values);
-            $author_rowid = $self->dbh->func('last_insert_rowid');
-        }
-        $insert_join->execute( $author_rowid, $pub_rowid );
+    # We collect the suffixes a,b,c... that already exist
+    if ($existing_key=~/$key([a-z])/){ #
+      push @suffix, $1;
     }
+  }
 
-    $pub->_rowid($pub_rowid);
+  if (not $unique){
+    my $new_suffix='a';
+    if (@suffix){
+      # we sort them to make sure to get the 'highest' suffix and count one up
+      @suffix=sort {$a <=> $b} @suffix;
+      $new_suffix=chr(ord(pop(@suffix))+1);
+    }
+    $key.=$new_suffix;
+  }
 
-    return $pub_rowid;
+  $pub->citekey($key);
+
+  ## Insert main entry into Publications table
+  ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
+  $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
+
+  ## Insert searchable fields into fulltext table
+  my $pub_rowid = $self->dbh->func('last_insert_rowid');
+
+  ( $fields, $values ) = $self->_hash2sql( {
+      rowid    => $pub_rowid,
+      key      => $pub->citekey,
+      year     => $pub->year,
+      journal  => $pub->journal,
+      title    => $pub->title,
+      abstract => $pub->abstract,
+      notes    => $pub->notes,
+      author   => $pub->_authors_display,
+      tag      => $pub->tags,
+      folders  => $pub->folders,
+    }
+  );
+
+  $self->dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
+
+  ## Insert authors
+
+  my $insert = $self->dbh->prepare("INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
+  my $search = $self->dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
+  my $insert_join =
+    $self->dbh->prepare("INSERT INTO author_publication (author_id,publication_id) VALUES(?,?)");
+
+  foreach my $author ( @{ $pub->get_authors } ) {
+    my $author_rowid;
+    $search->execute( $author->key );
+    $author_rowid = $search->fetchrow_array;
+    if ( not $author_rowid ) {
+      my @values = ( $author->key, $author->first, $author->last, $author->von, $author->jr );
+      $insert->execute(@values);
+      $author_rowid = $self->dbh->func('last_insert_rowid');
+    }
+    $insert_join->execute( $author_rowid, $pub_rowid );
+  }
+
+  $pub->_rowid($pub_rowid);
+
+  return $pub_rowid;
 }
 
 sub delete_pubs {
@@ -450,14 +486,15 @@ sub fulltext_search {
   if ($query) {
     $query = $self->dbh->quote("$query*");
     $where = "WHERE fulltext MATCH $query";
-  }
-  else {
+  } else {
     $where = '';    #Return everything if query empty
   }
 
-  # explicitely select rowid since it is not included by *
+  # explicitely select rowid since it is not included by '*'. Make
+  # sure the selected fields are all named like the fields in the
+  # Publication class
   my $sth = $self->dbh->prepare(
-     "SELECT *,
+    "SELECT *,
      publications.rowid as _rowid,
      publications.title as title,
      publications.abstract as abstract,
@@ -466,7 +503,6 @@ sub fulltext_search {
      ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset"
   );
 
-
   $sth->execute;
 
   my @page = ();
@@ -474,8 +510,15 @@ sub fulltext_search {
   while ( my $row = $sth->fetchrow_hashref() ) {
     my $pub = Paperpile::Library::Publication->new();
     foreach my $field ( keys %$row ) {
-      next if $field eq 'names';  # is not a standard field of Publication class
+
+      next if $field eq 'author';    # is not a standard field of
+                                     # Publication class, real author
+                                     # data comes from main table
       my $value = $row->{$field};
+
+      $field = 'citekey' if $field eq 'key';    # citekey is called 'key'
+                                                # in ft-table for
+                                                # convenience
 
       if ($value) {
 
@@ -617,6 +660,21 @@ sub delete_from_folder {
   $self->dbh->do("DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)");
 
 }
+
+
+sub add_attachment {
+
+  my ( $self, $file, $rowid ) = @_;
+
+  $self->dbh->do("UPDATE Publications SET attachments=attachments+1 WHERE rowid=$rowid");
+
+  $file=$self->dbh->quote($file);
+
+  $self->dbh->do("INSERT INTO Attachments (file_name,publication_id) VALUES ($file, $rowid)");
+
+
+}
+
 
 # Remove the item from the comma separated list
 

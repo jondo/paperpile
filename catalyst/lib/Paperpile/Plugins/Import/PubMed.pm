@@ -96,9 +96,9 @@ sub _linkOut {
 
     # got an error message
     if ( defined $entry->{Info} ) {
-      $pub_hash{$id}->url('');
+      $pub_hash{$id}->linkout('');
     } else {
-      $pub_hash{$id}->url( $entry->{ObjUrl}->{Url} );
+      $pub_hash{$id}->linkout( $entry->{ObjUrl}->{Url} );
 
       # Adjust the url otherwise it won't get displayed correctly
       my $icon_url = $entry->{ObjUrl}->{IconUrl};
