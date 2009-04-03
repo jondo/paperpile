@@ -417,7 +417,9 @@ sub _layoutChoose {
             if(exists $opt->{$o}->{group}) {        
                 #my @order = $c->{style}->{bibliography}->{layout}->{choose}->{$o}->{group}->order();
                 #print Dumper @order; exit;
-                $self->{_biblio_str} .= _parseGroup($mods, $c, $self, $opt->{$o}->{group}, "", 0);
+                my $elemNumber = 0;
+                # return value of elemNumber not important but necessary to keep the biblio_string intact.
+                _parseGroup($mods, $c, $self, $opt->{$o}->{group}, 0);
                 
                 
             }
@@ -433,22 +435,31 @@ sub _layoutChoose {
 # In subgroups we extend the string, recursively.
 # Furhermore, we need the number of overall printed elements in the recursion
 sub _parseGroup {
-    my ($mods, $c, $self, $g, $groupStr, $elemNumber) = @_;
-    
-    #print Dumper $g;
+    my ($mods, $c, $self, $g, $elemNumber) = @_;
 
-    $groupStr .= $g->{'prefix'}  if(exists $g->{'prefix'});
+    $self->{_biblio_str} .= $g->{'prefix'}  if(exists $g->{'prefix'});
     
-    foreach my $k (@{$g->{'/order'}} ) {
+    # index of the group element
+
+    # cause text could appear more than once in the ordering
+    # but if it contains more than once
+    # it is represented as array and has its own loop
+    my @order = @{$g->{'/order'}};
+    my @order_unique = _uniqueArray(\@order);
+    
+    # not the first element and not the last
+    # -1 because of the delimiter entry
+    
+    #my $round = 0;
+    foreach my $k (@order_unique) {
         switch($k) { # formatting | delimiter | TODO:
             #print $k, "\n";
             case "delimiter" {
-                
             }
-            #case "prefix" { # already done before the loop
-            #}
-            #case "suffix" { # will be done after the loop
-            #}
+            case "prefix" { # already done before the loop
+            }
+            case "suffix" { # will be done after the loop
+            }
             case "font-family" {
                 
             }
@@ -477,24 +488,43 @@ sub _parseGroup {
                 
             }
             case "text" {
-                $elemNumber++;
-                if($elemNumber>1) { # not the first element
-                    $groupStr .= $g->{'delimiter'} if($g->{'delimiter'});
+                if(ref($g->{$k}) eq "HASH") {
+                    $elemNumber++;                    
+                    $self->{_biblio_str} .= $g->{'delimiter'} if($elemNumber>1 && exists $g->{'delimiter'});
+                    
+                    # can appear either as hash
+                    if(exists $g->{$k}->{variable}) {
+                        $self->{_biblio_str} .= _parseVariable($mods, $c, $self, $g->{$k}->{variable});
+                    }
                 }
-                if($g->{$k}->{variable}) {
-                    $groupStr .= _parseVariable($mods, $c, $self, $g->{$k}->{variable});
+                elsif(ref($g->{$k}) eq "ARRAY") {
+                    # or as array
+                    foreach my $v (@{$g->{$k}}) {
+                        $elemNumber++;
+                        $self->{_biblio_str} .= $g->{'delimiter'} if($elemNumber>1 && exists $g->{'delimiter'});
+                    
+                        if(exists $v->{variable}) {
+                            $self->{_biblio_str} .= _parseVariable($mods, $c, $self, $v->{variable});
+                        }
+                    }
                 }
                 
             }
             case "group" {
+               $elemNumber = _parseGroup($mods, $c, $self, $g->{$k}, 0);
+            }
+            case "class" {
                 
+            }
+            else {
+               die "ERROR: The CSL-attribute ...group->{'".($k)."'} is not available?";
             }
         }        
     }
+
+    $self->{_biblio_str} .= $g->{'suffix'} if(exists $g->{'suffix'});
     
-    $groupStr .= $g->{'suffix'} if(exists $g->{'suffix'});
-    
-    return $groupStr;
+    return $elemNumber;
 }
 
 
@@ -502,15 +532,19 @@ sub _parseGroup {
 sub _parseVariable {
     my ($mods, $c, $self, $var) = @_;
     
-    my $varString = "";
+    #print Dumper $var;
     
     switch($var) {
         ## the primary title for the cited item
         case "title" { 
+
         }
         ## the secondary title for the cited item; for a book chapter, this 
         ## would be a book title, for an article the journal title, etc.
         case "container-title" {
+            if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
+                 return $mods->{relatedItem}->{titleInfo}->{title};
+            }
         }
         ## the tertiary title for the cited item; for example, a series title
         case "collection-title" {
@@ -547,7 +581,7 @@ sub _parseVariable {
             if(exists $mods->{relatedItem}->{part}->{extent}->{unit}) {
                 if($mods->{relatedItem}->{part}->{extent}->{unit} eq "page") {
                     if(exists $mods->{relatedItem}->{part}->{extent}->{start} && exists $mods->{relatedItem}->{part}->{extent}->{end}) {
-                           $varString = $mods->{relatedItem}->{part}->{extent}->{start}."-".$mods->{relatedItem}->{part}->{extent}->{end};
+                           return $mods->{relatedItem}->{part}->{extent}->{start}."-".$mods->{relatedItem}->{part}->{extent}->{end};
                     }
                     else {
                         die "ERROR: No start and end page in the mods file?";
@@ -564,6 +598,13 @@ sub _parseVariable {
         }
         ## volume number for the container periodical
         case "volume" {
+            if(exists $mods->{relatedItem}->{part}->{detail}->{type}) {
+                if($mods->{relatedItem}->{part}->{detail}->{type} eq "volume") {
+                    if(exists $mods->{relatedItem}->{part}->{detail}->{number}) {
+                        return $mods->{relatedItem}->{part}->{detail}->{number};
+                    }
+                }
+            }
         } 
         ## refers to the number of items in multi-volume books and such
         case "number-of-volumes" {
@@ -635,7 +676,21 @@ sub _parseVariable {
         }
     }
     
-    return $varString;
+    return "";
+}
+
+# returns an array with unique entries
+sub _uniqueArray {
+    my $array_ref = shift;
+    my %seen;
+    my @new_array;
+    foreach my $a (@$array_ref) {
+        if(! exists $seen{$a}) {
+            $seen{$a}=1;
+            push @new_array, $a;
+        }
+    }
+    return @new_array;
 }
 
 no Moose;
