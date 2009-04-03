@@ -248,18 +248,18 @@ sub update_tags {
 
 
 sub insert_folder {
-  ( my $self, my $folder) = @_;
+  ( my $self, my $folder_id) = @_;
 
-  my $select=$self->dbh->prepare("SELECT rowid FROM Folders WHERE folder=?");
-  my $insert=$self->dbh->prepare("INSERT INTO Folders (folder) VALUES(?)");
+  my $select=$self->dbh->prepare("SELECT rowid FROM Folders WHERE folder_id=?");
+  my $insert=$self->dbh->prepare("INSERT INTO Folders (folder_id) VALUES(?)");
 
   my $folder_rowid=undef;
 
   $select->bind_columns(\$folder_rowid);
-  $select->execute($folder);
+  $select->execute($folder_id);
   $select->fetch;
   if (not defined $folder_rowid){
-    $insert->execute($folder);
+    $insert->execute($folder_id);
     $folder_rowid = $self->dbh->func('last_insert_rowid');
   }
 
@@ -284,8 +284,8 @@ sub update_folders {
   # Then insert folders into Folder table (if not already exists) and set
   # new connections in Folder_Publication table
 
-  my $select=$self->dbh->prepare("SELECT rowid FROM Folders WHERE folder=?");
-  my $insert=$self->dbh->prepare("INSERT INTO Folders (folder) VALUES(?)");
+  my $select=$self->dbh->prepare("SELECT rowid FROM Folders WHERE folder_id=?");
+  #my $insert=$self->dbh->prepare("INSERT INTO Folders (folder) VALUES(?)");
   my $connection=$self->dbh->prepare("INSERT INTO Folder_Publication (folder_id, publication_id) VALUES(?,?)");
 
   foreach my $folder (@folders){
@@ -307,43 +307,53 @@ sub update_folders {
 }
 
 sub delete_folder {
-  ( my $self, my $folder ) = @_;
+  ( my $self, my $folder_ids ) = @_;
 
-  # First delete all flat folder assignments in the Publication table
-  # which are below the given folder (i.e. their path starts with the
-  # folder to delete)
-
-  my $select = $self->dbh->prepare("SELECT rowid,folders FROM Publications");
-  my $update = $self->dbh->prepare("UPDATE Publications SET folders=? WHERE rowid=?");
-  my ( $rowid, $curr_folders );
-  $select->execute;
-  $select->bind_columns( \$rowid, \$curr_folders );
-
-  while ( $select->fetch ) {
-    my @folders = split( /,/, $curr_folders );
-    my @new = ();
-    print STDERR "$rowid, $curr_folders";
-    foreach my $f (@folders) {
-      if ( not $f =~ /^$folder/ ) {
-        push @new, $f;
-      }
-    }
-    my $new = join( ',', @new );
-    $update->execute( $new, $rowid );
-
-    print STDERR "----> $curr_folders\n";
-
-  }
-
-  $self->dbh->do(
-    "DELETE FROM Folder_Publication WHERE Folder_Publication.rowid in
-    (SELECT Folder_Publication.rowid FROM Folders, Folder_Publication 
-    WHERE (folder_id=Folders.rowid) and folder like '$folder%')"
+  #  Delete all assications in Folder_Publication table
+  my $delete1 = $self->dbh->prepare(
+    "DELETE FROM Folder_Publication WHERE folder_id IN (SELECT rowid from Folders WHERE Folders.folder_id=?)"
   );
 
-  $self->dbh->do( "DELETE FROM Folders WHERE folder LIKE '$folder%'" );
+  #  Delete folders from Folders table
+  my $delete2 = $self->dbh->prepare("DELETE FROM Folders WHERE folder_id=?");
 
+  #  Update flat fields in Publication table and Fulltext table
+  my $update1 = $self->dbh->prepare("UPDATE Publications SET folders=? WHERE rowid=?");
+  my $update2 = $self->dbh->prepare("UPDATE Fulltext SET folders=? WHERE rowid=?");
 
+  foreach my $id (@$folder_ids) {
+
+    my ( $folders, $rowid );
+
+    # Get the publications that are in the given folder
+    my $select = $self->dbh->prepare(
+      "SELECT publications.rowid as rowid, publications.folders as folders FROM Publications JOIN fulltext
+     ON publications.rowid=fulltext.rowid WHERE fulltext MATCH 'folders:$id'"
+    );
+
+    $select->bind_columns( \$rowid, \$folders );
+    $select->execute;
+    while ( $select->fetch ) {
+
+      # Remove the entry from the comma separated list
+      #my @parts = split( /,/, $folders );
+      #my @newParts = ();
+      #foreach my $part (@parts) {
+      #  next if $part eq $id;
+      #  push @newParts, $part;
+      #}
+      #my $newFolders = join( ',', @newParts );
+
+      my $newFolders = $self->_remove_from_flatlist($folders,$id);
+
+      $update1->execute( $newFolders, $rowid );
+      $update2->execute( $newFolders, $rowid );
+    }
+
+    $delete1->execute($id);
+    $delete2->execute($id);
+
+  }
 }
 
 sub get_tags {
@@ -367,7 +377,7 @@ sub get_tags {
 sub get_folders {
   ( my $self) = @_;
 
-  my $sth=$self->dbh->prepare("SELECT folder from Folders;");
+  my $sth=$self->dbh->prepare("SELECT folder_id from Folders;");
 
   $sth->execute();
   my @out=();
@@ -447,7 +457,7 @@ sub fulltext_search {
 
   # explicitely select rowid since it is not included by *
   my $sth = $self->dbh->prepare(
-    "SELECT *,
+     "SELECT *,
      publications.rowid as _rowid,
      publications.title as title,
      publications.abstract as abstract,
@@ -592,6 +602,45 @@ sub restore_tree{
 
 }
 
+sub delete_from_folder {
+  ( my $self, my $row_id,  my $folder_id ) = @_;
+
+  ( my $folders ) =
+    $self->dbh->selectrow_array("SELECT folders FROM Publications WHERE rowid=$row_id");
+
+  my $newFolders=$self->_remove_from_flatlist($folders, $folder_id);
+
+  $newFolders=$self->dbh->quote($newFolders);
+
+  $self->dbh->do("UPDATE Publications SET folders=$newFolders WHERE rowid=$row_id");
+  $self->dbh->do("UPDATE fulltext SET folders=$newFolders WHERE rowid=$row_id");
+  $self->dbh->do("DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)");
+
+}
+
+# Remove the item from the comma separated list
+
+sub _remove_from_flatlist {
+
+  my ( $self, $list, $item ) = @_;
+
+  my @parts = split( /,/, $list );
+
+  # Only one item 
+  if (not @parts){
+    $list=~s/$item//;
+    return $list;
+  }
+
+  my @newParts = ();
+  foreach my $part (@parts) {
+    next if $part eq $item;
+    push @newParts, $part;
+  }
+
+  return join( ',', @newParts );
+
+}
 
 
 

@@ -63,7 +63,6 @@ sub get_default_tree : Private {
   );
 
   $folders->setUID('FOLDER_ROOT');
-  $self->_get_folders( $c, $folders );
 
   #### / Active Folders
 
@@ -276,65 +275,6 @@ sub _get_tags {
     );
   }
 }
-
-
-sub _get_folders {
-
-  my ( $self, $c, $tree ) = @_;
-
-  my @folders = @{ $c->model('User')->get_folders };
-
-  # Reset everything by removing all children
-  foreach my $child ( $tree->getAllChildren ) {
-    $tree->removeChild($child);
-  }
-
-  foreach my $folder (@folders) {
-    my @parts = split( /\//, $folder );
-
-    my $t = $tree;
-    foreach my $part (@parts) {
-      my $curr_node = undef;
-      foreach my $child ( $t->getAllChildren ) {
-        if ( $child->getNodeValue->{text} eq $part ) {
-          $curr_node = $child;
-          last;
-        }
-      }
-      if ( not $curr_node ) {
-        my $new_node = Tree::Simple->new( {
-            text              => $part,
-            type              => 'FOLDER',
-            iconCls           => 'pp-icon-folder',
-            plugin_name       => 'DB',
-            plugin_mode       => 'FULLTEXT',
-            plugin_query      => "folders: $part",
-            plugin_base_query => "folders: $part",
-            plugin_title      => $part,
-            plugin_iconCls    => 'pp-icon-folder',
-          }
-        );
-
-        #$new_node->getNodeValue->{id}=$new_node->getUID;
-        $t->addChild($new_node);
-        $t = $new_node;
-      } else {
-        $t = $curr_node;
-      }
-
-    }
-  }
-}
-
-
-
-
-
-
-
-
-
-
 
 
 

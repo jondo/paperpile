@@ -297,8 +297,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 					fn: function(){
                         var path=this.relativeFolderPath(newNode);
                         newNode.plugin_title=newNode.text;
-                        newNode.plugin_query='folders:'+ path;
-                        newNode.plugin_base_query='folders:'+ path,
+                        newNode.plugin_query='folders:'+newNode.id
+                        newNode.plugin_base_query='folders:'+newNode.id
                         this.onNewFolder(newNode);
                     }
 				}
@@ -374,14 +374,12 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
 
     //
-    // Rename active folder 
+    // Rename node
     //
 
-    renameActive: function(){
+    renameNode: function(){
         var node = this.getSelectionModel().getSelectedNode();
 
-        console.log(this);
-        
         var treeEditor=this.treeEditor;
 
         treeEditor.on({
@@ -391,7 +389,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 				fn:function(editor, newText, oldText){
                     editor.editNode.plugin_title=newText;
                     Ext.Ajax.request({
-                        url: '/ajax/tree/rename_active',
+                        url: '/ajax/tree/rename_node',
                         params: { node_id: node.id,
                                   new_text: newText
                                 },
@@ -503,17 +501,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         path=parts.slice(3,parts.length).join('/');
         return(path);
     }
-
-
-
 });
-
-
-
-
-
-
-
 
 Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
     
@@ -533,15 +521,23 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
               handler: tree.deleteFolder,
               scope: tree
             },
-            { itemId: 'folder_menu_reload',
-              text:'Reload',
-              handler: tree.reloadFolder,
+            { id: 'folder_menu_rename',
+              text:'Rename',
+              handler: tree.renameNode,
               scope: tree
-            }
+            },
         ]});
         
         Paperpile.Tree.FolderMenu.superclass.constructor.call(this, config);
         
+        this.on('beforehide',
+                function(){
+                    this.getSelectionModel().clearSelections();
+                    this.allowSelect=false;
+                },
+                tree
+               );
+       
     },
 
 });
@@ -573,7 +569,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
             },
             { id: 'active_menu_rename',
               text:'Rename',
-              handler: tree.renameActive,
+              handler: tree.renameNode,
               scope: tree
             },
 
