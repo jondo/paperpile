@@ -203,27 +203,39 @@ sub create_pub {
 
 sub delete_pubs {
 
-    ( my $self, my $rowids ) = @_;
+  ( my $self, my $rowids ) = @_;
 
-    my $delete_main = $self->dbh->prepare(
-        "DELETE FROM publications WHERE rowid=?"
-    );
-    my $delete_fulltext    = $self->dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
-    my $delete_author_join = $self->dbh->prepare(
-        "DELETE FROM author_publication WHERE publication_id=?"
-    );
-    my $delete_authors = $self->dbh->prepare(
-        "DELETE From authors where rowid not in (SELECT author_id FROM author_publication)"
-    );
+  # check if entry has any attachments an delete those
+  foreach my $rowid (@$rowids) {
 
-    foreach my $rowid (@$rowids) {
-        $delete_main->execute($rowid);
-        $delete_fulltext->execute($rowid);
-        $delete_author_join->execute($rowid);
-        $delete_authors->execute;
+    # First delete attachments from Attachments table
+    my $select=$self->dbh->prepare("SELECT rowid FROM Attachments WHERE publication_id=$rowid;");
+    my $attachment_rowid;
+    $select->bind_columns( \$attachment_rowid );
+    $select->execute;
+    while ( $select->fetch ) {
+      $self->delete_attachment($attachment_rowid,0);
     }
+    # Then delete the PDF
+    $self->delete_attachment($rowid,1);
+  }
 
-    return 1;
+  # Then delete the entry in all relevant tables
+  my $delete_main     = $self->dbh->prepare( "DELETE FROM publications WHERE rowid=?" );
+  my $delete_fulltext = $self->dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
+  my $delete_author_join =
+    $self->dbh->prepare( "DELETE FROM author_publication WHERE publication_id=?" );
+  my $delete_authors = $self->dbh->prepare(
+    "DELETE From authors where rowid not in (SELECT author_id FROM author_publication)" );
+
+  foreach my $rowid (@$rowids) {
+    $delete_main->execute($rowid);
+    $delete_fulltext->execute($rowid);
+    $delete_author_join->execute($rowid);
+    $delete_authors->execute;
+  }
+
+  return 1;
 
 }
 
@@ -676,6 +688,10 @@ sub add_attachment {
 }
 
 
+# Delete PDF or other supplementary files that are attached to an entry
+# if $is_pdf is true, the PDF file given in table 'Publications' at rowid is to be deleted
+# if $is_pdf is false, the attached file in table 'Attachments' at rowid is to be deleted
+
 sub delete_attachment{
 
   my ( $self, $rowid, $is_pdf ) = @_;
@@ -688,11 +704,14 @@ sub delete_attachment{
     ( my $pdf ) =
       $self->dbh->selectrow_array("SELECT pdf FROM Publications WHERE rowid=$rowid ");
 
-    $path = File::Spec->catfile( $paper_root, $pdf );
+    if ($pdf){
+      $path = File::Spec->catfile( $paper_root, $pdf );
+      ## TODO: Error handling to ensure consistency between database and file-tree
+      unlink($path);
+    }
 
-    ## TODO: Error handling to ensure consistency between database and file-tree
-    unlink($path);
     $self->update_field('Publications', $rowid, 'pdf','');
+
 
   } else {
 
@@ -720,6 +739,18 @@ sub delete_attachment{
   rmdir $dir;
 
 }
+
+
+sub index_pdf {
+
+  my ( $self, $rowid, $pdf_file) = @_;
+
+  print STDERR "============> $rowid, $pdf_file \n";
+
+
+
+}
+
 
 
 

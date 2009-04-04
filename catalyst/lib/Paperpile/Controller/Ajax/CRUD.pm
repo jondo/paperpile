@@ -23,6 +23,8 @@ sub insert_entry : Local {
 
   $c->model('User')->create_pub($pub);
 
+  $c->model('User')->index_pdf($pub->_rowid, '/aaa.pdf');
+
   $pub->_imported(1);
 
   $c->stash->{success} = 'true';
@@ -81,8 +83,6 @@ sub delete_entry : Local {
 
   my $grid_id = $c->request->params->{grid_id};
   my $rowid     = $c->request->params->{rowid};
-
-  #my $source = $c->session->{"grid_$grid_id"};
 
   $c->model('User')->delete_pubs( [$rowid] );
 
