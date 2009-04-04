@@ -1,0 +1,158 @@
+BioMed Central
+Page 1 of 17
+(page number not for citation purposes)
+BMC Bioinformatics
+Open AccessResearch article
+Reannotation of the CELO genome characterizes a set of previously
+unassigned open reading frames and points to novel modes of host
+interaction in avian adenoviruses
+Stefan Washietl1,2 and Frank Eisenhaber*1
+Address: 1Research Institute of Molecular Pathology, Dr. Bohrgasse 7, A-1030 Vienna, Austria and 2Current address: Institute for Theoretical
+Chemistry and Structural Biology, University of Vienna, Waehringerstrasse 17, A-1090 Vienna, Austria
+Email: Stefan Washietl - wash@tbi.univie.ac.at; Frank Eisenhaber* - Frank.Eisenhaber@imp.univie.ac.at
+* Corresponding author
+Abstract
+Background: The genome of the avian adenovirus Chicken Embryo Lethal Orphan (CELO) has
+two terminal regions without detectable homology in mammalian adenoviruses that are left
+without annotation in the initial analysis. Since adenoviruses have been a rich source of new insights
+into molecular cell biology and practical applications of CELO as gene a delivery vector are being
+considered, this genome appeared worth revisiting. We conducted a systematic reannotation and
+in-depth sequence analysis of the CELO genome.
+Results: We describe a strongly diverged paralogous cluster including ORF-2, ORF-12, ORF-13,
+and ORF-14 with an ATPase/helicase domain most likely acquired from adeno-associated
+parvoviruses. None of these ORFs appear to have retained ATPase/helicase function and
+alternative functions (e.g. modulation of gene expression during the early life-cycle) must be
+considered in an adenoviral context. Further, we identified a cluster of three putative type-1-
+transmembrane glycoproteins with IG-like domains (ORF-9, ORF-10, ORF-11) which are good
+candidates to substitute for the missing immunomodulatory functions of mammalian adenoviruses.
+ORF-16 (located directly adjacent) displays distant homology to vertebrate mono-ADP-
+ribosyltransferases. Members of this family are known to be involved in immuno-regulation and
+similiar functions during CELO life cycle can be considered for this ORF. Finally, we describe a
+putative triglyceride lipase (merged ORF-18/19) with additional domains, which can be expected to
+have specific roles during the infection of birds, since they are unique to avian adenoviruses and
+Marek's disease-like viruses, a group of pathogenic avian herpesviruses.
+Conclusions: We could characterize most of the previously unassigned ORFs pointing to
+functions in host-virus interaction. The results provide new directives for rationally designed
+experiments.
+Background
+Chicken embryo lethal orphan virus (CELO) is an adeno-
+virus infecting avian species [1,2]. It is a member of the
+genus Aviadenovirus and also referred to as Fowl Adenovi-
+rus 1 (FAdV-1). Compared to mammalian and, in partic-
+ular, human adenoviruses of the genus Mastadenovirus,
+which have been studied extensively over the years
+(reviewed in [3]), relatively little information is available
+Published: 07 November 2003
+BMC Bioinformatics 2003, 4:55
+Received: 02 September 2003
+Accepted: 07 November 2003
+This article is available from: http://www.biomedcentral.com/1471-2105/4/55
+© 2003 Washietl and Eisenhaber; licensee BioMed Central Ltd. This is an Open Access article: verbatim copying and redistribution of this article are per-
+mitted in all media for any purpose, provided this notice is preserved along with the article's original URL.
+BMC Bioinformatics 2003, 4 http://www.biomedcentral.com/1471-2105/4/55
+Page 2 of 17
+(page number not for citation purposes)
+on avian adenoviruses. In 1996, CELO was the first virus
+of this group to be completely sequenced [4].
+The analysis of the sequence revealed that the central por-
+tion of the 43.8 kb long, double-stranded, linear DNA
+genome is organized similar to mammalian adenoviruses.
+Genes for the major structural proteins (e.g. IIIa, hexon,
+penton base) as well as crucial functional proteins (e.g.
+DNA-polymerase, protease) are well conserved with
+respect to amino acid sequence and location. However,
+the important E1A, E1B, E3 and E4 regions, mainly
+responsible for host cell interaction and immune modula-
+tion/evasion in mammalian adenoviruses, could not be
+identified. Instead, two unique terminal regions of about
+6 kb and 12 kb rich in open reading frames with no
+homologs in mammalian adenoviruses could be found.
+This surprising result suggests that the basic properties of
+the replication cycle are similar in both groups whereas
+they encode a completely different set of proteins for host
+interaction. Only a few of these proteins have been func-
+tionally characterized so far.
+ORF-1 is significantly homologous to dUTP-pyrophos-
+phatases and was reported to have this enzymatic activity
+[4]. ORF-1 is the only sequence in the terminal regions
+which has homologs in mastadenoviruses (ORF-1 of early
+region 4). In human adenovirus 9, this protein has
+growth-transforming properties and is an important
+oncogenic determinant [5].
+ORF-8, which has been designated Gam1, is probably the
+most intriguing protein found in CELO. Originally identi-
+fied as a novel antiapoptotic protein [6] and further
+shown to induce heat shock response necessary for repli-
+cation [7], it is now known to influence host gene expres-
+sion by inactivation of histone deacetylase 1 [4,8,9].
+Together with another unique protein (ORF-22), Gam1
+influences also the pRb/E2F pathway crucial for cell-cycle
+progression. Both proteins bind pRb and, thus, act as
+functional analogs of the prominent adenoviral E1A pro-
+tein [10].
+For the rest of the unique ORFs, experimental data is
+sparse if available at all. Mutational studies found most of
+them to be dispensable for viral replication under differ-
+ent experimental settings [11,12]. In an attempt to charac-
+terize the transcriptional organisation of CELO, the
+corresponding RNAs for some of the ORFs together with
+their expression kinetics could be identified [13]. How-
+ever, the functions of these proteins during the viral life
+cycle are still completely unknown. Since they are thought
+to be implicated in such critical areas of biology as for
+example cell cycle control and immune response to viral
+infections, these proteins are of special interest. Moreover,
+CELO has been considered for use as a gene delivery vec-
+tor with promising features for both human gene therapy
+and vaccination applications in aviculture [11,12,14]. A
+better understanding of CELO biology could help to pro-
+mote such applications.
+In this contribution, we report a complete, systematic, in-
+depth sequence analysis of all potential coding sequences
+in the CELO genome. Applying a relevant subset of the
+most advanced analyzing methods available at present,
+we determined the molecular architecture of the putative
+proteins and uncovered distant homologies, evolutionary
+relationships and possible molecular and cellular func-
+tions. If available, we also analyzed homologous
+sequences of closely related avian adenoviruses. These are
+(i) Fowl Adenovirus 9 (FAdV-9, formerly known in litera-
+ture as FAdV-8) [15-17], (ii) strain CFA40, a hypervirulent
+variant of FAdV-9 [18] and (iii) FAdV-10. For FAdV-9, the
+complete genomic sequence is available, for CFA40 and
+FAdV-10 only fragments of the nucleic acid sequence are
+known. We anticipate that our results will stimulate exper-
+imental studies of CELO ORFs with newly assigned
+molecular and/or cellular functions.
+Results
+Refinement and analysis of potential coding regions
+The complete CELO sequence has been analyzed upon its
+initial sequencing [4]. In the central region ranging from
+approximately nt 6000 to 31000, most of the ORFs could
+be reliably assigned to proteins that have been previously
+described for mastadenoviruses. In the terminal regions
+(appr. nt 0–6000 and 31000–43804) no sequence simi-
+larity to known adenoviral sequences could be detected
+on the nucleic acid or protein level. Originally, 22 poten-
+tial protein coding sequences were proposed to reside in
+the unique terminal regions [4]. They have found their
+way into public databases and are referred to throughout
+literature. Those putative proteins are exclusively ORFs
+which are longer than 99 amino acids and start with a
+methionine. This is a rather arbitrary approach and, since
+also the experimental studies fall short in detecting and
+characterizing all RNAs of these regions [13], we had to
+refine the prediction of protein coding regions in order
+not to miss important information due to wrong concep-
+tual translations. We did a complete retranslation of the
+genome in all six frames also considering ORFs shorter
+than 99 amino acids and without a starting methionine,
+we further compared the potential coding regions to the
+related avian adenoviruses, especially to the complete
+genome of FAdV-9, and integrated all available experi-
+mental data [13,15-17] as well as the results of our subse-
+quent protein sequence analysis. Table 1 and Fig. 1 list the
+most likely coding regions that could be identified. If pos-
+sible, we adhere to the nomenclature introduced by Chi-
+occa et al. [4].
+

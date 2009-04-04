@@ -276,32 +276,30 @@ mxml_node_t* wordList(mxml_node_t *xml){
 
 mxml_node_t* text(mxml_node_t *xml){
 
-  //int text(char* uri, int pageNo, float x1, float y1, float x2, float y2){  
+  mxml_node_t *node, *xmlout, *output_tag, *status_tag;
+  char *in_file;
+  PDFDoc *doc;
+  GooString *filename_g;
+  TextOutputDev *textOut;
 
-  PopplerRectangle area;
-  GError *error;
-  PopplerDocument *document;
-  PopplerPage *page;
-  char *text;
-
-  char *uri;
-  int pageNo;
-  float x1, y1, x2, y2;
-
-  document = poppler_document_new_from_file (uri, NULL, &error);
-  page = poppler_document_get_page(document, pageNo);
-
-  area.x1 = x1;
-  area.y1 = y1;
-  area.x2 = x2;
-  area.y2 = y2;
-
-  text = poppler_page_get_text (page, POPPLER_SELECTION_WORD, &area);
+  if (!globalParams) {
+    globalParams = new GlobalParams();
+  }
   
-  printf("%s\n",text);
+  filename_g = new GooString (xmlGet(xml,"inFile"));
 
-  //return 1;
-   
+  doc = new PDFDoc(filename_g, NULL, NULL);
+
+  textOut = new TextOutputDev("-", gFalse, gFalse, gFalse);
+  
+  if (textOut->isOk()) {
+    doc->displayPages(textOut, 1, doc->getNumPages(), 72, 72, 0, gTrue, gFalse, gFalse);
+  } else {
+    printf("ERROR\n");
+    exit(1);
+  }
+  
+  exit(0);
 }
 
 static cairo_status_t write_png_stream (void *in_closure, const unsigned char *data, unsigned int length){
