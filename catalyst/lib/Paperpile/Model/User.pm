@@ -392,6 +392,7 @@ sub delete_folder {
   }
 }
 
+
 sub get_tags {
   ( my $self) = @_;
 
@@ -672,8 +673,54 @@ sub add_attachment {
 
   $self->dbh->do("INSERT INTO Attachments (file_name,publication_id) VALUES ($file, $rowid)");
 
+}
+
+
+sub delete_attachment{
+
+  my ( $self, $rowid, $is_pdf ) = @_;
+
+  my $path;
+
+  my $paper_root=$self->get_setting('paper_root');
+
+  if ($is_pdf){
+    ( my $pdf ) =
+      $self->dbh->selectrow_array("SELECT pdf FROM Publications WHERE rowid=$rowid ");
+
+    $path = File::Spec->catfile( $paper_root, $pdf );
+
+    ## TODO: Error handling to ensure consistency between database and file-tree
+    unlink($path);
+    $self->update_field('Publications', $rowid, 'pdf','');
+
+  } else {
+
+    ( my $file, my $pub_rowid ) =
+      $self->dbh->selectrow_array("SELECT file_name, publication_id FROM Attachments WHERE rowid=$rowid");
+
+    $path = File::Spec->catfile( $paper_root, $file);
+
+    unlink($path);
+    $self->dbh->do("DELETE FROM Attachments WHERE rowid=$rowid");
+    $self->dbh->do("UPDATE Publications SET attachments=attachments-1 WHERE rowid=$pub_rowid");
+
+  }
+
+  ## Remove directory if empty
+
+  my ($volume,$dir,$file_name) = File::Spec->splitpath( $path );
+
+  # Never remove the paper_root even if its empty;
+  return if (File::Spec->canonpath( $paper_root ) eq File::Spec->canonpath( $dir ));
+
+  # Simply remove it; will not do any harm if it is not empty; Did not
+  # find an easy way to check if dir is empty, but it does not seem
+  # necessary anyway
+  rmdir $dir;
 
 }
+
 
 
 # Remove the item from the comma separated list
@@ -699,6 +746,8 @@ sub _remove_from_flatlist {
   return join( ',', @newParts );
 
 }
+
+
 
 
 

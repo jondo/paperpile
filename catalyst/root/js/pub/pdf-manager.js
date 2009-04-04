@@ -12,22 +12,22 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</tpl>',
         
         '<tpl if="pdf">',
-        '<li id="open-pdf-{id}"><a href="#">Open PDF</a></li>',
-        '<li id="delete-pdf-{id}"><a href="#">Delete PDF</a></li>',
+        '<li id="open-pdf-{id}"><a href="#" action="open-pdf">Open PDF</a></li>',
+        '<li id="delete-pdf-{id}"><a href="#" action="delete-pdf">Delete PDF</a></li>',
         '</tpl>',
 
         '<tpl if="!pdf">',
         '<tpl if="linkout">',
-        '<li id="download-pdf-{id}"><a href="#">Download PDF</a></li>',
+        '<li id="download-pdf-{id}"><a href="#" action="download-pdf">Download PDF</a></li>',
         '</tpl>',
-        '<li id="attach-pdf-{id}"><a href="#">Attach PDF</a></li>',
+        '<li id="attach-pdf-{id}"><a href="#" action="attach-pdf">Attach PDF</a></li>',
         '</tpl>',
-        '<li id="attach-file-{id}"><a href="#">Attach File</a></li>',
+        '<li id="attach-file-{id}"><a href="#" action="attach-file">Attach File</a></li>',
        
         '<tpl if="attachments">',
         '<ul class="pp-attachments">',
         '<tpl for="attachments_list">',
-        '<li><a href="{link}" target="_blank">{file}</a><a href=""</li>',
+        '<li><a href="{link}" target="_blank">{file}</a><a href="#" action="delete-file" rowid="{rowid}">Delete</a></li>',
         '</tpl>',
         '</ul>',
         
@@ -81,28 +81,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         //var attachPDF_link=Ext.Element.get('attach-pdf-'+this.id);
         //var attachFile_link=Ext.Element.get('attach-file-'+this.id);
 
-        //if (attachPDF_link){
-        //    attachPDF_link.on('click', this.attachFile, this, {isPDF:true});
-        //}
-
-        //if (attachFile_link){
-        //    attachFile_link.on('click', this.attachFile, this, {isPDF:false});
-        //}
-
-        //Ext.select('a').on('click', function(e, el, o){
-        //    alert('!');
-        //}); 
-        
-        //this.html.on('click', function(e,el,o){
-        ///    console.log("inhere");
-        //}, null );
-
-
-        //Ext.select('ul.pp-pdf-manager').on('click', function(e, el, o){
-       ///     console.log("inhere");
-        //});
-
-
         /*
         
         this.progressBar = new Ext.ProgressBar({
@@ -127,12 +105,31 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     
     installEvents: function(el){
         el.on('click', function(e, el, o){
-            console.log("inhere");
-        });
+            switch(el.getAttribute('action')){
+            case 'attach-pdf':
+                this.attachFile(true);
+                break;
+            case 'delete-pdf':
+                this.deleteFile(true);
+                break;
+            case 'attach-file':
+                this.attachFile(false);
+                break;
+            case 'delete-file':
+                this.deleteFile(false, el.getAttribute('rowid'));
+                break;
+
+            }
+
+        }, this, {delegate:'a'});
     },
 
-        
-    attachFile: function(e,el,pars){
+    //
+    // Attach a file. Either it is *the* PDF of the citation or a
+    // supplementary file (given by isPDF).
+    //
+            
+    attachFile: function(isPDF){
 
         var fc=new Paperpile.FileChooser({
             callback:function(button,path){
@@ -144,16 +141,17 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                                     rowid: this.data._rowid,
                                     grid_id: this.grid_id,
                                     file:path,
-                                    is_pdf: (pars.isPDF) ? 1:0
+                                    is_pdf: (isPDF) ? 1:0
                                   },
                           method: 'GET',
                           success: function(response){
                               var json = Ext.util.JSON.decode(response.responseText);
                               if (json.pdf_file){
                                   Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf',json.pdf_file);
-                                  this.updateDetail(this.data);
+                              } else {
+                                  Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments+1);
                               }
-                              
+                              this.updateDetail(this.data);
                           }, 
                           scope:this,
                         });
@@ -163,6 +161,42 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         });
         
         fc.show();
+
+    },
+
+    //
+    // Delete file. isPDF controls whether it is *the* PDF or some
+    // other attached file. In the latter case rowid has to be
+    // specified as the rowid of the file in the 'Attachments' table
+    //
+    
+    deleteFile: function(isPDF, rowid){
+
+        var successFn;
+
+        if (isPDF) {
+            successFn=function(response){
+                Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf','');
+                this.updateDetail(this.data);
+            }
+        } else {
+            successFn=function(response){
+                Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments+1);
+                this.updateDetail(this.data);
+            }
+        }
+
+        Ext.Ajax.request(
+            { url: '/ajax/attachments/delete_file',
+              params: { sha1: this.data.sha1,
+                        rowid: isPDF ? this.data._rowid : rowid,
+                        is_pdf: (isPDF) ? 1:0,
+                        grid_id: this.grid_id,
+                      },
+              method: 'GET',
+              success: successFn,
+              scope:this,
+            });
 
     },
 

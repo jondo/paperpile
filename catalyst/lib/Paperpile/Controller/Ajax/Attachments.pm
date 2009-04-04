@@ -33,12 +33,14 @@ sub attach_file : Local {
   if ($is_pdf){
 
     # File name relative to [paper_root] is [pdf_pattern].pdf
-    my $relative_dest = $pub->format_pattern( $settings->{pdf_pattern}, { key => $pub->citekey } );
+    my $relative_dest = $pub->format_pattern( $settings->{pdf_pattern}, { key => $pub->citekey } ) . ".pdf";
 
     # Absolute  path is [paper_root]/[pdf_pattern].pdf
-    my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest ) . ".pdf";
+    my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
 
-    $self->_copy_file($source, $absolute_dest);
+    # Copy file, file name can be changed if it was not unique
+    $absolute_dest=$self->_copy_file($source, $absolute_dest);
+    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
 
     $c->model('User')->update_field('Publications', $rowid, 'pdf', $relative_dest);
     $c->stash->{pdf_file} = $relative_dest;
@@ -55,10 +57,11 @@ sub attach_file : Local {
     # Absolute  path is [paper_root]/[attachment_pattern]/$file_name
     my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
 
-    $self->_copy_file($source, $absolute_dest);
+    # Copy file, file name can be changed if it was not unique
+    $absolute_dest=$self->_copy_file($source, $absolute_dest);
+    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
 
     $c->model('User')->add_attachment($relative_dest, $rowid);
-
   }
 
   $c->stash->{success} = 'true';
@@ -99,19 +102,69 @@ sub list_files : Local {
 
 }
 
+sub delete_file : Local {
+  my ( $self, $c ) = @_;
+
+  my $rowid  = $c->request->params->{rowid};
+  my $is_pdf = $c->request->params->{is_pdf};
+
+  my $grid_id = $c->request->params->{grid_id};
+  my $sha1    = $c->request->params->{sha1};
+  my $plugin  = $c->session->{"grid_$grid_id"};
+
+  $c->model('User')->delete_attachment($rowid,$is_pdf);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+
+# Copies file $source to $dest. Creates directory if not already
+# exists and makes sure that file name is unique.
 
 sub _copy_file{
 
   my ( $self, $source, $dest ) = @_;
 
   # Create directory if not already exists
-  my ($volume,$dirs,$file_name) = File::Spec->splitpath( $dest );
-  mkpath($dirs);
+  my ($volume,$dir,$file_name) = File::Spec->splitpath( $dest );
+  mkpath($dir);
 
-  ## Todo check if unique
+  # Make sure file-name is unique
+  # For PDFs it is necessarily unique if the PDF pattern includes [key], 
+  # However, we allow arbitrary patterns so it can happen that PDFs are not unique.
+
+  # if foo.doc already exists create foo_1.doc
+  if (-e $dest){
+    my $basename=$file_name;
+    my $suffix='';
+    if ($file_name=~/^(.*)\.(.*)$/){
+      ($basename, $suffix)=($1, $2);
+    }
+
+    my @numbers=();
+    foreach my $file (glob("$dir/*")){
+      if ($file =~ /$basename\_(\d+)\.$suffix$/){
+        push @numbers, $1;
+      }
+    }
+    my $new_number=1;
+    if (@numbers){
+      @numbers=sort @numbers;
+      $new_number=$numbers[$#numbers]+1;
+    }
+
+    $dest=File::Spec->catfile($dir,"$basename\_$new_number");
+    if ($suffix){
+      $dest.=".$suffix";
+    }
+  }
 
   # copy the file
   copy($source, $dest);
+
+  return $dest;
 
 }
 
