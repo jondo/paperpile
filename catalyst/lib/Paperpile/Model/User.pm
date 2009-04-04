@@ -5,8 +5,10 @@ use Carp;
 use base 'Paperpile::Model::DBIbase';
 use Data::Dumper;
 use Tree::Simple;
+use XML::Simple;
 use FreezeThaw qw/freeze thaw/;
 use Moose;
+use Paperpile::Model::App;
 
 with 'Catalyst::Component::InstancePerContext';
 
@@ -60,7 +62,7 @@ sub init_db {
   # Full text search table
   $self->dbh->do('DROP TABLE IF EXISTS Fulltext');
   $self->dbh->do(
-    "CREATE VIRTUAL TABLE Fulltext using fts3(title,key,abstract,notes,author,tag,folders,year,journal);");
+    "CREATE VIRTUAL TABLE Fulltext using fts3(title,key,abstract,notes,author,tag,folders,year,journal,text);");
 
   # Create user settings table
   $self->dbh->do('DROP TABLE IF EXISTS Settings');
@@ -172,6 +174,7 @@ sub create_pub {
       author   => $pub->_authors_display,
       tag      => $pub->tags,
       folders  => $pub->folders,
+      text     => '',
     }
   );
 
@@ -524,9 +527,10 @@ sub fulltext_search {
     my $pub = Paperpile::Library::Publication->new();
     foreach my $field ( keys %$row ) {
 
-      next if $field eq 'author';    # is not a standard field of
-                                     # Publication class, real author
-                                     # data comes from main table
+      next if $field ~~ ['author','text'];    # fields only in
+                                              # fulltext, named
+                                              # differently or absent
+                                              # in Publications table
       my $value = $row->{$field};
 
       $field = 'citekey' if $field eq 'key';    # citekey is called 'key'
@@ -745,8 +749,32 @@ sub index_pdf {
 
   my ( $self, $rowid, $pdf_file) = @_;
 
-  print STDERR "============> $rowid, $pdf_file \n";
+  my $app_model = Paperpile::Model::App->new();
+  my $app_db = Paperpile::Utils->path_to('db/app.db');
+  $app_model->set_dsn("dbi:SQLite:$app_db");
 
+  my $bin = Paperpile::Utils->get_binary('extpdf',$app_model->get_setting('platform'));
+
+  my %extpdf;
+
+  $extpdf{command} = 'TEXT';
+  $extpdf{inFile} =  $pdf_file ;
+
+  my $xml = XMLout( \%extpdf, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
+
+  print STDERR $xml;
+
+  print STDERR "$bin";
+
+  my ( $fh, $filename ) = File::Temp::tempfile();
+  print $fh $xml;
+  close($fh);
+
+  my @text=`$bin $filename`;
+
+  print STDERR @text;
+
+  #UPDATE Fulltext SET text='inhereX' WHERE rowid=1
 
 
 }
