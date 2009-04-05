@@ -12,20 +12,19 @@ use 5.010;
 
 extends('Paperpile::Library::Publication::Bibutils');
 
-our @types=qw( ARTICLE
-              BOOK
-              BOOKLET
-              INBOOK
-              INCOLLECTION
-              PROCEEDINGS
-              INPROCEEDINGS
-              MANUAL
-              MASTERSTHESIS
-              PHDTHESIS
-              TECHREPORT
-              UNPUBLISHED
-              MISC );
-
+our @types = qw( ARTICLE
+  BOOK
+  BOOKLET
+  INBOOK
+  INCOLLECTION
+  PROCEEDINGS
+  INPROCEEDINGS
+  MANUAL
+  MASTERSTHESIS
+  PHDTHESIS
+  TECHREPORT
+  UNPUBLISHED
+  MISC );
 
 ## TODO: currently not handled:
 # CONTENTS (don't know what it is)
@@ -51,17 +50,15 @@ our @types=qw( ARTICLE
 # Booklet is not explicitely considered, is implicitely handled as book; seems to be fine for every practical
 # purpose
 
-
-
 # Built-in fields
-has 'sha1'       => ( is => 'rw' );
-has '_rowid'     => ( is => 'rw', isa => 'Int' );
-has 'created'    => ( is => 'rw', isa => 'Str' );
-has 'last_read'  => ( is => 'rw', isa => 'Str' );
-has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
+has 'sha1'        => ( is => 'rw' );
+has '_rowid'      => ( is => 'rw', isa => 'Int' );
+has 'created'     => ( is => 'rw', isa => 'Str' );
+has 'last_read'   => ( is => 'rw', isa => 'Str' );
+has 'times_read'  => ( is => 'rw', isa => 'Int', default => 0 );
 has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
 
-has 'pdf'        => ( is => 'rw', isa => 'Str', default => '' );
+has 'pdf' => ( is => 'rw', isa => 'Str', default => '' );
 
 # Read other fields from config file
 
@@ -89,9 +86,11 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 # Helper fields which have no equivalent field in the database
 has '_authors_display'  => ( is => 'rw', isa => 'Str' );
 has '_citation_display' => ( is => 'rw', isa => 'Str' );
-has '_imported'      => ( is => 'rw', isa => 'Bool' );
-has '_details_link'      => ( is => 'rw', isa => 'Str' );
-
+has '_imported'         => ( is => 'rw', isa => 'Bool' );
+has '_details_link'     => ( is => 'rw', isa => 'Str' );
+has '_snippets_text'     => ( is => 'rw', isa => 'Str' );
+has '_snippets_abstract' => ( is => 'rw', isa => 'Str' );
+has '_snippets_notes'    => ( is => 'rw', isa => 'Str' );
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -107,12 +106,12 @@ sub refresh_fields {
     foreach my $a ( split( /\band\b/, $self->authors ) ) {
       push @display, Paperpile::Library::Author->new( full => $a )->nice;
     }
-    $self->_authors_display( join( ', ', @display) );
+    $self->_authors_display( join( ', ', @display ) );
   }
 
-  my $cit=$self->format_citation;
+  my $cit = $self->format_citation;
 
-  if ($cit){
+  if ($cit) {
     $self->_citation_display($cit);
   }
 
@@ -126,13 +125,13 @@ sub calculate_sha1 {
 
   my $ctx = Digest::SHA1->new;
 
-  if ( ($self->authors or $self->_authors_display) and $self->title ) {
-    if ($self->authors){
-      $ctx->add( encode_utf8($self->authors) );
+  if ( ( $self->authors or $self->_authors_display ) and $self->title ) {
+    if ( $self->authors ) {
+      $ctx->add( encode_utf8( $self->authors ) );
     } else {
-      $ctx->add( encode_utf8($self->_authors_display) );
+      $ctx->add( encode_utf8( $self->_authors_display ) );
     }
-    $ctx->add( encode_utf8($self->title) );
+    $ctx->add( encode_utf8( $self->title ) );
     $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
   }
 
@@ -283,12 +282,11 @@ sub format_pattern {
 
   $pattern =~ s/\[journal\]/$journal/g;
 
-
   # Custom susbstitutions, given as parameter
 
-  if (defined $substitutions){
-    foreach my $key (keys %$substitutions){
-      my $value=$substitutions->{$key};
+  if ( defined $substitutions ) {
+    foreach my $key ( keys %$substitutions ) {
+      my $value = $substitutions->{$key};
       $pattern =~ s/\[$key\]/$value/g;
     }
   }
@@ -323,8 +321,6 @@ sub _setcase {
 sub list_types {
   return @types;
 }
-
-
 
 1;
 

@@ -32,15 +32,29 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     
         var renderPub=function(value, p, record){
 
-            var t = new Ext.Template(
+            // Can possibly be speeded up with compiling the template.
+
+            var t = new Ext.XTemplate(
                 '<p class="pp-grid-title">{title}</p>',
-                '<p class="pp-grid-authors">{authors}</p>',
-                '<p class="pp-grid-citation">{citation}</p>'
+                '<p class="pp-grid-authors">{_authors_display}</p>',
+                '<p class="pp-grid-citation">{_citation_display}</p>',
+                '<tpl if="_snippets_text">',
+                '<p class="pp-grid-snippets">{_snippets_text}</p>',
+                '</tpl>',
+                '<tpl if="_snippets_abstract">',
+                '<p class="pp-grid-snippets">{_snippets_abstract}</p>',
+                '</tpl>',
+                '<tpl if="_snippets_notes">',
+                '<p class="pp-grid-snippets">{_snippets_notes}</p>',
+                '</tpl>'
             );
-            return t.apply({title:record.data.title,
-                            authors:record.data._authors_display,
-                            citation:record.data._citation_display,
-                           });
+            //return t.apply({title:record.data.title,
+            //                authors:record.data._authors_display,
+            //                citation:record.data._citation_display,
+            //               });
+            
+            return t.apply(record.data);
+
         }
     
         Ext.apply(this, {
@@ -159,13 +173,17 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 var json = Ext.util.JSON.decode(response.responseText);
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry Inserted.');
-                this.store.getAt(this.store.find('sha1',sha1)).set('_imported',1);
 
-                console.log(json.data);
-                console.log(this.store.getAt(this.store.find('sha1',sha1)));
+                var record=this.store.getAt(this.store.find('sha1',sha1));
+
+                // Only update relevant fields that have changed for performence reasons
+                //this.store.getAt(this.store.find('sha1',sha1)).data=json.data;
+                record.beginEdit();
+                record.set('_imported',1);
+                record.set('_rowid', json.data._rowid);
+                record.endEdit();
                 
-                this.store.getAt(this.store.find('sha1',sha1)).data=json.data;
-               
+                              
                 if (callback){
                     callback.createDelegate(scope,[json.data])();
                 }

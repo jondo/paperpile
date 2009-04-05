@@ -62,7 +62,7 @@ sub init_db {
   # Full text search table
   $self->dbh->do('DROP TABLE IF EXISTS Fulltext');
   $self->dbh->do(
-    "CREATE VIRTUAL TABLE Fulltext using fts3(title,key,abstract,notes,author,tag,folders,year,journal,text);");
+    "CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,tag,folders,year,journal);");
 
   # Create user settings table
   $self->dbh->do('DROP TABLE IF EXISTS Settings');
@@ -496,11 +496,12 @@ sub fulltext_count {
 }
 
 sub fulltext_search {
-  ( my $self, my $query, my $offset, my $limit ) = @_;
+  ( my $self, my $_query, my $offset, my $limit ) = @_;
 
-  my $where;
-  if ($query) {
-    $query = $self->dbh->quote("$query*");
+  my ($where, $query);
+
+  if ($_query) {
+    $query = $self->dbh->quote("$_query*");
     $where = "WHERE fulltext MATCH $query";
   } else {
     $where = '';    #Return everything if query empty
@@ -511,6 +512,7 @@ sub fulltext_search {
   # Publication class
   my $sth = $self->dbh->prepare(
     "SELECT *,
+     offsets(fulltext) as offsets,
      publications.rowid as _rowid,
      publications.title as title,
      publications.abstract as abstract,
@@ -527,22 +529,32 @@ sub fulltext_search {
     my $pub = Paperpile::Library::Publication->new();
     foreach my $field ( keys %$row ) {
 
-      next if $field ~~ ['author','text'];    # fields only in
-                                              # fulltext, named
-                                              # differently or absent
-                                              # in Publications table
+      if ( $field eq 'offsets' ) {
+        my ( $snippets_text, $snippets_abstract, $snippets_notes ) =
+          $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query );
+
+        $pub->_snippets_text($snippets_text);
+        $pub->_snippets_abstract($snippets_abstract);
+        $pub->_snippets_notes($snippets_notes);
+
+        next;
+      }
+
+      next if $field ~~ [ 'author', 'text' ];    # fields only in
+                                                 # fulltext, named
+                                                 # differently or absent
+                                                 # in Publications table
       my $value = $row->{$field};
 
-      $field = 'citekey' if $field eq 'key';    # citekey is called 'key'
-                                                # in ft-table for
-                                                # convenience
+      $field = 'citekey' if $field eq 'key';     # citekey is called 'key'
+                                                 # in ft-table for
+                                                 # convenience
 
       if ($value) {
 
         # Some unicode magic going one here. In principle perl uses utf-8 and
         # sqlite used utf8. However, strings returned by the DBI driver function
-        # are not perl utf-8 strings. We use here utf8::decode which seems to work,
-        # which does not seem that everything is right unicode-wise, so take care...
+        # are not perl utf-8 strings. We use here utf8::decode which seems to work
         utf8::decode($value);
 
         $pub->$field($value);
@@ -723,7 +735,6 @@ sub delete_attachment{
 
 
     if ($pdf){
-      print STDERR "===========> $pdf\n";
       $path = File::Spec->catfile( $paper_root, $pdf );
       unlink($path);
     }
@@ -776,20 +787,19 @@ sub index_pdf {
 
   my $xml = XMLout( \%extpdf, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
 
-  print STDERR $xml;
-
-  print STDERR "$bin";
-
   my ( $fh, $filename ) = File::Temp::tempfile();
   print $fh $xml;
   close($fh);
 
   my @text=`$bin $filename`;
 
-  print STDERR @text;
+  my $text='';
 
-  #UPDATE Fulltext SET text='inhereX' WHERE rowid=1
+  $text.=$_ foreach (@text);
 
+  $text=$self->dbh->quote($text);
+
+  $self->dbh->do("UPDATE Fulltext SET text=$text WHERE rowid=$rowid");
 
 }
 
@@ -820,7 +830,72 @@ sub _remove_from_flatlist {
 
 }
 
+sub _snippets {
 
+  my ( $self, $rowid, $offsets, $query ) = @_;
+
+  if (not $query){
+    return ('','','');
+  }
+
+  my @terms=split(/\s+/,$query);
+
+  @terms=($query) if (not @terms);
+
+  # Offset format is 4 integers separated by blank
+
+  # 1. The index of the column containing the match. Columns are
+  #    numbered starting from 0.
+
+  # 2. The term in the query expression which was matched. Terms are
+  #    numbered starting from 0.
+
+  # 3. The byte offset of the first character of the matching phrase,
+  #    measured from the beginning of the column's text.
+
+  # 4. Number of bytes in the match.
+
+  # This is the order of our fields in the fulltext table
+  my @fields = ( 'text', 'abstract', 'notes' );
+
+  my %snippets = ( text => '', abstract => '', notes => '' );
+
+  my $context=30; # Characters of context
+
+  while ( $offsets =~ /(\d+) (\d+) (\d+) (\d+)/g ) {
+
+    # We only generate snippets for text, abstract and notes
+    next if ( $1 > 2 );
+
+    my $field = $fields[$1];
+
+    # We currently take only the first occurence
+    if ( $snippets{$field} eq '' ) {
+      ( my $text ) = $self->dbh->selectrow_array("SELECT $field FROM Fulltext WHERE rowid=$rowid ");
+
+      # TODO: more sophisticated way of generating ends, etc.
+
+      my $from=$3-$context;
+      $from=0 if $from<0;
+
+      my $snippet = substr( $text, $from, $4+2*$context );
+
+      utf8::decode($snippet);
+      $snippet="...".$snippet."...";
+
+      foreach my $term (@terms){
+        print STDERR "===============> $term\n";
+        print STDERR "--------> $snippet\n";
+        $snippet=~s/($query)/<span class="highlight">$1<\/span>/ig;
+      }
+
+      $snippets{$field} = $snippet ;
+    }
+  }
+
+  return ($snippets{text}, $snippets{abstract}, $snippets{notes});
+
+}
 
 
 

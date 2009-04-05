@@ -114,6 +114,17 @@
     line-height: 1.5em;
 }
 
+.pp-grid-snippets{
+    line-height: 1.5em;
+}
+
+.pp-grid-snippets .highlight{
+    line-height: 1.5em;
+    background-color: #FFF6A9;
+}
+
+
+
 
 .pp-tree-heading{
     background:#eee url(/images/cmp-bg.gif) repeat-x;

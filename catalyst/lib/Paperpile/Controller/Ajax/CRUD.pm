@@ -27,6 +27,7 @@ sub insert_entry : Local {
 
   $pub->_imported(1);
 
+
   $c->stash->{data} = $pub->as_hash;
 
   $c->stash->{success} = 'true';
