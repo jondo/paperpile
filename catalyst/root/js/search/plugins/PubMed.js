@@ -21,9 +21,14 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
                       text: 'Import',
                       cls: 'x-btn-text-icon add',
                       listeners: {
-                          click:  {fn: this.insertEntry, scope: this}
+                          click:  {
+                              fn: function(){
+                                  this.insertEntry();
+                              },
+                              scope: this
+                          },
                       },
-                  },
+                  }
                  ],
         });
 

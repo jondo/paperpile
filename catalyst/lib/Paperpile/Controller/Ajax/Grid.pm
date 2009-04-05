@@ -71,7 +71,6 @@ sub resultsgrid : Local {
 
   my $entries = $plugin->page( $offset, $limit );
 
-
   if ( $plugin_name eq 'DB' ) {
     foreach my $pub (@$entries) {
       $pub->_imported(1);

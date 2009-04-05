@@ -23,9 +23,11 @@ sub insert_entry : Local {
 
   $c->model('User')->create_pub($pub);
 
-  $c->model('User')->index_pdf($pub->_rowid, '/home/wash/PDFs/gesell06.pdf');
+  #$c->model('User')->index_pdf($pub->_rowid, '/home/wash/PDFs/gesell06.pdf');
 
   $pub->_imported(1);
+
+  $c->stash->{data} = $pub->as_hash;
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');

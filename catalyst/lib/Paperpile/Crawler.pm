@@ -264,17 +264,14 @@ sub load_driver {
 
   my $self = shift;
 
-  #open( XML, "<" . $self->driver_file )
+  open( XML, "<" . $self->driver_file ) or croak( "Could not open driver file " . $self->driver_file );
 
-  open( XML, "</home/wash/play/Paperpile/catalyst/t/data/driver.xml")
-    or croak( "Could not open driver file " . $self->driver_file );
   my $content = '';
   $content .= $_ foreach (<XML>);
   $self->_driver( XMLin( $content, ForceArray => ['url','body','rule','pattern','site'] ) );
 
-  open(YAML,">/home/wash/play/Paperpile/catalyst/t/data/driver.yml");
-  print YAML YAML::Dump($self->_driver);
-
+  #open(YAML,">/home/wash/play/Paperpile/catalyst/t/data/driver.yml");
+  #print YAML YAML::Dump($self->_driver);
   #print Dumper($cfg);
 
 

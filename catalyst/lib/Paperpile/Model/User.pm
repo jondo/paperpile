@@ -596,17 +596,30 @@ sub standard_search {
 sub exists_pub {
   ( my $self, my $pubs ) = @_;
 
-  my $sth = $self->dbh->prepare("SELECT sha1 FROM publications WHERE sha1=?");
+  my $sth = $self->dbh->prepare("SELECT rowid, * FROM publications WHERE sha1=?");
 
   foreach my $pub (@$pubs) {
     $sth->execute( $pub->sha1 );
 
-    if ( $sth->fetchrow_arrayref ) {
-      $pub->_imported(1);
+    my $exists=0;
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+      $exists=1;
+      foreach my $field ( keys %$row ) {
+        my $value = $row->{$field};
+        if ($field eq 'rowid'){
+          $pub->_rowid($value);
+        } else {
+          if ($value) {
+            utf8::decode($value);
+            $pub->$field($value);
+          }
+        }
+      }
     }
-    else {
-      $pub->_imported(0);
-    }
+
+    $pub->_imported($exists);
+
   }
 }
 
@@ -708,9 +721,10 @@ sub delete_attachment{
     ( my $pdf ) =
       $self->dbh->selectrow_array("SELECT pdf FROM Publications WHERE rowid=$rowid ");
 
+
     if ($pdf){
+      print STDERR "===========> $pdf\n";
       $path = File::Spec->catfile( $paper_root, $pdf );
-      ## TODO: Error handling to ensure consistency between database and file-tree
       unlink($path);
     }
 
@@ -732,15 +746,15 @@ sub delete_attachment{
 
   ## Remove directory if empty
 
-  my ($volume,$dir,$file_name) = File::Spec->splitpath( $path );
-
-  # Never remove the paper_root even if its empty;
-  return if (File::Spec->canonpath( $paper_root ) eq File::Spec->canonpath( $dir ));
-
-  # Simply remove it; will not do any harm if it is not empty; Did not
-  # find an easy way to check if dir is empty, but it does not seem
-  # necessary anyway
-  rmdir $dir;
+  if ($path){
+    my ($volume,$dir,$file_name) = File::Spec->splitpath( $path );
+    # Never remove the paper_root even if its empty;
+    return if (File::Spec->canonpath( $paper_root ) eq File::Spec->canonpath( $dir ));
+    # Simply remove it; will not do any harm if it is not empty; Did not
+    # find an easy way to check if dir is empty, but it does not seem
+    # necessary anyway
+    rmdir $dir;
+  }
 
 }
 

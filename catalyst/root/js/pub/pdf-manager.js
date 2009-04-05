@@ -13,17 +13,28 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         
         '<tpl if="pdf">',
         '<li id="open-pdf-{id}"><a href="#" action="open-pdf">Open PDF</a></li>',
+        '<tpl if="_imported">',
         '<li id="delete-pdf-{id}"><a href="#" action="delete-pdf">Delete PDF</a></li>',
+        '</tpl>',
+        '<tpl if="!_imported">',
+        '<li id="import-pdf-{id}"><a href="#" action="import-pdf">Import PDF into local library.</a></li>',
+        '</tpl>',
+        
         '</tpl>',
 
         '<tpl if="!pdf">',
         '<tpl if="linkout">',
-        '<li id="download-pdf-{id}"><a href="#" action="download-pdf">Download PDF</a></li>',
+        '<li id="search-pdf-{id}"><a href="#" action="search-pdf">Get PDF</a></li>',
         '</tpl>',
+        '<tpl if="_imported">',
         '<li id="attach-pdf-{id}"><a href="#" action="attach-pdf">Attach PDF</a></li>',
         '</tpl>',
+        '</tpl>',
+
+        '<tpl if="_imported">',
         '<li id="attach-file-{id}"><a href="#" action="attach-file">Attach File</a></li>',
-       
+        '</tpl>',
+
         '<tpl if="attachments">',
         '<ul class="pp-attachments">',
         '<tpl for="attachments_list">',
@@ -36,22 +47,27 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</ul>',
 	  ],
 
-	  startingMarkup: '',
+	startingMarkup: '',
 	  
     initComponent: function() {
-		    this.tpl = new Ext.XTemplate(this.markup);
-		    Ext.apply(this, {
-			    bodyStyle: {
-				    background: '#ffffff',
-				    padding: '7px'
-			    },
-                autoScroll: true,
-			    html: this.startingMarkup
-		    });
+		this.tpl = new Ext.XTemplate(this.markup);
+		Ext.apply(this, {
+			bodyStyle: {
+				background: '#ffffff',
+				padding: '7px'
+			},
+            autoScroll: true,
+			html: this.startingMarkup
+		});
 		
         Paperpile.PDFmanager.superclass.initComponent.call(this);
 	},
-	  
+	
+
+    //
+    // Redraws the HTML template panel with new data from the grid
+    //
+    
     updateDetail: function(data) {
         this.data=data;
         this.data.id=this.id;
@@ -77,92 +93,112 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         } else {
             this.installEvents(this.tpl.overwrite(this.body, this.data, true));
         }
-
-        //var attachPDF_link=Ext.Element.get('attach-pdf-'+this.id);
-        //var attachFile_link=Ext.Element.get('attach-file-'+this.id);
-
-        /*
-        
-        this.progressBar = new Ext.ProgressBar({
-            id: 'progress_bar',
-            hidden:true,
-            applyTo: 'pbar'
-        });
-
-        if (data.pdf){
-            this.ownerCt.getLayout().setActiveItem('pdf_viewer');
-            //Ext.getCmp('pdf_viewer').initPDF(data.pdf);
-        } else {
-            this.ownerCt.getLayout().setActiveItem('pdf_manager');
-        }
-        */
 	},
 
     //
-    // Event handling for the HTML. Is called with the Ext.Element of the HTML 
-    // after the template is written
+    // Event handling for the HTML. Is called with 'el' as the Ext.Element of the HTML 
+    // after the template was written in updateDetail
     //
     
     installEvents: function(el){
         el.on('click', function(e, el, o){
             switch(el.getAttribute('action')){
-            case 'attach-pdf':
-                this.attachFile(true);
+
+                // Choose local PDF file and attach to database entry
+            case 'attach-pdf': 
+                this.chooseFile(true);
                 break;
+
+                // Search and download PDF file; if entry is already in database 
+                // attach PDF directly to it
+            case 'search-pdf':                 
+                this.searchPDF(true);
+                break;
+
+                // If PDF has been downloaded for an entry that is not
+                // already imported, import entry and attach PDF
+            case 'import-pdf':
+                var grid=this.ownerCt.ownerCt.items.get('center_panel').items.get(0);
+                var pdf=this.data.pdf;
+                grid.insertEntry(
+                    // Callback comes with updated data that includes
+                    // _rowid of newly inserted entry
+                    function(data){
+                        this.data=data;
+                        this.attachFile(1,pdf);
+                    }, this
+                );
+                break;
+                
+                // Delete attached PDF file from database entry
             case 'delete-pdf':
                 this.deleteFile(true);
                 break;
+                
+                // Attach an arbitrary number of files of any type to an entry in the database
             case 'attach-file':
-                this.attachFile(false);
+                this.chooseFile(false);
                 break;
+                
+                // Delete attached files
             case 'delete-file':
                 this.deleteFile(false, el.getAttribute('rowid'));
                 break;
-
             }
 
         }, this, {delegate:'a'});
     },
 
     //
-    // Attach a file. Either it is *the* PDF of the citation or a
+    // Choose a file from harddisk to attach. Either it is *the* PDF of the citation or a
     // supplementary file (given by isPDF).
     //
-            
-    attachFile: function(isPDF){
+    
+    chooseFile: function(isPDF){
 
         var fc=new Paperpile.FileChooser({
             callback:function(button,path){
                 console.log(this);
                 if (button == 'OK'){
-                    Ext.Ajax.request(
-                        { url: '/ajax/attachments/attach_file',
-                          params: { sha1: this.data.sha1,
-                                    rowid: this.data._rowid,
-                                    grid_id: this.grid_id,
-                                    file:path,
-                                    is_pdf: (isPDF) ? 1:0
-                                  },
-                          method: 'GET',
-                          success: function(response){
-                              var json = Ext.util.JSON.decode(response.responseText);
-                              if (json.pdf_file){
-                                  Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf',json.pdf_file);
-                              } else {
-                                  Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments+1);
-                              }
-                              this.updateDetail(this.data);
-                          }, 
-                          scope:this,
-                        });
+                    this.attachFile(isPDF, path);
                 }
             },
             scope:this
         });
         
         fc.show();
-
     },
+
+
+    //
+    // Attach a file. Either it is *the* PDF of the citation or a
+    // supplementary file (given by isPDF).
+    //
+            
+    attachFile: function(isPDF, path){
+
+        Ext.Ajax.request(
+            { url: '/ajax/attachments/attach_file',
+              params: { sha1: this.data.sha1,
+                        rowid: this.data._rowid,
+                        grid_id: this.grid_id,
+                        file:path,
+                        is_pdf: (isPDF) ? 1:0
+                      },
+              method: 'GET',
+              success: function(response){
+                  var json = Ext.util.JSON.decode(response.responseText);
+                  if (json.pdf_file){
+                      Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf',json.pdf_file);
+                  } else {
+                      Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments+1);
+                  }
+                  this.updateDetail(this.data);
+              }, 
+              scope:this,
+            });
+    },
+
 
     //
     // Delete file. isPDF controls whether it is *the* PDF or some
@@ -200,121 +236,128 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
     },
 
+    //
+    // Searches for a PDF link on the publisher site
+    //
 
     searchPDF: function(){
 
+        //this.progressBar.show();
+
+        var li=Ext.get('search-pdf-'+this.id);
+        var div=Ext.DomHelper.append(li, '<div id="progress-bar"></div>');
+
+        this.progressBar = new Ext.ProgressBar({
+            width: 300,
+            renderTo: 'progress-bar'
+        });
+
         this.progressBar.wait({text:"Searching PDF on publisher site", interval:100});
-        this.progressBar.show();
 
         Ext.Ajax.request(
             {   url: '/ajax/download/search',
                 params: { sha1: this.data.sha1,
-                          source_id: this.source_id,
+                          grid_id: this.grid_id,
                           linkout:this.data.linkout,
                         },
                 method: 'GET',
-                success: this.foundPDF,
+                success: function(response){
+                    var json = Ext.util.JSON.decode(response.responseText);
+                    Ext.getCmp('statusbar').clearStatus();
+                    if (json.pdf){
+                        this.downloadPDF(json.pdf);
+                        Ext.getCmp('statusbar').setText(json.pdf);
+                    } else {
+                        this.progressBar.destroy();
+                        Ext.getCmp('statusbar').setText('Could not find PDF');
+                    }
+                    
+                },
+
                 scope: this,
             });
 
     },
 
-    foundPDF: function(response){
-
-        var json = Ext.util.JSON.decode(response.responseText);
+    //
+    // Downloads a PDF and saves it to a temporary location. If
+    // citation data is already imported, the PDF is attached to this entry
+    //
+    
+    downloadPDF: function(pdf){
 
         this.progressBar.reset();
-        
-        if (json.pdf){
-            this.progressBar.text="Starting download...";
-            this.downloadPDF(json.pdf);
-        }
-        
-        Ext.getCmp('statusbar').clearStatus();
-        Ext.getCmp('statusbar').setText(json.pdf);
-    },
-
-
-    downloadPDF: function(pdf){
+        this.progressBar.text="Starting download...";
 
         Ext.Ajax.request(
             {   url: '/ajax/download/get',
                 params: { sha1: this.data.sha1,
-                          source_id: this.source_id,
+                          grid_id: this.grid_id,
                           url:pdf,
                         },
                 method: 'GET',
-                success: this.finishDownload,
+                success: function(response){
+                    var json = Ext.util.JSON.decode(response.responseText);
+                    Ext.getCmp('statusbar').clearStatus();
+                    if (json.pdf){
+                        Ext.TaskMgr.stop(this.progressTask);
+                        this.progressTask=null;
+                        this.checkProgress();
+                        if (this.data._imported){
+                            this.attachFile(true,json.pdf);
+                        } else {
+                            this.data.pdf=json.pdf;
+                            this.updateDetail(this.data);
+                        }
+                        Ext.getCmp('statusbar').setText('Downloaded '+json.pdf);
+                    }
+                },
                 scope: this
             });
 
-        var task = {
+        this.progressTask = {
             run: this.checkProgress,
             scope: this,
             interval: 500
         }
-        Ext.TaskMgr.start(task);
+        Ext.TaskMgr.start(this.progressTask);
         
     },
 
-    finishDownload: function(){
-        Ext.TaskMgr.stopAll();
-        this.checkProgress();
-        Ext.Ajax.request({
-            url: '/ajax/download/finish',
-            params: { sha1: this.data.sha1,
-                      source_id: this.source_id,
-                    },
-            method: 'GET',
-            success: function(response){
-                var json = Ext.util.JSON.decode(response.responseText);
-                this.progressBar.hide();
-                Ext.getCmp(this.source_id).store.getById(this.data.sha1).set('pdf',json.pdf_file);
-                Ext.getCmp('pdf_viewer').initPDF(json.pdf_file);
-                Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_viewer');
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Download finished.');
-            },
-            scope: this,
-        });
-
-    },
-
+    //
+    // Polls progress of current download and updates progress bar
+    //
     checkProgress: function(sha1){
-        
+
         Ext.Ajax.request({
             url: '/ajax/download/progress',
             params: { sha1: this.data.sha1,
-                     source_id: this.source_id,
+                      grid_id: this.grid_id,
             },
             method: 'GET',
             success: function(response){
                 var json = Ext.util.JSON.decode(response.responseText);
-                var fraction;
 
-                if (json.current_size){
-                    fraction=json.current_size/json.total_size;
+                // If polling progress task is not running any longer, we are finished.
+                if (!this.progressTask){
+                    this.progressBar.updateProgress(1.0,'Download finished.');
+                    return;
                 } else {
-                    fraction=0;
+                    var fraction;
+                    if (json.current_size){
+                        fraction=json.current_size/json.total_size;
+                    } else {
+                        fraction=0.0;
+                    }
+                    this.progressBar.updateProgress(fraction, "Downloading ("
+                                                    +Ext.util.Format.fileSize(json.current_size) 
+                                                    +" / "+ Ext.util.Format.fileSize(json.total_size)+")");
                 }
-                var pbar=this.progressBar;
-                pbar.updateProgress(fraction, "Downloading ("
-                                    +Ext.util.Format.fileSize(json.current_size) 
-                                    +" / "+ Ext.util.Format.fileSize(json.total_size)+")");
-                pbar.show();
-                
-                Ext.getCmp('statusbar').setText(fraction);
+                    
             },
             scope:this
         })
     },
-
-    showPDF: function(file){
-
-        Ext.getCmp('pdf_viewer').initPDF(file);
-        Ext.getCmp('canvas_panel').getLayout().setActiveItem('pdf_viewer');
-    }
-
 
 
 });

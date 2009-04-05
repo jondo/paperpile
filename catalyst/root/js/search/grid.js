@@ -141,8 +141,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     },
 
 
-   
-    insertEntry: function(){
+    //
+    // Inserts the entry into local database. Optionally a callback function+scope can be given;
+    // If no callback function is needed make sure function is called with insertEntry()
+    //
+
+    insertEntry: function(callback,scope){
         
         var sha1=this.getSelectionModel().getSelected().data.sha1;
         Ext.Ajax.request({
@@ -151,10 +155,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       grid_id: this.id,
                     },
             method: 'GET',
-            success: function(){
+            success: function(response){
+                var json = Ext.util.JSON.decode(response.responseText);
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry Inserted.');
                 this.store.getAt(this.store.find('sha1',sha1)).set('_imported',1);
+
+                console.log(json.data);
+                console.log(this.store.getAt(this.store.find('sha1',sha1)));
+                
+                this.store.getAt(this.store.find('sha1',sha1)).data=json.data;
+               
+                if (callback){
+                    callback.createDelegate(scope,[json.data])();
+                }
+
             },
             scope:this
         });

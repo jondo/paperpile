@@ -22,25 +22,21 @@ use 5.010;
 sub search : Local {
   my ( $self, $c ) = @_;
 
-  my $source_id = $c->request->params->{source_id};
-  my $sha1      = $c->request->params->{sha1};
-  my $source = $c->session->{"source_$source_id"};
-  my $url        = $c->request->params->{linkout};
+  my $grid_id = $c->request->params->{grid_id};
+  my $sha1    = $c->request->params->{sha1};
+  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $url     = $c->request->params->{linkout};
 
-  my $pub = $source->find_sha1($sha1);
+  my $pub = $plugin->find_sha1($sha1);
 
-  my $crawler=Paperpile::Crawler->new;
+  my $crawler = Paperpile::Crawler->new;
   $crawler->debug(1);
-  $crawler->driver_file('/home/wash/play/Paperpile/t/data/driver.xml');
+  $crawler->driver_file($c->path_to('data','pdf-crawler.xml')->stringify);
   $crawler->load_driver();
-  my $pdf=$crawler->search_file($url);
-
-  if (not defined $pdf){
-    $pdf='null';
-  }
+  my $pdf = $crawler->search_file($url);
 
   $c->stash->{success} = 'true';
-  $c->stash->{pdf} = "$pdf";
+  $c->stash->{pdf}     = "$pdf";
   $c->forward('Paperpile::View::JSON');
 
 }
@@ -48,55 +44,65 @@ sub search : Local {
 sub get : Local {
   my ( $self, $c ) = @_;
 
-  my $source_id = $c->request->params->{source_id};
+  my $grid_id = $c->request->params->{grid_id};
   my $sha1      = $c->request->params->{sha1};
-  my $source = $c->session->{"source_$source_id"};
-  my $url        = $c->request->params->{url};
+  my $plugin    = $c->session->{"grid_$grid_id"};
+  my $url       = $c->request->params->{url};
 
-  my $pub = $source->find_sha1($sha1);
+  my $pub = $plugin->find_sha1($sha1);
 
-  my $tmp_dir=$c->model('User')->get_setting('tmp_dir');
-  my $dir="$tmp_dir/download/$sha1";
+  my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
+  my $dir     = "$tmp_dir/download/$sha1";
   rmtree($dir);
   mkpath($dir);
-  my $file="$dir/paper.pdf";
+  my $file = "$dir/paper.pdf";
 
-  my $ua=Paperpile::Utils->get_browser();
-  my $res = $ua->request(HTTP::Request->new(GET => $url),
-  sub{
-      my ($data, $response, $protocol)=@_;
-      if (not -e $file){
-        my $length = $response->content_length;
-        open(SIZE, ">$file.size");
-        if (defined $length){
-          print SIZE "$length\n";
+  my $ua = Paperpile::Utils->get_browser();
+
+  eval {
+    my $res = $ua->request(
+      HTTP::Request->new( GET => $url ),
+      sub {
+        my ( $data, $response, $protocol ) = @_;
+        if ( not -e $file ) {
+          my $length = $response->content_length;
+          open( SIZE, ">$file.size" );
+          if ( defined $length ) {
+            print SIZE "$length\n";
+          } else {
+            print SIZE "null\n";    # Don't know size
+          }
+          close(SIZE);
+          open( FILE, ">$file" ) || die "Can't open $file: $!\n";
+          binmode FILE;
         } else {
-          print SIZE "null\n"; # Don't know size
+          open( FILE, ">>$file" ) || die "Can't open $file: $!\n";
+          binmode FILE;
         }
-        close(SIZE);
-        open(FILE, ">$file") || die "Can't open $file: $!\n";
-        binmode FILE;
-      } else {
-        open(FILE, ">>$file") || die "Can't open $file: $!\n";
-        binmode FILE;
+        print FILE $data or die "Can't write to $file: $!\n";
+        close FILE;
       }
-      print FILE $data or die "Can't write to $file: $!\n";
-      close FILE;
-    }
- );
+    );
 
-  if (fileno(FILE)) {
-    close(FILE) || die "Can't write to $file: $!\n";
-     if ($res->header("X-Died") || !$res->is_success) {
-       if (my $died = $res->header("X-Died")) {
-         print STDERR "$died\n";
-       }
-     }
-   } else {
-     if (my $died = $res->header("X-Died")) {
-       print STDERR "$died\n";
-     }
-   }
+    if ( fileno(FILE) ) {
+      close(FILE) || die "Can't write to $file: $!\n";
+      if ( $res->header("X-Died") || !$res->is_success ) {
+        if ( my $died = $res->header("X-Died") ) {
+          print STDERR "$died\n";
+        }
+      }
+    } else {
+      if ( my $died = $res->header("X-Died") ) {
+        print STDERR "$died\n";
+      }
+    }
+  };
+
+  if ($@){
+    $c->stash->{pdf}=undef;
+  } else {
+    $c->stash->{pdf}=$file;
+  }
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -132,7 +138,6 @@ sub finish : Local{
 
 }
 
-
 sub progress : Local {
   my ( $self, $c ) = @_;
 
@@ -152,10 +157,10 @@ sub progress : Local {
     chomp($total_size);
   } else {
     $current_size=0;
-    $total_size='null';
+    $total_size=undef;
   }
 
-  $c->stash->{success} = 'true';
+  $c->stash->{success} = \1;
   $c->stash->{current_size} = $current_size;
   $c->stash->{total_size} = $total_size;
   $c->forward('Paperpile::View::JSON');
