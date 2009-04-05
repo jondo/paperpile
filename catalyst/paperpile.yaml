@@ -1,5 +1,5 @@
 ---
-name: "PaperPile"
+name: "Paperpile"
 
 Model::App:
   dsn: "dbi:SQLite:__path_to(db/app.db)__"

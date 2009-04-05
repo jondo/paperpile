@@ -2,8 +2,8 @@
 # expected.  you have been warned
 use inc::Module::Install;
 
-name 'PaperPile';
-all_from 'lib/PaperPile.pm';
+name 'Paperpile';
+all_from 'lib/Paperpile.pm';
 
 requires 'Catalyst::Runtime' => '5.7014';
 requires 'Catalyst::Plugin::ConfigLoader';
