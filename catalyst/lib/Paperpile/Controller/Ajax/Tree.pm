@@ -8,7 +8,7 @@ use Data::Dumper;
 use 5.010;
 
 
-sub node : Local {
+sub get_node : Local {
   my ( $self, $c ) = @_;
 
   my $node = $c->request->params->{node};
@@ -122,7 +122,6 @@ sub delete_folder : Local {
   $c->forward('Paperpile::View::JSON');
 
 }
-
 
 
 sub move_in_folder : Local {
@@ -244,6 +243,43 @@ sub rename_node : Local {
 
 }
 
+sub move_node : Local {
+  my ( $self, $c ) = @_;
+
+  # The node that was moved
+  my $drop_node = $c->request->params->{drop_node};
+
+  # The node to which it was moved
+  my $target_node = $c->request->params->{target_node};
+
+  # Either 'append' for dropping into the node, or 'below' or 'above'
+  # for moving nodes on the same level
+  my $point = $c->request->params->{point};
+
+  my $tree= $c->session->{"tree"};
+
+  # Get nodes from the ids
+  my $drop_subtree = $c->forward('private/get_subtree',[$tree, $drop_node]);
+  my $target_subtree = $c->forward('private/get_subtree',[$tree, $target_node]);
+
+  # Remove the subtree that was moved
+  $drop_subtree=$drop_subtree->getParent->removeChild($drop_subtree);
+
+  # Re-insert at the appropriate node
+  if ($point eq 'append'){
+    $target_subtree->addChild($drop_subtree);
+  } else {
+    my $target_index=$target_subtree->getIndex();
+    $target_index++ if ($point eq 'below');
+    $target_subtree->getParent->insertChild($target_index, $drop_subtree);
+  }
+
+  $c->model('User')->save_tree($tree);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
 
 
 

@@ -3,13 +3,13 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     initComponent: function() {
 		Ext.apply(this, {
             title: 'Paperpile Pre 2',
-            enableDrop:true,
+            enableDD:true,
             ddGroup: 'gridDD',
             animate: false,
             lines:false,
             autoScroll: true,
             loader: new Paperpile.TreeLoader(
-                {  url: '/ajax/tree/node',
+                {  url: '/ajax/tree/get_node',
                    requestMethod: 'GET'
                 }
             ),
@@ -35,6 +35,51 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             beforenodedrop:{scope:this, fn:this.onNodeDrop},
             checkchange:{scope:this,fn:this.onCheckChange}
 		});
+
+        this.on('nodedragover', function(e){
+            //console.log(e.source);
+
+            // We are dragging from the data grid
+            if (e.source.dragData.grid){
+
+                // only 'appends' make sense
+                if (e.point != 'append'){
+                    e.cancel=true;
+                } else {
+                    // only allow drop on Folders and Tags
+                    if ((e.target.type == 'TAGS' || e.target.type == 'FOLDER') &&
+                        (e.target.id != 'FOLDER_ROOT')){
+                        e.cancel=false;
+                    } else {
+                        e.cancel=true;
+                    }
+                }
+               
+            } 
+            // We are dragging internal nodes from the tree
+            else {
+                
+                // Only allow operations within the same subtree,
+                // i.e. nodes are of the same type
+                if (e.source.dragData.node.type != e.target.type){
+                    e.cancel=true;
+                } else {
+
+                    // Allow only re-ordering in active folder and import plugins,
+                    // because we only support one level
+                    if ((e.target.type == 'ACTIVE' || e.target.type == 'IMPORT_PLUGIN') && e.point =='append'){
+                        e.cancel=true;
+                    } else {
+                        // Can't move node above root
+                        if (e.target.id.search('ROOT')!=-1 && e.point=='above'){
+                            e.cancel=true;
+                        }
+                    }
+                }
+            }
+           
+
+        });
 
 
         // Avoid selecting nodes; only allow under certain
@@ -62,8 +107,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             // all other nodes are handled via the generic plugin mechanism
             default:
 
-                // Skip "header" nodes 
-                if (node.id != 'ACTIVE_ROOT'){
+                // Skip "header" nodes indicated by XXX_ROOT
+
+                console.log(node.id);
+
+                if (node.id.search('ROOT')==-1){
 
                     // Collect plugin paramters
                     var pars={}
@@ -81,25 +129,39 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         });
 	},
     
-    onNodeDrop: function(d){
+    onNodeDrop: function(e){
 
-        Ext.Ajax.request({
-
-            url: '/ajax/tree/move_in_folder',
-            params: { node_id: d.target.id,
-                      sha1: d.data.selections[0].data.sha1,
-                      rowid: d.data.selections[0].data._rowid,
-                      grid_id: d.source.grid.id,
-                      path: this.relativeFolderPath(d.target)
-                    },
-            success: function(){
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Moved to folder');
-            },
-
-        });
-
-
+        // We're dragging from the data grid
+        if (e.source.dragData.grid){
+            Ext.Ajax.request({
+                url: '/ajax/tree/move_in_folder',
+                params: { node_id: e.target.id,
+                          sha1: e.data.selections[0].data.sha1,
+                          rowid: e.data.selections[0].data._rowid,
+                          grid_id: e.source.grid.id,
+                          path: this.relativeFolderPath(e.target)
+                        },
+                success: function(){
+                    Ext.getCmp('statusbar').clearStatus();
+                    Ext.getCmp('statusbar').setText('Moved to folder');
+                },
+            });
+        }
+        // We're dragging nodes internally
+        else {
+            console.log(e);
+            Ext.Ajax.request({
+                url: '/ajax/tree/move_node',
+                params: { target_node: e.target.id,
+                          drop_node: e.dropNode.id,
+                          point: e.point,
+                        },
+                success: function(){
+                    Ext.getCmp('statusbar').clearStatus();
+                    Ext.getCmp('statusbar').setText('Moved node');
+                },
+            });
+        }
     },
 
 
@@ -134,8 +196,14 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             node.select();
             menu=new Paperpile.Tree.ActiveMenu({node:node});
             break;
-        }
 
+        case 'IMPORT_PLUGIN':
+            this.allowSelect=true;
+            node.select();
+            menu=new Paperpile.Tree.ImportMenu({node:node});
+            break;
+        }
+        
         if (menu != null){
             menu.node=node;
             menu.showAt(e.getXY());
@@ -347,7 +415,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             params: pars,
             success: function(){
                 Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Added new active folder');
+                Ext.getCmp('statusbar').setText('Added new folder');
             },
         });
     },
@@ -395,7 +463,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                 },
                         success: function(){
                             Ext.getCmp('statusbar').clearStatus();
-                            Ext.getCmp('statusbar').setText('Renamed active folder');
+                            Ext.getCmp('statusbar').setText('Renamed folder');
                         },
                     });
                 },
@@ -441,7 +509,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         this.configureNode=node;
         var oldLoader=node.loader;
         var tmpLoader=new Paperpile.TreeLoader(
-            {  url: '/ajax/tree/node',
+            {  url: '/ajax/tree/get_node',
                baseParams: {checked:true},
                requestMethod: 'GET'
             });
@@ -511,12 +579,12 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
         var tree=Paperpile.main.tree;
 
         Ext.apply(config,{items:[
-            { itemId: 'folder_menu_new',
+            { id: 'folder_menu_new',
               text:'New Folder',
               handler: tree.newFolder,
               scope: tree
             },
-            { itemId: 'folder_menu_delete',
+            { id: 'folder_menu_delete',
               text:'Delete',
               handler: tree.deleteFolder,
               scope: tree
@@ -529,6 +597,18 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
         ]});
         
         Paperpile.Tree.FolderMenu.superclass.constructor.call(this, config);
+
+        this.on('beforeshow',
+                function(){
+                    if (this.node.id == 'FOLDER_ROOT'){
+                        this.items.get('folder_menu_delete').hide();
+                        this.items.get('folder_menu_rename').hide();
+                    } else {
+
+                    }
+                },
+                this
+               );
         
         this.on('beforehide',
                 function(){
@@ -537,6 +617,8 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
                 },
                 tree
                );
+
+
        
     },
 
@@ -610,7 +692,52 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
 
 });
 
+//
+// Context menu for import plugins
+// is called with the selected node as "node" config parameter
+//
 
+Paperpile.Tree.ImportMenu = Ext.extend(Ext.menu.Menu, {
+    
+    constructor:function(config) {
+        config = config || {};
+
+        var tree=Paperpile.main.tree;
+
+        Ext.apply(config,{items:[
+            { id: 'import_menu_configure',
+              text:'Configure',
+              handler: function(){
+                  Paperpile.main.tree.configureSubtree(this.node);
+              },
+              scope: this
+            }
+        ]});
+        
+        Paperpile.Tree.ImportMenu.superclass.constructor.call(this, config);
+        
+
+        this.on('beforeshow',
+                function(){
+                    console.log(this.node.id);
+                    if (this.node.id == 'IMPORT_PLUGIN_ROOT'){
+                        // more to come later
+                    } else {
+                        this.items.get('import_menu_configure').disable();
+                    }
+                },
+                this
+               );
+
+        this.on('beforehide',
+                function(){
+                    this.getSelectionModel().clearSelections();
+                    this.allowSelect=false;
+                },
+                tree
+               );
+    },
+});
 
 
 

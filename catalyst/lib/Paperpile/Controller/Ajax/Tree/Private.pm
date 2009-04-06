@@ -35,6 +35,8 @@ sub get_default_tree : Private {
     $root
   );
 
+  $local_lib->setUID('LOCAL_ROOT');
+
   #### / Local Library / Tags
 
   my $tags = Tree::Simple->new( {
@@ -45,7 +47,7 @@ sub get_default_tree : Private {
     },
     $local_lib
   );
-  $tags->setUID('TAGS');
+  $tags->setUID('TAGS_ROOT');
 
   # Initialize
   $self->_get_tags( $c, $tags );
@@ -97,12 +99,15 @@ sub get_default_tree : Private {
 
   my $plugins = Tree::Simple->new( {
       text    => 'Online Databases',
+      type    => 'IMPORT_PLUGIN',
       cls     => 'pp-tree-heading',
       iconCls => 'pp-icon-empty',
       hidden  => 0,
     },
     $root
   );
+
+  $plugins->setUID('IMPORT_PLUGIN_ROOT');
 
   $plugins->addChild(
     Tree::Simple->new( {
