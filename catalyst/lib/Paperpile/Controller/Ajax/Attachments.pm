@@ -41,6 +41,7 @@ sub attach_file : Local {
     # Copy file, file name can be changed if it was not unique
     $absolute_dest=$self->_copy_file($source, $absolute_dest);
 
+    # Add text of PDF to fulltext table
     $c->model('User')->index_pdf($rowid, $absolute_dest);
 
     $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;

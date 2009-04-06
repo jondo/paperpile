@@ -23,8 +23,6 @@ sub insert_entry : Local {
 
   $c->model('User')->create_pub($pub);
 
-  #$c->model('User')->index_pdf($pub->_rowid, '/home/wash/PDFs/gesell06.pdf');
-
   $pub->_imported(1);
 
 

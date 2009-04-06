@@ -736,6 +736,7 @@ sub delete_attachment{
 
     if ($pdf){
       $path = File::Spec->catfile( $paper_root, $pdf );
+      $self->dbh->do("UPDATE Fulltext SET text='' WHERE rowid=$rowid");
       unlink($path);
     }
 

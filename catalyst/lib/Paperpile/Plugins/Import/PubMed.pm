@@ -87,7 +87,6 @@ sub _linkOut {
   my $result = XMLin( $response->content );
 
   #print STDERR Dumper($result->{LinkSet}->{IdUrlList}->{IdUrlSet});
-
   #print STDERR $result->{LinkSet}->{IdUrlList}->{IdUrlSet};
 
   foreach my $entry ( @{ $result->{LinkSet}->{IdUrlList}->{IdUrlSet} } ) {
