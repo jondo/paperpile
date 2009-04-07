@@ -62,7 +62,7 @@ sub init_db {
   # Full text search table
   $self->dbh->do('DROP TABLE IF EXISTS Fulltext');
   $self->dbh->do(
-    "CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,tag,folders,year,journal);");
+    "CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,tags,folders,year,journal);");
 
   # Create user settings table
   $self->dbh->do('DROP TABLE IF EXISTS Settings');
@@ -172,7 +172,7 @@ sub create_pub {
       abstract => $pub->abstract,
       notes    => $pub->notes,
       author   => $pub->_authors_display,
-      tag      => $pub->tags,
+      tags      => $pub->tags,
       folders  => $pub->folders,
       text     => '',
     }

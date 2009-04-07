@@ -50,7 +50,8 @@ sub get_default_tree : Private {
   $tags->setUID('TAGS_ROOT');
 
   # Initialize
-  $self->_get_tags( $c, $tags );
+  $c->forward('get_tags',[$tags]);
+
 
   #### / Local Library / Folders
 
@@ -168,49 +169,7 @@ sub get_default_tree : Private {
 }
 
 
-sub get_js_object : Private {
 
-  my ( $self, $c, $node, $checked ) = @_;
-
-  my @output = ();
-
-  foreach my $child ( $node->getAllChildren ) {
-
-    # make deep copy to avoid touching the tree structure which gave
-    # unexpected results...
-    my $h = { %{ $child->getNodeValue() } };
-
-    # we store node ids explicitely as "UID"s in backend and as
-    # "node.id" in frontend
-    $h->{id} = $child->getUID;
-
-    # draw a checkbox for configuration mode
-    if ($checked) {
-      if ( $h->{hidden} ) {
-        $h->{checked} = \0;
-        $h->{hidden}  = 0;    # During configuration we have to show all nodes
-      } else {
-        $h->{checked} = \1;
-      }
-    }
-
-    if ( $h->{hidden} ) {
-      $h->{hidden} = \1;
-    } else {
-      $h->{hidden} = \0;
-    }
-
-    if ( $child->isLeaf() ) {
-      $h->{expanded} = \1;
-      $h->{children}=[];
-    }
-
-    push @output, $h;
-  }
-
-  return [@output];
-
-}
 
 sub get_subtree : Private {
 
@@ -245,7 +204,7 @@ sub get_subtree : Private {
 
 }
 
-sub _get_tags {
+sub get_tags : Private {
 
   my ( $self, $c, $tree ) = @_;
 
@@ -266,7 +225,7 @@ sub _get_tags {
     $tree->addChild(
       Tree::Simple->new( {
           text              => $tag,
-          type              => 'TAG',
+          type              => 'TAGS',
           hidden            => 0,
           iconCls           => 'pp-icon-tag',
           plugin_name       => 'DB',

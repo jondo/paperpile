@@ -5,17 +5,17 @@ Paperpile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
     initComponent:function() {
 		    Ext.apply(this, {
 		        selectedValues: {},
-            enableKeyEvents: true,
-			      boxElements: {},
-			      current: false,
-			      options: {
-				        className: 'bit',
-				        separator: ','
-			      },
-			      hideTrigger: true,
-			      grow: false
+                enableKeyEvents: true,
+			    boxElements: {},
+			    current: false,
+			    options: {
+				    className: 'bit',
+				    separator: ','
+			    },
+			    hideTrigger: true,
+			    grow: false
 		    });
-		    Paperpile.BoxSelect.superclass.initComponent.call(this);
+		Paperpile.BoxSelect.superclass.initComponent.call(this);
         
         this.on('focus',
                 function(){
@@ -27,79 +27,87 @@ Paperpile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 
         this.addEvents('modified');
 
-	  },
+	},
 	
 	onRender:function(ct, position) {
-		  Paperpile.BoxSelect.superclass.onRender.call(this, ct, position);
-		
-		  this.el.removeClass('x-form-text');
-		  this.el.className = 'maininput';
-		  this.el.setWidth(20);
+		Paperpile.BoxSelect.superclass.onRender.call(this, ct, position);
+        
+        // wash: avoid strange resizing flickering by hiding the
+        // element and showing again at the end of the function
 
-		  this.holder = this.el.wrap({
-			    'tag': 'ul',
-			    'class':'holder x-form-text'
-		  });
+        this.hide();
+
+		this.el.removeClass('x-form-text');
+		this.el.className = 'maininput';
+		this.el.setWidth(20);
+
+		this.holder = this.el.wrap({
+			'tag': 'ul',
+			'class':'holder x-form-text'
+		});
 				
-		  this.holder.on('click', function(e){
-			    e.stopEvent();
-			    if(this.maininput != this.current) this.focus(this.maininput);
-		  }, this);
-      
-		  this.maininput = this.el.wrap({
-			    'tag': 'li', 'class':'bit-input'
-		  });
+		this.holder.on('click', function(e){
+			e.stopEvent();
+			if(this.maininput != this.current) this.focus(this.maininput);
+		}, this);
+        
+		this.maininput = this.el.wrap({
+			'tag': 'li', 'class':'bit-input'
+		});
 		
 		
-		  Ext.apply(this.maininput, {
-			    'focus': function(){
-				      this.focus();
-			    }.createDelegate(this)
-		  })
+		Ext.apply(this.maininput, {
+			'focus': function(){
+				this.focus();
+			}.createDelegate(this)
+		})
 		
-		  this.store.on('datachanged', function(store){
-			    this.store.each(function(rec){
-				      if(this.checkValue(rec.data[this.valueField])){
-					        this.removedRecords[rec.data[this.valueField]] = rec;
-					        this.store.remove(rec);
-				      }
-			    }, this);
-		  }, this);
-      
-		  this.on('expand', function(store){
-			    this.store.each(function(rec){
-				      if(this.checkValue(rec.data[this.valueField])){
-					        this.removedRecords[rec.data[this.valueField]] = rec;
-					        this.store.remove(rec);
-				      }
-			    }, this);
-		  }, this);
+		this.store.on('datachanged', function(store){
+			this.store.each(function(rec){
+				if(this.checkValue(rec.data[this.valueField])){
+					this.removedRecords[rec.data[this.valueField]] = rec;
+					this.store.remove(rec);
+				}
+			}, this);
+		}, this);
+        
+		this.on('expand', function(store){
+			this.store.each(function(rec){
+				if(this.checkValue(rec.data[this.valueField])){
+					this.removedRecords[rec.data[this.valueField]] = rec;
+					this.store.remove(rec);
+				}
+			}, this);
+		}, this);
       
       // wash.
-		  this.on('keypress', function(field,e){
-		      if (e.getKey() == e.ENTER){
-              var val=this.getRawValue();
-              if (val != ''){
-                  if(!this.boxElements[val]){
-			                var caption;
-			                if(this.displayFieldTpl)
-				                  caption = this.displayFieldTpl.apply(val)
-			                else if(this.displayField)
-				                  caption = val;
-                      this.selectedValues[val] = val;
-                      this.addItem(val, val);
-                      this.clearValue();
-                      this.fireEvent('modified');
-                  }
-              }
+		this.on('keypress', function(field,e){
+		    if (e.getKey() == e.ENTER){
+                var val=this.getRawValue();
+                if (val != ''){
+                    if(!this.boxElements[val]){
+			            var caption;
+			            if(this.displayFieldTpl)
+				            caption = this.displayFieldTpl.apply(val)
+			            else if(this.displayField)
+				            caption = val;
+                        this.selectedValues[val] = val;
+                        this.addItem(val, val);
+                        this.clearValue();
+                        this.fireEvent('modified');
+                    }
+                }
 	        }
-      }, this);
+        }, this);
+        
+        if ( this.value == ''){
+            this.setRawValue(this.emptyMsg);
+        }
+		
+		this.removedRecords = {};
 
-      if ( this.value == ''){
-          this.setRawValue(this.emptyMsg);
-      }
-		  
-		  this.removedRecords = {};
+        this.show();
+
 	},
 	
 	onResize : function(w, h, rw, rh){
@@ -109,53 +117,53 @@ Paperpile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 		this.autoSize();
 	},
 	
-	  onKeyUp : function(e) {
-		    if(this.editable !== false && !e.isSpecialKey()){
-			      if(e.getKey() == e.BACKSPACE && this.lastValue.length == 0){
-				        e.stopEvent();
-				        this.collapse();
-				        var el = this.maininput.prev();
-				        if(el) el.focus();
-				        return;
-			      }
-			      this.dqTask.delay(this.queryDelay);
-		    }
+	onKeyUp : function(e) {
+		if(this.editable !== false && !e.isSpecialKey()){
+			if(e.getKey() == e.BACKSPACE && this.lastValue.length == 0){
+				e.stopEvent();
+				this.collapse();
+				var el = this.maininput.prev();
+				if(el) el.focus();
+				return;
+			}
+			this.dqTask.delay(this.queryDelay);
+		}
 
-		    this.autoSize();
+		this.autoSize();
 
-		    Paperpile.BoxSelect.superclass.onKeyUp.call(this, e);
+		Paperpile.BoxSelect.superclass.onKeyUp.call(this, e);
 
-		    this.lastValue = this.el.dom.value;
-	  },
+		this.lastValue = this.el.dom.value;
+	},
 
 
-	  onSelect: function(record, index) {
-		    var val = record.data[this.valueField];
+	onSelect: function(record, index) {
+		var val = record.data[this.valueField];
 		
-		    this.selectedValues[val] = val;
+		this.selectedValues[val] = val;
 		
-		    if(typeof this.displayFieldTpl === 'string')
-			      this.displayFieldTpl = new Ext.XTemplate(this.displayFieldTpl);
+		if(typeof this.displayFieldTpl === 'string')
+			this.displayFieldTpl = new Ext.XTemplate(this.displayFieldTpl);
 		    
-		    if(!this.boxElements[val]){
-			      var caption;
-			      if(this.displayFieldTpl)
-				        caption = this.displayFieldTpl.apply(record.data)
-			      else if(this.displayField)
-				        caption = record.data[this.displayField];
+		if(!this.boxElements[val]){
+			var caption;
+			if(this.displayFieldTpl)
+				caption = this.displayFieldTpl.apply(record.data)
+			else if(this.displayField)
+				caption = record.data[this.displayField];
 			
-			      this.addItem(record.data[this.valueField], caption)
+			this.addItem(record.data[this.valueField], caption)
 			
-		    }
-		    this.collapse();
-		    this.setRawValue('');
-		    this.lastSelectionText = '';
-		    this.applyEmptyText();
-		    this.autoSize();
+		}
+		this.collapse();
+		this.setRawValue('');
+		this.lastSelectionText = '';
+		this.applyEmptyText();
+		this.autoSize();
         this.fireEvent('modified');
 
 
-	  },
+	},
     
 
     /* Simply duplicated here onSelect, this version is called during initializiation
@@ -317,7 +325,8 @@ Paperpile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 	  },
 	
 	  autoSize : function(){
-		    if(!this.rendered){
+          
+          if(!this.rendered){
 		        return;
 		    }
 		    if(!this.metrics){

@@ -31,9 +31,17 @@ sub get_node : Local {
 
   my $subtree = $c->forward('private/get_subtree',[$tree, $node]);
 
-  my $data=$c->forward('private/get_js_object',[$subtree,$c->request->params->{checked}]);
+  # Tags always generated dynamically
+  if ($subtree->getUID =~/TAGS_ROOT/){
+    $c->forward('private/get_tags',[$subtree]);
+  }
 
-  $c->stash->{tree} = $data;
+  my @data = ();
+  foreach my $child ( $subtree->getAllChildren ) {
+    push @data, $self->_get_js_object($child,$c->request->params->{checked});
+  }
+  $c->stash->{tree} = [@data];
+
 
   $c->forward('Paperpile::View::JSON::Tree');
 
@@ -278,6 +286,43 @@ sub move_node : Local {
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
+
+}
+
+sub _get_js_object {
+
+  my ( $self, $node, $checked ) = @_;
+
+  # make deep copy to avoid touching the tree structure which gave
+  # unexpected results...
+  my $h = { %{ $node->getNodeValue() } };
+
+  # we store node ids explicitely as "UID"s in backend and as
+  # "node.id" in frontend
+  $h->{id} = $node->getUID;
+
+  # draw a checkbox for configuration mode
+  if ($checked) {
+    if ( $h->{hidden} ) {
+      $h->{checked} = \0;
+      $h->{hidden}  = 0;    # During configuration we have to show all nodes
+    } else {
+      $h->{checked} = \1;
+    }
+  }
+
+  if ( $h->{hidden} ) {
+    $h->{hidden} = \1;
+  } else {
+   $h->{hidden} = \0;
+ }
+
+  if ( $node->isLeaf() ) {
+    $h->{expanded} = \1;
+    $h->{children} = [];
+  }
+
+  return $h;
 
 }
 
