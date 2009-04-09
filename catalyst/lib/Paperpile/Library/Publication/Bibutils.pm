@@ -12,6 +12,31 @@ use File::Temp qw/tempfile/;
 
 use 5.010;
 
+## TODO: currently not handled:
+# CONTENTS (don't know what it is)
+# ASSIGNEE (for patents, patents not handled for now)
+# CROSSREF (special for BibTeX)
+# LCCN (library of congress card number, do we need it?)
+# PAPER (not sure what this is; can obviously occur in INPROCEEDINGS but non standard BibTEX)
+# TRANSLATOR
+# LANGUAGE
+# REFNUM
+# REVISION (field for type "STANDARD" which we currently have not included)
+# LOCATION
+# NATIONALITY (for patents, patents not handled for now)
+
+# BibTeX field "type" is not handled. Bibutils lists it verbatim in
+# addition to standard type field like ('ARTICLE', ...). Also Bibutils ignores it when writing out
+# to xml. Nothing we can easily do about it, should only occur in Techreports tough.
+
+# If chapter and title is given in an INBOOK citation, this is listed
+# as TITLE level 0 two times by Bibutils. Currently we write the
+# first title to both title and chapter fields.
+
+# Booklet is not explicitely considered, is implicitely handled as book; seems to be fine for every practical
+# purpose
+
+# Supported formats:
 # MODS, BIBTEX, RIS, ENDNOTE, COPAC, ISI, MEDLINE, ENDNOTEXML, BIBLATEX
 
 sub import_string {

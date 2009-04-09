@@ -14,10 +14,15 @@ use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
 
-has 'query'     => ( is => 'rw' );
+# The database query which is passed to PubMed
+has 'query' => ( is => 'rw' );
+
+# The PubMed API saves session information for a query via two
+# variables
 has 'web_env'   => ( is => 'rw' );
 has 'query_key' => ( is => 'rw' );
 
+# URLs for PubMed resources at NCBI
 my $esearch =
   "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=PubMed&usehistory=y&retmax=1&term=";
 my $efetch = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?retmode=xml&db=PubMed";
@@ -31,82 +36,48 @@ my $epost  = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/epost.fcgi?db=pubmed&
 sub connect {
   my $self = shift;
 
+  # First we get a LWP user agent. We always should get it via the
+  # Utils function because this way we get a correctly configured
+  # browser. Additional configuration can be added afterwards if
+  # needed.
   my $browser = Paperpile::Utils->get_browser;
 
-  my $response  = $browser->get( $esearch . $self->query );
+  # We send our query to PubMed via a simple get
+  my $response = $browser->get( $esearch . $self->query );
+
+  # The response is XML formatted and can be parsed with XML::Simple
   my $resultXML = $response->content;
+  my $result    = XMLin($resultXML);
 
-
-  my $result = XMLin($resultXML);
-
+  # The relevant results are stored in the appropriate fields
   $self->web_env( $result->{WebEnv} );
   $self->query_key( $result->{QueryKey} );
   $self->total_entries( $result->{Count} );
 
+  # The function must return the total number of search results.
   return $self->total_entries;
 }
 
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
+  # We have split the functionality to three functions:
+  # _pubFetch, _read_xml, _link_out
   my $xml = $self->_pubFetch( $offset, $limit );
-
   my $page = $self->_read_xml($xml);
-
   $self->_linkOut($page);
 
+  # we should always call this function to make the results available
+  # afterwards via find_sha1
   $self->_save_page_to_hash($page);
 
   return $page;
-
 }
 
-sub _linkOut {
+# function: _pubFetch
 
-  ( my $self, my $pubs ) = @_;
-
-  my %pub_hash = ();
-
-  my @ids = ();
-  foreach my $pub (@$pubs) {
-    push @ids, $pub->{pmid};
-    $pub_hash{ $pub->{pmid} } = $pub;
-  }
-
-  my $ids = join( ',', @ids );
-
-  my $browser = Paperpile::Utils->get_browser;
-
-  my $url =
-    "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=prlinks&db=PubMed&id=$ids";
-
-  my $response = $browser->get($url);
-
-  #print STDERR Dumper( $url, "   ", $response->content );
-
-  my $result = XMLin( $response->content );
-
-  #print STDERR Dumper($result->{LinkSet}->{IdUrlList}->{IdUrlSet});
-  #print STDERR $result->{LinkSet}->{IdUrlList}->{IdUrlSet};
-
-  foreach my $entry ( @{ $result->{LinkSet}->{IdUrlList}->{IdUrlSet} } ) {
-
-    my $id = $entry->{Id};
-
-    # got an error message
-    if ( defined $entry->{Info} ) {
-      $pub_hash{$id}->linkout('');
-    } else {
-      $pub_hash{$id}->linkout( $entry->{ObjUrl}->{Url} );
-
-      # Adjust the url otherwise it won't get displayed correctly
-      my $icon_url = $entry->{ObjUrl}->{IconUrl};
-      $icon_url =~ s/entrez/corehtml/;
-      $pub_hash{$id}->icon($icon_url);
-    }
-  }
-
-}
+# Sends request to PubMed for page given by $offset and $limit and
+# returns XML output.
 
 sub _pubFetch {
 
@@ -123,6 +94,11 @@ sub _pubFetch {
   return $resultXML;
 
 }
+
+# function: _read_xml
+
+# Parses the PubMed XML format and converts it into a list of
+# Paperpile::Library::Publication entries.
 
 sub _read_xml {
 
@@ -209,6 +185,58 @@ sub _read_xml {
     push @output, $pub;
   }
   return [@output];
+}
+
+# Function: _linkOut
+
+# Sends request for "LinkOut" URLs to the server and adds the
+# information to the list of Publication objects.
+
+sub _linkOut {
+
+  ( my $self, my $pubs ) = @_;
+
+  my %pub_hash = ();
+
+  my @ids = ();
+  foreach my $pub (@$pubs) {
+    push @ids, $pub->{pmid};
+    $pub_hash{ $pub->{pmid} } = $pub;
+  }
+
+  my $ids = join( ',', @ids );
+
+  my $browser = Paperpile::Utils->get_browser;
+
+  my $url =
+    "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=prlinks&db=PubMed&id=$ids";
+
+  my $response = $browser->get($url);
+
+  #print STDERR Dumper( $url, "   ", $response->content );
+
+  my $result = XMLin( $response->content );
+
+  #print STDERR Dumper($result->{LinkSet}->{IdUrlList}->{IdUrlSet});
+  #print STDERR $result->{LinkSet}->{IdUrlList}->{IdUrlSet};
+
+  foreach my $entry ( @{ $result->{LinkSet}->{IdUrlList}->{IdUrlSet} } ) {
+
+    my $id = $entry->{Id};
+
+    # got an error message
+    if ( defined $entry->{Info} ) {
+      $pub_hash{$id}->linkout('');
+    } else {
+      $pub_hash{$id}->linkout( $entry->{ObjUrl}->{Url} );
+
+      # Adjust the url otherwise it won't get displayed correctly
+      my $icon_url = $entry->{ObjUrl}->{IconUrl};
+      $icon_url =~ s/entrez/corehtml/;
+      $pub_hash{$id}->icon($icon_url);
+    }
+  }
+
 }
 
 1;

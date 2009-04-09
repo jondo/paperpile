@@ -6,24 +6,26 @@ use lib "../../../lib";
 
 BEGIN { use_ok 'Paperpile::Plugins::Import::GoogleScholar' }
 
-binmode STDOUT, ":utf8"; # avoid unicode errors when printing to STDOUT
+binmode STDOUT, ":utf8";    # avoid unicode errors when printing to STDOUT
 
-my $source=Paperpile::Plugins::Import::GoogleScholar->new(query=>'washietl');
+my $plugin = Paperpile::Plugins::Import::GoogleScholar->new( query => 'Washietl' );
 
-$source->limit(10);
-$source->connect;
-my $page=$source->page(0,10);
+$plugin->connect;
 
-my $pub=$page->[1];
+like( $plugin->total_entries, qr/\d+/, 'Connect and retrieve number of hits.' );
 
-$pub=$source->complete_details($pub);
+my $page = $plugin->page( 0, 10 );
 
+# Assumes that 'Washietl' is an author in the first search result,
+# which is likely but not guaranteed.
+like( $page->[0]->_authors_display, qr/Washietl/, 'Get results page.' );
 
+is( $plugin->find_sha1( $page->[0]->sha1 ), $page->[0], 'find_sha1' );
 
-#my $pubs=$source->page_from_offset(0,10);
-#print Dumper($pubs);
-
-
+my $pub=$page->[0];
+$pub = $plugin->complete_details($pub);
+like( $pub->authors, qr/Washietl/, 'Complete details' );
+is( $plugin->find_sha1( $pub->sha1 ), $pub, 'find_sha1 with updated entries' );
 
 
 

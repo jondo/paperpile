@@ -6,43 +6,52 @@ use Data::Dumper;
 use Data::Page;
 use POSIX qw(ceil floor);
 
-has 'limit' => (
-  is      => 'rw',
-  isa     => 'Int',
-  default => 10,
-);
-
+# Number of all entries for the query/file
 has 'total_entries' => ( is => 'rw', isa => 'Int' );
-has '_hash'  => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
+
+# Maximum number of entries per page
+has 'limit' => ( is => 'rw', isa => 'Int', default => 10 );
+
+# Internal hash to quickly access the entries via their sha1 key across pages
+has '_hash' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
+
+# Stores pages to avoid re-loading in some situations. A page is
+# stored by the first and last index, e.g. _page_cache->{0}->{10}
 has '_page_cache' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
+
+# Function: connect
+
+# Sets up connection to the source and sets and returns total_entries.
+# It is *mandatory* to override this function.
 
 sub connect {
   my $self = shift;
   return undef;
 }
 
+# Function: page
+
+# Returns the entries for a page given by $offset and $limit. Return
+# format is an ArrayRef with objects of type
+# Paperpile::Library::Publication.
+
+# It is *mandatory* to override this function.
+
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
-  return 0;
+  return [];
 }
 
-sub _save_page_to_hash {
+# Function: complete_details
 
-  ( my $self, my $data ) = @_;
+# For efficiency reasons and to avoid harassing sites with too many
+# requests, "page" may return incomplete entries form a quick
+# preliminary scrape that can be filled in afterwards by this
+# function. The Publication object has a dedicated helper field
+# '_details_link' which holds some information on how to get the full
+# information (e.g. via a link to a BibTex file as for GoogleScholar).
 
-  foreach my $entry (@$data) {
-    $self->_hash->{ $entry->sha1 } = $entry;
-  }
-}
-
-sub find_sha1 {
-
-  ( my $self, my $sha1 ) = @_;
-
-  return $self->_hash->{$sha1};
-
-}
-
+# Overriding this function is *optional*.
 
 sub complete_details {
 
@@ -52,9 +61,36 @@ sub complete_details {
 
 }
 
+# Function find_sha1
 
+# Returns an entry by the sha1 index. To ensure that this function
+# works the entries have to be stored by the plugin to the field _hash
+# via the function _save_page_to_hash
 
+# This function should *not* be overriden.
 
+sub find_sha1 {
+
+  ( my $self, my $sha1 ) = @_;
+
+  return $self->_hash->{$sha1};
+
+}
+
+# Function _save_page_to_hash
+
+# Saves Publication objects given in the ArrayRef $data to _hash via
+# their sha1. Should be called in any implementation of the function
+# "page".
+
+sub _save_page_to_hash {
+
+  ( my $self, my $data ) = @_;
+
+  foreach my $entry (@$data) {
+    $self->_hash->{ $entry->sha1 } = $entry;
+  }
+}
 
 
 

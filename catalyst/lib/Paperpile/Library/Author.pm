@@ -141,7 +141,6 @@ sub read_bibutils{
 
   my @parts=split(/\|/,$string);
 
-
   # von and jr currently not handled explicitely
   # Bibutils does not seem to handle suffix (at least for pubmed)
   $last=$parts[0];

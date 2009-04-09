@@ -10,9 +10,12 @@ use Paperpile::Utils;
 use Encode qw(encode_utf8);
 use 5.010;
 
+# Bibutils functions are in a submodule
 extends('Paperpile::Library::Publication::Bibutils');
 
-our @types = qw( ARTICLE
+# We currently support the following publication types
+our @types = qw(
+  ARTICLE
   BOOK
   BOOKLET
   INBOOK
@@ -24,47 +27,48 @@ our @types = qw( ARTICLE
   PHDTHESIS
   TECHREPORT
   UNPUBLISHED
-  MISC );
+  MISC
+);
 
-## TODO: currently not handled:
-# CONTENTS (don't know what it is)
-# ASSIGNEE (for patents, patents not handled for now)
-# CROSSREF (special for BibTeX)
-# LCCN (library of congress card number, do we need it?)
-# PAPER (not sure what this is; can obviously occur in INPROCEEDINGS but non standard BibTEX)
-# TRANSLATOR
-# LANGUAGE
-# REFNUM
-# REVISION (field for type "STANDARD" which we currently have not included)
-# LOCATION
-# NATIONALITY (for patents, patents not handled for now)
+# The fields in this objects are equivalent to the fields in the
+# database table 'Publications'. Fields starting with underscore are
+# special helper fields not stored in the database. In addition to
+# built in fields which are hardcoded in the database schema and here
+# in this Module, there is a list of fields stored (and documented) in
+# the configuration file paperpile.yaml.
 
-# BibTeX field "type" is not handled. Bibutils lists it verbatim in
-# addition to standard type field like ('ARTICLE', ...). Also Bibutils ignores it when writing out
-# to xml. Nothing we can easily do about it, should only occur in Techreports tough.
+### 'Built-in' fields
 
-# If chapter and title is given in an INBOOK citation, this is listed
-# as TITLE level 0 two times by Bibutils. Currently we write the
-# first title to both title and chapter fields.
-
-# Booklet is not explicitely considered, is implicitely handled as book; seems to be fine for every practical
-# purpose
-
-# Built-in fields
-has 'sha1'        => ( is => 'rw' );
+# The unique rowid in the SQLite table 'Publications'
 has '_rowid'      => ( is => 'rw', isa => 'Int' );
-has 'created'     => ( is => 'rw', isa => 'Str' );
-has 'last_read'   => ( is => 'rw', isa => 'Str' );
-has 'times_read'  => ( is => 'rw', isa => 'Int', default => 0 );
-has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
 
+# The unique sha1 key which is currently calculated from title,
+# authors and year.
+has 'sha1'        => ( is => 'rw' );
+
+# Timestamp when the entry was created
+has 'created'     => ( is => 'rw', isa => 'Str' );
+
+# Timestamp when it was last read
+has 'last_read'   => ( is => 'rw', isa => 'Str' );
+
+# How many times it was read
+has 'times_read'  => ( is => 'rw', isa => 'Int', default => 0 );
+
+# The associated PDF file, the path is relative to the paper_root user
+# setting
 has 'pdf' => ( is => 'rw', isa => 'Str', default => '' );
 
-# Read other fields from config file
+# The number of additional files that are associated with this entry
+has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
+
+### Fiels from the config file
 
 my $config = Paperpile::Utils->get_config;
 foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
+  # These contribute to the sha1 and need a trigger to re-calculate it
+  # upon change
   if ( $field =~ /(authors|year|title$)/ ) {
     has $field => (
       is      => 'rw',
@@ -83,25 +87,41 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
   }
 }
 
-# Helper fields which have no equivalent field in the database
-has '_authors_display'  => ( is => 'rw', isa => 'Str' );
-has '_citation_display' => ( is => 'rw', isa => 'Str' );
-has '_imported'         => ( is => 'rw', isa => 'Bool' );
-has '_details_link'     => ( is => 'rw', isa => 'Str' );
+### Helper fields which have no equivalent field in the database
+
+# Formatted strings to be displayed in the frontend.
+has '_authors_display'   => ( is => 'rw', isa => 'Str' );
+has '_citation_display'  => ( is => 'rw', isa => 'Str' );
+
+# If an entry is already in our database this field is true.
+has '_imported'          => ( is => 'rw', isa => 'Bool' );
+
+# Some import plugins first only scrape partial information and store
+# a link (or some other hint) how to complete this information
+has '_details_link'      => ( is => 'rw', isa => 'Str' );
+
+# If a search in the local database returns a hit in the fulltext,
+# abstract or notes the hit+context ('snippet') is stored in these
+# fields
 has '_snippets_text'     => ( is => 'rw', isa => 'Str' );
 has '_snippets_abstract' => ( is => 'rw', isa => 'Str' );
 has '_snippets_notes'    => ( is => 'rw', isa => 'Str' );
+
 
 sub BUILD {
   my ( $self, $params ) = @_;
   $self->refresh_fields;
 }
 
+# Function: refresh_fields
+
+# Update dynamic fields like sha1 and formatted strings for display
+
 sub refresh_fields {
   ( my $self ) = @_;
 
+  ## Author display string
   my @display = ();
-
   if ( $self->authors ) {
     foreach my $a ( split( /\band\b/, $self->authors ) ) {
       push @display, Paperpile::Library::Author->new( full => $a )->nice;
@@ -109,15 +129,21 @@ sub refresh_fields {
     $self->_authors_display( join( ', ', @display ) );
   }
 
+  ## Citation display string
   my $cit = $self->format_citation;
-
   if ($cit) {
     $self->_citation_display($cit);
   }
 
+  ## Sha1
   $self->calculate_sha1;
 
 }
+
+# Function: calculate_sha1
+
+# Calculate unique sha1 from several key fields. Needs more thought on
+# what to include.
 
 sub calculate_sha1 {
 
@@ -137,8 +163,11 @@ sub calculate_sha1 {
 
 }
 
-# Simple Pubmed like citation format
-# Replace this with proper formatting function,
+# Function: format_citation
+
+# Currently this functino return an adhoc Pubmed like citation formatq
+# Replace this with proper formatting function once CSL is in place
+
 sub format_citation {
 
   ( my $self ) = @_;
@@ -175,6 +204,10 @@ sub format_citation {
 
 }
 
+# Function: as_hash
+
+# Return all fields as a simple HashRef.
+
 sub as_hash {
 
   ( my $self ) = @_;
@@ -193,6 +226,11 @@ sub as_hash {
 
 }
 
+# Function: get_authors
+
+# We store the authors in a flat string in BibTeX formatting This
+# function returns an ArrayRef of Paperpile::Library::Author objects.
+
 sub get_authors {
   ( my $self ) = @_;
   my @authors = ();
@@ -203,6 +241,15 @@ sub get_authors {
   }
   return [@authors];
 }
+
+# Function: format_pattern
+
+# Generates a string from a pattern like [firstauthor][year] See code
+# for available fields and syntax.
+
+# The optional HashRef $substitutions can hold additional fields to be
+# replaced dynamically. e.g {key => 'Gruber2009'} will replace [key]
+# with 'Gruber2009'.
 
 sub format_pattern {
 
@@ -317,6 +364,11 @@ sub _setcase {
 
   return $field;
 }
+
+
+# Function: list_types
+
+# Getter function for available publication types
 
 sub list_types {
   return @types;
