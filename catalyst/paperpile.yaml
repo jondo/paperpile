@@ -12,8 +12,10 @@ user_settings:
   attachment_pattern: "[key]_supplements"
   _tree: ""
 
+
 app_settings:
-  user_db: "../user/default/paperpile/paperpile.db" # relative to catalyst app-dir or absolute
+# relative to catalyst app-dir or absolute
+  user_db: "../user/default/paperpile/paperpile.db"
 
 
 pub_fields:
