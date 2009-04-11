@@ -53,7 +53,10 @@ sub get_config{
 
   my $conf = Config::Any->load_files({files=>[$file], flatten_to_hash => 0, use_ext=>1});
 
-  return $conf->[0]->{$file};
+  # Take care how to get the data out of the object, in older versions
+  # of Config::Any we had to use $conf->[0]->{$file}, with version
+  # 0.17 this is fine:
+  return $conf->{$file};
 
 }
 
