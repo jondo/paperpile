@@ -16,7 +16,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         var zoomer= new Paperpile.PDFzoomer;
   
         Ext.apply(this, 
-                  {autoScroll : false,
+                  {autoScroll : true,
                    bbar:new Ext.Toolbar(
                        { items: [
                            {  xtype:'button',
