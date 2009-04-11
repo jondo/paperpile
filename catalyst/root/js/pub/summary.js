@@ -34,9 +34,13 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
     // panel with 'data' for the current entry
     //
 
-    updateDetail: function(data) {
+    updateDetail: function(data, needsUpdate) {
         this.data=data;
         this.data.id=this.id;
+
+        if (needsUpdate){
+            this.needsUpdate=true;
+        }
 
         // Update abstract
 		this.abstractTemplate.overwrite(Ext.get('abstract-'+this.id), data);		
@@ -51,15 +55,23 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
         Ext.StoreMgr.lookup('tag_store').each(function(rec){
             list.push([rec.data.tag]);
 		}, this);
-        
+
         var store = new Ext.data.SimpleStore({
 			fields: ['tag'],
             data: list,
 		});
+     
+        
+        // Create boxselect field if not already exists or needs to be
+        // updated after a change. For efficiency reasons we create
+        // this element only once an then use hide/show to toggle
+        
+        if (!this.boxselect || this.needsUpdate){
 
-        // Create boxselect field if not already exists. 
-        // We create this element only once an then use hide/show to toggle
-        if (!this.boxselect){
+            if (this.boxselect){
+                this.boxselect.destroy();
+            }
+            
             this.boxselect=new Paperpile.BoxSelect({
 			    name: 'tags[]',
                 value:this.data.tags,
@@ -70,40 +82,14 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
                 width: 150,
 			    addUniqueValues: false,
                 listeners: {
-                    modified:  {fn: 
-                                function(){
-                                    
-                                    // Only call when the user changes
-                                    // it not when it is updated
-                                    // programtically
-
-                                    if (!this.interactive) {
-                                        return;
-                                    };
-                                    
-                                    Ext.Ajax.request({
-                                        url: '/ajax/crud/update_tags',
-                                        params: { rowid: this.data._rowid,
-                                                  tags: this.boxselect.getValue(),
-                                                },
-                                        method: 'GET',
-                                        success: function(){
-                                            console.log(this.boxselect.getValue());
-                                            console.log(this.data);
-                                            this.data.tags=this.boxselect.getValue();
-                                            Ext.StoreMgr.lookup('tag_store').reload();
-                                            Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
-                                            Ext.getCmp('statusbar').clearStatus();
-                                            Ext.getCmp('statusbar').setText('Updated tags.');
-                                        },
-                                        scope: this,
-                                        
-                                    });
-                                },
+                    modified:  {fn: this.updateTags,
                                 scope: this}
                 },
                 renderTo:'tags-'+this.id,
             });
+
+            this.needsUpdate=false;
+
         }
         
         // If no tags are given we show a link to add tags
@@ -116,7 +102,9 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
                 this.emptyMsg.on('click', 
                                  function(){
                                      this.emptyMsg.hide();
-                                     this.updateBoxselect(store);
+                                     this.interactive=false;
+                                     this.boxselect.setValue(this.data.tags);
+                                     this.interactive=true;
                                      this.boxselect.show();
                                      this.boxselect.focus();
                                  }, this);
@@ -124,7 +112,10 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
             this.emptyMsg.show();
             this.boxselect.hide();
         } else {
-            this.updateBoxselect(store);
+
+            this.interactive=false;
+            this.boxselect.setValue(this.data.tags);
+            this.interactive=true;
             this.boxselect.show();
             if (this.emptyMsg){
                 this.emptyMsg.hide();
@@ -132,19 +123,47 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
         }
     },
 
+    updateTags: function(){
+                                    
+        // Only call when it is changed by
+        // the user not when it is updated
+        // programmatically
 
-    //
-    // Updates the selection field, 'store' is the local store of all tags that is created in UpdateDetails
-    //
+        if (!this.interactive) {
+            return;
+        };
+                                    
+        Ext.Ajax.request({
+            url: '/ajax/crud/update_tags',
+            params: { rowid: this.data._rowid,
+                      tags: this.boxselect.getValue(),
+                    },
+            method: 'GET',
+                                        
+            success: function(){
 
-    updateBoxselect: function(store){
-
-        this.interactive=false;
-        this.boxselect.store=store;
-
-        this.boxselect.setValue(this.data.tags);
-        this.interactive=true;
+                // Update local data
+                Ext.StoreMgr.lookup('tag_store').reload();
+                this.data.tags=this.boxselect.getValue();
+                                           
+                // Ensure that boxselect
+                // is initialized with new
+                // tag-list next time when
+                // display is updated
+                this.needsUpdate=true;
+                                            
+                // Reload list in tree
+                Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
+                                            
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Updated tags.');
+            },
+            scope: this,
+            
+        });
     },
+
+
 
 });
 

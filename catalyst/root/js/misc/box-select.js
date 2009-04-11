@@ -222,10 +222,11 @@ Paperpile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 		    return ret.join(this.options['separator']);
 	  },
 	
-	  setValue: function(value){
+	setValue: function(value){
 		    this.removeAllItems();
 		    this.store.clearFilter();
-		    this.resetStore();
+		    
+        this.resetStore();
 	
 		    if(Ext.isArray(this.value) && typeof this.value[0]==='object' && this.value[0].data){
 			      this.setValues(this.value);
@@ -267,7 +268,7 @@ Paperpile.BoxSelect = Ext.extend(Ext.form.ComboBox, {
 		    this.value = '';
 	  },
 	
-	  removeAllItems: function(){
+	removeAllItems: function(){
 		    for(var k in this.boxElements){
 			      this.boxElements[k].dispose(true);
 		    }
@@ -445,7 +446,7 @@ Paperpile.BoxSelect.Item = Ext.extend(Ext.Component, {
 
 		    this.enableElListeners();
 
-		    this.el.update(this.caption);
+		  this.el.update(this.caption);
 
 		    this.lnk = this.el.createChild({
 			      'tag': 'a',

@@ -154,6 +154,8 @@ sub move_in_folder : Local {
   my %seen = ();
   @folders = grep { !$seen{$_}++ } @folders;
 
+  print STDERR Dumper($pub);
+
   $c->model('User')->update_folders( $rowid, join( ',', @folders ) );
   $pub->folders( join( ',', @folders ) );
 

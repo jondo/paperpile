@@ -150,6 +150,31 @@ sub update_tags : Local {
 
 }
 
+sub delete_tag : Local {
+  my ( $self, $c ) = @_;
+
+  my $tag = $c->request->params->{tag};
+
+  $c->model('User')->delete_tag($tag);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+sub rename_tag : Local {
+  my ( $self, $c ) = @_;
+
+  my $old_tag = $c->request->params->{old_tag};
+  my $new_tag = $c->request->params->{new_tag};
+
+  $c->model('User')->rename_tag($old_tag,$new_tag);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
 sub generate_edit_form : Local {
   my ( $self, $c ) = @_;
 

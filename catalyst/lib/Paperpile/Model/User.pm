@@ -298,6 +298,87 @@ sub update_tags {
 }
 
 
+sub delete_tag {
+  ( my $self, my $tag) = @_;
+
+  my $_tag=$self->dbh->quote($tag);
+
+  # Select all publications with this tag
+  ( my $tag_id ) =
+    $self->dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_tag");
+  my $select=$self->dbh->prepare("SELECT tags, publication_id FROM Publications, Tag_Publication WHERE Publications.rowid=publication_id AND tag_id=$tag_id");
+
+  my ($publication_id, $tags);
+  $select->bind_columns(\$tags, \$publication_id);
+  $select->execute;
+
+  while ( $select->fetch ) {
+
+    # Delete tag from flat string in Publications/Fulltext table
+
+    my $new_tags=$tags;
+    $new_tags =~s/^$tag$//;
+    $new_tags =~s/^$tag,//;
+    $new_tags =~s/,$tag,/,/;
+    $new_tags =~s/,$tag$//;
+
+    $self->update_field('Publications',$publication_id,'tags',$new_tags);
+    $self->update_field('Fulltext',$publication_id,'tags',$new_tags);
+
+  }
+
+  # Delete tag from Tags table and link table
+  $self->dbh->do("DELETE FROM Tags WHERE rowid=$tag_id");
+  $self->dbh->do("DELETE FROM Tag_Publication WHERE tag_id=$tag_id");
+
+}
+
+
+sub rename_tag {
+  my ( $self, $old_tag, $new_tag) = @_;
+
+  my $_old_tag=$self->dbh->quote($old_tag);
+
+  ( my $old_tag_id ) =
+    $self->dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_old_tag");
+  my $select=$self->dbh->prepare("SELECT tags, publication_id FROM Publications, Tag_Publication WHERE Publications.rowid=publication_id AND tag_id=$old_tag_id");
+
+  my ($publication_id, $old_tags);
+  $select->bind_columns(\$old_tags, \$publication_id);
+  $select->execute;
+
+  while ( $select->fetch ) {
+
+    my $new_tags=$old_tags;
+
+    $new_tags =~s/^$old_tag$/$new_tag/;
+    $new_tags =~s/^$old_tag,/$new_tag,/;
+    $new_tags =~s/,$old_tag,/,$new_tag,/;
+    $new_tags =~s/,$old_tag$/,$new_tag/;
+
+    print STDERR "$old_tags, $new_tags\n";
+
+    $self->update_field('Publications',$publication_id,'tags',$new_tags);
+    $self->update_field('Fulltext',$publication_id,'tags',$new_tags);
+
+  }
+
+  $self->update_field('Tags',$old_tag_id,'tag', $new_tag);
+
+  #$self->dbh->do("DELETE FROM Tags WHERE rowid=$tag_id");
+
+}
+
+
+
+
+
+
+
+
+
+
+
 sub insert_folder {
   ( my $self, my $folder_id) = @_;
 
