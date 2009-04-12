@@ -17,7 +17,7 @@ use LWP;
 # Static::Simple: will serve static files from the application's root
 #                 directory
 
-our $VERSION = '0.01';
+our $VERSION = '0.03';
 
 # Configure the application.
 #
