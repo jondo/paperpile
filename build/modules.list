@@ -85,3 +85,4 @@ File::Listing
 Mail::Address
 XML::XPathEngine
 HTML::TreeBuilder::XPath
+WWW::Mechanize
