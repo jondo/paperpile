@@ -663,7 +663,7 @@ sub standard_count {
 sub standard_search {
   ( my $self, my $query, my $offset, my $limit) = @_;
 
-  my $sth = $self->dbh->prepare( "SELECT * FROM Publications WHERE $query;" );
+  my $sth = $self->dbh->prepare( "SELECT rowid as _rowid, * FROM Publications WHERE $query;" );
 
   $sth->execute;
 

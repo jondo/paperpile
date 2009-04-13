@@ -95,6 +95,75 @@ sub search : Local {
 
 }
 
+# Function: search
+# Searches the local database and the document mods file for citations
+
+sub format_citations : Local {
+  my ( $self, $c ) = @_;
+
+  # get xml data from post body
+  my $input = XMLin( $c->request->body, ForceArray => [ 'citation', 'item' ] );
+
+  # get list of list with ids
+  my @id_list = ();
+  my @query   = ();
+  foreach my $citation ( @{ $input->{citations}->{citation} } ) {
+    push @id_list, $citation->{item};
+    foreach my $item ( @{ $citation->{item} } ) {
+      $item =~ s/rowid_//;
+      push @query, "rowid=$item";
+    }
+  }
+
+  # We explicitely connect to the user database
+  ( my $db_file ) =
+    $c->model('App')->dbh->selectrow_array("SELECT value FROM Settings WHERE key='user_db'");
+  my $model = Paperpile::Model::User->new();
+  $model->set_dsn( "dbi:SQLite:" . $db_file );
+
+  # We get all entries for the required ids
+  my $results = $model->standard_search( join( ' or ', @query ) );
+
+  # Quick and dirty way to get citations and references, will be replaced by the CSL functions
+  my %citations  = ();
+  my %references = ();
+
+  foreach my $pub (@$results) {
+    my $id   = $pub->_rowid;
+    my $name = $pub->authors;
+    $name =~ s/(\w+).*/$1/;
+    my $citation = $pub->_citation_display;
+    $citation =~ s!</?\w>!!g;
+    $citations{$id}  = "$name et al., " . $pub->year;
+    $references{$id} = $pub->_authors_display . ". " . $pub->title ." ". $citation;
+  }
+
+  # Put together output format to dump to XML
+  my %output;
+  $output{citations}=[];
+  $output{bibliography}='';
+  foreach my $citation (@id_list){
+    my @items=();
+    foreach my $item (@$citation){
+      push @items, $citations{$item};
+      $output{bibliography}.=$references{$item}."\n\n";
+    }
+    push @{$output{citations}}, "(".join(', ',@items).")";
+  }
+
+  # Dummy
+  $output{mods}='AAAAB3NzaC1yc2EAAAABIwAAAQEApxtOgSh9pJpRGsx2uq8X7MwDS7M5oSYRZzz';
+
+  my $body = XMLout( { %output }, RootName => 'xml', NoAttr => 1 );
+
+  $c->response->status(200);
+  $c->response->content_type('text/xml');
+  $c->response->content_encoding('utf-8');
+  $c->response->body($body);
+
+}
+
+
 1;
 
 
