@@ -15,7 +15,7 @@ use 5.010;
 sub ping : Local {
   my ( $self, $c ) = @_;
 
-  my $body = XMLout( { version => $c->VERSION }, RootName => 'data', NoAttr => 1 );
+  my $body = XMLout( { version => $c->VERSION }, RootName => 'xml', NoAttr => 1 );
 
   $c->response->status(200);
   $c->response->content_type('text/xml');
@@ -32,7 +32,7 @@ sub list_styles :Local{
 
   my $data= {style => [ 'APA', 'Nature', 'Cell', 'Harvard' ]};
 
-  my $body=XMLout($data, RootName =>'data');
+  my $body=XMLout($data, RootName =>'xml');
 
   $c->response->status(200);
   $c->response->content_type('text/xml');
@@ -86,7 +86,7 @@ sub search : Local {
 
   my $data = { result => [@output] };
 
-  my $body = XMLout( $data, RootName => 'data', NoAttr => 1 );
+  my $body = XMLout( $data, RootName => 'xml', NoAttr => 1 );
 
   $c->response->status(200);
   $c->response->content_type('text/xml');
