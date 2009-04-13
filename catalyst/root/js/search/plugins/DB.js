@@ -35,7 +35,26 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                       listeners: {
                           click:  {fn: this.editEntry, scope: this}
                       },
-                  },
+                  }, 
+                  {  xtype:'button',
+                     text: 'More',
+                     menu:new Ext.menu.Menu({
+                         itemId: 'more_menu',
+                         //cls: 'x-btn-text-icon edit',
+                         items:[
+                             {  text: 'Export selected',
+                                listeners: {
+                                    click:  {fn: function(){this.exportEntry('selection')}, scope: this}
+                                },
+                             },
+                             {  text: 'Export all',
+                                listeners: {
+                                    click:  {fn: function(){this.exportEntry('all')}, scope: this}
+                                },
+                             }
+                         ]
+                      })
+                  }
                  ];
 
         // If we are viewing a virtual folders we need an additional

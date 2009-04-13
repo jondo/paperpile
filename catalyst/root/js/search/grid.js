@@ -215,6 +215,19 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     },
 
+    exportEntry: function(what){
+
+        console.log(what);
+
+        var window=new Paperpile.ExportWindow();
+
+        window.show();
+        
+        //window.getLayout().setActiveItem(0);
+        
+
+    },
+
     editEntry: function(){
         
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
