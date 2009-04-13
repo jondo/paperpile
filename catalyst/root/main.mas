@@ -25,7 +25,8 @@
   misc/settings.js 
   misc/box-select.js
   misc/file-chooser.js
-  misc/export-window.js
+  
+  export/export-window.js
                
   pub/summary.js 
   pub/notes.js 

@@ -18,6 +18,11 @@
     background-image: url('/images/icons/accept.png');
 }
 
+.next .x-btn-text {
+    background-image: url('/images/icons/arrow_right.png');
+}
+
+
 .pp-basic {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
