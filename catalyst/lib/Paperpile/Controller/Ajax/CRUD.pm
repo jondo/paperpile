@@ -21,10 +21,9 @@ sub insert_entry : Local {
   $pub->times_read(0);
   $pub->last_read(timestamp); ## for the time being
 
-  $c->model('User')->create_pub($pub);
+  $c->model('User')->create_pubs([$pub]);
 
   $pub->_imported(1);
-
 
   $c->stash->{data} = $pub->as_hash;
 
@@ -69,7 +68,7 @@ sub new_entry: Local {
   $pub->attachments(0);
   $pub->last_read(timestamp); ## for the time being
 
-  $c->model('User')->create_pub($pub);
+  $c->model('User')->create_pubs([$pub]);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');

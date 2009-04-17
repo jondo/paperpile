@@ -118,91 +118,139 @@ sub settings {
 
 }
 
+# Function: create_pubs
+#
+# Adds a list of publication entries to the local library. It first
+# generates a unique citation-key and then adds the entries to the
+# database via the insert_pubs function. Note that this function
+# updates the entries in the $pubs array in place by adding the
+# citekey field.
 
-sub create_pub {
-  ( my $self, my $pub ) = @_;
+sub create_pubs {
+  ( my $self, my $pubs ) = @_;
 
-  # First generate citation key
-  my $pattern = $self->get_setting('key_pattern');
-  my $key     = $pub->format_pattern($pattern);
+  foreach my $pub (@$pubs) {
 
-  # Check if key already exists
-  my $sth = $self->dbh->prepare("SELECT key FROM fulltext WHERE fulltext MATCH 'key:$key*'");
-  my $existing_key;
-  $sth->bind_columns( \$existing_key);
-  $sth->execute;
+    # First generate citation key
+    my $pattern = $self->get_setting('key_pattern');
+    my $key     = $pub->format_pattern($pattern);
 
-  my @suffix=();
-  my $unique=1;
+    # Check if key already exists
+    my $sth = $self->dbh->prepare("SELECT key FROM fulltext WHERE fulltext MATCH 'key:$key*'");
+    my $existing_key;
+    $sth->bind_columns( \$existing_key );
+    $sth->execute;
 
-  while ( $sth->fetch ) {
-    $unique=0; # if we found something in the DB it is not unique
+    my @suffix = ();
+    my $unique = 1;
 
-    # We collect the suffixes a,b,c... that already exist
-    if ($existing_key=~/$key([a-z])/){ #
-      push @suffix, $1;
+    while ( $sth->fetch ) {
+      $unique = 0;    # if we found something in the DB it is not unique
+
+      # We collect the suffixes a,b,c... that already exist
+      if ( $existing_key =~ /$key([a-z])/ ) {    #
+        push @suffix, $1;
+      }
     }
+
+    if ( not $unique ) {
+      my $new_suffix = 'a';
+      if (@suffix) {
+
+        # we sort them to make sure to get the 'highest' suffix and count one up
+        @suffix = sort { $a <=> $b } @suffix;
+        $new_suffix = chr( ord( pop(@suffix) ) + 1 );
+      }
+      $key .= $new_suffix;
+    }
+
+    $pub->citekey($key);
+
   }
 
-  if (not $unique){
-    my $new_suffix='a';
-    if (@suffix){
-      # we sort them to make sure to get the 'highest' suffix and count one up
-      @suffix=sort {$a <=> $b} @suffix;
-      $new_suffix=chr(ord(pop(@suffix))+1);
-    }
-    $key.=$new_suffix;
-  }
+  $self->insert_pubs($pubs);
 
-  $pub->citekey($key);
-
-  ## Insert main entry into Publications table
-  ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
-  $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
-
-  ## Insert searchable fields into fulltext table
-  my $pub_rowid = $self->dbh->func('last_insert_rowid');
-
-  ( $fields, $values ) = $self->_hash2sql( {
-      rowid    => $pub_rowid,
-      key      => $pub->citekey,
-      year     => $pub->year,
-      journal  => $pub->journal,
-      title    => $pub->title,
-      abstract => $pub->abstract,
-      notes    => $pub->notes,
-      author   => $pub->_authors_display,
-      tags      => $pub->tags,
-      folders  => $pub->folders,
-      text     => '',
-    }
-  );
-
-  $self->dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
-
-  ## Insert authors
-
-  my $insert = $self->dbh->prepare("INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
-  my $search = $self->dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
-  my $insert_join =
-    $self->dbh->prepare("INSERT INTO author_publication (author_id,publication_id) VALUES(?,?)");
-
-  foreach my $author ( @{ $pub->get_authors } ) {
-    my $author_rowid;
-    $search->execute( $author->key );
-    $author_rowid = $search->fetchrow_array;
-    if ( not $author_rowid ) {
-      my @values = ( $author->key, $author->first, $author->last, $author->von, $author->jr );
-      $insert->execute(@values);
-      $author_rowid = $self->dbh->func('last_insert_rowid');
-    }
-    $insert_join->execute( $author_rowid, $pub_rowid );
-  }
-
-  $pub->_rowid($pub_rowid);
-
-  return $pub_rowid;
 }
+
+# Function: insert_pubs
+#
+# Inserts a list of publications into the database
+
+sub insert_pubs {
+
+  ( my $self, my $pubs ) = @_;
+
+  $self->dbh->begin_work;
+
+  foreach my $pub (@$pubs) {
+
+    ## Insert main entry into Publications table
+    ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
+    $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
+
+    ## Insert searchable fields into fulltext table
+    my $pub_rowid = $self->dbh->func('last_insert_rowid');
+
+    $pub->_rowid($pub_rowid);
+
+    ( $fields, $values ) = $self->_hash2sql( {
+        rowid    => $pub_rowid,
+        key      => $pub->citekey,
+        year     => $pub->year,
+        journal  => $pub->journal,
+        title    => $pub->title,
+        abstract => $pub->abstract,
+        notes    => $pub->notes,
+        author   => $pub->_authors_display,
+        tags     => $pub->tags,
+        folders  => $pub->folders,
+        text     => '',
+      }
+    );
+
+    $self->dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
+
+    ## Insert authors
+
+    my $insert =
+      $self->dbh->prepare("INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
+    my $search = $self->dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
+
+    # 'OR IGNORE' for rare cases where one paper has two or more
+    # authors that are not distinguished by their id (e.g. ENCODE paper with 316 authors)
+    my $insert_join =
+      $self->dbh->prepare("INSERT OR IGNORE INTO author_publication (author_id,publication_id) VALUES(?,?)");
+
+    foreach my $author ( @{ $pub->get_authors } ) {
+      my $author_rowid;
+      $search->execute( $author->key );
+      $author_rowid = $search->fetchrow_array;
+
+      if ( not $author_rowid ) {
+        my @values = ( $author->key, $author->first, $author->last, $author->von, $author->jr );
+        $insert->execute(@values);
+        $author_rowid = $self->dbh->func('last_insert_rowid');
+      }
+
+      $insert_join->execute( $author_rowid, $pub_rowid );
+    }
+  }
+
+  eval {
+    $self->dbh->commit;
+  };
+
+  if ($@) {
+
+    die("Could not insert data into database $@");
+
+    # TODO: best practise is to eval rollback as well...
+    $self->dbh->rollback;
+
+  }
+
+}
+
 
 sub delete_pubs {
 
@@ -368,14 +416,6 @@ sub rename_tag {
   #$self->dbh->do("DELETE FROM Tags WHERE rowid=$tag_id");
 
 }
-
-
-
-
-
-
-
-
 
 
 
