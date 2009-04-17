@@ -64,13 +64,15 @@ sub init_db {
   $self->dbh->do(
     "CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,tags,folders,year,journal);");
 
-  # Create user settings table
-  $self->dbh->do('DROP TABLE IF EXISTS Settings');
-  $self->dbh->do("CREATE TABLE Settings (key TEXT, value TEXT)");
+  if (defined $settings){
+    # Create user settings table
+    $self->dbh->do('DROP TABLE IF EXISTS Settings');
+    $self->dbh->do("CREATE TABLE Settings (key TEXT, value TEXT)");
 
-  foreach my $key ( keys %$settings ) {
-    my $value = $settings->{$key};
-    $self->dbh->do("INSERT INTO Settings (key,value) VALUES ('$key','$value')");
+    foreach my $key ( keys %$settings ) {
+      my $value = $settings->{$key};
+      $self->dbh->do("INSERT INTO Settings (key,value) VALUES ('$key','$value')");
+    }
   }
 }
 

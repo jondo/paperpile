@@ -7,11 +7,6 @@ use 5.010;
 
 extends 'Paperpile::Plugins::Export';
 
-has 'file_name' => (
-  is      => 'rw',
-  isa     => 'Str',
-);
-
 ## Supported settings (correspond to the Bibutils settings + "export_"-prefix
 
 #  export_format_out: MODS, BIBTEX, RIS, ENDNOTE, COPAC, ISI, MEDLINE, ENDNOTEXML, BIBLATEX
@@ -28,11 +23,9 @@ has 'file_name' => (
 #  export_modsout_dropkey
 #  export_wordout_dropkey
 
-
 sub write {
 
   my ($self) = @_;
-
 
   my %s=();
 

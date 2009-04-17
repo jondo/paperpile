@@ -167,6 +167,10 @@ sub init_session : Local {
     copy( $c->path_to('db/user.db')->stringify, $user_db ) or die "Copy failed: $!";
     $c->session->{user_db} = $user_db;
     $c->model('User')->init_db( $c->config->{pub_fields}, $c->config->{user_settings} );
+
+    # Copy the newly created database back to have an empty version
+    # with all tables and fields which will be used as export template
+    copy( $user_db, $c->path_to('db/local-user.db')->stringify ) or die "Copy failed: $!";
   } else {
     $c->session->{user_db} = $user_db;
   }
