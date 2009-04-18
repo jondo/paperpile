@@ -33,11 +33,6 @@ sub write {
   $model->set_dsn("dbi:SQLite:".$dbfile);
   $model->insert_pubs($self->data);
 
-  #foreach my $pub ( @{ $self->data } ) {
-  #  print Dumper($pub),"\n" if not defined $pub->sha1;
-  #  #print STDERR ($pub->sha1), "\n";
-  #}
-
 }
 
 1;

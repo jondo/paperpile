@@ -7,7 +7,6 @@ use lib "../../../lib";
 
 BEGIN { use_ok 'Paperpile::Plugins::Export::DB' }
 
-
 ### Read example data from MODS file
 
 my $bu = Bibutils->new(
@@ -27,26 +26,23 @@ foreach my $entry ( @{ $bu->get_data } ) {
   push @data, $pub;
 }
 
-
 ## Export to database file
 
-my $dbfile = '../../data/export.db';
+my $dbfile   = '../../data/export.db';
 my $settings = { export_file => $dbfile };
-my $export = Paperpile::Plugins::Export::DB->new(
+my $export   = Paperpile::Plugins::Export::DB->new(
   data     => [@data],
   settings => $settings
 );
 $export->write;
 
-ok(-e $dbfile, "Writing output file.");
-
+ok( -e $dbfile, "Writing output file." );
 
 ## Re-import and check content
 
 my $import = Paperpile::Plugins::Import::DB->new( file => $dbfile );
 $import->connect();
 my $imported = $import->page( 0, 1000 );
-
 
 my @original_sha1 = ();
 push @original_sha1, $_->sha1 foreach @data;
@@ -56,6 +52,6 @@ my @new_sha1 = ();
 push @new_sha1, $_->sha1 foreach @$imported;
 @new_sha1 = sort @new_sha1;
 
-is_deeply(\@original_sha1, \@new_sha1, 'Checking content.');
+is_deeply( \@original_sha1, \@new_sha1, 'Checking content.' );
 
-
+unlink $dbfile;

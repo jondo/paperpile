@@ -12,6 +12,8 @@ use Path::Class;
 use Config::Any;
 use HTTP::Cookies;
 use WWW::Mechanize;
+use Compress::Zlib;
+use MIME::Base64;
 
 $Data::Dumper::Indent = 1;
 
@@ -133,5 +135,37 @@ sub adjust_root {
   $path =~ s/^ROOT/$root/;
 
   return $path;
+
+}
+
+sub encode_db {
+
+  (my $self, my $file) = @_;
+
+  open(FILE, "<$file") || die("Could not read $file ($!)");
+  binmode(FILE);
+
+  my $content='';
+  my $buff;
+
+  while (read(FILE, $buff, 8 * 2**10)) {
+    $content.=$buff;
+  }
+
+  my $compressed = Compress::Zlib::memGzip($content) ;
+  my $encoded = encode_base64($compressed);
+
+  return $encoded;
+
+}
+
+sub decode_db {
+
+  ( my $self, my $string ) = @_;
+
+  my $compressed=decode_base64($string);
+  my $uncompressed = Compress::Zlib::memGunzip($compressed);
+
+  return $uncompressed;
 
 }
