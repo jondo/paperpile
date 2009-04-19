@@ -8,13 +8,19 @@ use lib "../blib/lib/";
 use Biblio::CSL;
 
 my $usage = << "JUS";
-  usage: perl $0 -m mods.xml.file -c csl.file -t type
+  usage: perl $0 -m mods.xml.file -c csl.file -i ID-string -t type
   
   options: 
         -m      MODS input xml file.
-		[REQUIRED]
+                [REQUIRED]
 
         -c      CSL input style file.
+                [REQUIRED]
+                
+        -i      ID-string, list of list of IDs needed to build the citations.
+                Citations of a single cite statement (\cite{a,b,c}) must be separated by comma 
+                and several cite statements are seperated by space.
+                Format: "a,b,c d e f,g"                
                 [REQUIRED]
 
         -f      Output format, e.g. txt, html, bibtex
@@ -28,31 +34,37 @@ my $usage = << "JUS";
 	at STDOUT
 JUS
 
-my ( $opt_m, $opt_c, $opt_f ) = ( "", "", "" );
+my ($opt_m, $opt_c, $opt_i, $opt_f) = ("", "", "", "");
 
 GetOptions(
   "m=s" => \$opt_m,
   "c=s" => \$opt_c,
-  "f=s" => \$opt_f
+  "f=s" => \$opt_f,
+  "i=s" => \$opt_i
 );
 
-if ( !$opt_m || !$opt_c || !$opt_f ) {
+if ( !$opt_m || !$opt_c || !$opt_f || $opt_i eq "") {
   print STDERR $usage;
   exit;
 }
 
 my $o = Biblio::CSL->new(
-  mods   => $opt_m,
-  csl    => $opt_c,
-  format => $opt_f
+  mods => $opt_m,
+  csl => $opt_c,
+  format => $opt_f,
+  IDs => $opt_i,
+  generateCitations => 1
 );
 
 
 #$o->version();
-print "\n--- Beispiel: txt ---\n\n";
+print "\n--- Beispiel: txt ---\n";
 
 $o->transform();
 
-print "\nBibliography:\n";
+print "\nCitations (".$o->getCitationsSize()."):\n";
+$o->citationsToString();
+
+print "\nBibliography (".$o->getBiblioSize()."):\n";
 $o->biblioToString();
 #print Dumper $o->{biblio}

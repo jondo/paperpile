@@ -44,17 +44,46 @@ has 'format' => (
   reader   => 'get_format',
   writer   => 'set_format',
   default  => 'txt',
-  trigger  => \&_format_set,
+  trigger  => \&_set_format,
   required => 1
+);
+
+# list of IDs
+# several IDs within a citation are separated by comma
+# several individual citations are seperated by space
+# e.g. "a,b,c d e f,g" for \cite{a,b,c} \cite{d} \cite{e} \cite{e} \cite{f,g}  
+has 'IDs' => (
+  is       => 'rw',
+  isa      => 'Str',
+  reader   => 'get_IDs',
+  writer   => 'set_IDs',
+  required => 1
+);
+
+# switch to put citation generation on (=1) or off (=0).
+# TODO: Do we need such a switch for the bibliography, too?
+has 'generateCitations' => (
+  is        => 'rw',
+  isa       => 'Int',
+  default   => "1",
+  required  => 0
 );
 
 # sorted array of strings, 
 # after transformation it contains the list of citations
 my @_citations = (); # the actual container
-has 'citation' => (
-  is       => 'ro',
+has 'citations' => (
+  is       => 'rw',
   isa      => 'ArrayRef[Str]',
   required => 0
+);
+
+# the overall number of citations
+has '_citationsSize' => (
+  is        => 'rw',
+  isa       => 'Int',
+  default   => 0,
+  required  => 0
 );
 
 # sorted array of strings, 
@@ -67,8 +96,16 @@ has 'biblio' => (
   required => 0
 );
 
-# citation counter,  number of current citation
-has '_citationNumber' => (
+# citation counter,  number of currently parsed biblio entry
+has '_biblioNumber' => (
+  is        => 'rw',
+  isa       => 'Int',
+  default   => 0,
+  required  => 0
+);
+
+# the overall number of biblio entries
+has '_biblioSize' => (
   is        => 'rw',
   isa       => 'Int',
   default   => 0,
@@ -83,6 +120,22 @@ has '_biblio_str' => (
   required  => 0
 );
 
+# hashref of the mods hash 
+has '_m' => (
+  is       => 'rw',
+  isa      => 'XML::Smart',
+  required => 0
+);
+
+# hashref of the csl hash
+has '_c' => (
+  is       => 'rw',
+  isa      => 'XML::Smart',
+  required => 0
+);
+
+
+
 # is called after construction
 # e.g. useful to validate attributes
 sub BUILD {
@@ -95,19 +148,91 @@ sub BUILD {
         die "ERROR: The CSL file '", $self->get_csl, "' does not exist!";
     }
     
-    $self->biblio(\@_biblio);
+    # register result-arrays
+    $self->citations(\@_citations);
+    $self->biblio(\@_biblio);    
+      
+    # generate the central hash structures
+    $self->_m(XML::Smart->new($self->get_mods));
+    $self->_c(XML::Smart->new($self->get_csl));
+    
+    # initialize some attributes
+    $self->_citationsSize(_setCitationsSize($self));
+    $self->_biblioSize(_setBiblioSize($self));
+    # do we have a biblio entry for each citation and vice versa?
+    if($self->_citationsSize != $self->_biblioSize) {
+        print STDERR  "Warning: the number of citations and the size of the bibliography differ, but should be of equal.";
+    }
 }
 
 # trigger to check that the format is validly set to a supported type
-sub _format_set {
-  my ( $self, $format, $meta_attr ) = @_;
+sub _set_format {
+    my ($self, $format, $meta_attr) = @_;
 
-  if ( $format ne "txt" ) {
-	die "ERROR: Unknwon output format\n";
-  }
+    if ($format ne "txt") {
+        die "ERROR: Unknwon output format\n";
+    }
 }
 
+# set the attribute _citationsSize
+sub _setCitationsSize {
+    my ($self) = @_;
+    
+    my $str = $self->get_IDs();
+    
+    $str =~ s/\,/ /g;
+    my @tmp = split /\s+/, $str;
+    
+    return scalar(@tmp);    
+}
+
+# returns the overall number of citations
+sub getCitationsSize {
+    my $self = shift;
+    
+    return $self->_citationsSize;
+}
+
+
+# set the attribute _biblioSize
+sub _setBiblioSize {
+    my ($self) = @_;
+    
+    my $ret = 0;
+    
+    if($self->_m->{modsCollection}) { 
+        my @tmp = $self->_m->{modsCollection}->{mods}->('@');
+        
+        # complicated, but necessary 
+        # because $ret = scalar(..) wouldn't pass the Moose type-constraint checks.
+        for(my $i=0; $i<=$#tmp; $i++) { 
+            $ret++;
+        }
+    }
+    else { # no collection, transform just a single mods        
+        $ret = 1;
+    }
+    
+    return $ret;
+}
+
+# returns the size of the bibliography
+sub getBiblioSize {
+    my $self = shift;
+    
+    return $self->_biblioSize;
+}
+
+######################################################
 ### class methods
+
+# print citations
+sub citationsToString {
+        my $self = shift;
+        foreach my $item ( @{$self->citations} ) {
+            print $item, "\n";
+        }
+}
 
 # print bibliography
 sub biblioToString {
@@ -120,34 +245,130 @@ sub biblioToString {
 # do the transformation of the mods file given the csl style file
 sub transform {
     my $self = shift;
-
-    my $m = XML::Smart->new($self->get_mods);
-    my $c = XML::Smart->new($self->get_csl);
-
-    #print Dumper $m;
-    #print Dumper $c;
     
-    if($m->{modsCollection}) { # transform the complete collection
-        foreach my $mods ($m->{modsCollection}->{mods}->('@')) {
+    # handle citations
+    if($self->generateCitations==1) {
+        if($self->_c->{style}->{citation} ) {
+            _parseCitations($self);
+        }
+        else {
+            die "ERROR: CSL-element 'citation' not available?";
+        }
+    }
+    
+    # handle bibliography
+    if($self->_m->{modsCollection}) { # transform the complete collection
+        foreach my $mods ($self->_m->{modsCollection}->{mods}->('@')) {
             #print Dumper $mods;            
-            transformEach($mods, $c, $self);
+            transformEach($mods, $self); # TODO: only 1 param: self
         }
     }
     else { # no collection, transform just a single mods        
-        transformEach($m->{mods}, $c, $self);
+        transformEach($self->_m->{mods}, $self); # TODO: only 1 param: self
+    }
+}
+
+
+###########################
+## private methods
+
+# case $self->_c->{style}->{citation}
+sub _parseCitations {
+    my $self = shift;
+    
+    # shorten the whole thing
+    my $ptr = $self->_c->{style}->{citation}->pointer;
+    #print Dumper $ptr;
+        
+    my ($prefix, $suffix, $collapse) = ("", "", 0);
+    $prefix = $ptr->{layout}->{prefix} if(exists $ptr->{layout}->{prefix});
+    $suffix = $ptr->{layout}->{suffix} if(exists $ptr->{layout}->{suffix});
+    
+    # should we display numbers (e.g. 1, 2, 3, ...) or string-labels (e.g. Rose:09)?
+    my $numbers = 0;
+    if(exists $ptr->{layout}->{text}->{variable}) { # a first way to specify citation-number
+        switch($ptr->{layout}->{text}->{variable}) {
+            case "citation-number" {
+                $numbers = 1;
+            }
+            else {
+                die "ERROR: The CSL-attribute style->citation->layout->text->variable eq '".($ptr->{layout}->{text}->{variable})."' is not implemented, yet.";
+            }
+        }
+    }
+    elsif(exists $ptr->{option}->{value}) { # second posibility of specifying citation-number
+        switch($ptr->{option}->{value}) {
+            case "citation-number" {
+                $numbers = 1;
+            }
+            else {
+                die "ERROR: The CSL-attribute style->citation->option->value eq '".($ptr->{option}->{value})."' is not implemented, yet.";
+            }
+        }
+    }
+    
+    # check for collapse mode
+    if(exists $ptr->{option}->{name}) {
+        switch($ptr->{option}->{name}) {
+            case "collapse" {
+                $collapse = 1;
+            }
+            else {
+                die "ERROR: The CSL-attribute style->citation->option->name eq '".($ptr->{option}->{name})."' is not implemented, yet.";
+            }
+        }
+    }
+        
+    my @list = split /\s+/, $self->get_IDs();
+    my $citation_i = 0;
+    foreach my $l (@list) {
+        my $ret_id = ""; # result id that will be returned (stored in the citations array).
+        
+        # add prefix
+        $ret_id .= $prefix;
+        
+        my @ids = split /\,/, $l;
+        
+        my $qtIDs = scalar @ids;
+        if($qtIDs<3) {        
+            for(my $i=0; $i<$qtIDs; $i++) {
+                $citation_i++;
+                $ids[$i] = $citation_i if($numbers);
+                $ret_id .= $ids[$i];
+                $ret_id .= $ptr->{layout}->{delimiter} if($i<($qtIDs-1) && exists $ptr->{layout}->{delimiter});
+            }
+        }
+        else { # >= 3 && collapse -> [1-3]
+            # take care of the first and the last element
+            if($numbers) {
+                $citation_i++;
+                $ids[0] = $citation_i;
+                $ids[$qtIDs-1] = $qtIDs+$citation_i-1;
+                $citation_i=$ids[$qtIDs-1]; # set for next round
+            }
+            
+            $ret_id .= $ids[0]."-".$ids[$qtIDs-1];
+        }
+        
+        # add suffix
+        $ret_id .= $suffix;
+        
+        #print "$ret_id\n";    
+        push @_citations, $ret_id; # store the citation
     }
 }
 
 
 # parse a single mods entry
 sub transformEach() {
-    my ($mods, $c, $self) = @_;
+    my ($mods, $self) = @_;
     
-    if($c->{style}) {
-        if( $c->{style}->{bibliography} ) {
-            if( $c->{style}->{bibliography}->{layout} ) {
-                my @nodes = $c->{style}->{bibliography}->{layout}->nodes_keys();
-                my @order = $c->{style}->{bibliography}->{layout}->order();
+    if($self->_c->{style}) {
+        # here we handle the bibliography only, the citations have already been generated.
+        if( $self->_c->{style}->{bibliography} ) {
+            if( $self->_c->{style}->{bibliography}->{layout} ) {
+                my @nodes = $self->_c->{style}->{bibliography}->{layout}->nodes_keys();
+                my @order = $self->_c->{style}->{bibliography}->{layout}->order();
 
                 # node names are not unique, e.g. text
                 # therefore we have to keep the index position for each node in the respective array
@@ -161,22 +382,22 @@ sub transformEach() {
                 foreach my $o ( @order ) {
                     #print "\n--- $o ---\n";
                     
-                    switch( $c->{style}->{bibliography}->{layout}->{$o}->key() ) {
+                    switch($self->_c->{style}->{bibliography}->{layout}->{$o}->key()) {
                         case "suffix" {
-                            _layoutSuffix($mods, $c);
+                            _layoutSuffix($mods, $self);
                         }
                         case "text" {
-                            _layoutText($mods, $c, \%i, $o, $self);
+                            _layoutText($mods, \%i, $o, $self);
                         }
                     
                         case "date" {
-                            _layoutDate($mods, $c);
+                            _layoutDate($mods, $self);
                         }
                         case "choose" {
-                            _layoutChoose($mods, $c, $self);
+                            _layoutChoose($mods, $self);
                         }
                         else {
-                            die "ERROR: The case CSL-attribute style->bibliography->layout eq '".($c->{style}->{bibliography}->{layout}->{$o}->key())."' is not implemented yet!";
+                            die "ERROR: The case CSL-attribute style->bibliography->layout eq '".($self->_c->{style}->{bibliography}->{layout}->{$o}->key())."' is not implemented yet!";
                         }
                     }
                     $i{$o}++ if(exists $i{$o});
@@ -199,23 +420,25 @@ sub transformEach() {
 }
 
 
-# case $c->{style}->{bibliography}->{layout} eq suffix
+
+# case $self->_c->{style}->{bibliography}->{layout} eq suffix
 sub _layoutSuffix {
-    my ($mods, $c) = @_;
+    my ($mods, $self) = @_;
     # TODO
 }
 
 
-# case $c->{style}->{bibliography}->{layout} eq text
+# case $self->_c->{style}->{bibliography}->{layout} eq text
 sub _layoutText {
-    my ($mods, $c, $i, $o, $self) = @_;
-                                             
-    my $text = $c->{style}->{bibliography}->{layout}->{text}->[$i->{$o}]->pointer;
+    my ($mods, $i, $o, $self) = @_;
+    
+    # shorten the whole thing
+    my $text = $self->_c->{style}->{bibliography}->{layout}->{text}->[$i->{$o}]->pointer;
                         
     if(exists $text->{variable} && exists $text->{suffix} && $text->{variable} eq "citation-number") {
-        $self->{_citationNumber}++;
-        #print $self->_citationNumber, $text->{suffix};
-        $self->{_biblio_str} .= $self->{_citationNumber}.$text->{suffix};
+        $self->{_biblioNumber}++;
+        #print $self->_biblioNumber, $text->{suffix};
+        $self->{_biblio_str} .= $self->{_biblioNumber}.$text->{suffix};
     }
     elsif($text->{macro} eq "author") {
         #print Dumper $text;
@@ -228,7 +451,7 @@ sub _layoutText {
             my ($et_al_min , $et_al_use_first) = (0, 0);
             
             # read et-al options
-            my @options = $c->{style}->{bibliography}->{option}('@');
+            my @options = $self->_c->{style}->{bibliography}->{option}('@');
             foreach my $o ( @options ) {
                #print Dumper $o->pointer;
                 switch($o->pointer->{name}) {
@@ -249,7 +472,7 @@ sub _layoutText {
                 
                 # either not enough for et-al or we use the first authors until we reach $et_al_use_first
                 if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) ) {
-                    my $c_nameEQauthor = $c->{style}->{macro}('name','eq','author') ;
+                    my $c_nameEQauthor = $self->_c->{style}->{macro}('name','eq','author') ;
                     my $family_name = $n->{namePart}('type', 'eq', 'family');
                     my @given_names = $n->{namePart}('type', 'eq', 'given');
                     #print Dumper @given_names;
@@ -310,18 +533,79 @@ sub _layoutText {
     }    
 }
 
-# case $c->{style}->{bibliography}->{layout} eq date
+# case $self->_c->{style}->{bibliography}->{layout} eq date
 sub _layoutDate {
-    my ($mods, $c) = @_;
-    # TODO
+    my ($mods, $self) = @_;
+    
+    # just shorten
+    my $ptr = $self->_c->{style}->{bibliography}->{layout}->{date}->pointer;
+    
+    $self->{_biblio_str} .= $ptr->{prefix} if(exists $ptr->{prefix});
+    
+    if(exists $ptr->{'date-part'}) {
+        if(exists $ptr->{'date-part'}->{name}) {
+            switch($ptr->{'date-part'}->{name}) { # month | day | year-other
+                case "month" { # 1. 
+                    
+                }
+                case "day" { # 2.
+                    
+                }
+                case "year" { # 3.1
+                    # unfortunately there are several ways to define the year:
+                    my $year = "";
+                    if(exists $mods->{relatedItem}->{part}->{date}) {
+                        $year = $mods->{relatedItem}->{part}->{date}->{CONTENT};
+                    }
+                    elsif(exists $mods->{relatedItem}->{originInfo}->{dateIssued}) {
+                        $year = $mods->{relatedItem}->{originInfo}->{dateIssued}->{CONTENT};
+                        if($year =~ /(\d\d\d\d)$/) {
+                            $year = $1;
+                        }
+                    }
+                    else {
+                        die "ERROR: How else should I get the year info?";
+                    }
+                    
+                    # now we have the long year, e.g. 2000.
+                    # perhaps we have to shorten it                    
+                    if(exists $ptr->{'date-part'}->{form}) {
+                        switch($ptr->{'date-part'}->{form}) {
+                            case "short" {
+                                
+                            }
+                            case "long" {
+                                
+                            }
+                            else {
+                                die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->form eq '".($ptr->{'date-part'}->{form})."' is not implemented, yet.";
+                            }
+                        }
+                    }
+                    
+                    # the year is ready, add it 
+                    $self->{_biblio_str} .= $year;
+                    
+                }
+                case "other" { # 3.2
+                    
+                }
+                else {
+                    die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->name eq '".($ptr->{'date-part'}->{name})."' is not implemented, yet.";
+                }
+            }
+        }
+    }
+    
+    $self->{_biblio_str} .= $ptr->{suffix} if(exists $ptr->{suffix});    
 }
 
-# case $c->{style}->{bibliography}->{layout} eq choose
+# case $self->_c->{style}->{bibliography}->{layout} eq choose
 sub _layoutChoose {
-    my ($mods, $c, $self) = @_;
+    my ($mods, $self) = @_;
     
-    my @options = $c->{style}->{bibliography}->{layout}->{choose}->nodes_keys();
-    my $opt = $c->{style}->{bibliography}->{layout}->{choose}->pointer;
+    my @options = $self->_c->{style}->{bibliography}->{layout}->{choose}->nodes_keys();
+    my $opt = $self->_c->{style}->{bibliography}->{layout}->{choose}->pointer;
     foreach my $o (@options) {
         if($opt->{$o}->{type}) {        
             switch($opt->{$o}->{type}) {
@@ -415,11 +699,11 @@ sub _layoutChoose {
             }
             
             if(exists $opt->{$o}->{group}) {        
-                #my @order = $c->{style}->{bibliography}->{layout}->{choose}->{$o}->{group}->order();
+                #my @order = $self->_c->{style}->{bibliography}->{layout}->{choose}->{$o}->{group}->order();
                 #print Dumper @order; exit;
                 my $elemNumber = 0;
                 # return value of elemNumber not important but necessary to keep the biblio_string intact.
-                _parseGroup($mods, $c, $self, $opt->{$o}->{group}, 0);
+                _parseGroup($mods, $self, $opt->{$o}->{group}, 0);
                 
                 
             }
@@ -435,7 +719,7 @@ sub _layoutChoose {
 # In subgroups we extend the string, recursively.
 # Furhermore, we need the number of overall printed elements in the recursion
 sub _parseGroup {
-    my ($mods, $c, $self, $g, $elemNumber) = @_;
+    my ($mods, $self, $g, $elemNumber) = @_;
 
     $self->{_biblio_str} .= $g->{'prefix'}  if(exists $g->{'prefix'});
     
@@ -494,7 +778,7 @@ sub _parseGroup {
                     
                     # can appear either as hash
                     if(exists $g->{$k}->{variable}) {
-                        $self->{_biblio_str} .= _parseVariable($mods, $c, $self, $g->{$k}->{variable});
+                        $self->{_biblio_str} .= _parseVariable($mods, $self, $g->{$k}->{variable});
                     }
                 }
                 elsif(ref($g->{$k}) eq "ARRAY") {
@@ -504,14 +788,14 @@ sub _parseGroup {
                         $self->{_biblio_str} .= $g->{'delimiter'} if($elemNumber>1 && exists $g->{'delimiter'});
                     
                         if(exists $v->{variable}) {
-                            $self->{_biblio_str} .= _parseVariable($mods, $c, $self, $v->{variable});
+                            $self->{_biblio_str} .= _parseVariable($mods, $self, $v->{variable});
                         }
                     }
                 }
                 
             }
             case "group" {
-               $elemNumber = _parseGroup($mods, $c, $self, $g->{$k}, 0);
+               $elemNumber = _parseGroup($mods, $self, $g->{$k}, 0);
             }
             case "class" {
                 
@@ -530,7 +814,7 @@ sub _parseGroup {
 
 
 sub _parseVariable {
-    my ($mods, $c, $self, $var) = @_;
+    my ($mods, $self, $var) = @_;
     
     #print Dumper $var;
     
