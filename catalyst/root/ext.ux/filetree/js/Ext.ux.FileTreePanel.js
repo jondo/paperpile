@@ -1155,7 +1155,9 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	 */
 	,onDblClick:function(node, e) {
 
-        this.findParentByType(Paperpile.FileChooser).showDir(this.rootPath+"/"+node.text);
+        if (node.attributes.type=='DIR'){
+            this.findParentByType(Paperpile.FileChooser).showDir(this.rootPath+"/"+node.text);
+        }
         
         //node.expand(true, true, function(node){ });
         //this.setRootNode(node);

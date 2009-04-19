@@ -59,7 +59,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                            tag:'div',
                            html:'<ul class="pp-filechooser-path"><li>inhere</li></ul>'
                        },
-                       width:200,
+                       width:400,
                       },
                   ],
                   items:[{xtype:'panel', itemId:'filetree', id:'DUMMY'}],
@@ -75,8 +75,8 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                fn: function(){
                                    var ft=this.items.get('filetree');
                                    
-                                   var path=this.getCurrentSelection();
-
+                                   var path=this.currentRoot+"/"+this.textfield.getValue();
+                                   
                                    if (this.saveMode){
                                        Ext.Ajax.request({
                                            url: '/ajax/files/stats',
@@ -140,9 +140,6 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
         this.textfield=this.items.get('northpanel').items.get('textfield');
 
         
-
-
-        
     },
 
     updateTextfield: function(value){
@@ -158,17 +155,6 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     onSelect: function(node,path){
         this.updateTextfield(node.text);
         this.saveDefault='';
-        this.currentRoot=path;
-
-    },
-
-    getCurrentSelection: function(){
-
-        var parts=this.currentRoot.split('/');
-        var newParts=parts.slice(0,parts.length-1);
-        newParts.push(this.textfield.getValue());
-        return newParts.join('/');
-        
     },
 
     showDir: function(path){
@@ -179,6 +165,8 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
         } else {
             this.updateTextfield('');
         }
+
+        this.currentRoot=path;
 
         var cp=this.items.get('centerpanel');
         
