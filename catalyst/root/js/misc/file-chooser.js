@@ -3,6 +3,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     title: "Select file",
     selectionMode: 'FILE',
     saveMode: false,
+    warnOnExisting: true,
     saveDefault: 'new-file.dat',
     currentRoot: "ROOT",
     showHidden: false,
@@ -77,7 +78,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                    
                                    var path=this.currentRoot+"/"+this.textfield.getValue();
                                    
-                                   if (this.saveMode){
+                                   if (this.saveMode && this.warnOnExisting){
                                        Ext.Ajax.request({
                                            url: '/ajax/files/stats',
                                            params: { location: path},
@@ -139,6 +140,14 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
         
         this.textfield=this.items.get('northpanel').items.get('textfield');
 
+        this.textfield.on('change',
+                          function(field, newValue, oldValue){
+                              console.log(newValue);
+                              this.saveDefault=newValue;
+                          },
+                          this
+                         );
+
         
     },
 
@@ -154,7 +163,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
     onSelect: function(node,path){
         this.updateTextfield(node.text);
-        this.saveDefault='';
+        this.saveDefault=node.text;
     },
 
     showDir: function(path){
@@ -170,7 +179,6 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
         var cp=this.items.get('centerpanel');
         
-
         // Remove old tree and build new one
         cp.remove(cp.items.get('filetree'));
         

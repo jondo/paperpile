@@ -26,7 +26,9 @@ foreach my $entry ( @{ $bu->get_data } ) {
 
 ### Writing to file
 
-my $settings={ export_file => '../../data/export.bib'};
+my $settings={ out_file => '../../data/export.bib',
+               out_format => 'BIBTEX',
+             };
 
 my $export = Paperpile::Plugins::Export::Bibfile->new( data => [@data],
                                                        settings=> $settings);
@@ -41,8 +43,10 @@ is($count, scalar @data, "Exporting file.");
 
 ### Settings
 
-$settings={ export_file => '../../data/export.bib',
-            export_bibout_whitespace=>1,
+$settings={ out_file => '../../data/export.bib',
+            out_format => 'BIBTEX',
+            bibout_whitespace=>1,
+            bibout_brackets=>1,
           };
 
 $export = Paperpile::Plugins::Export::Bibfile->new( data => [@data],

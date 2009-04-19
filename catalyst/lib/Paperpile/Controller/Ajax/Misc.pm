@@ -133,6 +133,7 @@ sub init_session : Local {
     # Currently only support linux32, linux64 and windows32
 
     my $platform='';
+    my $home='';
     if ($^O=~/linux/i){
       my @f=`file /bin/ls`; # More robust way for this??
       if ($f[0]=~/64-bit/){
@@ -140,13 +141,16 @@ sub init_session : Local {
       } else {
         $platform='linux32';
       }
+      $home=$ENV{HOME};
     }
 
     if ($^O=~/cygwin/i or $^O=~/MSWin/i){
       $platform='windows32';
+      $home=''; # Add logic for cygwin here
     }
 
     $c->config->{app_settings}->{platform}=$platform;
+    $c->config->{app_settings}->{homedir}=$home;
 
     $c->model('App')->init_db( $c->config->{app_settings} );
     $user_db=$c->model('App')->get_setting('user_db');

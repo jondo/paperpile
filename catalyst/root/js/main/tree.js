@@ -740,8 +740,21 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         });
 
         (function(){treeEditor.triggerEdit(node);}.defer(10));
+    },
+    
+
+    exportNode: function(){
+
+        var node = this.getSelectionModel().getSelectedNode();
+
+        var window=new Paperpile.ExportWindow({source_node: node.id});
+        window.show();
+
     }
+
 });
+
+
 
 
 
@@ -770,6 +783,12 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
               handler: tree.renameNode,
               scope: tree
             },
+            { id: 'folder_menu_export',
+              text:'Export',
+              handler: tree.exportNode,
+              scope: tree
+            },
+
         ]});
         
         Paperpile.Tree.FolderMenu.superclass.constructor.call(this, config);
@@ -779,6 +798,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
                     if (this.node.id == 'FOLDER_ROOT'){
                         this.items.get('folder_menu_delete').hide();
                         this.items.get('folder_menu_rename').hide();
+                        this.items.get('folder_menu_export').hide();
                     } else {
 
                     }
@@ -830,7 +850,11 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
               handler: tree.renameNode,
               scope: tree
             },
-
+            { id: 'active_menu_export',
+              text:'Export',
+              handler: tree.exportNode,
+              scope: tree
+            },
             { id: 'active_menu_configure',
               text:'Configure',
               handler: function(){
@@ -849,6 +873,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
                     if (this.node.id == 'ACTIVE_ROOT'){
                         this.items.get('active_menu_delete').hide();
                         this.items.get('active_menu_rename').hide();
+                        this.items.get('active_menu_export').hide();
                     } else {
                         this.items.get('active_menu_new').hide();
                         this.items.get('active_menu_configure').hide();
@@ -940,6 +965,12 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
               handler: tree.renameTag,
               scope: tree
             },
+            { id: 'tags_menu_export',
+              text:'Export',
+              handler: tree.exportNode,
+              scope: tree
+            },
+
 
         ]});
         

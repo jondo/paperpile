@@ -74,6 +74,17 @@ sub page {
   return $page;
 }
 
+
+sub all {
+
+  ( my $self ) = @_;
+
+  return $self->page(0,100);
+
+}
+
+
+
 # function: _pubFetch
 
 # Sends request to PubMed for page given by $offset and $limit and

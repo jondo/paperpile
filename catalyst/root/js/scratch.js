@@ -46,10 +46,13 @@ Ext.onReady(function() {
     //vp.on('render', function(){alert('inhere')}, Ext.getCmp('pdf_viewer'));
 
     win=new Paperpile.FileChooser({
+        currentRoot:'ROOT/home/wash',
+        //saveMode: true,
+        //saveDefault: 'new-file.dat',
         callback:function(button,path){
             if (button == 'OK'){
                 var viewer=Ext.getCmp('pdf_viewer');
-                //viewer.initPDF('ROOT/home/wash/PDFs/gesell06.pdf');
+                //console.log(path);
                 viewer.initPDF(path);
                 vp.show();
             }

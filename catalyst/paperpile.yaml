@@ -51,7 +51,6 @@ pub_fields:
   abstract:      "Abstract"
   keywords:      "Author key words"
   linkout:       "Website"
-  pdf:           "PDF"
   pdf_url:       "PDF URL"
   notes:         "Notes"
   tags:          "Tags"
