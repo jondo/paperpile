@@ -1,4 +1,8 @@
 Paperpile.ExportWindow = Ext.extend(Ext.Window, {
+
+    source_grid: null,
+    source_node: null,
+    selection:[],
     
     initComponent: function() {
         Ext.apply(this, {
@@ -10,23 +14,77 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
             closeAction:'hide',
             plain: true,
             modal:true,
-            bbar: [  {xtype:'tbfill'},
-                     { text: 'Next',
-                       itemId: 'ok_button',
-                       cls: 'x-btn-text-icon next',
-                       listeners: {
-                           click:  { 
-                               fn: function(){
-                                   var plugin=this.items.get('form').getForm().getValues().plugin;
-                                   var pluginForm=new Paperpile['Export'+plugin]({bodyStyle:'padding: 10px 10px 0 10px'});
-                                   //bodyStyle: 'padding: 10px 10px 0 10px';
-                                   this.items.add(pluginForm);
-                                   this.getLayout().setActiveItem(1);
-                               },
-                               scope:this
-                           }
-                       }
-                     }
+            bbar: [ { text: 'Back',
+                      itemId: 'prev_button',
+                      cls: 'x-btn-text-icon prev',
+                      listeners: {
+                          click:  { 
+                              fn: function(){
+                                  this.getLayout().setActiveItem(0);
+                                  this.getBottomToolbar().items.get('prev_button').hide();
+                                  this.getBottomToolbar().items.get('next_button').show();
+                                  this.getBottomToolbar().items.get('ok_button').hide();
+                              },
+                              scope:this
+                          }
+                      },
+                      hidden: true,
+                    },
+                    { xtype:'tbfill'},
+                    { text: 'Next',
+                      itemId: 'next_button',
+                      cls: 'x-btn-text-icon next',
+                      listeners: {
+                          click:  { 
+                              fn: function(){
+                                  var plugin=this.items.get('form').getForm().getValues().plugin;
+
+                                  // Create or update plugin form for second tab depending on selection
+                                  if ((!this.pluginForm) || (this.pluginForm.export_name != plugin)){
+                                      this.items.remove(this.pluginForm);
+                                      this.pluginForm=new Paperpile['Export'+plugin]({bodyStyle:'padding: 10px 10px 0 10px'});
+                                      this.items.add(this.pluginForm);
+                                  }
+
+                                  this.getLayout().setActiveItem(1);
+                                  this.getBottomToolbar().items.get('ok_button').show();
+                                  this.getBottomToolbar().items.get('next_button').hide();
+                                  this.getBottomToolbar().items.get('prev_button').show();
+                              },
+                              scope:this
+                          }
+                      }
+                    },
+                    { text: 'Export',
+                      itemId: 'ok_button',
+                      cls: 'x-btn-text-icon ok',
+                      listeners: {
+                          click:  { 
+                              fn: function(){
+                                  var form=this.items.get(1).getForm();
+                                  form.submit({
+                                      url:'/ajax/plugins/export',
+                                      params: {source_grid: this.source_grid,
+                                               source_node: this.source_node,
+                                               export_name: this.pluginForm.export_name,
+                                               selection: this.selection
+                                              },
+                                      success: function(){
+                                          this.close();
+                                          Ext.getCmp('statusbar').clearStatus();
+                                          Ext.getCmp('statusbar').setText('Exported data.');
+                                      },
+                                      scope:this,
+                                      failure: function(){
+                                          alert('nope')
+                                      },
+                                  })
+                              },
+                              scope:this
+                          }
+                      },
+                      hidden:true
+                    },
                   ],
             items: [
                 { xtype: 'form',
@@ -50,34 +108,6 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
                        inputValue: 'DB',
                        hideLabel: true,
                       },
-
-
-                      /*
-                      {xtype:'combo',
-                       itemId:'file_format',
-                       editable:false,
-                       forceSelection:true,
-                       triggerAction: 'all',
-                       disableKeyFilter: true,
-                       hideLabel:true,
-                       mode: 'local',
-                       store: [['BIBTEX','BibTeX'], 
-                               ['RIS','RIS'],
-                               ['ENDNOTE','EndNote'],
-                               ['ENDNOTEXML', 'EndNote XML'],
-                               ['MODS', 'MODS'],
-                              ],
-                       hiddenName: 'pubtype',
-                       listeners: {
-                           select: {
-                               fn: function(combo,record,indec){
-                                   //this.setFields(record.data.value);
-                               },
-                               scope:this,
-                           }
-                       }
-                      },
-                      */
                       {xtype: 'radio',
                        name: 'plugin',
                        boxLabel: 'Website',

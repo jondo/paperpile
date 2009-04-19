@@ -7,33 +7,33 @@ use 5.010;
 
 extends 'Paperpile::Plugins::Export';
 
-## Supported settings (correspond to the Bibutils settings + "export_"-prefix
+## Supported settings (correspond to the Bibutils settings)
 
-#  export_format_out: MODS, BIBTEX, RIS, ENDNOTE, COPAC, ISI, MEDLINE, ENDNOTEXML, BIBLATEX
-#  export_charsetout
-#  export_latexout
-#  export_utf8out
-#  export_xmlout
-#  export_bibout_finalcomma
-#  export_bibout_singledash
-#  export_bibout_whitespace
-#  export_bibout_brackets
-#  export_bibout_uppercase
-#  export_bibout_strictkey
-#  export_modsout_dropkey
-#  export_wordout_dropkey
+#  out_format: MODS, BIBTEX, RIS, ENDNOTE, COPAC, ISI, MEDLINE, ENDNOTEXML, BIBLATEX
+#  charsetout
+#  latexout
+#  utf8out
+#  xmlout
+#  bibout_finalcomma
+#  bibout_singledash
+#  bibout_whitespace
+#  bibout_brackets
+#  bibout_uppercase
+#  bibout_strictkey
+#  modsout_dropkey
+#  wordout_dropkey
 
 sub write {
 
   my ($self) = @_;
 
-  my %s=();
+  my %s = %{ $self->settings };
 
-  foreach my $key (keys %{$self->settings}){
-    my $new_key=$key;
-    $new_key=~s/^export_//;
-    $s{$new_key}=$self->settings->{$key};
-  }
+  #foreach my $key (keys %{$self->settings}){
+  #  my $new_key=$key;
+  #  $new_key=~s/^export_//;
+  #  $s{$new_key}=$self->settings->{$key};
+  #}
 
   my @bibutils = ();
 
@@ -41,29 +41,38 @@ sub write {
     push @bibutils, $pub->_format_bibutils;
   }
 
-  my $bu = Bibutils->new(
-    in_file    => '',
-    out_file   => $self->settings->{export_file},
-    in_format  => Bibutils::BIBTEXIN,
-    out_format => Bibutils::BIBTEXOUT,
+  my %formats = (
+    MODS       => Bibutils::MODSOUT,
+    BIBTEX     => Bibutils::BIBTEXOUT,
+    RIS        => Bibutils::RISOUT,
+    ENDNOTEOUT => Bibutils::ENDNOTEOUT,
+    ISI        => Bibutils::ISIOUT,
+    WORD2007   => Bibutils::WORD2007OUT,
   );
 
-  $bu->set_data([@bibutils]);
+  my $bu = Bibutils->new(
+    in_file    => '',
+    out_file   => $self->settings->{out_file},
+    in_format  => Bibutils::BIBTEXIN,
+    out_format => $formats{$self->settings->{out_format}},
+  );
 
-  $bu->write({%s});
+  $bu->set_data( [@bibutils] );
 
-  my $error=$bu->error;
+  $bu->write( {%s} );
 
-  if ($error != 0){
+  my $error = $bu->error;
 
-    my $msg="Data could not be exported. ";
+  if ( $error != 0 ) {
 
-    if ($error == Bibutils::ERR_CANTOPEN){
-      $msg.="Could not open file.";
+    my $msg = "Data could not be exported. ";
+
+    if ( $error == Bibutils::ERR_CANTOPEN ) {
+      $msg .= "Could not open file.";
     }
 
-    if ($error == Bibutils::ERR_MEMERR){
-      $msg.="Not enough memory.";
+    if ( $error == Bibutils::ERR_MEMERR ) {
+      $msg .= "Not enough memory.";
     }
 
     die($msg);

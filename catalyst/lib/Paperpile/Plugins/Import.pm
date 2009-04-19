@@ -42,6 +42,22 @@ sub page {
   return [];
 }
 
+
+# Function: all
+
+# Returns all entries. Override this function to limit maximum number
+# of returned elements
+
+sub all {
+
+  ( my $self ) = @_;
+
+  return $self->page(0,999999);
+
+}
+
+
+
 # Function: complete_details
 
 # For efficiency reasons and to avoid harassing sites with too many

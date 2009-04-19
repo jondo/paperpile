@@ -18,9 +18,18 @@
     background-image: url('/images/icons/accept.png');
 }
 
+.ok .x-btn-text {
+    background-image: url('/images/icons/accept.png');
+}
+
 .next .x-btn-text {
     background-image: url('/images/icons/arrow_right.png');
 }
+
+.prev .x-btn-text {
+    background-image: url('/images/icons/arrow_left.png');
+}
+
 
 
 .pp-basic {

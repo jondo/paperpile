@@ -9,7 +9,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         var _store=new Ext.data.Store(
             {  proxy: new Ext.data.HttpProxy({
-                url: '/ajax/grid/resultsgrid', 
+                url: '/ajax/plugins/resultsgrid', 
                 method: 'GET'
             }),
                baseParams:{grid_id: this.id,
@@ -114,7 +114,24 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                         this.completeEntry();
                                     },this);
 
+
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
+
+    },
+
+    
+    // Returns list of sha1s for the selected entries
+
+    getSelection: function(){
+
+        var selection=[];
+
+        this.getSelectionModel().each(
+            function(record){
+                selection.push(record.get('sha1'));
+            });
+
+        return selection;
 
     },
 
@@ -217,14 +234,17 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     exportEntry: function(what){
 
-        console.log(what);
-
-        var window=new Paperpile.ExportWindow();
+        var selection=[];
+        
+        if (what == 'selection'){
+            selection=this.getSelection();
+        }
+        
+        var window=new Paperpile.ExportWindow({source_grid:this.id, 
+                                               selection:selection,
+                                              });
 
         window.show();
-        
-        //window.getLayout().setActiveItem(0);
-        
 
     },
 
