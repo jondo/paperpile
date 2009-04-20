@@ -156,6 +156,9 @@ sub BUILD {
     $self->_m(XML::Smart->new($self->get_mods));
     $self->_c(XML::Smart->new($self->get_csl));
     
+    #print Dumper $self->_m; exit;
+    #print Dumper $self->_c; exit;
+    
     # initialize some attributes
     $self->_citationsSize(_setCitationsSize($self));
     $self->_biblioSize(_setBiblioSize($self));
@@ -679,24 +682,7 @@ sub _layoutChoose {
                 }
             }
         }
-        else { # no settings just print  
-            #print Dumper $opt->{$o};
-            if($opt->{$o}->{text}->{macro}) {
-                #print "NACH\n";
-                
-                $self->{_biblio_str} .= $opt->{$o}->{text}->{prefix} if($opt->{$o}->{text}->{prefix});
-                
-                if($opt->{$o}->{text}->{macro} eq "title") { 
-                    if($mods->{titleInfo}->{title}) {                        
-                        my $title = $mods->{titleInfo}->{title};
-                        $title =~ s/\n//g;
-                        $title =~ s/\s+/ /g;
-                        $self->{_biblio_str} .= $title;
-                    }
-                }
-                
-                $self->{_biblio_str} .= $opt->{$o}->{text}->{suffix} if($opt->{$o}->{text}->{suffix});
-            }
+        else { # no settings just print 
             
             if(exists $opt->{$o}->{group}) {        
                 #my @order = $self->_c->{style}->{bibliography}->{layout}->{choose}->{$o}->{group}->order();
@@ -778,7 +764,7 @@ sub _parseGroup {
                     
                     # can appear either as hash
                     if(exists $g->{$k}->{variable}) {
-                        $self->{_biblio_str} .= _parseVariable($mods, $self, $g->{$k}->{variable});
+                        $self->{_biblio_str} .= _parseVariable($mods, $self, $g->{$k});
                     }
                 }
                 elsif(ref($g->{$k}) eq "ARRAY") {
@@ -788,7 +774,7 @@ sub _parseGroup {
                         $self->{_biblio_str} .= $g->{'delimiter'} if($elemNumber>1 && exists $g->{'delimiter'});
                     
                         if(exists $v->{variable}) {
-                            $self->{_biblio_str} .= _parseVariable($mods, $self, $v->{variable});
+                            $self->{_biblio_str} .= _parseVariable($mods, $self, $v);
                         }
                     }
                 }
@@ -814,10 +800,11 @@ sub _parseGroup {
 
 
 sub _parseVariable {
-    my ($mods, $self, $var) = @_;
+    my ($mods, $self, $v) = @_;
     
     #print Dumper $var;
     
+    my $var = $v->{variable};
     switch($var) {
         ## the primary title for the cited item
         case "title" { 
@@ -826,9 +813,30 @@ sub _parseVariable {
         ## the secondary title for the cited item; for a book chapter, this 
         ## would be a book title, for an article the journal title, etc.
         case "container-title" {
-            if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-                 return $mods->{relatedItem}->{titleInfo}->{title};
+            # short title?
+            if(exists $v->{form}) {
+                switch($v->{form}) {
+                    case "short" {
+                            return $mods->{relatedItem}->{titleInfo}('type','eq','abbreviated')->{title};
+                    }
+                    case "long" {
+                        if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
+                            return $mods->{relatedItem}->{titleInfo}->{title};
+                        }
+                    }
+                    else {
+                        die "ERROR: Unknown container-title form '".($v->{form})."'";
+                    }
+                }
             }
+            else {
+                if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
+                    return $mods->{relatedItem}->{titleInfo}->{title};
+                }
+            }
+            #if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
+            #     return $mods->{relatedItem}->{titleInfo}->{title};
+            #}
         }
         ## the tertiary title for the cited item; for example, a series title
         case "collection-title" {

@@ -1,6 +1,3 @@
-
---- Beispiel: txt ---
-
 $VAR1 = bless( do{\(my $o = bless( {
                           'tree' => {
                                       '/order' => [
