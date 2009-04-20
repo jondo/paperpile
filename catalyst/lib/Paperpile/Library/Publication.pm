@@ -69,7 +69,7 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
   # These contribute to the sha1 and need a trigger to re-calculate it
   # upon change
-  if ( $field =~ /(authors|year|title$)/ ) {
+  if ( $field =~ /(authors|editors|year|title$)/ ) {
     has $field => (
       is      => 'rw',
       isa     => 'Str',
@@ -143,7 +143,7 @@ sub refresh_fields {
 # Function: calculate_sha1
 
 # Calculate unique sha1 from several key fields. Needs more thought on
-# what to include.
+# what to include. Function is a mess right now.
 
 sub calculate_sha1 {
 
@@ -151,16 +151,18 @@ sub calculate_sha1 {
 
   my $ctx = Digest::SHA1->new;
 
-  if ( ( $self->authors or $self->_authors_display ) and $self->title ) {
+  if ( ( $self->authors or $self->_authors_display or $self->editors) and $self->title ) {
     if ( $self->authors ) {
       $ctx->add( encode_utf8( $self->authors ) );
-    } else {
+    } elsif ($self->_authors_display) {
       $ctx->add( encode_utf8( $self->_authors_display ) );
+    }
+    if ($self->editors){
+      $ctx->add( encode_utf8( $self->editors ) );
     }
     $ctx->add( encode_utf8( $self->title ) );
     $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
   }
-
 }
 
 # Function: format_citation
