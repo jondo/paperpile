@@ -7,7 +7,10 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     saveDefault: 'new-file.dat',
     currentRoot: "ROOT",
     showHidden: false,
-
+    showFilter: false,
+    filterOptions:[],
+    currentFilter:0,
+    
     callback: function(button,path){
         console.log(button, path);
     },
@@ -22,6 +25,14 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
         if (this.selectionMode == 'FILE'){
             label='File';
+        }
+
+        var filterStore=[];
+        
+        if (this.filterOptions){
+            for (var i=0; i<this.filterOptions.length; i++){
+                filterStore.push([i,this.filterOptions[i].text]);
+            }
         }
  
 		Ext.apply(this, {
@@ -66,55 +77,77 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                   items:[{xtype:'panel', itemId:'filetree', id:'DUMMY'}],
                 }
             ],
-            bbar: [  {xtype:'tbfill'},
-                     { text: 'Select',
-                       itemId: 'ok_button',
-                       disabled: true,
-                       cls: 'x-btn-text-icon save',
-                       listeners: {
-                           click:  { 
-                               fn: function(){
-                                   var ft=this.items.get('filetree');
-                                   
-                                   var path=this.currentRoot+"/"+this.textfield.getValue();
-                                   
-                                   if (this.saveMode && this.warnOnExisting){
-                                       Ext.Ajax.request({
-                                           url: '/ajax/files/stats',
-                                           params: { location: path},
-                                           method: 'GET',
-                                           success: function(response){
-                                               var json = Ext.util.JSON.decode(response.responseText);
-                                               if (json.stats.exists){
-                                                   Ext.Msg.confirm('',path+' already exists. Overwrite?',
-                                                                   function(btn){
-                                                                       if (btn=='yes'){
-                                                                           console.log(this.scope);
-                                                                           this.callback.createDelegate(this.scope,['OK',path])();
-                                                                           this.close();
-                                                                       }
-                                                                   }                                           
-                                                                  )
-                                               } else {
-                                                   this.callback.createDelegate(this.scope,['OK',path])();
-                                                   this.close();
-                                               }
-                                           },
-                                           scope:this
-                                       });
-                                   } else {
-                                       this.callback.createDelegate(this.scope,['OK',path])();
-                                       this.close();
-                                   }
-                               },
-                               scope: this
-                           }
-                       },
+            bbar: [ {xtype:'combo',
+                     hidden: !this.showFilter,
+                     itemId:'file_format',
+                     value: this.currentFilter,
+                     editable:false,
+                     forceSelection:true,
+                     triggerAction: 'all',
+                     disableKeyFilter: true,
+                     hideLabel:true,
+                     mode: 'local',
+                     store: filterStore,
+                     hiddenName: 'export_out_format',
+                     listeners: {
+                         select: {
+                             fn: function(combo,record,index){
+                                 this.currentFilter=index;
+                                 this.showDir(this.currentRoot);
+                             },
+                             scope:this,
+                         }
                      },
-                     { text: 'Cancel',
-                       itemId: 'cancel',
-                       cls: 'x-btn-text-icon cancel',
-                       listeners: {
+                    },
+                    {xtype:'tbfill'},
+                    { text: 'Select',
+                      itemId: 'ok_button',
+                      disabled: true,
+                      cls: 'x-btn-text-icon save',
+                      listeners: {
+                          click:  { 
+                              fn: function(){
+                                  var ft=this.items.get('filetree');
+                                  
+                                  var path=this.currentRoot+"/"+this.textfield.getValue();
+                                  
+                                  if (this.saveMode && this.warnOnExisting){
+                                      Ext.Ajax.request({
+                                          url: '/ajax/files/stats',
+                                          params: { location: path},
+                                          method: 'GET',
+                                          success: function(response){
+                                              var json = Ext.util.JSON.decode(response.responseText);
+                                              if (json.stats.exists){
+                                                  Ext.Msg.confirm('',path+' already exists. Overwrite?',
+                                                                  function(btn){
+                                                                      if (btn=='yes'){
+                                                                          console.log(this.scope);
+                                                                          this.callback.createDelegate(this.scope,['OK',path])();
+                                                                          this.close();
+                                                                      }
+                                                                  }                                           
+                                                                 )
+                                              } else {
+                                                  this.callback.createDelegate(this.scope,['OK',path])();
+                                                  this.close();
+                                              }
+                                          },
+                                          scope:this
+                                      });
+                                  } else {
+                                      this.callback.createDelegate(this.scope,['OK',path])();
+                                      this.close();
+                                  }
+                              },
+                              scope: this
+                          }
+                      },
+                    },
+                    { text: 'Cancel',
+                      itemId: 'cancel',
+                      cls: 'x-btn-text-icon cancel',
+                      listeners: {
                            click:  { 
                                fn: function(){
                                    this.callback.createDelegate(this.scope,['CANCEL',null])();
@@ -122,8 +155,8 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                },
                                scope: this
                            }
-                       },
-                     }
+                      },
+                    }
                   ]
 	    });
         
@@ -181,7 +214,13 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
         
         // Remove old tree and build new one
         cp.remove(cp.items.get('filetree'));
-        
+
+        var filter=null;
+
+        if (this.showFilter){
+            filter=this.filterOptions[this.currentFilter].suffix;
+        }
+
         var treepanel = new Ext.ux.FileTreePanel({
 		    height:400,
             border:0,
@@ -197,6 +236,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
             enableSort:false,
             lines:false,
             rootVisible:false,
+            filter:filter,
             url:'/ajax/files/dialogue',
 	    });
 

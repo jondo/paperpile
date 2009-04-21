@@ -23,8 +23,6 @@ sub dialogue : Local {
     $output=$c->forward('newdir');
   }
 
-
-
   $c->stash->{tree} = $output;
 
   $c->forward('Paperpile::View::JSON::Tree');
@@ -47,35 +45,44 @@ sub get : Local {
 
   my $mode = $c->request->params->{selectionMode};
   my $path = $c->request->params->{path};
+  my $filter=$c->request->params->{filter};
 
   $path=Paperpile::Utils->adjust_root($path);
 
-  my @contents = ();
+  my @filters=();
+  if ($filter){
+    # 'ALL' means showing all, i.e. no filter
+    if ($filter eq 'ALL'){
+      @filters=();
+    } else {
+      @filters=split(',',$filter);
+    }
+  }
+
+  # Read directory content
 
   my $failure = { "success" => \0, "error" => "Could not read directory." };
-
-  #opendir( DIR, File::Spec->catdir( $root, $path ) ) || return $failure;
-
+  my @contents = ();
   opendir( DIR, $path ) || return $failure;
-
-
   @contents = readdir(DIR);
-
   closedir DIR;
+
+  # Collect list of files/directories depending on options and filter
 
   my @dirs  = ();
   my @files = ();
 
   foreach my $item (@contents) {
 
+    next if $item eq '.';
+    next if $item eq '..';
+
     # How can we recognize hidden files under windows?
     if ( $c->request->params->{showHidden} eq 'false' ) {
       next if $item =~ /^\./;
     }
 
-    next if $item eq '.';
-    next if $item eq '..';
-
+    # Entry is a directory
     if ( -d File::Spec->catdir( $path, $item ) ) {
       push @dirs, {
         text     => $item,
@@ -86,15 +93,31 @@ sub get : Local {
                                 # set directories as leafs.
         type     => 'DIR',
       };
-    } else {
+    }
+    # Entry is a file
+    else {
       if ( $mode eq 'FILE' or $mode eq 'BOTH' ) {
 
+        # Get file suffix
         my ( $dummy, $dummy2, $suffix ) = fileparse( $item, qr/\.[^.]*/ );
-
         $suffix =~ s/\.//;
+        $suffix=lc($suffix);
 
+        # Skip if not in list of file-extensions given in filters
+        if (@filters){
+          my $is_ok=0;
+          foreach my $s (@filters){
+            print STDERR "$s vs $suffix\n";
+            if ($suffix eq $s){
+              $is_ok=1;
+              last;
+            }
+          }
+          next unless $is_ok;
+        }
+
+        # Assign css style depending on file-extension
         my $iconCls = "file";
-
         if ( $suffix ~~ [@filetypes] ) {
           $iconCls = "file-$suffix";
         }

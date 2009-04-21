@@ -47,6 +47,14 @@ Ext.onReady(function() {
 
     win=new Paperpile.FileChooser({
         currentRoot:'ROOT/home/wash',
+        showFilter: true,
+        filterOptions:[{text: 'PDF documents (.pdf)',
+                        suffix: ['pdf'],
+                       },
+                       {text: 'All files',
+                        suffix:['ALL'],
+                       },
+                      ],
         //saveMode: true,
         //saveDefault: 'new-file.dat',
         callback:function(button,path){

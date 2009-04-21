@@ -16,7 +16,11 @@
 
 
 Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
+    
     selectionMode: 'BOTH', //FILE, DIR, or BOTH
+
+    filter:null,
+
     showHidden:true,
 
 	/**
@@ -373,6 +377,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 				,baseParams:{cmd:'get', 
                              selectionMode: this.selectionMode,
                              showHidden: this.showHidden,
+                             filter: this.filter==null? '':this.filter,
                             }
 				,listeners:{
 					beforeload:{scope:this, fn:function(loader, node) {
