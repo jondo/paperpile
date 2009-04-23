@@ -27,6 +27,8 @@
   misc/file-chooser.js
   
   export/export-window.js
+
+  settings/patterns.js
                
   pub/summary.js 
   pub/notes.js 

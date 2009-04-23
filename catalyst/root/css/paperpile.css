@@ -30,8 +30,6 @@
     background-image: url('/images/icons/arrow_left.png');
 }
 
-
-
 .pp-basic {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
@@ -188,43 +186,6 @@
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
 
-/*
-.pp-pdf-manager li{
-    font:normal 18px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    padding:10px;
-}
-
-.pp-publisher-link a{
-    font:normal 18px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    color:black;
-    text-decoration:none;
-    display:block;
-}
-.pp-publisher-link img{
-    vertical-align:middle;
-    padding-right: 10px;
-}
-
-.pp-action-download-pdf a{
-    font:normal 18px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    padding-left: 58px;
-    height: 48px;
-    line-height:48px;
-    background: transparent url('/images/icons/acroread.png') no-repeat;
-    color:black;
-    display:block;
-    text-decoration:none;
-}
-
-.pp-action-download-pdf a:hover{
-    background-color:#CAD8F3;
-}
-
-.pp-publisher-link a:hover{
-    background-color:#CAD8F3;
-}
-*/
-
 .pp-pdf-manager li{
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     padding:10px;
@@ -274,6 +235,12 @@
     margin: 0 5 0 5;
 }
 
+.pp-settings h2 {
+    margin: 5px 5px 10px 5px;
+}
 
+.pp-settings textfield {
+    color: blue !important;
+}
 
 

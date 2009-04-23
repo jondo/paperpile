@@ -146,8 +146,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     },
 
     settings:function(){
-        var win=new Paperpile.Settings();
-        win.show();
+
+        var panel=main.tabs.add(new Paperpile.PatternSettings({title:'Settings', 
+                                                         iconCls: 'pp-icon-page',
+                                                }));
+        console.log(panel);
+        panel.show();
+        
     }
 }
 
