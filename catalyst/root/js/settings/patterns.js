@@ -4,17 +4,15 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 		Ext.apply(this, {
             closable:true,
             autoLoad:{url:'/screens/patterns',
-                      callback: this.insertFields,
+                      callback: this.setupFields,
                       scope:this
                      },
-            //bodyStyle:'padding:5px 5px 0',
             bodyStyle:'pp-settings',
             
             bbar: [{xtype:'tbfill'},
                    { text:'Save',
                      cls: 'x-btn-text-icon save',
-                     handler: function(){
-                     },
+                     handler: this.submit,
                      scope: this
                    },
                    {text:'Cancel',
@@ -28,24 +26,88 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 		
         Paperpile.PatternSettings.superclass.initComponent.call(this);
 
-        
     },
 
-    insertFields: function(){
+    //
+    // Creates textfields, buttons and installs event handlers
+    //
+
+    setupFields: function(){
+        
+        this.textfields={};
 
         Ext.each(['user_db','paper_root','key_pattern','pdf_pattern','attachment_pattern'], 
                  function(item){
-                     new Ext.form.TextField({value:main.globalSettings[item], 
-                                             renderTo:item+'_textfield',
-                                             width: 300,
-                                            });
-                 });
+                     var field=new Ext.form.TextField({value:main.globalSettings[item], 
+                                                       renderTo:item+'_textfield',
+                                                       enableKeyEvents: true,
+                                                       width: 300,
+                                                      });
+                     this.textfields[item]=field;
+                     
+                     if (item == 'key_pattern' || item == 'pdf_pattern' || item == 'attachment_pattern'){
+
+                         var task = new Ext.util.DelayedTask(this.updateFields, this);
+
+                         field.on('keypress', function(){
+                             task.delay(500); 
+                         });
+                     }
+                     
+                 }, this);
+
+        this.updateFields();
+        
+    },
+
+    //
+    // Validates inputs and updates example fields
+    //
+
+    updateFields: function(){
+
+        Ext.each(['key_pattern','pdf_pattern','attachment_pattern'],
+                 function(f){
+                     Ext.Ajax.request({
+                         url: '/ajax/settings/pattern_example',
+                         params: {pattern: Ext.get(f+'_textfield').first().getValue(),
+                                  key: Ext.get('key_pattern_textfield').first().getValue()},
+                         success: function(response){
+                             var data = Ext.util.JSON.decode(response.responseText).data;
+                             if (data.error){
+                                 this.textfields[f].markInvalid(data.error);
+                                 Ext.get(f+'_example').update('');
+                             } else {
+                                 Ext.get(f+'_example').update(data.string);
+                             }
+                         },
+                         scope:this
+                     });
+                 }, this);
+    },
+
+    submit: function(){
+
+        var params={};
+
+        Ext.each(['user_db','paper_root','key_pattern','pdf_pattern','attachment_pattern'], 
+                 function(item){
+                     params[item]=this.textfields[item].getValue();
+                 }, this);
+
+        Ext.Ajax.request({
+            url: '/ajax/settings/update_patterns',
+            params: params,
+            success: function(response){
+                var data = Ext.util.JSON.decode(response.responseText).data;
+                if (data.error){
+                } else {
+                }
+            },
+            scope:this
+        });
 
     }
-
-
-
-
 
 });
 

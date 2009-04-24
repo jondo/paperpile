@@ -20,7 +20,6 @@
 
 <div id="key_pattern">
   <div class="textfield" id="key_pattern_textfield"></div>
-  <div class="button" id="key_pattern_button">Show preview</div>
   <div class="example" id="key_pattern_example"></div>
 </div>
 
@@ -28,7 +27,6 @@
 
 <div class="item" id="pdf_pattern">
   <div id="pdf_pattern_textfield"></div>
-  <div id="pdf_pattern_button">Show preview</div>
   <div id="pdf_pattern_example"></div>
 </div>
 
@@ -36,7 +34,6 @@
 
 <div id="attachment_pattern">
   <div id="attachment_pattern_textfield"></div>
-  <div id="attachment_pattern_button">Show preview</div>
   <div id="attachment_pattern_example"></div>
 </div>
 

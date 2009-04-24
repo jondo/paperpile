@@ -129,7 +129,10 @@ sub settings {
 # citekey field.
 
 sub create_pubs {
+
   ( my $self, my $pubs ) = @_;
+
+  my @to_be_inserted=();
 
   foreach my $pub (@$pubs) {
 
@@ -138,6 +141,8 @@ sub create_pubs {
     my $key     = $pub->format_pattern($pattern);
 
     # Check if key already exists
+
+    # First we check in the database
     my $sth = $self->dbh->prepare("SELECT key FROM fulltext WHERE fulltext MATCH 'key:$key*'");
     my $existing_key;
     $sth->bind_columns( \$existing_key );
@@ -155,16 +160,25 @@ sub create_pubs {
       }
     }
 
+    # Then in the current list that have been already processed in this loop
+    foreach my $existing_key (@to_be_inserted){
+      if ( $existing_key =~ /^$key([a-z])?/ ) {
+        $unique=0;
+        push @suffix, $1 if $1;
+      }
+    }
+
     if ( not $unique ) {
       my $new_suffix = 'a';
       if (@suffix) {
-
         # we sort them to make sure to get the 'highest' suffix and count one up
-        @suffix = sort { $a <=> $b } @suffix;
+        @suffix = sort { $a cmp $b } @suffix;
         $new_suffix = chr( ord( pop(@suffix) ) + 1 );
       }
       $key .= $new_suffix;
     }
+
+    push @to_be_inserted, $key;
 
     $pub->citekey($key);
 
@@ -307,6 +321,48 @@ sub update_field {
   $self->dbh->do("UPDATE $table SET $field=$value WHERE rowid=$rowid");
 
 }
+
+sub update_citekeys {
+
+  ( my $self, my $pattern) = @_;
+
+  my $data=$self->all('created');
+
+  my %seen=();
+
+  $self->dbh->begin_work;
+
+  foreach my $pub (@$data){
+    my $key = $pub->format_pattern($pattern);
+
+    if (!exists $seen{$key}){
+      $seen{$key}=1;
+    } else {
+      $seen{$key}++;
+    }
+
+    if ($seen{$key}>1){
+      $key.=chr(ord('a')+$seen{$key}-2);
+    }
+
+    $key=$self->dbh->quote($key);
+
+    $self->dbh->do("UPDATE Publications SET citekey=$key WHERE rowid=".$pub->_rowid);
+
+  }
+
+  eval {
+    $self->dbh->commit;
+  };
+
+  if ($@) {
+    die("Failed to update citation keys ($@)");
+    # TODO: best practise is to eval rollback as well...
+    $self->dbh->rollback;
+  }
+
+}
+
 
 sub update_tags {
   ( my $self, my $pub_rowid, my $tags) = @_;
@@ -723,10 +779,42 @@ sub standard_search {
     $pub->_imported(1);
     push @page, $pub;
   }
+  return [@page];
+}
 
+sub all {
+
+  my ($self, $order) = @_;
+
+  my $query="SELECT rowid as _rowid, * FROM Publications ";
+
+  if ($order){
+    $query.="ORDER BY $order";
+  }
+
+  my $sth = $self->dbh->prepare( $query );
+
+  $sth->execute;
+
+  my @page = ();
+
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    my $pub = Paperpile::Library::Publication->new();
+    foreach my $field ( keys %$row ) {
+      my $value = $row->{$field};
+      if ($value) {
+        utf8::decode($value);
+        $pub->$field($value);
+      }
+    }
+    $pub->_imported(1);
+    push @page, $pub;
+  }
+  
   return [@page];
 
 }
+
 
 sub exists_pub {
   ( my $self, my $pubs ) = @_;
