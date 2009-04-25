@@ -7,7 +7,9 @@ use Data::Dumper;
 use FindBin;
 use Config::General;
 use Catalyst::Utils;
+use File::Path;
 use File::Spec;
+use File::Copy;
 use Path::Class;
 use Config::Any;
 use HTTP::Cookies;
@@ -167,5 +169,54 @@ sub decode_db {
   my $uncompressed = Compress::Zlib::memGunzip($compressed);
 
   return $uncompressed;
+
+}
+
+
+# Copies file $source to $dest. Creates directory if not already
+# exists and makes sure that file name is unique.
+
+sub copy_file{
+
+  my ( $self, $source, $dest ) = @_;
+
+  # Create directory if not already exists
+  my ($volume,$dir,$file_name) = File::Spec->splitpath( $dest );
+  mkpath($dir);
+
+  # Make sure file-name is unique
+  # For PDFs it is necessarily unique if the PDF pattern includes [key], 
+  # However, we allow arbitrary patterns so it can happen that PDFs are not unique.
+
+  # if foo.doc already exists create foo_1.doc
+  if (-e $dest){
+    my $basename=$file_name;
+    my $suffix='';
+    if ($file_name=~/^(.*)\.(.*)$/){
+      ($basename, $suffix)=($1, $2);
+    }
+
+    my @numbers=();
+    foreach my $file (glob("$dir/*")){
+      if ($file =~ /$basename\_(\d+)\.$suffix$/){
+        push @numbers, $1;
+      }
+    }
+    my $new_number=1;
+    if (@numbers){
+      @numbers=sort @numbers;
+      $new_number=$numbers[$#numbers]+1;
+    }
+
+    $dest=File::Spec->catfile($dir,"$basename\_$new_number");
+    if ($suffix){
+      $dest.=".$suffix";
+    }
+  }
+
+  # copy the file
+  copy($source, $dest) || die("Could not copy $source to $dest ($!)");
+
+  return $dest;
 
 }

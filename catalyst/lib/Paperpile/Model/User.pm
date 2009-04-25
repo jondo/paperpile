@@ -332,32 +332,37 @@ sub update_citekeys {
 
   $self->dbh->begin_work;
 
-  foreach my $pub (@$data){
-    my $key = $pub->format_pattern($pattern);
-
-    if (!exists $seen{$key}){
-      $seen{$key}=1;
-    } else {
-      $seen{$key}++;
-    }
-
-    if ($seen{$key}>1){
-      $key.=chr(ord('a')+$seen{$key}-2);
-    }
-
-    $key=$self->dbh->quote($key);
-
-    $self->dbh->do("UPDATE Publications SET citekey=$key WHERE rowid=".$pub->_rowid);
-
-  }
-
   eval {
+
+    foreach my $pub (@$data){
+      my $key = $pub->format_pattern($pattern);
+
+      if (!exists $seen{$key}){
+        $seen{$key}=1;
+      } else {
+        $seen{$key}++;
+      }
+
+      if ($seen{$key}>1){
+        $key.=chr(ord('a')+$seen{$key}-2);
+      }
+
+      $key=$self->dbh->quote($key);
+
+      $self->dbh->do("UPDATE Publications SET citekey=$key WHERE rowid=".$pub->_rowid);
+
+
+    }
+
+    my $_pattern=$self->dbh->quote($pattern);
+    $self->dbh->do("UPDATE Settings SET value=$_pattern WHERE key='key_pattern'");
     $self->dbh->commit;
+
   };
 
   if ($@) {
     die("Failed to update citation keys ($@)");
-    # TODO: best practise is to eval rollback as well...
+    # DBI driver seems to rollback do this automatically when the eval statement dies
     $self->dbh->rollback;
   }
 
@@ -461,8 +466,6 @@ sub rename_tag {
     $new_tags =~s/^$old_tag,/$new_tag,/;
     $new_tags =~s/,$old_tag,/,$new_tag,/;
     $new_tags =~s/,$old_tag$/,$new_tag/;
-
-    print STDERR "$old_tags, $new_tags\n";
 
     $self->update_field('Publications',$publication_id,'tags',$new_tags);
     $self->update_field('Fulltext',$publication_id,'tags',$new_tags);
@@ -1096,8 +1099,6 @@ sub _snippets {
       $snippet="...".$snippet."...";
 
       foreach my $term (@terms){
-        print STDERR "===============> $term\n";
-        print STDERR "--------> $snippet\n";
         $snippet=~s/($query)/<span class="highlight">$1<\/span>/ig;
       }
 

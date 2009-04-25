@@ -39,7 +39,7 @@ sub attach_file : Local {
     my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
 
     # Copy file, file name can be changed if it was not unique
-    $absolute_dest=$self->_copy_file($source, $absolute_dest);
+    $absolute_dest=Paperpile::Utils->copy_file($source, $absolute_dest);
 
     # Add text of PDF to fulltext table
     $c->model('User')->index_pdf($rowid, $absolute_dest);
@@ -62,7 +62,7 @@ sub attach_file : Local {
     my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
 
     # Copy file, file name can be changed if it was not unique
-    $absolute_dest=$self->_copy_file($source, $absolute_dest);
+    $absolute_dest=Paperpile::Utils->copy_file($source, $absolute_dest);
     $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
 
     $c->model('User')->add_attachment($relative_dest, $rowid);
@@ -124,53 +124,6 @@ sub delete_file : Local {
 }
 
 
-# Copies file $source to $dest. Creates directory if not already
-# exists and makes sure that file name is unique.
-
-sub _copy_file{
-
-  my ( $self, $source, $dest ) = @_;
-
-  # Create directory if not already exists
-  my ($volume,$dir,$file_name) = File::Spec->splitpath( $dest );
-  mkpath($dir);
-
-  # Make sure file-name is unique
-  # For PDFs it is necessarily unique if the PDF pattern includes [key], 
-  # However, we allow arbitrary patterns so it can happen that PDFs are not unique.
-
-  # if foo.doc already exists create foo_1.doc
-  if (-e $dest){
-    my $basename=$file_name;
-    my $suffix='';
-    if ($file_name=~/^(.*)\.(.*)$/){
-      ($basename, $suffix)=($1, $2);
-    }
-
-    my @numbers=();
-    foreach my $file (glob("$dir/*")){
-      if ($file =~ /$basename\_(\d+)\.$suffix$/){
-        push @numbers, $1;
-      }
-    }
-    my $new_number=1;
-    if (@numbers){
-      @numbers=sort @numbers;
-      $new_number=$numbers[$#numbers]+1;
-    }
-
-    $dest=File::Spec->catfile($dir,"$basename\_$new_number");
-    if ($suffix){
-      $dest.=".$suffix";
-    }
-  }
-
-  # copy the file
-  copy($source, $dest);
-
-  return $dest;
-
-}
 
 
 

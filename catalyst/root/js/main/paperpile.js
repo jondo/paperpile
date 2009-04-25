@@ -153,10 +153,23 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         console.log(panel);
         panel.show();
         
-    }
-}
+    },
 
-);
+    error: function(response){
+
+        var data = Ext.util.JSON.decode(response.responseText);
+
+        Ext.Msg.show({
+            title:'Error',
+            msg: data.errors[0],
+            buttons: Ext.Msg.OK,
+            animEl: 'elId',
+            icon: Ext.MessageBox.ERROR
+        });
+    }
+
+
+});
 
 Ext.onReady(function() {
     Paperpile.initMask = new Ext.LoadMask(Ext.getBody(), {msg:"Starting Paperpile Pre 1"});

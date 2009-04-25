@@ -46,8 +46,32 @@ sub default : Path {
 }
 
 
-sub end : ActionClass('RenderView') {
+sub end : Private {
+  my ( $self, $c ) = @_;
+
+  if ( scalar @{ $c->error } ) {
+    $c->response->status(500);
+    $c->stash->{errors}   = $c->error;
+    $c->forward('Paperpile::View::JSON');
+
+    foreach my $error (@{$c->error}){
+      $c->log->error($error);
+    }
+
+    $c->error(0);
+  }
+
+  return 1 if $c->response->status =~ /^3\d\d$/;
+  return 1 if $c->response->body;
+
+  $c->forward('Paperpile::View::JSON');
+
 }
+
+
+
+#sub end : ActionClass('RenderView') {
+#}
 
 
 1;

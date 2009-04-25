@@ -83,7 +83,6 @@ $model->create_pubs( [$extra_pub] );
 
 is( $key, 'Washietl2007c', 'Generating non-redundant citation keys upon insertion (2)' );
 
-
 push @expected_keys, "Washietl2007c";
 s/(20|19)// foreach (@expected_keys);
 
@@ -101,6 +100,7 @@ while ( $sth->fetch ) {
 cmp_bag( [@keys], [@expected_keys],
          "Updating citation keys" );
 
+print STDERR "Last message\n";
 
 sub _read_data {
 

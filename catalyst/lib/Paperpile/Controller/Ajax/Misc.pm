@@ -127,43 +127,13 @@ sub init_session : Local {
   };
 
   # If we get and empty value this shows us that our database has not been initialized yet after install.
-  # We initialize it now and set some application wide globals like platform.
+  # We initialize it now.
   if ( not $user_db ) {
-
-    # Currently only support linux32, linux64 and windows32
-
-    my $platform='';
-    my $home='';
-    if ($^O=~/linux/i){
-      my @f=`file /bin/ls`; # More robust way for this??
-      if ($f[0]=~/64-bit/){
-        $platform='linux64';
-      } else {
-        $platform='linux32';
-      }
-      $home=$ENV{HOME};
-    }
-
-    if ($^O=~/cygwin/i or $^O=~/MSWin/i){
-      $platform='windows32';
-      $home=''; # Add logic for cygwin here
-    }
-
-    $c->config->{app_settings}->{platform}=$platform;
-    $c->config->{app_settings}->{homedir}=$home;
-
     $c->model('App')->init_db( $c->config->{app_settings} );
     $user_db=$c->model('App')->get_setting('user_db');
   }
 
-  # If $user_db is relative, it is interpreted as relative to the catalyst
-  # home dir
-  if ( not File::Spec->file_name_is_absolute($user_db) ) {
-    $user_db = Paperpile::Utils->path_to($user_db);
-    $c->model('App')->set_setting('user_db',$user_db);
-  }
-
-  # If it does not exist, we initialize it with an empty db-file from the catalyst directory
+  # If user_db does not exist, we initialize it with an empty db-file from the catalyst directory
   if ( not -e $user_db ) {
     $c->log->info("Created user database $user_db.");
     my ( $volume, $dir, $file ) = File::Spec->splitpath($user_db);

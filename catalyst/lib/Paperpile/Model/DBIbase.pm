@@ -75,12 +75,13 @@ sub connect {
   my $self = shift;
   my $dbh;
 
-  eval { $dbh = DBI->connect( $self->{dsn}, $self->{user}, $self->{password}, $self->{options} ); };
-  if ($@) { 
-    $self->{log}->debug(qq{Couldn't connect to the database "$@"}) if $self->{debug} 
+  $self->{options} = { AutoCommit => 1, RaiseError => 1 };
 
-  }
-  else {
+  eval { $dbh = DBI->connect( $self->{dsn}, $self->{user}, $self->{password}, $self->{options} ); };
+  if ($@) {
+    $self->{log}->debug(qq{Couldn't connect to the database "$@"}) if $self->{debug}
+
+  } else {
     $self->{log}->debug( 'Connected to the database via dsn:' . $self->{dsn} ) if $self->{debug};
   }
   $self->_pid($$);

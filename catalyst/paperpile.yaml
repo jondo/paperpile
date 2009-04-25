@@ -6,7 +6,7 @@ Model::App:
 
 user_settings:
   tmp_dir: "__path_to(tmp)__"
-  paper_root: "__path_to(../user/default/paperpile)__"
+  paper_root: "__USERHOME__/.paperpile/papers"
   key_pattern: "[firstauthor][YYYY]"
   pdf_pattern: "[key]"
   attachment_pattern: "[key]_supplements"
@@ -14,8 +14,8 @@ user_settings:
 
 
 app_settings:
-# relative to catalyst app-dir or absolute
-  user_db: "../user/default/paperpile/paperpile.db"
+  platform: "__PLATFORM__"
+  user_db: "__USERHOME__/.paperpile/paperpile.db"
 
 
 pub_fields:

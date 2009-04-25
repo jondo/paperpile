@@ -100,12 +100,32 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             params: params,
             success: function(response){
                 var data = Ext.util.JSON.decode(response.responseText).data;
-                if (data.error){
-                } else {
-                }
+                (function(){
+                    this.wait.hide();
+                    Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab());
+                }).defer(1000, this);
+                
+                main.loadSettings();
+            },
+            failure: function(response){
+                var json = Ext.util.JSON.decode(response.responseText);
+                Ext.Msg.show({
+                    title:'Error',
+                    msg: "<p>Your settings could not be applied </p>"+json.errors[0],
+                    buttons: Ext.Msg.OK,
+                    animEl: 'elId',
+                    icon: Ext.MessageBox.ERROR,
+                    fn: function(){
+                        Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab());
+                    },
+                    scope:this
+                });
+                main.loadSettings();
             },
             scope:this
         });
+
+        this.wait=Ext.Msg.wait( "Applying changes","", {interval:50});
 
     }
 
