@@ -54,4 +54,3 @@ __PACKAGE__->config->{'Plugin::ConfigLoader'}->{substitutions} = {
 __PACKAGE__->setup(qw/-Debug ConfigLoader Static::Simple/);
 
 1;
-## Please see file perltidy.ERR

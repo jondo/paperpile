@@ -200,11 +200,12 @@ Paperpile.app=function(){
     var tree=Ext.getCmp('treepanel');
     Paperpile.main.tree=tree;
     tree.expandAll();
+    console.log(tree);
     main.tabs.remove('welcome');
     
     Paperpile.initMask.hide();
     
- 
+    
 
     //Ext.StoreMgr.lookup('tag_store').each(function(rec){console.log(rec)});
 
