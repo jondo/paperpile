@@ -6,6 +6,9 @@ use Data::Dumper;
 use Data::Page;
 use POSIX qw(ceil floor);
 
+# Name of the plugin
+has 'plugin_name' => ( is => 'rw', isa => 'Str');
+
 # Number of all entries for the query/file
 has 'total_entries' => ( is => 'rw', isa => 'Int' );
 

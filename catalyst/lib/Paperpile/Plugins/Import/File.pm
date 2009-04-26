@@ -19,6 +19,11 @@ has format  => ( is => 'rw', isa => 'Format' );
 has 'file'  => ( is => 'rw', isa => 'Str' );
 has '_data' => ( is => 'rw', isa => 'ArrayRef' );
 
+sub BUILD {
+  my $self = shift;
+  $self->plugin_name('File');
+}
+
 sub connect {
   my $self = shift;
 

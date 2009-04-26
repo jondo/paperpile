@@ -94,14 +94,23 @@ sub update_patterns : Local {
 
   if ($db_changed) {
 
-    if (move( $settings->{user_db}, $user_db )){
+    my $ok=0;
+    if (not -e $user_db){
+      $ok=move( $settings->{user_db}, $user_db );
+    } else {
+      $ok=1;
+    }
 
+    if ($ok){
       # update user_db in session variable and also all active plugins
       # that have stored a reference to the database file
       $c->session->{user_db} = $user_db;
       foreach my $key (keys %{$c->session}){
         next if not $key=~/^grid_/;
-        $c->session->{$key}->file($user_db);
+        next if not $c->session->{$key}->plugin_name eq 'DB';
+        if ($c->session->{$key}->file eq $settings->{user_db}){
+          $c->session->{$key}->file($user_db);
+        }
       }
       $c->model('App')->set_setting( 'user_db', $user_db );
     } else {

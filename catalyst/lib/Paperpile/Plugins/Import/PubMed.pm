@@ -33,6 +33,11 @@ my $elink_related =
 my $espell = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/espell.fcgi?&db=PubMed&term=";
 my $epost  = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/epost.fcgi?db=pubmed&id=";
 
+sub BUILD {
+  my $self = shift;
+  $self->plugin_name('PubMed');
+}
+
 sub connect {
   my $self = shift;
 

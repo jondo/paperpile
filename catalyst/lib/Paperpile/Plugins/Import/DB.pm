@@ -16,6 +16,12 @@ has 'query' => ( is => 'rw' );
 has 'mode' => ( is => 'rw', default => 'FULLTEXT', isa => 'Str' );
 has 'file' => ( is => 'rw' );
 
+
+sub BUILD {
+  my $self = shift;
+  $self->plugin_name('DB');
+}
+
 sub get_model {
 
   my $self=shift;

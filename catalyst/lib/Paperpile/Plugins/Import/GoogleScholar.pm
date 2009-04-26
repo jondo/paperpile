@@ -28,6 +28,12 @@ my $searchUrl = 'http://scholar.google.com/scholar?hl=en&lr=&btnG=Search&q=';
 my $settingsUrl =
   'http://scholar.google.com/scholar_setprefs?output=search&inststart=0&hl=en&lang=all&instq=&submit=Save+Preferences&scis=yes';
 
+sub BUILD {
+  my $self = shift;
+  $self->plugin_name('GoogleScholar');
+}
+
+
 
 sub connect {
   my $self = shift;
