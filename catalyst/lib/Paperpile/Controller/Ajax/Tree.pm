@@ -16,17 +16,19 @@ sub get_node : Local {
   my $tree;
 
   if ( not defined $c->session->{"tree"} ) {
-
     $tree=$c->model('User')->restore_tree();
-
     if (not defined $tree){
       $tree = $c->forward('private/get_default_tree');
     }
-
     $c->session->{"tree"}=$tree;
   }
   else {
     $tree = $c->session->{"tree"};
+  }
+
+  if ($node eq 'ROOT'){
+    $c->stash->{tree} = $self->get_complete_tree($tree);
+    $c->detach('Paperpile::View::JSON::Tree');
   }
 
   my $subtree = $c->forward('private/get_subtree',[$tree, $node]);
@@ -42,10 +44,44 @@ sub get_node : Local {
   }
   $c->stash->{tree} = [@data];
 
+  $self->get_complete_tree($tree);
 
   $c->forward('Paperpile::View::JSON::Tree');
 
 }
+
+
+sub get_complete_tree {
+
+  my ($self, $tree) = @_;
+
+  my $dump='';
+
+  $tree->traverse(sub {
+     my ($_tree) = @_;
+     my $_dump=Dumper($self->_get_js_object($_tree,0));
+     my @tmp=split(/\n/,$_dump);
+     my @tmp=@tmp[1..$#tmp-1];
+     $dump.='{'.join("\n",@tmp);
+     if ($_tree->isLeaf){
+       $dump.='},';
+     } else {
+       $dump.=', children=>['
+     }
+   },
+   sub {
+     my ($_tree) = @_;
+     if (!$_tree->isLeaf){
+       $dump.=']},';
+     }
+   });
+
+  my $obj=eval('['.$dump.']');
+
+  return $obj;
+
+}
+
 
 sub set_visibility : Local {
 
@@ -153,8 +189,6 @@ sub move_in_folder : Local {
 
   my %seen = ();
   @folders = grep { !$seen{$_}++ } @folders;
-
-  print STDERR Dumper($pub);
 
   $c->model('User')->update_folders( $rowid, join( ',', @folders ) );
   $pub->folders( join( ',', @folders ) );
@@ -323,6 +357,9 @@ sub _get_js_object {
     $h->{expanded} = \1;
     $h->{children} = [];
   }
+
+  $h->{nodeType}='async';
+  $h->{leaf}=\0;
 
   return $h;
 

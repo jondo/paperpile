@@ -24169,7 +24169,7 @@ Ext.extend(Ext.tree.TreeLoader, Ext.util.Observable, {
 
     
     load : function(node, callback){
-        if(this.clearOnLoad){
+	if(this.clearOnLoad){
             while(node.firstChild){
                 node.removeChild(node.firstChild);
             }

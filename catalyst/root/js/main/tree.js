@@ -10,7 +10,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             autoScroll: true,
             loader: new Paperpile.TreeLoader(
                 {  url: '/ajax/tree/get_node',
-                   requestMethod: 'GET'
+                   requestMethod: 'GET',
                 }
             ),
             root: {
@@ -33,7 +33,16 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         this.on({
 			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
             beforenodedrop:{scope:this, fn:this.onNodeDrop},
-            checkchange:{scope:this,fn:this.onCheckChange}
+            checkchange:{scope:this,fn:this.onCheckChange},
+            // This is necessary because we load the tree as a whole
+            // during startup but want to re-load single nodes
+            // afterwards. We achieve this by removing the children
+            // array which gets stored in node.attributes 
+            load:{scope:this, 
+                  fn:function(node){
+                      delete node.attributes.children
+                  }
+                 }
 		});
 
         this.on('nodedragover', function(e){
@@ -561,8 +570,13 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         var tmpLoader=new Paperpile.TreeLoader(
             {  url: '/ajax/tree/get_node',
                baseParams: {checked:true},
-               requestMethod: 'GET'
+               requestMethod: 'GET',
             });
+
+        // Force reload by deleting the children which get stored in
+        // attributes when we load the tree in one step in the beginning
+        //delete node.attributes.children;
+        
         node.loader=tmpLoader;
         node.reload();
         node.loader=oldLoader;
@@ -1039,7 +1053,6 @@ Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
         if(typeof attr.uiProvider == 'string'){
             attr.uiProvider = this.uiProviders[attr.uiProvider] || eval(attr.uiProvider);
         }
-
 
         // Return our custom TreeNode here
 
