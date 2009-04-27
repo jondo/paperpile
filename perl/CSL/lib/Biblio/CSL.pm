@@ -789,23 +789,30 @@ sub _parseGroup {
                 
             }
             case "text" {
+                my $delimiter = "";
                 if(ref($g->{$k}) eq "HASH") {
-                    $elemNumber++;                    
-                    $self->{_biblio_str} .= $g->{'delimiter'} if($elemNumber>1 && exists $g->{'delimiter'});
+                    $elemNumber++;
+                    if($elemNumber>1 && exists $g->{'delimiter'}) {
+                        $delimiter = $g->{'delimiter'};
+                        $self->{_biblio_str} .= $g->{'delimiter'};
+                    }
                     
                     # can appear either as hash
                     if(exists $g->{$k}->{variable}) {
-                        $self->{_biblio_str} .= _parseVariable($mods, $self, $g->{$k});
+                        $self->{_biblio_str} .= _parseVariable($mods, $self, $g->{$k}, $elemNumber, $delimiter);
                     }
                 }
                 elsif(ref($g->{$k}) eq "ARRAY") {
                     # or as array
                     foreach my $v (@{$g->{$k}}) {
                         $elemNumber++;
-                        $self->{_biblio_str} .= $g->{'delimiter'} if($elemNumber>1 && exists $g->{'delimiter'});
+                        if($elemNumber>1 && exists $g->{'delimiter'}) {
+                            $delimiter = $g->{'delimiter'};
+                            $self->{_biblio_str} .= $g->{'delimiter'};
+                        }
                     
                         if(exists $v->{variable}) {
-                            $self->{_biblio_str} .= _parseVariable($mods, $self, $v);
+                            $self->{_biblio_str} .= _parseVariable($mods, $self, $v, $elemNumber, $delimiter);
                         }
                     }
                 }
@@ -829,9 +836,8 @@ sub _parseGroup {
 }
 
 
-
 sub _parseVariable {
-    my ($mods, $self, $v) = @_;
+    my ($mods, $self, $v, $elemNumber, $delimiter) = @_;
     
     #print Dumper $var;
     
@@ -867,9 +873,6 @@ sub _parseVariable {
                     return $mods->{relatedItem}->{titleInfo}->{title};
                 }
             }
-            #if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-            #     return $mods->{relatedItem}->{titleInfo}->{title};
-            #}
         }
         ## the tertiary title for the cited item; for example, a series title
         case "collection-title" {
@@ -904,15 +907,27 @@ sub _parseVariable {
         ##
         case "page" {
             if(exists $mods->{relatedItem}->{part}->{extent}->{unit}) {
-                if($mods->{relatedItem}->{part}->{extent}->{unit} eq "page") {
+                if($mods->{relatedItem}->{part}->{extent}->{unit} eq "pages") {
                     if(exists $mods->{relatedItem}->{part}->{extent}->{start} && exists $mods->{relatedItem}->{part}->{extent}->{end}) {
-                           return $mods->{relatedItem}->{part}->{extent}->{start}."-".$mods->{relatedItem}->{part}->{extent}->{end};
+                        if($mods->{relatedItem}->{part}->{extent}->{start} eq $mods->{relatedItem}->{part}->{extent}->{end}) {
+                            return $mods->{relatedItem}->{part}->{extent}->{start};
+                        }
+                        else {
+                            return $mods->{relatedItem}->{part}->{extent}->{start}."-".$mods->{relatedItem}->{part}->{extent}->{end};
+                        }
                     }
                     else {
                         die "ERROR: No start and end page in the mods file?";
                     }
                 }
+                else {
+                    die "ERROR: No 'pages' attribut in the mods file?";
+                }
             }
+            
+            # remove endstanding spaces and potential delimiters because we can not find the volume entry.
+            $self->{_biblio_str} =~ s/\s+$//g;
+            $self->{_biblio_str} =~ s/,$//g if($elemNumber>1 && $delimiter ne "");
         }
         ## a description to locate an item within some larger container or 
         ## collection; a volume or issue number is a kind of locator, for example.
@@ -928,8 +943,18 @@ sub _parseVariable {
                     if(exists $mods->{relatedItem}->{part}->{detail}->{number}) {
                         return $mods->{relatedItem}->{part}->{detail}->{number};
                     }
+                    else {
+                        die "ERROR: Volume type is given, but no volume number?";
+                    }
+                }
+                else {
+                    die "ERROR: Unknown volume type '".($mods->{relatedItem}->{part}->{detail}->{type})."'. Maybe not implemented, yet?";
                 }
             }
+            
+            # remove endstanding spaces and potential delimiters because we can not find the volume entry.
+            $self->{_biblio_str} =~ s/\s+$//g;
+            $self->{_biblio_str} =~ s/,$//g if($elemNumber>1 && $delimiter ne "");
         } 
         ## refers to the number of items in multi-volume books and such
         case "number-of-volumes" {
