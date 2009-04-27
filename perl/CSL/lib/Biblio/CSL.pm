@@ -491,10 +491,25 @@ sub _layoutText {
                     #print $c_nameEQauthor->{names}->{name}->{"name-as-sort-order"}; exit;
                     if($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
                         #print Dumper $n->{namePart}->[1]->pointer; exit;
-                        $complete_name = $family_name.$c_nameEQauthor->{names}->{name}->{'sort-separator'};                                      
-                        foreach my $gn (@given_names) {
-                           $complete_name .= $gn;
-                       }
+                        $complete_name = $family_name.$c_nameEQauthor->{names}->{name}->{'sort-separator'};
+                        
+                        if(exists $c_nameEQauthor->{names}->{name}->{'initialize-with'}) {
+                            foreach my $gn (@given_names) {
+                                my @nameParts = split /\s+/, $gn;
+                                for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Rose -> R.
+                                    if($nameParts[$i] =~ /^(\S)/) {
+                                        $nameParts[$i] = $1;
+                                        $complete_name .= $nameParts[$i].$c_nameEQauthor->{names}->{name}->{'initialize-with'};
+                                    }
+                                }
+                            }
+                            $complete_name =~ s/\s+$//g; # remove endstanding spaces
+                        }
+                        else {
+                            foreach my $gn (@given_names) {
+                                $complete_name .= $gn;
+                            }
+                        }
                     }
                     elsif($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "first") { # what does this option mean?
                         die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'}(eq first) is not implemented yet!";
@@ -684,6 +699,22 @@ sub _layoutChoose {
         }
         else { # no settings just print 
             
+            # e.g. article title
+            if($opt->{$o}->{text}->{macro}) {
+                $self->{_biblio_str} .= $opt->{$o}->{text}->{prefix} if($opt->{$o}->{text}->{prefix});
+                
+                if($opt->{$o}->{text}->{macro} eq "title") { 
+                    if($mods->{titleInfo}->{title}) {                        
+                        my $title = $mods->{titleInfo}->{title};
+                        $title =~ s/\n//g;
+                        $title =~ s/\s+/ /g;
+                        $self->{_biblio_str} .= $title;
+                    }
+                }
+                
+                $self->{_biblio_str} .= $opt->{$o}->{text}->{suffix} if($opt->{$o}->{text}->{suffix});
+            }
+            
             if(exists $opt->{$o}->{group}) {        
                 #my @order = $self->_c->{style}->{bibliography}->{layout}->{choose}->{$o}->{group}->order();
                 #print Dumper @order; exit;
@@ -812,12 +843,14 @@ sub _parseVariable {
         }
         ## the secondary title for the cited item; for a book chapter, this 
         ## would be a book title, for an article the journal title, etc.
+        # the article title is handled elsewhere, here we have to care about
+        #   $mods->{relatedItem}->{titleInfo}
         case "container-title" {
             # short title?
             if(exists $v->{form}) {
                 switch($v->{form}) {
                     case "short" {
-                            return $mods->{relatedItem}->{titleInfo}('type','eq','abbreviated')->{title};
+                        return $mods->{relatedItem}->{titleInfo}->('type','eq','abbreviated')->{title};
                     }
                     case "long" {
                         if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
