@@ -67,7 +67,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                  
 	},
 
-    loadSettings: function(){
+    loadSettings: function(callback,scope){
 
         Ext.Ajax.request({
             url: '/ajax/misc/get_settings',
@@ -76,6 +76,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 this.globalSettings=json.data;
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Loaded settings.');
+                if (callback){
+                    callback.createDelegate(scope)();
+                }
             },
             scope:this,
         });

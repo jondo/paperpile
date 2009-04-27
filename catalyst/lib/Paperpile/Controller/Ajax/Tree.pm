@@ -7,6 +7,9 @@ use Paperpile::Library::Publication;
 use Data::Dumper;
 use 5.010;
 
+# Note: I'm not sure what's best practice to have subs with access to
+# $c. Forwarding is clumsy and explicitely passing $c also does not
+# feel good.
 
 sub get_node : Local {
   my ( $self, $c ) = @_;
@@ -27,7 +30,7 @@ sub get_node : Local {
   }
 
   if ($node eq 'ROOT'){
-    $c->stash->{tree} = $self->get_complete_tree($tree);
+    $c->stash->{tree} = $self->get_complete_tree($c, $tree);
     $c->detach('Paperpile::View::JSON::Tree');
   }
 
@@ -44,8 +47,6 @@ sub get_node : Local {
   }
   $c->stash->{tree} = [@data];
 
-  $self->get_complete_tree($tree);
-
   $c->forward('Paperpile::View::JSON::Tree');
 
 }
@@ -53,13 +54,21 @@ sub get_node : Local {
 
 sub get_complete_tree {
 
-  my ($self, $tree) = @_;
+  my ($self, $c, $tree) = @_;
+
+  # Tags always generated dynamically
+  my $subtree = $c->forward('private/get_subtree',[$tree, 'TAGS_ROOT']);
+  $c->forward('private/get_tags',[$subtree]);
 
   my $dump='';
 
+  # Simple way of getting the complete tree. We just create perl
+  # expression and eval it. Not elegant but easy to implement starting
+  # from the example in the Tree::Simple docs.
   $tree->traverse(sub {
      my ($_tree) = @_;
      my $_dump=Dumper($self->_get_js_object($_tree,0));
+     # Remove first and last line with "$VAR1={" and "};", resp.
      my @tmp=split(/\n/,$_dump);
      my @tmp=@tmp[1..$#tmp-1];
      $dump.='{'.join("\n",@tmp);
@@ -76,10 +85,7 @@ sub get_complete_tree {
      }
    });
 
-  my $obj=eval('['.$dump.']');
-
-  return $obj;
-
+  return eval('['.$dump.']');
 }
 
 
@@ -130,7 +136,6 @@ sub new_folder : Local {
   $sub_tree->addChild($new);
 
   $c->model('User')->insert_folder( $node_id );
-
   $c->model('User')->save_tree($tree);
 
   $c->stash->{success} = 'true';

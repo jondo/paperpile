@@ -112,6 +112,8 @@ sub update_patterns : Local {
           $c->session->{$key}->file($user_db);
         }
       }
+      # Force reload of tree
+      delete $c->session->{tree};
       $c->model('App')->set_setting( 'user_db', $user_db );
     } else {
       die("Could not change database file to user_db ($!)");

@@ -6,7 +6,7 @@
 
 <div id="user_db">
   <div class="textfield" id="user_db_textfield"></div>
-  <div class="button" id="user_db_button"></div>
+  <div id="user_db_button"></div>
 </div>
 
 <h2>PDF directory</h2>
@@ -26,7 +26,7 @@
 <h2>PDF file pattern</h2>
 
 <div class="item" id="pdf_pattern">
-  <div id="pdf_pattern_textfield"></div>
+  <div id="pdf_pattern_textfield"><span>.pdf<span></div>
   <div id="pdf_pattern_example"></div>
 </div>
 
