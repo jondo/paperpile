@@ -239,8 +239,7 @@
     margin: 5px 5px 10px 5px;
 }
 
-.pp-settings textfield {
-    color: blue !important;
+.pp-textfield-with-button {
+    float: left;
 }
-
 

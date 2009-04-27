@@ -18,6 +18,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                    {text:'Cancel',
                     cls: 'x-btn-text-icon cancel',
                     handler: function(){
+                        Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
                     },
                     scope:this
                    },
@@ -39,11 +40,19 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
         Ext.each(['user_db','paper_root','key_pattern','pdf_pattern','attachment_pattern'], 
                  function(item){
                      var field=new Ext.form.TextField({value:main.globalSettings[item], 
-                                                       renderTo:item+'_textfield',
                                                        enableKeyEvents: true,
                                                        width: 300,
                                                       });
+
+                     field.render(item+'_textfield',0);
+
                      this.textfields[item]=field;
+
+                     if (item == 'user_db' || item == 'paper_root'){
+                         field.addClass('pp-textfield-with-button');
+                         new Ext.Button({text: item=='user_db'?'Choose file':'Choose folder',
+                                         renderTo:item+'_button'});
+                     }
                      
                      if (item == 'key_pattern' || item == 'pdf_pattern' || item == 'attachment_pattern'){
 
@@ -100,13 +109,47 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             params: params,
             success: function(response){
                 var data = Ext.util.JSON.decode(response.responseText).data;
+                // Wait a second for doing this that the user has time
+                // to see the progress bar instead of a unclean
+                // flicker if the job is done quickly. If the job
+                // takes longer this second does not do any harm
+                // either.
                 (function(){
-                    this.wait.hide();
-                    Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab());
+                    // Close the settings dialogue
+                    Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
+                    var old_user_db=main.globalSettings.user_db;
+                    main.loadSettings(
+                        function(){
+                            // Complete reload only if database has
+                            // changed. This is not necessary if the
+                            // database has only be renamed but we
+                            // update also in this case.
+                            if (old_user_db != main.globalSettings.user_db){
+                                Paperpile.main.tree.getRootNode().reload();
+                                Paperpile.main.tree.expandAll();
+                                
+                                // Note that this as async. Tags
+                                // should be loaded before results for
+                                // grid appear but it is not
+                                // guaranteed.
+                                Ext.StoreMgr.lookup('tag_store').reload();
+                                
+                                Ext.each(Paperpile.main.tabs.items.items,
+                                         function(item, index, length){
+                                             Paperpile.main.tabs.remove(item,true);
+                                         }
+                                        );
+                                
+                                Paperpile.main.tabs.newDBtab('');
+                                Paperpile.main.tabs.setActiveTab(0);
+                                Paperpile.main.tabs.doLayout();
+                                this.wait.hide();
+                            }
+                        }, this
+                    );
                 }).defer(1000, this);
-                
-                main.loadSettings();
             },
+            
             failure: function(response){
                 var json = Ext.util.JSON.decode(response.responseText);
                 Ext.Msg.show({

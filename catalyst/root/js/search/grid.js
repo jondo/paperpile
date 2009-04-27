@@ -283,7 +283,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     onDestroy: function(cont, comp){
         Ext.Ajax.request({
-            url: '/ajax/grid/delete_grid',
+            url: '/ajax/plugins/delete_grid',
             params: { grid_id: this.id,
                     },
             method: 'GET'
