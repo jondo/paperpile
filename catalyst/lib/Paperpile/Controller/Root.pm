@@ -37,6 +37,11 @@ sub scratch : Local {
   $c->forward('Paperpile::View::Mason');
 }
 
+sub scratch2 : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = 'scratch2.mas';
+  $c->forward('Paperpile::View::Mason');
+}
 
 sub default : Path {
   my ( $self, $c ) = @_;

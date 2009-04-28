@@ -243,3 +243,15 @@
     float: left;
 }
 
+.pp-item-widget {
+    margin: 5px;
+}
+
+.pp-item {
+    margin: 2px;
+    float: left;
+}
+
+.pp-item-widget-textfield {
+    float: left;
+}
