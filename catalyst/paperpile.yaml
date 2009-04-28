@@ -16,6 +16,7 @@ user_settings:
 app_settings:
   platform: "__PLATFORM__"
   user_db: "__USERHOME__/.paperpile/paperpile.db"
+  user_home: "__USERHOME__"
 
 
 pub_fields:

@@ -21,6 +21,7 @@
   search/search-field.js 
   search/filter-field.js
                
+  misc/utils.js
   misc/forms.js 
   misc/settings.js 
   misc/box-select.js

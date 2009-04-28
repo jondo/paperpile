@@ -50,8 +50,25 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
                      if (item == 'user_db' || item == 'paper_root'){
                          field.addClass('pp-textfield-with-button');
-                         new Ext.Button({text: item=='user_db'?'Choose file':'Choose folder',
-                                         renderTo:item+'_button'});
+                         var b=new Ext.Button({text: item=='user_db'?'Choose file':'Choose folder',
+                                               renderTo:item+'_button'});
+
+                         b.on('click', function(){
+                             var parts=Paperpile.utils.splitPath(this.textfields[item].getValue());
+                             new Paperpile.FileChooser({
+                                 saveMode: item == 'user_db' ? true : false,
+                                 selectionMode: item == 'user_db' ? 'FILE' : 'DIR',
+                                 saveDefault: item == 'user_db' ? parts.file : '',
+                                 currentRoot: parts.dir,
+                                 warnOnExisting:false,
+                                 callback:function(button,path){
+                                     if (button == 'OK'){
+                                         this.textfields[item].setValue(path);
+                                     }
+                                 },
+                                 scope:this
+                             }).show();
+                         },this);
                      }
                      
                      if (item == 'key_pattern' || item == 'pdf_pattern' || item == 'attachment_pattern'){
@@ -64,7 +81,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                      }
                      
                  }, this);
-
+        
         this.updateFields();
         
     },
@@ -75,24 +92,33 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
     updateFields: function(){
 
-        Ext.each(['key_pattern','pdf_pattern','attachment_pattern'],
-                 function(f){
-                     Ext.Ajax.request({
-                         url: '/ajax/settings/pattern_example',
-                         params: {pattern: Ext.get(f+'_textfield').first().getValue(),
-                                  key: Ext.get('key_pattern_textfield').first().getValue()},
-                         success: function(response){
-                             var data = Ext.util.JSON.decode(response.responseText).data;
-                             if (data.error){
-                                 this.textfields[f].markInvalid(data.error);
-                                 Ext.get(f+'_example').update('');
-                             } else {
-                                 Ext.get(f+'_example').update(data.string);
-                             }
-                         },
-                         scope:this
-                     });
-                 }, this);
+        var params={};
+
+        Ext.each(['user_db','paper_root','key_pattern','pdf_pattern','attachment_pattern'],
+                 function(key){
+                     params[key]=Ext.get(key+'_textfield').first().getValue();
+                 }, this
+                );
+
+        Ext.Ajax.request({
+            url: '/ajax/settings/pattern_example',
+            params: params,
+            success: function(response){
+                var data = Ext.util.JSON.decode(response.responseText).data;
+
+                for (var f in data){                
+                    if (data[f].error){
+                        this.textfields[f].markInvalid(data.error);
+                        Ext.get(f+'_example').update('');
+                    } else {
+                        Ext.get(f+'_example').update(data[f].string);
+                    }
+                }
+            },
+            scope:this
+        });
+
+
     },
 
     submit: function(){
@@ -143,8 +169,8 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                                 Paperpile.main.tabs.newDBtab('');
                                 Paperpile.main.tabs.setActiveTab(0);
                                 Paperpile.main.tabs.doLayout();
-                                this.wait.hide();
                             }
+                            this.wait.hide();
                         }, this
                     );
                 }).defer(1000, this);

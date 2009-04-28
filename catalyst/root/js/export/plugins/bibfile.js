@@ -65,7 +65,7 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
                                   var currentText=textfield.getValue();
                                   
                                   if (currentText == ''){
-                                      textfield.setValue(main.globalSettings.homedir+'/'+defaultFile);
+                                      textfield.setValue(main.globalSettings.user_home+'/'+defaultFile);
                                   } else {
                                       currentText=currentText.replace(/export.(bib|ris|enl|xml|mods)/,defaultFile);
                                       textfield.setValue(currentText);
@@ -104,25 +104,14 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
                        listeners: {
                            click:  { 
                                fn: function(){
-
-                                   var path=this.items.get('path').items.get('textfield').getValue();
-
-                                   var parts=path.split('/');
-                                   var defaultFile=parts[parts.length-1];
-                                   var newParts=parts.slice(1,parts.length-1);
-                                   newParts.unshift('ROOT');
-                                   var root=newParts.join('/');
-
-                                   console.log(root, defaultFile);
-
+                                   var parts=Paperpile.utils.splitPath(this.items.get('path').items.get('textfield').getValue());
                                    var win=new Paperpile.FileChooser({
                                        saveMode: true,
-                                       saveDefault: defaultFile,
-                                       currentRoot: root,
+                                       saveDefault: parts.file,
+                                       currentRoot: parts.dir,
                                        warnOnExisting:false,
                                        callback:function(button,path){
                                            if (button == 'OK'){
-                                               path=path.replace(/^ROOT/,'');
                                                this.items.get('path').items.get('textfield').setValue(path);
                                                console.log(path);
                                            }

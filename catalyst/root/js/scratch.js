@@ -46,7 +46,7 @@ Ext.onReady(function() {
     //vp.on('render', function(){alert('inhere')}, Ext.getCmp('pdf_viewer'));
 
     win=new Paperpile.FileChooser({
-        currentRoot:'ROOT/home/wash',
+        //currentRoot:'ROOT',
         showFilter: true,
         filterOptions:[{text: 'PDF documents (.pdf)',
                         suffix: ['pdf'],
@@ -60,7 +60,7 @@ Ext.onReady(function() {
         callback:function(button,path){
             if (button == 'OK'){
                 var viewer=Ext.getCmp('pdf_viewer');
-                //console.log(path);
+                console.log(path);
                 viewer.initPDF(path);
                 vp.show();
             }

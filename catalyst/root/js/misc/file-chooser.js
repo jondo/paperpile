@@ -5,7 +5,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     saveMode: false,
     warnOnExisting: true,
     saveDefault: 'new-file.dat',
-    currentRoot: "ROOT",
+    currentRoot: "",
     showHidden: false,
     showFilter: false,
     filterOptions:[],
@@ -16,6 +16,10 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     },
 
     initComponent: function() {
+
+        // We need this explicit marker for the root internally
+                
+        this.currentRoot="ROOT"+this.currentRoot;
 
         var label='Location';
 
@@ -110,6 +114,9 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                   var ft=this.items.get('filetree');
                                   
                                   var path=this.currentRoot+"/"+this.textfield.getValue();
+
+                                  // ROOT only needed internally
+                                  path=path.replace(/^ROOT/,'');
                                   
                                   if (this.saveMode && this.warnOnExisting){
                                       Ext.Ajax.request({
@@ -122,7 +129,6 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                                   Ext.Msg.confirm('',path+' already exists. Overwrite?',
                                                                   function(btn){
                                                                       if (btn=='yes'){
-                                                                          console.log(this.scope);
                                                                           this.callback.createDelegate(this.scope,['OK',path])();
                                                                           this.close();
                                                                       }

@@ -280,6 +280,7 @@ sub format_pattern {
     $YY = substr( $YYYY, 2, 2 );
   }
 
+
   # [firstauthor]
   if ( $pattern =~ /\[(firstauthor(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/ ) {
     my $found_field = $1;

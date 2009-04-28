@@ -213,3 +213,5 @@ Paperpile.app=function(){
     //Ext.StoreMgr.lookup('tag_store').each(function(rec){console.log(rec)});
 
 }
+
+

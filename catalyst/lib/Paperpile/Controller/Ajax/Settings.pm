@@ -12,15 +12,19 @@ use Data::Dumper;
 use 5.010;
 
 sub pattern_example : Local {
+
   my ( $self, $c ) = @_;
 
-  my $pattern = $c->request->params->{pattern};
-  my $key     = $c->request->params->{key};
+  my $paper_root = $c->request->params->{paper_root};
+  my $user_db    = $c->request->params->{user_db};
 
-  # Add full validation later
-  if (!$pattern){
-    $self->_submit( $c, { string => undef, error => 'Pattern must not be empty.' } );
-  }
+  my $key_pattern        = $c->request->params->{key_pattern};
+  my $pdf_pattern        = $c->request->params->{pdf_pattern};
+  my $attachment_pattern = $c->request->params->{attachment_pattern};
+
+  $paper_root=~s{/$}{}; # remove trailing /
+
+  my %data = ();
 
   my %book = (
     pubtype   => 'INBOOK',
@@ -41,11 +45,20 @@ sub pattern_example : Local {
 
   my $pub = Paperpile::Library::Publication->new( {%book} );
 
-  my $formatted_key = $pub->format_pattern($key);
+  my $formatted_key        = $pub->format_pattern( $c->request->params->{key_pattern} );
+  my $formatted_pdf        = $pub->format_pattern( $pdf_pattern, { key => $formatted_key } );
+  my $formatted_attachment = $pub->format_pattern( $attachment_pattern, { key => $formatted_key } );
 
-  my $string = $pub->format_pattern( $pattern, { key => $formatted_key } );
+  my @tmp=split(/\//,$paper_root);
 
-  $self->_submit( $c, { string => $string } );
+  $formatted_pdf=".../".$tmp[$#tmp]."/<b>$formatted_pdf.pdf</b>";
+  $formatted_attachment=".../".$tmp[$#tmp]."/<b>$formatted_attachment/</b>";
+
+  $data{key_pattern}->{string}        = $formatted_key;
+  $data{pdf_pattern}->{string}        = $formatted_pdf;
+  $data{attachment_pattern}->{string} = $formatted_attachment;
+
+  $self->_submit( $c, {%data} );
 
 }
 
