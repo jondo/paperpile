@@ -4,61 +4,21 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
     plugin_iconCls: 'pp-icon-folder',
 
     initComponent:function() {
-        
-        var _filterField=new Ext.app.FilterField({
-            width:320,
-        });
 
+        this.plugin_name='DB';
+      
+        Paperpile.PluginGridDB.superclass.initComponent.apply(this, arguments);
 
-        var tbar=[_filterField, 
-                  {xtype:'tbfill'},
-                  {   xtype:'button',
-                      itemId: 'new_button',
-                      text: 'New',
-                      cls: 'x-btn-text-icon add',
-                      listeners: {
-                          click:  {fn: this.newEntry, scope: this}
-                      },
-                  },
-                  {   xtype:'button',
-                      text: 'Delete',
-                      itemId: 'delete_button',
-                      cls: 'x-btn-text-icon delete',
-                      listeners: {
-                          click:  {fn: this.deleteEntry, scope: this}
-                      },
-                  },
-                  {   xtype:'button',
-                      itemId: 'edit_button',
-                      text: 'Edit',
-                      cls: 'x-btn-text-icon edit',
-                      listeners: {
-                          click:  {fn: this.editEntry, scope: this}
-                      },
-                  }, 
-                  {  xtype:'button',
-                     text: 'More',
-                     menu:new Ext.menu.Menu({
-                         itemId: 'more_menu',
-                         //cls: 'x-btn-text-icon edit',
-                         items:[
-                             {  text: 'Export selected',
-                                listeners: {
-                                    click:  {fn: function(){this.exportEntry('selection')}, scope: this}
-                                },
-                             },
-                             {  text: 'Export all',
-                                listeners: {
-                                    click:  {fn: function(){this.exportEntry('all')}, scope: this}
-                                },
-                             }
-                         ]
-                      })
-                  }
-                 ];
+        var tbar=this.getTopToolbar();
+
+        tbar.unshift(new Ext.app.FilterField({store: this.store, 
+                                              base_query: this.plugin_base_query,
+                                              width: 320,
+                                             }));
 
         // If we are viewing a virtual folders we need an additional
         // button to remove an entry from a virtual folder
+
         if (this.plugin_base_query.match('^folders:')){
 
             var menu = new Ext.menu.Menu({
@@ -77,33 +37,30 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                 ]
             });
 
-            tbar[3]= {   xtype:'button',
-                         text: 'Delete',
-                         itemId: 'delete_button',
-                         cls: 'x-btn-text-icon delete',
-                         menu: menu
-                     };
-
+            tbar[this.getButtonIndex('delete_button')]= {   xtype:'button',
+                                                            text: 'Delete',
+                                                            itemId: 'delete_button',
+                                                            cls: 'x-btn-text-icon delete',
+                                                            menu: menu
+                                                        };
         }
 
-        Ext.apply(this, {
-            plugin_name: 'DB',
-            tbar:  tbar
-        });
-
-        Paperpile.PluginGridDB.superclass.initComponent.apply(this, arguments);
-        _filterField.store=this.store;
-        _filterField.base_query=this.plugin_base_query;
-
         this.getColumnModel().setHidden(0,true);
-
-
 
     },
 
     onRender: function() {
         Paperpile.PluginGridDB.superclass.onRender.apply(this, arguments);
         this.store.load({params:{start:0, limit:25 }});
+
+        this.store.on('load', function(){
+            this.getSelectionModel().selectFirstRow();
+        }, this, {
+            single: true
+        });
+
+
+
     },
 
 

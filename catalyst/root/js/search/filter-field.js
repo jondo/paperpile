@@ -7,8 +7,10 @@
  */
 
 Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
-    
+
     initComponent : function(){
+
+        itemId:'filter_field',
 
         Ext.apply(this, {
             enableKeyEvents: true,

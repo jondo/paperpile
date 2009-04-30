@@ -7,6 +7,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     initComponent:function() {
 
+
+        console.log('PluginGrid');
+
         var _store=new Ext.data.Store(
             {  proxy: new Ext.data.HttpProxy({
                 url: '/ajax/plugins/resultsgrid', 
@@ -29,7 +32,59 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             displayMsg: 'Displaying papers {0} - {1} of {2}',
             emptyMsg: "No papers to display",
         });
-    
+
+        var tbar=[{xtype:'tbfill'},
+                  {   xtype:'button',
+                      itemId: 'new_button',
+                      text: 'New',
+                      cls: 'x-btn-text-icon add',
+                      disabled: true,
+                      listeners: {
+                          click:  {fn: this.newEntry, scope: this}
+                      },
+                  },
+                  {   xtype:'button',
+                      text: 'Delete',
+                      itemId: 'delete_button',
+                      cls: 'x-btn-text-icon delete',
+                      listeners: {
+                          click:  {fn: this.deleteEntry, scope: this}
+                      },
+                      disabled: true,
+                  },
+                  {   xtype:'button',
+                      itemId: 'edit_button',
+                      text: 'Edit',
+                      cls: 'x-btn-text-icon edit',
+                      listeners: {
+                          click:  {fn: this.editEntry, scope: this}
+                      },
+                      disabled: true,
+                  }, 
+                  {  xtype:'button',
+                     text: 'More',
+                     itemId: 'more_menu',
+                     menu:new Ext.menu.Menu({
+                         //itemId: 'more_menu',
+                         items:[
+                             {  text: 'Export selected',
+                                listeners: {
+                                    click:  {fn: function(){this.exportEntry('selection')}, scope: this}
+                                },
+                             },
+                             {  text: 'Export all',
+                                listeners: {
+                                    click:  {fn: function(){this.exportEntry('all')}, scope: this}
+                                },
+                             }
+                         ]
+                     }),
+                     disabled: true,
+                  }
+                 ];
+
+        
+   
         var renderPub=function(value, p, record){
 
             // Can possibly be speeded up with compiling the template.
@@ -48,11 +103,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 '<p class="pp-grid-snippets">{_snippets_notes}</p>',
                 '</tpl>'
             );
-            //return t.apply({title:record.data.title,
-            //                authors:record.data._authors_display,
-            //                citation:record.data._citation_display,
-            //               });
-            
+
             return t.apply(record.data);
 
         }
@@ -63,6 +114,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             itemId:'grid',
             store: _store,
             bbar: _pager,
+            tbar: tbar,
+
+
             autoExpandColumn:'publication',
             columns:[{header: '',
                       renderer: function(value, metadata,record, rowIndex,colIndex,store){
@@ -110,15 +164,60 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         this.getSelectionModel().on('rowselect',
                                     function(sm, rowIdx, r){
                                         var container= this.findParentByType(Paperpile.PubView);
+                                        this.updateButtons();
                                         container.onRowSelect(sm, rowIdx, r);
                                         this.completeEntry();
                                     },this);
 
 
+
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
+
+        //this.updateButtons();
+
 
     },
 
+    updateButtons: function(){
+        
+        var tbar = this.getTopToolbar();
+        var sm = this.getSelectionModel();
+        var record = sm.getSelected();
+        
+        if (tbar.items.get('new_button')){
+            tbar.items.get('new_button').enable();
+        }
+
+        tbar.items.get('more_menu').enable();
+
+        if (tbar.items.get('edit_button')){
+            if (record.data._imported && (sm.getCount() == 1 )){
+                tbar.items.get('edit_button').enable();
+            } else {
+                tbar.items.get('edit_button').disable();
+            }
+        }
+
+        if (tbar.items.get('add_button')){
+            tbar.items.get('add_button').setDisabled( record.data._imported );
+        }
+
+        if (tbar.items.get('delete_button')){
+            tbar.items.get('delete_button').setDisabled( ! record.data._imported );
+        }
+                
+    },
+
+   // Small helper functions to get the index of a given item in the toolbar configuration array
+
+    getButtonIndex: function(itemId){
+        
+        var tbar=this.getTopToolbar();
+
+        for (var i=0; i<tbar.length;i++){
+            if (tbar[i].itemId == itemId) return i;
+        }
+    },
     
     // Returns list of sha1s for the selected entries
 
@@ -200,7 +299,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 record.set('_rowid', json.data._rowid);
                 record.endEdit();
                 
-                              
+                this.updateButtons();
+                    
                 if (callback){
                     callback.createDelegate(scope,[json.data])();
                 }
@@ -216,6 +316,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
         var sha1=this.getSelectionModel().getSelected().data.sha1;
 
+        this.getSelectionModel().selectNext();
+
         Ext.Ajax.request({
             url: '/ajax/crud/delete_entry',
             params: { rowid: rowid,
@@ -223,9 +325,11 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     },
             method: 'GET',
             success: function(){
+                this.updateButtons();
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry deleted.');
             },
+            scope: this
         });
 
         this.store.remove(this.store.getAt(this.store.find('sha1',sha1)));
