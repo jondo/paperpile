@@ -28,9 +28,6 @@ Paperpile.PluginGridOnlineSearch = Ext.extend(Paperpile.PluginGrid, {
 
         tbar.splice(this.getButtonIndex('new_button'), 1, addButton);
 
-        // hide key field
-        this.getColumnModel().setHidden(2,true);
-
     },
     
     onRender: function() {

@@ -34,17 +34,6 @@
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
 
-.pp-status-imported {
-    background: transparent url('/images/icons/down.png') no-repeat;
-    width:40px;
-    height:40px;
-}
-.pp-status-pdf {
-    background: transparent url('/images/icons/pdf.png') no-repeat;
-    width:40px;
-    height:40px;
-}
-
 .pp-summary-abstract {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     width: 75%;
@@ -59,6 +48,8 @@
     width: 22%;
     float:left;
     padding: 5px 0px 0px 0px;
+    /*background-color: #FFFEEB;
+    border: 1px solid #F7CA75; */
 }
 
 .pp-action-add-notes a{
@@ -76,13 +67,14 @@
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     font-weight: bold;
     padding-left: 20px;
+    margin-bottom:20px;
     height: 16px;
     line-height:16px;
     background: transparent url('/images/icons/pencil.png') no-repeat;
     color:black;
     display:block;
     text-decoration:none;
-    float:right;
+    float: right;
 }
 
 
@@ -96,7 +88,6 @@
 
 .pp-notes {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    float:left;
 }
 
 .pp-notes ul {
@@ -112,10 +103,10 @@
 .pp-notes li { display: list-item }
 
 
-
 .pp-grid-title,.pp-grid-authors{
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     line-height: 1.5em;
+    white-space: normal;
 }
 
 .pp-grid-title{
@@ -135,8 +126,55 @@
     background-color: #FFF6A9;
 }
 
+.pp-grid-status{
+    line-height: 1.5em;
+    width: 120;
+    float: left;
+}
 
+.pp-grid-data{
+    line-height: 1.5em;
+    float: left;
+    width: 550;
+}
 
+.pp-grid-icons{
+}
+
+.pp-grid-key{
+    color: gray;
+    width: 120;
+}
+
+.pp-status-imported {
+    background: transparent url('/images/icons/down.png') no-repeat;
+    width:40px;
+    height:40px;
+}
+
+.pp-status-pdf {
+    background: transparent url('/images/icons/pdf_white.png') no-repeat;
+    width:24px;
+    height:24px;
+    margin: 3px;
+    float: left;
+}
+
+.pp-status-attachments {
+    background: transparent url('/images/icons/attachment.png') no-repeat;
+    width:24px;
+    height:24px;
+    margin: 3px;
+    float: left;
+}
+
+.pp-status-notes {
+    background: transparent url('/images/icons/notes.png') no-repeat;
+    width:24px;
+    height:24px;
+    margin: 3px;
+    float: left;
+}
 
 .pp-tree-heading{
     background:#eee url(/images/cmp-bg.gif) repeat-x;
@@ -199,8 +237,6 @@
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     padding: 0 0 0 40;
 }
-
-
 
 .pp-pdf-bitmap {
     border-color:black;

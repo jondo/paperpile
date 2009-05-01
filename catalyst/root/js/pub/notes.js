@@ -1,20 +1,19 @@
 
 Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 	markup: [
-        '<div class="pp-notes">{notes}</div>',
+        '<tpl if="notes">',
         '<div class="pp-action-edit-notes">',
-        '<a href="#" onClick="Ext.getCmp(\'{id}\').editNotes()">Edit Notes</a>',
+        '<a href="#" id="edit-notes-{id}">Edit Notes</a>',
         '</div>',
-    ],
-
-    markupEmpty: [
-        '<div class="pp-action-add-notes">',
-        '<a href="#" onClick="Ext.getCmp(\'{id}\').editNotes()">Insert notes</a>',
+        '<div class="pp-notes">{notes}</div>',
+        '</tpl>',
+        '<tpl if="!notes">',
+        '<div class="pp-action-add-notes" id="add-notes-{id}">',
+        '<a href="#">Add notes</a>',
         '</div>',
+        '</tpl>'
     ],
-
-	startingMarkup: 'Empty',
-	  
+ 
     initComponent: function() {
 		this.tpl = new Ext.XTemplate(this.markup);
 		Ext.apply(this, {
@@ -23,9 +22,8 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 				padding: '7px'
 			},
             autoScroll: true,
-			html: this.startingMarkup
 		});
-		Paperpile.PubNotes.superclass.initComponent.call(this);
+	    Paperpile.PubNotes.superclass.initComponent.call(this);
 	},
     
 	updateDetail: function(data) {
@@ -33,13 +31,23 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 
         var tpl=new Ext.XTemplate(this.markup);
 
-        if (data.notes==''){
-            tpl=new Ext.XTemplate(this.markupEmpty);
-        }
-
         this.data.id=this.id;
-		tpl.overwrite(this.body, this.data);		
+		tpl.overwrite(this.body, this.data);
+
+        this.installEvents();
+
 	},
+
+    installEvents: function(){
+
+        var addLink=Ext.get('add-notes-'+this.id);
+        var editLink=Ext.get('edit-notes-'+this.id);
+
+        if (addLink)  addLink.on('click', this.editNotes, this);
+        if (editLink) editLink.on('click', this.editNotes, this);
+
+    },
+
 
     editNotes: function(){
        
@@ -54,7 +62,6 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 
         dataTabs.add(this.editor);
         
-
         bbar.items.get('summary_tab_button').hide();
         bbar.items.get('notes_tab_button').hide();
 
@@ -111,8 +118,9 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 
         // id changes for some unknown reasons...
         this.data.id=dataTabs.items.get('pubnotes').id;
-
+        
         this.tpl.overwrite(this.body, this.data);
+        this.installEvents();
 
     }
 

@@ -89,7 +89,25 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             // Can possibly be speeded up with compiling the template.
 
+            record.data._notes_tip=Ext.util.Format.stripTags(record.data.notes);
+            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
+
             var t = new Ext.XTemplate(
+                '<div class="pp-grid-status">',
+                '<div class="pp-grid-key" ext:qtip="Imported {created}" >{_citekey}&nbsp;</div',
+                '<div class="pp-grid-icons">',
+                '<tpl if="pdf">',
+                '<div class="pp-status-pdf" ext:qtip="{pdf}"></div>',
+                '</tpl>',
+                '<tpl if="attachments">',
+                '<div class="pp-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+                '</tpl>',
+                '<tpl if="notes">',
+                '<div class="pp-status-notes" ext:qtip="{_notes_tip}"></div>',
+                '</tpl>',
+                '</div>',
+                '</div>',
+                '<div class="pp-grid-data">',
                 '<p class="pp-grid-title">{title}</p>',
                 '<p class="pp-grid-authors">{_authors_display}</p>',
                 '<p class="pp-grid-citation">{_citation_display}</p>',
@@ -101,7 +119,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 '</tpl>',
                 '<tpl if="_snippets_notes">',
                 '<p class="pp-grid-snippets">{_snippets_notes}</p>',
-                '</tpl>'
+                '</tpl>',
+                '</div>'
             );
 
             return t.apply(record.data);
@@ -116,40 +135,14 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             bbar: _pager,
             tbar: tbar,
 
-
             autoExpandColumn:'publication',
-            columns:[{header: '',
-                      renderer: function(value, metadata,record, rowIndex,colIndex,store){
-                          if (record.data._imported){
-                              return '<div class="pp-status-imported"></div>';
-                          } else {
-                              return '';
-                          }
-                      },
-                      width: 36,
-                     },
-                     {header: '',
-                      renderer: function(value, metadata,record, rowIndex,colIndex,store){
-                          if (record.data.pdf){
-                              return '<div class="pp-status-pdf"></div>';
-                          } else {
-                              return '';
-                          }
-                      },
-                      width: 36,
-                     },
-                     {header: "Key",
-                      id: 'citekey',
-                      width: 100,
-                      dataIndex: 'citekey',
-                     },
-                     {header: "Publication",
+
+            columns:[{header: "Publication",
                       id: 'publication',
                       dataIndex: 'title',
                       renderer:renderPub,
                      }
                     ],
-            
         });
         
         Paperpile.PluginGrid.superclass.initComponent.apply(this, arguments);
@@ -296,6 +289,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 //this.store.getAt(this.store.find('sha1',sha1)).data=json.data;
                 record.beginEdit();
                 record.set('_imported',1);
+                record.set('citekey',json.data.citekey);
                 record.set('_rowid', json.data._rowid);
                 record.endEdit();
                 

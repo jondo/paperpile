@@ -218,7 +218,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             }
         } else {
             successFn=function(response){
-                Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments+1);
+                Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments-1);
                 this.updateDetail(this.data);
             }
         }
@@ -242,8 +242,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     //
 
     searchPDF: function(){
-
-        //this.progressBar.show();
 
         var li=Ext.get('search-pdf-'+this.id);
         var div=Ext.DomHelper.append(li, '<div id="progress-bar"></div>');
@@ -307,7 +305,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                         if (this.data._imported){
                             this.attachFile(true,json.pdf);
                         } else {
-                            this.data.pdf=json.pdf;
+                            Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf',json.pdf);
                             this.updateDetail(this.data);
                         }
                         Ext.getCmp('statusbar').setText('Downloaded '+json.pdf);

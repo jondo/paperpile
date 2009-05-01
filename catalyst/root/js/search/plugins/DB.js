@@ -45,7 +45,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                                                         };
         }
 
-        this.getColumnModel().setHidden(0,true);
+        //this.getColumnModel().setHidden(0,true);
 
     },
 
