@@ -37,6 +37,7 @@ File::Temp
 HTML::Element
 HTML::Mason
 HTML::Tagset
+HTML::FormatText
 HTTP::Body
 JSON
 JSON::Any

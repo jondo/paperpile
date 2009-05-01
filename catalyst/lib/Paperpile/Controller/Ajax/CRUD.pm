@@ -6,6 +6,8 @@ use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Data::Dumper;
 use MooseX::Timestamp;
+use HTML::TreeBuilder;
+use HTML::FormatText;
 use 5.010;
 
 sub insert_entry : Local {
@@ -123,12 +125,17 @@ sub update_entry : Local {
 sub update_notes : Local {
   my ( $self, $c ) = @_;
 
-  my $rowid     = $c->request->params->{rowid};
-  my $sha1      = $c->request->params->{sha1};
-  my $html      = $c->request->params->{html};
+  my $rowid = $c->request->params->{rowid};
+  my $sha1  = $c->request->params->{sha1};
+  my $html  = $c->request->params->{html};
 
+  $c->model('User')->update_field( 'Publications', $rowid, 'notes', $html );
 
-  $c->model('User')->update_field('Publications', $rowid, 'notes', $html);
+  my $tree      = HTML::TreeBuilder->new->parse($html);
+  my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
+  my $text      = $formatter->format($tree);
+
+  $c->model('User')->update_field( 'Fulltext', $rowid, 'notes', $text );
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
