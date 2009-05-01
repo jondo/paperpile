@@ -24,6 +24,8 @@ $model->set_dsn( "dbi:SQLite:" . "../db/app.db" );
 
 $model->dbh->begin_work();
 
+my %data=();
+
 foreach my $line (<JOURNALS>) {
 
   $line =~ s/;.*$//;
@@ -31,13 +33,30 @@ foreach my $line (<JOURNALS>) {
   next if $line =~ /^$/;
   next if $line =~ /^\s*#/;
 
-  ( my $short, my $long ) = split( /=/, $line );
+  ( my $long, my $short ) = split( /\s*=\s*/, $line );
+
+  if ($short and $long){
+    chomp($short);
+    chomp($long);
+    $data{$short}=$long;
+  }
+}
+
+foreach my $short (keys %data){
+
+  my $long=$data{$short};
 
   $short = $model->dbh->quote($short);
   $long  = $model->dbh->quote($long);
 
   $model->dbh->do("INSERT OR IGNORE INTO Journals (short, long) VALUES ($short, $long);");
+
+  my $rowid = $model->dbh->func('last_insert_rowid');
+  print STDERR "$rowid $short $long\n";
+  $model->dbh->do("INSERT INTO Journals_lookup (rowid,short,long) VALUES ($rowid,$short,$long)");
+
 }
+
 
 $model->dbh->commit();
 

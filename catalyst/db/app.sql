@@ -10,3 +10,5 @@ CREATE TABLE Journals (
   url            TEXT,
   icon           TEXT
 );
+
+CREATE VIRTUAL TABLE Journals_lookup using fts3(long,short);

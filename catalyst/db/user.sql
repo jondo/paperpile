@@ -11,14 +11,6 @@ CREATE TABLE Authors (
   jr                  TEXT
 );
 
-CREATE TABLE Journals (
-  key            TEXT UNIQUE,
-  name           TEXT,
-  issn           TEXT,
-  url            TEXT,
-  icon           TEXT
-);
-
 CREATE TABLE Tags (
   tag            TEXT UNIQUE
 );

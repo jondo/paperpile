@@ -2,8 +2,26 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
 	  
     initComponent: function() {
 
-        this.pub_types=Paperpile.main.globalSettings.pub_types;
 
+        var _journal_store = new Ext.data.Store({
+            proxy: new Ext.data.HttpProxy({
+                url: '/ajax/misc/journal_list'
+            }),
+            reader: new Ext.data.JsonReader({
+                root: 'data',
+                id: 'short',
+                fields: ['short','long'],
+        
+            }, [{name: 'short', mapping: 'short'},
+                {name: 'long', mapping: 'long'},
+               ])         
+        });
+
+        var _journal_tpl = new Ext.XTemplate(
+            '<tpl for="."><div class="x-combo-list-item"><b>{short}</b><br>{long}</div></tpl>'
+        );
+
+        this.pub_types=Paperpile.main.globalSettings.pub_types;
         var _type_store=[];
 
         // Give the sorted list of publication types here
@@ -53,7 +71,17 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                 {name:'editors'},
                 {name:'howpublished'},
                 {name:'school'},
-                {name:'journal'},
+                {xtype:'combo',
+                 itemId:'journal',
+                 //fieldLabel:'Journal',
+                 minListWidth:320,
+                 store: _journal_store,
+                 hiddenName: 'journal',
+                 displayField:'short',
+                 valueField:'short',
+                 tpl: _journal_tpl,
+                 name: 'journal',
+                },
                 {name:'chapter'},
                 {name:'edition'},
                 {name:'volume', width:100},
@@ -124,7 +152,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
         /* first set labels and hide everything */
         for (var i=0; i<items.length; i++){
             var el=items[i].getEl();
-            if (items[i].itemId == 'pubtype'){
+            if (items[i].itemId == 'pubtype' || items[i].itemId == 'journal'){
                 continue;
             }
             if (this.pub_types[pubtype].fields[items[i].getName()]){

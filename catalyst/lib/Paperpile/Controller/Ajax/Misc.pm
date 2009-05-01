@@ -23,7 +23,7 @@ sub reset_db : Local {
 }
 
 sub tag_list : Local {
-
+  
   my ( $self, $c ) = @_;
 
   my $tags=$c->model('User')->get_tags;
@@ -42,8 +42,39 @@ sub tag_list : Local {
   );
 
   $c->stash->{data}          = [@data];
+
   $c->stash->{metaData}      = {%metaData};
 
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+sub journal_list : Local {
+
+  my ( $self, $c ) = @_;
+  my $query = $c->request->params->{query};
+
+  my $model = $c->model('App');
+
+  $query = $model->dbh->quote("$query*");
+
+  my $sth = $model->dbh->prepare(
+    "SELECT Journals.short, Journals.long FROM Journals 
+     JOIN Journals_lookup ON Journals.rowid=Journals_lookup.rowid 
+     WHERE Journals_lookup MATCH $query
+     ORDER BY Journals.short LIMIT 100;"
+  );
+
+  my ( $short, $long );
+  $sth->bind_columns( \$short, \$long );
+  $sth->execute;
+
+  my @data = ();
+  while ( $sth->fetch ) {
+    push @data, { long => $long, short => $short };
+  }
+
+  $c->stash->{data} = [@data];
   $c->forward('Paperpile::View::JSON');
 
 }
