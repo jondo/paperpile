@@ -22,8 +22,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                               margins: '2 2 2 2',
                               cmargins: '5 5 0 5',
                               width: 200,
-                              minSize: 100,
-                              maxSize: 300,
                               bbar: new Ext.StatusBar({
                                   border:0,
                                   id: 'statusbar',

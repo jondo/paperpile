@@ -5,7 +5,26 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         Ext.apply(this, {
             layout:'border',
             items:[
-                { region:'east',
+                { xtype:'panel',
+                  region:'west',
+                  split: true,
+                  itemId: 'center_panel',
+                  layout: 'border',
+                  width: 720,
+                  minSize:720,
+                  items:[
+                      this.grid,
+                      {border: false,
+                       split: true,
+                       xtype: 'datatabs',
+                       itemId: 'data_tabs',
+                       activeItem:0,
+                       height:200,
+                       region:'south'
+                      },
+                  ]
+                 },
+                { region:'center',
                   itemId: 'east_panel',
                   activeItem:0,
                   layout: 'card',
@@ -39,28 +58,8 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                              pressed: false
                            }
                         ],
-
-                  margins: '2 2 2 2',
-                  cmargins: '5 5 0 5',
-                  width: 500,
-                  minSize: 100,
-                  maxSize: 800,
                 },
-                { xtype:'panel',
-                  region:'center',
-                  itemId: 'center_panel',
-                  layout: 'border',
-                  items:[
-                      this.grid,
-                      {border: false,
-                       xtype: 'datatabs',
-                       itemId: 'data_tabs',
-                       activeItem:0,
-                       height:200,
-                       region:'south'
-                      },
-                  ]
-                }
+               
             ],
         });
        
