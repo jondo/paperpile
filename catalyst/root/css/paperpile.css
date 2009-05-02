@@ -126,6 +126,11 @@
     background-color: #FFF6A9;
 }
 
+.pp-grid-snippets .heading{
+    line-height: 1.5em;
+    color: green;
+}
+
 .pp-grid-status{
     line-height: 1.5em;
     width: 120;
@@ -145,6 +150,11 @@
     color: gray;
     width: 120;
 }
+
+.pp-grid-sort-container {
+    color: blue;
+}
+
 
 .pp-status-imported {
     background: transparent url('/images/icons/down.png') no-repeat;
@@ -291,3 +301,4 @@
 .pp-item-widget-textfield {
     float: left;
 }
+

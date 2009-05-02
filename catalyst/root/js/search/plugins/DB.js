@@ -9,12 +9,37 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
       
         Paperpile.PluginGridDB.superclass.initComponent.apply(this, arguments);
 
-        var tbar=this.getTopToolbar();
+        var menu = new Ext.menu.Menu({
+            defaults: {checked: false,
+                       group: 'filter'+this.id,
+                       checkHandler: this.toggleFilter,
+                       scope:this,
+                      },
+            items: [ { text: 'All fields',
+                       checked: true,
+                       itemId: 'all_nopdf',
+                     }, 
+                     { text: 'All fields + PDF fulltext',
+                       itemId: 'all_pdf',
+                     }, 
+                     '-', 
+                     { text: 'Author', itemId: 'author'}, 
+                     { text: 'Title',  itemId: 'title' },
+                     { text: 'Journal', itemId: 'journal'},
+                     { text: 'Abstract', itemId: 'abstract'},
+                     { text: 'PDF fulltext', itemId: 'text'},
+                     { text: 'Notes', itemId: 'notes'},
+                     { text: 'Year', itemId: 'year'},
+                   ]
+        });
 
-        tbar.unshift(new Ext.app.FilterField({store: this.store, 
-                                              base_query: this.plugin_base_query,
-                                              width: 320,
-                                             }));
+        this.filterField=new Ext.app.FilterField({store: this.store, 
+                                                  base_query: this.plugin_base_query,
+                                                  width: 320,
+                                                 });
+        var tbar=this.getTopToolbar();
+        tbar.unshift({xtype:'button', text: 'Filter', menu: menu });
+        tbar.unshift(this.filterField);
 
         // If we are viewing a virtual folders we need an additional
         // button to remove an entry from a virtual folder
@@ -44,8 +69,8 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                                                             menu: menu
                                                         };
         }
-
-        //this.getColumnModel().setHidden(0,true);
+        
+        this.store.baseParams['plugin_search_pdf']= 0 ;
 
     },
 
@@ -58,11 +83,33 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         }, this, {
             single: true
         });
-
-
-
     },
 
+    toggleFilter: function(item, checked){
+        console.log(item.itemId, checked);
+
+        // Toggle 'search_pdf' option 
+        if (item.itemId == 'all_pdf'){
+            this.store.baseParams['plugin_search_pdf']= checked ? 1:0 ;
+        }
+        
+        // Specific fields
+        if (item.itemId != 'all_pdf' && item.itemId != 'all_nopdf'){
+            if (checked){
+                this.filterField.singleField=item.itemId;
+                this.store.baseParams['plugin_search_pdf']= (item.itemId == 'text') ? 1:0;
+            } else {
+                if (this.filterField.singleField == item.itemId){
+                    this.filterField.singleField="";
+                }
+            }
+        }
+
+        if (checked){
+            this.filterField.onTrigger2Click();
+        }
+      
+    },
 
     //
     // Delete entry from virtual folder

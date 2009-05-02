@@ -59,12 +59,19 @@ sub init_db {
     };
   }
 
-  # Full text search table
-  $self->dbh->do('DROP TABLE IF EXISTS Fulltext');
+  # Full text search tables
+  $self->dbh->do('DROP TABLE IF EXISTS Fulltext_full');
   $self->dbh->do(
-    "CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,tags,folders,year,journal);");
+    "CREATE VIRTUAL TABLE Fulltext_full using fts3(text,abstract,notes,title,key,author,tags,folders,year,journal);"
+  );
 
-  if (defined $settings){
+  $self->dbh->do('DROP TABLE IF EXISTS Fulltext_citation');
+  $self->dbh->do(
+    "CREATE VIRTUAL TABLE Fulltext_citation using fts3(abstract,notes,title,key,author,tags,folders,year,journal);"
+  );
+
+  if ( defined $settings ) {
+
     # Create user settings table
     $self->dbh->do('DROP TABLE IF EXISTS Settings');
     $self->dbh->do("CREATE TABLE Settings (key TEXT, value TEXT)");
@@ -143,7 +150,7 @@ sub create_pubs {
     # Check if key already exists
 
     # First we check in the database
-    my $sth = $self->dbh->prepare("SELECT key FROM fulltext WHERE fulltext MATCH 'key:$key*'");
+    my $sth = $self->dbh->prepare("SELECT key FROM fulltext_full WHERE fulltext_full MATCH 'key:$key*'");
     my $existing_key;
     $sth->bind_columns( \$existing_key );
     $sth->execute;
@@ -209,22 +216,28 @@ sub insert_pubs {
 
     $pub->_rowid($pub_rowid);
 
-    ( $fields, $values ) = $self->_hash2sql( {
-        rowid    => $pub_rowid,
-        key      => $pub->citekey,
-        year     => $pub->year,
-        journal  => $pub->journal,
-        title    => $pub->title,
-        abstract => $pub->abstract,
-        notes    => $pub->notes,
-        author   => $pub->_authors_display,
-        tags     => $pub->tags,
-        folders  => $pub->folders,
-        text     => '',
-      }
-    );
+    my $hash = {
+      rowid    => $pub_rowid,
+      key      => $pub->citekey,
+      year     => $pub->year,
+      journal  => $pub->journal,
+      title    => $pub->title,
+      abstract => $pub->abstract,
+      notes    => $pub->notes,
+      author   => $pub->_authors_display,
+      tags     => $pub->tags,
+      folders  => $pub->folders,
+      text     => '',
+      };
 
-    $self->dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
+    ( $fields, $values ) = $self->_hash2sql($hash);
+    $self->dbh->do("INSERT INTO fulltext_full ($fields) VALUES ($values)");
+
+    delete($hash->{text});
+
+    ( $fields, $values ) = $self->_hash2sql($hash);
+    $self->dbh->do("INSERT INTO fulltext_citation ($fields) VALUES ($values)");
+
 
     ## Insert authors
 
@@ -234,8 +247,8 @@ sub insert_pubs {
 
     # 'OR IGNORE' for rare cases where one paper has two or more
     # authors that are not distinguished by their id (e.g. ENCODE paper with 316 authors)
-    my $insert_join =
-      $self->dbh->prepare("INSERT OR IGNORE INTO author_publication (author_id,publication_id) VALUES(?,?)");
+    my $insert_join = $self->dbh->prepare(
+      "INSERT OR IGNORE INTO author_publication (author_id,publication_id) VALUES(?,?)");
 
     foreach my $author ( @{ $pub->get_authors } ) {
       my $author_rowid;
@@ -252,9 +265,7 @@ sub insert_pubs {
     }
   }
 
-  eval {
-    $self->dbh->commit;
-  };
+  eval { $self->dbh->commit; };
 
   if ($@) {
 
@@ -378,7 +389,8 @@ sub update_tags {
 
   # First update flat field in Publication and Fulltext tables
   $self->update_field('Publications',$pub_rowid,'tags',$tags);
-  $self->update_field('Fulltext',$pub_rowid,'tags',$tags);
+  $self->update_field('Fulltext_full',$pub_rowid,'tags',$tags);
+  $self->update_field('Fulltext_citation',$pub_rowid,'tags',$tags);
 
   # Remove all connections form Tag_Publication table
   my $sth=$self->dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
@@ -434,7 +446,8 @@ sub delete_tag {
     $new_tags =~s/,$tag$//;
 
     $self->update_field('Publications',$publication_id,'tags',$new_tags);
-    $self->update_field('Fulltext',$publication_id,'tags',$new_tags);
+    $self->update_field('Fulltext_full',$publication_id,'tags',$new_tags);
+    $self->update_field('Fulltext_citation',$publication_id,'tags',$new_tags);
 
   }
 
@@ -468,7 +481,8 @@ sub rename_tag {
     $new_tags =~s/,$old_tag$/,$new_tag/;
 
     $self->update_field('Publications',$publication_id,'tags',$new_tags);
-    $self->update_field('Fulltext',$publication_id,'tags',$new_tags);
+    $self->update_field('Fulltext_full',$publication_id,'tags',$new_tags);
+    $self->update_field('Fulltext_citation',$publication_id,'tags',$new_tags);
 
   }
 
@@ -509,7 +523,8 @@ sub update_folders {
 
   # First update flat field in Publication and Fulltext tables
   $self->update_field('Publications',$pub_rowid,'folders',$folders);
-  $self->update_field('Fulltext',$pub_rowid,'folders',$folders);
+  $self->update_field('Fulltext_full',$pub_rowid,'folders',$folders);
+  $self->update_field('Fulltext_citation',$pub_rowid,'folders',$folders);
 
   # Remove all connections from Folder_Publication table
   my $sth=$self->dbh->do("DELETE FROM Folder_Publication WHERE publication_id=$pub_rowid");
@@ -552,7 +567,8 @@ sub delete_folder {
 
   #  Update flat fields in Publication table and Fulltext table
   my $update1 = $self->dbh->prepare("UPDATE Publications SET folders=? WHERE rowid=?");
-  my $update2 = $self->dbh->prepare("UPDATE Fulltext SET folders=? WHERE rowid=?");
+  my $update2 = $self->dbh->prepare("UPDATE Fulltext_full SET folders=? WHERE rowid=?");
+  my $update2 = $self->dbh->prepare("UPDATE Fulltext_citation SET folders=? WHERE rowid=?");
 
   foreach my $id (@$folder_ids) {
 
@@ -658,33 +674,49 @@ sub reset_db {
 }
 
 sub fulltext_count {
-  ( my $self, my $query ) = @_;
+  ( my $self, my $query, my $search_pdf ) = @_;
+
+  my $table='Fulltext_citation';
+
+  if ($search_pdf){
+    $table='Fulltext_Full';
+  }
 
   my $where;
   if ($query) {
     $query = $self->dbh->quote("$query*");
-    $where = "WHERE fulltext MATCH $query";
+    $where = "WHERE $table MATCH $query";
   }
   else {
     $where = '';    #Return everything if query empty
   }
 
   my $count = $self->dbh->selectrow_array(
-    qq{select count(*) from Publications join fulltext on 
-    publications.rowid=fulltext.rowid $where}
+    qq{select count(*) from Publications join $table on 
+    publications.rowid=$table.rowid $where}
   );
 
   return $count;
 }
 
 sub fulltext_search {
-  ( my $self, my $_query, my $offset, my $limit ) = @_;
+  ( my $self, my $_query, my $offset, my $limit, my $order, my $search_pdf ) = @_;
+
+  my $table='Fulltext_citation';
+
+  if ($search_pdf){
+    $table='Fulltext_Full';
+  }
+
+  if (!$order){
+    $order="created DESC";
+  }
 
   my ($where, $query);
 
   if ($_query) {
     $query = $self->dbh->quote("$_query*");
-    $where = "WHERE fulltext MATCH $query";
+    $where = "WHERE $table MATCH $query";
   } else {
     $where = '';    #Return everything if query empty
   }
@@ -694,18 +726,21 @@ sub fulltext_search {
   # Publication class
   my $sth = $self->dbh->prepare(
     "SELECT *,
-     offsets(fulltext) as offsets,
+     offsets($table) as offsets,
      publications.rowid as _rowid,
      publications.title as title,
      publications.abstract as abstract,
      publications.notes as notes
-     FROM Publications JOIN fulltext
-     ON publications.rowid=fulltext.rowid $where LIMIT $limit OFFSET $offset"
+     FROM Publications JOIN $table
+     ON publications.rowid=$table.rowid $where ORDER BY $order LIMIT $limit OFFSET $offset"
   );
 
   $sth->execute;
 
   my @page = ();
+
+  my @citation_hits=();
+  my @fulltext_hits=();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
     my $pub = Paperpile::Library::Publication->new();
@@ -713,7 +748,7 @@ sub fulltext_search {
 
       if ( $field eq 'offsets' ) {
         my ( $snippets_text, $snippets_abstract, $snippets_notes ) =
-          $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query );
+          $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query, $search_pdf );
 
         $pub->_snippets_text($snippets_text);
         $pub->_snippets_abstract($snippets_abstract);
@@ -912,7 +947,8 @@ sub delete_from_folder {
   $newFolders=$self->dbh->quote($newFolders);
 
   $self->dbh->do("UPDATE Publications SET folders=$newFolders WHERE rowid=$row_id");
-  $self->dbh->do("UPDATE fulltext SET folders=$newFolders WHERE rowid=$row_id");
+  $self->dbh->do("UPDATE fulltext_full SET folders=$newFolders WHERE rowid=$row_id");
+  $self->dbh->do("UPDATE fulltext_citation SET folders=$newFolders WHERE rowid=$row_id");
   $self->dbh->do("DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)");
 
 }
@@ -950,7 +986,7 @@ sub delete_attachment{
 
     if ($pdf){
       $path = File::Spec->catfile( $paper_root, $pdf );
-      $self->dbh->do("UPDATE Fulltext SET text='' WHERE rowid=$rowid");
+      $self->dbh->do("UPDATE Fulltext_full SET text='' WHERE rowid=$rowid");
       unlink($path);
     }
 
@@ -1014,7 +1050,7 @@ sub index_pdf {
 
   $text=$self->dbh->quote($text);
 
-  $self->dbh->do("UPDATE Fulltext SET text=$text WHERE rowid=$rowid");
+  $self->dbh->do("UPDATE Fulltext_full SET text=$text WHERE rowid=$rowid");
 
 }
 
@@ -1047,15 +1083,24 @@ sub _remove_from_flatlist {
 
 sub _snippets {
 
-  my ( $self, $rowid, $offsets, $query ) = @_;
+  my ( $self, $rowid, $offsets, $query, $search_pdf ) = @_;
+
+  my $table='Fulltext_citation';
+
+  if ($search_pdf){
+    $table='Fulltext_Full';
+  }
 
   if (not $query){
     return ('','','');
   }
 
   my @terms=split(/\s+/,$query);
-
   @terms=($query) if (not @terms);
+
+  foreach my $field (qw/key year journal title abstract notes author tags folders text/){
+    $query=~s/$field://g;
+  }
 
   # Offset format is 4 integers separated by blank
 
@@ -1070,23 +1115,31 @@ sub _snippets {
 
   # 4. Number of bytes in the match.
 
+
   # This is the order of our fields in the fulltext table
-  my @fields = ( 'text', 'abstract', 'notes' );
+  my @fields = ('text','abstract','notes');
+
+  # We don't have the 'text' field in the Fulltext_citation table
+  if (!$search_pdf){
+    @fields =('abstract', 'notes');
+  }
 
   my %snippets = ( text => '', abstract => '', notes => '' );
 
-  my $context=30; # Characters of context
+  my $context=45; # Characters of context
 
   while ( $offsets =~ /(\d+) (\d+) (\d+) (\d+)/g ) {
 
     # We only generate snippets for text, abstract and notes
-    next if ( $1 > 2 );
+    # (or abstract and notes if pdfs are not searched)
+    next if ( $1 > 2 and $search_pdf);
+    next if ( $1 > 1 and !$search_pdf);
 
     my $field = $fields[$1];
 
     # We currently take only the first occurence
     if ( $snippets{$field} eq '' ) {
-      ( my $text ) = $self->dbh->selectrow_array("SELECT $field FROM Fulltext WHERE rowid=$rowid ");
+      ( my $text ) = $self->dbh->selectrow_array("SELECT $field FROM $table WHERE rowid=$rowid ");
 
       # TODO: more sophisticated way of generating ends, etc.
 
@@ -1095,8 +1148,13 @@ sub _snippets {
 
       my $snippet = substr( $text, $from, $4+2*$context );
 
+      # Remove word fragments at beginning and start
+      $snippet=~s/\w+\b//;
+      $snippet=~s/\b\w+$//;
+
       utf8::decode($snippet);
-      $snippet="...".$snippet."...";
+
+      $snippet="\x{2026}".$snippet."\x{2026}";
 
       foreach my $term (@terms){
         $snippet=~s/($query)/<span class="highlight">$1<\/span>/ig;

@@ -57,46 +57,53 @@ sub get : Local {
   mkpath($dir);
   my $file = "$dir/paper.pdf";
 
-  my $ua = Paperpile::Utils->get_browser();
 
-  eval {
-    my $res = $ua->request(
-      HTTP::Request->new( GET => $url ),
-      sub {
-        my ( $data, $response, $protocol ) = @_;
-        if ( not -e $file ) {
-          my $length = $response->content_length;
-          open( SIZE, ">$file.size" );
-          if ( defined $length ) {
-            print SIZE "$length\n";
-          } else {
-            print SIZE "null\n";    # Don't know size
-          }
-          close(SIZE);
-          open( FILE, ">$file" ) || die "Can't open $file: $!\n";
-          binmode FILE;
-        } else {
-          open( FILE, ">>$file" ) || die "Can't open $file: $!\n";
-          binmode FILE;
-        }
-        print FILE $data or die "Can't write to $file: $!\n";
-        close FILE;
-      }
+   my $ua = Paperpile::Utils->get_browser();
+
+   eval {
+     my $res = $ua->request(
+       HTTP::Request->new( GET => $url ),
+       sub {
+         my ( $data, $response, $protocol ) = @_;
+         if ( not -e $file ) {
+           my $length = $response->content_length;
+           open( SIZE, ">$file.size" );
+           if ( defined $length ) {
+             print SIZE "$length\n";
+           } else {
+             print SIZE "null\n";    # Don't know size
+           }
+           close(SIZE);
+           open( FILE, ">$file" ) || die "Can't open $file: $!\n";
+           binmode FILE;
+         } else {
+           #open( FILE, ">>$file" ) || die "Can't open $file: $!\n";
+           #binmode FILE;
+         }
+         print FILE $data or die "Can't write to $file: $!\n";
+         # close(FILE);
+       }
     );
 
-    if ( fileno(FILE) ) {
-      close(FILE) || die "Can't write to $file: $!\n";
-      if ( $res->header("X-Died") || !$res->is_success ) {
-        if ( my $died = $res->header("X-Died") ) {
-          print STDERR "$died\n";
-        }
-      }
-    } else {
-      if ( my $died = $res->header("X-Died") ) {
-        print STDERR "$died\n";
-      }
-    }
-  };
+     # think more about this error handling...
+     if ( fileno(FILE) ) {
+
+       print STDERR Dumper($res);
+
+       close(FILE) || die "Can't write to $file: $!\n";
+       if ( $res->header("X-Died") || !$res->is_success ) {
+         if ( my $died = $res->header("X-Died") ) {
+           print STDERR "$died\n";
+         }
+       }
+     } else {
+       if ( my $died = $res->header("X-Died") ) {
+         die("Error while downloading file ($died)");
+       } else {
+         die("Error while downloading file.");
+       }
+     }
+   };
 
   if ($@){
     $c->stash->{pdf}=undef;

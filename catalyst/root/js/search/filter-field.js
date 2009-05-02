@@ -8,6 +8,8 @@
 
 Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
 
+    singleField: '', // Restrict query to a single field by appending it like name: knuth
+
     initComponent : function(){
 
         itemId:'filter_field',
@@ -23,11 +25,12 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
                 this.onTrigger2Click();
             }
         }, this);
-
-        this.on('keyup', function(f, e){
-            this.onTrigger2Click();
+        
+        var task = new Ext.util.DelayedTask(this.onTrigger2Click, this);
+        
+        this.on('keydown', function(f, e){
+            task.delay(100); 
         }, this);
-
     },
 
     validationEvent:false,
@@ -65,7 +68,6 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
         this.hasSearch = true;
         this.triggers[0].show();
         
-
     },
 
     build_query: function(input){
@@ -76,10 +78,14 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
                 return(this.base_query);
             }
         } else {
-            if (this.base_query == ''){
-                return(input);
+            if (this.singleField ==''){
+                return(this.base_query+" "+input);
             } else {
-                return(this.base_query+' AND '+input);
+                var parts=input.split(/\s+/);
+                for (var i=0; i<parts.length;i++){
+                    parts[i]=this.singleField+":"+parts[i];
+                }
+                return(this.base_query+" "+ parts.join(" "));
             }
         }
     }

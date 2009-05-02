@@ -15,7 +15,8 @@ extends 'Paperpile::Plugins::Import';
 has 'query' => ( is => 'rw' );
 has 'mode' => ( is => 'rw', default => 'FULLTEXT', isa => 'Str' );
 has 'file' => ( is => 'rw' );
-
+has 'search_pdf' => (is => 'rw', default => 1);
+has 'order' => (is => 'rw', default => 'created DESC');
 
 sub BUILD {
   my $self = shift;
@@ -39,9 +40,9 @@ sub connect {
 
   if ( $self->mode eq 'FULLTEXT' ) {
 
-    $self->total_entries( $model->fulltext_count( $self->query ) );
+    $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf ) );
   } else {
-    $self->total_entries( $model->standard_count( $self->query ) );
+    $self->total_entries( $model->standard_count( $self->query, $self->search_pdf ) );
   }
 
   return $self->total_entries;
@@ -55,9 +56,9 @@ sub page {
   my $page;
 
   if ( $self->mode eq 'FULLTEXT' ) {
-    $page = $model->fulltext_search( $self->query, $offset, $limit );
+    $page = $model->fulltext_search( $self->query, $offset, $limit, $self->order, $self->search_pdf );
   } else {
-    $page = $model->standard_search( $self->query, $offset, $limit );
+    $page = $model->standard_search( $self->query, $offset, $limit, $self->search_pdf );
   }
 
   $self->_save_page_to_hash($page);

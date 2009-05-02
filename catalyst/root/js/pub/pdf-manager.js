@@ -298,9 +298,9 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                 success: function(response){
                     var json = Ext.util.JSON.decode(response.responseText);
                     Ext.getCmp('statusbar').clearStatus();
+                    Ext.TaskMgr.stop(this.progressTask);
+                    this.progressTask=null;
                     if (json.pdf){
-                        Ext.TaskMgr.stop(this.progressTask);
-                        this.progressTask=null;
                         this.checkProgress();
                         if (this.data._imported){
                             this.attachFile(true,json.pdf);
@@ -309,6 +309,10 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                             this.updateDetail(this.data);
                         }
                         Ext.getCmp('statusbar').setText('Downloaded '+json.pdf);
+                    } else {
+                        Ext.getCmp('statusbar').clearStatus();
+                        Ext.getCmp('statusbar').setText("Could not download PDF.");
+                        this.updateDetail(this.data);
                     }
                 },
                 scope: this

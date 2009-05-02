@@ -135,7 +135,8 @@ sub update_notes : Local {
   my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
   my $text      = $formatter->format($tree);
 
-  $c->model('User')->update_field( 'Fulltext', $rowid, 'notes', $text );
+  $c->model('User')->update_field( 'Fulltext_full', $rowid, 'notes', $text );
+  $c->model('User')->update_field( 'Fulltext_citation', $rowid, 'notes', $text );
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');

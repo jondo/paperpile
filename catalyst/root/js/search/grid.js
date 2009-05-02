@@ -20,6 +20,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                            plugin_name: this.plugin_name,
                            plugin_query: this.plugin_query,
                            plugin_mode: this.plugin_mode,
+                           plugin_order: "created DESC",
                            limit:this.limit
                           },
                reader: new Ext.data.JsonReader(),
@@ -112,13 +113,13 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 '<p class="pp-grid-authors">{_authors_display}</p>',
                 '<p class="pp-grid-citation">{_citation_display}</p>',
                 '<tpl if="_snippets_text">',
-                '<p class="pp-grid-snippets">{_snippets_text}</p>',
+                '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
                 '</tpl>',
                 '<tpl if="_snippets_abstract">',
-                '<p class="pp-grid-snippets">{_snippets_abstract}</p>',
+                '<p class="pp-grid-snippets"><span class="heading">Abstract:</span> {_snippets_abstract}</p>',
                 '</tpl>',
                 '<tpl if="_snippets_notes">',
-                '<p class="pp-grid-snippets">{_snippets_notes}</p>',
+                '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
                 '</tpl>',
                 '</div>'
             );
@@ -134,7 +135,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             store: _store,
             bbar: _pager,
             tbar: tbar,
-
+            enableHdMenu : false,
             autoExpandColumn:'publication',
 
             columns:[{header: "Publication",
@@ -165,6 +166,11 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
 
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
+
+        console.log(this.getView().getHeaderCell(0));
+
+        //Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(0)).first(),
+        //                     '<div class="pp-grid-sort-container">Test</div>');
 
         //this.updateButtons();
 
