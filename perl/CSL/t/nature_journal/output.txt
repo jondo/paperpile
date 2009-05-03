@@ -1,0 +1,5 @@
+1. Guttman, M., et al. Chromatin signature reveals over a thousand highly conserved large non-coding RNAs in mammals. Nature 458, 223-227(2009).
+2. Sessions, O.M., et al. Discovery of insect and human dengue virus host factors. Nature 458, 1047-1050(2009).
+3. Aouadi, M., et al. Orally delivered siRNA targeting macrophage Map4k4 suppresses systemic inflammation. Nature 458, 1180-1184(2009).
+4. Dumont, S., et al. RNA translocation and unwinding mechanism of HCV NS3 helicase and its coordination by ATP. Nature 439, 105-108(2006).
+5. Blow, N. Transcriptomics: The digital generation. Nature 458, 239-242(2009).
