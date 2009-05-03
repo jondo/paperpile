@@ -43,7 +43,7 @@ GetOptions(
   "i=s" => \$opt_i
 );
 
-if ( !$opt_m || !$opt_c || !$opt_f || $opt_i eq "") {
+if ( !$opt_m || !$opt_c || !$opt_f ) {
   print STDERR $usage;
   exit;
 }
@@ -52,8 +52,7 @@ my $o = Biblio::CSL->new(
   mods => $opt_m,
   csl => $opt_c,
   format => $opt_f,
-  IDs => $opt_i,
-  generateCitations => 1
+  IDs => $opt_i
 );
 
 
@@ -62,9 +61,11 @@ print "\n--- Beispiel: txt ---\n";
 
 $o->transform();
 
-print "\nCitations (".$o->getCitationsSize()."):\n";
-$o->citationsToString();
+if($o->getCitationsSize()>0) {
+  print "\nCitations (".$o->getCitationsSize()."):\n";
+  print $o->citationsToString();
+}
 
 print "\nBibliography (".$o->getBiblioSize()."):\n";
-$o->biblioToString();
+print $o->biblioToString();
 #print Dumper $o->{biblio}
