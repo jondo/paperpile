@@ -23,7 +23,7 @@ sub reset_db : Local {
 }
 
 sub tag_list : Local {
-  
+
   my ( $self, $c ) = @_;
 
   my $tags=$c->model('User')->get_tags;
@@ -142,7 +142,7 @@ sub init_session : Local {
 
   # Clear session variables
   foreach my $key ( keys %{ $c->session } ) {
-    delete( $c->session->{$key} ) if $key =~ /^(grid|viewer|tree|user_db)/;
+    delete( $c->session->{$key} ) if $key =~ /^(grid|viewer|tree|user_db|pdfextract)/;
   }
 
   # The path for the user database is given in the application database

@@ -151,9 +151,15 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         var panel=main.tabs.add(new Paperpile.PatternSettings({title:'Settings', 
                                                          iconCls: 'pp-icon-page',
                                                 }));
-        console.log(panel);
         panel.show();
         
+    },
+
+    pdfExtract: function(){
+
+        var panel=main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs', iconCls: 'pp-icon-page'}));
+        panel.show();
+
     },
 
     error: function(response){

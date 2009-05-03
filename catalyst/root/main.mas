@@ -41,6 +41,9 @@
                
   pdf/viewer.js 
   pdf/zoomer.js
+
+  pdfextract/view.js
+  pdfextract/grid.js
   
   };
   
