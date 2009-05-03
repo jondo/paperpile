@@ -384,20 +384,19 @@ sub transformEach() {
                 # move through layout
                 foreach my $o ( @order ) {
                     #print "\n--- $o ---\n";
-                    
                     switch($self->_c->{style}->{bibliography}->{layout}->{$o}->key()) {
                         case "suffix" {
                             _layoutSuffix($mods, $self);
                         }
                         case "text" {
-                            _layoutText($mods, \%i, $o, $self);
+                            _parseText($mods, $self, $self->_c->{style}->{bibliography}->{layout}->{text}->[$i{$o}]->pointer);
                         }
                     
                         case "date" {
-                            _layoutDate($mods, $self);
+                            _parseDate($mods, $self, $self->_c->{style}->{bibliography}->{layout}->{date}->pointer);
                         }
                         case "choose" {
-                            _layoutChoose($mods, $self);
+                            _parseChoose($mods, $self, $self->_c->{style}->{bibliography}->{layout}->{choose}->pointer);
                         }
                         else {
                             die "ERROR: The case CSL-attribute style->bibliography->layout eq '".($self->_c->{style}->{bibliography}->{layout}->{$o}->key())."' is not implemented yet!";
@@ -414,6 +413,25 @@ sub transformEach() {
         else {
             die "ERROR: CSL-element 'bibliography' not available?";
         }
+        
+        # check for "line-formatting" element, attribute-name is {"line-spacing" | "entry-spacing" }.
+        my $opt = 0;
+        if($opt = $self->_c->{style}->{bibliography}->{option}("name", "eq", "line-spacing")->pointer) {
+            if(exists $opt->{value}) {
+                for(my $i=0; $i < $opt->{value}; $i++) {
+                    $self->{_biblio_str} .= "\n"; # add newlines
+                }
+            }
+        }
+        if($opt = $self->_c->{style}->{bibliography}->{option}("name", "eq", "entry-spacing")->pointer ) {
+            if(exists $opt->{value}) {
+                for(my $i=0; $i < $opt->{value}; $i++) {
+                    $self->{_biblio_str} .= " "; # add spaces 
+                }
+            }
+        }
+        
+        # the string is ready, add the current entry to the bibliography
         push @_biblio, $self->{_biblio_str};
         $self->{_biblio_str}="";
     }
@@ -432,137 +450,176 @@ sub _layoutSuffix {
 
 
 # case $self->_c->{style}->{bibliography}->{layout} eq text
-sub _layoutText {
-    my ($mods, $i, $o, $self) = @_;
-    
-    # shorten the whole thing
-    my $text = $self->_c->{style}->{bibliography}->{layout}->{text}->[$i->{$o}]->pointer;
-                        
-    if(exists $text->{variable} && exists $text->{suffix} && $text->{variable} eq "citation-number") {
-        $self->{_biblioNumber}++;
-        #print $self->_biblioNumber, $text->{suffix};
-        $self->{_biblio_str} .= $self->{_biblioNumber}.$text->{suffix};
-    }
-    elsif($text->{macro} eq "author") {
-        #print Dumper $text;
-        if($mods->{name}) {
-            #print Dumper $mods->{name};
-            my @names = $mods->{name}->('@');
-            my $round = scalar(@names); 
-            my $qtNames = $round;
+sub _parseText {
+    my ($mods, $self, $text) = @_;
 
-            my ($et_al_min , $et_al_use_first) = (0, 0);
-            
-            # read et-al options
-            my @options = $self->_c->{style}->{bibliography}->{option}('@');
-            foreach my $o ( @options ) {
-               #print Dumper $o->pointer;
-                switch($o->pointer->{name}) {
-                    case "et-al-min" { # the minimum number of contributors to use "et al"
-                        $et_al_min = $o->pointer->{value};
-                    }
-                    case "et-al-use-first" { # the number of contributors to explicitly print under  "et al" conditions
-                        $et_al_use_first = $o->pointer->{value};
-                    }                    
-                }
+    foreach my $t (keys %$text) {
+        switch($t) {
+            case 'variable' {
+                _parseVariable($mods, $self, $text, 0, "");
             }
+            case 'macro' {
+                _parseMacro($mods, $self, $text);
+            }
+            else {
+            }
+        }
+    }
+}
 
-            # print the names
-            foreach my $n ( @names ) {
-                #print Dumper $n->pointer; exit;
+
+sub _parseMacro {
+    my ($mods, $self, $macro) = @_;
+    #print Dumper $macro;
+    
+    switch($macro->{macro}) {
+        case 'author' {
+            if($mods->{name}) {
+                #print Dumper $mods->{name};
+                my @names = $mods->{name}->('@');
+                my $round = scalar(@names); 
+                my $qtNames = $round;
+
+                my ($et_al_min , $et_al_use_first) = (0, 0);
                 
-                my $complete_name = "";
-                
-                # either not enough for et-al or we use the first authors until we reach $et_al_use_first
-                if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) ) {
-                    my $c_nameEQauthor = $self->_c->{style}->{macro}('name','eq','author') ;
-                    my $family_name = $n->{namePart}('type', 'eq', 'family');
-                    my @given_names = $n->{namePart}('type', 'eq', 'given');
-                    #print Dumper @given_names;
-                                        
-                    my $and = "";
-                    if($c_nameEQauthor->{names}->{name}->{and} eq "text" ) {
-                        $and = "and ";
+                # read et-al options
+                my @options = $self->_c->{style}->{bibliography}->{option}('@');
+                foreach my $o ( @options ) {
+                   #print Dumper $o->pointer;
+                    switch($o->pointer->{name}) {
+                        case "et-al-min" { # the minimum number of contributors to use "et al"
+                            $et_al_min = $o->pointer->{value};
+                        }
+                        case "et-al-use-first" { # the number of contributors to explicitly print under  "et al" conditions
+                            $et_al_use_first = $o->pointer->{value};
+                        }                    
                     }
-                    elsif($c_nameEQauthor->{names}->{name}->{and} eq "symbol" ) {
-                        $and = "&";
-                    }
+                }
+
+                # print the names
+                foreach my $n ( @names ) {
+                    #print Dumper $n->pointer; exit;
                     
-                    #print $c_nameEQauthor->{names}->{name}->{"name-as-sort-order"}; exit;
-                    if($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
-                        #print Dumper $n->{namePart}->[1]->pointer; exit;
-                        $complete_name = $family_name.$c_nameEQauthor->{names}->{name}->{'sort-separator'};
+                    my $complete_name = "";
+                    
+                    # either not enough for et-al or we use the first authors until we reach $et_al_use_first
+                    if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) ) {
+                        my $c_nameEQauthor = $self->_c->{style}->{macro}('name','eq','author') ;
+                        my $family_name = $n->{namePart}('type', 'eq', 'family');
+                        my @given_names = $n->{namePart}('type', 'eq', 'given');
+                        #print Dumper @given_names;
+                                            
+                        my $and = "";
+                        if($c_nameEQauthor->{names}->{name}->{and} eq "text" ) {
+                            $and = "and ";
+                        }
+                        elsif($c_nameEQauthor->{names}->{name}->{and} eq "symbol" ) {
+                            $and = "&";
+                        }
                         
-                        if(exists $c_nameEQauthor->{names}->{name}->{'initialize-with'}) {
-                            foreach my $gn (@given_names) {
-                                my @nameParts = split /\s+/, $gn;
-                                for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Rose -> R.
-                                    if($nameParts[$i] =~ /^(\S)/) {
-                                        $nameParts[$i] = $1;
-                                        $complete_name .= $nameParts[$i].$c_nameEQauthor->{names}->{name}->{'initialize-with'};
+                        #print $c_nameEQauthor->{names}->{name}->{"name-as-sort-order"}; exit;
+                        if($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
+                            #print Dumper $n->{namePart}->[1]->pointer; exit;
+                            $complete_name = $family_name.$c_nameEQauthor->{names}->{name}->{'sort-separator'};
+                            
+                            if(exists $c_nameEQauthor->{names}->{name}->{'initialize-with'}) {
+                                foreach my $gn (@given_names) {
+                                    my @nameParts = split /\s+/, $gn;
+                                    for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Rose -> R.
+                                        if($nameParts[$i] =~ /^(\S)/) {
+                                            $nameParts[$i] = $1;
+                                            $complete_name .= $nameParts[$i].$c_nameEQauthor->{names}->{name}->{'initialize-with'};
+                                        }
                                     }
                                 }
+                                $complete_name =~ s/\s+$//g; # remove endstanding spaces
                             }
-                            $complete_name =~ s/\s+$//g; # remove endstanding spaces
-                        }
-                        else {
-                            foreach my $gn (@given_names) {
-                                $complete_name .= $gn;
+                            else {
+                                foreach my $gn (@given_names) {
+                                    $complete_name .= $gn;
+                                }
                             }
                         }
-                    }
-                    elsif($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "first") { # what does this option mean?
-                        die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'}(eq first) is not implemented yet!";
-                    }
-                    else { # attribute not given -> "John Doe"
-                        die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'} not given is not implemented yet!";
-                    }                                    
-                    
-                    if($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'always') {
-                        $complete_name .= $c_nameEQauthor->{names}->{name}->{delimiter} if($round>1);
-                        $complete_name .= $and if($round==2);
-                    }
-                    elsif($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'never') {
-                        if($qtNames == 2 && $round>1) {
-                            $complete_name .= $and;
+                        elsif($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "first") { # what does this option mean?
+                            die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'}(eq first) is not implemented yet!";
                         }
-                        else {
+                        else { # attribute not given -> "John Doe"
+                            die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'} not given is not implemented yet!";
+                        }                                    
+                        
+                        if($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'always') {
                             $complete_name .= $c_nameEQauthor->{names}->{name}->{delimiter} if($round>1);
                             $complete_name .= $and if($round==2);
                         }
+                        elsif($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'never') {
+                            if($qtNames == 2 && $round>1) {
+                                $complete_name .= $and;
+                            }
+                            else {
+                                $complete_name .= $c_nameEQauthor->{names}->{name}->{delimiter} if($round>1);
+                                $complete_name .= $and if($round==2);
+                            }
+                        }
+                        else {
+                            die "ERROR: The CSL-attribute style->macro->name(eq author)->names->name->{'delimiter-precedes-last'} is not available?";
+                        }
                     }
-                    else {
-                        die "ERROR: The CSL-attribute style->macro->name(eq author)->names->name->{'delimiter-precedes-last'} is not available?";
-                    }
+                    
+                    $round--;
+                    
+                    #print $complete_name;
+                    $self->{_biblio_str} .= $complete_name; # add the name to the biblio result-string
                 }
                 
-                $round--;
-                
-                #print $complete_name;
-                $self->{_biblio_str} .= $complete_name; # add the name to the biblio result-string
-            }
-            
-            # add et.al string
-            if($qtNames >= $et_al_min) {
-                $self->{_biblio_str} .= "et al.";
+                # add et.al string
+                if($qtNames >= $et_al_min) {
+                    $self->{_biblio_str} .= "et al.";
+                }
             }
         }
-        #print Dumper @authors;
-    }    
+        case 'title' { 
+            if($mods->{titleInfo}->{title}) {
+                # add prefix
+                $self->{_biblio_str} .= $macro->{prefix} if($macro->{prefix});
+
+                my $title = $mods->{titleInfo}->{title};
+                $title =~ s/\n//g;
+                $title =~ s/\s+/ /g;
+                $self->{_biblio_str} .= $title;
+                
+                # add suffix
+                $self->{_biblio_str} .= $macro->{suffix} if($macro->{suffix});
+            }
+        }
+        case 'issuance' {
+            _parseIssuance($mods, $self, $self->_c->{style}->{macro}->('name', 'eq', 'issuance')->pointer);
+        }
+    }
 }
 
+sub _parseIssuance {
+    my ($mods, $self, $issuance) = @_;    
+    #print Dumper $issuance;
+    
+    foreach my $k (keys %$issuance) {
+        switch ($k) {
+            case 'choose' {
+                _parseChoose($mods, $self, $issuance->{$k});
+            }
+        }
+    }
+}
+
+
 # case $self->_c->{style}->{bibliography}->{layout} eq date
-sub _layoutDate {
-    my ($mods, $self) = @_;
+sub _parseDate {
+    my ($mods, $self, $date) = @_;
+        
+    $self->{_biblio_str} .= $date->{prefix} if(exists $date->{prefix});
     
-    # just shorten
-    my $ptr = $self->_c->{style}->{bibliography}->{layout}->{date}->pointer;
-    
-    $self->{_biblio_str} .= $ptr->{prefix} if(exists $ptr->{prefix});
-    
-    if(exists $ptr->{'date-part'}) {
-        if(exists $ptr->{'date-part'}->{name}) {
-            switch($ptr->{'date-part'}->{name}) { # month | day | year-other
+    if(exists $date->{'date-part'}) {
+        if(exists $date->{'date-part'}->{name}) {
+            switch($date->{'date-part'}->{name}) { # month | day | year-other
                 case "month" { # 1. 
                     
                 }
@@ -587,8 +644,8 @@ sub _layoutDate {
                     
                     # now we have the long year, e.g. 2000.
                     # perhaps we have to shorten it                    
-                    if(exists $ptr->{'date-part'}->{form}) {
-                        switch($ptr->{'date-part'}->{form}) {
+                    if(exists $date->{'date-part'}->{form}) {
+                        switch($date->{'date-part'}->{form}) {
                             case "short" {
                                 
                             }
@@ -596,7 +653,7 @@ sub _layoutDate {
                                 
                             }
                             else {
-                                die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->form eq '".($ptr->{'date-part'}->{form})."' is not implemented, yet.";
+                                die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->form eq '".($date->{'date-part'}->{form})."' is not implemented, yet.";
                             }
                         }
                     }
@@ -609,24 +666,25 @@ sub _layoutDate {
                     
                 }
                 else {
-                    die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->name eq '".($ptr->{'date-part'}->{name})."' is not implemented, yet.";
+                    die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->name eq '".($date->{'date-part'}->{name})."' is not implemented, yet.";
                 }
             }
         }
     }
     
-    $self->{_biblio_str} .= $ptr->{suffix} if(exists $ptr->{suffix});    
+    $self->{_biblio_str} .= $date->{suffix} if(exists $date->{suffix});
 }
 
 # case $self->_c->{style}->{bibliography}->{layout} eq choose
-sub _layoutChoose {
-    my ($mods, $self) = @_;
+sub _parseChoose {
+    my ($mods, $self, $choose) = @_;    
+    #print Dumper $choose;exit;
     
-    my @options = $self->_c->{style}->{bibliography}->{layout}->{choose}->nodes_keys();
-    my $opt = $self->_c->{style}->{bibliography}->{layout}->{choose}->pointer;
-    foreach my $o (@options) {
-        if($opt->{$o}->{type}) {        
-            switch($opt->{$o}->{type}) {
+    my @order = @{$choose->{'/order'}};
+    
+    foreach my $o (@order) {
+        if($choose->{$o}->{type}) {
+            switch($choose->{$o}->{type}) {
                 case "article" {
                 }
                 case "article-magazine" {
@@ -697,36 +755,42 @@ sub _layoutChoose {
                 }
             }
         }
-        else { # no settings just print 
-            
-            # e.g. article title
-            if($opt->{$o}->{text}->{macro}) {
-                $self->{_biblio_str} .= $opt->{$o}->{text}->{prefix} if($opt->{$o}->{text}->{prefix});
-                
-                if($opt->{$o}->{text}->{macro} eq "title") { 
-                    if($mods->{titleInfo}->{title}) {                        
-                        my $title = $mods->{titleInfo}->{title};
-                        $title =~ s/\n//g;
-                        $title =~ s/\s+/ /g;
-                        $self->{_biblio_str} .= $title;
-                    }
+        else { # no settings just print
+            my @innerorder;
+
+            # do it ordered
+            if(exists $choose->{$o}{'/order'}) {
+                @innerorder = @{$choose->{$o}{'/order'}};
+            }
+            # simulate correct ordering (just one)
+            else {
+                foreach my $k (keys %{$choose->{$o}}) {
+                    push @innerorder, $k;
                 }
-                
-                $self->{_biblio_str} .= $opt->{$o}->{text}->{suffix} if($opt->{$o}->{text}->{suffix});
             }
             
-            if(exists $opt->{$o}->{group}) {        
-                #my @order = $self->_c->{style}->{bibliography}->{layout}->{choose}->{$o}->{group}->order();
-                #print Dumper @order; exit;
-                my $elemNumber = 0;
-                # return value of elemNumber not important but necessary to keep the biblio_string intact.
-                _parseGroup($mods, $self, $opt->{$o}->{group}, 0);
-                
-                
+            # parse it
+            foreach my $io (@innerorder) {
+                switch($io) {
+                    case 'text' { # e.g. article title            
+                        _parseText($mods, $self, $choose->{$o}->{text})
+                    }
+                    case 'group' {
+                        # return value of elemNumber not important but necessary to keep the biblio_string intact.
+                        _parseGroup($mods, $self, $choose->{$o}->{group}, 0);
+                    }
+                    case 'date' {
+                        _parseDate($mods, $self, $choose->{$o}->{date});
+                    }
+                    else {
+                        #print $io, "\n";
+                    }
+                }
             }
         }
     }    
 }
+
 
 # parse csl group element
 # A group can have subgroups.
@@ -737,7 +801,7 @@ sub _layoutChoose {
 # Furhermore, we need the number of overall printed elements in the recursion
 sub _parseGroup {
     my ($mods, $self, $g, $elemNumber) = @_;
-
+    
     $self->{_biblio_str} .= $g->{'prefix'}  if(exists $g->{'prefix'});
     
     # index of the group element
@@ -790,6 +854,7 @@ sub _parseGroup {
             }
             case "text" {
                 my $delimiter = "";
+                
                 if(ref($g->{$k}) eq "HASH") {
                     $elemNumber++;
                     if($elemNumber>1 && exists $g->{'delimiter'}) {
@@ -799,7 +864,7 @@ sub _parseGroup {
                     
                     # can appear either as hash
                     if(exists $g->{$k}->{variable}) {
-                        $self->{_biblio_str} .= _parseVariable($mods, $self, $g->{$k}, $elemNumber, $delimiter);
+                        _parseVariable($mods, $self, $g->{$k}, $elemNumber, $delimiter);
                     }
                 }
                 elsif(ref($g->{$k}) eq "ARRAY") {
@@ -812,14 +877,14 @@ sub _parseGroup {
                         }
                     
                         if(exists $v->{variable}) {
-                            $self->{_biblio_str} .= _parseVariable($mods, $self, $v, $elemNumber, $delimiter);
+                            _parseVariable($mods, $self, $v, $elemNumber, $delimiter);
                         }
                     }
                 }
                 
             }
             case "group" {
-               $elemNumber = _parseGroup($mods, $self, $g->{$k}, 0);
+                $elemNumber = _parseGroup($mods, $self, $g->{$k}, 0);
             }
             case "class" {
                 
@@ -839,7 +904,8 @@ sub _parseGroup {
 sub _parseVariable {
     my ($mods, $self, $v, $elemNumber, $delimiter) = @_;
     
-    #print Dumper $var;
+    #print Dumper $v;
+    $self->{_biblio_str} .= $v->{prefix} if (exists $v->{prefix});
     
     my $var = $v->{variable};
     switch($var) {
@@ -851,16 +917,16 @@ sub _parseVariable {
         ## would be a book title, for an article the journal title, etc.
         # the article title is handled elsewhere, here we have to care about
         #   $mods->{relatedItem}->{titleInfo}
-        case "container-title" {
+        case 'container-title' {
             # short title?
             if(exists $v->{form}) {
                 switch($v->{form}) {
                     case "short" {
-                        return $mods->{relatedItem}->{titleInfo}->('type','eq','abbreviated')->{title};
+                        $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->('type','eq','abbreviated')->{title};
                     }
                     case "long" {
                         if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-                            return $mods->{relatedItem}->{titleInfo}->{title};
+                            $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
                         }
                     }
                     else {
@@ -870,50 +936,50 @@ sub _parseVariable {
             }
             else {
                 if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-                    return $mods->{relatedItem}->{titleInfo}->{title};
+                    $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
                 }
             }
         }
         ## the tertiary title for the cited item; for example, a series title
-        case "collection-title" {
+        case 'collection-title' {
         }
         ## collection number; for example, series number
-        case "collection-number" {
+        case 'collection-number' {
         }
         ## title of a related original version; often useful in cases of translation
-        case "original-title" {
+        case 'original-title' {
         }
         ## the name of the publisher
-        case "publisher" {
+        case 'publisher' {
         }
         ## the location of the publisher
-        case "publisher-place" {
+        case 'publisher-place' {
         }
         ## the name of the archive
-        case "archive" {
+        case 'archive' {
         }
         ## the location of the archive
-        case "archive-place" {
+        case 'archive-place' {
         }
         ## the location within an archival collection (for example, box and folder)
-        case "archive_location" {
+        case 'archive_location' {
         }
         ## the name or title of a related event such as a conference or hearing
-        case "event" {
+        case 'event' {
         }
         ## the location or place for the related event
-        case "event-place" {
+        case 'event-place' {
         }
         ##
-        case "page" {
+        case 'page' {
             if(exists $mods->{relatedItem}->{part}->{extent}->{unit}) {
                 if($mods->{relatedItem}->{part}->{extent}->{unit} eq "pages") {
                     if(exists $mods->{relatedItem}->{part}->{extent}->{start} && exists $mods->{relatedItem}->{part}->{extent}->{end}) {
                         if($mods->{relatedItem}->{part}->{extent}->{start} eq $mods->{relatedItem}->{part}->{extent}->{end}) {
-                            return $mods->{relatedItem}->{part}->{extent}->{start};
+                            $self->{_biblio_str} .= $mods->{relatedItem}->{part}->{extent}->{start};
                         }
                         else {
-                            return $mods->{relatedItem}->{part}->{extent}->{start}."-".$mods->{relatedItem}->{part}->{extent}->{end};
+                            $self->{_biblio_str} .= $mods->{relatedItem}->{part}->{extent}->{start}."-".$mods->{relatedItem}->{part}->{extent}->{end};
                         }
                     }
                     else {
@@ -924,24 +990,25 @@ sub _parseVariable {
                     die "ERROR: No 'pages' attribut in the mods file?";
                 }
             }
-            
-            # remove endstanding spaces and potential delimiters because we can not find the volume entry.
-            $self->{_biblio_str} =~ s/\s+$//g;
-            $self->{_biblio_str} =~ s/,$//g if($elemNumber>1 && $delimiter ne "");
+            else {
+                # remove endstanding spaces and potential delimiters because we can not find the page entry.
+                $self->{_biblio_str} =~ s/\s+$//g;
+                $self->{_biblio_str} =~ s/,$//g if($elemNumber>1 && $delimiter ne "");
+            }
         }
         ## a description to locate an item within some larger container or 
         ## collection; a volume or issue number is a kind of locator, for example.
-        case "locator" {
+        case 'locator' {
         }
         ## version description
-        case "version" {
+        case 'version' {
         }
         ## volume number for the container periodical
-        case "volume" {
+        case 'volume' {
             if(exists $mods->{relatedItem}->{part}->{detail}->{type}) {
                 if($mods->{relatedItem}->{part}->{detail}->{type} eq "volume") {
                     if(exists $mods->{relatedItem}->{part}->{detail}->{number}) {
-                        return $mods->{relatedItem}->{part}->{detail}->{number};
+                        $self->{_biblio_str} .= $mods->{relatedItem}->{part}->{detail}->{number};
                     }
                     else {
                         die "ERROR: Volume type is given, but no volume number?";
@@ -951,82 +1018,90 @@ sub _parseVariable {
                     die "ERROR: Unknown volume type '".($mods->{relatedItem}->{part}->{detail}->{type})."'. Maybe not implemented, yet?";
                 }
             }
-            
-            # remove endstanding spaces and potential delimiters because we can not find the volume entry.
-            $self->{_biblio_str} =~ s/\s+$//g;
-            $self->{_biblio_str} =~ s/,$//g if($elemNumber>1 && $delimiter ne "");
+            else {
+                # remove endstanding spaces and potential delimiters because we can not find the volume entry.
+                $self->{_biblio_str} =~ s/\s+$//g;
+                $self->{_biblio_str} =~ s/,$//g if($elemNumber>1 && $delimiter ne "");
+            }
         } 
         ## refers to the number of items in multi-volume books and such
-        case "number-of-volumes" {
+        case 'number-of-volumes' {
         } 
         ## the issue number for the container publication
-        case "issue" {
+        case 'issue' {
         } 
         ##
-        case "chapter-number" {
+        case 'chapter-number' {
         } 
         ## medium description (DVD, CD, etc.)
-        case "medium" {
+        case 'medium' {
         } 
-        ## the (typically publication) status of an item; for example "forthcoming"
-        case "status" {
+        ## the (typically publication) status of an item; for example 'forthcoming'
+        case 'status' {
         } 
         ## an edition description
-        case "edition" {
+        case 'edition' {
         } 
         ## a section description (for newspapers, etc.)
-        case "section" {
+        case 'section' {
         } 
         ##
-        case "genre" {
+        case 'genre' {
         } 
         ## a short inline note, often used to refer to additional details of the resource
-        case "note" {
+        case 'note' {
         } 
         ## notes made by a reader about the content of the resource
-        case "annote" {
+        case 'annote' {
         } 
         ##
-        case "abstract" {
+        case 'abstract' {
         } 
         ##
-        case "keyword" {
+        case 'keyword' {
         } 
         ## a document number; useful for reports and such
-        case "number" {
+        case 'number' {
         }
         ## for related referenced resources; this is here for legal case 
         ## histories, but may be relevant for other contexts.
-        case "references" {
+        case 'references' {
         } 
         ##
-        case "URL" {
+        case 'URL' {
         } 
         ##
-        case "DOI" {
+        case 'DOI' {
         } 
         ##
-        case "ISBN" {
+        case 'ISBN' {
         } 
         ##
-        case "call-number" {
+        case 'call-number' {
         } 
         ## the number used for the in-text citation mark in numeric styles
-        case "citation-number" {
+        case 'citation-number' {
+            $self->{_biblioNumber}++;
+            $self->{_biblio_str} .= $self->{_biblioNumber};
+            
+            # hardcoded space, some styles have a space at this point, others don't
+            $self->{_biblio_str} .= " " if($self->{_biblio_str} !~ /\s$/);
         } 
         ## the label used for the in-text citation mark in label styles
-        case "citation-label" {
+        case 'citation-label' {
         }
         ## The number of a preceding note containing the first reference to
         ## this item. Relevant only for note-based styles, and null for first references.
-        case "first-reference-note-number" {
+        case 'first-reference-note-number' {
         }
         ## The year suffix for author-date styles; e.g. the 'a' in '1999a'.
-        case "year-suffix" {
-        }
+        case 'year-suffix' {
+        }        
     }
     
-    return "";
+    $self->{_biblio_str} =~ s/\s$//g; # remove endstanding (maybe hardcoded) gaps
+    $self->{_biblio_str} .= $v->{suffix} if (exists $v->{suffix});
+    $self->{_biblio_str} =~ s/\s\s/ /g; # 2 to 1
 }
 
 # returns an array with unique entries

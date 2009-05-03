@@ -9,9 +9,6 @@ use strict;
 use Test::More qw(no_plan);
 BEGIN { 
 	use_ok('Biblio::CSL');
-	use_ok('Moose');
-	use_ok('XML::Smart');
-	use_ok('Switch');
 };
 
 #########################

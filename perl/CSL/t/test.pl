@@ -21,10 +21,10 @@ my $usage = << "JUS";
                 Citations of a single cite statement (\cite{a,b,c}) must be separated by comma 
                 and several cite statements are seperated by space.
                 Format: "a,b,c d e f,g"                
-                [REQUIRED]
+                [OPTIONAL]
 
         -f      Output format, e.g. txt, html, bibtex
-                [REQUIRED]
+                [OPTIONAL, default: txt]
 
   purpose:
 	Read in a MODS xml file, parse it, and transform it 
@@ -34,7 +34,7 @@ my $usage = << "JUS";
 	at STDOUT
 JUS
 
-my ($opt_m, $opt_c, $opt_i, $opt_f) = ("", "", "", "");
+my ($opt_m, $opt_c, $opt_i, $opt_f) = ("", "", "", "txt");
 
 GetOptions(
   "m=s" => \$opt_m,
@@ -43,7 +43,7 @@ GetOptions(
   "i=s" => \$opt_i
 );
 
-if ( !$opt_m || !$opt_c || !$opt_f ) {
+if ( !$opt_m || !$opt_c ) {
   print STDERR $usage;
   exit;
 }
