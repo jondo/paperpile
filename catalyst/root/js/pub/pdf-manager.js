@@ -315,7 +315,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                         this.updateDetail(this.data);
                     }
                 },
-                scope: this
+                scope: this,
+                timeout: 60000,
             });
 
         this.progressTask = {
