@@ -55,18 +55,10 @@ has 'format' => (
 has 'IDs' => (
   is       => 'rw',
   isa      => 'Str',
+  default  => '',
   reader   => 'get_IDs',
   writer   => 'set_IDs',
-  required => 1
-);
-
-# switch to put citation generation on (=1) or off (=0).
-# TODO: Do we need such a switch for the bibliography, too?
-has 'generateCitations' => (
-  is        => 'rw',
-  isa       => 'Int',
-  default   => "1",
-  required  => 0
+  required => 0
 );
 
 # sorted array of strings, 
@@ -163,9 +155,9 @@ sub BUILD {
     $self->_citationsSize(_setCitationsSize($self));
     $self->_biblioSize(_setBiblioSize($self));
     # do we have a biblio entry for each citation and vice versa?
-    if($self->_citationsSize != $self->_biblioSize) {
-        print STDERR  "Warning: the number of citations and the size of the bibliography differ, but should be of equal.";
-    }
+    #if($self->_citationsSize != $self->_biblioSize) {
+    #    print STDERR  "Warning: the number of citations and the size of the bibliography differ, but should be equal.";
+    #}
 }
 
 # trigger to check that the format is validly set to a supported type
@@ -229,20 +221,28 @@ sub getBiblioSize {
 ######################################################
 ### class methods
 
-# print citations
+# return citations as string
 sub citationsToString {
-        my $self = shift;
-        foreach my $item ( @{$self->citations} ) {
-            print $item, "\n";
-        }
+    my $self = shift;
+    
+    my $str = "";
+    foreach my $item ( @{$self->citations} ) {
+        $str .= $item."\n";
+    }
+    
+    return $str;
 }
 
-# print bibliography
+# return  bibliography as string
 sub biblioToString {
-        my $self = shift;
-        foreach my $item ( @{$self->biblio} ) {
-            print $item, "\n";
-        }
+    my $self = shift;
+    
+    my $str = "";
+    foreach my $item ( @{$self->biblio} ) {
+        $str .= $item."\n";
+    }
+    
+    return $str;
 }
 
 # do the transformation of the mods file given the csl style file
@@ -250,7 +250,7 @@ sub transform {
     my $self = shift;
     
     # handle citations
-    if($self->generateCitations==1) {
+    if($self->getCitationsSize>0) {
         if($self->_c->{style}->{citation} ) {
             _parseCitations($self);
         }
@@ -458,10 +458,10 @@ sub _layoutText {
             foreach my $o ( @options ) {
                #print Dumper $o->pointer;
                 switch($o->pointer->{name}) {
-                    case "et-al-min" {
+                    case "et-al-min" { # the minimum number of contributors to use "et al"
                         $et_al_min = $o->pointer->{value};
                     }
-                    case "et-al-use-first" {
+                    case "et-al-use-first" { # the number of contributors to explicitly print under  "et al" conditions
                         $et_al_use_first = $o->pointer->{value};
                     }                    
                 }
@@ -539,7 +539,7 @@ sub _layoutText {
                 $round--;
                 
                 #print $complete_name;
-                $self->{_biblio_str} .= $complete_name;
+                $self->{_biblio_str} .= $complete_name; # add the name to the biblio result-string
             }
             
             # add et.al string
