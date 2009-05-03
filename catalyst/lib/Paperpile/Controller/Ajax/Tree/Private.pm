@@ -133,6 +133,20 @@ sub get_default_tree : Private {
     )
   );
 
+  $plugins->addChild(
+    Tree::Simple->new( {
+        type         => 'IMPORT_PLUGIN',
+        plugin_name  => 'ArXiv',
+        text         => 'ArXiv',
+        plugin_query => '',
+        iconCls      => 'pp-icon-arxiv',
+        hidden       => 0,
+      }
+    )
+  );
+
+
+
   ##### / Settings
 
   my $admin = Tree::Simple->new( {

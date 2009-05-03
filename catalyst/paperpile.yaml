@@ -36,6 +36,7 @@ pub_fields:
   edition:       "edition"
   pages:         "Pages"
   url:           "URL"
+  howpublished:  "How published"
   publisher:     "Publisher"
   organization:  "Organization"
   school:        "University"        
