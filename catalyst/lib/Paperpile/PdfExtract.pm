@@ -3,6 +3,7 @@ package Paperpile::PdfExtract;
 use Moose;
 use Paperpile::Library::Publication;
 use Data::Dumper;
+use XML::Simple;
 
 has 'file'    => ( is => 'rw', isa => 'Str' );
 has 'pub'     => ( is => 'rw', isa => 'PaperPile::Library::Publication' );

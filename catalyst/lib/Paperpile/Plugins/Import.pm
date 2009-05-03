@@ -111,6 +111,36 @@ sub _save_page_to_hash {
   }
 }
 
+# Merges two publication objects
+# Helper function for "match"
+
+sub _merge_pub {
+  my ($self, $old, $new) = @_;
+  foreach my $key (keys %{$old->as_hash}){
+    $old->$key($new->$key) if ($new->$key);
+  }
+  return $old;
+}
+
+# Compares two titles
+# Helper function for "match"
+
+sub _match_title {
+
+  my ($self, $title1, $title2) = @_;
+
+  for my $t ($title1, $title2){
+    $t=~s/\s+//g;
+    $t=~s/[.:!?]//g;
+    $t=uc($t);
+  }
+
+  return ($title1 eq $title2);
+
+}
+
+
+
 
 
 1;

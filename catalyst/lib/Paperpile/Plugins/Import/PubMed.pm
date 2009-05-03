@@ -83,10 +83,68 @@ sub page {
 sub all {
 
   ( my $self ) = @_;
-
   return $self->page(0,100);
+}
+
+
+# Simple and untested for now...
+
+sub match {
+
+  ( my $self, my $pub ) = @_;
+
+  my $matchDOI=0;
+  my $matchTitle=0;
+
+  my $query = '';
+
+  if ( $pub->doi ) {
+    $query = $pub->doi."[AID]";
+    $matchDOI=1;
+  } else {
+    if ($pub->title){
+      $query= $pub->title;
+      $matchTitle=1;
+    }
+  }
+
+  #print STDERR "$query\n";
+
+  my $browser   = Paperpile::Utils->get_browser;
+  my $response  = $browser->get( $esearch . $query );
+  my $resultXML = $response->content;
+  my $result    = XMLin($resultXML);
+
+  if ($result->{Count} ==0){
+    die("Match failed. No entry found.");
+  }
+
+  $self->web_env( $result->{WebEnv} );
+  $self->query_key( $result->{QueryKey} );
+  $self->total_entries( $result->{Count} );
+
+  my $xml = $self->_pubFetch( 0, 100 );
+  my $page = $self->_read_xml($xml);
+  $self->_linkOut($page);
+
+  if ($matchDOI){
+    if ($page->[0]->doi eq $pub->{doi}){
+      return $self->_merge_pub($pub, $page->[0]);
+    }
+  }
+
+  if ($matchTitle){
+    if ($self->_match_title($page->[0]->title,$pub->title)){
+      return $self->_merge_pub($pub, $page->[0]);
+    }
+  }
+
+
+  die("Match failed. Returned entry does not match");
 
 }
+
+
 
 
 
@@ -231,7 +289,7 @@ sub _linkOut {
 
   #print STDERR Dumper( $url, "   ", $response->content );
 
-  my $result = XMLin( $response->content );
+  my $result = XMLin( $response->content, forceArray =>['IdUrlSet']);
 
   #print STDERR Dumper($result->{LinkSet}->{IdUrlList}->{IdUrlSet});
   #print STDERR $result->{LinkSet}->{IdUrlList}->{IdUrlSet};
