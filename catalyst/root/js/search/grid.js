@@ -163,18 +163,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                         this.completeEntry();
                                     },this);
 
-
-
-        Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
-
-        console.log(this.getView().getHeaderCell(0));
-
-        //Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(0)).first(),
-        //                     '<div class="pp-grid-sort-container">Test</div>');
-
-        //this.updateButtons();
-
-
+   
     },
 
     updateButtons: function(){

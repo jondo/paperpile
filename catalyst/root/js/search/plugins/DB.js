@@ -83,7 +83,72 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         }, this, {
             single: true
         });
+
+   
+
+        Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
+
+        var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(0)).first(), 
+                                        '<div class="pp-grid-sort-container"></div>', true);
+
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-desc" action="journal">Date added</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="journal">Journal</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="year">Year</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="author">Author</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="pdf">PDF</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="attachments">Supplementary material</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="attachments">Notes</div>');
+
+        target.on('click', this.handleSortButtons, this);
+
+        
+
+
     },
+
+    handleSortButtons: function(e, el, o){
+
+        var currentClass=el.getAttribute('class');
+        var field=el.getAttribute('action');
+
+        if (!(currentClass == 'pp-grid-sort-desc' ||
+              currentClass == 'pp-grid-sort-asc'  ||
+              currentClass == 'pp-grid-sort-inactive')
+           ) return;
+
+        var El = Ext.get(el);
+
+        Ext.each(El.parent().query('*'),
+                 function(item){
+                     var l=Ext.get(item);
+                     if (item == el) return;
+                     l.removeClass('pp-grid-sort-asc');
+                     l.removeClass('pp-grid-sort-desc');
+                     l.addClass('pp-grid-sort-inactive');
+                 });
+
+
+        El.removeClass(currentClass);
+        if (currentClass=="pp-grid-sort-inactive"){
+            El.addClass('pp-grid-sort-desc');
+            this.store.baseParams['plugin_order']=field+" DESC";
+        } else {
+            if (currentClass=="pp-grid-sort-desc"){
+                this.store.baseParams['plugin_order']=field;
+                El.addClass('pp-grid-sort-asc');
+            } else {
+                El.addClass('pp-grid-sort-desc');
+                this.store.baseParams['plugin_order']=field+ " DESC";
+            }
+        }
+
+        if (this.filterField.getRawValue()==""){
+            this.store.reload({params:{start:0, task:"NEW"}});
+        } else {
+            this.filterField.onTrigger2Click();
+        }
+    },
+
 
     toggleFilter: function(item, checked){
         console.log(item.itemId, checked);
