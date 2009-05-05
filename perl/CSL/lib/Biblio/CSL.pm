@@ -139,7 +139,10 @@ sub BUILD {
     elsif (! -e $self->get_csl ) {
         die "ERROR: The CSL file '", $self->get_csl, "' does not exist!";
     }
-    
+
+    @_citations=();
+    @_biblio=();
+
     # register result-arrays
     $self->citations(\@_citations);
     $self->biblio(\@_biblio);    
