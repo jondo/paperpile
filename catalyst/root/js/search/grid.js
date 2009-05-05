@@ -162,7 +162,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                         container.onRowSelect(sm, rowIdx, r);
                                         this.completeEntry();
                                     },this);
-
+        
+        Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
    
     },
 
@@ -179,10 +180,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         tbar.items.get('more_menu').enable();
 
         if (tbar.items.get('edit_button')){
-            if (record.data._imported && (sm.getCount() == 1 )){
-                tbar.items.get('edit_button').enable();
-            } else {
-                tbar.items.get('edit_button').disable();
+            if (record){
+                if (record.data._imported && (sm.getCount() == 1 )){
+                    tbar.items.get('edit_button').enable();
+                } else {
+                    tbar.items.get('edit_button').disable();
+                }
             }
         }
 
@@ -346,10 +349,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
         var sha1=this.getSelectionModel().getSelected().data.sha1;
 
-        //var form = new Paperpile.Forms.Settings();
-
         var form=new Paperpile.Forms.PubEdit({data:this.getSelectionModel().getSelected().data,
                                               grid_id: this.id,
+                                              spotlight: true,
                                              });
 
         var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
@@ -358,6 +360,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         east_panel.add(form);
         east_panel.doLayout();
         east_panel.getLayout().setActiveItem('pub_edit');
+
 
     },
 

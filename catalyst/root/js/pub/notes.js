@@ -24,6 +24,12 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
             autoScroll: true,
 		});
 	    Paperpile.PubNotes.superclass.initComponent.call(this);
+
+        this.spot = new Ext.Spotlight({
+            animate: false,
+        });
+
+
 	},
     
 	updateDetail: function(data) {
@@ -71,6 +77,8 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
         dataTabs.doLayout();
         dataTabs.getLayout().setActiveItem('html_editor');
 
+        this.spot.show(this.ownerCt.id);
+
         // Does not work, don't know why
         editor.focus();
         
@@ -99,6 +107,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 
     onCancel: function(){
         this.closeEditor();
+
     },
 
 
@@ -121,6 +130,8 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
         
         this.tpl.overwrite(this.body, this.data);
         this.installEvents();
+
+        this.spot.hide();
 
     }
 

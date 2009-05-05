@@ -121,6 +121,10 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                  ],
 		});
 
+        this.spot = new Ext.Spotlight({
+            animate: false,
+        });
+
         Paperpile.Forms.PubEdit.superclass.initComponent.call(this);
         
         this.setValues(this.data);
@@ -128,6 +132,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
         this.on('afterlayout',
                 function(){
                     this.setFields('ARTICLE');
+                    this.spot.show(this.id);
                 });
               
 	  },
@@ -224,8 +229,9 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
         east_panel.doLayout();
         east_panel.getLayout().setActiveItem('pdf_manager');
         east_panel.showBbar();
-        
 
+        if (this.spotlight) this.spot.hide();
+        
     }
     
 

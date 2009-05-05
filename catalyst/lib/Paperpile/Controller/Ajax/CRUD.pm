@@ -63,7 +63,6 @@ sub new_entry: Local {
   }
 
   my $pub=Paperpile::Library::Publication->new({%fields});
-  print STDERR Dumper($pub);
 
   $pub->created(timestamp);
   $pub->times_read(0);
@@ -108,7 +107,7 @@ sub update_entry : Local {
 
   # apply new values to old entry
   foreach my $field (keys %{$c->request->params}){
-    next if $field=~/source_id/;
+    next if $field=~/grid_id/;
     $data->{$field}=$c->request->params->{$field};
   }
 

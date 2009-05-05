@@ -98,7 +98,7 @@ has '_imported'          => ( is => 'rw', isa => 'Bool' );
 
 # Some import plugins first only scrape partial information and store
 # a link (or some other hint) how to complete this information
-has '_details_link'      => ( is => 'rw', isa => 'Str' );
+has '_details_link'      => ( is => 'rw', isa => 'Str', default=>'' );
 
 # If a search in the local database returns a hit in the fulltext,
 # abstract or notes the hit+context ('snippet') is stored in these

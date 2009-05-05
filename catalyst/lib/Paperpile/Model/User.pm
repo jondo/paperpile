@@ -236,7 +236,11 @@ sub insert_pubs {
     delete($hash->{text});
 
     ( $fields, $values ) = $self->_hash2sql($hash);
+
+    print STDERR "INSERT INTO fulltext_citation ($fields) VALUES ($values)\n";
+
     $self->dbh->do("INSERT INTO fulltext_citation ($fields) VALUES ($values)");
+
 
 
     ## Insert authors
@@ -300,7 +304,8 @@ sub delete_pubs {
 
   # Then delete the entry in all relevant tables
   my $delete_main     = $self->dbh->prepare( "DELETE FROM publications WHERE rowid=?" );
-  my $delete_fulltext = $self->dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
+  my $delete_fulltext_citation = $self->dbh->prepare("DELETE FROM fulltext_citation WHERE rowid=?");
+  my $delete_fulltext_full = $self->dbh->prepare("DELETE FROM fulltext_full WHERE rowid=?");
   my $delete_author_join =
     $self->dbh->prepare( "DELETE FROM author_publication WHERE publication_id=?" );
   my $delete_authors = $self->dbh->prepare(
@@ -308,7 +313,8 @@ sub delete_pubs {
 
   foreach my $rowid (@$rowids) {
     $delete_main->execute($rowid);
-    $delete_fulltext->execute($rowid);
+    $delete_fulltext_citation->execute($rowid);
+    $delete_fulltext_full->execute($rowid);
     $delete_author_join->execute($rowid);
     $delete_authors->execute;
   }
@@ -321,7 +327,7 @@ sub update_pub {
 
   ( my $self, my $pub ) = @_;
   $self->delete_pubs( [ $pub->_rowid ] );
-  my $rowid = $self->create_pub($pub);
+  my $rowid = $self->create_pubs([$pub]);
   return $rowid;
 }
 
