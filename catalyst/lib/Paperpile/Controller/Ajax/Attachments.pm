@@ -11,6 +11,7 @@ use File::Spec;
 use File::Copy;
 use URI::file;
 
+
 use File::stat;
 use 5.010;
 
@@ -90,8 +91,7 @@ sub list_files : Local {
 
     my $abs=File::Spec->catfile( $paper_root, $file_name );
 
-    # TODO: serve file via Catalyst
-    my $link=URI::file->new($abs)->as_string;
+    my $link="/serve/$file_name";
 
     my ($volume,$dirs,$base_name) = File::Spec->splitpath( $abs );
 

@@ -12,7 +12,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</tpl>',
         
         '<tpl if="pdf">',
-        '<li id="open-pdf-{id}"><a href="#" action="open-pdf">Open PDF</a></li>',
+        '<li id="open-pdf-{id}"><a href="/serve/{pdf}" target="_blank" action="open-pdf">Open PDF</a></li>',
         '<tpl if="_imported">',
         '<li id="delete-pdf-{id}"><a href="#" action="delete-pdf">Delete PDF</a></li>',
         '</tpl>',
