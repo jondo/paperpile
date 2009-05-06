@@ -1,18 +1,17 @@
-1. Chemistry: Fuel from thin air. Nature 458, 1080(2009).
-2. Guttman, M. et al. Chromatin signature reveals over a thousand highly conserved large non-coding RNAs in mammals. Nature 458, 223-227(2009).
-3. Rose, D. et al. Computational RNomics of drosophilids. BMC Genomics 8, 406(2007).
-4. Sessions, O.M. et al. Discovery of insect and human dengue virus host factors. Nature 458, 1047-1050(2009).
-5. Rose, D. et al. Duplicated RNA genes in teleost fish genomes. J Bioinform Comput Biol 6, 1157-1175(2008).
-6. ter Veld, F. et al. Effects of somatostatin and octreotide on cytokine and chemokine production by lipopolysaccharide-activated peripheral blood mononuclear cells. J. Endocrinol. Invest 32, 123-129(2009).
-7. Rosa, J.S. et al. Exercise leukocyte profiles in healthy, type 1 diabetic, overweight, and asthmatic children. Pediatr Exerc Sci 21, 19-33(2009).
-8. Santra, M.K., Wajapeyee, N. & Green, M.R. F-box protein FBXO31 mediates cyclin D1 degradation to induce G1 arrest after DNA damage. Nature (2009).doi:10.1038/nature08011
-9. Beck, C., Walsh, M., Mechanic, M. & Taylor, C. Mediator Assessment, Documentation, and Disposition of Child Custody Cases Involving Intimate Partner Abuse: A Naturalistic Evaluation of One County's Practices. Law Hum Behav (2009).doi:10.1007/s10979-009-9181-0
-10. Rose, D., Hertel, J., Reiche, K., Stadler, P.F. & Hackermüller, J. NcDNAlign: plausible multiple alignments of non-protein-coding genomic sequences. Genomics 92, 65-74(2008).
-11. Hertel, J. et al. Non-coding RNA annotation of the genome of Trichoplax adhaerens. Nucleic Acids Res 37, 1602-1615(2009).
-12. Missal, K., Rose, D. & Stadler, P.F. Non-coding RNAs in Ciona intestinalis. Bioinformatics 21 Suppl 2, ii77-78(2005).
-13. Aouadi, M. et al. Orally delivered siRNA targeting macrophage Map4k4 suppresses systemic inflammation. Nature 458, 1180-1184(2009).
-14. Missal, K. et al. Prediction of structured non-coding RNAs in the genomes of the nematodes Caenorhabditis elegans and Caenorhabditis briggsae. J. Exp. Zool. B Mol. Dev. Evol 306, 379-392(2006).
-15. Backofen, R. et al. RNAs everywhere: genome-wide annotation of structured RNAs. J. Exp. Zool. B Mol. Dev. Evol 308, 1-25(2007).
-16. Dumont, S. et al. RNA translocation and unwinding mechanism of HCV NS3 helicase and its coordination by ATP. Nature 439, 105-108(2006).
-17. Ricciardi, I. et al. Sum-frequency generation of cw ultraviolet radiation in periodically poled LiTaO(3). Opt Lett 34, 1348-1350(2009).
-18. Blow, N. Transcriptomics: The digital generation. Nature 458, 239-242(2009).
+1. Guttman, M. et al. Chromatin signature reveals over a thousand highly conserved large non-coding RNAs in mammals. Nature 458, 223-227(2009).
+2. Rose, D. et al. Computational RNomics of drosophilids. BMC Genomics 8, 406(2007).
+3. Sessions, O.M. et al. Discovery of insect and human dengue virus host factors. Nature 458, 1047-1050(2009).
+4. Rose, D. et al. Duplicated RNA genes in teleost fish genomes. J Bioinform Comput Biol 6, 1157-1175(2008).
+5. ter Veld, F. et al. Effects of somatostatin and octreotide on cytokine and chemokine production by lipopolysaccharide-activated peripheral blood mononuclear cells. J. Endocrinol. Invest 32, 123-129(2009).
+6. Rosa, J.S. et al. Exercise leukocyte profiles in healthy, type 1 diabetic, overweight, and asthmatic children. Pediatr Exerc Sci 21, 19-33(2009).
+7. Santra, M.K., Wajapeyee, N. & Green, M.R. F-box protein FBXO31 mediates cyclin D1 degradation to induce G1 arrest after DNA damage. Nature (2009).doi:10.1038/nature08011
+8. Beck, C., Walsh, M., Mechanic, M. & Taylor, C. Mediator Assessment, Documentation, and Disposition of Child Custody Cases Involving Intimate Partner Abuse: A Naturalistic Evaluation of One County's Practices. Law Hum Behav (2009).doi:10.1007/s10979-009-9181-0
+9. Rose, D., Hertel, J., Reiche, K., Stadler, P.F. & Hackermüller, J. NcDNAlign: plausible multiple alignments of non-protein-coding genomic sequences. Genomics 92, 65-74(2008).
+10. Hertel, J. et al. Non-coding RNA annotation of the genome of Trichoplax adhaerens. Nucleic Acids Res 37, 1602-1615(2009).
+11. Missal, K., Rose, D. & Stadler, P.F. Non-coding RNAs in Ciona intestinalis. Bioinformatics 21 Suppl 2, ii77-78(2005).
+12. Aouadi, M. et al. Orally delivered siRNA targeting macrophage Map4k4 suppresses systemic inflammation. Nature 458, 1180-1184(2009).
+13. Missal, K. et al. Prediction of structured non-coding RNAs in the genomes of the nematodes Caenorhabditis elegans and Caenorhabditis briggsae. J. Exp. Zool. B Mol. Dev. Evol 306, 379-392(2006).
+14. Backofen, R. et al. RNAs everywhere: genome-wide annotation of structured RNAs. J. Exp. Zool. B Mol. Dev. Evol 308, 1-25(2007).
+15. Dumont, S. et al. RNA translocation and unwinding mechanism of HCV NS3 helicase and its coordination by ATP. Nature 439, 105-108(2006).
+16. Ricciardi, I. et al. Sum-frequency generation of cw ultraviolet radiation in periodically poled LiTaO(3). Opt Lett 34, 1348-1350(2009).
+17. Blow, N. Transcriptomics: The digital generation. Nature 458, 239-242(2009).

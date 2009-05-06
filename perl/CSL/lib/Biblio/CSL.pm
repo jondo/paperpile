@@ -6,10 +6,12 @@ use warnings;
 use Moose;
 use XML::Smart;
 use Switch;
+use utf8;
+binmode STDOUT, ":utf8";
 
 require Exporter;
 
-use Data::Dumper;    # TODO: just for debugging
+use Data::Dumper;    # TODO: just for debugging;
 
 our @ISA    = qw(Exporter);
 our @EXPORT = qw(
@@ -1004,8 +1006,11 @@ sub _parseVariable {
                     if(exists $mods->{relatedItem}->{part}->{detail}->{number}) {
                         $self->{_biblio_str} .= $mods->{relatedItem}->{part}->{detail}->{number};
                     }
+                    elsif(exists $mods->{relatedItem}->{part}->{detail}->{text}) {
+                        $self->{_biblio_str} .= $mods->{relatedItem}->{part}->{detail}->{text};
+                    }
                     else {
-                        die "ERROR: Volume type is given, but no volume number?";
+                        die "ERROR: Volume type is given, but no volume or text tag is found for the volume number? (mods-entry ".($self->_biblioNumber).")";
                     }
                 }
                 else {

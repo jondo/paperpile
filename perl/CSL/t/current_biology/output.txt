@@ -1,36 +1,34 @@
-1. Chemistry: Fuel from thin air (2009). Nature 458, 1080.
+1. Guttman, M. et al. (2009). Chromatin signature reveals over a thousand highly conserved large non-coding RNAs in mammals. Nature 458, 223-227.
 
-2. Guttman, M. et al. (2009). Chromatin signature reveals over a thousand highly conserved large non-coding RNAs in mammals. Nature 458, 223-227.
+2. Rose, D., Hackermüller, J., Washietl, S., Reiche, K., Hertel, J., Findeiss, S., Stadler, P. F., and Prohaska, S. J. (2007). Computational RNomics of drosophilids. BMC Genomics 8, 406.
 
-3. Rose, D., Hackermüller, J., Washietl, S., Reiche, K., Hertel, J., Findeiss, S., Stadler, P. F., and Prohaska, S. J. (2007). Computational RNomics of drosophilids. BMC Genomics 8, 406.
+3. Sessions, O. M. et al. (2009). Discovery of insect and human dengue virus host factors. Nature 458, 1047-1050.
 
-4. Sessions, O. M. et al. (2009). Discovery of insect and human dengue virus host factors. Nature 458, 1047-1050.
+4. Rose, D., Jöris, J., Hackermüller, J., Reiche, K., Li, Q., and Stadler, P. F. (2008). Duplicated RNA genes in teleost fish genomes. J Bioinform Comput Biol 6, 1157-1175.
 
-5. Rose, D., Jöris, J., Hackermüller, J., Reiche, K., Li, Q., and Stadler, P. F. (2008). Duplicated RNA genes in teleost fish genomes. J Bioinform Comput Biol 6, 1157-1175.
+5. ter Veld, F., Rose, B., Mussmann, R., Martin, S., Herder, C., and Kempf, K. (2009). Effects of somatostatin and octreotide on cytokine and chemokine production by lipopolysaccharide-activated peripheral blood mononuclear cells. J. Endocrinol. Invest 32, 123-129.
 
-6. ter Veld, F., Rose, B., Mussmann, R., Martin, S., Herder, C., and Kempf, K. (2009). Effects of somatostatin and octreotide on cytokine and chemokine production by lipopolysaccharide-activated peripheral blood mononuclear cells. J. Endocrinol. Invest 32, 123-129.
+6. Rosa, J. S., Schwindt, C. D., Oliver, S. R., Leu, S., Flores, R. L., and Galassetti, P. R. (2009). Exercise leukocyte profiles in healthy, type 1 diabetic, overweight, and asthmatic children. Pediatr Exerc Sci 21, 19-33.
 
-7. Rosa, J. S., Schwindt, C. D., Oliver, S. R., Leu, S., Flores, R. L., and Galassetti, P. R. (2009). Exercise leukocyte profiles in healthy, type 1 diabetic, overweight, and asthmatic children. Pediatr Exerc Sci 21, 19-33.
+7. Santra, M. K., Wajapeyee, N., and Green, M. R. (2009). F-box protein FBXO31 mediates cyclin D1 degradation to induce G1 arrest after DNA damage. Nature. Available at: http://www.ncbi.nlm.nih.gov/pubmed/19412162 [Accessed May 6, 2009].
 
-8. Santra, M. K., Wajapeyee, N., and Green, M. R. (2009). F-box protein FBXO31 mediates cyclin D1 degradation to induce G1 arrest after DNA damage. Nature. Available at: http://www.ncbi.nlm.nih.gov/pubmed/19412162 [Accessed May 6, 2009].
+8. Beck, C., Walsh, M., Mechanic, M., and Taylor, C. (2009). Mediator Assessment, Documentation, and Disposition of Child Custody Cases Involving Intimate Partner Abuse: A Naturalistic Evaluation of One County's Practices. Law Hum Behav. Available at: http://www.ncbi.nlm.nih.gov/pubmed/19412662 [Accessed May 6, 2009].
 
-9. Beck, C., Walsh, M., Mechanic, M., and Taylor, C. (2009). Mediator Assessment, Documentation, and Disposition of Child Custody Cases Involving Intimate Partner Abuse: A Naturalistic Evaluation of One County's Practices. Law Hum Behav. Available at: http://www.ncbi.nlm.nih.gov/pubmed/19412662 [Accessed May 6, 2009].
+9. Rose, D., Hertel, J., Reiche, K., Stadler, P. F., and Hackermüller, J. (2008). NcDNAlign: plausible multiple alignments of non-protein-coding genomic sequences. Genomics 92, 65-74.
 
-10. Rose, D., Hertel, J., Reiche, K., Stadler, P. F., and Hackermüller, J. (2008). NcDNAlign: plausible multiple alignments of non-protein-coding genomic sequences. Genomics 92, 65-74.
+10. Hertel, J., de Jong, D., Marz, M., Rose, D., Tafer, H., Tanzer, A., Schierwater, B., and Stadler, P. F. (2009). Non-coding RNA annotation of the genome of Trichoplax adhaerens. Nucleic Acids Res 37, 1602-1615.
 
-11. Hertel, J., de Jong, D., Marz, M., Rose, D., Tafer, H., Tanzer, A., Schierwater, B., and Stadler, P. F. (2009). Non-coding RNA annotation of the genome of Trichoplax adhaerens. Nucleic Acids Res 37, 1602-1615.
+11. Missal, K., Rose, D., and Stadler, P. F. (2005). Non-coding RNAs in Ciona intestinalis. Bioinformatics 21 Suppl 2, ii77-78.
 
-12. Missal, K., Rose, D., and Stadler, P. F. (2005). Non-coding RNAs in Ciona intestinalis. Bioinformatics 21 Suppl 2, ii77-78.
+12. Aouadi, M., Tesz, G. J., Nicoloro, S. M., Wang, M., Chouinard, M., Soto, E., Ostroff, G. R., and Czech, M. P. (2009). Orally delivered siRNA targeting macrophage Map4k4 suppresses systemic inflammation. Nature 458, 1180-1184.
 
-13. Aouadi, M., Tesz, G. J., Nicoloro, S. M., Wang, M., Chouinard, M., Soto, E., Ostroff, G. R., and Czech, M. P. (2009). Orally delivered siRNA targeting macrophage Map4k4 suppresses systemic inflammation. Nature 458, 1180-1184.
+13. Missal, K., Zhu, X., Rose, D., Deng, W., Skogerbø, G., Chen, R., and Stadler, P. F. (2006). Prediction of structured non-coding RNAs in the genomes of the nematodes Caenorhabditis elegans and Caenorhabditis briggsae. J. Exp. Zool. B Mol. Dev. Evol 306, 379-392.
 
-14. Missal, K., Zhu, X., Rose, D., Deng, W., Skogerbø, G., Chen, R., and Stadler, P. F. (2006). Prediction of structured non-coding RNAs in the genomes of the nematodes Caenorhabditis elegans and Caenorhabditis briggsae. J. Exp. Zool. B Mol. Dev. Evol 306, 379-392.
+14. Backofen, R. et al. (2007). RNAs everywhere: genome-wide annotation of structured RNAs. J. Exp. Zool. B Mol. Dev. Evol 308, 1-25.
 
-15. Backofen, R. et al. (2007). RNAs everywhere: genome-wide annotation of structured RNAs. J. Exp. Zool. B Mol. Dev. Evol 308, 1-25.
+15. Dumont, S., Cheng, W., Serebrov, V., Beran, R. K., Tinoco, I., Pyle, A. M., and Bustamante, C. (2006). RNA translocation and unwinding mechanism of HCV NS3 helicase and its coordination by ATP. Nature 439, 105-108.
 
-16. Dumont, S., Cheng, W., Serebrov, V., Beran, R. K., Tinoco, I., Pyle, A. M., and Bustamante, C. (2006). RNA translocation and unwinding mechanism of HCV NS3 helicase and its coordination by ATP. Nature 439, 105-108.
+16. Ricciardi, I., De Rosa, M., Rocco, A., Ferraro, P., Vannucci, A., Spano, P., and De Natale, P. (2009). Sum-frequency generation of cw ultraviolet radiation in periodically poled LiTaO(3). Opt Lett 34, 1348-1350.
 
-17. Ricciardi, I., De Rosa, M., Rocco, A., Ferraro, P., Vannucci, A., Spano, P., and De Natale, P. (2009). Sum-frequency generation of cw ultraviolet radiation in periodically poled LiTaO(3). Opt Lett 34, 1348-1350.
-
-18. Blow, N. (2009). Transcriptomics: The digital generation. Nature 458, 239-242.
+17. Blow, N. (2009). Transcriptomics: The digital generation. Nature 458, 239-242.
 
