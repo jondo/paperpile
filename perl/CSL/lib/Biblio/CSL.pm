@@ -449,13 +449,56 @@ sub _layoutSuffix {
 sub _parseText {
     my ($mods, $self, $text) = @_;
 
+    #print Dumper $text;
+
+    $self->{_biblio_str} .= $text->{prefix} if(exists $text->{prefix});
+
     foreach my $t (keys %$text) {
         switch($t) {
             case 'variable' {
-                _parseVariable($mods, $self, $text, 0, "");
+                _parseVariable($mods, $self, $text->{$t}, 0, "");
             }
             case 'macro' {
-                _parseMacro($mods, $self, $text);
+                if($text->{$t}) {
+                    _parseMacro($mods, $self, $text->{$t});
+                }
+                else {
+                    die "ERROR: Can we have a macro without a name?";
+                }
+            }
+            else {
+            }
+        }
+    }
+    
+    if(exists $text->{suffix}) {
+        $self->{_biblio_str} .= $text->{suffix};
+        #$self->{_biblio_str} =~ s/\.\.//g; #TODO: Maybe we need such a security check
+    }
+}
+
+# parsing macros seems to be complicated
+# the macro is called from somewhere
+# and then the macro-code has to be executed.
+# the macro is identified by its name
+sub _parseMacro {
+    my ($mods, $self, $macro_name) = @_;
+    
+    my $macro = $self->_c->{style}->{macro}('name','eq',$macro_name)->pointer;
+    
+    #print "Macro: $macro_name\n"; print Dumper $macro; #exit;
+    
+    # check the content of the macro
+    foreach my $key (keys %$macro) {
+        switch($key) {
+            case 'names' {
+                _parseNames($mods, $self, $macro->{$key});
+            }
+            case 'date' {
+                _parseDate($mods, $self, $macro->{$key});
+            }
+            case 'choose' {
+                _parseChoose($mods, $self, $macro->{$key});
             }
             else {
             }
@@ -464,131 +507,137 @@ sub _parseText {
 }
 
 
-sub _parseMacro {
-    my ($mods, $self, $macro) = @_;
-    #print Dumper $macro;
+sub _parseNames {
+    my ($mods, $self, $namesPtr) = @_;
     
-    switch($macro->{macro}) {
-        case 'author' {
-            if($mods->{name}) {
-                #print Dumper $mods->{name};
-                my @names = $mods->{name}->('@');
-                my $round = scalar(@names); 
-                my $qtNames = $round;
+    #print "Parsing Names:\n"; print Dumper $namesPtr; #exit;
+    
+    if($mods->{name}) {
+        #print Dumper $mods->{name};
+        my @names = $mods->{name}->('@');
+        my $round = scalar(@names); 
+        my $qtNames = $round;
 
-                my ($et_al_min , $et_al_use_first) = (0, 0);
-                
-                # read et-al options
-                my @options = $self->_c->{style}->{bibliography}->{option}('@');
-                foreach my $o ( @options ) {
-                   #print Dumper $o->pointer;
-                    switch($o->pointer->{name}) {
-                        case "et-al-min" { # the minimum number of contributors to use "et al"
-                            $et_al_min = $o->pointer->{value};
-                        }
-                        case "et-al-use-first" { # the number of contributors to explicitly print under  "et al" conditions
-                            $et_al_use_first = $o->pointer->{value};
-                        }                    
-                    }
+        my ($et_al_min , $et_al_use_first) = (0, 0);
+        
+        # read et-al options
+        my @options = $self->_c->{style}->{bibliography}->{option}('@');
+        foreach my $o ( @options ) {
+           #print Dumper $o->pointer;
+            switch($o->pointer->{name}) {
+                case "et-al-min" { # the minimum number of contributors to use "et al"
+                    $et_al_min = $o->pointer->{value};
                 }
+                case "et-al-use-first" { # the number of contributors to explicitly print under  "et al" conditions
+                    $et_al_use_first = $o->pointer->{value};
+                }                    
+            }
+        }
 
-                # print the names
-                foreach my $n ( @names ) {
-                    #print Dumper $n->pointer; exit;
+        # print the names
+        my $i=0;
+        foreach my $n ( @names ) {
+            #print Dumper $n->pointer; exit;
+            $i++;
+            my $complete_name = "";
+            
+            # either not enough for et-al or we use the first authors until we reach $et_al_use_first
+            if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) ) {
+                my $family_name = $n->{namePart}('type', 'eq', 'family');
+                my @given_names = $n->{namePart}('type', 'eq', 'given');
+                #print Dumper @given_names;
+                                    
+                my $and = "";
+                if($namesPtr->{name}->{and} eq "text" ) {
+                    $and = "and ";
+                }
+                elsif($namesPtr->{name}->{and} eq "symbol" ) {
+                    $and = "&";
+                }
+                
+                #print "names and=$and";exit;
+                
+                if($namesPtr->{name}->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
+                    #print Dumper $n->{namePart}->[1]->pointer; exit;
+                    $complete_name = $family_name.$namesPtr->{name}->{'sort-separator'};
                     
-                    my $complete_name = "";
-                    
-                    # either not enough for et-al or we use the first authors until we reach $et_al_use_first
-                    if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) ) {
-                        my $c_nameEQauthor = $self->_c->{style}->{macro}('name','eq','author') ;
-                        my $family_name = $n->{namePart}('type', 'eq', 'family');
-                        my @given_names = $n->{namePart}('type', 'eq', 'given');
-                        #print Dumper @given_names;
-                                            
-                        my $and = "";
-                        if($c_nameEQauthor->{names}->{name}->{and} eq "text" ) {
-                            $and = "and ";
-                        }
-                        elsif($c_nameEQauthor->{names}->{name}->{and} eq "symbol" ) {
-                            $and = "&";
-                        }
-                        
-                        #print $c_nameEQauthor->{names}->{name}->{"name-as-sort-order"}; exit;
-                        if($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
-                            #print Dumper $n->{namePart}->[1]->pointer; exit;
-                            $complete_name = $family_name.$c_nameEQauthor->{names}->{name}->{'sort-separator'};
-                            
-                            if(exists $c_nameEQauthor->{names}->{name}->{'initialize-with'}) {
-                                foreach my $gn (@given_names) {
-                                    my @nameParts = split /\s+/, $gn;
-                                    for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Rose -> R.
-                                        if($nameParts[$i] =~ /^(\S)/) {
-                                            $nameParts[$i] = $1;
-                                            $complete_name .= $nameParts[$i].$c_nameEQauthor->{names}->{name}->{'initialize-with'};
-                                        }
-                                    }
-                                }
-                                $complete_name =~ s/\s+$//g; # remove endstanding spaces
-                            }
-                            else {
-                                foreach my $gn (@given_names) {
-                                    $complete_name .= $gn;
+                    if(exists $namesPtr->{name}->{'initialize-with'}) {
+                        foreach my $gn (@given_names) {
+                            my @nameParts = split /\s+/, $gn;
+                            for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Rose -> R.
+                                if($nameParts[$i] =~ /^(\S)/) {
+                                    $nameParts[$i] = $1;
+                                    $complete_name .= $nameParts[$i].$namesPtr->{name}->{'initialize-with'};
                                 }
                             }
                         }
-                        elsif($c_nameEQauthor->{names}->{name}->{'name-as-sort-order'} eq "first") { # what does this option mean?
-                            die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'}(eq first) is not implemented yet!";
-                        }
-                        else { # attribute not given -> "John Doe"
-                            die "ERROR: The case CSL-attribute style->macro->name(eq author)->names->name->{'name-as-sort-order'} not given is not implemented yet!";
-                        }                                    
-                        
-                        if($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'always') {
-                            $complete_name .= $c_nameEQauthor->{names}->{name}->{delimiter} if($round>1);
-                            $complete_name .= $and if($round==2);
-                        }
-                        elsif($c_nameEQauthor->{names}->{name}->{'delimiter-precedes-last'} eq 'never') {
-                            if($qtNames == 2 && $round>1) {
-                                $complete_name .= $and;
-                            }
-                            else {
-                                $complete_name .= $c_nameEQauthor->{names}->{name}->{delimiter} if($round>1);
-                                $complete_name .= $and if($round==2);
-                            }
-                        }
-                        else {
-                            die "ERROR: The CSL-attribute style->macro->name(eq author)->names->name->{'delimiter-precedes-last'} is not available?";
+                        $complete_name =~ s/\s+$//g; # remove endstanding spaces
+                    }
+                    else {
+                        foreach my $gn (@given_names) {
+                            $complete_name .= $gn;
                         }
                     }
-                    
-                    $round--;
-                    
-                    #print $complete_name;
-                    $self->{_biblio_str} .= $complete_name; # add the name to the biblio result-string
                 }
+                # only the first name is written as Wash, Stefan the rest is written as 
+                elsif($namesPtr->{name}->{'name-as-sort-order'} eq "first") {
+                    if($i==1) { # Wash, Stefan
+                        $complete_name = $family_name.$namesPtr->{name}->{'sort-separator'};
+                        foreach my $gn (@given_names) {
+                            my @nameParts = split /\s+/, $gn;
+                            for(my $i=0; $i<=$#nameParts; $i++) {
+                                $complete_name .= $nameParts[$i];
+                            }
+                        }
+                    }
+                    else { # Stefan Wash
+                        foreach my $gn (@given_names) {
+                            my @nameParts = split /\s+/, $gn;
+                            for(my $i=0; $i<=$#nameParts; $i++) {
+                                $complete_name .= $nameParts[$i]." ";
+                            }                            
+                        }
+                        $complete_name .= $family_name;
+                    }
+                }
+                else { # attribute not given -> "John Doe"
+                    ### not tested yet
+                    foreach my $gn (@given_names) {
+                            my @nameParts = split /\s+/, $gn;
+                            for(my $i=0; $i<=$#nameParts; $i++) {
+                                $complete_name .= $nameParts[$i];
+                            }
+                    }
+                    $complete_name .= $family_name;
+                }                                    
                 
-                # add et.al string
-                if($qtNames >= $et_al_min) {
-                    $self->{_biblio_str} .= "et al.";
+                if($namesPtr->{name}->{'delimiter-precedes-last'} eq 'always') {
+                    $complete_name .= $namesPtr->{name}->{delimiter} if($round>1);
+                    $complete_name .= $and if($round==2);
+                }
+                elsif($namesPtr->{name}->{'delimiter-precedes-last'} eq 'never') {
+                    if($qtNames == 2 && $round>1) {
+                        $complete_name .= $and;
+                    }
+                    else {
+                        $complete_name .= $namesPtr->{name}->{delimiter} if($round>1);
+                        $complete_name .= $and if($round==2);
+                    }
+                }
+                else {
+                    die "ERROR: The CSL-attribute style->macro->name(eq author)->names->name->{'delimiter-precedes-last'} is not available?";
                 }
             }
+            
+            $round--;
+            
+            #print $complete_name;
+            $self->{_biblio_str} .= $complete_name; # add the name to the biblio result-string
         }
-        case 'title' { 
-            if($mods->{titleInfo}->{title}) {
-                # add prefix
-                $self->{_biblio_str} .= $macro->{prefix} if($macro->{prefix});
-
-                my $title = $mods->{titleInfo}->{title};
-                $title =~ s/\n//g;
-                $title =~ s/\s+/ /g;
-                $self->{_biblio_str} .= $title;
-                
-                # add suffix
-                $self->{_biblio_str} .= $macro->{suffix} if($macro->{suffix});
-            }
-        }
-        case 'issuance' {
-            _parseIssuance($mods, $self, $self->_c->{style}->{macro}->('name', 'eq', 'issuance')->pointer);
+        
+        # add "et al." string
+        if($qtNames >= $et_al_min) {
+            $self->{_biblio_str} .= "et al"; # TODO: 'et al' OR 'et al.'? (with or without dot?)
         }
     }
 }
@@ -671,96 +720,51 @@ sub _parseDate {
     $self->{_biblio_str} .= $date->{suffix} if(exists $date->{suffix});
 }
 
-# case $self->_c->{style}->{bibliography}->{layout} eq choose
+
 sub _parseChoose {
-    my ($mods, $self, $choose) = @_;    
-    #print Dumper $choose;exit;
+    my ($mods, $self, $choosePtr) = @_;
+    #print Dumper $choosePtr;
     
-    my @order = @{$choose->{'/order'}};
+    my @order;
+    if(ref($choosePtr) eq "HASH") {
+        if(exists $choosePtr->{'/order'}) {
+            @order = @{$choosePtr->{'/order'}};
+        }
+        elsif(exists $choosePtr->{'/nodes'}) {
+            push @order, $choosePtr->{'/nodes'};
+        }
+        else {
+            die "ERROR: Choose has no /order or /nodes entry?";
+        }
+    }
+    elsif(ref($choosePtr) eq "ARRAY") {
+        foreach my $c (@{$choosePtr}) {
+            _parseChoose($mods, $self, $c);
+        }
+    }
+    else {
+        die "ChoosePtr is neither a hash nor an array?";
+    }
+    # TODO: if, elsif, else needs to be implemented!
     
     foreach my $o (@order) {
-        if($choose->{$o}->{type}) {
-            switch($choose->{$o}->{type}) {
-                case "article" {
-                }
-                case "article-magazine" {
-                }
-                case "article-newspaper" {
-                }
-                case "article-journal" {
-                }
-                case "bill" {
-                }
-                case "book" {
-                }
-                case "broadcast" {
-                }
-                case "chapter" {
-                }
-                case "entry" {
-                }
-                case "entry-dictionary" {
-                }
-                case "entry-encyclopedia" {
-                }
-                case "figure" {
-                }
-                case "graphic" {
-                }
-                case "interview" {
-                }
-                case "legislation" {
-                }
-                case "legal_case" {
-                }
-                case "manuscript" {
-                }
-                case "map" {
-                }
-                case "motion_picture" {
-                }
-                case "musical_score" {
-                }
-                case "pamphlet" {
-                }
-                case "paper-conference" {
-                }
-                case "patent" {
-                }
-                case "post" {
-                }
-                case "post-weblog" {
-                }
-                case "personal_communication" {
-                }
-                case "report" {
-                }
-                case "review" {
-                }
-                case "review-book" {
-                }
-                case "song" {
-                }
-                case "speech" {
-                }
-                case "thesis" {
-                }
-                case "treaty" {
-                }
-                case "webpage" {
-                }
-            }
+        #print "-- $o --\n";
+        if( $o eq "if" && _checkCondition()==1 ) {
+            
         }
-        else { # no settings just print
+        elsif($o eq "else-if" && _checkCondition()==1) {
+            
+        }
+        elsif($o eq "else") { # no conditions just the else statement
             my @innerorder;
 
             # do it ordered
-            if(exists $choose->{$o}{'/order'}) {
-                @innerorder = @{$choose->{$o}{'/order'}};
+            if(exists $choosePtr->{$o}{'/order'}) {
+                @innerorder = @{$choosePtr->{$o}{'/order'}};
             }
             # simulate correct ordering (just one)
             else {
-                foreach my $k (keys %{$choose->{$o}}) {
+                foreach my $k (keys %{$choosePtr->{$o}}) {
                     push @innerorder, $k;
                 }
             }
@@ -768,15 +772,15 @@ sub _parseChoose {
             # parse it
             foreach my $io (@innerorder) {
                 switch($io) {
-                    case 'text' { # e.g. article title            
-                        _parseText($mods, $self, $choose->{$o}->{text})
+                    case 'text' { # e.g. article title
+                        _parseText($mods, $self, $choosePtr->{$o}->{text})
                     }
                     case 'group' {
                         # return value of elemNumber not important but necessary to keep the biblio_string intact.
-                        _parseGroup($mods, $self, $choose->{$o}->{group}, 0);
+                        _parseGroup($mods, $self, $choosePtr->{$o}->{group}, 0);
                     }
                     case 'date' {
-                        _parseDate($mods, $self, $choose->{$o}->{date});
+                        _parseDate($mods, $self, $choosePtr->{$o}->{date});
                     }
                     else {
                         #print $io, "\n";
@@ -787,6 +791,11 @@ sub _parseChoose {
     }    
 }
 
+# TODO: implement the if and els-if checks
+# return 1 when condition is true
+sub _checkCondition {
+    return 0;
+}
 
 # parse csl group element
 # A group can have subgroups.
@@ -886,7 +895,7 @@ sub _parseGroup {
                 
             }
             else {
-               die "ERROR: The CSL-attribute ...group->{'".($k)."'} is not available?";
+               #die "ERROR: The CSL-attribute ...group->{'".($k)."'} is not available?";
             }
         }        
     }
@@ -901,13 +910,18 @@ sub _parseVariable {
     my ($mods, $self, $v, $elemNumber, $delimiter) = @_;
     
     #print Dumper $v;
-    $self->{_biblio_str} .= $v->{prefix} if (exists $v->{prefix});
+    #$self->{_biblio_str} .= $v->{prefix} if (exists $v->{prefix});
     
-    my $var = $v->{variable};
-    switch($var) {
+    #my $var = $v->{variable};
+    switch($v) {
         ## the primary title for the cited item
         case "title" { 
-
+                if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
+                    $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
+                }
+                else {
+                    die "ERROR: No title tag? How should I else get the title?";
+                }
         }
         ## the secondary title for the cited item; for a book chapter, this 
         ## would be a book title, for an article the journal title, etc.
@@ -1098,9 +1112,9 @@ sub _parseVariable {
         }        
     }
     
-    $self->{_biblio_str} =~ s/\s$//g; # remove endstanding (maybe hardcoded) gaps
-    $self->{_biblio_str} .= $v->{suffix} if (exists $v->{suffix});
-    $self->{_biblio_str} =~ s/\s\s/ /g; # 2 to 1
+    #$self->{_biblio_str} =~ s/\s$//g; # remove endstanding (maybe hardcoded) gaps
+    #$self->{_biblio_str} .= $v->{suffix} if (exists $v->{suffix});
+    #$self->{_biblio_str} =~ s/\s\s/ /g; # 2 to 1
 }
 
 # returns an array with unique entries
