@@ -2,6 +2,7 @@ package Paperpile::Controller::Root;
 
 use strict;
 use warnings;
+use MIME::Types qw(by_suffix);
 use parent 'Catalyst::Controller';
 
 __PACKAGE__->config->{namespace} = '';
@@ -48,6 +49,32 @@ sub default : Path {
   $c->response->body('Page not found');
   $c->response->status(404);
 
+}
+
+sub serve : Regex('^serve/(.*)$') {
+
+  my ( $self, $c ) = @_;
+
+  my $file = $c->req->captures->[0];
+
+  my $root= $c->model('User')->get_setting('paper_root');
+
+  my $path= File::Spec->catfile( $root, $file );
+
+  if (not open(IN, $path)){
+    $c->response->status(404);
+    $c->response->body("Could not open $path.");
+  } else {
+
+    my $data='';
+
+    my ($mime_type, $encoding) = by_suffix($file);
+
+    $data.=$_ foreach (<IN>);
+    $c->response->status(200);
+    $c->response->content_type($mime_type);
+    $c->response->body($data);
+  }
 }
 
 
