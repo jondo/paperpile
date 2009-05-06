@@ -41,7 +41,7 @@ foreach my $style (@styles){
 	is($observed, $expected, "testing style: $style");
 }
 
-# returns the content of the file
+# returns the content of the file as a single string
 sub readFile {
 	my $file = shift;
 	

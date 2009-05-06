@@ -63,7 +63,6 @@ has 'IDs' => (
 
 # sorted array of strings, 
 # after transformation it contains the list of citations
-my @_citations = (); # the actual container
 has 'citations' => (
   is       => 'rw',
   isa      => 'ArrayRef[Str]',
@@ -80,11 +79,9 @@ has '_citationsSize' => (
 
 # sorted array of strings, 
 # after transformation it contains the biliography, each reference as one entry
-# the reference and its container are linked in the BUILD method
-my @_biblio = (); # the actual container
 has 'biblio' => (
   is       => 'rw',
-  isa      => 'ArrayRef',
+  isa      => 'ArrayRef[Str]',
   required => 0
 );
 
@@ -139,13 +136,6 @@ sub BUILD {
     elsif (! -e $self->get_csl ) {
         die "ERROR: The CSL file '", $self->get_csl, "' does not exist!";
     }
-
-    @_citations=();
-    @_biblio=();
-
-    # register result-arrays
-    $self->citations(\@_citations);
-    $self->biblio(\@_biblio);    
       
     # generate the central hash structures
     $self->_m(XML::Smart->new($self->get_mods));
@@ -360,7 +350,7 @@ sub _parseCitations {
         $ret_id .= $suffix;
         
         #print "$ret_id\n";    
-        push @_citations, $ret_id; # store the citation
+        push @{$self->{citations}}, $ret_id; # store the citation
     }
 }
 
@@ -435,7 +425,8 @@ sub transformEach() {
         }
         
         # the string is ready, add the current entry to the bibliography
-        push @_biblio, $self->{_biblio_str};
+        #push @_biblio, $self->{_biblio_str};
+        push @{$self->{biblio}}, $self->{_biblio_str};
         $self->{_biblio_str}="";
     }
     else {
