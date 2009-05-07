@@ -25,7 +25,7 @@ sub get_default_tree : Private {
   #### / Local Library
 
   my $local_lib = Tree::Simple->new( {
-      text    => 'Local library',
+      text    => 'My Paperpile',
       type    => 'DB',
       query   => '',
       cls     => 'pp-tree-heading',
@@ -37,7 +37,21 @@ sub get_default_tree : Private {
 
   $local_lib->setUID('LOCAL_ROOT');
 
-  #### / Local Library / Tags
+  #### / Local Library / Folders
+
+  my $folders = Tree::Simple->new( {
+      text    => 'All Papers',
+      type    => "FOLDER",
+      path    => '/',
+      iconCls => 'pp-icon-page',
+      hidden  => 0,
+    },
+    $local_lib
+  );
+
+  $folders->setUID('FOLDER_ROOT');
+
+    #### / Local Library / Tags
 
   my $tags = Tree::Simple->new( {
       text    => 'Tags',
@@ -52,19 +66,6 @@ sub get_default_tree : Private {
   # Initialize
   $c->forward( 'get_tags', [$tags] );
 
-  #### / Local Library / Folders
-
-  my $folders = Tree::Simple->new( {
-      text    => 'Folders',
-      type    => "FOLDER",
-      path    => '/',
-      iconCls => 'pp-icon-empty',
-      hidden  => 0,
-    },
-    $local_lib
-  );
-
-  $folders->setUID('FOLDER_ROOT');
 
   #### / Active Folders
 
@@ -98,7 +99,7 @@ sub get_default_tree : Private {
   ##### / Plugins
 
   my $plugins = Tree::Simple->new( {
-      text    => 'Online Databases',
+      text    => 'Online Search',
       type    => 'IMPORT_PLUGIN',
       cls     => 'pp-tree-heading',
       iconCls => 'pp-icon-empty',

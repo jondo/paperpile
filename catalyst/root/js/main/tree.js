@@ -2,7 +2,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     initComponent: function() {
 		Ext.apply(this, {
-            title: 'Paperpile Pre 2',
+            //title: 'Paperpile Pre 2',
             enableDD:true,
             ddGroup: 'gridDD',
             animate: false,
@@ -56,7 +56,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 } else {
                     // only allow drop on Folders and Tags
                     if ((e.target.type == 'TAGS' || e.target.type == 'FOLDER') &&
-                        e.target.id != 'FOLDER_ROOT' && e.target.id != 'TAGS_ROOT'){
+                        e.target.id != 'TAGS_ROOT'){
+
+                        //if (e.target.id = 'FOLDER_ROOT'){
+                        //    console.log(e.source.dragData);
+                        //}
 
                         // drop on tags only if not already tagged with the same tag
                         if (e.target.type=='TAGS'){
@@ -153,54 +157,90 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             }
         });
 	},
-    
+
     onNodeDrop: function(e){
 
         // We're dragging from the data grid
         if (e.source.dragData.grid){
-            
             if (e.target.type == 'FOLDER'){
-                Ext.Ajax.request({
-                    url: '/ajax/tree/move_in_folder',
-                    params: { node_id: e.target.id,
-                              sha1: e.data.selections[0].data.sha1,
-                              rowid: e.data.selections[0].data._rowid,
-                              grid_id: e.source.grid.id,
-                              path: this.relativeFolderPath(e.target)
+
+                var params = { node_id: e.target.id,
+                               sha1: e.data.selections[0].data.sha1,
+                               rowid: e.data.selections[0].data._rowid,
+                               grid_id: e.source.grid.id,
+                               path: this.relativeFolderPath(e.target)
+                             };
+                
+                if (e.source.grid.getSelectionModel().getSelected().data._imported){
+                    if (e.target.id != 'FOLDER_ROOT'){
+                        Ext.Ajax.request({
+                            url: '/ajax/tree/move_in_folder',
+                            params: params,
+                            success: function(){
+                                Ext.getCmp('statusbar').clearStatus();
+                                Ext.getCmp('statusbar').setText('Moved to folder');
                             },
-                    success: function(){
-                        Ext.getCmp('statusbar').clearStatus();
-                        Ext.getCmp('statusbar').setText('Moved to folder');
-                    },
-                });
+                        });
+                    }
+                } else {
+                    e.source.dragData.grid.insertEntry(
+                        function(data){
+                            Ext.apply(params, {rowid: data._rowid});
+                            if (e.target.id != 'FOLDER_ROOT'){
+                                Ext.Ajax.request({
+                                    url: '/ajax/tree/move_in_folder',
+                                    params: params,
+                                    success: function(){
+                                        Ext.getCmp('statusbar').clearStatus();
+                                        Ext.getCmp('statusbar').setText('Moved to folder');
+                                    },
+                                });
+                            }
+                        }, this);
+                }
             }
 
             if (e.target.type == 'TAGS'){
-                var oldTags=e.data.selections[0].data.tags;
                 var newTags=e.target.text;
+                var oldTags=e.data.selections[0].data.tags;
                 if (oldTags != ''){
                     newTags=oldTags+','+e.target.text;
                 }
 
-                Ext.Ajax.request(
-                    { url: '/ajax/crud/update_tags',
-                      params: { rowid: e.data.selections[0].data._rowid,
-                                tags: newTags,
-                              },
-                      method: 'GET',
-                      success: function(){
-                          Ext.StoreMgr.lookup('tag_store').reload();
-                          e.data.selections[0].data.tags=newTags;
+                var success= function(){
+                    Ext.StoreMgr.lookup('tag_store').reload();
+                    e.data.selections[0].data.tags=newTags;
+                    var datatabs=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('data_tabs');        
+                    datatabs.items.get('pubsummary').updateDetail(e.data.selections[0].data);
+                    Ext.getCmp('statusbar').clearStatus();
+                    Ext.getCmp('statusbar').setText('Updated tags.');
+                };
 
-                          var datatabs=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('data_tabs');        
-                          datatabs.items.get('pubsummary').updateDetail(e.data.selections[0].data);
-                                                                     
-                          Ext.getCmp('statusbar').clearStatus();
-                          Ext.getCmp('statusbar').setText('Updated tags.');
-                      },
-                    }
-                )
+                if (e.source.grid.getSelectionModel().getSelected().data._imported){
+
+                    Ext.Ajax.request(
+                        { url: '/ajax/crud/update_tags',
+                          params: { rowid: e.data.selections[0].data._rowid,
+                                    tags: newTags,
+                                  },
+                          success: success
+                        }
+                    )
         
+                } else {
+
+                    e.source.dragData.grid.insertEntry(
+                        function(data){
+                            Ext.Ajax.request(
+                                { url: '/ajax/crud/update_tags',
+                                  params: { rowid: data._rowid,
+                                            tags: newTags,
+                                          },
+                                  success: success
+                                }
+                            )
+                        }, this);
+                }
             }
         }
         // We're dragging nodes internally

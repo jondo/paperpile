@@ -35,9 +35,9 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
             plugin_base_query:'',
         });
 
-        var newView=this.add(new Paperpile.PubView({title:'Local library', 
+        var newView=this.add(new Paperpile.PubView({title:'All Papers', 
                                                     grid:newGrid,
-                                                    closable:true,
+                                                    closable:false,
                                                     iconCls: 'pp-icon-page',
                                                    }));
         newView.show();

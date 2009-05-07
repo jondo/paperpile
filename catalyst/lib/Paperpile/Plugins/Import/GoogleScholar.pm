@@ -227,6 +227,9 @@ sub complete_details {
 
   $full_pub->linkout( $pub->linkout );
 
+  # We don't use Google key
+  $full_pub->citekey('');
+
   # Note that if we change title, authors, and citation also the sha1
   # will change. We have to take care of this.
   my $old_sha1 = $pub->sha1;
