@@ -87,6 +87,8 @@ sub connect {
   $self->_pid($$);
   $self->_tid( threads->tid ) if $INC{'threads.pm'};
 
+  # Turn on unicode support explicitely
+  $dbh->{unicode} = 1;
   return $dbh;
 }
 

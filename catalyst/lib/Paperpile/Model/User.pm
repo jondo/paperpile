@@ -775,11 +775,6 @@ sub fulltext_search {
 
       if ($value) {
 
-        # Some unicode magic going one here. In principle perl uses utf-8 and
-        # sqlite used utf8. However, strings returned by the DBI driver function
-        # are not perl utf-8 strings. We use here utf8::decode which seems to work
-        utf8::decode($value);
-
         $pub->$field($value);
       }
     }
@@ -816,7 +811,6 @@ sub standard_search {
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
-        utf8::decode($value);
         $pub->$field($value);
       }
     }
@@ -847,7 +841,6 @@ sub all {
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
-        utf8::decode($value);
         $pub->$field($value);
       }
     }
@@ -878,7 +871,6 @@ sub exists_pub {
           $pub->_rowid($value);
         } else {
           if ($value) {
-            utf8::decode($value);
             $pub->$field($value);
           }
         }
@@ -1157,8 +1149,6 @@ sub _snippets {
       # Remove word fragments at beginning and start
       $snippet=~s/\w+\b//;
       $snippet=~s/\b\w+$//;
-
-      utf8::decode($snippet);
 
       $snippet="\x{2026}".$snippet."\x{2026}";
 
