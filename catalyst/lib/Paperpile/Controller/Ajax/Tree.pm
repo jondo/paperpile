@@ -198,6 +198,9 @@ sub move_in_folder : Local {
   $c->model('User')->update_folders( $rowid, join( ',', @folders ) );
   $pub->folders( join( ',', @folders ) );
 
+
+  print STDERR "======================>",Dumper($c->request->params),"\n";
+
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 

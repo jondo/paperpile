@@ -1,0 +1,92 @@
+body {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
+
+a {
+    text-decoration:none;
+    color: #0015FE;
+}
+
+a:hover {
+    text-decoration:underline;
+}
+
+
+
+h1 {
+    margin: 8;
+    font-size: 32px;
+    font-weight: normal;
+    letter-spacing: -1px;
+    color: #5E5E5E;
+}
+
+h2 {
+    margin: 8;
+    font-size: 18px;
+    color: #333333;
+    font-weight: normal;
+    color: #4183C4;
+
+}
+
+
+p {
+    margin: 8;
+}
+
+ul {
+   margin: 8;
+   list-style-type: circle;
+   list-style-position: inside;
+   padding-left: 4px;
+}
+
+li {
+    margin: 4 0 4 0;
+}
+
+dl {
+    margin: 8;
+}
+
+dt {
+    float: left;
+    clear: left;
+    color: #4183C4;
+    width: 75px; 
+    text-align: right; 
+}
+ dd { margin: 0 0 0 75px; 
+      padding: 0 0 5 5;
+    }
+
+
+
+.action-add, .action-delete {
+    padding: 2 2 2 22;
+}
+
+.action-add {
+    background: transparent url('images/icons/add.png') no-repeat;
+}
+
+.action-delete {
+    background: transparent url('images/icons/delete.png') no-repeat;
+}
+
+
+.box-gray{
+    background-color:#F0F0F0;
+    border:1px solid #D8D8D8;
+    max-width: 300px;
+    margin: 8;
+}
+
+.box-yellow{
+    background-color:#FFFEEB;
+    border:1px solid #F7CA75;
+    max-width: 300px;
+    margin: 8;
+}
