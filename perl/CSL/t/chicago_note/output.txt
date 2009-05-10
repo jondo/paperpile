@@ -1,0 +1,34 @@
+1. Mitchell Guttman et al., “Chromatin signature reveals over a thousand highly conserved large non-coding RNAs in mammals,” Nature 458, no. 7235 (March 12, 2009): 223-227.
+
+2. Dominic Rose et al., “Computational RNomics of drosophilids,” BMC Genomics 8 (2007): 406.
+
+3. October M Sessions et al., “Discovery of insect and human dengue virus host factors,” Nature 458, no. 7241 (April 23, 2009): 1047-1050.
+
+4. Dominic Rose et al., “Duplicated RNA genes in teleost fish genomes,” Journal of Bioinformatics and Computational Biology 6, no. 6 (December 2008): 1157-1175.
+
+5. F ter Veld et al., “Effects of somatostatin and octreotide on cytokine and chemokine production by lipopolysaccharide-activated peripheral blood mononuclear cells,” Journal of Endocrinological Investigation 32, no. 2 (February 2009): 123-129.
+
+6. Jaime S Rosa et al., “Exercise leukocyte profiles in healthy, type 1 diabetic, overweight, and asthmatic children,” Pediatric Exercise Science 21, no. 1 (February 2009): 19-33.
+
+7. Manas K Santra, Narendra Wajapeyee, and Michael R Green, “F-box protein FBXO31 mediates cyclin D1 degradation to induce G1 arrest after DNA damage,” Nature (May 3, 2009), http://www.ncbi.nlm.nih.gov/pubmed/19412162.
+
+8. Connie Beck et al., “Mediator Assessment, Documentation, and Disposition of Child Custody Cases Involving Intimate Partner Abuse: A Naturalistic Evaluation of One County's Practices,” Law and Human Behavior (May 2, 2009), http://www.ncbi.nlm.nih.gov/pubmed/19412662.
+
+9. Dominic Rose et al., “NcDNAlign: plausible multiple alignments of non-protein-coding genomic sequences,” Genomics 92, no. 1 (July 2008): 65-74.
+
+10. Jana Hertel et al., “Non-coding RNA annotation of the genome of Trichoplax adhaerens,” Nucleic Acids Research 37, no. 5 (April 2009): 1602-1615.
+
+11. Kristin Missal, Dominic Rose, and Peter F Stadler, “Non-coding RNAs in Ciona intestinalis,” Bioinformatics (Oxford, England) 21 Suppl 2 (September 1, 2005): ii77-78.
+
+12. Myriam Aouadi et al., “Orally delivered siRNA targeting macrophage Map4k4 suppresses systemic inflammation,” Nature 458, no. 7242 (April 30, 2009): 1180-1184.
+
+13. Kristin Missal et al., “Prediction of structured non-coding RNAs in the genomes of the nematodes Caenorhabditis elegans and Caenorhabditis briggsae,” Journal of Experimental Zoology. Part B. Molecular and Developmental Evolution 306, no. 4 (July 15, 2006): 379-392.
+
+14. Rolf Backofen et al., “RNAs everywhere: genome-wide annotation of structured RNAs,” Journal of Experimental Zoology. Part B. Molecular and Developmental Evolution 308, no. 1 (January 15, 2007): 1-25.
+
+15. Sophie Dumont et al., “RNA translocation and unwinding mechanism of HCV NS3 helicase and its coordination by ATP,” Nature 439, no. 7072 (January 5, 2006): 105-108.
+
+16. I Ricciardi et al., “Sum-frequency generation of cw ultraviolet radiation in periodically poled LiTaO(3),” Optics Letters 34, no. 9 (May 1, 2009): 1348-1350.
+
+17. Nathan Blow, “Transcriptomics: The digital generation,” Nature 458, no. 7235 (March 12, 2009): 239-242.
+
