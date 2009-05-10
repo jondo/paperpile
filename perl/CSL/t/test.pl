@@ -8,7 +8,7 @@ use lib "../blib/lib/";
 use Biblio::CSL;
 
 my $usage = << "JUS";
-  usage: perl $0 -m mods.xml.file -c csl.file -i ID-string -t type
+  usage: perl $0 -m mods.xml.file -c csl.file -i ID-string -t type -l int
   
   options: 
         -m      MODS input xml file.
@@ -25,6 +25,11 @@ my $usage = << "JUS";
 
         -f      Output format, e.g. txt, html, bibtex
                 [OPTIONAL, default: txt]
+                
+        -l      language mode (integer),
+                1 = paperpile
+                2 = zotero
+                [OPTIONAL, default: 1]
 
   purpose:
 	Read in a MODS xml file, parse it, and transform it 
@@ -34,13 +39,14 @@ my $usage = << "JUS";
 	at STDOUT
 JUS
 
-my ($opt_m, $opt_c, $opt_i, $opt_f) = ("", "", "", "txt");
+my ($opt_m, $opt_c, $opt_i, $opt_f, $opt_l) = ("", "", "", "txt", 1);
 
 GetOptions(
   "m=s" => \$opt_m,
   "c=s" => \$opt_c,
   "f=s" => \$opt_f,
-  "i=s" => \$opt_i
+  "i=s" => \$opt_i,
+  "l=i" => \$opt_l,
 );
 
 if ( !$opt_m || !$opt_c ) {
@@ -52,7 +58,8 @@ my $o = Biblio::CSL->new(
   mods => $opt_m,
   csl => $opt_c,
   format => $opt_f,
-  IDs => $opt_i
+  IDs => $opt_i,
+  lMode => $opt_l
 );
 
 

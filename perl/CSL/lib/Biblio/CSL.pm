@@ -125,7 +125,32 @@ has '_c' => (
   required => 0
 );
 
+# integer that specifies the genre mode
+# we have to keep a map of csl-genre descriptions vs several application specific MODS-genre names
+# e.g. csl attribute article-journal:
+# Zotero writes <genre authority="local">journalArticle</genre> 
+# Paperpile writes <genre>academic journal</genre>
+# therefore we need a map that holds the different descriptions (phrases)
+# mode 1: paperpile 
+# mode 2: zotero 
+# lMode = language mode
+# public variable
+has 'lMode' => (
+  is       => 'rw',
+  isa      => 'Int',
+  default  => 1, # = paperpile
+  required => 0
+);
 
+# see lMode
+# _lMap = language map
+# key: mode -> csl_phrase
+# value: phrase_in_projcets_dialect
+has '_lMap' => (
+  is       => 'rw',
+  isa      => 'Any', #TODO: how do I tell moose that I want a structured hash?
+  required => 0
+);
 
 # is called after construction
 # e.g. useful to validate attributes
@@ -145,14 +170,17 @@ sub BUILD {
     
     #print Dumper $self->_m; exit;
     #print Dumper $self->_c; exit;
-    
+
     # initialize some attributes
     $self->_citationsSize(_setCitationsSize($self));
     $self->_biblioSize(_setBiblioSize($self));
+    $self->_lMap(_set_lMap($self));
     # do we have a biblio entry for each citation and vice versa?
     #if($self->_citationsSize != $self->_biblioSize) {
     #    print STDERR  "Warning: the number of citations and the size of the bibliography differ, but should be equal.";
     #}
+    
+    print Dumper $self->{_lMap}; exit;
 }
 
 # trigger to check that the format is validly set to a supported type
@@ -160,8 +188,21 @@ sub _set_format {
     my ($self, $format, $meta_attr) = @_;
 
     if ($format ne "txt") {
-        die "ERROR: Unknwon output format\n";
+        die "ERROR: Unknown output format\n";
     }
+}
+
+# set and initialize the attribute _lMap
+sub _set_lMap {
+    my ($self) = @_;
+    
+    # paperpile
+    $self->{_lMap}->{1}->{'article-journal'} = 'academic journal';
+        
+    # zotero
+    $self->{_lMap}->{2}->{'article-journal'} = 'journalArticle';
+    
+    print Dumper $self->{_lMap};
 }
 
 # set the attribute _citationsSize
@@ -466,6 +507,9 @@ sub _parseText {
                     die "ERROR: Can we have a macro without a name?";
                 }
             }
+            case 'title' {
+                
+            }
             else {
             }
         }
@@ -476,6 +520,7 @@ sub _parseText {
         #$self->{_biblio_str} =~ s/\.\.//g; #TODO: Maybe we need such a security check
     }
 }
+
 
 # parsing macros seems to be complicated
 # the macro is called from somewhere
@@ -642,20 +687,6 @@ sub _parseNames {
     }
 }
 
-sub _parseIssuance {
-    my ($mods, $self, $issuance) = @_;    
-    #print Dumper $issuance;
-    
-    foreach my $k (keys %$issuance) {
-        switch ($k) {
-            case 'choose' {
-                _parseChoose($mods, $self, $issuance->{$k});
-            }
-        }
-    }
-}
-
-
 # case $self->_c->{style}->{bibliography}->{layout} eq date
 sub _parseDate {
     my ($mods, $self, $date) = @_;
@@ -734,7 +765,8 @@ sub _parseChoose {
             push @order, $choosePtr->{'/nodes'};
         }
         else {
-            die "ERROR: Choose has no /order or /nodes entry?";
+            #die "ERROR: Choose has no /order or /nodes entry?";
+            @order = keys %$choosePtr;
         }
     }
     elsif(ref($choosePtr) eq "ARRAY") {
@@ -749,10 +781,10 @@ sub _parseChoose {
     
     foreach my $o (@order) {
         #print "-- $o --\n";
-        if( $o eq "if" && _checkCondition()==1 ) {
+        if( $o eq "if" && _checkCondition($mods, $self, $choosePtr->{$o})==1 ) {
             
         }
-        elsif($o eq "else-if" && _checkCondition()==1) {
+        elsif($o eq "else-if" && _checkCondition($mods, $self, $choosePtr->{$o})==1) {
             
         }
         elsif($o eq "else") { # no conditions just the else statement
@@ -772,15 +804,17 @@ sub _parseChoose {
             # parse it
             foreach my $io (@innerorder) {
                 switch($io) {
+                    print "-- $io --\n";
                     case 'text' { # e.g. article title
-                        _parseText($mods, $self, $choosePtr->{$o}->{text})
+                        print "DRIN!";
+                        _parseText($mods, $self, $choosePtr->{$o}->{$io})
                     }
                     case 'group' {
                         # return value of elemNumber not important but necessary to keep the biblio_string intact.
-                        _parseGroup($mods, $self, $choosePtr->{$o}->{group}, 0);
+                        _parseGroup($mods, $self, $choosePtr->{$o}->{$io}, 0);
                     }
                     case 'date' {
-                        _parseDate($mods, $self, $choosePtr->{$o}->{date});
+                        _parseDate($mods, $self, $choosePtr->{$o}->{$io});
                     }
                     else {
                         #print $io, "\n";
@@ -791,10 +825,64 @@ sub _parseChoose {
     }    
 }
 
+
 # TODO: implement the if and els-if checks
 # return 1 when condition is true
 sub _checkCondition {
+    my ($mods, $self, $condiPtr) = @_;
+    
+    #print Dumper $condiPtr;
+
+    my @order;
+    if(ref($condiPtr) eq "HASH") {
+        if(exists $condiPtr->{'/order'}) {
+            @order = @{$condiPtr->{'/order'}};
+        }
+        elsif(exists $condiPtr->{'/nodes'}) {
+            push @order, $condiPtr->{'/nodes'};
+        }
+        else {
+            #die "ERROR: Condition has no /order or /nodes entry?";
+            @order = keys %$condiPtr;
+        }
+    }
+    elsif(ref($condiPtr) eq "ARRAY") {
+        foreach my $c (@{$condiPtr}) {
+            _parseChoose($mods, $self, $c);
+        }
+    }
+    else {
+        die "CondiPtr is neither a hash nor an array?";
+    }
+
+    foreach my $o (@order) {
+        switch($o) {
+            case 'type' {
+                _checkType($mods, $self, $condiPtr->{$o});
+            }
+        }
+    }
+    
     return 0;
+}
+
+# check if the current mods is of the respective type
+sub _checkType {
+    my ($mods, $self, $type) = @_;
+    
+    my $mode = $self->{lMode};
+
+    #if(exists $self->{_lMap}{"$mode"}) {
+        print "checking type: $type $self->{lMode} $mode\n";
+        print Dumper $self->{_lMap}->{2};
+    #}
+    #$self->{_lMap}->{$self->{lMode}}->{'article-title'}
+#    if($self->_m('genre', 'eq', 'adf') ) {
+#        print "ja!\n";
+#    }
+#    else {
+#        print "nein!\n";
+#    }
 }
 
 # parse csl group element
@@ -916,8 +1004,8 @@ sub _parseVariable {
     switch($v) {
         ## the primary title for the cited item
         case "title" { 
-                if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-                    $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
+                if(exists $mods->{titleInfo}->{title}) {
+                    $self->{_biblio_str} .= $mods->{titleInfo}->{title};
                 }
                 else {
                     die "ERROR: No title tag? How should I else get the title?";
@@ -926,7 +1014,7 @@ sub _parseVariable {
         ## the secondary title for the cited item; for a book chapter, this 
         ## would be a book title, for an article the journal title, etc.
         # the article title is handled elsewhere, here we have to care about
-        #   $mods->{relatedItem}->{titleInfo}
+        #  $mods->{relatedItem}->{titleInfo}
         case 'container-title' {
             # short title?
             if(exists $v->{form}) {
