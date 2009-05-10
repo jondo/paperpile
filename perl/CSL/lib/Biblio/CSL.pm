@@ -1103,29 +1103,6 @@ sub _parseVariable {
         case 'collection-title' {
             #TODO NOT yet testet!!!
             
-            #print Dumper $v;
-            
-            # short title?
-            if(exists $v->{form}) {
-                switch($v->{form}) {
-                    case "short" {
-                        $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->('type','eq','abbreviated')->{title};
-                    }
-                    case "long" {
-                        if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-                            $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
-                        }
-                    }
-                    else {
-                        die "ERROR: Unknown container-title form '".($v->{form})."'";
-                    }
-                }
-            }
-            else {
-                if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-                    $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
-                }
-            }
         }
         ## collection number; for example, series number
         case 'collection-number' {
