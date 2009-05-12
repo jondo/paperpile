@@ -25,11 +25,6 @@ my $usage = << "JUS";
 
         -f      Output format, e.g. txt, html, bibtex
                 [OPTIONAL, default: txt]
-                
-        -l      language mode (integer),
-                1 = paperpile
-                2 = zotero
-                [OPTIONAL, default: 1]
 
   purpose:
 	Read in a MODS xml file, parse it, and transform it 
@@ -39,14 +34,13 @@ my $usage = << "JUS";
 	at STDOUT
 JUS
 
-my ($opt_m, $opt_c, $opt_i, $opt_f, $opt_l) = ("", "", "", "txt", 1);
+my ($opt_m, $opt_c, $opt_i, $opt_f) = ("", "", "", "txt");
 
 GetOptions(
   "m=s" => \$opt_m,
   "c=s" => \$opt_c,
   "f=s" => \$opt_f,
-  "i=s" => \$opt_i,
-  "l=i" => \$opt_l,
+  "i=s" => \$opt_i
 );
 
 if ( !$opt_m || !$opt_c ) {
@@ -58,8 +52,7 @@ my $o = Biblio::CSL->new(
   mods => $opt_m,
   csl => $opt_c,
   format => $opt_f,
-  IDs => $opt_i,
-  lMode => $opt_l
+  IDs => $opt_i
 );
 
 

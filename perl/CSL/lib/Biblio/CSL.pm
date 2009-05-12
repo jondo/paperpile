@@ -125,39 +125,14 @@ has '_c' => (
   required => 0
 );
 
-# integer that specifies the genre mode
-# we have to keep a map of csl-genre descriptions vs several application specific MODS-genre names
-# e.g. csl attribute article-journal:
-# Zotero writes <genre authority="local">journalArticle</genre> 
-# Paperpile writes <genre>academic journal</genre>
-# therefore we need a map that holds the different descriptions (phrases)
-# mode 1: paperpile 
-# mode 2: zotero 
-# lMode = language mode
-# public variable
-has 'lMode' => (
-  is       => 'rw',
-  isa      => 'Int',
-  default  => 1, # = paperpile
-  required => 0
-);
-
-# see lMode
-# _lMap = language map
-# key: mode -> csl_phrase
-# value: phrase_in_projcets_dialect
-has '_lMap' => (
-  is       => 'rw',
-  required => 0
-);
-
 # hash that stores the current set variables
 # key: name of variables
 # value: content-string
 # whenever a variable is set, the name and the content of the variable is kept in the hash
+# TODO: no't know yet if I should just add the key, or if I also should keep the actual value
 has '_var' => (
-  is       => 'rw',
-  required => 0
+    is       => 'rw',
+    required => 0
 );
 
 # is called after construction
@@ -182,13 +157,11 @@ sub BUILD {
     # initialize some attributes
     $self->_citationsSize(_setCitationsSize($self));
     $self->_biblioSize(_setBiblioSize($self));
-    _set_lMap($self);
+
     # do we have a biblio entry for each citation and vice versa?
     #if($self->_citationsSize != $self->_biblioSize) {
     #    print STDERR  "Warning: the number of citations and the size of the bibliography differ, but should be equal.";
     #}
-    
-    #print Dumper $self->{_lMap}; exit;
 }
 
 # trigger to check that the format is validly set to a supported type
@@ -198,87 +171,6 @@ sub _set_format {
     if ($format ne "txt") {
         die "ERROR: Unknown output format\n";
     }
-}
-
-# set and initialize the attribute _lMap
-sub _set_lMap {
-    my ($self) = @_;
-    
-    # paperpile
-    
-    $self->{_lMap}->{1}->{'article'}            = 'academic journal';
-    $self->{_lMap}->{1}->{'article-magazine'}   = 'academic journal';
-    $self->{_lMap}->{1}->{'article-newspaper'}  = 'academic journal';
-    $self->{_lMap}->{1}->{'article-journal'}    = 'academic journal';
-    $self->{_lMap}->{1}->{'bill'}               = 'bill';
-    $self->{_lMap}->{1}->{'book'}               = 'book';
-    $self->{_lMap}->{1}->{'broadcast'}          = 'broadcast';
-    $self->{_lMap}->{1}->{'chapter'}            = 'chapter';
-    $self->{_lMap}->{1}->{'entry'}              = 'entry';
-    $self->{_lMap}->{1}->{'entry-dictionary'}   = 'entry-dictionary';
-    $self->{_lMap}->{1}->{'entry-encyclopedia'} = 'entry-encyclopedia';
-    $self->{_lMap}->{1}->{'figure'}             = 'figure';
-    $self->{_lMap}->{1}->{'graphic'}            = 'graphic';
-    $self->{_lMap}->{1}->{'interview'}          = 'interview';
-    $self->{_lMap}->{1}->{'legislation'}        = 'legislation';
-    $self->{_lMap}->{1}->{'legal_case'}         = 'legal_case';
-    $self->{_lMap}->{1}->{'manuscript'}         = 'manuscript';
-    $self->{_lMap}->{1}->{'map'}                = 'map';
-    $self->{_lMap}->{1}->{'motion_picture'}     = 'motion_picture';
-    $self->{_lMap}->{1}->{'musical_score'}      = 'musical_score';
-    $self->{_lMap}->{1}->{'pamphlet'}           = 'pamphlet';
-    $self->{_lMap}->{1}->{'paper-conference'}   = 'paper-conference';
-    $self->{_lMap}->{1}->{'patent'}             = 'patent';
-    $self->{_lMap}->{1}->{'post'}               = 'post';
-    $self->{_lMap}->{1}->{'post-weblog'}        = 'post-weblog';
-    $self->{_lMap}->{1}->{'personal_communication'} = 'personal_communication';
-    $self->{_lMap}->{1}->{'report'}             = 'report';
-    $self->{_lMap}->{1}->{'review'}             = 'review';
-    $self->{_lMap}->{1}->{'review-book'}        = 'review-book';
-    $self->{_lMap}->{1}->{'song'}               = 'song';
-    $self->{_lMap}->{1}->{'speech'}             = 'speech';
-    $self->{_lMap}->{1}->{'thesis'}             = 'thesis';
-    $self->{_lMap}->{1}->{'treaty'}             = 'treaty';
-    $self->{_lMap}->{1}->{'webpage'}            = 'webpage';
-    
-    
-    # zotero
-    $self->{_lMap}->{2}->{'article'}            = 'journalArticle';
-    $self->{_lMap}->{2}->{'article-magazine'}   = 'journalArticle';
-    $self->{_lMap}->{2}->{'article-newspaper'}  = 'journalArticle';
-    $self->{_lMap}->{2}->{'article-journal'}    = 'journalArticle';
-    $self->{_lMap}->{2}->{'bill'}               = 'bill';
-    $self->{_lMap}->{2}->{'book'}               = 'book';
-    $self->{_lMap}->{2}->{'broadcast'}          = 'broadcast';
-    $self->{_lMap}->{2}->{'chapter'}            = 'chapter';
-    $self->{_lMap}->{2}->{'entry'}              = 'entry';
-    $self->{_lMap}->{2}->{'entry-dictionary'}   = 'entry-dictionary';
-    $self->{_lMap}->{2}->{'entry-encyclopedia'} = 'entry-encyclopedia';
-    $self->{_lMap}->{2}->{'figure'}             = 'figure';
-    $self->{_lMap}->{2}->{'graphic'}            = 'graphic';
-    $self->{_lMap}->{2}->{'interview'}          = 'interview';
-    $self->{_lMap}->{2}->{'legislation'}        = 'legislation';
-    $self->{_lMap}->{2}->{'legal_case'}         = 'legal_case';
-    $self->{_lMap}->{2}->{'manuscript'}         = 'manuscript';
-    $self->{_lMap}->{2}->{'map'}                = 'map';
-    $self->{_lMap}->{2}->{'motion_picture'}     = 'motion_picture';
-    $self->{_lMap}->{2}->{'musical_score'}      = 'musical_score';
-    $self->{_lMap}->{2}->{'pamphlet'}           = 'pamphlet';
-    $self->{_lMap}->{2}->{'paper-conference'}   = 'paper-conference';
-    $self->{_lMap}->{2}->{'patent'}             = 'patent';
-    $self->{_lMap}->{2}->{'post'}               = 'post';
-    $self->{_lMap}->{2}->{'post-weblog'}        = 'post-weblog';
-    $self->{_lMap}->{2}->{'personal_communication'} = 'personal_communication';
-    $self->{_lMap}->{2}->{'report'}             = 'report';
-    $self->{_lMap}->{2}->{'review'}             = 'review';
-    $self->{_lMap}->{2}->{'review-book'}        = 'review-book';
-    $self->{_lMap}->{2}->{'song'}               = 'song';
-    $self->{_lMap}->{2}->{'speech'}             = 'speech';
-    $self->{_lMap}->{2}->{'thesis'}             = 'thesis';
-    $self->{_lMap}->{2}->{'treaty'}             = 'treaty';
-    $self->{_lMap}->{2}->{'webpage'}            = 'webpage';
-  
-    #print Dumper $self->{_lMap};
 }
 
 # set the attribute _citationsSize
@@ -376,7 +268,7 @@ sub transform {
     if($self->_m->{modsCollection}) { # transform the complete collection
         foreach my $mods ($self->_m->{modsCollection}->{mods}->('@')) {
             #print Dumper $mods; exit;
-            transformEach($mods, $self); # TODO: only 1 param: self, $mods or $mods->pointer???
+            transformEach($self, $mods); # TODO: only 1 param: self, $mods or $mods->pointer???
         }
     }
     else { # no collection, transform just a single mods        
@@ -389,6 +281,7 @@ sub transform {
 ## private methods
 
 # case $self->_c->{style}->{citation}
+# TODO: needs to be revised, does not work with chicago-author-date.csl
 sub _parseCitations {
     my $self = shift;
     
@@ -402,23 +295,28 @@ sub _parseCitations {
     
     # should we display numbers (e.g. 1, 2, 3, ...) or string-labels (e.g. Rose:09)?
     my $numbers = 0;
-    if(exists $ptr->{layout}->{text}->{variable}) { # a first way to specify citation-number
-        switch($ptr->{layout}->{text}->{variable}) {
-            case "citation-number" {
-                $numbers = 1;
-            }
-            else {
-                die "ERROR: The CSL-attribute style->citation->layout->text->variable eq '".($ptr->{layout}->{text}->{variable})."' is not implemented, yet.";
+    
+    if(exists $ptr->{layout}->{text}) {
+        if(exists $ptr->{layout}->{text}->{variable}) { # a first way to specify citation-number
+            switch($ptr->{layout}->{text}->{variable}) {
+                case "citation-number" {
+                    $numbers = 1;
+                }
+                else {
+                    die "ERROR: The CSL-attribute style->citation->layout->text->variable eq '".($ptr->{layout}->{text}->{variable})."' is not implemented, yet.";
+                }
             }
         }
     }
-    elsif(exists $ptr->{option}->{value}) { # second posibility of specifying citation-number
-        switch($ptr->{option}->{value}) {
-            case "citation-number" {
-                $numbers = 1;
-            }
-            else {
-                die "ERROR: The CSL-attribute style->citation->option->value eq '".($ptr->{option}->{value})."' is not implemented, yet.";
+    elsif(exists $ptr->{option}) { # second posibility of specifying citation-number
+        if(exists $ptr->{option}->{value}) {
+            switch($ptr->{option}->{value}) {
+                case "citation-number" {
+                    $numbers = 1;
+                }
+                else {
+                    die "ERROR: The CSL-attribute style->citation->option->value eq '".($ptr->{option}->{value})."' is not implemented, yet.";
+                }
             }
         }
     }
@@ -477,47 +375,36 @@ sub _parseCitations {
 
 # parse a single mods entry
 sub transformEach() {
-    my ($mods, $self) = @_;
+    my ($self, $mods) = @_;
     
-    if($self->_c->{style}) {
-        # here we handle the bibliography only, the citations have already been generated.
-        if( $self->_c->{style}->{bibliography} ) {
-            if( $self->_c->{style}->{bibliography}->{layout} ) {
-                my @nodes = $self->_c->{style}->{bibliography}->{layout}->nodes_keys();
-                my @order = $self->_c->{style}->{bibliography}->{layout}->order();
-
-                # node names are not unique, e.g. text
-                # therefore we have to keep the index position for each node in the respective array
-                # $node-name -> $node->array_position
-                my %i;
-                foreach my $n (@nodes) {
-                    $i{$n} = 0;
-                }
+    if(exists $self->_c->{style}) {
+        # here we only handle the bibliography, the citations have already been generated.
+        if(exists $self->_c->{style}->{bibliography} ) {
+            if(exists $self->_c->{style}->{bibliography}->{layout} ) {  
+                # lets go
+                _parseChildElements($self, $mods, $self->_c->{style}->{bibliography}->{layout}->pointer, "transformEach(parsing layout)");
                 
-                # move through layout
-                foreach my $o ( @order ) {
-                    #print "\n--- $o ---\n";
-                    switch($self->_c->{style}->{bibliography}->{layout}->{$o}->key()) {
-                        case "suffix" {
-                            _layoutSuffix($mods, $self);
-                        }
-                        case "text" {
-                            _parseText($mods, $self, $self->_c->{style}->{bibliography}->{layout}->{text}->[$i{$o}]->pointer);
-                        }
-                    
-                        case "date" {
-                            _parseDate($mods, $self, $self->_c->{style}->{bibliography}->{layout}->{date}->pointer);
-                        }
-                        case "choose" {
-                            _parseChoose($mods, $self, $self->_c->{style}->{bibliography}->{layout}->{choose}->pointer);
-                        }
-                        else {
-                            die "ERROR: The case CSL-attribute style->bibliography->layout eq '".($self->_c->{style}->{bibliography}->{layout}->{$o}->key())."' is not implemented yet!";
+                # check for "line-formatting" element, attribute-name is {"line-spacing" | "entry-spacing" }.
+                my $opt = 0;
+                if($opt = $self->_c->{style}->{bibliography}->{option}("name", "eq", "line-spacing")->pointer) {
+                    if(exists $opt->{value}) {
+                        for(my $i=0; $i < $opt->{value}; $i++) {
+                            $self->{_biblio_str} .= "\n"; # add newlines
                         }
                     }
-                    $i{$o}++ if(exists $i{$o});
                 }
-                #print Dumper %i;                
+                
+                if($opt = $self->_c->{style}->{bibliography}->{option}("name", "eq", "entry-spacing")->pointer ) {
+                    if(exists $opt->{value}) {
+                        for(my $i=0; $i < $opt->{value}; $i++) {
+                            $self->{_biblio_str} .= " "; # add spaces 
+                        }
+                    }
+                }
+                
+                # the string is ready, add the current entry to the bibliography result-array
+                push @{$self->{biblio}}, $self->{_biblio_str};
+                $self->{_biblio_str}="";
             }
             else {
                 die "ERROR: CSL-element 'layout' not available?";
@@ -526,28 +413,6 @@ sub transformEach() {
         else {
             die "ERROR: CSL-element 'bibliography' not available?";
         }
-        
-        # check for "line-formatting" element, attribute-name is {"line-spacing" | "entry-spacing" }.
-        my $opt = 0;
-        if($opt = $self->_c->{style}->{bibliography}->{option}("name", "eq", "line-spacing")->pointer) {
-            if(exists $opt->{value}) {
-                for(my $i=0; $i < $opt->{value}; $i++) {
-                    $self->{_biblio_str} .= "\n"; # add newlines
-                }
-            }
-        }
-        if($opt = $self->_c->{style}->{bibliography}->{option}("name", "eq", "entry-spacing")->pointer ) {
-            if(exists $opt->{value}) {
-                for(my $i=0; $i < $opt->{value}; $i++) {
-                    $self->{_biblio_str} .= " "; # add spaces 
-                }
-            }
-        }
-        
-        # the string is ready, add the current entry to the bibliography
-        #push @_biblio, $self->{_biblio_str};
-        push @{$self->{biblio}}, $self->{_biblio_str};
-        $self->{_biblio_str}="";
     }
     else {
         die "ERROR: CSL-element 'style' not available?";
@@ -555,98 +420,35 @@ sub transformEach() {
 }
 
 
-
-# case $self->_c->{style}->{bibliography}->{layout} eq suffix
-sub _layoutSuffix {
-    my ($mods, $self) = @_;
-    # TODO
-}
-
-
-# case $self->_c->{style}->{bibliography}->{layout} eq text
-sub _parseText {
-    my ($mods, $self, $text) = @_;
-
-    print "_parseText\n";
-    #print Dumper $text;
-
-    if(ref($text) eq "HASH") {
-        $self->{_biblio_str} .= $text->{prefix} if(exists $text->{prefix});
-
-        foreach my $t (keys %$text) {
-            switch($t) {
-                case 'variable' {
-                    _parseVariable($mods, $self, $text->{$t}, 0, "");
-                }
-                case 'macro' {
-                    if($text->{$t}) {
-                        _parseMacro($mods, $self, $text->{$t});
-                    }
-                    else {
-                        die "ERROR: Can we have a macro without a name?";
-                    }
-                }
-                else {
-                }
-            }
-        }
-        
-        if(exists $text->{suffix}) {
-            $self->{_biblio_str} .= $text->{suffix};
-            #$self->{_biblio_str} =~ s/\.\.//g; #TODO: Maybe we need such a security check
+# parses relevant major CSL elements while generating the bibliography
+sub _parseChildElements {
+    my ($self, $mods, $ptr, $from) = @_;
+    
+    if(ref($ptr) eq "HASH") {
+        if(exists $ptr->{prefix}) {
+            $self->{_biblio_str} .= $ptr->{prefix};
         }
     }
-    elsif(ref($text) eq "ARRAY") {
-        foreach my $t (@{$text}) {
-            _parseText($mods, $self, $t);
-        }
-    }
-    else {
-        die "ERROR: Text neither hash nor element?";
-    }
-}
-
-
-sub _getOrder {
-    my ($ptr, $description) = shift;
-    
-
-}
-
-# parsing macros seems to be complicated
-# the macro is called from somewhere
-# and then the macro-code has to be executed.
-# the macro is identified by its name
-sub _parseMacro {
-    my ($mods, $self, $macro_name) = @_;
-    
-    my $macro = $self->_c->{style}->{macro}('name','eq',$macro_name)->pointer;
-    
-    print "_parseMacro: $macro_name\n";
-    #print Dumper $macro;
     
     my @order;
-    if(ref($macro) eq "HASH") {
-        if(exists $macro->{'/order'}) {
-            @order = @{$macro->{'/order'}};
+    if(ref($ptr) eq "HASH") {
+        if(exists $ptr->{'/order'}) {
+            @order = _uniqueArray(\@{$ptr->{'/order'}});
         }
         else {
-            @order = keys %{$macro};
+            @order = keys %{$ptr};
         }
     }
-    elsif(ref($macro) eq "ARRAY") {
-        foreach my $m (@{$macro}) {
-            _parseMacro($mods, $self, $m);
+    elsif(ref($ptr) eq "ARRAY") {
+        foreach my $k (@$ptr) {
+            _parseChildElements($self, $mods, $k, $from);
         }
     }
     else {
-        die "ERROR (_parseMacro): Pointer is neither a hash nor an array?";
+        die "ERROR: $ptr is neither hash nor array!";
     }
-    #my @order = _getOrder($macro, "_parseMacro"); # that would be cool!
     
-    # check the content of the macro
     foreach my $o (@order) {
-    #foreach my $key (keys %$macro) {
         switch($o) {
             case '/order' { # cause of speed and to avoid printing the warn-msg
             }
@@ -654,33 +456,81 @@ sub _parseMacro {
             }
             case 'name' { # cause of speed and to avoid printing the warn-msg
             }
+            # because of nested macros
+            case 'macro' {
+                _parseMacro($self, $mods, $ptr->{$o});
+            }
+            # now all what is directly given by the CSL-standard
             case 'names' {
-                _parseNames($mods, $self, $macro->{$o});
+                _parseNames($self, $mods, $ptr->{$o});
             }
             case 'date' {
-                _parseDate($mods, $self, $macro->{$o});
+                #_parseDate($self, $mods, $ptr->{$o});
+                _parseChildElements($self, $mods, $ptr->{$o},"_parseChildElements($o)");
             }
-            case 'choose' {
-                _parseChoose($mods, $self, $macro->{$o});
+            case 'label' {
+                _parseLabel($self, $mods, $ptr->{$o});
             }
             case 'text' {
-                _parseText($mods, $self, $macro->{$o});
+                #_parseText($self, $mods, $ptr->{$o});
+                _parseChildElements($self, $mods, $ptr->{$o}, "_parseChildElements($o)");
             }
-            case 'group' {
-                _parseGroup($mods, $self, $macro->{$o});
+            case 'choose' {
+                _parseChoose($self, $mods, $ptr->{$o});
             }            
-            else {
-               print "Warning (_parseMacro): '$o' not implemented, yet!\n";
+            case 'group' {
+                _parseGroup($self, $mods, $ptr->{$o});
             }
+            # additional non-top-level elements
+            case 'variable' {
+                _parseVariable($self, $mods, $ptr->{$o}, 0, "");
+            }
+            case 'prefix' { # not here, we do it above (=front)
+            }
+            case 'suffix' { # not here, we do it below (=end)
+            }
+            case 'date-part' {
+                _parseDatePart($self, $mods, $ptr->{$o});
+            }
+            else {
+               print "Warning ($from): '$o' not implemented, yet!\n";
+            }
+        }
+        
+        print "### _parseChildElements($o): _biblio_string after parsing $o: '$self->{_biblio_str}'\n";
+    }
+    
+    if(ref($ptr) eq "HASH") {
+        if(exists $ptr->{suffix}) {
+            $self->{_biblio_str} .= $ptr->{suffix};
         }
     }
 }
 
 
+sub _parseMacro {
+    my ($self, $mods, $macro_name) = @_;
+    
+    my $macro = $self->_c->{style}->{macro}('name','eq',$macro_name)->pointer;
+    
+    print "_parseMacro: $macro_name\n";
+    #print Dumper $macro;
+    
+    _parseChildElements($self, $mods, $macro, "_parseMacro($macro_name)");
+}
+
+
+sub _parseLabel {
+    my ($self, $mods, $l) = @_;
+        # TODO
+}
+    
+
 sub _parseNames {
-    my ($mods, $self, $namesPtr) = @_;
+    my ($self, $mods, $namesPtr) = @_;
     
     print "_parseNames\n";
+    print Dumper $namesPtr;
     
     # remind set variables
     if(exists $namesPtr->{variable}) {
@@ -696,7 +546,7 @@ sub _parseNames {
       
         switch($namesPtr->{variable}) {
             case 'author' {
-                _parseNameAuthor($mods, $self, $namesPtr->{name});
+                _parseNameAuthor($self, $mods, $namesPtr->{name});
             }
             case 'editor' {
                 
@@ -740,7 +590,7 @@ sub _parseNames {
 
 # get the author names
 sub _parseNameAuthor {
-    my($mods, $self, $name) = @_;
+    my($self, $mods, $name) = @_;
     
     print "_parseNameAuthor\n";
     
@@ -885,31 +735,8 @@ sub _parseNameAuthor {
     }
 }
 
-# case $self->_c->{style}->{bibliography}->{layout} eq date
-sub _parseDate {
-    my ($mods, $self, $date) = @_;
-    
-    print "_parseDate\n";
-    
-    if(ref($date) eq "HASH") {
-        $self->{_biblio_str} .= $date->{prefix} if(exists $date->{prefix});
-        
-        _parseDatePart($mods, $self, $date->{'date-part'});
-        
-        $self->{_biblio_str} .= $date->{suffix} if(exists $date->{suffix});
-    }
-    elsif(ref($date) eq "ARRAY") {
-        foreach my $d (@{$date}) {
-            _parseDate($mods, $self, $d);
-        }
-    }
-    else {
-        die "ERROR: Date is neither hash nor array?";
-    }        
-}
-
 sub _parseDatePart {
-    my ($mods, $self, $dp) = @_;
+    my ($self, $mods, $dp) = @_;
     
     print "_parseDatePart\n";
     #print Dumper $dp;
@@ -970,7 +797,7 @@ sub _parseDatePart {
     }
     elsif(ref($dp) eq "ARRAY") {
         foreach my $dp (@$dp) {
-            _parseDatePart($mods, $self, $dp);
+            _parseDatePart($self, $mods, $dp);
         }
     }
     else {
@@ -980,7 +807,7 @@ sub _parseDatePart {
 
 
 sub _parseChoose {
-    my ($mods, $self, $choosePtr) = @_;
+    my ($self, $mods, $choosePtr) = @_;
     
     print "_parseChoose\n";
     #print Dumper $choosePtr;
@@ -988,11 +815,8 @@ sub _parseChoose {
     my @order;
     if(ref($choosePtr) eq "HASH") {
         if(exists $choosePtr->{'/order'}) {
-            @order = @{$choosePtr->{'/order'}};
+            @order = _uniqueArray(\@{$choosePtr->{'/order'}});
         }
-        #elsif(exists $choosePtr->{'/nodes'}) {
-        #    push @order, keys $choosePtr->{'/nodes'};
-        #}
         else {
             #die "ERROR: Choose has no /order or /nodes entry?";
             @order = keys %$choosePtr;
@@ -1000,7 +824,7 @@ sub _parseChoose {
     }
     elsif(ref($choosePtr) eq "ARRAY") {
         foreach my $c (@{$choosePtr}) {
-            _parseChoose($mods, $self, $c);
+            _parseChoose($self, $mods, $c);
         }
     }
     else {
@@ -1008,77 +832,23 @@ sub _parseChoose {
     }
     # TODO: if, elsif, else needs to be implemented!
     
+    my $goOn = 1;
     foreach my $o (@order) {
         print "-- $o --\n";
-        if( $o eq "if" && _checkCondition($mods, $self, $choosePtr->{$o})==1 ) {
+        if( $o eq "if" && _checkCondition($self, $mods, $choosePtr->{$o})==1 ) {
             print "within if\n";
-            _parseConditionContent($mods, $self, $choosePtr->{$o});
+            _parseChildElements($self, $mods, $choosePtr->{$o}, "_parseConditionContent(if)");
+            $goOn=0; # we have seen the "if", so no else-if and no else
         }
-        elsif($o eq "else-if" && _checkCondition($mods, $self, $choosePtr->{$o})==1) {
+        elsif($goOn==1 && $o eq "else-if" && _checkCondition($self, $mods, $choosePtr->{$o})==1) {
             print "within else-if\n";
-            _parseConditionContent($mods, $self, $choosePtr->{$o});
+            _parseChildElements($self, $mods, $choosePtr->{$o}, "_parseConditionContent(else-if)");
+            $goOn=0; # we have seen the "else-if", so no else
         }
-        elsif($o eq "else") { # no conditions just the else statement
+        elsif($goOn==1 && $o eq "else") { # no conditions just the else statement
             print "within else\n";
-            _parseConditionContent($mods, $self, $choosePtr->{$o});
-        }
-    }    
-}
-
-sub _parseConditionContent {
-    my ($mods, $self, $co) = @_;
-    
-    print "_parseConditionContent\n";
-    
-    my @innerorder;
-    # do it ordered
-    
-    #print Dumper $co;
-    
-    if(ref($co) eq "HASH") {
-        if(exists $co->{'/order'}) {
-            @innerorder = @{$co->{'/order'}};
-        }
-        #elsif(exists $co->{'/nodes'}) {
-        #    push @innerorder, $co->{'/nodes'};
-        #}
-        else {
-            #die "ERROR: Choose has no /order or /nodes entry?";
-            @innerorder = keys %$co;
-        }
-    }
-    elsif(ref($co) eq "ARRAY") {
-        foreach my $k (@$co) {
-            _parseConditionContent($mods, $self, $k);
-        }
-    }
-    else {
-        die "ERROR: inner condition content $co is neither hash nor array!";
-    }
-    
-    # parse it
-    foreach my $io (@innerorder) {
-        switch($io) {
-            print "within condition: $io\n";
-            case 'text' { # e.g. article title
-                _parseText($mods, $self, $co->{$io})
-            }
-            case 'group' {
-                # return value of elemNumber not important but necessary to keep the biblio_string intact.
-                _parseGroup($mods, $self, $co->{$io}, 0);
-            }
-            case 'date' {
-                _parseDate($mods, $self, $co->{$io});
-            }
-            case 'choose' {
-                _parseChoose($mods, $self, $co->{$io});
-            }
-            case 'variable' {
-                _parseVariable($mods, $self, $co->{$io});
-            }
-            else {
-                #print $io, "\n";
-            }
+            _parseChildElements($self, $mods, $choosePtr->{$o}, "_parseConditionContent(else)");
+            $goOn=0;
         }
     }
 }
@@ -1086,7 +856,7 @@ sub _parseConditionContent {
 
 # returns 1 when condition is true otherwise 0
 sub _checkCondition {
-    my ($mods, $self, $condiPtr) = @_;
+    my ($self, $mods, $condiPtr) = @_;
     
     #print Dumper $condiPtr;
 
@@ -1095,7 +865,7 @@ sub _checkCondition {
     my @order;
     if(ref($condiPtr) eq "HASH") {
         if(exists $condiPtr->{'/order'}) {
-            @order = @{$condiPtr->{'/order'}};
+            @order = _uniqueArray(\@{$condiPtr->{'/order'}});
         }
         #elsif(exists $condiPtr->{'/nodes'}) {
         #    push @order, $condiPtr->{'/nodes'};
@@ -1107,7 +877,7 @@ sub _checkCondition {
     }
     elsif(ref($condiPtr) eq "ARRAY") {
         foreach my $c (@{$condiPtr}) {
-            _checkCondition($mods, $self, $c);
+            _checkCondition($self, $mods, $c);
         }
     }
     else {
@@ -1120,31 +890,31 @@ sub _checkCondition {
     foreach my $o (@order) { 
         switch($o) {# for each subcondition
             case 'type' {
-                $truth += _checkType($mods, $self, $condiPtr->{$o});
+                $truth += _checkType($self, $mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'variable' {
-                $truth += _checkVariable($mods, $self, $condiPtr->{$o});
+                $truth += _checkVariable($self, $mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'is_numeric' {
-                $truth += _checkIsNumeric($mods, $self, $condiPtr->{$o});
+                $truth += _checkIsNumeric($self, $mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'is_date' {
-                $truth += _checkIsDate($mods, $self, $condiPtr->{$o});
+                $truth += _checkIsDate($self, $mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'position' {
-                $truth += _checkPosition($mods, $self, $condiPtr->{$o});
+                $truth += _checkPosition($self, $mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'disambiguate' {
-                $truth += _checkDisambiguate($mods, $self, $condiPtr->{$o});
+                $truth += _checkDisambiguate($self, $mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'locator' {
-                $truth += _checkLocator($mods, $self, $condiPtr->{$o});
+                $truth += _checkLocator($self, $mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'match' {
@@ -1154,6 +924,7 @@ sub _checkCondition {
     }
     
     switch($match) {
+        print "truth=$truth qtSubconditions=$qtSubconditions match='$match'\n";
         case "" {
             
         }
@@ -1167,15 +938,12 @@ sub _checkCondition {
                 return 1;
             }
         }
-        case "none" {
-            
-            print "truth=$truth qtSubconditions=$qtSubconditions\n";
-            
-            if($truth > 0) { # at least 1
-                return 0;
+        case "none" {            
+            if($truth == 0) { # no match
+                return 1;
             }
             else {
-                return 1;
+                return 0;
             }
         }
         else {
@@ -1193,25 +961,32 @@ sub _checkCondition {
 # check if the current mods is of the respective type
 # returns 1 if the check was positive else 0
 sub _checkType {
-    my ($mods, $self, $type) = @_;
-    
-    print "_checkType: $type\n";
-    
-    if(exists $self->{_lMap}->{$self->{lMode}}->{$type}) {
-        print "checking type: $type $self->{lMode} $self->{_lMap}->{$self->{lMode}}->{$type}\n";
-        
-        # is the mods of the respective type (mods-genre vs csl-type)?
-        # a mods could have several genre entries.
-        if($mods->{genre} eq $self->{_lMap}->{$self->{lMode}}->{$type} ) {
-            return 1; 
-        }
+    my ($self, $mods, $type) = @_;
 
-        return 0; 
+    print "_checkType: $type\n";
+
+    my %alias=( 
+        'academic journal' => 'article-journal',
+        'journalArticle' => 'article-journal',
+    );
+
+    # if it is the same, we take it right-away  
+    if ($mods->{genre} eq $type) {
+        return 1;
+    } 
+    else {
+        # We look if we can match an alias, if not return 0
+        if ($alias{$mods->{genre}}) {
+            return ($alias{$mods->{genre}} eq $type);
+        } 
+        else {
+            return 0;
+        }
     }
 }
 
 sub _checkVariable {
-    my ($mods, $self, $v) = @_;
+    my ($self, $mods, $v) = @_;
     
     print "_checkVariable: $v\n";
     
@@ -1226,7 +1001,7 @@ sub _checkVariable {
 }
 
 sub _checkIsNumeric {
-    my ($mods, $self, $n) = @_;
+    my ($self, $mods, $n) = @_;
     
     print "_checkIsNumeric: TODO! $n\n";
     #TODO
@@ -1235,7 +1010,7 @@ sub _checkIsNumeric {
 }
 
 sub _checkIsDate {
-    my ($mods, $self, $d) = @_;
+    my ($self, $mods, $d) = @_;
     
     print "_checkIsDate: TODO! $d\n";
     #TODO
@@ -1244,7 +1019,7 @@ sub _checkIsDate {
 }
 
 sub _checkPosition {
-    my ($mods, $self, $p) = @_;
+    my ($self, $mods, $p) = @_;
     
     print "_checkPosition: TODO! $p\n";
     #TODO
@@ -1253,7 +1028,7 @@ sub _checkPosition {
 }
 
 sub _checkDisambiguate {
-    my ($mods, $self, $t) = @_;
+    my ($self, $mods, $t) = @_;
     
     print "_checkDisambiguate: TODO! $t\n";
     #TODO
@@ -1262,7 +1037,7 @@ sub _checkDisambiguate {
 }
 
 sub _checkLocator {
-    my ($mods, $self, $l) = @_;
+    my ($self, $mods, $l) = @_;
     
     print "_checkLocator: TODO! $l\n";
     #TODO
@@ -1277,63 +1052,28 @@ sub _checkLocator {
 # At the first call of _parseGroup the string is empty.
 # In subgroups we extend the string, recursively.
 # Furhermore, we need the number of overall printed elements in the recursion
+# Maybe, we need more thinking here ;-)
 sub _parseGroup {
-    my ($mods, $self, $g, $elemNumber) = @_;
+    my ($self, $mods, $g, $elemNumber) = @_;
     
     print "_parseGroup\n";
     
     if(ref($g) eq "HASH") {
-        $self->{_biblio_str} .= $g->{'prefix'}  if(exists $g->{'prefix'});
+        #$self->{_biblio_str} .= $g->{'prefix'}  if(exists $g->{'prefix'});
         
         # index of the group element
 
         # cause text could appear more than once in the ordering
         # but if it contains more than once
         # it is represented as array and has its own loop
-        my @order = @{$g->{'/order'}};
-        my @order_unique = _uniqueArray(\@order);
+        my @order = _uniqueArray(\@{$g->{'/order'}});
         
-        # not the first element and not the last
-        # -1 because of the delimiter entry
-        
-        #my $round = 0;
-        foreach my $k (@order_unique) {
+        foreach my $k (@order) {
             switch($k) { # formatting | delimiter | TODO:
-                #print $k, "\n";
-                case "delimiter" {
+                case 'group' {
+                    $elemNumber = _parseGroup($self, $mods, $g->{$k}, $elemNumber);
                 }
-                case "prefix" { # already done before the loop
-                }
-                case "suffix" { # will be done after the loop
-                }
-                case "font-family" {
-                    
-                }
-                case "font-style" {
-                    
-                }
-                case "font-variant" {
-                    
-                }
-                case "font-weight" {
-                    
-                }            
-                case "text-decoration" {
-                    
-                }
-                case "vertical-align" {
-                    
-                }
-                case "text-case" {
-                    
-                }
-                case "display" {
-                        
-                }
-                case "quotes" {
-                    
-                }
-                case "text" { # TODO _parseText!
+                case 'text' { # TODO _parseText!
                     my $delimiter = "";
                     
                     if(ref($g->{$k}) eq "HASH") {
@@ -1345,7 +1085,7 @@ sub _parseGroup {
                         
                         # can appear either as hash
                         if(exists $g->{$k}->{variable}) {
-                            _parseVariable($mods, $self, $g->{$k}, $elemNumber, $delimiter);
+                            _parseVariable($self, $mods, $g->{$k}, $elemNumber, $delimiter);
                         }
                     }
                     elsif(ref($g->{$k}) eq "ARRAY") {
@@ -1358,17 +1098,14 @@ sub _parseGroup {
                             }
                         
                             if(exists $v->{variable}) {
-                                _parseVariable($mods, $self, $v, $elemNumber, $delimiter);
+                                _parseVariable($self, $mods, $v, $elemNumber, $delimiter);
                             }
                         }
                     }
                     
                 }
-                case "group" {
-                    $elemNumber = _parseGroup($mods, $self, $g->{$k}, $elemNumber);
-                }
-                case "class" {
-                    
+                case 'macro' {
+                    _parseMacro($self, $mods, $g->{$k});
                 }
                 else {
                    #die "ERROR: The CSL-attribute ...group->{'".($k)."'} is not available?";
@@ -1383,31 +1120,35 @@ sub _parseGroup {
     elsif(ref($g) eq "ARRAY") {
         #print "group-array (".(scalar @$g).")\n";
         foreach my $this_group (@$g) {
-            $elemNumber = _parseGroup($mods, $self, $this_group, $elemNumber);
+            $elemNumber = _parseGroup($self, $mods, $this_group, $elemNumber);
         }
     }
     else {
         die "ERROR: Group is neither hash nor array?";
     }
     
+    print "### _biblio_string after group: '$self->{_biblio_str}'\n";
+    
     return $elemNumber;
 }
 
 
 sub _parseVariable {
-    my ($mods, $self, $v, $elemNumber, $delimiter) = @_;
+    my ($self, $mods, $v, $elemNumber, $delimiter) = @_;
     
     print "_parseVariable: $v\n";
     
     #$self->{_biblio_str} .= $v->{prefix} if (exists $v->{prefix});
     
-    # set the variable at the "duartion" (availability?) hash.
+    # set the variable at the "availability"-hash.
     ${$self->{_var}}{$v}=1;
     
     switch($v) {
         ## the primary title for the cited item
-        case "title" { 
+        case "title" {
+                print "within parsing title\n";
                 if(exists $mods->{titleInfo}->{title}) {
+                    print "mods title: $mods->{titleInfo}->{title}\n";
                     $self->{_biblio_str} .= $mods->{titleInfo}->{title};
                 }
                 else {
@@ -1419,8 +1160,14 @@ sub _parseVariable {
         # the article title is handled elsewhere, here we have to care about
         #  $mods->{relatedItem}->{titleInfo}
         case 'container-title' {
-            # short title?
-            if(ref($v) eq "HASH") {
+            print "within parsing container-title\n";
+            if(! ref($v)) { # its hust the string and that is the order to get the container-title.
+                if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
+                        $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
+                }
+            }            
+            elsif(ref($v) eq "HASH") {
+                # short title?
                 if(exists $v->{form}) {
                     switch($v->{form}) {
                         case "short" {
@@ -1442,16 +1189,13 @@ sub _parseVariable {
                     }
                 }
             }
-            elsif(ref($v) eq "SCALAR") {
-                die "ERROR. container-title is scalar, not implemented, yet!";
-            }
             elsif(ref($v) eq "ARRAY") {
                 die "ERROR. container-title is array, not implemented, yet!";
             }
         }
         ## the tertiary title for the cited item; for example, a series title
         case 'collection-title' {
-            #TODO NOT yet testet!!!
+            print "within parsing collection-title\n";
             
         }
         ## collection number; for example, series number
@@ -1483,6 +1227,7 @@ sub _parseVariable {
         }
         ##
         case 'page' {
+            print "within parsing page\n";
             if(exists $mods->{relatedItem}->{part}->{extent}->{unit}) {
                 if($mods->{relatedItem}->{part}->{extent}->{unit} eq "pages") {
                     if(exists $mods->{relatedItem}->{part}->{extent}->{start} && exists $mods->{relatedItem}->{part}->{extent}->{end}) {
@@ -1516,6 +1261,7 @@ sub _parseVariable {
         }
         ## volume number for the container periodical
         case 'volume' {
+            print "within parsing volume\n";
             if(exists $mods->{relatedItem}->{part}->{detail}->{type}) {
                 if($mods->{relatedItem}->{part}->{detail}->{type} eq "volume") {
                     if(exists $mods->{relatedItem}->{part}->{detail}->{number}) {
@@ -1561,6 +1307,7 @@ sub _parseVariable {
         } 
         ##
         case 'genre' {
+            print "within parsing genre\n";
         } 
         ## a short inline note, often used to refer to additional details of the resource
         case 'note' {
