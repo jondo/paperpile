@@ -65,9 +65,9 @@
   <macro name="anon">
     <choose>
       <if variable="author editor translator" match="none">
-    <text term="anonymous" form="short" text-case="capitalize-first"/>
-	  </if>
-	</choose>
+        <text term="anonymous" form="short" text-case="capitalize-first"/>
+       </if>
+    </choose>
   </macro>
   <macro name="editor">
     <names variable="editor">
@@ -139,16 +139,16 @@
     <group delimiter=". ">
 	  <choose>
 	    <if type="graphic report" match="any">
-      <text macro="archive"/>
+             <text macro="archive"/>
 	    </if>
 	    <else-if type="book thesis chapter article-journal article-newspaper article-magazine" match="none">
-      <text macro="archive"/>
+              <text macro="archive"/>
 	    </else-if>
 	  </choose>
       <text variable="DOI" prefix="doi:"/>
 	  <choose>
 	    <if type="legal_case" match="none">
-      <text variable="URL"/>
+             <text variable="URL"/>
 	    </if>
 	  </choose>
     </group>
@@ -262,7 +262,7 @@
     </choose>
     <choose>
       <if type="legal_case" match="none">
-    <text variable="container-title" font-style="italic"/>
+        <text variable="container-title" font-style="italic"/>
       </if>
     </choose>
   </macro>
