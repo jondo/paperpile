@@ -1,5 +1,0 @@
-We draw our annotations ourselves. The following lines in Annot.cc in function Annot::Draw need to be commented out:
-
-//gfx->drawAnnot(&obj, (type == typeLink) ? border : (AnnotBorder *)NULL, color,
-//    rect->x1, rect->y1, rect->x2, rect->y2);
-

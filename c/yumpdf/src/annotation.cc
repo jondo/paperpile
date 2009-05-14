@@ -3,11 +3,10 @@
 #include <string.h>
 #include <time.h>
 #include "config.h"
-#include "poppler.h"
 #include "cairo.h"
 #include <podofo.h>
 
-#include "extpdf.h"
+#include "yumpdf.h"
 #include "annotation.h"
 
 using namespace PoDoFo;

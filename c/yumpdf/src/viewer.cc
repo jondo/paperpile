@@ -3,11 +3,10 @@
 #include <string.h>
 #include <time.h>
 #include "config.h"
-#include "poppler.h"
 #include "cairo.h"
 #include <podofo.h>
 
-#include "extpdf.h"
+#include "yumpdf.h"
 #include "viewer.h"
 
 #include <goo/GooString.h>
@@ -121,7 +120,7 @@ mxml_node_t* render(mxml_node_t *xml){
   }
 
   output_dev = new CairoOutputDev ();
-  output_dev->startDoc(doc->getXRef ());
+  output_dev->startDoc(doc->getXRef (), catalog);
   output_dev->setCairo (cr);
   output_dev->setPrinting (0);
 
@@ -149,6 +148,9 @@ mxml_node_t* render(mxml_node_t *xml){
   return xmlout;
 
 }
+
+
+/*
 
 mxml_node_t* search(mxml_node_t *xml){
   
@@ -202,10 +204,12 @@ mxml_node_t* search(mxml_node_t *xml){
 
 }
 
+*/
+
 
 mxml_node_t* wordList(mxml_node_t *xml){
 
-  GError *error;
+  // GError *error;
   int i;
   char *in_file;
   char string[1000];

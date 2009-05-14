@@ -3,10 +3,10 @@
 #include <string.h>
 #include <time.h>
 #include "config.h"
-#include "poppler.h"
+//#include "poppler.h"
 #include "cairo.h"
 
-#include "extpdf.h"
+#include "yumpdf.h"
 #include "viewer.h"
 #include "annotation.h"
 
@@ -19,7 +19,7 @@ int main (int argc, char *argv[]){
   FILE *fp;
   char command[100];
 
-  g_type_init ();
+  //g_type_init ();
   
   if (argc > 2){
     usage();
@@ -49,13 +49,13 @@ int main (int argc, char *argv[]){
 
   sprintf(command,"%s",node->child->value.opaque);
 
-  if (strcmp(command,"INFO")==0)  xmlout=info(xml);
+  //if (strcmp(command,"INFO")==0)  xmlout=info(xml);
   if (strcmp(command,"RENDER")==0)  xmlout=render(xml);
-  if (strcmp(command,"SEARCH")==0)  xmlout=search(xml);
-  if (strcmp(command,"WORDLIST")==0)  xmlout=wordList(xml);
-  if (strcmp(command,"TEXT")==0)  xmlout=text(xml);
-  if (strcmp(command,"ADD_ANNOTATION")==0)  xmlout=add_annotation(xml);
-  if (strcmp(command,"GET_ANNOTATIONS")==0)  xmlout=get_annotations(xml);
+  //if (strcmp(command,"SEARCH")==0)  xmlout=search(xml);
+  //if (strcmp(command,"WORDLIST")==0)  xmlout=wordList(xml);
+  //if (strcmp(command,"TEXT")==0)  xmlout=text(xml);
+  //if (strcmp(command,"ADD_ANNOTATION")==0)  xmlout=add_annotation(xml);
+  //if (strcmp(command,"GET_ANNOTATIONS")==0)  xmlout=get_annotations(xml);
   
   
   mxmlSaveFile (xmlout,stdout,_white_space_cb);
@@ -64,13 +64,7 @@ int main (int argc, char *argv[]){
 }
 
 void usage(){
-  fprintf(stderr, "Usage: extpdf COMMAND PARAMETERS\n");
-  fprintf(stderr, "       extpdf RENDER page scale file\n");
-  fprintf(stderr, "       exptdf SEARCH \"searchterm\" file\n");
-  fprintf(stderr, "       exptdf SELECT page x1 y1 x2 y2 file\n");
-  fprintf(stderr, "       exptdf TEXT page x1 y1 x2 y2 file\n");
-  fprintf(stderr, "       exptdf ADD_STICKY page left bottom width height \"Text\" file\n");
-  fprintf(stderr, "       exptdf ADD_HIGHLIGHT page x1 y1 x2 y2 file\n");
+  fprintf(stderr, "Usage: yumpdf command.XML\n");
   exit(1);
 }
 
@@ -93,7 +87,7 @@ void fail(const char* msg){
 }
 
 
-
+/*
 gchar* get_uri(gchar* file){
 
   GError *error;
@@ -117,6 +111,8 @@ gchar* get_uri(gchar* file){
   return uri;
 
 }
+*/
+
 
  
 const char * _white_space_cb(mxml_node_t *node, int where){
