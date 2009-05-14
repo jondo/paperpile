@@ -237,11 +237,7 @@ sub insert_pubs {
 
     ( $fields, $values ) = $self->_hash2sql($hash);
 
-    print STDERR "INSERT INTO fulltext_citation ($fields) VALUES ($values)\n";
-
     $self->dbh->do("INSERT INTO fulltext_citation ($fields) VALUES ($values)");
-
-
 
     ## Insert authors
 

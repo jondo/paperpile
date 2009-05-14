@@ -8,7 +8,7 @@ use lib "../blib/lib/";
 use Biblio::CSL;
 
 my $usage = << "JUS";
-  usage: perl $0 -m mods.xml.file -c csl.file -i ID-string -t type
+  usage: perl $0 -m mods.xml.file -c csl.file -i ID-string -t type -l int
   
   options: 
         -m      MODS input xml file.

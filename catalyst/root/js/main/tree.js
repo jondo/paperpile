@@ -176,6 +176,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         Ext.Ajax.request({
                             url: '/ajax/tree/move_in_folder',
                             params: params,
+                            method: 'GET',
                             success: function(){
                                 Ext.getCmp('statusbar').clearStatus();
                                 Ext.getCmp('statusbar').setText('Moved to folder');

@@ -1,0 +1,1798 @@
+﻿<?xml version="1.0"?>
+<modsCollection xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-2.xsd" xmlns="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <mods>
+    <titleInfo>
+      <title>Chromatin signature reveals over a thousand highly conserved large non-coding RNAs in mammals</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Guttman</namePart>
+      <namePart type="given">Mitchell</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Amit</namePart>
+      <namePart type="given">Ido</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Garber</namePart>
+      <namePart type="given">Manuel</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">French</namePart>
+      <namePart type="given">Courtney</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Lin</namePart>
+      <namePart type="given">Michael F</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Feldser</namePart>
+      <namePart type="given">David</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Huarte</namePart>
+      <namePart type="given">Maite</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Zuk</namePart>
+      <namePart type="given">Or</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Carey</namePart>
+      <namePart type="given">Bryce W</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Cassady</namePart>
+      <namePart type="given">John P</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Cabili</namePart>
+      <namePart type="given">Moran N</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Jaenisch</namePart>
+      <namePart type="given">Rudolf</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Mikkelsen</namePart>
+      <namePart type="given">Tarjei S</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Jacks</namePart>
+      <namePart type="given">Tyler</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hacohen</namePart>
+      <namePart type="given">Nir</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Bernstein</namePart>
+      <namePart type="given">Bradley E</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Kellis</namePart>
+      <namePart type="given">Manolis</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Regev</namePart>
+      <namePart type="given">Aviv</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Rinn</namePart>
+      <namePart type="given">John L</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Lander</namePart>
+      <namePart type="given">Eric S</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>458</number>
+        </detail>
+        <detail type="issue">
+          <number>7235</number>
+        </detail>
+        <extent unit="pages">
+          <start>223</start>
+          <end>227</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Mar 12, 2009</dateIssued>
+        <dateCaptured>2009-05-03 15:48:20</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1476-4687</identifier>
+      <titleInfo>
+        <title>Nature</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Nature</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1038/nature07672</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19182780</url>
+    </location>
+    <abstract>There is growing recognition that mammalian cells produce many thousands of large intergenic transcripts. However, the functional significance of these transcripts has been particularly controversial. Although there are some well-characterized examples, most (&gt;95%) show little evidence of evolutionary conservation and have been suggested to represent transcriptional noise. Here we report a new approach to identifying large non-coding RNAs using chromatin-state maps to discover discrete transcriptional units intervening known protein-coding loci. Our approach identified approximately 1,600 large multi-exonic RNAs across four mouse cell types. In sharp contrast to previous collections, these large intervening non-coding RNAs (lincRNAs) show strong purifying selection in their genomic loci, exonic sequences and promoter regions, with greater than 95% showing clear evolutionary conservation. We also developed a functional genomics approach that assigns putative functions to each lincRNA, demonstrating a diverse range of roles for lincRNAs in processes from embryonic stem cell pluripotency to cell proliferation. We obtained independent functional validation for the predictions for over 100 lincRNAs, using cell-based assays. In particular, we demonstrate that specific lincRNAs are transcriptionally regulated by key transcription factors in these processes such as p53, NFkappaB, Sox2, Oct4 (also known as Pou5f1) and Nanog. Together, these results define a unique collection of functional lincRNAs that are highly conserved and implicated in diverse biological processes.</abstract>
+    <subject>
+      <topic>Animals</topic>
+    </subject>
+    <subject>
+      <topic>Base Sequence</topic>
+    </subject>
+    <subject>
+      <topic>Cells, Cultured</topic>
+    </subject>
+    <subject>
+      <topic>Chromatin</topic>
+    </subject>
+    <subject>
+      <topic>Conserved Sequence</topic>
+    </subject>
+    <subject>
+      <topic>DNA, Intergenic</topic>
+    </subject>
+    <subject>
+      <topic>Exons</topic>
+    </subject>
+    <subject>
+      <topic>Mammals</topic>
+    </subject>
+    <subject>
+      <topic>Mice</topic>
+    </subject>
+    <subject>
+      <topic>Promoter Regions, Genetic</topic>
+    </subject>
+    <subject>
+      <topic>Reproducibility of Results</topic>
+    </subject>
+    <subject>
+      <topic>RNA</topic>
+    </subject>
+    <subject>
+      <topic>Transcription Factors</topic>
+    </subject>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Computational RNomics of drosophilids</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Rose</namePart>
+      <namePart type="given">Dominic</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hackermüller</namePart>
+      <namePart type="given">Jörg</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Washietl</namePart>
+      <namePart type="given">Stefan</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Reiche</namePart>
+      <namePart type="given">Kristin</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hertel</namePart>
+      <namePart type="given">Jana</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Findeiss</namePart>
+      <namePart type="given">Sven</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Stadler</namePart>
+      <namePart type="given">Peter F</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Prohaska</namePart>
+      <namePart type="given">Sonja J</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>8</number>
+        </detail>
+        <extent unit="pages">
+          <start>406</start>
+          <end>406</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>2007</dateIssued>
+        <dateCaptured>2009-05-06 17:06:58</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1471-2164</identifier>
+      <titleInfo>
+        <title>BMC Genomics</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>BMC Genomics</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1186/1471-2164-8-406</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/17996037</url>
+    </location>
+    <abstract>BACKGROUND: Recent experimental and computational studies have provided overwhelming evidence for a plethora of diverse transcripts that are unrelated to protein-coding genes. One subclass consists of those RNAs that require distinctive secondary structure motifs to exert their biological function and hence exhibit distinctive patterns of sequence conservation characteristic for positive selection on RNA secondary structure.The deep-sequencing of 12 drosophilid species coordinated by the NHGRI provides an ideal data set of comparative computational approaches to determine those genomic loci that code for evolutionarily conserved RNA motifs. This class of loci includes the majority of the known small ncRNAs as well as structured RNA motifs in mRNAs. We report here on a genome-wide survey using RNAz. RESULTS: We obtain 16 000 high quality predictions among which we recover the majority of the known ncRNAs. Taking a pessimistically estimated false discovery rate of 40% into account, this implies that at least some ten thousand loci in the Drosophila genome show the hallmarks of stabilizing selection action of RNA structure, and hence are most likely functional at the RNA level. A subset of RNAz predictions overlapping with TRF1 and BRF binding sites [Isogai et al., EMBO J. 26: 79-89 (2007)], which are plausible candidates of Pol III transcripts, have been studied in more detail. Among these sequences we identify several "clusters" of ncRNA candidates with striking structural similarities. CONCLUSION: The statistical evaluation of the RNAz predictions in comparison with a similar analysis of vertebrate genomes [Washietl et al., Nat. Biotech. 23: 1383-1390 (2005)] shows that qualitatively similar fractions of structured RNAs are found in introns, UTRs, and intergenic regions. The intergenic RNA structures, however, are concentrated much more closely around known protein-coding loci, suggesting that flies have significantly smaller complement of independent structured ncRNAs compared to mammals.</abstract>
+    <subject>
+      <topic>Animals</topic>
+    </subject>
+    <subject>
+      <topic>Drosophila melanogaster</topic>
+    </subject>
+    <subject>
+      <topic>Humans</topic>
+    </subject>
+    <subject>
+      <topic>Nucleic Acid Conformation</topic>
+    </subject>
+    <subject>
+      <topic>Phylogeny</topic>
+    </subject>
+    <subject>
+      <topic>RNA</topic>
+    </subject>
+    <subject>
+      <topic>Sensitivity and Specificity</topic>
+    </subject>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Discovery of insect and human dengue virus host factors</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Sessions</namePart>
+      <namePart type="given">October M</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Barrows</namePart>
+      <namePart type="given">Nicholas J</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Souza-Neto</namePart>
+      <namePart type="given">Jayme A</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Robinson</namePart>
+      <namePart type="given">Timothy J</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hershey</namePart>
+      <namePart type="given">Christine L</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Rodgers</namePart>
+      <namePart type="given">Mary A</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Ramirez</namePart>
+      <namePart type="given">Jose L</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Dimopoulos</namePart>
+      <namePart type="given">George</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Yang</namePart>
+      <namePart type="given">Priscilla L</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Pearson</namePart>
+      <namePart type="given">James L</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Garcia-Blanco</namePart>
+      <namePart type="given">Mariano A</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>458</number>
+        </detail>
+        <detail type="issue">
+          <number>7241</number>
+        </detail>
+        <extent unit="pages">
+          <start>1047</start>
+          <end>1050</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Apr 23, 2009</dateIssued>
+        <dateCaptured>2009-05-03 15:47:53</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1476-4687</identifier>
+      <titleInfo>
+        <title>Nature</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Nature</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1038/nature07967</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19396146</url>
+    </location>
+    <abstract>Dengue fever is the most frequent arthropod-borne viral disease of humans, with almost half of the world's population at risk of infection. The high prevalence, lack of an effective vaccine, and absence of specific treatment conspire to make dengue fever a global public health threat. Given their compact genomes, dengue viruses (DENV-1-4) and other flaviviruses probably require an extensive number of host factors; however, only a limited number of human, and an even smaller number of insect host factors, have been identified. Here we identify insect host factors required for DENV-2 propagation, by carrying out a genome-wide RNA interference screen in Drosophila melanogaster cells using a well-established 22,632 double-stranded RNA library. This screen identified 116 candidate dengue virus host factors (DVHFs). Although some were previously associated with flaviviruses (for example, V-ATPases and alpha-glucosidases), most of the DVHFs were newly implicated in dengue virus propagation. The dipteran DVHFs had 82 readily recognizable human homologues and, using a targeted short-interfering-RNA screen, we showed that 42 of these are human DVHFs. This indicates notable conservation of required factors between dipteran and human hosts. This work suggests new approaches to control infection in the insect vector and the mammalian host.</abstract>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Duplicated RNA genes in teleost fish genomes</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Rose</namePart>
+      <namePart type="given">Dominic</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Jöris</namePart>
+      <namePart type="given">Julian</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hackermüller</namePart>
+      <namePart type="given">Jörg</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Reiche</namePart>
+      <namePart type="given">Kristin</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Li</namePart>
+      <namePart type="given">Qiang</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Stadler</namePart>
+      <namePart type="given">Peter F</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>6</number>
+        </detail>
+        <detail type="issue">
+          <number>6</number>
+        </detail>
+        <extent unit="pages">
+          <start>1157</start>
+          <end>1175</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Dec 2008</dateIssued>
+        <dateCaptured>2009-05-06 17:06:42</dateCaptured>
+      </originInfo>
+      <identifier type="issn">0219-7200</identifier>
+      <titleInfo>
+        <title>Journal of Bioinformatics and Computational Biology</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>J Bioinform Comput Biol</title>
+      </titleInfo>
+    </relatedItem>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19090022</url>
+    </location>
+    <abstract>Teleost fishes share a duplication of their entire genomes. We report here on a computational survey of structured non-coding RNAs (ncRNAs) in teleost genomes, focusing on the fate of fish-specific duplicates. As in other metazoan groups, we find evidence of a large number (11,543) of structured RNAs, most of which (~86%) are clade-specific or evolve so fast that their tetrapod homologs cannot be detected. In surprising contrast to protein-coding genes, the fish-specific genome duplication did not lead to a large number of paralogous ncRNAs: only 188 candidates, mostly microRNAs, appear in a larger copy number in teleosts than in tetrapods, suggesting that large-scale gene duplications do not play a major role in the expansion of the vertebrate ncRNA inventory.</abstract>
+    <subject>
+      <topic>Algorithms</topic>
+    </subject>
+    <subject>
+      <topic>Animals</topic>
+    </subject>
+    <subject>
+      <topic>Cluster Analysis</topic>
+    </subject>
+    <subject>
+      <topic>Computational Biology</topic>
+    </subject>
+    <subject>
+      <topic>Databases, Nucleic Acid</topic>
+    </subject>
+    <subject>
+      <topic>Evolution, Molecular</topic>
+    </subject>
+    <subject>
+      <topic>Fishes</topic>
+    </subject>
+    <subject>
+      <topic>Gene Dosage</topic>
+    </subject>
+    <subject>
+      <topic>Gene Duplication</topic>
+    </subject>
+    <subject>
+      <topic>Genome</topic>
+    </subject>
+    <subject>
+      <topic>MicroRNAs</topic>
+    </subject>
+    <subject>
+      <topic>Nucleic Acid Conformation</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Untranslated</topic>
+    </subject>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Effects of somatostatin and octreotide on cytokine and chemokine production by lipopolysaccharide-activated peripheral blood mononuclear cells</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">ter Veld</namePart>
+      <namePart type="given">F</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Rose</namePart>
+      <namePart type="given">B</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Mussmann</namePart>
+      <namePart type="given">R</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Martin</namePart>
+      <namePart type="given">S</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Herder</namePart>
+      <namePart type="given">C</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Kempf</namePart>
+      <namePart type="given">K</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>32</number>
+        </detail>
+        <detail type="issue">
+          <number>2</number>
+        </detail>
+        <extent unit="pages">
+          <start>123</start>
+          <end>129</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Feb 2009</dateIssued>
+        <dateCaptured>2009-05-06 15:49:57</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1720-8386</identifier>
+      <titleInfo>
+        <title>Journal of Endocrinological Investigation</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>J. Endocrinol. Invest</title>
+      </titleInfo>
+    </relatedItem>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19411809</url>
+    </location>
+    <abstract>BACKGROUND: Somatostatin plays an important role in the communication between the nervous, endocrine, and immune systems. Although somatostatin or its analogues have been shown to modulate a number of immune functions, their immunomodulatory effects are not uniform and are strongly dependent on the underlying cell system. AIM: The aim of our study was to analyze the immunomodulatory effects of somatostatin and its analogue octreotide on peripheral blood mononuclear cells (PBMC) in vitro. MATERIALS/SUBJECTS:We used lipopolysaccharide-activated cells from normal glucose tolerant (NGT) subjects and from Type 2 diabetes mellitus (T2DM) patients as T2DM is associated with chronic, low-grade inflammation, and measured immune mediator release with multiplex bead-based assays. RESULTS: Our data showed no statistically significant effects on the secretion of the cytokines interleukin (IL)-1beta, IL-6, IL-10, IL-12, interferon-gamma and tumor necrosis factor-alpha as well as the chemokines IL-8 and monocyte chemoattractant protein (MCP)-1, either on PBMC from T2DM patients or on those from NGT controls. However, a trend towards a dose-dependent biphasic effect was observed for IL- 6, IL-10 and MCP-1 with reduced immune mediator levels at low and increased/unaltered levels at higher somatostatin or octreotide concentrations. These observations could not be explained by interference with cell viability or proliferation. CONCLUSIONS: We could not confirm immunomodulatory properties of somatostatin and octreotide on PBMC. Further analyses are necessary to explain the interaction between neuropeptides and the immune system.</abstract>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Exercise leukocyte profiles in healthy, type 1 diabetic, overweight, and asthmatic children</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Rosa</namePart>
+      <namePart type="given">Jaime S</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Schwindt</namePart>
+      <namePart type="given">Christina D</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Oliver</namePart>
+      <namePart type="given">Stacy R</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Leu</namePart>
+      <namePart type="given">Szu-Yun</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Flores</namePart>
+      <namePart type="given">Rebecca L</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Galassetti</namePart>
+      <namePart type="given">Pietro R</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>21</number>
+        </detail>
+        <detail type="issue">
+          <number>1</number>
+        </detail>
+        <extent unit="pages">
+          <start>19</start>
+          <end>33</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Feb 2009</dateIssued>
+        <dateCaptured>2009-05-06 15:50:06</dateCaptured>
+      </originInfo>
+      <identifier type="issn">0899-8493</identifier>
+      <titleInfo>
+        <title>Pediatric Exercise Science</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Pediatr Exerc Sci</title>
+      </titleInfo>
+    </relatedItem>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19411708</url>
+    </location>
+    <abstract>Leukocytosis contributes to exercise-induced immune modulation, which is a mechanism of cardiovascular protection. However, this process is poorly defined in children. We therefore measured leukocytes in 45 healthy, 18 overweight, 16 type 1 diabetic, and 8 asthmatic children at pre, end-, and 30-min postexercise (30-min intermittent or 6-min continuous). In all groups, total leukocytes, neutrophils, lymphocytes, and monocytes increased at end-exercise, but returned to baseline by 30-min postexercise, including neutrophils, previously reported to remain elevated for at least some exercise formats. This highly preserved pattern indicates the importance of the adaptive response to physical stress across multiple health conditions.</abstract>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>F-box protein FBXO31 mediates cyclin D1 degradation to induce G1 arrest after DNA damage</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Santra</namePart>
+      <namePart type="given">Manas K</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Wajapeyee</namePart>
+      <namePart type="given">Narendra</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Green</namePart>
+      <namePart type="given">Michael R</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <originInfo>
+        <dateIssued>May 3, 2009</dateIssued>
+        <dateCaptured>2009-05-06 15:55:23</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1476-4687</identifier>
+      <titleInfo>
+        <title>Nature</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Nature</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1038/nature08011</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19412162</url>
+    </location>
+    <abstract>In response to DNA damage, eukaryotic cells initiate a complex signalling pathway, termed the DNA damage response (DDR), which coordinates cell cycle arrest with DNA repair. Studies have shown that oncogene-induced senescence, which provides a barrier to tumour development, involves activation of the DDR. Using a genome-wide RNA interference (RNAi) screen, we have identified 17 factors required for oncogenic BRAF to induce senescence in primary fibroblasts and melanocytes. One of these factors is an F-box protein, FBXO31, a candidate tumour suppressor encoded in 16q24.3, a region in which there is loss of heterozygosity in breast, ovarian, hepatocellular and prostate cancers. Here we study the cellular role of FBXO31, identify its target substrate and determine the basis for its growth inhibitory activity. We show that ectopic expression of FBXO31 acts through a proteasome-directed pathway to mediate the degradation of cyclin D1, an important regulator of progression from G1 to S phase, resulting in arrest in G1. Cyclin D1 degradation results from a direct interaction with FBXO31 and is dependent on the F-box motif of FBXO31 and phosphorylation of cyclin D1 at Thr 286, which is known to be required for cyclin D1 proteolysis. The involvement of the DDR in oncogene-induced senescence prompted us to investigate the role of FBXO31 in DNA repair. We find that DNA damage induced by gamma-irradiation results in increased FBXO31 levels, which requires phosphorylation of FBXO31 by the DDR-initiating kinase ATM. RNAi-mediated knockdown of FBXO31 prevents cells from undergoing efficient arrest in G1 after gamma-irradiation and markedly increases sensitivity to DNA damage. Finally, we show that a variety of DNA damaging agents all result in a large increase in FBXO31 levels, indicating that induction of FBXO31 is a general response to genotoxic stress. Our results reveal FBXO31 as a regulator of the G1/S transition that is specifically required for DNA damage-induced growth arrest.</abstract>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Mediator Assessment, Documentation, and Disposition of Child Custody Cases Involving Intimate Partner Abuse: A Naturalistic Evaluation of One County's Practices</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Beck</namePart>
+      <namePart type="given">Connie</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Walsh</namePart>
+      <namePart type="given">Michele</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Mechanic</namePart>
+      <namePart type="given">Mindy</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Taylor</namePart>
+      <namePart type="given">Caitilin</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <originInfo>
+        <dateIssued>May 2, 2009</dateIssued>
+        <dateCaptured>2009-05-06 15:51:09</dateCaptured>
+      </originInfo>
+      <titleInfo>
+        <title>Law and Human Behavior</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Law Hum Behav</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1007/s10979-009-9181-0</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19412662</url>
+    </location>
+    <abstract>The contentious and costly nature of the adversarial process for resolving child custody disputes has prompted scholars, practitioners, and policy makers to advocate for the development and implementation of less divisive forms of dispute resolution, notably, mediation. Mediation has been championed for its potential to resolve disputes with less acrimony among disputants, reduced economic costs, increased satisfaction with outcomes, and fewer adverse consequences for family members. Despite the increasing popularity, arguments have cautioned against the use of mandated mediation when intimate partner abuse (IPA) is alleged. This research documents a mediation screening process and models mediators' decision-making process as instantiated, naturally, in one jurisdiction.</abstract>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>NcDNAlign: plausible multiple alignments of non-protein-coding genomic sequences</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Rose</namePart>
+      <namePart type="given">Dominic</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hertel</namePart>
+      <namePart type="given">Jana</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Reiche</namePart>
+      <namePart type="given">Kristin</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Stadler</namePart>
+      <namePart type="given">Peter F</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hackermüller</namePart>
+      <namePart type="given">Jörg</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>92</number>
+        </detail>
+        <detail type="issue">
+          <number>1</number>
+        </detail>
+        <extent unit="pages">
+          <start>65</start>
+          <end>74</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Jul 2008</dateIssued>
+        <dateCaptured>2009-05-06 17:06:48</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1089-8646</identifier>
+      <titleInfo>
+        <title>Genomics</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Genomics</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1016/j.ygeno.2008.04.003</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/18511233</url>
+    </location>
+    <abstract>Genome-wide multiple sequence alignments (MSAs) are a necessary prerequisite for an increasingly diverse collection of comparative genomic approaches. Here we present a versatile method that generates high-quality MSAs for non-protein-coding sequences. The NcDNAlign pipeline combines pairwise BLAST alignments to create initial MSAs, which are then locally improved and trimmed. The program is optimized for speed and hence is particulary well-suited to pilot studies. We demonstrate the practical use of NcDNAlign in three case studies: the search for ncRNAs in gammaproteobacteria and the analysis of conserved noncoding DNA in nematodes and teleost fish, in the latter case focusing on the fate of duplicated ultra-conserved regions. Compared to the currently widely used genome-wide alignment program TBA, our program results in a 20- to 30-fold reduction of CPU time necessary to generate gammaproteobacterial alignments. A showcase application of bacterial ncRNA prediction based on alignments of both algorithms results in similar sensitivity, false discovery rates, and up to 100 putatively novel ncRNA structures. Similar findings hold for our application of NcDNAlign to the identification of ultra-conserved regions in nematodes and teleosts. Both approaches yield conserved sequences of unknown function, result in novel evolutionary insights into conservation patterns among these genomes, and manifest the benefits of an efficient and reliable genome-wide alignment package. The software is available under the GNU Public License at http://www.bioinf.uni-leipzig.de/Software/NcDNAlign/.</abstract>
+    <subject>
+      <topic>Animals</topic>
+    </subject>
+    <subject>
+      <topic>Base Sequence</topic>
+    </subject>
+    <subject>
+      <topic>Conserved Sequence</topic>
+    </subject>
+    <subject>
+      <topic>Fishes</topic>
+    </subject>
+    <subject>
+      <topic>Genome</topic>
+    </subject>
+    <subject>
+      <topic>Molecular Sequence Data</topic>
+    </subject>
+    <subject>
+      <topic>Nematoda</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Bacterial</topic>
+    </subject>
+    <subject>
+      <topic>Sensitivity and Specificity</topic>
+    </subject>
+    <subject>
+      <topic>Sequence Alignment</topic>
+    </subject>
+    <subject>
+      <topic>Sequence Analysis, DNA</topic>
+    </subject>
+    <subject>
+      <topic>Sequence Analysis, RNA</topic>
+    </subject>
+    <subject>
+      <topic>Software</topic>
+    </subject>
+    <subject>
+      <topic>Untranslated Regions</topic>
+    </subject>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Non-coding RNA annotation of the genome of Trichoplax adhaerens</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Hertel</namePart>
+      <namePart type="given">Jana</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">de Jong</namePart>
+      <namePart type="given">Danielle</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Marz</namePart>
+      <namePart type="given">Manja</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Rose</namePart>
+      <namePart type="given">Dominic</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Tafer</namePart>
+      <namePart type="given">Hakim</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Tanzer</namePart>
+      <namePart type="given">Andrea</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Schierwater</namePart>
+      <namePart type="given">Bernd</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Stadler</namePart>
+      <namePart type="given">Peter F</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>37</number>
+        </detail>
+        <detail type="issue">
+          <number>5</number>
+        </detail>
+        <extent unit="pages">
+          <start>1602</start>
+          <end>1615</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Apr 2009</dateIssued>
+        <dateCaptured>2009-05-06 17:06:34</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1362-4962</identifier>
+      <titleInfo>
+        <title>Nucleic Acids Research</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Nucleic Acids Res</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1093/nar/gkn1084</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19151082</url>
+    </location>
+    <abstract>A detailed annotation of non-protein coding RNAs is typically missing in initial releases of newly sequenced genomes. Here we report on a comprehensive ncRNA annotation of the genome of Trichoplax adhaerens, the presumably most basal metazoan whose genome has been published to-date. Since blast identified only a small fraction of the best-conserved ncRNAs--in particular rRNAs, tRNAs and some snRNAs--we developed a semi-global dynamic programming tool, GotohScan, to increase the sensitivity of the homology search. It successfully identified the full complement of major and minor spliceosomal snRNAs, the genes for RNase P and MRP RNAs, the SRP RNA, as well as several small nucleolar RNAs. We did not find any microRNA candidates homologous to known eumetazoan sequences. Interestingly, most ncRNAs, including the pol-III transcripts, appear as single-copy genes or with very small copy numbers in the Trichoplax genome.</abstract>
+    <subject>
+      <topic>Animals</topic>
+    </subject>
+    <subject>
+      <topic>Base Sequence</topic>
+    </subject>
+    <subject>
+      <topic>Endoribonucleases</topic>
+    </subject>
+    <subject>
+      <topic>Genome</topic>
+    </subject>
+    <subject>
+      <topic>MicroRNAs</topic>
+    </subject>
+    <subject>
+      <topic>Molecular Sequence Data</topic>
+    </subject>
+    <subject>
+      <topic>Nucleic Acid Conformation</topic>
+    </subject>
+    <subject>
+      <topic>Placozoa</topic>
+    </subject>
+    <subject>
+      <topic>Ribonuclease P</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Ribosomal</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Small Cytoplasmic</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Small Nuclear</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Small Nucleolar</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Transfer</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Untranslated</topic>
+    </subject>
+    <subject>
+      <topic>Signal Recognition Particle</topic>
+    </subject>
+    <subject>
+      <topic>Software</topic>
+    </subject>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Non-coding RNAs in Ciona intestinalis</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Missal</namePart>
+      <namePart type="given">Kristin</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Rose</namePart>
+      <namePart type="given">Dominic</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Stadler</namePart>
+      <namePart type="given">Peter F</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <text>21 Suppl 2</text>
+        </detail>
+        <extent unit="pages">
+          <start>ii77-78</start>
+          <end>ii77-78</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Sep 1, 2005</dateIssued>
+        <dateCaptured>2009-05-06 17:08:09</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1460-2059</identifier>
+      <titleInfo>
+        <title>Bioinformatics (Oxford, England)</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Bioinformatics</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1093/bioinformatics/bti1113</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/16204130</url>
+    </location>
+    <abstract>MOTIVATION: The analysis of animal genomes showed that only a minute part of their DNA codes for proteins. Recent experimental results agree, however, that a large fraction of these genomes are transcribed and hence are probably functional at the RNA level. A computational survey of vertebrate genomes has predicted thousands of previously unknown ncRNAs with evolutionarily conserved secondary structures. Extending these comparative studies beyond vertebrates is difficult, however, since most ncRNAs evolve quickly at the sequence level while conserving their characteristic secondarystructures. RESULTS: We report on a computational screen of structured ncRNAs in the urochordate lineage based on a comparison of the genomic data from Ciona intestinalis, Ciona savignyi and Oikopleura dioica. We predict &gt;1000 ncRNAs with an evolutionarily conserved RNA secondary structure. Of these, about a quarter are located in introns of known protein coding sequences. A few RNA motifs can be identified as known RNAs, including approximately 300 tRNAs, some 100 snRNA genes and a few microRNAs and snoRNAs. AVAILABILITY: www.bioinf.uni-leipzig.de/Publications/SUPPLEMENTS/05-008/</abstract>
+    <subject>
+      <topic>Animals</topic>
+    </subject>
+    <subject>
+      <topic>Base Sequence</topic>
+    </subject>
+    <subject>
+      <topic>Chromosome Mapping</topic>
+    </subject>
+    <subject>
+      <topic>Ciona intestinalis</topic>
+    </subject>
+    <subject>
+      <topic>Conserved Sequence</topic>
+    </subject>
+    <subject>
+      <topic>Evolution, Molecular</topic>
+    </subject>
+    <subject>
+      <topic>Genetic Variation</topic>
+    </subject>
+    <subject>
+      <topic>Molecular Sequence Data</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Untranslated</topic>
+    </subject>
+    <subject>
+      <topic>Sequence Analysis, DNA</topic>
+    </subject>
+    <subject>
+      <topic>Sequence Homology, Nucleic Acid</topic>
+    </subject>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Orally delivered siRNA targeting macrophage Map4k4 suppresses systemic inflammation</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Aouadi</namePart>
+      <namePart type="given">Myriam</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Tesz</namePart>
+      <namePart type="given">Gregory J</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Nicoloro</namePart>
+      <namePart type="given">Sarah M</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Wang</namePart>
+      <namePart type="given">Mengxi</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Chouinard</namePart>
+      <namePart type="given">My</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Soto</namePart>
+      <namePart type="given">Ernesto</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Ostroff</namePart>
+      <namePart type="given">Gary R</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Czech</namePart>
+      <namePart type="given">Michael P</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>458</number>
+        </detail>
+        <detail type="issue">
+          <number>7242</number>
+        </detail>
+        <extent unit="pages">
+          <start>1180</start>
+          <end>1184</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Apr 30, 2009</dateIssued>
+        <dateCaptured>2009-05-03 15:46:15</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1476-4687</identifier>
+      <titleInfo>
+        <title>Nature</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Nature</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1038/nature07774</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19407801</url>
+    </location>
+    <abstract>Gene silencing by double-stranded RNA, denoted RNA interference, represents a new paradigm for rational drug design. However, the transformative therapeutic potential of short interfering RNA (siRNA) has been stymied by a key obstacle-safe delivery to specified target cells in vivo. Macrophages are particularly attractive targets for RNA interference therapy because they promote pathogenic inflammatory responses in diseases such as rheumatoid arthritis, atherosclerosis, inflammatory bowel disease and diabetes. Here we report the engineering of beta1,3-d-glucan-encapsulated siRNA particles (GeRPs) as efficient oral delivery vehicles that potently silence genes in mouse macrophages in vitro and in vivo. Oral gavage of mice with GeRPs containing as little as 20 microg kg(-1) siRNA directed against tumour necrosis factor alpha (Tnf-alpha) depleted its messenger RNA in macrophages recovered from the peritoneum, spleen, liver and lung, and lowered serum Tnf-alpha levels. Screening with GeRPs for inflammation genes revealed that the mitogen-activated protein kinase kinase kinase kinase 4 (Map4k4) is a previously unknown mediator of cytokine expression. Importantly, silencing Map4k4 in macrophages in vivo protected mice from lipopolysaccharide-induced lethality by inhibiting Tnf-alpha and interleukin-1beta production. This technology defines a new strategy for oral delivery of siRNA to attenuate inflammatory responses in human disease.</abstract>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Prediction of structured non-coding RNAs in the genomes of the nematodes Caenorhabditis elegans and Caenorhabditis briggsae</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Missal</namePart>
+      <namePart type="given">Kristin</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Zhu</namePart>
+      <namePart type="given">Xiaopeng</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Rose</namePart>
+      <namePart type="given">Dominic</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Deng</namePart>
+      <namePart type="given">Wei</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Skogerbø</namePart>
+      <namePart type="given">Geir</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Chen</namePart>
+      <namePart type="given">Runsheng</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Stadler</namePart>
+      <namePart type="given">Peter F</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>306</number>
+        </detail>
+        <detail type="issue">
+          <number>4</number>
+        </detail>
+        <extent unit="pages">
+          <start>379</start>
+          <end>392</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Jul 15, 2006</dateIssued>
+        <dateCaptured>2009-05-06 17:08:02</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1552-5007</identifier>
+      <titleInfo>
+        <title>Journal of Experimental Zoology. Part B. Molecular and Developmental Evolution</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>J. Exp. Zool. B Mol. Dev. Evol</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1002/jez.b.21086</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/16425273</url>
+    </location>
+    <abstract>We present a survey for non-coding RNAs and other structured RNA motifs in the genomes of Caenorhabditis elegans and Caenorhabditis briggsae using the RNAz program. This approach explicitly evaluates comparative sequence information to detect stabilizing selection acting on RNA secondary structure. We detect 3,672 structured RNA motifs, of which only 678 are known non-translated RNAs (ncRNAs) or clear homologs of known C. elegans ncRNAs. Most of these signals are located in introns or at a distance from known protein-coding genes. With an estimated false positive rate of about 50% and a sensitivity on the order of 50%, we estimate that the nematode genomes contain between 3,000 and 4,000 RNAs with evolutionary conserved secondary structures. Only a small fraction of these belongs to the known RNA classes, including tRNAs, snoRNAs, snRNAs, or microRNAs. A relatively small class of ncRNA candidates is associated with previously observed RNA-specific upstream elements.</abstract>
+    <subject>
+      <topic>Animals</topic>
+    </subject>
+    <subject>
+      <topic>Caenorhabditis</topic>
+    </subject>
+    <subject>
+      <topic>Caenorhabditis elegans</topic>
+    </subject>
+    <subject>
+      <topic>Genome, Helminth</topic>
+    </subject>
+    <subject>
+      <topic>Introns</topic>
+    </subject>
+    <subject>
+      <topic>MicroRNAs</topic>
+    </subject>
+    <subject>
+      <topic>Nucleic Acid Conformation</topic>
+    </subject>
+    <subject>
+      <topic>Promoter Regions, Genetic</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Helminth</topic>
+    </subject>
+    <subject>
+      <topic>RNA, Untranslated</topic>
+    </subject>
+    <subject>
+      <topic>Sensitivity and Specificity</topic>
+    </subject>
+    <subject>
+      <topic>Sequence Alignment</topic>
+    </subject>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>RNAs everywhere: genome-wide annotation of structured RNAs</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Backofen</namePart>
+      <namePart type="given">Rolf</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Bernhart</namePart>
+      <namePart type="given">Stephan H</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Flamm</namePart>
+      <namePart type="given">Christoph</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Fried</namePart>
+      <namePart type="given">Claudia</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Fritzsch</namePart>
+      <namePart type="given">Guido</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hackermüller</namePart>
+      <namePart type="given">Jörg</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hertel</namePart>
+      <namePart type="given">Jana</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Hofacker</namePart>
+      <namePart type="given">Ivo L</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Missal</namePart>
+      <namePart type="given">Kristin</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Mosig</namePart>
+      <namePart type="given">Axel</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Prohaska</namePart>
+      <namePart type="given">Sonja J</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Rose</namePart>
+      <namePart type="given">Dominic</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Stadler</namePart>
+      <namePart type="given">Peter F</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Tanzer</namePart>
+      <namePart type="given">Andrea</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Washietl</namePart>
+      <namePart type="given">Stefan</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Will</namePart>
+      <namePart type="given">Sebastian</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>308</number>
+        </detail>
+        <detail type="issue">
+          <number>1</number>
+        </detail>
+        <extent unit="pages">
+          <start>1</start>
+          <end>25</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Jan 15, 2007</dateIssued>
+        <dateCaptured>2009-05-06 17:07:55</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1552-5007</identifier>
+      <titleInfo>
+        <title>Journal of Experimental Zoology. Part B. Molecular and Developmental Evolution</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>J. Exp. Zool. B Mol. Dev. Evol</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1002/jez.b.21130</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/17171697</url>
+    </location>
+    <abstract>Starting with the discovery of microRNAs and the advent of genome-wide transcriptomics, non-protein-coding transcripts have moved from a fringe topic to a central field research in molecular biology. In this contribution we review the state of the art of "computational RNomics", i.e., the bioinformatics approaches to genome-wide RNA annotation. Instead of rehashing results from recently published surveys in detail, we focus here on the open problem in the field, namely (functional) annotation of the plethora of putative RNAs. A series of exploratory studies are used to provide non-trivial examples for the discussion of some of the difficulties.</abstract>
+    <subject>
+      <topic>Computational Biology</topic>
+    </subject>
+    <subject>
+      <topic>Evolution</topic>
+    </subject>
+    <subject>
+      <topic>Genome</topic>
+    </subject>
+    <subject>
+      <topic>RNA</topic>
+    </subject>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>RNA translocation and unwinding mechanism of HCV NS3 helicase and its coordination by ATP</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Dumont</namePart>
+      <namePart type="given">Sophie</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Cheng</namePart>
+      <namePart type="given">Wei</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Serebrov</namePart>
+      <namePart type="given">Victor</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Beran</namePart>
+      <namePart type="given">Rudolf K</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Tinoco</namePart>
+      <namePart type="given">Ignacio</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Pyle</namePart>
+      <namePart type="given">Anna Marie</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Bustamante</namePart>
+      <namePart type="given">Carlos</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>439</number>
+        </detail>
+        <detail type="issue">
+          <number>7072</number>
+        </detail>
+        <extent unit="pages">
+          <start>105</start>
+          <end>108</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Jan 5, 2006</dateIssued>
+        <dateCaptured>2009-05-03 15:50:20</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1476-4687</identifier>
+      <titleInfo>
+        <title>Nature</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Nature</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1038/nature04331</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/16397502</url>
+    </location>
+    <abstract>Helicases are a ubiquitous class of enzymes involved in nearly all aspects of DNA and RNA metabolism. Despite recent progress in understanding their mechanism of action, limited resolution has left inaccessible the detailed mechanisms by which these enzymes couple the rearrangement of nucleic acid structures to the binding and hydrolysis of ATP. Observing individual mechanistic cycles of these motor proteins is central to understanding their cellular functions. Here we follow in real time, at a resolution of two base pairs and 20 ms, the RNA translocation and unwinding cycles of a hepatitis C virus helicase (NS3) monomer. NS3 is a representative superfamily-2 helicase essential for viral replication, and therefore a potentially important drug target. We show that the cyclic movement of NS3 is coordinated by ATP in discrete steps of 11 +/- 3 base pairs, and that actual unwinding occurs in rapid smaller substeps of 3.6 +/- 1.3 base pairs, also triggered by ATP binding, indicating that NS3 might move like an inchworm. This ATP-coupling mechanism is likely to be applicable to other non-hexameric helicases involved in many essential cellular functions. The assay developed here should be useful in investigating a broad range of nucleic acid translocation motors.</abstract>
+    <subject>
+      <topic>Adenosine Triphosphate</topic>
+    </subject>
+    <subject>
+      <topic>Hepacivirus</topic>
+    </subject>
+    <subject>
+      <topic>Models, Biological</topic>
+    </subject>
+    <subject>
+      <topic>RNA</topic>
+    </subject>
+    <subject>
+      <topic>RNA Helicases</topic>
+    </subject>
+    <subject>
+      <topic>RNA Transport</topic>
+    </subject>
+    <subject>
+      <topic>Viral Nonstructural Proteins</topic>
+    </subject>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Sum-frequency generation of cw ultraviolet radiation in periodically poled LiTaO(3)</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Ricciardi</namePart>
+      <namePart type="given">I</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">De Rosa</namePart>
+      <namePart type="given">M</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Rocco</namePart>
+      <namePart type="given">A</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Ferraro</namePart>
+      <namePart type="given">P</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Vannucci</namePart>
+      <namePart type="given">A</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">Spano</namePart>
+      <namePart type="given">P</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <name type="personal">
+      <namePart type="family">De Natale</namePart>
+      <namePart type="given">P</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>34</number>
+        </detail>
+        <detail type="issue">
+          <number>9</number>
+        </detail>
+        <extent unit="pages">
+          <start>1348</start>
+          <end>1350</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>May 1, 2009</dateIssued>
+        <dateCaptured>2009-05-06 15:49:57</dateCaptured>
+      </originInfo>
+      <identifier type="issn">0146-9592</identifier>
+      <titleInfo>
+        <title>Optics Letters</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Opt Lett</title>
+      </titleInfo>
+    </relatedItem>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19412268</url>
+    </location>
+    <abstract>We present cw sum-frequency generation of UV radiation at 355 nm based on a high-power laser at 1064 nm and a two-stage quasi-phase-matching nonlinear interaction in periodically poled LiTaO(3) crystals. In a first stage, second harmonic at 532 nm is generated. Then, the outcoming IR and green light interact in a second nonlinear crystal to generate about 7 mW of ultraviolet radiation at the sum frequency.</abstract>
+  </mods>
+  <mods>
+    <titleInfo>
+      <title>Transcriptomics: The digital generation</title>
+    </titleInfo>
+    <typeOfResource>text</typeOfResource>
+    <genre authority="local">journalArticle</genre>
+    <genre authority="marcgt">periodical</genre>
+    <name type="personal">
+      <namePart type="family">Blow</namePart>
+      <namePart type="given">Nathan</namePart>
+      <role>
+        <roleTerm type="code" authority="marcrelator">aut</roleTerm>
+      </role>
+    </name>
+    <relatedItem type="host">
+      <part>
+        <detail type="volume">
+          <number>458</number>
+        </detail>
+        <detail type="issue">
+          <number>7235</number>
+        </detail>
+        <extent unit="pages">
+          <start>239</start>
+          <end>242</end>
+        </extent>
+      </part>
+      <originInfo>
+        <dateIssued>Mar 12, 2009</dateIssued>
+        <dateCaptured>2009-05-03 15:48:06</dateCaptured>
+      </originInfo>
+      <identifier type="issn">1476-4687</identifier>
+      <titleInfo>
+        <title>Nature</title>
+      </titleInfo>
+      <titleInfo type="abbreviated">
+        <title>Nature</title>
+      </titleInfo>
+    </relatedItem>
+    <identifier type="doi">10.1038/458239a</identifier>
+    <location>
+      <url>http://www.ncbi.nlm.nih.gov/pubmed/19279641</url>
+    </location>
+    <subject>
+      <topic>Gene Expression Profiling</topic>
+    </subject>
+    <subject>
+      <topic>Oligonucleotide Array Sequence Analysis</topic>
+    </subject>
+    <subject>
+      <topic>Sequence Analysis, RNA</topic>
+    </subject>
+  </mods>
+</modsCollection>

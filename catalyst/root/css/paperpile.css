@@ -1,5 +1,4 @@
-.add .x-btn-text {
-    background-image: url('/images/icons/add.png');
+.add .x-btn-text {    background-image: url('/images/icons/add.png');
 }
 
 .delete .x-btn-text {
@@ -341,6 +340,7 @@
 
 .pp-item-widget {
     margin: 5px;
+    width: 250px;
 }
 
 .pp-item {

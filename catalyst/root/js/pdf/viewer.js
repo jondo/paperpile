@@ -239,6 +239,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         scale = Math.round(scale*Math.pow(10,2))/Math.pow(10,2);
 
         var png="ajax/pdf/render/"+this.file+"/"+this.currentPage+"/"+scale;
+        
         this.bitmap.set({src:png});
 
         if (this.words[this.currentPage].length==0){
