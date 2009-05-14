@@ -37,19 +37,13 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     columnCount:3,
     onResize: function(){
         Paperpile.PDFviewer.superclass.onResize.apply(this, arguments);
-	for (var i=0; i < this.pageN;i++) {
-	    this.resizeImage(i);
-	    //var img = this.getPage(i);
-	    /*if (i % this.columnCount == 0) {
-		img.removeClass("pp-page-inline");
-		img.addClass("pp-page-clear");
-	    } else {
-		img.removeClass("pp-page-clear");
-		img.addClass("pp-page-inline");
-		}*/
-	};
-	// Update the css to reflect the zoom.
-	
+
+	var pages = Ext.select(".pp-page img");
+	var w = this.getImgWidth();
+	pages.set({width:w});
+	pages = Ext.select(".pp-page");
+	var pad = w/50;
+	pages.setStyle("padding",pad+"px 0");	
     },
 
     initPDF: function(file){
@@ -79,6 +73,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 		    var newDiv = new Ext.Element(document.createElement('div'));
 		    pdfContainer.appendChild(newDiv);
 		    newDiv.set({id:"page."+i});
+                    newDiv.addClass('pp-page');
 		    newDiv.addClass('pp-page-element');
 		    newDiv.addClass('pp-page-inline');
 
@@ -146,9 +141,9 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         var png="ajax/pdf/render/"+this.file+"/"+i+"/"+scale;
 	var src = img.dom.src;
 	if (src.indexOf(png) == -1) {
-	    console.log(png);
+	    //console.log(png);
 	    var newWidth = Math.floor(this.pageSizes[i].width * scale);
-	    console.log("Scale: "+scale+" orig width:"+width+" New width: "+newWidth);
+	    //console.log("Scale: "+scale+" orig width:"+width+" New width: "+newWidth);
 	    img.set({src:png});
 	    img.set({width:newWidth});
 	    //Ext.DomHelper.applyStyles(img.dom,"width:"+newWidth+"px");
@@ -157,6 +152,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     },
 
     onScroll: function(el) {
+
 	// Get the images currently in view, and update them accordingly.
 	this.visiblePages = [];
 	for (var i=0; i < this.pageN;i++) {
@@ -377,7 +373,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     mouseDownViewportTop:0,
     mouseDownViewportLeft:0,
     mouseDownDistToAnchorY:0,
-    
     mouseDownAnchor:null,
 
     onMouseOver: function(e) {
@@ -411,13 +406,15 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 	    var par = el.parent("div");
 	    par.appendChild(newDiv);
 	    newDiv.set({id:"anchor"});
-	    newDiv.setStyle("width","1px");
+	    newDiv.setStyle("width",el.getWidth()+"px");
+	    newDiv.setStyle("border","1px solid red");
 
 	    this.mouseDownAnchor = newDiv;
-	    this.mouseDownDistToAnchorY = y - this.mouseDownAnchor.getY();
+	    this.mouseDownDistToAnchorY = y - this.mouseDownAnchor.getTop();
 	    this.mouseDownViewportTop = y - (this.body.getTop());
-	    console.log(this.mouseDownViewportTop);
-	    
+
+	    this.mouseDownViewportLeft = x;
+	    this.mouseDownPageLeftPct = (x - el.getX()) / el.getWidth();
 	}
 
         if (this.mode == 'drag'){
@@ -470,23 +467,23 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 		    var dZoom = dY / 100;
 		    var zoomF = Math.pow(10,-dZoom);
 		    this.currentZoom = this.mouseDownZoom * zoomF;
+
+		    var newLeft = this.mouseDownPageLeftPct*this.mouseDownEl.getWidth();
+		    newLeft -= this.mouseDownViewportLeft;
+		    if (newLeft > 0)
+			this.body.scrollTo('left',newLeft);
+
 		    this.onResize();
-		    
+
 		    var newTop = Ext.Element.fly(this.mouseDownAnchor).getOffsetsTo(this.body)[1] + this.body.dom.scrollTop;
 		    var dY = this.mouseDownDistToAnchorY * zoomF;
 		    newTop -= this.mouseDownViewportTop;
 		    newTop += dY;
-		    //var newTop = this.mouseDownScrollF*this.body.getHeight()*zoomF;
-		    this.body.scrollTo('top',newTop);
-		 
-		    //console.log(newTop/this.body.getHeight()/zoomF);
-		    var el = this.mouseDownEl;
-		    var top = Ext.Element.fly(el).getOffsetsTo(this.body)[1] + this.body.dom.scrollTop;
-		    var h = el.getHeight(true);
-		    var dY = this.mouseDownPercentY * h;
-		    //this.body.scrollTo('top',top + dY - this.body.getHeight()/2);
-		    var dX = this.mouseDownPercentX * el.getWidth(true);
-		    //this.body.scrollTo('left',dX - this.body.getWidth()/2);
+		    if (this.body.dom.scrollTop == 0) {
+			this.body.scrollTo('top',newTop);
+		    } else {
+			this.body.scroll('top',this.body.dom.scrollTop-newTop);
+		    }
 		}
 	    }
 	}

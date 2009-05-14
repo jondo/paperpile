@@ -6,8 +6,6 @@
   <link rel="stylesheet" type="text/css" href="/css/paperpile.css">
   <link rel="stylesheet" type="text/css" href="/css/boxselect.css">
 
-  <script type="text/javascript" charset="utf-8" src="/js/misc/Tween.js"></script>
-
   <script type="text/javascript" charset="utf-8" src="/ext/adapter/ext/ext-base.js"></script>
   <script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
 
@@ -16,7 +14,6 @@
   <script type="text/javascript" charset="utf-8" src="/js/misc/file-chooser.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/misc/utils.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf/viewer2.js"></script>
-  <script type="text/javascript" charset="utf-8" src="/js/pdf/zoomer.js"></script>
 
   <link rel="stylesheet" type="text/css" href="/ext.ux/filetree/css/icons.css">
   <link rel="stylesheet" type="text/css" href="/ext.ux/filetree/css/webpage.css">

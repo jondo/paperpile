@@ -1,4 +1,5 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
+var Paperpile = {};
 Ext.ns('Paperpile');
 
 Ext.onReady(function() {
@@ -7,13 +8,13 @@ Ext.onReady(function() {
         layout: 'border',
         defaults: {
             collapsible: true,
-            split: true,
+            split: true
         },
         items: [
             new Ext.Panel({
                 region:'west',
                 split: true,
-                width: 30,
+                width: 30
             }),
             new Ext.Panel({
                 region:'north',
@@ -24,7 +25,7 @@ Ext.onReady(function() {
                     defaultText: 'Default status text',
                     defaultIconCls: 'default-icon',
                     text: 'Ready',
-                    iconCls: 'ready-icon',
+                    iconCls: 'ready-icon'
                 }),
             }),
             
@@ -37,7 +38,7 @@ Ext.onReady(function() {
 
             new Ext.Panel({
                 region:'east',
-                width: 30,
+                width: 30
             }),
      ]
     });
@@ -49,10 +50,10 @@ Ext.onReady(function() {
         //currentRoot:'ROOT',
         showFilter: true,
         filterOptions:[{text: 'PDF documents (.pdf)',
-                        suffix: ['pdf'],
+                        suffix: ['pdf']
                        },
                        {text: 'All files',
-                        suffix:['ALL'],
+                        suffix:['ALL']
                        },
                       ],
         //saveMode: true,

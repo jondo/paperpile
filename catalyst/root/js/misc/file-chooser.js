@@ -60,8 +60,8 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                       {xtype: 'textfield',
                        itemId: 'textfield',
                        fieldLabel: label,
-                       width: 400,
-                      },
+                       width: 400
+                      }
                   ],
                 },
                 { xtype: 'panel',
@@ -75,8 +75,8 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                            tag:'div',
                            html:'<ul class="pp-filechooser-path"><li>inhere</li></ul>'
                        },
-                       width:400,
-                      },
+                       width:400
+                      }
                   ],
                   items:[{xtype:'panel', itemId:'filetree', id:'DUMMY'}],
                 }
@@ -99,7 +99,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                  this.currentFilter=index;
                                  this.showDir(this.currentRoot);
                              },
-                             scope:this,
+                             scope:this
                          }
                      },
                     },
@@ -243,7 +243,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
             lines:false,
             rootVisible:false,
             filter:filter,
-            url:'/ajax/files/dialogue',
+            url:'/ajax/files/dialogue'
 	    });
 
         cp.add(treepanel);
@@ -266,7 +266,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
             var li = dh.append(ul,{tag:'li', cls:'pp-filechooser-dir', children:[{tag:'a', 
                                                                                   href:'#',
-                                                                                  html:html,
+                                                                                  html:html
                                                                                  }]});
             
             var link=path.slice(0,i+1).join('/');
