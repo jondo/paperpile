@@ -292,6 +292,24 @@
     */
 }
 
+.pp-page-element {
+    /*padding: 20px 0;*/
+}
+
+.pp-page-img {
+    /*margin: 0 20px;*/
+    border: 1px solid black;
+}
+
+.pp-page-inline {
+    display:block;
+}
+
+.pp-page-clear {
+    display:inline-block;
+    clear:both;
+}
+
 .pp-pdf-selector {
     background-color:#6495ED;
     border-width: 2px;

@@ -13,11 +13,11 @@ Ext.onReady(function() {
             new Ext.Panel({
                 region:'west',
                 split: true,
-                width: 200,
+                width: 30,
             }),
             new Ext.Panel({
                 region:'north',
-                height: 100,
+                height: 10,
                 bbar: new Ext.StatusBar({
                     border:0,
                     id: 'statusbar',
@@ -37,7 +37,7 @@ Ext.onReady(function() {
 
             new Ext.Panel({
                 region:'east',
-                width: 200,
+                width: 30,
             }),
      ]
     });
@@ -67,7 +67,11 @@ Ext.onReady(function() {
         }
     });
 
-    win.show();
-
+    //win.show();
+    var viewer = Ext.getCmp('pdf_viewer');
+    //var path = '/home/greg/wattenberg_03_conversation.pdf';
+    //var path = '/home/greg/jordan_08_phylowidget.pdf';
+    var path = '/home/greg/kosiol_08_patterns.pdf';
+    viewer.initPDF(path);
 
 })
