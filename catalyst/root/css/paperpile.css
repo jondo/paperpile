@@ -35,11 +35,10 @@
 
 .pp-summary-abstract {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    width: 75%;
-    line-height: 1.25em;
-    /*text-align: justify;*/
-    float:right;
-    padding: 5px 5px 5px 5px;
+    width: 90%;
+    line-height: 1.4em;
+    
+    padding: 10px 5px 5px 10px;
  }
 
 .pp-summary-form {
@@ -352,3 +351,146 @@
     float: left;
 }
 
+.pp-box {
+    max-width: 300px;
+    margin: 8;
+}
+
+.pp-box-gray{
+    background-color:#F0F0F0;
+    border:1px solid #D8D8D8;
+}
+
+.pp-box-yellow{
+    background-color:#FFFEEB;
+    border:1px solid #F7CA75;
+}
+
+.pp-box p {
+    margin: 8;
+}
+
+.pp-box h2 {
+    margin: 8;
+    font:normal 18px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    color: #333333;
+    font-weight: normal;
+    color: #4183C4;
+}
+
+dl {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    margin: 8;
+}
+
+dt {
+    float: left;
+    clear: left;
+    color: #4183C4;
+    width: 90px; 
+    text-align: right; 
+}
+
+dd { 
+    margin: 0 0 0 90px; 
+    padding: 0 0 5 5;
+}
+
+.pp-action-add, .pp-action-delete, .pp-action-go{
+    padding: 2 2 2 22;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
+.pp-action-add {
+    background: transparent url('/images/icons/add.png') no-repeat;
+}
+
+.pp-action-delete {
+    background: transparent url('/images/icons/delete.png') no-repeat;
+}
+
+.pp-action-go {
+    background: transparent url('/images/icons/application_go.png') no-repeat;
+}
+
+
+.pp-tag-style-default {
+    background-color:#EDEDED;
+    border-color:#BDBDBD;
+    border-style:solid;
+    color:black;
+}
+
+.pp-tag-container {
+
+}
+
+.pp-tag-control{
+    clear:both;
+}
+
+.pp-tag-add-link{
+    float:left;
+}
+
+
+.pp-tag-box {
+    border-style:solid;
+    border-width: 1px 0;
+    font-family: Verdana;
+    font-size: 9px;
+    font-weight:normal;
+    margin: 0 0.8em 0 1px;
+    overflow:visible;
+    display:block;
+    float:left;
+    margin: 0 6 6 0;
+}
+
+.pp-tag-name {
+    overflow:hidden;
+    display:inline;
+    padding: 0 2px;
+    border-width: 0 0 0 1px;
+    margin: 0 0 0 -1px;
+    cursor: default;
+}
+
+.pp-tag-remove{
+    border-width:0 1px;
+    margin: 0 2px 0 4px;
+    display:inline;
+    padding: 0 2px;
+    margin: 0 -1px 0 0;
+    cursor: default;
+}
+
+div:hover.pp-tag-remove{
+    border-width:0 1px;
+    margin: 0 2px 0 4px;
+    display:inline;
+    padding: 0 2px;
+    margin: 0 -1px 0 0;
+    background: transparent url('/images/black.png');
+    opacity: 0.2;
+    color:white;
+}
+
+.pp-button-control{
+    float: left;
+    padding: 5px 10px 0 0
+}
+
+.pp-textlink-control{
+    margin: 5px;
+    padding: 5px;
+}
+
+.pp-textlink-control a{
+    text-decoration:none;
+    color: #0015FE;
+}
+
+.pp-textlink-control a:hover{
+    text-decoration:underline;
+}

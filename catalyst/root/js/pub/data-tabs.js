@@ -17,7 +17,7 @@ Paperpile.DataTabs = Ext.extend(Ext.Panel, {
                     height:200
                    }
                   ],
-            bbar: [{ text: 'Summary',
+            bbar: [{ text: 'Abstract',
                      itemId: 'summary_tab_button',
                      enableToggle: true,
                      toggleHandler: this.onItemToggle,

@@ -12,7 +12,8 @@ CREATE TABLE Authors (
 );
 
 CREATE TABLE Tags (
-  tag            TEXT UNIQUE
+  tag            TEXT UNIQUE,
+  style          TEXT
 );
 
 CREATE TABLE Tag_Publication (

@@ -90,3 +90,18 @@ dt {
     max-width: 300px;
     margin: 8;
 }
+
+dl {
+    margin: 8;
+}
+
+dt {
+    float: left;
+    clear: left;
+    color: #4183C4;
+    width: 75px; 
+    text-align: right; 
+}
+ dd { margin: 0 0 0 75px; 
+      padding: 0 0 5 5;
+    }

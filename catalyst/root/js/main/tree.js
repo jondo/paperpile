@@ -2,7 +2,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     initComponent: function() {
 		Ext.apply(this, {
-            //title: 'Paperpile Pre 2',
             enableDD:true,
             ddGroup: 'gridDD',
             animate: false,
@@ -24,7 +23,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 				cancelOnEsc:true,
 				completeOnEnter:true,
 				ignoreNoChange:true,
-				//selectOnFocus:this.selectOnEdit,
 			}) 
 		});
 
@@ -300,12 +298,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             break;
 
         case 'TAGS':
-            // Tags root currently has no entries to show
-            if (node.id != 'TAGS_ROOT'){
-                this.allowSelect=true;
-                node.select();
-                menu=new Paperpile.Tree.TagsMenu({node:node});
-            }
+            this.allowSelect=true;
+            node.select();
+            menu=new Paperpile.Tree.TagsMenu({node:node});
             break;
         }
         
@@ -477,7 +472,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 				}
             });
                                     
-			treeEditor.creatingNewDir = true;
 			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
 		}.createDelegate(this));
 
@@ -679,6 +673,86 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         return(path);
     },
 
+
+    newTag: function() {
+    
+        var node = this.getNodeById('TAGS_ROOT');
+		
+	    var treeEditor = this.treeEditor;
+	    var newNode;
+        
+		node.expand(false, false, function(n) {
+		    
+			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Tag', 
+                                                                 iconCls:'pp-icon-tag', 
+                                                                 draggable:true,
+                                                                 expanded:true,
+                                                                 children:[],
+                                                                 id: this.generateUID()
+                                                                })
+                                   );
+            newNode.init(
+                { type: 'TAGS', 
+                  plugin_name: 'DB',
+                  plugin_title: node.text,
+                  plugin_iconCls: 'pp-icon-tag',
+                  plugin_mode: 'FULLTEXT',
+                });
+
+            newNode.select();
+
+			treeEditor.on({
+				complete:{
+					scope:this,
+					single:true,
+					fn: function(){
+                        newNode.plugin_title=newNode.text;
+                        newNode.plugin_query='tags:'+newNode.text
+                        newNode.plugin_base_query='tags:'+newNode.text
+                        this.onNewTag(newNode);
+                    }
+				}
+            });
+                                    
+			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
+		}.createDelegate(this));
+
+    },
+
+
+    //
+    // Is called after a new folder has been created. Writes folder
+    // information to database and updates and saves tree
+    // representation to database.
+    //
+
+    onNewTag: function(node){
+
+        this.getSelectionModel().clearSelections();
+        this.allowSelect=false;
+
+        var pars={tag:node.text,
+                  style: 'default'
+                 };
+
+        Ext.Ajax.request({
+            url: '/ajax/crud/new_tag',
+            params: pars,
+            success: function(){
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Added new Tag');
+            },
+        });
+    },
+
+
+
+
+
+
+
+
+
     //
     // Delete the tag given by node globally
     // This code is extremely clumsy, we should consider some event-handler solution
@@ -872,9 +946,6 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
                 },
                 tree
                );
-
-
-       
     },
 
 });
@@ -1012,6 +1083,12 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
         var tree=Paperpile.main.tree;
 
         Ext.apply(config,{items:[
+            { id: 'tags_menu_new',
+              text:'New Tag',
+              handler: tree.newTag,
+              scope: tree
+            },
+
             { id: 'tags_menu_delete',
               text:'Delete',
               handler: function(){
@@ -1039,8 +1116,10 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
         this.on('beforeshow',
                 function(){
                     if (this.node.id == 'TAGS_ROOT'){
-                        return(false);
-                    }
+                        this.items.get('tags_menu_delete').hide();
+                        this.items.get('tags_menu_rename').hide();
+                        this.items.get('tags_menu_export').hide();
+                    } 
                 }, this
                );
 

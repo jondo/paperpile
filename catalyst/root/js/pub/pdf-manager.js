@@ -1,16 +1,37 @@
 Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 	  
     markup: [
-        '<ul class="pp-pdf-manager" id="markup-{id}">',
-        
-        '<tpl if="linkout">',
-        '<li id="linkout-{id}"><a href="{linkout}" target="_blank">Go to publisher site</a></li>',
-        '</tpl>',
 
-        '<tpl if="!linkout">',
-        '<li>No links available for this citation.</li>',
-        '</tpl>',
+        // Yellow box
+        '<div class="pp-box pp-box-yellow"',
         
+        '<dl>',
+        '<dt>Publication type: </dt><dd>{pubtype}</dd>',
+        '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
+        '<tpl if="pmid"><dt>PubMed ID: </dt><dd>{pmid}</dd></tpl>',
+        '<tpl if="_imported"><dt>Imported: </dt><dd>{created}</dd></tpl>',
+        '<dt>Tags: </dt><dd>',
+        '<div id="tag-container-{id}" class="pp-tag-container"></div>',
+        '<div id="tag-control-{id}" class="pp-tag-control"></div>',
+        '<div id="tag-add-link-{id}" ><a href="#">Add&nbsp;tag</a></div>',
+        '</dd>',
+        '</dl>',
+
+        '<tpl if="linkout">',
+        '<p><a href="{linkout}" target="_blank" class="pp-action-go">Go to publisher site</a></p>',
+        '</tpl>',
+        '<tpl if="!linkout">',
+        '<p class="pp-action-go">[No publisher link available]</p>',
+        '</tpl>',
+        '</div>',
+
+
+        // Gray box
+        '<div class="pp-box pp-box-gray"',
+
+        '<h2>PDF</h2>',
+        '<ul class="pp-pdf-manager" id="markup-{id}">',
+
         '<tpl if="pdf">',
         '<li id="open-pdf-{id}"><a href="/serve/{pdf}" target="_blank" action="open-pdf">Open PDF</a></li>',
         '<tpl if="_imported">',
@@ -19,7 +40,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<tpl if="!_imported">',
         '<li id="import-pdf-{id}"><a href="#" action="import-pdf">Import PDF into local library.</a></li>',
         '</tpl>',
-        
         '</tpl>',
 
         '<tpl if="!pdf">',
@@ -31,24 +51,26 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</tpl>',
         '</tpl>',
 
+        '<h2>Supplementary material</h2>',
         '<tpl if="_imported">',
         '<li id="attach-file-{id}"><a href="#" action="attach-file">Attach File</a></li>',
         '</tpl>',
-
         '<tpl if="attachments">',
         '<ul class="pp-attachments">',
         '<tpl for="attachments_list">',
         '<li><a href="{link}" target="_blank">{file}</a><a href="#" action="delete-file" rowid="{rowid}">Delete</a></li>',
         '</tpl>',
         '</ul>',
-        
         '</tpl>',
         '<li><div id="pbar"></div></li>',
         '</ul>',
+
+        '</div>',
+
 	  ],
 
 	startingMarkup: '',
-	  
+
     initComponent: function() {
 		this.tpl = new Ext.XTemplate(this.markup);
 		Ext.apply(this, {
@@ -71,7 +93,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     updateDetail: function(data) {
         this.data=data;
         this.data.id=this.id;
-                
+
         this.grid_id=this.ownerCt.ownerCt.items.get('center_panel').items.get(0).id;
 
         this.data.attachments_list=[];
@@ -101,6 +123,10 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     //
     
     installEvents: function(el){
+
+        this.renderTags();
+        this.renderTagControls();
+
         el.on('click', function(e, el, o){
             switch(el.getAttribute('action')){
 
@@ -149,6 +175,190 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         }, this, {delegate:'a'});
     },
 
+
+    renderTags: function(){
+
+        var container=Ext.get("tag-container-"+this.id);
+
+        container.setVisibilityMode(Ext.Element.DISPLAY);
+
+        if (this.data.tags==''){
+            container.hide();
+            return;
+        } 
+
+        container.show();
+
+        var tags=this.data.tags.split(/\s*,\s*/);
+
+        for (var i =0; i< tags.length; i++){
+
+            var el= { tag: 'div',
+                      cls: 'pp-tag-box pp-tag-style-default',
+                      children: [{tag: 'div',
+                                  cls: 'pp-tag-name pp-tag-style-default',
+                                  html: tags[i]
+                                 },
+                                 {tag: 'div',
+                                  cls: 'pp-tag-remove pp-tag-style-default',
+                                  html: 'x',
+                                  name: tags[i]
+                                 }
+                                ]
+                    };
+
+            if (i==0){
+                Ext.DomHelper.overwrite(container,el);
+            } else {
+                Ext.DomHelper.append(container,el);
+            }
+        }
+
+        container.on('click',
+                     function(e){
+                         var t=e.getTarget('div.pp-tag-remove');
+                         
+                         if (!t) return;
+
+                         this.onRemoveTag(t);
+                                                  
+                     }, this);
+
+
+    },
+
+    renderTagControls: function(){
+
+        Ext.get('tag-control-'+this.id).setVisibilityMode(Ext.Element.DISPLAY);
+        Ext.get('tag-control-'+this.id).hide();
+          
+        var combo = new Ext.form.ComboBox({
+            id: 'tag-control-combo-'+this.id,
+            store: Ext.StoreMgr.lookup('tag_store'),
+            displayField:'tag',
+            forceSelection: false,
+            triggerAction:'all',
+            mode:'local',
+            renderTo:'tag-control-'+this.id,
+            width: 120,
+            listWidth: 120,
+        });
+        
+        var button = new Ext.Button({
+            id: 'tag-control-ok-'+this.id,
+            text: 'OK',
+        });
+
+        button.render(Ext.DomHelper.append('tag-control-'+this.id,
+                                           {tag:'div',
+                                            cls:'pp-button-control',
+                                           }
+                                          ));
+
+        var cancel = new Ext.BoxComponent({
+            autoEl: {tag:'div', 
+                     cls:'pp-textlink-control',
+                     children:[{
+                         tag: 'a',
+                         id: 'tag-control-cancel-'+this.id,
+                         href:'#',
+                         html: 'Cancel'
+                     }],
+                    },
+        });
+
+        cancel.render('tag-control-'+this.id);
+
+        Ext.get('tag-control-cancel-'+this.id).on('click',
+                                                  function(){
+                                                      Ext.get('tag-add-link-'+this.id).show();
+                                                      Ext.get('tag-control-'+this.id).hide();
+                                                  }, this);
+
+        Ext.get('tag-control-ok-'+this.id).on('click',
+                                              function(){
+                                                  this.onAddTag(combo.getValue());
+                                                  combo.setValue('');
+                                                  Ext.get('tag-add-link-'+this.id).show();
+                                                  Ext.get('tag-control-'+this.id).hide();
+                                              }, this);
+
+        Ext.get('tag-add-link-'+this.id).setVisibilityMode(Ext.Element.DISPLAY);
+        Ext.get('tag-add-link-'+this.id).on('click',
+                                   function(){
+                                       Ext.get('tag-add-link-'+this.id).hide();
+                                       Ext.get('tag-control-'+this.id).show();
+                                   }, this);
+
+              
+             
+    },
+
+
+    onAddTag: function(tag){
+
+        if (this.data.tags != ''){
+            this.data.tags=this.data.tags+","+tag;
+        } else {
+            this.data.tags=tag;
+        }
+
+        this.updateTags();
+       
+    },
+
+    onRemoveTag: function(el){
+
+        tag=el.getAttribute('name')
+
+        Ext.get(el).parent().remove();
+        
+        var tags=[];
+
+        Ext.each(Ext.query('div.pp-tag-remove', 'tag-container-'+this.id), 
+                 function(tag){
+                     tags.push(tag.getAttribute('name'));
+                 }
+                );
+
+
+        if (tags.length>0){
+            this.data.tags=tags.join(',');
+        } else {
+            this.data.tags='';
+        }
+
+        this.updateTags();
+
+    },
+
+
+    updateTags: function(){
+                                    
+        Ext.Ajax.request({
+            url: '/ajax/crud/update_tags',
+            params: { rowid: this.data._rowid,
+                      tags: this.data.tags,
+                    },
+            method: 'GET',
+                                        
+            success: function(){
+                // Update local data
+                Ext.StoreMgr.lookup('tag_store').reload();
+
+                Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
+
+                this.renderTags();
+
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Updated tags.');
+            },
+            scope: this,
+            
+        });
+    },
+
+
     //
     // Choose a file from harddisk to attach. Either it is *the* PDF of the citation or a
     // supplementary file (given by isPDF).
@@ -159,7 +369,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         var fc=new Paperpile.FileChooser({
             currentRoot: main.globalSettings.user_home,
             callback:function(button,path){
-                console.log(this);
                 if (button == 'OK'){
                     this.attachFile(isPDF, path);
                 }

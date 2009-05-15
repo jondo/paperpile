@@ -422,6 +422,16 @@ sub update_tags {
   $self->dbh->do("DELETE From Tags where rowid not in (SELECT tag_id FROM Tag_Publication)");
 }
 
+sub new_tag {
+  ( my $self, my $tag, my $style) = @_;
+
+  $tag=$self->dbh->quote($tag);
+  $style=$self->dbh->quote($style);
+
+  $self->dbh->do("INSERT INTO Tags (tag,style) VALUES($tag, $style)");
+
+}
+
 
 sub delete_tag {
   ( my $self, my $tag) = @_;
