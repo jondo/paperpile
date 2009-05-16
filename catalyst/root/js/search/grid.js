@@ -138,7 +138,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             enableHdMenu : false,
             autoExpandColumn:'publication',
 
-            columns:[{header: "Publication",
+            columns:[{header: "Papers",
                       id: 'publication',
                       dataIndex: 'title',
                       renderer:renderPub,

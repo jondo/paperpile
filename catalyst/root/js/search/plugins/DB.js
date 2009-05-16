@@ -84,23 +84,20 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
             single: true
         });
 
-   
-
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
 
         var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(0)).first(), 
-                                        '<div class="pp-grid-sort-container"></div>', true);
+                                        '<div class="pp-grid-sort-container">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Sort by:</b></div>', true);
 
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc" action="journal">Date added</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal">Journal</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year">Year</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author">Author</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf">PDF</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments">Supplementary material</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments">Notes</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="journal" status="inactive">Date added</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal" status="inactive">Journal</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year" status="inactive">Year</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author" status="inactive">Author</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf" status="inactive">PDF</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive">Supplementary material</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive">Notes</div>');
 
         target.on('click', this.handleSortButtons, this);
-
 
     },
 
@@ -108,35 +105,43 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
         var currentClass=el.getAttribute('class');
         var field=el.getAttribute('action');
+        var status=el.getAttribute('status');
 
-        if (!(currentClass == 'pp-grid-sort-item pp-grid-sort-desc' ||
-              currentClass == 'pp-grid-sort-item pp-grid-sort-asc'  ||
-              currentClass == 'pp-grid-sort-item pp-grid-sort-inactive')
-           ) return;
+        var classes={inactive: 'pp-grid-sort-item pp-grid-sort-inactive',
+                     asc: 'pp-grid-sort-item pp-grid-sort-asc',
+                     desc: 'pp-grid-sort-item pp-grid-sort-desc'};
+
+        if (!(status == 'inactive' ||  status == 'asc'  ||   status == 'desc')) return;
 
         var El = Ext.get(el);
 
         Ext.each(El.parent().query('*'),
                  function(item){
                      var l=Ext.get(item);
-                     if (item == el) return;
+                     l.removeClass('pp-grid-sort-item');
                      l.removeClass('pp-grid-sort-asc');
                      l.removeClass('pp-grid-sort-desc');
-                     l.addClass('pp-grid-sort-inactive');
-                 });
-
-
-        El.removeClass(currentClass);
-        if (currentClass=="pp-grid-sort-inactive"){
-            El.addClass('pp-grid-sort-desc');
+                     l.removeClass('pp-grid-sort-inactive');
+                     if (item == el) return;
+                     l.addClass(classes.inactive);
+                 }
+                );
+        
+         
+        if (status == "inactive"){
+            console.log(classes.desc);
+            El.addClass(classes.desc);
             this.store.baseParams['plugin_order']=field+" DESC";
+            el.setAttribute('status','desc');
         } else {
-            if (currentClass=="pp-grid-sort-desc"){
+            if (status=="desc"){
                 this.store.baseParams['plugin_order']=field;
-                El.addClass('pp-grid-sort-asc');
+                El.addClass(classes.asc);
+                el.setAttribute('status','asc');
             } else {
-                El.addClass('pp-grid-sort-desc');
+                El.addClass(classes.desc);
                 this.store.baseParams['plugin_order']=field+ " DESC";
+                el.setAttribute('status','desc');
             }
         }
 
