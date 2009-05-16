@@ -195,24 +195,24 @@ Paperpile.app=function(){
     main=new Paperpile.Viewport;
     main.show();
 
+    Paperpile.main=main; 
+
+    var tree=Ext.getCmp('treepanel');
+    Paperpile.main.tree=tree;
+
+    main.loadSettings();
+
     main.tabs.newDBtab('');
     // Global alias for main application class
-    Paperpile.main=main; 
 
     // Note: this is asynchronous, so might not be available
     // immediately (integrate this better in startup to make sure it
     // is loaded when needed)
-    main.loadSettings();
-    
-    var tree=Ext.getCmp('treepanel');
-    Paperpile.main.tree=tree;
+
+
     tree.expandAll();
-    console.log(tree);
     main.tabs.remove('welcome');
-    
     Paperpile.initMask.hide();
-    
-    
 
     //Ext.StoreMgr.lookup('tag_store').each(function(rec){console.log(rec)});
 

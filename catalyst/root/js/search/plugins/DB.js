@@ -91,17 +91,15 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(0)).first(), 
                                         '<div class="pp-grid-sort-container"></div>', true);
 
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-desc" action="journal">Date added</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="journal">Journal</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="year">Year</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="author">Author</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="pdf">PDF</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="attachments">Supplementary material</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-inactive" action="attachments">Notes</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc" action="journal">Date added</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal">Journal</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year">Year</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author">Author</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf">PDF</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments">Supplementary material</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments">Notes</div>');
 
         target.on('click', this.handleSortButtons, this);
-
-        
 
 
     },
@@ -111,9 +109,9 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         var currentClass=el.getAttribute('class');
         var field=el.getAttribute('action');
 
-        if (!(currentClass == 'pp-grid-sort-desc' ||
-              currentClass == 'pp-grid-sort-asc'  ||
-              currentClass == 'pp-grid-sort-inactive')
+        if (!(currentClass == 'pp-grid-sort-item pp-grid-sort-desc' ||
+              currentClass == 'pp-grid-sort-item pp-grid-sort-asc'  ||
+              currentClass == 'pp-grid-sort-item pp-grid-sort-inactive')
            ) return;
 
         var El = Ext.get(el);

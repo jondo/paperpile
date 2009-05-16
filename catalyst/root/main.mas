@@ -28,6 +28,7 @@
   misc/settings.js 
   misc/box-select.js
   misc/file-chooser.js
+  misc/style-picker.js
   
   export/export-window.js
 

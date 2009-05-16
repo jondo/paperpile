@@ -684,7 +684,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 		node.expand(false, false, function(n) {
 		    
 			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Tag', 
-                                                                 iconCls:'pp-icon-tag', 
+                                                                 iconCls:'pp-icon-empty', 
+                                                                 tagStyle:0,
+                                                                 cls: 'pp-tag-tree-node pp-tag-tree-style-0',
                                                                  draggable:true,
                                                                  expanded:true,
                                                                  children:[],
@@ -739,19 +741,12 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             url: '/ajax/crud/new_tag',
             params: pars,
             success: function(){
+                Ext.StoreMgr.lookup('tag_store').reload();
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Added new Tag');
             },
         });
     },
-
-
-
-
-
-
-
-
 
     //
     // Delete the tag given by node globally
@@ -784,11 +779,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                     var oldTags=records[i].get('tags');
                                     var newTags=oldTags;
                             
-                                    // Replace the given tag in the 'tags'
-                                    // field. The Regex depens on whether the
-                                    // entry is a single entry, at the start,
-                                    // at the end, or in the middle of the
-                                    // comma separated list
                                     newTags=newTags.replace(new RegExp("^"+tag+"$"),"");  //  XXX
                                     newTags=newTags.replace(new RegExp("^"+tag+","),"");  //  XXX,
                                     newTags=newTags.replace(new RegExp(","+tag+"$"),"");  // ,XXX
@@ -797,20 +787,58 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                     records[i].set('tags',newTags);
                                 }
                                 // If a entry is selected in a tab, also update the display
-                                var summary=item.items.get('center_panel').items.get('data_tabs').items.get('pubsummary');
+                                var pdf_manager=item.items.get('east_panel').items.get('pdf_manager');
                                 var selected=grid.getSelectionModel().getSelected();
                                 if (selected){
-                                    summary.updateDetail(selected.data, true);
+                                    pdf_manager.updateDetail(selected.data, true);
                                 }
                             }
                         );
                     }
                 });
-                
 
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Deleted tag');
             },
+        });
+    },
+
+
+    styleTag: function(number){
+
+        var node = this.getSelectionModel().getSelectedNode();
+
+        Ext.Ajax.request({
+            url: '/ajax/crud/style_tag',
+            params: {tag: node.text, 
+                     style: number,
+                    },
+            success: function(){
+                Ext.StoreMgr.lookup('tag_store').reload();
+                node.ui.removeClass('pp-tag-tree-style-'+node.tagStyle);
+                node.ui.addClass('pp-tag-tree-style-'+number);
+                node.tagStyle=number;
+
+                Ext.StoreMgr.lookup('tag_store').reload({
+                    callback: function(){
+                        Paperpile.main.tabs.items.each(
+                            function(item, index, length){
+                                var grid=item.items.get('center_panel').items.get('grid');
+                                var pdf_manager=item.items.get('east_panel').items.get('pdf_manager');
+                                var selected=grid.getSelectionModel().getSelected();
+                                if (selected){
+                                    pdf_manager.updateDetail(selected.data, true);
+                                }
+                            }
+                        );
+                    }
+                });
+
+
+                Ext.getCmp('statusbar').clearStatus();
+                Ext.getCmp('statusbar').setText('Changes style of Tag');
+            },
+            scope: this
         });
     },
 
@@ -854,10 +882,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                                 
                                                 records[i].set('tags',newTags);
                                             }
-                                            var summary=item.items.get('center_panel').items.get('data_tabs').items.get('pubsummary');
+                             
+                                            var pdf_manager=item.items.get('east_panel').items.get('pdf_manager');
                                             var selected=grid.getSelectionModel().getSelected();
                                             if (selected){
-                                                summary.updateDetail(selected.data, true);
+                                                pdf_manager.updateDetail(selected.data, true);
                                             }
                                         }
                                     );
@@ -1101,24 +1130,39 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
               handler: tree.renameTag,
               scope: tree
             },
+            { id: 'tags_menu_style',
+              text:'Style',
+              menu: new Paperpile.StylePickerMenu({
+                  handler : function(cm, number){
+                      // For some reason this handler is called
+                      // twice. First with the desired number and the
+                      // second time as normal click event. We ignore
+                      // the latter case and identify the event object
+                      // like this:
+                      if (number.A == 65) return;
+
+                      this.styleTag(number);
+                                              
+                  },
+                  scope:tree,
+              })
+            },
             { id: 'tags_menu_export',
               text:'Export',
               handler: tree.exportNode,
               scope: tree
             },
-
-
         ]});
         
         Paperpile.Tree.TagsMenu.superclass.constructor.call(this, config);
         
-
         this.on('beforeshow',
                 function(){
                     if (this.node.id == 'TAGS_ROOT'){
                         this.items.get('tags_menu_delete').hide();
                         this.items.get('tags_menu_rename').hide();
                         this.items.get('tags_menu_export').hide();
+                        this.items.get('tags_menu_style').hide();
                     } 
                 }, this
                );
@@ -1161,7 +1205,6 @@ Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
     initComponent: function() {
 		    Paperpile.TreeLoader.superclass.initComponent.call(this);
 	  },
-
 
     // This function is taken from extjs-debug.js and modified
     createNode : function(attr){

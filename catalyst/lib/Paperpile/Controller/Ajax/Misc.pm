@@ -28,17 +28,17 @@ sub tag_list : Local {
 
   my $tags=$c->model('User')->get_tags;
 
-  #my @tags=('Tag1','Tag2','Tag3');
-
   my @data=();
 
-  foreach my $tag (@$tags){
-    push @data, {tag=>$tag};
+  foreach my $row (@$tags){
+    push @data, {tag  =>$row->{tag},
+                 style=> $row->{style},
+                };
   }
 
   my %metaData = (
    root          => 'data',
-   fields        => ['tag']
+   fields        => ['tag', 'style'],
   );
 
   $c->stash->{data}          = [@data];

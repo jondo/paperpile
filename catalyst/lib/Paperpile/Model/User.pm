@@ -401,7 +401,7 @@ sub update_tags {
   # new connections in Tag_Publication table
 
   my $select=$self->dbh->prepare("SELECT rowid FROM Tags WHERE tag=?");
-  my $insert=$self->dbh->prepare("INSERT INTO Tags (tag) VALUES(?)");
+  my $insert=$self->dbh->prepare("INSERT INTO Tags (tag, style) VALUES(?,?)");
   my $connection=$self->dbh->prepare("INSERT INTO Tag_Publication (tag_id, publication_id) VALUES(?,?)");
 
   foreach my $tag (@tags){
@@ -411,15 +411,12 @@ sub update_tags {
     $select->execute($tag);
     $select->fetch;
     if (not defined $tag_rowid){
-      $insert->execute($tag);
+      $insert->execute($tag,'0');
       $tag_rowid = $self->dbh->func('last_insert_rowid');
     }
 
     $connection->execute($tag_rowid,$pub_rowid);
   }
-
-  # Delete tags that have no connectin any longer
-  $self->dbh->do("DELETE From Tags where rowid not in (SELECT tag_id FROM Tag_Publication)");
 }
 
 sub new_tag {
@@ -621,18 +618,31 @@ sub delete_folder {
 sub get_tags {
   ( my $self) = @_;
 
-  my $sth=$self->dbh->prepare("SELECT tag from Tags;");
+  my $sth=$self->dbh->prepare("SELECT tag,style from Tags;");
 
-  $sth->execute();
+  my ( $tag, $style );
+  $sth->bind_columns( \$tag, \$style );
 
+  $sth->execute;
 
   my @out=();
 
-  foreach my $tag (@{$sth->fetchall_arrayref}){
-    push @out, $tag->[0];
+  while ( $sth->fetch ) {
+    push @out, {tag => $tag, style => $style};
   }
 
   return [@out];
+
+}
+
+sub set_tag_style {
+
+  my ($self, $tag, $style) = @_;
+
+  $tag=$self->dbh->quote($tag);
+  $style=$self->dbh->quote($style);
+
+  $self->dbh->do("UPDATE TAGS SET style=$style WHERE tag=$tag;");
 
 }
 

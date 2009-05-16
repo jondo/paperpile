@@ -156,6 +156,20 @@ sub update_tags : Local {
 
 }
 
+sub style_tag : Local {
+  my ( $self, $c ) = @_;
+
+  my $tag   = $c->request->params->{tag};
+  my $style = $c->request->params->{style};
+
+  $c->model('User')->set_tag_style( $tag, $style );
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+
 sub new_tag : Local {
   my ( $self, $c ) = @_;
 
@@ -168,6 +182,8 @@ sub new_tag : Local {
   $c->forward('Paperpile::View::JSON');
 
 }
+
+
 
 sub delete_tag : Local {
   my ( $self, $c ) = @_;

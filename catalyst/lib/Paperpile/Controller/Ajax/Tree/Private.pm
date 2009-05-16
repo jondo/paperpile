@@ -56,7 +56,7 @@ sub get_default_tree : Private {
   my $tags = Tree::Simple->new( {
       text    => 'Tags',
       type    => "TAGS",
-      iconCls => 'pp-icon-empty',
+      iconCls => 'pp-icon-tag',
       hidden  => 0,
     },
     $local_lib
@@ -241,22 +241,24 @@ sub get_tags : Private {
   }
 
   if ( not @tags ) {
-    push @tags, 'No tags';
+    push @tags, {tag=>'No tags',style=>'0'};
   }
 
   # Add tags
   foreach my $tag (@tags) {
     $tree->addChild(
       Tree::Simple->new( {
-          text              => $tag,
+          text              => $tag->{tag},
           type              => 'TAGS',
           hidden            => 0,
-          iconCls           => 'pp-icon-tag',
+          iconCls           => 'pp-icon-empty',
+          cls               => 'pp-tag-tree-node pp-tag-tree-style-'.$tag->{style},
+          tagStyle         => $tag->{style},
           plugin_name       => 'DB',
           plugin_mode       => 'FULLTEXT',
-          plugin_query      => "tags: $tag",
-          plugin_base_query => "tags: $tag",
-          plugin_title      => $tag,
+          plugin_query      => "tags:".$tag->{tag},
+          plugin_base_query => "tags:".$tag->{tag},
+          plugin_title      => $tag->{tag},
           plugin_iconCls    => 'pp-icon-tag',
         }
       )
