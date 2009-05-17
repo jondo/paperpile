@@ -575,9 +575,11 @@ div:hover.pp-tag-remove{
 .pp-tag-style-23m .pp-tag-tree-style-23 a span { border-color: rgb(0, 102, 51);    border-style:solid; background-color: rgb(0, 102, 51);    color: rgb(241, 245, 236) !important;   }   
 
 
+/*Never show red markers in grid*/
 
-
-
+.x-grid3-dirty-cell {
+     background-image:none;
+}
 
 
 

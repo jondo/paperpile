@@ -18,13 +18,13 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
         
         var tbar=[{xtype:'tbfill'},
                   {   xtype:'button',
-                      itemId: 'new_button',
-                      text: 'New',
+                      itemId: 'import_button',
+                      text: 'Import',
                       cls: 'x-btn-text-icon add',
-                      disabled: true,
-                      //listeners: {
-                      //    click:  {fn: this.newEntry, scope: this}
-                      //},
+                      //disabled: true,
+                      listeners: {
+                          click:  {fn: this.controlPanel.importPDF, scope: this.controlPanel}
+                      },
                   },
                  ];
    
@@ -50,35 +50,30 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
                      {header: "DOI",
                       id: 'doi',
                       dataIndex: 'doi',
+                     },
+                     {header: "Status",
+                      id: 'status',
+                      renderer: function(value, p, record){
+                          var template='<div ext:qtip="{status_msg}">{status}</div';
+                          var t = new Ext.XTemplate(template);
+                          return t.apply(record.data);
+                      }
                      }
                     ],
         });
         
         Paperpile.PdfExtractGrid.superclass.initComponent.apply(this, arguments);
 
-        this.store.load({callback: this.extract,
-                         scope: this,
-                        } 
-                       );
-
-      
+        this.store.load({
+            callback: function(){
+                this.controlPanel=this.ownerCt.ownerCt.items.get('control_panel');
+                this.controlPanel.showControls();
+            },
+            scope: this
+        });
+        
     },
 
-    extract: function(record){
-
-         Ext.Ajax.request({
-            url: '/ajax/pdfextract/extract',
-             params: { root: this.root,
-                       grid_id: this.id,
-                     },
-             method: 'GET',
-             success: function(response){
-                 this.store.reload();
-             },
-             scope:this,
-             timeout: 600000,
-         });
-    }
-    
+      
 
 });

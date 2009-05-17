@@ -46,6 +46,7 @@
 
   pdfextract/view.js
   pdfextract/grid.js
+  pdfextract/control.js
   
   };
   

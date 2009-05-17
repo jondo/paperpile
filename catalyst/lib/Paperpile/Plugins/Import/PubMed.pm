@@ -105,10 +105,14 @@ sub match {
     if ($pub->title){
       $query= $pub->title;
       $matchTitle=1;
+      if ($pub->authors){
+        my $first=$pub->get_authors->[0]->last;
+        $query.=" AND $first [1au]";
+      }
     }
   }
 
-  #print STDERR "$query\n";
+  print STDERR "QUERY: $query\n";
 
   my $browser   = Paperpile::Utils->get_browser;
   my $response  = $browser->get( $esearch . $query );

@@ -5,6 +5,7 @@ use Moose::Util::TypeConstraints;
 use Data::Dumper;
 use Data::Page;
 use POSIX qw(ceil floor);
+use Text::Levenshtein qw(distance);
 
 # Name of the plugin
 has 'plugin_name' => ( is => 'rw', isa => 'Str');
@@ -129,13 +130,17 @@ sub _match_title {
 
   my ($self, $title1, $title2) = @_;
 
+  my $cutoff=5;
+
   for my $t ($title1, $title2){
     $t=~s/\s+//g;
     $t=~s/[.:!?]//g;
     $t=uc($t);
   }
 
-  return ($title1 eq $title2);
+  my $distance=distance($title1,$title2);
+
+  return $distance < $cutoff;
 
 }
 
