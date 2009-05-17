@@ -87,3 +87,4 @@ Mail::Address
 XML::XPathEngine
 HTML::TreeBuilder::XPath
 WWW::Mechanize
+Lingua::EN::NameParse

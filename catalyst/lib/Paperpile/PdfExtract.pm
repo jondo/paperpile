@@ -2,8 +2,11 @@ package Paperpile::PdfExtract;
 
 use Moose;
 use Paperpile::Library::Publication;
+use Paperpile::Library::Author;
 use Data::Dumper;
 use XML::Simple;
+use File::Temp qw(tempfile);
+use Lingua::EN::NameParse;
 
 has 'file'    => ( is => 'rw', isa => 'Str' );
 has 'pub'     => ( is => 'rw', isa => 'PaperPile::Library::Publication' );
@@ -20,12 +23,17 @@ sub parsePDF {
   my $PDFfile = $self->file;
   my $PDF2XML = $self->pdftoxml;
 
-  # create and read XML file
-  system("$PDF2XML $PDFfile -noImage -f 1 -l 2 2>/dev/null");
-  my $PDFxml = ( $PDFfile =~ m/(.*)(\.pdf)$/ ) ? "$1.xml" : "$PDFfile.xml";
-  my $xml    = new XML::Simple;
-  my $data   = $xml->XMLin( "$PDFxml", ForceArray => 1 );
+  # create a temp file
+  (undef,  my $tmpfile) = tempfile(OPEN => 0);
 
+  # create and read XML file, just the first page
+  system("$PDF2XML -noImage -f 1 -l 1 -q $PDFfile $tmpfile 2>/dev/null");
+  my $xml    = new XML::Simple;
+  my $data   = $xml->XMLin( "$tmpfile", ForceArray => 1 );
+
+  # remove temp file
+  unlink("$tmpfile"); 
+  
   my @page0   = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
   my $doi     = '';
   my $title   = '';
@@ -36,12 +44,16 @@ sub parsePDF {
     ( $title, $authors, $doi, $level ) = _ParseXML( \@page0 );
   }
 
-  # maybe the first page is a strange cover page (Cold Spring Harbour Press)
+  # maybe the first page is a strange cover page (e.g. Cold Spring Harbour Press)
   if ( $title eq '' and $authors eq '' and $doi eq '' ) {
-    my @page1 = @{ $data->{PAGE}->[1]->{TEXT} } if ( defined $data->{PAGE}->[1]->{TEXT} );
-    if ( $#page1 > -1 ) {
-      ( $title, $authors, $doi, $level ) = _ParseXML( \@page1 );
-    }
+      # create and read XML file, but no only the second page
+      system("$PDF2XML -noImage -f 2 -l 2 -q $PDFfile $tmpfile 2>/dev/null");
+      $xml    = new XML::Simple;
+      $data   = $xml->XMLin( "$tmpfile", ForceArray => 1 );
+      my @page1 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
+      if ( $#page1 > -1 ) {
+	  ( $title, $authors, $doi, $level ) = _ParseXML( \@page1 );
+      }
   }
 
   # let's do some sane checking
@@ -51,6 +63,11 @@ sub parsePDF {
   $wrong = 1 if ( $title =~ m/^Introduction$/i );
   $wrong = 1 if ( $title =~ m/^Results$/i );
   $wrong = 1 if ( _Bad_Author_Words($authors) == 1 );
+  $wrong = 1 if ( $authors =~ m/\sfrom\s/ );
+  $wrong = 1 if ( $authors =~ m/\sare\s/ );
+  $wrong = 1 if ( $authors =~ m/\sthe\s/ );
+  $wrong = 1 if ( $authors =~ m/\ssome\s/ );
+  $wrong = 1 if ( $authors =~ m/\sfew\s/ );
 
   if ( $wrong == 1 ) {
     $authors = '';
@@ -58,7 +75,155 @@ sub parsePDF {
     $level   = -2;
   }
 
-  return ( $title, $authors, $doi, $level );
+  #$authors  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
+  #print "T:$title\nA:$authors\n$level\n";
+
+
+  # if we found some authors, we are going to convert them into
+  # an authors object
+  my @authors_obj = ( );
+  if ($authors ne '') {
+
+      my $processed = 0;
+      # we clean the authors and remove numbers
+      $authors =~ s/1/L/g; # often OCR error
+      $authors =~ s/\d//g;
+      $authors =~ s/\./. /g;
+      $authors =~ s/,$//g;
+      $authors =~ s/^,//g;
+      $authors =~ s/and,/and/g;
+      $authors =~ s/` //g;
+      $authors =~ s/\s?\x{B4}//g;
+      $authors =~ s/^(by\s)//gi;
+      $authors =~ s/\s+/ /g;
+      
+
+      # First we check if authors are separated by commas
+      my @authors_array = ();
+      if ($authors =~ m/,/)
+      {
+	  @authors_array = split (/,/, $authors);
+	  # some sane checking
+	  pop(@authors_array) if ($authors_array[$#authors_array] !~ m/[A-Z]/i);
+
+	  if ($authors_array[$#authors_array] =~ m/^\s?and\s(.+)/i)
+	  {
+	      $authors_array[$#authors_array] = $1;
+	  }
+	  if ($authors_array[$#authors_array] =~ m/(.+)\sand\s(.+)/i)
+	  {
+	      $authors_array[$#authors_array] = $1;
+	      $authors_array[$#authors_array+1] = $2;
+	  }
+	  if ($authors_array[$#authors_array] =~ m/(.+)\s&\s(.+)/i)
+	  {
+	      $authors_array[$#authors_array] = $1;
+	      $authors_array[$#authors_array+1] = $2;
+	  }
+	  if ($authors_array[$#authors_array] =~ m/^\s&\s(.+)/i)
+	  {
+	      $authors_array[$#authors_array] = $1; 
+	  }	  
+	  $processed = 1;
+      }
+
+      # there maybe two others sepated by an 'and'
+      if ($processed == 0 and $authors =~ m/^(.+)\sand\s(.+)$/i)
+      {
+	  $authors_array[0] = $1;
+	  $authors_array[1] = $2;
+	  $processed = 1;
+      }
+
+      # there maybe two others sepated by an '&'
+      if ($processed == 0 and $authors =~ m/^(.+)\s&\s(.+)$/i)
+      {
+	  $authors_array[0] = $1;
+	  $authors_array[1] = $2;
+	  $processed = 1;
+      }
+
+      # there maybe just one
+      my $nr_spaces = ( $authors =~ tr/ // );
+      if ($processed == 0 and $nr_spaces <= 3)
+      {
+	  # We do some cleaning
+	  $authors_array[0] = $authors;
+      }
+
+      # now we parse each author separately
+      foreach my $author (@authors_array) {
+	  
+	  
+	  # args needed for Lingua::EN::NameParse
+	  my %args = (
+	      auto_clean     => 1,
+	      force_case     => 1,
+	      lc_prefix      => 1,
+	      initials       => 3,
+	      allow_reversed => 1
+	      );
+	  
+	  # remove unnecessary white spaces, and forgotten 'ands'
+	  $author =~ s/and\s//;
+	  $author =~ s/\s+$//;
+	  $author =~ s/^\s+//;
+	  next if (length($author) < 3);
+
+	  # sometime we have to change the order of given name 
+	  # and surename
+	  if ($author =~ m/\.$/)
+	  {
+	      my @tmp_author = split(/\s/, $author);
+	      $author = join(' ',reverse(@tmp_author));
+	  }
+	  my $all_lc = ( $author =~ tr/[a-z]// );
+	  if ($author =~ m/\s[A-Z]{1,2}$/ and $all_lc > 0)
+	  { 
+	      my @tmp_author = split(/\s/, $author);
+	      $author = join(' ',reverse(@tmp_author));
+	  }
+
+	  # Liu, Ute, Jan, etc. are not initial they are given
+	  # names. For correct handling we have to set the
+	  # correct value for initials
+	  my $spaces = ( $author =~ tr/ // );
+	  if ( $spaces == 1 )
+	  {
+	      (my $given_name = $author) =~ s/(.+)(\s.*)/$1/;
+	       my $lc = ( $given_name =~ tr/[a-z]// );
+	      $args{initials} = 1 if ($lc > 0);
+	  }
+	  
+	  my $parser = new Lingua::EN::NameParse(%args);
+	  my $error = $parser->parse($author);
+	  if ( $error == 0 ) {
+	      my $correct_casing = $parser->case_all_reversed;
+	      (my $last, my $first) = split(/,/, $correct_casing);
+	      
+	      # make a new author object
+	      push @authors_obj,
+	      Paperpile::Library::Author->new(
+		  last  => $last,
+		  first => $first,
+		  jr    => '',
+		  )->normalized;
+	      
+	  }
+      }
+  }
+
+  # once we have our authors we can now create a 
+  # publication object and return it
+  my $pub = Paperpile::Library::Publication->new( pubtype => 'MISC' );
+  if ($#authors_obj > -1 and $title ne '')
+  {
+      $pub->title($title);
+      $pub->authors( join( ' and ', @authors_obj ) );
+  }
+  $pub->doi($doi) if ($doi ne '');
+
+  return $pub;
 }
 
 sub _Bad_Author_Words {
@@ -109,10 +274,12 @@ sub _AuthorLine_by_Commas {
   my $words_title    = ( $candidate_title   =~ tr/ // );
   my $words_authors  = ( $candidate_authors =~ tr/ // );
 
-  if ( $commas_authors / $words_authors > $commas_title / $words_title ) {
-    $authors = $candidate_authors;
-    $title   = $candidate_title;
-    $flag    = 1;
+  if ($words_title > 0 and $words_authors > 0) {
+      if ( $commas_authors / $words_authors > $commas_title / $words_title ) {
+	  $authors = $candidate_authors;
+	  $title   = $candidate_title;
+	  $flag    = 1;
+      }
   }
 
   return ( $title, $authors, $flag );
@@ -162,8 +329,8 @@ sub _AuthorLine_is_One_Author {
   my $title             = '';
   my $authors           = '';
   my $flag              = 0;
-
-  my $spaces = ( $candidate_title =~ tr/ // );
+  
+  my $spaces = ( $candidate_authors =~ tr/ // );
   if ( $spaces <= 3 ) {
     $authors = $candidate_authors;
     $title   = $candidate_title;
@@ -189,6 +356,7 @@ sub _MarkBadWords {
   $bad++ if ( $tmp_line =~ m/^Letters$/i );
   $bad++ if ( $tmp_line =~ m/^(short)?(scientific)?reports?$/i );
   $bad++ if ( $tmp_line =~ m/^ORIGINALINVESTIGATION$/i );
+  $bad++ if ( $tmp_line =~ m/discoverynotes/i );
 
   # years
   $bad++ if ( $tmp_line =~ m/20\d\d/ );
@@ -256,6 +424,9 @@ sub _MarkAdress {
   $adress++ if ( $tmp_line =~ m/GeneralHospital/i );
   $adress++ if ( $tmp_line =~ m/Hospitalof/i );
   $adress++ if ( $tmp_line =~ m/Facultad/i );
+  $adress++ if ( $tmp_line =~ m/Road/i );
+  $adress++ if ( $tmp_line =~ m/U\.S\.A\./i );
+  $adress++ if ( $tmp_line =~ m/College/i );
 
   return $adress;
 
@@ -279,6 +450,9 @@ sub _ParseDOI {
 
   # DOIs do not have commas
   $doi =~ s/,//g;
+  
+  # remove points at the end
+  $doi =~ s/\.$//;
 
   return $doi;
 }
@@ -392,32 +566,54 @@ sub _ParseXML {
         my $word = $words[$i]->{content};
 
         #$word  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
+	
 
         if ( $words[$i]->{'font-size'} < $fs ) {
           $count++;
 
           #$word = "%SC_S$count%$word%SC_E$count%";
-          $word = '';
+          $word = ',';
           $nr_superscripts++;
           $starts_with_superscript = 1 if ( $i == 0 );
         }
 
         # let's screen for special chars that mark authors
+	if ( $word =~ m/\x{A0}/ ) {
+          $word =~ s/\x{A0}/,/g;
+          $nr_superscripts++;
+        }
+	if ( $word =~ m/\x{A7}/ ) {
+          $word =~ s/\x{A7}/,/g;
+          $nr_superscripts++;
+        }
+	if ( $word =~ m/\x{204E}/ ) {
+          $word =~ s/\x{204E}/,/g;
+          $nr_superscripts++;
+        }
         if ( $word =~ m/\x{2021}/ ) {
-          $word =~ s/\x{2021}//g;
+          $word =~ s/\x{2021}/,/g;
+          $nr_superscripts++;
+        }
+        if ( $word =~ m/\x{2020}/ ) {
+          $word =~ s/\x{2020}/,/g;
           $nr_superscripts++;
         }
         if ( $word =~ m/\*/ ) {
-          $word =~ s/\*//g;
+          $word =~ s/\*/,/g;
           $nr_superscripts++;
         }
         push @content, $word if ( $word ne '' );
       }
     }
 
-    my $content_line     = join( " ", @content );
+    my $content_line = join( " ", @content );
+    $content_line =~ s/\s+,/,/g;
+    $content_line =~ s/,+/,/g;
+    #$content_line  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
+    #print "$content_line\n";
     my $content_line_tmp = join( "",  @content );
 
+    
     $y_abstract = $y if ( $content_line_tmp =~ m/Abstract$/i );
     $y_abstract = $y if ( $content_line_tmp =~ m/^Abstract/i );
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Introduction$/i and $y < $y_intro );
@@ -425,6 +621,7 @@ sub _ParseXML {
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Background$/i and $y < $y_intro );
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Methods$/i and $y < $y_intro );
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Summary$/i and $y < $y_intro );
+    #print "$content_line_tmp $y $y_abstract $y_intro\n";
 
     # now we can search for the DOI
     if ( $doi eq '' or $doi =~ m/\/$/ ) {
@@ -550,6 +747,8 @@ sub _ParseXML {
       # also italic and bold have to fit
 
       my $lc = ( $lines_content[$pos] =~ tr/[a-z]// );
+      my $uc = ( $lines_content[$pos] =~ tr/[A-Z]// );
+      $uc = 1 if ($uc == 0);
 
       my $diff        = abs( $lines_y[$prev] - $lines_y[$pos] );
       my $same_fs     = ( $lines_fs[$pos] eq $lines_fs[$prev] ) ? 1 : 0;
@@ -566,12 +765,23 @@ sub _ParseXML {
       $flag_new_line = 3 if ( $lines_content[$pos] =~ m/^\*/ );
       $flag_new_line = 4 if ( $lines_adress[$pos] >= 1 );
       $flag_new_line = 5 if ( $lines_y[$pos] < $lines_y[$prev] );
-      $flag_new_line = 6 if ( $lc > 0 and $last_line_lc == 0 );
-      $flag_new_line = 0
-        if ( $lines_adress[$prev] == 1 and $lines_adress[$pos] == 1 and $flag_new_line == 1 );
-      $flag_new_line = 0 if ( $lines_content[$pos] =~ m/^and/ );
+      #$flag_new_line = 6 if ( $lc > 0 and $last_line_lc == 0 );
+      $flag_new_line = 6 if ( $lc/$uc > 0.2 and $last_line_lc == 0 );
+      $flag_new_line = 8 if ( $lines_content[$pos] =~ m/^\d+$/);
+      
+      # if the previous line had signs of beeing an adress, we just append
+      # if the cuurent one is also an adress line
+      $flag_new_line = 0 if ( $lines_adress[$prev] >= 1 and $lines_adress[$pos] >= 1 
+			      and $flag_new_line == 1 );
 
-      #print "$flag_new_line $lines_adress[$pos] $lines_content[$pos] $lc<br>\n";
+      # if a line starts with "and" it obviously is connected to the preceeding line
+      my $tmp_flag = 0;
+      $tmp_flag = 1 if ($lines_adress[$prev] >= 1 and $lines_adress[$pos] >= 1);
+      $tmp_flag = 1 if ($lines_adress[$prev] == 0 and $lines_adress[$pos] == 0);
+      $flag_new_line = 0 if ( $lines_content[$pos] =~ m/^and/ and $tmp_flag == 1);
+
+
+      #print "$flag_new_line $lines_adress[$pos] $lines_content[$pos]\n";
 
       if ( $flag_new_line >= 1 ) {
         push @final_content,        $lines_content[$pos];
@@ -621,7 +831,7 @@ sub _ParseXML {
     $final_content[$i] =~ s/\x{C6}/,/g;      # replace dots (not points) with commas
     $final_content[$i] =~ s/\x{B7}/,/g;      # replace dots (not points) with commas
     $final_content[$i] =~ s/\s+,\s+/, /g;    # replace unnecessary spaces
-      #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
+    #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
   }
 
   #################### STRATEGY ONE ########################
@@ -637,10 +847,10 @@ sub _ParseXML {
       last;
     }
   }
-
+  
   # Once we have found and adress line we start to search
   if ( $adress_line > -1 ) {
-
+      
     # find the previous two lines that do not have bad words
     my $candidate_Authors = -1;
     my $candidate_Title   = -1;
@@ -667,7 +877,7 @@ sub _ParseXML {
     if (  $final_fs[$candidate_Title] > $final_fs[$candidate_Authors]
       and $final_fs[$candidate_Title] / $major_fs > 1.2 ) {
       my $flag = 0;
-
+      
       # authors have usually more superscripts than titles
       ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
         $final_content[$candidate_Title],        $final_content[$candidate_Authors],
@@ -689,7 +899,7 @@ sub _ParseXML {
       ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $final_content[$candidate_Title],
         $final_content[$candidate_Authors] );
       return ( $title, $authors, $doi, 1.4 ) if ( $flag == 1 );
-
+      
     }
 
     # they might be of same size, but then we do not take all rules
@@ -760,14 +970,43 @@ sub _ParseXML {
       $max_fs_line_ALL = $i;
     }
   }
+  
+  # if there is just one line (as observed in Kellis04)
+  if ( $#IDS == 0 and $max_fs_line_ALL == $IDS[0]) {
+ 
+      $title = $final_content[$IDS[0]];
+      # let's find the next line that is none bad  
+      my $next = -1;
+      for my $i ($IDS[0]+1 .. $#IDS)
+      {
+	  if ($final_bad[$i] == 0 and $final_adress[$i] == 0)
+	      {
+		  $next = $i;
+		  last;
+	      }
+      }
+      # now let's see if it is a good author line
+      if ($final_nrsuperscripts[$next] > 0)
+      {
+	  $authors = $final_content[$next];
+      }
+      
+      return ( $title, $authors, $doi, 0.1 ) if ( $authors ne '' );
+      
+      $title = '';
+      $authors = '';
+  }
+
 
   # if we find just two lines, then this is a good sign
+  
   if ( $#IDS == 1 ) {
     my $candidate_Authors = $IDS[1];
     my $candidate_Title   = $IDS[0];
 
     # if the candidate_Title is also very large
     # then this is a good sign
+    
     if ( ( $final_fs[$max_fs_line_ALL] - $final_fs[$candidate_Title] ) / $major_fs < 0.2 ) {
 
       # the heading is normally B and has a greater fs than the authors
@@ -795,7 +1034,7 @@ sub _ParseXML {
         ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $final_content[$candidate_Title],
           $final_content[$candidate_Authors] );
         return ( $title, $authors, $doi, 2.4 ) if ( $flag == 1 );
-
+      
         # if Title directly preceeds Authors and Title seems to be really hughe
         if (  $candidate_Title == $candidate_Authors - 1
           and $final_fs[$candidate_Title] / $major_fs > 1.3 ) {
@@ -804,8 +1043,31 @@ sub _ParseXML {
           return ( $title, $authors, $doi, 2.9 );
         }
       }
-
     }
+      
+    #################################################################
+    # the order might be changed, but then we do not take all rules
+    if (  $final_fs[$candidate_Title] < $final_fs[$candidate_Authors]
+	  and $final_fs[$candidate_Authors] / $major_fs > 1.2 ) {
+	my $swap = $candidate_Title;
+	$candidate_Title   = $candidate_Authors;
+	$candidate_Authors = $swap;
+	
+	my $flag = 0;
+	
+	# authors have usually more superscripts than titles
+	( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
+	    $final_content[$candidate_Title],        $final_content[$candidate_Authors],
+	    $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
+	    );
+	return ( $title, $authors, $doi, 1.5 ) if ( $flag == 1 );
+	
+	# authors usually have a higher comma to word ratio than the title
+	( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
+							     $final_content[$candidate_Authors] );
+	return ( $title, $authors, $doi, 1.6 ) if ( $flag == 1 );
+    }
+  
   }
 
   # there are more than two lines left
@@ -813,7 +1075,7 @@ sub _ParseXML {
     my $candidate_Authors = $IDS[ $max_fs_line_NONEBAD + 1 ];
     my $candidate_Title   = $IDS[$max_fs_line_NONEBAD];
 
-#print "$candidate_Title $candidate_Authors $final_content[$candidate_Title] $final_content[$candidate_Authors]\n";
+    return ( $title, $authors, $doi, 4 ) if ($max_fs_line_NONEBAD + 1 > $#IDS);
 
     if ( ( $final_fs[$max_fs_line_ALL] - $final_fs[$candidate_Title] ) / $major_fs < 0.2 ) {
 

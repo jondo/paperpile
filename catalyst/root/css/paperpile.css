@@ -364,11 +364,15 @@ div:hover.pp-grid-sort-item {
 .pp-box-gray{
     background-color:#F0F0F0;
     border:1px solid #D8D8D8;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
 }
 
 .pp-box-yellow{
     background-color:#FFFEEB;
     border:1px solid #F7CA75;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
 }
 
 .pp-box p {
@@ -423,6 +427,7 @@ dd {
     font-size: 10px;
     padding: 0 4px;
     -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
 }
 
 .pp-tag-container {
