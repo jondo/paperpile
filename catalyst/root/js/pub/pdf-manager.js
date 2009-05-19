@@ -2,9 +2,10 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 	  
     markup: [
 
+        '<div id=main-container-{id}>',
+
         // Yellow box
         '<div class="pp-box pp-box-yellow"',
-        
         '<dl>',
         '<dt>Publication type: </dt><dd>{_pubtype_name}</dd>',
         '<tpl if="_imported"><dt>Imported: </dt><dd>{created}</dd></tpl>',
@@ -16,55 +17,58 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<div id="tag-add-link-{id}" ><a href="#">Add&nbsp;tag</a></div>',
         '</dd>',
         '</dl>',
-
-        '<tpl if="linkout">',
-        '<p><a href="{linkout}" target="_blank" class="pp-action-go">Go to publisher site</a></p>',
-        '</tpl>',
-        '<tpl if="!linkout">',
-        '<p class="pp-action-go">[No publisher link available]</p>',
-        '</tpl>',
         '</div>',
 
+        '<div class="pp-box pp-box-yellow"',
+        '<tpl if="linkout">',
+        '<p><a href="{linkout}" target="_blank" class="pp-action pp-action-go">Go to publisher site</a></p>',
+        '</tpl>',
+        '<tpl if="!linkout">',
+        '<p class="pp-action pp-action-go">[No publisher link available]</p>',
+        '</tpl>',
+        '</div>',
 
         // Gray box
         '<div class="pp-box pp-box-gray"',
 
         '<h2>PDF</h2>',
-        '<ul class="pp-pdf-manager" id="markup-{id}">',
-
+        '<ul>',
         '<tpl if="pdf">',
-        '<li id="open-pdf-{id}"><a href="/serve/{pdf}" target="_blank" action="open-pdf">Open PDF</a></li>',
+        '<li id="open-pdf-{id}" class="pp-action pp-action-open-pdf" ><a href="/serve/{pdf}" target="_blank" action="open-pdf">Open PDF</a></li>',
         '<tpl if="_imported">',
-        '<li id="delete-pdf-{id}"><a href="#" action="delete-pdf">Delete PDF</a></li>',
+        '<li id="delete-pdf-{id}" class="pp-action pp-action-delete-pdf"><a href="#" action="delete-pdf">Delete PDF</a></li>',
         '</tpl>',
         '<tpl if="!_imported">',
-        '<li id="import-pdf-{id}"><a href="#" action="import-pdf">Import PDF into local library.</a></li>',
+        '<li id="import-pdf-{id}" class="pp-action pp-action-import-pdf"><a href="#" action="import-pdf">Import PDF into local library.</a></li>',
         '</tpl>',
         '</tpl>',
 
         '<tpl if="!pdf">',
         '<tpl if="linkout">',
-        '<li id="search-pdf-{id}"><a href="#" action="search-pdf">Get PDF</a></li>',
+        '<li id="search-pdf-{id}" class="pp-action pp-action-get-pdf"><a href="#" action="search-pdf">Download PDF</a></li>',
+        '<li><div id="pbar"></div></li>',
         '</tpl>',
         '<tpl if="_imported">',
-        '<li id="attach-pdf-{id}"><a href="#" action="attach-pdf">Attach PDF</a></li>',
+        '<li id="attach-pdf-{id}" class="pp-action pp-action-attach-pdf"><a href="#" action="attach-pdf">Attach PDF</a></li>',
         '</tpl>',
         '</tpl>',
+        '</ul>',
 
-        '<h2>Supplementary material</h2>',
         '<tpl if="_imported">',
-        '<li id="attach-file-{id}"><a href="#" action="attach-file">Attach File</a></li>',
-        '</tpl>',
+        '<p>&nbsp;</p>',
+        '<h2>Supplementary material</h2>',
         '<tpl if="attachments">',
         '<ul class="pp-attachments">',
         '<tpl for="attachments_list">',
-        '<li><a href="{link}" target="_blank">{file}</a><a href="#" action="delete-file" rowid="{rowid}">Delete</a></li>',
+        '<li> - <a href="{link}" target="_blank">{file}</a>&nbsp;&nbsp;(<a href="#" action="delete-file" rowid="{rowid}">Delete</a>)</li>',
         '</tpl>',
         '</ul>',
+        '<p>&nbsp;</p>',
         '</tpl>',
-        '<li><div id="pbar"></div></li>',
-        '</ul>',
-
+        '<ul>',
+        '<li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" action="attach-file">Attach File</a></li>',      '</ul>',
+        '</tpl>',
+        '</div>',
         '</div>',
 
 	  ],
@@ -107,15 +111,18 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                   success: function(response){
                       var json = Ext.util.JSON.decode(response.responseText);
                       this.data.attachments_list=json.list;
-                      this.installEvents(this.tpl.overwrite(this.body, this.data, true));
+                      this.tpl.overwrite(this.body, this.data, true);
+                      this.installEvents();
+                      this.renderTags();
                   }, 
                   scope:this,
                 });
         } else {
-            this.installEvents(this.tpl.overwrite(this.body, this.data, true));
+            this.tpl.overwrite(this.body, this.data, true);
+            this.installEvents();
+            this.renderTags();
         }
         
-        this.renderTags();
         
 	},
 
@@ -124,7 +131,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     // after the template was written in updateDetail
     //
     
-    installEvents: function(el){
+    installEvents: function(){
+
 
         Ext.get('tag-add-link-'+this.id).setVisibilityMode(Ext.Element.DISPLAY);
         Ext.get('tag-add-link-'+this.id).on('click',
@@ -133,13 +141,13 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                                        this.showTagControls();
                                    }, this);
 
-            
         // All "action" links in panel
-        el.on('click', function(e, el, o){
-            switch(el.getAttribute('action')){
+        Ext.get('main-container-'+this.id).on('click', function(e, el, o){
 
+            switch(el.getAttribute('action')){
+                
                 // Choose local PDF file and attach to database entry
-            case 'attach-pdf': 
+            case 'attach-pdf':
                 this.chooseFile(true);
                 break;
 
@@ -188,7 +196,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                                              function(e){
                                                  var t=e.getTarget('div.pp-tag-remove');
                                                  if (!t) return;
-                                                 console.log(t);
                                                  this.onRemoveTag(t);
                                                  e.stopEvent();
                                              }, this);
@@ -407,8 +414,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             success: function(){
                 // Update local data
 
-                console.log(isNew);
-
                 Ext.StoreMgr.lookup('tag_store').reload();
                 if (isNew){
                     Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
@@ -520,10 +525,10 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     searchPDF: function(){
 
         var li=Ext.get('search-pdf-'+this.id);
-        var div=Ext.DomHelper.append(li, '<div id="progress-bar"></div>');
+        var div=Ext.DomHelper.append(li, '<div class="pp-control-container" id="progress-bar"></div>');
 
         this.progressBar = new Ext.ProgressBar({
-            width: 300,
+            width: 240,
             renderTo: 'progress-bar'
         });
 

@@ -145,6 +145,8 @@
 }
 
 .pp-grid-key{
+    background: transparent url('/images/icons/bullet_green.png') no-repeat;
+    padding-left: 16px;
     color: gray;
     width: 120;
 }
@@ -278,11 +280,6 @@ div:hover.pp-grid-sort-item {
     padding:10px;
 }
 
-.pp-attachments li{
-    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    padding: 0 0 0 40;
-}
-
 .pp-pdf-bitmap {
     border-color:black;
     border-width: 2px;
@@ -375,17 +372,23 @@ div:hover.pp-grid-sort-item {
     -webkit-border-radius: 8px;
 }
 
-.pp-box p {
+.pp-box p, .pp-box ul{
     margin: 8;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
+.pp-box li{
+    margin: 8 0;
 }
 
 .pp-box h2 {
-    margin: 8;
+    margin: 8 8 10 8;
     font:normal 18px arial, verdana, tahoma, arial, helvetica, sans-serif;
     color: #333333;
     font-weight: normal;
     color: #4183C4;
 }
+
 
 dl {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
@@ -405,7 +408,7 @@ dd {
     padding: 0 0 5 5;
 }
 
-.pp-action-add, .pp-action-delete, .pp-action-go{
+.pp-action{
     padding: 2 2 2 22;
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
@@ -421,6 +424,33 @@ dd {
 .pp-action-go {
     background: transparent url('/images/icons/application_go.png') no-repeat;
 }
+
+.pp-action-attach-pdf {
+    background: transparent url('/images/icons/folder_page_white.png') no-repeat;
+}
+
+.pp-action-get-pdf {
+    background: transparent url('/images/icons/page_white_put.png') no-repeat;
+}
+
+.pp-action-open-pdf {
+    background: transparent url('/images/icons/page_white_acrobat.png') no-repeat;
+}
+
+.pp-action-delete-pdf {
+    background: transparent url('/images/icons/page_white_delete.png') no-repeat;
+}
+
+.pp-action-import-pdf {
+    background: transparent url('/images/icons/add.png') no-repeat;
+}
+
+.pp-action-attach-file {
+    background: transparent url('/images/icons/attach.png') no-repeat;
+}
+
+
+
 
 .pp-tag-tree-node a span{
     border-width:1px;
@@ -521,6 +551,14 @@ div:hover.pp-tag-remove{
     color:white;
 }
 
+.pp-control-container {
+    margin: 8px;
+}
+
+.pp-control-container td{
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
 .pp-button-control{
     float: left;
     padding: 5px 10px 0 0
@@ -546,6 +584,30 @@ div:hover.pp-tag-remove{
     border-style:solid;
     color:black;
 }
+
+.pp-progress-box-status {
+    margin: 0 8;
+    font-size:11;
+}
+
+
+.pp-icon-tick{
+    padding: 2 2 2 22;
+    background: transparent url('/images/icons/tick.png') no-repeat;
+}
+
+.pp-icon-cross{
+    padding: 2 2 2 22;
+    background: transparent url('/images/icons/cross.png') no-repeat;
+}
+
+
+.pp-icon-loading{
+    padding: 2 2 2 22;
+    background: transparent url('/images/icons/loading.gif') no-repeat;
+}
+
+
 
 /*.pp-tag-style-1,  .pp-tag-tree-style-1  a span { border-color:#BDBDBD; border-style:solid; background-color: rgb(222, 229, 242); color: rgb(90, 105, 134) !important; }  */
  
@@ -575,6 +637,8 @@ div:hover.pp-tag-remove{
 .pp-tag-style-23m .pp-tag-tree-style-23 a span { border-color: rgb(0, 102, 51);    border-style:solid; background-color: rgb(0, 102, 51);    color: rgb(241, 245, 236) !important;   }   
 
 
+/* Overrides of ExtJS styles */
+
 /*Never show red markers in grid*/
 
 .x-grid3-dirty-cell {
@@ -582,7 +646,9 @@ div:hover.pp-tag-remove{
 }
 
 
-
+.x-spotlight {
+    opacity: 0.4;
+}
 
 
 
