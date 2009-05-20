@@ -6,6 +6,9 @@ use warnings;
 use Moose;
 use XML::Smart;
 use Switch;
+use Date::Components;
+use Date::Manip;
+
 use utf8;
 binmode STDOUT, ":utf8";
 
@@ -705,6 +708,38 @@ sub _updateVariables {
             }
             ## cs-date-tokens
             case 'issued' {
+                #<relatedItem><originInfo><dateIssued>Mar 12, 2009</dateIssued>
+                if(exists $mods->{relatedItem}) {
+                    if(exists $mods->{relatedItem}->{originInfo}) {
+                        if(exists $mods->{relatedItem}->{originInfo}->{dateIssued}) {
+                            my $dateString = $mods->{relatedItem}->{originInfo}->{dateIssued}->{CONTENT};
+                            print STDERR "dateString='$dateString'\n";
+                            my $date = ParseDate($dateString);
+                            #print STDERR $date;
+                            if(! $date) {
+                                die "ERROR: Invalid date: ", $dateString, "\n";
+                            }
+                            
+                            my $daterepresentation = UnixDate($date, "%d/%m/%Y"); # save the data as dd/mm/yyyy
+                            print STDERR $daterepresentation, "\n";
+                            
+                            #print STDERR "month=$month, day=$day, year=$year, dayofweek=$dayofweek\n";
+                            #if( Date::Components::is_valid_date($date) ) {
+                            #    $self->_var->{'issued'} = Date::Components::format_date($date); # standardize date: 'mm/dd/yyyy'
+                            #}
+                            #else {
+                            #    if( Date::Components::is_valid_month($date) || 
+                            #        Date::Components::is_valid_day_of_month($date) ||
+                            #        Date::Components::is_valid_year($date) ) {
+                            #        $self->_var->{'issued'} = $date; 
+                            #    }
+                            #    else {
+                            #        die "ERROR: Invalid date: ", $date, "\n";
+                            #    }
+                            #}
+                        }
+                    }
+                }
             }
             case 'event' {
             }
@@ -733,7 +768,6 @@ sub _setContainerTitle {
     
     if(exists $title->{title}) {
         if(! $r) { # its just the string and that is the order to get the container-title.
-            print "DRINQQQ\n";
             print Dumper $title;
             $self->{_var}->{'container-title'} = $title->{title}->{CONTENT};
         }            
@@ -759,17 +793,53 @@ sub _setContainerTitle {
     }
 }
 
+# add either prefix or suffix 
+sub _addFix {
+    my ($self, $ptr, $what) = @_;
+    
+    if(ref($ptr) eq "HASH") {
+        if($what eq "prefix") {
+            if(exists $ptr->{prefix}) {
+                print "Adding prefix '$ptr->{prefix}'\n";
+                print Dumper $ptr;
+                $self->{_biblio_str} .= $ptr->{prefix}; 
+                $self->_checkIntegrityOfFix($ptr->{prefix});
+            }
+        }
+        elsif($what eq "suffix") {     
+            if(exists $ptr->{suffix}) {
+                print "Adding suffix '$ptr->{suffix}'\n";
+                print Dumper $ptr;
+                $self->{_biblio_str} .= $ptr->{suffix};
+                $self->_checkIntegrityOfFix($ptr->{suffix});
+            }
+        }
+        else {
+            die "ERROR: '$what' is not a valid fix, either prefix or suffix, please!";
+        }
+    }
+}
+
+# sometimes we ignore variables
+# they are not written to the output
+# but then we also don't need the fix!
+# this is to ensure that we do not have double fixes and so on
+sub _checkIntegrityOfFix {
+    my ($self, $str) = @_;
+    
+    if($self->{_biblio_str} =~ /\Q$str$str\E/) {        
+        #print STDERR "matching (str='$str$str'): ", $self->{_biblio_str}, "\n";
+        $self->{_biblio_str} =~ s/$str$str/$str/g;
+        #print STDERR "after: ", $self->{_biblio_str}, "\n";
+    }
+    
+}
+
 # parses relevant major CSL elements while generating the bibliography
 sub _parseChildElements {
     my ($self, $mods, $ptr, $from) = @_;
     
-    if(ref($ptr) eq "HASH") {
-        if(exists $ptr->{prefix}) {
-            print "Adding prefix '$ptr->{prefix}'\n";
-            print Dumper $ptr;
-            $self->{_biblio_str} .= $ptr->{prefix};
-        }
-    }
+    $self->_addFix($ptr, "prefix");
     
     my @order;
     if(ref($ptr) eq "HASH") {
@@ -797,11 +867,15 @@ sub _parseChildElements {
     foreach my $o (@order) {
         print ">$o<\n";
         switch($o) {
-            case '/order' { # cause of speed and to avoid printing the warn-msg
+            ###################################################
+            # cause of speed and to avoid printing the warn-msg            
+            case '/order' { 
             }
-            case '/nodes' { # cause of speed and to avoid printing the warn-msg
+            case '/nodes' { 
             }
-            case 'name' { # cause of speed and to avoid printing the warn-msg
+            case 'name' { 
+            }
+            case 'text-case' {
             }
             # because of nested macros
             case 'macro' {
@@ -812,7 +886,6 @@ sub _parseChildElements {
                 $self->_parseNames($mods, $ptr->{$o});
             }
             case 'date' {
-                #_parseDate($self, $mods, $ptr->{$o});
                 $self->_parseChildElements($mods, $ptr->{$o},"_parseChildElements($o)");
             }
             case 'label' {
@@ -830,7 +903,7 @@ sub _parseChildElements {
             }
             # additional non-top-level elements
             case 'variable' {
-                $self->_parseVariable($mods, $ptr->{$o}, 0, "");
+                $self->_parseVariable($mods, $ptr->{$o});
             }
             case 'prefix' { # not here, we do it above (=front)
             }
@@ -856,13 +929,7 @@ sub _parseChildElements {
         print "### _parseChildElements($o): _biblio_string after parsing $o: '$self->{_biblio_str}'\n";
     }
     
-    if(ref($ptr) eq "HASH") {
-        if(exists $ptr->{suffix}) {
-            print "Adding suffix '$ptr->{suffix}'\n";
-            print Dumper $ptr;
-            $self->{_biblio_str} .= $ptr->{suffix};
-        }
-    }
+    $self->_addFix($ptr, "suffix");
 }
 
 
@@ -1100,67 +1167,81 @@ sub _parseDatePart {
     print "_parseDatePart\n";
     #print Dumper $dp;
     
-    if(ref($dp) eq "HASH") {
-        if(exists $dp->{name}) {
-            switch($dp->{name}) { # month | day | year-other
-                case "month" { # 1. 
-                    # TODO
-                }
-                case "day" { # 2.
-                    # TODO
-                }
-                case "year" { # 3.1
-                    # unfortunately there are several ways to define the year:
-                    my $year = "";
-                    if(exists $mods->{relatedItem}->{part}->{date}) {
-                        $year = $mods->{relatedItem}->{part}->{date};
+    #if($self->_var->{'issued'} ne '') {
+    if(0) {    
+        my ($month, $day, $year, $dayofweek) = Date::Components::date_only_parse($self->_var->{'issued'});
+        #print STDERR "month=$month, day=$day, year=$year, dayofweek=$dayofweek\n";
+        
+        # because Zotero deals with full month names
+        if($month>0) {
+            $month = Date::Components::set_month_to_month_name_full($month);
+        }
+        #print STDERR "month: '$month'\n";
+
+        if(ref($dp) eq "HASH") {
+            if(exists $dp->{name}) {
+                switch($dp->{name}) { # month | day | year-other
+                    case "month" { # 1. 
+                        $self->{_biblio_str} .= $month;
                     }
-                    elsif(exists $mods->{relatedItem}->{originInfo}->{dateIssued}) {
-                        $year = $mods->{relatedItem}->{originInfo}->{dateIssued};
-                        if($year =~ /(\d\d\d\d)$/) {
-                            $year = $1;
+                    case "day" { # 2.
+                        $self->{_biblio_str} .= $day;
+                    }
+                    case "year" { # 3.1
+                        
+                        #### OLD #####
+                        # unfortunately there are several ways to define the year:
+                        #my $year = "";
+                        #if(exists $mods->{relatedItem}->{part}->{date}) {
+                        #    $year = $mods->{relatedItem}->{part}->{date};
+                        #}
+                        #elsif(exists $mods->{relatedItem}->{originInfo}->{dateIssued}) {
+                        #    $year = $mods->{relatedItem}->{originInfo}->{dateIssued};
+                        #    if($year =~ /(\d\d\d\d)$/) {
+                        #       $year = $1;
+                        #    }
+                        #}
+                        #else {
+                        #    die "ERROR: How else should I get the year info?";
+                        #}
+                        
+                        # now we have the long year, e.g. 2000.
+                        # perhaps we have to shorten it                    
+                        if(exists $dp->{form}) {
+                            switch($dp->{form}) {
+                                case "short" {
+                                    
+                                }
+                                case "long" {
+                                    
+                                }
+                                else {
+                                    die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->form eq '".($dp->{form})."' is not implemented, yet.";
+                                }
+                            }
                         }
+                        
+                        # the year is ready, add it 
+                        $self->{_biblio_str} .= $year;
+                        
+                    }
+                    case "other" { # 3.2
+                        
                     }
                     else {
-                        die "ERROR: How else should I get the year info?";
+                        die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->name eq '".($dp->{'date-part'}->{name})."' is not implemented, yet.";
                     }
-                    
-                    # now we have the long year, e.g. 2000.
-                    # perhaps we have to shorten it                    
-                    if(exists $dp->{form}) {
-                        switch($dp->{form}) {
-                            case "short" {
-                                
-                            }
-                            case "long" {
-                                
-                            }
-                            else {
-                                die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->form eq '".($dp->{form})."' is not implemented, yet.";
-                            }
-                        }
-                    }
-                    
-                    # the year is ready, add it 
-                    $self->{_biblio_str} .= $year;
-                    
-                }
-                case "other" { # 3.2
-                    
-                }
-                else {
-                    die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->name eq '".($dp->{'date-part'}->{name})."' is not implemented, yet.";
                 }
             }
         }
-    }
-    elsif(ref($dp) eq "ARRAY") {
-        foreach my $dp (@$dp) {
-            $self->_parseDatePart($mods, $dp);
+        elsif(ref($dp) eq "ARRAY") {
+            foreach my $dp (@$dp) {
+                $self->_parseDatePart($mods, $dp);
+            }
         }
-    }
-    else {
-        die "ERROR: Date-part is neither hash nor array?";
+        else {
+            die "ERROR: Date-part is neither hash nor array?";
+        }
     }
 }
 
@@ -1199,7 +1280,8 @@ sub _parseChoose {
             $goOn = $self->_parseIf_elseIf_else($mods, $choosePtr->{$o}, $goOn, $o);
         }
         elsif($o eq 'else') { 
-            $goOn = $self->_parseIf_elseIf_else($mods, $choosePtr->{$o}, 1, $o);
+            print "else goOn=$goOn\n";
+            $goOn = $self->_parseIf_elseIf_else($mods, $choosePtr->{$o}, $goOn, $o);
         }
     }
 }
@@ -1219,6 +1301,7 @@ sub _parseIf_elseIf_else {
             }
             else {
                 print "false!\n";
+                return 1; #goOn
             }
         }
         else { # the else-statement
@@ -1494,7 +1577,7 @@ sub _checkLocator {
 # Furhermore, we need the number of overall printed elements in the recursion
 # Maybe, we need more thinking here ;-)
 sub _parseGroup {
-    my ($self, $mods, $g, $elemNumber) = @_;
+    my ($self, $mods, $g) = @_;
     
     print "_parseGroup\n";
     
@@ -1506,15 +1589,11 @@ sub _parseGroup {
     #    }
     #}
     print "### _biblio_string after group: '$self->{_biblio_str}'\n";
-    
-    return $elemNumber;
 }
 
 # add the variable to the biblio string
 sub _parseVariable {
-    my ($self, $mods, $v, $elemNumber, $delimiter) = @_;
-     
-    #$self->{_biblio_str} .= $v->{prefix} if (exists $v->{prefix});
+    my ($self, $mods, $v) = @_;
     
     #print STDERR "_parseVariable: '$v'\n";
     if(exists $self->_var->{$v}) {
@@ -1527,10 +1606,6 @@ sub _parseVariable {
     else {
         die "ERROR: Variable '$v' is unknown, someone should implement it ;-)";
     }
-    
-    #$self->{_biblio_str} =~ s/\s$//g; # remove endstanding (maybe hardcoded) gaps
-    #$self->{_biblio_str} .= $v->{suffix} if (exists $v->{suffix});
-    #$self->{_biblio_str} =~ s/\s\s/ /g; # 2 to 1
 }
 
 # returns an array with unique entries
