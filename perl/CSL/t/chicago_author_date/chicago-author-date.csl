@@ -17,15 +17,15 @@
   <macro name="secondary-contributors">
     <choose>
       <if type="chapter" match="none">
-    <group delimiter=". ">
-      <choose>
-        <if variable="author">
-      <names variable="editor">
-        <label form="verb-short" text-case="capitalize-first" suffix=". "/>
-        <name and="text" delimiter=", "/>
-      </names>
-        </if>
-      </choose>
+        <group delimiter=". ">
+          <choose>
+            <if variable="author">
+              <names variable="editor">
+                <label form="verb-short" text-case="capitalize-first" suffix=". "/>
+                <name and="text" delimiter=", "/>
+              </names>
+            </if>
+          </choose>
       <choose>
         <if variable="author editor" match="any">
           <names variable="translator">
@@ -41,24 +41,24 @@
   <macro name="container-contributors">
     <choose>
       <if type="chapter">
-    <group prefix="," delimiter=", ">
-      <choose>
-        <if variable="author">
-      <names variable="editor">
-        <label form="verb-short" prefix=" " text-case="lowercase" suffix=". "/>
-        <name and="text" delimiter=", "/>
-      </names>
-        </if>
-      </choose>
-      <choose>
-        <if variable="author editor" match="any">
-          <names variable="translator">
-            <label form="verb-short" prefix=" " text-case="lowercase" suffix=". "/>
-            <name and="text" delimiter=", "/>
-          </names>
-        </if>
-      </choose>
-    </group>
+        <group prefix="," delimiter=", ">
+          <choose>
+            <if variable="author">
+              <names variable="editor">
+                <label form="verb-short" prefix=" " text-case="lowercase" suffix=". "/>
+                <name and="text" delimiter=", "/>
+              </names>
+            </if>
+          </choose>
+          <choose>
+            <if variable="author editor" match="any">
+              <names variable="translator">
+                <label form="verb-short" prefix=" " text-case="lowercase" suffix=". "/>
+                <name and="text" delimiter=", "/>
+              </names>
+            </if>
+          </choose>
+        </group>
       </if>
     </choose>
   </macro>
@@ -85,15 +85,15 @@
     <choose>
       <if type="personal_communication">
     	<choose>
-	  	  <if variable="genre">
-		<text variable="genre" text-case="capitalize-first"/>
-	  	  </if>
-	  	  <else>
-		<text term="letter" text-case="capitalize-first"/>
-		  </else>
-	    </choose>
-	  </if>
-	</choose>
+          <if variable="genre">
+            <text variable="genre" text-case="capitalize-first"/>
+          </if>
+          <else>
+            <text term="letter" text-case="capitalize-first"/>
+          </else>
+        </choose>
+      </if>
+    </choose>
     <names variable="recipient" delimiter=", ">
       <label form="verb" prefix=" " text-case="lowercase" suffix=" "/>
       <name and="text" delimiter=", "/>
