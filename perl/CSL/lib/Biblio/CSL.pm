@@ -6,6 +6,13 @@ use warnings;
 use Moose;
 use XML::Smart;
 use Switch;
+#use Date::Components;
+#use Date::Manip;
+#use DateTime::Format::Natural;
+#use DateTime::Format::Flexible;
+use DateTimeX::Easy;
+
+
 use utf8;
 binmode STDOUT, ":utf8";
 
@@ -125,15 +132,21 @@ has '_c' => (
   required => 0
 );
 
-# hash that stores the current set variables
+# hash that stores the variables
 # key: name of variables
 # value: content-string
-# whenever a variable is set, the name and the content of the variable is kept in the hash
-# TODO: no't know yet if I should just add the key, or if I also should keep the actual value
 has '_var' => (
     is       => 'rw',
     required => 0
 );
+
+# group settings
+# getting active when entering group
+has '_var' => (
+    is       => 'rw',
+    required => 0
+);
+
 
 # is called after construction
 # e.g. useful to validate attributes
@@ -155,8 +168,11 @@ sub BUILD {
     #print Dumper $self->_c; exit;
 
     # initialize some attributes
-    $self->_citationsSize(_setCitationsSize($self));
-    $self->_biblioSize(_setBiblioSize($self));
+    $self->_citationsSize($self->_setCitationsSize());
+    $self->_biblioSize($self->_setBiblioSize());
+    
+    $self->{_group}->{'inGroup'} = 0;
+    $self->{_group}->{'delimiter'} = '';
 
     # do we have a biblio entry for each citation and vice versa?
     #if($self->_citationsSize != $self->_biblioSize) {
@@ -169,7 +185,7 @@ sub _set_format {
     my ($self, $format, $meta_attr) = @_;
 
     if ($format ne "txt") {
-        die "ERROR: Unknown output format\n";
+        die "ERROR: Unknown output format '$format'\n";
     }
 }
 
@@ -257,7 +273,7 @@ sub transform {
     # handle citations
     if($self->getCitationsSize>0) {
         if($self->_c->{style}->{citation} ) {
-            _parseCitations($self);
+            $self->_parseCitations();
         }
         else {
             die "ERROR: CSL-element 'citation' not available?";
@@ -267,12 +283,11 @@ sub transform {
     # handle bibliography
     if($self->_m->{modsCollection}) { # transform the complete collection
         foreach my $mods ($self->_m->{modsCollection}->{mods}->('@')) {
-            #print Dumper $mods; exit;
-            transformEach($self, $mods); # TODO: only 1 param: self, $mods or $mods->pointer???
+            $self->_transformEach($mods); # TODO: only 1 param: self, $mods or $mods->pointer???
         }
     }
     else { # no collection, transform just a single mods        
-        transformEach($self->_m->{mods}, $self); # TODO: only 1 param: self
+        $self->_transformEach($self->_m->{mods}); # TODO: only 1 param: self
     }
 }
 
@@ -374,7 +389,7 @@ sub _parseCitations {
 
 
 # parse a single mods entry
-sub transformEach() {
+sub _transformEach() {
     my ($self, $mods) = @_;
     
     if(exists $self->_c->{style}) {
@@ -382,7 +397,8 @@ sub transformEach() {
         if(exists $self->_c->{style}->{bibliography} ) {
             if(exists $self->_c->{style}->{bibliography}->{layout} ) {  
                 # lets go
-                _parseChildElements($self, $mods, $self->_c->{style}->{bibliography}->{layout}->pointer, "transformEach(parsing layout)");
+                $self->_updateVariables($mods->pointer);
+                $self->_parseChildElements($mods, $self->_c->{style}->{bibliography}->{layout}->pointer, "transformEach(parsing layout)");
                 
                 # check for "line-formatting" element, attribute-name is {"line-spacing" | "entry-spacing" }.
                 my $opt = 0;
@@ -419,16 +435,504 @@ sub transformEach() {
     }    
 }
 
+# cleans the old and store the current variables of the current mods
+sub _updateVariables {
+    my ($self, $mods) = @_;
+    
+    print "_updateVariables\n";
+    
+    %{$self->{_var}} = (); 
+    %{$self->_var} = (
+        'title' => '',
+        'container-title' => '',
+        'collection-title' => '',
+        'collection-number' => '',
+        'original-title' => '',
+        'publisher' => '',
+        'publisher-place' => '',
+        'archive' => '',
+        'archive-place' => '',
+        'archive_location' => '',
+        'event' => '',
+        'event-place' => '',
+        'page' => '',
+        'locator' => '',
+        'version' => '',
+        'volume' => '',
+        'number-of-volumes' => '',
+        'issue' => '',
+        'chapter-number' => '',
+        'medium' => '',
+        'status' => '',
+        'edition' => '',
+        'section' => '',
+        'genre' => '',
+        'note' => '',
+        'annote' => '',
+        'abstract' => '',
+        'keyword' => '',
+        'number' => '',
+        'references' => '',
+        'URL' => '',
+        'DOI' => '',
+        'ISBN' => '',
+        'call-number' => '',
+        'citation-number' => '',
+        'citation-label' => '',
+        'first-reference-note-number' => '',
+        'year-suffix' => '',
+        'editor' => '',
+        'translator' => '',
+        'interviewer' => '',
+        'recipient' => '',
+        'issued' => '',
+        'event' => '',
+        'accessed' => '',
+        'container' => '',
+        'original-date' => ''
+    );
+
+    # now get existing values for these given keys
+
+    foreach my $k (keys %{$self->_var}) {
+        switch($k) {
+            ## the primary title for the cited item
+            case "title" {
+                if(exists $mods->{titleInfo}->{title}) {
+                    $self->_var->{'title'} = $mods->{titleInfo}->{title}->{CONTENT};
+                }
+                else {                    
+                }
+            }
+            ## the secondary title for the cited item; for a book chapter, this 
+            ## would be a book title, for an article the journal title, etc.
+            # the article title is handled elsewhere, here we have to care about
+            #  $mods->{relatedItem}->{titleInfo}
+            case 'container-title' {
+                if(exists $mods->{relatedItem}) {
+                    if(exists $mods->{relatedItem}->{titleInfo}) {
+                        #print Dumper $mods->{relatedItem}->{titleInfo};
+                        my $r = ref($mods->{relatedItem}->{titleInfo});
+                        if($r eq "HASH") {
+                                $self->_setContainerTitle($mods, $mods->{relatedItem}->{titleInfo});                                
+                        }
+                        elsif($r eq "ARRAY") {
+                            #print Dumper $mods->{relatedItem}->{titleInfo};
+                            my @titles = @{$mods->{relatedItem}->{titleInfo}};
+                            #print Dumper @titles;
+                            foreach my $t (@titles) {
+                                print Dumper $t;
+                                $self->_setContainerTitle($mods, $t);
+                            }
+                        }
+                        else {
+                            die "ERROR: Container-title is neither hash nor array?";
+                        }
+                    }
+                }
+            }
+            ## the tertiary title for the cited item; for example, a series title
+            case 'collection-title' {
+                
+            }
+            ## collection number; for example, series number
+            case 'collection-number' {
+            }
+            ## title of a related original version; often useful in cases of translation
+            case 'original-title' {
+            }
+            ## the name of the publisher
+            case 'publisher' {
+            }
+            ## the location of the publisher
+            case 'publisher-place' {
+            }
+            ## the name of the archive
+            case 'archive' {
+            }
+            ## the location of the archive
+            case 'archive-place' {
+            }
+            ## the location within an archival collection (for example, box and folder)
+            case 'archive_location' {
+            }
+            ## the name or title of a related event such as a conference or hearing
+            case 'event' {
+            }
+            ## the location or place for the related event
+            case 'event-place' {
+            }
+            ##
+            case 'page' {
+                if(exists $mods->{relatedItem}->{part}->{extent}->{unit}) {
+                    if($mods->{relatedItem}->{part}->{extent}->{unit} eq "pages") {
+                        if(exists $mods->{relatedItem}->{part}->{extent}->{start} && exists $mods->{relatedItem}->{part}->{extent}->{end}) {
+                            if($mods->{relatedItem}->{part}->{extent}->{start}->{CONTENT} eq $mods->{relatedItem}->{part}->{extent}->{end}->{CONTENT}) {
+                                $self->_var->{'page'} = $mods->{relatedItem}->{part}->{extent}->{start}->{CONTENT};
+                            }
+                            else {
+                                $self->_var->{'page'} = $mods->{relatedItem}->{part}->{extent}->{start}->{CONTENT}."-".$mods->{relatedItem}->{part}->{extent}->{end}->{CONTENT};
+                            }
+                        }
+                        else {
+                            die "ERROR: No start and end page in the mods file?";
+                        }
+                    }
+                    else {
+                        die "ERROR: No 'pages' attribut in the mods file?";
+                    }
+                }
+                else {
+                }
+            }
+            ## a description to locate an item within some larger container or 
+            ## collection; a volume or issue number is a kind of locator, for example.
+            case 'locator' {
+            }
+            ## version description
+            case 'version' {
+            }
+            ## volume number for the container periodical
+            case 'volume' {
+                if(exists $mods->{relatedItem}) {
+                    if(exists $mods->{relatedItem}->{part}) {
+                        if(exists $mods->{relatedItem}->{part}->{detail}) {
+                            my $r = ref($mods->{relatedItem}->{part}->{detail});
+                            if($r eq "HASH") {
+                                if(exists $mods->{relatedItem}->{part}->{detail}->{type}) {
+                                    if($mods->{relatedItem}->{part}->{detail}->{type} eq 'volume') {
+                                        if(exists $mods->{relatedItem}->{part}->{detail}->{number}) {
+                                            $self->_var->{'volume'} = $mods->{relatedItem}->{part}->{detail}->{number}->{CONTENT};
+                                        }
+                                        elsif(exists $mods->{relatedItem}->{part}->{detail}->{text}) {
+                                            $self->_var->{'volume'} = $mods->{relatedItem}->{part}->{detail}->{text}->{CONTENT};
+                                        }
+                                        else {
+                                            die "ERROR: Volume number is given, but no number or text tag is found for the volume number? (mods-entry ".($self->_biblioNumber).")";
+                                        }
+                                    }
+                                }
+                            }
+                            elsif($r eq "ARRAY") {
+                                my @details = @{$mods->{relatedItem}->{part}->{detail}};
+                                foreach my $d (@details) {
+                                    if(exists $d->{type}) {
+                                        if($d->{type} eq 'volume') {
+                                            if(exists $d->{number}) {
+                                                $self->_var->{'volume'} = $d->{number}->{CONTENT};
+                                            }
+                                            elsif(exists $d->{text}) {
+                                                $self->_var->{'volume'} = $d->{text}->{CONTENT};
+                                            }
+                                            else {
+                                                die "ERROR: Volumeis given, but no number or text tag is found for the volume number? (mods-entry ".($self->_biblioNumber).")";
+                                            }
+                                        }
+                                    }
+                                }                                
+                            }
+                            else {
+                                die "mods->{ relatedItem }->{ part }->{ detail } is neither hash nor array? It is '$r'?\n";
+                            }
+                        }
+                    }
+                }
+            } 
+            ## refers to the number of items in multi-volume books and such
+            case 'number-of-volumes' {
+            } 
+            ## the issue number for the container publication
+            case 'issue' {
+                if(exists $mods->{relatedItem}) {
+                    if(exists $mods->{relatedItem}->{part}) {
+                        if(exists $mods->{relatedItem}->{part}->{detail}) {
+                            my $r = ref($mods->{relatedItem}->{part}->{detail});
+                            if($r eq "HASH") {
+                                if(exists $mods->{relatedItem}->{part}->{detail}->{type}) {
+                                    if($mods->{relatedItem}->{part}->{detail}->{type} eq 'issue') {
+                                        if(exists $mods->{relatedItem}->{part}->{detail}->{number}) {
+                                            $self->_var->{'issue'} = $mods->{relatedItem}->{part}->{detail}->{number}->{CONTENT};
+                                        }
+                                        else {
+                                            die "ERROR: Issue is given, but no number tag is found for the volume number? (mods-entry ".($self->_biblioNumber).")";
+                                        }
+                                    }
+                                }
+                            }
+                            elsif($r eq "ARRAY") {
+                                my @details = @{$mods->{relatedItem}->{part}->{detail}};
+                                foreach my $d (@details) {
+                                    if(exists $d->{type}) {
+                                        if($d->{type} eq 'issue') {
+                                            if(exists $d->{number}) {
+                                                $self->_var->{'issue'} = $d->{number}->{CONTENT};
+                                            }
+                                            elsif(exists $d->{text}) {
+                                                $self->_var->{'issue'} = $d->{text}->{CONTENT};
+                                            }
+                                            else {
+                                                die "ERROR: Issue is given, but no number tag is found for the volume number? (mods-entry ".($self->_biblioNumber).")";
+                                            }
+                                        }
+                                    }
+                                }                                
+                            }
+                            else {
+                                die "mods->{ relatedItem }->{ part }->{ detail } is neither hash nor array? It is '$r'?\n";
+                            }
+                        }
+                    }
+                }
+            } 
+            ##
+            case 'chapter-number' {
+            } 
+            ## medium description (DVD, CD, etc.)
+            case 'medium' {
+            } 
+            ## the (typically publication) status of an item; for example 'forthcoming'
+            case 'status' {
+            } 
+            ## an edition description
+            case 'edition' {
+            } 
+            ## a section description (for newspapers, etc.)
+            case 'section' {
+            } 
+            ##
+            case 'genre' {
+            } 
+            ## a short inline note, often used to refer to additional details of the resource
+            case 'note' {
+            } 
+            ## notes made by a reader about the content of the resource
+            case 'annote' {
+            } 
+            ##
+            case 'abstract' {
+            } 
+            ##
+            case 'keyword' {
+            } 
+            ## a document number; useful for reports and such
+            case 'number' {
+            }
+            ## for related referenced resources; this is here for legal case 
+            ## histories, but may be relevant for other contexts.
+            case 'references' {
+            } 
+            ##
+            case 'URL' {
+            } 
+            ##
+            case 'DOI' {
+                # TODO hash vs array?
+                if(exists $mods->{identifier}) {
+                    if(exists $mods->{identifier}->{type}) {
+                        if($mods->{identifier}->{type} eq 'doi') {
+                            $self->_var->{$k} = $mods->{identifier}->{'CONTENT'};
+                            print STDERR $self->_var->{$k}, "\n";
+                        }
+                    }
+                }
+            } 
+            ##
+            case 'ISBN' {
+            } 
+            ##
+            case 'call-number' {
+            } 
+            ## the number used for the in-text citation mark in numeric styles
+            case 'citation-number' {
+                $self->{_biblioNumber}++;
+                $self->_var->{'citation-number'} = $self->{_biblioNumber};
+                
+                # hardcoded space, some styles have a space at this point, others don't
+                $self->_var->{'citation-number'} .= " " if($self->_var->{'citation-number'} !~ /\s$/);
+            } 
+            ## the label used for the in-text citation mark in label styles
+            case 'citation-label' {
+            }
+            ## The number of a preceding note containing the first reference to
+            ## this item. Relevant only for note-based styles, and null for first references.
+            case 'first-reference-note-number' {
+            }
+            ## The year suffix for author-date styles; e.g. the 'a' in '1999a'.
+            case 'year-suffix' {
+            }            
+            ## Roles
+            # however, certain roles can appear as names-variable
+            case 'editor' {                
+            }
+            case 'translator' {                
+            }
+            case 'interviewer' {                
+            }
+            case 'recipient' {                
+            }
+            ## cs-date-tokens
+            case 'issued' {
+                #<relatedItem><originInfo><dateIssued>Mar 12, 2009</dateIssued>
+                if(exists $mods->{relatedItem}) {
+                    if(exists $mods->{relatedItem}->{originInfo}) {
+                        if(exists $mods->{relatedItem}->{originInfo}->{dateIssued}) {
+                            my $date = $mods->{relatedItem}->{originInfo}->{dateIssued}->{CONTENT};
+                            #print STDERR "date='$date'\n";
+                            
+                            # Zotero outputs full month names
+                            my %month = (
+                                "Jan" => "January",
+                                "Feb" => "February",
+                                "Mar" => "March",
+                                "Apr" => "April",
+                                "May" => "May",
+                                "Jun" => "June",
+                                "Jul" => "July",
+                                "Aug" => "August",
+                                "Sep" => "September",
+                                "Oct" => "October",
+                                "Nov" => "November",
+                                "Dec" => "December",
+                            );
+                                                        
+                            my $keep = "";
+                            # NAIVE APPROACH
+                            # WE'LL KEEP THE DATE AS DAY/MONTH/YEAR
+                            if($date =~ /^(\d\d\d\d)$/) { #simple year
+                                $keep = "-/-/".$1;
+                            }
+                            elsif($date =~ /^(\S+) (\d\d\d\d)$/) { # month and year
+                                if(exists $month{$1}) {
+                                    $keep = "-/".$month{$1}."/".$2; # keep full name
+                                }
+                                else {
+                                    $keep = "-/".$1."/".$2;
+                                }
+                            }
+                            elsif($date =~ /^(\S+) (\d+), (\d\d\d\d)$/) { # month day, year
+                                if(exists $month{$1}) {
+                                    $keep = $2."/".$month{$1}."/".$3;
+                                }
+                                else {
+                                    $keep = $2."/".$1."/".$3;
+                                }
+                            }
+                            else {
+                                die "ERROR: Wasn't able to parse the date '$date'?";
+                            }
+                            $self->_var->{'issued'} = $keep;
+                            #print STDERR $keep, "\n";
+                        }
+                    }
+                }
+            }
+            case 'event' {
+            }
+            case 'accessed' {
+            }
+            case 'container' {
+            }
+            case 'original-date' {
+            }
+        }
+    }
+
+
+    #print STDERR Dumper %{$self->_var}; 
+    #exit;
+
+}
+
+sub _setContainerTitle {
+    my ($self, $mods, $title) = @_; 
+    
+    #print Dumper $title;
+    
+    my $r = ref($title);
+    #print "innen r=$r\n";
+    
+    if(exists $title->{title}) {
+        if(! $r) { # its just the string and that is the order to get the container-title.
+            print Dumper $title;
+            $self->{_var}->{'container-title'} = $title->{title}->{CONTENT};
+        }            
+        elsif($r eq "HASH") {
+            # short title?
+            if(exists $title->{form}) {
+                switch($title->{form}) {
+                    case "short" {
+                        $self->_var->{'container-title'} = $mods->{relatedItem}->{titleInfo}->('type','eq','abbreviated')->{title}->{CONTENT};
+                    }
+                    case "long" {                                    
+                        $self->_var->{'container-title'} = $title->{title}->{CONTENT};
+                    }
+                    else {
+                        die "ERROR: Unknown container-title form '".($title->{form})."'";
+                    }
+                }
+            }
+            else {
+                $self->_var->{'container-title'} = $title->{title}->{CONTENT};
+            }
+        }
+    }
+}
+
+# add either prefix or suffix 
+sub _addFix {
+    my ($self, $ptr, $what) = @_;
+    
+    if(ref($ptr) eq "HASH") {
+        if($what eq "prefix") {
+            if(exists $ptr->{prefix}) {
+                print "Adding prefix '$ptr->{prefix}'\n";
+                #print Dumper $ptr;
+                $self->{_biblio_str} .= $ptr->{prefix}; 
+                #$self->_checkIntegrityOfFix($ptr->{prefix});
+            }
+        }
+        elsif($what eq "suffix") {     
+            if(exists $ptr->{suffix}) {
+                print "Adding suffix '$ptr->{suffix}'\n";
+                #print Dumper $ptr;
+                $self->{_biblio_str} .= $ptr->{suffix};
+                #$self->_checkIntegrityOfFix($ptr->{suffix});
+            }
+        }
+        else {
+            die "ERROR: '$what' is not a valid fix, either prefix or suffix, please!";
+        }
+    }
+}
+
+# sometimes we ignore variables
+# they are not written to the output
+# but then we also don't need the fix!
+# this is to ensure that we do not have double fixes and so on
+#
+### DON'T NEEDED ANYMORE 
+#
+#sub _checkIntegrityOfFix {
+    #my ($self, $str) = @_;
+    
+    #if($self->{_biblio_str} =~ /\Q$str$str\E/) {        
+    #    print "matching (str='$str$str'): ", $self->{_biblio_str}, "\n";
+    #    $self->{_biblio_str} =~ s/$str$str$/$str/g;
+    #    print "after: ", $self->{_biblio_str}, "\n";
+    #}
+    
+#}
 
 # parses relevant major CSL elements while generating the bibliography
 sub _parseChildElements {
     my ($self, $mods, $ptr, $from) = @_;
     
-    if(ref($ptr) eq "HASH") {
-        if(exists $ptr->{prefix}) {
-            $self->{_biblio_str} .= $ptr->{prefix};
-        }
-    }
+    $self->_addFix($ptr, "prefix");
+    
+    # copy to be able to recognise changes;
+    my $tmpStr = $self->_biblio_str;
+    
+    #print Dumper $ptr;
     
     my @order;
     if(ref($ptr) eq "HASH") {
@@ -441,56 +945,75 @@ sub _parseChildElements {
     }
     elsif(ref($ptr) eq "ARRAY") {
         foreach my $k (@$ptr) {
-            _parseChildElements($self, $mods, $k, $from);
+            $self->_parseChildElements($mods, $k, $from);
         }
     }
     else {
         die "ERROR: $ptr is neither hash nor array!";
     }
     
+    # needed for if|else-if|else
+    my $goOn = 1;  # do we go on?
+    
     foreach my $o (@order) {
+        print ">$o<\n";
         switch($o) {
-            case '/order' { # cause of speed and to avoid printing the warn-msg
+            ###################################################
+            # cause of speed and to avoid printing the warn-msg            
+            case '/order' { 
             }
-            case '/nodes' { # cause of speed and to avoid printing the warn-msg
+            case '/nodes' { 
             }
-            case 'name' { # cause of speed and to avoid printing the warn-msg
+            case 'name' { 
+            }
+            case 'text-case' {
+            }
+            case 'sort' {                
             }
             # because of nested macros
             case 'macro' {
-                _parseMacro($self, $mods, $ptr->{$o});
+                $self->_parseMacro($mods, $ptr->{$o});
             }
             # now all what is directly given by the CSL-standard
             case 'names' {
-                _parseNames($self, $mods, $ptr->{$o});
+                $self->_parseNames($mods, $ptr->{$o});
             }
             case 'date' {
-                #_parseDate($self, $mods, $ptr->{$o});
-                _parseChildElements($self, $mods, $ptr->{$o},"_parseChildElements($o)");
+                $self->_parseChildElements($mods, $ptr->{$o},"_parseChildElements($o)");
             }
             case 'label' {
-                _parseLabel($self, $mods, $ptr->{$o});
+                $self->_parseLabel($mods, $ptr->{$o});
             }
             case 'text' {
-                #_parseText($self, $mods, $ptr->{$o});
-                _parseChildElements($self, $mods, $ptr->{$o}, "_parseChildElements($o)");
+                print 'parsing text!!!\n';
+                $self->_parseChildElements($mods, $ptr->{$o}, "_parseChildElements($o)");
             }
             case 'choose' {
-                _parseChoose($self, $mods, $ptr->{$o});
+                $self->_parseChoose($mods, $ptr->{$o});
+                print "leaving choose\n";
             }            
             case 'group' {
-                _parseGroup($self, $mods, $ptr->{$o});
+                $self->_parseGroup($mods, $ptr->{$o});
             }
             # additional non-top-level elements
             case 'variable' {
-                _parseVariable($self, $mods, $ptr->{$o}, 0, "");
+                $self->_parseVariable($mods, $ptr->{$o});
             }
             case 'prefix' { # not here, we do it above (=front)
             }
             case 'suffix' { # not here, we do it below (=end)
             }
             case 'date-part' {
-                _parseDatePart($self, $mods, $ptr->{$o});
+                $self->_parseDatePart($mods, $ptr->{$o});
+            }
+            case 'if' {
+                $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
+            }
+            case 'else-if' {
+                $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
+            }
+            case 'else' {
+                $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
             }
             else {
                print "Warning ($from): '$o' not implemented, yet!\n";
@@ -500,11 +1023,32 @@ sub _parseChildElements {
         print "### _parseChildElements($o): _biblio_string after parsing $o: '$self->{_biblio_str}'\n";
     }
     
-    if(ref($ptr) eq "HASH") {
-        if(exists $ptr->{suffix}) {
-            $self->{_biblio_str} .= $ptr->{suffix};
+    my $removedPrefix = 0;
+    if($tmpStr eq $self->_biblio_str) {
+        # remove potential prefix cause the biblio_string hasn't changed, we don't need the prefix if there is nothing new
+        if(ref($ptr) eq "HASH") {
+            if(exists $ptr->{prefix}) {
+                #print STDERR "vor : '$self->{_biblio_str}'\n";
+                print "removing prefix '".$ptr->{prefix}."'\n";
+                my $substr = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($ptr->{prefix});
+                $self->{_biblio_str} = $substr;
+                $removedPrefix = 1;
+                #print STDERR "nach: '$self->{_biblio_str}'\n";
+                #if($self->{_biblio_str} =~ /\Q$p\E$/) {
+                #    $self->{_biblio_str} =~ s/$p//g;
+                #}
+            }
         }
     }
+    
+    # group delimiter
+    if($tmpStr ne $self->_biblio_str && $self->{_group}->{'inGroup'} ==1 && $self->{_group}->{'delimiter'} ne '' ) {
+        $self->{_biblio_str} .= $self->{_group}->{'delimiter'};
+    }
+
+    # suffixes finish strings
+    # but we need them only in that cases where we did not remove a prefix.
+    $self->_addFix($ptr, "suffix") if(! $removedPrefix);
 }
 
 
@@ -514,9 +1058,9 @@ sub _parseMacro {
     my $macro = $self->_c->{style}->{macro}('name','eq',$macro_name)->pointer;
     
     print "_parseMacro: $macro_name\n";
-    #print Dumper $macro;
+    print Dumper $macro;
     
-    _parseChildElements($self, $mods, $macro, "_parseMacro($macro_name)");
+    $self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
 }
 
 
@@ -532,8 +1076,9 @@ sub _parseNames {
     print "_parseNames\n";
     print Dumper $namesPtr;
     
-    # remind set variables
     if(exists $namesPtr->{variable}) {
+        # remind set variables
+        # print "reminding variable ", $namesPtr->{variable}, "\n";
         $self->{_var}{$namesPtr->{variable}} = 1;        
         
         # cs-names = "author" | "editor" | "translator" | "recipient" | 
@@ -546,10 +1091,10 @@ sub _parseNames {
       
         switch($namesPtr->{variable}) {
             case 'author' {
-                _parseNameAuthor($self, $mods, $namesPtr->{name});
+                $self->_parseNameAuthor($mods, $namesPtr->{name});
             }
             case 'editor' {
-                
+                print "_parseEditor TODO\n";
             }
             case 'translator' {
                 
@@ -741,67 +1286,69 @@ sub _parseDatePart {
     print "_parseDatePart\n";
     #print Dumper $dp;
     
-    if(ref($dp) eq "HASH") {
-        if(exists $dp->{name}) {
-            switch($dp->{name}) { # month | day | year-other
-                case "month" { # 1. 
-                    # TODO
-                }
-                case "day" { # 2.
-                    # TODO
-                }
-                case "year" { # 3.1
-                    # unfortunately there are several ways to define the year:
-                    my $year = "";
-                    if(exists $mods->{relatedItem}->{part}->{date}) {
-                        $year = $mods->{relatedItem}->{part}->{date};
+    my @d = split /\//, $self->_var->{'issued'};
+    if(scalar(@d)!=3) {
+        die "ERROR: Couldn't split SL-variable issued!";
+    }
+
+    my $datePartString = "";
+    if($self->_var->{'issued'} ne '') {
+        if(ref($dp) eq "HASH") {
+            
+            if(exists $dp->{name}) {
+                switch($dp->{name}) { # month | day | year-other
+                    case "month" { # 1.                        
+                        $datePartString .= $d[1] if($d[1] ne '-');
                     }
-                    elsif(exists $mods->{relatedItem}->{originInfo}->{dateIssued}) {
-                        $year = $mods->{relatedItem}->{originInfo}->{dateIssued};
-                        if($year =~ /(\d\d\d\d)$/) {
-                            $year = $1;
+                    case "day" { # 2.
+                        $datePartString .= $d[0] if($d[0] ne '-');
+                    }
+                    case "year" { # 3.1
+                        # now we have the long year, e.g. 2000.
+                        # perhaps we have to shorten it                    
+                        if(exists $dp->{form}) {
+                            switch($dp->{form}) {
+                                case "short" {
+                                    $d[2] = $1 if($d[2] =~ /\d\d(\d\d)/);                                    
+                                }
+                                case "long" {
+                                    
+                                }
+                                else {
+                                    die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->form eq '".($dp->{form})."' is not implemented, yet.";
+                                }
+                            }
                         }
+                        
+                        # the year is ready, add it 
+                        $datePartString .= $d[2];
+                        
+                    }
+                    case "other" { # 3.2
+                        
                     }
                     else {
-                        die "ERROR: How else should I get the year info?";
+                        die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->name eq '".($dp->{'date-part'}->{name})."' is not implemented, yet.";
                     }
-                    
-                    # now we have the long year, e.g. 2000.
-                    # perhaps we have to shorten it                    
-                    if(exists $dp->{form}) {
-                        switch($dp->{form}) {
-                            case "short" {
-                                
-                            }
-                            case "long" {
-                                
-                            }
-                            else {
-                                die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->form eq '".($dp->{form})."' is not implemented, yet.";
-                            }
-                        }
-                    }
-                    
-                    # the year is ready, add it 
-                    $self->{_biblio_str} .= $year;
-                    
                 }
-                case "other" { # 3.2
-                    
-                }
-                else {
-                    die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->name eq '".($dp->{'date-part'}->{name})."' is not implemented, yet.";
+                
+                if($datePartString ne '') {
+                    $self->_addFix($dp, "prefix");
+                    $self->{_biblio_str} .= $datePartString;
+                    $self->_addFix($dp, "suffix");
                 }
             }
+            
+            
         }
-    }
-    elsif(ref($dp) eq "ARRAY") {
-        foreach my $dp (@$dp) {
-            _parseDatePart($self, $mods, $dp);
+        elsif(ref($dp) eq "ARRAY") {
+            foreach my $dp (@$dp) {
+                $self->_parseDatePart($mods, $dp);
+            }
         }
-    }
-    else {
-        die "ERROR: Date-part is neither hash nor array?";
+        else {
+            die "ERROR: Date-part is neither hash nor array?";
+        }
     }
 }
 
@@ -810,7 +1357,7 @@ sub _parseChoose {
     my ($self, $mods, $choosePtr) = @_;
     
     print "_parseChoose\n";
-    #print Dumper $choosePtr;
+    print Dumper $choosePtr;
     
     my @order;
     if(ref($choosePtr) eq "HASH") {
@@ -824,33 +1371,63 @@ sub _parseChoose {
     }
     elsif(ref($choosePtr) eq "ARRAY") {
         foreach my $c (@{$choosePtr}) {
-            _parseChoose($self, $mods, $c);
+            $self->_parseChoose($mods, $c);
+            print "leaving choose\n";
         }
     }
     else {
         die "ChoosePtr is neither a hash nor an array?";
     }
-    # TODO: if, elsif, else needs to be implemented!
     
-    my $goOn = 1;
+    my $goOn = 1;  # do we go on?
     foreach my $o (@order) {
         print "-- $o --\n";
-        if( $o eq "if" && _checkCondition($self, $mods, $choosePtr->{$o})==1 ) {
-            print "within if\n";
-            _parseChildElements($self, $mods, $choosePtr->{$o}, "_parseConditionContent(if)");
-            $goOn=0; # we have seen the "if", so no else-if and no else
+        if( $o eq 'if' || $o eq 'else-if') {
+            $goOn = $self->_parseIf_elseIf_else($mods, $choosePtr->{$o}, $goOn, $o);
         }
-        elsif($goOn==1 && $o eq "else-if" && _checkCondition($self, $mods, $choosePtr->{$o})==1) {
-            print "within else-if\n";
-            _parseChildElements($self, $mods, $choosePtr->{$o}, "_parseConditionContent(else-if)");
-            $goOn=0; # we have seen the "else-if", so no else
+        elsif($o eq 'else') { 
+            print "else goOn=$goOn\n";
+            $goOn = $self->_parseIf_elseIf_else($mods, $choosePtr->{$o}, $goOn, $o);
         }
-        elsif($goOn==1 && $o eq "else") { # no conditions just the else statement
-            print "within else\n";
-            _parseChildElements($self, $mods, $choosePtr->{$o}, "_parseConditionContent(else)");
-            $goOn=0;
+        else {
+            print "Warning: Should I reach this?";
         }
     }
+    
+    print "leaving end of choose\n";
+}
+
+sub _parseIf_elseIf_else {
+    my ($self, $mods, $ptr, $goOn, $what) = @_;
+    
+    if($goOn==1) {
+        print "within $what\n";
+        if($what eq 'if' or $what eq 'else-if') {
+            if($self->_checkCondition($mods, $ptr)==1) {
+                my $next = $self->_howToProceedAfterCondition($ptr);
+                print "next after $what = '$next'\n";
+                if($next ne "") {
+                    $self->_parseChildElements($mods, $ptr->{$next}, "_parseConditionContent($what)");
+                }
+            }
+            else {
+                print "false!\n";
+                return 1; #goOn
+            }
+        }
+        else { # the else-statement
+            print "\n";
+            my $next = $self->_howToProceedAfterCondition($ptr);
+            print "next after $what = '$next'\n";
+            if($next ne "") {
+                $self->_parseChildElements($mods, $ptr->{$next}, "_parseConditionContent($what)");
+            }
+        }
+    }
+    
+    print "leaving parseIf_elseIf_else\n";
+    
+    return 0; # goOn=0 because we went into either if|else-if|else
 }
 
 
@@ -867,9 +1444,6 @@ sub _checkCondition {
         if(exists $condiPtr->{'/order'}) {
             @order = _uniqueArray(\@{$condiPtr->{'/order'}});
         }
-        #elsif(exists $condiPtr->{'/nodes'}) {
-        #    push @order, $condiPtr->{'/nodes'};
-        #}
         else {
             #die "ERROR: Condition has no /order or /nodes entry?";
             @order = keys %$condiPtr;
@@ -877,7 +1451,7 @@ sub _checkCondition {
     }
     elsif(ref($condiPtr) eq "ARRAY") {
         foreach my $c (@{$condiPtr}) {
-            _checkCondition($self, $mods, $c);
+            $self->_checkCondition($mods, $c);
         }
     }
     else {
@@ -890,31 +1464,31 @@ sub _checkCondition {
     foreach my $o (@order) { 
         switch($o) {# for each subcondition
             case 'type' {
-                $truth += _checkType($self, $mods, $condiPtr->{$o});
+                $truth += $self->_checkType($mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'variable' {
-                $truth += _checkVariable($self, $mods, $condiPtr->{$o});
+                $truth += $self->_checkVariable($mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'is_numeric' {
-                $truth += _checkIsNumeric($self, $mods, $condiPtr->{$o});
+                $truth += $self->_checkIsNumeric($mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'is_date' {
-                $truth += _checkIsDate($self, $mods, $condiPtr->{$o});
+                $truth += $self->_checkIsDate($mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'position' {
-                $truth += _checkPosition($self, $mods, $condiPtr->{$o});
+                $truth += $self->_checkPosition($mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'disambiguate' {
-                $truth += _checkDisambiguate($self, $mods, $condiPtr->{$o});
+                $truth += $self->_checkDisambiguate($mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'locator' {
-                $truth += _checkLocator($self, $mods, $condiPtr->{$o});
+                $truth += $self->_checkLocator($mods, $condiPtr->{$o});
                 $qtSubconditions++;
             }
             case 'match' {
@@ -958,6 +1532,67 @@ sub _checkCondition {
     return 0;
 }
 
+
+sub _howToProceedAfterCondition {
+    my ($self, $condiPtr) = @_;
+
+    print "_howToProceedAfterCondition\n";
+
+    my @order;
+    if(ref($condiPtr) eq "HASH") {
+        if(exists $condiPtr->{'/order'}) {
+            @order = _uniqueArray(\@{$condiPtr->{'/order'}});
+        }
+        else {
+            @order = keys %$condiPtr;
+        }
+    }
+    #elsif(ref($condiPtr) eq "ARRAY") {
+    #    foreach my $c (@{$condiPtr}) {
+    #        $self->_howToProceedAfterCondition($c);
+    #    }
+    #}
+    else {
+        die "CondiPtr is neither a hash nor an array?";
+    }
+
+    #print Dumper @order;
+
+    foreach my $o (@order) {        
+        switch($o) {# for each subcondition
+            #print "o=", $o, "\n";
+            case 'type' {
+            }
+            case 'variable' {
+            }
+            case 'is_numeric' {
+            }
+            case 'is_date' {
+            }
+            case 'position' {
+            }
+            case 'disambiguate' {
+            }
+            case 'locator' {
+            }
+            case 'match' {
+            }
+            # other stop words
+            case '/nodes' {
+            }
+            case 'delimiter' {
+            }
+            else {
+                print "proceed with $o\n";
+                return $o;
+            }
+        }
+    }
+
+    return "";
+}
+
+
 # check if the current mods is of the respective type
 # returns 1 if the check was positive else 0
 sub _checkType {
@@ -970,19 +1605,26 @@ sub _checkType {
         'journalArticle' => 'article-journal',
     );
 
-    # if it is the same, we take it right-away  
-    if ($mods->{genre} eq $type) {
-        return 1;
-    } 
-    else {
-        # We look if we can match an alias, if not return 0
-        if ($alias{$mods->{genre}}) {
-            return ($alias{$mods->{genre}} eq $type);
+    # $type can store multiple types
+    my @types = split / /, $type;
+    my $ret = 0;
+    # check if at least one type fits
+    foreach my $t (@types) {
+        # if it is the same, we take it right-away  
+        if ($mods->{genre} eq $t) {
+            $ret = 1;
         } 
         else {
-            return 0;
+            # We look if we can match an alias, if not return 0
+            if ($alias{$mods->{genre}}) {
+                $ret = 1 if($alias{$mods->{genre}} eq $t);
+            } 
+            else {
+                $ret = 0;
+            }
         }
     }
+    return $ret;
 }
 
 sub _checkVariable {
@@ -993,10 +1635,14 @@ sub _checkVariable {
     my @s = split / /, $v;
     foreach my $entry (@s) {
         if(exists ${$self->{_var}}{$entry}) {
-            return 1;
+            if(${$self->{_var}}{$entry} ne '') {
+                print "variable exists\n";
+                return 1;
+            }
         }
     }
     
+    print "variable is unknown\n";
     return 0;
 }
 
@@ -1054,315 +1700,50 @@ sub _checkLocator {
 # Furhermore, we need the number of overall printed elements in the recursion
 # Maybe, we need more thinking here ;-)
 sub _parseGroup {
-    my ($self, $mods, $g, $elemNumber) = @_;
-    
+    my ($self, $mods, $g) = @_;
+
     print "_parseGroup\n";
-    
+    $self->{_group}->{'inGroup'} = 1;
+
     if(ref($g) eq "HASH") {
-        #$self->{_biblio_str} .= $g->{'prefix'}  if(exists $g->{'prefix'});
-        
-        # index of the group element
-
-        # cause text could appear more than once in the ordering
-        # but if it contains more than once
-        # it is represented as array and has its own loop
-        my @order = _uniqueArray(\@{$g->{'/order'}});
-        
-        foreach my $k (@order) {
-            switch($k) { # formatting | delimiter | TODO:
-                case 'group' {
-                    $elemNumber = _parseGroup($self, $mods, $g->{$k}, $elemNumber);
-                }
-                case 'text' { # TODO _parseText!
-                    my $delimiter = "";
-                    
-                    if(ref($g->{$k}) eq "HASH") {
-                        $elemNumber++;
-                        if($elemNumber>1 && exists $g->{'delimiter'}) {
-                            $delimiter = $g->{'delimiter'};
-                            $self->{_biblio_str} .= $g->{'delimiter'};
-                        }
-                        
-                        # can appear either as hash
-                        if(exists $g->{$k}->{variable}) {
-                            _parseVariable($self, $mods, $g->{$k}, $elemNumber, $delimiter);
-                        }
-                    }
-                    elsif(ref($g->{$k}) eq "ARRAY") {
-                        # or as array
-                        foreach my $v (@{$g->{$k}}) {
-                            $elemNumber++;
-                            if($elemNumber>1 && exists $g->{'delimiter'}) {
-                                $delimiter = $g->{'delimiter'};
-                                $self->{_biblio_str} .= $g->{'delimiter'};
-                            }
-                        
-                            if(exists $v->{variable}) {
-                                _parseVariable($self, $mods, $v, $elemNumber, $delimiter);
-                            }
-                        }
-                    }
-                    
-                }
-                case 'macro' {
-                    _parseMacro($self, $mods, $g->{$k});
-                }
-                else {
-                   #die "ERROR: The CSL-attribute ...group->{'".($k)."'} is not available?";
-                }
-            }        
-        }
-
-        $self->{_biblio_str} .= $g->{'suffix'} if(exists $g->{'suffix'});
-        
-        return $elemNumber;
-    }
-    elsif(ref($g) eq "ARRAY") {
-        #print "group-array (".(scalar @$g).")\n";
-        foreach my $this_group (@$g) {
-            $elemNumber = _parseGroup($self, $mods, $this_group, $elemNumber);
+        if(exists $g->{'delimiter'}) {
+            $self->{_group}->{'delimiter'} = $g->{'delimiter'};
         }
     }
-    else {
-        die "ERROR: Group is neither hash nor array?";
-    }
     
-    print "### _biblio_string after group: '$self->{_biblio_str}'\n";
+    # do the group
+    my $next = $self->_howToProceedAfterCondition($g);
+    print "next after group = '$next'\n";
+    $self->_parseChildElements($mods, $g->{$next}, "_parseConditionContent(group)");
     
-    return $elemNumber;
+    # remove last delimiter 
+    # delimiter-example: e.g. ',': a,b,c
+    my $substr = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
+    $self->{_biblio_str} = $substr;
+    
+    # because we leave the group
+    $self->{_group}->{'delimiter'} = '';
+    $self->{_group}->{'inGroup'} = 0;    
 }
 
-
+# add the variable to the biblio string
 sub _parseVariable {
-    my ($self, $mods, $v, $elemNumber, $delimiter) = @_;
+    my ($self, $mods, $v) = @_;
     
-    print "_parseVariable: $v\n";
-    
-    #$self->{_biblio_str} .= $v->{prefix} if (exists $v->{prefix});
-    
-    # set the variable at the "availability"-hash.
-    ${$self->{_var}}{$v}=1;
-    
-    switch($v) {
-        ## the primary title for the cited item
-        case "title" {
-                print "within parsing title\n";
-                if(exists $mods->{titleInfo}->{title}) {
-                    print "mods title: $mods->{titleInfo}->{title}\n";
-                    $self->{_biblio_str} .= $mods->{titleInfo}->{title};
-                }
-                else {
-                    die "ERROR: No title tag? How should I else get the title?";
-                }
-        }
-        ## the secondary title for the cited item; for a book chapter, this 
-        ## would be a book title, for an article the journal title, etc.
-        # the article title is handled elsewhere, here we have to care about
-        #  $mods->{relatedItem}->{titleInfo}
-        case 'container-title' {
-            print "within parsing container-title\n";
-            if(! ref($v)) { # its hust the string and that is the order to get the container-title.
-                if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-                        $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
-                }
-            }            
-            elsif(ref($v) eq "HASH") {
-                # short title?
-                if(exists $v->{form}) {
-                    switch($v->{form}) {
-                        case "short" {
-                            $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->('type','eq','abbreviated')->{title};
-                        }
-                        case "long" {
-                            if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-                                $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
-                            }
-                        }
-                        else {
-                            die "ERROR: Unknown container-title form '".($v->{form})."'";
-                        }
-                    }
-                }
-                else {
-                    if(exists $mods->{relatedItem}->{titleInfo}->{title}) {
-                        $self->{_biblio_str} .= $mods->{relatedItem}->{titleInfo}->{title};
-                    }
-                }
-            }
-            elsif(ref($v) eq "ARRAY") {
-                die "ERROR. container-title is array, not implemented, yet!";
+    # do not print the issued variable, that is done within _parseDatePart 
+    if($v ne "issued") {    
+        print "_parseVariable: '$v'\n";
+        if(exists $self->_var->{$v}) {
+            #print STDERR Dumper $self->_var;
+            #print STDERR Dumper $self->_var->{$v};
+            if($self->_var->{$v} ne '') {
+                $self->{_biblio_str} .= $self->_var->{$v};
             }
         }
-        ## the tertiary title for the cited item; for example, a series title
-        case 'collection-title' {
-            print "within parsing collection-title\n";
-            
+        else {
+            die "ERROR: Variable '$v' is unknown, someone should implement it ;-)";
         }
-        ## collection number; for example, series number
-        case 'collection-number' {
-        }
-        ## title of a related original version; often useful in cases of translation
-        case 'original-title' {
-        }
-        ## the name of the publisher
-        case 'publisher' {
-        }
-        ## the location of the publisher
-        case 'publisher-place' {
-        }
-        ## the name of the archive
-        case 'archive' {
-        }
-        ## the location of the archive
-        case 'archive-place' {
-        }
-        ## the location within an archival collection (for example, box and folder)
-        case 'archive_location' {
-        }
-        ## the name or title of a related event such as a conference or hearing
-        case 'event' {
-        }
-        ## the location or place for the related event
-        case 'event-place' {
-        }
-        ##
-        case 'page' {
-            print "within parsing page\n";
-            if(exists $mods->{relatedItem}->{part}->{extent}->{unit}) {
-                if($mods->{relatedItem}->{part}->{extent}->{unit} eq "pages") {
-                    if(exists $mods->{relatedItem}->{part}->{extent}->{start} && exists $mods->{relatedItem}->{part}->{extent}->{end}) {
-                        if($mods->{relatedItem}->{part}->{extent}->{start} eq $mods->{relatedItem}->{part}->{extent}->{end}) {
-                            $self->{_biblio_str} .= $mods->{relatedItem}->{part}->{extent}->{start};
-                        }
-                        else {
-                            $self->{_biblio_str} .= $mods->{relatedItem}->{part}->{extent}->{start}."-".$mods->{relatedItem}->{part}->{extent}->{end};
-                        }
-                    }
-                    else {
-                        die "ERROR: No start and end page in the mods file?";
-                    }
-                }
-                else {
-                    die "ERROR: No 'pages' attribut in the mods file?";
-                }
-            }
-            else {
-                # remove endstanding spaces and potential delimiters because we can not find the page entry.
-                $self->{_biblio_str} =~ s/\s+$//g;
-                $self->{_biblio_str} =~ s/,$//g if($elemNumber>1 && $delimiter ne "");
-            }
-        }
-        ## a description to locate an item within some larger container or 
-        ## collection; a volume or issue number is a kind of locator, for example.
-        case 'locator' {
-        }
-        ## version description
-        case 'version' {
-        }
-        ## volume number for the container periodical
-        case 'volume' {
-            print "within parsing volume\n";
-            if(exists $mods->{relatedItem}->{part}->{detail}->{type}) {
-                if($mods->{relatedItem}->{part}->{detail}->{type} eq "volume") {
-                    if(exists $mods->{relatedItem}->{part}->{detail}->{number}) {
-                        $self->{_biblio_str} .= $mods->{relatedItem}->{part}->{detail}->{number};
-                    }
-                    elsif(exists $mods->{relatedItem}->{part}->{detail}->{text}) {
-                        $self->{_biblio_str} .= $mods->{relatedItem}->{part}->{detail}->{text};
-                    }
-                    else {
-                        die "ERROR: Volume type is given, but no volume or text tag is found for the volume number? (mods-entry ".($self->_biblioNumber).")";
-                    }
-                }
-                else {
-                    die "ERROR: Unknown volume type '".($mods->{relatedItem}->{part}->{detail}->{type})."'. Maybe not implemented, yet?";
-                }
-            }
-            else {
-                # remove endstanding spaces and potential delimiters because we can not find the volume entry.
-                $self->{_biblio_str} =~ s/\s+$//g;
-                $self->{_biblio_str} =~ s/,$//g if($elemNumber>1 && $delimiter ne "");
-            }
-        } 
-        ## refers to the number of items in multi-volume books and such
-        case 'number-of-volumes' {
-        } 
-        ## the issue number for the container publication
-        case 'issue' {
-        } 
-        ##
-        case 'chapter-number' {
-        } 
-        ## medium description (DVD, CD, etc.)
-        case 'medium' {
-        } 
-        ## the (typically publication) status of an item; for example 'forthcoming'
-        case 'status' {
-        } 
-        ## an edition description
-        case 'edition' {
-        } 
-        ## a section description (for newspapers, etc.)
-        case 'section' {
-        } 
-        ##
-        case 'genre' {
-            print "within parsing genre\n";
-        } 
-        ## a short inline note, often used to refer to additional details of the resource
-        case 'note' {
-        } 
-        ## notes made by a reader about the content of the resource
-        case 'annote' {
-        } 
-        ##
-        case 'abstract' {
-        } 
-        ##
-        case 'keyword' {
-        } 
-        ## a document number; useful for reports and such
-        case 'number' {
-        }
-        ## for related referenced resources; this is here for legal case 
-        ## histories, but may be relevant for other contexts.
-        case 'references' {
-        } 
-        ##
-        case 'URL' {
-        } 
-        ##
-        case 'DOI' {
-        } 
-        ##
-        case 'ISBN' {
-        } 
-        ##
-        case 'call-number' {
-        } 
-        ## the number used for the in-text citation mark in numeric styles
-        case 'citation-number' {
-            $self->{_biblioNumber}++;
-            $self->{_biblio_str} .= $self->{_biblioNumber};
-            
-            # hardcoded space, some styles have a space at this point, others don't
-            $self->{_biblio_str} .= " " if($self->{_biblio_str} !~ /\s$/);
-        } 
-        ## the label used for the in-text citation mark in label styles
-        case 'citation-label' {
-        }
-        ## The number of a preceding note containing the first reference to
-        ## this item. Relevant only for note-based styles, and null for first references.
-        case 'first-reference-note-number' {
-        }
-        ## The year suffix for author-date styles; e.g. the 'a' in '1999a'.
-        case 'year-suffix' {
-        }        
     }
-    
-    #$self->{_biblio_str} =~ s/\s$//g; # remove endstanding (maybe hardcoded) gaps
-    #$self->{_biblio_str} .= $v->{suffix} if (exists $v->{suffix});
-    #$self->{_biblio_str} =~ s/\s\s/ /g; # 2 to 1
 }
 
 # returns an array with unique entries
