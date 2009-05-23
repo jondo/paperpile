@@ -23,7 +23,7 @@ sub write {
 
   my ($self) = @_;
 
-  my $dbfile=$self->settings->{export_file};
+  my $dbfile=$self->settings->{out_file};
 
   # First initialize with empty database file
   my $empty_db=Paperpile::Utils->path_to('db/local-user.db')->stringify;

@@ -162,6 +162,58 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     },
 
+    fileImport: function(){
+
+        win=new Paperpile.FileChooser({
+            showFilter: true,
+            currentRoot:main.globalSettings.user_home,
+            filterOptions:[{text: 'All supported formats',
+                            suffix:['ppl','bib','ris','enl','lib','mods','xml']
+                           },
+                           {text: 'BibTeX (.bib)',
+                            suffix: ['bib']
+                           },
+                           {text: 'RIS file (.ris)',
+                            suffix: ['ris']
+                           },
+                           {text: 'Endnote (.enl, .lib )',
+                            suffix: ['enl','lib']
+                           },
+                           {text: 'Endnote XML (.xml)',
+                            suffix: ['xml']
+                           },
+                           {text: 'Word 2007 XML (.xml)',
+                            suffix: ['xml']
+                           },
+                           {text: 'MODS (.mods, .xml)',
+                            suffix: ['mods','xml']
+                           },
+                           {text: 'Paperpile (.ppl)',
+                            suffix: ['ppl']
+                           },
+                           {text: 'All files',
+                            suffix:['ALL']
+                           },
+                          ],
+            
+            callback:function(button,path){
+                if (button == 'OK'){
+                    var parts=Paperpile.utils.splitPath(path);
+                    main.tabs.newPluginTab('File', {
+                        plugin_file: path,
+                        plugin_name: 'File',
+                        plugin_mode: 'FULLTEXT',
+                        plugin_query: '',
+                        plugin_base_query:'',
+                    }, parts.file, 'pp-icon-file');
+                }
+            }
+        });
+        
+        win.show();
+        
+    },
+
     error: function(response){
 
         var data = Ext.util.JSON.decode(response.responseText);

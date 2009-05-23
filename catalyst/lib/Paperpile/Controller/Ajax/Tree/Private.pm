@@ -51,7 +51,7 @@ sub get_default_tree : Private {
 
   $folders->setUID('FOLDER_ROOT');
 
-    #### / Local Library / Tags
+  #### / Local Library / Tags
 
   my $tags = Tree::Simple->new( {
       text    => 'Tags',
@@ -65,7 +65,6 @@ sub get_default_tree : Private {
 
   # Initialize
   $c->forward( 'get_tags', [$tags] );
-
 
   #### / Active Folders
 
@@ -146,8 +145,6 @@ sub get_default_tree : Private {
     )
   );
 
-
-
   ##### / Settings
 
   my $admin = Tree::Simple->new( {
@@ -183,6 +180,16 @@ sub get_default_tree : Private {
     Tree::Simple->new( {
         text    => 'Import PDFs',
         type    => 'PDFEXTRACT',
+        iconCls => 'pp-icon-tools',
+        hidden  => 0,
+      }
+    )
+  );
+
+  $admin->addChild(
+    Tree::Simple->new( {
+        text    => 'Import File',
+        type    => 'FILE_IMPORT',
         iconCls => 'pp-icon-tools',
         hidden  => 0,
       }

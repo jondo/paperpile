@@ -23,17 +23,17 @@ foreach my $format (keys %files){
   is($import->format, $format, "Guessing format $format");
 }
 
-my $import = Paperpile::Plugins::Import::File->new( file => "../../data/formats/test.bib");
-is ($import->connect, 28, 'Reading test.bib');
+my $import = Paperpile::Plugins::Import::File->new( file => "../../data/test2.bib");
+is ($import->connect, 42, 'Reading test.bib');
 
-my $page=$import->all;
-is (@$page, 28, 'Reading all entries with "all"');
+#my $page=$import->all;
+#is (@$page, 28, 'Reading all entries with "all"');
 
-my $page=$import->page(0,10);
-is (@$page, 10, 'Reading 10 entries with "page"');
+#my $page=$import->page(0,10);
+#is (@$page, 10, 'Reading 10 entries with "page"');
 
-my $page=$import->page(27,10);
-is (@$page, 1, 'Reading entry with "page" from the end with limit longer than list.');
+#my $page=$import->page(27,10);
+#is (@$page, 1, 'Reading entry with "page" from the end with limit longer than list.');
 
 
 

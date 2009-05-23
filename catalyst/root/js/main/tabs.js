@@ -44,14 +44,14 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     },
 
     
-    newPluginTab:function(name, pars){
+    newPluginTab:function(name, pars, title, iconCls){
 
         var newGrid=new Paperpile['PluginGrid'+name](pars);
         
-        var newView=this.add(new Paperpile.PubView({title: newGrid.plugin_title, 
+        var newView=this.add(new Paperpile.PubView({title: (title) ? title:newGrid.plugin_title, 
                                                     grid:newGrid,
                                                     closable:true,
-                                                    iconCls: newGrid.plugin_iconCls,
+                                                    iconCls: (iconCls) ? iconCls : newGrid.plugin_iconCls,
                                                    }));
         newView.show();
     },

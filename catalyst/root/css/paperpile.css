@@ -1,4 +1,6 @@
-.add .x-btn-text {    background-image: url('/images/icons/add.png');
+/**** Toolbar icons ****/
+
+.add .x-btn-text { background-image: url('/images/icons/add.png');
 }
 
 .delete .x-btn-text {
@@ -29,26 +31,88 @@
     background-image: url('/images/icons/arrow_left.png');
 }
 
+
+/*** Generic styles ****/
+
 .pp-basic {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
 
-.pp-summary-abstract {
+.pp-box {
+    max-width: 300px;
+    margin: 8;
+    border-style:solid;
+    border-width: 1px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+}
+
+.pp-box-top {
+    -moz-border-radius-bottomleft: 0px;
+    -moz-border-radius-bottomright: 0px;
+}
+
+.pp-box-middle {
+    -moz-border-radius: 0px;
+}
+
+.pp-box-bottom {
+    -moz-border-radius-topleft: 0px;
+    -moz-border-radius-topright: 0px;
+}
+
+.pp-box-style1{
+    background-color:#FFFEEB;
+    border-color: #F7CA75;
+}
+
+.pp-box-style2{
+    background-color:#F0F0F0;
+    border-color: #D8D8D8;
+}
+
+.pp-box p, .pp-box ul, .pp-box ol, .pp-box h2 {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    margin: 8;
+} 
+
+.pp-box li{
+    margin: 8 0;
+}
+
+.pp-box h2 {
+    margin: 8 8 10 8;
+    font-size: 18px;
+    font-weight: normal;
+    color: #4183C4;
+}
+
+.pp-box dl {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    margin: 8;
+}
+
+.pp-box dt {
+    float: left;
+    clear: left;
+    color: #4183C4;
+    width: 90px; 
+    text-align: right; 
+}
+
+.pp-box dd { 
+    margin: 0 0 0 90px; 
+    padding: 0 0 5 5;
+}
+
+/**** Abstract ****/
+
+.pp-abstract {
     width: 90%;
     line-height: 1.4em;
-    
     padding: 10px 5px 5px 10px;
  }
-
-.pp-summary-form {
-    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    width: 22%;
-    float:left;
-    padding: 5px 0px 0px 0px;
-    /*background-color: #FFFEEB;
-    border: 1px solid #F7CA75; */
-}
+/**** Notes ****/
 
 .pp-action-add-notes a{
     font:normal 14px arial, verdana, tahoma, arial, helvetica, sans-serif;
@@ -75,7 +139,6 @@
     float: right;
 }
 
-
 .pp-action-add-notes a:hover{
     background-color:#EEEEEE;
 }
@@ -100,6 +163,8 @@
 
 .pp-notes li { display: list-item }
 
+
+/**** Grid *****/
 
 .pp-grid-title,.pp-grid-authors{
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
@@ -250,6 +315,11 @@ div:hover.pp-grid-sort-item {
   background-image: url('/images/icons/folder.png')!important;
 }
 
+.pp-icon-file{
+  background-image: url('/images/icons/page.png')!important;
+}
+
+
 .pp-icon-pubmed{
   background-image: url('/images/icons/pubmed.png')!important;
 }
@@ -264,11 +334,6 @@ div:hover.pp-grid-sort-item {
 
 .pp-icon-tools{
   background-image: url('/images/icons/wrench.png')!important;
-}
-
-
-.pp-basic {
-    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
 
 .pp-pdf-manager li{
@@ -353,60 +418,6 @@ div:hover.pp-grid-sort-item {
     float: left;
 }
 
-.pp-box {
-    max-width: 300px;
-    margin: 8;
-}
-
-.pp-box-gray{
-    background-color:#F0F0F0;
-    border:1px solid #D8D8D8;
-    -moz-border-radius: 8px;
-    -webkit-border-radius: 8px;
-}
-
-.pp-box-yellow{
-    background-color:#FFFEEB;
-    border:1px solid #F7CA75;
-    -moz-border-radius: 8px;
-    -webkit-border-radius: 8px;
-}
-
-.pp-box p, .pp-box ul{
-    margin: 8;
-    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-}
-
-.pp-box li{
-    margin: 8 0;
-}
-
-.pp-box h2 {
-    margin: 8 8 10 8;
-    font:normal 18px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    color: #333333;
-    font-weight: normal;
-    color: #4183C4;
-}
-
-
-dl {
-    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    margin: 8;
-}
-
-dt {
-    float: left;
-    clear: left;
-    color: #4183C4;
-    width: 90px; 
-    text-align: right; 
-}
-
-dd { 
-    margin: 0 0 0 90px; 
-    padding: 0 0 5 5;
-}
 
 .pp-action{
     padding: 2 2 2 22;

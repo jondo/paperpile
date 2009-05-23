@@ -76,7 +76,8 @@ sub resultsgrid : Local {
 
   my $entries = $plugin->page( $offset, $limit );
 
-  if ( $plugin_name eq 'DB' ) {
+  # Skip test for existence for standard user database
+  if ( $plugin_name eq 'DB' and not $c->request->params->{plugin_file} ) {
     foreach my $pub (@$entries) {
       $pub->_imported(1);
     }
@@ -123,6 +124,10 @@ sub _resultsgrid_format {
 sub delete_grid : Local {
   my ( $self, $c ) = @_;
   my $grid_id = $c->request->params->{grid_id};
+
+  my $plugin = $c->session->{"grid_$grid_id"};
+
+  $plugin->cleanup();
 
   delete( $c->session->{"grid_$grid_id"} );
 

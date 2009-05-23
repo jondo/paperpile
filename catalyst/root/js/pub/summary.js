@@ -4,7 +4,7 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
 
         // The template for the abstract
 	    this.abstractMarkup= [
-            '<div class="pp-summary-abstract">{abstract}</div>',
+            '<div class="pp-basic pp-abstract">{abstract}</div>',
         ];
 
         this.abstractTemplate = new Ext.Template(this.abstractMarkup);

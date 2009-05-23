@@ -7,9 +7,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     initComponent:function() {
 
-
-        console.log('PluginGrid');
-
         var _store=new Ext.data.Store(
             {  proxy: new Ext.data.HttpProxy({
                 url: '/ajax/plugins/resultsgrid', 
@@ -43,6 +40,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       listeners: {
                           click:  {fn: this.newEntry, scope: this}
                       },
+                  },
+                  { xtype:'button',
+                    itemId: 'add_button',
+                    text: 'Import',
+                    hidden:true,
+                    cls: 'x-btn-text-icon add',
+                    listeners: {
+                        click:  {
+                            fn: function(){
+                                this.insertEntry();
+                            },
+                            scope: this
+                        },
+                    },
+                    disabled: true,
                   },
                   {   xtype:'button',
                       text: 'Delete',
@@ -95,7 +107,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             var t = new Ext.XTemplate(
                 '<div class="pp-grid-status">',
+                '<tpl if="_imported">',
                 '<div class="pp-grid-key" ext:qtip="Imported {created}" >{_citekey}&nbsp;</div',
+                '</tpl>',
+                '<tpl if="!_imported">',
+                '<div>&nbsp;</div',
+                '</tpl>',
                 '<div class="pp-grid-icons">',
                 '<tpl if="pdf">',
                 '<div class="pp-status-pdf" ext:qtip="{pdf}"></div>',

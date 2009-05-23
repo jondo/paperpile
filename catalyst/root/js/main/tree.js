@@ -133,6 +133,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 Paperpile.main.pdfExtract();
                 break;
 
+            case 'FILE_IMPORT':
+                Paperpile.main.fileImport();
+                break;
+                
+
             // all other nodes are handled via the generic plugin mechanism
             default:
 

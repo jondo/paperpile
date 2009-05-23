@@ -5,7 +5,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<div id=main-container-{id}>',
 
         // Yellow box
-        '<div class="pp-box pp-box-yellow"',
+        '<div class="pp-box pp-box-top pp-box-style1"',
         '<dl>',
         '<dt>Publication type: </dt><dd>{_pubtype_name}</dd>',
         '<tpl if="_imported"><dt>Imported: </dt><dd>{created}</dd></tpl>',
@@ -19,7 +19,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</dl>',
         '</div>',
 
-        '<div class="pp-box pp-box-yellow"',
+        '<div class="pp-box pp-box-bottom pp-box-style1"',
         '<tpl if="linkout">',
         '<p><a href="{linkout}" target="_blank" class="pp-action pp-action-go">Go to publisher site</a></p>',
         '</tpl>',
@@ -29,8 +29,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</div>',
 
         // Gray box
-        '<div class="pp-box pp-box-gray"',
-
+        '<tpl if="pdf || _imported || linkout">',
+        '<div class="pp-box pp-box-style2"',
         '<h2>PDF</h2>',
         '<ul>',
         '<tpl if="pdf">',
@@ -69,7 +69,9 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" action="attach-file">Attach File</a></li>',      '</ul>',
         '</tpl>',
         '</div>',
+        '</tpl>',
         '</div>',
+        
 
 	  ],
 
@@ -228,7 +230,10 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         for (var i =0; i< tags.length; i++){
 
             var name = tags[i];
-            var style = store.getAt(store.find('tag',name)).get('style');
+            var style = '0';
+            if (store.getAt(store.find('tag',name))){
+                style=store.getAt(store.find('tag',name)).get('style');
+            }
 
             var el= { tag: 'div',
                       cls: 'pp-tag-box pp-tag-style-'+style,

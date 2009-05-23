@@ -5,13 +5,17 @@ use Data::Page;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Data::Dumper;
+use File::Copy;
+use File::Path;
+use File::Temp qw(tempfile);
 use Bibutils;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Library::Journal;
+use Paperpile::Utils;
 
-extends 'Paperpile::Plugins::Import';
+extends 'Paperpile::Plugins::Import::DB';
 
 enum Format => qw(BIBTEX MODS ISI ENDNOTE ENDNOTEXML RIS MEDLINE);
 
@@ -27,47 +31,68 @@ sub BUILD {
 sub connect {
   my $self = shift;
 
-  $self->guess_format if not $self->format;
+  $self->_db_file( $self->_tmp_file_name( $self->file )  );
 
-  my $bu = Bibutils->new(
-  in_file    => $self->file,
-  out_file   => '',
-  in_format  => eval('Bibutils::'.$self->format.'IN'),
-  out_format => Bibutils::BIBTEXOUT,
-  );
+  if ( !-e $self->_db_file ) {
 
-  $bu->read;
+    $self->guess_format if not $self->format;
 
-  my $data = $bu->get_data;
+    my $bu = Bibutils->new(
+      in_file    => $self->file,
+      out_file   => '',
+      in_format  => eval( 'Bibutils::' . $self->format . 'IN' ),
+      out_format => Bibutils::BIBTEXOUT,
+    );
 
-  $self->_data([]);
+    $bu->read;
 
-  foreach my $entry (@$data){
-    my $pub = Paperpile::Library::Publication->new;
-    $pub->_build_from_bibutils($entry);
-    push @{$self->_data}, $pub;
+    my $data = $bu->get_data;
+
+    my @all = ();
+
+    foreach my $entry (@$data) {
+      my $pub = Paperpile::Library::Publication->new;
+      $pub->_build_from_bibutils($entry);
+      $pub->citekey('');
+      push @all, $pub;
+    }
+
+    my $empty_db = Paperpile::Utils->path_to('db/local-user.db')->stringify;
+    copy( $empty_db, $self->_db_file ) or die "Could not initialize empty db ($!)";
+
+    my $model = $self->get_model();
+
+    $model->insert_pubs( [@all] );
+
   }
 
-  $self->total_entries( scalar( @{ $self->_data } ) );
+  my $model = $self->get_model();
 
+  $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf ) );
   return $self->total_entries;
 
 }
 
-sub page {
+sub cleanup {
 
-  ( my $self, my $offset, my $limit ) = @_;
+  my $self=shift;
 
-  my @page = ();
+  unlink $self->_db_file;
 
-  for my $i ( 0 .. $limit - 1 ) {
-    last if ($offset + $i == $self->total_entries );
-    push @page, $self->_data->[ $offset + $i ];
-  }
+}
 
-  $self->_save_page_to_hash(\@page);
+sub _tmp_file_name {
 
-  return \@page;
+  my ($self, $bibfile) = @_;
+
+  my $path=Paperpile::Utils->path_to("tmp/import")->stringify;
+  mkpath($path);
+
+  $bibfile=~s/\//_/g;
+  $bibfile=~s/\./_/g;
+  $bibfile.='.ppl';
+
+  return File::Spec->catfile( $path, $bibfile );
 
 }
 

@@ -6,6 +6,7 @@ use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Paperpile::Utils;
+use Paperpile::Model::User;
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Library::Journal;
@@ -17,6 +18,7 @@ has 'mode' => ( is => 'rw', default => 'FULLTEXT', isa => 'Str' );
 has 'file' => ( is => 'rw' );
 has 'search_pdf' => (is => 'rw', default => 1);
 has 'order' => (is => 'rw', default => 'created DESC');
+has '_db_file' => ( is => 'rw' );
 
 sub BUILD {
   my $self = shift;
@@ -27,7 +29,7 @@ sub get_model {
 
   my $self=shift;
   my $model = Paperpile::Model::User->new();
-  $model->set_dsn("dbi:SQLite:".$self->file);
+  $model->set_dsn("dbi:SQLite:".$self->_db_file);
   return $model;
 
 }
@@ -35,6 +37,8 @@ sub get_model {
 
 sub connect {
   my $self = shift;
+
+  $self->_db_file($self->file);
 
   my $model=$self->get_model;
 

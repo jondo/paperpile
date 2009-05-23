@@ -26,7 +26,10 @@ Paperpile.PluginGridOnlineSearch = Ext.extend(Paperpile.PluginGrid, {
                           disabled: true,
                         };
 
-        tbar.splice(this.getButtonIndex('new_button'), 1, addButton);
+        //tbar.splice(this.getButtonIndex('new_button'), 1, addButton);
+
+        tbar[this.getButtonIndex('add_button')].hidden=false;
+        tbar[this.getButtonIndex('new_button')].hidden=true;
 
     },
     

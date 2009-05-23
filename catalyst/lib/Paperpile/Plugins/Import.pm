@@ -97,6 +97,12 @@ sub find_sha1 {
 
 }
 
+sub cleanup {
+
+
+}
+
+
 # Function _save_page_to_hash
 
 # Saves Publication objects given in the ArrayRef $data to _hash via
@@ -143,7 +149,6 @@ sub _match_title {
   return $distance < $cutoff;
 
 }
-
 
 
 

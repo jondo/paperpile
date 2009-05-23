@@ -2,11 +2,10 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
     plugin_base_query:'',
     plugin_iconCls: 'pp-icon-folder',
+    plugin_name:'DB',
 
     initComponent:function() {
 
-        this.plugin_name='DB';
-      
         Paperpile.PluginGridDB.superclass.initComponent.apply(this, arguments);
 
         var menu = new Ext.menu.Menu({
@@ -40,6 +39,8 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         var tbar=this.getTopToolbar();
         tbar.unshift({xtype:'button', text: 'Filter', menu: menu });
         tbar.unshift(this.filterField);
+
+        //tbar.splice(this.getButtonIndex('add_button'), 1);
 
         // If we are viewing a virtual folders we need an additional
         // button to remove an entry from a virtual folder
