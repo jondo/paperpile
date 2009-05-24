@@ -54,6 +54,8 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
                                                     iconCls: (iconCls) ? iconCls : newGrid.plugin_iconCls,
                                                    }));
         newView.show();
+        
+        
     },
 
 

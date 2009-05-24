@@ -461,8 +461,6 @@ div:hover.pp-grid-sort-item {
 }
 
 
-
-
 .pp-tag-tree-node a span{
     border-width:1px;
     font-size: 10px;
@@ -490,6 +488,15 @@ div:hover.pp-grid-sort-item {
 .pp-tag-style-picker {
     width: 200px;
 } 
+
+.pp-tag-style-tab {
+    border-width: 1px;
+    font-size: 11px !important;
+    margin: 3px 4px 1px 3px;
+    padding: 1px 4px !important;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
 
 .pp-tag-style-sample {
     border-style:solid;

@@ -152,9 +152,23 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                             pars[key]=node[key];
                         }
                     }
+                    
+                    // Use default title and css for tab 
+                    var title=null;
+                    var iconCls=null;
+
+                    // For tags use specifically styled tab
+                    if (node.type == 'TAGS'){
+                        var store=Ext.StoreMgr.lookup('tag_store');
+                        var style = '0';
+                        if (store.getAt(store.find('tag',node.text))){
+                            style=store.getAt(store.find('tag',node.text)).get('style');
+                        }
+                        iconCls='pp-tag-style-tab pp-tag-style-'+style;
+                    }
 
                     // Call appropriate frontend
-                    Paperpile.main.tabs.newPluginTab(node.plugin_name, pars);
+                    Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
                 }
                 break;
             }
@@ -819,15 +833,18 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                      style: number,
                     },
             success: function(){
-                Ext.StoreMgr.lookup('tag_store').reload();
-                node.ui.removeClass('pp-tag-tree-style-'+node.tagStyle);
-                node.ui.addClass('pp-tag-tree-style-'+number);
-                node.tagStyle=number;
-
+               
+                
                 Ext.StoreMgr.lookup('tag_store').reload({
                     callback: function(){
                         Paperpile.main.tabs.items.each(
                             function(item, index, length){
+                                if (item.title == node.text){
+                                    var el=Ext.get(Ext.DomQuery.selectNode('span.x-tab-strip-text',Paperpile.main.tabs.getTabEl(this)));
+                                    console.log(el);
+                                    el.removeClass('pp-tag-style-'+node.tagStyle);
+                                    el.addClass('pp-tag-style-'+number);
+                                }
                                 var grid=item.items.get('center_panel').items.get('grid');
                                 var pdf_manager=item.items.get('east_panel').items.get('pdf_manager');
                                 var selected=grid.getSelectionModel().getSelected();
@@ -836,6 +853,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                 }
                             }
                         );
+                        node.ui.removeClass('pp-tag-tree-style-'+node.tagStyle);
+                        node.ui.addClass('pp-tag-tree-style-'+number);
+                        node.tagStyle=number;
                     }
                 });
 
