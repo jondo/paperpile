@@ -13,7 +13,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         Ext.apply(this, 
                   {layout: 'border',
                    renderTo: Ext.getBody(),
-                   items: [ { border: 0,
+                   items:[{xtype:'panel',
+                           layout:'border',
+                           region:'center',
+                           tbar: [{xtype:'button', text:"Test"}],
+                           items: [ { border: 0,
                               xtype:'tree',
                               rootVisible : false,
                               id: 'treepanel',
@@ -39,7 +43,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                               id: 'tabs',
                               activeItem:0,
                             }
-                          ]});
+                                 ]}
+                         ],
+                   
+                  }
+                 );
         
         Paperpile.Viewport.superclass.initComponent.call(this);
 

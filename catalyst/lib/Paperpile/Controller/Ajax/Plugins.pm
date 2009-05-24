@@ -127,9 +127,10 @@ sub delete_grid : Local {
 
   my $plugin = $c->session->{"grid_$grid_id"};
 
-  $plugin->cleanup();
-
-  delete( $c->session->{"grid_$grid_id"} );
+  if ($plugin){
+    $plugin->cleanup();
+    delete( $c->session->{"grid_$grid_id"} );
+  }
 
   $c->forward('Paperpile::View::JSON');
 }

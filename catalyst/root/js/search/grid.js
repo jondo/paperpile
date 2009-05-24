@@ -166,9 +166,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         Paperpile.PluginGrid.superclass.initComponent.apply(this, arguments);
 
         
-        this.on('beforedestroy', this.onDestroy,this);
+        this.on('beforedestroy', this.onClose,this);
+
+        this.store.on('loadexception', this.onError);
 
     },
+
 
     afterRender: function(){
 
@@ -182,6 +185,10 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
    
+    },
+
+    onError: function(exception, options, response, error){
+        Paperpile.main.error(response);
     },
 
     updateButtons: function(){
@@ -394,7 +401,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     },
 
-    onDestroy: function(cont, comp){
+    onClose: function(cont, comp){
         Ext.Ajax.request({
             url: '/ajax/plugins/delete_grid',
             params: { grid_id: this.id,

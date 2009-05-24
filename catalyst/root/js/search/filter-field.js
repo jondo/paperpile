@@ -29,7 +29,7 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
         var task = new Ext.util.DelayedTask(this.onTrigger2Click, this);
         
         this.on('keydown', function(f, e){
-            task.delay(100); 
+            task.delay(200); 
         }, this);
     },
 

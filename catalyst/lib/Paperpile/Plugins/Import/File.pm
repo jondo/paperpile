@@ -17,7 +17,7 @@ use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import::DB';
 
-enum Format => qw(BIBTEX MODS ISI ENDNOTE ENDNOTEXML RIS MEDLINE);
+enum Format => qw(PAPERPILE BIBTEX MODS ISI ENDNOTE ENDNOTEXML RIS MEDLINE);
 
 has format  => ( is => 'rw', isa => 'Format' );
 has 'file'  => ( is => 'rw', isa => 'Str' );
@@ -31,38 +31,50 @@ sub BUILD {
 sub connect {
   my $self = shift;
 
-  $self->_db_file( $self->_tmp_file_name( $self->file )  );
+  $self->_db_file( $self->_tmp_file_name( $self->file ) );
 
   if ( !-e $self->_db_file ) {
 
     $self->guess_format if not $self->format;
 
-    my $bu = Bibutils->new(
-      in_file    => $self->file,
-      out_file   => '',
-      in_format  => eval( 'Bibutils::' . $self->format . 'IN' ),
-      out_format => Bibutils::BIBTEXOUT,
-    );
+    if ( $self->format eq 'PAPERPILE' ) {
+      copy( $self->file, $self->_db_file ) or die "Could not create temporary db file ($!)";
+      my $model = $self->get_model();
+      $model->dbh->do("UPDATE Publications SET citekey=''");
 
-    $bu->read;
+    } else {
 
-    my $data = $bu->get_data;
+      my $bu = Bibutils->new(
+        in_file    => $self->file,
+        out_file   => '',
+        in_format  => eval( 'Bibutils::' . $self->format . 'IN' ),
+        out_format => Bibutils::BIBTEXOUT,
+      );
 
-    my @all = ();
+      $bu->read;
 
-    foreach my $entry (@$data) {
-      my $pub = Paperpile::Library::Publication->new;
-      $pub->_build_from_bibutils($entry);
-      $pub->citekey('');
-      push @all, $pub;
+      my $data = $bu->get_data;
+
+      # Collect pubs in hash to avoid entries with duplicate sha1 which
+      # causes problems when converting to database. Maybe this is too
+      # simplistic to deal with duplicates at this stage but it works...
+      my %all = ();
+
+      foreach my $entry (@$data) {
+        my $pub = Paperpile::Library::Publication->new;
+        $pub->_build_from_bibutils($entry);
+        $pub->citekey('');
+        $all{ $pub->sha1 } = $pub;
+      }
+
+      my $empty_db = Paperpile::Utils->path_to('db/local-user.db')->stringify;
+      copy( $empty_db, $self->_db_file ) or die "Could not initialize empty db ($!)";
+
+      my $model = $self->get_model();
+
+      $model->insert_pubs( [ values %all ] );
+
     }
-
-    my $empty_db = Paperpile::Utils->path_to('db/local-user.db')->stringify;
-    copy( $empty_db, $self->_db_file ) or die "Could not initialize empty db ($!)";
-
-    my $model = $self->get_model();
-
-    $model->insert_pubs( [@all] );
 
   }
 
@@ -100,39 +112,63 @@ sub guess_format {
 
   my $self = shift;
 
-  open( FILE, "<" . $self->file ) || die "Could not open file " . $self->file . " ($!)";
+  # Text file
+  if ( -T $self->file ) {
 
-  # Read only first 100 lines. Should be enough to identify file-type
-  my $line;
-  my @lines = ();
-  while ( @lines < 100 and $line = <FILE> ) {
-    next if $line =~ /^$/;
-    push @lines, $line;
-  }
-  close(FILE);
+    open( FILE, "<" . $self->file ) || die "Could not open file " . $self->file . " ($!)";
 
-  # Very simplistic. Probably need to get more specific/sensitive
-  # patterns for real life data sometime
-  my %patterns = (
-    MODS    => qr/<\s*mods\s*/i,
-    MEDLINE => qr/<PubmedArticle>/i,
-    BIBTEX  => qr/\@\w+\{/i,
-    ISI     => qr/^\s*AU /i,
-    ENDNOTE => qr/^\s*%0 /i,
-    RIS     => qr/^\s*TY\s+-\s+/i,
-  );
+    # Read only first 100 lines. Should be enough to identify file-type
+    my $line;
+    my @lines = ();
+    while ( @lines < 100 and $line = <FILE> ) {
+      next if $line =~ /^$/;
+      push @lines, $line;
+    }
+    close(FILE);
 
-  foreach my $line (@lines) {
-    foreach my $format ( keys %patterns ) {
-      my $pattern = $patterns{$format};
-      if ( $line =~ $pattern ) {
-        $self->format($format);
-        return $format;
+    # Very simplistic. Probably need to get more specific/sensitive
+    # patterns for real life data sometime
+    my %patterns = (
+      MODS    => qr/<\s*mods\s*/i,
+      MEDLINE => qr/<PubmedArticle>/i,
+      BIBTEX  => qr/\@\w+\{/i,
+      ISI     => qr/^\s*AU /i,
+      ENDNOTE => qr/^\s*%0 /i,
+      RIS     => qr/^\s*TY\s+-\s+/i,
+    );
+
+    foreach my $line (@lines) {
+      foreach my $format ( keys %patterns ) {
+        my $pattern = $patterns{$format};
+        if ( $line =~ $pattern ) {
+          $self->format($format);
+          return $format;
+        }
       }
     }
   }
 
-  return undef;
+  # File is binary
+  else {
+    open( FILE, "<" . $self->file ) || die "Could not open file " . $self->file . " ($!)";
+    my $sample;
+
+    read(FILE, $sample, 6);
+
+    if ($sample ne 'SQLite'){
+      die("Could not open file. Unknown format.");
+    } else {
+
+      # Todo check if right version of Paperpile
+      $self->format('PAPERPILE');
+      return 'PAPERPILE';
+
+    }
+
+
+  }
+
+  die("Could not open file. Unknown format.");
 }
 
 
