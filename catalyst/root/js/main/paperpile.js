@@ -1,8 +1,6 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('Paperpile');
 
-
-
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     canvasWidth:null,
@@ -80,8 +78,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             success: function(response){
                 var json = Ext.util.JSON.decode(response.responseText);
                 this.globalSettings=json.data;
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Loaded settings.');
+                //Ext.getCmp('statusbar').clearStatus();
+                //Ext.getCmp('statusbar').setText('Loaded settings.');
                 if (callback){
                     callback.createDelegate(scope)();
                 }
@@ -111,14 +109,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
 
     importJournals: function(){
-        statusBar = Ext.getCmp('statusbar');
-        statusBar.showBusy();
-        statusBar.setText('Importing journals titles');
+        //statusBar = Ext.getCmp('statusbar');
+        //statusBar.showBusy();
+        //statusBar.setText('Importing journals titles');
         Ext.Ajax.request({
             url: '/ajax/misc/import_journals',
             success: function(){
-                statusBar.clearStatus();
-                statusBar.setText('Import done.');
+                //statusBar.clearStatus();
+                //statusBar.setText('Import done.');
             },
             failure: this.markInvalid,
         })
@@ -126,14 +124,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
 
     resetDB: function(){
-        statusBar = Ext.getCmp('statusbar');
-        statusBar.showBusy();
-        statusBar.setText('Resetting database');
+        //statusBar = Ext.getCmp('statusbar');
+        //statusBar.showBusy();
+        //statusBar.setText('Resetting database');
         Ext.Ajax.request({
             url: '/ajax/misc/reset_db',
             success: function(){
-                statusBar.clearStatus();
-                statusBar.setText('Reset finished.');
+                //statusBar.clearStatus();
+                //statusBar.setText('Reset finished.');
             },
             failure: this.markInvalid,
         })
@@ -141,14 +139,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
 
     initDB: function(){
-        statusBar = Ext.getCmp('statusbar');
-        statusBar.showBusy();
-        statusBar.setText('Initializing database');
+        //statusBar = Ext.getCmp('statusbar');
+        //statusBar.showBusy();
+        //statusBar.setText('Initializing database');
         Ext.Ajax.request({
             url: '/ajax/misc/init_db',
             success: function(){
-                statusBar.clearStatus();
-                statusBar.setText('Initialization finished.');
+                //statusBar.clearStatus();
+                //statusBar.setText('Initialization finished.');
             },
             failure: this.markInvalid,
         })

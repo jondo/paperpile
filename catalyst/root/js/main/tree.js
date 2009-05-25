@@ -195,8 +195,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                             params: params,
                             method: 'GET',
                             success: function(){
-                                Ext.getCmp('statusbar').clearStatus();
-                                Ext.getCmp('statusbar').setText('Moved to folder');
+                                //Ext.getCmp('statusbar').clearStatus();
+                                //Ext.getCmp('statusbar').setText('Moved to folder');
                             },
                         });
                     }
@@ -209,8 +209,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                     url: '/ajax/tree/move_in_folder',
                                     params: params,
                                     success: function(){
-                                        Ext.getCmp('statusbar').clearStatus();
-                                        Ext.getCmp('statusbar').setText('Moved to folder');
+                                        //Ext.getCmp('statusbar').clearStatus();
+                                        //Ext.getCmp('statusbar').setText('Moved to folder');
                                     },
                                 });
                             }
@@ -230,8 +230,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     e.data.selections[0].data.tags=newTags;
                     var datatabs=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('data_tabs');        
                     datatabs.items.get('pubsummary').updateDetail(e.data.selections[0].data);
-                    Ext.getCmp('statusbar').clearStatus();
-                    Ext.getCmp('statusbar').setText('Updated tags.');
+                    //Ext.getCmp('statusbar').clearStatus();
+                    //Ext.getCmp('statusbar').setText('Updated tags.');
                 };
 
                 if (e.source.grid.getSelectionModel().getSelected().data._imported){
@@ -270,8 +270,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                           point: e.point,
                         },
                 success: function(){
-                    Ext.getCmp('statusbar').clearStatus();
-                    Ext.getCmp('statusbar').setText('Moved node');
+                    //Ext.getCmp('statusbar').clearStatus();
+                    //Ext.getCmp('statusbar').setText('Moved node');
                 },
             });
         }
@@ -437,8 +437,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             url: '/ajax/tree/new_active',
             params: pars,
             success: function(){
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Added new active folder');
+                //Ext.getCmp('statusbar').clearStatus();
+                //Ext.getCmp('statusbar').setText('Added new active folder');
             },
         });
         
@@ -532,8 +532,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             url: '/ajax/tree/new_folder',
             params: pars,
             success: function(){
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Added new folder');
+                //Ext.getCmp('statusbar').clearStatus();
+                //Ext.getCmp('statusbar').setText('Added new folder');
             },
         });
     },
@@ -549,8 +549,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             url: '/ajax/tree/delete_active',
             params: { node_id: node.id },
             success: function(){
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Deleted active folder');
+                //Ext.getCmp('statusbar').clearStatus();
+                //Ext.getCmp('statusbar').setText('Deleted active folder');
             },
         });
 
@@ -579,8 +579,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                   new_text: newText
                                 },
                         success: function(){
-                            Ext.getCmp('statusbar').clearStatus();
-                            Ext.getCmp('statusbar').setText('Renamed folder');
+                            //Ext.getCmp('statusbar').clearStatus();
+                            //Ext.getCmp('statusbar').setText('Renamed folder');
                         },
                     });
                 },
@@ -602,8 +602,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                       path: this.relativeFolderPath(node),
                     },
             success: function(){
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Deleted folder');
+                //Ext.getCmp('statusbar').clearStatus();
+                //Ext.getCmp('statusbar').setText('Deleted folder');
             },
         });
 
@@ -672,8 +672,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                       hidden: hidden
                     },
             success: function(){
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Hide/Show node');
+                //Ext.getCmp('statusbar').clearStatus();
+                //Ext.getCmp('statusbar').setText('Hide/Show node');
             },
 
         });
@@ -761,8 +761,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             params: pars,
             success: function(){
                 Ext.StoreMgr.lookup('tag_store').reload();
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Added new Tag');
+                //Ext.getCmp('statusbar').clearStatus();
+                //Ext.getCmp('statusbar').setText('Added new Tag');
             },
         });
     },
@@ -816,8 +816,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     }
                 });
 
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Deleted tag');
+                //Ext.getCmp('statusbar').clearStatus();
+                //Ext.getCmp('statusbar').setText('Deleted tag');
             },
         });
     },
@@ -860,8 +860,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 });
 
 
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Changes style of Tag');
+                //Ext.getCmp('statusbar').clearStatus();
+                //Ext.getCmp('statusbar').setText('Changes style of Tag');
             },
             scope: this
         });
@@ -918,8 +918,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                 }
                             });
 
-                            Ext.getCmp('statusbar').clearStatus();
-                            Ext.getCmp('statusbar').setText('Renamed tag');
+                            //Ext.getCmp('statusbar').clearStatus();
+                            //Ext.getCmp('statusbar').setText('Renamed tag');
                         },
                     });
                 },

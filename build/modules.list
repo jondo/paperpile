@@ -88,3 +88,4 @@ XML::XPathEngine
 HTML::TreeBuilder::XPath
 WWW::Mechanize
 Lingua::EN::NameParse
+Time::Duration
