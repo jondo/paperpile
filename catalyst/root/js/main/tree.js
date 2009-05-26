@@ -642,9 +642,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         var div=Ext.Element.get(node.ui.getAnchor()).up('div');
 
         var ok=Ext.DomHelper.append(div, 
-              '<a href="#" id="configure-node"><span class="pp-ok-text">&nbsp;Done</span></a>', true);
-
-        
+              '<a href="#" id="configure-node" class="pp-textlink">Done</a>', true);
 
         ok.on({
 			click:{ 

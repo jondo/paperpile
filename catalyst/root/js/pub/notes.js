@@ -2,14 +2,14 @@
 Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 	markup: [
         '<tpl if="notes">',
-        '<div class="pp-action-edit-notes">',
-        '<a href="#" id="edit-notes-{id}">Edit Notes</a>',
+        '<div class="pp-action pp-action-edit-notes">',
+        '<a href="#" class="pp-textlink" id="edit-notes-{id}">Edit Notes</a>',
         '</div>',
         '<div class="pp-notes">{notes}</div>',
         '</tpl>',
         '<tpl if="!notes">',
-        '<div class="pp-action-add-notes" id="add-notes-{id}">',
-        '<a href="#">Add notes</a>',
+        '<div class="pp-action-big pp-action-add-notes" id="add-notes-{id}">',
+        '<a href="#" class="pp-textlink">Add notes</a>',
         '</div>',
         '</tpl>'
     ],
