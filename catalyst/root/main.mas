@@ -17,14 +17,13 @@
   main/tabs.js 
   main/tree.js
                
-  search/grid.js 
-  search/search-field.js 
-  search/filter-field.js
-  search/plugins/online-search.js
+  import/grid.js 
+  import/search-field.js 
+  import/filter-field.js
+  import/plugins/online-search.js
                
   misc/utils.js
   misc/forms.js 
-  misc/settings.js 
   misc/file-chooser.js
   misc/style-picker.js
   
@@ -32,12 +31,12 @@
 
   settings/patterns.js
                
-  pub/summary.js 
+  pub/abstract.js 
   pub/notes.js 
   pub/edit.js 
   pub/view.js 
-  pub/data-tabs.js 
-  pub/pdf-manager.js
+  pub/bottom-panel.js 
+  pub/side-panel.js
                
   pdf/viewer.js 
   pdf/zoomer.js

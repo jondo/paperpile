@@ -567,7 +567,7 @@ div:hover.pp-tag-style-sample {
 } 
 
 
- 
+.pp-tag-style-default,  .pp-tag-tree-style-default  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: black !important; }
 .pp-tag-style-0,  .pp-tag-tree-style-0  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: black !important; }
 .pp-tag-style-1,  .pp-tag-tree-style-1  a span { border-color: rgb(124, 136, 155); border-style:solid; background-color: rgb(224, 236, 255); color: rgb(32, 108, 255) !important; }   
 .pp-tag-style-2,  .pp-tag-tree-style-2  a span { border-color: rgb(123, 126, 155);  border-style:solid; background-color: rgb(223, 226, 255); color: rgb(0, 0, 204) !important;    }   

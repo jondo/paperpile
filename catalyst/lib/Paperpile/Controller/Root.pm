@@ -12,15 +12,15 @@ sub index : Path : Args(0) {
   my ( $self, $c ) = @_;
 
   # Add dynamically all *js files in the  plugins directory
-  my @list=glob($c->path_to('root/js/search/plugins')."/*js");
+  my @list=glob($c->path_to('root/js/import/plugins')."/*js");
   push @list, glob($c->path_to('root/js/export/plugins')."/*js");
 
   my @plugins=();
 
   foreach my $plugin (@list){
     my ($volume,$directories,$file) = File::Spec->splitpath( $plugin );
-    if ($directories =~/search/){
-      push @plugins, "search/plugins/$file";
+    if ($directories =~/import/){
+      push @plugins, "import/plugins/$file";
     } else {
       push @plugins, "export/plugins/$file";
     }

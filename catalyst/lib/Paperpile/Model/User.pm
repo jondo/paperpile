@@ -7,8 +7,12 @@ use Data::Dumper;
 use Tree::Simple;
 use XML::Simple;
 use FreezeThaw qw/freeze thaw/;
+use File::Path;
+use File::Spec;
+use File::Copy;
 use Moose;
 use Paperpile::Model::App;
+use Paperpile::Utils;
 
 with 'Catalyst::Component::InstancePerContext';
 
@@ -968,15 +972,58 @@ sub delete_from_folder {
 }
 
 
-sub add_attachment {
+sub attach_file {
 
-  my ( $self, $file, $rowid ) = @_;
+  my ( $self, $file,  $is_pdf, $rowid, $pub) = @_;
 
-  $self->dbh->do("UPDATE Publications SET attachments=attachments+1 WHERE rowid=$rowid");
+  my $settings = $self->settings;
 
-  $file=$self->dbh->quote($file);
+  my $source = Paperpile::Utils->adjust_root($file);
 
-  $self->dbh->do("INSERT INTO Attachments (file_name,publication_id) VALUES ($file, $rowid)");
+  if ($is_pdf){
+
+    # File name relative to [paper_root] is [pdf_pattern].pdf
+    my $relative_dest = $pub->format_pattern( $settings->{pdf_pattern}, { key => $pub->citekey } ) . ".pdf";
+
+    # Absolute  path is [paper_root]/[pdf_pattern].pdf
+    my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
+
+    # Copy file, file name can be changed if it was not unique
+    $absolute_dest=Paperpile::Utils->copy_file($source, $absolute_dest);
+
+    # Add text of PDF to fulltext table
+    $self->index_pdf($rowid, $absolute_dest);
+
+    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
+
+    $self->update_field('Publications', $rowid, 'pdf', $relative_dest);
+    return $relative_dest;
+
+  } else {
+
+    # Get file_name without dir
+    my ($volume,$dirs,$file_name) = File::Spec->splitpath( $source );
+
+    # Path relative to [paper_root] is [attachment_pattern]/$file_name
+    my $relative_dest = $pub->format_pattern( $settings->{attachment_pattern}, { key => $pub->citekey } );
+    $relative_dest = File::Spec->catfile( $relative_dest, $file_name);
+
+    # Absolute  path is [paper_root]/[attachment_pattern]/$file_name
+    my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
+
+    # Copy file, file name can be changed if it was not unique
+    $absolute_dest=Paperpile::Utils->copy_file($source, $absolute_dest);
+    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
+
+    #$c->model('User')->add_attachment($relative_dest, $rowid);
+
+    $self->dbh->do("UPDATE Publications SET attachments=attachments+1 WHERE rowid=$rowid");
+    my $file=$self->dbh->quote($relative_dest);
+    $self->dbh->do("INSERT INTO Attachments (file_name,publication_id) VALUES ($file, $rowid)");
+
+    return $relative_dest;
+
+  }
 
 }
 

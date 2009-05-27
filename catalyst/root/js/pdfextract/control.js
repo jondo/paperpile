@@ -3,7 +3,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
     statusMsgTpl: "There are {number} PDFs in your directory",
 
     markup: [
-        '<div class="pp-box pp-box-yellow"',
+        '<div class="pp-box pp-box-style1"',
         '<h2>Import PDFs</h2>',
         '<p id="status-msg-{id}"></p>',
         '<p>&nbsp;</p>',

@@ -60,17 +60,17 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
                      {header: "Status",
                       id: 'status',
                       renderer: function(value, p, record){
-                          var icon;
+                          if (record.get('status') == 'NEW') template='';
+                          if (record.get('status') == 'IMPORTED') {
+                              template='<div ext:qtip="{status_msg}" class="pp-icon-tick">Imported</div>';
+                          }
+                          if (record.get('status') == 'FAIL') {
+                              template='<div ext:qtip="{status_msg}" class="pp-icon-cross">No match</div>';
+                          }
 
-                          if (record.get('status') == 'NEW') icon='';
-                          if (record.get('status') == 'IMPORTED') icon='<div class="pp-icon-tick">Imported</div>';
-                          if (record.get('status') == 'FAIL') icon='<div class="pp-icon-cross">No match</div>';
-
-                          var template='<div ext:qtip="{status_msg}">{icon}</div';
                           var t = new Ext.XTemplate(template);
                           
                           return t.apply({ status_msg:record.get('status_msg'),
-                                           icon:icon
                                          }
                                         );
                       }
@@ -87,6 +87,15 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
             },
             scope: this
         });
+
+        this.on('beforedestroy', function(cont, comp){
+            Ext.Ajax.request({
+                url: '/ajax/pdfextract/delete_grid',
+                params: { grid_id: this.id,
+                        },
+                method: 'GET'
+            });
+        }, this );
         
     },
 });

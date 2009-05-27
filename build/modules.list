@@ -34,6 +34,7 @@ Error
 Exception::Class
 File::Copy
 File::Temp
+File::Compare
 HTML::Element
 HTML::Mason
 HTML::Tagset
