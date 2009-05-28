@@ -373,27 +373,44 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
         var sha1=this.getSelectionModel().getSelected().data.sha1;
 
+        var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
+
         var form=new Paperpile.Forms.PubEdit({data:this.getSelectionModel().getSelected().data,
                                               grid_id: this.id,
                                               spotlight: true,
+                                              callback: function(status){
+                                                  east_panel.remove('pub_edit');
+                                                  east_panel.doLayout();
+                                                  east_panel.getLayout().setActiveItem('pdf_manager');
+                                                  east_panel.showBbar();
+                                              },
+                                              scope:this
                                              });
 
-        var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
         
         east_panel.hideBbar();
         east_panel.add(form);
         east_panel.doLayout();
         east_panel.getLayout().setActiveItem('pub_edit');
-
-
     },
 
     newEntry: function(){
-
-        var form=new Paperpile.Forms.PubEdit({data:{pubtype:'ARTICLE'}, grid_id: null });
-
         var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
-        
+
+        var form=new Paperpile.Forms.PubEdit({data:{pubtype:'ARTICLE'}, 
+                                              grid_id: null,
+                                              spotlight: true,
+                                              callback: function(status,data){
+                                                  east_panel.remove('pub_edit');
+                                                  east_panel.doLayout();
+                                                  east_panel.getLayout().setActiveItem('pdf_manager');
+                                                  east_panel.showBbar();
+                                              },
+                                              scope:this
+
+                                             });
+
+       
         east_panel.hideBbar();
         east_panel.add(form);
         east_panel.doLayout();

@@ -55,6 +55,8 @@ sub new_entry: Local {
 
   my ( $self, $c ) = @_;
 
+  my $attach_pdf = $c->request->params->{attach_pdf};
+
   my %fields=();
 
   foreach my $key (%{$c->request->params}){
@@ -71,9 +73,13 @@ sub new_entry: Local {
 
   $c->model('User')->create_pubs([$pub]);
 
+  if ($attach_pdf){
+    $c->model('User')->attach_file( $attach_pdf, 1, $pub->_rowid, $pub);
+  }
+
+  $c->stash->{data} = $pub->as_hash;
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
-
 
 
 }

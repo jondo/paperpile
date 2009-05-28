@@ -10,6 +10,7 @@ use 5.010;
 use File::Find;
 use File::Path;
 use File::Compare;
+use File::Basename;
 use File::stat;
 use MooseX::Timestamp;
 use Paperpile::Plugins::Import;
@@ -19,39 +20,34 @@ sub grid : Local {
 
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
-  my $root    = $c->request->params->{root};
+  my $root = $c->request->params->{root};
 
   my $data = [];
 
-  if ( not defined $c->session->{"pdfextract_$grid_id"} ) {
+  my @list = ();
 
-    my @list = ();
+  find(
+    sub {
+      my $name = $File::Find::name;
+      push @list, $name if $name =~ /\.pdf$/i;
+    },
+    $root
+  );
 
-    find(
-      sub {
-        my $name = $File::Find::name;
-        push @list, $name if $name =~ /\.pdf$/i;
-      },
-      $root
-    );
+  foreach my $file_name (@list) {
 
-    foreach my $file_name (@list) {
-      my $rel = File::Spec->abs2rel( $file_name, $root );
-      my $pub = Paperpile::Library::Publication->new();
-      push @$data, {
-        file_name  => $rel,
-        file_size  => stat($file_name)->size,
-        status     => 'NEW',
-        status_msg => '',
-        pub        => $pub,
-        };
-    }
+    my $pub = Paperpile::Library::Publication->new();
 
-    $c->session->{"pdfextract_$grid_id"} = $data;
+    ( my $basename ) = fileparse($file_name);
 
-  } else {
-    $data = $c->session->{"pdfextract_$grid_id"};
+    push @$data, {
+      file_name     => $file_name,
+      file_basename => $basename,
+      file_size     => stat($file_name)->size,
+      status        => 'NEW',
+      status_msg    => '',
+      pub           => $pub,
+      };
   }
 
   # Get all existing PDFs in database
@@ -60,34 +56,46 @@ sub grid : Local {
 
   my $paper_root = $c->model('User')->get_setting('paper_root');
 
-  my $sth = $c->model('User')->dbh->prepare("SELECT rowid,pdf FROM Publications WHERE pdf !='';");
+  my $sth =
+    $c->model('User')
+    ->dbh->prepare("SELECT rowid,pdf,title,authors,doi FROM Publications WHERE pdf !='';");
   $sth->execute;
 
   while ( my $row = $sth->fetchrow_hashref() ) {
     my $file = File::Spec->catfile( $paper_root, $row->{pdf} );
-    my $size = stat($file)->size;
 
-    $pdfs_in_db{$size} = {
-      rowid => $row->{rowid},
-      file  => $file,
-    };
+    my $s = stat($file);
+
+    if ($s) {
+      $pdfs_in_db{ $s->size } = {
+        rowid   => $row->{rowid},
+        file    => $file,
+        authors => $row->{authors},
+        title   => $row->{title},
+        doi     => $row->{doi}
+      };
+    }
   }
 
   my @output = ();
 
   foreach my $item (@$data) {
 
-    if ($pdfs_in_db{$item->{file_size}}){
+    my $in_db = $pdfs_in_db{ $item->{file_size} };
 
-      
+    if ($in_db) {
 
-
-      $item->{status}='IMPORTED';
-      $item->{status_msg}='File already in database';
+      if ( compare( $in_db->{file}, $item->{file_name} ) == 0 ) {
+        $item->{status}     = 'IMPORTED';
+        $item->{status_msg} = '<b>'.$item->{file_basename}.'</b> already in database';
+        $item->{pub}->authors( $in_db->{authors} );
+        $item->{pub}->title( $in_db->{title} );
+        $item->{pub}->doi( $in_db->{doi} );
+      }
     }
 
     my $tmp = $item->{pub}->as_hash;
-    foreach my $key ( 'file_name', 'file_size', 'status', 'status_msg' ) {
+    foreach my $key ( 'file_name', 'file_basename', 'file_size', 'status', 'status_msg' ) {
       $tmp->{$key} = $item->{$key};
     }
     push @output, $tmp;
@@ -98,7 +106,7 @@ sub grid : Local {
   foreach my $key ( keys %{ Paperpile::Library::Publication->new()->as_hash } ) {
     push @fields, { name => $key };
   }
-  push @fields, 'file_name', 'file_size', 'status', 'status_msg';
+  push @fields, 'file_name', 'file_basename', 'file_size', 'status', 'status_msg';
 
   my %metaData = (
     root   => 'data',
@@ -116,39 +124,31 @@ sub import : Local {
 
   my ( $self, $c ) = @_;
 
-  my $grid_id   = $c->request->params->{grid_id};
   my $file_name = $c->request->params->{file_name};
-  my $root      = $c->request->params->{root};
-
-  my $data = $c->session->{"pdfextract_$grid_id"};
+  ( my $file_basename ) = fileparse($file_name);
 
   my $bin = Paperpile::Utils->get_binary( 'pdftoxml', $c->model('App')->get_setting('platform') );
 
-  my $item = undef;
-  foreach my $t (@$data) {
-    if ( $t->{file_name} eq $file_name ) {
-      $item = $t;
-      last;
-    }
-  }
-
-  my $absolute = File::Spec->catfile( $root, $item->{file_name} );
-
   my $pub = {};
-  my $extract = Paperpile::PdfExtract->new( file => $absolute, pdftoxml => $bin );
+  my $extract = Paperpile::PdfExtract->new( file => $file_name, pdftoxml => $bin );
   eval { $pub = $extract->parsePDF; };
 
+  my $data = {
+    file_name     => $file_name,
+    file_basename => $file_basename
+  };
+
   if ( !$pub->{doi} and !$pub->{title} ) {
-    $item->{status}     = 'FAIL';
-    $item->{status_msg} = 'Could not find title or doi in PDF.';
+    $data->{status}     = 'FAIL';
+    $data->{status_msg} = 'Could not find title or doi in PDF.';
   } else {
     my $plugin = Paperpile::Plugins::Import::PubMed->new();
 
     eval { $pub = $plugin->match($pub); };
 
     if ($@) {
-      $item->{status}     = 'FAIL';
-      $item->{status_msg} = 'Could not find unique match in database.';
+      $data->{status}     = 'FAIL';
+      $data->{status_msg} = 'Could not find unique match in database.';
     } else {
 
       my $pub_in_db =
@@ -162,49 +162,40 @@ sub import : Local {
         $c->model('User')->create_pubs( [$pub] );
         $pub->_imported(1);
 
-        my $imported = $c->model('User')->attach_file( $absolute, 1, $pub->_rowid, $pub );
+        my $imported = $c->model('User')->attach_file( $file_name, 1, $pub->_rowid, $pub );
 
-        $item->{status_msg} = "Imported $file_name as entry " . $pub->citekey;
+        $data->{status_msg} = "Imported <b>$file_basename</b> as entry <b>" . $pub->citekey. "</b>";
 
       } else {
 
         if ( $pub_in_db->pdf ) {
-          $item->{status_msg} = "$file_name already exists in database (" . $pub_in_db->pdf . ")";
+          $data->{status_msg} = "<b>$file_basename</b> already exists in database (" . $pub_in_db->pdf . ")";
         } else {
           my $imported =
-            $c->model('User')->attach_file( $absolute, 1, $pub_in_db->_rowid, $pub_in_db );
-          $item->{status_msg} =
-              "<b>$file_name</b> assigned to citation <b>"
+            $c->model('User')->attach_file( $file_name, 1, $pub_in_db->_rowid, $pub_in_db );
+          $data->{status_msg} =
+              "<b>$file_basename</b> assigned to citation <b>"
             . $pub_in_db->citekey
             . "</b> that was already in your database.";
         }
       }
 
-      $item->{status} = 'IMPORTED';
+      $data->{status} = 'IMPORTED';
 
     }
   }
 
-  $item->{pub} = $pub;
+  $data->{pub} = $pub;
 
-  my $tmp = $item->{pub}->as_hash;
-  foreach my $key ( 'file_name', 'file_size', 'status', 'status_msg' ) {
-    $tmp->{$key} = $item->{$key};
+  my $tmp = $data->{pub}->as_hash;
+  foreach my $key ( 'file_name', 'file_basename', 'file_size', 'status', 'status_msg' ) {
+    $tmp->{$key} = $data->{$key};
   }
 
   $c->stash->{data} = $tmp;
 
   $c->forward('Paperpile::View::JSON');
 
-}
-
-sub delete_grid : Local {
-  my ( $self, $c ) = @_;
-  my $grid_id = $c->request->params->{grid_id};
-
-  delete( $c->session->{"pdfextract_$grid_id"} );
-
-  $c->forward('Paperpile::View::JSON');
 }
 
 

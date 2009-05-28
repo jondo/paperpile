@@ -200,39 +200,37 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
         // else we are creating a new one
         else {
             url='/ajax/crud/new_entry';
-            params:{};
+            if (this.data.attach_pdf){
+                console.log("INHERE");
+                params={attach_pdf: this.data.attach_pdf};
+            }
         }
 
         this.getForm().submit(
             {   url:url,
                 scope:this,
+                params:params,
                 success:this.onSuccess,
-                params: params,
                 waitMsg:'Saving...',
             }
         );
     },
 
     cancel: function(){
-        this.close();
+        if (this.spotlight) this.spot.hide();
+        this.callback.createDelegate(this.scope,['CANCEL'])();
+
     },
 
     onSuccess: function(form,action){
-        this.close();
-    },
-
-    close: function(){
-        
-        var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
-
-        east_panel.remove('pub_edit');
-        east_panel.doLayout();
-        east_panel.getLayout().setActiveItem('pdf_manager');
-        east_panel.showBbar();
+        console.log(action);
+        var json = Ext.util.JSON.decode(action.response.responseText);
 
         if (this.spotlight) this.spot.hide();
-        
-    }
+        this.callback.createDelegate(this.scope,['SAVE',json.data])();
+
+    },
+
     
 
 });

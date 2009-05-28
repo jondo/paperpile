@@ -10,9 +10,6 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
                 url: '/ajax/pdfextract/grid', 
                 method: 'GET'
             }),
-               baseParams:{grid_id: this.id,
-                           root: this.root,
-                          },
                reader: new Ext.data.JsonReader(),
             }); 
         
@@ -32,6 +29,14 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
                                   }
                       },
                   },
+                  {   xtype:'button',
+                      itemId: 'edit_button',
+                      text: 'Edit',
+                      cls: 'x-btn-text-icon edit',
+                      listeners: {
+                          click:  {fn: this.editEntry, scope: this}
+                      },
+                  }, 
                  ];
    
         Ext.apply(this, {
@@ -39,26 +44,36 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
             itemId:'grid',
             store: _store,
             tbar: tbar,
-            autoExpandColumn:'file_name',
+            autoExpandColumn:'title',
 
             columns:[{header: "File",
-                      id: 'file_name',
-                      dataIndex: 'file_name',
+                      id: 'file_basename',
+                      dataIndex: 'file_basename',
+                      sortable: true,
+                      renderer: function(value, p, record){
+                          return '<div ext:qtip="'+record.get('file_name')+'">'+value+'</div>';
+                      }
                      },
                      {header: "Title",
                       id: 'title',
                       dataIndex: 'title',
+                      width: 150,
+                      sortable: true,
                      },
                      {header: "Authors",
                       id: 'authors',
                       dataIndex: '_authors_display',
+                      sortable: true,
                      },
                      {header: "DOI",
                       id: 'doi',
                       dataIndex: 'doi',
+                      sortable: true,
                      },
                      {header: "Status",
                       id: 'status',
+                      dataIndex: 'status',
+                      sortable: true,
                       renderer: function(value, p, record){
                           if (record.get('status') == 'NEW') template='';
                           if (record.get('status') == 'IMPORTED') {
@@ -81,23 +96,58 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
         Paperpile.PdfExtractGrid.superclass.initComponent.apply(this, arguments);
 
         this.store.load({
+            params: { root: this.root },
             callback: function(){
-                this.controlPanel=this.ownerCt.ownerCt.items.get('control_panel');
+                this.controlPanel=this.ownerCt.ownerCt.items.get('east_panel').items.get('control_panel');
                 this.controlPanel.initControls();
             },
             scope: this
         });
 
-        this.on('beforedestroy', function(cont, comp){
-            Ext.Ajax.request({
-                url: '/ajax/pdfextract/delete_grid',
-                params: { grid_id: this.id,
-                        },
-                method: 'GET'
-            });
-        }, this );
-        
     },
+
+    editEntry: function(){
+        var east_panel=this.findParentByType(Ext.PdfExtractView).items.get('east_panel');
+
+        var data=this.getSelectionModel().getSelected().data;
+
+        var file_name=data.file_name;
+
+        data.attach_pdf=this.root+"/"+data.file_name;
+        
+        var form=new Paperpile.Forms.PubEdit({data:data,
+                                              grid_id: null,
+                                              spotlight: true,
+                                              callback: function(status,data){
+                                                  if (status == 'SAVE'){
+                                                      var record=this.store.getAt(this.store.find('file_name',file_name));
+                                                      record.beginEdit();
+                                                      for ( var i in data){
+                                                          record.set(i,data[i]);
+                                                      }
+                                                      record.set('status','IMPORTED');
+                                                      record.set('status_msg','Data manually entered.');
+                                                      
+                                                      //record.set('_authors_display',data._authors_display);
+                                                      //record.set('title',data.title);
+                                                      record.endEdit();
+                                                  }
+                                                  east_panel.remove('pub_edit');
+                                                  east_panel.doLayout();
+                                                  east_panel.getLayout().setActiveItem('control_panel');
+                                              },
+                                              scope:this
+                                             });
+        east_panel.add(form);
+        east_panel.doLayout();
+        east_panel.getLayout().setActiveItem('pub_edit');
+
+    },
+
+
+    
+   
+
 });
 
 

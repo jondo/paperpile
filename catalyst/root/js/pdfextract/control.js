@@ -56,7 +56,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
     },
 
     initControls: function(data){
-        this.grid=this.ownerCt.items.get('west_panel').items.get('grid');
+        this.grid=this.ownerCt.ownerCt.items.get('west_panel').items.get('grid');
 
         var list=this.getUnimportedList();
 

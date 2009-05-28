@@ -26,9 +26,16 @@ Paperpile.PdfExtractView = Ext.extend(Ext.Panel, {
                       },
                   ]
                  },
-                new Paperpile.PdfExtractControl({region:'center',
-                                                 itemId: 'control_panel'}
-                                               ),
+                { region:'center',
+                  itemId: 'east_panel',
+                  activeItem:0,
+                  layout: 'card',
+                  items: [
+                      new Paperpile.PdfExtractControl({region:'center',
+                                                       itemId: 'control_panel'}
+                                                     ),
+                  ],
+                }
             ],
         });
        
