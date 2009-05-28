@@ -6,13 +6,6 @@ use warnings;
 use Moose;
 use XML::Smart;
 use Switch;
-#use Date::Components;
-#use Date::Manip;
-#use DateTime::Format::Natural;
-#use DateTime::Format::Flexible;
-use DateTimeX::Easy;
-
-
 use utf8;
 binmode STDOUT, ":utf8";
 
@@ -141,8 +134,22 @@ has '_var' => (
 );
 
 # group settings
-# getting active when entering group
-has '_var' => (
+# hash contains:
+#   'inGroup': 1 if we are within a group, 0 otherwise
+#   'delimiter': The delimiter.
+has '_group' => (
+    is       => 'rw',
+    required => 0
+);
+
+# mapping of months to strings
+has '_monthStrings' => (
+    is       => 'rw',
+    required => 0
+);
+
+# mapping of months to numbers
+has '_monthNumbers' => (
     is       => 'rw',
     required => 0
 );
@@ -173,6 +180,65 @@ sub BUILD {
     
     $self->{_group}->{'inGroup'} = 0;
     $self->{_group}->{'delimiter'} = '';
+    
+    # Zotero outputs full month names
+    # therefore we need a mapping to the full names
+    %{$self->{_monthStrings}} = (
+        "Jan" => "January",
+        "Feb" => "February",
+        "Mar" => "March",
+        "Apr" => "April",
+        "May" => "May",
+        "Jun" => "June",
+        "Jul" => "July",
+        "Aug" => "August",
+        "Sep" => "September",
+        "Oct" => "October",
+        "Nov" => "November",
+        "Dec" => "December",
+        "01" => "January",
+        "02" => "February",
+        "03" => "March",
+        "04" => "April",
+        "05" => "May",
+        "06" => "June",
+        "07" => "July",
+        "08" => "August",
+        "09" => "September",
+        "10" => "October",
+        "11" => "November",
+        "12" => "December"
+    );
+    
+    # sorting requires a numeric date format
+    # therefore we need a mapping to the numbers
+    # (we store the date as YYYY/MM/DD)
+    %{$self->{_monthNumbers}} = (
+        "Jan" => "01",
+        "Feb" => "02",
+        "Mar" => "03",
+        "Apr" => "04",
+        "May" => "05",
+        "Jun" => "06",
+        "Jul" => "07",
+        "Aug" => "08",
+        "Sep" => "09",
+        "Oct" => "10",
+        "Nov" => "11",
+        "Dec" => "12",
+        "January" => "01",
+        "February" => "02",
+        "March" => "03",
+        "April" => "04",
+        "May" => "05",
+        "June" => "06",
+        "July" => "07",
+        "August" => "08",
+        "September" => "09",
+        "October" => "10",
+        "November" => "11",
+        "December" => "12"
+    );
 
     # do we have a biblio entry for each citation and vice versa?
     #if($self->_citationsSize != $self->_biblioSize) {
@@ -289,11 +355,77 @@ sub transform {
     else { # no collection, transform just a single mods        
         $self->_transformEach($self->_m->{mods}); # TODO: only 1 param: self
     }
+    
+    print Dumper $self->{_sort}; 
+    @{$self->{biblio}} = $self->_sortBiblio if(scalar(keys %{$self->{_sort}})>0);
 }
 
 
 ###########################
 ## private methods
+
+# _sort*
+# sort the $self->biblio array according to what is specified at $self->_c->{style}->{bibliography}->{sort}
+#
+# $self->{_sort}->{artifical_order_of_keys(INT)}->{_biblioNumber}->{key}
+# 
+sub _sortAddKeys {
+    my $self = shift;
+    
+    print "sort keys: ".($self->{_biblioNumber})."\n";
+    my $i=0;
+    foreach my $key ($self->_c->{style}->{bibliography}->{sort}->{key}('[@]') ) {
+        $key = $key->pointer;
+        foreach my $k (keys %{$key}) {
+            $i++;
+            if(! exists $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}}) {
+                $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = 1;
+                if(exists $self->{_var}->{$key->{$k}}) {
+                    #print STDERR "$i ->{ $k }->{ ".$key->{$k}." } -> ".($self->{_biblioNumber})."\n";
+                    $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = $self->{_var}->{$key->{$k}};
+                }
+            }            
+        }
+    }
+    #print STDERR Dumper $self->{_sort};
+}
+
+# TODO: Sorting works just for the first key, yet. 
+# Generally, perl sorts multiple keys by combining them with or
+sub _sortBiblio {
+    my $self = shift;
+    
+    my @tmp; # container for the _biblio entries
+    print "_sortBiblio:\n";
+    
+    my $round=0;
+    foreach my $sort_order (sort {$a<=>$b} keys %{$self->{_sort}}) {
+        $round++;
+        foreach my $k (keys %{$self->{_sort}->{$sort_order}}) {
+            foreach my $kk (keys %{$self->{_sort}->{$sort_order}->{$k}}) {
+                foreach my $kkk (sort {$self->{_sort}->{$sort_order}->{$k}->{$kk}->{$a} cmp $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$b}} keys %{$self->{_sort}->{$sort_order}->{$k}->{$kk}}) {
+                    print "sort_order: ", $sort_order, " ", $k, " ", $kk, " ", $kkk, " = ", $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk},"\n";
+                    if($round==1) {
+                        foreach my $b (@{$self->{biblio}}) {
+                            if($b =~ /$self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk}/) {
+                                push @tmp, $b;
+                            }
+                        }
+                    }
+                    else {
+                        # only continue if there are two identical entries which have to be sorted by the next key
+                    }
+                    
+                }
+            }
+        }
+    }
+    
+    #print Dumper @tmp; exit;
+    return @tmp;
+}
+
+
 
 # case $self->_c->{style}->{citation}
 # TODO: needs to be revised, does not work with chicago-author-date.csl
@@ -393,11 +525,19 @@ sub _transformEach() {
     my ($self, $mods) = @_;
     
     if(exists $self->_c->{style}) {
+        $self->{_biblioNumber}++; # we are parsing the next entry
+        
         # here we only handle the bibliography, the citations have already been generated.
-        if(exists $self->_c->{style}->{bibliography} ) {
+        if(exists $self->_c->{style}->{bibliography} ) {            
             if(exists $self->_c->{style}->{bibliography}->{layout} ) {  
                 # lets go
                 $self->_updateVariables($mods->pointer);
+                
+                if(exists $self->_c->{style}->{bibliography}->{sort}) {
+                    $self->_sortAddKeys; # initialize the sorting hash.
+                    #print STDERR Dumper $self->{_sort};
+                }
+                
                 $self->_parseChildElements($mods, $self->_c->{style}->{bibliography}->{layout}->pointer, "transformEach(parsing layout)");
                 
                 # check for "line-formatting" element, attribute-name is {"line-spacing" | "entry-spacing" }.
@@ -744,7 +884,6 @@ sub _updateVariables {
             } 
             ## the number used for the in-text citation mark in numeric styles
             case 'citation-number' {
-                $self->{_biblioNumber}++;
                 $self->_var->{'citation-number'} = $self->{_biblioNumber};
                 
                 # hardcoded space, some styles have a space at this point, others don't
@@ -778,50 +917,34 @@ sub _updateVariables {
                         if(exists $mods->{relatedItem}->{originInfo}->{dateIssued}) {
                             my $date = $mods->{relatedItem}->{originInfo}->{dateIssued}->{CONTENT};
                             #print STDERR "date='$date'\n";
-                            
-                            # Zotero outputs full month names
-                            my %month = (
-                                "Jan" => "January",
-                                "Feb" => "February",
-                                "Mar" => "March",
-                                "Apr" => "April",
-                                "May" => "May",
-                                "Jun" => "June",
-                                "Jul" => "July",
-                                "Aug" => "August",
-                                "Sep" => "September",
-                                "Oct" => "October",
-                                "Nov" => "November",
-                                "Dec" => "December",
-                            );
-                                                        
+                                                                                    
                             my $keep = "";
                             # NAIVE APPROACH
-                            # WE'LL KEEP THE DATE AS DAY/MONTH/YEAR
+                            # WE'LL KEEP THE DATE AS YEAR/MONTH/DAY
                             if($date =~ /^(\d\d\d\d)$/) { #simple year
-                                $keep = "-/-/".$1;
+                                $keep = $1."/-/-";
                             }
                             elsif($date =~ /^(\S+) (\d\d\d\d)$/) { # month and year
-                                if(exists $month{$1}) {
-                                    $keep = "-/".$month{$1}."/".$2; # keep full name
+                                if(exists $self->{_monthNumbers}{$1}) {
+                                    $keep = $2."/".$self->{_monthNumbers}{$1}."/-";
                                 }
                                 else {
-                                    $keep = "-/".$1."/".$2;
+                                    $keep = $2."/".$1."/-";
                                 }
                             }
                             elsif($date =~ /^(\S+) (\d+), (\d\d\d\d)$/) { # month day, year
-                                if(exists $month{$1}) {
-                                    $keep = $2."/".$month{$1}."/".$3;
+                                if(exists $self->{_monthNumbers}{$1}) {
+                                    $keep = $3."/".$self->{_monthNumbers}{$1}."/".$2;
                                 }
                                 else {
-                                    $keep = $2."/".$1."/".$3;
+                                    $keep = $3."/".$1."/".$2;
                                 }
                             }
                             else {
                                 die "ERROR: Wasn't able to parse the date '$date'?";
                             }
                             $self->_var->{'issued'} = $keep;
-                            #print STDERR $keep, "\n";
+                            #print STDERR $keep, "\n"; exit;
                         }
                     }
                 }
@@ -905,34 +1028,16 @@ sub _addFix {
     }
 }
 
-# sometimes we ignore variables
-# they are not written to the output
-# but then we also don't need the fix!
-# this is to ensure that we do not have double fixes and so on
-#
-### DON'T NEEDED ANYMORE 
-#
-#sub _checkIntegrityOfFix {
-    #my ($self, $str) = @_;
-    
-    #if($self->{_biblio_str} =~ /\Q$str$str\E/) {        
-    #    print "matching (str='$str$str'): ", $self->{_biblio_str}, "\n";
-    #    $self->{_biblio_str} =~ s/$str$str$/$str/g;
-    #    print "after: ", $self->{_biblio_str}, "\n";
-    #}
-    
-#}
 
 # parses relevant major CSL elements while generating the bibliography
 sub _parseChildElements {
     my ($self, $mods, $ptr, $from) = @_;
     
+    # prefix before the tmp copy!
     $self->_addFix($ptr, "prefix");
     
     # copy to be able to recognise changes;
-    my $tmpStr = $self->_biblio_str;
-    
-    #print Dumper $ptr;
+    my $tmpStr = $self->{_biblio_str};
     
     my @order;
     if(ref($ptr) eq "HASH") {
@@ -944,12 +1049,13 @@ sub _parseChildElements {
         }
     }
     elsif(ref($ptr) eq "ARRAY") {
+        print Dumper @$ptr;
         foreach my $k (@$ptr) {
             $self->_parseChildElements($mods, $k, $from);
         }
     }
     else {
-        die "ERROR: $ptr is neither hash nor array!";
+        die "ERROR: '$ptr', ref=".(ref($ptr))." is neither hash nor array!";
     }
     
     # needed for if|else-if|else
@@ -985,7 +1091,7 @@ sub _parseChildElements {
                 $self->_parseLabel($mods, $ptr->{$o});
             }
             case 'text' {
-                print 'parsing text!!!\n';
+                print "parsing text!!!\n";
                 $self->_parseChildElements($mods, $ptr->{$o}, "_parseChildElements($o)");
             }
             case 'choose' {
@@ -1022,9 +1128,11 @@ sub _parseChildElements {
         
         print "### _parseChildElements($o): _biblio_string after parsing $o: '$self->{_biblio_str}'\n";
     }
-    
+        
     my $removedPrefix = 0;
-    if($tmpStr eq $self->_biblio_str) {
+    if($tmpStr eq $self->{_biblio_str}) {
+        print "should remove prefix!\n";
+        print Dumper $ptr;
         # remove potential prefix cause the biblio_string hasn't changed, we don't need the prefix if there is nothing new
         if(ref($ptr) eq "HASH") {
             if(exists $ptr->{prefix}) {
@@ -1042,10 +1150,18 @@ sub _parseChildElements {
     }
     
     # group delimiter
-    if($tmpStr ne $self->_biblio_str && $self->{_group}->{'inGroup'} ==1 && $self->{_group}->{'delimiter'} ne '' ) {
-        $self->{_biblio_str} .= $self->{_group}->{'delimiter'};
+    if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '') {
+        if($tmpStr ne $self->{_biblio_str} && $self->{_biblio_str} !~ /$self->{_group}->{'delimiter'}$/) {
+            print "'$tmpStr' vs '".($self->{_biblio_str})."'\n"; 
+            print "adding delimiter ($from)'".$self->{_group}->{'delimiter'}."'\n";
+            $self->{_biblio_str} .= $self->{_group}->{'delimiter'};
+        }
+        else {
+            #print "removing delimiter (_parseChildElement)'".$self->{_group}->{'delimiter'}."'\n";
+            #$self->{_biblio_str} = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
+        }
     }
-
+    
     # suffixes finish strings
     # but we need them only in that cases where we did not remove a prefix.
     $self->_addFix($ptr, "suffix") if(! $removedPrefix);
@@ -1060,7 +1176,18 @@ sub _parseMacro {
     print "_parseMacro: $macro_name\n";
     print Dumper $macro;
     
+    my $tmpBiblio = $self->{_biblio_str};
     $self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
+    foreach my $k (keys %{$self->{_sort}}) {
+        if(exists $self->{_sort}->{$k}->{macro}) {
+            if(exists $self->{_sort}->{$k}->{macro}->{$macro_name}) {
+                #print STDERR "$k -> macro -> $macro_name \n";
+                my $substr = substr $self->{_biblio_str}, length($tmpBiblio);
+                $self->{_sort}->{$k}->{macro}->{$macro_name}->{$self->{_biblioNumber}}=$substr;
+            }
+        }
+    }
+    #print STDERR Dumper $self->{_sort}; 
 }
 
 
@@ -1288,20 +1415,19 @@ sub _parseDatePart {
     
     my @d = split /\//, $self->_var->{'issued'};
     if(scalar(@d)!=3) {
-        die "ERROR: Couldn't split SL-variable issued!";
+        die "ERROR: Couldn't split CSL-variable issued!";
     }
 
     my $datePartString = "";
     if($self->_var->{'issued'} ne '') {
-        if(ref($dp) eq "HASH") {
-            
+        if(ref($dp) eq "HASH") {            
             if(exists $dp->{name}) {
                 switch($dp->{name}) { # month | day | year-other
                     case "month" { # 1.                        
-                        $datePartString .= $d[1] if($d[1] ne '-');
+                        $datePartString .= $self->{_monthStrings}->{$d[1]} if($d[1] ne '-');
                     }
                     case "day" { # 2.
-                        $datePartString .= $d[0] if($d[0] ne '-');
+                        $datePartString .= $d[2] if($d[2] ne '-');
                     }
                     case "year" { # 3.1
                         # now we have the long year, e.g. 2000.
@@ -1309,7 +1435,7 @@ sub _parseDatePart {
                         if(exists $dp->{form}) {
                             switch($dp->{form}) {
                                 case "short" {
-                                    $d[2] = $1 if($d[2] =~ /\d\d(\d\d)/);                                    
+                                    $d[0] = $1 if($d[0] =~ /\d\d(\d\d)/);                                    
                                 }
                                 case "long" {
                                     
@@ -1321,7 +1447,7 @@ sub _parseDatePart {
                         }
                         
                         # the year is ready, add it 
-                        $datePartString .= $d[2];
+                        $datePartString .= $d[0];
                         
                     }
                     case "other" { # 3.2
@@ -1704,26 +1830,83 @@ sub _parseGroup {
 
     print "_parseGroup\n";
     $self->{_group}->{'inGroup'} = 1;
-
-    if(ref($g) eq "HASH") {
+    
+    my @order;
+    if(ref($g) eq "HASH") { 
         if(exists $g->{'delimiter'}) {
             $self->{_group}->{'delimiter'} = $g->{'delimiter'};
         }
+
+        if(exists $g->{'/order'}) {
+            @order = _uniqueArray(\@{$g->{'/order'}});
+        }
+        else {
+            @order = keys %{$g};
+        }
+        
+        # do the group
+        foreach my $o (@order) {
+            $self->_parseChildElements($mods, $g->{$o}, "_parseConditionContent(group-$o)") if(isNoStopWord($o));
+        }
+    }
+    elsif(ref($g) eq "ARRAY") {
+        # do the group
+        foreach my $k (@$g) {
+            $self->_parseChildElements($mods, $k, "_parseConditionContent(group)") if(isNoStopWord($k));
+        }
+    }
+    else {
+        die "ERROR: $g is neither hash nor array!";
     }
     
-    # do the group
-    my $next = $self->_howToProceedAfterCondition($g);
-    print "next after group = '$next'\n";
-    $self->_parseChildElements($mods, $g->{$next}, "_parseConditionContent(group)");
+    # Here we leave the group.
+    # Group-example: 1,2,3
+    # if the third(last) group element does not contribute to the biblio_string
+    # then we also do not need the delimiter at the second element.
+    if($self->{_group}->{'delimiter'} ne '' && $self->{_biblio_str}=~/$self->{_group}->{'delimiter'}$/ ) {
+        #$self->{_biblio_str}=~s/$self->{_group}->{'delimiter'}$//g;
+        #print STDERR "JA group: ", $self->{_biblio_str}, "\n";
+        print "removing delimiter '".$self->{_group}->{'delimiter'}."'\n";
+        $self->{_biblio_str} = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
+        #print STDERR "JA group (after removing): ", $self->{_biblio_str}, "\n";
+    }
+    else {
+        #print STDERR "NEIN group: ", $self->{_biblio_str}, "\n";
+    }
     
-    # remove last delimiter 
-    # delimiter-example: e.g. ',': a,b,c
-    my $substr = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
-    $self->{_biblio_str} = $substr;
-    
+        
     # because we leave the group
     $self->{_group}->{'delimiter'} = '';
-    $self->{_group}->{'inGroup'} = 0;    
+    $self->{_group}->{'size'} = 0;    
+}
+
+# variation of _howToProceedAfterCondition
+# useful to check if there is something left that we have to parse
+# TODO: check all _howToProceedAfterCondition calls... 
+# they only return 1 element, this one will be parsed, 
+# but what if there are multiple elements after the condition, do we parse them all or just the single one that was returned?
+sub isNoStopWord {
+    my $word = shift;
+    
+    my %stop_words = (
+        'type' => 1,
+        'variable' => 1,
+        'is_numeric' => 1,
+        'is_date' => 1,
+        'position' => 1,
+        'disambiguate' => 1,
+        'locator' => 1,
+        'match' => 1,
+        '/nodes' => 1,
+        'delimiter' => 1
+    );
+    
+    if(exists $stop_words{$word}) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
 }
 
 # add the variable to the biblio string
