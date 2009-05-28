@@ -111,6 +111,14 @@ has '_biblio_str' => (
   required  => 0
 );
 
+# string that temporarily holds the current entry of the bibliography
+has '_biblio_str' => (
+  is        => 'rw',
+  isa       => 'Str',
+  default   => "",
+  required  => 0
+);
+
 # hashref of the mods hash 
 has '_m' => (
   is       => 'rw',
@@ -134,8 +142,10 @@ has '_var' => (
 );
 
 # group settings
-# getting active when entering group
-has '_var' => (
+# hash contains:
+#   'inGroup': 1 if we are within a group, 0 otherwise
+#   'delimiter': The delimiter.
+has '_group' => (
     is       => 'rw',
     required => 0
 );
@@ -287,6 +297,7 @@ sub transform {
 
 ###########################
 ## private methods
+
 
 # case $self->_c->{style}->{citation}
 # TODO: needs to be revised, does not work with chicago-author-date.csl
@@ -898,23 +909,6 @@ sub _addFix {
     }
 }
 
-# sometimes we ignore variables
-# they are not written to the output
-# but then we also don't need the fix!
-# this is to ensure that we do not have double fixes and so on
-#
-### DON'T NEEDED ANYMORE 
-#
-#sub _checkIntegrityOfFix {
-    #my ($self, $str) = @_;
-    
-    #if($self->{_biblio_str} =~ /\Q$str$str\E/) {        
-    #    print "matching (str='$str$str'): ", $self->{_biblio_str}, "\n";
-    #    $self->{_biblio_str} =~ s/$str$str$/$str/g;
-    #    print "after: ", $self->{_biblio_str}, "\n";
-    #}
-    
-#}
 
 # parses relevant major CSL elements while generating the bibliography
 sub _parseChildElements {
@@ -923,7 +917,7 @@ sub _parseChildElements {
     $self->_addFix($ptr, "prefix");
     
     # copy to be able to recognise changes;
-    my $tmpStr = $self->_biblio_str;
+    $self->{_tmp_biblio_str} = $self->{_biblio_str};
     
     #print Dumper $ptr;
     
@@ -937,12 +931,13 @@ sub _parseChildElements {
         }
     }
     elsif(ref($ptr) eq "ARRAY") {
+        print Dumper @$ptr;
         foreach my $k (@$ptr) {
             $self->_parseChildElements($mods, $k, $from);
         }
     }
     else {
-        die "ERROR: $ptr is neither hash nor array!";
+        die "ERROR: '$ptr', ref=".(ref($ptr))." is neither hash nor array!";
     }
     
     # needed for if|else-if|else
@@ -1015,9 +1010,9 @@ sub _parseChildElements {
         
         print "### _parseChildElements($o): _biblio_string after parsing $o: '$self->{_biblio_str}'\n";
     }
-    
+        
     my $removedPrefix = 0;
-    if($tmpStr eq $self->_biblio_str) {
+    if($self->{_tmp_biblio_str} eq $self->_biblio_str) {
         # remove potential prefix cause the biblio_string hasn't changed, we don't need the prefix if there is nothing new
         if(ref($ptr) eq "HASH") {
             if(exists $ptr->{prefix}) {
@@ -1035,10 +1030,18 @@ sub _parseChildElements {
     }
     
     # group delimiter
-    if($tmpStr ne $self->_biblio_str && $self->{_group}->{'inGroup'} ==1 && $self->{_group}->{'delimiter'} ne '' ) {
-        $self->{_biblio_str} .= $self->{_group}->{'delimiter'};
+    if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '') {
+        if($self->{_tmp_biblio_str} ne $self->{_biblio_str} && $self->{_biblio_str} !~ /$self->{_group}->{'delimiter'}$/) {
+            print "'".($self->{_tmp_biblio_str})."' vs '".($self->{_biblio_str})."'\n"; 
+            print "adding delimiter ($from)'".$self->{_group}->{'delimiter'}."'\n";
+            $self->{_biblio_str} .= $self->{_group}->{'delimiter'};
+        }
+        else {
+            #print "removing delimiter (_parseChildElement)'".$self->{_group}->{'delimiter'}."'\n";
+            #$self->{_biblio_str} = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
+        }
     }
-
+    
     # suffixes finish strings
     # but we need them only in that cases where we did not remove a prefix.
     $self->_addFix($ptr, "suffix") if(! $removedPrefix);
@@ -1697,21 +1700,83 @@ sub _parseGroup {
 
     print "_parseGroup\n";
     $self->{_group}->{'inGroup'} = 1;
-
-    if(ref($g) eq "HASH") {
+    
+    my @order;
+    if(ref($g) eq "HASH") { 
         if(exists $g->{'delimiter'}) {
             $self->{_group}->{'delimiter'} = $g->{'delimiter'};
         }
+
+        if(exists $g->{'/order'}) {
+            @order = _uniqueArray(\@{$g->{'/order'}});
+        }
+        else {
+            @order = keys %{$g};
+        }
+        
+        # do the group
+        foreach my $o (@order) {
+            $self->_parseChildElements($mods, $g->{$o}, "_parseConditionContent(group-$o)") if(isNoStopWord($o));
+        }
+    }
+    elsif(ref($g) eq "ARRAY") {
+        # do the group
+        foreach my $k (@$g) {
+            $self->_parseChildElements($mods, $k, "_parseConditionContent(group)") if(isNoStopWord($k));
+        }
+    }
+    else {
+        die "ERROR: $g is neither hash nor array!";
     }
     
-    # do the group
-    my $next = $self->_howToProceedAfterCondition($g);
-    print "next after group = '$next'\n";
-    $self->_parseChildElements($mods, $g->{$next}, "_parseConditionContent(group)");
+    # Here we leave the group.
+    # Group-example: 1,2,3
+    # if the third(last) group element does not contribute to the biblio_string
+    # then we also do not need the delimiter at the second element.
+    if($self->{_group}->{'delimiter'} ne '' && $self->{_biblio_str}=~/$self->{_group}->{'delimiter'}$/ ) {
+        #$self->{_biblio_str}=~s/$self->{_group}->{'delimiter'}$//g;
+        #print STDERR "JA group: ", $self->{_biblio_str}, "\n";
+        print "removing delimiter '".$self->{_group}->{'delimiter'}."'\n";
+        $self->{_biblio_str} = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
+        #print STDERR "JA group (after removing): ", $self->{_biblio_str}, "\n";
+    }
+    else {
+        #print STDERR "NEIN group: ", $self->{_biblio_str}, "\n";
+    }
     
+        
     # because we leave the group
     $self->{_group}->{'delimiter'} = '';
-    $self->{_group}->{'inGroup'} = 0;    
+    $self->{_group}->{'size'} = 0;    
+}
+
+# variation of _howToProceedAfterCondition
+# useful to check if there is something left that we have to parse
+# TODO: check all _howToProceedAfterCondition calls... 
+# they only return 1 element, this one will be parsed, 
+# but what if there are multiple elements after the condition, do we parse them all or just the single one that was returned?
+sub isNoStopWord {
+    my $word = shift;
+    
+    my %stop_words = (
+        'type' => 1,
+        'variable' => 1,
+        'is_numeric' => 1,
+        'is_date' => 1,
+        'position' => 1,
+        'disambiguate' => 1,
+        'locator' => 1,
+        'match' => 1,
+        '/nodes' => 1,
+        'delimiter' => 1
+    );
+    
+    if(exists $stop_words{$word}) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
 }
 
 # add the variable to the biblio string
