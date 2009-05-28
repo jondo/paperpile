@@ -6,13 +6,6 @@ use warnings;
 use Moose;
 use XML::Smart;
 use Switch;
-#use Date::Components;
-#use Date::Manip;
-#use DateTime::Format::Natural;
-#use DateTime::Format::Flexible;
-use DateTimeX::Easy;
-
-
 use utf8;
 binmode STDOUT, ":utf8";
 
@@ -1715,11 +1708,6 @@ sub _parseGroup {
     my $next = $self->_howToProceedAfterCondition($g);
     print "next after group = '$next'\n";
     $self->_parseChildElements($mods, $g->{$next}, "_parseConditionContent(group)");
-    
-    # remove last delimiter 
-    # delimiter-example: e.g. ',': a,b,c
-    my $substr = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
-    $self->{_biblio_str} = $substr;
     
     # because we leave the group
     $self->{_group}->{'delimiter'} = '';
