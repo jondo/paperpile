@@ -1,16 +1,26 @@
 Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
 	
-    statusMsgTpl: "There are {number} PDFs in your directory",
+    matchPlugin:'PubMed',
+
+    statusMsgTpl: [
+        '<tpl if="number">',
+        'There are <b>{number}</b> PDFs in the list not yet in your library. ',
+        'The files can be matched against online resources and then imported. ',
+        'Click <i>Import</i> in the toolbar to match and import files individually, ',
+        'or import all files automatically by clicking the button below. ',
+        '</tpl>',
+        '<tpl if="!number">',
+        'All files imported.',
+        '</tpl>',
+
+    ],
 
     markup: [
         '<div class="pp-box pp-box-style1"',
         '<h2>Import PDFs</h2>',
         '<p id="status-msg-{id}"></p>',
-        '<p>&nbsp;</p>',
         '<div class="pp-control-container">',
         '<table><tr>',
-        '<td>Match PDFs against: </td>',
-        '<td><div id="combo-container-{id}"</div></td>',
         '</tr></table>',
         '</div>',
         '<div id="start-container-{id}" class="pp-control-container"></div>',
@@ -18,7 +28,6 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
         '<div id="pbox-container-{id}" class="pp-control-container"></div>',
         '</div>',
 	],
-
 
     initComponent: function() {
 		Ext.apply(this, {
@@ -49,6 +58,10 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
 
     updateView: function(){
         var list=this.getUnimportedList();
+
+        if (list.length==0){
+            this.startButton.disable();
+        }
         
         var tpl= new Ext.XTemplate(this.statusMsgTpl);
         tpl.overwrite('status-msg-'+this.id, {number: list.length});
@@ -66,31 +79,9 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
 
         this.updateView();
                 
-        var store=[['PubMed','PubMed']];
-        var combo= new Ext.form.ComboBox(
-            { renderTo: 'combo-container-'+this.id,
-              editable:false,
-              forceSelection:true,
-              triggerAction: 'all',
-              disableKeyFilter: true,
-              fieldLabel:'Type',
-              mode: 'local',
-              width: 120,
-              store: [['PubMed','PubMed']],
-              value: 'PubMed',
-              listeners: {
-                  select: {
-                      fn: function(combo,record,indec){
-                          console.log("inhere");
-                      },
-                      scope:this,
-                  }
-              }
-            });
-
         this.startButton=new Ext.Button(
             { renderTo: "start-container-"+this.id,
-              text: 'Start import',
+              text: 'Match and import all PDFs',
               handler: function(){
                   this.importAll();
               },
@@ -126,6 +117,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
             this.importPDF,
             function(){
                 this.cancelProcess=0;
+                this.pbox.destroy();
                 this.updateView();
                 this.startButton.enable();
             }, 
@@ -161,6 +153,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
             url: '/ajax/pdfextract/import',
             params: { root: this.grid.root,
                       grid_id: this.grid.id,
+                      match_plugin:this.matchPlugin,
                       file_name: file_name,
                     },
             method: 'GET',

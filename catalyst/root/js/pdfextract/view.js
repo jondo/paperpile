@@ -15,7 +15,7 @@ Paperpile.PdfExtractView = Ext.extend(Ext.Panel, {
                   width: 720,
                   minSize:720,
                   items:[
-                      new Paperpile.PdfExtractGrid({itemId:'grid'}),
+                      new Paperpile.PdfExtractGrid({itemId:'grid', path: this.path}),
                       {border: false,
                        split: true,
                        xtype: 'panel',

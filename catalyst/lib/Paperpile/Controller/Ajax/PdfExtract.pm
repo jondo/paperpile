@@ -20,19 +20,22 @@ sub grid : Local {
 
   my ( $self, $c ) = @_;
 
-  my $root = $c->request->params->{root};
-
-  my $data = [];
+  my $path = $c->request->params->{path};
 
   my @list = ();
+  my $data = [];
 
-  find(
-    sub {
-      my $name = $File::Find::name;
-      push @list, $name if $name =~ /\.pdf$/i;
-    },
-    $root
-  );
+  if ( -d $path ) {
+    find(
+      sub {
+        my $name = $File::Find::name;
+        push @list, $name if $name =~ /\.pdf$/i;
+      },
+      $path
+    );
+  } else {
+    push @list, $path;
+  }
 
   foreach my $file_name (@list) {
 
@@ -87,7 +90,7 @@ sub grid : Local {
 
       if ( compare( $in_db->{file}, $item->{file_name} ) == 0 ) {
         $item->{status}     = 'IMPORTED';
-        $item->{status_msg} = '<b>'.$item->{file_basename}.'</b> already in database';
+        $item->{status_msg} = '<b>' . $item->{file_basename} . '</b> already in database';
         $item->{pub}->authors( $in_db->{authors} );
         $item->{pub}->title( $in_db->{title} );
         $item->{pub}->doi( $in_db->{doi} );
@@ -125,6 +128,7 @@ sub import : Local {
   my ( $self, $c ) = @_;
 
   my $file_name = $c->request->params->{file_name};
+  my $match_plugin = $c->request->params->{match_plugin};
   ( my $file_basename ) = fileparse($file_name);
 
   my $bin = Paperpile::Utils->get_binary( 'pdftoxml', $c->model('App')->get_setting('platform') );
@@ -142,7 +146,11 @@ sub import : Local {
     $data->{status}     = 'FAIL';
     $data->{status_msg} = 'Could not find title or doi in PDF.';
   } else {
-    my $plugin = Paperpile::Plugins::Import::PubMed->new();
+
+    my $plugin_module = "Paperpile::Plugins::Import::" . $match_plugin;
+    my $plugin        = eval( "$plugin_module->" . 'new()' );
+
+    #my $plugin = Paperpile::Plugins::Import::PubMed->new();
 
     eval { $pub = $plugin->match($pub); };
 

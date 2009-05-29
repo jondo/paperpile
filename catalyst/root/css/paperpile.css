@@ -40,6 +40,7 @@
 .pp-box p, .pp-box ul, .pp-box ol, .pp-box h2 {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     margin: 8;
+    line-height: 1.5em;
 } 
 
 .pp-box li{
@@ -565,6 +566,15 @@ div:hover.pp-tag-style-sample {
 .pp-tag-style-picker {
     width: 200px;
 } 
+
+/*** PDF Extract ***/
+
+.pp-pdfextract-file{
+    padding: 2 2 2 22;
+    background: transparent url('/images/icons/page_white_acrobat.png') no-repeat;
+}
+
+
 
 
 .pp-tag-style-default,  .pp-tag-tree-style-default  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: black !important; }

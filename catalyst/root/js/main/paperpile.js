@@ -163,8 +163,28 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     pdfExtract: function(){
 
-        var panel=main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs', iconCls: 'pp-icon-page'}));
-        panel.show();
+        win=new Paperpile.FileChooser({
+            title: "Select single PDF file or directory to search for PDF files",
+            currentRoot:main.globalSettings.user_home,
+            showFilter: true,
+            selectionMode: 'BOTH',
+            filterOptions:[{text: 'PDF files',
+                            suffix:['pdf']
+                           }],
+            callback:function(button,path){
+                if (button == 'OK'){
+                    var panel=main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs', 
+                                                                          iconCls: 'pp-icon-page',
+                                                                          path: path
+                                                                         }));
+                    panel.show();
+                }
+            }
+        });
+        
+        win.show();
+
+
 
     },
 
