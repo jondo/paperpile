@@ -59,12 +59,13 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
     updateView: function(){
         var list=this.getUnimportedList();
 
+        var tpl= new Ext.XTemplate(this.statusMsgTpl);
+        tpl.overwrite('status-msg-'+this.id, {number: list.length});
+
         if (list.length==0){
             this.startButton.disable();
         }
         
-        var tpl= new Ext.XTemplate(this.statusMsgTpl);
-        tpl.overwrite('status-msg-'+this.id, {number: list.length});
         
     },
 
@@ -77,8 +78,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
 
         tpl.overwrite(this.body, {number: list.length, id: this.id});
 
-        this.updateView();
-                
+               
         this.startButton=new Ext.Button(
             { renderTo: "start-container-"+this.id,
               text: 'Match and import all PDFs',
@@ -87,6 +87,9 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
               },
               scope:this,
             });
+
+        this.updateView();
+
         
     },
 
