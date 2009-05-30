@@ -1,6 +1,6 @@
 Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 	  
-    markup: [
+    markupSingle: [
 
         '<div id=main-container-{id}>',
 
@@ -71,12 +71,21 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</div>',
         '</tpl>',
         '</div>',
-        
+    ],
 
-	  ],
+    markupMultiple: [
+
+        '<div id=main-container-{id}>',
+        '<div class="pp-box pp-box-top pp-box-style1"',
+        '<p><b>{numSelected}</b> papers selected.</p>',
+        '</div>',
+        '</div>',
+
+    ],
 
     initComponent: function() {
-		this.tpl = new Ext.XTemplate(this.markup);
+		this.tplSingle = new Ext.XTemplate(this.markupSingle);
+        this.tplMultiple = new Ext.XTemplate(this.markupMultiple);
 		Ext.apply(this, {
 			bodyStyle: {
 				background: '#ffffff',
@@ -93,40 +102,55 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     // Redraws the HTML template panel with new data from the grid
     //
     
-    updateDetail: function(data) {
-        this.data=data;
-        this.data.id=this.id;
+    updateDetail: function(grid) {
 
-        this.grid_id=this.ownerCt.ownerCt.items.get('center_panel').items.get(0).id;
+        sm=grid.getSelectionModel();
 
-        this.data._pubtype_name=Paperpile.main.globalSettings.pub_types[this.data.pubtype].name;
+        var numSelected=sm.getCount();
 
-        this.data.attachments_list=[];
-        if (this.data.attachments > 0){
-            Ext.Ajax.request(
-                { url: '/ajax/attachments/list_files',
-                  params: { sha1: this.data.sha1,
-                            rowid: this.data._rowid,
-                            grid_id: this.grid_id,
-                          },
-                  method: 'GET',
-                  success: function(response){
-                      var json = Ext.util.JSON.decode(response.responseText);
-                      this.data.attachments_list=json.list;
-                      this.tpl.overwrite(this.body, this.data, true);
-                      this.installEvents();
-                      this.renderTags();
-                  }, 
-                  scope:this,
-                });
-        } else {
-            this.tpl.overwrite(this.body, this.data, true);
-            this.installEvents();
-            this.renderTags();
+        if (grid.allSelected){
+            numSelected=grid.store.getTotalCount();
         }
-        
-        
-	},
+
+        if (numSelected==1){
+            this.data=sm.getSelected().data;
+            this.data.id=this.id;
+
+            //this.grid_id=this.ownerCt.ownerCt.items.get('center_panel').items.get(0).id;
+
+            this.grid_id=grid.id;
+
+            this.data._pubtype_name=Paperpile.main.globalSettings.pub_types[this.data.pubtype].name;
+
+            this.data.attachments_list=[];
+            if (this.data.attachments > 0){
+                Ext.Ajax.request(
+                    { url: '/ajax/attachments/list_files',
+                      params: { sha1: this.data.sha1,
+                                rowid: this.data._rowid,
+                                grid_id: this.grid_id,
+                              },
+                      method: 'GET',
+                      success: function(response){
+                          var json = Ext.util.JSON.decode(response.responseText);
+                          this.data.attachments_list=json.list;
+                          this.tplSingle.overwrite(this.body, this.data, true);
+                          this.installEvents();
+                          this.renderTags();
+                      }, 
+                      scope:this,
+                    });
+            } else {
+                this.tplSingle.overwrite(this.body, this.data, true);
+                this.installEvents();
+                this.renderTags();
+            }
+        }
+
+        if (numSelected>1){
+            this.tplMultiple.overwrite(this.body, {numSelected: numSelected}, true);
+        }
+   	},
 
     //
     // Event handling for the HTML. Is called with 'el' as the Ext.Element of the HTML 

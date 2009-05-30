@@ -207,12 +207,22 @@ sub insert_pubs {
 
   ( my $self, my $pubs ) = @_;
 
+  my $counter = 0;
+
+  # to avoid sha1 constraint violation seems to be only very minor
+  # performance overhead and any other attempts with OR IGNOR or eval {}
+  # did not work.
+  $self->exists_pub($pubs);
+
   $self->dbh->begin_work;
 
   foreach my $pub (@$pubs) {
 
+    next if $pub->_imported;
+
     ## Insert main entry into Publications table
     ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
+
     $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
 
     ## Insert searchable fields into fulltext table
@@ -232,12 +242,12 @@ sub insert_pubs {
       tags     => $pub->tags,
       folders  => $pub->folders,
       text     => '',
-      };
+    };
 
     ( $fields, $values ) = $self->_hash2sql($hash);
     $self->dbh->do("INSERT INTO fulltext_full ($fields) VALUES ($values)");
 
-    delete($hash->{text});
+    delete( $hash->{text} );
 
     ( $fields, $values ) = $self->_hash2sql($hash);
 
@@ -269,26 +279,21 @@ sub insert_pubs {
     }
   }
 
-  eval { $self->dbh->commit; };
-
-  if ($@) {
-
-    die("Could not insert data into database $@");
-
-    # TODO: best practise is to eval rollback as well...
-    $self->dbh->rollback;
-
-  }
+  $self->dbh->commit;
 
 }
 
 
 sub delete_pubs {
 
-  ( my $self, my $rowids ) = @_;
+  ( my $self, my $pubs ) = @_;
+
+  $self->dbh->begin_work;
 
   # check if entry has any attachments an delete those
-  foreach my $rowid (@$rowids) {
+  foreach my $pub (@$pubs) {
+
+    my $rowid=$pub->_rowid;
 
     # First delete attachments from Attachments table
     my $select=$self->dbh->prepare("SELECT rowid FROM Attachments WHERE publication_id=$rowid;");
@@ -311,13 +316,16 @@ sub delete_pubs {
   my $delete_authors = $self->dbh->prepare(
     "DELETE From authors where rowid not in (SELECT author_id FROM author_publication)" );
 
-  foreach my $rowid (@$rowids) {
+  foreach my $pub (@$pubs) {
+    my $rowid = $pub->_rowid;
     $delete_main->execute($rowid);
     $delete_fulltext_citation->execute($rowid);
     $delete_fulltext_full->execute($rowid);
     $delete_author_join->execute($rowid);
     $delete_authors->execute;
   }
+
+  $self->dbh->commit;
 
   return 1;
 

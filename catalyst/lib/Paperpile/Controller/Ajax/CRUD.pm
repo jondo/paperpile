@@ -14,22 +14,46 @@ sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
   my $grid_id = $c->request->params->{grid_id};
-  my $sha1      = $c->request->params->{sha1};
+  my $selection = $c->request->params->{selection};
   my $plugin = $c->session->{"grid_$grid_id"};
 
-  my $pub = $plugin->find_sha1($sha1);
+  my @data = ();
 
-  $pub->created(timestamp);
-  $pub->times_read(0);
-  $pub->last_read(timestamp); ## for the time being
+  if ($selection eq 'ALL'){
+    @data = @{$plugin->all};
+  } else {
+    my @tmp;
+    if ( ref($selection) eq 'ARRAY' ) {
+      @tmp = @$selection;
+    } else {
+      push @tmp, $selection;
+    }
+    for my $sha1 (@tmp) {
+      my $pub = $plugin->find_sha1($sha1);
+      push @data, $pub;
+    }
+  }
 
-  $c->model('User')->create_pubs([$pub]);
+  my %output=();
 
-  $pub->_imported(1);
+  foreach my $pub (@data){
+    $pub->created(timestamp);
+    $pub->times_read(0);
+    $pub->last_read(timestamp); ## for the time being
+    $pub->_imported(1);
+  }
 
-  $c->stash->{data} = $pub->as_hash;
+  $c->model('User')->create_pubs(\@data);
 
-  $c->stash->{success} = 'true';
+  foreach my $pub (@data){
+    $output{$pub->sha1}={_imported=>1,
+                         citekey=>$pub->citekey,
+                         _rowid=>$pub->_rowid,
+                        };
+  }
+
+  $c->stash->{data} = {%output};
+
   $c->forward('Paperpile::View::JSON');
 
 }
@@ -84,16 +108,34 @@ sub new_entry: Local {
 
 }
 
-
 sub delete_entry : Local {
   my ( $self, $c ) = @_;
 
   my $grid_id = $c->request->params->{grid_id};
-  my $rowid     = $c->request->params->{rowid};
+  my $selection = $c->request->params->{selection};
+  my $plugin = $c->session->{"grid_$grid_id"};
 
-  $c->model('User')->delete_pubs( [$rowid] );
+  my @data = ();
 
-  $c->stash->{success} = 'true';
+  if ($selection eq 'ALL'){
+    @data = @{$plugin->all};
+  } else {
+    my @tmp;
+    if ( ref($selection) eq 'ARRAY' ) {
+      @tmp = @$selection;
+    } else {
+      push @tmp, $selection;
+    }
+    for my $sha1 (@tmp) {
+      my $pub = $plugin->find_sha1($sha1);
+      push @data, $pub;
+    }
+  }
+
+  $c->model('User')->delete_pubs([@data]);
+
+  $plugin->total_entries($plugin->total_entries - scalar(@data));
+
   $c->forward('Paperpile::View::JSON');
 
 }

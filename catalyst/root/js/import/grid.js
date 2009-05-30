@@ -4,6 +4,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     closable:true,
     region:'center',
     limit: 25,
+    allSelected:false,
 
     initComponent:function() {
 
@@ -36,7 +37,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       itemId: 'new_button',
                       text: 'New',
                       cls: 'x-btn-text-icon add',
-                      disabled: true,
+                      //disabled: true,
                       listeners: {
                           click:  {fn: this.newEntry, scope: this}
                       },
@@ -54,7 +55,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                             scope: this
                         },
                     },
-                    disabled: true,
+                    //disabled: true,
                   },
                   {   xtype:'button',
                       text: 'Delete',
@@ -63,7 +64,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       listeners: {
                           click:  {fn: this.deleteEntry, scope: this}
                       },
-                      disabled: true,
+                      //disabled: true,
                   },
                   {   xtype:'button',
                       itemId: 'edit_button',
@@ -72,7 +73,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       listeners: {
                           click:  {fn: this.editEntry, scope: this}
                       },
-                      disabled: true,
+                      //disabled: true,
                   }, 
                   {  xtype:'button',
                      text: 'More',
@@ -80,6 +81,23 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                      menu:new Ext.menu.Menu({
                          //itemId: 'more_menu',
                          items:[
+                             {  text: 'Select all',
+                                listeners: {
+                                    click: {fn: function(){
+                                        this.allSelected=true;
+                                        this.getSelectionModel().selectAll();
+                                        this.getSelectionModel().on('selectionchange',
+                                                                    function(sm){
+                                                                        this.allSelected=false;
+                                                                    }, this, {single:true});
+                                        this.getSelectionModel().on('rowdeselect',
+                                                                    function(sm){
+                                                                        sm.clearSelections();
+                                                                    }, this, {single:true});
+                                        
+                                    }, scope: this}
+                                },
+                             },
                              {  text: 'Export selected',
                                 listeners: {
                                     click:  {fn: function(){this.exportEntry('selection')}, scope: this}
@@ -92,7 +110,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                              }
                          ]
                      }),
-                     disabled: true,
+                     //disabled: true,
                   }
                  ];
 
@@ -168,12 +186,33 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         
         this.on('beforedestroy', this.onClose,this);
 
+
+        // A bug in ExtJS 2.2 does not allow clearing a multiple selection when an item is clicked
+        // This hack should become unnecessary in future versions of ExtJS
+        this.on('rowclick', 
+                function( grid, rowIndex, e ){
+                    if (e.hasModifier()){
+                        return;
+                    }
+                    var sm=this.getSelectionModel();
+                    if (sm.getCount()>1 && sm.isSelected(rowIndex)){
+                        sm.clearSelections();
+                    }
+                }, this);
+
         this.store.on('loadexception', this.onError);
 
+        this.store.on('load', 
+                      function(){
+                          console.log("load store");
+                          this.getSelectionModel().selectRow(0);
+                      }, this);
+        
     },
 
 
     afterRender: function(){
+
 
         this.getSelectionModel().on('rowselect',
                                     function(sm, rowIdx, r){
@@ -182,6 +221,15 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                         container.onRowSelect(sm, rowIdx, r);
                                         this.completeEntry();
                                     },this);
+
+        this.getSelectionModel().on('rowdeselect',
+                                    function(sm, rowIdx, r){
+                                        var container= this.findParentByType(Paperpile.PubView);
+                                        container.onRowSelect(sm, rowIdx, r);
+                                    },this);
+
+
+
         
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
    
@@ -196,6 +244,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var tbar = this.getTopToolbar();
         var sm = this.getSelectionModel();
         var record = sm.getSelected();
+        
+        return;
         
         if (tbar.items.get('new_button')){
             tbar.items.get('new_button').enable();
@@ -234,15 +284,25 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         }
     },
     
-    // Returns list of sha1s for the selected entries
+    // Returns list of sha1s for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
 
-    getSelection: function(){
+    getSelection: function(what){
 
+        if (!what) what='ALL';
+
+        if (this.allSelected){
+            return 'ALL';
+        }
+        
         var selection=[];
 
         this.getSelectionModel().each(
             function(record){
-                selection.push(record.get('sha1'));
+                if ((what == 'ALL') ||
+                    (what == 'IMPORTED' && record.get('_imported')) ||
+                    (what == 'NOT_IMPORTED' && !record.get('_imported'))){
+                    selection.push(record.get('sha1'));
+                }
             });
 
         return selection;
@@ -293,10 +353,15 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     insertEntry: function(callback,scope){
         
-        var sha1=this.getSelectionModel().getSelected().data.sha1;
+        var selection=this.getSelection('NOT_IMPORTED');
+
+        //var selection=this.getSelection();
+
+        if (selection.length==0) return;
+        
         Ext.Ajax.request({
             url: '/ajax/crud/insert_entry',
-            params: { sha1: sha1,
+            params: { selection: selection,
                       grid_id: this.id,
                     },
             method: 'GET',
@@ -305,16 +370,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry Inserted.');
 
-                var record=this.store.getAt(this.store.find('sha1',sha1));
+                this.store.suspendEvents();
 
-                // Only update relevant fields that have changed for performence reasons
-                //this.store.getAt(this.store.find('sha1',sha1)).data=json.data;
-                record.beginEdit();
-                record.set('_imported',1);
-                record.set('citekey',json.data.citekey);
-                record.set('_rowid', json.data._rowid);
-                record.endEdit();
-                
+                for (var sha1 in json.data){
+                    var record=this.store.getAt(this.store.find('sha1',sha1));
+                    if (!record) continue;
+                    record.beginEdit();
+                    record.set('_imported',1);
+                    record.set('citekey',json.data[sha1].citekey);
+                    record.set('_rowid', json.data[sha1]._rowid);
+                    record.endEdit();
+                }
+
+                this.store.resumeEvents();
+                this.store.fireEvent('datachanged',this.store);
+
                 this.updateButtons();
                     
                 if (callback){
@@ -329,26 +399,32 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     deleteEntry: function(){
         
-        var rowid=this.getSelectionModel().getSelected().get('_rowid');
-        var sha1=this.getSelectionModel().getSelected().data.sha1;
+        selection=this.getSelection();
 
-        this.getSelectionModel().selectNext();
+        var index=this.store.indexOf(this.getSelectionModel().getSelected());
 
         Ext.Ajax.request({
             url: '/ajax/crud/delete_entry',
-            params: { rowid: rowid,
+            params: { selection: selection,
                       grid_id: this.id,
                     },
             method: 'GET',
             success: function(){
                 this.updateButtons();
+                if (selection == 'ALL'){
+                    this.store.removeAll();
+                } else {
+                    for (var i=0;i<selection.length;i++){
+                        this.store.remove(this.store.getAt(this.store.find('sha1',selection[i])));
+                    }
+                    this.getSelectionModel().selectRow(index);
+                }
+                
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry deleted.');
             },
             scope: this
         });
-
-        this.store.remove(this.store.getAt(this.store.find('sha1',sha1)));
 
     },
 

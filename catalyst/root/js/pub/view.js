@@ -66,6 +66,7 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         Paperpile.PubView.superclass.initComponent.apply(this, arguments);
     },
 
+
     onRowSelect: function(sm, rowIdx, r) {
 
         Ext.getCmp('statusbar').clearStatus();
@@ -76,10 +77,7 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         datatabs.items.get('pubsummary').updateDetail(r.data);
         datatabs.items.get('pubnotes').updateDetail(r.data);        
 
-
-        this.items.get('east_panel').items.get('pdf_manager').updateDetail(r.data);
-        
-
+        this.items.get('east_panel').items.get('pdf_manager').updateDetail(this.grid);
     },
 
 });
