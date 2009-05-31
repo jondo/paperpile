@@ -356,7 +356,7 @@ sub transform {
         $self->_transformEach($self->_m->{mods}); # TODO: only 1 param: self
     }
     
-    print Dumper $self->{_sort}; 
+    #print Dumper $self->{_sort}; 
     @{$self->{biblio}} = $self->_sortBiblio if(scalar(keys %{$self->{_sort}})>0);
 }
 
@@ -366,13 +366,11 @@ sub transform {
 
 # _sort*
 # sort the $self->biblio array according to what is specified at $self->_c->{style}->{bibliography}->{sort}
-#
-# $self->{_sort}->{artifical_order_of_keys(INT)}->{_biblioNumber}->{key}
-# 
+
 sub _sortAddKeys {
     my $self = shift;
     
-    print "sort keys: ".($self->{_biblioNumber})."\n";
+    #print "sort keys: ".($self->{_biblioNumber})."\n";
     my $i=0;
     foreach my $key ($self->_c->{style}->{bibliography}->{sort}->{key}('[@]') ) {
         $key = $key->pointer;
@@ -387,41 +385,38 @@ sub _sortAddKeys {
             }            
         }
     }
-    #print STDERR Dumper $self->{_sort};
 }
 
 # TODO: Sorting works just for the first key, yet. 
-# Generally, perl sorts multiple keys by combining them with or
 sub _sortBiblio {
     my $self = shift;
     
     my @tmp; # container for the _biblio entries
-    print "_sortBiblio:\n";
+    my %s; # hash to realize sorting of multiple keys
+    #print "_sortBiblio:\n";
     
-    my $round=0;
     foreach my $sort_order (sort {$a<=>$b} keys %{$self->{_sort}}) {
-        $round++;
         foreach my $k (keys %{$self->{_sort}->{$sort_order}}) {
             foreach my $kk (keys %{$self->{_sort}->{$sort_order}->{$k}}) {
                 foreach my $kkk (sort {$self->{_sort}->{$sort_order}->{$k}->{$kk}->{$a} cmp $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$b}} keys %{$self->{_sort}->{$sort_order}->{$k}->{$kk}}) {
-                    print "sort_order: ", $sort_order, " ", $k, " ", $kk, " ", $kkk, " = ", $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk},"\n";
-                    if($round==1) {
-                        foreach my $b (@{$self->{biblio}}) {
-                            if($b =~ /$self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk}/) {
-                                push @tmp, $b;
-                            }
-                        }
+                    #print "sort_order: ", $sort_order, " ", $k, " ", $kk, " ", $kkk, " = ", $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk},"\n";
+                    if(exists $s{$kkk}) {
+                        $s{$kkk} .= $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk}." ";
                     }
                     else {
-                        # only continue if there are two identical entries which have to be sorted by the next key
-                    }
-                    
+                        $s{$kkk} = $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk}." ";
+                    }                        
                 }
             }
         }
     }
     
-    #print Dumper @tmp; exit;
+    # $i is the order/number of the respective biblio entry
+    foreach my $i (sort {$s{$a} cmp $s{$b}} keys %s) {
+        #print $i, " ", $s{$i}, "\n";
+        push @tmp, $self->{biblio}[$i-1];
+    }
+    
     return @tmp;
 }
 
@@ -661,7 +656,7 @@ sub _updateVariables {
                             my @titles = @{$mods->{relatedItem}->{titleInfo}};
                             #print Dumper @titles;
                             foreach my $t (@titles) {
-                                print Dumper $t;
+                                #print Dumper $t;
                                 $self->_setContainerTitle($mods, $t);
                             }
                         }
@@ -871,7 +866,7 @@ sub _updateVariables {
                     if(exists $mods->{identifier}->{type}) {
                         if($mods->{identifier}->{type} eq 'doi') {
                             $self->_var->{$k} = $mods->{identifier}->{'CONTENT'};
-                            print STDERR $self->_var->{$k}, "\n";
+                            #print STDERR $self->_var->{$k}, "\n";
                         }
                     }
                 }
@@ -976,7 +971,7 @@ sub _setContainerTitle {
     
     if(exists $title->{title}) {
         if(! $r) { # its just the string and that is the order to get the container-title.
-            print Dumper $title;
+            #print Dumper $title;
             $self->{_var}->{'container-title'} = $title->{title}->{CONTENT};
         }            
         elsif($r eq "HASH") {
@@ -1008,7 +1003,7 @@ sub _addFix {
     if(ref($ptr) eq "HASH") {
         if($what eq "prefix") {
             if(exists $ptr->{prefix}) {
-                print "Adding prefix '$ptr->{prefix}'\n";
+                #print "Adding prefix '$ptr->{prefix}'\n";
                 #print Dumper $ptr;
                 $self->{_biblio_str} .= $ptr->{prefix}; 
                 #$self->_checkIntegrityOfFix($ptr->{prefix});
@@ -1016,7 +1011,7 @@ sub _addFix {
         }
         elsif($what eq "suffix") {     
             if(exists $ptr->{suffix}) {
-                print "Adding suffix '$ptr->{suffix}'\n";
+                #print "Adding suffix '$ptr->{suffix}'\n";
                 #print Dumper $ptr;
                 $self->{_biblio_str} .= $ptr->{suffix};
                 #$self->_checkIntegrityOfFix($ptr->{suffix});
@@ -1049,7 +1044,7 @@ sub _parseChildElements {
         }
     }
     elsif(ref($ptr) eq "ARRAY") {
-        print Dumper @$ptr;
+        #print Dumper @$ptr;
         foreach my $k (@$ptr) {
             $self->_parseChildElements($mods, $k, $from);
         }
@@ -1091,12 +1086,12 @@ sub _parseChildElements {
                 $self->_parseLabel($mods, $ptr->{$o});
             }
             case 'text' {
-                print "parsing text!!!\n";
+                #print "parsing text!!!\n";
                 $self->_parseChildElements($mods, $ptr->{$o}, "_parseChildElements($o)");
             }
             case 'choose' {
                 $self->_parseChoose($mods, $ptr->{$o});
-                print "leaving choose\n";
+                #print "leaving choose\n";
             }            
             case 'group' {
                 $self->_parseGroup($mods, $ptr->{$o});
@@ -1131,13 +1126,13 @@ sub _parseChildElements {
         
     my $removedPrefix = 0;
     if($tmpStr eq $self->{_biblio_str}) {
-        print "should remove prefix!\n";
-        print Dumper $ptr;
+        #print "should remove prefix!\n";
+        #print Dumper $ptr;
         # remove potential prefix cause the biblio_string hasn't changed, we don't need the prefix if there is nothing new
         if(ref($ptr) eq "HASH") {
             if(exists $ptr->{prefix}) {
                 #print STDERR "vor : '$self->{_biblio_str}'\n";
-                print "removing prefix '".$ptr->{prefix}."'\n";
+                #print "removing prefix '".$ptr->{prefix}."'\n";
                 my $substr = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($ptr->{prefix});
                 $self->{_biblio_str} = $substr;
                 $removedPrefix = 1;
@@ -1152,8 +1147,8 @@ sub _parseChildElements {
     # group delimiter
     if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '') {
         if($tmpStr ne $self->{_biblio_str} && $self->{_biblio_str} !~ /$self->{_group}->{'delimiter'}$/) {
-            print "'$tmpStr' vs '".($self->{_biblio_str})."'\n"; 
-            print "adding delimiter ($from)'".$self->{_group}->{'delimiter'}."'\n";
+            #print "'$tmpStr' vs '".($self->{_biblio_str})."'\n"; 
+            #print "adding delimiter ($from)'".$self->{_group}->{'delimiter'}."'\n";
             $self->{_biblio_str} .= $self->{_group}->{'delimiter'};
         }
         else {
@@ -1174,7 +1169,7 @@ sub _parseMacro {
     my $macro = $self->_c->{style}->{macro}('name','eq',$macro_name)->pointer;
     
     print "_parseMacro: $macro_name\n";
-    print Dumper $macro;
+    #print Dumper $macro;
     
     my $tmpBiblio = $self->{_biblio_str};
     $self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
@@ -1201,7 +1196,7 @@ sub _parseNames {
     my ($self, $mods, $namesPtr) = @_;
     
     print "_parseNames\n";
-    print Dumper $namesPtr;
+    #print Dumper $namesPtr;
     
     if(exists $namesPtr->{variable}) {
         # remind set variables
@@ -1221,7 +1216,7 @@ sub _parseNames {
                 $self->_parseNameAuthor($mods, $namesPtr->{name});
             }
             case 'editor' {
-                print "_parseEditor TODO\n";
+                #print "_parseEditor TODO\n";
             }
             case 'translator' {
                 
@@ -1400,7 +1395,7 @@ sub _parseNameAuthor {
         
         # add "et al." string
         if($qtNames >= $et_al_min) {
-            print "adding et al!\n";
+            #print "adding et al!\n";
             
             $self->{_biblio_str} .= "et al"; # TODO: 'et al' OR 'et al.'? (with or without dot?)
         }
@@ -1483,7 +1478,7 @@ sub _parseChoose {
     my ($self, $mods, $choosePtr) = @_;
     
     print "_parseChoose\n";
-    print Dumper $choosePtr;
+    #print Dumper $choosePtr;
     
     my @order;
     if(ref($choosePtr) eq "HASH") {
@@ -1498,7 +1493,7 @@ sub _parseChoose {
     elsif(ref($choosePtr) eq "ARRAY") {
         foreach my $c (@{$choosePtr}) {
             $self->_parseChoose($mods, $c);
-            print "leaving choose\n";
+            #print "leaving choose\n";
         }
     }
     else {
@@ -1520,38 +1515,39 @@ sub _parseChoose {
         }
     }
     
-    print "leaving end of choose\n";
+    #print "leaving end of choose\n";
 }
 
+# TODO: check that really ALL-NEXT-NODES get parsed, not only the first of the next ones.
 sub _parseIf_elseIf_else {
     my ($self, $mods, $ptr, $goOn, $what) = @_;
     
     if($goOn==1) {
-        print "within $what\n";
+        #print "within $what\n";
         if($what eq 'if' or $what eq 'else-if') {
             if($self->_checkCondition($mods, $ptr)==1) {
                 my $next = $self->_howToProceedAfterCondition($ptr);
-                print "next after $what = '$next'\n";
+                #print "next after $what = '$next'\n";
                 if($next ne "") {
                     $self->_parseChildElements($mods, $ptr->{$next}, "_parseConditionContent($what)");
                 }
             }
             else {
-                print "false!\n";
+                #print "false!\n";
                 return 1; #goOn
             }
         }
         else { # the else-statement
-            print "\n";
+            #print "\n";
             my $next = $self->_howToProceedAfterCondition($ptr);
-            print "next after $what = '$next'\n";
+            #print "next after $what = '$next'\n";
             if($next ne "") {
                 $self->_parseChildElements($mods, $ptr->{$next}, "_parseConditionContent($what)");
             }
         }
     }
     
-    print "leaving parseIf_elseIf_else\n";
+    #print "leaving parseIf_elseIf_else\n";
     
     return 0; # goOn=0 because we went into either if|else-if|else
 }
@@ -1762,13 +1758,13 @@ sub _checkVariable {
     foreach my $entry (@s) {
         if(exists ${$self->{_var}}{$entry}) {
             if(${$self->{_var}}{$entry} ne '') {
-                print "variable exists\n";
+                #print "variable exists\n";
                 return 1;
             }
         }
     }
     
-    print "variable is unknown\n";
+    #print "variable is unknown\n";
     return 0;
 }
 
@@ -1866,7 +1862,7 @@ sub _parseGroup {
     if($self->{_group}->{'delimiter'} ne '' && $self->{_biblio_str}=~/$self->{_group}->{'delimiter'}$/ ) {
         #$self->{_biblio_str}=~s/$self->{_group}->{'delimiter'}$//g;
         #print STDERR "JA group: ", $self->{_biblio_str}, "\n";
-        print "removing delimiter '".$self->{_group}->{'delimiter'}."'\n";
+        #print "removing delimiter '".$self->{_group}->{'delimiter'}."'\n";
         $self->{_biblio_str} = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
         #print STDERR "JA group (after removing): ", $self->{_biblio_str}, "\n";
     }
