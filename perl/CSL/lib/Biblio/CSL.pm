@@ -395,10 +395,10 @@ sub _sortBiblio {
     my %s; # hash to realize sorting of multiple keys
     #print "_sortBiblio:\n";
     
-    foreach my $sort_order (sort {$a<=>$b} keys %{$self->{_sort}}) {
+    foreach my $sort_order (sort {$a<=>$b} keys %{$self->{_sort}}) { # order of the keys
         foreach my $k (keys %{$self->{_sort}->{$sort_order}}) {
             foreach my $kk (keys %{$self->{_sort}->{$sort_order}->{$k}}) {
-                foreach my $kkk (sort {$self->{_sort}->{$sort_order}->{$k}->{$kk}->{$a} cmp $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$b}} keys %{$self->{_sort}->{$sort_order}->{$k}->{$kk}}) {
+                foreach my $kkk (keys %{$self->{_sort}->{$sort_order}->{$k}->{$kk}}) {
                     #print "sort_order: ", $sort_order, " ", $k, " ", $kk, " ", $kkk, " = ", $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk},"\n";
                     if(exists $s{$kkk}) {
                         $s{$kkk} .= $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk}." ";
@@ -412,7 +412,7 @@ sub _sortBiblio {
     }
     
     # $i is the order/number of the respective biblio entry
-    foreach my $i (sort {$s{$a} cmp $s{$b}} keys %s) {
+    foreach my $i (sort {$s{$a} cmp $s{$b}} keys %s) { # actual sorting due to multiple concatenated keys
         #print $i, " ", $s{$i}, "\n";
         push @tmp, $self->{biblio}[$i-1];
     }
@@ -651,13 +651,25 @@ sub _updateVariables {
                         if($r eq "HASH") {
                                 $self->_setContainerTitle($mods, $mods->{relatedItem}->{titleInfo});                                
                         }
-                        elsif($r eq "ARRAY") {
+                        elsif($r eq "ARRAY") { # multiple titles
+                            # which should we keep?
+                            # we'll try to get the full name
+                            # MODS type variants: abbreviated, translated, alternative, uniform
                             #print Dumper $mods->{relatedItem}->{titleInfo};
                             my @titles = @{$mods->{relatedItem}->{titleInfo}};
-                            #print Dumper @titles;
                             foreach my $t (@titles) {
-                                #print Dumper $t;
-                                $self->_setContainerTitle($mods, $t);
+                                print STDERR Dumper $t;
+                                if(exists $t->{type}) {
+                                    # do not keep special title variants
+                                }
+                                else { # try to get the full title
+                                    $self->_setContainerTitle($mods, $t);
+                                }
+                            }
+                            
+                            # just ensure that we have a conainer-title 
+                            if($self->_var->{'container-title'} eq '' && scalar(@titles)>0) {
+                                $self->_setContainerTitle($mods, $titles[0]);
                             }
                         }
                         else {
