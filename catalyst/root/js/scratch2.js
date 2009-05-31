@@ -5,19 +5,70 @@ Ext.onReady(function() {
 
     //var a = new Paperpile.Items ({renderTo:'container'});
 
+    var status=new Paperpile.Status();
 
-    var a = new Ext.form.HtmlEditor({
-        renderTo: 'container',
-        width: 300,
-        height: 100,
-    });
-   
-    a.on('sync', 
-         function(editor, html){
-             console.log(html);
-             return false;
-         }, this);
+    status.showMsg('Imported 10 items');
+    
+    //(function(){status.updateMsg('New Message')}).defer(5000, this);
 
+    //(function(){status.hideMsg()}).defer(10000, this);
+
+  
+});
+
+
+Paperpile.Status = Ext.extend(Ext.BoxComponent, {
+
+    anim: true,
+
+    initComponent: function() {
+		Ext.apply(this, {
+            renderTo: document.body,
+            autoEl: {
+                style: 'position: absolute',
+                tag: 'div',
+                children: [
+                    { tag: 'div',
+                      id: 'status-msg',
+                      cls: 'pp-basic pp-status-msg pp-status-msg-busy',
+                    }
+                ]
+            }
+        });
+		Paperpile.Status.superclass.initComponent.call(this);
+    },
+    
+    afterRender: function(){
+        Paperpile.Status.superclass.afterRender.apply(this, arguments);
+        this.msgEl= Ext.get('status-msg');
+        this.msgEl.hide();
+        this.msgEl.anchorTo(document.body, 't-t',[0,3]);
+        
+    },
+
+    showMsg: function(msg,duration){
+
+        Ext.DomHelper.overwrite(this.msgEl, msg);
+
+        this.msgEl.show(this.anim);
+
+        if (duration) {
+            (function(){this.msgEl.hide(this.anim)}).defer(duration*1000, this);
+        }
+    },
+    
+    updateMsg: function(msg,duration){
+
+        Ext.DomHelper.overwrite(this.msgEl, msg);
+
+        if (duration) {
+            (function(){this.msgEl.hide(this.anim)}).defer(duration*1000, this);
+        }
+    },
+
+    hideMsg: function(){
+        this.msgEl.hide(this.anim);
+    },
 
 });
 

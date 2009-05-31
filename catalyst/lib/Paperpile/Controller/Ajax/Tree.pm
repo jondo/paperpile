@@ -199,11 +199,6 @@ sub move_in_folder : Local {
   $pub->folders( join( ',', @folders ) );
 
 
-  print STDERR "======================>",Dumper($c->request->params),"\n";
-
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
-
 }
 
 sub delete_from_folder : Local {

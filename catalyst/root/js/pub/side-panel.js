@@ -95,6 +95,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 		});
 		
         Paperpile.PDFmanager.superclass.initComponent.call(this);
+
+
 	},
 	
 
@@ -102,23 +104,25 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     // Redraws the HTML template panel with new data from the grid
     //
     
-    updateDetail: function(grid) {
+    updateDetail: function() {
 
-        sm=grid.getSelectionModel();
+        if (!this.grid){
+            this.grid=this.findParentByType(Ext.PubView).items.get('center_panel').items.get('grid');
+        }
+
+        sm=this.grid.getSelectionModel();
 
         var numSelected=sm.getCount();
 
-        if (grid.allSelected){
-            numSelected=grid.store.getTotalCount();
+        if (this.grid.allSelected){
+            numSelected=this.grid.store.getTotalCount();
         }
 
         if (numSelected==1){
             this.data=sm.getSelected().data;
             this.data.id=this.id;
 
-            //this.grid_id=this.ownerCt.ownerCt.items.get('center_panel').items.get(0).id;
-
-            this.grid_id=grid.id;
+            this.grid_id=this.grid.id;
 
             this.data._pubtype_name=Paperpile.main.globalSettings.pub_types[this.data.pubtype].name;
 
@@ -394,13 +398,30 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             this.data.tags=tag;
         }
 
-        var store=Ext.StoreMgr.lookup('tag_store');
-        
-        if (store.find('tag',tag) == -1){
-            this.updateTags(true);
-        } else {
-            this.updateTags(false);
-        }
+        Ext.Ajax.request({
+            url: '/ajax/crud/add_tag',
+            params: { 
+                grid_id:this.grid_id,
+                selection: Ext.getCmp(this.grid_id).getSelection(),
+                tag: tag,
+            },
+            method: 'GET',
+                                        
+            success: function(response){
+                var json = Ext.util.JSON.decode(response.responseText);
+                var grid=Ext.getCmp(this.grid_id);
+                grid.updateData(json.data);
+
+                var store=Ext.StoreMgr.lookup('tag_store');
+                if (store.find('tag',tag) == -1){
+                    Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
+                    Ext.StoreMgr.lookup('tag_store').reload();
+                }
+            },
+            scope: this,
+        });
+
+        this.renderTags();
 
         Ext.get('tag-add-link-'+this.id).show();
        
@@ -411,55 +432,23 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         tag=el.getAttribute('name');
 
         Ext.get(el).parent().remove();
-        
-        var tags=[];
-
-        Ext.each(Ext.query('div.pp-tag-remove', 'tag-container-'+this.id), 
-                 function(tag){
-                     tags.push(tag.getAttribute('name'));
-                 }
-                );
-
-
-        if (tags.length>0){
-            this.data.tags=tags.join(',');
-        } else {
-            this.data.tags='';
-        }
-
-        this.updateTags(false);
-
-    },
-
-
-    updateTags: function(isNew){
 
         Ext.Ajax.request({
-            url: '/ajax/crud/update_tags',
-            params: { rowid: this.data._rowid,
-                      tags: this.data.tags,
-                    },
+            url: '/ajax/crud/remove_tag',
+            params: { 
+                grid_id:this.grid_id,
+                selection: Ext.getCmp(this.grid_id).getSelection(),
+                tag: tag,
+            },
             method: 'GET',
-                                        
-            success: function(){
-                // Update local data
-
-                Ext.StoreMgr.lookup('tag_store').reload();
-                if (isNew){
-                    Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
-                }
-
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Updated tags.');
+            success: function(response){
+                var json = Ext.util.JSON.decode(response.responseText);
+                var grid=Ext.getCmp(this.grid_id);
+                grid.updateData(json.data);
             },
             scope: this,
-            
         });
-
-        this.renderTags();
-
     },
-
 
     //
     // Choose a file from harddisk to attach. Either it is *the* PDF of the citation or a

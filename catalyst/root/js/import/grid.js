@@ -5,6 +5,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     region:'center',
     limit: 25,
     allSelected:false,
+    itemId:'grid',
 
     initComponent:function() {
 
@@ -204,7 +205,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         this.store.on('load', 
                       function(){
-                          console.log("load store");
                           this.getSelectionModel().selectRow(0);
                       }, this);
         
@@ -371,7 +371,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 Ext.getCmp('statusbar').setText('Entry Inserted.');
 
                 this.store.suspendEvents();
-
                 for (var sha1 in json.data){
                     var record=this.store.getAt(this.store.find('sha1',sha1));
                     if (!record) continue;
@@ -381,7 +380,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     record.set('_rowid', json.data[sha1]._rowid);
                     record.endEdit();
                 }
-
                 this.store.resumeEvents();
                 this.store.fireEvent('datachanged',this.store);
 
@@ -492,6 +490,27 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         east_panel.doLayout();
         east_panel.getLayout().setActiveItem('pub_edit');
 
+    },
+
+    // Update specific fields of specific entries to avoid complete
+    // reload of everything data is a hash of a hash with sha1 as the
+    // first key and the other fields that need to be udpated as the
+    // other keys
+
+    updateData: function(data){
+        this.store.suspendEvents();
+        for (var sha1 in data){
+            var record=this.store.getAt(this.store.find('sha1',sha1));
+            if (!record) continue;
+            var update=data[sha1];
+            record.beginEdit();
+            for (var field in update){
+                record.set(field,update[field]);
+            }
+            record.endEdit();
+        }
+        this.store.resumeEvents();
+        this.store.fireEvent('datachanged',this.store);
     },
 
     onClose: function(cont, comp){
