@@ -1,0 +1,6 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTTP/Body.pm relocate_as=../../../HTTP/Body.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTTP/Body/MultiPart.pm relocate_as=../../../HTTP/Body/MultiPart.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTTP/Body/OctetStream.pm relocate_as=../../../HTTP/Body/OctetStream.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTTP/Body/UrlEncoded.pm relocate_as=../../../HTTP/Body/UrlEncoded.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTTP/Body/XForms.pm relocate_as=../../../HTTP/Body/XForms.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/HTTP/Body/XFormsMultipart.pm relocate_as=../../../HTTP/Body/XFormsMultipart.pm

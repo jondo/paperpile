@@ -1,0 +1,14 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/bin/crc32 relocate_as=../../../../bin/crc32
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip.pm relocate_as=../../../Archive/Zip.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/Archive.pm relocate_as=../../../Archive/Zip/Archive.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/BufferedFileHandle.pm relocate_as=../../../Archive/Zip/BufferedFileHandle.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/DirectoryMember.pm relocate_as=../../../Archive/Zip/DirectoryMember.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/FAQ.pod relocate_as=../../../Archive/Zip/FAQ.pod
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/FileMember.pm relocate_as=../../../Archive/Zip/FileMember.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/Member.pm relocate_as=../../../Archive/Zip/Member.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/MemberRead.pm relocate_as=../../../Archive/Zip/MemberRead.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/MockFileHandle.pm relocate_as=../../../Archive/Zip/MockFileHandle.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/NewFileMember.pm relocate_as=../../../Archive/Zip/NewFileMember.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/StringMember.pm relocate_as=../../../Archive/Zip/StringMember.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/Tree.pm relocate_as=../../../Archive/Zip/Tree.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Archive/Zip/ZipFileMember.pm relocate_as=../../../Archive/Zip/ZipFileMember.pm

@@ -1,0 +1,9 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/MooseX/Types.pm relocate_as=../../../MooseX/Types.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/MooseX/Types/Base.pm relocate_as=../../../MooseX/Types/Base.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/MooseX/Types/CheckedUtilExports.pm relocate_as=../../../MooseX/Types/CheckedUtilExports.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/MooseX/Types/Combine.pm relocate_as=../../../MooseX/Types/Combine.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/MooseX/Types/Moose.pm relocate_as=../../../MooseX/Types/Moose.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/MooseX/Types/TypeDecorator.pm relocate_as=../../../MooseX/Types/TypeDecorator.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/MooseX/Types/UndefinedType.pm relocate_as=../../../MooseX/Types/UndefinedType.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/MooseX/Types/Util.pm relocate_as=../../../MooseX/Types/Util.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/MooseX/Types/Wrapper.pm relocate_as=../../../MooseX/Types/Wrapper.pm

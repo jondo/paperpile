@@ -1,0 +1,8 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Builder.pm relocate_as=../../../Test/Builder.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Builder/IO/Scalar.pm relocate_as=../../../Test/Builder/IO/Scalar.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Builder/Module.pm relocate_as=../../../Test/Builder/Module.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Builder/Tester.pm relocate_as=../../../Test/Builder/Tester.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Builder/Tester/Color.pm relocate_as=../../../Test/Builder/Tester/Color.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/More.pm relocate_as=../../../Test/More.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Simple.pm relocate_as=../../../Test/Simple.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Tutorial.pod relocate_as=../../../Test/Tutorial.pod

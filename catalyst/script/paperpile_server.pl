@@ -4,14 +4,16 @@ BEGIN {
     $ENV{CATALYST_ENGINE} ||= 'HTTP';
     $ENV{CATALYST_SCRIPT_GEN} = 31;
     require Catalyst::Engine::HTTP;
-}  
+}
 
 use strict;
 use warnings;
 use Getopt::Long;
 use Pod::Usage;
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+#use FindBin;
+#use lib "$FindBin::Bin/../lib";
+
+push @INC, ('../lib','../perl5/5.10.0','../perl5/5.10.0/linux64');
 
 my $debug             = 0;
 my $fork              = 0;

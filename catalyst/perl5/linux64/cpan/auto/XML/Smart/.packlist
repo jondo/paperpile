@@ -1,0 +1,14 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart.pm relocate_as=../../../XML/Smart.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/Base64.pm relocate_as=../../../XML/Smart/Base64.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/DTD.pm relocate_as=../../../XML/Smart/DTD.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/Data.pm relocate_as=../../../XML/Smart/Data.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/Entity.pm relocate_as=../../../XML/Smart/Entity.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/FAQ.epod relocate_as=../../../XML/Smart/FAQ.epod
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/FAQ.pod relocate_as=../../../XML/Smart/FAQ.pod
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/HTMLParser.pm relocate_as=../../../XML/Smart/HTMLParser.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/Parser.pm relocate_as=../../../XML/Smart/Parser.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/Tie.pm relocate_as=../../../XML/Smart/Tie.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/Tree.pm relocate_as=../../../XML/Smart/Tree.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/Tutorial.epod relocate_as=../../../XML/Smart/Tutorial.epod
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/Tutorial.pod relocate_as=../../../XML/Smart/Tutorial.pod
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/Smart/XPath.pm relocate_as=../../../XML/Smart/XPath.pm

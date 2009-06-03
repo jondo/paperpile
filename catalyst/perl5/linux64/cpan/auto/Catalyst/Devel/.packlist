@@ -1,0 +1,6 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Catalyst/Devel.pm relocate_as=../../../Catalyst/Devel.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Catalyst/Helper.pm relocate_as=../../../Catalyst/Helper.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Catalyst/Restarter.pm relocate_as=../../../Catalyst/Restarter.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Catalyst/Restarter/Forking.pm relocate_as=../../../Catalyst/Restarter/Forking.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Catalyst/Restarter/Win32.pm relocate_as=../../../Catalyst/Restarter/Win32.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Module/Install/Catalyst.pm relocate_as=../../../Module/Install/Catalyst.pm
