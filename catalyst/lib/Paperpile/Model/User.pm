@@ -13,6 +13,7 @@ use File::Copy;
 use Moose;
 use Paperpile::Model::App;
 use Paperpile::Utils;
+use MooseX::Timestamp;
 
 with 'Catalyst::Component::InstancePerContext';
 
@@ -147,7 +148,13 @@ sub create_pubs {
 
   foreach my $pub (@$pubs) {
 
-    # First generate citation key
+    # Initialize some fields
+    $pub->created(timestamp);
+    $pub->times_read(0);
+    $pub->last_read(timestamp); ## for the time being
+    $pub->_imported(1);
+
+    # Generate citation key
     my $pattern = $self->get_setting('key_pattern');
     my $key     = $pub->format_pattern($pattern);
 

@@ -186,14 +186,16 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
     deleteFromFolder: function(){
         
-        var rowid=this.getSelectionModel().getSelected().get('_rowid');
-        var sha1=this.getSelectionModel().getSelected().data.sha1;
+        //var rowid=this.getSelectionModel().getSelected().get('_rowid');
+        //var sha1=this.getSelectionModel().getSelected().data.sha1;
+        
+        var selection=this.getSelection();
 
         var match=this.plugin_base_query.match('folders:(.*)$');
 
         Ext.Ajax.request({
-            url: '/ajax/tree/delete_from_folder',
-            params: { rowid: rowid,
+            url: '/ajax/crud/delete_from_folder',
+            params: { selection: selection,
                       grid_id: this.id,
                       folder_id: match[1]
                     },
@@ -204,7 +206,9 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
             },
         });
 
-        this.store.remove(this.store.getAt(this.store.find('sha1',sha1)));
+        for (var i=0;i<selection.length;i++){
+            this.store.remove(this.store.getAt(this.store.find('sha1',selection[i])));
+        }
 
     },
 

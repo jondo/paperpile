@@ -5,7 +5,6 @@ use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Data::Dumper;
-use MooseX::Timestamp;
 use HTML::TreeBuilder;
 use HTML::FormatText;
 use 5.010;
@@ -13,39 +12,13 @@ use 5.010;
 sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
-  my $selection = $c->request->params->{selection};
-  my $plugin = $c->session->{"grid_$grid_id"};
-
-  my @data = ();
-
-  if ($selection eq 'ALL'){
-    @data = @{$plugin->all};
-  } else {
-    my @tmp;
-    if ( ref($selection) eq 'ARRAY' ) {
-      @tmp = @$selection;
-    } else {
-      push @tmp, $selection;
-    }
-    for my $sha1 (@tmp) {
-      my $pub = $plugin->find_sha1($sha1);
-      push @data, $pub;
-    }
-  }
+  my $data = $self->_get_selection($c);
 
   my %output=();
 
-  foreach my $pub (@data){
-    $pub->created(timestamp);
-    $pub->times_read(0);
-    $pub->last_read(timestamp); ## for the time being
-    $pub->_imported(1);
-  }
+  $c->model('User')->create_pubs($data);
 
-  $c->model('User')->create_pubs(\@data);
-
-  foreach my $pub (@data){
+  foreach my $pub (@$data){
     $output{$pub->sha1}={_imported=>1,
                          citekey=>$pub->citekey,
                          _rowid=>$pub->_rowid,
@@ -90,11 +63,6 @@ sub new_entry: Local {
 
   my $pub=Paperpile::Library::Publication->new({%fields});
 
-  $pub->created(timestamp);
-  $pub->times_read(0);
-  $pub->attachments(0);
-  $pub->last_read(timestamp); ## for the time being
-
   $c->model('User')->create_pubs([$pub]);
 
   if ($attach_pdf){
@@ -110,36 +78,19 @@ sub new_entry: Local {
 
 sub delete_entry : Local {
   my ( $self, $c ) = @_;
-
   my $grid_id = $c->request->params->{grid_id};
-  my $selection = $c->request->params->{selection};
   my $plugin = $c->session->{"grid_$grid_id"};
 
-  my @data = ();
+  my $plugin = $c->session->{"grid_$grid_id"};
+  my $data = $self->_get_selection($c);
 
-  if ($selection eq 'ALL'){
-    @data = @{$plugin->all};
-  } else {
-    my @tmp;
-    if ( ref($selection) eq 'ARRAY' ) {
-      @tmp = @$selection;
-    } else {
-      push @tmp, $selection;
-    }
-    for my $sha1 (@tmp) {
-      my $pub = $plugin->find_sha1($sha1);
-      push @data, $pub;
-    }
-  }
+  $c->model('User')->delete_pubs($data);
 
-  $c->model('User')->delete_pubs([@data]);
-
-  $plugin->total_entries($plugin->total_entries - scalar(@data));
+  $plugin->total_entries($plugin->total_entries - scalar(@$data));
 
   $c->forward('Paperpile::View::JSON');
 
 }
-
 
 sub update_entry : Local {
   my ( $self, $c ) = @_;
@@ -186,6 +137,70 @@ sub update_notes : Local {
   $c->model('User')->update_field( 'Fulltext_citation', $rowid, 'notes', $text );
 
   $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+sub add_tag : Local {
+  my ( $self, $c ) = @_;
+
+  my $tag= $c->request->params->{tag};
+
+  my $data = $self->_get_selection($c);
+
+  # First import entries that are not already in the database
+  my @to_be_imported=();
+  foreach my $pub (@$data){
+    push @to_be_imported, $pub if !$pub->_imported;
+  }
+
+  $c->model('User')->create_pubs(\@to_be_imported);
+
+  my %output=();
+
+  foreach my $pub (@$data){
+    my @tags = split( /,/, $pub->tags );
+    push @tags, $tag;
+    my %seen = ();
+    @tags = grep { !$seen{$_}++ } @tags;
+    my $new_tags=join( ',', @tags );
+    $c->model('User')->update_tags($pub->_rowid, $new_tags);
+    $pub->tags($new_tags);
+    $output{$pub->sha1}={_imported=>1,
+                         _rowid=>$pub->_rowid,
+                         citekey=>$pub->citekey,
+                         created=>$pub->created,
+                         tags=>$new_tags,
+                        };
+  }
+
+  $c->stash->{data} = {%output};
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+sub remove_tag : Local {
+  my ( $self, $c ) = @_;
+
+  my $tag  = $c->request->params->{tag};
+  my $data = $self->_get_selection($c);
+
+  my %output=();
+
+  foreach my $pub (@$data) {
+    my $new_tags = $pub->tags;
+    $new_tags =~ s/^$tag,//g;
+    $new_tags =~ s/^$tag$//g;
+    $new_tags =~ s/,$tag$//g;
+    $new_tags =~ s/,$tag,/,/g;
+    $c->model('User')->update_tags( $pub->_rowid, $new_tags );
+
+    $output{$pub->sha1}={tags=>$new_tags};
+
+  }
+
+  $c->stash->{data} = {%output};
   $c->forward('Paperpile::View::JSON');
 
 }
@@ -240,6 +255,14 @@ sub delete_tag : Local {
 
   $c->model('User')->delete_tag($tag);
 
+  foreach my $var (keys %{$c->session}){
+    next if !($var=~/^grid_/);
+    my $plugin=$c->session->{$var};
+    foreach my $pub (values %{$plugin->_hash}){
+      print STDERR $pub->tags, "\n";
+      # finish here.
+    }
+  }
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 
@@ -281,7 +304,106 @@ sub generate_edit_form : Local {
 
 }
 
+sub move_in_folder : Local {
+  my ( $self, $c ) = @_;
 
+  my $node_id = $c->request->params->{node_id};
+
+  my $data = $self->_get_selection($c);
+
+  # First import entries that are not already in the database
+  my @to_be_imported = ();
+  foreach my $pub (@$data) {
+    push @to_be_imported, $pub if !$pub->_imported;
+  }
+
+  $c->model('User')->create_pubs( \@to_be_imported );
+
+  my %output;
+
+  if ( $node_id ne 'FOLDER_ROOT' ) {
+    my $newFolder = $node_id;
+
+    foreach my $pub (@$data) {
+      my @folders = split( /,/, $pub->folders );
+      push @folders, $newFolder;
+      my %seen = ();
+      @folders = grep { !$seen{$_}++ } @folders;
+      my $new_folders = join( ',', @folders );
+      $c->model('User')->update_folders( $pub->_rowid, $new_folders );
+      $output{ $pub->sha1 } = {
+        _imported => 1,
+        _rowid    => $pub->_rowid,
+        citekey   => $pub->citekey,
+        created   => $pub->created,
+        folders   => $pub->folders,
+      };
+
+    }
+  } else {
+    foreach my $pub (@to_be_imported) {
+      $output{ $pub->sha1 } = {
+        _imported => 1,
+        _rowid    => $pub->_rowid,
+        citekey   => $pub->citekey,
+        created   => $pub->created,
+      };
+    }
+
+  }
+
+  $c->stash->{data}    = {%output};
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+
+sub delete_from_folder : Local {
+  my ( $self, $c ) = @_;
+
+  my $node_id = $c->request->params->{node_id};
+  my $folder_id     = $c->request->params->{folder_id};
+
+  my $data = $self->_get_selection($c);
+
+  foreach my $pub (@$data){
+    $c->model('User')->delete_from_folder( $pub->_rowid, $folder_id );
+  }
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+sub _get_selection {
+
+  my ( $self, $c ) = @_;
+
+  my $grid_id = $c->request->params->{grid_id};
+  my $selection = $c->request->params->{selection};
+  my $plugin = $c->session->{"grid_$grid_id"};
+
+  my @data = ();
+
+  if ($selection eq 'ALL'){
+    @data = @{$plugin->all};
+  } else {
+    my @tmp;
+    if ( ref($selection) eq 'ARRAY' ) {
+      @tmp = @$selection;
+    } else {
+      push @tmp, $selection;
+    }
+    for my $sha1 (@tmp) {
+      my $pub = $plugin->find_sha1($sha1);
+      push @data, $pub;
+    }
+  }
+
+  return [@data];
+
+}
 
 
 

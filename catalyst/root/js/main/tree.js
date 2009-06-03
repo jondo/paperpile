@@ -179,86 +179,40 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         // We're dragging from the data grid
         if (e.source.dragData.grid){
-            if (e.target.type == 'FOLDER'){
+            var grid=e.source.dragData.grid;
 
-                var params = { node_id: e.target.id,
-                               sha1: e.data.selections[0].data.sha1,
-                               rowid: e.data.selections[0].data._rowid,
-                               grid_id: e.source.grid.id,
-                               path: this.relativeFolderPath(e.target)
-                             };
-                
-                if (e.source.grid.getSelectionModel().getSelected().data._imported){
-                    if (e.target.id != 'FOLDER_ROOT'){
-                        Ext.Ajax.request({
-                            url: '/ajax/tree/move_in_folder',
-                            params: params,
-                            method: 'GET',
-                            success: function(){
-                                //Ext.getCmp('statusbar').clearStatus();
-                                //Ext.getCmp('statusbar').setText('Moved to folder');
-                            },
-                        });
-                    }
-                } else {
-                    e.source.dragData.grid.insertEntry(
-                        function(data){
-                            Ext.apply(params, {rowid: data._rowid});
-                            if (e.target.id != 'FOLDER_ROOT'){
-                                Ext.Ajax.request({
-                                    url: '/ajax/tree/move_in_folder',
-                                    params: params,
-                                    success: function(){
-                                        //Ext.getCmp('statusbar').clearStatus();
-                                        //Ext.getCmp('statusbar').setText('Moved to folder');
-                                    },
-                                });
-                            }
-                        }, this);
-                }
+            if (e.target.type == 'FOLDER'){
+                Ext.Ajax.request({
+                    url: '/ajax/crud/move_in_folder',
+                    params: {
+                        grid_id: grid.id,
+                        selection: grid.getSelection(),
+                        node_id: e.target.id,
+                    },
+                    method: 'GET',
+                    success: function(response){
+                        var json = Ext.util.JSON.decode(response.responseText);
+                        grid.updateData(json.data);
+                    },
+                });
             }
 
             if (e.target.type == 'TAGS'){
-                var newTags=e.target.text;
-                var oldTags=e.data.selections[0].data.tags;
-                if (oldTags != ''){
-                    newTags=oldTags+','+e.target.text;
-                }
-
-                var success= function(){
-                    Ext.StoreMgr.lookup('tag_store').reload();
-                    e.data.selections[0].data.tags=newTags;
-                    var datatabs=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('data_tabs');        
-                    datatabs.items.get('pubsummary').updateDetail(e.data.selections[0].data);
-                    //Ext.getCmp('statusbar').clearStatus();
-                    //Ext.getCmp('statusbar').setText('Updated tags.');
-                };
-
-                if (e.source.grid.getSelectionModel().getSelected().data._imported){
-
-                    Ext.Ajax.request(
-                        { url: '/ajax/crud/update_tags',
-                          params: { rowid: e.data.selections[0].data._rowid,
-                                    tags: newTags,
-                                  },
-                          success: success
-                        }
-                    )
-        
-                } else {
-
-                    e.source.dragData.grid.insertEntry(
-                        function(data){
-                            Ext.Ajax.request(
-                                { url: '/ajax/crud/update_tags',
-                                  params: { rowid: data._rowid,
-                                            tags: newTags,
-                                          },
-                                  success: success
-                                }
-                            )
-                        }, this);
-                }
+                Ext.Ajax.request({
+                    url: '/ajax/crud/add_tag',
+                    params: { 
+                        grid_id:grid.id,
+                        selection: grid.getSelection(),
+                        tag: e.target.text,
+                    },
+                    method: 'GET',
+                    
+                    success: function(response){
+                        var json = Ext.util.JSON.decode(response.responseText);
+                        grid.updateData(json.data);
+                    },
+                    scope: this,
+                });
             }
         }
         // We're dragging nodes internally
@@ -791,6 +745,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         Paperpile.main.tabs.items.each(
                             function(item, index, length){
                                 var grid=item.items.get('center_panel').items.get('grid');
+                                grid.store.suspendEvents();
                                 var records=grid.getStore().data.items;
                                 for (i=0;i<records.length;i++){
                                     var oldTags=records[i].get('tags');
@@ -803,11 +758,15 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                     
                                     records[i].set('tags',newTags);
                                 }
+                                
+                                grid.store.resumeEvents();
+                                grid.store.fireEvent('datachanged',this.store);
+
                                 // If a entry is selected in a tab, also update the display
                                 var pdf_manager=item.items.get('east_panel').items.get('pdf_manager');
                                 var selected=grid.getSelectionModel().getSelected();
                                 if (selected){
-                                    pdf_manager.updateDetail(selected.data, true);
+                                    pdf_manager.updateDetail();
                                 }
                             }
                         );
