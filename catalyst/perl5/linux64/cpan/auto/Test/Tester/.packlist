@@ -1,0 +1,4 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Tester.pm relocate_as=../../../Test/Tester.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Tester/Capture.pm relocate_as=../../../Test/Tester/Capture.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Tester/CaptureRunner.pm relocate_as=../../../Test/Tester/CaptureRunner.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Test/Tester/Delegate.pm relocate_as=../../../Test/Tester/Delegate.pm

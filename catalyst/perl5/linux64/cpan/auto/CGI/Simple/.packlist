@@ -1,0 +1,4 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/CGI/Simple.pm relocate_as=../../../CGI/Simple.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/CGI/Simple/Cookie.pm relocate_as=../../../CGI/Simple/Cookie.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/CGI/Simple/Standard.pm relocate_as=../../../CGI/Simple/Standard.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/CGI/Simple/Util.pm relocate_as=../../../CGI/Simple/Util.pm

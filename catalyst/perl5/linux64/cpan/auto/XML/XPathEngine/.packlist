@@ -1,0 +1,11 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine.pm relocate_as=../../../XML/XPathEngine.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/Boolean.pm relocate_as=../../../XML/XPathEngine/Boolean.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/Expr.pm relocate_as=../../../XML/XPathEngine/Expr.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/Function.pm relocate_as=../../../XML/XPathEngine/Function.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/Literal.pm relocate_as=../../../XML/XPathEngine/Literal.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/LocationPath.pm relocate_as=../../../XML/XPathEngine/LocationPath.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/NodeSet.pm relocate_as=../../../XML/XPathEngine/NodeSet.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/Number.pm relocate_as=../../../XML/XPathEngine/Number.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/Root.pm relocate_as=../../../XML/XPathEngine/Root.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/Step.pm relocate_as=../../../XML/XPathEngine/Step.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/XML/XPathEngine/Variable.pm relocate_as=../../../XML/XPathEngine/Variable.pm
