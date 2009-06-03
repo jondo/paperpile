@@ -553,6 +553,12 @@ sub _transformEach() {
                     }
                 }
                 
+                # hardcoded rule: if we have "et al" and it doesn't end with a ., we add it.
+                $self->{_biblio_str} =~ s/et al/et al./g if($self->{_biblio_str} =~ /et al[^\.]/);
+                # hardcoded rule: remove double spaces
+                $self->{_biblio_str} =~ s/  / /g if($self->{_biblio_str} =~ /  /);
+                
+                
                 # the string is ready, add the current entry to the bibliography result-array
                 push @{$self->{biblio}}, $self->{_biblio_str};
                 $self->{_biblio_str}="";
@@ -658,7 +664,7 @@ sub _updateVariables {
                             #print Dumper $mods->{relatedItem}->{titleInfo};
                             my @titles = @{$mods->{relatedItem}->{titleInfo}};
                             foreach my $t (@titles) {
-                                print STDERR Dumper $t;
+                                #print STDERR Dumper $t;
                                 if(exists $t->{type}) {
                                     # do not keep special title variants
                                 }
@@ -870,6 +876,12 @@ sub _updateVariables {
             } 
             ##
             case 'URL' {
+                if(exists $mods->{location}) {
+                    if(exists $mods->{location}->{url}) {
+                        $self->_var->{$k} = $mods->{location}->{url}->{'CONTENT'};
+                        #print STDERR $self->_var->{$k}, "\n";
+                    }
+                }
             } 
             ##
             case 'DOI' {
@@ -893,8 +905,8 @@ sub _updateVariables {
             case 'citation-number' {
                 $self->_var->{'citation-number'} = $self->{_biblioNumber};
                 
-                # hardcoded space, some styles have a space at this point, others don't
-                $self->_var->{'citation-number'} .= " " if($self->_var->{'citation-number'} !~ /\s$/);
+                # hardcoded space, some styles have a space at this point, others don't, TODO do we really need this?
+                # $self->_var->{'citation-number'} .= " " if($self->_var->{'citation-number'} !~ /\s$/);
             } 
             ## the label used for the in-text citation mark in label styles
             case 'citation-label' {
@@ -1310,10 +1322,10 @@ sub _parseNameAuthor {
                                     
                 my $and = "";
                 if($name->{and} eq "text" ) {
-                    $and = "and ";
+                    $and = " and ";
                 }
                 elsif($name->{and} eq "symbol" ) {
-                    $and = "&";
+                    $and = " & ";
                 }
                 
                 #print "names and=$and";exit;
@@ -1348,7 +1360,9 @@ sub _parseNameAuthor {
                             foreach my $gn (@given_names) {
                                 my @nameParts = split /\s+/, $gn;
                                 for(my $i=0; $i<=$#nameParts; $i++) {
+                                    $complete_name .= " " if($i>0);
                                     $complete_name .= $nameParts[$i];
+                                    
                                 }
                             }
                         }
@@ -1356,6 +1370,7 @@ sub _parseNameAuthor {
                             foreach my $gn (@given_names) {
                                 my @nameParts = split /\s+/, $gn;
                                 for(my $i=0; $i<=$#nameParts; $i++) {
+                                    $complete_name .= " " if($i>0);
                                     $complete_name .= $nameParts[$i]." ";
                                 }                            
                             }
@@ -1386,7 +1401,7 @@ sub _parseNameAuthor {
                             $complete_name .= $and;
                         }
                         else {
-                            $complete_name .= $name->{delimiter} if($round>1);
+                            $complete_name .= $name->{delimiter} if($round>2);
                             $complete_name .= $and if($round==2);
                         }
                     }
@@ -1681,13 +1696,13 @@ sub _howToProceedAfterCondition {
             @order = keys %$condiPtr;
         }
     }
-    #elsif(ref($condiPtr) eq "ARRAY") {
-    #    foreach my $c (@{$condiPtr}) {
-    #        $self->_howToProceedAfterCondition($c);
-    #    }
-    #}
+    elsif(ref($condiPtr) eq "ARRAY") {
+        foreach my $c (@{$condiPtr}) {
+            $self->_howToProceedAfterCondition($c);
+        }
+    }
     else {
-        die "CondiPtr is neither a hash nor an array?";
+        die "CondiPtr '$condiPtr' is neither a hash nor an array? (It is ".(ref($condiPtr)).")";
     }
 
     #print Dumper @order;
