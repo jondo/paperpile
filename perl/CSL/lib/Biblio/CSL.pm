@@ -154,6 +154,20 @@ has '_monthNumbers' => (
     required => 0
 );
 
+# hash containing info needed for sorting
+# e.g.
+# $self->{_sortInfo}->{_withinSorting}
+#   flag that shows whether we are within the sorting routine and have to collect sorting keys or not
+# $self->{_sortInfo}->{_curKeyNumber}
+#   the current i.th key
+# $self->{_sortInfo}->{_curKeyElement}
+#   Which element, e.g. a macro
+# $self->{_sortInfo}->{_curKeyName}
+#   Name of the element, e.g. the maro 'contributors'
+has '_sortInfo' => (
+    is       => 'rw',
+    required => 0
+);
 
 # is called after construction
 # e.g. useful to validate attributes
@@ -180,6 +194,8 @@ sub BUILD {
     
     $self->{_group}->{'inGroup'} = 0;
     $self->{_group}->{'delimiter'} = '';
+    
+    $self->{_sortInfo}->{_withinSorting} = 0;
     
     # Zotero outputs full month names
     # therefore we need a mapping to the full names
@@ -369,6 +385,7 @@ sub transform {
 
 sub _sortAddKeys {
     my $self = shift;
+    my $mods = shift;
     
     #print "sort keys: ".($self->{_biblioNumber})."\n";
     my $i=0;
@@ -382,7 +399,21 @@ sub _sortAddKeys {
                     #print STDERR "$i ->{ $k }->{ ".$key->{$k}." } -> ".($self->{_biblioNumber})."\n";
                     $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = $self->{_var}->{$key->{$k}};
                 }
-            }            
+            }
+            
+            # TODO
+            # whenever we see the sort element, switch the flag that tells us that from now on we have to collect keys for sorting
+            $self->{_sortInfo}->{_withinSorting}=1;
+            if(exists $self->{_sortInfo}->{_keyNumber}) {
+                $self->{_sortInfo}->{_keyNumber}++;
+            }
+            else {
+                $self->{_sortInfo}->{_keyNumber}=1;
+            }
+            #print STDERR Dumper $key;
+            $self->_parseChildElements($mods, $key,"_parseChildElements($key->{$k})");
+            
+            $self->{_sortInfo}->{_withinSorting}=0;
         }
     }
 }
@@ -399,7 +430,7 @@ sub _sortBiblio {
         foreach my $k (keys %{$self->{_sort}->{$sort_order}}) {
             foreach my $kk (keys %{$self->{_sort}->{$sort_order}->{$k}}) {
                 foreach my $kkk (keys %{$self->{_sort}->{$sort_order}->{$k}->{$kk}}) {
-                    #print "sort_order: ", $sort_order, " ", $k, " ", $kk, " ", $kkk, " = ", $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk},"\n";
+                    print "sort_order: ", $sort_order, " ", $k, " ", $kk, " ", $kkk, " = ", $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk},"\n";
                     if(exists $s{$kkk}) {
                         $s{$kkk} .= $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk}." ";
                     }
@@ -529,7 +560,7 @@ sub _transformEach() {
                 $self->_updateVariables($mods->pointer);
                 
                 if(exists $self->_c->{style}->{bibliography}->{sort}) {
-                    $self->_sortAddKeys; # initialize the sorting hash.
+                    $self->_sortAddKeys($mods); # initialize the sorting hash.
                     #print STDERR Dumper $self->{_sort};
                 }
                 
@@ -562,6 +593,8 @@ sub _transformEach() {
                 # the string is ready, add the current entry to the bibliography result-array
                 push @{$self->{biblio}}, $self->{_biblio_str};
                 $self->{_biblio_str}="";
+                $self->{_sortInfo} = ();
+                $self->{_sortInfo}->{_withinSorting} = 0;
             }
             else {
                 die "ERROR: CSL-element 'layout' not available?";
@@ -1093,7 +1126,7 @@ sub _parseChildElements {
             }
             case 'text-case' {
             }
-            case 'sort' {                
+            case 'sort' { # nothing todo
             }
             # because of nested macros
             case 'macro' {
@@ -1195,17 +1228,26 @@ sub _parseMacro {
     print "_parseMacro: $macro_name\n";
     #print Dumper $macro;
     
-    my $tmpBiblio = $self->{_biblio_str};
-    $self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
-    foreach my $k (keys %{$self->{_sort}}) {
-        if(exists $self->{_sort}->{$k}->{macro}) {
-            if(exists $self->{_sort}->{$k}->{macro}->{$macro_name}) {
-                #print STDERR "$k -> macro -> $macro_name \n";
-                my $substr = substr $self->{_biblio_str}, length($tmpBiblio);
-                $self->{_sort}->{$k}->{macro}->{$macro_name}->{$self->{_biblioNumber}}=$substr;
-            }
-        }
+    if($self->{_sortInfo}->{_withinSorting}==1) {
+        $self->{_sortInfo}->{_curKeyElement} = 'macro';
+        $self->{_sortInfo}->{_curKeyName}    = $macro_name;
+        print STDERR Dumper $self->{_sortInfo};
     }
+    
+    $self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
+    
+    
+    #my $tmpBiblio = $self->{_biblio_str};
+    #$self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
+    #foreach my $k (keys %{$self->{_sort}}) {
+    #    if(exists $self->{_sort}->{$k}->{macro}) {
+    #        if(exists $self->{_sort}->{$k}->{macro}->{$macro_name}) {
+    #            #print STDERR "$k -> macro -> $macro_name \n";
+    #            #my $substr = substr $self->{_biblio_str}, length($tmpBiblio);
+    #            #$self->{_sort}->{$k}->{macro}->{$macro_name}->{$self->{_biblioNumber}}=$substr;
+    #        }
+    #    }
+    #}
     #print STDERR Dumper $self->{_sort}; 
 }
 
@@ -1285,146 +1327,164 @@ sub _parseNameAuthor {
     
     print "_parseNameAuthor\n";
     
-    if($mods->{name}) {
-        #print Dumper $mods->{name};
-        my @names = $mods->{name}->('@');
-        my $qtNames = scalar(@names);
-        my $round = $qtNames;
-
-        my ($et_al_min , $et_al_use_first) = (0, 0);
-        
-        # read et-al options
-        my @options = $self->_c->{style}->{bibliography}->{option}('@');
-        foreach my $o ( @options ) {
-           #print Dumper $o->pointer;
-            switch($o->pointer->{name}) {
-                case "et-al-min" { # the minimum number of contributors to use "et al"
-                    $et_al_min = $o->pointer->{value};
+    if($self->{_sortInfo}->{_withinSorting}==1) {
+        print STDERR "Drin!\n";
+        if($mods->{name}) {
+            my $string = "";
+            foreach my $n ( $mods->{name}->('@') ) {
+                # add family name
+                $string .= $n->{namePart}('type', 'eq', 'family')." ";
+                my @given_names = $n->{namePart}('type', 'eq', 'given');
+                # add given names
+                foreach my $gn (@given_names) {
+                    $string .= $gn." ";
                 }
-                case "et-al-use-first" { # the number of contributors to explicitly print under  "et al" conditions
-                    $et_al_use_first = $o->pointer->{value};
-                }                    
+                $self->{_sort}->{$self->{_sortInfo}->{_keyNumber}}->{$self->{_sortInfo}->{_curKeyElement}}->{$self->{_sortInfo}->{_curKeyName}}->{$self->{_biblioNumber}}=$string;
             }
         }
+    }
+    else {    
+        if($mods->{name}) {
+            #print Dumper $mods->{name};
+            my @names = $mods->{name}->('@');
+            my $qtNames = scalar(@names);
+            my $round = $qtNames;
 
-        # print the names
-        my $i=0;
-        foreach my $n ( @names ) {
-            #print Dumper $n->pointer; exit;
-            $i++;
-            my $complete_name = "";
+            my ($et_al_min , $et_al_use_first) = (0, 0);
             
-            # either not enough for et-al or we use the first authors until we reach $et_al_use_first
-            if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) ) {
-                my $family_name = $n->{namePart}('type', 'eq', 'family');
-                my @given_names = $n->{namePart}('type', 'eq', 'given');
-                #print Dumper @given_names;
-                                    
-                my $and = "";
-                if($name->{and} eq "text" ) {
-                    $and = " and ";
+            # read et-al options
+            my @options = $self->_c->{style}->{bibliography}->{option}('@');
+            foreach my $o ( @options ) {
+               #print Dumper $o->pointer;
+                switch($o->pointer->{name}) {
+                    case "et-al-min" { # the minimum number of contributors to use "et al"
+                        $et_al_min = $o->pointer->{value};
+                    }
+                    case "et-al-use-first" { # the number of contributors to explicitly print under  "et al" conditions
+                        $et_al_use_first = $o->pointer->{value};
+                    }                    
                 }
-                elsif($name->{and} eq "symbol" ) {
-                    $and = " & ";
-                }
+            }
+
+            # print the names
+            my $i=0;
+            foreach my $n ( @names ) {
+                #print Dumper $n->pointer; exit;
+                $i++;
+                my $complete_name = "";
                 
-                #print "names and=$and";exit;
-                
-                if(exists $name->{'name-as-sort-order'}) {
-                    if($name->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
-                        #print Dumper $n->{namePart}->[1]->pointer; exit;
-                        $complete_name = $family_name.$name->{'sort-separator'};
-                        
-                        if(exists $name->{'initialize-with'}) {
-                            foreach my $gn (@given_names) {
-                                my @nameParts = split /\s+/, $gn;
-                                for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Rose -> R.
-                                    if($nameParts[$i] =~ /^(\S)/) {
-                                        $nameParts[$i] = $1;
-                                        $complete_name .= $nameParts[$i].$name->{'initialize-with'};
+                # either not enough for et-al or we use the first authors until we reach $et_al_use_first
+                if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) ) {
+                    my $family_name = $n->{namePart}('type', 'eq', 'family');
+                    my @given_names = $n->{namePart}('type', 'eq', 'given');
+                    #print Dumper @given_names;
+                                        
+                    my $and = "";
+                    if($name->{and} eq "text" ) {
+                        $and = " and ";
+                    }
+                    elsif($name->{and} eq "symbol" ) {
+                        $and = " & ";
+                    }
+                    
+                    #print "names and=$and";exit;
+                    
+                    if(exists $name->{'name-as-sort-order'}) {
+                        if($name->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
+                            #print Dumper $n->{namePart}->[1]->pointer; exit;
+                            $complete_name = $family_name.$name->{'sort-separator'};
+                            
+                            if(exists $name->{'initialize-with'}) {
+                                foreach my $gn (@given_names) {
+                                    my @nameParts = split /\s+/, $gn;
+                                    for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Rose -> R.
+                                        if($nameParts[$i] =~ /^(\S)/) {
+                                            $nameParts[$i] = $1;
+                                            $complete_name .= $nameParts[$i].$name->{'initialize-with'};
+                                        }
+                                    }
+                                }
+                                $complete_name =~ s/\s+$//g; # remove endstanding spaces
+                            }
+                            else {
+                                foreach my $gn (@given_names) {
+                                    $complete_name .= $gn;
+                                }
+                            }
+                        }
+                        # only the first name is written as Wash, Stefan the rest is written as 
+                        elsif($name->{'name-as-sort-order'} eq "first") {
+                            if($i==1) { # Wash, Stefan
+                                $complete_name = $family_name.$name->{'sort-separator'};
+                                foreach my $gn (@given_names) {
+                                    my @nameParts = split /\s+/, $gn;
+                                    for(my $i=0; $i<=$#nameParts; $i++) {
+                                        $complete_name .= " " if($i>0);
+                                        $complete_name .= $nameParts[$i];
+                                        
                                     }
                                 }
                             }
-                            $complete_name =~ s/\s+$//g; # remove endstanding spaces
-                        }
-                        else {
-                            foreach my $gn (@given_names) {
-                                $complete_name .= $gn;
-                            }
-                        }
-                    }
-                    # only the first name is written as Wash, Stefan the rest is written as 
-                    elsif($name->{'name-as-sort-order'} eq "first") {
-                        if($i==1) { # Wash, Stefan
-                            $complete_name = $family_name.$name->{'sort-separator'};
-                            foreach my $gn (@given_names) {
-                                my @nameParts = split /\s+/, $gn;
-                                for(my $i=0; $i<=$#nameParts; $i++) {
-                                    $complete_name .= " " if($i>0);
-                                    $complete_name .= $nameParts[$i];
-                                    
+                            else { # Stefan Wash
+                                foreach my $gn (@given_names) {
+                                    my @nameParts = split /\s+/, $gn;
+                                    for(my $i=0; $i<=$#nameParts; $i++) {
+                                        $complete_name .= " " if($i>0);
+                                        $complete_name .= $nameParts[$i]." ";
+                                    }                            
                                 }
+                                $complete_name .= $family_name;
                             }
                         }
-                        else { # Stefan Wash
-                            foreach my $gn (@given_names) {
-                                my @nameParts = split /\s+/, $gn;
-                                for(my $i=0; $i<=$#nameParts; $i++) {
-                                    $complete_name .= " " if($i>0);
-                                    $complete_name .= $nameParts[$i]." ";
-                                }                            
-                            }
-                            $complete_name .= $family_name;
+                        else { # attribute given, but phrase is not supported?
                         }
                     }
-                    else { # attribute given, but phrase is not supported?
-                    }
-                }
-                else { # attribute not given -> "John Doe"
-                    ### not tested yet
-                    #foreach my $gn (@given_names) {
-                    #       my @nameParts = split /\s+/, $gn;
-                    #        for(my $i=0; $i<=$#nameParts; $i++) {
-                    #            $complete_name .= $nameParts[$i];
-                    #        }
-                    #}
-                    #$complete_name .= $family_name;
-                }                                    
-                
-                if(exists $name->{'delimiter-precedes-last'}) {
-                    if($name->{'delimiter-precedes-last'} eq 'always') {
-                        $complete_name .= $name->{delimiter} if($round>1);
-                        $complete_name .= $and if($round==2);
-                    }
-                    elsif($name->{'delimiter-precedes-last'} eq 'never') {
-                        if($qtNames == 2 && $round>1) {
-                            $complete_name .= $and;
-                        }
-                        else {
-                            $complete_name .= $name->{delimiter} if($round>2);
+                    else { # attribute not given -> "John Doe"
+                        ### not tested yet
+                        #foreach my $gn (@given_names) {
+                        #       my @nameParts = split /\s+/, $gn;
+                        #        for(my $i=0; $i<=$#nameParts; $i++) {
+                        #            $complete_name .= $nameParts[$i];
+                        #        }
+                        #}
+                        #$complete_name .= $family_name;
+                    }                                    
+                    
+                    if(exists $name->{'delimiter-precedes-last'}) {
+                        if($name->{'delimiter-precedes-last'} eq 'always') {
+                            $complete_name .= $name->{delimiter} if($round>1);
                             $complete_name .= $and if($round==2);
                         }
+                        elsif($name->{'delimiter-precedes-last'} eq 'never') {
+                            if($qtNames == 2 && $round>1) {
+                                $complete_name .= $and;
+                            }
+                            else {
+                                $complete_name .= $name->{delimiter} if($round>2);
+                                $complete_name .= $and if($round==2);
+                            }
+                        }
+                        else { # attribute exists but the given phrase is not supported
+                            
+                        }
                     }
-                    else { # attribute exists but the given phrase is not supported
+                    else {
                         
                     }
                 }
-                else {
-                    
-                }
+                
+                $round--;
+                
+                #print $complete_name;
+                $self->{_biblio_str} .= $complete_name; # add the name to the biblio result-string
             }
             
-            $round--;
-            
-            #print $complete_name;
-            $self->{_biblio_str} .= $complete_name; # add the name to the biblio result-string
-        }
-        
-        # add "et al." string
-        if($qtNames >= $et_al_min) {
-            #print "adding et al!\n";
-            
-            $self->{_biblio_str} .= "et al"; # TODO: 'et al' OR 'et al.'? (with or without dot?)
+            # add "et al." string
+            if($qtNames >= $et_al_min) {
+                #print "adding et al!\n";
+                
+                $self->{_biblio_str} .= "et al"; # TODO: 'et al' OR 'et al.'? (with or without dot?)
+            }
         }
     }
 }
