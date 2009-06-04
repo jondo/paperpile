@@ -79,8 +79,7 @@ sub connect {
 
   eval { $dbh = DBI->connect( $self->{dsn}, $self->{user}, $self->{password}, $self->{options} ); };
   if ($@) {
-    $self->{log}->debug(qq{Couldn't connect to the database "$@"}) if $self->{debug}
-
+    $self->{log}->debug(qq{Couldn't connect to the database "$@"}) if $self->{debug};
   } else {
     $self->{log}->debug( 'Connected to the database via dsn:' . $self->{dsn} ) if $self->{debug};
   }

@@ -77,7 +77,7 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         datatabs.items.get('pubsummary').updateDetail(r.data);
         datatabs.items.get('pubnotes').updateDetail(r.data);        
 
-        this.items.get('east_panel').items.get('pdf_manager').updateDetail(this.grid);
+        this.items.get('east_panel').items.get('pdf_manager').updateDetail();
     },
 
 });

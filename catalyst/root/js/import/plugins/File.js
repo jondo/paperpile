@@ -8,12 +8,9 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
 
         Paperpile.PluginGridFile.superclass.initComponent.apply(this, arguments);
 
-        var tbar=this.getTopToolbar();
-        tbar[this.getButtonIndex('add_button')].hidden=false;
-        tbar[this.getButtonIndex('new_button')].hidden=true;
+        this.actions['IMPORT'].show();
+        this.actions['NEW'].hide();
 
     },
-
-    
 
 });

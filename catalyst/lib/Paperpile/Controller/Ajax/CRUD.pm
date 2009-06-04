@@ -81,7 +81,6 @@ sub delete_entry : Local {
   my $grid_id = $c->request->params->{grid_id};
   my $plugin = $c->session->{"grid_$grid_id"};
 
-  my $plugin = $c->session->{"grid_$grid_id"};
   my $data = $self->_get_selection($c);
 
   $c->model('User')->delete_pubs($data);
@@ -195,7 +194,7 @@ sub remove_tag : Local {
     $new_tags =~ s/,$tag$//g;
     $new_tags =~ s/,$tag,/,/g;
     $c->model('User')->update_tags( $pub->_rowid, $new_tags );
-
+    $pub->tags($new_tags);
     $output{$pub->sha1}={tags=>$new_tags};
 
   }
@@ -246,8 +245,6 @@ sub new_tag : Local {
 
 }
 
-
-
 sub delete_tag : Local {
   my ( $self, $c ) = @_;
 
@@ -255,14 +252,15 @@ sub delete_tag : Local {
 
   $c->model('User')->delete_tag($tag);
 
-  foreach my $var (keys %{$c->session}){
-    next if !($var=~/^grid_/);
-    my $plugin=$c->session->{$var};
-    foreach my $pub (values %{$plugin->_hash}){
-      print STDERR $pub->tags, "\n";
-      # finish here.
-    }
+  foreach my $pub (@{$self->_get_cached_data($c)}){
+    my $new_tags=$pub->tags;
+    $new_tags =~ s/^$tag,//g;
+    $new_tags =~ s/^$tag$//g;
+    $new_tags =~ s/,$tag$//g;
+    $new_tags =~ s/,$tag,/,/g;
+    $pub->tags($new_tags);
   }
+
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 
@@ -275,6 +273,15 @@ sub rename_tag : Local {
   my $new_tag = $c->request->params->{new_tag};
 
   $c->model('User')->rename_tag($old_tag,$new_tag);
+
+  foreach my $pub (@{$self->_get_cached_data($c)}){
+    my $new_tags=$pub->tags;
+    $new_tags =~ s/^$old_tag,/$new_tag,/g;
+    $new_tags =~ s/^$old_tag$/$new_tag/g;
+    $new_tags =~ s/,$old_tag$/,$new_tag/g;
+    $new_tags =~ s/,$old_tag,/,$new_tag,/g;
+    $pub->tags($new_tags);
+  }
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -405,8 +412,22 @@ sub _get_selection {
 
 }
 
+sub _get_cached_data {
 
+  my ( $self, $c ) = @_;
 
+  my @list=();
 
+  foreach my $var (keys %{$c->session}){
+    next if !($var=~/^grid_/);
+    my $plugin=$c->session->{$var};
+    foreach my $pub (values %{$plugin->_hash}){
+      push @list, $pub;
+    }
+  }
+
+  return [@list];
+
+}
 
 1;

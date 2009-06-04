@@ -33,8 +33,83 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             emptyMsg: "No papers to display",
         });
 
+        this.actions={
+            'NEW': new Ext.Action({
+                text: 'New',
+                handler: this.newEntry,
+                scope: this,
+                cls: 'x-btn-text-icon add',
+                disabled:true,
+                itemId:'new_button'
+                
+            }),
+            
+            'EDIT': new Ext.Action({
+                text: 'Edit',
+                handler: this.editEntry,
+                scope: this,
+                cls: 'x-btn-text-icon edit',
+                disabled:true,
+                itemId:'edit_button'
+            }),
+
+            'DELETE': new Ext.Action({
+                text: 'Delete',
+                handler: this.deleteEntry,
+                scope: this,
+                cls: 'x-btn-text-icon delete',
+                disabled:true,
+                itemId:'delete_button'
+            }),
+
+            'IMPORT': new Ext.Action({
+                text: 'Import',
+                handler: this.insertEntry,
+                scope: this,
+                cls: 'x-btn-text-icon add',
+                disabled:true,
+                itemId:'import_button'
+            }),
+            
+            'EXPORT': new Ext.Action({
+                text: 'Export',
+                handler: this.exportEntry,
+                scope: this,
+                disabled:true,
+                itemId:'export_button'
+            }),
+
+            'SELECT_ALL': new Ext.Action({
+                text: 'Select all',
+                handler: this.selectAll,
+                scope: this,
+                disabled:true,
+                itemId:'select_all_button'
+            }),
+
+
+        };
+
+
         var tbar=[{xtype:'tbfill'},
-                  {   xtype:'button',
+                  this.actions['NEW'],
+                  this.actions['IMPORT'],
+                  this.actions['DELETE'],
+                  this.actions['EDIT'],
+                  { xtype:'button',
+                    itemId: 'more_menu',
+                    menu:new Ext.menu.Menu({
+                        items:[
+                            this.actions['EXPORT'],
+                            this.actions['SELECT_ALL'],
+                        ]
+                    })
+                  }
+
+
+                  /*
+
+ {   xtype:'button',
                       itemId: 'new_button',
                       text: 'New',
                       cls: 'x-btn-text-icon add',
@@ -43,6 +118,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                           click:  {fn: this.newEntry, scope: this}
                       },
                   },
+
                   { xtype:'button',
                     itemId: 'add_button',
                     text: 'Import',
@@ -112,11 +188,25 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                          ]
                      }),
                      //disabled: true,
-                  }
+                  }*/
                  ];
-
         
-   
+        this.contextMenu=new Ext.menu.Menu({
+            items:[
+                this.actions['IMPORT'],
+                this.actions['DELETE'],
+                this.actions['EDIT'],
+                this.actions['EXPORT'],
+                this.actions['SELECT_ALL'],
+            ]
+        });
+        
+        this.on('rowcontextmenu', 
+                function(grid, row, e){
+                    this.getSelectionModel().selectRow(row);
+                    this.contextMenu.showAt(e.getXY());
+                }, this, {stopEvent:true});
+
         var renderPub=function(value, p, record){
 
             // Can possibly be speeded up with compiling the template.
@@ -213,7 +303,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     afterRender: function(){
 
-
         this.getSelectionModel().on('rowselect',
                                     function(sm, rowIdx, r){
                                         var container= this.findParentByType(Paperpile.PubView);
@@ -229,7 +318,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                     },this);
 
 
-
+        this.el.on({
+			contextmenu:{fn:function(){return false;},stopEvent:true}
+		});
         
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
    
@@ -241,6 +332,32 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     updateButtons: function(){
         
+        var imported=this.getSelection('IMPORTED').length;
+        var notImported=this.getSelection('NOT_IMPORTED').length;
+        var selected=imported+notImported;
+        
+        console.log(imported, notImported, selected);
+
+        console.log(this.getTopToolbar().items);
+
+        this.actions['NEW'].enable();
+        this.actions['EXPORT'].enable();
+
+        if (selected == 1){
+            this.actions['EDIT'].setDisabled(imported==0);
+            this.actions['IMPORT'].setDisabled(imported);
+            this.actions['DELETE'].setDisabled(imported==0);
+        }
+
+        if (selected > 1 ){
+            this.actions['EDIT'].disable();
+            this.actions['DELETE'].setDisabled(imported==0);
+            this.actions['IMPORT'].setDisabled(imported==0);
+        }
+
+        this.actions['SELECT_ALL'].setDisabled(this.allSelected);
+
+        /*
         var tbar = this.getTopToolbar();
         var sm = this.getSelectionModel();
         var record = sm.getSelected();
@@ -270,17 +387,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         if (tbar.items.get('delete_button')){
             tbar.items.get('delete_button').setDisabled( ! record.data._imported );
         }
+*/
+
                 
     },
 
    // Small helper functions to get the index of a given item in the toolbar configuration array
+   // We have to use the text instead of itemId. Actions do not seem to support itemIds. 
+   // A better solution should be possible with ExtJS 3
 
     getButtonIndex: function(itemId){
-        
         var tbar=this.getTopToolbar();
-
         for (var i=0; i<tbar.length;i++){
-            if (tbar[i].itemId == itemId) return i;
+            if (tbar[i].getText){
+                if (tbar[i].getText() == itemId) return i;
+            }
         }
     },
     
@@ -512,6 +633,22 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.resumeEvents();
         this.store.fireEvent('datachanged',this.store);
     },
+
+
+    selectAll: function(){
+        this.allSelected=true;
+        this.getSelectionModel().selectAll();
+        this.getSelectionModel().on('selectionchange',
+                                    function(sm){
+                                        this.allSelected=false;
+                                    }, this, {single:true});
+        this.getSelectionModel().on('rowdeselect',
+                                    function(sm){
+                                        sm.clearSelections();
+                                    }, this, {single:true});
+        
+    },
+    
 
     onClose: function(cont, comp){
         Ext.Ajax.request({

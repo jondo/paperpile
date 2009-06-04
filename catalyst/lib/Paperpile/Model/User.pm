@@ -20,6 +20,7 @@ with 'Catalyst::Component::InstancePerContext';
 sub build_per_context_instance {
   my ($self, $c) = @_;
   my $file=$c->session->{user_db};
+  print STDERR "====================> $file\n";
   my $model = Paperpile::Model::User->new();
   $model->set_dsn("dbi:SQLite:$file");
   return $model;

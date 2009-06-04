@@ -9,27 +9,12 @@ Paperpile.PluginGridOnlineSearch = Ext.extend(Paperpile.PluginGrid, {
         tbar.unshift(new Ext.app.SearchField({width:320,
                                               store: this.store}));
 
-        console.log('OnlineSearch');
-
-        var addButton = { xtype:'button',
-                          itemId: 'add_button',
-                          text: 'Import',
-                          cls: 'x-btn-text-icon add',
-                          listeners: {
-                              click:  {
-                                  fn: function(){
-                                      this.insertEntry();
-                                  },
-                                  scope: this
-                              },
-                          },
-                          disabled: true,
-                        };
-
         //tbar.splice(this.getButtonIndex('new_button'), 1, addButton);
 
-        tbar[this.getButtonIndex('add_button')].hidden=false;
-        tbar[this.getButtonIndex('new_button')].hidden=true;
+        //tbar[this.getButtonIndex('add_button')].hidden=false;
+        //tbar[this.getButtonIndex('new_button')].hidden=true;
+
+        this.actions['NEW'].hide();
 
     },
     

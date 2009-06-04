@@ -78,6 +78,9 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<div id=main-container-{id}>',
         '<div class="pp-box pp-box-top pp-box-style1"',
         '<p><b>{numSelected}</b> papers selected.</p>',
+        '<div id="tag-container-{id}" class="pp-tag-container"></div>',
+        '<div id="tag-control-{id}" class="pp-tag-control"></div>',
+        '<div id="tag-add-link-{id}" ><a href="#" class="pp-textlink">Add&nbsp;tag</a></div>',
         '</div>',
         '</div>',
 
@@ -153,6 +156,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         if (numSelected>1){
             this.tplMultiple.overwrite(this.body, {numSelected: numSelected}, true);
+
+
         }
    	},
 
@@ -494,7 +499,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                   } else {
                       Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments+1);
                   }
-                  this.updateDetail(this.data);
+                  this.updateDetail();
               }, 
               scope:this,
             });
@@ -514,12 +519,12 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         if (isPDF) {
             successFn=function(response){
                 Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf','');
-                this.updateDetail(this.data);
+                this.updateDetail();
             }
         } else {
             successFn=function(response){
                 Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments-1);
-                this.updateDetail(this.data);
+                this.updateDetail();
             }
         }
 
@@ -606,13 +611,13 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                             this.attachFile(true,json.pdf);
                         } else {
                             Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf',json.pdf);
-                            this.updateDetail(this.data);
+                            this.updateDetail();
                         }
                         Ext.getCmp('statusbar').setText('Downloaded '+json.pdf);
                     } else {
                         Ext.getCmp('statusbar').clearStatus();
                         Ext.getCmp('statusbar').setText("Could not download PDF.");
-                        this.updateDetail(this.data);
+                        this.updateDetail();
                     }
                 },
                 scope: this,

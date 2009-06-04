@@ -40,35 +40,38 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         tbar.unshift({xtype:'button', text: 'Filter', menu: menu });
         tbar.unshift(this.filterField);
 
-        //tbar.splice(this.getButtonIndex('add_button'), 1);
+        this.actions['IMPORT'].hide();
 
         // If we are viewing a virtual folders we need an additional
         // button to remove an entry from a virtual folder
 
         if (this.plugin_base_query.match('^folders:')){
 
+
+            this.actions['DELETE_FROM_FOLDER']= new Ext.Action({
+                text: 'Delete from folder',
+                handler: this.deleteFromFolder,
+                scope: this,
+            });
+
             var menu = new Ext.menu.Menu({
                 itemId: 'deleteMenu',
                 items: [
-                    {  text: 'Delete from library',
-                       listeners: {
-                           click:  {fn: this.deleteEntry, scope: this}
-                       },
-                    },
-                    {  text: 'Delete from folder',
-                       listeners: {
-                           click:  {fn: this.deleteFromFolder, scope: this}
-                       },
-                    }
+                    this.actions['DELETE_FROM_FOLDER'],
+                    this.actions['DELETE']
                 ]
             });
 
-            tbar[this.getButtonIndex('delete_button')]= {   xtype:'button',
-                                                            text: 'Delete',
-                                                            itemId: 'delete_button',
-                                                            cls: 'x-btn-text-icon delete',
-                                                            menu: menu
-                                                        };
+            tbar[this.getButtonIndex('Delete')]= 
+                { xtype:'button',
+                  text: 'Delete',
+                  itemId: 'delete_button',
+                  cls: 'x-btn-text-icon delete',
+                  menu: menu
+                };
+
+            this.actions['DELETE'].setText('Delete from library');
+            this.actions['DELETE'].setIconClass('');
         }
         
         this.store.baseParams['plugin_search_pdf']= 0 ;

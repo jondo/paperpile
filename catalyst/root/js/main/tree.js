@@ -713,18 +713,14 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             params: pars,
             success: function(){
                 Ext.StoreMgr.lookup('tag_store').reload();
-                //Ext.getCmp('statusbar').clearStatus();
-                //Ext.getCmp('statusbar').setText('Added new Tag');
             },
         });
     },
 
-    //
+  
     // Delete the tag given by node globally
     // This code is extremely clumsy, we should consider some event-handler solution
-    // but since the boxselect widget is so special this is also not straightforward.
-    //
-    
+      
     deleteTag: function(node){
 
         var tag=node.text;
@@ -772,9 +768,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         );
                     }
                 });
-
-                //Ext.getCmp('statusbar').clearStatus();
-                //Ext.getCmp('statusbar').setText('Deleted tag');
             },
         });
     },
@@ -852,6 +845,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                     Paperpile.main.tabs.items.each(
                                         function(item, index, length){
                                             var grid=item.items.get('center_panel').items.get('grid');
+                                            grid.store.suspendEvents();
                                             var records=grid.getStore().data.items;
                                             for (i=0;i<records.length;i++){
                                                 var oldTags=records[i].get('tags');
@@ -861,22 +855,23 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                                 newTags=newTags.replace(new RegExp("^"+tag+","),newText+",");  //  XXX,
                                                 newTags=newTags.replace(new RegExp(","+tag+"$"),","+newText);  // ,XXX
                                                 newTags=newTags.replace(new RegExp(","+tag+","),","+newText+","); // ,XXX,
-                                                
+                                               
                                                 records[i].set('tags',newTags);
                                             }
-                             
+                                
+                                            grid.store.resumeEvents();
+                                            grid.store.fireEvent('datachanged',this.store);
+
+                                            // If a entry is selected in a tab, also update the display
                                             var pdf_manager=item.items.get('east_panel').items.get('pdf_manager');
                                             var selected=grid.getSelectionModel().getSelected();
                                             if (selected){
-                                                pdf_manager.updateDetail(selected.data, true);
+                                                pdf_manager.updateDetail();
                                             }
                                         }
                                     );
                                 }
                             });
-
-                            //Ext.getCmp('statusbar').clearStatus();
-                            //Ext.getCmp('statusbar').setText('Renamed tag');
                         },
                     });
                 },
