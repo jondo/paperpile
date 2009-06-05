@@ -72,6 +72,11 @@
     padding: 0 0 5 5;
 }
 
+.pp-box .pp-vspace{
+    height:20px;
+    clear:both;
+}
+
 .pp-control-container {
     margin: 8px;
 }

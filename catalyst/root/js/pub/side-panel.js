@@ -76,11 +76,13 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     markupMultiple: [
 
         '<div id=main-container-{id}>',
-        '<div class="pp-box pp-box-top pp-box-style1"',
+        '<div class="pp-box pp-box-top pp-box-style1">',
         '<p><b>{numSelected}</b> papers selected.</p>',
+        '<div class="pp-control-container">',
         '<div id="tag-container-{id}" class="pp-tag-container"></div>',
         '<div id="tag-control-{id}" class="pp-tag-control"></div>',
-        '<div id="tag-add-link-{id}" ><a href="#" class="pp-textlink">Add&nbsp;tag</a></div>',
+        '</div>',
+        '<div class="pp-vspace"></div>',
         '</div>',
         '</div>',
 
@@ -116,12 +118,15 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         sm=this.grid.getSelectionModel();
 
         var numSelected=sm.getCount();
-
         if (this.grid.allSelected){
             numSelected=this.grid.store.getTotalCount();
         }
 
-        if (numSelected==1){
+        this.multipleSelection=(numSelected > 1 );
+        
+        console.log(numSelected, this.multipleSelection);
+
+        if (!this.multipleSelection){
             this.data=sm.getSelected().data;
             this.data.id=this.id;
 
@@ -152,12 +157,11 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                 this.installEvents();
                 this.renderTags();
             }
-        }
+        } else { // single selection
 
-        if (numSelected>1){
-            this.tplMultiple.overwrite(this.body, {numSelected: numSelected}, true);
-
-
+            this.tplMultiple.overwrite(this.body, {numSelected: numSelected, id: this.id}, true);
+            //this.installEvents();
+            this.showTagControls();
         }
    	},
 
@@ -167,7 +171,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     //
     
     installEvents: function(){
-
 
         Ext.get('tag-add-link-'+this.id).setVisibilityMode(Ext.Element.DISPLAY);
         Ext.get('tag-add-link-'+this.id).on('click',
@@ -251,7 +254,11 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             return;
         } 
 
-        Ext.get('tag-add-link-'+this.id).addClass('pp-clear-left');
+        // We only have this control for a single selection
+        if (!this.multipleSelection){
+            Ext.get('tag-add-link-'+this.id).addClass('pp-clear-left');
+        }
+        
         Ext.get('tag-control-'+this.id).addClass('pp-clear-left');
 
         container.show();
@@ -301,14 +308,18 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
     showTagControls: function(){
         
-        // Skip tags for combo which are already in list
+        // Skip tags for combo which are already in list (unless we have multiple selection where this
+        // does not make too much sense
         var list=[];
+
         Ext.StoreMgr.lookup('tag_store').each(function(rec){
             var tag=rec.data.tag;
-            if (this.data.tags.match(new RegExp(","+tag+"$"))) return; // ,XXX
-            if (this.data.tags.match(new RegExp("^"+tag+"$"))) return; //  XXX
-            if (this.data.tags.match(new RegExp("^"+tag+","))) return; //  XXX,
-            if (this.data.tags.match(new RegExp(","+tag+","))) return; // ,XXX,
+            if (!this.multipleSelection){
+                if (this.data.tags.match(new RegExp(","+tag+"$"))) return; // ,XXX
+                if (this.data.tags.match(new RegExp("^"+tag+"$"))) return; //  XXX
+                if (this.data.tags.match(new RegExp("^"+tag+","))) return; //  XXX,
+                if (this.data.tags.match(new RegExp(","+tag+","))) return; // ,XXX,
+            }
             list.push([tag]);
 		}, this);
 
@@ -362,27 +373,30 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                                            }
                                           ));
 
-        var cancel = new Ext.BoxComponent({
-            autoEl: {tag:'div', 
-                     cls:'pp-textlink-control',
-                     children:[{
-                         tag: 'a',
-                         id: 'tag-control-cancel-'+this.id,
-                         href:'#',
-                         cls: 'pp-textlink',
-                         html: 'Cancel'
-                     }],
-                    },
-        });
+        if (! this.multipleSelection){
 
-        cancel.render('tag-control-'+this.id);
+            var cancel = new Ext.BoxComponent({
+                autoEl: {tag:'div', 
+                         cls:'pp-textlink-control',
+                         children:[{
+                             tag: 'a',
+                             id: 'tag-control-cancel-'+this.id,
+                             href:'#',
+                             cls: 'pp-textlink',
+                             html: 'Cancel'
+                         }],
+                        },
+            });
 
-        Ext.get('tag-control-cancel-'+this.id).on('click',
-                                                  function(){
-                                                      Ext.get('tag-add-link-'+this.id).show();
-                                                      this.hideTagControls();
-                                                  }, this);
+            cancel.render('tag-control-'+this.id);
 
+            Ext.get('tag-control-cancel-'+this.id).on('click',
+                                                      function(){
+                                                          Ext.get('tag-add-link-'+this.id).show();
+                                                          this.hideTagControls();
+                                                      }, this);
+        }
+            
         Ext.get('tag-control-ok-'+this.id).on('click', this.onAddTag, this);
        
     },
@@ -395,13 +409,18 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         combo.setValue('');
 
-        this.hideTagControls();
-
         if (this.data.tags != ''){
             this.data.tags=this.data.tags+","+tag;
         } else {
             this.data.tags=tag;
         }
+        
+        if (!this.multipleSelection){
+            this.hideTagControls();
+            this.renderTags();
+            Ext.get('tag-add-link-'+this.id).show();
+        }
+
 
         Ext.Ajax.request({
             url: '/ajax/crud/add_tag',
@@ -426,9 +445,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             scope: this,
         });
 
-        this.renderTags();
-
-        Ext.get('tag-add-link-'+this.id).show();
        
     },
 

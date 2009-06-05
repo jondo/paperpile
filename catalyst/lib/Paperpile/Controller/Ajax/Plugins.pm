@@ -139,9 +139,11 @@ sub export : Local {
 
   my ( $self, $c ) = @_;
 
-  my $source_grid = $c->request->params->{source_grid};
+  my $grid_id = $c->request->params->{grid_id};
   my $source_node = $c->request->params->{source_node};
   my $selection   = $c->request->params->{selection};
+
+  my $grid = $c->session->{"grid_$grid_id"};
 
   # Collect all export_ parameters for the export plugin
   my %export_params = ();
@@ -162,34 +164,25 @@ sub export : Local {
   my $data = [];
 
   # Get data from results grid
-  if ( defined $source_grid ) {
-
-    my $plugin = $c->session->{"grid_$source_grid"};
-
-    # If selection is given, export only those
-    if ( defined $selection ) {
-      my @list;
-
+  if ( defined $grid_id ) {
+    if ($selection eq 'ALL'){
+      $data = $grid->all;
+    } else {
+      my @tmp;
       if ( ref($selection) eq 'ARRAY' ) {
-        @list = @$selection;
+        @tmp = @$selection;
       } else {
-        push @list, $selection;
+        push @tmp, $selection;
       }
-
-      for my $sha1 (@list) {
-        my $pub = $plugin->find_sha1($sha1);
+      for my $sha1 (@tmp) {
+        my $pub = $grid->find_sha1($sha1);
         push @$data, $pub;
       }
-
-      # If not selection is given export all
-    } else {
-      $data = $plugin->all;
     }
   }
 
   # Data from plugin-query in tree
   if ( defined $source_node ) {
-
     # Get the node with the id specified by $source_node
     my $tree = $c->session->{"tree"};
     my $node = undef;

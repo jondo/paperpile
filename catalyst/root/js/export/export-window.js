@@ -1,6 +1,6 @@
 Paperpile.ExportWindow = Ext.extend(Ext.Window, {
 
-    source_grid: null,
+    grid_id: null,
     source_node: null,
     selection:[],
     
@@ -64,7 +64,7 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
                                   var form=this.items.get(1).getForm();
                                   form.submit({
                                       url:'/ajax/plugins/export',
-                                      params: {source_grid: this.source_grid,
+                                      params: {grid_id: this.grid_id,
                                                source_node: this.source_node,
                                                export_name: this.pluginForm.export_name,
                                                selection: this.selection
@@ -113,12 +113,14 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
                        boxLabel: 'Website',
                        inputValue: 'HTML',
                        hideLabel: true,
+                       disabled: true,
                       },
                       {xtype: 'radio',
                        name: 'plugin',
                        boxLabel: 'PDF',
                        inputValue: 'PDF',
                        hideLabel: true,
+                       disabled: true,
                       },
                   ],
                 },

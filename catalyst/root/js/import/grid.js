@@ -311,12 +311,13 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                         this.completeEntry();
                                     },this);
 
+        /*
         this.getSelectionModel().on('rowdeselect',
                                     function(sm, rowIdx, r){
                                         var container= this.findParentByType(Paperpile.PubView);
                                         container.onRowSelect(sm, rowIdx, r);
                                     },this);
-
+*/
 
         this.el.on({
 			contextmenu:{fn:function(){return false;},stopEvent:true}
@@ -336,10 +337,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var notImported=this.getSelection('NOT_IMPORTED').length;
         var selected=imported+notImported;
         
-        console.log(imported, notImported, selected);
-
-        console.log(this.getTopToolbar().items);
-
         this.actions['NEW'].enable();
         this.actions['EXPORT'].enable();
 
@@ -547,15 +544,11 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     },
 
-    exportEntry: function(what){
+    exportEntry: function(){
 
-        var selection=[];
+        selection=this.getSelection();
         
-        if (what == 'selection'){
-            selection=this.getSelection();
-        }
-        
-        var window=new Paperpile.ExportWindow({source_grid:this.id, 
+        var window=new Paperpile.ExportWindow({grid_id:this.id, 
                                                selection:selection,
                                               });
 
