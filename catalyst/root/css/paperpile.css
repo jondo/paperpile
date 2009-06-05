@@ -229,6 +229,11 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/arrow_left.png');
 }
 
+.collapse {
+    background-image: url('/images/icons/collapse.png');
+}
+
+
 /*** Other icons (tree, tabs) ***/
 
 .pp-icon-empty{

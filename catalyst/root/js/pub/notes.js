@@ -70,7 +70,8 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
         
         bbar.items.get('summary_tab_button').hide();
         bbar.items.get('notes_tab_button').hide();
-
+        bbar.items.get('collapse_button').hide();
+        
         bbar.items.get('save_notes_button').show();
         bbar.items.get('cancel_notes_button').show();
 
@@ -119,6 +120,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
         dataTabs.remove('html_editor'); 
         bbar.items.get('summary_tab_button').show();
         bbar.items.get('notes_tab_button').show();
+        bbar.items.get('collapse_button').show();
         bbar.items.get('save_notes_button').hide();
         bbar.items.get('cancel_notes_button').hide();
         

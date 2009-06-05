@@ -63,6 +63,21 @@ Paperpile.DataTabs = Ext.extend(Ext.Panel, {
                      },
                      hidden:true
                    },
+                   { itemId: 'collapse_button',
+                     // Icon is kind of a hack but I don't see an easy way to get 
+                     // the real collapse button in the bottom toolbar
+                     icon: '/images/icons/collapse.png',
+                     listeners: {
+                         click:  { 
+                             fn: function(){
+                                 this.collapse();
+                             },
+                             scope: this
+                         },
+                     },
+                     height:20
+                     //hidden:true
+                   },
                   ]}
                  );
        

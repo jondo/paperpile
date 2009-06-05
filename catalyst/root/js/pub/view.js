@@ -20,7 +20,9 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                        itemId: 'data_tabs',
                        activeItem:0,
                        height:200,
-                       region:'south'
+                       region:'south',
+                       collapsible:true,
+                       animCollapse:false
                       },
                   ]
                  },
