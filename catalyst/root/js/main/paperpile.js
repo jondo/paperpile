@@ -278,6 +278,8 @@ Paperpile.app=function(){
     var tree=Ext.getCmp('treepanel');
     Paperpile.main.tree=tree;
 
+    Paperpile.status=new Paperpile.Status();
+
     main.loadSettings();
 
     main.tabs.newDBtab('');
@@ -287,12 +289,10 @@ Paperpile.app=function(){
     // immediately (integrate this better in startup to make sure it
     // is loaded when needed)
 
-
     tree.expandAll();
     main.tabs.remove('welcome');
     Paperpile.initMask.hide();
 
-    //Ext.StoreMgr.lookup('tag_store').each(function(rec){console.log(rec)});
 
 }
 

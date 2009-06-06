@@ -26,6 +26,7 @@
   misc/forms.js 
   misc/file-chooser.js
   misc/style-picker.js
+  misc/status.js
   
   export/export-window.js
 

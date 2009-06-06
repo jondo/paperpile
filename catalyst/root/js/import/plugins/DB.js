@@ -158,7 +158,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
 
     toggleFilter: function(item, checked){
-        console.log(item.itemId, checked);
+
 
         // Toggle 'search_pdf' option 
         if (item.itemId == 'all_pdf'){
