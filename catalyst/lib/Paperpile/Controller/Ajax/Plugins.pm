@@ -7,6 +7,7 @@ use Paperpile::Library::Publication;
 use Data::Dumper;
 use 5.010;
 use Module::Load;
+use Exception::Class;
 
 use Paperpile::Plugins::Import;
 use Paperpile::Plugins::Export;
@@ -32,10 +33,10 @@ sub resultsgrid : Local {
 
   my ( $self, $c ) = @_;
 
-  my $grid_id     = $c->request->params->{grid_id};
-  my $task        = $c->request->params->{task} || '';
-  my $offset      = $c->request->params->{start};
-  my $limit       = $c->request->params->{limit};
+  my $grid_id = $c->request->params->{grid_id};
+  my $task    = $c->request->params->{task} || '';
+  my $offset  = $c->request->params->{start};
+  my $limit   = $c->request->params->{limit};
 
   my $plugin_name = $c->request->params->{plugin_name};
   my $plugin;
@@ -63,7 +64,21 @@ sub resultsgrid : Local {
     $plugin = eval( "$plugin_module->" . 'new(%params)' );
 
     $plugin->limit($limit);
-    $plugin->connect;
+
+    eval{
+      $plugin->connect;
+    };
+
+    my $e;
+    if ( $e = Exception::Class->caught('ImportException') ){
+      $c->stash->{error}=$e->error;
+      $c->detach('Paperpile::View::JSON');
+    } else {
+      $e = Exception::Class->caught();
+      if ($e){
+        ref $e ? $e->rethrow : die $e;
+      }
+    }
 
     if ( $plugin->total_entries == 0 ) {
       _resultsgrid_format( @_, [], 0 );
@@ -86,6 +101,8 @@ sub resultsgrid : Local {
   }
 
   _resultsgrid_format( @_, $entries, $plugin->total_entries );
+
+  #$c->stash->{errors}= ['My error'] ;
 
 }
 

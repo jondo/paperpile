@@ -597,7 +597,7 @@ sub delete_folder {
   #  Update flat fields in Publication table and Fulltext table
   my $update1 = $self->dbh->prepare("UPDATE Publications SET folders=? WHERE rowid=?");
   my $update2 = $self->dbh->prepare("UPDATE Fulltext_full SET folders=? WHERE rowid=?");
-  my $update2 = $self->dbh->prepare("UPDATE Fulltext_citation SET folders=? WHERE rowid=?");
+  my $update3 = $self->dbh->prepare("UPDATE Fulltext_citation SET folders=? WHERE rowid=?");
 
   foreach my $id (@$folder_ids) {
 
@@ -613,19 +613,11 @@ sub delete_folder {
     $select->execute;
     while ( $select->fetch ) {
 
-      # Remove the entry from the comma separated list
-      #my @parts = split( /,/, $folders );
-      #my @newParts = ();
-      #foreach my $part (@parts) {
-      #  next if $part eq $id;
-      #  push @newParts, $part;
-      #}
-      #my $newFolders = join( ',', @newParts );
-
       my $newFolders = $self->_remove_from_flatlist($folders,$id);
 
       $update1->execute( $newFolders, $rowid );
       $update2->execute( $newFolders, $rowid );
+      $update3->execute( $newFolders, $rowid );
     }
 
     $delete1->execute($id);

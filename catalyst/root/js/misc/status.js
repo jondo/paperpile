@@ -1,6 +1,6 @@
 Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
-    anim: true,
+    anim: false,
     scope:this,
     type: 'info',
     anchor: Ext.getBody(),
@@ -118,19 +118,19 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
         }
 
         if (pars.busy){
-            Ext.DomHelper.overwrite(this.busyEl, '<img src="/images/icons/loading.gif">');
+            Ext.DomHelper.overwrite(this.busyEl, '<img src="/images/spinner.gif">');
         } else {
             this.busyEl.hide();
         }
 
         if (pars.duration) {
-            (function(){this.hideMsg()}).defer(pars.duration*1000, this);
+            (function(){this.clearMsg()}).defer(pars.duration*1000, this);
         }
 
         if (pars.hideOnClick){
             Ext.getBody().on('click',
                            function(e){
-                               this.hideMsg();
+                               this.clearMsg();
                            }, this, {single:true});
         }
 
@@ -138,7 +138,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
     },
 
-    hideMsg: function(){
+    clearMsg: function(){
         this.el.hide(this.anim);
         // back to default
         this.setType('info');
@@ -148,8 +148,8 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
         this.updateMsg({msg:msg,busy:true});
     },
 
-    setText: function(text){
-        Ext.DomHelper.overwrite(this.msgEl, text);
+    setMsg: function(msg){
+        Ext.DomHelper.overwrite(this.msgEl, msg);
     },
 
     setType: function(type){

@@ -105,90 +105,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                         ]
                     })
                   }
-
-
-                  /*
-
- {   xtype:'button',
-                      itemId: 'new_button',
-                      text: 'New',
-                      cls: 'x-btn-text-icon add',
-                      //disabled: true,
-                      listeners: {
-                          click:  {fn: this.newEntry, scope: this}
-                      },
-                  },
-
-                  { xtype:'button',
-                    itemId: 'add_button',
-                    text: 'Import',
-                    hidden:true,
-                    cls: 'x-btn-text-icon add',
-                    listeners: {
-                        click:  {
-                            fn: function(){
-                                this.insertEntry();
-                            },
-                            scope: this
-                        },
-                    },
-                    //disabled: true,
-                  },
-                  {   xtype:'button',
-                      text: 'Delete',
-                      itemId: 'delete_button',
-                      cls: 'x-btn-text-icon delete',
-                      listeners: {
-                          click:  {fn: this.deleteEntry, scope: this}
-                      },
-                      //disabled: true,
-                  },
-                  {   xtype:'button',
-                      itemId: 'edit_button',
-                      text: 'Edit',
-                      cls: 'x-btn-text-icon edit',
-                      listeners: {
-                          click:  {fn: this.editEntry, scope: this}
-                      },
-                      //disabled: true,
-                  }, 
-                  {  xtype:'button',
-                     text: 'More',
-                     itemId: 'more_menu',
-                     menu:new Ext.menu.Menu({
-                         //itemId: 'more_menu',
-                         items:[
-                             {  text: 'Select all',
-                                listeners: {
-                                    click: {fn: function(){
-                                        this.allSelected=true;
-                                        this.getSelectionModel().selectAll();
-                                        this.getSelectionModel().on('selectionchange',
-                                                                    function(sm){
-                                                                        this.allSelected=false;
-                                                                    }, this, {single:true});
-                                        this.getSelectionModel().on('rowdeselect',
-                                                                    function(sm){
-                                                                        sm.clearSelections();
-                                                                    }, this, {single:true});
-                                        
-                                    }, scope: this}
-                                },
-                             },
-                             {  text: 'Export selected',
-                                listeners: {
-                                    click:  {fn: function(){this.exportEntry('selection')}, scope: this}
-                                },
-                             },
-                             {  text: 'Export all',
-                                listeners: {
-                                    click:  {fn: function(){this.exportEntry('all')}, scope: this}
-                                },
-                             }
-                         ]
-                     }),
-                     //disabled: true,
-                  }*/
                  ];
         
         this.contextMenu=new Ext.menu.Menu({
@@ -328,7 +244,13 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     },
 
     onError: function(exception, options, response, error){
-        Paperpile.main.error(response);
+        
+        // unexpected and uncaught error goes to standard error handling
+        if (response.status==500){
+            Paperpile.main.uncaughtError(response);
+        } else {
+            Paperpile.main.error(response);
+        }
     },
 
     updateButtons: function(){

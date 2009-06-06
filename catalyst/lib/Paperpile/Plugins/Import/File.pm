@@ -31,6 +31,14 @@ sub BUILD {
 sub connect {
   my $self = shift;
 
+  if ( !-e $self->file ) {
+    ImportException->throw( error => "Could not find file " . $self->file );
+  }
+
+  if ( !-r $self->file ) {
+    ImportException->throw( error => "File " . $self->file . " is not readable." );
+  }
+
   $self->_db_file( $self->_tmp_file_name( $self->file ) );
 
   if ( !-e $self->_db_file ) {
@@ -38,7 +46,11 @@ sub connect {
     $self->guess_format if not $self->format;
 
     if ( $self->format eq 'PAPERPILE' ) {
-      copy( $self->file, $self->_db_file ) or die "Could not create temporary db file ($!)";
+
+      copy( $self->file, $self->_db_file )
+        || ImportException->throw(
+        error => "Could not open " . $self->file . " (failed to create temporary database representation)." );
+
       my $model = $self->get_model();
       $model->dbh->do("UPDATE Publications SET citekey=''");
 
@@ -52,6 +64,11 @@ sub connect {
       );
 
       $bu->read;
+
+      if ( $bu->error ) {
+        ImportException->throw(
+          error => "Could not read " . $self->file . ". Error during parsing." );
+      }
 
       my $data = $bu->get_data;
 
@@ -75,7 +92,6 @@ sub connect {
       $model->insert_pubs( [ values %all ] );
 
     }
-
   }
 
   my $model = $self->get_model();
@@ -112,11 +128,11 @@ sub guess_format {
 
   my $self = shift;
 
+  open( FILE, "<" . $self->file )
+    || ImportException->throw( error => "Could not open file " . $self->file );
+
   # Text file
   if ( -T $self->file ) {
-
-    open( FILE, "<" . $self->file ) || die "Could not open file " . $self->file . " ($!)";
-
     # Read only first 100 lines. Should be enough to identify file-type
     my $line;
     my @lines = ();
@@ -150,25 +166,19 @@ sub guess_format {
 
   # File is binary
   else {
-    open( FILE, "<" . $self->file ) || die "Could not open file " . $self->file . " ($!)";
     my $sample;
-
-    read(FILE, $sample, 6);
-
-    if ($sample ne 'SQLite'){
-      die("Could not open file. Unknown format.");
+    read( FILE, $sample, 6 );
+    if ( $sample ne 'SQLite' ) {
+      ImportException->throw( error => "Could not open file (unknown format)");
     } else {
-
       # Todo check if right version of Paperpile
       $self->format('PAPERPILE');
       return 'PAPERPILE';
-
     }
-
-
   }
 
-  die("Could not open file. Unknown format.");
+  ImportException->throw( error => "Could not open file. (unknown format)" . $self->file );
+
 }
 
 

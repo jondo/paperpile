@@ -83,7 +83,7 @@ sub end : Private {
 
   if ( scalar @{ $c->error } ) {
     $c->response->status(500);
-    $c->stash->{errors}   = $c->error;
+    $c->stash->{error}   = join('<br>',@{$c->error});
     $c->forward('Paperpile::View::JSON');
 
     foreach my $error (@{$c->error}){

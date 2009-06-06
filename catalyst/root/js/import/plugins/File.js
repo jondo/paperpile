@@ -10,6 +10,18 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
 
         this.actions['IMPORT'].show();
         this.actions['NEW'].hide();
+        this.actions['EDIT'].hide();
+        this.actions['DELETE'].hide();
+
+        this.store.on('beforeload',
+                      function(){
+                          Paperpile.status.showBusy('Parsing file.');
+                      }, this);
+        
+        this.store.on('load',
+                      function(){
+                          Paperpile.status.clearMsg();
+                      }, this);
 
     },
 

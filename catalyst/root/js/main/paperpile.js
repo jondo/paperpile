@@ -240,20 +240,26 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         
     },
 
-    error: function(response){
-
+    uncaughtError: function(response){
         var data = Ext.util.JSON.decode(response.responseText);
+        // TODO add window with details
+        Paperpile.status.updateMsg(
+            { type:'error',
+              msg: 'An unexpected error has occured.',
+              hideOnClick: true,
+            }
+        );
+    },
 
-        Ext.Msg.show({
-            title:'Error',
-            msg: data.errors[0],
-            buttons: Ext.Msg.OK,
-            animEl: 'elId',
-            icon: Ext.MessageBox.ERROR
-        });
+    error: function(response){
+        var data = Ext.util.JSON.decode(response.responseText);
+        Paperpile.status.updateMsg(
+            { type:'error',
+              msg: data.error,
+              hideOnClick: true,
+            }
+        );
     }
-
-
 });
 
 Ext.onReady(function() {
