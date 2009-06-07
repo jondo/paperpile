@@ -8,7 +8,7 @@ use lib "../blib/lib/";
 use Biblio::CSL;
 
 my $usage = << "JUS";
-  usage: perl $0 -m mods.xml.file -c csl.file -i ID-string -t type -l int
+  usage: perl $0 -m mods.xml.file -c csl.file -i ID-string -t type -l int -v INT
   
   options: 
         -m      MODS input xml file.
@@ -25,6 +25,9 @@ my $usage = << "JUS";
 
         -f      Output format, e.g. txt, html, bibtex
                 [OPTIONAL, default: txt]
+                
+        -v      Verbose mode on(1) or off(0)
+                [OPTIONAL, default 0(=off)]
 
   purpose:
 	Read in a MODS xml file, parse it, and transform it 
@@ -34,38 +37,41 @@ my $usage = << "JUS";
 	at STDOUT
 JUS
 
-my ($opt_m, $opt_c, $opt_i, $opt_f) = ("", "", "", "txt");
+my ($opt_m, $opt_c, $opt_i, $opt_f, $opt_v) = ("", "", "", "txt", 0);
 
 GetOptions(
   "m=s" => \$opt_m,
   "c=s" => \$opt_c,
   "f=s" => \$opt_f,
-  "i=s" => \$opt_i
+  "i=s" => \$opt_i,
+  "v=i" => \$opt_v
 );
 
-if ( !$opt_m || !$opt_c ) {
+if ( !$opt_m || !$opt_c || $opt_v !~ /^[1|0]$/) {
   print STDERR $usage;
   exit;
 }
+
 
 my $o = Biblio::CSL->new(
   mods => $opt_m,
   csl => $opt_c,
   format => $opt_f,
-  IDs => $opt_i
+  IDs => $opt_i,
+  verbose => $opt_v
 );
 
 
 #$o->version();
-print "\n--- Beispiel: txt ---\n";
+#print "\n--- Beispiel: txt ---\n";
 
 $o->transform();
 
 if($o->getCitationsSize()>0) {
-  print "\nCitations (".$o->getCitationsSize()."):\n";
-  print $o->citationsToString();
+  #print "\nCitations (".$o->getCitationsSize()."):\n";
+  #print $o->citationsToString();
 }
 
-print "\nBibliography (".$o->getBiblioSize()."):\n";
+#print "\nBibliography (".$o->getBiblioSize()."):\n";
 print $o->biblioToString();
 #print Dumper $o->{biblio}
