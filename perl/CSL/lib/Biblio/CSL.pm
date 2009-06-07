@@ -177,6 +177,7 @@ has '_sortInfo' => (
     required => 0
 );
 
+
 # is called after construction
 # e.g. useful to validate attributes
 sub BUILD {
@@ -582,7 +583,10 @@ sub _transformEach() {
                 $self->{_result} =~ s/et al/et al./g if($self->{_result} =~ /et al[^\.]/);
                 # hardcoded rule: remove double spaces
                 $self->{_result} =~ s/  / /g if($self->{_result} =~ /  /);
-                
+                # hardcoded rule: solve space-comma-space
+                $self->{_result} =~ s/ , /, /g if($self->{_result} =~ / , /);
+                # hardcoded rule: if we start with number and ., a space must follow
+                $self->{_result} = $1." ".$2.$3 if($self->{_result} =~ /^(\d+\.)(\S)(.+)/);
                 
                 # the string is ready, add the current entry to the bibliography result-array
                 push @{$self->{biblio}}, $self->{_result};
@@ -613,6 +617,7 @@ sub _updateVariables {
     %{$self->_var} = (
         'title' => '',
         'container-title' => '',
+        'container-title_short' => '',        
         'collection-title' => '',
         'collection-number' => '',
         'original-title' => '',
@@ -665,7 +670,7 @@ sub _updateVariables {
     foreach my $k (keys %{$self->_var}) {
         switch($k) {
             ## the primary title for the cited item
-            case "title" {
+            case 'title' {
                 if(exists $mods->{titleInfo}->{title}) {
                     $self->_var->{'title'} = $mods->{titleInfo}->{title}->{CONTENT};
                 }
@@ -681,7 +686,46 @@ sub _updateVariables {
                     if(exists $mods->{relatedItem}->{titleInfo}) {
                         my $r = ref($mods->{relatedItem}->{titleInfo});
                         if($r eq "HASH") {
-                                $self->_setContainerTitle($mods, $mods->{relatedItem}->{titleInfo});                                
+                                if(exists $r->{type}) { # dont get special title variants
+                                }
+                                else {
+                                    $self->{_var}->{'container-title'} = $mods->{relatedItem}->{titleInfo}->{title}->{CONTENT};
+                                }
+                        }
+                        elsif($r eq "ARRAY") { # multiple titles
+                            # which should we keep?
+                            # we'll try to get the full name
+                            # MODS type variants: abbreviated, translated, alternative, uniform
+                            my @titles = @{$mods->{relatedItem}->{titleInfo}};
+                            foreach my $t (@titles) {
+                                if(exists $t->{type}) { # dont get special title variants
+                                }
+                                else { # try to get the full title
+                                    $self->{_var}->{'container-title'} = $t->{title}->{CONTENT};
+                                }
+                            }
+                            
+                            # just ensure that we have a conainer-title 
+                            if($self->_var->{'container-title'} eq '' && scalar(@titles)>0) {
+                                $self->{_var}->{'container-title'} = $titles[0]->{title}->{CONTENT};
+                            }
+                        }
+                        else {
+                            die "ERROR: Container-title is neither hash nor array?";
+                        }
+                    }
+                }
+            }
+            case 'container-title_short' {                
+                if(exists $mods->{relatedItem}) {
+                    if(exists $mods->{relatedItem}->{titleInfo}) {
+                        my $r = ref($mods->{relatedItem}->{titleInfo});
+                        if($r eq "HASH") {
+                                if(exists $r->{type}) {
+                                    if($r->{type} eq 'abbreviated') {
+                                        $self->{_var}->{'container-title_short'} = $mods->{relatedItem}->{titleInfo}->{title}->{CONTENT};
+                                    }
+                                }
                         }
                         elsif($r eq "ARRAY") { # multiple titles
                             # which should we keep?
@@ -690,20 +734,21 @@ sub _updateVariables {
                             my @titles = @{$mods->{relatedItem}->{titleInfo}};
                             foreach my $t (@titles) {
                                 if(exists $t->{type}) {
-                                    # do not keep special title variants
+                                    if($t->{type} eq 'abbreviated') {
+                                        $self->{_var}->{'container-title_short'} = $t->{title}->{CONTENT};
+                                    }
                                 }
-                                else { # try to get the full title
-                                    $self->_setContainerTitle($mods, $t);
+                                else { # don't get full title
                                 }
                             }
                             
                             # just ensure that we have a conainer-title 
-                            if($self->_var->{'container-title'} eq '' && scalar(@titles)>0) {
-                                $self->_setContainerTitle($mods, $titles[0]);
+                            if($self->_var->{'container-title_short'} eq '' && scalar(@titles)>0) {
+                                $self->{_var}->{'container-title_short'} = $titles[0]->{title}->{CONTENT};
                             }
                         }
                         else {
-                            die "ERROR: Container-title is neither hash nor array?";
+                            die "ERROR: Container-title_short is neither hash nor array?";
                         }
                     }
                 }
@@ -1009,39 +1054,6 @@ sub _updateVariables {
 
 }
 
-sub _setContainerTitle {
-    my ($self, $mods, $title) = @_; 
-    
-    #print Dumper $title;
-    
-    my $r = ref($title);
-    
-    if(exists $title->{title}) {
-        if(! $r) { # its just the string and that is the order to get the container-title.
-            #print Dumper $title;
-            $self->{_var}->{'container-title'} = $title->{title}->{CONTENT};
-        }            
-        elsif($r eq "HASH") {
-            # short title?
-            if(exists $title->{form}) {
-                switch($title->{form}) {
-                    case "short" {
-                        $self->_var->{'container-title'} = $mods->{relatedItem}->{titleInfo}->('type','eq','abbreviated')->{title}->{CONTENT};
-                    }
-                    case "long" {                                    
-                        $self->_var->{'container-title'} = $title->{title}->{CONTENT};
-                    }
-                    else {
-                        die "ERROR: Unknown container-title form '".($title->{form})."'";
-                    }
-                }
-            }
-            else {
-                $self->_var->{'container-title'} = $title->{title}->{CONTENT};
-            }
-        }
-    }
-}
 
 # add either prefix or suffix 
 sub _addFix {
@@ -1120,11 +1132,16 @@ sub _parseChildElements {
             }
             case 'sort' { # nothing todo
             }
-            # because of nested macros
-            case 'macro' {
-                $self->_parseMacro($mods, $ptr->{$o});
+            case 'form' {                
             }
-            # now all what is directly given by the CSL-standard
+            case 'font-weight' {
+            }
+            case 'font-style' {
+            }
+            # because of nested macros
+            case 'macro' { 
+                $self->_parseMacro($mods, $ptr->{$o});
+            }# now all what is directly given by the CSL-standard
             case 'names' {
                 $self->_parseNames($mods, $ptr->{$o});
             }
@@ -1146,8 +1163,8 @@ sub _parseChildElements {
                 $self->_parseGroup($mods, $ptr->{$o});
             }
             # additional non-top-level elements
-            case 'variable' {
-                $self->_parseVariable($mods, $ptr->{$o});
+            case 'variable' {       
+                $self->_parseVariable($mods, $ptr, $o);
             }
             case 'prefix' { # not here, we do it above (=front)
             }
@@ -1166,7 +1183,7 @@ sub _parseChildElements {
                 $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
             }
             else {
-               print "Warning ($from): '$o' not implemented, yet!\n" if($self->{verbose});
+               print STDERR "Warning ($from): '$o' not implemented, yet!\n" if($self->{verbose});
             }
         }
         
@@ -1175,16 +1192,16 @@ sub _parseChildElements {
         
     my $removedPrefix = 0;
     if($tmpStr eq $self->{_result}) {
-        #print "should remove prefix!\n";
+        print "should remove prefix!\n" if($self->{verbose});
         # remove potential prefix cause the _result string hasn't changed, we don't need the prefix if there is nothing new
-        if(ref($ptr) eq "HASH") {
-            if(exists $ptr->{prefix}) {
+        if(ref($ptr) eq "HASH") {        
+            if(exists $ptr->{prefix}) {  
                 print "removing prefix '".$ptr->{prefix}."'\n" if($self->{verbose});
                 my $substr = substr $self->{_result}, 0, length($self->{_result})-length($ptr->{prefix});
                 $self->{_result} = $substr;
-                $removedPrefix = 1;
             }
         }
+        $removedPrefix = 1;
     }
 
     # group delimiter
@@ -1349,17 +1366,7 @@ sub _parseNameAuthor {
                     my $family_name = $n->{namePart}('type', 'eq', 'family');
                     my @given_names = $n->{namePart}('type', 'eq', 'given');
                     #print Dumper @given_names;
-                                        
-                    my $and = "";
-                    if($name->{and} eq "text" ) {
-                        $and = " and ";
-                    }
-                    elsif($name->{and} eq "symbol" ) {
-                        $and = " & ";
-                    }
-                    
-                    #print "names and=$and";exit;
-                    
+
                     if(exists $name->{'name-as-sort-order'}) {
                         if($name->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
                             #print Dumper $n->{namePart}->[1]->pointer; exit;
@@ -1419,28 +1426,38 @@ sub _parseNameAuthor {
                         #        }
                         #}
                         #$complete_name .= $family_name;
-                    }                                    
+                    }
                     
                     if(exists $name->{'delimiter-precedes-last'}) {
                         if($name->{'delimiter-precedes-last'} eq 'always') {
-                            $complete_name .= $name->{delimiter} if($round>1);
-                            $complete_name .= $and if($round==2);
+                            if($round>1) {
+                                $complete_name .= $name->{delimiter} if(exists $name->{delimiter});
+                                
+                            }
                         }
                         elsif($name->{'delimiter-precedes-last'} eq 'never') {
-                            if($qtNames == 2 && $round>1) {
-                                $complete_name .= $and;
-                            }
-                            else {
-                                $complete_name .= $name->{delimiter} if($round>2);
-                                $complete_name .= $and if($round==2);
+                            if($round>2 && $qtNames < $et_al_min) {
+                                $complete_name .= $name->{delimiter} if(exists $name->{delimiter});
                             }
                         }
                         else { # attribute exists but the given phrase is not supported
-                            
                         }
                     }
-                    else {
-                        
+                    else {                        
+                    }
+                    
+                    # add the AND 
+                    my $and = "";
+                    if($name->{and} eq "text" ) {
+                        $and = " and ";
+                    }
+                    elsif($name->{and} eq "symbol" ) {
+                        $and = " & ";
+                    }
+                    
+                    if($round==2 && $qtNames < $et_al_min) {
+                        # $qtNames < $et_al_min means that we only add the AND if we do not have the ET-AL
+                        $complete_name .= $and;
                     }
                 }
                 
@@ -1453,6 +1470,11 @@ sub _parseNameAuthor {
             # add "et al." string
             if($qtNames >= $et_al_min) {
                 print "adding 'et al'\n" if($self->{verbose});
+                
+                # ensure that there is a space before the ET-ALL
+                if($self->{_result} !~ / $/) {
+                    $self->{_result} .= " ";
+                }
                 
                 $self->{_result} .= 'et al'; # TODO: 'et al' OR 'et al.'? (with or without dot?)
             }
@@ -1961,7 +1983,15 @@ sub isNoStopWord {
 
 # add the variable to the biblio string
 sub _parseVariable {
-    my ($self, $mods, $v) = @_;
+    my ($self, $mods, $ptr, $link) = @_;
+    
+    my $v = $ptr->{$link};
+    
+    # get putative options of the variable
+    if(exists $ptr->{'form'}) {
+        #print STDERR "Form:".Dumper $ptr->{'form'};
+        $v.='_short'; # we want the short version of the variable
+    }
     
     # do not print the issued variable, that is done within _parseDatePart 
     if($v ne "issued") {    

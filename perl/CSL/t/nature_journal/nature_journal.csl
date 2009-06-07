@@ -2,7 +2,7 @@
 <?oxygen RNGSchema="http://xbiblio.svn.sourceforge.net/viewvc/*checkout*/xbiblio/csl/schema/trunk/csl.rnc" type="compact"?>
 <style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" xml:lang="en">
     <info>
-        <title>Nature Journal (dev)</title>
+        <title>Nature Journal</title>
         <id>http://www.zotero.org/styles/nature</id>
         <link href="http://www.zotero.org/styles/nature"/>
         <author>
@@ -12,7 +12,7 @@
         <category term="biology"/>
         <category term="generic-base"/>
         <category term="numeric"/>
-        <updated>2009-04-21T11:21:58+00:00</updated>
+        <updated>2008-04-01T17:46:55+00:00</updated>
     </info>
     <macro name="title">
         <choose>
@@ -69,12 +69,12 @@
 		</layout>
 	</citation>
     <bibliography>
-        <option name="et-al-min" value="6"/>
+        <option name="et-al-min" value="4"/>
         <option name="et-al-use-first" value="1"/>
         <option name="second-field-align" value="true"/>
         <option name="entry-spacing" value="0"/>
         <layout>
-            <text variable="citation-number" suffix=". "/>
+            <text variable="citation-number" suffix="."/>
             <text macro="author"/>
             <text macro="title" prefix=" " suffix=". "/>
             <text variable="container-title" font-style="italic" suffix=" " form="short"/>
