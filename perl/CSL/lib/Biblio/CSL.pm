@@ -63,6 +63,14 @@ has 'IDs' => (
   required => 0
 );
 
+# verbose mode on (1) or off (0)
+has 'verbose' => (
+  is        => 'rw',
+  isa       => 'Int',
+  default   => 0,
+  required  => 0
+);
+
 # sorted array of strings, 
 # after transformation it contains the list of citations
 has 'citations' => (
@@ -375,7 +383,7 @@ sub transform {
         $self->_transformEach($self->_m->{mods}); # TODO: only 1 param: self
     }
     
-    #print Dumper $self->{_sort}; 
+    print Dumper $self->{_sort} if($self->{verbose});
     @{$self->{biblio}} = $self->_sortBiblio if(scalar(keys %{$self->{_sort}})>0);
 }
 
@@ -599,7 +607,7 @@ sub _transformEach() {
 sub _updateVariables {
     my ($self, $mods) = @_;
     
-    #print "_updateVariables\n";
+    print "_updateVariables\n" if($self->{verbose});
     
     %{$self->{_var}} = (); 
     %{$self->_var} = (
@@ -671,7 +679,6 @@ sub _updateVariables {
             case 'container-title' {
                 if(exists $mods->{relatedItem}) {
                     if(exists $mods->{relatedItem}->{titleInfo}) {
-                        #print Dumper $mods->{relatedItem}->{titleInfo};
                         my $r = ref($mods->{relatedItem}->{titleInfo});
                         if($r eq "HASH") {
                                 $self->_setContainerTitle($mods, $mods->{relatedItem}->{titleInfo});                                
@@ -680,10 +687,8 @@ sub _updateVariables {
                             # which should we keep?
                             # we'll try to get the full name
                             # MODS type variants: abbreviated, translated, alternative, uniform
-                            #print Dumper $mods->{relatedItem}->{titleInfo};
                             my @titles = @{$mods->{relatedItem}->{titleInfo}};
                             foreach my $t (@titles) {
-                                #print STDERR Dumper $t;
                                 if(exists $t->{type}) {
                                     # do not keep special title variants
                                 }
@@ -1010,7 +1015,6 @@ sub _setContainerTitle {
     #print Dumper $title;
     
     my $r = ref($title);
-    #print "innen r=$r\n";
     
     if(exists $title->{title}) {
         if(! $r) { # its just the string and that is the order to get the container-title.
@@ -1046,7 +1050,7 @@ sub _addFix {
     if(ref($ptr) eq "HASH") {
         if($what eq "prefix") {
             if(exists $ptr->{prefix}) {
-                #print "Adding prefix '$ptr->{prefix}'\n";
+                print "Adding prefix '$ptr->{prefix}'\n" if($self->{verbose});
                 #print Dumper $ptr;
                 $self->{_result} .= $ptr->{prefix}; 
                 #$self->_checkIntegrityOfFix($ptr->{prefix});
@@ -1054,7 +1058,7 @@ sub _addFix {
         }
         elsif($what eq "suffix") {     
             if(exists $ptr->{suffix}) {
-                #print "Adding suffix '$ptr->{suffix}'\n";
+                print "Adding suffix '$ptr->{suffix}'\n" if($self->{verbose});
                 #print Dumper $ptr;
                 $self->{_result} .= $ptr->{suffix};
                 #$self->_checkIntegrityOfFix($ptr->{suffix});
@@ -1070,6 +1074,8 @@ sub _addFix {
 # parses relevant major CSL elements while generating the bibliography
 sub _parseChildElements {
     my ($self, $mods, $ptr, $from) = @_;
+    
+    print "_parseChildElements\n" if($self->{verbose});
     
     # prefix before the tmp copy!
     $self->_addFix($ptr, "prefix");
@@ -1100,7 +1106,7 @@ sub _parseChildElements {
     my $goOn = 1;  # do we go on?
     
     foreach my $o (@order) {
-        #print ">$o<\n";
+        print ">$o<\n" if($self->{verbose});
         switch($o) {
             ###################################################
             # cause of speed and to avoid printing the warn-msg            
@@ -1160,42 +1166,36 @@ sub _parseChildElements {
                 $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
             }
             else {
-               #print "Warning ($from): '$o' not implemented, yet!\n";
+               print "Warning ($from): '$o' not implemented, yet!\n" if($self->{verbose});
             }
         }
         
-        #print "### _parseChildElements($o): _result string after parsing $o: '$self->{_result}'\n";
+        print "### _parseChildElements($o): _result string after parsing $o: '$self->{_result}'\n" if($self->{verbose});
     }
         
     my $removedPrefix = 0;
     if($tmpStr eq $self->{_result}) {
         #print "should remove prefix!\n";
-        #print Dumper $ptr;
         # remove potential prefix cause the _result string hasn't changed, we don't need the prefix if there is nothing new
         if(ref($ptr) eq "HASH") {
             if(exists $ptr->{prefix}) {
-                #print STDERR "vor : '$self->{_result}'\n";
-                #print "removing prefix '".$ptr->{prefix}."'\n";
+                print "removing prefix '".$ptr->{prefix}."'\n" if($self->{verbose});
                 my $substr = substr $self->{_result}, 0, length($self->{_result})-length($ptr->{prefix});
                 $self->{_result} = $substr;
                 $removedPrefix = 1;
-                #print STDERR "nach: '$self->{_result}'\n";
-                #if($self->{_result} =~ /\Q$p\E$/) {
-                #    $self->{_result} =~ s/$p//g;
-                #}
             }
         }
     }
-    
+
     # group delimiter
     if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '') {
         if($tmpStr ne $self->{_result} && $self->{_result} !~ /$self->{_group}->{'delimiter'}$/) {
             #print "'$tmpStr' vs '".($self->{_result})."'\n"; 
-            #print "adding delimiter ($from)'".$self->{_group}->{'delimiter'}."'\n";
+            print "adding delimiter ($from)'".$self->{_group}->{'delimiter'}."'\n" if($self->{verbose});
             $self->{_result} .= $self->{_group}->{'delimiter'};
         }
         else {
-            #print "removing delimiter (_parseChildElement)'".$self->{_group}->{'delimiter'}."'\n";
+            #print "removing delimiter (_parseChildElement)'".$self->{_group}->{'delimiter'}."'\n" if($self->{verbose});
             #$self->{_result} = substr $self->{_result}, 0, length($self->{_result})-length($self->{_group}->{'delimiter'});
         }
     }
@@ -1211,7 +1211,7 @@ sub _parseMacro {
     
     my $macro = $self->_c->{style}->{macro}('name','eq',$macro_name)->pointer;
     
-    #print "_parseMacro: $macro_name\n";
+    print "_parseMacro: $macro_name\n" if($self->{verbose});
     #print Dumper $macro;
     
     if($self->{_sortInfo}->{_withinSorting}==1) {
@@ -1221,20 +1221,6 @@ sub _parseMacro {
     }
     
     $self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
-    
-    
-    #my $tmpBiblio = $self->{_result};
-    #$self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
-    #foreach my $k (keys %{$self->{_sort}}) {
-    #    if(exists $self->{_sort}->{$k}->{macro}) {
-    #        if(exists $self->{_sort}->{$k}->{macro}->{$macro_name}) {
-    #            #print STDERR "$k -> macro -> $macro_name \n";
-    #            #my $substr = substr $self->{_result}, length($tmpBiblio);
-    #            #$self->{_sort}->{$k}->{macro}->{$macro_name}->{$self->{_biblioNumber}}=$substr;
-    #        }
-    #    }
-    #}
-    #print STDERR Dumper $self->{_sort}; 
 }
 
 
@@ -1247,7 +1233,7 @@ sub _parseLabel {
 sub _parseNames {
     my ($self, $mods, $namesPtr) = @_;
     
-    #print "_parseNames\n";
+    print "_parseNames\n" if($self->{verbose});
     #print Dumper $namesPtr;
     
     if(exists $namesPtr->{variable}) {
@@ -1311,7 +1297,7 @@ sub _parseNames {
 sub _parseNameAuthor {
     my($self, $mods, $name) = @_;
     
-    #print "_parseNameAuthor\n";
+    print "_parseNameAuthor\n" if($self->{verbose});
     
     if($self->{_sortInfo}->{_withinSorting}==1) {
         if($mods->{name}) {
@@ -1466,9 +1452,9 @@ sub _parseNameAuthor {
             
             # add "et al." string
             if($qtNames >= $et_al_min) {
-                #print "adding et al!\n";
+                print "adding 'et al'\n" if($self->{verbose});
                 
-                $self->{_result} .= "et al"; # TODO: 'et al' OR 'et al.'? (with or without dot?)
+                $self->{_result} .= 'et al'; # TODO: 'et al' OR 'et al.'? (with or without dot?)
             }
         }
     }
@@ -1477,7 +1463,7 @@ sub _parseNameAuthor {
 sub _parseDatePart {
     my ($self, $mods, $dp) = @_;
     
-    #print "_parseDatePart\n";
+    print "_parseDatePart\n" if($self->{verbose});
     #print Dumper $dp;
     
     my @d = split /\//, $self->_var->{'issued'};
@@ -1549,7 +1535,7 @@ sub _parseDatePart {
 sub _parseChoose {
     my ($self, $mods, $choosePtr) = @_;
     
-    #print "_parseChoose\n";
+    print "_parseChoose\n" if($self->{verbose});
     #print Dumper $choosePtr;
     
     my @order;
@@ -1629,9 +1615,8 @@ sub _parseIf_elseIf_else {
 sub _checkCondition {
     my ($self, $mods, $condiPtr) = @_;
     
+    print "_checkCondition\n" if($self->{verbose});
     #print Dumper $condiPtr;
-
-    #print " - check condition - \n";
 
     my @order;
     if(ref($condiPtr) eq "HASH") {
@@ -1692,7 +1677,7 @@ sub _checkCondition {
     }
     
     switch($match) {
-        #print "truth=$truth qtSubconditions=$qtSubconditions match='$match'\n";
+        print "truth=$truth qtSubconditions=$qtSubconditions match='$match'\n" if($self->{verbose});
         case "" {
             
         }
@@ -1730,7 +1715,7 @@ sub _checkCondition {
 sub _howToProceedAfterCondition {
     my ($self, $condiPtr) = @_;
 
-    #print "_howToProceedAfterCondition\n";
+    print "_howToProceedAfterCondition\n" if($self->{verbose});
 
     my @order;
     if(ref($condiPtr) eq "HASH") {
@@ -1777,7 +1762,7 @@ sub _howToProceedAfterCondition {
             case 'delimiter' {
             }
             else {
-                #print "proceed with $o\n";
+                print "proceed with $o\n" if($self->{verbose});
                 return $o;
             }
         }
@@ -1792,7 +1777,7 @@ sub _howToProceedAfterCondition {
 sub _checkType {
     my ($self, $mods, $type) = @_;
 
-    #print "_checkType: $type\n";
+    print "_checkType: $type\n" if($self->{verbose});
 
     my %alias=( 
         'academic journal' => 'article-journal',
@@ -1824,19 +1809,19 @@ sub _checkType {
 sub _checkVariable {
     my ($self, $mods, $v) = @_;
     
-    #print "_checkVariable: $v\n";
+    print "_checkVariable: $v\n" if($self->{verbose});
     
     my @s = split / /, $v;
     foreach my $entry (@s) {
         if(exists ${$self->{_var}}{$entry}) {
             if(${$self->{_var}}{$entry} ne '') {
-                #print "variable exists\n";
+                print "variable exists\n" if($self->{verbose});
                 return 1;
             }
         }
     }
     
-    #print "variable is unknown\n";
+    print "variable is unknown\n" if($self->{verbose});
     return 0;
 }
 
@@ -1896,7 +1881,7 @@ sub _checkLocator {
 sub _parseGroup {
     my ($self, $mods, $g) = @_;
 
-    #print "_parseGroup\n";
+    print "_parseGroup\n" if($self->{verbose});
     $self->{_group}->{'inGroup'} = 1;
     
     my @order;
@@ -1932,9 +1917,6 @@ sub _parseGroup {
     # if the third(last) group element does not contribute to the _result string
     # then we also do not need the delimiter at the second element.
     if($self->{_group}->{'delimiter'} ne '' && $self->{_result}=~/$self->{_group}->{'delimiter'}$/ ) {
-        #$self->{_result}=~s/$self->{_group}->{'delimiter'}$//g;
-        #print STDERR "JA group: ", $self->{_result}, "\n";
-        #print "removing delimiter '".$self->{_group}->{'delimiter'}."'\n";
         $self->{_result} = substr $self->{_result}, 0, length($self->{_result})-length($self->{_group}->{'delimiter'});
         #print STDERR "JA group (after removing): ", $self->{_result}, "\n";
     }
@@ -1983,7 +1965,7 @@ sub _parseVariable {
     
     # do not print the issued variable, that is done within _parseDatePart 
     if($v ne "issued") {    
-        #print "_parseVariable: '$v'\n";
+        print "_parseVariable: '$v'\n" if($self->{verbose});
         if(exists $self->_var->{$v}) {
             #print STDERR Dumper $self->_var;
             #print STDERR Dumper $self->_var->{$v};
