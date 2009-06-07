@@ -14,7 +14,16 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                    items:[{xtype:'panel',
                            layout:'border',
                            region:'center',
-                           tbar: [{xtype:'button', text:"Test"}],
+                           tbar: [
+                               {xtype:'tbfill'},
+                               {xtype:'button', 
+                                text:"Dashboard",
+                                cls: 'x-btn-text-icon dashboard',
+                                handler: function(){
+                                    Paperpile.main.tabs.newScreenTab('Dashboard');
+                                },
+                               }
+                           ],
                            items: [ { border: 0,
                               xtype:'tree',
                               rootVisible : false,
@@ -160,6 +169,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         panel.show();
         
     },
+
+
+
 
     pdfExtract: function(){
 

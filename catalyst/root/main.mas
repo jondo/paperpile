@@ -8,6 +8,7 @@
   <script type="text/javascript" charset="utf-8" src="/ext/adapter/ext/ext-base.js"></script>
   <script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
   <script type="text/javascript" charset="utf-8" src="/ext/examples/core/Spotlight.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/flashchart/swfobject.js"></script>
   
   <%perl> 
   my @js = qw{
@@ -16,6 +17,7 @@
   main/paperpile.js 
   main/tabs.js 
   main/tree.js
+  main/dashboard.js
                
   import/grid.js 
   import/search-field.js 
@@ -30,7 +32,8 @@
   
   export/export-window.js
 
-  settings/patterns.js
+  screens/patterns.js
+  screens/statistics.js
                
   pub/abstract.js 
   pub/notes.js 
@@ -45,6 +48,8 @@
   pdfextract/view.js
   pdfextract/grid.js
   pdfextract/control.js
+
+
   
   };
   

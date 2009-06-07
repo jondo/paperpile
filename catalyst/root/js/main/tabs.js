@@ -16,16 +16,6 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
     },
 
-    newFileTab:function(file){
-        this.add(new Paperpile.PluginGridFile({
-            title: 'test2.ris',
-            iconCls: 'tabs',
-            source_file: file,
-            source_type: 'FILE',
-            closable:true
-        })).show();
-    },
-
     newDBtab:function(query){
         
         var newGrid=new Paperpile.PluginGridDB({
@@ -58,34 +48,11 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         
     },
 
-
-    newPubMedTab:function(query){
-        this.add(new Paperpile.PluginGridPubMed({
-            source_query: query,
-            iconCls: 'tabs',
-        })).show();
-    },
-  
-
-    showDBQueryResults: function(mode,query,base_query,tabTitle,iconCls){
-
-        var newGrid=new Paperpile.PluginGridDB({
-            iconCls: iconCls,
-            plugin_name: 'DB',
-            plugin_query: base_query,
-            plugin_mode: mode,
-            plugin_base_query: base_query,
-        });
-
-        var newView=this.add(new Paperpile.PubView({title:tabTitle, 
-                                                    grid:newGrid,
-                                                    closable:true,
-                                                    iconCls: iconCls
-                                                   }));
-        newView.show();
+    newScreenTab:function(name){
+        var panel=main.tabs.add(new Paperpile[name]());
+        panel.show();
     }
-
-
+    
 }                                 
  
 );

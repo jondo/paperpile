@@ -11,4 +11,18 @@ sub patterns : Local {
   $c->forward('Paperpile::View::Mason');
 }
 
+
+sub dashboard : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = '/screens/dashboard.mas';
+  $c->forward('Paperpile::View::Mason');
+}
+
+sub flash : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = 'flash.mas';
+  $c->forward('Paperpile::View::Mason');
+}
+
+
 1;

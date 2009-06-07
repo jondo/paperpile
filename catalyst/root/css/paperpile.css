@@ -47,6 +47,15 @@
     margin: 8 0;
 }
 
+h1 {
+    margin: 8;
+    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-size: 32px;
+    font-weight: normal;
+    letter-spacing: -1px;
+    color: #5E5E5E;
+}
+
 .pp-box h2 {
     margin: 8 8 10 8;
     font-size: 18px;
@@ -246,6 +255,10 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/arrow_left.png');
 }
 
+.dashboard .x-btn-text {
+    background-image: url('/images/icons/cog.png');
+}
+
 .collapse {
     background-image: url('/images/icons/collapse.png');
 }
@@ -292,6 +305,23 @@ a:hover.pp-textlink {
 .pp-icon-tools{
     background-image: url('/images/icons/wrench.png')!important;
 }
+
+.pp-icon-import-pdf{
+    background-image: url('/images/icons/pdf_white.png')!important;
+}
+
+.pp-icon-import-file{
+    background-image: url('/images/icons/page.png')!important;
+}
+
+.pp-icon-dashboard{
+    background-image: url('/images/icons/cog.png')!important;
+}
+
+.pp-icon-statistics{
+    background-image: url('/images/icons/chart_bar.png')!important;
+}
+
 
 .pp-icon-tick{
     padding: 2 2 2 22;

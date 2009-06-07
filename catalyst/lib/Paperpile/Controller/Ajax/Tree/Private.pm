@@ -147,8 +147,8 @@ sub get_default_tree : Private {
 
   ##### / Settings
 
-  my $admin = Tree::Simple->new( {
-      text    => 'Debug',
+  my $import = Tree::Simple->new( {
+      text    => 'Import Data',
       cls     => 'pp-tree-heading',
       iconCls => 'pp-icon-empty',
       hidden  => 0,
@@ -156,41 +156,22 @@ sub get_default_tree : Private {
     $root
   );
 
-  $admin->addChild(
-    Tree::Simple->new( {
-        text    => 'Reset Database',
-        type    => 'RESET_DB',
-        iconCls => 'pp-icon-tools',
-        hidden  => 0,
-      }
-    )
-  );
 
-  $admin->addChild(
-    Tree::Simple->new( {
-        text    => 'Settings',
-        type    => 'SETTINGS',
-        iconCls => 'pp-icon-tools',
-        hidden  => 0,
-      }
-    )
-  );
-
-  $admin->addChild(
+  $import->addChild(
     Tree::Simple->new( {
         text    => 'Import PDFs',
         type    => 'PDFEXTRACT',
-        iconCls => 'pp-icon-tools',
+        iconCls => 'pp-icon-import-pdf',
         hidden  => 0,
       }
     )
   );
 
-  $admin->addChild(
+  $import->addChild(
     Tree::Simple->new( {
         text    => 'Import File',
         type    => 'FILE_IMPORT',
-        iconCls => 'pp-icon-tools',
+        iconCls => 'pp-icon-import-file',
         hidden  => 0,
       }
     )
