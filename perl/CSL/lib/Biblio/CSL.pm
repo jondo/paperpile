@@ -103,8 +103,8 @@ has '_biblioSize' => (
   required  => 0
 );
 
-# string that holds the current entry of the bibliography
-has '_biblio_str' => (
+# string that holds the current rusult of either parsing the citations or a entry of the bibliography
+has '_result' => (
   is        => 'rw',
   isa       => 'Str',
   default   => "",
@@ -348,17 +348,20 @@ sub biblioToString {
     return $str;
 }
 
-# do the transformation of the mods file given the csl style file
+# do the transformation of the mods file given the CSL-style file
+# parses citations and bibliography
 sub transform {
     my $self = shift;
     
     # handle citations
     if($self->getCitationsSize>0) {
-        if($self->_c->{style}->{citation} ) {
-            $self->_parseCitations();
-        }
-        else {
-            die "ERROR: CSL-element 'citation' not available?";
+        if(exists $self->_c->{style}) {
+            if(exists $self->_c->{style}->{citation}) {
+                $self->_parseCitations($self->_c->{style}->{citation}->pointer);
+            }
+            else {
+                die "ERROR: CSL-element 'citation' not available?";
+            }
         }
     }
     
@@ -430,7 +433,7 @@ sub _sortBiblio {
         foreach my $k (keys %{$self->{_sort}->{$sort_order}}) {
             foreach my $kk (keys %{$self->{_sort}->{$sort_order}->{$k}}) {
                 foreach my $kkk (keys %{$self->{_sort}->{$sort_order}->{$k}->{$kk}}) {
-                    print "sort_order: ", $sort_order, " ", $k, " ", $kk, " ", $kkk, " = ", $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk},"\n";
+                    #print "sort_order: ", $sort_order, " ", $k, " ", $kk, " ", $kkk, " = ", $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk},"\n";
                     if(exists $s{$kkk}) {
                         $s{$kkk} .= $self->{_sort}->{$sort_order}->{$k}->{$kk}->{$kkk}." ";
                     }
@@ -452,7 +455,6 @@ sub _sortBiblio {
 }
 
 
-
 # case $self->_c->{style}->{citation}
 # TODO: needs to be revised, does not work with chicago-author-date.csl
 sub _parseCitations {
@@ -469,7 +471,17 @@ sub _parseCitations {
     # should we display numbers (e.g. 1, 2, 3, ...) or string-labels (e.g. Rose:09)?
     my $numbers = 0;
     
-    if(exists $ptr->{layout}->{text}) {
+    #print Dumper $ptr;
+    
+    if(exists $ptr->{option}) {
+        if(my $o = $self->_c->{style}->{citation}->{option}('name', 'eq', 'collapse')) {
+             $collapse = 1;
+            if($o->{value} eq 'citation-number') {
+                $numbers = 1;
+            }
+        }
+    }
+    elsif(exists $ptr->{layout}->{text}) {
         if(exists $ptr->{layout}->{text}->{variable}) { # a first way to specify citation-number
             switch($ptr->{layout}->{text}->{variable}) {
                 case "citation-number" {
@@ -480,32 +492,8 @@ sub _parseCitations {
                 }
             }
         }
-    }
-    elsif(exists $ptr->{option}) { # second posibility of specifying citation-number
-        if(exists $ptr->{option}->{value}) {
-            switch($ptr->{option}->{value}) {
-                case "citation-number" {
-                    $numbers = 1;
-                }
-                else {
-                    die "ERROR: The CSL-attribute style->citation->option->value eq '".($ptr->{option}->{value})."' is not implemented, yet.";
-                }
-            }
-        }
-    }
-    
-    # check for collapse mode
-    if(exists $ptr->{option}->{name}) {
-        switch($ptr->{option}->{name}) {
-            case "collapse" {
-                $collapse = 1;
-            }
-            else {
-                die "ERROR: The CSL-attribute style->citation->option->name eq '".($ptr->{option}->{name})."' is not implemented, yet.";
-            }
-        }
-    }
-        
+    }    
+            
     my @list = split /\s+/, $self->get_IDs();
     my $citation_i = 0;
     foreach my $l (@list) {
@@ -547,18 +535,16 @@ sub _parseCitations {
 
 
 # parse a single mods entry
+# here we only handle the bibliography, the citations have already been generated.
 sub _transformEach() {
     my ($self, $mods) = @_;
     
     if(exists $self->_c->{style}) {
-        $self->{_biblioNumber}++; # we are parsing the next entry
-        
-        # here we only handle the bibliography, the citations have already been generated.
         if(exists $self->_c->{style}->{bibliography} ) {            
-            if(exists $self->_c->{style}->{bibliography}->{layout} ) {  
-                # lets go
+            if(exists $self->_c->{style}->{bibliography}->{layout} ) {
+                $self->{_biblioNumber}++; # we are parsing the next entry
                 $self->_updateVariables($mods->pointer);
-                
+
                 if(exists $self->_c->{style}->{bibliography}->{sort}) {
                     $self->_sortAddKeys($mods); # initialize the sorting hash.
                     #print STDERR Dumper $self->{_sort};
@@ -571,7 +557,7 @@ sub _transformEach() {
                 if($opt = $self->_c->{style}->{bibliography}->{option}("name", "eq", "line-spacing")->pointer) {
                     if(exists $opt->{value}) {
                         for(my $i=0; $i < $opt->{value}; $i++) {
-                            $self->{_biblio_str} .= "\n"; # add newlines
+                            $self->{_result} .= "\n"; # add newlines
                         }
                     }
                 }
@@ -579,20 +565,20 @@ sub _transformEach() {
                 if($opt = $self->_c->{style}->{bibliography}->{option}("name", "eq", "entry-spacing")->pointer ) {
                     if(exists $opt->{value}) {
                         for(my $i=0; $i < $opt->{value}; $i++) {
-                            $self->{_biblio_str} .= " "; # add spaces 
+                            $self->{_result} .= " "; # add spaces 
                         }
                     }
                 }
                 
                 # hardcoded rule: if we have "et al" and it doesn't end with a ., we add it.
-                $self->{_biblio_str} =~ s/et al/et al./g if($self->{_biblio_str} =~ /et al[^\.]/);
+                $self->{_result} =~ s/et al/et al./g if($self->{_result} =~ /et al[^\.]/);
                 # hardcoded rule: remove double spaces
-                $self->{_biblio_str} =~ s/  / /g if($self->{_biblio_str} =~ /  /);
+                $self->{_result} =~ s/  / /g if($self->{_result} =~ /  /);
                 
                 
                 # the string is ready, add the current entry to the bibliography result-array
-                push @{$self->{biblio}}, $self->{_biblio_str};
-                $self->{_biblio_str}="";
+                push @{$self->{biblio}}, $self->{_result};
+                $self->{_result}="";
                 $self->{_sortInfo} = ();
                 $self->{_sortInfo}->{_withinSorting} = 0;
             }
@@ -613,7 +599,7 @@ sub _transformEach() {
 sub _updateVariables {
     my ($self, $mods) = @_;
     
-    print "_updateVariables\n";
+    #print "_updateVariables\n";
     
     %{$self->{_var}} = (); 
     %{$self->_var} = (
@@ -1062,7 +1048,7 @@ sub _addFix {
             if(exists $ptr->{prefix}) {
                 #print "Adding prefix '$ptr->{prefix}'\n";
                 #print Dumper $ptr;
-                $self->{_biblio_str} .= $ptr->{prefix}; 
+                $self->{_result} .= $ptr->{prefix}; 
                 #$self->_checkIntegrityOfFix($ptr->{prefix});
             }
         }
@@ -1070,7 +1056,7 @@ sub _addFix {
             if(exists $ptr->{suffix}) {
                 #print "Adding suffix '$ptr->{suffix}'\n";
                 #print Dumper $ptr;
-                $self->{_biblio_str} .= $ptr->{suffix};
+                $self->{_result} .= $ptr->{suffix};
                 #$self->_checkIntegrityOfFix($ptr->{suffix});
             }
         }
@@ -1089,7 +1075,7 @@ sub _parseChildElements {
     $self->_addFix($ptr, "prefix");
     
     # copy to be able to recognise changes;
-    my $tmpStr = $self->{_biblio_str};
+    my $tmpStr = $self->{_result};
     
     my @order;
     if(ref($ptr) eq "HASH") {
@@ -1114,7 +1100,7 @@ sub _parseChildElements {
     my $goOn = 1;  # do we go on?
     
     foreach my $o (@order) {
-        print ">$o<\n";
+        #print ">$o<\n";
         switch($o) {
             ###################################################
             # cause of speed and to avoid printing the warn-msg            
@@ -1174,28 +1160,28 @@ sub _parseChildElements {
                 $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
             }
             else {
-               print "Warning ($from): '$o' not implemented, yet!\n";
+               #print "Warning ($from): '$o' not implemented, yet!\n";
             }
         }
         
-        print "### _parseChildElements($o): _biblio_string after parsing $o: '$self->{_biblio_str}'\n";
+        #print "### _parseChildElements($o): _result string after parsing $o: '$self->{_result}'\n";
     }
         
     my $removedPrefix = 0;
-    if($tmpStr eq $self->{_biblio_str}) {
+    if($tmpStr eq $self->{_result}) {
         #print "should remove prefix!\n";
         #print Dumper $ptr;
-        # remove potential prefix cause the biblio_string hasn't changed, we don't need the prefix if there is nothing new
+        # remove potential prefix cause the _result string hasn't changed, we don't need the prefix if there is nothing new
         if(ref($ptr) eq "HASH") {
             if(exists $ptr->{prefix}) {
-                #print STDERR "vor : '$self->{_biblio_str}'\n";
+                #print STDERR "vor : '$self->{_result}'\n";
                 #print "removing prefix '".$ptr->{prefix}."'\n";
-                my $substr = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($ptr->{prefix});
-                $self->{_biblio_str} = $substr;
+                my $substr = substr $self->{_result}, 0, length($self->{_result})-length($ptr->{prefix});
+                $self->{_result} = $substr;
                 $removedPrefix = 1;
-                #print STDERR "nach: '$self->{_biblio_str}'\n";
-                #if($self->{_biblio_str} =~ /\Q$p\E$/) {
-                #    $self->{_biblio_str} =~ s/$p//g;
+                #print STDERR "nach: '$self->{_result}'\n";
+                #if($self->{_result} =~ /\Q$p\E$/) {
+                #    $self->{_result} =~ s/$p//g;
                 #}
             }
         }
@@ -1203,14 +1189,14 @@ sub _parseChildElements {
     
     # group delimiter
     if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '') {
-        if($tmpStr ne $self->{_biblio_str} && $self->{_biblio_str} !~ /$self->{_group}->{'delimiter'}$/) {
-            #print "'$tmpStr' vs '".($self->{_biblio_str})."'\n"; 
+        if($tmpStr ne $self->{_result} && $self->{_result} !~ /$self->{_group}->{'delimiter'}$/) {
+            #print "'$tmpStr' vs '".($self->{_result})."'\n"; 
             #print "adding delimiter ($from)'".$self->{_group}->{'delimiter'}."'\n";
-            $self->{_biblio_str} .= $self->{_group}->{'delimiter'};
+            $self->{_result} .= $self->{_group}->{'delimiter'};
         }
         else {
             #print "removing delimiter (_parseChildElement)'".$self->{_group}->{'delimiter'}."'\n";
-            #$self->{_biblio_str} = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
+            #$self->{_result} = substr $self->{_result}, 0, length($self->{_result})-length($self->{_group}->{'delimiter'});
         }
     }
     
@@ -1225,25 +1211,25 @@ sub _parseMacro {
     
     my $macro = $self->_c->{style}->{macro}('name','eq',$macro_name)->pointer;
     
-    print "_parseMacro: $macro_name\n";
+    #print "_parseMacro: $macro_name\n";
     #print Dumper $macro;
     
     if($self->{_sortInfo}->{_withinSorting}==1) {
         $self->{_sortInfo}->{_curKeyElement} = 'macro';
         $self->{_sortInfo}->{_curKeyName}    = $macro_name;
-        print STDERR Dumper $self->{_sortInfo};
+        #print STDERR Dumper $self->{_sortInfo};
     }
     
     $self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
     
     
-    #my $tmpBiblio = $self->{_biblio_str};
+    #my $tmpBiblio = $self->{_result};
     #$self->_parseChildElements($mods, $macro, "_parseMacro($macro_name)");
     #foreach my $k (keys %{$self->{_sort}}) {
     #    if(exists $self->{_sort}->{$k}->{macro}) {
     #        if(exists $self->{_sort}->{$k}->{macro}->{$macro_name}) {
     #            #print STDERR "$k -> macro -> $macro_name \n";
-    #            #my $substr = substr $self->{_biblio_str}, length($tmpBiblio);
+    #            #my $substr = substr $self->{_result}, length($tmpBiblio);
     #            #$self->{_sort}->{$k}->{macro}->{$macro_name}->{$self->{_biblioNumber}}=$substr;
     #        }
     #    }
@@ -1261,7 +1247,7 @@ sub _parseLabel {
 sub _parseNames {
     my ($self, $mods, $namesPtr) = @_;
     
-    print "_parseNames\n";
+    #print "_parseNames\n";
     #print Dumper $namesPtr;
     
     if(exists $namesPtr->{variable}) {
@@ -1325,10 +1311,9 @@ sub _parseNames {
 sub _parseNameAuthor {
     my($self, $mods, $name) = @_;
     
-    print "_parseNameAuthor\n";
+    #print "_parseNameAuthor\n";
     
     if($self->{_sortInfo}->{_withinSorting}==1) {
-        print STDERR "Drin!\n";
         if($mods->{name}) {
             my $string = "";
             foreach my $n ( $mods->{name}->('@') ) {
@@ -1476,14 +1461,14 @@ sub _parseNameAuthor {
                 $round--;
                 
                 #print $complete_name;
-                $self->{_biblio_str} .= $complete_name; # add the name to the biblio result-string
+                $self->{_result} .= $complete_name; # add the name to the biblio result-string
             }
             
             # add "et al." string
             if($qtNames >= $et_al_min) {
                 #print "adding et al!\n";
                 
-                $self->{_biblio_str} .= "et al"; # TODO: 'et al' OR 'et al.'? (with or without dot?)
+                $self->{_result} .= "et al"; # TODO: 'et al' OR 'et al.'? (with or without dot?)
             }
         }
     }
@@ -1492,7 +1477,7 @@ sub _parseNameAuthor {
 sub _parseDatePart {
     my ($self, $mods, $dp) = @_;
     
-    print "_parseDatePart\n";
+    #print "_parseDatePart\n";
     #print Dumper $dp;
     
     my @d = split /\//, $self->_var->{'issued'};
@@ -1542,7 +1527,7 @@ sub _parseDatePart {
                 
                 if($datePartString ne '') {
                     $self->_addFix($dp, "prefix");
-                    $self->{_biblio_str} .= $datePartString;
+                    $self->{_result} .= $datePartString;
                     $self->_addFix($dp, "suffix");
                 }
             }
@@ -1564,7 +1549,7 @@ sub _parseDatePart {
 sub _parseChoose {
     my ($self, $mods, $choosePtr) = @_;
     
-    print "_parseChoose\n";
+    #print "_parseChoose\n";
     #print Dumper $choosePtr;
     
     my @order;
@@ -1589,16 +1574,16 @@ sub _parseChoose {
     
     my $goOn = 1;  # do we go on?
     foreach my $o (@order) {
-        print "-- $o --\n";
+        #print "-- $o --\n";
         if( $o eq 'if' || $o eq 'else-if') {
             $goOn = $self->_parseIf_elseIf_else($mods, $choosePtr->{$o}, $goOn, $o);
         }
         elsif($o eq 'else') { 
-            print "else goOn=$goOn\n";
+            #print "else goOn=$goOn\n";
             $goOn = $self->_parseIf_elseIf_else($mods, $choosePtr->{$o}, $goOn, $o);
         }
         else {
-            print "Warning: Should I reach this?";
+            #print "Warning: Should I reach this?";
         }
     }
     
@@ -1646,7 +1631,7 @@ sub _checkCondition {
     
     #print Dumper $condiPtr;
 
-    print " - check condition - \n";
+    #print " - check condition - \n";
 
     my @order;
     if(ref($condiPtr) eq "HASH") {
@@ -1707,7 +1692,7 @@ sub _checkCondition {
     }
     
     switch($match) {
-        print "truth=$truth qtSubconditions=$qtSubconditions match='$match'\n";
+        #print "truth=$truth qtSubconditions=$qtSubconditions match='$match'\n";
         case "" {
             
         }
@@ -1745,7 +1730,7 @@ sub _checkCondition {
 sub _howToProceedAfterCondition {
     my ($self, $condiPtr) = @_;
 
-    print "_howToProceedAfterCondition\n";
+    #print "_howToProceedAfterCondition\n";
 
     my @order;
     if(ref($condiPtr) eq "HASH") {
@@ -1792,7 +1777,7 @@ sub _howToProceedAfterCondition {
             case 'delimiter' {
             }
             else {
-                print "proceed with $o\n";
+                #print "proceed with $o\n";
                 return $o;
             }
         }
@@ -1807,7 +1792,7 @@ sub _howToProceedAfterCondition {
 sub _checkType {
     my ($self, $mods, $type) = @_;
 
-    print "_checkType: $type\n";
+    #print "_checkType: $type\n";
 
     my %alias=( 
         'academic journal' => 'article-journal',
@@ -1839,7 +1824,7 @@ sub _checkType {
 sub _checkVariable {
     my ($self, $mods, $v) = @_;
     
-    print "_checkVariable: $v\n";
+    #print "_checkVariable: $v\n";
     
     my @s = split / /, $v;
     foreach my $entry (@s) {
@@ -1858,7 +1843,7 @@ sub _checkVariable {
 sub _checkIsNumeric {
     my ($self, $mods, $n) = @_;
     
-    print "_checkIsNumeric: TODO! $n\n";
+    #print "_checkIsNumeric: TODO! $n\n";
     #TODO
     
     return 0;    
@@ -1867,7 +1852,7 @@ sub _checkIsNumeric {
 sub _checkIsDate {
     my ($self, $mods, $d) = @_;
     
-    print "_checkIsDate: TODO! $d\n";
+    #print "_checkIsDate: TODO! $d\n";
     #TODO
     
     return 0;    
@@ -1876,7 +1861,7 @@ sub _checkIsDate {
 sub _checkPosition {
     my ($self, $mods, $p) = @_;
     
-    print "_checkPosition: TODO! $p\n";
+    #print "_checkPosition: TODO! $p\n";
     #TODO
     
     return 0;    
@@ -1885,7 +1870,7 @@ sub _checkPosition {
 sub _checkDisambiguate {
     my ($self, $mods, $t) = @_;
     
-    print "_checkDisambiguate: TODO! $t\n";
+    #print "_checkDisambiguate: TODO! $t\n";
     #TODO
     
     return 0;    
@@ -1894,7 +1879,7 @@ sub _checkDisambiguate {
 sub _checkLocator {
     my ($self, $mods, $l) = @_;
     
-    print "_checkLocator: TODO! $l\n";
+    #print "_checkLocator: TODO! $l\n";
     #TODO
     
     return 0;    
@@ -1911,7 +1896,7 @@ sub _checkLocator {
 sub _parseGroup {
     my ($self, $mods, $g) = @_;
 
-    print "_parseGroup\n";
+    #print "_parseGroup\n";
     $self->{_group}->{'inGroup'} = 1;
     
     my @order;
@@ -1944,17 +1929,17 @@ sub _parseGroup {
     
     # Here we leave the group.
     # Group-example: 1,2,3
-    # if the third(last) group element does not contribute to the biblio_string
+    # if the third(last) group element does not contribute to the _result string
     # then we also do not need the delimiter at the second element.
-    if($self->{_group}->{'delimiter'} ne '' && $self->{_biblio_str}=~/$self->{_group}->{'delimiter'}$/ ) {
-        #$self->{_biblio_str}=~s/$self->{_group}->{'delimiter'}$//g;
-        #print STDERR "JA group: ", $self->{_biblio_str}, "\n";
+    if($self->{_group}->{'delimiter'} ne '' && $self->{_result}=~/$self->{_group}->{'delimiter'}$/ ) {
+        #$self->{_result}=~s/$self->{_group}->{'delimiter'}$//g;
+        #print STDERR "JA group: ", $self->{_result}, "\n";
         #print "removing delimiter '".$self->{_group}->{'delimiter'}."'\n";
-        $self->{_biblio_str} = substr $self->{_biblio_str}, 0, length($self->{_biblio_str})-length($self->{_group}->{'delimiter'});
-        #print STDERR "JA group (after removing): ", $self->{_biblio_str}, "\n";
+        $self->{_result} = substr $self->{_result}, 0, length($self->{_result})-length($self->{_group}->{'delimiter'});
+        #print STDERR "JA group (after removing): ", $self->{_result}, "\n";
     }
     else {
-        #print STDERR "NEIN group: ", $self->{_biblio_str}, "\n";
+        #print STDERR "NEIN group: ", $self->{_result}, "\n";
     }
     
         
@@ -1998,12 +1983,12 @@ sub _parseVariable {
     
     # do not print the issued variable, that is done within _parseDatePart 
     if($v ne "issued") {    
-        print "_parseVariable: '$v'\n";
+        #print "_parseVariable: '$v'\n";
         if(exists $self->_var->{$v}) {
             #print STDERR Dumper $self->_var;
             #print STDERR Dumper $self->_var->{$v};
             if($self->_var->{$v} ne '') {
-                $self->{_biblio_str} .= $self->_var->{$v};
+                $self->{_result} .= $self->_var->{$v};
             }
         }
         else {

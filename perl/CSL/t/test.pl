@@ -57,15 +57,15 @@ my $o = Biblio::CSL->new(
 
 
 #$o->version();
-print "\n--- Beispiel: txt ---\n";
+#print "\n--- Beispiel: txt ---\n";
 
 $o->transform();
 
 if($o->getCitationsSize()>0) {
-  print "\nCitations (".$o->getCitationsSize()."):\n";
-  print $o->citationsToString();
+  #print "\nCitations (".$o->getCitationsSize()."):\n";
+  #print $o->citationsToString();
 }
 
-print "\nBibliography (".$o->getBiblioSize()."):\n";
+#print "\nBibliography (".$o->getBiblioSize()."):\n";
 print $o->biblioToString();
 #print Dumper $o->{biblio}
