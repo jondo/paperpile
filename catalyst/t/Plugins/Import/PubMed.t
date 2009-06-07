@@ -8,10 +8,13 @@ use Paperpile::Library::Publication;
 
 BEGIN { use_ok 'Paperpile::Plugins::Import::PubMed' }
 
-#my $source=Paperpile::Library::Source::PubMed->new(query=>'Stadler');
-#$source->connect;
-#my $pubs=$source->page_from_offset(0,10);
+my $source=Paperpile::Plugins::Import::PubMed->new(query=>'Stadler');
+$source->connect;
+my $pubs=$source->page(0,10);
 #print Dumper($pubs);
+
+
+exit(0);
 
 #my $pub=Paperpile::Library::Publication->new(doi=>'10.1111/j.1365-2958.2008.06495.x');
 my $plugin=Paperpile::Plugins::Import::PubMed->new();

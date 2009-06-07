@@ -207,7 +207,11 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     }
                 }, this);
 
-        this.store.on('loadexception', this.onError);
+        this.store.on('loadexception', 
+                      function(exception, options, response, error){
+                          Paperpile.main.onError(response);
+                      });
+
 
         this.store.on('load', 
                       function(){
@@ -243,15 +247,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
    
     },
 
-    onError: function(exception, options, response, error){
-        
-        // unexpected and uncaught error goes to standard error handling
-        if (response.status==500){
-            Paperpile.main.uncaughtError(response);
-        } else {
-            Paperpile.main.error(response);
-        }
-    },
 
     updateButtons: function(){
         

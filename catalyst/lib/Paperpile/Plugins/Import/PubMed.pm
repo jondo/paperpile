@@ -50,9 +50,25 @@ sub connect {
   # We send our query to PubMed via a simple get
   my $response = $browser->get( $esearch . $self->query );
 
+  if ( $response->is_error ) {
+    NetGetError->throw(
+      error => 'PubMed query failed: ' . $response->message,
+      code  => $response->code
+    );
+  }
+
   # The response is XML formatted and can be parsed with XML::Simple
   my $resultXML = $response->content;
   my $result    = XMLin($resultXML);
+
+  if ( ( not defined $result->{WebEnv} )
+    or ( not defined $result->{QueryKey} )
+    or ( not defined $result->{Count} ) ) {
+    NetFormatError->throw(
+      error    => 'PubMed query failed: unknown return format',
+      content => $response->content
+    );
+  }
 
   # The relevant results are stored in the appropriate fields
   $self->web_env( $result->{WebEnv} );
@@ -81,7 +97,6 @@ sub page {
 
 
 sub all {
-
   ( my $self ) = @_;
   return $self->page(0,100);
 }
@@ -150,8 +165,6 @@ sub match {
 
 
 
-
-
 # function: _pubFetch
 
 # Sends request to PubMed for page given by $offset and $limit and
@@ -165,8 +178,16 @@ sub _pubFetch {
   my $query_key = $self->query_key;
   my $web_env   = $self->web_env;
 
-  my $url       = "$efetch&query_key=$query_key&WebEnv=$web_env&retstart=$offset&retmax=$limit";
-  my $response  = $browser->get($url);
+  my $url      = "$efetch&query_key=$query_key&WebEnv=$web_env&retstart=$offset&retmax=$limit";
+  my $response = $browser->get($url);
+
+  if ( $response->is_error ) {
+    NetGetError->throw(
+      error => 'PubMed query failed: ' . $response->message,
+      code  => $response->code
+    );
+  }
+
   my $resultXML = $response->content;
 
   return $resultXML;
@@ -184,6 +205,13 @@ sub _read_xml {
 
   my $result = XMLin( $xml, keyattr => ['IdType'], SuppressEmpty => 1 );
 
+  if ( not defined $result->{PubmedArticle} ) {
+    NetFormatError->throw(
+      error   => 'PubMed query failed: unknown return format',
+      content => $xml
+    );
+  }
+
   my @output = ();
 
   my @list;
@@ -199,10 +227,6 @@ sub _read_xml {
     my $cit = $article->{MedlineCitation};
 
     my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
-
-    if ( not $pub->pmid( $cit->{PMID} ) ) {
-      die();
-    }
 
     $pub->pmid( $cit->{PMID} );
 
@@ -291,12 +315,14 @@ sub _linkOut {
 
   my $response = $browser->get($url);
 
-  #print STDERR Dumper( $url, "   ", $response->content );
+  if ( $response->is_error ) {
+    NetGetError->throw(
+      error => 'PubMed query failed: ' . $response->message,
+      code  => $response->code
+    );
+  }
 
   my $result = XMLin( $response->content, forceArray =>['IdUrlSet']);
-
-  #print STDERR Dumper($result->{LinkSet}->{IdUrlList}->{IdUrlSet});
-  #print STDERR $result->{LinkSet}->{IdUrlList}->{IdUrlSet};
 
   foreach my $entry ( @{ $result->{LinkSet}->{IdUrlList}->{IdUrlSet} } ) {
 

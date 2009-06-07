@@ -4,9 +4,9 @@ use strict;
 use warnings;
 use MIME::Types qw(by_suffix);
 use parent 'Catalyst::Controller';
+use Data::Dumper;
 
 __PACKAGE__->config->{namespace} = '';
-
 
 sub index : Path : Args(0) {
   my ( $self, $c ) = @_;
@@ -82,8 +82,26 @@ sub end : Private {
   my ( $self, $c ) = @_;
 
   if ( scalar @{ $c->error } ) {
-    $c->response->status(500);
-    $c->stash->{error}   = join('<br>',@{$c->error});
+
+    my $error = $c->error->[0];
+
+    if ($error->isa('PaperpileError')){
+      my $data={ msg => $error->error,
+                 type => ref($error)
+               };
+
+      foreach my $field ($error->Fields){
+        $data->{$field}=$error->$field;
+      }
+
+      $c->stash->{error}  = $data;
+    } else {
+      $c->response->status(500);
+      $c->stash->{error}   = { msg => join('<br>',@{$c->error}),
+                               type => 'Unknown',
+                             };
+    }
+
     $c->forward('Paperpile::View::JSON');
 
     foreach my $error (@{$c->error}){
@@ -99,11 +117,5 @@ sub end : Private {
   $c->forward('Paperpile::View::JSON');
 
 }
-
-
-
-#sub end : ActionClass('RenderView') {
-#}
-
 
 1;

@@ -7,8 +7,7 @@ use Data::Page;
 use POSIX qw(ceil floor);
 use Text::Levenshtein qw(distance);
 
-use Exception::Class( 'ImportException');
-
+use Paperpile::Exceptions;
 
 # Name of the plugin
 has 'plugin_name' => ( is => 'rw', isa => 'Str');

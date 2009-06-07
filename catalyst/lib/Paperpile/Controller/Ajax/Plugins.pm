@@ -7,7 +7,8 @@ use Paperpile::Library::Publication;
 use Data::Dumper;
 use 5.010;
 use Module::Load;
-use Exception::Class;
+#use Exception::Class ( 'MyException');
+use Paperpile::Exceptions;
 
 use Paperpile::Plugins::Import;
 use Paperpile::Plugins::Export;
@@ -65,20 +66,7 @@ sub resultsgrid : Local {
 
     $plugin->limit($limit);
 
-    eval{
-      $plugin->connect;
-    };
-
-    my $e;
-    if ( $e = Exception::Class->caught('ImportException') ){
-      $c->stash->{error}=$e->error;
-      $c->detach('Paperpile::View::JSON');
-    } else {
-      $e = Exception::Class->caught();
-      if ($e){
-        ref $e ? $e->rethrow : die $e;
-      }
-    }
+    $plugin->connect;
 
     if ( $plugin->total_entries == 0 ) {
       _resultsgrid_format( @_, [], 0 );
@@ -102,7 +90,6 @@ sub resultsgrid : Local {
 
   _resultsgrid_format( @_, $entries, $plugin->total_entries );
 
-  #$c->stash->{errors}= ['My error'] ;
 
 }
 

@@ -32,11 +32,11 @@ sub connect {
   my $self = shift;
 
   if ( !-e $self->file ) {
-    ImportException->throw( error => "Could not find file " . $self->file );
+    FileReadError->throw( error => "Could not find file " . $self->file );
   }
 
   if ( !-r $self->file ) {
-    ImportException->throw( error => "File " . $self->file . " is not readable." );
+    FileReadError->throw( error => "File " . $self->file . " is not readable." );
   }
 
   $self->_db_file( $self->_tmp_file_name( $self->file ) );
@@ -48,7 +48,7 @@ sub connect {
     if ( $self->format eq 'PAPERPILE' ) {
 
       copy( $self->file, $self->_db_file )
-        || ImportException->throw(
+        || FileWriteError->throw(
         error => "Could not open " . $self->file . " (failed to create temporary database representation)." );
 
       my $model = $self->get_model();
@@ -66,7 +66,7 @@ sub connect {
       $bu->read;
 
       if ( $bu->error ) {
-        ImportException->throw(
+        FileFormatError->throw(
           error => "Could not read " . $self->file . ". Error during parsing." );
       }
 
@@ -129,7 +129,7 @@ sub guess_format {
   my $self = shift;
 
   open( FILE, "<" . $self->file )
-    || ImportException->throw( error => "Could not open file " . $self->file );
+    || FileReadError->throw( error => "Could not open file " . $self->file );
 
   # Text file
   if ( -T $self->file ) {
@@ -169,7 +169,7 @@ sub guess_format {
     my $sample;
     read( FILE, $sample, 6 );
     if ( $sample ne 'SQLite' ) {
-      ImportException->throw( error => "Could not open file (unknown format)");
+      FileFormatError->throw( error => "Could not open file (unknown format)");
     } else {
       # Todo check if right version of Paperpile
       $self->format('PAPERPILE');
@@ -177,7 +177,7 @@ sub guess_format {
     }
   }
 
-  ImportException->throw( error => "Could not open file. (unknown format)" . $self->file );
+  FileFormatError->throw( error => "Could not open file (unknown format)");
 
 }
 
