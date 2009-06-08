@@ -398,36 +398,39 @@ sub transform {
 sub _sortAddKeys {
     my $self = shift;
     my $mods = shift;
+    my $sort = shift;
     
-    #print "sort keys: ".($self->{_biblioNumber})."\n";
-    my $i=0;
-    foreach my $key ($self->_c->{style}->{bibliography}->{sort}->{key}('[@]') ) {
+    print "_sortAddKeys\n" if($self->{verbose});
+    
+    # whenever we see the sort element, switch the flag that tells us that from now on we have to collect keys for sorting
+    $self->{_sortInfo}->{_withinSorting}=1;
+    print "Setting $self->{ _sortInfo }->{ _withinSorting }=1\n" if($self->{verbose});    
+    
+    $self->{_sortInfo}->{_keyNumber}=0;
+    foreach my $key ($sort->{key}('[@]') ) {
         $key = $key->pointer;
+        #print Dumper $key;
         foreach my $k (keys %{$key}) {
-            $i++;
-            if(! exists $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}}) {
-                $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = 1;
-                if(exists $self->{_var}->{$key->{$k}}) {
-                    #print STDERR "$i ->{ $k }->{ ".$key->{$k}." } -> ".($self->{_biblioNumber})."\n";
-                    $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = $self->{_var}->{$key->{$k}};
-                }
-            }
-            
-            # TODO
-            # whenever we see the sort element, switch the flag that tells us that from now on we have to collect keys for sorting
-            $self->{_sortInfo}->{_withinSorting}=1;
             if(exists $self->{_sortInfo}->{_keyNumber}) {
                 $self->{_sortInfo}->{_keyNumber}++;
+                print "incrementing _keyNumber to ".$self->{_sortInfo}->{_keyNumber}."\n" if($self->{verbose});
             }
-            else {
-                $self->{_sortInfo}->{_keyNumber}=1;
+            if(! exists $self->{_sort}->{$self->{_sortInfo}->{_keyNumber}}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}}) {
+                $self->{_sort}->{$self->{_sortInfo}->{_keyNumber}}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = 1;
+                print "adding sort-key _keyNumber=".$self->{_sortInfo}->{_keyNumber}." k=$k _curKeyName=".$key->{$k}."\n" if($self->{verbose});
+                if(exists $self->{_var}->{$key->{$k}}) {
+                    #print STDERR "$i ->{ $k }->{ ".$key->{$k}." } -> ".($self->{_biblioNumber})."\n";
+                    $self->{_sort}->{$self->{_sortInfo}->{_keyNumber}}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = $self->{_var}->{$key->{$k}};
+                }
             }
+
             #print STDERR Dumper $key;
             $self->_parseChildElements($mods, $key,"_parseChildElements($key->{$k})");
-            
-            $self->{_sortInfo}->{_withinSorting}=0;
         }
     }
+    
+    $self->{_sortInfo}->{_withinSorting}=0;
+    print "Setting $self->{ _sortInfo }->{ _withinSorting }=0\n" if($self->{verbose});
 }
 
 # TODO: Sorting works just for the first key, yet. 
@@ -555,7 +558,7 @@ sub _transformEach() {
                 $self->_updateVariables($mods->pointer);
 
                 if(exists $self->_c->{style}->{bibliography}->{sort}) {
-                    $self->_sortAddKeys($mods); # initialize the sorting hash.
+                    $self->_sortAddKeys($mods, $self->_c->{style}->{bibliography}->{sort}); # initialize the sorting hash.
                     #print STDERR Dumper $self->{_sort};
                 }
                 
@@ -1087,7 +1090,7 @@ sub _addFix {
 sub _parseChildElements {
     my ($self, $mods, $ptr, $from) = @_;
     
-    print "_parseChildElements\n" if($self->{verbose});
+    print "_parseChildElements from=$from\n" if($self->{verbose});
     
     # prefix before the tmp copy!
     $self->_addFix($ptr, "prefix");
@@ -1987,24 +1990,43 @@ sub _parseVariable {
     
     my $v = $ptr->{$link};
     
-    # get putative options of the variable
-    if(exists $ptr->{'form'}) {
-        #print STDERR "Form:".Dumper $ptr->{'form'};
-        $v.='_short'; # we want the short version of the variable
-    }
+    # option indicators
+    my $gotQuotes = 0;
     
-    # do not print the issued variable, that is done within _parseDatePart 
-    if($v ne "issued") {    
-        print "_parseVariable: '$v'\n" if($self->{verbose});
-        if(exists $self->_var->{$v}) {
-            #print STDERR Dumper $self->_var;
-            #print STDERR Dumper $self->_var->{$v};
-            if($self->_var->{$v} ne '') {
-                $self->{_result} .= $self->_var->{$v};
+    if($self->{_sortInfo}->{_withinSorting}==1) {
+        
+    }
+    else {
+        # get putative options of the variable
+        if(exists $ptr->{'form'}) {
+            #print STDERR "Form:".Dumper $ptr->{'form'};
+            $v.='_short'; # we want the short version of the variable
+        }
+        
+        if(exists $ptr->{'quotes'}) {
+            if($ptr->{'quotes'} eq 'true') {
+                $gotQuotes = 1;
             }
         }
-        else {
-            die "ERROR: Variable '$v' is unknown, someone should implement it ;-)";
+        
+        # do not print the issued variable, that is done within _parseDatePart 
+        if($v ne "issued") {    
+            print "_parseVariable: '$v'\n" if($self->{verbose});
+            if(exists $self->_var->{$v}) {
+                #print STDERR Dumper $self->_var;
+                #print STDERR Dumper $self->_var->{$v};
+                if($self->_var->{$v} ne '') {
+                    if($gotQuotes) {
+                        $self->{_result} .= '"'.$self->_var->{$v}'"'; 
+                    }
+                    else {
+                        $self->{_result} .= $self->_var->{$v};
+                    }
+                }
+            }
+            else {
+                die "ERROR: Variable '$v' is unknown, someone should implement it ;-)";
+            }
         }
     }
 }
