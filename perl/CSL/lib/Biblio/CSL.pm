@@ -590,6 +590,10 @@ sub _transformEach() {
                 $self->{_result} =~ s/ , /, /g if($self->{_result} =~ / , /);
                 # hardcoded rule: if we start with number and ., a space must follow
                 $self->{_result} = $1." ".$2.$3 if($self->{_result} =~ /^(\d+\.)(\S)(.+)/);
+                # hardcoded rule: if we have quotes and the quote comes before a ., switch them
+                $self->{_result} =~ s/\x{0201D}\./\.\x{0201D}/g if($self->{_result}=~ /\x{0201D}\./);
+                # hardcoded rule: remove double dots
+                $self->{_result} =~ s/\.\./\./g if($self->{_result} =~ /\.\./);
                 
                 # the string is ready, add the current entry to the bibliography result-array
                 push @{$self->{biblio}}, $self->{_result};
@@ -1062,8 +1066,8 @@ sub _updateVariables {
 sub _addFix {
     my ($self, $ptr, $what) = @_;
     
-    if(ref($ptr) eq "HASH") {
-        if($what eq "prefix") {
+    if(ref($ptr) eq 'HASH') {
+        if($what eq 'prefix') {
             if(exists $ptr->{prefix}) {
                 print "Adding prefix '$ptr->{prefix}'\n" if($self->{verbose});
                 #print Dumper $ptr;
@@ -1071,7 +1075,7 @@ sub _addFix {
                 #$self->_checkIntegrityOfFix($ptr->{prefix});
             }
         }
-        elsif($what eq "suffix") {     
+        elsif($what eq 'suffix') {
             if(exists $ptr->{suffix}) {
                 print "Adding suffix '$ptr->{suffix}'\n" if($self->{verbose});
                 #print Dumper $ptr;
@@ -1079,8 +1083,20 @@ sub _addFix {
                 #$self->_checkIntegrityOfFix($ptr->{suffix});
             }
         }
+        elsif($what eq 'quoteOpen') {
+            if(exists $ptr->{quotes}) {
+                print "Adding quoteOpen \x{0201C}\n" if($self->{verbose});
+                $self->{_result} .= "\x{0201C}";
+            }
+        }
+        elsif($what eq 'quoteClose') {
+            if(exists $ptr->{quotes}) {
+                print "Adding quoteClose \x{0201D}\n" if($self->{verbose});
+                $self->{_result} .= "\x{0201D}";
+            }
+        }
         else {
-            die "ERROR: '$what' is not a valid fix, either prefix or suffix, please!";
+            die "ERROR: '$what' is not a valid fix, choose prefix|suffix|quoteOpen|quoteClose, please!";
         }
     }
 }
@@ -1093,13 +1109,16 @@ sub _parseChildElements {
     print "_parseChildElements from=$from\n" if($self->{verbose});
     
     # prefix before the tmp copy!
-    $self->_addFix($ptr, "prefix");
+    $self->_addFix($ptr, 'prefix');
+    $self->_addFix($ptr, 'quoteOpen');
     
     # copy to be able to recognise changes;
     my $tmpStr = $self->{_result};
     
+    
+    
     my @order;
-    if(ref($ptr) eq "HASH") {
+    if(ref($ptr) eq "HASH") {        
         if(exists $ptr->{'/order'}) {
             @order = _uniqueArray(\@{$ptr->{'/order'}});
         }
@@ -1208,10 +1227,9 @@ sub _parseChildElements {
     }
 
     # group delimiter
-    if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '') {
+    if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '' && $from=~ /group/) {
         if($tmpStr ne $self->{_result} && $self->{_result} !~ /$self->{_group}->{'delimiter'}$/) {
-            #print "'$tmpStr' vs '".($self->{_result})."'\n"; 
-            print "adding delimiter ($from)'".$self->{_group}->{'delimiter'}."'\n" if($self->{verbose});
+            print "adding delimiter ($from) '".$self->{_group}->{'delimiter'}."'\n" if($self->{verbose});
             $self->{_result} .= $self->{_group}->{'delimiter'};
         }
         else {
@@ -1219,10 +1237,13 @@ sub _parseChildElements {
             #$self->{_result} = substr $self->{_result}, 0, length($self->{_result})-length($self->{_group}->{'delimiter'});
         }
     }
-    
+        
     # suffixes finish strings
     # but we need them only in that cases where we did not remove a prefix.
-    $self->_addFix($ptr, "suffix") if(! $removedPrefix);
+    if(! $removedPrefix) {
+        $self->_addFix($ptr, "suffix");
+        $self->_addFix($ptr, "quoteClose");
+    }
 }
 
 
@@ -1952,7 +1973,8 @@ sub _parseGroup {
         
     # because we leave the group
     $self->{_group}->{'delimiter'} = '';
-    $self->{_group}->{'size'} = 0;    
+    $self->{_group}->{'size'} = 0; 
+    $self->{_group}->{'inGroup'} = 0;
 }
 
 # variation of _howToProceedAfterCondition
@@ -1990,9 +2012,6 @@ sub _parseVariable {
     
     my $v = $ptr->{$link};
     
-    # option indicators
-    my $gotQuotes = 0;
-    
     if($self->{_sortInfo}->{_withinSorting}==1) {
         
     }
@@ -2002,13 +2021,7 @@ sub _parseVariable {
             #print STDERR "Form:".Dumper $ptr->{'form'};
             $v.='_short'; # we want the short version of the variable
         }
-        
-        if(exists $ptr->{'quotes'}) {
-            if($ptr->{'quotes'} eq 'true') {
-                $gotQuotes = 1;
-            }
-        }
-        
+
         # do not print the issued variable, that is done within _parseDatePart 
         if($v ne "issued") {    
             print "_parseVariable: '$v'\n" if($self->{verbose});
@@ -2016,12 +2029,7 @@ sub _parseVariable {
                 #print STDERR Dumper $self->_var;
                 #print STDERR Dumper $self->_var->{$v};
                 if($self->_var->{$v} ne '') {
-                    if($gotQuotes) {
-                        $self->{_result} .= '"'.$self->_var->{$v}'"'; 
-                    }
-                    else {
                         $self->{_result} .= $self->_var->{$v};
-                    }
                 }
             }
             else {
