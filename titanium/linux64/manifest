@@ -1,0 +1,24 @@
+#appname: paperpile
+#appid:paperpile
+#publisher:paperpile.org
+#image:default_app_logo.png
+#url:test
+#guid:4254b3a3-bf80-4f70-ae7f-24b784cb8769
+#desc:No description provided
+#type:desktop
+runtime:0.4.0
+api:0.4.0
+tiapp:0.4.0
+tifilesystem:0.4.0
+tiplatform:0.4.0
+tiui:0.4.0
+javascript:0.4.0
+tianalytics:0.4.0
+tidesktop:0.4.0
+tinotification:0.4.0
+tidatabase:0.4.0
+tiprocess:0.4.0
+tigrowl:0.4.0
+tinetwork:0.4.0
+timonkey:0.4.0
+timedia:0.4.0
