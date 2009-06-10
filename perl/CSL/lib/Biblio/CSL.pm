@@ -398,36 +398,39 @@ sub transform {
 sub _sortAddKeys {
     my $self = shift;
     my $mods = shift;
+    my $sort = shift;
     
-    #print "sort keys: ".($self->{_biblioNumber})."\n";
-    my $i=0;
-    foreach my $key ($self->_c->{style}->{bibliography}->{sort}->{key}('[@]') ) {
+    print "_sortAddKeys\n" if($self->{verbose});
+    
+    # whenever we see the sort element, switch the flag that tells us that from now on we have to collect keys for sorting
+    $self->{_sortInfo}->{_withinSorting}=1;
+    print "Setting $self->{ _sortInfo }->{ _withinSorting }=1\n" if($self->{verbose});    
+    
+    $self->{_sortInfo}->{_keyNumber}=0;
+    foreach my $key ($sort->{key}('[@]') ) {
         $key = $key->pointer;
+        #print Dumper $key;
         foreach my $k (keys %{$key}) {
-            $i++;
-            if(! exists $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}}) {
-                $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = 1;
-                if(exists $self->{_var}->{$key->{$k}}) {
-                    #print STDERR "$i ->{ $k }->{ ".$key->{$k}." } -> ".($self->{_biblioNumber})."\n";
-                    $self->{_sort}->{$i}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = $self->{_var}->{$key->{$k}};
-                }
-            }
-            
-            # TODO
-            # whenever we see the sort element, switch the flag that tells us that from now on we have to collect keys for sorting
-            $self->{_sortInfo}->{_withinSorting}=1;
             if(exists $self->{_sortInfo}->{_keyNumber}) {
                 $self->{_sortInfo}->{_keyNumber}++;
+                print "incrementing _keyNumber to ".$self->{_sortInfo}->{_keyNumber}."\n" if($self->{verbose});
             }
-            else {
-                $self->{_sortInfo}->{_keyNumber}=1;
+            if(! exists $self->{_sort}->{$self->{_sortInfo}->{_keyNumber}}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}}) {
+                $self->{_sort}->{$self->{_sortInfo}->{_keyNumber}}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = 1;
+                print "adding sort-key _keyNumber=".$self->{_sortInfo}->{_keyNumber}." k=$k _curKeyName=".$key->{$k}."\n" if($self->{verbose});
+                if(exists $self->{_var}->{$key->{$k}}) {
+                    #print STDERR "$i ->{ $k }->{ ".$key->{$k}." } -> ".($self->{_biblioNumber})."\n";
+                    $self->{_sort}->{$self->{_sortInfo}->{_keyNumber}}->{$k}->{$key->{$k}}->{$self->{_biblioNumber}} = $self->{_var}->{$key->{$k}};
+                }
             }
+
             #print STDERR Dumper $key;
             $self->_parseChildElements($mods, $key,"_parseChildElements($key->{$k})");
-            
-            $self->{_sortInfo}->{_withinSorting}=0;
         }
     }
+    
+    $self->{_sortInfo}->{_withinSorting}=0;
+    print "Setting $self->{ _sortInfo }->{ _withinSorting }=0\n" if($self->{verbose});
 }
 
 # TODO: Sorting works just for the first key, yet. 
@@ -555,7 +558,7 @@ sub _transformEach() {
                 $self->_updateVariables($mods->pointer);
 
                 if(exists $self->_c->{style}->{bibliography}->{sort}) {
-                    $self->_sortAddKeys($mods); # initialize the sorting hash.
+                    $self->_sortAddKeys($mods, $self->_c->{style}->{bibliography}->{sort}); # initialize the sorting hash.
                     #print STDERR Dumper $self->{_sort};
                 }
                 
@@ -587,6 +590,10 @@ sub _transformEach() {
                 $self->{_result} =~ s/ , /, /g if($self->{_result} =~ / , /);
                 # hardcoded rule: if we start with number and ., a space must follow
                 $self->{_result} = $1." ".$2.$3 if($self->{_result} =~ /^(\d+\.)(\S)(.+)/);
+                # hardcoded rule: if we have quotes and the quote comes before a ., switch them
+                $self->{_result} =~ s/\x{0201D}\./\.\x{0201D}/g if($self->{_result}=~ /\x{0201D}\./);
+                # hardcoded rule: remove double dots
+                $self->{_result} =~ s/\.\./\./g if($self->{_result} =~ /\.\./);
                 
                 # the string is ready, add the current entry to the bibliography result-array
                 push @{$self->{biblio}}, $self->{_result};
@@ -1059,8 +1066,8 @@ sub _updateVariables {
 sub _addFix {
     my ($self, $ptr, $what) = @_;
     
-    if(ref($ptr) eq "HASH") {
-        if($what eq "prefix") {
+    if(ref($ptr) eq 'HASH') {
+        if($what eq 'prefix') {
             if(exists $ptr->{prefix}) {
                 print "Adding prefix '$ptr->{prefix}'\n" if($self->{verbose});
                 #print Dumper $ptr;
@@ -1068,7 +1075,7 @@ sub _addFix {
                 #$self->_checkIntegrityOfFix($ptr->{prefix});
             }
         }
-        elsif($what eq "suffix") {     
+        elsif($what eq 'suffix') {
             if(exists $ptr->{suffix}) {
                 print "Adding suffix '$ptr->{suffix}'\n" if($self->{verbose});
                 #print Dumper $ptr;
@@ -1076,8 +1083,20 @@ sub _addFix {
                 #$self->_checkIntegrityOfFix($ptr->{suffix});
             }
         }
+        elsif($what eq 'quoteOpen') {
+            if(exists $ptr->{quotes}) {
+                print "Adding quoteOpen \x{0201C}\n" if($self->{verbose});
+                $self->{_result} .= "\x{0201C}";
+            }
+        }
+        elsif($what eq 'quoteClose') {
+            if(exists $ptr->{quotes}) {
+                print "Adding quoteClose \x{0201D}\n" if($self->{verbose});
+                $self->{_result} .= "\x{0201D}";
+            }
+        }
         else {
-            die "ERROR: '$what' is not a valid fix, either prefix or suffix, please!";
+            die "ERROR: '$what' is not a valid fix, choose prefix|suffix|quoteOpen|quoteClose, please!";
         }
     }
 }
@@ -1087,16 +1106,19 @@ sub _addFix {
 sub _parseChildElements {
     my ($self, $mods, $ptr, $from) = @_;
     
-    print "_parseChildElements\n" if($self->{verbose});
+    print "_parseChildElements from=$from\n" if($self->{verbose});
     
     # prefix before the tmp copy!
-    $self->_addFix($ptr, "prefix");
+    $self->_addFix($ptr, 'prefix');
+    $self->_addFix($ptr, 'quoteOpen');
     
     # copy to be able to recognise changes;
     my $tmpStr = $self->{_result};
     
+    
+    
     my @order;
-    if(ref($ptr) eq "HASH") {
+    if(ref($ptr) eq "HASH") {        
         if(exists $ptr->{'/order'}) {
             @order = _uniqueArray(\@{$ptr->{'/order'}});
         }
@@ -1205,10 +1227,9 @@ sub _parseChildElements {
     }
 
     # group delimiter
-    if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '') {
+    if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '' && $from=~ /group/) {
         if($tmpStr ne $self->{_result} && $self->{_result} !~ /$self->{_group}->{'delimiter'}$/) {
-            #print "'$tmpStr' vs '".($self->{_result})."'\n"; 
-            print "adding delimiter ($from)'".$self->{_group}->{'delimiter'}."'\n" if($self->{verbose});
+            print "adding delimiter ($from) '".$self->{_group}->{'delimiter'}."'\n" if($self->{verbose});
             $self->{_result} .= $self->{_group}->{'delimiter'};
         }
         else {
@@ -1216,10 +1237,13 @@ sub _parseChildElements {
             #$self->{_result} = substr $self->{_result}, 0, length($self->{_result})-length($self->{_group}->{'delimiter'});
         }
     }
-    
+        
     # suffixes finish strings
     # but we need them only in that cases where we did not remove a prefix.
-    $self->_addFix($ptr, "suffix") if(! $removedPrefix);
+    if(! $removedPrefix) {
+        $self->_addFix($ptr, "suffix");
+        $self->_addFix($ptr, "quoteClose");
+    }
 }
 
 
@@ -1949,7 +1973,8 @@ sub _parseGroup {
         
     # because we leave the group
     $self->{_group}->{'delimiter'} = '';
-    $self->{_group}->{'size'} = 0;    
+    $self->{_group}->{'size'} = 0; 
+    $self->{_group}->{'inGroup'} = 0;
 }
 
 # variation of _howToProceedAfterCondition
@@ -1987,24 +2012,29 @@ sub _parseVariable {
     
     my $v = $ptr->{$link};
     
-    # get putative options of the variable
-    if(exists $ptr->{'form'}) {
-        #print STDERR "Form:".Dumper $ptr->{'form'};
-        $v.='_short'; # we want the short version of the variable
+    if($self->{_sortInfo}->{_withinSorting}==1) {
+        
     }
-    
-    # do not print the issued variable, that is done within _parseDatePart 
-    if($v ne "issued") {    
-        print "_parseVariable: '$v'\n" if($self->{verbose});
-        if(exists $self->_var->{$v}) {
-            #print STDERR Dumper $self->_var;
-            #print STDERR Dumper $self->_var->{$v};
-            if($self->_var->{$v} ne '') {
-                $self->{_result} .= $self->_var->{$v};
-            }
+    else {
+        # get putative options of the variable
+        if(exists $ptr->{'form'}) {
+            #print STDERR "Form:".Dumper $ptr->{'form'};
+            $v.='_short'; # we want the short version of the variable
         }
-        else {
-            die "ERROR: Variable '$v' is unknown, someone should implement it ;-)";
+
+        # do not print the issued variable, that is done within _parseDatePart 
+        if($v ne "issued") {    
+            print "_parseVariable: '$v'\n" if($self->{verbose});
+            if(exists $self->_var->{$v}) {
+                #print STDERR Dumper $self->_var;
+                #print STDERR Dumper $self->_var->{$v};
+                if($self->_var->{$v} ne '') {
+                        $self->{_result} .= $self->_var->{$v};
+                }
+            }
+            else {
+                die "ERROR: Variable '$v' is unknown, someone should implement it ;-)";
+            }
         }
     }
 }

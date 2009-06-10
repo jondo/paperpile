@@ -225,7 +225,7 @@
       <if variable="title" match="none">
         <choose>
           <if type="personal_communication" match="none">
-        <text variable="genre" text-case="capitalize-first"/>
+            <text variable="genre" text-case="capitalize-first"/>
           </if>
         </choose>
       </if>
