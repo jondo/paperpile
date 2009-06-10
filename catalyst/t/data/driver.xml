@@ -41,6 +41,13 @@
   <signature>
     <url>!linkinghub.elsevier.com!</url>
   </signature>
+
+  <!-- We are directly taken to science direct -->
+  <pattern>
+    <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
+  </pattern>
+
+  <!-- We have landed on the selection page and go for the science direct path -->
   <rule>
     <pattern>
       <match>!(http://www\.sciencedirect\.com/science\?_ob=GatewayURL.*?)&quot;!</match>

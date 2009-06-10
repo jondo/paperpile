@@ -13,6 +13,7 @@ use Encode;
 use Data::Dumper;
 use Config::Any;
 use Paperpile::Utils;
+use Paperpile::Exceptions;
 
 use YAML;
 
@@ -26,6 +27,7 @@ has 'driver_file' => (
 has '_driver'  => ( is => 'rw', isa => 'HashRef' );
 has '_browser' => ( is => 'rw', isa => 'LWP::UserAgent' );
 has 'debug'    => ( is => 'rw', isa => 'Bool', default => 1 );
+has '_cache'   => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
 
 sub BUILD {
 
@@ -44,15 +46,18 @@ sub search_file {
   my $driver = $self->_identify_site($URL);
 
   if ( not $driver ) {
-    carp('No driver found.');
-    return undef;
+    CrawlerUnknownSiteError->throw(error=>'PDF not found. Publisher site not supported.',
+                                   url => $URL,
+                                  );
   }
 
   my $site_rules = $driver->{rule};
 
   if ( not @$site_rules ) {
-    carp('No rules specified in driver.');
-    return undef;
+    # should not happen
+    CrawlerError->throw(error=>'PDF not found. Error in driver file.',
+                        url => $URL,
+                       );
   }
 
   # Take the redirected URL (if redirection has taken place)
@@ -90,7 +95,12 @@ sub search_file {
     }
     $ruleCount++;
   }
-  return $file;
+
+  if (!defined $file){
+    CrawlerScrapeError->throw("Could not download PDF. Your institution might need a subscription for the journal.");
+  } else {
+    return $file;
+  }
 }
 
 ## Finds the site drive for the given URL
@@ -144,7 +154,7 @@ sub _identify_site {
 
   foreach my $siteName ( keys %{ $driver->{site} } ) {
     foreach my $pattern (
-      @{ $driver->{site}->{$siteName}->{signature}->[0]->{body} } )
+      @{ $driver->{site}->{$siteName}->{signature}->{body} } )
     {
 
       print STDERR "Matching page content vs. $pattern. " if $self->debug;
@@ -153,6 +163,8 @@ sub _identify_site {
 
       if ( $body =~ m!($pattern)! ) {
         $driver->{site}->{$siteName}->{final_url} = $URL;
+        # Avoid getting the same page twice
+        $self->_cache->{$URL}=$response;
         print STDERR "Match. Using driver $siteName.\n" if $self->debug;
         return $driver->{site}->{$siteName};
       }
@@ -206,13 +218,20 @@ sub _matchURL {
 
   ( my $self, my $URL, my $pattern ) = @_;
 
-  my $response = $self->_browser->get($URL);
+  my ($content, $response);
 
-  my $content = $response->content;
+  if ($self->_cache->{$URL}){
+    $response=$self->_cache->{$URL};
+  } else {
+    $response = $self->_browser->get($URL);
+  }
+
+  $content = $response->content;
+
   $content =~ s/\n//g;
   my $tmp = time;
-  #open( FILE, ">$tmp.html" );
-  #print FILE $content;
+  open( FILE, ">$tmp.html" );
+  print FILE $content;
 
   $pattern =~ s/!//g;
 

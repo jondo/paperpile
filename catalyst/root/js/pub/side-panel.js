@@ -583,17 +583,17 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                 method: 'GET',
                 success: function(response){
                     var json = Ext.util.JSON.decode(response.responseText);
-                    Ext.getCmp('statusbar').clearStatus();
                     if (json.pdf){
                         this.downloadPDF(json.pdf);
-                        Ext.getCmp('statusbar').setText(json.pdf);
                     } else {
+                        Paperpile.main.onError(response);
                         this.progressBar.destroy();
-                        Ext.getCmp('statusbar').setText('Could not find PDF');
                     }
-                    
                 },
-
+                failure: function(response){
+                    Paperpile.main.onError(response);
+                    this.progressBar.destroy();
+                },
                 scope: this,
             });
 

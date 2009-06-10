@@ -12,6 +12,11 @@ use Exception::Class (PaperpileError,
                       NetFormatError => { isa => 'NetError',
                                           fields => 'content',
                                         },
+                      CrawlerError => { isa => 'PaperpileError',
+                                        fields => 'url',
+                                      },
+                      CrawlerUnknownSiteError => { isa => 'CrawlerError'},
+                      CrawlerScrapeError => { isa => 'CrawlerError'},
 
                      );
 

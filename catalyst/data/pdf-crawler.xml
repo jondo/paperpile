@@ -4,7 +4,6 @@
 
   <signature>
     <url>!biomedcentral\.com!</url>
-    <url>!genomebiology\.com!</url>
     <body>!http://\S*/content/pdf/.*\.pdf!</body>
   </signature>
 
@@ -23,7 +22,6 @@
 </site>
 
 <site name="ScienceDirect">
-
   <signature>
     <url>!sciencedirect!</url>
   </signature>
@@ -33,7 +31,6 @@
       <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
     </pattern>
   </rule>
-  
 </site>
 
 
@@ -41,6 +38,15 @@
   <signature>
     <url>!linkinghub.elsevier.com!</url>
   </signature>
+
+  <!-- We are directly taken to science direct -->
+  <rule>
+    <pattern>
+      <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
+    </pattern>
+  </rule>
+
+  <!-- We have landed on the selection page and go for the science direct path -->
   <rule>
     <pattern>
       <match>!(http://www\.sciencedirect\.com/science\?_ob=GatewayURL.*?)&quot;!</match>
@@ -52,11 +58,12 @@
 
   <test>
     <url>http://linkinghub.elsevier.com/retrieve/pii/S1470-2045(08)70008-1</url>
+    <url>http://linkinghub.elsevier.com/retrieve/pii/S0168-9525(08)00255-2</url>
   </test>
-
 
 </site>
 
+<!-- PloS links in pubmed have changed -->
 
 <site name="PloS">
 
@@ -105,11 +112,9 @@
 </site>
 
 <site name="HighWire2">
-
   <signature>
     <url>!cgi/content/(full|abstract)!</url>
   </signature>
-
   <rule>
     <pattern>
       <rewrite>!^(.*/cgi)/content/full/(.*)!$1/reprint/$2\.pdf!</rewrite>
@@ -123,7 +128,29 @@
   
 </site>
 
+<!-- We have landed directly on reprint site. Hope this is specific enough.-->
+<site name="HighWire3">
+  <signature>
+    <url>!cgi/reprint/\S*$!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <rewrite>!(cgi/reprint/\S*$)!$1\.pdf!</rewrite>
+    </pattern>
+  </rule>
 
+  <test>
+    <url>http://bioinformatics.oxfordjournals.org/cgi/reprint/btp064v2</url>
+  </test>
+  
+</site>
+
+
+
+
+
+
+<!-- There are many other patterns for books. I hope this is at least valid for most journals. -->
 <site name="Wiley">
   <signature>
     <url>!wiley!</url>
@@ -206,12 +233,14 @@
   </test>
 </site>
 
+<!-- get full list of journal using atypon-->
 <site name="Atypon">
 
   <signature>
     <url>acs\.org/doi/(abs|full)</url>
     <url>annualreviews\.org/doi/(abs|full)</url>
     <url>liebertonline\.com/doi/(abs|full)</url>
+    <url>mitpressjournals\.org/doi/(abs|full)</url>
   </signature>
 
   <rule>
@@ -321,7 +350,15 @@
 
 
 
+<!-- 
+Missing: 
+- http://www.landesbioscience.com/ (e.g. RNA biology) 
+- http://www.worldscinet.com
+- IEEE eg, http://doi.ieeecomputersociety.org/10.1109/TVCG.2006.196
 
+Broken:
+- http://rnajournal.cshlp.org/content/7/2/254.long
+-->
 
 
 

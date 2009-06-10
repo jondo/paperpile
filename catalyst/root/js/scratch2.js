@@ -7,6 +7,8 @@ Ext.onReady(function() {
 
     var status=new Paperpile.Status();
 
+    alert(Titanium.App.getName());
+
 
     /*
     status.updateMsg({msg: 'You have deleted 2 messages',

@@ -31,15 +31,13 @@ sub search : Local {
 
   my $crawler = Paperpile::Crawler->new;
   $crawler->debug(1);
-  $crawler->driver_file($c->path_to('data','pdf-crawler.xml')->stringify);
+  $crawler->driver_file( $c->path_to( 'data', 'pdf-crawler.xml' )->stringify );
   $crawler->load_driver();
   my $pdf = $crawler->search_file($url);
 
   print STDERR Dumper($pdf);
 
-  $c->stash->{success} = 'true';
-  $c->stash->{pdf}     = "$pdf";
-  $c->forward('Paperpile::View::JSON');
+  $c->stash->{pdf} = "$pdf";
 
 }
 
