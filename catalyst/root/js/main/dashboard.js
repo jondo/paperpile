@@ -6,7 +6,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
     initComponent: function() {
 		Ext.apply(this, {
             closable:true,
-            autoLoad:{url:'/screens/dashboard',
+            autoLoad:{url: Paperpile.Url('/screens/dashboard'),
                       callback: this.setupFields,
                       scope:this
                      },

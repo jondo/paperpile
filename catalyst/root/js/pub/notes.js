@@ -90,7 +90,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
         var newNotes= this.editor.getValue();
 
         Ext.Ajax.request({
-            url: '/ajax/crud/update_notes',
+            url: Paperpile.Url('/ajax/crud/update_notes'),
             params: { sha1: this.data.sha1,
                       rowid: this.data._rowid,
                       html: newNotes,

@@ -1,6 +1,12 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('Paperpile');
 
+IS_TITANIUM = !(window['Titanium'] == undefined);
+
+Paperpile.Url = function(url){
+    return (IS_TITANIUM) ? 'http://localhost:3000'+url : url;
+}
+
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     canvasWidth:null,
@@ -62,7 +68,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
         this.tagStore=new Ext.data.Store(
             { proxy: new Ext.data.HttpProxy({
-                url: '/ajax/misc/tag_list', 
+                url: Paperpile.Url('/ajax/misc/tag_list'), 
                 method: 'GET'
             }),
               storeId: 'tag_store',
@@ -83,7 +89,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     loadSettings: function(callback,scope){
 
         Ext.Ajax.request({
-            url: '/ajax/misc/get_settings',
+            url: Paperpile.Url('/ajax/misc/get_settings'),
             success: function(response){
                 var json = Ext.util.JSON.decode(response.responseText);
                 this.globalSettings=json.data;
@@ -122,7 +128,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         //statusBar.showBusy();
         //statusBar.setText('Importing journals titles');
         Ext.Ajax.request({
-            url: '/ajax/misc/import_journals',
+            url: Paperpile.Url('/ajax/misc/import_journals'),
             success: function(){
                 //statusBar.clearStatus();
                 //statusBar.setText('Import done.');
@@ -137,7 +143,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         //statusBar.showBusy();
         //statusBar.setText('Resetting database');
         Ext.Ajax.request({
-            url: '/ajax/misc/reset_db',
+            url: Paperpile.Url('/ajax/misc/reset_db'),
             success: function(){
                 //statusBar.clearStatus();
                 //statusBar.setText('Reset finished.');
@@ -152,7 +158,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         //statusBar.showBusy();
         //statusBar.setText('Initializing database');
         Ext.Ajax.request({
-            url: '/ajax/misc/init_db',
+            url: Paperpile.Url('/ajax/misc/init_db'),
             success: function(){
                 //statusBar.clearStatus();
                 //statusBar.setText('Initialization finished.');
@@ -278,7 +284,7 @@ Ext.onReady(function() {
     Paperpile.initMask = new Ext.LoadMask(Ext.getBody(), {msg:"Starting Paperpile Pre 1"});
     Paperpile.initMask.show();
     Ext.Ajax.request({
-        url: '/ajax/misc/init_session',
+        url: Paperpile.Url('/ajax/misc/init_session'),
         success: Paperpile.app
     });
      

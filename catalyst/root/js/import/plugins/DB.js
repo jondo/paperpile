@@ -197,7 +197,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         var match=this.plugin_base_query.match('folders:(.*)$');
 
         Ext.Ajax.request({
-            url: '/ajax/crud/delete_from_folder',
+            url: Paperpile.Url('/ajax/crud/delete_from_folder'),
             params: { selection: selection,
                       grid_id: this.id,
                       folder_id: match[1]

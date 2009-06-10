@@ -11,7 +11,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         var _store=new Ext.data.Store(
             {  proxy: new Ext.data.HttpProxy({
-                url: '/ajax/plugins/resultsgrid', 
+                url: Paperpile.Url('/ajax/plugins/resultsgrid'), 
                 method: 'GET'
             }),
                baseParams:{grid_id: this.id,
@@ -360,7 +360,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             Ext.getCmp('statusbar').showBusy();
         
             Ext.Ajax.request({
-                url: '/ajax/crud/complete_entry',
+                url: Paperpile.Url('/ajax/crud/complete_entry'),
                 params: { sha1: sha1,
                           grid_id: this.id,
                         },
@@ -395,7 +395,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         if (selection.length==0) return;
         
         Ext.Ajax.request({
-            url: '/ajax/crud/insert_entry',
+            url: Paperpile.Url('/ajax/crud/insert_entry'),
             params: { selection: selection,
                       grid_id: this.id,
                     },
@@ -437,7 +437,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var index=this.store.indexOf(this.getSelectionModel().getSelected());
 
         Ext.Ajax.request({
-            url: '/ajax/crud/delete_entry',
+            url: Paperpile.Url('/ajax/crud/delete_entry'),
             params: { selection: selection,
                       grid_id: this.id,
                     },
@@ -562,7 +562,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     onClose: function(cont, comp){
         Ext.Ajax.request({
-            url: '/ajax/plugins/delete_grid',
+            url: Paperpile.Url('/ajax/plugins/delete_grid'),
             params: { grid_id: this.id,
                     },
             method: 'GET'

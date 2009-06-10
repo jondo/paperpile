@@ -120,7 +120,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                   
                                   if (this.saveMode && this.warnOnExisting){
                                       Ext.Ajax.request({
-                                          url: '/ajax/files/stats',
+                                          url: Paperpile.Url('/ajax/files/stats'),
                                           params: { location: path},
                                           method: 'GET',
                                           success: function(response){
@@ -243,7 +243,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
             lines:false,
             rootVisible:false,
             filter:filter,
-            url:'/ajax/files/dialogue'
+            url:Paperpile.Url('/ajax/files/dialogue')
 	    });
 
         cp.add(treepanel);

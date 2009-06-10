@@ -23,7 +23,7 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
     initComponent: function() {
 		Ext.apply(this, {
             export_name:'Bibfile',
-            url:'/ajax/forms/settings',
+            url: Paperpile.Url('/ajax/forms/settings'),
             defaultType: 'textfield',
             layout:"column",
             border:false,

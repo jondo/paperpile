@@ -13,8 +13,8 @@ use Pod::Usage;
 #use FindBin;
 #use lib "$FindBin::Bin/../lib";
 
-#push @INC, ('../lib','../perl5/5.10.0','../perl5/5.10.0/linux64');
-push @INC, ('/home/wash/play/paperpile/catalyst/lib');
+push @INC, ('../lib','../perl5/5.10.0','../perl5/5.10.0/linux64');
+#push @INC, ('/home/wash/play/paperpile/catalyst/lib');
 
 my $debug             = 0;
 my $fork              = 0;

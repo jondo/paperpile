@@ -7,7 +7,7 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
 
         var _store=new Ext.data.Store(
             {  proxy: new Ext.data.HttpProxy({
-                url: '/ajax/pdfextract/grid', 
+                url: Paperpile.Url('/ajax/pdfextract/grid'), 
                 method: 'GET'
             }),
                reader: new Ext.data.JsonReader(),

@@ -8,7 +8,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             lines:false,
             autoScroll: true,
             loader: new Paperpile.TreeLoader(
-                {  url: '/ajax/tree/get_node',
+                {  url: Paperpile.Url('/ajax/tree/get_node'),
                    requestMethod: 'GET',
                 }
             ),
@@ -183,7 +183,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
             if (e.target.type == 'FOLDER'){
                 Ext.Ajax.request({
-                    url: '/ajax/crud/move_in_folder',
+                    url: Paperpile.Url('/ajax/crud/move_in_folder'),
                     params: {
                         grid_id: grid.id,
                         selection: grid.getSelection(),
@@ -199,7 +199,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
             if (e.target.type == 'TAGS'){
                 Ext.Ajax.request({
-                    url: '/ajax/crud/add_tag',
+                    url: Paperpile.Url('/ajax/crud/add_tag'),
                     params: { 
                         grid_id:grid.id,
                         selection: grid.getSelection(),
@@ -218,7 +218,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         // We're dragging nodes internally
         else {
             Ext.Ajax.request({
-                url: '/ajax/tree/move_node',
+                url: Paperpile.Url('/ajax/tree/move_node'),
                 params: { target_node: e.target.id,
                           drop_node: e.dropNode.id,
                           point: e.point,
@@ -388,7 +388,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         // Send to backend
         Ext.Ajax.request({
-            url: '/ajax/tree/new_active',
+            url: Paperpile.Url('/ajax/tree/new_active'),
             params: pars,
             success: function(){
                 //Ext.getCmp('statusbar').clearStatus();
@@ -483,7 +483,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         // Send to backend
         Ext.Ajax.request({
-            url: '/ajax/tree/new_folder',
+            url: Paperpile.Url('/ajax/tree/new_folder'),
             params: pars,
             success: function(){
                 //Ext.getCmp('statusbar').clearStatus();
@@ -500,7 +500,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         var node = this.getSelectionModel().getSelectedNode();
 
         Ext.Ajax.request({
-            url: '/ajax/tree/delete_active',
+            url: Paperpile.Url('/ajax/tree/delete_active'),
             params: { node_id: node.id },
             success: function(){
                 //Ext.getCmp('statusbar').clearStatus();
@@ -528,7 +528,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 				fn:function(editor, newText, oldText){
                     editor.editNode.plugin_title=newText;
                     Ext.Ajax.request({
-                        url: '/ajax/tree/rename_node',
+                        url: Paperpile.Url('/ajax/tree/rename_node'),
                         params: { node_id: node.id,
                                   new_text: newText
                                 },
@@ -549,7 +549,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         Ext.Ajax.request({
 
-            url: '/ajax/tree/delete_folder',
+            url: Paperpile.Url('/ajax/tree/delete_folder'),
             params: { node_id: node.id,
                       parent_id: node.parentNode.id,
                       name: node.text,
@@ -580,7 +580,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         this.configureNode=node;
         var oldLoader=node.loader;
         var tmpLoader=new Paperpile.TreeLoader(
-            {  url: '/ajax/tree/get_node',
+            {  url: Paperpile.Url('/ajax/tree/get_node'),
                baseParams: {checked:true},
                requestMethod: 'GET',
             });
@@ -619,7 +619,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         }
 
         Ext.Ajax.request({
-            url: '/ajax/tree/set_visibility',
+            url: Paperpile.Url('/ajax/tree/set_visibility'),
             params: { node_id: node.id,
                       hidden: hidden
                     },
@@ -709,7 +709,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                  };
 
         Ext.Ajax.request({
-            url: '/ajax/crud/new_tag',
+            url: Paperpile.Url('/ajax/crud/new_tag'),
             params: pars,
             success: function(){
                 Ext.StoreMgr.lookup('tag_store').reload();
@@ -726,7 +726,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         var tag=node.text;
 
         Ext.Ajax.request({
-            url: '/ajax/crud/delete_tag',
+            url: Paperpile.Url('/ajax/crud/delete_tag'),
             params: { tag: tag },
             success: function(){
                 
@@ -778,7 +778,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         var node = this.getSelectionModel().getSelectedNode();
 
         Ext.Ajax.request({
-            url: '/ajax/crud/style_tag',
+            url: Paperpile.Url('/ajax/crud/style_tag'),
             params: {tag: node.text, 
                      style: number,
                     },
@@ -833,7 +833,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 				single:true,
 				fn:function(editor, newText, oldText){
                     Ext.Ajax.request({
-                        url: '/ajax/crud/rename_tag',
+                        url: Paperpile.Url('/ajax/crud/rename_tag'),
                         params: { old_tag: tag,
                                   new_tag: newText
                                 },

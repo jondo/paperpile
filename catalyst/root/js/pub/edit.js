@@ -5,7 +5,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
 
         var _journal_store = new Ext.data.Store({
             proxy: new Ext.data.HttpProxy({
-                url: '/ajax/misc/journal_list'
+                url: Paperpile.Url('/ajax/misc/journal_list')
             }),
             reader: new Ext.data.JsonReader({
                 root: 'data',
@@ -191,7 +191,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
 
         // If we are given a grid_id we are updating an entry
         if (this.grid_id){
-            url='/ajax/crud/update_entry';
+            url= Paperpile.Url('/ajax/crud/update_entry');
             params={rowid:this.data._rowid,
                     sha1:this.data.sha1,
                     grid_id: this.grid_id,
@@ -199,7 +199,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
         } 
         // else we are creating a new one
         else {
-            url='/ajax/crud/new_entry';
+            url= Paperpile.Url('/ajax/crud/new_entry');
             if (this.data.attach_pdf){
                 console.log("INHERE");
                 params={attach_pdf: this.data.attach_pdf};

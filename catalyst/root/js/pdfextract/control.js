@@ -153,7 +153,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
         Ext.DomHelper.overwrite(this.grid.getView().getCell(row, 4), '<div class="pp-icon-loading">Matching...</div>');
         
         Ext.Ajax.request({
-            url: '/ajax/pdfextract/import',
+            url: Paperpile.Url('/ajax/pdfextract/import'),
             params: { root: this.grid.root,
                       grid_id: this.grid.id,
                       match_plugin:this.matchPlugin,

@@ -101,7 +101,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 		
         Paperpile.PDFmanager.superclass.initComponent.call(this);
 
-
 	},
 	
 
@@ -124,8 +123,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         this.multipleSelection=(numSelected > 1 );
         
-        console.log(numSelected, this.multipleSelection);
-
         if (!this.multipleSelection){
             this.data=sm.getSelected().data;
             this.data.id=this.id;
@@ -137,7 +134,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             this.data.attachments_list=[];
             if (this.data.attachments > 0){
                 Ext.Ajax.request(
-                    { url: '/ajax/attachments/list_files',
+                    { url: Paperpile.Url('/ajax/attachments/list_files'),
                       params: { sha1: this.data.sha1,
                                 rowid: this.data._rowid,
                                 grid_id: this.grid_id,
@@ -423,7 +420,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
 
         Ext.Ajax.request({
-            url: '/ajax/crud/add_tag',
+            url: Paperpile.Url('/ajax/crud/add_tag'),
             params: { 
                 grid_id:this.grid_id,
                 selection: Ext.getCmp(this.grid_id).getSelection(),
@@ -455,7 +452,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         Ext.get(el).parent().remove();
 
         Ext.Ajax.request({
-            url: '/ajax/crud/remove_tag',
+            url: Paperpile.Url('/ajax/crud/remove_tag'),
             params: { 
                 grid_id:this.grid_id,
                 selection: Ext.getCmp(this.grid_id).getSelection(),
@@ -500,7 +497,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     attachFile: function(isPDF, path){
 
         Ext.Ajax.request(
-            { url: '/ajax/attachments/attach_file',
+            { url: Paperpile.Url('/ajax/attachments/attach_file'),
               params: { sha1: this.data.sha1,
                         rowid: this.data._rowid,
                         grid_id: this.grid_id,
@@ -545,7 +542,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         }
 
         Ext.Ajax.request(
-            { url: '/ajax/attachments/delete_file',
+            { url: Paperpile.Url('/ajax/attachments/delete_file'),
               params: { sha1: this.data.sha1,
                         rowid: isPDF ? this.data._rowid : rowid,
                         is_pdf: (isPDF) ? 1:0,
@@ -575,7 +572,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         this.progressBar.wait({text:"Searching PDF on publisher site", interval:100});
 
         Ext.Ajax.request(
-            {   url: '/ajax/download/search',
+            {   url: Paperpile.Url('/ajax/download/search'),
                 params: { sha1: this.data.sha1,
                           grid_id: this.grid_id,
                           linkout:this.data.linkout,
@@ -610,7 +607,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         this.progressBar.text="Starting download...";
 
         Ext.Ajax.request(
-            {   url: '/ajax/download/get',
+            {   url: Paperpile.Url('/ajax/download/get'),
                 params: { sha1: this.data.sha1,
                           grid_id: this.grid_id,
                           url:pdf,
@@ -655,7 +652,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     checkProgress: function(sha1){
 
         Ext.Ajax.request({
-            url: '/ajax/download/progress',
+            url: Paperpile.Url('/ajax/download/progress'),
             params: { sha1: this.data.sha1,
                       grid_id: this.grid_id,
             },

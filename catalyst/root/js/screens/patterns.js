@@ -3,7 +3,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
     initComponent: function() {
 		Ext.apply(this, {
             closable:true,
-            autoLoad:{url:'/screens/patterns',
+            autoLoad:{url:Paperpile.Url('/screens/patterns'),
                       callback: this.setupFields,
                       scope:this
                      },
@@ -101,7 +101,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                 );
 
         Ext.Ajax.request({
-            url: '/ajax/settings/pattern_example',
+            url: Paperpile.Url('/ajax/settings/pattern_example'),
             params: params,
             success: function(response){
                 var data = Ext.util.JSON.decode(response.responseText).data;
@@ -131,7 +131,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                  }, this);
 
         Ext.Ajax.request({
-            url: '/ajax/settings/update_patterns',
+            url: Paperpile.Url('/ajax/settings/update_patterns'),
             params: params,
             success: function(response){
                 var data = Ext.util.JSON.decode(response.responseText).data;

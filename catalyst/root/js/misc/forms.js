@@ -15,7 +15,7 @@ Paperpile.Forms.Settings = Ext.extend(Paperpile.Forms, {
     initComponent: function() {
 		Ext.apply(this, {
             labelWidth: 150,
-            url:'/ajax/forms/settings',
+            url:Paperpile.Url('/ajax/forms/settings'),
             defaultType: 'textfield',
             items:[
                 { name:'user_db',
@@ -42,7 +42,7 @@ Paperpile.Forms.Settings = Ext.extend(Paperpile.Forms, {
             buttons: [{ text:'Save',
                         handler: function(){
                             this.getForm().submit({
-                                url:'/ajax/forms/settings',
+                                url:Paperpile.Url('/ajax/forms/settings'),
                                 params: {action:'SUBMIT'},
                                 success: function(){
                                     Ext.getCmp('statusbar').clearStatus();
@@ -69,7 +69,7 @@ Paperpile.Forms.Settings = Ext.extend(Paperpile.Forms, {
         Paperpile.Forms.Settings.superclass.initComponent.call(this);
         
         this.load({
-            url:'/ajax/forms/settings',
+            url: Paperpile.Url('/ajax/forms/settings'),
             params: {action:'LOAD'},
             success: function(){
                 console.log(Paperpile.main.globalSettings);

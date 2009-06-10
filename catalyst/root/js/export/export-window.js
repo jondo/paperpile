@@ -63,7 +63,7 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
                               fn: function(){
                                   var form=this.items.get(1).getForm();
                                   form.submit({
-                                      url:'/ajax/plugins/export',
+                                      url:Paperpile.Url('/ajax/plugins/export'),
                                       params: {grid_id: this.grid_id,
                                                source_node: this.source_node,
                                                export_name: this.pluginForm.export_name,
