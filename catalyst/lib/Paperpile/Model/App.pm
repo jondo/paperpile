@@ -52,7 +52,6 @@ sub settings {
     $output{$key} = $value;
   }
   return {%output};
-
 }
 
 

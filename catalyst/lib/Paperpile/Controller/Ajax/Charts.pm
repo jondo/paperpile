@@ -12,7 +12,7 @@ sub test : Local {
   my ( $self, $c ) = @_;
 
   my $sth =
-    $c->model('User')
+    $c->model('Library')
     ->dbh->prepare(
     'SELECT author_id, first, last FROM Authors, Author_Publication WHERE author_id == Authors.rowid;'
     );

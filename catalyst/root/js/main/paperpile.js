@@ -9,8 +9,6 @@ Paperpile.Url = function(url){
 
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
-    canvasWidth:null,
-    canvasHeight:null,
     globalSettings:null,
 
     initComponent: function() {
@@ -78,12 +76,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             }
         ); 
         this.tagStore.reload();
-
-        
-
-        
-        this.on('afterlayout',this.onAfterLayout,this);
-                 
 	},
 
     loadSettings: function(callback,scope){
@@ -93,22 +85,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             success: function(response){
                 var json = Ext.util.JSON.decode(response.responseText);
                 this.globalSettings=json.data;
-                //Ext.getCmp('statusbar').clearStatus();
-                //Ext.getCmp('statusbar').setText('Loaded settings.');
                 if (callback){
                     callback.createDelegate(scope)();
                 }
             },
             scope:this,
         });
-    },
-
-
-    onAfterLayout: function(){
-
-        //this.canvasWidth=Ext.getCmp('canvas_panel').getInnerWidth();
-        //this.canvasHeight=Ext.getCmp('canvas_panel').getInnerHeight();
-
     },
 
     onPDFtabToggle: function(button, pressed){
@@ -121,62 +103,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             this.canvas_panel.getLayout().setActiveItem('pdf_viewer');
         }
     },
-
-
-    importJournals: function(){
-        //statusBar = Ext.getCmp('statusbar');
-        //statusBar.showBusy();
-        //statusBar.setText('Importing journals titles');
-        Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/misc/import_journals'),
-            success: function(){
-                //statusBar.clearStatus();
-                //statusBar.setText('Import done.');
-            },
-            failure: this.markInvalid,
-        })
-    },
-
-
-    resetDB: function(){
-        //statusBar = Ext.getCmp('statusbar');
-        //statusBar.showBusy();
-        //statusBar.setText('Resetting database');
-        Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/misc/reset_db'),
-            success: function(){
-                //statusBar.clearStatus();
-                //statusBar.setText('Reset finished.');
-            },
-            failure: this.markInvalid,
-        })
-    },
-
-
-    initDB: function(){
-        //statusBar = Ext.getCmp('statusbar');
-        //statusBar.showBusy();
-        //statusBar.setText('Initializing database');
-        Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/misc/init_db'),
-            success: function(){
-                //statusBar.clearStatus();
-                //statusBar.setText('Initialization finished.');
-            },
-            failure: this.markInvalid,
-        })
-    },
-
-    settings:function(){
-
-        var panel=main.tabs.add(new Paperpile.PatternSettings({title:'Settings', 
-                                                         iconCls: 'pp-icon-page',
-                                                }));
-        panel.show();
-        
-    },
-
-
 
 
     pdfExtract: function(){
@@ -284,10 +210,29 @@ Ext.onReady(function() {
     Paperpile.initMask = new Ext.LoadMask(Ext.getBody(), {msg:"Starting Paperpile Pre 1"});
     Paperpile.initMask.show();
     Ext.Ajax.request({
-        url: Paperpile.Url('/ajax/misc/init_session'),
-        success: Paperpile.app
+        url: Paperpile.Url('/ajax/app/init_session'),
+        success: function(response){
+            var json = Ext.util.JSON.decode(response.responseText);
+            if (json.error){
+                
+                Ext.Msg.show({
+                    title:'Error',
+                    msg: json.error.msg,
+                    buttons: Ext.Msg.OK,
+                    animEl: 'elId',
+                    icon: Ext.MessageBox.ERROR
+                });
+
+                if (json.error.type == 'LibraryMissingError'){
+                    Paperpile.app();
+                } else {
+                    Paperpile.initMask.hide();
+                }
+            } else {
+                Paperpile.app();
+            }
+        }
     });
-     
 });
 
 
@@ -316,7 +261,6 @@ Paperpile.app=function(){
     tree.expandAll();
     main.tabs.remove('welcome');
     Paperpile.initMask.hide();
-
 
 }
 

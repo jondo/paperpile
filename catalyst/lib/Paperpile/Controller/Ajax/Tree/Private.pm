@@ -220,7 +220,7 @@ sub get_tags : Private {
 
   my ( $self, $c, $tree ) = @_;
 
-  my @tags = @{ $c->model('User')->get_tags };
+  my @tags = @{ $c->model('Library')->get_tags };
 
   # Remove all children (old tags) first
 

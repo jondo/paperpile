@@ -16,7 +16,7 @@ sub insert_entry : Local {
 
   my %output=();
 
-  $c->model('User')->create_pubs($data);
+  $c->model('Library')->create_pubs($data);
 
   foreach my $pub (@$data){
     $output{$pub->sha1}={_imported=>1,
@@ -63,10 +63,10 @@ sub new_entry: Local {
 
   my $pub=Paperpile::Library::Publication->new({%fields});
 
-  $c->model('User')->create_pubs([$pub]);
+  $c->model('Library')->create_pubs([$pub]);
 
   if ($attach_pdf){
-    $c->model('User')->attach_file( $attach_pdf, 1, $pub->_rowid, $pub);
+    $c->model('Library')->attach_file( $attach_pdf, 1, $pub->_rowid, $pub);
   }
 
   $c->stash->{data} = $pub->as_hash;
@@ -83,7 +83,7 @@ sub delete_entry : Local {
 
   my $data = $self->_get_selection($c);
 
-  $c->model('User')->delete_pubs($data);
+  $c->model('Library')->delete_pubs($data);
 
   $plugin->total_entries($plugin->total_entries - scalar(@$data));
 
@@ -111,7 +111,7 @@ sub update_entry : Local {
 
   my $newPub=Paperpile::Library::Publication->new($data);
 
-  $c->model('User')->update_pub($newPub);
+  $c->model('Library')->update_pub($newPub);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -126,14 +126,14 @@ sub update_notes : Local {
   my $sha1  = $c->request->params->{sha1};
   my $html  = $c->request->params->{html};
 
-  $c->model('User')->update_field( 'Publications', $rowid, 'notes', $html );
+  $c->model('Library')->update_field( 'Publications', $rowid, 'notes', $html );
 
   my $tree      = HTML::TreeBuilder->new->parse($html);
   my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
   my $text      = $formatter->format($tree);
 
-  $c->model('User')->update_field( 'Fulltext_full', $rowid, 'notes', $text );
-  $c->model('User')->update_field( 'Fulltext_citation', $rowid, 'notes', $text );
+  $c->model('Library')->update_field( 'Fulltext_full', $rowid, 'notes', $text );
+  $c->model('Library')->update_field( 'Fulltext_citation', $rowid, 'notes', $text );
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -153,7 +153,7 @@ sub add_tag : Local {
     push @to_be_imported, $pub if !$pub->_imported;
   }
 
-  $c->model('User')->create_pubs(\@to_be_imported);
+  $c->model('Library')->create_pubs(\@to_be_imported);
 
   my %output=();
 
@@ -163,7 +163,7 @@ sub add_tag : Local {
     my %seen = ();
     @tags = grep { !$seen{$_}++ } @tags;
     my $new_tags=join( ',', @tags );
-    $c->model('User')->update_tags($pub->_rowid, $new_tags);
+    $c->model('Library')->update_tags($pub->_rowid, $new_tags);
     $pub->tags($new_tags);
     $output{$pub->sha1}={_imported=>1,
                          _rowid=>$pub->_rowid,
@@ -193,7 +193,7 @@ sub remove_tag : Local {
     $new_tags =~ s/^$tag$//g;
     $new_tags =~ s/,$tag$//g;
     $new_tags =~ s/,$tag,/,/g;
-    $c->model('User')->update_tags( $pub->_rowid, $new_tags );
+    $c->model('Library')->update_tags( $pub->_rowid, $new_tags );
     $pub->tags($new_tags);
     $output{$pub->sha1}={tags=>$new_tags};
 
@@ -211,7 +211,7 @@ sub update_tags : Local {
   my $sha1      = $c->request->params->{sha1};
   my $tags      = $c->request->params->{tags};
 
-  $c->model('User')->update_tags($rowid, $tags);
+  $c->model('Library')->update_tags($rowid, $tags);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -224,7 +224,7 @@ sub style_tag : Local {
   my $tag   = $c->request->params->{tag};
   my $style = $c->request->params->{style};
 
-  $c->model('User')->set_tag_style( $tag, $style );
+  $c->model('Library')->set_tag_style( $tag, $style );
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -238,7 +238,7 @@ sub new_tag : Local {
   my $tag = $c->request->params->{tag};
   my $style = $c->request->params->{style};
 
-  $c->model('User')->new_tag($tag,$style);
+  $c->model('Library')->new_tag($tag,$style);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -250,7 +250,7 @@ sub delete_tag : Local {
 
   my $tag = $c->request->params->{tag};
 
-  $c->model('User')->delete_tag($tag);
+  $c->model('Library')->delete_tag($tag);
 
   foreach my $pub (@{$self->_get_cached_data($c)}){
     my $new_tags=$pub->tags;
@@ -272,7 +272,7 @@ sub rename_tag : Local {
   my $old_tag = $c->request->params->{old_tag};
   my $new_tag = $c->request->params->{new_tag};
 
-  $c->model('User')->rename_tag($old_tag,$new_tag);
+  $c->model('Library')->rename_tag($old_tag,$new_tag);
 
   foreach my $pub (@{$self->_get_cached_data($c)}){
     my $new_tags=$pub->tags;
@@ -324,7 +324,7 @@ sub move_in_folder : Local {
     push @to_be_imported, $pub if !$pub->_imported;
   }
 
-  $c->model('User')->create_pubs( \@to_be_imported );
+  $c->model('Library')->create_pubs( \@to_be_imported );
 
   my %output;
 
@@ -337,7 +337,7 @@ sub move_in_folder : Local {
       my %seen = ();
       @folders = grep { !$seen{$_}++ } @folders;
       my $new_folders = join( ',', @folders );
-      $c->model('User')->update_folders( $pub->_rowid, $new_folders );
+      $c->model('Library')->update_folders( $pub->_rowid, $new_folders );
       $output{ $pub->sha1 } = {
         _imported => 1,
         _rowid    => $pub->_rowid,
@@ -375,7 +375,7 @@ sub delete_from_folder : Local {
   my $data = $self->_get_selection($c);
 
   foreach my $pub (@$data){
-    $c->model('User')->delete_from_folder( $pub->_rowid, $folder_id );
+    $c->model('Library')->delete_from_folder( $pub->_rowid, $folder_id );
   }
 
   $c->stash->{success} = 'true';

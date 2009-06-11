@@ -1,7 +1,7 @@
 *~
 user.db
 app.db
-local-user.db
+library.db
 semantic.cache
 tmp/
 user/

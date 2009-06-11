@@ -84,7 +84,7 @@ sub connect {
         $all{ $pub->sha1 } = $pub;
       }
 
-      my $empty_db = Paperpile::Utils->path_to('db/local-user.db')->stringify;
+      my $empty_db = Paperpile::Utils->path_to('db/library.db')->stringify;
       copy( $empty_db, $self->_db_file ) or die "Could not initialize empty db ($!)";
 
       my $model = $self->get_model();

@@ -1,23 +1,30 @@
 ---
 name: "Paperpile"
+platform: "__PLATFORM__"
+
+paperpile_user_dir: "__USERHOME__/.paperpile"
+user_settings_db: "__USERHOME__/.paperpile/settings.db"
 
 Model::App:
   dsn: "dbi:SQLite:__path_to(db/app.db)__"
 
+Model::User:
+  dsn: "dbi:SQLite:__USERHOME__/.paperpile/settings.db"
+
+app_settings:
+  platform: "__PLATFORM__"
+
 user_settings:
   tmp_dir: "__path_to(tmp)__"
+  library_db: "__USERHOME__/.paperpile/paperpile.ppl"
+  user_home: "__USERHOME__"
+
+library_settings:
   paper_root: "__USERHOME__/.paperpile/papers"
   key_pattern: "[firstauthor][YYYY]"
   pdf_pattern: "[key]"
   attachment_pattern: "[key]_supplements"
   _tree: ""
-
-
-app_settings:
-  platform: "__PLATFORM__"
-  user_db: "__USERHOME__/.paperpile/paperpile.db"
-  user_home: "__USERHOME__"
-
 
 pub_fields:
   pubtype:       "Publication Type"

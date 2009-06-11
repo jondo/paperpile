@@ -1,8 +1,11 @@
 package Paperpile::Exceptions;
 
 use Exception::Class (PaperpileError,
-                      FileError => { isa => 'PaperpileError' },
+                      FileError => { isa => 'PaperpileError',
+                                     fields =>'file'
+                                   },
                       FileReadError => {isa => 'FileError'},
+                      LibraryMissingError => {isa => 'FileReadError'},
                       FileWriteError => {isa => 'FileError'},
                       FileFormatError => {isa => 'FileError'},
                       NetError => { isa => 'PaperpileError' },

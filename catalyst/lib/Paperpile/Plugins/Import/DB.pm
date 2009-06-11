@@ -6,7 +6,7 @@ use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Paperpile::Utils;
-use Paperpile::Model::User;
+use Paperpile::Model::Library;
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Library::Journal;
@@ -28,7 +28,7 @@ sub BUILD {
 sub get_model {
 
   my $self=shift;
-  my $model = Paperpile::Model::User->new();
+  my $model = Paperpile::Model::Library->new();
   $model->set_dsn("dbi:SQLite:".$self->_db_file);
   return $model;
 

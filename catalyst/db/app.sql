@@ -1,4 +1,4 @@
-CREATE TABLE settings(
+CREATE TABLE Settings(
  key      TEXT, 
  value    TEXT
 );

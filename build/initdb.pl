@@ -2,24 +2,34 @@
 
 use lib "../catalyst/lib";
 use Paperpile::Model::App;
+use Paperpile::Model::Library;
+use Data::Dumper;
+
+use YAML qw(LoadFile);
 
 chdir '../catalyst/db';
 
-print STDERR "Initializing app.db...\n";
-unlink 'app.db';
-my @out = `sqlite3 app.db < app.sql`;
-print @out;
+foreach my $key ('app','user','library'){
+  print STDERR "Initializing $key.db...\n";
+  unlink "$key.db";
+  my @out = `sqlite3 $key.db < $key.sql`;
+  print @out;
+}
 
-print STDERR "Initializing user.db...\n";
-unlink 'user.db';
-@out = `sqlite3 user.db < user.sql`;
-print @out;
+my $model = Paperpile::Model::Library->new();
+$model->set_dsn( "dbi:SQLite:" . "library.db" );
+
+my $config = LoadFile('../paperpile.yaml');
+
+foreach my $field ( keys %{$config->{pub_fields}} ) {
+  $model->dbh->do("ALTER TABLE Publications ADD COLUMN $field TEXT");
+}
 
 
 print STDERR "Importing journal list into app.db...\n";
 
 open( JOURNALS, "<../data/journals.list" );
-my $model = Paperpile::Model::App->new();
+$model = Paperpile::Model::App->new();
 $model->set_dsn( "dbi:SQLite:" . "../db/app.db" );
 
 $model->dbh->begin_work();
@@ -56,7 +66,6 @@ foreach my $short (keys %data){
   $model->dbh->do("INSERT INTO Journals_lookup (rowid,short,long) VALUES ($rowid,$short,$long)");
 
 }
-
 
 $model->dbh->commit();
 

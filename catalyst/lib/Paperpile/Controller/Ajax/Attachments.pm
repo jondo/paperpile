@@ -27,7 +27,7 @@ sub attach_file : Local {
 
   my $pub      = $plugin->find_sha1($sha1);
 
-  my $attached_file=$c->model('User')->attach_file($file, $is_pdf, $rowid, $pub);
+  my $attached_file=$c->model('Library')->attach_file($file, $is_pdf, $rowid, $pub);
 
   if ($is_pdf){
     $c->stash->{pdf_file}=$attached_file;
@@ -43,12 +43,12 @@ sub list_files : Local {
 
   my $rowid  = $c->request->params->{rowid};
 
-  my $sth = $c->model('User')->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+  my $sth = $c->model('Library')->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
   my ( $attachment_rowid, $file_name );
   $sth->bind_columns( \$attachment_rowid, \$file_name );
   $sth->execute;
 
-  my $paper_root=$c->model('User')->get_setting('paper_root');
+  my $paper_root=$c->model('Library')->get_setting('paper_root');
 
   my @output=();
   while ( $sth->fetch ) {
@@ -80,7 +80,7 @@ sub delete_file : Local {
   my $sha1    = $c->request->params->{sha1};
   my $plugin  = $c->session->{"grid_$grid_id"};
 
-  $c->model('User')->delete_attachment($rowid,$is_pdf);
+  $c->model('Library')->delete_attachment($rowid,$is_pdf);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');

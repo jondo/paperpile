@@ -71,7 +71,7 @@ sub update_patterns : Local {
   my $pdf_pattern        = $c->request->params->{pdf_pattern};
   my $attachment_pattern = $c->request->params->{attachment_pattern};
 
-  my $settings = $c->model('User')->settings;
+  my $settings = $c->model('Library')->settings;
   $settings->{user_db} = $c->model('App')->get_setting('user_db');
 
   my $db_changed         = $user_db            ne $settings->{user_db};
@@ -81,7 +81,7 @@ sub update_patterns : Local {
   my $attachment_changed = $attachment_pattern ne $settings->{attachment_pattern};
 
   if ($key_changed) {
-    $c->model('User')->update_citekeys($key_pattern);
+    $c->model('Library')->update_citekeys($key_pattern);
   }
 
   # Update files if either attachments or pdf pattern changed, or if
@@ -93,13 +93,13 @@ sub update_patterns : Local {
 
   if ($update_files) {
     $c->forward('rename_files');
-    $c->model('User')->set_setting( 'pdf_pattern',        $pdf_pattern );
-    $c->model('User')->set_setting( 'attachment_pattern', $attachment_pattern );
+    $c->model('Library')->set_setting( 'pdf_pattern',        $pdf_pattern );
+    $c->model('Library')->set_setting( 'attachment_pattern', $attachment_pattern );
   }
 
   if ($root_changed) {
     if ( dirmove( $settings->{paper_root}, $paper_root ) ) {
-      $c->model('User')->set_setting( 'paper_root', $paper_root );
+      $c->model('Library')->set_setting( 'paper_root', $paper_root );
     } else {
       die("Could not move directory to new location ($!)");
     }
@@ -146,7 +146,7 @@ sub rename_files : Private {
   my $pdf_pattern        = $c->request->params->{pdf_pattern};
   my $attachment_pattern = $c->request->params->{attachment_pattern};
 
-  my $model= $c->model('User');
+  my $model= $c->model('Library');
 
   $model->dbh->begin_work;
 

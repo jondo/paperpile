@@ -12,7 +12,7 @@ sub settings : Local {
 
   my $params=$c->request->params;
 
-  my $user_settings=$c->model('User')->settings;
+  my $user_settings=$c->model('Library')->settings;
   my $app_settings=$c->model('App')->settings;
 
   if ($params->{action} eq 'LOAD'){
@@ -37,7 +37,7 @@ sub settings : Local {
       # Check if user or app setting, and only update if changed
       if (exists $user_settings->{$key}){
         if ($user_settings->{$key} ne $params->{$key}){
-          $c->model('User')->set_setting($key,$params->{$key});
+          $c->model('Library')->set_setting($key,$params->{$key});
         }
       }
       if (exists $app_settings->{$key}){

@@ -58,7 +58,7 @@ sub resultsgrid : Local {
     }
 
     if ( ( $plugin_name eq 'DB' ) and ( not $c->request->params->{plugin_file} ) ) {
-      $params{file} = $c->session->{user_db};
+      $params{file} = $c->session->{library_db};
     }
 
     # create instance; can we do this more elegantly?
@@ -85,7 +85,7 @@ sub resultsgrid : Local {
       $pub->_imported(1);
     }
   } else {
-    $c->model('User')->exists_pub($entries);
+    $c->model('Library')->exists_pub($entries);
   }
 
   _resultsgrid_format( @_, $entries, $plugin->total_entries );
@@ -209,7 +209,7 @@ sub export : Local {
       }
     }
     if ( ( $params{name} eq 'DB' ) and ( not $params{file} ) ) {
-      $params{file} = $c->session->{user_db};
+      $params{file} = $c->session->{library_db};
     }
 
     my $plugin_module = "Paperpile::Plugins::Import::" . $params{name};

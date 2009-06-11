@@ -57,10 +57,10 @@ sub grid : Local {
 
   my %pdfs_in_db = ();
 
-  my $paper_root = $c->model('User')->get_setting('paper_root');
+  my $paper_root = $c->model('Library')->get_setting('paper_root');
 
   my $sth =
-    $c->model('User')
+    $c->model('Library')
     ->dbh->prepare("SELECT rowid,pdf,title,authors,doi FROM Publications WHERE pdf !='';");
   $sth->execute;
 
@@ -160,17 +160,17 @@ sub import : Local {
     } else {
 
       my $pub_in_db =
-        $c->model('User')
-        ->standard_search( 'sha1=' . $c->model('User')->dbh->quote( $pub->sha1 ), 0, 1 )->[0];
+        $c->model('Library')
+        ->standard_search( 'sha1=' . $c->model('Library')->dbh->quote( $pub->sha1 ), 0, 1 )->[0];
 
       if ( !$pub_in_db ) {
         $pub->created(timestamp);
         $pub->times_read(0);
         $pub->last_read(timestamp);
-        $c->model('User')->create_pubs( [$pub] );
+        $c->model('Library')->create_pubs( [$pub] );
         $pub->_imported(1);
 
-        my $imported = $c->model('User')->attach_file( $file_name, 1, $pub->_rowid, $pub );
+        my $imported = $c->model('Library')->attach_file( $file_name, 1, $pub->_rowid, $pub );
 
         $data->{status_msg} = "Imported <b>$file_basename</b> as entry <b>" . $pub->citekey. "</b>";
 
@@ -180,7 +180,7 @@ sub import : Local {
           $data->{status_msg} = "<b>$file_basename</b> already exists in database (" . $pub_in_db->pdf . ")";
         } else {
           my $imported =
-            $c->model('User')->attach_file( $file_name, 1, $pub_in_db->_rowid, $pub_in_db );
+            $c->model('Library')->attach_file( $file_name, 1, $pub_in_db->_rowid, $pub_in_db );
           $data->{status_msg} =
               "<b>$file_basename</b> assigned to citation <b>"
             . $pub_in_db->citekey

@@ -51,7 +51,7 @@ sub get : Local {
 
   my $pub = $plugin->find_sha1($sha1);
 
-  my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
+  my $tmp_dir = $c->model('Library')->get_setting('tmp_dir');
   my $dir     = "$tmp_dir/download/$sha1";
   rmtree($dir);
   mkpath($dir);
@@ -124,11 +124,11 @@ sub finish : Local{
   my $source = $c->session->{"source_$source_id"};
   my $pub = $source->find_sha1($sha1);
 
-  my $tmp_dir=$c->model('User')->get_setting('tmp_dir');
+  my $tmp_dir=$c->model('Library')->get_setting('tmp_dir');
   my $tmp_file="$tmp_dir/download/$sha1/paper.pdf";
 
-  my $root=$pub->format($c->model('User')->get_setting('paper_root'));
-  my $pattern=$pub->format($c->model('User')->get_setting('paper_pattern'));
+  my $root=$pub->format($c->model('Library')->get_setting('paper_root'));
+  my $pattern=$pub->format($c->model('Library')->get_setting('paper_pattern'));
 
   my $dest=	File::Spec->catfile($root, $pattern).".pdf";
 
@@ -137,7 +137,7 @@ sub finish : Local{
   mkpath($dirs);
   copy($tmp_file, $dest);
 
-  $c->model('User')->update_field('Publications',$pub->_rowid, 'pdf', $dest);
+  $c->model('Library')->update_field('Publications',$pub->_rowid, 'pdf', $dest);
 
   $c->stash->{pdf_file} = "$dest";
   $c->stash->{success} = 'true';
@@ -150,7 +150,7 @@ sub progress : Local {
 
   my $sha1  = $c->request->params->{sha1};
 
-  my $tmp_dir=$c->model('User')->get_setting('tmp_dir');
+  my $tmp_dir=$c->model('Library')->get_setting('tmp_dir');
 
   my $file="$tmp_dir/download/$sha1/paper.pdf";
 

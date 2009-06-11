@@ -19,7 +19,7 @@ sub get_node : Local {
   my $tree;
 
   if ( not defined $c->session->{"tree"} ) {
-    $tree=$c->model('User')->restore_tree();
+    $tree=$c->model('Library')->restore_tree();
     if (not defined $tree){
       $tree = $c->forward('private/get_default_tree');
     }
@@ -101,7 +101,7 @@ sub set_visibility : Local {
 
   $subtree->getNodeValue->{hidden}=$hidden;
 
-  $c->model('User')->save_tree($tree);
+  $c->model('Library')->save_tree($tree);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -135,8 +135,8 @@ sub new_folder : Local {
   $new->setUID($node_id);
   $sub_tree->addChild($new);
 
-  $c->model('User')->insert_folder( $node_id );
-  $c->model('User')->save_tree($tree);
+  $c->model('Library')->insert_folder( $node_id );
+  $c->model('Library')->save_tree($tree);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -164,8 +164,8 @@ sub delete_folder : Local {
   );
 
   $subtree->getParent->removeChild($subtree);
-  $c->model('User')->save_tree($tree);
-  $c->model('User')->delete_folder([@to_delete]);
+  $c->model('Library')->save_tree($tree);
+  $c->model('Library')->delete_folder([@to_delete]);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -195,7 +195,7 @@ sub move_in_folder : Local {
   my %seen = ();
   @folders = grep { !$seen{$_}++ } @folders;
 
-  $c->model('User')->update_folders( $rowid, join( ',', @folders ) );
+  $c->model('Library')->update_folders( $rowid, join( ',', @folders ) );
   $pub->folders( join( ',', @folders ) );
 
 
@@ -210,7 +210,7 @@ sub delete_from_folder : Local {
 
   my $plugin = $c->session->{"grid_$grid_id"};
 
-  $c->model('User')->delete_from_folder( $rowid, $folder_id );
+  $c->model('Library')->delete_from_folder( $rowid, $folder_id );
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -243,7 +243,7 @@ sub new_active : Local {
   $new->setUID($node_id);
   $sub_tree->addChild($new);
 
-  $c->model('User')->save_tree($tree);
+  $c->model('Library')->save_tree($tree);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -261,7 +261,7 @@ sub delete_active : Local {
 
   $subtree->getParent->removeChild($subtree);
 
-  $c->model('User')->save_tree($tree);
+  $c->model('Library')->save_tree($tree);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -283,7 +283,7 @@ sub rename_node : Local {
   $pars->{text}=$new_text;
   $pars->{plugin_title}=$new_text;
 
-  $c->model('User')->save_tree($tree);
+  $c->model('Library')->save_tree($tree);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -321,7 +321,7 @@ sub move_node : Local {
     $target_subtree->getParent->insertChild($target_index, $drop_subtree);
   }
 
-  $c->model('User')->save_tree($tree);
+  $c->model('Library')->save_tree($tree);
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
