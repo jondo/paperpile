@@ -15,7 +15,7 @@ app_settings:
   platform: "__PLATFORM__"
 
 user_settings:
-  tmp_dir: "__path_to(tmp)__"
+  tmp_dir: "__USERHOME__/.paperpile/tmp"
   library_db: "__USERHOME__/.paperpile/paperpile.ppl"
   user_home: "__USERHOME__"
 

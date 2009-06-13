@@ -1,0 +1,16 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server.pm relocate_as=../../../Net/Server.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server.pod relocate_as=../../../Net/Server.pod
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/Daemonize.pm relocate_as=../../../Net/Server/Daemonize.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/Fork.pm relocate_as=../../../Net/Server/Fork.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/INET.pm relocate_as=../../../Net/Server/INET.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/MultiType.pm relocate_as=../../../Net/Server/MultiType.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/Multiplex.pm relocate_as=../../../Net/Server/Multiplex.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/PreFork.pm relocate_as=../../../Net/Server/PreFork.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/PreForkSimple.pm relocate_as=../../../Net/Server/PreForkSimple.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/Proto.pm relocate_as=../../../Net/Server/Proto.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/Proto/SSL.pm relocate_as=../../../Net/Server/Proto/SSL.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/Proto/TCP.pm relocate_as=../../../Net/Server/Proto/TCP.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/Proto/UDP.pm relocate_as=../../../Net/Server/Proto/UDP.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/Proto/UNIX.pm relocate_as=../../../Net/Server/Proto/UNIX.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/SIG.pm relocate_as=../../../Net/Server/SIG.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Net/Server/Single.pm relocate_as=../../../Net/Server/Single.pm

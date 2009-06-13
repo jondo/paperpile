@@ -11,7 +11,11 @@ use File::Path;
 use File::Copy;
 use Paperpile::Exceptions;
 use 5.010;
+use POSIX;
 
+sub kill_server : Local {
+  exit(0);
+}
 
 sub init_session : Local {
 
@@ -70,6 +74,8 @@ sub init_session : Local {
     $c->session->{library_db} = $library_db;
 
   }
+
+  mkpath($c->model('User')->get_setting('tmp_dir'));
 
 }
 

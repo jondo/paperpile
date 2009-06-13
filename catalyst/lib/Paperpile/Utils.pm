@@ -16,6 +16,7 @@ use HTTP::Cookies;
 use WWW::Mechanize;
 use Compress::Zlib;
 use MIME::Base64;
+use Config;
 
 $Data::Dumper::Indent = 1;
 
@@ -66,10 +67,13 @@ sub get_config{
 
 sub get_binary{
 
-  my ($self, $name,$platform)=@_;
+  my ($self, $name)=@_;
 
-  if ($platform =~/windows/i){
-    $name.='exe';
+  my $platform='';
+  my $arch_string=$Config{archname};
+
+  if ( $arch_string =~ /linux/i ) {
+    $platform = ($arch_string =~ /64/) ? 'linux64' : 'linux32';
   }
 
   my $bin=File::Spec->catfile($self->path_to('bin'), $platform, $name);
@@ -218,5 +222,15 @@ sub copy_file{
   copy($source, $dest) || die("Could not copy $source to $dest ($!)");
 
   return $dest;
+}
+
+sub is_pdf {
+
+  my ($self, $file) = @_;
+
+  
+
+
+
 
 }

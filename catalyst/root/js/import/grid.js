@@ -64,7 +64,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             'IMPORT': new Ext.Action({
                 text: 'Import',
-                handler: this.insertEntry,
+                handler: function() {this.insertEntry()},
                 scope: this,
                 cls: 'x-btn-text-icon add',
                 disabled:true,
@@ -390,8 +390,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         
         var selection=this.getSelection('NOT_IMPORTED');
 
-        //var selection=this.getSelection();
-
         if (selection.length==0) return;
         
         Ext.Ajax.request({
@@ -402,8 +400,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             method: 'GET',
             success: function(response){
                 var json = Ext.util.JSON.decode(response.responseText);
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Entry Inserted.');
 
                 this.store.suspendEvents();
                 for (var sha1 in json.data){
@@ -421,6 +417,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.updateButtons();
                     
                 if (callback){
+                    console.log(callback);
                     callback.createDelegate(scope,[json.data])();
                 }
 

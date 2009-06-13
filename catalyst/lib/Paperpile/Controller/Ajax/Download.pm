@@ -45,74 +45,78 @@ sub get : Local {
   my ( $self, $c ) = @_;
 
   my $grid_id = $c->request->params->{grid_id};
-  my $sha1      = $c->request->params->{sha1};
-  my $plugin    = $c->session->{"grid_$grid_id"};
-  my $url       = $c->request->params->{url};
+  my $sha1    = $c->request->params->{sha1};
+  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $url     = $c->request->params->{url};
 
   my $pub = $plugin->find_sha1($sha1);
 
-  my $tmp_dir = $c->model('Library')->get_setting('tmp_dir');
+  my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
   my $dir     = "$tmp_dir/download/$sha1";
+
   rmtree($dir);
-  mkpath($dir);
+  mkpath($dir)
+    or FileWriteError->throw(
+    error => 'Download error. Could not create temporary dir for download.',
+    file  => $dir
+    );
   my $file = "$dir/paper.pdf";
 
+  my $ua = Paperpile::Utils->get_browser();
 
-   my $ua = Paperpile::Utils->get_browser();
+  my $res = $ua->request(
+    HTTP::Request->new( GET => $url ),
+    sub {
+      my ( $data, $response, $protocol ) = @_;
+      if ( not -e $file ) {
+        my $length = $response->content_length;
+        open( SIZE, ">$file.size" )
+          or FileWriteError->throw(
+          error => 'Download error. Could not create temporary file for download.',
+          file  => "$file.size"
+          );
+        if ( defined $length ) {
+          print SIZE "$length\n";
+        } else {
+          print SIZE "null\n";
+        }
+        close(SIZE);
+        open( FILE, ">$file" )
+          or FileWriteError->throw(
+          error => 'Download error. Could not open temporary file for download.',
+          file  => $file
+          );
+        binmode FILE;
+      }
+      print FILE $data
+        or FileWriteError->throw(
+        error => 'Download error. Could not write data to temporary file.',
+        file  => "$file"
+        );
+    }
+  );
 
-   eval {
-     my $res = $ua->request(
-       HTTP::Request->new( GET => $url ),
-       sub {
-         my ( $data, $response, $protocol ) = @_;
-         if ( not -e $file ) {
-           my $length = $response->content_length;
-           open( SIZE, ">$file.size" );
-           if ( defined $length ) {
-             print SIZE "$length\n";
-           } else {
-             print SIZE "null\n";    # Don't know size
-           }
-           close(SIZE);
-           open( FILE, ">$file" ) || die "Can't open $file: $!\n";
-           binmode FILE;
-         } else {
-           #open( FILE, ">>$file" ) || die "Can't open $file: $!\n";
-           #binmode FILE;
-         }
-         print FILE $data or die "Can't write to $file: $!\n";
-         # close(FILE);
-       }
-    );
 
-     # think more about this error handling...
-     if ( fileno(FILE) ) {
-
-       print STDERR Dumper($res);
-
-       close(FILE) || die "Can't write to $file: $!\n";
-       if ( $res->header("X-Died") || !$res->is_success ) {
-         if ( my $died = $res->header("X-Died") ) {
-           print STDERR "$died\n";
-         }
-       }
-     } else {
-       if ( my $died = $res->header("X-Died") ) {
-         die("Error while downloading file ($died)");
-       } else {
-         die("Error while downloading file.");
-       }
-     }
-   };
-
-  if ($@){
-    $c->stash->{pdf}=undef;
-  } else {
-    $c->stash->{pdf}=$file;
+  # Check if download was successfull
+  if ( $res->header("X-Died") || !$res->is_success ) {
+    NetGetError->throw(error => 'Download error.',
+                       code => $res->code,
+                      );
   }
 
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
+  # Check if we have got really a PDF and not a "Access denied" screen
+  close(FILE);
+  open(FILE, "<$file");
+  binmode(FILE);
+  my $content;
+  read( FILE, $content, 64 );
+
+  if ( $content !~ m/^\%PDF/ ) {
+    rmtree($dir);
+    NetGetError->throw('Could not download PDF. Your institution might need a subscription for the journal.');
+  }
+
+  $c->stash->{pdf} = $file;
 
 }
 
@@ -124,7 +128,7 @@ sub finish : Local{
   my $source = $c->session->{"source_$source_id"};
   my $pub = $source->find_sha1($sha1);
 
-  my $tmp_dir=$c->model('Library')->get_setting('tmp_dir');
+  my $tmp_dir=$c->model('User')->get_setting('tmp_dir');
   my $tmp_file="$tmp_dir/download/$sha1/paper.pdf";
 
   my $root=$pub->format($c->model('Library')->get_setting('paper_root'));
@@ -150,7 +154,7 @@ sub progress : Local {
 
   my $sha1  = $c->request->params->{sha1};
 
-  my $tmp_dir=$c->model('Library')->get_setting('tmp_dir');
+  my $tmp_dir=$c->model('User')->get_setting('tmp_dir');
 
   my $file="$tmp_dir/download/$sha1/paper.pdf";
 

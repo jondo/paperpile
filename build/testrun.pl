@@ -16,11 +16,17 @@ use FindBin;
 use lib "$FindBin::Bin/../catalyst/lib";
 
 use Catalyst::Engine::HTTP;
+use Catalyst::Engine::HTTP::Prefork;
+use Catalyst::Restarter;
+use Catalyst::Restarter::Forking;
+use File::ChangeNotify::Event;
+use File::ChangeNotify::Watcher;
+use File::ChangeNotify::Watcher::Default;
 use Sys::Hostname;
 use Storable;
 use DBD::SQLite;
 use Digest::MD5;
-
+use utf8;
 
 my $debug             = 0;
 my $fork              = 0;

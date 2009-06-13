@@ -29,6 +29,7 @@
   misc/file-chooser.js
   misc/style-picker.js
   misc/status.js
+  misc/browser.js
   
   export/export-window.js
 

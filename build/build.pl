@@ -6,15 +6,22 @@ use Data::Dumper;
 use File::Path;
 use File::Find;
 use File::Spec::Functions qw(catfile);
-use File::Copy::Recursive qw(fcopy);
+use File::Copy::Recursive qw(fcopy dircopy);
 
 my $platform   = 'linux64';
 my $cat_dir    = '../catalyst';
 my $target_dir = '/home/wash/tmp/dist/';
 
-my @ignore = ( qr{[~#]}, qr{/tmp/}, qr{/t/}, qr{\.gitignore}, qr{/perl5/$platform/(cpan|base)} );
+my @ignore = ( qr([~#]),
+               qr{/tmp/},
+               qr{/t/},
+               qr{\.gitignore},
+               qr{/perl5/$platform/(cpan|base)}
+             );
 
-my $cpan = catfile( $target_dir, 'perl5', $platform, 'cpan' );
+my @add = ("perl5/$platform/base/unicore");
+
+my $cpan = catfile( $target_dir,'catalyst', 'perl5', $platform, 'cpan' );
 mkpath($cpan);
 
 my $modules = scan_deps(
@@ -33,13 +40,11 @@ foreach my $m ( sort { $a->{key} cmp $b->{key} } values %$modules ) {
 
   print $m->{type}, ": ", $relative, "\n";
 
-  #fcopy( $m->{file}, catfile( $cpan, $relative ) ) or die($!);
+  fcopy( $m->{file}, catfile( $cpan, $relative ) ) or die($!);
 }
 
 
-exit;
-
-my @list = ();
+my @list = @add;
 
 find( {
     no_chdir => 1,
@@ -56,9 +61,15 @@ find( {
 );
 
 foreach my $file (@list) {
+
+  if (-d  catfile( $cat_dir, $file)){
+    dircopy( catfile( $cat_dir, $file ), catfile( $target_dir, 'catalyst', $file ) ) or die( $!, $file );
+    next;
+  }
+
   my ( $volume, $dir, $base ) = File::Spec->splitpath($file);
-  $dir = catfile( $target_dir, $dir );
+  $dir = catfile( $target_dir, 'catalyst', $dir );
   mkpath($dir) if !-d $dir;
-  fcopy( catfile( $cat_dir, $file ), catfile( $target_dir, $file ) ) or die( $!, $file );
+  fcopy( catfile( $cat_dir, $file ), catfile( $target_dir, 'catalyst', $file ) ) or die( $!, $file );
 }
 

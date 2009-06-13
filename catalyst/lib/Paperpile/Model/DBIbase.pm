@@ -131,7 +131,8 @@ sub connect {
 
   $self->{options} = { AutoCommit => 1, RaiseError => 1 };
 
-  eval { $dbh = DBI->connect( $self->{dsn}, $self->{user}, $self->{password}, $self->{options} ); };
+  #eval { $dbh = DBI->connect( $self->{dsn}, $self->{user}, $self->{password}, $self->{options} ); };
+  $dbh = DBI->connect( $self->{dsn}, $self->{user}, $self->{password}, $self->{options} ); 
   if ($@) {
     $self->{log}->debug(qq{Couldn't connect to the database "$@"}) if $self->{debug};
   } else {

@@ -22,6 +22,7 @@ sub build_per_context_instance {
   my $file=$c->session->{library_db};
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn("dbi:SQLite:$file");
+  print STDERR "dbi:SQLite:$file\n";
   return $model;
 }
 
@@ -990,7 +991,7 @@ sub index_pdf {
   my $app_db = Paperpile::Utils->path_to('db/app.db');
   $app_model->set_dsn("dbi:SQLite:$app_db");
 
-  my $bin = Paperpile::Utils->get_binary('extpdf',$app_model->get_setting('platform'));
+  my $bin = Paperpile::Utils->get_binary('extpdf');
 
   my %extpdf;
 

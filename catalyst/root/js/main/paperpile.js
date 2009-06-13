@@ -26,7 +26,18 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                 handler: function(){
                                     Paperpile.main.tabs.newScreenTab('Dashboard');
                                 },
+                               },
+                               /*
+                               {xtype:'button', 
+                                text:"Test",
+                                handler: function(){
+                                    var myIFrame = document.getElementById('iframe-testframe');  
+                                    var content = myIFrame.contentWindow.document.body.innerHTML;  
+                                    alert(content);
+                                },
                                }
+*/
+
                            ],
                            items: [ { border: 0,
                               xtype:'tree',
@@ -184,8 +195,42 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         
     },
 
+    browseTest: function(){
+
+        /*
+        Ext.ux.IFrameComponent = Ext.extend(Ext.BoxComponent, {
+            onRender : function(ct, position){
+                this.el = ct.createChild({tag: 'iframe', id: 'iframe-'+ this.id, frameBorder: 0, src: this.url});
+            }
+
+        });
+
+        var tab = new Ext.Panel({
+            //id: id,
+            title: 'Google',
+            closable:true,
+            // layout to fit child component
+            layout:'fit', 
+            // add iframe as the child component
+            items: [ new Ext.ux.IFrameComponent({ id:'testframe', url: 'http://google.com' }) ]
+        });
+*/
+
+        //Paperpile.main.tabs.add(new Paperpile.Browser());
+
+    },
+
     onError: function(response){
-        var error = Ext.util.JSON.decode(response.responseText).error;
+        
+        var error;
+
+        //Timed out errors come back empty
+        if (response){
+            error= Ext.util.JSON.decode(response.responseText).error;
+        } else {
+            error.type=='Unknown';
+            error.msg='Unknown';
+        }
         
         if (error.type == 'Unknown'){
             Paperpile.status.updateMsg(
@@ -260,6 +305,9 @@ Paperpile.app=function(){
 
     tree.expandAll();
     main.tabs.remove('welcome');
+
+    main.browseTest();
+
     Paperpile.initMask.hide();
 
 }

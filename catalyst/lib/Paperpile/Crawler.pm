@@ -36,6 +36,7 @@ sub BUILD {
 
 }
 
+
 ## Tries to get the PDF link for the given URL;
 ## Returns undef if no PDF could be found
 
@@ -99,6 +100,7 @@ sub search_file {
   if (!defined $file){
     CrawlerScrapeError->throw("Could not download PDF. Your institution might need a subscription for the journal.");
   } else {
+
     return $file;
   }
 }
@@ -119,14 +121,14 @@ sub _identify_site {
   for my $run ( 'original', 'redirected' ) {
 
     if ( $run eq 'redirected' ) {
-      my $response = $self->_browser->get($URL);
+      my $response = $self->_get_location($URL);
       $URL = $response->request->uri;
     }
 
-    foreach my $siteName ( keys %{ $driver->{site} } ) {
-      foreach my $pattern (
-       @{ $driver->{site}->{$siteName}->{signature}->{url} } )
-      {
+    foreach my $site ( @{ $driver->{site} } ) {
+      foreach my $pattern ( @{ $site->{signature}->{url} } ) {
+
+        $pattern = $self->_resolve_pattern($pattern);
 
         print STDERR "Matching $URL vs. $pattern. " if $self->debug;
 
@@ -135,11 +137,10 @@ sub _identify_site {
         if ( $URL =~ m!($pattern)! ) {
 
           # save resolved URL for downstream use to avoid doing this again.
-          $driver->{site}->{$siteName}->{final_url} = $URL;
-          print STDERR "Match. Using driver $siteName.\n" if $self->debug;
-          return $driver->{site}->{$siteName};
-        }
-        else {
+          $site->{final_url} = $URL;
+          print STDERR "Match. Using driver " . $site->{name} . "\n" if $self->debug;
+          return $site;
+        } else {
           print STDERR "No match. \n" if $self->debug;
         }
       }
@@ -148,27 +149,27 @@ sub _identify_site {
 
   # if we haven't found a signature in the url, we check the content of the page
 
-  my $response = $self->_browser->get($URL);
+  my $response = $self->_get_location($URL);
   my $body     = $response->content;
   $URL = $response->request->uri;
 
-  foreach my $siteName ( keys %{ $driver->{site} } ) {
-    foreach my $pattern (
-      @{ $driver->{site}->{$siteName}->{signature}->{body} } )
-    {
+  #open( FILE, ">$$.html" );
+  #print FILE $body;
+
+  foreach my $site ( @{ $driver->{site} } ) {
+    foreach my $pattern ( @{ $site->{signature}->{body} } ) {
+
+      $pattern = $self->_resolve_pattern($pattern);
 
       print STDERR "Matching page content vs. $pattern. " if $self->debug;
 
       $pattern =~ s/!//g;
 
       if ( $body =~ m!($pattern)! ) {
-        $driver->{site}->{$siteName}->{final_url} = $URL;
-        # Avoid getting the same page twice
-        $self->_cache->{$URL}=$response;
-        print STDERR "Match. Using driver $siteName.\n" if $self->debug;
-        return $driver->{site}->{$siteName};
-      }
-      else {
+        $site->{final_url} = $URL;
+        print STDERR "Match. Using driver " . $site->{name} . "\n" if $self->debug;
+        return $site;
+      } else {
         print STDERR "No match. \n" if $self->debug;
       }
     }
@@ -189,8 +190,8 @@ sub _followURL {
   ( my $self, my $URL, my $rule ) = @_;
   my $newURL = $URL;
 
-  my $match   = $rule->{match};
-  my $rewrite = $rule->{rewrite};
+  my $match   = $self->_resolve_pattern($rule->{match});
+  my $rewrite = $self->_resolve_pattern($rule->{rewrite});
 
   # If nothing is specified, just return the original URL;
   # Useful at the start with the first URL.
@@ -201,7 +202,12 @@ sub _followURL {
 
   if ($match) {
     $newURL = $self->_matchURL( $URL, $match );
-    return undef if ( not defined $newURL );
+    # Decode &'s which are encoded in HTML
+    if (defined $newURL){
+      $newURL=~s/&amp;/&/g;
+    } else {
+      return undef;
+    }
   }
 
   if ($rewrite) {
@@ -218,20 +224,14 @@ sub _matchURL {
 
   ( my $self, my $URL, my $pattern ) = @_;
 
-  my ($content, $response);
+  my $response = $self->_get_location($URL);
 
-  if ($self->_cache->{$URL}){
-    $response=$self->_cache->{$URL};
-  } else {
-    $response = $self->_browser->get($URL);
-  }
-
-  $content = $response->content;
+  my $content = $response->content;
 
   $content =~ s/\n//g;
   my $tmp = time;
-  open( FILE, ">$tmp.html" );
-  print FILE $content;
+  #open( FILE, ">$tmp.html" );
+  #print FILE $content;
 
   $pattern =~ s/!//g;
 
@@ -283,11 +283,11 @@ sub load_driver {
 
   my $self = shift;
 
-  open( XML, "<" . $self->driver_file ) or croak( "Could not open driver file " . $self->driver_file );
+  open( XML, "<" . $self->driver_file ) or die( "Could not open driver file " . $self->driver_file );
 
   my $content = '';
   $content .= $_ foreach (<XML>);
-  $self->_driver( XMLin( $content, ForceArray => ['url','body','rule','pattern','site'] ) );
+  $self->_driver( XMLin( $content, ForceArray => ['url','body','rule','pattern','site'] , KeyAttr => {namedRegex=>'name'}) );
 
   #open(YAML,">/home/wash/play/Paperpile/catalyst/t/data/driver.yml");
   #print YAML YAML::Dump($self->_driver);
@@ -305,16 +305,56 @@ sub get_tests {
 
   my $tests = {};
 
-  foreach my $siteName ( keys %{ $driver->{site} } ) {
+  foreach my $site ( @{$driver->{site} } ) {
     my @tmp = ();
-    foreach my $test ( @{ $driver->{site}->{$siteName}->{test}->{url} } ) {
+    foreach my $test ( @{ $site->{test}->{url} } ) {
       push @tmp, $test;
     }
-    $tests->{$siteName} = [@tmp];
+    $tests->{$site->{name}} = [@tmp];
   }
 
   return $tests;
 }
+
+## Looks up named RegExes and if necessary replaces the pattern with
+## one from the list
+
+sub _resolve_pattern {
+  my ($self, $pattern) = @_;
+
+  if (defined $pattern){
+    if (ref ($pattern) eq 'HASH'){
+      return $self->_driver->{patterns}->{namedRegex}->{$pattern->{namedRegex}}->{content};
+    }
+  }
+  return $pattern;
+}
+
+## Wrapper around LWP, adds simple cache and error handling
+
+sub _get_location {
+
+  my ($self, $URL) = @_;
+
+  if ($self->_cache->{$URL}){
+    return $self->_cache->{$URL};
+  }
+
+  my $response=$self->_browser->get($URL);
+
+  if ( $response->is_error ) {
+    NetGetError->throw(
+      error => 'Network error while downloading PDF: ' . $response->message,
+      code  => $response->code
+    );
+  }
+
+  $self->_cache->{$URL}=$response;
+
+  return $response;
+}
+
+
 
 sub check_pdf {
 

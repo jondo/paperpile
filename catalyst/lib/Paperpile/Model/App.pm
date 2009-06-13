@@ -6,7 +6,6 @@ use base 'Paperpile::Model::DBIbase';
 use Data::Dumper;
 use Moose;
 
-
 sub init_db {
 
   my ( $self, $settings ) = @_;

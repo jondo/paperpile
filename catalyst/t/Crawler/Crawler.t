@@ -14,15 +14,16 @@ $crawler->load_driver();
 
 my $tests=$crawler->get_tests;
 
-$tests={manual=>['http://www.springerlink.com/content/l871518576358136/']};
-
-#$tests={manual=>['http://linkinghub.elsevier.com/retrieve/pii/S1470-2045(08)70008-1']};
+#$tests={manual=>['http://www.landesbioscience.com/journals/cc/article/8887']};
+$tests={manual=>['http://www.nature.com/doifinder/10.1038/ng1108-1262']};
 
 
 foreach my $site (keys %$tests){
   my $test_no=1;
   foreach my $test (@{$tests->{$site}}){
-    my $file=$crawler->search_file($test);
+    my $file;
+    eval {$file=$crawler->search_file($test)};
+    print STDERR $@ if ($@);
     ok ($file, "$site: getting pdf-url for $test");
   SKIP: {
       skip "No valid url found, not downloading PDF" if not defined $file;

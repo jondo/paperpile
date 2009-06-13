@@ -57,7 +57,7 @@ sub serve : Regex('^serve/(.*)$') {
 
   my $file = $c->req->captures->[0];
 
-  my $root= $c->model('User')->get_setting('paper_root');
+  my $root= $c->model('Library')->get_setting('paper_root');
 
   my $path= File::Spec->catfile( $root, $file );
 

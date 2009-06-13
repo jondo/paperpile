@@ -1,0 +1,3 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Catalyst/Engine/HTTP/Prefork.pm relocate_as=../../../../../Catalyst/Engine/HTTP/Prefork.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Catalyst/Engine/HTTP/Prefork/Handler.pm relocate_as=../../../../../Catalyst/Engine/HTTP/Prefork/Handler.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Catalyst/Engine/HTTP/Prefork/Restarter.pm relocate_as=../../../../../Catalyst/Engine/HTTP/Prefork/Restarter.pm

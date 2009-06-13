@@ -198,10 +198,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                 var grid=this.ownerCt.ownerCt.items.get('center_panel').items.get(0);
                 var pdf=this.data.pdf;
                 grid.insertEntry(
-                    // Callback comes with updated data that includes
-                    // _rowid of newly inserted entry
                     function(data){
-                        this.data=data;
                         this.attachFile(1,pdf);
                     }, this
                 );
@@ -615,7 +612,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                 method: 'GET',
                 success: function(response){
                     var json = Ext.util.JSON.decode(response.responseText);
-                    Ext.getCmp('statusbar').clearStatus();
                     Ext.TaskMgr.stop(this.progressTask);
                     this.progressTask=null;
                     if (json.pdf){
@@ -626,13 +622,18 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                             Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf',json.pdf);
                             this.updateDetail();
                         }
-                        Ext.getCmp('statusbar').setText('Downloaded '+json.pdf);
                     } else {
-                        Ext.getCmp('statusbar').clearStatus();
-                        Ext.getCmp('statusbar').setText("Could not download PDF.");
+                        Paperpile.main.onError(response);
                         this.updateDetail();
                     }
                 },
+                failure: function(response){
+                    Ext.TaskMgr.stop(this.progressTask);
+                    this.progressTask=null;
+                    Paperpile.main.onError(response);
+                    this.progressBar.destroy();
+                },
+
                 scope: this,
                 timeout: 60000,
             });
@@ -666,17 +667,25 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                     return;
                 } else {
                     var fraction;
-                    if (json.current_size){
+                    var current_size=0.0;
+                   
+                    if (json.current_size && json.total_size){
                         fraction=json.current_size/json.total_size;
+                         this.progressBar.updateProgress(fraction, "Downloading ("
+                                                         +Ext.util.Format.fileSize(json.current_size) 
+                                                         +" / "+ Ext.util.Format.fileSize(json.total_size)+")");
+                        
                     } else {
-                        fraction=0.0;
+                        this.progressBar.updateProgress(0.0, "Downloading...");
                     }
-                    this.progressBar.updateProgress(fraction, "Downloading ("
-                                                    +Ext.util.Format.fileSize(json.current_size) 
-                                                    +" / "+ Ext.util.Format.fileSize(json.total_size)+")");
                 }
                     
             },
+            failure: function(response){
+                Ext.TaskMgr.stop(this.progressTask);
+                Paperpile.main.onError(response);
+            },
+
             scope:this
         })
     },
