@@ -1,0 +1,813 @@
+$VAR1 = bless( do{\(my $o = bless( {
+                          'tree' => {
+                                      '/order' => [
+                                                    'style'
+                                                  ],
+                                      '/nodes' => {
+                                                    'style' => 1
+                                                  },
+                                      'style' => {
+                                                 'info' => {
+                                                           'link' => [
+                                                                     {
+                                                                       'href' => 'http://www.zotero.org/styles/ieee'
+                                                                     },
+                                                                     {
+                                                                       '/order' => [
+                                                                                     'href',
+                                                                                     'rel'
+                                                                                   ],
+                                                                       'rel' => 'documentation',
+                                                                       'href' => 'http://www.ieee.org/portal/cms_docs_iportals/iportals/publications/authors/transjnl/stylemanual.pdf'
+                                                                     }
+                                                                   ],
+                                                           '/order' => [
+                                                                         'title',
+                                                                         'id',
+                                                                         'link',
+                                                                         'author',
+                                                                         'contributor',
+                                                                         'contributor',
+                                                                         'category',
+                                                                         'category',
+                                                                         'category',
+                                                                         'updated',
+                                                                         'link'
+                                                                       ],
+                                                           'author' => {
+                                                                       'email' => {
+                                                                                  'CONTENT' => 'mberkowi@gmu.edu'
+                                                                                },
+                                                                       '/order' => [
+                                                                                     'name',
+                                                                                     'email'
+                                                                                   ],
+                                                                       '/nodes' => {
+                                                                                     'email' => 1,
+                                                                                     'name' => 1
+                                                                                   },
+                                                                       'name' => {
+                                                                                 'CONTENT' => 'Michael Berkowitz'
+                                                                               }
+                                                                     },
+                                                           '/nodes' => {
+                                                                         'link' => 1,
+                                                                         'updated' => 1,
+                                                                         'category' => 1,
+                                                                         'author' => 1,
+                                                                         'id' => 1,
+                                                                         'title' => 1,
+                                                                         'contributor' => 1
+                                                                       },
+                                                           'updated' => {
+                                                                        'CONTENT' => '2008-10-21T16:10:35+00:00'
+                                                                      },
+                                                           'category' => [
+                                                                         {
+                                                                           'term' => 'engineering'
+                                                                         },
+                                                                         {
+                                                                           'term' => 'generic-base'
+                                                                         },
+                                                                         {
+                                                                           'term' => 'numeric'
+                                                                         }
+                                                                       ],
+                                                           'title' => {
+                                                                      'CONTENT' => 'IEEE'
+                                                                    },
+                                                           'id' => {
+                                                                   'CONTENT' => 'http://www.zotero.org/styles/ieee'
+                                                                 },
+                                                           'contributor' => [
+                                                                            {
+                                                                              'email' => {
+                                                                                         'CONTENT' => 'julian.onions@gmail.com'
+                                                                                       },
+                                                                              '/order' => [
+                                                                                            'name',
+                                                                                            'email'
+                                                                                          ],
+                                                                              '/nodes' => {
+                                                                                            'email' => 1,
+                                                                                            'name' => 1
+                                                                                          },
+                                                                              'name' => {
+                                                                                        'CONTENT' => 'Julian Onions'
+                                                                                      }
+                                                                            },
+                                                                            {
+                                                                              '/order' => [
+                                                                                            'name',
+                                                                                            'uri'
+                                                                                          ],
+                                                                              '/nodes' => {
+                                                                                            'name' => 1,
+                                                                                            'uri' => 1
+                                                                                          },
+                                                                              'name' => {
+                                                                                        'CONTENT' => 'Rintze Zelle'
+                                                                                      },
+                                                                              'uri' => {
+                                                                                       'CONTENT' => 'http://forums.zotero.org/account/831/'
+                                                                                     }
+                                                                            }
+                                                                          ]
+                                                         },
+                                                 '/order' => [
+                                                               'xmlns',
+                                                               'class',
+                                                               'xml:lang',
+                                                               'info',
+                                                               'macro',
+                                                               'macro',
+                                                               'macro',
+                                                               'macro',
+                                                               'macro',
+                                                               'macro',
+                                                               'citation',
+                                                               'bibliography'
+                                                             ],
+                                                 'xmlns' => 'http://purl.org/net/xbiblio/csl',
+                                                 'xml:lang' => 'en',
+                                                 '/nodes' => {
+                                                               'info' => 1,
+                                                               'bibliography' => 1,
+                                                               'macro' => 1,
+                                                               'citation' => 1
+                                                             },
+                                                 'bibliography' => {
+                                                                   '/order' => [
+                                                                                 'option',
+                                                                                 'option',
+                                                                                 'layout'
+                                                                               ],
+                                                                   'layout' => {
+                                                                               '/order' => [
+                                                                                             'suffix',
+                                                                                             'text',
+                                                                                             'text',
+                                                                                             'choose'
+                                                                                           ],
+                                                                               '/nodes' => {
+                                                                                             'text' => 1,
+                                                                                             'choose' => 1
+                                                                                           },
+                                                                               'text' => [
+                                                                                         {
+                                                                                           '/order' => [
+                                                                                                         'variable',
+                                                                                                         'prefix',
+                                                                                                         'suffix'
+                                                                                                       ],
+                                                                                           'variable' => 'citation-number',
+                                                                                           'suffix' => ']',
+                                                                                           'prefix' => '['
+                                                                                         },
+                                                                                         {
+                                                                                           '/order' => [
+                                                                                                         'macro',
+                                                                                                         'prefix',
+                                                                                                         'suffix'
+                                                                                                       ],
+                                                                                           'suffix' => ', ',
+                                                                                           'macro' => 'author',
+                                                                                           'prefix' => ' '
+                                                                                         }
+                                                                                       ],
+                                                                               'suffix' => '.',
+                                                                               'choose' => {
+                                                                                           '/order' => [
+                                                                                                         'if',
+                                                                                                         'else-if',
+                                                                                                         'else-if',
+                                                                                                         'else-if',
+                                                                                                         'else'
+                                                                                                       ],
+                                                                                           '/nodes' => {
+                                                                                                         'else-if' => 1,
+                                                                                                         'else' => 1,
+                                                                                                         'if' => 1
+                                                                                                       },
+                                                                                           'else-if' => [
+                                                                                                        {
+                                                                                                          '/order' => [
+                                                                                                                        'type',
+                                                                                                                        'group'
+                                                                                                                      ],
+                                                                                                          'group' => {
+                                                                                                                     '/order' => [
+                                                                                                                                   'delimiter',
+                                                                                                                                   'text',
+                                                                                                                                   'text',
+                                                                                                                                   'text',
+                                                                                                                                   'text',
+                                                                                                                                   'text'
+                                                                                                                                 ],
+                                                                                                                     '/nodes' => {
+                                                                                                                                   'text' => 1
+                                                                                                                                 },
+                                                                                                                     'text' => [
+                                                                                                                               {
+                                                                                                                                 'macro' => 'title'
+                                                                                                                               },
+                                                                                                                               {
+                                                                                                                                 '/order' => [
+                                                                                                                                               'variable',
+                                                                                                                                               'font-style'
+                                                                                                                                             ],
+                                                                                                                                 'variable' => 'container-title',
+                                                                                                                                 'font-style' => 'italic'
+                                                                                                                               },
+                                                                                                                               {
+                                                                                                                                 'macro' => 'editor'
+                                                                                                                               },
+                                                                                                                               {
+                                                                                                                                 'macro' => 'publisher'
+                                                                                                                               },
+                                                                                                                               {
+                                                                                                                                 'macro' => 'page'
+                                                                                                                               }
+                                                                                                                             ],
+                                                                                                                     'delimiter' => ', '
+                                                                                                                   },
+                                                                                                          '/nodes' => {
+                                                                                                                        'group' => 1
+                                                                                                                      },
+                                                                                                          'type' => 'chapter'
+                                                                                                        },
+                                                                                                        {
+                                                                                                          '/order' => [
+                                                                                                                        'type',
+                                                                                                                        'text',
+                                                                                                                        'text',
+                                                                                                                        'date'
+                                                                                                                      ],
+                                                                                                          'date' => {
+                                                                                                                    '/order' => [
+                                                                                                                                  'variable',
+                                                                                                                                  'prefix',
+                                                                                                                                  'date-part',
+                                                                                                                                  'date-part',
+                                                                                                                                  'date-part'
+                                                                                                                                ],
+                                                                                                                    '/nodes' => {
+                                                                                                                                  'date-part' => 1
+                                                                                                                                },
+                                                                                                                    'variable' => 'issued',
+                                                                                                                    'date-part' => [
+                                                                                                                                   {
+                                                                                                                                     '/order' => [
+                                                                                                                                                   'name',
+                                                                                                                                                   'suffix'
+                                                                                                                                                 ],
+                                                                                                                                     'suffix' => ' ',
+                                                                                                                                     'name' => 'month'
+                                                                                                                                   },
+                                                                                                                                   {
+                                                                                                                                     '/order' => [
+                                                                                                                                                   'name',
+                                                                                                                                                   'suffix'
+                                                                                                                                                 ],
+                                                                                                                                     'suffix' => ', ',
+                                                                                                                                     'name' => 'day'
+                                                                                                                                   },
+                                                                                                                                   {
+                                                                                                                                     'name' => 'year'
+                                                                                                                                   }
+                                                                                                                                 ],
+                                                                                                                    'prefix' => ', '
+                                                                                                                  },
+                                                                                                          '/nodes' => {
+                                                                                                                        'date' => 1,
+                                                                                                                        'text' => 1
+                                                                                                                      },
+                                                                                                          'text' => [
+                                                                                                                    {
+                                                                                                                      '/order' => [
+                                                                                                                                    'macro',
+                                                                                                                                    'suffix'
+                                                                                                                                  ],
+                                                                                                                      'suffix' => ', ',
+                                                                                                                      'macro' => 'title'
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                      '/order' => [
+                                                                                                                                    'variable',
+                                                                                                                                    'prefix'
+                                                                                                                                  ],
+                                                                                                                      'variable' => 'number',
+                                                                                                                      'prefix' => 'U.S. Patent '
+                                                                                                                    }
+                                                                                                                  ],
+                                                                                                          'type' => 'patent'
+                                                                                                        },
+                                                                                                        {
+                                                                                                          '/order' => [
+                                                                                                                        'type',
+                                                                                                                        'group'
+                                                                                                                      ],
+                                                                                                          'group' => {
+                                                                                                                     '/order' => [
+                                                                                                                                   'delimiter',
+                                                                                                                                   'text',
+                                                                                                                                   'text',
+                                                                                                                                   'text',
+                                                                                                                                   'date'
+                                                                                                                                 ],
+                                                                                                                     '/nodes' => {
+                                                                                                                                   'date' => 1,
+                                                                                                                                   'text' => 1
+                                                                                                                                 },
+                                                                                                                     'date' => {
+                                                                                                                               '/order' => [
+                                                                                                                                             'variable',
+                                                                                                                                             'date-part'
+                                                                                                                                           ],
+                                                                                                                               '/nodes' => {
+                                                                                                                                             'date-part' => 1
+                                                                                                                                           },
+                                                                                                                               'variable' => 'issued',
+                                                                                                                               'date-part' => {
+                                                                                                                                              'name' => 'year'
+                                                                                                                                            }
+                                                                                                                             },
+                                                                                                                     'text' => [
+                                                                                                                               {
+                                                                                                                                 'macro' => 'title'
+                                                                                                                               },
+                                                                                                                               {
+                                                                                                                                 'variable' => 'genre'
+                                                                                                                               },
+                                                                                                                               {
+                                                                                                                                 'variable' => 'publisher'
+                                                                                                                               }
+                                                                                                                             ],
+                                                                                                                     'delimiter' => ', '
+                                                                                                                   },
+                                                                                                          '/nodes' => {
+                                                                                                                        'group' => 1
+                                                                                                                      },
+                                                                                                          'type' => 'thesis'
+                                                                                                        }
+                                                                                                      ],
+                                                                                           'else' => {
+                                                                                                     'group' => {
+                                                                                                                '/order' => [
+                                                                                                                              'delimiter',
+                                                                                                                              'text',
+                                                                                                                              'text',
+                                                                                                                              'text',
+                                                                                                                              'date',
+                                                                                                                              'text'
+                                                                                                                            ],
+                                                                                                                '/nodes' => {
+                                                                                                                              'date' => 1,
+                                                                                                                              'text' => 1
+                                                                                                                            },
+                                                                                                                'date' => {
+                                                                                                                          '/order' => [
+                                                                                                                                        'variable',
+                                                                                                                                        'date-part',
+                                                                                                                                        'date-part'
+                                                                                                                                      ],
+                                                                                                                          '/nodes' => {
+                                                                                                                                        'date-part' => 1
+                                                                                                                                      },
+                                                                                                                          'variable' => 'issued',
+                                                                                                                          'date-part' => [
+                                                                                                                                         {
+                                                                                                                                           '/order' => [
+                                                                                                                                                         'name',
+                                                                                                                                                         'form',
+                                                                                                                                                         'suffix'
+                                                                                                                                                       ],
+                                                                                                                                           'suffix' => '. ',
+                                                                                                                                           'form' => 'short',
+                                                                                                                                           'name' => 'month'
+                                                                                                                                         },
+                                                                                                                                         {
+                                                                                                                                           'name' => 'year'
+                                                                                                                                         }
+                                                                                                                                       ]
+                                                                                                                        },
+                                                                                                                'text' => [
+                                                                                                                          {
+                                                                                                                            'macro' => 'title'
+                                                                                                                          },
+                                                                                                                          {
+                                                                                                                            '/order' => [
+                                                                                                                                          'variable',
+                                                                                                                                          'font-style'
+                                                                                                                                        ],
+                                                                                                                            'variable' => 'container-title',
+                                                                                                                            'font-style' => 'italic'
+                                                                                                                          },
+                                                                                                                          {
+                                                                                                                            '/order' => [
+                                                                                                                                          'variable',
+                                                                                                                                          'prefix'
+                                                                                                                                        ],
+                                                                                                                            'variable' => 'volume',
+                                                                                                                            'prefix' => ' vol. '
+                                                                                                                          },
+                                                                                                                          {
+                                                                                                                            'macro' => 'page'
+                                                                                                                          }
+                                                                                                                        ],
+                                                                                                                'delimiter' => ', '
+                                                                                                              },
+                                                                                                     '/nodes' => {
+                                                                                                                   'group' => 1
+                                                                                                                 }
+                                                                                                   },
+                                                                                           'if' => {
+                                                                                                   '/order' => [
+                                                                                                                 'type',
+                                                                                                                 'group'
+                                                                                                               ],
+                                                                                                   'group' => {
+                                                                                                              '/order' => [
+                                                                                                                            'delimiter',
+                                                                                                                            'text',
+                                                                                                                            'text'
+                                                                                                                          ],
+                                                                                                              '/nodes' => {
+                                                                                                                            'text' => 1
+                                                                                                                          },
+                                                                                                              'text' => [
+                                                                                                                        {
+                                                                                                                          'macro' => 'title'
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                          'macro' => 'publisher'
+                                                                                                                        }
+                                                                                                                      ],
+                                                                                                              'delimiter' => ', '
+                                                                                                            },
+                                                                                                   '/nodes' => {
+                                                                                                                 'group' => 1
+                                                                                                               },
+                                                                                                   'type' => 'book'
+                                                                                                 }
+                                                                                         }
+                                                                             },
+                                                                   '/nodes' => {
+                                                                                 'layout' => 1,
+                                                                                 'option' => 1
+                                                                               },
+                                                                   'option' => [
+                                                                               {
+                                                                                 '/order' => [
+                                                                                               'name',
+                                                                                               'value'
+                                                                                             ],
+                                                                                 'value' => '0',
+                                                                                 'name' => 'entry-spacing'
+                                                                               },
+                                                                               {
+                                                                                 '/order' => [
+                                                                                               'name',
+                                                                                               'value'
+                                                                                             ],
+                                                                                 'value' => 'true',
+                                                                                 'name' => 'second-field-align'
+                                                                               }
+                                                                             ]
+                                                                 },
+                                                 'class' => 'in-text',
+                                                 'macro' => [
+                                                            {
+                                                              '/order' => [
+                                                                            'name',
+                                                                            'names'
+                                                                          ],
+                                                              '/nodes' => {
+                                                                            'names' => 1
+                                                                          },
+                                                              'names' => {
+                                                                         '/order' => [
+                                                                                       'variable',
+                                                                                       'name',
+                                                                                       'label',
+                                                                                       'substitute'
+                                                                                     ],
+                                                                         'variable' => 'author',
+                                                                         'substitute' => {
+                                                                                         '/order' => [
+                                                                                                       'names',
+                                                                                                       'names'
+                                                                                                     ],
+                                                                                         '/nodes' => {
+                                                                                                       'names' => 1
+                                                                                                     },
+                                                                                         'names' => [
+                                                                                                    {
+                                                                                                      'variable' => 'editor'
+                                                                                                    },
+                                                                                                    {
+                                                                                                      'variable' => 'translator'
+                                                                                                    }
+                                                                                                  ]
+                                                                                       },
+                                                                         'name' => {
+                                                                                   '/order' => [
+                                                                                                 'initialize-with',
+                                                                                                 'delimiter',
+                                                                                                 'and',
+                                                                                                 'name-as-sort-order'
+                                                                                               ],
+                                                                                   'name-as-sort-order' => 'all',
+                                                                                   'delimiter' => ', ',
+                                                                                   'and' => 'text',
+                                                                                   'initialize-with' => '.'
+                                                                                 },
+                                                                         '/nodes' => {
+                                                                                       'substitute' => 1,
+                                                                                       'name' => 1,
+                                                                                       'label' => 1
+                                                                                     },
+                                                                         'label' => {
+                                                                                    '/order' => [
+                                                                                                  'form',
+                                                                                                  'prefix',
+                                                                                                  'text-case',
+                                                                                                  'suffix'
+                                                                                                ],
+                                                                                    'suffix' => '.',
+                                                                                    'form' => 'short',
+                                                                                    'text-case' => 'lowercase',
+                                                                                    'prefix' => ', '
+                                                                                  }
+                                                                       },
+                                                              'name' => 'author'
+                                                            },
+                                                            {
+                                                              '/order' => [
+                                                                            'name',
+                                                                            'names'
+                                                                          ],
+                                                              '/nodes' => {
+                                                                            'names' => 1
+                                                                          },
+                                                              'names' => {
+                                                                         '/order' => [
+                                                                                       'variable',
+                                                                                       'name',
+                                                                                       'label'
+                                                                                     ],
+                                                                         '/nodes' => {
+                                                                                       'name' => 1,
+                                                                                       'label' => 1
+                                                                                     },
+                                                                         'variable' => 'editor',
+                                                                         'name' => {
+                                                                                   '/order' => [
+                                                                                                 'initialize-with',
+                                                                                                 'delimiter',
+                                                                                                 'and',
+                                                                                                 'name-as-sort-order'
+                                                                                               ],
+                                                                                   'name-as-sort-order' => 'all',
+                                                                                   'delimiter' => ', ',
+                                                                                   'and' => 'text',
+                                                                                   'initialize-with' => '.'
+                                                                                 },
+                                                                         'label' => {
+                                                                                    '/order' => [
+                                                                                                  'form',
+                                                                                                  'prefix',
+                                                                                                  'text-case',
+                                                                                                  'suffix'
+                                                                                                ],
+                                                                                    'suffix' => '.',
+                                                                                    'form' => 'short',
+                                                                                    'text-case' => 'lowercase',
+                                                                                    'prefix' => ', '
+                                                                                  }
+                                                                       },
+                                                              'name' => 'editor'
+                                                            },
+                                                            {
+                                                              '/order' => [
+                                                                            'name',
+                                                                            'choose'
+                                                                          ],
+                                                              '/nodes' => {
+                                                                            'choose' => 1
+                                                                          },
+                                                              'name' => 'title',
+                                                              'choose' => {
+                                                                          '/order' => [
+                                                                                        'if',
+                                                                                        'else'
+                                                                                      ],
+                                                                          '/nodes' => {
+                                                                                        'else' => 1,
+                                                                                        'if' => 1
+                                                                                      },
+                                                                          'else' => {
+                                                                                    '/nodes' => {
+                                                                                                  'text' => 1
+                                                                                                },
+                                                                                    'text' => {
+                                                                                              '/order' => [
+                                                                                                            'variable',
+                                                                                                            'quotes'
+                                                                                                          ],
+                                                                                              'quotes' => 'true',
+                                                                                              'variable' => 'title'
+                                                                                            }
+                                                                                  },
+                                                                          'if' => {
+                                                                                  '/order' => [
+                                                                                                'type',
+                                                                                                'text'
+                                                                                              ],
+                                                                                  '/nodes' => {
+                                                                                                'text' => 1
+                                                                                              },
+                                                                                  'text' => {
+                                                                                            '/order' => [
+                                                                                                          'variable',
+                                                                                                          'font-style'
+                                                                                                        ],
+                                                                                            'variable' => 'title',
+                                                                                            'font-style' => 'italic'
+                                                                                          },
+                                                                                  'type' => 'book'
+                                                                                }
+                                                                        }
+                                                            },
+                                                            {
+                                                              '/order' => [
+                                                                            'name',
+                                                                            'text',
+                                                                            'text',
+                                                                            'date'
+                                                                          ],
+                                                              'date' => {
+                                                                        '/order' => [
+                                                                                      'variable',
+                                                                                      'date-part'
+                                                                                    ],
+                                                                        '/nodes' => {
+                                                                                      'date-part' => 1
+                                                                                    },
+                                                                        'variable' => 'issued',
+                                                                        'date-part' => {
+                                                                                       'name' => 'year'
+                                                                                     }
+                                                                      },
+                                                              'name' => 'publisher',
+                                                              '/nodes' => {
+                                                                            'date' => 1,
+                                                                            'text' => 1
+                                                                          },
+                                                              'text' => [
+                                                                        {
+                                                                          '/order' => [
+                                                                                        'variable',
+                                                                                        'suffix',
+                                                                                        'prefix'
+                                                                                      ],
+                                                                          'variable' => 'publisher-place',
+                                                                          'suffix' => ': ',
+                                                                          'prefix' => ' '
+                                                                        },
+                                                                        {
+                                                                          '/order' => [
+                                                                                        'variable',
+                                                                                        'suffix'
+                                                                                      ],
+                                                                          'variable' => 'publisher',
+                                                                          'suffix' => ', '
+                                                                        }
+                                                                      ]
+                                                            },
+                                                            {
+                                                              '/order' => [
+                                                                            'name',
+                                                                            'text'
+                                                                          ],
+                                                              '/nodes' => {
+                                                                            'text' => 1
+                                                                          },
+                                                              'text' => {
+                                                                        'variable' => 'URL'
+                                                                      },
+                                                              'name' => 'access'
+                                                            },
+                                                            {
+                                                              '/order' => [
+                                                                            'name',
+                                                                            'group'
+                                                                          ],
+                                                              'group' => {
+                                                                         '/order' => [
+                                                                                       'label',
+                                                                                       'text'
+                                                                                     ],
+                                                                         '/nodes' => {
+                                                                                       'text' => 1,
+                                                                                       'label' => 1
+                                                                                     },
+                                                                         'text' => {
+                                                                                   'variable' => 'page'
+                                                                                 },
+                                                                         'label' => {
+                                                                                    '/order' => [
+                                                                                                  'variable',
+                                                                                                  'form',
+                                                                                                  'suffix'
+                                                                                                ],
+                                                                                    'variable' => 'page',
+                                                                                    'suffix' => '. ',
+                                                                                    'form' => 'short'
+                                                                                  }
+                                                                       },
+                                                              '/nodes' => {
+                                                                            'group' => 1
+                                                                          },
+                                                              'name' => 'page'
+                                                            }
+                                                          ],
+                                                 'citation' => {
+                                                               '/order' => [
+                                                                             'option',
+                                                                             'option',
+                                                                             'option',
+                                                                             'sort',
+                                                                             'layout'
+                                                                           ],
+                                                               'layout' => {
+                                                                           '/order' => [
+                                                                                         'prefix',
+                                                                                         'suffix',
+                                                                                         'delimiter',
+                                                                                         'text'
+                                                                                       ],
+                                                                           '/nodes' => {
+                                                                                         'text' => 1
+                                                                                       },
+                                                                           'suffix' => ']',
+                                                                           'text' => {
+                                                                                     'variable' => 'citation-number'
+                                                                                   },
+                                                                           'delimiter' => ',',
+                                                                           'prefix' => '['
+                                                                         },
+                                                               'sort' => {
+                                                                         '/nodes' => {
+                                                                                       'key' => 1
+                                                                                     },
+                                                                         'key' => {
+                                                                                  'variable' => 'citation-number'
+                                                                                }
+                                                                       },
+                                                               '/nodes' => {
+                                                                             'layout' => 1,
+                                                                             'sort' => 1,
+                                                                             'option' => 1
+                                                                           },
+                                                               'option' => [
+                                                                           {
+                                                                             '/order' => [
+                                                                                           'name',
+                                                                                           'value'
+                                                                                         ],
+                                                                             'value' => '3',
+                                                                             'name' => 'et-al-min'
+                                                                           },
+                                                                           {
+                                                                             '/order' => [
+                                                                                           'name',
+                                                                                           'value'
+                                                                                         ],
+                                                                             'value' => '1',
+                                                                             'name' => 'et-al-use-first'
+                                                                           },
+                                                                           {
+                                                                             '/order' => [
+                                                                                           'name',
+                                                                                           'value'
+                                                                                         ],
+                                                                             'value' => 'citation-number',
+                                                                             'name' => 'collapse'
+                                                                           }
+                                                                         ]
+                                                             }
+                                               }
+                                    },
+                          'a' => [],
+                          'TIEONUSE' => {
+                                          'h' => 'XML::Smart::Tie::Hash',
+                                          'a' => 'XML::Smart::Tie::Array'
+                                        },
+                          's' => \sub { "DUMMY" },
+                          'c' => sub { "DUMMY" },
+                          'point' => ${$VAR1}->{'tree'},
+                          'h' => {},
+                          'g' => \*Object::MultiType::Saver::NULL,
+                          'b' => \sub { "DUMMY" }
+                        }, 'Object::MultiType::Saver' ))}, 'XML::Smart' );
