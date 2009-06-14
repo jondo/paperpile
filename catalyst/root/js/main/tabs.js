@@ -34,23 +34,38 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     },
 
     
-    newPluginTab:function(name, pars, title, iconCls){
+    // If itemId is given it is checked if the same tab already is
+    // open and it activated instead of creating a new one
+    newPluginTab:function(name, pars, title, iconCls, itemId){
 
         var newGrid=new Paperpile['PluginGrid'+name](pars);
+
+        var openTab=Paperpile.main.tabs.getItem(itemId);
+
+        if (openTab){
+            this.activate(openTab);
+        } else {
         
-        var newView=this.add(new Paperpile.PubView({title: (title) ? title:newGrid.plugin_title, 
-                                                    grid:newGrid,
-                                                    closable:true,
-                                                    iconCls: (iconCls) ? iconCls : newGrid.plugin_iconCls,
-                                                   }));
-        newView.show();
-        
-        
+            var newView=this.add(new Paperpile.PubView({title: (title) ? title:newGrid.plugin_title, 
+                                                        grid:newGrid,
+                                                        closable:true,
+                                                        iconCls: (iconCls) ? iconCls : newGrid.plugin_iconCls,
+                                                        itemId: itemId,
+                                                       }));
+            newView.show();
+        }
     },
 
-    newScreenTab:function(name){
-        var panel=main.tabs.add(new Paperpile[name]());
-        panel.show();
+    newScreenTab:function(name, itemId){
+        
+        var openTab=Paperpile.main.tabs.getItem(itemId);
+
+        if (openTab){
+            this.activate(openTab);
+        } else {
+            var panel=main.tabs.add(new Paperpile[name]({itemId:itemId}));
+            panel.show();
+        }
     }
     
 }                                 

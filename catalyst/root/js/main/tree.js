@@ -166,9 +166,15 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         }
                         iconCls='pp-tag-style-tab pp-tag-style-'+style;
                     }
+                    console.log(node.plugin_name, node.type);
 
-                    // Call appropriate frontend
-                    Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
+                    // Call appropriate frontend, tags, active folders, and folders are opened only once 
+                    // and we pass the node.id as item-id for the tab
+                    if (node.type == 'TAGS' || node.type == 'ACTIVE' || node.type == 'FOLDER'){
+                        Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id);
+                    } else {
+                        Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
+                    }
                 }
                 break;
             }

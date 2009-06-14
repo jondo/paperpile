@@ -34,7 +34,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                 text:"Dashboard",
                                 cls: 'x-btn-text-icon dashboard',
                                 handler: function(){
-                                    Paperpile.main.tabs.newScreenTab('Dashboard');
+                                    Paperpile.main.tabs.newScreenTab('Dashboard','dashboard');
                                 },
                                },
                                
