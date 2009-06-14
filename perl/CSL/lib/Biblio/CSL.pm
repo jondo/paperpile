@@ -607,6 +607,7 @@ sub _transformEach() {
         }
         else {
             die "ERROR: CSL-element 'bibliography' not available?";
+                        
         }
     }
     else {
@@ -1377,7 +1378,9 @@ sub _parseNameAuthor {
                     }                    
                 }
             }
-
+            
+            print "et_al_min=".$et_al_min.", et-al-use-first=".$et_al_use_first." qtNames=$qtNames round=$round\n" if($self->{verbose});
+            
             # print the names
             my $i=0;
             foreach my $n ( @names ) {
@@ -1385,25 +1388,28 @@ sub _parseNameAuthor {
                 $i++;
                 my $complete_name = "";
                 
-                # either not enough for et-al or we use the first authors until we reach $et_al_use_first
-                if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) ) {
+                # either not enough for et-al or we use the first authors until we reach $et_al_use_first, or we do not have et-al option
+                if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) || ($et_al_min==0 && $et_al_use_first==0)) {
                     my $family_name = $n->{namePart}('type', 'eq', 'family');
                     my @given_names = $n->{namePart}('type', 'eq', 'given');
                     #print Dumper @given_names;
 
                     if(exists $name->{'name-as-sort-order'}) {
-                        if($name->{'name-as-sort-order'} eq "all") { # all -> Doe, John                                             
-                            #print Dumper $n->{namePart}->[1]->pointer; exit;
-                            $complete_name = $family_name.$name->{'sort-separator'};
+                        if($name->{'name-as-sort-order'} eq "all") { # all -> Doe, John
+                            #print Dumper $n->{namePart}->[1]->pointer;
+                            my $sort_separator = ", ";
+                            $sort_separator = $name->{'sort-separator'} if(exists $name->{'sort-separator'});
+                            $complete_name = $family_name.$sort_separator;
                             
                             if(exists $name->{'initialize-with'}) {
                                 foreach my $gn (@given_names) {
                                     my @nameParts = split /\s+/, $gn;
-                                    for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Rose -> R.
+                                    push @nameParts, $gn if(scalar(@nameParts)==0);                                    
+                                    for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Dominic -> D.
                                         if($nameParts[$i] =~ /^(\S)/) {
                                             $nameParts[$i] = $1;
                                             $complete_name .= $nameParts[$i].$name->{'initialize-with'};
-                                        }
+                                        }                                        
                                     }
                                 }
                                 $complete_name =~ s/\s+$//g; # remove endstanding spaces
@@ -1417,7 +1423,9 @@ sub _parseNameAuthor {
                         # only the first name is written as Wash, Stefan the rest is written as 
                         elsif($name->{'name-as-sort-order'} eq "first") {
                             if($i==1) { # Wash, Stefan
-                                $complete_name = $family_name.$name->{'sort-separator'};
+                                my $sort_separator = ", ";
+                                $sort_separator = $name->{'sort-separator'} if(exists $name->{'sort-separator'});
+                                $complete_name = $family_name.$sort_separator;
                                 foreach my $gn (@given_names) {
                                     my @nameParts = split /\s+/, $gn;
                                     for(my $i=0; $i<=$#nameParts; $i++) {
@@ -1492,7 +1500,7 @@ sub _parseNameAuthor {
             }
             
             # add "et al." string
-            if($qtNames >= $et_al_min) {
+            if($et_al_min>0 && $qtNames>=$et_al_min) {
                 print "adding 'et al'\n" if($self->{verbose});
                 
                 # ensure that there is a space before the ET-ALL
