@@ -48,13 +48,26 @@ foreach my $line (<JOURNALS>) {
   if ($short and $long){
     chomp($short);
     chomp($long);
-    $data{$short}=$long;
+
+    # If variants with dots and without exists, we take the on with
+    # dots. We have to think about how to get extensive list with dots.
+    my $id=$short;
+    $id=~s/\.//g;
+    $id=~s/ //g;
+    if (exists $data{$id}){
+      if ($short=~/\./){
+        $data{$id}={short=> $short, long => $long};
+      }
+    } else {
+      $data{$id}={short=> $short, long => $long};
+    }
   }
 }
 
-foreach my $short (keys %data){
 
-  my $long=$data{$short};
+foreach my $key (sort keys %data){
+  my $short=$data{$key}->{short};
+  my $long=$data{$key}->{long};
 
   $short = $model->dbh->quote($short);
   $long  = $model->dbh->quote($long);

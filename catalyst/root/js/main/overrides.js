@@ -2,19 +2,20 @@
 
 Ext.override(Ext.form.Field, {
     hideItem :function(){
-        this.formItem = Ext.Element(this.getEl()).findParent('.x-form-item');
+        this.formItem = Ext.Element(this.getEl()).findParent('.x-form-item',4);
         this.formItem.addClass('x-hide-' + this.hideMode);             
     },
 
     showItem: function(){
-        this.formItem = Ext.Element(this.getEl()).findParent('.x-form-item');
+        this.formItem = Ext.Element(this.getEl()).findParent('.x-form-item',4);
         this.formItem.removeClass('x-hide-' + this.hideMode);             
     },
     setFieldLabel: function(text) {
-    var ct = this.el.findParent('div.x-form-item', 3, true);
-    var label = ct.first('label.x-form-item-label');
-    label.update(text);
-  }
+        var ct = this.el.findParent('div.x-form-item', 4, true);
+        //console.log(this.el, ct);
+        var label = ct.first('label.x-form-item-label');
+        label.update(text);
+    }
 });
 
 Ext.override(Ext.Panel, {

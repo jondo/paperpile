@@ -157,9 +157,10 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
         /* first set labels and hide everything */
         for (var i=0; i<items.length; i++){
             var el=items[i].getEl();
-            if (items[i].itemId == 'pubtype' || items[i].itemId == 'journal'){
+            if (items[i].itemId == 'pubtype') {
                 continue;
             }
+           
             if (this.pub_types[pubtype].fields[items[i].getName()]){
                 var label=this.pub_types[pubtype].fields[items[i].getName()].label;
                 if (label){
