@@ -1,5 +1,15 @@
 /*** Generic styles ****/
 
+.pp-main-toolbar {
+    background: #F0F4F5 url(/images/toolbar-blue.png) repeat-x scroll left top;
+}
+
+.pp-main-toolbar-label {
+    color: #FFFFFF;
+    font-weight: bold !important;
+    padding: 0 5;
+}
+
 .pp-basic {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
@@ -11,6 +21,11 @@
     border-width: 1px;
     -moz-border-radius: 8px;
     -webkit-border-radius: 8px;
+}
+
+.pp-dashboard-box {
+    width: 400px;
+    margin: 10px;
 }
 
 .pp-box-top {
@@ -62,6 +77,24 @@ h1 {
     font-weight: normal;
     color: #4183C4;
 }
+
+.pp-dashboard-statistics {
+    background: transparent url('/images/icons/statistics.png') no-repeat;
+    padding: 3 0 0 30;
+}
+
+.pp-dashboard-feedback {
+    background: transparent url('/images/icons/feedback.png') no-repeat;
+    padding: 1 0 0 33;
+}
+
+.pp-dashboard-settings {
+    background: transparent url('/images/icons/settings.png') no-repeat;
+    padding: 1 0 0 33;
+}
+
+
+
 
 .pp-box dl {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;

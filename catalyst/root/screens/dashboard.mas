@@ -1,17 +1,47 @@
-<div class="pp-box pp-box-style1">
-<h2>Statistics</h1>
-<ul>
-<li><a href="#" class="pp-textlink" action="statistics">More statistics</a></li>
-<li></li>
-</ul>
 
-</div>
+<table>
+<tr>
+<td>
+  <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
+    <h2  class="pp-dashboard-statistics" >Statistics</h2>
+    <ul>
+      <li><a href="#" class="pp-textlink" action="statistics">More statistics</a></li>
+      <li></li>
+    </ul>
+  </div>
+</td>
+<td>
+  <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
+    <h2 class="pp-dashboard-settings">Tools &amp; Settings</h2>
+    <ul>
+      <li><a href="#" class="pp-textlink" action="settings-patterns">Paths and patterns</a></li>
+      <li><a href="#" class="pp-textlink" action="settings-patterns">Paths and patterns</a></li>
+    </ul>
+  </div>
+</td>
 
-<div class="pp-box pp-box-style1">
-<h2>Settings</h1>
-<ul>
-<li><a href="#" class="pp-textlink" action="settings-patterns">Paths and patterns</a></li>
-<li></li>
-</ul>
+<tr>
+  <td>
+    <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
+      <h2 class="pp-dashboard-feedback">Support &amp; Feedback</h2>
+      <ul>
+        <li>support@paperpile.org - Send us your questions and comments.</li>
+      </ul>
+    </div>
+  </td>
 
-<div>
+  <td>
+     <div class="pp-box pp-box-style2 pp-dashboard-box" style="height:200;">
+      <h2>About Paperpile</h2>
+      <ul>
+        <li>support@paperpile.org - Send us your questions and comments.</li>
+      </ul>
+    </div>
+  </td>
+</tr>
+
+
+</table>
+
+
+

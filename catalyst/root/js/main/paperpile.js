@@ -18,7 +18,17 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                    items:[{xtype:'panel',
                            layout:'border',
                            region:'center',
-                           tbar: [
+                           tbar: new Ext.Toolbar({
+                               cls: 'pp-main-toolbar',
+                               items:[
+                                   new Ext.BoxComponent(
+                                       { autoEl: {
+                                           cls: 'pp-main-toolbar-label',
+                                           tag: 'div',
+                                           html: 'Paperpile 0.4 beta',
+                                       }
+                                       }
+                                   ),
                                {xtype:'tbfill'},
                                {xtype:'button', 
                                 text:"Dashboard",
@@ -38,7 +48,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                 },
                                }
 
-                           ],
+                               ]}),
                            items: [ { border: 0,
                               xtype:'tree',
                               rootVisible : false,
