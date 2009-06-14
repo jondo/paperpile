@@ -19,6 +19,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                            layout:'border',
                            region:'center',
                            tbar: new Ext.Toolbar({
+                               id: 'main-toolbar',
                                cls: 'pp-main-toolbar',
                                items:[
                                    new Ext.BoxComponent(

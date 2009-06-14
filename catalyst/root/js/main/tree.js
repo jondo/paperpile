@@ -166,7 +166,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         }
                         iconCls='pp-tag-style-tab pp-tag-style-'+style;
                     }
-                    console.log(node.plugin_name, node.type);
 
                     // Call appropriate frontend, tags, active folders, and folders are opened only once 
                     // and we pass the node.id as item-id for the tab
@@ -797,7 +796,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                             function(item, index, length){
                                 if (item.title == node.text){
                                     var el=Ext.get(Ext.DomQuery.selectNode('span.x-tab-strip-text',Paperpile.main.tabs.getTabEl(this)));
-                                    console.log(el);
                                     el.removeClass('pp-tag-style-'+node.tagStyle);
                                     el.addClass('pp-tag-style-'+number);
                                 }

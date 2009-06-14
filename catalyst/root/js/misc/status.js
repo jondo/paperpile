@@ -56,6 +56,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
             }
         });
 		Paperpile.Status.superclass.initComponent.call(this);
+
     },
     
     afterRender: function(){
@@ -134,7 +135,8 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
                            }, this, {single:true});
         }
 
-        this.el.alignTo(this.anchor, 't-t',[0,3]);
+        this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t',[0,3]);
+
 
     },
 

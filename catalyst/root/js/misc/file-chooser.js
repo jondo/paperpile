@@ -181,7 +181,6 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
         this.textfield.on('change',
                           function(field, newValue, oldValue){
-                              console.log(newValue);
                               this.saveDefault=newValue;
                           },
                           this
