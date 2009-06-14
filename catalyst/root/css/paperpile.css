@@ -689,12 +689,12 @@ div:hover.pp-tag-style-sample {
      background-image:none;
 }
 
-
 .x-spotlight {
     opacity: 0.4;
 }
 
-
+/*Fixes combobox trigger bug. Don't know what it is exactly doing but seems to work. */
+.ext-safari .x-form-field-wrap .x-form-trigger{right:inherit;}
 
 
 

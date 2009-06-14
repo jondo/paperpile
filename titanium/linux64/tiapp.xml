@@ -7,14 +7,14 @@
       <id>initial</id>
       <title>Paperpile</title>
       <url>app://index.html</url>
-      <!--
+     
       <width>1024</width>
       <height>768</height>i
-	-->
 
+	<!--
       <width>1280</width>
       <height>1024</height>i
-
+-->
 
       <fullscreen>false</fullscreen>
       <!--
