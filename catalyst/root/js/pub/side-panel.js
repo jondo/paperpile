@@ -562,7 +562,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         var div=Ext.DomHelper.append(li, '<div class="pp-control-container" id="progress-bar"></div>');
 
         this.progressBar = new Ext.ProgressBar({
-            width: 240,
+            width: 200,
             renderTo: 'progress-bar'
         });
 

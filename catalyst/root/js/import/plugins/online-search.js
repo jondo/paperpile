@@ -6,7 +6,7 @@ Paperpile.PluginGridOnlineSearch = Ext.extend(Paperpile.PluginGrid, {
 
         var tbar=this.getTopToolbar();
 
-        tbar.unshift(new Ext.app.SearchField({width:320,
+        tbar.unshift(new Ext.app.SearchField({width:250,
                                               store: this.store}));
 
         //tbar.splice(this.getButtonIndex('new_button'), 1, addButton);

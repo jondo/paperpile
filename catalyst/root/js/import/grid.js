@@ -131,25 +131,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
 
             var t = new Ext.XTemplate(
-                '<div class="pp-grid-info">',
-                '<tpl if="_imported">',
-                '<div class="pp-grid-key" ext:qtip="Imported {created}" >{_citekey}&nbsp;</div',
-                '</tpl>',
-                '<tpl if="!_imported">',
-                '<div>&nbsp;</div',
-                '</tpl>',
-                '<div>',
-                '<tpl if="pdf">',
-                '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="{pdf}"></div>',
-                '</tpl>',
-                '<tpl if="attachments">',
-                '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
-                '</tpl>',
-                '<tpl if="notes">',
-                '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
-                '</tpl>',
-                '</div>',
-                '</div>',
+         
                 '<div class="pp-grid-data">',
                 '<p class="pp-grid-title">{title}</p>',
                 '<p class="pp-grid-authors">{_authors_display}</p>',
@@ -168,7 +150,38 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             return t.apply(record.data);
 
+        };
+
+        var renderIcons=function(value, p, record){
+
+            // Can possibly be speeded up with compiling the template.
+
+            record.data._notes_tip=Ext.util.Format.stripTags(record.data.notes);
+            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
+
+            var t = new Ext.XTemplate(
+                '<div class="pp-grid-info">',
+                '<tpl if="_imported">',
+                '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="{_citekey}"></div>',
+                '</tpl>',
+                '<div>',
+                '<tpl if="pdf">',
+                '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="{pdf}"></div>',
+                '</tpl>',
+                '<tpl if="attachments">',
+                '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+                '</tpl>',
+                '<tpl if="notes">',
+                '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
+                '</tpl>',
+                '</div>',
+                '</div>'
+            );
+
+            return t.apply(record.data);
+
         }
+
     
         Ext.apply(this, {
             ddGroup  : 'gridDD',
@@ -180,12 +193,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             enableHdMenu : false,
             autoExpandColumn:'publication',
 
-            columns:[{header: "Papers",
-                      id: 'publication',
-                      dataIndex: 'title',
-                      renderer:renderPub,
-                     }
-                    ],
+            columns:[
+                {header: "",
+                 id: 'icons',
+                 dataIndex: 'title',
+                 renderer:renderIcons,
+                 width: 70,
+                 resizable: false,
+                },
+                {header: "Papers",
+                 id: 'publication',
+                 dataIndex: 'title',
+                 renderer:renderPub,
+                 resizable: false,
+                },
+            ],
         });
         
         Paperpile.PluginGrid.superclass.initComponent.apply(this, arguments);
@@ -271,38 +293,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         this.actions['SELECT_ALL'].setDisabled(this.allSelected);
 
-        /*
-        var tbar = this.getTopToolbar();
-        var sm = this.getSelectionModel();
-        var record = sm.getSelected();
-        
-        return;
-        
-        if (tbar.items.get('new_button')){
-            tbar.items.get('new_button').enable();
-        }
-
-        tbar.items.get('more_menu').enable();
-
-        if (tbar.items.get('edit_button')){
-            if (record){
-                if (record.data._imported && (sm.getCount() == 1 )){
-                    tbar.items.get('edit_button').enable();
-                } else {
-                    tbar.items.get('edit_button').disable();
-                }
-            }
-        }
-
-        if (tbar.items.get('add_button')){
-            tbar.items.get('add_button').setDisabled( record.data._imported );
-        }
-
-        if (tbar.items.get('delete_button')){
-            tbar.items.get('delete_button').setDisabled( ! record.data._imported );
-        }
-*/
-
+       
                 
     },
 
@@ -482,6 +473,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                               spotlight: true,
                                               callback: function(status){
                                                   east_panel.remove('pub_edit');
+                                                  if (oldSize<500) east_panel.setSize(oldSize);
                                                   east_panel.doLayout();
                                                   east_panel.getLayout().setActiveItem('pdf_manager');
                                                   east_panel.showBbar();
@@ -489,7 +481,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                               scope:this
                                              });
 
-        
+        var oldSize=east_panel.getInnerWidth();
+        if (oldSize<500) east_panel.setSize(500); 
         east_panel.hideBbar();
         east_panel.add(form);
         east_panel.doLayout();
@@ -504,6 +497,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                               spotlight: true,
                                               callback: function(status,data){
                                                   east_panel.remove('pub_edit');
+                                                  if (oldSize<500) east_panel.setSize(oldSize);
                                                   east_panel.doLayout();
                                                   east_panel.getLayout().setActiveItem('pdf_manager');
                                                   east_panel.showBbar();
@@ -511,8 +505,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                               scope:this
 
                                              });
-
-       
+        
+        var oldSize=east_panel.getInnerWidth();
+        if (oldSize<500) east_panel.setSize(500); 
         east_panel.hideBbar();
         east_panel.add(form);
         east_panel.doLayout();

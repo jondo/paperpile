@@ -6,12 +6,9 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
             layout:'border',
             items:[
                 { xtype:'panel',
-                  region:'west',
-                  split: true,
+                  region:'center',
                   itemId: 'center_panel',
                   layout: 'border',
-                  width: 720,
-                  minSize:720,
                   items:[
                       this.grid,
                       {border: false,
@@ -26,10 +23,12 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                       },
                   ]
                  },
-                { region:'center',
+                { region:'east',
                   itemId: 'east_panel',
                   activeItem:0,
+                  split: true,
                   layout: 'card',
+                  width:300,
                   items: [
                       new Paperpile.PDFmanager(
                           {itemId:'pdf_manager',
@@ -66,7 +65,10 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         });
        
         Paperpile.PubView.superclass.initComponent.apply(this, arguments);
+
     },
+
+    
 
 
     onRowSelect: function(sm, rowIdx, r) {

@@ -2,7 +2,6 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
 	  
     initComponent: function() {
 
-
         var _journal_store = new Ext.data.Store({
             proxy: new Ext.data.HttpProxy({
                 url: Paperpile.Url('/ajax/misc/journal_list')
@@ -126,7 +125,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
         });
 
         Paperpile.Forms.PubEdit.superclass.initComponent.call(this);
-        
+
         this.setValues(this.data);
 
         this.on('afterlayout',
@@ -134,6 +133,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                     this.setFields('ARTICLE');
                     this.spot.show(this.id);
                 });
+
               
 	  },
     
@@ -219,7 +219,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
     cancel: function(){
         if (this.spotlight) this.spot.hide();
         this.callback.createDelegate(this.scope,['CANCEL'])();
-
+        
     },
 
     onSuccess: function(form,action){
@@ -231,7 +231,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
 
     },
 
-    
+   
 
 });
 

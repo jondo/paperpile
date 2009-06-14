@@ -27,16 +27,16 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                     Paperpile.main.tabs.newScreenTab('Dashboard');
                                 },
                                },
-                               /*
+                               
                                {xtype:'button', 
                                 text:"Test",
                                 handler: function(){
-                                    var myIFrame = document.getElementById('iframe-testframe');  
-                                    var content = myIFrame.contentWindow.document.body.innerHTML;  
-                                    alert(content);
+                                    //var myIFrame = document.getElementById('iframe-testframe');  
+                                    //var content = myIFrame.contentWindow.document.body.innerHTML;  
+                                    //alert(content);
+                           
                                 },
                                }
-*/
 
                            ],
                            items: [ { border: 0,
@@ -59,7 +59,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                             },
                             { region:'center',
                               border: false,
-                              height:600,
+                              //height:600,
                               border: false,
                               xtype: 'tabs',
                               id: 'tabs',

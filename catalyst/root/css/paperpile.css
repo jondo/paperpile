@@ -370,7 +370,7 @@ a:hover.pp-textlink {
 
 .pp-grid-info{
     line-height: 1.5em;
-    width: 120;
+    width: 70;
     float: left;
 }
 
@@ -382,28 +382,33 @@ a:hover.pp-textlink {
 }
 
 .pp-grid-status {
-    width:24px;
-    height:24px;
+    width:16px;
+    height:16px;
     margin: 3px;
     float: left;
 }
 
 .pp-grid-status-pdf {
-    background: transparent url('/images/icons/pdf_white.png') no-repeat;
+    background: transparent url('/images/icons/page_white_acrobat.png') no-repeat;
 }
 
 .pp-grid-status-attachments {
-    background: transparent url('/images/icons/attachment.png') no-repeat;
+    background: transparent url('/images/icons/attach.png') no-repeat;
 }
 
 .pp-grid-status-notes {
-    background: transparent url('/images/icons/notes.png') no-repeat;
+    background: transparent url('/images/icons/pencil.png') no-repeat;
+}
+
+.pp-grid-status-imported {
+    background: transparent url('/images/icons/imported.gif') no-repeat;
 }
 
 .pp-grid-data{
     line-height: 1.5em;
     float: left;
-    width: 550;
+    width: 100%;
+    max-width: 600px;
 }
 
 .pp-grid-title,.pp-grid-authors{

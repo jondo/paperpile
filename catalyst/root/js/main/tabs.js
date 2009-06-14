@@ -4,7 +4,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         
         Ext.apply(this, {
             id: 'tabs',
-            margins: '2 2 2 2',
+            //margins: '2 2 2 2',
             //Have at least one item on rendering to get it rendered correctly
             items: [{title:'Welcome', 
                      itemId: 'welcome'

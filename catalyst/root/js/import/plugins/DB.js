@@ -34,7 +34,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
         this.filterField=new Ext.app.FilterField({store: this.store, 
                                                   base_query: this.plugin_base_query,
-                                                  width: 320,
+                                                  width: 250,
                                                  });
         var tbar=this.getTopToolbar();
         tbar.unshift({xtype:'button', text: 'Filter', menu: menu });
@@ -90,7 +90,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
 
-        var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(0)).first(), 
+        var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(1)).first(), 
                                         '<div class="pp-grid-sort-container">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Sort by:</b></div>', true);
 
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="journal" status="inactive">Date added</div>');
