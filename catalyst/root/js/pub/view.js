@@ -4,6 +4,7 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         
         Ext.apply(this, {
             layout:'border',
+            hideBorders:true,
             items:[
                 { xtype:'panel',
                   region:'center',
