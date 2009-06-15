@@ -42,6 +42,7 @@
   pub/view.js 
   pub/bottom-panel.js 
   pub/side-panel.js
+  pub/details.js
                
   pdf/viewer.js 
   pdf/zoomer.js

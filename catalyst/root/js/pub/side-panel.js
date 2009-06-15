@@ -7,7 +7,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         // Yellow box
         '<div class="pp-box pp-box-top pp-box-style1"',
         '<dl>',
-        '<dt>Publication type: </dt><dd>{_pubtype_name}</dd>',
+        '<dt>Type: </dt><dd>{_pubtype_name}</dd>',
         '<tpl if="_imported"><dt>Imported: </dt><dd>{created}</dd></tpl>',
         '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
         '<tpl if="pmid"><dt>PubMed ID: </dt><dd>{pmid}</dd></tpl>',

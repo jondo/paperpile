@@ -134,8 +134,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
          
                 '<div class="pp-grid-data">',
                 '<p class="pp-grid-title">{title}</p>',
+                '<tpl if="_authors_display">',
                 '<p class="pp-grid-authors">{_authors_display}</p>',
+                '</tpl>',
+                '<tpl if="_citation_display">',
                 '<p class="pp-grid-citation">{_citation_display}</p>',
+                '</tpl>',
                 '<tpl if="_snippets_text">',
                 '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
                 '</tpl>',

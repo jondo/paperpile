@@ -1,6 +1,7 @@
 package Paperpile::Library::Author;
 use Moose;
 use Moose::Util::TypeConstraints;
+use Text::Unidecode;
 
 has 'full' => (
   is      => 'rw',
@@ -60,7 +61,7 @@ sub split_full {
   }
 
   # Recognize non-human entities like collaborative names;
-  # Currently they are marked by {..}, probably add 
+  # Currently they are marked by {..}, probably add
   # full support of {...} as in BibTeX rather this one special
   # case
   if ($self->full=~/^\s*\{(.*)\}\s*$/){
@@ -154,7 +155,6 @@ sub read_bibutils{
   return $self;
 }
 
-
 sub create_key {
   my $self = shift;
 
@@ -169,6 +169,8 @@ sub create_key {
   }
 
   my $key = join( '_', @components );
+
+  $key = unidecode($key);
 
   return ( $self->key($key) );
 }

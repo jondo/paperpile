@@ -99,18 +99,20 @@ h1 {
 .pp-box dl {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     margin: 8;
+    line-height: 1.3em;
 }
 
 .pp-box dt {
     float: left;
     clear: left;
     color: #4183C4;
-    width: 90px; 
+    width: 75px; 
     text-align: right; 
+    line-height: 1.3em;
 }
 
 .pp-box dd { 
-    margin: 0 0 0 90px; 
+    margin: 0 0 0 75px; 
     padding: 0 0 5 5;
 }
 

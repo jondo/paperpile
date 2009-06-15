@@ -32,33 +32,32 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                   width:300,
                   items: [
                       new Paperpile.PDFmanager(
-                          {itemId:'pdf_manager',
+                          {itemId:'overview',
                           }
                       ),
-                      new Paperpile.PDFviewer(
-                          {itemId:'pdf_viewer',
+                      new Paperpile.PubDetails(
+                          {itemId:'details',
                           }
                       )
                   ],
-                  bbar: [{ text: 'Manage PDF',
-                           itemId: 'pdf_manager_tab_button',
+                  bbar: [{ text: 'Overview',
+                           itemId: 'overview_tab_button',
                            enableToggle: true,
-                           toggleHandler: this.onPDFtabToggle,
-                           toggleGroup: 'pdf_tab_buttons',
+                           toggleHandler: this.onControlToggle,
+                           toggleGroup: 'control_tab_buttons',
                            scope: this,
                            allowDepress : false,
                            pressed: true
                          },
-                           { text: 'View PDF',
-                             itemId: 'pdf_view_tab_button',
-                             enableToggle: true,
-                             toggleHandler: this.onPDFtabToggle,
-                             toggleGroup: 'pdf_tab_buttons',
-                             disabled:true,
-                             scope: this,
-                             allowDepress : false,
-                             pressed: false
-                           }
+                         { text: 'Details',
+                           itemId: 'details_tab_button',
+                           enableToggle: true,
+                           toggleHandler: this.onControlToggle,
+                           toggleGroup: 'control_tab_buttons',
+                           scope: this,
+                           allowDepress : false,
+                           pressed: false
+                         }
                         ],
                 },
                
@@ -69,8 +68,18 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
 
     },
 
-    
+    onControlToggle:function (button, pressed){
 
+        if (button.itemId == 'overview_tab_button' && pressed){
+            this.items.get('east_panel').getLayout().setActiveItem('overview');
+        }
+
+        if (button.itemId == 'details_tab_button' && pressed){
+            this.items.get('east_panel').getLayout().setActiveItem('details');
+        }
+
+    },
+    
 
     onRowSelect: function(sm, rowIdx, r) {
 
@@ -82,7 +91,8 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         datatabs.items.get('pubsummary').updateDetail(r.data);
         datatabs.items.get('pubnotes').updateDetail(r.data);        
 
-        this.items.get('east_panel').items.get('pdf_manager').updateDetail();
+        this.items.get('east_panel').items.get('overview').updateDetail();
+        this.items.get('east_panel').items.get('details').updateDetail();
     },
 
 });
