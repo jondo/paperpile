@@ -1363,7 +1363,7 @@ sub _parseNameAuthor {
             my $qtNames = scalar(@names);
             my $round = $qtNames;
 
-            my ($et_al_min , $et_al_use_first) = (0, 0);
+            my ($et_al_min , $et_al_use_first, $sort_separator, $initialize_with, $name_as_sort_order) = (0, 0, "", "", "");
             
             # read et-al options
             my @options = $self->_c->{style}->{bibliography}->{option}('@');
@@ -1378,8 +1378,18 @@ sub _parseNameAuthor {
                     }                    
                 }
             }
+                        
+            # set sort_separator
+            $sort_separator = $name->{'sort-separator'} if(exists $name->{'sort-separator'});
+                    
+            # set initialize_with
+            $initialize_with = $name->{'initialize-with'} if(exists $name->{'initialize-with'});
+            $initialize_with =~ s/\s+$//g; # remove endstanding spaces
             
-            print "et_al_min=".$et_al_min.", et-al-use-first=".$et_al_use_first." qtNames=$qtNames round=$round\n" if($self->{verbose});
+            # set name_as_sort_order
+            $name_as_sort_order = $name->{'name-as-sort-order'} if(exists $name->{'name-as-sort-order'});
+            
+            print "et_al_min=".$et_al_min.", et-al-use-first=".$et_al_use_first." sort_separator='$sort_separator' initialize_with='$initialize_with' name_as_sort_order='$name_as_sort_order' qtNames='$qtNames' round='$round'\n" if($self->{verbose});            
             
             # print the names
             my $i=0;
@@ -1387,79 +1397,58 @@ sub _parseNameAuthor {
                 #print Dumper $n->pointer; exit;
                 $i++;
                 my $complete_name = "";
+                my @nameParts = ();
                 
                 # either not enough for et-al or we use the first authors until we reach $et_al_use_first, or we do not have et-al option
                 if($qtNames < $et_al_min || (($qtNames >= $et_al_min) && ($qtNames-$round)<$et_al_use_first) || ($et_al_min==0 && $et_al_use_first==0)) {
                     my $family_name = $n->{namePart}('type', 'eq', 'family');
-                    my @given_names = $n->{namePart}('type', 'eq', 'given');
-                    #print Dumper @given_names;
+                    my @given_names = $n->{namePart}('type', 'eq', 'given');    
 
-                    if(exists $name->{'name-as-sort-order'}) {
-                        if($name->{'name-as-sort-order'} eq "all") { # all -> Doe, John
-                            #print Dumper $n->{namePart}->[1]->pointer;
-                            my $sort_separator = ", ";
-                            $sort_separator = $name->{'sort-separator'} if(exists $name->{'sort-separator'});
-                            $complete_name = $family_name.$sort_separator;
+                    # prepare nameParts
+                    foreach my $gn (@given_names) {
+                        @nameParts = split /\s+/, $gn;
+                        push @nameParts, $gn if(scalar(@nameParts)==0);
+                    }
+
+                    if($initialize_with ne '') {
+                        for(my $j=0; $j<=$#nameParts; $j++) { # shorten each name part to its initial and add the respective char, e.g. Dominic -> D.
+                            if($nameParts[$j] =~ /^(\S)/) {
+                                $nameParts[$j] = uc($1).$initialize_with;
+                                $nameParts[$j] =~ s/\s+$//g; # remove endstanding spaces                                
+                            }
+                        }
+                    }
+                    else {
+                        for(my $j=0; $j<=$#nameParts; $j++) { # add endstanding space
+                            $nameParts[$j] .= " ";
+                        }
+                    }
+
+                    if( (($i == 1 && $name_as_sort_order eq 'first') || $name_as_sort_order eq 'all') && $sort_separator ne '') {
+                            # if this is the first author and name-as-sort="first"
+                            # or if this is a subsequent author and name-as-sort="all"
+                            # then the name gets inverted
                             
-                            if(exists $name->{'initialize-with'}) {
-                                foreach my $gn (@given_names) {
-                                    my @nameParts = split /\s+/, $gn;
-                                    push @nameParts, $gn if(scalar(@nameParts)==0);                                    
-                                    for(my $i=0; $i<=$#nameParts; $i++) { # shorten each name part to its initial and add the respective char, e.g. Dominic -> D.
-                                        if($nameParts[$i] =~ /^(\S)/) {
-                                            $nameParts[$i] = $1;
-                                            $complete_name .= $nameParts[$i].$name->{'initialize-with'};
-                                        }                                        
-                                    }
-                                }
-                                $complete_name =~ s/\s+$//g; # remove endstanding spaces
+                            # zotero:
+                            #authorStrings.push(lastName+(firstName ? child["@sort-separator"].toString()+firstName : ""));
+
+                            $complete_name .= $family_name;
+                            $complete_name .= $sort_separator if(@given_names>0);
+                            for(my $j=0; $j<=$#nameParts; $j++) {
+                                $complete_name .= $nameParts[$j];
                             }
-                            else {
-                                foreach my $gn (@given_names) {
-                                    $complete_name .= $gn;
-                                }
+                            $complete_name =~ s/\s+$//g; # remove endstanding spaces
+                    } else {
+                            # zotero:
+                            #authorStrings.push((firstName ? firstName+" " : "")+lastName);
+                            
+                            for(my $j=0; $j<=$#nameParts; $j++) {
+                                $complete_name .= $nameParts[$j];
                             }
-                        }
-                        # only the first name is written as Wash, Stefan the rest is written as 
-                        elsif($name->{'name-as-sort-order'} eq "first") {
-                            if($i==1) { # Wash, Stefan
-                                my $sort_separator = ", ";
-                                $sort_separator = $name->{'sort-separator'} if(exists $name->{'sort-separator'});
-                                $complete_name = $family_name.$sort_separator;
-                                foreach my $gn (@given_names) {
-                                    my @nameParts = split /\s+/, $gn;
-                                    for(my $i=0; $i<=$#nameParts; $i++) {
-                                        $complete_name .= " " if($i>0);
-                                        $complete_name .= $nameParts[$i];
-                                        
-                                    }
-                                }
-                            }
-                            else { # Stefan Wash
-                                foreach my $gn (@given_names) {
-                                    my @nameParts = split /\s+/, $gn;
-                                    for(my $i=0; $i<=$#nameParts; $i++) {
-                                        $complete_name .= " " if($i>0);
-                                        $complete_name .= $nameParts[$i]." ";
-                                    }                            
-                                }
-                                $complete_name .= $family_name;
-                            }
-                        }
-                        else { # attribute given, but phrase is not supported?
-                        }
+                            $complete_name .= " " if(scalar(@given_names)>0);
+                            $complete_name .= $family_name;
                     }
-                    else { # attribute not given -> "John Doe"
-                        ### not tested yet
-                        #foreach my $gn (@given_names) {
-                        #       my @nameParts = split /\s+/, $gn;
-                        #        for(my $i=0; $i<=$#nameParts; $i++) {
-                        #            $complete_name .= $nameParts[$i];
-                        #        }
-                        #}
-                        #$complete_name .= $family_name;
-                    }
-                    
+                   
                     if(exists $name->{'delimiter-precedes-last'}) {
                         if($name->{'delimiter-precedes-last'} eq 'always') {
                             if($round>1) {
@@ -1475,7 +1464,8 @@ sub _parseNameAuthor {
                         else { # attribute exists but the given phrase is not supported
                         }
                     }
-                    else {                        
+                    else {
+                        $complete_name .= $name->{delimiter} if(exists $name->{delimiter});
                     }
                     
                     # add the AND 
