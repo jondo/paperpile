@@ -1,5 +1,7 @@
 Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
+    title: 'Location and patterns settings',
+
     initComponent: function() {
 		Ext.apply(this, {
             closable:true,

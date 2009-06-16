@@ -151,6 +151,7 @@ a:hover.pp-textlink {
 }
 
 .pp-textfield-with-button {
+    margin-right: 5px;
     float: left;
 }
 
@@ -570,6 +571,40 @@ div:hover.pp-grid-sort-item {
     position: absolute;
     opacity:0.3;
 }
+
+/*** Settings ***/
+
+.pp-box-settings {
+    width: 450;
+    min-width:450;
+}
+.pp-box-settings h3 {
+    clear:left;
+    color: #4183C4;
+    margin: 16 0 2 8;
+    font:italic 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-weight:bold;
+}
+
+.pp-settings-textfield {
+    margin: 0px 8px;
+}
+
+.pp-settings-example {
+    font:italic 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    margin: 8px;
+}
+
+
+.pp-settings-example code {
+    font: normal 12px "Courier New", monospace;
+    background-color: #F8F8FF;
+    border: 1px solid #DEDEDE;
+    color: #444444;
+    padding: 0 5;
+    border-style:dotted;
+}
+
 
 
 /*** Tags ***/

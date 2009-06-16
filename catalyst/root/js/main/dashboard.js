@@ -30,7 +30,9 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
                 break;
 
             case 'settings-patterns':                 
-                this.searchPDF(true);
+                
+                Paperpile.main.tabs.newScreenTab('PatternSettings');
+
                 break;
             }
 
