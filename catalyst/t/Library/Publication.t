@@ -67,15 +67,15 @@ foreach my $key ( keys %journal ) {
 $pub = Paperpile::Library::Publication->new( {%book} );
 
 my $ctx = Digest::SHA1->new;
-$ctx->add(encode_utf8('Knuth, D.E.'));
-$ctx->add(encode_utf8('Fundamental Algorithms'));
+$ctx->add( encode_utf8('Knuth, D.E.') );
+$ctx->add( encode_utf8('Fundamental Algorithms') );
 my $sha1 = substr( $ctx->hexdigest, 0, 15 );
 
 is( $pub->sha1, $sha1, "Autogenerate sha1 identity" );
 
 $ctx = Digest::SHA1->new;
-$ctx->add(encode_utf8('Knuth, D.E.'));
-$ctx->add(encode_utf8('New Title'));
+$ctx->add( encode_utf8('Knuth, D.E.') );
+$ctx->add( encode_utf8('New Title') );
 $sha1 = substr( $ctx->hexdigest, 0, 15 );
 
 $pub->title('New Title');
@@ -84,21 +84,36 @@ is( $pub->sha1, $sha1, "Re-calculate sha1 identity after change" );
 
 my $pub2 = Paperpile::Library::Publication->new( {%journal} );
 
-is( $pub2->format_pattern('[firstauthor]'),       'Gruber',   '[firstauthor]' );
-is( $pub2->format_pattern('[firstauthor:Uc]'),    'Gruber',   '[firstauthor:Uc]' );
-is( $pub2->format_pattern('[firstauthor:lc]'),    'gruber',   '[firstauthor:lc]' );
-is( $pub2->format_pattern('[firstauthor:UC]'),    'GRUBER',   '[firstauthor:UC]' );
-is( $pub2->format_pattern('[firstauthor_abbr3]'), 'Gru',      '[firstauthor_abbr3]' );
-is( $pub2->format_pattern('[lastauthor]'),        'Washietl', '[lastauthor]' );
-is( $pub2->format_pattern('[authors]'),        'Gruber_Bernhart_Hofacker_Washietl', '[authors]' );
-is( $pub2->format_pattern('[authors2]'),       'Gruber_Bernhart_et_al',             '[authors2]' );
-is( $pub2->format_pattern('[authors3_abbr4]'), 'Grub_Bern_Hofa_et_al',              '[authors3_abbr4]' );
+is( $pub2->format_pattern('[firstauthor]'), 'gruber', '[firstauthor]' );
+is( $pub2->format_pattern('[Firstauthor]'), 'Gruber', '[Firstauthor]' );
+is( $pub2->format_pattern('[FIRSTAUTHOR]'), 'GRUBER', '[FIRSTAUTHOR]' );
+
+is( $pub2->format_pattern('[Firstauthor:3]'), 'Gru', '[Firstauthor:3]' );
+
+is( $pub2->format_pattern('[lastauthor]'), 'washietl', '[lastauthor]' );
+is( $pub2->format_pattern('[Lastauthor]'), 'Washietl', '[Lastauthor]' );
+is( $pub2->format_pattern('[LASTAUTHOR]'), 'WASHIETL', '[LASTAUTHOR]' );
+
+is( $pub2->format_pattern('[Authors]'), 'Gruber_Bernhart_Hofacker_Washietl', '[Authors]' );
+is( $pub2->format_pattern('[AUTHORS]'), 'GRUBER_BERNHART_HOFACKER_WASHIETL', '[AUTHORS]' );
+
+is( $pub2->format_pattern('[Authors2]'),   'Gruber_Bernhart_et_al', '[Authors2]' );
+is( $pub2->format_pattern('[authors3:4]'), 'grub_bern_hofa_et_al',  '[authors3:4]' );
+
+
+is( $pub2->format_pattern('[Title]'),
+  'Strategies_for_measuring_evolutionary_conservation_of_RNA_secondary_structures', '[Title]' );
 is( $pub2->format_pattern('[title]'),
-  'Strategies_for_measuring_evolutionary_conservation_of_RNA_secondary_structures', '[title]' );
-is( $pub2->format_pattern('[title3]'),       'Strategies_for_measuring', '[title3]' );
-is( $pub2->format_pattern('[title3_abbr3]'), 'Str_for_mea',              '[title3_abbr3]' );
+  'strategies_for_measuring_evolutionary_conservation_of_rna_secondary_structures', '[title]' );
+is( $pub2->format_pattern('[TITLE]'),
+  'STRATEGIES_FOR_MEASURING_EVOLUTIONARY_CONSERVATION_OF_RNA_SECONDARY_STRUCTURES', '[TITLE]' );
+
+
+is( $pub2->format_pattern('[Title3]'),       'Strategies_for_measuring', '[Title3]' );
+is( $pub2->format_pattern('[Title3:3]'), 'Str_for_mea',              '[Title3:3]' );
+
 is( $pub2->format_pattern('[YY]'),           '08',                       '[YY]' );
 is( $pub2->format_pattern('[YYYY]'),         '2008',                     '[YYYY]' );
 is( $pub2->format_pattern('[journal]'),      'BMC_Bioinformatics',       '[journal]' );
-is( $pub2->format_pattern('[key]', {key=>'Test'}),      'Test',       'Custom substitution [key]' );
+is( $pub2->format_pattern( '[key]', { key => 'Test' } ), 'Test', 'Custom substitution [key]' );
 

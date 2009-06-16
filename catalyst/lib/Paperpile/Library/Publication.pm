@@ -296,11 +296,19 @@ sub format_pattern {
 
   my @authors = ();
   foreach my $a ( @{ $self->get_authors } ) {
-    push @authors, $a->last;
+    if ( $a->collective ) {
+      push @authors, $a->collective;
+    } else {
+      push @authors, $a->last;
+    }
   }
 
   my $first_author = $authors[0];
   my $last_author  = $authors[$#authors];
+
+  if ( $first_author eq $last_author ) {
+    $last_author = "-";
+  }
 
   my $YYYY = $self->year;
   my $YY   = $YYYY;
@@ -311,36 +319,44 @@ sub format_pattern {
 
   my $journal = $self->journal;
 
-  $journal =~ s/\s+/_/g;
+  $journal      =~ s/\s+/_/g;
+  $first_author =~ s/\s+/_/g;
+  $last_author  =~ s/\s+/_/g;
 
   if ( length($YY) == 4 ) {
     $YY = substr( $YYYY, 2, 2 );
   }
 
   # [firstauthor]
-  if ( $pattern =~ /\[(firstauthor(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/ ) {
+  if ( $pattern =~ /\[((firstauthor)(:(\d+))?)\]/i ) {
     my $found_field = $1;
-    $first_author = substr( $first_author, 0, $3 ) if $2;
-    $first_author = _setcase( $first_author, $4 );
+    $first_author = uc($first_author)      if $2 eq 'FIRSTAUTHOR';
+    $first_author = ucfirst($first_author) if $2 eq 'Firstauthor';
+    $first_author = lc($first_author)      if $2 eq 'firstauthor';
+    $first_author = substr( $first_author, 0, $4 ) if $3;
     $pattern =~ s/$found_field/$first_author/g;
   }
 
   # [lastauthor]
-  if ( $pattern =~ /\[(lastauthor(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/ ) {
+  if ( $pattern =~ /\[((lastauthor)(:(\d+))?)\]/i ) {
     my $found_field = $1;
-    $first_author = substr( $last_author, 0, $3 ) if $2;
-    $first_author = _setcase( $last_author, $4 );
+    $last_author = uc($last_author)     if $2 eq 'LASTAUTHOR';
+    $last_author = ucfirst($last_author) if $2 eq 'Lastauthor';
+    $last_author = lc($last_author)     if $2 eq 'lastauthor';
+    $last_author = substr( $last_author, 0, $4 ) if $3;
     $pattern =~ s/$found_field/$last_author/g;
   }
 
   # [authors]
-  if ( $pattern =~ /\[(authors(\d*)(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/ ) {
+  if ( $pattern =~ /\[((authors)(\d*)(:(\d+))?)\]/i ) {
     my $found_field = $1;
     my $to          = @authors;
-    $to = $2 if $2;
+    $to = $3 if $3;
     foreach my $i ( 0 .. $to - 1 ) {
-      $authors[$i] = substr( $authors[$i], 0, $4 ) if ($3);
-      $authors[$i] = _setcase( $authors[$i], $5 );
+      $authors[$i] = substr( $authors[$i], 0, $5 ) if ($4);
+      $authors[$i] = uc( $authors[$i] )      if $2 eq 'AUTHORS';
+      $authors[$i] = ucfirst( $authors[$i] ) if $2 eq 'Authors';
+      $authors[$i] = lc( $authors[$i] )      if $2 eq 'authors';
     }
     my $author_string = join( '_', @authors[ 0 .. $to - 1 ] );
     if ( $to < @authors ) {
@@ -350,17 +366,20 @@ sub format_pattern {
   }
 
   # [title]
-  if ( $pattern =~ /\[(title(\d*)(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/ ) {
+  if ( $pattern =~ /\[((title)(\d*)(:(\d+))?)\]/i ) {
     my $found_field = $1;
     my $to          = @title_words;
-    $to = $2 if $2;
+    $to = $3 if $3;
     foreach my $i ( 0 .. $to - 1 ) {
-      $title_words[$i] = substr( $title_words[$i], 0, $4 ) if ($3);
-      $title_words[$i] = _setcase( $title_words[$i], $5 );
+      $title_words[$i] = substr( $title_words[$i], 0, $5 ) if ($4);
+      $title_words[$i] = uc( $title_words[$i] )      if $2 eq 'TITLE';
+      #$title_words[$i] = ucfirst( $title_words[$i] ) if $2 eq 'Title';
+      $title_words[$i] = lc( $title_words[$i] )      if $2 eq 'title';
     }
     my $title_string = join( '_', @title_words[ 0 .. $to - 1 ] );
     $pattern =~ s/$found_field/$title_string/g;
   }
+
 
   # [YY] and [YYYY]
   $pattern =~ s/\[YY\]/$YY/g;
@@ -368,7 +387,7 @@ sub format_pattern {
 
   $pattern =~ s/\[journal\]/$journal/g;
 
-  # Custom susbstitutions, given as parameter
+  # Custom substitutions, given as parameter
 
   if ( defined $substitutions ) {
     foreach my $key ( keys %$substitutions ) {
@@ -381,7 +400,7 @@ sub format_pattern {
   $pattern =~ s/\[//g;
   $pattern =~ s/\]//g;
 
-  $pattern=unidecode($pattern);
+  $pattern = unidecode($pattern);
 
   return $pattern;
 
