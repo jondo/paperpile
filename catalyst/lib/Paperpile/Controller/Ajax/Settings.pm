@@ -16,7 +16,7 @@ sub pattern_example : Local {
   my ( $self, $c ) = @_;
 
   my $paper_root = $c->request->params->{paper_root};
-  my $user_db    = $c->request->params->{user_db};
+  my $library_db    = $c->request->params->{library_db};
 
   my $key_pattern        = $c->request->params->{key_pattern};
   my $pdf_pattern        = $c->request->params->{pdf_pattern};
@@ -65,16 +65,16 @@ sub pattern_example : Local {
 sub update_patterns : Local {
   my ( $self, $c ) = @_;
 
-  my $user_db            = $c->request->params->{user_db};
+  my $library_db         = $c->request->params->{library_db};
   my $paper_root         = $c->request->params->{paper_root};
   my $key_pattern        = $c->request->params->{key_pattern};
   my $pdf_pattern        = $c->request->params->{pdf_pattern};
   my $attachment_pattern = $c->request->params->{attachment_pattern};
 
   my $settings = $c->model('Library')->settings;
-  $settings->{user_db} = $c->model('App')->get_setting('user_db');
+  $settings->{library_db} = $c->model('User')->get_setting('library_db');
 
-  my $db_changed         = $user_db            ne $settings->{user_db};
+  my $db_changed         = $library_db         ne $settings->{library_db};
   my $root_changed       = $paper_root         ne $settings->{paper_root};
   my $key_changed        = $key_pattern        ne $settings->{key_pattern};
   my $pdf_changed        = $pdf_pattern        ne $settings->{pdf_pattern};
@@ -107,29 +107,31 @@ sub update_patterns : Local {
 
   if ($db_changed) {
 
-    my $ok=0;
-    if (not -e $user_db){
-      $ok=move( $settings->{user_db}, $user_db );
+    my $ok = 0;
+    if ( not -e $library_db ) {
+      $ok = move( $settings->{library_db}, $library_db );
     } else {
-      $ok=1;
+      $ok = 1;
     }
 
-    if ($ok){
-      # update user_db in session variable and also all active plugins
+    if ($ok) {
+
+      # update library_db in session variable and also all active plugins
       # that have stored a reference to the database file
-      $c->session->{user_db} = $user_db;
-      foreach my $key (keys %{$c->session}){
-        next if not $key=~/^grid_/;
+      $c->session->{library_db} = $library_db;
+      foreach my $key ( keys %{ $c->session } ) {
+        next if not $key =~ /^grid_/;
         next if not $c->session->{$key}->plugin_name eq 'DB';
-        if ($c->session->{$key}->file eq $settings->{user_db}){
-          $c->session->{$key}->file($user_db);
+        if ( $c->session->{$key}->file eq $settings->{library_db} ) {
+          $c->session->{$key}->file($library_db);
         }
       }
+
       # Force reload of tree
       delete $c->session->{tree};
-      $c->model('App')->set_setting( 'user_db', $user_db );
+      $c->model('User')->set_setting( 'library_db', $library_db );
     } else {
-      die("Could not change database file to user_db ($!)");
+      die("Could not change database file to library_db ($!)");
     }
   }
 
