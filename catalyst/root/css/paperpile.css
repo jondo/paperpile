@@ -10,6 +10,16 @@
     padding: 0 5;
 }
 
+.pp-dashboard-button {
+    background: transparent url('/images/icons/dashboard_button.png') no-repeat;
+    padding: 1 0 0 33;
+    width: 97px;
+    height: 16px;
+    padding: 1 5;
+}
+
+
+
 .pp-basic {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
