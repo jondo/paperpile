@@ -277,8 +277,6 @@ sub update_citekeys {
       $key=$self->dbh->quote($key);
 
       $self->dbh->do("UPDATE Publications SET citekey=$key WHERE rowid=".$pub->_rowid);
-
-
     }
 
     my $_pattern=$self->dbh->quote($pattern);
