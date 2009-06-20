@@ -26,7 +26,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
     setupFields: function(){
         
         this.textfields={};
-
+        
         Ext.get('patterns-cancel-button').on('click',
                                              function(){
                                                  Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
@@ -69,7 +69,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                      if (item == 'key_pattern' || item == 'pdf_pattern' || item == 'attachment_pattern'){
 
                          var task = new Ext.util.DelayedTask(this.updateFields, this);
-
+                         
                          field.on('keypress', function(){
                              this.isDirty=true;
                              task.delay(500); 

@@ -9,7 +9,7 @@
   <script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
   <script type="text/javascript" charset="utf-8" src="/ext/examples/core/Spotlight.js"></script>
   <script type="text/javascript" charset="utf-8" src="/flashchart/swfobject.js"></script>
-  
+
   <%perl> 
   my @js = qw{
   
@@ -35,6 +35,8 @@
 
   screens/patterns.js
   screens/statistics.js
+  screens/format.js
+  screens/settings.js
                
   pub/abstract.js 
   pub/notes.js 

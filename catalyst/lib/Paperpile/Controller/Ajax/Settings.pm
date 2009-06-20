@@ -276,6 +276,18 @@ sub rename_files : Private {
   rmtree("$old_root\_backup");
 }
 
+sub set_settings : Local{
+
+  my ( $self, $c ) = @_;
+
+  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd') {
+    $c->model('User')->set_setting($field, $c->request->params->{$field});
+  }
+
+}
+
+
+
 
 sub _submit {
 

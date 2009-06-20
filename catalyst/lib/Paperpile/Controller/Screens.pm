@@ -11,6 +11,11 @@ sub patterns : Local {
   $c->forward('Paperpile::View::Mason');
 }
 
+sub settings : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = '/screens/settings.mas';
+  $c->forward('Paperpile::View::Mason');
+}
 
 sub dashboard : Local {
   my ( $self, $c ) = @_;

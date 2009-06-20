@@ -87,6 +87,15 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 itemId:'select_all_button'
             }),
 
+            'FORMAT': new Ext.Action({
+                text: 'Format',
+                handler: this.formatEntry,
+                scope: this,
+                disabled:true,
+                itemId:'format_button'
+            }),
+
+
 
         };
 
@@ -113,6 +122,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.actions['DELETE'],
                 this.actions['EDIT'],
                 this.actions['EXPORT'],
+                this.actions['FORMAT'],
                 this.actions['SELECT_ALL'],
             ]
         });
@@ -282,6 +292,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         
         this.actions['NEW'].enable();
         this.actions['EXPORT'].enable();
+        this.actions['FORMAT'].enable();
 
         if (selected == 1){
             this.actions['EDIT'].setDisabled(imported==0);
@@ -518,6 +529,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         east_panel.getLayout().setActiveItem('pub_edit');
 
     },
+
+
+    formatEntry: function(){
+
+        selection=this.getSelection();
+
+        Paperpile.main.tabs.add(new Paperpile.Format(
+            {grid_id:this.id, 
+             selection:selection,
+            }
+        ));
+    },
+
+
+
 
     // Update specific fields of specific entries to avoid complete
     // reload of everything data is a hash of a hash with sha1 as the

@@ -52,6 +52,14 @@
     margin: 8 0;
 }
 
+
+
+.pp-bullet{
+    padding: 2 2 2 16;
+    background: transparent url('/images/icons/bullet_go.png') no-repeat;
+}
+
+
 h1 {
     margin: 8;
     font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
@@ -68,6 +76,10 @@ h1 {
     color: #4183C4;
 }
 
+.pp-label-inactive {
+    color: #D8D8D8 !important;
+}
+
 .pp-dashboard-statistics {
     background: transparent url('/images/icons/statistics.png') no-repeat;
     padding: 3 0 0 30;
@@ -82,6 +94,11 @@ h1 {
     background: transparent url('/images/icons/settings.png') no-repeat;
     padding: 1 0 0 33;
 }
+
+.pp-dashboard-box li{
+    margin: 8 21 !important;
+}
+
 
 
 

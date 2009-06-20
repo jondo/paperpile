@@ -56,7 +56,7 @@
 <tr>
 <td>
 <center>
-<div style="width:220;">
+<div style="width:190;">
 <div id="patterns-save-button" class="pp-save-button"></div>
 <div id="patterns-cancel-button" class="pp-cancel-button"></div>
 </div>

@@ -18,6 +18,10 @@ user_settings:
   tmp_dir: "__USERHOME__/.paperpile/tmp"
   library_db: "__USERHOME__/.paperpile/paperpile.ppl"
   user_home: "__USERHOME__"
+  use_proxy: ""
+  proxy: ""
+  proxy_user: ""
+  proxy_passwd: ""
 
 library_settings:
   paper_root: "__USERHOME__/.paperpile/papers"

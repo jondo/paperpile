@@ -406,24 +406,43 @@ sub format_pattern {
 
 }
 
-sub _setcase {
+sub format_csl {
 
-  ( my $field, my $format ) = @_;
+  ( my $self) = @_;
 
-  return $field if not defined $format;
+  my %output=();
 
-  if ($format) {
-    if ( $format eq ':Uc' ) {
-      $field = ucfirst($field);
-    } elsif ( $format eq ':UC' ) {
-      $field = uc($field);
-    } elsif ( $format eq ':lc' ) {
-      $field = lc($field);
+  $output{id}=$self->sha1;
+
+  if ($self->pubtype eq 'ARTICLE'){
+    $output{'type'}='article-journal';
+    $output{'container-title'}=$self->journal;
+
+    for my $field ('title','volume', 'issue'){
+      $output{$field}=$self->$field;
     }
+
+    $output{page}=$self->pages;
+
+    $output{issued}={year=>$self->year};
+
+    my @tmp=();
+
+    foreach my $author (@{$self->get_authors}){
+      push @tmp, {name=> $author->full};
+    }
+
+    $output{author}=[@tmp];
   }
 
-  return $field;
+  print STDERR Dumper({%output});
+
+  return {%output};
+
 }
+
+
+
 
 # Function: list_types
 
