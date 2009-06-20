@@ -429,7 +429,10 @@ sub format_csl {
     my @tmp=();
 
     foreach my $author (@{$self->get_authors}){
-      push @tmp, {name=> $author->full};
+      push @tmp, {'name'=> $author->full,
+                  'primary-key'=>$author->last,
+                  'secondary-key'=>$author->first,
+                 };
     }
 
     $output{author}=[@tmp];
