@@ -162,6 +162,12 @@ has '_monthNumbers' => (
     required => 0
 );
 
+# did we parse the date node?
+has '_gotDate' => (
+    is       => 'rw',
+    required => 0
+);
+
 # hash containing info needed for sorting
 # e.g.
 # $self->{_sortInfo}->{_withinSorting}
@@ -205,6 +211,8 @@ sub BUILD {
     $self->{_group}->{'delimiter'} = '';
     
     $self->{_sortInfo}->{_withinSorting} = 0;
+    
+    $self->{_gotDate}=0;
     
     # Zotero outputs full month names
     # therefore we need a mapping to the full names
@@ -562,7 +570,11 @@ sub _transformEach() {
                     #print STDERR Dumper $self->{_sort};
                 }
                 
-                $self->_parseChildElements($mods, $self->_c->{style}->{bibliography}->{layout}->pointer, "transformEach(parsing layout)");
+                my $ptr = $self->_c->{style}->{bibliography}->{layout}->pointer;
+                $self->_parseChildElements($mods, $ptr, "transformEach(parsing layout)");
+                if(exists $ptr->{suffix}) { # TODO: is it really possible to forget the layout-suffix?
+                    $self->{_result} .= $ptr->{suffix};
+                }
                 
                 # check for "line-formatting" element, attribute-name is {"line-spacing" | "entry-spacing" }.
                 my $opt = 0;
@@ -594,6 +606,8 @@ sub _transformEach() {
                 $self->{_result} =~ s/\x{0201D}\./\.\x{0201D}/g if($self->{_result}=~ /\x{0201D}\./);
                 # hardcoded rule: remove double dots
                 $self->{_result} =~ s/\.\./\./g if($self->{_result} =~ /\.\./);
+                # hardcoded rule: remove double comma
+                $self->{_result} =~ s/\,\,/\,/g if($self->{_result} =~ /\,\,/);
                 
                 # the string is ready, add the current entry to the bibliography result-array
                 push @{$self->{biblio}}, $self->{_result};
@@ -1078,10 +1092,14 @@ sub _addFix {
         }
         elsif($what eq 'suffix') {
             if(exists $ptr->{suffix}) {
-                print "Adding suffix '$ptr->{suffix}'\n" if($self->{verbose});
-                #print Dumper $ptr;
-                $self->{_result} .= $ptr->{suffix};
-                #$self->_checkIntegrityOfFix($ptr->{suffix});
+                my $l = length($ptr->{suffix});
+                my $l_str = substr $self->{_result}, (0-$l);
+                print "end of _result: $l_str\n" if($self->{verbose});
+                if($ptr->{suffix} ne $l_str) {
+                    #print Dumper $ptr;
+                    print "Adding suffix '$ptr->{suffix}'\n" if($self->{verbose});                    
+                    $self->{_result} .= $ptr->{suffix};
+                }
             }
         }
         elsif($what eq 'quoteOpen') {
@@ -1114,21 +1132,20 @@ sub _parseChildElements {
     $self->_addFix($ptr, 'quoteOpen');
     
     # copy to be able to recognise changes;
-    my $tmpStr = $self->{_result};
-    
-    
-    
+    my $tmpStr = $self->{_result};    
+
     my @order;
     if(ref($ptr) eq "HASH") {        
         if(exists $ptr->{'/order'}) {
-            @order = _uniqueArray(\@{$ptr->{'/order'}});
+            #@order = _uniqueArray(\@{$ptr->{'/order'}});
+            @order = $self->_getMap(\@{$ptr->{'/order'}});
         }
         else {
-            @order = keys %{$ptr};
+            my @tmp = keys %{$ptr};
+            @order = $self->_getMap(\@tmp);
         }
     }
     elsif(ref($ptr) eq "ARRAY") {
-        #print Dumper @$ptr;
         foreach my $k (@$ptr) {
             $self->_parseChildElements($mods, $k, $from);
         }
@@ -1140,79 +1157,102 @@ sub _parseChildElements {
     # needed for if|else-if|else
     my $goOn = 1;  # do we go on?
     
-    foreach my $o (@order) {
-        print ">$o<\n" if($self->{verbose});
-        switch($o) {
-            ###################################################
-            # cause of speed and to avoid printing the warn-msg            
-            case '/order' { 
-            }
-            case '/nodes' { 
-            }
-            case 'name' { 
-            }
-            case 'text-case' {
-            }
-            case 'sort' { # nothing todo
-            }
-            case 'form' {                
-            }
-            case 'font-weight' {
-            }
-            case 'font-style' {
-            }
-            # because of nested macros
-            case 'macro' { 
-                $self->_parseMacro($mods, $ptr->{$o});
-            }# now all what is directly given by the CSL-standard
-            case 'names' {
-                $self->_parseNames($mods, $ptr->{$o});
-            }
-            case 'date' {
-                $self->_parseChildElements($mods, $ptr->{$o},"_parseChildElements($o)");
-            }
-            case 'label' {
-                $self->_parseLabel($mods, $ptr->{$o});
-            }
-            case 'text' {
-                #print "parsing text!!!\n";
-                $self->_parseChildElements($mods, $ptr->{$o}, "_parseChildElements($o)");
-            }
-            case 'choose' {
-                $self->_parseChoose($mods, $ptr->{$o});
-                #print "leaving choose\n";
-            }            
-            case 'group' {
-                $self->_parseGroup($mods, $ptr->{$o});
-            }
-            # additional non-top-level elements
-            case 'variable' {       
-                $self->_parseVariable($mods, $ptr, $o);
-            }
-            case 'prefix' { # not here, we do it above (=front)
-            }
-            case 'suffix' { # not here, we do it below (=end)
-            }
-            case 'date-part' {
-                $self->_parseDatePart($mods, $ptr->{$o});
-            }
-            case 'if' {
-                $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
-            }
-            case 'else-if' {
-                $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
-            }
-            case 'else' {
-                $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
-            }
-            else {
-               print STDERR "Warning ($from): '$o' not implemented, yet!\n" if($self->{verbose});
+    foreach my $element (@order) {
+        if(ref($ptr->{$element->{'name'}}) eq 'ARRAY' && $element->{'name'} ne 'date-part') {
+            $self->_parseChildElements($mods, ${$ptr->{$element->{'name'}}}[$element->{'pos'}], "parseChildElement(".$element->{'name'}.")");
+        }
+        else {
+            my $o = $element->{'name'};
+            print ">$o<\n" if($self->{verbose});
+            switch($o) {
+                ###################################################
+                # cause of speed and to avoid printing the warn-msg            
+                case '/order' { 
+                }
+                case '/nodes' { 
+                }
+                case 'name' { 
+                }
+                case 'text-case' {
+                }
+                case 'sort' { # nothing todo
+                }
+                case 'form' {                
+                }
+                case 'font-weight' {
+                }
+                case 'font-style' {
+                }
+                case 'quotes' {
+                }
+                case 'delimiter' {
+                }
+                # because of nested macros
+                case 'macro' { 
+                    $self->_parseMacro($mods, $ptr->{$o});
+                }# now all what is directly given by the CSL-standard
+                case 'names' {
+                    $self->_parseNames($mods, $ptr->{$o});
+                }
+                case 'date' {
+                    #$self->_parseChildElements($mods, $ptr->{$o},"_parseChildElements($o)");
+                    print Dumper $ptr->{$o} if($self->{verbose});
+                    $self->_addFix($ptr->{$o}, "prefix");
+                    $self->_parseDatePart($mods, $ptr->{$o}->{'date-part'});
+                    $self->_addFix($ptr->{$o}, "suffix");
+                    $self->{_gotDate}=1;
+                }
+                case 'label' {
+                    $self->_parseLabel($mods, $ptr->{$o});
+                }
+                case 'text' {
+                    $self->_parseChildElements($mods, $ptr->{$o}, "_parseChildElements($o)");
+                }
+                case 'choose' {
+                    $self->_parseChoose($mods, $ptr->{$o});
+                }            
+                case 'group' {
+                    $self->_parseGroup($mods, $ptr->{$o});
+                }
+                # additional non-top-level elements
+                case 'variable' {       
+                    $self->_parseVariable($mods, $ptr, $o);
+                }
+                case 'prefix' { # not here, we do it above (=front)
+                }
+                case 'suffix' { # not here, we do it below (=end)
+                }
+                case 'date-part' {
+                    $self->_parseDatePart($mods, $ptr->{$o}) if(! $self->{_gotDate});
+                }
+                case 'if' {
+                    $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
+                }
+                case 'else-if' {
+                    $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
+                }
+                case 'else' {
+                    $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
+                }
+                else {
+                   print STDERR "Warning ($from): '$o' not implemented, yet!\n" if($self->{verbose});
+                }
             }
         }
         
-        print "### _parseChildElements($o): _result string after parsing $o: '$self->{_result}'\n" if($self->{verbose});
+        if(isNoStopWord($element->{'name'})) {
+            # group delimiter
+            if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '') {
+                if($tmpStr ne $self->{_result} && $self->{_result} !~ /$self->{_group}->{'delimiter'}$/) {
+                    print "adding delimiter ($from) '".$self->{_group}->{'delimiter'}."'\n" if($self->{verbose});
+                    $self->{_result} .= $self->{_group}->{'delimiter'};
+                }
+            }
+        }
+                
+        print "### _parseChildElements(".$element->{'name'}."): _result string after parsing ".$element->{'name'}.": '$self->{_result}'\n" if($self->{verbose});
     }
-        
+     
     my $removedPrefix = 0;
     if($tmpStr eq $self->{_result}) {
         print "should remove prefix!\n" if($self->{verbose});
@@ -1226,18 +1266,6 @@ sub _parseChildElements {
         }
         $removedPrefix = 1;
     }
-
-    # group delimiter
-    if($self->{_group}->{'inGroup'}==1 && $self->{_group}->{'delimiter'} ne '' && $from=~ /group/) {
-        if($tmpStr ne $self->{_result} && $self->{_result} !~ /$self->{_group}->{'delimiter'}$/) {
-            print "adding delimiter ($from) '".$self->{_group}->{'delimiter'}."'\n" if($self->{verbose});
-            $self->{_result} .= $self->{_group}->{'delimiter'};
-        }
-        else {
-            #print "removing delimiter (_parseChildElement)'".$self->{_group}->{'delimiter'}."'\n" if($self->{verbose});
-            #$self->{_result} = substr $self->{_result}, 0, length($self->{_result})-length($self->{_group}->{'delimiter'});
-        }
-    }
         
     # suffixes finish strings
     # but we need them only in that cases where we did not remove a prefix.
@@ -1245,6 +1273,7 @@ sub _parseChildElements {
         $self->_addFix($ptr, "suffix");
         $self->_addFix($ptr, "quoteClose");
     }
+
 }
 
 
@@ -1268,7 +1297,19 @@ sub _parseMacro {
 
 sub _parseLabel {
     my ($self, $mods, $l) = @_;
-        # TODO
+    
+    print "_parseLabel\n" if($self->{verbose});
+    
+    if(exists $l->{variable}) {
+        if($l->{variable} eq 'page') {
+            if($self->_var->{'page'} =~ /(\d+)\-(\d+)/) {
+                $self->{_result} .= "pp. ";
+            }
+            elsif($self->_var->{'page'} =~ /^(\d+)$/) {
+                $self->{_result} .= "p. ";
+            }
+        }
+    }
 }
     
 
@@ -1477,7 +1518,7 @@ sub _parseNameAuthor {
                         $and = " & ";
                     }
                     
-                    if($round==2 && $qtNames < $et_al_min) {
+                    if($round==2 && ($qtNames < $et_al_min || $et_al_min<=0) ) {
                         # $qtNames < $et_al_min means that we only add the AND if we do not have the ET-AL
                         $complete_name .= $and;
                     }
@@ -1508,7 +1549,6 @@ sub _parseDatePart {
     my ($self, $mods, $dp) = @_;
     
     print "_parseDatePart\n" if($self->{verbose});
-    #print Dumper $dp;
     
     my @d = split /\//, $self->_var->{'issued'};
     if(scalar(@d)!=3) {
@@ -1520,8 +1560,25 @@ sub _parseDatePart {
         if(ref($dp) eq "HASH") {            
             if(exists $dp->{name}) {
                 switch($dp->{name}) { # month | day | year-other
-                    case "month" { # 1.                        
-                        $datePartString .= $self->{_monthStrings}->{$d[1]} if($d[1] ne '-');
+                    case "month" { # 1. 
+                        if($d[1] ne '-') {
+                            if(exists $dp->{form}) {
+                                switch($dp->{form}) {
+                                    case "short" {
+                                        $datePartString .= $1 if($self->{_monthStrings}->{$d[1]} =~ /^(\S\S\S)/);                                    
+                                    }
+                                    case "long" {
+                                        
+                                    }
+                                    else {
+                                        die "ERROR: The CSL-attribute style->bibliography->layout->date->date-part->form eq '".($dp->{form})."' is not implemented, yet.";
+                                    }
+                                }
+                            }
+                            else {
+                                $datePartString .= $self->{_monthStrings}->{$d[1]};
+                            }
+                        }
                     }
                     case "day" { # 2.
                         $datePartString .= $d[2] if($d[2] ne '-');
@@ -1565,8 +1622,9 @@ sub _parseDatePart {
             
         }
         elsif(ref($dp) eq "ARRAY") {
-            foreach my $dp (@$dp) {
-                $self->_parseDatePart($mods, $dp);
+            foreach my $thisDp (@$dp) {
+                $self->_parseDatePart($mods, $thisDp);
+                #$self->_parseChildElements($mods, $thisDp,"_parseDatePart");
             }
         }
         else {
@@ -1604,20 +1662,23 @@ sub _parseChoose {
     
     my $goOn = 1;  # do we go on?
     foreach my $o (@order) {
-        #print "-- $o --\n";
+        print "-- $o --\n"  if($self->{verbose});
         if( $o eq 'if' || $o eq 'else-if') {
+            print "if or else-if goOn=$goOn\n" if($self->{verbose});
             $goOn = $self->_parseIf_elseIf_else($mods, $choosePtr->{$o}, $goOn, $o);
+            print "goOn=$goOn after parsing if or else-if\n" if($self->{verbose});
         }
         elsif($o eq 'else') { 
-            #print "else goOn=$goOn\n";
+            print "else goOn=$goOn\n" if($self->{verbose});
             $goOn = $self->_parseIf_elseIf_else($mods, $choosePtr->{$o}, $goOn, $o);
+            print "goOn=$goOn after parsing else\n" if($self->{verbose});
         }
         else {
             #print "Warning: Should I reach this?";
         }
     }
     
-    #print "leaving end of choose\n";
+    print "leaving choose\n" if($self->{verbose});
 }
 
 # TODO: check that really ALL-NEXT-NODES get parsed, not only the first of the next ones.
@@ -1625,35 +1686,84 @@ sub _parseIf_elseIf_else {
     my ($self, $mods, $ptr, $goOn, $what) = @_;
     
     if($goOn==1) {
-        #print "within $what\n";
+        print "checking $what\n" if($self->{verbose});
         if($what eq 'if' or $what eq 'else-if') {
             if($self->_checkCondition($mods, $ptr)==1) {
-                my $next = $self->_howToProceedAfterCondition($ptr);
-                #print "next after $what = '$next'\n";
-                if($next ne "") {
-                    $self->_parseChildElements($mods, $ptr->{$next}, "_parseConditionContent($what)");
-                }
+                print "within the if or else-if statement, what=$what\n" if($self->{verbose});
+                $self->_processSubgroupNoStopWords($mods, $ptr);
             }
             else {
-                #print "false!\n";
                 return 1; #goOn
             }
         }
         else { # the else-statement
-            #print "\n";
-            my $next = $self->_howToProceedAfterCondition($ptr);
-            #print "next after $what = '$next'\n";
-            if($next ne "") {
-                $self->_parseChildElements($mods, $ptr->{$next}, "_parseConditionContent($what)");
-            }
+            print "within the else statement, what=$what\n" if($self->{verbose});
+            #$self->_processSubgroupNoStopWords($mods, $ptr);
+            $self->_parseChildElements($mods, $ptr, "_parseIf_elseIf_else($what)");
         }
     }
     
-    #print "leaving parseIf_elseIf_else\n";
+    print "leaving parseIf_elseIf_else\n" if($self->{verbose});
     
     return 0; # goOn=0 because we went into either if|else-if|else
 }
 
+sub _processSubgroupNoStopWords {
+    my ($self, $mods, $condiPtr) = @_;
+
+    print "_processSubgroupNoStopWords\n" if($self->{verbose});
+    #print Dumper $condiPtr;
+
+    my @order;
+    if(ref($condiPtr) eq "HASH") {
+        if(exists $condiPtr->{'/order'}) {
+            @order = _uniqueArray(\@{$condiPtr->{'/order'}});
+        }
+        else {
+            @order = keys %$condiPtr;
+        }
+    }
+    elsif(ref($condiPtr) eq "ARRAY") {
+        foreach my $c (@{$condiPtr}) {
+            $self->_processSubgroupNoStopWords($mods, $c);
+            #$self->_parseChildElements($mods, $condiPtr->{$o}, "_processSubgroup($o)");
+        }
+    }
+    else {
+        die "CondiPtr '$condiPtr' is neither a hash nor an array? (It is ".(ref($condiPtr)).")";
+    }
+
+    foreach my $o (@order) {        
+        switch($o) {# for each subcondition
+            case 'type' {
+            }
+            case 'variable' {
+            }
+            case 'is_numeric' {
+            }
+            case 'is_date' {
+            }
+            case 'position' {
+            }
+            case 'disambiguate' {
+            }
+            case 'locator' {
+            }
+            case 'match' {
+            }
+            # other stop words
+            case '/nodes' {
+            }
+            else {
+                if($o  ne '') {
+                    print "proceed with $o\n" if($self->{verbose});
+                    #print Dumper $condiPtr->{$o};
+                    $self->_parseChildElements($mods, $condiPtr->{$o}, "_processSubgroupNoStopWords($o)");
+                }
+            }
+        }
+    }
+}
 
 # returns 1 when condition is true otherwise 0
 sub _checkCondition {
@@ -1681,11 +1791,12 @@ sub _checkCondition {
         die "CondiPtr is neither a hash nor an array?";
     }
 
-    my $truth = 0; # increment if subcondiion is true
+    my $truth = 0; # increment if subcondition is true
     my $qtSubconditions = 0;
     my $match = "";
     foreach my $o (@order) { 
         switch($o) {# for each subcondition
+            print "searching subcondition: $o\n" if($self->{verbose});
             case 'type' {
                 $truth += $self->_checkType($mods, $condiPtr->{$o});
                 $qtSubconditions++;
@@ -1720,100 +1831,43 @@ sub _checkCondition {
         }
     }
     
-    switch($match) {
-        print "truth=$truth qtSubconditions=$qtSubconditions match='$match'\n" if($self->{verbose});
-        case "" {
-            
-        }
-        case "all" {
-            if($truth == $qtSubconditions) {
-                return 1;
+    if($qtSubconditions>0) {
+        switch($match) {
+            print "truth=$truth qtSubconditions=$qtSubconditions match='$match'\n" if($self->{verbose});
+            case "" {
+                
             }
-        }
-        case "any" {
-            if($truth > 0) { # at least 1
-                return 1;
+            case "all" {
+                if($truth == $qtSubconditions) {
+                    return 1;
+                }
             }
-        }
-        case "none" {            
-            if($truth == 0) { # no match
-                return 1;
+            case "any" {
+                if($truth > 0) { # at least 1
+                    return 1;
+                }
+            }
+            case "none" {            
+                if($truth == 0) { # no match
+                    return 1;
+                }
+                else {
+                    return 0;
+                }
             }
             else {
-                return 0;
+                die "ERROR: match='$condiPtr->{match}' is not supported!";
             }
         }
-        else {
-            die "ERROR: match='$condiPtr->{match}' is not supported!";
+        
+        if($truth == $qtSubconditions) {
+            return 1;
         }
-    }
-    
-    if($truth == $qtSubconditions) {
-        return 1;
     }
     
     return 0;
 }
 
-
-sub _howToProceedAfterCondition {
-    my ($self, $condiPtr) = @_;
-
-    print "_howToProceedAfterCondition\n" if($self->{verbose});
-
-    my @order;
-    if(ref($condiPtr) eq "HASH") {
-        if(exists $condiPtr->{'/order'}) {
-            @order = _uniqueArray(\@{$condiPtr->{'/order'}});
-        }
-        else {
-            @order = keys %$condiPtr;
-        }
-    }
-    elsif(ref($condiPtr) eq "ARRAY") {
-        foreach my $c (@{$condiPtr}) {
-            $self->_howToProceedAfterCondition($c);
-        }
-    }
-    else {
-        die "CondiPtr '$condiPtr' is neither a hash nor an array? (It is ".(ref($condiPtr)).")";
-    }
-
-    #print Dumper @order;
-
-    foreach my $o (@order) {        
-        switch($o) {# for each subcondition
-            #print "o=", $o, "\n";
-            case 'type' {
-            }
-            case 'variable' {
-            }
-            case 'is_numeric' {
-            }
-            case 'is_date' {
-            }
-            case 'position' {
-            }
-            case 'disambiguate' {
-            }
-            case 'locator' {
-            }
-            case 'match' {
-            }
-            # other stop words
-            case '/nodes' {
-            }
-            case 'delimiter' {
-            }
-            else {
-                print "proceed with $o\n" if($self->{verbose});
-                return $o;
-            }
-        }
-    }
-
-    return "";
-}
 
 
 # check if the current mods is of the respective type
@@ -1914,6 +1968,32 @@ sub _checkLocator {
     return 0;    
 }
 
+sub _getMap {
+    my ($self, $array_ref) = @_;
+    
+    my @order;
+    my %global_map;
+    
+    foreach my $a (@{$array_ref}) {
+        my %map;
+        
+        if(! exists $global_map{$a}) {
+            $global_map{$a} = 0;
+        }
+        else {
+            $global_map{$a}++;
+        }
+                
+        $map{'name'} = $a;
+        $map{'pos'}  = $global_map{$a};
+        
+        push @order, \%map;            
+    }
+    
+    return @order;
+}
+
+
 # parse csl group element
 # A group can have subgroups.
 # Therefore, we provide the groupStr
@@ -1927,35 +2007,15 @@ sub _parseGroup {
 
     print "_parseGroup\n" if($self->{verbose});
     $self->{_group}->{'inGroup'} = 1;
-    
-    my @order;
-    if(ref($g) eq "HASH") { 
+
+    if(ref($g) eq "HASH") {
         if(exists $g->{'delimiter'}) {
             $self->{_group}->{'delimiter'} = $g->{'delimiter'};
         }
-
-        if(exists $g->{'/order'}) {
-            @order = _uniqueArray(\@{$g->{'/order'}});
-        }
-        else {
-            @order = keys %{$g};
-        }
-        
-        # do the group
-        foreach my $o (@order) {
-            $self->_parseChildElements($mods, $g->{$o}, "_parseConditionContent(group-$o)") if(isNoStopWord($o));
-        }
-    }
-    elsif(ref($g) eq "ARRAY") {
-        # do the group
-        foreach my $k (@$g) {
-            $self->_parseChildElements($mods, $k, "_parseConditionContent(group)") if(isNoStopWord($k));
-        }
-    }
-    else {
-        die "ERROR: $g is neither hash nor array!";
     }
     
+    $self->_parseChildElements($mods, $g, "_parseGroup(group)");
+
     # Here we leave the group.
     # Group-example: 1,2,3
     # if the third(last) group element does not contribute to the _result string
@@ -1975,9 +2035,8 @@ sub _parseGroup {
     $self->{_group}->{'inGroup'} = 0;
 }
 
-# variation of _howToProceedAfterCondition
+# variation of _processSubgroup
 # useful to check if there is something left that we have to parse
-# TODO: check all _howToProceedAfterCondition calls... 
 # they only return 1 element, this one will be parsed, 
 # but what if there are multiple elements after the condition, do we parse them all or just the single one that was returned?
 sub isNoStopWord {
@@ -1993,7 +2052,9 @@ sub isNoStopWord {
         'locator' => 1,
         'match' => 1,
         '/nodes' => 1,
-        'delimiter' => 1
+        'delimiter' => 1,
+        'label' => 1,
+        'quotes' => 1
     );
     
     if(exists $stop_words{$word}) {
@@ -2031,7 +2092,7 @@ sub _parseVariable {
                 }
             }
             else {
-                die "ERROR: Variable '$v' is unknown, someone should implement it ;-)";
+                print STDERR "Warning: Variable '$v' is unknown, someone should implement it ;-)\n" if($self->{verbose});
             }
         }
     }
