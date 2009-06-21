@@ -24,16 +24,15 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
             switch(el.getAttribute('action')){
                 
             case 'statistics':
-
                 Paperpile.main.tabs.newScreenTab('Statistics');
-
                 break;
-
             case 'settings-patterns':                 
-                this.searchPDF(true);
+                Paperpile.main.tabs.newScreenTab('PatternSettings');
+                break;
+            case 'settings-general':                 
+                Paperpile.main.tabs.newScreenTab('GeneralSettings');
                 break;
             }
-
         }, this, {delegate:'a'});
 
     },

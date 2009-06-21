@@ -30,25 +30,27 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                        }
                                        }
                                    ),
-                               {xtype:'tbfill'},
-                               {xtype:'button', 
-                                text:"Dashboard",
-                                cls: 'x-btn-text-icon dashboard',
-                                handler: function(){
-                                    Paperpile.main.tabs.newScreenTab('Dashboard','dashboard');
-                                },
-                               },
-                               
-                               {xtype:'button', 
-                                text:"Test",
-                                handler: function(){
-                                    //var myIFrame = document.getElementById('iframe-testframe');  
-                                    //var content = myIFrame.contentWindow.document.body.innerHTML;  
-                                    //alert(content);
-                           
-                                },
-                               }
-
+                                   {xtype:'tbfill'},
+                                   new Ext.BoxComponent(
+                                       { autoEl: {
+                                           tag: 'a',
+                                           href:'#',
+                                           html: '<div class="pp-dashboard-button"></div>'
+                                           }, 
+                                         id: 'dashboard-button',
+                                       }
+                                   ),
+                                   /*
+                                   {xtype:'button', 
+                                    text:"Test",
+                                    handler: function(){
+                                        //var myIFrame = document.getElementById('iframe-testframe');  
+                                        //var content = myIFrame.contentWindow.document.body.innerHTML;  
+                                        //alert(content);
+                                        
+                                    },
+                                   }
+*/
                                ]}),
                            items: [ { border: 0,
                               xtype:'tree',
@@ -318,6 +320,10 @@ Paperpile.app=function(){
     main.tabs.remove('welcome');
 
     main.browseTest();
+
+    Ext.get('dashboard-button').on('click', function(){ 
+        Paperpile.main.tabs.newScreenTab('Dashboard','dashboard');
+    });
 
     Paperpile.initMask.hide();
 

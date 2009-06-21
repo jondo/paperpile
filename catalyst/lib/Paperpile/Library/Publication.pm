@@ -8,6 +8,7 @@ use Paperpile::Library::Author;
 use Paperpile::Library::Journal;
 use Paperpile::Utils;
 use Encode qw(encode_utf8);
+use Text::Unidecode;
 use 5.010;
 
 # Bibutils functions are in a submodule
@@ -40,20 +41,20 @@ our @types = qw(
 ### 'Built-in' fields
 
 # The unique rowid in the SQLite table 'Publications'
-has '_rowid'      => ( is => 'rw', isa => 'Int' );
+has '_rowid' => ( is => 'rw', isa => 'Int' );
 
 # The unique sha1 key which is currently calculated from title,
 # authors and year.
-has 'sha1'        => ( is => 'rw' );
+has 'sha1' => ( is => 'rw' );
 
 # Timestamp when the entry was created
-has 'created'     => ( is => 'rw', isa => 'Str' );
+has 'created' => ( is => 'rw', isa => 'Str' );
 
 # Timestamp when it was last read
-has 'last_read'   => ( is => 'rw', isa => 'Str' );
+has 'last_read' => ( is => 'rw', isa => 'Str' );
 
 # How many times it was read
-has 'times_read'  => ( is => 'rw', isa => 'Int', default => 0 );
+has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # The associated PDF file, the path is relative to the paper_root user
 # setting
@@ -62,7 +63,7 @@ has 'pdf' => ( is => 'rw', isa => 'Str', default => '' );
 # The number of additional files that are associated with this entry
 has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
 
-### Fiels from the config file
+### Fields from the config file
 
 my $config = Paperpile::Utils->get_config;
 foreach my $field ( keys %{ $config->{pub_fields} } ) {
@@ -90,15 +91,16 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 ### Helper fields which have no equivalent field in the database
 
 # Formatted strings to be displayed in the frontend.
-has '_authors_display'   => ( is => 'rw', isa => 'Str' );
-has '_citation_display'  => ( is => 'rw', isa => 'Str' );
+has '_authors_display'  => ( is => 'rw', isa => 'Str' );
+has '_editors_display'  => ( is => 'rw', isa => 'Str' );
+has '_citation_display' => ( is => 'rw', isa => 'Str' );
 
 # If an entry is already in our database this field is true.
-has '_imported'          => ( is => 'rw', isa => 'Bool' );
+has '_imported' => ( is => 'rw', isa => 'Bool' );
 
 # Some import plugins first only scrape partial information and store
 # a link (or some other hint) how to complete this information
-has '_details_link'      => ( is => 'rw', isa => 'Str', default=>'' );
+has '_details_link' => ( is => 'rw', isa => 'Str', default => '' );
 
 # If a search in the local database returns a hit in the fulltext,
 # abstract or notes the hit+context ('snippet') is stored in these
@@ -106,7 +108,6 @@ has '_details_link'      => ( is => 'rw', isa => 'Str', default=>'' );
 has '_snippets_text'     => ( is => 'rw', isa => 'Str' );
 has '_snippets_abstract' => ( is => 'rw', isa => 'Str' );
 has '_snippets_notes'    => ( is => 'rw', isa => 'Str' );
-
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -121,12 +122,9 @@ sub refresh_fields {
   ( my $self ) = @_;
 
   ## Author display string
-  my @display = ();
-  if ( $self->authors ) {
-    foreach my $a ( split( /\band\b/, $self->authors ) ) {
-      push @display, Paperpile::Library::Author->new( full => $a )->nice;
-    }
-    $self->_authors_display( join( ', ', @display ) );
+  my $authors=$self->format_authors;
+  if ($authors) {
+    $self->_authors_display($authors);
   }
 
   ## Citation display string
@@ -151,23 +149,24 @@ sub calculate_sha1 {
 
   my $ctx = Digest::SHA1->new;
 
-  if ( ( $self->authors or $self->_authors_display or $self->editors) and $self->title ) {
+  if ( ( $self->authors or $self->_authors_display or $self->editors ) and $self->title ) {
     if ( $self->authors ) {
       $ctx->add( encode_utf8( $self->authors ) );
-    } elsif ($self->_authors_display) {
+    } elsif ( $self->_authors_display ) {
       $ctx->add( encode_utf8( $self->_authors_display ) );
     }
-    if ($self->editors){
+    if ( $self->editors ) {
       $ctx->add( encode_utf8( $self->editors ) );
     }
     $ctx->add( encode_utf8( $self->title ) );
+
     $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
   }
 }
 
 # Function: format_citation
 
-# Currently this functino return an adhoc Pubmed like citation formatq
+# Currently this function return an adhoc Pubmed like citation format
 # Replace this with proper formatting function once CSL is in place
 
 sub format_citation {
@@ -176,35 +175,73 @@ sub format_citation {
 
   my $cit = '';
 
-  if ( $self->journal ) {
-    $cit .= '<i>' . $self->journal . '</i>. ';
+  my $j=$self->journal;
+
+  if ($j){
+    $j=~s/\.//g;
+    $cit .= '<i>' . $j . '</i>. ';
   }
 
-  if ( $self->year ) {
-    $cit .= '(' . $self->year . ') ';
+  if ( $self->booktitle ){
+    if ( $self->pubtype eq 'INCOLLECTION' ){
+      $cit.="in ";
+    }
+    if ( $self->title){
+      $cit .= '<i>' . $self->booktitle . '</i>. ' if ( $self->title ne $self->booktitle );
+    } else {
+      $cit .= '<i>' . $self->booktitle . '</i>. ';
+    }
+  }
+  $cit .= '<i>Unpublished</i>. ' if ( $self->pubtype eq 'UNPUBLISHED' );
+  $cit .= '<i>PhD Thesis</i>. ' if ( $self->pubtype eq 'PHDTHESIS' );
+  $cit .= '<i>Master\'s Thesis</i>. ' if ( $self->pubtype eq 'MASTERSTHESIS' );
+  $cit .= $self->school .' '  if ( $self->school );
+
+  $cit .= '(' . $self->year . ') '        if ( $self->year );
+  $cit .= $self->month                    if ( $self->month );
+  $cit .= '; '                            if $cit;
+
+  if ( $self->pubtype eq 'ARTICLE' or  $self->pubtype eq 'INPROCEEDINGS') {
+    $cit .= '<b>' . $self->volume . '</b>:' if ( $self->volume );
+    $cit .= '(' . $self->issue . ') '       if ( $self->issue );
+    $cit .= $self->pages                    if ( $self->pages );
   }
 
-  if ( $self->month ) {
-    $cit .= $self->month . '; ';
-  } else {
-    $cit .= '; ' if $cit;
+  if ( $self->pubtype eq 'BOOK' or  $self->pubtype eq 'INBOOK' or  $self->pubtype eq 'INCOLLECTION') {
+    $cit .= $self->publisher .', '  if ( $self->publisher );
+    $cit .= $self->address .' '  if ( $self->address );
   }
 
-  if ( $self->volume ) {
-    $cit .= '<b>' . $self->volume . '</b>:';
-  }
-
-  if ( $self->issue ) {
-    $cit .= '(' . $self->issue . ') ';
-  }
-
-  if ( $self->pages ) {
-    $cit .= $self->pages;
-  }
+  $cit =~ s/\s*[;,.]\s*$//;
 
   return $cit;
 
 }
+
+
+sub format_authors{
+
+  my $self = shift;
+
+  my @display = ();
+  if ( $self->authors ) {
+    foreach my $a ( split( /\band\b/, $self->authors ) ) {
+      push @display, Paperpile::Library::Author->new( full => $a )->nice;
+    }
+    $self->_authors_display( join( ', ', @display ) );
+  }
+
+  # We only show editors when no authors are given
+  if ($self->editors and ! $self->authors){
+    foreach my $a ( split( /\band\b/, $self->editors ) ) {
+      push @display, Paperpile::Library::Author->new( full => $a )->nice;
+    }
+    $self->_authors_display( join( ', ', @display ). ' (eds.)' );
+  }
+
+}
+
+
 
 # Function: as_hash
 
@@ -259,11 +296,19 @@ sub format_pattern {
 
   my @authors = ();
   foreach my $a ( @{ $self->get_authors } ) {
-    push @authors, $a->last;
+    if ( $a->collective ) {
+      push @authors, $a->collective;
+    } else {
+      push @authors, $a->last;
+    }
   }
 
   my $first_author = $authors[0];
   my $last_author  = $authors[$#authors];
+
+  if ( $first_author eq $last_author ) {
+    $last_author = "-";
+  }
 
   my $YYYY = $self->year;
   my $YY   = $YYYY;
@@ -274,37 +319,44 @@ sub format_pattern {
 
   my $journal = $self->journal;
 
-  $journal =~ s/\s+/_/g;
+  $journal      =~ s/\s+/_/g;
+  $first_author =~ s/\s+/_/g;
+  $last_author  =~ s/\s+/_/g;
 
   if ( length($YY) == 4 ) {
     $YY = substr( $YYYY, 2, 2 );
   }
 
-
   # [firstauthor]
-  if ( $pattern =~ /\[(firstauthor(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/ ) {
+  if ( $pattern =~ /\[((firstauthor)(:(\d+))?)\]/i ) {
     my $found_field = $1;
-    $first_author = substr( $first_author, 0, $3 ) if $2;
-    $first_author = _setcase( $first_author, $4 );
+    $first_author = uc($first_author)      if $2 eq 'FIRSTAUTHOR';
+    $first_author = ucfirst($first_author) if $2 eq 'Firstauthor';
+    $first_author = lc($first_author)      if $2 eq 'firstauthor';
+    $first_author = substr( $first_author, 0, $4 ) if $3;
     $pattern =~ s/$found_field/$first_author/g;
   }
 
   # [lastauthor]
-  if ( $pattern =~ /\[(lastauthor(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/ ) {
+  if ( $pattern =~ /\[((lastauthor)(:(\d+))?)\]/i ) {
     my $found_field = $1;
-    $first_author = substr( $last_author, 0, $3 ) if $2;
-    $first_author = _setcase( $last_author, $4 );
+    $last_author = uc($last_author)     if $2 eq 'LASTAUTHOR';
+    $last_author = ucfirst($last_author) if $2 eq 'Lastauthor';
+    $last_author = lc($last_author)     if $2 eq 'lastauthor';
+    $last_author = substr( $last_author, 0, $4 ) if $3;
     $pattern =~ s/$found_field/$last_author/g;
   }
 
   # [authors]
-  if ( $pattern =~ /\[(authors(\d*)(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/ ) {
+  if ( $pattern =~ /\[((authors)(\d*)(:(\d+))?)\]/i ) {
     my $found_field = $1;
     my $to          = @authors;
-    $to = $2 if $2;
+    $to = $3 if $3;
     foreach my $i ( 0 .. $to - 1 ) {
-      $authors[$i] = substr( $authors[$i], 0, $4 ) if ($3);
-      $authors[$i] = _setcase( $authors[$i], $5 );
+      $authors[$i] = substr( $authors[$i], 0, $5 ) if ($4);
+      $authors[$i] = uc( $authors[$i] )      if $2 eq 'AUTHORS';
+      $authors[$i] = ucfirst( $authors[$i] ) if $2 eq 'Authors';
+      $authors[$i] = lc( $authors[$i] )      if $2 eq 'authors';
     }
     my $author_string = join( '_', @authors[ 0 .. $to - 1 ] );
     if ( $to < @authors ) {
@@ -314,17 +366,20 @@ sub format_pattern {
   }
 
   # [title]
-  if ( $pattern =~ /\[(title(\d*)(_abbr(\d+))?(:Uc|:UC|:lc)?)\]/ ) {
+  if ( $pattern =~ /\[((title)(\d*)(:(\d+))?)\]/i ) {
     my $found_field = $1;
     my $to          = @title_words;
-    $to = $2 if $2;
+    $to = $3 if $3;
     foreach my $i ( 0 .. $to - 1 ) {
-      $title_words[$i] = substr( $title_words[$i], 0, $4 ) if ($3);
-      $title_words[$i] = _setcase( $title_words[$i], $5 );
+      $title_words[$i] = substr( $title_words[$i], 0, $5 ) if ($4);
+      $title_words[$i] = uc( $title_words[$i] )      if $2 eq 'TITLE';
+      #$title_words[$i] = ucfirst( $title_words[$i] ) if $2 eq 'Title';
+      $title_words[$i] = lc( $title_words[$i] )      if $2 eq 'title';
     }
     my $title_string = join( '_', @title_words[ 0 .. $to - 1 ] );
     $pattern =~ s/$found_field/$title_string/g;
   }
+
 
   # [YY] and [YYYY]
   $pattern =~ s/\[YY\]/$YY/g;
@@ -332,7 +387,7 @@ sub format_pattern {
 
   $pattern =~ s/\[journal\]/$journal/g;
 
-  # Custom susbstitutions, given as parameter
+  # Custom substitutions, given as parameter
 
   if ( defined $substitutions ) {
     foreach my $key ( keys %$substitutions ) {
@@ -345,28 +400,51 @@ sub format_pattern {
   $pattern =~ s/\[//g;
   $pattern =~ s/\]//g;
 
+  $pattern = unidecode($pattern);
+
   return $pattern;
 
 }
 
-sub _setcase {
+sub format_csl {
 
-  ( my $field, my $format ) = @_;
+  ( my $self) = @_;
 
-  return $field if not defined $format;
+  my %output=();
 
-  if ($format) {
-    if ( $format eq ':Uc' ) {
-      $field = ucfirst($field);
-    } elsif ( $format eq ':UC' ) {
-      $field = uc($field);
-    } elsif ( $format eq ':lc' ) {
-      $field = lc($field);
+  $output{id}=$self->sha1;
+
+  if ($self->pubtype eq 'ARTICLE'){
+    $output{'type'}='article-journal';
+    $output{'container-title'}=$self->journal;
+
+    for my $field ('title','volume', 'issue'){
+      $output{$field}=$self->$field;
     }
+
+    $output{page}=$self->pages;
+
+    $output{issued}={year=>$self->year};
+
+    my @tmp=();
+
+    foreach my $author (@{$self->get_authors}){
+      push @tmp, {'name'=> $author->full,
+                  'primary-key'=>$author->last,
+                  'secondary-key'=>$author->first,
+                 };
+    }
+
+    $output{author}=[@tmp];
   }
 
-  return $field;
+  print STDERR Dumper({%output});
+
+  return {%output};
+
 }
+
+
 
 
 # Function: list_types

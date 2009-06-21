@@ -7,10 +7,15 @@ use parent 'Catalyst::Controller';
 
 sub patterns : Local {
   my ( $self, $c ) = @_;
-  $c->stash->{template} = 'patterns.mas';
+  $c->stash->{template} = '/screens/patterns.mas';
   $c->forward('Paperpile::View::Mason');
 }
 
+sub settings : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = '/screens/settings.mas';
+  $c->forward('Paperpile::View::Mason');
+}
 
 sub dashboard : Local {
   my ( $self, $c ) = @_;
@@ -18,11 +23,6 @@ sub dashboard : Local {
   $c->forward('Paperpile::View::Mason');
 }
 
-sub flash : Local {
-  my ( $self, $c ) = @_;
-  $c->stash->{template} = 'flash.mas';
-  $c->forward('Paperpile::View::Mason');
-}
 
 
 1;

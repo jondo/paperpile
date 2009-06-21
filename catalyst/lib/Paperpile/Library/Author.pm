@@ -1,6 +1,7 @@
 package Paperpile::Library::Author;
 use Moose;
 use Moose::Util::TypeConstraints;
+use Text::Unidecode;
 
 has 'full' => (
   is      => 'rw',
@@ -37,6 +38,13 @@ has 'jr' => (
   default => '',
 );
 
+has 'collective' => (
+  is      => 'rw',
+  isa     => 'Str',
+  default => '',
+);
+
+
 has 'initials' => (
   is  => 'rw',
   isa => 'Str',
@@ -60,11 +68,12 @@ sub split_full {
   }
 
   # Recognize non-human entities like collaborative names;
-  # Currently they are marked by {..}, probably add 
+  # Currently they are marked by {..}, probably add
   # full support of {...} as in BibTeX rather this one special
   # case
   if ($self->full=~/^\s*\{(.*)\}\s*$/){
-    $self->last("{$1}");
+    $self->collective($1);
+    $self->last('');
     $self->von('');
     $self->first('');
     $self->jr('');
@@ -141,19 +150,32 @@ sub read_bibutils{
 
   my @parts=split(/\|/,$string);
 
-  # von and jr currently not handled explicitely
-  # Bibutils does not seem to handle suffix (at least for pubmed)
-  $last=$parts[0];
-  $first=join(" ", @parts[1..$#parts]);
-  $von='';
-  $jr='';
+  # Bibutils does not handle collective authors very well, they are
+  # just forced into first/last name. TODO: think what to do about
+  # this
+
+  # author without first names do not exist to my knowledge. We
+  # interpret this as collective name,
+  if (scalar @parts == 1){
+    $self->collective($parts[0]);
+    $last='';
+    $first='';
+  } else {
+
+    $last=$parts[0];
+    $first=join(" ", @parts[1..$#parts]);
+
+    # von and jr currently not handled explicitely Bibutils does not
+    # seem to handle suffix (at least for pubmed); so we leave them
+    # emtpy
+
+  }
 
   $self->last($last);
   $self->first($first);
 
   return $self;
 }
-
 
 sub create_key {
   my $self = shift;
@@ -169,6 +191,8 @@ sub create_key {
   }
 
   my $key = join( '_', @components );
+
+  $key = unidecode($key);
 
   return ( $self->key($key) );
 }
@@ -195,19 +219,24 @@ sub parse_initials {
 # by $self->flat
 
 sub nice {
-  my $self       = shift;
+  my $self = shift;
+
+  if ( $self->collective ) {
+    return $self->collective;
+  }
+
   my @components = ();
 
-  push @components, $self->von if ( $self->von );
-  push @components, $self->last if ( $self->last);
-  push @components, $self->jr    if ( $self->jr );
-  push @components, $self->initials  if ( $self->initials );
+  push @components, $self->von      if ( $self->von );
+  push @components, $self->last     if ( $self->last );
+  push @components, $self->jr       if ( $self->jr );
+  push @components, $self->initials if ( $self->initials );
 
-  my $output=join( " ", @components );
+  my $output = join( " ", @components );
 
   # Don't show groupings for collaborative names
-  $output=~s/\{//g;
-  $output=~s/\}//g;
+  $output =~ s/\{//g;
+  $output =~ s/\}//g;
 
   return $output;
 
@@ -216,8 +245,12 @@ sub nice {
 sub normalized {
 
   my $self       = shift;
-  my @components = ();
 
+  if ($self->collective){
+    return '{'.$self->collective.'}';
+  }
+
+  my @components = ();
   my $output='';
 
   $output.=$self->von if ($self->von)." ";
@@ -232,6 +265,11 @@ sub normalized {
 sub bibtex {
 
   my $self       = shift;
+
+  if ($self->collective){
+    return '{'.$self->collective.'}';
+  }
+
   my @components = ();
 
   my $output='';
@@ -249,6 +287,13 @@ sub bibutils {
 
   my $self       = shift;
   my @components = ();
+
+  if ($self->collective){
+    # Currently we just set the whole cooperative name as last name
+    # and leave first names empty Todo: check if this can be handled
+    # better, e.g. by setting author:corp
+    return $self->collective;
+  }
 
   my $output='';
 

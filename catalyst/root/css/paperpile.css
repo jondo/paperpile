@@ -1,15 +1,5 @@
 /*** Generic styles ****/
 
-.pp-main-toolbar {
-    background: #F0F4F5 url(/images/toolbar-blue.png) repeat-x scroll left top;
-}
-
-.pp-main-toolbar-label {
-    color: #FFFFFF;
-    font-weight: bold !important;
-    padding: 0 5;
-}
-
 .pp-basic {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
@@ -62,6 +52,14 @@
     margin: 8 0;
 }
 
+
+
+.pp-bullet{
+    padding: 2 2 2 16;
+    background: transparent url('/images/icons/bullet_go.png') no-repeat;
+}
+
+
 h1 {
     margin: 8;
     font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
@@ -76,6 +74,10 @@ h1 {
     font-size: 18px;
     font-weight: normal;
     color: #4183C4;
+}
+
+.pp-label-inactive {
+    color: #D8D8D8 !important;
 }
 
 .pp-dashboard-statistics {
@@ -93,24 +95,36 @@ h1 {
     padding: 1 0 0 33;
 }
 
+.pp-dashboard-box li{
+    margin: 8 21 !important;
+}
 
-
+.pp-chart-box {
+    margin: 8;
+    padding:20;
+    border-style:solid;
+    border-width: 1px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+}
 
 .pp-box dl {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     margin: 8;
+    line-height: 1.3em;
 }
 
 .pp-box dt {
     float: left;
     clear: left;
     color: #4183C4;
-    width: 90px; 
+    width: 75px; 
     text-align: right; 
+    line-height: 1.3em;
 }
 
 .pp-box dd { 
-    margin: 0 0 0 90px; 
+    margin: 0 0 0 75px; 
     padding: 0 0 5 5;
 }
 
@@ -149,6 +163,7 @@ a:hover.pp-textlink {
 }
 
 .pp-textfield-with-button {
+    margin-right: 5px;
     float: left;
 }
 
@@ -252,6 +267,52 @@ a:hover.pp-textlink {
     display:block;
     float: right;
 }
+
+/*** Main toolbar ***/
+
+.pp-main-toolbar {
+    background: #F0F4F5 url(/images/toolbar-blue.png) repeat-x scroll left top;
+}
+
+.pp-main-toolbar-label {
+    color: #FFFFFF;
+    font-weight: bold !important;
+    padding: 0 5;
+}
+
+.pp-dashboard-button {
+    background: transparent url('/images/icons/dashboard_button.png') no-repeat;
+    width: 97px;
+    height: 16px;
+    padding: 1 5;
+}
+
+/*** Custom buttons ***/
+
+.pp-save-button {
+    background: transparent url('/images/icons/button_save.png') no-repeat;
+    width: 90px;
+    height: 20px;
+    cursor: pointer;
+    float:left;
+}
+
+.pp-save-button-disabled {
+    background: transparent url('/images/icons/button_save_disabled.png') no-repeat;
+    width: 90px;
+    height: 20px;
+    float:left;
+}
+
+
+.pp-cancel-button {
+    background: transparent url('/images/icons/button_cancel.png') no-repeat;
+    width: 90px;
+    height: 20px;
+    cursor: pointer;
+    float: right;
+}
+
 
 
 /**** Toolbar icons ****/
@@ -568,6 +629,40 @@ div:hover.pp-grid-sort-item {
     position: absolute;
     opacity:0.3;
 }
+
+/*** Settings ***/
+
+.pp-box-settings {
+    max-width: 1000;
+    width: 450;
+}
+.pp-box-settings h3 {
+    clear:left;
+    color: #4183C4;
+    margin: 16 0 2 8;
+    font:italic 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-weight:bold;
+}
+
+.pp-settings-textfield {
+    margin: 0px 8px;
+}
+
+.pp-settings-example {
+    font:italic 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    margin: 8px;
+}
+
+
+.pp-settings-example code {
+    font: normal 12px "Courier New", monospace;
+    background-color: #F0F0F0;
+    border: 1px solid #DEDEDE;
+    color: #444444;
+    padding: 0 5;
+    border-style:dotted;
+}
+
 
 
 /*** Tags ***/

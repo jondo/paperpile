@@ -1,11 +1,22 @@
-
 <table>
 <tr>
 <td>
   <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
     <h2  class="pp-dashboard-statistics" >Statistics</h2>
+
+    <dl>
+      <dt># References</dt>
+      <dd>234</dd>
+      <dt># PDFs</dt>
+      <dd>100</dd>
+      <dt># Suppl. files</dt>
+      <dd>13</dd>
+      <dt>Last imported</dt>
+      <dd>Three days ago</dd>
+    </dl>
+
     <ul>
-      <li><a href="#" class="pp-textlink" action="statistics">More statistics</a></li>
+      <li><a href="#" class="pp-textlink pp-bullet" action="statistics">More statistics</a></li>
       <li></li>
     </ul>
   </div>
@@ -14,27 +25,36 @@
   <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
     <h2 class="pp-dashboard-settings">Tools &amp; Settings</h2>
     <ul>
-      <li><a href="#" class="pp-textlink" action="settings-patterns">Paths and patterns</a></li>
-      <li><a href="#" class="pp-textlink" action="settings-patterns">Paths and patterns</a></li>
+      <li><a href="#" class="pp-textlink  pp-bullet" action="settings-general">General settings</a></li>
+      <li><a href="#" class="pp-textlink  pp-bullet" action="settings-patterns">Paths and patterns</a></li>
     </ul>
   </div>
 </td>
 
 <tr>
   <td>
-    <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
+    <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:220;">
       <h2 class="pp-dashboard-feedback">Support &amp; Feedback</h2>
+      <p>Something broken? Get it fixed. Something missing? Get it
+        done. Make yourself heard at our feedback forum:</p>
       <ul>
-        <li>support@paperpile.org - Send us your questions and comments.</li>
+        <li><a href="#" class="pp-textlink pp-bullet">uservoice.com/paperpile</a></li>
+      </ul>
+      <p>Need help? Have questions? We are here to help:</p>
+      <ul>
+        <li><a href="#" class="pp-textlink pp-bullet">support@paperpile.org</a></li>
       </ul>
     </div>
   </td>
 
   <td>
-     <div class="pp-box pp-box-style2 pp-dashboard-box" style="height:200;">
+    <div class="pp-box pp-box-style2 pp-dashboard-box" style="height:220;">
       <h2>About Paperpile</h2>
+      <p>You are running Paperpile $version for $platform.</p>
       <ul>
-        <li>support@paperpile.org - Send us your questions and comments.</li>
+        <li><a href="#" class="pp-textlink pp-bullet">Licence</a></li>
+        <li><a href="#" class="pp-textlink pp-bullet">Acknowledgments</a></li>
+        <li><a href="#" class="pp-textlink pp-bullet">The Paperpile Open Source project</a></li>
       </ul>
     </div>
   </td>

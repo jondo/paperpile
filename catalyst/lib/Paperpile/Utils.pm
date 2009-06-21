@@ -224,13 +224,3 @@ sub copy_file{
   return $dest;
 }
 
-sub is_pdf {
-
-  my ($self, $file) = @_;
-
-  
-
-
-
-
-}

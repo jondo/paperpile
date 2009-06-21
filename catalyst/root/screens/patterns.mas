@@ -1,40 +1,73 @@
-<div class="pp-settings">
+<table>
 
-<h1>Locations and patterns Settings</h1>
+<tr>
+<td>
+  <div class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:140;">
 
-<h2>Paperpile database</h2>
+    <h3>Paperpile database</h3>
+    <div id="library_db">
+      <div class="pp-settings-textfield" id="library_db_textfield"></div>
+      <div id="library_db_button"></div>
+    </div>
+    
+    <h3>PDF directory</h3>
+    <div id="paper_root">
+      <div id="paper_root_textfield" class="pp-settings-textfield"></div>
+      <div id="paper_root_button"></div>
+    </div>
 
-<div id="user_db">
-  <div class="textfield" id="user_db_textfield"></div>
-  <div id="user_db_button"></div>
+  </div>
+</td>
+</tr>
+
+<tr>
+<td>
+  <div class="pp-box pp-box-style1 pp-box-bottom pp-box-settings" style="height:300;">
+    <h3>Citation key pattern</h3>
+
+    <div id="key_pattern">
+      <div class="pp-settings-textfield" id="key_pattern_textfield"></div>
+      <div class="pp-settings-example">Example: <code id="key_pattern_example"></code></div>
+    </div>
+
+    <h3>PDF file pattern</h3>
+    
+    <div id="pdf_pattern">
+      <div id="pdf_pattern_textfield" class="pp-settings-textfield"><span>.pdf<span></div>
+      <div class="pp-settings-example">Example: <code id="pdf_pattern_example"></code></div>
+    </div>
+
+    <h3>Attachment pattern</h3>
+
+    <div id="attachment_pattern">
+      <div id="attachment_pattern_textfield" class="pp-settings-textfield"></div>
+      <div class="pp-settings-example">Example: <code id="attachment_pattern_example"></code></div>
+    </div>
+  </div>
+</td>
+
+<td>
+  <div class="pp-box pp-box-style2" style="height:300; width: 400px; ">
+    <h2>Patterns</h2>
+    
+  </div>
+</td>
+</tr>
+<tr>
+<td>
+<center>
+<div style="width:190;">
+<div id="patterns-save-button" class="pp-save-button"></div>
+<div id="patterns-cancel-button" class="pp-cancel-button"></div>
 </div>
+</center>
+</td>
 
-<h2>PDF directory</h2>
+<td>
+</td>
+</tr>
 
-<div id="paper_root">
-  <div id="paper_root_textfield"></div>
-  <div id="paper_root_button"></div>
-</div>
+</table>
 
-<h2>Citation key pattern</h2>
 
-<div id="key_pattern">
-  <div class="textfield" id="key_pattern_textfield"></div>
-  <div class="example" id="key_pattern_example"></div>
-</div>
 
-<h2>PDF file pattern</h2>
-
-<div class="item" id="pdf_pattern">
-  <div id="pdf_pattern_textfield"><span>.pdf<span></div>
-  <div id="pdf_pattern_example"></div>
-</div>
-
-<h2>Attachment pattern</h2>
-
-<div id="attachment_pattern">
-  <div id="attachment_pattern_textfield"></div>
-  <div id="attachment_pattern_example"></div>
-</div>
-
-</div>

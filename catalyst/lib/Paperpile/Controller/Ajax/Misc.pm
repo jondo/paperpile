@@ -139,5 +139,59 @@ sub import_journals : Local {
 }
 
 
+sub preprocess_csl : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $grid_id = $c->request->params->{grid_id};
+  my $selection = $c->request->params->{selection};
+  my $plugin = $c->session->{"grid_$grid_id"};
+
+  my @data = ();
+
+  if ($selection eq 'ALL'){
+    @data = @{$plugin->all};
+  } else {
+    my @tmp;
+    if ( ref($selection) eq 'ARRAY' ) {
+      @tmp = @$selection;
+    } else {
+      push @tmp, $selection;
+    }
+    for my $sha1 (@tmp) {
+      my $pub = $plugin->find_sha1($sha1);
+      push @data, $pub;
+    }
+  }
+
+  my @output=();
+
+  my $style_file=$c->path_to('root/csl/style/nature.csl');
+  my $locale_file=$c->path_to('root/csl/locale/locales-en-US.xml');
+
+  my $style='';
+  my $locale='';
+
+  open(IN,"<$style_file");
+  $style.=$_ while <IN>;
+
+  open(IN,"<$locale_file");
+  $locale.=$_ while <IN>;
+
+  $locale=~s/<\?.*\?>//g;
+  $style=~s/<\?.*\?>//g;
+
+  print STDERR "$locale";
+
+  foreach my $pub (@data){
+    push @output, $pub->format_csl;
+  }
+
+  $c->stash->{data}=[@output];
+  $c->stash->{style}=$style;
+  $c->stash->{locale}=$locale;
+
+}
+
 
 1;

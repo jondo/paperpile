@@ -63,6 +63,9 @@ sub import_string {
 
   $self->_build_from_bibutils($data[0]);
 
+  unlink($file_name);
+
+
 }
 
 
@@ -93,7 +96,7 @@ sub _build_from_bibutils {
     'URL'                => 'url',
     'DEGREEGRANTOR:ASIS' => 'school',
     'KEYWORD'            => 'keywords',
-    'AUTHOR:CORP'        => 'organization',
+    'AUTHOR:CORP'        => 'organization', # check if this should be collective author ?
     'PUBLISHER'          => 'publisher',
   );
 

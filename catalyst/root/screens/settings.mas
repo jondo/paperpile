@@ -1,0 +1,30 @@
+<table>
+
+<tr>
+<td>
+  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300;">
+    <div id="proxy_checkbox" style="float:left;margin:8px"></div>
+    <h2 style="margin:8 20;">Proxy</h2>
+
+    <h3>Address</h3>
+    <div class="pp-settings-textfield" id="proxy_textfield"></div>
+    <h3>User name</h3>
+    <div class="pp-settings-textfield" id="proxy_user_textfield"></div>
+    <h3>Password</h3>
+    <div class="pp-settings-textfield" id="proxy_passwd_textfield"></div>
+    
+  </div>
+</td>
+</tr>
+<tr>
+<td>
+<center>
+<div style="width:190;">
+  <div id="settings-save-button" class="pp-save-button"></div>
+  <div id="settings-cancel-button" class="pp-cancel-button"></div>
+</div>
+</center>
+</td>
+</tr>
+
+</table>

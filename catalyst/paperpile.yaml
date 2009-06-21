@@ -18,6 +18,10 @@ user_settings:
   tmp_dir: "__USERHOME__/.paperpile/tmp"
   library_db: "__USERHOME__/.paperpile/paperpile.ppl"
   user_home: "__USERHOME__"
+  use_proxy: ""
+  proxy: ""
+  proxy_user: ""
+  proxy_passwd: ""
 
 library_settings:
   paper_root: "__USERHOME__/.paperpile/papers"
@@ -27,7 +31,7 @@ library_settings:
   _tree: ""
 
 pub_fields:
-  pubtype:       "Publication Type"
+  pubtype:       "Type"
   citekey:       "Citation key"
   sortkey:       "Name used for sorting"
   title:         "Title"
@@ -43,7 +47,7 @@ pub_fields:
   edition:       "edition"
   pages:         "Pages"
   url:           "URL"
-  howpublished:  "How published"
+  howpublished:  "Details"
   publisher:     "Publisher"
   organization:  "Organization"
   school:        "University"        
@@ -71,7 +75,7 @@ pub_types:
     name: "Journal Article"
     fields: 
       pubtype:
-        label: "Publication Type"
+        label: "Type"
       title:
         label: "Title"
       authors:
@@ -103,7 +107,7 @@ pub_types:
     name: "Book Chapter (named)"
     fields:
       pubtype:
-        label: "Publication Type"
+        label: "Type"
       title:
         label: "Chapter Title"
       booktitle:
@@ -120,6 +124,8 @@ pub_types:
         label: "Year"
       series:
         label: "Series"
+      volume:
+        label: "Volume"
       address:
         label: "Address"
       month:
@@ -139,7 +145,7 @@ pub_types:
     name: "Book (whole)"
     fields:
       pubtype:
-        label: "Publication Type"
+        label: "Type"
       booktitle:
         label: "Book Title"
       authors:
@@ -152,6 +158,8 @@ pub_types:
         label: "Year"
       series:
         label: "Series"
+      volume:
+        label: "Volume"
       address:
         label: "Address"
       month:
@@ -171,7 +179,7 @@ pub_types:
     name: "Book Chapter"
     fields:
       pubtype:
-        label: "Publication Type"
+        label: "Type"
       booktitle:
         label: "Book Title"
       authors:
@@ -181,13 +189,15 @@ pub_types:
       pages:
         label: "Pages"
       chapter:
-        label: "Chapter number"
+        label: "Chapter"
       publisher:
         label: "Publisher"
       year:
         label: "Year"
       series:
         label: "Series"
+      volume:
+        label: "Volume"
       address:
         label: "Address"
       month:
@@ -207,7 +217,7 @@ pub_types:
     name: "Conference Proceedings"
     fields:
       pubtype:
-        label: "Publication Type"
+        label: "Type"
       title:
         label: "Title"
       editors:
@@ -225,7 +235,7 @@ pub_types:
     name: "Conference Paper"
     fields:
       pubtype:
-        label: "Publication Type"
+        label: "Type"
       title:
         label: "Title"
       authors:
@@ -249,7 +259,7 @@ pub_types:
     name: "Master's Thesis"
     fields:
       pubtype:
-        label: "Publication Type"
+        label: "Type"
       title:
         label: "Title"
       authors:
@@ -265,7 +275,7 @@ pub_types:
     name: "PhD Thesis"
     fields:
       pubtype:
-        label: "Publication Type"
+        label: "Type"
       title:
         label: "Title"
       authors:
@@ -285,7 +295,7 @@ pub_types:
       authors:
         label: "Author"
       edition:
-        label: "Version/Edition"
+        label: "Version"
       organization: 
         label: "Organization"
       address:
@@ -303,7 +313,7 @@ pub_types:
       authors:
         label: "Author"
       howpublished:
-        label: "How published"
+        label: "Details"
       year:
         label: "Year"
       month:

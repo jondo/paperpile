@@ -269,9 +269,10 @@ sub _read_xml {
       if ( $author->{CollectiveName} ) {
         push @authors,
           Paperpile::Library::Author->new(
-          last  => '{' . $author->{CollectiveName} . '}',
+          last  => '',
           first => '',
           jr    => '',
+          collective => $author->{CollectiveName},
           )->normalized;
       } else {
         push @authors,

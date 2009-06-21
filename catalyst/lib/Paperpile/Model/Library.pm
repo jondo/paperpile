@@ -44,9 +44,9 @@ sub create_pubs {
   foreach my $pub (@$pubs) {
 
     # Initialize some fields
-    $pub->created(timestamp);
+    $pub->created(timestamp gmtime); # use standard time for timestamps
     $pub->times_read(0);
-    $pub->last_read(timestamp); ## for the time being
+    $pub->last_read(timestamp gmtime); ## for the time being
     $pub->_imported(1);
 
     # Generate citation key
@@ -277,8 +277,6 @@ sub update_citekeys {
       $key=$self->dbh->quote($key);
 
       $self->dbh->do("UPDATE Publications SET citekey=$key WHERE rowid=".$pub->_rowid);
-
-
     }
 
     my $_pattern=$self->dbh->quote($pattern);

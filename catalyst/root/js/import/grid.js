@@ -87,6 +87,15 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 itemId:'select_all_button'
             }),
 
+            'FORMAT': new Ext.Action({
+                text: 'Format',
+                handler: this.formatEntry,
+                scope: this,
+                disabled:true,
+                itemId:'format_button'
+            }),
+
+
 
         };
 
@@ -113,6 +122,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.actions['DELETE'],
                 this.actions['EDIT'],
                 this.actions['EXPORT'],
+                this.actions['FORMAT'],
                 this.actions['SELECT_ALL'],
             ]
         });
@@ -134,8 +144,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
          
                 '<div class="pp-grid-data">',
                 '<p class="pp-grid-title">{title}</p>',
+                '<tpl if="_authors_display">',
                 '<p class="pp-grid-authors">{_authors_display}</p>',
+                '</tpl>',
+                '<tpl if="_citation_display">',
                 '<p class="pp-grid-citation">{_citation_display}</p>',
+                '</tpl>',
                 '<tpl if="_snippets_text">',
                 '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
                 '</tpl>',
@@ -278,6 +292,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         
         this.actions['NEW'].enable();
         this.actions['EXPORT'].enable();
+        this.actions['FORMAT'].enable();
 
         if (selected == 1){
             this.actions['EDIT'].setDisabled(imported==0);
@@ -397,8 +412,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     var record=this.store.getAt(this.store.find('sha1',sha1));
                     if (!record) continue;
                     record.beginEdit();
-                    record.set('_imported',1);
                     record.set('citekey',json.data[sha1].citekey);
+                    record.set('created', json.data[sha1].created);
+                    record.set('_imported',1);
                     record.set('_rowid', json.data[sha1]._rowid);
                     record.endEdit();
                 }
@@ -514,6 +530,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         east_panel.getLayout().setActiveItem('pub_edit');
 
     },
+
+
+    formatEntry: function(){
+
+        selection=this.getSelection();
+
+        Paperpile.main.tabs.add(new Paperpile.Format(
+            {grid_id:this.id, 
+             selection:selection,
+            }
+        ));
+    },
+
+
+
 
     // Update specific fields of specific entries to avoid complete
     // reload of everything data is a hash of a hash with sha1 as the

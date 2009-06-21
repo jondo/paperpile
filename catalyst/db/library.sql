@@ -27,7 +27,8 @@ CREATE TABLE Authors (
   first               TEXT,
   von                 TEXT,
   last                TEXT,
-  jr                  TEXT
+  jr                  TEXT,
+  collective          TEXT
 );
 
 CREATE TABLE Tags (

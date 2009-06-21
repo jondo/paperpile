@@ -1,0 +1,1150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?oxygen RNGSchema="http://xbiblio.svn.sourceforge.net/viewvc/*checkout*/xbiblio/csl/schema/trunk/csl.rnc" type="compact"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="note" xml:lang="en">
+  <info>
+    <title>Bluebook Law Review (experimental)</title>
+    <id>http://gsl-nagoya-u.net/appendix/software/bluebook</id>
+    <link href="http://gsl-nagoya-u.net/appendix/software/bluebook"/>
+    <author>
+      <name>Bruce D’Arcus</name>
+      <email>bdarcus@gmail.com</email>
+    </author>
+    <author>
+      <name>Nancy Sims</name>
+      <email>nsims@umich.edu</email>
+    </author>
+    <author>
+      <name>Frank Bennett</name>
+      <email>bennett@law.nagoya-u.ac.jp</email>
+    </author>
+    <updated>2008-12-10T20:19:42+00:00</updated>
+    <summary>The Bluebook legal citation style for law reviews.</summary>
+  </info>
+
+  <!-- Localizations -->
+
+  <terms>
+    <locale xml:lang="en">
+      <term name="editor" form="symbol">
+	<single>ed.</single>
+	<multiple>eds.</multiple>
+      </term>
+      <term name="translator" form="symbol">
+	<single>trans.</single>
+	<multiple>trans.</multiple>
+      </term>
+      <term name="section" form="symbol">
+	<single>§</single>
+	<multiple>§§</multiple>
+      </term>
+      <term name="paragraph" form="symbol">
+	<single>¶</single>
+	<multiple>¶¶</multiple>
+      </term>
+      <term name="page" form="symbol">
+	<single></single>
+	<multiple></multiple>
+      </term>
+      <term name="note" form="symbol">
+	<single>n.</single>
+	<multiple>nn.</multiple>
+      </term>
+      <term name="issue" form="symbol">
+	<single>No.</single>
+	<multiple>Nos.</multiple>
+      </term>
+      <term name="month-01" form="short">Jan.</term>
+      <term name="month-02" form="short">Feb.</term>
+      <term name="month-03" form="short">Mar.</term>
+      <term name="month-04" form="short">Apr.</term>
+      <term name="month-05" form="short">May</term>
+      <term name="month-06" form="short">June</term>
+      <term name="month-07" form="short">July</term>
+      <term name="month-08" form="short">Aug.</term>
+      <term name="month-09" form="short">Sept.</term>
+      <term name="month-10" form="short">Oct.</term>
+      <term name="month-11" form="short">Nov.</term>
+      <term name="month-12" form="short">Dec.</term>
+      <term name="ordinal-01">st</term>
+      <term name="ordinal-02">d</term>
+      <term name="ordinal-03">d</term>
+      <term name="ordinal-04">th</term>
+    </locale>
+  </terms>
+
+  <!-- /Localizations -->
+
+
+
+  <!-- VOLUME NUMBERS -->
+
+  <macro name="single-authored-volume">
+	<choose>
+	  <if type="chapter" variable="author" match="all">
+		<choose>
+		  <if variable="contributor" match="none">
+			<text variable="volume"/>
+		  </if>
+		</choose>
+	  </if>
+	</choose>
+  </macro>
+
+  <macro name="multi-authored-volume">
+    <choose>
+      <if type="chapter" variable="contributor" match="all">
+		<choose>
+		  <if variable="author" match="none">
+			<text variable="volume"/>
+		  </if>
+		</choose>
+	  </if>
+	</choose>
+  </macro>
+
+  <!-- /VOLUME NUMBERS -->
+
+
+  <!-- COLLECTION NUMBERS -->
+
+  <macro name="collection-number-intitle">
+    <choose>
+      <if variable="contributor" match="none">
+		<text variable="collection-number"/>
+	  </if>
+	</choose>
+  </macro>
+
+  <macro name="collection-number-indate">
+    <choose>
+      <if variable="contributor collection-number" match="all">
+		<text variable="collection-number"/>
+	  </if>
+    </choose>
+  </macro>
+
+  <!-- /COLLECTION NUMBERS -->
+
+
+  <!-- NAME ELEMENTS -->
+
+  <macro name="contributor-rm-long">
+	<names variable="contributor">
+	  <name and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+	</names>
+  </macro>
+
+  <macro name="author-sc-long">
+	<names variable="author" font-variant="small-caps">
+	  <name and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+	</names>
+  </macro>
+
+  <macro name="author-or-sponsor-sc-long">
+	<names variable="author" font-variant="small-caps">
+	  <name and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+	  <substitute>
+		<text macro="sponsor-sc-long"/>
+	  </substitute>
+	</names>
+  </macro>
+
+  <macro name="author-rm-short">
+	<names variable="author">
+	  <name form="short" and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+	</names>
+  </macro>
+
+  <macro name="contributor-rm-short">
+    <names variable="contributor">
+      <name form="short" and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+    </names>
+  </macro>
+
+  <macro name="author-sc-short">
+	<names variable="author" font-variant="small-caps">
+	  <name form="short" and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+	</names>
+  </macro>
+
+  <macro name="sponsor-sc-long">
+	<names variable="sponsor" font-variant="small-caps">
+	  <name and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+	</names>
+  </macro>
+
+  <macro name="sponsor-rm-long">
+	<names variable="sponsor">
+	  <name and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+	</names>
+  </macro>
+
+
+  <!-- /NAME ELEMENTS -->
+
+
+  <!-- NAME INTERMEDIATE BUNDLES -->
+  
+  <macro name="contributor-rm-author-sc-long">
+	<text macro="contributor-rm-long"/>
+	<text macro="author-sc-long"/>
+  </macro>
+
+  <macro name="author-sc-contributor-rm-title-it-short">
+	<choose>
+	  <if variable="author">
+		<text macro="author-sc-short"/>
+	  </if>
+	  <else-if variable="contributor">
+		<text macro="contributor-rm-short"/>
+	  </else-if>
+	  <else>
+		<text variable="title" font-style="italic"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="author-sc-sponsor-sc-title-sc-short">
+	<choose>
+	  <if variable="author">
+		<text macro="author-sc-short"/>
+	  </if>
+	  <else-if variable="sponsor">
+		<text macro="sponsor-sc-long"/>
+	  </else-if>
+	  <else>
+		<text variable="title" font-variant="small-caps"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="author-rm-contributor-rm-title-rm-short">
+	<choose>
+	  <if variable="author">
+		<text macro="author-rm-short"/>
+	  </if>
+	  <else-if variable="contributor">
+		<text macro="contributor-rm-short"/>
+	  </else-if>
+	  <else>
+		<text variable="title"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <!-- /NAME INTERMEDIATE BUNDLES -->
+
+
+  <!-- NAME ASSEMBLIES -->
+
+  <macro name="author-long">
+	<choose>
+	  <if type="chapter">
+		<text macro="contributor-rm-author-sc-long"/>
+	  </if>
+	  <else-if type="book">
+		<text macro="author-or-sponsor-sc-long"/>
+	  </else-if>
+	  <else>
+		<!-- this should be moved to an intermediate macro -->
+		<names variable="author">
+		  <name and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+		  <substitute>
+			<text macro="contributor-rm-long"/>
+		  </substitute>
+		</names>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="author-short">
+	<choose>
+	  <if variable="short-title">
+		  <text macro="title-short"/>
+	  </if>
+	  <else-if type="chapter">
+		<text macro="author-sc-contributor-rm-title-it-short"/>
+	  </else-if>
+	  <else-if type="book">
+		<text macro="author-sc-sponsor-sc-title-sc-short"/>
+	  </else-if>
+	  <else>
+		<text macro="author-rm-contributor-rm-title-rm-short"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="sponsor-indate">
+	<choose>
+	  <if variable="contributor collection-number" match="all">
+		<text macro="sponsor-rm-long"/>
+	  </if>
+	</choose>
+  </macro>
+  
+  <macro name="container-author">
+    <choose>
+      <if variable="collection-number" match="none">
+		<names variable="sponsor">
+		  <name and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+		</names>
+	  </if>
+    </choose>
+  </macro>
+
+  <!-- /NAME ASSEMBLIES -->
+
+
+  <!-- TITLE ASSEMBLIES -->
+
+  <macro name="title-it-title-sc-title-rm-long">
+	<choose>
+	  <!-- this handles a letter case in the Bluebook.  it might
+           better be handled by applying a discrete type (like "letter", say).
+           but "letter" has no fields relating to publication.  using the
+           proper type will play well when relationships are available.
+           for now, for us, this is a minor use case, so this copes as
+           a stop-gap. -->
+	  <if variable="contributor author" match="none">
+		<text variable="title"/>
+	  </if>
+	  <else-if variable="contributor">
+		<text variable="title" font-style="italic"/>
+	  </else-if>
+	  <else>
+		<text variable="title" font-variant="small-caps"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="title-short">
+	<choose>
+	  <if type="book">
+		<text variable="title" form="short" font-variant="small-caps"/>
+	  </if>
+	  <else>
+		<text variable="title" form="short" font-style="italic"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <!-- /TITLE ASSEMBLIES -->
+
+
+  <!-- SPLICES -->
+
+  <macro name="chapter-splice">
+	<choose>
+	  <if variable="title container-title">
+		<choose>
+		  <if endswith-preposition="title" match="none">
+			<text value="in" font-style="italic" prefix=", "/>
+		  </if>
+		</choose>
+	  </if>
+	</choose>
+  </macro>
+
+
+  <!-- this needs to have a chain of macros that expands downward,
+       to avoid cut-and-plaster code everywhere.  Only one if/else
+	   per macro.
+   -->
+  <macro name="page-locator-space">
+	<choose>
+	  <!-- the obvious one is newspapers -->
+	  <if type="article">
+		<choose>
+		  <if variable="volume" match="none">
+			<text value=", at"/>
+		  </if>
+		  <else>
+			<text macro="page-locator-space-numeric-check-1"/>
+		  </else>
+		</choose>
+	  </if>
+	  <!-- then cases reported in newspapers -->
+	  <else-if type="legal_case" variable="reporting-date" match="all">
+		<choose>
+		  <if variable="volume" match="none">
+			<text value=", at"/>
+		  </if>
+		  <else>
+			<text macro="page-locator-space-numeric-check-1"/>
+		  </else>
+		</choose>
+	  </else-if>
+	  <else>
+		<text macro="page-locator-space-numeric-check-1"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="page-locator-space-numeric-check-1">
+	<choose>
+	  <if variable="page">
+		<choose>
+		  <if is-numeric="page" match="none">
+			<text value=", at"/>
+		  </if>
+		  <else>
+			<text macro="page-locator-space-numeric-check-3"/>
+		  </else>
+		</choose>
+	  </if>
+	  <else>
+		<text macro="page-locator-space-numeric-check-2"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="page-locator-space-numeric-check-2">
+	<choose>
+	  <if variable="locator">
+		<choose>
+		  <if is-numeric="locator" match="none">
+			<text value=", at"/>
+		  </if>
+		  <else>
+			<text macro="page-locator-space-numeric-check-3"/>
+		  </else>
+		</choose>
+	  </if>
+	  <else>
+		<text macro="page-locator-space-numeric-check-3"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="page-locator-space-numeric-check-3">
+	<choose>
+	  <if is-numeric="container-title" match="any">
+		<choose>
+		  <if variable="locator" locator="page" match="all">
+			<text value=", at"/>
+		  </if>
+		  <else>
+			<text macro="page-locator-space-numeric-check-4"/>
+		  </else>
+		</choose>
+	  </if>
+	  <else>
+		<text macro="page-locator-space-numeric-check-4"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="page-locator-space-numeric-check-4">
+	<choose>
+	  <if is-numeric="title">
+		<choose>
+		  <!-- this last bit is tricky: test the title only if this 
+               isn't a journal or collection -->
+		  <if variable="container-title" match="none">
+			<text value=", at"/>
+		  </if>
+		</choose>
+	  </if>
+	</choose>
+  </macro>
+
+  <!-- /SPLICES -->
+
+
+  <!-- DATE STRING INTERMEDIATE MACROS -->
+
+  <macro name="editor-translator">
+	<group delimiter=", ">
+	  <names variable="editor">
+		<name and="symbol" delimiter=", "/>
+		<label form="symbol" prefix=" "/>
+	  </names>
+	  <names variable="translator">
+		<name and="symbol" delimiter=", "/>
+		<label form="symbol" prefix=" "/>
+	  </names>
+	</group>
+  </macro>
+
+  <macro name="publisher-modern">
+	<choose>
+	  <if variable="issued">
+		<choose>
+		  <if is-numeric="issued" match="none">
+			<group delimiter=", ">
+			  <text variable="publisher-place"/>
+			  <text variable="publisher"/>
+			</group>
+		  </if>
+		</choose>
+	  </if>
+	</choose>
+  </macro>
+
+  <macro name="edition">  
+	<choose>
+	  <if is-numeric="edition" match="none">
+		<text variable="edition"/>
+	  </if>
+	  <else>
+		<number variable="edition" form="ordinal" suffix=" ed."/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="edition-supplement">
+    <choose>
+      <if variable="original-date">
+		<choose>
+		  <if is-numeric="original-date" match="none">
+			<text variable="original-date"/>
+		  </if>
+		</choose>
+	  </if>
+	</choose>
+  </macro>
+
+  <!-- /DATE STRING INTERMEDIATE MACROS -->
+
+
+  <!-- DATE STRING ASSEMBLIES -->
+
+  <macro name="date-parens">
+	<group prefix=" (" suffix=")">
+	  <text macro="sponsor-indate" suffix=" "/>
+	  <text macro="collection-number-indate" suffix=" "/>
+	  <text macro="editor-translator" suffix=" "/>
+	  <choose>
+		<if variable="title">
+		  <text variable="court" suffix=" "/>
+		</if>
+	  </choose>
+	  <choose>
+		<if variable="docket-number">
+		  <text variable="docket-number"/>
+		  <text value="slip op." prefix=" "/>
+		</if>
+	  </choose>
+	  <text macro="publisher-modern" suffix=" "/>
+	  <text macro="edition" suffix=" "/>
+	  <text macro="edition-supplement" suffix=" "/>
+	  <date variable="issued">
+		<date-part name="year"/>
+	  </date>
+	</group>
+  </macro>
+
+  <macro name="date-comma">
+	<date variable="issued">
+	  <date-part name="month" form="short"/>
+	  <date-part name="day" prefix=" " suffix=","/>
+	  <date-part name="year" prefix=" "/>
+	</date>
+  </macro>
+
+  <!-- /DATE STRING ASSEMBLIES -->
+
+
+  <!-- LOCATORS -->
+
+  <macro name="page-locator">
+	<group delimiter="">
+	  <text macro="page-locator-space"/>
+	  <group delimiter=", " prefix=" ">
+		<text variable="page"/>
+		<group delimiter=" ">
+		  <choose>
+			<if locator="page" match="none">
+			  <label variable="locator" form="symbol"/>
+			</if>
+		  </choose>
+		  <text variable="locator"/>
+		</group>
+	  </group>
+	</group>
+  </macro>
+
+  <macro name="backref-page">
+	<group delimiter=" ">
+	  <choose>
+		<if type="legal_case">
+		  <choose>
+			<if variable="container-title volume" match="any">
+			  <text value="at"/>
+			</if>
+		  </choose>
+		</if>
+		<else-if locator="page">
+		  <text value="at"/>
+		</else-if>
+		<else>
+		  <label variable="locator" form="symbol"/>
+		</else>
+	  </choose>
+	  <text variable="locator"/>
+	</group>
+  </macro>
+
+  <!-- /LOCATORS -->
+
+
+  <!-- SUPPLEMENTARY MATTER INTERMEDIATE MACROS -->
+
+  <macro name="access">
+	<group delimiter=" ">
+	  <choose>
+		<if variable="archive_location">
+		  <choose>
+			<if variable="accessed" match="none">
+			  <text value="available at" font-style="italic"/>
+			</if>
+		  </choose>
+		  <text variable="archive_location"/>
+		</if>
+		<else-if variable="URL">
+		  <group delimiter=" ">
+			<choose>
+			  <if type="webpage">
+				<text value="at" font-style="italic"/>
+			  </if>
+			  <else-if type="book article legal_case legislation bill" match="any">
+				<choose>
+				  <if variable="accessed">
+					<text value="available at" font-style="italic"/>
+				  </if>
+				  <else>
+					<text value="at" font-style="italic"/>
+				  </else>
+				</choose>
+			  </else-if>
+			  <else>
+				<text value="at" font-style="italic"/>
+			  </else>
+			</choose>
+			<text variable="URL"/>
+		  </group>
+		</else-if>
+	  </choose>
+	  <choose>
+		<if variable="URL archive_location" match="any">
+		  <group prefix="(" suffix=")" delimiter=" ">
+			<choose>
+			  <if variable="note" match="any">
+				<text variable="note"/>
+			  </if>
+			  <else-if type="webpage">
+				<text value="last visited"/>
+			  </else-if>
+			</choose>
+			<date variable="accessed">
+			  <date-part name="month" form="short" suffix=" "/>
+			  <date-part name="day" suffix=", "/>
+			  <date-part name="year"/>
+			</date>
+		  </group>
+		</if>
+	  </choose>
+	</group>
+  </macro>
+
+  <!-- /SUPPLEMENTARY MATTER INTERMEDIATE MACROS -->
+
+
+  <!-- SUPPLEMENTARY MATTER ASSEMBLIES -->
+
+  <macro name="year-original">
+      <choose>
+		<if is-numeric="issued" match="none">
+		  <choose>
+			<if is-numeric="original-date">
+			  <date variable="original-date" prefix=" (" suffix=")">
+				<date-part name="year"/>
+			  </date>
+			</if>
+		  </choose>
+		</if>
+	  </choose>
+  </macro>
+
+  <macro name="supplementary-matter">
+	<choose>
+	  <if variable="short-title">
+		<text macro="title-short" prefix=" [hereinafter " suffix="]"/>
+		<text macro="access" prefix=" "/>
+	  </if>
+	  <else-if variable="issued">
+		<text macro="access" prefix=", "/>
+	  </else-if>
+	  <else>
+		<text macro="access"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <!-- /SUPPLEMENTARY MATTER ASSEMBLIES -->
+
+
+  <!-- SECONDARY MATERIAL TYPES: LONG FORM INTERMEDIATE MACROS -->
+
+  <macro name="source-info-comma">
+	<text variable="container-title" form="short" font-variant="small-caps"/>
+	<text variable="publisher-place" prefix=" (" suffix=")"/>
+	<text macro="date-comma"/>
+	<choose>
+	  <if variable="section">
+		<text term="section" form="symbol" prefix=" "/>
+		<text variable="section"/>
+	  </if>
+	</choose>
+	<text macro="page-locator"/>
+  </macro>
+
+  <macro name="book-plain">
+	<group delimiter=" ">
+	  <text variable="volume"/>
+	  <group delimiter=", ">
+		<text macro="author-long"/>
+		<text macro="sponsor-sc-long"/>
+		<text macro="collection-number-intitle" font-variant="small-caps"/>
+		<text variable="title" font-variant="small-caps"/>
+	  </group>
+	</group>
+	<text macro="page-locator"/>
+	<text macro="date-parens"/>
+	<text macro="year-original"/>
+  </macro>
+  
+  <macro name="book-chapter">
+	<group delimiter=" ">
+	  <text macro="single-authored-volume"/>
+	  <group delimiter=", ">
+		<text macro="author-long"/>
+		<group delimiter=" ">
+		  <group delimiter="">
+			<text macro="title-it-title-sc-title-rm-long"/>
+			<!-- tolerate this; it provides a discretionary trailing comma to the title -->
+			<text macro="chapter-splice"/>
+		  </group>
+		  <text macro="multi-authored-volume"/>
+		  <group delimiter=", ">
+			<text macro="container-author" font-variant="small-caps"/>
+			<text variable="container-title" font-variant="small-caps"/>
+		  </group>
+		</group>
+		<text macro="collection-number-intitle"/>
+	  </group>
+	</group>
+	<text macro="page-locator"/>
+	<text macro="date-parens"/>
+	<text macro="year-original"/>
+  </macro>
+  
+  <macro name="book-weird">
+    <choose>
+      <if variable="contributor">
+		<text macro="book-weird-federalist"/>
+	  </if>
+	  <else>
+		<text macro="book-weird-commentary"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="book-weird-commentary">
+    <text variable="volume"/>
+    <text variable="collection-title" font-variant="small-caps" prefix=" "/>
+    <text variable="title" font-style="italic" prefix=" "/>
+    <text macro="page-locator"/>
+    <text variable="issued" prefix=" (" suffix=")"/>
+  </macro>
+
+  <macro name="book-weird-federalist">
+    <text variable="title" font-variant="small-caps"/>
+    <group prefix=" ">
+      <label variable="locator" form="symbol" font-variant="small-caps"/>
+      <text variable="locator"/>
+    </group>
+    <names variable="contributor" prefix=" (" suffix=")">
+      <name and="symbol" delimiter=", " delimiter-precedes-last="never"/>
+    </names>
+  </macro>
+
+  <macro name="article-consecutive">
+	<group delimiter=", ">
+	  <text macro="author-long"/>
+	  <text variable="title" font-style="italic"/>
+	  <group delimiter=" ">
+		<text variable="volume"/>
+		<text variable="container-title" form="short" font-variant="small-caps"/>
+	  </group>
+	</group>
+    <text macro="page-locator"/>
+    <text macro="date-parens"/>
+  </macro>
+
+  <macro name="article-nonconsecutive">
+	<group delimiter=", ">
+	  <text macro="author-long"/>
+	  <text variable="title" font-style="italic"/>
+	  <group delimiter=" ">
+		<text variable="container-title" form="short" font-variant="small-caps"/>
+		<text variable="publisher-place" prefix="(" suffix=")"/>
+	  </group>
+	  <text macro="date-comma"/>
+	  <choose>
+		<if variable="section">
+		  <group delimiter=" ">
+			<text term="section" form="symbol"/>
+			<text variable="section"/>
+		  </group>
+		</if>
+	  </choose>
+	</group>
+	<text macro="page-locator"/>
+  </macro>
+
+  <!-- /SECONDARY MATERIAL TYPES: LONG FORM INTERMEDIATE MACROS -->
+
+
+  <!-- SECONDARY MATERIAL TYPES: LONG FORM ASSEMBLIES -->
+
+  <macro name="book">
+    <choose>
+      <if type="book" is-numeric="issued" variable="author container-title" match="none">
+		<text macro="book-weird"/>
+	  </if>
+	  <else-if variable="title container-title" match="all">
+		<text macro="book-chapter"/>
+	  </else-if>
+	  <else>
+		<text macro="book-plain"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="article">
+    <choose>
+      <if variable="volume">
+		<text macro="article-consecutive"/>
+      </if>
+      <else>
+		<text macro="article-nonconsecutive"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="dictionary">
+    <number variable="volume"/>
+	<text variable="container-title" font-variant="small-caps"/>
+	<choose>
+	  <if variable="container-title">
+		<text variable="title" font-style="italic" prefix=" "/>
+	  </if>
+	  <else>
+		<text variable="title" font-style="italic"/>
+	  </else>
+	</choose>
+	<text macro="page-locator"/>
+	<text macro="date-parens"/>
+  </macro>
+
+  <!-- /SECONDARY MATERIAL TYPES: LONG FORM ASSEMBLIES -->
+
+
+  <!-- SECONDARY MATERIAL TYPES: SHORT FORM ASSEMBLIES -->
+
+  <macro name="secondary-short">
+	<group delimiter=", ">
+	  <text macro="author-short"/>
+	  <group delimiter="">
+		<text value="supra" font-style="italic"/>
+		<choose>
+		  <if context="same-note" match="none">
+			<text value="note" prefix=" "/>
+			<text variable="first-reference-note-number" prefix=" "/>
+		  </if>
+		</choose>
+		<text macro="backref-page"/>
+	  </group>
+	</group>
+  </macro>
+
+  <!-- /SECONDARY MATERIAL TYPES: SHORTFORM ASSEMBLIES -->
+
+
+  <!-- PRIMARY MATERIAL TYPES: INTERMEDIATE MACROS -->
+
+  <macro name="legal-case-date-parens">
+	<group prefix="(" suffix=")">
+	  <text variable="court" suffix=" "/>
+	  <choose>
+		<if variable="decision-date" match="none">
+		  <date variable="filing-date" prefix="filed ">
+			<date-part name="month" form="short" suffix=" "/>
+			<date-part name="day" suffix=", "/>
+			<date-part name="year"/>
+		  </date>
+		</if>
+		<else-if variable="volume" match="none">
+		  <date variable="decision-date">
+			<date-part name="month" form="short" suffix=" "/>
+			<date-part name="day" suffix=", "/>
+			<date-part name="year"/>
+		  </date>
+		</else-if>
+		<else>
+		  <date variable="decision-date">
+			<date-part name="year"/>
+		  </date>
+		</else>
+	  </choose>
+	</group>
+  </macro>
+
+  <macro name="legal-case-with-title-middle">
+	<choose>
+	  <if variable="submission-description volume" match="none">
+		<text variable="docket-number"/>
+	  </if>
+	</choose>
+	<group delimiter=" ">
+	  <text variable="volume"/>
+	  <text variable="container-title"/>
+	</group>
+	<choose>
+	  <if variable="volume" match="none">
+		<date variable="reporting-date">
+		  <date-part name="month" form="short" suffix=" "/>
+		  <date-part name="day" suffix=", "/>
+		  <date-part name="year"/>
+		</date>
+	  </if>
+	</choose>
+	<choose>
+	  <if variable="locator">
+		<choose>
+		  <if variable="container-title submission-description" match="none">
+			<choose>
+			  <if variable="docket-number">
+				<text value=", slip op. at"/>
+			  </if>
+			</choose>
+		  </if>
+		</choose>
+	  </if>
+	</choose>
+  </macro>
+
+  <macro name="legal-case-with-title-long">
+	<group delimiter=" ">
+	  <group delimiter=", ">
+		<choose>
+		  <if variable="submission-description">
+			<group delimiter=" ">
+			  <text variable="submission-description"/>
+			  <text macro="backref-page"/>
+			</group>
+		  </if>
+		</choose>
+		<text variable="title" form="bluebook-long"/>
+		<text macro="legal-case-with-title-middle"/>
+	  </group>
+	</group>
+	<text macro="page-locator"/>
+	<group delimiter=" " prefix=" ">
+	  <text macro="legal-case-date-parens"/>
+	  <text variable="order-description" prefix="(" suffix=")"/>
+	</group>
+  </macro>
+
+  <!-- bluebook does not provide full guidance on short-forming of cases -->
+  <!-- use straight long form for briefs -->
+  <!-- use long form with the short name for the other weird stuff -->
+  <macro name="legal-case-with-title-short">
+	<choose>
+	  <if variable="submission-description">
+		<text macro="legal-case-with-title-long"/>
+	  </if>
+	  <else>
+		<group delimiter=" ">
+		  <group delimiter=", ">
+			<text variable="title" form="bluebook-short" font-style="italic"/>
+			<text macro="legal-case-with-title-middle"/>
+		  </group>
+		  <choose>
+			<if variable="volume">
+			  <text macro="backref-page"/>
+			</if>
+			<else>
+			  <group delimiter=" ">
+				<text macro="backref-page"/>
+				<text macro="legal-case-date-parens"/>
+				<text variable="order-description" prefix="(" suffix=")"/>
+			  </group>
+			</else>
+		  </choose>
+		</group>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="law-case-without-title-long">
+	<text macro="law-case-without-title-first-part"/>
+	<group prefix=", ">
+	  <choose>
+		<if variable="volume">
+		  <text variable="volume"/>
+		  <text variable="container-title" font-variant="small-caps"/>
+		  <text macro="page-locator"/>
+		  <text macro="date-parens"/>
+		</if>
+		<else-if variable="container-title">
+		  <text macro="source-info-comma"/>
+		</else-if>
+	  </choose>
+	</group>
+  </macro>
+
+  <macro name="legal-case-without-title-short">
+	<choose>
+	  <if reset-first="5">
+		<text macro="law-case-without-title-long"/>
+	  </if>
+	  <else>
+		<text macro="law-case-without-title-first-part" font-style="italic"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="legal-case-long">
+	<choose>
+	  <if variable="title">
+		<text macro="legal-case-with-title-long"/>
+	  </if>
+	  <else>
+		<text macro="legal-case-without-title-long"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="legal-case-short">
+	<choose>
+	  <if variable="title">
+		<choose>
+		  <if reset-first="5">
+			<text macro="legal-case-with-title-long"/>
+		  </if>
+		  <else>
+			<text macro="legal-case-with-title-short"/>
+		  </else>
+		</choose>
+	  </if>
+	  <else>
+		<choose>
+		  <if reset-first="5">
+			<text macro="legal-case-without-title-long"/>
+		  </if>
+		  <else>
+			<text macro="legal-case-without-title-short"/>
+		  </else>
+		</choose>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="legislation-short">
+	<text value="[undefined legislation (short)]"/>
+  </macro>
+
+  <!-- /PRIMARY MATERIAL TYPES: ASSEMBLIES -->
+
+
+  <!-- CITATION MASTERS -->
+
+  <macro name="citation-long">
+    <choose>
+      <if type="article">
+		<text macro="article"/>
+      </if>
+	  <else-if type="legal_case">
+		<text macro="legal-case-long"/>
+	  </else-if>
+	  <else-if type="book chapter" match="any">
+		<text macro="book"/>
+	  </else-if>
+	  <else>
+		<text value="[Undefined full citation]"/>
+      </else>
+    </choose>
+	<choose>
+	  <if type="legal_case">
+		<text macro="access" prefix=", "/>
+	  </if>
+	  <else>
+		<text macro="supplementary-matter"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <macro name="citation-short">
+	<choose>
+	  <if type="legal_case">
+		<text macro="legal-case-short"/>
+	  </if>
+	  <else-if type="legislation">
+		<text macro="legislation-short"/>
+	  </else-if>
+	  <else>
+		<text macro="secondary-short"/>
+	  </else>
+	</choose>
+  </macro>
+
+  <!-- /CITATION MASTERS -->
+
+
+  <citation>
+    <option name="et-al-min" value="3"/>
+    <option name="et-al-use-first" value="1"/>
+    <layout suffix="." delimiter="; ">
+      <choose>
+		<if position="ibid-with-locator">
+		  <group delimiter=" ">
+			<choose>
+			  <if context="prefix-punctuation">
+				<text value="Id." font-style="italic"/>
+			  </if>
+			  <else>
+				<text value="id." font-style="italic"/>
+			  </else>
+			</choose>
+			<text macro="backref-page"/>
+		  </group>
+		</if>
+		<else-if position="ibid">
+		  <choose>
+			<if context="prefix-punctuation">
+			  <text value="Id." font-style="italic"/>
+			</if>
+			<else>
+			  <text value="id." font-style="italic"/>
+			</else>
+		  </choose>
+		</else-if>
+		<else-if position="subsequent">
+		  <text macro="citation-short"/>
+		</else-if>
+		<else>
+		  <text macro="citation-long"/>
+		</else>
+	  </choose>
+    </layout>
+  </citation>
+
+  <bibliography>
+	<layout>
+	  <text macro="citation-long"/>
+	</layout>
+  </bibliography>
+
+</style>
