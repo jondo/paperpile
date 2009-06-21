@@ -44,12 +44,15 @@ sub test : Local {
   }
 
   my $chart = {
-    "bg_colour" => "#FFFFFF",
+    "bg_colour" => "#FFFEEB",
     elements    => [ {
-        type   => 'bar',
+        type   => 'bar_glass',
         alpha  => 0.5,
         colour => "#006AFF",
         values => [@values],
+       "on-show" => { "type" => "grow-up",
+                       "cascade" => 0,
+                       "delay" => 0 }
       },
     ],
     y_axis => {
@@ -57,6 +60,8 @@ sub test : Local {
       'max'         => $values[0] + 10,
       steps         => 5,
       "grid-colour" => "#FFFFFF",
+      "colour"      => "#000000",
+      "font-size"   => 26
     },
 
     #y_legend => { text => 'Number of Publications' },
@@ -65,9 +70,9 @@ sub test : Local {
       labels        => {
         rotate => 315,
         labels => [@labels]
-      }
-      }
-
+      },
+      "colour" => "#000000"
+    },
   };
 
   foreach my $key ( keys %$chart ) {

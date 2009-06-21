@@ -22,6 +22,7 @@ sub insert_entry : Local {
     $output{$pub->sha1}={_imported=>1,
                          citekey=>$pub->citekey,
                          _rowid=>$pub->_rowid,
+                         created=>$pub->created
                         };
   }
 

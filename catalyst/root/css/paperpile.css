@@ -99,9 +99,14 @@ h1 {
     margin: 8 21 !important;
 }
 
-
-
-
+.pp-chart-box {
+    margin: 8;
+    padding:20;
+    border-style:solid;
+    border-width: 1px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+}
 
 .pp-box dl {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;

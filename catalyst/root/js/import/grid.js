@@ -412,8 +412,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     var record=this.store.getAt(this.store.find('sha1',sha1));
                     if (!record) continue;
                     record.beginEdit();
-                    record.set('_imported',1);
                     record.set('citekey',json.data[sha1].citekey);
+                    record.set('created', json.data[sha1].created);
+                    record.set('_imported',1);
                     record.set('_rowid', json.data[sha1]._rowid);
                     record.endEdit();
                 }

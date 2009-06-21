@@ -4,8 +4,10 @@ Paperpile.Statistics = Ext.extend(Ext.Panel, {
     iconCls: 'pp-icon-statistics',
 
     markup: [
+        '<div class="pp-chart-box pp-box-style1">',
         '<div id="container">',
         '<p>INHERE</p>',
+        '</div>',
         '</div>'
     ],
 

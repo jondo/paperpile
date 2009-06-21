@@ -7,8 +7,9 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         // Yellow box
         '<div class="pp-box pp-box-top pp-box-style1"',
         '<dl>',
+        //'<tpl if="citekey"><dt>Key: </dt><dd>[{citekey}]</dd></tpl>',
         '<dt>Type: </dt><dd>{_pubtype_name}</dd>',
-        '<tpl if="_imported"><dt>Imported: </dt><dd>{created}</dd></tpl>',
+        '<tpl if="_imported"><dt>Added: </dt><dd ext:qtip="{createdFull}">{createdPretty}</dd></tpl>',
         '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
         '<tpl if="pmid"><dt>PubMed ID: </dt><dd>{pmid}</dd></tpl>',
         '<dt>Tags: </dt><dd>',
@@ -126,6 +127,11 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         if (!this.multipleSelection){
             this.data=sm.getSelected().data;
             this.data.id=this.id;
+
+            if (this.data.created){
+                this.data.createdPretty = Paperpile.utils.prettyDate(this.data.created);
+                this.data.createdFull = Paperpile.utils.localDate(this.data.created);
+            }
 
             this.grid_id=this.grid.id;
 
