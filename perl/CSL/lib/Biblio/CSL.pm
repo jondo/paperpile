@@ -162,12 +162,6 @@ has '_monthNumbers' => (
     required => 0
 );
 
-# did we parse the date node?
-has '_gotDate' => (
-    is       => 'rw',
-    required => 0
-);
-
 # hash containing info needed for sorting
 # e.g.
 # $self->{_sortInfo}->{_withinSorting}
@@ -211,8 +205,6 @@ sub BUILD {
     $self->{_group}->{'delimiter'} = '';
     
     $self->{_sortInfo}->{_withinSorting} = 0;
-    
-    $self->{_gotDate}=0;
     
     # Zotero outputs full month names
     # therefore we need a mapping to the full names
@@ -1200,7 +1192,7 @@ sub _parseChildElements {
                     $self->_addFix($ptr->{$o}, "prefix");
                     $self->_parseDatePart($mods, $ptr->{$o}->{'date-part'});
                     $self->_addFix($ptr->{$o}, "suffix");
-                    $self->{_gotDate}=1;
+                    
                 }
                 case 'label' {
                     $self->_parseLabel($mods, $ptr->{$o});
@@ -1223,7 +1215,7 @@ sub _parseChildElements {
                 case 'suffix' { # not here, we do it below (=end)
                 }
                 case 'date-part' {
-                    $self->_parseDatePart($mods, $ptr->{$o}) if(! $self->{_gotDate});
+                    #$self->_parseDatePart($mods, $ptr->{$o});
                 }
                 case 'if' {
                     $goOn = $self->_parseIf_elseIf_else($mods, $ptr->{$o}, $goOn, $o);
