@@ -249,8 +249,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
 
 
-
-
         // A bug in ExtJS 2.2 does not allow clearing a multiple selection when an item is clicked
         // This hack should become unnecessary in future versions of ExtJS
         this.on('rowclick', 

@@ -18,7 +18,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                        checked: true,
                        itemId: 'all_nopdf',
                      }, 
-                     { text: 'All fields + PDF fulltext',
+                     { text: 'All + Fulltext',
                        itemId: 'all_pdf',
                      }, 
                      '-', 
@@ -26,7 +26,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                      { text: 'Title',  itemId: 'title' },
                      { text: 'Journal', itemId: 'journal'},
                      { text: 'Abstract', itemId: 'abstract'},
-                     { text: 'PDF fulltext', itemId: 'text'},
+                     { text: 'Fulltext', itemId: 'text'},
                      { text: 'Notes', itemId: 'notes'},
                      { text: 'Year', itemId: 'year'},
                    ]
@@ -37,7 +37,13 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                                                   width: 250,
                                                  });
         var tbar=this.getTopToolbar();
-        tbar.unshift({xtype:'button', text: 'Filter', menu: menu });
+        tbar.unshift({ xtype:'button',
+                       itemId:'filter_button', 
+                       text: 'Filter', 
+                       tooltip: 'Choose field(s) to search',
+                       menu: menu, 
+                     }
+                    );
         tbar.unshift(this.filterField);
 
         this.actions['IMPORT'].hide();
@@ -160,6 +166,10 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
     toggleFilter: function(item, checked){
 
 
+        var filter_button=this.getTopToolbar().items.get('filter_button');
+
+        
+
         // Toggle 'search_pdf' option 
         if (item.itemId == 'all_pdf'){
             this.store.baseParams['plugin_search_pdf']= checked ? 1:0 ;
@@ -178,6 +188,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         }
 
         if (checked){
+            filter_button.setText(item.text);
             this.filterField.onTrigger2Click();
         }
       
