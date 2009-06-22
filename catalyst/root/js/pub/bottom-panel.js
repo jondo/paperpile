@@ -94,7 +94,12 @@ Paperpile.DataTabs = Ext.extend(Ext.Panel, {
             this.layout.setActiveItem('pubnotes');
         }
 
+    },
+
+    showNotes: function(){
+        this.getBottomToolbar().items.get('notes_tab_button').toggle(true);
     }
+
     
 }                                 
  

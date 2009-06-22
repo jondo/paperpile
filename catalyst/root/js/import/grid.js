@@ -176,10 +176,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
             record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
 
+            record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
+
             var t = new Ext.XTemplate(
                 '<div class="pp-grid-info">',
                 '<tpl if="_imported">',
-                '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="{_citekey}"></div>',
+                '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
                 '</tpl>',
                 '<div>',
                 '<tpl if="pdf">',
@@ -232,11 +234,28 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         
         this.on('beforedestroy', this.onClose,this);
 
+        this.on('rowdblclick', 
+                function( grid, rowIndex, e ){
+                    var sm=this.getSelectionModel();
+                    
+                    if (sm.getCount() == 1){
+
+                        if (!sm.getSelected().data._imported){
+                            this.insertEntry();
+                        }
+                    }
+                    
+                }, this);
+
+
+
+
 
         // A bug in ExtJS 2.2 does not allow clearing a multiple selection when an item is clicked
         // This hack should become unnecessary in future versions of ExtJS
         this.on('rowclick', 
                 function( grid, rowIndex, e ){
+
                     if (e.hasModifier()){
                         return;
                     }
@@ -245,6 +264,19 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                         sm.clearSelections();
                     }
                 }, this);
+
+        this.on('click', 
+                function( e ){
+                    if (Ext.get(e.target).hasClass('pp-grid-status-notes')){
+                        this.findParentByType(Paperpile.PubView).items.get('center_panel').items.get('data_tabs').showNotes();
+                    }
+                   
+                    
+                }, this);
+
+
+
+
 
         this.store.on('loadexception', 
                       function(exception, options, response, error){
