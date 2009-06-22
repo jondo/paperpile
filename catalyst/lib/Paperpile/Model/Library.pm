@@ -14,6 +14,7 @@ use Moose;
 use Paperpile::Model::App;
 use Paperpile::Utils;
 use MooseX::Timestamp;
+use Encode qw(encode decode);
 
 with 'Catalyst::Component::InstancePerContext';
 
@@ -1096,12 +1097,16 @@ sub _snippets {
     if ( $snippets{$field} eq '' ) {
       ( my $text ) = $self->dbh->selectrow_array("SELECT $field FROM $table WHERE rowid=$rowid ");
 
-      # TODO: more sophisticated way of generating ends, etc.
+      # Convert to bytes to get offsets exactly
+      $text = encode('UTF-8', $text);
 
       my $from=$3-$context;
       $from=0 if $from<0;
 
       my $snippet = substr( $text, $from, $4+2*$context );
+
+      # Convert back to unicode
+      $snippet = decode('UTF-8', $snippet);
 
       # Remove word fragments at beginning and start
       $snippet=~s/\w+\b//;
