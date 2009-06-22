@@ -91,9 +91,9 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
 
         var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(1)).first(), 
-                                        '<div class="pp-grid-sort-container">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Sort by:</b></div>', true);
+                                        '<div class="pp-grid-sort-container">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>', true);
 
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="journal" status="inactive">Date added</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="journal" status="desc">Date added</div>');
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal" status="inactive">Journal</div>');
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year" status="inactive">Year</div>');
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author" status="inactive">Author</div>');
@@ -119,7 +119,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
         var El = Ext.get(el);
 
-        Ext.each(El.parent().query('*'),
+        Ext.each(El.parent().query('div'),
                  function(item){
                      var l=Ext.get(item);
                      l.removeClass('pp-grid-sort-item');
