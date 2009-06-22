@@ -65,14 +65,15 @@ pub_fields:
   keywords:      "Author key words"
   linkout:       "Website"
   pdf_url:       "PDF URL"
-  notes:         "Notes"
+  note:          "Note"
+  annote:        "Notes"
   tags:          "Tags"
   folders:       "Folders"
 
 
 pub_types:
   ARTICLE:
-    name: "Journal Article"
+    name: "Journal article"
     fields: 
       pubtype:
         label: "Type"
@@ -100,11 +101,13 @@ pub_types:
         label: "DOI"
       url:
         label: "Website"
+      note:
+        label: "Note"
       abstract:
         label: "Abstract"
 
   INCOLLECTION:
-    name: "Book Chapter (named)"
+    name: "Book chapter"
     fields:
       pubtype:
         label: "Type"
@@ -138,11 +141,13 @@ pub_types:
         label: "DOI"
       url:
         label: "Website"
+      note:
+        label: "Note"
       abstract:
         label: "Abstract"
 
   BOOK:
-    name: "Book (whole)"
+    name: "Book"
     fields:
       pubtype:
         label: "Type"
@@ -172,11 +177,13 @@ pub_types:
         label: "DOI"
       url:
         label: "Website"
+      note:
+        label: "Note"
       abstract:
         label: "Abstract"
 
   INBOOK:
-    name: "Book Chapter"
+    name: "In book (chapter, pages...)"
     fields:
       pubtype:
         label: "Type"
@@ -210,11 +217,13 @@ pub_types:
         label: "DOI"
       url:
         label: "Website"
+      note:
+        label: "Note"
       abstract:
         label: "Abstract"
 
   PROCEEDINGS:
-    name: "Conference Proceedings"
+    name: "Conference proceedings"
     fields:
       pubtype:
         label: "Type"
@@ -230,9 +239,16 @@ pub_types:
         label: "Year"
       month:
         label: "Month"
+      doi:
+        label: "DOI"
+      url:
+        label: "Website"
+      note:
+        label: "Note"
+
 
   INPROCEEDINGS:
-    name: "Conference Paper"
+    name: "Conference paper"
     fields:
       pubtype:
         label: "Type"
@@ -254,9 +270,16 @@ pub_types:
         label: "Year"
       month:
         label: "Month"
+      doi:
+        label: "DOI"
+      url:
+        label: "Website"
+      note:
+        label: "Note"
+
 
   MASTERSTHESIS:
-    name: "Master's Thesis"
+    name: "Master's thesis"
     fields:
       pubtype:
         label: "Type"
@@ -270,9 +293,12 @@ pub_types:
         label: "Year"
       month:
         label: "Month"
+      note:
+        label: "Note"
+
 
   PHDTHESIS:
-    name: "PhD Thesis"
+    name: "PhD thesis"
     fields:
       pubtype:
         label: "Type"
@@ -286,9 +312,12 @@ pub_types:
         label: "Year"
       month:
         label: "Month"
+      note:
+        label: "Note"
+
 
   MANUAL:
-    name: "Technical Documentation"
+    name: "Technical documentation"
     fields:
       title:
         label: "Title"
@@ -304,6 +333,9 @@ pub_types:
         label: "Year"
       month:
         label: "Month"
+      note:
+        label: "Note"
+
 
   MISC:
     name: "Other"
@@ -318,6 +350,9 @@ pub_types:
         label: "Year"
       month:
         label: "Month"
+      note:
+        label: "Note"
+
 
   UNPUBLISHED:
     name: "Unpublished"
@@ -330,3 +365,6 @@ pub_types:
         label: "Year"
       month:
         label: "Month"
+      note:
+        label: "Note"
+

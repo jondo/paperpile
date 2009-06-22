@@ -45,7 +45,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         // If we are viewing a virtual folders we need an additional
         // button to remove an entry from a virtual folder
 
-        if (this.plugin_base_query.match('^folders:')){
+        if (this.plugin_base_query.match('^folder:')){
 
 
             this.actions['DELETE_FROM_FOLDER']= new Ext.Action({
@@ -194,7 +194,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         
         var selection=this.getSelection();
 
-        var match=this.plugin_base_query.match('folders:(.*)$');
+        var match=this.plugin_base_query.match('folder:(.*)$');
 
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/delete_from_folder'),

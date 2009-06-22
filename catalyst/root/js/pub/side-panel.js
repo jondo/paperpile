@@ -12,10 +12,10 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<tpl if="_imported"><dt>Added: </dt><dd ext:qtip="{createdFull}">{createdPretty}</dd></tpl>',
         '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
         '<tpl if="pmid"><dt>PubMed ID: </dt><dd>{pmid}</dd></tpl>',
-        '<dt>Tags: </dt><dd>',
+        '<dt>Labels: </dt><dd>',
         '<div id="tag-container-{id}" class="pp-tag-container"></div>',
         '<div id="tag-control-{id}" class="pp-tag-control"></div>',
-        '<div id="tag-add-link-{id}" ><a href="#" class="pp-textlink">Add&nbsp;tag</a></div>',
+        '<div id="tag-add-link-{id}" ><a href="#" class="pp-textlink">Add&nbsp;Label</a></div>',
         '</dd>',
         '</dl>',
         '</div>',
@@ -124,7 +124,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         this.multipleSelection=(numSelected > 1 );
         
-        if (!this.multipleSelection){
+        if (numSelected == 1){
             this.data=sm.getSelected().data;
             this.data.id=this.id;
 
@@ -160,11 +160,16 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                 this.installEvents();
                 this.renderTags();
             }
-        } else { // single selection
+        } 
 
+        if (numSelected > 1) {
             this.tplMultiple.overwrite(this.body, {numSelected: numSelected, id: this.id}, true);
-            //this.installEvents();
             this.showTagControls();
+        }
+
+        if (numSelected == 0) {
+            var empty = new Ext.Template('');
+            empty.overwrite(this.body);
         }
    	},
 
@@ -270,6 +275,9 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         for (var i =0; i< tags.length; i++){
 
             var name = tags[i];
+
+            //name=name.replace(/ +/g,"&nbsp;");
+
             var style = '0';
             if (store.getAt(store.find('tag',name))){
                 style=store.getAt(store.find('tag',name)).get('style');
@@ -364,7 +372,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         var button = new Ext.Button({
             id: 'tag-control-ok-'+this.id,
-            text: 'Add Tag',
+            text: 'Add Label',
         });
 
         button.render(Ext.DomHelper.append('tag-control-'+this.id,

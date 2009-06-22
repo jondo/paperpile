@@ -46,44 +46,38 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
             numSelected=this.grid.store.getTotalCount();
         }
 
-        this.multipleSelection=(numSelected > 1 );
+        if (numSelected==1){
 
-        this.data=sm.getSelected().data;
+            this.data=sm.getSelected().data;
 
-        /*
-        if (!this.multipleSelection){
-        
-            this.data.id=this.id;
-
-            this.grid_id=this.grid.id;
-
-            this.data._pubtype_name=Paperpile.main.globalSettings.pub_types[this.data.pubtype].name;
-
-            this.tpl.overwrite(this.body, this.data, true);
-        }
-*/
-        var currFields=Paperpile.main.globalSettings.pub_types[this.data.pubtype];
+            var currFields=Paperpile.main.globalSettings.pub_types[this.data.pubtype];
      
-        var allFields=['title', 'authors','booktitle','series','editors',
-                       'howpublished','school','journal', 'chapter', 'edition', 
-                       'volume', 'issue', 'pages', 'year', 'month', 'day', 
-                       'publisher', 'organization','address', 'issn', 'isbn', 
-                       'pmid', 'doi', 'url'];
+            var allFields=['title', 'authors','booktitle','series','editors',
+                           'howpublished','school','journal', 'chapter', 'edition', 
+                           'volume', 'issue', 'pages', 'year', 'month', 'day', 
+                           'publisher', 'organization','address', 'issn', 'isbn', 
+                           'pmid', 'doi', 'url','note'];
 
-        var list=[];
+            var list=[];
 
-        for (i=0;i<allFields.length;i++){
-            if (currFields.fields[allFields[i]]){
-                var value=this.data[allFields[i]];
-                if (!value) value='&nbsp';
+            for (i=0;i<allFields.length;i++){
+                if (currFields.fields[allFields[i]]){
+                    var value=this.data[allFields[i]];
+                    if (!value) value='&nbsp';
                 
-                list.push({label: currFields.fields[allFields[i]].label,
-                           value: value
-                          });
+                    list.push({label: currFields.fields[allFields[i]].label,
+                               value: value
+                              });
+                }
             }
-        }
 
-        this.tpl.overwrite(this.body, {pubtype: currFields.name, citekey: this.data.citekey, fields:list}, true);
+            this.tpl.overwrite(this.body, {pubtype: currFields.name, citekey: this.data.citekey, fields:list}, true);
+        } else {
+
+            var empty = new Ext.Template('');
+            empty.overwrite(this.body);
+
+        }
 
    	},
 });

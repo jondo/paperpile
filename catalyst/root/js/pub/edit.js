@@ -42,6 +42,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
             },
             frame:true,
             border:0,
+            autoScroll:true,
             items:[
                 {xtype:'combo',
                  itemId:'pubtype',
@@ -98,6 +99,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                 {name:'doi'},
                 {name:'url'},
                 {name:'abstract', xtype:'textarea', height:'100'},
+                {name:'note'},
             ],
 
             bbar:[{xtype:'tbfill'},

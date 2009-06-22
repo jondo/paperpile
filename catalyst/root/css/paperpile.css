@@ -401,7 +401,7 @@ a:hover.pp-textlink {
 }
 
 .pp-icon-import-pdf{
-    background-image: url('/images/icons/pdf_white.png')!important;
+    background-image: url('/images/icons/page_white_acrobat.png')!important;
 }
 
 .pp-icon-import-file{
@@ -495,7 +495,7 @@ a:hover.pp-textlink {
 }
 
 .pp-grid-status-imported {
-    background: transparent url('/images/icons/imported.gif') no-repeat;
+    background: transparent url('/images/icons/page.png') no-repeat;
 }
 
 .pp-grid-data{
@@ -669,7 +669,11 @@ div:hover.pp-grid-sort-item {
 
 
 /* Tag display/control in right side-panel */
-.pp-tag-container {}
+.pp-tag-container {
+    line-height: 1em;
+    white-space: nowrap;
+
+}
 
 .pp-tag-control{}
 

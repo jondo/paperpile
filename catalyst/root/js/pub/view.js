@@ -81,16 +81,12 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
     },
     
 
-    onRowSelect: function(sm, rowIdx, r) {
-
-        Ext.getCmp('statusbar').clearStatus();
-        Ext.getCmp('statusbar').setText(r.data.sha1);
+    onRowSelect: function() {
 
         var datatabs=this.items.get('center_panel').items.get('data_tabs');
 
-        datatabs.items.get('pubsummary').updateDetail(r.data);
-        datatabs.items.get('pubnotes').updateDetail(r.data);        
-
+        datatabs.items.get('pubsummary').updateDetail();
+        datatabs.items.get('pubnotes').updateDetail();        
         this.items.get('east_panel').items.get('overview').updateDetail();
         this.items.get('east_panel').items.get('details').updateDetail();
     },

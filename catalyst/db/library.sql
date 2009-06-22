@@ -13,9 +13,9 @@ CREATE TABLE Publications(
   attachments        INTEGER
 );
 
-CREATE VIRTUAL TABLE Fulltext_full using fts3(text,abstract,notes,title,key,author,tags,folders,year,journal);
+CREATE VIRTUAL TABLE Fulltext_full using fts3(text,abstract,notes,title,key,author,label,keyword,folder,year,journal);
 
-CREATE VIRTUAL TABLE Fulltext_citation using fts3(abstract,notes,title,key,author,tags,folders,year,journal);
+CREATE VIRTUAL TABLE Fulltext_citation using fts3(abstract,notes,title,key,author,label,keyword,folder,year,journal);
 
 CREATE TABLE Fields(
   field             TEXT,

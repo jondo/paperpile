@@ -239,6 +239,7 @@ sub _read_xml {
     my $title    = $cit->{Article}->{ArticleTitle};
     my $status   = $article->{PubmedData}->{PublicationStatus};
     my $journal  = $cit->{MedlineJournalInfo}->{MedlineTA};
+    my $issn     = $cit->{Article}->{Journal}->{ISSN}->{content};
 
     my $doi = $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
 
@@ -250,6 +251,8 @@ sub _read_xml {
     $pub->abstract($abstract) if $abstract;
     $pub->title($title)       if $title;
     $pub->doi($doi)           if $doi;
+    $pub->issn($issn)         if $issn;
+
 
     if ($journal) {
       my $jid = $journal;

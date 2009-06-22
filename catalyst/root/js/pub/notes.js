@@ -1,13 +1,13 @@
 
 Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 	markup: [
-        '<tpl if="notes">',
+        '<tpl if="annote">',
         '<div class="pp-action pp-action-edit-notes">',
         '<a href="#" class="pp-textlink" id="edit-notes-{id}">Edit Notes</a>',
         '</div>',
-        '<div class="pp-notes">{notes}</div>',
+        '<div class="pp-notes">{annote}</div>',
         '</tpl>',
-        '<tpl if="!notes">',
+        '<tpl if="!annote">',
         '<div class="pp-action-big pp-action-add-notes" id="add-notes-{id}">',
         '<a href="#" class="pp-textlink">Add notes</a>',
         '</div>',
@@ -33,14 +33,30 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 	},
     
 	updateDetail: function(data) {
-        this.data=data;
 
-        var tpl=new Ext.XTemplate(this.markup);
+        if (!this.grid){
+            this.grid=this.findParentByType(Ext.PubView).items.get('center_panel').items.get('grid');
+        }
 
-        this.data.id=this.id;
-		tpl.overwrite(this.body, this.data);
+        sm=this.grid.getSelectionModel();
+        var numSelected=sm.getCount();
+        if (this.grid.allSelected){
+            numSelected=this.grid.store.getTotalCount();
+        }
 
-        this.installEvents();
+        if (numSelected==1){
+            this.data=sm.getSelected().data;
+  
+            var tpl=new Ext.XTemplate(this.markup);
+
+            this.data.id=this.id;
+		    tpl.overwrite(this.body, this.data);
+
+            this.installEvents();
+        } else {
+            var empty = new Ext.Template('');
+            empty.overwrite(this.body);
+        }
 
 	},
 
@@ -58,7 +74,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
     editNotes: function(){
        
         this.editor=new Ext.form.HtmlEditor(
-            {value: this.data.notes,
+            {value: this.data.annote,
              itemId:'html_editor',
             }
         );
@@ -81,7 +97,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
         this.spot.show(this.ownerCt.id);
 
         // Does not work, don't know why
-        editor.focus();
+        //editor.focus();
         
     },
 
@@ -97,7 +113,8 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
                     },
             method: 'GET',
             success: function(){
-                this.data.notes=newNotes,
+                var record=this.grid.getStore().getAt(this.grid.getStore().find('sha1',this.data.sha1));
+                record.set('annote',newNotes);
                 this.closeEditor();
             },
             scope: this

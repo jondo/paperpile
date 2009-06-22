@@ -21,11 +21,27 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
         
 	},
 
-    updateDetail: function(data, needsUpdate) {
-        this.data=data;
-        this.data.id=this.id;
-		this.abstractTemplate.overwrite(this.body, data);		
+    updateDetail: function() {
 
+        if (!this.grid){
+            this.grid=this.findParentByType(Ext.PubView).items.get('center_panel').items.get('grid');
+        }
+
+        sm=this.grid.getSelectionModel();
+        var numSelected=sm.getCount();
+        if (this.grid.allSelected){
+            numSelected=this.grid.store.getTotalCount();
+        }
+
+        if (numSelected==1){
+            this.data=sm.getSelected().data;
+            this.data.id=this.id;
+		    this.abstractTemplate.overwrite(this.body, this.data);
+        } else {
+
+            var empty = new Ext.Template('');
+            empty.overwrite(this.body);
+        }
     }
 
 });

@@ -443,8 +443,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 					fn: function(){
                         var path=this.relativeFolderPath(newNode);
                         newNode.plugin_title=newNode.text;
-                        newNode.plugin_query='folders:'+newNode.id
-                        newNode.plugin_base_query='folders:'+newNode.id
+                        newNode.plugin_query='folder:'+newNode.id
+                        newNode.plugin_base_query='folder:'+newNode.id
                         this.onNewFolder(newNode);
                     }
 				}
@@ -659,7 +659,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         
 		node.expand(false, false, function(n) {
 		    
-			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Tag', 
+			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Label', 
                                                                  iconCls:'pp-icon-empty', 
                                                                  tagStyle:0,
                                                                  cls: 'pp-tag-tree-node pp-tag-tree-style-0',
@@ -764,10 +764,10 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                 grid.store.fireEvent('datachanged',this.store);
 
                                 // If a entry is selected in a tab, also update the display
-                                var pdf_manager=item.items.get('east_panel').items.get('pdf_manager');
+                                var sidepanel=item.items.get('east_panel').items.get('overview');
                                 var selected=grid.getSelectionModel().getSelected();
                                 if (selected){
-                                    pdf_manager.updateDetail();
+                                    sidepanel.updateDetail();
                                 }
                             }
                         );
@@ -800,10 +800,10 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                     el.addClass('pp-tag-style-'+number);
                                 }
                                 var grid=item.items.get('center_panel').items.get('grid');
-                                var pdf_manager=item.items.get('east_panel').items.get('pdf_manager');
+                                var sidepanel=item.items.get('east_panel').items.get('overview');
                                 var selected=grid.getSelectionModel().getSelected();
                                 if (selected){
-                                    pdf_manager.updateDetail(selected.data, true);
+                                    sidepanel.updateDetail(selected.data, true);
                                 }
                             }
                         );
@@ -867,10 +867,10 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                             grid.store.fireEvent('datachanged',this.store);
 
                                             // If a entry is selected in a tab, also update the display
-                                            var pdf_manager=item.items.get('east_panel').items.get('pdf_manager');
+                                            var sidepanel=item.items.get('east_panel').items.get('sidepanel');
                                             var selected=grid.getSelectionModel().getSelected();
                                             if (selected){
-                                                pdf_manager.updateDetail();
+                                                sidepanel.updateDetail();
                                             }
                                         }
                                     );
@@ -1094,7 +1094,7 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
 
         Ext.apply(config,{items:[
             { id: 'tags_menu_new',
-              text:'New Tag',
+              text:'New Label',
               handler: tree.newTag,
               scope: tree
             },

@@ -139,10 +139,11 @@ sub insert_pubs {
       journal  => $pub->journal,
       title    => $pub->title,
       abstract => $pub->abstract,
-      notes    => $pub->notes,
+      notes    => $pub->annote,
       author   => $pub->_authors_display,
-      tags     => $pub->tags,
-      folders  => $pub->folders,
+      label    => $pub->tags,
+      keyword  => $pub->keywords,
+      folder   => $pub->folders,
       text     => '',
     };
 
@@ -303,8 +304,8 @@ sub update_tags {
 
   # First update flat field in Publication and Fulltext tables
   $self->update_field('Publications',$pub_rowid,'tags',$tags);
-  $self->update_field('Fulltext_full',$pub_rowid,'tags',$tags);
-  $self->update_field('Fulltext_citation',$pub_rowid,'tags',$tags);
+  $self->update_field('Fulltext_full',$pub_rowid,'label',$tags);
+  $self->update_field('Fulltext_citation',$pub_rowid,'label',$tags);
 
   # Remove all connections form Tag_Publication table
   my $sth=$self->dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
@@ -367,8 +368,8 @@ sub delete_tag {
     $new_tags =~s/,$tag$//;
 
     $self->update_field('Publications',$publication_id,'tags',$new_tags);
-    $self->update_field('Fulltext_full',$publication_id,'tags',$new_tags);
-    $self->update_field('Fulltext_citation',$publication_id,'tags',$new_tags);
+    $self->update_field('Fulltext_full',$publication_id,'label',$new_tags);
+    $self->update_field('Fulltext_citation',$publication_id,'label',$new_tags);
 
   }
 
@@ -402,14 +403,12 @@ sub rename_tag {
     $new_tags =~s/,$old_tag$/,$new_tag/;
 
     $self->update_field('Publications',$publication_id,'tags',$new_tags);
-    $self->update_field('Fulltext_full',$publication_id,'tags',$new_tags);
-    $self->update_field('Fulltext_citation',$publication_id,'tags',$new_tags);
+    $self->update_field('Fulltext_full',$publication_id,'label',$new_tags);
+    $self->update_field('Fulltext_citation',$publication_id,'label',$new_tags);
 
   }
 
   $self->update_field('Tags',$old_tag_id,'tag', $new_tag);
-
-  #$self->dbh->do("DELETE FROM Tags WHERE rowid=$tag_id");
 
 }
 
@@ -444,8 +443,8 @@ sub update_folders {
 
   # First update flat field in Publication and Fulltext tables
   $self->update_field('Publications',$pub_rowid,'folders',$folders);
-  $self->update_field('Fulltext_full',$pub_rowid,'folders',$folders);
-  $self->update_field('Fulltext_citation',$pub_rowid,'folders',$folders);
+  $self->update_field('Fulltext_full',$pub_rowid,'folder',$folders);
+  $self->update_field('Fulltext_citation',$pub_rowid,'folder',$folders);
 
   # Remove all connections from Folder_Publication table
   my $sth=$self->dbh->do("DELETE FROM Folder_Publication WHERE publication_id=$pub_rowid");
@@ -454,7 +453,6 @@ sub update_folders {
   # new connections in Folder_Publication table
 
   my $select=$self->dbh->prepare("SELECT rowid FROM Folders WHERE folder_id=?");
-  #my $insert=$self->dbh->prepare("INSERT INTO Folders (folder) VALUES(?)");
   my $connection=$self->dbh->prepare("INSERT INTO Folder_Publication (folder_id, publication_id) VALUES(?,?)");
 
   foreach my $folder (@folders){
@@ -488,8 +486,8 @@ sub delete_folder {
 
   #  Update flat fields in Publication table and Fulltext table
   my $update1 = $self->dbh->prepare("UPDATE Publications SET folders=? WHERE rowid=?");
-  my $update2 = $self->dbh->prepare("UPDATE Fulltext_full SET folders=? WHERE rowid=?");
-  my $update3 = $self->dbh->prepare("UPDATE Fulltext_citation SET folders=? WHERE rowid=?");
+  my $update2 = $self->dbh->prepare("UPDATE Fulltext_full SET folder=? WHERE rowid=?");
+  my $update3 = $self->dbh->prepare("UPDATE Fulltext_citation SET folder=? WHERE rowid=?");
 
   foreach my $id (@$folder_ids) {
 
@@ -655,8 +653,7 @@ sub fulltext_search {
      offsets($table) as offsets,
      publications.rowid as _rowid,
      publications.title as title,
-     publications.abstract as abstract,
-     publications.notes as notes
+     publications.abstract as abstract
      FROM Publications JOIN $table
      ON publications.rowid=$table.rowid $where ORDER BY $order LIMIT $limit OFFSET $offset"
   );
@@ -683,10 +680,9 @@ sub fulltext_search {
         next;
       }
 
-      next if $field ~~ [ 'author', 'text' ];    # fields only in
-                                                 # fulltext, named
-                                                 # differently or absent
-                                                 # in Publications table
+      # fields only in fulltext, named differently or absent in
+      # Publications table
+      next if $field ~~ [ 'author', 'text', 'notes', 'label', 'folder'];
       my $value = $row->{$field};
 
       $field = 'citekey' if $field eq 'key';     # citekey is called 'key'
@@ -694,7 +690,6 @@ sub fulltext_search {
                                                  # convenience
 
       if ($value) {
-
         $pub->$field($value);
       }
     }
@@ -864,8 +859,8 @@ sub delete_from_folder {
   $newFolders=$self->dbh->quote($newFolders);
 
   $self->dbh->do("UPDATE Publications SET folders=$newFolders WHERE rowid=$row_id");
-  $self->dbh->do("UPDATE fulltext_full SET folders=$newFolders WHERE rowid=$row_id");
-  $self->dbh->do("UPDATE fulltext_citation SET folders=$newFolders WHERE rowid=$row_id");
+  $self->dbh->do("UPDATE fulltext_full SET folder=$newFolders WHERE rowid=$row_id");
+  $self->dbh->do("UPDATE fulltext_citation SET folder=$newFolders WHERE rowid=$row_id");
   $self->dbh->do("DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)");
 
 }
@@ -1058,7 +1053,7 @@ sub _snippets {
   my @terms=split(/\s+/,$query);
   @terms=($query) if (not @terms);
 
-  foreach my $field (qw/key year journal title abstract notes author tags folders text/){
+  foreach my $field (qw/key year journal title abstract notes author label keyword folder text/){
     $query=~s/$field://g;
   }
 

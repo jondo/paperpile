@@ -54,7 +54,7 @@ sub get_default_tree : Private {
   #### / Local Library / Tags
 
   my $tags = Tree::Simple->new( {
-      text    => 'Tags',
+      text    => 'Labels',
       type    => "TAGS",
       iconCls => 'pp-icon-tag',
       hidden  => 0,
@@ -162,6 +162,7 @@ sub get_default_tree : Private {
         text    => 'Import PDFs',
         type    => 'PDFEXTRACT',
         iconCls => 'pp-icon-import-pdf',
+        qtip => 'Import one or more PDFs to your library',
         hidden  => 0,
       }
     )
@@ -172,6 +173,7 @@ sub get_default_tree : Private {
         text    => 'Import File',
         type    => 'FILE_IMPORT',
         iconCls => 'pp-icon-import-file',
+        qtip => 'Import references from EndNote, BibTeX <br> and other bibliography files.',
         hidden  => 0,
       }
     )
@@ -229,7 +231,7 @@ sub get_tags : Private {
   }
 
   if ( not @tags ) {
-    push @tags, {tag=>'No tags',style=>'0'};
+    #push @tags, {tag=>'No labels',style=>'0'};
   }
 
   # Add tags
@@ -244,8 +246,8 @@ sub get_tags : Private {
           tagStyle         => $tag->{style},
           plugin_name       => 'DB',
           plugin_mode       => 'FULLTEXT',
-          plugin_query      => "tags:".$tag->{tag},
-          plugin_base_query => "tags:".$tag->{tag},
+          plugin_query      => "label:".$tag->{tag},
+          plugin_base_query => "label:".$tag->{tag},
           plugin_title      => $tag->{tag},
           plugin_iconCls    => 'pp-icon-tag',
         }

@@ -40,8 +40,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 scope: this,
                 cls: 'x-btn-text-icon add',
                 disabled:true,
-                itemId:'new_button'
-                
+                itemId:'new_button',
+                tooltip: 'Create a new reference and add it to your library',
             }),
             
             'EDIT': new Ext.Action({
@@ -50,7 +50,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 scope: this,
                 cls: 'x-btn-text-icon edit',
                 disabled:true,
-                itemId:'edit_button'
+                itemId:'edit_button',
+                tooltip: 'Edit citation data of the selected reference',
             }),
 
             'DELETE': new Ext.Action({
@@ -59,16 +60,18 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 scope: this,
                 cls: 'x-btn-text-icon delete',
                 disabled:true,
-                itemId:'delete_button'
+                itemId:'delete_button',
+                tooltip: 'Delete the selected references from your library',
             }),
 
             'IMPORT': new Ext.Action({
-                text: 'Import',
+                text: 'Add',
                 handler: function() {this.insertEntry()},
                 scope: this,
                 cls: 'x-btn-text-icon add',
                 disabled:true,
-                itemId:'import_button'
+                itemId:'import_button',
+                tooltip: 'Add the selected references to your library.',
             }),
             
             'EXPORT': new Ext.Action({
@@ -137,7 +140,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             // Can possibly be speeded up with compiling the template.
 
-            record.data._notes_tip=Ext.util.Format.stripTags(record.data.notes);
+            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
             record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
 
             var t = new Ext.XTemplate(
@@ -170,7 +173,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             // Can possibly be speeded up with compiling the template.
 
-            record.data._notes_tip=Ext.util.Format.stripTags(record.data.notes);
+            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
             record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
 
             var t = new Ext.XTemplate(
@@ -185,7 +188,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 '<tpl if="attachments">',
                 '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
                 '</tpl>',
-                '<tpl if="notes">',
+                '<tpl if="annote">',
                 '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
                 '</tpl>',
                 '</div>',
@@ -303,7 +306,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         if (selected > 1 ){
             this.actions['EDIT'].disable();
             this.actions['DELETE'].setDisabled(imported==0);
-            this.actions['IMPORT'].setDisabled(imported==0);
+            this.actions['IMPORT'].setDisabled(notImported==0);
         }
 
         this.actions['SELECT_ALL'].setDisabled(this.allSelected);
@@ -362,9 +365,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             var sha1=this.getSelectionModel().getSelected().data.sha1;
         
-            Ext.getCmp('statusbar').setText('Downloading details');
-            Ext.getCmp('statusbar').showBusy();
-        
+       
             Ext.Ajax.request({
                 url: Paperpile.Url('/ajax/crud/complete_entry'),
                 params: { sha1: sha1,
@@ -379,7 +380,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                         record.set(i,json.data[i]);
                     }
                     record.endEdit();
-                    Ext.getCmp('statusbar').clearStatus();
                 },
                 scope:this
             });
@@ -397,6 +397,20 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var selection=this.getSelection('NOT_IMPORTED');
 
         if (selection.length==0) return;
+
+        var many=false;
+
+        if (selection == 'ALL'){
+            many=true;
+        } else {
+            if (selection.length > 10){
+                many=true;
+            }
+        }
+
+        if (many){
+            Paperpile.status.showBusy('Importing references to library');
+        }
         
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/insert_entry'),
@@ -427,6 +441,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     console.log(callback);
                     callback.createDelegate(scope,[json.data])();
                 }
+                
+                Paperpile.status.clearMsg();
 
             },
             scope:this
@@ -440,6 +456,20 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         var index=this.store.indexOf(this.getSelectionModel().getSelected());
 
+        var many=false;
+
+        if (selection == 'ALL'){
+            many=true;
+        } else {
+            if (selection.length > 10){
+                many=true;
+            }
+        }
+
+        if (many){
+            Paperpile.status.showBusy('Delete references from library');
+        }
+
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/delete_entry'),
             params: { selection: selection,
@@ -448,6 +478,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             method: 'GET',
             success: function(){
                 this.updateButtons();
+                this.store.suspendEvents();
                 if (selection == 'ALL'){
                     this.store.removeAll();
                 } else {
@@ -456,9 +487,17 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     }
                     this.getSelectionModel().selectRow(index);
                 }
-                
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Entry deleted.');
+
+                this.store.resumeEvents();
+                this.store.fireEvent('datachanged',this.store);
+
+                if (this.getSelectionModel().getCount()==0){
+                    var container= this.findParentByType(Paperpile.PubView);
+                    container.onRowSelect();
+                }
+
+                Paperpile.status.clearMsg();
+
             },
             scope: this
         });
@@ -491,7 +530,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                                   east_panel.remove('pub_edit');
                                                   if (oldSize<500) east_panel.setSize(oldSize);
                                                   east_panel.doLayout();
-                                                  east_panel.getLayout().setActiveItem('pdf_manager');
+                                                  east_panel.getLayout().setActiveItem('overview');
                                                   east_panel.showBbar();
                                               },
                                               scope:this
@@ -515,7 +554,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                                   east_panel.remove('pub_edit');
                                                   if (oldSize<500) east_panel.setSize(oldSize);
                                                   east_panel.doLayout();
-                                                  east_panel.getLayout().setActiveItem('pdf_manager');
+                                                  east_panel.getLayout().setActiveItem('overview');
                                                   east_panel.showBbar();
                                               },
                                               scope:this

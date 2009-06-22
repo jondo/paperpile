@@ -127,7 +127,7 @@ sub update_notes : Local {
   my $sha1  = $c->request->params->{sha1};
   my $html  = $c->request->params->{html};
 
-  $c->model('Library')->update_field( 'Publications', $rowid, 'notes', $html );
+  $c->model('Library')->update_field( 'Publications', $rowid, 'annote', $html );
 
   my $tree      = HTML::TreeBuilder->new->parse($html);
   my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
@@ -190,12 +190,15 @@ sub remove_tag : Local {
 
   foreach my $pub (@$data) {
     my $new_tags = $pub->tags;
+    print STDERR "======> $new_tags $tag\n";
+
     $new_tags =~ s/^$tag,//g;
     $new_tags =~ s/^$tag$//g;
     $new_tags =~ s/,$tag$//g;
     $new_tags =~ s/,$tag,/,/g;
     $c->model('Library')->update_tags( $pub->_rowid, $new_tags );
     $pub->tags($new_tags);
+    print STDERR "======> $new_tags\n";
     $output{$pub->sha1}={tags=>$new_tags};
 
   }
