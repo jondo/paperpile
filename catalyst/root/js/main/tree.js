@@ -685,8 +685,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 					single:true,
 					fn: function(){
                         newNode.plugin_title=newNode.text;
-                        newNode.plugin_query='tags:'+newNode.text
-                        newNode.plugin_base_query='tags:'+newNode.text
+                        newNode.plugin_query='label:'+newNode.text
+                        newNode.plugin_base_query='label:'+newNode.text
                         this.onNewTag(newNode);
                     }
 				}
