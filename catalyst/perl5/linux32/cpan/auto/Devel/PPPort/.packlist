@@ -1,0 +1,3 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Devel/PPPort.pm relocate_as=../../../Devel/PPPort.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/Devel/PPPort/PPPort.bs relocate_as=PPPort.bs
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/Devel/PPPort/PPPort.so relocate_as=PPPort.so

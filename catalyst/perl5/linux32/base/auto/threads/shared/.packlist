@@ -1,0 +1,3 @@
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/threads/shared/shared.bs relocate_as=shared.bs
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/threads/shared/shared.so relocate_as=shared.so
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/threads/shared.pm relocate_as=../../../threads/shared.pm

@@ -1,0 +1,8 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/IO/AtomicFile.pm relocate_as=../../../IO/AtomicFile.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/IO/InnerFile.pm relocate_as=../../../IO/InnerFile.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/IO/Lines.pm relocate_as=../../../IO/Lines.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/IO/Scalar.pm relocate_as=../../../IO/Scalar.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/IO/ScalarArray.pm relocate_as=../../../IO/ScalarArray.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/IO/Stringy.pm relocate_as=../../../IO/Stringy.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/IO/Wrap.pm relocate_as=../../../IO/Wrap.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/IO/WrapTie.pm relocate_as=../../../IO/WrapTie.pm

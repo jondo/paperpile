@@ -1,0 +1,4 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Path/Class.pm relocate_as=../../../Path/Class.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Path/Class/Dir.pm relocate_as=../../../Path/Class/Dir.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Path/Class/Entity.pm relocate_as=../../../Path/Class/Entity.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Path/Class/File.pm relocate_as=../../../Path/Class/File.pm

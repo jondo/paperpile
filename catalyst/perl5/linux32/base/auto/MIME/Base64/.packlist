@@ -1,0 +1,4 @@
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/MIME/Base64.pm relocate_as=../../../MIME/Base64.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/MIME/QuotedPrint.pm relocate_as=../../../MIME/QuotedPrint.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/MIME/Base64/Base64.bs relocate_as=Base64.bs
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/MIME/Base64/Base64.so relocate_as=Base64.so

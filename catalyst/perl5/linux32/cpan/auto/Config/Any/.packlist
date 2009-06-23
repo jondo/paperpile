@@ -1,0 +1,8 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Config/Any.pm relocate_as=../../../Config/Any.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Config/Any/Base.pm relocate_as=../../../Config/Any/Base.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Config/Any/General.pm relocate_as=../../../Config/Any/General.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Config/Any/INI.pm relocate_as=../../../Config/Any/INI.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Config/Any/JSON.pm relocate_as=../../../Config/Any/JSON.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Config/Any/Perl.pm relocate_as=../../../Config/Any/Perl.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Config/Any/XML.pm relocate_as=../../../Config/Any/XML.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Config/Any/YAML.pm relocate_as=../../../Config/Any/YAML.pm

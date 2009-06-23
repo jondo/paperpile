@@ -1,0 +1,13 @@
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO.pm relocate_as=../../IO.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/Dir.pm relocate_as=../../IO/Dir.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/File.pm relocate_as=../../IO/File.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/Handle.pm relocate_as=../../IO/Handle.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/Pipe.pm relocate_as=../../IO/Pipe.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/Poll.pm relocate_as=../../IO/Poll.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/Seekable.pm relocate_as=../../IO/Seekable.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/Select.pm relocate_as=../../IO/Select.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/Socket.pm relocate_as=../../IO/Socket.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/Socket/INET.pm relocate_as=../../IO/Socket/INET.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/IO/Socket/UNIX.pm relocate_as=../../IO/Socket/UNIX.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/IO/IO.bs relocate_as=IO.bs
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/IO/IO.so relocate_as=IO.so

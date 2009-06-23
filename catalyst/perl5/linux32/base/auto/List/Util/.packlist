@@ -1,0 +1,7 @@
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/List/Util.pm relocate_as=../../../List/Util.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/List/Util/PP.pm relocate_as=../../../List/Util/PP.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/List/Util/XS.pm relocate_as=../../../List/Util/XS.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/Scalar/Util.pm relocate_as=../../../Scalar/Util.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/Scalar/Util/PP.pm relocate_as=../../../Scalar/Util/PP.pm
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/List/Util/Util.bs relocate_as=Util.bs
+/home/wash/play/paperpile/catalyst/perl5/linux32/base/auto/List/Util/Util.so relocate_as=Util.so
