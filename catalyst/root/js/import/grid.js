@@ -232,20 +232,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         Paperpile.PluginGrid.superclass.initComponent.apply(this, arguments);
 
         
-        this.on('beforedestroy', this.onClose,this);
+        this.on('beforedestroy', this.onClose, this);
 
-        this.on('rowdblclick', 
-                function( grid, rowIndex, e ){
-                    var sm=this.getSelectionModel();
-                    
-                    if (sm.getCount() == 1){
-
-                        if (!sm.getSelected().data._imported){
-                            this.insertEntry();
-                        }
-                    }
-                    
-                }, this);
+        this.on('rowdblclick', this.onDblClick, this);
 
 
 
@@ -268,8 +257,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     if (Ext.get(e.target).hasClass('pp-grid-status-notes')){
                         this.findParentByType(Paperpile.PubView).items.get('center_panel').items.get('data_tabs').showNotes();
                     }
-                   
-                    
                 }, this);
 
 
@@ -388,14 +375,17 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     // without harassing the site too much. Then the details are
     // fetched only when user clicks the entry.
        
-    completeEntry: function(){
+    completeEntry: function(callback,scope){
+
+        var data=this.getSelectionModel().getSelected().data;
 
         // _details_link indicates if an entry still needs to be completed or not
-        if (this.getSelectionModel().getSelected().data._details_link){
+        if (data._details_link){
+
+            Paperpile.status.showBusy('Looking up bibliographic data');
 
             var sha1=this.getSelectionModel().getSelected().data.sha1;
         
-       
             Ext.Ajax.request({
                 url: Paperpile.Url('/ajax/crud/complete_entry'),
                 params: { sha1: sha1,
@@ -410,10 +400,20 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                         record.set(i,json.data[i]);
                     }
                     record.endEdit();
+
+                    this.findParentByType(Paperpile.PubView).onRowSelect();
+
+                    Paperpile.status.clearMsg();
+
+                    if (callback) callback.createDelegate(scope)();
+                    
                 },
                 scope:this
             });
+        } else {
+            if (callback) callback.createDelegate(scope)();
         }
+        
     },
 
 
@@ -468,7 +468,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.updateButtons();
                     
                 if (callback){
-                    console.log(callback);
                     callback.createDelegate(scope,[json.data])();
                 }
                 
@@ -650,7 +649,16 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                     }, this, {single:true});
         
     },
-    
+
+    onDblClick: function( grid, rowIndex, e ){
+
+        var sm=this.getSelectionModel();
+        if (sm.getCount() == 1){
+            if (!sm.getSelected().data._imported){
+                this.insertEntry();
+            }
+        }
+    },
 
     onClose: function(cont, comp){
         Ext.Ajax.request({

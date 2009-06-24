@@ -12,16 +12,7 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGridOnlineSearch, {
 
         Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
 
-        this.store.on('beforeload',
-                      function(){
-                          Paperpile.status.showBusy('Searching PubMed');
-                      }, this);
-
-        this.store.on('load',
-                      function(){
-                          Paperpile.status.clearMsg();
-                      }, this);
-
+       
                     
     },
  

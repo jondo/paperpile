@@ -7,7 +7,6 @@ use Paperpile::Library::Publication;
 use Data::Dumper;
 use 5.010;
 use Module::Load;
-#use Exception::Class ( 'MyException');
 use Paperpile::Exceptions;
 
 use Paperpile::Plugins::Import;

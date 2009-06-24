@@ -9,12 +9,17 @@ Paperpile.PluginGridOnlineSearch = Ext.extend(Paperpile.PluginGrid, {
         tbar.unshift(new Ext.app.SearchField({width:250,
                                               store: this.store}));
 
-        //tbar.splice(this.getButtonIndex('new_button'), 1, addButton);
-
-        //tbar[this.getButtonIndex('add_button')].hidden=false;
-        //tbar[this.getButtonIndex('new_button')].hidden=true;
-
         this.actions['NEW'].hide();
+
+        this.store.on('beforeload',
+                      function(){
+                          Paperpile.status.showBusy('Searching '+this.plugin_name);
+                      }, this);
+
+        this.store.on('load',
+                      function(){
+                          Paperpile.status.clearMsg();
+                      }, this);
 
     },
     

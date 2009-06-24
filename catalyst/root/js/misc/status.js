@@ -46,7 +46,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
                                },
                                {tag:'td',
                                 id: 'status-busy',
-                                cls: 'pp-basic pp-status-spinner',
+                                cls: 'pp-basic',
                                },
                            ]
                           }
@@ -119,7 +119,9 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
         }
 
         if (pars.busy){
-            Ext.DomHelper.overwrite(this.busyEl, '<img src="/images/spinner.gif">');
+            //Ext.DomHelper.overwrite(this.busyEl, '<img src="/images/spinner.gif">');
+            this.busyEl.addClass('pp-status-busy');
+
         } else {
             this.busyEl.hide();
         }

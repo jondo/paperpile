@@ -19,6 +19,7 @@ sub insert_entry : Local {
   $c->model('Library')->create_pubs($data);
 
   foreach my $pub (@$data){
+
     $output{$pub->sha1}={_imported=>1,
                          citekey=>$pub->citekey,
                          _rowid=>$pub->_rowid,
@@ -41,6 +42,8 @@ sub complete_entry : Local{
 
   my $pub = $plugin->find_sha1($sha1);
   $pub=$plugin->complete_details($pub);
+
+  $c->model('Library')->exists_pub([$pub]);
 
   $c->stash->{data} = $pub->as_hash;
 

@@ -8,7 +8,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<div class="pp-box pp-box-top pp-box-style1"',
         '<dl>',
         //'<tpl if="citekey"><dt>Key: </dt><dd>[{citekey}]</dd></tpl>',
-        '<dt>Type: </dt><dd>{_pubtype_name}</dd>',
+        '<tpl if="_pubtype_name"><dt>Type: </dt><dd>{_pubtype_name}</dd></tpl>',
         '<tpl if="_imported"><dt>Added: </dt><dd ext:qtip="{createdFull}">{createdPretty}</dd></tpl>',
         '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
         '<tpl if="pmid"><dt>PubMed ID: </dt><dd>{pmid}</dd></tpl>',
@@ -135,7 +135,11 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
             this.grid_id=this.grid.id;
 
-            this.data._pubtype_name=Paperpile.main.globalSettings.pub_types[this.data.pubtype].name;
+            if (this.data.pubtype){
+                this.data._pubtype_name=Paperpile.main.globalSettings.pub_types[this.data.pubtype].name;
+            } else {
+                this.data._pubtype_name=false;
+            }
 
             this.data.attachments_list=[];
             if (this.data.attachments > 0){
@@ -518,10 +522,12 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
               method: 'GET',
               success: function(response){
                   var json = Ext.util.JSON.decode(response.responseText);
+                  var record=this.grid.store.getAt(this.grid.store.find('sha1',this.data.sha1));
+
                   if (json.pdf_file){
-                      Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf',json.pdf_file);
+                      record.set('pdf',json.pdf_file);
                   } else {
-                      Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments+1);
+                      record.set('attachments',this.data.attachments+1);
                   }
                   this.updateDetail();
               }, 
@@ -633,7 +639,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                         if (this.data._imported){
                             this.attachFile(true,json.pdf);
                         } else {
-                            Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf',json.pdf);
+                            var store=this.grid.store;
+                            store.getAt(store.find('sha1',this.data.sha1)).set('pdf',json.pdf);
                             this.updateDetail();
                         }
                     } else {

@@ -50,28 +50,32 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
 
             this.data=sm.getSelected().data;
 
-            var currFields=Paperpile.main.globalSettings.pub_types[this.data.pubtype];
+            // Don't show details if we have only partial information that lacks pubtype
+            if (this.data.pubtype){
+
+                var currFields=Paperpile.main.globalSettings.pub_types[this.data.pubtype];
      
-            var allFields=['title', 'authors','booktitle','series','editors',
-                           'howpublished','school','journal', 'chapter', 'edition', 
-                           'volume', 'issue', 'pages', 'year', 'month', 'day', 
-                           'publisher', 'organization','address', 'issn', 'isbn', 
-                           'pmid', 'doi', 'url','note'];
+                var allFields=['title', 'authors','booktitle','series','editors',
+                               'howpublished','school','journal', 'chapter', 'edition', 
+                               'volume', 'issue', 'pages', 'year', 'month', 'day', 
+                               'publisher', 'organization','address', 'issn', 'isbn', 
+                               'pmid', 'doi', 'url','note'];
 
-            var list=[];
+                var list=[];
 
-            for (i=0;i<allFields.length;i++){
-                if (currFields.fields[allFields[i]]){
-                    var value=this.data[allFields[i]];
-                    if (!value) value='&nbsp';
+                for (i=0;i<allFields.length;i++){
+                    if (currFields.fields[allFields[i]]){
+                        var value=this.data[allFields[i]];
+                        if (!value) value='&nbsp';
                 
-                    list.push({label: currFields.fields[allFields[i]].label,
-                               value: value
-                              });
+                        list.push({label: currFields.fields[allFields[i]].label,
+                                   value: value
+                                  });
+                    }
                 }
-            }
 
-            this.tpl.overwrite(this.body, {pubtype: currFields.name, citekey: this.data.citekey, fields:list}, true);
+                this.tpl.overwrite(this.body, {pubtype: currFields.name, citekey: this.data.citekey, fields:list}, true);
+            }
         } else {
 
             var empty = new Ext.Template('');
