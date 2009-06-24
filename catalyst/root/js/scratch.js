@@ -16,19 +16,7 @@ Ext.onReady(function() {
                 split: true,
                 width: 30
             }),
-            new Ext.Panel({
-                region:'north',
-                height: 10,
-                bbar: new Ext.StatusBar({
-                    border:0,
-                    id: 'statusbar',
-                    defaultText: 'Default status text',
-                    defaultIconCls: 'default-icon',
-                    text: 'Ready',
-                    iconCls: 'ready-icon'
-                }),
-            }),
-            
+
             new Paperpile.PDFviewer(
                 {id:'pdf_viewer',
                  itemId:'pdf_viewer',
@@ -73,6 +61,9 @@ Ext.onReady(function() {
     //var path = '/home/greg/wattenberg_03_conversation.pdf';
     //var path = '/home/greg/jordan_08_phylowidget.pdf';
     var path = '/home/greg/kosiol_08_patterns.pdf';
+    //var path = '/home/greg/Desktop/CiteULike/theses/kosiol_06_markov.pdf';
+    //var path = '/home/greg/Dropbox/CiteULike/theses/bofkin_06_causes.pdf';
+
     viewer.initPDF(path);
 
 })

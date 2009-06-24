@@ -1,3 +1,10 @@
+IS_TITANIUM = !(window['Titanium'] == undefined);
+
+Paperpile.Url = function(url){
+    return (IS_TITANIUM) ? 'http://localhost:3000'+url : url;
+};
+
+
 Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
     title: "Select file",
@@ -10,7 +17,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     showFilter: false,
     filterOptions:[],
     currentFilter:0,
-    
+
     callback: function(button,path){
         console.log(button, path);
     },
@@ -18,7 +25,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     initComponent: function() {
 
         // We need this explicit marker for the root internally
-                
+
         this.currentRoot="ROOT"+this.currentRoot;
 
         var label='Location';
@@ -32,13 +39,13 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
         }
 
         var filterStore=[];
-        
+
         if (this.filterOptions){
             for (var i=0; i<this.filterOptions.length; i++){
                 filterStore.push([i,this.filterOptions[i].text]);
             }
         }
- 
+
 		Ext.apply(this, {
             layout: 'border',
             width: 500,
@@ -109,15 +116,15 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                       disabled: true,
                       cls: 'x-btn-text-icon save',
                       listeners: {
-                          click:  { 
+                          click:  {
                               fn: function(){
                                   var ft=this.items.get('filetree');
-                                  
+
                                   var path=this.currentRoot+"/"+this.textfield.getValue();
 
                                   // ROOT only needed internally
                                   path=path.replace(/^ROOT/,'');
-                                  
+
                                   if (this.saveMode && this.warnOnExisting){
                                       Ext.Ajax.request({
                                           url: Paperpile.Url('/ajax/files/stats'),
@@ -132,7 +139,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                                                           this.callback.createDelegate(this.scope,['OK',path])();
                                                                           this.close();
                                                                       }
-                                                                  }                                           
+                                                                  }
                                                                  )
                                               } else {
                                                   this.callback.createDelegate(this.scope,['OK',path])();
@@ -154,7 +161,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                       itemId: 'cancel',
                       cls: 'x-btn-text-icon cancel',
                       listeners: {
-                           click:  { 
+                           click:  {
                                fn: function(){
                                    this.callback.createDelegate(this.scope,['CANCEL',null])();
                                    this.close();
@@ -165,7 +172,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                     }
                   ]
 	    });
-        
+
         Paperpile.FileChooser.superclass.initComponent.call(this);
 
         if (!this.scope){
@@ -176,7 +183,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                         function(){
                                             this.showDir(this.currentRoot);
                                         }, this,{single:true});
-        
+
         this.textfield=this.items.get('northpanel').items.get('textfield');
 
         this.textfield.on('change',
@@ -186,7 +193,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                           this
                          );
 
-        
+
     },
 
     updateTextfield: function(value){
@@ -216,7 +223,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
         this.currentRoot=path;
 
         var cp=this.items.get('centerpanel');
-        
+
         // Remove old tree and build new one
         cp.remove(cp.items.get('filetree'));
 
@@ -258,23 +265,23 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
         for (var i=0; i<path.length;i++){
 
             var html=path[i];
-            
+
             if (path[i]=='ROOT') {
                 html='<img src="/images/icons/drive.png" valign="center"/>';
             }
 
-            var li = dh.append(ul,{tag:'li', cls:'pp-filechooser-dir', children:[{tag:'a', 
+            var li = dh.append(ul,{tag:'li', cls:'pp-filechooser-dir', children:[{tag:'a',
                                                                                   href:'#',
                                                                                   html:html
                                                                                  }]});
-            
+
             var link=path.slice(0,i+1).join('/');
-            
+
             Ext.Element.get(li).on('click',
                                    function(e, el, options){
                                        this.showDir(options.link);
                                    }, this, {link: link });
-            
+
             dh.append(ul,{tag:'li', cls:'pp-filechooser-separator', html:"/"});
         }
     }
