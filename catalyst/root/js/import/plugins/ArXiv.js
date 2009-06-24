@@ -1,8 +1,6 @@
 Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGridOnlineSearch, {
-
     
     plugin_title: 'ArXiv',
-    loadMask: {msg:"Searching ArXiv"},
     plugin_iconCls: 'pp-icon-arxiv',
     limit: 25,
 
@@ -13,5 +11,4 @@ Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGridOnlineSearch, {
         Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
     },
  
-
 });

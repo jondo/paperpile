@@ -92,7 +92,7 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
 # Formatted strings to be displayed in the frontend.
 has '_authors_display'  => ( is => 'rw', isa => 'Str' );
-has '_editors_display'  => ( is => 'rw', isa => 'Str' );
+#has '_editors_display'  => ( is => 'rw', isa => 'Str' );
 has '_citation_display' => ( is => 'rw', isa => 'Str' );
 
 # If an entry is already in our database this field is true.

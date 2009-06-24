@@ -169,8 +169,8 @@ pub_types:
         label: "Address"
       month:
         label: "Month"
-      issn:
-        label: "ISSN"
+      isbn:
+        label: "ISBN"
       pmid:
         label: "Pubmed ID"
       doi:

@@ -32,7 +32,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
                                       cls: 'pp-basic pp-textlink pp-status-action',
                                     }
                                 ],
-                                hidden: true,
+                                //hidden: true,
                                },
                                {tag:'td',
                                 children:[
@@ -42,7 +42,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
                                       cls: 'pp-basic pp-textlink pp-status-action',
                                     }
                                 ],
-                                hidden: true,
+                                //hidden: true,
                                },
                                {tag:'td',
                                 id: 'status-busy',
@@ -108,6 +108,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
         if (pars.action1){
             Ext.DomHelper.overwrite(this.action1el, pars.action1);
+            this.action1el.show();
         } else {
             this.action1el.hide();
         }
@@ -119,9 +120,8 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
         }
 
         if (pars.busy){
-            //Ext.DomHelper.overwrite(this.busyEl, '<img src="/images/spinner.gif">');
             this.busyEl.addClass('pp-status-busy');
-
+            this.busyEl.show();
         } else {
             this.busyEl.hide();
         }
@@ -135,6 +135,10 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
                            function(e){
                                this.clearMsg();
                            }, this, {single:true});
+        }
+
+        if (pars.callback){
+            this.callback=pars.callback;
         }
 
         this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t',[0,3]);

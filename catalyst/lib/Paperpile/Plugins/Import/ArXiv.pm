@@ -40,10 +40,14 @@ sub connect {
       $tmp_words[$i] = "all:$tmp_words[$i]";
   }
   my $query_string = join('+AND+', @tmp_words);
-  
+
   # We now call execute the search
   my $response = $browser->get( $searchUrl . $query_string . '&max_results=100' );
+
   my $result    = XMLin($response->content, ForceArray => 1);
+
+  #open(TMP,">/home/wash/tmp.dat");
+  #print TMP Dumper($response->content);
 
   # Determine the number of hits
   my $number = 0;
@@ -65,117 +69,111 @@ sub connect {
 
 
 
+
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
   # Get the content of the page via cache
   my @content;
   if ( $self->_page_cache->{0}->{0} ) {
-      @content = @{$self->_page_cache->{0}->{0}};
-  } 
+    @content = @{ $self->_page_cache->{0}->{0} };
+  }
 
   my $page = [];
-  my $max = ($#content < $offset+$limit-1) ? $#content : $offset+$limit-1;
-  foreach my $i ($offset .. $max) 
-  {
-      my $entry = $content[$i];
-      
-      # Title and abstract are easy, they are regular elements
-      my $title = join(' ',@{$entry->{title}});
-      my $abstract = join(' ',@{$entry->{summary}});
-      
-      # Now we add the authors
-      my @authors = ( );
-      foreach my $author (@{$entry->{author}}) 
-      {
-	  my @tmp_names = split(/ /,join(' ',@{$author->{name}}));
-	  my $first = '';
-	  my $last = '';
-	  if ($#tmp_names == 1)
-	  {
-	      $first = $tmp_names[0];
-	      $last = $tmp_names[1];
-	  }
-	  if ($#tmp_names == 2)
-	  {
-	      $first = $tmp_names[0].' '.$tmp_names[1];
-	      $last = $tmp_names[2];
-	  }
+  my $max = ( $#content < $offset + $limit - 1 ) ? $#content : $offset + $limit - 1;
+  foreach my $i ( $offset .. $max ) {
+    my $entry = $content[$i];
 
-	  push @authors, Paperpile::Library::Author->new(
-	      last  => $last,
-	      first => $first,
-	      jr    => '')->normalized;
-      }
+    # Title and abstract are easy, they are regular elements
+    my $title    = join( ' ', @{ $entry->{title} } );
+    my $abstract = join( ' ', @{ $entry->{summary} } );
 
-      # If there is a journal reference, we can parse it and
-      # fill the following fields
+    # Now we add the authors
+    my @authors = ();
 
-      my $journal = '';
-      my $year = '';
-      my $volume = '';
-      my $issue = '';
-      my $pages = '';
-      my $comment = '';
-      my $pubtype = 'MISC';
-      if ($entry->{'arxiv:journal_ref'})
-      {
-	  my $journal_line = @{$entry->{'arxiv:journal_ref'}}[0]->{content};
-	  $journal_line =~ s/\n//g;
-	  $journal_line =~ s/\s+/ /g;
-	  ($journal, $year, $volume, $issue, $pages, $comment) = parseJournalLine($journal_line);
-	  $pubtype = ' ARTICLE' if ($journal ne '');
+    foreach my $author ( @{ $entry->{author} } ) {
 
-	  # NOTE: if there is something in comment and journal is empty
-	  # then we were not able to parse the journal string correctly
-      }
+      print STDERR Dumper($author->{name}), "\n";
 
-      # get id
-      my $id = join(' ',@{$entry->{id}});
-      (my $pdf = $id) =~ s/\/abs\//\/pdf\//;
-      
+      Paperpile::Library::Author->new();
+
+      push @authors, Paperpile::Library::Author->new()->parse_freestyle($author->{name}->[0])->bibtex();
 
 
+    #  my @tmp_names = split( / /, join( ' ', @{ $author->{name} } ) );
+    #  my $first     = '';
+    #  my $last      = '';
+    #  if ( $#tmp_names == 1 ) {
+    #    $first = $tmp_names[0];
+    #    $last  = $tmp_names[1];
+    #  }
+    #  if ( $#tmp_names == 2 ) {
+    #    $first = $tmp_names[0] . ' ' . $tmp_names[1];
+    #    $last  = $tmp_names[2];
+    #  }
 
-      my $pub = Paperpile::Library::Publication->new( pubtype => $pubtype );
-      
-      #$pub->howpublished($id);
-      $pub->url($id);
-      #$pub->pdf_url($pdf);
-      $pub->linkout($pdf);
-      $pub->title($title) if $title;
-      $pub->abstract($abstract) if $abstract;
-      $pub->authors( join( ' and ', @authors ) );
-      $pub->volume($volume)     if ($volume ne '');
-      $pub->issue($issue)       if ($issue ne '');
-      $pub->year($year)         if ($year ne '');
-      $pub->pages($pages)       if ($pages ne '');
-      $pub->journal($journal)   if ($journal ne '');
-      $pub->journal($comment)   if ($journal eq '' and $comment ne '');
+    #  push @authors,
+    #    Paperpile::Library::Author->new(
+    #    last  => $last,
+    #    first => $first,
+    #    jr    => ''
+    #    )->normalized;
+    }
 
+    # If there is a journal reference, we can parse it and
+    # fill the following fields
 
-      $pub->refresh_fields;
-      push @$page, $pub;
+    my $journal = '';
+    my $year    = '';
+    my $volume  = '';
+    my $issue   = '';
+    my $pages   = '';
+    my $comment = '';
+    my $pubtype = 'MISC';
+    if ( $entry->{'arxiv:journal_ref'} ) {
+      my $journal_line = @{ $entry->{'arxiv:journal_ref'} }[0]->{content};
+      $journal_line =~ s/\n//g;
+      $journal_line =~ s/\s+/ /g;
+      ( $journal, $year, $volume, $issue, $pages, $comment ) = parseJournalLine($journal_line);
+      $pubtype = 'ARTICLE' if ( $journal ne '' );
+
+      # NOTE: if there is something in comment and journal is empty
+      # then we were not able to parse the journal string correctly
+    }
+
+    # get id
+    my $id = join( ' ', @{ $entry->{id} } );
+    ( my $pdf = $id ) =~ s/\/abs\//\/pdf\//;
+
+    my $pub = Paperpile::Library::Publication->new( pubtype => $pubtype );
+
+    #$pub->howpublished($id);
+    $pub->url($id);
+
+    #$pub->pdf_url($pdf);
+    $pub->linkout($pdf);
+    $pub->title($title)       if $title;
+    $pub->abstract($abstract) if $abstract;
+    $pub->authors( join( ' and ', @authors ) );
+    $pub->volume($volume)   if ( $volume  ne '' );
+    $pub->issue($issue)     if ( $issue   ne '' );
+    $pub->year($year)       if ( $year    ne '' );
+    $pub->pages($pages)     if ( $pages   ne '' );
+    $pub->journal($journal) if ( $journal ne '' );
+    $pub->journal($comment) if ( $journal eq '' and $comment ne '' );
+
+    $pub->refresh_fields;
+    push @$page, $pub;
   }
 
   # we should always call this function to make the results available
   # afterwards via find_sha1
   $self->_save_page_to_hash($page);
 
+
+  #print STDERR Dumper($page);
+
   return $page;
-
-}
-
-
-sub complete_details {
-
-  ( my $self, my $pub ) = @_;
-
-  # Create a new Publication object and import the information from the BibTeX string
-  my $full_pub = Paperpile::Library::Publication->new();
-
-
-  return $full_pub;
 
 }
 

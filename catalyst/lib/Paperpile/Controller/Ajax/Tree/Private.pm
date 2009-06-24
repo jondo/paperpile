@@ -145,6 +145,19 @@ sub get_default_tree : Private {
     )
   );
 
+  $plugins->addChild(
+   Tree::Simple->new( {
+        type         => 'IMPORT_PLUGIN',
+        plugin_name  => 'CiteSeerX',
+        text         => 'CiteSeerX',
+        plugin_query => '',
+        iconCls      => 'pp-icon-citeseerx',
+        hidden       => 0,
+      }
+    )
+  );
+
+
   ##### / Settings
 
   my $import = Tree::Simple->new( {
