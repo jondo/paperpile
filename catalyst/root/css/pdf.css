@@ -1,0 +1,21 @@
+.pdf-block {
+
+}
+
+.pdf-page {
+    display:inline-block;
+}
+
+.pdf-page-img {
+    /*margin: 0 20px;*/
+    border: 1px solid black;
+}
+
+
+.pdf-selector {
+    background-color:#6495ED;
+    border-width: 2px;
+    position: absolute;
+    opacity:0.3;
+}
+
