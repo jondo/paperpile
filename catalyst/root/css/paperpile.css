@@ -398,6 +398,10 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/page_white_stack.png')!important;
 }
 
+.pp-icon-citeseerx{
+    background-image: url('/images/icons/citeseerx.png')!important;
+}
+
 .pp-icon-tools{
     background-image: url('/images/icons/wrench.png')!important;
 }

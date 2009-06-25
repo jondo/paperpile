@@ -2,6 +2,7 @@ package Paperpile::Library::Author;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Text::Unidecode;
+use Lingua::EN::NameParse;
 
 has 'full' => (
   is      => 'rw',
@@ -305,6 +306,36 @@ sub bibutils {
   $output.=join('|',@firsts);
 
   return $output;
+}
+
+
+sub parse_freestyle {
+
+  my ($self, $author_string) = @_;
+
+  my %args = (
+    auto_clean     => 1,
+    force_case     => 1,
+    lc_prefix      => 1,
+    initials       => 3,
+    allow_reversed => 1
+  );
+
+  my $parser = new Lingua::EN::NameParse(%args);
+
+  my $error = $parser->parse($author_string);
+
+  if ( $error == 0 ) {
+    my $correct_casing = $parser->case_all_reversed;
+    ( my $last, my $first ) = split( /,/, $correct_casing );
+
+    $self->last($last);
+    $self->first($first);
+    $self->jr('');
+  }
+
+  return $self;
+
 }
 
 

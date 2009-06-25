@@ -235,20 +235,30 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     onError: function(response){
         
-        var error;
+        var error={ type:"Unknown",
+                    msg: "Empty response or timeout.",
+                  };
 
-        //Timed out errors come back empty
-        if (response){
+        //Timed out errors come back empty otherwise fill in error
+        //data from backend
+        if (response.responseText){
             error= Ext.util.JSON.decode(response.responseText).error;
-        } else {
-            error.type=='Unknown';
-            error.msg='Unknown';
-        }
+        } 
         
         if (error.type == 'Unknown'){
             Paperpile.status.updateMsg(
                 { type:'error',
                   msg: 'An unexpected error has occured.',
+                  action1: 'Details',
+                  callback: function(action){
+                      Ext.Msg.show({
+                          title:'Error',
+                          msg: error.msg,
+                          buttons: Ext.Msg.OK,
+                          animEl: 'elId',
+                          icon: Ext.MessageBox.ERROR
+                      });
+                  },
                   hideOnClick: true,
                 }
             );
