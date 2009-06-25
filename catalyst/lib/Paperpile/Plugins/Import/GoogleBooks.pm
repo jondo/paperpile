@@ -1,4 +1,4 @@
-package Paperpile::Plugins::Import::GoogleScholar;
+package Paperpile::Plugins::Import::GoogleBooks;
  
 use Carp;
 use Data::Dumper;
@@ -6,7 +6,6 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use XML::Simple;
 use Lingua::EN::NameParse;
-#use Date::Components;
 use 5.010;
  
 use Paperpile::Library::Publication;
@@ -16,7 +15,7 @@ use Paperpile::Utils;
  
 extends 'Paperpile::Plugins::Import';
  
-# The search query to be send to GoogleScholar
+# The search query to be send to GoogleBooks
 has 'query' => ( is => 'rw' );
  
 # The main search URL
@@ -27,7 +26,7 @@ has 'max' => ( is => 'rw', isa => 'Int', default => 20 );
 
 sub BUILD {
   my $self = shift;
-  $self->plugin_name('GoogleScholar');
+  $self->plugin_name('GoogleBooks');
 }
  
  
@@ -125,6 +124,7 @@ print STDERR Dumper $book;
       $title = join(': ', @tmp);
     }
 #print STDERR "titel: $title";
+
     #############################
     # collect authors
     my @authors;
@@ -151,21 +151,37 @@ print STDERR Dumper $book;
 #print STDERR "author: $author\n";
         my $parser = new Lingua::EN::NameParse(%args);
         my $error = $parser->parse($author);
+        my $failure = 0;
         if ( $error == 0 ) {
           my $correct_casing = $parser->case_all_reversed;
-          (my $last, my $first) = split(/, /, $correct_casing);
+          my ($last, $first) = split(/, /, $correct_casing);
 #print STDERR "last=$last, first=$first\n";
           # make a new author object
+          if(length($last)>0 && length($first)>0) {
+            push @authors,
+              Paperpile::Library::Author->new(
+                  collective => $author,
+                  last  => $last,
+                  first => $first,
+                  jr    => '',
+              )->normalized; 
+          }
+          else {
+            $failure = 1;
+          }
+        }
+        else {
+          $failure = 1;
+        }
+        
+        if($failure) {
           push @authors,
             Paperpile::Library::Author->new(
                 collective => $author,
-                last  => $last,
-                first => $first,
+                last  => '',
+                first => '',
                 jr    => '',
-            )->normalized;          
-        }
-        else {
-          print STDERR "Warning: Could not parse author '$author'\n";
+            )->normalized; 
         }
       }    
     }
@@ -182,24 +198,76 @@ print STDERR Dumper $book;
     
     #############################
     # collect date (only year?)
-#    my ($month, $day, $year);
-#    @tmp = ();
-#    if(exists $book->{'dc:date'}) {
-#      foreach my $d (@{$book->{'dc:date'}}) {
-#        my ($month, $day, $year);# = date_only_parse($d);
-#        push @tmp, $year;
-#      }
-#    }
-#    $year = join('; ', @tmp); # actually it should only be one year, but who knows...
+    my $year;
+    @tmp = ();
+    if(exists $book->{'dc:date'}) {
+      foreach my $d (@{$book->{'dc:date'}}) {
+        if($d =~ /(\d\d\d\d)/) {
+            push @tmp, $1;
+        }
+      }
+    }
+    $year = join('; ', @tmp); # actually it should only be one year, but who knows...
 
+    #############################
+    # collect ISBN, ISSN
+    my ($isbn, $issn) = ('', '');
+    @tmp = ();
+    if(exists $book->{'dc:identifier'}) {
+      foreach my $id (@{$book->{'dc:identifier'}}) {
+        if($id =~ /ISBN:(\S+)/) {
+            push @tmp, $1;
+        }
+      }
+      $isbn = join('; ', @tmp);
+      
+      foreach my $id (@{$book->{'dc:identifier'}}) {
+        if($id =~ /ISSN:(\S+)/) {
+            push @tmp, $1;
+        }
+      }
+      $issn = join('; ', @tmp);
+    }
 
+    #############################
+    # collect abstract
+    # TODO: Maybe replace it with the more detailed description of the preview website
+    my $abstract = '';
+    @tmp = ();
+    if(exists $book->{'dc:description'}) {
+      @tmp = @{$book->{'dc:description'}};
+    }
+    $abstract = join('; ', @tmp);
 
+    #############################
+    # collect url
+    my $url = '';
+    if(exists $book->{'link'}) {
+      foreach my $link (@{$book->{'link'}}) {
+        if(exists $link->{rel}) {
+          if($link->{rel} =~ /preview$/) {
+            $url = $link->{href};
+          }
+        }
+      }      
+    }
+#print STDERR "url=$url\n";
+
+    #############################
+    # collect pages
+    # not every book has pages info
+    # TODO
     
-    $pub->title( $title ) if($title ne '');
-    $pub->_authors_display( $authors_display ) if($authors_display ne '');
+
+    $pub->title( $title ) if($title); # maybe booktitle, but booktitle is not displayed in the frontend?
+    $pub->_authors_display( $authors_display ) if($authors_display);
     $pub->authors( join( ' and ', @authors ) ) if(scalar(@authors)>1);
-    $pub->publisher( $publisher ) if($publisher ne '');
-    #$pub->year( $year ) if($year);    
+    $pub->publisher( $publisher ) if($publisher);
+    $pub->year( $year ) if($year);
+    $pub->isbn( $isbn ) if($isbn);
+    $pub->issn( $issn ) if($issn);
+    $pub->abstract( $abstract ) if($abstract);
+    $pub->url( $url ) if($url);
     #$pub->_citation_display(  );
     #$pub->linkout(  );
     #$pub->_details_link(  );

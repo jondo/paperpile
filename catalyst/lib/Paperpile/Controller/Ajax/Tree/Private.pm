@@ -122,6 +122,19 @@ sub get_default_tree : Private {
   );
 
   $plugins->addChild(
+     Tree::Simple->new( {
+         type         => 'IMPORT_PLUGIN',
+         plugin_name  => 'GoogleBooks',
+         text         => 'Google Books',
+         plugin_query => '',
+         iconCls      => 'pp-icon-google',
+         hidden       => 0,
+       }
+     )
+   );
+
+
+  $plugins->addChild(
     Tree::Simple->new( {
         type         => 'IMPORT_PLUGIN',
         plugin_name  => 'GoogleScholar',
