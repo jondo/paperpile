@@ -192,6 +192,8 @@ sub format_citation {
       $cit .= '<i>' . $self->booktitle . '</i>. ';
     }
   }
+
+  $cit .= $self->howpublished .' '  if ( $self->howpublished );
   $cit .= '<i>Unpublished</i>. ' if ( $self->pubtype eq 'UNPUBLISHED' );
   $cit .= '<i>PhD Thesis</i>. ' if ( $self->pubtype eq 'PHDTHESIS' );
   $cit .= '<i>Master\'s Thesis</i>. ' if ( $self->pubtype eq 'MASTERSTHESIS' );

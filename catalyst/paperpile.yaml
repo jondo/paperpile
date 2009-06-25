@@ -56,6 +56,7 @@ pub_fields:
   year:          "Year"
   month:         "Month"
   day:           "Day"
+  eprint:        "Eprint"
   issn:          "ISSN"
   isbn:          "ISBN"
   pmid:          "Pubmed ID"
@@ -97,6 +98,8 @@ pub_types:
         label: "ISSN"
       pmid:
         label: "Pubmed ID"
+      eprint:
+        label: "Eprint"
       doi:
         label: "DOI"
       url:
@@ -137,6 +140,8 @@ pub_types:
         label: "ISSN"
       pmid:
         label: "Pubmed ID"
+      eprint:
+        label: "Eprint"
       doi:
         label: "DOI"
       url:
@@ -175,6 +180,8 @@ pub_types:
         label: "Pubmed ID"
       doi:
         label: "DOI"
+      eprint:
+        label: "Eprint"
       url:
         label: "Website"
       note:
@@ -215,6 +222,8 @@ pub_types:
         label: "Pubmed ID"
       doi:
         label: "DOI"
+      eprint:
+        label: "Eprint"
       url:
         label: "Website"
       note:
@@ -239,6 +248,8 @@ pub_types:
         label: "Year"
       month:
         label: "Month"
+      eprint:
+        label: "Eprint"
       doi:
         label: "DOI"
       url:
@@ -270,6 +281,8 @@ pub_types:
         label: "Year"
       month:
         label: "Month"
+      eprint:
+        label: "Eprint"
       doi:
         label: "DOI"
       url:
@@ -346,6 +359,8 @@ pub_types:
         label: "Author"
       howpublished:
         label: "Details"
+      eprint:
+        label: "Eprint"
       year:
         label: "Year"
       month:

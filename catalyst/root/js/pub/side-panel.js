@@ -11,6 +11,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<tpl if="_pubtype_name"><dt>Type: </dt><dd>{_pubtype_name}</dd></tpl>',
         '<tpl if="_imported"><dt>Added: </dt><dd ext:qtip="{createdFull}">{createdPretty}</dd></tpl>',
         '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
+        '<tpl if="eprint"><dt>Eprint: </dt><dd>{eprint}</dd></tpl>',
         '<tpl if="pmid"><dt>PubMed ID: </dt><dd>{pmid}</dd></tpl>',
         '<dt>Labels: </dt><dd>',
         '<div id="tag-container-{id}" class="pp-tag-container"></div>',
@@ -585,6 +586,11 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             width: 200,
             renderTo: 'progress-bar'
         });
+
+        if (this.data.pdf_url){
+            this.downloadPDF(this.data.pdf_url);
+            return;
+        }
 
         this.progressBar.wait({text:"Searching PDF on publisher site", interval:100});
 
