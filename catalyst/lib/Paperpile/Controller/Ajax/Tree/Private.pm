@@ -84,11 +84,11 @@ sub get_default_tree : Private {
   $active->addChild(
     Tree::Simple->new( {
         type         => 'ACTIVE',
-        text         => 'My papers',
-        plugin_title => 'My papers',
+        text         => '2009 papers',
+        plugin_title => '2009 papers',
         plugin_name  => 'DB',
         plugin_mode  => 'FULLTEXT',
-        plugin_query => 'washietl',
+        plugin_query => 'year:2009',
         iconCls      => 'pp-icon-folder',
         hidden       => 0,
       }

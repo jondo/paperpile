@@ -98,6 +98,17 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 itemId:'format_button'
             }),
 
+            'SAVE_AS_ACTIVE': new Ext.Action({
+                text: 'Save as active folder',
+                handler: Paperpile.main.tree.newActive,
+                scope: Paperpile.main.tree,
+                disabled:true,
+                itemId:'format_button'
+            }),
+
+
+
+
 
 
         };
@@ -114,6 +125,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                         items:[
                             this.actions['EXPORT'],
                             this.actions['SELECT_ALL'],
+                            this.actions['SAVE_AS_ACTIVE'],
                         ]
                     })
                   }
@@ -313,6 +325,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         this.actions['NEW'].enable();
         this.actions['EXPORT'].enable();
         this.actions['FORMAT'].enable();
+        this.actions['SAVE_AS_ACTIVE'].enable();
 
         if (selected == 1){
             this.actions['EDIT'].setDisabled(imported==0);
