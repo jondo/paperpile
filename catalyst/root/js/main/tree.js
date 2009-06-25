@@ -293,7 +293,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     // Creates a new active folder based on the currently active tab
     //
 
-    newActive: function(node) {
+    newActive: function() {
+
+        var node = this.getNodeById('ACTIVE_ROOT');
 
         var grid=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
         var treeEditor = this.treeEditor;
@@ -976,7 +978,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
             { id: 'active_menu_new', //itemId does not work here
               text:'Save current search as active folder',
               handler: function(){
-                  Paperpile.main.tree.newActive(this.node);
+                  Paperpile.main.tree.newActive();
               },
               scope: this
             },
