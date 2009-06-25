@@ -4,15 +4,11 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
 
     statusMsgTpl: [
         '<tpl if="number">',
-        'There are <b>{number}</b> PDFs in the list not yet in your library. ',
-        'The files can be matched against online resources and then imported. ',
-        'Click <i>Import</i> in the toolbar to match and import files individually, ',
-        'or import all files automatically by clicking the button below. ',
+        '<b>{number}</b> PDFs in the list are not yet in your library and can be automatically imported.',
         '</tpl>',
         '<tpl if="!number">',
         'All files imported.',
         '</tpl>',
-
     ],
 
     markup: [
@@ -70,7 +66,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
     },
 
     initControls: function(data){
-        this.grid=this.ownerCt.ownerCt.items.get('west_panel').items.get('grid');
+        this.grid=this.ownerCt.ownerCt.items.get('center_panel').items.get('grid');
 
         var list=this.getUnimportedList();
 

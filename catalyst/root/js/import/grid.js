@@ -604,7 +604,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                              });
         
         var oldSize=east_panel.getInnerWidth();
+
         if (oldSize<500) east_panel.setSize(500); 
+
         east_panel.hideBbar();
         east_panel.add(form);
         east_panel.doLayout();

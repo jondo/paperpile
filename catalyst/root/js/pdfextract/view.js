@@ -6,14 +6,13 @@ Paperpile.PdfExtractView = Ext.extend(Ext.Panel, {
         
         Ext.apply(this, {
             layout:'border',
+            hideBorders:true,
             items:[
                 { xtype:'panel',
-                  region:'west',
+                  region:'center',
                   split: true,
-                  itemId: 'west_panel',
+                  itemId: 'center_panel',
                   layout: 'border',
-                  width: 720,
-                  minSize:720,
                   items:[
                       new Paperpile.PdfExtractGrid({itemId:'grid', path: this.path}),
                       {border: false,
@@ -26,8 +25,10 @@ Paperpile.PdfExtractView = Ext.extend(Ext.Panel, {
                       },
                   ]
                  },
-                { region:'center',
+                { region:'east',
                   itemId: 'east_panel',
+                  split: true,
+                  width: 300,
                   activeItem:0,
                   layout: 'card',
                   items: [

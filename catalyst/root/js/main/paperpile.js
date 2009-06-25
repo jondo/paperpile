@@ -142,7 +142,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             callback:function(button,path){
                 if (button == 'OK'){
                     var panel=main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs', 
-                                                                          iconCls: 'pp-icon-page',
+                                                                          iconCls: 'pp-icon-import-pdf',
                                                                           path: path
                                                                          }));
                     panel.show();

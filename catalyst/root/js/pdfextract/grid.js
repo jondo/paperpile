@@ -38,7 +38,7 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
             });
 
 
-        var tbar=[ { xtype: 'tbtext', text: 'Match PDF files against: '} ,
+        var tbar=[ { xtype: 'tbtext', text: 'Match PDF files against: ', height:20} ,
                    { xtype: 'combo',
                      editable:false,
                      forceSelection:true,
@@ -57,26 +57,36 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
                              scope:this,
                          }
                      }
-                   },
+                   }, 
+                   // Dummy element to increase the height of the toolbar a bit
+                   new Ext.BoxComponent(
+                       { autoEl: 
+                         { style: 'height:25px;',
+                           tag: 'div',
+                         }
+                       }
+                   ),
                    { xtype:'tbfill'},
                    { xtype:'button',
-                      itemId: 'import_button',
-                      text: 'Import',
-                      cls: 'x-btn-text-icon add',
-                      disabled: true,
-                      listeners: {
-                          click:  {fn: 
-                                   function(){
-                                       var record=this.getSelectionModel().getSelected();
-                                       this.controlPanel.importPDF.createDelegate(this.controlPanel,[record])();
-                                   },
-                                   scope: this
-                                  }
-                      },
-                  },
+                     itemId: 'import_button',
+                     text: 'Import',
+                     tooltip: 'Match PDF file against the online database and import it to your library.',
+                     cls: 'x-btn-text-icon add',
+                     disabled: true,
+                     listeners: {
+                         click:  {fn: 
+                                  function(){
+                                      var record=this.getSelectionModel().getSelected();
+                                      this.controlPanel.importPDF.createDelegate(this.controlPanel,[record])();
+                                  },
+                                  scope: this
+                                 }
+                     },
+                   },
                    {  xtype:'button',
                       itemId: 'delete_button',
-                      text: "Remove from list",
+                      text: "Don't import",
+                      tooltip: 'Remove PDF file from the list in case you don\'t want to import it',
                       cls: 'x-btn-text-icon delete',
                       disabled: true,
                       listeners: {
@@ -86,7 +96,8 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
 
                   {   xtype:'button',
                       itemId: 'edit_button',
-                      text: 'Edit manually',
+                      text: 'Insert manually',
+                      tooltip: 'Insert bibliographic for the PDF data manually.',
                       cls: 'x-btn-text-icon edit',
                       disabled: true,
                       listeners: {
@@ -97,7 +108,6 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
                  ];
    
         Ext.apply(this, {
-            ddGroup  : 'gridDD',
             itemId:'grid',
             store: _store,
             tbar: tbar,
@@ -162,6 +172,16 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
         
         Paperpile.PdfExtractGrid.superclass.initComponent.apply(this, arguments);
 
+        this.store.on('beforeload',
+                      function(){
+                          Paperpile.status.showBusy('Searching PDFs');
+                      }, this);
+
+        this.store.on('load',
+                      function(){
+                          Paperpile.status.clearMsg();
+                      }, this);
+
         this.store.load({
             params: { path: this.path },
             callback: function(){
@@ -170,6 +190,8 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
             },
             scope: this
         });
+
+
 
         this.getSelectionModel().on('rowselect',
                                     function(sm, rowIdx, r){
@@ -217,18 +239,21 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
                                                       record.set('status','IMPORTED');
                                                       record.set('status_msg','Data manually entered.');
                                                       
-                                                      //record.set('_authors_display',data._authors_display);
-                                                      //record.set('title',data.title);
                                                       record.endEdit();
                                                   }
                                                   east_panel.remove('pub_edit');
-                                                  east_panel.doLayout();
+                                                  if (oldSize<500) east_panel.setSize(oldSize);
+                                                  east_panel.ownerCt.doLayout();
                                                   east_panel.getLayout().setActiveItem('control_panel');
                                               },
                                               scope:this
                                              });
+        var oldSize=east_panel.getInnerWidth();
+        if (oldSize<500) east_panel.setSize(500); 
         east_panel.add(form);
-        east_panel.doLayout();
+        // Calling east_panel.doLayout() does not work like in
+        // PubView. Calling doLayout() on container seems to work...
+        east_panel.ownerCt.doLayout();
         east_panel.getLayout().setActiveItem('pub_edit');
 
     },
