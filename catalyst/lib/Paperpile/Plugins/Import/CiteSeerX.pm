@@ -93,12 +93,12 @@ sub page {
     my $browser = Paperpile::Utils->get_browser;
 
     # We have to modify the query string to fit citeseerX needs
-    my @tmp_words = split(/ /, $self->query);
-    my $query_string = join('+', @tmp_words);
+    my @tmp_words = split( / /, $self->query );
+    my $query_string = join( '+', @tmp_words );
 
     # Get the results
-    my $response = $browser->get( $searchUrl . $query_string . "&start=$offset");
-    $content  = $response->content;
+    my $response = $browser->get( $searchUrl . $query_string . "&start=$offset" );
+    $content = $response->content;
   }
 
   # Now we parse the HTML for information of interest
@@ -114,49 +114,47 @@ sub page {
     details   => [],
   );
 
-  
   # Each document entry is listed in an ul-element
   my @nodes = $tree->findnodes('/html/body/div/div/div/div/div/div/div/ul');
-  
+
   foreach my $node (@nodes) {
 
-      # title is easy to find, and does not change anymore
-      my $title = $node->findvalue('./li/a/em');
-      push @{ $data{titles} }, $title;
+    # title is easy to find, and does not change anymore
+    my $title = $node->findvalue('./li/a/em');
+    push @{ $data{titles} }, $title;
 
-      # now we parse the author line
-      my $tmp = $node->findvalue('./li[@class="author char6 padded"]');
-      (my $authors = $tmp) =~ s/\x{2014}.*//;
-      $authors =~ s/^by\s//;
-      push @{ $data{authors} }, $authors;
+    # now we parse the author line
+    my $tmp = $node->findvalue('./li[@class="author char6 padded"]');
+    ( my $authors = $tmp ) =~ s/\x{2014}.*//;
+    $authors =~ s/^by\s//;
+    push @{ $data{authors} }, $authors;
 
-      # perhaps there is something like a year or a journal
-      my $citation_tmp = '';
-      if ($tmp =~ m/\x{2014}/) {
-	  my @temp = split(/\x{2014}/, $tmp);
+    # perhaps there is something like a year or a journal
+    my $citation_tmp = '';
+    if ( $tmp =~ m/\x{2014}/ ) {
+      my @temp = split( /\x{2014}/, $tmp );
 
-	  for my $i (1 .. $#temp) {
-	      $citation_tmp .= " $temp[$i]";
-	  }
+      for my $i ( 1 .. $#temp ) {
+        $citation_tmp .= " $temp[$i]";
       }
-      push @{ $data{citations} }, $citation_tmp;
-      
-      # finally get the details link
-      my @links = $node->findnodes('./li/a[@class="remove doc_details"]');
-      my $url = "http://citeseerx.ist.psu.edu".$links[0]->attr('href');
-      push @{ $data{details} }, $url;
+    }
+    push @{ $data{citations} }, $citation_tmp;
 
-      # direct link to cached pdf
-      (my $doi = $links[0]->attr('href')) =~ s/\/viewdoc\/summary;//;
-      my $pdf_url = "http://citeseerx.ist.psu.edu/viewdoc/download?$doi&rep=rep1&type=pdf";
+    # finally get the details link
+    my @links = $node->findnodes('./li/a[@class="remove doc_details"]');
+    my $url   = "http://citeseerx.ist.psu.edu" . $links[0]->attr('href');
+    push @{ $data{details} }, $url;
 
-      
+    # direct link to cached pdf
+    ( my $doi = $links[0]->attr('href') ) =~ s/\/viewdoc\/summary;//;
+    my $pdf_url = "http://citeseerx.ist.psu.edu/viewdoc/download?$doi&rep=rep1&type=pdf";
+
   }
 
   # Write output list of Publication records with preliminary
-  # information and full information. Title and authors do not 
+  # information and full information. Title and authors do not
   # change if we call complete_details. Citation, though, may change
-  # as volume or issue are provided. So citation info is just 
+  # as volume or issue are provided. So citation info is just
   # preliminary stored in citation_display.
   my $page = [];
 
@@ -165,46 +163,46 @@ sub page {
 
     # no modifiction is neeeded, title can be used as is
     $pub->title( $data{titles}->[$i] );
-    
+
     # The authors provided by citeseerx are somewhat crapy
     # Sometimes you find an author named something like
-    # 'Department of Biochemisty'. Therefore we call 
+    # 'Department of Biochemisty'. Therefore we call
     # Lingua::EN::NameParse as used in PfdExtract.
     my %args = (
-	auto_clean     => 1,
-	force_case     => 1,
-	lc_prefix      => 1,
-	initials       => 3,
-	allow_reversed => 1
-	);
+      auto_clean     => 1,
+      force_case     => 1,
+      lc_prefix      => 1,
+      initials       => 3,
+      allow_reversed => 1
+    );
 
     my $parser = new Lingua::EN::NameParse(%args);
-    
-    my @tmp_authors = split(/,/, $data{authors}->[$i]);
+
+    my @tmp_authors = split( /,/, $data{authors}->[$i] );
     my @authors = ();
 
-    if ($data{authors}->[$i] =~ m/Unknown\sAuthors/i) {
-	$pub->authors( 'NN' );
+    if ( $data{authors}->[$i] =~ m/Unknown\sAuthors/i ) {
+      $pub->authors('NN');
     } else {
-        foreach my $tmp_author (@tmp_authors) {
-	    my $error = $parser->parse($tmp_author);
-	    if ( $error == 0 ) {
-		my $correct_casing = $parser->case_all_reversed;
-		(my $last, my $first) = split(/,/, $correct_casing);
-		
-		# make a new author object
-		push @authors,
-		Paperpile::Library::Author->new(
-		    last  => $last,
-		    first => $first,
-		    jr    => '',
-		    )->normalized;
-		
-	    }
-	}
-	$pub->authors( join( ' and ', @authors )); 
+      foreach my $tmp_author (@tmp_authors) {
+        my $error = $parser->parse($tmp_author);
+        if ( $error == 0 ) {
+          my $correct_casing = $parser->case_all_reversed;
+          ( my $last, my $first ) = split( /,/, $correct_casing );
+
+          # make a new author object
+          push @authors,
+            Paperpile::Library::Author->new(
+            last  => $last,
+            first => $first,
+            jr    => '',
+            )->normalized;
+
+        }
+      }
+      $pub->authors( join( ' and ', @authors ) );
     }
-  
+
     # citations may change upon complete_details call,
     # so we store only preliminary information
     $pub->_citation_display( $data{citations}->[$i] );

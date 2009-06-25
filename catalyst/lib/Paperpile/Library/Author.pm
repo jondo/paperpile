@@ -63,6 +63,7 @@ sub split_full {
 
   my ($first, $von, $last, $jr);
 
+
   # Do nothing in this trivial case
   if (not $self->full){
     return;
@@ -243,6 +244,8 @@ sub nice {
 
 }
 
+# Returns author in a normalized format with initials. We use this to
+# generate unique IDs for authors
 sub normalized {
 
   my $self       = shift;
@@ -263,6 +266,7 @@ sub normalized {
   return $output;
 }
 
+# Returns author as bibtex which we use as flat storage format.
 sub bibtex {
 
   my $self       = shift;
@@ -311,31 +315,75 @@ sub bibutils {
 
 sub parse_freestyle {
 
-  my ($self, $author_string) = @_;
+  my ( $self, $author_string ) = @_;
 
-  my %args = (
-    auto_clean     => 1,
-    force_case     => 1,
-    lc_prefix      => 1,
-    initials       => 3,
-    allow_reversed => 1
-  );
+  # Think more about this
+  $self->von('');
+  $self->jr('');
 
-  my $parser = new Lingua::EN::NameParse(%args);
+  # For efficiency reaseons, we first try to parse the most simplest
+  # patterns ourselves
 
-  my $error = $parser->parse($author_string);
+  my ( $first, $last ) = ( '', '' );
 
-  if ( $error == 0 ) {
-    my $correct_casing = $parser->case_all_reversed;
-    ( my $last, my $first ) = split( /,/, $correct_casing );
+  # Peter Stadler
+  if ( $author_string =~ /^\s*(\u\w+)\s+(\u\w+)\s*$/ ) {
+    ( $first, $last ) = ( $1, $2 );
+  }
+
+  # Peter F. Stadler
+  elsif ( $author_string =~ /^\s*(\u\w+)\s*(\u\w\.)\s+(\u\w+)\s*$/ ) {
+    ( $first, $last ) = ( $1 . ' ' . $2, $3 );
+  }
+
+  # P. Stadler
+  elsif ( $author_string =~ /^\s*(\u\w\.)\s+(\u\w+)\s*$/ ) {
+    ( $first, $last ) = ( $1, $2 );
+  }
+
+  # P. F. Stadler and J. -L. Picard
+  elsif ( $author_string =~ /^\s*(\u\w\.)\s+(-?\u\w\.)\s+(\u\w+)\s*$/ ) {
+    ( $first, $last ) = ( $1 . ' ' . $2, $3 );
+  }
+
+  # We have found a match with the simple patterns
+  if ( $first and $last ) {
 
     $self->last($last);
     $self->first($first);
-    $self->jr('');
+
+  }
+
+  # We use Lingua::EN::NameParse magic
+  else {
+
+    my %args = (
+      auto_clean     => 1,
+      force_case     => 1,
+      lc_prefix      => 1,
+      initials       => 3,
+      allow_reversed => 1
+    );
+
+    my $parser = new Lingua::EN::NameParse(%args);
+
+    my $error = $parser->parse($author_string);
+
+    if ( $error == 0 ) {
+      my $correct_casing = $parser->case_all_reversed;
+      ( my $last, my $first ) = split( /,/, $correct_casing );
+
+      $self->last($last);
+      $self->first($first);
+
+    }
+    # if we can't parse it we add it verbatim as 'collective' author
+    else {
+      $self->collective($author_string);
+    }
   }
 
   return $self;
-
 }
 
 

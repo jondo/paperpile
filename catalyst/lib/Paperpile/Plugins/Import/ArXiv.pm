@@ -93,12 +93,9 @@ sub page {
 
     foreach my $author ( @{ $entry->{author} } ) {
 
-      print STDERR Dumper($author->{name}), "\n";
-
       Paperpile::Library::Author->new();
 
       push @authors, Paperpile::Library::Author->new()->parse_freestyle($author->{name}->[0])->bibtex();
-
 
     #  my @tmp_names = split( / /, join( ' ', @{ $author->{name} } ) );
     #  my $first     = '';
