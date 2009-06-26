@@ -33,6 +33,46 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             emptyMsg: "No papers to display",
         });
 
+        this.pubTemplate = new Ext.XTemplate(
+            '<div class="pp-grid-data">',
+            '<p class="pp-grid-title">{title}</p>',
+            '<tpl if="_authors_display">',
+            '<p class="pp-grid-authors">{_authors_display}</p>',
+            '</tpl>',
+            '<tpl if="_citation_display">',
+            '<p class="pp-grid-citation">{_citation_display}</p>',
+            '</tpl>',
+            '<tpl if="_snippets_text">',
+            '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
+            '</tpl>',
+            '<tpl if="_snippets_abstract">',
+            '<p class="pp-grid-snippets"><span class="heading">Abstract:</span> {_snippets_abstract}</p>',
+            '</tpl>',
+            '<tpl if="_snippets_notes">',
+            '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
+            '</tpl>',
+            '</div>'
+        ).compile();
+
+        this.iconTemplate = new Ext.XTemplate(
+            '<div class="pp-grid-info">',
+            '<tpl if="_imported">',
+            '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
+            '</tpl>',
+            '<div>',
+            '<tpl if="pdf">',
+            '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="{pdf}"></div>',
+            '</tpl>',
+            '<tpl if="attachments">',
+            '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+            '</tpl>',
+            '<tpl if="annote">',
+            '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
+            '</tpl>',
+            '</div>',
+            '</div>'
+        ).compile();
+
         this.actions={
             'NEW': new Ext.Action({
                 text: 'New',
@@ -142,6 +182,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     this.contextMenu.showAt(e.getXY());
                 }, this, {stopEvent:true});
 
+        
         var renderPub=function(value, p, record){
 
             // Can possibly be speeded up with compiling the template.
@@ -149,29 +190,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
             record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
 
-            var t = new Ext.XTemplate(
-         
-                '<div class="pp-grid-data">',
-                '<p class="pp-grid-title">{title}</p>',
-                '<tpl if="_authors_display">',
-                '<p class="pp-grid-authors">{_authors_display}</p>',
-                '</tpl>',
-                '<tpl if="_citation_display">',
-                '<p class="pp-grid-citation">{_citation_display}</p>',
-                '</tpl>',
-                '<tpl if="_snippets_text">',
-                '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
-                '</tpl>',
-                '<tpl if="_snippets_abstract">',
-                '<p class="pp-grid-snippets"><span class="heading">Abstract:</span> {_snippets_abstract}</p>',
-                '</tpl>',
-                '<tpl if="_snippets_notes">',
-                '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
-                '</tpl>',
-                '</div>'
-            );
-
-            return t.apply(record.data);
+            
+            return this.pubTemplate.apply(record.data);
 
         };
 
@@ -184,26 +204,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
 
-            var t = new Ext.XTemplate(
-                '<div class="pp-grid-info">',
-                '<tpl if="_imported">',
-                '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
-                '</tpl>',
-                '<div>',
-                '<tpl if="pdf">',
-                '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="{pdf}"></div>',
-                '</tpl>',
-                '<tpl if="attachments">',
-                '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
-                '</tpl>',
-                '<tpl if="annote">',
-                '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
-                '</tpl>',
-                '</div>',
-                '</div>'
-            );
-
-            return t.apply(record.data);
+            return this.iconTemplate.apply(record.data);
 
         }
 
@@ -222,15 +223,16 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 {header: "",
                  id: 'icons',
                  dataIndex: 'title',
-                 renderer:renderIcons,
+                 renderer:renderIcons.createDelegate(this),
                  width: 70,
                  resizable: false,
                 },
                 {header: "Papers",
                  id: 'publication',
                  dataIndex: 'title',
-                 renderer:renderPub,
+                 renderer: renderPub.createDelegate(this),
                  resizable: false,
+                 scope:this,
                 },
             ],
         });

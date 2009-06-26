@@ -91,8 +91,9 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     ],
 
     initComponent: function() {
-		this.tplSingle = new Ext.XTemplate(this.markupSingle);
-        this.tplMultiple = new Ext.XTemplate(this.markupMultiple);
+		this.tplSingle = new Ext.XTemplate(this.markupSingle).compile();
+        this.tplMultiple = new Ext.XTemplate(this.markupMultiple).compile();
+
 		Ext.apply(this, {
 			bodyStyle: {
 				background: '#ffffff',
