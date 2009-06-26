@@ -52,7 +52,18 @@
     margin: 8 0;
 }
 
+.pp-attachment-list{
+    padding: 0 20;
+    background-repeat: no-repeat;
+}
 
+.pp-delete-attachment{
+    display:none;
+}
+
+li:hover a.pp-delete-attachment{
+    display:inline;
+}
 
 .pp-bullet{
     padding: 2 2 2 16;
@@ -493,7 +504,7 @@ a:hover.pp-textlink {
 }
 
 .pp-grid-status-attachments {
-    background: transparent url('/images/icons/attach.png') no-repeat;
+    background: transparent url('/images/icons/attachment.png') no-repeat;
 }
 
 .pp-grid-status-notes {

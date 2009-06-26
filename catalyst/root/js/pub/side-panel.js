@@ -62,7 +62,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<tpl if="attachments">',
         '<ul class="pp-attachments">',
         '<tpl for="attachments_list">',
-        '<li> - <a href="{link}" target="_blank">{file}</a>&nbsp;&nbsp;(<a href="#" class="pp-textlink" action="delete-file" rowid="{rowid}">Delete</a>)</li>',
+        '<li class="pp-attachment-list {cls}"><a href="{link}" target="_blank" class="pp-textlink">{file}</a>&nbsp;&nbsp;<a href="#" class="pp-textlink pp-delete-attachment" action="delete-file" rowid="{rowid}">Delete</a></li>',
         '</tpl>',
         '</ul>',
         '<p>&nbsp;</p>',
