@@ -113,7 +113,7 @@ sub page {
 #print STDERR "entr=$urlID\n";
 print STDERR Dumper $book;
 
-    my $pub = Paperpile::Library::Publication->new(type=>"BOOK");
+    my $pub = Paperpile::Library::Publication->new(pubtype=>"BOOK");
     my @tmp = ();
     
     #############################

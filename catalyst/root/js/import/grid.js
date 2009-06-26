@@ -105,12 +105,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 disabled:true,
                 itemId:'format_button'
             }),
-
-
-
-
-
-
         };
 
 
@@ -483,7 +477,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 if (callback){
                     callback.createDelegate(scope,[json.data])();
                 }
-                
+
+                Paperpile.main.onUpdateDB();
+
                 Paperpile.status.clearMsg();
 
             },
@@ -537,6 +533,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     var container= this.findParentByType(Paperpile.PubView);
                     container.onRowSelect();
                 }
+
+                Paperpile.main.onUpdateDB(this.id);
 
                 Paperpile.status.clearMsg();
 

@@ -233,6 +233,29 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     },
 
+    // Reloads DB grids upon insert/entries; it is possible to avoid
+    // reload of a grid by passing the id via ignore
+
+    onUpdateDB: function(ignore){
+
+        Paperpile.main.tabs.items.each(
+            function(item, index, length){
+                
+                var grid=item.items.get('center_panel').items.get('grid');
+
+                if (ignore){
+                    if (grid.id == ignore){
+                        return;
+                    }
+                }
+
+                if (grid.plugin_name == 'DB'){
+                    grid.store.reload();
+                }
+            }
+        );
+    },
+
     onError: function(response){
         
         var error={ type:"Unknown",

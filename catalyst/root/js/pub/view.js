@@ -91,4 +91,8 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         this.items.get('east_panel').items.get('details').updateDetail();
     },
 
+    
+
+
+
 });
