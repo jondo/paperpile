@@ -188,33 +188,37 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
         // notification area later
         
         this.getForm().waitMsgTarget=true;
-        
+
+        var msg='';
         var url;
         var params;
 
         // If we are given a grid_id we are updating an entry
         if (this.grid_id){
             url= Paperpile.Url('/ajax/crud/update_entry');
-            params={rowid:this.data._rowid,
+            params={//_rowid:this.data._rowid,
                     sha1:this.data.sha1,
                     grid_id: this.grid_id,
                    };
+            msg='Updating database';
         } 
         // else we are creating a new one
         else {
             url= Paperpile.Url('/ajax/crud/new_entry');
             if (this.data.attach_pdf){
-                console.log("INHERE");
                 params={attach_pdf: this.data.attach_pdf};
             }
+            msg='Adding new entry to database';
         }
+
+        if (this.spotlight) this.spot.hide();
+        Paperpile.status.showBusy(msg);
 
         this.getForm().submit(
             {   url:url,
                 scope:this,
                 params:params,
                 success:this.onSuccess,
-                waitMsg:'Saving...',
             }
         );
     },
@@ -226,10 +230,7 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
     },
 
     onSuccess: function(form,action){
-        console.log(action);
         var json = Ext.util.JSON.decode(action.response.responseText);
-
-        if (this.spotlight) this.spot.hide();
         this.callback.createDelegate(this.scope,['SAVE',json.data])();
 
     },

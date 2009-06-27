@@ -15,6 +15,7 @@ use Paperpile::Model::App;
 use Paperpile::Utils;
 use MooseX::Timestamp;
 use Encode qw(encode decode);
+use File::Temp qw/ tempfile tempdir /;
 
 with 'Catalyst::Component::InstancePerContext';
 
@@ -45,9 +46,10 @@ sub create_pubs {
   foreach my $pub (@$pubs) {
 
     # Initialize some fields
-    $pub->created(timestamp gmtime); # use standard time for timestamps
+
+    $pub->created(timestamp gmtime) if not $pub->created;
     $pub->times_read(0);
-    $pub->last_read(timestamp gmtime); ## for the time being
+    $pub->last_read(timestamp gmtime);
     $pub->_imported(1);
 
     # Generate citation key
@@ -124,7 +126,10 @@ sub insert_pubs {
     next if $pub->_imported;
 
     ## Insert main entry into Publications table
-    ( my $fields, my $values ) = $self->_hash2sql( $pub->as_hash() );
+    my $tmp=$pub->as_hash();
+    $tmp->{rowid}=$pub->_rowid if $pub->_rowid;
+
+    ( my $fields, my $values ) = $self->_hash2sql( $tmp );
 
     $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
 
@@ -237,10 +242,79 @@ sub delete_pubs {
 
 sub update_pub {
 
-  ( my $self, my $pub ) = @_;
-  $self->delete_pubs( [ $pub->_rowid ] );
-  my $rowid = $self->create_pubs([$pub]);
-  return $rowid;
+  ( my $self, my $old_pub, my $new_data ) = @_;
+
+  my $data = $old_pub->as_hash;
+
+  # add new fields to old entry
+  foreach my $field ( keys %{$new_data} ) {
+    $data->{$field} = $new_data->{$field};
+  }
+
+  my $new_pub = Paperpile::Library::Publication->new($data);
+
+
+  # Save attachments in temporary dir
+  my $tmp_dir = tempdir( CLEANUP => 1 );
+
+  my @attachments=();
+
+  foreach my $file ($self->get_attachments($new_pub->_rowid)){
+    my ($volume,$dirs,$base_name) = File::Spec->splitpath( $file );
+    my $tmp_file=File::Spec->catfile($tmp_dir,$base_name);
+    copy($file, $tmp_dir);
+    push @attachments, $tmp_file;
+  }
+
+  my $pdf_file='';
+
+  if ($new_pub->pdf){
+    my $paper_root=$self->get_setting('paper_root');
+    my $file=File::Spec->catfile( $paper_root, $new_pub->pdf );
+    my ($volume,$dirs,$base_name) = File::Spec->splitpath( $file );
+    copy($file, $tmp_dir);
+    $pdf_file=File::Spec->catfile($tmp_dir,$base_name);
+  }
+
+  # Delete and then re-create
+  $self->delete_pubs( [$new_pub] );
+  $self->create_pubs( [$new_pub] );
+
+
+  # Attach files again afterwards. Is not the most efficient way but
+  # currently the easiest and most robust solution.
+  foreach my $file (@attachments){
+    $self->attach_file($file, 0, $new_pub->_rowid, $new_pub);
+  }
+  if ($pdf_file){
+    $self->attach_file($pdf_file, 1, $new_pub->_rowid, $new_pub);
+  }
+
+  $new_pub->_imported(1);
+  $new_pub->attachments(scalar @attachments);
+
+  return $new_pub;
+}
+
+
+
+sub get_attachments {
+
+  my ($self, $rowid) = @_;
+
+  my $sth = $self->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+  my ( $attachment_rowid, $file_name );
+  $sth->bind_columns( \$attachment_rowid, \$file_name );
+  $sth->execute;
+  my $paper_root=$self->get_setting('paper_root');
+
+  my @files=();
+
+  while ( $sth->fetch ) {
+    push @files, File::Spec->catfile( $paper_root, $file_name );
+  }
+
+  return @files;
 }
 
 sub update_field {
@@ -892,6 +966,9 @@ sub attach_file {
     $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
 
     $self->update_field('Publications', $rowid, 'pdf', $relative_dest);
+
+    $pub->pdf($relative_dest);
+
     return $relative_dest;
 
   } else {
@@ -910,7 +987,7 @@ sub attach_file {
     $absolute_dest=Paperpile::Utils->copy_file($source, $absolute_dest);
     $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
 
-    #$c->model('User')->add_attachment($relative_dest, $rowid);
+
 
     $self->dbh->do("UPDATE Publications SET attachments=attachments+1 WHERE rowid=$rowid");
     my $file=$self->dbh->quote($relative_dest);

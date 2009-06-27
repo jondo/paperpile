@@ -193,7 +193,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 					       })
     };
 
-    var loadBtn = new Ext.Button({
+   var loadBtn = new Ext.Button({
 				  handler:this.openFile,
 				  text:'Load',
 				  tooltip:"Load File",

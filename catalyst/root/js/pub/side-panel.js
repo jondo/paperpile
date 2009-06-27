@@ -548,14 +548,20 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         var successFn;
 
+        var record= this.grid.store.getAt(this.grid.store.find('sha1',this.data.sha1));
+
         if (isPDF) {
             successFn=function(response){
-                Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf','');
+                //Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf','');
+                record.set('pdf','');
+
                 this.updateDetail();
             }
         } else {
             successFn=function(response){
-                Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments-1);
+                //Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments-1);
+                record.set('attachments',this.data.attachments-1);
+
                 this.updateDetail();
             }
         }

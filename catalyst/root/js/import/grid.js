@@ -277,11 +277,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       });
 
 
-        this.store.on('load', 
-                      function(){
-                          this.getSelectionModel().selectRow(0);
-                      }, this);
+        this.store.on('load', this.onStoreLoad, this);
         
+    },
+
+
+    onStoreLoad: function() {
+        // If nothing is selected, select first row
+        if (!this.getSelectionModel().getSelected()){
+            this.getSelectionModel().selectRow(0);
+        } else {
+            // else re-focus on last selection
+            var row=this.store.indexOf(this.getSelectionModel().getSelected());
+            (function(){this.getView().focusRow( row )}).defer(1000,this);
+            console.log(row);
+        }
     },
 
 
@@ -568,12 +578,17 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var form=new Paperpile.Forms.PubEdit({data:this.getSelectionModel().getSelected().data,
                                               grid_id: this.id,
                                               spotlight: true,
-                                              callback: function(status){
+                                              callback: function(status,data){
                                                   east_panel.remove('pub_edit');
                                                   if (oldSize<500) east_panel.setSize(oldSize);
                                                   east_panel.doLayout();
                                                   east_panel.getLayout().setActiveItem('overview');
                                                   east_panel.showBbar();
+                                                  if (status == 'SAVE'){
+                                                      this.updateData(data);
+                                                      this.findParentByType(Paperpile.PubView).onRowSelect();
+                                                      Paperpile.status.clearMsg();
+                                                  }
                                               },
                                               scope:this
                                              });
@@ -598,9 +613,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                                   east_panel.doLayout();
                                                   east_panel.getLayout().setActiveItem('overview');
                                                   east_panel.showBbar();
+                                                  if (status == 'SAVE'){
+                                                      this.store.reload();
+                                                      Paperpile.status.clearMsg();
+                                                  }
                                               },
                                               scope:this
-
                                              });
         
         var oldSize=east_panel.getInnerWidth();

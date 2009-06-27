@@ -87,6 +87,8 @@ sub delete_entry : Local {
 
   my $data = $self->_get_selection($c);
 
+  print STDERR Dumper($data);
+
   $c->model('Library')->delete_pubs($data);
 
   $plugin->total_entries($plugin->total_entries - scalar(@$data));
@@ -99,26 +101,27 @@ sub update_entry : Local {
   my ( $self, $c ) = @_;
 
   my $grid_id = $c->request->params->{grid_id};
-  my $rowid     = $c->request->params->{rowid};
-  my $sha1      = $c->request->params->{sha1};
+  #my $rowid   = $c->request->params->{_rowid};
+  my $sha1    = $c->request->params->{sha1};
 
-  # get old data
-  my $plugin = $c->session->{"grid_$grid_id"};
-  my $pub = $plugin->find_sha1($sha1);
-  my $data=$pub->as_hash;
+  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $old_pub = $plugin->find_sha1($sha1);
+  my $data    = $old_pub->as_hash;
 
-  # apply new values to old entry
-  foreach my $field (keys %{$c->request->params}){
-    next if $field=~/grid_id/;
-    $data->{$field}=$c->request->params->{$field};
+  my $new_data = {};
+  foreach my $field ( keys %{ $c->request->params } ) {
+    next if $field =~ /grid_id/;
+    $new_data->{$field} = $c->request->params->{$field};
   }
 
-  my $newPub=Paperpile::Library::Publication->new($data);
+  my $new_pub = $c->model('Library')->update_pub( $old_pub, $new_data );
 
-  $c->model('Library')->update_pub($newPub);
+  delete( $plugin->_hash->{ $old_pub->sha1 } );
+  $plugin->_hash->{ $new_pub->sha1 } = $new_pub;
 
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
+  $c->stash->{data}->{ $old_pub->sha1 } = $new_pub->as_hash;
+
+  $c->stash->{success} = \1;
 
 }
 
