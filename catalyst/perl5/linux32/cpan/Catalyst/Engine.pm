@@ -13,6 +13,8 @@ use URI::QueryParam;
 
 use namespace::clean -except => 'meta';
 
+has env => (is => 'rw');
+
 # input position and length
 has read_length => (is => 'rw');
 has read_position => (is => 'rw');
@@ -83,7 +85,8 @@ sub finalize_cookies {
                 -expires => $val->{expires},
                 -domain  => $val->{domain},
                 -path    => $val->{path},
-                -secure  => $val->{secure} || 0
+                -secure  => $val->{secure} || 0,
+                -httponly => $val->{httponly} || 0,
             )
         );
 
@@ -673,6 +676,18 @@ sub unescape_uri {
 =head2 $self->finalize_output
 
 <obsolete>, see finalize_body
+
+=head2 $self->env
+
+Hash containing enviroment variables including many special variables inserted
+by WWW server - like SERVER_*, REMOTE_*, HTTP_* ...
+
+Before accesing enviroment variables consider whether the same information is
+not directly available via Catalyst objects $c->request, $c->engine ...
+
+BEWARE: If you really need to access some enviroment variable from your Catalyst
+application you should use $c->engine->env->{VARNAME} instead of $ENV{VARNAME},
+as in some enviroments the %ENV hash does not contain what you would expect.
 
 =head1 AUTHORS
 
