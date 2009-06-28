@@ -1,32 +1,40 @@
 Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   toolMode: 'anchorzoom',
-  pageN:0,
-  pageSizes:[],
-  words:[],
+
+
+  pageN:0,                         // The total number of pages in the document.
+  pageSizes:[],                    // A list of page size objects in the form {w,h}
+  words:[],                        // A list of words in the form {x1,y1,x2,y2}
   lines:[],
-  thumbnails:[],
-  searchResults:[],
+  searchResults:[],                // A list of search result rectangles, in the form {x1,y1,x2,y2}
+  images:{},                       // A hash containing the URLs of images that have already been loaded.
+  loadedImages:{},
+
   delayedTask:null,
 
-  // Page layout settings.
-  continuous:true,
+  // In a continuous layout, we have pages from startPage to (startPage+maxPages).
+  continuous:false,                 // Whether or not we're laying out continuously or in single-block mode.
   startPage:0,
   maxPages:25,
-  columnCount:1,
+
+  columnCount:4,                   // In both single and continuous layout, pages are grouped into page
+                                   // blocks according to the columnCount value.
 
   // Reading state.
-  currentPage:0,
-  currentZoom: 1.0,
-  specialZoom:'page',
+  currentPage:0,                   // The current "active" page being viewed
+  currentZoom: 1.0,                // The current numerical zoom value.
+  specialZoom:'page',              // either '' (no special zoom), 'page', or 'width'. If set, then the layout
+                                   // will maintain the full-page zoom upon resizing.
+
+  // Selection state.
   selection:[],
   selectionStartWord:-1,
   selectionPrevWord:-1,
 
-  zoomAnim:null,
-  scrollAnim:null,
 
+  // Layout parameters.
   betweenPagePaddingFraction:1/50,
-  pageBlockMargin:50,
+  imageBorderW:1,
 
   initComponent: function() {
 
@@ -71,6 +79,15 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 				    disabled:true,
 				    itemId:'pdf_layout_twoup'
 					 }),
+      'LAYOUT_FOUR': new Ext.Action({
+//				    text:'Four-up',
+				    handler:this.layoutFourUp,
+				    scope:this,
+				    cls:'x-btn-text-icon layoutFourUp',
+				    disabled:true,
+				    itemId:'pdf_layout_fourup'
+					 }),
+
       'LAYOUT_ONE': new Ext.Action({
 //				    text:'One-up',
 				    handler:this.layoutOneUp,
@@ -202,7 +219,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     var oneBtn = new Ext.Button({
 				  handler:this.layoutOneUp,
-				  text:'One-Up',
+				  text:'1',
 				  enableToggle:true,
 				  toggleGroup:'onetwo',
 				  tooltip:"One-Up Layout",
@@ -210,12 +227,21 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 				    });
     var twoBtn = new Ext.Button({
 				  handler:this.layoutTwoUp,
-				  text:'Two-Up',
+				  text:'2',
 				  enableToggle:true,
 				  toggleGroup:'onetwo',
 				  tooltip:"Two-Up Layout",
 				  scope:this
 				    });
+    var fourBtn = new Ext.Button({
+				  handler:this.layoutFourUp,
+				  text:'4',
+				  enableToggle:true,
+				  toggleGroup:'onetwo',
+				  tooltip:"Four-Up Layout",
+				  scope:this
+				    });
+
     var singleBtn = new Ext.Button({
 				     handler:this.viewSingle,
 				     text:'Single',
@@ -268,6 +294,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       {xtype:'tbseparator'},
       oneBtn,
       twoBtn,
+      fourBtn,
       {xtype:'tbseparator'},
       singleBtn,
       continBtn,
@@ -280,12 +307,15 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       this.tbItems['SEARCH_FIELD']
     ];
 
+    var pagesId = this.prefix()+"pages";
+    var root_id = this.getItemId()+"_content";
+
     Ext.apply(this,
       {autoScroll : true,
        enableKeyEvents: true,
        keys: {},
        bbar: bbar,
-       html:'<div id="content-pane" class="content-pane" style="left:0pt;top:0pt"><center class="page-pane" id="pages"></center>',
+       html:'<div id="content-pane" class="content-pane" style="left:0pt;top:0pt"><center class="page-pane" id="'+pagesId+'"></center>',
        plugins: []
       });
 
@@ -295,7 +325,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
 
   afterRender: function() {
-
     this.setKeyEvents();
 
     this.body.on('scroll',this.onScroll,this);
@@ -319,7 +348,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   updateZoom: function() {
-    // A zoom level of "1" will always correspond to fitting the page block width.
+    // A zoom level of "1" will always correspond to fitting the page-block width!.
 
     if (this.pageSizes.length == 0)
       return;
@@ -331,12 +360,15 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       if (this.columnCount > 1) {
 	var cols = this.columnCount;
 	var pad = this.betweenPagePaddingFraction;
-	pageWidth = pageWidth * cols + (pageWidth*pad*(cols-1));
+	pageWidth = pageWidth * cols + (pageWidth*pad*(cols+1));
+      } else {
+	var cols = this.columnCount;
+	var pad = this.betweenPagePaddingFraction;
+	pageWidth = pageWidth * cols + (pageWidth*pad*(cols)+1);
       }
 
       var pageRatio = pageWidth / pageHeight;
       var viewRatio = this.getRealWidth() / this.getRealHeight();
-//      console.log("pg: "+pageRatio+" viw:"+viewRatio);
       if (pageRatio > viewRatio) {
 	// page is wider, so constrain to width.
 	this.currentZoom = 1;
@@ -349,13 +381,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     } else {
       // Do nothing.
     }
-  },
-
-  getRealHeight: function() {
-    return this.getInnerHeight() - 18;
-  },
-  getRealWidth: function() {
-    return this.getInnerWidth() - this.pageBlockMargin;
+    console.log(this.currentZoom);
   },
 
   initPDF: function(file){
@@ -369,11 +395,15 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       },
       success: function(response){
         var doc = response.responseXML;
-        this.pageN = Ext.DomQuery.selectNumber("pageNo", doc);
-        var p=Ext.DomQuery.select("page", doc);
 
         this.pageSizes=[];
-	this.imageSizes=[];
+	this.images={};
+	this.searchResults=[];
+	this.words=[];
+	this.lines=[];
+
+        this.pageN = Ext.DomQuery.selectNumber("pageNo", doc);
+        var p=Ext.DomQuery.select("page", doc);
         for (var i=0;i<this.pageN;i++){
           var width=Ext.DomQuery.selectNumber("width", p[i]);
           var height=Ext.DomQuery.selectNumber("height", p[i]);
@@ -381,141 +411,388 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
           this.words[i]=[];
           this.lines[i]=[];
 	}
-	this.layoutPages();
+
+	this.setCurrentPage(this.currentPage);
 	this.updateZoom();
-	this.loadFullPage(this.startPage);
-	this.resizePages();
-	this.setCurrentPage(this.startPage);
+	this.layoutPages();
+
+	for (var i=0; i < this.pageN; i++) {
+	  this.addBackgroundTask("initPDF thumbnails",this.loadThumbnail,[i],this,10);
+	}
 
       },
       scope:this
       });
+
+  },
+
+  prefix: function() {
+    return this.getItemId()+"_";
   },
 
   layoutPages: function() {
+    if (!this.continuous) {
+      this.layoutSingle();
+    } else {
+      this.layoutContinuous();
+    }
+  },
+
+  pageTemplate: function(pageIndex,useBlinders) {
+    var prefix = this.prefix();
+    var w = this.getPageWidth(pageIndex);
+    var margin = Math.floor(w * this.betweenPagePaddingFraction/2);
+
+    var src = this.getThumbnailUrl(pageIndex);
+
+    var blinder= {};
+    if (useBlinders) {
+      blinder = {
+      id:prefix+"blinder."+pageIndex,
+      style:[
+	"position:absolute;z-index:3;",
+	"width:"+this.getAdjustedWidth(pageIndex),
+	"height:"+this.getAdjustedHeight(pageIndex),
+	"top:0px",
+	"left:0px"
+      ].join(";"),
+      cls:"pdf-page-blinder",
+      tag:"div"
+      };
+    }
+
+    var page = {
+      id:prefix+"page."+pageIndex,
+      tag:"div",
+      cls:'pdf-page',
+      style:{
+	margin:margin+"px "+margin+"px"
+      },
+      children:[
+	{id:"",tag:"div",
+	style:{
+	  position:'relative',
+	  'z-index':0
+	},
+	children:[
+	  {id:prefix+"sticky."+pageIndex,
+	  tag:"div"},
+	  {id:prefix+"highlight."+pageIndex,
+	  tag:"div"},
+	  {id:prefix+"search."+pageIndex,
+	  style:"position:absolute;z-index:-1",
+	  tag:"div"},
+	  {id:prefix+"img."+pageIndex,
+	  tag:"img",
+	  src:src,
+	  width:this.getAdjustedWidth(pageIndex),
+	  height:this.getAdjustedHeight(pageIndex),
+	  style:"position:aboslute;z-index:1;top:0px;left:0px;",
+	  cls:"pdf-page-img"
+	  },
+	  blinder
+	  ]
+	  }
+	]
+    };
+
+    return page;
+  },
+
+  layoutSingle: function() {
     var numPages = this.pageN;
     var columns = this.columnCount;
     var continuous = this.continuous;
     var maxPages = this.maxPages;
 
+    var pagesId = this.prefix()+"pages";
+    var pageBlocks = Ext.select("#"+pagesId+" > *");
+    pageBlocks.remove();
+
+    var children = [];
+    for (var i=0; i < columns; i++) {
+      var pageIndex = this.currentPage + i;
+      if (pageIndex > numPages-1) {
+	break;
+      }
+      children.push(this.pageTemplate(pageIndex,true));
+    }
+
+    var pdfContainer = Ext.get(this.prefix()+"pages");
+    var block = Ext.DomHelper.append(pdfContainer,
+      {
+      id:this.prefix()+"pageblock."+i,
+      tag:"div",
+      cls:"pdfblock",
+      children:children
+      },
+      true
+    );
+    this.positionBlock(block);
+
+    // Remove old annotation retrieval.
+    this.removeBackgroundTasksByName("Layout Annotations");
+
+    for (var i=0; i < columns; i++) {
+      var pageIndex = this.currentPage + i;
+      if (pageIndex > numPages-1) {
+	break;
+      }
+
+      var newImg = Ext.get(this.prefix()+"img."+pageIndex);
+      if (!this.isThumbnailLoaded(pageIndex)) {
+	newImg.on("load",this.imageLoaded,this);
+      } else {
+	var blinder = Ext.fly(this.prefix()+"blinder."+pageIndex);
+	if (blinder != null)
+	  blinder.remove();
+      }
+
+      // Trigger the full page image to load.
+      //newImg.set({src:this.getFullUrl(pageIndex)});
+      this.loadFullPage(pageIndex);
+
+      this.addBackgroundTask("Layout Annotations",this.loadSearchAndAnnotations,[pageIndex],this,20,0,false);
+    }
+  },
+
+  positionBlock:function(block) {
+    block.setStyle("width",this.getBlockWidth());
+    block.setStyle("position","relative");
+    if (this.getPageHeight() < this.getRealHeight() && !this.continuous) {
+      var heightDiff = this.getRealHeight() - this.getPageHeight(0);
+      block.setStyle("top",heightDiff/2);
+    } else {
+      block.setStyle("top","0px");
+    }
+  },
+
+  getBlockWidth: function() {
+    var pgW = Math.ceil(this.getPageWidth());
+    var pad = Math.ceil(pgW * this.betweenPagePaddingFraction+1);
+    var blockW = (pgW*this.columnCount + pad*(this.columnCount+1) + this.imageBorderW*4*this.columnCount);
+    if (blockW < 200 || this.currentZoom <= 1 || this.columnCount == 1) {
+      return "";
+    } else {
+      return blockW+"px";
+    }
+  },
+
+  layoutContinuous: function() {
+    var numPages = this.pageN;
+    var columns = this.columnCount;
+    var startPage = this.startPage;
+    var maxPages = this.maxPages;
+
     numPages = Math.min(maxPages,numPages);
-    numPages = (continuous ? numPages : 1);
     var numBlocks = Math.ceil(numPages / columns);
 
-    var pdfContainer = Ext.get("pages");
-
-    // Remove all existing blocks.
-    var pageBlocks = Ext.select("#pages > *");
-//    console.log(pageBlocks);
+    var pagesId = this.prefix()+"pages";
+    var pageBlocks = Ext.select("#"+pagesId+" > *");
     pageBlocks.remove();
-//    console.log("Going to layout "+numPages+" pages...");
 
-    var w = this.getPageWidth();
-    var pad = w * this.betweenPagePaddingFraction;
-
-    var maxPageHeight = 0;
+    //this.suspendEvents();
     for (var i=0; i < numBlocks; i++) {
       var children = [];
       for (var j=0; j < columns; j++) {
-	var pageIndex = i*columns + j + this.startPage;
+	var pageIndex = i*columns + j + this.viewStartPage;
 	if (pageIndex > this.pageN-1)
 	  break;
-//	console.log("Adding page "+pageIndex);
-	children.push({
-	  id:"page."+pageIndex,
-	  tag:"div",
-	  cls:'pdf-page',
-	  style:{
-	    padding:pad+"px "+pad/2+"px"
-	  },
-	  children:[
-	    {id:"",tag:"div",
-	     style:{
-	       position:'relative',
-	       'z-index':0
-	     },
-	    children:[
-	      {id:"sticky."+pageIndex,
-	      tag:"div"},
-	      {id:"highlight."+pageIndex,
-	      tag:"div"},
-	      {id:"search."+pageIndex,
-	       style:"position:absolute;z-index:-1",
-	      tag:"div"},
-	      {id:"img."+pageIndex,
-	      tag:"img",
-	      width:this.getPageWidth(),
-	      height:this.getPageHeight(pageIndex),
-	      style:"position:aboslute;z-index:1;",
-	      cls:"pdf-page-img"}
-	      ]
-	    }
-	  ]
-	});
+	children.push(this.pageTemplate(pageIndex,true));
       }
 
+      var pdfContainer = Ext.get(this.prefix()+"pages");
       var block = Ext.DomHelper.append(pdfContainer,
-	{id:"pageblock."+i,
+	{id:this.prefix()+"pageblock."+i,
 	tag:"div",
 	cls:"pdfblock",
 	children:children},
 	true);
-      if (this.columnCount > 1) {
-	var blockW = (this.getPageWidth()*this.columnCount + pad*this.columnCount) + 20;
-	block.setStyle("width",blockW+"px");
-      }
+      this.positionBlock(block);
 
       for (var j=0; j < columns; j++) {
-	var pageIndex = i*columns+j + this.startPage;
+	var pageIndex = i*columns+j + this.viewStartPage;
 	if (pageIndex > this.pageN-1)
 	  break;
 
-	var newImg = Ext.get("img."+pageIndex);
-	this.loadThumbnail(pageIndex,newImg);
+	var newImg = Ext.get(this.prefix()+"img."+pageIndex);
+	if (!this.isThumbnailLoaded(pageIndex)) {
+	  newImg.on("load",this.imageLoaded,this);
+	} else {
+	  var blinder = Ext.fly(this.prefix()+"blinder."+pageIndex);
+	  if (blinder != null)
+	    blinder.remove();
+	}
 
-	this.loadSearchResultsIntoPage(pageIndex);
-
-	var pg = this.getPage(pageIndex);
-	var pgH = this.getPageHeight(pageIndex);
-	var pgW = this.getPageWidth(pageIndex);
-	maxPageHeight = Math.max(maxPageHeight,pgH);
+	this.addBackgroundTask("Layout Annotations",this.loadSearchAndAnnotations,[pageIndex],this,20,0,false);
       }
+    }
+
+    this.loadVisiblePages();
+
+
+    //this.resumeEvents();
+  },
+
+  imageLoaded: function(e,t,o) {
+    var img = Ext.fly(t);
+    img.un("load");
+    var id = t.id;
+    var index = id.lastIndexOf(".")+1;
+    if (index > 0) {
+      var pageNo = id.substr(index);
+      // Find the page blinder and hide it.
+      var blinder = Ext.fly(this.prefix()+"blinder."+pageNo);
+      if (blinder != null)
+	blinder.setVisible(false);
     }
   },
 
   resizePages: function() {
-    var pageImgs = Ext.select(".pdf-page-img");
-    var w = this.getPageWidth();
-    pageImgs.set({width:w,height:''});
-
-    var pages = Ext.select(".pdf-page");
-    var pad = w * this.betweenPagePaddingFraction;
-    pages.setStyle("padding",pad+"px "+pad/2+"px");
-
-    var blocks = Ext.select(".pdfblock");
-    if (this.columnCount > 1) {
-      var blockW = (this.getPageWidth()*this.columnCount + pad*this.columnCount) + 20;
-      blocks.setStyle("width",blockW+"px");
+    // Resize each page image.
+    for (var i=this.startPage;i<this.startPage+this.maxPages;i++) {
+      var pgImg = Ext.fly(this.prefix()+"img."+i);
+      if (pgImg != null) {
+	//console.log("Resizing page "+i);
+	var adjW = this.getAdjustedWidth(i);
+	var h = this.getAdjustedHeight(i);
+	//console.log("w:"+adjW+" h:"+h);
+	pgImg.set({width:adjW,height:h});
+	var pgBlinder = Ext.fly(this.prefix()+"blinder."+i);
+	if (pgBlinder != null) {
+	  pgBlinder.setStyle({width:adjW,height:h,top:0,left:0});
+	}
+      }
     }
 
-    // Hide all search results while they resize.
+    // Load the full image of all visible pages.
+    this.removeBackgroundTasksByName("Visible Pages");
+    this.loadVisiblePages();
+
+    // Re-adjust the between-page padding amounts.
+    var pages = Ext.select("#"+this.getItemId()+" .pdf-page");
+    var w = this.getPageWidth(0);
+    var margin = Math.floor(w * this.betweenPagePaddingFraction/2);
+    pages.setStyle("margin",margin+"px "+margin+"px");
+
+    // Set the width on the block containers (most important when we're zoomed in with two-up layout)
+    var blocks = Ext.select("#"+this.getItemId()+" .pdfblock");
+    //blocks.setStyle("width",this.getBlockWidth());
+    this.positionBlock(blocks);
+
+    // Remove all annotations and whatnot.
+    var searches = Ext.select("#"+this.getItemId()+" .pdf-search-result");
+    searches.remove();
+
+    // Reset the positions of all search results, stickies, annotations, etc.
+    // Note: we put these actions on the bg queue, so the resizing happens first.
+    this.removeBackgroundTasksByName("Resize Annotations");
     for (var i=this.startPage;i<this.startPage+this.maxPages;i++) {
-      this.loadSearchResultsIntoPage(i);
+      var pageIndex = i;
+      var img = this.getImage(pageIndex);
+      if (img == null)
+	continue;
+
+      this.addBackgroundTask("Resize Annotations",this.loadSearchAndAnnotations,[pageIndex],this,20,20,false);
     }
   },
 
+  bgTasks:[],
+  bgDelay:null,
+  loadSearchAndAnnotations: function(pageIndex) {
+    //console.log("  -> Loading search and Annotations for page "+pageIndex+"...");
+    this.loadSearchResultsIntoPage(pageIndex);
+    //console.log("  -> Done!");
+  },
 
+  addBackgroundTask: function(name,fn,paramArray,scope,delayToNext,workerDelay,addToFront) {
+    if (!workerDelay) {
+      workerDelay = 50;
+    }
+    if (!delayToNext) {
+      delayToNext = 0;
+    }
+    if (!addToFront) {
+      addToFront = false;
+    }
+
+    var bgTask = {
+		   name:name,
+		   fn:fn,
+		   params:paramArray,
+		   scope:scope,
+		   delayToNext:delayToNext
+		 };
+    //console.log("Adding bg task: "+bgTask);
+    if (addToFront) {
+      this.bgTasks.unshift(bgTask);
+    } else {
+      this.bgTasks.push(bgTask);
+    }
+
+    if (this.bgDelay == null) {
+      this.bgDelay = new Ext.util.DelayedTask();
+    }
+    this.bgDelay.delay(workerDelay,this.backgroundWorker,this);
+  },
+
+  removeBackgroundTasksByName: function(name) {
+    for (var i=0; i < this.bgTasks.length; i++) {
+      var bgTask = this.bgTasks[i];
+      if (bgTask.name == name) {
+	console.log("Removing bg task "+i+": "+name);
+	this.bgTasks.splice(i,1);
+	i--;
+      }
+    }
+  },
+
+  backgroundWorker: function() {
+    if (this.bgTasks.length > 0) {
+      var bgTask = this.bgTasks.shift();
+      console.log("Running background task '"+bgTask.name+"'  ["+bgTask.params+"]");
+      try {
+	bgTask.fn.defer(0,bgTask.scope,bgTask.params);
+      } catch (err) {
+	console.log("ERROR Running bgWorker:");
+	console.log(err);
+      }
+    }
+
+    if (this.bgTasks.length > 0) {
+      this.bgDelay.delay(bgTask.delayToNext,this.backgroundWorker,this);
+    } else {
+      //console.log("  -> No work left to do! Stopping bgWorker...");
+    }
+  },
 
   getImage: function(i){
-//    return Ext.get(Ext.query("img","img."+i)[0]);
-    return Ext.get("img."+i);
+    return Ext.get(this.prefix()+"img."+i);
   },
 
   getPage: function(i){
-    return Ext.get("page."+i);
+    return Ext.get(this.prefix()+"page."+i);
+  },
+
+  getRealHeight: function() {
+    var realHeight = this.getInnerHeight() - 2;
+    //console.log("Real height: "+realHeight);
+    return realHeight;
+  },
+
+  getRealWidth: function() {
+    var realWidth = this.getInnerWidth() -2;
+    //console.log("Real width: "+realWidth);
+    return realWidth;
   },
 
   getPageHeight: function(i) {
+    if (!i) {
+      i = 0;
+    }
+    if (!this.pageSizes[i]) {
+      return this.getPageWidth();
+    }
     var width = this.getPageWidth();
     var aspectRatio = this.pageSizes[i].height / this.pageSizes[i].width;
     return aspectRatio*width;
@@ -524,43 +801,159 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   getPageWidth: function() {
     var totalWidth = this.getRealWidth();
     var columns = this.columnCount;
-    var padding = (columns-1) * this.betweenPagePaddingFraction * totalWidth;
-    var widthMinusPadding = totalWidth - padding;
-    return widthMinusPadding/columns * this.currentZoom;
+
+    totalWidth -= totalWidth*this.betweenPagePaddingFraction*2;
+    totalWidth *= this.currentZoom;
+    var intWidthPerPage = Math.floor(totalWidth/columns);
+    var pagePadding = Math.floor(intWidthPerPage*this.betweenPagePaddingFraction);
+    intWidthPerPage -= pagePadding;
+    return intWidthPerPage;
+
+    // Tried a more mathematical approach, but rounding errors in CSS are a bitch. Fail.
+    // n*x + x*(n+1)/pad = total
+    // x = total / (n + [n+1]/pad)
+    //var pgW = (totalWidth*this.currentZoom - (2*this.imageBorderW*columns)) / (columns + this.betweenPagePaddingFraction*(columns+1));
+    //console.log("pgW: "+pgW);
+    //return pgW-2;
   },
 
-  loadThumbnail: function(i,imgEl){
-    var scale=200/this.pageSizes[i].width;
+  getAdjustedHeight: function(i,scale) {
+    if (!scale) {
+      scale = this.getScale(i);
+    }
+    var width = this.getAdjustedWidth(i);
+    var ratio = this.pageSizes[i].height / this.pageSizes[i].width;
+    var newHeight = width * ratio;
+    return Math.floor(newHeight);
+  },
+
+  getAdjustedWidth: function(pageIndex,scale) {
+    if (!scale) {
+      scale = this.getScale(pageIndex);
+    }
+    var newWidth = Math.floor(this.pageSizes[pageIndex].width * scale);
+    return newWidth;
+  },
+
+  getScale: function(pageIndex) {
+    var width = this.getPageWidth();
+    var scale = (width)/this.pageSizes[pageIndex].width;
     scale = Math.round(scale*100)/100;
-    var png = "ajax/pdf/render/"+this.file+"/"+i+"/"+scale;
-    imgEl.set({src:png});
+    return scale;
+  },
+
+  getThumbnailUrl: function(pageIndex) {
+    var scale=this.thumbnailSize/this.pageSizes[pageIndex].width;
+    scale = Math.round(scale*100)/100;
+    return "ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale;
+  },
+
+  getFullUrl: function(pageIndex) {
+    var scale = this.getScale(pageIndex);
+    var url = "ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale;
+    return url;
+  },
+
+  isThumbnailLoaded: function(pageIndex) {
+    var needsLoading = this.loadThumbnail(pageIndex,0);
+    return !needsLoading;
+  },
+
+  thumbnailSize:200,
+  loadThumbnail: function(i,imgEl){
+    var scale=this.thumbnailSize/this.pageSizes[i].width;
+    scale = Math.round(scale*100)/100;
+    var neededLoading = this.loadImage(i,scale,imgEl);
+    return neededLoading;
+  },
+
+  loadImage: function(pageIndex,scale,target) {
+    var url = "ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale;
+    if (this.images[url] != null && this.images[url].complete) {
+      //console.log("  -> No need to reload:"+url);
+
+      if (target) {
+	if (target.dom.src.indexOf(url) == -1) {
+	  console.log("  -> Replacing image with pre-loaded at new size: "+url);
+	  target.set({src:url});
+	}
+      }
+      return false;
+    } else {
+      console.log("Loading image: "+url);
+
+      /*if (target) {
+	target.set({src:url});
+	target.on("load",
+	  function() {
+	    this.images[url] = "loaded";
+	    target.un("load");
+	  },this);
+      } else {*/
+	var w = this.getAdjustedWidth(pageIndex,scale);
+	var h = this.getAdjustedHeight(pageIndex,scale);
+	var imgO = new Image(w,h);
+	imgO.src = url;
+	var images = this.images;
+	imgO.onload = function() {
+	  if (target) {
+	    target.set({src:url});
+	  }
+	};
+      //}
+
+      this.images[url] = imgO;
+      return true;
+    }
   },
 
   loadFullPage: function(pageIndex) {
     var img = this.getImage(pageIndex);
-    var width = this.getPageWidth(pageIndex);
-    if (width < 200)
-      return;
-    if (img == null)
-      return;
-    var scale = (width)/this.pageSizes[pageIndex].width;
-    scale = Math.round(scale*100)/100;
-    if (scale > 10 || scale < 0.1) {return;}
+    var scale = this.getScale(pageIndex);
 
-    var png="ajax/pdf/render/"+this.file+"/"+pageIndex+"/"+scale;
-    var src = img.dom.src;
-    if (src.indexOf(png) == -1) {
-      console.log("Loading new full img "+png);
+    if (scale > 10 || scale < 0.1) {return false;}
+
+    var pageNeedsLoading = this.loadImage(pageIndex,scale,img);
+
+    /*
+    var fullUrl="ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale;
+
+    if (img.dom.src.indexOf(fullUrl) == -1) {
+      if (this.images[fullUrl] != null) {
+	var imgO = this.images[fullUrl];
+	console.log("  -> No need to reload: "+fullUrl);
+      //console.log(imgO);
+      } else {
+	var w = this.getAdjustedWidth(pageIndex);
+	var h = this.getAdjustedHeight(pageIndex);
+	var imgO = new Image(w,h);
+	imgO.src = fullUrl;
+	imgO.onload = function() {
+	  console.log("  -> Image loaded! "+fullUrl);
+	  img.set({src:fullUrl});
+	  imgO.onload = null;
+	};
+	console.log("Loading image: "+fullUrl);
+	this.images[fullUrl] = imgO;
+      }
+    }
+
+    //var src = img.dom.src;
+    //if (src.indexOf(png) == -1) {
+    //  console.log("Loading new full img "+png);
       // If the image URL is changing as a result, let's update the <img> tag size to ensure
       // that the <img> and image sizes match up
-      var newWidth = Math.floor(this.pageSizes[pageIndex].width * scale);
-      img.set({src:png});
-      img.set({width:newWidth});
-    }
+      //var newWidth = Math.floor(this.pageSizes[pageIndex].width * scale);
+      //var newHeight = newWidth * this.pageSizes[i].height / this.pageSizes[i].width;
+      //img.set({src:png});
+      //img.set({width:newWidth,height:newHeight});
+    //}
+     */
+    //if (this.words[pageIndex].length == 0) {
+      //this.loadWords(pageIndex);
+    //}
 
-    if (this.words[pageIndex].length == 0) {
-      this.loadWords(pageIndex);
-    }
+    return pageNeedsLoading;
   },
 
   onSearch: function(f,e) {
@@ -585,8 +978,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 	term: searchText
       },
       success: function(response){
-        var doc = response.responseXML;
-	//console.log("Response: "+response.responseText);
+      var doc = response.responseXML;
+      //console.log("Response: "+response.responseText);
 
 	this.searchResults=[];
 
@@ -652,15 +1045,16 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       });
     }
 
-    var searchHolder = Ext.get("search."+pageIndex);
-    var block = Ext.DomHelper.overwrite(searchHolder,
-      hitDivs,
-      true);
-
+    var searchHolder = Ext.get(this.prefix()+"search."+pageIndex);
+    if (searchHolder != null) {
+      var block = Ext.DomHelper.overwrite(searchHolder,
+	hitDivs,
+	true);
+    }
 },
 
   page2px: function(pageCoord,pageIndex) {
-    var pageW = this.getPageWidth();
+    var pageW = this.getPageWidth(pageIndex);
     var origW = this.pageSizes[pageIndex].width;
 //    console.log(pageW/origW);
     return Math.round(pageCoord * pageW/origW);
@@ -673,17 +1067,42 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     var scale=this.canvasWidth/this.pageSizes[pageIndex].width*this.currentZoom;
     scale = Math.round(scale*Math.pow(10,2))/Math.pow(10,2);
     return px/scale;
-
   },
 
   onScroll: function(el) {
-    this.delayedTask.delay(30,this.scrollDelay,this);;
+    this.delayedTask.delay(100,this.scrollDelay,this);;
   },
 
   loadNextPage:function(curPage) {
     var timeToWait = this.currentZoom * 2000;
-    this.timeoutNum = this.loadNextPage.defer(timeToWait,this,[curPage+1]);
-    this.loadFullPage(curPage);
+    var pageNeedsLoading = this.loadFullPage(curPage);
+    if (!pageNeedsLoading) {
+      timeToWait = 100;
+    }
+    //this.timeoutNum = this.loadNextPage.defer(timeToWait,this,[curPage+1]);
+  },
+
+  stopPageLoading:function() {
+    window.clearTimeout(this.timeoutNum);
+  },
+
+  loadVisiblePages: function() {
+    var visiblePages=[];
+    for (var i=0; i < this.pageN; i++) {
+      var pageIndex = i;
+      var img = this.getImage(pageIndex);
+      if (img == null)
+	continue;
+      var amountInView = this.isElInView(img);
+      if (amountInView > 0.05) {
+	  visiblePages.push(pageIndex);
+      }
+    }
+
+    for (var i=0; i < visiblePages.length; i++) {
+      var pageIndex = visiblePages[i];
+      this.addBackgroundTask("Visible Pages",this.loadFullPage,[pageIndex],this,0,0,true);
+    }
   },
 
   timeoutNum:0,
@@ -705,27 +1124,27 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 	  mostVisibleAmount = amountInView;
 	  mostVisiblePage = pageIndex;
 	}
-	if (amountInView > 0.1) {
+	if (amountInView > 0.05) {
 	  visiblePages.push(pageIndex);
 	}
       }
     }
 
-
     if (mostVisibleAmount > 0) {
       if (mostVisiblePage != this.currentPage) {
-	window.clearTimeout(this.timeoutNum);
-	this.loadNextPage(mostVisiblePage);
+	//window.clearTimeout(this.timeoutNum);
+	//this.loadNextPage(mostVisiblePage);
       }
-      this.setCurrentPage(mostVisiblePage);
-      //this.loadFullPage(mostVisiblePage);
+      //this.setCurrentPage(mostVisiblePage);
     }
 
     for (var i=0; i < visiblePages.length; i++) {
-      this.loadFullPage(i);
+      var pageIndex = visiblePages[i];
+      //this.addBackgroundTask(this.loadFullPage,[pageIndex],this);
+      this.loadFullPage(pageIndex);
     }
 
-    this.updateButtons();
+    //this.updateButtons();
   },
 
   isElInView: function(el) {
@@ -830,7 +1249,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
            lines.push({x1:currLine[0].x1,
            y1:currLine[0].y1,
            x2:currLine[currLine.length-1].x2,
-           y2:currLine[0].y2,
+           y2:currLine[0].y2
                       });
            currLine=[currWord];
          }
@@ -840,7 +1259,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     lines.push({x1:currLine[0].x1,
     y1:currLine[0].y1,
     x2:currLine[currLine.length-1].x2,
-    y2:currLine[0].y2,
+    y2:currLine[0].y2
                });
 
     this.lines[pageIndex]=lines;
@@ -884,7 +1303,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       for (var i=0; i<selected.length; i++){
         var line=selected[i];
 
-        var top=this.pdf2px(line.y1)
+        var top=this.pdf2px(line.y1);
         var left=this.pdf2px(line.x1);
         var width=this.pdf2px(line.x2-line.x1);
         var height=this.pdf2px(line.y2-line.y1);
@@ -925,7 +1344,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.clearSelection();
 
     var word=this.words[this.currentPage][i];
-    var top=this.pdf2px(word.y1)
+    var top=this.pdf2px(word.y1);
     var left=this.pdf2px(word.x1);
     var width=this.pdf2px(word.x2-word.x1);
     var height=this.pdf2px(word.y2-word.y1);
@@ -935,7 +1354,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     el.setPositioning({left:left,top:top, width:width, height:height});
     this.pdfContainer.appendChild(el);
     this.selection.push(el);
-
   },
 
   clearSelection: function(i){
@@ -948,30 +1366,36 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
   viewSingle: function() {
     this.continuous = false;
-    this.updateView();
+    this.viewStartPage = this.currentPage;
+    this.updateLayout();
   },
   viewContinuous: function() {
     this.continuous = true;
-    this.updateView();
+    this.viewStartPage = this.startPage;
+    this.updateLayout();
   },
   layoutOneUp: function() {
     this.columnCount = 1;
-    this.updateView();
+    this.updateLayout();
   },
   layoutTwoUp: function() {
     this.columnCount = 2;
-    this.updateView();
+    this.updateLayout();
+  },
+  layoutFourUp: function() {
+    this.columnCount = 4;
+    this.updateLayout();
   },
 
-  updateView: function() {
+  updateLayout: function() {
     this.updateZoom();
     this.layoutPages();
+    this.pageScroll(0);
   },
 
   pagePrev: function() {
     this.pageScrollPrev();
   },
-
   pageNext: function() {
     this.pageScrollNext();
   },
@@ -981,7 +1405,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.updateZoom();
     this.resizePages();
   },
-
   zoomWidth: function() {
     this.specialZoom = 'width';
     this.updateZoom();
@@ -1004,9 +1427,10 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       return true;
     if (a > c && a < b)
       return true;
+    return false;
   },
 
-  zoomArray: [0.01,0.05,0.1,0.25,0.5,1,2,4,8,16],
+  zoomArray: [0.01,0.05,0.1,0.25,0.5,1,1.5,2,3,4,5,10],
   zoomInOut: function(dir) {
     var curZoom = this.currentZoom;
     this.specialZoom = '';
@@ -1053,8 +1477,10 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.currentZoom = destZoom;
     this.updateZoom();
     this.resizePages();
+    var pgEl = this.getPage(this.currentPage);
+    pgEl.scrollIntoView(this.body,true);
 
-    this.scrollToPage(this.currentPage);
+    //this.scrollToPage(this.currentPage);
   },
 
   zoomIn:function() {
@@ -1088,6 +1514,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         if (tbar[i].getText() == itemId) return i;
       }
     }
+    return 0;
   },
 
   isMouseDown:false,
@@ -1341,8 +1768,47 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
   scrollTarget:0,
   pageScroll: function(dir) {
-    var scrollTarget = this.scrollTarget;
+    // Do some checks on the original scroll target to see if we don't want to scroll at all.
+    if (dir < 0 && this.scrollTarget == 0) {
+      this.scrollToPage(this.scrollTarget);
+      return;
+    }
+    if (dir > 0 && this.scrollTarget + this.columnCount - 1 >= this.pageN-1) {
+      this.scrollToPage(this.scrollTarget);
+      return;
+    }
+
+
     this.scrollTarget += dir;
+    if (this.scrollTarget < 0)
+      this.scrollTarget = 0;
+    if (this.scrollTarget > this.pageN-1)
+      this.scrollTarget = this.pageN-1;
+
+    var scrollTarget = this.scrollTarget;
+    this.currentPage = this.scrollTarget;
+
+    if (!this.continuous) {
+      this.viewStartPage = scrollTarget;
+      this.layoutPages();
+      this.scrollToPage(this.scrollTarget);
+      return;
+    } else if (scrollTarget > this.startPage + this.maxPages) {
+      // Load the next bunch of pages.
+      this.startPage += this.maxPages;
+      this.viewStartPage = this.startPage;
+      this.layoutPages();
+      this.scrollToPage(this.scrollTarget);
+    } else if (scrollTarget < this.startPage) {
+      // Load the previous bunch.
+      this.startPage -= this.maxPages;
+      if (this.startPage < 0)
+	this.startPage = 0;
+      this.viewStartPage = this.startPage;
+      this.layoutPages();
+      this.scrollToPage(this.scrollTarget);
+    }
+
     this.scrollToPage(this.scrollTarget);
   },
 
@@ -1352,9 +1818,18 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     var pf = this.tbItems['PAGE_FIELD'];
     pf.setValue((this.currentPage+1));
-    var pt = this.tbItems['PAGE_COUNT'];
-    var totalPages = this.pageN;
-    pt.setText("of "+totalPages);
+
+    var pageImages = Ext.select("#"+this.getItemId()+" .pdf-page-img");
+    pageImages.removeClass("pdf-cur-page");
+
+    var img = this.getImage(this.currentPage);
+    if (img != null) {
+      console.log("Setting cur pgae!");
+      img.addClass("pdf-cur-page");
+    }
+    //var pt = this.tbItems['PAGE_COUNT'];
+    //var totalPages = this.pageN;
+    //pt.setText("of "+totalPages);
   },
 
   scrollAnimation:null,
@@ -1364,26 +1839,13 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     if (scrollTarget < 0)
       scrollTarget = 0;
 
-    if (!this.continuous) {
-      this.startPage = scrollTarget;
-      this.layoutPages();
-    } else if (scrollTarget > this.startPage + this.maxPages) {
-      // Load the next bunch of pages.
-      this.startPage += this.maxPages;
-      this.layoutPages();
-    } else if (scrollTarget < this.startPage) {
-      // Load the previous bunch.
-      this.startPage -= this.maxPages;
-      if (this.startPage < 0)
-	this.startPage = 0;
-      this.layoutPages();
-    }
-
     //console.log(scrollTarget);
-    this.loadFullPage(this.currentPage);
     var pgEl = this.getPage(scrollTarget);
+    console.log(scrollTarget);
     pgEl.scrollIntoView(this.body,true);
     this.setCurrentPage(scrollTarget);
+    this.scrollDelay();
+    //this.loadFullPage(scrollTarget);
   },
 
   openFile:function() {
@@ -1447,8 +1909,6 @@ ButtonPanel = Ext.extend(Ext.Panel, {
 });
 
 Ext.reg('pdfviewer', Paperpile.PDFviewer);
-
-
 
 var A = Ext.lib.Anim;
 Ext.override(Ext.Element, {

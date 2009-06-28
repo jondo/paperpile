@@ -7,10 +7,17 @@
 }
 
 .pdf-page-img {
-    /*margin: 0 20px;*/
     border: 1px solid black;
 }
 
+.pdf-cur-page {
+    border: 1px solid blue;
+}
+
+.pdf-page-blinder {
+#    border: 1px solid black;
+    background: #ffffff;
+}
 
 .pdf-selector {
     background-color:#6495ED;
@@ -19,3 +26,12 @@
     opacity:0.3;
 }
 
+.pdf-search-result {
+    background-color:#ffff66;
+    border:1px solid red;
+}
+
+.pdf-search-result-current {
+    padding:2px;
+    border:2px solid blue;
+}
