@@ -4,6 +4,21 @@
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
 
+h1 {
+    margin: 8;
+    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-size: 32px;
+    font-weight: normal;
+    letter-spacing: -1px;
+    color: #5E5E5E;
+}
+
+.pp-bullet{
+    padding: 2 2 2 16;
+    background: transparent url('/images/icons/bullet_go.png') no-repeat;
+}
+
+
 .pp-box {
     max-width: 300px;
     margin: 8;
@@ -28,8 +43,8 @@
 }
 
 .pp-box-bottom {
-    -moz-border-radius-topleft: 0px;
-    -moz-border-radius-topright: 0px;
+    -moz-border-radius-topleft: 0px !important;
+    -moz-border-radius-topright: 0px !important;
 }
 
 .pp-box-style1{
@@ -52,6 +67,37 @@
     margin: 8 0;
 
 }
+
+.pp-box-tabs {
+    margin:8;
+}
+
+.pp-box-tabs ul, .pp-box-tabs .pp-box{
+    margin:0;
+}
+
+.pp-box-tabs li{
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    background-color:#F8F7E5;
+    border-color: #F7CA75;
+    border-style: solid;
+    border-width: 1px;
+    float: left;
+    margin: -1px 3px 3px 3px;
+    padding: 6px;
+    -moz-border-radius-bottomleft: 5px;
+    -moz-border-radius-bottomright: 5px;
+}
+
+.pp-box-tabs-leftmost {
+    margin: -1px 3px 3px 0px !important;
+}
+.pp-box-tabs-active {
+    border-top-width: 0px !important;
+    background-color:#FFFEEB !important;
+    padding: 7px !important;
+}
+
 
 li.pp-menu  > ul {
     display: none;   
@@ -76,21 +122,6 @@ li.pp-menu:hover > ul {
 
 li:hover a.pp-delete-attachment{
     display:inline;
-}
-
-.pp-bullet{
-    padding: 2 2 2 16;
-    background: transparent url('/images/icons/bullet_go.png') no-repeat;
-}
-
-
-h1 {
-    margin: 8;
-    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
-    font-size: 32px;
-    font-weight: normal;
-    letter-spacing: -1px;
-    color: #5E5E5E;
 }
 
 .pp-box h2 {

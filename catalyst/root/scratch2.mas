@@ -16,24 +16,15 @@
 <body>
 <div id="container"></div>
 
-<div class="pp-box pp-box-top pp-box-style1">
+<div class="pp-box-tabs">
+<div class="pp-box pp-box-top pp-box-style1" style="height:200px; width:400px">
+</div>
 <ul>
-  <li class="pp-menu pp-action pp-action-attach-pdf" id="attach-pdf-ext-comp-1032">
-    <a action="attach-pdf" class="pp-textlink" href="#">Search PDF &gt;</a>
-    <ul class="pp-submenu">
-      <li><a href="cat.html">Cat</a></li>
-      <li><a href="rabbit.html">Rabbit</a></li>
-      <li><a href="dingo.html">Dingo</a></li>
-    </ul>
-</li>
+  <li class="pp-box-tabs-leftmost">Top authors</li>
+  <li class=" pp-box-tabs-active">Top journals</li>
+  <li>Timeline</li>
 </ul>
 </div>
-
-<ul class="pp-menu">
-  <li>&gt;&gt; Lips
-  </li>
-</ul>
-
 
 </body>
 </html>
