@@ -7,6 +7,7 @@ use Text::SimpleTable;
 use Catalyst::ActionChain;
 use Catalyst::Utils;
 use URI;
+use Scalar::Util ();
 
 has _endpoints => (
                    is => 'rw',
@@ -151,7 +152,13 @@ sub match {
     my @parts = split('/', $path);
 
     my ($chain, $captures, $parts) = $self->recurse_match($c, '/', \@parts);
-    push @{$request->args}, @$parts if $parts && @$parts;
+
+    if ($parts && @$parts) {
+        for my $arg (@$parts) {
+            $arg =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/eg;
+            push @{$request->args}, $arg;
+        }
+    }
 
     return 0 unless $chain;
 
@@ -300,6 +307,23 @@ sub register {
     unshift(@{ $children->{$part} ||= [] }, $action);
 
     $self->_actions->{'/'.$action->reverse} = $action;
+
+    if (exists $action->attributes->{Args}) {
+        my $args = $action->attributes->{Args}->[0];
+        if (defined($args) and not (
+            Scalar::Util::looks_like_number($args) and
+            int($args) == $args
+        )) {
+            require Data::Dumper;
+            local $Data::Dumper::Terse = 1;
+            local $Data::Dumper::Indent = 0;
+            $args = Data::Dumper::Dumper($args);
+            Catalyst::Exception->throw(
+              "Invalid Args($args) for action " . $action->reverse() .
+              " (use 'Args' or 'Args(<number>)'"
+            );
+        }
+    }
 
     unless ($action->attributes->{CaptureArgs}) {
         unshift(@{ $self->_endpoints }, $action);

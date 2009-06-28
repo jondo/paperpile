@@ -62,7 +62,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<tpl if="attachments">',
         '<ul class="pp-attachments">',
         '<tpl for="attachments_list">',
-        '<li> - <a href="{link}" target="_blank">{file}</a>&nbsp;&nbsp;(<a href="#" class="pp-textlink" action="delete-file" rowid="{rowid}">Delete</a>)</li>',
+        '<li class="pp-attachment-list {cls}"><a href="{link}" target="_blank" class="pp-textlink">{file}</a>&nbsp;&nbsp;<a href="#" class="pp-textlink pp-delete-attachment" action="delete-file" rowid="{rowid}">Delete</a></li>',
         '</tpl>',
         '</ul>',
         '<p>&nbsp;</p>',
@@ -91,8 +91,9 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     ],
 
     initComponent: function() {
-		this.tplSingle = new Ext.XTemplate(this.markupSingle);
-        this.tplMultiple = new Ext.XTemplate(this.markupMultiple);
+		this.tplSingle = new Ext.XTemplate(this.markupSingle).compile();
+        this.tplMultiple = new Ext.XTemplate(this.markupMultiple).compile();
+
 		Ext.apply(this, {
 			bodyStyle: {
 				background: '#ffffff',
@@ -547,14 +548,20 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         var successFn;
 
+        var record= this.grid.store.getAt(this.grid.store.find('sha1',this.data.sha1));
+
         if (isPDF) {
             successFn=function(response){
-                Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf','');
+                //Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf','');
+                record.set('pdf','');
+
                 this.updateDetail();
             }
         } else {
             successFn=function(response){
-                Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments-1);
+                //Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments-1);
+                record.set('attachments',this.data.attachments-1);
+
                 this.updateDetail();
             }
         }

@@ -76,7 +76,7 @@ __PACKAGE__->stats_class('Catalyst::Stats');
 
 # Remember to update this in Catalyst::Runtime as well!
 
-our $VERSION = '5.80004';
+our $VERSION = '5.80005';
 
 {
     my $dev_version = $VERSION =~ /_\d{2}$/;
@@ -904,7 +904,9 @@ Returns the engine instance. See L<Catalyst::Engine>.
 =head2 $c->path_to(@path)
 
 Merges C<@path> with C<< $c->config->{home} >> and returns a
-L<Path::Class::Dir> object.
+L<Path::Class::Dir> object. Note you can usually use this object as
+a filename, but sometimes you will have to explicitly stringify it
+yourself by calling the C<<->stringify>> method.
 
 For example:
 
@@ -1161,7 +1163,7 @@ using C<< $c->req->captures >>.
   $c->uri_for($c->action, $c->req->captures);
 
   # For the Foo action in the Bar controller
-  $c->uri_for($c->controller->('Bar')->action_for('Foo'), $c->req->captures);
+  $c->uri_for($c->controller('Bar')->action_for('Foo'), $c->req->captures);
 
 =back
 
@@ -2503,9 +2505,8 @@ the plugin name does not begin with C<Catalyst::Plugin::>.
 
         my @plugins = map { s/\A\+// ? $_ : "Catalyst::Plugin::$_" } @$plugins;
         
-        Class::MOP::load_class($_) for @plugins;
-        
         for my $plugin ( reverse @plugins ) {
+            Class::MOP::load_class($plugin);
             my $meta = find_meta($plugin);
             next if $meta && $meta->isa('Moose::Meta::Role');
 
@@ -2711,6 +2712,8 @@ David E. Wheeler
 dkubb: Dan Kubb <dan.kubb-cpan@onautopilot.com>
 
 Drew Taylor
+
+dwc: Daniel Westermann-Clark <danieltwc@cpan.org>
 
 esskar: Sascha Kiefer
 

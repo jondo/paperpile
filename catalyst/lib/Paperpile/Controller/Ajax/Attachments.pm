@@ -57,9 +57,15 @@ sub list_files : Local {
 
     my $link="/serve/$file_name";
 
+    (my $suffix)=($link=~/\.(.*+$)/);
+
+
     my ($volume,$dirs,$base_name) = File::Spec->splitpath( $abs );
 
-    push @output, {file=>$base_name, link=>$link, rowid=> $attachment_rowid};
+    push @output, {file=>$base_name, 
+                   link=>$link,
+                   cls=>"file-$suffix",
+                   rowid=> $attachment_rowid};
 
   }
 

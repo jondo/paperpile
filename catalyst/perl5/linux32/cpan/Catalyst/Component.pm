@@ -7,6 +7,9 @@ use Catalyst::Utils;
 use Class::C3::Adopt::NEXT;
 use MRO::Compat;
 use mro 'c3';
+use Scalar::Util 'blessed';
+use Storable 'dclone';
+use namespace::clean -except => 'meta';
 
 with 'MooseX::Emulate::Class::Accessor::Fast';
 with 'Catalyst::ClassData';
@@ -34,7 +37,7 @@ Catalyst::Component - Catalyst Component Base Class
         my ( $self, $c ) = @_;
         $c->response->output( $self->{foo} );
     }
-    
+
     1;
 
     # Methods can be a request step
@@ -47,7 +50,7 @@ Catalyst::Component - Catalyst Component Base Class
 
 =head1 DESCRIPTION
 
-This is the universal base class for Catalyst components 
+This is the universal base class for Catalyst components
 (Model/View/Controller).
 
 It provides you with a generic new() for instantiation through Catalyst's
@@ -59,14 +62,27 @@ __PACKAGE__->mk_classdata('_plugins');
 __PACKAGE__->mk_classdata('_config');
 
 sub BUILDARGS {
-    my ($self) = @_;
-    
-    # Temporary fix, some components does not pass context to constructor
-    my $arguments = ( ref( $_[-1] ) eq 'HASH' ) ? $_[-1] : {};
+    my $class = shift;
+    my $args = {};
 
-    my $args =  $self->merge_config_hashes( $self->config, $arguments );
-    
-    return $args;
+    if (@_ == 1) {
+        $args = $_[0] if ref($_[0]) eq 'HASH';
+    } elsif (@_ == 2) { # is it ($app, $args) or foo => 'bar' ?
+        if (blessed($_[0])) {
+            $args = $_[1] if ref($_[1]) eq 'HASH';
+        } elsif (Class::MOP::is_class_loaded($_[0]) &&
+                $_[0]->isa('Catalyst') && ref($_[1]) eq 'HASH') {
+            $args = $_[1];
+        } elsif ($_[0] == $_[1]) {
+            $args = $_[1];
+        } else {
+            $args = +{ @_ };
+        }
+    } elsif (@_ % 2 == 0) {
+        $args = +{ @_ };
+    }
+
+    return $class->merge_config_hashes( $class->config, $args );
 }
 
 sub COMPONENT {
@@ -97,15 +113,14 @@ sub config {
         # this is a bit of a kludge, required to make
         # __PACKAGE__->config->{foo} = 'bar';
         # work in a subclass.
+        # TODO maybe this should be a ClassData option?
         my $class = blessed($self) || $self;
         my $meta = Class::MOP::get_metaclass_by_name($class);
         unless ($meta->has_package_symbol('$_config')) {
-
-            $config = $self->merge_config_hashes( $config, {} );
-            $self->_config( $config );
+            $self->_config( dclone $config );
         }
     }
-    return $config;
+    return $self->_config;
 }
 
 sub merge_config_hashes {
@@ -120,9 +135,8 @@ sub process {
           . " did not override Catalyst::Component::process" );
 }
 
-no Moose;
-
 __PACKAGE__->meta->make_immutable;
+
 1;
 
 __END__
@@ -134,15 +148,26 @@ __END__
 Called by COMPONENT to instantiate the component; should return an object
 to be stored in the application's component hash.
 
-=head2 COMPONENT($c, $arguments)
+=head2 COMPONENT
+
+C<< my $component_instance = $component->COMPONENT($app, $arguments); >>
 
 If this method is present (as it is on all Catalyst::Component subclasses,
 it is called by Catalyst during setup_components with the application class
 as $c and any config entry on the application for this component (for example,
 in the case of MyApp::Controller::Foo this would be
-MyApp->config->{'Controller::Foo'}). The arguments are expected to be a 
-hashref and are merged with the __PACKAGE__->config hashref before calling 
+MyApp->config->{'Controller::Foo'}). The arguments are expected to be a
+hashref and are merged with the __PACKAGE__->config hashref before calling
 ->new to instantiate the component.
+
+You can override it in your components to do custom instantiation, using
+something like this:
+
+  sub COMPONENT {
+      my ($class, $app, $args) = @_;
+      $args = $self->merge_config_hashes($self->config, $args);
+      return $class->new($app, $args);
+  }
 
 =head2 $c->config
 
@@ -150,15 +175,15 @@ hashref and are merged with the __PACKAGE__->config hashref before calling
 
 =head2 $c->config($key, $value, ...)
 
-Accessor for this component's config hash. Config values can be set as 
+Accessor for this component's config hash. Config values can be set as
 key value pair, or you can specify a hashref. In either case the keys
-will be merged with any existing config settings. Each component in 
-a Catalyst application has it's own config hash.
+will be merged with any existing config settings. Each component in
+a Catalyst application has its own config hash.
 
 =head2 $c->process()
 
 This is the default method called on a Catalyst component in the dispatcher.
-For instance, Views implement this action to render the response body 
+For instance, Views implement this action to render the response body
 when you forward to them. The default is an abstract method.
 
 =head2 $c->merge_config_hashes( $hashref, $hashref )

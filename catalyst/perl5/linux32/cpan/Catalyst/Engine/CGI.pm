@@ -3,7 +3,6 @@ package Catalyst::Engine::CGI;
 use Moose;
 extends 'Catalyst::Engine';
 
-has env => (is => 'rw');
 has _header_buf => (is => 'rw', clearer => '_clear_header_buf', predicate => '_has_header_buf');
 
 =head1 NAME
@@ -72,7 +71,8 @@ sub prepare_connection {
 
     $request->hostname( $ENV{REMOTE_HOST} ) if exists $ENV{REMOTE_HOST};
     $request->protocol( $ENV{SERVER_PROTOCOL} );
-    $request->user( $ENV{REMOTE_USER} );
+    $request->user( $ENV{REMOTE_USER} );  # XXX: Deprecated. See Catalyst::Request for removal information
+    $request->remote_user( $ENV{REMOTE_USER} );
     $request->method( $ENV{REQUEST_METHOD} );
 
     if ( $ENV{HTTPS} && uc( $ENV{HTTPS} ) eq 'ON' ) {
@@ -233,7 +233,7 @@ sub read_chunk { shift; shift; *STDIN->sysread(@_); }
 
 =cut
 
-sub run { shift; shift->handle_request(@_) }
+sub run { shift; shift->handle_request( env => \%ENV ) }
 
 =head1 SEE ALSO
 

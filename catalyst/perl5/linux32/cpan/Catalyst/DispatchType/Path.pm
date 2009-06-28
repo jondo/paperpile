@@ -6,6 +6,7 @@ extends 'Catalyst::DispatchType';
 use Text::SimpleTable;
 use Catalyst::Utils;
 use URI;
+use Scalar::Util ();
 
 has _paths => (
                is => 'rw',
@@ -61,6 +62,16 @@ sub list {
       if ( keys %{ $self->_paths } );
 }
 
+sub _action_args_sort_order {
+    my ( $self, $action ) = @_;
+
+    my ($args) = @{ $action->attributes->{Args} || [] };
+
+    return $args if Scalar::Util::looks_like_number($args);
+
+    return ~0;
+}
+
 =head2 $self->match( $c, $path )
 
 For each action registered to this exact path, offers the action a chance to
@@ -74,7 +85,12 @@ sub match {
 
     $path = '/' if !defined $path || !length $path;
 
-    foreach my $action ( @{ $self->_paths->{$path} || [] } ) {
+    # sort from least args to most
+    my @actions = sort { $self->_action_args_sort_order($a) <=>
+                         $self->_action_args_sort_order($b) }
+            @{ $self->_paths->{$path} || [] };
+
+    foreach my $action ( @actions ) {
         next unless $action->match($c);
         $c->req->action($path);
         $c->req->match($path);

@@ -33,6 +33,46 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             emptyMsg: "No papers to display",
         });
 
+        this.pubTemplate = new Ext.XTemplate(
+            '<div class="pp-grid-data">',
+            '<p class="pp-grid-title">{title}</p>',
+            '<tpl if="_authors_display">',
+            '<p class="pp-grid-authors">{_authors_display}</p>',
+            '</tpl>',
+            '<tpl if="_citation_display">',
+            '<p class="pp-grid-citation">{_citation_display}</p>',
+            '</tpl>',
+            '<tpl if="_snippets_text">',
+            '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
+            '</tpl>',
+            '<tpl if="_snippets_abstract">',
+            '<p class="pp-grid-snippets"><span class="heading">Abstract:</span> {_snippets_abstract}</p>',
+            '</tpl>',
+            '<tpl if="_snippets_notes">',
+            '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
+            '</tpl>',
+            '</div>'
+        ).compile();
+
+        this.iconTemplate = new Ext.XTemplate(
+            '<div class="pp-grid-info">',
+            '<tpl if="_imported">',
+            '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
+            '</tpl>',
+            '<div>',
+            '<tpl if="pdf">',
+            '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="{pdf}"></div>',
+            '</tpl>',
+            '<tpl if="attachments">',
+            '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+            '</tpl>',
+            '<tpl if="annote">',
+            '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
+            '</tpl>',
+            '</div>',
+            '</div>'
+        ).compile();
+
         this.actions={
             'NEW': new Ext.Action({
                 text: 'New',
@@ -105,12 +145,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 disabled:true,
                 itemId:'format_button'
             }),
-
-
-
-
-
-
         };
 
 
@@ -148,6 +182,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     this.contextMenu.showAt(e.getXY());
                 }, this, {stopEvent:true});
 
+        
         var renderPub=function(value, p, record){
 
             // Can possibly be speeded up with compiling the template.
@@ -155,29 +190,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
             record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
 
-            var t = new Ext.XTemplate(
-         
-                '<div class="pp-grid-data">',
-                '<p class="pp-grid-title">{title}</p>',
-                '<tpl if="_authors_display">',
-                '<p class="pp-grid-authors">{_authors_display}</p>',
-                '</tpl>',
-                '<tpl if="_citation_display">',
-                '<p class="pp-grid-citation">{_citation_display}</p>',
-                '</tpl>',
-                '<tpl if="_snippets_text">',
-                '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
-                '</tpl>',
-                '<tpl if="_snippets_abstract">',
-                '<p class="pp-grid-snippets"><span class="heading">Abstract:</span> {_snippets_abstract}</p>',
-                '</tpl>',
-                '<tpl if="_snippets_notes">',
-                '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
-                '</tpl>',
-                '</div>'
-            );
-
-            return t.apply(record.data);
+            
+            return this.pubTemplate.apply(record.data);
 
         };
 
@@ -190,26 +204,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
 
-            var t = new Ext.XTemplate(
-                '<div class="pp-grid-info">',
-                '<tpl if="_imported">',
-                '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
-                '</tpl>',
-                '<div>',
-                '<tpl if="pdf">',
-                '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="{pdf}"></div>',
-                '</tpl>',
-                '<tpl if="attachments">',
-                '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
-                '</tpl>',
-                '<tpl if="annote">',
-                '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
-                '</tpl>',
-                '</div>',
-                '</div>'
-            );
-
-            return t.apply(record.data);
+            return this.iconTemplate.apply(record.data);
 
         }
 
@@ -228,15 +223,16 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 {header: "",
                  id: 'icons',
                  dataIndex: 'title',
-                 renderer:renderIcons,
+                 renderer:renderIcons.createDelegate(this),
                  width: 70,
                  resizable: false,
                 },
                 {header: "Papers",
                  id: 'publication',
                  dataIndex: 'title',
-                 renderer:renderPub,
+                 renderer: renderPub.createDelegate(this),
                  resizable: false,
+                 scope:this,
                 },
             ],
         });
@@ -281,11 +277,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       });
 
 
-        this.store.on('load', 
-                      function(){
-                          this.getSelectionModel().selectRow(0);
-                      }, this);
+        this.store.on('load', this.onStoreLoad, this);
         
+    },
+
+
+    onStoreLoad: function() {
+        // If nothing is selected, select first row
+        if (!this.getSelectionModel().getSelected()){
+            this.getSelectionModel().selectRow(0);
+        } else {
+            // else re-focus on last selection
+            var row=this.store.indexOf(this.getSelectionModel().getSelected());
+            (function(){this.getView().focusRow( row )}).defer(1000,this);
+            console.log(row);
+        }
     },
 
 
@@ -483,7 +489,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 if (callback){
                     callback.createDelegate(scope,[json.data])();
                 }
-                
+
+                Paperpile.main.onUpdateDB();
+
                 Paperpile.status.clearMsg();
 
             },
@@ -538,6 +546,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     container.onRowSelect();
                 }
 
+                Paperpile.main.onUpdateDB(this.id);
+
                 Paperpile.status.clearMsg();
 
             },
@@ -568,12 +578,17 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var form=new Paperpile.Forms.PubEdit({data:this.getSelectionModel().getSelected().data,
                                               grid_id: this.id,
                                               spotlight: true,
-                                              callback: function(status){
+                                              callback: function(status,data){
                                                   east_panel.remove('pub_edit');
                                                   if (oldSize<500) east_panel.setSize(oldSize);
                                                   east_panel.doLayout();
                                                   east_panel.getLayout().setActiveItem('overview');
                                                   east_panel.showBbar();
+                                                  if (status == 'SAVE'){
+                                                      this.updateData(data);
+                                                      this.findParentByType(Paperpile.PubView).onRowSelect();
+                                                      Paperpile.status.clearMsg();
+                                                  }
                                               },
                                               scope:this
                                              });
@@ -598,13 +613,18 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                                                   east_panel.doLayout();
                                                   east_panel.getLayout().setActiveItem('overview');
                                                   east_panel.showBbar();
+                                                  if (status == 'SAVE'){
+                                                      this.store.reload();
+                                                      Paperpile.status.clearMsg();
+                                                  }
                                               },
                                               scope:this
-
                                              });
         
         var oldSize=east_panel.getInnerWidth();
+
         if (oldSize<500) east_panel.setSize(500); 
+
         east_panel.hideBbar();
         east_panel.add(form);
         east_panel.doLayout();

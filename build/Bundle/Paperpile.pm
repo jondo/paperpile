@@ -28,6 +28,7 @@ Catalyst::Plugin::Session
 Catalyst::Plugin::Session::State::Cookie
 Catalyst::Plugin::Session::Store::File
 Catalyst::Plugin::Static::Simple
+Catalyst::Plugin::Unicode
 Catalyst::View::JSON
 Catalyst::View::Mason
 Class::Container

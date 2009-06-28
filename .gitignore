@@ -1,6 +1,7 @@
 *~
 semantic.cache
 tmp/
+dist/
 user/
 catalyst/root/tinotification.html
 \#*
