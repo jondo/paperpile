@@ -7,7 +7,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         // Yellow box
         '<div class="pp-box pp-box-top pp-box-style1"',
         '<dl>',
-        //'<tpl if="citekey"><dt>Key: </dt><dd>[{citekey}]</dd></tpl>',
         '<tpl if="_pubtype_name"><dt>Type: </dt><dd>{_pubtype_name}</dd></tpl>',
         '<tpl if="_imported"><dt>Added: </dt><dd ext:qtip="{createdFull}">{createdPretty}</dd></tpl>',
         '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
@@ -50,6 +49,18 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<li id="search-pdf-{id}" class="pp-action pp-action-get-pdf"><a href="#" class="pp-textlink" action="search-pdf">Download PDF</a></li>',
         '<li><div id="pbar"></div></li>',
         '</tpl>',
+        '<tpl if="!linkout">',
+        '<li id="search-pdf-{id}" class="pp-menu pp-action pp-action-search-pdf">',
+        '<a href="#" class="pp-textlink">Search PDF &gt;</a>',
+        '<ul>',
+        '<li><a href="#" class="pp-textlink" action="search-pdf" plugin="PubMed">PubMed</a></li>',
+        '<li>GoogleScholar</li>',
+        '</ul>',
+        '</li>',
+        '<li><div id="pbar"></div></li>',
+        '</tpl>',
+
+
         '<tpl if="_imported">',
         '<li id="attach-pdf-{id}" class="pp-action pp-action-attach-pdf"><a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a></li>',
         '</tpl>',
@@ -205,8 +216,9 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
                 // Search and download PDF file; if entry is already in database 
                 // attach PDF directly to it
-            case 'search-pdf':                 
-                this.searchPDF(true);
+            case 'search-pdf':
+
+                this.searchPDF(el.getAttribute('plugin'));
                 break;
 
                 // If PDF has been downloaded for an entry that is not
@@ -584,7 +596,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     // Searches for a PDF link on the publisher site
     //
 
-    searchPDF: function(){
+    searchPDF: function(plugin){
 
         var li=Ext.get('search-pdf-'+this.id);
         var div=Ext.DomHelper.append(li, '<div class="pp-control-container" id="progress-bar"></div>');
@@ -599,13 +611,20 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             return;
         }
 
-        this.progressBar.wait({text:"Searching PDF on publisher site", interval:100});
+        var msg='Searching PDF on publisher site';
+
+        if (plugin){
+            msg='Searching PDF via '+plugin;
+        }
+
+        this.progressBar.wait({text:msg, interval:100});
 
         Ext.Ajax.request(
             {   url: Paperpile.Url('/ajax/download/search'),
                 params: { sha1: this.data.sha1,
                           grid_id: this.grid_id,
                           linkout:this.data.linkout,
+                          plugin: plugin,
                         },
                 method: 'GET',
                 success: function(response){

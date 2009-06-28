@@ -50,6 +50,19 @@
 
 .pp-box li{
     margin: 8 0;
+
+}
+
+li.pp-menu  > ul {
+    display: none;   
+}
+
+li.pp-menu {
+    width: 120;
+}
+
+li.pp-menu:hover > ul {
+    display: block;        
 }
 
 .pp-attachment-list{
@@ -253,6 +266,10 @@ a:hover.pp-textlink {
 .pp-action-get-pdf {
     background: transparent url('/images/icons/page_white_put.png') no-repeat;
 }
+.pp-action-search-pdf {
+    background: transparent url('/images/icons/page_white_search.png') no-repeat;
+}
+
 
 .pp-action-open-pdf {
     background: transparent url('/images/icons/page_white_acrobat.png') no-repeat;

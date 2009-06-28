@@ -108,34 +108,32 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
-  my $matchDOI=0;
-  my $matchTitle=0;
+  my $matchDOI   = 0;
+  my $matchTitle = 0;
 
   my $query = '';
 
   if ( $pub->doi ) {
-    $query = $pub->doi."[AID]";
-    $matchDOI=1;
+    $query    = $pub->doi . "[AID]";
+    $matchDOI = 1;
   } else {
-    if ($pub->title){
-      $query= $pub->title;
-      $matchTitle=1;
-      if ($pub->authors){
-        my $first=$pub->get_authors->[0]->last;
-        $query.=" AND $first [1au]";
+    if ( $pub->title ) {
+      $query      = $pub->title;
+      $matchTitle = 1;
+      if ( $pub->authors ) {
+        my $first = $pub->get_authors->[0]->last;
+        $query .= " AND $first [1au]";
       }
     }
   }
-
-  print STDERR "QUERY: $query\n";
 
   my $browser   = Paperpile::Utils->get_browser;
   my $response  = $browser->get( $esearch . $query );
   my $resultXML = $response->content;
   my $result    = XMLin($resultXML);
 
-  if ($result->{Count} ==0){
-    die("Match failed. No entry found.");
+  if ( $result->{Count} == 0 ) {
+    NetMatchError->throw( error => 'No match against PubMed.');
   }
 
   $self->web_env( $result->{WebEnv} );
@@ -146,20 +144,19 @@ sub match {
   my $page = $self->_read_xml($xml);
   $self->_linkOut($page);
 
-  if ($matchDOI){
-    if ($page->[0]->doi eq $pub->{doi}){
-      return $self->_merge_pub($pub, $page->[0]);
+  if ($matchDOI) {
+    if ( $page->[0]->doi eq $pub->{doi} ) {
+      return $self->_merge_pub( $pub, $page->[0] );
     }
   }
 
-  if ($matchTitle){
-    if ($self->_match_title($page->[0]->title,$pub->title)){
-      return $self->_merge_pub($pub, $page->[0]);
+  if ($matchTitle) {
+    if ( $self->_match_title( $page->[0]->title, $pub->title ) ) {
+      return $self->_merge_pub( $pub, $page->[0] );
     }
   }
 
-
-  die("Match failed. Returned entry does not match");
+  NetMatchError->throw( error => 'No match against PubMed.');
 
 }
 

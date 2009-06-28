@@ -18,6 +18,9 @@ use Exception::Class ( PaperpileError,
     isa    => 'NetError',
     fields => 'content',
   },
+  NetMatchError => {
+   isa => 'NetError',
+  },
   CrawlerError => {
     isa    => 'PaperpileError',
     fields => 'url',

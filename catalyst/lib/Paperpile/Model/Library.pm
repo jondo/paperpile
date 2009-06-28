@@ -127,7 +127,8 @@ sub insert_pubs {
 
     ## Insert main entry into Publications table
     my $tmp=$pub->as_hash();
-    $tmp->{rowid}=$pub->_rowid if $pub->_rowid;
+    
+    #$tmp->{rowid}=$pub->_rowid if $pub->_rowid;
 
     ( my $fields, my $values ) = $self->_hash2sql( $tmp );
 

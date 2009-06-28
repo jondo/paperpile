@@ -32,7 +32,7 @@ sub get_browser {
     $browser = LWP::UserAgent->new();
   }
 
-  #$browser->proxy('http', 'http://localhost:8146/');
+  $browser->proxy('http', 'http://localhost:8146/');
   #my $cookie_jar = HTTP::Cookies->new(
   #  file     => $self->path_to("cookies.txt"),
   #  autosave => 1,

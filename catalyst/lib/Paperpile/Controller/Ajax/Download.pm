@@ -22,12 +22,36 @@ use 5.010;
 sub search : Local {
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
-  my $sha1    = $c->request->params->{sha1};
-  my $plugin  = $c->session->{"grid_$grid_id"};
-  my $url     = $c->request->params->{linkout};
+  my $grid_id      = $c->request->params->{grid_id};
+  my $sha1         = $c->request->params->{sha1};
+  my $grid         = $c->session->{"grid_$grid_id"};
+  my $url          = $c->request->params->{linkout};
+  my $match_plugin = $c->request->params->{plugin};
 
-  my $pub = $plugin->find_sha1($sha1);
+  my $pub = $grid->find_sha1($sha1);
+
+  if ( !$url and $match_plugin ) {
+    my $plugin_module = "Paperpile::Plugins::Import::" . $match_plugin;
+    my $plugin        = eval( "$plugin_module->" . 'new()' );
+
+    eval { $pub = $plugin->match($pub); };
+
+    my $e;
+
+    if ( $e = Exception::Class->caught ) {
+      if ( $e = Exception::Class->caught('NetMatchError') ) {
+        NetMatchError->throw("Could not find PDF via $match_plugin");
+      } else {
+        $e = Exception::Class->caught();
+        ref $e ? $e->rethrow : die $e;
+      }
+    }
+
+    if ( !$pub->linkout ) {
+      NetMatchError->throw("Found paper at $match_plugin but no PDF link is given.");
+    }
+    $url = $pub->linkout;
+  }
 
   my $crawler = Paperpile::Crawler->new;
   $crawler->debug(1);
