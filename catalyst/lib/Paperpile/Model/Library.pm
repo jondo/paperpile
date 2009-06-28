@@ -764,6 +764,7 @@ sub fulltext_search {
       $field = 'citekey' if $field eq 'key';     # citekey is called 'key'
                                                  # in ft-table for
                                                  # convenience
+      $field = 'keywords' if $field eq 'keyword';
 
       if ($value) {
         $pub->$field($value);
