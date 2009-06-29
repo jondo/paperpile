@@ -56,14 +56,14 @@ Ext.onReady(function() {
         }
     });
 
-    //win.show();
+    win.show();
     var viewer = Ext.getCmp('pdf_viewer');
     //var path = '/home/greg/wattenberg_03_conversation.pdf';
     //var path = '/home/greg/jordan_08_phylowidget.pdf';
-    var path = '/home/greg/kosiol_08_patterns.pdf';
+    //var path = '/home/greg/kosiol_08_patterns.pdf';
     //var path = '/home/greg/Desktop/CiteULike/theses/kosiol_06_markov.pdf';
     //var path = '/home/greg/Dropbox/CiteULike/theses/bofkin_06_causes.pdf';
 
-    viewer.initPDF(path);
+    //viewer.initPDF(path);
 
-})
+});
