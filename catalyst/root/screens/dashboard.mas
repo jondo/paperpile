@@ -6,13 +6,13 @@
 
     <dl>
       <dt># References</dt>
-      <dd>234</dd>
-      <dt># PDFs</dt>
-      <dd>100</dd>
+      <dd><% $c->{stash}->{num_items} %></dd>
+      <dt>PDFs</dt>
+      <dd><% $c->{stash}->{num_pdfs} %></dd>
       <dt># Suppl. files</dt>
-      <dd>13</dd>
+      <dd><% $c->{stash}->{num_attachments} %></dd>
       <dt>Last imported</dt>
-      <dd>Three days ago</dd>
+      <dd id="dashboard-last-imported"><% $c->{stash}->{last_imported} %></dd>
     </dl>
 
     <ul>

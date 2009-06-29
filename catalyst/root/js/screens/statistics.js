@@ -13,7 +13,7 @@ Paperpile.Statistics = Ext.extend(Ext.Panel, {
         '</div>',
         '</div>',
 
-        '<ul>',
+        '<ul id="stats-tabs">',
         '<li class="pp-box-tabs-leftmost pp-box-tabs-active">',
         '<a href="#" class="pp-textlink pp-bullet" action="top_authors">Top authors</a>',
         '</li>',
@@ -33,6 +33,7 @@ Paperpile.Statistics = Ext.extend(Ext.Panel, {
     initComponent: function() {
 		Ext.apply(this, {
             closable:true,
+            autoScroll:true,
         });
 		
         Paperpile.PatternSettings.superclass.initComponent.call(this);
@@ -45,6 +46,23 @@ Paperpile.Statistics = Ext.extend(Ext.Panel, {
         Paperpile.Statistics.superclass.afterRender.apply(this, arguments);
 
         this.tpl.overwrite(this.body, {id:this.id}, true);
+
+
+        Ext.get('stats-tabs').on('click', function(e, el, o){
+
+            var action=el.getAttribute('action');
+
+            if (!action) return;
+
+
+            Ext.select('#stats-tabs li', true, 'stats-tab').removeClass('pp-box-tabs-active');
+
+            Ext.get(el).parent('li').addClass('pp-box-tabs-active');
+
+            console.log(action);
+
+        });
+
 
         //swfobject.embedSWF(
         //    Paperpile.Url("/flashchart/open-flash-chart.swf"), "container", "550", "300",

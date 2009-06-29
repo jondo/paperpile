@@ -1055,13 +1055,12 @@ sub delete_attachment{
 
 }
 
-
 sub index_pdf {
 
-  my ( $self, $rowid, $pdf_file) = @_;
+  my ( $self, $rowid, $pdf_file ) = @_;
 
   my $app_model = Paperpile::Model::App->new();
-  my $app_db = Paperpile::Utils->path_to('db/app.db');
+  my $app_db    = Paperpile::Utils->path_to('db/app.db');
   $app_model->set_dsn("dbi:SQLite:$app_db");
 
   my $bin = Paperpile::Utils->get_binary('extpdf');
@@ -1069,7 +1068,7 @@ sub index_pdf {
   my %extpdf;
 
   $extpdf{command} = 'TEXT';
-  $extpdf{inFile} =  $pdf_file ;
+  $extpdf{inFile}  = $pdf_file;
 
   my $xml = XMLout( \%extpdf, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
 
@@ -1077,18 +1076,92 @@ sub index_pdf {
   print $fh $xml;
   close($fh);
 
-  my @text=`$bin $filename`;
+  my @text = `$bin $filename`;
 
-  my $text='';
+  my $text = '';
 
-  $text.=$_ foreach (@text);
+  $text .= $_ foreach (@text);
 
-  $text=$self->dbh->quote($text);
+  $text = $self->dbh->quote($text);
 
   $self->dbh->do("UPDATE Fulltext_full SET text=$text WHERE rowid=$rowid");
 
 }
 
+sub histogram {
+
+  my ( $self, $field ) = @_;
+
+  my %hist = ();
+
+  if ( $field eq 'authors' ) {
+
+    my $sth = $self->dbh->prepare(
+      'SELECT author_id, first, last FROM Authors, Author_Publication WHERE author_id == Authors.rowid;'
+    );
+    my ( $author_id, $first, $last );
+    $sth->bind_columns( \$author_id, \$first, \$last );
+    $sth->execute;
+
+    while ( $sth->fetch ) {
+      my $name = $last . ", " . $first;
+      if ( exists $hist{$name} ) {
+        $hist{$name}++;
+      } else {
+        $hist{$name} = 1;
+      }
+    }
+  }
+
+  if ( $field eq 'journal' or $field eq 'pubtype') {
+
+    my $sth = $self->dbh->prepare( "SELECT $field FROM Publications;" );
+    my ( $value );
+    $sth->bind_columns( \$value );
+    $sth->execute;
+
+    while ( $sth->fetch ) {
+      if ($value){
+        $value =~s/\.//g;
+        if ( exists $hist{$value} ) {
+          $hist{$value}++;
+        } else {
+          $hist{$value} = 1;
+        }
+      }
+    }
+  }
+
+  return {%hist};
+
+}
+
+sub dashboard_stats {
+
+  my $self=shift;
+
+  ( my $num_items ) =
+    $self->dbh->selectrow_array("SELECT count(*) FROM Publications;");
+
+  ( my $num_pdfs ) =
+    $self->dbh->selectrow_array("SELECT count(*) FROM Publications WHERE PDF !='';");
+
+  ( my $num_attachments ) =
+    $self->dbh->selectrow_array("SELECT count(*) FROM Attachments;");
+
+  ( my $last_imported ) =
+    $self->dbh->selectrow_array("SELECT created FROM Publications ORDER BY created DESC limit 1;");
+
+
+
+  return {num_items => $num_items,
+          num_pdfs => $num_pdfs,
+          num_attachments => $num_attachments,
+          last_imported => $last_imported
+         };
+
+
+}
 
 
 

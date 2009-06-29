@@ -25,7 +25,13 @@ h1 {
     border-style:solid;
     border-width: 1px;
     -moz-border-radius: 8px;
-    -webkit-border-radius: 8px;
+
+
+    -webkit-border-radius-top-left: 8px;
+    -webkit-border-radius-top-right: 8px;
+    -webkit-border-radius-bottom-left: 8px;
+    -webkit-border-radius-bottom-right: 8px;
+
 }
 
 .pp-dashboard-box {
@@ -36,6 +42,9 @@ h1 {
 .pp-box-top {
     -moz-border-radius-bottomleft: 0px;
     -moz-border-radius-bottomright: 0px;
+    -webkit-border-radius-bottom-left: 0px;
+    -webkit-border-radius-bottom-right: 0px;
+
 }
 
 .pp-box-middle {
@@ -45,6 +54,9 @@ h1 {
 .pp-box-bottom {
     -moz-border-radius-topleft: 0px !important;
     -moz-border-radius-topright: 0px !important;
+    -webkit-border-radius-top-left: 0px !important;
+    -webkit-border-radius-top-right: 0px !important;
+    
 }
 
 .pp-box-style1{
@@ -207,13 +219,14 @@ li:hover a.pp-delete-attachment{
 }
 
 a.pp-textlink, a:visited.pp-textlink {
-    text-decoration:underline !important;
+    /*text-decoration:underline !important;*/
+    text-decoration:none;
     color: #0015FE;
 }
 
 a:hover.pp-textlink {
     text-decoration:underline !important;
-    font-weight:bold !important;
+    /*font-weight:bold !important;*/
     color: #0015FE;
 }
 
