@@ -61,7 +61,6 @@ Ext.onReady(function() {
         }
     });
 
-    //win.show();
     var viewer = Ext.getCmp('pdf_viewer');
 
     //var path = '/home/greg/wattenberg_03_conversation.pdf';
@@ -70,6 +69,9 @@ Ext.onReady(function() {
     //var path = '/home/greg/Desktop/CiteULike/theses/kosiol_06_markov.pdf';
     //var path = '/home/greg/Dropbox/CiteULike/theses/bofkin_06_causes.pdf';
     var path = Ext.getUrlParam("file");
-    viewer.initPDF(path);
-
+    if (path != '') {
+      viewer.initPDF(path);
+    } else {
+      win.show();
+    }
 });
