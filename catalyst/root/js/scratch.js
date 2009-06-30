@@ -2,6 +2,11 @@ Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 var Paperpile = {};
 Ext.ns('Paperpile');
 
+Ext.getUrlParam = function(param) {
+  var params = Ext.urlDecode(location.search.substring(1));
+  return param ? params[param] : params;
+};
+
 Ext.onReady(function() {
 
     var vp=new Ext.Viewport({
@@ -56,14 +61,15 @@ Ext.onReady(function() {
         }
     });
 
-    win.show();
+    //win.show();
     var viewer = Ext.getCmp('pdf_viewer');
+
     //var path = '/home/greg/wattenberg_03_conversation.pdf';
     //var path = '/home/greg/jordan_08_phylowidget.pdf';
     //var path = '/home/greg/kosiol_08_patterns.pdf';
     //var path = '/home/greg/Desktop/CiteULike/theses/kosiol_06_markov.pdf';
     //var path = '/home/greg/Dropbox/CiteULike/theses/bofkin_06_causes.pdf';
-
-    //viewer.initPDF(path);
+    var path = Ext.getUrlParam("file");
+    viewer.initPDF(path);
 
 });
