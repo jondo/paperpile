@@ -241,16 +241,20 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         Paperpile.main.tabs.items.each(
             function(item, index, length){
                 
-                var grid=item.items.get('center_panel').items.get('grid');
+                if (item.tabType=='PLUGIN'){
 
-                if (ignore){
-                    if (grid.id == ignore){
-                        return;
+                    var grid=item.items.get('center_panel').items.get('grid');
+
+                    if (ignore){
+                        if (grid.id == ignore){
+                            return;
+                        }
                     }
-                }
 
-                if (grid.plugin_name == 'DB'){
-                    grid.store.reload();
+                    if (grid.plugin_name == 'DB'){
+                        grid.store.reload();
+                    }
+
                 }
             }
         );

@@ -19,11 +19,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
 
     setupFields: function(){
 
-
-
         var el = Ext.get('dashboard-last-imported');
-
-        //console.log(Ext.get('dashboard-last-imported').dom.innerHTML);
 
         Ext.DomHelper.overwrite(el,Paperpile.utils.prettyDate(el.dom.innerHTML));
 

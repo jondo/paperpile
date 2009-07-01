@@ -3,6 +3,7 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
     initComponent:function() {
         
         Ext.apply(this, {
+            tabType: 'PLUGIN',
             layout:'border',
             hideBorders:true,
             items:[

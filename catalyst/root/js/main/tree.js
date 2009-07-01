@@ -125,10 +125,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 Paperpile.main.resetDB();
                 break;
 
-            case 'SETTINGS':
-                Paperpile.main.settings();
-                break;
-
             case 'PDFEXTRACT':
                 Paperpile.main.pdfExtract();
                 break;
@@ -137,6 +133,10 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 Paperpile.main.fileImport();
                 break;
                 
+            case 'CLOUDS':
+                Paperpile.main.tabs.newScreenTab('Clouds','clouds');
+                break;
+               
 
             // all other nodes are handled via the generic plugin mechanism
             default:
@@ -976,7 +976,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
 
         Ext.apply(config,{items:[
             { id: 'active_menu_new', //itemId does not work here
-              text:'Save current search as active folder',
+              text:'Save current search as active view',
               handler: function(){
                   Paperpile.main.tree.newActive();
               },

@@ -38,6 +38,7 @@
   screens/statistics.js
   screens/format.js
   screens/settings.js
+  screens/clouds.js
                
   pub/abstract.js 
   pub/notes.js 

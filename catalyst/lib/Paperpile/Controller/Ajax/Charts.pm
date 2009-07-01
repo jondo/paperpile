@@ -78,7 +78,58 @@ sub test : Local {
   foreach my $key ( keys %$chart ) {
     $c->stash->{$key} = $chart->{$key};
   }
+}
+
+sub clouds : Local {
+
+  my ( $self, $c ) = @_;
+  my $field = $c->request->params->{field};
+
+  my $hist = $c->model('Library')->histogram($field);
+
+  my $minSize = 10;
+  my $maxSize = 20;
+
+  my $max_items = 300;
+
+  my @list = ();
+
+  my $counter = 0;
+
+  foreach my $key ( sort { $hist->{$b}->{count} <=> $hist->{$a}->{count} } keys %$hist ) {
+    push @list, $hist->{$key};
+    last if $counter++ > $max_items;
+  }
+
+  my $max = $list[0]->{count};
+  my $min = $list[$#list]->{count};
+
+  my $output = '';
+
+  foreach my $item ( sort { $a->{name} cmp $b->{name} } @list ) {
+
+    my $x = $item->{count};
+
+    my $weight = 1.0;
+
+    if ($max > $min){
+      $weight=( log($x) - log($min) ) / ( log($max) - log($min) );
+    }
+
+    my $size = $minSize + int( ( $maxSize - $minSize ) * $weight );
+
+    my $name = $item->{name};
+    my $id   = $item->{id};
+
+    $output .= "<a key=\"$id\" href=\"#\" style=\"font-size:$size;\">$name</a> ";
+
+  }
+
+  $c->stash->{html} = $output;
 
 }
+
+
+
 
 1;

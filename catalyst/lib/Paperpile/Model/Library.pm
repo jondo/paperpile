@@ -1097,36 +1097,43 @@ sub histogram {
   if ( $field eq 'authors' ) {
 
     my $sth = $self->dbh->prepare(
-      'SELECT author_id, first, last FROM Authors, Author_Publication WHERE author_id == Authors.rowid;'
+      'SELECT author_id, first, last, von, jr FROM Authors, Author_Publication WHERE author_id == Authors.rowid ;'
     );
-    my ( $author_id, $first, $last );
-    $sth->bind_columns( \$author_id, \$first, \$last );
+    my ( $author_id, $first, $last, $von, $jr );
+    $sth->bind_columns( \$author_id, \$first, \$last, \$von, \$jr );
     $sth->execute;
 
     while ( $sth->fetch ) {
-      my $name = $last . ", " . $first;
-      if ( exists $hist{$name} ) {
-        $hist{$name}++;
+
+      my $name = $last;
+
+      if ( exists $hist{$author_id} ) {
+        $hist{$author_id}->{count}++;
       } else {
-        $hist{$name} = 1;
+        $hist{$author_id}->{count} = 1;
+        $hist{$author_id}->{name}  = $name;
+        $hist{$author_id}->{id}    = $name;
+
       }
     }
   }
 
-  if ( $field eq 'journal' or $field eq 'pubtype') {
+  if ( $field eq 'journal' or $field eq 'pubtype' ) {
 
-    my $sth = $self->dbh->prepare( "SELECT $field FROM Publications;" );
-    my ( $value );
+    my $sth = $self->dbh->prepare("SELECT $field FROM Publications;");
+    my ($value);
     $sth->bind_columns( \$value );
     $sth->execute;
 
     while ( $sth->fetch ) {
-      if ($value){
-        $value =~s/\.//g;
+      if ($value) {
+        $value =~ s/\.//g;
         if ( exists $hist{$value} ) {
-          $hist{$value}++;
+          $hist{$value}->{count}++;
         } else {
-          $hist{$value} = 1;
+          $hist{$value}->{count} = 1;
+          $hist{$value}->{name}  = $value;
+          $hist{$value}->{id}    = $value;
         }
       }
     }

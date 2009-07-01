@@ -69,7 +69,7 @@ sub get_default_tree : Private {
   #### / Active Folders
 
   my $active = Tree::Simple->new( {
-      text    => 'Active Folders',
+      text    => 'Active Views',
       type    => "ACTIVE",
       path    => '/',
       iconCls => 'pp-icon-empty',
@@ -90,6 +90,16 @@ sub get_default_tree : Private {
         plugin_mode  => 'FULLTEXT',
         plugin_query => 'year:2009',
         iconCls      => 'pp-icon-folder',
+        hidden       => 0,
+      }
+    )
+  );
+
+  $active->addChild(
+    Tree::Simple->new( {
+        type         => 'CLOUDS',
+        text         => 'Cloud view',
+        iconCls      => 'pp-icon-clouds',
         hidden       => 0,
       }
     )
@@ -122,17 +132,16 @@ sub get_default_tree : Private {
   );
 
   $plugins->addChild(
-     Tree::Simple->new( {
-         type         => 'IMPORT_PLUGIN',
-         plugin_name  => 'GoogleBooks',
-         text         => 'Google Books',
-         plugin_query => '',
-         iconCls      => 'pp-icon-google',
-         hidden       => 0,
-       }
-     )
-   );
-
+    Tree::Simple->new( {
+        type         => 'IMPORT_PLUGIN',
+        plugin_name  => 'GoogleBooks',
+        text         => 'Google Books',
+        plugin_query => '',
+        iconCls      => 'pp-icon-google',
+        hidden       => 0,
+      }
+    )
+  );
 
   $plugins->addChild(
     Tree::Simple->new( {
@@ -159,7 +168,7 @@ sub get_default_tree : Private {
   );
 
   $plugins->addChild(
-   Tree::Simple->new( {
+    Tree::Simple->new( {
         type         => 'IMPORT_PLUGIN',
         plugin_name  => 'CiteSeerX',
         text         => 'CiteSeerX',
@@ -169,7 +178,6 @@ sub get_default_tree : Private {
       }
     )
   );
-
 
   ##### / Settings
 
@@ -182,13 +190,12 @@ sub get_default_tree : Private {
     $root
   );
 
-
   $import->addChild(
     Tree::Simple->new( {
         text    => 'Import PDFs',
         type    => 'PDFEXTRACT',
         iconCls => 'pp-icon-import-pdf',
-        qtip => 'Import one or more PDFs to your library',
+        qtip    => 'Import one or more PDFs to your library',
         hidden  => 0,
       }
     )
@@ -199,7 +206,7 @@ sub get_default_tree : Private {
         text    => 'Import File',
         type    => 'FILE_IMPORT',
         iconCls => 'pp-icon-import-file',
-        qtip => 'Import references from EndNote, BibTeX <br> and other bibliography files.',
+        qtip    => 'Import references from EndNote, BibTeX <br> and other bibliography files.',
         hidden  => 0,
       }
     )

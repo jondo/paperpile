@@ -139,7 +139,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             }),
 
             'SAVE_AS_ACTIVE': new Ext.Action({
-                text: 'Save as active folder',
+                text: 'Save as active view',
                 handler: Paperpile.main.tree.newActive,
                 scope: Paperpile.main.tree,
                 disabled:true,
@@ -284,14 +284,14 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     onStoreLoad: function() {
         // If nothing is selected, select first row
-        if (!this.getSelectionModel().getSelected()){
+        //if (!this.getSelectionModel().getSelected()){
             this.getSelectionModel().selectRow(0);
-        } else {
+        //} else {
             // else re-focus on last selection
-            var row=this.store.indexOf(this.getSelectionModel().getSelected());
-            (function(){this.getView().focusRow( row )}).defer(1000,this);
-            console.log(row);
-        }
+          //  var row=this.store.indexOf(this.getSelectionModel().getSelected());
+           // (function(){this.getView().focusRow( row )}).defer(1000,this);
+           // console.log(row);
+      //  }
     },
 
 

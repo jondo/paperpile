@@ -20,7 +20,7 @@ h1 {
 
 
 .pp-box {
-    max-width: 300px;
+    /*max-width: 300px;*/
     margin: 8;
     border-style:solid;
     border-width: 1px;
@@ -32,6 +32,10 @@ h1 {
     -webkit-border-radius-bottom-left: 8px;
     -webkit-border-radius-bottom-right: 8px;
 
+}
+
+.pp-box-side-panel {
+    max-width: 300px;
 }
 
 .pp-dashboard-box {
@@ -229,6 +233,23 @@ a:hover.pp-textlink {
     /*font-weight:bold !important;*/
     color: #0015FE;
 }
+
+#cloud{
+    border-style:none;
+}
+
+#cloud a, #cloud a:visited {
+    /*text-decoration:underline !important;*/
+    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
+    text-decoration:none;
+    color: #0015FE;
+}
+
+#cloud a:hover {
+    text-decoration:underline;
+}
+
+
 
 .pp-textfield-with-button {
     margin-right: 5px;
@@ -449,6 +470,11 @@ a:hover.pp-textlink {
 .pp-icon-tag{
     background-image: url('/images/icons/tag_blue.png')!important;
 }
+
+.pp-icon-clouds{
+    background-image: url('/images/icons/weather_clouds.png')!important;
+}
+
 
 .pp-icon-folder{
     background-image: url('/images/icons/folder.png')!important;

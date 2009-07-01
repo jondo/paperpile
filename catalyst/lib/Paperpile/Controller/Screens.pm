@@ -21,9 +21,6 @@ sub settings : Local {
 sub dashboard : Local {
   my ( $self, $c ) = @_;
 
-  my $hist = $c->model('Library')->histogram('pubtype');
-  print STDERR Dumper($hist);
-
   my $stats = $c->model('Library')->dashboard_stats;
 
   $c->stash->{num_items}       = $stats->{num_items};
