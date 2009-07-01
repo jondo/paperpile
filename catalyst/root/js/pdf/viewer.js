@@ -435,11 +435,12 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 	this.setCurrentPage(this.currentPage);
 	this.updateButtons();
 	this.updateZoom();
-	this.layoutPages();
 
 	for (var i=0; i < this.pageN; i++) {
-	  this.addBackgroundTask("initPDF thumbnails",this.loadThumbnail,[i],this,10);
+	  this.addBackgroundTask("initPDF thumbnails",this.loadThumbnail,[i],this,10,0,true);
 	}
+
+	this.layoutPages();
 
       },
       scope:this
@@ -650,8 +651,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     }
 
     this.loadVisiblePages();
-
-
     //this.resumeEvents();
   },
 
@@ -716,7 +715,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     // Note: we put these actions on the bg queue, so the resizing happens first.
     // Load the full image of all visible pages.
     this.loadVisiblePages();
-
     for (var i=this.startPage;i<this.startPage+this.maxPages;i++) {
       var pageIndex = i;
       var img = this.getImage(pageIndex);
@@ -888,7 +886,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     return !needsLoading;
   },
 
-  thumbnailSize:200,
+  thumbnailSize:160,
   loadThumbnail: function(i,imgEl){
     var scale=this.thumbnailSize/this.pageSizes[i].width;
     scale = Math.round(scale*100)/100;
@@ -932,51 +930,11 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   loadFullPage: function(pageIndex) {
     var img = this.getImage(pageIndex);
     var scale = this.getScale(pageIndex);
-
     if (scale > 10 || scale < 0.1) {return false;}
 
     var pageNeedsLoading = this.loadImage(pageIndex,scale);
-
     var url = this.getFullUrl(pageIndex);
     img.set({src:url});
-
-    /*
-    var fullUrl="ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale;
-
-    if (img.dom.src.indexOf(fullUrl) == -1) {
-      if (this.images[fullUrl] != null) {
-	var imgO = this.images[fullUrl];
-	console.log("  -> No need to reload: "+fullUrl);
-      //console.log(imgO);
-      } else {
-	var w = this.getAdjustedWidth(pageIndex);
-	var h = this.getAdjustedHeight(pageIndex);
-	var imgO = new Image(w,h);
-	imgO.src = fullUrl;
-	imgO.onload = function() {
-	  console.log("  -> Image loaded! "+fullUrl);
-	  img.set({src:fullUrl});
-	  imgO.onload = null;
-	};
-	console.log("Loading image: "+fullUrl);
-	this.images[fullUrl] = imgO;
-      }
-    }
-
-    //var src = img.dom.src;
-    //if (src.indexOf(png) == -1) {
-    //  console.log("Loading new full img "+png);
-      // If the image URL is changing as a result, let's update the <img> tag size to ensure
-      // that the <img> and image sizes match up
-      //var newWidth = Math.floor(this.pageSizes[pageIndex].width * scale);
-      //var newHeight = newWidth * this.pageSizes[i].height / this.pageSizes[i].width;
-      //img.set({src:png});
-      //img.set({width:newWidth,height:newHeight});
-    //}
-     */
-    //if (this.words[pageIndex].length == 0) {
-      //this.loadWords(pageIndex);
-    //}
 
     return pageNeedsLoading;
   },
@@ -1097,7 +1055,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   onScroll: function(el) {
     this.delayedTask.delay(100,this.scrollDelay,this);;
   },
-
 
   loadVisiblePages: function() {
     var visiblePages=[];
