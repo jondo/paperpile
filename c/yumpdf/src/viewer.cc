@@ -150,9 +150,10 @@ mxml_node_t* render(mxml_node_t *xml){
 }
 
 
-/*
 
 mxml_node_t* search(mxml_node_t *xml){
+
+  /*
   
   GList *list, *l;
   GError *error;
@@ -202,9 +203,14 @@ mxml_node_t* search(mxml_node_t *xml){
 
   return(xmlout);
 
+  */
+
+  return NULL;
+
+
 }
 
-*/
+
 
 
 mxml_node_t* wordList(mxml_node_t *xml){
