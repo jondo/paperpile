@@ -75,6 +75,41 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
             this.proxyCheckbox.setValue(false);
             this.onToggleProxy(this.proxyCheckbox,false);
         }
+        
+        this.proxyTestButton=new Ext.Button({text:"Test your network connection", 
+                                             renderTo:'proxy_test_button'});
+        
+
+        this.proxyTestButton.on('click', 
+                                function(){
+
+                                    Paperpile.status.showBusy('Testing network connection.');
+                                    
+                                    Ext.Ajax.request({
+                                        url: Paperpile.Url('/ajax/misc/test_network'),
+                                        success: function(response){
+
+                                            var error;
+
+                                            if (response.responseText){
+                                                error= Ext.util.JSON.decode(response.responseText).error;
+                                            }
+
+                                            if (error){
+                                                Ext.get('proxy_test_status').replaceClass('pp-icon-tick', 'pp-icon-cross');
+                                                Paperpile.main.onError(response);
+                                            } else {
+                                                Ext.get('proxy_test_status').replaceClass('pp-icon-cross','pp-icon-tick');
+                                                Paperpile.status.clearMsg();
+                                            }
+ 
+                                        },
+                                        failure: function(response){
+                                            Ext.get('proxy_test_status').replaceClass('pp-icon-tick', 'pp-icon-cross');
+                                            Paperpile.main.onError(response);
+                                        }
+                                    });
+                                }, this);
 
 
         this.setSaveDisabled(true);
