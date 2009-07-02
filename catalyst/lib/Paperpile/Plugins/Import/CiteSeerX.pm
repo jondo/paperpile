@@ -16,6 +16,7 @@ use Paperpile::Library::Journal;
 use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
+# sinnloser kommentar
 
 # The search query to be send to CiteSeerX
 has 'query'           => ( is => 'rw' );
