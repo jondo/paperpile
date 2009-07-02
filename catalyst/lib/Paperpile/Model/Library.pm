@@ -1132,8 +1132,8 @@ sub histogram {
           $hist{$value}->{count}++;
         } else {
           $hist{$value}->{count} = 1;
-          $hist{$value}->{name}  = $value;
           $hist{$value}->{id}    = $value;
+          $hist{$value}->{name}  = $value;
         }
       }
     }
@@ -1158,8 +1158,6 @@ sub dashboard_stats {
 
   ( my $last_imported ) =
     $self->dbh->selectrow_array("SELECT created FROM Publications ORDER BY created DESC limit 1;");
-
-
 
   return {num_items => $num_items,
           num_pdfs => $num_pdfs,

@@ -7,52 +7,79 @@ use Paperpile::Library::Publication;
 use Data::Dumper;
 use 5.010;
 
-sub test : Local {
+sub chart : Local {
 
   my ( $self, $c ) = @_;
+  my $type = $c->request->params->{type};
 
-  my $sth =
-    $c->model('Library')
-    ->dbh->prepare(
-    'SELECT author_id, first, last FROM Authors, Author_Publication WHERE author_id == Authors.rowid;'
-    );
-  my ( $author_id, $first, $last );
-  $sth->bind_columns( \$author_id, \$first, \$last );
-  $sth->execute;
+  my $chart;
 
-  my %hist = ();
-
-  while ( $sth->fetch ) {
-    my $name = $last . ", " . $first;
-    if ( exists $hist{$name} ) {
-      $hist{$name}++;
-    } else {
-      $hist{$name} = 1;
-    }
+  if ($type eq 'top_authors'){
+    my $hist = $c->model('Library')->histogram('authors');
+    $chart = $self->_chart($hist, 'bar');
   }
+
+  if ($type eq 'top_journals'){
+    my $hist = $c->model('Library')->histogram('journal');
+    $chart = $self->_chart($hist, 'bar');
+  }
+
+  if ($type eq 'pubtypes'){
+    my $hist = $c->model('Library')->histogram('pubtype');
+
+    foreach my $key (keys %$hist){
+      $hist->{$key}->{name}=$c->config->{pub_types}->{$key}->{name};
+    }
+
+    $hist->{BOOK}->{count}+=$hist->{INBOOK}->{count};
+    delete($hist->{INBOOK});
+
+    $chart = $self->_chart($hist, 'pie');
+  }
+
+  foreach my $key ( keys %$chart ) {
+    $c->stash->{$key} = $chart->{$key};
+  }
+
+}
+
+
+sub _chart : Local {
+
+  my ( $self, $hist, $type ) = @_;
 
   my @values = ();
   my @labels = ();
 
   my $counter = 0;
 
-  foreach my $name ( sort { $hist{$b} <=> $hist{$a} } keys %hist ) {
-    push @values, $hist{$name};
-    push @labels, $name;
-    $counter++;
-    last if $counter >= 10;
+  if ( $type eq 'bar' ) {
+
+    foreach my $key ( sort { $hist->{$b}->{count} <=> $hist->{$a}->{count} } keys %$hist ) {
+      push @values, $hist->{$key}->{count};
+      push @labels, $hist->{$key}->{name};
+      $counter++;
+      last if $counter >= 10;
+    }
+  }
+
+  if ( $type eq 'pie' ) {
+    foreach my $key ( sort { $hist->{$b}->{count} <=> $hist->{$a}->{count} } keys %$hist ) {
+      push @values, { value => $hist->{$key}->{count}, label => $hist->{$key}->{name} };
+    }
   }
 
   my $chart = {
     "bg_colour" => "#FFFEEB",
     elements    => [ {
-        type   => 'bar_glass',
-        alpha  => 0.5,
-        colour => "#006AFF",
-        values => [@values],
-       "on-show" => { "type" => "grow-up",
-                       "cascade" => 0,
-                       "delay" => 0 }
+        type            => $type,
+        "gradient-fill" => \1,
+        values    => [@values],
+        "on-show" => {
+          "type"    => "grow-up",
+          "cascade" => 0,
+          "delay"   => 0
+        }
       },
     ],
     y_axis => {
@@ -64,7 +91,6 @@ sub test : Local {
       "font-size"   => 26
     },
 
-    #y_legend => { text => 'Number of Publications' },
     x_axis => {
       "grid-colour" => "#FFFFFF",
       labels        => {
@@ -75,10 +101,22 @@ sub test : Local {
     },
   };
 
-  foreach my $key ( keys %$chart ) {
-    $c->stash->{$key} = $chart->{$key};
+  if ( $type eq 'bar' ) {
+    $chart->{elements}->[0]->{colour} = "#006AFF";
+    $chart->{elements}->[0]->{alpha}  = 0.6;
   }
+
+  my $colors = [ '#006AFF', '#44c450', '#f12d0d', '#f3f602', '#c502f6', '#f6a802' ];
+
+  if ( $type eq 'pie' ) {
+    $chart->{elements}->[0]->{colours} = $colors;
+    $chart->{elements}->[0]->{alpha}   = 1.0;
+  }
+
+  return $chart;
+
 }
+
 
 sub clouds : Local {
 
