@@ -17,28 +17,53 @@ use WWW::Mechanize;
 use Compress::Zlib;
 use MIME::Base64;
 use Config;
+use Paperpile::Model::User;
 
 $Data::Dumper::Indent = 1;
 
 sub get_browser {
 
-  my ($self, $type) = @_;
+  my ( $self, $test_proxy ) = @_;
 
-  my $browser;
+  my $settings;
 
-  if (defined $type){
-    $browser = WWW::Mechanize->new() if $type eq 'mech';
+  # To test the proxy settings, we can pass the settings directly from
+  # the settings screen. Otherwise we read from the user database.
+  if ($test_proxy) {
+    $settings = $test_proxy;
   } else {
-    $browser = LWP::UserAgent->new();
+
+    # This is hard-coded for now. Ideally it should read database
+    # location from paperpile.yaml. Don't know how to do this without
+    # access to $c and replicating substitution code.
+
+    my $user_settings_db = $ENV{HOME} . "/.paperpile/settings.db";
+    my $model            = Paperpile::Model::User->new();
+    $model->set_dsn( "dbi:SQLite:" . $user_settings_db );
+    $settings = $model->settings;
+  }
+
+  my $browser = LWP::UserAgent->new();
+
+  if ( $settings->{use_proxy} ) {
+    if ( $settings->{proxy} ) {
+
+      my $proxy = $settings->{proxy};
+
+      $proxy =~ s|http://||g;
+
+      if ( $settings->{proxy_user} and $settings->{proxy_passwd} ) {
+
+        # TODO: add user/passwd code. Would be nice if I knew a test
+        # proxy for this.
+
+      } else {
+        $browser->proxy( 'http', 'http://' . $proxy );
+      }
+    }
   }
 
   #$browser->proxy('http', 'http://localhost:8146/');
-  #my $cookie_jar = HTTP::Cookies->new(
-  #  file     => $self->path_to("cookies.txt"),
-  #  autosave => 1,
-  #  ignore_discard=>1
-  #);
-  #my $cookie_jar = HTTP::Cookies->new({});
 
   $browser->cookie_jar( {} );
 

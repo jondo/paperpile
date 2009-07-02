@@ -83,10 +83,18 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         this.proxyTestButton.on('click', 
                                 function(){
 
+                                    Ext.get('proxy_test_status').removeClass(['pp-icon-tick', 'pp-icon-cross']);
+
                                     Paperpile.status.showBusy('Testing network connection.');
-                                    
+
+                                    var params={use_proxy: this.proxyCheckbox.getValue() ? 1 : 0,
+                                                proxy: this.textfields['proxy'].getValue(),
+                                                proxy_user: this.textfields['proxy_user'].getValue(),
+                                                proxy_passwd: this.textfields['proxy_passwd'].getValue(),
+                                               };
                                     Ext.Ajax.request({
                                         url: Paperpile.Url('/ajax/misc/test_network'),
+                                        params: params,
                                         success: function(response){
 
                                             var error;
