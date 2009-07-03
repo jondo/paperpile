@@ -31,6 +31,12 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
                       hidden: true,
                     },
                     { xtype:'tbfill'},
+                    { text: 'Cancel',
+                      itemId: 'cancel_button',
+                      cls: 'x-btn-text-icon cancel',
+                      handler: function(){this.close()},
+                      scope: this,
+                    },
                     { text: 'Next',
                       itemId: 'next_button',
                       cls: 'x-btn-text-icon next',
@@ -42,12 +48,16 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
                                   // Create or update plugin form for second tab depending on selection
                                   if ((!this.pluginForm) || (this.pluginForm.export_name != plugin)){
                                       this.items.remove(this.pluginForm);
-                                      this.pluginForm=new Paperpile['Export'+plugin]({bodyStyle:'padding: 10px 10px 0 10px'});
+                                      this.pluginForm=new Paperpile['Export'+plugin]({ 
+                                          bodyStyle:'padding: 10px 10px 0 10px',
+                                      });
+
                                       this.items.add(this.pluginForm);
                                   }
 
                                   this.getLayout().setActiveItem(1);
                                   this.getBottomToolbar().items.get('ok_button').show();
+                                  this.getBottomToolbar().items.get('cancel_button').show();
                                   this.getBottomToolbar().items.get('next_button').hide();
                                   this.getBottomToolbar().items.get('prev_button').show();
                               },
@@ -62,6 +72,9 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
                           click:  { 
                               fn: function(){
                                   var form=this.items.get(1).getForm();
+
+                                  Paperpile.status.showBusy('Exporting data.')
+                                  
                                   form.submit({
                                       url:Paperpile.Url('/ajax/plugins/export'),
                                       params: {grid_id: this.grid_id,
@@ -70,15 +83,16 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
                                                selection: this.selection
                                               },
                                       success: function(){
+                                          Paperpile.status.clearMsg();
                                           this.close();
-                                          Ext.getCmp('statusbar').clearStatus();
-                                          Ext.getCmp('statusbar').setText('Exported data.');
                                       },
                                       scope:this,
-                                      failure: function(){
-                                          alert('nope')
+                                      failure: function(form,action){
+                                          Paperpile.main.onError(action.response);
                                       },
-                                  })
+                                  });
+
+
                               },
                               scope:this
                           }
@@ -127,11 +141,15 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
             ],
         });
 
-        
         Paperpile.ExportWindow.superclass.initComponent.call(this);
 
     },
-        
+
+
+    setDisabledOk: function(disable){
+        this.getBottomToolbar().items.get('ok_button').setDisabled(disable);
+    }
+      
 
 
 

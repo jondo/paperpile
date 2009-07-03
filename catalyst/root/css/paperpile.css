@@ -267,8 +267,10 @@ a:hover.pp-textlink {
 
 .pp-status-line-container {
     padding: 0px 10px;
+    z-index: 9001; /* show above mask */
     /*-moz-border-radius: 3px; Does not work with update*/
     -webkit-border-radius: 3px;
+    
 }
 
 .pp-status-msg {
@@ -442,11 +444,11 @@ a:hover.pp-textlink {
 }
 
 .next .x-btn-text {
-    background-image: url('/images/icons/arrow_right.png');
+    background-image: url('/images/icons/next.png');
 }
 
 .prev .x-btn-text {
-    background-image: url('/images/icons/arrow_left.png');
+    background-image: url('/images/icons/back.png');
 }
 
 .dashboard .x-btn-text {
