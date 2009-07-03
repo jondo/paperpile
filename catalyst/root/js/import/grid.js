@@ -438,8 +438,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     Paperpile.status.clearMsg();
 
                     if (callback) callback.createDelegate(scope)();
-                    
                 },
+                failure: Paperpile.main.onError,
                 scope:this
             });
         } else {
@@ -508,6 +508,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 Paperpile.status.clearMsg();
 
             },
+            failure: Paperpile.main.onError,
             scope:this
         });
 
@@ -575,6 +576,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 Paperpile.status.clearMsg();
 
             },
+            failure: Paperpile.main.onError,
             scope: this
         });
 

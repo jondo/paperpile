@@ -219,6 +219,9 @@ Paperpile.Forms.PubEdit = Ext.extend(Paperpile.Forms, {
                 scope:this,
                 params:params,
                 success:this.onSuccess,
+                failure: function(form,action){
+                    Paperpile.main.onError(action.response);
+                },
             }
         );
     },

@@ -29,7 +29,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 		Paperpile.Tree.superclass.initComponent.call(this);
 
         this.on({
-			//contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
+			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
             beforenodedrop:{scope:this, fn:this.onNodeDrop},
             checkchange:{scope:this,fn:this.onCheckChange},
             // This is necessary because we load the tree as a whole
@@ -224,6 +224,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         var json = Ext.util.JSON.decode(response.responseText);
                         grid.updateData(json.data);
                     },
+                    failure: Paperpile.main.onError,
                 });
             }
 
@@ -241,6 +242,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         var json = Ext.util.JSON.decode(response.responseText);
                         grid.updateData(json.data);
                     },
+                    failure: Paperpile.main.onError,
                     scope: this,
                 });
             }
@@ -257,6 +259,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     //Ext.getCmp('statusbar').clearStatus();
                     //Ext.getCmp('statusbar').setText('Moved node');
                 },
+                failure: Paperpile.main.onError
             });
         }
     },
@@ -267,7 +270,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         // Do not show browser-context menu
         this.el.on({
-			//contextmenu:{fn:function(){return false;},stopEvent:true}
+			contextmenu:{fn:function(){return false;},stopEvent:true}
 		});
 
     },
@@ -426,6 +429,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Added new active folder');
             },
+            failure: Paperpile.main.onError,
         });
         
     },
@@ -521,6 +525,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Added new folder');
             },
+            failure: Paperpile.main.onError,
         });
     },
 
@@ -538,6 +543,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Deleted active folder');
             },
+            failure: Paperpile.main.onError,
         });
 
         node.remove();
@@ -568,6 +574,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                             //Ext.getCmp('statusbar').clearStatus();
                             //Ext.getCmp('statusbar').setText('Renamed folder');
                         },
+                        failure: Paperpile.main.onError,
                     });
                 },
 			}
@@ -591,6 +598,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Deleted folder');
             },
+            failure: Paperpile.main.onError,
         });
 
         node.remove();
@@ -659,6 +667,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Hide/Show node');
             },
+            failure: Paperpile.main.onError,
 
         });
     },
@@ -746,6 +755,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             success: function(){
                 Ext.StoreMgr.lookup('tag_store').reload();
             },
+            failure: Paperpile.main.onError,
         });
     },
 
@@ -801,6 +811,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     }
                 });
             },
+            failure: Paperpile.main.onError,
         });
     },
 
@@ -815,8 +826,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                      style: number,
                     },
             success: function(){
-               
-                
                 Ext.StoreMgr.lookup('tag_store').reload({
                     callback: function(){
                         Paperpile.main.tabs.items.each(
@@ -844,6 +853,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Changes style of Tag');
             },
+            failure: Paperpile.main.onError,
             scope: this
         });
     },
@@ -904,6 +914,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                 }
                             });
                         },
+                        failure: Paperpile.main.onError,
                     });
                 },
 			}

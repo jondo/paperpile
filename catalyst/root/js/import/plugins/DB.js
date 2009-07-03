@@ -244,6 +244,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                 Ext.getCmp('statusbar').clearStatus();
                 Ext.getCmp('statusbar').setText('Entry deleted.');
             },
+            failure: Paperpile.main.onError,
         });
 
         for (var i=0;i<selection.length;i++){

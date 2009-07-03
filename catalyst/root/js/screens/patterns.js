@@ -123,6 +123,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                     this.setSaveDisabled(hasErrors);
                 }
             },
+            failure: Paperpile.main.onError,
             scope:this
         });
 

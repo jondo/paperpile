@@ -97,8 +97,8 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
                 var json = Ext.util.JSON.decode(response.responseText);
                 Ext.DomHelper.overwrite('cloud','');
                 Ext.DomHelper.insertHtml('afterBegin',Ext.get('cloud').dom, json.html);
-
             },
+            failure: Paperpile.main.onError,
             scope:this,
         });
     }

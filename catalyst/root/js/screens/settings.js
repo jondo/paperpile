@@ -173,10 +173,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                     }, this
                 );
             },
-            
-            failure: function(response){
-                
-            },
+            failure: Paperpile.main.onError,
             scope:this
         });
 

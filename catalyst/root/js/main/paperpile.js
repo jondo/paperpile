@@ -113,6 +113,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                     callback.createDelegate(scope)();
                 }
             },
+            failure: Paperpile.main.onError,
             scope:this,
         });
     },

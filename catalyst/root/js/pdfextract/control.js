@@ -169,6 +169,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
                     callback.createDelegate(scope)();
                 }
             },
+            failure: Paperpile.main.onError,
             scope:this,
             timeout: 600000,
         });
