@@ -13,6 +13,7 @@ Model::User:
 
 app_settings:
   platform: "__PLATFORM__"
+  version: "0.4.0"
 
 user_settings:
   tmp_dir: "__USERHOME__/.paperpile/tmp"

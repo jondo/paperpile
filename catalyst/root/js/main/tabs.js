@@ -57,6 +57,10 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         }
     },
 
+
+    // Opens a new tab with some specialized screen. Name is either the name of a preconficured panel-class, or
+    // an object specifying url and title of the tab. 
+
     newScreenTab:function(name, itemId){
         
         var openTab=Paperpile.main.tabs.getItem(itemId);
@@ -64,8 +68,30 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         if (openTab){
             this.activate(openTab);
         } else {
-            var panel=main.tabs.add(new Paperpile[name]({itemId:itemId}));
+
+            var panel;
+
+            // Pre-configured class
+            if (Paperpile[name]){
+                panel=main.tabs.add(new Paperpile[name]({itemId:itemId}));
+
+            // Generic panel 
+            } else {
+                
+                panel=main.tabs.add(new Ext.Panel(
+                    { closable:true,
+                      autoLoad:{url:Paperpile.Url(name.url),
+                                callback: this.setupFields,
+                                scope:this
+                               },
+                      autoScroll: true,
+                      title: name.title,
+                    }
+                ));
+            }
+
             panel.show();
+               
         }
     }
     

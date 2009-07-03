@@ -11,6 +11,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                      },
             bodyStyle:'pp-settings',
             autoScroll: true,
+            iconCls:'pp-icon-tools',
         });
 		
         Paperpile.PatternSettings.superclass.initComponent.call(this);

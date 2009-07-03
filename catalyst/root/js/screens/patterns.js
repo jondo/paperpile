@@ -10,6 +10,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                       scope:this
                      },
             bodyStyle:'pp-settings',
+            iconCls:'pp-icon-tools',
             autoScroll: true,
         });
 		
