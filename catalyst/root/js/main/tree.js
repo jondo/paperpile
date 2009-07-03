@@ -29,7 +29,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 		Paperpile.Tree.superclass.initComponent.call(this);
 
         this.on({
-			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
+			//contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
             beforenodedrop:{scope:this, fn:this.onNodeDrop},
             checkchange:{scope:this,fn:this.onCheckChange},
             // This is necessary because we load the tree as a whole
@@ -174,7 +174,36 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 break;
             }
         });
+
+        // Set scroll size the first time, when the node is rendered
+        this.on('beforechildrenrendered', 
+                function(node){
+                    if (node.id == 'TAGS_ROOT'){
+                        this.updateScrollSize();
+                    }
+                }, this);
+
+        this.on('resize', 
+                function(){
+                    this.updateScrollSize();
+                }, this);
+
+
 	},
+
+    updateScrollSize: function(){
+        var node = this.getNodeById('TAGS_ROOT');
+
+        // Make sure everything is rendered; this allows to call the function via the 'resize' event;
+        if (node){
+            if (node.rendered){
+                var el=Ext.Element.get(node.ui.getAnchor()).up('li').first('ul');
+                maxHeight=Math.round(this.getInnerHeight()/3);
+                el.setStyle('overflow','auto');
+                el.setStyle('max-height',maxHeight);
+            }
+        }
+    },
 
     onNodeDrop: function(e){
 
@@ -238,7 +267,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         // Do not show browser-context menu
         this.el.on({
-			contextmenu:{fn:function(){return false;},stopEvent:true}
+			//contextmenu:{fn:function(){return false;},stopEvent:true}
 		});
 
     },
@@ -891,7 +920,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         var window=new Paperpile.ExportWindow({source_node: node.id});
         window.show();
 
-    }
+    },
+
 
 });
 
