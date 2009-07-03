@@ -346,7 +346,7 @@ Paperpile.app=function(){
 
     main.loadSettings();
 
-    main.tabs.newDBtab('');
+    main.tabs.newDBtab('','MAIN');
     // Global alias for main application class
 
     // Note: this is asynchronous, so might not be available

@@ -4,6 +4,21 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
     plugin_iconCls: 'pp-icon-folder',
     plugin_name:'DB',
 
+    welcomeMsg:[
+        '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome"',
+        '<h2>Welcome to Paperpile</h2>',
+        '<p>Your library is still empty. <p>',
+        '<p>To get started, <p>',
+        '<ul>',
+        '<li>import your <a href="#" class="pp-textlink" onClick="Paperpile.main.pdfExtract();">PDF collection</a></li>',
+        '<li> get references from a <a href="#" class="pp-textlink" onClick="Paperpile.main.fileImport();">bibliography file</a></li>',
+        '<li>start searching for papers using ',
+        '<a href="#" class="pp-textlink" onClick="Paperpile.main.tabs.newPluginTab(\'PubMed\', {plugin_name: \'Pubmed\', plugin_query:\'\'});">PubMed</a> or ',
+        '<a href="#" class="pp-textlink" onClick="Paperpile.main.tabs.newPluginTab(\'GoogleScholar\', {plugin_name: \'GoogleScholar\', plugin_query:\'\'});">Google Scholar</a></li>',
+        '</ul>',
+        '</div>',
+    ],
+
     initComponent:function() {
 
         Paperpile.PluginGridDB.superclass.initComponent.apply(this, arguments);
@@ -82,6 +97,16 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         }
         
         this.store.baseParams['plugin_search_pdf']= 0 ;
+
+        this.store.on('load', 
+                      function(){
+                          if (this.store.getCount()==0){
+                              var container= this.findParentByType(Paperpile.PubView);
+                              if (container.itemId=='MAIN'){
+                                  container.onEmpty(this.welcomeMsg);
+                              }
+                          }
+                      }, this);
 
     },
 

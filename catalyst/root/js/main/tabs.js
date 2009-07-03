@@ -16,7 +16,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
     },
 
-    newDBtab:function(query){
+    newDBtab:function(query, itemId){
         
         var newGrid=new Paperpile.PluginGridDB({
             plugin_name: 'DB',
@@ -29,6 +29,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
                                                     grid:newGrid,
                                                     closable:false,
                                                     iconCls: 'pp-icon-page',
+                                                    itemId:itemId,
                                                    }));
         newView.show();
     },

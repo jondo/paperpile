@@ -121,10 +121,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
             switch(node.type){
 
-            case 'RESET_DB':
-                Paperpile.main.resetDB();
-                break;
-
             case 'PDFEXTRACT':
                 Paperpile.main.pdfExtract();
                 break;

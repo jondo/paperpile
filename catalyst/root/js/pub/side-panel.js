@@ -185,10 +185,13 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         }
 
         if (numSelected == 0) {
+
             var empty = new Ext.Template('');
             empty.overwrite(this.body);
+            
         }
    	},
+
 
     //
     // Event handling for the HTML. Is called with 'el' as the Ext.Element of the HTML 
@@ -743,7 +746,15 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         })
     },
 
+    // Gets called when the grid
+    showEmpty: function(tpl){
 
+        var empty = new Ext.Template(tpl);
+        empty.overwrite(this.body);
+  
+    }
+
+    
 });
 
 

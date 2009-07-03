@@ -92,7 +92,9 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         this.items.get('east_panel').items.get('details').updateDetail();
     },
 
-    
+    onEmpty: function(tpl){
+        this.items.get('east_panel').items.get('overview').showEmpty(tpl);
+    }
 
 
 

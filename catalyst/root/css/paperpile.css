@@ -147,6 +147,17 @@ li:hover a.pp-delete-attachment{
     color: #4183C4;
 }
 
+.pp-box-welcome p, .pp-box-welcome li{
+    font-size: 13px;
+    line-height: 1.5em;
+}
+
+.pp-box-welcome ul {
+    list-style-type:disc;
+    margin: 0 24;
+}
+
+
 .pp-label-inactive {
     color: #D8D8D8 !important;
 }
