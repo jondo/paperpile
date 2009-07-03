@@ -47,6 +47,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         tbar.unshift(this.filterField);
 
         this.actions['IMPORT'].hide();
+        this.actions['IMPORT_ALL'].hide();
 
         // If we are viewing a virtual folders we need an additional
         // button to remove an entry from a virtual folder

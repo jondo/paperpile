@@ -13,6 +13,9 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
         this.actions['EDIT'].hide();
         this.actions['DELETE'].hide();
 
+        this.actions['IMPORT_ALL'].show();
+        this.actions['IMPORT_ALL'].enable();
+
         this.store.on('beforeload',
                       function(){
                           Paperpile.status.showBusy('Parsing file.');

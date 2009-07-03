@@ -416,6 +416,11 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/add.png');
 }
 
+.add-all .x-btn-text { 
+    background-image: url('/images/icons/page_add.png');
+}
+
+
 .delete .x-btn-text {
     background-image: url('/images/icons/delete.png');
 }

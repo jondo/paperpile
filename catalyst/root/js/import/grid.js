@@ -105,13 +105,23 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             }),
 
             'IMPORT': new Ext.Action({
-                text: 'Add',
+                text: 'Import',
                 handler: function() {this.insertEntry()},
                 scope: this,
                 cls: 'x-btn-text-icon add',
                 disabled:true,
                 itemId:'import_button',
                 tooltip: 'Add the selected references to your library.',
+            }),
+
+            'IMPORT_ALL': new Ext.Action({
+                text: 'Import all',
+                handler: function() {this.insertAll()},
+                scope: this,
+                cls: 'x-btn-text-icon add-all',
+                disabled:true,
+                itemId:'import_button',
+                tooltip: 'Import all references to your library.',
             }),
             
             'EXPORT': new Ext.Action({
@@ -151,6 +161,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var tbar=[{xtype:'tbfill'},
                   this.actions['NEW'],
                   this.actions['IMPORT'],
+                  this.actions['IMPORT_ALL'],
                   this.actions['DELETE'],
                   this.actions['EDIT'],
                   { xtype:'button',
@@ -292,6 +303,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
            // (function(){this.getView().focusRow( row )}).defer(1000,this);
            // console.log(row);
       //  }
+
+       
     },
 
 
@@ -497,6 +510,17 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             },
             scope:this
         });
+
+    },
+
+    insertAll: function(){
+
+        this.allSelected=true;
+        this.insertEntry(function(){
+            this.allSelected=false;
+            var container= this.findParentByType(Paperpile.PubView);
+            container.onRowSelect();
+        },this);
 
     },
 
