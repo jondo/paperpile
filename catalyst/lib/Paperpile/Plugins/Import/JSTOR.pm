@@ -70,8 +70,6 @@ sub connect {
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
-  
-
   # Get the content of the page, either via cache for the first page
   # which has been retrieved in the connect function or send new query
   my $content = '';
@@ -79,8 +77,10 @@ sub page {
     $content = $self->_page_cache->{$offset}->{$limit};
   } else {
     my $browser = Paperpile::Utils->get_browser;
+    my $nr = $offset+1;
     (my $tmp_query = $self->query) =~ s/\s+/+/g;
-    my $response = $browser->get( $searchUrl . $tmp_query );
+    my $searchUrl_new = 'http://www.jstor.org/action/doBasicResults?hp=25&la=&wc=on&gw=jtx&jcpsi=1&artsi=1&Query='.$tmp_query.'&si='.$nr.'&jtxsi='.$nr;
+    my $response = $browser->get( $searchUrl_new );
     $content = $response->content;
   }
   
