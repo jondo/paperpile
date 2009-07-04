@@ -179,6 +179,18 @@ sub get_default_tree : Private {
     )
   );
 
+  $plugins->addChild(
+    Tree::Simple->new( {
+        type         => 'IMPORT_PLUGIN',
+        plugin_name  => 'JSTOR',
+        text         => 'JSTOR',
+        plugin_query => '',
+        iconCls      => 'pp-icon-jstor',
+        hidden       => 0,
+      }
+    )
+  );
+
   ##### / Settings
 
   my $import = Tree::Simple->new( {
