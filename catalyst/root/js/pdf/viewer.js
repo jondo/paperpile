@@ -439,14 +439,14 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 	this.updateButtons();
 	this.updateZoom();
 
+	if (this.search != "") {
+	    this.searchDelay();
+	}
 	for (var i=0; i < this.pageN; i++) {
-	  this.addBackgroundTask("initPDF thumbnails",this.loadThumbnail,[i],this,10,0,true);
+	  this.addBackgroundTask("initPDF thumbnails",this.loadThumbnail,[i],this,50,50,true);
 	}
 
 	this.layoutPages();
-	if (this.search != "") {
-	    this.onSearch();
-	}
       },
       scope:this
       });
@@ -580,7 +580,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       //newImg.set({src:this.getFullUrl(pageIndex)});
       this.loadFullPage(pageIndex);
 
-      this.addBackgroundTask("Layout Annotations",this.loadSearchAndAnnotations,[pageIndex],this,20,0,false);
+      this.addBackgroundTask("Layout Annotations",this.loadSearchAndAnnotations,[pageIndex],this,20,0,true);
     }
   },
 
