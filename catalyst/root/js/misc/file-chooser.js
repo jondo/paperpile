@@ -146,6 +146,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                                   this.close();
                                               }
                                           },
+                                          failure: Paperpile.main.onError,
                                           scope:this
                                       });
                                   } else {

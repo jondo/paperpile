@@ -72,7 +72,7 @@ Paperpile.Statistics = Ext.extend(Ext.Panel, {
         swfobject.embedSWF(
             Paperpile.Url("/flashchart/open-flash-chart.swf"), "container", "550", "300",
             "9.0.0", "/expressInstall.swf",
-            {"data-file":"/ajax/charts/chart?type="+type}
+            {"data-file": "/ajax/charts/chart?type="+type}
         );
 
     }

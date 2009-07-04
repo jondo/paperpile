@@ -53,15 +53,15 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
                       listeners: {
                           select: {
                               fn: function(combo,record,index){
-                                  this.setOptionFields(record.data.value);
                                   
+                                  this.setOptionFields(record.data.value);
+
                                   this.items.get('path_button').items.get('button').enable();
                                   
                                   this.currentType=record.data.value;
                                   var defaultFile='export.'+this.fileEndings[this.currentType];
 
                                   var textfield=this.items.get('path').items.get('textfield');
-                                  //textfield.enable();
                                   var currentText=textfield.getValue();
                                   
                                   if (currentText == ''){
@@ -137,13 +137,6 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
                  items:[
                      { xtype:'checkbox',
                        fieldLabel: '',
-                       boxLabel:'Comma after last item',
-                       hideLabel:true,
-                       name: 'export_bibout_finalcomma',
-                       itemId: 'export_bibout_finalcomma',
-                     },
-                     { xtype:'checkbox',
-                       fieldLabel: '',
                        checked:true,
                        boxLabel:'Pretty formatting and indentation',
                        hideLabel:true,
@@ -151,7 +144,14 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
                        itemId: 'export_bibout_whitespace',
                      },
                      { xtype:'checkbox',
-                       checked:true,
+                       fieldLabel: '',
+                       boxLabel:'Comma after last item',
+                       hideLabel:true,
+                       name: 'export_bibout_finalcomma',
+                       itemId: 'export_bibout_finalcomma',
+                     },
+                     { xtype:'checkbox',
+                       checked:false,
                        boxLabel: 'Use single dash - instead of -- in page field',
                        hideLabel:true,
                        name: 'export_bibout_singledash',
@@ -161,24 +161,24 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
                        fieldLabel: 'Encode special characters as',
                        itemId: 'export_latexout',
                        items: [
-                           {boxLabel: 'LaTeX', name: 'export_latexout', inputValue: true},
-                           {boxLabel: 'Unicode (UTF-8)', name: 'export_latexout', inputValue: false, checked: true},
+                           {boxLabel: 'LaTeX', name: 'export_latexout', inputValue: true, checked: true},
+                           {boxLabel: 'Unicode (UTF-8)', name: 'export_latexout', inputValue: false},
                        ]
                      },
                      { xtype: 'radiogroup',
                        fieldLabel: 'Enclose fields in ',
                        itemId: 'export_bibout_brackets',
                        items: [
-                           {boxLabel: 'Brackets {...}', name: 'export_bibout_brackets', inputValue: true},
                            {boxLabel: 'Quotes "..."', name: 'export_bibout_brackets', inputValue: false, checked: true},
+                           {boxLabel: 'Brackets {...}', name: 'export_bibout_brackets', inputValue: true},
                        ]
                      },
                      { xtype: 'radiogroup',
                        fieldLabel: 'Encode special characters as',
                        itemId: 'export_xmlout',
                        items: [
-                           {boxLabel: 'XML entities', name: 'export_utf8out', inputValue: true},
-                           {boxLabel: 'Unicode (UTF-8)', name: 'export_utf8out', inputValue: false, checked: true},
+                           {boxLabel: 'XML entities', name: 'export_utf8out', inputValue: true, checked: true},
+                           {boxLabel: 'Unicode (UTF-8)', name: 'export_utf8out', inputValue: false},
                        ]
                      },
                      { xtype:'checkbox',
@@ -195,7 +195,9 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
 		
         Paperpile.ExportBibfile.superclass.initComponent.call(this);
 
-        this.on('afterlayout', function(){this.setOptionFields(this.currentType)});
+        this.on('afterlayout', function(){
+            this.setOptionFields(this.currentType);
+        });
     },
 
     setOptionFields: function(type){
@@ -208,7 +210,10 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
                 item.getEl().up('div.x-form-item').setDisplayed(false);
             }
         }
-    }
+    }, 
+
+    
+    
 
 });
 

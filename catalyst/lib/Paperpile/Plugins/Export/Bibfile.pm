@@ -45,7 +45,7 @@ sub write {
     MODS       => Bibutils::MODSOUT,
     BIBTEX     => Bibutils::BIBTEXOUT,
     RIS        => Bibutils::RISOUT,
-    ENDNOTEOUT => Bibutils::ENDNOTEOUT,
+    ENDNOTE    => Bibutils::ENDNOTEOUT,
     ISI        => Bibutils::ISIOUT,
     WORD2007   => Bibutils::WORD2007OUT,
   );
@@ -65,17 +65,15 @@ sub write {
 
   if ( $error != 0 ) {
 
-    my $msg = "Data could not be exported. ";
+    #my $msg = "Data could not be exported. ";
+    #if ( $error == Bibutils::ERR_CANTOPEN ) {
+    #  $msg .= "Could not open file.";
+    #}
+    #if ( $error == Bibutils::ERR_MEMERR ) {
+    #  $msg .= "Not enough memory.";
+    #}
 
-    if ( $error == Bibutils::ERR_CANTOPEN ) {
-      $msg .= "Could not open file.";
-    }
-
-    if ( $error == Bibutils::ERR_MEMERR ) {
-      $msg .= "Not enough memory.";
-    }
-
-    die($msg);
+    FileWriteError->throw( error => "Could not write ". $self->settings->{out_file} );
 
   }
 

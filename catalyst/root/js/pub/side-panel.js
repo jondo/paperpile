@@ -169,7 +169,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                           this.tplSingle.overwrite(this.body, this.data, true);
                           this.installEvents();
                           this.renderTags();
-                      }, 
+                      },
+                      failure: Paperpile.main.onError,
                       scope:this,
                     });
             } else {
@@ -185,10 +186,13 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         }
 
         if (numSelected == 0) {
+
             var empty = new Ext.Template('');
             empty.overwrite(this.body);
+            
         }
    	},
+
 
     //
     // Event handling for the HTML. Is called with 'el' as the Ext.Element of the HTML 
@@ -468,6 +472,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                     Ext.StoreMgr.lookup('tag_store').reload();
                 }
             },
+            failure: Paperpile.main.onError,
             scope: this,
         });
 
@@ -493,6 +498,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                 var grid=Ext.getCmp(this.grid_id);
                 grid.updateData(json.data);
             },
+            failure: Paperpile.main.onError,
             scope: this,
         });
     },
@@ -544,7 +550,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                       record.set('attachments',this.data.attachments+1);
                   }
                   this.updateDetail();
-              }, 
+              },
+              failure: Paperpile.main.onError,
               scope:this,
             });
     },
@@ -587,6 +594,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                       },
               method: 'GET',
               success: successFn,
+              failure: Paperpile.main.onError,
               scope:this,
             });
 
@@ -743,7 +751,15 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         })
     },
 
+    // Gets called when the grid
+    showEmpty: function(tpl){
 
+        var empty = new Ext.Template(tpl);
+        empty.overwrite(this.body);
+  
+    }
+
+    
 });
 
 

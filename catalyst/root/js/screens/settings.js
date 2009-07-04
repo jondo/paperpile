@@ -11,6 +11,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                      },
             bodyStyle:'pp-settings',
             autoScroll: true,
+            iconCls:'pp-icon-tools',
         });
 		
         Paperpile.PatternSettings.superclass.initComponent.call(this);
@@ -173,10 +174,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                     }, this
                 );
             },
-            
-            failure: function(response){
-                
-            },
+            failure: Paperpile.main.onError,
             scope:this
         });
 

@@ -10,6 +10,7 @@ Paperpile.PluginGridOnlineSearch = Ext.extend(Paperpile.PluginGrid, {
                                               store: this.store}));
 
         this.actions['NEW'].hide();
+        this.actions['IMPORT_ALL'].hide();
 
         this.store.on('beforeload',
                       function(){

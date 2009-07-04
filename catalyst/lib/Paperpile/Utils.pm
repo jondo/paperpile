@@ -21,6 +21,18 @@ use Paperpile::Model::User;
 
 $Data::Dumper::Indent = 1;
 
+sub get_tmp_dir {
+
+  my ( $self ) = @_;
+
+  # This is hard-coded for now. Ideally it should read location from
+  # paperpile.yaml. Don't know how to do this without access to $c
+
+  my $tmp_dir= $ENV{HOME} . "/.paperpile/tmp";
+
+  return $tmp_dir;
+}
+
 sub get_browser {
 
   my ( $self, $test_proxy ) = @_;

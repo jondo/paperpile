@@ -72,6 +72,7 @@ Paperpile.ExportDB = Ext.extend(Ext.FormPanel, {
                        hideLabel:true,
                        name: 'export_include_pdfs',
                        itemId: 'export_include_pdfs',
+                       disabled:true,
                      },
                      { xtype:'checkbox',
                        fieldLabel: '',
@@ -79,6 +80,7 @@ Paperpile.ExportDB = Ext.extend(Ext.FormPanel, {
                        hideLabel:true,
                        name: 'export_include_attachments',
                        itemId: 'export_include_attachments',
+                       disabled:true,
                      },
                  ]
                 },

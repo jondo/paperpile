@@ -4,16 +4,24 @@
   <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
     <h2  class="pp-dashboard-statistics" >Statistics</h2>
 
-    <dl>
-      <dt># References</dt>
-      <dd><% $c->{stash}->{num_items} %></dd>
-      <dt>PDFs</dt>
-      <dd><% $c->{stash}->{num_pdfs} %></dd>
-      <dt># Suppl. files</dt>
-      <dd><% $c->{stash}->{num_attachments} %></dd>
-      <dt>Last imported</dt>
-      <dd id="dashboard-last-imported"><% $c->{stash}->{last_imported} %></dd>
-    </dl>
+    <table>
+      <tr>
+        <td class="pp-dashboard-dt"># References: </td>
+        <td class="pp-dashboard-dl"><% $c->{stash}->{num_items} %></td>
+      </tr>
+      <tr>
+        <td class="pp-dashboard-dt"># PDFs: </td>
+        <td class="pp-dashboard-dl"><% $c->{stash}->{num_pdfs} %></td>
+      </tr>
+      <tr>
+        <td class="pp-dashboard-dt"># Suppl. files: </td>
+        <td class="pp-dashboard-dl"><% $c->{stash}->{num_attachments} %></td>
+      </tr>
+      <tr>
+        <td class="pp-dashboard-dt">Last imported: </td>
+        <td class="pp-dashboard-dl" id="dashboard-last-imported"><% $c->{stash}->{last_imported} %></td>
+      </tr>
+    </table>
 
     <ul>
       <li><a href="#" class="pp-textlink pp-bullet" action="statistics">More statistics</a></li>
@@ -35,14 +43,14 @@
   <td>
     <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:220;">
       <h2 class="pp-dashboard-feedback">Support &amp; Feedback</h2>
-      <p>Something broken? Get it fixed. Something missing? Get it
-        done. Make yourself heard at our feedback forum:</p>
+      <p>Something broken? Get it fixed. Something missing? Tell us
+      about it. Make yourself heard at our feedback forum:</p>
       <ul>
-        <li><a href="#" class="pp-textlink pp-bullet">uservoice.com/paperpile</a></li>
+        <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.utils.openURL('http://paperpile.uservoice.com');">paperpile.uservoice.com</a></li>
       </ul>
-      <p>Need help? Have questions? We are here to help:</p>
+      <p>Need help? Have questions? Send us an email:</p>
       <ul>
-        <li><a href="#" class="pp-textlink pp-bullet">support@paperpile.org</a></li>
+        <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.utils.openURL('mailto:support@paperpile.org');">support@paperpile.org</a></li>
       </ul>
     </div>
   </td>
@@ -50,11 +58,11 @@
   <td>
     <div class="pp-box pp-box-style2 pp-dashboard-box" style="height:220;">
       <h2>About Paperpile</h2>
-      <p>You are running Paperpile $version for $platform.</p>
+      <p>You are running Paperpile <% $c->config->{app_settings}->{version} %> on <% $c->config->{app_settings}->{platform} %> </p>
       <ul>
-        <li><a href="#" class="pp-textlink pp-bullet">Licence</a></li>
-        <li><a href="#" class="pp-textlink pp-bullet">Acknowledgments</a></li>
-        <li><a href="#" class="pp-textlink pp-bullet">The Paperpile Open Source project</a></li>
+        <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.main.tabs.newScreenTab({url:'/screens/license', title:'License'});">License</a></li>
+        <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.main.tabs.newScreenTab({url:'/screens/credits', title:'Acknowledgements'});">Acknowledgements</a></li>
+        <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.utils.openURL('https://github.com/wash/paperpile');">The Paperpile Open Source project</a></li>
       </ul>
     </div>
   </td>

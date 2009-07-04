@@ -7,6 +7,14 @@ Paperpile.utils = {
         return {dir:dir, file:file};
     },
 
+    openURL: function(url) {
+        if (IS_TITANIUM){
+
+        } else {
+            window.open(url, '_blank');
+        }
+    },
+
     // The intended purpose of this function is to convert the GMT
     // timestamp to local time; for now it justs chops of the time
     // from the date string

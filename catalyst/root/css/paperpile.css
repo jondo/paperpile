@@ -39,7 +39,7 @@ h1 {
 }
 
 .pp-dashboard-box {
-    width: 400px;
+    width: 300px;
     margin: 10px;
 }
 
@@ -147,6 +147,17 @@ li:hover a.pp-delete-attachment{
     color: #4183C4;
 }
 
+.pp-box-welcome p, .pp-box-welcome li{
+    font-size: 13px;
+    line-height: 1.5em;
+}
+
+.pp-box-welcome ul {
+    list-style-type:disc;
+    margin: 0 24;
+}
+
+
 .pp-label-inactive {
     color: #D8D8D8 !important;
 }
@@ -169,6 +180,30 @@ li:hover a.pp-delete-attachment{
 .pp-dashboard-box li{
     margin: 8 21 !important;
 }
+
+.pp-dashboard-box p{
+    margin: 8 21 !important;
+}
+
+.pp-dashboard-box table{
+    margin: 8 21 !important;
+}
+
+.pp-dashboard-box td{
+    line-height: 1.3em;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    padding: 2 4;
+}
+
+td.pp-dashboard-dt{
+    color: #4183C4;
+    text-align: right; 
+}
+
+td.pp-dashboard-dl{
+    text-align: left; 
+}
+
 
 .pp-chart-box {
     margin: 8;
@@ -267,8 +302,10 @@ a:hover.pp-textlink {
 
 .pp-status-line-container {
     padding: 0px 10px;
+    z-index: 9001; /* show above mask */
     /*-moz-border-radius: 3px; Does not work with update*/
     -webkit-border-radius: 3px;
+    
 }
 
 .pp-status-msg {
@@ -416,6 +453,11 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/add.png');
 }
 
+.add-all .x-btn-text { 
+    background-image: url('/images/icons/page_add.png');
+}
+
+
 .delete .x-btn-text {
     background-image: url('/images/icons/delete.png');
 }
@@ -437,11 +479,11 @@ a:hover.pp-textlink {
 }
 
 .next .x-btn-text {
-    background-image: url('/images/icons/arrow_right.png');
+    background-image: url('/images/icons/next.png');
 }
 
 .prev .x-btn-text {
-    background-image: url('/images/icons/arrow_left.png');
+    background-image: url('/images/icons/back.png');
 }
 
 .dashboard .x-btn-text {
