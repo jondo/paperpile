@@ -248,7 +248,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.tbItems['SINGLE_B'] = bi(this.tbItems['SINGLE']);
 
     this.tbItems['ZOOM_MENU'] = new Ext.HoverButton({
-					menu: {
+						      menu: {shadow:false,
 					  items:[
 					    this.slide,
 					    this.zmW,
@@ -261,7 +261,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 				      });
 
     this.tbItems['LAYOUT_MENU'] = new Ext.HoverButton({
-					menu: {
+							menu: {shadow:false,
 					  items:[
 					    this.tbItems['ONE_UP_B'],
 					    this.tbItems['TWO_UP_B'],
@@ -2104,8 +2104,9 @@ Ext.HoverButton = function(config) {
   Ext.HoverButton.superclass.constructor.call(this, config);
 };
 Ext.extend(Ext.HoverButton, Ext.Button, {
-  showSpeed:0.3,
-  hideSpeed:0.3,
+  animateOpen:false,
+  showSpeed:0.4,
+  hideSpeed:0.5,
   hideDelay:250,
   inPosition:false,
   hideTimeout:0,
@@ -2136,29 +2137,37 @@ Ext.extend(Ext.HoverButton, Ext.Button, {
   },
 
   hideAnim:function() {
-    this.menu.getEl().alignTo(this.el,"bl",[0,0],{
+    if (this.animateOpen) {
+      this.menu.getEl().alignTo(this.el,"bl",[0,0],{
 				duration:this.hideSpeed,
 				scope:this,
 				callback:function() {
 				  this.menu.hide();
 				  this.inPosition=false;
 				}
-    });
+				});
+    } else {
+      this.hideMenu();
+      this.inPosition=false;
+    }
   },
 
   showAnim: function() {
-    this.menu.show(this.el,"bl");
-    this.menu.getEl().alignTo(this.el,"tl-bl?",[0,0],{
+    if (this.animateOpen) {
+      this.menu.show(this.el,"tl");
+      this.menu.getEl().alignTo(this.el,"tl-bl?",[0,0],{
 				duration:this.showSpeed,
 				scope:this,
 				callback:function() {
 				  this.inPosition=true;
-//				  this.menu.resumeEvents();
 				}
 			      }
 			     );
-//    this.menu.suspendEvents();
-    this.inPosition = false;
+      this.inPosition = false;
+    } else {
+      this.showMenu();
+      this.inPosition=true;
+    }
   },
 
   onClick: function(e) {
