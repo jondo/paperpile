@@ -32,14 +32,14 @@ Ext.onReady(function() {
             new Ext.Panel({
                 region:'east',
                 width: 30
-            }),
+            })
      ]
     });
 
     //vp.on('afterlayout', Ext.getCmp('pdf_viewer').onLayout, Ext.getCmp('pdf_viewer'));
     //vp.on('render', function(){alert('inhere')}, Ext.getCmp('pdf_viewer'));
 
-    win=new Paperpile.FileChooser({
+    var win=new Paperpile.FileChooser({
         //currentRoot:'ROOT',
         showFilter: true,
         filterOptions:[{text: 'PDF documents (.pdf)',
@@ -47,7 +47,7 @@ Ext.onReady(function() {
                        },
                        {text: 'All files',
                         suffix:['ALL']
-                       },
+                       }
                       ],
         //saveMode: true,
         //saveDefault: 'new-file.dat',
@@ -62,14 +62,9 @@ Ext.onReady(function() {
     });
 
     var viewer = Ext.getCmp('pdf_viewer');
-
-    //var path = '/home/greg/wattenberg_03_conversation.pdf';
-    //var path = '/home/greg/jordan_08_phylowidget.pdf';
-    //var path = '/home/greg/kosiol_08_patterns.pdf';
-    //var path = '/home/greg/Desktop/CiteULike/theses/kosiol_06_markov.pdf';
-    //var path = '/home/greg/Dropbox/CiteULike/theses/bofkin_06_causes.pdf';
     var path = Ext.getUrlParam("file");
-    if (path != '') {
+    if (path !== undefined && path !== '') {
+      console.log(path);
       viewer.initPDF(path);
     } else {
       win.show();
