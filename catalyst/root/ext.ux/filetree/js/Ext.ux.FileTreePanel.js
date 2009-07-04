@@ -10,13 +10,13 @@
  * the Open Source LGPL 3.0 license.  Commercial use is permitted to the extent
  * that the code/component(s) do NOT become part of another Open Source or Commercially
  * licensed development library or toolkit without explicit permission.
- * 
+ *
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
 
 
 Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
-    
+
     selectionMode: 'BOTH', //FILE, DIR, or BOTH
 
     filter:null,
@@ -29,7 +29,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	 confirmText:'Confirm'
 
 	/**
-	 * @cfg {Boolean} containerScroll true to register 
+	 * @cfg {Boolean} containerScroll true to register
 	 * this container with ScrollManager (defaults to true)
 	 */
 	,containerScroll:true
@@ -53,13 +53,13 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	,enableDD:true
 
 	/**
-	 * @cfg {Boolean) enableDelete true to enable to delete files and directories. 
+	 * @cfg {Boolean) enableDelete true to enable to delete files and directories.
 	 * If false context menu item is not shown (defaults to true)
 	 */
 	,enableDelete:true
 
 	/**
-	 * @cfg {Boolean) enableNewDir true to enable to create new directory. 
+	 * @cfg {Boolean) enableNewDir true to enable to create new directory.
 	 * If false context menu item is not shown (defaults to true)
 	 */
 	,enableNewDir:true
@@ -77,7 +77,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	,enableProgress:true
 
 	/**
-	 * @cfg {Boolean) enableRename true to enable to rename files and directories. 
+	 * @cfg {Boolean) enableRename true to enable to rename files and directories.
 	 * If false context menu item is not shown (defaults to true)
 	 */
 	,enableRename:true
@@ -88,7 +88,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	,enableSort:true
 
 	/**
-	 * @cfg {Boolean) enableUpload true to enable to upload files. 
+	 * @cfg {Boolean) enableUpload true to enable to upload files.
 	 * If false context menu item is not shown (defaults to true)
 	 */
 	,enableUpload:true
@@ -133,13 +133,13 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	,folderSort:true
 
 	/**
-	 * @cfg {String} hrefPrefix Text to prepend before file href for file open command. 
+	 * @cfg {String} hrefPrefix Text to prepend before file href for file open command.
 	 * (defaults to '')
 	 */
 	,hrefPrefix:''
 
 	/**
-	 * @cfg {String} hrefSuffix Text to append to file href for file open command. 
+	 * @cfg {String} hrefSuffix Text to append to file href for file open command.
 	 * (defaults to '')
 	 */
 	,hrefSuffix:''
@@ -183,12 +183,12 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	,newdirText:'New Folder'
 
 	/**
-	 * @cfg {String} newdirUrl URL to use when creating new directory; 
+	 * @cfg {String} newdirUrl URL to use when creating new directory;
 	 * this.url is used if not set (defaults to undefined)
 	 */
 
 	/**
-	 * @cfg {String} openMode Default file open mode. This mode is used when user dblclicks 
+	 * @cfg {String} openMode Default file open mode. This mode is used when user dblclicks
 	 * a file. Other valid values are '_self', '_blank' and 'download' (defaults to 'popup')
 	 */
 	,openMode:'popup'
@@ -374,7 +374,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 		if(!this.loader) {
 			this.loader = new Ext.tree.TreeLoader({
 				 url:this.url
-				,baseParams:{cmd:'get', 
+				,baseParams:{cmd:'get',
                              selectionMode: this.selectionMode,
                              showHidden: this.showHidden,
                              filter: this.filter==null? '':this.filter,
@@ -404,7 +404,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 
 
 		// {{{
-		// install treeEditor event handlers 
+		// install treeEditor event handlers
 		if(this.treeEditor) {
 			// do not enter edit mode on selected node click
 			this.treeEditor.beforeNodeClick = function(node,e){return true;};
@@ -435,7 +435,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
                 fn:function(tree, parent,node){
                 }
             }
-            
+
 	    });
 
         this.getSelectionModel().on({
@@ -444,11 +444,11 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 
                     var allowSelect=0;
                     var type=node.attributes.type;
-                    
+
                     if (this.selectionMode == 'FILE' && type =='FILE') allowSelect=1;
                     if (this.selectionMode == 'DIR' && type =='DIR') allowSelect=1;
                     if (this.selectionMode == 'BOTH') allowSelect=1;
-                        
+
                     if (allowSelect){
                         var fc=this.findParentByType(Paperpile.FileChooser);
                         var path=this.rootPath+"/"+node.text;
@@ -457,7 +457,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 
                 },
                 scope:this
-            },
+            }
         });
 
 		// }}}
@@ -484,12 +484,12 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 			,'open'
 			/**
 			 * @event beforerename
-			 * Fires after the user completes file name editing 
+			 * Fires after the user completes file name editing
 			 * but before the file is renamed. Return false to cancel the event
 			 * @param {Ext.ux.FileTreePanel} this
 			 * @param {Ext.tree.AsyncTreeNode} node being renamed
-			 * @param {String} newPath including file name 
-			 * @param {String} oldPath including file name 
+			 * @param {String} newPath including file name
+			 * @param {String} oldPath including file name
 			 */
 			,'beforerename'
 			/**
@@ -497,8 +497,8 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 			 * Fires after the file has been successfully renamed
 			 * @param {Ext.ux.FileTreePanel} this
 			 * @param {Ext.tree.AsyncTreeNode} node that has been renamed
-			 * @param {String} newPath including file name 
-			 * @param {String} oldPath including file name 
+			 * @param {String} newPath including file name
+			 * @param {String} oldPath including file name
 			 */
 			,'rename'
 			/**
@@ -506,8 +506,8 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 			 * Fires after a failure when renaming file
 			 * @param {Ext.ux.FileTreePanel} this
 			 * @param {Ext.tree.AsyncTreeNode} node rename of which failed
-			 * @param {String} newPath including file name 
-			 * @param {String} oldPath including file name 
+			 * @param {String} newPath including file name
+			 * @param {String} oldPath including file name
 			 */
 			,'renamefailure'
 			/**
@@ -552,6 +552,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 			 * @param {String} path creation of which failed
 			 */
 			,'newdirfailure'
+			,'fileaction'
 		); // eo addEvents
 		// }}}
 
@@ -590,7 +591,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 
 		}
 
-		// prevent default browser context menu to appear 
+		// prevent default browser context menu to appear
 		this.el.on({
 			contextmenu:{fn:function(){return false;},stopEvent:true}
 		});
@@ -864,7 +865,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 			setTimeout(function() {document.body.removeChild(form);}, 100);
 			setTimeout(function() {document.body.removeChild(frame);}, 110);
 		};
-		
+
 		Ext.EventManager.on(frame, 'load', callback, this);
 
 		form.submit();
@@ -1161,9 +1162,13 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 	,onDblClick:function(node, e) {
 
         if (node.attributes.type=='DIR'){
-            this.findParentByType(Paperpile.FileChooser).showDir(this.rootPath+"/"+node.text);
-        }
-        
+          this.findParentByType(Paperpile.FileChooser).showDir(this.rootPath+"/"+node.text);
+        } else {
+	  if(true !== this.eventsSuspended) {
+	    this.fireEvent('fileaction', this, this.getPath(node));
+	  }
+	}
+
         //node.expand(true, true, function(node){ });
         //this.setRootNode(node);
 
@@ -1493,7 +1498,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 		menu.setItemDisabled('newdir', this.readOnly || (node.isLeaf() ? node.parentNode.disabled : node.disabled));
 		//menu.setItemDisabled('upload', node.isLeaf() ? node.parentNode.disabled : node.disabled);
 		//menu.setItemDisabled('upload-panel', node.isLeaf() ? node.parentNode.disabled : node.disabled);
-		
+
 		// show/hide logic
 		//menu.getItemByCmd('open').setVisible(this.enableOpen);
 		//menu.getItemByCmd('delete').setVisible(this.enableDelete);
@@ -1511,7 +1516,7 @@ Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 		else {
 			menu.showAt(menu.getEl().getAlignToXY(alignEl, 'tl-tl?', [0, 18]));
 		}
-	} // eo function 
+	} // eo function
 	// }}}
 	// {{{
 	/**

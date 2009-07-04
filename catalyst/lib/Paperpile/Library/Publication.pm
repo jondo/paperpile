@@ -325,7 +325,7 @@ sub format_pattern {
   $first_author =~ s/\s+/_/g;
   $last_author  =~ s/\s+/_/g;
 
-  if ( length($YY) == 4 ) {
+  if ( defined $YY && length($YY) == 4 ) {
     $YY = substr( $YYYY, 2, 2 );
   }
 
@@ -384,8 +384,10 @@ sub format_pattern {
 
 
   # [YY] and [YYYY]
-  $pattern =~ s/\[YY\]/$YY/g;
-  $pattern =~ s/\[YYYY\]/$YYYY/g;
+  if (defined $YYYY) {
+    $pattern =~ s/\[YY\]/$YY/g;
+    $pattern =~ s/\[YYYY\]/$YYYY/g;
+  }
 
   $pattern =~ s/\[journal\]/$journal/g;
 

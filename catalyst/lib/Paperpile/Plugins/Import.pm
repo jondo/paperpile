@@ -116,7 +116,9 @@ sub _save_page_to_hash {
   ( my $self, my $data ) = @_;
 
   foreach my $entry (@$data) {
-    $self->_hash->{ $entry->sha1 } = $entry;
+    if (defined $entry->sha1) {
+      $self->_hash->{ $entry->sha1 } = $entry;
+    }
   }
 }
 

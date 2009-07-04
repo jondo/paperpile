@@ -414,7 +414,9 @@ sub _get_selection {
     }
     for my $sha1 (@tmp) {
       my $pub = $plugin->find_sha1($sha1);
-      push @data, $pub;
+      if (defined $pub) {
+	push @data, $pub;
+      }
     }
   }
 

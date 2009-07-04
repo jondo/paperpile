@@ -81,7 +81,9 @@ sub connect {
         my $pub = Paperpile::Library::Publication->new;
         $pub->_build_from_bibutils($entry);
         $pub->citekey('');
-        $all{ $pub->sha1 } = $pub;
+	if (defined $pub->sha1) {
+          $all{ $pub->sha1 } = $pub;
+	}
       }
 
 
