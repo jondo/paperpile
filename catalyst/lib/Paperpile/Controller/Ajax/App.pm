@@ -17,6 +17,16 @@ sub kill_server : Local {
   exit(0);
 }
 
+sub heartbeat : Local {
+
+  my ( $self, $c ) = @_;
+
+  $c->stash->{version} = $c->config->{app_settings}->{version};
+  $c->stash->{status} = 'RUNNING';
+
+}
+
+
 sub init_session : Local {
 
   my ( $self, $c ) = @_;

@@ -302,7 +302,59 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
 });
 
+
 Ext.onReady(function() {
+
+    Paperpile.currentStage=0;
+
+    Paperpile.serverPID=null;
+
+    Paperpile.stage1();
+
+
+    /*
+
+    Ext.Ajax.request({
+
+        url: Paperpile.Url('/ajax/app/heartbeat'),
+
+        success: function(response){
+            var json = Ext.util.JSON.decode(response.responseText);
+            if (json.status == 'RUNNING'){
+                if (Paperpile.currentStage == 0 ){
+                    Paperpile.stage1();
+                }
+            }
+        },
+                
+        failure: function(response){
+            
+            if (IS_TITANIUM){
+                var process = Titanium.Process.launch('../../catalyst/perl5/linux64/bin/perl',
+                                                      ['../../catalyst/script/paperpile_server.pl', '-fork']);
+                Paperpile.serverPID=process.pid;
+                Paperpile.stage1();
+            }
+
+                  Ext.Msg.show({
+                title:'Error',
+                msg: 'Could not start Paperpile server',
+                buttons: Ext.Msg.OK,
+                animEl: 'elId',
+                icon: Ext.MessageBox.ERROR
+            });
+                 
+        },
+        //timeout: 2000,
+    });
+    */
+    
+});
+
+Paperpile.stage1 = function() {
+
+    Paperpile.currentStage=1;
+
     Paperpile.initMask = new Ext.LoadMask(Ext.getBody(), {msg:"Starting Paperpile Pre 1"});
     Paperpile.initMask.show();
     Ext.Ajax.request({
@@ -320,19 +372,19 @@ Ext.onReady(function() {
                 });
 
                 if (json.error.type == 'LibraryMissingError'){
-                    Paperpile.app();
+                    Paperpile.stage2();
                 } else {
                     Paperpile.initMask.hide();
                 }
             } else {
-                Paperpile.app();
+                Paperpile.stage2();
             }
         }
     });
-});
+};
 
 
-Paperpile.app=function(){
+Paperpile.stage2=function(){
 
     Ext.QuickTips.init();
     main=new Paperpile.Viewport;
@@ -364,9 +416,6 @@ Paperpile.app=function(){
     });
 
     Paperpile.initMask.hide();
-
-
-
 }
 
 
