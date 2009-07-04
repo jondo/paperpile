@@ -121,10 +121,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
             switch(node.type){
 
-            case 'RESET_DB':
-                Paperpile.main.resetDB();
-                break;
-
             case 'PDFEXTRACT':
                 Paperpile.main.pdfExtract();
                 break;
@@ -178,7 +174,36 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 break;
             }
         });
+
+        // Set scroll size the first time, when the node is rendered
+        this.on('beforechildrenrendered', 
+                function(node){
+                    if (node.id == 'TAGS_ROOT'){
+                        this.updateScrollSize();
+                    }
+                }, this);
+
+        this.on('resize', 
+                function(){
+                    this.updateScrollSize();
+                }, this);
+
+
 	},
+
+    updateScrollSize: function(){
+        var node = this.getNodeById('TAGS_ROOT');
+
+        // Make sure everything is rendered; this allows to call the function via the 'resize' event;
+        if (node){
+            if (node.rendered){
+                var el=Ext.Element.get(node.ui.getAnchor()).up('li').first('ul');
+                maxHeight=Math.round(this.getInnerHeight()/3);
+                el.setStyle('overflow','auto');
+                el.setStyle('max-height',maxHeight);
+            }
+        }
+    },
 
     onNodeDrop: function(e){
 
@@ -199,6 +224,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         var json = Ext.util.JSON.decode(response.responseText);
                         grid.updateData(json.data);
                     },
+                    failure: Paperpile.main.onError,
                 });
             }
 
@@ -216,6 +242,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         var json = Ext.util.JSON.decode(response.responseText);
                         grid.updateData(json.data);
                     },
+                    failure: Paperpile.main.onError,
                     scope: this,
                 });
             }
@@ -232,6 +259,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     //Ext.getCmp('statusbar').clearStatus();
                     //Ext.getCmp('statusbar').setText('Moved node');
                 },
+                failure: Paperpile.main.onError
             });
         }
     },
@@ -401,6 +429,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Added new active folder');
             },
+            failure: Paperpile.main.onError,
         });
         
     },
@@ -496,6 +525,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Added new folder');
             },
+            failure: Paperpile.main.onError,
         });
     },
 
@@ -513,6 +543,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Deleted active folder');
             },
+            failure: Paperpile.main.onError,
         });
 
         node.remove();
@@ -543,6 +574,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                             //Ext.getCmp('statusbar').clearStatus();
                             //Ext.getCmp('statusbar').setText('Renamed folder');
                         },
+                        failure: Paperpile.main.onError,
                     });
                 },
 			}
@@ -566,6 +598,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Deleted folder');
             },
+            failure: Paperpile.main.onError,
         });
 
         node.remove();
@@ -634,6 +667,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Hide/Show node');
             },
+            failure: Paperpile.main.onError,
 
         });
     },
@@ -721,6 +755,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             success: function(){
                 Ext.StoreMgr.lookup('tag_store').reload();
             },
+            failure: Paperpile.main.onError,
         });
     },
 
@@ -776,6 +811,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     }
                 });
             },
+            failure: Paperpile.main.onError,
         });
     },
 
@@ -790,8 +826,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                      style: number,
                     },
             success: function(){
-               
-                
                 Ext.StoreMgr.lookup('tag_store').reload({
                     callback: function(){
                         Paperpile.main.tabs.items.each(
@@ -819,6 +853,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Changes style of Tag');
             },
+            failure: Paperpile.main.onError,
             scope: this
         });
     },
@@ -879,6 +914,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                 }
                             });
                         },
+                        failure: Paperpile.main.onError,
                     });
                 },
 			}
@@ -895,7 +931,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         var window=new Paperpile.ExportWindow({source_node: node.id});
         window.show();
 
-    }
+    },
+
 
 });
 

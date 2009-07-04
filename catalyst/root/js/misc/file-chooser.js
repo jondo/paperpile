@@ -85,7 +85,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                        width:400
                       }
                   ],
-                  items:[{xtype:'panel', itemId:'filetree', id:'DUMMY'}],
+                  items:[{xtype:'panel', itemId:'filetree', id:'DUMMY'}]
                 }
             ],
             bbar: [ {xtype:'combo',
@@ -108,7 +108,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                              },
                              scope:this
                          }
-                     },
+                     }
                     },
                     {xtype:'tbfill'},
                     { text: 'Select',
@@ -117,45 +117,10 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                       cls: 'x-btn-text-icon save',
                       listeners: {
                           click:  {
-                              fn: function(){
-                                  var ft=this.items.get('filetree');
-
-                                  var path=this.currentRoot+"/"+this.textfield.getValue();
-
-                                  // ROOT only needed internally
-                                  path=path.replace(/^ROOT/,'');
-
-                                  if (this.saveMode && this.warnOnExisting){
-                                      Ext.Ajax.request({
-                                          url: Paperpile.Url('/ajax/files/stats'),
-                                          params: { location: path},
-                                          method: 'GET',
-                                          success: function(response){
-                                              var json = Ext.util.JSON.decode(response.responseText);
-                                              if (json.stats.exists){
-                                                  Ext.Msg.confirm('',path+' already exists. Overwrite?',
-                                                                  function(btn){
-                                                                      if (btn=='yes'){
-                                                                          this.callback.createDelegate(this.scope,['OK',path])();
-                                                                          this.close();
-                                                                      }
-                                                                  }
-                                                                 )
-                                              } else {
-                                                  this.callback.createDelegate(this.scope,['OK',path])();
-                                                  this.close();
-                                              }
-                                          },
-                                          scope:this
-                                      });
-                                  } else {
-                                      this.callback.createDelegate(this.scope,['OK',path])();
-                                      this.close();
-                                  }
-                              },
+                              fn: this.selectAction,
                               scope: this
                           }
-                      },
+                      }
                     },
                     { text: 'Cancel',
                       itemId: 'cancel',
@@ -168,7 +133,7 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                                },
                                scope: this
                            }
-                      },
+                      }
                     }
                   ]
 	    });
@@ -194,6 +159,43 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                          );
 
 
+    },
+
+    selectAction: function(){
+      var ft=this.items.get('filetree');
+      var path=this.currentRoot+"/"+this.textfield.getValue();
+
+      // ROOT only needed internally
+      path=path.replace(/^ROOT/,'');
+
+      if (this.saveMode && this.warnOnExisting){
+        Ext.Ajax.request({
+          url: Paperpile.Url('/ajax/files/stats'),
+          params: { location: path},
+          method: 'GET',
+          success: function(response){
+            var json = Ext.util.JSON.decode(response.responseText);
+            if (json.stats.exists){
+              Ext.Msg.confirm('',path+' already exists. Overwrite?',
+              function(btn){
+                if (btn=='yes'){
+                  this.callback.createDelegate(this.scope,['OK',path])();
+                  this.close();
+                }
+              }
+                             );
+            } else {
+              this.callback.createDelegate(this.scope,['OK',path])();
+              this.close();
+            }
+          },
+          failure: Paperpile.main.onError,
+          scope:this
+                         });
+      } else {
+        this.callback.createDelegate(this.scope,['OK',path])();
+        this.close();
+      }
     },
 
     updateTextfield: function(value){
@@ -250,8 +252,14 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
             rootVisible:false,
             filter:filter,
             url:Paperpile.Url('/ajax/files/dialogue')
-	    });
+	});
 
+	treepanel.on("fileaction",
+	  function(e,el,options) {
+	    this.selectAction(options);
+	  },
+	  this
+	);
         cp.add(treepanel);
         cp.doLayout();
 
@@ -279,9 +287,8 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
             Ext.Element.get(li).on('click',
                                    function(e, el, options){
-                                       this.showDir(options.link);
+				     this.showDir(options.link);
                                    }, this, {link: link });
-
             dh.append(ul,{tag:'li', cls:'pp-filechooser-separator', html:"/"});
         }
     }

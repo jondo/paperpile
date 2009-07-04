@@ -11,6 +11,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                      },
             bodyStyle:'pp-settings',
             autoScroll: true,
+            iconCls:'pp-icon-tools',
         });
 		
         Paperpile.PatternSettings.superclass.initComponent.call(this);
@@ -75,6 +76,49 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
             this.proxyCheckbox.setValue(false);
             this.onToggleProxy(this.proxyCheckbox,false);
         }
+        
+        this.proxyTestButton=new Ext.Button({text:"Test your network connection", 
+                                             renderTo:'proxy_test_button'});
+        
+
+        this.proxyTestButton.on('click', 
+                                function(){
+
+                                    Ext.get('proxy_test_status').removeClass(['pp-icon-tick', 'pp-icon-cross']);
+
+                                    Paperpile.status.showBusy('Testing network connection.');
+
+                                    var params={use_proxy: this.proxyCheckbox.getValue() ? 1 : 0,
+                                                proxy: this.textfields['proxy'].getValue(),
+                                                proxy_user: this.textfields['proxy_user'].getValue(),
+                                                proxy_passwd: this.textfields['proxy_passwd'].getValue(),
+                                               };
+                                    Ext.Ajax.request({
+                                        url: Paperpile.Url('/ajax/misc/test_network'),
+                                        params: params,
+                                        success: function(response){
+
+                                            var error;
+
+                                            if (response.responseText){
+                                                error= Ext.util.JSON.decode(response.responseText).error;
+                                            }
+
+                                            if (error){
+                                                Ext.get('proxy_test_status').replaceClass('pp-icon-tick', 'pp-icon-cross');
+                                                Paperpile.main.onError(response);
+                                            } else {
+                                                Ext.get('proxy_test_status').replaceClass('pp-icon-cross','pp-icon-tick');
+                                                Paperpile.status.clearMsg();
+                                            }
+ 
+                                        },
+                                        failure: function(response){
+                                            Ext.get('proxy_test_status').replaceClass('pp-icon-tick', 'pp-icon-cross');
+                                            Paperpile.main.onError(response);
+                                        }
+                                    });
+                                }, this);
 
 
         this.setSaveDisabled(true);
@@ -130,10 +174,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                     }, this
                 );
             },
-            
-            failure: function(response){
-                
-            },
+            failure: Paperpile.main.onError,
             scope:this
         });
 

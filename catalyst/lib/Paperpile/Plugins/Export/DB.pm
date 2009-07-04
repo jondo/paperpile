@@ -23,15 +23,16 @@ sub write {
 
   my ($self) = @_;
 
-  my $dbfile=$self->settings->{out_file};
+  my $dbfile = $self->settings->{out_file};
 
   # First initialize with empty database file
-  my $empty_db=Paperpile::Utils->path_to('db/local-user.db')->stringify;
-  copy( $empty_db, $dbfile ) or die "Could not initialize empty db: $!";
+  my $empty_db = Paperpile::Utils->path_to('db/library.db')->stringify;
 
-  my $model=Paperpile::Model::User->new();
-  $model->set_dsn("dbi:SQLite:".$dbfile);
-  $model->insert_pubs($self->data);
+  copy( $empty_db, $dbfile ) or FileWriteError->throw( error => "Could not write $dbfile." );
+
+  my $model = Paperpile::Model::Library->new();
+  $model->set_dsn( "dbi:SQLite:" . $dbfile );
+  $model->insert_pubs( $self->data );
 
 }
 

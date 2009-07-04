@@ -5,10 +5,10 @@ Paperpile.Statistics = Ext.extend(Ext.Panel, {
 
     markup: [
         '<div class="pp-box-tabs">',
-        '<div class="pp-box pp-box-top pp-box-style1" style="height:450px; width:600px; max-width:600px; padding:20px;">',
+        '<div class="pp-box pp-box-top pp-box-style1" style="height:350px; width:600px; max-width:600px; padding:20px;">',
         '<div class="pp-container-centered">',
         '<div id="container" style="display: table-cell;vertical-align: middle;">',
-        '<p>INHERE</p>',
+        '<p>Could not find flash plugin.</p>',
         '</div>',
         '</div>',
         '</div>',
@@ -50,29 +50,33 @@ Paperpile.Statistics = Ext.extend(Ext.Panel, {
 
         Ext.get('stats-tabs').on('click', function(e, el, o){
 
-            var action=el.getAttribute('action');
+            var type=el.getAttribute('action');
 
-            if (!action) return;
-
-
+            if (!type) return;
+            
             Ext.select('#stats-tabs li', true, 'stats-tab').removeClass('pp-box-tabs-active');
 
             Ext.get(el).parent('li').addClass('pp-box-tabs-active');
 
-            console.log(action);
+            this.showFlash(type);
+        }, this);
 
-        });
+        this.showFlash('top_authors');
 
-
-        //swfobject.embedSWF(
-        //    Paperpile.Url("/flashchart/open-flash-chart.swf"), "container", "550", "300",
-        //    "9.0.0", "/expressInstall.swf",
-        //    {"data-file":"/ajax/charts/test"}
-        //);
-
-        
+      
+    },
 
 
-        
+    showFlash: function(type) {
+
+        swfobject.embedSWF(
+            Paperpile.Url("/flashchart/open-flash-chart.swf"), "container", "550", "300",
+            "9.0.0", "/expressInstall.swf",
+            {"data-file": "/ajax/charts/chart?type="+type}
+        );
+
     }
+
+
+
 });

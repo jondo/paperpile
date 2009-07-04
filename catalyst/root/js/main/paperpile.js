@@ -113,6 +113,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                     callback.createDelegate(scope)();
                 }
             },
+            failure: Paperpile.main.onError,
             scope:this,
         });
     },
@@ -346,7 +347,7 @@ Paperpile.app=function(){
 
     main.loadSettings();
 
-    main.tabs.newDBtab('');
+    main.tabs.newDBtab('','MAIN');
     // Global alias for main application class
 
     // Note: this is asynchronous, so might not be available
@@ -363,6 +364,8 @@ Paperpile.app=function(){
     });
 
     Paperpile.initMask.hide();
+
+
 
 }
 

@@ -117,6 +117,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
                 record.set('annote',newNotes);
                 this.closeEditor();
             },
+            failure: Paperpile.main.onError,
             scope: this
         });
 

@@ -14,7 +14,18 @@ my $ti_dir   = "../titanium/$platform";
 
 my $target_dir = '../dist';
 
-my @ignore = ( qr([~#]), qr{/tmp/}, qr{/t/}, qr{\.gitignore}, );
+my @ignore = ( qr([~#]),
+               qr{/tmp/}, 
+               qr{/t/}, 
+               qr{\.gitignore}, 
+               qr{base/CORE/},
+               qr{base/pod/},
+               qr{(base|cpan)/CPAN},
+               qr{(base|cpan)/Test},
+               qr{base/unicore/.*txt$},
+               qr{runtime/(template|webinspector|installer)},
+               qr{catalyst/data/journals.list},
+             );
 
 if ( $platform eq 'linux64' ) {
   push @ignore, qr{/(perl5|bin)/(linux32|osx|win32)};

@@ -18,6 +18,19 @@ sub settings : Local {
   $c->forward('Paperpile::View::Mason');
 }
 
+sub license : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = '/screens/license.mas';
+  $c->forward('Paperpile::View::Mason');
+}
+
+sub credits : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = '/screens/credits.mas';
+  $c->forward('Paperpile::View::Mason');
+}
+
+
 sub dashboard : Local {
   my ( $self, $c ) = @_;
 

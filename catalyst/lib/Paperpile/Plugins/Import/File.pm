@@ -81,7 +81,9 @@ sub connect {
         my $pub = Paperpile::Library::Publication->new;
         $pub->_build_from_bibutils($entry);
         $pub->citekey('');
-        $all{ $pub->sha1 } = $pub;
+	if (defined $pub->sha1) {
+          $all{ $pub->sha1 } = $pub;
+	}
       }
 
 
@@ -114,7 +116,8 @@ sub _tmp_file_name {
 
   my ($self, $bibfile) = @_;
 
-  my $path=Paperpile::Utils->path_to("tmp/import")->stringify;
+  my $path=File::Spec->catfile( Paperpile::Utils->get_tmp_dir, 'import');
+
   mkpath($path);
 
   $bibfile=~s/\//_/g;

@@ -138,6 +138,22 @@ sub import_journals : Local {
 
 }
 
+sub test_network : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $browser = Paperpile::Utils->get_browser($c->request->params);
+
+  my $response = $browser->get('http://google.com');
+
+  if ( $response->is_error ) {
+    NetGetError->throw(
+      error => 'Error: ' . $response->message,
+      code  => $response->code
+    );
+  }
+}
+
 
 sub preprocess_csl : Local {
 

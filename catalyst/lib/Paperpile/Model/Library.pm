@@ -44,7 +44,7 @@ sub create_pubs {
   my @to_be_inserted=();
 
   foreach my $pub (@$pubs) {
-
+      eval {
     # Initialize some fields
 
     $pub->created(timestamp gmtime) if not $pub->created;
@@ -59,7 +59,8 @@ sub create_pubs {
     # Check if key already exists
 
     # First we check in the database
-    my $sth = $self->dbh->prepare("SELECT key FROM fulltext_full WHERE fulltext_full MATCH 'key:$key*'");
+    my $quoted = $self->dbh->quote("key:$key*");
+    my $sth = $self->dbh->prepare(qq^SELECT key FROM fulltext_full WHERE fulltext_full MATCH $quoted^);
     my $existing_key;
     $sth->bind_columns( \$existing_key );
     $sth->execute;
@@ -97,7 +98,8 @@ sub create_pubs {
     push @to_be_inserted, $key;
 
     $pub->citekey($key);
-
+      };
+      warn $@ if $@;
   }
 
   $self->insert_pubs($pubs);
@@ -851,6 +853,7 @@ sub exists_pub {
   my $sth = $self->dbh->prepare("SELECT rowid, * FROM publications WHERE sha1=?");
 
   foreach my $pub (@$pubs) {
+      next unless defined ($pub);
     $sth->execute( $pub->sha1 );
 
     my $exists=0;
@@ -1132,8 +1135,8 @@ sub histogram {
           $hist{$value}->{count}++;
         } else {
           $hist{$value}->{count} = 1;
-          $hist{$value}->{name}  = $value;
           $hist{$value}->{id}    = $value;
+          $hist{$value}->{name}  = $value;
         }
       }
     }
@@ -1158,8 +1161,6 @@ sub dashboard_stats {
 
   ( my $last_imported ) =
     $self->dbh->selectrow_array("SELECT created FROM Publications ORDER BY created DESC limit 1;");
-
-
 
   return {num_items => $num_items,
           num_pdfs => $num_pdfs,

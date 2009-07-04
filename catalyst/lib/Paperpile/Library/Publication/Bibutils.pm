@@ -449,7 +449,7 @@ sub _format_bibutils {
     'issn'         => 'ISSN',
     'issue'        => 'ISSUE',
     'number'       => 'NUMBER',
-    'notes'        => 'NOTE',
+    'note'         => 'NOTE',
     'url'          => 'URL',
     'school'       => 'DEGREEGRANTOR:ASIS',
     'keywords'     => 'KEYWORD',
