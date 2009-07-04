@@ -25,7 +25,14 @@ Ext.onReady(function() {
             new Paperpile.PDFviewer(
                 {id:'pdf_viewer',
                  itemId:'pdf_viewer',
-                 region:'center'
+                 region:'center',
+
+		 // PDF Viewer initial config options.
+		 search:'phylogeny',     // initial search.
+		 file:'',                // file to load on startup.
+		 zoom:'page',            // 'width', 'page', or a numerical value.
+		 columns:1,              // Number of columns to view.
+		 pageLayout:'single'     // 'single' or 'continuous'
                 }
             ),
 
