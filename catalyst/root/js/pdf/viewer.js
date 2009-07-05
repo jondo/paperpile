@@ -22,7 +22,7 @@ log = function(text) {
 };
 
 Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
-  toolMode: 'anchorzoom',
+  toolMode: 'select',
 
 
   pageN:0,                         // The total number of pages in the document.
@@ -741,6 +741,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   loadSearchAndAnnotations: function(pageIndex) {
     //log("  -> Loading search and Annotations for page "+pageIndex+"...");
     this.loadSearchResultsIntoPage(pageIndex);
+    this.loadWords(pageIndex);
     //log("  -> Done!");
   },
 
@@ -807,6 +808,10 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
   getImage: function(i){
     return Ext.get(this.prefix()+"img."+i);
+  },
+
+  getImageFly:function(i) {
+    return Ext.fly(this.prefix()+"img."+i);
   },
 
   getPage: function(i){
@@ -1060,9 +1065,10 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   px2page: function(px,pageIndex) {
-    var scale=this.canvasWidth/this.pageSizes[pageIndex].width*this.currentZoom;
-    scale = Math.round(scale*Math.pow(10,2))/Math.pow(10,2);
-    return px/scale;
+    var pageW = this.getPageWidth(pageIndex);
+    var origW = this.pageSizes[pageIndex].width;
+//    log(px+"  "+pageW+"  "+origW);
+    return Math.round(px * origW/pageW);
   },
 
   holdScroll:false,
@@ -1162,20 +1168,11 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     return overlap;
   },
 
-  pdf2px: function(pdfCoord){
-    var scale=this.canvasWidth/this.pageSizes[this.currentPage].width*this.currentZoom;
-    scale = Math.round(scale*Math.pow(10,2))/Math.pow(10,2);
-    return Math.round(pdfCoord*scale);
-  },
-
-  px2pdf: function(px){
-    var scale=this.canvasWidth/this.pageSizes[this.currentPage].width*this.currentZoom;
-    scale = Math.round(scale*Math.pow(10,2))/Math.pow(10,2);
-    return px/scale;
-  },
-
   loadWords: function(pageIndex){
+    if (this.words[pageIndex].length > 0)
+      return;
 
+    log("Loading words...");
     Ext.Ajax.request({
       url: '/ajax/pdf/extpdf',
       params: {
@@ -1185,7 +1182,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       },
       success: function(response){
         var doc = response.responseXML;
-//	log("Response: "+doc);
+	log("Response: "+response.responseText);
         var words=Ext.DomQuery.select("word", doc);
 
         for (var i=0;i<words.length;i++){
@@ -1212,9 +1209,9 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     var lines=[];
     var currWord;
     var prevWord;
+    var firstWordForLine;
 
-    var prevWord=this.words[pageIndex][0];
-//    log(prevWord);
+    prevWord=this.words[pageIndex][0];
     var currLine=[prevWord];
     var cutoffX=5.0;
     var cutoffY=0.1;
@@ -1238,9 +1235,12 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
            lines.push({x1:currLine[0].x1,
            y1:currLine[0].y1,
            x2:currLine[currLine.length-1].x2,
-           y2:currLine[0].y2
-                      });
+	   y2:currLine[0].y2,
+	   lastWord:i,
+	   firstWord:firstWordForLine
+           });
            currLine=[currWord];
+	   firstWordForLine=i+1;
          }
     }
 
@@ -1248,73 +1248,118 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     lines.push({x1:currLine[0].x1,
     y1:currLine[0].y1,
     x2:currLine[currLine.length-1].x2,
-    y2:currLine[0].y2
+    y2:currLine[0].y2,
+    lastWord:this.words[pageIndex].length-1,
+    firstWord:firstWordForLine
                });
 
     this.lines[pageIndex]=lines;
-
   },
 
-  select: function(x1,y1,x2,y2){
 
-    this.clearSelection();
+  delaySelect:function(args) {
+    if (this.delayS == null) {
+      this.delayS = new Ext.util.DelayedTask();
+    }
+    this.delayS.delay(10,this.select,this,args);
+  },
 
-    var lines=this.lines[this.currentPage];
-    var selected=[];
+  lineWithinRegion:function(line,x1,y1,x2,y2) {
+    return (
+      (line.y1>y1 && line.y1<y2 || y1>line.y1 && y1<line.y2)
+	&& !(line.x2<x1 || line.x1>x2)
+    );
+  },
 
-    x1=this.px2pdf(x1);
-    x2=this.px2pdf(x2);
-    y1=this.px2pdf(y1);
-    y2=this.px2pdf(y2);
+  select: function(pageIndex,x1,y1,x2,y2){
+    var lines=this.lines[pageIndex];
+    var selectedLines=[];
+    var selectedWords=[];
+
+    var pi = pageIndex;
+    x1=this.px2page(x1,pi);
+    x2=this.px2page(x2,pi);
+    y1=this.px2page(y1,pi);
+    y2=this.px2page(y2,pi);
 
     var minX=x1;
     var maxX=x2;
 
     for (var i=0; i<lines.length; i++){
       var line=lines[i];
-      if ((line.y1>y1 && line.y1<y2 || y1>line.y1 && y1<line.y2) &&
-        !(line.x2<minX || line.x1>maxX)
-         ){
-           selected.push({x1:line.x1,y1:line.y1,x2:line.x2,y2:line.y2});
-         }
+      if (this.lineWithinRegion(line,x1,y1,x2,y2)) {
+           selectedLines.push({x1:line.x1,y1:line.y1,x2:line.x2,y2:line.y2,firstWord:line.firstWord,lastWord:line.lastWord});
+      } else if (i > 0 && this.lineWithinRegion(lines[i-1],x1,y1,x2,y2) &&
+	   i < lines.length-1 && this.lineWithinRegion(lines[i+1],x1,y1,x2,y2)) {
+           selectedLines.push({x1:line.x1,y1:line.y1,x2:line.x2,y2:line.y2,firstWord:line.firstWord,lastWord:line.lastWord});
+      }
     }
 
-    if (selected.length==0){
+    if (selectedLines.length==0){
       return;
+    }
+
+    // Adjust the first and last lines if necessary.
+    var first = selectedLines[0];
+    var minXValue = -1;
+    for (var i=first.firstWord; i <= first.lastWord; i++) {
+      var word = this.words[pageIndex][i];
+      if (word.x2 >= x1){
+	if (word.x1 < minXValue || minXValue == -1)
+	  minXValue=word.x1;
       }
+    }
+    first.x1 = minXValue;
 
-      if (this.selectionStartWord != -1){
-        var startWord=this.words[this.currentPage][this.selectionStartWord];
-        selected[0].x1=startWord.x1;
+    var last = selectedLines[selectedLines.length-1];
+    var maxXValue = -1;
+    for (var i=last.firstWord; i <= last.lastWord; i++) {
+      var word = this.words[pageIndex][i];
+      if (word.x1 <= x2){
+	if (word.x2 > maxXValue || maxXValue == -1)
+	  maxXValue=word.x2;
       }
+    }
+    last.x2 = maxXValue;
 
 
-      for (var i=0; i<selected.length; i++){
-        var line=selected[i];
+    Ext.select(".pdf-selection").remove();
+    var selBoxes = [];
+    for (var i=0; i<selectedLines.length; i++){
+      var line=selectedLines[i];
 
-        var top=this.pdf2px(line.y1);
-        var left=this.pdf2px(line.x1);
-        var width=this.pdf2px(line.x2-line.x1);
-        var height=this.pdf2px(line.y2-line.y1);
+      var pi = pageIndex;
+      var top=this.page2px(line.y1,pi);
+      var left=this.page2px(line.x1,pi);
+      var width=this.page2px(line.x2-line.x1,pi);
+      var height=this.page2px(line.y2-line.y1,pi);
 
-        var el=Ext.get(document.createElement('div'));
-        el.addClass('pdf-selector');
-        el.setPositioning({left:left,top:top, width:width, height:height});
-        this.pdfContainer.appendChild(el);
-        this.selection.push(el);
-      }
+      selBoxes.push({
+	'class':'pdf-selection',
+	tag:'div',
+	style:{
+	  top:top,
+	  left:left,
+	  width:width,
+	  height:height,
+	  position:'absolute',
+	  background:"#1188FF",
+	  opacity:"0.5"
+	}
+      });
+    }
 
-
+    var holder = Ext.fly(this.prefix()+"highlight."+pageIndex);
+    Ext.DomHelper.append(holder,selBoxes);
   },
 
 
-  getWord: function(x,y){
-
-    var words=this.words[this.currentPage];
+  getWord: function(pageIndex,x,y){
+    var words=this.words[pageIndex];
     var word=null;
 
-    x=this.px2pdf(x);
-    y=this.px2pdf(y);
+    x=this.px2page(x,pageIndex);
+    y=this.px2page(y,pageIndex);
 
     for (var i=0; i<words.length; i++){
       if (!(x<words[i].x1 || x>words[i].x2) &&
@@ -1328,29 +1373,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
   },
 
-  selectWord: function(i){
-
-    this.clearSelection();
-
-    var word=this.words[this.currentPage][i];
-    var top=this.pdf2px(word.y1);
-    var left=this.pdf2px(word.x1);
-    var width=this.pdf2px(word.x2-word.x1);
-    var height=this.pdf2px(word.y2-word.y1);
-
-    var el=Ext.get(document.createElement('div'));
-    el.addClass('pdf-selector');
-    el.setPositioning({left:left,top:top, width:width, height:height});
-    this.pdfContainer.appendChild(el);
-    this.selection.push(el);
-  },
-
   clearSelection: function(i){
-
-    for (var i=0; i< this.selection.length;i++){
-      this.selection[i].remove();
-      }
-      this.selection=[];
+    Ext.select(".pdf-selection").remove();
   },
 
   viewSingle: function() {
@@ -1557,41 +1581,28 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.tbItems['PAGE_PREV'].setDisabled(pagesToStart==0);
   },
 
-  // Small helper functions to get the index of a given item in the toolbar configuration array
-  // We have to use the text instead of itemId. Actions do not seem to support itemIds.
-  // A better solution should be possible with ExtJS 3
-  getButtonIndex: function(itemId) {
-    var tbar=this.getTopToolbar();
-    for (var i=0; i<tbar.length;i++) {
-      if (tbar[i].getText) {
-        if (tbar[i].getText() == itemId) return i;
-      }
-    }
-    return 0;
-  },
 
   isMouseDown:false,
   mouseDownEl:null,
   mouseDownZoom:0,
   mouseDownWindowX:0.0,
   mouseDownWindowY:0.0,
+  mouseDownPageIndex:0,
+  mouseDownPageX:0,
+  mouseDownPageY:0,
   mouseDownViewportTop:0,
   mouseDownViewportLeft:0,
   mouseDownDistToAnchorY:0,
   mouseDownAnchor:null,
 
-  onMouseOver: function(e) {
-    //log(e.getTarget().tagName.toLowerCase());
-  },
-
   onMouseDown: function(e) {
     this.isMouseDown = true;
-    this.mouseX = e.getPageX();
-    this.mouseY = e.getPageY();
+    this.mouseDownWindowX = e.getPageX();
+    this.mouseDownWindowY = e.getPageY();
     var x = this.mouseX;
     var y = this.mouseY;
 
-    if (this.mode == 'anchorzoom') {
+    if (this.toolMode == 'anchorzoom') {
       this.mouseDownWindowX = e.getPageX();
       this.mouseDownWindowY = e.getPageY();
 
@@ -1624,39 +1635,50 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
       this.mouseDownViewportLeft = x;
       this.mouseDownPageLeftPct = (x - el.getX()) / el.getWidth();
+    }
+
+    if (this.toolMode == 'drag'){
+      e.stopEvent();
+      Ext.getBody().on('mousemove', this.onMouseMove, this);
+      Ext.getDoc().on('mouseup', this.onMouseUp, this);
+    }
+
+    if (this.toolMode == 'select'){
+      e.stopEvent();
+      var x = e.getPageX();
+      var y = e.getPageY();
+
+      var pageIndex = this.getPageIndexForEvent(e);
+      if (pageIndex > -1) {
+	this.mouseDownPageIndex = pageIndex;
+	var img = this.getImage(pageIndex);
+	var pt = img.translatePoints(x,y);
+
+	this.mouseDownPageX = pt.left;
+	this.mouseDownPageY = pt.top;
+
+	this.clearSelection();
       }
 
-      if (this.mode == 'drag'){
-        e.stopEvent();
-        Ext.getBody().on('mousemove', this.onMouseMove, this);
-        Ext.getDoc().on('mouseup', this.onMouseUp, this);
-      }
-
-      if (this.mode == 'select'){
-        e.stopEvent();
-
-        var x = e.getPageX();
-        var y = e.getPageY();
-
-        x=x-this.bitmap.getLeft();
-        y=y-this.bitmap.getTop();
-
-        this.mouseX = x;
-        this.mouseY = y;
-
-        if (this.selectionStartWord!=-1){
-          this.clearSelection();
-          }
-
-          this.selectionStartWord=this.getWord(x,y);
-          this.selectionPrevWord=this.selectionStartWord;
-
-          Ext.getBody().on('mousemove', this.onMouseMove, this);
-          Ext.getDoc().on('mouseup', this.onMouseUp, this);
-      }
-
+      Ext.getBody().on("mousemove",this.onMouseMove,this);
+      Ext.getDoc().on("mousemove",this.onMouseMove,this);
+      Ext.getBody().on("mouseup",this.onMouseUp,this);
+      Ext.getDoc().on("mouseup",this.onMouseUp,this);
+    }
   },
 
+  getPageIndexForEvent: function(e) {
+    var t = e.getTarget();
+    var id = t.id;
+    var index = id.lastIndexOf(".")+1;
+    if (index > 0) {
+      var pageIndex = id.substr(index);
+//      log(pageIndex);
+      return pageIndex;
+    } else {
+      return -1;
+    }
+  },
 
   anchoredZoom: function(mouseDownWindowY,mouseDownZoom,mouseDownAnchorDist,mouseDownViewportTop) {
 
@@ -1669,40 +1691,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.mouseX = x;
     this.mouseY = y;
 
-    if (this.mode == 'anchorzoom') {
-      //e.stopEvent();
-      if (this.isMouseDown) {
-        e.stopEvent();
-	var tag = this.mouseDownEl.dom.tagName.toLowerCase();
-	if (tag == "img") {
-	  var dY = y - this.mouseDownWindowY;
-	  var dZoom = dY / 100;
-	  var zoomF = Math.pow(10,-dZoom);
-	  this.currentZoom = this.mouseDownZoom * zoomF;
-
-	  this.onResize(false);
-
-	  //var blockIndex = this.columnCount
-	  var newLeft = 2*this.mouseDownEl.getWidth() + this.mouseDownPageLeftPct*this.mouseDownEl.getWidth();
-	  newLeft -= this.mouseDownViewportLeft;
-	  //if (newLeft > 0)
-	    //this.body.scrollTo('left',newLeft);
-
-	  var newTop = Ext.Element.fly(this.mouseDownAnchor).getOffsetsTo(this.body)[1] + this.body.dom.scrollTop;
-	  var dY = this.mouseDownDistToAnchorY * zoomF;
-	  newTop -= this.mouseDownViewportTop;
-	  newTop += dY;
-	  if (this.body.dom.scrollTop == 0) {
-	    this.body.scrollTo('top',newTop);
-	  } else {
-	    this.body.scroll('top',this.body.dom.scrollTop-newTop);
-	  }
-	}
-      }
-    }
-
-
-    if (this.mode == 'drag'){
+    if (this.toolMode == 'drag'){
       e.stopEvent();
       if (e.within(this.body)) {
 	var xDelta = x - this.mouseX;
@@ -1712,21 +1701,47 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       }
     }
 
-    if (this.mode == 'select'){
-      e.stopEvent();
+    if (this.toolMode == 'select'){
+      if (this.isMouseDown) {
+	e.stopEvent();
+	var pageIndex = this.mouseDownPageIndex;
+	var img = this.getImage(pageIndex);
+	var pt = img.translatePoints(x,y);
 
-      x=x-this.bitmap.getLeft();
-      y=y-this.bitmap.getTop();
+	var box = Ext.get(this.prefix()+"selection-box");
+	if (box == null) {
+	  box = Ext.DomHelper.append(Ext.getBody(),{
+				 id:this.prefix()+"selection-box",
+				 tag:'div',
+				 style:{
+				   border:"1px dashed black",
+				   position:"absolute"
+				 }
+				     },true);
+	  box.on("mousemove",this.onMouseMove,this);
+	  box.on("mouseup",this.onMouseUp,this);
+	}
 
-      Ext.getCmp('statusbar').clearStatus();
-      var box=this.bitmap.getBox();
-      Ext.getCmp('statusbar').setText('('+x+','+y+')'+'    ('+box.x+','+box.y+')');
+	var downX = this.mouseDownWindowX;
+	var downY = this.mouseDownWindowY;
+	var curX = x;
+	var curY = y;
+	box.setStyle({left:Math.min(downX,curX),
+		      top:Math.min(downY,curY),
+		      width:Math.abs(curX-downX),
+		      height:Math.abs(curY-downY)
+		     });
 
-      var currentWord=this.getWord(x,y);
 
-      if (currentWord != this.selectionPrevWord) {
-	this.select(this.mouseX,this.mouseY,x,y);
-	this.selectionPrevWord=currentWord;
+	var pageDX = this.mouseDownPageX;
+	var pageDY = this.mouseDownPageY;
+	var pageCX = pt.left;
+	var pageCY = pt.top;
+
+	var args = [pageIndex,pageDX,pageDY,
+		    pageCX,pageCY];
+	this.delaySelect(args);
+
       }
     }
   },
@@ -1736,29 +1751,24 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     var y = e.getPageY();
     this.isMouseDown = false;
 
-    if (this.mode == 'anchorzoom') {
+    if (this.toolMode == 'anchorzoom') {
       e.stopEvent();
 
     }
 
-    if (this.mode == 'drag') {
+    if (this.toolMode == 'drag') {
       Ext.getBody().un('mousemove', this.onMouseMove, this);
       Ext.getDoc().un('mouseup', this.onMouseUp, this);
     }
 
-    if (this.mode == 'select') {
+    if (this.toolMode == 'select') {
+      var box = Ext.get(this.prefix()+"selection-box");
+      box.remove();
 
-      x=x-this.bitmap.getLeft();
-      y=y-this.bitmap.getTop();
-
-      var currentWord=this.getWord(x,y);
-
-      if (currentWord==this.selectionStartWord && currentWord !=-1) {
-	this.selectWord(currentWord);
-      }
-
-      Ext.getBody().un('mousemove', this.onMouseMove, this);
-      Ext.getDoc().un('mouseup', this.onMouseUp, this);
+      Ext.getBody().un("mousemove",this.onMouseMove,this);
+      Ext.getDoc().un("mousemove",this.onMouseMove,this);
+      Ext.getBody().un("mouseup",this.onMouseUp,this);
+      Ext.getDoc().un("mouseup",this.onMouseUp,this);
     }
 
   },
@@ -1861,6 +1871,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     break;
     }
   },
+
 
   onMouseWheel: function(e) {
     if (e.ctrlKey) {
