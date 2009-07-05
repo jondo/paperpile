@@ -740,46 +740,6 @@ div:hover.pp-grid-sort-item {
     margin: 0 5 0 5;
 }
 
-
-/*** Related to PDF viewer, should be moved to separate file ***/
-
-.pp-pdf-bitmap {
-    border-color:black;
-    border-width: 2px;
-}
-
-.pp-pdf-container {
-    /*border-color:black;
-    border: 2px;
-    border-style: solid;
-    */
-}
-
-.pp-page-element {
-    /*padding: 20px 0;*/
-}
-
-.pp-page-img {
-    /*margin: 0 20px;*/
-    border: 1px solid black;
-}
-
-.pp-page-inline {
-    display:block;
-}
-
-.pp-page-clear {
-    display:inline-block;
-    clear:both;
-}
-
-.pp-pdf-selector {
-    background-color:#6495ED;
-    border-width: 2px;
-    position: absolute;
-    opacity:0.3;
-}
-
 /*** Settings ***/
 
 .pp-box-settings {

@@ -7,6 +7,19 @@ Paperpile.utils = {
         return {dir:dir, file:file};
     },
 
+    catPath : function(){
+
+        var parts=[];
+        
+        // Note: we can't run join on the arguments array which is
+        // technically no array object
+        for(var i=0; i <arguments.length; ++i){
+            parts.push(arguments[i]);
+        }
+
+        return parts.join('/');
+    },
+
     openURL: function(url) {
         if (IS_TITANIUM){
 
