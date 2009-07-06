@@ -95,10 +95,15 @@ WebInspector.SourceView.prototype = {
 
         this.attach();
 
-        if (!InspectorController.addResourceSourceToFrame(this.resource.identifier, this.sourceFrame.element))
-            return;
-
         delete this._frameNeedsSetup;
+        this.sourceFrame.addEventListener("content loaded", this._contentLoaded, this);
+        InspectorController.addResourceSourceToFrame(this.resource.identifier, this.sourceFrame.element);
+    },
+    
+    _contentLoaded: function()
+    {
+        delete this._frameNeedsSetup;
+        this.sourceFrame.removeEventListener("content loaded", this._contentLoaded, this);
 
         if (this.resource.type === WebInspector.Resource.Type.Script) {
             this.sourceFrame.addEventListener("syntax highlighting complete", this._syntaxHighlightingComplete, this);
@@ -129,8 +134,10 @@ WebInspector.SourceView.prototype = {
             }
         }
 
-        var breakpoint = new WebInspector.Breakpoint(this.resource.url, line, sourceID);
-        WebInspector.panels.scripts.addBreakpoint(breakpoint);
+        if (WebInspector.panels.scripts) {
+            var breakpoint = new WebInspector.Breakpoint(this.resource.url, line, sourceID);
+            WebInspector.panels.scripts.addBreakpoint(breakpoint);
+        }
     },
 
     // The rest of the methods in this prototype need to be generic enough to work with a ScriptView.
@@ -272,7 +279,7 @@ WebInspector.SourceView.prototype = {
         if (!foundRange)
             return;
 
-        var selection = window.getSelection();
+        var selection = this.sourceFrame.element.contentWindow.getSelection();
         selection.removeAllRanges();
         selection.addRange(foundRange);
 

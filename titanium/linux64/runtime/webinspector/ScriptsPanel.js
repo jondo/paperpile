@@ -205,6 +205,10 @@ WebInspector.ScriptsPanel.prototype = {
                 continue;
             view.visible = false;
         }
+        if (this._attachDebuggerWhenShown) {
+            InspectorController.enableDebuggerFromFrontend(false);
+            delete this._attachDebuggerWhenShown;
+        }
     },
 
     get searchableViews()
@@ -220,7 +224,7 @@ WebInspector.ScriptsPanel.prototype = {
         for (var sourceID in this._sourceIDMap) {
             var scriptOrResource = this._sourceIDMap[sourceID];
             var view = this._sourceViewForScriptOrResource(scriptOrResource);
-            if (!view.performSearch || view.alreadySearching)
+            if (!view || !view.performSearch || view.alreadySearching)
                 continue;
 
             view.alreadySearching = true;
@@ -359,6 +363,24 @@ WebInspector.ScriptsPanel.prototype = {
         window.focus();
     },
 
+    debuggerResumed: function()
+    {
+        this._paused = false;
+        this._waitingToPause = false;
+        this._stepping = false;
+
+        this._clearInterface();
+    },
+
+    attachDebuggerWhenShown: function()
+    {
+        if (this.element.parentElement) {
+            InspectorController.enableDebuggerFromFrontend(false);
+        } else {
+            this._attachDebuggerWhenShown = true;
+        }
+    },
+
     debuggerWasEnabled: function()
     {
         this.reset();
@@ -470,16 +492,22 @@ WebInspector.ScriptsPanel.prototype = {
 
     _sourceViewForScriptOrResource: function(scriptOrResource)
     {
-        if (scriptOrResource instanceof WebInspector.Resource)
+        if (scriptOrResource instanceof WebInspector.Resource) {
+            if (!WebInspector.panels.resources)
+                return null;
             return WebInspector.panels.resources.resourceViewForResource(scriptOrResource);
+        }
         if (scriptOrResource instanceof WebInspector.Script)
             return this.scriptViewForScript(scriptOrResource);
     },
 
     _sourceFrameForScriptOrResource: function(scriptOrResource)
     {
-        if (scriptOrResource instanceof WebInspector.Resource)
+        if (scriptOrResource instanceof WebInspector.Resource) {
+            if (!WebInspector.panels.resources)
+                return null;
             return WebInspector.panels.resources.sourceFrameForResource(scriptOrResource);
+        }
         if (scriptOrResource instanceof WebInspector.Script)
             return this.sourceFrameForScript(scriptOrResource);
     },
@@ -491,6 +519,8 @@ WebInspector.ScriptsPanel.prototype = {
 
         var view;
         if (scriptOrResource instanceof WebInspector.Resource) {
+            if (!WebInspector.panels.resources)
+                return null;
             view = WebInspector.panels.resources.resourceViewForResource(scriptOrResource);
             view.headersVisible = false;
 
@@ -561,11 +591,33 @@ WebInspector.ScriptsPanel.prototype = {
 
         var select = this.filesSelectElement;
 
-        // FIXME: Append in some meaningful order.
         var option = document.createElement("option");
         option.representedObject = (script.resource || script);
         option.text = (script.sourceURL ? WebInspector.displayNameForURL(script.sourceURL) : WebInspector.UIString("(program)"));
-        select.appendChild(option);
+
+        function optionCompare(a, b)
+        {
+            var aTitle = a.text.toLowerCase();
+            var bTitle = b.text.toLowerCase();
+            if (aTitle < bTitle)
+                return -1;
+            else if (aTitle > bTitle)
+                return 1;
+
+            var aSourceID = a.representedObject.sourceID;
+            var bSourceID = b.representedObject.sourceID;
+            if (aSourceID < bSourceID)
+                return -1;
+            else if (aSourceID > bSourceID)
+                return 1;
+            return 0;
+        }
+
+        var insertionIndex = insertionIndexForObjectInListSortedByFunction(option, select.childNodes, optionCompare);
+        if (insertionIndex < 0)
+            select.appendChild(option);
+        else
+            select.insertBefore(option, select.childNodes.item(insertionIndex));
 
         script.filesSelectOption = option;
 
@@ -732,19 +784,19 @@ WebInspector.ScriptsPanel.prototype = {
     {
         if (InspectorController.debuggerEnabled())
             return;
-        this._toggleDebugging();
+        this._toggleDebugging(this.panelEnablerView.alwaysEnabled);
     },
 
-    _toggleDebugging: function()
+    _toggleDebugging: function(optionalAlways)
     {
         this._paused = false;
         this._waitingToPause = false;
         this._stepping = false;
 
         if (InspectorController.debuggerEnabled())
-            InspectorController.disableDebugger();
+            InspectorController.disableDebugger(true);
         else
-            InspectorController.enableDebugger();
+            InspectorController.enableDebuggerFromFrontend(!!optionalAlways);
     },
 
     _togglePauseOnExceptions: function()
