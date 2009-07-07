@@ -18,7 +18,8 @@ Ext.extend(Paperpile.TextItem,Ext.Toolbar.Item, {
 Ext.reg('pptext', Paperpile.TextItem);
 
 log = function(text) {
-  console.log(text);
+  if (console)
+    console.log(text);
 };
 
 Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
@@ -293,7 +294,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     //this.tbItems['SPACER'] = new Ext.Toolbar.Spacer();
 
     var bbar=[
-      //this.tbItems['SPACER'],
       this.tbItems['LOAD'],
       {xtype:'tbseparator'},
       this.tbItems['PAGE_PREV'],
@@ -301,14 +301,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       this.tbItems['PAGE_COUNT'],
       this.tbItems['PAGE_NEXT'],
       {xtype:'tbseparator'},
-//      this.tbItems['ONE_UP'],
-//      this.tbItems['TWO_UP'],
-//      this.tbItems['FOUR_UP'],
       this.tbItems['LAYOUT_MENU'],
-//      {xtype:'tbseparator'},
-//      this.tbItems['SINGLE'],
-//      this.tbItems['CONTINUOUS'],
-//      {xtype:'tbseparator'},
       this.tbItems['ZOOM_MENU'],
       {xtype:'tbseparator'},
       this.tbItems['SEARCH_FIELD']
@@ -336,18 +329,18 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   afterRender: function() {
     this.body.on('scroll',this.onScroll,this);
     this.body.on('mousedown', this.onMouseDown, this);
-    this.body.on('mousemove', this.onMouseMove, this);
-    this.body.on('mouseup', this.onMouseUp, this);
-    this.body.on('mouseover',this.onMouseOver,this);
+    //this.body.on('mousemove', this.onMouseMove, this);
+    //this.body.on('mouseup', this.onMouseUp, this);
+    //this.body.on('mouseover',this.onMouseOver,this);
     this.body.on("mousewheel", this.onMouseWheel, this);
 
-    //this.getBottomToolbar().getEl().child("table").wrap({tag:'center'});
+    this.getBottomToolbar().getEl().child("table").wrap({tag:'center'});
 
     this.delayedTask = new Ext.util.DelayedTask();
     this.loadKeyEvents();
 
     this.bbar.setStyle("z-index",50);
-    this.bbar.setStyle("position","absolute");
+    this.bbar.setStyle("position","relative");
     this.slide.slider.on("changecomplete",function() {
       this.slideZoom();
     },this);
@@ -669,7 +662,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   imageLoaded: function(img,pageIndex) {
-    log(pageIndex + "loaded");
+    //log(pageIndex + "loaded");
     if (pageIndex >= 0) {
       var blinder = Ext.fly(this.prefix()+"blinder."+pageIndex);
       if (blinder != null)
@@ -822,13 +815,11 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
   getRealHeight: function() {
     var realHeight = this.getInnerHeight() - 2;
-    //log("Real height: "+realHeight);
     return realHeight;
   },
 
   getRealWidth: function() {
     var realWidth = this.getInnerWidth() -2;
-    //log("Real width: "+realWidth);
     return realWidth;
   },
 
@@ -1650,16 +1641,17 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       var x = e.getPageX();
       var y = e.getPageY();
 
-      var pageIndex = this.getPageIndexForEvent(e);
-      if (pageIndex > -1) {
-	this.mouseDownPageIndex = pageIndex;
-	var img = this.getImage(pageIndex);
-	var pt = img.translatePoints(x,y);
+      this.mouseDownPageIndex = this.getPageIndexForEvent(e);
+      if (this.mouseDownPageIndex > -1) {
+	var img = this.getImage(this.mouseDownPageIndex);
+	if (img != null) {
+	  var pt = img.translatePoints(x,y);
 
-	this.mouseDownPageX = pt.left;
-	this.mouseDownPageY = pt.top;
+	  this.mouseDownPageX = pt.left;
+	  this.mouseDownPageY = pt.top;
 
-	this.clearSelection();
+	  this.clearSelection();
+	}
       }
 
       Ext.getBody().on("mousemove",this.onMouseMove,this);
@@ -1705,8 +1697,10 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     if (this.toolMode == 'select'){
       if (this.isMouseDown) {
-	e.stopEvent();
 	var pageIndex = this.mouseDownPageIndex;
+	if (pageIndex == -1)
+	  return;
+	e.stopEvent();
 	var img = this.getImage(pageIndex);
 	var pt = img.translatePoints(x,y);
 
@@ -1765,7 +1759,9 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     if (this.toolMode == 'select') {
       var box = Ext.get(this.prefix()+"selection-box");
-      box.remove();
+      if (box != null) {
+	box.remove();
+      }
 
       Ext.getBody().un("mousemove",this.onMouseMove,this);
       Ext.getDoc().un("mousemove",this.onMouseMove,this);
@@ -2137,12 +2133,12 @@ Ext.extend(Ext.HoverButton, Ext.Button, {
     },this);
     this.menu.on("mouseout",function(e) {
       if (this.inPosition) {
-	log("Hide mouseout!");
+	//log("Hide mouseout!");
 	this.hideTimeout = this.hideAnim.defer(this.hideDelay,this);
       }
     },this);
     this.on("mouseover",function(e) {
-	      log("over");
+	      //log("over");
     },this);
 
     this.menu.getEl().setStyle("z-index",9);
