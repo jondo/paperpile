@@ -290,10 +290,10 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 				 scope:this
 			       });
 
-    this.tbItems['SPACER'] = new Ext.Toolbar.Spacer();
+    //this.tbItems['SPACER'] = new Ext.Toolbar.Spacer();
 
     var bbar=[
-      this.tbItems['SPACER'],
+      //this.tbItems['SPACER'],
       this.tbItems['LOAD'],
       {xtype:'tbseparator'},
       this.tbItems['PAGE_PREV'],
@@ -341,6 +341,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.body.on('mouseover',this.onMouseOver,this);
     this.body.on("mousewheel", this.onMouseWheel, this);
 
+    //this.getBottomToolbar().getEl().child("table").wrap({tag:'center'});
+
     this.delayedTask = new Ext.util.DelayedTask();
     this.loadKeyEvents();
 
@@ -359,12 +361,12 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   onResize: function(){
     Paperpile.PDFviewer.superclass.onResize.apply(this, arguments);
 
-    var s = Ext.fly(this.tbItems['SPACER'].getEl());
-    s.setStyle("width","0px");
-    var barWidth = this.getBottomToolbar().getBox().width;
-    var totalWidth = this.getInnerWidth();
-    var spacerWidth = (totalWidth-barWidth)/2;
-    s.setStyle("width",spacerWidth+"px");
+    //var s = Ext.fly(this.tbItems['SPACER'].getEl());
+    //s.setStyle("width","0px");
+    //var barWidth = this.getBottomToolbar().getBox().width;
+    //var totalWidth = this.getInnerWidth();
+    //var spacerWidth = (totalWidth-barWidth)/2;
+    //s.setStyle("width",spacerWidth+"px");
 
     this.updateZoom();
     this.resizePages();
@@ -454,7 +456,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   prefix: function() {
-    return this.getItemId()+"_";
+    return this.id+"_";
   },
 
   layoutPages: function() {
@@ -1182,7 +1184,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       },
       success: function(response){
         var doc = response.responseXML;
-	log("Response: "+response.responseText);
+	//log("Response: "+response.responseText);
         var words=Ext.DomQuery.select("word", doc);
 
         for (var i=0;i<words.length;i++){

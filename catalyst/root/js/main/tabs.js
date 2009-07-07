@@ -1,23 +1,23 @@
 Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
     initComponent:function() {
-        
+
         Ext.apply(this, {
             id: 'tabs',
             //margins: '2 2 2 2',
             //Have at least one item on rendering to get it rendered correctly
-            items: [{title:'Welcome', 
+            items: [{title:'Welcome',
                      itemId: 'welcome'
                     }
                    ],
         });
-       
+
         Paperpile.Tabs.superclass.initComponent.apply(this, arguments);
 
     },
 
     newDBtab:function(query, itemId){
-        
+
         var newGrid=new Paperpile.PluginGridDB({
             plugin_name: 'DB',
             plugin_mode: 'FULLTEXT',
@@ -25,7 +25,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
             plugin_base_query:'',
         });
 
-        var newView=this.add(new Paperpile.PubView({title:'All Papers', 
+        var newView=this.add(new Paperpile.PubView({title:'All Papers',
                                                     grid:newGrid,
                                                     closable:false,
                                                     iconCls: 'pp-icon-page',
@@ -34,7 +34,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         newView.show();
     },
 
-    
+
     // If itemId is given it is checked if the same tab already is
     // open and it activated instead of creating a new one
     newPluginTab:function(name, pars, title, iconCls, itemId){
@@ -46,8 +46,8 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         if (openTab){
             this.activate(openTab);
         } else {
-        
-            var newView=this.add(new Paperpile.PubView({title: (title) ? title:newGrid.plugin_title, 
+
+            var newView=this.add(new Paperpile.PubView({title: (title) ? title:newGrid.plugin_title,
                                                         grid:newGrid,
                                                         closable:true,
                                                         iconCls: (iconCls) ? iconCls : newGrid.plugin_iconCls,
@@ -59,10 +59,10 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
 
     // Opens a new tab with some specialized screen. Name is either the name of a preconficured panel-class, or
-    // an object specifying url and title of the tab. 
+    // an object specifying url and title of the tab.
 
     newScreenTab:function(name, itemId){
-        
+
         var openTab=Paperpile.main.tabs.getItem(itemId);
 
         if (openTab){
@@ -75,9 +75,9 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
             if (Paperpile[name]){
                 panel=main.tabs.add(new Paperpile[name]({itemId:itemId}));
 
-            // Generic panel 
+            // Generic panel
             } else {
-                
+
                 panel=main.tabs.add(new Ext.Panel(
                     { closable:true,
                       autoLoad:{url:Paperpile.Url(name.url),
@@ -91,15 +91,16 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
             }
 
             panel.show();
-               
+
         }
     },
 
+    pdfViewerCounter:0,
     newPdfTab:function(config){
-
-        var defaults = { id:'pdf_viewer',
+      this.pdfViewerCounter++;
+        var defaults = { id:'pdf_viewer_'+this.pdfViewerCounter,
                          region:'center',
-		                 search:'', 
+		                 search:'',
 		                 zoom:'page',
 		                 columns:1,
 		                 pageLayout:'single',
@@ -111,15 +112,15 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         Ext.apply(pars, config, defaults);
 
         console.log(pars);
-        
+
         var panel=main.tabs.add(new Paperpile.PDFviewer(pars));
 
         panel.show();
 
     }
-    
-}                                 
- 
+
+}
+
 );
 
 Ext.reg('tabs', Paperpile.Tabs);
