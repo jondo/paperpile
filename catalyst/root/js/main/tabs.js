@@ -105,7 +105,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 		                 columns:1,
 		                 pageLayout:'single',
                          closable:true,
-                         iconCls: 'pp-icon-import-pdf',
+                         iconCls: 'pp-icon-import-pdf'
                        };
         var pars={};
 
