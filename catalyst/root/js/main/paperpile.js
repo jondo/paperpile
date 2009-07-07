@@ -12,9 +12,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     globalSettings:null,
 
     initComponent: function() {
-        Ext.apply(this, 
+        Ext.apply(this,
                   {layout: 'border',
                    renderTo: Ext.getBody(),
+		   enableKeyEvents:true,
+		   keys:{},
                    items:[{xtype:'panel',
                            layout:'border',
                            region:'center',
@@ -36,18 +38,18 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                            tag: 'a',
                                            href:'#',
                                            html: '<div class="pp-dashboard-button"></div>'
-                                           }, 
+                                           },
                                          id: 'dashboard-button',
                                        }
                                    ),
                                    /*
-                                   {xtype:'button', 
+                                   {xtype:'button',
                                     text:"Test",
                                     handler: function(){
-                                        //var myIFrame = document.getElementById('iframe-testframe');  
-                                        //var content = myIFrame.contentWindow.document.body.innerHTML;  
+                                        //var myIFrame = document.getElementById('iframe-testframe');
+                                        //var content = myIFrame.contentWindow.document.body.innerHTML;
                                         //alert(content);
-                                        
+
                                     },
                                    }
 */
@@ -80,17 +82,17 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                             }
                                  ]}
                          ],
-                   
+
                   }
                  );
-        
+
         Paperpile.Viewport.superclass.initComponent.call(this);
 
         this.tabs=Ext.getCmp('tabs');
 
         this.tagStore=new Ext.data.Store(
             { proxy: new Ext.data.HttpProxy({
-                url: Paperpile.Url('/ajax/misc/tag_list'), 
+                url: Paperpile.Url('/ajax/misc/tag_list'),
                 method: 'GET'
             }),
               storeId: 'tag_store',
@@ -98,10 +100,44 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               reader: new Ext.data.JsonReader(),
               pruneModifiedRecords:true,
             }
-        ); 
+        );
         this.tagStore.reload();
+
+//	this.loadKeys();
 	},
 
+/*
+    keyMap:null,
+    loadKeys:function() {
+      this.keyMap = new Ext.KeyMap(document,[
+        {
+	  key: [Ext.EventObject.TAB,Ext.EventObject.W,Ext.EventObject.A],
+//	  ctrl:true,
+	  stopEvent:true,
+	  handler: this.controlPlus,
+	  scope:this
+	}
+      ]);
+    },
+
+    controlPlus:function(e,t) {
+      var key = e.getKey();
+      log("Key!" + key);
+      switch (key) {
+      case Ext.EventManager.TAB:
+	e.stopEvent();
+	break;
+      case Ext.EventObject.W:
+	log("W!");
+	var curTab = Paperpile.main.tabs.getActiveTab();
+	console.log(curTab);
+	Paperpile.main.tabs.remove(curTab);
+	e.stopEvent();
+	console.log("Stopped ctrl-W!");
+	break;
+      }
+    },
+*/
     loadSettings: function(callback,scope){
 
         Ext.Ajax.request({
@@ -142,7 +178,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                            }],
             callback:function(button,path){
                 if (button == 'OK'){
-                    var panel=main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs', 
+                    var panel=main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs',
                                                                           iconCls: 'pp-icon-import-pdf',
                                                                           path: path
                                                                          }));
@@ -150,7 +186,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 }
             }
         });
-        
+
         win.show();
 
 
@@ -190,7 +226,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                             suffix:['ALL']
                            },
                           ],
-            
+
             callback:function(button,path){
                 if (button == 'OK'){
                     var parts=Paperpile.utils.splitPath(path);
@@ -204,9 +240,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 }
             }
         });
-        
+
         win.show();
-        
+
     },
 
     browseTest: function(){
@@ -224,7 +260,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             title: 'Google',
             closable:true,
             // layout to fit child component
-            layout:'fit', 
+            layout:'fit',
             // add iframe as the child component
             items: [ new Ext.ux.IFrameComponent({ id:'testframe', url: 'http://google.com' }) ]
         });
@@ -241,7 +277,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
         Paperpile.main.tabs.items.each(
             function(item, index, length){
-                
+
                 if (item.tabType=='PLUGIN'){
 
                     var grid=item.items.get('center_panel').items.get('grid');
@@ -262,7 +298,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     },
 
     onError: function(response){
-        
+
         var error={ type:"Unknown",
                     msg: "Empty response or timeout.",
                   };
@@ -271,8 +307,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         //data from backend
         if (response.responseText){
             error= Ext.util.JSON.decode(response.responseText).error;
-        } 
-        
+        }
+
         if (error.type == 'Unknown'){
             Paperpile.status.updateMsg(
                 { type:'error',

@@ -23,7 +23,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 				cancelOnEsc:true,
 				completeOnEnter:true,
 				ignoreNoChange:true,
-			}) 
+			})
 		});
 
 		Paperpile.Tree.superclass.initComponent.call(this);
@@ -35,8 +35,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             // This is necessary because we load the tree as a whole
             // during startup but want to re-load single nodes
             // afterwards. We achieve this by removing the children
-            // array which gets stored in node.attributes 
-            load:{scope:this, 
+            // array which gets stored in node.attributes
+            load:{scope:this,
                   fn:function(node){
                       delete node.attributes.children
                   }
@@ -79,11 +79,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         e.cancel=true;
                     }
                 }
-               
-            } 
+
+            }
             // We are dragging internal nodes from the tree
             else {
-                
+
                 // Only allow operations within the same subtree,
                 // i.e. nodes are of the same type
                 if (e.source.dragData.node.type != e.target.type){
@@ -102,20 +102,20 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     }
                 }
             }
-           
+
 
         });
 
 
         // Avoid selecting nodes; only allow under certain
         // circumstances where it makes sense (e.g context menu selection)
-        
+
         this.allowSelect=false;
         this.getSelectionModel().on("beforeselect",
                                     function(){
                                         return this.allowSelect;
                                     }, this);
-        
+
 
         this.on("click", function(node,e){
 
@@ -128,11 +128,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             case 'FILE_IMPORT':
                 Paperpile.main.fileImport();
                 break;
-                
+
             case 'CLOUDS':
                 Paperpile.main.tabs.newScreenTab('Clouds','clouds');
                 break;
-               
+
 
             // all other nodes are handled via the generic plugin mechanism
             default:
@@ -148,8 +148,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                             pars[key]=node[key];
                         }
                     }
-                    
-                    // Use default title and css for tab 
+
+                    // Use default title and css for tab
                     var title=null;
                     var iconCls=null;
 
@@ -163,27 +163,30 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         iconCls='pp-tag-style-tab pp-tag-style-'+style;
                     }
 
-                    // Call appropriate frontend, tags, active folders, and folders are opened only once 
+                    // Call appropriate frontend, tags, active folders, and folders are opened only once
                     // and we pass the node.id as item-id for the tab
                     if (node.type == 'TAGS' || node.type == 'ACTIVE' || node.type == 'FOLDER'){
                         Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id);
                     } else {
                         Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
                     }
-                }
+                } else {
+		  var main = Paperpile.main.tabs.getItem("MAIN");
+		  Paperpile.main.tabs.activate(main);
+		}
                 break;
             }
         });
 
         // Set scroll size the first time, when the node is rendered
-        this.on('beforechildrenrendered', 
+        this.on('beforechildrenrendered',
                 function(node){
                     if (node.id == 'TAGS_ROOT'){
                         this.updateScrollSize();
                     }
                 }, this);
 
-        this.on('resize', 
+        this.on('resize',
                 function(){
                     this.updateScrollSize();
                 }, this);
@@ -231,13 +234,13 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             if (e.target.type == 'TAGS'){
                 Ext.Ajax.request({
                     url: Paperpile.Url('/ajax/crud/add_tag'),
-                    params: { 
+                    params: {
                         grid_id:grid.id,
                         selection: grid.getSelection(),
                         tag: e.target.text,
                     },
                     method: 'GET',
-                    
+
                     success: function(response){
                         var json = Ext.util.JSON.decode(response.responseText);
                         grid.updateData(json.data);
@@ -282,9 +285,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     onContextMenu:function(node, e) {
 
         var menu=null;
-        
+
         switch (node.type){
-        
+
         case 'FOLDER':
             this.allowSelect=true;
             node.select();
@@ -309,7 +312,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             menu=new Paperpile.Tree.TagsMenu({node:node});
             break;
         }
-        
+
         if (menu != null){
             menu.node=node;
             menu.showAt(e.getXY());
@@ -353,24 +356,24 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         } else {
             title=pars.plugin_name;
         }
-                
-        Ext.apply(pars, { type: 'ACTIVE', 
+
+        Ext.apply(pars, { type: 'ACTIVE',
                           plugin_title: title,
                           // current query becomes base query for further filtering
-                          plugin_base_query: pars.plugin_query, 
+                          plugin_base_query: pars.plugin_query,
                         });
 
         // Now create new child
         var newNode;
         node.expand(false, false, function(n) {
-    
+
 		    newNode = n.appendChild(new Paperpile.AsyncTreeNode({
-                text: title, 
-                iconCls:pars.plugin_iconCls, 
+                text: title,
+                iconCls:pars.plugin_iconCls,
                 leaf:true,
                 id: this.generateUID()
             }));
-        
+
             // apply the parameters
             newNode.init(pars);
             newNode.select();
@@ -431,7 +434,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             },
             failure: Paperpile.main.onError,
         });
-        
+
     },
 
 
@@ -440,16 +443,16 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     //
 
     newFolder: function() {
-    
+
         var node = this.getSelectionModel().getSelectedNode();
-		
+
 	    var treeEditor = this.treeEditor;
 	    var newNode;
-        
+
 		node.expand(false, false, function(n) {
-		    
-			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Folder', 
-                                                                 iconCls:'pp-icon-folder', 
+
+			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Folder',
+                                                                 iconCls:'pp-icon-folder',
                                                                  draggable:true,
                                                                  expanded:true,
                                                                  children:[],
@@ -458,7 +461,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                    );
 
             newNode.init(
-                { type: 'FOLDER', 
+                { type: 'FOLDER',
                   plugin_name: 'DB',
                   plugin_title: node.text,
                   plugin_iconCls: 'pp-icon-folder',
@@ -480,7 +483,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     }
 				}
             });
-                                    
+
 			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
 		}.createDelegate(this));
 
@@ -530,7 +533,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     },
 
     //
-    // Deletes active folder 
+    // Deletes active folder
     //
 
     deleteActive: function(){
@@ -579,7 +582,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 },
 			}
         });
-                                    
+
 		(function(){treeEditor.triggerEdit(node);}.defer(10));
     },
 
@@ -602,7 +605,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         });
 
         node.remove();
-       
+
     },
 
 
@@ -628,18 +631,18 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         // Force reload by deleting the children which get stored in
         // attributes when we load the tree in one step in the beginning
         //delete node.attributes.children;
-        
+
         node.loader=tmpLoader;
         node.reload();
         node.loader=oldLoader;
-        
+
         var div=Ext.Element.get(node.ui.getAnchor()).up('div');
 
-        var ok=Ext.DomHelper.append(div, 
+        var ok=Ext.DomHelper.append(div,
               '<a href="#" id="configure-node" class="pp-textlink">Done</a>', true);
 
         ok.on({
-			click:{ 
+			click:{
                 fn:function(){
                     this.configureNode.reload();
                     Ext.Element.get(this.configureNode.ui.getAnchor()).up('div').select('#configure-node').remove();
@@ -687,16 +690,16 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
 
     newTag: function() {
-    
+
         var node = this.getNodeById('TAGS_ROOT');
-		
+
 	    var treeEditor = this.treeEditor;
 	    var newNode;
-        
+
 		node.expand(false, false, function(n) {
-		    
-			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Label', 
-                                                                 iconCls:'pp-icon-empty', 
+
+			newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New Label',
+                                                                 iconCls:'pp-icon-empty',
                                                                  tagStyle:0,
                                                                  cls: 'pp-tag-tree-node pp-tag-tree-style-0',
                                                                  draggable:true,
@@ -706,7 +709,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                                                 })
                                    );
             newNode.init(
-                { type: 'TAGS', 
+                { type: 'TAGS',
                   plugin_name: 'DB',
                   plugin_title: node.text,
                   plugin_iconCls: 'pp-icon-tag',
@@ -727,7 +730,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     }
 				}
             });
-                                    
+
 			(function(){treeEditor.triggerEdit(newNode);}.defer(10));
 		}.createDelegate(this));
 
@@ -759,10 +762,10 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         });
     },
 
-  
+
     // Delete the tag given by node globally
     // This code is extremely clumsy, we should consider some event-handler solution
-      
+
     deleteTag: function(node){
 
         var tag=node.text;
@@ -771,14 +774,14 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             url: Paperpile.Url('/ajax/crud/delete_tag'),
             params: { tag: tag },
             success: function(){
-                
-                // Remove the entry of the tag in the tree                
+
+                // Remove the entry of the tag in the tree
                 node.remove();
-                
+
                 // Update store with tags from the server
                 Ext.StoreMgr.lookup('tag_store').reload({
                     callback: function(){
-                    
+
                         // Afterwards update entries on all open tabs
                         Paperpile.main.tabs.items.each(
                             function(item, index, length){
@@ -788,15 +791,15 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                 for (i=0;i<records.length;i++){
                                     var oldTags=records[i].get('tags');
                                     var newTags=oldTags;
-                            
+
                                     newTags=newTags.replace(new RegExp("^"+tag+"$"),"");  //  XXX
                                     newTags=newTags.replace(new RegExp("^"+tag+","),"");  //  XXX,
                                     newTags=newTags.replace(new RegExp(","+tag+"$"),"");  // ,XXX
                                     newTags=newTags.replace(new RegExp(","+tag+","),","); // ,XXX,
-                                    
+
                                     records[i].set('tags',newTags);
                                 }
-                                
+
                                 grid.store.resumeEvents();
                                 grid.store.fireEvent('datachanged',this.store);
 
@@ -822,7 +825,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/style_tag'),
-            params: {tag: node.text, 
+            params: {tag: node.text,
                      style: number,
                     },
             success: function(){
@@ -861,7 +864,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     //
     // Rename the tag given by node globally
     //
-   
+
     renameTag: function(){
 
         var node = this.getSelectionModel().getSelectedNode();
@@ -882,7 +885,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
                             Ext.StoreMgr.lookup('tag_store').reload({
                                 callback: function(){
-                      
+
                                     Paperpile.main.tabs.items.each(
                                         function(item, index, length){
                                             var grid=item.items.get('center_panel').items.get('grid');
@@ -891,15 +894,15 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                             for (i=0;i<records.length;i++){
                                                 var oldTags=records[i].get('tags');
                                                 var newTags=oldTags;
-                                                
+
                                                 newTags=newTags.replace(new RegExp("^"+tag+"$"),newText);  //  XXX
                                                 newTags=newTags.replace(new RegExp("^"+tag+","),newText+",");  //  XXX,
                                                 newTags=newTags.replace(new RegExp(","+tag+"$"),","+newText);  // ,XXX
                                                 newTags=newTags.replace(new RegExp(","+tag+","),","+newText+","); // ,XXX,
-                                               
+
                                                 records[i].set('tags',newTags);
                                             }
-                                
+
                                             grid.store.resumeEvents();
                                             grid.store.fireEvent('datachanged',this.store);
 
@@ -922,7 +925,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
         (function(){treeEditor.triggerEdit(node);}.defer(10));
     },
-    
+
 
     exportNode: function(){
 
@@ -943,7 +946,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
 
 Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
-    
+
     constructor:function(config) {
         config = config || {};
 
@@ -972,7 +975,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
             },
 
         ]});
-        
+
         Paperpile.Tree.FolderMenu.superclass.constructor.call(this, config);
 
         this.on('beforeshow',
@@ -987,7 +990,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
                 },
                 this
                );
-        
+
         this.on('beforehide',
                 function(){
                     this.getSelectionModel().clearSelections();
@@ -1005,7 +1008,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
 //
 
 Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
-    
+
     constructor:function(config) {
         config = config || {};
 
@@ -1043,9 +1046,9 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
             }
 
         ]});
-        
+
         Paperpile.Tree.ActiveMenu.superclass.constructor.call(this, config);
-        
+
 
         this.on('beforeshow',
                 function(){
@@ -1078,7 +1081,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
 //
 
 Paperpile.Tree.ImportMenu = Ext.extend(Ext.menu.Menu, {
-    
+
     constructor:function(config) {
         config = config || {};
 
@@ -1093,9 +1096,9 @@ Paperpile.Tree.ImportMenu = Ext.extend(Ext.menu.Menu, {
               scope: this
             }
         ]});
-        
+
         Paperpile.Tree.ImportMenu.superclass.constructor.call(this, config);
-        
+
 
         this.on('beforeshow',
                 function(){
@@ -1125,7 +1128,7 @@ Paperpile.Tree.ImportMenu = Ext.extend(Ext.menu.Menu, {
 //
 
 Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
-    
+
     constructor:function(config) {
         config = config || {};
 
@@ -1162,7 +1165,7 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
                       if (number.A == 65) return;
 
                       this.styleTag(number);
-                                              
+
                   },
                   scope:tree,
               })
@@ -1173,9 +1176,9 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
               scope: tree
             },
         ]});
-        
+
         Paperpile.Tree.TagsMenu.superclass.constructor.call(this, config);
-        
+
         this.on('beforeshow',
                 function(){
                     if (this.node.id == 'TAGS_ROOT'){
@@ -1183,7 +1186,7 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
                         this.items.get('tags_menu_rename').hide();
                         this.items.get('tags_menu_export').hide();
                         this.items.get('tags_menu_style').hide();
-                    } 
+                    }
                 }, this
                );
 
@@ -1199,9 +1202,9 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
 
 
 // Extend TreeNode to allow to pass additional parameters from the server,
-// Note that TreeNode is not a 'component' but only an observable, so we 
-// can't override as usual but have do define (and call) an init function 
-// for ourselves. 
+// Note that TreeNode is not a 'component' but only an observable, so we
+// can't override as usual but have do define (and call) an init function
+// for ourselves.
 
 Paperpile.AsyncTreeNode = Ext.extend(Ext.tree.AsyncTreeNode, {
 
@@ -1221,7 +1224,7 @@ Paperpile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
 
 // To use our custom TreeNode we also have to override TreeLoader
 Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
-	  
+
     initComponent: function() {
 		    Paperpile.TreeLoader.superclass.initComponent.call(this);
 	  },
@@ -1232,7 +1235,7 @@ Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
         if(this.baseAttrs){
             Ext.applyIf(attr, this.baseAttrs);
         }
-  
+
         if(this.applyLoader !== false){
             attr.loader = this;
         }
@@ -1254,7 +1257,7 @@ Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
         }
 
         // code in the original implementation
-        
+
         //if(attr.nodeType){
         //    return new Ext.tree.TreePanel.nodeTypes[attr.nodeType](attr);
         //}else{
