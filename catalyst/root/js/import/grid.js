@@ -715,8 +715,14 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         if (sm.getCount() == 1){
             if (!sm.getSelected().data._imported){
                 this.insertEntry();
+                return;
             }
-        }
+            if (sm.getSelected().data.pdf){
+                var pdf=sm.getSelected().data.pdf;
+                var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf );
+                Paperpile.main.tabs.newPdfTab({file:path, title:pdf});
+            }
+         }
     },
 
     onClose: function(cont, comp){
