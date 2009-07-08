@@ -1,10 +1,32 @@
 Paperpile.utils = {
-    splitPath : function(path) { 
+    splitPath: function(path) { 
         var parts=path.split('/');
         var file=parts[parts.length-1];
         var newParts=parts.slice(0,parts.length-1);
         var dir=newParts.join('/');
         return {dir:dir, file:file};
+    },
+
+    openURL: function(url) {
+        if (IS_TITANIUM){
+            var process = Titanium.Process.launch('xdg-open', url);
+        } else {
+            window.open(url, '_blank');
+        }
+    },
+
+    openFile: function(file) {
+
+        if (IS_TITANIUM){
+            
+            var process = Titanium.Process.launch('xdg-open', file);
+            // TODO: handle return of xdg-open; we wait until process
+            // API is more stable
+
+        } else {
+            window.open('/serve/'+file, '_blank');
+        }
+
     },
 
     catPath : function(){
@@ -18,14 +40,6 @@ Paperpile.utils = {
         }
 
         return parts.join('/');
-    },
-
-    openURL: function(url) {
-        if (IS_TITANIUM){
-
-        } else {
-            window.open(url, '_blank');
-        }
     },
 
     // The intended purpose of this function is to convert the GMT

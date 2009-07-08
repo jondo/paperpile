@@ -132,11 +132,12 @@ li.pp-menu:hover > ul {
     background-repeat: no-repeat;
 }
 
-.pp-delete-attachment{
+.pp-second-link{
     display:none;
+    font-style:italic;
 }
 
-li:hover a.pp-delete-attachment{
+li:hover a.pp-second-link{
     display:inline;
 }
 
@@ -156,6 +157,12 @@ li:hover a.pp-delete-attachment{
     list-style-type:disc;
     margin: 0 24;
 }
+
+
+.pp-file-generic{
+    background-image: url(/ext/resources/images/default/tree/leaf.gif);
+}
+
 
 
 .pp-label-inactive {

@@ -62,7 +62,8 @@ sub list_files : Local {
 
     my ($volume,$dirs,$base_name) = File::Spec->splitpath( $abs );
 
-    push @output, {file=>$base_name, 
+    push @output, {file=>$base_name,
+                   path=>$abs,
                    link=>$link,
                    cls=>"file-$suffix",
                    rowid=> $attachment_rowid};

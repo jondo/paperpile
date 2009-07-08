@@ -35,8 +35,9 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<h2>PDF</h2>',
         '<ul>',
         '<tpl if="pdf">',
-        //'<li id="open-pdf-{id}" class="pp-action pp-action-open-pdf" ><a href="/serve/{pdf}" target="_blank" class="pp-textlink" action="open-pdf">Open PDF</a></li>',
-        '<li id="open-pdf{id}" class="pp-action pp-action-open-pdf" ><a href="#" class="pp-textlink" action="open-pdf">Open PDF</a></li>',
+        '<li id="open-pdf{id}" class="pp-action pp-action-open-pdf" >',
+        '<a href="#" class="pp-textlink" action="open-pdf">Open PDF</a>',
+        '&nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a></li>',
         '<tpl if="_imported">',
         '<li id="delete-pdf-{id}" class="pp-action pp-action-delete-pdf"><a href="#" class="pp-textlink" action="delete-pdf">Delete PDF</a></li>',
         '</tpl>',
@@ -61,7 +62,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<li><div id="pbar"></div></li>',
         '</tpl>',
 
-
         '<tpl if="_imported">',
         '<li id="attach-pdf-{id}" class="pp-action pp-action-attach-pdf"><a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a></li>',
         '</tpl>',
@@ -74,7 +74,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<tpl if="attachments">',
         '<ul class="pp-attachments">',
         '<tpl for="attachments_list">',
-        '<li class="pp-attachment-list {cls}"><a href="{link}" target="_blank" class="pp-textlink">{file}</a>&nbsp;&nbsp;<a href="#" class="pp-textlink pp-delete-attachment" action="delete-file" rowid="{rowid}">Delete</a></li>',
+        '<li class="pp-attachment-list pp-file-generic {cls}"><a href="#" class="pp-textlink" action="open-attachment" path="{path}">{file}</a>&nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="delete-file" rowid="{rowid}">Delete</a></li>',
         '</tpl>',
         '</ul>',
         '<p>&nbsp;</p>',
@@ -216,11 +216,13 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
 
             case 'open-pdf':
-
                 var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf);
-
                 Paperpile.main.tabs.newPdfTab({file:path, title:this.data.pdf});
+                break;
 
+            case 'open-pdf-external':
+                var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf);
+                Paperpile.utils.openFile(path);
                 break;
                
                 // Choose local PDF file and attach to database entry
@@ -256,7 +258,13 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             case 'attach-file':
                 this.chooseFile(false);
                 break;
-                
+
+                // Open attached files
+            case 'open-attachment':
+                var path= el.getAttribute('path');
+                Paperpile.utils.openFile(path);
+                break;
+            
                 // Delete attached files
             case 'delete-file':
                 this.deleteFile(false, el.getAttribute('rowid'));

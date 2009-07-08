@@ -57,13 +57,12 @@ sub serve : Regex('^serve/(.*)$') {
 
   my $file = $c->req->captures->[0];
 
-  my $root= $c->model('Library')->get_setting('paper_root');
+  #my $root= $c->model('Library')->get_setting('paper_root');
+  #my $path= File::Spec->catfile( $root, $file );
 
-  my $path= File::Spec->catfile( $root, $file );
-
-  if (not open(IN, $path)){
+  if (not open(IN, $file)){
     $c->response->status(404);
-    $c->response->body("Could not open $path.");
+    $c->response->body("Could not open $file.");
   } else {
 
     my $data='';

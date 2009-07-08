@@ -3,6 +3,7 @@ semantic.cache
 tmp/
 dist/
 user/
+pid
 catalyst/root/tinotification.html
 \#*
 .\#*
