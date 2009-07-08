@@ -406,7 +406,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.file=file,
 
     Ext.Ajax.request({
-      url: '/ajax/pdf/extpdf',
+        url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'INFO',
         inFile: this.file
@@ -882,12 +882,12 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   getThumbnailUrl: function(pageIndex) {
     var scale=this.thumbnailSize/this.pageSizes[pageIndex].width;
     scale = Math.round(scale*100)/100;
-    return "ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale;
+      return Paperpile.Url("/ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale);
   },
 
   getFullUrl: function(pageIndex) {
     var scale = this.getScale(pageIndex);
-    var url = "ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale;
+      var url = Paperpile.Url("/ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale);
     return url;
   },
 
@@ -905,7 +905,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   loadImage: function(pageIndex,scale,target,removeBlinder) {
-    var url = "ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale;
+      var url = Paperpile.Url("/ajax/pdf/render"+this.file+"/"+pageIndex+"/"+scale);
     if (this.images[url] != null && this.images[url].complete) {
       //log("  -> No need to reload:"+url);
 
@@ -965,7 +965,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     log("Searching for: "+searchText);
 
     Ext.Ajax.request({
-      url: '/ajax/pdf/extpdf',
+        url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'SEARCH',
         inFile: this.file,
@@ -1167,7 +1167,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     log("Loading words...");
     Ext.Ajax.request({
-      url: '/ajax/pdf/extpdf',
+        url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'WORDLIST',
         page:pageIndex,
