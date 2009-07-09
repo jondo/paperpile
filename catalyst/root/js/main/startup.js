@@ -22,12 +22,9 @@ Paperpile.stage0 = function(){
             console.log('Ping attempt '+ Paperpile.pingAttempts);
 
             if (IS_TITANIUM && Paperpile.pingAttempts == 0){
-
-                //var path = Titanium.App.path;
-                //path=path.replace(/kboot$/,'');
-                //console.log(path);
-
-                var process = Titanium.Process.launch('bash', 'start_server.sh');
+                var path = Titanium.App.path;
+                path=path.replace(/_paperpile\.bin$/,'');
+                var process = Titanium.Process.launch('bash', [path+'start_server.sh',path]);
             }
 
             if (Paperpile.pingAttempts < 50 ){
@@ -127,16 +124,6 @@ Paperpile.stage2=function(){
 
 
 Ext.onReady(function() {
-
-    //Titanium.UI.mainWindow.addEventListener('close', function(){console.log("exit---------------")},false);
-
-    if (IS_TITANIUM){
-        Titanium.UI.mainWindow.addEventListener(
-            function(event){
-                console.log("-------------> "+event);
-            }
-        );
-    }
 
     Paperpile.pingAttempts=0;
     Paperpile.stage0();

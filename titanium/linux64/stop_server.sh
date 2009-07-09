@@ -1,1 +1,2 @@
-kill -9  `cat pid` && rm pid  
+path=`dirname $0`
+kill -9  `cat $path/pid` && rm $path/pid  
