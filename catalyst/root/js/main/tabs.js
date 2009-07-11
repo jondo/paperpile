@@ -46,8 +46,9 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         if (openTab){
             this.activate(openTab);
         } else {
-
-            var newView=this.add(new Paperpile.PubView({title: (title) ? title:newGrid.plugin_title,
+	  title = (title) ? title: newGrid.plugin_title;
+//	  title = title.substring(0,32);
+            var newView=this.add(new Paperpile.PubView({title: title,
                                                         grid:newGrid,
                                                         closable:true,
                                                         iconCls: (iconCls) ? iconCls : newGrid.plugin_iconCls,
