@@ -1,2 +1,2 @@
-path=`dirname $0`
-kill -9  `cat $path/pid` && rm $path/pid  
+path=$HOME/.paperpile
+kill -9  `cat $path/server.pid` && rm $path/server.pid  
