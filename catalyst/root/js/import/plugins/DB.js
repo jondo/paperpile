@@ -3,6 +3,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
     plugin_base_query:'',
     plugin_iconCls: 'pp-icon-folder',
     plugin_name:'DB',
+    limit: 25,
 
     welcomeMsg:[
         '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome"',
@@ -22,6 +23,8 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
     initComponent:function() {
 
         Paperpile.PluginGridDB.superclass.initComponent.apply(this, arguments);
+
+        //this.limit = Paperpile.main.globalSettings['pager_limit'];
 
         var menu = new Ext.menu.Menu({
             defaults: {checked: false,
@@ -112,7 +115,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
     onRender: function() {
         Paperpile.PluginGridDB.superclass.onRender.apply(this, arguments);
-        this.store.load({params:{start:0, limit:25 }});
+        this.store.load({params:{start:0, limit: this.limit}});
 
         this.store.on('load', function(){
             this.getSelectionModel().selectFirstRow();

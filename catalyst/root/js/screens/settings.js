@@ -36,12 +36,13 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
 
         this.textfields={};
+        this.combos={};
 
         Ext.each(['proxy','proxy_user','proxy_passwd'], 
                  function(item){
                      var field=new Ext.form.TextField({value:main.globalSettings[item], 
                                                        enableKeyEvents: true,
-                                                       width: 300,
+                                                       width: 220,
                                                       });
 
                      field.render(item+'_textfield',0);
@@ -57,6 +58,25 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
                  }, this
                 );
+
+        this.combos['pager_limit'] =  new Ext.form.ComboBox({renderTo:'pager_limit_combo',
+                                                             editable:false,
+                                                             forceSelection:true,
+                                                             triggerAction: 'all',
+                                                             disableKeyFilter: true,
+                                                             fieldLabel:'Type',
+                                                             mode: 'local',
+                                                             width:60,
+                                                             store: [10,25,50,75,100],
+                                                             value: Paperpile.main.globalSettings['pager_limit'],
+                                                            });
+
+
+        this.combos['pager_limit'].on('select', 
+                                      function(){
+                                          this.isDirty=true;
+                                          this.setSaveDisabled(false);
+                                      }, this);
 
         this.proxyCheckbox=new Ext.form.Checkbox({renderTo:'proxy_checkbox'});
 
@@ -158,6 +178,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                     proxy: this.textfields['proxy'].getValue(),
                     proxy_user: this.textfields['proxy_user'].getValue(),
                     proxy_passwd: this.textfields['proxy_passwd'].getValue(),
+                    pager_limit: this.combos['pager_limit'].getValue(),
                    };
 
 

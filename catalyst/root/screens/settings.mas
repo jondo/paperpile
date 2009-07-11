@@ -2,7 +2,7 @@
 
 <tr>
 <td>
-  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300;">
+  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:300">
     <div id="proxy_checkbox" style="float:left;margin:8px"></div>
     <h2 style="margin:8 20;">Proxy</h2>
 
@@ -26,9 +26,17 @@
 
   </div>
 </td>
+<td>
+  <div id="ui-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:300">
+    <h2>User interface</h2>
+    
+    <h3>Number of items per page</h3>
+    <div class="pp-settings-textfield" id="pager_limit_combo"></div>
+  </div>
+</td>
 </tr>
 <tr>
-<td>
+<td colspan="2">
 <center>
 <div style="width:190;">
   <div id="settings-save-button" class="pp-save-button"></div>

@@ -280,7 +280,7 @@ sub set_settings : Local{
 
   my ( $self, $c ) = @_;
 
-  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd') {
+  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd','pager_limit') {
     $c->model('User')->set_setting($field, $c->request->params->{$field});
   }
 
