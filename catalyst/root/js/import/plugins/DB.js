@@ -123,26 +123,33 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
 
         var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(1)).first(), 
-                                        '<div class="pp-grid-sort-container">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>', true);
+                                        '<div id="pp-grid-sort-container_'+this.id+'" class="pp-grid-sort-container"></div>', true);
 
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="journal" status="desc">Date added</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="created" status="desc">Date added</div>');
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal" status="inactive">Journal</div>');
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year" status="inactive">Year</div>');
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author" status="inactive">Author</div>');
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf" status="inactive">PDF</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive">Supplementary material</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive">Notes</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive">Supp. material</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="notes" status="inactive">Notes</div>');
 
         target.on('click', this.handleSortButtons, this);
 
     },
 
+    currentSortField:'',
     handleSortButtons: function(e, el, o){
 
         var currentClass=el.getAttribute('class');
         var field=el.getAttribute('action');
         var status=el.getAttribute('status');
-
+      
+        if (field != this.currentSortField) {
+          //log(field);
+          status = "inactive";
+        }
+        this.currentSortField = field;
+      
         var classes={inactive: 'pp-grid-sort-item pp-grid-sort-inactive',
                      asc: 'pp-grid-sort-item pp-grid-sort-asc',
                      desc: 'pp-grid-sort-item pp-grid-sort-desc'};
@@ -165,7 +172,6 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         
          
         if (status == "inactive"){
-            console.log(classes.desc);
             El.addClass(classes.desc);
             this.store.baseParams['plugin_order']=field+" DESC";
             el.setAttribute('status','desc');

@@ -685,16 +685,28 @@ a:hover.pp-textlink {
 
 /**** Grid controls *****/
 
-.x-grid3-hd .pp-grid-sort-container{
-    color: black;
-    display:inline;
-    visibility:hidden;
-}
-
-.x-grid3-hd-over .pp-grid-sort-container{
-    color: black;
+div.pp-grid-sort-container{
+    color: #888;
     display:inline;
     visibility:visible;
+}
+
+div:hover.pp-grid-sort-container{
+    display:inline;
+    visibility:visible;
+}
+
+div.pp-grid-sort-container .pp-grid-sort-inactive {
+    visibility:hidden;
+}
+div:hover.pp-grid-sort-container .pp-grid-sort-inactive {
+    visibility:visible;
+}
+
+div.pp-grid-sort-item {
+    display:inline;
+    margin: 0 2 0 2;
+    padding: 0 15 0 0;
 }
 
 div:hover.pp-grid-sort-item {
@@ -703,23 +715,16 @@ div:hover.pp-grid-sort-item {
 }
 
 .pp-grid-sort-asc {
-    margin: 0 5 0 5;
-    display:inline;
     background: transparent url('/ext/resources/images/default/grid/sort_asc.gif') no-repeat right center;
-    padding: 0 15 0 0;
+    visibility:visible;
 }
 
 .pp-grid-sort-desc {
-    margin: 0 5 0 5;
-    display:inline;
     background: transparent url('/ext/resources/images/default/grid/sort_desc.gif') no-repeat right center;
-    padding: 0 15 0 0;
+    visibility:visible;
 }
 
 .pp-grid-sort-inactive {
-    margin: 0 5 0 5;
-    display:inline;
-    padding: 0 15 0 0;
 }
 
 /*** Tree ***/
