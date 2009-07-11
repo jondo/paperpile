@@ -43,10 +43,11 @@
   <td>
     <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:220;">
       <h2 class="pp-dashboard-feedback">Support &amp; Feedback</h2>
-      <p>Something broken? Get it fixed. Something missing? Tell us
-      about it. Make yourself heard at our feedback forum:</p>
+      <p>Something broken? Something missing? Tell us about it now!</p>
       <ul>
-        <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.utils.openURL('http://paperpile.uservoice.com');">paperpile.uservoice.com</a></li>
+        <li><a href="#" class="pp-textlink pp-bullet" onclick=" if (window.UserVoice) {UserVoice.Popin.show()}; return false;"> 
+            Feedback</a>
+        </li>
       </ul>
       <p>Need help? Have questions? Send us an email:</p>
       <ul>
@@ -70,6 +71,5 @@
 
 
 </table>
-
 
 

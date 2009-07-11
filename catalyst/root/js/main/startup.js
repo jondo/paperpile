@@ -120,6 +120,17 @@ Paperpile.stage2=function(){
     Ext.get('dashboard-button').on('click', function(){ 
         Paperpile.main.tabs.newScreenTab('Dashboard','dashboard');
     });
+
+    // If offline the userscript JS has not been loaded, so test for it
+    if (window.UserVoice){
+        UserVoice.Popin.setup({ 
+            key: 'paperpile',
+            host: 'paperpile.uservoice.com', 
+            forum: 'general', 
+            lang: 'en'
+        });
+    }
+
 }
 
 
