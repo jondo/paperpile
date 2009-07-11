@@ -31,6 +31,18 @@ sub credits : Local {
 }
 
 
+sub flash_container: Local {
+
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = '/screens/flash_container.mas';
+
+  $c->stash->{type} = $c->request->params->{type};
+  $c->forward('Paperpile::View::Mason');
+
+}
+
+
+
 sub dashboard : Local {
   my ( $self, $c ) = @_;
 

@@ -69,11 +69,13 @@ Paperpile.Statistics = Ext.extend(Ext.Panel, {
 
     showFlash: function(type) {
 
-        swfobject.embedSWF(
-            Paperpile.Url("/flashchart/open-flash-chart.swf"), "container", "550", "300",
-            "9.0.0", "/expressInstall.swf",
-            {"data-file": "/ajax/charts/chart?type="+type}
-        );
+        Ext.DomHelper.overwrite(Ext.get('container'), 
+                                {tag: 'iframe',
+                                 src: 'http://localhost:3000/screens/flash_container?type='+type,
+                                 width: 600,
+                                 height: 350,
+                                 style: "border:none;"
+                                });
 
     }
 

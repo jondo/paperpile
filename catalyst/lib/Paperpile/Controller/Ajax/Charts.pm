@@ -12,6 +12,10 @@ sub chart : Local {
   my ( $self, $c ) = @_;
   my $type = $c->request->params->{type};
 
+  # This controlles is currently called from an iframe which has not
+  # set the session variables of the main application
+  $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
+
   my $chart;
 
   if ($type eq 'top_authors'){
