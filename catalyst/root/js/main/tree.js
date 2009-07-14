@@ -87,7 +87,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 // Only allow operations within the same subtree,
                 // i.e. nodes are of the same type
                 if (e.source.dragData.node.type != e.target.type){
-                    e.cancel=true;
+                  e.cancel=true;
+                } else if (e.target.type == 'TAGS' && e.point == 'append') {
+                  e.cancel = true;
                 } else {
 
                     // Allow only re-ordering in active folder and import plugins,
