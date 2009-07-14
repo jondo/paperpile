@@ -7,6 +7,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     allSelected:false,
     itemId:'grid',
 
+    tagStyles:{},
+                                    
     initComponent:function() {
 
         var _store=new Ext.data.Store(
@@ -32,7 +34,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             displayMsg: 'Displaying papers {0} - {1} of {2}',
             emptyMsg: "No papers to display",
         });
-
+      
         this.pubTemplate = new Ext.XTemplate(
             '<div class="pp-grid-data">',
             '<p class="pp-grid-title">{title}</p>',
@@ -59,7 +61,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             '<tpl if="_imported">',
             '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
             '</tpl>',
-            '<div>',
+//            '<div>',
             '<tpl if="pdf">',
             '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="{pdf}"></div>',
             '</tpl>',
@@ -69,8 +71,28 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             '<tpl if="annote">',
             '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
             '</tpl>',
+            '<tpl if="tags">',
+            '{[this.tagStyle(values.tags)]}',
+            '</tpl>',
             '</div>',
-            '</div>'
+//            '</div>',
+                    {
+            tagStyle:function(tag_string) {
+              var returnMe = '<div class="pp-tag-grid-block">';
+              var tags = tag_string.split(/\s*,\s*/);
+              for (var i=0; i < tags.length; i++) {
+                var tag = tags[i];
+                var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.find('tag',tag));
+                if (style != null) {
+                  style = style.get('style');
+                  returnMe += '<div class="pp-tag-grid pp-tag-box pp-tag-style-'+style+'" ext:qtip="<b>'+tag+'</b>">'+tag.substring(0,1)+'</div>';
+                }
+              }
+              returnMe += '</div>';
+              return returnMe;
+            }
+          }
+
         ).compile();
 
         this.actions={

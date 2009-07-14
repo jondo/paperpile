@@ -897,6 +897,26 @@ div:hover.pp-tag-style-sample {
     width: 200px;
 } 
 
+.pp-tag-grid-block {
+    float:left;
+    clear:both;
+    margin-top:4px;
+    margin-left:4px;
+    margin-right:4px;
+}
+
+.pp-tag-grid {
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-width:1px;
+    font-size: 9px;
+    height:12px;
+    line-height:9px;
+    margin:0 2px 2px 0;
+    padding: 0 0.1em;
+    text-align:center;
+}
+
 /*** PDF Extract ***/
 
 .pp-pdfextract-file{

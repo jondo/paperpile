@@ -844,6 +844,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                 if (selected){
                                     sidepanel.updateDetail(selected.data, true);
                                 }
+                                grid.getView().refresh();
                             }
                         );
                         node.ui.removeClass('pp-tag-tree-style-'+node.tagStyle);
