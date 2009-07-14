@@ -133,14 +133,19 @@ sub import : Local {
 
   my $bin = Paperpile::Utils->get_binary( 'pdftoxml', $c->model('App')->get_setting('platform') );
 
-  my $pub = {};
-  my $extract = Paperpile::PdfExtract->new( file => $file_name, pdftoxml => $bin );
-  eval { $pub = $extract->parsePDF; };
-
   my $data = {
     file_name     => $file_name,
     file_basename => $file_basename
   };
+
+  my $pub = {};
+  my $extract = Paperpile::PdfExtract->new( file => $file_name, pdftoxml => $bin );
+  eval { $pub = $extract->parsePDF; };
+
+  if ($@) {
+      $data->{status}     = 'FAIL';
+      $data->{status_msg} = $@;
+  }
 
   if ( !$pub->{doi} and !$pub->{title} ) {
     $data->{status}     = 'FAIL';
@@ -194,14 +199,15 @@ sub import : Local {
   }
 
   $data->{pub} = $pub;
-
-  my $tmp = $data->{pub}->as_hash;
+  my $tmp;
+  if (ref $pub =~ 'Paperpile') {
+    $tmp = $data->{pub}->as_hash;
+  }
   foreach my $key ( 'file_name', 'file_basename', 'file_size', 'status', 'status_msg' ) {
     $tmp->{$key} = $data->{$key};
   }
-
   $c->stash->{data} = $tmp;
-
+  
   $c->forward('Paperpile::View::JSON');
 
 }

@@ -100,6 +100,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
               onCancel: function(){
                   this.cancelProcess=1;
                   this.pbox.destroy();
+                  this.startButton.enable();
               },
               formatStatus: function(item){
                   return item.get('file_name');
@@ -169,11 +170,16 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
                     callback.createDelegate(scope)();
                 }
             },
-            failure: Paperpile.main.onError,
+            failure: this.importPDFError,
             scope:this,
             timeout: 600000,
         });
     },
+                                           
+    importPDFError: function() {
+      Paperpile.main.onError(arguments);
+      this.startButton.enable();
+    }
 });
 
 

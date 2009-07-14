@@ -9,7 +9,7 @@ use File::Temp qw(tempfile);
 use Lingua::EN::NameParse;
 
 has 'file'    => ( is => 'rw', isa => 'Str' );
-has 'pub'     => ( is => 'rw', isa => 'PaperPile::Library::Publication' );
+has 'pub'     => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
 has 'pdftoxml' => ( is => 'rw', isa => 'Str' );
 
 #( my $title, my $authors, my $doi, my $level ) = ParsePDF( $ARGV[0] );
@@ -822,9 +822,11 @@ sub _ParseXML {
   }
 
   # now score the last one
-  $final_bad[$#final_bad] += _MarkBadWords( $final_content[$#final_bad] );
-  $final_bad[$#final_bad]++ unless ( $final_content[$#final_bad] =~ /\s/ );
-  $final_adress[$#final_adress] += _MarkAdress( $final_content[$#final_adress] );
+  if ($#final_bad > -1) {
+    $final_bad[$#final_bad] += _MarkBadWords( $final_content[$#final_bad] );
+    $final_bad[$#final_bad]++ unless ( $final_content[$#final_bad] =~ /\s/ );
+    $final_adress[$#final_adress] += _MarkAdress( $final_content[$#final_adress] );
+  }
 
   # now search for authors and title
   for my $i ( 0 .. $#final_content ) {
