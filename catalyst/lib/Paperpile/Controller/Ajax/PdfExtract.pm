@@ -142,10 +142,10 @@ sub import : Local {
   my $extract = Paperpile::PdfExtract->new( file => $file_name, pdftoxml => $bin );
   eval { $pub = $extract->parsePDF; };
 
-  if ($@) {
-      $data->{status}     = 'FAIL';
-      $data->{status_msg} = $@;
-  }
+#  if ($@) {
+#      $data->{status}     = 'FAIL';
+#      $data->{status_msg} = $@;
+#  }
 
   if ( !$pub->{doi} and !$pub->{title} ) {
     $data->{status}     = 'FAIL';
@@ -200,7 +200,7 @@ sub import : Local {
 
   $data->{pub} = $pub;
   my $tmp;
-  if (ref $pub =~ 'Paperpile') {
+  if (ref $pub =~ /paperpile/i) {
     $tmp = $data->{pub}->as_hash;
   }
   foreach my $key ( 'file_name', 'file_basename', 'file_size', 'status', 'status_msg' ) {
