@@ -668,6 +668,7 @@ a:hover.pp-textlink {
 }
 
 .pp-grid-title{
+    display:inline;
     font-weight: bold;
 }
 
@@ -898,11 +899,13 @@ div:hover.pp-tag-style-sample {
 } 
 
 .pp-tag-grid-block {
-    float:left;
+/*    float:left;
     clear:both;
     margin-top:4px;
     margin-left:4px;
-    margin-right:4px;
+    margin-right:4px;*/
+    display:inline-block;
+    margin: 0 0 0 .75em;
 }
 
 .pp-tag-grid {
@@ -911,11 +914,34 @@ div:hover.pp-tag-style-sample {
     border-width:1px;
     font-size: 9px;
     height:12px;
-    line-height:9px;
+    width:1.1em;
+    line-height:10px;
     margin:0 2px 2px 0;
     padding: 0 0.1em;
     text-align:center;
+    overflow:hidden;
+    position:relative;
+    top:0px;
+    opacity:0.5;
+    display:inline-block;
 }
+
+.pp-tag-grid-inline {
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    border-width:1px;
+    font-size: 9px;
+    line-height:11px;
+    margin:0 2px 2px 0;
+    padding: 0;
+    text-align:center;
+    opacity:0.5;
+    display:inline-block;
+    width:1.1em;
+    height:12px;
+    white-space:normal;
+}
+
 
 /*** PDF Extract ***/
 
@@ -972,14 +998,52 @@ div:hover.pp-tag-style-sample {
 
 
 
+/* Ext.ux.Menubar */
+div.x-menu.x-menubar {
+    background:#F0F0F0!important;
+    position:relative
+}
+.menubar-textitem {
+  display:block;
+  padding-top:4px;
+}
+div.x-menu.x-horizontal-menubar {
+/*    border-left:0px none;*/
+/*    border-right:0px none;*/
+    overflow:hidden;
+}
+div.x-menu.x-menubar .x-menu-list {
+    border:0px none;
+}
+div.x-menu.x-horizontal-menubar .x-menu-list {
+/*    margin-left:5px;*/
+    height:100%;
+}
+div.x-menu.x-horizontal-menubar .x-menu-list .x-menu-list-item {
+    text-decoration: none;
+    padding: 0px 10px;
+    display: block;
+    float: left;
+}
+div.x-menu.x-menubar .x-menu-list .x-menu-list-item {
+    border: 1px solid transparent;
+}
+div.x-menu.x-menubar .x-menu-list .x-menu-list-item.x-menu-item-active {
+    border: 1px solid #AACCF6;
+}
+div.x-menu.x-horizontal-menubar .x-menu-list .x-menu-single-item .x-menu-item {
+    background: transparent;
+    padding-right: 15px;
+}               
+div.x-menu.x-horizontal-menubar .x-menu-list .x-menu-list-item .x-menu-item-arrow {
+    background: transparent url(menubar-parent.gif) no-repeat scroll right 0.6em;
+}
+div.x-menu.x-menubar .x-menu-list .x-menu-list-item .x-menu-item .x-menu-item-icon {
+    display: none;
+}
 
-
-
-
-
-
-
-
-
-
-
+.x-menu.x-horizontal-menubar a.x-menu-item {
+    padding-top: 0px! important;
+    padding-bottom: 0px! important;
+    padding-right: 15px!important
+} 

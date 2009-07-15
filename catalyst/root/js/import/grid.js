@@ -37,7 +37,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
       
         this.pubTemplate = new Ext.XTemplate(
             '<div class="pp-grid-data">',
-            '<p class="pp-grid-title">{title}</p>',
+              '<div>',
+            '<span class="pp-grid-title">{title}</span>{[this.tagStyle(values.tags)]}',
+            '</div>',
             '<tpl if="_authors_display">',
             '<p class="pp-grid-authors">{_authors_display}</p>',
             '</tpl>',
@@ -53,7 +55,25 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             '<tpl if="_snippets_notes">',
             '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
             '</tpl>',
-            '</div>'
+            '</div>',
+            {
+            tagStyle:function(tag_string) {
+              var returnMe = '';//<div class="pp-tag-grid-block">';
+              var tags = tag_string.split(/\s*,\s*/);
+              for (var i=0; i < tags.length; i++) {
+                var tag = tags[i];
+                var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.find('tag',tag));
+                if (style != null) {
+                  style = style.get('style');
+                  returnMe += '<div class="pp-tag-grid-inline pp-tag-style-'+style+'" ext:qtip="<b>'+tag+'</b>">'+tag.substring(0,1)+'</div>';
+                }
+              }
+//              returnMe += '</div>';
+              if (tags.length > 0)
+                returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
+              return returnMe;
+            }          
+            }
         ).compile();
 
         this.iconTemplate = new Ext.XTemplate(
@@ -71,28 +91,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             '<tpl if="annote">',
             '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
             '</tpl>',
-            '<tpl if="tags">',
-            '{[this.tagStyle(values.tags)]}',
-            '</tpl>',
-            '</div>',
-//            '</div>',
-                    {
-            tagStyle:function(tag_string) {
-              var returnMe = '<div class="pp-tag-grid-block">';
-              var tags = tag_string.split(/\s*,\s*/);
-              for (var i=0; i < tags.length; i++) {
-                var tag = tags[i];
-                var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.find('tag',tag));
-                if (style != null) {
-                  style = style.get('style');
-                  returnMe += '<div class="pp-tag-grid pp-tag-box pp-tag-style-'+style+'" ext:qtip="<b>'+tag+'</b>">'+tag.substring(0,1)+'</div>';
-                }
-              }
-              returnMe += '</div>';
-              return returnMe;
-            }
-          }
-
+            '</div>'
+//            '</div>'
         ).compile();
 
         this.actions={

@@ -487,8 +487,13 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                 var store=Ext.StoreMgr.lookup('tag_store');
                 if (store.find('tag',tag) == -1){
                     Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
-                    Ext.StoreMgr.lookup('tag_store').reload();
+                    Ext.StoreMgr.lookup('tag_store').reload({
+                                                            callback: function() {
+                                                              grid.getView().refresh();             
+                                                            }
+                                                            });
                 }
+               
             },
             failure: Paperpile.main.onError,
             scope: this,
@@ -515,6 +520,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                 var json = Ext.util.JSON.decode(response.responseText);
                 var grid=Ext.getCmp(this.grid_id);
                 grid.updateData(json.data);
+                grid.getView().refresh();
             },
             failure: Paperpile.main.onError,
             scope: this,
