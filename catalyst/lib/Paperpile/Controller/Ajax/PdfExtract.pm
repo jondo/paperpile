@@ -138,9 +138,11 @@ sub import : Local {
     file_basename => $file_basename
   };
 
-  my $pub = {};
+  my $pub;
   my $extract = Paperpile::PdfExtract->new( file => $file_name, pdftoxml => $bin );
   eval { $pub = $extract->parsePDF; };
+
+  $pub = $extract->parsePDF;
 
   if ($@) {
       $data->{status}     = 'FAIL';
@@ -169,9 +171,6 @@ sub import : Local {
         ->standard_search( 'sha1=' . $c->model('Library')->dbh->quote( $pub->sha1 ), 0, 1 )->[0];
 
       if ( !$pub_in_db ) {
-        $pub->created(timestamp);
-        $pub->times_read(0);
-        $pub->last_read(timestamp);
         $c->model('Library')->create_pubs( [$pub] );
         $pub->_imported(1);
 
@@ -200,14 +199,14 @@ sub import : Local {
 
   $data->{pub} = $pub;
   my $tmp;
-  if (ref $pub =~ 'Paperpile') {
+
+  if (ref ($pub) =~ 'Paperpile') {
     $tmp = $data->{pub}->as_hash;
   }
   foreach my $key ( 'file_name', 'file_basename', 'file_size', 'status', 'status_msg' ) {
     $tmp->{$key} = $data->{$key};
   }
   $c->stash->{data} = $tmp;
-  
   $c->forward('Paperpile::View::JSON');
 
 }
