@@ -7,6 +7,13 @@ Paperpile.utils = {
         return {dir:dir, file:file};
     },
 
+    // Returns true if path is absolute. Gets more interesting under Windows...
+    isAbsolute: function(path){
+        
+        return (path.substring(0,1) == '/');
+
+    },
+
     openURL: function(url) {
         if (IS_TITANIUM){
             var process = Titanium.Process.launch('xdg-open', url);

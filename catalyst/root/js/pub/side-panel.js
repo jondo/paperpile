@@ -216,7 +216,11 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
 
             case 'open-pdf':
-                var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf);
+
+                var path=this.data.pdf;
+                if (!Paperpile.utils.isAbsolute(path)){
+                    path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
+                }
                 Paperpile.main.tabs.newPdfTab({file:path, title:this.data.pdf});
                 break;
 
