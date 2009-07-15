@@ -98,7 +98,7 @@ sub get : Local {
           or FileWriteError->throw(
           error => 'Download error. Could not create temporary file for download.',
           file  => "$file.size"
-          );
+        );
         if ( defined $length ) {
           print SIZE "$length\n";
         } else {
@@ -190,6 +190,9 @@ sub progress : Local {
     open(SIZE,"<$file.size");
     $total_size=<SIZE>;
     chomp($total_size);
+    if ($total_size eq 'null'){
+      $total_size=undef;
+    }
   } else {
     $current_size=0;
     $total_size=undef;
