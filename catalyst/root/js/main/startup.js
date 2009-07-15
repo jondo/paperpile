@@ -94,34 +94,25 @@ Paperpile.stage1 = function() {
 Paperpile.stage2=function(){
 
     Ext.QuickTips.init();
-    main=new Paperpile.Viewport;
-    main.show();
+    Paperpile.main=new Paperpile.Viewport;
 
-    Paperpile.main=main; 
-
-    var tree=Ext.getCmp('treepanel');
-    Paperpile.main.tree=tree;
-
-    Paperpile.status=new Paperpile.Status();
-
-    main.loadSettings();
-
-    main.tabs.newDBtab('','MAIN');
-
-    // Note: this is asynchronous, so might not be available
-    // immediately (integrate this better in startup to make sure it
-    // is loaded when needed)
-
-    tree.expandAll();
-    main.tabs.remove('welcome');
-
-    Ext.get('splash').remove();
-
+    Paperpile.main.loadSettings(
+        function(){
+            Paperpile.main.show();
+            var tree=Ext.getCmp('treepanel');
+            Paperpile.main.tree=tree;
+            Paperpile.status=new Paperpile.Status();
+            Paperpile.main.tabs.newDBtab('','MAIN');
+            tree.expandAll();
+            Paperpile.main.tabs.remove('welcome');
+            Ext.get('splash').remove();
+        }, this);
+    
     Ext.get('dashboard-button').on('click', function(){ 
         Paperpile.main.tabs.newScreenTab('Dashboard','dashboard');
     });
 
-    // If offline the userscript JS has not been loaded, so test for it
+    // If offline the uservoice JS has not been loaded, so test for it
     if (window.UserVoice){
         UserVoice.Popin.setup({ 
             key: 'paperpile',
@@ -130,7 +121,6 @@ Paperpile.stage2=function(){
             lang: 'en'
         });
     }
-
 }
 
 

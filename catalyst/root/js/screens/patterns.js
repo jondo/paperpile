@@ -35,7 +35,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
         Ext.each(['library_db','paper_root','key_pattern','pdf_pattern','attachment_pattern'], 
                  function(item){
-                     var field=new Ext.form.TextField({value:main.globalSettings[item], 
+                     var field=new Ext.form.TextField({value:Paperpile.main.globalSettings[item], 
                                                        enableKeyEvents: true,
                                                        width: 300,
                                                       });
@@ -166,14 +166,14 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                     return;
                 }
                 Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
-                var old_library_db=main.globalSettings.library_db;
-                main.loadSettings(
+                var old_library_db=Paperpile.main.globalSettings.library_db;
+                Paperpile.main.loadSettings(
                     function(){
                         // Complete reload only if database has
                         // changed. This is not necessary if the
                         // database has only be renamed but we
                         // update also in this case.
-                        if (old_library_db != main.globalSettings.library_db){
+                        if (old_library_db != Paperpile.main.globalSettings.library_db){
                             Paperpile.main.tree.getRootNode().reload();
                             Paperpile.main.tree.expandAll();
                                 
@@ -210,7 +210,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                     },
                     scope:this
                 });
-                main.loadSettings();
+                Paperpile.main.loadSettings();
             },
             scope:this
         });

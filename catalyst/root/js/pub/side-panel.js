@@ -529,7 +529,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     chooseFile: function(isPDF){
 
         var fc=new Paperpile.FileChooser({
-            currentRoot: main.globalSettings.user_home,
+            currentRoot: Paperpile.main.globalSettings.user_home,
             callback:function(button,path){
                 if (button == 'OK'){
                     this.attachFile(isPDF, path);

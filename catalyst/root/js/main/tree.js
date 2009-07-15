@@ -171,9 +171,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
                     }
                 } else {
-		  var main = Paperpile.main.tabs.getItem("MAIN");
-		  Paperpile.main.tabs.activate(main);
-		}
+		            var main = Paperpile.main.tabs.getItem("MAIN");
+		            Paperpile.main.tabs.activate(main);
+		        }
                 break;
             }
         });

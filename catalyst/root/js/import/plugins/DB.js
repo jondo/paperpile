@@ -24,7 +24,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
         Paperpile.PluginGridDB.superclass.initComponent.apply(this, arguments);
 
-        //this.limit = Paperpile.main.globalSettings['pager_limit'];
+        this.limit = Paperpile.main.globalSettings['pager_limit'];
 
         var menu = new Ext.menu.Menu({
             defaults: {checked: false,
@@ -100,6 +100,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         }
         
         this.store.baseParams['plugin_search_pdf']= 0 ;
+        this.store.baseParams['limit']= this.limit ;
 
         this.store.on('load', 
                       function(){
@@ -115,6 +116,9 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
 
     onRender: function() {
         Paperpile.PluginGridDB.superclass.onRender.apply(this, arguments);
+
+        console.log(this.limit);
+
         this.store.load({params:{start:0, limit: this.limit}});
 
         this.store.on('load', function(){

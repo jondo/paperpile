@@ -170,7 +170,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
         win=new Paperpile.FileChooser({
             title: "Select single PDF file or directory to search for PDF files",
-            currentRoot:main.globalSettings.user_home,
+            currentRoot:Paperpile.main.globalSettings.user_home,
             showFilter: true,
             selectionMode: 'BOTH',
             filterOptions:[{text: 'PDF files',
@@ -178,9 +178,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                            }],
             callback:function(button,path){
                 if (button == 'OK'){
-                    var panel=main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs',
-                                                                          iconCls: 'pp-icon-import-pdf',
-                                                                          path: path
+                    var panel=Paperpile.main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs',
+                                                                                    iconCls: 'pp-icon-import-pdf',                                                                                    path: path
                                                                          }));
                     panel.show();
                 }
@@ -197,7 +196,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
         win=new Paperpile.FileChooser({
             showFilter: true,
-            currentRoot:main.globalSettings.user_home,
+            currentRoot:Paperpile.main.globalSettings.user_home,
             filterOptions:[{text: 'All supported formats',
                             suffix:['ppl','bib','ris','enl','lib','mods','xml']
                            },
@@ -230,7 +229,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             callback:function(button,path){
                 if (button == 'OK'){
                     var parts=Paperpile.utils.splitPath(path);
-                    main.tabs.newPluginTab('File', {
+                    Paperpile.main.tabs.newPluginTab('File', {
                         plugin_file: path,
                         plugin_name: 'File',
                         plugin_mode: 'FULLTEXT',
