@@ -401,6 +401,21 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     },
 
+    getDragDropText: function(){
+
+        var num = this.getSelectionModel().getCount();
+
+        if ( num == 1){
+            var key=this.getSelectionModel().getSelected().get('citekey');
+            if (key){
+                return "["+key+"]";
+            } else {
+                return " 1 selected reference";
+            }
+        } else {
+            return num+" selected references";
+        }
+    },
 
     updateButtons: function(){
 
