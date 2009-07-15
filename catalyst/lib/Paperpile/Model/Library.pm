@@ -573,8 +573,8 @@ sub delete_folder {
 
     # Get the publications that are in the given folder
     my $select = $self->dbh->prepare(
-      "SELECT publications.rowid as rowid, publications.folders as folders FROM Publications JOIN fulltext
-     ON publications.rowid=fulltext.rowid WHERE fulltext MATCH 'folders:$id'"
+      "SELECT publications.rowid as rowid, publications.folders as folders FROM Publications JOIN fulltext_citation
+     ON publications.rowid=fulltext_citation.rowid WHERE fulltext_citation MATCH 'folder:$id'"
     );
 
     $select->bind_columns( \$rowid, \$folders );
