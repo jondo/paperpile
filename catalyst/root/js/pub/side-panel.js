@@ -216,7 +216,11 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
 
             case 'open-pdf':
-                var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf);
+
+                var path=this.data.pdf;
+                if (!Paperpile.utils.isAbsolute(path)){
+                    path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
+                }
                 Paperpile.main.tabs.newPdfTab({file:path, title:this.data.pdf});
                 break;
 
@@ -535,7 +539,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     chooseFile: function(isPDF){
 
         var fc=new Paperpile.FileChooser({
-            currentRoot: main.globalSettings.user_home,
+            currentRoot: Paperpile.main.globalSettings.user_home,
             callback:function(button,path){
                 if (button == 'OK'){
                     this.attachFile(isPDF, path);
@@ -685,8 +689,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     downloadPDF: function(pdf){
 
         this.progressBar.reset();
-        this.progressBar.text="Starting download...";
-
+        this.progressBar.updateProgress(0.0,'Starting download.');
         Ext.Ajax.request(
             {   url: Paperpile.Url('/ajax/download/get'),
                 params: { sha1: this.data.sha1,
@@ -748,20 +751,25 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
                 // If polling progress task is not running any longer, we are finished.
                 if (!this.progressTask){
+                    this.progressBar.reset();
                     this.progressBar.updateProgress(1.0,'Download finished.');
                     return;
                 } else {
                     var fraction;
                     var current_size=0.0;
-                   
-                    if (json.current_size && json.total_size){
+
+                    // We only show stats when download has started and we know the total size.
+                    if (json.current_size > 0 && json.total_size){
                         fraction=json.current_size/json.total_size;
-                         this.progressBar.updateProgress(fraction, "Downloading ("
-                                                         +Ext.util.Format.fileSize(json.current_size) 
-                                                         +" / "+ Ext.util.Format.fileSize(json.total_size)+")");
-                        
+                        this.progressBar.updateProgress(fraction, "Downloading ("
+                                                        +Ext.util.Format.fileSize(json.current_size) 
+                                                        +" / "+ Ext.util.Format.fileSize(json.total_size)+")");
                     } else {
-                        this.progressBar.updateProgress(0.0, "Downloading...");
+                        // If download has started and we do not know
+                        // the total size we just show a generic wait bar.
+                        if (json.current_size > 0){
+                            this.progressBar.wait({text: 'Downloading PDF', interval:100 });
+                        }
                     }
                 }
                     
