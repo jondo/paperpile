@@ -74,12 +74,12 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
             // Pre-configured class
             if (Paperpile[name]){
-                panel=main.tabs.add(new Paperpile[name]({itemId:itemId}));
+                panel=Paperpile.main.tabs.add(new Paperpile[name]({itemId:itemId}));
 
             // Generic panel
             } else {
 
-                panel=main.tabs.add(new Ext.Panel(
+                panel=Paperpile.main.tabs.add(new Ext.Panel(
                     { closable:true,
                       autoLoad:{url:Paperpile.Url(name.url),
                                 callback: this.setupFields,
@@ -114,7 +114,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
         console.log(pars);
 
-        var panel=main.tabs.add(new Paperpile.PDFviewer(pars));
+        var panel=Paperpile.main.tabs.add(new Paperpile.PDFviewer(pars));
 
         panel.show();
 

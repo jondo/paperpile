@@ -166,6 +166,9 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
                     record.set(i,json.data[i]);
                 }
                 record.endEdit();
+                
+                Paperpile.main.onUpdateDB();
+
                 if (callback){
                     callback.createDelegate(scope)();
                 }

@@ -173,9 +173,9 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                         Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
                     }
                 } else {
-		  var main = Paperpile.main.tabs.getItem("MAIN");
-		  Paperpile.main.tabs.activate(main);
-		}
+		            var main = Paperpile.main.tabs.getItem("MAIN");
+		            Paperpile.main.tabs.activate(main);
+		        }
                 break;
             }
         });
@@ -835,18 +835,20 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     callback: function(){
                         Paperpile.main.tabs.items.each(
                             function(item, index, length){
-                                if (item.title == node.text){
-                                    var el=Ext.get(Ext.DomQuery.selectNode('span.x-tab-strip-text',Paperpile.main.tabs.getTabEl(this)));
-                                    el.removeClass('pp-tag-style-'+node.tagStyle);
-                                    el.addClass('pp-tag-style-'+number);
+                                if (item.tabType=='PLUGIN'){
+                                    if (item.title == node.text){
+                                        var el=Ext.get(Ext.DomQuery.selectNode('span.x-tab-strip-text',Paperpile.main.tabs.getTabEl(this)));
+                                        el.removeClass('pp-tag-style-'+node.tagStyle);
+                                        el.addClass('pp-tag-style-'+number);
+                                    }
+                                    var grid=item.items.get('center_panel').items.get('grid');
+                                    var sidepanel=item.items.get('east_panel').items.get('overview');
+                                    var selected=grid.getSelectionModel().getSelected();
+                                    if (selected){
+                                        sidepanel.updateDetail(selected.data, true);
+                                    }
+                                    grid.getView().refresh();
                                 }
-                                var grid=item.items.get('center_panel').items.get('grid');
-                                var sidepanel=item.items.get('east_panel').items.get('overview');
-                                var selected=grid.getSelectionModel().getSelected();
-                                if (selected){
-                                    sidepanel.updateDetail(selected.data, true);
-                                }
-                                grid.getView().refresh();
                             }
                         );
                         node.ui.removeClass('pp-tag-tree-style-'+node.tagStyle);

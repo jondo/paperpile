@@ -40,7 +40,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
         Ext.each(['proxy','proxy_user','proxy_passwd'], 
                  function(item){
-                     var field=new Ext.form.TextField({value:main.globalSettings[item], 
+                     var field=new Ext.form.TextField({value:Paperpile.main.globalSettings[item], 
                                                        enableKeyEvents: true,
                                                        width: 220,
                                                       });
@@ -89,7 +89,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                               }, this);
 
        
-        if (main.globalSettings['use_proxy'] == "1"){
+        if (Paperpile.main.globalSettings['use_proxy'] == "1"){
             this.proxyCheckbox.setValue(true);
             this.onToggleProxy(this.proxyCheckbox,true);
         } else {
@@ -188,8 +188,20 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
             url: Paperpile.Url('/ajax/settings/set_settings'),
             params: params,
             success: function(response){
+
+                // Update main DB tab with new pager limit. Other DB
+                // plugins will use the new setting when they are newly opened.
+                var new_pager_limit=this.combos['pager_limit'].getValue();
+                if ( new_pager_limit != Paperpile.main.globalSettings['pager_limit']){
+                    var grid=Paperpile.main.tabs.items.get('MAIN').items.get('center_panel').items.get('grid');
+                    grid.store.baseParams['limit']=new_pager_limit;
+                    grid.store.reload();
+                }
+
                 Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
-                main.loadSettings(
+
+
+                Paperpile.main.loadSettings(
                     function(){
                         Paperpile.status.clearMsg();
                     }, this
