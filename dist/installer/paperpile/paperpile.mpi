@@ -189,7 +189,7 @@ UpgradeApplicationID
 {}
 
 Version
-0.4-beta
+0.4-preview
 
 ViewReadme
 Yes
@@ -4344,11 +4344,12 @@ File ::A45D8E56-CF13-6373-217A-DF046658CD25 -name license.mas -parent 15413E6C-6
 File ::7ECA3C80-A6C5-9444-4214-7668F4A1CE5D -name patterns.mas -parent 15413E6C-63FF-2DE9-A681-89F33E6B1899
 File ::6E0377D9-405E-BC8D-A91A-F670B3F1C34B -name semantic.cache -parent 15413E6C-63FF-2DE9-A681-89F33E6B1899
 File ::DC41B0DD-E386-B67E-A20C-D7EDE294E7A3 -name settings.mas -parent 15413E6C-63FF-2DE9-A681-89F33E6B1899
+File ::2FEF73EA-0EA7-C375-CBDF-C7B892923F23 -name flash_container.mas -parent 15413E6C-63FF-2DE9-A681-89F33E6B1899
 File ::67808320-9D2E-2078-CD15-4D22B5B3A7E6 -type dir -name script -parent 85A93F03-68E5-427E-A6F6-0D6339175A8C
-File ::65A4EC3E-A505-A11B-2E11-68174DDB78FC -name paperpile_server.pl -parent 67808320-9D2E-2078-CD15-4D22B5B3A7E6
-File ::C55B5A27-511D-8867-A50A-3427B6375C7D -name paperpile_test.pl -parent 67808320-9D2E-2078-CD15-4D22B5B3A7E6
-File ::25792F7A-2E41-52DA-D63D-33E15B80EFF6 -name start_linux32.sh -parent 67808320-9D2E-2078-CD15-4D22B5B3A7E6
-File ::44D04A06-F14A-6CC7-37B1-97704711226B -name start_linux64.sh -parent 67808320-9D2E-2078-CD15-4D22B5B3A7E6
+File ::65A4EC3E-A505-A11B-2E11-68174DDB78FC -name paperpile_server.pl -permissions 00705 -parent 67808320-9D2E-2078-CD15-4D22B5B3A7E6
+File ::C55B5A27-511D-8867-A50A-3427B6375C7D -name paperpile_test.pl -permissions 00705 -parent 67808320-9D2E-2078-CD15-4D22B5B3A7E6
+File ::25792F7A-2E41-52DA-D63D-33E15B80EFF6 -name start_linux32.sh -permissions 00755 -parent 67808320-9D2E-2078-CD15-4D22B5B3A7E6
+File ::44D04A06-F14A-6CC7-37B1-97704711226B -name start_linux64.sh -permissions 00755 -parent 67808320-9D2E-2078-CD15-4D22B5B3A7E6
 File ::6232AF6C-7A5B-3F9A-9064-4E92983A1CAA -type dir -name /home/wash/play/paperpile/dist/data/linux64/installer -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
 File ::097FFB71-CDCE-C635-1E8E-6D2B099DB893 -name installer -parent 6232AF6C-7A5B-3F9A-9064-4E92983A1CAA
 File ::E5E7FE39-7F6A-778E-86D6-83F44642959F -type dir -name /home/wash/play/paperpile/dist/data/linux64/modules -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
@@ -4426,11 +4427,11 @@ File ::F1FE9FB2-DEA9-BDDE-9609-08AD34BAA145 -name libwebkittitanium-1.0.so -pare
 File ::D2E005F7-9192-AC18-FC6C-3AF225D7ECC1 -name libwebkittitanium-1.0.so.2 -parent 098DD4BD-C662-9FC5-374A-441C5650BF30
 File ::28276FCA-2E64-95A3-2D79-E6ECF6D95EF1 -name libwebkittitanium-1.0.so.2.7.0 -parent 098DD4BD-C662-9FC5-374A-441C5650BF30
 File ::08AF5F66-CF54-D426-1C16-733025383EAC -name libxcb-render-util.so.0 -parent 098DD4BD-C662-9FC5-374A-441C5650BF30
-File ::B80753D1-0915-34C3-580B-562E2A94C93C -name /home/wash/play/paperpile/dist/data/linux64/_paperpile.bin -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
+File ::B80753D1-0915-34C3-580B-562E2A94C93C -name /home/wash/play/paperpile/dist/data/linux64/_paperpile.bin -permissions 00755 -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
 File ::8B00EA96-1D86-DA7C-F6BB-58D7B4ACA70F -name /home/wash/play/paperpile/dist/data/linux64/manifest -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
-File ::953505FD-462D-55A8-414F-40F824A4C579 -name /home/wash/play/paperpile/dist/data/linux64/paperpile -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
-File ::217ABDBF-58F3-2F98-1160-80F48CE39A2B -name /home/wash/play/paperpile/dist/data/linux64/start_server.sh -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
-File ::5414E6B9-3CAC-BC03-4F17-B884FEBA7D5A -name /home/wash/play/paperpile/dist/data/linux64/stop_server.sh -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
+File ::953505FD-462D-55A8-414F-40F824A4C579 -name /home/wash/play/paperpile/dist/data/linux64/paperpile -permissions 00745 -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
+File ::217ABDBF-58F3-2F98-1160-80F48CE39A2B -name /home/wash/play/paperpile/dist/data/linux64/start_server.sh -permissions 00745 -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
+File ::5414E6B9-3CAC-BC03-4F17-B884FEBA7D5A -name /home/wash/play/paperpile/dist/data/linux64/stop_server.sh -permissions 00745 -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
 File ::6AE2A8B2-D793-75D6-144C-6250422C5CFF -name /home/wash/play/paperpile/dist/data/linux64/tiapp.xml -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
 File ::822C6955-AC24-6718-2881-8DF245E3C480 -type dir -name /home/wash/play/paperpile/dist/data/linux64/Resources -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
 File ::C4810A16-0EC1-5B98-7847-F29495F83B87 -name css.html -parent 822C6955-AC24-6718-2881-8DF245E3C480
@@ -5090,6 +5091,8 @@ File ::0509CD1E-6923-FD08-0247-4D14EEC1C3D7 -name license.mas -parent 12459214-F
 File ::68F86480-C6E0-4AB2-C551-79263B68F50F -name patterns.mas -parent 12459214-F0C0-D684-F296-63757746BA94
 File ::6539197B-713E-0666-A5B3-6F9CA3545726 -name semantic.cache -parent 12459214-F0C0-D684-F296-63757746BA94
 File ::CF718575-0565-4A38-D338-89E3CF701970 -name settings.mas -parent 12459214-F0C0-D684-F296-63757746BA94
+File ::812A1614-63EB-5A2D-9121-64CC82AC4719 -name flash_container.mas -parent 12459214-F0C0-D684-F296-63757746BA94
+File ::8AE947D4-B69D-F259-B1F5-1C2535CD3C44 -name /home/wash/play/paperpile/dist/data/linux64/icon.svg -parent 77870372-6CA0-21C9-CFA6-BBA3BA73B792
 Component ::25F4F5FB-5370-D6F2-9B02-4DBC121D55B9 -setup Install -active Yes -platforms {AIX-ppc FreeBSD-4-x86 FreeBSD-5-x86 FreeBSD-6-x86 FreeBSD-7-x86 FreeBSD-x86 HPUX-hppa Linux-x86 Linux-x86_64 Solaris-sparc Solaris-x86 Windows} -name {Default Component} -parent Components
 SetupType ::7891163A-B1FC-7536-B4C9-F531F986FBF0 -setup Install -active Yes -platforms {AIX-ppc FreeBSD-4-x86 FreeBSD-5-x86 FreeBSD-6-x86 FreeBSD-7-x86 FreeBSD-x86 HPUX-hppa Linux-x86_64 Solaris-sparc Solaris-x86 Windows} -name Default -parent SetupTypes
 
@@ -5159,8 +5162,6 @@ InstallComponent F68E78FE-DC68-2AE2-9645-260D1B55FADA -setup Install -type actio
 Condition 9D887166-5D0D-8505-B854-48B93F25C393 -active Yes -parent F68E78FE-DC68-2AE2-9645-260D1B55FADA -title {String Is Condition} -component StringIsCondition -TreeObject::id 9D887166-5D0D-8505-B854-48B93F25C393
 InstallComponent 5DD4A70C-7F0D-79DF-7345-9CFF17879C89 -setup Install -type action -conditions 47B976BF-D467-B431-F7C0-EA4C1349945B -title {Program Shortcut} -component InstallProgramFolderShortcut -command insert -active Yes -parent 06206ADC-D063-971A-019A-CB0EFAE99741
 Condition 47B976BF-D467-B431-F7C0-EA4C1349945B -active Yes -parent 5DD4A70C-7F0D-79DF-7345-9CFF17879C89 -title {String Is Condition} -component StringIsCondition -TreeObject::id 47B976BF-D467-B431-F7C0-EA4C1349945B
-InstallComponent 27E32D10-7CAD-8F0B-52C6-8179C7E09733 -setup Install -type action -conditions 31D57C14-250B-C6CF-0675-DF274DC12783 -title {Uninstall Shortcut} -component InstallProgramFolderShortcut -command insert -active Yes -parent 06206ADC-D063-971A-019A-CB0EFAE99741
-Condition 31D57C14-250B-C6CF-0675-DF274DC12783 -active Yes -parent 27E32D10-7CAD-8F0B-52C6-8179C7E09733 -title {String Is Condition} -component StringIsCondition -TreeObject::id 31D57C14-250B-C6CF-0675-DF274DC12783
 InstallComponent 9947439D-3AD3-9B30-4823-6AF350824932 -setup Install -type actiongroup -title {Finish Actions} -alias {Finish Actions} -active Yes -parent ActionGroupsInstall
 InstallComponent 29F32A31-4FC0-238D-06C8-6513B3D0E7C6 -setup Install -type action -conditions {EB7F339F-161C-4015-14F6-67C6AD9F3A5D CE8DF167-D245-23DA-F06C-01545FA99C2C} -title {Install Desktop Shortcut} -component InstallDesktopShortcut -command insert -active Yes -parent 9947439D-3AD3-9B30-4823-6AF350824932
 Condition EB7F339F-161C-4015-14F6-67C6AD9F3A5D -active Yes -parent 29F32A31-4FC0-238D-06C8-6513B3D0E7C6 -title {String Is Condition} -component StringIsCondition -TreeObject::id EB7F339F-161C-4015-14F6-67C6AD9F3A5D
@@ -5224,6 +5225,9 @@ CreateQuickLaunchShortcut
 
 06206ADC-D063-971A-019A-CB0EFAE99741,Alias
 {Install Actions}
+
+06206ADC-D063-971A-019A-CB0EFAE99741,Conditions
+{0 conditions}
 
 0AE08036-E7CA-5089-B290-0CEAF7AF79B9,Background
 white
@@ -5294,18 +5298,6 @@ Windows
 25F4F5FB-5370-D6F2-9B02-4DBC121D55B9,RequiredComponent
 Yes
 
-27E32D10-7CAD-8F0B-52C6-8179C7E09733,FileName
-<%ShortAppName%>-uninstall
-
-27E32D10-7CAD-8F0B-52C6-8179C7E09733,ShortcutName
-{Uninstall <%AppName%>}
-
-27E32D10-7CAD-8F0B-52C6-8179C7E09733,TargetFileName
-<%Uninstaller%>
-
-27E32D10-7CAD-8F0B-52C6-8179C7E09733,WorkingDirectory
-<%InstallDir%>
-
 29F32A31-4FC0-238D-06C8-6513B3D0E7C6,ShortcutName
 <%AppName%>
 
@@ -5359,15 +5351,6 @@ LaunchApplication
 
 2FF145CE-F8D1-1FB2-1338-6402C8AA78E6,Y
 160
-
-31D57C14-250B-C6CF-0675-DF274DC12783,CheckCondition
-{Before Action is Executed}
-
-31D57C14-250B-C6CF-0675-DF274DC12783,Operator
-false
-
-31D57C14-250B-C6CF-0675-DF274DC12783,String
-<%UpgradeInstall%>
 
 3559B718-5154-2F40-A6A6-3E8048DFE326,CheckCondition
 {Before Action is Executed}
@@ -5506,6 +5489,18 @@ false
 
 5C0124CB-BE3A-878F-F0F3-F436EA3C847F,Filename
 <%ProgramReadme%>
+
+5DD4A70C-7F0D-79DF-7345-9CFF17879C89,AdditionalArguments
+{Categories=Office;}
+
+5DD4A70C-7F0D-79DF-7345-9CFF17879C89,Conditions
+{1 condition}
+
+5DD4A70C-7F0D-79DF-7345-9CFF17879C89,IconPath
+<%InstallDir%>/icon.svg
+
+5DD4A70C-7F0D-79DF-7345-9CFF17879C89,ProgramFolderName
+{}
 
 5DD4A70C-7F0D-79DF-7345-9CFF17879C89,ShortcutName
 <%AppName%>
@@ -5646,7 +5641,7 @@ false
 <%InstallDir%>
 
 77870372-6CA0-21C9-CFA6-BBA3BA73B792,FileSize
-159317554
+159332199
 
 77870372-6CA0-21C9-CFA6-BBA3BA73B792,FollowDirLinks
 No
