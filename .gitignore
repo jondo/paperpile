@@ -2,6 +2,7 @@
 semantic.cache
 tmp/
 dist/data
+dist/output
 user/
 pid
 catalyst/root/tinotification.html
