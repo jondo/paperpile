@@ -8,11 +8,23 @@ use File::Spec::Functions qw(catfile);
 use File::Copy::Recursive qw(fcopy dircopy);
 use 5.010;
 
-my $platform = 'linux64';
+if ($#ARGV != 0){
+  print 'Usage: build.pl [linux32|linux64]',"\n";
+  exit(1);
+}
+
+if ($ARGV[0] ne 'linux32' and $ARGV[0] ne 'linux64'){
+  print 'Usage: build.pl [linux32|linux64]',"\n";
+  exit(1);
+}
+
+my $platform = $ARGV[0];
 my $cat_dir  = '../catalyst';
 my $ti_dir   = "../titanium/$platform";
 
 my $target_dir = '../dist/data';
+
+`rm -rf $target_dir/$platform`;
 
 my @ignore = (
   qr([~#]),                qr{/tmp/},
@@ -26,6 +38,11 @@ my @ignore = (
 if ( $platform eq 'linux64' ) {
   push @ignore, qr{/(perl5|bin)/(linux32|osx|win32)};
 }
+
+if ( $platform eq 'linux32' ) {
+  push @ignore, qr{/(perl5|bin)/(linux64|osx|win32)};
+}
+
 
 mkpath( catfile("$target_dir/$platform/catalyst") );
 

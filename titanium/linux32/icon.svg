@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   version="1.0"
+   width="143.63"
+   height="143.58"
+   id="svg2421">
+  <defs
+     id="defs2423">
+    <linearGradient
+       id="linearGradient3373">
+      <stop
+         id="stop3375"
+         style="stop-color:#ececec;stop-opacity:1"
+         offset="0" />
+      <stop
+         id="stop3377"
+         style="stop-color:#ececec;stop-opacity:0"
+         offset="1" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3254">
+      <stop
+         id="stop3256"
+         style="stop-color:#ffffff;stop-opacity:1"
+         offset="0" />
+      <stop
+         id="stop3258"
+         style="stop-color:#ffffff;stop-opacity:0"
+         offset="1" />
+    </linearGradient>
+    <linearGradient
+       x1="-11.863178"
+       y1="38.524139"
+       x2="121.12347"
+       y2="68.36956"
+       id="linearGradient3260"
+       xlink:href="#linearGradient3254"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.7708333,0,0,0.8461538,97.949665,110.82365)" />
+    <linearGradient
+       x1="152.27277"
+       y1="257.75519"
+       x2="212.74879"
+       y2="344.46692"
+       id="linearGradient3379"
+       xlink:href="#linearGradient3373"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.5699698,0,0,1.403933,-120.18607,-112.08852)" />
+  </defs>
+  <g
+     transform="translate(-118.67883,-243.44317)"
+     id="layer1">
+    <rect
+       width="141.42857"
+       height="140.71428"
+       rx="0.62018996"
+       ry="0.010051703"
+       x="120.1074"
+       y="245.5946"
+       id="rect2459"
+       style="opacity:1;fill:#f2f2f2;fill-opacity:1;stroke:none;stroke-width:1.50300002;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <text
+       x="216.31717"
+       y="318.95706"
+       transform="matrix(0.959332,0.2149189,-0.2079885,0.9957964,0,0)"
+       id="text3212"
+       xml:space="preserve"
+       style="font-size:155.88011169px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:condensed;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Futura XBlkCn BT;-inkscape-font-specification:Futura XBlkCn BT Condensed"><tspan
+         x="216.31717"
+         y="318.95706"
+         id="tspan3214"
+         style="font-size:155.88011169px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:condensed;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;font-family:Futura XBlkCn BT;-inkscape-font-specification:Futura XBlkCn BT Condensed">P</tspan></text>
+    <rect
+       width="112.12693"
+       height="77.781746"
+       x="89.384422"
+       y="98.11956"
+       id="rect3252"
+       style="opacity:1;fill:url(#linearGradient3260);fill-opacity:1;stroke:none;stroke-width:1.50300002;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <path
+       d="M 118.87758,320.22601 C 118.87758,320.22601 277.03795,338.20351 269.13904,278.73741 L 264.58656,244.46457 L 119.81561,245.00393 L 118.87758,320.22601 z"
+       id="path3371"
+       style="fill:url(#linearGradient3379);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+  </g>
+</svg>
