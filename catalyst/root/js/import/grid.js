@@ -60,12 +60,14 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             tagStyle:function(tag_string) {
               var returnMe = '';//<div class="pp-tag-grid-block">';
               var tags = tag_string.split(/\s*,\s*/);
+              var totalChars = 0;
               for (var i=0; i < tags.length; i++) {
                 var tag = tags[i];
                 var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.find('tag',tag));
                 if (style != null) {
                   style = style.get('style');
-                  returnMe += '<div class="pp-tag-grid-inline pp-tag-style-'+style+'" ext:qtip="<b>'+tag+'</b>">'+tag.substring(0,1)+'</div>';
+                  totalChars += tag.length;
+                  returnMe += '<div class="pp-tag-grid-inline pp-tag-style-'+style+'">'+tag+'&nbsp;</div>&nbsp;';
                 }
               }
 //              returnMe += '</div>';
