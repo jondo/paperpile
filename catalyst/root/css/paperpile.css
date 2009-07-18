@@ -932,12 +932,12 @@ div:hover.pp-tag-style-sample {
     border-width:1px;
     font-size: 9px;
     line-height:11px;
-    margin:0 2px 2px 0;
-    padding: 0;
+/*    margin:0 2px 2px 0;*/
+/*    padding: 0 1px;*/
     text-align:center;
-    opacity:0.5;
+    opacity:0.7;
     display:inline-block;
-    width:1.1em;
+/*    width:1.1em;*/
     height:12px;
     white-space:normal;
 }
@@ -984,6 +984,10 @@ div:hover.pp-tag-style-sample {
 /* Overrides of ExtJS styles */
 
 /*Never show red markers in grid*/
+
+.x-grid3-cell-inner {
+    white-space:normal; /* Helsp make the tags flow correctly when displayed as inline-block */
+}
 
 .x-grid3-dirty-cell {
      background-image:none;
