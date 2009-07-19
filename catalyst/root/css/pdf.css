@@ -19,6 +19,12 @@
     background: #ffffff;
 }
 
+.pdf-page-loading {
+    background-image: url('/ext/resources/images/default/grid/loading.gif');
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+
 .pdf-selector {
     background-color:#6495ED;
     border-width: 2px;
