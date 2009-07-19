@@ -38,7 +38,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
                                    
   // In a continuous layout, we have pages from startPage to (startPage+maxPages).
   continuous:true,                 // Whether or not we're laying out continuously or in single-block mode.
-  startPage:10,
+  startPage:0,
   columnCount:2,                   // In both single and continuous layout, pages are grouped into page
                                    // blocks according to the columnCount value.
 
@@ -75,7 +75,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   keyMap:null,
   searchBar:null,
   slide:null,
-
+  focusEl:null,
+                                   
   initComponent: function() {
     log(this.getItemId());
     log(this.id);
@@ -141,11 +142,20 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 					     listeners: {
 					       keypress: function(f,e) {
 						 if (e.getKey() == e.ENTER) {
-						   this.scrollToPage(parseInt(f.getValue())-1);
-						 }
+                                                   var newPage = parseInt(f.getValue())-1;
+                                                   if (newPage != this.currentPage) {
+                                                     this.scrollTarget = newPage;
+                                                     this.pageScroll(0);
+                                                   }
+                                                 }
 					       },
 					       blur: function(f,e) {
-						 this.scrollToPage(parseInt(f.getValue())-1);
+                                                 log("Scroll to page!");
+                                                 var newPage = parseInt(f.getValue())-1;
+                                                 if (newPage != this.currentPage) {
+                                                   this.scrollTarget = newPage;
+                                                   this.pageScroll(0);
+                                                 }
 					       },
 					       scope:this
 					     }
@@ -171,6 +181,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 						   this.onSearch(f,e);
 						 },
 						 blur: function(f,e) {
+                                                   log(e);
+                                                   log(f);
 						   this.onSearch(f,e);
 						 },
 						 scope:this
@@ -209,7 +221,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 				  scope:this
 			      }),
       'FOUR_UP':new Ext.Button({
-				 id:'four_up',
+				 id:this.prefix()+'four_up',
 				  handler:this.layoutFourUp,
 				  icon:"/images/icons/4-up.png",
 				  cls:'x-btn-icon',
@@ -352,6 +364,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     });
 
     this.searchBar = new Ext.ux.Menubar({
+      renderTo:this.body,
       id:this.prefix()+'search_bar',
       shadow:false,
       orientation:'horizontal',
@@ -363,7 +376,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         this.tbItems['SR_PREV'],
         this.tbItems['SR_NEXT'],
         this.tbItems['SR_TEXT']
-      ]
+      ],
     });
 
     var bbar=[
@@ -382,7 +395,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     var pagesId = this.prefix()+"pages";
     var contentId = this.prefix()+"content";
-    
+
     Ext.apply(this,
       {autoScroll : true,
        enableKeyEvents: true,
@@ -393,13 +406,22 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     Paperpile.PDFviewer.superclass.initComponent.apply(this,arguments);
 
-    if (this.file != "") {
-      this.initPDF(this.file);
-    }
   },
 
 
   afterRender: function() {
+    if (this.file != "") {
+      this.initPDF(this.file);
+    }
+
+    this.focusEl = this.el.createChild({
+      tag:'a',cls:'x-menu-focus',href:'#',onclick:'return false;',tabIndex:'-1'
+    });
+
+    this.on('activate',this.onActivate,this);
+    this.on('deactivate',this.onDeactivate,this);
+    this.on('beforedestroy',this.destroy,this);
+    
     this.body.on('scroll',this.onScroll,this);
     this.body.on('mousedown', this.onMouseDown, this);
     this.body.on('mousemove', this.onMouseMove, this);
@@ -431,9 +453,19 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   getOnePixel:function() {
     return Paperpile.Url("/images/1px-tsp.png");
   },
+
+  focus:function() {
+    log("Focus!");
+    this.focusEl.focus.defer(50,this.focusEl);
+  },
                                    
   onResize: function(){
     Paperpile.PDFviewer.superclass.onResize.apply(this, arguments);
+
+    if (this.pageSizes.length == 0) {
+      // We're probably getting a resize event before the pdf is loaded.
+      return;
+    }
 
     //var s = Ext.fly(this.tbItems['SPACER'].getEl());
     //s.setStyle("width","0px");
@@ -537,7 +569,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   prefix: function() {
-    return "a";
+    return this.id;
   },
 
   layoutPages: function() {
@@ -553,7 +585,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     var w = this.getPageWidth(pageIndex);
     var margin = Math.floor(w * this.betweenPagePaddingFraction/2);
 
-    //var src = this.getThumbnailUrl(pageIndex);
     var src = this.getOnePixel();
     if (this.isThumbnailLoaded(pageIndex)) {
       src = this.getThumbnailUrl(pageIndex);
@@ -616,11 +647,10 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       children.push(this.pageTemplate(pageIndex));
     }
 
-    var pdfContainer = Ext.get(this.prefix()+"pages");
-    log(pdfContainer);
+    var pdfContainer = this.fly("pages");
     var block = Ext.DomHelper.append(pdfContainer,
       {
-      id:this.prefix()+"pageblock."+i,
+      id:this.prefix()+"pageblock.0",
       tag:"div",
       cls:"pdfblock",
       children:children
@@ -639,7 +669,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       if (pageIndex > numPages-1) {
         break;
       }
-      var imgEl = this.getImage(pageIndex);
+      //var imgEl = this.getImage(pageIndex);
       //imgEl.set({src:this.getThumbnailUrl(pageIndex)});
     }
     
@@ -653,7 +683,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     }
     
     this.addBackgroundTask("Visible Pages",this.loadVisiblePages,[],this,10,'urgent');
-    this.addBackgroundTask("Update Search Bar",this.updateSearchResultsView,[],this,10,'background');
+    this.addBackgroundTask("Update Search Bar",this.updateSearchResultsView,[],this,10);
   },
 
   positionBlock:function(block) {
@@ -904,7 +934,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     if (bgTask != null) {
       this.boredomDT.cancel();
       try {
-        log(bgTask);
+        //log(bgTask);
 //        bgTask.fn.createDelegate(bgTask.scope,bgTask.params);
 	bgTask.fn.defer(0,bgTask.scope,bgTask.params);
       } catch (err) {
@@ -918,7 +948,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       this.backgroundWorker.defer(bgTask.delay+10,this);
     } else {
       this.boredomDT.delay(this.boredomDelay,this.whatToDoWhenBored,this);
-      log("  -> No work left to do! Stopping worker...");
+      //log("  -> No work left to do! Stopping worker...");
     }
   },
 
@@ -1114,7 +1144,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   clearSearch: function() {
-    this.get("search_field").removeClass("pdf-search-busy");
+    this.fly("search_field").removeClass("pdf-search-busy");
     var allResults = Ext.select("#"+this.id+" .pdf-search-result");
     allResults.remove();
     
@@ -1149,27 +1179,25 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       this.tbItems['SEARCH_FIELD'].trigger.show();
     }
     this.lastSearchText = searchText;
-
-//    log("Searching for: "+searchText);
-    this.get("search_field").addClass("pdf-search-busy");
+    this.fly("search_field").addClass("pdf-search-busy");
     
     Ext.Ajax.request({
-        url: Paperpile.Url('/ajax/pdf/extpdf'),
+      url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'SEARCH',
         inFile: this.file,
 	term: searchText
       },
       success: function(response){
-        this.get("search_field").removeClass("pdf-search-busy");
+        this.fly("search_field").removeClass("pdf-search-busy");
         var doc = response.responseXML;
 
-        var allResults = Ext.select(".pdf-search-result");
+        var allResults = Ext.select("#"+this.id+" .pdf-search-result");
         allResults.remove();
        
 	this.searchResults=[];
         this.numSearchResults=0;
-        this.currentSearchResult=0;
+        this.currentSearchResult=-1;
 	var hits=Ext.DomQuery.select("hit", doc);
 	var hitDivs=[];
         for (var i=0;i<hits.length;i++){
@@ -1194,13 +1222,13 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 	}
 
 	for (var i=this.startPage; i < this.startPage+this.maxPages; i++) {
-          if (this.getPage(i) != null) 
+          if (this.getPage(i) != null)
             this.addBackgroundTask("Search Loading",this.loadSearchResultsIntoPage,[i]);
 	}
         this.addBackgroundTask("Search View Refresh",this.updateSearchResultsView);
       },
       failure: function(response){
-        this.get("search_field").removeClass("pdf-search-busy");        
+        this.fly("search_field").removeClass("pdf-search-busy");        
       },
       scope: this
       });
@@ -1219,29 +1247,15 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       this.searchBar.forceHide();
       return;
     }
-    
-    var curResultEl = Ext.fly("pdf-search-result."+this.currentSearchResultPage+"."+this.currentSearchResultPageIndex);
-    if (curResultEl != null && this.isElInView(curResultEl) > 0 ) {
-      curResultEl.addClass("pdf-cur-search-result");
-    } else {
-      log("No current Result in view!");
-      // Current search result isn't in view... try to find any search result in view, and update accordingly.
-      var curPage = this.currentPage;
-      var srs = this.searchResults[curPage];
-      if (srs != null) {
-        
-        var i,el;
-        for (i=0; i < srs.length; i++) {
-          el = Ext.fly("pdf-search-result."+curPage+"."+i);
-          var amt = this.isElInView(el);
-          if (amt > 0.5) {
-            this.currentSearchResult = srs[i].index;
-            this.currentSearchResultPageIndex = i;
-            this.currentSearchResultPage = curPage;
-            el.addClass("pdf-cur-search-result");
-            break;
-          }
-        }
+
+    if (this.currentSearchResult > -1) {      
+      var curResultEl = this.fly("pdf-search-result."+this.currentSearchResultPage+"."+this.currentSearchResultPageIndex);
+      if (curResultEl != null && this.isElInView(curResultEl) > 0 ) {
+        curResultEl.addClass("pdf-cur-search-result");
+      } else {
+        log("No current Result in view!");
+        // Current search result isn't in view... try to find any search result in view, and update accordingly.
+        this.setCurrentSearchResultToFirstVisible();
       }
     }
     
@@ -1249,12 +1263,13 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     var xy = this.searchBar.el.getAlignToXY(sEl,'bl-tl');
     this.searchBar.showAt(xy);
     if (this.numSearchResults == 0 && this.lastSearchText != '') {
-      log("Zero hits!");
       textEl.innerHTML = "No results.";
       this.tbItems['SR_TEXT'].render();
-    } else if (this.numSearchResults > 0) {
+    } else if (this.numSearchResults > 0 && this.currentSearchResult > -1) {
       textEl.innerHTML = (this.currentSearchResult+1) + " of "+this.numSearchResults+" results";
       this.tbItems['SR_TEXT'].render();
+    } else if (this.numSearchResults > 0 && this.currentSearchResult == -1) {
+      textEl.innerHTML = this.numSearchResults+" results";
     } else {
       this.searchBar.forceHide();
       return;      
@@ -1266,9 +1281,40 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     if (this.currentSearchResult < this.numSearchResults-1) {
       this.tbItems['SR_NEXT'].enable();
     }
+    this.focus();
   },
-            
+
+  setCurrentSearchResultToFirstVisible: function() {
+    var pages = this.getVisiblePages();
+    for (var i=0; i < pages.length; i++) {
+      var curPage = pages[i];
+      var srs = this.searchResults[curPage];
+      if (srs != null) {
+        var j,el;
+        for (j=0; j < srs.length; j++) {
+          el = this.fly("pdf-search-result."+curPage+"."+j);
+          var amt = this.isElInView(el);
+          if (amt > 0.5) {
+            this.currentSearchResult = srs[j].index;
+            this.currentSearchResultPageIndex = j;
+            this.currentSearchResultPage = curPage;
+            el.addClass("pdf-cur-search-result");
+            break;
+          }
+        }
+      }
+    }
+  },
+                                   
   searchNext: function() {
+    if (this.currentSearchResult == -1) {
+      // This is a little hacky. If we just ran a search. we want to make it so that
+      // the currentSearchResult becomes the first result on the currently viewed page.
+      this.setCurrentSearchResultToFirstVisible();
+      this.updateSearchResultsView();
+      this.searchMoveUpdate();
+      return;
+    }
     if (this.currentSearchResult < this.numSearchResults-1)
       this.currentSearchResult++;
     this.searchMoveUpdate();
@@ -1281,6 +1327,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   searchMoveUpdate: function() {
+    this.focus();
     if (this.numSearchResults == 0) {
       this.updateSearchResultsView();
       return;
@@ -1342,7 +1389,10 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     if (results==null){
       return;
     }
-
+    var searchHolder = Ext.fly(this.prefix()+"search."+pageIndex);
+    if (searchHolder == null)
+      return;
+    
     var hitDivs=[];
     for (var i=0; i < results.length; i++) {
       bx = results[i];
@@ -1359,14 +1409,13 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       };
 
       hitDivs.push({
-	id:"pdf-search-result."+pg+"."+i,
+	id:this.prefix()+"pdf-search-result."+pg+"."+i,
 	tag:"div",
 	cls:'pdf-search-result',
 	style:style
       });
     }
 
-    var searchHolder = Ext.get(this.prefix()+"search."+pageIndex);
     if (searchHolder != null) {
       var block = Ext.DomHelper.overwrite(searchHolder,
 	hitDivs,
@@ -1477,6 +1526,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   isElInView: function(el) {
+    if (el == null)
+      return false;
     var bot = el.getBottom()-1;
     var top = el.getTop()+1;
     if (bot > this.body.getTop() && top < this.body.getBottom()) {
@@ -1659,7 +1710,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     last.x2 = maxXValue;
 
 
-    Ext.select(".pdf-selection").remove();
+    Ext.select("#"+this.id+" .pdf-selection").remove();
     var selBoxes = [];
     for (i=0; i<selectedLines.length; i++){
       var line=selectedLines[i];
@@ -1710,7 +1761,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   clearSelection: function(i){
-    Ext.select(".pdf-selection").remove();
+    Ext.select("#"+this.id+" .pdf-selection").remove();
   },
 
   viewSingle: function() {
@@ -1947,6 +1998,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 //    log(this.prefix()+"mouse down!");
 //    this.body.focus();
 
+    this.focus();
+    
     this.isMouseDown = true;
     this.mouseDownWindowX = e.getPageX();
     this.mouseDownWindowY = e.getPageY();
@@ -2154,29 +2207,30 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   loadKeyEvents: function() {
-    this.keys = new Ext.KeyMap(Ext.get(this.id),[
+    this.keys = new Ext.KeyMap(this.focusEl,[
       {
 	key: [Ext.EventObject.LEFT,Ext.EventObject.RIGHT,Ext.EventObject.UP,Ext.EventObject.DOWN,
 	      Ext.EventObject.PAGE_UP,Ext.EventObject.PAGE_DOWN],
 	fn: this.keyNav,
 	scope:this
       },
+      {key: [191],fn:this.keySearch,scope:this}, // '/' to focus search box.
+      {key:[Ext.EventObject.F3],fn:this.keySearch,scope:this},
+      {key:[Ext.EventObject.F],fn:this.keySearch,scope:this},
+      {key: [Ext.EventObject.G],fn:this.keySearch,scope:this},
       {
-	key: [191],
-	fn:this.keySearch,
-	scope:this
-      },
-      {
-	key: [107,109],
+	key: [107,109], // ctrl_+, ctrl_-
 	fn:this.keyZoom,
 	ctrl:true,
 	scope:this
-      }
+      },
+                                 {
+                                   
+                                 }
     ]);
   },
 
   keyNav: function(k,e) {
-    log(e);
     switch (e.getKey()) {
       case Ext.EventObject.LEFT:
 	if (this.currentZoom <= 1) {
@@ -2208,13 +2262,24 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 	  this.body.scroll("down",this.getPageHeight()+pad+4);
       }
       break;
-
+      default:
+      
+        break;
     }
   },
 
   keySearch: function(k,e) {
-    e.preventDefault();
-    log("Search!"+e);
+    e.stopEvent();
+    var key = e.getKey();
+    if (key == Ext.EventObject.F || key == 191) {
+      this.tbItems['SEARCH_FIELD'].focus();
+    } else if (key == Ext.EventObject.F3 || key == Ext.EventObject.G) {
+      if (e.shiftKey) {
+        this.searchPrev();
+      } else {
+        this.searchNext();
+      }
+    }
   },
 
   keyZoom: function(k,e) {
@@ -2378,8 +2443,42 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       scope:this
     });
     win.show();
-  }
+  },
 
+  onActivate: function() {
+    this.updateSearchResultsView();
+  },
+  
+  onDeactivate: function() {
+    // Hide the pesky search bar if necessary.
+    if (this.searchBar.isVisible)
+      this.searchBar.forceHide();
+    
+    if (this.boredomDT != null)
+      this.boredomDT.cancel();
+    if (this.bgDT != null)
+      this.bgDT.cancel();
+    if (this.delayedTask != null)
+      this.delayedTask.cancel();
+    if (this.delayS != null)
+      this.delayS.cancel();
+    if (this.slideDelay != null)
+      this.slideDelay.cancel();
+  },
+  
+  destroy:function() {
+    log("Destroy!");
+    
+    Ext.get(this.id).remove();
+
+    this.searchResults = null;
+    this.pageSizes = null;
+    this.words = null;
+    this.lines = null;
+    this.images = null;
+    this.selection = null;
+  }
+                                   
 });
 Ext.reg('pdfviewer', Paperpile.PDFviewer);
 
