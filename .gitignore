@@ -5,6 +5,7 @@ dist/data
 dist/output
 user/
 pid
+c/yum-poppler
 catalyst/root/tinotification.html
 \#*
 .\#*

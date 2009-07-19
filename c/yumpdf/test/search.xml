@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
-<command name="SEARCH">
+<extpdf>
+  <command>SEARCH</command>
   <inFile>../test/test.pdf</inFile>
-  <term>Protein</term>
-</command>
+  <term>the</term>
+</extpdf>
 

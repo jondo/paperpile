@@ -62,6 +62,8 @@ sub extpdf : Local {
 
   my $xml = XMLout( $c->request->params, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
 
+  print STDERR $xml;
+
   my ( $fh, $filename ) = File::Temp::tempfile();
   print $fh $xml;
   close($fh);

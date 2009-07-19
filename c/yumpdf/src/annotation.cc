@@ -13,13 +13,15 @@ using namespace PoDoFo;
 
 mxml_node_t* get_annotations(mxml_node_t *xml){
 
-  int i,j, type;
+  int i,j, k, l, type;
   mxml_node_t *xmlout, *output_tag, *status_tag, 
-    *some_tag, *page_tag, *ann_tag, *rect_tag;
-  char* string;
+    *some_tag, *page_tag, *ann_tag, *misc_tag;
+  char string[1000];
   PdfPage* page;
   PdfRect rect;
   PdfAnnotation* annotation;
+  PdfArray quadPoints;
+  PdfArray colors;
 
   PdfMemDocument document( xmlGet(xml,"inFile") );
 
@@ -30,48 +32,101 @@ mxml_node_t* get_annotations(mxml_node_t *xml){
 
   for (i=0;i < document.GetPageCount(); i++){
     page = document.GetPage( i );
-    printf("Page: %i\n",i);
-    page_tag = mxmlNewElement(output_tag, "page");
 
     for (j=0;j<page->GetNumAnnots();j++){
       annotation=page->GetAnnotation(j);
       type=annotation->GetType();
-      
+
       // Currently only two types are supported
       if (type == ePdfAnnotation_Text || type == ePdfAnnotation_Highlight){
 
-        if (type == ePdfAnnotation_Text){
-          ann_tag = mxmlNewElement(page_tag, "annotation");
+        ann_tag = mxmlNewElement(output_tag, "annotation");
 
+        sprintf(string,"%i", i);
+        xmlSetString(ann_tag,"page",string);
+        sprintf(string,"%i", j);
+        xmlSetString(ann_tag,"index",string);
+
+        colors=annotation->GetColor();
+
+        // We currently only consider colors given in RGB which can be
+        // recognized by a color array of size 3
+        if (colors.GetSize() == 3) {
+          PdfArray::iterator pos = colors.begin();
+
+          PdfVariant R (*pos);
+          pos++;
+
+          PdfVariant G (*pos);
+          pos++;
+
+          PdfVariant B (*pos);
+          misc_tag = mxmlNewElement(ann_tag, "color");
+          sprintf(string,"%.2f %.2f %.2f", R.GetReal(),G.GetReal(),B.GetReal());
+          mxmlNewOpaque(misc_tag, string);
+        }
+      
+        if (type == ePdfAnnotation_Text){
+        
           xmlSetString(ann_tag,"type","STICKY");
           xmlSetString(ann_tag,"title",annotation->GetTitle().GetString());
           xmlSetString(ann_tag,"text",annotation->GetContents().GetString());
 
-          rect_tag = mxmlNewElement(ann_tag, "rect");
           rect=annotation->GetRect();
           
-          xmlSetFloat(rect_tag,"x1",rect.GetLeft());
-          xmlSetFloat(rect_tag,"y1",rect.GetBottom()-rect.GetHeight());
-          xmlSetFloat(rect_tag,"x2",rect.GetLeft()+rect.GetWidth());
-          xmlSetFloat(rect_tag,"y2",rect.GetBottom());
+          misc_tag = mxmlNewElement(ann_tag, "rect");
+          sprintf (string,"%.2f %.2f %.2f %.2f", 
+                   rect.GetLeft(), 
+                   rect.GetBottom()-rect.GetHeight(),
+                   rect.GetLeft()+rect.GetWidth(),
+                   rect.GetBottom());
+          
+          mxmlNewOpaque(misc_tag, string);
 
         }
 
         if (type == ePdfAnnotation_Highlight){
-            
-           
-        }
+          quadPoints=annotation->GetQuadPoints();
 
-        printf("Type: %i\n",type);
+          xmlSetString(ann_tag,"type","HIGHLIGHT");
           
+          for ( PdfArray::iterator pos = quadPoints.begin(); pos != quadPoints.end() ; ++pos ){
+            PdfVariant x4(*pos);
+            pos++;
+            PdfVariant y4(*pos);
+            pos++;
+            PdfVariant x3(*pos);
+            pos++;
+            PdfVariant y3(*pos);
+            pos++;
+            PdfVariant x1(*pos);
+            pos++;
+            PdfVariant y1(*pos);
+            pos++;
+            PdfVariant x2(*pos);
+            pos++;
+            PdfVariant y2(*pos);
+
+            misc_tag = mxmlNewElement(ann_tag, "quads");
+            sprintf (string,"%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f", 
+                     x1.GetReal(), 
+                     y1.GetReal(), 
+                     x2.GetReal(), 
+                     y2.GetReal(),
+                     x3.GetReal(), 
+                     y3.GetReal(), 
+                     x4.GetReal(), 
+                     y4.GetReal());
+            mxmlNewOpaque(misc_tag, string);
+            
+          }
+        }
       }
     }
   }
  
   return xmlout;
 }
-
-
 
 
 mxml_node_t* add_annotation(mxml_node_t *xml){

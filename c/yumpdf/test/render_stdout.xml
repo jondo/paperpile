@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <extpdf>
   <command>RENDER</command>
-  <page>1</page>
+  <page>0</page>
   <scale>1.0</scale>
   <inFile>../test/test.pdf</inFile>
   <outFile>STDOUT</outFile>

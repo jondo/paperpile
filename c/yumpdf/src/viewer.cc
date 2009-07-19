@@ -153,69 +153,88 @@ mxml_node_t* render(mxml_node_t *xml){
 
 mxml_node_t* search(mxml_node_t *xml){
 
-  /*
-  
-  GList *list, *l;
-  GError *error;
-  PopplerDocument *document;
-  PopplerPage *page;
-  int N,i;
-  char *in_file, *uri;
+  PDFDoc *doc;
+  Page *page;
+  Catalog *catalog;
+  GooString *filename_g;
+  TextOutputDev *output_dev;
+  Gfx *gfx;
+  int N,i,len;
+  int firstHit;
+  double width, height, xMin, xMax, yMin, yMax;
+  Unicode *u;
+  char *in_file;
   char *term;
   char string[1000];
   mxml_node_t *node;
   mxml_node_t *xmlout, *output_tag, *status_tag, *hit_tag;
 
-  node = mxmlFindElement(xml, xml, "inFile", NULL, NULL, MXML_DESCEND);
-  in_file=node->child->value.opaque;
-
-  node = mxmlFindElement(xml, xml, "term", NULL, NULL, MXML_DESCEND);
-  term=node->child->value.opaque;
-
-  uri=get_uri(in_file);
-
-  document = poppler_document_new_from_file (uri, NULL, &error);
-
-  if (document == NULL){
-    fail("Could not open file");
+  if (!globalParams) {
+    globalParams = new GlobalParams();
   }
+
+
+  filename_g = new GooString (xmlGet(xml,"inFile"));
+  term = xmlGet(xml,"term");
+
+  len = strlen(term);
+  u = (Unicode *)gmallocn(len, sizeof(Unicode));
+  for (i = 0; i < len; ++i) {
+    u[i] = (Unicode)(term[i] & 0xff);
+  }
+
+  doc = new PDFDoc(filename_g, NULL, NULL);
+  catalog = doc->getCatalog();
 
   xmlout = mxmlNewXML("1.0");
   output_tag = mxmlNewElement(xmlout, "output");
   status_tag = mxmlNewElement(output_tag, "status");
   mxmlNewOpaque(status_tag, "OK");
+  
+  for (i=0;i<doc->getNumPages();i++){
 
-  N=poppler_document_get_n_pages(document);
+    output_dev = new TextOutputDev (NULL, gTrue, gFalse, gFalse);  
+
+    if (output_dev->isOk()) {
+    } else {
+      printf("ERROR\n");
+      exit(1);
+    }
+
+    page = catalog->getPage (i+1);
+
+    page->display (output_dev, 72, 72, 0, gFalse,
+                   gTrue, gFalse, catalog);
+  
+    height=page->getCropHeight();
+
+    // The first time we start searching from the beginning, then we
+    // start from the last hit.
+    firstHit=1;
     
-  for (i=0; i < N; ++i){
-    page = poppler_document_get_page(document, i);
-    list = poppler_page_find_text (page, term);
-    
-    for (l = list; l != NULL; l = l->next){
-      PopplerRectangle *rect = (PopplerRectangle *)l->data;
+    while (output_dev->findText (u, len,
+                                 firstHit, gTrue, // startAtTop, stopAtBottom
+                                 gTrue, gFalse, // startAtLast, stopAtLast
+                                 gFalse, gFalse, // caseSensitive, backwards
+                                 &xMin, &yMin, &xMax, &yMax)){
+      firstHit=0;
+
       hit_tag = mxmlNewElement(output_tag, "hit");
       sprintf(string,"%i",i);
       mxmlElementSetAttr (hit_tag, "page",string);
-      sprintf (string,"%i %.2f %.2f %.2f %.2f", i, rect->x1, rect->y1, rect->x2, rect->y2);
+      sprintf (string,"%i %.2f %.2f %.2f %.2f", i, xMin, height-yMax, xMax, height-yMin);
       mxmlNewOpaque(hit_tag, string);
     }
+    delete output_dev;
   }
-
+  
   return(xmlout);
-
-  */
-
-  return NULL;
-
-
 }
-
 
 
 
 mxml_node_t* wordList(mxml_node_t *xml){
 
-  // GError *error;
   int i;
   char *in_file;
   char string[1000];
