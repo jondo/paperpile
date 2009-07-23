@@ -180,7 +180,16 @@ sub rename_files : Private {
   $model->dbh->begin_work;
 
   my $old_root = $model->get_setting('paper_root');
+
+  # If paper_root is not created or does not exist for some other
+  # reason, we can stop because there are no files for us to update
+  if (!-e $old_root){
+    $model->dbh->commit;
+    return;
+  }
+
   my $tmp_root = File::Temp::tempdir( 'paperpile-XXXXXXX', DIR => '/tmp', CLEANUP => 0 );
+
 
   eval {
 
@@ -259,7 +268,7 @@ sub rename_files : Private {
 
   if ( not move( $old_root, "$old_root\_backup" ) ) {
     $model->dbh->rollback;
-    FileError->throw("Could not apply changes (Error creating backup copy $old_root\_backup)");
+    FileError->throw("Could not apply changes (Error creating backup copy $old_root\_backup -- $!)");
   }
 
   if ( not move( $tmp_root, $old_root ) ) {
