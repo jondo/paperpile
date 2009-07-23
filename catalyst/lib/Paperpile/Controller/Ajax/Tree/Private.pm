@@ -138,7 +138,7 @@ sub get_default_tree : Private {
         text         => 'Google Books',
         plugin_query => '',
         iconCls      => 'pp-icon-google',
-        hidden       => 0,
+        hidden       => 1,
       }
     )
   );
@@ -174,7 +174,7 @@ sub get_default_tree : Private {
         text         => 'CiteSeerX',
         plugin_query => '',
         iconCls      => 'pp-icon-citeseerx',
-        hidden       => 0,
+        hidden       => 1,
       }
     )
   );
@@ -186,7 +186,7 @@ sub get_default_tree : Private {
         text         => 'JSTOR',
         plugin_query => '',
         iconCls      => 'pp-icon-jstor',
-        hidden       => 0,
+        hidden       => 1,
       }
     )
   );
