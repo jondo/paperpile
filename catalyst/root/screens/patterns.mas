@@ -22,7 +22,7 @@
 
 <tr>
 <td>
-  <div class="pp-box pp-box-style1 pp-box-bottom pp-box-settings" style="height:300;">
+  <div class="pp-box pp-box-style1 pp-box-bottom pp-box-settings" style="height:350;">
     <h3>Citation key pattern</h3>
 
     <div id="key_pattern">
@@ -47,8 +47,22 @@
 </td>
 
 <td>
-  <div class="pp-box pp-box-style2" style="height:300; width: 400px; ">
+  <div class="pp-box pp-box-style2" style="height:350; width: 400px; ">
     <h2>Patterns</h2>
+    <p>You can use the following keywords in your pattern:</p>
+    <ul>
+        <li> <b>[Firstauthor], [Lastauthor]</b> ... Name of first/last author  </li>
+        <li> <b>[Authors]</b> ... Names of all authors  </li>   
+        <li> <b>[YYYY], [YY]</b> ... Publication year with four or two digits</li>
+        <li> <b>[Title]</b> ... Title of paper </li>
+        <li> <b>[Journal]</b> ... Journal name</li> 
+    </ul>
+    <p> You get uppercase/lowercase variants by using
+      e.g. <b>[firstauthor],[Firstauthor]</b> or <b>[FIRSTAUTHOR] </b>
+      which gives <b>knuth, Knuth or KNUTH</b>.</p>
+    <p>You can abbreviate words by
+      adding a single digit. <b>[Firstauthor3]</b> only shows the first three
+      letters, e.g. <b>Knu</b>.</p>
     
   </div>
 </td>

@@ -53,24 +53,17 @@ sub pattern_example : Local {
 
   $paper_root=~s{/$}{}; # remove trailing /
 
-  my %book = (
-    pubtype   => 'INBOOK',
-    title     => 'Fundamental Algorithms',
-    booktitle => 'The Art of Computer Programming',
-    authors   => 'Knuth, D.E.',
-    volume    => '1',
-    pages     => '10-119',
-    publisher => 'Addison-Wesley',
-    city      => 'Reading',
-    address   => "Massachusetts",
-    year      => '2007',
-    month     => 'Jan',
-    isbn      => '0-201-03803-X',
-    notes     => 'These are my notes',
-    tags      => 'programming, algorithms',
+  my %sample = (
+    pubtype   => 'ARTICLE',
+    title     => 'A note on strategy elimination in bimatrix games',
+    authors   => 'Knuth, D.E. and Papadimitriou, C.H. and Tsitsiklis, J.H.',
+    journal =>  'Operations Research Letters',
+    volume    => '7',
+    pages     => '103--107',
+    year      => '1988',
   );
 
-  my $pub = Paperpile::Library::Publication->new( {%book} );
+  my $pub = Paperpile::Library::Publication->new( {%sample} );
 
   my $formatted_key        = $pub->format_pattern( $c->request->params->{key_pattern} );
   my $formatted_pdf        = $pub->format_pattern( $pdf_pattern, { key => $formatted_key } );

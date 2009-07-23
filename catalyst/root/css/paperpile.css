@@ -757,8 +757,9 @@ div:hover.pp-grid-sort-item {
 
 .pp-box-settings {
     max-width: 1000;
-    width: 450;
+    width: 420;
 }
+
 .pp-box-settings h3 {
     clear:left;
     color: #4183C4;
