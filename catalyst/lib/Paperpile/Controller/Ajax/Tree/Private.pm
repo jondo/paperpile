@@ -191,6 +191,18 @@ sub get_default_tree : Private {
     )
   );
 
+  $plugins->addChild(
+    Tree::Simple->new( {
+        type         => 'IMPORT_PLUGIN',
+        plugin_name  => 'ACM',
+        text         => 'ACM',
+        plugin_query => '',
+        iconCls      => 'pp-icon-acm',
+        hidden       => 1,
+      }
+    )
+  );
+
   ##### / Settings
 
   my $import = Tree::Simple->new( {
