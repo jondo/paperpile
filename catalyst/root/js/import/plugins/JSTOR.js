@@ -22,7 +22,7 @@ Paperpile.PluginGridJSTOR = Ext.extend(Paperpile.PluginGridOnlineSearch, {
             );
         };
 
-        Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
+        Paperpile.PluginGridJSTOR.superclass.initComponent.apply(this, arguments);
     },
  
 

@@ -8,7 +8,7 @@ Paperpile.PluginGridACM = Ext.extend(Paperpile.PluginGridOnlineSearch, {
 
         this.plugin_name = 'ACM';
 
-        Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
+        Paperpile.PluginGridACM.superclass.initComponent.apply(this, arguments);
     },
  
 });

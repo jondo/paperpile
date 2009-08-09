@@ -1,4 +1,4 @@
-package Paperpile::Plugins::Import::ACM;
+package Paperpile::Plugins::Import::SpringerLink;
 
 use Carp;
 use Data::Dumper;
@@ -15,18 +15,16 @@ use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
 
-# The search query to be send to ACM Portal
+# The search query to be send to SpringerLink Portal
 has 'query' => ( is => 'rw' );
 
-# The main search URL
-# dl=GUIDE for 'The Guide" whatever this is
-# dl=Portal for 'The ACM Digital Library'
-my $searchUrl = 'http://portal.acm.org/results.cfm?coll=Portal&dl=GUIDE&termshow=matchall&query=';
+
+my $searchUrl = 'http://springerlink.com/content/?hl=u&k=';
 
 
 sub BUILD {
   my $self = shift;
-  $self->plugin_name('ACM');
+  $self->plugin_name('SpringerLink');
 }
 
 sub connect {
@@ -46,14 +44,14 @@ sub connect {
   $self->_page_cache->{0}->{ $self->limit } = $content;
 
   # Nothing found
-  if ( $content =~ /was not found. Start a new search or use/ ) {
+  if ( $content =~ /No results returned for your criteria./ ) {
     $self->total_entries(0);
     return 0;
   }
 
   # Try to find the number of hits
   # Maybe that could be done faster with XPath, one has to rethink
-  if ( $content =~ m/Results\s\d+\s-\s\d+\sof\s([1234567890,]+)/ ) {
+  if ( $content =~ m/<td>([1234567890,]+)\sResults<\/td>/ ) {
     my $number = $1;
     $number =~ s/,//;
     $self->total_entries($number);
@@ -96,38 +94,31 @@ sub page {
   );
 
   # Each entry is part of an unorder list 
-  my @nodes = $tree->findnodes('/html/body/table/tr/td/table/tr[@valign="top"]/td/table');
+  my @nodes = $tree->findnodes('/html/body/*/*/*/*/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]');
   
   foreach my $node (@nodes) {
       
-      # Title is easy
+      # Title 
       my ( $title, $author, $citation, $pdf, $url );
-      $title = $node->findvalue('./tr/td/a[@class="medium-text"]');
+      $title = $node->findvalue('./div[@class="listItemName"]/a');
 
-      # Sometime authors are linked out, sometimes not
-      my @author_nodes = $node->findnodes('./tr/td/div/a');
-      if ($#author_nodes > -1) {
-	  my @tmp = ( );
-	  foreach my $author_node (@author_nodes) {
-	      push @tmp, @{$author_node->{_content}};
-	  }
-	  $author = join(", ",@tmp) if ($#tmp > -1);
-     } else {
-	  $author = $node->findvalue('./tr/td/div[@class="authors"]');
-     }
+      # authors
+      my @author_nodes = $node->findnodes('./div[@class="listAuthors"]');
+      $author = $author_nodes[0]->as_text();
 
-      # Citation can be found easily, we add also the year
-      $citation = $node->findvalue('./tr/td/div[@class="addinfo"]');
-      if ($node->findvalue('./tr/td[@class="small-text"]') =~ m/.*\s(\d+)\s.*/) {
-	  $citation .= " ($1)";
-      }
+      # citation
+      my @citation_nodes = $node->findnodes('./div[@class="listParents"]');
+      $citation = $citation_nodes[0]->as_text();
 
-      # Now we look for the URLs for linkout and PDFs
-      my $linkout = $node->findvalue('./tr/td/a[@class="medium-text"]/@href');
-      $url = 'http://portal.acm.org/'.$linkout;
-      $pdf = $node->findvalue('./tr/td/table/tr/td/table/tr/td/a[@title="Pdf"]/@href');
-      $pdf = 'http://portal.acm.org/'.$pdf if ($pdf ne '');
- 
+      # PDF link
+      $pdf = $node->findvalue('./table/tr/td/a/@href');
+      $pdf = 'http://springerlink.com' . $pdf;
+      $pdf =~ s/pdf\/content.*html$/pdf/;
+
+      # URL linkout
+      $url = $node->findvalue('./div[@class="listItemName"]/a/@href');
+      $url = 'http://springerlink.com' . $url;
+
       push @{ $data{titles} }, $title;
       push @{ $data{authors} }, $author;
       push @{ $data{citations} }, $citation;
@@ -174,8 +165,10 @@ sub complete_details {
   ( my $self, my $pub ) = @_;
 
   my $browser = Paperpile::Utils->get_browser;
-
-  # Get the BibTeX
+  
+  # Get the HTML page. I have tried to use the RIS export, but that
+  # did not work. There seems to be a protection, can only be
+  # used in the borwser.
   my $response = $browser->get( $pub->_details_link );
   my $content = $response->content;
 
@@ -184,36 +177,49 @@ sub complete_details {
   $tree->utf8_mode(1);
   $tree->parse_content($content);
 
-  # finding the abstract is a little bit wired, there seem to be 
-  # several ways the page is made up
-  my @putative_abstract_nodes = $tree->findnodes('/html/body/div/table/tr/td/div[@class="abstract"]/p');
-  my $abstract = '';
-  foreach my $node (@putative_abstract_nodes) {
-      my $text = $node->as_text();
-      next if ($text eq '');
-      next if ($text =~ m/^Note:\sOCR\serrors/);
-      $abstract = $text;
+  # let's find the abstract first
+  my $abstract = $tree->findvalue('/*/*/*/*/*/*/*/*/*/*/*/*/*/div[@class="Abstract"]');
+
+  # Now we complete the other details
+  my @ids = $tree->findnodes('/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]/table/tr/td/table/tr/td[@class="labelName"');
+  my @values = $tree->findnodes('/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]/table/tr/td/table/tr/td[@class="labelValue"');
+
+  # We first build a nice hash, than we can see what stuff we have got
+  my %details = ( );
+  foreach my $i (0 .. $#ids) {
+      # It might happen that there is the same identifier more than once
+      if (defined $details{ $ids[$i]->as_text() }) {
+	  $details{ $ids[$i]->as_text() } .= "%%BREAK%%".$values[$i]->as_text();
+      } else {
+	  $details{ $ids[$i]->as_text() } = $values[$i]->as_text();
+      }
   }
 
-  # Now we have to find the BibTex link
-  my @nodes = $tree->findnodes('/html/body/div/table/tr/td/table/tr/td/table/tr/td/div/a[@class="small-link-text"]');
-  (my $bibtex_url = $nodes[1]->attr('onclick')) =~ s/(.*open\(')(.*)(','Bi.*)/$2/;
-  $bibtex_url = 'http://portal.acm.org/'.$bibtex_url;
+  (my $journal, my $doi, my $volume, my $issue, my $pages, my $year);
   
-  # Create a new Publication object and import the information from the BibTeX string
-  $response = $browser->get( $bibtex_url );
-  my $bibtex = $response->content;
-  my $full_pub = Paperpile::Library::Publication->new();
-  $full_pub->import_string( $bibtex, 'BIBTEX' );
+  $pages = $details{'Pages'} if ($details{'Pages'});
+  
+  # let's see if there is a journal entry, otherwise it will be
+  # a book chapter
+  if ($details{'Journal'}) {
+      $journal = $details{'Journal'};
+  }
 
-  # Add the linkout and PDF url from the old object because it is not in the BibTeX
-  # and thus not in the new object
-  $full_pub->abstract ($abstract);
+
+ 
+  # Create a new Publication object
+  my $full_pub = Paperpile::Library::Publication->new();
+
+  # Add new values 
+  $pub->pages($pages)       if ($pages);
+  $pub->journal($journal)   if ($journal);
+
+  # Add values from the old object
+  $full_pub->title( $pub->title );
+  $full_pub->authors( $pub->_authors_display );
+  $full_pub->abstract( $abstract );
   $full_pub->linkout( $pub->linkout );
   $full_pub->pdf_url( $pub->pdf_url );
-
-  # We don't use ACM key
-  $full_pub->citekey('');
 
   # Note that if we change title, authors, and citation also the sha1
   # will change. We have to take care of this.
