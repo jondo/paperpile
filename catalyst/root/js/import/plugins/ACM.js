@@ -2,7 +2,7 @@ Paperpile.PluginGridACM = Ext.extend(Paperpile.PluginGridOnlineSearch, {
     
     plugin_title: 'ACM Portal',
     plugin_iconCls: 'pp-icon-acm',
-    limit: 25,
+    limit: 20,
 
     initComponent:function() {
 

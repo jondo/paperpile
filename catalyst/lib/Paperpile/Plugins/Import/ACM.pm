@@ -15,11 +15,13 @@ use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
 
-# The search query to be send to JSTOR
+# The search query to be send to ACM Portal
 has 'query' => ( is => 'rw' );
 
 # The main search URL
-my $searchUrl = 'http://www.jstor.org/action/doBasicSearch?dc=All+Disciplines&Query=';
+# dl=GUIDE for 'The Guide" whatever this is
+# dl=Portal for 'The ACM Digital Library'
+my $searchUrl = 'http://portal.acm.org/results.cfm?coll=Portal&dl=GUIDE&termshow=matchall&query=';
 
 
 sub BUILD {
@@ -44,20 +46,16 @@ sub connect {
   $self->_page_cache->{0}->{ $self->limit } = $content;
 
   # Nothing found
-  if ( $content =~ /No Items Matched Your Search/ ) {
+  if ( $content =~ /was not found. Start a new search or use/ ) {
     $self->total_entries(0);
     return 0;
   }
 
-  # We parse the HTML via XPath
-  my $tree = HTML::TreeBuilder::XPath->new;
-  $tree->utf8_mode(1);
-  $tree->parse_content($content);
-
   # Try to find the number of hits
-  my $stats = $tree->findnodes(q{/html/body/div/div/div/div/form/div/p[@id='resultsBlock']});
-  if ( $stats =~ /Results.*of\s(\d+)\sfor/ ) {
+  # Maybe that could be done faster with XPath, one has to rethink
+  if ( $content =~ m/Results\s\d+\s-\s\d+\sof\s([1234567890,]+)/ ) {
     my $number = $1;
+    $number =~ s/,//;
     $self->total_entries($number);
   } else {
     die('Something is wrong with the results page.');
@@ -74,14 +72,13 @@ sub page {
   # which has been retrieved in the connect function or send new query
   my $content = '';
   if ( $self->_page_cache->{$offset}->{$limit} ) {
-    $content = $self->_page_cache->{$offset}->{$limit};
+      $content = $self->_page_cache->{$offset}->{$limit};
   } else {
-    my $browser = Paperpile::Utils->get_browser;
-    my $nr = $offset+1;
-    (my $tmp_query = $self->query) =~ s/\s+/+/g;
-    my $searchUrl_new = 'http://www.jstor.org/action/doBasicResults?hp=25&la=&wc=on&gw=jtx&jcpsi=1&artsi=1&Query='.$tmp_query.'&si='.$nr.'&jtxsi='.$nr;
-    my $response = $browser->get( $searchUrl_new );
-    $content = $response->content;
+      my $browser = Paperpile::Utils->get_browser;
+      my $nr = $offset+1;
+      (my $tmp_query = $self->query) =~ s/\s+/+/g;
+      my $response = $browser->get( $searchUrl . $tmp_query . '&start=' . $nr );
+      $content = $response->content;
   }
   
   # now we parse the HTML for entries
@@ -99,32 +96,48 @@ sub page {
   );
 
   # Each entry is part of an unorder list 
-  
-  my @nodes = $tree->findnodes('/html/body/div/div/div/div/form/fieldset/ul/li');
+  my @nodes = $tree->findnodes('/html/body/table/tr/td/table/tr[@valign="top"]/td/table');
   
   foreach my $node (@nodes) {
+      
+      # Title is easy
+      my ( $title, $author, $citation, $pdf, $url );
+      $title = $node->findvalue('./tr/td/a[@class="medium-text"]');
 
-    my ( $title, $author, $citation, $bibtex, $pdf, $url );
-    $title = $node->findvalue('./ul/li/a[@class="title"]');
-    $author = $node->findvalue('./ul/li/a[@class="author"]');
-    $citation = $node->findvalue('./ul/li[@class="sourceInfo"]');
-    $bibtex = $node->findvalue('./ul/li/span/a[@class="exportArticle"]/@href');
-    $bibtex =~ s/exportSingleCitation\?/downloadSingleCitation?format=bibtex&include=abs&/;
-    $bibtex = 'http://www.jstor.org'.$bibtex;
-    (my $suffix = $bibtex) =~ s/(.*suffix=)//;
-    $pdf = 'http://www.jstor.org/stable/pdfplus/'.$suffix.'.pdf';
-    $url = 'http://www.jstor.org/stable/'.$suffix;
-    push @{ $data{titles} }, $title;
-    push @{ $data{authors} },   $author;
-    push @{ $data{citations} },   $citation;
-    push @{ $data{bibtex} }, $bibtex;
-    push @{ $data{pdf} }, $pdf;
-    push @{ $data{urls} }, $url;
+      # Sometime authors are linked out, sometimes not
+      my @author_nodes = $node->findnodes('./tr/td/div/a');
+      if ($#author_nodes > -1) {
+	  my @tmp = ( );
+	  foreach my $author_node (@author_nodes) {
+	      push @tmp, @{$author_node->{_content}};
+	  }
+	  $author = join(", ",@tmp) if ($#tmp > -1);
+     } else {
+	  $author = $node->findvalue('./tr/td/div[@class="authors"]');
+     }
+
+      # Citation can be found easily, we add also the year
+      $citation = $node->findvalue('./tr/td/div[@class="addinfo"]');
+      if ($node->findvalue('./tr/td[@class="small-text"]') =~ m/.*\s(\d+)\s.*/) {
+	  $citation .= " ($1)";
+      }
+
+      # Now we look for the URLs for linkout and PDFs
+      my $linkout = $node->findvalue('./tr/td/a[@class="medium-text"]/@href');
+      $url = 'http://portal.acm.org/'.$linkout;
+      my $pdf = $node->findvalue('./tr/td/table/tr/td/table/tr/td/a[@title="Pdf"]/@href');
+      $pdf = 'http://portal.acm.org/'.$pdf if ($pdf ne '');
+ 
+      push @{ $data{titles} }, $title;
+      push @{ $data{authors} }, $author;
+      push @{ $data{citations} }, $citation;
+      push @{ $data{pdf} }, $pdf;
+      push @{ $data{urls} }, $url;
   }
 
 
   # Write output list of Publication records with preliminary
-  # information We save to the helper fields _authors_display and
+  # information. We save to the helper fields _authors_display and
   # _citation_display which will be displayed in the front end.
   my $page = [];
 
@@ -135,7 +148,7 @@ sub page {
     $pub->_citation_display( $data{citations}->[$i] );
     $pub->linkout( $data{urls}->[$i] );
     $pub->pdf_url( $data{pdf}->[$i] );
-    $pub->_details_link( $data{bibtex}->[$i] );
+    $pub->_details_link( $data{urls}->[$i] );
     $pub->refresh_fields;
     push @$page, $pub;
   }
@@ -148,12 +161,13 @@ sub page {
 
 }
 
-# We parse GoogleScholar in a two step process. First we scrape off
-# what we see and display it unchanged in the front end via
+# We parse ACM Portal in a two step process. First we scrape off what
+# we see and display it unchanged in the front end via
 # _authors_display and _citation_display. If the user clicks on an
-# entry the missing information is completed from the BibTeX
-# file. This ensures fast search results and avoids too many requests
-# to Google which is potentially harmful.
+# entry the missing information is completed from the details page
+# where we find the abstract and a BibTeX link. This ensures fast
+# search results and avoids too many requests to ACM which is
+# potentially harmful.
 
 sub complete_details {
 
@@ -162,20 +176,43 @@ sub complete_details {
   my $browser = Paperpile::Utils->get_browser;
 
   # Get the BibTeX
-  my $bibtex = $browser->get( $pub->_details_link );
-  $bibtex = $bibtex->content;
+  my $response = $browser->get( $pub->_details_link );
+  my $content = $response->content;
 
+  # now we parse the HTML for entries
+  my $tree = HTML::TreeBuilder::XPath->new;
+  $tree->utf8_mode(1);
+  $tree->parse_content($content);
+
+  # finding the abstract is a little bit wired, there seem to be 
+  # several ways the page is made up
+  my @putative_abstract_nodes = $tree->findnodes('/html/body/div/table/tr/td/div[@class="abstract"]/p');
+  my $abstract = '';
+  foreach my $node (@putative_abstract_nodes) {
+      my $text = $node->as_text();
+      next if ($text eq '');
+      next if ($text =~ m/^Note:\sOCR\serrors/);
+      $abstract = $text;
+  }
+
+  # Now we have to find the BibTex link
+  my @nodes = $tree->findnodes('/html/body/div/table/tr/td/table/tr/td/table/tr/td/div/a[@class="small-link-text"]');
+  (my $bibtex_url = $nodes[1]->attr('onclick')) =~ s/(.*open\(')(.*)(','Bi.*)/$2/;
+  $bibtex_url = 'http://portal.acm.org/'.$bibtex_url;
+  
   # Create a new Publication object and import the information from the BibTeX string
+  $response = $browser->get( $bibtex_url );
+  my $bibtex = $response->content;
   my $full_pub = Paperpile::Library::Publication->new();
   $full_pub->import_string( $bibtex, 'BIBTEX' );
 
-  # Add the linkout from the old object because it is not in the BibTeX
-  #and thus not in the new object
-
+  # Add the linkout and PDF url from the old object because it is not in the BibTeX
+  # and thus not in the new object
+  $full_pub->abstract ($abstract);
   $full_pub->linkout( $pub->linkout );
   $full_pub->pdf_url( $pub->pdf_url );
 
-  # We don't use Google key
+  # We don't use ACM key
   $full_pub->citekey('');
 
   # Note that if we change title, authors, and citation also the sha1
