@@ -8,7 +8,7 @@ Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGridOnlineSearch, {
 
         this.plugin_name = 'ArXiv';
 
-        Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
+        Paperpile.PluginGridArXiv.superclass.initComponent.apply(this, arguments);
     },
  
 });

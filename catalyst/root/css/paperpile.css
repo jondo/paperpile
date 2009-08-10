@@ -553,6 +553,14 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/jstor.png')!important;
 }
 
+.pp-icon-acm{
+    background-image: url('/images/icons/acm.png')!important;
+}
+
+.pp-icon-springerlink{
+    background-image: url('/images/icons/springerlink.png')!important;
+}
+
 .pp-icon-tools{
     background-image: url('/images/icons/wrench.png')!important;
 }
