@@ -172,7 +172,6 @@ mxml_node_t* add_annotation(mxml_node_t *xml){
     annotation->SetContents( PdfString(text) );
     annotation->SetColor( color_r,color_g,color_b);
     
-    document.Write( "out.pdf" );
   }
 
   if (strcmp(type, "HIGHLIGHT")==0){
@@ -222,15 +221,20 @@ mxml_node_t* add_annotation(mxml_node_t *xml){
 
     PdfAnnotation* highlight = page->CreateAnnotation( ePdfAnnotation_Highlight, bbox ) ;
     highlight->SetQuadPoints( quadPoints );
-    highlight->SetColor( 0, 0, 1, 0 );
-    document.Write( "out.pdf" );
+    highlight->SetColor( color_r,color_g,color_b);
+    highlight->SetTitle( PdfString("test") );
+    highlight->SetContents( PdfString("test") );
 
   }
+
+  document.Write( out_file );
 
   xmlout = mxmlNewXML("1.0");
   output_tag = mxmlNewElement(xmlout, "output");
   status_tag = mxmlNewElement(output_tag, "status");
   mxmlNewOpaque(status_tag, "OK");
+
+  return xmlout;
 
 }
 

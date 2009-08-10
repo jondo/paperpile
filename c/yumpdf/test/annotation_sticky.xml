@@ -3,7 +3,7 @@
   <command>ADD_ANNOTATION</command>
   <page>1</page>
   <inFile>../test/test.pdf</inFile>
-  <outFile>./out.pdf</outFile>
+  <outFile>./outfile.pdf</outFile>
 
   <color type="rgb">
     <red>1.0</red>

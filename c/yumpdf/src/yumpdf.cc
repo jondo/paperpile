@@ -55,7 +55,7 @@ int main (int argc, char *argv[]){
   if (strcmp(command,"SEARCH")==0)  xmlout=search(xml);
   if (strcmp(command,"WORDLIST")==0)  xmlout=wordList(xml);
   if (strcmp(command,"TEXT")==0)  xmlout=text(xml);
-  //if (strcmp(command,"ADD_ANNOTATION")==0)  xmlout=add_annotation(xml);
+  if (strcmp(command,"ADD_ANNOTATION")==0)  xmlout=add_annotation(xml);
   if (strcmp(command,"GET_ANNOTATIONS")==0)  xmlout=get_annotations(xml);
   
   
