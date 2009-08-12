@@ -1,3 +1,4 @@
+unset PERL5LIB
 if [ ! -d "$HOME/.paperpile" ]; then
     mkdir $HOME/.paperpile
 fi
