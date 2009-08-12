@@ -5,6 +5,6 @@
   <index>10</index>
   
   <inFile>../test/test.pdf</inFile>
-  <outFile>../test/test.pdf</outFile>
+  <outFile>./out.pdf</outFile>
 
 </extpdf>
