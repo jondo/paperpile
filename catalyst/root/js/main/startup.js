@@ -62,7 +62,12 @@ Paperpile.stage1 = function() {
                     msg: json.error.msg,
                     buttons: Ext.Msg.OK,
                     animEl: 'elId',
-                    icon: Ext.MessageBox.ERROR
+                    icon: Ext.MessageBox.ERROR,
+                    fn: function(action){
+                        if (IS_TITANIUM){
+                            Titanium.UI.mainWindow.close();
+                        }
+                    }
                 });
 
                 if (json.error.type == 'LibraryMissingError'){
@@ -75,15 +80,28 @@ Paperpile.stage1 = function() {
         }, 
 
         failure: function(response){
+            var error;            
+            
+            if (response.responseText){
+                error= Ext.util.JSON.decode(response.responseText).error;
+                if (error){
+                    error=error.msg;
+                }
+            }
+            
             Ext.Msg.show({
-                title:'Error contacting Paperpile server.',
-                msg: json.error.msg,
+                title:'Error',
+                msg: 'Could not start application.<br>'+error,
                 buttons: Ext.Msg.OK,
                 animEl: 'elId',
-                icon: Ext.MessageBox.ERROR
+                icon: Ext.MessageBox.ERROR,
+                fn: function(action){
+                    if (IS_TITANIUM){
+                        Titanium.UI.mainWindow.close();
+                    }
+                }
             });
         }
-        
     });
 };
 
