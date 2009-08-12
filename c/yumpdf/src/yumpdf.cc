@@ -57,7 +57,7 @@ int main (int argc, char *argv[]){
   if (strcmp(command,"TEXT")==0)  xmlout=text(xml);
   if (strcmp(command,"ADD_ANNOTATION")==0)  xmlout=add_annotation(xml);
   if (strcmp(command,"GET_ANNOTATIONS")==0)  xmlout=get_annotations(xml);
-  
+  if (strcmp(command,"DELETE_ANNOTATION")==0)  xmlout=delete_annotation(xml);
   
   mxmlSaveFile (xmlout,stdout,_white_space_cb);
 

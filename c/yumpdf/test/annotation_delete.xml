@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<extpdf>
+  <command>DELETE_ANNOTATION</command>
+  <page>0</page>
+  <index>10</index>
+  
+  <inFile>../test/test.pdf</inFile>
+  <outFile>../test/test.pdf</outFile>
+
+</extpdf>

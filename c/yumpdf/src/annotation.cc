@@ -136,6 +136,7 @@ mxml_node_t* add_annotation(mxml_node_t *xml){
   float bbox_x1,bbox_y1,bbox_x2,bbox_y2;
   char *type, *text, *title;
   char *in_file, *out_file;
+  char tmp_file[1024];
   mxml_node_t *node, *xmlout, *output_tag, *status_tag;
   float color_r, color_g, color_b;
 
@@ -222,12 +223,20 @@ mxml_node_t* add_annotation(mxml_node_t *xml){
     PdfAnnotation* highlight = page->CreateAnnotation( ePdfAnnotation_Highlight, bbox ) ;
     highlight->SetQuadPoints( quadPoints );
     highlight->SetColor( color_r,color_g,color_b);
-    highlight->SetTitle( PdfString("test") );
-    highlight->SetContents( PdfString("test") );
+    //highlight->SetTitle( PdfString("test") );
+    //highlight->SetContents( PdfString("test") );
 
   }
 
-  document.Write( out_file );
+  if (strcmp(in_file,out_file)==0){
+    sprintf(tmp_file, "%s_tmp", in_file);
+    document.Write(tmp_file);
+    remove(in_file);
+    rename(tmp_file,in_file);
+  } else {
+    document.Write( out_file );
+  }
+
 
   xmlout = mxmlNewXML("1.0");
   output_tag = mxmlNewElement(xmlout, "output");
@@ -238,3 +247,42 @@ mxml_node_t* add_annotation(mxml_node_t *xml){
 
 }
 
+mxml_node_t* delete_annotation(mxml_node_t *xml){
+
+  int index, pageNo;
+  float x1, y1, x2, y2;
+  float bbox_x1,bbox_y1,bbox_x2,bbox_y2;
+  char *type, *text, *title;
+  char *in_file, *out_file;
+  char tmp_file[1024];
+  mxml_node_t *node, *xmlout, *output_tag, *status_tag;
+  
+  in_file=xmlGet(xml,"inFile");
+  out_file=xmlGet(xml,"outFile");
+  pageNo=atoi(xmlGet(xml,"page"));
+  index=atoi(xmlGet(xml,"index"));
+
+  PdfMemDocument document( in_file );
+  PdfPage* page = document.GetPage( pageNo );
+
+  page->DeleteAnnotation(index);
+
+  if (strcmp(in_file,out_file)==0){
+    sprintf(tmp_file, "%s_tmp", in_file);
+    document.Write(tmp_file);
+    remove(in_file);
+    rename(tmp_file,in_file);
+  } else {
+    document.Write( out_file );
+  }
+
+  xmlout = mxmlNewXML("1.0");
+  output_tag = mxmlNewElement(xmlout, "output");
+  status_tag = mxmlNewElement(output_tag, "status");
+  mxmlNewOpaque(status_tag, "OK");
+
+  return xmlout;
+
+
+
+}
