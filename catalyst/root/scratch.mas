@@ -18,6 +18,7 @@
   <script type="text/javascript" charset="utf-8" src="/js/import/search-field.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf/menubar.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf/viewer.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pdf/hoverbutton.js"></script>
 
   <link rel="stylesheet" type="text/css" href="/ext.ux/filetree/css/icons.css">
   <link rel="stylesheet" type="text/css" href="/ext.ux/filetree/css/webpage.css">

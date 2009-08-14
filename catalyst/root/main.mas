@@ -50,6 +50,7 @@
   pub/details.js
                
   pdf/viewer.js 
+  pdf/hoverbutton.js
   pdf/menubar.js
 
   pdfextract/view.js
