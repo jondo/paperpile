@@ -493,6 +493,11 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/back.png');
 }
 
+.clean .x-btn-text {
+    background-image: url('/images/icons/clean.png');
+}
+
+
 .dashboard .x-btn-text {
     background-image: url('/images/icons/cog.png');
 }

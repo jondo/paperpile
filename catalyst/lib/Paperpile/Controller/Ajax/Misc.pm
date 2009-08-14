@@ -210,4 +210,20 @@ sub preprocess_csl : Local {
 }
 
 
+sub clean_duplicates : Local {
+  my ( $self, $c ) = @_;
+  my $grid_id = $c->request->params->{grid_id};
+  my $plugin = $c->session->{"grid_$grid_id"};
+
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+
+
+
+
+
+
+
 1;
