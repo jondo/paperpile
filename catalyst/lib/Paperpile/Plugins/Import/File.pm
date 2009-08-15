@@ -14,6 +14,7 @@ use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Library::Journal;
 use Paperpile::Utils;
+use Paperpile::Formats;
 
 extends 'Paperpile::Plugins::Import::DB';
 
@@ -43,9 +44,16 @@ sub connect {
 
   if ( !-e $self->_db_file ) {
 
-    $self->guess_format if not $self->format;
+    my $reader;
 
-    if ( $self->format eq 'PAPERPILE' ) {
+    if ($self->format){
+      # not in use and untested
+      $reader= eval("Paperpile::Formats::".$self->format."->new(file=>'".$self->file."')");
+    } else {
+      $reader = Paperpile::Formats->guess_format($self->file);
+    }
+
+    if ( $reader->format eq 'PAPERPILE' ) {
 
       copy( $self->file, $self->_db_file )
         || FileWriteError->throw(
@@ -56,36 +64,19 @@ sub connect {
 
     } else {
 
-      my $bu = Bibutils->new(
-        in_file    => $self->file,
-        out_file   => '',
-        in_format  => eval( 'Bibutils::' . $self->format . 'IN' ),
-        out_format => Bibutils::BIBTEXOUT,
-      );
-
-      $bu->read;
-
-      if ( $bu->error ) {
-        FileFormatError->throw(
-          error => "Could not read " . $self->file . ". Error during parsing." );
-      }
-
-      my $data = $bu->get_data;
+      my $data = $reader->read();
 
       # Collect pubs in hash to avoid entries with duplicate sha1 which
       # causes problems when converting to database. Maybe this is too
       # simplistic to deal with duplicates at this stage but it works...
       my %all = ();
 
-      foreach my $entry (@$data) {
-        my $pub = Paperpile::Library::Publication->new;
-        $pub->_build_from_bibutils($entry);
+      foreach my $pub (@$data) {
         $pub->citekey('');
-	if (defined $pub->sha1) {
+        if (defined $pub->sha1) {
           $all{ $pub->sha1 } = $pub;
-	}
+        }
       }
-
 
       my $empty_db = Paperpile::Utils->path_to('db/library.db')->stringify;
       copy( $empty_db, $self->_db_file ) or die "Could not initialize empty db ($!)";

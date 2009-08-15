@@ -11,6 +11,7 @@ use Paperpile::Exceptions;
 
 use Paperpile::Plugins::Import;
 use Paperpile::Plugins::Export;
+#use Paperpile::Plugins::Export::Bibfile;
 
 # Import plugins dynamically from directory content alone
 BEGIN{
