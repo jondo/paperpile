@@ -70,6 +70,11 @@ sub connect {
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
+  my $browser = Paperpile::Utils->get_browser;
+  my $query =  '';
+  my $response;
+  my $responseDetails;
+  
   # google books is 1-based, paperpile seems to be 0-based
   $offset++;
 
@@ -83,9 +88,9 @@ sub page {
     $result = $self->_page_cache->{$offset}->{$limit};
   } 
   else {
-    my $browser = Paperpile::Utils->get_browser;
-    my $query = $searchUrl . $self->query . "&start-index=$offset&max-results=$limit";
-    my $response = $browser->get($query);
+    $browser = Paperpile::Utils->get_browser;
+    $query = $searchUrl . $self->query . "&start-index=$offset&max-results=$limit";
+    $response = $browser->get($query);
     if ( $response->is_error ) {
       NetGetError->throw(
         error => $self->{'plugin_name'} . ' query failed: ' . $response->message,
@@ -111,7 +116,7 @@ sub page {
   # collect data
   foreach my $book (@{$result->{entry}}) {
 #print STDERR "entr=$urlID\n";
-print STDERR Dumper $book;
+#print STDERR Dumper $book;
 
     my $pub = Paperpile::Library::Publication->new(pubtype=>"BOOK");
     my @tmp = ();
@@ -251,13 +256,32 @@ print STDERR Dumper $book;
         }
       }      
     }
-#print STDERR "url=$url\n";
+print STDERR "url=$url\n";
 
     #############################
     # collect pages
     # not every book has pages info
     # TODO
     
+    
+    #############################
+    # collect linkout (PDF-link)
+    my $pdf_link = '';
+    if($url ne '') {
+      my $responseDetails = $browser->get($url);
+      if ( $responseDetails->is_error ) {
+        NetGetError->throw(
+          error => $self->{'plugin_name'} . ' query failed: ' . $responseDetails->message,
+          code  => $responseDetails->code
+        );
+      }
+      #print STDERR Dumper $response;
+      if($responseDetails->{_content} =~ /a id=pdf_download href="(\S+)"/) {
+        $pdf_link = $1;
+print STDERR "PDF: $pdf_link\n";
+      }
+    }
+
 
     $pub->title( $title ) if($title); # maybe booktitle, but booktitle is not displayed in the frontend?
     $pub->_authors_display( $authors_display ) if($authors_display);
@@ -269,9 +293,9 @@ print STDERR Dumper $book;
     $pub->abstract( $abstract ) if($abstract);
     $pub->url( $url ) if($url);
     #$pub->_citation_display(  );
-    #$pub->linkout(  );
+    $pub->linkout($pdf_link) if($pdf_link);
     #$pub->_details_link(  );
-    #$pub->refresh_fields;
+    $pub->refresh_fields;
     push @$page, $pub;
   }
  
