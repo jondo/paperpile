@@ -146,9 +146,7 @@ sub write_string {
   $self->write();
 
   my $string = '';
-
   open( TMP, "<$file_name" );
-  my $string = '';
   $string .= $_ foreach (<TMP>);
 
   return $string;
