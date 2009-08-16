@@ -267,20 +267,20 @@ print STDERR "url=$url\n";
     #############################
     # collect linkout (PDF-link)
     my $pdf_link = '';
-    if($url ne '') {
-      my $responseDetails = $browser->get($url);
-      if ( $responseDetails->is_error ) {
-        NetGetError->throw(
-          error => $self->{'plugin_name'} . ' query failed: ' . $responseDetails->message,
-          code  => $responseDetails->code
-        );
-      }
-      #print STDERR Dumper $response;
-      if($responseDetails->{_content} =~ /a id=pdf_download href="(\S+)"/) {
-        $pdf_link = $1;
-print STDERR "PDF: $pdf_link\n";
-      }
-    }
+#    if($url ne '') {
+#      my $responseDetails = $browser->get($url);
+#      if ( $responseDetails->is_error ) {
+#        NetGetError->throw(
+#          error => $self->{'plugin_name'} . ' query failed: ' . $responseDetails->message,
+#          code  => $responseDetails->code
+#        );
+#      }
+#      #print STDERR Dumper $response;
+#      if($responseDetails->{_content} =~ /a id=pdf_download href="(\S+)"/) {
+#        $pdf_link = $1;
+#print STDERR "PDF: $pdf_link\n";
+#      }
+#    }
 
 
     $pub->title( $title ) if($title); # maybe booktitle, but booktitle is not displayed in the frontend?
