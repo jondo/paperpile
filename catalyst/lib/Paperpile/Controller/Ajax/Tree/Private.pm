@@ -66,6 +66,18 @@ sub get_default_tree : Private {
   # Initialize
   $c->forward( 'get_tags', [$tags] );
 
+  my $folders = Tree::Simple->new( {
+      text    => 'Trash',
+      type    => "TRASH",
+      iconCls => 'pp-icon-trash',
+      plugin_name  => 'Trash',
+      hidden  => 0,
+    },
+    $local_lib
+  );
+
+  $folders->setUID('TRASH');
+
   #### / Active Folders
 
   my $active = Tree::Simple->new( {
@@ -97,10 +109,10 @@ sub get_default_tree : Private {
 
   $active->addChild(
     Tree::Simple->new( {
-        type         => 'CLOUDS',
-        text         => 'Cloud view',
-        iconCls      => 'pp-icon-clouds',
-        hidden       => 0,
+        type    => 'CLOUDS',
+        text    => 'Cloud view',
+        iconCls => 'pp-icon-clouds',
+        hidden  => 0,
       }
     )
   );

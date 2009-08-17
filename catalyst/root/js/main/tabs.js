@@ -34,6 +34,25 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         newView.show();
     },
 
+    newTrashTab:function(){
+
+        var newGrid=new Paperpile.PluginGridTrash({
+            plugin_name: 'Trash',
+            plugin_mode: 'FULLTEXT',
+            plugin_query: '',
+            plugin_base_query:'',
+        });
+
+        var newView=this.add(new Paperpile.PubView({title:'Trash',
+                                                    grid:newGrid,
+                                                    closable:true,
+                                                    iconCls: 'pp-icon-trash',
+                                                    itemId:'trash',
+                                                   }));
+        newView.show();
+    },
+
+
 
     // If itemId is given it is checked if the same tab already is
     // open and it activated instead of creating a new one

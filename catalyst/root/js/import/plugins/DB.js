@@ -83,7 +83,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                 itemId: 'deleteMenu',
                 items: [
                     this.actions['DELETE_FROM_FOLDER'],
-                    this.actions['DELETE']
+                    this.actions['TRASH']
                 ]
             });
 
@@ -95,8 +95,8 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                   menu: menu
                 };
 
-            this.actions['DELETE'].setText('Delete from library');
-            this.actions['DELETE'].setIconClass('');
+            this.actions['TRASH'].setText('Delete from library');
+            this.actions['TRASH'].setIconClass('');
         }
         
         this.store.baseParams['plugin_search_pdf']= 0 ;

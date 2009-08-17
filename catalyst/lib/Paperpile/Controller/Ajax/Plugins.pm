@@ -58,7 +58,7 @@ sub resultsgrid : Local {
     }
 
     if ( (( $plugin_name eq 'DB' ) and ( not $c->request->params->{plugin_file} )) or
-         ( $plugin_name eq 'Duplicates' )) {
+         ( $plugin_name eq 'Duplicates' ) or ( $plugin_name eq 'Trash' )) {
       $params{file} = $c->session->{library_db};
     }
 

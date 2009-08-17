@@ -243,6 +243,24 @@ sub delete_pubs {
 
 }
 
+sub trash_pubs {
+
+  ( my $self, my $pubs ) = @_;
+
+  $self->dbh->begin_work;
+
+  foreach my $pub (@$pubs) {
+    my $rowid=$pub->_rowid;
+    $self->dbh->do("UPDATE Publications SET trashed=1 WHERE rowid=$rowid");
+  }
+
+  $self->dbh->commit;
+
+  return 1;
+
+}
+
+
 sub update_pub {
 
   ( my $self, my $old_pub, my $new_data ) = @_;
@@ -676,7 +694,7 @@ sub reset_db {
 }
 
 sub fulltext_count {
-  ( my $self, my $query, my $search_pdf ) = @_;
+  ( my $self, my $query, my $search_pdf, my $trash ) = @_;
 
   my $table='Fulltext_citation';
 
@@ -684,13 +702,19 @@ sub fulltext_count {
     $table='Fulltext_Full';
   }
 
+  if ($trash){
+    $trash=1;
+  } else {
+    $trash=0;
+  }
+
   my $where;
   if ($query) {
     $query = $self->dbh->quote("$query*");
-    $where = "WHERE $table MATCH $query";
+    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
   }
   else {
-    $where = '';    #Return everything if query empty
+    $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
   }
 
   my $count = $self->dbh->selectrow_array(
@@ -702,7 +726,7 @@ sub fulltext_count {
 }
 
 sub fulltext_search {
-  ( my $self, my $_query, my $offset, my $limit, my $order, my $search_pdf ) = @_;
+  ( my $self, my $_query, my $offset, my $limit, my $order, my $search_pdf, my $trash ) = @_;
 
   my $table='Fulltext_citation';
 
@@ -714,13 +738,19 @@ sub fulltext_search {
     $order="created DESC";
   }
 
+  if ($trash){
+    $trash=1;
+  } else {
+    $trash=0;
+  }
+
   my ($where, $query);
 
   if ($_query) {
     $query = $self->dbh->quote("$_query*");
-    $where = "WHERE $table MATCH $query";
+    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
   } else {
-    $where = '';    #Return everything if query empty
+    $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
   }
 
   # explicitely select rowid since it is not included by '*'. Make

@@ -84,12 +84,15 @@ sub delete_entry : Local {
   my ( $self, $c ) = @_;
   my $grid_id = $c->request->params->{grid_id};
   my $plugin = $c->session->{"grid_$grid_id"};
+  my $trash = $c->request->params->{trash};
 
   my $data = $self->_get_selection($c);
 
-  print STDERR Dumper($data);
-
-  $c->model('Library')->delete_pubs($data);
+  if ($trash){
+    $c->model('Library')->trash_pubs($data);
+  } else {
+    $c->model('Library')->delete_pubs($data);
+  }
 
   $plugin->total_entries($plugin->total_entries - scalar(@$data));
 

@@ -118,9 +118,11 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 tooltip: 'Edit citation data of the selected reference',
             }),
 
-            'DELETE': new Ext.Action({
+            'TRASH': new Ext.Action({
                 text: 'Delete',
-                handler: this.deleteEntry,
+                handler: function(){
+                    this.deleteEntry(1);
+                },
                 scope: this,
                 cls: 'x-btn-text-icon delete',
                 disabled:true,
@@ -216,7 +218,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                   this.actions['NEW'],
                   this.actions['IMPORT'],
                   this.actions['IMPORT_ALL'],
-                  this.actions['DELETE'],
+                  this.actions['TRASH'],
                   this.actions['EDIT'],
                   { xtype:'button',
                     itemId: 'more_menu',
@@ -235,7 +237,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.actions['VIEW_PDF'],
 		'-',
 		this.actions['IMPORT'],
-                this.actions['DELETE'],
+                this.actions['TRASH'],
                 this.actions['EDIT'],
                 this.actions['EXPORT'],
 //                this.actions['FORMAT'],
@@ -436,12 +438,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         if (selected == 1){
             this.actions['EDIT'].setDisabled(imported==0);
             this.actions['IMPORT'].setDisabled(imported);
-            this.actions['DELETE'].setDisabled(imported==0);
+            this.actions['TRASH'].setDisabled(imported==0);
         }
 
         if (selected > 1 ){
             this.actions['EDIT'].disable();
-            this.actions['DELETE'].setDisabled(imported==0);
+            this.actions['TRASH'].setDisabled(imported==0);
             this.actions['IMPORT'].setDisabled(notImported==0);
         }
 
@@ -615,7 +617,10 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     },
 
-    deleteEntry: function(){
+    // If trash is set entries are moved to trash, otherwise they are
+    // deleted completely
+
+    deleteEntry: function(trash){
 
         selection=this.getSelection();
 
@@ -632,13 +637,16 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         }
 
         if (many){
-            Paperpile.status.showBusy('Delete references from library');
+            if (!trash){
+                Paperpile.status.showBusy('Deleting references from library');
+            }
         }
 
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/delete_entry'),
             params: { selection: selection,
                       grid_id: this.id,
+                      trash: trash,
                     },
             method: 'GET',
             success: function(){
@@ -656,9 +664,11 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.store.resumeEvents();
                 this.store.fireEvent('datachanged',this.store);
 
-                if (this.getSelectionModel().getCount()==0){
-                    var container= this.findParentByType(Paperpile.PubView);
+                var container= this.findParentByType(Paperpile.PubView);
+                if (this.getSelectionModel().getCount()!=0){
                     container.onRowSelect();
+                } else {
+                    container.onEmpty('');
                 }
 
                 Paperpile.main.onUpdateDB(this.id);

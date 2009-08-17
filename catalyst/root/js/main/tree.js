@@ -167,10 +167,15 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
                     // Call appropriate frontend, tags, active folders, and folders are opened only once
                     // and we pass the node.id as item-id for the tab
+
                     if (node.type == 'TAGS' || node.type == 'ACTIVE' || node.type == 'FOLDER'){
-                        Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id);
+                        Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id); 
                     } else {
-                        Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
+                        if (node.type=='TRASH'){
+                            Paperpile.main.tabs.newTrashTab(); 
+                        } else {
+                            Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
+                        }
                     }
                 } else {
 		            var main = Paperpile.main.tabs.getItem("MAIN");

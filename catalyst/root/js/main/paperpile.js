@@ -287,7 +287,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                         }
                     }
 
-                    if (grid.plugin_name == 'DB'){
+                    if (grid.plugin_name == 'DB' || grid.plugin_name == 'Trash'){
                         grid.store.reload();
                     }
 

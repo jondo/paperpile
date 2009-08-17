@@ -517,6 +517,10 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/page_white_stack.png') !important;
 }
 
+.pp-icon-trash {
+    background-image: url('/images/icons/trash.png') !important;
+}
+
 .pp-icon-tags{
     background-image: url('/images/icons/tag_orange.png')!important;
 }
@@ -528,7 +532,6 @@ a:hover.pp-textlink {
 .pp-icon-clouds{
     background-image: url('/images/icons/weather_clouds.png')!important;
 }
-
 
 .pp-icon-folder{
     background-image: url('/images/icons/folder.png')!important;
