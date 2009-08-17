@@ -52,8 +52,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 if (e.point != 'append'){
                     e.cancel=true;
                 } else {
-                    // only allow drop on Folders and Tags
-                    if ((e.target.type == 'TAGS' || e.target.type == 'FOLDER') &&
+                    // only allow drop on Folders, Tags and Trash
+                    if ((e.target.type == 'TAGS' || e.target.type == 'FOLDER' || e.target.type =='TRASH') &&
                         e.target.id != 'TAGS_ROOT'){
 
                         //if (e.target.id = 'FOLDER_ROOT'){
@@ -255,6 +255,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     failure: Paperpile.main.onError,
                     scope: this,
                 });
+            }
+
+            if (e.target.type == 'TRASH'){
+                var grid=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
+                grid.deleteEntry(1);
             }
         }
         // We're dragging nodes internally

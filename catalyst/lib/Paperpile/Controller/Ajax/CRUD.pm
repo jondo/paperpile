@@ -84,15 +84,14 @@ sub delete_entry : Local {
   my ( $self, $c ) = @_;
   my $grid_id = $c->request->params->{grid_id};
   my $plugin = $c->session->{"grid_$grid_id"};
-  my $trash = $c->request->params->{trash};
+  my $mode = $c->request->params->{mode};
 
   my $data = $self->_get_selection($c);
 
-  if ($trash){
-    $c->model('Library')->trash_pubs($data);
-  } else {
-    $c->model('Library')->delete_pubs($data);
-  }
+  $c->model('Library')->trash_pubs($data) if $mode eq 'TRASH';
+  $c->model('Library')->delete_pubs($data) if $mode eq  'DELETE';
+  $c->model('Library')->restore_pubs($data) if $mode eq  'RESTORE';
+
 
   $plugin->total_entries($plugin->total_entries - scalar(@$data));
 

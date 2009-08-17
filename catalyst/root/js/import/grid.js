@@ -121,7 +121,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             'TRASH': new Ext.Action({
                 text: 'Delete',
                 handler: function(){
-                    this.deleteEntry(1);
+                    this.deleteEntry('TRASH');
                 },
                 scope: this,
                 cls: 'x-btn-text-icon delete',
@@ -619,8 +619,11 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     // If trash is set entries are moved to trash, otherwise they are
     // deleted completely
+    // mode: TRASH ... move to trash
+    //       RESTORE ... restore from trash
+    //       DELETE ... delete permanently
 
-    deleteEntry: function(trash){
+    deleteEntry: function(mode){
 
         selection=this.getSelection();
 
@@ -637,7 +640,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         }
 
         if (many){
-            if (!trash){
+            if (mode == 'DELETE'){
                 Paperpile.status.showBusy('Deleting references from library');
             }
         }
@@ -646,7 +649,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             url: Paperpile.Url('/ajax/crud/delete_entry'),
             params: { selection: selection,
                       grid_id: this.id,
-                      trash: trash,
+                      mode: mode,
                     },
             method: 'GET',
             success: function(){

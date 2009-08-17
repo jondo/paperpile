@@ -260,6 +260,23 @@ sub trash_pubs {
 
 }
 
+sub restore_pubs {
+
+  ( my $self, my $pubs ) = @_;
+
+  $self->dbh->begin_work;
+
+  foreach my $pub (@$pubs) {
+    my $rowid=$pub->_rowid;
+    $self->dbh->do("UPDATE Publications SET trashed=0 WHERE rowid=$rowid");
+  }
+
+  $self->dbh->commit;
+
+  return 1;
+
+}
+
 
 sub update_pub {
 
