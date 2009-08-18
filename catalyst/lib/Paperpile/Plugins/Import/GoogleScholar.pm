@@ -6,6 +6,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
+use URI::Escape;
 use 5.010;
 
 use Paperpile::Library::Publication;
@@ -29,8 +30,22 @@ my $settingsUrl =
   'http://scholar.google.com/scholar_setprefs?output=search&inststart=0&hl=en&lang=all&instq=&submit=Save+Preferences&scis=yes';
 
 sub BUILD {
-  my $self = shift;
-  $self->plugin_name('GoogleScholar');
+    my $self = shift;
+    $self->plugin_name('GoogleScholar');
+}
+
+# Format the query sent to Google Scholar. This means escaping 
+# things like non-alphanumeric characters and joining words with '+'.
+
+sub FormatQueryString {
+    my $query = $_[0];
+    
+    my @tmp = split(/ /, $query);
+    foreach my $i (0 .. $#tmp) {
+	$tmp[$i] = uri_escape($tmp[$i]);
+    }
+    
+    return join("+", @tmp);
 }
 
 sub connect {
@@ -50,7 +65,8 @@ sub connect {
   $browser->cookie_jar( $self->_session_cookie );    # set the session cookie
 
   # Get the results
-  my $response = $browser->get( $searchUrl . $self->query );
+  my $query_string = FormatQueryString($self->query);
+  my $response = $browser->get( $searchUrl . $query_string );
   my $content  = $response->content;
  
   # save first page in cache to speed up call to first page afterwards
@@ -94,7 +110,8 @@ sub page {
   } else {
     my $browser = Paperpile::Utils->get_browser;
     $browser->cookie_jar( $self->_session_cookie );
-    my $query    = $searchUrl . $self->query . "&start=$offset";
+    my $query_string = FormatQueryString($self->query);
+    my $query    = $searchUrl . $query_string . "&start=$offset";
     my $response = $browser->get($query);
     $content = $response->content;
   }
@@ -233,6 +250,23 @@ sub complete_details {
 
   return $full_pub;
 
+}
+
+# match function to match a given publication object against Google
+# Scholar.
+
+sub match {
+
+  ( my $self, my $pub ) = @_;
+
+
+  my $query = '';
+
+  if ( $pub->title ) {
+      $query      = FormatQueryString($pub->title);
+  }
+
+  print STDERR "$query\n";
 }
 
 1;

@@ -2,7 +2,7 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGridOnlineSearch,
     
     plugin_title: 'GoogleScholar',
     plugin_iconCls: 'pp-icon-google',
-    limit:25,
+    limit:10,
 
     initComponent:function() {
 
