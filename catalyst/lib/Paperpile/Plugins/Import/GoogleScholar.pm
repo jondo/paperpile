@@ -52,7 +52,7 @@ sub connect {
   # Get the results
   my $response = $browser->get( $searchUrl . $self->query );
   my $content  = $response->content;
-
+ 
   # save first page in cache to speed up call to first page afterwards
   $self->_page_cache( {} );
   $self->_page_cache->{0}->{ $self->limit } = $content;
@@ -69,8 +69,8 @@ sub connect {
   $tree->parse_content($content);
 
   # Try to find the number of hits
-  my $stats = $tree->findnodes(q{//td[@align="right"]/font[@size='-1']});
-  if ( $stats =~ /Results \d+ - \d+ of\s*(about)?\s*([0123456789,]+) for/ ) {
+  my @stats = $tree->findnodes('/html/body/table/tr/td[@align="right"]/font[@size="-1"]');
+  if ( $stats[0]->as_text() =~ m/Results\s\d+\s-\s\d+\sof\s(about)?\s([0123456789,]+)\./ ) {
     my $number = $2;
     $number =~ s/,//g;
     $number = 1000 if ( $number > 1000 );    # Google does not provide more than 1000 results
@@ -114,7 +114,7 @@ sub page {
   );
 
   # Each entry has a h3 heading
-  my @nodes = $tree->findnodes('//h3');
+  my @nodes = $tree->findnodes('/html/body/h3[@class="r"]');
 
   foreach my $node (@nodes) {
 
@@ -137,15 +137,14 @@ sub page {
 
       $url = '';
     }
-
-    push @{ $data{titles} }, $title;
+   push @{ $data{titles} }, $title;
     push @{ $data{urls} },   $url;
   }
 
   # There is <div> for each entry but a <font> tag directly below the
   # <h3> header
 
-  @nodes = $tree->findnodes(q{//font[@size='-1']});
+  @nodes = $tree->findnodes(q{/html/body/font[@size='-1']});
 
   foreach my $node (@nodes) {
 
@@ -154,13 +153,13 @@ sub page {
     next if not $line;
 
     my ( $authors, $citation, $publisher ) = split( / - /, $line );
-
+ 
     $citation .= "- $publisher" if $publisher;
 
     push @{ $data{authors} },   defined($authors)  ? $authors  : '';
     push @{ $data{citations} }, defined($citation) ? $citation : '';
 
-    my @links = $node->findnodes('./a');
+    my @links = $node->findnodes('./span[@class="fl"]/a');
 
     # Find the BibTeX export links
     foreach my $link (@links) {
