@@ -8,7 +8,12 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1"',
         '<dl>',
         '<tpl if="_pubtype_name"><dt>Type: </dt><dd>{_pubtype_name}</dd></tpl>',
-        '<tpl if="_imported"><dt>Added: </dt><dd ext:qtip="{createdFull}">{createdPretty}</dd></tpl>',
+        
+        '<tpl if="_imported">',
+        '<tpl if="trashed==0"><dt>Added: </dt></tpl>',
+        '<tpl if="trashed==1"><dt>Deleted: </dt></tpl>',
+        '<dd ext:qtip="{createdFull}">{createdPretty}</dd>',
+        '</tpl>',
         '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
         '<tpl if="eprint"><dt>Eprint: </dt><dd>{eprint}</dd></tpl>',
         '<tpl if="pmid"><dt>PubMed ID: </dt><dd>{pmid}</dd></tpl>',
@@ -20,6 +25,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</dl>',
         '</div>',
 
+        '<tpl if="trashed==0">',
+
         '<div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1"',
         '<tpl if="linkout">',
         '<p><a href="{linkout}" target="_blank" class="pp-textlink pp-action pp-action-go">Go to publisher site</a></p>',
@@ -30,6 +37,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</div>',
 
         // Gray box
+
         '<tpl if="pdf || _imported || linkout">',
         '<div class="pp-box pp-box-side-panel pp-box-style2"',
         '<h2>PDF</h2>',
@@ -85,6 +93,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</div>',
         '</tpl>',
         '</div>',
+        '</tpl>',
+
     ],
 
     markupMultiple: [

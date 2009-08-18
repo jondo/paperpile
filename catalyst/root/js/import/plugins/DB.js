@@ -95,7 +95,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                   menu: menu
                 };
 
-            this.actions['TRASH'].setText('Delete from library');
+            this.actions['TRASH'].setText('Move to Trash');
             this.actions['TRASH'].setIconClass('');
         }
         

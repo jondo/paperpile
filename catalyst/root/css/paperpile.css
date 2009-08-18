@@ -464,7 +464,6 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/page_add.png');
 }
 
-
 .delete .x-btn-text {
     background-image: url('/images/icons/delete.png');
 }
@@ -495,6 +494,10 @@ a:hover.pp-textlink {
 
 .clean .x-btn-text {
     background-image: url('/images/icons/clean.png');
+}
+
+.restore .x-btn-text {
+    background-image: url('/images/icons/restore.png');
 }
 
 
@@ -670,6 +673,11 @@ a:hover.pp-textlink {
 .pp-grid-status-imported {
     background: transparent url('/images/icons/page.png') no-repeat;
 }
+
+.pp-grid-status-deleted {
+    background: transparent url('/images/icons/trashed.png') no-repeat;
+}
+
 
 .pp-grid-data{
     line-height: 1.5em;

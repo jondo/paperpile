@@ -81,7 +81,11 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         this.iconTemplate = new Ext.XTemplate(
             '<div class="pp-grid-info">',
             '<tpl if="_imported">',
+            '<tpl if="trashed==0">',
             '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
+            '</tpl>',
+            '<tpl if="trashed==1">',
+            '<div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
             '</tpl>',
 //            '<div>',
             '<tpl if="pdf">',
@@ -127,7 +131,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 cls: 'x-btn-text-icon delete',
                 disabled:true,
                 itemId:'delete_button',
-                tooltip: 'Delete the selected references from your library',
+                tooltip: 'Move selected references to Trash',
             }),
 
             'IMPORT': new Ext.Action({
@@ -137,7 +141,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 cls: 'x-btn-text-icon add',
                 disabled:true,
                 itemId:'import_button',
-                tooltip: 'Add the selected references to your library.',
+                tooltip: 'Import selected references to your library.',
             }),
 
             'IMPORT_ALL': new Ext.Action({
@@ -652,7 +656,10 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       mode: mode,
                     },
             method: 'GET',
-            success: function(){
+            success: function(response){
+
+                var num_deleted = Ext.util.JSON.decode(response.responseText).num_deleted;
+
                 this.updateButtons();
                 this.store.suspendEvents();
                 if (selection == 'ALL'){
@@ -674,9 +681,37 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     container.onEmpty('');
                 }
 
-                Paperpile.main.onUpdateDB(this.id);
+                if (mode == 'TRASH'){
+                    var msg= num_deleted + ' references moved to Trash';
 
-                Paperpile.status.clearMsg();
+                    if (num_deleted == 1){
+                        msg="1 reference moved to Trash"
+                    }
+
+                    Paperpile.status.updateMsg(
+                        { msg: msg,
+                          action1: 'Undo',
+                          callback: function(action){
+                              
+                              Ext.Ajax.request({
+                                  url: Paperpile.Url('/ajax/crud/undo_trash'),
+                                  method: 'GET',
+                                  success: function(){
+                                      Paperpile.main.onUpdateDB();
+                                      Paperpile.status.clearMsg();
+                                  }, 
+                                  scope:this
+                              });
+                          },
+                          scope: this,
+                          hideOnClick: true,
+                        }
+                    );
+                } else {
+                    Paperpile.status.clearMsg();
+                }
+
+                Paperpile.main.onUpdateDB(this.id);
 
             },
             failure: Paperpile.main.onError,

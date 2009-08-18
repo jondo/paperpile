@@ -11,6 +11,8 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
         this.actions['NEW'].hide();
         this.actions['EDIT'].hide();
         this.actions['TRASH'].hide();
+        this.actions['EXPORT'].hide();
+        this.actions['SAVE_AS_ACTIVE'].hide();
 
         this.actions['DELETE']= new Ext.Action({
             text: 'Delete',
@@ -21,7 +23,7 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
             cls: 'x-btn-text-icon delete',
             disabled:false,
             itemId:'delete_button',
-            tooltip: 'Delete permanently from your library',
+            tooltip: 'Delete selected references permanently from your library',
         });
 
         this.actions['EMPTY']= new Ext.Action({
@@ -35,19 +37,19 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
             cls: 'x-btn-text-icon clean',
             disabled:false,
             itemId:'empty_button',
-            tooltip: 'Delete all references from Trash',
+            tooltip: 'Delete all references in Trash permanently form your library.',
         });
 
         this.actions['RESTORE']= new Ext.Action({
-            text: 'restore',
+            text: 'Restore',
             handler: function(){
                 this.deleteEntry('RESTORE');
             },
             scope: this,
-            cls: 'x-btn-text-icon add',
+            cls: 'x-btn-text-icon restore',
             disabled:false,
             itemId: 'restore_button',
-            tooltip: 'Restore references',
+            tooltip: 'Restore selected references from Trash',
         });
 
 

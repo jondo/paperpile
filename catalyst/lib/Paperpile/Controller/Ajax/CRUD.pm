@@ -88,16 +88,40 @@ sub delete_entry : Local {
 
   my $data = $self->_get_selection($c);
 
-  $c->model('Library')->trash_pubs($data) if $mode eq 'TRASH';
   $c->model('Library')->delete_pubs($data) if $mode eq  'DELETE';
   $c->model('Library')->restore_pubs($data) if $mode eq  'RESTORE';
 
+
+  if ($mode eq 'TRASH'){
+    $c->model('Library')->trash_pubs($data);
+    $c->session->{"undo_trash"}=$data;
+  }
+
+  $c->stash->{num_deleted} = scalar @$data;
 
   $plugin->total_entries($plugin->total_entries - scalar(@$data));
 
   $c->forward('Paperpile::View::JSON');
 
 }
+
+sub undo_trash : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $data =  $c->session->{"undo_trash"};
+
+  $c->forward('Paperpile::View::JSON');
+
+  $c->model('Library')->restore_pubs($data);
+
+  delete($c->session->{undo_trash});
+
+  $c->forward('Paperpile::View::JSON');
+
+
+}
+
 
 sub update_entry : Local {
   my ( $self, $c ) = @_;
