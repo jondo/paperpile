@@ -259,7 +259,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
             if (e.target.type == 'TRASH'){
                 var grid=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
-                grid.deleteEntry(1);
+                grid.deleteEntry('TRASH');
             }
         }
         // We're dragging nodes internally
