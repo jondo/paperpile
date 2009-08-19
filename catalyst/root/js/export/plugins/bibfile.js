@@ -65,7 +65,7 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
                                   var currentText=textfield.getValue();
                                   
                                   if (currentText == ''){
-                                      textfield.setValue(main.globalSettings.user_home+'/'+defaultFile);
+                                      textfield.setValue(Paperpile.main.globalSettings.user_home+'/'+defaultFile);
                                   } else {
                                       currentText=currentText.replace(/export.(bib|ris|enl|xml|mods)/,defaultFile);
                                       textfield.setValue(currentText);
