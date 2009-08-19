@@ -484,6 +484,11 @@ sub match {
   }
 
   print STDERR "$query\n";
+
+
+  NetMatchError->throw( error => 'No match against ArXiv.');
+
+
 }
 
 1;

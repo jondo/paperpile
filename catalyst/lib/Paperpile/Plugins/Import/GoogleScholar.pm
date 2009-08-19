@@ -267,6 +267,9 @@ sub match {
   }
 
   print STDERR "$query\n";
+
+  NetMatchError->throw( error => 'No match against GoogleScholar.');
+
 }
 
 1;
