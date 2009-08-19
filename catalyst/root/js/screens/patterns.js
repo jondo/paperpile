@@ -71,7 +71,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
                          var task = new Ext.util.DelayedTask(this.updateFields, this);
                          
-                         field.on('keypress', function(){
+                         field.on('keydown', function(){
                              this.isDirty=true;
                              task.delay(500); 
                          }, this);
