@@ -87,6 +87,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             '<tpl if="trashed==1">',
             '<div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
             '</tpl>',
+            '</tpl>',
 //            '<div>',
             '<tpl if="pdf">',
             '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="{pdf}"></div>',
