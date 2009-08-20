@@ -27,6 +27,8 @@ __PACKAGE__->config( {
   }
 );
 
+
+
 __PACKAGE__->config->{'Plugin::ConfigLoader'}->{substitutions} = {
   PLATFORM => sub {
     my $c = shift;
@@ -49,6 +51,16 @@ __PACKAGE__->config->{'Plugin::ConfigLoader'}->{substitutions} = {
     return $ENV{HOME};
   }
 };
+
+
+# Hardcoded for Linux
+__PACKAGE__->config( {
+    'session' => {
+                  storage => $ENV{HOME}."/.paperpile/tmp/session"
+    }
+  }
+);
+
 
 # Start the application
 __PACKAGE__->setup(qw/-Debug ConfigLoader Static::Simple/);
