@@ -636,20 +636,27 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         var many=false;
 
-        if (selection == 'ALL'){
-            many=true;
-        } else {
-            if (selection.length > 10){
-                many=true;
-            }
+        //if (selection == 'ALL'){
+        //    many=true;
+        //} else {
+        //    if (selection.length > 10){
+        //        many=true;
+        //    }
+        //}
+
+        //if (many){
+        if (mode == 'DELETE'){
+            Paperpile.status.showBusy('Deleting references from library');
+        }
+        if (mode == 'TRASH'){
+            Paperpile.status.showBusy('Moving references to Trash');
         }
 
-        if (many){
-            if (mode == 'DELETE'){
-                Paperpile.status.showBusy('Deleting references from library');
-            }
+        if (mode == 'RESTORE'){
+            Paperpile.status.showBusy('Restoring references');
         }
 
+       
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/delete_entry'),
             params: { selection: selection,
@@ -693,7 +700,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                         { msg: msg,
                           action1: 'Undo',
                           callback: function(action){
-                              
+                              // TODO: does not show up, don't know why:
+                              Paperpile.status.showBusy('Undo...');
                               Ext.Ajax.request({
                                   url: Paperpile.Url('/ajax/crud/undo_trash'),
                                   method: 'GET',

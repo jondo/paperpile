@@ -245,13 +245,91 @@ sub delete_pubs {
 
 sub trash_pubs {
 
-  ( my $self, my $pubs ) = @_;
+  ( my $self, my $pubs, my $mode ) = @_;
 
   $self->dbh->begin_work;
 
+  my @files = ();
+
   foreach my $pub (@$pubs) {
-    my $rowid=$pub->_rowid;
-    $self->dbh->do("UPDATE Publications SET trashed=1 WHERE rowid=$rowid");
+    my $rowid = $pub->_rowid;
+
+    my $status=1;
+    $status=0 if $mode eq 'RESTORE';
+
+    $self->dbh->do("UPDATE Publications SET trashed=$status WHERE rowid=$rowid");
+
+    # Move attachments
+    my $select =
+      $self->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+
+    my $attachment_rowid;
+    my $file_name;
+
+    $select->bind_columns( \$attachment_rowid, \$file_name );
+    $select->execute;
+    while ( $select->fetch ) {
+      my $move_to;
+
+      if ($mode eq 'TRASH'){
+        $move_to = File::Spec->catfile( "Trash", $file_name );
+      } else {
+        $move_to=$file_name;
+        $move_to=~s/Trash.//;
+      }
+      push @files, [ $file_name, $move_to ];
+      $move_to = $self->dbh->quote($move_to);
+
+      #print STDERR "UPDATE Attachments SET file_name=$move_to WHERE rowid=$attachment_rowid;\n";
+      $self->dbh->do("UPDATE Attachments SET file_name=$move_to WHERE rowid=$attachment_rowid; ");
+
+    }
+
+    ( my $pdf ) = $self->dbh->selectrow_array("SELECT pdf FROM Publications WHERE rowid=$rowid ");
+
+    if ($pdf) {
+      my $move_to;
+
+      if ($mode eq 'TRASH'){
+        $move_to = File::Spec->catfile( "Trash", $pdf );
+      } else {
+        $move_to=$pdf;
+        $move_to=~s/Trash.//;
+      }
+      push @files, [ $pdf, $move_to ];
+
+      $move_to = $self->dbh->quote($move_to);
+
+      $self->dbh->do("UPDATE Publications SET pdf=$move_to WHERE rowid=$rowid;");
+
+    }
+
+  }
+
+  my $paper_root = $self->get_setting('paper_root');
+
+  foreach my $pair (@files) {
+
+    ( my $from, my $to ) = @$pair;
+
+    $from = File::Spec->catfile( $paper_root, $from );
+    $to   = File::Spec->catfile( $paper_root, $to );
+
+    my ($volume,$dir,$file_name) = File::Spec->splitpath( $to );
+
+    mkpath($dir);
+    move($from, $to);
+
+    ($volume,$dir,$file_name) = File::Spec->splitpath( $from );
+
+    # Never remove the paper_root even if its empty;
+    if (File::Spec->canonpath( $paper_root ) ne File::Spec->canonpath( $dir )){
+      # Simply remove it; will not do any harm if it is not empty; Did
+      # not find an easy way to check if dir is empty, but it does not
+      # seem necessary anyway TODO: recursively remove empty
+      # directories, currently only one level is deleted
+      rmdir $dir;
+    }
   }
 
   $self->dbh->commit;

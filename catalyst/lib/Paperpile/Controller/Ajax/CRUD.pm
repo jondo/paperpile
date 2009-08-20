@@ -89,11 +89,11 @@ sub delete_entry : Local {
   my $data = $self->_get_selection($c);
 
   $c->model('Library')->delete_pubs($data) if $mode eq  'DELETE';
-  $c->model('Library')->restore_pubs($data) if $mode eq  'RESTORE';
+  $c->model('Library')->trash_pubs($data,'RESTORE') if $mode eq  'RESTORE';
 
 
   if ($mode eq 'TRASH'){
-    $c->model('Library')->trash_pubs($data);
+    $c->model('Library')->trash_pubs($data, 'TRASH');
     $c->session->{"undo_trash"}=$data;
   }
 
@@ -113,7 +113,7 @@ sub undo_trash : Local {
 
   $c->forward('Paperpile::View::JSON');
 
-  $c->model('Library')->restore_pubs($data);
+  $c->model('Library')->trash_pubs($data, 'RESTORE');
 
   delete($c->session->{undo_trash});
 
