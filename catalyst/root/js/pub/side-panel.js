@@ -588,6 +588,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                       record.set('attachments',this.data.attachments+1);
                   }
                   this.updateDetail();
+                  Paperpile.main.onUpdateDB(this.grid_id);
               },
               failure: Paperpile.main.onError,
               scope:this,
@@ -609,17 +610,15 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         if (isPDF) {
             successFn=function(response){
-                //Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf','');
                 record.set('pdf','');
-
                 this.updateDetail();
+                Paperpile.main.onUpdateDB(this.grid_id);
             }
         } else {
             successFn=function(response){
-                //Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments-1);
                 record.set('attachments',this.data.attachments-1);
-
                 this.updateDetail();
+                Paperpile.main.onUpdateDB(this.grid_id);
             }
         }
 

@@ -108,6 +108,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                               var container= this.findParentByType(Paperpile.PubView);
                               if (container.itemId=='MAIN'){
                                   container.onEmpty(this.welcomeMsg);
+                                  console.log(this.plugin_query);
                               }
                           }
                       }, this);
