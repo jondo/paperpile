@@ -736,8 +736,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 					single:true,
 					fn: function(){
                         newNode.plugin_title=newNode.text;
-                        newNode.plugin_query='label:'+newNode.text
-                        newNode.plugin_base_query='label:'+newNode.text
+                        newNode.plugin_query='labelid:'+Paperpile.utils.encodeTag(newNode.text),
+                        newNode.plugin_base_query='labelid:'+Paperpile.utils.encodeTag(newNode.text),
                         this.onNewTag(newNode);
                     }
 				}
@@ -891,6 +891,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 				scope:this,
 				single:true,
 				fn:function(editor, newText, oldText){
+
+                    node.plugin_title=newText;
+                    node.plugin_query='labelid:'+Paperpile.utils.encodeTag(newText),
+                    node.plugin_base_query='labelid:'+Paperpile.utils.encodeTag(newText),
+                    
                     Ext.Ajax.request({
                         url: Paperpile.Url('/ajax/crud/rename_tag'),
                         params: { old_tag: tag,
@@ -922,7 +927,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                             grid.store.fireEvent('datachanged',this.store);
 
                                             // If a entry is selected in a tab, also update the display
-                                            var sidepanel=item.items.get('east_panel').items.get('sidepanel');
+                                            var sidepanel=item.items.get('east_panel').items.get('overview');
                                             var selected=grid.getSelectionModel().getSelected();
                                             if (selected){
                                                 sidepanel.updateDetail();

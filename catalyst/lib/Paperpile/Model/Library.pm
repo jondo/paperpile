@@ -151,6 +151,7 @@ sub insert_pubs {
       notes    => $pub->annote,
       author   => $pub->_authors_display,
       label    => $pub->tags,
+      labelid => Paperpile::Utils->encode_tags($pub->tags),
       keyword  => $pub->keywords,
       folder   => $pub->folders,
       text     => '',
@@ -498,6 +499,10 @@ sub update_tags {
   $self->update_field('Fulltext_full',$pub_rowid,'label',$tags);
   $self->update_field('Fulltext_citation',$pub_rowid,'label',$tags);
 
+  my $encoded_tags= Paperpile::Utils->encode_tags($tags);
+  $self->update_field('Fulltext_full',$pub_rowid,'labelid',$encoded_tags);
+  $self->update_field('Fulltext_citation',$pub_rowid,'labelid',$encoded_tags);
+
   # Remove all connections form Tag_Publication table
   my $sth=$self->dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
 
@@ -562,6 +567,10 @@ sub delete_tag {
     $self->update_field('Fulltext_full',$publication_id,'label',$new_tags);
     $self->update_field('Fulltext_citation',$publication_id,'label',$new_tags);
 
+    my $encoded_tags= Paperpile::Utils->encode_tags($new_tags);
+    $self->update_field('Fulltext_full',$publication_id,'labelid',$encoded_tags);
+    $self->update_field('Fulltext_citation',$publication_id,'labelid',$encoded_tags);
+
   }
 
   # Delete tag from Tags table and link table
@@ -596,6 +605,11 @@ sub rename_tag {
     $self->update_field('Publications',$publication_id,'tags',$new_tags);
     $self->update_field('Fulltext_full',$publication_id,'label',$new_tags);
     $self->update_field('Fulltext_citation',$publication_id,'label',$new_tags);
+
+    my $encoded_tags= Paperpile::Utils->encode_tags($new_tags);
+    $self->update_field('Fulltext_full',$publication_id,'labelid',$encoded_tags);
+    $self->update_field('Fulltext_citation',$publication_id,'labelid',$encoded_tags);
+
 
   }
 
@@ -885,7 +899,7 @@ sub fulltext_search {
 
       # fields only in fulltext, named differently or absent in
       # Publications table
-      next if $field ~~ [ 'author', 'text', 'notes', 'label', 'folder'];
+      next if $field ~~ [ 'author', 'text', 'notes', 'label', 'labelid', 'folder'];
       my $value = $row->{$field};
 
       $field = 'citekey' if $field eq 'key';     # citekey is called 'key'
@@ -1339,7 +1353,7 @@ sub _snippets {
   my @terms=split(/\s+/,$query);
   @terms=($query) if (not @terms);
 
-  foreach my $field (qw/key year journal title abstract notes author label keyword folder text/){
+  foreach my $field (qw/key year journal title abstract notes author label labelid keyword folder text/){
     $query=~s/$field://g;
   }
 
