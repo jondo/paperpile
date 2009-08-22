@@ -39,11 +39,7 @@ sub connect {
 
   $self->_db_file($self->file);
 
-  my $model=$self->get_model;
-
-  $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf, 1 ) );
-
-  return $self->total_entries;
+  return $self->update_count();
 }
 
 sub page {
@@ -58,6 +54,16 @@ sub page {
   $self->_save_page_to_hash($page);
 
   return $page;
+
+}
+
+sub update_count {
+  ( my $self) =@_;
+  my $model=$self->get_model;
+
+  $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf,1 ) );
+
+  return $self->total_entries;
 
 }
 

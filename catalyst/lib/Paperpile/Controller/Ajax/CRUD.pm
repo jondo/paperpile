@@ -29,6 +29,8 @@ sub insert_entry : Local {
 
   $c->stash->{data} = {%output};
 
+  $self->_update_counts($c);
+
   $c->forward('Paperpile::View::JSON');
 
 }
@@ -73,6 +75,8 @@ sub new_entry: Local {
     $c->model('Library')->attach_file( $attach_pdf, 1, $pub->_rowid, $pub);
   }
 
+  $self->_update_counts($c);
+
   $c->stash->{data} = $pub->as_hash;
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -101,6 +105,8 @@ sub delete_entry : Local {
 
   $plugin->total_entries($plugin->total_entries - scalar(@$data));
 
+  $self->_update_counts($c);
+
   $c->forward('Paperpile::View::JSON');
 
 }
@@ -116,6 +122,8 @@ sub undo_trash : Local {
   $c->model('Library')->trash_pubs($data, 'RESTORE');
 
   delete($c->session->{undo_trash});
+
+  $self->_update_counts($c);
 
   $c->forward('Paperpile::View::JSON');
 
@@ -466,6 +474,20 @@ sub _get_cached_data {
 
   return [@list];
 
+}
+
+
+sub _update_counts {
+
+  my ( $self, $c ) = @_;
+
+  foreach my $var (keys %{$c->session}){
+    next if !($var=~/^grid_/);
+    my $plugin=$c->session->{$var};
+    if ($plugin->plugin_name eq 'DB' or $plugin->plugin_name eq 'Trash'){
+      $plugin->update_count();
+    }
+  }
 }
 
 1;
