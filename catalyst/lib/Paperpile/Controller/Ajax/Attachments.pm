@@ -87,13 +87,46 @@ sub delete_file : Local {
   my $sha1    = $c->request->params->{sha1};
   my $plugin  = $c->session->{"grid_$grid_id"};
 
-  $c->model('Library')->delete_attachment($rowid,$is_pdf);
+  my $undo_path = $c->model('Library')->delete_attachment( $rowid, $is_pdf, 1 );
+
+  $c->session->{"undo_delete_attachment"} = {
+    file    => $undo_path,
+    is_pdf  => $is_pdf,
+    grid_id => $grid_id,
+    sha1    => $sha1,
+  };
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 
 }
 
+sub  undo_delete : Local {
+  my ( $self, $c ) = @_;
+
+  my $undo_data=$c->session->{"undo_delete_attachment"};
+
+  delete($c->session->{undo_delete_attachment});
+
+  my $file   = $undo_data->{file};
+  my $is_pdf = $undo_data->{is_pdf};
+
+  my $grid_id = $undo_data->{grid_id};
+  my $sha1    = $undo_data->{sha1};
+  my $plugin  = $c->session->{"grid_$grid_id"};
+
+  my $pub      = $plugin->find_sha1($sha1);
+
+  my $attached_file=$c->model('Library')->attach_file($file, $is_pdf, $pub->_rowid, $pub);
+
+  if ($is_pdf){
+    $c->stash->{pdf_file}=$attached_file;
+  }
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
 
 
 

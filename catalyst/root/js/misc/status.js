@@ -74,6 +74,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
         this.action2el.setVisibilityMode(Ext.Element.DISPLAY);
         this.busyEl.setVisibilityMode(Ext.Element.DISPLAY);
 
+
         this.action1el.on('click',
                         function(){
                             this.callback.createDelegate(this.scope,['ACTION1'])();
@@ -99,6 +100,12 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
         if (pars.type){
             this.setType(pars.type);
         }
+
+
+        if (pars.scope){
+            this.scope=pars.scope;
+        }
+
     
         if (pars.msg){
             Ext.DomHelper.overwrite(this.msgEl, pars.msg);

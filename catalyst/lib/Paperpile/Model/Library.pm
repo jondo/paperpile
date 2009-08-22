@@ -1150,11 +1150,15 @@ sub attach_file {
 
 sub delete_attachment{
 
-  my ( $self, $rowid, $is_pdf ) = @_;
+
+  my ( $self, $rowid, $is_pdf, $with_undo ) = @_;
+
+  my $paper_root = $self->get_setting('paper_root');
 
   my $path;
 
-  my $paper_root=$self->get_setting('paper_root');
+  my $undo_dir = File::Spec->catfile(Paperpile::Utils->get_tmp_dir(),"trash");
+  mkpath($undo_dir);
 
   if ($is_pdf){
     ( my $pdf ) =
@@ -1164,6 +1168,7 @@ sub delete_attachment{
     if ($pdf){
       $path = File::Spec->catfile( $paper_root, $pdf );
       $self->dbh->do("UPDATE Fulltext_full SET text='' WHERE rowid=$rowid");
+      move($path, $undo_dir) if $with_undo;
       unlink($path);
     }
 
@@ -1177,7 +1182,9 @@ sub delete_attachment{
 
     $path = File::Spec->catfile( $paper_root, $file);
 
+    move($path, $undo_dir) if $with_undo;
     unlink($path);
+
     $self->dbh->do("DELETE FROM Attachments WHERE rowid=$rowid");
     $self->dbh->do("UPDATE Publications SET attachments=attachments-1 WHERE rowid=$pub_rowid");
 
@@ -1188,12 +1195,20 @@ sub delete_attachment{
   if ($path){
     my ($volume,$dir,$file_name) = File::Spec->splitpath( $path );
     # Never remove the paper_root even if its empty;
-    return if (File::Spec->canonpath( $paper_root ) eq File::Spec->canonpath( $dir ));
-    # Simply remove it; will not do any harm if it is not empty; Did not
-    # find an easy way to check if dir is empty, but it does not seem
-    # necessary anyway
-    rmdir $dir;
+    if (File::Spec->canonpath( $paper_root ) ne File::Spec->canonpath( $dir )){
+      # Simply remove it; will not do any harm if it is not empty; Did not
+      # find an easy way to check if dir is empty, but it does not seem
+      # necessary anyway
+      rmdir $dir;
+    }
   }
+
+  if ($with_undo){
+    my ($volume,$dir,$file_name) = File::Spec->splitpath( $path );
+    return File::Spec->catfile($undo_dir,$file_name);
+  }
+
+
 
 }
 

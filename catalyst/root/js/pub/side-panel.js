@@ -630,7 +630,47 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                         grid_id: this.grid_id,
                       },
               method: 'GET',
-              success: successFn,
+              success: function(response){
+                  var undo_msg='';
+                  if (isPDF){
+                      undo_msg='Deleted PDF file '+ record.get('pdf');
+                      record.set('pdf','');
+                  } else {
+                      undo_msg="Deleted one attached file"
+                      record.set('attachments',this.data.attachments-1);
+                  }
+                  this.updateDetail();
+
+                  Paperpile.status.updateMsg(
+                        { msg: undo_msg,
+                          action1: 'Undo',
+                          callback: function(action){
+                              Ext.Ajax.request({
+                                  url: Paperpile.Url('/ajax/attachments/undo_delete'),
+                                  method: 'GET',
+                                  success: function(response){
+                                      var json = Ext.util.JSON.decode(response.responseText);
+                                      var record=this.grid.store.getAt(this.grid.store.find('sha1',this.data.sha1));
+                                      if (json.pdf_file){
+                                          record.set('pdf',json.pdf_file);
+                                      } else {
+                                          record.set('attachments',this.data.attachments+1);
+                                      }
+                                      this.updateDetail();
+                                      Paperpile.main.onUpdateDB(this.grid_id);
+                                      Paperpile.status.clearMsg();
+                                  }, 
+                                  scope:this
+                              });
+                          },
+                          scope: this,
+                          hideOnClick: true,
+                        }
+                    );
+
+                  Paperpile.main.onUpdateDB(this.grid_id);
+
+              },
               failure: Paperpile.main.onError,
               scope:this,
             });
