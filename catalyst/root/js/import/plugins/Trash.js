@@ -21,7 +21,7 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
             },
             scope: this,
             cls: 'x-btn-text-icon delete',
-            disabled:false,
+            disabled:true,
             itemId:'delete_button',
             tooltip: 'Delete selected references permanently from your library',
         });
@@ -35,7 +35,7 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
             },
             scope: this,
             cls: 'x-btn-text-icon clean',
-            disabled:false,
+            disabled:true,
             itemId:'empty_button',
             tooltip: 'Delete all references in Trash permanently form your library.',
         });
@@ -47,7 +47,7 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
             },
             scope: this,
             cls: 'x-btn-text-icon restore',
-            disabled:false,
+            disabled:true,
             itemId: 'restore_button',
             tooltip: 'Restore selected references from Trash',
         });
@@ -64,9 +64,46 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
 
     },
 
+    
+    updateButtons: function(){
+
+        var imported=this.getSelection('IMPORTED').length;
+        var notImported=this.getSelection('NOT_IMPORTED').length;
+        var selected=imported+notImported;
+
+        if (selected>0){
+            this.actions['DELETE'].enable();
+            this.actions['RESTORE'].enable();
+            this.actions['VIEW_YEAR'].enable();
+	        this.actions['VIEW_JOURNAL'].enable();
+	        this.actions['VIEW_AUTHOR'].enable();
+
+        } else {
+            this.actions['DELETE'].disable();
+            this.actions['RESTORE'].disable();
+            this.actions['VIEW_YEAR'].disable();
+	        this.actions['VIEW_JOURNAL'].disable();
+	        this.actions['VIEW_AUTHOR'].disable();
+        }
+
+        if (selected==1){
+            if (this.getSelectionModel().getSelected().data.pdf) {
+	            this.actions['VIEW_PDF'].setDisabled(false);
+            } else {
+	            this.actions['VIEW_PDF'].setDisabled(true);
+            }
+        }
+
+        if (this.store.getCount()>0){
+            this.actions['EMPTY'].enable();
+            this.actions['SELECT_ALL'].enable();
+        } else {
+            this.actions['EMPTY'].disable();
+            this.actions['SELECT_ALL'].disable();
+        }
 
 
-
+    }
 
 
 });

@@ -364,7 +364,15 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       });
 
 
-        this.store.on('load', this.onStoreLoad, this);
+        this.store.on('load', 
+                      function() {
+                          // If nothing is selected, select first row
+                          if (!this.getSelectionModel().getSelected()){
+                              this.getSelectionModel().selectRow(0);
+                          };
+                          this.updateButtons();
+                      },
+                      this);
 
     },
 
@@ -432,13 +440,29 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var notImported=this.getSelection('NOT_IMPORTED').length;
         var selected=imported+notImported;
 
-        this.actions['NEW'].enable();
-        this.actions['EXPORT'].enable();
-        this.actions['FORMAT'].enable();
-        this.actions['SAVE_AS_ACTIVE'].enable();
-	this.actions['VIEW_YEAR'].enable();
-	this.actions['VIEW_JOURNAL'].enable();
-	this.actions['VIEW_AUTHOR'].enable();
+        if (selected == 0){
+            console.log("INHERE");
+            for (b in this.actions){
+                this.actions[b].disable();
+            }
+            this.actions['NEW'].enable();
+        }
+
+        if (selected > 0 ){
+            this.actions['NEW'].enable();
+            this.actions['EXPORT'].enable();
+            this.actions['FORMAT'].enable();
+            this.actions['SAVE_AS_ACTIVE'].enable();
+	        this.actions['VIEW_YEAR'].enable();
+	        this.actions['VIEW_JOURNAL'].enable();
+	        this.actions['VIEW_AUTHOR'].enable();
+
+            if (this.getSelectionModel().getSelected().data.pdf) {
+	            this.actions['VIEW_PDF'].setDisabled(false);
+            } else {
+	            this.actions['VIEW_PDF'].setDisabled(true);
+            }
+        }
 
         if (selected == 1){
             this.actions['EDIT'].setDisabled(imported==0);
@@ -452,13 +476,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             this.actions['IMPORT'].setDisabled(notImported==0);
         }
 
-      if (this.getSelectionModel().getSelected().data.pdf) {
-	this.actions['VIEW_PDF'].setDisabled(false);
-      } else {
-	this.actions['VIEW_PDF'].setDisabled(true);
-      }
 
-      this.actions['SELECT_ALL'].setDisabled(this.allSelected);
+        this.actions['SELECT_ALL'].setDisabled(this.allSelected);
     },
 
    // Small helper functions to get the index of a given item in the toolbar configuration array
