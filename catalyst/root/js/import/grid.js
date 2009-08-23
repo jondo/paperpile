@@ -371,9 +371,9 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     onStoreLoad: function() {
         // If nothing is selected, select first row
-        //if (!this.getSelectionModel().getSelected()){
+        if (!this.getSelectionModel().getSelected()){
             this.getSelectionModel().selectRow(0);
-        //} else {
+        };// else {
             // else re-focus on last selection
           //  var row=this.store.indexOf(this.getSelectionModel().getSelected());
            // (function(){this.getView().focusRow( row )}).defer(1000,this);
@@ -720,7 +720,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                     Paperpile.status.clearMsg();
                 }
 
-                Paperpile.main.onUpdateDB(this.id);
+                Paperpile.main.onUpdateDB();
 
             },
             failure: Paperpile.main.onError,
