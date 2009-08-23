@@ -69,11 +69,12 @@ sub resultsgrid : Local {
 
     $plugin->connect;
 
+    $c->session->{"grid_$grid_id"} = $plugin;
+
     if ( $plugin->total_entries == 0 ) {
       _resultsgrid_format( @_, [], 0 );
     }
 
-    $c->session->{"grid_$grid_id"} = $plugin;
   } else {
     $plugin = $c->session->{"grid_$grid_id"};
   }
