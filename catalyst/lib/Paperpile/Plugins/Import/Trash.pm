@@ -1,4 +1,4 @@
-package Paperpile::Plugins::Import::DB;
+package Paperpile::Plugins::Import::Trash;
 
 use Carp;
 use Data::Page;
@@ -22,7 +22,7 @@ has '_db_file' => ( is => 'rw' );
 
 sub BUILD {
   my $self = shift;
-  $self->plugin_name('DB');
+  $self->plugin_name('Trash');
 }
 
 sub get_model {
@@ -34,12 +34,10 @@ sub get_model {
 
 }
 
-
 sub connect {
   my $self = shift;
 
   $self->_db_file($self->file);
-
 
   return $self->update_count();
 }
@@ -51,11 +49,7 @@ sub page {
 
   my $page;
 
-  if ( $self->mode eq 'FULLTEXT' ) {
-    $page = $model->fulltext_search( $self->query, $offset, $limit, $self->order, $self->search_pdf );
-  } else {
-    $page = $model->standard_search( $self->query, $offset, $limit, $self->search_pdf );
-  }
+  $page = $model->fulltext_search( $self->query, $offset, $limit, $self->order, $self->search_pdf, 1 );
 
   $self->_save_page_to_hash($page);
 
@@ -67,11 +61,7 @@ sub update_count {
   ( my $self) =@_;
   my $model=$self->get_model;
 
-  if ( $self->mode eq 'FULLTEXT' ) {
-    $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf ) );
-  } else {
-    $self->total_entries( $model->standard_count( $self->query, $self->search_pdf ) );
-  }
+  $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf,1 ) );
 
   return $self->total_entries;
 

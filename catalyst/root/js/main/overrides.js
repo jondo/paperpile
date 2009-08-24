@@ -38,6 +38,17 @@ Ext.override(Ext.Panel, {
 
 });
 
+
+// Avoid scrolling to top if 'holdPosition" is given
+// from: http://extjs.com/forum/showthread.php?t=13898
+Ext.override(Ext.grid.GridView, {
+    holdPosition: false,
+    onLoad : function(){
+        if (!this.holdPosition) this.scrollToTop();
+        this.holdPosition = false
+    }
+});
+
 // Allow dynamically change the root, should be included by default in next version
 // http://extjs.com/forum/showthread.php?p=305958
 

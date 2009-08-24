@@ -7,15 +7,16 @@ CREATE TABLE Publications(
   sha1               TEXT UNIQUE,
   pdf                TEXT,
   pdftext            TEXT,
+  trashed            INTEGER,
   created            TIMESTAMP,
   last_read          TIMESTAMP,
   times_read         INTEGER,
   attachments        INTEGER
 );
 
-CREATE VIRTUAL TABLE Fulltext_full using fts3(text,abstract,notes,title,key,author,label,keyword,folder,year,journal);
+CREATE VIRTUAL TABLE Fulltext_full using fts3(text,abstract,notes,title,key,author,label,labelid,keyword,folder,year,journal);
 
-CREATE VIRTUAL TABLE Fulltext_citation using fts3(abstract,notes,title,key,author,label,keyword,folder,year,journal);
+CREATE VIRTUAL TABLE Fulltext_citation using fts3(abstract,notes,title,key,author,label,labelid,keyword,folder,year,journal);
 
 CREATE TABLE Fields(
   field             TEXT,

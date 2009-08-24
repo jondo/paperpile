@@ -35,6 +35,7 @@
     <ul>
       <li><a href="#" class="pp-textlink  pp-bullet" action="settings-general">General settings</a></li>
       <li><a href="#" class="pp-textlink  pp-bullet" action="settings-patterns">Paths and patterns</a></li>
+      <li><a href="#" class="pp-textlink  pp-bullet" action="duplicates">Find duplicates</a></li>
     </ul>
   </div>
 </td>

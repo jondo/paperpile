@@ -6,6 +6,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
+use URI::Escape;
 use 5.010;
 
 use Paperpile::Library::Publication;
@@ -15,23 +16,40 @@ use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
 
+# The search query to be send to ArXiv
 has 'query' => ( is => 'rw' );
 
+# The main search URL
 my $searchUrl = 'http://export.arxiv.org/api/query?search_query=';
+
+sub BUILD {
+    my $self = shift;
+    $self->plugin_name('ArXiv');
+}
+
+
+# Format the query sent to ArXiv. This means escaping 
+# things like non-alphanumeric characters and joining words with '+'.
+
+sub FormatQueryString {
+    my $query = $_[0];
+    
+    my @tmp = split(/ /, $query);
+    foreach my $i (0 .. $#tmp) {
+	$tmp[$i] = 'all:'.uri_escape($tmp[$i]);
+    }
+    
+    return join("+AND+", @tmp);
+}
 
 sub connect {
   my $self = shift;
 
   my $browser = Paperpile::Utils->get_browser;
 
+  my $query_string = FormatQueryString($self->query);
 
-  my @tmp_words = split( / /, $self->query );
-  foreach my $i ( 0 .. $#tmp_words ) {
-    $tmp_words[$i] = "all:$tmp_words[$i]";
-  }
-  my $query_string = join( '+AND+', @tmp_words );
-
-  my $response = $browser->get( $searchUrl . $query_string . '&max_results=100' );
+  my $response = $browser->get( $searchUrl . $query_string . '&max_results=500' );
 
   my $result = XMLin( $response->content, ForceArray => 1 );
 
@@ -450,6 +468,27 @@ sub parseJournalLine {
   }
 
   return ( $journal, $year, $volume, $issue, $pages, $comment );
+}
+
+# match function to match a given publication object against ArivX.
+
+sub match {
+
+  ( my $self, my $pub ) = @_;
+
+
+  my $query = '';
+
+  if ( $pub->title ) {
+      $query      = FormatQueryString($pub->title);
+  }
+
+  print STDERR "$query\n";
+
+
+  NetMatchError->throw( error => 'No match against ArXiv.');
+
+
 }
 
 1;

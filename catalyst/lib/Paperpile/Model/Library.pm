@@ -151,6 +151,7 @@ sub insert_pubs {
       notes    => $pub->annote,
       author   => $pub->_authors_display,
       label    => $pub->tags,
+      labelid => Paperpile::Utils->encode_tags($pub->tags),
       keyword  => $pub->keywords,
       folder   => $pub->folders,
       text     => '',
@@ -242,6 +243,119 @@ sub delete_pubs {
   return 1;
 
 }
+
+sub trash_pubs {
+
+  ( my $self, my $pubs, my $mode ) = @_;
+
+  $self->dbh->begin_work;
+
+  my @files = ();
+
+  foreach my $pub (@$pubs) {
+    my $rowid = $pub->_rowid;
+
+    my $status=1;
+    $status=0 if $mode eq 'RESTORE';
+
+    $self->dbh->do("UPDATE Publications SET trashed=$status WHERE rowid=$rowid");
+
+    # Move attachments
+    my $select =
+      $self->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+
+    my $attachment_rowid;
+    my $file_name;
+
+    $select->bind_columns( \$attachment_rowid, \$file_name );
+    $select->execute;
+    while ( $select->fetch ) {
+      my $move_to;
+
+      if ($mode eq 'TRASH'){
+        $move_to = File::Spec->catfile( "Trash", $file_name );
+      } else {
+        $move_to=$file_name;
+        $move_to=~s/Trash.//;
+      }
+      push @files, [ $file_name, $move_to ];
+      $move_to = $self->dbh->quote($move_to);
+
+      #print STDERR "UPDATE Attachments SET file_name=$move_to WHERE rowid=$attachment_rowid;\n";
+      $self->dbh->do("UPDATE Attachments SET file_name=$move_to WHERE rowid=$attachment_rowid; ");
+
+    }
+
+    ( my $pdf ) = $self->dbh->selectrow_array("SELECT pdf FROM Publications WHERE rowid=$rowid ");
+
+    if ($pdf) {
+      my $move_to;
+
+      if ($mode eq 'TRASH'){
+        $move_to = File::Spec->catfile( "Trash", $pdf );
+      } else {
+        $move_to=$pdf;
+        $move_to=~s/Trash.//;
+      }
+      push @files, [ $pdf, $move_to ];
+
+      $move_to = $self->dbh->quote($move_to);
+
+      $self->dbh->do("UPDATE Publications SET pdf=$move_to WHERE rowid=$rowid;");
+
+    }
+
+  }
+
+  my $paper_root = $self->get_setting('paper_root');
+
+  foreach my $pair (@files) {
+
+    ( my $from, my $to ) = @$pair;
+
+    $from = File::Spec->catfile( $paper_root, $from );
+    $to   = File::Spec->catfile( $paper_root, $to );
+
+    my ($volume,$dir,$file_name) = File::Spec->splitpath( $to );
+
+    mkpath($dir);
+    move($from, $to);
+
+    ($volume,$dir,$file_name) = File::Spec->splitpath( $from );
+
+    # Never remove the paper_root even if its empty;
+    if (File::Spec->canonpath( $paper_root ) ne File::Spec->canonpath( $dir )){
+      # Simply remove it; will not do any harm if it is not empty; Did
+      # not find an easy way to check if dir is empty, but it does not
+      # seem necessary anyway TODO: recursively remove empty
+      # directories, currently only one level is deleted
+      rmdir $dir;
+    }
+  }
+
+  $self->dbh->commit;
+
+  return 1;
+
+}
+
+sub restore_pubs {
+
+  ( my $self, my $pubs ) = @_;
+
+  $self->dbh->begin_work;
+
+  foreach my $pub (@$pubs) {
+    my $rowid=$pub->_rowid;
+    $self->dbh->do("UPDATE Publications SET trashed=0 WHERE rowid=$rowid");
+  }
+
+  $self->dbh->commit;
+
+  return 1;
+
+}
+
 
 sub update_pub {
 
@@ -385,6 +499,10 @@ sub update_tags {
   $self->update_field('Fulltext_full',$pub_rowid,'label',$tags);
   $self->update_field('Fulltext_citation',$pub_rowid,'label',$tags);
 
+  my $encoded_tags= Paperpile::Utils->encode_tags($tags);
+  $self->update_field('Fulltext_full',$pub_rowid,'labelid',$encoded_tags);
+  $self->update_field('Fulltext_citation',$pub_rowid,'labelid',$encoded_tags);
+
   # Remove all connections form Tag_Publication table
   my $sth=$self->dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
 
@@ -449,6 +567,10 @@ sub delete_tag {
     $self->update_field('Fulltext_full',$publication_id,'label',$new_tags);
     $self->update_field('Fulltext_citation',$publication_id,'label',$new_tags);
 
+    my $encoded_tags= Paperpile::Utils->encode_tags($new_tags);
+    $self->update_field('Fulltext_full',$publication_id,'labelid',$encoded_tags);
+    $self->update_field('Fulltext_citation',$publication_id,'labelid',$encoded_tags);
+
   }
 
   # Delete tag from Tags table and link table
@@ -483,6 +605,11 @@ sub rename_tag {
     $self->update_field('Publications',$publication_id,'tags',$new_tags);
     $self->update_field('Fulltext_full',$publication_id,'label',$new_tags);
     $self->update_field('Fulltext_citation',$publication_id,'label',$new_tags);
+
+    my $encoded_tags= Paperpile::Utils->encode_tags($new_tags);
+    $self->update_field('Fulltext_full',$publication_id,'labelid',$encoded_tags);
+    $self->update_field('Fulltext_citation',$publication_id,'labelid',$encoded_tags);
+
 
   }
 
@@ -676,7 +803,7 @@ sub reset_db {
 }
 
 sub fulltext_count {
-  ( my $self, my $query, my $search_pdf ) = @_;
+  ( my $self, my $query, my $search_pdf, my $trash ) = @_;
 
   my $table='Fulltext_citation';
 
@@ -684,13 +811,19 @@ sub fulltext_count {
     $table='Fulltext_Full';
   }
 
+  if ($trash){
+    $trash=1;
+  } else {
+    $trash=0;
+  }
+
   my $where;
   if ($query) {
     $query = $self->dbh->quote("$query*");
-    $where = "WHERE $table MATCH $query";
+    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
   }
   else {
-    $where = '';    #Return everything if query empty
+    $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
   }
 
   my $count = $self->dbh->selectrow_array(
@@ -702,7 +835,7 @@ sub fulltext_count {
 }
 
 sub fulltext_search {
-  ( my $self, my $_query, my $offset, my $limit, my $order, my $search_pdf ) = @_;
+  ( my $self, my $_query, my $offset, my $limit, my $order, my $search_pdf, my $trash ) = @_;
 
   my $table='Fulltext_citation';
 
@@ -714,13 +847,19 @@ sub fulltext_search {
     $order="created DESC";
   }
 
+  if ($trash){
+    $trash=1;
+  } else {
+    $trash=0;
+  }
+
   my ($where, $query);
 
   if ($_query) {
     $query = $self->dbh->quote("$_query*");
-    $where = "WHERE $table MATCH $query";
+    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
   } else {
-    $where = '';    #Return everything if query empty
+    $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
   }
 
   # explicitely select rowid since it is not included by '*'. Make
@@ -760,7 +899,7 @@ sub fulltext_search {
 
       # fields only in fulltext, named differently or absent in
       # Publications table
-      next if $field ~~ [ 'author', 'text', 'notes', 'label', 'folder'];
+      next if $field ~~ [ 'author', 'text', 'notes', 'label', 'labelid', 'folder'];
       my $value = $row->{$field};
 
       $field = 'citekey' if $field eq 'key';     # citekey is called 'key'
@@ -1011,11 +1150,15 @@ sub attach_file {
 
 sub delete_attachment{
 
-  my ( $self, $rowid, $is_pdf ) = @_;
+
+  my ( $self, $rowid, $is_pdf, $with_undo ) = @_;
+
+  my $paper_root = $self->get_setting('paper_root');
 
   my $path;
 
-  my $paper_root=$self->get_setting('paper_root');
+  my $undo_dir = File::Spec->catfile(Paperpile::Utils->get_tmp_dir(),"trash");
+  mkpath($undo_dir);
 
   if ($is_pdf){
     ( my $pdf ) =
@@ -1025,6 +1168,7 @@ sub delete_attachment{
     if ($pdf){
       $path = File::Spec->catfile( $paper_root, $pdf );
       $self->dbh->do("UPDATE Fulltext_full SET text='' WHERE rowid=$rowid");
+      move($path, $undo_dir) if $with_undo;
       unlink($path);
     }
 
@@ -1038,7 +1182,9 @@ sub delete_attachment{
 
     $path = File::Spec->catfile( $paper_root, $file);
 
+    move($path, $undo_dir) if $with_undo;
     unlink($path);
+
     $self->dbh->do("DELETE FROM Attachments WHERE rowid=$rowid");
     $self->dbh->do("UPDATE Publications SET attachments=attachments-1 WHERE rowid=$pub_rowid");
 
@@ -1049,12 +1195,20 @@ sub delete_attachment{
   if ($path){
     my ($volume,$dir,$file_name) = File::Spec->splitpath( $path );
     # Never remove the paper_root even if its empty;
-    return if (File::Spec->canonpath( $paper_root ) eq File::Spec->canonpath( $dir ));
-    # Simply remove it; will not do any harm if it is not empty; Did not
-    # find an easy way to check if dir is empty, but it does not seem
-    # necessary anyway
-    rmdir $dir;
+    if (File::Spec->canonpath( $paper_root ) ne File::Spec->canonpath( $dir )){
+      # Simply remove it; will not do any harm if it is not empty; Did not
+      # find an easy way to check if dir is empty, but it does not seem
+      # necessary anyway
+      rmdir $dir;
+    }
   }
+
+  if ($with_undo){
+    my ($volume,$dir,$file_name) = File::Spec->splitpath( $path );
+    return File::Spec->catfile($undo_dir,$file_name);
+  }
+
+
 
 }
 
@@ -1214,7 +1368,7 @@ sub _snippets {
   my @terms=split(/\s+/,$query);
   @terms=($query) if (not @terms);
 
-  foreach my $field (qw/key year journal title abstract notes author label keyword folder text/){
+  foreach my $field (qw/key year journal title abstract notes author label labelid keyword folder text/){
     $query=~s/$field://g;
   }
 

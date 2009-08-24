@@ -8,7 +8,12 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1"',
         '<dl>',
         '<tpl if="_pubtype_name"><dt>Type: </dt><dd>{_pubtype_name}</dd></tpl>',
-        '<tpl if="_imported"><dt>Added: </dt><dd ext:qtip="{createdFull}">{createdPretty}</dd></tpl>',
+        
+        '<tpl if="_imported">',
+        '<tpl if="trashed==0"><dt>Added: </dt></tpl>',
+        '<tpl if="trashed==1"><dt>Deleted: </dt></tpl>',
+        '<dd ext:qtip="{createdFull}">{createdPretty}</dd>',
+        '</tpl>',
         '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
         '<tpl if="eprint"><dt>Eprint: </dt><dd>{eprint}</dd></tpl>',
         '<tpl if="pmid"><dt>PubMed ID: </dt><dd>{pmid}</dd></tpl>',
@@ -20,6 +25,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</dl>',
         '</div>',
 
+        '<tpl if="trashed==0">',
+
         '<div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1"',
         '<tpl if="linkout">',
         '<p><a href="{linkout}" target="_blank" class="pp-textlink pp-action pp-action-go">Go to publisher site</a></p>',
@@ -30,6 +37,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</div>',
 
         // Gray box
+
         '<tpl if="pdf || _imported || linkout">',
         '<div class="pp-box pp-box-side-panel pp-box-style2"',
         '<h2>PDF</h2>',
@@ -85,6 +93,8 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</div>',
         '</tpl>',
         '</div>',
+        '</tpl>',
+
     ],
 
     markupMultiple: [
@@ -578,6 +588,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                       record.set('attachments',this.data.attachments+1);
                   }
                   this.updateDetail();
+                  Paperpile.main.onUpdateDB(this.grid_id);
               },
               failure: Paperpile.main.onError,
               scope:this,
@@ -599,17 +610,15 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         if (isPDF) {
             successFn=function(response){
-                //Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('pdf','');
                 record.set('pdf','');
-
                 this.updateDetail();
+                Paperpile.main.onUpdateDB(this.grid_id);
             }
         } else {
             successFn=function(response){
-                //Ext.getCmp(this.grid_id).store.getById(this.data.sha1).set('attachments',this.data.attachments-1);
                 record.set('attachments',this.data.attachments-1);
-
                 this.updateDetail();
+                Paperpile.main.onUpdateDB(this.grid_id);
             }
         }
 
@@ -621,7 +630,47 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                         grid_id: this.grid_id,
                       },
               method: 'GET',
-              success: successFn,
+              success: function(response){
+                  var undo_msg='';
+                  if (isPDF){
+                      undo_msg='Deleted PDF file '+ record.get('pdf');
+                      record.set('pdf','');
+                  } else {
+                      undo_msg="Deleted one attached file"
+                      record.set('attachments',this.data.attachments-1);
+                  }
+                  this.updateDetail();
+
+                  Paperpile.status.updateMsg(
+                        { msg: undo_msg,
+                          action1: 'Undo',
+                          callback: function(action){
+                              Ext.Ajax.request({
+                                  url: Paperpile.Url('/ajax/attachments/undo_delete'),
+                                  method: 'GET',
+                                  success: function(response){
+                                      var json = Ext.util.JSON.decode(response.responseText);
+                                      var record=this.grid.store.getAt(this.grid.store.find('sha1',this.data.sha1));
+                                      if (json.pdf_file){
+                                          record.set('pdf',json.pdf_file);
+                                      } else {
+                                          record.set('attachments',this.data.attachments+1);
+                                      }
+                                      this.updateDetail();
+                                      Paperpile.main.onUpdateDB(this.grid_id);
+                                      Paperpile.status.clearMsg();
+                                  }, 
+                                  scope:this
+                              });
+                          },
+                          scope: this,
+                          hideOnClick: true,
+                        }
+                    );
+
+                  Paperpile.main.onUpdateDB(this.grid_id);
+
+              },
               failure: Paperpile.main.onError,
               scope:this,
             });

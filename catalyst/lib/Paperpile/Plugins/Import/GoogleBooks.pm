@@ -21,7 +21,7 @@ has 'query' => ( is => 'rw' );
 # The main search URL
 my $searchUrl = 'http://books.google.com/books/feeds/volumes?q=';
 
-# GoogleBooks maximally provides 20 entries per search;
+# GoogleBooks maximally provides 20 entries per search
 has 'max' => ( is => 'rw', isa => 'Int', default => 20 );
 
 sub BUILD {
@@ -34,11 +34,10 @@ sub BUILD {
 sub connect {
   my $self = shift;
  
-  # Maximum number of entries per page, this is the maximal number google allows to fetch per call.
-  $self->{limit} = $self->{max} if($self->{limit} >= $self->{max});
- 
   my $browser = Paperpile::Utils->get_browser;  # get new browser
   my $response = $browser->get( $searchUrl . $self->query . "&start-index=1&max-results=" . $self->limit);
+  
+  $self->limit($self->max) if($self->limit >= $self->max);
   
   if ( $response->is_error ) {
     NetGetError->throw(
@@ -53,7 +52,7 @@ sub connect {
 
   # overall number f results, although google only submits max 20 per query
   my $number = $result->{'openSearch:totalResults'}[0]; 
-  #print STDERR "number $number\n";
+#print STDERR "number $number\n";
 
   # cache the xml structure to speed up call to first page afterwards
   # google books ist one-based
@@ -70,11 +69,15 @@ sub connect {
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
+  my $browser = Paperpile::Utils->get_browser;
+  my $query =  '';
+  my $response;
+  my $responseDetails;
+  
+  $self->limit($self->max) if($self->limit >= $self->max);
+  
   # google books is 1-based, paperpile seems to be 0-based
   $offset++;
-
-  # Maximum number of entries per page, this is the maximal number google allows to fetch per call.
-  $self->{limit} = $self->{max} if($self->{limit} >= $self->{max});
 
   # Get the content of the page, either via cache for the first page
   # which has been retrieved in the connect function or send new query
@@ -83,9 +86,9 @@ sub page {
     $result = $self->_page_cache->{$offset}->{$limit};
   } 
   else {
-    my $browser = Paperpile::Utils->get_browser;
-    my $query = $searchUrl . $self->query . "&start-index=$offset&max-results=$limit";
-    my $response = $browser->get($query);
+    $browser = Paperpile::Utils->get_browser;
+    $query = $searchUrl . $self->query . "&start-index=$offset&max-results=$limit";
+    $response = $browser->get($query);
     if ( $response->is_error ) {
       NetGetError->throw(
         error => $self->{'plugin_name'} . ' query failed: ' . $response->message,
@@ -109,9 +112,13 @@ sub page {
   );
   
   # collect data
+  my $i=0;
+  #for(my $i=1; $i<=$self->{max}; $i++) {
   foreach my $book (@{$result->{entry}}) {
+    #my $book = ${$result->{entry}}[$i];
+    $i++;
 #print STDERR "entr=$urlID\n";
-print STDERR Dumper $book;
+#print STDERR Dumper $book;
 
     my $pub = Paperpile::Library::Publication->new(pubtype=>"BOOK");
     my @tmp = ();
@@ -123,7 +130,7 @@ print STDERR Dumper $book;
       my @tmp = @{$book->{'dc:title'}};    
       $title = join(': ', @tmp);
     }
-#print STDERR "titel: $title";
+print STDERR $i, "/", $limit, ": ", $title, "\n";
 
     #############################
     # collect authors
@@ -251,14 +258,13 @@ print STDERR Dumper $book;
         }
       }      
     }
-#print STDERR "url=$url\n";
+print STDERR "url=$url\n";
 
     #############################
     # collect pages
     # not every book has pages info
     # TODO
     
-
     $pub->title( $title ) if($title); # maybe booktitle, but booktitle is not displayed in the frontend?
     $pub->_authors_display( $authors_display ) if($authors_display);
     $pub->authors( join( ' and ', @authors ) ) if(scalar(@authors)>1);
@@ -269,9 +275,9 @@ print STDERR Dumper $book;
     $pub->abstract( $abstract ) if($abstract);
     $pub->url( $url ) if($url);
     #$pub->_citation_display(  );
-    #$pub->linkout(  );
+    #$pub->linkout($pdf_link) if($pdf_link); # that is done at _complete_details()
     #$pub->_details_link(  );
-    #$pub->refresh_fields;
+    $pub->refresh_fields;
     push @$page, $pub;
   }
  
@@ -282,7 +288,43 @@ print STDERR Dumper $book;
   return $page;
 }
 
+sub complete_details {
+  ( my $self, my $pub ) = @_;
 
+print STDERR "Entering complete_details!\n";
+
+  my $browser = Paperpile::Utils->get_browser;
+
+  # hold the data we already have
+  my $full_pub = $pub;
+
+  #############################
+  # collect linkout (PDF-link)
+  if($pub->url ne '') {
+    my $responseDetails = $browser->get($pub->url);
+    if ( $responseDetails->is_error ) {
+      NetGetError->throw(
+        error => $self->{'plugin_name'} . ' query failed: ' . $responseDetails->message,
+        code  => $responseDetails->code
+      );
+    }
+    #print STDERR Dumper $response;
+    if($responseDetails->{_content} =~ /a id=pdf_download href="(\S+)"/) {
+      $pub->linkout($1); # we hold it in both opbjects, maybe we'll need it in the short pub object, too.
+      $full_pub->linkout( $pub->linkout );
+print STDERR "PDF:", $full_pub->linkout, "\n";
+    }
+  }
+
+  # Note that if we change title, authors, and citation also the sha1
+  # will change. We have to take care of this.
+  my $old_sha1 = $pub->sha1;
+  my $new_sha1 = $full_pub->sha1;
+  delete( $self->_hash->{$old_sha1} );
+  $self->_hash->{$new_sha1} = $full_pub;
+
+  return $full_pub;
+}
 
  
 1;

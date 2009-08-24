@@ -50,6 +50,9 @@ has 'sha1' => ( is => 'rw' );
 # Timestamp when the entry was created
 has 'created' => ( is => 'rw', isa => 'Str' );
 
+# Flags entry as trashed
+has 'trashed' => ( is => 'rw', isa =>'Int', default => 0);
+
 # Timestamp when it was last read
 has 'last_read' => ( is => 'rw', isa => 'Str' );
 

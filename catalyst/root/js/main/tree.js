@@ -52,8 +52,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                 if (e.point != 'append'){
                     e.cancel=true;
                 } else {
-                    // only allow drop on Folders and Tags
-                    if ((e.target.type == 'TAGS' || e.target.type == 'FOLDER') &&
+                    // only allow drop on Folders, Tags and Trash
+                    if ((e.target.type == 'TAGS' || e.target.type == 'FOLDER' || e.target.type =='TRASH') &&
                         e.target.id != 'TAGS_ROOT'){
 
                         //if (e.target.id = 'FOLDER_ROOT'){
@@ -167,10 +167,15 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
                     // Call appropriate frontend, tags, active folders, and folders are opened only once
                     // and we pass the node.id as item-id for the tab
+
                     if (node.type == 'TAGS' || node.type == 'ACTIVE' || node.type == 'FOLDER'){
-                        Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id);
+                        Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id); 
                     } else {
-                        Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
+                        if (node.type=='TRASH'){
+                            Paperpile.main.tabs.newTrashTab(); 
+                        } else {
+                            Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
+                        }
                     }
                 } else {
 		            var main = Paperpile.main.tabs.getItem("MAIN");
@@ -250,6 +255,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                     failure: Paperpile.main.onError,
                     scope: this,
                 });
+            }
+
+            if (e.target.type == 'TRASH'){
+                var grid=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
+                grid.deleteEntry('TRASH');
             }
         }
         // We're dragging nodes internally
@@ -726,8 +736,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 					single:true,
 					fn: function(){
                         newNode.plugin_title=newNode.text;
-                        newNode.plugin_query='label:'+newNode.text
-                        newNode.plugin_base_query='label:'+newNode.text
+                        newNode.plugin_query='labelid:'+Paperpile.utils.encodeTag(newNode.text),
+                        newNode.plugin_base_query='labelid:'+Paperpile.utils.encodeTag(newNode.text),
                         this.onNewTag(newNode);
                     }
 				}
@@ -881,6 +891,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 				scope:this,
 				single:true,
 				fn:function(editor, newText, oldText){
+
+                    node.plugin_title=newText;
+                    node.plugin_query='labelid:'+Paperpile.utils.encodeTag(newText),
+                    node.plugin_base_query='labelid:'+Paperpile.utils.encodeTag(newText),
+                    
                     Ext.Ajax.request({
                         url: Paperpile.Url('/ajax/crud/rename_tag'),
                         params: { old_tag: tag,
@@ -912,7 +927,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
                                             grid.store.fireEvent('datachanged',this.store);
 
                                             // If a entry is selected in a tab, also update the display
-                                            var sidepanel=item.items.get('east_panel').items.get('sidepanel');
+                                            var sidepanel=item.items.get('east_panel').items.get('overview');
                                             var selected=grid.getSelectionModel().getSelected();
                                             if (selected){
                                                 sidepanel.updateDetail();

@@ -116,6 +116,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
                 var record=this.grid.getStore().getAt(this.grid.getStore().find('sha1',this.data.sha1));
                 record.set('annote',newNotes);
                 this.closeEditor();
+                Paperpile.main.onUpdateDB(this.grid.id);
             },
             failure: Paperpile.main.onError,
             scope: this

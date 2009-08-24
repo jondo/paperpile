@@ -214,6 +214,34 @@ sub decode_db {
 }
 
 
+# Convert tags that can consists of several words to one
+# string. Start, end and spaces are encoded by numbers. We cannot
+# encode with special characters as they are ignored by FTS.
+# eg. "Really crap papers" gets to "88Really99crap99papers88" This hack
+# is necessary to allow searching for a specific tag using FTS.
+sub encode_tags {
+
+  (my $self, my $tags) = @_;
+
+  return "" if not $tags;
+
+  my @tags = split(/,/, $tags);
+
+  my @new_tags=();
+
+  foreach my $tag (@tags){
+
+    $tag=~s/ /99/g;
+    $tag='88'.$tag.'88';
+    push @new_tags, $tag;
+
+  }
+
+  return join(',', @new_tags);
+
+}
+
+
 # Copies file $source to $dest. Creates directory if not already
 # exists and makes sure that file name is unique.
 

@@ -6,6 +6,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
+use URI::Escape;
 use 5.010;
 
 use Paperpile::Library::Publication;
@@ -29,8 +30,22 @@ my $settingsUrl =
   'http://scholar.google.com/scholar_setprefs?output=search&inststart=0&hl=en&lang=all&instq=&submit=Save+Preferences&scis=yes';
 
 sub BUILD {
-  my $self = shift;
-  $self->plugin_name('GoogleScholar');
+    my $self = shift;
+    $self->plugin_name('GoogleScholar');
+}
+
+# Format the query sent to Google Scholar. This means escaping 
+# things like non-alphanumeric characters and joining words with '+'.
+
+sub FormatQueryString {
+    my $query = $_[0];
+    
+    my @tmp = split(/ /, $query);
+    foreach my $i (0 .. $#tmp) {
+	$tmp[$i] = uri_escape($tmp[$i]);
+    }
+    
+    return join("+", @tmp);
 }
 
 sub connect {
@@ -50,9 +65,10 @@ sub connect {
   $browser->cookie_jar( $self->_session_cookie );    # set the session cookie
 
   # Get the results
-  my $response = $browser->get( $searchUrl . $self->query );
+  my $query_string = FormatQueryString($self->query);
+  my $response = $browser->get( $searchUrl . $query_string );
   my $content  = $response->content;
-
+ 
   # save first page in cache to speed up call to first page afterwards
   $self->_page_cache( {} );
   $self->_page_cache->{0}->{ $self->limit } = $content;
@@ -69,8 +85,8 @@ sub connect {
   $tree->parse_content($content);
 
   # Try to find the number of hits
-  my $stats = $tree->findnodes(q{//td[@align="right"]/font[@size='-1']});
-  if ( $stats =~ /Results \d+ - \d+ of\s*(about)?\s*([0123456789,]+) for/ ) {
+  my @stats = $tree->findnodes('/html/body/table/tr/td[@align="right"]/font[@size="-1"]');
+  if ( $stats[0]->as_text() =~ m/Results\s\d+\s-\s\d+\sof\s(about)?\s([0123456789,]+)\./ ) {
     my $number = $2;
     $number =~ s/,//g;
     $number = 1000 if ( $number > 1000 );    # Google does not provide more than 1000 results
@@ -94,7 +110,8 @@ sub page {
   } else {
     my $browser = Paperpile::Utils->get_browser;
     $browser->cookie_jar( $self->_session_cookie );
-    my $query    = $searchUrl . $self->query . "&start=$offset";
+    my $query_string = FormatQueryString($self->query);
+    my $query    = $searchUrl . $query_string . "&start=$offset";
     my $response = $browser->get($query);
     $content = $response->content;
   }
@@ -114,7 +131,7 @@ sub page {
   );
 
   # Each entry has a h3 heading
-  my @nodes = $tree->findnodes('//h3');
+  my @nodes = $tree->findnodes('/html/body/h3[@class="r"]');
 
   foreach my $node (@nodes) {
 
@@ -137,15 +154,14 @@ sub page {
 
       $url = '';
     }
-
-    push @{ $data{titles} }, $title;
+   push @{ $data{titles} }, $title;
     push @{ $data{urls} },   $url;
   }
 
   # There is <div> for each entry but a <font> tag directly below the
   # <h3> header
 
-  @nodes = $tree->findnodes(q{//font[@size='-1']});
+  @nodes = $tree->findnodes(q{/html/body/font[@size='-1']});
 
   foreach my $node (@nodes) {
 
@@ -154,13 +170,13 @@ sub page {
     next if not $line;
 
     my ( $authors, $citation, $publisher ) = split( / - /, $line );
-
+ 
     $citation .= "- $publisher" if $publisher;
 
     push @{ $data{authors} },   defined($authors)  ? $authors  : '';
     push @{ $data{citations} }, defined($citation) ? $citation : '';
 
-    my @links = $node->findnodes('./a');
+    my @links = $node->findnodes('./span[@class="fl"]/a');
 
     # Find the BibTeX export links
     foreach my $link (@links) {
@@ -233,6 +249,26 @@ sub complete_details {
   $self->_hash->{$new_sha1} = $full_pub;
 
   return $full_pub;
+
+}
+
+# match function to match a given publication object against Google
+# Scholar.
+
+sub match {
+
+  ( my $self, my $pub ) = @_;
+
+
+  my $query = '';
+
+  if ( $pub->title ) {
+      $query      = FormatQueryString($pub->title);
+  }
+
+  print STDERR "$query\n";
+
+  NetMatchError->throw( error => 'No match against GoogleScholar.');
 
 }
 

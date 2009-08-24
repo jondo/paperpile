@@ -11,6 +11,7 @@ use Paperpile::Exceptions;
 
 use Paperpile::Plugins::Import;
 use Paperpile::Plugins::Export;
+#use Paperpile::Plugins::Export::Bibfile;
 
 # Import plugins dynamically from directory content alone
 BEGIN{
@@ -56,7 +57,8 @@ sub resultsgrid : Local {
       }
     }
 
-    if ( ( $plugin_name eq 'DB' ) and ( not $c->request->params->{plugin_file} ) ) {
+    if ( (( $plugin_name eq 'DB' ) and ( not $c->request->params->{plugin_file} )) or
+         ( $plugin_name eq 'Duplicates' ) or ( $plugin_name eq 'Trash' )) {
       $params{file} = $c->session->{library_db};
     }
 
@@ -67,11 +69,12 @@ sub resultsgrid : Local {
 
     $plugin->connect;
 
+    $c->session->{"grid_$grid_id"} = $plugin;
+
     if ( $plugin->total_entries == 0 ) {
       _resultsgrid_format( @_, [], 0 );
     }
 
-    $c->session->{"grid_$grid_id"} = $plugin;
   } else {
     $plugin = $c->session->{"grid_$grid_id"};
   }

@@ -36,6 +36,15 @@ Paperpile.utils = {
 
     },
 
+    // Encode tag using our special format to allow unique full text searches
+    encodeTag: function(tag) {
+
+        tag=tag.replace(/ /g, "99");
+
+        return '88'+tag+'88';
+
+    },
+
     catPath : function(){
 
         var parts=[];

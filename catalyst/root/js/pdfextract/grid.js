@@ -14,7 +14,8 @@ Paperpile.PdfExtractGrid = Ext.extend(Ext.grid.GridPanel, {
             }); 
         
         var pluginsStore=[['PubMed','PubMed'],
-                          //['GoogleScholar','Google Scholar']
+                          ['GoogleScholar','Google Scholar'],
+                          ['ArXiv','ArXiv'],
                          ];
         
         var combo= new Ext.form.ComboBox(

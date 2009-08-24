@@ -67,7 +67,8 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                       {xtype: 'textfield',
                        itemId: 'textfield',
                        fieldLabel: label,
-                       width: 400
+                       width: 400,
+                       enableKeyEvents: true,
                       }
                   ],
                 },
@@ -157,7 +158,13 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
                           },
                           this
                          );
-
+        
+        this.textfield.on('keypress',
+                          function(field, e){
+                              this.getBottomToolbar().items.get('ok_button').enable();
+                          },
+                          this
+                         );
 
     },
 

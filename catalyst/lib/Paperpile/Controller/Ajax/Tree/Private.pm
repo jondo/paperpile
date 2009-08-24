@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
+use Paperpile::Utils;
 use Data::Dumper;
 use 5.010;
 
@@ -66,6 +67,18 @@ sub get_default_tree : Private {
   # Initialize
   $c->forward( 'get_tags', [$tags] );
 
+  my $folders = Tree::Simple->new( {
+      text    => 'Trash',
+      type    => "TRASH",
+      iconCls => 'pp-icon-trash',
+      plugin_name  => 'Trash',
+      hidden  => 0,
+    },
+    $local_lib
+  );
+
+  $folders->setUID('TRASH');
+
   #### / Active Folders
 
   my $active = Tree::Simple->new( {
@@ -97,10 +110,10 @@ sub get_default_tree : Private {
 
   $active->addChild(
     Tree::Simple->new( {
-        type         => 'CLOUDS',
-        text         => 'Cloud view',
-        iconCls      => 'pp-icon-clouds',
-        hidden       => 0,
+        type    => 'CLOUDS',
+        text    => 'Cloud view',
+        iconCls => 'pp-icon-clouds',
+        hidden  => 0,
       }
     )
   );
@@ -303,8 +316,12 @@ sub get_tags : Private {
     #push @tags, {tag=>'No labels',style=>'0'};
   }
 
+
   # Add tags
   foreach my $tag (@tags) {
+
+    my $encoded=Paperpile::Utils->encode_tags($tag->{tag});
+
     $tree->addChild(
       Tree::Simple->new( {
           text              => $tag->{tag},
@@ -315,8 +332,8 @@ sub get_tags : Private {
           tagStyle         => $tag->{style},
           plugin_name       => 'DB',
           plugin_mode       => 'FULLTEXT',
-          plugin_query      => "label:".$tag->{tag},
-          plugin_base_query => "label:".$tag->{tag},
+          plugin_query      => "labelid:".$encoded,
+          plugin_base_query => "labelid:".$encoded,
           plugin_title      => $tag->{tag},
           plugin_iconCls    => 'pp-icon-tag',
         }

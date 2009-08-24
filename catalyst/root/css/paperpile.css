@@ -464,7 +464,6 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/page_add.png');
 }
 
-
 .delete .x-btn-text {
     background-image: url('/images/icons/delete.png');
 }
@@ -493,6 +492,15 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/back.png');
 }
 
+.clean .x-btn-text {
+    background-image: url('/images/icons/clean.png');
+}
+
+.restore .x-btn-text {
+    background-image: url('/images/icons/restore.png');
+}
+
+
 .dashboard .x-btn-text {
     background-image: url('/images/icons/cog.png');
 }
@@ -512,6 +520,10 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/page_white_stack.png') !important;
 }
 
+.pp-icon-trash {
+    background-image: url('/images/icons/trash.png') !important;
+}
+
 .pp-icon-tags{
     background-image: url('/images/icons/tag_orange.png')!important;
 }
@@ -523,7 +535,6 @@ a:hover.pp-textlink {
 .pp-icon-clouds{
     background-image: url('/images/icons/weather_clouds.png')!important;
 }
-
 
 .pp-icon-folder{
     background-image: url('/images/icons/folder.png')!important;
@@ -662,6 +673,11 @@ a:hover.pp-textlink {
 .pp-grid-status-imported {
     background: transparent url('/images/icons/page.png') no-repeat;
 }
+
+.pp-grid-status-deleted {
+    background: transparent url('/images/icons/trashed.png') no-repeat;
+}
+
 
 .pp-grid-data{
     line-height: 1.5em;

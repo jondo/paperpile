@@ -69,8 +69,8 @@ sub get_complete_tree {
      my ($_tree) = @_;
      my $_dump=Dumper($self->_get_js_object($_tree,0));
      # Remove first and last line with "$VAR1={" and "};", resp.
-     my @tmp=split(/\n/,$_dump);
-     my @tmp=@tmp[1..$#tmp-1];
+     my @t=split(/\n/,$_dump);
+     my @tmp=@t[1..$#t-1];
      $dump.='{'.join("\n",@tmp);
      if ($_tree->isLeaf){
        $dump.='},';

@@ -81,7 +81,12 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         this.iconTemplate = new Ext.XTemplate(
             '<div class="pp-grid-info">',
             '<tpl if="_imported">',
+            '<tpl if="trashed==0">',
             '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
+            '</tpl>',
+            '<tpl if="trashed==1">',
+            '<div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
+            '</tpl>',
             '</tpl>',
 //            '<div>',
             '<tpl if="pdf">',
@@ -118,14 +123,16 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 tooltip: 'Edit citation data of the selected reference',
             }),
 
-            'DELETE': new Ext.Action({
+            'TRASH': new Ext.Action({
                 text: 'Delete',
-                handler: this.deleteEntry,
+                handler: function(){
+                    this.deleteEntry('TRASH');
+                },
                 scope: this,
                 cls: 'x-btn-text-icon delete',
                 disabled:true,
                 itemId:'delete_button',
-                tooltip: 'Delete the selected references from your library',
+                tooltip: 'Move selected references to Trash',
             }),
 
             'IMPORT': new Ext.Action({
@@ -135,7 +142,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 cls: 'x-btn-text-icon add',
                 disabled:true,
                 itemId:'import_button',
-                tooltip: 'Add the selected references to your library.',
+                tooltip: 'Import selected references to your library.',
             }),
 
             'IMPORT_ALL': new Ext.Action({
@@ -216,7 +223,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                   this.actions['NEW'],
                   this.actions['IMPORT'],
                   this.actions['IMPORT_ALL'],
-                  this.actions['DELETE'],
+                  this.actions['TRASH'],
                   this.actions['EDIT'],
                   { xtype:'button',
                     itemId: 'more_menu',
@@ -235,7 +242,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.actions['VIEW_PDF'],
 		'-',
 		this.actions['IMPORT'],
-                this.actions['DELETE'],
+                this.actions['TRASH'],
                 this.actions['EDIT'],
                 this.actions['EXPORT'],
 //                this.actions['FORMAT'],
@@ -357,16 +364,24 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       });
 
 
-        this.store.on('load', this.onStoreLoad, this);
+        this.store.on('load', 
+                      function() {
+                          // If nothing is selected, select first row
+                          if (!this.getSelectionModel().getSelected()){
+                              this.getSelectionModel().selectRow(0);
+                          };
+                          this.updateButtons();
+                      },
+                      this);
 
     },
 
 
     onStoreLoad: function() {
         // If nothing is selected, select first row
-        //if (!this.getSelectionModel().getSelected()){
+        if (!this.getSelectionModel().getSelected()){
             this.getSelectionModel().selectRow(0);
-        //} else {
+        };// else {
             // else re-focus on last selection
           //  var row=this.store.indexOf(this.getSelectionModel().getSelected());
            // (function(){this.getView().focusRow( row )}).defer(1000,this);
@@ -425,33 +440,44 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var notImported=this.getSelection('NOT_IMPORTED').length;
         var selected=imported+notImported;
 
-        this.actions['NEW'].enable();
-        this.actions['EXPORT'].enable();
-        this.actions['FORMAT'].enable();
-        this.actions['SAVE_AS_ACTIVE'].enable();
-	this.actions['VIEW_YEAR'].enable();
-	this.actions['VIEW_JOURNAL'].enable();
-	this.actions['VIEW_AUTHOR'].enable();
+        if (selected == 0){
+            console.log("INHERE");
+            for (b in this.actions){
+                this.actions[b].disable();
+            }
+            this.actions['NEW'].enable();
+        }
+
+        if (selected > 0 ){
+            this.actions['NEW'].enable();
+            this.actions['EXPORT'].enable();
+            this.actions['FORMAT'].enable();
+            this.actions['SAVE_AS_ACTIVE'].enable();
+	        this.actions['VIEW_YEAR'].enable();
+	        this.actions['VIEW_JOURNAL'].enable();
+	        this.actions['VIEW_AUTHOR'].enable();
+
+            if (this.getSelectionModel().getSelected().data.pdf) {
+	            this.actions['VIEW_PDF'].setDisabled(false);
+            } else {
+	            this.actions['VIEW_PDF'].setDisabled(true);
+            }
+        }
 
         if (selected == 1){
             this.actions['EDIT'].setDisabled(imported==0);
             this.actions['IMPORT'].setDisabled(imported);
-            this.actions['DELETE'].setDisabled(imported==0);
+            this.actions['TRASH'].setDisabled(imported==0);
         }
 
         if (selected > 1 ){
             this.actions['EDIT'].disable();
-            this.actions['DELETE'].setDisabled(imported==0);
+            this.actions['TRASH'].setDisabled(imported==0);
             this.actions['IMPORT'].setDisabled(notImported==0);
         }
 
-      if (this.getSelectionModel().getSelected().data.pdf) {
-	this.actions['VIEW_PDF'].setDisabled(false);
-      } else {
-	this.actions['VIEW_PDF'].setDisabled(true);
-      }
 
-      this.actions['SELECT_ALL'].setDisabled(this.allSelected);
+        this.actions['SELECT_ALL'].setDisabled(this.allSelected);
     },
 
    // Small helper functions to get the index of a given item in the toolbar configuration array
@@ -615,7 +641,13 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
     },
 
-    deleteEntry: function(){
+    // If trash is set entries are moved to trash, otherwise they are
+    // deleted completely
+    // mode: TRASH ... move to trash
+    //       RESTORE ... restore from trash
+    //       DELETE ... delete permanently
+
+    deleteEntry: function(mode){
 
         selection=this.getSelection();
 
@@ -623,25 +655,38 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         var many=false;
 
-        if (selection == 'ALL'){
-            many=true;
-        } else {
-            if (selection.length > 10){
-                many=true;
-            }
+        //if (selection == 'ALL'){
+        //    many=true;
+        //} else {
+        //    if (selection.length > 10){
+        //        many=true;
+        //    }
+        //}
+
+        //if (many){
+        if (mode == 'DELETE'){
+            Paperpile.status.showBusy('Deleting references from library');
+        }
+        if (mode == 'TRASH'){
+            Paperpile.status.showBusy('Moving references to Trash');
         }
 
-        if (many){
-            Paperpile.status.showBusy('Delete references from library');
+        if (mode == 'RESTORE'){
+            Paperpile.status.showBusy('Restoring references');
         }
 
+       
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/delete_entry'),
             params: { selection: selection,
                       grid_id: this.id,
+                      mode: mode,
                     },
             method: 'GET',
-            success: function(){
+            success: function(response){
+
+                var num_deleted = Ext.util.JSON.decode(response.responseText).num_deleted;
+
                 this.updateButtons();
                 this.store.suspendEvents();
                 if (selection == 'ALL'){
@@ -656,14 +701,45 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.store.resumeEvents();
                 this.store.fireEvent('datachanged',this.store);
 
-                if (this.getSelectionModel().getCount()==0){
-                    var container= this.findParentByType(Paperpile.PubView);
+                var container= this.findParentByType(Paperpile.PubView);
+                if (this.getSelectionModel().getCount()!=0){
                     container.onRowSelect();
+                } else {
+                    container.onEmpty('');
                 }
 
-                Paperpile.main.onUpdateDB(this.id);
+                if (mode == 'TRASH'){
+                    var msg= num_deleted + ' references moved to Trash';
 
-                Paperpile.status.clearMsg();
+                    if (num_deleted == 1){
+                        msg="1 reference moved to Trash"
+                    }
+
+                    Paperpile.status.updateMsg(
+                        { msg: msg,
+                          action1: 'Undo',
+                          callback: function(action){
+                              // TODO: does not show up, don't know why:
+                              Paperpile.status.showBusy('Undo...');
+                              Ext.Ajax.request({
+                                  url: Paperpile.Url('/ajax/crud/undo_trash'),
+                                  method: 'GET',
+                                  success: function(){
+                                      Paperpile.main.onUpdateDB();
+                                      Paperpile.status.clearMsg();
+                                  }, 
+                                  scope:this
+                              });
+                          },
+                          scope: this,
+                          hideOnClick: true,
+                        }
+                    );
+                } else {
+                    Paperpile.status.clearMsg();
+                }
+
+                Paperpile.main.onUpdateDB();
 
             },
             failure: Paperpile.main.onError,

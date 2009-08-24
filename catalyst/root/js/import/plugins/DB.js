@@ -83,7 +83,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                 itemId: 'deleteMenu',
                 items: [
                     this.actions['DELETE_FROM_FOLDER'],
-                    this.actions['DELETE']
+                    this.actions['TRASH']
                 ]
             });
 
@@ -95,8 +95,8 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                   menu: menu
                 };
 
-            this.actions['DELETE'].setText('Delete from library');
-            this.actions['DELETE'].setIconClass('');
+            this.actions['TRASH'].setText('Move to Trash');
+            this.actions['TRASH'].setIconClass('');
         }
         
         this.store.baseParams['plugin_search_pdf']= 0 ;
@@ -106,7 +106,7 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                       function(){
                           if (this.store.getCount()==0){
                               var container= this.findParentByType(Paperpile.PubView);
-                              if (container.itemId=='MAIN'){
+                              if (container.itemId=='MAIN' && this.store.baseParams.plugin_query ==""){
                                   container.onEmpty(this.welcomeMsg);
                               }
                           }
@@ -118,6 +118,8 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
         Paperpile.PluginGridDB.superclass.onRender.apply(this, arguments);
 
         console.log(this.limit);
+
+
 
         this.store.load({params:{start:0, limit: this.limit}});
 
