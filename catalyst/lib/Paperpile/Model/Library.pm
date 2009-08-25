@@ -255,6 +255,8 @@ sub trash_pubs {
 
   my @files = ();
 
+  # currently no explicit error handling/rollback etc.
+
   foreach my $pub (@$pubs) {
     my $rowid = $pub->_rowid;
 
@@ -262,6 +264,12 @@ sub trash_pubs {
     $status=0 if $mode eq 'RESTORE';
 
     $self->dbh->do("UPDATE Publications SET trashed=$status WHERE rowid=$rowid");
+
+
+    # Created is used to store time of import as well as time of
+    # deletion, so we set it everytime we trash or restore something
+    my $now = $self->dbh->quote(timestamp gmtime);
+    $self->dbh->do("UPDATE Publications SET created=$now WHERE rowid=$rowid;");
 
     # Move attachments
     my $select =
@@ -284,7 +292,6 @@ sub trash_pubs {
       push @files, [ $file_name, $move_to ];
       $move_to = $self->dbh->quote($move_to);
 
-      #print STDERR "UPDATE Attachments SET file_name=$move_to WHERE rowid=$attachment_rowid;\n";
       $self->dbh->do("UPDATE Attachments SET file_name=$move_to WHERE rowid=$attachment_rowid; ");
 
     }
@@ -334,23 +341,6 @@ sub trash_pubs {
       # directories, currently only one level is deleted
       rmdir $dir;
     }
-  }
-
-  $self->dbh->commit;
-
-  return 1;
-
-}
-
-sub restore_pubs {
-
-  ( my $self, my $pubs ) = @_;
-
-  $self->dbh->begin_work;
-
-  foreach my $pub (@$pubs) {
-    my $rowid=$pub->_rowid;
-    $self->dbh->do("UPDATE Publications SET trashed=0 WHERE rowid=$rowid");
   }
 
   $self->dbh->commit;
