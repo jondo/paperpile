@@ -41,65 +41,68 @@ sub create_pubs {
 
   ( my $self, my $pubs ) = @_;
 
-  my @to_be_inserted=();
+  my @to_be_inserted = ();
 
   foreach my $pub (@$pubs) {
-      eval {
-    # Initialize some fields
+    eval {
 
-    $pub->created(timestamp gmtime) if not $pub->created;
-    $pub->times_read(0);
-    $pub->last_read(timestamp gmtime);
-    $pub->_imported(1);
+      # Initialize some fields
 
-    # Generate citation key
-    my $pattern = $self->get_setting('key_pattern');
-    my $key     = $pub->format_pattern($pattern);
+      $pub->created( timestamp gmtime ) if not $pub->created;
+      $pub->times_read(0);
+      $pub->last_read('');
+      $pub->_imported(1);
 
-    # Check if key already exists
+      # Generate citation key
+      my $pattern = $self->get_setting('key_pattern');
+      my $key     = $pub->format_pattern($pattern);
 
-    # First we check in the database
-    my $quoted = $self->dbh->quote("key:$key*");
-    my $sth = $self->dbh->prepare(qq^SELECT key FROM fulltext_full WHERE fulltext_full MATCH $quoted^);
-    my $existing_key;
-    $sth->bind_columns( \$existing_key );
-    $sth->execute;
+      # Check if key already exists
 
-    my @suffix = ();
-    my $unique = 1;
+      # First we check in the database
+      my $quoted = $self->dbh->quote("key:$key*");
+      my $sth =
+        $self->dbh->prepare(qq^SELECT key FROM fulltext_full WHERE fulltext_full MATCH $quoted^);
+      my $existing_key;
+      $sth->bind_columns( \$existing_key );
+      $sth->execute;
 
-    while ( $sth->fetch ) {
-      $unique = 0;    # if we found something in the DB it is not unique
+      my @suffix = ();
+      my $unique = 1;
 
-      # We collect the suffixes a,b,c... that already exist
-      if ( $existing_key =~ /$key([a-z])/ ) {    #
-        push @suffix, $1;
+      while ( $sth->fetch ) {
+        $unique = 0;    # if we found something in the DB it is not unique
+
+        # We collect the suffixes a,b,c... that already exist
+        if ( $existing_key =~ /$key([a-z])/ ) {    #
+          push @suffix, $1;
+        }
       }
-    }
 
-    # Then in the current list that have been already processed in this loop
-    foreach my $existing_key (@to_be_inserted){
-      if ( $existing_key =~ /^$key([a-z])?/ ) {
-        $unique=0;
-        push @suffix, $1 if $1;
+      # Then in the current list that have been already processed in this loop
+      foreach my $existing_key (@to_be_inserted) {
+        if ( $existing_key =~ /^$key([a-z])?/ ) {
+          $unique = 0;
+          push @suffix, $1 if $1;
+        }
       }
-    }
 
-    if ( not $unique ) {
-      my $new_suffix = 'a';
-      if (@suffix) {
-        # we sort them to make sure to get the 'highest' suffix and count one up
-        @suffix = sort { $a cmp $b } @suffix;
-        $new_suffix = chr( ord( pop(@suffix) ) + 1 );
+      if ( not $unique ) {
+        my $new_suffix = 'a';
+        if (@suffix) {
+
+          # we sort them to make sure to get the 'highest' suffix and count one up
+          @suffix = sort { $a cmp $b } @suffix;
+          $new_suffix = chr( ord( pop(@suffix) ) + 1 );
+        }
+        $key .= $new_suffix;
       }
-      $key .= $new_suffix;
-    }
 
-    push @to_be_inserted, $key;
+      push @to_be_inserted, $key;
 
-    $pub->citekey($key);
-      };
-      warn $@ if $@;
+      $pub->citekey($key);
+    };
+    warn $@ if $@;
   }
 
   $self->insert_pubs($pubs);
@@ -1110,6 +1113,8 @@ sub attach_file {
     $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
 
     $self->update_field('Publications', $rowid, 'pdf', $relative_dest);
+    $self->update_field('Publications', $rowid, 'times_read', 0);
+    $self->update_field('Publications', $rowid, 'last_read', '');
 
     $pub->pdf($relative_dest);
 
@@ -1173,7 +1178,8 @@ sub delete_attachment{
     }
 
     $self->update_field('Publications', $rowid, 'pdf','');
-
+    $self->update_field('Publications', $rowid, 'times_read', 0);
+    $self->update_field('Publications', $rowid, 'last_read', '');
 
   } else {
 

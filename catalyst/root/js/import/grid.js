@@ -90,7 +90,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             '</tpl>',
 //            '<div>',
             '<tpl if="pdf">',
-            '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="{pdf}"></div>',
+            '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br>{_last_readPretty}"></div>',
             '</tpl>',
             '<tpl if="attachments">',
             '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
@@ -289,6 +289,13 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
             record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
 
+            if (record.data.last_read){
+                record.data._last_readPretty = 'Last read: '+ Paperpile.utils.prettyDate(record.data.last_read);
+            } else {
+                record.data._last_readPretty='Never read';
+            }
+
+
             return this.iconTemplate.apply(record.data);
 
         }
@@ -441,7 +448,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var selected=imported+notImported;
 
         if (selected == 0){
-            console.log("INHERE");
             for (b in this.actions){
                 this.actions[b].disable();
             }
@@ -916,12 +922,13 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     },
 
     openPDF: function() {
-      var sm = this.getSelectionModel();
-      if (sm.getSelected().data.pdf){
-        var pdf=sm.getSelected().data.pdf;
-        var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf );
-        Paperpile.main.tabs.newPdfTab({file:path, title:pdf});
-      }
+        var sm = this.getSelectionModel();
+        if (sm.getSelected().data.pdf){
+            var pdf=sm.getSelected().data.pdf;
+            var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf );
+            Paperpile.main.tabs.newPdfTab({file:path, title:pdf});
+            Paperpile.main.inc_read_counter(sm.getSelected().data._rowid);
+        }
     },
 
     onDblClick: function( grid, rowIndex, e ){
