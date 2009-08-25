@@ -10,6 +10,7 @@ use File::Spec;
 use File::Path;
 use File::Copy;
 use Paperpile::Exceptions;
+use MooseX::Timestamp;
 use 5.010;
 
 sub reset_db : Local {
@@ -221,8 +222,19 @@ sub clean_duplicates : Local {
 
 
 
+sub inc_read_counter : Local {
+
+  my ( $self, $c ) = @_;
+  my $rowid = $c->request->params->{rowid};
+
+  my $touched= $c->model('Library')->dbh->quote(timestamp gmtime);
+
+  $c->model('Library')->dbh->do("UPDATE Publications SET times_read=times_read+1 WHERE rowid=$rowid");
+
+  $c->model('Library')->dbh->do("UPDATE Publications SET last_read=$touched WHERE rowid=$rowid");
 
 
+}
 
 
 
