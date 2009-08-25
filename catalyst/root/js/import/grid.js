@@ -421,6 +421,22 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 			contextmenu:{fn:function(){return false;},stopEvent:true}
 		});
 
+        var map=new Ext.KeyMap(this.el, {
+            key: Ext.EventObject.DELETE,
+            handler: function(){
+                var imported=this.getSelection('IMPORTED').length;
+                if (imported>0){
+                    // Handle both cases of normal grids and Trash grid
+                    if (this.getSelectionModel().getSelected().get('trashed')){
+                        this.deleteEntry('DELETE');
+                    } else {
+                        this.deleteEntry('TRASH');
+                    }
+                }
+            },
+            scope : this
+        });
+
         Paperpile.PluginGrid.superclass.afterRender.apply(this, arguments);
 
     },
