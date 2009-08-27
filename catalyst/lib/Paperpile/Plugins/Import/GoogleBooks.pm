@@ -6,6 +6,8 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use XML::Simple;
 use Lingua::EN::NameParse;
+use HTML::TreeBuilder::XPath;
+use Encode;
 use 5.010;
  
 use Paperpile::Library::Publication;
@@ -244,6 +246,7 @@ sub page {
       @tmp = @{$book->{'dc:description'}};
     }
     $abstract = join('; ', @tmp);
+#print STDERR "abstract=$abstract\n";
 
     #############################
     # collect url
@@ -290,7 +293,7 @@ sub page {
     $pub->year( $year ) if($year);
     $pub->isbn( $isbn ) if($isbn);
     $pub->issn( $issn ) if($issn);
-    $pub->abstract( $abstract ) if($abstract);
+    $pub->abstract( $abstract ) if($abstract);		
     $pub->url( $url ) if($url);
 		$pub->pages( $pages ) if($pages);
     #$pub->_citation_display(  );
@@ -338,6 +341,13 @@ sub complete_details {
 		);
 	}
 
+  # now we parse the HTML for entries
+  my $tree = HTML::TreeBuilder::XPath->new;
+  $tree->utf8_mode(1);
+  $tree->parse_content($responseDetails->{_content});
+	
+	
+
 	#############################
   # get PDF-link
 	if($responseDetails->{_content} =~ /a href="(\S+)">Download PDF/) {
@@ -345,6 +355,15 @@ sub complete_details {
       $full_pub->pdf_url($1);
 #print STDERR "PDF:", $full_pub->pdf_url, "\n";
   }
+	
+	#############################
+  # try to get complete abstract	
+	my @nodes = $tree->findnodes('//*[@id="synopsistext"]');
+	if(scalar(@nodes) > 0) {
+		my $tmpString = $nodes[0]->as_text();
+		$pub->abstract( $tmpString ); # we hold it in both opbjects, maybe we'll need it in the short pub object, too.
+    $full_pub->abstract( $tmpString );
+	}
 
   # Note that if we change title, authors, and citation also the sha1
   # will change. We have to take care of this.
