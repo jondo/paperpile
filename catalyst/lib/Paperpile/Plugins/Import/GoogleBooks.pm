@@ -167,11 +167,10 @@ sub page {
           if(length($last)>0 && length($first)>0) {
             push @authors,
               Paperpile::Library::Author->new(
-                  collective => $author,
                   last  => $last,
                   first => $first,
                   jr    => '',
-              )->normalized; 
+              )->normalized;
           }
           else {
             $failure = 1;
@@ -277,7 +276,7 @@ sub page {
     # collect pages
     # not every book has pages info
 
-    
+#print STDERR Dumper @authors;    
     $pub->title( $title ) if($title);
 		$pub->booktitle( $title ) if($title); 
     $pub->_authors_display( $authors_display ) if($authors_display);
