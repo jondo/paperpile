@@ -6,6 +6,8 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use XML::Simple;
 use Lingua::EN::NameParse;
+use HTML::TreeBuilder::XPath;
+use Encode;
 use 5.010;
  
 use Paperpile::Library::Publication;
@@ -130,7 +132,7 @@ sub page {
       my @tmp = @{$book->{'dc:title'}};    
       $title = join(': ', @tmp);
     }
-print STDERR $i, "/", $limit, ": ", $title, "\n";
+#print STDERR $i, "/", $limit, ": ", $title, "\n";
 
     #############################
     # collect authors
@@ -167,11 +169,10 @@ print STDERR $i, "/", $limit, ": ", $title, "\n";
           if(length($last)>0 && length($first)>0) {
             push @authors,
               Paperpile::Library::Author->new(
-                  collective => $author,
                   last  => $last,
                   first => $first,
                   jr    => '',
-              )->normalized; 
+              )->normalized;
           }
           else {
             $failure = 1;
@@ -245,6 +246,7 @@ print STDERR $i, "/", $limit, ": ", $title, "\n";
       @tmp = @{$book->{'dc:description'}};
     }
     $abstract = join('; ', @tmp);
+#print STDERR "abstract=$abstract\n";
 
     #############################
     # collect url
@@ -252,31 +254,51 @@ print STDERR $i, "/", $limit, ": ", $title, "\n";
     if(exists $book->{'link'}) {
       foreach my $link (@{$book->{'link'}}) {
         if(exists $link->{rel}) {
-          if($link->{rel} =~ /preview$/) {
-            $url = $link->{href};
+#print STDERR "link-rel  = $link->{rel}\n";
+#print STDERR "link-href = $link->{href}\n";
+          if($link->{rel} =~ /info$/) {
+            $url = $link->{href} if(exists $link->{href});
           }
         }
       }      
     }
-print STDERR "url=$url\n";
+#print STDERR "url=$url\n";
 
     #############################
     # collect pages
     # not every book has pages info
-    # TODO
-    
-    $pub->title( $title ) if($title); # maybe booktitle, but booktitle is not displayed in the frontend?
+    my $pages = '';
+    foreach my $f (@{$book->{'dc:format'}}) {
+      if($f =~ /(\d+)\s*pages/) {
+				$pages = $1;
+      }      
+    }
+#print STDERR "pages=$pages\n";
+
+    #############################
+    # collect pages
+    # not every book has pages info
+
+#print STDERR Dumper @authors;    
+    $pub->title( $title ) if($title);
+		$pub->booktitle( $title ) if($title); 
     $pub->_authors_display( $authors_display ) if($authors_display);
-    $pub->authors( join( ' and ', @authors ) ) if(scalar(@authors)>1);
+		if(scalar(@authors)==1) {
+			$pub->authors($authors[0]);
+		}
+		elsif(scalar(@authors)>1) {
+			$pub->authors( join( ' and ', @authors ) );
+		}
     $pub->publisher( $publisher ) if($publisher);
     $pub->year( $year ) if($year);
     $pub->isbn( $isbn ) if($isbn);
     $pub->issn( $issn ) if($issn);
-    $pub->abstract( $abstract ) if($abstract);
+    $pub->abstract( $abstract ) if($abstract);		
     $pub->url( $url ) if($url);
+		$pub->pages( $pages ) if($pages);
     #$pub->_citation_display(  );
-    #$pub->linkout($pdf_link) if($pdf_link); # that is done at _complete_details()
-    #$pub->_details_link(  );
+    $pub->linkout($url) if($url);
+    $pub->_details_link($url) if($url);
     $pub->refresh_fields;
     push @$page, $pub;
   }
@@ -290,31 +312,58 @@ print STDERR "url=$url\n";
 
 sub complete_details {
   ( my $self, my $pub ) = @_;
-
-print STDERR "Entering complete_details!\n";
+#print STDERR Dumper $pub;
 
   my $browser = Paperpile::Utils->get_browser;
 
   # hold the data we already have
-  my $full_pub = $pub;
+  my $full_pub = Paperpile::Library::Publication->new();
+  $full_pub->title( $pub->title ) if($pub->title);
+  $full_pub->booktitle( $pub->title ) if($pub->title); 
+	$full_pub->_authors_display( $pub->_authors_display ) if($pub->_authors_display);
+  $full_pub->authors( $pub->authors ) if($pub->authors);
+  $full_pub->publisher( $pub->publisher ) if($pub->publisher);
+  $full_pub->year( $pub->year ) if($pub->year);
+  $full_pub->isbn( $pub->isbn ) if($pub->isbn);
+  $full_pub->issn( $pub->issn ) if($pub->issn);
+  $full_pub->abstract( $pub->abstract ) if($pub->abstract);
+  $full_pub->url( $pub->url ) if($pub->url);
+  $full_pub->pages( $pub->pages ) if($pub->pages);
+	$full_pub->linkout($pub->linkout) if($pub->linkout);
+  $full_pub->_details_link($pub->_details_link) if($pub->_details_link);
 
-  #############################
-  # collect linkout (PDF-link)
-  if($pub->url ne '') {
-    my $responseDetails = $browser->get($pub->url);
-    if ( $responseDetails->is_error ) {
-      NetGetError->throw(
-        error => $self->{'plugin_name'} . ' query failed: ' . $responseDetails->message,
-        code  => $responseDetails->code
-      );
-    }
-    #print STDERR Dumper $response;
-    if($responseDetails->{_content} =~ /a id=pdf_download href="(\S+)"/) {
-      $pub->linkout($1); # we hold it in both opbjects, maybe we'll need it in the short pub object, too.
-      $full_pub->linkout( $pub->linkout );
-print STDERR "PDF:", $full_pub->linkout, "\n";
-    }
+
+	my $responseDetails = $browser->get($pub->_details_link);
+	if ( $responseDetails->is_error ) {
+		NetGetError->throw(
+			error => $self->{'plugin_name'} . ' query failed: ' . $responseDetails->message,
+			code  => $responseDetails->code
+		);
+	}
+
+  # now we parse the HTML for entries
+  my $tree = HTML::TreeBuilder::XPath->new;
+  $tree->utf8_mode(1);
+  $tree->parse_content($responseDetails->{_content});
+	
+	
+
+	#############################
+  # get PDF-link
+	if($responseDetails->{_content} =~ /a href="(\S+)">Download PDF/) {
+      $pub->pdf_url($1); # we hold it in both opbjects, maybe we'll need it in the short pub object, too.
+      $full_pub->pdf_url($1);
+#print STDERR "PDF:", $full_pub->pdf_url, "\n";
   }
+	
+	#############################
+  # try to get complete abstract	
+	my @nodes = $tree->findnodes('//*[@id="synopsistext"]');
+	if(scalar(@nodes) > 0) {
+		my $tmpString = $nodes[0]->as_text();
+		$pub->abstract( $tmpString ); # we hold it in both opbjects, maybe we'll need it in the short pub object, too.
+    $full_pub->abstract( $tmpString );
+	}
 
   # Note that if we change title, authors, and citation also the sha1
   # will change. We have to take care of this.

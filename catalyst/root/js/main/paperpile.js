@@ -336,6 +336,23 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             );
         }
     },
+
+    inc_read_counter: function(rowid){
+
+        if (rowid){
+            Ext.Ajax.request({
+                url: Paperpile.Url('/ajax/misc/inc_read_counter'),
+                params: { rowid: rowid,
+                        },
+                success: function(response){
+                },
+                failure: Paperpile.main.onError,
+                scope:this,
+            });
+        }
+    }
+    
+
 });
 
 

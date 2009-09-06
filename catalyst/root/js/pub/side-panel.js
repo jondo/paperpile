@@ -232,11 +232,13 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                     path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
                 }
                 Paperpile.main.tabs.newPdfTab({file:path, title:this.data.pdf});
+                Paperpile.main.inc_read_counter(this.data._rowid);
                 break;
 
             case 'open-pdf-external':
                 var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf);
                 Paperpile.utils.openFile(path);
+                Paperpile.main.inc_read_counter(this.data._rowid);
                 break;
                
                 // Choose local PDF file and attach to database entry

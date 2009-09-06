@@ -92,9 +92,17 @@ sub delete_entry : Local {
 
   my $data = $self->_get_selection($c);
 
+  # ignore all entries that are not imported
+  my @imported=();
+  foreach my $pub (@$data){
+    next if not $pub->_imported;
+    push @imported, $pub;
+  }
+
+  $data=[@imported];
+
   $c->model('Library')->delete_pubs($data) if $mode eq  'DELETE';
   $c->model('Library')->trash_pubs($data,'RESTORE') if $mode eq  'RESTORE';
-
 
   if ($mode eq 'TRASH'){
     $c->model('Library')->trash_pubs($data, 'TRASH');
