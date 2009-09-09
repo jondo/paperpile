@@ -29,10 +29,16 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGrid, {
                         }
                    );
 
-        this.store.on('load', 
+        this.store.on('beforeload',
                       function(){
-                          
+                          Paperpile.status.showBusy('Searching duplicates');
                       }, this);
+
+        this.store.on('load',
+                      function(){
+                          Paperpile.status.clearMsg();
+                      }, this);
+
 
     },
 

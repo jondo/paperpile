@@ -63,7 +63,6 @@ sub split_full {
 
   my ($first, $von, $last, $jr);
 
-
   # Do nothing in this trivial case
   if (not $self->full){
     return;
@@ -119,6 +118,7 @@ sub split_full {
 
   # otherwise we search for the last lowercase "von" word;
   } else {
+    #print STDERR $self->full, "\n";
     my $last_lc=0;
 
     for my $i (0..$#words){
@@ -126,6 +126,7 @@ sub split_full {
         $last_lc=$i;
       }
     }
+
     # everything before is "von"
     $von=join(' ', @words[0..$last_lc]);
     # everything after is "last"

@@ -14,6 +14,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var _store=new Ext.data.Store(
             {  proxy: new Ext.data.HttpProxy({
                 url: Paperpile.Url('/ajax/plugins/resultsgrid'),
+                timeout: 10000000, // Think about this, different plugins need different timeouts...
                 method: 'GET'
             }),
                baseParams:{grid_id: this.id,
