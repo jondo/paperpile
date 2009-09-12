@@ -26,6 +26,10 @@ sub parsePDF {
   # create a temp file
   (undef,  my $tmpfile) = tempfile(OPEN => 0);
 
+  # The file may contain space, that have to be escaped. I do not 
+  # know how this will be handled in Windows.
+  $PDFfile =~ s/\s/\\ /g;
+
   # create and read XML file, just the first page
   system("$PDF2XML -noImage -f 1 -l 1 -q $PDFfile $tmpfile 2>/dev/null");
   my $xml    = new XML::Simple;
@@ -35,24 +39,26 @@ sub parsePDF {
   unlink("$tmpfile"); 
   
   my @page0   = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
+
   my $doi     = '';
   my $title   = '';
   my $authors = '';
   my $level   = -1;
+  my $has_cover_page = 0;
 
   if ( $#page0 > -1 ) {
-    ( $title, $authors, $doi, $level ) = _ParseXML( \@page0 );
+    ( $title, $authors, $doi, $level, $has_cover_page ) = _ParseXML( \@page0 );
   }
 
   # maybe the first page is a strange cover page (e.g. Cold Spring Harbour Press)
-  if ( $title eq '' and $authors eq '' and $doi eq '' ) {
+  if ( ($title eq '' and $authors eq '' and $doi eq '') or ( $has_cover_page == 1 ) ) {
       # create and read XML file, but no only the second page
       system("$PDF2XML -noImage -f 2 -l 2 -q $PDFfile $tmpfile 2>/dev/null");
       $xml    = new XML::Simple;
       $data   = $xml->XMLin( "$tmpfile", ForceArray => 1 );
       my @page1 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
       if ( $#page1 > -1 ) {
-	  ( $title, $authors, $doi, $level ) = _ParseXML( \@page1 );
+	  ( $title, $authors, $doi, $level, $has_cover_page ) = _ParseXML( \@page1 );
       }
   }
 
@@ -77,7 +83,6 @@ sub parsePDF {
 
   #$authors  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
   #print "T:$title\nA:$authors\n$level\n";
-
 
   # if we found some authors, we are going to convert them into
   # an authors object
@@ -492,6 +497,7 @@ sub _ParseXML {
   my $first_y        = 0;
   my $y_abstract     = 1000;
   my $y_intro        = 1000;
+  my $has_cover_page = 0;
 
   ###########################################
   # read in all the elements
@@ -607,6 +613,12 @@ sub _ParseXML {
     }
 
     my $content_line = join( " ", @content );
+    
+    # some publishers like 'Cold Spring Harbor Laboratory Press' have a 
+    # kind of cover page. We set a flag for those cases that is returned.
+    $has_cover_page = 1 if ($content_line =~ m/Cold\sSpring\sHarbor/);
+
+
     $content_line =~ s/\s+,/,/g;
     $content_line =~ s/,+/,/g;
     #$content_line  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
@@ -885,22 +897,22 @@ sub _ParseXML {
         $final_content[$candidate_Title],        $final_content[$candidate_Authors],
         $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
       );
-      return ( $title, $authors, $doi, 1.1 ) if ( $flag == 1 );
+      return ( $title, $authors, $doi, 1.1, $has_cover_page ) if ( $flag == 1 );
 
       # authors usually have a higher comma to word ratio than the title
       ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
         $final_content[$candidate_Authors] );
-      return ( $title, $authors, $doi, 1.2 ) if ( $flag == 1 );
+      return ( $title, $authors, $doi, 1.2, $has_cover_page ) if ( $flag == 1 );
 
       # there could be just TWO authors
       ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $final_content[$candidate_Title],
         $final_content[$candidate_Authors] );
-      return ( $title, $authors, $doi, 1.3 ) if ( $flag == 1 );
+      return ( $title, $authors, $doi, 1.3, $has_cover_page ) if ( $flag == 1 );
 
       # there could be just ONE authors
       ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $final_content[$candidate_Title],
         $final_content[$candidate_Authors] );
-      return ( $title, $authors, $doi, 1.4 ) if ( $flag == 1 );
+      return ( $title, $authors, $doi, 1.4, $has_cover_page ) if ( $flag == 1 );
       
     }
 
@@ -914,7 +926,7 @@ sub _ParseXML {
         $final_content[$candidate_Title],        $final_content[$candidate_Authors],
         $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
       );
-      return ( $title, $authors, $doi, 1.9 ) if ( $flag == 1 );
+      return ( $title, $authors, $doi, 1.9, $has_cover_page ) if ( $flag == 1 );
 
     }
 
@@ -932,12 +944,12 @@ sub _ParseXML {
         $final_content[$candidate_Title],        $final_content[$candidate_Authors],
         $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
       );
-      return ( $title, $authors, $doi, 1.5 ) if ( $flag == 1 );
+      return ( $title, $authors, $doi, 1.5, $has_cover_page ) if ( $flag == 1 );
 
       # authors usually have a higher comma to word ratio than the title
       ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
         $final_content[$candidate_Authors] );
-      return ( $title, $authors, $doi, 1.6 ) if ( $flag == 1 );
+      return ( $title, $authors, $doi, 1.6, $has_cover_page ) if ( $flag == 1 );
     }
 
   }
@@ -993,7 +1005,7 @@ sub _ParseXML {
 	  $authors = $final_content[$next];
       }
       
-      return ( $title, $authors, $doi, 0.1 ) if ( $authors ne '' );
+      return ( $title, $authors, $doi, 0.1, $has_cover_page ) if ( $authors ne '' );
       
       $title = '';
       $authors = '';
@@ -1020,29 +1032,29 @@ sub _ParseXML {
           $final_content[$candidate_Title],        $final_content[$candidate_Authors],
           $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
         );
-        return ( $title, $authors, $doi, 2.1 ) if ( $flag == 1 );
+        return ( $title, $authors, $doi, 2.1, $has_cover_page ) if ( $flag == 1 );
 
         # authors usually have a higher comma to word ratio than the title
         ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
           $final_content[$candidate_Authors] );
-        return ( $title, $authors, $doi, 2.2 ) if ( $flag == 1 );
+        return ( $title, $authors, $doi, 2.2, $has_cover_page ) if ( $flag == 1 );
 
         # there could be just TWO authors
         ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $final_content[$candidate_Title],
           $final_content[$candidate_Authors] );
-        return ( $title, $authors, $doi, 2.3 ) if ( $flag == 1 );
+        return ( $title, $authors, $doi, 2.3, $has_cover_page ) if ( $flag == 1 );
 
         # there could be just ONE authors
         ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $final_content[$candidate_Title],
           $final_content[$candidate_Authors] );
-        return ( $title, $authors, $doi, 2.4 ) if ( $flag == 1 );
+        return ( $title, $authors, $doi, 2.4, $has_cover_page ) if ( $flag == 1 );
       
         # if Title directly preceeds Authors and Title seems to be really hughe
         if (  $candidate_Title == $candidate_Authors - 1
           and $final_fs[$candidate_Title] / $major_fs > 1.3 ) {
           $authors = $final_content[$candidate_Authors];
           $title   = $final_content[$candidate_Title];
-          return ( $title, $authors, $doi, 2.9 );
+          return ( $title, $authors, $doi, 2.9, $has_cover_page );
         }
       }
     }
@@ -1062,12 +1074,12 @@ sub _ParseXML {
 	    $final_content[$candidate_Title],        $final_content[$candidate_Authors],
 	    $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
 	    );
-	return ( $title, $authors, $doi, 1.5 ) if ( $flag == 1 );
+	return ( $title, $authors, $doi, 1.5, $has_cover_page ) if ( $flag == 1 );
 	
 	# authors usually have a higher comma to word ratio than the title
 	( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
 							     $final_content[$candidate_Authors] );
-	return ( $title, $authors, $doi, 1.6 ) if ( $flag == 1 );
+	return ( $title, $authors, $doi, 1.6, $has_cover_page ) if ( $flag == 1 );
     }
   
   }
@@ -1077,7 +1089,7 @@ sub _ParseXML {
     my $candidate_Authors = $IDS[ $max_fs_line_NONEBAD + 1 ];
     my $candidate_Title   = $IDS[$max_fs_line_NONEBAD];
 
-    return ( $title, $authors, $doi, 4 ) if ($max_fs_line_NONEBAD + 1 > $#IDS);
+    return ( $title, $authors, $doi, 4, $has_cover_page ) if ($max_fs_line_NONEBAD + 1 > $#IDS);
 
     if ( ( $final_fs[$max_fs_line_ALL] - $final_fs[$candidate_Title] ) / $major_fs < 0.2 ) {
 
@@ -1090,29 +1102,29 @@ sub _ParseXML {
           $final_content[$candidate_Title],        $final_content[$candidate_Authors],
           $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
         );
-        return ( $title, $authors, $doi, 3.1 ) if ( $flag == 1 );
+        return ( $title, $authors, $doi, 3.1, $has_cover_page ) if ( $flag == 1 );
 
         # authors usually have a higher comma to word ratio than the title
         ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
           $final_content[$candidate_Authors] );
-        return ( $title, $authors, $doi, 3.2 ) if ( $flag == 1 );
+        return ( $title, $authors, $doi, 3.2, $has_cover_page ) if ( $flag == 1 );
 
         # there could be just TWO authors
         ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $final_content[$candidate_Title],
           $final_content[$candidate_Authors] );
-        return ( $title, $authors, $doi, 3.3 ) if ( $flag == 1 );
+        return ( $title, $authors, $doi, 3.3, $has_cover_page ) if ( $flag == 1 );
 
         # there could be just ONE authors
         ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $final_content[$candidate_Title],
           $final_content[$candidate_Authors] );
-        return ( $title, $authors, $doi, 3.4 ) if ( $flag == 1 );
+        return ( $title, $authors, $doi, 3.4, $has_cover_page ) if ( $flag == 1 );
 
         # if Title directly preceeds Authors and Title seems to be really hughe
         if (  $candidate_Title == $candidate_Authors - 1
           and $final_fs[$candidate_Title] / $major_fs > 1.3 ) {
           $authors = $final_content[$candidate_Authors];
           $title   = $final_content[$candidate_Title];
-          return ( $title, $authors, $doi, 3.9 );
+          return ( $title, $authors, $doi, 3.9, $has_cover_page );
         }
       }
 
@@ -1120,7 +1132,7 @@ sub _ParseXML {
 
   }
 
-  return ( $title, $authors, $doi, 4 );
+  return ( $title, $authors, $doi, 4, $has_cover_page );
 
 }
 
