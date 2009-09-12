@@ -116,93 +116,8 @@ sub page {
     $content = $response->content;
   }
 
-  # Google markup is a mess, so also the code to parse is cumbersome
-
-  my $tree = HTML::TreeBuilder::XPath->new;
-  $tree->utf8_mode(1);
-  $tree->parse_content($content);
-
-  my %data = (
-    authors   => [],
-    titles    => [],
-    citations => [],
-    urls      => [],
-    bibtex    => [],
-  );
-
-  # Each entry has a h3 heading
-  my @nodes = $tree->findnodes('/html/body/h3[@class="r"]');
-
-  foreach my $node (@nodes) {
-
-    my ( $title, $url );
-
-    # A link to a web-resource is available
-    if ( $node->findnodes('./a') ) {
-      $title = $node->findvalue('./a');
-      $url   = $node->findvalue('./a/@href');
-
-      # citation only
-    } else {
-
-      $title = $node->findvalue('.');
-
-      # Remove the tags [CITATION] and [BOOK] (and the character
-      # afterwards which is a &nbsp;)
-      $title =~ s/\[CITATION\].//;
-      $title =~ s/\[BOOK\].//;
-
-      $url = '';
-    }
-   push @{ $data{titles} }, $title;
-    push @{ $data{urls} },   $url;
-  }
-
-  # There is <div> for each entry but a <font> tag directly below the
-  # <h3> header
-
-  @nodes = $tree->findnodes(q{/html/body/font[@size='-1']});
-
-  foreach my $node (@nodes) {
-
-    # Most information is contained in a <span> tag
-    my $line = $node->findvalue(q{./span[@class='a']});
-    next if not $line;
-
-    my ( $authors, $citation, $publisher ) = split( / - /, $line );
+  my $page = $self->_parse_googlescholar_page($content);
  
-    $citation .= "- $publisher" if $publisher;
-
-    push @{ $data{authors} },   defined($authors)  ? $authors  : '';
-    push @{ $data{citations} }, defined($citation) ? $citation : '';
-
-    my @links = $node->findnodes('./span[@class="fl"]/a');
-
-    # Find the BibTeX export links
-    foreach my $link (@links) {
-      my $url = $link->attr('href');
-      next if not $url =~ /\/scholar\.bib/;
-      $url = "http://scholar.google.com$url";
-      push @{ $data{bibtex} }, $url;
-    }
-  }
-
-  # Write output list of Publication records with preliminary
-  # information We save to the helper fields _authors_display and
-  # _citation_display which will be displayed in the front end.
-  my $page = [];
-
-  foreach my $i ( 0 .. @{ $data{titles} } - 1 ) {
-    my $pub = Paperpile::Library::Publication->new();
-    $pub->title( $data{titles}->[$i] );
-    $pub->_authors_display( $data{authors}->[$i] );
-    $pub->_citation_display( $data{citations}->[$i] );
-    $pub->linkout( $data{urls}->[$i] );
-    $pub->_details_link( $data{bibtex}->[$i] );
-    $pub->refresh_fields;
-    push @$page, $pub;
-  }
-
   # we should always call this function to make the results available
   # afterwards via find_sha1
   $self->_save_page_to_hash($page);
@@ -259,17 +174,224 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
+  # First set preferences (necessary to show BibTeX export links)
+  # We simulate submitting the form which sets a cookie. We save
+  # the cookie for this session.
 
-  my $query = '';
+  my $browser = Paperpile::Utils->get_browser;
+  $settingsUrl .= 'num=10&scisf=4';    # gives us BibTeX
+  $browser->get($settingsUrl);
+  $self->_session_cookie( $browser->cookie_jar );
 
-  if ( $pub->title ) {
-      $query      = FormatQueryString($pub->title);
+  # Then start real query
+  $browser = Paperpile::Utils->get_browser;          # get new browser
+  $browser->cookie_jar( $self->_session_cookie );    # set the session cookie
+
+
+  # Once the browser is properly set
+  # We first try the DOI if there is one
+  if ( $pub->doi ) {
+
+      # format the doi to be used as query and send it to GoogleScholar
+      my $query_string = FormatQueryString($pub->doi);
+      my $query = $searchUrl . $query_string;
+      my $response = $browser->get($query);
+      my $content = $response->content;
+      
+      # parse the page and then see if a publication matches
+      my $page = $self->_parse_googlescholar_page($content);
+      my $matchedpub = $self->_find_best_hit( $page, $pub );
+
+      if ( $matchedpub ) {
+	  print STDERR "Found a match using DOI as query.\n";
+	  return $matchedpub;
+      }
+   }
+
+  # If we are here, it means a search using the DOI was not conducted or 
+  # not successfull. Now we try a query using title and authors.
+
+  my $query_string = '';
+  $query_string = $pub->title if ( $pub->title );
+  if ( $pub->authors ) {
+      my $tmp = $pub->authors();
+      $tmp =~s/\sand//g;
+      $tmp =~s/,\s[A-Z]{1,3}//g;
+      $query_string = $query_string." $tmp";
   }
+  $query_string = FormatQueryString($query_string);
 
-  print STDERR "$query\n";
-
+  # Now let's ask GoogleScholar again with Authors/Title
+  my $query = $searchUrl . $query_string;
+  my $response = $browser->get($query);
+  my $content = $response->content;
+  
+  # parse the page and then see if a publication matches
+  my $page = $self->_parse_googlescholar_page($content);
+  my $matchedpub = $self->_find_best_hit( $page, $pub );
+  
+  if ( $matchedpub ) {
+      print STDERR "Found a match using Authors/Title as query.\n";
+      return $matchedpub;
+  }
+  
+  # If we are here then all search strategies failed.
   NetMatchError->throw( error => 'No match against GoogleScholar.');
-
+  
 }
+
+
+
+# Gets from a list of GoogleScholar hits the one that fits 
+# the publication title we are searching for best
+sub _find_best_hit {
+    ( my $self, my $hits_ref, my $orig_pub ) = @_;
+
+    my @google_hits = @{$hits_ref};
+    if ( $#google_hits > -1 ) {
+
+	# let's first remove a few things that would otherwise
+	# cause troubles in regexps
+	# let's get rid of none ASCII chars first
+	(my $orig_title = $orig_pub->title ) =~ s/([^[:ascii:]])//g; 
+	$orig_title =~ s/\(//g;
+	$orig_title =~ s/\)//g;
+	$orig_title =~ s/\[//g;
+	$orig_title =~ s/\]//g;
+	my @words = split( /\s/, $orig_title );
+	
+	# now we screen each hit and see which one matches best
+ 	my $max_counts = 0;
+	my $best_hit = -1;
+	foreach my $i ( 0 .. $#google_hits ) {
+	    # some preprocessing again
+	    ( my $tmp_title = $google_hits[$i]->title ) =~ s/([^[:ascii:]])//g;
+	    $tmp_title =~ s/\(//g;
+	    $tmp_title =~ s/\)//g;
+	      
+	    # let's check how many of the words in the title match
+	    my $counts = 0;
+	    foreach my $word ( @words ) {
+		$counts++ if ( $tmp_title =~ m/$word/ );
+	    }
+	    if ( $counts > $max_counts ) {
+		$max_counts = $counts;
+		$best_hit = $i;
+	    }
+	}
+	
+	# now let's look up the BibTeX record and see if it is really 
+	# what we are looking for
+	if ( $best_hit > -1) {
+	    my $fullpub = $self->complete_details($google_hits[$best_hit]);
+	    if ( $self->_match_title( $fullpub->title, $orig_pub->title ) ) {
+		return $self->_merge_pub( $orig_pub, $fullpub );
+	    }
+	}
+    }
+
+    return undef;
+}
+
+# the functionality of parsing a google scholar results page
+# implemented originally in the sub "page" was moved to this 
+# separate sub as it is needed by the sub "match" too.
+# it returns an array reference of publication objects
+sub _parse_googlescholar_page {
+
+    ( my $self, my $content ) = @_;
+    
+    # Google markup is a mess, so also the code to parse is cumbersome
+    
+    my $tree = HTML::TreeBuilder::XPath->new;
+    $tree->utf8_mode(1);
+    $tree->parse_content($content);
+    
+    my %data = (
+	authors   => [],
+	titles    => [],
+	citations => [],
+	urls      => [],
+	bibtex    => [],
+	);
+    
+    # Each entry has a h3 heading
+    my @nodes = $tree->findnodes('/html/body/h3[@class="r"]');
+    
+    foreach my $node (@nodes) {
+	
+	my ( $title, $url );
+	
+	# A link to a web-resource is available
+	if ( $node->findnodes('./a') ) {
+	    $title = $node->findvalue('./a');
+	    $url   = $node->findvalue('./a/@href');
+	    
+	    # citation only
+	} else {
+	    
+	    $title = $node->findvalue('.');
+	    
+	    # Remove the tags [CITATION] and [BOOK] (and the character
+	    # afterwards which is a &nbsp;)
+	    $title =~ s/\[CITATION\].//;
+	    $title =~ s/\[BOOK\].//;
+	    
+	    $url = '';
+	}
+	push @{ $data{titles} }, $title;
+	push @{ $data{urls} },   $url;
+    }
+    
+    # There is <div> for each entry but a <font> tag directly below the
+    # <h3> header
+    
+    @nodes = $tree->findnodes(q{/html/body/font[@size='-1']});
+    
+    foreach my $node (@nodes) {
+	
+	# Most information is contained in a <span> tag
+	my $line = $node->findvalue(q{./span[@class='a']});
+	next if not $line;
+	
+	my ( $authors, $citation, $publisher ) = split( / - /, $line );
+	
+	$citation .= "- $publisher" if $publisher;
+	
+	push @{ $data{authors} },   defined($authors)  ? $authors  : '';
+	push @{ $data{citations} }, defined($citation) ? $citation : '';
+	
+	my @links = $node->findnodes('./span[@class="fl"]/a');
+	
+	# Find the BibTeX export links
+	foreach my $link (@links) {
+	    my $url = $link->attr('href');
+	    next if not $url =~ /\/scholar\.bib/;
+	    $url = "http://scholar.google.com$url";
+	    push @{ $data{bibtex} }, $url;
+	}
+    }
+    
+    # Write output list of Publication records with preliminary
+    # information We save to the helper fields _authors_display and
+    # _citation_display which will be displayed in the front end.
+    my $page = [];
+    
+    foreach my $i ( 0 .. @{ $data{titles} } - 1 ) {
+	my $pub = Paperpile::Library::Publication->new();
+	$pub->title( $data{titles}->[$i] );
+	$pub->_authors_display( $data{authors}->[$i] );
+	$pub->_citation_display( $data{citations}->[$i] );
+	$pub->linkout( $data{urls}->[$i] );
+	$pub->_details_link( $data{bibtex}->[$i] );
+	$pub->refresh_fields;
+	push @$page, $pub;
+    }
+    
+    return $page;
+        
+}
+
+
 
 1;
