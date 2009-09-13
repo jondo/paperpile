@@ -21,6 +21,7 @@ has 'query' => ( is => 'rw' );
 
 # The main search URL
 my $searchUrl = 'http://export.arxiv.org/api/query?search_query=';
+my $searchUrl_ID = 'http://export.arxiv.org/api/query?id_list=';
 
 sub BUILD {
     my $self = shift;
@@ -32,6 +33,7 @@ sub BUILD {
 # things like non-alphanumeric characters and joining words with '+'.
 
 sub FormatQueryString {
+    my $self = shift;
     my $query = $_[0];
     
     my @tmp = split(/ /, $query);
@@ -42,12 +44,25 @@ sub FormatQueryString {
     return join("+AND+", @tmp);
 }
 
+sub FormatQueryStringID {
+    my $self = shift;
+    my $query = $_[0];
+    
+    my @tmp = split(/ /, $query);
+    foreach my $i (0 .. $#tmp) {
+	$tmp[$i] = uri_escape($tmp[$i]);
+    }
+    
+    return join(";", @tmp);
+}
+
+
 sub connect {
   my $self = shift;
 
   my $browser = Paperpile::Utils->get_browser;
 
-  my $query_string = FormatQueryString($self->query);
+  my $query_string = $self->FormatQueryString($self->query);
 
   my $response = $browser->get( $searchUrl . $query_string . '&max_results=500' );
 
@@ -55,9 +70,27 @@ sub connect {
 
   # Determine the number of hits
   my $number  = 0;
-  my @entries = @{ $result->{entry} };
-  $number = $#entries + 1;
-  $self->total_entries($number);
+  my @entries = ( );
+  if ( $result->{entry} ) {
+      @entries = @{ $result->{entry} };
+      $number = $#entries + 1;
+      $self->total_entries($number);
+  } else {
+      # if we did not find anything, it does not necessarily mean
+      # that there is really noting. The user might just have provided
+      # an ArXiv Id, which has to retrieved by other ways
+      $query_string = $self->FormatQueryStringID($self->query);
+      $response = $browser->get($searchUrl_ID . $query_string );
+      $result = XMLin( $response->content, ForceArray => 1 );
+      if ( $result->{entry} ) {
+	  @entries = @{ $result->{entry} };
+	  $number = $#entries + 1;
+	  $self->total_entries($number);
+      } else {
+	  $self->total_entries( 0 );
+	  return 0;
+      }
+  }
 
   # We store the results so that they can be retrieved afterwards
   # We keep the way of storage that is used in other Plugins
@@ -80,87 +113,116 @@ sub page {
     @content = @{ $self->_page_cache->{0}->{0} };
   }
 
-  my $page = [];
+  # let's first move the entries we want to parse to
+  # a separate array
+  my @tmp_content = ( );
   my $max = ( $#content < $offset + $limit - 1 ) ? $#content : $offset + $limit - 1;
   foreach my $i ( $offset .. $max ) {
-    my $entry = $content[$i];
-
-    # Title and abstract are easy, they are regular elements
-    my $title    = join( ' ', @{ $entry->{title} } );
-    my $abstract = join( ' ', @{ $entry->{summary} } );
-
-    # Now we add the authors
-    my @authors = ();
-
-    foreach my $author ( @{ $entry->{author} } ) {
-      push @authors,
-        Paperpile::Library::Author->new()->parse_freestyle( $author->{name}->[0] )->bibtex();
-    }
-
-    # If there is a journal reference, we can parse it and
-    # fill the following fields
-
-    my $journal = '';
-    my $year    = '';
-    my $volume  = '';
-    my $issue   = '';
-    my $pages   = '';
-    my $comment = '';
-    my $pubtype = 'MISC';
-    if ( $entry->{'arxiv:journal_ref'} ) {
-      my $journal_line = @{ $entry->{'arxiv:journal_ref'} }[0]->{content};
-      $journal_line =~ s/\n//g;
-      $journal_line =~ s/\s+/ /g;
-      ( $journal, $year, $volume, $issue, $pages, $comment ) = parseJournalLine($journal_line);
-      $pubtype = 'ARTICLE' if ( $journal ne '' );
-
-      # NOTE: if there is something in comment and journal is empty
-      # then we were not able to parse the journal string correctly
-    }
-
-    if (! $year){
-      my $date = join( ' ', @{ $entry->{published} } );
-      if ($date =~ /(\d\d\d\d)-(\d\d)/){
-        $year = $1;
-      }
-    }
-
-    my $pub = Paperpile::Library::Publication->new( pubtype => $pubtype );
-
-    my $abs = join( ' ', @{ $entry->{id} } );
-
-    my $pdf = $abs;
-    $pdf=~ s/\/abs\//\/pdf\//;
-
-    my $id = $abs;
-    $id=~s!http://arxiv\.org/abs/!arXiv:!;
-
-    if ($pubtype ne 'ARTICLE'){
-      $pub->howpublished('Preprint');
-    }
-
-    $pub->linkout($abs);
-    $pub->eprint($id);
-    $pub->pdf_url($pdf);
-
-    $pub->title($title)       if $title;
-    $pub->abstract($abstract) if $abstract;
-    $pub->authors( join( ' and ', @authors ) );
-    $pub->volume($volume)   if ( $volume  ne '' );
-    $pub->issue($issue)     if ( $issue   ne '' );
-    $pub->year($year)       if ( $year    ne '' );
-    $pub->pages($pages)     if ( $pages   ne '' );
-    $pub->journal($journal) if ( $journal ne '' );
-    $pub->journal($comment) if ( $journal eq '' and $comment ne '' );
-
-    $pub->refresh_fields;
-    push @$page, $pub;
+      push @tmp_content, $content[$i];
   }
+
+  # then parse the results page
+  my $page = $self->_parse_arxiv_page(\@tmp_content);
 
   $self->_save_page_to_hash($page);
 
   return $page;
 
+}
+
+# the functionality of parsing the ArXiv results page
+# implemented originally in the sub "page" was moved to this 
+# separate sub as it is needed by the sub "match" too.
+# it returns an array reference of publication objects
+sub _parse_arxiv_page {
+
+    ( my $self, my $content_ref ) = @_;
+
+    my @content = @{$content_ref};
+    my $page = [];
+
+    foreach my $i ( 0 .. $#content ) {
+	my $entry = $content[$i];
+	
+	# Title and abstract are easy, they are regular elements
+	my $title    = join( ' ', @{ $entry->{title} } );
+	my $abstract = join( ' ', @{ $entry->{summary} } );
+	
+	# Now we add the authors
+	my @authors = ();
+	
+	foreach my $author ( @{ $entry->{author} } ) {
+	    push @authors,
+	    Paperpile::Library::Author->new()->parse_freestyle( $author->{name}->[0] )->bibtex();
+	}
+	
+	# If there is a journal reference, we can parse it and
+	# fill the following fields
+	
+	my $journal = '';
+	my $year    = '';
+	my $volume  = '';
+	my $issue   = '';
+	my $pages   = '';
+	my $comment = '';
+	my $pubtype = 'MISC';
+	if ( $entry->{'arxiv:journal_ref'} ) {
+	    my $journal_line = @{ $entry->{'arxiv:journal_ref'} }[0]->{content};
+	    $journal_line =~ s/\n//g;
+	    $journal_line =~ s/\s+/ /g;
+	    ( $journal, $year, $volume, $issue, $pages, $comment ) = parseJournalLine($journal_line);
+	    $pubtype = 'ARTICLE' if ( $journal ne '' );
+	    
+	    # NOTE: if there is something in comment and journal is empty
+	    # then we were not able to parse the journal string correctly
+	}
+	
+	if (! $year){
+	    my $date = join( ' ', @{ $entry->{published} } );
+	    if ($date =~ /(\d\d\d\d)-(\d\d)/){
+		$year = $1;
+	    }
+	}
+
+	my $doi = '';
+	if ( $entry->{'arxiv:doi'} ) {
+	    $doi = @{ $entry->{'arxiv:doi'} }[0]->{content};
+	}
+	
+	my $pub = Paperpile::Library::Publication->new( pubtype => $pubtype );
+	
+	my $abs = join( ' ', @{ $entry->{id} } );
+	
+	my $pdf = $abs;
+	$pdf=~ s/\/abs\//\/pdf\//;
+	
+	my $id = $abs;
+	$id=~s!http://arxiv\.org/abs/!arXiv:!;
+	
+	if ($pubtype ne 'ARTICLE'){
+	    $pub->howpublished('Preprint');
+	}
+	
+	$pub->linkout($abs);
+	$pub->eprint($id);
+	$pub->pdf_url($pdf);
+	
+	$pub->title($title)       if $title;
+	$pub->abstract($abstract) if $abstract;
+	$pub->authors( join( ' and ', @authors ) );
+	$pub->volume($volume)   if ( $volume  ne '' );
+	$pub->issue($issue)     if ( $issue   ne '' );
+	$pub->year($year)       if ( $year    ne '' );
+	$pub->pages($pages)     if ( $pages   ne '' );
+	$pub->journal($journal) if ( $journal ne '' );
+	$pub->journal($comment) if ( $journal eq '' and $comment ne '' );
+	$pub->doi($doi)         if ( $doi     ne '' );
+	
+	$pub->refresh_fields;
+	push @$page, $pub;
+    }
+ 
+    return $page;
 }
 
 sub parseJournalLine {
@@ -476,19 +538,98 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
+  my $browser = Paperpile::Utils->get_browser;
+  
+  # let's first see if we have an arXiv identifier
+  if ( $pub->pmid ) {
+      my $query_string = $self->FormatQueryStringID($pub->pmid);
+      my $response = $browser->get($searchUrl_ID . $query_string );
+      my $result = XMLin( $response->content, ForceArray => 1 );
 
-  my $query = '';
-
-  if ( $pub->title ) {
-      $query      = FormatQueryString($pub->title);
+      if ( $result->{entry} ) {
+	  my @content = @{ $result->{entry} };
+	  my @tmp = @{$self->_parse_arxiv_page(\@content)};
+	  
+	  if ($#tmp == 0) {
+	      print STDERR "Found a match using ArXivID as query.\n";
+	      return $self->_merge_pub( $pub, $tmp[0] );
+	  }
+      }
   }
 
-  print STDERR "$query\n";
+  # if search with the arxiv id did not work or was not
+  # conducted, we start a search using the title
 
+  my $query_string = $self->FormatQueryString($pub->title);
+  my $response = $browser->get($searchUrl . $query_string . '&max_results=50');
+  my $result = XMLin( $response->content, ForceArray => 1 );
 
+  if ( $result->{entry} ) {
+      my @content = @{ $result->{entry} };
+      my $page = $self->_parse_arxiv_page(\@content);
+     
+      my $matchedpub = $self->_find_best_hit( $page, $pub );
+  
+      if ( $matchedpub ) {
+	  print STDERR "Found a match using Authors/Title as query.\n";
+	  return $matchedpub;
+      }
+  }
+
+  # if we are here, then we were not succesful
   NetMatchError->throw( error => 'No match against ArXiv.');
-
-
 }
+
+# Gets from a list of ArXiv hits the one that fits 
+# the publication title we are searching for best
+sub _find_best_hit {
+    ( my $self, my $hits_ref, my $orig_pub ) = @_;
+
+    my @hits = @{$hits_ref};
+    if ( $#hits > -1 ) {
+	
+	# let's first remove a few things that would otherwise
+	# cause troubles in regexps
+	# let's get rid of none ASCII chars first
+	(my $orig_title = $orig_pub->title ) =~ s/([^[:ascii:]])//g; 
+	$orig_title =~ s/\(//g;
+	$orig_title =~ s/\)//g;
+	$orig_title =~ s/\[//g;
+	$orig_title =~ s/\]//g;
+	my @words = split( /\s/, $orig_title );
+	
+	# now we screen each hit and see which one matches best
+ 	my $max_counts = 0;
+	my $best_hit = -1;
+	foreach my $i ( 0 .. $#hits ) {
+	    # some preprocessing again
+	    ( my $tmp_title = $hits[$i]->title ) =~ s/([^[:ascii:]])//g;
+	    $tmp_title =~ s/\(//g;
+	    $tmp_title =~ s/\)//g;
+	      
+	    # let's check how many of the words in the title match
+	    my $counts = 0;
+	    foreach my $word ( @words ) {
+		$counts++ if ( $tmp_title =~ m/$word/ );
+	    }
+	    if ( $counts > $max_counts ) {
+		$max_counts = $counts;
+		$best_hit = $i;
+	    }
+	}
+	
+	# some last controls
+	if ( $best_hit > -1) {
+	    if ( $self->_match_title( $hits[$best_hit]->title, $orig_pub->title ) ) {
+		return $self->_merge_pub( $orig_pub, $hits[$best_hit] );
+	    }
+	}
+    }
+
+    return undef;
+}
+
+
+
 
 1;
