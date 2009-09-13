@@ -73,7 +73,7 @@ sub connect {
 
   #$avgTitleLength /= $self->total_entries;
 
-  print STDERR "total entries : ", $self->total_entries, "\n";
+  #print STDERR "total entries : ", $self->total_entries, "\n";
 
   #print STDERR "minTitleLength: ", $minTitleLength, "\n";
   #print STDERR "maxTitleLength: ", $maxTitleLength, "\n";
@@ -122,6 +122,7 @@ sub connect {
 # and
 # although border-items (last item(s) of the current class (all items with maxClassLength) with first item(s) of the next class (all items with minClassLength))
   my $distance = 0;
+	my $countDuplicates = 0;
   my @lastKeys;
   foreach my $classID ( sort { $a <=> $b } keys %compare ) {
     my @keys =
@@ -137,12 +138,16 @@ sub connect {
             #print STDERR $keys[$i], ' VS ', $keys[$j], "\n";
             my $a = $self->find_sha1( $keys[$i] );
             my $b = $self->find_sha1( $keys[$j] );
-            if ( $self->_match_title( $a->{title}, $b->{title} ) ) {
-              print STDERR
-                "duplicates: \"$a->{title}\" ($a->{sha1})  VS  \"$b->{title}\" ($b->{sha1})\n";
+						if( lc(substr($a->{title}, 0, 1)) eq lc(substr($b->{title}, 0, 1)) ) {
+							if ( $self->_match_title( lc($a->{title}), lc($b->{title}) ) ) {
+								print STDERR
+									"duplicates: \"$a->{title}\" ($a->{sha1})  VS  \"$b->{title}\" ($b->{sha1})\n";
 
-              push @{$self->_data}, $a;
-              push @{$self->_data}, $b;
+								push @{$self->_data}, $a;
+								push @{$self->_data}, $b;
+								
+								$countDuplicates++;
+							}
             }
           }
         }
@@ -162,10 +167,17 @@ sub connect {
             {    # for all of last class with max length
               my $a = $self->find_sha1( $keys[$i] );
               my $b = $self->find_sha1( $lastKeys[$j] );
-              if ( $self->_match_title( $a->{title}, $b->{title} ) ) {
-                print STDERR
-                  "duplicates (border!): \"$a->{title}\" ($a->{sha1})  VS  \"$b->{title}\" ($b->{sha1})\n";
-              }
+							if( lc(substr($a->{title}, 0, 1)) eq lc(substr($b->{title}, 0, 1)) ) {
+								if ( $self->_match_title( lc($a->{title}), lc($b->{title}) ) ) {
+									print STDERR
+										"duplicates (border!): \"$a->{title}\" ($a->{sha1})  VS  \"$b->{title}\" ($b->{sha1})\n";
+									
+									push @{$self->_data}, $a;
+									push @{$self->_data}, $b;
+									
+									$countDuplicates++;
+								}
+							}
             }
           }
         }
@@ -177,6 +189,7 @@ sub connect {
     #print STDERR "\n";
   }
 
+	print STDERR "found ", $countDuplicates, " pairwise duplications!\n";
   print STDERR "CONNECT: leaving\n";
 
   $self->total_entries(scalar @{$self->_data});
