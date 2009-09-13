@@ -13,7 +13,7 @@ has 'pub'     => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
 has 'pdftoxml' => ( is => 'rw', isa => 'Str' );
 
 #( my $title, my $authors, my $doi, my $level ) = ParsePDF( $ARGV[0] );
-
+# aguber
 #print "LEVEL:$level\nTITLE:$title\nAUTHORS:$authors\nDOI:$doi\n";
 
 sub parsePDF {
