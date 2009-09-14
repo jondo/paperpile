@@ -274,11 +274,21 @@ sub as_hash {
 
 # We store the authors in a flat string in BibTeX formatting This
 # function returns an ArrayRef of Paperpile::Library::Author objects.
+# if $editors is true, we return editors
 
 sub get_authors {
-  ( my $self ) = @_;
+  ( my $self, my $editors ) = @_;
   my @authors = ();
-  foreach my $a ( split( /\band\b/, $self->authors ) ) {
+
+  my $data=$self->authors;
+
+  if ($editors){
+    $data=$self->editors;
+  }
+
+  return [] if not $data;
+
+  foreach my $a ( split( /\band\b/, $data ) ) {
     $a =~ s/^\s+//;
     $a =~ s/\s+$//;
     push @authors, Paperpile::Library::Author->new( full => $a );
@@ -300,12 +310,27 @@ sub format_pattern {
   ( my $self, my $pattern, my $substitutions ) = @_;
 
   my @authors = ();
-  foreach my $a ( @{ $self->get_authors } ) {
+  foreach my $a ( @{ $self->get_authors(0) } ) {
     if ( $a->collective ) {
       push @authors, $a->collective;
     } else {
       push @authors, $a->last;
     }
+  }
+
+  # if no authors are given we use editors
+  if (not @authors){
+
+    foreach my $a ( @{ $self->get_authors(1) } ) {
+      if ( $a->collective ) {
+        push @authors, $a->collective;
+      } else {
+        push @authors, $a->last;
+      }
+    }
+  }
+  if (not @authors){
+    @authors=('unnamed');
   }
 
   my $first_author = $authors[0];
@@ -407,7 +432,11 @@ sub format_pattern {
   $pattern =~ s/\[//g;
   $pattern =~ s/\]//g;
 
+  # Try to change unicode character to the appropriate ASCII characters
   $pattern = unidecode($pattern);
+
+  # Remove all remaining non-alphanumeric characters that might be left
+  $pattern=~s/\W//g;
 
   return $pattern;
 

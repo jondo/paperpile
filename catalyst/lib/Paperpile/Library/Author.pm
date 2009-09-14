@@ -84,6 +84,10 @@ sub split_full {
   # first split by comma
   my @parts = split( /,/, $self->full );
 
+  for my $i (0..$#parts){
+    $parts[$i]=~s/^\s+//;
+  }
+
   # we have a jr part
   if ( @parts == 3 ) {
     $jr=$parts[1];
@@ -107,6 +111,9 @@ sub split_full {
   my @words = split( /\s+/, $parts[0] );
   my @vons  = ();
   my @lasts = ();
+
+  #print STDERR join('|', @parts), "\n";
+  #print STDERR join('|', @words), "\n";
 
   my $word;
 
@@ -151,7 +158,32 @@ sub read_bibutils{
   my ($self, $string) = @_;
   my ($first, $von, $last, $jr);
 
+  
   my @parts=split(/\|/,$string);
+
+  # No second name is given. For example due to wrong Bibtex: Schuster
+  # P. (no comma).  When we are sure that this is an error because it
+  # is obviously a name we parse it. Otherwise we convert it to a
+  # collective author.
+
+  if (scalar @parts > 1 and $parts[0] eq ''){
+    #binmode STDERR, ":utf8";
+    #print STDERR "$string\n";
+    my $merged=join(' ',@parts);
+    $merged=~s/^\s+//;
+    #print STDERR "$merged\n";
+
+    # match Stadler P. F. and that like
+    if ($merged=~/^([A-Z]\w+) (([A-Z]\.?)( [A-Z]\.?)?)$/){
+      $last=$1;
+      $first=$2;
+    } else {
+      $self->collective($merged);
+      $last='';
+      $first='';
+    }
+
+  }
 
   # Bibutils does not handle collective authors very well, they are
   # just forced into first/last name. TODO: think what to do about
@@ -159,7 +191,7 @@ sub read_bibutils{
 
   # author without first names do not exist to my knowledge. We
   # interpret this as collective name,
-  if (scalar @parts == 1){
+  elsif (scalar @parts == 1){
     $self->collective($parts[0]);
     $last='';
     $first='';
