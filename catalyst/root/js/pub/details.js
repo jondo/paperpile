@@ -4,7 +4,7 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
         '<div id=main-container-{id}>',
         '<div class="pp-box pp-box-top pp-box-style2"',
         '<dl>',
-        '<tpl if="citekey"><dt>Key: </dt><dd>[{citekey}]</dd></tpl>',
+        '<tpl if="citekey"><dt>Key: </dt><dd>{citekey}</dd></tpl>',
         '<dt>Type: </dt><dd>{pubtype}</dd>',
         '<tpl for="fields">',
         '<dt>{label}:</dt><dd>{value}</dd>',        
