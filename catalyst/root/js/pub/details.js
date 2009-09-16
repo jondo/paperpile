@@ -87,3 +87,20 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
 });
 
 Ext.reg('pubdetails', Paperpile.PubDetails);
+
+/*
+
+javascript:u=location.href;
+a=false;
+x=window;
+e=x.encodeURIComponent;
+d=document;
+if((s=d.selection)?t=s.createRange().text:t=x.getSelection()+'')
+(r=/(doi:)?\s?(10\.\d{4}\/\S+)/.exec(t))?u='http://dx.doi.org/'+r[2]:a=true;a?alert('Please%20highlight%20a%20full%20DOI,%20or%20deselect%20text%20to%20add%20this%20page.'):w=open('http://www.connotea.org/addpopup?continue=confirm&uri='+e(u)+'&title='+e(d.title),'add','width=720,height=755,scrollbars,resizable');
+void(x.setTimeout('w.focus()',200));
+
+javascript:location.href='http://localhost:3000/url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title)
+
+
+
+*/
