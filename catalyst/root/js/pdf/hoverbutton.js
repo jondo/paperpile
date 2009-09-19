@@ -34,7 +34,7 @@ Ext.extend(Ext.HoverButton, Ext.Button, {
     },this);
 
     //this.menu.getEl().setStyle("z-index",9);
-    this.menu.getEl().setStyle("position","absolute");
+    //this.menu.getEl().setStyle("position","absolute");
   },
 
   bodyMove:function(e) {
