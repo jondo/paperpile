@@ -14,6 +14,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         var _store=new Ext.data.Store(
             {  proxy: new Ext.data.HttpProxy({
                 url: Paperpile.Url('/ajax/plugins/resultsgrid'),
+                timeout: 10000000, // Think about this, different plugins need different timeouts...
                 method: 'GET'
             }),
                baseParams:{grid_id: this.id,
@@ -617,6 +618,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             params: { selection: selection,
                       grid_id: this.id,
                     },
+            timeout: 10000000,
             method: 'GET',
             success: function(response){
                 var json = Ext.util.JSON.decode(response.responseText);
@@ -705,6 +707,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
                       mode: mode,
                     },
             method: 'GET',
+            timeout: 10000000,
             success: function(response){
 
                 var num_deleted = Ext.util.JSON.decode(response.responseText).num_deleted;

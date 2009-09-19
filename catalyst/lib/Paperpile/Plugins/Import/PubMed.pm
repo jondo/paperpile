@@ -163,6 +163,37 @@ sub match {
 }
 
 
+sub web_lookup {
+
+  my ($self, $url, $content) = @_;
+
+  #my $pmid;
+
+  $url=~/pubmed\/(\d+)/;
+
+  my $pmid=$1;
+
+  my $browser   = Paperpile::Utils->get_browser;
+  my $response  = $browser->get( $esearch . $pmid );
+  my $resultXML = $response->content;
+  my $result    = XMLin($resultXML);
+
+  if ( $result->{Count} == 0 ) {
+    NetMatchError->throw( error => 'Could not find entry in PubMed');
+  }
+
+  $self->web_env( $result->{WebEnv} );
+  $self->query_key( $result->{QueryKey} );
+  $self->total_entries( $result->{Count} );
+
+  my $xml = $self->_pubFetch( 0, 100 );
+  my $page = $self->_read_xml($xml);
+  $self->_linkOut($page);
+
+  return $page;
+
+}
+
 
 # function: _pubFetch
 

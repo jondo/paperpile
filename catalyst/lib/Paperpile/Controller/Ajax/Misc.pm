@@ -228,11 +228,8 @@ sub inc_read_counter : Local {
   my $rowid = $c->request->params->{rowid};
 
   my $touched= $c->model('Library')->dbh->quote(timestamp gmtime);
-
   $c->model('Library')->dbh->do("UPDATE Publications SET times_read=times_read+1 WHERE rowid=$rowid");
-
   $c->model('Library')->dbh->do("UPDATE Publications SET last_read=$touched WHERE rowid=$rowid");
-
 
 }
 

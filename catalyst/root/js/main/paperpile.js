@@ -306,6 +306,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
         //Timed out errors come back empty otherwise fill in error
         //data from backend
+
         if (response.responseText){
             error= Ext.util.JSON.decode(response.responseText).error;
         }
