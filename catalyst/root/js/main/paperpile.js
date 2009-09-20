@@ -63,7 +63,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                               margins: '2 2 2 2',
                               cmargins: '5 5 0 5',
                               width: 200,
-                              bbar: new Ext.StatusBar({
+                              bbar: new Ext.ux.StatusBar({
                                   border:0,
                                   id: 'statusbar',
                                   defaultText: 'Default status text',
