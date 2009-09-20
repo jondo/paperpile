@@ -850,6 +850,25 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     },
 
 
+    batchDownload: function(){
+
+        selection=this.getSelection();
+        
+        Ext.Ajax.request({
+            url: Paperpile.Url('/ajax/crud/batch_download'),
+            params: { selection: selection,
+                      grid_id: this.id,
+                    },
+            method: 'GET',
+            timeout: 10000000,
+            success: function(response){
+                Paperpile.main.tabs.showQueueTab();
+            }
+        });
+
+    }, 
+
+
     formatEntry: function(){
 
         selection=this.getSelection();

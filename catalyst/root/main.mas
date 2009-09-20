@@ -56,7 +56,9 @@
   pdfextract/grid.js
   pdfextract/control.js
 
-
+  queue/view.js
+  queue/grid.js
+  queue/control.js
   
   };
   

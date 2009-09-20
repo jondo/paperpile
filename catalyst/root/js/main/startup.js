@@ -139,6 +139,8 @@ Paperpile.stage2=function(){
             lang: 'en'
         });
     }
+    
+    Paperpile.main.startHeartbeat();
 }
 
 

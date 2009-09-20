@@ -18,26 +18,42 @@ sub lookup : Local {
 
   my ( $self, $c ) = @_;
 
+
+  # Note: We are initiating this session via the bookmarklet without going
+  # through the normal startup process.
+  $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
+
   my $url     = $c->request->params->{url};
   my $content = $c->request->params->{content};
 
   my $plugin = Paperpile::Plugins::Import::PubMed->new();
 
+  my $id = int(rand(1000000));
+
+  my $job = {type=>'WEB_IMPORT',
+             status => 'RUNNING'
+            };
+
+  my $queue = Paperpile::Utils->retrieve('queue');
+
+  $queue->{$id} = $job;
+
+  Paperpile::Utils->store('queue', $queue);
+
   my $pubs = $plugin->web_lookup( $url, $content );
 
-  my $lookup_id = int( rand(1000000) );
+  $c->model('Library')->create_pubs($pubs);
 
-  $c->stash->{lookup_id} = $lookup_id;
+  $queue = Paperpile::Utils->retrieve('queue');
 
-  $c->session->{web_lookup} = {
-    $lookup_id => {
-      pub    => $pubs->[0]->as_hash,
-      status => 'REFERENCE_LOOKUP'
-    }
-  };
+  $queue->{$id}->{status} = 'DONE';
+  $queue->{$id}->{callback} = {notify => 'Imported new entry',
+                               updatedb => 1,
+                              };
 
-  $c->stash->{template} = 'screens/browser_lookup.mas';
-  $c->forward('Paperpile::View::Mason');
+  Paperpile::Utils->store('queue', $queue);
+
+
 }
 
 
