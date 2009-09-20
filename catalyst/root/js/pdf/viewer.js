@@ -262,17 +262,17 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 				      minValue: 0,
 				      maxValue: this.slideZoomArray.length-1
     });
-    this.zmW = new Ext.Button({handler:this.zoomWidth,
-					cls:'x-btn-icon',
+    this.zmW = new Ext.Toolbar.Button({handler:this.zoomWidth,
+			       //cls:'x-btn-icon',
 					scope:this,
 					tooltip:"Zoom to Width",
-					icon:"/images/icons/fit-width.png"
+				       icon:"/images/icons/fit-width.png",
     });
-    this.zmP = new Ext.Button({handler:this.zoomPage,
-					cls:'x-btn-icon',
+    this.zmP = new Ext.Toolbar.Button({handler:this.zoomPage,
+			       //cls:'x-btn-icon',
 					scope:this,
 					tooltip:"Zoom to Page",
-					icon:"/images/icons/fit-page.png"
+			       icon:"/images/icons/fit-page.png",
     });
 
 
@@ -283,20 +283,31 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     };
 
     this.tbItems['ZOOM_MENU'] = new Ext.Button({
-/*						      menu: {shadow:false,
+            listeners:{
+	    mouseover: function() {
+		    this.showMenu();
+		}},
+					menu: {
+		cls:'no-icon-menu',
+		showSeparator:false,
 					  items:[
-					    this.slide,
-					    this.zmW,
-					    this.zmP
+						 this.slide,
+						 this.zmW,
+    					    this.zmP
 					  ]
-					},*/
+					},
 					icon:"/images/icons/zoom.png",
-					cls:'x-btn-icon',
+	    //		cls:'x-btn-icon',
 					enableToggle:false
 				      });
 
     this.tbItems['LAYOUT_MENU'] = new Ext.Button({
-/*							menu: {shadow:false,
+            listeners:{
+	    mouseover: function() {
+		    this.showMenu();
+		}},
+					  menu: {
+		cls:'no-icon-menu',
 					  items:[
 					    this.tbItems['ONE_UP'],
 					    this.tbItems['TWO_UP'],
@@ -305,9 +316,9 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 					    this.tbItems['SINGLE'],
 					    this.tbItems['CONTINUOUS']
 					  ]
-					},*/
+					},
 					icon:"/images/icons/continuous-pages.png",
-					cls:'x-btn-icon',
+					//cls:'x-btn-icon',
 					enableToggle:false
 				      });
 

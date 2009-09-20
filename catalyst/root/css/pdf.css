@@ -1,3 +1,7 @@
+.no-icon-menu .x-menu-item {padding-left:0px;}
+.no-icon-menu .x-menu-item-icon {display:none;}
+.no-icon-menu .x-menu-list-item-indent {padding-left:0px;}
+
 .pdf-block {
 
 }
