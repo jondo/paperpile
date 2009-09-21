@@ -198,7 +198,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             showFilter: true,
             currentRoot:Paperpile.main.globalSettings.user_home,
             filterOptions:[{text: 'All supported formats',
-                            suffix:['ppl','bib','ris','enl','lib','mods','xml']
+                            suffix:['ppl','bib','ris','enl','lib','mods','xml','rss']
                            },
                            {text: 'BibTeX (.bib)',
                             suffix: ['bib']
@@ -217,6 +217,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                            },
                            {text: 'MODS (.mods, .xml)',
                             suffix: ['mods','xml']
+                           },
+                           {text: 'RSS (.rss, .xml)',
+                            suffix: ['rss','xml']
                            },
                            {text: 'Paperpile (.ppl)',
                             suffix: ['ppl']

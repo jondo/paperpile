@@ -1,4 +1,4 @@
-package Paperpile::Formats::Paperpile;
+package Paperpile::Formats::Rss;
 use Moose;
 use XML::Simple;
 
@@ -17,10 +17,10 @@ sub read {
     my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
     $pub->title('Test');
     $pub->authors('Gruber AR');
-    
+
     my @output = ();
     push @output, $pub;
-    
+
     return [@output];
 
 }

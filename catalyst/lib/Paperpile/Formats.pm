@@ -9,8 +9,9 @@ use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Library::Journal;
 use Paperpile::Exceptions;
+use Paperpile::Formats::Rss;
 
-enum Format => qw(PAPERPILE BIBTEX MODS ISI ENDNOTE ENDNOTEXML RIS MEDLINE);
+enum Format => qw(PAPERPILE BIBTEX MODS ISI ENDNOTE ENDNOTEXML RIS MEDLINE RSS);
 
 has 'data' => ( is => 'rw', isa => 'ArrayRef[Paperpile::Library::Publication]' );
 has format => ( is => 'rw', isa => 'Format' );
@@ -55,6 +56,7 @@ sub guess_format {
       ISI     => qr/^\s*AU /i,
       ENDNOTE => qr/^\s*%0 /i,
       RIS     => qr/^\s*TY\s+-\s+/i,
+      RSS     => qr/rss/i, # add here proper signature for RSS
     );
 
     foreach my $line (@lines) {
@@ -63,6 +65,7 @@ sub guess_format {
         if ( $line =~ $pattern ) {
           $format = lc($format);
           $format = ucfirst($format);
+          print STDERR "==========================> $format\n";
           my $module = "Paperpile::Formats::$format";
           return eval("use $module; $module->new(file=>'$file')");
         }
