@@ -117,10 +117,6 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
     onRender: function() {
         Paperpile.PluginGridDB.superclass.onRender.apply(this, arguments);
 
-        console.log(this.limit);
-
-
-
         this.store.load({params:{start:0, limit: this.limit}});
 
         this.store.on('load', function(){

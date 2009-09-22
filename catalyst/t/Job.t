@@ -33,16 +33,18 @@ my $job2 = Paperpile::Job->new(
 );
 
 $q->add_job($job1);
-#$q->add_job($job2);
+$q->add_job($job2);
 
 $q->save;
 
+$q->run;
+
+
+
 #$q->restore;
 #$job1->run;
-
-my $q2 = Paperpile::Queue->new();
-
+#my $q2 = Paperpile::Queue->new();
 #$q->_dump;
-$q2->_dump;
+#$q2->_dump;
 
 

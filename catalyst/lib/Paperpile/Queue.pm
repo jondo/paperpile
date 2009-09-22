@@ -11,8 +11,9 @@ use File::Temp qw/ tempfile /;
 use JSON;
 use 5.010;
 
-
+enum 'Status' => qw(RUNNING WAITING DONE);
 has 'jobs'  => ( is => 'rw', isa => 'ArrayRef[Paperpile::Job]', default => sub { [] });
+has 'status' => ( is => 'rw', isa => 'Status', default=>'WAITING' );
 
 
 sub BUILD {
@@ -66,6 +67,33 @@ sub restore {
   foreach my $key ( $self->meta->get_attribute_list ) {
     $self->$key($stored->$key);
   }
+
+}
+
+sub run {
+
+  my $self = shift;
+
+  $self->status('RUNNING');
+
+  while (1){
+
+    my $curr_job = undef;
+
+    foreach my $job (@{$self->jobs}){
+
+      if ($job->status eq 'PENDING'){
+        $curr_job = $job;
+        last;
+      }
+    }
+
+    last if not $curr_job;
+    $curr_job->run;
+
+  }
+
+  $self->status('DONE');
 
 }
 

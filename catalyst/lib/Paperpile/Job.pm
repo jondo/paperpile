@@ -86,34 +86,45 @@ sub run {
 
   $self->status_update('RUNNING');
 
-  if ($self->type eq 'PDF_SEARCH'){
+  $self->progress_update('Stage1');
+  sleep(3);
+  $self->progress_update('Stage2');
+  sleep(3);
+  $self->progress_update('Stage3');
+  sleep(3);
 
-    if (not $self->pub->linkout){
-      $self->_match;
-      if ($self->error){
-        $self->status_update('DONE');
-        return;
-      }
-    }
+  $self->status_update('DONE');
 
-    if (not $self->pub->pdf_url){
-      $self->_crawl;
-      if ($self->error){
-        $self->status_update('DONE');
-        return;
-      }
-    }
+  # $self->status_update('RUNNING');
 
-    $self->_download;
-    if ($self->error){
-      $self->status_update('DONE');
-      return;
-    }
+  # if ($self->type eq 'PDF_SEARCH'){
 
-    $self->status_update('DONE');
+  #   if (not $self->pub->linkout){
+  #     $self->_match;
+  #     if ($self->error){
+  #       $self->status_update('DONE');
+  #       return;
+  #     }
+  #   }
+
+  #   if (not $self->pub->pdf_url){
+  #     $self->_crawl;
+  #     if ($self->error){
+  #       $self->status_update('DONE');
+  #       return;
+  #     }
+  #   }
+
+  #   $self->_download;
+  #   if ($self->error){
+  #     $self->status_update('DONE');
+  #     return;
+  #   }
+
+  #   $self->status_update('DONE');
+  # }
 
 
-  }
 }
 
 sub as_hash {

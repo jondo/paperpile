@@ -457,6 +457,9 @@ sub batch_download : Local {
 
   $q->save;
 
+  $q->run;
+
+
 }
 
 

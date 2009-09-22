@@ -33,38 +33,92 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             tbar: tbar,
             autoExpandColumn:'title',
             sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
-            columns:[{header: "Title",
-                      id: 'title',
-                      dataIndex: 'title',
+            columns:[{header: "Type",
+                      id: 'type',
+                      dataIndex: 'type',
                       sortable: true,
                       renderer: function(value, p, record){
                           var tpl = new Ext.XTemplate('<div>{id} | {type} | {status} </div>');
                           return tpl.apply(record.data);
                       }
                      },
+                     { header: "Task",
+                       id: 'title',
+                       dataIndex: 'title',
+                       sortable: true,
+                       renderer: function(value, p, record){
+                           var tpl = new Ext.XTemplate('<div>{id} | {type} | {status} </div>');
+                           return tpl.apply(record.data);
+                       }
+                     },
+                     { header: "Status",
+                       id: 'status',
+                       dataIndex: 'status',
+                       sortable: true,
+                       renderer: function(value, p, record){
+
+                           var d=record.data;
+                           
+                           var tpl;
+
+                           //template='<div ext:qtip="{status_msg}" class="pp-icon-tick">{progress}</div>';
+
+                           if (d.status === 'RUNNING'){
+                               tpl='<div class="pp-icon-loading">{progress}</div>';
+                           } 
+
+                           if (d.status === 'PENDING'){
+                               tpl='<div class="">Pending</div>';
+                           }
+
+                           if (d.status === 'DONE'){
+                               tpl='<div class="pp-icon-tick">Done</div>';
+                           }
+
+                           
+
+
+                           var t = new Ext.XTemplate(tpl); 
+
+                           return t.apply( d );
+                       }
+                      },
                     ],
         });
         
         Paperpile.QueueGrid.superclass.initComponent.apply(this, arguments);
 
+        this.pollingTask =  {
+            run: function(){
+                this.getStore().reload();
+            },
+            scope: this,
+            interval: 5000
+        },
+
         this.store.on('beforeload',
                       function(){
                           //Paperpile.status.showBusy('Searching PDFs');
                       }, this);
-
+        
         this.store.on('load',
                       function(){
                           //Paperpile.status.clearMsg();
                       }, this);
 
+        this.on('beforedestroy', 
+                function(){
+                    Ext.TaskMgr.stop(this.pollingTask);
+                }, this);
+
         this.store.load({
             params: { foo: 'foo' },
             callback: function(){
                 this.controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');               //this.controlPanel.initControls();
+                Ext.TaskMgr.start(this.pollingTask);
             },
             scope: this
         });
-
 
         this.getSelectionModel().on('rowselect',
                                     function(sm, rowIdx, r){
@@ -91,7 +145,6 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         }
         */
     },
-
 
 
     deleteEntry: function(){

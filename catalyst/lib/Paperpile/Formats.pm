@@ -65,7 +65,6 @@ sub guess_format {
         if ( $line =~ $pattern ) {
           $format = lc($format);
           $format = ucfirst($format);
-          print STDERR "==========================> $format\n";
           my $module = "Paperpile::Formats::$format";
           return eval("use $module; $module->new(file=>'$file')");
         }
