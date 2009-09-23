@@ -32,6 +32,9 @@ sub grid : Local {
     fields => [ 'id', 'title', 'type', 'status', 'progress', 'error' ]
   );
 
+
+  $c->stash->{num_pending} = $q->num_pending;
+  $c->stash->{num_done} = $q->num_done;
   $c->stash->{data} = [ @data ];
   $c->stash->{metaData} = {%metaData};
   $c->detach('Paperpile::View::JSON');
