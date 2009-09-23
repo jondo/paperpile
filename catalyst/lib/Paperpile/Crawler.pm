@@ -56,9 +56,12 @@ sub search_file {
 
   if ( not @$site_rules ) {
     # should not happen
-    CrawlerError->throw(error=>'PDF not found. Error in driver file.',
-                        url => $URL,
-                       );
+    #CrawlerError->throw(error=>'PDF not found. Error in driver file.',
+    #                    url => $URL,
+    #                   );
+
+    die("PDF not found. Error in driver file.");
+
   }
 
   # Take the redirected URL (if redirection has taken place)
@@ -101,7 +104,9 @@ sub search_file {
     CrawlerScrapeError->throw("Could not download PDF. Your institution might need a subscription for the journal.");
   } else {
 
-    return $file;
+    # $file is a URI:http at this point, return with " " to transfrom
+    # it to string
+    return "$file";
   }
 }
 

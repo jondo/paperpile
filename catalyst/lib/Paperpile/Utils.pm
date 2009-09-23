@@ -18,6 +18,8 @@ use Compress::Zlib;
 use MIME::Base64;
 use Config;
 use Paperpile::Model::User;
+use Paperpile::Model::Library;
+use Storable qw(lock_store lock_retrieve);
 
 $Data::Dumper::Indent = 1;
 
@@ -33,6 +35,37 @@ sub get_tmp_dir {
   return $tmp_dir;
 }
 
+sub get_user_settings_model {
+
+  my $self = shift;
+
+  # This is hard-coded for now. Ideally it should read database
+  # location from paperpile.yaml. Don't know how to do this without
+  # access to $c and replicating substitution code.
+
+  my $user_settings_db = $ENV{HOME} . "/.paperpile/settings.db";
+  my $model            = Paperpile::Model::User->new();
+  $model->set_dsn( "dbi:SQLite:" . $user_settings_db );
+
+  return $model;
+
+}
+
+sub get_library_model {
+
+  my $self = shift;
+
+  my $settings = $self->get_user_settings_model->settings;
+
+  my $db_file = $settings->{library_db};
+  my $model            = Paperpile::Model::Library->new();
+  $model->set_dsn( "dbi:SQLite:" . $db_file );
+
+  return $model;
+
+}
+
+
 sub get_browser {
 
   my ( $self, $test_proxy ) = @_;
@@ -45,13 +78,7 @@ sub get_browser {
     $settings = $test_proxy;
   } else {
 
-    # This is hard-coded for now. Ideally it should read database
-    # location from paperpile.yaml. Don't know how to do this without
-    # access to $c and replicating substitution code.
-
-    my $user_settings_db = $ENV{HOME} . "/.paperpile/settings.db";
-    my $model            = Paperpile::Model::User->new();
-    $model->set_dsn( "dbi:SQLite:" . $user_settings_db );
+    my $model = $self->get_user_settings_model;
     $settings = $model->settings;
   }
 
@@ -288,4 +315,32 @@ sub copy_file{
 
   return $dest;
 }
+
+sub store {
+
+  my ($self, $item, $ref) = @_;
+
+  my $file = File::Spec->catfile($self->get_tmp_dir(), 'cache', $item);
+
+  lock_store($ref, $file) or  die "Can't write to cache\n";
+
+}
+
+
+sub retrieve {
+
+  my ($self, $item) = @_;
+
+  my $file = File::Spec->catfile($self->get_tmp_dir(), 'cache', $item);
+
+  my $ref=undef;
+
+  eval {
+    $ref = lock_retrieve($file);
+  };
+
+  return $ref;
+
+}
+
 

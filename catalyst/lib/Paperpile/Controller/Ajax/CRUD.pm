@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
+use Paperpile::Job;
+use Paperpile::Queue;
 use Data::Dumper;
 use HTML::TreeBuilder;
 use HTML::FormatText;
@@ -434,6 +436,32 @@ sub delete_from_folder : Local {
   $c->forward('Paperpile::View::JSON');
 
 }
+
+sub batch_download : Local {
+  my ( $self, $c ) = @_;
+  my $grid_id = $c->request->params->{grid_id};
+  my $plugin  = $c->session->{"grid_$grid_id"};
+
+  my $data = $self->_get_selection($c);
+
+  my $q = Paperpile::Queue->new();
+
+  foreach my $pub (@$data) {
+    my $j = Paperpile::Job->new(
+      type  => 'PDF_SEARCH',
+      pub   => $pub,
+      queue => $q
+    );
+    $q->add_job($j);
+  }
+
+  $q->save;
+
+  $q->run;
+
+
+}
+
 
 sub _get_selection {
 

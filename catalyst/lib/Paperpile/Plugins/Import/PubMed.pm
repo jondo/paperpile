@@ -127,8 +127,6 @@ sub match {
     }
   }
 
-  print STDERR "$query\n";
-
   my $browser   = Paperpile::Utils->get_browser;
   my $response  = $browser->get( $esearch . $query );
   my $resultXML = $response->content;

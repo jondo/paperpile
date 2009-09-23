@@ -10,6 +10,9 @@ use NEXT;
 use DBI;
 use Data::Dumper;
 
+# For now we suppress the NEXT deprecated warning. Should think about porting DBI module...
+no warnings 'Class::C3::Adopt::NEXT';
+
 our $VERSION = '0.19';
 
 __PACKAGE__->mk_accessors( qw/_dbh _pid _tid/ );

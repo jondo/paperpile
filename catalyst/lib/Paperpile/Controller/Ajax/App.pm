@@ -24,6 +24,20 @@ sub heartbeat : Local {
   $c->stash->{version} = $c->config->{app_settings}->{version};
   $c->stash->{status} = 'RUNNING';
 
+  #my $queue =  Paperpile::Utils->retrieve('queue');
+  #$c->stash->{queue} = {%$queue};
+  #my $changed = 0;
+
+  # If job is done remove from queue ensuring that status 'DONE' is
+  # only sent once to frontend
+  #foreach my $id (keys %$queue){
+  #  if ($queue->{$id}->{status} eq 'DONE'){
+  #    delete $queue->{$id};
+  #    $changed=1;
+  #  }
+  #}
+  #Paperpile::Utils->store('queue', $queue) if $changed;
+
 }
 
 
@@ -85,7 +99,13 @@ sub init_session : Local {
 
   }
 
-  mkpath($c->model('User')->get_setting('tmp_dir'));
+  my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
+
+  mkpath($tmp_dir);
+  mkpath(File::Spec->catfile($tmp_dir, 'cache'));
+
+  #Paperpile::Utils->store('queue',{});
+
 
 }
 

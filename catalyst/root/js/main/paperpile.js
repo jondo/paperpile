@@ -198,7 +198,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             showFilter: true,
             currentRoot:Paperpile.main.globalSettings.user_home,
             filterOptions:[{text: 'All supported formats',
-                            suffix:['ppl','bib','ris','enl','lib','mods','xml']
+                            suffix:['ppl','bib','ris','enl','lib','mods','xml','rss']
                            },
                            {text: 'BibTeX (.bib)',
                             suffix: ['bib']
@@ -217,6 +217,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                            },
                            {text: 'MODS (.mods, .xml)',
                             suffix: ['mods','xml']
+                           },
+                           {text: 'RSS (.rss, .xml)',
+                            suffix: ['rss','xml']
                            },
                            {text: 'Paperpile (.ppl)',
                             suffix: ['ppl']
@@ -336,6 +339,54 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 }
             );
         }
+    },
+
+    startHeartbeat: function(){
+
+        this.heartbeatTask = {
+            run: this.pollServer,
+            scope: this,
+            interval: 5000
+        }
+
+        //Ext.TaskMgr.start(this.heartbeatTask);
+
+    },
+
+    
+    pollServer: function(){
+
+        Ext.Ajax.request({
+            url: Paperpile.Url('/ajax/app/heartbeat'),
+            success: function(response){
+                var json = Ext.util.JSON.decode(response.responseText);
+
+                for (var jobID in json.queue){
+                    
+                    var callback = json.queue[jobID].callback;
+
+                    if (callback){
+                        if (callback.notify){
+                            Paperpile.status.clearMsg(); 
+                            Paperpile.status.updateMsg(
+                                { msg: callback.notify,
+                                  hideOnClick: true,
+                                }
+                            );
+                        }
+                        if (callback.updatedb){
+                            this.onUpdateDB();
+                        }
+                    }
+                    
+
+                }
+            },
+                
+            failure: function(response){
+                // do something reasonable here when server contact breaks down.
+            }
+        })
     },
 
     inc_read_counter: function(rowid){

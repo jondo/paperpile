@@ -107,6 +107,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<div id="tag-control-{id}" class="pp-tag-control"></div>',
         '</div>',
         '<div class="pp-vspace"></div>',
+        '<p><a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a></p>',
         '</div>',
         '</div>',
 
@@ -193,6 +194,15 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         if (numSelected > 1) {
             this.tplMultiple.overwrite(this.body, {numSelected: numSelected, id: this.id}, true);
+
+            Ext.get('main-container-'+this.id).on('click', function(e, el, o){
+                switch(el.getAttribute('action')){
+                case 'batch-download':
+                    this.grid.batchDownload();
+                    break;
+                }        
+            }, this, {delegate:'a'});
+
             this.showTagControls();
         }
 
@@ -285,6 +295,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             case 'delete-file':
                 this.deleteFile(false, el.getAttribute('rowid'));
                 break;
+
             }
 
         }, this, {delegate:'a'});
