@@ -68,6 +68,8 @@ sub restore {
     $self->$key( $stored->$key );
   }
 
+  $self->_update_stats;
+
 }
 
 sub run {

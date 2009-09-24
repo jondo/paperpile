@@ -75,7 +75,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                            //template='<div ext:qtip="{status_msg}" class="pp-icon-tick">{progress}</div>';
 
                            if (d.status === 'RUNNING'){
-                               tpl='<div class="pp-icon-loading">{progress}</div>';
+                               tpl='<div class="pp-icon-queue">{progress}</div>';
                            } 
 
                            if (d.status === 'PENDING'){
@@ -113,9 +113,8 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.on('load',
                       function(){
                           //Paperpile.status.clearMsg();
-                          var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');         
-                          controlPanel.updateView();
-
+                          var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
+                          controlPanel.updateView.createDelegate(controlPanel)();
                       }, this);
 
         this.on('beforedestroy', 
@@ -126,7 +125,8 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.load({
             params: { foo: 'foo' },
             callback: function(){
-                //this.controlPanel.initControls();
+                var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
+                controlPanel.initControls.createDelegate(controlPanel)();
                 Ext.TaskMgr.start(this.pollingTask);
             },
             scope: this
