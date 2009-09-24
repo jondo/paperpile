@@ -33,13 +33,24 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             tbar: tbar,
             autoExpandColumn:'title',
             sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
-            columns:[{header: "Type",
+            columns:[{header: "",
                       id: 'type',
                       dataIndex: 'type',
                       sortable: true,
+                      width: 30,
                       renderer: function(value, p, record){
-                          var tpl = new Ext.XTemplate('<div>{id} | {type} | {status} </div>');
-                          return tpl.apply(record.data);
+
+                          var d=record.data;
+                           
+                          var tpl;
+
+                          if (d.type === 'PDF_SEARCH'){
+                              tpl='<div class="pp-action-search-pdf" style="height:20px">&nbsp;</div>';
+                          } 
+
+                          var t = new Ext.XTemplate(tpl); 
+                          return t.apply( d );
+
                       }
                      },
                      { header: "Task",
@@ -47,7 +58,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                        dataIndex: 'title',
                        sortable: true,
                        renderer: function(value, p, record){
-                           var tpl = new Ext.XTemplate('<div>{id} | {type} | {status} </div>');
+                           var tpl = new Ext.XTemplate('<div>{title}</div>');
                            return tpl.apply(record.data);
                        }
                      },
@@ -64,7 +75,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                            //template='<div ext:qtip="{status_msg}" class="pp-icon-tick">{progress}</div>';
 
                            if (d.status === 'RUNNING'){
-                               tpl='<div class="pp-icon-loading">{progress}</div>';
+                               tpl='<div class="pp-icon-queue">{progress}</div>';
                            } 
 
                            if (d.status === 'PENDING'){
@@ -75,11 +86,8 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                                tpl='<div class="pp-icon-tick">Done</div>';
                            }
 
-                           
-
-
+  
                            var t = new Ext.XTemplate(tpl); 
-
                            return t.apply( d );
                        }
                       },
@@ -90,6 +98,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
 
         this.pollingTask =  {
             run: function(){
+                this.getView().holdPosition=true;
                 this.getStore().reload();
             },
             scope: this,
@@ -104,6 +113,8 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.on('load',
                       function(){
                           //Paperpile.status.clearMsg();
+                          var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
+                          controlPanel.updateView.createDelegate(controlPanel)();
                       }, this);
 
         this.on('beforedestroy', 
@@ -114,7 +125,8 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.load({
             params: { foo: 'foo' },
             callback: function(){
-                this.controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');               //this.controlPanel.initControls();
+                var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
+                controlPanel.initControls.createDelegate(controlPanel)();
                 Ext.TaskMgr.start(this.pollingTask);
             },
             scope: this

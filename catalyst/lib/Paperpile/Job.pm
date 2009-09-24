@@ -27,6 +27,8 @@ has 'type'   => ( is => 'rw', isa => 'Types' );
 has 'status' => ( is => 'rw', isa => 'Status' );
 has 'error'  => ( is => 'rw', isa => 'Str' );
 has 'progress'  => ( is => 'rw', isa => 'Str' );
+has 'title' => ( is => 'rw', isa => 'Str' );
+has 'duration' => ( is => 'rw', isa => 'Int' );
 
 has 'pub'    => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
 has 'queue'  => ( is => 'rw', isa => 'Paperpile::Queue' );
@@ -37,7 +39,20 @@ sub BUILD {
   $self->status('PENDING');
   $self->progress('Waiting.');
   $self->error('');
+  $self->create_title;
+
 }
+
+
+sub create_title {
+  my $self = shift;
+
+  if ($self->type eq 'PDF_SEARCH'){
+    $self->title("Get PDF for ". $self->pub->title);
+  }
+
+}
+
 
 sub generate_id {
 
@@ -84,6 +99,8 @@ sub run {
 
   my $self = shift;
 
+  my $start_time = time;
+
   $self->status_update('RUNNING');
 
   $self->progress_update('Stage1');
@@ -94,6 +111,10 @@ sub run {
   sleep(3);
 
   $self->status_update('DONE');
+
+  my $end_time = time;
+
+  $self->duration($end_time-$start_time);
 
   # $self->status_update('RUNNING');
 

@@ -608,6 +608,14 @@ a:hover.pp-textlink {
     background: transparent url('/images/icons/loading.gif') no-repeat;
 }
 
+.pp-icon-queue{
+    padding: 2 2 2 22;
+    background: transparent url('/images/icons/queue.gif') no-repeat;
+}
+
+
+
+
 
 /**** Abstract ****/
 

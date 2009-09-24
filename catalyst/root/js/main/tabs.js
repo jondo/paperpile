@@ -118,7 +118,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
     showQueueTab:function(){
         var panel=Paperpile.main.tabs.add(new Paperpile.QueueView({title:'Background tasks',
-                                                                   iconCls: 'pp-icon-import-pdf'}));
+                                                                   iconCls: 'pp-icon-queue'}));
         panel.show();
         
     },

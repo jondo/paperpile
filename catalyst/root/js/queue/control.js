@@ -1,27 +1,21 @@
 Paperpile.QueueControl = Ext.extend(Ext.Panel, {
-	
-    statusMsgTpl: [
-        '<tpl if="number">',
-        '<b>{number}</b> PDFs in the list are not yet in your library and can be automatically imported.',
-        '</tpl>',
-        '<tpl if="!number">',
-        'All files imported.',
-        '</tpl>',
-    ],
 
     markup: [
         '<div class="pp-box pp-box-style1"',
-        '<h2>Import PDFs</h2>',
-        '<p id="status-msg-{id}"></p>',
-        '<div class="pp-control-container">',
-        '<table><tr>',
-        '</tr></table>',
-        '</div>',
-        '<div id="start-container-{id}" class="pp-control-container"></div>',
-        '<p>&nbsp;</p>',
-        '<div id="pbox-container-{id}" class="pp-control-container"></div>',
+        '<h2>Progress</h2>',
+        '<p id="queue-progress"></p>',
+        '<div id="queue-status"><div>',
         '</div>',
 	],
+
+    markupProgress: [
+        '<p>{num_done} of {num_all} tasks completed.</p>',
+	],
+
+    markupDone: [
+        '<p>All jobs done</p>',
+	],
+
 
     initComponent: function() {
 		Ext.apply(this, {
@@ -37,43 +31,59 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 	},
 
 
-    /*
+    
     updateView: function(){
-        var list=this.getUnimportedList();
 
-        var tpl= new Ext.XTemplate(this.statusMsgTpl);
-        tpl.overwrite('status-msg-'+this.id, {number: list.length});
-
-        if (list.length==0){
-            this.startButton.disable();
+        if (! Ext.get('queue-status')){
+            var bodyTpl= new Ext.XTemplate(this.markup);
+            bodyTpl.overwrite(this.body, {});
+            this.pbar=new Ext.ProgressBar({cls: 'pp-basic'});
+            this.pbar.render('queue-progress',0);
         }
+
+
+
+        var currTpl;
+        var tplProgress= new Ext.XTemplate(this.markupProgress);
+        var tplDone= new Ext.XTemplate(this.markupDone);
+
+        var r=this.ownerCt.ownerCt.items.get('grid').getStore().getAt(0);
+
+        d={};
+
+        if (r){
+            var num_done = parseInt(r.data.num_done);
+            var num_pending = parseInt(r.data.num_pending);
+            var num_all = num_done + num_pending;
+
+            if (num_done < num_all){
+                d =  { num_done:num_done, 
+                       num_all: num_all,
+                     };
+                currTpl = tplProgress;
+                this.pbar.updateProgress(num_done/num_all, num_done+ ' of '+num_all);
+
+            } else {
+                currTpl = tplDone;
+            }
+        } else {
+            currTpl = tplDone;
+        }
+
+        console.log(Ext.get('queue-status'));
         
-        
-    },
-
-    initControls: function(data){
-        this.grid=this.ownerCt.ownerCt.items.get('center_panel').items.get('grid');
-
-        var list=this.getUnimportedList();
-
-        var tpl= new Ext.XTemplate(this.markup);
-
-        tpl.overwrite(this.body, {number: list.length, id: this.id});
+        currTpl.overwrite(Ext.get('queue-status'), d);
 
                
-        this.startButton=new Ext.Button(
-            { renderTo: "start-container-"+this.id,
-              text: 'Match and import all PDFs',
-              handler: function(){
-                  this.importAll();
-              },
-              scope:this,
-            });
+    },
 
-        this.updateView();
+      
+    initControls: function(data){
 
-        
-    },*/
+        this.grid=this.ownerCt.ownerCt.items.get('grid');
+
+               
+    },
 
     
 });

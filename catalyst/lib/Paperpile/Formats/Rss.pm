@@ -166,8 +166,7 @@ sub _parse_RegularFeed {
 		    # parsing using parse_freestyle seems to give properly formatted
 		    # results, but it takes far too long
 		    # We just use the unformtted author tags now
-		    #push @authors, Paperpile::Library::Author->new()->
-		    #	parse_freestyle( $author )->bibtex();
+		    #push @authors, Paperpile::Library::Author->new()->parse_freestyle( $author )->bibtex();
 		    push @authors, $author;
 		    
 		}
