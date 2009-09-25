@@ -11,11 +11,12 @@ use File::Temp qw/ tempfile /;
 use JSON;
 use 5.010;
 
-enum 'Status' => qw(RUNNING WAITING DONE);
+enum 'Status' => qw(RUNNING WAITING PAUSED DONE);
 has 'jobs' => ( is => 'rw', isa => 'ArrayRef[Paperpile::Job]', default => sub { [] } );
-has 'status' => ( is => 'rw', isa => 'Status', default => 'WAITING' );
+
+has 'status' => ( is => 'rw', isa => 'Status', default => 'WAITING', trigger => sub {my $self = shift; $self->save;} );
 has _durations => ( is => 'rw', isa => 'ArrayRef[Int]', default => sub { [] } );
-has eta => ( is => 'rw', isa => 'Str', default => "Estimated time left: --:--:--" );
+has eta         => ( is => 'rw', isa => 'Str', default => "Estimated time left: --:--:--" );
 has num_pending => ( is => 'rw', isa => 'Int', default => 0 );
 has num_done    => ( is => 'rw', isa => 'Int', default => 0 );
 
@@ -105,8 +106,8 @@ sub _update_stats {
 
   my $self = shift;
 
-  my $num_pending=0;
-  my $num_done=0;
+  my $num_pending = 0;
+  my $num_done    = 0;
 
   foreach my $job ( @{ $self->jobs } ) {
     if ( $job->status eq 'PENDING' or $job->status eq 'RUNNING' ) {

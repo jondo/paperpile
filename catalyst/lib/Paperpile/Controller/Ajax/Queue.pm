@@ -27,8 +27,9 @@ sub grid : Local {
 
     # For simplicity, simply push info for complete queue to each item
     # in the list
-    $data[$#data]->{num_pending} = $q->num_pending;
-    $data[$#data]->{num_done}    = $q->num_done;
+    $data[$#data]->{num_pending}  = $q->num_pending;
+    $data[$#data]->{num_done}     = $q->num_done;
+    $data[$#data]->{queue_status} = $q->status;
 
     print STDERR $q->num_pending, "   ", $q->num_done, "\n";
 
@@ -37,7 +38,10 @@ sub grid : Local {
   my %metaData = (
     root   => 'data',
     id     => 'id',
-    fields => [ 'id', 'title', 'type', 'status', 'progress', 'error', 'num_pending', 'num_done' ]
+    fields => [
+      'id',          'title',    'type', 'status', 'progress', 'error',
+      'num_pending', 'num_done', 'queue_status'
+    ]
   );
 
   $c->stash->{data}     = [@data];
