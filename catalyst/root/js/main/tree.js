@@ -449,6 +449,35 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     },
 
+    newRSS: function(){
+
+        var n = this.getNodeById('ACTIVE_ROOT');
+
+        Ext.Msg.prompt('Import RSS feed', 'URL:', function(btn, text){
+            if (btn == 'ok'){
+
+                newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'New RSS',
+                                                                     iconCls:'pp-icon-feed',
+                                                                     draggable:true,
+                                                                     expanded:true,
+                                                                     children:[],
+                                                                     id: this.generateUID()
+                                                                    })
+                                       );
+
+                var pars={type: 'RSS',
+                          plugin_name: 'RSS',
+                          plugin_title: 'New RSS feed',
+                          plugin_iconCls: 'pp-icon-feed',
+                          plugin_url: text,
+                         };
+
+                newNode.init( pars );
+
+                
+            }
+        }, this);
+    },
 
     //
     // Creates new folder
@@ -1041,6 +1070,13 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
                   Paperpile.main.tree.newActive();
               },
               scope: this
+            },
+            { id: 'active_menu_rss', //itemId does not work here
+              text:'Import RSS feed',
+              handler: function(){
+                  Paperpile.main.tree.newRSS();
+              },
+              scope: tree
             },
             { id: 'active_menu_delete',
               text:'Delete',

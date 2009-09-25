@@ -250,6 +250,43 @@ sub new_active : Local {
 
 }
 
+sub new_rss : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $node_id   = $c->request->params->{node_id};
+  my $parent_id = $c->request->params->{parent_id};
+
+  my $tree = $c->session->{"tree"};
+
+  my $sub_tree = $c->forward( 'private/get_subtree', [ $tree, $parent_id ] );
+
+  my %params = ();
+
+  foreach my $key ( keys %{ $c->request->params } ) {
+    next if $key =~ /^_/;
+    $params{$key} = $c->request->params->{$key};
+  }
+
+  $params{id} = $node_id;
+  delete( $params{node_id} );
+
+  my $new = Tree::Simple->new( {%params} );
+  $new->setUID($node_id);
+  $sub_tree->addChild($new);
+
+  $c->model('Library')->save_tree($tree);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+
+
+
+
+
 sub delete_active : Local {
   my ( $self, $c ) = @_;
 

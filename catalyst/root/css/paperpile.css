@@ -613,6 +613,10 @@ a:hover.pp-textlink {
     background: transparent url('/images/icons/queue.gif') no-repeat;
 }
 
+.pp-icon-feed{
+    padding: 2 2 2 22;
+    background: transparent url('/images/icons/feed.png') no-repeat !important;
+}
 
 
 
