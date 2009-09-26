@@ -592,6 +592,10 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/chart_bar.png')!important;
 }
 
+.pp-icon-feed{
+    background: transparent url('/images/icons/feed.png') no-repeat !important;
+}
+
 
 .pp-icon-tick{
     padding: 2 2 2 22;
@@ -605,7 +609,7 @@ a:hover.pp-textlink {
 
 .pp-icon-loading{
     padding: 2 2 2 22;
-    background: transparent url('/images/icons/loading.gif') no-repeat;
+    background: transparent url('/images/icons/loading.gif') no-repeat !important;
 }
 
 .pp-icon-queue{
@@ -613,10 +617,6 @@ a:hover.pp-textlink {
     background: transparent url('/images/icons/queue.gif') no-repeat;
 }
 
-.pp-icon-feed{
-    padding: 2 2 2 22;
-    background: transparent url('/images/icons/feed.png') no-repeat !important;
-}
 
 
 
