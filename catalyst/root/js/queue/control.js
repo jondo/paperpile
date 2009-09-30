@@ -1,10 +1,11 @@
 Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 
     markup: [
-        '<div class="pp-box pp-box-style1"',
+        '<div class="pp-box pp-box-style1" style="height:200px;"',
         '<h2>Progress</h2>',
         '<p id="queue-progress"></p>',
-        '<div id="queue-status"><div>',
+        '<div id="queue-status"></div>',
+        '<center><div id="queue-button"></div></center>',
         '</div>',
 	],
 
@@ -35,14 +36,9 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
     updateView: function(){
 
         if (! Ext.get('queue-status')){
-            var bodyTpl= new Ext.XTemplate(this.markup);
-            bodyTpl.overwrite(this.body, {});
-            this.pbar=new Ext.ProgressBar({cls: 'pp-basic'});
-            this.pbar.render('queue-progress',0);
+            this.initControls();
         }
-
-
-
+        
         var currTpl;
         var tplProgress= new Ext.XTemplate(this.markupProgress);
         var tplDone= new Ext.XTemplate(this.markupDone);
@@ -52,26 +48,35 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
         d={};
 
         if (r){
+
+            this.status = r.data.queue_status;
+
             var num_done = parseInt(r.data.num_done);
             var num_pending = parseInt(r.data.num_pending);
             var num_all = num_done + num_pending;
+
+            if (this.status === 'RUNNING'){
+                this.button.setText('Pause tasks');
+            }
 
             if (num_done < num_all){
                 d =  { num_done:num_done, 
                        num_all: num_all,
                      };
                 currTpl = tplProgress;
-                this.pbar.updateProgress(num_done/num_all, num_done+ ' of '+num_all);
+                this.pbar.updateProgress(num_done/num_all, num_done+ ' of '+num_all+' tasks completed');
 
             } else {
                 currTpl = tplDone;
+                console.log("inhere");
+                this.button.setText('Close tab');
             }
         } else {
             currTpl = tplDone;
+            this.button.setText('Close tab');
         }
 
-        console.log(Ext.get('queue-status'));
-        
+            
         currTpl.overwrite(Ext.get('queue-status'), d);
 
                
@@ -82,7 +87,21 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 
         this.grid=this.ownerCt.ownerCt.items.get('grid');
 
-               
+        var bodyTpl= new Ext.XTemplate(this.markup);
+        bodyTpl.overwrite(this.body, {});
+        this.pbar=new Ext.ProgressBar({cls: 'pp-basic'});
+        this.pbar.render('queue-progress',0);
+
+        this.button=new Ext.Button(
+            { text: '',
+              handler: function(){
+                  alert("inhere");
+              },
+              scope:this,
+            });
+
+        this.button.render('queue-button',0);
+
     },
 
     

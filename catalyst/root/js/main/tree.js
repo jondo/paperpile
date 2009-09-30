@@ -449,6 +449,64 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
     },
 
+    newRSS: function(){
+
+        var n = this.getNodeById('ACTIVE_ROOT');
+
+        Ext.Msg.prompt('Subscribe to RSS feed', 'Location:', function(btn, text){
+            if (btn == 'ok'){
+
+                var newNode = n.appendChild(new Paperpile.AsyncTreeNode({text:'Loading feed',
+                                                                         iconCls:'pp-icon-loading',
+                                                                         qtip:  text,
+                                                                         draggable:true,
+                                                                         expanded:true,
+                                                                         children:[],
+                                                                         id: this.generateUID()
+                                                                        })
+                                           );
+                
+                var pars={type: 'ACTIVE',
+                          node_id: newNode.id,
+                          parent_id: newNode.parentNode.id,
+                          iconCls: 'pp-icon-feed',
+                          plugin_name: 'Feed',
+                          plugin_title: 'New RSS feed',
+                          plugin_iconCls: 'pp-icon-feed',
+                          plugin_mode: 'FULLTEXT',
+                          plugin_url: text,
+                          plugin_id: newNode.id
+                         };
+
+                newNode.init( pars );
+                
+                Ext.Ajax.request({
+                    url: Paperpile.Url('/ajax/tree/new_rss'),
+                    params: pars,
+                    success: function(response){
+                        var json = Ext.util.JSON.decode(response.responseText);
+
+                        if (json.error){
+                            Paperpile.main.onError(response); 
+                            newNode.remove();
+                        }
+
+                        newNode.setText(json.title);
+
+                        newNode.plugin_title = json.title;
+
+                        Ext.get(newNode.getUI().getIconEl()).replaceClass('pp-icon-loading','pp-icon-feed');
+
+
+                    },
+                    failure: function(response){
+                        Paperpile.main.onError(response),
+                        newNode.remove();
+                    }
+                });
+            }
+        }, this);
+    },
 
     //
     // Creates new folder
@@ -548,6 +606,24 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
     // Deletes active folder
     //
 
+    deleteRss: function(){
+        var node = this.getSelectionModel().getSelectedNode();
+
+        Ext.Ajax.request({
+            url: Paperpile.Url('/ajax/tree/delete_rss'),
+            params: { node_id: node.id },
+            success: function(){
+            },
+            failure: Paperpile.main.onError,
+        });
+
+        node.remove();
+    },
+
+    //
+    // Deletes active folder
+    //
+
     deleteActive: function(){
         var node = this.getSelectionModel().getSelectedNode();
 
@@ -555,8 +631,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             url: Paperpile.Url('/ajax/tree/delete_active'),
             params: { node_id: node.id },
             success: function(){
-                //Ext.getCmp('statusbar').clearStatus();
-                //Ext.getCmp('statusbar').setText('Deleted active folder');
             },
             failure: Paperpile.main.onError,
         });
@@ -1041,6 +1115,13 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Ext.menu.Menu, {
                   Paperpile.main.tree.newActive();
               },
               scope: this
+            },
+            { id: 'active_menu_rss', //itemId does not work here
+              text:'Subscribe to RSS feed',
+              handler: function(){
+                  Paperpile.main.tree.newRSS();
+              },
+              scope: tree
             },
             { id: 'active_menu_delete',
               text:'Delete',

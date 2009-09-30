@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
+use Paperpile::Plugins::Import::Feed;
 use Data::Dumper;
 use 5.010;
 
@@ -250,14 +251,79 @@ sub new_active : Local {
 
 }
 
+sub new_rss : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $node_id   = $c->request->params->{node_id};
+  my $parent_id = $c->request->params->{parent_id};
+
+  my $tree = $c->session->{"tree"};
+
+  my $sub_tree = $c->forward( 'private/get_subtree', [ $tree, $parent_id ] );
+
+  my %params = ();
+  my %plugin_params = ();
+
+  foreach my $key ( keys %{ $c->request->params } ) {
+    next if $key =~ /^_/;
+    $params{$key} = $c->request->params->{$key};
+
+    if ( $key =~ /^plugin_/ ) {
+      my $newKey = $key;
+      $newKey =~ s/^plugin_//;
+      $plugin_params{$newKey} = $c->request->params->{$key};
+    }
+  }
+
+  $params{id} = $node_id;
+  delete( $params{node_id} );
+
+  my $plugin = Paperpile::Plugins::Import::Feed->new({%plugin_params});
+  $plugin->connect();
+
+  my $title = $plugin->title;
+
+  if (length($title) > 20){
+    ($title) = $title =~ /(.{1,20}\W)/gms;
+    $title.="...";
+  }
+
+  $params{text} = $title;
+  $params{plugin_title} = $title;
+  $params{qtip} = $params{plugin_url};
+
+  my $new = Tree::Simple->new( {%params} );
+  $new->setUID($node_id);
+  $sub_tree->addChild($new);
+
+  $c->model('Library')->save_tree($tree);
+
+  $c->stash->{title} = $title;
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+
+}
+
+
+
 sub delete_active : Local {
   my ( $self, $c ) = @_;
 
   my $node_id = $c->request->params->{node_id};
 
-  my $tree= $c->session->{"tree"};
+  my $tree = $c->session->{"tree"};
 
-  my $subtree = $c->forward('private/get_subtree',[$tree, $node_id]);
+  my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node_id ] );
+
+
+  if ( $subtree->getNodeValue->{plugin_name} eq 'Feed' ) {
+
+    my $plugin = Paperpile::Plugins::Import::Feed->new( id => $subtree->getNodeValue->{plugin_id} );
+    print STDERR "Inehre outer\n";
+    $plugin->cleanup();
+
+  }
 
   $subtree->getParent->removeChild($subtree);
 

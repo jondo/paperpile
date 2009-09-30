@@ -126,7 +126,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             params: { foo: 'foo' },
             callback: function(){
                 var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
-                controlPanel.initControls.createDelegate(controlPanel)();
+                //controlPanel.initControls.createDelegate(controlPanel)();
                 Ext.TaskMgr.start(this.pollingTask);
             },
             scope: this
