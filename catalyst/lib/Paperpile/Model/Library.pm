@@ -53,6 +53,13 @@ sub create_pubs {
       $pub->last_read('');
       $pub->_imported(1);
 
+      # Remove period from end of title
+      my $title  = $pub->title;
+      if ($title =~/\.\s*$/){
+        $title=~s/\.\s*$//;
+        $pub->title($title);
+      }
+
       # Generate citation key
       my $pattern = $self->get_setting('key_pattern');
       my $key     = $pub->format_pattern($pattern);
