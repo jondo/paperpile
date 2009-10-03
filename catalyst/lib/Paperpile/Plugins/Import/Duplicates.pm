@@ -100,7 +100,7 @@ sub connect {
 			my $wordcount_i = scalar @words;
 			my $wordcount_j = keys %{$index[$j]};
 			
-			# extend mismatches to get all differences		
+			# extend mismatches (to get all differences	if wordcount differs)	
 			$mismatches += abs($wordcount_i - $wordcount_j);
 			
 			if( $mismatches <= $max_mismatch ){
@@ -116,13 +116,15 @@ sub connect {
 						# exact equality (x eq y), we don't need distance calculation
 						print STDERR "GOT YA! (direct)\n";
 						$countDuplDirect++;
+						push @{$self->_data}, $data[$i];
+						push @{$self->_data}, $data[$j];
 					}
 					else { # perform distance calculation
 						if ( $self->_match_title( lc($data[$i]->{title}), lc($data[$j]->{title}) ) ) {
 							print STDERR "GOT YA! (matching)\n";
 							$countDuplMatching++;
-							
-							
+							push @{$self->_data}, $data[$i];
+							push @{$self->_data}, $data[$j];							
 						}
 						else {
 							print STDERR "\n";
