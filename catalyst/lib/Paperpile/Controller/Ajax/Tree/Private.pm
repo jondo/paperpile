@@ -67,7 +67,7 @@ sub get_default_tree : Private {
   # Initialize
   $c->forward( 'get_tags', [$tags] );
 
-  my $folders = Tree::Simple->new( {
+  $folders = Tree::Simple->new( {
       text    => 'Trash',
       type    => "TRASH",
       iconCls => 'pp-icon-trash',
