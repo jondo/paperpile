@@ -38,8 +38,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
       
         this.pubTemplate = new Ext.XTemplate(
             '<div class="pp-grid-data">',
-              '<div>',
-            '<span class="pp-grid-title">{title}</span>{[this.tagStyle(values.tags)]}',
+            '<div>',
+            '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
             '</div>',
             '<tpl if="_authors_display">',
             '<p class="pp-grid-authors">{_authors_display}</p>',
@@ -264,8 +264,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         this.on('rowcontextmenu',
                 function(grid, row, e){
                     this.getSelectionModel().selectRow(row);
-		    this.updateButtons();
-                    this.contextMenu.showAt(e.getXY());
+		            this.updateButtons();
+                    //this.contextMenu.showAt(e.getXY());
                 }, this, {stopEvent:true});
 
 
@@ -853,7 +853,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     batchDownload: function(){
 
         selection=this.getSelection();
-        Paperpile.main.tabs.showQueueTab();
 
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/batch_download'),
@@ -863,9 +862,10 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             method: 'GET',
             timeout: 10000000,
             success: function(response){
-                
             }
         });
+
+        Paperpile.main.tabs.showQueueTab();
 
     }, 
 

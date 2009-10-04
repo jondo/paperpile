@@ -1,23 +1,12 @@
-Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
-Ext.ns('Paperpile');
+document.body.appendChild(document.createElement('script')).src='http://localhost:3000/js/web/ext-core-debug.js';
+
+//alert("inhere");
+
+Ext.DomHelper.append(document.body, {tag: 'p', cls: 'some-class'});
+Ext.select('p.some-class').update('Ext Core successfully injected');
 
 
-Paperpile.status = function(){
-    
-    Ext.Ajax.request({
-        url: '/ajax/browser/status',
-        params: { lookup_id: Paperpile.lookup_id,
-                },
-        method: 'GET',
-        success: function(response){
-            var json = Ext.util.JSON.decode(response.responseText);
-            console.log(json);
-            
-        }
-    })
-};
-                    
-
+/*
 
 Ext.onReady(function() {
 
@@ -32,9 +21,10 @@ Ext.onReady(function() {
         interval: 500
     }
     Ext.TaskMgr.start(this.progressTask);
+});
 
 */
 
 
 
-});
+

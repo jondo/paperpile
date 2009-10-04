@@ -10,11 +10,12 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 	],
 
     markupProgress: [
-        '<p>{num_done} of {num_all} tasks completed.</p>',
+        '<p></p>',
+        '<tpl if="eta"><p>About {eta} left.</p></tpl>',
 	],
 
     markupDone: [
-        '<p>All jobs done</p>',
+        '<p>All tasks completed</p>',
 	],
 
 
@@ -32,13 +33,31 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 	},
 
 
+    // setIconClass does not seem to work in Ext JS 2, so we need a workaround
+
+    setTabTitle: function(title, iconCls){
+
+        var tabPanel = this.ownerCt.ownerCt.ownerCt;
+        var tab = this.ownerCt.ownerCt;
+
+        var el = tabPanel.getTabEl(tab);
+        var item = Ext.fly(el).child('.x-tab-strip-text');
+
+        tab.setTitle(title);
+
+        item.replaceClass('pp-icon-queue', iconCls);
+
+    }, 
+
     
     updateView: function(){
+
+        console.log("INHERE");
 
         if (! Ext.get('queue-status')){
             this.initControls();
         }
-        
+
         var currTpl;
         var tplProgress= new Ext.XTemplate(this.markupProgress);
         var tplDone= new Ext.XTemplate(this.markupDone);
@@ -54,6 +73,7 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
             var num_done = parseInt(r.data.num_done);
             var num_pending = parseInt(r.data.num_pending);
             var num_all = num_done + num_pending;
+            var eta = r.data.eta;
 
             if (this.status === 'RUNNING'){
                 this.button.setText('Pause tasks');
@@ -62,17 +82,22 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
             if (num_done < num_all){
                 d =  { num_done:num_done, 
                        num_all: num_all,
+                       eta: eta,
                      };
                 currTpl = tplProgress;
                 this.pbar.updateProgress(num_done/num_all, num_done+ ' of '+num_all+' tasks completed');
+                this.setTabTitle('Background tasks ('+num_done+'/'+num_all+')','pp-icon-queue');
 
             } else {
                 currTpl = tplDone;
-                console.log("inhere");
+                this.setTabTitle('Background tasks','pp-icon-tick');
+                this.pbar.updateProgress(1,'Done');
                 this.button.setText('Close tab');
             }
         } else {
             currTpl = tplDone;
+            this.setTabTitle('Background tasks','pp-icon-tick');
+            console.log("inhere");
             this.button.setText('Close tab');
         }
 
@@ -94,8 +119,12 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 
         this.button=new Ext.Button(
             { text: '',
-              handler: function(){
-                  alert("inhere");
+              handler: function(button){
+
+                  if (button.getText() === 'Close tab'){
+                      Paperpile.main.tabs.remove(Paperpile.main.tabs.getItem('queue-tab'),1);
+                  }
+    
               },
               scope:this,
             });

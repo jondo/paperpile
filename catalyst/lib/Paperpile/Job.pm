@@ -3,6 +3,7 @@ package Paperpile::Job;
 use Moose;
 use Moose::Util::TypeConstraints;
 
+use Paperpile::Queue;
 use Paperpile::Library::Publication;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
@@ -27,7 +28,6 @@ has 'type'   => ( is => 'rw', isa => 'Types' );
 has 'status' => ( is => 'rw', isa => 'Status' );
 has 'error'  => ( is => 'rw', isa => 'Str' );
 has 'progress'  => ( is => 'rw', isa => 'Str' );
-has 'title' => ( is => 'rw', isa => 'Str' );
 has 'duration' => ( is => 'rw', isa => 'Int' );
 
 has 'pub'    => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
@@ -39,20 +39,8 @@ sub BUILD {
   $self->status('PENDING');
   $self->progress('Waiting.');
   $self->error('');
-  $self->create_title;
 
 }
-
-
-sub create_title {
-  my $self = shift;
-
-  if ($self->type eq 'PDF_SEARCH'){
-    $self->title("Get PDF for ". $self->pub->title);
-  }
-
-}
-
 
 sub generate_id {
 
@@ -91,6 +79,7 @@ sub update {
 
   my $self = shift;
 
+  $self->queue(Paperpile::Queue->new());
   $self->queue->update_job($self);
 
 }
@@ -110,11 +99,15 @@ sub run {
   $self->progress_update('Stage3');
   sleep(3);
 
-  $self->status_update('DONE');
-
   my $end_time = time;
 
   $self->duration($end_time-$start_time);
+
+  if (int(rand(10))>5) {
+    $self->error('An error has occured');
+  }
+
+  $self->status_update('DONE');
 
   # $self->status_update('RUNNING');
 
@@ -156,10 +149,16 @@ sub as_hash {
 
   foreach my $key ( $self->meta->get_attribute_list ) {
     my $value = $self->$key;
+
     # take only simple scalar and not refs of any sort
     next if ref($value);
     $hash{$key} = $value;
   }
+
+  $hash{citekey}  = $self->pub->citekey;
+  $hash{title}    = $self->pub->title;
+  $hash{citation} = $self->pub->_citation_display;
+  $hash{authors}  = $self->pub->_authors_display;
 
   return {%hash};
 

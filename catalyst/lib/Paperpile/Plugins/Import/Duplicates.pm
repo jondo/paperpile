@@ -146,6 +146,10 @@ sub connect {
 
   $self->total_entries( scalar @{ $self->_data } );
 
+  foreach my $pub (@{$self->_data}){
+    print STDERR $pub->title, "\n";
+  }
+
   return $self->total_entries;
 }
 

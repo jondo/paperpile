@@ -117,9 +117,20 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
 
     showQueueTab:function(){
-        var panel=Paperpile.main.tabs.add(new Paperpile.QueueView({title:'Background tasks',
-                                                                   iconCls: 'pp-icon-queue'}));
-        panel.show();
+        var openTab=Paperpile.main.tabs.getItem('queue-tab');
+
+        if (openTab){
+            openTab.items.get('grid').getStore().reload();
+            this.activate(openTab);
+        } else {
+            var panel=Paperpile.main.tabs.add(new Paperpile.QueueView({title:'Background tasks',
+                                                                       iconCls: 'pp-icon-queue',
+                                                                       itemId:'queue-tab'
+                                                                      }
+                                                                     ));
+            panel.show();
+
+        }
         
     },
 
