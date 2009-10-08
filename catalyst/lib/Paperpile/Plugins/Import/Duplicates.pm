@@ -37,19 +37,27 @@ sub connect {
 
   my $model = $self->get_model;
 
-  #$self->total_entries( $model->fulltext_count("") );
-  #$self->_save_page_to_hash( $model->all );
+  # get all publications
+  my @data = @{ $model->all_as_hash };
 
-  print STDERR "calling model -> all!\n";
-  my @data = @{ $model->all_as_hash };    # get all publications
-  print STDERR "finished calling model -> all!\n";
-  my @lengths = ();               # number of words for each title
-  my @index   = ();               # array of hashes to index words of each title
-  my $countDuplCandidates =
-    0;    # number of general candidate duplications, e.g. title i might be substr of title j.
-  my $countDuplDirect   = 0;    # number of directly identified duplications
-  my $countDuplMatching = 0;    # number of duplications that additionally needed matching
-  my $countDuplOverall  = 0;    # number of real duplications
+  # number of words for each title
+  my @lengths = ();
+
+  # array of hashes to index words of each title
+  my @index = ();
+
+  # number of general candidate duplications
+  # e.g. title i might be substr of title j.
+  my $countDuplCandidates = 0;
+
+  # number of directly identified duplications
+  my $countDuplDirect = 0;
+
+  # number of duplications that additionally needed matching
+  my $countDuplMatching = 0;
+
+  # number of real duplications
+  my $countDuplOverall = 0;
 
   # get and count words of titles
   foreach my $i ( 0 .. $#data ) {
@@ -116,14 +124,14 @@ sub connect {
             # exact equality (x eq y), we don't need distance calculation
             print STDERR "GOT YA! (direct)\n";
             $countDuplDirect++;
-            push @{ $self->_data }, Paperpile::Library::Publication->new(%{$data[$i]});
-            push @{ $self->_data }, Paperpile::Library::Publication->new(%{$data[$j]});
+            push @{ $self->_data }, Paperpile::Library::Publication->new( %{ $data[$i] } );
+            push @{ $self->_data }, Paperpile::Library::Publication->new( %{ $data[$j] } );
           } else {    # perform distance calculation
             if ( $self->_match_title( lc( $data[$i]->{title} ), lc( $data[$j]->{title} ) ) ) {
               print STDERR "GOT YA! (matching)\n";
               $countDuplMatching++;
-              push @{ $self->_data }, Paperpile::Library::Publication->new(%{$data[$i]});
-              push @{ $self->_data }, Paperpile::Library::Publication->new(%{$data[$j]});
+              push @{ $self->_data }, Paperpile::Library::Publication->new( %{ $data[$i] } );
+              push @{ $self->_data }, Paperpile::Library::Publication->new( %{ $data[$j] } );
             } else {
               print STDERR "\n";
             }
@@ -146,7 +154,7 @@ sub connect {
 
   $self->total_entries( scalar @{ $self->_data } );
 
-  foreach my $pub (@{$self->_data}){
+  foreach my $pub ( @{ $self->_data } ) {
     print STDERR $pub->title, "\n";
   }
 
