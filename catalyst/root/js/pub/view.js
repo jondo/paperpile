@@ -45,26 +45,55 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                            itemId: 'overview_tab_button',
                            enableToggle: true,
                            toggleHandler: this.onControlToggle,
-                           toggleGroup: 'control_tab_buttons',
+                           toggleGroup: 'control_tab_buttons'+this.id,
                            scope: this,
                            allowDepress : false,
-                           pressed: true
+                           disabled: true,
+                           pressed: false
                          },
                          { text: 'Details',
                            itemId: 'details_tab_button',
                            enableToggle: true,
                            toggleHandler: this.onControlToggle,
-                           toggleGroup: 'control_tab_buttons',
+                           toggleGroup: 'control_tab_buttons'+this.id,
                            scope: this,
                            allowDepress : false,
+                           disabled: true,
                            pressed: false
+                         },'->',
+                         { text: 'About',
+                           itemId: 'about_tab_button',
+                           enableToggle: true,
+                           toggleHandler: this.onControlToggle,
+                           toggleGroup: 'control_tab_buttons'+this.id,
+                           scope: this,
+                           disabled: true,
+                           allowDepress : false,
+                           pressed: false,
+                           hidden:true,
                          }
                         ],
                 },
                
             ],
         });
-       
+
+
+        this.on('afterLayout', 
+                function(){
+                    if (this.grid.sidePanel){
+                        this.items.get('east_panel').items.add(this.grid.sidePanel);
+                        this.items.get('east_panel').items.add(this.grid.sidePanel);
+                        var button = this.items.get('east_panel').getBottomToolbar().items.get('about_tab_button');
+                        button.show();
+                        button.enable();
+                        button.toggle(true);
+                        this.items.get('east_panel').getLayout().setActiveItem('about');
+                    }
+                }, this);
+
+
+        
         Paperpile.PubView.superclass.initComponent.apply(this, arguments);
 
     },
@@ -78,6 +107,11 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         if (button.itemId == 'details_tab_button' && pressed){
             this.items.get('east_panel').getLayout().setActiveItem('details');
         }
+
+        if (button.itemId == 'about_tab_button' && pressed){
+            this.items.get('east_panel').getLayout().setActiveItem('about');
+        }
+
 
     },
     

@@ -1,29 +1,11 @@
-document.body.appendChild(document.createElement('script')).src='http://localhost:3000/js/web/ext-core-debug.js';
+var s=document.createElement('script'); 
+s.src='http://localhost:3000/js/web/ext-core-debug.js';
+s.onload=function(){
+    Ext.DomHelper.append(document.body, {tag: 'p', cls: 'some-class'});
+    Ext.select('p.some-class').update('Ext Core successfully injected');
+};
 
-//alert("inhere");
-
-Ext.DomHelper.append(document.body, {tag: 'p', cls: 'some-class'});
-Ext.select('p.some-class').update('Ext Core successfully injected');
-
-
-/*
-
-Ext.onReady(function() {
-
-    Paperpile.lookup_id=Ext.get('lookup_id').dom.innerHTML;
-
-    Paperpile.status();
-
-    /*
-    this.progressTask = {
-        run: this.checkProgress,
-        scope: this,
-        interval: 500
-    }
-    Ext.TaskMgr.start(this.progressTask);
-});
-
-*/
+document.getElementsByTagName('head')[0].appendChild(s);
 
 
 

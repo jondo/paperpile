@@ -6,6 +6,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     limit: 25,
     allSelected:false,
     itemId:'grid',
+    sidePanel:null,
 
     tagStyles:{},
                                     
@@ -375,6 +376,23 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         this.store.on('load', 
                       function() {
                           // If nothing is selected, select first row
+
+                          var ep = this.findParentByType(Paperpile.PubView).items.get('east_panel');
+                          var tb = ep.getBottomToolbar();
+
+                          var activeTab=ep.getLayout().activeItem.itemId;
+
+                          if (this.store.getCount()>0){
+                              tb.items.get('overview_tab_button').enable();
+                              tb.items.get('details_tab_button').enable();
+                              if (activeTab === 'about'){
+                                  ep.getLayout().setActiveItem('overview');
+                                  activeTab='overview';
+                              }
+                          } 
+                          
+                          tb.items.get(activeTab+'_tab_button').toggle(true);
+
                           if (!this.getSelectionModel().getSelected()){
                               this.getSelectionModel().selectRow(0);
                           };
