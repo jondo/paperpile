@@ -42,7 +42,13 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
             var empty = new Ext.Template('');
             empty.overwrite(this.body);
         }
+    },
+
+    showEmpty: function(tpl){
+        var empty = new Ext.Template(tpl);
+        empty.overwrite(this.body);
     }
+
 
 });
 

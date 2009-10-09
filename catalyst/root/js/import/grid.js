@@ -375,24 +375,30 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         this.store.on('load', 
                       function() {
-                          // If nothing is selected, select first row
+                          var container= this.findParentByType(Paperpile.PubView);
 
-                          var ep = this.findParentByType(Paperpile.PubView).items.get('east_panel');
-                          var tb = ep.getBottomToolbar();
-
+                          var ep = container.items.get('east_panel');
+                          var tb_side = ep.getBottomToolbar();
                           var activeTab=ep.getLayout().activeItem.itemId;
 
                           if (this.store.getCount()>0){
-                              tb.items.get('overview_tab_button').enable();
-                              tb.items.get('details_tab_button').enable();
                               if (activeTab === 'about'){
                                   ep.getLayout().setActiveItem('overview');
                                   activeTab='overview';
                               }
-                          } 
+                          }  else {
+                              container.onEmpty('');
+                              if (this.sidePanel){
+                                  ep.getLayout().setActiveItem('about');
+                                  activeTab='about';
+                              }
+                          }
                           
-                          tb.items.get(activeTab+'_tab_button').toggle(true);
+                          tb_side.items.get(activeTab+'_tab_button').toggle(true);
 
+                          container.updateButtons();
+
+                          // If nothing is selected, select first row
                           if (!this.getSelectionModel().getSelected()){
                               this.getSelectionModel().selectRow(0);
                           };

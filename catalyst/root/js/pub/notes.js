@@ -154,7 +154,13 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 
         this.spot.hide();
 
+    },
+
+    showEmpty: function(tpl){
+        var empty = new Ext.Template(tpl);
+        empty.overwrite(this.body);
     }
+    
 
 
 

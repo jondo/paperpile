@@ -1010,6 +1010,18 @@ div:hover.pp-tag-style-sample {
     white-space:normal;
 }
 
+/* Plugin logos */
+
+.pp-pubmed-logo{
+    margin: 20 auto;
+    width: 165px;
+    height: 60px;
+    background: transparent url('/images/pubmed_logo.png') no-repeat;
+}
+
+
+
+
 
 /*** PDF Extract ***/
 

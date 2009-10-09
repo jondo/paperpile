@@ -207,7 +207,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         }
 
         if (numSelected == 0) {
-
             var empty = new Ext.Template('');
             empty.overwrite(this.body);
             
@@ -845,7 +844,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         })
     },
 
-    // Gets called when the grid
     showEmpty: function(tpl){
 
         var empty = new Ext.Template(tpl);

@@ -21,19 +21,21 @@ Paperpile.DataTabs = Ext.extend(Ext.Panel, {
                      itemId: 'summary_tab_button',
                      enableToggle: true,
                      toggleHandler: this.onItemToggle,
-                     toggleGroup: 'tab_buttons',
+                     toggleGroup: 'tab_buttons'+this.id,
                      scope: this,
                      allowDepress : false,
-                     pressed: true
+                     pressed: true,
+                     disabled:true
                    },
                    { text: 'Notes',
                      itemId: 'notes_tab_button',
                      enableToggle: true,
                      toggleHandler: this.onItemToggle,
-                     toggleGroup: 'tab_buttons',
+                     toggleGroup: 'tab_buttons'+this.id,
                      scope: this,
                      allowDepress : false,
-                     pressed: false
+                     pressed: false,
+                     disabled:true
                    },
                    {xtype:'tbfill'},
                    { text: 'Save',
