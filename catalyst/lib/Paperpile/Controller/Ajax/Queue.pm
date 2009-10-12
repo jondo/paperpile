@@ -13,19 +13,20 @@ use File::Compare;
 use File::Basename;
 use File::stat;
 use MooseX::Timestamp;
+use POSIX qw(ceil floor);
 
 sub grid : Local {
 
   my ( $self, $c ) = @_;
 
-  my $sort = $c->request->params->{sort};
-  my $dir = $c->request->params->{dir};
+  my $start = $c->request->params->{start};
+  my $limit = $c->request->params->{limit};
 
   my @data = ();
 
   my $q = Paperpile::Queue->new();
 
-  $q->_dump;
+  #$q->_dump;
 
   foreach my $job ( @{ $q->jobs } ) {
     push @data, $job->as_hash;
@@ -35,44 +36,27 @@ sub grid : Local {
     $data[$#data]->{num_pending}  = $q->num_pending;
     $data[$#data]->{num_done}     = $q->num_done;
     $data[$#data]->{queue_status} = $q->status;
-    $data[$#data]->{eta} = $q->eta;
-
-    print STDERR $q->num_pending, "   ", $q->num_done, "\n";
-
+    $data[$#data]->{eta}          = $q->eta;
   }
 
+  my $total_entries = scalar @data;
 
+  my $end = ( $start + $limit - 1 );
 
-  if ($sort){
-    if ($sort eq 'title'){
-      my $field ='title';
-
-      if ($dir eq 'ASC'){
-        @data = sort {$a->{title} cmp $b->{title}} @data;
-      } else {
-        @data = sort {$b->{title} cmp $a->{title}} @data;
-      }
-    }
-
-    if ($sort eq 'title'){
-      if ($dir eq 'ASC'){
-        @data = sort {$a->{title} cmp $b->{title}} @data;
-      } else {
-        @data = sort {$b->{title} cmp $a->{title}} @data;
-      }
-    }
-
-  }
-
+  @data = @data[ $start .. ( ( $end > $#data ) ? $#data : $end ) ];
 
   my %metaData = (
-    root   => 'data',
-    id     => 'id',
-    fields => [
-      'id', 'type', 'status', 'progress', 'error', 'citekey', 'title','citation','authors',
-      'num_pending', 'num_done', 'queue_status', 'eta'
+    totalProperty => 'total_entries',
+    root          => 'data',
+    id            => 'id',
+    fields        => [
+      'id',    'type',     'status',  'progress',    'error',    'citekey',
+      'title', 'citation', 'authors', 'num_pending', 'num_done', 'queue_status',
+      'eta'
     ]
   );
+
+  $c->stash->{total_entries} = $total_entries;
 
   $c->stash->{data}     = [@data];
   $c->stash->{metaData} = {%metaData};
@@ -89,7 +73,61 @@ sub clear :Local {
 
 }
 
+sub pause :Local {
 
+  my ( $self, $c ) = @_;
+
+  my $q = Paperpile::Queue->new();
+  $q->pause;
+}
+
+sub resume :Local {
+
+  my ( $self, $c ) = @_;
+
+  my $q = Paperpile::Queue->new();
+  $q->resume;
+}
+
+
+
+sub get_running : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $limit = $c->request->params->{limit};
+
+  my $q = Paperpile::Queue->new();
+
+  my @jobs =  @{ $q->jobs };
+
+  my $i = 0;
+
+  my $is_running=0;
+
+  while ($i <= $#jobs){
+    print STDERR "$i\n";
+    if ($jobs[$i]->status eq 'RUNNING'){
+      $is_running=1;
+      last;
+    }
+    $i++;
+  }
+
+  my $page = -1;
+  my $index = -1;
+
+  if ($is_running){
+    $page = floor($i/$limit)+1;
+    $index = $i % $limit;
+  }
+
+  print STDERR "==========> $i $limit $page $index\n";
+
+  $c->stash->{page} = $page;
+  $c->stash->{index} = $index;
+
+}
 
 
 

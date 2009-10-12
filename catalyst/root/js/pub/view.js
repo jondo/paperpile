@@ -88,6 +88,7 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                         button.show();
                         button.enable();
                         button.toggle(true);
+                        button.setText(this.grid.sidePanel.tabLabel);
                         this.grid.sidePanel.update();
                         this.items.get('east_panel').getLayout().setActiveItem('about');
                     }

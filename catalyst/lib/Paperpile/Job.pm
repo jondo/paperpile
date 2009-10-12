@@ -13,7 +13,7 @@ use File::Temp qw/ tempfile /;
 use File::Path;
 use File::Spec;
 use File::Copy;
-
+use Time::HiRes qw( usleep);
 
 
 use JSON;
@@ -95,9 +95,6 @@ sub run {
   $self->progress_update('Stage1');
   sleep(3);
   $self->progress_update('Stage2');
-  sleep(3);
-  $self->progress_update('Stage3');
-  sleep(3);
 
   my $end_time = time;
 

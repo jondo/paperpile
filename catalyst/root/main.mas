@@ -25,6 +25,7 @@
   import/search-field.js 
   import/filter-field.js
   import/plugins/online-search.js
+  import/plugins/sidepanel.js
                
   misc/utils.js
   misc/forms.js 
@@ -59,6 +60,7 @@
   queue/view.js
   queue/grid.js
   queue/control.js
+  
   
   };
   

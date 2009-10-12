@@ -476,6 +476,15 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/cancel.png');
 }
 
+.pause .x-btn-text {
+    background-image: url('/images/icons/pause.png');
+}
+
+.resume .x-btn-text {
+    background-image: url('/images/icons/resume.png');
+}
+
+
 .save .x-btn-text {
     background-image: url('/images/icons/accept.png');
 }
@@ -616,6 +625,12 @@ a:hover.pp-textlink {
     padding: 2 2 2 22;
     background: transparent url('/images/icons/queue.gif') no-repeat;
 }
+
+.pp-icon-pause{
+    padding: 2 2 2 22;
+    background: transparent url('/images/icons/pause.png') no-repeat;
+}
+
 
 
 

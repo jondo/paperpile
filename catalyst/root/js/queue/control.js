@@ -5,7 +5,10 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
         '<h2>Progress</h2>',
         '<p id="queue-progress"></p>',
         '<div id="queue-status"></div>',
-        '<center><div id="queue-button"></div></center>',
+        '<table style="border: 2px; margin: 10px auto;"><tr>',
+        '<td style="padding: 0 10px;"><div id="pause-button"></div></td>',
+        '<td style="padding: 0 10px;"><div id="cancel-button"></div></td>',
+        '</tr></table>',
         '</div>',
 	],
 
@@ -18,6 +21,7 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
         '<p>All tasks completed</p>',
 	],
 
+    paused:false,
 
     initComponent: function() {
 		Ext.apply(this, {
@@ -45,7 +49,12 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 
         tab.setTitle(title);
 
-        item.replaceClass('pp-icon-queue', iconCls);
+        item.removeClass('pp-icon-queue');
+        item.removeClass('pp-icon-pause');
+        item.removeClass('pp-icon-tick');
+
+        item.addClass(iconCls);
+
 
     }, 
 
@@ -76,31 +85,39 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
             var eta = r.data.eta;
 
             if (this.status === 'RUNNING'){
-                this.button.setText('Pause tasks');
+                this.pause_button.show();
+                this.cancel_button.show();
             }
 
             if (num_done < num_all){
+
                 d =  { num_done:num_done, 
                        num_all: num_all,
                        eta: eta,
                      };
                 currTpl = tplProgress;
-                this.pbar.updateProgress(num_done/num_all, num_done+ ' of '+num_all+' tasks completed');
-                this.setTabTitle('Background tasks ('+num_done+'/'+num_all+')','pp-icon-queue');
-
+                
+                if (this.status === 'PAUSED'){
+                    this.setTabTitle('Background tasks (paused)','pp-icon-pause');
+                } else {
+                    this.pbar.updateProgress(num_done/num_all, num_done+ ' of '+num_all+' tasks completed');
+                    this.setTabTitle('Background tasks ('+num_done+'/'+num_all+')','pp-icon-queue');
+                }
+                
             } else {
                 currTpl = tplDone;
                 this.setTabTitle('Background tasks','pp-icon-tick');
                 this.pbar.updateProgress(1,'Done');
-                this.button.setText('Close tab');
+                this.pause_button.hide();
+                this.cancel_button.hide();
+                //this.button.setText('Close tab');
             }
         } else {
             currTpl = tplDone;
             this.setTabTitle('Background tasks','pp-icon-tick');
-            console.log("inhere");
-            this.button.setText('Close tab');
-        }
 
+            //this.button.setText('Close tab');
+        }
             
         currTpl.overwrite(Ext.get('queue-status'), d);
 
@@ -117,19 +134,68 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
         this.pbar=new Ext.ProgressBar({cls: 'pp-basic'});
         this.pbar.render('queue-progress',0);
 
-        this.button=new Ext.Button(
-            { text: '',
-              handler: function(button){
+        //Paperpile.main.tabs.remove(Paperpile.main.tabs.getItem('queue-tab'),1);
 
-                  if (button.getText() === 'Close tab'){
-                      Paperpile.main.tabs.remove(Paperpile.main.tabs.getItem('queue-tab'),1);
+        this.pause_button=new Ext.Button(
+            { text: 'Pause queue',
+              cls: 'x-btn-text-icon pause',
+              handler: function(button){
+                  var r=this.grid.getStore().getAt(0);
+
+                  if (r){
+
+                      var el = this.pause_button.getEl();
+                      console.log(el);
+
+                      if (r.data.queue_status === 'RUNNING') {
+                          Ext.Ajax.request(
+                              { url: Paperpile.Url('/ajax/queue/pause'),
+                                method: 'GET',
+                                success: function(response){
+                                    this.grid.store.reload();
+                                    this.pause_button.setText('Resume');
+                                    el.replaceClass('pause','resume');
+
+                                },
+                                failure: Paperpile.main.onError,
+                                scope:this,
+                              });
+                      }
+
+                      if (r.data.queue_status === 'PAUSED') {
+                          Ext.Ajax.request(
+                              { url: Paperpile.Url('/ajax/queue/resume'),
+                                method: 'GET',
+                                success: function(response){
+                                    this.grid.store.reload();
+                                    this.pause_button.setText('Pause queue');
+                                },
+                                failure: Paperpile.main.onError,
+                                scope:this,
+                              });
+                      }
+
+
+
                   }
-    
+
               },
               scope:this,
             });
 
-        this.button.render('queue-button',0);
+        this.pause_button.render('pause-button',0);
+
+
+        this.cancel_button=new Ext.Button(
+            { text: 'Cancel all tasks',
+              cls: 'x-btn-text-icon cancel',
+              handler: function(button){
+                  
+              },
+              scope:this,
+            });
+        
+        this.cancel_button.render('cancel-button',0);
 
     },
 

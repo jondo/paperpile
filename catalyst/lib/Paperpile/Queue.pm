@@ -74,6 +74,27 @@ sub restore {
 
 }
 
+sub pause {
+
+  my $self = shift;
+
+  $self->restore;
+  $self->status('PAUSED');
+  $self->save;
+
+}
+
+sub resume {
+
+  my $self = shift;
+
+  $self->restore;
+  $self->status('RUNNING');
+  $self->save;
+
+}
+
+
 sub run {
 
   my $self = shift;
@@ -89,6 +110,11 @@ sub run {
     while (1) {
 
       $self->restore;
+
+      if ($self->status eq 'PAUSED'){
+        sleep(1);
+        next;
+      }
 
       my $curr_job = undef;
 

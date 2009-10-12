@@ -13,15 +13,14 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGridOnlineSearch, {
         this.plugin_name = 'PubMed';
 
         Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
-
-        this.sidePanel = new Paperpile.PluginSidepanelPubMed({ itemId:'about',
-                                                             });
+        
+        this.sidePanel = new Paperpile.PluginSidepanelPubMed();
 
     },
 
 });
 
-Paperpile.PluginSidepanelPubMed = Ext.extend(Ext.Panel, {
+Paperpile.PluginSidepanelPubMed = Ext.extend(Paperpile.PluginSidepanel, {
 
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
@@ -30,25 +29,6 @@ Paperpile.PluginSidepanelPubMed = Ext.extend(Ext.Panel, {
         '<p><a target=_blank href="http://pubmed.gov" class="pp-textlink">pubmed.gov</a></p>',
         '</div>'],
 
-
-    initComponent: function() {
-		Ext.apply(this, {
-			bodyStyle: {
-				background: '#ffffff',
-				padding: '7px'
-			},
-            autoScroll: true,
-		});
-
-	    this.tpl = new Ext.XTemplate(this.markup).compile();
-	
-        Paperpile.PluginSidepanelPubMed.superclass.initComponent.call(this);
-	},
-
-    
-    update: function(){
-
-        this.tpl.overwrite(this.body, {}, true);
-
-    }
+    tabLabel: 'About PubMed',
+   
 });
