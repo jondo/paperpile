@@ -1,40 +1,12 @@
-Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
-Ext.ns('Paperpile');
-
-
-Paperpile.status = function(){
-    
-    Ext.Ajax.request({
-        url: '/ajax/browser/status',
-        params: { lookup_id: Paperpile.lookup_id,
-                },
-        method: 'GET',
-        success: function(response){
-            var json = Ext.util.JSON.decode(response.responseText);
-            console.log(json);
-            
-        }
-    })
+var s=document.createElement('script'); 
+s.src='http://localhost:3000/js/web/ext-core-debug.js';
+s.onload=function(){
+    Ext.DomHelper.append(document.body, {tag: 'p', cls: 'some-class'});
+    Ext.select('p.some-class').update('Ext Core successfully injected');
 };
-                    
 
-
-Ext.onReady(function() {
-
-    Paperpile.lookup_id=Ext.get('lookup_id').dom.innerHTML;
-
-    Paperpile.status();
-
-    /*
-    this.progressTask = {
-        run: this.checkProgress,
-        scope: this,
-        interval: 500
-    }
-    Ext.TaskMgr.start(this.progressTask);
-
-*/
+document.getElementsByTagName('head')[0].appendChild(s);
 
 
 
-});
+

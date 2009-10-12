@@ -14,10 +14,8 @@ use Paperpile::Library::Journal;
 extends 'Paperpile::Plugins::Import';
 
 has '_db_file' => ( is => 'rw' );
-has 'file' => ( is => 'rw' );
-has '_data' => ( is => 'rw', isa => 'ArrayRef' );
-
-
+has 'file'     => ( is => 'rw' );
+has '_data'    => ( is => 'rw', isa => 'ArrayRef' );
 
 sub BUILD {
   my $self = shift;
@@ -25,174 +23,140 @@ sub BUILD {
 }
 
 sub get_model {
-
   my $self  = shift;
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn( "dbi:SQLite:" . $self->_db_file );
   return $model;
-
 }
 
 sub connect {
   my $self = shift;
 
-  print STDERR "CONNECT: entering\n";
-
   $self->_db_file( $self->file );
+  $self->_data( [] );
 
   my $model = $self->get_model;
-  #$self->total_entries( $model->fulltext_count("") );
-  $self->_save_page_to_hash( $model->all );
 
-  $self->_data([]);
+  # get all publications
+  my @data = @{ $model->all_as_hash };
 
-# sort publications into hash of title-length-differences equivalence classes
-# serves as a heuristic to figure out which publications have to be compared
-# all of the same class (=same or similar length) have to be analysed in detail
-# title length difference between two "neighboured" publications (same or similar title length) must be controlled
-# min and max lengths of a equivalence class must be controlled (if difference is too big, different class)
-  my %classes;    # used to sort items by title length and to define equivalence classes
-  my %compare;    # keeps equivalence classes
-  my %meta;       # additional info about equivalence classes, most important: min/max lengths
-  my $titleLengthPartnersCutoff = 5;
-  my $titleLengthMinMaxCutoff   = 5;
-  my ( $minTitleLength, $maxTitleLength, $avgTitleLength ) = ( 9999999, 0, 0 );
+  # number of words for each title
+  my @lengths = ();
 
-  # get length statistics
-  my $len = 0;
-  foreach my $m ( @{ $model->all } ) {
+  # array of hashes to index words of each title
+  my @index = ();
 
-    #print STDERR Dumper $m, "\n";exit;
-    $len = length $m->title;
+  # number of general candidate duplications
+  # e.g. title i might be substr of title j.
+  my $countDuplCandidates = 0;
 
-    #$maxTitleLength = $len if($len>$maxTitleLength);
-    #$minTitleLength = $len if($len<$minTitleLength);
-    #$avgTitleLength += $len;
-    $classes{$len}{ $m->sha1 } = 1;
-  }
+  # number of directly identified duplications
+  my $countDuplDirect = 0;
 
-  #$avgTitleLength /= $self->total_entries;
+  # number of duplications that additionally needed matching
+  my $countDuplMatching = 0;
 
-  #print STDERR "total entries : ", $self->total_entries, "\n";
+  # number of real duplications
+  my $countDuplOverall = 0;
 
-  #print STDERR "minTitleLength: ", $minTitleLength, "\n";
-  #print STDERR "maxTitleLength: ", $maxTitleLength, "\n";
-  #print STDERR "avgTitleLength: ", $avgTitleLength, "\n";
-
-  # sort by title length
-  my $classID   = 1;
-  my $oldLength = 0;
-  my $round     = 0;
-
-# min title length of current class
-# max is always the current one, cause list is sorted, min is always the first one, cause list is sorted!
-  my $minTitleClassLength = 0;
-
-  # build equivalence classes
-  foreach my $l ( sort { $a <=> $b } keys %classes ) {
-    foreach my $sha1 ( keys %{ $classes{$l} } ) {
-
-      #print STDERR $l, " ", $sha1, "\n";
-      $round++;
-
-      # now compare each other as long as their length difference doesn't exceed the length cutoff
-      if ( $round > 1 ) {
-        if ( ( $l - $oldLength ) <= $titleLengthPartnersCutoff
-          && ( $l - $minTitleClassLength ) <= $titleLengthMinMaxCutoff )
-        {    # similar length, they have to be analysed in detail
-          $compare{$classID}{$sha1} = $l;
-          $meta{$classID}{maxLength} = $l;
-        } else {    # length difference is too big, we change equivalence class
-          $classID++;
-          $compare{$classID}{$sha1}  = $l;    # don't forget current item
-          $minTitleClassLength       = $l;
-          $meta{$classID}{minLength} = $l;
-        }
-      } elsif ( $round == 1 ) {
-        $compare{$classID}{$sha1}  = $l;      # init with furst item
-        $minTitleClassLength       = $l;
-        $meta{$classID}{minLength} = $l;
-      }
-
-      $oldLength = $l;                        # remember for next round;
+  # get and count words of titles
+  foreach my $i ( 0 .. $#data ) {
+    $index[$i] = {};
+    my @words = split( /\s+/, lc( $data[$i]->{title} ) );
+    $lengths[$i] = scalar @words;
+    foreach my $word (@words) {
+      $index[$i]->{$word} = 1;
     }
   }
 
-# we'll analyse all items of the same class with all items of the same class
-# and
-# although border-items (last item(s) of the current class (all items with maxClassLength) with first item(s) of the next class (all items with minClassLength))
-  my $distance = 0;
-	my $countDuplicates = 0;
-  my @lastKeys;
-  foreach my $classID ( sort { $a <=> $b } keys %compare ) {
-    my @keys =
-      sort { $compare{$classID}{$a} <=> $compare{$classID}{$b} } keys %{ $compare{$classID} };
+  foreach my $i ( 0 .. $#data ) {
+    my @words = keys %{ $index[$i] };
 
-    if ( scalar @keys > 1 ) {    # check within same class, but only if there are at least 2 items
-      for ( my $i = 0 ; $i < $#keys ; $i++ ) {
+    # 1/3 of words may mismatch; play with this cutoff
+    my $max_mismatch = int( $lengths[$i] * 0.33 );
 
-        #print STDERR $classID, " ", $compare{$classID}{$keys[$i]}, " ", $keys[$i], "\n";
-        for ( my $j = 0 ; $j < $#keys ; $j++ ) {
-          if ( $i != $j && $i < $j ) {
+    foreach my $j ( 0 .. $#data ) {
 
-            #print STDERR $keys[$i], ' VS ', $keys[$j], "\n";
-            my $a = $self->find_sha1( $keys[$i] );
-            my $b = $self->find_sha1( $keys[$j] );
-						if( lc(substr($a->{title}, 0, 1)) eq lc(substr($b->{title}, 0, 1)) ) {
-							if ( $self->_match_title( lc($a->{title}), lc($b->{title}) ) ) {
-								print STDERR
-									"duplicates: \"$a->{title}\" ($a->{sha1})  VS  \"$b->{title}\" ($b->{sha1})\n";
+      # don't check papers with themselves
+      # and don't check pairs twice (i vs j and j vs i, i vs j is enough)
+      next if $i >= $j;
 
-								push @{$self->_data}, $a;
-								push @{$self->_data}, $b;
-								
-								$countDuplicates++;
-							}
+      # Don't compare if lengths are too different
+      # play with this cutoff
+      next if abs( $lengths[$i] - $lengths[$j] ) > 5;
+
+      my $matches    = 0;
+      my $mismatches = 0;
+
+      # Match each word, stop if too many words are missing
+      foreach my $word (@words) {
+        if ( $index[$j]->{$word} ) {
+          $matches++;
+        } else {
+          $mismatches++;
+        }
+        last if $mismatches > $max_mismatch;
+      }
+
+      # Matches for further analysis; right now matches are printed if
+      # all words could be matched;
+      # Todo: choose criterion to select those for edit distance calculation
+      #       if exact equality (x eq y) then we don't need distance calculation
+      #       This should limit distance calculations to a reasonable number
+      my $wordcount_i = scalar @words;
+      my $wordcount_j = keys %{ $index[$j] };
+
+      # extend mismatches (to get all differences	if wordcount differs)
+      $mismatches += abs( $wordcount_i - $wordcount_j );
+
+      if ( $mismatches <= $max_mismatch ) {
+        $countDuplCandidates++;
+        print STDERR "$i\t", $data[$i]->{title}, "\n";
+        print STDERR "$j\t", $data[$j]->{title}, "\n";
+        print STDERR
+          "($wordcount_i vs $wordcount_j, matches=$matches, mismatches=$mismatches, max_mismatches=$max_mismatch)\n";
+
+        if ( abs( $wordcount_i - $wordcount_j ) <= $max_mismatch ) {
+          print STDERR "BE CAREFULL...";
+
+          if ( $mismatches == 0 ) {
+
+            # exact equality (x eq y), we don't need distance calculation
+            print STDERR "GOT YA! (direct)\n";
+            $countDuplDirect++;
+            push @{ $self->_data }, Paperpile::Library::Publication->new( %{ $data[$i] } );
+            push @{ $self->_data }, Paperpile::Library::Publication->new( %{ $data[$j] } );
+          } else {    # perform distance calculation
+            if ( $self->_match_title( lc( $data[$i]->{title} ), lc( $data[$j]->{title} ) ) ) {
+              print STDERR "GOT YA! (matching)\n";
+              $countDuplMatching++;
+              push @{ $self->_data }, Paperpile::Library::Publication->new( %{ $data[$i] } );
+              push @{ $self->_data }, Paperpile::Library::Publication->new( %{ $data[$j] } );
+            } else {
+              print STDERR "\n";
             }
           }
         }
+
+        print STDERR "\n";
       }
     }
-
-    # additionally check border items
-    if ( $classID > 1 ) {
-      my $lastID = $classID - 1;
-
-      # compare minLength items of current with maxLength items of last class
-      for ( my $i = 0 ; $i < $#keys ; $i++ ) {
-        if ( $meta{$classID}{minLength} == $compare{$classID}{ $keys[$i] } )
-        {    # for all of current class with min length
-          for ( my $j = 0 ; $j < $#lastKeys ; $j++ ) {
-            if ( $meta{$lastID}{maxLength} == $compare{$lastID}{ $lastKeys[$j] } )
-            {    # for all of last class with max length
-              my $a = $self->find_sha1( $keys[$i] );
-              my $b = $self->find_sha1( $lastKeys[$j] );
-							if( lc(substr($a->{title}, 0, 1)) eq lc(substr($b->{title}, 0, 1)) ) {
-								if ( $self->_match_title( lc($a->{title}), lc($b->{title}) ) ) {
-									print STDERR
-										"duplicates (border!): \"$a->{title}\" ($a->{sha1})  VS  \"$b->{title}\" ($b->{sha1})\n";
-									
-									push @{$self->_data}, $a;
-									push @{$self->_data}, $b;
-									
-									$countDuplicates++;
-								}
-							}
-            }
-          }
-        }
-      }
-    }
-
-    @lastKeys = @keys;    # for next round
-
-    #print STDERR "\n";
   }
 
-	print STDERR "found ", $countDuplicates, " pairwise duplications!\n";
-  print STDERR "CONNECT: leaving\n";
+  $countDuplOverall = $countDuplDirect + $countDuplMatching;
 
-  $self->total_entries(scalar @{$self->_data});
+  print STDERR "max candidate duplicates     : ", $countDuplCandidates, "\n";
+  print STDERR "  ->      directly identified: ", $countDuplDirect,     "\n";
+  print STDERR "  -> via distance calculation: ", $countDuplMatching,   "\n";
+  print STDERR "overall identified duplicates: ", $countDuplOverall,    "\n";
+  print STDERR "neglected candidates         : ", ( $countDuplCandidates - $countDuplOverall ),
+    "\n\n";
+
+  $self->total_entries( scalar @{ $self->_data } );
+
+  foreach my $pub ( @{ $self->_data } ) {
+    print STDERR $pub->title, "\n";
+  }
 
   return $self->total_entries;
 }
@@ -200,20 +164,14 @@ sub connect {
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
-  #my $model = $self->get_model;
-  #my $page;
-  #$page = $model->fulltext_search( "", $offset, $limit );
-  #$self->_save_page_to_hash($page);
-  #return $page;
-
   my @page = ();
 
   for my $i ( 0 .. $limit - 1 ) {
-    last if ($offset + $i == $self->total_entries );
+    last if ( $offset + $i == $self->total_entries );
     push @page, $self->_data->[ $offset + $i ];
   }
 
-  $self->_save_page_to_hash(\@page);
+  $self->_save_page_to_hash( \@page );
 
   return \@page;
 

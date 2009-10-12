@@ -6,6 +6,7 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     limit: 25,
     allSelected:false,
     itemId:'grid',
+    sidePanel:null,
 
     tagStyles:{},
                                     
@@ -38,8 +39,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
       
         this.pubTemplate = new Ext.XTemplate(
             '<div class="pp-grid-data">',
-              '<div>',
-            '<span class="pp-grid-title">{title}</span>{[this.tagStyle(values.tags)]}',
+            '<div>',
+            '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
             '</div>',
             '<tpl if="_authors_display">',
             '<p class="pp-grid-authors">{_authors_display}</p>',
@@ -264,8 +265,8 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
         this.on('rowcontextmenu',
                 function(grid, row, e){
                     this.getSelectionModel().selectRow(row);
-		    this.updateButtons();
-                    this.contextMenu.showAt(e.getXY());
+		            this.updateButtons();
+                    //this.contextMenu.showAt(e.getXY());
                 }, this, {stopEvent:true});
 
 
@@ -374,6 +375,29 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         this.store.on('load', 
                       function() {
+                          var container= this.findParentByType(Paperpile.PubView);
+
+                          var ep = container.items.get('east_panel');
+                          var tb_side = ep.getBottomToolbar();
+                          var activeTab=ep.getLayout().activeItem.itemId;
+
+                          if (this.store.getCount()>0){
+                              if (activeTab === 'about'){
+                                  ep.getLayout().setActiveItem('overview');
+                                  activeTab='overview';
+                              }
+                          }  else {
+                              container.onEmpty('');
+                              if (this.sidePanel){
+                                  ep.getLayout().setActiveItem('about');
+                                  activeTab='about';
+                              }
+                          }
+                          
+                          tb_side.items.get(activeTab+'_tab_button').toggle(true);
+
+                          container.updateButtons();
+
                           // If nothing is selected, select first row
                           if (!this.getSelectionModel().getSelected()){
                               this.getSelectionModel().selectRow(0);
@@ -853,7 +877,6 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
     batchDownload: function(){
 
         selection=this.getSelection();
-        Paperpile.main.tabs.showQueueTab();
 
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/batch_download'),
@@ -863,9 +886,10 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             method: 'GET',
             timeout: 10000000,
             success: function(response){
-                
             }
         });
+
+        Paperpile.main.tabs.showQueueTab();
 
     }, 
 

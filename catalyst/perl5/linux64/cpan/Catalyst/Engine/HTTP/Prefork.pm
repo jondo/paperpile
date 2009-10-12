@@ -17,7 +17,7 @@ use constant DEBUG        => $ENV{CATALYST_PREFORK_DEBUG} || 0;
 use constant CHUNKSIZE    => 64 * 1024;
 use constant READ_TIMEOUT => 5;
 
-our $VERSION = '0.50';
+our $VERSION = '0.51';
 
 sub run {
     my ( $self, $class, $port, $host, $options ) = @_;
@@ -33,7 +33,16 @@ sub run {
     # Restore ARGV since Getopt has eaten it and Net::Server needs it
     # for proper restart support
     @ARGV = @{ $options->{argv} };
-    
+   
+    my %extra = ();
+    if ( $options->{pidfile} or $options->{pid_file} ) {
+        $extra{pid_file} = $options->{pidfile} || $options->{pid_file};
+    } 
+    if ( $options->{background} ) {
+        $extra{setsid} = $extra{background} = 1;
+    }
+	$extra{log_file}='log';
+
     $self->SUPER::run(
         port                       => $port || 3000,
         host                       => $host || '*',
@@ -45,6 +54,8 @@ sub run {
         max_servers                => $options->{max_servers}       || 50,
         max_requests               => $options->{max_requests}      || 1000,
         leave_children_open_on_hup => $options->{restart_graceful}  || 0,
+
+        %extra
     );
 }
 
@@ -384,6 +395,16 @@ version.
 This enables Net::Server's leave_children_open_on_hup option.  If set, the parent
 will not attempt to close child processes if the parent receives a SIGHUP.  Each
 child will exit as soon as possible after processing the current request if any.
+
+=head2 pidfile
+
+This passes through to Net::Server's pid_file option.  If set, the pidfile is
+written to the path.  Default is none.  This file is not removed on server exit 
+
+=head2 background
+
+This option passes through to Net::Server and also sets the 'setsid' option to
+true.
 
 =head1 AUTHOR
 

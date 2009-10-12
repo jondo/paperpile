@@ -95,7 +95,6 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
 # Formatted strings to be displayed in the frontend.
 has '_authors_display'  => ( is => 'rw', isa => 'Str' );
-#has '_editors_display'  => ( is => 'rw', isa => 'Str' );
 has '_citation_display' => ( is => 'rw', isa => 'Str' );
 
 # If an entry is already in our database this field is true.
@@ -111,6 +110,9 @@ has '_details_link' => ( is => 'rw', isa => 'Str', default => '' );
 has '_snippets_text'     => ( is => 'rw', isa => 'Str' );
 has '_snippets_abstract' => ( is => 'rw', isa => 'Str' );
 has '_snippets_notes'    => ( is => 'rw', isa => 'Str' );
+
+# CSS style to highlight the entry in the frontend
+has '_highlight'     => ( is => 'rw', isa => 'Str', default => 'pp-grid-highlight0');
 
 sub BUILD {
   my ( $self, $params ) = @_;

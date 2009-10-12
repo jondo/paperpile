@@ -7,16 +7,16 @@ use Paperpile::Utils;
 use Paperpile::Exceptions;
 use Paperpile::Job;
 use Data::Dumper;
+use Time::Duration;
 use File::Temp qw/ tempfile /;
 use JSON;
 use 5.010;
 
-enum 'Status' => qw(RUNNING WAITING PAUSED DONE);
+enum 'Status' => qw(RUNNING WAITING PAUSED);
 has 'jobs' => ( is => 'rw', isa => 'ArrayRef[Paperpile::Job]', default => sub { [] } );
 
 has 'status' => ( is => 'rw', isa => 'Status', default => 'WAITING', trigger => sub {my $self = shift; $self->save;} );
-has _durations => ( is => 'rw', isa => 'ArrayRef[Int]', default => sub { [] } );
-has eta         => ( is => 'rw', isa => 'Str', default => "Estimated time left: --:--:--" );
+has eta         => ( is => 'rw', isa => 'Str', default => "--:--:--" );
 has num_pending => ( is => 'rw', isa => 'Int', default => 0 );
 has num_done    => ( is => 'rw', isa => 'Int', default => 0 );
 
@@ -57,6 +57,7 @@ sub update_job {
 
 }
 
+
 sub restore {
 
   my $self = shift;
@@ -73,32 +74,77 @@ sub restore {
 
 }
 
+sub pause {
+
+  my $self = shift;
+
+  $self->restore;
+  $self->status('PAUSED');
+  $self->save;
+
+}
+
+sub resume {
+
+  my $self = shift;
+
+  $self->restore;
+  $self->status('RUNNING');
+  $self->save;
+
+}
+
+
 sub run {
 
   my $self = shift;
 
-  $self->status('RUNNING');
+  # If queue is already running or paused don't start a new process
+  if ($self->status ne 'WAITING'){
+    return;
+  } else {
 
-  while (1) {
+    $self->status('RUNNING');
+    $self->save;
 
-    my $curr_job = undef;
+    while (1) {
 
-    foreach my $job ( @{ $self->jobs } ) {
+      $self->restore;
 
-      if ( $job->status eq 'PENDING' ) {
-        $curr_job = $job;
-        last;
+      if ($self->status eq 'PAUSED'){
+        sleep(1);
+        next;
       }
+
+      my $curr_job = undef;
+
+      foreach my $job ( @{ $self->jobs } ) {
+
+        if ( $job->status eq 'PENDING' ) {
+          $curr_job = $job;
+          last;
+        }
+      }
+
+      last if not $curr_job;
+      $curr_job->run;
     }
 
-    last if not $curr_job;
-    $curr_job->run;
-
-    push @{ $self->_durations }, $curr_job->duration;
-
+    $self->status('WAITING');
   }
 
-  $self->status('DONE');
+}
+
+sub clear {
+
+  my $self = shift;
+
+  if ($self->status eq 'WAITING'){
+    $self->jobs([]);
+  }
+
+  $self->_update_stats;
+  $self->save;
 
 }
 
@@ -109,12 +155,22 @@ sub _update_stats {
   my $num_pending = 0;
   my $num_done    = 0;
 
+  my $sum_duration = 0;
+
   foreach my $job ( @{ $self->jobs } ) {
     if ( $job->status eq 'PENDING' or $job->status eq 'RUNNING' ) {
       $num_pending++;
     } else {
+      $sum_duration+=$job->duration;
       $num_done++;
     }
+  }
+
+  if ($num_done>=1){
+    my $seconds_left = int($sum_duration/$num_done*$num_pending);
+    $self->eta(Time::Duration::duration($seconds_left));
+  } else {
+    $self->eta('');
   }
 
   $self->num_pending($num_pending);

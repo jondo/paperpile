@@ -84,6 +84,13 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
         }
 
    	},
+
+    showEmpty: function(tpl){
+        var empty = new Ext.Template(tpl);
+        empty.overwrite(this.body);
+    }
+
+
 });
 
 Ext.reg('pubdetails', Paperpile.PubDetails);

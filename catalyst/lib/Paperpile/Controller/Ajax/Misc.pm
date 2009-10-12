@@ -221,7 +221,6 @@ sub clean_duplicates : Local {
 }
 
 
-
 sub inc_read_counter : Local {
 
   my ( $self, $c ) = @_;

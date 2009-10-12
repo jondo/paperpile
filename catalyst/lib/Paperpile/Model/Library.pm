@@ -53,6 +53,13 @@ sub create_pubs {
       $pub->last_read('');
       $pub->_imported(1);
 
+      # Remove period from end of title
+      my $title  = $pub->title;
+      if ($title =~/\.\s*$/){
+        $title=~s/\.\s*$//;
+        $pub->title($title);
+      }
+
       # Generate citation key
       my $pattern = $self->get_setting('key_pattern');
       my $key     = $pub->format_pattern($pattern);
@@ -973,8 +980,44 @@ sub all {
     $pub->_imported(1);
     push @page, $pub;
   }
-  
+
   return [@page];
+
+}
+
+# Gets all entries as simple hash. Is much faster than building
+# Publication objects which is not necessary for some tasks such as
+# finding duplicates
+
+sub all_as_hash {
+
+  my ($self, $order) = @_;
+
+  my $query="SELECT rowid as _rowid, * FROM Publications ";
+
+  if ($order){
+    $query.="ORDER BY $order";
+  }
+
+  my $sth = $self->dbh->prepare( $query );
+
+  $sth->execute;
+
+  my @data = ();
+
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    my $pub={};
+    foreach my $field ( keys %$row ) {
+      my $value = $row->{$field};
+      if ($value) {
+        $pub->{$field}=$value;
+      }
+    }
+    $pub->{_imported}=1;
+    push @data, $pub;
+  }
+
+  return [@data];
 
 }
 

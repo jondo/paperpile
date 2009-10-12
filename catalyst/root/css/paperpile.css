@@ -476,6 +476,15 @@ a:hover.pp-textlink {
     background-image: url('/images/icons/cancel.png');
 }
 
+.pause .x-btn-text {
+    background-image: url('/images/icons/pause.png');
+}
+
+.resume .x-btn-text {
+    background-image: url('/images/icons/resume.png');
+}
+
+
 .save .x-btn-text {
     background-image: url('/images/icons/accept.png');
 }
@@ -617,6 +626,12 @@ a:hover.pp-textlink {
     background: transparent url('/images/icons/queue.gif') no-repeat;
 }
 
+.pp-icon-pause{
+    padding: 2 2 2 22;
+    background: transparent url('/images/icons/pause.png') no-repeat;
+}
+
+
 
 
 
@@ -719,6 +734,37 @@ a:hover.pp-textlink {
 .pp-grid-snippets .heading{
     color: green;
 }
+
+.pp-grid-task{
+    background-color: #FFF6A9;
+}
+
+.pp-grid-highlight0{
+}
+
+.pp-grid-highlight1{
+    background-color: #FFF6A9;
+}
+
+.pp-grid-highlight2{
+    background-color: #99CC00;
+}
+
+.pp-grid-highlight3{
+    background-color: #6699FF;
+}
+
+.pp-grid-error{
+    color: #D8000C;   
+    font-weight: bold;
+}
+
+.pp-grid-ok{
+    color: #088A08;
+    font-weight: bold;
+}
+
+
 
 /**** Grid controls *****/
 
@@ -978,6 +1024,18 @@ div:hover.pp-tag-style-sample {
     height:12px;
     white-space:normal;
 }
+
+/* Plugin logos */
+
+.pp-pubmed-logo{
+    margin: 20 auto;
+    width: 165px;
+    height: 60px;
+    background: transparent url('/images/pubmed_logo.png') no-repeat;
+}
+
+
+
 
 
 /*** PDF Extract ***/
