@@ -144,6 +144,9 @@ sub complete_details {
   my $bibtex = $browser->get( $pub->_details_link );
   $bibtex = $bibtex->content;
 
+  # Google Bug: everything is twice escaped in bibtex
+  $bibtex =~ s/\\\\/\\/g;
+
   # Create a new Publication object and import the information from the BibTeX string
   my $full_pub = Paperpile::Library::Publication->new();
   $full_pub->import_string( $bibtex, 'BIBTEX' );
