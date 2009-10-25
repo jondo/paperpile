@@ -86,7 +86,7 @@ sub connect {
 
   # Try to find the number of hits
   my @stats = $tree->findnodes('/html/body/table/tr/td[@align="right"]/font[@size="-1"]');
-  if ( $stats[0]->as_text() =~ m/Results\s\d+\s-\s\d+\sof\s(about)?\s([0123456789,]+)\./ ) {
+  if ( $stats[0]->as_text() =~ m/Results\s\d+\s-\s\d+\sof\s(about\s)?([0123456789,]+)\./ ) {
     my $number = $2;
     $number =~ s/,//g;
     $number = 1000 if ( $number > 1000 );    # Google does not provide more than 1000 results
@@ -144,9 +144,19 @@ sub complete_details {
   my $bibtex = $browser->get( $pub->_details_link );
   $bibtex = $bibtex->content;
 
+  # Google Bug: everything is twice escaped in bibtex
+  $bibtex =~ s/\\\\/\\/g;
+
   # Create a new Publication object and import the information from the BibTeX string
   my $full_pub = Paperpile::Library::Publication->new();
   $full_pub->import_string( $bibtex, 'BIBTEX' );
+
+  # there are cases where bibtex gives less information than we already have
+  $full_pub->title( $pub->title ) if ( !$full_pub->title );
+  $full_pub->authors( $pub->_authors_display ) if ( !$full_pub->authors );
+  if (!$full_pub->journal and !$full_pub->year ) {
+      $full_pub->_citation_display( $pub->_citation_display );
+  }
 
   # Add the linkout from the old object because it is not in the BibTeX
   #and thus not in the new object

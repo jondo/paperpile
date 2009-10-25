@@ -39,12 +39,19 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 
     // setIconClass does not seem to work in Ext JS 2, so we need a workaround
 
-    setTabTitle: function(title, iconCls){
+    setTabTitle: function(title, iconCls, closable){
 
         var tabPanel = this.ownerCt.ownerCt.ownerCt;
         var tab = this.ownerCt.ownerCt;
 
         var el = tabPanel.getTabEl(tab);
+        
+      
+        if (closable){
+            Ext.fly(el).addClass('x-tab-strip-closable');
+        }
+
+
         var item = Ext.fly(el).child('.x-tab-strip-text');
 
         tab.setTitle(title);
@@ -55,13 +62,15 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 
         item.addClass(iconCls);
 
+      
+       
+        //item.insertHtml('beforeEnd','<a>INHERE</a>');
+
 
     }, 
 
     
     updateView: function(){
-
-        console.log("INHERE");
 
         if (! Ext.get('queue-status')){
             this.initControls();
@@ -84,7 +93,7 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
             var num_all = num_done + num_pending;
             var eta = r.data.eta;
 
-            if (this.status === 'RUNNING'){
+            if (this.status != 'DONE'){
                 this.pause_button.show();
                 this.cancel_button.show();
             }
@@ -106,7 +115,7 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
                 
             } else {
                 currTpl = tplDone;
-                this.setTabTitle('Background tasks','pp-icon-tick');
+                this.setTabTitle('Background tasks','pp-icon-tick', true);
                 this.pbar.updateProgress(1,'Done');
                 this.pause_button.hide();
                 this.cancel_button.hide();
@@ -114,8 +123,8 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
             }
         } else {
             currTpl = tplDone;
-            this.setTabTitle('Background tasks','pp-icon-tick');
-
+            this.setTabTitle('Background tasks','pp-icon-tick', true);
+            
             //this.button.setText('Close tab');
         }
             
@@ -134,11 +143,19 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
         this.pbar=new Ext.ProgressBar({cls: 'pp-basic'});
         this.pbar.render('queue-progress',0);
 
-        //Paperpile.main.tabs.remove(Paperpile.main.tabs.getItem('queue-tab'),1);
+        var text = 'Pause';
+        var cls = 'pause';
+
+        var r=this.grid.getStore().getAt(0);
+
+        if (r.data.queue_status === 'PAUSED'){
+            text = 'Resume';
+            cls = 'resume';
+        }
 
         this.pause_button=new Ext.Button(
-            { text: 'Pause queue',
-              cls: 'x-btn-text-icon pause',
+            { text: text,
+              cls: 'x-btn-text-icon '+cls,
               handler: function(button){
                   var r=this.grid.getStore().getAt(0);
 
@@ -169,6 +186,7 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
                                 success: function(response){
                                     this.grid.store.reload();
                                     this.pause_button.setText('Pause queue');
+                                    el.replaceClass('resume','pause');
                                 },
                                 failure: Paperpile.main.onError,
                                 scope:this,
