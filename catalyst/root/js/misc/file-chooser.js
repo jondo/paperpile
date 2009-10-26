@@ -1,8 +1,8 @@
-IS_TITANIUM = !(window['Titanium'] == undefined);
+//IS_TITANIUM = !(window['Titanium'] == undefined);
 
-Paperpile.Url = function(url){
-    return (IS_TITANIUM) ? 'http://localhost:3000'+url : url;
-};
+//Paperpile.Url = function(url){
+//    return (IS_TITANIUM) ? 'http://localhost:3000'+url : url;
+//};
 
 
 Paperpile.FileChooser = Ext.extend(Ext.Window, {
