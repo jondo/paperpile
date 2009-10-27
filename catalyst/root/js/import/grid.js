@@ -82,26 +82,24 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
 
         this.iconTemplate = new Ext.XTemplate(
             '<div class="pp-grid-info">',
-            '<tpl if="_imported">',
-            '<tpl if="trashed==0">',
-            '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
-            '</tpl>',
-            '<tpl if="trashed==1">',
-            '<div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
-            '</tpl>',
-            '</tpl>',
-//            '<div>',
-            '<tpl if="pdf">',
-            '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br>{_last_readPretty}"></div>',
-            '</tpl>',
-            '<tpl if="attachments">',
-            '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
-            '</tpl>',
-            '<tpl if="annote">',
-            '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
-            '</tpl>',
+              '<tpl if="_imported">',
+                '<tpl if="trashed==0">',
+                  '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
+                '</tpl>',
+                '<tpl if="trashed==1">',
+                  '<div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
+                '</tpl>',
+              '</tpl>',
+              '<tpl if="pdf">',
+                '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br>{_last_readPretty}"></div>',
+              '</tpl>',
+              '<tpl if="attachments">',
+                '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+              '</tpl>',
+              '<tpl if="annote">',
+                '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
+              '</tpl>',
             '</div>'
-//            '</div>'
         ).compile();
 
         this.actions={

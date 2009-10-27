@@ -341,6 +341,9 @@ sub _read_xml {
 
     my $doi = $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
 
+    # Remove period from end of title
+    $title=~s/\.\s*$//;
+
     $pub->volume($volume)     if $volume;
     $pub->issue($issue)       if $issue;
     $pub->year($year)         if $year;
