@@ -7,6 +7,7 @@ use lib '../../lib';
 use Paperpile::Library::Publication;
 use Bibutils;
 
+
 my %journal = (
   pubtype  => 'JOUR',
   title    => 'Strategies for measuring evolutionary conservation of RNA secondary structures',
@@ -43,9 +44,16 @@ my $bu = Bibutils->new(
 ## Reading file
 $bu->read;
 
-exit;
+
+
+
+
+#exit;
+
+
 ## Getting data
 my $data = $bu->get_data;
+
 
 my @pubs = ();
 
@@ -57,4 +65,4 @@ foreach my $entry (@$data) {
 
 }
 
-#print Dumper(\@pubs);
+print Dumper(\@pubs);

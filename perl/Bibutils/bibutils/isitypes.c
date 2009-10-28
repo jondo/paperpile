@@ -1,7 +1,7 @@
 /*
  * isitypes.c
  *
- * Copyright (c) Chris Putnam 2004-8
+ * Copyright (c) Chris Putnam 2004-2009
  *
  * Program and source code released under the GPL
  *

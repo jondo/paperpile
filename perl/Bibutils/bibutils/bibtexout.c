@@ -1,7 +1,7 @@
 /*
  * bibtexout.c
  *
- * Copyright (c) Chris Putnam 2003-8
+ * Copyright (c) Chris Putnam 2003-2009
  *
  * Program and source code released under the GPL
  *
@@ -17,6 +17,7 @@
 #include "fields.h"
 #include "bibl.h"
 #include "bibtexout.h"
+#include "doi.h"
 
 enum {
 	TYPE_UNKNOWN = 0,
@@ -74,7 +75,8 @@ bibtexout_type( fields *info, char *filename, int refnum, param *p )
 		if ( !strcasecmp( genre, "periodical" ) ||
 		     !strcasecmp( genre, "academic journal" ) ||
 		     !strcasecmp( genre, "magazine" ) ||
-		     !strcasecmp( genre, "newspaper" ) )
+		     !strcasecmp( genre, "newspaper" ) ||
+		     !strcasecmp( genre, "article" ) )
 			type = TYPE_ARTICLE;
 		else if ( !strcasecmp( genre, "instruction" ) )
 			type = TYPE_MANUAL;
@@ -224,10 +226,6 @@ output_simple( FILE *fp, fields *info, char *intag, char *outtag,
 	int n = fields_find( info, intag, -1 );
 	if ( n!=-1 ) {
 		output_and_use( fp, info, n, outtag, format_opts );
-/*
-		output_element( fp, outtag, info->data[n].data, format_opts );
-		fields_setused( info, n );
-*/
 	}
 }
 
@@ -239,9 +237,29 @@ output_simpleall( FILE *fp, fields *info, char *intag, char *outtag,
 	for ( i=0; i<info->nfields; ++i ) {
 		if ( strcasecmp( info->tag[i].data, intag ) ) continue;
 		output_and_use( fp, info, i, outtag, format_opts );
-/*		output_element( fp, outtag, info->data[i].data, format_opts );
-		fields_setused( info, i );*/
 	}
+}
+
+static void
+output_fileattach( FILE *fp, fields *info, int format_opts )
+{
+	newstr data;
+	int i;
+	newstr_init( &data );
+	for ( i=0; i<info->nfields; ++i ) {
+		if ( strcasecmp( info->tag[i].data, "FILEATTACH" ) ) continue;
+		newstr_strcpy( &data, "Description:" );
+		newstr_newstrcat( &data, &(info->data[i]) );
+		if ( strsearch( info->data[i].data, ".pdf" ) )
+			newstr_strcat( &data, ":PDF" );
+		else if ( strsearch( info->data[i].data, ".html" ) )
+			newstr_strcat( &data, ":HTML" );
+		else newstr_strcat( &data, ":TYPE" );
+		output_element( fp, "file", data.data, format_opts );
+		fields_setused( info, i );
+		newstr_empty( &data );
+	}
+	newstr_free( &data );
 }
 
 static void
@@ -369,6 +387,34 @@ output_articlenumber( FILE *fp, fields *info, unsigned long refnum,
 		output_element( fp, "pages", pages.data, format_opts );
 		fields_setused( info, ar );
 		newstr_free( &pages );
+	}
+}
+
+static void
+output_arxiv( FILE *fp, fields *info, int format_opts )
+{
+	int ar = fields_find( info, "ARXIV", -1 );
+	if ( ar!=-1 ) {
+		newstr arxiv;
+		newstr_init( &arxiv );
+		arxiv_to_url( info, ar, "URL", &arxiv );
+		if ( arxiv.len )
+			output_element( fp, "url", arxiv.data, format_opts );
+		newstr_free( &arxiv );
+	}
+}
+
+static void
+output_pmid( FILE *fp, fields *info, int format_opts )
+{
+	int pm = fields_find( info, "PMID", -1 );
+	if ( pm!=-1 ) {
+		newstr pmid;
+		newstr_init( &pmid );
+		pmid_to_url( info, pm, "URL", &pmid );
+		if ( pmid.len )
+			output_element( fp, "url", pmid.data, format_opts );
+		newstr_free( &pmid );
 	}
 }
 
@@ -502,6 +548,9 @@ bibtexout_write( fields *info, FILE *fp, param *p, unsigned long refnum )
 	output_simple( fp, info, "ISSN", "issn", p->format_opts );
 	output_simple( fp, info, "DOI", "doi", p->format_opts );
 	output_simpleall( fp, info, "URL", "url", p->format_opts );
+	output_fileattach( fp, info, p->format_opts );
+	output_arxiv( fp, info, p->format_opts );
+	output_pmid( fp, info, p->format_opts );
 	output_simple( fp, info, "LANGUAGE", "language", p->format_opts );
 	if ( p->format_opts & BIBOUT_FINALCOMMA ) fprintf( fp, "," );
 	fprintf( fp, "\n}\n\n" );

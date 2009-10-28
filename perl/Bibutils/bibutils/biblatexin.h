@@ -1,7 +1,7 @@
 /*
  * biblatexin.h
  *
- * Copyright (c) Chris Putnam 2008
+ * Copyright (c) Chris Putnam 2008-9
  *
  * Program and source code released under the GPL
  *

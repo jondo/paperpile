@@ -1,12 +1,11 @@
 /*
  * reftypes.c
  *
- * Copyright (c) Chris Putnam 2003-8
+ * Copyright (c) Chris Putnam 2003-2009
  *
  * Program and source code released under the GPL
  *
  */
-
 #include <stdio.h>
 #include <string.h>
 #include "is_ws.h"

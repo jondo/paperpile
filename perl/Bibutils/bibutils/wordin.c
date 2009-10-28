@@ -1,7 +1,7 @@
 /*
- * medin.c
+ * wordin.c
  *
- * Copyright (c) Chris Putnam 2004-2009
+ * Copyright (c) Chris Putnam 2009
  *
  * Program and source code released under the GPL
  *
@@ -16,35 +16,22 @@
 #include "xml_encoding.h"
 #include "medin.h"
 
-/*
- * The only difference between MEDLINE and PUBMED in format is
- * that the entire library is wrapped in <MedlineCitationSet>
- * or <PubmedArticle> tags...
- */
-static char *wrapper[] = { "MedlineCitationSet", "PubmedArticle" };
-static int nwrapper = sizeof( wrapper ) / sizeof( wrapper[0] );
-
 static char *
-medin_findstartwrapper( char *buf, int *ntype )
+wordin_findstartwrapper( char *buf, int *ntype )
 {
-	char *startptr=NULL;
-	int i;
-	for ( i=0; i<nwrapper && startptr==NULL; ++i ) {
-		startptr = xml_findstart( buf, wrapper[ i ] );
-		if ( startptr ) *ntype = i;
-	}
+	char *startptr = xml_findstart( buf, "b:Source" );
 	return startptr;
 }
 
 static char *
-medin_findendwrapper( char *buf, int ntype )
+wordin_findendwrapper( char *buf, int ntype )
 {
-	char *endptr = xml_findend( buf, wrapper[ ntype ] );
+	char *endptr = xml_findend( buf, "b:Source" );
 	return endptr;
 }
 
 int
-medin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, newstr *reference, int *fcharset )
+wordin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, newstr *reference, int *fcharset )
 {
 	newstr tmp;
 	char *startptr = NULL, *endptr;
@@ -56,7 +43,7 @@ medin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, newstr
 			if ( m!=CHARSET_UNKNOWN ) file_charset = m;
 		}
 		if ( line->data ) {
-			startptr = medin_findstartwrapper( line->data, &type );
+			startptr = wordin_findstartwrapper( line->data, &type );
 		}
 		if ( startptr || inref ) {
 			if ( inref ) newstr_strcat( &tmp, line->data );
@@ -64,10 +51,11 @@ medin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, newstr
 				newstr_strcat( &tmp, startptr );
 				inref = 1;
 			}
-			endptr = medin_findendwrapper( tmp.data, type );
+			endptr = wordin_findendwrapper( tmp.data, type );
 			if ( endptr ) {
 				newstr_segcpy( reference, tmp.data, endptr );
 				haveref = 1;
+fprintf(stderr,"reference='%s'\n",reference->data);
 			}
 		}
 	}
@@ -103,6 +91,7 @@ typedef struct xml_convert {
 	int level;
 } xml_convert;
 
+#if 0
 static int
 medin_doconvert( xml *node, fields *info, xml_convert *c, int nc )
 {
@@ -443,41 +432,131 @@ medin_pubmedarticle( xml *node, fields *info )
 	}
 	if ( node->next ) medin_pubmedarticle( node->next, info );
 }
+#endif
+static void
+wordin_person( xml *node, fields *info, char *type )
+{
+	xml *last, *first;
+	newstr name;
+
+	newstr_init( &name );
+
+	last = node;
+	while ( last && !xml_tagexact( last, "b:Last" ) )
+		last = last->next;
+	if ( last ) newstr_strcpy( &name, last->value->data );
+
+	first = node;
+	while ( first ) {
+		if ( xml_tagexact( first, "b:First" ) ) {
+			if ( name.len ) newstr_addchar( &name, '|' );
+			newstr_strcat( &name, first->value->data );
+		}
+		first = first->next;
+	}
+
+	fields_add( info, type, name.data, 0 );
+
+	newstr_free( &name );
+}
 
 static void
-medin_assembleref( xml *node, fields *info )
+wordin_people( xml *node, fields *info, char *type )
 {
-	if ( xml_tagexact( node, "PubmedArticle" ) ||
-	     xml_tagexact( node, "MedlineCitationSet" ) ) {
-		if ( node->down ) medin_pubmedarticle( node->down, info );
-	} else if ( node->down ) medin_assembleref( node->down, info );
-	if ( node->next ) medin_assembleref( node->next, info );
-	/* assume everything is a journal article */
-	if ( info->nfields ) {
-		fields_add( info, "RESOURCE", "text", 0 );
-		fields_add( info, "ISSUANCE", "continuing", 1 );
-		fields_add( info, "GENRE", "periodical", 1 );
-		fields_add( info, "GENRE", "academic journal", 1 );
+	if ( xml_tagexact( node, "b:Author" ) && node->down ) {
+		wordin_people( node->down, info, type );
+	} else if ( xml_tagexact( node, "b:NameList" ) && node->down ) {
+		wordin_people( node->down, info, type );
+	} else if ( xml_tagexact( node, "b:Person" ) ) {
+		if ( node->down ) wordin_person( node->down, info, type );
+		if ( node->next ) wordin_people( node->next, info, type );
+	}
+}
+
+static void
+wordin_pages( xml *node, fields *info )
+{
+	newstr sp, ep;
+	char *p;
+	int i;
+	newstr_init( &sp );
+	newstr_init( &ep );
+	p = xml_data( node );
+	while ( *p && *p!='-' )
+		newstr_addchar( &sp, *p++ );
+	if ( *p=='-' ) p++;
+	while ( *p )
+		newstr_addchar( &ep, *p++ );
+	if ( sp.len ) fields_add( info, "PAGESTART", sp.data, 1 );
+	if ( ep.len ) {
+		if ( sp.len > ep.len ) {
+			for ( i=sp.len-ep.len; i<sp.len; ++i )
+				sp.data[i] = ep.data[i-sp.len+ep.len];
+			fields_add( info, "PAGEEND", sp.data, 1 );
+		} else
+			fields_add( info, "PAGEEND", ep.data, 1 );
+	}
+	newstr_free( &sp );
+	newstr_free( &ep );
+}
+
+static void
+wordin_reference( xml *node, fields *info )
+{
+	if ( xml_hasdata( node ) ) {
+		if ( xml_tagexact( node, "b:Tag" ) ) {
+			fields_add( info, "REFNUM", xml_data( node ), 0 );
+		} else if ( xml_tagexact( node, "b:SourceType" ) ) {
+		} else if ( xml_tagexact( node, "b:City" ) ) {
+			fields_add( info, "ADDRESS", xml_data( node ), 0 );
+		} else if ( xml_tagexact( node, "b:Publisher" ) ) {
+			fields_add( info, "PUBLISHER", xml_data( node ), 0 );
+		} else if ( xml_tagexact( node, "b:Title" ) ) {
+			fields_add( info, "TITLE", xml_data( node ), 0 );
+		} else if ( xml_tagexact( node, "b:JournalName" ) ) {
+			fields_add( info, "TITLE", xml_data( node ), 1 );
+		} else if ( xml_tagexact( node, "b:Volume" ) ) {
+			fields_add( info, "VOLUME", xml_data( node ), 1 );
+		} else if ( xml_tagexact( node, "b:Comments" ) ) {
+			fields_add( info, "NOTES", xml_data( node ), 0 );
+		} else if ( xml_tagexact( node, "b:Pages" ) ) {
+			wordin_pages( node, info );
+		} else if ( xml_tagexact( node, "b:Author" ) && node->down ) {
+			wordin_people( node->down, info, "AUTHOR" );
+		} else if ( xml_tagexact( node, "b:Editor" ) && node->down ) {
+			wordin_people( node->down, info, "EDITOR" );
+		}
+	}
+	if ( node->next ) wordin_reference( node->next, info );
+}
+
+static void
+wordin_assembleref( xml *node, fields *info )
+{
+	if ( xml_tagexact( node, "b:Source" ) ) {
+		if ( node->down ) wordin_reference( node->down, info );
+	} else if ( node->tag->len==0 && node->down ) {
+		wordin_assembleref( node->down, info );
 	}
 }
 
 int
-medin_processf( fields *medin, char *data, char *filename, long nref )
+wordin_processf( fields *wordin, char *data, char *filename, long nref )
 {
 	xml top;
 	xml_init( &top );
 	xml_tree( data, &top );
-	medin_assembleref( &top, medin );
+	wordin_assembleref( &top, wordin );
 	xml_free( &top );
 	return 1;
 }
 
 void
-medin_convertf( fields *medin, fields *info, int reftype, int verbose, 
+wordin_convertf( fields *wordin, fields *info, int reftype, int verbose, 
 	variants *all, int nall )
 {
 	int i;
-	for ( i=0; i<medin->nfields; ++i )
-		fields_add( info, medin->tag[i].data, medin->data[i].data,
-				medin->level[i] );
+	for ( i=0; i<wordin->nfields; ++i )
+		fields_add( info, wordin->tag[i].data, wordin->data[i].data,
+				wordin->level[i] );
 }

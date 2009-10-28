@@ -1,7 +1,7 @@
 /*
  * endtypes.c
  *
- * Copyright (c) Chris Putnam 2003-8
+ * Copyright (c) Chris Putnam 2003-2009
  *
  * Program and source code released under the GPL
  *
@@ -67,42 +67,48 @@ static lookups generic[] = {
 };
 
 static lookups journalarticle[] = {
-	{ "%0", "TYPE",      TYPE,     LEVEL_MAIN },
-	{ "%A", "AUTHOR",    PERSON,   LEVEL_MAIN },
-	{ "%H", "TRANSLATOR",PERSON, LEVEL_MAIN },
-	{ "%Q", "TRANSLATEDTITLE", SIMPLE, LEVEL_MAIN },
-	{ "%D", "PARTYEAR",  SIMPLE,   LEVEL_MAIN },
-	{ "%T", "TITLE" ,    TITLE,    LEVEL_MAIN },
-	{ "%J", "TITLE",     TITLE,    LEVEL_HOST }, /* journal title */
-	{ "%B", "TITLE",     TITLE,    LEVEL_HOST }, /* journal title */
-	{ "%C", "ADDRESS",   SIMPLE, LEVEL_MAIN },
-	{ "%V", "VOLUME" ,   SIMPLE,   LEVEL_MAIN },
-	{ "%N", "ISSUE",     SIMPLE,   LEVEL_MAIN },
-	{ "%P", "PAGES",     PAGES,    LEVEL_MAIN },
-	{ "%I", "PUBLISHER", SIMPLE,    LEVEL_HOST }, 
-	{ "%8", "PARTMONTH", DATE,     LEVEL_MAIN },
-	{ "%9", "GENRE",     SIMPLE,  LEVEL_MAIN },
-	{ "%!", "SHORTTITLE",TITLE,    LEVEL_MAIN },
-	{ "%@", "SERIALNUMBER",      SERIALNO, LEVEL_HOST },
-	{ "%(", "TITLE",     SIMPLE,   LEVEL_ORIG }, /* original pub */
-	{ "%)", "REPRINTEDITION",SIMPLE,LEVEL_MAIN },
-	{ "%*", "REVIEWEDITEM",SIMPLE, LEVEL_MAIN },
-	{ "%M", "ACCESSNUM", SIMPLE,   LEVEL_MAIN },
-	{ "%L", "CALLNUMBER",SIMPLE,   LEVEL_MAIN },
-	{ "%F", "REFNUM",    SIMPLE,   LEVEL_MAIN },
-	{ "%K", "KEYWORD",   SIMPLE,   LEVEL_MAIN },
-	{ "%X", "ABSTRACT",  SIMPLE,   LEVEL_MAIN },
-	{ "%O", "NOTES",     SIMPLE,   LEVEL_MAIN },
-	{ "%U", "URL",       SIMPLE,   LEVEL_MAIN },
-	{ "%Z", "NOTES",     SIMPLE,   LEVEL_MAIN },
-	{ "%+", "AUTHORADDRESS",SIMPLE,LEVEL_MAIN },
-	{ "%>", "PDFLINK",      SIMPLE, LEVEL_MAIN },
-	{ "%G", "LANGUAGE",     SIMPLE, LEVEL_MAIN },
-	{ "%W", "PHYSICALLOC",  SIMPLE, LEVEL_MAIN },  /* physical location */
-	{ "%^", "CAPTION",      SIMPLE, LEVEL_MAIN },
-	{ "%[", "ACCESSDATE",   SIMPLE, LEVEL_MAIN },
-	{ "%=", "LASTMODDATE",  SIMPLE, LEVEL_MAIN },
-	{ "%~", "DATABASE",     SIMPLE, LEVEL_MAIN },
+	{ "%0", "TYPE",         TYPE,     LEVEL_MAIN },
+	{ "%A", "AUTHOR",       PERSON,   LEVEL_MAIN },
+	{ "%H", "TRANSLATOR",   PERSON,   LEVEL_MAIN },
+	{ "%Q", "TRANSLATEDTITLE",SIMPLE, LEVEL_MAIN },
+	{ "%D", "PARTYEAR",     SIMPLE,   LEVEL_MAIN },
+	{ "%T", "TITLE" ,       TITLE,    LEVEL_MAIN },
+	{ "%J", "TITLE",        TITLE,    LEVEL_HOST }, /* journal title */
+	{ "%B", "TITLE",        TITLE,    LEVEL_HOST }, /* journal title */
+	{ "%C", "ADDRESS",      SIMPLE,   LEVEL_MAIN },
+	{ "%V", "VOLUME" ,      SIMPLE,   LEVEL_MAIN },
+	{ "%N", "ISSUE",        SIMPLE,   LEVEL_MAIN },
+	{ "%P", "PAGES",        PAGES,    LEVEL_MAIN },
+	{ "%I", "PUBLISHER",    SIMPLE,   LEVEL_HOST }, 
+	{ "%8", "PARTMONTH",    DATE,     LEVEL_MAIN },
+	{ "%9", "GENRE",        SIMPLE,   LEVEL_MAIN },
+	{ "%!", "SHORTTITLE",   TITLE,    LEVEL_MAIN },
+	{ "%@", "SERIALNUMBER", SERIALNO, LEVEL_HOST },
+	{ "%(", "TITLE",        SIMPLE,   LEVEL_ORIG }, /* original pub */
+	{ "%)", "REPRINTEDITION",SIMPLE,  LEVEL_MAIN },
+	{ "%*", "REVIEWEDITEM", SIMPLE,   LEVEL_MAIN },
+	{ "%M", "ACCESSNUM",    SIMPLE,   LEVEL_MAIN },
+	{ "%L", "CALLNUMBER",   SIMPLE,   LEVEL_MAIN },
+	{ "%F", "REFNUM",       SIMPLE,   LEVEL_MAIN },
+	{ "%K", "KEYWORD",      SIMPLE,   LEVEL_MAIN },
+	{ "%X", "ABSTRACT",     SIMPLE,   LEVEL_MAIN },
+	{ "%U", "URL",          SIMPLE,   LEVEL_MAIN },
+	{ "%O", "NOTES",        NOTES,    LEVEL_MAIN },
+	{ "%Z", "NOTES",        NOTES,    LEVEL_MAIN },
+	{ "%1", "CUSTOM1",      NOTES,    LEVEL_MAIN },
+	{ "%2", "CUSTOM2",      NOTES,    LEVEL_MAIN },
+	{ "%3", "CUSTOM3",      NOTES,    LEVEL_MAIN },
+	{ "%4", "CUSTOM4",      NOTES,    LEVEL_MAIN },
+	{ "%#", "CUSTOM5",      NOTES,    LEVEL_MAIN },
+	{ "%$", "CUSTOM6",      NOTES,    LEVEL_MAIN },
+	{ "%+", "AUTHORADDRESS",SIMPLE,   LEVEL_MAIN },
+	{ "%>", "PDFLINK",      SIMPLE,   LEVEL_MAIN },
+	{ "%G", "LANGUAGE",     SIMPLE,   LEVEL_MAIN },
+	{ "%W", "PHYSICALLOC",  SIMPLE,   LEVEL_MAIN },  /* physical location */
+	{ "%^", "CAPTION",      SIMPLE,   LEVEL_MAIN },
+	{ "%[", "ACCESSDATE",   SIMPLE,   LEVEL_MAIN },
+	{ "%=", "LASTMODDATE",  SIMPLE,   LEVEL_MAIN },
+	{ "%~", "DATABASE",     SIMPLE,   LEVEL_MAIN },
 	{ "  ", "ISSUANCE|continuing",    ALWAYS, LEVEL_HOST },
 	{ "  ", "RESOURCE|text",          ALWAYS, LEVEL_MAIN },
 	{ "  ", "GENRE|periodical",       ALWAYS, LEVEL_HOST },
@@ -134,9 +140,15 @@ static lookups magazinearticle[] = {
 	{ "%F", "REFNUM",    SIMPLE,  LEVEL_MAIN },
 	{ "%K", "KEYWORD",   SIMPLE,  LEVEL_MAIN }, 
 	{ "%X", "ABSTRACT",  SIMPLE,  LEVEL_MAIN },
-	{ "%O", "NOTES",     SIMPLE,  LEVEL_MAIN },
 	{ "%U", "URL",       SIMPLE,  LEVEL_MAIN },
+	{ "%O", "NOTES",     SIMPLE,  LEVEL_MAIN },
 	{ "%Z", "NOTES",     SIMPLE,  LEVEL_MAIN },
+	{ "%1", "CUSTOM1",      NOTES,    LEVEL_MAIN },
+	{ "%2", "CUSTOM2",      NOTES,    LEVEL_MAIN },
+	{ "%3", "CUSTOM3",      NOTES,    LEVEL_MAIN },
+	{ "%4", "CUSTOM4",      NOTES,    LEVEL_MAIN },
+	{ "%#", "CUSTOM5",      NOTES,    LEVEL_MAIN },
+	{ "%$", "CUSTOM6",      NOTES,    LEVEL_MAIN },
 	{ "%+", "AUTHORADDRESS",SIMPLE,LEVEL_MAIN },
 	{ "%>", "PDFLINK",      SIMPLE, LEVEL_MAIN },
 	{ "%G", "LANGUAGE",     SIMPLE, LEVEL_MAIN },
@@ -176,9 +188,15 @@ static lookups newspaperarticle[] = {
 	{ "%F", "REFNUM",    SIMPLE,  LEVEL_MAIN },
 	{ "%K", "KEYWORD",   SIMPLE,  LEVEL_MAIN }, 
 	{ "%X", "ABSTRACT",  SIMPLE,  LEVEL_MAIN },
-	{ "%O", "NOTES",     SIMPLE,  LEVEL_MAIN },
 	{ "%U", "URL",       SIMPLE,  LEVEL_MAIN },
+	{ "%O", "NOTES",     SIMPLE,  LEVEL_MAIN },
 	{ "%Z", "NOTES",     SIMPLE,  LEVEL_MAIN },
+	{ "%1", "CUSTOM1",      NOTES,    LEVEL_MAIN },
+	{ "%2", "CUSTOM2",      NOTES,    LEVEL_MAIN },
+	{ "%3", "CUSTOM3",      NOTES,    LEVEL_MAIN },
+	{ "%4", "CUSTOM4",      NOTES,    LEVEL_MAIN },
+	{ "%#", "CUSTOM5",      NOTES,    LEVEL_MAIN },
+	{ "%$", "CUSTOM6",      NOTES,    LEVEL_MAIN },
 	{ "%G", "LANGUAGE",     SIMPLE, LEVEL_MAIN },
 	{ "%W", "PHYSICALLOC",  SIMPLE, LEVEL_MAIN },  /* physical location */
 	{ "%+", "AUTHORADDRESS",SIMPLE,LEVEL_MAIN },
@@ -205,6 +223,7 @@ static lookups book[] = {
 	{ "%C", "ADDRESS",   SIMPLE,    LEVEL_MAIN },
 	{ "%I", "PUBLISHER", SIMPLE,    LEVEL_MAIN }, 
 	{ "%V", "VOLUME" ,   SIMPLE,    LEVEL_MAIN },
+	{ "%N", "NUMBER",    SIMPLE,    LEVEL_MAIN },
 	{ "%6", "NUMVOLUMES",SIMPLE,    LEVEL_MAIN },
 	{ "%P", "TOTALPAGES", SIMPLE,LEVEL_MAIN },
 	{ "%7", "EDITION",   SIMPLE,    LEVEL_MAIN },
@@ -251,6 +270,7 @@ static lookups booksection[] = {
 	{ "%B", "TITLE",     TITLE,     LEVEL_HOST }, /* book title */
 	{ "%C", "ADDRESS",   SIMPLE,    LEVEL_HOST },
 	{ "%I", "PUBLISHER", SIMPLE,    LEVEL_HOST }, 
+	{ "%N", "NUMBER",    SIMPLE,    LEVEL_HOST },
 	{ "%V", "VOLUME" ,   SIMPLE,    LEVEL_MAIN },
 	{ "%6", "NUMVOLUMES",SIMPLE,    LEVEL_HOST },
 	{ "%P", "PAGES",     PAGES,     LEVEL_MAIN },
@@ -300,6 +320,7 @@ static lookups editedbook[] = {
 	{ "%B", "TITLE",     TITLE,     LEVEL_HOST }, /* SERIES_TITLE */
 	{ "%C", "ADDRESS",   SIMPLE,    LEVEL_MAIN },
 	{ "%I", "PUBLISHER", SIMPLE,    LEVEL_MAIN }, 
+	{ "%N", "NUMBER",    SIMPLE,    LEVEL_MAIN },
 	{ "%V", "VOLUME" ,   SIMPLE,    LEVEL_MAIN },
 	{ "%6", "NUMVOLUMES",SIMPLE,    LEVEL_HOST },
 	{ "%P", "TOTALPAGES", SIMPLE,LEVEL_MAIN },
@@ -461,6 +482,53 @@ static lookups proceedings[] = {
 	{ "  ", "GENRE|conference publication", ALWAYS, LEVEL_MAIN }
 };
 
+static lookups conferencepaper[] = {
+	{ "%0", "TYPE",         TYPE,     LEVEL_MAIN },
+	{ "%A", "AUTHOR",       PERSON,   LEVEL_MAIN },
+	{ "%H", "TRANSLATOR",   PERSON,   LEVEL_MAIN },
+	{ "%Q", "TRANSLATEDTITLE",SIMPLE, LEVEL_MAIN },
+	{ "%D", "PARTYEAR",     SIMPLE,   LEVEL_MAIN },
+	{ "%T", "TITLE" ,       TITLE,    LEVEL_MAIN },
+	{ "%J", "TITLE",        TITLE,    LEVEL_HOST }, /* journal title */
+	{ "%B", "TITLE",        TITLE,    LEVEL_HOST }, /* journal title */
+	{ "%C", "ADDRESS",      SIMPLE,   LEVEL_MAIN },
+	{ "%V", "VOLUME" ,      SIMPLE,   LEVEL_MAIN },
+	{ "%N", "ISSUE",        SIMPLE,   LEVEL_MAIN },
+	{ "%P", "PAGES",        PAGES,    LEVEL_MAIN },
+	{ "%I", "PUBLISHER",    SIMPLE,   LEVEL_HOST }, 
+	{ "%8", "PARTMONTH",    DATE,     LEVEL_MAIN },
+	{ "%9", "GENRE",        SIMPLE,   LEVEL_MAIN },
+	{ "%!", "SHORTTITLE",   TITLE,    LEVEL_MAIN },
+	{ "%@", "SERIALNUMBER", SERIALNO, LEVEL_HOST },
+	{ "%(", "TITLE",        SIMPLE,   LEVEL_ORIG }, /* original pub */
+	{ "%)", "REPRINTEDITION",SIMPLE,  LEVEL_MAIN },
+	{ "%*", "REVIEWEDITEM", SIMPLE,   LEVEL_MAIN },
+	{ "%M", "ACCESSNUM",    SIMPLE,   LEVEL_MAIN },
+	{ "%L", "CALLNUMBER",   SIMPLE,   LEVEL_MAIN },
+	{ "%F", "REFNUM",       SIMPLE,   LEVEL_MAIN },
+	{ "%K", "KEYWORD",      SIMPLE,   LEVEL_MAIN },
+	{ "%X", "ABSTRACT",     SIMPLE,   LEVEL_MAIN },
+	{ "%U", "URL",          SIMPLE,   LEVEL_MAIN },
+	{ "%O", "NOTES",        NOTES,    LEVEL_MAIN },
+	{ "%Z", "NOTES",        NOTES,    LEVEL_MAIN },
+	{ "%1", "CUSTOM1",      NOTES,    LEVEL_MAIN },
+	{ "%2", "CUSTOM2",      NOTES,    LEVEL_MAIN },
+	{ "%3", "CUSTOM3",      NOTES,    LEVEL_MAIN },
+	{ "%4", "CUSTOM4",      NOTES,    LEVEL_MAIN },
+	{ "%#", "CUSTOM5",      NOTES,    LEVEL_MAIN },
+	{ "%$", "CUSTOM6",      NOTES,    LEVEL_MAIN },
+	{ "%+", "AUTHORADDRESS",SIMPLE,   LEVEL_MAIN },
+	{ "%>", "PDFLINK",      SIMPLE,   LEVEL_MAIN },
+	{ "%G", "LANGUAGE",     SIMPLE,   LEVEL_MAIN },
+	{ "%W", "PHYSICALLOC",  SIMPLE,   LEVEL_MAIN },  /* physical location */
+	{ "%^", "CAPTION",      SIMPLE,   LEVEL_MAIN },
+	{ "%[", "ACCESSDATE",   SIMPLE,   LEVEL_MAIN },
+	{ "%=", "LASTMODDATE",  SIMPLE,   LEVEL_MAIN },
+	{ "%~", "DATABASE",     SIMPLE,   LEVEL_MAIN },
+	{ "  ", "RESOURCE|text",          ALWAYS, LEVEL_MAIN },
+	{ "  ", "GENRE|conference publication", ALWAYS, LEVEL_HOST }
+};
+
 static lookups thesis[] = {
 	{ "%0", "TYPE",         TYPE,   LEVEL_MAIN },
 	{ "%A", "AUTHOR",       PERSON, LEVEL_MAIN },
@@ -514,7 +582,6 @@ static lookups program[] = {
 	{ "%I", "PUBLISHER", SIMPLE   , LEVEL_MAIN },
 	{ "%7", "VERSION",   SIMPLE   , LEVEL_MAIN },
 	{ "%9", "GENRE",     SIMPLE   , LEVEL_MAIN },
-	{ "%!", "SHORTTITLE",TITLE    , LEVEL_MAIN },
 	{ "%M", "ACCESSNUM", SIMPLE   , LEVEL_MAIN },
 	{ "%L", "CALLNUMBER",SIMPLE   , LEVEL_MAIN },
 	{ "%F", "REFNUM",    SIMPLE   , LEVEL_MAIN },
@@ -529,6 +596,7 @@ static lookups program[] = {
 	{ "%4", "CUSTOM4",   SIMPLE   , LEVEL_MAIN },
 	{ "%#", "CUSTOM5",   SIMPLE   , LEVEL_MAIN },
 	{ "%$", "CUSTOM6",   SIMPLE   , LEVEL_MAIN },
+	{ "%!", "SHORTTITLE",TITLE    , LEVEL_MAIN },
 	{ "%+", "AUTHORADDRESS",SIMPLE, LEVEL_MAIN },
 	{ "%>", "PDFLINK",      SIMPLE, LEVEL_MAIN },
 	{ "%W", "PHYSICALLOC",  SIMPLE, LEVEL_MAIN },  /* physical location */
@@ -662,7 +730,47 @@ static lookups electronic[] = {
 	{ "%~", "DATABASE",     SIMPLE, LEVEL_MAIN },
         { " ",  "RESOURCE|software, multimedia",    ALWAYS, LEVEL_MAIN },
         { " ",  "GENRE|electronic",       ALWAYS, LEVEL_MAIN },
+};
 
+static lookups webpage[] = {
+	{ "%0", "TYPE",      TYPE      , LEVEL_MAIN },
+	{ "%A", "AUTHOR",    PERSON    , LEVEL_MAIN },
+	{ "%H", "TRANSLATOR",PERSON, LEVEL_MAIN },
+	{ "%Q", "TRANSLATEDTITLE", SIMPLE, LEVEL_MAIN },
+	{ "%D", "YEAR",      SIMPLE    , LEVEL_MAIN },
+	{ "%T", "TITLE" ,    TITLE     , LEVEL_MAIN },
+	{ "%C", "ADDRESS",   SIMPLE, LEVEL_MAIN },
+	{ "%I", "PUBLISHER", SIMPLE    , LEVEL_MAIN }, 
+	{ "%V", "ACCESS_YEAR",  SIMPLE , LEVEL_MAIN },
+	{ "%N", "ACCESS_DATE",  DATE   , LEVEL_MAIN },
+	{ "%7", "EDITION",   SIMPLE,     LEVEL_MAIN },
+	{ "%8", "UPDATE_DATE", DATE,     LEVEL_MAIN },
+	{ "%9", "GENRE",     SIMPLE,     LEVEL_MAIN },
+	{ "%!", "SHORTTITLE",TITLE,      LEVEL_MAIN },
+	{ "%1", "CUSTOM1",   NOTES,      LEVEL_MAIN },
+	{ "%2", "CUSTOM2",   NOTES,      LEVEL_MAIN },
+	{ "%3", "CUSTOM3",   NOTES,      LEVEL_MAIN },
+	{ "%4", "CUSTOM4",   NOTES,      LEVEL_MAIN },
+	{ "%#", "CUSTOM5",   NOTES,      LEVEL_MAIN },
+	{ "%$", "CUSTOM6",   NOTES,      LEVEL_MAIN },
+	{ "%M", "ACCESSNUM", SIMPLE,     LEVEL_MAIN },
+	{ "%F", "REFNUM",    SIMPLE,     LEVEL_MAIN },
+	{ "%K", "KEYWORD",   SIMPLE,     LEVEL_MAIN }, 
+	{ "%X", "ABSTRACT",  SIMPLE,     LEVEL_MAIN },
+	{ "%O", "NOTES",     NOTES,      LEVEL_MAIN },
+	{ "%U", "URL",       SIMPLE,     LEVEL_MAIN },
+	{ "%V", "VOLUME",    SIMPLE,     LEVEL_MAIN },
+	{ "%Z", "NOTES",     NOTES,      LEVEL_MAIN },
+	{ "%W", "PHYSICALLOC",  SIMPLE, LEVEL_MAIN },  /* physical location */
+	{ "%+", "AUTHORADDRESS",SIMPLE , LEVEL_MAIN },
+	{ "%>", "PDFLINK",      SIMPLE, LEVEL_MAIN },
+	{ "%G", "LANGUAGE",     SIMPLE, LEVEL_MAIN },
+	{ "%^", "CAPTION",      SIMPLE, LEVEL_MAIN },
+	{ "%[", "ACCESSDATE",   SIMPLE, LEVEL_MAIN },
+	{ "%=", "LASTMODDATE",  SIMPLE, LEVEL_MAIN },
+	{ "%~", "DATABASE",     SIMPLE, LEVEL_MAIN },
+        { " ",  "RESOURCE|software, multimedia",    ALWAYS, LEVEL_MAIN },
+        { " ",  "GENRE|web page",       ALWAYS, LEVEL_MAIN },
 };
 
 static lookups artwork[] = {
@@ -714,6 +822,7 @@ static lookups report[] = {
 	{ "%P", "PAGES",     PAGES, LEVEL_MAIN },
 	{ "%8", "MONTH",     DATE, LEVEL_MAIN },
 	{ "%9", "GENRE",     SIMPLE,    LEVEL_MAIN },
+	{ "%N", "NUMBER",    SIMPLE,    LEVEL_MAIN },
 	{ "%@", "SERIALNUMBER", SERIALNO, LEVEL_MAIN },
 	{ "%!", "SHORTTITLE",TITLE,     LEVEL_MAIN },
 	{ "%M", "ACCESSNUM", SIMPLE,    LEVEL_MAIN },
@@ -1112,7 +1221,7 @@ variants end_all[] = {
 	REFTYPE( "Chart or Table", chart ),
 	REFTYPE( "Classical Work", generic ),
 	REFTYPE( "Computer Program", program ),
-/*	REFTYPE( "Conference Paper", conferencepaper ),*/
+	REFTYPE( "Conference Paper", conferencepaper ),
 	REFTYPE( "Conference Proceeding", proceedings ),
 	REFTYPE( "Edited Book", editedbook ),
 /*	REFTYPE( "Equation", equation ), */
@@ -1137,6 +1246,7 @@ variants end_all[] = {
 	REFTYPE( "Statute", statute ),
 	REFTYPE( "Thesis", thesis ),
 	REFTYPE( "Unpublished Work", unpublished ),
+	REFTYPE( "Web Page", webpage ),
 };
 
 

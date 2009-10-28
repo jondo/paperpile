@@ -1,7 +1,7 @@
 /*
  * wordout.h
  *
- * Copyright (c) Chris Putnam 2008
+ * Copyright (c) Chris Putnam 2008-2009
  *
  * Source code released under the GPL
  *

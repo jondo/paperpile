@@ -3,7 +3,7 @@
  *
  * convert between latex special chars and unicode
  *
- * Copyright (c) Chris Putnam 2004-8
+ * Copyright (c) Chris Putnam 2004-2009
  *
  * Source code released under the GPL
  *
@@ -39,7 +39,7 @@ static struct latex_chars latex_chars[] = {
    { 194, "{\\^A}",  "\\^{A}",  "\\^A"  }, /*               with circumflex */
    { 195, "{\\~A}",  "\\~{A}",  "\\~A"  }, /*               with tilde */
    { 196, "{\\\"A}", "\\\"{A}", "\\\"A" }, /*               with diuresis */
-   { 197, "\\AA",    "",        ""      }, /*               with ring above */
+   { 197, "{\\AA}",  "",        ""      }, /*               with ring above */
 
                                            /* Latin Small a */
    { 224, "{\\`a}",  "\\`{a}",  "\\`a"  }, /*               with grave */
@@ -47,13 +47,13 @@ static struct latex_chars latex_chars[] = {
    { 226, "{\\^a}",  "\\^{a}",  "\\^a"  }, /*               with circumflex */
    { 227, "{\\~a}",  "\\~{a}",  "\\~a"  }, /*               with tilde */
    { 228, "{\\\"a}", "\\\"{a}", "\\\"a" }, /*               with diuresis */
-   { 229, "\\aa",    "",        ""      }, /*               with ring above */
+   { 229, "{\\aa}",  "",        ""      }, /*               with ring above */
 
    { 198, "{\\AE}",  "\\AE",    ""      }, /* Latin Capital AE */
    { 230, "{\\ae}",  "\\ae",    ""      }, /* Latin Small ae */
 
-   { 199, "\\c{C}",  "",        ""      }, /* Latin Capital C with cedilla */
-   { 231, "\\c{c}",  "",        ""      }, /* Latin small c with cedilla*/
+   { 199, "{\\c{C}}","\\c{C}",  ""      }, /* Latin Capital C with cedilla */
+   { 231, "{\\c{c}}","\\c{c}",  ""      }, /* Latin small c with cedilla*/
    { 262, "{\\'C}",  "\\'{C}",  "\\'C"  }, /* Latin Capital C with acute */
    { 263, "{\\'c}",  "\\'{c}",  "\\'c"  }, /* Latin small c with acute */
 

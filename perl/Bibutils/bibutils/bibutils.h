@@ -1,7 +1,7 @@
 /*
  * bibutils.h
  *
- * Copyright (c) Chris Putnam 2005-8
+ * Copyright (c) Chris Putnam 2005-2009
  *
  */
 #ifndef BIBUTILS_H
@@ -30,7 +30,9 @@ extern "C" {
 #define BIBL_MEDLINEIN    (BIBL_FIRSTIN+6)
 #define BIBL_ENDNOTEXMLIN (BIBL_FIRSTIN+7)
 #define BIBL_BIBLATEXIN   (BIBL_FIRSTIN+8)
-#define BIBL_LASTIN       (BIBL_FIRSTIN+8)
+#define BIBL_EBIIN        (BIBL_FIRSTIN+9)
+#define BIBL_WORDIN       (BIBL_FIRSTIN+10)
+#define BIBL_LASTIN       (BIBL_FIRSTIN+10)
 
 #define BIBL_FIRSTOUT     (200)
 #define BIBL_MODSOUT      (BIBL_FIRSTOUT)
@@ -68,6 +70,7 @@ typedef struct param {
 	uchar latexin;
 	uchar utf8in;
 	uchar xmlin;
+	uchar nosplittitle;
 
 	int charsetout;
 	uchar charsetout_src; /* BIBL_SRC_PROG, BIBL_SRC_USER */

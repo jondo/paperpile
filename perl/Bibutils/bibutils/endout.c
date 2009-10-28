@@ -1,7 +1,7 @@
 /*
  * endout.c
  *
- * Copyright (c) Chris Putnam 2004-8
+ * Copyright (c) Chris Putnam 2004-2009
  *
  * Program and source code released under the GPL
  *
@@ -14,6 +14,7 @@
 #include "newstr.h"
 #include "strsearch.h"
 #include "fields.h"
+#include "doi.h"
 #include "endout.h"
 
 enum {
@@ -360,6 +361,51 @@ output_pages( FILE *fp, fields *info )
 }
 
 static void
+output_doi( FILE *fp, fields *info )
+{
+	newstr doi_url;
+	int i;
+	newstr_init( &doi_url );
+	for ( i=0; i<info->nfields; ++i ) {
+		if ( strcmp( info->tag[i].data, "DOI" ) ) continue;
+		doi_to_url( info, i, "URL", &doi_url );
+		if ( doi_url.len )
+			fprintf( fp, "%%U %s\n", doi_url.data );
+	}
+	newstr_free( &doi_url );
+}
+
+static void
+output_pmid( FILE *fp, fields *info )
+{
+	newstr pmid_url;
+	int i;
+	newstr_init( &pmid_url );
+	for ( i=0; i<info->nfields; ++i ) {
+		if ( strcmp( info->tag[i].data, "PMID" ) ) continue;
+		pmid_to_url( info, i, "URL", &pmid_url );
+		if ( pmid_url.len )
+			fprintf( fp, "%%U %s\n", pmid_url.data );
+	}
+	newstr_free( &pmid_url );
+}
+
+static void
+output_arxiv( FILE *fp, fields *info )
+{
+	newstr arxiv_url;
+	int i;
+	newstr_init( &arxiv_url );
+	for ( i=0; i<info->nfields; ++i ) {
+		if ( strcmp( info->tag[i].data, "ARXIV" ) ) continue;
+		arxiv_to_url( info, i, "URL", &arxiv_url );
+		if ( arxiv_url.len )
+			fprintf( fp, "%%U %s\n", arxiv_url.data );
+	}
+	newstr_free( &arxiv_url );
+}
+
+static void
 output_year( FILE *fp, fields *info, int level )
 {
 	int year = fields_find( info, "YEAR", level );
@@ -480,6 +526,10 @@ endout_write( fields *info, FILE *fp, param *p, unsigned long refnum )
 	output_easyall( fp, info, "NGENRE", "%9", -1 );
 	output_thesishint( fp, type );
 	output_easyall( fp, info, "URL", "%U", -1 ); 
+	output_easyall( fp, info, "FILEATTACH", "%U", -1 ); 
+	output_doi( fp, info );
+	output_pmid( fp, info );
+	output_arxiv( fp, info );
 	output_pages( fp, info );
 	fprintf( fp, "\n" );
 	fflush( fp );

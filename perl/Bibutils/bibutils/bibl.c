@@ -1,7 +1,7 @@
 /*
  * bibl.c
  *
- * Copyright (c) Chris Putnam 2005-8
+ * Copyright (c) Chris Putnam 2005-2009
  *
  * Source code released under the GPL
  *
@@ -62,6 +62,7 @@ bibl_free( bibl *b )
 	for ( i=0; i<b->nrefs; ++i )
 		fields_free( b->ref[i] );
 	free( b->ref );
+	b->ref = NULL;
 	b->nrefs = b->maxrefs = 0;
 }
 

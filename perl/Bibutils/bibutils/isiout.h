@@ -1,7 +1,7 @@
 /*
  * isiout.h
  *
- * Copyright (c) Chris Putnam 2007-8
+ * Copyright (c) Chris Putnam 2007-2009
  *
  */
 #ifndef ISIOUT_H

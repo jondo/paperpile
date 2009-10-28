@@ -1,7 +1,7 @@
 /*
  * xml_getencoding.c
  *
- * Copyright (c) Chris Putnam 2007-8
+ * Copyright (c) Chris Putnam 2007-2009
  *
  * Source code released under the GPL
  *

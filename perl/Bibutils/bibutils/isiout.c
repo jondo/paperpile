@@ -1,7 +1,7 @@
 /*
  * isiout.c
  *
- * Copyright (c) Chris Putnam 2008
+ * Copyright (c) Chris Putnam 2008-2009
  *
  * Source code released under the GPL
  */
@@ -238,6 +238,7 @@ isiout_write( fields *info, FILE *fp, param *p, unsigned long refnum )
         output_easy( fp, info, "ISSN", "SN", -1 );
         output_easy( fp, info, "ISBN", "SN", -1 );
         output_easy( fp, info, "URL", "UR", -1 );
+        output_easy( fp, info, "FILEATTACH", "UR", -1 );
         output_pubmed( fp, info, refnum );
         output_easy( fp, info, "NOTES", "N1", -1 );
         output_easy( fp, info, "REFNUM", "ID", -1 );*/

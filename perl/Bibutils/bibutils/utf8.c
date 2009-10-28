@@ -1,7 +1,7 @@
 /*
  * utf8.c
  *
- * Copyright (c) Chris Putnam 2004-8
+ * Copyright (c) Chris Putnam 2004-2009
  *
  * Source code released under the GPL
  *
@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "utf8.h"
 
-/* UTF-8 encryption
+/* UTF-8 encoding
 
 U-00000000 - U-0000007F:  0xxxxxxx 
 U-00000080 - U-000007FF:  110xxxxx 10xxxxxx 

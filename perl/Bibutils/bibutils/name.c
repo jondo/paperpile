@@ -3,7 +3,7 @@
  *
  * mangle names w/ and w/o commas
  *
- * Copyright (c) Chris Putnam 2004-8
+ * Copyright (c) Chris Putnam 2004-2009
  *
  * Source code released under the GPL
  *
@@ -22,7 +22,7 @@ check_case( char *start, char *end, int *upper, int *lower )
 {
 	int u = 0, l = 0;
 	char *p = start;
-	while ( p < end ) { 
+	while ( p < end ) {
 		if ( islower( *p ) ) l = 1;
 		else if ( isupper( *p ) ) u = 1;
 		p++;
@@ -32,15 +32,19 @@ check_case( char *start, char *end, int *upper, int *lower )
 }
 
 static int
-should_split( int upperlast, int lowerlast, int upperfirst, int lowerfirst )
+should_split( char *last_start, char *last_end, char *first_start, 
+	char *first_end )
 {
-	if ( ( upperlast && lowerlast ) && ( upperfirst && !lowerfirst ) )
-		return 1;
-	else return 0;
+	int upperlast, lowerlast, upperfirst, lowerfirst;
+        check_case( first_start, first_end, &upperfirst, &lowerfirst );
+        check_case( last_start,  last_end,  &upperlast,  &lowerlast );
+        if ( ( upperlast && lowerlast ) && ( upperfirst && !lowerfirst ) )
+                return 1;
+        else return 0;
 }
 
 /* name_addmultibytechar
- *
+ * 
  * Add character to newstring s starting at pointer p.
  *
  * Handles the case for multibyte Unicode chars (with high bits
@@ -48,7 +52,7 @@ should_split( int upperlast, int lowerlast, int upperfirst, int lowerfirst )
  *
  * Since we can progress more than one byte in the string,
  * return the properly updated pointer p.
- */ 
+ */
 static char *
 name_addmultibytechar( newstr *s, char *p, char *lastp )
 {
@@ -64,6 +68,79 @@ name_addmultibytechar( newstr *s, char *p, char *lastp )
 	return p;
 }
 
+static void
+name_givennames_nosplit( char *start_first, char *end_first, newstr *outname )
+{
+	char *p;
+	p = start_first;
+	while ( p!=end_first ) {
+		if ( !is_ws( *p ) && *p!='.' ) {
+			p = name_addmultibytechar( outname, p, end_first );
+		} else {
+			if ( *p=='.' ) p++;
+			while ( p!=end_first && is_ws( *p ) ) p++;
+			if ( p!=end_first )
+				newstr_addchar( outname, '|' );
+		}
+	}
+}
+
+static void
+name_givennames_split( char *start_first, char *end_first, newstr *outname )
+{
+	int n = 0;
+	char *p;
+	p = start_first;
+	while ( p!=end_first ) {
+		if ( !is_ws( *p ) ) {
+			if ( *p=='.' && *(p+1)=='-' ) {
+				newstr_strcat( outname, ".-" );
+				p++; p++;
+				p = skip_ws( p );
+				p = name_addmultibytechar( outname, p, end_first );
+				newstr_addchar( outname, '.' );
+				n++;
+			} else if ( *p=='.' ) {
+				p++;
+			} else if ( *p=='-' ) {
+				newstr_strcat( outname, ".-" );
+				p++;
+				p = skip_ws( p );
+				p = name_addmultibytechar( outname, p, end_first );
+				newstr_addchar( outname, '.' );
+				n++;
+			} else {
+				if ( n ) newstr_addchar( outname, '|' );
+				p = name_addmultibytechar( outname, p, end_first );
+				n++;
+			}
+		} else {
+			while ( p!=end_first && is_ws( *p ) ) p++;
+		}
+	}
+}
+
+static void
+name_givennames( char *first_start, char *first_end, char *last_start,
+	char *last_end, newstr *outname )
+{
+	int splitfirst;
+        newstr_addchar( outname, '|' );
+	splitfirst = should_split( last_start, last_end, first_start, 
+		first_end );
+	if ( !splitfirst )
+		name_givennames_nosplit( first_start, first_end, outname );
+	else 
+		name_givennames_split( first_start, first_end, outname );
+}
+
+static char *
+string_end( char *p )
+{
+	while ( *p ) p++;
+	return p;
+}
+
 
 /* name_nocomma()
  *
@@ -72,55 +149,27 @@ name_addmultibytechar( newstr *s, char *p, char *lastp )
 void
 name_nocomma( char *start, newstr *outname )
 {
-	char *p, *last, *end;
-	int uplast, lowlast, upfirst, lowfirst, splitfirst;
+        char *p, *last_start, *last_end, *first_start, *first_end;
 
-	/* move to end */
-	p = start;
-	while ( *p && *(p+1) ) p++;
-
-	/* point to last name */
-	end = p;
-	while ( p>start && !is_ws( *p ) ) p--;
-	if ( !strcasecmp( p, "Jr." ) || !strcasecmp( p, "III" ) ) {
-		while ( p>start && is_ws( *p ) ) p--;
-		while ( p>start && !is_ws( *p ) ) p--;
+        /** Last name **/
+	p = last_end = string_end( start );
+	while ( p!=start && !is_ws( *p ) ) p--;
+	if ( !strcasecmp( p+1, "Jr." ) || !strcasecmp( p+1, "III" ) ) {
+		while ( p!=start && is_ws( *p ) ) p--;
+		while ( p!=start && !is_ws( *p ) ) p--;
 	}
-	last = p;
+	last_start = p = skip_ws( p );
+        while ( p!=last_end )
+                newstr_addchar( outname, *p++ );
 
-	p = skip_ws( p );
-
-	/* look for upper and lower case in last name */
-	check_case( p, end+1, &uplast, &lowlast );
-
-	/* copy last name */
-	while ( p<=end )
-		newstr_addchar( outname, *p++ );
-
-	if ( start==last ) return;   /*Only last name */
-
-	/* Given names */
-	newstr_addchar( outname, '|' );
-
-	/* look for upper and lower case in given name(s) */
-	check_case( start, last, &upfirst, &lowfirst );
-	splitfirst = should_split( uplast, lowlast, upfirst, lowfirst );
-
-	/* copy given name(s), splitfirst to identify cases of "HF Author" */
-	p = start;
-	while ( p!=last ) {
-		if ( *p!=' ' && *p!='\t' ) {
-			if ( !(splitfirst && ( *p=='.' || *p=='-' ) ) ) {
-				p = name_addmultibytechar( outname, p, last );
-				if ( splitfirst )
-					newstr_addchar(outname,'|');
-			} else p++;
-		} else {
-			while ( p!=last && ( *p==' ' || *p=='\t' ) )
-				p++;
-			if ( p!=last && !splitfirst )
-				newstr_addchar( outname, '|' );
-		}
+        /** Given names **/
+        if ( start!=last_start ) {
+		first_start = skip_ws( start );
+		first_end = last_start;
+		while ( first_end!=first_start && !is_ws( *first_end ) )
+			first_end--;
+		name_givennames( first_start, last_start, last_start, last_end, 
+			outname );
 	}
 }
 
@@ -132,42 +181,22 @@ name_nocomma( char *start, newstr *outname )
 void
 name_comma( char *p, newstr *outname )
 {
-	char *q;
-	int uplast, lowlast, upfirst, lowfirst, splitfirst;
+	char *start_first, *end_first, *start_last, *end_last;
 
-	q = p;
-	while ( *q && ( *q!=',' ) ) q++;
-	check_case( p, q, &uplast, &lowlast );
-
-	while ( *p && ( *p!=',' ) ) 
+	/** Last name **/
+	start_last = skip_ws( p );
+	while ( *p && ( *p!=',' ) ) {
 		newstr_addchar( outname, *p++ );
+		end_last = p;
+	}
 
+	/** Given names **/
 	if ( *p==',' ) p++;
-	p = skip_ws( p );
-
-	q = p;
-	while ( *q ) q++;
-	check_case( p, q, &upfirst, &lowfirst );
-	splitfirst = should_split( uplast, lowlast, upfirst, lowfirst );
-
-	if ( !*p ) return; /* Only last name */
-
-	/* add each part of the given name */
-	newstr_addchar( outname, '|' );
-
-	/* splitfirst to identify cases of Author, HF */
-	while ( *p ) {
-		if ( !is_ws( *p ) ) {
-			if ( ! (splitfirst && ( *p=='.' || *p=='-' ) ) ) {
-				p=name_addmultibytechar(outname,p,NULL);
-				if ( splitfirst )
-					newstr_addchar( outname, '|' );
-			} else p++;
-		} else if ( *(p+1)!='\0' ) {
-			if ( !splitfirst )
-				newstr_addchar( outname, '|' );
-			p++;
-		} else p++;
+	start_first = skip_ws( p );
+	if ( *start_first ) {
+		end_first = string_end( start_first );
+		name_givennames( start_first, end_first, start_last, end_last, 
+				outname );
 	}
 }
 
@@ -237,26 +266,48 @@ name_nomangle( char *tag, char *data, newstr *newtag, list *asis, list *corps )
 }
 
 static void
-name_process( fields *info, char *tag, int level, newstr *inname, list *asis,
-	list *corps )
+name_person( fields *info, char *tag, int level, newstr *inname )
 {
-	newstr newtag, outname;
-	newstr_init( &newtag );
+	newstr outname;
 	newstr_init( &outname );
+	if ( strchr( inname->data, ',' ) ) 
+		name_comma( inname->data, &outname );
+	else
+		name_nocomma( inname->data, &outname );
+	if ( outname.len!=0 )
+		fields_add( info, tag, outname.data, level );
+	newstr_free( &outname );
+}
+
+/*
+ * name_process
+ *
+ * returns 1 if "et al." needs to be added to the list globally
+ */
+static int
+name_process( fields *info, char *tag, int level, newstr *inname, list *asis, list *corps )
+{
+	newstr newtag;
+	int add_etal = 0;
+
+	/* keep "names" like " , " from coredumping program */
+	if ( !inname->len ) return 0;
+
+	/* identify and process asis or corps names */
+	newstr_init( &newtag );
 	if ( name_nomangle( tag, inname->data, &newtag, asis, corps ) ) {
 		fields_add( info, newtag.data, inname->data, level );
 	} else {
-		newstr_findreplace( inname, ".", ". " );
-		if ( strchr( inname->data, ',' ) ) 
-			name_comma( inname->data, &outname );
-		else
-			name_nocomma( inname->data, &outname );
-		if ( outname.len!=0 ) {
-			fields_add( info, tag, outname.data, level );
+		if ( strstr( inname->data, "et al." ) ) {
+			add_etal = 1;
+			newstr_findreplace( inname, "et al.", "" );
+		}
+		if ( inname->len ) {
+			name_person( info, tag, level, inname );
 		}
 	}
 	newstr_free( &newtag );
-	newstr_free( &outname );
+	return add_etal;
 }
 
 /*
@@ -274,16 +325,17 @@ name_process( fields *info, char *tag, int level, newstr *inname, list *asis,
  * on if the author name is in the format "H. F. Author" or
  * "Author, H. F."
  */
-
 void
 name_add( fields *info, char *tag, char *q, int level, list *asis, list *corps )
 {
-	newstr inname;
+	newstr inname, newtag;
 	char *p, *start, *end;
+	int add_etal = 0;
 
 	if ( !q ) return;
 
 	newstr_init( &inname );
+	newstr_init( &newtag );
 
 	while ( *q ) {
 
@@ -298,13 +350,32 @@ name_add( fields *info, char *tag, char *q, int level, list *asis, list *corps )
 		for ( p=start; p<=end; p++ )
 			newstr_addchar( &inname, *p );
 
+		add_etal += name_process( info, tag, level, &inname, asis, corps );
+#if 0
 		/* keep "names" like " , " from coredumping program */
 		if ( inname.len ) {
-			name_process( info, tag, level, &inname, asis, corps );
+			if ( name_nomangle( tag, inname.data, &newtag, asis, corps ) ) {
+				fields_add( info, newtag.data, inname.data, level );
+				newstr_empty( &newtag );
+			} else {
+				if ( strstr( inname.data, "et al." ) ) {
+					add_etal=1;
+					newstr_findreplace( &inname, "et al.", "" );
+				}
+				if ( inname.len ) name_person( info, tag, level, &inname, asis, corps );
+			}
 			newstr_empty( &inname );
 		}
+#endif
 
+		newstr_empty( &inname );
 		if ( *q=='|' ) q++;
 	}
+	if ( add_etal ) {
+		newstr_strcpy( &newtag, tag );
+		newstr_strcat( &newtag, ":ASIS" );
+		fields_add( info, newtag.data, "et al.", level );
+	}
 	newstr_free( &inname );
+	newstr_free( &newtag );
 }

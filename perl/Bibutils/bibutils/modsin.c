@@ -1,7 +1,7 @@
 /*
  * modsin.c
  *
- * Copyright (c) Chris Putnam 2004-8
+ * Copyright (c) Chris Putnam 2004-2009
  *
  * Source code released under the GPL
  *
@@ -90,7 +90,7 @@ modsin_date( xml *node, fields *info, int level, int part )
 }
 
 static void
-modsin_pager( xml *node, newstr *sp, newstr *ep, newstr *tp )
+modsin_pager( xml *node, newstr *sp, newstr *ep, newstr *tp, newstr *lp )
 {
 	if ( xml_tagexact( node, "start" ) ) {
 		newstr_newstrcpy( sp, node->value );
@@ -98,31 +98,37 @@ modsin_pager( xml *node, newstr *sp, newstr *ep, newstr *tp )
 		newstr_newstrcpy( ep, node->value );
 	} else if ( xml_tagexact( node, "total" ) ) {
 		newstr_newstrcpy( tp, node->value );
+	} else if ( xml_tagexact( node, "list" ) ) {
+		newstr_newstrcpy( lp, node->value );
 	}
-	if ( node->down ) modsin_pager( node->down, sp, ep, tp );
-	if ( node->next ) modsin_pager( node->next, sp, ep, tp );
+	if ( node->down ) modsin_pager( node->down, sp, ep, tp, lp );
+	if ( node->next ) modsin_pager( node->next, sp, ep, tp, lp );
 }
 
 static void
 modsin_page( xml *node, fields *info, int level )
 {
-	newstr sp, ep, tp;
+	newstr sp, ep, tp, lp;
 	if ( node->down ) {
 		newstr_init( &sp );
 		newstr_init( &ep );
 		newstr_init( &tp );
-		modsin_pager( node->down, &sp, &ep, &tp );
+		newstr_init( &lp );
+		modsin_pager( node->down, &sp, &ep, &tp, &lp );
 		if ( sp.len || ep.len ) {
 			if ( sp.len )
 				fields_add( info, "PAGESTART", sp.data, level );
 			if ( ep.len )
 				fields_add( info, "PAGEEND", ep.data, level );
+		} else if ( lp.len ) {
+			fields_add( info, "PAGESTART", lp.data, level );
 		}
 		if ( tp.len )
 			fields_add( info, "TOTALPAGES", tp.data, level );
 		newstr_free( &sp );
 		newstr_free( &ep );
 		newstr_free( &tp );
+		newstr_free( &lp );
 	}
 }
 
@@ -496,16 +502,23 @@ modsin_abstract( xml *node, fields *info, int level )
 static void
 modsin_locationr( xml *node, fields *info, int level )
 {
-	char url[]="URL", school[]="SCHOOL", loc[]="LOCATION", *tag=NULL;
-	if ( xml_tagexact( node, "url" ) ) {
+	char url[]="URL", school[]="SCHOOL", loc[]="LOCATION";
+	char fileattach[]="FILEATTACH", *tag=NULL;
+
+	if ( xml_tag_attrib( node, "url", "access", "raw object" ) ) {
+		tag = fileattach;
+	} else if ( xml_tagexact( node, "url" ) ) {
 		tag = url;
 	}
+
 	if ( xml_tag_attrib( node, "physicalLocation", "type", "school" ) ) {
 		tag = school;
 	} else if ( xml_tagexact( node, "physicalLocation" ) ) {
 		tag = loc;
 	}
+
 	if ( tag ) fields_add( info, tag, node->value->data, level );
+
 	if ( node->down ) modsin_locationr( node->down, info, level );
 	if ( node->next ) modsin_locationr( node->next, info, level );
 }
@@ -582,8 +595,10 @@ modsin_identifier( xml *node, fields *info, int level )
 		{ "doi",           "DOI"          },
 		{ "url",           "URL"          },
 		{ "uri",           "URL"          },
-		{ "pubmed",        "PUBMED"       },
+		{ "pmid",          "PMID"         },
+		{ "pubmed",        "PMID"         },
 		{ "medline",       "MEDLINE"      },
+		{ "arXiv",         "ARXIV"        },
 		{ "pii",           "PII"          },
 		{ "isi",           "ISIREFNUM"    },
 		{ "serial number", "SERIALNUMBER" },

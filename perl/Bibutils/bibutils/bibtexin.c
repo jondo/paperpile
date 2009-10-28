@@ -1,7 +1,7 @@
 /*
  * bibtexin.c
  *
- * Copyright (c) Chris Putnam 2003-8
+ * Copyright (c) Chris Putnam 2003-2009
  *
  * Program and source code released under the GPL
  *
@@ -50,9 +50,18 @@ bibtexin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, new
 {
 	int haveref = 0;
 	char *p;
+	*fcharset = CHARSET_UNKNOWN;
 	while ( haveref!=2 && readmore( fp, buf, bufsize, bufpos, line ) ) {
 		if ( line->len == 0 ) continue; /* blank line */
 		p = &(line->data[0]);
+		/* Recognize UTF8 BOM */
+		if ( line->len > 2 && 
+				(unsigned char)(p[0])==0xEF &&
+				(unsigned char)(p[1])==0xBB &&
+				(unsigned char)(p[2])==0xBF ) {
+			*fcharset = CHARSET_UNICODE;
+			p += 3;
+		}
 		p = skip_ws( p );
 		if ( *p == '%' ) { /* commented out line */
 			newstr_empty( line );
@@ -66,7 +75,6 @@ bibtexin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, new
 		} else if ( !haveref ) newstr_empty( line );
 	
 	}
-	*fcharset = CHARSET_UNKNOWN;
 	return haveref;
 }
 
@@ -90,8 +98,19 @@ bibtex_item( char *p, newstr *s )
 			nbrackets--;
 			/*if ( nbrackets>0 )*/ newstr_addchar( s, *p );
 		} else {
+			/*
 			if ( s->len!=0 || ( s->len==0 && !is_ws( *p ) ) )
 				newstr_addchar( s, *p );
+			*/
+			if ( !is_ws( *p ) ) newstr_addchar( s, *p );
+			else {
+				if ( s->len!=0 && *p!='\n' && *p!='\r' )
+					newstr_addchar( s, *p );
+				else if ( s->len!=0 && (*p=='\n' || *p=='\r')) {
+					newstr_addchar( s, ' ' );
+					while ( is_ws( *(p+1) ) ) p++;
+				}
+			}
 		}
 		p++;
 	}
@@ -488,6 +507,7 @@ process_names( fields *info, char *tag, newstr *data, int level, list *asis,
 	list *corps )
 {
 	newstr_findreplace( data, " and ", "|" );
+	newstr_findreplace( data, "|and ", "|" );
 	name_add( info, tag, data->data, level, asis, corps );
 }
 
@@ -527,7 +547,39 @@ process_url( fields *info, char *p, int level )
 		fields_add( info, "URL", p+8, level );
 	else if ( !strncasecmp( p, "\\url", 4 ) )
 		fields_add( info, "URL", p+4, level );
+	else if ( !strncasecmp( p, "arXiv:", 6 ) )
+		fields_add( info, "ARXIV", p+6, level ); 
+	else if ( !strncasecmp( p, "http://arxiv.org/abs/", 21 ) )
+		fields_add( info, "ARXIV", p+21, level );
 	else fields_add( info, "URL", p, level );
+}
+
+/*
+ * sentelink = {file://localhost/full/path/to/file.pdf,Sente,PDF}
+ */
+static void
+process_sente( fields *info, char *p, int level )
+{
+	newstr link;
+	newstr_init( &link );
+	while ( *p && *p!=',' ) newstr_addchar( &link, *p++ );
+	if ( link.len ) fields_add( info, "FILEATTACH", link.data, level );
+	newstr_free( &link );
+}
+
+/*
+ * file={Description:/full/path/to/file.pdf:PDF}
+ */
+static void
+process_file( fields *info, char *p, int level )
+{
+	newstr link;
+	newstr_init( &link );
+	while ( *p && *p!=':' ) p++;
+	if ( *p==':' ) p++;
+	while ( *p && *p!=':' ) newstr_addchar( &link, *p++ );
+	if ( link.len ) fields_add( info, "FILEATTACH", link.data, level );
+	newstr_free( &link );
 }
 
 int
@@ -592,7 +644,8 @@ bibtexin_convertf( fields *bibin, fields *info, int reftype, param *p,
 		if ( process==SIMPLE )
 			fields_add( info, newtag, d->data, level );
 		else if ( process==TITLE )
-			title_process( info, "TITLE", d->data, level);
+			title_process( info, "TITLE", d->data, level, 
+					p->nosplittitle );
 		else if ( process==PERSON )
 			process_names( info, newtag, d, level, &(p->asis), 
 					&(p->corps) );
@@ -600,6 +653,10 @@ bibtexin_convertf( fields *bibin, fields *info, int reftype, param *p,
 			process_pages( info, d, level);
 		else if ( process==BIBTEX_URL )
 			process_url( info, d->data, level );
+		else if ( process==BIBTEX_SENTE )
+			process_sente( info, d->data, level );
+		else if ( process==BIBTEX_FILE )
+			process_file( info, d->data, level );
 	}
 	if ( p->verbose ) report( info );
 }
