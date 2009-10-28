@@ -1,6 +1,6 @@
 package Paperpile::Library::Author;
 use Moose;
-#use Moose::Util::TypeConstraints;
+use Moose::Util::TypeConstraints;
 use Text::Unidecode;
 use Lingua::EN::NameParse;
 

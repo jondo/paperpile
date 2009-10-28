@@ -43,6 +43,7 @@ my $bu = Bibutils->new(
 ## Reading file
 $bu->read;
 
+exit;
 ## Getting data
 my $data = $bu->get_data;
 
