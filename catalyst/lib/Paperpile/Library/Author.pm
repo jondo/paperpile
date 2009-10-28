@@ -1,8 +1,15 @@
 package Paperpile::Library::Author;
 use Moose;
-use Moose::Util::TypeConstraints;
+#use Moose::Util::TypeConstraints;
 use Text::Unidecode;
 use Lingua::EN::NameParse;
+
+sub BUILD {
+
+  #print "author object\n";
+}
+
+has _autorefresh => (is =>'rw', isa=>'Int', default =>1);
 
 has 'full' => (
   is      => 'rw',
@@ -10,7 +17,6 @@ has 'full' => (
   trigger => sub {
     my $self = shift;
     $self->split_full;
-    $self->parse_initials;
     $self->create_key;
   }
 );
@@ -158,7 +164,7 @@ sub read_bibutils{
   my ($self, $string) = @_;
   my ($first, $von, $last, $jr);
 
-  
+
   my @parts=split(/\|/,$string);
 
   # No second name is given. For example due to wrong Bibtex: Schuster
@@ -235,6 +241,8 @@ sub create_key {
 sub parse_initials {
   my $self  = shift;
   my $input = $self->first;
+
+  return $self->initials if not ($self->_autorefresh);
 
   # get individual components by splitting at '.' and whitespace
   $input =~ s/\./ /g;
@@ -433,5 +441,30 @@ sub as_hash {
   };
 
 }
+
+sub clear{
+
+  my $self = shift;
+
+  $self->_autorefresh(0);
+
+  $self->first('');
+  $self->last('');
+  $self->von('');
+  $self->jr('');
+  $self->collective('');
+  $self->initials('');
+
+  $self->_autorefresh(1);
+
+
+}
+
+
+
+no Moose;
+
+__PACKAGE__->meta->make_immutable;
+
 
 1;

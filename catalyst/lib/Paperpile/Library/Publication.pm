@@ -51,7 +51,7 @@ has 'sha1' => ( is => 'rw' );
 has 'created' => ( is => 'rw', isa => 'Str' );
 
 # Flags entry as trashed
-has 'trashed' => ( is => 'rw', isa =>'Int', default => 0);
+has 'trashed' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Timestamp when it was last read
 has 'last_read' => ( is => 'rw', isa => 'Str' );
@@ -73,13 +73,22 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
   # These contribute to the sha1 and need a trigger to re-calculate it
   # upon change
-  if ( $field =~ /(authors|editors|year|title$)/ ) {
+  if ( $field ~~ ['year','title', 'booktitle']) {
     has $field => (
       is      => 'rw',
       isa     => 'Str',
       trigger => sub {
         my $self = shift;
         $self->refresh_fields;
+      }
+    );
+  } elsif ( $field ~~ ['authors','editors']) {
+    has $field => (
+      is      => 'rw',
+      isa     => 'Str',
+      trigger => sub {
+        my $self = shift;
+        $self->refresh_authors;
       }
     );
   } else {
@@ -112,11 +121,22 @@ has '_snippets_abstract' => ( is => 'rw', isa => 'Str' );
 has '_snippets_notes'    => ( is => 'rw', isa => 'Str' );
 
 # CSS style to highlight the entry in the frontend
-has '_highlight'     => ( is => 'rw', isa => 'Str', default => 'pp-grid-highlight0');
+has '_highlight' => ( is => 'rw', isa => 'Str', default => 'pp-grid-highlight0' );
+
+
+# If set fields update themselves. Is only activated after initial
+# object creation in BUILD to avoid excessive redundant refreshing.
+has '_auto_refresh'    => ( is => 'rw', isa => 'Int', default => 0);
+
 
 sub BUILD {
   my ( $self, $params ) = @_;
+
+  $self->_auto_refresh(1);
   $self->refresh_fields;
+  $self->refresh_authors;
+
+
 }
 
 # Function: refresh_fields
@@ -126,11 +146,7 @@ sub BUILD {
 sub refresh_fields {
   ( my $self ) = @_;
 
-  ## Author display string
-  my $authors=$self->format_authors;
-  if ($authors) {
-    $self->_authors_display($authors);
-  }
+  return if not ($self->_auto_refresh);
 
   ## Citation display string
   my $cit = $self->format_citation;
@@ -141,6 +157,20 @@ sub refresh_fields {
   ## Sha1
   $self->calculate_sha1;
 
+}
+
+sub refresh_authors {
+
+  ( my $self ) = @_;
+
+  return if not ($self->_auto_refresh);
+
+  ## Author display string
+  my $authors = $self->format_authors;
+  if ($authors) {
+    $self->_authors_display($authors);
+  }
+  $self->refresh_fields;
 }
 
 # Function: calculate_sha1
@@ -180,43 +210,44 @@ sub format_citation {
 
   my $cit = '';
 
-  my $j=$self->journal;
+  my $j = $self->journal;
 
-  if ($j){
-    $j=~s/\.//g;
+  if ($j) {
+    $j =~ s/\.//g;
     $cit .= '<i>' . $j . '</i>. ';
   }
 
-  if ( $self->booktitle ){
-    if ( $self->pubtype eq 'INCOLLECTION' ){
-      $cit.="in ";
+  if ( $self->booktitle ) {
+    if ( $self->pubtype eq 'INCOLLECTION' ) {
+      $cit .= "in ";
     }
-    if ( $self->title){
+    if ( $self->title ) {
       $cit .= '<i>' . $self->booktitle . '</i>. ' if ( $self->title ne $self->booktitle );
     } else {
       $cit .= '<i>' . $self->booktitle . '</i>. ';
     }
   }
 
-  $cit .= $self->howpublished .' '  if ( $self->howpublished );
-  $cit .= '<i>Unpublished</i>. ' if ( $self->pubtype eq 'UNPUBLISHED' );
-  $cit .= '<i>PhD Thesis</i>. ' if ( $self->pubtype eq 'PHDTHESIS' );
+  $cit .= $self->howpublished . ' ' if ( $self->howpublished );
+  $cit .= '<i>Unpublished</i>. '      if ( $self->pubtype eq 'UNPUBLISHED' );
+  $cit .= '<i>PhD Thesis</i>. '       if ( $self->pubtype eq 'PHDTHESIS' );
   $cit .= '<i>Master\'s Thesis</i>. ' if ( $self->pubtype eq 'MASTERSTHESIS' );
-  $cit .= $self->school .' '  if ( $self->school );
+  $cit .= $self->school . ' '         if ( $self->school );
 
-  $cit .= '(' . $self->year . ') '        if ( $self->year );
-  $cit .= $self->month                    if ( $self->month );
-  $cit .= '; '                            if $cit;
+  $cit .= '(' . $self->year . ') ' if ( $self->year );
+  $cit .= $self->month             if ( $self->month );
+  $cit .= '; '                     if $cit;
 
-  if ( $self->pubtype eq 'ARTICLE' or  $self->pubtype eq 'INPROCEEDINGS') {
+  if ( $self->pubtype eq 'ARTICLE' or $self->pubtype eq 'INPROCEEDINGS' ) {
     $cit .= '<b>' . $self->volume . '</b>:' if ( $self->volume );
     $cit .= '(' . $self->issue . ') '       if ( $self->issue );
     $cit .= $self->pages                    if ( $self->pages );
   }
 
-  if ( $self->pubtype eq 'BOOK' or  $self->pubtype eq 'INBOOK' or  $self->pubtype eq 'INCOLLECTION') {
-    $cit .= $self->publisher .', '  if ( $self->publisher );
-    $cit .= $self->address .' '  if ( $self->address );
+  if ( $self->pubtype eq 'BOOK' or $self->pubtype eq 'INBOOK' or $self->pubtype eq 'INCOLLECTION' )
+  {
+    $cit .= $self->publisher . ', ' if ( $self->publisher );
+    $cit .= $self->address . ' '    if ( $self->address );
   }
 
   $cit =~ s/\s*[;,.]\s*$//;
@@ -225,30 +256,34 @@ sub format_citation {
 
 }
 
-
-sub format_authors{
+sub format_authors {
 
   my $self = shift;
 
   my @display = ();
   if ( $self->authors ) {
+
+    my $tmp = Paperpile::Library::Author->new();
+
     foreach my $a ( split( /\band\b/, $self->authors ) ) {
-      push @display, Paperpile::Library::Author->new( full => $a )->nice;
+
+      #push @display, Paperpile::Library::Author->new( full => $a )->nice;
+      $tmp->full($a);
+      push @display, $tmp->nice;
+      $tmp->clear;
     }
     $self->_authors_display( join( ', ', @display ) );
   }
 
   # We only show editors when no authors are given
-  if ($self->editors and ! $self->authors){
+  if ( $self->editors and !$self->authors ) {
     foreach my $a ( split( /\band\b/, $self->editors ) ) {
       push @display, Paperpile::Library::Author->new( full => $a )->nice;
     }
-    $self->_authors_display( join( ', ', @display ). ' (eds.)' );
+    $self->_authors_display( join( ', ', @display ) . ' (eds.)' );
   }
 
 }
-
-
 
 # Function: as_hash
 
@@ -279,13 +314,14 @@ sub as_hash {
 # if $editors is true, we return editors
 
 sub get_authors {
+
   ( my $self, my $editors ) = @_;
   my @authors = ();
 
-  my $data=$self->authors;
+  my $data = $self->authors;
 
-  if ($editors){
-    $data=$self->editors;
+  if ($editors) {
+    $data = $self->editors;
   }
 
   return [] if not $data;
@@ -321,7 +357,7 @@ sub format_pattern {
   }
 
   # if no authors are given we use editors
-  if (not @authors){
+  if ( not @authors ) {
 
     foreach my $a ( @{ $self->get_authors(1) } ) {
       if ( $a->collective ) {
@@ -331,8 +367,8 @@ sub format_pattern {
       }
     }
   }
-  if (not @authors){
-    @authors=('unnamed');
+  if ( not @authors ) {
+    @authors = ('unnamed');
   }
 
   my $first_author = $authors[0];
@@ -372,9 +408,9 @@ sub format_pattern {
   # [lastauthor]
   if ( $pattern =~ /\[((lastauthor)(:(\d+))?)\]/i ) {
     my $found_field = $1;
-    $last_author = uc($last_author)     if $2 eq 'LASTAUTHOR';
+    $last_author = uc($last_author)      if $2 eq 'LASTAUTHOR';
     $last_author = ucfirst($last_author) if $2 eq 'Lastauthor';
-    $last_author = lc($last_author)     if $2 eq 'lastauthor';
+    $last_author = lc($last_author)      if $2 eq 'lastauthor';
     $last_author = substr( $last_author, 0, $4 ) if $3;
     $pattern =~ s/$found_field/$last_author/g;
   }
@@ -404,17 +440,17 @@ sub format_pattern {
     $to = $3 if $3;
     foreach my $i ( 0 .. $to - 1 ) {
       $title_words[$i] = substr( $title_words[$i], 0, $5 ) if ($4);
-      $title_words[$i] = uc( $title_words[$i] )      if $2 eq 'TITLE';
+      $title_words[$i] = uc( $title_words[$i] ) if $2 eq 'TITLE';
+
       #$title_words[$i] = ucfirst( $title_words[$i] ) if $2 eq 'Title';
-      $title_words[$i] = lc( $title_words[$i] )      if $2 eq 'title';
+      $title_words[$i] = lc( $title_words[$i] ) if $2 eq 'title';
     }
     my $title_string = join( '_', @title_words[ 0 .. $to - 1 ] );
     $pattern =~ s/$found_field/$title_string/g;
   }
 
-
   # [YY] and [YYYY]
-  if (defined $YYYY) {
+  if ( defined $YYYY ) {
     $pattern =~ s/\[YY\]/$YY/g;
     $pattern =~ s/\[YYYY\]/$YYYY/g;
   }
@@ -438,7 +474,7 @@ sub format_pattern {
   $pattern = unidecode($pattern);
 
   # Remove all remaining non-alphanumeric characters that might be left
-  $pattern=~s/\W//g;
+  $pattern =~ s/\W//g;
 
   return $pattern;
 
@@ -446,44 +482,42 @@ sub format_pattern {
 
 sub format_csl {
 
-  ( my $self) = @_;
+  ( my $self ) = @_;
 
-  my %output=();
+  my %output = ();
 
-  $output{id}=$self->sha1;
+  $output{id} = $self->sha1;
 
-  if ($self->pubtype eq 'ARTICLE'){
-    $output{'type'}='article-journal';
-    $output{'container-title'}=$self->journal;
+  if ( $self->pubtype eq 'ARTICLE' ) {
+    $output{'type'}            = 'article-journal';
+    $output{'container-title'} = $self->journal;
 
-    for my $field ('title','volume', 'issue'){
-      $output{$field}=$self->$field;
+    for my $field ( 'title', 'volume', 'issue' ) {
+      $output{$field} = $self->$field;
     }
 
-    $output{page}=$self->pages;
+    $output{page} = $self->pages;
 
-    $output{issued}={year=>$self->year};
+    $output{issued} = { year => $self->year };
 
-    my @tmp=();
+    my @tmp = ();
 
-    foreach my $author (@{$self->get_authors}){
-      push @tmp, {'name'=> $author->full,
-                  'primary-key'=>$author->last,
-                  'secondary-key'=>$author->first,
-                 };
+    foreach my $author ( @{ $self->get_authors } ) {
+      push @tmp, {
+        'name'          => $author->full,
+        'primary-key'   => $author->last,
+        'secondary-key' => $author->first,
+        };
     }
 
-    $output{author}=[@tmp];
+    $output{author} = [@tmp];
   }
 
-  print STDERR Dumper({%output});
+  print STDERR Dumper( {%output} );
 
   return {%output};
 
 }
-
-
-
 
 # Function: list_types
 
@@ -492,6 +526,10 @@ sub format_csl {
 sub list_types {
   return @types;
 }
+
+no Moose;
+
+__PACKAGE__->meta->make_immutable;
 
 1;
 

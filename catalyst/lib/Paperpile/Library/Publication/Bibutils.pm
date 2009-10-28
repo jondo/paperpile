@@ -73,6 +73,8 @@ sub _build_from_bibutils {
 
   my ( $self, $data ) = @_;
 
+  $self->_auto_refresh(0);
+
   my %bibutils_map = (
     'REFNUM'             => 'citekey',
     'BIBKEY'             => 'sortkey',
@@ -119,13 +121,15 @@ sub _build_from_bibutils {
     }
 
     if ($field->{tag} eq 'AUTHOR'){
-      my $a=Paperpile::Library::Author->new();
-      push @authors, $a->read_bibutils($field->{data})->bibtex;
+      #my $a=Paperpile::Library::Author->new();
+      #push @authors, $a->read_bibutils($field->{data})->bibtex;
+      push @authors, $self->_format_author($field->{data});
     }
 
     if ($field->{tag} eq 'EDITOR'){
-      my $a=Paperpile::Library::Author->new();
-      push @editors, $a->read_bibutils($field->{data})->bibtex;
+      #my $a=Paperpile::Library::Author->new();
+      #push @editors, $a->read_bibutils($field->{data})->bibtex;
+      push @editors, $self->_format_author($field->{data});
     }
 
     $page_start = $field->{data} if $field->{tag} eq 'PAGESTART';
@@ -168,6 +172,11 @@ sub _build_from_bibutils {
 
   $self->authors(join(' and ',@authors));
   $self->editors(join(' and ',@editors));
+
+  $self->_auto_refresh(1);
+  $self->refresh_fields;
+  $self->refresh_authors;
+
 
 }
 
@@ -603,6 +612,81 @@ sub _get_type_from_bibutils {
   return $type;
 
 }
+
+sub _format_author{
+
+  my ($self, $string) = @_;
+  my ($first, $von, $last, $jr, $collective);
+
+
+  my @parts=split(/\|/,$string);
+
+  # No second name is given. For example due to wrong Bibtex: Schuster
+  # P. (no comma).  When we are sure that this is an error because it
+  # is obviously a name we parse it. Otherwise we convert it to a
+  # collective author.
+
+  if (scalar @parts > 1 and $parts[0] eq ''){
+    #binmode STDERR, ":utf8";
+    #print STDERR "$string\n";
+    my $merged=join(' ',@parts);
+    $merged=~s/^\s+//;
+    #print STDERR "$merged\n";
+
+    # match Stadler P. F. and that like
+    if ($merged=~/^([A-Z]\w+) (([A-Z]\.?)( [A-Z]\.?)?)$/){
+      $last=$1;
+      $first=$2;
+    } else {
+      $collective=$merged;
+      $last='';
+      $first='';
+    }
+  }
+
+  # Bibutils does not handle collective authors very well, they are
+  # just forced into first/last name. TODO: think what to do about
+  # this
+
+  # author without first names do not exist to my knowledge. We
+  # interpret this as collective name,
+  elsif (scalar @parts == 1){
+    $collective = $parts[0];
+    $last='';
+    $first='';
+  } else {
+
+    $last=$parts[0];
+    $first=join(" ", @parts[1..$#parts]);
+
+    # von and jr currently not handled explicitely Bibutils does not
+    # seem to handle suffix (at least for pubmed); so we leave them
+    # emtpy
+
+  }
+
+  if ($collective){
+    return '{'.$collective.'}';
+  }
+
+  my $output='';
+
+  $output.=$von." " if ($von); #?? Check this
+
+  $output.=$last.", ";
+  $output.=$jr.", " if ($jr);
+  $output.=$first;
+
+  return $output;
+
+}
+
+
+
+no Moose;
+
+__PACKAGE__->meta->make_immutable;
+
 
 
 1;

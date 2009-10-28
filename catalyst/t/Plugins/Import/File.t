@@ -20,6 +20,14 @@ my %files = (
 
 my $import;
 
+#$import=Paperpile::Plugins::Import::File->new( file => "/home/wash/play/scripts/out.bib" );
+
+#$import->connect();
+#$import->guess_format;
+#$import->all;
+#exit;
+
+
 #eval {
 $import=Paperpile::Plugins::Import::File->new( file => "../../data/formats/test.bib" );
 #$import=Paperpile::Plugins::Import::File->new( file => "/home/wash/logo.png" );
