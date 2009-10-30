@@ -1,18 +1,27 @@
 #!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -w
 ##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -d:NYTProf -w
 
+
 use strict;
 use Data::Dumper;
 use lib '../../lib';
 use Paperpile::Library::Publication;
 use Bibutils;
 
+use Paperpile::Model::Library;
+
+
+my $model = Paperpile::Model::Library->new();
+$model->set_dsn("dbi:SQLite:test.db");
+
+`cp ../../db/library.db  ./test.db`;
+
 
 my %journal = (
   pubtype  => 'JOUR',
   title    => 'Strategies for measuring evolutionary conservation of RNA secondary structures',
   journal  => 'BMC Bioinformatics',
-  authors  => 'Gruber, AR and Bernhart, SH and  Hofacker, I.L. and Washietl, S.',
+  authors  => 'Gruber, AR and Stadler, PF and Washietl, S and Hofacker, IL',
   volume   => '9',
   pages    => '122',
   year     => '2008',
@@ -28,41 +37,73 @@ my %journal = (
   pdf      => 'some/folder/to/pdfs/gruber2008.pdf',
 );
 
-#foreach my $i (0..5000){
-#  my $pub = Paperpile::Library::Publication->new( {%journal} );
+#my $pub;
+
+#foreach my $i (1..5000){
+#  $pub = Paperpile::Library::Publication->new({%journal});
 #}
+
+#print Dumper($pub);
 
 #exit;
 
+
+#$model->dbh->begin_work();
+#my $dbh=$model->dbh;
+#foreach my $x (0..4000){
+
+#  $dbh->quote('adsfsdf');
+#  $dbh->quote('adsfsdf');
+#  $dbh->quote('adsfsdf');
+#  $dbh->quote('adsfsdf');
+#  $dbh->quote('adsfsdf');
+#  $dbh->quote('adsfsdf');
+#  $dbh->do("INSERT INTO publications ('title') VALUES ('asdfasdf')");
+  #print STDERR ".";
+#}
+#$model->dbh->commit;
+#exit;
+
+
 my $bu = Bibutils->new(
-  in_file    => 'test.bib',
+  in_file    => 'long.bib',
   out_file   => 'new.bib',
   in_format  => Bibutils::BIBTEXIN,
   out_format => Bibutils::BIBTEXOUT,
 );
 
-## Reading file
+print STDERR "Reading bibutils\n";
+
 $bu->read;
 
 
-
-
-
-#exit;
-
-
-## Getting data
 my $data = $bu->get_data;
 
 
+print STDERR "Building objects\n";
+
 my @pubs = ();
+
+my %seen=();
 
 foreach my $entry (@$data) {
   my $pub = Paperpile::Library::Publication->new();
   $pub->_build_from_bibutils($entry);
 
-  push @pubs, $pub;
+  next if not $pub->sha1;
 
+  if (not $seen{$pub->sha1}){
+    push @pubs, $pub;
+    $seen{$pub->sha1} = 1;
+  }
 }
 
-print Dumper(\@pubs);
+print STDERR "Inserting...\n";
+
+$model->create_pubs( [ @pubs ] );
+
+
+
+
+
+

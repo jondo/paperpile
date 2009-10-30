@@ -40,10 +40,14 @@ sub create_pubs {
 
   ( my $self, my $pubs ) = @_;
 
-  my @to_be_inserted = ();
+  my %to_be_inserted = ();
+
+  my $dbh=$self->dbh;
 
   foreach my $pub (@$pubs) {
     eval {
+
+      print STDERR "-";
 
       # Initialize some fields
 
@@ -55,14 +59,17 @@ sub create_pubs {
 
       # Generate citation key
       my $pattern = $self->get_setting('key_pattern');
+
+      #my $pattern ='[firstauthor][YYYY]';
+
       my $key     = $pub->format_pattern($pattern);
 
       # Check if key already exists
 
       # First we check in the database
-      my $quoted = $self->dbh->quote("key:$key*");
+      my $quoted = $dbh->quote("key:$key*");
       my $sth =
-        $self->dbh->prepare(qq^SELECT key FROM fulltext_full WHERE fulltext_full MATCH $quoted^);
+        $dbh->prepare(qq^SELECT key FROM fulltext_full WHERE fulltext_full MATCH $quoted^);
       my $existing_key;
       $sth->bind_columns( \$existing_key );
       $sth->execute;
@@ -80,12 +87,14 @@ sub create_pubs {
       }
 
       # Then in the current list that have been already processed in this loop
-      foreach my $existing_key (@to_be_inserted) {
+      foreach my $existing_key (@{$to_be_inserted{$key}}) {
         if ( $existing_key =~ /^$key([a-z])?/ ) {
           $unique = 0;
           push @suffix, $1 if $1;
         }
       }
+
+      my $bare_key = $key;
 
       if ( not $unique ) {
         my $new_suffix = 'a';
@@ -98,7 +107,11 @@ sub create_pubs {
         $key .= $new_suffix;
       }
 
-      push @to_be_inserted, $key;
+      if (not $to_be_inserted{$bare_key}){
+        $to_be_inserted{$bare_key} = [$key];
+      } else {
+        push @{$to_be_inserted{$bare_key}}, $key;
+      }
 
       $pub->citekey($key);
     };
@@ -117,14 +130,16 @@ sub insert_pubs {
 
   ( my $self, my $pubs ) = @_;
 
-  my $counter = 0;
+  my $dbh = $self->dbh;
 
   # to avoid sha1 constraint violation seems to be only very minor
   # performance overhead and any other attempts with OR IGNOR or eval {}
   # did not work.
   $self->exists_pub($pubs);
 
-  $self->dbh->begin_work;
+  $dbh->begin_work;
+
+  my $counter = 0;
 
   foreach my $pub (@$pubs) {
 
@@ -132,15 +147,16 @@ sub insert_pubs {
 
     ## Insert main entry into Publications table
     my $tmp=$pub->as_hash();
-
     #$tmp->{rowid}=$pub->_rowid if $pub->_rowid;
 
-    ( my $fields, my $values ) = $self->_hash2sql( $tmp );
+    ( my $fields, my $values ) = $self->_hash2sql( $tmp, $dbh );
 
-    $self->dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
+    $dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
+
+    print STDERR ".";
 
     ## Insert searchable fields into fulltext table
-    my $pub_rowid = $self->dbh->func('last_insert_rowid');
+    my $pub_rowid = $dbh->func('last_insert_rowid');
 
     $pub->_rowid($pub_rowid);
 
@@ -157,45 +173,44 @@ sub insert_pubs {
       labelid => Paperpile::Utils->encode_tags($pub->tags),
       keyword  => $pub->keywords,
       folder   => $pub->folders,
-      text     => '',
     };
 
-    ( $fields, $values ) = $self->_hash2sql($hash);
-    $self->dbh->do("INSERT INTO fulltext_full ($fields) VALUES ($values)");
+    ( $fields, $values ) = $self->_hash2sql($hash, $dbh);
 
-    delete( $hash->{text} );
+    $dbh->do("INSERT INTO fulltext_citation ($fields) VALUES ($values)");
 
-    ( $fields, $values ) = $self->_hash2sql($hash);
+    $fields.=",text";
+    $values.=",''";
 
-    $self->dbh->do("INSERT INTO fulltext_citation ($fields) VALUES ($values)");
+    $dbh->do("INSERT INTO fulltext_full ($fields) VALUES ($values)");
 
-    ## Insert authors
+    # Insert authors
 
-    my $insert =
-      $self->dbh->prepare("INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
-    my $search = $self->dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
+     my $insert =
+       $dbh->prepare("INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
+     my $search = $dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
 
-    # 'OR IGNORE' for rare cases where one paper has two or more
-    # authors that are not distinguished by their id (e.g. ENCODE paper with 316 authors)
-    my $insert_join = $self->dbh->prepare(
-      "INSERT OR IGNORE INTO author_publication (author_id,publication_id) VALUES(?,?)");
+     # 'OR IGNORE' for rare cases where one paper has two or more
+     # authors that are not distinguished by their id (e.g. ENCODE paper with 316 authors)
+     my $insert_join = $dbh->prepare(
+       "INSERT OR IGNORE INTO author_publication (author_id,publication_id) VALUES(?,?)");
 
-    foreach my $author ( @{ $pub->get_authors } ) {
-      my $author_rowid;
-      $search->execute( $author->key );
-      $author_rowid = $search->fetchrow_array;
+     foreach my $author ( @{ $pub->get_authors } ) {
+       my $author_rowid;
+       $search->execute( $author->key );
+       $author_rowid = $search->fetchrow_array;
 
-      if ( not $author_rowid ) {
-        my @values = ( $author->key, $author->first, $author->last, $author->von, $author->jr );
-        $insert->execute(@values);
-        $author_rowid = $self->dbh->func('last_insert_rowid');
-      }
+       if ( not $author_rowid ) {
+         my @values = ( $author->key, $author->first, $author->last, $author->von, $author->jr );
+         $insert->execute(@values);
+         $author_rowid = $dbh->func('last_insert_rowid');
+       }
 
-      $insert_join->execute( $author_rowid, $pub_rowid );
-    }
+       $insert_join->execute( $author_rowid, $pub_rowid );
+     }
   }
 
-  $self->dbh->commit;
+  $dbh->commit;
 
 }
 
@@ -1045,9 +1060,12 @@ sub exists_pub {
   }
 }
 
+# Small helper function that converts hash to sql syntax (including
+# quotes). Also passed the database handel to avoid calling $self->dbh
+# all the time which turned out to be a bottle neck
 sub _hash2sql {
 
-  ( my $self, my $hash ) = @_;
+  ( my $self, my $hash, my $dbh ) = @_;
 
   my @fields = ();
   my @values = ();
@@ -1058,9 +1076,14 @@ sub _hash2sql {
     # They are not stored to the database by convention
     next if $key =~ /^_/;
 
-    if ( defined $hash->{$key} ) {
-      push @fields, $key;
-      push @values, $self->dbh->quote( $hash->{$key} );
+    next if not defined $hash->{$key};
+
+    push @fields, $key;
+
+    if ($hash->{$key} eq ''){
+      push @values, "''";
+    } else {
+      push @values, $dbh->quote( $hash->{$key} );
     }
   }
 

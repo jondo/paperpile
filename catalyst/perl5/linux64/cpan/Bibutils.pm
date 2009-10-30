@@ -77,19 +77,21 @@ sub get_data {
 
   my @bibs = ();
 
-  my $N = Bibutils::c_get_n_entries( $self->_bibpointer );
+  my $bibpointer =  $self->_bibpointer;
+
+  my $N = Bibutils::c_get_n_entries( $bibpointer );
 
   foreach my $i ( 0 .. $N - 1 ) {
 
     my @fields = ();
 
-    my $n = Bibutils::c_get_n_fields( $self->_bibpointer, $i );
+    my $n = Bibutils::c_get_n_fields( $bibpointer, $i );
     foreach my $j ( 0 .. $n - 1 ) {
 
       my ( $tag, $data, $level ) = (
-        c_get_field_tag( $self->_bibpointer, $i, $j ),
-        c_get_field_data( $self->_bibpointer, $i, $j ),
-        c_get_field_level( $self->_bibpointer, $i, $j )
+        c_get_field_tag( $bibpointer, $i, $j ),
+        c_get_field_data( $bibpointer, $i, $j ),
+        c_get_field_level( $bibpointer, $i, $j )
       );
 
       push @fields, { tag => $tag, data => decode_utf8($data), level => $level };

@@ -1,0 +1,6 @@
+335,337d334
+<     if (value == '\\' || value == '{' || value == '~' || value == '^' ||
+<         value == '$'  || value == '-' || value =='\'' || value == '`'){
+< 
+353d349
+<     }

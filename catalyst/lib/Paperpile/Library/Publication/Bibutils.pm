@@ -146,7 +146,7 @@ sub _build_from_bibutils {
     if ($myfield) {
       $self->$myfield( $mydata );
     } else {
-      print STDERR "WARNING: Could not handle $field->{tag} of value $field->{data}\n";
+      #print STDERR "WARNING: Could not handle $field->{tag} of value $field->{data}\n";
     }
   }
 

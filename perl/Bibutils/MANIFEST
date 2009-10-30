@@ -44,8 +44,6 @@ bibutils/fields.h
 bibutils/gb18030.c
 bibutils/gb18030_enumeration.c
 bibutils/gb18030.h
-bibutils/is_doi.c
-bibutils/is_doi.h
 bibutils/isiin.c
 bibutils/isiin.h
 bibutils/isiout.c
@@ -83,7 +81,6 @@ bibutils/risin.h
 bibutils/risout.c
 bibutils/risout.h
 bibutils/ristypes.c
-bibutils/semantic.cache
 bibutils/serialno.c
 bibutils/serialno.h
 bibutils/strsearch.c

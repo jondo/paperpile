@@ -41,27 +41,27 @@ our @types = qw(
 ### 'Built-in' fields
 
 # The unique rowid in the SQLite table 'Publications'
-has '_rowid' => ( is => 'rw', isa => 'Int' );
+has '_rowid' => ( is => 'rw');
 
 # The unique sha1 key which is currently calculated from title,
 # authors and year.
 has 'sha1' => ( is => 'rw' );
 
 # Timestamp when the entry was created
-has 'created' => ( is => 'rw', isa => 'Str' );
+has 'created' => ( is => 'rw');
 
 # Flags entry as trashed
 has 'trashed' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Timestamp when it was last read
-has 'last_read' => ( is => 'rw', isa => 'Str' );
+has 'last_read' => ( is => 'rw');
 
 # How many times it was read
 has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # The associated PDF file, the path is relative to the paper_root user
 # setting
-has 'pdf' => ( is => 'rw', isa => 'Str', default => '' );
+has 'pdf' => ( is => 'rw', default => '' );
 
 # The number of additional files that are associated with this entry
 has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
@@ -76,7 +76,6 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
   if ( $field ~~ ['year','title', 'booktitle']) {
     has $field => (
       is      => 'rw',
-      isa     => 'Str',
       trigger => sub {
         my $self = shift;
         $self->refresh_fields;
@@ -85,7 +84,6 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
   } elsif ( $field ~~ ['authors','editors']) {
     has $field => (
       is      => 'rw',
-      isa     => 'Str',
       trigger => sub {
         my $self = shift;
         $self->refresh_authors;
@@ -94,7 +92,6 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
   } else {
     has $field => (
       is      => 'rw',
-      isa     => 'Str',
       default => ''
     );
   }
@@ -103,39 +100,41 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 ### Helper fields which have no equivalent field in the database
 
 # Formatted strings to be displayed in the frontend.
-has '_authors_display'  => ( is => 'rw', isa => 'Str' );
-has '_citation_display' => ( is => 'rw', isa => 'Str' );
+has '_authors_display'  => ( is => 'rw');
+has '_citation_display' => ( is => 'rw');
 
 # If an entry is already in our database this field is true.
 has '_imported' => ( is => 'rw', isa => 'Bool' );
 
 # Some import plugins first only scrape partial information and store
 # a link (or some other hint) how to complete this information
-has '_details_link' => ( is => 'rw', isa => 'Str', default => '' );
+has '_details_link' => ( is => 'rw', default => '' );
 
 # If a search in the local database returns a hit in the fulltext,
 # abstract or notes the hit+context ('snippet') is stored in these
 # fields
-has '_snippets_text'     => ( is => 'rw', isa => 'Str' );
-has '_snippets_abstract' => ( is => 'rw', isa => 'Str' );
-has '_snippets_notes'    => ( is => 'rw', isa => 'Str' );
+has '_snippets_text'     => ( is => 'rw');
+has '_snippets_abstract' => ( is => 'rw');
+has '_snippets_notes'    => ( is => 'rw');
 
 # CSS style to highlight the entry in the frontend
-has '_highlight' => ( is => 'rw', isa => 'Str', default => 'pp-grid-highlight0' );
+has '_highlight' => ( is => 'rw', default => 'pp-grid-highlight0' );
 
 
 # If set fields update themselves. Is only activated after initial
 # object creation in BUILD to avoid excessive redundant refreshing.
 has '_auto_refresh'    => ( is => 'rw', isa => 'Int', default => 0);
 
+has '_author_helper'  => ( is => 'rw');
 
 sub BUILD {
   my ( $self, $params ) = @_;
 
-  $self->_auto_refresh(1);
-  $self->refresh_fields;
-  $self->refresh_authors;
+  $self->_author_helper(Paperpile::Library::Author->new());
 
+  $self->_auto_refresh(1);
+  #$self->refresh_fields;
+  $self->refresh_authors;
 
 }
 
@@ -184,7 +183,7 @@ sub calculate_sha1 {
 
   my $ctx = Digest::SHA1->new;
 
-  if ( ( $self->authors or $self->_authors_display or $self->editors ) and $self->title ) {
+  if ( ( $self->authors or $self->_authors_display or $self->editors ) and ($self->title or $self->booktitle)) {
     if ( $self->authors ) {
       $ctx->add( encode_utf8( $self->authors ) );
     } elsif ( $self->_authors_display ) {
@@ -193,7 +192,13 @@ sub calculate_sha1 {
     if ( $self->editors ) {
       $ctx->add( encode_utf8( $self->editors ) );
     }
-    $ctx->add( encode_utf8( $self->title ) );
+    if ($self->title){
+      $ctx->add( encode_utf8( $self->title ) );
+    }
+    if ($self->booktitle){
+      $ctx->add( encode_utf8( $self->booktitle ) );
+    }
+
 
     $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
   }
@@ -260,10 +265,13 @@ sub format_authors {
 
   my $self = shift;
 
+  #return "";
+
   my @display = ();
   if ( $self->authors ) {
 
-    my $tmp = Paperpile::Library::Author->new();
+    #my $tmp = Paperpile::Library::Author->new();
+    my $tmp=$self->_author_helper;
 
     foreach my $a ( split( /\band\b/, $self->authors ) ) {
 

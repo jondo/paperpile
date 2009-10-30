@@ -13,7 +13,6 @@ has _autorefresh => (is =>'rw', isa=>'Int', default =>1);
 
 has 'full' => (
   is      => 'rw',
-  isa     => 'Str',
   trigger => sub {
     my $self = shift;
     $self->split_full;
@@ -23,41 +22,35 @@ has 'full' => (
 
 has 'last' => (
   is      => 'rw',
-  isa     => 'Str',
   default => '',
 );
 
 has 'first' => ( is => 'rw',
-                 isa => 'Str',
                  default => '',
                  trigger => sub { my $self = shift; $self->parse_initials}
               );
 
 has 'von' => (
   is      => 'rw',
-  isa     => 'Str',
   default => '',
 );
 
 has 'jr' => (
   is      => 'rw',
-  isa     => 'Str',
   default => '',
 );
 
 has 'collective' => (
   is      => 'rw',
-  isa     => 'Str',
   default => '',
 );
 
 
 has 'initials' => (
   is  => 'rw',
-  isa => 'Str',
 );
 
-has 'key' => ( is => 'rw', isa => 'Str' );
+has 'key' => ( is => 'rw');
 
 
 ### Splits BibTeX like author string into components.
@@ -69,8 +62,11 @@ sub split_full {
 
   my ($first, $von, $last, $jr);
 
+  my $full = $self->full;
+
+
   # Do nothing in this trivial case
-  if (not $self->full){
+  if (not $full){
     return;
   }
 
@@ -78,7 +74,7 @@ sub split_full {
   # Currently they are marked by {..}, probably add
   # full support of {...} as in BibTeX rather this one special
   # case
-  if ($self->full=~/^\s*\{(.*)\}\s*$/){
+  if ($full=~/^\s*\{(.*)\}\s*$/){
     $self->collective($1);
     $self->last('');
     $self->von('');
@@ -88,7 +84,7 @@ sub split_full {
   }
 
   # first split by comma
-  my @parts = split( /,/, $self->full );
+  my @parts = split( /,/, $full );
 
   for my $i (0..$#parts){
     $parts[$i]=~s/^\s+//;
@@ -459,7 +455,6 @@ sub clear{
 
 
 }
-
 
 
 no Moose;

@@ -194,8 +194,6 @@ sub read_bibutils {
   print STDERR "==============> End converting from Bibutils\n";
   print STDERR scalar localtime, "\n";
 
-  return [];
-
   return [@output];
 
 }
