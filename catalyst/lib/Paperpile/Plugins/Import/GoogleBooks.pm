@@ -18,7 +18,7 @@ use Paperpile::Utils;
 extends 'Paperpile::Plugins::Import';
  
 # The search query to be send to GoogleBooks
-has 'query' => ( is => 'rw' );
+has 'query' => (is => 'rw');
  
 # The main search URL
 my $searchUrl = 'http://books.google.com/books/feeds/volumes?q=';

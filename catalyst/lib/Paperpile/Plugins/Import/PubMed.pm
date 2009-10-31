@@ -5,6 +5,7 @@ use Data::Dumper;
 use Moose;
 use Moose::Util::TypeConstraints;
 use XML::Simple;
+use URI::Escape;
 use 5.010;
 
 use Paperpile::Library::Publication;
@@ -38,6 +39,74 @@ sub BUILD {
   $self->plugin_name('PubMed');
 }
 
+sub _EscapeString {
+    my $string = $_[0];
+    
+    # remove leading spaces
+    $string =~ s/^\s+//;
+    # remove spaces at the end
+    $string =~ s/\s+$//;
+
+    # escape each single word and finally join
+    # with plus signs
+    my @tmp = split( /\s+/, $string );
+    foreach my $i ( 0 .. $#tmp ) {
+	$tmp[$i] = uri_escape( $tmp[$i] );
+    }
+    
+    return join( "+", @tmp );
+}
+
+sub _FormatQueryString {
+    my $query = $_[0];
+    my $formatted_query_string = '';
+
+    # let's see if we have signal words
+    my $special_words = 0;
+
+    $special_words = 1 if ( $query =~ m/(author:|title:|journal:)/ );
+ 
+    # there are no special words so we just do a regular escaping
+    if ( $special_words == 0 ) {
+        $formatted_query_string = _EscapeString( $query );
+    } else {
+	my @blocks = split(/(author:|title:|journal:)/, $query);
+	shift(@blocks) if (!$blocks[0]);
+
+	my @tmp_query = ( );
+	for ( my $i=0; $i <= $#blocks; $i++ ) {
+	    #print STDERR "$i :: $blocks[$i]\n";
+	    if ( $blocks[$i] =~ m/^author:$/i ) {
+		if ( defined $blocks[$i+1] ) {
+		    push @tmp_query, _EscapeString( '"'.$blocks[$i+1].'"'."[Author]" );
+		}
+		$i++;
+	    }
+	    if ( $blocks[$i] =~ m/^title:$/i ) {
+		if ( defined $blocks[$i+1] ) {
+		    push @tmp_query, _EscapeString( '"'.$blocks[$i+1].'"'."[Title]" );
+		}
+		$i++;
+	    }
+	    if ( $blocks[$i] =~ m/^journal:$/i ) {
+		if ( defined $blocks[$i+1] ) {
+		    push @tmp_query, _EscapeString( '"'.$blocks[$i+1].'"'."[Journal]" );
+		}
+		$i++;
+	    }
+	    #print STDERR "   $i :: $blocks[$i]\n";
+	}
+	$formatted_query_string = join("+", @tmp_query);
+	#print STDERR "BLOCKS :: ",join("+", @blocks)," --> $formatted_query_string\n";
+	
+
+	#$formatted_query_string = $query;
+    }
+
+    return $formatted_query_string;
+}
+
+
 sub connect {
   my $self = shift;
 
@@ -48,7 +117,8 @@ sub connect {
   my $browser = Paperpile::Utils->get_browser;
 
   # We send our query to PubMed via a simple get
-  my $response = $browser->get( $esearch . $self->query );
+  my $query_string = _FormatQueryString($self->query);
+  my $response = $browser->get( $esearch . $query_string );
 
   if ( $response->is_error ) {
     NetGetError->throw(
@@ -270,6 +340,9 @@ sub _read_xml {
     my $issn     = $cit->{Article}->{Journal}->{ISSN}->{content};
 
     my $doi = $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
+
+    # Remove period from end of title
+    $title=~s/\.\s*$//;
 
     $pub->volume($volume)     if $volume;
     $pub->issue($issue)       if $issue;

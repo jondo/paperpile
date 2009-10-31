@@ -1,6 +1,6 @@
 Paperpile.QueueView = Ext.extend(Ext.Panel, {
 
-    closable: true,
+    closable: false,
 
     initComponent:function() {
         

@@ -1,4 +1,3 @@
-
 // Stage 0 
 //
 // Ping the server. If we get a response, we directly go on to stage 1
@@ -7,6 +6,8 @@
 
 Paperpile.stage0 = function(){
 
+    
+    
     Ext.Ajax.request({
         url: Paperpile.Url('/ajax/app/heartbeat'),
 
@@ -25,6 +26,11 @@ Paperpile.stage0 = function(){
                 var path = Titanium.App.path;
                 path=path.replace(/_paperpile\.bin$/,'');
                 var process = Titanium.Process.launch('bash', [path+'start_server.sh',path]);
+
+                //var server = Titanium.Process.createProcess([path+'/catalyst/script/paperpile_server.pl', '-fork']); 
+
+                
+
             }
 
             if (Paperpile.pingAttempts < 50 ){

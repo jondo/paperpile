@@ -24,7 +24,6 @@ sub build_per_context_instance {
   my $file=$c->session->{library_db};
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn("dbi:SQLite:$file");
-  print STDERR "dbi:SQLite:$file\n";
   return $model;
 }
 
@@ -53,12 +52,6 @@ sub create_pubs {
       $pub->last_read('');
       $pub->_imported(1);
 
-      # Remove period from end of title
-      my $title  = $pub->title;
-      if ($title =~/\.\s*$/){
-        $title=~s/\.\s*$//;
-        $pub->title($title);
-      }
 
       # Generate citation key
       my $pattern = $self->get_setting('key_pattern');
@@ -139,7 +132,7 @@ sub insert_pubs {
 
     ## Insert main entry into Publications table
     my $tmp=$pub->as_hash();
-    
+
     #$tmp->{rowid}=$pub->_rowid if $pub->_rowid;
 
     ( my $fields, my $values ) = $self->_hash2sql( $tmp );

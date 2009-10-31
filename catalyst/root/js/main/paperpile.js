@@ -4,7 +4,7 @@ Ext.ns('Paperpile');
 IS_TITANIUM = !(window['Titanium'] == undefined);
 
 Paperpile.Url = function(url){
-    return (IS_TITANIUM) ? 'http://localhost:3000'+url : url;
+    return (IS_TITANIUM) ? 'http://127.0.0.1:3000'+url : url;
 }
 
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {

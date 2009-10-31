@@ -138,18 +138,22 @@ sub _merge_pub {
 
 sub _match_title {
 
-  my ($self, $title1, $title2) = @_;
+  my ( $self, $title1, $title2 ) = @_;
 
-  my $cutoff=5;
+  my $cutoff = 5;
 
-  for my $t ($title1, $title2){
-    $t=~s/\s+//g;
-    $t=~s/[.:!?]//g;
-    $t=uc($t);
+  for my $t ( $title1, $title2 ) {
+    $t =~ s/\s+//g;
+    # be careful:
+    # if there is a special char within your title
+    # that is not listed here
+    # the distance gets unexpectedly large! 
+    $t =~ s/[.:!?\-;,]//g;
+    $t = uc($t);
   }
 
-  my $distance=distance($title1,$title2);
-
+  my $distance = distance( $title1, $title2 );
+  #print STDERR "distance=$distance\n";
   return $distance < $cutoff;
 
 }
