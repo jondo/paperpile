@@ -29,19 +29,20 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 		Paperpile.Tree.superclass.initComponent.call(this);
 
         this.on({
-			contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
+	    contextmenu:{scope:this, fn:this.onContextMenu, stopEvent:true},
             beforenodedrop:{scope:this, fn:this.onNodeDrop},
             checkchange:{scope:this,fn:this.onCheckChange},
-            // This is necessary because we load the tree as a whole
+            
+	    // This is necessary because we load the tree as a whole
             // during startup but want to re-load single nodes
             // afterwards. We achieve this by removing the children
             // array which gets stored in node.attributes
             load:{scope:this,
                   fn:function(node){
-                      delete node.attributes.children
+		    delete node.attributes.children;
                   }
-                 }
-		});
+		 }
+	    });
 
         this.on('nodedragover', function(e){
 
@@ -321,13 +322,16 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
         case 'TAGS':
             this.allowSelect=true;
             node.select();
-            menu=new Paperpile.Tree.TagsMenu({node:node});
+	    if (this.tagsMenu == null) {
+	      this.tagsMenu = new Paperpile.Tree.TagsMenu();
+	    }
+	    menu = this.tagsMenu;
             break;
         }
 
         if (menu != null){
             menu.node=node;
-            menu.showAt(e.getXY());
+	    menu.showAt(e.getXY());
         }
 
 	},
@@ -1034,11 +1038,6 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 });
 
 
-
-
-
-
-
 Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
 
     constructor:function(config) {
@@ -1092,7 +1091,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Ext.menu.Menu, {
                 },
                 tree
                );
-    },
+    }
 
 });
 
@@ -1229,13 +1228,11 @@ Paperpile.Tree.ImportMenu = Ext.extend(Ext.menu.Menu, {
 //
 
 Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
-
-    constructor:function(config) {
-        config = config || {};
-
+    initComponent: function() {
         var tree=Paperpile.main.tree;
 
-        Ext.apply(config,{items:[
+        Ext.apply(this,
+	    {items:[
             { id: 'tags_menu_new',
               text:'New Label',
               handler: tree.newTag,
@@ -1258,47 +1255,41 @@ Paperpile.Tree.TagsMenu = Ext.extend(Ext.menu.Menu, {
               text:'Style',
               menu: new Paperpile.StylePickerMenu({
                   handler : function(cm, number){
-                      // For some reason this handler is called
-                      // twice. First with the desired number and the
-                      // second time as normal click event. We ignore
-                      // the latter case and identify the event object
-                      // like this:
-                      if (number.A == 65) return;
-
                       this.styleTag(number);
-
                   },
-                  scope:tree,
+                  scope:tree
               })
             },
             { id: 'tags_menu_export',
               text:'Export',
               handler: tree.exportNode,
               scope: tree
-            },
-        ]});
+            }
+        ]
+	});
 
-        Paperpile.Tree.TagsMenu.superclass.constructor.call(this, config);
+        Paperpile.Tree.TagsMenu.superclass.initComponent.call(this);
 
-        this.on('beforeshow',
-                function(){
-                    if (this.node.id == 'TAGS_ROOT'){
-                        this.items.get('tags_menu_delete').hide();
-                        this.items.get('tags_menu_rename').hide();
-                        this.items.get('tags_menu_export').hide();
-                        this.items.get('tags_menu_style').hide();
-                    }
-                }, this
-               );
-
-        this.on('beforehide',
-                function(){
-                    this.getSelectionModel().clearSelections();
-                    this.allowSelect=false;
-                },
-                tree
-               );
+	this.on('show',this.hideItems);
     },
+
+    hideItems:function() {
+      log("Before show!");
+      // Show all items by default.
+      this.items.each(function(item){item.show();});
+      // Hide some if we're on the tags root.
+      if (this.node.id == 'TAGS_ROOT'){
+	this.items.get('tags_menu_delete').hide();
+	this.items.get('tags_menu_rename').hide();
+	this.items.get('tags_menu_export').hide();
+	this.items.get('tags_menu_style').hide();
+      }
+
+      // Re-layout the menu, in case the menu shrunk from hidden items.
+      this.doLayout();
+      return true;
+    }
+
 });
 
 
@@ -1369,9 +1360,6 @@ Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
     }
 
 });
-
-
-
 
 
 Ext.reg('tree', Paperpile.Tree);

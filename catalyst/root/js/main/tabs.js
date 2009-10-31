@@ -140,23 +140,19 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       this.pdfViewerCounter++;
         var defaults = { id:'pdf_viewer_'+this.pdfViewerCounter,
                          region:'center',
-		                 search:'',
-		                 zoom:'page',
-		                 columns:1,
-		                 pageLayout:'single',
+	                 search:'',
+			 zoom:'width',
+		         columns:1,
+		         pageLayout:'flow',
                          closable:true,
                          iconCls: 'pp-icon-import-pdf'
                        };
         var pars={};
 
         Ext.apply(pars, config, defaults);
-
         console.log(pars);
-
         var panel=Paperpile.main.tabs.add(new Paperpile.PDFviewer(pars));
-
         panel.show();
-
     }
 
 }
