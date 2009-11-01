@@ -1,0 +1,1834 @@
+#!/usr/local/bin/perl
+
+eval 'exec /usr/local/bin/perl  -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+##########################################################
+## This script is part of the Devel::NYTProf distribution
+##
+## Copyright, contact and other information can be found
+## at the bottom of this file, or by going to:
+## http://search.cpan.org/~akaplan/Devel-NYTProf
+##
+##########################################################
+# $Id: nytprofhtml 774 2009-06-18 20:44:25Z tim.bunce $
+###########################################################
+use warnings;
+use strict;
+
+use Carp;
+use Getopt::Long;
+use List::Util qw(sum max);
+use File::Copy;
+
+use Devel::NYTProf::Reader;
+use Devel::NYTProf::Core;
+use Devel::NYTProf::Util qw(
+    fmt_float fmt_time fmt_incl_excl_time
+    calculate_median_absolute_deviation
+    get_abs_paths_alternation_regex
+    html_safe_filename
+);
+
+our $VERSION = '2.10';
+
+if ($VERSION != $Devel::NYTProf::Core::VERSION) {
+    die "$0 version '$VERSION' doesn't match version '$Devel::NYTProf::Core::VERSION' of $INC{'Devel/NYTProf/Core.pm'}\n";
+}
+
+# These control the limits for what the script will consider ok to severe times
+# specified in standard deviations from the mean time
+use constant SEVERITY_SEVERE => 2.0;    # above this deviation, a bottleneck
+use constant SEVERITY_BAD    => 1.0;
+use constant SEVERITY_GOOD   => 0.5;    # within this deviation, okay
+
+use constant NUMERIC_PRECISION => 5;
+
+my @on_ready_js;
+
+my %opt = (
+    file => 'nytprof.out',
+    out  => 'nytprof',
+);
+GetOptions(\%opt, qw/file|f=s delete|d out|o=s lib|l=s help|h open/)
+    or do {
+        usage();
+        exit 1;
+    };
+
+if (defined($opt{help})) {
+    usage();
+    exit;
+}
+
+# handle file selection option
+if (!-r $opt{file}) {
+    die "$0: Unable to access $opt{file}\n";
+}
+
+# handle handle output location
+if (!-e $opt{out}) {
+
+    # will be created
+}
+elsif (!-d $opt{out}) {
+    die "$0: Specified output directory `$opt{out}' is a file. whoops!\n";
+}
+elsif (!-w $opt{out}) {
+    die "$0: Unable to write to output directory `$opt{out}'\n";
+}
+
+# handle deleting old db's
+if (defined($opt{'delete'})) {
+    _delete();
+}
+
+# handle custom lib path
+if (defined($opt{lib})) {
+    if (-d $opt{lib}) {
+        unshift(@INC, $opt{lib});
+    }
+    else {
+        die "$0: Specified lib directory `$opt{lib}' does not exist.\n";
+    }
+}
+
+print "Generating report...\n";
+my $reporter = new Devel::NYTProf::Reader($opt{file});
+
+# place to store this crap
+$reporter->output_dir($opt{out});
+
+# set formatting for html
+$reporter->set_param(
+    'header',
+    sub {
+        my ($profile, $filestr, $output_filestr, $level) = @_;
+
+        my $profile_level_buttons =
+            get_level_buttons($profile->get_profile_levels, $output_filestr, $level);
+
+        my $subhead = qq{&emsp;&emsp;$profile_level_buttons<br />
+            For ${ \($profile->{attribute}{application}) }
+        };
+
+        get_html_header("NYTProf Profile: !~FILENAME~!")
+            . get_page_header(
+            profile  => $profile,
+            title    => "Performance Profile",
+            subtitle => $subhead,
+            mode     => qq/-$level/
+            )
+            . qq{
+<div class="body_content">
+<br />
+<table>
+<tr>
+<td class="h" align="right">File</td>
+<td align="left">!~FILENAME~!</td>
+</tr>
+<tr>
+<td class="h" align="right">Statements Executed</td>
+<td align="left">!~TOTAL_CALLS~!</td>
+</tr>
+<tr>
+<td class="h" align="right">Total Time</td>
+<td align="left">!~TOTAL_TIME~! seconds</td>
+</tr>
+</table>
+};
+    }
+);
+
+$reporter->set_param(
+    'taintmsg',
+    qq{<div class="warn_title">WARNING!</div>\n
+<div class="warn">The source file used to generate this report was modified
+after the profiler database was generated. The database might be out of sync, you should regenerate it.  This page might not make any sense!</div><br />\n}
+);
+
+
+sub calc_mad_from_objects {
+    my ($ary, $meth, $ignore_zeros) = @_;
+    return calculate_median_absolute_deviation([map { scalar $_->$meth } @$ary], $ignore_zeros,);
+}
+
+sub calc_mad_from_hashes {
+    my ($ary, $meth, $ignore_zeros) = @_;
+    return calculate_median_absolute_deviation([map { scalar $_->{$meth} } @$ary], $ignore_zeros,
+    );
+}
+
+sub subroutine_table {
+    my ($profile, $filestr, $max_subs, $sortby) = @_;
+    $sortby ||= 'excl_time';
+
+    my $subs_in_file = ($filestr)
+        ? $profile->subs_defined_in_file($filestr, 0)
+        : $profile->subname_subinfo_map;
+    return "" unless $subs_in_file && %$subs_in_file;
+
+    my $inc_path_regex = get_abs_paths_alternation_regex([$profile->inc], qr/^|\[/);
+
+    # XXX slow - use Schwartzian transform or via XS or Sort::Key
+    my @subs =
+        sort { $b->$sortby <=> $a->$sortby or $a->subname cmp $b->subname }
+        values %$subs_in_file;
+
+    # in the overall summary, don't show subs that were never called
+    @subs = grep { $_->calls > 0 } @subs if !$filestr;
+
+    my $dev_incl_time  = calc_mad_from_objects(\@subs, 'incl_time',    1);
+    my $dev_excl_time  = calc_mad_from_objects(\@subs, 'excl_time',    1);
+    my $dev_calls      = calc_mad_from_objects(\@subs, 'calls',        1);
+    my $dev_call_count = calc_mad_from_objects(\@subs, 'caller_count', 1);
+    my $dev_call_fids  = calc_mad_from_objects(\@subs, 'caller_fids',  1);
+
+    my @subs_to_show = ($max_subs) ? splice @subs, 0, $max_subs : @subs;
+    my $qualifier = (@subs > @subs_to_show) ? "Top $max_subs " : "";
+    my $max_pkg_name_len = max(map { length($_->package) } @subs_to_show);
+
+    my $sub_links;
+
+    my $sortby_desc = ($sortby eq 'excl_time') ? "exclusive time" : "inclusive time";
+    $sub_links .= qq{
+        <table id="subs_table" border="1" cellpadding="0" class="tablesorter">
+        <caption>${qualifier}Subroutines &mdash; ordered by $sortby_desc</caption>
+        <thead>
+        <tr>
+        <th>Calls</th>
+        <th><span title="Number of Places sub is called from">P</span></th>
+        <th><span title="Number of Files sub is called from">F</span></th>
+        <th>Exclusive<br />Time</th>
+        <th>Inclusive<br />Time</th>
+        <th>Subroutine</th>
+        </tr>
+        </thead>
+    };
+
+    # XXX may not be appropriate if profiling wasn't continuous
+    my $profiler_duration = $profile->{attribute}{profiler_duration};
+
+    my @rows;
+    $sub_links .= "<tbody>\n";
+    for my $sub (@subs_to_show) {
+
+        $sub_links .= "<tr>";
+
+        $sub_links .= determine_severity($sub->calls        || 0, $dev_calls);
+        $sub_links .= determine_severity($sub->caller_count || 0, $dev_call_count);
+        $sub_links .= determine_severity($sub->caller_fids  || 0, $dev_call_fids);
+        $sub_links .= determine_severity($sub->excl_time    || 0, $dev_excl_time, 1,
+            sprintf("%.1f%%", $sub->excl_time/$profiler_duration*100)
+        );
+        $sub_links .= determine_severity($sub->incl_time    || 0, $dev_incl_time, 1,
+            sprintf("%.1f%%", $sub->incl_time/$profiler_duration*100)
+        );
+
+        my @hints;
+        push @hints, 'xsub' if $sub->is_xsub;
+
+        # package and subname
+        my $subname = $sub->subname;
+        if (ref $subname) { # subs have been merged
+            push @hints, sprintf "merge of %d subs", scalar @$subname;
+            $subname = $subname->[0];
+        }
+
+        my ($pkg, $subr) = ($subname =~ /^(.*::)(.*?)$/) ? ($1, $2) : ('', $subname);
+
+        # remove OWN filename from eg __ANON__[(eval 3)[/long/path/name.pm:99]:53]
+        #                     becomes __ANON__[(eval 3)[:99]:53]
+        # XXX doesn't work right if $filestr isn't full filename
+        $subr =~ s/\Q$filestr\E:(\d+)/:$1/g;
+        # remove @INC prefix from other paths
+        $subr =~ s/$inc_path_regex//;    # for __ANON__[/very/long/path...]
+
+        $sub_links .= qq{<td class="sub_name">};
+        # hidden span is for tablesorter to sort on
+        $sub_links .= sprintf(qq{<span style="display: none;">%s::%s</span>}, $pkg, $subr);
+
+        my $href = $reporter->href_for_sub($subname);
+        $sub_links .= sprintf qq{%*s<a %s>%s</a>%s</span></td>},
+            $max_pkg_name_len+2, $pkg, $href, $subr,
+            (@hints) ? "(".join(", ",@hints).")" : "";
+
+        $sub_links .= "</tr>\n";
+    }
+    $sub_links .= q{
+        </tbody>
+        </table>
+    };
+
+    # make table sortable if it contains all the subs
+    push @on_ready_js, q{
+        $("#subs_table").tablesorter({
+            headers: {
+                3: { sorter: 'fmt_time' },
+                4: { sorter: 'fmt_time' }
+            }
+        });
+    } if @subs_to_show == @subs;
+
+    return $sub_links;
+}
+
+
+# http://www.jquery.info/The-TreeMap-plugin
+#
+sub package_tables {
+    my ($profile) = @_;
+    my $pkg_html = "";
+
+    # XXX may not be appropriate if profiling wasn't continuous
+    my $profiler_duration = $profile->{attribute}{profiler_duration};
+
+    # [
+    #   undef,  # depth 0
+    #   {       # depth 1
+    #       "main::" => [ [ subinfo1, subinfo2 ] ],    # 2 subs in 1 pkg
+    #       "Foo::"  => [ [ subinfo3 ], [ subinfo4 ] ] # 2 subs in 2 pkg
+    #   }
+    #   {       # depth 2
+    #       "Foo::Bar::" => [ [ subinfo3 ] ]           # 1 sub in 1 pkg
+    #       "Foo::Baz::" => [ [ subinfo4 ] ]           # 1 sub in 1 pkg
+    #   }
+    # ]
+    my $pkg_depth = $profile->packages_at_depth_subinfo({
+        include_unused_subs => 0,
+        rollup_packages => 1,
+        merge_subinfos => 1,
+    });
+
+    # default:
+    # { pkgname => [ subinfo1, subinfo2, ... ], ... }
+    # merged:
+    # { pkgname => [ single_merged_subinfo ], ...  }
+    my $package_subinfo_map = $profile->package_subinfo_map(1);
+
+    # generate a separate table for each depth
+    for my $depth (0..@$pkg_depth-1) {
+
+        my $pkgs_subinfos = { %{ $pkg_depth->[$depth] || {} } };
+        next if not %$pkgs_subinfos;
+
+        # add info for raw (un-rolledup) packages from lower depths
+        for my $d (0..$depth-1) {
+            my $p = $pkg_depth->[$d] or next;
+            for my $higher_pkg (keys %$p) {
+                my $higher_pkg_info = $package_subinfo_map->{$higher_pkg}
+                    or next;
+                $pkgs_subinfos->{$higher_pkg} = $higher_pkg_info;
+            }
+        }
+
+        my %pkg_summary;
+        while ( my ($pkg_name, $subinfos) = each %$pkgs_subinfos) {
+            my $pi = $pkg_summary{$pkg_name} ||= { pkg_name => $pkg_name };
+
+            # merge all sub infos into one pseudo-sub for package
+            my $sub;
+            for my $si (@$subinfos) {
+                ++$pi->{num_packages};
+                my $n = $si->subname;
+                ($sub) ? $sub->merge_in($si) : ($sub = $si->clone);
+            }
+            $pi->{merged_sub} = $sub;
+            $pi->{excl_time}  = $sub->excl_time;
+        }
+
+        my $dev_excl_time = calc_mad_from_hashes([values %pkg_summary], 'excl_time', 1);
+
+        my $table_id = "pkg_table_$depth";
+        $pkg_html .= qq{
+            <table id="$table_id" border="1" cellpadding="0" class="tablesorter">
+            <caption>Packages - subroutine times rolled up to level $depth package name</caption>
+            <thead>
+            <tr>
+            <th>Exclusive<br />Time</th>
+            <th>Package Name Prefix</th>
+            </tr>
+            </thead>
+        };
+        $pkg_html .= "<tbody>\n";
+        for my $pi (sort { $b->{excl_time} <=> $a->{excl_time} } values %pkg_summary) {
+
+            $pkg_html .= "<tr>";
+            $pkg_html .= determine_severity($pi->{excl_time}    || 0, $dev_excl_time, 1,
+                sprintf("%.1f%%", $pi->{excl_time}/$profiler_duration*100)
+            );
+            $pkg_html .= qq{<td class="sub_name">};
+            my $name = $pi->{pkg_name};
+            $name .= " (includes $pi->{num_packages} packages)" if $pi->{num_packages} > 1;
+            $pkg_html .= _escape_html($name);
+            $pkg_html .= qq{</td>};
+            $pkg_html .= "</tr>\n";
+        }
+        $pkg_html .= q{
+            </tbody>
+            </table>
+        };
+
+        push @on_ready_js, qq{
+            \$("#$table_id").tablesorter({
+                headers: {
+                    0: { sorter: 'fmt_time' }
+                }
+            });
+        };
+
+        # no point in generating deeper levels if there isn't any more detail
+        # (e.g. A::B contains no subs just a single package A::B::C)
+        last if not grep { $_->{num_packages} > 1 } values %pkg_summary;
+    }
+
+    return $pkg_html;
+}
+
+
+$reporter->set_param(
+    'datastart',
+    sub {
+        my ($profile, $filestr) = @_;
+
+        my $sub_links = subroutine_table($profile, $filestr, undef, undef);
+
+        return qq{$sub_links
+      <table border="1" cellpadding="0">
+      <thead>
+      <tr><th>Line</th><th>Stmts.</th><th>Exclusive<br />Time</th><th>Avg.</th><th class="left_indent_header">Code</th>
+      </tr>\n
+      </thead>
+      <tbody>
+    };
+    }
+);
+
+$reporter->set_param( footer => sub {
+    my ($profile, $filestr) = @_;
+    my $footer = get_footer($profile);
+    return "</tbody></table></div>$footer</body></html>";
+} );
+
+$reporter->set_param(mk_report_source_line => \&mk_report_source_line);
+$reporter->set_param(mk_report_xsub_line   => \&mk_report_xsub_line  );
+
+sub mk_report_source_line {
+    my ($linenum, $line, $stats_for_line, $stats_for_file, $subs_defined, $makes_calls_to, $profile, $filestr) = @_;
+
+    my $l = sprintf(qq{<td class="h"><a name="%s"></a>%s</td>}, $linenum, $linenum);
+    my $s = report_src_line(undef, $linenum, $line, $profile, $subs_defined, $makes_calls_to, $filestr);
+
+    return "<tr>$l<td></td><td></td><td></td>$s</tr>\n"
+        if not %$stats_for_line;
+
+    return join "",
+        "<tr>$l",
+        determine_severity($stats_for_line->{'calls'},     $stats_for_file->{'calls'}),
+        determine_severity($stats_for_line->{'time'},      $stats_for_file->{'time'}, 1),
+        determine_severity($stats_for_line->{'time/call'}, $stats_for_file->{'time/call'}, 1),
+        $s, "</tr>\n";
+}
+
+sub mk_report_xsub_line {
+    my ($subname, $line, $stats_for_line, $stats_for_file, $subs_defined, $makes_calls_to, $profile, $filestr) = @_;
+    (my $anchor = $subname) =~ s/\W/_/g;
+    return join "",
+        sprintf(qq{<tr><td class="h"><a name="%s"></a>%s</td>}, $anchor, ''),
+        "<td></td><td></td><td></td>",
+        report_src_line(undef, undef, $line, $profile, $subs_defined, $makes_calls_to, $filestr),
+        "</tr>\n";
+}
+
+
+sub _escape_html {
+    local $_ = shift;
+    s/\t/        /g; # XXX incorrect for most non-leading tabs
+    s/&/&amp;/g;
+    s/</&lt;/g;
+    s/>/&gt;/g;
+    s{\n}{<br />}g;  # for xsub pseudo-sub declarations
+    s{"}{&quot;}g;   # for attributes like title="..."
+    return $_;
+}
+
+
+sub report_src_line {
+    my ($value, undef, $linesrc, $profile, $subs, $calls, $thisfile) = @_;
+
+    $linesrc = _escape_html($linesrc);
+
+    my @prologue;
+
+    # for each of the subs defined on this line, who called them
+    for my $sub_info (@$subs) {
+        my $callers = $sub_info->callers;
+        next unless $callers && %$callers;
+
+        my @callers;
+        while (my ($fid, $fid_line_info) = each %$callers) {
+            push @callers, [$fid, $_, @{$fid_line_info->{$_}}] for keys %$fid_line_info;
+        }
+        my $total_calls = sum(my @caller_calls = map { $_->[2] } @callers);
+        my $max_calls = max(@caller_calls);
+        my $avg_per_call = fmt_time($sub_info->incl_time / $total_calls);
+
+        push @prologue, sprintf "# spent %s within %s which was called%s",
+            fmt_incl_excl_time($sub_info->incl_time, $sub_info->excl_time),
+            $sub_info->subname, ($total_calls <= 1)
+            ? ""
+            : " $total_calls times, avg ${avg_per_call}/call:";
+
+        # order by most frequent caller first
+        @callers = sort { $b->[2] <=> $a->[2] || $b->[3] <=> $a->[3] } @callers;
+        for my $caller (@callers) {
+            my ($fid, $line, $count, $incl_time, $excl_time) = @$caller;
+            my $fi = $profile->fileinfo_of($fid);
+
+            my @subnames = $profile->subname_at_file_line($fid, $line);
+            ref $_ and $_ = sprintf "%s (merge of %d subs)", $_->[0], scalar @$_
+                for @subnames;
+            my $subname = (@subnames) ? " by " . join(" or ", @subnames) : "";
+            my $avg_time =
+                ($count <= 1)
+                ? ""
+                : sprintf ", avg %s/call", fmt_time($incl_time / $count);
+            my $times = sprintf " (%s+%s)", fmt_time($excl_time),
+                fmt_time($incl_time - $excl_time);
+
+            my $filename = $fi->filename($fid);
+            my $line_desc = "line $line of $filename";
+            # chase string eval chain back to a real file
+            while ( my ($outer_fileinfo, $outer_line) = $fi->outer ) {
+                ($filename, $line) = ($outer_fileinfo->filename, $outer_line);
+                $line_desc .= sprintf " at line %s of %s", $line, $filename;
+                $fi = $outer_fileinfo;
+            }
+
+            my $href = $reporter->get_file_stats()->{$filename}{html_safe} || "unknown";
+            $line_desc =~ s/ of \Q$filename\E$// if $filename eq $thisfile;
+
+            push @prologue,
+                sprintf q{# %*s times%s%s at <a href="%s#%d">%s</a>%s},
+                length($max_calls), $count, $times, $subname, "$href.html", $line,
+                $line_desc, $avg_time;
+            $prologue[-1] =~ s/^(# +)1 times/$1   once/;  # better English
+        }
+    }
+    my $prologue = '';
+    $prologue = sprintf qq{<div class="calls"><div class="calls_in">%s</div></div>}, join("\n", @prologue)
+        if @prologue;
+
+    # give details of each of the subs called by this line
+    my $epilogue = '';
+    if (%$calls) {
+
+        my @calls_to = sort {
+            $calls->{$b}[1] <=> $calls->{$a}[1] or    # incl_time
+                $a cmp $b
+        } keys %$calls;
+        my $max_calls_to = max(map { $_->[0] } values %$calls);
+        my $ws = ($linesrc =~ m/^((?:&nbsp;|\s)+)/) ? $1 : '';
+
+        $epilogue = join "\n", map {
+            my ($count, $incl_time, $reci_time, $rec_depth) = (@{$calls->{$_}})[0,1,5,6];
+            my $html = sprintf qq{%s# spent %s making %*d call%s to }, $ws,
+                fmt_time($incl_time+$reci_time, 5), length($max_calls_to),
+                $count, $count == 1 ? "" : "s";
+            $html .= sprintf qq{<a %s>%s</a>}, $reporter->href_for_sub($_), $_;
+            $html .= sprintf qq{, avg %s/call}, fmt_time($incl_time / $count)
+                if $count > 1;
+            $html .= sprintf qq{, max recursion depth %d}, $rec_depth
+                if $rec_depth;
+            $html;
+        } @calls_to;
+        $epilogue = sprintf qq{<div class="calls"><div class="calls_out">%s</div></div>}, $epilogue;
+    }
+
+    return qq{<td class="s">$prologue$linesrc$epilogue</td>};
+}
+
+
+# set output options
+$reporter->set_param('suffix', '.html');
+
+# output a css file too (optional, but good for pretty pages)
+$reporter->_output_additional('style.css', get_css());
+
+# generate the files
+$reporter->report();
+
+output_subs_indexpage($reporter, "index-subs-excl.html", 'excl_time');
+output_subs_indexpage($reporter, "index-subs-incl.html", 'incl_time');
+output_package_treemap($reporter, "package-treemap.html");
+output_indexpage($reporter, "index.html");
+
+output_js_files($reporter);
+
+open_browser_on("$opt{out}/index.html") if $opt{open};
+
+exit 0;
+
+#
+# SUBROUTINES
+#
+
+# output an html indexing page or subroutines
+sub output_subs_indexpage {
+    my ($r, $filename, $sortby) = @_;
+    my $profile = $reporter->{profile};
+
+    open(OUT, '>', "$opt{out}/$filename")
+        or croak "Unable to open file $opt{out}/$filename: $!";
+
+    print OUT get_html_header("Subroutine Index - NYTProf");
+    print OUT get_page_header(profile => $profile, title => "Performance Profile Subroutine Index");
+    print OUT qq{<div class="body_content"><br />};
+
+    # Show top subs across all files
+    print OUT subroutine_table($profile, 0, 0, $sortby);
+
+    my $footer = get_footer($profile);
+    print OUT "</div>$footer</body></html>";
+    close OUT;
+}
+
+
+# output an html indexing page with some information to help navigate potential
+# large numbers of profiled files. Optional, recommended
+sub output_indexpage {
+    my ($r, $filename) = @_;
+    my $profile = $reporter->{profile};
+    my $stats   = $r->get_file_stats();
+
+    ###
+    open(OUT, '>', "$opt{out}/$filename")
+        or croak "Unable to open file $opt{out}/$filename: $!";
+
+    print OUT get_html_header();
+    print OUT get_page_header(profile => $profile, title => "Performance Profile Index");
+    print OUT qq{
+        <div class="body_content"><br />
+    };
+
+    # overall description
+    my @all_fileinfos = $profile->all_fileinfos;
+    my $eval_fileinfos = grep { $_->eval_line } @all_fileinfos;
+    my $summary = sprintf "Profile of %s for %s,",
+        $profile->{attribute}{application},
+        fmt_time($profile->{attribute}{profiler_duration});
+    $summary .= sprintf " executing %d statements",
+         $profile->{attribute}{total_stmts_measured}
+        -$profile->{attribute}{total_stmts_discounted};
+    $summary .= sprintf " and %d subroutine calls",
+         $profile->{attribute}{total_sub_calls};
+    $summary .= sprintf " in %d source files",
+        @all_fileinfos - $eval_fileinfos;
+    $summary .= sprintf " and %d string evals",
+        $eval_fileinfos if $eval_fileinfos;
+    printf OUT qq{<div class="index_summary">%s.</div>}, _escape_html($summary);
+
+    # generate name-sorted select options for files, if there are many
+    if (keys %$stats > 30) {
+        print OUT qq{<div class="jump_to_file"><form name="jump">};
+        print OUT qq{<select name="file" onChange="location.href=document.jump.file.value;">\n};
+        printf OUT qq{<option disabled="disabled">%s</option>\n}, "Jump to file...";
+        foreach (sort keys %$stats) {
+            my $fid = $profile->resolve_fid($_) or warn "Can't find fid for $_";
+            printf OUT qq{<option value="#f%s">%s</option>\n}, $fid, $_;
+        }
+        print OUT "</select></form></div>\n";
+    }
+
+    # Show top subs across all files
+    my $max_subs = 15; # keep it less than a page so users can see the file table
+    my $all_subs = keys %{$profile->{sub_subinfo}};
+    print OUT subroutine_table($profile, 0, $max_subs, undef);
+    if ($all_subs > $max_subs) {
+        print OUT sprintf qq{<div class="table_footer">
+            See <a href="%s">all %d subroutines</a>
+            </div>
+        }, "index-subs-excl.html", $all_subs;
+    }
+
+    print OUT file_table($profile, $stats, 1);
+
+    print OUT q{<br/><a href="package-treemap.html">Package treemap</a><br/>};
+
+    print OUT package_tables($profile);
+
+    my $footer = get_footer($profile);
+    print OUT "</div>$footer</body></html>";
+    close OUT;
+}
+
+
+sub output_package_treemap {
+    my ($r, $filename) = @_;
+    my $profile = $reporter->{profile};
+
+    open(OUT, '>', "$opt{out}/$filename")
+        or croak "Unable to open file $opt{out}/$filename: $!";
+
+    my $treemap_head = qq{
+	<link type="text/css" rel="stylesheet" href="js/jit/Treemap.css" />
+	<script language="JavaScript" src="js/jit/jit.js"></script>
+    };
+
+    print OUT get_html_header("Package Treemap - NYTProf", {
+        skip_style => 1,
+        skip_jquery => 1,
+        head_epilogue => $treemap_head,
+        not_xhtml => 1, # XXX js-treemap doesn't worth with xhtml at the moment
+    });
+    print OUT get_page_header(
+        profile => $profile,
+        title => "Performance Profile Subroutine Index",
+        body_onload => "init();"
+    ) if 0;
+    print OUT qq{<body onload="init();">};
+
+    local $Data::Dumper::Sortkeys = 1;
+    local $Data::Dumper::Indent = 1;
+    local $Data::Dumper::Maxdepth = 3;
+    #warn Data::Dumper::Dumper($profile->package_subinfo_map(1,1));
+    #my $package_tree_subinfo_map = $profile->package_subinfo_map(1,1);
+
+    print OUT q{
+<script language="JavaScript">
+function init() {
+var json = {
+    "id": "node02",
+    "name": "0.2",
+    "data": {
+        "$area": 195,
+        "$color": 5
+    },
+    "children": [{
+        "id": "node13",
+        "name": "1.3",
+        "data": {
+            "$area": 23,
+            "$color": 8
+        },
+        "children": [{
+            "id": "node24",
+            "name": "2.4",
+            "data": {
+                "$area": 6,
+                "$color": -75
+            },
+            "children": []
+        }, {
+            "id": "node25",
+            "name": "2.5",
+            "data": {
+                "$area": 9,
+                "$color": -48
+            },
+            "children": []
+        }, {
+            "id": "node26",
+            "name": "2.6",
+            "data": {
+                "$area": 1,
+                "$color": -1
+            },
+            "children": []
+        }, {
+            "id": "node27",
+            "name": "2.7",
+            "data": {
+                "$area": 7,
+                "$color": 25
+            },
+            "children": []
+        }]
+    }, {
+        "id": "node18",
+        "name": "1.8",
+        "data": {
+            "$area": 17,
+            "$color": 28
+        },
+        "children": [{
+            "id": "node29",
+            "name": "2.9",
+            "data": {
+                "$area": 8,
+                "$color": -28
+            },
+            "children": []
+        }, {
+            "id": "node210",
+            "name": "2.10",
+            "data": {
+                "$area": 9,
+                "$color": -83
+            },
+            "children": []
+        }]
+    }, {
+        "id": "node111",
+        "name": "1.11",
+        "data": {
+            "$area": 25,
+            "$color": -82
+        },
+        "children": [{
+            "id": "node212",
+            "name": "2.12",
+            "data": {
+                "$area": 8,
+                "$color": -27
+            },
+            "children": []
+        }, {
+            "id": "node213",
+            "name": "2.13",
+            "data": {
+                "$area": 3,
+                "$color": -80
+            },
+            "children": []
+        }, {
+            "id": "node214",
+            "name": "2.14",
+            "data": {
+                "$area": 7,
+                "$color": -73
+            },
+            "children": []
+        }, {
+            "id": "node215",
+            "name": "2.15",
+            "data": {
+                "$area": 7,
+                "$color": 26
+            },
+            "children": []
+        }]
+    }, {
+        "id": "node116",
+        "name": "1.16",
+        "data": {
+            "$area": 17,
+            "$color": 91
+        },
+        "children": [{
+            "id": "node217",
+            "name": "2.17",
+            "data": {
+                "$area": 7,
+                "$color": 48
+            },
+            "children": []
+        }, {
+            "id": "node218",
+            "name": "2.18",
+            "data": {
+                "$area": 10,
+                "$color": -86
+            },
+            "children": []
+        }]
+    }, {
+        "id": "node119",
+        "name": "1.19",
+        "data": {
+            "$area": 52,
+            "$color": -77
+        },
+        "children": [{
+            "id": "node220",
+            "name": "2.20",
+            "data": {
+                "$area": 8,
+                "$color": 64
+            },
+            "children": []
+        }, {
+            "id": "node221",
+            "name": "2.21",
+            "data": {
+                "$area": 5,
+                "$color": 84
+            },
+            "children": []
+        }, {
+            "id": "node222",
+            "name": "2.22",
+            "data": {
+                "$area": 6,
+                "$color": 81
+            },
+            "children": []
+        }, {
+            "id": "node223",
+            "name": "2.23",
+            "data": {
+                "$area": 1,
+                "$color": 25
+            },
+            "children": []
+        }, {
+            "id": "node224",
+            "name": "2.24",
+            "data": {
+                "$area": 4,
+                "$color": 18
+            },
+            "children": []
+        }, {
+            "id": "node225",
+            "name": "2.25",
+            "data": {
+                "$area": 10,
+                "$color": 37
+            },
+            "children": []
+        }, {
+            "id": "node226",
+            "name": "2.26",
+            "data": {
+                "$area": 8,
+                "$color": 83
+            },
+            "children": []
+        }, {
+            "id": "node227",
+            "name": "2.27",
+            "data": {
+                "$area": 10,
+                "$color": -62
+            },
+            "children": []
+        }]
+    }, {
+        "id": "node128",
+        "name": "1.28",
+        "data": {
+            "$area": 37,
+            "$color": -40
+        },
+        "children": [{
+            "id": "node229",
+            "name": "2.29",
+            "data": {
+                "$area": 8,
+                "$color": -67
+            },
+            "children": []
+        }, {
+            "id": "node230",
+            "name": "2.30",
+            "data": {
+                "$area": 8,
+                "$color": 46
+            },
+            "children": []
+        }, {
+            "id": "node231",
+            "name": "2.31",
+            "data": {
+                "$area": 4,
+                "$color": -99
+            },
+            "children": []
+        }, {
+            "id": "node232",
+            "name": "2.32",
+            "data": {
+                "$area": 8,
+                "$color": -38
+            },
+            "children": []
+        }, {
+            "id": "node233",
+            "name": "2.33",
+            "data": {
+                "$area": 1,
+                "$color": -3
+            },
+            "children": []
+        }, {
+            "id": "node234",
+            "name": "2.34",
+            "data": {
+                "$area": 8,
+                "$color": 82
+            },
+            "children": []
+        }]
+    }, {
+        "id": "node135",
+        "name": "1.35",
+        "data": {
+            "$area": 24,
+            "$color": 63
+        },
+        "children": [{
+            "id": "node236",
+            "name": "2.36",
+            "data": {
+                "$area": 10,
+                "$color": 8
+            },
+            "children": []
+        }, {
+            "id": "node237",
+            "name": "2.37",
+            "data": {
+                "$area": 8,
+                "$color": 63
+            },
+            "children": []
+        }, {
+            "id": "node238",
+            "name": "2.38",
+            "data": {
+                "$area": 6,
+                "$color": 46
+            },
+            "children": []
+        }]
+    }]
+};
+    var tm = new TM.Squarified({
+                rootId: 'infovis'
+             });
+    tm.loadJSON(json);
+}
+</script>
+    };
+
+    my $pkg_html;
+    $pkg_html .= qq{
+<div id="infovis">
+</div>
+    };
+    print OUT $pkg_html;
+
+    #push @on_ready_js, qq{ };
+
+    my $footer = ""; # get_footer($profile);
+    print OUT "$footer</body></html>";
+    close OUT;
+}
+
+
+sub output_js_files {
+    my ($profile) = @_;
+    # find the js, gif, css etc files installed with Devel::NYTProf
+    (my $lib = $INC{"Devel/NYTProf/Data.pm"}) =~ s/\/Data\.pm$//;
+    _copy_dir("$lib/js", "$opt{out}/js");
+}
+
+sub _copy_dir {
+    my ($srcdir, $dstdir) = @_;
+    mkdir $dstdir or die "Can't create $dstdir directory: $!\n"
+        unless -d $dstdir;
+    for my $src (glob("$srcdir/*")) {
+        (my $name = $src) =~ s{.*/}{};
+        next if $name =~ m/^\./; # skip . and .. etc
+        my $dstname = "$dstdir/$name";
+        if (not -f $src) {
+            _copy_dir($src, $dstname) if -d $src; # recurse
+            next; # skip non-ordinary-files
+        }
+        unlink $dstname;
+        copy($src, $dstname)
+            or warn "Unable to copy $src to $dstname: $!";
+    }
+}
+
+
+sub open_browser_on {
+    my $index = shift;
+    if (eval { require ActiveState::Browser; 1 }) {
+        ActiveState::Browser::open($index);
+    }
+    else {
+        my $BROWSER;
+        if ($^O eq "MSWin32") {
+            $BROWSER = "start %s";
+        }
+        elsif ($^O eq "darwin") {
+            $BROWSER = "/usr/bin/open %s";
+        }
+        else {
+            my @try = qw(xdg-open);
+            if ($ENV{BROWSER}) {
+                push(@try, split(/:/, $ENV{BROWSER}));
+            }
+            else {
+                push(@try, qw(firefox galeon mozilla opera netscape));
+            }
+            unshift(@try, "kfmclient") if $ENV{KDE_FULL_SESSION};
+            unshift(@try, "gnome-open") if $ENV{GNOME_DESKTOP_SESSION_ID};
+            for (@try) {
+                if (have_prog($_)) {
+                    if ($_ eq "kfmclient") {
+                        $BROWSER .= " openURL %s";
+                    }
+                    elsif ($_ eq "gnome-open" || $_ eq "opera") {
+                        $BROWSER = "$_ %s";
+                    }
+                    else {
+                        $BROWSER = "$_ %s &";
+                    }
+                    last;
+                }
+            }
+        }
+        if ($BROWSER) {
+            (my $cmd = $BROWSER) =~ s/%s/"$index"/;
+            #warn "Running $cmd\n";
+            system($cmd);
+        }
+        else {
+            warn "Don't know how to invoke your web browser.\nPlease visit $index yourself!\n";
+        }
+    }
+}
+
+
+sub have_prog {
+    my $prog = shift;
+    for (split(":", $ENV{PATH})) {
+        return 1 if -x "$_/$prog";
+    }
+    return 0;
+}
+
+
+sub file_table {
+    my ($profile, $stats, $add_totals) = @_;
+
+    for (values %$stats) {
+        next if not $_;
+        $_->{'time/call'} = ($_->{calls}) ? $_->{'time'} / $_->{calls} : 0;
+    }
+
+    my $dev_time = calc_mad_from_hashes([values %$stats], 'time',      0);
+    my $dev_avgt = calc_mad_from_hashes([values %$stats], 'time/call', 0);
+
+    # generate time-sorted sections for files
+    print OUT qq{
+        <table id="filestable" border="1" cellspacing="0" class="tablesorter">
+        <caption>Source Code Files &mdash; ordered by exclusive time then name</caption>
+    };
+    print OUT qq{
+        <thead><tr class="index">
+        <th>Stmts</th><th>Exclusive<br />Time</th>
+        <th>Avg.</th><th>Reports</th><th>Source File</th>
+        </tr></thead>
+        <tbody>
+    };
+
+    my $inc_path_regex = get_abs_paths_alternation_regex([$profile->inc], qr/^|\[/);
+
+    my $allTimes = $profile->{attribute}{total_stmts_duration};
+    my $allCalls = $profile->{attribute}{total_stmts_measured}
+                 - $profile->{attribute}{total_stmts_discounted};
+
+    my ($t_stmt_exec, $t_stmt_time) = (0,0);
+    foreach my $filestats (sort { $b->{'time'} <=> $a->{'time'} } values %$stats) {
+        my $fi = $profile->fileinfo_of($filestats->{filename})
+            or die "Can't find fileinfo for $filestats->{filename}";
+        my @extra;
+
+        my $has_evals = $fi->has_evals(1) || [];
+        #my $eval_stmts = 0;
+        if (@$has_evals) {
+            my $n_evals = scalar @$has_evals;
+            my $msg = sprintf "executed %d string eval%s", $n_evals, ($n_evals>1) ? "s" : "";
+            if (my @nested = grep { $_->eval_fid != $fi->fid } @$has_evals) {
+                $msg .= sprintf ": %d direct plus %d nested",
+                    $n_evals-@nested, scalar @nested;
+            }
+            push @extra, $msg;
+            #$eval_stmts += sum(map { $_->number_of_statements_executed } @$has_evals);
+        }
+
+        print OUT qq{<tr class="index">};
+
+        print OUT determine_severity($filestats->{'calls'},     undef, 0,
+            ($allCalls) ? sprintf("%.1f%%", $filestats->{'calls'}/$allCalls*100) : ''
+        );
+        $t_stmt_exec += $filestats->{'calls'};
+
+        print OUT determine_severity($filestats->{'time'},      $dev_time, 1,
+            ($allTimes) ? sprintf("%.1f%%", $filestats->{'time'}/$allTimes*100) : ''
+        );
+        $t_stmt_time += $filestats->{'time'};
+
+        print OUT determine_severity($filestats->{'time/call'}, $dev_avgt, 1);
+
+        my $rep_links = join '&nbsp;&bull;&nbsp;', map {
+            my $level_html_safe = $filestats->{$_}->{html_safe};
+            ($level_html_safe)
+                ? sprintf(qq{<a href="%s.html">%s</a>}, $level_html_safe, $_)
+                : ()
+        } qw(line block sub);
+        print OUT "<td>$rep_links</td>";
+
+        print OUT sprintf q{<td><a name="f%s" title="%s">%s</a> %s</td>},
+            $fi->fid, $fi->abs_filename, $fi->filename_without_inc,
+            (@extra) ? sprintf("(%s)", join ", ", @extra) : "";
+        print OUT "</tr>\n";
+    }
+    print OUT "</tbody>\n";
+
+    if ($add_totals) {
+        print OUT "<tfoot>\n";
+        my $stats_fmt =
+            qq{<tr class="index"><td class="n">%s</td><td class="n">%s</td><td class="n">%s</td><td colspan="2" style="font-style: italic">%s</td></tr>};
+        my $t_notes = "";
+        my $stmt_time_diff = $allTimes - $t_stmt_time;
+        if ($t_stmt_exec != $allCalls or $stmt_time_diff > 0.000_010) {
+            my $eval_fileinfos = grep { $_->eval_line } $profile->all_fileinfos;
+            $stmt_time_diff = ($stmt_time_diff > 0.000_010)
+                ? sprintf(" and %s", fmt_time($stmt_time_diff)) : "";
+            $t_notes = sprintf "(%d string evals account for a further %d statements%s)",
+                $eval_fileinfos, $allCalls - $t_stmt_exec, $stmt_time_diff;
+        }
+        print OUT sprintf $stats_fmt, fmt_float($t_stmt_exec), fmt_time($t_stmt_time), '',
+            "Total $t_notes";
+
+        print OUT sprintf $stats_fmt, int(fmt_float($t_stmt_exec / keys %$stats)),
+            fmt_time($t_stmt_time / keys %$stats), '', "Average"
+            if %$stats;    # avoid divide by zero
+
+        print OUT sprintf $stats_fmt, '', fmt_time($dev_time->[1]), fmt_time($dev_avgt->[1]),
+            "Median";
+        print OUT sprintf $stats_fmt, '', fmt_float($dev_time->[0]), fmt_float($dev_avgt->[0]),
+            "Deviation"
+            if $dev_time->[0] or $dev_avgt->[0];
+        print OUT "</tfoot>\n";
+    }
+    print OUT '</table>';
+    push @on_ready_js, q{
+        $("#filestable").tablesorter({
+            headers: {
+                1: { sorter: 'fmt_time' },
+                2: { sorter: 'fmt_time' },
+                3: { sorter: false      }
+            }
+        });
+    };
+
+    return "";
+}
+
+# calculates how good or bad the time is for a file based on the others
+sub determine_severity {
+    my $val = shift;
+    return "<td></td>" unless defined $val;
+    my $stats = shift;    # @_[3] is like arrayref (deviation, mean)
+    my $is_time = shift;
+    my $title   = shift;
+
+    # normalize the width/precision so that the tables look good.
+    my $fmt_val = ($is_time)
+        ? fmt_time($val)
+        : fmt_float($val, NUMERIC_PRECISION);
+
+    my $class;
+    if (defined $stats) {
+
+        my $devs = ($val - $stats->[1]);    #stats->[1] is the mean.
+        $devs /= $stats->[0] if $stats->[0];    # no divide by zero when all values equal
+
+        if ($devs < 0) {                        # fast
+            $class = 'c3';
+        }
+        elsif ($devs < SEVERITY_GOOD) {
+            $class = 'c3';
+        }
+        elsif ($devs < SEVERITY_BAD) {
+            $class = 'c2';
+        }
+        elsif ($devs < SEVERITY_SEVERE) {
+            $class = 'c1';
+        }
+        else {
+            $class = 'c0';
+        }
+    }
+    else {
+        $class = 'n';
+    }
+
+    if ($title) {
+        $title = _escape_html($title);
+        $fmt_val = qq{<span title="$title">$fmt_val</span>};
+    }
+
+    return qq{<td class="$class">$fmt_val</td>};
+}
+
+# Delete the previous database/directory if it exists
+sub _delete {
+    if (-d $opt{out}) {
+        print "Deleting $opt{out}\n";
+        unlink glob($opt{out} . "/*");
+        unlink glob($opt{out} . "/.*");
+        rmdir $opt{out} or confess "Delete of $opt{out} failed: $!\n";
+    }
+}
+
+sub usage {
+    print <<END
+usage: [perl] nytprofhtml [opts]
+ --file <file>, -f <file>  Use the specified file as Devel::NYTProf database
+                            file. [default: ./nytprof.out]
+ --out <dir>,   -o <dir>   Place generated files here [default: ./nytprof]
+ --delete,      -d         Delete the old nytprofhtml output [uses --out]
+ --lib,         -l         Add a path to the beginning of \@INC
+ --help,        -h         Print this message
+
+This script of part of the Devel::NYTProf distribution.
+See http://search.cpan.org/dist/Devel-NYTProf/ for details and copyright.
+END
+}
+
+
+# return an html string with buttons for switching between profile levels of detail
+sub get_level_buttons {
+    my $mode_ref = shift;
+    my $file     = shift;
+    my $level    = shift;
+
+    my $html = join '&emsp;&bull;&emsp;', map {
+        my $mode = $mode_ref->{$_};
+
+        if ($mode eq $level) {
+            qq{<span class="mode_btn mode_btn_selected">$mode view</span>};
+        }
+        else {
+            my $mode_file = $file;
+
+            # replace the mode specifier in the output file name -- file-name-MODE.html
+            $mode_file =~ s/(.*-).*?\.html/$1$mode.html/o;
+
+            qq{<span class="mode_btn"><a href="$mode_file">$mode view</a></span>};
+        }
+    } keys %$mode_ref;
+
+    return qq{<span>&laquo;&emsp;$html&emsp;&raquo;</span>};
+}
+
+
+sub get_footer {
+    my ($profile) = @_;
+    my $version = $Devel::NYTProf::Core::VERSION;
+
+    my $js = '';
+    if (@on_ready_js) {
+        # XXX I've no idea why this workaround is needed (or works).
+        # without it the file table on the index page isn't sortable
+        @on_ready_js = reverse @on_ready_js;
+        $js = sprintf q{
+            <script type="text/javascript"> $(document).ready(function() { %s } ); </script>
+        }, join("\n", '', @on_ready_js, '');
+        @on_ready_js = ();
+    };
+
+    # spacing so links to #line near can put right line at top near the bottom of the report
+    my $spacing = "<br />" x 10;
+    return qq{
+        $js
+        <div class="footer">Report produced by the
+        <a href="http://search.cpan.org/dist/Devel-NYTProf/">NYTProf $version</a>
+        Perl profiler, developed by
+        <a href="http://www.linkedin.com/in/timbunce">Tim Bunce</a> and
+        <a href="http://code.nytimes.com">Adam Kaplan</a>.
+        </div>
+        $spacing
+    };
+}
+
+# returns the generic header string.  Here only to make the code more readable.
+sub get_html_header {
+    my $title = shift || "Profile Index - NYTProf";
+    my $opts = shift || {};
+
+    my $html = <<EOD;
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+EOD
+    $html = "<html>" if $opts->{not_xhtml};
+    $html .= <<EOD;
+<!--
+This file was generated by Devel::NYTProf version $Devel::NYTProf::Core::VERSION
+-->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="Content-Language" content="en-us"></meta>
+    <title>$title</title>
+EOD
+
+    $html .= qq{<link rel="stylesheet" type="text/css" href="style.css"></link>\n}
+        unless $opts->{skip_style};
+
+    $html .= <<EOD unless $opts->{skip_jquery};
+    <script type="text/javascript" src="js/jquery-min.js"></script> 
+
+    <script type="text/javascript" src="js/jquery-tablesorter-min.js"></script> 
+    <link rel="stylesheet" type="text/css" href="style-tablesorter.css"></link>
+    <script type="text/javascript">
+    // when a column is first clicked on to sort it, use descending order
+    // XXX doesn't seem to work (and not just because the tablesorter formatSortingOrder() is broken)
+    \$.tablesorter.defaults.sortInitialOrder = "desc";
+    // add parser through the tablesorter addParser method 
+    \$.tablesorter.addParser({
+        id: 'fmt_time',   // name of this parser
+        is: function(s) { 
+            return false; // return false so this parser is not auto detected 
+        }, 
+        format: function(orig) { // format data for normalization 
+            // console.log(orig);
+            val = orig.replace(/ns/,'');
+            if (val != orig) { return val / (1000*1000*1000); } 
+            val = orig.replace(/µs/,''); /* XXX use &micro; ? */
+            if (val != orig) { return val / (1000*1000); } 
+            var val = orig.replace(/ms/,'');
+            if (val != orig) { return val / (1000); }
+            var val = orig.replace(/s/,'');
+            if (val != orig) { return val; }
+            if (orig == '0') { return orig; } 
+            console.log('no match for fmt_time of '.concat(orig));
+            return orig;
+        },
+        type: 'numeric' // set type, either numeric or text 
+    }); 
+    </script> 
+EOD
+    $html .= $opts->{head_epilogue} if $opts->{head_epilogue};
+
+    $html .= <<EOD;
+</head>
+EOD
+
+    return $html;
+}
+
+sub get_page_header {
+    my %args = @_;
+    my ($profile, $head1, $head2, $right1, $right2, $mode) = (
+        $args{profile}, $args{title},     $args{subtitle},
+        $args{title2},  $args{subtitle2}, $args{mode}
+    );
+
+    $head2  ||= qq{<br />For ${ \($profile->{attribute}{application}) }};
+    $right1 ||= "&nbsp;";
+    $right2 ||= "Run on ${ \scalar localtime($profile->{attribute}{basetime}) }<br />Reported on "
+        . localtime(time);
+
+    my $back_link = q//;
+    if ($mode) {
+        $back_link = qq{<div class="header_back">
+            <a href="index.html">&larr; Index</a>
+        </div>};
+    }
+
+    my @body_attribs;
+    push @body_attribs, qq{onload="$args{body_onload}"} if $args{body_onload};
+    my $body_attribs = join "; ", @body_attribs;
+
+    return qq{<body $body_attribs> 
+<div class="header" style="position: relative; overflow-x: hidden; overflow-y: hidden; z-index: 0; ">
+$back_link
+<div class="headerForeground" style="float: left">
+    <span class="siteTitle">$head1</span>
+    <span class="siteSubtitle">$head2</span>
+</div>
+<div class="headerForeground" style="float: right; text-align: right">
+    <span class="siteTitle">$right1</span>
+    <span class="siteSubtitle">$right2</span>
+</div>
+<div style="position: absolute; left: 0px; top: 0%; width: 100%; height: 101%; z-index: -1; background-color: rgb(17, 136, 255); "></div>
+<div style="position: absolute; left: 0px; top: 2%; width: 100%; height: 99%; z-index: -1; background-color: rgb(16, 134, 253); "></div>
+<div style="position: absolute; left: 0px; top: 4%; width: 100%; height: 97%; z-index: -1; background-color: rgb(16, 133, 252); "></div>
+<div style="position: absolute; left: 0px; top: 6%; width: 100%; height: 95%; z-index: -1; background-color: rgb(15, 131, 250); "></div>
+<div style="position: absolute; left: 0px; top: 8%; width: 100%; height: 93%; z-index: -1; background-color: rgb(15, 130, 249); "></div>
+<div style="position: absolute; left: 0px; top: 10%; width: 100%; height: 91%; z-index: -1; background-color: rgb(15, 129, 248); "></div>
+<div style="position: absolute; left: 0px; top: 12%; width: 100%; height: 89%; z-index: -1; background-color: rgb(14, 127, 246); "></div>
+<div style="position: absolute; left: 0px; top: 14%; width: 100%; height: 87%; z-index: -1; background-color: rgb(14, 126, 245); "></div>
+<div style="position: absolute; left: 0px; top: 16%; width: 100%; height: 85%; z-index: -1; background-color: rgb(14, 125, 244); "></div>
+<div style="position: absolute; left: 0px; top: 18%; width: 100%; height: 83%; z-index: -1; background-color: rgb(13, 123, 242); "></div>
+<div style="position: absolute; left: 0px; top: 20%; width: 100%; height: 81%; z-index: -1; background-color: rgb(13, 122, 241); "></div>
+<div style="position: absolute; left: 0px; top: 22%; width: 100%; height: 79%; z-index: -1; background-color: rgb(13, 121, 240); "></div>
+<div style="position: absolute; left: 0px; top: 24%; width: 100%; height: 77%; z-index: -1; background-color: rgb(12, 119, 238); "></div>
+<div style="position: absolute; left: 0px; top: 26%; width: 100%; height: 75%; z-index: -1; background-color: rgb(12, 118, 237); "></div>
+<div style="position: absolute; left: 0px; top: 28%; width: 100%; height: 73%; z-index: -1; background-color: rgb(12, 116, 235); "></div>
+<div style="position: absolute; left: 0px; top: 30%; width: 100%; height: 71%; z-index: -1; background-color: rgb(11, 115, 234); "></div>
+<div style="position: absolute; left: 0px; top: 32%; width: 100%; height: 69%; z-index: -1; background-color: rgb(11, 114, 233); "></div>
+<div style="position: absolute; left: 0px; top: 34%; width: 100%; height: 67%; z-index: -1; background-color: rgb(11, 112, 231); "></div>
+<div style="position: absolute; left: 0px; top: 36%; width: 100%; height: 65%; z-index: -1; background-color: rgb(10, 111, 230); "></div>
+<div style="position: absolute; left: 0px; top: 38%; width: 100%; height: 63%; z-index: -1; background-color: rgb(10, 110, 229); "></div>
+<div style="position: absolute; left: 0px; top: 40%; width: 100%; height: 61%; z-index: -1; background-color: rgb(10, 108, 227); "></div>
+<div style="position: absolute; left: 0px; top: 42%; width: 100%; height: 59%; z-index: -1; background-color: rgb(9, 107, 226); "></div>
+<div style="position: absolute; left: 0px; top: 44%; width: 100%; height: 57%; z-index: -1; background-color: rgb(9, 106, 225); "></div>
+<div style="position: absolute; left: 0px; top: 46%; width: 100%; height: 55%; z-index: -1; background-color: rgb(9, 104, 223); "></div>
+<div style="position: absolute; left: 0px; top: 48%; width: 100%; height: 53%; z-index: -1; background-color: rgb(8, 103, 222); "></div>
+<div style="position: absolute; left: 0px; top: 50%; width: 100%; height: 51%; z-index: -1; background-color: rgb(8, 102, 221); "></div>
+<div style="position: absolute; left: 0px; top: 52%; width: 100%; height: 49%; z-index: -1; background-color: rgb(8, 100, 219); "></div>
+<div style="position: absolute; left: 0px; top: 54%; width: 100%; height: 47%; z-index: -1; background-color: rgb(7, 99, 218); "></div>
+<div style="position: absolute; left: 0px; top: 56%; width: 100%; height: 45%; z-index: -1; background-color: rgb(7, 97, 216); "></div>
+<div style="position: absolute; left: 0px; top: 58%; width: 100%; height: 43%; z-index: -1; background-color: rgb(7, 96, 215); "></div>
+<div style="position: absolute; left: 0px; top: 60%; width: 100%; height: 41%; z-index: -1; background-color: rgb(6, 95, 214); "></div>
+<div style="position: absolute; left: 0px; top: 62%; width: 100%; height: 39%; z-index: -1; background-color: rgb(6, 93, 212); "></div>
+<div style="position: absolute; left: 0px; top: 64%; width: 100%; height: 37%; z-index: -1; background-color: rgb(6, 92, 211); "></div>
+<div style="position: absolute; left: 0px; top: 66%; width: 100%; height: 35%; z-index: -1; background-color: rgb(5, 91, 210); "></div>
+<div style="position: absolute; left: 0px; top: 68%; width: 100%; height: 33%; z-index: -1; background-color: rgb(5, 89, 208); "></div>
+<div style="position: absolute; left: 0px; top: 70%; width: 100%; height: 31%; z-index: -1; background-color: rgb(5, 88, 207); "></div>
+<div style="position: absolute; left: 0px; top: 72%; width: 100%; height: 29%; z-index: -1; background-color: rgb(4, 87, 206); "></div>
+<div style="position: absolute; left: 0px; top: 74%; width: 100%; height: 27%; z-index: -1; background-color: rgb(4, 85, 204); "></div>
+<div style="position: absolute; left: 0px; top: 76%; width: 100%; height: 25%; z-index: -1; background-color: rgb(4, 84, 203); "></div>
+<div style="position: absolute; left: 0px; top: 78%; width: 100%; height: 23%; z-index: -1; background-color: rgb(3, 82, 201); "></div>
+<div style="position: absolute; left: 0px; top: 80%; width: 100%; height: 21%; z-index: -1; background-color: rgb(3, 81, 200); "></div>
+<div style="position: absolute; left: 0px; top: 82%; width: 100%; height: 19%; z-index: -1; background-color: rgb(3, 80, 199); "></div>
+<div style="position: absolute; left: 0px; top: 84%; width: 100%; height: 17%; z-index: -1; background-color: rgb(2, 78, 197); "></div>
+<div style="position: absolute; left: 0px; top: 86%; width: 100%; height: 15%; z-index: -1; background-color: rgb(2, 77, 196); "></div>
+<div style="position: absolute; left: 0px; top: 88%; width: 100%; height: 13%; z-index: -1; background-color: rgb(2, 76, 195); "></div>
+<div style="position: absolute; left: 0px; top: 90%; width: 100%; height: 11%; z-index: -1; background-color: rgb(1, 74, 193); "></div>
+<div style="position: absolute; left: 0px; top: 92%; width: 100%; height: 9%; z-index: -1; background-color: rgb(1, 73, 192); "></div>
+<div style="position: absolute; left: 0px; top: 94%; width: 100%; height: 7%; z-index: -1; background-color: rgb(1, 72, 191); "></div>
+<div style="position: absolute; left: 0px; top: 96%; width: 100%; height: 5%; z-index: -1; background-color: rgb(0, 70, 189); "></div>
+<div style="position: absolute; left: 0px; top: 98%; width: 100%; height: 3%; z-index: -1; background-color: rgb(0, 69, 188); "></div>
+<div style="position: absolute; left: 0px; top: 100%; width: 100%; height: 1%; z-index: -1; background-color: rgb(0, 68, 187); "></div>
+</div>\n};
+}
+
+sub get_css {
+    return <<'EOD';
+/* Stylesheet for Devel::NYTProf::Reader HTML reports */
+
+/* You may modify this file to alter the appearance of your coverage
+ * reports. If you do, you should probably flag it read-only to prevent
+ * future runs from overwriting it.
+ */
+
+/* Note: default values use the color-safe web palette. */
+a:visited { color: #6d00E6; }
+a:hover { color: red; }
+
+body { font-family: sans-serif; margin: 0px; }
+.body_content { margin: 8px; }
+
+.header { font-family: sans-serif; padding-left: 0.5em; padding-right: 0.5em; }
+.headerForeground { color: white; padding: 10px; padding-top: 50px; }
+.siteTitle { font-size: 2em; }
+.siteSubTitle { font-size: 1.2em; }
+
+.header_back { 
+    position: absolute; 
+    padding: 10px;
+}
+.header_back > a:link,
+.header_back > a:visited {
+    color: white; 
+    text-decoration: none;
+    font-size: 0.75em;
+}
+
+.jump_to_file {
+    margin-top: 20px;
+}
+
+.footer,
+.footer > a:link,
+.footer > a:visited {
+    color: #cccccc;
+    text-decoration: none;
+}
+.footer { margin: 8px; }
+
+table { 
+    border-collapse: collapse; 
+    border-spacing: 0px; 
+    margin-top: 20px;
+}
+tr { 
+    text-align : center;
+    vertical-align: top; 
+}
+th,.h {
+    background-color: #dddddd;
+    border: solid 1px #666666;
+    padding: 0em 0.4em 0em 0.4em;
+}
+td { 
+    border: solid 1px #cccccc; 
+    padding: 0em 0.4em 0em 0.4em;
+}
+caption {
+    background-color: #dddddd;
+    text-align: left;
+    white-space: pre;
+    padding: 0.4em;
+}
+
+.table_footer { color: gray; }
+.table_footer > a:link,
+.table_footer > a:visited { color: gray; }
+.table_footer > a:hover   { color: red; }
+
+.index { text-align: left; }
+
+.mode_btn_selected {
+  font-style: italic;
+}
+
+/* subroutine dispatch table */
+.sub_name {
+  text-align: left;
+  font-family: monospace;
+  white-space: pre;
+  color: gray;
+}
+
+/* source code */
+th.left_indent_header {
+  padding-left: 15px;
+  text-align: left;
+}
+
+pre,.s {
+    text-align: left;
+    font-family: monospace;
+    white-space: pre;
+}
+/* plain number */
+.n { text-align: right }
+
+/* Classes for color-coding profiling information:
+ *   c0  : code not hit
+ *   c1  : coverage >= 75%
+ *   c2  : coverage >= 90%
+ *   c3  : path covered or coverage = 100%
+ */
+.c0, .c1, .c2, .c3 { text-align: right; }
+.c0 { background-color: #ff9999; }
+.c1 { background-color: #ffcc99; }
+.c2 { background-color: #ffff99; }
+.c3 { background-color: #99ff99; }
+
+/* warnings */
+.warn {
+    background-color: #FFFFAA;
+    border: 0;
+    width: 96%;
+    text-align: center;
+    padding: 5px 0;
+}
+.warn_title {
+    background-color: #FFFFAA;
+    border: 0;
+    color: red;
+    width: 96%;
+    font-size: 2em;
+    text-align: center;
+    padding: 5px 0;
+}
+
+/* summary of calls into and out of a sub */
+.calls {
+  display: block;
+  color: gray;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-decoration: none;
+}
+.calls:hover {
+    background-color: #e8e8e8;
+    color: black;
+}
+.calls       a       { color: gray;  text-decoration: none; }
+.calls:hover a       { color: black; text-decoration: underline; }
+.calls:hover a:hover { color: red; }
+/* give a little headroom to the summary of calls into a sub */
+.calls .calls_in { margin-top: 5px; }
+
+EOD
+}
+
+__END__
+
+=head1 NAME
+
+nytprofhtml - Generate reports from Devel::NYTProf data
+
+=head1 SYNOPSIS
+
+Typical usage:
+
+ $ perl -d:NYTProf some_perl_app.pl
+ $ nytprofhtml --open
+
+Options synopsis:
+
+ $ nytprofhtml [-h] [-d] [-o <output directory>] [-f <input file>] [--open]
+
+=head1 DESCRIPTION
+
+Devel::NYTProf is a powerful feature-rich perl source code profiler.
+See L<Devel::NYTProf> for details.
+
+C<nytprofhtml> generates html a set of html reports from the data collected by
+L<Devel::NYTProf>.
+
+The reports include dynamic runtime analysis wherein each line and each file
+is analyzed based on the preformance of the other lines and files.  As a
+result, you can quickly find the slowest module and the slowest line in a 
+module.  Slowness is measured in three ways: total calls, total time and
+average time per call.
+
+Coloring is based on absolute deviations from the median.
+See L<http://en.wikipedia.org/wiki/Median_absolute_deviation> for more details.
+
+That might sound complicated, but in reality you can just run the command and
+enjoy your report!
+
+=head1 COMMAND-LINE OPTIONS
+
+=over 4
+
+=item -f, --file <filename>
+
+Specifies the location of the file generated by L<Devel::NYTProf>.
+Default: ./nytprof.out
+
+=item -o, --out <dir>
+
+The directory in which to place the generated report files. Default: ./nytprof/
+
+=item -d, --delete
+
+Purge any existing contents of the report output directory.
+
+=item -l, --lib <dir>
+
+Add a path to the beginning of @INC to help nytprofhtml find the source files
+used by the code. Should not be needed in practice.
+
+=item --open
+
+Make your web browser visit the report after it has been generated.
+
+=item -h, --help
+
+Print the help message
+
+=back
+
+=head1 SAMPLE OUTPUT
+
+You can see a complete report for a large application (over 200 files and 2000 subroutines) at
+L<http://idisk.mac.com/tim.bunce-Public/perl/NYTProf/nytprof-perlcritic-20080812/index.html>
+
+The report was generated by profiling L<perlcritic> 1.088 checking it's own source code.
+
+=head1 DIAGNOSTICS
+
+=head2 "Unable to open '... (autosplit into ...)'"
+
+The profiled application executed code in a module that used L<AutoLoader> to
+load the code from a separate .al file.  NYTProf automatically recognises this
+situation and tries to determine the 'parent' module file so it can associate
+the profile data with it.  In order to do that the parent module file must
+already be 'known' to NYTProf, typically by already having some code profiled.
+
+You're only likely to see this warning if you're using the C<start> option to
+start profiling after compile-time. The effect is that times spent in
+autoloaded subs won't be associated with the parent module file and you won't
+get annotated reports for them.
+
+You can avoid this by using the default C<start=begin> option, or by ensuring
+you execute some non-autoloaded code in the parent module, while the profiler is
+running, before an autoloaded sub is called.
+
+
+=head1 HISTORY
+
+A bit of history and a shameless plug...
+
+NYTProf stands for 'New York Times Profiler'. Indeed, this module was initially
+developed from Devel::FastProf by The New York Times Co. to help our developers
+quickly identify bottlenecks in large Perl applications.  The NY Times loves
+Perl and we hope the community will benefit from our work as much as we have
+from theirs.
+
+Please visit L<http://open.nytimes.com>, our open source blog to see what we
+are up to, L<http://code.nytimes.com> to see some of our open projects and then
+check out L<http://nytimes.com> for the latest news!
+
+=head2 Background
+
+Subroutine-level profilers:
+
+  Devel::DProf        | 1995-10-31 | ILYAZ
+  Devel::AutoProfiler | 2002-04-07 | GSLONDON
+  Devel::Profiler     | 2002-05-20 | SAMTREGAR
+  Devel::Profile      | 2003-04-13 | JAW
+  Devel::DProfLB      | 2006-05-11 | JAW
+  Devel::WxProf       | 2008-04-14 | MKUTTER
+
+Statement-level profilers:
+
+  Devel::SmallProf    | 1997-07-30 | ASHTED
+  Devel::FastProf     | 2005-09-20 | SALVA
+  Devel::NYTProf      | 2008-03-04 | AKAPLAN
+  Devel::Profit       | 2008-05-19 | LBROCARD
+
+Devel::NYTProf is a (now distant) fork of Devel::FastProf, which was itself an
+evolution of Devel::SmallProf.
+
+Adam Kaplan took Devel::FastProf and added html report generation (based on
+Devel::Cover) and a test suite - a tricky thing to do for a profiler.
+Meanwhile Tim Bunce had been extending Devel::FastProf to add novel
+per-sub and per-block timing, plus subroutine caller tracking.
+
+When Devel::NYTProf was released Tim switched to working on Devel::NYTProf
+because the html report would be a good way to show the extra profile data, and
+the test suite made development much easier and safer.
+
+Then he went a little crazy and added a slew of new features, in addition to
+per-sub and per-block timing and subroutine caller tracking. These included the
+'opcode interception' method of profiling, ultra-fast and robust inclusive
+subroutine timing, doubling performance, plus major changes to html reporting
+to display all the extra profile call and timing data in richly annotated and
+cross-linked reports.
+
+Steve Peters came on board along the way with patches for portability and to
+keep NYTProf working with the latest development perl versions.
+
+Adam's work is sponsored by The New York Times Co. L<http://open.nytimes.com>.
+Tim's work was partly sponsored by Shopzilla. L<http://www.shopzilla.com>.
+
+=head1 SEE ALSO
+
+Mailing list and discussion at L<http://groups.google.com/group/develnytprof-dev>
+
+Public SVN Repository and hacking instructions at L<http://code.google.com/p/perl-devel-nytprof/>
+
+L<Devel::NYTProf>,
+L<Devel::NYTProf::Reader>,
+L<nytprofcsv>
+
+=head1 AUTHOR
+
+B<Adam Kaplan>, C<< <akaplan at nytimes.com> >>.
+B<Tim Bunce>, L<http://www.tim.bunce.name> and L<http://blog.timbunce.org>.
+B<Steve Peters>, C<< <steve at fisharerojo.org> >>.
+
+=head1 COPYRIGHT AND LICENSE
+
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.8 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut
+
+# vim:ts=8:sw=4:expandtab
