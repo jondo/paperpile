@@ -2,6 +2,7 @@ package Paperpile::Library::Author;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Text::Unidecode;
+use Data::Dumper;
 use Lingua::EN::NameParse;
 
 sub BUILD {
@@ -27,7 +28,7 @@ has 'last' => (
 
 has 'first' => ( is => 'rw',
                  default => '',
-                 trigger => sub { my $self = shift; $self->parse_initials}
+                 trigger => sub { my $self = shift; $self->initials($self->_parse_initials($self->first));}
               );
 
 has 'von' => (
@@ -58,16 +59,25 @@ has 'key' => ( is => 'rw');
 
 sub split_full {
 
-  my ($self) = @_;
+  my $self = shift;
+
+  my $d = $self->_split_full($self->full);
+
+  foreach my $key (keys %$d){
+    $self->$key($d->{$key});
+  }
+}
+
+
+sub _split_full {
+
+  my ($dummy, $full) = @_;
 
   my ($first, $von, $last, $jr);
 
-  my $full = $self->full;
-
-
   # Do nothing in this trivial case
   if (not $full){
-    return;
+    return {first => '', von => '', last => '', jr => '', collective => ''};
   }
 
   # Recognize non-human entities like collaborative names;
@@ -75,12 +85,7 @@ sub split_full {
   # full support of {...} as in BibTeX rather this one special
   # case
   if ($full=~/^\s*\{(.*)\}\s*$/){
-    $self->collective($1);
-    $self->last('');
-    $self->von('');
-    $self->first('');
-    $self->jr('');
-    return;
+    return {first => '', von => '', last => '', jr => '', collective => $1};
   }
 
   # first split by comma
@@ -148,11 +153,7 @@ sub split_full {
     $$string=~s/\s+$//;
   }
 
-  $self->von($von);
-  $self->last($last);
-  $self->first($first);
-  $self->jr($jr);
-
+  return {first => $first, von => $von, last => $last, jr => $jr, collective => ''};
 }
 
 sub read_bibutils{
@@ -234,11 +235,11 @@ sub create_key {
   return ( $self->key($key) );
 }
 
-sub parse_initials {
-  my $self  = shift;
-  my $input = $self->first;
 
-  return $self->initials if not ($self->_autorefresh);
+
+sub _parse_initials {
+
+  my ($dummy, $input) = @_;
 
   # get individual components by splitting at '.' and whitespace
   $input =~ s/\./ /g;
@@ -251,7 +252,7 @@ sub parse_initials {
       $initials .= $1;
     }
   }
-  return $self->initials($initials);
+  return $initials;
 }
 
 # Nicely format name for use in UI; this format can be re-parsed
@@ -260,16 +261,32 @@ sub parse_initials {
 sub nice {
   my $self = shift;
 
-  if ( $self->collective ) {
-    return $self->collective;
+  return $self->_nice( {
+      first      => $self->first,
+      von        => $self->von,
+      last       => $self->last,
+      jr         => $self->jr,
+      collective => $self->collective,
+      initials   => $self->initials,
+
+    }
+  );
+
+}
+
+sub _nice {
+  my ($dummy, $data) = @_;
+
+  if ( $data->{collective} ) {
+    return $data->{collective};
   }
 
   my @components = ();
 
-  push @components, $self->von      if ( $self->von );
-  push @components, $self->last     if ( $self->last );
-  push @components, $self->jr       if ( $self->jr );
-  push @components, $self->initials if ( $self->initials );
+  push @components, $data->{von}      if ( $data->{von} );
+  push @components, $data->{last}     if ( $data->{last} );
+  push @components, $data->{jr}       if ( $data->{jr} );
+  push @components, $data->{initials} if ( $data->{initials} );
 
   my $output = join( " ", @components );
 
@@ -280,6 +297,8 @@ sub nice {
   return $output;
 
 }
+
+
 
 # Returns author in a normalized format with initials. We use this to
 # generate unique IDs for authors

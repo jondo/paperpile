@@ -32,8 +32,6 @@ sub BUILD {
 sub connect {
   my $self = shift;
 
-  print STDERR "==============> Start \n";
-
   if ( !-e $self->file ) {
     FileReadError->throw( error => "Could not find file " . $self->file );
   }

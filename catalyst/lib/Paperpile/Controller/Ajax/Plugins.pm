@@ -95,6 +95,7 @@ sub resultsgrid : Local {
 
 }
 
+
 sub _resultsgrid_format {
 
   my ( $self, $c, $entries, $total_entries ) = @_;
@@ -123,6 +124,7 @@ sub _resultsgrid_format {
   $c->stash->{total_entries} = $total_entries;
   $c->stash->{data}          = [@data];
   $c->stash->{metaData}      = {%metaData};
+
   $c->detach('Paperpile::View::JSON');
 
 }

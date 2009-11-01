@@ -20,6 +20,7 @@ has 'search_pdf' => (is => 'rw', default => 1);
 has 'order' => (is => 'rw', default => 'created DESC');
 has '_db_file' => ( is => 'rw' );
 
+
 sub BUILD {
   my $self = shift;
   $self->plugin_name('DB');
@@ -30,6 +31,9 @@ sub get_model {
   my $self=shift;
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn("dbi:SQLite:".$self->_db_file);
+
+  $model->light_objects($self->light_objects);
+
   return $model;
 
 }
@@ -43,6 +47,7 @@ sub connect {
 
   return $self->update_count();
 }
+
 
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
@@ -60,6 +65,17 @@ sub page {
   $self->_save_page_to_hash($page);
 
   return $page;
+
+}
+
+sub all {
+
+  ( my $self ) = @_;
+
+
+  my $model=$self->get_model;
+
+  return $model->all();
 
 }
 

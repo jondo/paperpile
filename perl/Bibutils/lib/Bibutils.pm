@@ -94,8 +94,26 @@ sub get_data {
         c_get_field_level( $bibpointer, $i, $j )
       );
 
-      push @fields, { tag => $tag, data => decode_utf8($data), level => $level };
+      #print "$tag => $data\n";
+      #my $d = $data;
+      #$d = decode_utf8($data);
+
+      push @fields, { tag => $tag, data => $data, level => $level };
     }
+
+    # decode all data to utf8 in one shot (to avoid calling the
+    # function for every small field which turned out to take long
+    # time
+    my @tmp=();
+    foreach my $x (0.. $#fields){
+      push @tmp, $fields[$x]->{data};
+    }
+    # Assume there is no !#!~~!#! in the data, otherwise we have problem
+    my @encoded = split(/!#!!#!/, decode_utf8(join('!#!!#!', @tmp)));
+    foreach my $x (0.. $#fields){
+      $fields[$x]->{data} = $encoded[$x];
+    }
+
     push @bibs,[@fields];
   }
 

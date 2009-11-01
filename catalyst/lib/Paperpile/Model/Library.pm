@@ -17,7 +17,12 @@ use MooseX::Timestamp;
 use Encode qw(encode decode);
 use File::Temp qw/ tempfile tempdir /;
 
+use Paperpile::Library::Publication;
+use Paperpile::Library::Author;
+
 with 'Catalyst::Component::InstancePerContext';
+
+has 'light_objects' => (is =>'rw', isa =>'Int', default =>0);
 
 sub build_per_context_instance {
   my ($self, $c) = @_;
@@ -47,8 +52,6 @@ sub create_pubs {
   foreach my $pub (@$pubs) {
     eval {
 
-      print STDERR "-";
-
       # Initialize some fields
 
       $pub->created( timestamp gmtime ) if not $pub->created;
@@ -56,11 +59,10 @@ sub create_pubs {
       $pub->last_read('');
       $pub->_imported(1);
 
-
       # Generate citation key
       my $pattern = $self->get_setting('key_pattern');
 
-      #my $pattern ='[firstauthor][YYYY]';
+      $pattern ='[firstauthor][YYYY]';
 
       my $key     = $pub->format_pattern($pattern);
 
@@ -147,18 +149,27 @@ sub insert_pubs {
 
     ## Insert main entry into Publications table
     my $tmp=$pub->as_hash();
-    #$tmp->{rowid}=$pub->_rowid if $pub->_rowid;
 
     ( my $fields, my $values ) = $self->_hash2sql( $tmp, $dbh );
 
     $dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
 
-    print STDERR ".";
-
     ## Insert searchable fields into fulltext table
     my $pub_rowid = $dbh->func('last_insert_rowid');
 
     $pub->_rowid($pub_rowid);
+
+    if ((not $pub->_authors_display) and ($pub->authors)){
+      my @authors = split (/\band\b/,$pub->authors);
+      my @display=();
+      foreach my $a (@authors){
+        my $tmp = Paperpile::Library::Author->_split_full($a);
+        $tmp->{initials} = Paperpile::Library::Author->_parse_initials($tmp->{first});
+        push @display, Paperpile::Library::Author->_nice($tmp);
+      }
+      $pub->_auto_refresh(0);
+      $pub->_authors_display(join(", ", @display));
+    }
 
     my $hash = {
       rowid    => $pub_rowid,
@@ -181,33 +192,8 @@ sub insert_pubs {
 
     $fields.=",text";
     $values.=",''";
-
     $dbh->do("INSERT INTO fulltext_full ($fields) VALUES ($values)");
 
-    # Insert authors
-
-     my $insert =
-       $dbh->prepare("INSERT INTO authors (key,first,last,von,jr) VALUES(?,?,?,?,?)");
-     my $search = $dbh->prepare("SELECT rowid FROM authors WHERE key = ?");
-
-     # 'OR IGNORE' for rare cases where one paper has two or more
-     # authors that are not distinguished by their id (e.g. ENCODE paper with 316 authors)
-     my $insert_join = $dbh->prepare(
-       "INSERT OR IGNORE INTO author_publication (author_id,publication_id) VALUES(?,?)");
-
-     foreach my $author ( @{ $pub->get_authors } ) {
-       my $author_rowid;
-       $search->execute( $author->key );
-       $author_rowid = $search->fetchrow_array;
-
-       if ( not $author_rowid ) {
-         my @values = ( $author->key, $author->first, $author->last, $author->von, $author->jr );
-         $insert->execute(@values);
-         $author_rowid = $dbh->func('last_insert_rowid');
-       }
-
-       $insert_join->execute( $author_rowid, $pub_rowid );
-     }
   }
 
   $dbh->commit;
@@ -891,17 +877,17 @@ sub fulltext_search {
   my @fulltext_hits=();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $pub = Paperpile::Library::Publication->new();
+
+    my $data={};
+
     foreach my $field ( keys %$row ) {
 
       if ( $field eq 'offsets' ) {
         my ( $snippets_text, $snippets_abstract, $snippets_notes ) =
           $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query, $search_pdf );
-
-        $pub->_snippets_text($snippets_text);
-        $pub->_snippets_abstract($snippets_abstract);
-        $pub->_snippets_notes($snippets_notes);
-
+        $data->{_snippets_text}=$snippets_text;
+        $data->{_snippets_abstract}=$snippets_abstract;
+        $data->{_snippets_notes}=$snippets_notes;
         next;
       }
 
@@ -915,11 +901,17 @@ sub fulltext_search {
                                                  # convenience
       $field = 'keywords' if $field eq 'keyword';
 
-      if ($value) {
-        $pub->$field($value);
+      if (defined $value and $value ne '') {
+        $data->{$field}=$value;
       }
     }
+
+    $data->{light} = $self->light_objects;
+
+    my $pub = Paperpile::Library::Publication->new($data);
+
     $pub->_imported(1);
+
     push @page, $pub;
   }
 
@@ -948,7 +940,7 @@ sub standard_search {
   my @page = ();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $pub = Paperpile::Library::Publication->new();
+    my $pub = Paperpile::Library::Publication->new($self->light_objects);
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
@@ -978,7 +970,7 @@ sub all {
   my @page = ();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $pub = Paperpile::Library::Publication->new();
+    my $pub = Paperpile::Library::Publication->new({_light=>$self->light_objects});
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
@@ -1072,18 +1064,20 @@ sub _hash2sql {
 
   foreach my $key ( keys %{$hash} ) {
 
+    my $value = $hash->{$key};
+
     # ignore fields starting with underscore
     # They are not stored to the database by convention
     next if $key =~ /^_/;
 
-    next if not defined $hash->{$key};
+    next if not defined $value;
 
     push @fields, $key;
 
-    if ($hash->{$key} eq ''){
+    if ($value eq ''){
       push @values, "''";
     } else {
-      push @values, $dbh->quote( $hash->{$key} );
+      push @values, $dbh->quote( $value );
     }
   }
 

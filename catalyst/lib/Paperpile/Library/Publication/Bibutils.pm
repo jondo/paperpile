@@ -74,6 +74,7 @@ sub _build_from_bibutils {
   my ( $self, $data ) = @_;
 
   $self->_auto_refresh(0);
+  $self->_light(1);
 
   my %bibutils_map = (
     'REFNUM'             => 'citekey',

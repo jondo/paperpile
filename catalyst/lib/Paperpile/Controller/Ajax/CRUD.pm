@@ -14,7 +14,7 @@ use 5.010;
 sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
-  my $data = $self->_get_selection($c);
+  my $data = $self->_get_selection($c, 1);
 
   my %output=();
 
@@ -460,20 +460,21 @@ sub batch_download : Local {
   }
 
   $q->save;
-
   $q->run;
-
-
 }
 
 
 sub _get_selection {
 
-  my ( $self, $c ) = @_;
+  my ( $self, $c, $light_objects ) = @_;
 
   my $grid_id = $c->request->params->{grid_id};
   my $selection = $c->request->params->{selection};
   my $plugin = $c->session->{"grid_$grid_id"};
+
+  if ($light_objects){
+    $plugin->light_objects(1);
+  }
 
   my @data = ();
 

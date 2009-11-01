@@ -121,19 +121,21 @@ has '_snippets_notes'    => ( is => 'rw');
 has '_highlight' => ( is => 'rw', default => 'pp-grid-highlight0' );
 
 
-# If set fields update themselves. Is only activated after initial
-# object creation in BUILD to avoid excessive redundant refreshing.
+# If true fields update themselves automatically. Is only activated
+# after initial object creation in BUILD to avoid excessive redundant
+# refreshing.
 has '_auto_refresh'    => ( is => 'rw', isa => 'Int', default => 0);
 
-has '_author_helper'  => ( is => 'rw');
+# If set to true helper fields for gui (_citation_display,
+# _author_display) are not generated. Thus we avoid created tons of
+# author objects which is not always needed (e.g. for import).
+has '_light' =>  ( is => 'rw', isa => 'Int', default => 0);
+
 
 sub BUILD {
   my ( $self, $params ) = @_;
 
-  $self->_author_helper(Paperpile::Library::Author->new());
-
   $self->_auto_refresh(1);
-  #$self->refresh_fields;
   $self->refresh_authors;
 
 }
@@ -145,12 +147,16 @@ sub BUILD {
 sub refresh_fields {
   ( my $self ) = @_;
 
-  return if not ($self->_auto_refresh);
+  return if (not $self->_auto_refresh);
 
-  ## Citation display string
-  my $cit = $self->format_citation;
-  if ($cit) {
-    $self->_citation_display($cit);
+  if (not $self->_light){
+
+    ## Citation display string
+    my $cit = $self->format_citation;
+    if ($cit) {
+      $self->_citation_display($cit);
+    }
+
   }
 
   ## Sha1
@@ -162,6 +168,7 @@ sub refresh_authors {
 
   ( my $self ) = @_;
 
+  return if $self->_light;
   return if not ($self->_auto_refresh);
 
   ## Author display string
@@ -186,7 +193,7 @@ sub calculate_sha1 {
   if ( ( $self->authors or $self->_authors_display or $self->editors ) and ($self->title or $self->booktitle)) {
     if ( $self->authors ) {
       $ctx->add( encode_utf8( $self->authors ) );
-    } elsif ( $self->_authors_display ) {
+    } elsif ( $self->_authors_display and !$self->editors) {
       $ctx->add( encode_utf8( $self->_authors_display ) );
     }
     if ( $self->editors ) {
@@ -198,7 +205,6 @@ sub calculate_sha1 {
     if ($self->booktitle){
       $ctx->add( encode_utf8( $self->booktitle ) );
     }
-
 
     $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
   }
@@ -270,8 +276,7 @@ sub format_authors {
   my @display = ();
   if ( $self->authors ) {
 
-    #my $tmp = Paperpile::Library::Author->new();
-    my $tmp=$self->_author_helper;
+    my $tmp = Paperpile::Library::Author->new();
 
     foreach my $a ( split( /\band\b/, $self->authors ) ) {
 
@@ -305,9 +310,14 @@ sub as_hash {
 
   foreach my $key ( $self->meta->get_attribute_list ) {
     my $value = $self->$key;
+    next if ref($value);
+
+    # Force it to a number to be correctly converted to JSON
+    if ($key ~~ ['attachments', 'times_read', 'trashed']){
+      $value+=0;
+    }
 
     # take only simple scalar and not refs of any sort
-    next if ref($value);
     $hash{$key} = $value;
   }
 
@@ -520,8 +530,6 @@ sub format_csl {
 
     $output{author} = [@tmp];
   }
-
-  print STDERR Dumper( {%output} );
 
   return {%output};
 
