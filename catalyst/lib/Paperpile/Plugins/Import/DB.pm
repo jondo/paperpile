@@ -68,16 +68,11 @@ sub page {
 
 }
 
-sub all {
-
-  ( my $self ) = @_;
-
-
-  my $model=$self->get_model;
-
-  return $model->all();
-
-}
+#sub all {
+#  ( my $self ) = @_;
+#  my $model=$self->get_model;
+# return $model->all();
+#}
 
 sub update_count {
   ( my $self) =@_;

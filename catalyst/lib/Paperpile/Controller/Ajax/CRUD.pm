@@ -83,7 +83,6 @@ sub new_entry: Local {
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 
-
 }
 
 sub delete_entry : Local {
@@ -208,6 +207,10 @@ sub add_tag : Local {
 
   my %output=();
 
+  my $dbh=$c->model('Library')->dbh;
+
+  $dbh->begin_work();
+
   foreach my $pub (@$data){
     my @tags = split( /,/, $pub->tags );
     push @tags, $tag;
@@ -223,6 +226,7 @@ sub add_tag : Local {
                          tags=>$new_tags,
                         };
   }
+  $dbh->commit();
 
   $c->stash->{data} = {%output};
   $c->stash->{success} = 'true';
@@ -238,20 +242,23 @@ sub remove_tag : Local {
 
   my %output=();
 
+  my $dbh=$c->model('Library')->dbh;
+
+  $dbh->begin_work;
+
   foreach my $pub (@$data) {
     my $new_tags = $pub->tags;
-    print STDERR "======> $new_tags $tag\n";
-
     $new_tags =~ s/^$tag,//g;
     $new_tags =~ s/^$tag$//g;
     $new_tags =~ s/,$tag$//g;
     $new_tags =~ s/,$tag,/,/g;
     $c->model('Library')->update_tags( $pub->_rowid, $new_tags );
     $pub->tags($new_tags);
-    print STDERR "======> $new_tags\n";
     $output{$pub->sha1}={tags=>$new_tags};
 
   }
+
+  $dbh->commit;
 
   $c->stash->{data} = {%output};
   $c->forward('Paperpile::View::JSON');
@@ -382,6 +389,10 @@ sub move_in_folder : Local {
 
   my %output;
 
+  my $dbh = $c->model('Library')->dbh;
+
+  $dbh->begin_work();
+
   if ( $node_id ne 'FOLDER_ROOT' ) {
     my $newFolder = $node_id;
 
@@ -410,8 +421,10 @@ sub move_in_folder : Local {
         created   => $pub->created,
       };
     }
-
   }
+
+  $dbh->commit();
+
 
   $c->stash->{data}    = {%output};
   $c->stash->{success} = 'true';
@@ -474,6 +487,8 @@ sub _get_selection {
 
   if ($light_objects){
     $plugin->light_objects(1);
+  } else {
+    $plugin->light_objects(0);
   }
 
   my @data = ();

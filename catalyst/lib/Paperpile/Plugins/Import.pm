@@ -61,9 +61,7 @@ sub all {
   ( my $self ) = @_;
 
   return $self->page(0,999999);
-
 }
-
 
 
 # Function: complete_details

@@ -205,7 +205,9 @@ sub delete_pubs {
 
   ( my $self, my $pubs ) = @_;
 
-  $self->dbh->begin_work;
+  my $dbh = $self->dbh;
+
+  $dbh->begin_work;
 
   # check if entry has any attachments an delete those
   foreach my $pub (@$pubs) {
@@ -213,7 +215,7 @@ sub delete_pubs {
     my $rowid=$pub->_rowid;
 
     # First delete attachments from Attachments table
-    my $select=$self->dbh->prepare("SELECT rowid FROM Attachments WHERE publication_id=$rowid;");
+    my $select=$dbh->prepare("SELECT rowid FROM Attachments WHERE publication_id=$rowid;");
     my $attachment_rowid;
     $select->bind_columns( \$attachment_rowid );
     $select->execute;
@@ -225,24 +227,18 @@ sub delete_pubs {
   }
 
   # Then delete the entry in all relevant tables
-  my $delete_main     = $self->dbh->prepare( "DELETE FROM publications WHERE rowid=?" );
-  my $delete_fulltext_citation = $self->dbh->prepare("DELETE FROM fulltext_citation WHERE rowid=?");
-  my $delete_fulltext_full = $self->dbh->prepare("DELETE FROM fulltext_full WHERE rowid=?");
-  my $delete_author_join =
-    $self->dbh->prepare( "DELETE FROM author_publication WHERE publication_id=?" );
-  my $delete_authors = $self->dbh->prepare(
-    "DELETE From authors where rowid not in (SELECT author_id FROM author_publication)" );
+  my $delete_main     = $dbh->prepare( "DELETE FROM publications WHERE rowid=?" );
+  my $delete_fulltext_citation = $dbh->prepare("DELETE FROM fulltext_citation WHERE rowid=?");
+  my $delete_fulltext_full = $dbh->prepare("DELETE FROM fulltext_full WHERE rowid=?");
 
   foreach my $pub (@$pubs) {
     my $rowid = $pub->_rowid;
     $delete_main->execute($rowid);
     $delete_fulltext_citation->execute($rowid);
     $delete_fulltext_full->execute($rowid);
-    $delete_author_join->execute($rowid);
-    $delete_authors->execute;
   }
 
-  $self->dbh->commit;
+  $dbh->commit;
 
   return 1;
 
@@ -252,7 +248,9 @@ sub trash_pubs {
 
   ( my $self, my $pubs, my $mode ) = @_;
 
-  $self->dbh->begin_work;
+  my $dbh = $self->dbh;
+
+  $dbh->begin_work;
 
   my @files = ();
 
@@ -264,17 +262,16 @@ sub trash_pubs {
     my $status=1;
     $status=0 if $mode eq 'RESTORE';
 
-    $self->dbh->do("UPDATE Publications SET trashed=$status WHERE rowid=$rowid");
-
+    $dbh->do("UPDATE Publications SET trashed=$status WHERE rowid=$rowid");
 
     # Created is used to store time of import as well as time of
     # deletion, so we set it everytime we trash or restore something
     my $now = $self->dbh->quote(timestamp gmtime);
-    $self->dbh->do("UPDATE Publications SET created=$now WHERE rowid=$rowid;");
+    $dbh->do("UPDATE Publications SET created=$now WHERE rowid=$rowid;");
 
     # Move attachments
     my $select =
-      $self->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+      $dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
 
     my $attachment_rowid;
     my $file_name;
@@ -291,9 +288,9 @@ sub trash_pubs {
         $move_to=~s/Trash.//;
       }
       push @files, [ $file_name, $move_to ];
-      $move_to = $self->dbh->quote($move_to);
+      $move_to = $dbh->quote($move_to);
 
-      $self->dbh->do("UPDATE Attachments SET file_name=$move_to WHERE rowid=$attachment_rowid; ");
+      $dbh->do("UPDATE Attachments SET file_name=$move_to WHERE rowid=$attachment_rowid; ");
 
     }
 
@@ -312,7 +309,7 @@ sub trash_pubs {
 
       $move_to = $self->dbh->quote($move_to);
 
-      $self->dbh->do("UPDATE Publications SET pdf=$move_to WHERE rowid=$rowid;");
+      $dbh->do("UPDATE Publications SET pdf=$move_to WHERE rowid=$rowid;");
 
     }
 
@@ -344,7 +341,7 @@ sub trash_pubs {
     }
   }
 
-  $self->dbh->commit;
+  $dbh->commit;
 
   return 1;
 
@@ -406,7 +403,6 @@ sub update_pub {
 
   return $new_pub;
 }
-
 
 
 sub get_attachments {
@@ -481,31 +477,45 @@ sub update_citekeys {
 }
 
 
+# Update tag flat fields in Publication and Fulltext tables
+
+sub _update_tags {
+
+  ( my $self, my $pub_rowid, my $tags) = @_;
+
+  my $dbh = $self->dbh;
+
+  my $encoded_tags= Paperpile::Utils->encode_tags($tags);
+
+  $tags = $dbh->quote($tags);
+  $encoded_tags = $dbh->quote($encoded_tags);
+
+  $dbh->do("UPDATE Publications SET tags=$tags WHERE rowid=$pub_rowid;");
+  $dbh->do("UPDATE Fulltext_full SET label=$tags WHERE rowid=$pub_rowid;");
+  $dbh->do("UPDATE Fulltext_citation SET label=$tags WHERE rowid=$pub_rowid;");
+
+  $dbh->do("UPDATE Fulltext_full SET labelid=$encoded_tags WHERE rowid=$pub_rowid;");
+  $dbh->do("UPDATE Fulltext_citation SET labelid=$encoded_tags WHERE rowid=$pub_rowid;");
+
+}
+
 sub update_tags {
   ( my $self, my $pub_rowid, my $tags) = @_;
 
-  $DB::single=1;
-
+  my $dbh = $self->dbh;
   my @tags=split(/,/,$tags);
 
-  # First update flat field in Publication and Fulltext tables
-  $self->update_field('Publications',$pub_rowid,'tags',$tags);
-  $self->update_field('Fulltext_full',$pub_rowid,'label',$tags);
-  $self->update_field('Fulltext_citation',$pub_rowid,'label',$tags);
-
-  my $encoded_tags= Paperpile::Utils->encode_tags($tags);
-  $self->update_field('Fulltext_full',$pub_rowid,'labelid',$encoded_tags);
-  $self->update_field('Fulltext_citation',$pub_rowid,'labelid',$encoded_tags);
+  $self->_update_tags($pub_rowid, $tags);
 
   # Remove all connections form Tag_Publication table
-  my $sth=$self->dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
+  my $sth=$dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
 
   # Then insert tags into Tag table (if not already exists) and set
   # new connections in Tag_Publication table
 
-  my $select=$self->dbh->prepare("SELECT rowid FROM Tags WHERE tag=?");
-  my $insert=$self->dbh->prepare("INSERT INTO Tags (tag, style) VALUES(?,?)");
-  my $connection=$self->dbh->prepare("INSERT INTO Tag_Publication (tag_id, publication_id) VALUES(?,?)");
+  my $select=$dbh->prepare("SELECT rowid FROM Tags WHERE tag=?");
+  my $insert=$dbh->prepare("INSERT INTO Tags (tag, style) VALUES(?,?)");
+  my $connection=$dbh->prepare("INSERT INTO Tag_Publication (tag_id, publication_id) VALUES(?,?)");
 
   foreach my $tag (@tags){
     my $tag_rowid=undef;
@@ -536,12 +546,16 @@ sub new_tag {
 sub delete_tag {
   ( my $self, my $tag) = @_;
 
-  my $_tag=$self->dbh->quote($tag);
+  my $dbh = $self->dbh;
+
+  $dbh->begin_work;
+
+  my $_tag=$dbh->quote($tag);
 
   # Select all publications with this tag
   ( my $tag_id ) =
-    $self->dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_tag");
-  my $select=$self->dbh->prepare("SELECT tags, publication_id FROM Publications, Tag_Publication WHERE Publications.rowid=publication_id AND tag_id=$tag_id");
+    $dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_tag");
+  my $select=$dbh->prepare("SELECT tags, publication_id FROM Publications, Tag_Publication WHERE Publications.rowid=publication_id AND tag_id=$tag_id");
 
   my ($publication_id, $tags);
   $select->bind_columns(\$tags, \$publication_id);
@@ -557,19 +571,15 @@ sub delete_tag {
     $new_tags =~s/,$tag,/,/;
     $new_tags =~s/,$tag$//;
 
-    $self->update_field('Publications',$publication_id,'tags',$new_tags);
-    $self->update_field('Fulltext_full',$publication_id,'label',$new_tags);
-    $self->update_field('Fulltext_citation',$publication_id,'label',$new_tags);
-
-    my $encoded_tags= Paperpile::Utils->encode_tags($new_tags);
-    $self->update_field('Fulltext_full',$publication_id,'labelid',$encoded_tags);
-    $self->update_field('Fulltext_citation',$publication_id,'labelid',$encoded_tags);
+    $self->_update_tags($publication_id, $new_tags);
 
   }
 
   # Delete tag from Tags table and link table
-  $self->dbh->do("DELETE FROM Tags WHERE rowid=$tag_id");
-  $self->dbh->do("DELETE FROM Tag_Publication WHERE tag_id=$tag_id");
+  $dbh->do("DELETE FROM Tags WHERE rowid=$tag_id");
+  $dbh->do("DELETE FROM Tag_Publication WHERE tag_id=$tag_id");
+
+  $dbh->commit;
 
 }
 
@@ -577,10 +587,14 @@ sub delete_tag {
 sub rename_tag {
   my ( $self, $old_tag, $new_tag) = @_;
 
-  my $_old_tag=$self->dbh->quote($old_tag);
+  my $dbh = $self->dbh;
+
+  $dbh->begin_work;
+
+  my $_old_tag=$dbh->quote($old_tag);
 
   ( my $old_tag_id ) =
-    $self->dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_old_tag");
+    $dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_old_tag");
   my $select=$self->dbh->prepare("SELECT tags, publication_id FROM Publications, Tag_Publication WHERE Publications.rowid=publication_id AND tag_id=$old_tag_id");
 
   my ($publication_id, $old_tags);
@@ -596,21 +610,16 @@ sub rename_tag {
     $new_tags =~s/,$old_tag,/,$new_tag,/;
     $new_tags =~s/,$old_tag$/,$new_tag/;
 
-    $self->update_field('Publications',$publication_id,'tags',$new_tags);
-    $self->update_field('Fulltext_full',$publication_id,'label',$new_tags);
-    $self->update_field('Fulltext_citation',$publication_id,'label',$new_tags);
-
-    my $encoded_tags= Paperpile::Utils->encode_tags($new_tags);
-    $self->update_field('Fulltext_full',$publication_id,'labelid',$encoded_tags);
-    $self->update_field('Fulltext_citation',$publication_id,'labelid',$encoded_tags);
-
-
+    $self->_update_tags($publication_id, $new_tags);
   }
 
-  $self->update_field('Tags',$old_tag_id,'tag', $new_tag);
+  $new_tag = $dbh->quote($new_tag);
+
+  $dbh->do("UPDATE Tags SET tag=$new_tag WHERE rowid=$old_tag_id;");
+
+  $dbh->commit;
 
 }
-
 
 
 sub insert_folder {
@@ -636,23 +645,24 @@ sub insert_folder {
 sub update_folders {
   ( my $self, my $pub_rowid, my $folders) = @_;
 
-  $DB::single=1;
+  my $dbh = $self->dbh;
 
   my @folders=split(/,/,$folders);
 
   # First update flat field in Publication and Fulltext tables
-  $self->update_field('Publications',$pub_rowid,'folders',$folders);
-  $self->update_field('Fulltext_full',$pub_rowid,'folder',$folders);
-  $self->update_field('Fulltext_citation',$pub_rowid,'folder',$folders);
+
+  $dbh->do("UPDATE Publications SET folders=$folders WHERE rowid=$pub_rowid;");
+  $dbh->do("UPDATE Fulltext_full SET folder=$folders WHERE rowid=$pub_rowid;");
+  $dbh->do("UPDATE Fulltext_citation SET folder=$folders WHERE rowid=$pub_rowid;");
 
   # Remove all connections from Folder_Publication table
-  my $sth=$self->dbh->do("DELETE FROM Folder_Publication WHERE publication_id=$pub_rowid");
+  my $sth=$dbh->do("DELETE FROM Folder_Publication WHERE publication_id=$pub_rowid");
 
   # Then insert folders into Folder table (if not already exists) and set
   # new connections in Folder_Publication table
 
-  my $select=$self->dbh->prepare("SELECT rowid FROM Folders WHERE folder_id=?");
-  my $connection=$self->dbh->prepare("INSERT INTO Folder_Publication (folder_id, publication_id) VALUES(?,?)");
+  my $select=$dbh->prepare("SELECT rowid FROM Folders WHERE folder_id=?");
+  my $connection=$dbh->prepare("INSERT INTO Folder_Publication (folder_id, publication_id) VALUES(?,?)");
 
   foreach my $folder (@folders){
     my $folder_rowid=undef;
@@ -666,10 +676,6 @@ sub update_folders {
 
     $connection->execute($folder_rowid,$pub_rowid);
   }
-
-  # Delete folders that have no connection any longer
-  #$self->dbh->do("DELETE From Folders where rowid not in (SELECT folder_id FROM Folder_Publication)");
-
 }
 
 sub delete_folder {
@@ -905,8 +911,6 @@ sub fulltext_search {
         $data->{$field}=$value;
       }
     }
-
-    $data->{light} = $self->light_objects;
 
     my $pub = Paperpile::Library::Publication->new($data);
 

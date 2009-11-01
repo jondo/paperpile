@@ -174,34 +174,6 @@ sub delete_folder : Local {
 }
 
 
-sub move_in_folder : Local {
-  my ( $self, $c ) = @_;
-
-  my $node_id = $c->request->params->{node_id};
-  my $grid_id = $c->request->params->{grid_id};
-  my $sha1    = $c->request->params->{sha1};
-  my $rowid   = $c->request->params->{rowid};
-  my $path    = $c->request->params->{path};
-
-  my $plugin = $c->session->{"grid_$grid_id"};
-  my $pub    = $plugin->find_sha1($sha1);
-  my $tree   = $c->session->{"tree"};
-
-  my $newFolder = $node_id;
-  my @folders   = ();
-
-  @folders = split( /,/, $pub->folders );
-  push @folders, $newFolder;
-
-  my %seen = ();
-  @folders = grep { !$seen{$_}++ } @folders;
-
-  $c->model('Library')->update_folders( $rowid, join( ',', @folders ) );
-  $pub->folders( join( ',', @folders ) );
-
-
-}
-
 sub delete_from_folder : Local {
   my ( $self, $c ) = @_;
 
