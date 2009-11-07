@@ -1,7 +1,7 @@
 /*
  * endxmlin.h
  *
- * Copyright (c) Chris Putnam 2006-8
+ * Copyright (c) Chris Putnam 2006-2009
  *
  * Program and source code released under the GPL
  *

@@ -1,7 +1,7 @@
 /*
  * medin.c
  *
- * Copyright (c) Chris Putnam 2004-8
+ * Copyright (c) Chris Putnam 2004-2009
  *
  * Program and source code released under the GPL
  *
@@ -16,35 +16,58 @@
 #include "xml_encoding.h"
 #include "medin.h"
 
+/*
+ * The only difference between MEDLINE and PUBMED in format is
+ * that the entire library is wrapped in <MedlineCitationSet>
+ * or <PubmedArticle> tags...
+ */
+static char *wrapper[] = { "MedlineCitationSet", "PubmedArticle" };
+static int nwrapper = sizeof( wrapper ) / sizeof( wrapper[0] );
+
+static char *
+medin_findstartwrapper( char *buf, int *ntype )
+{
+	char *startptr=NULL;
+	int i;
+	for ( i=0; i<nwrapper && startptr==NULL; ++i ) {
+		startptr = xml_findstart( buf, wrapper[ i ] );
+		if ( startptr ) *ntype = i;
+	}
+	return startptr;
+}
+
+static char *
+medin_findendwrapper( char *buf, int ntype )
+{
+	char *endptr = xml_findend( buf, wrapper[ ntype ] );
+	return endptr;
+}
+
 int
 medin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, newstr *reference, int *fcharset )
 {
 	newstr tmp;
 	char *startptr = NULL, *endptr;
-	int haveref = 0, inref = 0, file_charset = CHARSET_UNKNOWN, m;
+	int haveref = 0, inref = 0, file_charset = CHARSET_UNKNOWN, m, type = 1;
 	newstr_init( &tmp );
 	while ( !haveref && newstr_fget( fp, buf, bufsize, bufpos, line ) ) {
 		if ( line->data ) {
 			m = xml_getencoding( line );
 			if ( m!=CHARSET_UNKNOWN ) file_charset = m;
 		}
-		if ( line->data )
-			startptr = xml_findstart( line->data, "PubmedArticle" );
+		if ( line->data ) {
+			startptr = medin_findstartwrapper( line->data, &type );
+		}
 		if ( startptr || inref ) {
 			if ( inref ) newstr_strcat( &tmp, line->data );
 			else {
 				newstr_strcat( &tmp, startptr );
 				inref = 1;
 			}
-			endptr = xml_findend( tmp.data, "PubmedArticle" );
+			endptr = medin_findendwrapper( tmp.data, type );
 			if ( endptr ) {
-/*				newstr_segcpy( reference, tmp.data, endptr+1 );*/
 				newstr_segcpy( reference, tmp.data, endptr );
 				haveref = 1;
-/*				newstr_empty( &buffer ); */
-/*				startptr = xml_findstart( buffer.data, "PubmedArticle" );
-				if ( startptr ) inref=1;
-				else inref = 0;*/
 			}
 		}
 	}
@@ -53,13 +76,64 @@ medin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, newstr
 	return haveref;
 }
 
+static inline int
+xml_hasdata( xml *node )
+{
+	if ( node && node->value && node->value->data ) return 1;
+	return 0;
+}
+
+static inline char *
+xml_data( xml *node )
+{
+	return node->value->data;
+}
+
+static inline int
+xml_tagwithdata( xml *node, char *tag )
+{
+	if ( !xml_hasdata( node ) ) return 0;
+	return xml_tagexact( node, tag );
+}
+
+typedef struct xml_convert {
+	char *in;       /* The input tag */
+	char *a, *aval; /* The attribute="attribute_value" pair, if nec. */
+	char *out;      /* The output tag */
+	int level;
+} xml_convert;
+
+static int
+medin_doconvert( xml *node, fields *info, xml_convert *c, int nc )
+{
+	int i, found = 0;
+	char *d;
+	if ( !xml_hasdata( node ) ) return 0;
+	d = xml_data( node );
+	for ( i=0; i<nc && found==0; ++i ) {
+		if ( c[i].a==NULL ) {
+			if ( xml_tagexact( node, c[i].in ) ) {
+				found = 1;
+				fields_add( info, c[i].out, d, c[i].level );
+			}
+		} else {
+			if ( xml_tag_attrib( node, c[i].in, c[i].a, c[i].aval)){
+				found = 1;
+				fields_add( info, c[i].out, d, c[i].level );
+			}
+		}
+	
+	}
+	return found;
+}
+
 /* <ArticleTitle>Mechanism and.....</ArticleTitle>
  */
 static void
 medin_articletitle( xml *node, fields *info )
 {
-	if ( node->value && node->value->data )
-		fields_add( info, "TITLE", node->value->data, 0 );
+	if ( xml_hasdata( node ) )
+		fields_add( info, "TITLE", xml_data( node ), 0 );
 }
 
 /*            <MedlineDate>2003 Jan-Feb</MedlineDate> */
@@ -100,6 +174,8 @@ medin_medlinedate( fields *info, char *string, int level )
 	newstr_free( &tmp );
 }
 
+
+
 /* <Journal>
  *    <ISSN>0027-8424</ISSN>
  *    <JournalIssue PrintYN="Y">
@@ -131,21 +207,19 @@ medin_medlinedate( fields *info, char *string, int level )
 static void
 medin_journal1( xml *node, fields *info )
 {
-	if ( node->value && node->value->data ) {
-		if ( xml_tagexact( node, "ISSN" ) )
-			fields_add( info, "ISSN", node->value->data, 1 );
-		else if ( xml_tagexact( node, "Volume" ) )
-			fields_add( info, "VOLUME", node->value->data, 1 );
-		else if ( xml_tagexact( node, "Issue" ) )
-			fields_add( info, "ISSUE", node->value->data, 1 );
-		else if ( xml_tagexact( node, "Year" ) )
-			fields_add( info, "PARTYEAR", node->value->data, 1 );
-		else if ( xml_tagexact( node, "Month" ) )
-			fields_add( info, "PARTMONTH", node->value->data, 1 );
-		else if ( xml_tagexact( node, "Day" ) )
-			fields_add( info, "PARTDAY", node->value->data, 1 );
-		else if ( xml_tagexact( node, "MedlineDate" ) )
-			medin_medlinedate( info, node->value->data, 1 );
+	xml_convert c[] = {
+		{ "ISSN",     NULL, NULL, "ISSN",      1 },
+		{ "Volume",   NULL, NULL, "VOLUME",    1 },
+		{ "Issue",    NULL, NULL, "ISSUE",     1 },
+		{ "Year",     NULL, NULL, "PARTYEAR",  1 },
+		{ "Month",    NULL, NULL, "PARTMONTH", 1 },
+		{ "Day",      NULL, NULL, "PARTDAY",   1 },
+		{ "Language", NULL, NULL, "LANGUAGE",  1 },
+	};
+	int nc = sizeof( c ) / sizeof( c[0] );;
+	if ( xml_hasdata( node ) && !medin_doconvert( node, info, c, nc ) ) {
+		if ( xml_tagexact( node, "MedlineDate" ) )
+			medin_medlinedate( info, xml_data( node ), 1 );
 	}
 	if ( node->down ) medin_journal1( node->down, info );
 	if ( node->next ) medin_journal1( node->next, info );
@@ -164,7 +238,7 @@ medin_pagination( xml *node, fields *info )
 	if ( xml_tagexact( node, "MedlinePgn" ) && node->value ) {
 		newstr_init( &sp );
 		newstr_init( &ep );
-		p = node->value->data;
+		p = xml_data( node );
 		while ( *p && *p!='-' )
 			newstr_addchar( &sp, *p++ );
 		if ( *p=='-' ) p++;
@@ -193,8 +267,8 @@ medin_pagination( xml *node, fields *info )
 static void
 medin_abstract( xml *node, fields *info )
 {
-	if ( xml_tagexact( node, "AbstractText" ) && node->value && node->value->data )
-		fields_add( info, "ABSTRACT", node->value->data, 0 );
+	if ( xml_tagwithdata( node, "AbstractText" ) )
+		fields_add( info, "ABSTRACT", xml_data( node ), 0 );
 	else if ( node->next ) medin_abstract( node->next, info );
 }
 
@@ -214,16 +288,22 @@ medin_author( xml *node, newstr *name )
 	if ( xml_tagexact( node, "LastName" ) ) {
 		if ( name->len ) {
 			newstr_prepend( name, "|" );
-			newstr_prepend( name, node->value->data );
+			newstr_prepend( name, xml_data( node ) );
 		}
-		else newstr_strcat( name, node->value->data );
+		else newstr_strcat( name, xml_data( node ) );
 	} else if ( xml_tagexact( node, "ForeName" ) || 
 	            xml_tagexact( node, "FirstName" ) ) {
-		p = node->value->data;
+		p = xml_data( node );
 		while ( p && *p ) {
 			if ( name->len ) newstr_addchar( name, '|' );
 			while ( *p && *p==' ' ) p++;
 			while ( *p && *p!=' ' ) newstr_addchar( name, *p++ );
+		}
+	} else if ( xml_tagexact( node, "Initials" ) && !strchr( name->data, '|' )) {
+		p = xml_data( node );
+		while ( p && *p ) {
+			if ( name->len ) newstr_addchar( name, '|' );
+			if ( !is_ws(*p) ) newstr_addchar( name, *p++ );
 		}
 	}
 	if ( node->down ) medin_author( node->down, name );
@@ -262,8 +342,8 @@ medin_authorlist( xml *node, fields *info )
 static void
 medin_journal2( xml *node, fields *info )
 {
-	if ( xml_tagexact( node, "MedlineTA" ) && node->value && node->value->data )
-		fields_add( info, "TITLE", node->value->data, 1 );
+	if ( xml_tagwithdata( node, "MedlineTA" ) )
+		fields_add( info, "TITLE", xml_data( node ), 1 );
 	if ( node->down ) medin_journal2( node->down, info );
 	if ( node->next ) medin_journal2( node->next, info );
 }
@@ -281,9 +361,8 @@ medin_journal2( xml *node, fields *info )
 static void
 medin_meshheading( xml *node, fields *info )
 {
-	if ( xml_tagexact( node, "DescriptorName" ) && node->value && node->value->data ) {
-		fields_add( info, "KEYWORD", node->value->data, 0 );
-	}
+	if ( xml_tagwithdata( node, "DescriptorName" ) )
+		fields_add( info, "KEYWORD", xml_data( node ), 0 );
 	if ( node->next ) medin_meshheading( node->next, info );
 }
 
@@ -311,14 +390,14 @@ medin_meshheadinglist( xml *node, fields *info )
 static void
 medin_pubmeddata( xml *node, fields *info )
 {
-	if ( xml_tag_attrib( node, "ArticleId", "IdType", "doi" ) )
-		fields_add( info, "DOI", node->value->data, 0 );
-	if ( xml_tag_attrib( node, "ArticleId", "IdType", "pubmed" ) )
-		fields_add( info, "PUBMED", node->value->data, 0 );
-	if ( xml_tag_attrib( node, "ArticleId", "IdType", "medline" ) )
-		fields_add( info, "MEDLINE", node->value->data, 0 );
-	if ( xml_tag_attrib( node, "ArticleId", "IdType", "pii" ) )
-		fields_add( info, "PII", node->value->data, 0 );
+	xml_convert c[] = {
+		{ "ArticleId", "IdType", "doi",     "DOI",     0 },
+		{ "ArticleId", "IdType", "pubmed",  "PMID",    0 },
+		{ "ArticleId", "IdType", "medline", "MEDLINE", 0 },
+		{ "ArticleId", "IdType", "pii",     "PII",     0 },
+	};
+	int nc = sizeof( c ) / sizeof( c[0] );
+	medin_doconvert( node, info, c, nc );
 	if ( node->next ) medin_pubmeddata( node->next, info );
 	if ( node->down ) medin_pubmeddata( node->down, info );
 }
@@ -342,29 +421,34 @@ medin_article( xml *node, fields *info )
 static void
 medin_medlinecitation( xml *node, fields *info )
 {
-	if ( xml_tagexact( node, "Article" ) && node->down )
-		medin_article( node->down, info );
-	else if ( xml_tagexact( node, "MedlineJournalInfo" ) && node->down )
-		medin_journal2( node->down, info );
-	else if ( xml_tagexact( node, "MeshHeadingList" ) && node->down )
-		medin_meshheadinglist( node->down, info );
+	if ( node->down ) {
+		if ( xml_tagexact( node, "Article" ) )
+			medin_article( node->down, info );
+		else if ( xml_tagexact( node, "MedlineJournalInfo" ) )
+			medin_journal2( node->down, info );
+		else if ( xml_tagexact( node, "MeshHeadingList" ) )
+			medin_meshheadinglist( node->down, info );
+	}
 	if ( node->next ) medin_medlinecitation( node->next, info );
 }
 
 static void
 medin_pubmedarticle( xml *node, fields *info )
 {
-	if ( xml_tagexact( node, "MedlineCitation" ) && node->down )
-		medin_medlinecitation( node->down, info );
-	else if ( xml_tagexact( node, "PubmedData" ) && node->down )
-		medin_pubmeddata( node->down, info );
+	if ( node->down ) {
+		if ( xml_tagexact( node, "MedlineCitation" ) )
+			medin_medlinecitation( node->down, info );
+		else if ( xml_tagexact( node, "PubmedData" ) )
+			medin_pubmeddata( node->down, info );
+	}
 	if ( node->next ) medin_pubmedarticle( node->next, info );
 }
 
 static void
 medin_assembleref( xml *node, fields *info )
 {
-	if ( xml_tagexact( node, "PubmedArticle" ) ) {
+	if ( xml_tagexact( node, "PubmedArticle" ) ||
+	     xml_tagexact( node, "MedlineCitationSet" ) ) {
 		if ( node->down ) medin_pubmedarticle( node->down, info );
 	} else if ( node->down ) medin_assembleref( node->down, info );
 	if ( node->next ) medin_assembleref( node->next, info );
@@ -382,7 +466,7 @@ medin_processf( fields *medin, char *data, char *filename, long nref )
 {
 	xml top;
 	xml_init( &top );
-	xml_tree( data, & top );
+	xml_tree( data, &top );
 	medin_assembleref( &top, medin );
 	xml_free( &top );
 	return 1;

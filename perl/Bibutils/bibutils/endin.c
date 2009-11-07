@@ -1,7 +1,7 @@
 /*
  * endin.c
  *
- * Copyright (c) Chris Putnam 2003-8
+ * Copyright (c) Chris Putnam 2003-2009
  *
  * Program and source code released under the GPL
  *
@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "is_ws.h"
+#include "doi.h"
 #include "newstr.h"
 #include "newstr_conv.h"
 #include "fields.h"
@@ -21,20 +23,20 @@
 
 /* Endnote tag definition:
     character 1 = '%'
-    character 2 = alphabetic character or digit
+    character 2 = alphabetic character or digit (or other characters)
     character 3 = space (ansi 32)
 */
 static int
 endin_istag( char *buf )
 {
-	if (! (buf[0]=='%' ) ) return  0;
-	if (! (((buf[1]>='A' && buf[1]<='Z'))||(buf[1]>='0'&&buf[1]<='9')||
-	        (buf[1]>='a' && buf[1]<='z')|| (buf[1]=='?'||buf[1]=='@'||buf[1]=='!' || buf[1]=='#' || buf[1]=='$' || buf[1]=='&' || buf[1]=='(' || buf[1]==')' || buf[1]=='*' || buf[1]=='+')) ) 
-		return 0;
-	if (buf[2]!=' ') return 0;
-	return 1;
+	const char others[]="!@#$^&*()+=?[~>";
+	if ( buf[0]!='%' ) return 0;
+	if ( buf[2]!=' ' ) return 0;
+	if ( isalpha( buf[1] ) ) return 1;
+	if ( isdigit( buf[1] ) ) return 1;
+	if ( strchr( others, buf[1] ) ) return 1;
+	return 0;
 }
-
 
 static int
 readmore( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line )
@@ -57,7 +59,8 @@ endin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, newstr
 		/* Skip <feff> Unicode header information */
 		/* <feff> = ef bb bf */
 		up = (unsigned char* ) p;
-		if ( *up==239 && *(up+1)==187 && *(up+2)==191 ) {
+		if ( line->len > 2 && up[0]==0xEF && up[1]==0xBB &&
+				up[2]==0xBF ) {
 			*fcharset = CHARSET_UNICODE;
 			p += 3;
 		}
@@ -176,6 +179,7 @@ addtype( fields *info, char *data, int level )
 		{ "HEARING", "HEARING" },
 		{ "STATUTE", "STATUTE" },
 		{ "CHART OR TABLE", "CHART" },
+		{ "WEB PAGE", "WEBPAGE" },
 	};
 	int  ntypes = sizeof( types ) / sizeof( lookups );
 	int  i, found=0;
@@ -271,18 +275,18 @@ adddate( fields *info, char *tag, char *newtag, char *p, int level )
  * if !%B & !%J & !%R & !%I - journal article
  */
 int
-endin_typef( fields *endin, char *filename, int nrefs, param *p, variants *all,
-		int nall )
+endin_typef( fields *endin, char *filename, int nrefs, param *p, 
+	variants *all, int nall )
 {
 	char *refnum = "";
 	int n, reftype, nrefnum, nj, nv, nb, nr, nt, ni;
 	n = fields_find( endin, "%0", 0 );
 	nrefnum = fields_find( endin, "%F", 0 );
 	if ( nrefnum!=-1 ) refnum = endin->data[nrefnum].data;
-	if ( n!=-1 )
-		reftype = get_reftype( endin->data[n].data, nrefs, p->progname,
-			all, nall, refnum );
-	else {
+	if ( n!=-1 ) {
+		reftype = get_reftype( endin->data[n].data, nrefs, 
+			p->progname, all, nall, refnum );
+	} else {
 		nj = fields_find( endin, "%J", 0 );
 		nv = fields_find( endin, "%V", 0 );
 		nb = fields_find( endin, "%B", 0 );
@@ -310,6 +314,69 @@ endin_typef( fields *endin, char *filename, int nrefs, param *p, variants *all,
 		}
 	}
 	return reftype;
+}
+
+/* Wiley puts multiple authors separated by commas on the %A lines.
+ * We can detect this by finding the terminal comma in the data.
+ *
+ * "%A" "Author A. X. Last, Author N. B. Next,"
+ */
+static int
+is_wiley_author( fields *endin, int n )
+{
+	newstr *t, *d;
+	t = &(endin->tag[n]);
+	if ( !t->data || strcmp( t->data, "%A" ) ) return 0;
+	d = &( endin->data[n] );
+	if ( !(d->data) || d->len==0 ) return 0;
+	if ( d->data[d->len-1]!=',' ) return 0;
+	return 1;
+}
+
+static void
+cleanup_wiley_author( fields *endin, int n )
+{	
+	newstr tmp, tmppart;
+	int i, nauthor = 0;
+	newstr_init( &tmp );
+	newstr_init( &tmppart );
+	newstr_newstrcpy( &tmp, &( endin->data[n] ) );
+	i = 0;
+	while ( i<tmp.len ) {
+		if ( tmp.data[i]==',' ) {
+			if ( nauthor==0 )
+				newstr_newstrcpy( &(endin->data[n]), &tmppart );
+			else
+				fields_add( endin, endin->tag[n].data,
+					tmppart.data, endin->level[n] );
+			newstr_empty( &tmppart );
+			nauthor++;
+			while ( i<tmp.len && is_ws( tmp.data[i] ) ) i++;
+		} else {
+			newstr_addchar( &tmppart, tmp.data[i] );
+		}
+		i++;
+	}
+	newstr_free( &tmppart );
+	newstr_free( &tmp );
+}
+
+static void
+endin_cleanref( fields *endin )
+{
+	int i;
+	for ( i=0; i<endin->nfields; ++i ) {
+		if ( is_wiley_author( endin, i ) )
+			cleanup_wiley_author( endin, i );
+	}
+}
+
+void
+endin_cleanf( bibl *bin, param *p )
+{
+        long i;
+        for ( i=0; i<bin->nrefs; ++i )
+                endin_cleanref( bin->ref[i] );
 }
 
 static void
@@ -366,10 +433,11 @@ endin_convertf( fields *endin, fields *info, int reftype, param *p, variants *al
 		else if ( process==TYPE )
 			addtype( info, d->data, level );
 		else if ( process==TITLE )
-			title_process( info, newtag, d->data, level );
+			title_process( info, newtag, d->data, level, 
+					p->nosplittitle );
 		else if ( process==PERSON )
-			name_add( info, newtag, d->data, level, &(p->asis), 
-					&(p->corps) );
+			name_add( info, newtag, d->data, level, 
+					&(p->asis), &(p->corps) );
 		else if ( process==DATE )
 			adddate( info, t, newtag,d->data,level);
 		else if ( process==PAGES )

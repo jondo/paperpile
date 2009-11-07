@@ -1,7 +1,7 @@
 /*
  * ristypes.c
  *
- * Copyright (c) Chris Putnam 2003-8
+ * Copyright (c) Chris Putnam 2003-2009
  *
  * Program and source code released under the GPL
  *
@@ -49,6 +49,9 @@ static lookups generic[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "DO", "DOI",          DOI,     LEVEL_MAIN },
+	{ "DI", "DOI",          DOI,     LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN }, /*user defined */
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN }, /* put in "notes" */
@@ -95,6 +98,9 @@ static lookups article[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "DO", "DOI",          DOI,     LEVEL_MAIN },
+	{ "DI", "DOI",          DOI,     LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -147,6 +153,7 @@ static lookups magarticle[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -199,6 +206,7 @@ static lookups newsarticle[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -250,6 +258,7 @@ static lookups book[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -295,6 +304,7 @@ static lookups inbook[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -345,6 +355,7 @@ static lookups conference[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -395,6 +406,7 @@ static lookups statute[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -445,6 +457,7 @@ static lookups hearing[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -494,6 +507,7 @@ static lookups cases[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -543,6 +557,7 @@ static lookups communication[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -592,6 +607,7 @@ static lookups thesis[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN }, /*user defined */
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN }, /* put in "notes" */
@@ -642,6 +658,7 @@ static lookups report[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN }, /*user defined */
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN }, /* put in "notes" */
@@ -692,6 +709,7 @@ static lookups abstract[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN }, /*user defined */
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN }, /* put in "notes" */
@@ -740,6 +758,7 @@ static lookups program[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN }, /*user defined */
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN }, /* put in "notes" */
@@ -790,6 +809,7 @@ static lookups patent[] = {
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN }, /*user defined */
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN }, /* put in "notes" */
 	{ "U3", "NOTES",        NOTES,   LEVEL_MAIN },
 	{ "U4", "NOTES",        NOTES,   LEVEL_MAIN },
@@ -837,6 +857,7 @@ static lookups electric[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN }, /*user defined */
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN }, /* put in "notes" */
@@ -886,6 +907,7 @@ static lookups pamphlet[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN }, /*user defined */
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN }, /* put in "notes" */
@@ -935,6 +957,7 @@ static lookups unpublished[] = {
 	{ "CY", "ADDRESS",      SIMPLE,  LEVEL_MAIN },
 	{ "RP", "REPRINTSTATUS",SIMPLE,  LEVEL_MAIN },
 	{ "UR", "URL",          SIMPLE,  LEVEL_MAIN },
+	{ "L1", "FILEATTACH",   SIMPLE,  LEVEL_MAIN },
 	{ "ID", "REFNUM",       SIMPLE,  LEVEL_MAIN },
 	{ "U1", "NOTES",        NOTES,   LEVEL_MAIN }, /*user defined */
 	{ "U2", "NOTES",        NOTES,   LEVEL_MAIN }, /* put in "notes" */

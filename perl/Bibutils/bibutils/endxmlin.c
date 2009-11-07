@@ -1,7 +1,7 @@
 /*
  * endxmlin.c
  *
- * Copyright (c) Chris Putnam 2006-8
+ * Copyright (c) Chris Putnam 2006-2009
  *
  * Program and source code released under the GPL
  */
@@ -211,14 +211,51 @@ endxmlin_keywords( xml *node, fields *info )
 		endxmlin_keyword( node->down, info );
 }
 
+/*
+ *<electronic-resource-num><style face="normal" font="default" 
+ * size="100%">10.1007/BF00356334</style></electronic-resource-num>
+ */
+static void
+endxmlin_ern( xml *node, fields *info )
+{
+	if ( xml_tagexact( node, "electronic-resource-num" ) )
+		endxmlin_data( node, "DOI", info, 0 );
+}
+
+static void
+endxmlin_language( xml *node, fields *info )
+{
+	if ( xml_tagexact( node, "language" ) )
+		endxmlin_data( node, "%G", info, 0 );
+}
+
+/*
+ * <urls>
+ *    <pdf-urls>
+ *           <url>internal-pdf://Zukin_1995_The_Cultures_of_Cities-0000551425/Zukin_1995_The_Cultures_of_Cities.pdf</url>
+ *    </pdf-urls>
+ * </urls>
+ */
+static void
+endxmlin_fileattach( xml *node, fields *info )
+{
+	if ( xml_tagexact( node, "url" ) )
+		endxmlin_data( node, "FILEATTACH", info, 0 );
+	if ( node->down ) endxmlin_fileattach( node->down, info );
+	if ( node->next ) endxmlin_fileattach( node->next, info );
+}
+
 static void
 endxmlin_urls( xml *node, fields *info )
 {
-	if ( xml_tagexact( node, "url" ) )
+	if ( xml_tagexact( node, "pdf-urls" ) && node->down )
+		endxmlin_fileattach( node->down, info );
+	else if ( xml_tagexact( node, "url" ) )
 		endxmlin_data( node, "%U", info, 0 );
 	else {
 		if ( node->down ) {
 			if ( xml_tagexact( node->down, "related-urls" ) ||
+			     xml_tagexact( node->down, "pdf-urls" ) ||
 			     xml_tagexact( node->down, "url" ) )
 				endxmlin_urls( node->down, info );
 		}
@@ -343,6 +380,7 @@ endxmlin_record( xml *node, fields *info )
 		{ "label",  "%F" },
 		{ "auth-address", "%C" },
 		{ "auth-affiliation", "%C" },
+		{ "pub-location", "%C" },
 		{ "publisher", "%I" },
 		{ "abstract", "%X" },
 		{ "edition", "%7" },
@@ -375,17 +413,19 @@ endxmlin_record( xml *node, fields *info )
 		endxmlin_keywords( node, info );
 	} else if ( xml_tagexact( node, "urls" ) ) {
 		endxmlin_urls( node, info );
+	} else if ( xml_tagexact( node, "electronic-resource-num" ) ) {
+		endxmlin_ern( node, info );
 	} else if ( xml_tagexact( node, "dates" ) ) {
 		endxmlin_dates( node, info );
+	} else if ( xml_tagexact( node, "language" ) ) {
+		endxmlin_language( node, info );
 	} else if ( xml_tagexact( node, "periodical" ) ) {
 	} else if ( xml_tagexact( node, "secondary-volume" ) ) {
 	} else if ( xml_tagexact( node, "secondary-issue" ) ) {
 	} else if ( xml_tagexact( node, "reprint-status" ) ) {
-	} else if ( xml_tagexact( node, "pub-location" ) ) {
 	} else if ( xml_tagexact( node, "orig-pub" ) ) {
 	} else if ( xml_tagexact( node, "report-id" ) ) {
 	} else if ( xml_tagexact( node, "coden" ) ) {
-	} else if ( xml_tagexact( node, "electronic-resource-num" ) ) {
 	} else if ( xml_tagexact( node, "caption" ) ) {
 	} else if ( xml_tagexact( node, "research-notes" ) ) {
 	} else if ( xml_tagexact( node, "work-type" ) ) {
@@ -400,7 +440,6 @@ endxmlin_record( xml *node, fields *info )
 	} else if ( xml_tagexact( node, "repro-ratio" ) ) {
 	} else if ( xml_tagexact( node, "remote-database-name" ) ) {
 	} else if ( xml_tagexact( node, "remote-database-provider" ) ) {
-	} else if ( xml_tagexact( node, "language" ) ) {
 	} else if ( xml_tagexact( node, "access-date" ) ) {
 	} else if ( xml_tagexact( node, "modified-data" ) ) {
 	} else if ( xml_tagexact( node, "misc1" ) ) {

@@ -23,15 +23,6 @@ CREATE TABLE Fields(
   text              TEXT
 );
 
-CREATE TABLE Authors (
-  key                 TEXT UNIQUE,
-  first               TEXT,
-  von                 TEXT,
-  last                TEXT,
-  jr                  TEXT,
-  collective          TEXT
-);
-
 CREATE TABLE Tags (
   tag            TEXT UNIQUE,
   style          TEXT
@@ -51,13 +42,6 @@ CREATE TABLE Folder_Publication (
   folder_id         INTEGER,
   publication_id    INTEGER,
   PRIMARY KEY (folder_id, publication_id)
-);
-
-
-CREATE TABLE Author_Publication (
-  author_id         INTEGER,
-  publication_id    INTEGER,
-  PRIMARY KEY (author_id, publication_id)
 );
 
 CREATE TABLE Attachments (

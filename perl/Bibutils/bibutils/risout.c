@@ -1,7 +1,7 @@
 /*
  * risout.c
  *
- * Copyright (c) Chris Putnam 2003-8
+ * Copyright (c) Chris Putnam 2003-2009
  *
  * Program and source code released under the GPL
  *
@@ -14,6 +14,7 @@
 #include "newstr.h"
 #include "strsearch.h"
 #include "fields.h"
+#include "doi.h"
 #include "risout.h"
 
 enum { 
@@ -319,13 +320,48 @@ output_keywords( FILE *fp, fields *info )
 }
 
 static void
-output_pubmed( FILE *fp, fields *info )
+output_doi( FILE *fp, fields *info )
 {
+	newstr doi_url;
 	int i;
+	newstr_init( &doi_url );
 	for ( i=0; i<info->nfields; ++i ) {
-		if ( !strcmp( info->tag[i].data, "PUBMED" ) )
-			fprintf( fp, "UR  - PM:%s\n", info->data[i].data );
+		if ( strcmp( info->tag[i].data, "DOI" ) ) continue;
+		doi_to_url( info, i, "URL", &doi_url );
+		if ( doi_url.len )
+			fprintf( fp, "UR  - %s\n", doi_url.data );
 	}
+	newstr_free( &doi_url );
+}
+
+static void
+output_pmid( FILE *fp, fields *info )
+{
+	newstr pmid_url;
+	int i;
+	newstr_init( &pmid_url );
+	for ( i=0; i<info->nfields; ++i ) {
+		if ( strcmp( info->tag[i].data, "PMID" ) ) continue;
+		pmid_to_url( info, i, "URL", &pmid_url );
+		if ( pmid_url.len )
+			fprintf( fp, "UR  - %s\n", pmid_url.data );
+	}
+	newstr_free( &pmid_url );
+}
+
+static void
+output_arxiv( FILE *fp, fields *info )
+{
+	newstr arxiv_url;
+	int i;
+	newstr_init( &arxiv_url );
+	for ( i=0; i<info->nfields; ++i ) {
+		if ( strcmp( info->tag[i].data, "ARXIV" ) ) continue;
+		arxiv_to_url( info, i, "URL", &arxiv_url );
+		if ( arxiv_url.len )
+			fprintf( fp, "UR  - %s\n", arxiv_url.data );
+	}
+	newstr_free( &arxiv_url );
 }
 
 static void
@@ -400,11 +436,14 @@ risout_write( fields *info, FILE *fp, param *p, unsigned long refnum )
 	output_easy( fp, info, refnum, "DEGREEGRANTOR:CORP", "PB", -1 );
 	output_easy( fp, info, refnum, "ADDRESS", "CY", -1 );
 	output_keywords( fp, info );
-	output_easy( fp, info, refnum, "ABSTRACT", "AB", -1 );
+	output_easy( fp, info, refnum, "ABSTRACT", "N2", -1 );
 	output_easy( fp, info, refnum, "ISSN", "SN", -1 );
 	output_easy( fp, info, refnum, "ISBN", "SN", -1 );
 	output_easyall( fp, info, refnum, "URL", "UR", -1 );
-	output_pubmed( fp, info );
+	output_easyall( fp, info, refnum, "FILEATTACH", "L1", -1 );
+	output_doi( fp, info );
+	output_pmid( fp, info );
+	output_arxiv( fp, info );
 	output_easy( fp, info, refnum, "NOTES", "N1", -1 );
 	output_easy( fp, info, refnum, "REFNUM", "ID", -1 );
 	output_thesishint( fp, type );

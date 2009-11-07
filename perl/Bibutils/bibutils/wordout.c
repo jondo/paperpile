@@ -3,7 +3,7 @@
  * 
  * (Word 2007 format)
  *
- * Copyright (c) Chris Putnam 2007-8
+ * Copyright (c) Chris Putnam 2007-2009
  *
  * Source code released under the GPL
  *
@@ -22,12 +22,58 @@ typedef struct convert {
 	int  code;
 } convert;
 
+typedef struct outtype {
+	int value;
+	char *out;
+} outtype;
+
+/*
+At the moment 17 unique types of sources are defined:
+
+{code}
+	Art
+	ArticleInAPeriodical
+	Book
+	BookSection
+	Case
+	Conference
+	DocumentFromInternetSite
+	ElectronicSource
+	Film
+	InternetSite
+	Interview
+	JournalArticle
+	Report
+	Misc
+	Patent
+	Performance
+	Proceedings
+	SoundRecording
+{code}
+
+*/
+
 enum {
 	TYPE_UNKNOWN = 0,
-	TYPE_ARTICLE,
+	TYPE_ART,
+	TYPE_ARTICLEINAPERIODICAL,
 	TYPE_BOOK,
-	TYPE_INBOOK,
-	TYPE_INPROCEEDINGS,
+	TYPE_BOOKSECTION,
+	TYPE_CASE,
+	TYPE_CONFERENCE,
+	TYPE_DOCUMENTFROMINTERNETSITE,
+	TYPE_ELECTRONICSOURCE,
+	TYPE_FILM,
+	TYPE_INTERNETSITE,
+	TYPE_INTERVIEW,
+	TYPE_JOURNALARTICLE,
+	TYPE_MISC,
+	TYPE_PATENT,
+	TYPE_PERFORMANCE,
+	TYPE_PROCEEDINGS,
+	TYPE_REPORT,
+	TYPE_SOUNDRECORDING,
+
 	TYPE_THESIS,
 	TYPE_MASTERSTHESIS,
 	TYPE_PHDTHESIS,
@@ -93,35 +139,97 @@ output_list( fields *info, FILE *outptr, convert *c, int nc )
 
 }
 
+static
+outtype genres[] = {
+	{ TYPE_PATENT, "patent" },
+	{ TYPE_REPORT, "report" },
+	{ TYPE_CASE,   "legal case and case notes" },
+	{ TYPE_ART,    "art original" },
+	{ TYPE_ART,    "art reproduction" },
+	{ TYPE_ART,    "comic strip" },
+	{ TYPE_ART,    "diorama" },
+	{ TYPE_ART,    "graphic" },
+	{ TYPE_ART,    "model" },
+	{ TYPE_ART,    "picture" },
+	{ TYPE_ELECTRONICSOURCE, "electronic" },
+	{ TYPE_FILM,   "videorecording" },
+	{ TYPE_FILM,   "motion picture" },
+	{ TYPE_SOUNDRECORDING, "sound" },
+	{ TYPE_PERFORMANCE, "rehersal" },
+	{ TYPE_INTERNETSITE, "web site" },
+	{ TYPE_INTERVIEW, "interview" },
+	{ TYPE_INTERVIEW, "communication" },
+	{ TYPE_MISC, "misc" },
+};
+int ngenres = sizeof( genres ) / sizeof( genres[0] );
+
 static int
-get_type( fields *info )
+get_type_from_genre( fields *info )
 {
+	int type = TYPE_UNKNOWN, i, j, level;
 	char *genre;
-	int i, type = TYPE_UNKNOWN;
+	for ( i=0; i<info->nfields; ++i ) {
+		if ( strcasecmp( info->tag[i].data, "GENRE" ) &&
+			strcasecmp( info->tag[i].data, "NGENRE" ) ) continue;
+		genre = info->data[i].data;
+		for ( j=0; j<ngenres; ++j ) {
+			if ( !strcasecmp( genres[j].out, genre ) )
+				type = genres[j].value;
+		}
+		if ( type==TYPE_UNKNOWN ) {
+			level = info->level[i];
+			if ( !strcasecmp( genre, "academic journal" ) ) {
+				type = TYPE_JOURNALARTICLE;
+			}
+			else if ( !strcasecmp( genre, "periodical" ) ) {
+				if ( type == TYPE_UNKNOWN )
+					type = TYPE_ARTICLEINAPERIODICAL;
+			}
+			else if ( !strcasecmp( genre, "book" ) ||
+				!strcasecmp( genre, "collection" ) ) {
+				if ( info->level[i]==0 ) type = TYPE_BOOK;
+				else type = TYPE_BOOKSECTION;
+			}
+			else if ( !strcasecmp( genre, "conference publication" ) ) {
+				if ( level==0 ) type=TYPE_CONFERENCE;
+				type = TYPE_PROCEEDINGS;
+			}
+			else if ( !strcasecmp( genre, "thesis" ) ) {
+	                        if ( type==TYPE_UNKNOWN ) type=TYPE_THESIS;
+			}
+			else if ( !strcasecmp( genre, "Ph.D. thesis" ) ) {
+				type = TYPE_PHDTHESIS;
+			}
+			else if ( !strcasecmp( genre, "Masters thesis" ) ) {
+				type = TYPE_MASTERSTHESIS;
+			}
+		}
+	}
+	return type;
+}
+
+static int
+get_type_from_resource( fields *info )
+{
+	int type = TYPE_UNKNOWN, i;
+	char *resource;
 	for ( i=0; i<info->nfields; ++i ) {
 		if ( strcasecmp( info->tag[i].data, "GENRE" )!=0 &&
 			strcasecmp( info->tag[i].data, "NGENRE" )!=0 ) continue;
-		genre = info->data[i].data;
-		if ( !strcasecmp( genre, "periodical" ) ||
-		     !strcasecmp( genre, "academic journal" ) )
-			type = TYPE_ARTICLE;
-		else if ( !strcasecmp( genre, "book" ) ||
-			!strcasecmp( genre, "collection" ) ) {
-			if ( info->level[i]==0 ) type = TYPE_BOOK;
-			else type = TYPE_INBOOK;
-		}
-                else if ( !strcasecmp( genre, "conference publication" ) ) {
-/*                        if ( level==0 ) type=TYPE_PROCEEDINGS;*/
-                        /*else */ type = TYPE_INPROCEEDINGS;
-                }
-		else if ( !strcasecmp( genre, "thesis" ) ) {
-                        if ( type==TYPE_UNKNOWN ) type=TYPE_THESIS;
-                } else if ( !strcasecmp( genre, "Ph.D. thesis" ) )
-                        type = TYPE_PHDTHESIS;
-                else if ( !strcasecmp( genre, "Masters thesis" ) )
-                        type = TYPE_MASTERSTHESIS;
-
+		resource = info->data[i].data;
+		if ( !strcasecmp( resource, "moving image" ) )
+			type = TYPE_FILM;
 	}
+	return type;
+}
+
+static int
+get_type( fields *info )
+{
+	int type;
+	type = get_type_from_genre( info );
+	if ( type==TYPE_UNKNOWN )
+		type = get_type_from_resource( info );
 	return type;
 }
 
@@ -152,8 +260,6 @@ output_titleinfo( fields *info, FILE *outptr, char *tag, int level )
 	}
 }
 
-
-
 static void
 output_title( fields *info, FILE *outptr, int level )
 {
@@ -176,7 +282,15 @@ output_title( fields *info, FILE *outptr, int level )
 }
 
 static void
-output_name( FILE *outptr, char *p, int level )
+output_name_nomangle( FILE *outptr, char *p )
+{
+	fprintf( outptr, "<b:Person>" );
+	fprintf( outptr, "<b:Last>%s</b:Last>", p );
+	fprintf( outptr, "</b:Person>\n" );
+}
+
+static void
+output_name( FILE *outptr, char *p )
 {
 	newstr family, part;
 	int n=0, npart=0;
@@ -219,101 +333,62 @@ output_name( FILE *outptr, char *p, int level )
 #define NAME_ASIS (2)
 #define NAME_CORP (4)
 
-static void
-output_name_type( fields *info, FILE *outptr, int level, 
-			convert *map, int nmap, char *tag )
+static int
+extract_name_and_info( newstr *outtag, newstr *intag )
 {
-	int i, n;
-	fprintf( outptr, "<%s><b:NameList>\n", tag );
-	for ( n=0; n<nmap; ++n ) {
-		for ( i=0; i<info->nfields; ++i ) {
-			if ( strcasecmp(info->tag[i].data,map[n].oldtag) )
-				continue;
-			if ( map[n].code & NAME_ASIS || 
-					map[n].code & NAME_CORP ) {
-				fprintf( outptr, "<b:Person>" );
-				fprintf( outptr, "<b:Last>%s</b:Last>",
-					info->data[i].data );
-				fprintf( outptr, "</b:Person>\n" );
-			} else {
-				output_name(outptr, info->data[i].data, level);
-			}
-			fields_setused( info, i );
-		}
-	}
-	fprintf( outptr, "</b:NameList></%s>\n", tag );
+	int code = NAME;
+	newstr_newstrcpy( outtag, intag );
+	if ( newstr_findreplace( outtag, ":ASIS", "" ) ) code = NAME_ASIS;
+	if ( newstr_findreplace( outtag, ":CORP", "" ) ) code = NAME_CORP;
+	return code;
 }
 
 static void
-output_names( fields *info, FILE *outptr, int level )
+output_name_type( fields *info, FILE *outptr, int level, 
+			char *map[], int nmap, char *tag )
 {
-	convert authors[] = {
-		{ "AUTHOR",       "author",               NAME },
-		{ "AUTHOR:ASIS",  "author",               NAME_ASIS },
-		{ "AUTHOR:CORP",  "author",               NAME_CORP },
-		{ "WRITER",       "author",               NAME },
-		{ "WRITER:ASIS",  "author",               NAME_ASIS },
-		{ "WRITER:CORP",  "author",               NAME_CORP },
-		{ "ASSIGNEE",     "author",               NAME },
-		{ "ASSIGNEE:ASIS","author",               NAME_ASIS },
-		{ "ASSIGNEE:CORP","author",               NAME_CORP },
-		{ "ARTIST",       "artist",               NAME },
-		{ "ARTIST:ASIS",  "artist",               NAME_ASIS },
-		{ "ARTIST:CORP",  "artist",               NAME_CORP },
-		{ "CARTOGRAPHER", "cartographer",         NAME },
-		{ "CARTOGRAPHER:ASIS", "cartographer",    NAME_ASIS},
-		{ "CARTOGRAPHER:CORP", "cartographer",     NAME_CORP},
-		{ "INVENTOR",     "inventor",             NAME },
-		{ "INVENTOR:ASIS","inventor",             NAME_ASIS},
-		{ "INVENTOR:CORP","inventor",             NAME_CORP},
-		{ "ORGANIZER",    "organizer of meeting", NAME },
-		{ "ORGANIZER:ASIS","organizer of meeting",NAME_ASIS },
-		{ "ORGANIZER:CORP","organizer of meeting",NAME_CORP },
-		{ "DIRECTOR",     "director",             NAME },
-		{ "DIRECTOR:ASIS","director",     NAME_ASIS },
-		{ "DIRECTOR:CORP","director",     NAME_CORP },
-		{ "PERFORMER",    "performer",    NAME },
-		{ "PERFORMER:ASIS","performer",   NAME_ASIS },
-		{ "PERFORMER:CORP","performer",   NAME_CORP },
-		{ "REPORTER",     "reporter",     NAME },
-		{ "REPORTER:ASIS","reporter",     NAME_ASIS },
-		{ "REPORTER:CORP","reporter",     NAME_CORP },
-		{ "TRANSLATOR",   "translator",   NAME },
-		{ "DIRECTOR",     "director",     NAME },
-		{ "DIRECTOR:ASIS","director",     NAME_ASIS },
-		{ "DIRECTOR:CORP","director",     NAME_CORP },
-		{ "PERFORMER",    "performer",    NAME },
-		{ "PERFORMER:ASIS","performer",   NAME_ASIS },
-		{ "PERFORMER:CORP","performer",   NAME_CORP },
-		{ "TRANSLATOR",   "translator",   NAME },
-		{ "TRANSLATOR:ASIS", "translator",NAME_ASIS },
-		{ "TRANSLATOR:CORP", "translator",NAME_CORP },
-		{ "RECIPIENT",    "recipient",    NAME },
-		{ "RECIPIENT:ASIS","recipient",   NAME_ASIS },
-		{ "RECIPIENT:CORP","recipient",   NAME_CORP },
-		{ "2ND_AUTHOR",   "author",       NAME },
-		{ "2ND_AUTHOR:ASIS","author",     NAME_ASIS },
-		{ "2ND_AUTHOR:CORP","author",     NAME_CORP },
-		{ "3RD_AUTHOR",   "author",       NAME },
-		{ "3RD_AUTHOR:ASIS","author",     NAME_ASIS },
-		{ "3RD_AUTHOR:CORP","author",     NAME_CORP },
-		{ "SUB_AUTHOR",   "author",       NAME },
-		{ "SUB_AUTHOR:ASIS","author",     NAME_ASIS },
-		{ "COMMITTEE:CORP",    "author",  NAME_CORP },
-		{ "COURT:CORP",        "author",  NAME_CORP },
-		{ "LEGISLATIVEBODY:CORP",   "author",  NAME_CORP }
-	};
-	int nauthors = sizeof( authors ) / sizeof( convert );
+	newstr ntag;
+	int i, j, n=0, code;
+	newstr_init( &ntag );
+	for ( j=0; j<nmap; ++j ) {
+		for ( i=0; i<info->nfields; ++i ) {
+			code = extract_name_and_info( &ntag, &(info->tag[i]) );
+			if ( strcasecmp( ntag.data, map[j] ) ) continue;
+			if ( n==0 )
+				fprintf( outptr, "<%s><b:NameList>\n", tag );
+			if ( code != NAME )
+				output_name_nomangle( outptr, info->data[i].data );
+			else 
+				output_name( outptr, info->data[i].data );
+			fields_setused( info, i );
+			n++;
+		}
+	}
+	newstr_free( &ntag );
+	if ( n )
+		fprintf( outptr, "</b:NameList></%s>\n", tag );
+}
 
-	convert editors[] = {
-		{ "EDITOR",       "editor", NAME },
-		{ "EDITOR:ASIS",  "editor", NAME_ASIS },
-		{ "EDITOR:CORP",  "editor", NAME_CORP },
-	};
-	int neditors = sizeof( editors ) / sizeof( convert );
-	
+static void
+output_names( fields *info, FILE *outptr, int level, int type )
+{
+	char *authors[] = { "AUTHOR", "WRITER", "ASSIGNEE", "ARTIST",
+		"CARTOGRAPHER", "INVENTOR", "ORGANIZER", "DIRECTOR",
+		"PERFORMER", "REPORTER", "TRANSLATOR", "RECIPIENT",
+		"2ND_AUTHOR", "3RD_AUTHOR", "SUB_AUTHOR", "COMMITTEE",
+		"COURT", "LEGISLATIVEBODY" };
+	int nauthors = sizeof( authors ) / sizeof( authors[0] );
+
+	char *editors[] = { "EDITOR" };
+	int neditors = sizeof( editors ) / sizeof( editors[0] );
+
+	char author_default[] = "b:Author", inventor[] = "b:Inventor";
+	char *author_type = author_default;
+
+	if ( type == TYPE_PATENT ) author_type = inventor;
+
 	fprintf( outptr, "<b:Author>\n" );
-	output_name_type( info, outptr, level, authors, nauthors, "b:Author" );
+	output_name_type( info, outptr, level, authors, nauthors, author_type );
 	output_name_type( info, outptr, level, editors, neditors, "b:Editor" );
 	fprintf( outptr, "</b:Author>\n" );
 }
@@ -359,11 +434,13 @@ output_pages( fields *info, FILE *outptr, int level )
 static void
 output_includedin( fields *info, FILE *outptr, int type )
 {
-	if ( type==TYPE_ARTICLE ) {
+	if ( type==TYPE_JOURNALARTICLE ) {
 		output_titleinfo( info, outptr, "b:JournalName", 1 );
-	} else if ( type==TYPE_INBOOK ) {
+	} else if ( type==TYPE_ARTICLEINAPERIODICAL ) {
+		output_titleinfo( info, outptr, "b:PeriodicalName", 1 );
+	} else if ( type==TYPE_BOOKSECTION ) {
 		output_titleinfo( info, outptr, "b:ConferenceName", 1 ); /*??*/
-	} else if ( type==TYPE_INPROCEEDINGS ) {
+	} else if ( type==TYPE_PROCEEDINGS ) {
 		output_titleinfo( info, outptr, "b:ConferenceName", 1 );
 	}
 }
@@ -396,20 +473,44 @@ output_thesisdetails( fields *info, FILE *outptr, int type )
 	}
 }
 
+static
+outtype types[] = {
+	{ TYPE_UNKNOWN,                  "Misc" },
+	{ TYPE_MISC,                     "Misc" },
+	{ TYPE_BOOK,                     "Book" },
+	{ TYPE_BOOKSECTION,              "BookSection" },
+	{ TYPE_CASE,                     "Case" },
+	{ TYPE_CONFERENCE,               "Conference" },
+	{ TYPE_ELECTRONICSOURCE,         "ElectronicSource" },
+	{ TYPE_FILM,                     "Film" },
+	{ TYPE_INTERNETSITE,             "InternetSite" },
+	{ TYPE_INTERVIEW,                "Interview" },
+	{ TYPE_SOUNDRECORDING,           "SoundRecording" },
+	{ TYPE_ARTICLEINAPERIODICAL,     "ArticleInAPeriodical" },
+	{ TYPE_DOCUMENTFROMINTERNETSITE, "DocumentFromInternetSite" },
+	{ TYPE_JOURNALARTICLE,           "JournalArticle" },
+	{ TYPE_REPORT,                   "Report" },
+	{ TYPE_PATENT,                   "Patent" },
+	{ TYPE_PERFORMANCE,              "Performance" },
+	{ TYPE_PROCEEDINGS,              "Proceedings" },
+};
+static
+int ntypes = sizeof( types ) / sizeof( types[0] );
+
 static void
 output_type( fields *info, FILE *outptr, int type )
 {
+	int i, found = 0;
 	fprintf( outptr, "<b:SourceType>" );
-	if ( type==TYPE_UNKNOWN || type==TYPE_BOOK )
-		fprintf( outptr, "Book" );
-	else if ( type==TYPE_INBOOK )
-		fprintf( outptr, "BookSection" );
-	else if ( type==TYPE_ARTICLE )
-		fprintf( outptr, "JournalArticle" );
-	else if ( type==TYPE_INPROCEEDINGS )
-		fprintf( outptr, "ConferenceProceedings" );
-	else if ( type_is_thesis( type ) ) 
-		fprintf( outptr, "Report" );
+	for ( i=0; i<ntypes && !found; ++i ) {
+		if ( types[i].value!=type ) continue;
+		found = 1;
+		fprintf( outptr, "%s", types[i].out );
+	}
+	if ( !found ) {
+		if (  type_is_thesis( type ) ) fprintf( outptr, "Report" );
+		else fprintf( outptr, "Misc" );
+	}
 	fprintf( outptr, "</b:SourceType>\n" );
 
 	if ( type_is_thesis( type ) )
@@ -473,7 +574,7 @@ output_citeparts( fields *info, FILE *outptr, int level, int max, int type )
 	output_includedin( info, outptr, type );
 	output_list( info, outptr, parts, nparts );
 	output_pages( info, outptr, level );
-	output_names( info, outptr, level);
+	output_names( info, outptr, level, type );
 	output_title( info, outptr, level );
 	output_comments( info, outptr, level );
 }

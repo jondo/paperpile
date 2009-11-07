@@ -1,7 +1,7 @@
 /*
  * bibutils.c
  *
- * Copyright (c) Chris Putnam 2005-8
+ * Copyright (c) Chris Putnam 2005-2009
  *
  * Source code released under the GPL
  *
@@ -24,12 +24,15 @@
 #include "medin.h"
 #include "modsin.h"
 #include "risin.h"
+#include "wordin.h"
 #include "risout.h"
 #include "modsout.h"
 #include "wordout.h"
 #include "adsout.h"
 #include "newstr_conv.h"
 #include "is_ws.h"
+
+#include "ebiin.h"
 
 typedef struct convert_rules {
 	int  (*readf)(FILE*,char*,int,int*,newstr*,newstr*,int*);
@@ -60,6 +63,7 @@ bibl_initparams( param *p, int readmode, int writemode, char *progname )
 	p->utf8out          = 0;
 	p->utf8bom          = 0;
 	p->xmlout           = 0;
+	p->nosplittitle     = 0;
 	p->verbose          = 0;
 	p->addcount         = 0;
 	p->singlerefperfile = 0;
@@ -79,7 +83,20 @@ bibl_initparams( param *p, int readmode, int writemode, char *progname )
 		p->output_raw = BIBL_RAW_WITHMAKEREFID |
 				BIBL_RAW_WITHCHARCONVERT;
 		p->charsetin = BIBL_CHARSET_UNICODE;
+	} else if ( readmode == BIBL_WORDIN ) {
+		p->xmlin = 1;
+		p->utf8in = 1;
+		p->output_raw = BIBL_RAW_WITHMAKEREFID |
+				BIBL_RAW_WITHCHARCONVERT;
+		p->charsetin = BIBL_CHARSET_UNICODE;
 	} else if ( readmode == BIBL_MEDLINEIN ) {
+		/* default medline to UTF8 Unicode */
+		p->charsetin = BIBL_CHARSET_UNICODE;
+		p->utf8in = 1;
+		p->xmlin = 1;
+		p->output_raw = BIBL_RAW_WITHMAKEREFID |
+				BIBL_RAW_WITHCHARCONVERT;
+	} else if ( readmode == BIBL_EBIIN ) {
 		/* default medline to UTF8 Unicode */
 		p->charsetin = BIBL_CHARSET_UNICODE;
 		p->utf8in = 1;
@@ -181,6 +198,7 @@ bibl_duplicateparams( param *np, param *op )
 	np->utf8bom = op->utf8bom;
 	np->latexout = op->latexout;
 	np->xmlout = op->xmlout;
+	np->nosplittitle = op->nosplittitle;
 
 	np->verbose = op->verbose;
 	np->format_opts = op->format_opts;
@@ -244,7 +262,7 @@ bibl_verbose1( fields *info, fields *orig, char *filename, long nrefs )
 		fprintf( stderr, "'%s'='%s' level=%d\n", orig->tag[i].data,
 				orig->data[i].data , orig->level[i]);
 	}
-	bibl_verbose2( info, filename, nrefs );
+	if ( info ) bibl_verbose2( info, filename, nrefs );
 }
 
 void
@@ -290,7 +308,7 @@ read_ref( FILE *fp, bibl *bin, char *filename, convert_rules *r, param *p )
 	newstr reference, line;
 	fields *ref;
 	char buf[256]="";
-	int nrefs = 0, bufpos = 0, fcharset;
+	int nrefs = 0, bufpos = 0, fcharset;/* = CHARSET_UNKNOWN;*/
 	newstr_init( &reference );
 	newstr_init( &line );
 	while ( r->readf( fp, buf, sizeof(buf), &bufpos, &line, &reference, &fcharset ) ) {
@@ -314,6 +332,7 @@ read_ref( FILE *fp, bibl *bin, char *filename, convert_rules *r, param *p )
 			}
 		}
 	}
+	if ( p->charsetin==CHARSET_UNICODE ) p->utf8in = 1;
 	newstr_free( &line );
 	newstr_free( &reference );
 	return BIBL_OK;
@@ -361,10 +380,13 @@ build_refnum( fields *info, long nrefs )
 	char *p, num[512];
 	int y, a;
 	newstr_init( &refnum );
-	y = fields_find( info, "YEAR", -1 );
+	y = fields_find( info, "YEAR", 0 );
+	if ( y==-1 ) y = fields_find( info, "YEAR", -1 );
 	if ( y==-1 ) y = fields_find( info, "PARTYEAR", -1 );
-	a = fields_find( info, "AUTHOR", -1 );
+	a = fields_find( info, "AUTHOR", 0 );
+	if ( a==-1 ) a = fields_find( info, "AUTHOR", -1 );
 	if ( a==-1 ) a = fields_find( info, "AUTHOR:CORP", -1 );
+	if ( a==-1 ) a = fields_find( info, "AUTHOR:ASIS", -1 );
 	if ( a!=-1 && y!=-1 ) {
 		p = info->data[a].data;
 		while ( p && *p && *p!='|' )
@@ -567,7 +589,7 @@ rules_init( convert_rules *r, int mode )
 			break;
 		case BIBL_ENDNOTEIN:
 			r->readf    = endin_readf;
-			r->cleanf   = NULL;
+			r->cleanf   = endin_cleanf;
 			r->processf = endin_processf;
 			r->typef    = endin_typef;
 			r->convertf = endin_convertf;
@@ -634,6 +656,24 @@ rules_init( convert_rules *r, int mode )
 			r->readf    = medin_readf;
 			r->cleanf   = NULL;
 			r->processf = medin_processf;
+			r->typef    = NULL;
+			r->convertf = NULL;
+			r->all      = NULL;
+			r->nall     = 0;
+			break;
+		case BIBL_WORDIN:
+			r->readf    = wordin_readf;
+			r->cleanf   = NULL;
+			r->processf = wordin_processf;
+			r->typef    = NULL;
+			r->convertf = NULL;
+			r->all      = NULL;
+			r->nall     = 0;
+			break;
+		case BIBL_EBIIN:
+			r->readf    = ebiin_readf;
+			r->cleanf   = NULL;
+			r->processf = ebiin_processf;
 			r->typef    = NULL;
 			r->convertf = NULL;
 			r->all      = NULL;
@@ -752,9 +792,7 @@ singlerefname( fields *reffields, long nref, int mode )
 		else sprintf( outfile,"%ld_%ld.%s",nref, count, suffix );
 		fp = fopen( outfile, "r" );
 	}
-	fp = fopen( outfile, "w" );
-	if ( !fp ) return NULL;
-	return fp;
+	return fopen( outfile, "w" );
 }
 
 static int

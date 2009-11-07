@@ -18,6 +18,8 @@ has 'total_entries' => ( is => 'rw', isa => 'Int' );
 # Maximum number of entries per page
 has 'limit' => ( is => 'rw', isa => 'Int', default => 10 );
 
+has 'light_objects' => (is =>'rw', isa =>'Int', default =>0);
+
 # Internal hash to quickly access the entries via their sha1 key across pages
 has '_hash' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
 
@@ -59,9 +61,7 @@ sub all {
   ( my $self ) = @_;
 
   return $self->page(0,999999);
-
 }
-
 
 
 # Function: complete_details

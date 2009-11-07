@@ -252,15 +252,13 @@ Paperpile.PluginGridDB = Ext.extend(Paperpile.PluginGrid, {
                     },
             method: 'GET',
             success: function(){
-                Ext.getCmp('statusbar').clearStatus();
-                Ext.getCmp('statusbar').setText('Entry deleted.');
             },
             failure: Paperpile.main.onError,
         });
 
-        for (var i=0;i<selection.length;i++){
-            this.store.remove(this.store.getAt(this.store.find('sha1',selection[i])));
-        }
+        //for (var i=0;i<selection.length;i++){
+        //    this.store.remove(this.store.getAt(this.store.find('sha1',selection[i])));
+        //}
 
     },
 

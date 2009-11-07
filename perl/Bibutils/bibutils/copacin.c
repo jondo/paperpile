@@ -1,7 +1,7 @@
 /*
  * copacin.c
  *
- * Copyright (c) Chris Putnam 2004-8
+ * Copyright (c) Chris Putnam 2004-2009
  *
  * Program and source code released under the GPL
  *
@@ -49,11 +49,20 @@ copacin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, news
 {
 	int haveref = 0, inref=0;
 	char *p;
+	*fcharset = CHARSET_UNKNOWN;
 	while ( !haveref && readmore( fp, buf, bufsize, bufpos, line ) ) {
 		/* blank line separates */
 		if ( line->data==NULL ) continue;
 		if ( inref && line->len==0 ) haveref=1; 
 		p = &(line->data[0]);
+		/* Recognize UTF8 BOM */
+		if ( line->len > 2 &&
+				(unsigned char)(p[0])==0xEF &&
+				(unsigned char)(p[1])==0xBB &&
+				(unsigned char)(p[2])==0xBF ) {
+			*fcharset = CHARSET_UNICODE;
+			p += 3;
+		}
 		if ( copacin_istag( p ) ) {
 			if ( inref ) newstr_addchar( reference, '\n' );
 			newstr_strcat( reference, p );
@@ -73,7 +82,6 @@ copacin_readf( FILE *fp, char *buf, int bufsize, int *bufpos, newstr *line, news
 			newstr_empty( line );
 		}
 	}
-	*fcharset = CHARSET_UNKNOWN;
 	return haveref;
 }
 
@@ -251,7 +259,8 @@ copacin_convertf( fields *copacin, fields *info, int reftype, param *p, variants
 		if ( process==SIMPLE )
 			fields_add( info, newtag, d->data, level );
 		else if ( process==TITLE )
-			title_process( info, newtag, d->data, level );
+			title_process( info, newtag, d->data, level, 
+					p->nosplittitle );
 		else if ( process==PERSON )
 			copacin_addname( info, newtag, d, level, &(p->asis), 
 					&(p->corps) );
