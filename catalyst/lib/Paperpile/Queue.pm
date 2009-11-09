@@ -10,6 +10,7 @@ use Data::Dumper;
 use Time::Duration;
 use File::Temp qw/ tempfile /;
 use JSON;
+use Fcntl ':flock';
 use 5.010;
 
 enum 'Status' => qw(RUNNING WAITING PAUSED);
@@ -94,46 +95,97 @@ sub resume {
 
 }
 
-
 sub run {
+
+  open(LOG,">>log");
+
+  print LOG "Entering Queue::Run $$\n";
 
   my $self = shift;
 
-  # If queue is already running or paused don't start a new process
-  if ($self->status ne 'WAITING'){
-    return;
+  if (-e 'lock'){
+    print LOG "lock exists $$\n";
   } else {
-
-    $self->status('RUNNING');
-    $self->save;
-
-    while (1) {
-
-      $self->restore;
-
-      if ($self->status eq 'PAUSED'){
-        sleep(1);
-        next;
-      }
-
-      my $curr_job = undef;
-
-      foreach my $job ( @{ $self->jobs } ) {
-
-        if ( $job->status eq 'PENDING' ) {
-          $curr_job = $job;
-          last;
-        }
-      }
-
-      last if not $curr_job;
-      $curr_job->run;
-    }
-
-    $self->status('WAITING');
+    print LOG "no lock $$\n";
   }
 
+  while (-e 'lock'){
+    #wait;
+    sleep(1);
+  }
+
+  open(LOCK,'>lock');
+  print LOCK "locked";
+
+  $self->restore;
+
+  my $curr_job = undef;
+
+  my $max_running = 3;
+
+  my $curr_running = 0;
+
+  foreach my $job ( @{ $self->jobs } ) {
+    $curr_running++ if $job->status eq 'RUNNING';
+  }
+
+  foreach my $job ( @{ $self->jobs } ) {
+
+    if ( $job->status eq 'PENDING' ) {
+      if ($curr_running < $max_running){
+        $curr_job = $job;
+        $curr_job->run;
+        $curr_running++;
+      } else {
+        last;
+      }
+    }
+  }
+
+  unlink('lock');
+
+
+  print LOG "Exiting Queue::Run $$\n";
+
 }
+
+
+
+
+  # # If queue is already running or paused don't start a new process
+  # if ($self->status ne 'WAITING'){
+  #   return;
+  # } else {
+
+  #   $self->status('RUNNING');
+  #   $self->save;
+
+  #   while (1) {
+
+  #     $self->restore;
+
+  #     if ($self->status eq 'PAUSED'){
+  #       sleep(1);
+  #       next;
+  #     }
+
+  #     my $curr_job = undef;
+
+  #     foreach my $job ( @{ $self->jobs } ) {
+
+  #       if ( $job->status eq 'PENDING' ) {
+  #         $curr_job = $job;
+  #         last;
+  #       }
+  #     }
+
+  #     last if not $curr_job;
+  #     $curr_job->run;
+  #   }
+
+  #   $self->status('WAITING');
+  # }
+
 
 sub clear {
 

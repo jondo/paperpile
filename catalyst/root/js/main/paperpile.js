@@ -33,6 +33,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                        }
                                    ),
                                    {xtype:'tbfill'},
+                                   new Paperpile.QueueWidget(),
                                    new Ext.BoxComponent(
                                        { autoEl: {
                                            tag: 'a',
@@ -42,17 +43,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                          id: 'dashboard-button',
                                        }
                                    ),
-                                   /*
-                                   {xtype:'button',
-                                    text:"Test",
-                                    handler: function(){
-                                        //var myIFrame = document.getElementById('iframe-testframe');
-                                        //var content = myIFrame.contentWindow.document.body.innerHTML;
-                                        //alert(content);
-
-                                    },
-                                   }
-*/
                                ]}),
                            items: [ { border: 0,
                               xtype:'tree',

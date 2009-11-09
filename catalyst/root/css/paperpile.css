@@ -341,6 +341,21 @@ a:hover.pp-textlink {
     color: #D8000C;
 }
 
+.pp-queue-widget {
+    margin: 0 10px;
+    padding: 0 0 0 15px;
+    background: transparent url('/images/icons/queue.gif') no-repeat 2px 0;
+    background-color:#FFF1A8;
+    color: #0015FE;
+    text-decoration:none;
+}
+
+a.pp-queue-widget, a:visited.pp-queue-widget {
+
+ 
+}
+
+
 
 /*** Text links with icons ****/
 

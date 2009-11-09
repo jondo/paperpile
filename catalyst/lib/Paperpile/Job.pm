@@ -8,30 +8,29 @@ use Paperpile::Library::Publication;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
 use Paperpile::Crawler;
+
 use Data::Dumper;
-use File::Temp qw/ tempfile /;
 use File::Path;
 use File::Spec;
 use File::Copy;
-use Time::HiRes qw( usleep);
-
+use File::Temp qw/ tempfile /;
+use Time::HiRes qw/ usleep/;
 
 use JSON;
 use 5.010;
 
 enum 'Types'  => qw(MATCH PDF_IMPORT PDF_SEARCH WEB_IMPORT);
 enum 'Status' => qw(RUNNING PENDING DONE);
-#enum 'Stages' => qw(STARTING MATCHING CRAWLING DOWNLOADING DONE);
 
-has 'id'     => ( is => 'rw', isa => 'Str' );
-has 'type'   => ( is => 'rw', isa => 'Types' );
-has 'status' => ( is => 'rw', isa => 'Status' );
-has 'error'  => ( is => 'rw', isa => 'Str' );
-has 'progress'  => ( is => 'rw', isa => 'Str' );
+has 'id'       => ( is => 'rw', isa => 'Str' );
+has 'type'     => ( is => 'rw', isa => 'Types' );
+has 'status'   => ( is => 'rw', isa => 'Status' );
+has 'error'    => ( is => 'rw', isa => 'Str' );
+has 'progress' => ( is => 'rw', isa => 'Str' );
 has 'duration' => ( is => 'rw', isa => 'Int' );
 
-has 'pub'    => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
-has 'queue'  => ( is => 'rw', isa => 'Paperpile::Queue' );
+has 'pub'   => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
+has 'queue' => ( is => 'rw', isa => 'Paperpile::Queue' );
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -39,7 +38,6 @@ sub BUILD {
   $self->status('PENDING');
   $self->progress('Waiting.');
   $self->error('');
-
 }
 
 sub generate_id {
@@ -61,50 +59,62 @@ sub generate_id {
 }
 
 
-# combine setting status/stage and updating for convenience
 sub status_update {
-  my ($self, $status) = @_;
+  my ( $self, $status ) = @_;
   $self->status($status);
-  $self->update;
+  $self->queue( Paperpile::Queue->new() );
+  $self->queue->update_job($self);
+  Paperpile::Utils->store( 'job_' . $self->id, $self );
 }
 
 sub progress_update {
-  my ($self, $progress) = @_;
+  my ( $self, $progress ) = @_;
   $self->progress($progress);
-  $self->update;
-}
-
-
-sub update {
-
-  my $self = shift;
-
-  $self->queue(Paperpile::Queue->new());
+  $self->queue( Paperpile::Queue->new() );
   $self->queue->update_job($self);
-
 }
 
 sub run {
 
   my $self = shift;
 
-  my $start_time = time;
+  my $pid = undef;
 
-  $self->status_update('RUNNING');
-
-  $self->progress_update('Stage1');
-  sleep(3);
-  $self->progress_update('Stage2');
-
-  my $end_time = time;
-
-  $self->duration($end_time-$start_time);
-
-  if (int(rand(10))>5) {
-    $self->error('An error has occured');
+  # fork returned undef, so failed
+  if ( !defined( $pid = fork() ) ) {
+    die "Cannot fork: $!";
   }
+  # fork returned 0, so this branch is child
+  elsif ( $pid == 0 ) {
 
-  $self->status_update('DONE');
+    my $start_time = time;
+
+    $self->status_update('RUNNING');
+
+    $self->progress_update('Stage1');
+
+    foreach my $x ( 0 .. 10 ) {
+      open( LOG, ">>log" );
+      print LOG $self->id, "  step $x $$\n";
+      close(LOG);
+      sleep(1);
+    }
+
+    my $end_time = time;
+
+    $self->duration( $end_time - $start_time );
+
+    if ( int( rand(10) ) > 5 ) {
+      $self->error('An error has occured');
+    }
+
+    $self->status_update('DONE');
+
+    $self->queue->restore;
+    $self->queue->run;
+
+    exit();
+  }
 
   # $self->status_update('RUNNING');
 
@@ -135,7 +145,6 @@ sub run {
   #   $self->status_update('DONE');
   # }
 
-
 }
 
 sub as_hash {
@@ -161,64 +170,59 @@ sub as_hash {
 
 }
 
-
 sub _catch_error {
 
   my $self = shift;
 
   my $e = Exception::Class->caught();
 
-  if (ref $e){
-    $self->error($e->error);
+  if ( ref $e ) {
+    $self->error( $e->error );
   } else {
     $self->error("An unexpected error has occured ($@)");
   }
 }
 
-
-sub _match{
+sub _match {
 
   my $self = shift;
 
-  my $model = Paperpile::Utils->get_library_model;
+  my $model    = Paperpile::Utils->get_library_model;
   my $settings = $model->settings;
 
-  my @plugin_list = split(/,/,$settings->{search_seq});
+  my @plugin_list = split( /,/, $settings->{search_seq} );
 
   my $matched = 0;
 
-  foreach my $plugin (@plugin_list){
+  foreach my $plugin (@plugin_list) {
 
     $self->progress_update("Searching $plugin");
 
-    eval {
-      $self->_match_single($plugin);
-    };
+    eval { $self->_match_single($plugin); };
 
     my $e;
     if ( $e = Exception::Class->caught ) {
       if ( $e = Exception::Class->caught('NetMatchError') ) {
         next;
       } else {
-        $matched=0;
+        $matched = 0;
         $self->_catch_error;
         last;
       }
     } else {
-      $matched=1;
+      $matched = 1;
       last;
     }
   }
 
-  if ($self->error){
+  if ( $self->error ) {
     $self->error('Could not find reference in online databases.');
   }
 }
 
-
 sub _match_single {
 
-  my ($self, $match_plugin) = @_;
+  my ( $self, $match_plugin ) = @_;
 
   my $plugin_module = "Paperpile::Plugins::Import::" . $match_plugin;
   my $plugin        = eval( "use $plugin_module; $plugin_module->" . 'new()' );
@@ -231,8 +235,7 @@ sub _match_single {
 
 }
 
-
-sub _crawl{
+sub _crawl {
 
   my $self = shift;
 
@@ -245,7 +248,7 @@ sub _crawl{
 
   my $pdf;
 
-  eval {$pdf = $crawler->search_file($self->pub->linkout)};
+  eval { $pdf = $crawler->search_file( $self->pub->linkout ) };
 
   $self->pub->pdf_url($pdf) if $pdf;
 
@@ -344,7 +347,7 @@ sub _download {
   my $e;
   if ( $e = Exception::Class->caught ) {
     if ( $e = Exception::Class->caught('PaperpileError') ) {
-      $self->error($e->error);
+      $self->error( $e->error );
     } else {
       $self->_catch_error;
     }
@@ -353,7 +356,6 @@ sub _download {
   }
 
 }
-
 
 no Moose::Util::TypeConstraints;
 

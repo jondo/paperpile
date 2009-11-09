@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-use lib "../lib";
+use lib "../../lib";
 use strict;
 use Data::Dumper;
 use Paperpile::Library::Publication;
@@ -20,6 +20,10 @@ my $pub2 = Paperpile::Library::Publication->new( doi => "10.1016/j.tig.2008.09.0
 
 my $q = Paperpile::Queue->new();
 
+$q->clear;
+
+unlink('log');
+
 my $job1 = Paperpile::Job->new(
   type  => 'PDF_SEARCH',
   pub   => $pub1,
@@ -32,10 +36,26 @@ my $job2 = Paperpile::Job->new(
   queue => $q
 );
 
+my $job3 = Paperpile::Job->new(
+  type  => 'PDF_SEARCH',
+  pub   => $pub2,
+  queue => $q
+);
+
+my $job4 = Paperpile::Job->new(
+  type  => 'PDF_SEARCH',
+  pub   => $pub2,
+  queue => $q
+);
+
+
 $q->add_job($job1);
 $q->add_job($job2);
+$q->add_job($job3);
+$q->add_job($job4);
 
 $q->save;
+
 
 $q->run;
 
