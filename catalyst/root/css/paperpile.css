@@ -1025,6 +1025,8 @@ div:hover.pp-tag-style-sample {
     white-space:normal;
 }
 
+
+
 /* Plugin logos */
 
 .pp-pubmed-logo{
@@ -1034,7 +1036,18 @@ div:hover.pp-tag-style-sample {
     background: transparent url('/images/pubmed_logo.png') no-repeat;
 }
 
+.pp-googlescholar-logo{
+    margin: 20 auto;
+    width: 165px;
+    height: 59px;
+    background: transparent url('/images/googlescholar_logo.png') no-repeat;
+}
 
+/*** Plugin description at side-panel ***/
+
+.pp-plugins-description{
+    text-align: justify;
+}
 
 
 

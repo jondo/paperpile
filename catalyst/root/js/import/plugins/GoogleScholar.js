@@ -23,8 +23,22 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGridOnlineSearch,
             );
         };
 
-        Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
+        Paperpile.PluginGridGoogleScholar.superclass.initComponent.apply(this, arguments);
+	this.sidePanel = new Paperpile.PluginSidepanelGoogleScholar();
     },
  
 
+});
+
+Paperpile.PluginSidepanelGoogleScholar = Ext.extend(Paperpile.PluginSidepanel, {
+
+    markup: [
+        '<div class="pp-box pp-box-side-panel pp-box-style1">',
+        '<div class="pp-googlescholar-logo">&nbsp</div>',
+        '<p class="pp-plugins-description">Google Scholar provides a simple way to broadly search for scholarly literature. From one place, you can search across many disciplines and sources: peer-reviewed papers, theses, books, abstracts and articles, from academic publishers, professional societies, preprint repositories, universities and other scholarly organizations. Google Scholar helps you identify the most relevant research across the world of scholarly research.</p>',
+        '<p><a target=_blank href="http://scholar.google.com" class="pp-textlink">scholar.google.com</a></p>',
+        '</div>'],
+
+    tabLabel: 'About PubMed',
+   
 });
