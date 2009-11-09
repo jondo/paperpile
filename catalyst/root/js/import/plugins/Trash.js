@@ -1,32 +1,22 @@
-Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
+Paperpile.PluginGridTrash = function(config) {
+  Ext.apply(this, config);
+
+  Paperpile.PluginGridTrash.superclass.constructor.call(this, {
+
+  });
+
+};
+
+Ext.extend(Paperpile.PluginGridTrash, Paperpile.PluginGridDB, {
 
     plugin_base_query:'',
     plugin_iconCls: 'pp-icon-trash',
     plugin_name:'Trash',
     
     initComponent:function() {
+        Paperpile.PluginGridTrash.superclass.initComponent.apply(this, arguments);
 
-        Paperpile.PluginGridFile.superclass.initComponent.apply(this, arguments);
-
-        this.actions['NEW'].hide();
-        this.actions['EDIT'].hide();
-        this.actions['TRASH'].hide();
-        this.actions['EXPORT'].hide();
-        this.actions['SAVE_AS_ACTIVE'].hide();
-
-        this.actions['DELETE']= new Ext.Action({
-            text: 'Delete',
-            handler: function(){
-                this.deleteEntry('DELETE');
-            },
-            scope: this,
-            cls: 'x-btn-text-icon delete',
-            disabled:true,
-            itemId:'delete_button',
-            tooltip: 'Delete selected references permanently from your library',
-        });
-
-        this.actions['EMPTY']= new Ext.Action({
+        this.actions['EMPTY_TRASH']= new Ext.Action({
             text: 'Empty Trash',
             handler: function(){
                 this.allSelected=true;
@@ -34,10 +24,9 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
                 this.allSelected=false;
             },
             scope: this,
-            cls: 'x-btn-text-icon clean',
-            disabled:true,
+	    iconCls: 'pp-icon-clean',
             itemId:'empty_button',
-            tooltip: 'Delete all references in Trash permanently form your library.',
+            tooltip: 'Delete all references in Trash permanently form your library.'
         });
 
         this.actions['RESTORE']= new Ext.Action({
@@ -46,64 +35,57 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
                 this.deleteEntry('RESTORE');
             },
             scope: this,
-            cls: 'x-btn-text-icon restore',
-            disabled:true,
+	    iconCls: 'pp-icon-restore',
             itemId: 'restore_button',
-            tooltip: 'Restore selected references from Trash',
+            tooltip: 'Restore selected references from Trash'
         });
 
-
-        var tbar=this.getTopToolbar();
-
-        tbar.splice(3,0, 
-                    this.actions['EMPTY'], 
-                    this.actions['DELETE'],
-                    this.actions['RESTORE']
-                   );
-        
-
+      
+      this.on({afterrender:{scope:this,fn:this.myOnRender}});
     },
 
+    myOnRender: function() {
+      var tbar = this.getTopToolbar();
+      var index = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
+      
+      tbar.insertButton(index+1,this.actions['RESTORE']);
+      tbar.insertButton(index+1,this.actions['DELETE']);
+      tbar.insertButton(index+1,this.actions['EMPTY_TRASH']);
+
+      index = this.getButtonIndex(this.actions['SAVE_MENU']);
+
+    },
     
-    updateButtons: function(){
+    shouldShowButton: function(menuItem) {
+      var superShow = Paperpile.PluginGridTrash.superclass.shouldShowButton.call(this,menuItem);
 
-        var imported=this.getSelection('IMPORTED').length;
-        var notImported=this.getSelection('NOT_IMPORTED').length;
-        var selected=imported+notImported;
+      if (menuItem.itemId == this.actions['DELETE'].itemId) {
+	menuItem.setTooltip('Permanently delete selected references.');
+	menuItem.setIconClass('pp-icon-delete');
+      }
 
-        if (selected>0){
-            this.actions['DELETE'].enable();
-            this.actions['RESTORE'].enable();
-            this.actions['VIEW_YEAR'].enable();
-	        this.actions['VIEW_JOURNAL'].enable();
-	        this.actions['VIEW_AUTHOR'].enable();
+      if (menuItem.itemId == this.actions['SAVE_MENU'].itemId) {
+	this.getTopToolbar().remove(menuItem);
+	this.getTopToolbar().doLayout();
+//	menuItem.setVisible(false);
+      }
 
-        } else {
-            this.actions['DELETE'].disable();
-            this.actions['RESTORE'].disable();
-            this.actions['VIEW_YEAR'].disable();
-	        this.actions['VIEW_JOURNAL'].disable();
-	        this.actions['VIEW_AUTHOR'].disable();
-        }
+      return superShow;
+    },
 
-        if (selected==1){
-            if (this.getSelectionModel().getSelected().data.pdf) {
-	            this.actions['VIEW_PDF'].setDisabled(false);
-            } else {
-	            this.actions['VIEW_PDF'].setDisabled(true);
-            }
-        }
+    shouldShowContextItem: function(menuItem,record) {
+      var superShow = Paperpile.PluginGridTrash.superclass.shouldShowContextItem.call(this,menuItem,record);
+      
+      if (menuItem.itemId == this.actions['DELETE'].itemId) {
+	menuItem.setIconClass('pp-icon-delete');
+	menuItem.setText('Delete permanently');
+      }
 
-        if (this.store.getCount()>0){
-            this.actions['EMPTY'].enable();
-            this.actions['SELECT_ALL'].enable();
-        } else {
-            this.actions['EMPTY'].disable();
-            this.actions['SELECT_ALL'].disable();
-        }
+      return superShow;
+    },
 
-
+    handleDelete: function() {
+      this.deleteEntry('DELETE');
     }
-
 
 });

@@ -178,9 +178,8 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                     proxy: this.textfields['proxy'].getValue(),
                     proxy_user: this.textfields['proxy_user'].getValue(),
                     proxy_passwd: this.textfields['proxy_passwd'].getValue(),
-                    pager_limit: this.combos['pager_limit'].getValue(),
+                    pager_limit: this.combos['pager_limit'].getValue()
                    };
-
 
         Paperpile.status.showBusy('Applying changes.');
 

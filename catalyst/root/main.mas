@@ -2,7 +2,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <link rel="stylesheet" type="text/css" href="/ext3/resources/css/ext-all.css">
-  <link rel="stylesheet" type="text/css" href="/ext3/resources/css/xtheme-gray-extend.css">
+<!--  <link rel="stylesheet" type="text/css" href="/ext3/resources/css/xtheme-gray-extend.css"> -->
   <link rel="stylesheet" type="text/css" href="/css/paperpile.css">
   <link rel="stylesheet" type="text/css" href="/css/pdf.css">
 
@@ -27,6 +27,7 @@
   import/filter-field.js
   import/plugins/online-search.js
   import/plugins/sidepanel.js
+  import/plugins/DB.js
                
   misc/utils.js
   misc/forms.js 
@@ -53,6 +54,7 @@
                
   pdf/viewer.js 
   pdf/hoverbutton.js
+  pdf/autohide-menu.js
   pdf/menubar.js
 
   pdfextract/view.js

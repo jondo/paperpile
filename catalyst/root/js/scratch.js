@@ -15,7 +15,7 @@ Ext.getUrlParam = function(param,deflt) {
 Ext.onReady(function() {
 
     var path = Ext.getUrlParam('file','');
-    var layout = Ext.getUrlParam('layout','single');
+    var layout = Ext.getUrlParam('layout','continuous');
     var columns = Ext.getUrlParam('columns','1');
     log("Layout:"+layout+" cols:"+columns);
               
@@ -39,9 +39,9 @@ Ext.onReady(function() {
 		 // PDF Viewer initial config options.
 		 search:'',     // initial search.
 		 file:path,                // file to load on startup.
-		 zoom:'page',            // 'width', 'page', or a numerical value.
-		 columns:columns,              // Number of columns to view.
-		 pageLayout:layout     // 'single' or 'continuous'
+		 zoom:'width',            // 'width', 'page', or a numerical value.
+		 columns:columns              // Number of columns to view.
+//		 pageLayout:layout     // 'single' or 'continuous'
                 }
             ),
 

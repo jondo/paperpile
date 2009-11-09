@@ -63,6 +63,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                               margins: '2 2 2 2',
                               cmargins: '5 5 0 5',
                               width: 200,
+/*
                               bbar: new Ext.ux.StatusBar({
                                   border:0,
                                   id: 'statusbar',
@@ -71,6 +72,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                   text: 'Ready',
                                   iconCls: 'ready-icon',
                               }),
+*/
                             },
                             { region:'center',
                               border: false,
@@ -274,6 +276,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     // Reloads DB grids upon insert/entries; it is possible to avoid
     // reload of a grid by passing the id via ignore
+
+    getActiveGrid: function() {
+      var panel = Paperpile.main.tabs.getActiveTab();
+      var grid = panel.items.get('center_panel').items.get('grid');
+      return grid;
+    },
 
     onUpdateDB: function(ignore){
 
