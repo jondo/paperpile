@@ -282,9 +282,15 @@ sub set_settings : Local{
 
   my ( $self, $c ) = @_;
 
-  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd','pager_limit') {
-    $c->model('User')->set_setting($field, $c->request->params->{$field});
+  for my $field (keys %{$c->request->params}) {
+      print STDERR "$field \n";
   }
+
+#  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd','pager_limit') {
+#    $c->model('User')->set_setting($field, $c->request->params->{$field});
+#  }
+
+  $c->model('User')->set_settings($c->request->params);
 
 }
 
