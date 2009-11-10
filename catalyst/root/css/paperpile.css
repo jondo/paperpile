@@ -1037,10 +1037,19 @@ div:hover.pp-tag-style-sample {
 }
 
 .pp-googlescholar-logo{
-    margin: 20 auto;
-    width: 165px;
-    height: 59px;
+    margin: auto;
+    margin-top:20px;
+    width: 189px;
+    height: 40px;
     background: transparent url('/images/googlescholar_logo.png') no-repeat;
+}
+
+.pp-arxiv-logo{
+    margin: auto;
+    margin-top:20px;
+    width: 171px;
+    height: 55px;
+    background: transparent url('/images/arxiv_logo.png') no-repeat;
 }
 
 /*** Plugin description at side-panel ***/

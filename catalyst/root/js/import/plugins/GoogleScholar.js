@@ -39,6 +39,6 @@ Paperpile.PluginSidepanelGoogleScholar = Ext.extend(Paperpile.PluginSidepanel, {
         '<p><a target=_blank href="http://scholar.google.com" class="pp-textlink">scholar.google.com</a></p>',
         '</div>'],
 
-    tabLabel: 'About PubMed',
+    tabLabel: 'About GoogleScholar',
    
 });
