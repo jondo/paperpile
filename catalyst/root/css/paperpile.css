@@ -1047,10 +1047,20 @@ div:hover.pp-tag-style-sample {
 .pp-arxiv-logo{
     margin: auto;
     margin-top:20px;
+    margin-bottom:20px;
     width: 171px;
     height: 55px;
     background: transparent url('/images/arxiv_logo.png') no-repeat;
 }
+
+.pp-googlebooks-logo{
+    margin: auto;
+    margin-top:20px;
+    width: 174px;
+    height: 40px;
+    background: transparent url('/images/googlebooks_logo.png') no-repeat;
+}
+
 
 /*** Plugin description at side-panel ***/
 
