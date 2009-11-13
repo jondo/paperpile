@@ -1070,6 +1070,33 @@ div:hover.pp-tag-style-sample {
     background: transparent url('/images/citeseerx_logo.png') no-repeat;
 }
 
+.pp-jstor-logo{
+    margin: auto;
+    margin-top:20px;
+    margin-bottom:20px;
+    width: 60px;
+    height: 80px;
+    background: transparent url('/images/jstor_logo.png') no-repeat;
+}
+
+.pp-acm-logo{
+    margin: auto;
+    margin-top:15px;
+    margin-bottom:15px;
+    width: 100px;
+    height: 100px;
+    background: transparent url('/images/acm_logo.png') no-repeat;
+}
+
+.pp-springerlink-logo{
+    margin: auto;
+    margin-top:15px;
+    margin-bottom:15px;
+    width: 180px;
+    height: 50px;
+    background: transparent url('/images/springerlink_logo.png') no-repeat;
+}
+
 /*** Plugin description at side-panel ***/
 
 .pp-plugins-description{
