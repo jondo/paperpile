@@ -22,8 +22,22 @@ Paperpile.PluginGridCiteSeerX = Ext.extend(Paperpile.PluginGridOnlineSearch, {
             );
         };
 
-        Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
-    },
- 
+        Paperpile.PluginGridCiteSeerX.superclass.initComponent.apply(this, arguments);
+	this.sidePanel = new Paperpile.PluginSidepanelCiteSeerX();
+    }, 
 
+});
+
+
+Paperpile.PluginSidepanelCiteSeerX = Ext.extend(Paperpile.PluginSidepanel, {
+
+    markup: [
+        '<div class="pp-box pp-box-side-panel pp-box-style1">',
+        '<div class="pp-citeseerx-logo">&nbsp</div>',
+        '<p class="pp-plugins-description">CiteSeerX is a scientific literature digital library and search engine that focuses primarily on the literature in computer and information science.</p>',
+        '<p><a target=_blank href="http://citeseerx.ist.psu.edu/" class="pp-textlink">citeseerx.ist.psu.edu</a></p>',
+        '</div>'],
+
+    tabLabel: 'About CiteSeerX',
+   
 });

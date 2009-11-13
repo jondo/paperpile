@@ -1061,6 +1061,14 @@ div:hover.pp-tag-style-sample {
     background: transparent url('/images/googlebooks_logo.png') no-repeat;
 }
 
+.pp-citeseerx-logo{
+    margin: auto;
+    margin-top:20px;
+    margin-bottom:20px;
+    width: 161px;
+    height: 31px;
+    background: transparent url('/images/citeseerx_logo.png') no-repeat;
+}
 
 /*** Plugin description at side-panel ***/
 
