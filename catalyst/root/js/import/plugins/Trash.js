@@ -55,6 +55,20 @@ Ext.extend(Paperpile.PluginGridTrash, Paperpile.PluginGridDB, {
       index = this.getButtonIndex(this.actions['SAVE_MENU']);
 
     },
+
+    updateButtons: function() {
+      Paperpile.PluginGridTrash.superclass.updateButtons.call(this);
+
+      var selected = this.getSelection().length;
+      if (selected > 0) {
+	this.actions['DELETE'].enable();
+	this.actions['RESTORE'].enable();
+      } else {
+	this.actions['DELETE'].disable();
+	this.actions['RESTORE'].disable();
+      }
+
+    },
     
     shouldShowButton: function(menuItem) {
       var superShow = Paperpile.PluginGridTrash.superclass.shouldShowButton.call(this,menuItem);

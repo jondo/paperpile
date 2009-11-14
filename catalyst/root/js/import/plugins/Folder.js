@@ -20,6 +20,7 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   myOnRender: function() {
+    // Don't call superclass.
     var tbar = this.getTopToolbar();
     var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
     tbar.insertButton(filterFieldIndex+1,this.actions['REMOVE_FROM_FOLDER']);
@@ -35,6 +36,13 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
       this.actions['REMOVE_FROM_FOLDER'].disable();
     }
   },
+
+  shouldShowButton: function(menuItem) {
+    var superShow = Paperpile.PluginGridFolder.superclass.shouldShowButton.call(this,menuItem);
+
+    return superShow;
+  },
+
 
   deleteFromFolder: function(){
     var selection=this.getSelection();

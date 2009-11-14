@@ -1,14 +1,13 @@
 Paperpile.PluginGridOnlineSearch = function(config) {
   Ext.apply(this, config);
-
   Paperpile.PluginGridOnlineSearch.superclass.constructor.call(this, {
-    });
 
+  });
 };
 
-
 Ext.extend(Paperpile.PluginGridOnlineSearch, Paperpile.PluginGrid, {
-
+  plugins:new Paperpile.ImportGridPlugin(),
+  
     initComponent:function() {
         Paperpile.PluginGridOnlineSearch.superclass.initComponent.call(this);
 

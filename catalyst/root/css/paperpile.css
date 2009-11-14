@@ -4,6 +4,10 @@
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
 
+.hover-node {
+    font-size:large;
+}
+
 h1 {
     margin: 8;
     font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
@@ -416,6 +420,17 @@ a:hover.pp-textlink {
 .pp-img-action {
     cursor: pointer;
     padding: 4px;
+}
+
+.pp-img-span {
+    width:12px;
+    height:12px;
+    line-height:12px;
+    display:block;
+    float:right;
+    position:relative;
+    top:-24px;
+    left:-4px;
 }
 
 .pp-img-action:hover {

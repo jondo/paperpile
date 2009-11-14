@@ -33,11 +33,11 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                   width:300,
                   items: [
                       new Paperpile.PDFmanager(
-                          {itemId:'overview',
+                          {itemId:'overview'
                           }
                       ),
                       new Paperpile.PubDetails(
-                          {itemId:'details',
+                          {itemId:'details'
                           }
                       )
                   ],
@@ -100,8 +100,13 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
 
     },
 
-    onControlToggle:function (button, pressed){
+    depressButton: function(itemId) {
+      var button = this.items.get('east_panel').getBottomToolbar().items.get(itemId);
+      button.toggle(true);
+      this.onControlToggle(button,true);
+    },
 
+    onControlToggle:function (button, pressed){
         if (button.itemId == 'overview_tab_button' && pressed){
             this.items.get('east_panel').getLayout().setActiveItem('overview');
         }
@@ -113,8 +118,6 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         if (button.itemId == 'about_tab_button' && pressed){
             this.items.get('east_panel').getLayout().setActiveItem('about');
         }
-
-
     },
     
     onRowSelect: function() {
@@ -124,7 +127,6 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         this.items.get('east_panel').items.get('overview').updateDetail();
         this.items.get('east_panel').items.get('details').updateDetail();
     },
-
 
     updateButtons: function(){
 
@@ -145,7 +147,6 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
     },
 
     onEmpty: function(tpl){
-        
         var east_panel = this.items.get('east_panel');
 
         east_panel.items.get('overview').showEmpty(tpl);
@@ -154,8 +155,6 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         var datatabs=this.items.get('center_panel').items.get('data_tabs');
         datatabs.items.get('pubsummary').showEmpty('');
         datatabs.items.get('pubnotes').showEmpty('');        
-
-
     }
 
 

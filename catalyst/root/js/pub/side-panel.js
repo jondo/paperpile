@@ -37,6 +37,10 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
           '</dd>',
 	'</tpl>',
         '</dl>',
+        '<div id="bottom-actions" style="float:right;">',
+    	  '<span class="pp-img-action pp-img-span" action="show-details" ext:qtip="View Full Reference Details">...</span>',
+        '</div>',
+//        '<div style="clear:both;"></div>',
         '</div>',
 
         '<tpl if="trashed==0">',
@@ -143,7 +147,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     //
     
     updateDetail: function() {
-
         if (!this.grid){
             this.grid=this.findParentByType(Ext.PubView).items.get('center_panel').items.get('grid');
         }
@@ -249,6 +252,16 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
       this.el.on('click',this.handleClick,this);
     },
 
+    showOverview: function() {
+      var view = Paperpile.main.getActiveView();
+      view.depressButton('overview_tab_button');
+    },
+
+    showDetails: function() {
+      var view = Paperpile.main.getActiveView();
+      view.depressButton('details_tab_button');
+    },
+
     handleClick: function(e) {
       e.stopEvent();
 	var el = e.getTarget();
@@ -320,10 +333,14 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 	    break;
 
 	  case 'delete-ref':
-	    console.log("DELETE!");
 	    var grid = Paperpile.main.getActiveGrid();
 	    grid.handleDelete();
-		break;
+	    break;
+
+	  case 'show-details':
+	    this.showDetails();
+	    break;
+
             }
     },
 

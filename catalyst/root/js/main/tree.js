@@ -1,6 +1,6 @@
 Paperpile.Tree = function(config) {
   Paperpile.Tree.superclass.constructor.call(this,config);
-}
+};
 
 Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 
@@ -13,7 +13,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 	autoScroll: true,
 	loader: new Paperpile.TreeLoader(
           { url: Paperpile.Url('/ajax/tree/get_node'),
-            requestMethod: 'GET',
+            requestMethod: 'GET'
           }
         ),
 	root: {
@@ -26,7 +26,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 	    allowBlank:false,
 	    cancelOnEsc:true,
 	    completeOnEnter:true,
-	    ignoreNoChange:true,
+	    ignoreNoChange:true
 	})
       });
 
@@ -45,6 +45,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
           // array which gets stored in node.attributes
 	  fn:function(node){
 	    delete node.attributes.children;
+	    var el = node.getUI().getEl();
+	    var xEl = Ext.fly(el);
+	    if (node != this.getRootNode()) {
+	      xEl.addClassOnOver('hover-node');
+	    }
           }
 	},
 	beforechildrenrendered:{scope:this,
@@ -54,6 +59,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
             }
 	  }
 	},
+	insert:{scope:this,
+	  fn:function(tree,parent,node,refNode) {
+	    console.log(node);
+	  }
+	},
 	resize:{scope:this,
 	  // Set scroll size the first time, when the node is rendered
 	  fn:function(node) {
@@ -61,6 +71,8 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
 	  }
 	}
       });
+
+      
 
       this.treeEditor.on({
 	startedit:{
@@ -1309,7 +1321,7 @@ Paperpile.AsyncTreeNode = Ext.extend(Ext.tree.AsyncTreeNode, {
 
     init: function(attr) {
 		    Ext.apply(this, attr);
-	},
+	}
 
 });
 
@@ -1317,7 +1329,7 @@ Paperpile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
 
     init: function(attr) {
 		Ext.apply(this, attr);
-	},
+	}
 
 });
 

@@ -3,7 +3,6 @@ Paperpile.PluginGridDB = function(config) {
 
   Paperpile.PluginGridDB.superclass.constructor.call(this, {
     });
-
 };
 
 Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
@@ -29,93 +28,41 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     ],
 
     initComponent:function() {
-        Paperpile.PluginGridDB.superclass.initComponent.call(this);
-        this.limit = Paperpile.main.globalSettings['pager_limit'];
+      Paperpile.PluginGridDB.superclass.initComponent.call(this);
+      this.limit = Paperpile.main.globalSettings['pager_limit'];
 
-        var menu = new Ext.menu.Menu({
-            defaults: {checked: false,
-                       group: 'filter'+this.id,
-                       checkHandler: this.toggleFilter,
-                       scope:this,
-                      },
-            items: [ { text: 'All fields',
-                       checked: true,
-                       itemId: 'all_nopdf',
-                     }, 
-                     { text: 'All + Fulltext',
-                       itemId: 'all_pdf',
-                     }, 
-                     '-', 
-                     { text: 'Author', itemId: 'author'}, 
-                     { text: 'Title',  itemId: 'title' },
-                     { text: 'Journal', itemId: 'journal'},
-                     { text: 'Abstract', itemId: 'abstract'},
-                     { text: 'Fulltext', itemId: 'text'},
-                     { text: 'Notes', itemId: 'notes'},
-                     { text: 'Year', itemId: 'year'},
-                   ]
-        });
-
-        this.filterField=new Ext.app.FilterField({store: this.store, 
-                                                  base_query: this.plugin_base_query,
-                                                  width: 200,
-                                                 });
-        var tbar=this.getTopToolbar();
-        tbar.unshift({ xtype:'button',
-                       itemId:'filter_button', 
-                       text: 'Filter', 
-                       tooltip: 'Choose field(s) to search',
-                       menu: menu
-                     }
-                    );
-        tbar.unshift(this.filterField);
-
-        // If we are viewing a virtual folders we need an additional
-        // button to remove an entry from a virtual folder
-        this.store.baseParams['plugin_search_pdf']= 0 ;
-        this.store.baseParams['limit']= this.limit ;
-        this.store.on('load', 
-                      function(){
-                          if (this.store.getCount()==0){
-                              var container= this.findParentByType(Paperpile.PubView);
-                              if (container.itemId=='MAIN' && this.store.baseParams.plugin_query ==""){
-                                  container.onEmpty(this.welcomeMsg);
-                              }
-                          }
-                      }, this);
-        this.store.load({params:{start:0, limit: this.limit}});
-
-        this.store.on('load', function(){
-            this.getSelectionModel().selectFirstRow();
-        }, this, {
-            single: true
-        });
-
-      this.on({render:{scope:this,fn:this.createSortHandles}});
-      this.on({afterrender:{scope:this,fn:this.myOnRender}});
-
-      this.actions['NEW'] = new Ext.Action({
-	text: 'New Reference',
-	iconCls: 'pp-icon-add',
-        handler: this.newEntry,
-        scope: this,
-        itemId:'new_button',
-        tooltip: 'Manually create a new reference for your library'
+      // If we are viewing a virtual folders we need an additional
+      // button to remove an entry from a virtual folder
+      this.store.baseParams['plugin_search_pdf']= 0 ;
+      this.store.baseParams['limit']= this.limit ;
+      this.store.on('load', 
+	function() {
+	  if (this.store.getCount()==0) {
+            var container= this.findParentByType(Paperpile.PubView);
+            if (container.itemId=='MAIN' && this.store.baseParams.plugin_query =="") {
+              container.onEmpty(this.welcomeMsg);
+	    }
+          }
+        },
+	this
+      );
+      this.store.on('load', function() {
+	this.getSelectionModel().selectFirstRow();
+      }, this, {
+        single: true
       });
-
+      this.store.load({params:{start:0, limit: this.limit}});
+      this.on({render:{scope:this,fn:this.createSortHandles}});
     },
 
-    myOnRender: function() {
-
-      var tbar = this.getTopToolbar();
-      var index = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-      tbar.insertButton(index+1,this.actions['NEW']);
+    myAfterRender: function() {
+      Paperpile.PluginGridDB.superclass.myAfterRender.call(this);      
 
     },
 
     createSortHandles: function() {
         var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(1)).first(), 
-                                        '<div id="pp-grid-sort-container_'+this.id+'" class="pp-grid-sort-container"></div>', true);
+	  '<div id="pp-grid-sort-container_'+this.id+'" class="pp-grid-sort-container"></div>', true);
 
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="created" status="desc">Date added</div>');
         Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal" status="inactive">Journal</div>');
@@ -130,7 +77,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     currentSortField:'',
     handleSortButtons: function(e, el, o){
-
         var currentClass=el.getAttribute('class');
         var field=el.getAttribute('action');
         var status=el.getAttribute('status');
@@ -229,6 +175,68 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       return superShow;
     },
 
+    createToolbarMenu: function() {
+      Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
+
+        this.filterMenu = new Ext.menu.Menu({
+            defaults: {checked: false,
+                       group: 'filter'+this.id,
+                       checkHandler: this.toggleFilter,
+                       scope:this
+                      },
+            items: [ { text: 'All fields',
+                       checked: true,
+                       itemId: 'all_nopdf'
+                     }, 
+                     { text: 'All + Fulltext',
+                       itemId: 'all_pdf'
+                     }, 
+                     '-', 
+                     { text: 'Author', itemId: 'author'}, 
+                     { text: 'Title',  itemId: 'title' },
+                     { text: 'Journal', itemId: 'journal'},
+                     { text: 'Abstract', itemId: 'abstract'},
+                     { text: 'Fulltext', itemId: 'text'},
+                     { text: 'Notes', itemId: 'notes'},
+                     { text: 'Year', itemId: 'year'}
+                   ]
+        });
+
+	this.filterButton = new Ext.Button({
+	  itemId:'filter_button',
+	  text: 'Filter',
+	  tooltip: 'Choose field(s) to search',
+	  menu: this.filterMenu
+	});
+        this.filterField=new Ext.app.FilterField({
+	  itemId:'filter_field',
+	  store: this.store, 
+	  base_query: this.plugin_base_query,
+          width: 200
+        });
+
+      this._tbar.insert(0,this.filterButton);
+      this._tbar.insert(0,this.filterField);
+
+
+      this.actions['NEW'] = new Ext.Action({
+	text: 'New Reference',
+	iconCls: 'pp-icon-add',
+        handler: this.newEntry,
+        scope: this,
+        itemId:'new_button',
+        tooltip: 'Manually create a new reference for your library'
+      });
+      var tbar = this._tbar;
+      var index = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
+      tbar.insertButton(index+1,this.actions['NEW']);
+
+    },
+
+    toolbarItemHook: function(item,index,length) {
+      Paperpile.PluginGridDB.superclass.toolbarItemHook.call(this,arguments);
+
+    },
 
     shouldShowContextItem: function(menuItem,record) {
       var superShow = Paperpile.PluginGridDB.superclass.shouldShowContextItem.call(this,menuItem,record);

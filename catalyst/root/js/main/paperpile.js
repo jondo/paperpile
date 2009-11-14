@@ -5,7 +5,13 @@ IS_TITANIUM = !(window['Titanium'] == undefined);
 
 Paperpile.Url = function(url){
     return (IS_TITANIUM) ? 'http://127.0.0.1:3000'+url : url;
-}
+};
+
+Paperpile.log = function() {
+  if (console != undefined) {
+    console.log(arguments);
+  }
+};
 
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
@@ -276,6 +282,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     // Reloads DB grids upon insert/entries; it is possible to avoid
     // reload of a grid by passing the id via ignore
+
+    getActiveView: function() {
+      return Paperpile.main.tabs.getActiveTab();
+    },
 
     getActiveGrid: function() {
       var panel = Paperpile.main.tabs.getActiveTab();
