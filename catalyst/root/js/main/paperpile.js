@@ -33,7 +33,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                        }
                                    ),
                                    {xtype:'tbfill'},
-                                   new Paperpile.QueueWidget(),
+                                   //new Paperpile.QueueWidget(),
                                    new Ext.BoxComponent(
                                        { autoEl: {
                                            tag: 'a',
