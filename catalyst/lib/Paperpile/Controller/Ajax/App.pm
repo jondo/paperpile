@@ -10,6 +10,7 @@ use File::Spec;
 use File::Path;
 use File::Copy;
 use Paperpile::Exceptions;
+use Paperpile::Queue;
 use 5.010;
 use POSIX;
 
@@ -77,7 +78,10 @@ sub init_session : Local {
     $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
     $c->model('Library')->set_settings( $c->config->{'library_settings'} );
 
-  } else {
+  }
+
+  # Settings file exists
+  else {
 
     my $library_db = $c->model('User')->get_setting('library_db');
 
@@ -101,9 +105,12 @@ sub init_session : Local {
 
   my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
 
-  mkpath($tmp_dir);
-  mkpath(File::Spec->catfile($tmp_dir, 'cache'));
+  # clear queue for now at startup
+  my $q = Paperpile::Queue->new();
+  $q->clear;
 
+  #mkpath($tmp_dir);
+  #mkpath(File::Spec->catfile($tmp_dir, 'cache'));
   #Paperpile::Utils->store('queue',{});
 
 

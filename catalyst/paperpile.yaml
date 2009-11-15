@@ -24,6 +24,7 @@ user_settings:
   proxy_user: ""
   proxy_passwd: ""
   pager_limit: 25
+  _queue: ""
 
 library_settings:
   paper_root: "__USERHOME__/.paperpile/papers"

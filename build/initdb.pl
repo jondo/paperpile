@@ -4,13 +4,14 @@ use strict;
 use lib "../catalyst/lib";
 use Paperpile::Model::App;
 use Paperpile::Model::Library;
+use Paperpile::Model::Queue;
 use Data::Dumper;
 
 use YAML qw(LoadFile);
 
 chdir '../catalyst/db';
 
-foreach my $key ( 'app', 'user', 'library' ) {
+foreach my $key ( 'app', 'user', 'library','queue' ) {
   print STDERR "Initializing $key.db...\n";
   unlink "$key.db";
   my @out = `sqlite3 $key.db < $key.sql`;

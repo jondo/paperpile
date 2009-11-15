@@ -884,11 +884,11 @@ Paperpile.PluginGrid = Ext.extend(Ext.grid.GridPanel, {
             method: 'GET',
             timeout: 10000000,
             success: function(response){
+                Paperpile.main.tabs.showQueueTab();
             }
         });
 
-        Paperpile.main.tabs.showQueueTab();
-
+        
     }, 
 
 

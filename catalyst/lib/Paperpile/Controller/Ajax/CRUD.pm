@@ -461,15 +461,14 @@ sub batch_download : Local {
 
   # Clear queue if idle (does not do anything if jobs are pending and
   # the new jobs will be added)
-  $q->clear();
+  #$q->clear();
 
   foreach my $pub (@$data) {
     my $j = Paperpile::Job->new(
-      type  => 'PDF_SEARCH',
-      pub   => $pub,
-      queue => $q
+      type => 'PDF_SEARCH',
+      pub  => $pub,
     );
-    $q->add_job($j);
+    $q->submit($j);
   }
 
   $q->save;

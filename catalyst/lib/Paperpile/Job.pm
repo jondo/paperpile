@@ -15,6 +15,7 @@ use File::Spec;
 use File::Copy;
 use File::Temp qw/ tempfile /;
 use Time::HiRes qw/ usleep/;
+use Storable qw(lock_store lock_retrieve);
 
 use JSON;
 use 5.010;
@@ -22,23 +23,70 @@ use 5.010;
 enum 'Types'  => qw(MATCH PDF_IMPORT PDF_SEARCH WEB_IMPORT);
 enum 'Status' => qw(RUNNING PENDING DONE);
 
-has 'id'       => ( is => 'rw', isa => 'Str' );
+has 'id'       => ( is => 'rw' );
 has 'type'     => ( is => 'rw', isa => 'Types' );
 has 'status'   => ( is => 'rw', isa => 'Status' );
-has 'error'    => ( is => 'rw', isa => 'Str' );
-has 'progress' => ( is => 'rw', isa => 'Str' );
+has 'error'    => ( is => 'rw' );
+has 'progress' => ( is => 'rw' );
 has 'duration' => ( is => 'rw', isa => 'Int' );
+has 'progress' => ( is => 'rw' );
+has 'file'     => ( is => 'rw' );
 
-has 'pub'   => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
-has 'queue' => ( is => 'rw', isa => 'Paperpile::Queue' );
+has 'pub' => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
 
 sub BUILD {
   my ( $self, $params ) = @_;
-  $self->generate_id;
-  $self->status('PENDING');
-  $self->progress('Waiting.');
-  $self->error('');
+
+  # if not id is given create new job
+  if ( !$params->{id} ) {
+    $self->generate_id;
+    $self->status('PENDING');
+    $self->progress('Waiting.');
+    $self->error('');
+    $self->duration(0);
+
+    my $file = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue' );
+    mkpath($file);
+    $file = File::Spec->catfile( $file, $self->id );
+    $self->file($file);
+    $self->save;
+  }
+
+  # otherwise restore object from disk
+  else {
+    $self->file( File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id ) );
+    $self->restore;
+  }
 }
+
+## Save job object to disk
+
+sub save {
+  my $self = shift;
+
+  my $file = $self->file;
+
+  lock_store( $self, $self->file );
+
+}
+
+## Read job object from disk
+
+sub restore {
+  my $self = shift;
+
+  my $stored = undef;
+
+  eval { $stored = lock_retrieve( $self->file ); };
+
+  return if not $stored;
+
+  foreach my $key ( $self->meta->get_attribute_list ) {
+    $self->$key( $stored->$key );
+  }
+}
+
+## Generate alphanumerical random id
 
 sub generate_id {
 
@@ -58,21 +106,41 @@ sub generate_id {
   $self->id($string);
 }
 
+## Updates status in job file and queue database table
 
-sub status_update {
+sub update_status {
   my ( $self, $status ) = @_;
+
   $self->status($status);
-  $self->queue( Paperpile::Queue->new() );
-  $self->queue->update_job($self);
-  Paperpile::Utils->store( 'job_' . $self->id, $self );
+
+  my $dbh = Paperpile::Utils->get_queue_model->dbh;
+
+  my $job_id = $dbh->quote( $self->id );
+
+  $dbh->begin_work;
+
+  $status = $dbh->quote( $self->status );
+
+  my $error = 0;
+  $error = 1 if $self->error;
+  my $duration = $self->duration;
+
+  $dbh->do("UPDATE Queue SET status=$status, error=$error, duration=$duration WHERE jobid=$job_id");
+
+  $dbh->commit;
+
+  $self->save;
+
 }
 
 sub progress_update {
   my ( $self, $progress ) = @_;
   $self->progress($progress);
-  $self->queue( Paperpile::Queue->new() );
-  $self->queue->update_job($self);
+  $self->save;
 }
+
+
+## Runs the job in a forked sub-process
 
 sub run {
 
@@ -84,18 +152,16 @@ sub run {
   if ( !defined( $pid = fork() ) ) {
     die "Cannot fork: $!";
   }
+
   # fork returned 0, so this branch is child
   elsif ( $pid == 0 ) {
 
     my $start_time = time;
 
-    $self->status_update('RUNNING');
-
-    $self->progress_update('Stage1');
-
     foreach my $x ( 0 .. 10 ) {
       open( LOG, ">>log" );
       print LOG $self->id, "  step $x $$\n";
+      $self->progress_update('Stage $x');
       close(LOG);
       sleep(1);
     }
@@ -108,15 +174,13 @@ sub run {
       $self->error('An error has occured');
     }
 
-    $self->status_update('DONE');
+    $self->update_status('DONE');
 
-    $self->queue->restore;
-    $self->queue->run;
+    my $q = Paperpile::Queue->new();
+    $q->run;
 
     exit();
   }
-
-  # $self->status_update('RUNNING');
 
   # if ($self->type eq 'PDF_SEARCH'){
 

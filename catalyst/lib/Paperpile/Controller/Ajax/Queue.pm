@@ -16,30 +16,6 @@ use MooseX::Timestamp;
 use POSIX qw(ceil floor);
 
 
-sub fork : Local {
-
-  my ( $self, $c ) = @_;
-
-  my $pid = undef;
-
-  if (!defined($pid = fork())) {
-    # fork returned undef, so failed
-    die "Cannot fork: $!";
-  } elsif ($pid == 0) {
-    # fork returned 0, so this branch is child
-    foreach my $i (0..15){
-      sleep(1);
-      print STDERR "$$: $i\n";
-    }
-    exit();
-  } else {
-    $c->stash->{pid} = 12345;
-  }
-
-
-}
-
-
 sub grid : Local {
 
   my ( $self, $c ) = @_;
@@ -51,9 +27,9 @@ sub grid : Local {
 
   my $q = Paperpile::Queue->new();
 
-  #$q->_dump;
+  $q->update_stats;
 
-  foreach my $job ( @{ $q->jobs } ) {
+  foreach my $job ( @{ $q->get_jobs } ) {
     push @data, $job->as_hash;
 
     # For simplicity, simply push info for complete queue to each item
