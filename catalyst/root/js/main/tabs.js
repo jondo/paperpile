@@ -53,13 +53,15 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     },
 
 
-
     // If itemId is given it is checked if the same tab already is
     // open and it activated instead of creating a new one
     newPluginTab:function(name, pars, title, iconCls, itemId){
+      var javascript_ui = pars.plugin_name || name;
+      if (pars.plugin_query.indexOf('folder:') > -1) {
+	javascript_ui = "Folder";
+      }
 
-        var newGrid=new Paperpile['PluginGrid'+name](pars);
-
+        var newGrid=new Paperpile['PluginGrid'+javascript_ui](pars);
         var openTab=Paperpile.main.tabs.getItem(itemId);
 
         if (openTab){
@@ -71,7 +73,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
                                                         grid:newGrid,
                                                         closable:true,
                                                         iconCls: (iconCls) ? iconCls : newGrid.plugin_iconCls,
-                                                        itemId: itemId,
+                                                        itemId: itemId
                                                        }));
             newView.show();
         }
@@ -80,7 +82,6 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
     // Opens a new tab with some specialized screen. Name is either the name of a preconficured panel-class, or
     // an object specifying url and title of the tab.
-
     newScreenTab:function(name, itemId){
 
         var openTab=Paperpile.main.tabs.getItem(itemId);
@@ -140,23 +141,18 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       this.pdfViewerCounter++;
         var defaults = { id:'pdf_viewer_'+this.pdfViewerCounter,
                          region:'center',
-		                 search:'',
-		                 zoom:'page',
-		                 columns:1,
-		                 pageLayout:'single',
+	                 search:'',
+			 zoom:'width',
+		         columns:1,
+		         pageLayout:'flow',
                          closable:true,
                          iconCls: 'pp-icon-import-pdf'
                        };
         var pars={};
 
         Ext.apply(pars, config, defaults);
-
-        console.log(pars);
-
         var panel=Paperpile.main.tabs.add(new Paperpile.PDFviewer(pars));
-
         panel.show();
-
     }
 
 }

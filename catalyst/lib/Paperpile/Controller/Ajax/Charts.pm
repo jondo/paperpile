@@ -24,7 +24,12 @@ sub chart : Local {
   }
 
   if ($type eq 'top_journals'){
-    my $hist = $c->model('Library')->histogram('journal');
+    my $hist = $c->model('Library')->histogram('journals');
+    $chart = $self->_chart($hist, 'bar');
+  }
+
+  if ($type eq 'top_tags'){
+    my $hist = $c->model('Library')->histogram('tags');
     $chart = $self->_chart($hist, 'bar');
   }
 
@@ -126,6 +131,9 @@ sub clouds : Local {
 
   my ( $self, $c ) = @_;
   my $field = $c->request->params->{field};
+  my $sort_by = $c->request->params->{sorting};
+
+  $sort_by = 'alphabetical' unless (defined $sort_by);
 
   my $hist = $c->model('Library')->histogram($field);
 
@@ -148,7 +156,11 @@ sub clouds : Local {
 
   my $output = '';
 
-  foreach my $item ( sort { $a->{name} cmp $b->{name} } @list ) {
+  my @sorted_list;
+  @sorted_list = sort { lc($a->{name}) cmp lc($b->{name})} @list;
+  @sorted_list = sort { $b->{count} <=> $a->{count}} @list if ($sort_by eq 'count');
+
+  foreach my $item ( @sorted_list ) {
 
     my $x = $item->{count};
 
@@ -163,7 +175,13 @@ sub clouds : Local {
     my $name = $item->{name};
     my $id   = $item->{id};
 
-    $output .= "<a key=\"$id\" href=\"#\" style=\"font-size:$size;\">$name</a> ";
+    if ($item->{style}) {
+      # We have style information for the tag cloud.
+      my $style = $item->{style};
+      $output .= "<a class=\"pp-tag-cloud pp-tag-style-${style}\" key=\"$name\" style_number=\"${style}\" href=\"#\" style=\"font-size:$size;\">$name</a> ";
+    } else {
+      $output .= "<a key=\"$id\" class=\"pp-cloud-item\" href=\"#\" style=\"font-size:$size;\">$name</a> ";
+    }
 
   }
 

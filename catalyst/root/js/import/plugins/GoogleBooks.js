@@ -23,8 +23,20 @@ Paperpile.PluginGridGoogleBooks = Ext.extend(Paperpile.PluginGridOnlineSearch, {
             );
         };
 
-        Paperpile.PluginGridPubMed.superclass.initComponent.apply(this, arguments);
-    },
- 
+        Paperpile.PluginGridGoogleBooks.superclass.initComponent.apply(this, arguments);
+	this.sidePanel = new Paperpile.PluginSidepanelGoogleBooks();
+    },    
+});
 
+Paperpile.PluginSidepanelGoogleBooks = Ext.extend(Paperpile.PluginSidepanel, {
+
+    markup: [
+        '<div class="pp-box pp-box-side-panel pp-box-style1">',
+        '<div class="pp-googlebooks-logo">&nbsp</div>',
+        '<p class="pp-plugins-description">Google Books searches the full text of over seven million books.</p>',
+        '<p><a target=_blank href="http://books.google.com/" class="pp-textlink">books.google.com/</a></p>',
+        '</div>'],
+
+    tabLabel: 'About GoogleBooks',
+   
 });

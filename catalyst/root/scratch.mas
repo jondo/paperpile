@@ -1,14 +1,15 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <link rel="stylesheet" type="text/css" href="/ext/resources/css/ext-all.css">
-  <link rel="stylesheet" type="text/css" href="/ext/resources/css/xtheme-gray.css">
+  <link rel="stylesheet" type="text/css" href="/ext3/resources/css/ext-all.css">
+<!--  <link rel="stylesheet" type="text/css" href="/ext3/resources/css/xtheme-gray-extend.css"> -->
   <link rel="stylesheet" type="text/css" href="/css/paperpile.css">
   <link rel="stylesheet" type="text/css" href="/css/pdf.css">
   <link rel="stylesheet" type="text/css" href="/css/boxselect.css">
 
-  <script type="text/javascript" charset="utf-8" src="/ext/adapter/ext/ext-base.js"></script>
-  <script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/ext3/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/ext3/ext-all-debug.js"></script>
+<!-  <script type="text/javascript" charset="utf-8" src="/ext3/examples/ux/StatusBar.js"></script> -->
 
   <script type="text/javascript" charset="utf-8" src="/js/main/overrides.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/scratch.js"></script>
@@ -16,8 +17,10 @@
   <script type="text/javascript" charset="utf-8" src="/js/misc/utils.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/import/filter-field.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/import/search-field.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pdf/autohide-menu.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf/menubar.js"></script>
   <script type="text/javascript" charset="utf-8" src="/js/pdf/viewer.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/js/pdf/hoverbutton.js"></script>
 
   <link rel="stylesheet" type="text/css" href="/ext.ux/filetree/css/icons.css">
   <link rel="stylesheet" type="text/css" href="/ext.ux/filetree/css/webpage.css">
@@ -32,7 +35,7 @@
   <script type="text/javascript" src="/ext.ux/filetree/js/Ext.ux.FileTreePanel.js"></script>
 
 
-  <title>Paperpile</title>
+  <title>Paperpile PDF Scratch</title>
 </head>
 <body>
 <div id="container"></div>

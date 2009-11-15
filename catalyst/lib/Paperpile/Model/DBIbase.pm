@@ -23,6 +23,7 @@ sub set_settings {
   foreach my $key ( keys %$settings ) {
     my $value = $settings->{$key};
     $self->dbh->do("INSERT INTO Settings (key,value) VALUES ('$key','$value')");
+    print STDERR "--> SET $key $value\n";
   }
 }
 

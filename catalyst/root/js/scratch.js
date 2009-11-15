@@ -2,13 +2,23 @@ Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 var Paperpile = {};
 Ext.ns('Paperpile');
 
-Ext.getUrlParam = function(param) {
+Ext.getUrlParam = function(param,deflt) {
+  if (deflt === undefined) deflt = '';
   var params = Ext.urlDecode(location.search.substring(1));
-  return param ? params[param] : params;
+  if (params[param]) {
+    return params[param];
+  } else {
+    return deflt;
+  }
 };
 
 Ext.onReady(function() {
 
+    var path = Ext.getUrlParam('file','');
+    var layout = Ext.getUrlParam('layout','continuous');
+    var columns = Ext.getUrlParam('columns','1');
+    log("Layout:"+layout+" cols:"+columns);
+              
     var vp=new Ext.Viewport({
         layout: 'border',
         defaults: {
@@ -27,11 +37,11 @@ Ext.onReady(function() {
                  region:'center',
 
 		 // PDF Viewer initial config options.
-		 search:'life',     // initial search.
-		 file:'',                // file to load on startup.
-		 zoom:'page',            // 'width', 'page', or a numerical value.
-		 columns:1,              // Number of columns to view.
-		 pageLayout:'single'     // 'single' or 'continuous'
+		 search:'',     // initial search.
+		 file:path,                // file to load on startup.
+		 zoom:'width',            // 'width', 'page', or a numerical value.
+		 columns:columns              // Number of columns to view.
+//		 pageLayout:layout     // 'single' or 'continuous'
                 }
             ),
 
@@ -67,12 +77,13 @@ Ext.onReady(function() {
         }
     });
 
-    var viewer = Ext.getCmp('pdf_viewer');
-    var path = Ext.getUrlParam("file");
+/*
+     var viewer = Ext.getCmp('pdf_viewer');
     if (path !== undefined && path !== '') {
       console.log(path);
       viewer.initPDF(path);
     } else {
       win.show();
     }
+*/
 });

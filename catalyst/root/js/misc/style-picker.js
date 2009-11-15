@@ -28,13 +28,14 @@ Ext.extend(Paperpile.StylePicker, Ext.Component, {
         var t = this.tpl || new Ext.XTemplate(
             '<tpl for="."><div class="pp-tag-style-sample pp-tag-style-{.}"><span unselectable="on">a</span></div></tpl>');
         var el = document.createElement("div");
+	el.id = this.getId();
         el.className = 'pp-tag-style-picker';
         t.overwrite(el, numbers);
         container.dom.insertBefore(el, position);
         this.el = Ext.get(el);
-        this.el.on(this.clickEvent, this.handleClick,  this, {delegate: "div"});
+        this.mon(this.el, this.clickEvent, this.handleClick,  this, {delegate: "div"});
         if(this.clickEvent != 'click'){
-            this.el.on('click', Ext.emptyFn,  this, {delegate: "div", preventDefault:true});
+            this.mon(this.el, 'click', Ext.emptyFn,  this, {delegate: "div", preventDefault:true});
         }
     },
 
@@ -62,24 +63,28 @@ Ext.extend(Paperpile.StylePicker, Ext.Component, {
 });
 Ext.reg('colorpalette', Paperpile.StylePicker);
 
-Paperpile.StylePickerMenu = function(config){
-    Paperpile.StylePickerMenu.superclass.constructor.call(this, config);
-    this.plain = true;
-    var ci = new Paperpile.StyleItem(config);
-    this.add(ci);
-    this.palette = ci.palette;
-    this.relayEvents(ci, ["select"]);
-};
+Paperpile.StylePickerMenu = Ext.extend(Ext.menu.Menu, {
+    hideOnClick:true,
+    enableScrolling:false,
 
-Ext.extend(Paperpile.StylePickerMenu, Ext.menu.Menu);
+    initComponent:function() {
+      Ext.apply(this, {
+	plain:true,
+	showSeparator:false,
+	items:this.palette = new Paperpile.StylePicker(this.initialConfig)
+      });
+      this.palette.purgeListeners();
+      Paperpile.StylePickerMenu.superclass.initComponent.call(this);
+      this.relayEvents(this.palette, ["select"]);
+      this.on('select', this.menuHide, this);
+      if(this.handler){
+        this.on('select', this.handler, this.scope || this);
+      }
+    },
 
-Paperpile.StyleItem = function(config){
-    Paperpile.StyleItem.superclass.constructor.call(this, new Paperpile.StylePicker(config), config);
-    this.palette = this.component;
-    this.relayEvents(this.palette, ["select"]);
-    if(this.selectHandler){
-        this.on('select', this.selectHandler, this.scope);
+    menuHide: function() {
+      if (this.hideOnClick) {
+	this.hide(true);
+      }
     }
-};
-
-Ext.extend(Paperpile.StyleItem, Ext.menu.Adapter);
+});

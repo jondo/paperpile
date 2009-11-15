@@ -6,6 +6,18 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
 
         // Yellow box
         '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1"',
+        '<tpl if="_imported">',
+  	  '<div id="ref-actions" style="float:right;">',
+	    '<img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
+	    '<tpl if="trashed==1">',
+	      '<img src="/images/icons/delete.png" class="pp-img-action" action="delete-ref" ext:qtip="Permanently Delete Reference"/>',
+	    '</tpl>',
+	    '<tpl if="trashed==0">',
+	      '<img src="/images/icons/trash.png" class="pp-img-action" action="delete-ref" ext:qtip="Move Reference to Trash"/>',
+	    '</tpl>',
+          '</div>',
+        '</tpl>',
+        '<h2>Reference Info</h2>',
         '<dl>',
         '<tpl if="_pubtype_name"><dt>Type: </dt><dd>{_pubtype_name}</dd></tpl>',
         
@@ -17,24 +29,29 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<tpl if="doi"><dt>DOI: </dt><dd>{doi}</dd></tpl>',
         '<tpl if="eprint"><dt>Eprint: </dt><dd>{eprint}</dd></tpl>',
         '<tpl if="pmid"><dt>PubMed ID: </dt><dd>{pmid}</dd></tpl>',
-        '<dt>Labels: </dt><dd>',
-        '<div id="tag-container-{id}" class="pp-tag-container"></div>',
-        '<div id="tag-control-{id}" class="pp-tag-control"></div>',
-        '<div id="tag-add-link-{id}" ><a href="#" class="pp-textlink">Add&nbsp;Label</a></div>',
-        '</dd>',
+        '<tpl if="_imported">', // Don't show the labels widget if this article isn't imported.
+	  '<dt>Labels: </dt><dd>',
+          '<div id="tag-container-{id}" class="pp-tag-container"></div>',
+          '<div id="tag-control-{id}" class="pp-tag-control"></div>',
+	  '<div id="tag-add-link-{id}" ><a href="#" class="pp-textlink">Add&nbsp;Label</a></div>',
+          '</dd>',
+	'</tpl>',
         '</dl>',
         '</div>',
 
         '<tpl if="trashed==0">',
 
-        '<div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1"',
-        '<tpl if="linkout">',
-        '<p><a href="{linkout}" target="_blank" class="pp-textlink pp-action pp-action-go">Go to publisher site</a></p>',
+        '<tpl if="linkout || doi">',
+	  '<div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1"',
+          '<tpl if="linkout">',
+          '<p><a href="{linkout}" target="_blank" class="pp-textlink pp-action pp-action-go">Go to publisher site</a></p>',
+          '</tpl>',
+	  '<tpl if="!linkout && doi">',
+	    '<p><a href="http://dx.doi.org/{doi}" target="_blank" class="pp-textlink pp-action pp-action-go">Publisher\'s site via DOI</a></p>',
+            //'<p class="pp-action pp-action-go">[No publisher link available]</p>',
+	  '</tpl>',
+          '</div>',
         '</tpl>',
-        '<tpl if="!linkout">',
-        '<p class="pp-action pp-action-go">[No publisher link available]</p>',
-        '</tpl>',
-        '</div>',
 
         // Gray box
 
@@ -55,19 +72,10 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</tpl>',
 
         '<tpl if="!pdf">',
-        '<tpl if="linkout">',
-        '<li id="search-pdf-{id}" class="pp-action pp-action-get-pdf"><a href="#" class="pp-textlink" action="search-pdf">Download PDF</a></li>',
-        '<li><div id="pbar"></div></li>',
-        '</tpl>',
-        '<tpl if="!linkout">',
-        '<li id="search-pdf-{id}" class="pp-menu pp-action pp-action-search-pdf">',
-        '<a href="#" class="pp-textlink">Search PDF &gt;</a>',
-        '<ul>',
-        '<li><a href="#" class="pp-textlink" action="search-pdf" plugin="PubMed">PubMed</a></li>',
-        '<li>GoogleScholar</li>',
-        '</ul>',
-        '</li>',
-        '<li><div id="pbar"></div></li>',
+        '<tpl if="linkout || doi">',
+            '<li id="search-pdf-{id}" class="pp-menu pp-action pp-action-search-pdf">',
+            '<a href="#" class="pp-textlink" action="search-pdf">Search & Download PDF</a></li>',
+            '<li><div id="pbar"></div></li>',
         '</tpl>',
 
         '<tpl if="_imported">',
@@ -77,7 +85,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '</ul>',
 
         '<tpl if="_imported">',
-        '<p>&nbsp;</p>',
         '<h2>Supplementary material</h2>',
         '<tpl if="attachments">',
         '<ul class="pp-attachments">',
@@ -114,20 +121,21 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     ],
 
     initComponent: function() {
-		this.tplSingle = new Ext.XTemplate(this.markupSingle).compile();
-        this.tplMultiple = new Ext.XTemplate(this.markupMultiple).compile();
+      this.tplSingle = new Ext.XTemplate(this.markupSingle).compile();
+      this.tplMultiple = new Ext.XTemplate(this.markupMultiple).compile();
 
-		Ext.apply(this, {
-			bodyStyle: {
-				background: '#ffffff',
-				padding: '7px'
-			},
-            autoScroll: true,
-		});
+      Ext.apply(this,{
+	  bodyStyle: {
+	    background: '#ffffff',
+	    padding: '7px'
+	  },
+	  autoScroll: true,
+      });
 		
-        Paperpile.PDFmanager.superclass.initComponent.call(this);
-
-	},
+      Paperpile.PDFmanager.superclass.initComponent.call(this);
+      
+      this.on('afterrender',this.installEvents,this);
+      },
 	
 
     //
@@ -179,7 +187,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                           var json = Ext.util.JSON.decode(response.responseText);
                           this.data.attachments_list=json.list;
                           this.tplSingle.overwrite(this.body, this.data, true);
-                          this.installEvents();
                           this.renderTags();
                       },
                       failure: Paperpile.main.onError,
@@ -187,7 +194,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                     });
             } else {
                 this.tplSingle.overwrite(this.body, this.data, true);
-                this.installEvents();
                 this.renderTags();
             }
         } 
@@ -220,86 +226,15 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     //
     
     installEvents: function(){
-
-        Ext.get('tag-add-link-'+this.id).setVisibilityMode(Ext.Element.DISPLAY);
-        Ext.get('tag-add-link-'+this.id).on('click',
+	var el = Ext.get('tag-add-link-'+this.id);
+	if (el != null) {
+	  Ext.get('tag-add-link-'+this.id).setVisibilityMode(Ext.Element.DISPLAY);
+          Ext.get('tag-add-link-'+this.id).on('click',
                                    function(){
                                        Ext.get('tag-add-link-'+this.id).hide();
                                        this.showTagControls();
                                    }, this);
 
-        // All "action" links in panel
-        Ext.get('main-container-'+this.id).on('click', function(e, el, o){
-
-            switch(el.getAttribute('action')){
-
-
-            case 'open-pdf':
-
-                var path=this.data.pdf;
-                if (!Paperpile.utils.isAbsolute(path)){
-                    path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
-                }
-                Paperpile.main.tabs.newPdfTab({file:path, title:this.data.pdf});
-                Paperpile.main.inc_read_counter(this.data._rowid);
-                break;
-
-            case 'open-pdf-external':
-                var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf);
-                Paperpile.utils.openFile(path);
-                Paperpile.main.inc_read_counter(this.data._rowid);
-                break;
-               
-                // Choose local PDF file and attach to database entry
-            case 'attach-pdf':
-                this.chooseFile(true);
-                break;
-
-                // Search and download PDF file; if entry is already in database 
-                // attach PDF directly to it
-            case 'search-pdf':
-
-                this.searchPDF(el.getAttribute('plugin'));
-                break;
-
-                // If PDF has been downloaded for an entry that is not
-                // already imported, import entry and attach PDF
-            case 'import-pdf':
-                var grid=this.ownerCt.ownerCt.items.get('center_panel').items.get(0);
-                var pdf=this.data.pdf;
-                grid.insertEntry(
-                    function(data){
-                        this.attachFile(1,pdf);
-                    }, this
-                );
-                break;
-                
-                // Delete attached PDF file from database entry
-            case 'delete-pdf':
-                this.deleteFile(true);
-                break;
-                
-                // Attach an arbitrary number of files of any type to an entry in the database
-            case 'attach-file':
-                this.chooseFile(false);
-                break;
-
-                // Open attached files
-            case 'open-attachment':
-                var path= el.getAttribute('path');
-                Paperpile.utils.openFile(path);
-                break;
-            
-                // Delete attached files
-            case 'delete-file':
-                this.deleteFile(false, el.getAttribute('rowid'));
-                break;
-
-            }
-
-        }, this, {delegate:'a'});
-
-        
         // Delete function for tags
         Ext.get("tag-container-"+this.id).on('click',
                                              function(e){
@@ -309,68 +244,148 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
                                                  e.stopEvent();
                                              }, this);
 
+	}
+
+      this.el.on('click',this.handleClick,this);
+    },
+
+    handleClick: function(e) {
+      e.stopEvent();
+	var el = e.getTarget();
+      
+	switch(el.getAttribute('action')) {
+
+          case 'open-pdf':
+            var path=this.data.pdf;
+            if (!Paperpile.utils.isAbsolute(path)){
+	      path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
+            }
+            Paperpile.main.tabs.newPdfTab({file:path, title:this.data.pdf});
+            Paperpile.main.inc_read_counter(this.data._rowid);
+            break;
+
+          case 'open-pdf-external':
+            var path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf);
+            Paperpile.utils.openFile(path);
+            Paperpile.main.inc_read_counter(this.data._rowid);
+            break;
+               
+	  case 'attach-pdf':
+            // Choose local PDF file and attach to database entry
+            this.chooseFile(true);
+            break;
+
+          case 'search-pdf':
+            // Search and download PDF file; if entry is already in database 
+            // attach PDF directly to it
+            this.searchPDF(el.getAttribute('plugin'));
+            break;
+
+          case 'import-pdf':
+            // If PDF has been downloaded for an entry that is not
+            // already imported, import entry and attach PDF
+            var grid=this.ownerCt.ownerCt.items.get('center_panel').items.get(0);
+            var pdf=this.data.pdf;
+            grid.insertEntry(
+              function(data){
+		this.attachFile(1,pdf);
+              }, this
+            );
+            break;
+                
+          case 'delete-pdf':
+            // Delete attached PDF file from database entry
+            this.deleteFile(true);
+            break;
+                
+          case 'attach-file':
+            // Attach an arbitrary number of files of any type to an entry in the database 
+            this.chooseFile(false);
+            break;
+
+          case 'open-attachment':
+            // Open attached files
+            var path= el.getAttribute('path');
+	    Paperpile.utils.openFile(path);
+	    break;
+            
+          case 'delete-file':
+            // Delete attached files
+            this.deleteFile(false, el.getAttribute('rowid'));
+            break;
+
+	  case 'edit-ref':
+	    var grid = Paperpile.main.getActiveGrid();
+	    grid.handleEdit();
+	    break;
+
+	  case 'delete-ref':
+	    console.log("DELETE!");
+	    var grid = Paperpile.main.getActiveGrid();
+	    grid.handleDelete();
+		break;
+            }
     },
 
 
     renderTags: function(){
+      var container=Ext.get("tag-container-"+this.id);
 
-        var container=Ext.get("tag-container-"+this.id);
+      if (container == null)
+	return;
 
-        container.setVisibilityMode(Ext.Element.DISPLAY);
+      container.setVisibilityMode(Ext.Element.DISPLAY);
 
-        if (this.data.tags==''){
-            Ext.get('tag-add-link-'+this.id).removeClass('pp-clear-left');
-            Ext.get('tag-control-'+this.id).removeClass('pp-clear-left');
-            container.hide();
-            return;
-        } 
+      if (this.data.tags==''){
+	Ext.get('tag-add-link-'+this.id).removeClass('pp-clear-left');
+	Ext.get('tag-control-'+this.id).removeClass('pp-clear-left');
+	container.hide();
+	return;
+      } 
 
-        // We only have this control for a single selection
-        if (!this.multipleSelection){
-            Ext.get('tag-add-link-'+this.id).addClass('pp-clear-left');
-        }
+      // We only have this control for a single selection
+      if (!this.multipleSelection){
+	Ext.get('tag-add-link-'+this.id).addClass('pp-clear-left');
+      }
         
-        Ext.get('tag-control-'+this.id).addClass('pp-clear-left');
+      Ext.get('tag-control-'+this.id).addClass('pp-clear-left');
 
-        container.show();
+      container.show();
 
-        var store=Ext.StoreMgr.lookup('tag_store');
+      var store=Ext.StoreMgr.lookup('tag_store');
 
-        var tags=this.data.tags.split(/\s*,\s*/);
+      var tags=this.data.tags.split(/\s*,\s*/);
 
-        for (var i =0; i< tags.length; i++){
+      for (var i =0; i< tags.length; i++){
+	var name = tags[i];
 
-            var name = tags[i];
+	//name=name.replace(/ +/g,"&nbsp;");
 
-            //name=name.replace(/ +/g,"&nbsp;");
-
-            var style = '0';
-            if (store.getAt(store.find('tag',name))){
-                style=store.getAt(store.find('tag',name)).get('style');
-            }
-
-            var el= { tag: 'div',
-                      cls: 'pp-tag-box pp-tag-style-'+style,
-                      children: [{tag: 'div',
-                                  cls: 'pp-tag-name pp-tag-style-'+style,
-                                  html: name
-                                 },
-                                 {tag: 'div',
-                                  cls: 'pp-tag-remove pp-tag-style-'+style,
-                                  html: 'x',
-                                  name: name
-                                 }
-                                ]
-                    };
-
-            if (i==0){
-                Ext.DomHelper.overwrite(container,el);
-            } else {
-                Ext.DomHelper.append(container,el);
-            }
+	var style = '0';
+	if (store.getAt(store.find('tag',name))){
+          style=store.getAt(store.find('tag',name)).get('style');
         }
 
-           
+	var el= { tag: 'div',
+	  cls: 'pp-tag-box pp-tag-style-'+style,
+          children: [{tag: 'div',
+            cls: 'pp-tag-name pp-tag-style-'+style,
+            html: name
+	    },
+            { tag: 'div',
+              cls: 'pp-tag-remove pp-tag-style-'+style,
+              html: 'x',
+              name: name
+	    }
+	    ]
+          };
+
+        if (i==0){
+	  Ext.DomHelper.overwrite(container,el);
+        } else {
+	  Ext.DomHelper.append(container,el);
+        }
+      }
     },
 
     hideTagControls: function(){
@@ -381,7 +396,6 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
     },
 
     showTagControls: function(){
-        
         // Skip tags for combo which are already in list (unless we have multiple selection where this
         // does not make too much sense
         var list=[];
@@ -708,20 +722,25 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
             return;
         }
 
-        var msg='Searching PDF on publisher site';
+        var msg='Searching online for PDF...';
 
         if (plugin){
-            msg='Searching PDF via '+plugin;
+            msg='Searching for PDF via '+plugin+"...";
         }
 
         this.progressBar.wait({text:msg, interval:100});
+
+	var url = this.data.linkout;
+	if (!this.data.linkout && this.data.doi) {
+	  url = "http://dx.doi.org/"+this.data.doi;
+	}
 
         Ext.Ajax.request(
             {   url: Paperpile.Url('/ajax/download/search'),
                 params: { sha1: this.data.sha1,
                           grid_id: this.grid_id,
-                          linkout:this.data.linkout,
-                          plugin: plugin,
+                          linkout:url,
+                          plugin: plugin
                         },
                 method: 'GET',
                 success: function(response){

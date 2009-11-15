@@ -25,7 +25,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 		});
 	    Paperpile.PubNotes.superclass.initComponent.call(this);
 
-        this.spot = new Ext.Spotlight({
+        this.spot = new Ext.ux.Spotlight({
             animate: false,
         });
 

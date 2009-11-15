@@ -1,14 +1,15 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <link rel="stylesheet" type="text/css" href="/ext/resources/css/ext-all.css">
-  <link rel="stylesheet" type="text/css" href="/ext/resources/css/xtheme-gray.css">
+  <link rel="stylesheet" type="text/css" href="/ext3/resources/css/ext-all.css">
+<!--  <link rel="stylesheet" type="text/css" href="/ext3/resources/css/xtheme-gray-extend.css"> -->
   <link rel="stylesheet" type="text/css" href="/css/paperpile.css">
   <link rel="stylesheet" type="text/css" href="/css/pdf.css">
 
-  <script type="text/javascript" charset="utf-8" src="/ext/adapter/ext/ext-base.js"></script>
-  <script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
-  <script type="text/javascript" charset="utf-8" src="/ext/examples/core/Spotlight.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/ext3/adapter/ext/ext-base.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/ext3/ext-all-debug.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/ext3/examples/ux/StatusBar.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/ext3/examples/ux/Spotlight.js"></script>
   <script type="text/javascript" charset="utf-8" src="/flashchart/swfobject.js"></script>
 
   <%perl> 
@@ -26,6 +27,7 @@
   import/filter-field.js
   import/plugins/online-search.js
   import/plugins/sidepanel.js
+  import/plugins/DB.js
                
   misc/utils.js
   misc/forms.js 
@@ -51,6 +53,8 @@
   pub/details.js
                
   pdf/viewer.js 
+  pdf/hoverbutton.js
+  pdf/autohide-menu.js
   pdf/menubar.js
 
   pdfextract/view.js

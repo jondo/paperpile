@@ -826,6 +826,8 @@ sub fulltext_count {
     $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
   }
 
+  print STDERR "Where: $where\n";
+  print STDERR "Table: $table\n";
   my $count = $self->dbh->selectrow_array(
     qq{select count(*) from Publications join $table on 
     publications.rowid=$table.rowid $where}
@@ -1328,7 +1330,35 @@ sub histogram {
     }
   }
 
-  if ( $field eq 'journal' or $field eq 'pubtype' ) {
+  if ( $field eq 'tags' ) {
+
+    my $sth = $self->dbh->prepare(
+      'SELECT tag_id,tag,style FROM Tags, Tag_Publication WHERE Tag_Publication.tag_id == Tags.rowid;'
+    );
+    my ( $tag_id, $tag, $style );
+    $sth->bind_columns( \$tag_id, \$tag, \$style );
+    $sth->execute;
+
+    while ( $sth->fetch ) {
+
+      my $tag_name = $tag;
+      my $style = $style || 'default';
+
+      if ( exists $hist{$tag_id} ) {
+        $hist{$tag_id}->{count}++;
+      } else {
+        $hist{$tag_id}->{count} = 1;
+        $hist{$tag_id}->{name}  = $tag_name;
+        $hist{$tag_id}->{id}  = $tag_name;
+        $hist{$tag_id}->{style} = $style;
+      }
+    }
+
+  }
+
+  if ( $field eq 'journals' or $field eq 'pubtype' ) {
+
+    $field = 'journal' if ($field eq 'journals');
 
     my $sth = $self->dbh->prepare("SELECT $field FROM Publications;");
     my ($value);

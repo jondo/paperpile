@@ -117,11 +117,8 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
 
     },
     
-
     onRowSelect: function() {
-
         var datatabs=this.items.get('center_panel').items.get('data_tabs');
-
         datatabs.items.get('pubsummary').updateDetail();
         datatabs.items.get('pubnotes').updateDetail();        
         this.items.get('east_panel').items.get('overview').updateDetail();
