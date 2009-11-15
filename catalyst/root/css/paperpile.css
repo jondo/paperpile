@@ -1218,7 +1218,7 @@ div:hover.pp-tag-style-sample {
 /*** Plugin description at side-panel ***/
 
 .pp-plugins-description{
-    text-align: justify;
+    /*text-align: justify*/;
 }
 
 

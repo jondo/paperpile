@@ -33,7 +33,7 @@ Paperpile.PluginSidepanelGoogleBooks = Ext.extend(Paperpile.PluginSidepanel, {
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
         '<div class="pp-googlebooks-logo">&nbsp</div>',
-        '<p class="pp-plugins-description">GoogleBooks allows you to search the full text of books. Find the perfect book for your purposes and discover new ones that interest you.</p>',
+        '<p class="pp-plugins-description">Google Books searches the full text of over seven million books.</p>',
         '<p><a target=_blank href="http://books.google.com/" class="pp-textlink">books.google.com/</a></p>',
         '</div>'],
 

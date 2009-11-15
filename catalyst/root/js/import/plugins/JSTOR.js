@@ -34,7 +34,7 @@ Paperpile.PluginSidepanelJSTOR = Ext.extend(Paperpile.PluginSidepanel, {
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
         '<div class="pp-jstor-logo">&nbsp</div>',
-        '<p class="pp-plugins-description">JSTOR (short for Journal Storage) is a online system for archiving academic journals. It provides full-text searches of digitized back issues of several hundred well-known journals. It is a not–for–profit service that helps scholars, researchers, and students discover, use, and build upon a wide range of content in a trusted digital archive of academic journals and other scholarly content.</p>',
+        '<p class="pp-plugins-description">JSTOR (short for Journal Storage) is a online system for archiving academic journals. It provides full-text searches of digitized back issues of several hundred well-known journals.</p>',
         '<p><a target=_blank href="http://www.jstor.org" class="pp-textlink">	jstor.org</a></p>',
         '</div>'],
 
