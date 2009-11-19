@@ -188,7 +188,7 @@ sub run {
 
   my $curr_job = undef;
 
-  my $max_running = 1;
+  my $max_running = 2;
 
   my $curr_running = 0;
 

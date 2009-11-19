@@ -156,12 +156,14 @@ sub run {
   # fork returned 0, so this branch is child
   elsif ( $pid == 0 ) {
 
+    $self->update_status('RUNNING');
+
     my $start_time = time;
 
     foreach my $x ( 0 .. 10 ) {
       open( LOG, ">>log" );
       print LOG $self->id, "  step $x $$\n";
-      $self->progress_update('Stage $x');
+      $self->progress_update("Stage $x");
       close(LOG);
       sleep(1);
     }

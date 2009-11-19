@@ -103,27 +103,25 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                            
                            var tpl;
 
-                           if (d.status === 'RUNNING'){
-                               tpl='<div class="pp-icon-queue">{progress}</div>';
-                           } 
+                           //if (d.status === 'RUNNING'){
+                           tpl='<div id="job_{id}">{progress}</div>';
+                           //} 
 
-                           if (d.status === 'PENDING'){
-                               tpl='<div class="">Pending</div>';
-                               if (d.queue_status === 'PAUSED'){
-                                   tpl='<div class="">PAUSED</div>';
-                               }
-                           }
+                           //if (d.status === 'PENDING'){
+                           //    tpl='<div id="job_{id}" class="">Pending</div>';
+                           //    if (d.queue_status === 'PAUSED'){
+                           //        tpl='<div class="">PAUSED</div>';
+                           //    }
+                           //}
 
 
-                           if (d.status === 'DONE'){
-
-                               if  (d.error){
-                                   tpl='<div ext:qtip="{error}" class="pp-icon-cross pp-grid-error">Failed</div>';
-                               } else {
-                                   tpl='<div class="pp-icon-tick pp-grid-ok">Ok</div>';
-                               }
-
-                           }
+                           //if (d.status === 'DONE'){
+                           //    if  (d.error){
+                           //        tpl='<div ext:qtip="{error}" class="pp-icon-cross pp-grid-error">Failed</div>';
+                           //    } else {
+                           //        tpl='<div class="pp-icon-tick pp-grid-ok">Ok</div>';
+                           //    }
+                           //}
 
                            var t = new Ext.XTemplate(tpl); 
                            return t.apply( d );
@@ -133,16 +131,15 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         });
         
         Paperpile.QueueGrid.superclass.initComponent.apply(this, arguments);
+        
+        this.reloadTask = new Ext.util.DelayedTask(function(){
+            this.getView().holdPosition=true;
+            this.store.reload();
+        }, this); 
 
-        this.pollingTask =  {
-            run: function(){
-                this.getView().holdPosition=true;
-                this.store.reload();
-            },
-            scope: this,
-            interval: 10000
-        },
 
+        this.pollingTask = new Ext.util.DelayedTask(this.updateJobs, this); 
+        
         this.on('beforedestroy', 
                 function(){
                     Ext.TaskMgr.stop(this.pollingTask);
@@ -151,7 +148,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                           params: {},
                           method: 'GET',
                           success: function(response){
-                          
+                              
                           },
                           failure: Paperpile.main.onError,
                           scope:this,
@@ -162,11 +159,14 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             params: { foo: 'foo', start:0 },
             callback: function(){
                 var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
-                Ext.TaskMgr.start(this.pollingTask);
-                
+
+                this.updateJobs();
+
                 this.store.on('load',
                               function(){
                                   var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
+
+                                  this.updateJobs();
 
                                   controlPanel.updateView.createDelegate(controlPanel)();
 
@@ -209,7 +209,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
     afterRender: function(){
 
         // This is undocumented feature in Ext 2 and was renamed to 'refreshing' (I guess) in Ext JS 3
-        this.pager.loading.hide(); 
+        //this.pager.loading.hide(); 
 
         
         this.pager.addButton({ text: 'Goto active task',
@@ -298,6 +298,45 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         } else {
             return true;
         }
-    }
+    },
+
+
+    updateJobs: function(){
+        console.log("In update jobs");
+        var jobs=[];
+        this.store.each(function(record){
+            console.log(record.get('status'));
+            if (record.get('status') === 'RUNNING'){
+                jobs.push(record.id);
+            }
+        }, this);
+        
+        if (jobs.length==0){
+            console.log("No running jobs. Calling full reload in 1s...");
+            this.reloadTask.delay(1000);
+        } else {
+            Ext.Ajax.request(
+                { url: Paperpile.Url('/ajax/queue/jobs'),
+                  params: {ids: jobs},
+                  method: 'GET',
+                  success: function(response){
+                      var data = Ext.util.JSON.decode(response.responseText).data;
+                      console.log(data);
+                      for (var id in data){
+                          Ext.DomHelper.overwrite('job_'+id,data[id].progress);
+                          if (data[id].status=='DONE'){
+                              this.getView().holdPosition=true;
+                              this.store.reload();
+                          }
+                      }
+                      console.log("Running jobs. Polling jobs in 0.5s...");
+                      this.pollingTask.delay(500);
+                  },
+                  failure: Paperpile.main.onError,
+                  scope:this,
+                });
+        }
+    },
+
 
 });

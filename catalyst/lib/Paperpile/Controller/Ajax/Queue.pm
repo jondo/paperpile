@@ -65,6 +65,31 @@ sub grid : Local {
 
 }
 
+sub jobs : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $ids = $c->request->params->{ids};
+
+  if (ref($ids) ne 'ARRAY'){
+    $ids = [$ids];
+  }
+
+  my $data={};
+
+  foreach my $id (@$ids){
+    my $job = Paperpile::Job->new({id=>$id});
+
+    print STDERR Dumper($job);
+
+    $data->{$id}=$job->as_hash;
+  }
+
+  $c->stash->{data} = $data;
+
+}
+
+
 sub clear :Local {
 
   my ( $self, $c ) = @_;
