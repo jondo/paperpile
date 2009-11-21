@@ -9,11 +9,14 @@ use Paperpile::Job;
 use Data::Dumper;
 use Time::Duration;
 use FreezeThaw qw/freeze thaw/;
-use File::Temp qw/ tempfile /;
 use JSON;
 use 5.010;
 
-enum 'Status' => qw(RUNNING WAITING PAUSED);
+enum 'Status' => (
+  'WAITING',    # No jobs to run or all jobs done
+  'RUNNING',    # Queue is processing jobs
+  'PAUSED'
+);              # Queue is paused
 
 has 'status' => (
   is      => 'rw',
@@ -22,9 +25,15 @@ has 'status' => (
   trigger => sub { my $self = shift; $self->save; }
 );
 
+# Estimated time to completion
 has eta         => ( is => 'rw', isa => 'Str', default => "--:--:--" );
+
+# Number of remaining jobs (running jobs + waiting jobs)
 has num_pending => ( is => 'rw', isa => 'Int', default => 0 );
+
+# Number of jobs finished (either successfully or failed)
 has num_done    => ( is => 'rw', isa => 'Int', default => 0 );
+
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -72,7 +81,7 @@ sub restore {
   }
 }
 
-## Adds job object to the queue
+## Add job to the queue
 
 sub submit {
 
@@ -87,7 +96,7 @@ sub submit {
 
 }
 
-## Returns list of job objects currently in the queue
+## Return list of job objects currently in the queue
 
 sub get_jobs {
 
@@ -97,9 +106,9 @@ sub get_jobs {
 
   my $sth = $dbh->prepare("SELECT jobid FROM Queue");
 
-  my ( $job_id);
+  my ($job_id);
 
-  $sth->bind_columns( \$job_id);
+  $sth->bind_columns( \$job_id );
   $sth->execute;
 
   my @jobs = ();
@@ -127,30 +136,29 @@ sub update_stats {
   $sth->bind_columns( \$job_id, \$status, \$duration );
   $sth->execute;
 
-  my $sum_duration =  0;
-  my $num_pending = 0;
-  my $num_done =0;
+  my $sum_duration = 0;
+  my $num_pending  = 0;
+  my $num_done     = 0;
 
   while ( $sth->fetch ) {
-    if ( $status eq 'PENDING' ) {
+    if ( $status eq 'PENDING' or $status eq 'RUNNING' ) {
       $num_pending++;
     } elsif ( $status eq 'DONE' ) {
       $num_done++;
-      $sum_duration+=$duration;
+      $sum_duration += $duration;
     }
   }
 
   $self->num_done($num_done);
   $self->num_pending($num_pending);
 
-  if ($num_done>=1){
-    my $seconds_left = int($sum_duration/$num_done*$num_pending);
-    $self->eta(Time::Duration::duration($seconds_left));
+  if ( $num_done >= 1 ) {
+    my $seconds_left = int( $sum_duration / $num_done * $num_pending );
+    $self->eta( Time::Duration::duration($seconds_left) );
   } else {
     $self->eta('');
   }
 }
-
 
 #sub pause {
 #  my $self = shift;
@@ -166,23 +174,13 @@ sub update_stats {
 #  $self->save;
 #}
 
-
 ## Starts pending jobs
 
 sub run {
 
   my $self = shift;
 
-  use IO::Handle;
-  open my $log, ">>", "log";
-  $log->autoflush(1);
-
-  #$self->restore;
   my $dbh = Paperpile::Utils->get_queue_model->dbh;
-
-  print $log "Locking database $$\n";
-
-  #$dbh->begin_work();
 
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
@@ -191,8 +189,6 @@ sub run {
   my $max_running = 2;
 
   my $curr_running = 0;
-
-  print $log "Running remaining jobs $$\n";
 
   my $sth = $dbh->prepare("SELECT jobid, status FROM Queue");
 
@@ -226,19 +222,10 @@ sub run {
   $dbh->do('COMMIT TRANSACTION');
 
   foreach my $id (@to_be_started) {
-    print $log "Starting job $id $$\n";
     my $job = Paperpile::Job->new( { id => $id } );
     $job->run;
   }
-
-  if ( not @to_be_started ) {
-    print $log "No pending jobs left.$$\n";
-  }
-
-  print $log "Commiting to database $$\n";
-
 }
-
 
 ## Clears queue completely
 
@@ -257,7 +244,8 @@ sub clear {
 
   while ( $sth->fetch ) {
     my $job = Paperpile::Job->new( { id => $job_id } );
-    unlink($job->file);
+
+    unlink( $job->_file );
   }
 
   $dbh->do("UPDATE Settings SET value='' WHERE key='queue'");
@@ -265,6 +253,5 @@ sub clear {
 
   $self->save;
 }
-
 
 1;

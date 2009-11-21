@@ -13,48 +13,65 @@ use Data::Dumper;
 use File::Path;
 use File::Spec;
 use File::Copy;
-use File::Temp qw/ tempfile /;
-use Time::HiRes qw/ usleep/;
 use Storable qw(lock_store lock_retrieve);
 
-use JSON;
-use 5.010;
+enum 'Types' => (
+  'MATCH',         # match a (partial) reference against a web resource
+  'PDF_IMPORT',    # extract metadata from PDF and match agains web resource
+  'PDF_SEARCH',    # search PDF online
+  'WEB_IMPORT'     # Import a reference that was sent from the browser
+);
 
-enum 'Types'  => qw(MATCH PDF_IMPORT PDF_SEARCH WEB_IMPORT);
-enum 'Status' => qw(RUNNING PENDING DONE);
+enum 'Status' => (
+  'PENDING',       # job is waiting to be started
+  'RUNNING',       # job is running
+  'DONE'           # job is done
+);
 
-has 'id'       => ( is => 'rw' );
-has 'type'     => ( is => 'rw', isa => 'Types' );
-has 'status'   => ( is => 'rw', isa => 'Status' );
-has 'error'    => ( is => 'rw' );
-has 'progress' => ( is => 'rw' );
+has 'type'   => ( is => 'rw', isa => 'Types' );
+has 'status' => ( is => 'rw', isa => 'Status' );
+
+has 'id'    => ( is => 'rw' );    # Unique id identifying the job
+has 'error' => ( is => 'rw' );    # Error message if job failed
+
+# Field to store different job type specific information
+has 'info' => ( is => 'rw', isa => 'HashRef' );
+
+# Time (in seconds) that was used to finish a job
 has 'duration' => ( is => 'rw', isa => 'Int' );
-has 'progress' => ( is => 'rw' );
-has 'file'     => ( is => 'rw' );
 
+# This field serves as way to send interrupts to a running job. If set
+# to 'CANCEL' a running job should exit with an exception UserCancel.
+has 'interrupt' => ( is => 'rw', default => '' );
+
+# Publication object which is needed for all job types
 has 'pub' => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
+
+# File name to store the job object
+has '_file' => ( is => 'rw' );
+
 
 sub BUILD {
   my ( $self, $params ) = @_;
 
-  # if not id is given create new job
+  # if no id is given we create a new job
   if ( !$params->{id} ) {
     $self->generate_id;
     $self->status('PENDING');
-    $self->progress('Waiting.');
+    $self->info( { msg => 'Waiting' } );
     $self->error('');
     $self->duration(0);
 
     my $file = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue' );
     mkpath($file);
     $file = File::Spec->catfile( $file, $self->id );
-    $self->file($file);
+    $self->_file($file);
     $self->save;
   }
 
   # otherwise restore object from disk
   else {
-    $self->file( File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id ) );
+    $self->_file( File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id ) );
     $self->restore;
   }
 }
@@ -64,9 +81,9 @@ sub BUILD {
 sub save {
   my $self = shift;
 
-  my $file = $self->file;
+  my $file = $self->_file;
 
-  lock_store( $self, $self->file );
+  lock_store( $self, $self->_file );
 
 }
 
@@ -77,7 +94,7 @@ sub restore {
 
   my $stored = undef;
 
-  eval { $stored = lock_retrieve( $self->file ); };
+  eval { $stored = lock_retrieve( $self->_file ); };
 
   return if not $stored;
 
@@ -133,12 +150,11 @@ sub update_status {
 
 }
 
-sub progress_update {
-  my ( $self, $progress ) = @_;
-  $self->progress($progress);
+sub info_update {
+  my ( $self, $info ) = @_;
+  $self->info($info);
   $self->save;
 }
-
 
 ## Runs the job in a forked sub-process
 
@@ -156,16 +172,27 @@ sub run {
   # fork returned 0, so this branch is child
   elsif ( $pid == 0 ) {
 
+    srand();
+
     $self->update_status('RUNNING');
 
     my $start_time = time;
 
-    foreach my $x ( 0 .. 10 ) {
-      open( LOG, ">>log" );
-      print LOG $self->id, "  step $x $$\n";
-      $self->progress_update("Stage $x");
-      close(LOG);
-      sleep(1);
+    eval {
+      foreach my $x ( 0 .. 10 ) {
+        $self->restore;
+
+        if ( $self->interrupt eq 'CANCEL' ) {
+          UserCancel->throw("Job stopped");
+        }
+
+        $self->info_update( { msg => "Stage $x" } );
+        sleep(int(rand(10)));
+      }
+    };
+
+    if ($@) {
+      $self->_catch_error;
     }
 
     my $end_time = time;
@@ -213,6 +240,8 @@ sub run {
 
 }
 
+# Dumps the job object as hash
+
 sub as_hash {
 
   my $self = shift;
@@ -222,8 +251,14 @@ sub as_hash {
   foreach my $key ( $self->meta->get_attribute_list ) {
     my $value = $self->$key;
 
-    # take only simple scalar and not refs of any sort
-    next if ref($value);
+    # Also save info->{msg} as field 'progress'
+    if ( $key eq 'info' ) {
+      $hash{progress} = $self->$key->{msg};
+      $hash{info}     = $self->$key;
+    }
+
+    next if ref( $self->$key );
+
     $hash{$key} = $value;
   }
 
@@ -235,6 +270,8 @@ sub as_hash {
   return {%hash};
 
 }
+
+# Set error fields after an exception was thrown
 
 sub _catch_error {
 
@@ -262,7 +299,7 @@ sub _match {
 
   foreach my $plugin (@plugin_list) {
 
-    $self->progress_update("Searching $plugin");
+    $self->info_update("Searching $plugin");
 
     eval { $self->_match_single($plugin); };
 
@@ -305,7 +342,7 @@ sub _crawl {
 
   my $self = shift;
 
-  $self->progress_update("Searching PDF on publisher site.");
+  $self->info_update("Searching PDF on publisher site.");
 
   my $crawler = Paperpile::Crawler->new;
   $crawler->debug(0);
@@ -336,7 +373,7 @@ sub _download {
 
   my $self = shift;
 
-  $self->progress_update("Downloading PDF");
+  $self->info_update("Downloading PDF");
 
   my $file;
 

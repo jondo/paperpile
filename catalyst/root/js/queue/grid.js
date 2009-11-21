@@ -99,50 +99,73 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                        sortable: true,
                        renderer: function(value, p, record){
 
+                           console.log(record.get('progress'));
+
                            var d=record.data;
                            
                            var tpl;
 
-                           //if (d.status === 'RUNNING'){
-                           tpl='<div id="job_{id}">{progress}</div>';
-                           //} 
+                           if (d.status === 'RUNNING'){
+                               tpl='<div id="job_{id}">{progress}</div><a class="pp-textlink" href="#" id=cancel_{id} onClick="Ext.getCmp(\'{thisId}\').cancelJob(\'{id}\')">Cancel</a>';
+                           }
 
-                           //if (d.status === 'PENDING'){
-                           //    tpl='<div id="job_{id}" class="">Pending</div>';
-                           //    if (d.queue_status === 'PAUSED'){
+                           if (d.status === 'PENDING'){
+                               tpl='<div id="job_{id}" class="">Pending</div>';
+                           }
+                           
+                           //if (d.queue_status === 'PAUSED'){
                            //        tpl='<div class="">PAUSED</div>';
                            //    }
-                           //}
+                           // }
 
+                           if (d.status === 'DONE'){
+                               if  (d.error){
+                                   tpl='<div id="job_{id}" ext:qtip="{error}" class="pp-icon-cross pp-grid-error">Failed</div>';
+                               } else {
+                                   tpl='<div id="job_{id}" class="pp-icon-tick pp-grid-ok">Ok</div>';
+                               }
+                           }
 
-                           //if (d.status === 'DONE'){
-                           //    if  (d.error){
-                           //        tpl='<div ext:qtip="{error}" class="pp-icon-cross pp-grid-error">Failed</div>';
-                           //    } else {
-                           //        tpl='<div class="pp-icon-tick pp-grid-ok">Ok</div>';
-                           //    }
-                           //}
+                           d.thisId=this.id;
 
                            var t = new Ext.XTemplate(tpl); 
                            return t.apply( d );
-                       }
+                       },
+                       scope:this
                      },
                     ],
         });
         
         Paperpile.QueueGrid.superclass.initComponent.apply(this, arguments);
         
-        this.reloadTask = new Ext.util.DelayedTask(function(){
-            this.getView().holdPosition=true;
-            this.store.reload();
-        }, this); 
+        //this.reloadTask = new Ext.util.DelayedTask(function(){
+        //    this.getView().holdPosition=true;
+        //    this.store.reload();
+        //}, this); 
 
 
-        this.pollingTask = new Ext.util.DelayedTask(this.updateJobs, this); 
+        this.reloadTask = {
+            run: function(){
+                this.getView().holdPosition=true;
+                this.store.reload();
+            },
+            interval: 3000,
+            scope:this
+        }
+
+        this.pollingTask = {
+            run: function(){
+                this.updateJobs();
+            },
+            interval: 1000,
+            scope:this
+        }
+        
+        //this.pollingTask = new Ext.util.DelayedTask(this.updateJobs, this); 
         
         this.on('beforedestroy', 
                 function(){
-                    Ext.TaskMgr.stop(this.pollingTask);
+                    Ext.TaskMgr.stop(this.reloadTask);
                     Ext.Ajax.request(
                         { url: Paperpile.Url('/ajax/queue/clear'),
                           params: {},
@@ -160,7 +183,8 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             callback: function(){
                 var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
 
-                this.updateJobs();
+                Ext.TaskMgr.start(this.reloadTask);
+                Ext.TaskMgr.start(this.pollingTask);
 
                 this.store.on('load',
                               function(){
@@ -222,7 +246,6 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                                        method: 'GET',
                                        success: function(response){
                                            var json = Ext.util.JSON.decode(response.responseText);
-                                           console.log(json.page, json.index);
 
                                            if (json.page != -1){
 
@@ -301,36 +324,42 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
     },
 
 
+    cancelJob: function(id){
+
+        Ext.Ajax.request(
+            { url: Paperpile.Url('/ajax/queue/cancel_jobs'),
+              params: {ids: id},
+              method: 'GET',
+              success: function(response){
+              },
+              failure: Paperpile.main.onError,
+              scope:this,
+            });
+    },
+
     updateJobs: function(){
-        console.log("In update jobs");
         var jobs=[];
         this.store.each(function(record){
-            console.log(record.get('status'));
             if (record.get('status') === 'RUNNING'){
                 jobs.push(record.id);
             }
         }, this);
         
-        if (jobs.length==0){
-            console.log("No running jobs. Calling full reload in 1s...");
-            this.reloadTask.delay(1000);
-        } else {
+        if (jobs.length>0){
             Ext.Ajax.request(
                 { url: Paperpile.Url('/ajax/queue/jobs'),
                   params: {ids: jobs},
                   method: 'GET',
                   success: function(response){
+                      console.log(response);
                       var data = Ext.util.JSON.decode(response.responseText).data;
-                      console.log(data);
                       for (var id in data){
-                          Ext.DomHelper.overwrite('job_'+id,data[id].progress);
+                          Ext.DomHelper.overwrite('job_'+id,data[id].info.msg);
                           if (data[id].status=='DONE'){
                               this.getView().holdPosition=true;
                               this.store.reload();
                           }
                       }
-                      console.log("Running jobs. Polling jobs in 0.5s...");
-                      this.pollingTask.delay(500);
                   },
                   failure: Paperpile.main.onError,
                   scope:this,

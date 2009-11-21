@@ -30,6 +30,8 @@ my $follow_symlinks;
 
 my @argv = @ARGV;
 
+$SIG{CHLD} = 'IGNORE'; # avoid zombies
+
 GetOptions(
     'debug|d'             => \$debug,
     'fork|f'              => \$fork,

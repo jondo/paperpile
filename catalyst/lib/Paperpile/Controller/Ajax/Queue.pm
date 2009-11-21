@@ -5,8 +5,8 @@ use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Paperpile::PdfExtract;
+
 use Data::Dumper;
-use 5.010;
 use File::Find;
 use File::Path;
 use File::Compare;
@@ -14,7 +14,6 @@ use File::Basename;
 use File::stat;
 use MooseX::Timestamp;
 use POSIX qw(ceil floor);
-
 
 sub grid : Local {
 
@@ -30,7 +29,9 @@ sub grid : Local {
   $q->update_stats;
 
   foreach my $job ( @{ $q->get_jobs } ) {
-    push @data, $job->as_hash;
+    my $tmp = $job->as_hash;
+    delete($tmp->{info});
+    push @data, $tmp;
 
     # For simplicity, simply push info for complete queue to each item
     # in the list
@@ -80,8 +81,6 @@ sub jobs : Local {
   foreach my $id (@$ids){
     my $job = Paperpile::Job->new({id=>$id});
 
-    print STDERR Dumper($job);
-
     $data->{$id}=$job->as_hash;
   }
 
@@ -89,6 +88,24 @@ sub jobs : Local {
 
 }
 
+sub cancel_jobs : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $ids = $c->request->params->{ids};
+
+  if (ref($ids) ne 'ARRAY'){
+    $ids = [$ids];
+  }
+
+  foreach my $id (@$ids){
+    my $job = Paperpile::Job->new({id=>$id});
+
+    $job->interrupt('CANCEL');
+    $job->save;
+
+  }
+}
 
 sub clear :Local {
 
@@ -116,7 +133,6 @@ sub resume :Local {
 }
 
 
-
 sub get_running : Local {
 
   my ( $self, $c ) = @_;
@@ -132,7 +148,6 @@ sub get_running : Local {
   my $is_running=0;
 
   while ($i <= $#jobs){
-    print STDERR "$i\n";
     if ($jobs[$i]->status eq 'RUNNING'){
       $is_running=1;
       last;
@@ -148,13 +163,10 @@ sub get_running : Local {
     $index = $i % $limit;
   }
 
-  print STDERR "==========> $i $limit $page $index\n";
-
   $c->stash->{page} = $page;
   $c->stash->{index} = $index;
 
 }
-
 
 
 1;
