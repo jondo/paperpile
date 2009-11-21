@@ -15,25 +15,26 @@ use 5.010;
 enum 'Status' => (
   'WAITING',    # No jobs to run or all jobs done
   'RUNNING',    # Queue is processing jobs
-  'PAUSED'
-);              # Queue is paused
+  'PAUSED'      # Queue is paused
+);
 
 has 'status' => (
   is      => 'rw',
   isa     => 'Status',
   default => 'WAITING',
-  trigger => sub { my $self = shift; $self->save; }
 );
 
+# Maximum number of jobs running at the same time
+has max_running => ( is => 'rw', isa => 'Int', default => 2 );
+
 # Estimated time to completion
-has eta         => ( is => 'rw', isa => 'Str', default => "--:--:--" );
+has eta => ( is => 'rw', isa => 'Str', default => "--:--:--" );
 
 # Number of remaining jobs (running jobs + waiting jobs)
 has num_pending => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Number of jobs finished (either successfully or failed)
-has num_done    => ( is => 'rw', isa => 'Int', default => 0 );
-
+has num_done => ( is => 'rw', isa => 'Int', default => 0 );
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -158,27 +159,37 @@ sub update_stats {
   } else {
     $self->eta('');
   }
+
 }
 
-#sub pause {
-#  my $self = shift;
-#  $self->restore;
-#  $self->status('PAUSED');
-#  $self->save;
-#}
 
-#sub resume {
-#  my $self = shift;
-#  $self->restore;
-#  $self->status('RUNNING');
-#  $self->save;
-#}
+## Pause queue, running jobs are finished but no new jobs are started
 
-## Starts pending jobs
+sub pause {
+  my $self = shift;
+  $self->restore;
+  $self->status('PAUSED');
+  $self->save;
+}
+
+## 
+
+sub resume {
+  my $self = shift;
+  $self->restore;
+  $self->status('RUNNING');
+  $self->run;
+  $self->save;
+}
+
+## Starts queue. All jobs are run until not jobs are left. Jobs are
+## run in parallel with at most max_running at the same time.
 
 sub run {
 
   my $self = shift;
+
+  return if $self->status eq 'PAUSED';
 
   my $dbh = Paperpile::Utils->get_queue_model->dbh;
 
@@ -186,7 +197,6 @@ sub run {
 
   my $curr_job = undef;
 
-  my $max_running = 2;
 
   my $curr_running = 0;
 
@@ -210,7 +220,7 @@ sub run {
   my @to_be_started = ();
 
   foreach my $id (@pending) {
-    if ( $curr_running < $max_running ) {
+    if ( $curr_running < $self->max_running ) {
       $dbh->do("UPDATE Queue SET status='RUNNING' WHERE jobid='$id'");
       push @to_be_started, $id;
       $curr_running++;
@@ -221,9 +231,16 @@ sub run {
 
   $dbh->do('COMMIT TRANSACTION');
 
-  foreach my $id (@to_be_started) {
-    my $job = Paperpile::Job->new( { id => $id } );
-    $job->run;
+  if ($curr_running == 0 and @to_be_started == 0){
+    $self->status('WAITING');
+    $self->save;
+  } else {
+    foreach my $id (@to_be_started) {
+      my $job = Paperpile::Job->new( { id => $id } );
+      $job->run;
+    }
+    $self->status('RUNNING');
+    $self->save;
   }
 }
 

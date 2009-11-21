@@ -187,7 +187,7 @@ sub run {
         }
 
         $self->info_update( { msg => "Stage $x" } );
-        sleep(int(rand(10)));
+        sleep(1);
       }
     };
 

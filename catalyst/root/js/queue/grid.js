@@ -99,8 +99,6 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                        sortable: true,
                        renderer: function(value, p, record){
 
-                           console.log(record.get('progress'));
-
                            var d=record.data;
                            
                            var tpl;
@@ -166,6 +164,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         this.on('beforedestroy', 
                 function(){
                     Ext.TaskMgr.stop(this.reloadTask);
+                    Ext.TaskMgr.stop(this.pollingTask);
                     Ext.Ajax.request(
                         { url: Paperpile.Url('/ajax/queue/clear'),
                           params: {},
@@ -184,7 +183,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                 var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
 
                 Ext.TaskMgr.start(this.reloadTask);
-                Ext.TaskMgr.start(this.pollingTask);
+                //Ext.TaskMgr.start(this.pollingTask);
 
                 this.store.on('load',
                               function(){
@@ -201,8 +200,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                                           var currPage = this.getCurrPage();
                                           var maxPage = this.getTotalPage();
 
-                                          console.log(currPage, maxPage, this.store.getTotalCount(), this.pager.pageSize);
-                                      
+                                     
                                           if (currPage < maxPage){
                                               this.pager.changePage(currPage+1);
                                           }
@@ -351,7 +349,6 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                   params: {ids: jobs},
                   method: 'GET',
                   success: function(response){
-                      console.log(response);
                       var data = Ext.util.JSON.decode(response.responseText).data;
                       for (var id in data){
                           Ext.DomHelper.overwrite('job_'+id,data[id].info.msg);

@@ -27,10 +27,17 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
   $model->dbh->do("ALTER TABLE Publications ADD COLUMN $field TEXT");
 }
 
+
 # Just for now set some defaults here, will be refactored to set these
 # defaults with all other defaults in the Controller
 $model->dbh->do("INSERT INTO Tags (tag,style) VALUES ('Important',11);");
 $model->dbh->do("INSERT INTO Tags (tag,style) VALUES ('Review',22);");
+
+
+$model = Paperpile::Model::Queue->new();
+$model->set_dsn( "dbi:SQLite:" . "queue.db" );
+$model->dbh->do("INSERT INTO Settings (key,value) VALUES ('queue','');");
+
 
 print STDERR "Importing journal list into app.db...\n";
 
