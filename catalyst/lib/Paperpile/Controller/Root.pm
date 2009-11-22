@@ -28,7 +28,7 @@ sub index : Path : Args(0) {
   }
   $c->stash->{plugins}=[@plugins];
 
-  $c->stash->{template} = 'main.mas';
+  $c->stash->{template} = 'index.mas';
   $c->forward('Paperpile::View::Mason');
 }
 
