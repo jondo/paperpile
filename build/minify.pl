@@ -13,6 +13,8 @@ my $all_css = "$cat_dir/root/css/all.css";
 
 unlink($all_css);
 
+
+
 foreach my $file (@{$data->{css}}){
   `cat $cat_dir/root/$file >> $all_css`;
 }
@@ -23,6 +25,10 @@ unlink($all_js);
 
 foreach my $file (@{$data->{js}}){
   `cat $cat_dir/root/$file >> tmp.js`;
+}
+my @plugins=glob("$cat_dir/root/js/??port/plugins/*js");
+foreach my $file (@plugins){
+  `cat $file >> tmp.js`;
 }
 
 `java -jar $yui tmp.js -o $all_js`;

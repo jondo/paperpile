@@ -19,7 +19,7 @@
       print '<link rel="stylesheet" type="text/css" charset="utf-8" href="/'.$j.'"></link>', "\n";
     }
 
-    foreach my $j (@{$data->{js}}){
+    foreach my $j (@{$data->{js}}, @{$c->stash->{plugins}}){
       print '<script type="text/javascript" charset="utf-8" src="/'.$j.'"></script>', "\n";
     }
   } else {

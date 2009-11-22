@@ -20,9 +20,9 @@ sub index : Path : Args(0) {
   foreach my $plugin (@list){
     my ($volume,$directories,$file) = File::Spec->splitpath( $plugin );
     if ($directories =~/import/){
-      push @plugins, "import/plugins/$file";
+      push @plugins, "js/import/plugins/$file";
     } else {
-      push @plugins, "export/plugins/$file";
+      push @plugins, "js/export/plugins/$file";
     }
 
   }
