@@ -47,6 +47,7 @@ has 'interrupt' => ( is => 'rw', default => '' );
 # Publication object which is needed for all job types
 has 'pub' => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
 
+
 # File name to store the job object
 has '_file' => ( is => 'rw' );
 
@@ -179,16 +180,9 @@ sub run {
     my $start_time = time;
 
     eval {
-      foreach my $x ( 0 .. 10 ) {
-        $self->restore;
 
-        if ( $self->interrupt eq 'CANCEL' ) {
-          UserCancel->throw("Job stopped");
-        }
+      $self->_do_work;
 
-        $self->info_update( { msg => "Stage $x" } );
-        sleep(1);
-      }
     };
 
     if ($@) {
@@ -199,9 +193,9 @@ sub run {
 
     $self->duration( $end_time - $start_time );
 
-    if ( int( rand(10) ) > 5 ) {
-      $self->error('An error has occured');
-    }
+    #if ( int( rand(10) ) > 5 ) {
+    #  $self->error('An error has occured');
+    #}
 
     $self->update_status('DONE');
 
@@ -210,34 +204,6 @@ sub run {
 
     exit();
   }
-
-  # if ($self->type eq 'PDF_SEARCH'){
-
-  #   if (not $self->pub->linkout){
-  #     $self->_match;
-  #     if ($self->error){
-  #       $self->status_update('DONE');
-  #       return;
-  #     }
-  #   }
-
-  #   if (not $self->pub->pdf_url){
-  #     $self->_crawl;
-  #     if ($self->error){
-  #       $self->status_update('DONE');
-  #       return;
-  #     }
-  #   }
-
-  #   $self->_download;
-  #   if ($self->error){
-  #     $self->status_update('DONE');
-  #     return;
-  #   }
-
-  #   $self->status_update('DONE');
-  # }
-
 }
 
 # Dumps the job object as hash
@@ -271,6 +237,42 @@ sub as_hash {
 
 }
 
+
+sub _do_work {
+
+  my $self = shift;
+
+  #foreach my $x ( 0 .. 10 ) {
+  #  $self->restore;
+  #  if ( $self->interrupt eq 'CANCEL' ) {
+  #    UserCancel->throw("Job stopped");
+  #  }
+  #  $self->info_update( { msg => "Stage $x" } );
+  #  sleep(1);
+  #}
+
+  if ($self->type eq 'PDF_SEARCH'){
+
+    #if (not $self->pub->linkout){
+    #  $self->_match;
+    #}
+
+    #if (not $self->pub->pdf_url){
+    #  $self->_crawl;
+    #}
+
+    sleep(2);
+
+    $self->info->{callback} = {fn => 'console.log', args => ['Hi there.']};
+
+    $self->info_update($self->info);
+
+    #$self->_download;
+  }
+
+}
+
+
 # Set error fields after an exception was thrown
 
 sub _catch_error {
@@ -286,6 +288,20 @@ sub _catch_error {
   }
 }
 
+sub _rethrow_error {
+
+  my $self = shift;
+
+  my $e = Exception::Class->caught();
+
+  if ( ref $e ) {
+    $e->rethrow;
+  } else {
+    die($@);
+  }
+}
+
+
 sub _match {
 
   my $self = shift;
@@ -299,27 +315,26 @@ sub _match {
 
   foreach my $plugin (@plugin_list) {
 
-    $self->info_update("Searching $plugin");
+    $self->info_update({msg => "Searching $plugin"});
 
     eval { $self->_match_single($plugin); };
 
     my $e;
     if ( $e = Exception::Class->caught ) {
+
+      # Did not find a match, continue with next plugin
       if ( $e = Exception::Class->caught('NetMatchError') ) {
         next;
-      } else {
-        $matched = 0;
-        $self->_catch_error;
-        last;
       }
-    } else {
-      $matched = 1;
+      # Other error has occured -> stop now by rethrowing error
+      else {
+        $self->_rethrow_error;
+      }
+    }
+    # Found match -> stop now
+    else {
       last;
     }
-  }
-
-  if ( $self->error ) {
-    $self->error('Could not find reference in online databases.');
   }
 }
 
@@ -342,7 +357,7 @@ sub _crawl {
 
   my $self = shift;
 
-  $self->info_update("Searching PDF on publisher site.");
+  $self->info_update({msg => "Searching PDF on publisher site."});
 
   my $crawler = Paperpile::Crawler->new;
   $crawler->debug(0);
@@ -351,29 +366,31 @@ sub _crawl {
 
   my $pdf;
 
-  eval { $pdf = $crawler->search_file( $self->pub->linkout ) };
+  $pdf = $crawler->search_file( $self->pub->linkout );
+
+  #eval { $pdf = $crawler->search_file( $self->pub->linkout ) };
 
   $self->pub->pdf_url($pdf) if $pdf;
 
-  if ( Exception::Class->caught ) {
-    if ( Exception::Class->caught('CrawlerError') ) {
-      if ( Exception::Class->caught('CrawlerUnknownSiteError') ) {
-        $self->error('Publisher site not supported');
-      }
-      if ( Exception::Class->caught('CrawlerScrapeError') ) {
-        $self->error('Could not download PDF. You might need a subscription.');
-      }
-    } else {
-      $self->_catch_error;
-    }
-  }
+  #if ( Exception::Class->caught ) {
+  #  if ( Exception::Class->caught('CrawlerError') ) {
+  #    if ( Exception::Class->caught('CrawlerUnknownSiteError') ) {
+  #      $self->error('Publisher site not supported');
+  #    }
+  #    if ( Exception::Class->caught('CrawlerScrapeError') ) {
+  #      $self->error('Could not download PDF. You might need a subscription.');
+  #    }
+  #  } else {
+  #    $self->_catch_error;
+  #  }
+  #}
 }
 
 sub _download {
 
   my $self = shift;
 
-  $self->info_update("Downloading PDF");
+  $self->info_update({msg => "Downloading PDF"});
 
   my $file;
 

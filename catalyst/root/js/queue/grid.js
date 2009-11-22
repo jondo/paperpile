@@ -136,18 +136,12 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         
         Paperpile.QueueGrid.superclass.initComponent.apply(this, arguments);
         
-        //this.reloadTask = new Ext.util.DelayedTask(function(){
-        //    this.getView().holdPosition=true;
-        //    this.store.reload();
-        //}, this); 
-
-
         this.reloadTask = {
             run: function(){
                 this.getView().holdPosition=true;
                 this.store.reload();
             },
-            interval: 3000,
+            interval: 2000,
             scope:this
         }
 
@@ -155,11 +149,9 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             run: function(){
                 this.updateJobs();
             },
-            interval: 1000,
+            interval: 500,
             scope:this
         }
-        
-        //this.pollingTask = new Ext.util.DelayedTask(this.updateJobs, this); 
         
         this.on('beforedestroy', 
                 function(){
@@ -183,13 +175,11 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                 var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
 
                 Ext.TaskMgr.start(this.reloadTask);
-                //Ext.TaskMgr.start(this.pollingTask);
+                Ext.TaskMgr.start(this.pollingTask);
 
                 this.store.on('load',
                               function(){
                                   var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
-
-                                  this.updateJobs();
 
                                   controlPanel.updateView.createDelegate(controlPanel)();
 
@@ -337,11 +327,14 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
 
     updateJobs: function(){
         var jobs=[];
+
         this.store.each(function(record){
             if (record.get('status') === 'RUNNING'){
                 jobs.push(record.id);
             }
         }, this);
+        
+        console.log(jobs);
         
         if (jobs.length>0){
             Ext.Ajax.request(
@@ -350,11 +343,19 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                   method: 'GET',
                   success: function(response){
                       var data = Ext.util.JSON.decode(response.responseText).data;
+
                       for (var id in data){
                           Ext.DomHelper.overwrite('job_'+id,data[id].info.msg);
-                          if (data[id].status=='DONE'){
-                              this.getView().holdPosition=true;
-                              this.store.reload();
+                          var record=this.store.getAt(this.store.find('id',id));
+                          if (record){
+                              record.set('status',data[id].status);
+                          }
+
+                          console.log(data[id]);
+                          var cb =  data[id].info.callback;
+       
+                          if (data[id].status=='DONE' && cb){
+                              //window[cb.fn].createDelegate(this,cb.args);
                           }
                       }
                   },
