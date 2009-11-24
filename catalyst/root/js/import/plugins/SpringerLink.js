@@ -19,7 +19,7 @@ Paperpile.PluginSidepanelSpringerLink = Ext.extend(Paperpile.PluginSidepanel, {
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
         '<div class="pp-springerlink-logo">&nbsp</div>',
-        '<p class="pp-plugins-description">SpringerLink is one of the world\'s leading interactive databases for high-quality scientific, technological and medical journals, books series and reference works. Offering over 1,750 peer reviewed journals and 27,000 eBooks online SpringerLink is a powerful central access point for researchers and scientists.</p>',
+        '<p class="pp-plugins-description">SpringerLink is a databases for high-quality scientific, technological and medical journals, books series and reference works. It offers over 1,750 peer reviewed journals and 27,000 eBooks.</p>',
         '<p><a target=_blank href="http://springerlink.com" class="pp-textlink">springerlink.com</a></p>',
         '</div>'],
 
