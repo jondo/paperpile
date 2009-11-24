@@ -22,6 +22,8 @@
   main/tree.js
   main/dashboard.js
                
+  widgets/label_widget.js  
+
   import/grid.js 
   import/plugins/plugin-import.js
   import/search-field.js 
@@ -30,6 +32,7 @@
   import/plugins/sidepanel.js
   import/plugins/DB.js
                
+
   misc/utils.js
   misc/forms.js 
   misc/file-chooser.js
@@ -50,7 +53,7 @@
   pub/edit.js 
   pub/view.js 
   pub/bottom-panel.js 
-  pub/side-panel.js
+  pub/overview.js
   pub/details.js
                
   pdf/viewer.js 
@@ -65,7 +68,6 @@
   queue/view.js
   queue/grid.js
   queue/control.js
-  
   
   };
   

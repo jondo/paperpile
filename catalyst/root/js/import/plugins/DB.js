@@ -1,9 +1,23 @@
+Paperpile.PluginPanelDB = function(config) {
+  Ext.apply(this, config);
+
+  Paperpile.PluginPanelDB.superclass.constructor.call(this, {
+  });
+};
+
+Ext.extend(Paperpile.PluginPanelDB, Paperpile.PluginPanel, {
+  createGrid: function(params) {
+    return new Paperpile.PluginGridDB(params);
+  }
+});
+
 Paperpile.PluginGridDB = function(config) {
   Ext.apply(this, config);
 
   Paperpile.PluginGridDB.superclass.constructor.call(this, {
     });
 };
+
 
 Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
@@ -53,11 +67,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       });
       this.store.load({params:{start:0, limit: this.limit}});
       this.on({render:{scope:this,fn:this.createSortHandles}});
-    },
-
-    myAfterRender: function() {
-      Paperpile.PluginGridDB.superclass.myAfterRender.call(this);      
-
     },
 
     createSortHandles: function() {
@@ -165,16 +174,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       
     },
 
-    shouldShowButton: function(menuItem) {
-      var superShow = Paperpile.PluginGridDB.superclass.shouldShowButton.call(this,menuItem);
-
-      if (menuItem.itemId == this.actions['DELETE'].itemId) {
-	menuItem.setIconClass('pp-icon-trash');
-      }
-
-      return superShow;
-    },
-
     createToolbarMenu: function() {
       Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
 
@@ -215,9 +214,9 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
           width: 200
         });
 
-      this._tbar.insert(0,this.filterButton);
-      this._tbar.insert(0,this.filterField);
-
+      var tbar = this.getTopToolbar();
+      tbar.insert(0,this.filterButton);
+      tbar.insert(0,this.filterField);
 
       this.actions['NEW'] = new Ext.Action({
 	text: 'New Reference',
@@ -227,32 +226,21 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         itemId:'new_button',
         tooltip: 'Manually create a new reference for your library'
       });
-      var tbar = this._tbar;
+
       var index = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
       tbar.insertButton(index+1,this.actions['NEW']);
-
     },
 
-    toolbarItemHook: function(item,index,length) {
-      Paperpile.PluginGridDB.superclass.toolbarItemHook.call(this,arguments);
-
-    },
-
-    shouldShowContextItem: function(menuItem,record) {
-      var superShow = Paperpile.PluginGridDB.superclass.shouldShowContextItem.call(this,menuItem,record);
-      
+    updateContextItem: function(menuItem,record) {
+      Paperpile.PluginGridDB.superclass.updateContextItem.call(this,menuItem,record);
       if (menuItem.itemId == this.actions['SELECT_ALL'].itemId) {
 	menuItem.setText('Select all ('+this.store.getTotalCount()+')');
       }
 
       if (menuItem.itemId == this.actions['DELETE'].itemId) {
-	console.log(menuItem);
 	menuItem.setIconClass('pp-icon-trash');
-//	menuItem.ownerCt.doLayout();
 	menuItem.setText('Move to Trash');
       }
-
-      return superShow;
     }
 
 });

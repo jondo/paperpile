@@ -4,6 +4,7 @@ Paperpile.ImportGridPlugin = function(config) {
 
 Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
   init:function(grid) {
+
     grid.actions['IMPORT'] = new Ext.Action({
       text: 'Import',
       handler: function() {this.insertEntry();},
@@ -22,44 +23,64 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
       tooltip: 'Import all references to your library.'
     });
 
+
     Ext.apply(grid,{
-      addImportButtons: function() {
+      createToolbarMenu: grid.createToolbarMenu.createSequence(function() {
 	var tbar = this.getTopToolbar();
 
-	// Add to top toolbar.
+	if (this.actions['NEW'] != null) {
+	  var item = this.getToolbarByItemId(this.actions['NEW'].itemId);
+	  item.setVisible(false);
+	}
+
 	var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
 	tbar.insertButton(filterFieldIndex+1,this.actions['IMPORT']);
 	tbar.insertButton(filterFieldIndex+1,this.actions['IMPORT_ALL']);
-
-      },
+      },grid),
 
       createContextMenu: grid.createContextMenu.createSequence(function() {
-	// Add to context menu.
-	//var selectAllIndex = this.getContextIndex(this.actions['SELECT_ALL'].itemId);
 	this.context.insert(0,this.actions['IMPORT']);
+
+	this.getContextByItemId(this.actions['VIEW_PDF'].itemId).setVisible(false);
+	//this.getContextByItemId(this.actions['EDIT'].itemId).setVisible(false);
+	this.getContextByItemId(this.actions['DELETE'].itemId).setVisible(false);
+
       },grid),
 
-      shouldShowContextItem: grid.shouldShowContextItem.createSequence(function(item,record) {
-	if (item.itemId == this.actions['IMPORT'] && record.data._imported) {
-	  // TODO: disable the 'import' action for already imported items.
+      updateContextItem: grid.updateContextItem.createSequence(function(item,record) {
+	if (item.itemId == this.actions['IMPORT'].itemId) {
+	  if (record.data._imported) {
+	    item.disable();
+	    item.setText("Already imported.");
+	  } else {
+	    item.enable();
+	    item.setText("Import");
+	  }
 	}
 
-	return true;
+	if (item.itemId == this.actions['EDIT'].itemId) {
+	  record.data._imported ? item.setVisible(false) : item.setVisible(true);
+	}
+
       },grid),
 
-      updateButtons: grid.updateButtons.createSequence(function(item) {
+      updateToolbarItem: grid.updateToolbarItem.createSequence(function(item) {
 	var selected = this.getSelection().length;
-	if (selected > 0) {
-	  this.actions['IMPORT'].enable();
-	} else {
-	  this.actions['IMPORT'].disable();
+	var totalCount = this.store.getTotalCount();
+
+	if (item.itemId == this.actions['IMPORT'].itemId) {
+	  (selected > 0 ? item.enable() : item.disable());
+	  if (selected == 1) {
+	    // Check for an already-imported item.
+	    var data = this.getSelectionModel().getSelected().data;
+	    if (data._imported) {
+	      item.disable();
+	    }
+	  }
 	}
 
-	var totalCount = this.store.getTotalCount();
-	if (totalCount > 0) {
-	  this.actions['IMPORT_ALL'].enable();
-	} else {
-	  this.actions['IMPORT_ALL'].disable();
+	if (item.itemId == this.actions['IMPORT_ALL'].itemId) {
+	  (totalCount > 0 ? item.enable() : item.disable());
 	}
 
       },grid),
@@ -119,8 +140,7 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
 	  scope:this
 	});
       }
-    },grid);
+    });
 
-    grid.on({afterrender:{scope:grid,fn:grid.addImportButtons}});
   }
 });

@@ -1,7 +1,20 @@
-Paperpile.PubView = Ext.extend(Ext.Panel, {
+Paperpile.PluginPanel = function(config) {
+  Ext.apply(this,config);
+
+  Paperpile.PluginPanel.superclass.constructor.call(this,{
+
+  });
+};
+
+Ext.extend(Paperpile.PluginPanel, Ext.Panel, {
+    closable:false,
 
     initComponent:function() {
-        
+
+      this.grid = this.createGrid(this.gridParams);
+      this.overviewPanel = new Paperpile.PubOverview();
+      this.detailPanel = new Paperpile.PubDetails();
+
         Ext.apply(this, {
             tabType: 'PLUGIN',
             layout:'border',
@@ -22,7 +35,7 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                        region:'south',
                        collapsible:true,
                        animCollapse:false
-                      },
+                      }
                   ]
                  },
                 { region:'east',
@@ -32,14 +45,8 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                   layout: 'card',
                   width:300,
                   items: [
-                      new Paperpile.PDFmanager(
-                          {itemId:'overview'
-                          }
-                      ),
-                      new Paperpile.PubDetails(
-                          {itemId:'details'
-                          }
-                      )
+		    this.overviewPanel,
+		    this.detailPanel
                   ],
                   bbar: [{ text: 'Overview',
                            itemId: 'overview_tab_button',
@@ -70,34 +77,33 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
                            disabled: true,
                            allowDepress : false,
                            pressed: false,
-                           hidden:true,
+                           hidden:true
                          }
-                        ],
-                },
-               
-            ],
+                        ]
+                }
+            ]
         });
 
+	Paperpile.PluginPanel.superclass.initComponent.call(this);
 
         // If grid has an "about" panel, create this panel and show it
         this.on('afterLayout', 
                 function(){
-                    if (this.grid.sidePanel){
-                        this.items.get('east_panel').items.add(this.grid.sidePanel);
+                    if (this.grid.aboutPanel){
+                        this.items.get('east_panel').items.add(this.grid.aboutPanel);
                         var button = this.items.get('east_panel').getBottomToolbar().items.get('about_tab_button');
                         button.show();
                         button.enable();
                         button.toggle(true);
-                        button.setText(this.grid.sidePanel.tabLabel);
-                        this.grid.sidePanel.update();
+                        button.setText(this.grid.aboutPanel.tabLabel);
+                        this.grid.aboutPanel.update();
                         this.items.get('east_panel').getLayout().setActiveItem('about');
                     }
                 }, this, {single:true});
+    },
 
-
-        
-        Paperpile.PubView.superclass.initComponent.apply(this, arguments);
-
+    createGrid: function(params) {
+      return new Paperpile.PluginGrid(params);
     },
 
     depressButton: function(itemId) {
@@ -156,7 +162,5 @@ Paperpile.PubView = Ext.extend(Ext.Panel, {
         datatabs.items.get('pubsummary').showEmpty('');
         datatabs.items.get('pubnotes').showEmpty('');        
     }
-
-
 
 });

@@ -1,5 +1,4 @@
 Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
-
     initComponent:function() {
 
         Ext.apply(this, {
@@ -18,37 +17,37 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
     newDBtab:function(query, itemId){
 
-        var newGrid=new Paperpile.PluginGridDB({
+        var gridParams = {
             plugin_name: 'DB',
             plugin_mode: 'FULLTEXT',
             plugin_query: query,
-            plugin_base_query:'',
-        });
+            plugin_base_query:''
+        };
 
-        var newView=this.add(new Paperpile.PubView({title:'All Papers',
-                                                    grid:newGrid,
-                                                    closable:false,
-                                                    iconCls: 'pp-icon-page',
-                                                    itemId:itemId,
-                                                   }));
+        var newView=this.add(new Paperpile.PluginPanelDB({
+	  title:'All Papers',
+          iconCls: 'pp-icon-page',
+          itemId:itemId,
+	  gridParams: gridParams
+	}));
         newView.show();
     },
 
     newTrashTab:function(){
 
-        var newGrid=new Paperpile.PluginGridTrash({
+        var gridParams = {
             plugin_name: 'Trash',
             plugin_mode: 'FULLTEXT',
             plugin_query: '',
             plugin_base_query:'',
-        });
+        };
 
-        var newView=this.add(new Paperpile.PubView({title:'Trash',
-                                                    grid:newGrid,
-                                                    closable:true,
-                                                    iconCls: 'pp-icon-trash',
-                                                    itemId:'trash',
-                                                   }));
+        var newView=this.add(new Paperpile.PluginPanelTrash({
+	  gridParams:gridParams,
+	  title:'Trash',
+          closable:true,
+          itemId:'trash'
+	}));
         newView.show();
     },
 
@@ -61,21 +60,24 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 	javascript_ui = "Folder";
       }
 
-        var newGrid=new Paperpile['PluginGrid'+javascript_ui](pars);
+        //var newGrid=new Paperpile['Plugin'+javascript_ui](pars);
         var openTab=Paperpile.main.tabs.getItem(itemId);
-
-        if (openTab){
-            this.activate(openTab);
+        if (openTab) {
+	  this.activate(openTab);
+	  return;
         } else {
-	  title = (title) ? title: newGrid.plugin_title;
-//	  title = title.substring(0,32);
-            var newView=this.add(new Paperpile.PubView({title: title,
-                                                        grid:newGrid,
-                                                        closable:true,
-                                                        iconCls: (iconCls) ? iconCls : newGrid.plugin_iconCls,
-                                                        itemId: itemId
-                                                       }));
-            newView.show();
+	  var viewParams = {
+	    title:title,
+	    iconCls:iconCls,
+            gridParams: pars,
+            closable:true,
+            itemId: itemId
+	  };
+	  if (iconCls) viewParams.iconCls = iconCls;
+	  if (title) viewParams.title = title;
+          var newView=this.add(new Paperpile['PluginPanel'+javascript_ui](viewParams));
+	  newView.show();
+	  return;
         }
     },
 

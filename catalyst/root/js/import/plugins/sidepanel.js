@@ -1,4 +1,4 @@
-Paperpile.PluginSidepanel = Ext.extend(Ext.Panel, {
+Paperpile.PluginAboutPanel = Ext.extend(Ext.Panel, {
 
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
@@ -20,7 +20,7 @@ Paperpile.PluginSidepanel = Ext.extend(Ext.Panel, {
 
 	    this.tpl = new Ext.XTemplate(this.markup).compile();
 	
-        Paperpile.PluginSidepanel.superclass.initComponent.call(this);
+        Paperpile.PluginAboutPanel.superclass.initComponent.call(this);
 	},
 
     

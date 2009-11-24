@@ -1,42 +1,32 @@
-Paperpile.PluginGridOnlineSearch = function(config) {
-  Ext.apply(this, config);
-  Paperpile.PluginGridOnlineSearch.superclass.constructor.call(this, {
-
-  });
+Paperpile.OnlineSearchGridPlugin = function(config) {
+  Ext.apply(this,config);
 };
 
-Ext.extend(Paperpile.PluginGridOnlineSearch, Paperpile.PluginGrid, {
-  plugins:new Paperpile.ImportGridPlugin(),
-  
-    initComponent:function() {
-        Paperpile.PluginGridOnlineSearch.superclass.initComponent.call(this);
+Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
+  init:function(grid) {
 
-        var tbar=this.getTopToolbar();
-        tbar.unshift(new Ext.app.SearchField({width:200,
-                                              store: this.store}));
+    grid.store.on('beforeload',
+      function() {
+	Paperpile.status.showBusy('Searching '+this.plugin_name);
+      },grid);
 
-        this.store.on('beforeload',
-                      function(){
-                          Paperpile.status.showBusy('Searching '+this.plugin_name);
-                      }, this);
+    grid.store.on('load',
+      function() {
+	Paperpile.status.clearMsg();
+	this.getSelectionModel().selectFirstRow();
+      }, grid);
 
-        this.store.on('load',
-                      function(){
-                          Paperpile.status.clearMsg();
-			this.getSelectionModel().selectFirstRow();
-                      }, this);
-        if (this.plugin_query != ''){
-            this.store.load({params:{start:0, limit:this.limit }});
-        }
+    Ext.apply(grid,{
+      createToolbarMenu: grid.createToolbarMenu.createSequence(function() {
+	var tbar = this.getTopToolbar();
+	tbar.insert(0, new Ext.app.SearchField({width:200,store:this.store}));
+      },grid)
+    });
 
-	this.on({afterrender:{scope:this,fn:this.myOnRender}});
-    },
-
-    myOnRender: function() {
-      var tbar = this.getTopToolbar();
-      var index = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-      tbar.insertButton(index+1,this.actions['IMPORT_ALL']);
-      tbar.insertButton(index+1,this.actions['IMPORT']);
+    if (grid.plugin_query != '') {
+      grid.store.load({params:{start:0, limit:this.limit }});
     }
-    
+
+
+  }
 });

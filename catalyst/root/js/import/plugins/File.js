@@ -1,8 +1,25 @@
+Paperpile.PluginPanelFile = function(config) {
+  Ext.apply(this,config);
+
+  Paperpile.PluginPanelFile.superclass.constructor.call(this, {    
+  });
+};
+
+Ext.extend(Paperpile.PluginPanelFile, Paperpile.PluginPanelDB, {
+
+  iconCls: 'pp-icon-folder',
+
+  createGrid: function(gridParams) {
+    return new Paperpile.PluginGridFile(gridParams);
+  }
+
+});
+
+
 Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
 
-    plugins:new Paperpile.ImportGridPlugin(),
+    plugins:[new Paperpile.ImportGridPlugin()],
     plugin_base_query:'',
-    plugin_iconCls: 'pp-icon-folder',
     plugin_name:'File',
     
     initComponent:function() {
@@ -20,14 +37,14 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
 
     },
 
-    createToolbarMenu: function(item,index,length) {
-      Paperpile.PluginGridFile.superclass.createToolbarMenu.call(this,arguments);
+    createToolbarMenu: function() {
+      Paperpile.PluginGridFile.superclass.createToolbarMenu.call(this);
 
       this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
     },
 
-    shouldShowContextItem: function(menuItem,record) {
-      var superShow = Paperpile.PluginGridFile.superclass.shouldShowContextItem.call(this,menuItem,record);
+    updateContextItem: function(menuItem,record) {
+      var superShow = Paperpile.PluginGridFile.superclass.updateContextItem.call(this,menuItem,record);
 
       if (menuItem.itemId == this.actions['DELETE'].itemId) {
 	menuItem.setVisible(false);

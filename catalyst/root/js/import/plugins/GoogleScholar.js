@@ -23,14 +23,14 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGridOnlineSearch,
             );
         };
 
-        Paperpile.PluginGridGoogleScholar.superclass.initComponent.apply(this, arguments);
-	this.sidePanel = new Paperpile.PluginSidepanelGoogleScholar();
+        Paperpile.PluginGridGoogleScholar.superclass.initComponent.call(this);
+	this.sidePanel = new Paperpile.AboutGoogleScholar();
     },
  
 
 });
 
-Paperpile.PluginSidepanelGoogleScholar = Ext.extend(Paperpile.PluginSidepanel, {
+Paperpile.AboutGoogleScholar = Ext.extend(Paperpile.PluginAboutPanel, {
 
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
@@ -39,6 +39,6 @@ Paperpile.PluginSidepanelGoogleScholar = Ext.extend(Paperpile.PluginSidepanel, {
         '<p><a target=_blank href="http://scholar.google.com" class="pp-textlink">scholar.google.com</a></p>',
         '</div>'],
 
-    tabLabel: 'About GoogleScholar',
+    tabLabel: 'About GoogleScholar'
    
 });

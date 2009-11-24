@@ -8,6 +8,11 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
   initComponent: function() {
     Paperpile.PluginGridFolder.superclass.initComponent.call(this);
 
+  },
+
+  createToolbarMenu: function() {
+    Paperpile.PluginGridFolder.superclass.createToolbarMenu.call(this);
+
     this.actions['REMOVE_FROM_FOLDER'] = new Ext.Action({
       text:'Remove from folder',
       cls:'x-btn-text-icon',
@@ -15,34 +20,30 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
       handler:this.deleteFromFolder,
       scope:this
     });
+    
+    var tbar = this._tbar;
+    
+    // Hide the add button.
+    this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
 
-    this.on({afterrender:{scope:this,fn:this.myOnRender}});
-  },
-
-  myOnRender: function() {
-    // Don't call superclass.
-    var tbar = this.getTopToolbar();
     var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
     tbar.insertButton(filterFieldIndex+1,this.actions['REMOVE_FROM_FOLDER']);
   },
 
-  updateButtons: function() {
-    Paperpile.PluginGridFolder.superclass.updateButtons.call(this);
-    
-    var selected = this.getSelection().length;
-    if (selected > 0) {
-      this.actions['REMOVE_FROM_FOLDER'].enable();
-    } else {
-      this.actions['REMOVE_FROM_FOLDER'].disable();
+  updateToolbarItem: function(item) {
+    Paperpile.PluginGridFolder.superclass.updateToolbarItem.call(this,item);
+
+    if (item.itemId == this.actions['REMOVE_FROM_FOLDER'].itemId) {
+      var selected = this.getSelection().length;
+      (selected > 0 ? item.enable() : item.disable());
     }
+
   },
 
-  shouldShowButton: function(menuItem) {
-    var superShow = Paperpile.PluginGridFolder.superclass.shouldShowButton.call(this,menuItem);
+  updateContextItem: function(item,record) {
+    Paperpile.PluginGridFolder.superclass.updateContextItem.call(this,item,record);
 
-    return superShow;
   },
-
 
   deleteFromFolder: function(){
     var selection=this.getSelection();

@@ -12,12 +12,13 @@ Paperpile.PluginGrid = function(config) {
 Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     plugin_query:'',
-    closable:true,
     region:'center',
     limit: 25,
     allSelected:false,
     itemId:'grid',
-    sidePanel:null,
+    aboutPanel:null,
+    overviewPanel:null,
+    detailsPanel:null,
 
     tagStyles:{},
 
@@ -25,105 +26,46 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                                     
     initComponent:function() {
 
-        var _store=new Ext.data.Store(
-            {  proxy: new Ext.data.HttpProxy({
-                url: Paperpile.Url('/ajax/plugins/resultsgrid'),
-                timeout: 10000000, // Think about this, different plugins need different timeouts...
-                method: 'GET'
-            }),
-               baseParams:{grid_id: this.id,
-                           plugin_file: this.plugin_file,
-                           plugin_name: this.plugin_name,
-                           plugin_query: this.plugin_query,
-                           plugin_mode: this.plugin_mode,
-                           plugin_order: "created DESC",
-                           limit:this.limit
-                          },
-               reader: new Ext.data.JsonReader(),
-            });
-
         var _pager=new Ext.PagingToolbar({
             pageSize: this.limit,
-            store: _store,
+            store: this.createStore(),
             displayInfo: true,
             displayMsg: 'Displaying papers {0} - {1} of {2}',
             emptyMsg: "No papers to display"
         });
       
-        this.pubTemplate = new Ext.XTemplate(
-            '<div class="pp-grid-data" sha1="{sha1}">',
-            '<div>',
-            '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
-            '</div>',
-	    '<tpl if="_authors_display && _long_authorlist">',
-    	      '<p class="pp-grid-authors">',
-  	      '<tpl if="!_shrink_authors">',
-		'<span class="pp-author-full">{_authors_display}</span>',
-	      '</tpl>',
-	      '<tpl if="_shrink_authors">',
-		'<span class="pp-author-short">{_authors_display_short} ... {_authors_display_short_tail}</span>',
-	      '</tpl>',
-	      '</p>',
-	    '</tpl>',
-            '<tpl if="_authors_display && !_long_authorlist">',
-            '<p class="pp-grid-authors">{_authors_display}</p>',
-            '</tpl>',
-            '<tpl if="_citation_display">',
-            '<p class="pp-grid-citation">{_citation_display}</p>',
-            '</tpl>',
-            '<tpl if="_snippets_text">',
-            '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
-            '</tpl>',
-            '<tpl if="_snippets_abstract">',
-            '<p class="pp-grid-snippets"><span class="heading">Abstract:</span> {_snippets_abstract}</p>',
-            '</tpl>',
-            '<tpl if="_snippets_notes">',
-            '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
-            '</tpl>',
-            '</div>',
-            {
-            tagStyle:function(tag_string) {
-              var returnMe = '';//<div class="pp-tag-grid-block">';
-              var tags = tag_string.split(/\s*,\s*/);
-              var totalChars = 0;
-              for (var i=0; i < tags.length; i++) {
-                var tag = tags[i];
-                var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.find('tag',tag));
-                if (style != null) {
-                  style = style.get('style');
-                  totalChars += tag.length;
-                  returnMe += '<div class="pp-tag-grid-inline pp-tag-style-'+style+'">'+tag+'&nbsp;</div>&nbsp;';
-                }
-              }
-//              returnMe += '</div>';
-              if (tags.length > 0)
-                returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
-              return returnMe;
-            }          
-            }
-        ).compile();
+        var renderPub=function(value, p, record){
+            // Can possibly be speeded up with compiling the template.
+            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
+            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
 
-        this.iconTemplate = new Ext.XTemplate(
-            '<div class="pp-grid-info">',
-              '<tpl if="_imported">',
-                '<tpl if="trashed==0">',
-                  '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
-                '</tpl>',
-                '<tpl if="trashed==1">',
-                  '<div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
-                '</tpl>',
-              '</tpl>',
-              '<tpl if="pdf">',
-                '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br/>{_last_readPretty}<br/><img src=\'/ajax/pdf/render/{pdf_path}/0/0.2\' width=\'100\'/>"></div>',
-              '</tpl>',
-              '<tpl if="attachments">',
-                '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
-              '</tpl>',
-              '<tpl if="annote">',
-                '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
-              '</tpl>',
-            '</div>'
-        ).compile();
+	    // Shrink very long author lists.
+	    record.data._long_authorlist = 0;
+	    var ad = record.data._authors_display;
+	    if (record.data._shrink_authors == null)
+	      record.data._shrink_authors = 1;
+	    if (ad.length > this.author_shrink_threshold) {
+	      record.data._long_authorlist = 1;
+	      record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
+	      record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
+	    } 
+            return this.getPubTemplate().apply(record.data);
+        };
+
+        var renderIcons=function(value, p, record){
+            // Can possibly be speeded up with compiling the template.
+            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
+            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
+            record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
+            if (record.data.last_read){
+                record.data._last_readPretty = 'Last read: '+ Paperpile.utils.prettyDate(record.data.last_read);
+            } else {
+                record.data._last_readPretty='Never read';
+            }
+
+            record.data.pdf_path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
+            return this.getIconTemplate().apply(record.data);
+        };
 
         this.actions={
             'EDIT': new Ext.Action({
@@ -145,24 +87,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                 tooltip: 'Move selected references to Trash'
             }),
 
-/*            'IMPORT': new Ext.Action({
-                text: 'Import',
-                handler: function() {this.insertEntry();},
-                scope: this,
-                iconCls:'pp-icon-add',
-                itemId:'import_button',
-                tooltip: 'Import selected references to your library.'
-            }),
-
-            'IMPORT_ALL': new Ext.Action({
-                text: 'Import all',
-                handler: function() {this.insertAll();},
-                scope: this,
-		iconCls:'pp-icon-add-all',
-                itemId:'import_all_button',
-                tooltip: 'Import all references to your library.'
-            }),
-*/
             'EXPORT': new Ext.Action({
                 text: 'Export',
                 handler: this.handleExport,
@@ -220,7 +144,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 		width:'10px',
 		itemId:'search_tb_fill'
 	    })
-        };
+	};
+
 
 	this.actions['SAVE_MENU'] = new Ext.Button({
 	  itemId:'save_menu',
@@ -241,49 +166,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  ]}
 	});
 
-	this.createToolbarMenu();
-
-        var renderPub=function(value, p, record){
-            // Can possibly be speeded up with compiling the template.
-            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
-            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
-
-	    // Shrink very long author lists.
-	    record.data._long_authorlist = 0;
-	    var ad = record.data._authors_display;
-	    if (record.data._shrink_authors == null)
-	      record.data._shrink_authors = 1;
-	    if (ad.length > this.author_shrink_threshold) {
-	      record.data._long_authorlist = 1;
-	      record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
-	      record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
-	    } 
-            return this.pubTemplate.apply(record.data);
-        };
-
-        var renderIcons=function(value, p, record){
-            // Can possibly be speeded up with compiling the template.
-            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
-            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
-            record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
-            if (record.data.last_read){
-                record.data._last_readPretty = 'Last read: '+ Paperpile.utils.prettyDate(record.data.last_read);
-            } else {
-                record.data._last_readPretty='Never read';
-            }
-
-            record.data.pdf_path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
-            return this.iconTemplate.apply(record.data);
-        };
-
         Ext.apply(this, {
             ddGroup  : 'gridDD',
             enableDragDrop   : true,
 	    appendOnly:true,
             itemId:'grid',
-            store: _store,
+            store: this.createStore(),
             bbar: _pager,
-            tbar: this._tbar,
+            tbar: new Ext.Toolbar({itemId:'toolbar'}),
             enableHdMenu : false,
             autoExpandColumn:'publication',
 
@@ -311,6 +201,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
 	this.on({
 	  // Delegate to class methods.
+	  beforerender:{scope:this,fn:this.myBeforeRender},
 	  afterrender:{scope:this,fn:this.myAfterRender},
 	  beforedestroy:{scope:this,fn:this.onClose},
 	  rowdblclick:{scope:this,fn:this.onDblClick},
@@ -427,6 +318,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.updateButtons();
     },
 
+    myBeforeRender: function(ct) {
+      this.createToolbarMenu();
+      this.createContextMenu();
+    },
+
     myAfterRender: function(ct){
       this.updateButtons();
       this.getSelectionModel().on('rowselect',
@@ -461,9 +357,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
 
     getDragDropText: function(){
-
         var num = this.getSelectionModel().getCount();
-
         if ( num == 1){
             var key=this.getSelectionModel().getSelected().get('citekey');
             if (key){
@@ -476,54 +370,309 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
     },
 
-    createToolbarMenu: function() {
-      this._tbar= new Ext.Toolbar({
-	itemId:'toolbar',
-	items:[
-	  this.actions['SEARCH_TB_FILL'],
-	  this.actions['SAVE_MENU']
-	]
-      });
-
-      this._tbar.items.each(function(item,index,length) {
-	this.toolbarItemHook(item,index,length);
-      },this);
-      
+    createStore: function() {
+      if (this._store != null) {
+	return this._store;
+      }
+      this._store=new Ext.data.Store(
+            {  proxy: new Ext.data.HttpProxy({
+                url: Paperpile.Url('/ajax/plugins/resultsgrid'),
+                timeout: 10000000, // Think about this, different plugins need different timeouts...
+                method: 'GET'
+            }),
+               baseParams:{grid_id: this.id,
+                           plugin_file: this.plugin_file,
+                           plugin_name: this.plugin_name,
+                           plugin_query: this.plugin_query,
+                           plugin_mode: this.plugin_mode,
+                           plugin_order: "created DESC",
+                           limit:this.limit
+                          },
+               reader: new Ext.data.JsonReader()
+            });
+      return this._store;
     },
 
+    gridTemplates:{},
+
+    getPubTemplate: function() {
+      if (this.pubTemplate == null) {
+	this.pubTemplate = new Ext.XTemplate(
+	  '<div class="pp-grid-data" sha1="{sha1}">',
+          '<div>',
+          '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
+          '</div>',
+	  '<tpl if="_authors_display && _long_authorlist">',
+    	  '<p class="pp-grid-authors">',
+  	  '<tpl if="!_shrink_authors">',
+	  '<span class="pp-author-full">{_authors_display}</span>',
+	  '</tpl>',
+	  '<tpl if="_shrink_authors">',
+	  '<span class="pp-author-short">{_authors_display_short} ... {_authors_display_short_tail}</span>',
+	  '</tpl>',
+	  '</p>',
+	  '</tpl>',
+          '<tpl if="_authors_display && !_long_authorlist">',
+          '<p class="pp-grid-authors">{_authors_display}</p>',
+          '</tpl>',
+          '<tpl if="_citation_display">',
+          '<p class="pp-grid-citation">{_citation_display}</p>',
+          '</tpl>',
+          '<tpl if="_snippets_text">',
+          '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
+          '</tpl>',
+          '<tpl if="_snippets_abstract">',
+          '<p class="pp-grid-snippets"><span class="heading">Abstract:</span> {_snippets_abstract}</p>',
+          '</tpl>',
+          '<tpl if="_snippets_notes">',
+          '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
+          '</tpl>',
+          '</div>',
+          {
+            tagStyle:function(tag_string) {
+              var returnMe = '';//<div class="pp-tag-grid-block">';
+              var tags = tag_string.split(/\s*,\s*/);
+              var totalChars = 0;
+              for (var i=0; i < tags.length; i++) {
+		var tag = tags[i];
+		var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.find('tag',tag));
+		if (style != null) {
+		  style = style.get('style');
+                  totalChars += tag.length;
+                  returnMe += '<div class="pp-tag-grid-inline pp-tag-style-'+style+'">'+tag+'&nbsp;</div>&nbsp;';
+		}
+              }
+              if (tags.length > 0)
+		returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
+              return returnMe;
+	    }          
+          }).compile();
+      }
+
+      return this.pubTemplate;
+    },
+
+    getIconTemplate: function() {
+      if (this.iconTemplate != null) {
+	return this.iconTemplate;
+      }
+      this.iconTemplate = new Ext.XTemplate(
+	'<div class="pp-grid-info">',
+        '<tpl if="_imported">',
+        '<tpl if="trashed==0">',
+        '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
+        '</tpl>',
+        '<tpl if="trashed==1">',
+        '<div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
+        '</tpl>',
+        '</tpl>',
+        '<tpl if="pdf">',
+        '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br/>{_last_readPretty}<br/><img src=\'/ajax/pdf/render/{pdf_path}/0/0.2\' width=\'100\'/>"></div>',
+        '</tpl>',
+        '<tpl if="attachments">',
+        '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+        '</tpl>',
+        '<tpl if="annote">',
+        '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
+        '</tpl>',
+        '</div>'
+      ).compile();
+      return this.iconTemplate;
+    },
+
+    getSidebarTemplate: function() {
+      if (this.sidebarTemplate == null) {
+	this.sidebarTemplate = {
+	  singleSelection:new Ext.XTemplate(this.getSingleSelectionTemplate()).compile(),
+	  multipleSelection:new Ext.XTemplate(this.getMultipleSelectionTemplate()).compile()
+	};
+      }
+      return this.sidebarTemplate;
+    },
+  
+    getSingleSelectionTemplate: function() {
+      var prefix = [
+        '<div id="main-container-{id}">'
+      ];
+      var suffix = [
+        '</div>'
+      ];
+      var referenceInfo = [
+        '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
+        '<tpl if="_imported">',
+  	'  <div id="ref-actions" style="float:right;">',
+	'  <img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
+	'  <tpl if="trashed==1">',
+	'    <img src="/images/icons/delete.png" class="pp-img-action" action="delete-ref" ext:qtip="Permanently Delete Reference"/>',
+	'  </tpl>',
+	'  <tpl if="trashed==0">',
+	'    <img src="/images/icons/trash.png" class="pp-img-action" action="delete-ref" ext:qtip="Move Reference to Trash"/>',
+	'  </tpl>',
+        '  </div>',
+        '</tpl>',
+        '<h2>Reference Info</h2>',
+        '<dl>',
+        '<tpl if="_pubtype_name">',
+	'  <dt>Type: </dt><dd>{_pubtype_name}</dd>',
+	'</tpl>',
+        '<tpl if="_imported">',
+        '  <tpl if="trashed==0">',
+	'    <dt>Added: </dt>',
+	'  </tpl>',
+        '  <tpl if="trashed==1">',
+	'    <dt>Deleted: </dt>',
+	'  </tpl>',
+        '  <dd>{createdPretty}</dd>',
+        '</tpl>',
+        '<tpl if="doi">',
+	'  <dt>DOI: </dt><dd>{doi}</dd>',
+	'</tpl>',
+        '<tpl if="eprint">',
+	'  <dt>Eprint: </dt>',
+	'  <dd>{eprint}</dd>',
+	'</tpl>',
+        '<tpl if="pmid">',
+	'  <dt>PubMed ID: </dt><dd>{pmid}</dd>',
+	'</tpl>',
+        '<tpl if="_imported">', // Don't show the labels widget if this article isn't imported.
+	'  <dt>Labels: </dt>',
+	'  <dd>',
+        '  <div id="tag-container-{id}" class="pp-tag-container"></div>',
+        '  <div id="tag-control-{id}" class="pp-tag-control"></div>',
+	'  <div id="tag-add-link-{id}"><a href="#" class="pp-textlink">Add&nbsp;Label</a></div>',
+        '  </dd>',
+	'</tpl>',
+        '</dl>',
+        '<div id="bottom-actions" style="float:right;">',
+    	'  <span class="pp-img-action pp-img-span" action="show-details" ext:qtip="View Full Reference Details">...</span>',
+        '</div>',
+        '</div>'
+      ];
+
+      var linkOuts = [
+        '<tpl if="trashed==0">',
+	'  <tpl if="linkout || doi">',
+	'    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
+        '    <tpl if="linkout">',
+        '      <p><a href="{linkout}" target="_blank" class="pp-textlink pp-action pp-action-go">Go to publisher site</a></p>',
+        '    </tpl>',
+	'    <tpl if="!linkout && doi">',
+	'      <p><a href="http://dx.doi.org/{doi}" target="_blank" class="pp-textlink pp-action pp-action-go">Publisher\'s site via DOI</a></p>',
+	'    </tpl>',
+        '    </div>',
+	'  </tpl>',
+        '  <tpl if="pdf || _imported || linkout">',
+        '    <div class="pp-box pp-box-side-panel pp-box-style2"',
+        '    <h2>PDF</h2>',
+        '    <ul>',
+        '    <tpl if="pdf">',
+        '      <li id="open-pdf{id}" class="pp-action pp-action-open-pdf" >',
+        '      <a href="#" class="pp-textlink" action="open-pdf">Open PDF</a>',
+        '      &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a></li>',
+        '      <tpl if="_imported">',
+        '        <li id="delete-pdf-{id}" class="pp-action pp-action-delete-pdf"><a href="#" class="pp-textlink" action="delete-pdf">Delete PDF</a></li>',
+        '      </tpl>',
+        '      <tpl if="!_imported">',
+        '        <li id="import-pdf-{id}" class="pp-action pp-action-import-pdf"><a href="#" class="pp-textlink" action="import-pdf">Import PDF into local library.</a></li>',
+        '      </tpl>',
+        '    </tpl>',
+        '    <tpl if="!pdf">',
+        '      <tpl if="linkout || doi">',
+        '        <li id="search-pdf-{id}" class="pp-menu pp-action pp-action-search-pdf">',
+        '        <a href="#" class="pp-textlink" action="search-pdf">Search & Download PDF</a></li>',
+        '        <li><div id="pbar"></div></li>',
+        '      </tpl>',
+        '      <tpl if="_imported">',
+        '        <li id="attach-pdf-{id}" class="pp-action pp-action-attach-pdf"><a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a></li>',
+        '      </tpl>',
+        '    </tpl>',
+        '    </ul>',
+        '    <tpl if="_imported">',
+        '      <h2>Supplementary material</h2>',
+        '      <tpl if="attachments">',
+        '        <ul class="pp-attachments">',
+        '        <tpl for="attachments_list">',
+        '          <li class="pp-attachment-list pp-file-generic {cls}"><a href="#" class="pp-textlink" action="open-attachment" path="{path}">{file}</a>&nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="delete-file" rowid="{rowid}">Delete</a></li>',
+        '        </tpl>',
+        '        </ul>',
+        '        <p>&nbsp;</p>',
+        '      </tpl>',
+        '      <ul>',
+        '      <li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" class="pp-textlink" action="attach-file">Attach File</a></li>',      '</ul>',
+        '    </tpl>',
+        '    </div>',
+        '  </tpl>',
+        '  </div>',
+        '</tpl>'
+      ];
+      return [].concat(prefix,referenceInfo,linkOuts,suffix);
+    },
+
+    getMultipleSelectionTemplate: function() {
+      var template = [
+	'<div id="main-container-{id}">',
+	'  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
+	'    <p><b>{numSelected}</b> papers selected.</p>',
+	'    <div class="pp-control-container">',
+	'      <div id="tag-container-{id}" class="pp-tag-container"></div>',
+	'      <div id="tag-control-{id}" class="pp-tag-control"></div>',
+	'    </div>',
+	'    <div class="pp-vspace"></div>',
+	'    <p><a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a></p>',
+	'  </div>',
+	'</div>'
+      ];
+      return [].concat(template);
+    },
+
+    createToolbarMenu: function() {
+      var tbar = this.getTopToolbar();
+      tbar.removeAll();
+
+      tbar.insert(0,new Ext.Button(this.actions['SAVE_MENU']));
+      tbar.insert(0,this.actions['SEARCH_TB_FILL']);
+    },
+
+    getContextMenu: function() {
+      return this.context;
+    },
+
+/*    getContextMenu: function() {
+      if (this.context == null) {
+	this.context = new Ext.menu.Menu({
+	  id:'pp-grid-context',
+	  itemId:'context'
+	});
+      }
+      return this.context;
+    },
+*/
     createContextMenu: function() {
       this.context = new Ext.menu.Menu({
-	id:'pp-grid-context',
-	items:[
-	  this.actions['VIEW_PDF'],
-	  '-',
-	  this.actions['EDIT'],
-	  this.actions['DELETE'],
-          this.actions['SELECT_ALL'],
-	  '-',
-	  { text:'Search by...',
-	    itemId:'search_by',
-	    menu:{
-	      items:[
-		this.actions['VIEW_AUTHOR'],
-		this.actions['VIEW_JOURNAL'],
-		this.actions['VIEW_YEAR']
-	      ]
-	    }
-	  }
-        ]
+	id:'pp-grid-context-'+this.id,
+	itemId:'context'
       });
-
-      this.context.items.each(function(item,index,length) {
-	this.contextCreationHook(item,index,length);
-      },this);
+      var context = this.context;
+      context.addMenuItem(this.actions['VIEW_PDF']);
+      context.addSeparator();
+      context.addMenuItem(this.actions['EDIT']);
+      context.addMenuItem(this.actions['DELETE']);
+      context.addMenuItem(this.actions['SELECT_ALL']);
+      context.addSeparator();
+      context.addMenuItem({
+	text:'Search by...',
+	itemId:'search_by',
+	menu:{
+	  items:[
+	    this.actions['VIEW_AUTHOR'],
+	    this.actions['VIEW_JOURNAL'],
+	    this.actions['VIEW_YEAR']
+	  ]
+	}
+      });
     },
 
     onContextClick: function(grid,index,e) {
-      if (this.context == null) {
-	this.createContextMenu();
-      }
-
       e.stopEvent();
       var record = this.store.getAt(index);
 
@@ -542,11 +691,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
        }).defer(20,this);
     },
 
-    contextItemHook: function(item,index,length) {
-      // Override with extending classes to add or remove context buttons.
-    },
-
     updateContextItem: function(menuItem,record) {
+      console.log("Updating "+menuItem);
       // Override with extending classes to update context items on each showing.
 
       if (menuItem.itemId == this.actions['VIEW_PDF'].itemId && record.data.pdf == '') {
@@ -572,10 +718,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       },this);
     },
 
-    toolbarItemHook: function(item,index,length) {
-      // Override.
-    },
-
     updateToolbarItem: function(menuItem) {
       // Override with extending classes to update toolbar when the grid selection changes.
       if (menuItem.itemId == this.actions['SELECT_ALL'].itemId && this.allSelected) {
@@ -591,14 +733,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     getToolbarByItemId: function(itemId) {
       var tbar=this.getTopToolbar();
-      if (tbar == null)
-	tbar = this._tbar;
       return tbar.items.itemAt(this.getButtonIndex(itemId));
     },
 
-
     getContextByItemId: function(itemId) {
-      return context.items.itemAt(this.getContextIndex(itemId));
+      return this.getContextMenu().items.itemAt(this.getContextIndex(itemId));
     },
 
    // Small helper functions to get the index of a given item in the toolbar configuration array
@@ -606,21 +745,30 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
    // A better solution should be possible with ExtJS 3
 
     getContextIndex: function(itemId) {
-      var context = this.context;
+      var context = this.getContextMenu();
       for (var i=0; i < context.items.length; i++) {
 	var item = context.items.itemAt(i);
 	if (item.itemId == itemId) return i;
       }
+      return -1;
+    },
+
+    getTopToolbar: function() {
+      var tbar = Paperpile.PluginGrid.superclass.getTopToolbar.call(this);
+      if (tbar == null) {
+	tbar = this._tbar;
+      }
+      return tbar;
     },
 
     getButtonIndex: function(itemId) {
       var tbar=this.getTopToolbar();
-      if (tbar == null)
-	tbar = this._tbar;
       for (var i=0; i<tbar.items.length;i++){
 	var item = tbar.items.itemAt(i);
+	console.log(item.itemId);
 	if (item.itemId == itemId) return i;
       }
+      return -1;
     },
 
     // Returns list of sha1s for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
@@ -688,7 +836,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
 
 
-
+    updateDetail: function() {
+      // Override with other plugin methods to do things necessary on detail update.
+    },
 
     // If trash is set entries are moved to trash, otherwise they are
     // deleted completely

@@ -45,11 +45,11 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
           // array which gets stored in node.attributes
 	  fn:function(node){
 	    delete node.attributes.children;
-	    var el = node.getUI().getEl();
-	    var xEl = Ext.fly(el);
-	    if (node != this.getRootNode()) {
-	      xEl.addClassOnOver('hover-node');
-	    }
+//	    var el = node.getUI().getEl();
+//	    var xEl = Ext.fly(el);
+//	    if (node != this.getRootNode()) {
+//	      xEl.addClassOnOver('hover-node');
+//	    }
           }
 	},
 	beforechildrenrendered:{scope:this,
@@ -157,7 +157,7 @@ Paperpile.Tree = Ext.extend(Ext.tree.TreePanel, {
               }
 
               // Use default title and css for tab
-              var title=null;
+              var title=pars.plugin_title;
               var iconCls=null;
 
               // For tags use specifically styled tab

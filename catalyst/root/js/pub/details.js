@@ -1,4 +1,6 @@
 Paperpile.PubDetails = Ext.extend(Ext.Panel, {
+
+  itemId: 'details',
 	  
     markup: [
         '<div id=main-container-{id}>',
