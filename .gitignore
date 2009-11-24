@@ -7,5 +7,7 @@ user/
 pid
 c/yum-poppler
 catalyst/root/tinotification.html
+catalyst/root/js/all.js
+catalyst/root/css/all.css
 \#*
 .\#*

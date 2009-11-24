@@ -8,13 +8,13 @@ use File::Spec::Functions qw(catfile);
 use File::Copy::Recursive qw(fcopy dircopy);
 use 5.010;
 
-if ($#ARGV != 0){
-  print 'Usage: build.pl [linux32|linux64]',"\n";
+if ( $#ARGV != 0 ) {
+  print 'Usage: build.pl [linux32|linux64]', "\n";
   exit(1);
 }
 
-if ($ARGV[0] ne 'linux32' and $ARGV[0] ne 'linux64'){
-  print 'Usage: build.pl [linux32|linux64]',"\n";
+if ( $ARGV[0] ne 'linux32' and $ARGV[0] ne 'linux64' ) {
+  print 'Usage: build.pl [linux32|linux64]', "\n";
   exit(1);
 }
 
@@ -32,7 +32,7 @@ my @ignore = (
   qr{base/CORE/},          qr{base/pod/},
   qr{(base|cpan)/CPAN},    qr{(base|cpan)/Test},
   qr{base/unicore/.*txt$}, qr{runtime/(template|webinspector|installer)},
-  qr{catalyst/data/journals.list},
+  qr{ext3/examples}, qr{ext3/src},
 );
 
 if ( $platform eq 'linux64' ) {
@@ -42,7 +42,6 @@ if ( $platform eq 'linux64' ) {
 if ( $platform eq 'linux32' ) {
   push @ignore, qr{/(perl5|bin)/(linux64|osx|win32)};
 }
-
 
 mkpath( catfile("$target_dir/$platform/catalyst") );
 

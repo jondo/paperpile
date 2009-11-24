@@ -85,7 +85,7 @@ sub connect {
   $tree->parse_content($content);
 
   # Try to find the number of hits
-  my @stats = $tree->findnodes('/html/body/table/tr/td[@align="right"]/font[@size="-1"]');
+  my @stats = $tree->findnodes('/html/body/form/table/tr/td[@align="right"]/font[@size="-1"]');
   if ( $stats[0]->as_text() =~ m/Results\s\d+\s-\s\d+\sof\s(about\s)?([0123456789,]+)\./ ) {
     my $number = $2;
     $number =~ s/,//g;
@@ -141,8 +141,8 @@ sub complete_details {
   $browser->cookie_jar( $self->_session_cookie );
 
   # Get the BibTeX
-  my $bibtex = $browser->get( $pub->_details_link );
-  $bibtex = $bibtex->content;
+  my $bibtex_tmp = $browser->get( $pub->_details_link );
+  my $bibtex = $bibtex_tmp->content;
 
   # Google Bug: everything is twice escaped in bibtex
   $bibtex =~ s/\\\\/\\/g;
@@ -365,6 +365,12 @@ sub _parse_googlescholar_page {
 	next if not $line;
 	
 	my ( $authors, $citation, $publisher ) = split( / - /, $line );
+
+	# sometime the publisher is just a plain IP-address or some URL
+	undef ( $publisher ) if ( $publisher =~ m/(\.com|\.gov|\.org|\.ca|\.fr)$/ );
+	if ( $publisher ) {
+	    undef ( $publisher ) if ( $publisher =~ m/\d{3}\./ );
+	}
 	
 	$citation .= "- $publisher" if $publisher;
 	
