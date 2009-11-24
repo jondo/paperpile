@@ -1,4 +1,4 @@
-Ext.BLANK_IMAGE_URL = './ext3/resources/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('Paperpile');
 
 IS_TITANIUM = !(window['Titanium'] == undefined);
