@@ -334,8 +334,6 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             }
         }, this);
         
-        console.log(jobs);
-        
         if (jobs.length>0){
             Ext.Ajax.request(
                 { url: Paperpile.Url('/ajax/queue/jobs'),
@@ -345,17 +343,17 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                       var data = Ext.util.JSON.decode(response.responseText).data;
 
                       for (var id in data){
+                          console.log(data[id].info);
                           Ext.DomHelper.overwrite('job_'+id,data[id].info.msg);
                           var record=this.store.getAt(this.store.find('id',id));
                           if (record){
                               record.set('status',data[id].status);
                           }
 
-                          console.log(data[id]);
                           var cb =  data[id].info.callback;
        
                           if (data[id].status=='DONE' && cb){
-                              //window[cb.fn].createDelegate(this,cb.args);
+                              this.handleCallback(cb);
                           }
                       }
                   },
@@ -365,5 +363,16 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
         }
     },
 
+
+    // We need to think how to handle callbacks, in particular how to
+    // avoid calling the same function several times in a row, how to
+    // pass the function (either directly [security issues...] or via a
+    // keyword that is resolved here)
+
+    handleCallback: function(cb){
+        if (cb.fn === 'CONSOLE'){
+            console.log(cb.args);
+        }
+    }
 
 });

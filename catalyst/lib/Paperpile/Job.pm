@@ -13,6 +13,7 @@ use Data::Dumper;
 use File::Path;
 use File::Spec;
 use File::Copy;
+use File::stat;
 use Storable qw(lock_store lock_retrieve);
 
 enum 'Types' => (
@@ -151,11 +152,6 @@ sub update_status {
 
 }
 
-sub info_update {
-  my ( $self, $info ) = @_;
-  $self->info($info);
-  $self->save;
-}
 
 ## Runs the job in a forked sub-process
 
@@ -257,17 +253,15 @@ sub _do_work {
     #  $self->_match;
     #}
 
-    #if (not $self->pub->pdf_url){
-    #  $self->_crawl;
-    #}
+    if (not $self->pub->pdf_url){
+      $self->_crawl;
+    }
 
-    sleep(2);
+    $self->_download;
 
-    $self->info->{callback} = {fn => 'console.log', args => ['Hi there.']};
+    $self->info->{callback} = {fn => 'CONSOLE', args => $self->pub->pdf_url};
+    $self->save;
 
-    $self->info_update($self->info);
-
-    #$self->_download;
   }
 
 }
@@ -315,7 +309,8 @@ sub _match {
 
   foreach my $plugin (@plugin_list) {
 
-    $self->info_update({msg => "Searching $plugin"});
+    $self->info({msg => "Searching $plugin"});
+    $self->save;
 
     eval { $self->_match_single($plugin); };
 
@@ -357,123 +352,112 @@ sub _crawl {
 
   my $self = shift;
 
-  $self->info_update({msg => "Searching PDF on publisher site."});
+  $self->info({msg => "Searching PDF on publisher site."});
+  $self->save;
 
   my $crawler = Paperpile::Crawler->new;
-  $crawler->debug(0);
+  $crawler->debug(1);
   $crawler->driver_file( Paperpile::Utils->path_to( 'data', 'pdf-crawler.xml' )->stringify );
   $crawler->load_driver();
 
   my $pdf;
 
-  $pdf = $crawler->search_file( $self->pub->linkout );
-
-  #eval { $pdf = $crawler->search_file( $self->pub->linkout ) };
+  eval { $pdf = $crawler->search_file( $self->pub->linkout ) };
 
   $self->pub->pdf_url($pdf) if $pdf;
 
-  #if ( Exception::Class->caught ) {
-  #  if ( Exception::Class->caught('CrawlerError') ) {
-  #    if ( Exception::Class->caught('CrawlerUnknownSiteError') ) {
-  #      $self->error('Publisher site not supported');
-  #    }
-  #    if ( Exception::Class->caught('CrawlerScrapeError') ) {
-  #      $self->error('Could not download PDF. You might need a subscription.');
-  #    }
-  #  } else {
-  #    $self->_catch_error;
-  #  }
-  #}
 }
 
 sub _download {
 
   my $self = shift;
 
-  $self->info_update({msg => "Downloading PDF"});
+  $self->info( { msg => "Downloading PDF" } );
+  $self->save;
 
   my $file;
 
-  eval {
+  my $dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->id );
 
-    my $dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->id );
-
-    rmtree($dir);
-    mkpath($dir)
-      or FileWriteError->throw(
-      error => 'Download error. Could not create temporary dir for download.',
-      file  => $dir
-      );
-
-    $file = "$dir/paper.pdf";
-
-    my $ua = Paperpile::Utils->get_browser();
-
-    my $res = $ua->request(
-      HTTP::Request->new( GET => $self->pub->pdf_url ),
-      sub {
-        my ( $data, $response, $protocol ) = @_;
-        if ( not -e $file ) {
-          my $length = $response->content_length;
-          open( SIZE, ">$file.size" )
-            or FileWriteError->throw(
-            error => 'Download error. Could not create temporary file for download.',
-            file  => "$file.size"
-            );
-          if ( defined $length ) {
-            print SIZE "$length\n";
-          } else {
-            print SIZE "null\n";
-          }
-          close(SIZE);
-          open( FILE, ">$file" )
-            or FileWriteError->throw(
-            error => 'Download error. Could not open temporary file for download.',
-            file  => $file
-            );
-          binmode FILE;
-        }
-        print FILE $data
-          or FileWriteError->throw(
-          error => 'Download error. Could not write data to temporary file.',
-          file  => "$file"
-          );
-      }
+  rmtree($dir);
+  mkpath($dir)
+    or FileWriteError->throw(
+    error => 'Download error. Could not create temporary dir for download.',
+    file  => $dir
     );
 
-    # Check if download was successfull
-    if ( $res->header("X-Died") || !$res->is_success ) {
-      NetGetError->throw(
-        error => 'Download error.',
-        code  => $res->code,
-      );
+  $file = "$dir/paper.pdf";
+
+  my $ua = Paperpile::Utils->get_browser();
+
+  my $res = $ua->request(
+   HTTP::Request->new( GET => $self->pub->pdf_url ),
+    sub {
+      my ( $data, $response, $protocol ) = @_;
+
+      sleep(5);
+      print STDERR "-------> INHERE\n";
+
+      $self->restore;
+
+      if ($self->interrupt){
+      }
+
+      if ( $self->interrupt eq 'CANCEL' ) {
+        print  STDERR  "==========================>", $self->interrupt, "\n\n";
+        UserCancel->throw("Job stopped");
+      }
+
+      if ( not -e $file ) {
+        my $length = $response->content_length;
+
+        if ( defined $length ) {
+          $self->info->{size} = $length;
+        } else {
+          $self->info->{size} = undef;
+        }
+
+        open( FILE, ">$file" )
+          or FileWriteError->throw(
+          error => 'Download error. Could not open temporary file for download.',
+          file  => $file
+          );
+        binmode FILE;
+      }
+      print FILE $data
+        or FileWriteError->throw(
+        error => 'Download error. Could not write data to temporary file.',
+        file  => "$file"
+        );
+      my $current_size = stat($file)->size;
+
+      $self->info->{downloaded} = $current_size;
+      $self->save;
     }
+  );
 
-    # Check if we have got really a PDF and not a "Access denied" screen
-    close(FILE);
-    open( FILE, "<$file" );
-    binmode(FILE);
-    my $content;
-    read( FILE, $content, 64 );
-
-    if ( $content !~ m/^\%PDF/ ) {
-      rmtree($dir);
-      NetGetError->throw(
-        'Could not download PDF. Your institution might need a subscription for the journal.');
-    }
-
-  };
-
-  my $e;
-  if ( $e = Exception::Class->caught ) {
-    if ( $e = Exception::Class->caught('PaperpileError') ) {
-      $self->error( $e->error );
-    } else {
-      $self->_catch_error;
-    }
-  } else {
-    $self->pub->pdf($file);
+  # Check if download was successfull
+  if ( $res->header("X-Died") || !$res->is_success ) {
+    NetGetError->throw(
+      error => 'Download error.',
+      code  => $res->code,
+    );
   }
+
+  # Check if we have got really a PDF and not a "Access denied" screen
+  close(FILE);
+  open( FILE, "<$file" );
+  binmode(FILE);
+  my $content;
+  read( FILE, $content, 64 );
+
+  if ( $content !~ m/^\%PDF/ ) {
+    rmtree($dir);
+    NetGetError->throw(
+      'Could not download PDF. Your institution might need a subscription for the journal.');
+  }
+
+  $self->pub->pdf($file);
 
 }
 
