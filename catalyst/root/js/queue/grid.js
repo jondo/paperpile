@@ -141,7 +141,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.getView().holdPosition=true;
                 this.store.reload();
             },
-            interval: 2000,
+            interval: 5000,
             scope:this
         }
 
@@ -149,7 +149,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             run: function(){
                 this.updateJobs();
             },
-            interval: 500,
+            interval: 2000,
             scope:this
         }
         
@@ -343,8 +343,14 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                       var data = Ext.util.JSON.decode(response.responseText).data;
 
                       for (var id in data){
-                          console.log(data[id].info);
-                          Ext.DomHelper.overwrite('job_'+id,data[id].info.msg);
+
+                          var msg = data[id].info.msg;
+
+                          if (data[id].info.size && data[id].info.downloaded){
+                              msg = msg + "("+Ext.util.Format.fileSize(data[id].info.downloaded)+"/"+Ext.util.Format.fileSize(data[id].info.size)+")";
+                          }
+
+                          Ext.DomHelper.overwrite('job_'+id,msg);
                           var record=this.store.getAt(this.store.find('id',id));
                           if (record){
                               record.set('status',data[id].status);

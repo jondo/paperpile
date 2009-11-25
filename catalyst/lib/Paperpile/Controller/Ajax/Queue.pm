@@ -102,6 +102,9 @@ sub cancel_jobs : Local {
     my $job = Paperpile::Job->new({id=>$id});
 
     $job->interrupt('CANCEL');
+
+    print STDERR Dumper($job);
+
     $job->save;
 
   }
