@@ -6,7 +6,6 @@ use File::Path;
 use File::Find;
 use File::Spec::Functions qw(catfile);
 use File::Copy::Recursive qw(fcopy dircopy);
-use 5.010;
 
 if ( $#ARGV != 0 ) {
   print 'Usage: build.pl [linux32|linux64]', "\n";
