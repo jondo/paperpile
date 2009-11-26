@@ -63,6 +63,9 @@ has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
 # setting
 has 'pdf' => ( is => 'rw', default => '' );
 
+# Size of PDF in bytes
+has 'pdf_size' => ( is => 'rw', default => 0, isa => 'Int' );
+
 # The number of additional files that are associated with this entry
 has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
 

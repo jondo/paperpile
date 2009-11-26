@@ -189,10 +189,6 @@ sub run {
 
     $self->duration( $end_time - $start_time );
 
-    #if ( int( rand(10) ) > 5 ) {
-    #  $self->error('An error has occured');
-    #}
-
     $self->update_status('DONE');
 
     my $q = Paperpile::Queue->new();
@@ -226,6 +222,7 @@ sub as_hash {
 
   $hash{citekey}  = $self->pub->citekey;
   $hash{title}    = $self->pub->title;
+  $hash{doi}    = $self->pub->doi;
   $hash{citation} = $self->pub->_citation_display;
   $hash{authors}  = $self->pub->_authors_display;
   $hash{pdf}  = $self->pub->pdf;
@@ -264,8 +261,15 @@ sub _do_work {
 
     $self->_extract_meta_data;
 
-  }
+    if ( !$self->pub->{doi} and !$self->pub->{title} ) {
+      ExtractionError->throw("Could not find DOI or title in PDF");
+    }
 
+    $self->_match;
+    $self->_insert;
+    $self->_attach_pdf;
+
+  }
 }
 
 
@@ -460,7 +464,6 @@ sub _download {
      'Could not download PDF. Your institution might need a subscription for the journal.');
   }
 
-  # St
   $self->pub->pdf($file);
 
 }
@@ -475,6 +478,30 @@ sub _extract_meta_data {
 
   my $pub = $extract->parsePDF;
 
+  $pub->pdf($self->pub->pdf);
+
+  $self->pub($pub);
+
+}
+
+
+# Search for pdf in database
+
+sub _match_pdf {
+
+
+}
+
+
+sub _insert {
+
+  my $self = shift;
+
+  my $model = Paperpile::Utils->get_library_model;
+
+  $model->create_pubs( [$self->pub] );
+
+  $self->pub->_imported(1);
 
 }
 
@@ -489,7 +516,6 @@ sub _attach_pdf {
   unlink($self->pub->pdf);
 
   $self->pub->pdf($attached_file);
-
 
 }
 

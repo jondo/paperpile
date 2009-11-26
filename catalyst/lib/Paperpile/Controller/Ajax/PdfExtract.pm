@@ -41,7 +41,7 @@ sub submit : Local {
   }
 
 
-  my @files = @files[0,3];
+  my @files = @files[5..10];
 
   my $q = Paperpile::Queue->new();
 

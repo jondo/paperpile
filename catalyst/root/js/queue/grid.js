@@ -85,7 +85,20 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                                    '<div><span class="pp-grid-task">{task}</span></div>',
                                    '<div>',
                                    '<span class="pp-grid-title">{pdf}</span>',
-                                   '</div>');
+                                   '</div>',
+                                   '<tpl if="title">',
+                                   '<p class="pp-grid-authors">Title: {title}</p>',
+                                   '</tpl>',
+                                   '<tpl if="doi">',
+                                   '<p class="pp-grid-citation">DOI: {doi}</p>',
+                                   '</tpl>',
+                                   '<tpl if="authors">',
+                                   '<p class="pp-grid-authors">Authors: {authors}</p>',
+                                   '</tpl>',
+                                   '<tpl if="citation">',
+                                   '<p class="pp-grid-citation">{citation}</p>',
+                                   '</tpl></div>'
+                               );
                            } 
 
                            if (d.type === 'PDF_SEARCH'){
@@ -158,7 +171,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                 this.getView().holdPosition=true;
                 this.store.reload();
             },
-            interval: 5000,
+            interval: 2000,
             scope:this
         }
 
@@ -166,7 +179,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             run: function(){
                 this.updateJobs();
             },
-            interval: 2000,
+            interval: 500,
             scope:this
         }
         

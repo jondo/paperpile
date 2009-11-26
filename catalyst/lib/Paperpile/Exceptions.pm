@@ -26,6 +26,11 @@ use Exception::Class ( PaperpileError,
   },
   CrawlerUnknownSiteError => { isa => 'CrawlerError' },
   CrawlerScrapeError      => { isa => 'CrawlerError' },
+  ExtractionError  => {
+    isa    => 'PaperpileError',
+  },
+
+
 
 );
 
