@@ -54,7 +54,7 @@ sub grid : Local {
     fields        => [
       'id',    'type',     'status',  'progress',    'error',    'citekey',
       'title', 'citation', 'authors', 'num_pending', 'num_done', 'queue_status',
-      'eta'
+      'eta', 'pdf'
     ]
   );
 

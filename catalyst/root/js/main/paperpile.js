@@ -160,7 +160,22 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     pdfExtract: function(){
 
-        win=new Paperpile.FileChooser({
+        Ext.Ajax.request({
+            url: Paperpile.Url('/ajax/pdfextract/submit'),
+            params: { path:"/home/wash/PDFs/boston_papers"},
+            
+            success: function(response){
+                Paperpile.main.tabs.showQueueTab();
+            },
+                
+        });
+
+
+        
+        
+        
+        /*
+       win=new Paperpile.FileChooser({
             title: "Select single PDF file or directory to search for PDF files",
             currentRoot:Paperpile.main.globalSettings.user_home,
             showFilter: true,
@@ -179,8 +194,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         });
 
         win.show();
-
-
+*/
 
     },
 

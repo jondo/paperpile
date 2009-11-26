@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
+use Paperpile::Queue;
+use Paperpile::Job;
 use Paperpile::PdfExtract;
 use Data::Dumper;
 use 5.010;
@@ -16,110 +18,114 @@ use MooseX::Timestamp;
 use Paperpile::Plugins::Import;
 use Paperpile::Plugins::Export;
 
-sub grid : Local {
+sub submit : Local {
 
   my ( $self, $c ) = @_;
 
   my $path = $c->request->params->{path};
 
-  my @list = ();
-  my $data = [];
+  ## Get all PDFs in all subdirectories
+
+  my @files = ();
 
   if ( -d $path ) {
     find(
       sub {
         my $name = $File::Find::name;
-        push @list, $name if $name =~ /\.pdf$/i;
+        push @files, $name if $name =~ /\.pdf$/i;
       },
       $path
     );
   } else {
-    push @list, $path;
+    push @files, $path;
   }
 
-  foreach my $file_name (@list) {
 
-    my $pub = Paperpile::Library::Publication->new();
+  my @files = @files[0,3];
 
-    ( my $basename ) = fileparse($file_name);
+  my $q = Paperpile::Queue->new();
 
-    push @$data, {
-      file_name     => $file_name,
-      file_basename => $basename,
-      file_size     => stat($file_name)->size,
-      status        => 'NEW',
-      status_msg    => '',
-      pub           => $pub,
-      };
-  }
+  my @jobs = ();
 
-  # Get all existing PDFs in database
+  foreach my $file (@files) {
 
-  my %pdfs_in_db = ();
+    my $pub = Paperpile::Library::Publication->new( { pdf => $file } );
 
-  my $paper_root = $c->model('Library')->get_setting('paper_root');
-
-  my $sth =
-    $c->model('Library')
-    ->dbh->prepare("SELECT rowid,pdf,title,authors,doi FROM Publications WHERE pdf !='';");
-  $sth->execute;
-
-  while ( my $row = $sth->fetchrow_hashref() ) {
-    my $file = File::Spec->catfile( $paper_root, $row->{pdf} );
-
-    my $s = stat($file);
-
-    if ($s) {
-      $pdfs_in_db{ $s->size } = {
-        rowid   => $row->{rowid},
-        file    => $file,
-        authors => $row->{authors},
-        title   => $row->{title},
-        doi     => $row->{doi}
-      };
-    }
-  }
-
-  my @output = ();
-
-  foreach my $item (@$data) {
-
-    my $in_db = $pdfs_in_db{ $item->{file_size} };
-
-    if ($in_db) {
-
-      if ( compare( $in_db->{file}, $item->{file_name} ) == 0 ) {
-        $item->{status}     = 'IMPORTED';
-        $item->{status_msg} = '<b>' . $item->{file_basename} . '</b> already in database';
-        $item->{pub}->authors( $in_db->{authors} );
-        $item->{pub}->title( $in_db->{title} );
-        $item->{pub}->doi( $in_db->{doi} );
+    my $j = Paperpile::Job->new( {
+        type => 'PDF_IMPORT',
+        pub  => $pub
       }
-    }
+    );
 
-    my $tmp = $item->{pub}->as_hash;
-    foreach my $key ( 'file_name', 'file_basename', 'file_size', 'status', 'status_msg' ) {
-      $tmp->{$key} = $item->{$key};
-    }
-    push @output, $tmp;
+    $q->submit($j);
+
   }
 
-  my @fields = ();
+  $q->save;
+  $q->run;
 
-  foreach my $key ( keys %{ Paperpile::Library::Publication->new()->as_hash } ) {
-    push @fields, { name => $key };
-  }
-  push @fields, 'file_name', 'file_basename', 'file_size', 'status', 'status_msg';
+  # Get all existing PDFs in database and store them as hash by their size
 
-  my %metaData = (
-    root   => 'data',
-    id     => 'file_name',
-    fields => [@fields]
-  );
+  #my %pdfs_in_db = ();
 
-  $c->stash->{data}     = [@output];
-  $c->stash->{metaData} = {%metaData};
-  $c->detach('Paperpile::View::JSON');
+  #my $paper_root = $c->model('Library')->get_setting('paper_root');
+
+  #my $sth =
+  #  $c->model('Library')
+  #  ->dbh->prepare("SELECT rowid,pdf,title,authors,doi FROM Publications WHERE pdf !='';");
+  #$sth->execute;
+
+  #while ( my $row = $sth->fetchrow_hashref() ) {
+  #  my $file = File::Spec->catfile( $paper_root, $row->{pdf} );
+
+  #  my $s = stat($file);
+
+  #  if ($s) {
+  #    $pdfs_in_db{ $s->size } = {
+  #      rowid => $row->{rowid},
+  #      file  => $file,
+  #    };
+  #  }
+  #}
+
+  #foreach my $j (@jobs) {
+
+  #  my $in_db = $pdfs_in_db{ $j->info->{size} };
+
+  #  if ($in_db) {
+
+  #    if ( compare( $in_db->{file}, $item->{file_name} ) == 0 ) {
+  #      $item->{status}     = 'IMPORTED';
+  #      $item->{status_msg} = '<b>' . $item->{file_basename} . '</b> already in database';
+  #      $item->{pub}->authors( $in_db->{authors} );
+  #      $item->{pub}->title( $in_db->{title} );
+  #      $item->{pub}->doi( $in_db->{doi} );
+  #    }
+  #  }
+
+  #  my $tmp = $item->{pub}->as_hash;
+  #  foreach my $key ( 'file_name', 'file_basename', 'file_size', 'status', 'status_msg' ) {
+  #    $tmp->{$key} = $item->{$key};
+  #  }
+  #  push @output, $tmp;
+  #}
+
+  #my @fields = ();
+
+  #foreach my $key ( keys %{ Paperpile::Library::Publication->new()->as_hash } ) {
+  #  push @fields, { name => $key };
+  #}
+  #push @fields, 'file_name', 'file_basename', 'file_size', 'status', 'status_msg';
+
+  #my %metaData = (
+  #  root   => 'data',
+  #  id     => 'file_name',
+  #  fields => [@fields]
+  #);
+
+  #$c->stash->{data}     = [@output];
+  #$c->stash->{metaData} = {%metaData};
+  #$c->detach('Paperpile::View::JSON');
 
 }
 

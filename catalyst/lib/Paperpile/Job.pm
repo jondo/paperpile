@@ -228,6 +228,7 @@ sub as_hash {
   $hash{title}    = $self->pub->title;
   $hash{citation} = $self->pub->_citation_display;
   $hash{authors}  = $self->pub->_authors_display;
+  $hash{pdf}  = $self->pub->pdf;
 
   return {%hash};
 
@@ -237,15 +238,6 @@ sub as_hash {
 sub _do_work {
 
   my $self = shift;
-
-  #foreach my $x ( 0 .. 10 ) {
-  #  $self->restore;
-  #  if ( $self->interrupt eq 'CANCEL' ) {
-  #    UserCancel->throw("Job stopped");
-  #  }
-  #  $self->info_update( { msg => "Stage $x" } );
-  #  sleep(1);
-  #}
 
   if ($self->type eq 'PDF_SEARCH'){
 
@@ -259,8 +251,18 @@ sub _do_work {
 
     $self->_download;
 
+    if ($self->pub->_imported){
+      $self->_attach_pdf;
+    }
+
     $self->info->{callback} = {fn => 'CONSOLE', args => $self->pub->pdf_url};
     $self->save;
+
+  }
+
+  if ($self->type eq 'PDF_IMPORT'){
+
+    $self->_extract_meta_data;
 
   }
 
@@ -426,8 +428,6 @@ sub _download {
 
   # Check if download was successful
 
-  print STDERR Dumper($res);
-
   if ( $res->header("X-Died") || !$res->is_success ) {
     unlink($file);
     if ( $res->header("X-Died") ) {
@@ -460,9 +460,39 @@ sub _download {
      'Could not download PDF. Your institution might need a subscription for the journal.');
   }
 
+  # St
   $self->pub->pdf($file);
 
 }
+
+sub _extract_meta_data {
+
+  my $self = shift;
+
+  my $bin = Paperpile::Utils->get_binary( 'pdftoxml');
+
+  my $extract = Paperpile::PdfExtract->new( file => $self->pub->pdf, pdftoxml => $bin );
+
+  my $pub = $extract->parsePDF;
+
+
+}
+
+sub _attach_pdf {
+
+  my $self = shift;
+
+  my $model = Paperpile::Utils->get_library_model;
+
+  my $attached_file=$model->attach_file($self->pub->pdf, 1, $self->pub->_rowid, $self->pub);
+
+  unlink($self->pub->pdf);
+
+  $self->pub->pdf($attached_file);
+
+
+}
+
 
 no Moose::Util::TypeConstraints;
 

@@ -74,21 +74,38 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                        sortable: true,
                        renderer: function(value, p, record){
 
-                           var d = record.data;
-                           d.task = 'Get PDF for';
+                           var tpl;
 
-                           var tpl = new Ext.XTemplate(
-                               '<div class="pp-grid-data">',
-                               '<div><span class="pp-grid-task">{task}</span></div>',
-                               '<div>',
-                               '<span class="pp-grid-title">{title}</span>',
-                               '</div>',
-                               '<tpl if="authors">',
-                               '<p class="pp-grid-authors">{authors}</p>',
-                               '</tpl>',
-                               '<tpl if="citation">',
-                               '<p class="pp-grid-citation">{citation}</p>',
-                               '</tpl></div>');
+                           var d = record.data;
+
+                           if (d.type === 'PDF_IMPORT'){
+                               d.task = 'Import PDF';
+                               tpl = new Ext.XTemplate(
+                                   '<div class="pp-grid-data">',
+                                   '<div><span class="pp-grid-task">{task}</span></div>',
+                                   '<div>',
+                                   '<span class="pp-grid-title">{pdf}</span>',
+                                   '</div>');
+                           } 
+
+                           if (d.type === 'PDF_SEARCH'){
+                               d.task = 'Get PDF for';
+
+                               tpl = new Ext.XTemplate(
+                                   '<div class="pp-grid-data">',
+                                   '<div><span class="pp-grid-task">{task}</span></div>',
+                                   '<div>',
+                                   '<span class="pp-grid-title">{title}</span>',
+                                   '</div>',
+                                   '<tpl if="authors">',
+                                   '<p class="pp-grid-authors">{authors}</p>',
+                                   '</tpl>',
+                                   '<tpl if="citation">',
+                                   '<p class="pp-grid-citation">{citation}</p>',
+                                   '</tpl></div>');
+                           }
+
+
 
                            return tpl.apply(d);
                        }
