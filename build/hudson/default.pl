@@ -4,4 +4,4 @@ use strict;
 
 print STDERR "Hello World";
 
-exit(1);
+exit(0);
