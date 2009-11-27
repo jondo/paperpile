@@ -10,7 +10,7 @@ use File::Path;
 use File::Find;
 use File::Spec::Functions qw(catfile);
 use File::Copy::Recursive qw(fcopy dircopy);
-use YAML qw(LoadFile);
+use YAML qw(LoadFile DumpFile);
 
 has cat_dir  => ( is => 'rw' );    # catalyst directory
 has ti_dir   => ( is => 'rw' );    # titanium directory
@@ -113,7 +113,7 @@ sub initdb {
 
 sub make_dist {
 
-  my ( $self, $platform ) = @_;
+  my ( $self, $platform, $build_number ) = @_;
 
   my ( $dist_dir, $cat_dir, $ti_dir ) = ( $self->dist_dir, $self->cat_dir, $self->ti_dir );
 
@@ -135,6 +135,19 @@ sub make_dist {
   $self->_copy_list( $list, $ti_dir, $platform );
 
   symlink "catalyst/root", "$dist_dir/$platform/Resources";
+
+
+  # Update configuration file for current build
+  my $yaml = "$dist_dir/$platform/catalyst/paperpile.yaml";
+  my $config = LoadFile($yaml);
+
+  $config->{app_settings}->{platform} = $platform;
+
+  if ($build_number){
+    $config->{app_settings}->{build_number} = $build_number;
+  }
+
+  DumpFile($yaml, $config);
 
 }
 
