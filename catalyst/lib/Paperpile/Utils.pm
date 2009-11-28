@@ -62,9 +62,9 @@ sub get_queue_model {
 
   my $queue_db = $ENV{HOME} . "/.paperpile/tmp/queue.db";
 
-  if ( !-e $queue_db ) {
-    copy( $self->path_to('db/queue.db')->stringify, $queue_db );
-  }
+  #if ( !-e $queue_db ) {
+  #  copy( $self->path_to('db/queue.db')->stringify, $queue_db );
+  #}
 
   my $model = Paperpile::Model::Queue->new();
   $model->set_dsn( "dbi:SQLite:" . $queue_db );

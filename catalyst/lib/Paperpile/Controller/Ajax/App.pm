@@ -65,7 +65,10 @@ sub init_session : Local {
 
     # initialize databases
     copy( $c->path_to('db/user.db')->stringify, $c->config->{'user_settings_db'} )
-      or FileWriteError->throw("Could not start application. Error initializing database.");
+      or FileWriteError->throw("Could not start application (Error initializing settings database)");
+
+    copy( $c->path_to('db/queue.db')->stringify, $c->config->{'queue_db'} )
+      or FileWriteError->throw("Could not start application (Error initializing queue database)");
 
     # Don't overwrite an existing library database in the case the
     # user has just deleted the user settings database
@@ -106,12 +109,13 @@ sub init_session : Local {
   my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
 
   # clear queue for now at startup
-  my $q = Paperpile::Queue->new();
-  $q->clear;
+  #my $q = Paperpile::Queue->new();
+  #$q->clear;
 
   # Crate temporary directories
   mkpath(File::Spec->catfile($tmp_dir, 'download'));
   mkpath(File::Spec->catfile($tmp_dir, 'queue'));
+
 
 }
 
