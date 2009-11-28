@@ -109,10 +109,9 @@ sub init_session : Local {
   my $q = Paperpile::Queue->new();
   $q->clear;
 
-  #mkpath($tmp_dir);
-  #mkpath(File::Spec->catfile($tmp_dir, 'cache'));
-  #Paperpile::Utils->store('queue',{});
-
+  # Crate temporary directories
+  mkpath(File::Spec->catfile($tmp_dir, 'download'));
+  mkpath(File::Spec->catfile($tmp_dir, 'queue'));
 
 }
 

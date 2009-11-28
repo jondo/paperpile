@@ -4,16 +4,8 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
-use Paperpile::PdfExtract;
 
 use Data::Dumper;
-use File::Find;
-use File::Path;
-use File::Compare;
-use File::Basename;
-use File::stat;
-use MooseX::Timestamp;
-use POSIX qw(ceil floor);
 
 sub grid : Local {
 
@@ -66,6 +58,8 @@ sub grid : Local {
 
 }
 
+## Returns job information for one or more job ids.
+
 sub jobs : Local {
 
   my ( $self, $c ) = @_;
@@ -87,6 +81,8 @@ sub jobs : Local {
   $c->stash->{data} = $data;
 
 }
+
+## Cancel one or more jobs
 
 sub cancel_jobs : Local {
 
@@ -110,6 +106,8 @@ sub cancel_jobs : Local {
   }
 }
 
+## Clears the queue
+
 sub clear :Local {
 
   my ( $self, $c ) = @_;
@@ -119,6 +117,8 @@ sub clear :Local {
 
 }
 
+## Pauses the queue
+
 sub pause :Local {
 
   my ( $self, $c ) = @_;
@@ -127,48 +127,14 @@ sub pause :Local {
   $q->pause;
 }
 
+## Starts queue again
+
 sub resume :Local {
 
   my ( $self, $c ) = @_;
 
   my $q = Paperpile::Queue->new();
   $q->resume;
-}
-
-
-sub get_running : Local {
-
-  my ( $self, $c ) = @_;
-
-  my $limit = $c->request->params->{limit};
-
-  my $q = Paperpile::Queue->new();
-
-  my @jobs =  @{ $q->jobs };
-
-  my $i = 0;
-
-  my $is_running=0;
-
-  while ($i <= $#jobs){
-    if ($jobs[$i]->status eq 'RUNNING'){
-      $is_running=1;
-      last;
-    }
-    $i++;
-  }
-
-  my $page = -1;
-  my $index = -1;
-
-  if ($is_running){
-    $page = floor($i/$limit)+1;
-    $index = $i % $limit;
-  }
-
-  $c->stash->{page} = $page;
-  $c->stash->{index} = $index;
-
 }
 
 

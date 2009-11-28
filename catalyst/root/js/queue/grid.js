@@ -150,7 +150,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                                if  (d.error){
                                    tpl='<div id="job_{id}" ext:qtip="{error}" class="pp-icon-cross pp-grid-error">Failed</div>';
                                } else {
-                                   tpl='<div id="job_{id}" class="pp-icon-tick pp-grid-ok">Ok</div>';
+                                   tpl='<div id="job_{id}" ext:qtip="{progress}" class="pp-icon-tick pp-grid-ok">Ok</div>';
                                }
                            }
 
@@ -252,37 +252,6 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
 
         // This is undocumented feature in Ext 2 and was renamed to 'refreshing' (I guess) in Ext JS 3
         //this.pager.loading.hide(); 
-
-        
-        this.pager.addButton({ text: 'Goto active task',
-                               handler: function(){
-                                   Ext.Ajax.request({
-                                       url: Paperpile.Url('/ajax/queue/get_running'),
-                                       params: {    
-                                           limit: this.pager.pageSize
-                                       },
-                                       method: 'GET',
-                                       success: function(response){
-                                           var json = Ext.util.JSON.decode(response.responseText);
-
-                                           if (json.page != -1){
-
-                                               this.store.on('load',
-                                                             function(){
-                                                                 this.getView().focusRow(json.index);
-                                                             }, this, {single: true});
-                                               
-                                               this.pager.changePage(json.page);
-                                               
-                                           }
-
-                                       },
-                                       failure: Paperpile.main.onError,
-                                       scope:this
-                                   });
-                               }, 
-                               scope: this
-                             });
 
         Paperpile.QueueGrid.superclass.afterRender.apply(this, arguments);
 
