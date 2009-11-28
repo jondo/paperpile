@@ -36,7 +36,8 @@ sub parsePDF {
   my $data   = $xml->XMLin( "$tmpfile", ForceArray => 1 );
 
   # remove temp file
-  unlink("$tmpfile"); 
+  #print STDERR "$tmpfile\n";
+  #unlink("$tmpfile"); 
   
   my @page0   = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
 
@@ -540,7 +541,8 @@ sub _ParseXML {
       if ( $words[$i]->{angle} != 0 )    # we do not want watermarks and all that stuff
       {
         $angle_flag = 1;
-	if ($words[$i]->{content} =~ m/arXiv:(.+)/) {
+	next if ( !$words[$i]->{content} );
+	if ( $words[$i]->{content} =~ m/arXiv:(.+)/ ) {
 	    $arxiv_id = $1;
 	}
         last;
@@ -628,7 +630,7 @@ sub _ParseXML {
     $content_line =~ s/\s+,/,/g;
     $content_line =~ s/,+/,/g;
     #$content_line  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
-    #print "$content_line\n";
+    #print STDERR "$content_line\n";
     my $content_line_tmp = join( "",  @content );
 
     
@@ -658,7 +660,6 @@ sub _ParseXML {
         }
       }
       $doi =~ s/;$//;
-
     }
 
     #let's see if it has some adress tags

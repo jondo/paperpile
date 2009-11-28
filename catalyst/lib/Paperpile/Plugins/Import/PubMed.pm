@@ -178,11 +178,12 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
+
   my $matchDOI   = 0;
   my $matchTitle = 0;
 
   my $query = '';
-
+  print STDERR "PUBMED-MATCH:: ",$pub->title,"\n";
   if ( $pub->doi ) {
     $query    = $pub->doi . "[AID]";
     $matchDOI = 1;
@@ -195,6 +196,11 @@ sub match {
         $query .= " AND $first [1au]";
       }
     }
+  }
+  
+  if ( $query eq '' ) {
+      #NetMatchError->throw( error => 'No match against PubMed.');
+      return $pub;
   }
 
   my $browser   = Paperpile::Utils->get_browser;
@@ -226,7 +232,8 @@ sub match {
     }
   }
 
-  NetMatchError->throw( error => 'No match against PubMed.');
+  return $pub;
+  #NetMatchError->throw( error => 'No match against PubMed.');
 
 }
 
