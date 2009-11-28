@@ -160,22 +160,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     pdfExtract: function(){
 
-        Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/pdfextract/submit'),
-            params: { path:"/home/wash/PDFs/boston_papers"},
-            
-            success: function(response){
-                Paperpile.main.tabs.showQueueTab();
-            },
-                
-        });
-
-
-        
-        
-        
-        /*
-       win=new Paperpile.FileChooser({
+        win=new Paperpile.FileChooser({
             title: "Select single PDF file or directory to search for PDF files",
             currentRoot:Paperpile.main.globalSettings.user_home,
             showFilter: true,
@@ -185,16 +170,18 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                            }],
             callback:function(button,path){
                 if (button == 'OK'){
-                    var panel=Paperpile.main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs',
-                                                                                    iconCls: 'pp-icon-import-pdf',                                                                                    path: path
-                                                                         }));
-                    panel.show();
+                    Ext.Ajax.request({
+                        url: Paperpile.Url('/ajax/pdfextract/submit'),
+                        params: { path:path},
+                        success: function(response){
+                            Paperpile.main.tabs.showQueueTab();
+                        },
+                    });
                 }
             }
         });
 
         win.show();
-*/
 
     },
 

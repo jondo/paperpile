@@ -102,8 +102,6 @@ sub submit {
 
   my ( $self, $jobs ) = @_;
 
-  print STDERR ref($jobs);
-
   if (ref($jobs) ne 'ARRAY'){
     $jobs = [$jobs];
   }
