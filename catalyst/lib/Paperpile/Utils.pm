@@ -19,6 +19,7 @@ use MIME::Base64;
 use Config;
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
+use Paperpile::Model::Queue;
 use Storable qw(lock_store lock_retrieve);
 
 $Data::Dumper::Indent = 1;
@@ -51,6 +52,28 @@ sub get_user_settings_model {
 
 }
 
+sub get_queue_model {
+
+  my $self = shift;
+
+  # This is hard-coded for now. Ideally it should read database
+  # location from paperpile.yaml. Don't know how to do this without
+  # access to $c and replicating substitution code.
+
+  my $queue_db = $ENV{HOME} . "/.paperpile/tmp/queue.db";
+
+  if ( !-e $queue_db ) {
+    copy( $self->path_to('db/queue.db')->stringify, $queue_db );
+  }
+
+  my $model = Paperpile::Model::Queue->new();
+  $model->set_dsn( "dbi:SQLite:" . $queue_db );
+
+  return $model;
+}
+
+
+
 sub get_library_model {
 
   my $self = shift;
@@ -64,6 +87,11 @@ sub get_library_model {
   return $model;
 
 }
+
+
+
+
+
 
 
 sub get_browser {

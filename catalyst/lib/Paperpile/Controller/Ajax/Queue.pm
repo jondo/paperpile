@@ -4,16 +4,8 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
-use Paperpile::PdfExtract;
+
 use Data::Dumper;
-use 5.010;
-use File::Find;
-use File::Path;
-use File::Compare;
-use File::Basename;
-use File::stat;
-use MooseX::Timestamp;
-use POSIX qw(ceil floor);
 
 sub grid : Local {
 
@@ -26,10 +18,12 @@ sub grid : Local {
 
   my $q = Paperpile::Queue->new();
 
-  #$q->_dump;
+  $q->update_stats;
 
-  foreach my $job ( @{ $q->jobs } ) {
-    push @data, $job->as_hash;
+  foreach my $job ( @{ $q->get_jobs } ) {
+    my $tmp = $job->as_hash;
+    delete($tmp->{info});
+    push @data, $tmp;
 
     # For simplicity, simply push info for complete queue to each item
     # in the list
@@ -52,7 +46,7 @@ sub grid : Local {
     fields        => [
       'id',    'type',     'status',  'progress',    'error',    'citekey',
       'title', 'citation', 'authors', 'num_pending', 'num_done', 'queue_status',
-      'eta'
+      'eta', 'pdf', 'doi'
     ]
   );
 
@@ -64,6 +58,56 @@ sub grid : Local {
 
 }
 
+## Returns job information for one or more job ids.
+
+sub jobs : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $ids = $c->request->params->{ids};
+
+  if (ref($ids) ne 'ARRAY'){
+    $ids = [$ids];
+  }
+
+  my $data={};
+
+  foreach my $id (@$ids){
+    my $job = Paperpile::Job->new({id=>$id});
+
+    $data->{$id}=$job->as_hash;
+  }
+
+  $c->stash->{data} = $data;
+
+}
+
+## Cancel one or more jobs
+
+sub cancel_jobs : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $ids = $c->request->params->{ids};
+
+  if (ref($ids) ne 'ARRAY'){
+    $ids = [$ids];
+  }
+
+  foreach my $id (@$ids){
+    my $job = Paperpile::Job->new({id=>$id});
+
+    $job->interrupt('CANCEL');
+
+    print STDERR Dumper($job);
+
+    $job->save;
+
+  }
+}
+
+## Clears the queue
+
 sub clear :Local {
 
   my ( $self, $c ) = @_;
@@ -73,6 +117,8 @@ sub clear :Local {
 
 }
 
+## Pauses the queue
+
 sub pause :Local {
 
   my ( $self, $c ) = @_;
@@ -81,6 +127,8 @@ sub pause :Local {
   $q->pause;
 }
 
+## Starts queue again
+
 sub resume :Local {
 
   my ( $self, $c ) = @_;
@@ -88,47 +136,6 @@ sub resume :Local {
   my $q = Paperpile::Queue->new();
   $q->resume;
 }
-
-
-
-sub get_running : Local {
-
-  my ( $self, $c ) = @_;
-
-  my $limit = $c->request->params->{limit};
-
-  my $q = Paperpile::Queue->new();
-
-  my @jobs =  @{ $q->jobs };
-
-  my $i = 0;
-
-  my $is_running=0;
-
-  while ($i <= $#jobs){
-    print STDERR "$i\n";
-    if ($jobs[$i]->status eq 'RUNNING'){
-      $is_running=1;
-      last;
-    }
-    $i++;
-  }
-
-  my $page = -1;
-  my $index = -1;
-
-  if ($is_running){
-    $page = floor($i/$limit)+1;
-    $index = $i % $limit;
-  }
-
-  print STDERR "==========> $i $limit $page $index\n";
-
-  $c->stash->{page} = $page;
-  $c->stash->{index} = $index;
-
-}
-
 
 
 1;

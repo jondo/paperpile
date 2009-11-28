@@ -1,8 +1,6 @@
-package Paperpile::Model::User;
+package Paperpile::Model::Queue;
 
 use base 'Paperpile::Model::DBIbase';
-
-
 
 
 

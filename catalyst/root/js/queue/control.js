@@ -38,6 +38,7 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 
 
     // setIconClass does not seem to work in Ext JS 2, so we need a workaround
+    // I hope it is fixed in Ext3
 
     setTabTitle: function(title, iconCls, closable){
 
@@ -61,11 +62,6 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
         item.removeClass('pp-icon-tick');
 
         item.addClass(iconCls);
-
-      
-       
-        //item.insertHtml('beforeEnd','<a>INHERE</a>');
-
 
     }, 
 
@@ -119,13 +115,10 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
                 this.pbar.updateProgress(1,'Done');
                 this.pause_button.hide();
                 this.cancel_button.hide();
-                //this.button.setText('Close tab');
-            }
+                }
         } else {
             currTpl = tplDone;
             this.setTabTitle('Background tasks','pp-icon-tick', true);
-            
-            //this.button.setText('Close tab');
         }
             
         currTpl.overwrite(Ext.get('queue-status'), d);
@@ -160,9 +153,8 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
                   var r=this.grid.getStore().getAt(0);
 
                   if (r){
-
                       var el = this.pause_button.getEl();
-                      console.log(el);
+                      console.log(r.data);
 
                       if (r.data.queue_status === 'RUNNING') {
                           Ext.Ajax.request(
@@ -192,9 +184,6 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
                                 scope:this,
                               });
                       }
-
-
-
                   }
 
               },

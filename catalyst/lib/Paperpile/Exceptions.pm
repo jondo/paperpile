@@ -1,6 +1,7 @@
 package Paperpile::Exceptions;
 
 use Exception::Class ( PaperpileError,
+  UserCancel => { isa => 'PaperpileError' },
   FileError => {
     isa    => 'PaperpileError',
     fields => 'file'
@@ -18,15 +19,18 @@ use Exception::Class ( PaperpileError,
     isa    => 'NetError',
     fields => 'content',
   },
-  NetMatchError => {
-   isa => 'NetError',
-  },
-  CrawlerError => {
+  NetMatchError => { isa => 'NetError', },
+  CrawlerError  => {
     isa    => 'PaperpileError',
     fields => 'url',
   },
   CrawlerUnknownSiteError => { isa => 'CrawlerError' },
   CrawlerScrapeError      => { isa => 'CrawlerError' },
+  ExtractionError  => {
+    isa    => 'PaperpileError',
+  },
+
+
 
 );
 
