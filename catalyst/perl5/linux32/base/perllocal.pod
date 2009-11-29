@@ -1318,3 +1318,47 @@ C<EXE_FILES: bin/nytprofhtml bin/nytprofcsv>
 
 =back
 
+=head2 Sun Nov 29 00:32:09 2009: C<Module> L<FCGI|FCGI>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux32/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.67>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sun Nov 29 00:32:24 2009: C<Module> L<FCGI::ProcManager|FCGI::ProcManager>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux32/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.19>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
