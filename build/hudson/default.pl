@@ -11,9 +11,9 @@ use lib "$FindBin::Bin/../../catalyst/lib";
 use Paperpile::Build;
 
 my $b = Paperpile::Build->new( {
-    cat_dir  => '../../catalyst',
-    ti_dir   => "../../titanium",
-    dist_dir => '../../dist/data',
+    cat_dir  => 'catalyst',
+    ti_dir   => "titanium",
+    dist_dir => 'dist/data',
     yui_jar  => $ENV{HOME} . '/bin/yuicompressor-2.4.2.jar',
   }
 );
