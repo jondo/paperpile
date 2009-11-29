@@ -18,6 +18,13 @@ my $b = Paperpile::Build->new( {
   }
 );
 
+my ( $day, $month, $year ) = (localtime)[ 3, 4, 5 ];
+
+$month+=1;
+$year+=1900;
+
+my $tag = sprintf("%02d-%02d-%04d", $month, $day, $year);
+
 Paperpile::Build->echo("Minifying javascript");
 $b->minify;
 
@@ -26,6 +33,19 @@ $b->make_dist('linux64', $ENV{BUILD_NUMBER});
 
 Paperpile::Build->echo("Making distribution linux32");
 $b->make_dist('linux32', $ENV{BUILD_NUMBER});
+
+
+chdir "dist/data";
+
+for my $platform ('linux32','linux64'){
+   Paperpile::Build->echo("Packaging $platform");
+  `mv $platform paperpile`;
+  `tar czf ../paperpile-$tag-$platform.tar.gz paperpile`;
+  `mv paperpile $platform`;
+}
+
+chdir "../..";
+
 
 
 Paperpile::Build->echo("Deploy catalyst app to /scratch/catalyst/nightly");
