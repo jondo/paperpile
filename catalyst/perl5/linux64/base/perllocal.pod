@@ -724,3 +724,47 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sat Nov 28 18:04:17 2009: C<Module> L<FCGI|FCGI>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.67>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat Nov 28 18:12:49 2009: C<Module> L<FCGI::ProcManager|FCGI::ProcManager>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.19>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

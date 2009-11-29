@@ -31,6 +31,7 @@ Catalyst::Plugin::Static::Simple
 Catalyst::Plugin::Unicode
 Catalyst::View::JSON
 Catalyst::View::Mason
+Catalyst::Engine::FCGI
 Class::Container
 Class::Data::Inheritable
 Class::MOP
@@ -108,7 +109,8 @@ Lingua::EN::NameParse
 Time::Duration
 FreezeThaw
 Text::Levenshtein
-
+FCGI
+FCGI::ProcManager
 =head1 AUTHOR
 
 Stefan Washietl <wash@paperpile.org>

@@ -35,6 +35,16 @@ my %ignore = (
 );
 
 
+sub echo {
+
+  my ( $self, $msg ) = @_;
+
+  my ( $sec, $min, $hour, $day, $month, $year ) = (localtime)[ 0, 1, 2, 3, 4, 5 ];
+  printf "[%02d/%02d/%04d %02d:%02d:%02d] %s\n",
+    $month+1, $day, $year + 1900, $hour, $min, $sec, $msg;
+
+}
+
 ## Initialize database files
 
 sub initdb {
