@@ -34,10 +34,10 @@ Paperpile.stage0 = function(){
                     }
                 }
 
-                // Get working directory
-                var path = Titanium.App.getPath();
-                path=path.replace(/paperpile$/,'');
-                
+                // Get absolute path to working directory
+                var path = Titanium.App.appURLToPath('/');
+                path=path.replace(/Resources$/,'');
+
                 // Set up process
                 Paperpile.server = Titanium.Process.createProcess({
                     args:[path+"catalyst/perl5/"+platform+"/bin/perl", path+'catalyst/script/paperpile_server.pl', '-fork'],
