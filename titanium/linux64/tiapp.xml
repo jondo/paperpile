@@ -9,14 +9,8 @@
      <url>app://index.html</url>
      <!--<url>http://google.com</url>-->
 	
-     
-      <width>1024</width>
-      <height>768</height>i
-
-	<!--
-      <width>1280</width>
-      <height>1024</height>i
--->
+     <width>1024</width>
+     <height>768</height>i
 
       <fullscreen>false</fullscreen>
       <!--

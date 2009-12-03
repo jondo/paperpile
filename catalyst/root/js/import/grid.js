@@ -266,13 +266,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	    // Shrink very long author lists.
 	    record.data._long_authorlist = 0;
 	    var ad = record.data._authors_display;
-	    if (record.data._shrink_authors == null)
-	      record.data._shrink_authors = 1;
-	    if (ad.length > this.author_shrink_threshold) {
-	      record.data._long_authorlist = 1;
-	      record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
-	      record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
-	    } 
+            if (ad){
+	            if (record.data._shrink_authors == null)
+	                record.data._shrink_authors = 1;
+                
+                if (ad.length > this.author_shrink_threshold) {
+	                record.data._long_authorlist = 1;
+	                record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
+	                record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
+	            } 
+            }
             return this.pubTemplate.apply(record.data);
         };
 

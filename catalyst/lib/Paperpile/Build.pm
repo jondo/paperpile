@@ -203,6 +203,37 @@ sub minify {
 
 }
 
+
+## Concatenate/minify Javascript and CSS
+
+sub dump_includes {
+
+  my $self = shift;
+
+  my $cat_dir = $self->cat_dir;
+
+  my $data = LoadFile("$cat_dir/data/resources.yaml");
+
+  foreach my $file ( @{ $data->{css} } ) {
+    print '<link rel="stylesheet" type="text/css" charset="utf-8" href="/'.$file.'"></link>', "\n";
+  }
+
+  my $curr_dir = `pwd`;
+  chomp($curr_dir);
+  chdir "$cat_dir/root";
+  my @plugins = glob("js/??port/plugins/*js");
+  chdir $curr_dir;
+
+  foreach my $file ( @{ $data->{js} }, @plugins  ) {
+    print '<script type="text/javascript" charset="utf-8" src="/'.$file.'"></script>', "\n";
+  }
+
+}
+
+
+
+
+
 sub _get_list {
 
   my ( $self, $source_dir, $ignore ) = @_;

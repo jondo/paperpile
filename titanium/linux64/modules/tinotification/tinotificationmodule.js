@@ -2,7 +2,7 @@ var notification_windows = 1;
 
 function TitaniumNotification(window)
 {
-	var width = 300, height = 80, notificationDelay = 3000;
+	var width = 300, height = 80, notificationTimeout = 3000;
 	if (Titanium.platform == "win32") {
 		height = 80;  
 	}
@@ -15,6 +15,7 @@ function TitaniumNotification(window)
 		height:height,
 		transparency:transparency,
 		usingChrome:false,
+		toolWindow:true,
 		id:myid,
 		visible:false,
 		topMost:true,
@@ -56,14 +57,16 @@ function TitaniumNotification(window)
 	};
 
 	/**
-	 * @tiapi(method=True,name=Notification.Notification.setDelay,since=0.2)
-	 * @tiapi Sets the delay time before a Notification object is displayed
-	 * @tiarg[Number, delay] The delay time in milliseconds
+	 * @tiapi(method=True,name=Notification.Notification.setTimeout,since=0.2)
+	 * @tiapi Set amount of time in milliseconds before the notification disappears. This
+	 * @tiapi feature is currently unsupported on OS X. The default value is 3 seconds.
+	 * @tiarg[Number, timeout] The timeout in milliseconds.
 	 */
-	this.setDelay = function(value)
+	this.setTimeout = function(value)
 	{
-		notificationDelay = value;
+		notificationTimeout = value;
 	};
+	this.setDelay = this.setTimeout;
 
 	/**
 	 * @tiapi(method=True,name=Notification.Notification.setCallback,since=0.2)
@@ -84,7 +87,7 @@ function TitaniumNotification(window)
 	this.show = function(animate,autohide)
 	{
 		if ('Growl' in Titanium && Titanium.Growl.isRunning()) {
-			Titanium.Growl.showNotification(title, message, icon, notificationDelay/1000, callback);
+			Titanium.Growl.showNotification(title, message, icon, notificationTimeout/1000, callback);
 			return;
 		}
 
@@ -111,7 +114,7 @@ function TitaniumNotification(window)
 
 		mywindow.setTransparency(.99);
 		mywindow.callback = notificationClicked;
-		mywindow.setURL('ti://tinotification/tinotification.html?title='+encodeURIComponent(title)+'&message='+encodeURIComponent(message)+'&icon='+encodeURIComponent(icon));
+			mywindow.setURL('ti://tinotification/tinotification.html?title='+encodeURIComponent(title)+'&message='+encodeURIComponent(message)+'&icon='+encodeURIComponent(icon));
 		mywindow.open();
 		mywindow.show();
 		if (autohide)
@@ -119,7 +122,7 @@ function TitaniumNotification(window)
 			hideTimer = window.setTimeout(function()
 			{
 				self.hide();
-			},notificationDelay + (animate ? 1000 : 0));
+			},notificationTimeout + (animate ? 1000 : 0));
 		}
 	};
 
@@ -145,11 +148,12 @@ function TitaniumNotification(window)
 	/**
 	 * @tiapi(method=True,name=Notification.createNotification,since=0.2)
 	 * @tiapi Creates a new Notification object
-	 * @tiarg[UI.UserWindow, window, optional=True] The window object to use
+	 * @tiarg[DOMWindow, window, optional=True] The window object to use
 	 * @tiresult[Notification.Notification] a Notification object
 	 */
 	Titanium.Notification = {
 		createNotification : function(window) {
+			if (!window) throw "You must supply a DOM Window as the first argument";
 			return new TitaniumNotification(window);
 		}
 	};

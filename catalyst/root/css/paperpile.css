@@ -723,6 +723,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/chart_bar.png')!important;
 }
 
+.pp-icon-console{
+    background-image: url('/images/icons/console.png')!important;
+}
+
+
 .pp-icon-feed{
     background: transparent url('/images/icons/feed.png') no-repeat !important;
 }
@@ -1237,7 +1242,6 @@ div:hover.pp-tag-style-sample {
 }
 
 
-
 /*** PDF Extract ***/
 
 .pp-pdfextract-file{
@@ -1245,6 +1249,13 @@ div:hover.pp-tag-style-sample {
     background: transparent url('/images/icons/page_white_acrobat.png') no-repeat;
 }
 
+
+/*** Catalyst log screen ***/
+
+.pp-catalyst-log{
+    background: #000000;
+    color:#5FB404;
+}
 
 
 

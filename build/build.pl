@@ -9,7 +9,7 @@ use Paperpile::Build;
 
 if ( $#ARGV != 0 ) {
   print 'Usage: ./perl.pl build.pl [command]', "\n";
-  print 'Commands: dist, initdb, minify',      "\n";
+  print 'Commands: dist, initdb, minify, dump_includes', "\n";
   exit(1);
 }
 
@@ -27,7 +27,6 @@ if ( $command eq 'initdb' ) {
   $b->initdb;
 }
 
-
 if ( $command eq 'dist' ) {
   $b->make_dist('linux64');
   $b->make_dist('linux32');
@@ -37,3 +36,6 @@ if ( $command eq 'minify' ) {
   $b->minify;
 }
 
+if ( $command eq 'dump_includes' ) {
+  $b->dump_includes;
+}

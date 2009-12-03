@@ -5,7 +5,7 @@
 {
 	var update_check_delay = 30000; // how many ms before we initiate check
 	var update_check_interval_secs = (60000 * 15) / 1000; // once per 15 min
-	
+
 	var url = Titanium.App.getStreamURL("app-track");
 	var guid = null;
 	var sid = null;
@@ -13,18 +13,33 @@
 	var initialized = false;
 	var window = null;
 	var refresh_components = true;
-	
+	var update_check_timer = null;
+	var analytics_spec_version = 2;
+
+	// js returns minutes to add to local to get UTC,
+	// Java returns ms to add to UTC to get local
+	var tz_offset_mins = - (new Date().getTimezoneOffset());
+
 	function send(qsv,async,timeout)
 	{
 		try
 		{
-			// if we're offline we don't even attempt these
-			if (qsv.event!='ti.start' && qsv.event!='ti.end' && Titanium.Network.online===false)
+			// If we're offline we don't even attempt these
+			if (qsv.type != 'ti.start' && qsv.type != 'ti.end'
+				&& Titanium.Network.online === false)
 			{
 				//TODO: we need to place these in DB and re-send later
-				Titanium.API.debug("we're not online - skipping analytics");
+				Titanium.API.debug("Not online -- skipping analytics");
 				return;
 			}
+
+			// If we're offline we don't even attempt these
+			if (!Titanium.App.analyticsEnabled)
+			{
+				Titanium.API.debug("Analytics disabled via tiapp.xml, skipping");
+				return;
+			}
+
 			async = (typeof async=='undefined') ? true : async;
 			qsv.mid = Titanium.Platform.id;
 			qsv.guid = guid;
@@ -40,7 +55,9 @@
 			qsv.oscpu = Titanium.Platform.processorCount;
 			qsv.un = Titanium.Platform.username;
 			qsv.ip = Titanium.Platform.address;
-			
+			qsv.ver = analytics_spec_version;
+			qsv.tz = tz_offset_mins;
+
 			var qs = '';
 			for (var p in qsv)
 			{
@@ -64,7 +81,7 @@
 					}
 				}
 			}
-			xhr.open('POST',url,async);
+			xhr.open('POST', url, async);
 			xhr.send(qs);
 		}
 		catch(E)
@@ -73,22 +90,133 @@
 		}
 	}
 	
-	/**
-	 * @tiapi(method=True,name=Analytics.addEvent,since=0.3) Sends an analytics event associated with the application
-	 * @tiarg(for=Analytics.addEvent,type=string,name=event) event name
-	 * @tiarg(for=Analytics.addEvent,type=object,name=data,optional=True) event data
+	/** Undocumented, perhaps to be deprecated
+	 * @no_tiapi(method=True,name=Analytics.addEvent,since=0.3)
+	 * @no_tiapi Sends an analytics event associated with the application,
+	 * @no_tiapi likely to be deprecated in favor of userEvent
+	 * @no_tiarg(for=Analytics.addEvent,type=String,name=event) event name
+	 * @no_tiarg(for=Analytics.addEvent,type=Object,name=data,optional=True) event data
 	 */
 	Titanium.API.set("Analytics.addEvent", function(event,data)
 	{
-		send({'event':event,'data':data});
+		send({type:'app.addEvent',event:event,data:data});
+	});
+
+	/**
+	 * @tiapi(method=True,name=Analytics.navEvent,since=0.7) Sends an analytics event associated with application navigation
+	 * @tiarg(for=Analytics.navEvent,type=String,name=from) navigation starting point, the context we're leaving
+	 * @tiarg(for=Analytics.navEvent,type=String,name=to) navigation ending point, the context to which we're going
+	 * @tiarg(for=Analytics.navEvent,type=String,name=name,optional=True) event name
+	 * @tiarg(for=Analytics.navEvent,type=Object,name=data,optional=True) event data
+	 */
+	Titanium.API.set("Analytics.navEvent", function(from,to,name,data)
+	{
+		if ((typeof(from)!='undefined') && (typeof(to)!='undefined'))
+		{
+			var payload = {from:from,to:to,data:data};
+			payload = Titanium.JSON.stringify(payload);
+			var event = ((typeof(name)!='undefined')?name:'app.nav');
+			send({type:'app.nav',event:event,data:payload});
+		}
 	});
 	
 	/**
+	 * @tiapi(method=True,name=Analytics.featureEvent,since=0.7) Sends an analytics event associated with application feature functionality
+	 * @tiarg(for=Analytics.featureEvent,type=String,name=name) feature name
+	 * @tiarg(for=Analytics.featureEvent,type=Object,name=data,optional=True) event data
+	 */
+	Titanium.API.set("Analytics.featureEvent", function(name,data)
+	{
+		if (typeof(name)!='undefined')
+		{
+			data = ((typeof(data)!='undefined') ? Titanium.JSON.stringify(data) : null);
+			send({type:'app.feature',event:name,data:data});			
+		}
+	});
+
+	/**
+	 * @tiapi(method=True,name=Analytics.settingsEvent,since=0.7) Sends an analytics event associated with application settings or configuration
+	 * @tiarg(for=Analytics.settingsEvent,type=String,name=name) settings name
+	 * @tiarg(for=Analytics.settingsEvent,type=Object,name=data,optional=True) event data
+	 */
+	Titanium.API.set("Analytics.settingsEvent", function(name,data)
+	{
+		if (typeof(name)!='undefined')
+		{
+			data = ((typeof(data)!='undefined') ? Titanium.JSON.stringify(data) : null);
+			send({type:'app.settings',event:name,data:data});
+		}
+	});
+	
+	/**
+	 * @tiapi(method=True,name=Analytics.timedEvent,since=0.3) Sends an analytics event tracking the duration of an application action
+	 * @tiarg(for=Analytics.timedEvent,type=String,name=event) event name
+	 * @tiarg(for=Analytics.timedEvent,type=Date,name=start,optional=True) event start time (optional if duration is specified)
+	 * @tiarg(for=Analytics.timedEvent,type=Date,name=stop,optional=True) event stop time (optional if duration is specified)
+	 * @tiarg(for=Analytics.timedEvent,type=String,name=duration,optional=True) event duration in seconds (optional if both start and stop are specified)
+	 * @tiarg(for=Analytics.timedEvent,type=Object,name=data,optional=True) event data
+	 */
+	Titanium.API.set("Analytics.timedEvent", function(name,start,stop,duration,data)
+	{
+		zeropad = function(maybe_small_number)
+		{
+			/* number in, two-digit (or more) string out */
+			return ((maybe_small_number < 10) ? '0' : '') + maybe_small_number;
+		}
+		formatUTCstring = function(d)
+		{
+			/* format to yyyy-MM-dd'T'HH:mm:ss.SSSZ to be consistent with mobile's UTC timestamp strings */
+			return d.getUTCFullYear().toString() + '-' +
+			         zeropad(1 + d.getUTCMonth()) + '-' +
+					 zeropad(d.getUTCDate()) + 'T' +
+					 zeropad(d.getUTCHours()) + ':' +
+					 zeropad(d.getUTCMinutes()) + ':' +
+					 zeropad(d.getUTCSeconds()) + '+0000';
+		}
+		if (typeof(name)!='undefined')
+		{
+			payload = {};
+			if (typeof(start)!='undefined')
+			{
+				payload.start = formatUTCstring(start);
+			}
+			if (typeof(stop)!='undefined')
+			{
+				payload.stop = formatUTCstring(stop);
+			}
+			if (typeof(duration)!='undefined')
+			{
+				payload.duration = duration;
+			}
+			if (typeof(data)!='undefined')
+			{
+				payload.data = data;
+			}
+			payload = Titanium.JSON.stringify(payload);
+			send({type:'app.timed_event',event:name,data:payload});
+		}
+	});
+
+	/**
+	 * @tiapi(method=True,name=Analytics.userEvent,since=0.7) Sends an analytics event not covered by the other interfaces
+	 * @tiarg(for=Analytics.userEvent,type=String,name=event) event name
+	 * @tiarg(for=Analytics.userEvent,type=Object,name=data,optional=True) event data
+	 */
+	Titanium.API.set("Analytics.userEvent", function(name,data)
+	{
+		if (typeof(name)!='undefined')
+		{
+			data = ((typeof(data)!='undefined') ? Titanium.JSON.stringify(data) : null);
+			send({type:'app.user',event:name,data:data});
+		}
+	});
+
+	/**
 	 * @tiapi(method=True,name=UpdateManager.startMonitor,since=0.4) Check the update service for a new version
-	 * @tiarg(for=UpdateManager.startMonitor,name=component,type=string) Name of the component
-	 * @tiarg(for=UpdateManager.startMonitor,name=callback,type=function) Function callback to call when completed
-	 * @tiarg(for=UpdateManager.startMonitor,name=interval,type=int) Interval in milliseconds for how often to check for an update
-	 * @tiresult(for=UpdateManager.startMonitor,type=int) Returns a handle which should use used to cancel the monitor
+	 * @tiarg(for=UpdateManager.startMonitor,name=component,type=String) Name of the component
+	 * @tiarg(for=UpdateManager.startMonitor,name=callback,type=Function) Function callback to call when completed
+	 * @tiarg(for=UpdateManager.startMonitor,name=interval,type=Number) Interval in milliseconds for how often to check for an update
+	 * @tiresult(for=UpdateManager.startMonitor,type=Number) Returns a handle which should use used to cancel the monitor
 	 */
 	Titanium.API.set("UpdateManager.startMonitor", function(components,callback,interval)
 	{
@@ -147,7 +275,7 @@
 
 	/**
 	 * @tiapi(method=True,name=UpdateManager.cancelMonitor,since=0.4) Check the update service for a new version
-	 * @tiarg(for=UpdateManager.cancelMonitor,name=id,type=int) The monitor id returned from startMonitor
+	 * @tiarg(for=UpdateManager.cancelMonitor,name=id,type=Number) The monitor id returned from startMonitor
 	 */
 	Titanium.API.set("UpdateManager.cancelMonitor", function(id)
 	{
@@ -174,8 +302,10 @@
 	});
 
 	/**
-	 * @tiapi(method=True,name=UpdateManager.installAppUpdate,since=0.4) Install an application update received from update monitor. This method will cause the process to first be restarted for the update to begin.
-	 * @tiarg(for=UpdateManager.installAppUpdate,name=spec,type=object) Update spec object received from update service.
+	 * @tiapi(method=True,name=UpdateManager.installAppUpdate,since=0.4)
+	 * @tiapi Install an application update received from update monitor. This
+	 * @tiapi method will cause the process to first be restarted for the update to begin.
+	 * @tiarg[Object, updateSpec] Update spec object received from update service.
 	 */
 	Titanium.API.set("UpdateManager.installAppUpdate", function(updateSpec)
 	{
@@ -191,7 +321,7 @@
 		update.write(updateSpec.manifest);
 		
 		// restart ourselves to cause the install
-		Titanium.Process.restart();
+		Titanium.App.restart();
 	}
 	
 
@@ -199,6 +329,10 @@
 	{
 		try
 		{
+			if (!Titanium.Network.online)
+			{
+				return;
+			}
 			limit = (limit==undefined) ? 1 : limit;
 			var url = Titanium.App.getStreamURL("release-list");
 			var xhr = Titanium.Network.createHTTPClient();
@@ -353,17 +487,26 @@
 		db.close();
 	}
 	
-	Titanium.API.register("ti.UI.stop",function(name)
+	Titanium.API.addEventListener(Titanium.APP_EXIT, function(event)
 	{
-		window = null;
-		send({'event':'ti.end'},false,5000);
+		if (update_check_timer)
+		{
+			window.clearTimeout(update_check_timer);
+			update_check_timer=null;
+		}
+		if (initialized)
+		{
+			window = null;
+			initialized = false;
+			send({'event':'ti.end',type:'ti.end'},false,5000);
+		}
 	});
 
-	Titanium.API.register("ti.UI.window.page.init",function(name,event)
+	Titanium.API.addEventListener(Titanium.PAGE_INITIALIZED, function(event)
 	{
 		try
 		{
-			if (initialized===true)
+			if (initialized === true || !event.hasTitaniumObject)
 			{
 				return;
 			}
@@ -382,10 +525,10 @@
 			guid = Titanium.App.getGUID();
 			sid = Titanium.Platform.createUUID();
 			
-			send({'event':'ti.start'});
+			send({'event':'ti.start',type:'ti.start'});
 			
 			// schedule the update check
-			window.setTimeout(function(){
+			update_check_timer = window.setTimeout(function(){
 				checkForUpdate();
 			},update_check_delay);
 		}
