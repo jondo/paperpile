@@ -11,6 +11,10 @@ use File::Path;
 use File::Copy;
 use Paperpile::Exceptions;
 use MooseX::Timestamp;
+use LWP;
+use HTTP::Request::Common;
+use File::Temp qw(tempfile);
+
 use 5.010;
 
 sub reset_db : Local {
@@ -231,6 +235,49 @@ sub inc_read_counter : Local {
   $c->model('Library')->dbh->do("UPDATE Publications SET last_read=$touched WHERE rowid=$rowid");
 
 }
+
+sub report_error : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $error        = $c->request->params->{error};
+  my $catalyst_log = $c->request->params->{catalyst_log};
+
+  my $browser = Paperpile::Utils->get_browser();
+
+  my $version_string = $c->config->{app_settings}->{version_string};
+  my $version_id     = $c->config->{app_settings}->{version_id};
+  my $build_number   = $c->config->{app_settings}->{build_number};
+  my $platform       = $c->config->{app_settings}->{platform};
+
+  my $subject =
+    "Unknown exception on $platform;  version: $version_id ($version_string); build: $build_number";
+
+  my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", SUFFIX => '.txt' );
+
+  my $attachment = undef;
+
+  if ($catalyst_log) {
+    print $fh $catalyst_log;
+    $attachment = [$filename];
+  }
+
+  my $r = POST 'http://stage.paperpile.com/api/v1/feedback/bugs',
+    Content_Type => 'form-data',
+    Content      => [
+    subject    => $subject,
+    body       => $error,
+    from       => 'Paperpile client',
+    attachment => $attachment,
+    ];
+
+  my $response = $browser->request($r);
+
+  unlink($filename);
+
+}
+
+
 
 
 

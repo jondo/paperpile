@@ -4,7 +4,8 @@
 // server. Once we have verified that the server is running we
 // continue with stage1.
 
-Paperpile.serverLog='';
+Paperpile.serverLog = '';
+Paperpile.isLogging = true; 
 
 Paperpile.stage0 = function(){
     Ext.Ajax.request({
@@ -34,13 +35,11 @@ Paperpile.stage0 = function(){
                     }
                 }
 
-                // Get absolute path to working directory
-                var path = Titanium.App.appURLToPath('/');
-                path=path.replace(/Resources$/,'');
+                var path = Titanium.App.getHome()+'/catalyst';
 
                 // Set up process
                 Paperpile.server = Titanium.Process.createProcess({
-                    args:[path+"catalyst/perl5/"+platform+"/bin/perl", path+'catalyst/script/paperpile_server.pl', '-fork'],
+                    args:[path+"/perl5/"+platform+"/bin/perl", path+'/script/paperpile_server.pl', '-fork'],
                 });
 
                 // Make sure there is no PERL5LIB variable set in the environment
@@ -58,22 +57,25 @@ Paperpile.stage0 = function(){
 
                 // Handler to process the STDERR output of the server
                 Paperpile.server.setOnReadLine(function(line){
-                    Paperpile.serverLog=Paperpile.serverLog+line+"\n";
 
-                    var panel = Ext.getCmp('log-panel');
+                    if (Paperpile.isLogging){
+                        Paperpile.serverLog=Paperpile.serverLog+line+"\n";
+                    
+                        var panel = Ext.getCmp('log-panel');
 
-                    if (panel){
-                        panel.addLine(line+"\n");
-                    }
+                        if (panel){
+                            panel.addLine(line+"\n");
+                        }
 
-                    if (line.match(/Paperpile powered by Catalyst/)){
-                        Titanium.API.notice("Catalyst successfully started");
-                        // We are successfull so we remove the failure
-                        // handler to avoid to call it on exit of the
-                        // application (although it does not seem to
-                        // be called anyway)
-                        Paperpile.server.setOnExit(function(){});
-                        Paperpile.stage1();
+                        if (line.match(/Paperpile powered by Catalyst/)){
+                            Titanium.API.notice("Catalyst successfully started");
+                            // We are successful so we remove the failure
+                            // handler to avoid to call it on exit of the
+                            // application (although it does not seem to
+                            // be called anyway)
+                            Paperpile.server.setOnExit(function(){});
+                            Paperpile.stage1();
+                        }
                     }
                 });
 
