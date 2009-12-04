@@ -36,7 +36,7 @@ $b->make_dist('linux32', $ENV{BUILD_NUMBER});
 
 
 chdir "dist/data";
-
+`rm ../*tar.gz`;
 for my $platform ('linux32','linux64'){
    Paperpile::Build->echo("Packaging $platform");
   `mv $platform paperpile`;
