@@ -144,3 +144,5 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
 
   }
 });
+
+Ext.reg("import-grid-plugin",Paperpile.ImportGridPlugin);

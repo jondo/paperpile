@@ -1,15 +1,4 @@
-Paperpile.PluginPanelDB = function(config) {
-  Ext.apply(this, config);
 
-  Paperpile.PluginPanelDB.superclass.constructor.call(this, {
-  });
-};
-
-Ext.extend(Paperpile.PluginPanelDB, Paperpile.PluginPanel, {
-  createGrid: function(params) {
-    return new Paperpile.PluginGridDB(params);
-  }
-});
 
 Paperpile.PluginGridDB = function(config) {
   Ext.apply(this, config);
@@ -17,7 +6,6 @@ Paperpile.PluginGridDB = function(config) {
   Paperpile.PluginGridDB.superclass.constructor.call(this, {
     });
 };
-
 
 Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
@@ -246,3 +234,17 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 });
 
 Ext.reg('pp-plugin-grid-db', Paperpile.PluginGridDB);
+
+
+Paperpile.PluginPanelDB = function(config) {
+  Ext.apply(this, config);
+
+  Paperpile.PluginPanelDB.superclass.constructor.call(this, {
+  });
+};
+
+Ext.extend(Paperpile.PluginPanelDB, Paperpile.PluginPanel, {
+  createGrid: function(params) {
+    return new Paperpile.PluginGridDB(params);
+  }
+});

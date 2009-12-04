@@ -1,5 +1,7 @@
 Paperpile.OnlineSearchGridPlugin = function(config) {
   Ext.apply(this,config);
+
+  Paperpile.OnlineSearchGridPlugin.superclass.constructor.call(this, {});
 };
 
 Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
