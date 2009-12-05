@@ -136,6 +136,14 @@ has '_snippets_notes'    => ( is => 'rw');
 # CSS style to highlight the entry in the frontend
 has '_highlight' => ( is => 'rw', default => 'pp-grid-highlight0' );
 
+# Holds the Google Scholar link to other versions of
+# the same publication.
+has '_all_versions' => ( is => 'rw', default => '' );
+
+# Google Scholar gives the IP or URL as publisher. This is not
+# that what we want to display as publisher, but it is useful
+# for other purposes in the Google Scholar Plugin.
+has '_www_publisher' => ( is => 'rw', default => '' );
 
 # If true fields update themselves automatically. Is only activated
 # after initial object creation in BUILD to avoid excessive redundant

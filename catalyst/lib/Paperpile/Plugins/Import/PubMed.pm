@@ -185,7 +185,7 @@ sub match {
 
   # First we format the three query strings properly. Besides
   # HTML escaping we remove words that contain non-alphnumeric
-  # characters. These words can cause sever problems.
+  # characters. These words can cause severe problems.
   # 1) DOI
   $query_doi = _EscapeString($pub->doi . "[AID]") if ( $pub->doi );
 
