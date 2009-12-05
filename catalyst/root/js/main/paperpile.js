@@ -13,11 +13,13 @@ Paperpile.log = function() {
   }
 };
 
+
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     globalSettings:null,
 
     initComponent: function() {
+
         Ext.apply(this,
                   {layout: 'border',
                    renderTo: Ext.getBody(),
@@ -39,6 +41,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                        }
                                    ),
                                    {xtype:'tbfill'},
+                                   //new Paperpile.QueueWidget(),
                                    new Ext.BoxComponent(
                                        { autoEl: {
                                            tag: 'a',
@@ -185,20 +188,21 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                            }],
             callback:function(button,path){
                 if (button == 'OK'){
-                    var panel=Paperpile.main.tabs.add(new Paperpile.PdfExtractView({title:'Import PDFs',
-                                                                                    iconCls: 'pp-icon-import-pdf',                                                                                    path: path
-                                                                         }));
-                    panel.show();
+                    Ext.Ajax.request({
+                        url: Paperpile.Url('/ajax/pdfextract/submit'),
+                        params: { path:path},
+                        success: function(response){
+                            Paperpile.main.tabs.showQueueTab();
+                        },
+                    });
                 }
             }
         });
 
         win.show();
 
-
-
     },
-
+    
     fileImport: function(){
 
         win=new Paperpile.FileChooser({
@@ -337,13 +341,25 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                   msg: 'An unexpected error has occured.',
                   action1: 'Details',
                   callback: function(action){
-                      Ext.Msg.show({
-                          title:'Error',
-                          msg: error.msg,
-                          buttons: Ext.Msg.OK,
-                          animEl: 'elId',
-                          icon: Ext.MessageBox.ERROR
-                      });
+
+                      if (action === 'ACTION1'){
+                      
+                          Ext.MessageBox.buttonText.ok = "Send error report"; 
+                          Ext.Msg.show({
+                              title:'Error',
+                              msg: error.msg,
+                              animEl: 'elId',
+                              icon: Ext.MessageBox.ERROR,
+                              buttons: Ext.Msg.OKCANCEL,
+                              fn: function(btn){
+                                  if (btn === 'ok'){
+                                      Paperpile.main.reportError(error);                                      
+                                  }
+                                  Ext.MessageBox.buttonText.ok = "Ok"; 
+                              }, 
+                          });
+                          
+                      }
                   },
                   hideOnClick: true
                 }
@@ -356,6 +372,24 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 }
             );
         }
+    },
+
+    reportError: function(error){
+
+        // Turn off logging to avoid logging the log when it is sent
+        // to the backend...
+        Paperpile.isLogging=false;
+        Ext.Ajax.request({
+            url: Paperpile.Url('/ajax/misc/report_error'),
+            params: { error: error.msg,
+                      catalyst_log: Paperpile.serverLog,
+                    },
+            scope:this,
+            success: function(){
+                // Turn on logging again
+                Paperpile.isLogging=true;
+            }
+        });
     },
 
     startHeartbeat: function(){

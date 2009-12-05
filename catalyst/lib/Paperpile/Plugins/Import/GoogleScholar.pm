@@ -151,6 +151,8 @@ sub complete_details {
   my $full_pub = Paperpile::Library::Publication->new();
   $full_pub->import_string( $bibtex, 'BIBTEX' );
 
+  print STDERR $full_pub->title,"\nBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n";
+
   # there are cases where bibtex gives less information than we already have
   $full_pub->title( $pub->title ) if ( !$full_pub->title );
   $full_pub->authors( $pub->_authors_display ) if ( !$full_pub->authors );

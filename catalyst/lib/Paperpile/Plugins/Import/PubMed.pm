@@ -51,7 +51,7 @@ sub _EscapeString {
     # with plus signs
     my @tmp = split( /\s+/, $string );
     foreach my $i ( 0 .. $#tmp ) {
-	$tmp[$i] = uri_escape( $tmp[$i] );
+	$tmp[$i] = uri_escape_utf8( $tmp[$i] );
     }
     
     return join( "+", @tmp );
@@ -172,62 +172,208 @@ sub all {
 }
 
 
-# Simple and untested for now...
+# Match function to match publication-objects
+# against Pubmed. 
 
 sub match {
 
   ( my $self, my $pub ) = @_;
 
-  my $matchDOI   = 0;
-  my $matchTitle = 0;
+  my $query_doi = '';
+  my $query_title = '';
+  my $query_authors = '';
 
-  my $query = '';
+  # First we format the three query strings properly. Besides
+  # HTML escaping we remove words that contain non-alphnumeric
+  # characters. These words can cause sever problems.
+  # 1) DOI
+  $query_doi = _EscapeString($pub->doi . "[AID]") if ( $pub->doi );
 
-  if ( $pub->doi ) {
-    $query    = $pub->doi . "[AID]";
-    $matchDOI = 1;
-  } else {
-    if ( $pub->title ) {
-      $query      = $pub->title;
-      $matchTitle = 1;
-      if ( $pub->authors ) {
-        my $first = $pub->get_authors->[0]->last;
-        $query .= " AND $first [1au]";
+  # 2) Title
+  if ( $pub->title ) {
+      my @tmp = ( );
+      foreach my $word ( split(/\s+/, $pub->title ) ) {
+	  # words that contain non-alphnumeric and non-ascii 
+	  # characters are removed
+	  next if ( $word =~ m/[^\w\s-]/ );
+	  next if ( $word =~ m/[^[:ascii:]]/ );
+
+	  # words with less than 3 characters are removed
+	  next if (length($word) < 3 );
+
+	  # Pubmed stopwords are not searched and the query will
+	  # fail if we keep them
+	  # the list is taken from here: http://www.ncbi.nlm.nih.gov/
+	  # bookshelf/br.fcgi?book=helppubmed&part=pubmedhelp&
+	  # rendertype=table&id=pubmedhelp.T43
+	  # last line contains other words that might cause problems. They
+	  # may be in the title for PDF parsing errors.
+	  
+	  my @pubmed_stopwords = ("about", "again", "all", "almost", "also", 
+				  "although", "always", "among", "and", "another", 
+				  "any", "are", "because", "been", "before",
+				  "being", "between", "both", "but", "can", "could", 
+				  "did", "does", "done", "due", "during", "each", 
+				  "either", "enough", "especially", "etc", "for", 
+				  "found", "from", "further", "had", "has", "have",
+				  "having", "here", "how", "however", "into", "its", 
+				  "itself", "just", "made", "mainly", "make", "may", 
+				  "might", "most", "mostly", "must", "nearly", 
+				  "neither", "nor", "not", "obtained", "often", "our", 
+				  "overall", "perhaps", "pmid", "quite", "rather", 
+				  "really", "regarding", "seem", "seen", "several", 
+				  "should", "show", "showed", "shown", "shows",
+				  "significantly", "since", "some", "such", "than", 
+				  "that", "the", "their", "theirs", "them", "then", 
+				  "there", "therefore", "these", "they", "this", 
+				  "those", "through", "thus", "upon", "use", "used",
+				  "using", "various", "very", "was", "were", "what", 
+				  "when", "which", "while", "with", "within", 
+				  "without", "would",
+				  "review","article");
+	  my $flag = 0;
+	  foreach my $stop_word (@pubmed_stopwords) {
+	      if (lc($word) eq $stop_word) {
+		  $flag = 1;
+		  last;
+	      }
+	  }
+	  next if ($flag == 1);
+	  
+	  # Add Title-tag
+	  push @tmp, "$word\[Title]";
       }
-    }
+      $query_title = _EscapeString( join( " AND ", @tmp ) );
   }
+
+  # 3) Authors. We just use each author's last name
+  if ( $pub->authors ) {
+      my @tmp = ( );
+      foreach my $author ( @{ $pub->get_authors } ) {
+	  # words that contain non-alphnumeric and non-ascii 
+	  # characters are removed
+	  next if ( $author->last =~ m/[^\w\s-]/ );
+	  next if ( $author->last =~ m/[^[:ascii:]]/ );
+
+	  push @tmp, $author->last . "[au]";
+      }
+      $query_authors = _EscapeString(join(" AND ", @tmp));
+  }
+
+  # SEARCH STRATEGY:
+  # 1) Use DOI if available: This is the best strategy if a DOI is available,
+  #    but it might happen that there are parsing errors in the DOI.
+  # 2) Title+Authors: Most stringent, but parsing errors and strange characters
+  #    in the PDF can cause troubles.
+  # 3) Just Title: If everything till this point failed.
+
 
   my $browser   = Paperpile::Utils->get_browser;
-  my $response  = $browser->get( $esearch . $query );
-  my $resultXML = $response->content;
-  my $result    = XMLin($resultXML);
+  if ( $query_doi ne '' ) {
+      my $response  = $browser->get( $esearch . $query_doi );
+      my $resultXML = $response->content;
+      my $result    = XMLin($resultXML);
 
-  if ( $result->{Count} == 0 ) {
-    NetMatchError->throw( error => 'No match against PubMed.');
+      # If we get exactly one result then the DOI was really unique
+      # and in most cases we are done.
+      if ( $result->{Count} == 1 ) {
+	  $self->web_env( $result->{WebEnv} );
+	  $self->query_key( $result->{QueryKey} );
+      
+	  my $xml = $self->_pubFetch( 0, 1 );
+	  my $page = $self->_read_xml($xml);
+	  $self->_linkOut($page);
+
+	  if ( $page->[0]->doi eq $pub->{doi} ) {
+	      return $self->_merge_pub( $pub, $page->[0] );
+	  }
+      }
   }
 
-  $self->web_env( $result->{WebEnv} );
-  $self->query_key( $result->{QueryKey} );
-  $self->total_entries( $result->{Count} );
+  # If we are here then the DOI was not conducted or did not work.
+  # We try a search using the title/authors now.
+  if ( $query_title ne '' and $query_authors ne '') {
+      #print STDERR "$esearch$query_title+$query_authors\n";
+      # Pubmed is queried using title and authors
+      my $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+      my $resultXML = $response->content;
+      my $result    = XMLin($resultXML);
+      
+      # If some errors popup we adjust our query string and query again
+      if ( $result->{ErrorList}->{PhraseNotFound} ) {
+	  my @badtmp = ( );
+	  if ( $result->{ErrorList}->{PhraseNotFound} =~ m/^ARRAY/ ) {
+	      @badtmp = @{$result->{ErrorList}->{PhraseNotFound}};
+	  } else {
+	      push @badtmp, $result->{ErrorList}->{PhraseNotFound};
+	  }
+	  foreach my $badword ( @badtmp ) {
+	      $badword  = _EscapeString( $badword );
+	      $query_title =~ s/(\+AND\+)?$badword//;
+	      $query_authors =~ s/(\+AND\+)?$badword//;
+	  }
+	  # now query again
+	  $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+	  $resultXML = $response->content;
+	  $result    = XMLin($resultXML);
+      } 
 
-  my $xml = $self->_pubFetch( 0, 100 );
-  my $page = $self->_read_xml($xml);
-  $self->_linkOut($page);
-
-  if ($matchDOI) {
-    if ( $page->[0]->doi eq $pub->{doi} ) {
-      return $self->_merge_pub( $pub, $page->[0] );
-    }
+      # Let's check if the query returned any results and if
+      # the publication of interest is contained. The Top 5
+      # results are checked.
+      if ( $result->{Count} > 0 ) {
+	  $self->web_env( $result->{WebEnv} );
+	  $self->query_key( $result->{QueryKey} );
+ 	  my $xml = $self->_pubFetch( 0, 5 );
+	  my $page = $self->_read_xml($xml);
+	  $self->_linkOut($page);
+	  my $max = ( $result->{Count} > 5 ) ? 4 : $result->{Count}-1;
+	  # if there is only one result, we belive it and return
+	  # Note: Sometime we delete some words from the title (maybe
+	  # parsing errors, e.g. review, ...) and the two titles do not
+	  # match
+	  return $self->_merge_pub( $pub, $page->[0] ) if ( $max == 0 );
+	  foreach my $i ( 0 .. $max ) {
+	      print $page->[$i]->title,"\n";
+	      print $pub->title,"\n";
+	      if ( $self->_match_title( $page->[$i]->title, $pub->title ) ) {
+		  return $self->_merge_pub( $pub, $page->[$i] );
+	      }
+	  }
+      }
+      
   }
 
-  if ($matchTitle) {
-    if ( $self->_match_title( $page->[0]->title, $pub->title ) ) {
-      return $self->_merge_pub( $pub, $page->[0] );
-    }
+  # If we are here then Title+Auhtors failed, and we try to search
+  # only with the title.
+  if ( $query_title ne '' ) {
+      my $response  = $browser->get( $esearch . "$query_title" );
+      my $resultXML = $response->content;
+      my $result    = XMLin($resultXML);
+
+      # Let's check if the query returned any results and if
+      # the publication of interest is contained. The Top 5
+      # results are checked.
+      
+      if ( $result->{Count} > 0 ) {
+	  $self->web_env( $result->{WebEnv} );
+	  $self->query_key( $result->{QueryKey} );
+      
+	  my $xml = $self->_pubFetch( 0, 5 );
+	  my $page = $self->_read_xml($xml);
+	  $self->_linkOut($page);
+	  my $max = ( $result->{Count} > 5 ) ? 4 : $result->{Count}-1;
+	  foreach my $i ( 0 .. $max ) {
+	      if ( $self->_match_title( $page->[$i]->title, $pub->title ) ) {
+		  return $self->_merge_pub( $pub, $page->[$i] );
+	      }
+	  }	  
+      }
   }
 
+  # If we are here then our search against Pubmed was not successful.
   NetMatchError->throw( error => 'No match against PubMed.');
-
+  #return $pub; # comment in for command line testing
 }
 
 

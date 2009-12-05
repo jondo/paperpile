@@ -35,6 +35,7 @@ js:
   - "js/screens/settings.js"
   - "js/screens/clouds.js"
   - "js/widgets/label-widget.js"
+  - "js/screens/log.js"
   - "js/pub/abstract.js" 
   - "js/pub/notes.js" 
   - "js/pub/edit.js"

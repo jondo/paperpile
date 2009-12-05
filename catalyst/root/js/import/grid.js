@@ -165,6 +165,59 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  ]}
 	});
 
+        var tbar=[
+	  this.actions['SEARCH_TB_FILL'],
+	  this.actions['SAVE_MENU']
+/*	  {itemId:this.actions['SAVE_MENU'].itemId,
+	   iconCls:'pp-icon-save',
+	   menu:{items:[
+            { text:'Save as Active View',
+	      handler:this.actions['SAVE_AS_ACTIVE'].handler
+	    },
+	    { text:'Export contents to file',
+	      handler:this.actions['EXPORT'].handler
+	    }
+	  ]}
+	  }
+*/
+        ];
+
+        var renderPub=function(value, p, record){
+            // Can possibly be speeded up with compiling the template.
+            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
+            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
+
+	    // Shrink very long author lists.
+	    record.data._long_authorlist = 0;
+	    var ad = record.data._authors_display;
+            if (ad){
+	            if (record.data._shrink_authors == null)
+	                record.data._shrink_authors = 1;
+                
+                if (ad.length > this.author_shrink_threshold) {
+	                record.data._long_authorlist = 1;
+	                record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
+	                record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
+	            } 
+            }
+            return this.pubTemplate.apply(record.data);
+        };
+
+        var renderIcons=function(value, p, record){
+            // Can possibly be speeded up with compiling the template.
+            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
+            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
+            record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
+            if (record.data.last_read){
+                record.data._last_readPretty = 'Last read: '+ Paperpile.utils.prettyDate(record.data.last_read);
+            } else {
+                record.data._last_readPretty='Never read';
+            }
+
+            record.data.pdf_path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
+            return this.iconTemplate.apply(record.data);
+        };
+
         Ext.apply(this, {
             ddGroup  : 'gridDD',
             enableDragDrop   : true,
@@ -1038,11 +1091,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             method: 'GET',
             timeout: 10000000,
             success: function(response){
+                Paperpile.main.tabs.showQueueTab();
             }
         });
 
-        Paperpile.main.tabs.showQueueTab();
-
+        
     }, 
 
 

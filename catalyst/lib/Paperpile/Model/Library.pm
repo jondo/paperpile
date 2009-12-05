@@ -10,6 +10,7 @@ use FreezeThaw qw/freeze thaw/;
 use File::Path;
 use File::Spec;
 use File::Copy;
+use File::stat;
 use Moose;
 use Paperpile::Model::App;
 use Paperpile::Utils;
@@ -941,12 +942,15 @@ sub standard_search {
 
   my $sth = $self->dbh->prepare( "SELECT rowid as _rowid, * FROM Publications WHERE $query;" );
 
+  print STDERR "SELECT rowid as _rowid, * FROM Publications WHERE $query\n";
+
   $sth->execute;
 
   my @page = ();
 
+
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $pub = Paperpile::Library::Publication->new($self->light_objects);
+    my $pub = Paperpile::Library::Publication->new({_light=>$self->light_objects});
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
@@ -956,6 +960,7 @@ sub standard_search {
     $pub->_imported(1);
     push @page, $pub;
   }
+
   return [@page];
 }
 
@@ -1162,6 +1167,7 @@ sub attach_file {
     $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
 
     $self->update_field('Publications', $rowid, 'pdf', $relative_dest);
+    $self->update_field('Publications', $rowid, 'pdf_size', stat($file)->size);
     $self->update_field('Publications', $rowid, 'times_read', 0);
     $self->update_field('Publications', $rowid, 'last_read', '');
 

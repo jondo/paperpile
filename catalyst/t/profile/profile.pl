@@ -12,22 +12,27 @@ use Bibutils;
 
 use Paperpile::Model::Library;
 
-`cp ~/.paperpile/paperpile.ppl ./test.db`;
+#`cp ~/.paperpile/paperpile.ppl ./test.db`;
 
-my $model = Paperpile::Model::Library->new();
+`cp ~/.paperpile/settings.db ./test.db`;
+
+my $model = Paperpile::Model::User->new();
 $model->set_dsn("dbi:SQLite:test.db");
 
-$model->light_objects(0);
+my $dbh = $model->dbh;
 
-
-#`cp ../../db/library.db  ./test.db`;
-
-
-foreach my $i (1..500){
-
-  my $result = $model->fulltext_search('Hofacker IL',  0, 25);
-
+for my $x (0..100){
+  $dbh->do("UPDATE Settings SET value='asdfasdf' WHERE key='proxy' ");
 }
+
+
+#my $model = Paperpile::Model::Library->new();
+#$model->set_dsn("dbi:SQLite:test.db");
+#$model->light_objects(0);
+##`cp ../../db/library.db  ./test.db`;
+#foreach my $i (1..500){
+#  my $result = $model->fulltext_search('Hofacker IL',  0, 25);
+#}
 
 
 

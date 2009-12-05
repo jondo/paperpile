@@ -1,87 +1,41 @@
-#!/usr/bin/perl -w
+### Run with ./perl.pl wrapper!
 
 use strict;
-use Data::Dumper;
-use File::Path;
-use File::Find;
-use File::Spec::Functions qw(catfile);
-use File::Copy::Recursive qw(fcopy dircopy);
-use 5.010;
+
+use FindBin;
+use lib "$FindBin::Bin/../catalyst/lib";
+
+use Paperpile::Build;
 
 if ( $#ARGV != 0 ) {
-  print 'Usage: build.pl [linux32|linux64]', "\n";
+  print 'Usage: ./perl.pl build.pl [command]', "\n";
+  print 'Commands: dist, initdb, minify, dump_includes', "\n";
   exit(1);
 }
 
-if ( $ARGV[0] ne 'linux32' and $ARGV[0] ne 'linux64' ) {
-  print 'Usage: build.pl [linux32|linux64]', "\n";
-  exit(1);
-}
+my $command = $ARGV[0];
 
-my $platform = $ARGV[0];
-my $cat_dir  = '../catalyst';
-my $ti_dir   = "../titanium/$platform";
-
-my $target_dir = '../dist/data';
-
-`rm -rf $target_dir/$platform`;
-
-my @ignore = (
-  qr([~#]),                qr{/tmp/},
-  qr{/t/},                 qr{\.gitignore},
-  qr{base/CORE/},          qr{base/pod/},
-  qr{(base|cpan)/CPAN},    qr{(base|cpan)/Test},
-  qr{base/unicore/.*txt$}, qr{runtime/(template|webinspector|installer)},
-  qr{ext3/examples}, qr{ext3/src},
+my $b = Paperpile::Build->new( {
+    cat_dir  => '../catalyst',
+    ti_dir   => "../titanium",
+    dist_dir => '../dist/data',
+    yui_jar => '/home/wash/bin/yuicompressor-2.4.2.jar',
+  }
 );
 
-if ( $platform eq 'linux64' ) {
-  push @ignore, qr{/(perl5|bin)/(linux32|osx|win32)};
+if ( $command eq 'initdb' ) {
+  $b->initdb;
 }
 
-if ( $platform eq 'linux32' ) {
-  push @ignore, qr{/(perl5|bin)/(linux64|osx|win32)};
+if ( $command eq 'dist' ) {
+  $b->make_dist('linux64');
+  $b->make_dist('linux32');
 }
 
-mkpath( catfile("$target_dir/$platform/catalyst") );
-
-my $list = get_list($cat_dir);
-copy_list( $list, $cat_dir, "$platform/catalyst" );
-
-$list = get_list($ti_dir);
-copy_list( $list, $ti_dir, $platform );
-
-symlink "catalyst/root", "$target_dir/$platform/Resources";
-
-sub get_list {
-
-  my $source_dir = shift;
-
-  my @list = ();
-
-  find( {
-      no_chdir => 1,
-      wanted   => sub {
-        my $name = $File::Find::name;
-        return if -d $name;
-        foreach my $r (@ignore) {
-          return if $name =~ $r;
-        }
-        push @list, File::Spec->abs2rel( $name, $source_dir );
-        }
-    },
-    $source_dir
-  );
-
-  return \@list;
-
+if ( $command eq 'minify' ) {
+  $b->minify;
 }
 
-sub copy_list {
-  my ( $list, $source_dir, $prefix ) = @_;
-  foreach my $file (@$list) {
-    fcopy( catfile( $source_dir, $file ), catfile( $target_dir, $prefix, $file ) )
-      or die( $!, $file );
-  }
+if ( $command eq 'dump_includes' ) {
+  $b->dump_includes;
 }
-

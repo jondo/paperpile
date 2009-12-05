@@ -1,13 +1,13 @@
 // Stage 0 
 //
-// Ping the server. If we get a response, we directly go on to stage 1
-// If not, we start the server and recursively call this function
-// again until we get a response or give up after some time.
+// Check if server is already running, if not start the catalyst
+// server. Once we have verified that the server is running we
+// continue with stage1.
+
+Paperpile.serverLog = '';
+Paperpile.isLogging = true; 
 
 Paperpile.stage0 = function(){
-
-    
-    
     Ext.Ajax.request({
         url: Paperpile.Url('/ajax/app/heartbeat'),
 
@@ -20,31 +20,79 @@ Paperpile.stage0 = function(){
                 
         failure: function(response){
 
-            console.log('Ping attempt '+ Paperpile.pingAttempts);
+            if (IS_TITANIUM){
 
-            if (IS_TITANIUM && Paperpile.pingAttempts == 0){
-                var path = Titanium.App.path;
-                path=path.replace(/_paperpile\.bin$/,'');
-                var process = Titanium.Process.launch('bash', [path+'start_server.sh',path]);
-
-                //var server = Titanium.Process.createProcess([path+'/catalyst/script/paperpile_server.pl', '-fork']); 
-
+                // Determine platform we are running on
+                var osname = Titanium.Platform.name;
+                var ostype = Titanium.Platform.ostype;
+                var platform = '';
                 
+                if (osname === 'Linux'){
+                    if (ostype === '64bit'){
+                        platform = 'linux64';
+                    } else {
+                        platform = 'linux32';
+                    }
+                }
 
-            }
+                var path = Titanium.App.getHome()+'/catalyst';
 
-            if (Paperpile.pingAttempts < 50 ){
-                Paperpile.pingAttempts++;
-                (function(){Paperpile.stage0()}).defer(200);
-            } else {
-                Ext.Msg.show({
-                    title:'Error',
-                    msg: 'Could not start Paperpile server.',
-                    buttons: Ext.Msg.OK,
-                    icon: Ext.MessageBox.ERROR,
+                // Set up process
+                Paperpile.server = Titanium.Process.createProcess({
+                    args:[path+"/perl5/"+platform+"/bin/perl", path+'/script/paperpile_server.pl', '-fork'],
                 });
+
+                // Make sure there is no PERL5LIB variable set in the environment
+                Paperpile.server.setEnvironment("PERL5LIB","");
+
+                // Handler for failing start of the server
+                Paperpile.server.setOnExit(function(line){
+                    Ext.Msg.show({
+                        title:'Error',
+                        msg: 'Could not start Paperpile server.',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.ERROR,
+                    });
+                });
+
+                // Handler to process the STDERR output of the server
+                Paperpile.server.setOnReadLine(function(line){
+
+                    if (Paperpile.isLogging){
+                        Paperpile.serverLog=Paperpile.serverLog+line+"\n";
+                    
+                        var panel = Ext.getCmp('log-panel');
+
+                        if (panel){
+                            panel.addLine(line+"\n");
+                        }
+
+                        if (line.match(/Paperpile powered by Catalyst/)){
+                            Titanium.API.notice("Catalyst successfully started");
+                            // We are successful so we remove the failure
+                            // handler to avoid to call it on exit of the
+                            // application (although it does not seem to
+                            // be called anyway)
+                            Paperpile.server.setOnExit(function(){});
+                            Paperpile.stage1();
+                        }
+                    }
+                });
+
+                // Kill the server when the application exits
+                Titanium.API.addEventListener(
+                    Titanium.APP_EXIT, 
+                    function(){
+                        Titanium.API.notice("Killing Catalyst");
+                        Paperpile.server.kill();
+                    });
+
+                // Finally start the actual process
+                Titanium.API.notice("Starting Catalyst");
+                Paperpile.server.launch();
+              
             }
-        },
+        }
     });
 }
 
@@ -59,6 +107,7 @@ Paperpile.stage1 = function() {
     Ext.Ajax.request({
         url: Paperpile.Url('/ajax/app/init_session'),
         success: function(response){
+
             var json = Ext.util.JSON.decode(response.responseText);
             
             if (json.error){
@@ -87,7 +136,7 @@ Paperpile.stage1 = function() {
 
         failure: function(response){
             var error;            
-            
+
             if (response.responseText){
                 error= Ext.util.JSON.decode(response.responseText).error;
                 if (error){
@@ -120,6 +169,11 @@ Paperpile.stage2=function(){
     Ext.QuickTips.init();
     Paperpile.main=new Paperpile.Viewport;
 
+    Paperpile.main.on('afterrender',
+                      function(){
+                          alert("layout finished");
+                      },this, {single:true});
+
     Paperpile.main.loadSettings(
         function(){
             Paperpile.main.show();
@@ -146,16 +200,12 @@ Paperpile.stage2=function(){
         });
     }
     
-    Paperpile.main.startHeartbeat();
 }
 
 
 Ext.onReady(function() {
 
-    Paperpile.pingAttempts=0;
     Paperpile.stage0();
        
 });
-
-
 

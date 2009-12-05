@@ -2,7 +2,7 @@
 <tr>
 <td>
   <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
-    <h2  class="pp-dashboard-statistics" >Statistics</h2>
+    <h2 class="pp-dashboard-statistics" >Statistics</h2>
 
     <table>
       <tr>
@@ -36,6 +36,7 @@
       <li><a href="#" class="pp-textlink  pp-bullet" action="settings-general">General settings</a></li>
       <li><a href="#" class="pp-textlink  pp-bullet" action="settings-patterns">Paths and patterns</a></li>
       <li><a href="#" class="pp-textlink  pp-bullet" action="duplicates">Find duplicates</a></li>
+      <li><a href="#" class="pp-textlink  pp-bullet" action="catalyst">Catalyst console (debugging)</a></li>
     </ul>
   </div>
 </td>
@@ -60,7 +61,7 @@
   <td>
     <div class="pp-box pp-box-style2 pp-dashboard-box" style="height:220;">
       <h2>About Paperpile</h2>
-      <p>You are running Paperpile <% $c->config->{app_settings}->{version} %> on <% $c->config->{app_settings}->{platform} %> </p>
+      <p>You are running Paperpile <% $c->config->{app_settings}->{version_string} %> on <% $c->config->{app_settings}->{platform} %> </p>
       <ul>
         <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.main.tabs.newScreenTab({url:'/screens/license', title:'License'});">License</a></li>
         <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.main.tabs.newScreenTab({url:'/screens/credits', title:'Acknowledgements'});">Acknowledgements</a></li>

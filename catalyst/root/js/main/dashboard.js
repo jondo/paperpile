@@ -16,7 +16,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
         Paperpile.PatternSettings.superclass.initComponent.call(this);
 
     },
-
+    
     setupFields: function(){
 
         var el = Ext.get('dashboard-last-imported');
@@ -38,6 +38,9 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
                 break;
             case 'duplicates':                 
                 Paperpile.main.tabs.newPluginTab('Duplicates', {}, "Duplicates", "pp-icon-folder", "duplicates")
+                break;
+            case 'catalyst':                 
+                Paperpile.main.tabs.newScreenTab('CatalystLog','catalyst-log');
                 break;
             }
         }, this, {delegate:'a'});

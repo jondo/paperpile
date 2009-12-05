@@ -10,12 +10,10 @@ use File::Spec;
 use File::Path;
 use File::Copy;
 use Paperpile::Exceptions;
+use Paperpile::Queue;
 use 5.010;
 use POSIX;
 
-sub kill_server : Local {
-  exit(0);
-}
 
 sub heartbeat : Local {
 
@@ -23,20 +21,6 @@ sub heartbeat : Local {
 
   $c->stash->{version} = $c->config->{app_settings}->{version};
   $c->stash->{status} = 'RUNNING';
-
-  #my $queue =  Paperpile::Utils->retrieve('queue');
-  #$c->stash->{queue} = {%$queue};
-  #my $changed = 0;
-
-  # If job is done remove from queue ensuring that status 'DONE' is
-  # only sent once to frontend
-  #foreach my $id (keys %$queue){
-  #  if ($queue->{$id}->{status} eq 'DONE'){
-  #    delete $queue->{$id};
-  #    $changed=1;
-  #  }
-  #}
-  #Paperpile::Utils->store('queue', $queue) if $changed;
 
 }
 
@@ -64,7 +48,7 @@ sub init_session : Local {
 
     # initialize databases
     copy( $c->path_to('db/user.db')->stringify, $c->config->{'user_settings_db'} )
-      or FileWriteError->throw("Could not start application. Error initializing database.");
+      or FileWriteError->throw("Could not start application (Error initializing settings database)");
 
     # Don't overwrite an existing library database in the case the
     # user has just deleted the user settings database
@@ -77,7 +61,10 @@ sub init_session : Local {
     $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
     $c->model('Library')->set_settings( $c->config->{'library_settings'} );
 
-  } else {
+  }
+
+  # Settings file exists
+  else {
 
     my $library_db = $c->model('User')->get_setting('library_db');
 
@@ -101,13 +88,19 @@ sub init_session : Local {
 
   my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
 
-  mkpath($tmp_dir);
-  mkpath(File::Spec->catfile($tmp_dir, 'cache'));
+  # Crate temporary directories if they do not exist already
+  mkpath(File::Spec->catfile($tmp_dir, 'download'));
+  mkpath(File::Spec->catfile($tmp_dir, 'queue'));
 
-  #Paperpile::Utils->store('queue',{});
+  if (not -e $c->config->{'queue_db'}){
+    copy( $c->path_to('db/queue.db')->stringify, $c->config->{'queue_db'} )
+      or FileWriteError->throw("Could not start application (Error initializing queue database,  $!)");
+  }
 
+  #clear queue for now at startup
+  my $q = Paperpile::Queue->new();
+  $q->clear;
 
 }
-
 
 1;

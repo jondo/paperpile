@@ -410,6 +410,21 @@ a:hover.pp-textlink {
     color: #D8000C;
 }
 
+.pp-queue-widget {
+    margin: 0 10px;
+    padding: 0 0 0 15px;
+    background: transparent url('/images/icons/queue.gif') no-repeat 2px 0;
+    background-color:#FFF1A8;
+    color: #0015FE;
+    text-decoration:none;
+}
+
+a.pp-queue-widget, a:visited.pp-queue-widget {
+
+ 
+}
+
+
 
 /*** Text links with icons ****/
 
@@ -722,6 +737,11 @@ a:hover.pp-textlink {
 .pp-icon-statistics{
     background-image: url('/images/icons/chart_bar.png')!important;
 }
+
+.pp-icon-console{
+    background-image: url('/images/icons/console.png')!important;
+}
+
 
 .pp-icon-feed{
     background: transparent url('/images/icons/feed.png') no-repeat !important;
@@ -1252,7 +1272,6 @@ div:hover.pp-tag-style-sample {
 }
 
 
-
 /*** PDF Extract ***/
 
 .pp-pdfextract-file{
@@ -1260,6 +1279,13 @@ div:hover.pp-tag-style-sample {
     background: transparent url('/images/icons/page_white_acrobat.png') no-repeat;
 }
 
+
+/*** Catalyst log screen ***/
+
+.pp-catalyst-log{
+    background: #000000;
+    color:#5FB404;
+}
 
 
 

@@ -74,21 +74,51 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                        sortable: true,
                        renderer: function(value, p, record){
 
-                           var d = record.data;
-                           d.task = 'Get PDF for';
+                           var tpl;
 
-                           var tpl = new Ext.XTemplate(
-                               '<div class="pp-grid-data">',
-                               '<div><span class="pp-grid-task">{task}</span></div>',
-                               '<div>',
-                               '<span class="pp-grid-title">{title}</span>',
-                               '</div>',
-                               '<tpl if="authors">',
-                               '<p class="pp-grid-authors">{authors}</p>',
-                               '</tpl>',
-                               '<tpl if="citation">',
-                               '<p class="pp-grid-citation">{citation}</p>',
-                               '</tpl></div>');
+                           var d = record.data;
+
+                           if (d.type === 'PDF_IMPORT'){
+                               d.task = 'Import PDF';
+                               tpl = new Ext.XTemplate(
+                                   '<div class="pp-grid-data">',
+                                   '<div><span class="pp-grid-task">{task}</span></div>',
+                                   '<div>',
+                                   '<span class="pp-grid-title">{pdf}</span>',
+                                   '</div>',
+                                   '<tpl if="title">',
+                                   '<p class="pp-grid-authors">Title: {title}</p>',
+                                   '</tpl>',
+                                   '<tpl if="doi">',
+                                   '<p class="pp-grid-citation">DOI: {doi}</p>',
+                                   '</tpl>',
+                                   '<tpl if="authors">',
+                                   '<p class="pp-grid-authors">Authors: {authors}</p>',
+                                   '</tpl>',
+                                   '<tpl if="citation">',
+                                   '<p class="pp-grid-citation">{citation}</p>',
+                                   '</tpl></div>'
+                               );
+                           } 
+
+                           if (d.type === 'PDF_SEARCH'){
+                               d.task = 'Get PDF for';
+
+                               tpl = new Ext.XTemplate(
+                                   '<div class="pp-grid-data">',
+                                   '<div><span class="pp-grid-task">{task}</span></div>',
+                                   '<div>',
+                                   '<span class="pp-grid-title">{title}</span>',
+                                   '</div>',
+                                   '<tpl if="authors">',
+                                   '<p class="pp-grid-authors">{authors}</p>',
+                                   '</tpl>',
+                                   '<tpl if="citation">',
+                                   '<p class="pp-grid-citation">{citation}</p>',
+                                   '</tpl></div>');
+                           }
+
+
 
                            return tpl.apply(d);
                        }
@@ -104,54 +134,65 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                            var tpl;
 
                            if (d.status === 'RUNNING'){
-                               tpl='<div class="pp-icon-queue">{progress}</div>';
-                           } 
+                               tpl='<div id="job_{id}">{progress}</div><a class="pp-textlink" href="#" id=cancel_{id} onClick="Ext.getCmp(\'{thisId}\').cancelJob(\'{id}\')">Cancel</a>';
+                           }
 
                            if (d.status === 'PENDING'){
-                               tpl='<div class="">Pending</div>';
-                               if (d.queue_status === 'PAUSED'){
-                                   tpl='<div class="">PAUSED</div>';
-                               }
+                               tpl='<div id="job_{id}" class="">Pending</div>';
                            }
-
+                           
+                           //if (d.queue_status === 'PAUSED'){
+                           //        tpl='<div class="">PAUSED</div>';
+                           //    }
+                           // }
 
                            if (d.status === 'DONE'){
-
                                if  (d.error){
-                                   tpl='<div ext:qtip="{error}" class="pp-icon-cross pp-grid-error">Failed</div>';
+                                   tpl='<div id="job_{id}" ext:qtip="{error}" class="pp-icon-cross pp-grid-error">Failed</div>';
                                } else {
-                                   tpl='<div class="pp-icon-tick pp-grid-ok">Ok</div>';
+                                   tpl='<div id="job_{id}" ext:qtip="{progress}" class="pp-icon-tick pp-grid-ok">Ok</div>';
                                }
-
                            }
+
+                           d.thisId=this.id;
 
                            var t = new Ext.XTemplate(tpl); 
                            return t.apply( d );
-                       }
+                       },
+                       scope:this
                      },
                     ],
         });
         
         Paperpile.QueueGrid.superclass.initComponent.apply(this, arguments);
-
-        this.pollingTask =  {
+        
+        this.reloadTask = {
             run: function(){
                 this.getView().holdPosition=true;
                 this.store.reload();
             },
-            scope: this,
-            interval: 10000
-        },
+            interval: 2000,
+            scope:this
+        }
 
+        this.pollingTask = {
+            run: function(){
+                this.updateJobs();
+            },
+            interval: 500,
+            scope:this
+        }
+        
         this.on('beforedestroy', 
                 function(){
+                    Ext.TaskMgr.stop(this.reloadTask);
                     Ext.TaskMgr.stop(this.pollingTask);
                     Ext.Ajax.request(
                         { url: Paperpile.Url('/ajax/queue/clear'),
                           params: {},
                           method: 'GET',
                           success: function(response){
-                          
+                              
                           },
                           failure: Paperpile.main.onError,
                           scope:this,
@@ -162,8 +203,10 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             params: { foo: 'foo', start:0 },
             callback: function(){
                 var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
+
+                Ext.TaskMgr.start(this.reloadTask);
                 Ext.TaskMgr.start(this.pollingTask);
-                
+
                 this.store.on('load',
                               function(){
                                   var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
@@ -177,8 +220,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                                           var currPage = this.getCurrPage();
                                           var maxPage = this.getTotalPage();
 
-                                          console.log(currPage, maxPage, this.store.getTotalCount(), this.pager.pageSize);
-                                      
+                                     
                                           if (currPage < maxPage){
                                               this.pager.changePage(currPage+1);
                                           }
@@ -209,39 +251,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
     afterRender: function(){
 
         // This is undocumented feature in Ext 2 and was renamed to 'refreshing' (I guess) in Ext JS 3
-        this.pager.loading.hide(); 
-
-        
-        this.pager.addButton({ text: 'Goto active task',
-                               handler: function(){
-                                   Ext.Ajax.request({
-                                       url: Paperpile.Url('/ajax/queue/get_running'),
-                                       params: {    
-                                           limit: this.pager.pageSize
-                                       },
-                                       method: 'GET',
-                                       success: function(response){
-                                           var json = Ext.util.JSON.decode(response.responseText);
-                                           console.log(json.page, json.index);
-
-                                           if (json.page != -1){
-
-                                               this.store.on('load',
-                                                             function(){
-                                                                 this.getView().focusRow(json.index);
-                                                             }, this, {single: true});
-                                               
-                                               this.pager.changePage(json.page);
-                                               
-                                           }
-
-                                       },
-                                       failure: Paperpile.main.onError,
-                                       scope:this
-                                   });
-                               }, 
-                               scope: this
-                             });
+        //this.pager.loading.hide(); 
 
         Paperpile.QueueGrid.superclass.afterRender.apply(this, arguments);
 
@@ -297,6 +307,76 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             return false;
         } else {
             return true;
+        }
+    },
+
+
+    cancelJob: function(id){
+
+        Ext.Ajax.request(
+            { url: Paperpile.Url('/ajax/queue/cancel_jobs'),
+              params: {ids: id},
+              method: 'GET',
+              success: function(response){
+              },
+              failure: Paperpile.main.onError,
+              scope:this,
+            });
+    },
+
+    updateJobs: function(){
+        var jobs=[];
+
+        this.store.each(function(record){
+            if (record.get('status') === 'RUNNING'){
+                jobs.push(record.id);
+            }
+        }, this);
+        
+        if (jobs.length>0){
+            Ext.Ajax.request(
+                { url: Paperpile.Url('/ajax/queue/jobs'),
+                  params: {ids: jobs},
+                  method: 'GET',
+                  success: function(response){
+                      var data = Ext.util.JSON.decode(response.responseText).data;
+
+                      for (var id in data){
+
+                          var msg = data[id].info.msg;
+
+                          if (data[id].info.size && data[id].info.downloaded){
+                              msg = msg + "("+Ext.util.Format.fileSize(data[id].info.downloaded)+"/"+Ext.util.Format.fileSize(data[id].info.size)+")";
+                          }
+
+                          Ext.DomHelper.overwrite('job_'+id,msg);
+                          var record=this.store.getAt(this.store.find('id',id));
+                          if (record){
+                              record.set('status',data[id].status);
+                          }
+
+                          var cb =  data[id].info.callback;
+       
+                          if (data[id].status=='DONE' && cb){
+                              this.handleCallback(cb);
+                          }
+                      }
+                  },
+                  failure: Paperpile.main.onError,
+                  scope:this,
+                });
+        }
+    },
+
+
+    // We need to think how to handle callbacks, in particular how to
+    // avoid calling the same function several times in a row, how to
+    // pass the function (either directly [security issues...] or via a
+    // keyword that is resolved here)
+
+    handleCallback: function(cb){
+        if (cb.fn === 'CONSOLE'){
+            console.log(cb.args);
         }
     }
 
