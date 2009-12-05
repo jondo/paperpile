@@ -34,18 +34,31 @@ sub BUILD {
     $self->plugin_name('GoogleScholar');
 }
 
+sub _EscapeString {
+    my $string = $_[0];
+    
+    # remove leading spaces
+    $string =~ s/^\s+//;
+    # remove spaces at the end
+    $string =~ s/\s+$//;
+
+    # escape each single word and finally join
+    # with plus signs
+    my @tmp = split( /\s+/, $string );
+    foreach my $i ( 0 .. $#tmp ) {
+	$tmp[$i] = uri_escape_utf8( $tmp[$i] );
+    }
+    
+    return join( "+", @tmp );
+}
+
 # Format the query sent to Google Scholar. This means escaping 
 # things like non-alphanumeric characters and joining words with '+'.
 
 sub FormatQueryString {
     my $query = $_[0];
-    
-    my @tmp = split(/ /, $query);
-    foreach my $i (0 .. $#tmp) {
-	$tmp[$i] = uri_escape($tmp[$i]);
-    }
-    
-    return join("+", @tmp);
+
+    return _EscapeString( $query );
 }
 
 sub connect {
@@ -139,10 +152,53 @@ sub complete_details {
 
   my $browser = Paperpile::Utils->get_browser;
   $browser->cookie_jar( $self->_session_cookie );
+  my $bibtex;
 
-  # Get the BibTeX
-  my $bibtex_tmp = $browser->get( $pub->_details_link );
-  my $bibtex = $bibtex_tmp->content;
+  # For many articles Google provides links to several versions of
+  # the same article. There are differences regarding the parsing
+  # quality of the BibTeX. We search all versions if there are any
+  # high quality links.
+  if ( $pub->_all_versions ne '' ) {
+      my @order_publishers = ( 'Elsevier','ingentaconnect.com',
+			       'liebertonline.com', 'nature.com',
+			       'sciencemag.org', 'Springer',
+			       'Nature Publishing Group', 'Oxford Univ Press',
+			       'cat.inist.fr','pubmedcentral.nih.gov',
+			       'adsabs.harvard.edu','ncbi.nlm.nih.gov',
+			       'arxiv.org');
+      my @order_flags = (  );
+      for ( 0 .. $#order_publishers ) { push @order_flags, -1 }
+
+      my $response_all_versions = $browser->get( $pub->_all_versions );
+      my $content_all_versions = $response_all_versions->content;
+
+      my $page = $self->_parse_googlescholar_page( $content_all_versions );
+      for my $i ( 0 .. $#{ $page } ) {
+	  foreach my $j ( 0 .. $#order_publishers ) {
+	      if ( $page->[$i]->_www_publisher eq $order_publishers[$j] ) {
+		  $order_flags[$j] = $i if ( $order_flags[$j] == -1 );
+	      }
+	  }
+      }
+      
+      # let's define the best one
+      my $best_one = 0;
+      foreach my $j ( 0 .. $#order_flags ) {
+	  if ( $order_flags[$j] > -1 ) {
+	      $best_one = $order_flags[$j];
+	      last;
+	  }
+      }
+      #print "BEST_ONE:$best_one\n";
+
+      # Get the BibTeX
+      my $bibtex_tmp = $browser->get( $page->[$best_one]->_details_link );
+      $bibtex = $bibtex_tmp->content;
+  } else {
+      # Get the BibTeX
+      my $bibtex_tmp = $browser->get( $pub->_details_link );
+      $bibtex = $bibtex_tmp->content;
+  }
 
   # Google Bug: everything is twice escaped in bibtex
   $bibtex =~ s/\\\\/\\/g;
@@ -151,14 +207,15 @@ sub complete_details {
   my $full_pub = Paperpile::Library::Publication->new();
   $full_pub->import_string( $bibtex, 'BIBTEX' );
 
-  print STDERR $full_pub->title,"\nBBBBBBBBBBBBBBBBBBBBBBBBBBBB\n";
-
   # there are cases where bibtex gives less information than we already have
   $full_pub->title( $pub->title ) if ( !$full_pub->title );
   $full_pub->authors( $pub->_authors_display ) if ( !$full_pub->authors );
   if (!$full_pub->journal and !$full_pub->year ) {
       $full_pub->_citation_display( $pub->_citation_display );
   }
+
+  # Google uses number instead of issue
+  $full_pub->issue( $full_pub->number ) if ( !$full_pub->issue and $full_pub->number );
 
   # Add the linkout from the old object because it is not in the BibTeX
   #and thus not in the new object
@@ -186,6 +243,49 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
+  my $query_doi = '';
+  my $query_title = '';
+  my $query_authors = '';
+
+  # First we format the three query strings properly. Besides
+  # HTML escaping we remove words that contain non-alphnumeric
+  # characters. These words can cause severe problems.
+  # 1) DOI
+  $query_doi = _EscapeString( $pub->doi ) if ( $pub->doi );
+
+  # 2) Title
+  if ( $pub->title ) {
+      my @tmp = ( );
+      foreach my $word ( split(/\s+/, $pub->title ) ) {
+	  # words that contain non-alphnumeric and non-ascii 
+	  # characters are removed
+	  next if ( $word =~ m/[^\w\s-]/ );
+	  next if ( $word =~ m/[^[:ascii:]]/ );
+
+	  # words with less than 3 characters are removed
+	  next if (length($word) < 3 );
+	  
+	  # Add Title-tag
+	  push @tmp, $word;
+      }
+      $query_title = _EscapeString( join( " ", @tmp ) );
+      $query_title = 'allintitle:'.$query_title;
+  }
+
+  # 3) Authors. We just use each author's last name
+  if ( $pub->authors ) {
+      my @tmp = ( );
+      foreach my $author ( @{ $pub->get_authors } ) {
+	  # words that contain non-alphnumeric and non-ascii 
+	  # characters are removed
+	  next if ( $author->last =~ m/[^\w\s-]/ );
+	  next if ( $author->last =~ m/[^[:ascii:]]/ );
+
+	  push @tmp, 'author:'.$author->last;
+      }
+      $query_authors = _EscapeString(join(" ", @tmp));
+  }
+
   # First set preferences (necessary to show BibTeX export links)
   # We simulate submitting the form which sets a cookie. We save
   # the cookie for this session.
@@ -202,53 +302,97 @@ sub match {
 
   # Once the browser is properly set
   # We first try the DOI if there is one
-  if ( $pub->doi ) {
+  if ( $query_doi ne '' ) {
 
-      # format the doi to be used as query and send it to GoogleScholar
-      my $query_string = FormatQueryString($pub->doi);
-      my $query = $searchUrl . $query_string;
-      my $response = $browser->get($query);
+      my $query = $searchUrl . $query_doi;
+      my $response = $browser->get( $query );
       my $content = $response->content;
       
       # parse the page and then see if a publication matches
-      my $page = $self->_parse_googlescholar_page($content);
-      my $matchedpub = $self->_find_best_hit( $page, $pub );
+      if ( $pub->title() ) {
+	  my $page = $self->_parse_googlescholar_page( $content );
+	  my $matchedpub = $self->_find_best_hit( $page, $pub );
+	  
+	  if ( $matchedpub ) {
+	      #print STDERR "Found a match using DOI as query.\n";
+	      return $matchedpub;
+	  }
+      } else {
+	  # we do not have a title and authors; in most cases google
+	  # returns more than one hit when searching with a doi
+	  # we have nothing to compare with and have to search with  
+	  # another strategy
 
-      if ( $matchedpub ) {
-	  print STDERR "Found a match using DOI as query.\n";
-	  return $matchedpub;
+	  # let's take the first Google hit, which is usually the most
+	  # promising one and let's see if we can find the title in the
+	  # HTML page that we get when we resolve the doi
+	  my $page = $self->_parse_googlescholar_page( $content );
+	  if ( $page->[0] ) {
+	      my $fullpub = $self->complete_details( $page->[0] );
+	      
+	      # We resolve the doi using dx.doi.org
+	      my $doi_response = $browser->get( 'http://dx.doi.org/'.$pub->doi );
+	      ( my $doi_content = $doi_response->content ) =~ s/\s+/ /g;
+	      $doi_content =~ s/\n//g; 
+	      
+	      my $title = $fullpub->title;
+	      if ( $doi_content =~ m/$title/i ) {
+		  return $self->_merge_pub( $pub, $fullpub );
+	      }
+	  }
       }
    }
 
   # If we are here, it means a search using the DOI was not conducted or 
   # not successfull. Now we try a query using title and authors.
 
-  my $query_string = '';
-  $query_string = $pub->title if ( $pub->title );
-  if ( $pub->authors ) {
-      my $tmp = $pub->authors();
-      $tmp =~s/\sand//g;
-      $tmp =~s/,\s[A-Z]{1,3}//g;
-      $query_string = $query_string." $tmp";
-  }
-  $query_string = FormatQueryString($query_string);
+  if ( $query_title ne '' and $query_authors ne '') {
 
-  # Now let's ask GoogleScholar again with Authors/Title
-  my $query = $searchUrl . $query_string;
-  my $response = $browser->get($query);
-  my $content = $response->content;
+      # we add "&as_vis=1" to exclude citations and get only those links
+      # that have stronger support
+      my $query_string = "$query_title+$query_authors"."&as_vis=1";
+      #print STDERR "$searchUrl$query_string\n";
+
+      # Now let's ask GoogleScholar again with Authors/Title
+      my $query = $searchUrl . $query_string;
+      my $response = $browser->get($query);
+      my $content = $response->content;
+      # parse the page and then see if a publication matches
+      my $page = $self->_parse_googlescholar_page($content);
+      my $matchedpub = $self->_find_best_hit( $page, $pub );
+      
+      if ( $matchedpub ) {
+	  #print STDERR "Found a match using Authors/Title as query.\n";
+	  return $matchedpub;
+      }
+  }
+
+  # If we are here then Title+Auhtors failed, and we try to search
+  # only with the title.
+  if ( $query_title ne '' ) {
+      # we add "&as_vis=1" to exclude citations and get only those links
+      # that have stronger support
+      my $query_string = "$query_title"."&as_vis=1";
+      #print STDERR "$searchUrl$query_string\n";
+
+      # Now let's ask GoogleScholar again with Authors/Title
+      my $query = $searchUrl . $query_string;
+      my $response = $browser->get($query);
+      my $content = $response->content;
   
-  # parse the page and then see if a publication matches
-  my $page = $self->_parse_googlescholar_page($content);
-  my $matchedpub = $self->_find_best_hit( $page, $pub );
-  
-  if ( $matchedpub ) {
-      print STDERR "Found a match using Authors/Title as query.\n";
-      return $matchedpub;
+      # parse the page and then see if a publication matches
+      my $page = $self->_parse_googlescholar_page($content);
+      my $matchedpub = $self->_find_best_hit( $page, $pub );
+      
+      if ( $matchedpub ) {
+	  #print STDERR "Found a match using Title as query.\n";
+	  return $matchedpub;
+      }
   }
   
   # If we are here then all search strategies failed.
   NetMatchError->throw( error => 'No match against GoogleScholar.');
+  #return $pub;
   
 }
 
@@ -266,25 +410,21 @@ sub _find_best_hit {
 	# cause troubles in regexps
 	# let's get rid of none ASCII chars first
 	(my $orig_title = $orig_pub->title ) =~ s/([^[:ascii:]])//g; 
-	$orig_title =~ s/\(//g;
-	$orig_title =~ s/\)//g;
-	$orig_title =~ s/\[//g;
-	$orig_title =~ s/\]//g;
-	my @words = split( /\s/, $orig_title );
+	$orig_title =~ s/[^\w|\s]//g;
+	my @words = split( /\s+/, $orig_title );
 	
 	# now we screen each hit and see which one matches best
- 	my $max_counts = 0;
+ 	my $max_counts = $#words;
 	my $best_hit = -1;
 	foreach my $i ( 0 .. $#google_hits ) {
 	    # some preprocessing again
 	    ( my $tmp_title = $google_hits[$i]->title ) =~ s/([^[:ascii:]])//g;
-	    $tmp_title =~ s/\(//g;
-	    $tmp_title =~ s/\)//g;
+	    $tmp_title =~ s/[^\w|\s]//g;
 	      
 	    # let's check how many of the words in the title match
 	    my $counts = 0;
 	    foreach my $word ( @words ) {
-		$counts++ if ( $tmp_title =~ m/$word/ );
+		$counts++ if ( $tmp_title =~ m/$word/i );
 	    }
 	    if ( $counts > $max_counts ) {
 		$max_counts = $counts;
@@ -296,9 +436,9 @@ sub _find_best_hit {
 	# what we are looking for
 	if ( $best_hit > -1) {
 	    my $fullpub = $self->complete_details($google_hits[$best_hit]);
-	    if ( $self->_match_title( $fullpub->title, $orig_pub->title ) ) {
-		return $self->_merge_pub( $orig_pub, $fullpub );
-	    }
+	    #if ( $self->_match_title( $fullpub->title, $orig_pub->title ) ) {
+	    return $self->_merge_pub( $orig_pub, $fullpub );
+	    #}
 	}
     }
 
@@ -325,6 +465,8 @@ sub _parse_googlescholar_page {
 	citations => [],
 	urls      => [],
 	bibtex    => [],
+	versions  => [],
+	www_publisher => []
 	);
     
     # Each entry has a h3 heading
@@ -368,13 +510,19 @@ sub _parse_googlescholar_page {
 	
 	my ( $authors, $citation, $publisher ) = split( / - /, $line );
 
+	# we set _www_publisher, which is used then again in _complete_details
+	push @{ $data{www_publisher} },   defined($publisher)  ? $publisher  : '';
+
+
 	# sometime the publisher is just a plain IP-address or some URL
-	undef ( $publisher ) if ( $publisher =~ m/(\.com|\.gov|\.org|\.ca|\.fr)$/ );
-	if ( $publisher ) {
+	if ( defined $publisher ) {
+	    undef ( $publisher ) if ( $publisher =~ m/\.[A-Z]{3}$/i );
+	}
+	if ( defined $publisher ) {
 	    undef ( $publisher ) if ( $publisher =~ m/\d{3}\./ );
 	}
 	
-	$citation .= "- $publisher" if $publisher;
+	$citation .= "- $publisher" if ( defined $publisher );
 	
 	push @{ $data{authors} },   defined($authors)  ? $authors  : '';
 	push @{ $data{citations} }, defined($citation) ? $citation : '';
@@ -382,12 +530,22 @@ sub _parse_googlescholar_page {
 	my @links = $node->findnodes('./span[@class="fl"]/a');
 	
 	# Find the BibTeX export links
+	my $cluster_link_found = 0;
 	foreach my $link (@links) {
 	    my $url = $link->attr('href');
-	    next if not $url =~ /\/scholar\.bib/;
-	    $url = "http://scholar.google.com$url";
-	    push @{ $data{bibtex} }, $url;
+	    if ( $url =~ /\/scholar\.bib/ ) {
+		$url = "http://scholar.google.com$url";
+		push @{ $data{bibtex} }, $url;
+	    }
+	    if ( $url =~ /\/scholar\?cluster/ ) {
+		$url = "http://scholar.google.com$url";
+		push @{ $data{versions} }, $url;
+		$cluster_link_found = 1;
+	    }
 	}
+	# not all nodes have a versions link; we push an empty one
+	# if nothing was found 
+	push @{ $data{versions} }, '' if ( $cluster_link_found == 0 );
     }
     
     # Write output list of Publication records with preliminary
@@ -402,6 +560,8 @@ sub _parse_googlescholar_page {
 	$pub->_citation_display( $data{citations}->[$i] );
 	$pub->linkout( $data{urls}->[$i] );
 	$pub->_details_link( $data{bibtex}->[$i] );
+	$pub->_all_versions( $data{versions}->[$i] );
+	$pub->_www_publisher( $data{www_publisher}->[$i] );
 	$pub->refresh_fields;
 	push @$page, $pub;
     }
