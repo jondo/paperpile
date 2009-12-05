@@ -141,7 +141,6 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
 	});
       }
     });
-
   }
 });
 

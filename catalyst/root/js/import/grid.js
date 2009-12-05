@@ -2,7 +2,6 @@ Paperpile.PluginGrid = function(config) {
   Ext.apply(this, config);
 
   Paperpile.PluginGrid.superclass.constructor.call(this, {
-
   });
 
   this.on('rowcontextmenu', this.onContextClick, this);
@@ -44,7 +43,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	    var ad = record.data._authors_display;
 	    if (record.data._shrink_authors == null)
 	      record.data._shrink_authors = 1;
-	    if (ad.length > this.author_shrink_threshold) {
+	    if (ad != null && ad.length > this.author_shrink_threshold) {
 	      record.data._long_authorlist = 1;
 	      record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
 	      record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
@@ -692,7 +691,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
 
     updateContextItem: function(menuItem,record) {
-      console.log("Updating "+menuItem);
       // Override with extending classes to update context items on each showing.
 
       if (menuItem.itemId == this.actions['VIEW_PDF'].itemId && record.data.pdf == '') {
@@ -765,7 +763,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var tbar=this.getTopToolbar();
       for (var i=0; i<tbar.items.length;i++){
 	var item = tbar.items.itemAt(i);
-	console.log(item.itemId);
 	if (item.itemId == itemId) return i;
       }
       return -1;

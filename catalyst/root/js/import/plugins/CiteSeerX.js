@@ -1,5 +1,15 @@
-Paperpile.PluginGridCiteSeerX = Ext.extend(Paperpile.PluginGridOnlineSearch, {
+Paperpile.PluginPanelCiteSeerX = Ext.extend(Paperpile.PluginPanel, {
+  createGrid: function(params) {
+    return new Paperpile.PluginGridCiteSeerX(params);
+  }
+});
+
+Paperpile.PluginGridCiteSeerX = Ext.extend(Paperpile.PluginGrid, {
     
+    plugins:[
+      new Paperpile.OnlineSearchGridPlugin(),
+      new Paperpile.ImportGridPlugin()
+    ],
     plugin_title: 'CiteSeerX',
     plugin_iconCls: 'pp-icon-citeseerx',
     limit:25,
@@ -9,7 +19,7 @@ Paperpile.PluginGridCiteSeerX = Ext.extend(Paperpile.PluginGridOnlineSearch, {
         this.plugin_name = 'CiteSeerX';
 
         // Multiple selection behaviour and double-click import turned
-        // out to be really difficult for plugins where we have a to
+        // out to be really difficult for plugins where we have a two
         // step process to get the data. Needs more thought, for now
         // we just turn these features off.
 
@@ -21,15 +31,14 @@ Paperpile.PluginGridCiteSeerX = Ext.extend(Paperpile.PluginGridOnlineSearch, {
                 }
             );
         };
+	this.aboutPanel = new Paperpile.AboutCiteSeerX();
 
-        Paperpile.PluginGridCiteSeerX.superclass.initComponent.apply(this, arguments);
-	this.sidePanel = new Paperpile.PluginSidepanelCiteSeerX();
-    }, 
+        Paperpile.PluginGridCiteSeerX.superclass.initComponent.call(this);
+    }
 
 });
 
-
-Paperpile.PluginSidepanelCiteSeerX = Ext.extend(Paperpile.PluginSidepanel, {
+Paperpile.AboutCiteSeerX = Ext.extend(Paperpile.PluginAboutPanel, {
 
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
@@ -38,6 +47,6 @@ Paperpile.PluginSidepanelCiteSeerX = Ext.extend(Paperpile.PluginSidepanel, {
         '<p><a target=_blank href="http://citeseerx.ist.psu.edu/" class="pp-textlink">citeseerx.ist.psu.edu</a></p>',
         '</div>'],
 
-    tabLabel: 'About CiteSeerX',
+    tabLabel: 'About CiteSeerX'
    
 });

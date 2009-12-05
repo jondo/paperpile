@@ -1,10 +1,8 @@
-
-
 Paperpile.PluginGridDB = function(config) {
   Ext.apply(this, config);
 
   Paperpile.PluginGridDB.superclass.constructor.call(this, {
-    });
+  });
 };
 
 Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
@@ -26,7 +24,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         '<a href="#" class="pp-textlink" onClick="Paperpile.main.tabs.newPluginTab(\'PubMed\', {plugin_name: \'Pubmed\', plugin_query:\'\'});">PubMed</a> or ',
         '<a href="#" class="pp-textlink" onClick="Paperpile.main.tabs.newPluginTab(\'GoogleScholar\', {plugin_name: \'GoogleScholar\', plugin_query:\'\'});">Google Scholar</a></li>',
         '</ul>',
-        '</div>',
+        '</div>'
     ],
 
     initComponent:function() {

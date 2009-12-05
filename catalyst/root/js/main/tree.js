@@ -1,34 +1,10 @@
-Paperpile.ContextTrianglePlugin = function(config) {
-  Ext.apply(this, config);
-};
-
-Ext.extend(Paperpile.ContextTrianglePlugin, Ext.util.Observable, {
-  init:function(node) {
-    Ext.apply(node,{});
-  }
-});
-
-
-Paperpile.TreeMenu = Ext.extend(Ext.BoxComponent, {
-
-  initComponent: function() {
-    Ext.apply(this, {
-      autoEl: {
-	tag: 'img',
-	src: '/images/icons/bullet_go.png'
-      }
-    });
-    Paperpile.TreeMenu.superclass.initComponent.call(this);
-  }
-});
-
-
 Paperpile.Tree = function(config) {
-  Paperpile.Tree.superclass.constructor.call(this,config);
+  Ext.apply(this,config);
+  Paperpile.Tree.superclass.constructor.call(this, {
+  });
 };
 
 Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
-
     initComponent: function() {
       Ext.apply(this, {
 	enableDD:true,
@@ -52,7 +28,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	    cancelOnEsc:true,
 	    completeOnEnter:true,
 	    ignoreNoChange:true
-	})
+	}),
+	plugins:[Paperpile.ContextTrianglePlugin]
       });
 
       Paperpile.Tree.superclass.initComponent.call(this);
@@ -1353,9 +1330,9 @@ Paperpile.AsyncTreeNode = Ext.extend(Ext.tree.AsyncTreeNode, {
 
 Paperpile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
 
-    init: function(attr) {
-		Ext.apply(this, attr);
-	}
+  init: function(attr) {
+    Ext.apply(this, attr);
+  }
 
 });
 

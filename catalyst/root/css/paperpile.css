@@ -422,6 +422,11 @@ a:hover.pp-textlink {
     padding: 4px;
 }
 
+.pp-img-action:hover {
+    border: 1px solid #F7CA75 ;
+    margin: -1px;
+}
+
 .pp-img-span {
     width:12px;
     height:12px;
@@ -431,11 +436,6 @@ a:hover.pp-textlink {
     position:relative;
     top:-24px;
     left:-4px;
-}
-
-.pp-img-action:hover {
-    border: 1px solid #F7CA75 ;
-    margin: -1px;
 }
 
 .pp-action{
@@ -943,6 +943,21 @@ div:hover.pp-grid-sort-item {
     border-bottom:1px solid #ccc;
     padding-top:2px;
     padding-bottom:1px;
+}
+
+.pp-tree-context-triangle {
+  width:12px;
+  height:12px;
+  border:2px solid red;
+  top:0px;
+  left:0px;
+  background: transparent url(/ext/resources/images/default/grid/sort_asc.gif) no-repeat right center;
+  cursor:pointer;
+  position:absolute;
+}
+
+.pp-tree-context-triangle:hover {
+
 }
 
 /*** File chooser ***/

@@ -45,9 +45,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                            href:'#',
                                            html: '<div class="pp-dashboard-button"></div>'
                                            },
-                                         id: 'dashboard-button',
+                                         id: 'dashboard-button'
                                        }
-                                   ),
+                                   )
                                    /*
                                    {xtype:'button',
                                     text:"Test",
@@ -68,7 +68,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                               region:'west',
                               margins: '2 2 2 2',
                               cmargins: '5 5 0 5',
-                              width: 200,
+                              width: 200
 /*
                               bbar: new Ext.ux.StatusBar({
                                   border:0,
@@ -86,11 +86,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                               border: false,
                               xtype: 'tabs',
                               id: 'tabs',
-                              activeItem:0,
+                              activeItem:0
                             }
                                  ]}
-                         ],
-
+                         ]
                   }
                  );
 
@@ -346,14 +345,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                           icon: Ext.MessageBox.ERROR
                       });
                   },
-                  hideOnClick: true,
+                  hideOnClick: true
                 }
             );
         } else {
             Paperpile.status.updateMsg(
                 { type:'error',
                   msg: error.msg,
-                  hideOnClick: true,
+                  hideOnClick: true
                 }
             );
         }
@@ -365,10 +364,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             run: this.pollServer,
             scope: this,
             interval: 5000
-        }
-
+        };
         //Ext.TaskMgr.start(this.heartbeatTask);
-
     },
 
     
@@ -388,7 +385,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                             Paperpile.status.clearMsg(); 
                             Paperpile.status.updateMsg(
                                 { msg: callback.notify,
-                                  hideOnClick: true,
+                                  hideOnClick: true
                                 }
                             );
                         }
@@ -404,7 +401,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             failure: function(response){
                 // do something reasonable here when server contact breaks down.
             }
-        })
+        });
     },
 
     inc_read_counter: function(rowid){
@@ -412,12 +409,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         if (rowid){
             Ext.Ajax.request({
                 url: Paperpile.Url('/ajax/misc/inc_read_counter'),
-                params: { rowid: rowid,
+                params: { rowid: rowid
                         },
                 success: function(response){
                 },
                 failure: Paperpile.main.onError,
-                scope:this,
+                scope:this
             });
         }
     }

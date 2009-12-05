@@ -2,16 +2,16 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     initComponent:function() {
 
         Ext.apply(this, {
-            id: 'tabs',
+            id: 'pp-tabs',
             //margins: '2 2 2 2',
             //Have at least one item on rendering to get it rendered correctly
             items: [{title:'Welcome',
                      itemId: 'welcome'
                     }
-                   ],
+                   ]
         });
 
-        Paperpile.Tabs.superclass.initComponent.apply(this, arguments);
+        Paperpile.Tabs.superclass.initComponent.call(this);
 
     },
 
