@@ -966,18 +966,22 @@ div:hover.pp-grid-sort-item {
 }
 
 .pp-tree-context-triangle {
-  width:12px;
-  height:12px;
-  border:2px solid red;
-  top:0px;
-  left:0px;
-  background: transparent url(/ext/resources/images/default/grid/sort_asc.gif) no-repeat right center;
+  width:18px;
+  height:18px;
+  background: transparent url(/ext/resources/images/default/button/arrow.gif) no-repeat center center;
   cursor:pointer;
   position:absolute;
+  float:right;
 }
 
-.pp-tree-context-triangle:hover {
+.x-tree-node-el {
+  cursor:pointer;
+}
 
+.pp-tree-context-triangle-over, .pp-tree-context-triangle-down {
+  width:16px;
+  height:16px;
+  border: 1px solid #F7CA75 ;
 }
 
 /*** File chooser ***/

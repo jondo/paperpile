@@ -1,4 +1,11 @@
 Paperpile.PluginPanelJSTOR = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'JSTOR',
+      iconCls: 'pp-icon-jstor'
+    });
+    Paperpile.PluginPanelJSTOR.superclass.initComponent.call(this);
+  },
   createGrid: function(params) {
     return new Paperpile.PluginGridJSTOR(params);
   }
@@ -10,8 +17,6 @@ Paperpile.PluginGridJSTOR = Ext.extend(Paperpile.PluginGrid, {
       new Paperpile.OnlineSearchGridPlugin(),
       new Paperpile.ImportGridPlugin()
     ],
-    plugin_title: 'JSTOR',
-    plugin_iconCls: 'pp-icon-jstor',
     limit:25,
 
     initComponent:function() {

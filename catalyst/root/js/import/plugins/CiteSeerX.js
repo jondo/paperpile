@@ -1,4 +1,11 @@
 Paperpile.PluginPanelCiteSeerX = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'CiteSeerX',
+      iconCls: 'pp-icon-citeseerx'
+    });
+    Paperpile.PluginPanelCiteSeerX.superclass.initComponent.call(this);
+  },
   createGrid: function(params) {
     return new Paperpile.PluginGridCiteSeerX(params);
   }

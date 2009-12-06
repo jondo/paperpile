@@ -1,19 +1,11 @@
-Paperpile.PluginPanel = function(config) {
-  Ext.apply(this,config);
-
-  Paperpile.PluginPanel.superclass.constructor.call(this,{
-
-  });
-};
-
-Ext.extend(Paperpile.PluginPanel, Ext.Panel, {
+Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     closable:false,
 
     initComponent:function() {
 
-      this.grid = this.createGrid(this.gridParams);
-      this.overviewPanel = new Paperpile.PubOverview();
-      this.detailPanel = new Paperpile.PubDetails();
+    this.grid = this.createGrid(this.gridParams);
+    this.overviewPanel = new Paperpile.PubOverview();
+    this.detailPanel = new Paperpile.PubDetails();
 
         Ext.apply(this, {
             tabType: 'PLUGIN',

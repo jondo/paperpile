@@ -39,7 +39,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
             plugin_name: 'Trash',
             plugin_mode: 'FULLTEXT',
             plugin_query: '',
-            plugin_base_query:'',
+            plugin_base_query:''
         };
 
         var newView=this.add(new Paperpile.PluginPanelTrash({
@@ -56,7 +56,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     // open and it activated instead of creating a new one
     newPluginTab:function(name, pars, title, iconCls, itemId){
       var javascript_ui = pars.plugin_name || name;
-      if (pars.plugin_query.indexOf('folder:') > -1) {
+      if (pars.plugin_query != null && pars.plugin_query.indexOf('folder:') > -1) {
 	javascript_ui = "Folder";
       }
 
@@ -73,6 +73,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
             closable:true,
             itemId: itemId
 	  };
+	  Paperpile.log(viewParams);
 	  if (iconCls) viewParams.iconCls = iconCls;
 	  if (title) viewParams.title = title;
           var newView=this.add(new Paperpile['PluginPanel'+javascript_ui](viewParams));
@@ -108,16 +109,13 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
                                 scope:this
                                },
                       autoScroll: true,
-                      title: name.title,
+                      title: name.title
                     }
                 ));
             }
-
             panel.show();
-
         }
     },
-
 
     showQueueTab:function(){
         var openTab=Paperpile.main.tabs.getItem('queue-tab');

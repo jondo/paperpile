@@ -1,4 +1,11 @@
 Paperpile.PluginPanelGoogleBooks = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'Google Books',
+      iconCls: 'pp-icon-google'
+    });
+    Paperpile.PluginPanelGoogleBooks.superclass.initComponent.call(this);
+  },
   createGrid: function(params) {
     return new Paperpile.PluginGridGoogleBooks(params);
   }

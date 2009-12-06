@@ -1,4 +1,11 @@
 Paperpile.PluginPanelGoogleScholar = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'Google Scholar',
+      iconCls: 'pp-icon-google'
+    });
+    Paperpile.PluginPanelGoogleScholar.superclass.initComponent.call(this);
+  },
   createGrid: function(params) {
     return new Paperpile.PluginGridGoogleScholar(params);
   }
@@ -10,8 +17,6 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
       new Paperpile.OnlineSearchGridPlugin(),
       new Paperpile.ImportGridPlugin()
     ],
-    plugin_title: 'GoogleScholar',
-    plugin_iconCls: 'pp-icon-google',
     limit:10,
 
     initComponent:function() {

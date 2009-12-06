@@ -1,4 +1,11 @@
 Paperpile.PluginPanelArXiv = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'ArXiv',
+      iconCls: 'pp-icon-arxiv'
+    });
+    Paperpile.PluginPanelArXiv.superclass.initComponent.call(this);
+  },
   createGrid: function(params) {
     return new Paperpile.PluginGridArXiv(params);
   }
@@ -10,8 +17,6 @@ Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGrid, {
       new Paperpile.OnlineSearchGridPlugin(),
       new Paperpile.ImportGridPlugin()
     ],
-    plugin_title: 'ArXiv',
-    plugin_iconCls: 'pp-icon-arxiv',
     limit: 25,
 
     initComponent:function() {

@@ -53,6 +53,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
         var renderIcons=function(value, p, record){
             // Can possibly be speeded up with compiling the template.
+	    Paperpile.log(record.data);
             record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
             record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
             record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
@@ -181,42 +182,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  }
 */
         ];
-
-        var renderPub=function(value, p, record){
-            // Can possibly be speeded up with compiling the template.
-            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
-            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
-
-	    // Shrink very long author lists.
-	    record.data._long_authorlist = 0;
-	    var ad = record.data._authors_display;
-            if (ad){
-	            if (record.data._shrink_authors == null)
-	                record.data._shrink_authors = 1;
-                
-                if (ad.length > this.author_shrink_threshold) {
-	                record.data._long_authorlist = 1;
-	                record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
-	                record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
-	            } 
-            }
-            return this.pubTemplate.apply(record.data);
-        };
-
-        var renderIcons=function(value, p, record){
-            // Can possibly be speeded up with compiling the template.
-            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
-            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
-            record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
-            if (record.data.last_read){
-                record.data._last_readPretty = 'Last read: '+ Paperpile.utils.prettyDate(record.data.last_read);
-            } else {
-                record.data._last_readPretty='Never read';
-            }
-
-            record.data.pdf_path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
-            return this.iconTemplate.apply(record.data);
-        };
 
         Ext.apply(this, {
             ddGroup  : 'gridDD',
@@ -511,21 +476,24 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.iconTemplate = new Ext.XTemplate(
 	'<div class="pp-grid-info">',
         '<tpl if="_imported">',
-        '<tpl if="trashed==0">',
-        '<div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
-        '</tpl>',
-        '<tpl if="trashed==1">',
-        '<div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
-        '</tpl>',
+        '  <tpl if="trashed==0">',
+        '    <div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
+        '  </tpl>',
+        '  <tpl if="trashed==1">',
+        '    <div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
+        '  </tpl>',
         '</tpl>',
         '<tpl if="pdf">',
-        '<div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br/>{_last_readPretty}<br/><img src=\'/ajax/pdf/render/{pdf_path}/0/0.2\' width=\'100\'/>"></div>',
+        '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br/>{_last_readPretty}<br/><img src=\'/ajax/pdf/render/{pdf_path}/0/0.2\' width=\'100\'/>"></div>',
         '</tpl>',
         '<tpl if="attachments">',
-        '<div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+        '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
         '</tpl>',
+//        '<tpl if="folder">',
+//        '  <div class="pp-grid-status pp-grid-status-folder" ext:qtip="in folder: {_folder_tip}"></div>',
+//        '</tpl>',
         '<tpl if="annote">',
-        '<div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
+        '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
         '</tpl>',
         '</div>'
       ).compile();

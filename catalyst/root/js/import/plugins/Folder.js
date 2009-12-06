@@ -1,9 +1,26 @@
+Paperpile.PluginPanelFolder = Ext.extend(Paperpile.PluginPanel, {
+
+  initComponent: function() {
+    Ext.apply(this, {
+      title:this.title,
+      iconCls:'pp-icon-folder'
+    });
+
+    Paperpile.PluginPanelFolder.superclass.initComponent.call(this);
+  },
+
+  createGrid: function(gridParams) {
+    return new Paperpile.PluginGridFolder(gridParams);
+  }
+
+});
+
 Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
 
-    plugin_base_query:'',
-    plugin_iconCls: 'pp-icon-folder',
-    plugin_name:'DB',
-    limit: 25,
+  plugin_iconCls: 'pp-icon-folder',
+  plugin_name:'DB',
+  limit: 25,
+  plugin_base_query:'',
 
   initComponent: function() {
     Paperpile.PluginGridFolder.superclass.initComponent.call(this);
@@ -21,7 +38,7 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
       scope:this
     });
     
-    var tbar = this._tbar;
+    var tbar = this.getTopToolbar();
     
     // Hide the add button.
     this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);

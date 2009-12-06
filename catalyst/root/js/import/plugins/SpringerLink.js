@@ -1,4 +1,11 @@
 Paperpile.PluginPanelSpringerLink = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'SpringerLink',
+      iconCls: 'pp-icon-springerlink'
+    });
+    Paperpile.PluginPanelSpringerLink.superclass.initComponent.call(this);
+  },
   createGrid: function(params) {
     return new Paperpile.PluginGridSpringerLink(params);
   }
@@ -10,8 +17,6 @@ Paperpile.PluginGridSpringerLink = Ext.extend(Paperpile.PluginGrid, {
       new Paperpile.OnlineSearchGridPlugin(),
       new Paperpile.ImportGridPlugin()
     ],
-    plugin_title: 'SpringerLink',
-    plugin_iconCls: 'pp-icon-springerlink',
     limit: 10,
 
     initComponent:function() {

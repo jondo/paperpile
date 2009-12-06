@@ -1,15 +1,15 @@
 Paperpile.PluginPanelACM = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'ACM Portal',
+      iconCls: 'pp-icon-acm'
+    });
+    Paperpile.PluginPanelACM.superclass.initComponent.call(this);
+  },
   createGrid: function(params) {
     return new Paperpile.PluginGridACM(params);
   }
 });
-
-Paperpile.PluginGridACM = function(config) {
-  Ext.apply(this, config);
-
-  Paperpile.PluginGridACM.superclass.constructor.call(this, {
-  });
-};
 
 Paperpile.PluginGridACM = Ext.extend(Paperpile.PluginGrid, {    
 
@@ -17,8 +17,6 @@ Paperpile.PluginGridACM = Ext.extend(Paperpile.PluginGrid, {
       new Paperpile.OnlineSearchGridPlugin(),
       new Paperpile.ImportGridPlugin()
     ],
-    plugin_title: 'ACM Portal',
-    plugin_iconCls: 'pp-icon-acm',
     limit: 20,
 
     initComponent:function() {
