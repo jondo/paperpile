@@ -154,6 +154,11 @@ sub complete_details {
   $browser->cookie_jar( $self->_session_cookie );
   my $bibtex;
 
+  # We call the British Library Direct link to get the
+  # abstract if they have any
+
+  my $abstract = $self->_parse_BL ( $pub );
+
   # For many articles Google provides links to several versions of
   # the same article. There are differences regarding the parsing
   # quality of the BibTeX. We search all versions if there are any
@@ -189,7 +194,7 @@ sub complete_details {
 	      last;
 	  }
       }
-      #print "BEST_ONE:$best_one\n";
+      print STDERR "BEST_ONE:$best_one\n";
 
       # Get the BibTeX
       my $bibtex_tmp = $browser->get( $page->[$best_one]->_details_link );
@@ -219,8 +224,10 @@ sub complete_details {
 
   # Add the linkout from the old object because it is not in the BibTeX
   #and thus not in the new object
-
   $full_pub->linkout( $pub->linkout );
+
+  # Add the abstract if there is any
+  $full_pub->abstract ( $abstract ) if ( $abstract ne '' );
 
   # We don't use Google key
   $full_pub->citekey('');
@@ -466,7 +473,9 @@ sub _parse_googlescholar_page {
 	urls      => [],
 	bibtex    => [],
 	versions  => [],
-	www_publisher => []
+	www_publisher => [],
+	related_articles => [],
+	BL => []
 	);
     
     # Each entry has a h3 heading
@@ -531,6 +540,8 @@ sub _parse_googlescholar_page {
 	
 	# Find the BibTeX export links
 	my $cluster_link_found = 0;
+	my $related_link_found = 0;
+	my $BL_link_found = 0;
 	foreach my $link (@links) {
 	    my $url = $link->attr('href');
 	    if ( $url =~ /\/scholar\.bib/ ) {
@@ -542,10 +553,27 @@ sub _parse_googlescholar_page {
 		push @{ $data{versions} }, $url;
 		$cluster_link_found = 1;
 	    }
+	    if ( $url =~ /\/scholar\?cluster/ ) {
+		$url = "http://scholar.google.com$url";
+		push @{ $data{versions} }, $url;
+		$cluster_link_found = 1;
+	    }
+	    if ( $url =~ /\/scholar\?q=related/ ) {
+		$url = "http://scholar.google.com$url";
+		push @{ $data{related_articles} }, $url;
+		$related_link_found = 1;
+	    }
+	    if ( $url =~ /direct\.bl\.uk/ ) {
+		push @{ $data{BL} }, $url;
+		$BL_link_found = 1;
+	    }
 	}
+	
 	# not all nodes have a versions link; we push an empty one
 	# if nothing was found 
 	push @{ $data{versions} }, '' if ( $cluster_link_found == 0 );
+	push @{ $data{related_articles} }, '' if ( $related_link_found == 0 );
+	push @{ $data{BL} }, '' if ( $BL_link_found == 0 );
     }
     
     # Write output list of Publication records with preliminary
@@ -562,12 +590,41 @@ sub _parse_googlescholar_page {
 	$pub->_details_link( $data{bibtex}->[$i] );
 	$pub->_all_versions( $data{versions}->[$i] );
 	$pub->_www_publisher( $data{www_publisher}->[$i] );
+	$pub->_related_articles( $data{related_articles}->[$i] );
+	$pub->_google_BL_link( $data{BL}->[$i] );
 	$pub->refresh_fields;
 	push @$page, $pub;
     }
     
     return $page;
         
+}
+
+# parses the BL (British Library Direct) link to get bibliographic
+# data and abstract. 
+
+sub _parse_BL {
+    ( my $self, my $pub ) = @_;
+
+    my $abstract = '';
+    if ( $pub->_google_BL_link ne '' ) {
+	my $browser = Paperpile::Utils->get_browser;
+	my $response = $browser->get( $pub->_google_BL_link );
+	my $content = $response->content;
+
+	my $tree = HTML::TreeBuilder::XPath->new;
+	$tree->utf8_mode(1);
+	$tree->parse_content($content);
+
+	# The bibliographic data is easy to parse, but it seems to be
+	# generated automatically and is therefore likely not to be complete. 
+	# But the abstract is useful.
+	$abstract = $tree->findvalue(q{/html/body/div/table/tr/td/table/tr/td[3]/table[2]/tr/td/div});
+	$abstract =~ s/^Abstract:\s?//;
+
+    }
+
+    return $abstract;
 }
 
 
