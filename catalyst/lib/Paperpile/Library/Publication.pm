@@ -126,6 +126,15 @@ has '_imported' => ( is => 'rw', isa => 'Bool' );
 # a link (or some other hint) how to complete this information
 has '_details_link' => ( is => 'rw', default => '' );
 
+# Is some kind of _details_link for Google Scholar. It is the link
+# to British Library Direct, where bibliographic data is available. 
+# In some cases it also offers the absract, which is impossible to  
+# get directly from Google.
+has '_google_BL_link' => ( is => 'rw', default => '' );
+
+# Holds the linkout for a related article search.
+has '_related_articles' => ( is => 'rw', default => '' );
+
 # If a search in the local database returns a hit in the fulltext,
 # abstract or notes the hit+context ('snippet') is stored in these
 # fields
