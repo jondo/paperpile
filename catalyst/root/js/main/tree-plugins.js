@@ -60,8 +60,7 @@ Paperpile.TreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
 	}
 
 	menu.node = this.node;
-	var alignEl = Ext.fly(this.getEl()).child(".x-tree-node-el");
-	menu.show(alignEl,'tr-br');
+	menu.show(tree.contextTriangle,'tl-bl');
 	this.menuShowing = true;
 	tree.contextTriangle.addClass('pp-tree-context-triangle-down');
 	tree.allowSelect = true;
