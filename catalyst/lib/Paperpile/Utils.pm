@@ -134,7 +134,7 @@ sub get_browser {
 
   $browser->cookie_jar( {} );
 
-  $browser->agent('Mozilla/5.0');
+  $browser->agent('Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.5) Gecko/20091109 Ubuntu/9.10 (karmic) Firefox/3.5.5');
   return $browser;
 }
 
