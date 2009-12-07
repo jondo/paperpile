@@ -152,21 +152,39 @@ sub complete_details {
 
   my $browser = Paperpile::Utils->get_browser;
   $browser->cookie_jar( $self->_session_cookie );
-  my $bibtex;
+  my $bibtex = '';
 
   # We call the British Library Direct link to get the
   # abstract if they have any
 
   my $abstract = $self->_parse_BL ( $pub );
 
+  # Let's see if the the www_provider is a good one
+  my @best_sources = ( 'Elsevier','ingentaconnect.com',
+		       'liebertonline.com', 'nature.com',
+		       'sciencemag.org', 'Springer',
+		       'Cambridge Univ Press',
+		       'Nature Publishing Group', 'Oxford Univ Press' );
+  my $best_flag = 0;
+  foreach my $j ( 0 .. $#best_sources ) {
+      $best_flag = 1 if ( $pub->_www_publisher eq $best_sources[$j] );
+  }
+
+  # if the publisher is already a good one we call the BibTeX right here
+  if ( $best_flag == 1 ) {
+      my $bibtex_tmp = $browser->get( $pub->_details_link );
+      $bibtex = $bibtex_tmp->content;
+  }
+
   # For many articles Google provides links to several versions of
   # the same article. There are differences regarding the parsing
   # quality of the BibTeX. We search all versions if there are any
   # high quality links.
-  if ( $pub->_all_versions ne '' ) {
+  if ( $pub->_all_versions ne '' and $best_flag == 0 ) {
       my @order_publishers = ( 'Elsevier','ingentaconnect.com',
 			       'liebertonline.com', 'nature.com',
 			       'sciencemag.org', 'Springer',
+			       'Cambridge Univ Press',
 			       'Nature Publishing Group', 'Oxford Univ Press',
 			       'cat.inist.fr','pubmedcentral.nih.gov',
 			       'adsabs.harvard.edu','ncbi.nlm.nih.gov',
@@ -194,13 +212,15 @@ sub complete_details {
 	      last;
 	  }
       }
-      print STDERR "BEST_ONE:$best_one\n";
-
+ 
       # Get the BibTeX
       my $bibtex_tmp = $browser->get( $page->[$best_one]->_details_link );
       $bibtex = $bibtex_tmp->content;
-  } else {
-      # Get the BibTeX
+  } 
+
+  # Nothing good found till here, so we take the link of the original
+  # publication object
+  if ( $bibtex eq '' ) {
       my $bibtex_tmp = $browser->get( $pub->_details_link );
       $bibtex = $bibtex_tmp->content;
   }
@@ -240,7 +260,6 @@ sub complete_details {
   $self->_hash->{$new_sha1} = $full_pub;
 
   return $full_pub;
-
 }
 
 # match function to match a given publication object against Google
@@ -314,7 +333,7 @@ sub match {
       my $query = $searchUrl . $query_doi;
       my $response = $browser->get( $query );
       my $content = $response->content;
-      
+      #print STDERR "$query\n";
       # parse the page and then see if a publication matches
       if ( $pub->title() ) {
 	  my $page = $self->_parse_googlescholar_page( $content );
@@ -358,7 +377,7 @@ sub match {
       # we add "&as_vis=1" to exclude citations and get only those links
       # that have stronger support
       my $query_string = "$query_title+$query_authors"."&as_vis=1";
-      #print STDERR "$searchUrl$query_string\n";
+      print STDERR "$searchUrl$query_string\n";
 
       # Now let's ask GoogleScholar again with Authors/Title
       my $query = $searchUrl . $query_string;
@@ -380,7 +399,7 @@ sub match {
       # we add "&as_vis=1" to exclude citations and get only those links
       # that have stronger support
       my $query_string = "$query_title"."&as_vis=1";
-      #print STDERR "$searchUrl$query_string\n";
+      print STDERR "$searchUrl$query_string\n";
 
       # Now let's ask GoogleScholar again with Authors/Title
       my $query = $searchUrl . $query_string;
@@ -398,9 +417,8 @@ sub match {
   }
   
   # If we are here then all search strategies failed.
-  NetMatchError->throw( error => 'No match against GoogleScholar.');
-  #return $pub;
-  
+  #NetMatchError->throw( error => 'No match against GoogleScholar.');
+  return $pub;
 }
 
 
@@ -413,30 +431,53 @@ sub _find_best_hit {
     my @google_hits = @{$hits_ref};
     if ( $#google_hits > -1 ) {
 
-	# let's first remove a few things that would otherwise
-	# cause troubles in regexps
-	# let's get rid of none ASCII chars first
-	(my $orig_title = $orig_pub->title ) =~ s/([^[:ascii:]])//g; 
-	$orig_title =~ s/[^\w|\s]//g;
-	my @words = split( /\s+/, $orig_title );
+	# let's get rid of words that contain none ASCII chars
+	# and other bad stuff (often PDF utf-8 issues)
+	my @words = ( );
+	foreach my $word ( split(/\s+/, $orig_pub->title ) ) {
+	    next if ( $word =~ m/([^[:ascii:]])/ );
+	    push @words, $word if ( $word =~ m/^\w+$/ );
+	}
 	
 	# now we screen each hit and see which one matches best
  	my $max_counts = $#words;
 	my $best_hit = -1;
-	foreach my $i ( 0 .. $#google_hits ) {
+
+	# we take a look at the top three candidates
+	my $max_to_screen = ( $#google_hits < 2 ) ? $#google_hits : 2;
+	foreach my $i ( 0 .. $max_to_screen ) {
+
+	    # In some cases it is necessary to get the BibTex entry, 
+	    # because sometimes not the full title is displayed. These
+	    # cases can be identified by the '...' Hex-code 2026
+	    my $tmp_title;
+	    if ( $google_hits[$i]->title =~ m/\x{2026}/ ) {
+		my $tmp_pub = $self->complete_details($google_hits[$i]);
+		$tmp_title = $tmp_pub->title;
+	    } else {
+		$tmp_title = $google_hits[$i]->title;
+	    }
+
 	    # some preprocessing again
-	    ( my $tmp_title = $google_hits[$i]->title ) =~ s/([^[:ascii:]])//g;
-	    $tmp_title =~ s/[^\w|\s]//g;
+	    my @words2 = ( );
+	    foreach my $word ( split(/\s+/, $tmp_title ) ) {
+		next if ( $word =~ m/([^[:ascii:]])/ );
+		push @words2, $word if ( $word =~ m/^\w+$/ );
+	    }
+	    $tmp_title = " ".join( " ", @words2 )." ";
 	      
 	    # let's check how many of the words in the title match
 	    my $counts = 0;
 	    foreach my $word ( @words ) {
-		$counts++ if ( $tmp_title =~ m/$word/i );
+		$counts++ if ( $tmp_title =~ m/\s$word\s/i );
+		#print "$counts || $word || $tmp_title\n";
+		
 	    }
 	    if ( $counts > $max_counts ) {
 		$max_counts = $counts;
 		$best_hit = $i;
 	    }
+	    #print "$counts of $max_counts --> $best_hit\n";
 	}
 	
 	# now let's look up the BibTeX record and see if it is really 
@@ -545,21 +586,21 @@ sub _parse_googlescholar_page {
 	foreach my $link (@links) {
 	    my $url = $link->attr('href');
 	    if ( $url =~ /\/scholar\.bib/ ) {
-		$url = "http://scholar.google.com$url";
+		$url = "http://scholar.google.com$url" if ( $url !~ m/^http/ );
 		push @{ $data{bibtex} }, $url;
 	    }
 	    if ( $url =~ /\/scholar\?cluster/ ) {
-		$url = "http://scholar.google.com$url";
+		$url = "http://scholar.google.com$url" if ( $url !~ m/^http/ );
 		push @{ $data{versions} }, $url;
 		$cluster_link_found = 1;
 	    }
 	    if ( $url =~ /\/scholar\?cluster/ ) {
-		$url = "http://scholar.google.com$url";
+		$url = "http://scholar.google.com$url" if ( $url !~ m/^http/ );
 		push @{ $data{versions} }, $url;
 		$cluster_link_found = 1;
 	    }
 	    if ( $url =~ /\/scholar\?q=related/ ) {
-		$url = "http://scholar.google.com$url";
+		$url = "http://scholar.google.com$url" if ( $url !~ m/^http/ );
 		push @{ $data{related_articles} }, $url;
 		$related_link_found = 1;
 	    }
