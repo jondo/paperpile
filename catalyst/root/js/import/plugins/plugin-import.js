@@ -89,7 +89,7 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
 	this.allSelected=true;
         this.insertEntry(function(){
           this.allSelected=false;
-          var container= this.findParentByType(Paperpile.PubView);
+          var container= this.findParentByType(Paperpile.PluginPanel);
           container.onRowSelect();
         },this);
       },
