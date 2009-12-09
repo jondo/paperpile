@@ -1,5 +1,21 @@
 // Ext overrides
 
+Ext.override(Ext.Component,{
+
+  findParentByType: function(t) {
+    if (!Ext.isFunction(t)) {
+      return this.findParentBy(function(p){
+                return p.constructor.xtype === t;
+            });
+    }
+    var p = this;
+    do {
+        p = p.ownerCt;
+    } while(p!=null && !(p instanceof t))
+    return p;
+  }
+});
+
 Ext.override(Ext.form.Field, {
     hideItem :function(){
         this.formItem = Ext.Element(this.getEl()).findParent('.x-form-item',4);

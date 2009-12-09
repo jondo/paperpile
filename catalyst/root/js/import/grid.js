@@ -227,7 +227,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  click:{scope:this,
 	    fn:function(e) {
               if (Ext.get(e.target).hasClass('pp-grid-status-notes')) {
-		this.findParentByType(Paperpile.PubView).items.get('center_panel').items.get('data_tabs').showNotes();
+		this.findParentByType(Paperpile.PluginPanel).items.get('center_panel').items.get('data_tabs').showNotes();
               }
 	    }
 	  }
@@ -304,7 +304,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     onStoreLoad: function() {
       this.addGridExpanders();
 
-      var container= this.findParentByType(Paperpile.PubView);
+      var container= this.findParentByType(Paperpile.PluginPanel);
       var ep = container.items.get('east_panel');
       var tb_side = ep.getBottomToolbar();
       var activeTab=ep.getLayout().activeItem.itemId;
@@ -344,12 +344,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.updateButtons();
       this.getSelectionModel().on('rowselect',
 	function(sm, rowIdx, r) {
-          var container= this.findParentByType(Paperpile.PubView);
+          var container= this.findParentByType(Paperpile.PluginPanel);
           this.completeEntry();
         },this);
       this.getSelectionModel().on('selectionchange',
 	function(sm) {
-	  var container= this.findParentByType(Paperpile.PubView);
+	  var container= this.findParentByType(Paperpile.PluginPanel);
           this.updateButtons();
           container.onRowSelect();
 	},this);	
@@ -838,7 +838,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                     }
                     record.endEdit();
 
-                    this.findParentByType(Paperpile.PubView).onRowSelect();
+                    this.findParentByType(Paperpile.PluginPanel).onRowSelect();
 
                     Paperpile.status.clearMsg();
 
@@ -935,7 +935,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                 this.store.resumeEvents();
                 this.store.fireEvent('datachanged',this.store);
 
-                var container= this.findParentByType(Paperpile.PubView);
+                var container= this.findParentByType(Paperpile.PluginPanel);
                 if (this.getSelectionModel().getCount()!=0){
                     container.onRowSelect();
                 } else {
@@ -987,7 +987,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
         var sha1=this.getSelectionModel().getSelected().data.sha1;
 
-        var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
+        var east_panel=this.findParentByType(Paperpile.PluginPanel).items.get('east_panel');
 
         var form=new Paperpile.Forms.PubEdit({data:this.getSelectionModel().getSelected().data,
                                               grid_id: this.id,
@@ -1000,7 +1000,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                                                   east_panel.showBbar();
                                                   if (status == 'SAVE'){
                                                       this.updateData(data);
-                                                      this.findParentByType(Paperpile.PubView).onRowSelect();
+                                                      this.findParentByType(Paperpile.PluginPanel).onRowSelect();
                                                       Paperpile.status.clearMsg();
                                                   }
                                               },
@@ -1016,7 +1016,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
 
     newEntry: function(){
-        var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
+        var east_panel=this.findParentByType(Paperpile.PluginPanel).items.get('east_panel');
 
         var form=new Paperpile.Forms.PubEdit({data:{pubtype:'ARTICLE'},
                                               grid_id: null,

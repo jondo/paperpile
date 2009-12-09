@@ -38,7 +38,7 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
     updateDetail: function() {
 
         if (!this.grid){
-            this.grid=this.findParentByType(Ext.PubView).items.get('center_panel').items.get('grid');
+            this.grid=this.findParentByType(Paperpile.PluginPanel).items.get('center_panel').items.get('grid');
         }
 
         sm=this.grid.getSelectionModel();

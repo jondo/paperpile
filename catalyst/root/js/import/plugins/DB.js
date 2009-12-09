@@ -38,7 +38,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       this.store.on('load', 
 	function() {
 	  if (this.store.getCount()==0) {
-            var container= this.findParentByType(Paperpile.PubView);
+            var container= this.findParentByType(Paperpile.PluginPanel);
             if (container.itemId=='MAIN' && this.store.baseParams.plugin_query =="") {
               container.onEmpty(this.welcomeMsg);
 	    }
