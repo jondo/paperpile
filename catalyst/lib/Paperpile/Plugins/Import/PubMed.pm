@@ -182,6 +182,7 @@ sub match {
   my $query_doi = '';
   my $query_title = '';
   my $query_authors = '';
+  my @title_words = ( ); 
 
   # First we format the three query strings properly. Besides
   # HTML escaping we remove words that contain non-alphnumeric
@@ -192,11 +193,13 @@ sub match {
   # 2) Title
   if ( $pub->title ) {
       my @tmp = ( );
-      foreach my $word ( split(/\s+/, $pub->title ) ) {
+      ( my $tmp_title = $pub->title ) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+      foreach my $word ( split(/\s+/, $tmp_title ) ) {
 	  # words that contain non-alphnumeric and non-ascii 
 	  # characters are removed
 	  next if ( $word =~ m/[^\w\s-]/ );
 	  next if ( $word =~ m/[^[:ascii:]]/ );
+	  push @title_words, $word;
 
 	  # words with less than 3 characters are removed
 	  next if (length($word) < 3 );
@@ -321,7 +324,7 @@ sub match {
       # Let's check if the query returned any results and if
       # the publication of interest is contained. The Top 5
       # results are checked.
-      if ( $result->{Count} > 0 ) {
+       if ( $result->{Count} > 0 ) {
 	  $self->web_env( $result->{WebEnv} );
 	  $self->query_key( $result->{QueryKey} );
  	  my $xml = $self->_pubFetch( 0, 5 );
@@ -334,8 +337,6 @@ sub match {
 	  # match
 	  return $self->_merge_pub( $pub, $page->[0] ) if ( $max == 0 );
 	  foreach my $i ( 0 .. $max ) {
-	      print $page->[$i]->title,"\n";
-	      print $pub->title,"\n";
 	      if ( $self->_match_title( $page->[$i]->title, $pub->title ) ) {
 		  return $self->_merge_pub( $pub, $page->[$i] );
 	      }
@@ -364,7 +365,14 @@ sub match {
 	  $self->_linkOut($page);
 	  my $max = ( $result->{Count} > 5 ) ? 4 : $result->{Count}-1;
 	  foreach my $i ( 0 .. $max ) {
-	      if ( $self->_match_title( $page->[$i]->title, $pub->title ) ) {
+	      # there are often PDF parsing errors so we cannot do a
+	      # simple string comparison
+	      my $counts = 0;
+	      my $to_compare_with = ' '.$page->[$i]->title.' ';
+	      foreach my $word ( @title_words ) {
+		$counts++ if ( $to_compare_with =~ m/\s$word\s/i );
+	      }
+	      if ( $counts > $#title_words ) {
 		  return $self->_merge_pub( $pub, $page->[$i] );
 	      }
 	  }	  
@@ -372,8 +380,8 @@ sub match {
   }
 
   # If we are here then our search against Pubmed was not successful.
-  NetMatchError->throw( error => 'No match against PubMed.');
-  #return $pub; # comment in for command line testing
+  #NetMatchError->throw( error => 'No match against PubMed.');
+  return $pub; # comment in for command line testing
 }
 
 

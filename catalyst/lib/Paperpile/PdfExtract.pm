@@ -12,14 +12,10 @@ has 'file'    => ( is => 'rw', isa => 'Str' );
 has 'pub'     => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
 has 'pdftoxml' => ( is => 'rw', isa => 'Str' );
 
-#( my $title, my $authors, my $doi, my $level ) = ParsePDF( $ARGV[0] );
-# aguber
-#print "LEVEL:$level\nTITLE:$title\nAUTHORS:$authors\nDOI:$doi\n";
-
 sub parsePDF {
 
   my $self =shift;
-
+  
   my $PDFfile = $self->file;
   my $PDF2XML = $self->pdftoxml;
 
@@ -37,7 +33,7 @@ sub parsePDF {
 
   # remove temp file
   #print STDERR "$tmpfile\n";
-  #unlink("$tmpfile"); 
+  unlink("$tmpfile"); 
   
   my @page0   = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
 
@@ -47,20 +43,19 @@ sub parsePDF {
   my $arxiv_id = '';
   my $level   = -1;
   my $has_cover_page = 0;
-
   if ( $#page0 > -1 ) {
     ( $title, $authors, $doi, $level, $has_cover_page, $arxiv_id ) = _ParseXML( \@page0 );
   }
-
   # maybe the first page is a strange cover page (e.g. Cold Spring Harbour Press)
   if ( ($title eq '' and $authors eq '' and $doi eq '') or ( $has_cover_page == 1 ) ) {
-      # create and read XML file, but no only the second page
+      # create and read XML file, but now only the second page
       system("$PDF2XML -noImage -f 2 -l 2 -q $PDFfile $tmpfile 2>/dev/null");
       $xml    = new XML::Simple;
       $data   = $xml->XMLin( "$tmpfile", ForceArray => 1 );
       my @page1 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
       if ( $#page1 > -1 ) {
-	  ( $title, $authors, $doi, $level, $has_cover_page, $arxiv_id ) = _ParseXML( \@page1 );
+	  ( $title, $authors, my $doi_page2, $level, $has_cover_page, $arxiv_id ) = _ParseXML( \@page1 );
+	  $doi = $doi_page2 if ( $doi eq '' );
       }
   }
 
@@ -83,6 +78,13 @@ sub parsePDF {
     $level   = -2;
   }
 
+  # sometime still some cleaning is required
+  $title =~ s/^(Research\sarticle)//i;
+  $title =~ s/^(Short\sarticle)//i;
+  $title =~ s/^(Report)//i;
+  $title =~ s/^([A-Z]*\sMinireview)//i;
+  $title =~ s/^(Letter:?)//i;
+
   #$authors  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
   #print "T:$title\nA:$authors\n$level\n";
 
@@ -104,7 +106,6 @@ sub parsePDF {
       $authors =~ s/^(by\s)//gi;
       $authors =~ s/\s+/ /g;
       
-
       # First we check if authors are separated by commas
       my @authors_array = ();
       if ($authors =~ m/,/)
@@ -207,7 +208,7 @@ sub parsePDF {
 	  if ( $error == 0 ) {
 	      my $correct_casing = $parser->case_all_reversed;
 	      (my $last, my $first) = split(/,/, $correct_casing);
-	      
+	      next if ( !$last );
 	      # make a new author object
 	      push @authors_obj,
 	      Paperpile::Library::Author->new(
@@ -449,7 +450,8 @@ sub _ParseDOI {
 
   # there might be a strange minus sign (unicode &#8211; --> \x{2013}
   $doi =~ s/\s\x{2013}\s/-/g;
-  if ( $doi =~ m/\D(10\.\d{4})/ ) {
+ 
+  if ( $doi =~ m/\D?(10\.\d{4})/ ) {
     $doi =~ s/(.*)(10\.\d{4})(\/?\s*)(\S+)(.*)/$2\/$4/;
     $doi =~ s/\(*\)*//g;
   } else {
@@ -624,8 +626,9 @@ sub _ParseXML {
     
     # some publishers like 'Cold Spring Harbor Laboratory Press' have a 
     # kind of cover page. We set a flag for those cases that is returned.
-    $has_cover_page = 1 if ($content_line =~ m/Cold\sSpring\sHarbor/);
-
+    $has_cover_page = 1 if ($content_line =~ m/Cold\sSpring\sHarbor\sLaboratory\sPress/);
+    $has_cover_page = 1 if ($content_line =~ m/rsbl\.royalsocietypublishing\.org/);
+    $has_cover_page = 1 if ($content_line =~ m/PLEASE\sSCROLL\sDOWN\sFOR\sARTICLE/i);
 
     $content_line =~ s/\s+,/,/g;
     $content_line =~ s/,+/,/g;
@@ -665,7 +668,7 @@ sub _ParseXML {
     #let's see if it has some adress tags
     my $adress = 0;
     $adress = _MarkAdress($content_line);
-
+    
     # lines that are less than 2 chars are discarded
     # possible source (equations that are not correctly parsed, ...)
     if ( length($content_line) > 2 ) {
@@ -853,6 +856,7 @@ sub _ParseXML {
     $final_content[$i] =~ s/\x{B7}/,/g;      # replace dots (not points) with commas
     $final_content[$i] =~ s/\s+,\s+/, /g;    # replace unnecessary spaces
     #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
+    #print $final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_content[$i],"\n";
   }
 
   #################### STRATEGY ONE ########################
@@ -861,16 +865,16 @@ sub _ParseXML {
   # This is the most promising strategy and give confident
   # results
 
-  my $adress_line = -1;
+  my @adress_lines = ( );
+  
   for my $i ( 0 .. $#final_adress ) {
     if ( $final_adress[$i] > 0 ) {
-      $adress_line = $i;
-      last;
+      push @adress_lines, $i;
     }
   }
   
   # Once we have found and adress line we start to search
-  if ( $adress_line > -1 ) {
+  foreach my $adress_line ( @adress_lines ) {
       
     # find the previous two lines that do not have bad words
     my $candidate_Authors = -1;
@@ -888,9 +892,13 @@ sub _ParseXML {
       } else {
         $candidate_Title = $i if ( $tmp_bad == 0 and $candidate_Title == -1 );
       }
-
     }
-
+    # cleanup PDF-Parsing/UTF-8/special char mess
+    $final_content[$candidate_Authors] =~ s/(\s[^[:ascii:]]\s)//g;
+    $final_content[$candidate_Title] =~ s/(\s[^[:ascii:]]\s)//g;
+ 
+    next if ( $candidate_Title == -1 or $candidate_Authors == -1 );
+    #print "$final_content[$candidate_Title],        $final_content[$candidate_Authors]\n";
     # the title is normally B and has a greater fs than the authors
     # the heading is usually much bigger than the rest
     # Note, this is restrictive but gives confident results
@@ -898,7 +906,6 @@ sub _ParseXML {
     if (  $final_fs[$candidate_Title] > $final_fs[$candidate_Authors]
       and $final_fs[$candidate_Title] / $major_fs > 1.2 ) {
       my $flag = 0;
-      
       # authors have usually more superscripts than titles
       ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
         $final_content[$candidate_Title],        $final_content[$candidate_Authors],
@@ -915,7 +922,7 @@ sub _ParseXML {
       ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $final_content[$candidate_Title],
         $final_content[$candidate_Authors] );
       return ( $title, $authors, $doi, 1.3, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
-
+      
       # there could be just ONE authors
       ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $final_content[$candidate_Title],
         $final_content[$candidate_Authors] );
@@ -1024,7 +1031,7 @@ sub _ParseXML {
   if ( $#IDS == 1 ) {
     my $candidate_Authors = $IDS[1];
     my $candidate_Title   = $IDS[0];
-
+    
     # if the candidate_Title is also very large
     # then this is a good sign
     
@@ -1097,13 +1104,13 @@ sub _ParseXML {
     my $candidate_Title   = $IDS[$max_fs_line_NONEBAD];
 
     return ( $title, $authors, $doi, 4, $has_cover_page, $arxiv_id ) if ($max_fs_line_NONEBAD + 1 > $#IDS);
-
+    #print "$final_fs[$max_fs_line_ALL] - $final_fs[$candidate_Title] ) / $major_fs\n";
     if ( ( $final_fs[$max_fs_line_ALL] - $final_fs[$candidate_Title] ) / $major_fs < 0.2 ) {
 
       # the heading is normally B and has a greater fs than the authors
       if ( $final_fs[$candidate_Title] > $final_fs[$candidate_Authors] ) {
         my $flag = 0;
-
+	
         # authors have usually more superscripts than titles
         ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
           $final_content[$candidate_Title],        $final_content[$candidate_Authors],
@@ -1134,7 +1141,26 @@ sub _ParseXML {
           return ( $title, $authors, $doi, 3.9, $has_cover_page, $arxiv_id );
         }
       }
-
+    } else {
+	# very last chance to become a good hit
+	my $count_spaces = ($final_content[$candidate_Title] =~ tr/ //); # rough estimate of words
+	if ( $final_fs[$candidate_Title] / $major_fs > 1.5 and $count_spaces > 5 ) {
+	    # the heading is normally B and has a greater fs than the authors
+	    if ( $final_fs[$candidate_Title] > $final_fs[$candidate_Authors] ) {
+		my $flag = 0;
+		# authors have usually more superscripts than titles
+		( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
+		    $final_content[$candidate_Title],        $final_content[$candidate_Authors],
+		    $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
+		    );
+		return ( $title, $authors, $doi, 5.1, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+		
+		# authors usually have a higher comma to word ratio than the title
+		( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
+								     $final_content[$candidate_Authors] );
+		return ( $title, $authors, $doi, 5.2, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+	    }
+	}
     }
 
   }

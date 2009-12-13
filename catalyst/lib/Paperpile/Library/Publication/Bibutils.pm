@@ -111,7 +111,7 @@ sub _build_from_bibutils {
   my ( $page_start,   $page_end );
 
   foreach my $field (@$data) {
-
+      
     if ( $field->{tag} ~~ ['TITLE'] ) {
       push @title_fields, $field;
     }

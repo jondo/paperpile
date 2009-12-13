@@ -184,11 +184,11 @@ sub complete_details {
       my @order_publishers = ( 'Elsevier','ingentaconnect.com',
 			       'liebertonline.com', 'nature.com',
 			       'sciencemag.org', 'Springer',
-			       'Cambridge Univ Press',
+			       'Cambridge Univ Press', 'indexcopernicus.com',
 			       'Nature Publishing Group', 'Oxford Univ Press',
-			       'cat.inist.fr','pubmedcentral.nih.gov',
+			       'pubmedcentral.nih.gov',
 			       'adsabs.harvard.edu','ncbi.nlm.nih.gov',
-			       'arxiv.org');
+			       'cat.inist.fr','arxiv.org','csa.com');
       my @order_flags = (  );
       for ( 0 .. $#order_publishers ) { push @order_flags, -1 }
 
@@ -198,7 +198,7 @@ sub complete_details {
       my $page = $self->_parse_googlescholar_page( $content_all_versions );
       for my $i ( 0 .. $#{ $page } ) {
 	  foreach my $j ( 0 .. $#order_publishers ) {
-	      if ( $page->[$i]->_www_publisher eq $order_publishers[$j] ) {
+	      if ( $page->[$i]->_www_publisher =~ m/$order_publishers[$j]/ ) {
 		  $order_flags[$j] = $i if ( $order_flags[$j] == -1 );
 	      }
 	  }
@@ -282,7 +282,8 @@ sub match {
   # 2) Title
   if ( $pub->title ) {
       my @tmp = ( );
-      foreach my $word ( split(/\s+/, $pub->title ) ) {
+      ( my $tmp_title = $pub->title ) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+      foreach my $word ( split(/\s+/, $tmp_title ) ) {
 	  # words that contain non-alphnumeric and non-ascii 
 	  # characters are removed
 	  next if ( $word =~ m/[^\w\s-]/ );
@@ -291,6 +292,20 @@ sub match {
 	  # words with less than 3 characters are removed
 	  next if (length($word) < 3 );
 	  
+	  my @google_stopwords = ('about', 'com', 'for', 'from', 'how', 
+				  'that', 'the', 'this', 'was', 'what',
+				  'when', 'where', 'will', 'with', 'und',
+				  'and', 'www');
+
+	  my $flag = 0;
+	  foreach my $stop_word (@google_stopwords) {
+	      if (lc($word) eq $stop_word) {
+		  $flag = 1;
+		  last;
+	      }
+	  }
+	  next if ($flag == 1);
+
 	  # Add Title-tag
 	  push @tmp, $word;
       }
@@ -330,10 +345,10 @@ sub match {
   # We first try the DOI if there is one
   if ( $query_doi ne '' ) {
 
-      my $query = $searchUrl . $query_doi;
+      my $query = $searchUrl . $query_doi ."&as_vis=1";
       my $response = $browser->get( $query );
       my $content = $response->content;
-      #print STDERR "$query\n";
+      print STDERR "$query\n";
       # parse the page and then see if a publication matches
       if ( $pub->title() ) {
 	  my $page = $self->_parse_googlescholar_page( $content );
@@ -342,6 +357,17 @@ sub match {
 	  if ( $matchedpub ) {
 	      #print STDERR "Found a match using DOI as query.\n";
 	      return $matchedpub;
+	  } else {
+	      # We resolve the doi using dx.doi.org of the first hit
+	      my $fullpub = $self->complete_details( $page->[0] );
+	      my $doi_response = $browser->get( 'http://dx.doi.org/'.$pub->doi );
+	      ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
+	      $doi_content =~ s/\s+/ /g;
+	      $doi_content =~ s/\n//g; 
+	      my $title = $fullpub->title;
+	      if ( $doi_content =~ m/$title/i ) {
+		  return $self->_merge_pub( $pub, $fullpub );
+	      }
 	  }
       } else {
 	  # we do not have a title and authors; in most cases google
@@ -358,9 +384,9 @@ sub match {
 	      
 	      # We resolve the doi using dx.doi.org
 	      my $doi_response = $browser->get( 'http://dx.doi.org/'.$pub->doi );
-	      ( my $doi_content = $doi_response->content ) =~ s/\s+/ /g;
+	      ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
+	      $doi_content =~ s/\s+/ /g;
 	      $doi_content =~ s/\n//g; 
-	      
 	      my $title = $fullpub->title;
 	      if ( $doi_content =~ m/$title/i ) {
 		  return $self->_merge_pub( $pub, $fullpub );
@@ -394,11 +420,13 @@ sub match {
   }
 
   # If we are here then Title+Auhtors failed, and we try to search
-  # only with the title.
-  if ( $query_title ne '' ) {
-      # we add "&as_vis=1" to exclude citations and get only those links
-      # that have stronger support
-      my $query_string = "$query_title"."&as_vis=1";
+  # only with the title and include also citations this time.
+  # Final quality check if there are enough words in the title
+  # to give a significant match
+
+  my $count_words = ($query_title =~ tr/\+//);
+  if ( $query_title ne '' and $count_words > 5) {
+      my $query_string = "$query_title"."&as_vis=0";
       print STDERR "$searchUrl$query_string\n";
 
       # Now let's ask GoogleScholar again with Authors/Title
@@ -434,8 +462,11 @@ sub _find_best_hit {
 	# let's get rid of words that contain none ASCII chars
 	# and other bad stuff (often PDF utf-8 issues)
 	my @words = ( );
-	foreach my $word ( split(/\s+/, $orig_pub->title ) ) {
+	(my $tmp_orig_title = $orig_pub->title) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+	$tmp_orig_title =~ s/\s+/ /g;
+	foreach my $word ( split(/\s+/, $tmp_orig_title ) ) {
 	    next if ( $word =~ m/([^[:ascii:]])/ );
+	    next if ( length ( $word ) < 2 ); # skip one letter words
 	    push @words, $word if ( $word =~ m/^\w+$/ );
 	}
 	
@@ -460,6 +491,8 @@ sub _find_best_hit {
 
 	    # some preprocessing again
 	    my @words2 = ( );
+	    $tmp_title =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+	    $tmp_title =~ s/\s+/ /g;
 	    foreach my $word ( split(/\s+/, $tmp_title ) ) {
 		next if ( $word =~ m/([^[:ascii:]])/ );
 		push @words2, $word if ( $word =~ m/^\w+$/ );
@@ -471,12 +504,20 @@ sub _find_best_hit {
 	    foreach my $word ( @words ) {
 		$counts++ if ( $tmp_title =~ m/\s$word\s/i );
 		#print "$counts || $word || $tmp_title\n";
-		
 	    }
+
 	    if ( $counts > $max_counts ) {
 		$max_counts = $counts;
 		$best_hit = $i;
 	    }
+
+	    # if we fail, we try it a little less restrictive
+	    if ( $best_hit == -1 and $max_counts >= 10 ) {
+		if ( $counts >= $max_counts ) {
+		    $best_hit = $i;
+		}
+	    }
+
 	    #print "$counts of $max_counts --> $best_hit\n";
 	}
 	
