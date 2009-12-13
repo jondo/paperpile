@@ -128,7 +128,11 @@ sub _save_page_to_hash {
 sub _merge_pub {
   my ($self, $old, $new) = @_;
   foreach my $key (keys %{$old->as_hash}){
-    $old->$key($new->$key) if ($new->$key);
+      if ( $key eq 'authors' and $new->$key =~ m/\{others\}$/ ) {
+	  # keep the old authors entry and do nothing
+	  next;
+      } 
+      $old->$key($new->$key) if ($new->$key);
   }
   return $old;
 }
