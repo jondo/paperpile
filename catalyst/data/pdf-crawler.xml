@@ -357,6 +357,20 @@
   </test>
 </site>
 
+<site name="eProceedings">
+  <signature>
+    <url>!eproceedings\.worldscinet\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\.\/preserved-docs\/\S+\.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1142/9789812704313_0004</url>
+  </test>
+</site>
+
 
 <site name="Meta">
   <signature>
