@@ -139,19 +139,24 @@ h1 {
 /*    padding: 8px !important;*/
 }
 
-li.pp-menu  > ul {
+div.pp-menu  > ul {
     display: none;   
 }
 
-li.pp-menu {
+div.pp-menu {
 /*    width: 120; */
 }
 
-li.pp-menu:hover > ul {
-    display: block;        
+div.pp-menu:hover > ul {
+    display: inline;        
 }
 
-.pp-attachment-list{
+div.pp-menu-horizontal  li {
+    display:inline;
+    padding: 0 10px;
+}
+
+div.pp-attachment-list{
     padding: 0 20;
     background-repeat: no-repeat;
 }
@@ -1357,3 +1362,88 @@ div.x-menu.x-menubar .x-menu-list .x-menu-list-item .x-menu-item .x-menu-item-ic
     padding-bottom: 0px! important;
     padding-right: 15px!important
 } 
+
+
+
+/* facebox and meta data entry */
+
+.pp-meta-entry td {
+    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-size: 11pt;
+}
+
+td.pp-meta-label {
+    width: 100px;
+    vertical-align:top;
+    text-align:right;
+    padding: 8px 5px 8px 0px;
+}
+
+td.pp-meta-field {
+    padding: 8px 0px 8px 0px;
+}
+
+td.pp-meta-field {
+    width: 100px;
+} 
+
+
+
+.pp-facebox {
+
+}
+
+
+/* meta data entry form */
+
+
+table.pp-meta-form {
+    border-spacing:0px;
+}
+
+.pp-meta-form tbody.style1 {
+}
+
+
+.pp-meta-form tbody.style2{
+}
+
+
+.pp-meta-form td {
+    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-size: 11pt;
+    vertical-align:top;
+    margin:0;
+    padding: 8px 5px 8px 5px;
+    width:100px;
+}
+
+.pp-meta-form .tooltip-link {
+    display:inline;
+    padding-left: 5px;
+} 
+
+.pp-meta-form .tooltip-link a{
+    color: #BDBDBD;
+    text-decoration:none;
+} 
+
+
+
+.pp-meta-form td.label {
+    text-align:right;
+    font-weight: bold;
+} 
+
+.pp-meta-form td.field {
+    text-align:left;
+} 
+
+.pp-meta-form td.separator {
+    padding: 10px;
+} 
+
+
+.pp-meta-form td.active {
+    background-color: #F2F5A9;
+}

@@ -94,22 +94,21 @@ sub _build_from_bibutils {
     'NUMBER'             => 'number',
     'PAGES'              => 'pages',
     'EDITION'            => 'edition',
-    'NOTES'              => 'note',
+    'NOTES'              => 'annote',
     'VOLUME'             => 'volume',
     'URL'                => 'url',
-    'DEGREEGRANTOR:ASIS' => 'school',
+    'DEGREEGRANTOR:ASIS' => 'organization',
     'KEYWORD'            => 'keywords',
-    'AUTHOR:CORP'        => 'organization', # check if this should be collective author ?
+    'AUTHOR:CORP'        => 'organization',    # check if this should be collective author ?
     'PUBLISHER'          => 'publisher',
   );
-
 
   my $type = $self->_get_type_from_bibutils($data);
   $self->pubtype($type);
 
   my ( @title_fields, @subtitle_fields );
-  my (@authors, @editors);
-  my ( $page_start, $page_end );
+  my ( @authors,      @editors );
+  my ( $page_start,   $page_end );
 
   foreach my $field (@$data) {
 
@@ -121,33 +120,33 @@ sub _build_from_bibutils {
       push @subtitle_fields, $field;
     }
 
-    if ($field->{tag} eq 'AUTHOR'){
-      #my $a=Paperpile::Library::Author->new();
-      #push @authors, $a->read_bibutils($field->{data})->bibtex;
-      push @authors, $self->_format_author($field->{data});
+    if ( $field->{tag} eq 'AUTHOR' ) {
+      push @authors, $self->_format_author( $field->{data} );
     }
 
-    if ($field->{tag} eq 'EDITOR'){
-      #my $a=Paperpile::Library::Author->new();
-      #push @editors, $a->read_bibutils($field->{data})->bibtex;
-      push @editors, $self->_format_author($field->{data});
+    if ( $field->{tag} eq 'EDITOR' ) {
+      push @editors, $self->_format_author( $field->{data} );
     }
 
     $page_start = $field->{data} if $field->{tag} eq 'PAGESTART';
     $page_end   = $field->{data} if $field->{tag} eq 'PAGEEND';
 
     # Already handled
-    next if ( $field->{tag} ~~ [ 'TITLE', 'SUBTITLE', 'AUTHOR','EDITOR',
-                                 'PAGESTART', 'PAGEEND',
-                                 'TYPE', 'GENRE', 'RESOURCE', 'ISSUANCE' ] );
+    next
+      if (
+      $field->{tag} ~~ [
+        'TITLE', 'SUBTITLE', 'AUTHOR',   'EDITOR', 'PAGESTART', 'PAGEEND',
+        'TYPE',  'GENRE',    'RESOURCE', 'ISSUANCE'
+      ]
+      );
 
     my $myfield = $bibutils_map{ $field->{tag} };
-    my $mydata=$field->{data};
+    my $mydata  = $field->{data};
 
     if ($myfield) {
-      $self->$myfield( $mydata );
+      $self->$myfield($mydata);
     } else {
-      #print STDERR "WARNING: Could not handle $field->{tag} of value $field->{data}\n";
+      print STDERR "WARNING: Could not handle $field->{tag} of value $field->{data}\n";
     }
   }
 
@@ -163,21 +162,20 @@ sub _build_from_bibutils {
     }
   }
 
-  if ($page_start){
-    if ($page_end){
-      $self->pages($page_start."-".$page_end);
+  if ($page_start) {
+    if ($page_end) {
+      $self->pages( $page_start . "-" . $page_end );
     } else {
       $self->pages($page_start);
     }
   }
 
-  $self->authors(join(' and ',@authors));
-  $self->editors(join(' and ',@editors));
+  $self->authors( join( ' and ', @authors ) );
+  $self->editors( join( ' and ', @editors ) );
 
   $self->_auto_refresh(1);
   $self->refresh_fields;
   $self->refresh_authors;
-
 
 }
 
@@ -459,7 +457,7 @@ sub _format_bibutils {
     'issn'         => 'ISSN',
     'issue'        => 'ISSUE',
     'number'       => 'NUMBER',
-    'note'         => 'NOTE',
+    'annote'       => 'NOTES',
     'url'          => 'URL',
     'school'       => 'DEGREEGRANTOR:ASIS',
     'keywords'     => 'KEYWORD',

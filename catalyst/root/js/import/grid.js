@@ -866,6 +866,21 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
         var sha1=this.getSelectionModel().getSelected().data.sha1;
 
+        win = new Ext.Window({
+            modal:true,
+            //baseCls: 'pp-facebox',
+            shadow:false,
+            layout:'fit',
+            width:800,
+            height:600,
+            resizable:false,
+            closable:true,
+            items: [new Paperpile.MetaPanel({data:this.getSelectionModel().getSelected()})],
+        });
+    
+        win.show(this);
+
+        /*
         var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
 
         var form=new Paperpile.Forms.PubEdit({data:this.getSelectionModel().getSelected().data,
@@ -892,6 +907,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         east_panel.add(form);
         east_panel.doLayout();
         east_panel.getLayout().setActiveItem('pub_edit');
+*/
     },
 
     newEntry: function(){

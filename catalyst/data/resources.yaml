@@ -36,6 +36,7 @@ js:
   - "js/pub/abstract.js" 
   - "js/pub/notes.js" 
   - "js/pub/edit.js"
+  - "js/pub/edit-window.js"
   - "js/pub/view.js" 
   - "js/pub/bottom-panel.js"
   - "js/pub/side-panel.js"

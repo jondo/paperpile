@@ -586,9 +586,9 @@ sub _linkOut {
       $pub_hash{$id}->linkout( $entry->{ObjUrl}->{Url} );
 
       # Adjust the url otherwise it won't get displayed correctly
-      my $icon_url = $entry->{ObjUrl}->{IconUrl};
-      $icon_url =~ s/entrez/corehtml/;
-      $pub_hash{$id}->icon($icon_url);
+      #my $icon_url = $entry->{ObjUrl}->{IconUrl};
+      #$icon_url =~ s/entrez/corehtml/;
+      #$pub_hash{$id}->icon($icon_url);
     }
   }
 

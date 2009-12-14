@@ -59,7 +59,10 @@ has 'last_read' => ( is => 'rw');
 # How many times it was read
 has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
 
-# The associated PDF file, the path is relative to the paper_root user
+# If available, direct link to PDF goes in here
+has 'pdf_url' => ( is => 'rw', default => '' );
+
+# An attached PDF file, the path is relative to the paper_root user
 # setting
 has 'pdf' => ( is => 'rw', default => '' );
 
@@ -68,6 +71,16 @@ has 'pdf_size' => ( is => 'rw', default => 0, isa => 'Int' );
 
 # The number of additional files that are associated with this entry
 has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
+
+# User provided annotation "Notes", formatted in HTML
+has 'annote' => ( is => 'rw', default => '' );
+
+# Comma separated list of tags (known as "labels" in the UI)
+has 'tags' => ( is => 'rw', default => '' );
+
+# Comma separated list of folders
+has 'folders' => ( is => 'rw', default => '' );
+
 
 ### Fields from the config file
 

@@ -54,11 +54,11 @@ foreach my $i ( 0 .. 27 ) {
   cmp_bag( $new_data, $data[$i], "check self-consistent input/output ($i, ".$pub->citekey.")");
 
   foreach my $line (sort {$a->{tag} cmp $b->{tag}} @$new_data) {
-    #print join( " ", $line->{tag}, "'" . $line->{data} . "'", $line->{level} ), "\n";
+#    print STDERR join( " ", $line->{tag}, "'" . $line->{data} . "'", $line->{level} ), "\n";
   }
-  #print ">>>>>>>>>>>>>>>>>\n";
+#  print STDERR ">>>>>>>>>>>>>>>>>\n";
   foreach my $line ( sort {$a->{tag} cmp $b->{tag}} @{ $data[$i] } ) {
-    #print join( " ", $line->{tag}, "'" . $line->{data} . "'", $line->{level} ), "\n";
+#    print STDERR join( " ", $line->{tag}, "'" . $line->{data} . "'", $line->{level} ), "\n";
   }
 }
 

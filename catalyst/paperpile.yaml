@@ -1,4 +1,4 @@
----
+YAML---
 name: "Paperpile"
 platform: "__PLATFORM__"
 
@@ -59,7 +59,6 @@ pub_fields:
   publisher:     "Publisher"
   organization:  "Organization"
   school:        "University"        
-  city:          "City"
   address:       "Address"
   year:          "Year"
   month:         "Month"
@@ -68,326 +67,78 @@ pub_fields:
   issn:          "ISSN"
   isbn:          "ISBN"
   pmid:          "Pubmed ID"
+  lccn:          "Library of congress card number"
+  arxivid:       "ArXiv ID"
   doi:           "DOI"
-  icon:          "Icon URL"
   abstract:      "Abstract"
   keywords:      "Author key words"
   linkout:       "Website"
-  pdf_url:       "PDF URL"
   note:          "Note"
-  annote:        "Notes"
-  tags:          "Tags"
-  folders:       "Folders"
 
+pub_tooltips:
+  pubtype:       "Type"
+  citekey:       ""
+  sortkey:       "This name is used for sorting in BibTeX bibliographies if authors and editors are not available"
+  title:         ""
+  booktitle:     ""
+  series:        ""
+  authors:       "The names of the authors. Names should be given as Knuth, Donald or Knuth, D. Multiple names are separated by 'and' "
+  editors:       "Editors"
+  journal:       "Journal"
+  chapter:       "Chapter"      
+  volume:        "Volume"
+  number:        "Number"
+  issue:         "Issue"
+  edition:       "edition"
+  pages:         "Pages"
+  url:           "URL"
+  howpublished:  "Details"
+  publisher:     "Publisher"
+  organization:  "Organization"
+  school:        "University"        
+  address:       "Address"
+  year:          "Year"
+  month:         "Month"
+  day:           "Day"
+  eprint:        "Eprint"
+  issn:          "ISSN"
+  isbn:          "ISBN"
+  pmid:          "Pubmed ID"
+  lccn:          "Library of congress card number"
+  arxivid:       "ArXiv ID"
+  doi:           "DOI"
+  abstract:      "Abstract"
+  keywords:      "Author key words"
+  linkout:       "Website"
+  note:          "Note"
+
+
+pub_identifiers: ["issn", "isbn", "pmid", "lccn", "arxivid"]
 
 pub_types:
   ARTICLE:
     name: "Journal article"
-    fields: 
-      pubtype:
-        label: "Type"
-      title:
-        label: "Title"
-      authors:
-        label: "Authors"
-      journal:
-        label: "Journal"
-      volume:
-        label: "Volume"
-      issue:
-        label: "Issue"
-      pages:
-        label: "Pages"
-      year:
-        label: "Year"
-      month:
-        label: "Month"
-      issn:
-        label: "ISSN"
-      pmid:
-        label: "Pubmed ID"
-      eprint:
-        label: "Eprint"
-      doi:
-        label: "DOI"
-      url:
-        label: "Website"
-      note:
-        label: "Note"
-      abstract:
-        label: "Abstract"
-
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["abstract:6"]
+      - ["-"]
+      - ["journal:4", ""]
+      - ["volume:2", "issue:2", "pages:2"]
+      - ["year:2", "month:2", ""]
+      - ["-"]
   INCOLLECTION:
     name: "Book chapter"
     fields:
-      pubtype:
-        label: "Type"
-      title:
-        label: "Chapter Title"
-      booktitle:
-        label: "Book Title"
-      authors:
-        label: "Authors"
-      editors:
-        label: "Editors"
-      pages:
-        label: "Pages"
-      publisher:
-        label: "Publisher"
-      year:
-        label: "Year"
-      series:
-        label: "Series"
-      volume:
-        label: "Volume"
-      address:
-        label: "Address"
-      month:
-        label: "Month"
-      issn:
-        label: "ISSN"
-      pmid:
-        label: "Pubmed ID"
-      eprint:
-        label: "Eprint"
-      doi:
-        label: "DOI"
-      url:
-        label: "Website"
-      note:
-        label: "Note"
-      abstract:
-        label: "Abstract"
-
-  BOOK:
-    name: "Book"
-    fields:
-      pubtype:
-        label: "Type"
-      booktitle:
-        label: "Book Title"
-      authors:
-        label: "Authors"
-      editors:
-        label: "Editors"
-      publisher:
-        label: "Publisher"
-      year:
-        label: "Year"
-      series:
-        label: "Series"
-      volume:
-        label: "Volume"
-      address:
-        label: "Address"
-      month:
-        label: "Month"
-      isbn:
-        label: "ISBN"
-      pmid:
-        label: "Pubmed ID"
-      doi:
-        label: "DOI"
-      eprint:
-        label: "Eprint"
-      url:
-        label: "Website"
-      note:
-        label: "Note"
-      abstract:
-        label: "Abstract"
-
-  INBOOK:
-    name: "In book (chapter, pages...)"
-    fields:
-      pubtype:
-        label: "Type"
-      booktitle:
-        label: "Book Title"
-      authors:
-        label: "Authors"
-      editors:
-        label: "Editors"
-      pages:
-        label: "Pages"
-      chapter:
-        label: "Chapter"
-      publisher:
-        label: "Publisher"
-      year:
-        label: "Year"
-      series:
-        label: "Series"
-      volume:
-        label: "Volume"
-      address:
-        label: "Address"
-      month:
-        label: "Month"
-      issn:
-        label: "ISSN"
-      pmid:
-        label: "Pubmed ID"
-      doi:
-        label: "DOI"
-      eprint:
-        label: "Eprint"
-      url:
-        label: "Website"
-      note:
-        label: "Note"
-      abstract:
-        label: "Abstract"
-
-  PROCEEDINGS:
-    name: "Conference proceedings"
-    fields:
-      pubtype:
-        label: "Type"
-      title:
-        label: "Title"
-      editors:
-        label: "Editors"
-      organization:
-        label: "Organizer"
-      publisher:
-        label: "Publisher"
-      year:
-        label: "Year"
-      month:
-        label: "Month"
-      eprint:
-        label: "Eprint"
-      doi:
-        label: "DOI"
-      url:
-        label: "Website"
-      note:
-        label: "Note"
-
-
-  INPROCEEDINGS:
-    name: "Conference paper"
-    fields:
-      pubtype:
-        label: "Type"
-      title:
-        label: "Title"
-      authors:
-        label: "Authors"
-      editors:
-        label: "Editors"
-      booktitle:
-        label: "Conference"
-      pages:
-        label: "Pages"
-      organization:
-        label: "Organizer"
-      publisher:
-        label: "Publisher"
-      year:
-        label: "Year"
-      month:
-        label: "Month"
-      eprint:
-        label: "Eprint"
-      doi:
-        label: "DOI"
-      url:
-        label: "Website"
-      note:
-        label: "Note"
-
-
-  MASTERSTHESIS:
-    name: "Master's thesis"
-    fields:
-      pubtype:
-        label: "Type"
-      title:
-        label: "Title"
-      authors:
-        label: "Author"
-      school: 
-        label: "University"
-      year:
-        label: "Year"
-      month:
-        label: "Month"
-      note:
-        label: "Note"
-
-
-  PHDTHESIS:
-    name: "PhD thesis"
-    fields:
-      pubtype:
-        label: "Type"
-      title:
-        label: "Title"
-      authors:
-        label: "Author"
-      school: 
-        label: "University"
-      year:
-        label: "Year"
-      month:
-        label: "Month"
-      note:
-        label: "Note"
-
-
-  MANUAL:
-    name: "Technical documentation"
-    fields:
-      title:
-        label: "Title"
-      authors:
-        label: "Author"
-      edition:
-        label: "Version"
-      organization: 
-        label: "Organization"
-      address:
-        label: "Address"
-      year:
-        label: "Year"
-      month:
-        label: "Month"
-      note:
-        label: "Note"
-
-
-  MISC:
-    name: "Other"
-    fields:
-      title:
-        label: "Title"
-      authors:
-        label: "Author"
-      howpublished:
-        label: "Details"
-      eprint:
-        label: "Eprint"
-      year:
-        label: "Year"
-      month:
-        label: "Month"
-      note:
-        label: "Note"
-
-
-  UNPUBLISHED:
-    name: "Unpublished"
-    fields:
-      title:
-        label: "Title"
-      authors:
-        label: "Author"
-      year:
-        label: "Year"
-      month:
-        label: "Month"
-      note:
-        label: "Note"
-
+      - ["-"]
+      - ["title:6"]
+      - ["booktitle:6"]
+      - ["authors:6"]
+      - ["editors:6"]
+      - ["abstract:6"]
+      - ["-"]
+      - ["publisher:3", "address:3"]
+      - ["volume:2", "pages:2", ""]
+      - ["year:2", "month:2", ""]
+      - ["-"]

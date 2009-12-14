@@ -6,13 +6,17 @@ CREATE TABLE Settings(
 CREATE TABLE Publications(
   sha1               TEXT UNIQUE,
   pdf                TEXT,
+  pdf_url            TEXT,
   pdftext            TEXT,
   pdf_size           INTEGER,
   trashed            INTEGER,
   created            TIMESTAMP,
   last_read          TIMESTAMP,
   times_read         INTEGER,
-  attachments        INTEGER
+  attachments        INTEGER,
+  annote             TEXT,
+  tags               TEXT,
+  folders            TEXT
 );
 
 CREATE VIRTUAL TABLE Fulltext_full using fts3(text,abstract,notes,title,key,author,label,labelid,keyword,folder,year,journal);

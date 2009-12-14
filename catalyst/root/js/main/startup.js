@@ -57,6 +57,7 @@ Paperpile.stage0 = function(){
 
                 // Handler to process the STDERR output of the server
                 Paperpile.server.setOnReadLine(function(line){
+                    console.log(line);
 
                     if (Paperpile.isLogging){
                         Paperpile.serverLog=Paperpile.serverLog+line+"\n";
@@ -67,7 +68,7 @@ Paperpile.stage0 = function(){
                             panel.addLine(line+"\n");
                         }
 
-                        if (line.match(/Paperpile powered by Catalyst/)){
+                        if (line.match(/powered by Catalyst 5.8/)){
                             Titanium.API.notice("Catalyst successfully started");
                             // We are successful so we remove the failure
                             // handler to avoid to call it on exit of the

@@ -11,7 +11,7 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
         this.actions['IMPORT'].show();
         this.actions['NEW'].hide();
         this.actions['EDIT'].hide();
-        this.actions['TRASH'].hide();
+        //this.actions['TRASH'].hide();
 
         this.actions['IMPORT_ALL'].show();
         this.actions['IMPORT_ALL'].enable();
