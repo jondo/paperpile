@@ -359,14 +359,16 @@ sub match {
 	      return $matchedpub;
 	  } else {
 	      # We resolve the doi using dx.doi.org of the first hit
-	      my $fullpub = $self->complete_details( $page->[0] );
-	      my $doi_response = $browser->get( 'http://dx.doi.org/'.$pub->doi );
-	      ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
-	      $doi_content =~ s/\s+/ /g;
-	      $doi_content =~ s/\n//g; 
-	      my $title = $fullpub->title;
-	      if ( $doi_content =~ m/$title/i ) {
-		  return $self->_merge_pub( $pub, $fullpub );
+	      if ( $page->[0] ) {
+		  my $fullpub = $self->complete_details( $page->[0] );
+		  my $doi_response = $browser->get( 'http://dx.doi.org/'.$pub->doi );
+		  ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
+		  $doi_content =~ s/\s+/ /g;
+		  $doi_content =~ s/\n//g; 
+		  my $title = $fullpub->title;
+		  if ( $doi_content =~ m/\Q$title\E/i ) {
+		      return $self->_merge_pub( $pub, $fullpub );
+		  }
 	      }
 	  }
       } else {
@@ -388,7 +390,9 @@ sub match {
 	      $doi_content =~ s/\s+/ /g;
 	      $doi_content =~ s/\n//g; 
 	      my $title = $fullpub->title;
-	      if ( $doi_content =~ m/$title/i ) {
+	      # \Q \E are needed, otherwise we would need to esacpe brackets
+	      # and other stuff
+	      if ( $doi_content =~ m/\Q$title\E/im ) {
 		  return $self->_merge_pub( $pub, $fullpub );
 	      }
 	  }
@@ -445,8 +449,8 @@ sub match {
   }
   
   # If we are here then all search strategies failed.
-  #NetMatchError->throw( error => 'No match against GoogleScholar.');
-  return $pub;
+  NetMatchError->throw( error => 'No match against GoogleScholar.');
+  #return $pub;
 }
 
 
