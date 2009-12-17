@@ -741,7 +741,27 @@ sub _ParseXML {
     }
   }
 
-  #################################################3
+  ##################################################### 
+  # EXIT POINT NUMBER ONE
+  # Some journal have such wired page setting styles
+  # that they cannot be parsed the regular way
+  # Here is the first check point if we encounter such
+  # a journal
+  #####################################################
+  if ( $lines_content[0] =~ m/Landes\sBioscience$/ ) {
+      my @title_tmp = ( );
+      my @authors_tmp = ( );
+      for my $pos ( 0 .. $#lines_content ) {
+	  push @title_tmp, $lines_content[$pos] if ( $lines_fs[$pos] == 24 );
+	  push @authors_tmp, $lines_content[$pos] if ( $lines_fs[$pos] == 12 and $lines_content[$pos] =~ m/,$/ );
+      }
+      $title = join(" ", @title_tmp);
+      $authors = join (" ", @authors_tmp);
+      return ( $title, $authors, $doi, 6, 0, '' ) if ($title ne '' and $authors ne '');
+  }
+
+
+  #################################################
   # LET'S JOIN THE LINES
 
   my @final_content        = ();
