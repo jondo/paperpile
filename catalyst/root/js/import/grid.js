@@ -863,8 +863,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     handleEdit: function(isNew){
 
-        var rowid=this.getSelectionModel().getSelected().get('_rowid');
-        var sha1=this.getSelectionModel().getSelected().data.sha1;
+        var selection = this.getSelectionModel().getSelected();
+
+        if (selection){
+            var rowid=selection.get('_rowid');
+            var sha1=selection.data.sha1;
+        }
 
         win = new Ext.Window({
             title: isNew ? 'Add new reference':'Edit reference',
