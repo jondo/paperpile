@@ -97,7 +97,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       this.actions['NEW'] = new Ext.Action({
 	text: 'New Reference',
 	iconCls: 'pp-icon-add',
-        handler: this.newEntry,
+          handler: function(){this.handleEdit(true);},
         scope: this,
         itemId:'new_button',
         tooltip: 'Manually create a new reference for your library'

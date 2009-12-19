@@ -89,20 +89,15 @@ sub get_settings : Local {
 
   my ( $self, $c ) = @_;
 
-  my $tags = $c->model('Library')->get_tags;
-
-  my $user_settings = $c->model('Library')->settings;
-  my $app_settings  = $c->model('App')->settings;
-
   my @list1 = %{ $c->model('App')->settings };
   my @list2 = %{ $c->model('User')->settings };
   my @list3 = %{ $c->model('Library')->settings };
 
   my %merged = ( @list1, @list2, @list3 );
 
-  $merged{pub_types} = $c->config->{pub_types};
-  $merged{pub_fields} = $c->config->{pub_fields};
-  $merged{pub_identifiers} = $c->config->{pub_identifiers};
+  foreach my $key ( 'pub_types', 'pub_fields', 'pub_tooltips', 'pub_identifiers' ) {
+    $merged{$key} = $c->config->{$key};
+  }
 
   $c->stash->{data} = {%merged};
 

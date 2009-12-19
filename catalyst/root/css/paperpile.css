@@ -1304,9 +1304,11 @@ div:hover.pp-tag-style-sample {
      background-image:none;
 }
 
+/*
 .x-spotlight {
     opacity: 0.4;
 }
+*/
 
 /*Fixes combobox trigger bug. Don't know what it is exactly doing but seems to work. */
 .ext-safari .x-form-field-wrap .x-form-trigger{right:inherit;}
@@ -1408,26 +1410,26 @@ table.pp-meta-form {
 .pp-meta-form tbody.style2{
 }
 
-
 .pp-meta-form td {
     font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
-    font-size: 11pt;
     vertical-align:top;
     margin:0;
     padding: 8px 5px 8px 5px;
     width:100px;
+    font-size: 14px;
 }
 
 .pp-meta-form .tooltip-link {
     display:inline;
     padding-left: 5px;
-} 
-
-.pp-meta-form .tooltip-link a{
+    vertical-align:top;
     color: #BDBDBD;
-    text-decoration:none;
+    cursor:default;
 } 
 
+.pp-meta-form div.tooltip-link:hover {
+    color: black!important;
+}
 
 
 .pp-meta-form td.label {
@@ -1440,10 +1442,14 @@ table.pp-meta-form {
 } 
 
 .pp-meta-form td.separator {
-    padding: 10px;
+    padding: 5px;
 } 
 
 
 .pp-meta-form td.active {
     background-color: #F2F5A9;
+}
+
+.pp-meta-form a.pp-textlink {
+    font-size: 12px;
 }

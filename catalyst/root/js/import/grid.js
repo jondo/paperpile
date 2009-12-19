@@ -128,7 +128,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         this.actions={
             'EDIT': new Ext.Action({
                 text: 'Edit',
-                handler: this.handleEdit,
+                handler: function(){ this.handleEdit(false) },
                 scope: this,
                 cls: 'x-btn-text-icon edit',
 		icon: '/images/icons/pencil.png',
@@ -861,55 +861,44 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     },
 
-    handleEdit: function(){
+    handleEdit: function(isNew){
 
         var rowid=this.getSelectionModel().getSelected().get('_rowid');
         var sha1=this.getSelectionModel().getSelected().data.sha1;
 
         win = new Ext.Window({
+            title: isNew ? 'Add new reference':'Edit reference',
             modal:true,
-            //baseCls: 'pp-facebox',
             shadow:false,
             layout:'fit',
             width:800,
             height:600,
             resizable:false,
             closable:true,
-            items: [new Paperpile.MetaPanel({data:this.getSelectionModel().getSelected()})],
+            items: [ new Paperpile.MetaPanel(
+                { data: isNew ? {pubtype:'ARTICLE'} : this.getSelectionModel().getSelected().data,
+                  grid_id: isNew ? null : this.id,
+                  callback: function(status,data){
+                      if (status == 'SAVE'){
+                          if (isNew){
+                              this.store.reload();
+                          } else {
+                              this.updateData(data);
+                              this.findParentByType(Paperpile.PubView).onRowSelect();
+                          }
+                          Paperpile.status.clearMsg();
+                      }
+                      win.close();
+                  },
+                  scope:this
+                }
+            )],
         });
     
         win.show(this);
-
-        /*
-        var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
-
-        var form=new Paperpile.Forms.PubEdit({data:this.getSelectionModel().getSelected().data,
-                                              grid_id: this.id,
-                                              spotlight: true,
-                                              callback: function(status,data){
-                                                  east_panel.remove('pub_edit');
-                                                  if (oldSize<500) east_panel.setSize(oldSize);
-                                                  east_panel.doLayout();
-                                                  east_panel.getLayout().setActiveItem('overview');
-                                                  east_panel.showBbar();
-                                                  if (status == 'SAVE'){
-                                                      this.updateData(data);
-                                                      this.findParentByType(Paperpile.PubView).onRowSelect();
-                                                      Paperpile.status.clearMsg();
-                                                  }
-                                              },
-                                              scope:this
-                                             });
-
-        var oldSize=east_panel.getInnerWidth();
-        if (oldSize<500) east_panel.setSize(500);
-        east_panel.hideBbar();
-        east_panel.add(form);
-        east_panel.doLayout();
-        east_panel.getLayout().setActiveItem('pub_edit');
-*/
     },
 
+    /*
     newEntry: function(){
         var east_panel=this.findParentByType(Ext.PubView).items.get('east_panel');
 
@@ -940,6 +929,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         east_panel.getLayout().setActiveItem('pub_edit');
 
     },
+*/
 
 
     batchDownload: function(){

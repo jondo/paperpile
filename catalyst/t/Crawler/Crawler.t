@@ -42,3 +42,4 @@ foreach my $site ( keys %$tests ) {
     $test_no++;
   }
 }
+
