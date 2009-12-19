@@ -131,6 +131,7 @@ Paperpile.stage1 = function() {
                 }
                 
             } else {
+                Paperpile.status=new Paperpile.Status();
                 Paperpile.stage2();
             }
         }, 
@@ -180,7 +181,6 @@ Paperpile.stage2=function(){
             Paperpile.main.show();
             var tree=Ext.getCmp('treepanel');
             Paperpile.main.tree=tree;
-            Paperpile.status=new Paperpile.Status();
             Paperpile.main.tabs.newDBtab('','MAIN');
             tree.expandAll();
             Paperpile.main.tabs.remove('welcome');
