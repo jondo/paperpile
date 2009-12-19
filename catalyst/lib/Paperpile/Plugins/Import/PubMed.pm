@@ -602,4 +602,32 @@ sub _linkOut {
 
 }
 
+# Function: _fetch_by_pmid
+
+sub _fetch_by_pmid {
+
+    ( my $self, my $pmid ) = @_;
+
+    my $browser   = Paperpile::Utils->get_browser;
+    if ( $pmid ne '' ) {
+	my $query = "$esearch$pmid";
+	$query .= "[uid]" if ( $pmid !~ m/^PMC/ );
+
+	my $response  = $browser->get( $query );
+	my $resultXML = $response->content;
+	my $result    = XMLin($resultXML);
+	
+	if ( $result->{Count} == 1 ) {
+	    $self->web_env( $result->{WebEnv} );
+	    $self->query_key( $result->{QueryKey} );
+	    
+	    my $xml = $self->_pubFetch( 0, 1 );
+	    my $page = $self->_read_xml($xml);
+	    $self->_linkOut($page);
+	    return $page->[0];
+	}
+    }
+}
+
+
 1;
