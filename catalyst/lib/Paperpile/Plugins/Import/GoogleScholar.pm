@@ -14,6 +14,9 @@ use Paperpile::Library::Author;
 use Paperpile::Library::Journal;
 use Paperpile::Utils;
 
+use Paperpile::Plugins::Import::SpringerLink;
+use Paperpile::Plugins::Import::ACM;
+
 extends 'Paperpile::Plugins::Import';
 
 # The search query to be send to GoogleScholar
@@ -150,30 +153,69 @@ sub complete_details {
 
   ( my $self, my $pub ) = @_;
 
+  # Create a new Publication object
+  my $full_pub = Paperpile::Library::Publication->new();
+
   my $browser = Paperpile::Utils->get_browser;
   $browser->cookie_jar( $self->_session_cookie );
   my $bibtex = '';
-
-  # We call the British Library Direct link to get the
-  # abstract if they have any
-
-  my $abstract = $self->_parse_BL ( $pub );
 
   # Let's see if the the www_provider is a good one
   my @best_sources = ( 'Elsevier','ingentaconnect.com',
 		       'liebertonline.com', 'nature.com',
 		       'sciencemag.org', 'Springer',
 		       'Cambridge Univ Press',
-		       'Nature Publishing Group', 'Oxford Univ Press' );
+		       'Nature Publishing Group', 'Oxford Univ Press',
+		       'portal.acm.org');
   my $best_flag = 0;
   foreach my $j ( 0 .. $#best_sources ) {
       $best_flag = 1 if ( $pub->_www_publisher eq $best_sources[$j] );
   }
 
   # if the publisher is already a good one we call the BibTeX right here
+  # or take another Plugin if we can recognize it
   if ( $best_flag == 1 ) {
-      my $bibtex_tmp = $browser->get( $pub->_details_link );
-      $bibtex = $bibtex_tmp->content;
+      my $done = 0;
+      my $backup_details_link = $pub->_details_link;
+
+      # Exit point to SpringerLink details completion
+      if ( $pub->_www_publisher eq 'Springer' ) {
+	  if ( $pub->linkout() =~ m/http:\/\/www.springerlink.com\/index\/(\w+)(\.pdf)/ ) {
+	      my $tmp_details_link = 'http://www.springerlink.com/content/'.$1;
+	      my $SpringerLinkPlugin = Paperpile::Plugins::Import::SpringerLink->new();
+	      $pub->_details_link( $tmp_details_link );
+	      $full_pub = $SpringerLinkPlugin->complete_details( $pub );
+	      $done = 1 if ( $full_pub->title );
+	  }
+      }
+
+      # Exit point to ACM details completion
+      if ( $pub->_www_publisher eq 'portal.acm.org' ) {
+	  if ( $pub->linkout() =~ m/http:\/\/portal\.acm\.org\/citation\.cfm\?id=/ ) {
+	      my $tmp_details_link = $pub->linkout();
+	      my $ACMPlugin = Paperpile::Plugins::Import::ACM->new();
+	      $pub->_details_link( $tmp_details_link );
+	      $full_pub = $ACMPlugin->complete_details( $pub );
+	      $done = 1 if ( $full_pub->title );
+	  }
+      }
+
+      # If we have no support for the publisher yet, or it did not work
+      # we fall back to Google Bibtex
+      if ( $done == 0 ) {
+	  $pub->_details_link( $backup_details_link );
+	  my $bibtex_tmp = $browser->get( $pub->_details_link );
+	  $bibtex = $bibtex_tmp->content;
+      } else {
+	  # If we are here we succeded in calling another Plugin and
+	  # we are done
+	  my $old_sha1 = $pub->sha1;
+	  my $new_sha1 = $full_pub->sha1;
+	  delete( $self->_hash->{$old_sha1} );
+	  $self->_hash->{$new_sha1} = $full_pub;
+	  
+	  return $full_pub;
+      }
   }
 
   # For many articles Google provides links to several versions of
@@ -228,8 +270,7 @@ sub complete_details {
   # Google Bug: everything is twice escaped in bibtex
   $bibtex =~ s/\\\\/\\/g;
 
-  # Create a new Publication object and import the information from the BibTeX string
-  my $full_pub = Paperpile::Library::Publication->new();
+  # import the information from the BibTeX string
   $full_pub->import_string( $bibtex, 'BIBTEX' );
 
   # there are cases where bibtex gives less information than we already have
@@ -246,7 +287,9 @@ sub complete_details {
   #and thus not in the new object
   $full_pub->linkout( $pub->linkout );
 
-  # Add the abstract if there is any
+  # We call the British Library Direct link to get the
+  # abstract if they have any
+  my $abstract = $self->_parse_BL ( $pub );
   $full_pub->abstract ( $abstract ) if ( $abstract ne '' );
 
   # We don't use Google key

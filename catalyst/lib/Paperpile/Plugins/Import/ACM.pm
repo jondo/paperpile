@@ -6,6 +6,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
+use URI::Escape;
 use 5.010;
 
 use Paperpile::Library::Publication;
@@ -23,6 +24,23 @@ has 'query' => ( is => 'rw' );
 # dl=Portal for 'The ACM Digital Library'
 my $searchUrl = 'http://portal.acm.org/results.cfm?coll=Portal&dl=GUIDE&termshow=matchall&query=';
 
+sub _EscapeString {
+    my $string = $_[0];
+    
+    # remove leading spaces
+    $string =~ s/^\s+//;
+    # remove spaces at the end
+    $string =~ s/\s+$//;
+
+    # escape each single word and finally join
+    # with plus signs
+    my @tmp = split( /\s+/, $string );
+    foreach my $i ( 0 .. $#tmp ) {
+	$tmp[$i] = uri_escape_utf8( $tmp[$i] );
+    }
+    
+    return join( "+", @tmp );
+}
 
 sub BUILD {
   my $self = shift;
@@ -36,7 +54,7 @@ sub connect {
   my $browser = Paperpile::Utils->get_browser;
 
   # Get the results
-  (my $tmp_query = $self->query) =~ s/\s+/+/g;
+  my $tmp_query = _EscapeString($self->query);
   my $response = $browser->get( $searchUrl . $tmp_query );
   
   my $content  = $response->content;
@@ -85,7 +103,7 @@ sub page {
   my $tree = HTML::TreeBuilder::XPath->new;
   $tree->utf8_mode(1);
   $tree->parse_content($content);
-
+ 
   my %data = (
     authors   => [],
     titles    => [],
@@ -97,7 +115,6 @@ sub page {
 
   # Each entry is part of an unorder list 
   my @nodes = $tree->findnodes('/html/body/table/tr/td/table/tr[@valign="top"]/td/table');
-  
   foreach my $node (@nodes) {
       
       # Title is easy
@@ -199,7 +216,7 @@ sub complete_details {
   my @nodes = $tree->findnodes('/html/body/div/table/tr/td/table/tr/td/table/tr/td/div/a[@class="small-link-text"]');
   (my $bibtex_url = $nodes[1]->attr('onclick')) =~ s/(.*open\(')(.*)(','Bi.*)/$2/;
   $bibtex_url = 'http://portal.acm.org/'.$bibtex_url;
-  
+
   # Create a new Publication object and import the information from the BibTeX string
   $response = $browser->get( $bibtex_url );
   my $bibtex = $response->content;
@@ -211,6 +228,11 @@ sub complete_details {
   $full_pub->abstract ($abstract);
   $full_pub->linkout( $pub->linkout );
   $full_pub->pdf_url( $pub->pdf_url );
+
+  # clean the DOI entry
+  ( my $doi = $full_pub->doi ) =~ s/http:\/\/dx\.doi\.org\///;
+  $doi =~ s/http:\/\/doi.acm.org\///;
+  $full_pub->doi( $doi ) if ( $doi );
 
   # We don't use ACM key
   $full_pub->citekey('');

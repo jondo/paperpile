@@ -30,6 +30,25 @@ sub BUILD {
 }
 
 
+sub _EscapeString {
+    my $string = $_[0];
+    
+    # remove leading spaces
+    $string =~ s/^\s+//;
+    # remove spaces at the end
+    $string =~ s/\s+$//;
+
+    # escape each single word and finally join
+    # with plus signs
+    my @tmp = split( /\s+/, $string );
+    foreach my $i ( 0 .. $#tmp ) {
+	$tmp[$i] = uri_escape_utf8( $tmp[$i] );
+    }
+    
+    return join( "+AND+", @tmp );
+}
+
+
 # Format the query sent to ArXiv. This means escaping 
 # things like non-alphanumeric characters and joining words with '+'.
 
@@ -148,6 +167,8 @@ sub _parse_arxiv_page {
 	# Title and abstract are easy, they are regular elements
 	my $title    = join( ' ', @{ $entry->{title} } );
 	my $abstract = join( ' ', @{ $entry->{summary} } );
+	$title =~ s/\n//g;
+	$title =~ s/\s+/ /g;
 	
 	# Now we add the authors
 	my @authors = ();
@@ -539,12 +560,74 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
+  my $query_doi = '';
+  my $query_arxiv_id = '';
+  my $query_title = '';
+  my $query_authors = '';
+
+  # First we format the three query strings properly. Besides
+  # HTML escaping we remove words that contain non-alphnumeric
+  # characters. These words can cause severe problems.
+
+  # 1) DOIs are sometimes supported, but Arxiv Ids work best. It is at the
+  # moment stored in pmid
+  $query_doi = _EscapeString( $pub->doi ) if ( $pub->doi );
+  $query_arxiv_id = _EscapeString( $pub->pmid ) if ( $pub->pmid );
+
+  # 2) Title
+  if ( $pub->title ) {
+      my @tmp = ( );
+      ( my $tmp_title = $pub->title ) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+      foreach my $word ( split(/\s+/, $tmp_title ) ) {
+	  # words that contain non-alphnumeric and non-ascii 
+	  # characters are removed
+	  next if ( $word =~ m/[^\w\s-]/ );
+	  next if ( $word =~ m/[^[:ascii:]]/ );
+
+	  # words with less than 3 characters are removed
+	  next if (length($word) < 3 );
+	  
+	  my @stopwords = ('about', 'com', 'for', 'from', 'how', 
+				  'that', 'the', 'this', 'was', 'what',
+				  'when', 'where', 'will', 'with', 'und',
+				  'and', 'www');
+
+	  my $flag = 0;
+	  foreach my $stop_word (@stopwords) {
+	      if (lc($word) eq $stop_word) {
+		  $flag = 1;
+		  last;
+	      }
+	  }
+	  next if ($flag == 1);
+
+	  # Add Title-tag
+	  push @tmp, "ti:$word";
+      }
+      $query_title = _EscapeString( join( " ", @tmp ) );
+  }
+
+  # 3) Authors. We just use each author's last name
+  if ( $pub->authors ) {
+      my @tmp = ( );
+      foreach my $author ( @{ $pub->get_authors } ) {
+	  # words that contain non-alphnumeric and non-ascii 
+	  # characters are removed
+	  next if ( $author->last =~ m/[^\w\s-]/ );
+	  next if ( $author->last =~ m/[^[:ascii:]]/ );
+
+	  push @tmp, 'au:'.$author->last;
+      }
+      $query_authors = _EscapeString(join(" ", @tmp));
+  }
+
   my $browser = Paperpile::Utils->get_browser;
-  
+
   # let's first see if we have an arXiv identifier
-  if ( $pub->pmid ) {
-      my $query_string = $self->FormatQueryStringID($pub->pmid);
-      my $response = $browser->get($searchUrl_ID . $query_string );
+  if ( $query_arxiv_id ne '' ) {
+      my $query = $searchUrl_ID .$query_arxiv_id;
+      #print STDERR "$query\n";
+      my $response = $browser->get( $query );
       my $result = XMLin( $response->content, ForceArray => 1 );
 
       if ( $result->{entry} ) {
@@ -552,28 +635,49 @@ sub match {
 	  my @tmp = @{$self->_parse_arxiv_page(\@content)};
 	  
 	  if ($#tmp == 0) {
-	      print STDERR "Found a match using ArXivID as query.\n";
 	      return $self->_merge_pub( $pub, $tmp[0] );
 	  }
       }
   }
 
   # if search with the arxiv id did not work or was not
-  # conducted, we start a search using the title
-
-  my $query_string = $self->FormatQueryString($pub->title);
-  my $response = $browser->get($searchUrl . $query_string . '&max_results=50');
-  my $result = XMLin( $response->content, ForceArray => 1 );
-
-  if ( $result->{entry} ) {
-      my @content = @{ $result->{entry} };
-      my $page = $self->_parse_arxiv_page(\@content);
-     
-      my $matchedpub = $self->_find_best_hit( $page, $pub );
+  # conducted, we start a search using the title and authors
+  if ( $query_title ne '' and $query_authors ne '' ) {
+      my $query = $searchUrl . $query_title . '+AND+' . $query_authors . '&max_results=10';
+      #print STDERR "$query\n";
+      my $response = $browser->get( $query );
+      my $result = XMLin( $response->content, ForceArray => 1 );
+      
+      if ( $result->{entry} ) {
+	  my @content = @{ $result->{entry} };
+	  my $page = $self->_parse_arxiv_page(\@content);
+	  
+	  my $matchedpub = $self->_find_best_hit( $page, $pub );
   
-      if ( $matchedpub ) {
-	  print STDERR "Found a match using Authors/Title as query.\n";
-	  return $matchedpub;
+	  if ( $matchedpub ) {
+	      print STDERR "Found a match using Authors/Title as query.\n";
+	      return $matchedpub;
+	  }
+      }
+  }
+
+  # last chance with title only
+  if ( $query_title ne '' ) {
+      my $query = $searchUrl . $query_title . '&max_results=10';
+      #print STDERR "$query\n";
+      my $response = $browser->get( $query );
+      my $result = XMLin( $response->content, ForceArray => 1 );
+      
+      if ( $result->{entry} ) {
+	  my @content = @{ $result->{entry} };
+	  my $page = $self->_parse_arxiv_page(\@content);
+	  
+	  my $matchedpub = $self->_find_best_hit( $page, $pub );
+  
+	  if ( $matchedpub ) {
+	      print STDERR "Found a match using Title as query.\n";
+	      return $matchedpub;
+	  }
       }
   }
 
@@ -589,29 +693,36 @@ sub _find_best_hit {
     my @hits = @{$hits_ref};
     if ( $#hits > -1 ) {
 	
-	# let's first remove a few things that would otherwise
-	# cause troubles in regexps
-	# let's get rid of none ASCII chars first
-	(my $orig_title = $orig_pub->title ) =~ s/([^[:ascii:]])//g; 
-	$orig_title =~ s/\(//g;
-	$orig_title =~ s/\)//g;
-	$orig_title =~ s/\[//g;
-	$orig_title =~ s/\]//g;
-	my @words = split( /\s/, $orig_title );
-	
+	# let's get rid of words that contain none ASCII chars
+	# and other bad stuff (often PDF utf-8 issues)
+	my @words = ( );
+	(my $tmp_orig_title = $orig_pub->title) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+	$tmp_orig_title =~ s/\s+/ /g;
+	foreach my $word ( split(/\s+/, $tmp_orig_title ) ) {
+	    next if ( $word =~ m/([^[:ascii:]])/ );
+	    next if ( length ( $word ) < 2 ); # skip one letter words
+	    push @words, $word if ( $word =~ m/^\w+$/ );
+	}
+
 	# now we screen each hit and see which one matches best
- 	my $max_counts = 0;
+ 	my $max_counts = $#words;
 	my $best_hit = -1;
 	foreach my $i ( 0 .. $#hits ) {
 	    # some preprocessing again
-	    ( my $tmp_title = $hits[$i]->title ) =~ s/([^[:ascii:]])//g;
-	    $tmp_title =~ s/\(//g;
-	    $tmp_title =~ s/\)//g;
+	    my @words2 = ( );
+	    my $tmp_title = $hits[$i]->title;
+	    $tmp_title =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+	    $tmp_title =~ s/\s+/ /g;
+	    foreach my $word ( split(/\s+/, $tmp_title ) ) {
+		next if ( $word =~ m/([^[:ascii:]])/ );
+		push @words2, $word if ( $word =~ m/^\w+$/ );
+	    }
+	    $tmp_title = " ".join( " ", @words2 )." ";
 	      
 	    # let's check how many of the words in the title match
 	    my $counts = 0;
 	    foreach my $word ( @words ) {
-		$counts++ if ( $tmp_title =~ m/$word/ );
+		$counts++ if ( $tmp_title =~ m/\s$word\s/ );
 	    }
 	    if ( $counts > $max_counts ) {
 		$max_counts = $counts;
@@ -621,9 +732,9 @@ sub _find_best_hit {
 	
 	# some last controls
 	if ( $best_hit > -1) {
-	    if ( $self->_match_title( $hits[$best_hit]->title, $orig_pub->title ) ) {
+	    #if ( $self->_match_title( $hits[$best_hit]->title, $orig_pub->title ) ) {
 		return $self->_merge_pub( $orig_pub, $hits[$best_hit] );
-	    }
+	    #}
 	}
     }
 

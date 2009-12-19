@@ -184,6 +184,8 @@ sub complete_details {
   $tree->utf8_mode(1);
   $tree->parse_content($content);
 
+  my $title = $tree->findvalue('/html/body/form/table/tr/td[2]/table/tr/td/div[2]/table/tr/td[2]/h2');
+  
   # let's find the abstract first
   my $abstract = $tree->findvalue('/*/*/*/*/*/*/*/*/*/*/*/*/*/div[@class="Abstract"]');
 
@@ -267,35 +269,44 @@ sub complete_details {
   }
 
   # Now we prepare the authors correctly
-  my @authors_tmp = split(/,/, $pub->_authors_display );
-  if ($authors_tmp[$#authors_tmp] =~ m/(.*)(\sand\s)(.*)/) {
+  my $authors_new = $tree->findvalue('/html/body/form/table/tr/td[2]/table/tr/td/table/tr/td/div[2]/p[@class="AuthorGroup"]');
+  $authors_new =~ s/\d//g;
+  $authors_new =~ s/\x{A0}/ /g;
+  $authors_new =~ s/\s+,/,/g;
+  $authors_new =~ s/,+/,/g;
+  $authors_new =~ s/\s+/ /g;
+  my @authors_tmp = split(/,/, $authors_new );
+  if ( $authors_tmp[$#authors_tmp] =~ m/(.+)(\sand\s)(.*)/ ) {
       $authors_tmp[$#authors_tmp] = $1;
       $authors_tmp[$#authors_tmp+1] = $3;
   }
+  if ( $authors_tmp[$#authors_tmp] =~ m/^\sand\s(.+)/ ) {
+      $authors_tmp[$#authors_tmp] = $1;
+  }
   my @authors = ();
   foreach my $entry (@authors_tmp) {
-      print STDERR "$entry\n";
+      $entry =~ s/ü/\\"{u}/;
+      $entry =~ s/ö/\\"{o}/;
+      $entry =~ s/ä/\\"{a}/;    
       push @authors,
         Paperpile::Library::Author->new()->parse_freestyle( $entry )->bibtex();
   }
-  
-
- 
+   
   # Create a new Publication object
   my $full_pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
 
   # Add new values 
-  $full_pub->pages( $pages )       if ($pages);
-  $full_pub->journal( $journal )   if ($journal);
-  $full_pub->volume( $volume )     if ($volume);
-  $full_pub->issue( $issue )       if ($issue);
-  $full_pub->year( $year )         if ($year);
-  $full_pub->issn( $issn )         if ($issn);
-  $full_pub->abstract( $abstract ) if ($abstract);
+  $full_pub->title( $title )       if ( $title );
+  $full_pub->pages( $pages )       if ( $pages );
+  $full_pub->journal( $journal )   if ( $journal );
+  $full_pub->volume( $volume )     if ( $volume );
+  $full_pub->issue( $issue )       if ( $issue );
+  $full_pub->year( $year )         if ( $year );
+  $full_pub->issn( $issn )         if ( $issn );
+  $full_pub->abstract( $abstract ) if ( $abstract );
   $full_pub->authors( join( ' and ', @authors ) );
 
-  # Add values from the old object
-  $full_pub->title( $pub->title );
+  # Add values from the old object  
   $full_pub->linkout( $pub->linkout );
   $full_pub->pdf_url( $pub->pdf_url );
 

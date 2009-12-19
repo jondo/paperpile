@@ -54,11 +54,12 @@ sub parsePDF {
       $data   = $xml->XMLin( "$tmpfile", ForceArray => 1 );
       my @page1 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
       if ( $#page1 > -1 ) {
-	  ( $title, $authors, my $doi_page2, $level, $has_cover_page, $arxiv_id ) = _ParseXML( \@page1 );
+	  ( $title, $authors, my $doi_page2, $level, $has_cover_page, my $arxiv_id_page2 ) = _ParseXML( \@page1 );
 	  $doi = $doi_page2 if ( $doi eq '' );
+	  $arxiv_id = $arxiv_id_page2  if ( $arxiv_id eq '' );
       }
   }
-
+  
   # let's do some sane checking
   my $wrong = 0;
   $wrong = 1 if ( $title =~ m/MAtERIALS And MEtHOdS/i );
