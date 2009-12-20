@@ -16,6 +16,8 @@ use MIME::Base64;
 use Data::Dumper;
 use Config;
 
+## If we use Utils.pm from a script outside Paperpile it seems we have to also
+## "use Paperpile;" in the calling script. Otherwise we get strange errrors.
 use Paperpile;
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
