@@ -16,6 +16,7 @@ use Paperpile::Utils;
 
 use Paperpile::Plugins::Import::SpringerLink;
 use Paperpile::Plugins::Import::ACM;
+use Paperpile::Plugins::Import::PubMed;
 
 extends 'Paperpile::Plugins::Import';
 
@@ -139,8 +140,74 @@ sub page {
   $self->_save_page_to_hash($page);
 
   return $page;
-
 }
+
+sub _check_for_better_bibliographic_data {
+    ( my $self, my $pub ) = @_;
+    
+    # Create a new Publication object
+    my $full_pub = Paperpile::Library::Publication->new();
+    
+    my $backup_details_link = $pub->_details_link;
+    my $done = 0;
+    
+    # Exit point to direct PubMed calls
+    if ( $pub->_www_publisher eq 'ncbi.nlm.nih.gov' ) {
+	if ( $pub->linkout() =~ m/http:\/\/www\.ncbi\.nlm\.nih\.gov\/pubmed\/(\d+)/ ) {
+	    my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
+	    $full_pub = $PubMedPlugin->_fetch_by_pmid ( $1 );
+	    $done = 1 if ( $full_pub->title );
+	}
+    }
+
+    # Exit point to direct PubMed calls via Pubmed Central Id
+    if ( $pub->_www_publisher eq 'pubmedcentral.nih.gov' and $done == 0 ) {
+	if ( $pub->linkout() =~ m/http:\/\/www\.pubmedcentral\.nih\.gov\/articlerender\.fcgi\?artid=(\d+)/ ) {
+	    my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
+	    $full_pub = $PubMedPlugin->_fetch_by_pmid ( "PMC$1" );
+	    $done = 1 if ( $full_pub->title );
+	}
+    }
+    
+    # Exit point to SpringerLink details completion
+    if ( $pub->_www_publisher eq 'Springer' and $done == 0 ) {
+	if ( $pub->linkout() =~ m/http:\/\/www.springerlink.com\/index\/(\w+)(\.pdf)/ ) {
+	    my $tmp_details_link = 'http://www.springerlink.com/content/'.$1;
+	    my $SpringerLinkPlugin = Paperpile::Plugins::Import::SpringerLink->new();
+	    $pub->_details_link( $tmp_details_link );
+	    $full_pub = $SpringerLinkPlugin->complete_details( $pub );
+	    $done = 1 if ( $full_pub->title );
+	}
+    }
+    
+    # Exit point to ACM details completion
+    if ( $pub->_www_publisher eq 'portal.acm.org' and $done == 0 ) {
+	if ( $pub->linkout() =~ m/http:\/\/portal\.acm\.org\/citation\.cfm\?id=/ ) {
+	    my $tmp_details_link = $pub->linkout();
+	    my $ACMPlugin = Paperpile::Plugins::Import::ACM->new();
+	    $pub->_details_link( $tmp_details_link );
+	    $full_pub = $ACMPlugin->complete_details( $pub );
+	    $done = 1 if ( $full_pub->title );
+	}
+    }
+    
+    # If we have no support for the publisher yet, or it did not work
+    # we return undef
+    if ( $done == 0 ) {
+	$pub->_details_link( $backup_details_link );
+	return undef;
+    } else {
+	# If we are here we succeded in calling another Plugin and
+	# we are done
+	my $old_sha1 = $pub->sha1;
+	my $new_sha1 = $full_pub->sha1;
+	delete( $self->_hash->{$old_sha1} );
+	$self->_hash->{$new_sha1} = $full_pub;
+	
+	return $full_pub;
+    }
+}
+
 
 # We parse GoogleScholar in a two step process. First we scrape off
 # what we see and display it unchanged in the front end via
@@ -153,9 +220,6 @@ sub complete_details {
 
   ( my $self, my $pub ) = @_;
 
-  # Create a new Publication object
-  my $full_pub = Paperpile::Library::Publication->new();
-
   my $browser = Paperpile::Utils->get_browser;
   $browser->cookie_jar( $self->_session_cookie );
   my $bibtex = '';
@@ -166,7 +230,7 @@ sub complete_details {
 		       'sciencemag.org', 'Springer',
 		       'Cambridge Univ Press',
 		       'Nature Publishing Group', 'Oxford Univ Press',
-		       'portal.acm.org');
+		       'portal.acm.org','ncbi.nlm.nih.gov');
   my $best_flag = 0;
   foreach my $j ( 0 .. $#best_sources ) {
       $best_flag = 1 if ( $pub->_www_publisher eq $best_sources[$j] );
@@ -175,47 +239,13 @@ sub complete_details {
   # if the publisher is already a good one we call the BibTeX right here
   # or take another Plugin if we can recognize it
   if ( $best_flag == 1 ) {
-      my $done = 0;
-      my $backup_details_link = $pub->_details_link;
-
-      # Exit point to SpringerLink details completion
-      if ( $pub->_www_publisher eq 'Springer' ) {
-	  if ( $pub->linkout() =~ m/http:\/\/www.springerlink.com\/index\/(\w+)(\.pdf)/ ) {
-	      my $tmp_details_link = 'http://www.springerlink.com/content/'.$1;
-	      my $SpringerLinkPlugin = Paperpile::Plugins::Import::SpringerLink->new();
-	      $pub->_details_link( $tmp_details_link );
-	      $full_pub = $SpringerLinkPlugin->complete_details( $pub );
-	      $done = 1 if ( $full_pub->title );
-	  }
-      }
-
-      # Exit point to ACM details completion
-      if ( $pub->_www_publisher eq 'portal.acm.org' ) {
-	  if ( $pub->linkout() =~ m/http:\/\/portal\.acm\.org\/citation\.cfm\?id=/ ) {
-	      my $tmp_details_link = $pub->linkout();
-	      my $ACMPlugin = Paperpile::Plugins::Import::ACM->new();
-	      $pub->_details_link( $tmp_details_link );
-	      $full_pub = $ACMPlugin->complete_details( $pub );
-	      $done = 1 if ( $full_pub->title );
-	  }
-      }
-
-      # If we have no support for the publisher yet, or it did not work
-      # we fall back to Google Bibtex
-      if ( $done == 0 ) {
-	  $pub->_details_link( $backup_details_link );
+      my $full_pub = $self->_check_for_better_bibliographic_data( $pub );
+      if ( $full_pub ) {
+	  return $full_pub;
+      } else {
 	  my $bibtex_tmp = $browser->get( $pub->_details_link );
 	  $bibtex = $bibtex_tmp->content;
-      } else {
-	  # If we are here we succeded in calling another Plugin and
-	  # we are done
-	  my $old_sha1 = $pub->sha1;
-	  my $new_sha1 = $full_pub->sha1;
-	  delete( $self->_hash->{$old_sha1} );
-	  $self->_hash->{$new_sha1} = $full_pub;
-	  
-	  return $full_pub;
-      }
+      } 
   }
 
   # For many articles Google provides links to several versions of
@@ -223,13 +253,14 @@ sub complete_details {
   # quality of the BibTeX. We search all versions if there are any
   # high quality links.
   if ( $pub->_all_versions ne '' and $best_flag == 0 ) {
-      my @order_publishers = ( 'Elsevier','ingentaconnect.com',
+      my @order_publishers = ( 'ncbi.nlm.nih.gov','Springer',
+			       'portal.acm.org','Elsevier','ingentaconnect.com',
 			       'liebertonline.com', 'nature.com',
-			       'sciencemag.org', 'Springer',
+			       'sciencemag.org', 
 			       'Cambridge Univ Press', 'indexcopernicus.com',
 			       'Nature Publishing Group', 'Oxford Univ Press',
 			       'pubmedcentral.nih.gov',
-			       'adsabs.harvard.edu','ncbi.nlm.nih.gov',
+			       'adsabs.harvard.edu',
 			       'cat.inist.fr','arxiv.org','csa.com');
       my @order_flags = (  );
       for ( 0 .. $#order_publishers ) { push @order_flags, -1 }
@@ -256,8 +287,13 @@ sub complete_details {
       }
  
       # Get the BibTeX
-      my $bibtex_tmp = $browser->get( $page->[$best_one]->_details_link );
-      $bibtex = $bibtex_tmp->content;
+      my $full_pub = $self->_check_for_better_bibliographic_data( $page->[$best_one] );
+      if ( $full_pub ) {
+	  return $full_pub;
+      } else {
+	  my $bibtex_tmp = $browser->get( $page->[$best_one]->_details_link );
+	  $bibtex = $bibtex_tmp->content;
+      } 
   } 
 
   # Nothing good found till here, so we take the link of the original
@@ -266,6 +302,9 @@ sub complete_details {
       my $bibtex_tmp = $browser->get( $pub->_details_link );
       $bibtex = $bibtex_tmp->content;
   }
+
+  # Create a new Publication object
+  my $full_pub = Paperpile::Library::Publication->new();
 
   # Google Bug: everything is twice escaped in bibtex
   $bibtex =~ s/\\\\/\\/g;

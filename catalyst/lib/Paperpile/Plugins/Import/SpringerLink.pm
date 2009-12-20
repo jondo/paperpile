@@ -188,6 +188,7 @@ sub complete_details {
   
   # let's find the abstract first
   my $abstract = $tree->findvalue('/*/*/*/*/*/*/*/*/*/*/*/*/*/div[@class="Abstract"]');
+  $abstract =~ s/^Abstract\s+//i;
 
   # Now we complete the other details
   my @ids = $tree->findnodes('/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]/table/tr/td/table/tr/td[@class="labelName"');
