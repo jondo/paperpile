@@ -8,6 +8,7 @@ use strict;
 use FindBin;
 use lib "$FindBin::Bin/../../catalyst/lib";
 
+use Paperpile;
 use Paperpile::Build;
 
 my $b = Paperpile::Build->new( {
