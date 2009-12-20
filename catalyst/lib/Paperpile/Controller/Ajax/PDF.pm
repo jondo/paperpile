@@ -21,7 +21,7 @@ sub render : Regex('^ajax/pdf/render/(.*\.pdf)/(\d+)/(\d+\.\d+)$') {
   # File dialogue prepends ROOT as marker for the system root
   $path=~s/^ROOT//;
 
-  my $bin = Paperpile::Utils->get_binary('extpdf',$c->model('App')->get_setting('platform'));
+  my $bin = Paperpile::Utils->get_binary('extpdf',$c->config->{platform});
 
   my %extpdf;
 
@@ -55,7 +55,7 @@ sub extpdf : Local {
 
   my ( $self, $c ) = @_;
 
-  my $bin = Paperpile::Utils->get_binary('extpdf',$c->model('App')->get_setting('platform'));
+  my $bin = Paperpile::Utils->get_binary('extpdf',$c->config->{platform});
 
   # File dialogue prepends ROOT as marker for the system root
   $c->request->params->{inFile}=~s/^ROOT//;

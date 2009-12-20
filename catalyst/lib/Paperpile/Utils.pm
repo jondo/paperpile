@@ -1,52 +1,44 @@
 package Paperpile::Utils;
 use Moose;
-use Moose::Util::TypeConstraints;
-use Carp;
+
 use LWP;
-use Data::Dumper;
-use FindBin;
-use Config::General;
-use Catalyst::Utils;
+use HTTP::Cookies;
+use WWW::Mechanize;
+
 use File::Path;
 use File::Spec;
 use File::Copy;
-use Path::Class;
-use Config::Any;
-use HTTP::Cookies;
-use WWW::Mechanize;
+
+use Storable qw(lock_store lock_retrieve);
 use Compress::Zlib;
 use MIME::Base64;
+
+use Data::Dumper;
 use Config;
+
+use Paperpile;
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
 use Paperpile::Model::Queue;
-use Storable qw(lock_store lock_retrieve);
 
-$Data::Dumper::Indent = 1;
 
 sub get_tmp_dir {
 
   my ( $self ) = @_;
 
-  # This is hard-coded for now. Ideally it should read location from
-  # paperpile.yaml. Don't know how to do this without access to $c
+  return Paperpile->config->{user_settings}->{tmp_dir};
 
-  my $tmp_dir= $ENV{HOME} . "/.paperpile/tmp";
-
-  return $tmp_dir;
 }
 
 sub get_user_settings_model {
 
   my $self = shift;
 
-  # This is hard-coded for now. Ideally it should read database
-  # location from paperpile.yaml. Don't know how to do this without
-  # access to $c and replicating substitution code.
+  my $dsn = Paperpile->config->{'Model::User'}->{dsn};
 
-  my $user_settings_db = $ENV{HOME} . "/.paperpile/settings.db";
-  my $model            = Paperpile::Model::User->new();
-  $model->set_dsn( "dbi:SQLite:" . $user_settings_db );
+  my $model = Paperpile::Model::User->new();
+
+  $model->set_dsn($dsn);
 
   return $model;
 
@@ -56,18 +48,10 @@ sub get_queue_model {
 
   my $self = shift;
 
-  # This is hard-coded for now. Ideally it should read database
-  # location from paperpile.yaml. Don't know how to do this without
-  # access to $c and replicating substitution code.
-
-  my $queue_db = $ENV{HOME} . "/.paperpile/tmp/queue.db";
-
-  #if ( !-e $queue_db ) {
-  #  copy( $self->path_to('db/queue.db')->stringify, $queue_db );
-  #}
+  my $dsn = Paperpile->config->{'Model::Queue'}->{dsn};
 
   my $model = Paperpile::Model::Queue->new();
-  $model->set_dsn( "dbi:SQLite:" . $queue_db );
+  $model->set_dsn($dsn);
 
   return $model;
 }
@@ -81,17 +65,12 @@ sub get_library_model {
   my $settings = $self->get_user_settings_model->settings;
 
   my $db_file = $settings->{library_db};
-  my $model            = Paperpile::Model::Library->new();
+  my $model   = Paperpile::Model::Library->new();
   $model->set_dsn( "dbi:SQLite:" . $db_file );
 
   return $model;
 
 }
-
-
-
-
-
 
 
 sub get_browser {
@@ -130,32 +109,12 @@ sub get_browser {
     }
   }
 
-  #$browser->proxy('http', 'http://localhost:8146/');
-
   $browser->cookie_jar( {} );
 
   $browser->agent('Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.1.5) Gecko/20091109 Ubuntu/9.10 (karmic) Firefox/3.5.5');
   return $browser;
 }
 
-
-### get_config()
-### Gives access to config data when $c is not available
-
-sub get_config{
-
-  my $self=shift;
-
-  my $file=$self->home."/paperpile.yaml";
-
-  my $conf = Config::Any->load_files({files=>[$file], flatten_to_hash => 0, use_ext=>1});
-
-  # Take care how to get the data out of the object, in older versions
-  # of Config::Any we had to use $conf->[0]->{$file}, with version
-  # 0.17 this is fine:
-  return $conf->{$file};
-
-}
 
 sub get_binary{
 
@@ -174,52 +133,24 @@ sub get_binary{
 }
 
 
-## Gives access to the installation dir of the application outside
-## Catalyst classes. Uses the function from Catalyst::Utils. Copied here,
-## because it did not work by calling it from the class for some reason.
+sub get_config{
+
+  my $self=shift;
+
+  return Paperpile->config;
+
+}
 
 sub home {
-  my $class = shift;
-
-  ( my $file = "$class.pm" ) =~ s{::}{/}g;
-
-  if ( my $inc_entry = $INC{$file} ) {
-    {
-      ( my $path = $inc_entry ) =~ s/$file$//;
-      my $home = dir($path)->absolute->cleanup;
-
-      $home = $home->parent while $home =~ /b?lib$/;
-
-      if ( -f $home->file("Makefile.PL") or -f $home->file("Build.PL") ) {
-
-        my $dir;
-        my @dir_list = $home->dir_list();
-        while ( ( $dir = pop(@dir_list) ) && $dir eq '..' ) {
-          $home = dir($home)->parent->parent;
-        }
-
-        return $home->stringify;
-      }
-    }
-
-    {
-      ( my $path = $inc_entry ) =~ s/\.pm$//;
-      my $home = dir($path)->absolute->cleanup;
-      return $home->stringify if -d $home;
-    }
-  }
-  # did not find anything
-  return 0;
+  return Paperpile->config->{home};
 }
 
 
-## Access to this handy helper function outside of catalyst.
-
 sub path_to {
   (my $self, my @path ) = @_;
-  my $path = Path::Class::Dir->new( $self->home, @path );
-  if ( -d $path ) { return $path }
-  else { return Path::Class::File->new( $self->home, @path ) }
+
+  return Paperpile->path_to(@path);
+
 }
 
 ## We store root as explicit 'ROOT/' in database and frontend. Adjust
@@ -372,3 +303,4 @@ sub retrieve {
 }
 
 
+1;

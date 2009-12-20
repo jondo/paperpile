@@ -10,7 +10,9 @@ use File::Path;
 use File::Find;
 use File::Spec::Functions qw(catfile);
 use File::Copy::Recursive qw(fcopy dircopy);
+use File::DirCompare;
 use YAML qw(LoadFile DumpFile);
+
 
 has cat_dir  => ( is => 'rw' );    # catalyst directory
 has ti_dir   => ( is => 'rw' );    # titanium directory
@@ -230,8 +232,56 @@ sub dump_includes {
 
 }
 
+sub create_patch {
 
+  my ( $self, $dir_old, $dir_new ) = @_;
 
+  my $patch_dir = 'patch';
+
+  my ( @listing, @modified );
+  File::DirCompare->compare(
+    $dir_old, $dir_new,
+    sub {
+      my ( $a, $b ) = @_;
+
+      my ( $a_rel, $b_rel );
+
+      if ($a) {
+        $a_rel = $a;
+        $a_rel =~ s/$dir_old\///;
+      }
+
+      if ($b) {
+        $b_rel = $b;
+        $b_rel =~ s/$dir_new\///;
+      }
+
+      if ( !$b ) {
+        push @listing, "D   $a_rel";
+      } elsif ( !$a ) {
+        fcopy( $b, "patch/$b_rel" );
+        push @listing, "A   $b_rel";
+      } else {
+        if ( -f $a && -f $b ) {
+          push @listing,  "M   $b_rel";
+          fcopy( $b, "patch/$b_rel" );
+        } else {
+
+          # One file, one directory - treat as delete + add
+          push @listing, "D   $a_rel";
+          push @listing, "A   $b_rel";
+        }
+      }
+    }
+  );
+
+  open(DIFF, ">$patch_dir/__DIFF__");
+
+  foreach my $line (@listing){
+    print DIFF "$line\n";
+  }
+
+}
 
 
 sub _get_list {
