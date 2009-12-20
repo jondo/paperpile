@@ -53,6 +53,7 @@ Exception::Class
 File::Copy
 File::Temp
 File::Compare
+File::DirCompare
 HTML::Element
 HTML::Mason
 HTML::Tagset

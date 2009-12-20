@@ -1362,3 +1362,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sun Dec 20 22:58:28 2009: C<Module> L<File::DirCompare|File::DirCompare>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux32/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.5>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
