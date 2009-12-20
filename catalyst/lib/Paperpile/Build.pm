@@ -65,7 +65,7 @@ sub initdb {
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn( "dbi:SQLite:" . "library.db" );
 
-  my $config = LoadFile('../paperpile.yaml');
+  my $config = LoadFile('../conf/settings.yaml');
 
   foreach my $field ( keys %{ $config->{pub_fields} } ) {
     $model->dbh->do("ALTER TABLE Publications ADD COLUMN $field TEXT");
@@ -150,7 +150,7 @@ sub make_dist {
 
 
   # Update configuration file for current build
-  my $yaml = "$dist_dir/$platform/catalyst/paperpile.yaml";
+  my $yaml = "$dist_dir/$platform/catalyst/conf/settings.yaml";
   my $config = LoadFile($yaml);
 
   $config->{app_settings}->{platform} = $platform;
