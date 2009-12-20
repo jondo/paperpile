@@ -9,6 +9,7 @@ use Paperpile::Library::Journal;
 use Paperpile::Utils;
 use Encode qw(encode_utf8);
 use Text::Unidecode;
+use YAML qw(LoadFile);
 use 5.010;
 
 # Bibutils functions are in a submodule
@@ -84,7 +85,8 @@ has 'folders' => ( is => 'rw', default => '' );
 
 ### Fields from the config file
 
-my $config = Paperpile::Utils->get_config;
+my $config = LoadFile(Paperpile::Utils->path_to('conf/fields.yaml'));
+
 foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
   # These contribute to the sha1 and need a trigger to re-calculate it

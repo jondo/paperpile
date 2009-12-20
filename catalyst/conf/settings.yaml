@@ -1,0 +1,40 @@
+---
+name: "Paperpile"
+platform: "__PLATFORM__"
+
+paperpile_user_dir: "__USERHOME__/.paperpile"
+user_settings_db: "__USERHOME__/.paperpile/settings.db"
+queue_db: "__USERHOME__/.paperpile/tmp/queue.db"
+
+Model::App:
+  dsn: "dbi:SQLite:__path_to(db/app.db)__"
+
+Model::User:
+  dsn: "dbi:SQLite:__USERHOME__/.paperpile/settings.db"
+
+app_settings:
+  platform: "__PLATFORM__"
+  version_id: 1
+  version_string: "0.4.0-preview"
+  build_number: 0
+
+user_settings:
+  tmp_dir: "__USERHOME__/.paperpile/tmp"
+  library_db: "__USERHOME__/.paperpile/paperpile.ppl"
+  user_home: "__USERHOME__"
+  use_proxy: ""
+  proxy: ""
+  proxy_user: ""
+  proxy_passwd: ""
+  pager_limit: 25
+  _queue: ""
+
+library_settings:
+  paper_root: "__USERHOME__/.paperpile/papers"
+  key_pattern: "[firstauthor][YYYY]"
+  pdf_pattern: "[key]"
+  attachment_pattern: "[key]_supplements"
+  search_seq: "PubMed"
+  _tree: ""
+  
+

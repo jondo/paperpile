@@ -4,9 +4,7 @@ use strict;
 use warnings;
 use parent qw/Catalyst/;
 use Catalyst qw/Session Session::State::Cookie Session::Store::File Unicode/;
-
 use Catalyst::Runtime '5.70';
-
 use LWP;
 
 our $VERSION = '0.03';
@@ -27,40 +25,37 @@ __PACKAGE__->config( {
   }
 );
 
+__PACKAGE__->config(
+  'Plugin::ConfigLoader' => {
+    file          => __PACKAGE__->path_to('conf/settings.yaml'),
+    substitutions => {
+      PLATFORM => sub {
+        my $c = shift;
+        my $platform;
+        if ( $^O =~ /linux/i ) {
+          my @f = `file /bin/ls`;    # More robust way for this??
+          if ( $f[0] =~ /64-bit/ ) {
+            $platform = 'linux64';
+          } else {
+            $platform = 'linux32';
+          }
+        }
+        if ( $^O =~ /cygwin/i or $^O =~ /MSWin/i ) {
+          $platform = 'windows32';
+        }
+        return $platform;
+      },
+      USERHOME => sub {
 
-
-__PACKAGE__->config->{'Plugin::ConfigLoader'}->{substitutions} = {
-  PLATFORM => sub {
-    my $c = shift;
-    my $platform;
-    if ( $^O =~ /linux/i ) {
-      my @f = `file /bin/ls`;       # More robust way for this??
-      if ( $f[0] =~ /64-bit/ ) {
-        $platform = 'linux64';
-      } else {
-        $platform = 'linux32';
-      }
-    }
-    if ( $^O =~ /cygwin/i or $^O =~ /MSWin/i ) {
-      $platform = 'windows32';
-    }
-    return $platform;
-  },
-  USERHOME => sub {
-    # Add code for other platforms here
-    return $ENV{HOME};
-  }
-};
-
-
-# Hardcoded for Linux
-__PACKAGE__->config( {
-    'session' => {
-                  storage => $ENV{HOME}."/.paperpile/tmp/session"
+        # Add code for other platforms here
+        return $ENV{HOME};
+        }
     }
   }
 );
 
+# Hardcoded for Linux
+__PACKAGE__->config( { 'session' => { storage => $ENV{HOME} . "/.paperpile/tmp/session" } } );
 
 # Start the application
 __PACKAGE__->setup(qw/-Debug ConfigLoader Static::Simple/);

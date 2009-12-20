@@ -1,0 +1,289 @@
+---
+pub_fields:
+  pubtype:       "Type"
+  citekey:       "Citation key"
+  sortkey:       "Name used for sorting"
+  title:         "Title"
+  booktitle:     "Book title"
+  series:        "Series"
+  authors:       "Authors"
+  editors:       "Editors"
+  journal:       "Journal"
+  chapter:       "Chapter"      
+  volume:        "Volume"
+  number:        "Number"
+  issue:         "Issue"
+  edition:       "edition"
+  pages:         "Pages"
+  url:           "URL"
+  howpublished:  "How published"
+  publisher:     "Publisher"
+  organization:  "Organization"
+  school:        "University"        
+  address:       "Address"
+  year:          "Year"
+  month:         "Month"
+  day:           "Day"
+  eprint:        "Eprint"
+  issn:          "ISSN"
+  isbn:          "ISBN"
+  pmid:          "Pubmed ID"
+  lccn:          "LCCN"
+  arxivid:       "ArXiv ID"
+  doi:           "DOI"
+  abstract:      "Abstract"
+  keywords:      "Author key words"
+  linkout:       "Website"
+  note:          "Note"
+
+pub_tooltips:
+  pubtype:       "Type"
+  citekey:       ""
+  sortkey:       "This name is used for sorting in BibTeX bibliographies if authors and editors are not available"
+  title:         ""
+  booktitle:     "Book title"
+  series:        "The series of books the book was published in (e.g. 'Lecture Notes in Computer Science')"
+  authors: >      
+    <p>The name(s) of the author(s), like</p>
+    <ul>
+    <li><b>Knuth, Donald</b></li>
+    <li><b>van der Waals, J. D.</b></li>
+    </ul>
+    <p>Multiple names are separated by 'and' like</p>
+    <p><b>Watson, James and Crick, Francis</b></p>
+  editors:  >
+    <p>The name(s) of the editor(s), like</p>
+    <ul>
+    <li><b>Knuth, Donald</b></li>
+    <li><b>van der Waals, J. D.</b></li>
+    </ul>
+    <p>Multiple names are separated by 'and' like</p>
+    <p><b>Watson, James and Crick, Francis</b></p>
+  journal:       "The name of the journal"
+  chapter:       "The chapter number"      
+  volume:        "The volume number"
+  number:        "The issue number"
+  issue:         "The issue number"
+  edition:       "Edition of the book (e.g. 'first' or 'second')"
+  pages:         "Page numbers (a range or starting page) , e.g. '210-213' or '210'"
+  url:           "The URL of a resource in the Internet"
+  howpublished:  "Details like 'Personal communication', 'Preprint' "
+  publisher:     "The publisher's name, e.g. 'MIT Press'"
+  organization:  "The conference sponsor"
+  school:        "The degree awarding institution, e.g. 'University of Cambridge'"
+  address:       "The publisher's address, usually just the city"
+  year:          "The year of publication"
+  month:         "The month of publication, e.g. 'March' or 'Mar' or '3' "
+  day:           "The day of publication"
+  eprint:        "A specification of an electronic publication, often a preprint or a technical report"
+  issn:          "International standard serial number of a journal, e.g. 1876-7737"
+  isbn:          "International standard book number, e.g. 978-0596519780"
+  pmid:          "Unique identifier in the PubMed database, e.g.19995608 "
+  lccn:          "Library of congress card number, e.g. he68001993"
+  arxivid:       "Unique identifier in the ArXiv preprint archive, e.g. arXiv:0912.2959v1 "
+  doi:           "Digital object identifier, e.g. 10.1016/j.jprot.2009.11.014"
+  abstract:      "Abstract/Summary"
+  keywords:      "Author key words"
+  linkout:       "Website"
+  note:          "Note"
+
+
+pub_identifiers: ["doi", "issn", "isbn", "pmid", "lccn", "arxivid", "eprint"]
+
+pub_types:
+  ARTICLE:
+    name: "Journal article"
+    info: "Article in a journal or magazine"
+    tooltips:
+      title: "The title of the article"  
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["abstract:6"]
+      - ["-"]
+      - ["journal:4", ""]
+      - ["volume:2", "issue:2", "pages:2"]
+      - ["year:2", "month:2", ""]
+      - ["-"]
+  INCOLLECTION:
+    name: "Book chapter"
+    info: "Book chapter having its own title and authors"
+    labels: 
+      title: "Chapter Title"
+    tooltips:
+      booktitle: "The title of book"
+      title: "The title of the chapter/part of the book"  
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["booktitle:6"]
+      - ["authors:6"]
+      - ["editors:6"]
+      - ["abstract:6"]
+      - ["-"]
+      - ["pages:2", "year:2", "month:2"]
+      - ["publisher:3", "address:3"]
+      - ["series:3", "volume:3"]
+      - ["-"]
+  INBOOK:
+    name: "In Book"
+    info: "Untitled part of a book (chapter, pages,...)"
+    labels: 
+      title: "Chapter Title"
+    tooltips:
+      booktitle: "The title of book"
+      title: "The title of the chapter/part of the book"  
+    fields:
+      - ["-"]
+      - ["booktitle:6"]
+      - ["authors:6"]
+      - ["editors:6"]
+      - ["-"]
+      - ["pages:2", "chapter:2", "year:2"]
+      - ["publisher:3", "address:3"]
+      - ["series:3", "volume:3"]
+      - ["-"]
+  BOOK:
+    name: "Book"
+    info: "A whole book"
+    tooltips: 
+      title: "The title of the book"
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["editors:6"]
+      - ["-"]
+      - ["publisher:3", "address:3"]
+      - ["series:3", "volume:3"]
+      - ["year:2", "", ""]
+      - ["-"]
+  INPROCEEDINGS:
+    name: "Conference paper"
+    info: "Article in a conference proceedings"
+    labels: 
+      booktitle: "Proceedings Title"
+    tooltips:
+      booktitle: "The title of the conference proceedings, e.g. 'Proceedings of the ASWC International Workshop on Semantic e-Science'"
+      title: "The title of article"
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["booktitle:6"]
+      - ["authors:6"]
+      - ["editors:6"]
+      - ["-"]
+      - ["pages:2", "year:2", "month:2"]
+      - ["organization:3", "series:3"]
+      - ["publisher:3", "address:3"]
+      - ["-"]
+  PROCEEDINGS:
+    name: "Proceedings"
+    info: "Proceedings of a conference"
+    tooltips:
+      title: "The title of the conference proceedings, e.g. 'Proceedings of the ASWC International Workshop on Semantic e-Science'"
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["editors:6"]
+      - ["-"]
+      - ["year:2", "month:2", ""]
+      - ["organization:3", "series:3"]
+      - ["publisher:3", "address:3"]
+      - ["-"]
+  MASTERSTHESIS:
+    name: "Master's thesis"
+    info: "Thesis for a degree on master's level"
+    labels: 
+      authors: "Author"
+      title: "Title"
+    tooltips:
+      title: "The title of the thesis"  
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["-"]
+      - ["school:6"]
+      - ["year:2", "month:2", ""]
+      - ["-"]
+  PHDTHESIS:
+    name: "Doctoral thesis"
+    info: "Thesis for a degree on PhD level"
+    labels: 
+      authors: "Author"
+      tooltips:
+        title: "The title of the thesis"  
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["-"]
+      - ["school:6"]
+      - ["year:2", "month:2", ""]
+      - ["-"]
+  MANUAL:
+    name: "Manual"
+    info: "Manual or other type of documentation"
+    labels: 
+      edition: "Version"
+    tooltips:
+      edition: "Version or edition of the document"
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["-"]
+      - ["organization:3", "address:3"]
+      - ["edition:2", "year:2", "month:2"]
+      - ["-"]
+  TECHREPORT:
+    name: "Report"
+    info: "Report published by a university or institution"
+    labels: 
+      number: "Number"
+      organization: "Institution"
+    tooltips:
+      number: "Number of the report within a series"
+      organization: "Publishing university or institution"
+      title: "The title of the report"
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["-"]
+      - ["number:3", "organization:3"]
+      - ["year:2", "month:2", ""]
+      - ["-"]
+  UNPUBLISHED:
+    name: "Unpublished"
+    info: "Work that has not been formally published."
+    tooltips:
+      year: "The year the work or document was created"
+      month: "The month the work or document was created"
+      note: "Additional notes"
+      title: "Title of the work or document"
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["note:6"]
+      - ["year:2", "month:2", ""]
+      - ["-"]
+  MISC:
+    name: "Other"
+    info: "Preprint, software, web-site..."
+    tooltips:
+      title: "The title of the resource"
+      url: "URL if resource is a web-site"
+    fields:
+      - ["-"]
+      - ["title:6"]
+      - ["authors:6"]
+      - ["-"]
+      - ["howpublished:6"]
+      - ["url:6"]
+      - ["year:2", "month:2", ""]
+      - ["-"]

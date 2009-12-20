@@ -14,6 +14,7 @@ use MooseX::Timestamp;
 use LWP;
 use HTTP::Request::Common;
 use File::Temp qw(tempfile);
+use YAML qw(LoadFile);
 
 use 5.010;
 
@@ -89,14 +90,19 @@ sub get_settings : Local {
 
   my ( $self, $c ) = @_;
 
-  my @list1 = %{ $c->model('App')->settings };
+  # app_settings are read from the config file, they are never changed
+  # by the user and constant for a specific version of the application
+  my @list1 = %{ $c->config->{app_settings}};
+
   my @list2 = %{ $c->model('User')->settings };
   my @list3 = %{ $c->model('Library')->settings };
 
   my %merged = ( @list1, @list2, @list3 );
 
+  my $fields = LoadFile($c->path_to('conf/fields.yaml'));
+
   foreach my $key ( 'pub_types', 'pub_fields', 'pub_tooltips', 'pub_identifiers' ) {
-    $merged{$key} = $c->config->{$key};
+    $merged{$key} = $fields->{$key};
   }
 
   $c->stash->{data} = {%merged};
@@ -104,8 +110,6 @@ sub get_settings : Local {
   $c->forward('Paperpile::View::JSON');
 
 }
-
-
 
 sub import_journals : Local {
   my ( $self, $c ) = @_;
