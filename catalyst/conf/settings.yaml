@@ -20,8 +20,8 @@ session:
 
 app_settings:
   platform: "__PLATFORM__"
-  version_id: 1
-  version_string: "0.4.0-preview"
+  version_id: 2
+  version_string: "0.4.1-preview"
   build_number: 0
 
 user_settings:
