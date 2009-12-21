@@ -7,20 +7,25 @@ use strict;
 
 use FindBin;
 use lib "$FindBin::Bin/../../catalyst/lib";
+use YAML qw(LoadFile);
+
+use Paperpile;
+use Paperpile::Build;
 
 
+my $b = Paperpile::Build->new( {
+    cat_dir  => 'catalyst',
+    ti_dir   => "titanium",
+    dist_dir => 'dist/data',
+    yui_jar  => $ENV{HOME} . '/bin/yuicompressor-2.4.2.jar',
+  }
+);
 
+my $settings = LoadFile('catalyst/conf/settings.yaml');
 
-#use Paperpile;
-#use Paperpile::Build;
+my ($version_string, $version_id) = ($settings->{app_settings}->{version_string},
+                                     $settings->{app_settings}->{version_id});
 
-#my $b = Paperpile::Build->new( {
-#    cat_dir  => 'catalyst',
-#    ti_dir   => "titanium",
-#    dist_dir => 'dist/data',
-#    yui_jar  => $ENV{HOME} . '/bin/yuicompressor-2.4.2.jar',
-#  }
-#);
 
 #my ( $day, $month, $year ) = (localtime)[ 3, 4, 5 ];
 #$month+=1;
@@ -31,19 +36,19 @@ use lib "$FindBin::Bin/../../catalyst/lib";
 #Paperpile::Build->echo("Minifying javascript");
 #$b->minify;
 
-#Paperpile::Build->echo("Making distribution linux64");
-#$b->make_dist('linux64', $ENV{BUILD_NUMBER});
+Paperpile::Build->echo("Making distribution linux64");
+$b->make_dist('linux64', $ENV{BUILD_NUMBER});
 
-#Paperpile::Build->echo("Making distribution linux32");
-#$b->make_dist('linux32', $ENV{BUILD_NUMBER});
+Paperpile::Build->echo("Making distribution linux32");
+$b->make_dist('linux32', $ENV{BUILD_NUMBER});
 
 
-#chdir "dist/data";
-#`rm ../*tar.gz`;
-#for my $platform ('linux32','linux64'){
-#   Paperpile::Build->echo("Packaging $platform");
-#  `mv $platform paperpile`;
-#  `tar czf ../paperpile-$tag-$platform.tar.gz paperpile`;
-#  `mv paperpile $platform`;
-#}
+chdir "dist/data";
+`rm ../*tar.gz`;
+for my $platform ('linux32', 'linux64'){
+  Paperpile::Build->echo("Packaging $platform");
+  `mv $platform paperpile`;
+  `tar czf ../paperpile-$version_string-$platform.tar.gz paperpile`;
+  `mv paperpile $platform`;
+}
 
