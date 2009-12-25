@@ -112,6 +112,7 @@ FreezeThaw
 Text::Levenshtein
 FCGI
 FCGI::ProcManager
+Archive::Zip
 =head1 AUTHOR
 
 Stefan Washietl <wash@paperpile.org>

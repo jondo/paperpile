@@ -13,7 +13,7 @@ use warnings ;
 use bytes ;
 our ($VERSION, $XS_VERSION, @ISA, @EXPORT, $AUTOLOAD);
 
-$VERSION = '2.008';
+$VERSION = '2.023';
 $XS_VERSION = $VERSION; 
 $VERSION = eval $VERSION;
 
@@ -62,8 +62,13 @@ $VERSION = eval $VERSION;
         Z_SYNC_FLUSH
         Z_UNKNOWN
         Z_VERSION_ERROR
+
+        WANT_GZIP
+        WANT_GZIP_OR_ZLIB
 );
 
+use constant WANT_GZIP           => 16;
+use constant WANT_GZIP_OR_ZLIB   => 32;
 
 sub AUTOLOAD {
     my($constname);
@@ -79,6 +84,7 @@ use constant FLAG_APPEND             => 1 ;
 use constant FLAG_CRC                => 2 ;
 use constant FLAG_ADLER              => 4 ;
 use constant FLAG_CONSUME_INPUT      => 8 ;
+use constant FLAG_LIMIT_OUTPUT       => 16 ;
 
 eval {
     require XSLoader;
@@ -361,10 +367,14 @@ sub Compress::Raw::Zlib::Deflate::new
     $flags |= FLAG_CRC    if $got->value('CRC32') ;
     $flags |= FLAG_ADLER  if $got->value('ADLER32') ;
 
+    my $windowBits =  $got->value('WindowBits');
+    $windowBits += MAX_WBITS()
+        if ($windowBits & MAX_WBITS()) == 0 ;
+
     _deflateInit($flags,
                 $got->value('Level'), 
                 $got->value('Method'), 
-                $got->value('WindowBits'), 
+                $windowBits, 
                 $got->value('MemLevel'), 
                 $got->value('Strategy'), 
                 $got->value('Bufsize'),
@@ -378,6 +388,7 @@ sub Compress::Raw::Zlib::Inflate::new
     my ($got) = ParseParameters(0,
                     {
                         'AppendOutput'  => [1, 1, Parse_boolean,  0],
+                        'LimitOutput'   => [1, 1, Parse_boolean,  0],
                         'CRC32'         => [1, 1, Parse_boolean,  0],
                         'ADLER32'       => [1, 1, Parse_boolean,  0],
                         'ConsumeInput'  => [1, 1, Parse_boolean,  1],
@@ -397,8 +408,14 @@ sub Compress::Raw::Zlib::Inflate::new
     $flags |= FLAG_CRC    if $got->value('CRC32') ;
     $flags |= FLAG_ADLER  if $got->value('ADLER32') ;
     $flags |= FLAG_CONSUME_INPUT if $got->value('ConsumeInput') ;
+    $flags |= FLAG_LIMIT_OUTPUT if $got->value('LimitOutput') ;
 
-    _inflateInit($flags, $got->value('WindowBits'), $got->value('Bufsize'), 
+
+    my $windowBits =  $got->value('WindowBits');
+    $windowBits += MAX_WBITS()
+        if ($windowBits & MAX_WBITS()) == 0 ;
+
+    _inflateInit($flags, $windowBits, $got->value('Bufsize'), 
                  $got->value('Dictionary')) ;
 }
 
@@ -530,6 +547,7 @@ Compress::Raw::Zlib - Low-Level Interface to zlib compression library
     ($d, $status) = new Compress::Raw::Zlib::Deflate( [OPT] ) ;
     $status = $d->deflate($input, $output) ;
     $status = $d->flush($output [, $flush_type]) ;
+    $d->deflateReset() ;
     $d->deflateParams(OPTS) ;
     $d->deflateTune(OPTS) ;
     $d->dict_adler() ;
@@ -559,8 +577,7 @@ Compress::Raw::Zlib - Low-Level Interface to zlib compression library
     $crc = adler32_combine($crc1, $crc2, $len2)l
     $crc = crc32_combine($adler1, $adler2, $len2)
 
-    ZLIB_VERSION
-    ZLIB_VERNUM
+    my $version = Compress::Raw::Zlib::zlib_version();
 
 =head1 DESCRIPTION
 
@@ -568,15 +585,12 @@ The I<Compress::Raw::Zlib> module provides a Perl interface to the I<zlib>
 compression library (see L</AUTHOR> for details about where to get
 I<zlib>). 
 
-
-
 =head1 Compress::Raw::Zlib::Deflate
 
 This section defines an interface that allows in-memory compression using
 the I<deflate> interface provided by zlib.
 
 Here is a definition of the interface available:
-
 
 =head2 B<($d, $status) = new Compress::Raw::Zlib::Deflate( [OPT] ) >
 
@@ -610,7 +624,7 @@ Defines the compression level. Valid values are 0 through 9,
 C<Z_NO_COMPRESSION>, C<Z_BEST_SPEED>, C<Z_BEST_COMPRESSION>, and
 C<Z_DEFAULT_COMPRESSION>.
 
-The default is Z_DEFAULT_COMPRESSION.
+The default is C<Z_DEFAULT_COMPRESSION>.
 
 =item B<-Method>
 
@@ -619,10 +633,18 @@ the default) is Z_DEFLATED.
 
 =item B<-WindowBits>
 
+To compress an RFC 1950 data stream, set C<WindowBits> to a positive
+number between 8 and 15.
+
+To compress an RFC 1951 data stream, set C<WindowBits> to C<-MAX_WBITS>.
+
+To compress an RFC 1952 data stream (i.e. gzip), set C<WindowBits> to
+C<WANT_GZIP>.
+
 For a definition of the meaning and valid values for C<WindowBits>
 refer to the I<zlib> documentation for I<deflateInit2>.
 
-Defaults to MAX_WBITS.
+Defaults to C<MAX_WBITS>.
 
 =item B<-MemLevel>
 
@@ -678,14 +700,12 @@ calculated. Use the C<$d-E<gt>crc32> method to retrieve this value.
 
 This option defaults to false.
 
-
 =item B<-ADLER32>
 
 If set to true, an adler32 checksum of the uncompressed data will be
 calculated. Use the C<$d-E<gt>adler32> method to retrieve this value.
 
 This option defaults to false.
-
 
 =back
 
@@ -695,7 +715,6 @@ level. All other options will take their default values.
 
     my $d = new Compress::Raw::Zlib::Deflate ( -Bufsize => 300, 
                                                -Level   => Z_BEST_SPEED ) ;
-
 
 =head2 B<$status = $d-E<gt>deflate($input, $output)>
 
@@ -744,13 +763,22 @@ the C<$d> object, the compressed data will be appended to C<$output>. If
 it is false, C<$output> will be truncated before any compressed data is
 written to it.
 
+=head2 B<$status = $d-E<gt>deflateReset() >
+
+This method will reset the deflation object C<$d>. It can be used when you
+are compressing multiple data streams and want to use the same object to
+compress each of them. It should only be used once the previous data stream
+has been flushed successfully, i.e. a call to C<< $d->flush(Z_FINISH) >> has
+returned C<Z_OK>.
+
+Returns C<Z_OK> if successful.
+
 =head2 B<$status = $d-E<gt>deflateParams([OPT])>
 
 Change settings for the deflate object C<$d>.
 
 The list of the valid options is shown below. Options not specified
 will remain unchanged.
-
 
 =over 5
 
@@ -771,7 +799,6 @@ Sets the initial size for the output buffer used by the C<$d-E<gt>deflate>
 and C<$d-E<gt>flush> methods. If the buffer has to be
 reallocated to increase the size, it will grow in increments of
 C<Bufsize>.
-
 
 =back
 
@@ -815,7 +842,6 @@ Returns the total number of compressed bytes output from deflate.
 Returns the deflation strategy currently used. Valid values are
 C<Z_DEFAULT_STRATEGY>, C<Z_FILTERED> and C<Z_HUFFMAN_ONLY>. 
 
-
 =head2 B<$d-E<gt>get_Level()>
 
 Returns the compression level being used. 
@@ -825,7 +851,6 @@ Returns the compression level being used.
 Returns the buffer size used to carry out the compression.
 
 =head2 Example
-
 
 Here is a trivial example of using C<deflate>. It simply reads standard
 input, deflates it and writes it to standard output.
@@ -865,7 +890,6 @@ the I<inflate> interface provided by zlib.
 
 Here is a definition of the interface:
 
-
 =head2 B< ($i, $status) = new Compress::Raw::Zlib::Inflate( [OPT] ) >
 
 Initialises an inflation object. 
@@ -894,14 +918,20 @@ Here is a list of the valid options:
 =item B<-WindowBits>
 
 To uncompress an RFC 1950 data stream, set C<WindowBits> to a positive
-number.
+number between 8 and 15.
 
 To uncompress an RFC 1951 data stream, set C<WindowBits> to C<-MAX_WBITS>.
+
+To uncompress an RFC 1952 data stream (i.e. gzip), set C<WindowBits> to
+C<WANT_GZIP>.
+
+To auto-detect and uncompress an RFC 1950 or RFC 1952 data stream (i.e.
+gzip), set C<WindowBits> to C<WANT_GZIP_OR_ZLIB>.
 
 For a full definition of the meaning and valid values for C<WindowBits>
 refer to the I<zlib> documentation for I<inflateInit2>.
 
-Defaults to MAX_WBITS.
+Defaults to C<MAX_WBITS>.
 
 =item B<-Bufsize>
 
@@ -928,7 +958,6 @@ output buffer by the C<$i-E<gt>inflate> method.
 
 This option defaults to false.
 
-
 =item B<-CRC32>
 
 If set to true, a crc32 checksum of the uncompressed data will be
@@ -946,13 +975,36 @@ This option defaults to false.
 =item B<-ConsumeInput>
 
 If set to true, this option will remove compressed data from the input
-buffer of the the C< $i-E<gt>inflate > method as the inflate progresses.
+buffer of the C<< $i->inflate >> method as the inflate progresses.
 
 This option can be useful when you are processing compressed data that is
 embedded in another file/buffer. In this case the data that immediately
 follows the compressed stream will be left in the input buffer.
 
 This option defaults to true.
+
+=item B<-LimitOutput>
+
+The C<LimitOutput> option changes the behavior of the C<< $i->inflate >>
+method so that the amount of memory used by the output buffer can be
+limited. 
+
+When C<LimitOutput> is used the size of the output buffer used will either
+be the value of the C<Bufsize> option or the amount of memory already
+allocated to C<$output>, whichever is larger. Predicting the output size
+available is tricky, so don't rely on getting an exact output buffer size.
+
+When C<LimitOutout> is not specified C<< $i->inflate >> will use as much
+memory as it takes to write all the uncompressed data it creates by
+uncompressing the input buffer.
+
+If C<LimitOutput> is enabled, the C<ConsumeInput> option will also be
+enabled.
+
+This option defaults to false.
+
+See L</The LimitOutput option> for a discussion on why C<LimitOutput> is
+needed and how to use it.
 
 =back
 
@@ -1048,7 +1100,6 @@ Note I<full flush points> are not present by default in compressed
 data streams. They must have been added explicitly when the data stream
 was created by calling C<Compress::Deflate::flush>  with C<Z_FULL_FLUSH>.
 
-
 =head2 B<$i-E<gt>dict_adler()>
 
 Returns the adler32 value for the dictionary.
@@ -1083,7 +1134,7 @@ Returns the total number of uncompressed bytes output from inflate.
 
 Returns the buffer size used to carry out the decompression.
 
-=head2 Example
+=head2 Examples
 
 Here is an example of using C<inflate>.
 
@@ -1102,12 +1153,51 @@ Here is an example of using C<inflate>.
     my ($output, $status) ;
     while (read(STDIN, $input, 4096))
     {
-        $status = $x->inflate(\$input, $output) ;
+        $status = $x->inflate($input, $output) ;
     
-        print $output 
-            if $status == Z_OK or $status == Z_STREAM_END ;
+        print $output ;
     
         last if $status != Z_OK ;
+    }
+    
+    die "inflation failed\n"
+        unless $status == Z_STREAM_END ;
+
+The next example show how to use the C<LimitOutput> option. Notice the use
+of two nested loops in this case. The outer loop reads the data from the
+input source - STDIN and the inner loop repeatedly calls C<inflate> until
+C<$input> is exhausted, we get an error, or the end of the stream is
+reached. One point worth remembering is by using the C<LimitOutput> option
+you also get C<ConsumeInput> set as well - this makes the code below much
+simpler.
+
+    use strict ;
+    use warnings ;
+    
+    use Compress::Raw::Zlib;
+    
+    my $x = new Compress::Raw::Zlib::Inflate(LimitOutput => 1)
+       or die "Cannot create a inflation stream\n" ;
+    
+    my $input = '' ;
+    binmode STDIN;
+    binmode STDOUT;
+    
+    my ($output, $status) ;
+
+  OUTER:
+    while (read(STDIN, $input, 4096))
+    {
+        do
+        {
+            $status = $x->inflate($input, $output) ;
+
+            print $output ;
+
+            last OUTER
+                unless $status == Z_OK || $status == Z_BUF_ERROR ;
+        }
+        while ($status == Z_OK && length $input);
     }
     
     die "inflation failed\n"
@@ -1135,31 +1225,169 @@ CRC-related functions are available.
 
 These functions allow checksums to be merged.
 
+=head1 Misc
+
+=head2 my $version = Compress::Raw::Zlib::zlib_version();
+
+Returns the version of the zlib library.
+
+=head1 The LimitOutput option.
+
+By default C<< $i->inflate($input, $output) >> will uncompress I<all> data
+in C<$input> and write I<all> of the uncompressed data it has generated to
+C<$output>. This makes the interface to C<inflate> much simpler - if the
+method has uncompressed C<$input> successfully I<all> compressed data in
+C<$input> will have been dealt with. So if you are reading from an input
+source and uncompressing as you go the code will look something like this
+
+    use strict ;
+    use warnings ;
+    
+    use Compress::Raw::Zlib;
+    
+    my $x = new Compress::Raw::Zlib::Inflate()
+       or die "Cannot create a inflation stream\n" ;
+    
+    my $input = '' ;
+    
+    my ($output, $status) ;
+    while (read(STDIN, $input, 4096))
+    {
+        $status = $x->inflate($input, $output) ;
+    
+        print $output ;
+    
+        last if $status != Z_OK ;
+    }
+    
+    die "inflation failed\n"
+        unless $status == Z_STREAM_END ;
+
+The points to note are 
+
+=over 5
+
+=item *
+
+The main processing loop in the code handles reading of compressed data
+from STDIN.
+
+=item *
+
+The status code returned from C<inflate> will only trigger termination of
+the main processing loop if it isn't C<Z_OK>. When C<LimitOutput> has not
+been used the C<Z_OK> status means means that the end of the compressed
+data stream has been reached or there has been an error in uncompression.
+
+=item *
+
+After the call to C<inflate> I<all> of the uncompressed data in C<$input>
+will have been processed. This means the subsequent call to C<read> can
+overwrite it's contents without any problem.
+
+=back
+
+For most use-cases the behavior described above is acceptable (this module
+and it's predecessor, C<Compress::Zlib>, have used it for over 10 years
+without an issue), but in a few very specific use-cases the amount of
+memory required for C<$output> can prohibitively large. For example, if the
+compressed data stream contains the same pattern repeated thousands of
+times, a relatively small compressed data stream can uncompress into
+hundreds of megabytes.  Remember C<inflate> will keep allocating memory
+until I<all> the uncompressed data has been written to the output buffer -
+the size of C<$output> is unbounded. 
+
+The C<LimitOutput> option is designed to help with this use-case.
+
+The main difference in your code when using C<LimitOutput> is having to
+deal with cases where the C<$input> parameter still contains some
+uncompressed data that C<inflate> hasn't processed yet. The status code
+returned from C<inflate> will be C<Z_OK> if uncompression took place and
+C<Z_BUF_ERROR> if the output buffer is full.
+
+Below is typical code that shows how to use C<LimitOutput>.
+
+    use strict ;
+    use warnings ;
+    
+    use Compress::Raw::Zlib;
+    
+    my $x = new Compress::Raw::Zlib::Inflate(LimitOutput => 1)
+       or die "Cannot create a inflation stream\n" ;
+    
+    my $input = '' ;
+    binmode STDIN;
+    binmode STDOUT;
+    
+    my ($output, $status) ;
+
+  OUTER:
+    while (read(STDIN, $input, 4096))
+    {
+        do
+        {
+            $status = $x->inflate($input, $output) ;
+
+            print $output ;
+
+            last OUTER
+                unless $status == Z_OK || $status == Z_BUF_ERROR ;
+        }
+        while ($status == Z_OK && length $input);
+    }
+    
+    die "inflation failed\n"
+        unless $status == Z_STREAM_END ;
+
+Points to note this time:
+
+=over 5
+
+=item *
+
+There are now two nested loops in the code: the outer loop for reading the
+compressed data from STDIN, as before; and the inner loop to carry out the
+uncompression.
+
+=item *
+
+There are two exit points from the inner uncompression loop.
+
+Firstly when C<inflate> has returned a status other than C<Z_OK> or
+C<Z_BUF_ERROR>.  This means that either the end of the compressed data
+stream has been reached (C<Z_STREAM_END>) or there is an error in the
+compressed data. In either of these cases there is no point in continuing
+with reading the compressed data, so both loops are terminated.
+
+The second exit point tests if there is any data left in the input buffer,
+C<$input> - remember that the C<ConsumeInput> option is automatically
+enabled when C<LimitOutput> is used.  When the input buffer has been
+exhausted, the outer loop can run again and overwrite a now empty
+C<$input>.
+
+=back
+
 =head1 ACCESSING ZIP FILES
 
-Although it is possible (with some effort on your part) to use this
-module to access .zip files, there is a module on CPAN that will do all
-the hard work for you. Check out the C<Archive::Zip> module on CPAN at
-
-    http://www.cpan.org/modules/by-module/Archive/Archive-Zip-*.tar.gz    
-
+Although it is possible (with some effort on your part) to use this module
+to access .zip files, there are other perl modules available that will
+do all the hard work for you. Check out C<Archive::Zip>,
+C<IO::Compress::Zip> and C<IO::Uncompress::Unzip>.
 
 =head1 CONSTANTS
 
 All the I<zlib> constants are automatically imported when you make use
 of I<Compress::Raw::Zlib>.
 
-
 =head1 SEE ALSO
 
-L<Compress::Zlib>, L<IO::Compress::Gzip>, L<IO::Uncompress::Gunzip>, L<IO::Compress::Deflate>, L<IO::Uncompress::Inflate>, L<IO::Compress::RawDeflate>, L<IO::Uncompress::RawInflate>, L<IO::Compress::Bzip2>, L<IO::Uncompress::Bunzip2>, L<IO::Compress::Lzop>, L<IO::Uncompress::UnLzop>, L<IO::Compress::Lzf>, L<IO::Uncompress::UnLzf>, L<IO::Uncompress::AnyInflate>, L<IO::Uncompress::AnyUncompress>
+L<Compress::Zlib>, L<IO::Compress::Gzip>, L<IO::Uncompress::Gunzip>, L<IO::Compress::Deflate>, L<IO::Uncompress::Inflate>, L<IO::Compress::RawDeflate>, L<IO::Uncompress::RawInflate>, L<IO::Compress::Bzip2>, L<IO::Uncompress::Bunzip2>, L<IO::Compress::Lzma>, L<IO::Uncompress::UnLzma>, L<IO::Compress::Xz>, L<IO::Uncompress::UnXz>, L<IO::Compress::Lzop>, L<IO::Uncompress::UnLzop>, L<IO::Compress::Lzf>, L<IO::Uncompress::UnLzf>, L<IO::Uncompress::AnyInflate>, L<IO::Uncompress::AnyUncompress>
 
 L<Compress::Zlib::FAQ|Compress::Zlib::FAQ>
 
 L<File::GlobMapper|File::GlobMapper>, L<Archive::Zip|Archive::Zip>,
 L<Archive::Tar|Archive::Tar>,
 L<IO::Zlib|IO::Zlib>
-
 
 For RFC 1950, 1951 and 1952 see 
 F<http://www.faqs.org/rfcs/rfc1950.html>,
@@ -1174,14 +1402,9 @@ F<http://www.zlib.org>.
 
 The primary site for gzip is F<http://www.gzip.org>.
 
-
-
-
 =head1 AUTHOR
 
 This module was written by Paul Marquess, F<pmqs@cpan.org>. 
-
-
 
 =head1 MODIFICATION HISTORY
 
@@ -1189,10 +1412,8 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2007 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2009 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
-
-
 

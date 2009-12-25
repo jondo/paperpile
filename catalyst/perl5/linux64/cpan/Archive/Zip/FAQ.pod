@@ -212,7 +212,7 @@ There is a distinction between Unix gzip files, and Zip archives that
 also can use the gzip compression.
 
 
-Depending on the format of the gzip file, you can use L<Compress::Zlib>, or
+Depending on the format of the gzip file, you can use L<Compress::Raw::Zlib>, or
 L<Archive::Tar> to decompress it (and de-archive it in the case of Tar files).
 
 
@@ -330,11 +330,11 @@ getting this error message:
 
 B<A:> You can't uncompress this archive member. Archive::Zip only supports uncompressed
 members, and compressed members that are compressed using the compression
-supported by Compress::Zlib. That means only Deflated and Stored members.
+supported by Compress::Raw::Zlib. That means only Deflated and Stored members.
 
 
 Your file is compressed using the Shrink format, which isn't supported by
-Compress::Zlib.
+Compress::Raw::Zlib.
 
 
 You could, perhaps, use a command-line UnZip program (like the Info-Zip
@@ -440,7 +440,7 @@ B<Q:> I'm using Windows. When I try to use Archive::Zip, my machine locks up/mak
 funny sounds/displays a BSOD/corrupts data. How can I fix this?
 
 
-B<A:> First, try the newest version of Compress::Zlib. I know of
+B<A:> First, try the newest version of Compress::Raw::Zlib. I know of
 Windows-related problems prior to v1.14 of that library.
 
 

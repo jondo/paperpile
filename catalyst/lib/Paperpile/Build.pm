@@ -9,7 +9,7 @@ use Data::Dumper;
 use File::Path;
 use File::Find;
 use File::Spec::Functions qw(catfile);
-use File::Copy::Recursive qw(fcopy dircopy);
+use File::Copy::Recursive qw(fcopy dircopy rcopy);
 use File::DirCompare;
 use YAML qw(LoadFile DumpFile);
 
@@ -234,13 +234,11 @@ sub dump_includes {
 
 sub create_patch {
 
-  my ( $self, $dir_old, $dir_new ) = @_;
-
-  my $patch_dir = 'patch';
+  my ( $self, $old_dir, $new_dir, $patch_dir ) = @_;
 
   my ( @listing, @modified );
   File::DirCompare->compare(
-    $dir_old, $dir_new,
+    $old_dir, $new_dir,
     sub {
       my ( $a, $b ) = @_;
 
@@ -248,23 +246,23 @@ sub create_patch {
 
       if ($a) {
         $a_rel = $a;
-        $a_rel =~ s/$dir_old\///;
+        $a_rel =~ s/$old_dir\///;
       }
 
       if ($b) {
         $b_rel = $b;
-        $b_rel =~ s/$dir_new\///;
+        $b_rel =~ s/$new_dir\///;
       }
 
       if ( !$b ) {
         push @listing, "D   $a_rel";
       } elsif ( !$a ) {
-        fcopy( $b, "patch/$b_rel" );
+        rcopy( $b, "$patch_dir/$b_rel" );
         push @listing, "A   $b_rel";
       } else {
         if ( -f $a && -f $b ) {
           push @listing,  "M   $b_rel";
-          fcopy( $b, "patch/$b_rel" );
+          rcopy( $b, "$patch_dir/$b_rel" );
         } else {
 
           # One file, one directory - treat as delete + add
