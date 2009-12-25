@@ -1,46 +1,51 @@
 ## run with the right perl binary!
 
 use strict;
+use FindBin;
+use Getopt::Long;
+
 use YAML;
 use JSON;
 use Data::Dumper;
-use Getopt::Long;
-use LWP;
-use FindBin;
+
 use File::Temp;
-use File::stat;
 use File::Find;
 use File::Path;
 use File::Copy::Recursive qw(rcopy);
+
 use Archive::Zip;
 use Digest::MD5;
 
+use LWP;
+
+### General settings
+
+my $app_dir      = "$FindBin::Bin/../../";
+my $mock_app_dir = '/home/wash/tmp/paperpile/version-0.1';
+my $update_url   = 'http://127.0.0.1:3000/updates';
+my $platform     = 'linux64';
+
+### Command line options
+
 my $check  = 1;
-my $help   = 1;
 my $update = 0;
+my $help   = 0;
 
 GetOptions(
   'check'  => \$check,
   'c'      => \$check,
   'update' => \$update,
   'u'      => \$update,
-  "help" => \$help,
-  "h"    => \$help
+  "help"   => \$help,
+  "h"      => \$help
 );
 
-$check =0 if ($update);
+$check = 0 if ($update);
 
-my $app_dir = "$FindBin::Bin/../../";
-
-my $mock_app_dir = '/home/wash/tmp/paperpile/version-0.1';
-
-my $update_url = 'http://127.0.0.1:3000/updates';
-my $platform   = 'linux64';
+### Read version information from current installation
 
 my $curr_version_id;
 my $curr_version_string;
-
-## First read version information from current installation
 
 eval {
   my $app_settings = YAML::LoadFile("$app_dir/catalyst/conf/settings.yaml")->{app_settings}
@@ -54,6 +59,8 @@ if ($@) {
   exit(1);
 }
 
+### Get update file from remote server
+
 my $browser = LWP::UserAgent->new();
 
 my $response = $browser->get("$update_url/updates.yaml");
@@ -64,20 +71,30 @@ if ( $response->is_error ) {
 
 my $info = YAML::Load( $response->content ) || die("Failed to read update information");
 
+### Check if new updates are available and collect details for these updates
+
 my @new_versions = ();
 
-my $restart = 0;
-my $patch   = 1;
+my $restart       = 0;    # A restart is needed
+my $patch         = 1;    # Update can be done via a patch (or series of patches)
+my $download_size = 0;    # The total size of downloads
 
 foreach my $item (@$info) {
+
   if ( $item->{release}->{id} > $curr_version_id ) {
-    push @new_versions, $item->{release};
+
+    $item->{release}->{patch_name} =
+      sprintf( "patch-%s_to_%s-$platform", $item->{release}->{id} - 1, $item->{release}->{id} );
+
     $restart = 1 if $item->{release}->{restart};
     $patch   = 0 if not $item->{release}->{patch};
+    $download_size += $item->{release}->{size};
+
+    push @new_versions, $item->{release};
   }
 }
 
-### Check for updates
+### If --check is given we just report the update details and exit
 
 if ($check) {
 
@@ -88,6 +105,7 @@ if ($check) {
       'update_available' => 1,
       'restart'          => $restart,
       'patch'            => $patch,
+      'download_size'    => $download_size,
       'updates'          => \@new_versions
     };
   } else {
@@ -97,24 +115,26 @@ if ($check) {
   print to_json($output);
 
   exit(0);
-
 }
 
-### Apply updates
+### Apply the updates
+
+@new_versions = sort { $a->{id} <=> $b->{id} } @new_versions;
 
 my $tmp_dir = File::Temp::tempdir( 'paperpile-XXXX', TMPDIR => 1, CLEANUP => 0 );
 
-print "$tmp_dir\n";
+my $downloaded = 0;
 
-foreach my $release ( sort { $a->{id} <=> $b->{id} } @new_versions ) {
+my $status = 'DOWNLOAD';
+echo("Downloading updates");
 
-  my $patch = sprintf( "patch-%s_to_%s-$platform", $release->{id} - 1, $release->{id} );
+foreach my $release (@new_versions) {
 
-  print "Downloading update ", $release->{string}, "\n";
+  my $patch = $release->{patch_name};
 
   download( "$update_url/$patch.zip", "$tmp_dir/$patch.zip" );
 
-  open(ZIP, "$tmp_dir/$patch.zip") or die "Can't open $patch.zip ($!)";
+  open( ZIP, "$tmp_dir/$patch.zip" ) or die "Can't open $patch.zip ($!)";
 
   my $c = Digest::MD5->new;
 
@@ -124,23 +144,36 @@ foreach my $release ( sort { $a->{id} <=> $b->{id} } @new_versions ) {
 
   close(ZIP);
 
-  if ($checksum != $release->{md5}){
+  if ( $checksum != $release->{md5} ) {
     die("Error downloading $patch.zip (checksum not correct)");
   }
+}
 
-  print "Extracting $patch.zip\n";
+$status = 'EXTRACT';
+echo("Extracting updates");
+
+foreach my $release (@new_versions) {
+
+  my $patch = $release->{patch_name};
 
   my $zip = Archive::Zip->new();
+
   if ( $zip->read("$tmp_dir/$patch.zip") != Archive::Zip::AZ_OK ) {
     die "Error reading ZIP file $patch";
   }
 
   $zip->extractTree( $patch, "$tmp_dir/$patch" );
 
-  print "Applying patch\n";
-  apply_patch( $mock_app_dir, "$tmp_dir/$patch" );
-
 }
+
+$status = 'PATCH';
+echo("Applying updates");
+
+foreach my $release (@new_versions) {
+  my $patch = $release->{patch_name};
+  apply_patch( $mock_app_dir, "$tmp_dir/$patch" );
+}
+
 
 sub download {
 
@@ -154,8 +187,8 @@ sub download {
     sub {
       my ( $data, $response, $protocol ) = @_;
       print FILE $data;
-      my $current_size = stat($file)->size;
-
+      $downloaded += length($data);
+      echo("Downloading updates");
     }
   );
 
@@ -212,5 +245,14 @@ sub apply_patch {
 
 }
 
+sub echo {
 
+  my $msg = shift;
 
+  my $data = { msg => $msg, status => $status };
+
+  $data->{downloaded} = $downloaded if defined($downloaded);
+
+  print to_json($data), "\n";
+
+}
