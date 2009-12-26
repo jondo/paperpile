@@ -7,6 +7,31 @@
 Paperpile.serverLog = '';
 Paperpile.isLogging = true; 
 
+Paperpile.startupFailure = function(response){
+    var error;            
+
+    if (response.responseText){
+        error= Ext.util.JSON.decode(response.responseText).error;
+        if (error){
+            error=error.msg;
+        }
+    }
+            
+    Ext.Msg.show({
+        title:'Error',
+        msg: 'Could not start application.<br>'+error,
+        buttons: Ext.Msg.OK,
+        animEl: 'elId',
+        icon: Ext.MessageBox.ERROR,
+        fn: function(action){
+            if (IS_TITANIUM){
+                Titanium.UI.mainWindow.close();
+            }
+        }
+    });
+}
+
+
 Paperpile.stage0 = function(){
     Ext.Ajax.request({
         url: Paperpile.Url('/ajax/app/heartbeat'),
@@ -105,6 +130,8 @@ Paperpile.stage0 = function(){
 
 Paperpile.stage1 = function() {
 
+    Paperpile.status=new Paperpile.Status();
+
     Ext.Ajax.request({
         url: Paperpile.Url('/ajax/app/init_session'),
         success: function(response){
@@ -112,53 +139,46 @@ Paperpile.stage1 = function() {
             var json = Ext.util.JSON.decode(response.responseText);
             
             if (json.error){
-                
-                Ext.Msg.show({
-                    title:'Error',
-                    msg: json.error.msg,
-                    buttons: Ext.Msg.OK,
-                    animEl: 'elId',
-                    icon: Ext.MessageBox.ERROR,
-                    fn: function(action){
-                        if (IS_TITANIUM){
-                            Titanium.UI.mainWindow.close();
-                        }
-                    }
-                });
+                if (json.error.type == 'DatabaseVersionError'){
+                    Ext.MessageBox.show({
+                        msg: 'Updating your library, please wait...',
+                        progressText: '',
+                        width:300,
+                        wait:true,
+                        waitConfig: {interval:200},
+                    });
 
-                if (json.error.type == 'LibraryMissingError'){
+                    Ext.Ajax.request({
+                        url: Paperpile.Url('/ajax/app/migrate_db'),
+                        success: function(response){
+                            Ext.MessageBox.hide();
+                            Paperpile.stage1();
+                        },
+                        failure: function(response){
+                            Paperpile.startupFailure(response); 
+                        }
+                    });
+                } else if (json.error.type == 'LibraryMissingError'){
                     Paperpile.stage2();
+                } else {
+                    Ext.Msg.show({
+                        title:'Error',
+                        msg: json.error.msg,
+                        buttons: Ext.Msg.OK,
+                        animEl: 'elId',
+                        icon: Ext.MessageBox.ERROR,
+                        fn: function(action){
+                            if (IS_TITANIUM){
+                                Titanium.UI.mainWindow.close();
+                            }
+                        }
+                    });
                 }
-                
             } else {
-                Paperpile.status=new Paperpile.Status();
                 Paperpile.stage2();
             }
         }, 
-
-        failure: function(response){
-            var error;            
-
-            if (response.responseText){
-                error= Ext.util.JSON.decode(response.responseText).error;
-                if (error){
-                    error=error.msg;
-                }
-            }
-            
-            Ext.Msg.show({
-                title:'Error',
-                msg: 'Could not start application.<br>'+error,
-                buttons: Ext.Msg.OK,
-                animEl: 'elId',
-                icon: Ext.MessageBox.ERROR,
-                fn: function(action){
-                    if (IS_TITANIUM){
-                        Titanium.UI.mainWindow.close();
-                    }
-                }
-            });
-        }
+        failure: Paperpile.startupFailure
     });
 };
 

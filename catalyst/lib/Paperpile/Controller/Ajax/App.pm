@@ -11,6 +11,7 @@ use File::Path;
 use File::Copy;
 use Paperpile::Exceptions;
 use Paperpile::Queue;
+use Paperpile::Migrate;
 use 5.010;
 use POSIX;
 
@@ -87,9 +88,22 @@ sub init_session : Local {
 
   }
 
-  my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
+  # Check versions of databases and migrate them if necessary
+
+  my $db_library_version   = $c->model('Library')->get_setting('db_version');
+  my $db_settings_version  = $c->model('User')->get_setting('db_version');
+  my $app_library_version  = $c->config->{app_settings}->{library_db_version};
+  my $app_settings_version = $c->config->{app_settings}->{settings_db_version};
+
+  if ( ( $db_library_version != $app_library_version )
+    or ( $db_settings_version != $app_settings_version ) ) {
+    DatabaseVersionError->throw("Database needs to be migrated to latest version");
+  }
 
   # Crate temporary directories if they do not exist already
+
+  my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
+
   mkpath( File::Spec->catfile( $tmp_dir, 'download' ) );
   mkpath( File::Spec->catfile( $tmp_dir, 'queue' ) );
 
@@ -102,6 +116,24 @@ sub init_session : Local {
   #clear queue for now at startup
   my $q = Paperpile::Queue->new();
   $q->clear;
+
+}
+
+sub migrate_db : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $mg = Paperpile::Migrate->new();
+
+  $mg->app_library_version($c->config->{app_settings}->{library_db_version});
+  $mg->app_settings_version($c->config->{app_settings}->{settings_db_version});
+
+  $mg->settings_db($c->config->{'user_settings_db'});
+  $mg->library_db($c->config->{'user_settings'}->{library_db});
+
+  $mg->migrate('library');
+  $mg->migrate('settings');
+
 
 }
 

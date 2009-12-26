@@ -18,6 +18,9 @@ use Digest::MD5;
 
 use LWP;
 
+# Catch all errors and return them as JSON
+$SIG{__DIE__} = sub { print to_json( { error => @_ } ); };
+
 ### General settings
 
 my $app_dir      = "$FindBin::Bin/../../";
@@ -47,17 +50,10 @@ $check = 0 if ($update);
 my $curr_version_id;
 my $curr_version_string;
 
-eval {
-  my $app_settings = YAML::LoadFile("$app_dir/catalyst/conf/settings.yaml")->{app_settings}
-    || die($!);
-  $curr_version_id     = $app_settings->{version_id}     || die("version_id not found");
-  $curr_version_string = $app_settings->{version_string} || die("version string not found");
-};
-
-if ($@) {
-  print STDERR "Could not read app configuration file ($@)\n";
-  exit(1);
-}
+my $app_settings = YAML::LoadFile("$app_dir/catalyst/conf/settings.yaml")->{app_settings}
+  || die($!);
+$curr_version_id     = $app_settings->{version_id}     || die("version_id not found");
+$curr_version_string = $app_settings->{version_string} || die("version string not found");
 
 ### Get update file from remote server
 
@@ -93,6 +89,8 @@ foreach my $item (@$info) {
     push @new_versions, $item->{release};
   }
 }
+
+die("Killed here");
 
 ### If --check is given we just report the update details and exit
 
@@ -173,7 +171,6 @@ foreach my $release (@new_versions) {
   my $patch = $release->{patch_name};
   apply_patch( $mock_app_dir, "$tmp_dir/$patch" );
 }
-
 
 sub download {
 
