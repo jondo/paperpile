@@ -37,6 +37,7 @@
       <li><a href="#" class="pp-textlink  pp-bullet" action="settings-patterns">Paths and patterns</a></li>
       <li><a href="#" class="pp-textlink  pp-bullet" action="duplicates">Find duplicates</a></li>
       <li><a href="#" class="pp-textlink  pp-bullet" action="catalyst">Catalyst console (debugging)</a></li>
+      <li><a href="#" class="pp-textlink  pp-bullet" action="updates">Check for updates</a></li>
     </ul>
   </div>
 </td>

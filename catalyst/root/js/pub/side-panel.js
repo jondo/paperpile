@@ -5,7 +5,7 @@ Paperpile.PDFmanager = Ext.extend(Ext.Panel, {
         '<div id=main-container-{id}>',
 
         // Yellow box
-        '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1"',
+        '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
         '<tpl if="_imported">',
   	  '<div id="ref-actions" style="float:right;">',
 	    '<img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',

@@ -36,6 +36,29 @@ Paperpile.utils = {
 
     },
 
+
+    get_platform: function() {
+
+        var platform = '';
+
+        if (IS_TITANIUM){
+
+            // Determine platform we are running on
+            var osname = Titanium.Platform.name;
+            var ostype = Titanium.Platform.ostype;
+                            
+            if (osname === 'Linux'){
+                if (ostype === '64bit'){
+                    platform = 'linux64';
+                } else {
+                    platform = 'linux32';
+                }
+            }
+        }
+
+        return(platform);
+    },
+
     // Encode tag using our special format to allow unique full text searches
     encodeTag: function(tag) {
 

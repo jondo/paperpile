@@ -712,6 +712,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/wrench.png')!important;
 }
 
+.pp-icon-update{
+    background-image: url('/images/icons/transmit.png')!important;
+}
+
 .pp-icon-import-pdf{
     background-image: url('/images/icons/page_white_acrobat.png')!important;
 }
@@ -1453,3 +1457,10 @@ table.pp-meta-form {
 .pp-meta-form a.pp-textlink {
     font-size: 12px;
 }
+
+.pp-update-log li{
+    background: transparent url('/images/icons/tick.png') no-repeat 0;
+    padding: 2 2 2 22;
+    margin: 10px 15px;
+}
+

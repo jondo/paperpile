@@ -33,6 +33,7 @@ js:
   - "js/screens/settings.js"
   - "js/screens/clouds.js"
   - "js/screens/log.js"
+  - "js/screens/updates.js"
   - "js/pub/abstract.js" 
   - "js/pub/notes.js" 
   - "js/pub/edit.js"

@@ -18,15 +18,20 @@ use Digest::MD5;
 
 use LWP;
 
+# Force output as it happens
+$| = 1;
+
 # Catch all errors and return them as JSON
-$SIG{__DIE__} = sub { print to_json( { error => @_ } ); };
+$SIG{__DIE__} = sub { print STDOUT to_json( { error => @_ } ), "\n"; };
+open STDERR, ">/dev/null";
 
 ### General settings
 
-my $app_dir      = "$FindBin::Bin/../../";
-my $mock_app_dir = '/home/wash/tmp/paperpile/version-0.1';
-my $update_url   = 'http://127.0.0.1:3000/updates';
-my $platform     = 'linux64';
+my $app_dir             = "$FindBin::Bin/../../";
+my $mock_app_dir        = '/home/wash/tmp/paperpile/version-0.1';
+my $update_url          = 'http://127.0.0.1:3003/updates';
+my $platform            = 'linux64';
+my $progress_resolution = 10;
 
 ### Command line options
 
@@ -71,9 +76,9 @@ my $info = YAML::Load( $response->content ) || die("Failed to read update inform
 
 my @new_versions = ();
 
-my $restart       = 0;    # A restart is needed
-my $patch         = 1;    # Update can be done via a patch (or series of patches)
-my $download_size = 0;    # The total size of downloads
+my $restart         = 0;    # A restart is needed
+my $patch_available = 1;    # Update can be done via a patch (or series of patches)
+my $download_size   = 0;    # The total size of downloads
 
 foreach my $item (@$info) {
 
@@ -82,15 +87,13 @@ foreach my $item (@$info) {
     $item->{release}->{patch_name} =
       sprintf( "patch-%s_to_%s-$platform", $item->{release}->{id} - 1, $item->{release}->{id} );
 
-    $restart = 1 if $item->{release}->{restart};
-    $patch   = 0 if not $item->{release}->{patch};
+    $restart         = 1 if $item->{release}->{restart};
+    $patch_available = 0 if not $item->{release}->{patch};
     $download_size += $item->{release}->{size};
 
     push @new_versions, $item->{release};
   }
 }
-
-die("Killed here");
 
 ### If --check is given we just report the update details and exit
 
@@ -102,7 +105,7 @@ if ($check) {
     $output = {
       'update_available' => 1,
       'restart'          => $restart,
-      'patch'            => $patch,
+      'patch_available'  => $patch_available,
       'download_size'    => $download_size,
       'updates'          => \@new_versions
     };
@@ -176,6 +179,9 @@ sub download {
 
   my ( $url, $file ) = @_;
 
+  my $chunk_size = $download_size / $progress_resolution;
+  my $curr_chunk = 0;
+
   open( FILE, ">$file" ) || die("Could not write $file ($!)");
   binmode FILE;
 
@@ -185,7 +191,11 @@ sub download {
       my ( $data, $response, $protocol ) = @_;
       print FILE $data;
       $downloaded += length($data);
-      echo("Downloading updates");
+      $curr_chunk += length($data);
+      if ( $curr_chunk >= $chunk_size ) {
+        echo("Downloading updates");
+        $curr_chunk = 0;
+      }
     }
   );
 

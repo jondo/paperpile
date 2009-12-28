@@ -48,18 +48,8 @@ Paperpile.stage0 = function(){
             if (IS_TITANIUM){
 
                 // Determine platform we are running on
-                var osname = Titanium.Platform.name;
-                var ostype = Titanium.Platform.ostype;
-                var platform = '';
-                
-                if (osname === 'Linux'){
-                    if (ostype === '64bit'){
-                        platform = 'linux64';
-                    } else {
-                        platform = 'linux32';
-                    }
-                }
-
+                var platform = Paperpile.utils.get_platform();
+   
                 var path = Titanium.App.getHome()+'/catalyst';
 
                 // Set up process
@@ -82,8 +72,6 @@ Paperpile.stage0 = function(){
 
                 // Handler to process the STDERR output of the server
                 Paperpile.server.setOnReadLine(function(line){
-                    console.log(line);
-
                     if (Paperpile.isLogging){
                         Paperpile.serverLog=Paperpile.serverLog+line+"\n";
                     

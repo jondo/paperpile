@@ -433,9 +433,88 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 scope:this,
             });
         }
-    }
-    
+    },
 
+    check_updates: function(silent){
+
+        if (IS_TITANIUM){
+            
+            if (!silent){
+                Paperpile.status.showBusy('Searching for updates');
+            }
+            
+            var platform = Paperpile.utils.get_platform();
+            var path = Titanium.App.getHome()+'/catalyst';
+
+            var upgrader = Titanium.Process.createProcess({
+                args:[path+"/perl5/"+platform+"/bin/perl", path+'/script/updater.pl', '--check'],
+            });
+
+            upgrader.setEnvironment("PERL5LIB","");
+
+            var results;
+
+            upgrader.setOnReadLine(function(line){
+                results = Ext.util.JSON.decode(line);
+            });
+
+            upgrader.setOnExit(function(){
+                Paperpile.status.clearMsg();
+                if (results.error){
+                    if (!silent){
+                        Paperpile.status.updateMsg(
+                            { type:'error',
+                              msg: 'Update check failed.',
+                              action1: 'Details',
+                              callback: function(action){
+                                  if (action === 'ACTION1'){
+                                      Ext.Msg.show({
+                                          title:'Error',
+                                          msg: results.error,
+                                          animEl: 'elId',
+                                          icon: Ext.MessageBox.ERROR,
+                                          buttons: Ext.Msg.OK,
+                                          fn: function(btn){
+                                              Ext.Msg.close();
+                                          }, 
+                                      });
+                                  }
+                              },
+                              hideOnClick: true,
+                            }
+                        );
+                    }
+                } else {
+                    if (results.update_available){
+                        Paperpile.status.updateMsg(
+                            { msg: 'An updated version of Paperpile is available',
+                              action1: 'Install Updates',
+                              action2: 'Not now',
+                              callback: function(action){
+                                  if (action === 'ACTION1'){
+                                      Paperpile.updateInfo=results;
+                                      Paperpile.main.tabs.newScreenTab('Updates','updates');
+                                  } else {
+                                      Paperpile.status.clearMsg();
+                                  }
+                              },
+                              hideOnClick: true,
+                            }
+                        );
+                    } else {
+                        if (!silent){
+                            Paperpile.status.updateMsg(
+                                { msg: 'Paperpile is up-to-date.',
+                                  hideOnClick: true,
+                                }
+                            );
+                        }
+                    }
+                }
+            });
+            upgrader.launch();
+        }
+    }
 });
 
 

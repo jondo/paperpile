@@ -122,6 +122,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
         if (pars.action2){
             Ext.DomHelper.overwrite(this.action2el, pars.action2);
+            this.action2el.show();
         } else {
             this.action2el.hide();
         }
