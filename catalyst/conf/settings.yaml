@@ -21,7 +21,7 @@ session:
 app_settings:
   platform: "__PLATFORM__"
   version_id: 1
-  version_string: "0.4.1-preview"
+  version_string: "0.4-preview"
   build_number: 0
   settings_db_version: 1
   library_db_version: 1
@@ -46,3 +46,10 @@ library_settings:
   attachment_pattern: "[key]_supplements"
   search_seq: "PubMed"
   _tree: ""
+
+release:
+  patch: 0
+  restart: 1
+  msg: "Initial version"
+  log:
+    - "First version with automatic release process"
