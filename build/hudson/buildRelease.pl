@@ -8,6 +8,7 @@ use strict;
 use FindBin;
 use lib "$FindBin::Bin/../../catalyst/lib";
 use YAML qw(LoadFile);
+use Data::Dumper;
 
 use Paperpile;
 use Paperpile::Build;
@@ -27,28 +28,38 @@ my ($version_string, $version_id) = ($settings->{app_settings}->{version_string}
                                      $settings->{app_settings}->{version_id});
 
 
-#my ( $day, $month, $year ) = (localtime)[ 3, 4, 5 ];
-#$month+=1;
-#$year+=1900;
-
-#my $tag = sprintf("%02d-%02d-%04d", $month, $day, $year);
-
 #Paperpile::Build->echo("Minifying javascript");
-#$b->minify;
+#$b->minify; 
 
-Paperpile::Build->echo("Making distribution linux64");
-$b->make_dist('linux64', $ENV{BUILD_NUMBER});
+#Paperpile::Build->echo("Making distribution linux64");
+#$b->make_dist('linux64', $ENV{BUILD_NUMBER});
 
-Paperpile::Build->echo("Making distribution linux32");
-$b->make_dist('linux32', $ENV{BUILD_NUMBER});
+#Paperpile::Build->echo("Making distribution linux32");
+#$b->make_dist('linux32', $ENV{BUILD_NUMBER});
 
 
 chdir "dist/data";
-`rm ../*tar.gz`;
-for my $platform ('linux32', 'linux64'){
-  Paperpile::Build->echo("Packaging $platform");
-  `mv $platform paperpile`;
-  `tar czf ../paperpile-$version_string-$platform.tar.gz paperpile`;
-  `mv paperpile $platform`;
-}
+#`rm ../*tar.gz`;
+#for my $platform ('linux32', 'linux64'){
+#  Paperpile::Build->echo("Packaging $platform");
+#  `mv $platform paperpile`;
+#  `tar czf ../paperpile-$version_string-$platform.tar.gz paperpile`;
+#  `mv paperpile $platform`;
+#}
 
+chdir "..";
+
+#`rm -rf  ~/release_stage/$version_string`;
+#`mkdir ~/release_stage/$version_string`;
+#`mv * ~/release_stage/$version_string`;
+
+my $update_info = LoadFile($ENV{HOME}."/release_stage/updates.yaml");
+
+my $release_info = $settings->{release};
+
+$release_info->{id} = $settings->{app_settings}->{version_id};
+$release_info->{string} = $settings->{app_settings}->{version_string};
+
+unshift @$update_info, {release => $settings->{release}};
+
+print Dumper($update_info);
