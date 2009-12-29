@@ -246,13 +246,13 @@ sub report_error : Local {
 
   my $browser = Paperpile::Utils->get_browser();
 
-  my $version_string = $c->config->{app_settings}->{version_string};
+  my $version_name = $c->config->{app_settings}->{version_name};
   my $version_id     = $c->config->{app_settings}->{version_id};
   my $build_number   = $c->config->{app_settings}->{build_number};
   my $platform       = $c->config->{app_settings}->{platform};
 
   my $subject =
-    "Unknown exception on $platform;  version: $version_id ($version_string); build: $build_number";
+    "Unknown exception on $platform;  version: $version_id ($version_name); build: $build_number";
 
   my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", SUFFIX => '.txt' );
 

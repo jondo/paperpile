@@ -53,12 +53,12 @@ $check = 0 if ($update);
 ### Read version information from current installation
 
 my $curr_version_id;
-my $curr_version_string;
+my $curr_version_name;
 
 my $app_settings = YAML::LoadFile("$app_dir/catalyst/conf/settings.yaml")->{app_settings}
   || die($!);
-$curr_version_id     = $app_settings->{version_id}     || die("version_id not found");
-$curr_version_string = $app_settings->{version_string} || die("version string not found");
+$curr_version_id   = $app_settings->{version_id}   || die("version_id not found");
+$curr_version_name = $app_settings->{version_name} || die("version name not found");
 
 ### Get update file from remote server
 
