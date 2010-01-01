@@ -11,6 +11,9 @@ use File::Find;
 use File::Spec::Functions qw(catfile);
 use File::Copy::Recursive qw(fcopy dircopy rcopy);
 use File::DirCompare;
+use File::stat;
+use Digest::MD5;
+
 use YAML qw(LoadFile DumpFile);
 
 
@@ -280,6 +283,27 @@ sub create_patch {
   }
 
 }
+
+
+sub file_stats {
+
+  my ( $self, $file ) = @_;
+
+  open( ZIP, $file ) or die "Can't open $file ($!)";
+
+  my $c = Digest::MD5->new;
+
+  $c->addfile(*ZIP);
+
+  close(ZIP);
+
+  return {
+    size => stat($file)->size,
+    md5  => $c->hexdigest,
+  };
+
+}
+
 
 
 sub _get_list {

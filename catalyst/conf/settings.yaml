@@ -20,8 +20,8 @@ session:
 
 app_settings:
   platform: "__PLATFORM__"
-  version_id: 1
-  version_name: "0.4-preview"
+  version_id: 2
+  version_name: "0.4.1"
   build_number: 0
   settings_db_version: 1
   library_db_version: 1
@@ -48,8 +48,8 @@ library_settings:
   _tree: ""
 
 release:
-  patch: 0
+  patch: 1
   restart: 1
-  msg: "Initial version"
+  msg: "Test version for patch mechanism"
   log:
-    - "First version with automatic release process"
+    - "Test version for patch mechanism"
