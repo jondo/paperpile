@@ -5,7 +5,7 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
     markupPatch: [
         '<div class="pp-box pp-box-top pp-box-style1" style="width:400px;">',
         '<tpl for="updates">',
-        '<h2>Update {string}</h2>',
+        '<h2>Update {name}</h2>',
         '<p>{msg}</p>',
         '<ul class="pp-update-log">',
         '<tpl for="log">',
@@ -80,8 +80,10 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
         var platform = Paperpile.utils.get_platform();
         var path = Titanium.App.getHome()+'/catalyst';
 
+        var args = [path+"/perl5/"+platform+"/bin/perl", path+'/script/updater.pl', '--update'];
+
         var upgrader = Titanium.Process.createProcess({
-            args:[path+"/perl5/"+platform+"/bin/perl", path+'/script/updater.pl', '--update'],
+            args:args,
         });
 
         upgrader.setEnvironment("PERL5LIB","");
@@ -92,6 +94,7 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
         var error = false;
 
         upgrader.setOnReadLine(function(line){
+
             log = Ext.util.JSON.decode(line);
 
             if (log.error){

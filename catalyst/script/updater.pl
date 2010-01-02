@@ -1,4 +1,4 @@
-## run with the right perl binary!
+## Run with the Paperpile perl binary!
 
 use strict;
 use FindBin;
@@ -21,58 +21,75 @@ use LWP;
 # Force output as it happens
 $| = 1;
 
-# Catch all errors and return them as JSON
+# Catch all errors and return them as JSON. Note that the script
+# always return 0
 $SIG{__DIE__} = sub { print STDOUT to_json( { error => @_ } ), "\n"; };
+
 open STDERR, ">/dev/null";
 
-### General settings
+####################### General settings #############################
 
 my $app_dir             = "$FindBin::Bin/../../";
-my $mock_app_dir        = '/home/wash/tmp/paperpile/version-0.1';
-my $update_url          = 'http://127.0.0.1:3003/updates';
-my $platform            = 'linux64';
+my $update_url          = 'http://paperpile.com/download/files';
+my $latest              = 'latest';
 my $progress_resolution = 10;
+my $platform            = get_platform();
 
-### Command line options
+# Mock dir for testing; It is not wise to patch the development
+# working directory
+#$app_dir = '/home/wash/tmp/paperpile/paperpile';
+
+####################### Command line options #########################
 
 my $check  = 1;
 my $update = 0;
+my $debug  = 0;
 my $help   = 0;
 
 GetOptions(
   'check'  => \$check,
   'c'      => \$check,
   'update' => \$update,
+  'debug'  => \$debug,
   'u'      => \$update,
-  "help"   => \$help,
-  "h"      => \$help
+  'help'   => \$help,
+  'h'      => \$help
 );
 
 $check = 0 if ($update);
 
-### Read version information from current installation
+# To test the release before it is live we can use the --debug option
+# or set the PP_DEBUG environment variable
+if ( $ENV{PP_DEBUG} ) {
+  $debug = 1;
+}
+
+$latest = 'stage' if $debug;
+
+######### Read version information from current installation #########
 
 my $curr_version_id;
 my $curr_version_name;
 
 my $app_settings = YAML::LoadFile("$app_dir/catalyst/conf/settings.yaml")->{app_settings}
   || die($!);
+
 $curr_version_id   = $app_settings->{version_id}   || die("version_id not found");
 $curr_version_name = $app_settings->{version_name} || die("version name not found");
 
-### Get update file from remote server
+my $needs_sudo = ( -w "$app_dir/catalyst/conf/settings.yaml" ) ? 0 : 1;
+
+########### Get update information from remote server ################
 
 my $browser = LWP::UserAgent->new();
 
-my $response = $browser->get("$update_url/updates.yaml");
+my $response = $browser->get("$update_url/$latest/updates.yaml");
 
 if ( $response->is_error ) {
   die( $response->message, " Code: ", $response->code );
 }
 
 my $info = YAML::Load( $response->content ) || die("Failed to read update information");
-
-### Check if new updates are available and collect details for these updates
 
 my @new_versions = ();
 
@@ -89,13 +106,13 @@ foreach my $item (@$info) {
 
     $restart         = 1 if $item->{release}->{restart};
     $patch_available = 0 if not $item->{release}->{patch};
-    $download_size += $item->{release}->{size};
+    $download_size += $item->{release}->{size}->{$platform};
 
     push @new_versions, $item->{release};
   }
 }
 
-### If --check is given we just report the update details and exit
+########## --check: Report the update details and exit ###############
 
 if ($check) {
 
@@ -113,18 +130,83 @@ if ($check) {
     $output = { 'update_available' => 0 };
   }
 
-  print to_json($output);
+  print to_json($output), "\n";
 
   exit(0);
 }
 
-### Apply the updates
+################## --update: Apply the updates #######################
+
+if ($needs_sudo) {
+
+  #`sudo -k`;    # reset sudo to force password entry for gksudo every time (for testing)
+
+  # Get catalyst base dir via the include path of the perl binary
+  my $cat_path = $INC[0];
+  $cat_path =~ s!/perl5/$platform/base!!;
+
+  my $call = "$cat_path/perl5/$platform/bin/perl $cat_path/script/updater.pl --update";
+
+  if ($debug) {
+    $call .= " --debug";
+  }
+
+  # We support gksudo and pkexec, kdesudo behaved strangely and is not
+  # supported for now
+
+  my $gksudo = `which gksudo`;
+  my $pkexec = `which pkexec`;
+
+  chomp($gksudo);
+  chomp($pkexec);
+
+  my $login_error = to_json( {
+      error =>
+        'Administrative privileges are required to perform the update. Authentication failed.'
+    }
+  );
+
+  my $sudo_error = to_json(
+    { error => 'Authentication failed. Please install gksudo or kdesudo to perform the update.' } );
+
+  if ($gksudo) {
+
+    # Call myself via gksudo
+    my $code = system("$gksudo -k -D Paperpile -- $call");
+
+    # If 'Cancel' is hit or password is wrong gksudo return non-zero
+    # value (the script itself always returns 0, if an error occurs
+    # this goes to the json output)
+    if ( $code != 0 ) {
+      print $login_error, "\n";
+    }
+    exit(0);
+
+  } elsif ($pkexec) {
+
+    my $code = system("pkexec $call");
+
+    if ( $code != 0 ) {
+      print $login_error, "\n";
+    }
+    exit(0);
+
+  } else {
+    print $sudo_error, "\n";
+    exit(0);
+  }
+}
+
+# For the case that --update is given but no updates are available
+die("No update available") if ( not @new_versions );
 
 @new_versions = sort { $a->{id} <=> $b->{id} } @new_versions;
 
 my $tmp_dir = File::Temp::tempdir( 'paperpile-XXXX', TMPDIR => 1, CLEANUP => 0 );
 
 my $downloaded = 0;
+
+##### Download #####
 
 my $status = 'DOWNLOAD';
 echo("Downloading updates");
@@ -133,7 +215,9 @@ foreach my $release (@new_versions) {
 
   my $patch = $release->{patch_name};
 
-  download( "$update_url/$patch.zip", "$tmp_dir/$patch.zip" );
+  my ( $from, $to ) = ( $patch =~ /patch-(\d+)_to_(\d+)-.*/ );
+
+  download( "$update_url/$to/$patch.zip", "$tmp_dir/$patch.zip" );
 
   open( ZIP, "$tmp_dir/$patch.zip" ) or die "Can't open $patch.zip ($!)";
 
@@ -145,10 +229,12 @@ foreach my $release (@new_versions) {
 
   close(ZIP);
 
-  if ( $checksum != $release->{md5} ) {
+  if ( $checksum != $release->{md5}->{$platform} ) {
     die("Error downloading $patch.zip (checksum not correct)");
   }
 }
+
+##### Extract ######
 
 $status = 'EXTRACT';
 echo("Extracting updates");
@@ -167,13 +253,17 @@ foreach my $release (@new_versions) {
 
 }
 
+##### Apply the updates ######
+
 $status = 'PATCH';
 echo("Applying updates");
 
 foreach my $release (@new_versions) {
   my $patch = $release->{patch_name};
-  apply_patch( $mock_app_dir, "$tmp_dir/$patch" );
+  apply_patch( $app_dir, "$tmp_dir/$patch" );
 }
+
+####################### Helper functions #############################
 
 sub download {
 
@@ -263,3 +353,23 @@ sub echo {
   print to_json($data), "\n";
 
 }
+
+sub get_platform {
+
+  my $platform;
+  if ( $^O =~ /linux/i ) {
+    my @f = `file /bin/ls`;    # More robust way for this??
+    if ( $f[0] =~ /64-bit/ ) {
+      $platform = 'linux64';
+    } else {
+      $platform = 'linux32';
+    }
+  }
+  if ( $^O =~ /cygwin/i or $^O =~ /MSWin/i ) {
+    $platform = 'windows32';
+  }
+
+  return $platform;
+
+}
+
