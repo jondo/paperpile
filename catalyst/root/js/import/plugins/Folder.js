@@ -24,7 +24,6 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
 
   initComponent: function() {
     Paperpile.PluginGridFolder.superclass.initComponent.call(this);
-
   },
 
   createToolbarMenu: function() {
@@ -73,8 +72,13 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
         folder_id: match[1]
       },
       method: 'GET',
-      success: function(){
-	this.updateGrid();
+      success: function(response) {
+	var json = Ext.util.JSON.decode(response.responseText);
+	// Update the status of the other views.
+	Paperpile.main.onUpdate(json.data);
+	// Reload this entire view, because the refs just got removed from the folder.
+	this.getView().holdPosition = true;
+	this.getStore().reload();
       },
       failure: Paperpile.main.onError,
       scope:this

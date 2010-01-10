@@ -6,14 +6,6 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
 
     initComponent:function() {
 
-        var _store=new Ext.data.Store(
-            {  proxy: new Ext.data.HttpProxy({
-                url: Paperpile.Url('/ajax/queue/grid'), 
-                method: 'GET',
-            }),
-               baseParams:{limit:10},
-               reader: new Ext.data.JsonReader(),
-            }); 
         
         this.pager=new Ext.PagingToolbar({
             pageSize: 10,
@@ -173,7 +165,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             },
             interval: 2000,
             scope:this
-        }
+        };
 
         this.pollingTask = {
             run: function(){
@@ -181,14 +173,14 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
             },
             interval: 500,
             scope:this
-        }
+        };
         
         this.on('beforedestroy', 
                 function(){
                     Ext.TaskMgr.stop(this.reloadTask);
                     Ext.TaskMgr.stop(this.pollingTask);
-                    Ext.Ajax.request(
-                        { url: Paperpile.Url('/ajax/queue/clear'),
+/*                    Ext.Ajax.request(
+                        { url: Paperpile.Url('/ajax/queue/save'),
                           params: {},
                           method: 'GET',
                           success: function(response){
@@ -197,6 +189,7 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
                           failure: Paperpile.main.onError,
                           scope:this,
                         });
+*/
             }, this);
 
         this.store.load({
@@ -369,15 +362,5 @@ Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
     },
 
 
-    // We need to think how to handle callbacks, in particular how to
-    // avoid calling the same function several times in a row, how to
-    // pass the function (either directly [security issues...] or via a
-    // keyword that is resolved here)
-
-    handleCallback: function(cb){
-        if (cb.fn === 'CONSOLE'){
-            console.log(cb.args);
-        }
-    }
 
 });

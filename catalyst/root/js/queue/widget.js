@@ -1,50 +1,48 @@
 Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
     
+  id: 'queue-widget',
+  itemId: 'queue-widget',
+
     initComponent:function() {
+
+      var t = new Ext.XTemplate(
+	'<a href="#" id="queue-widget-anchor">',
+	'<div id="queue-widget-button" class="pp-queue-widget pp-top-button">',
+ 	'    <tpl if="num_pending">',
+	'      <a href="#" class="pp-basic pp-top-button-link">',
+	'        <b>Queue ({num_pending})</b>',
+	'      </a>',
+	'    </tpl>',
+	'    <tpl if="!num_pending">',
+	'      <a href="#" class="pp-basic pp-top-button-link">',
+	'        Queue',
+	'      </a>',
+	'    </tpl>',
+	'</div>',
+	'</a>'
+      ).compile();
         
         Ext.apply(this, {
-            autoEl: {
-                tag: 'div',
-                cls: 'pp-queue-widget',
-                children : [
-                    {tag: 'a',
-                     href:'#',
-                     cls: 'pp-basic pp-textlink pp-status-action',
-                     html: 'Background tasks',
-                     id: 'queue-widget-link'
-                    }
-                ],
-            },
-            id: 'queue-widget',
+	  tpl:t,
+	  data:{num_pending:0}
         });
 
-        Paperpile.QueueWidget.superclass.initComponent.apply(this, arguments);
+        Paperpile.QueueWidget.superclass.initComponent.call(this);
+
+      this.on('render', function() {
+	this.el.on('click',this.test,this);
+      },this);
     },
-
-    
-    afterRender: function(){
-        Paperpile.QueueWidget.superclass.afterRender.apply(this, arguments);
-        
-        Ext.get('queue-widget-link').on('click', this.test);
-
-
+    onUpdate: function(data) {
+      if (data.queue) {
+	this.update(data.queue);
+      }
     },
 
     test: function(){
-
-        Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/queue/fork'),
-            success: function(response){
-                var json = Ext.util.JSON.decode(response.responseText);
-                console.log(json);
-            },
-            failure: Paperpile.main.onError,
-            scope:this,
-        });
-        
+      Paperpile.log("queue!");
+      Paperpile.main.queueJobUpdate();
+      Paperpile.main.tabs.showQueueTab();
     }
-
-
-
 
 });

@@ -12,20 +12,135 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       });
 		
       Paperpile.PubOverview.superclass.initComponent.call(this);
-      
+
       this.on('afterrender',this.installEvents,this);
       },
-	
-    updateDetail: function() {
-        if (!this.grid){
-            this.grid=this.findParentByType(Paperpile.PluginPanel).items.get('center_panel').items.get('grid');
+
+    getPluginPanel: function() {
+      return this.findParentByType(Paperpile.PluginPanel);
+    },
+
+    getGrid: function() {
+      return this.getPluginPanel().getGrid();
+    },
+
+    // Called when a non-user interaction causes an update of the overview panel.
+    onUpdate: function(data) {
+      var sm = this.getGrid().getSelectionModel();
+      this.grid_id = this.getGrid().id;
+
+//      Paperpile.log("On update...");
+      var numSelected=sm.getCount();
+      if (this.getGrid().allSelected){
+        numSelected=this.getGrid().store.getTotalCount();
+      }
+
+      if (numSelected == 1) {
+	var oldData = this.oldData || {};
+	var newData = sm.getSelected().data || {};
+
+	newData.id = this.id;
+	newData._pubtype_name = false;
+	if (newData.pubtype){
+	    var pt = Paperpile.main.globalSettings.pub_types[newData.pubtype];
+	  if (pt) {
+	    newData._pubtype_name = pt.name;
+	  }
         }
 
-        sm=this.grid.getSelectionModel();
+	this.data = newData;
+	this.oldData = Ext.ux.clone(this.data);
+
+	if (newData.sha1 != oldData.sha1) {
+	  this.updateAllInfo(newData);
+	  return;
+	}
+
+	if (newData._attachments_list != oldData._attachments_list) {
+	  this.updateAllInfo(newData);
+	  return;
+	}
+
+	if (data.updateSidePanel) {
+	  this.updateAllInfo(newData);
+	  return;
+	}
+
+	if (newData.tags != oldData.tags) {
+	  this.updateLabels(newData);
+	}
+
+	if (newData.pdf != oldData.pdf || 
+	    (newData._search_job != oldData._search_job) ||
+	    (newData._search_job_progress != oldData._search_job_progress) ||
+	    (newData._search_job_error != oldData._search_job_error) ||
+	    (newData._search_job_msg != oldData._search_job_msg)) {
+	  this.updateSearchJob(newData);
+	}
+
+      } else {
+	var d = {numSelected: numSelected, id: this.id};
+	this.oldData = d;
+	this.updateInfoMultiple(d);
+      }
+    },
+
+    updateAllInfo: function(data) {
+      this.getGrid().getSidebarTemplate().singleSelection.overwrite(this.body, data);
+      this.updateLabels(data);
+      this.updateSearchJob(data);
+    },
+
+    updateLabels: function(data) {
+      if (this.labelWidget == null) {
+	this.labelWidget = new Paperpile.LabelWidget({
+	  grid_id:this.grid_id,
+	  div_id:'label-widget-'+this.id,
+          renderTo:'label-widget-'+this.id
+	});
+      }
+      if (!Ext.get('label-widget-'+this.id)) {
+	return;
+      }
+      this.labelWidget.renderData(data);
+    },
+
+    updateSearchJob: function(data) {
+      if (this.searchDownloadWidget == null) {
+	this.searchDownloadWidget = new Paperpile.SearchDownloadWidget({
+	  div_id:'search-download-widget-'+this.id
+	});
+      }
+      if (!Ext.fly('search-download-widget-'+this.id)) {
+	return;
+      }
+      this.searchDownloadWidget.renderData(data);
+    },
+
+    updateInfoMultiple: function(data) {
+        this.getGrid().getSidebarTemplate().multipleSelection.overwrite(this.body, data, true);
+
+	Ext.get('main-container-'+this.id).on('click', function(e, el, o) {
+	  switch(el.getAttribute('action')) {
+          case 'batch-download':
+            this.getGrid().batchDownload();
+            break;
+          }        
+        }, this, {delegate:'a'});
+    },
+
+/*
+    updateDetail: function() {
+      return;
+        if (!this.grid){
+            this.grid=this.getPluginPanel().items.get('center_panel').items.get('grid');
+        }
+
+        sm=this.getGrid().getSelectionModel();
 
         var numSelected=sm.getCount();
-        if (this.grid.allSelected){
-            numSelected=this.grid.store.getTotalCount();
+        if (this.getGrid().allSelected){
+            numSelected=this.getGrid().store.getTotalCount();
         }
 
         this.multipleSelection=(numSelected > 1 );
@@ -39,7 +154,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
                 this.data.createdFull = Paperpile.utils.localDate(this.data.created);
             }
 
-            this.grid_id=this.grid.id;
+            this.grid_id=this.getGrid().id;
 
             if (this.data.pubtype){
                 this.data._pubtype_name=Paperpile.main.globalSettings.pub_types[this.data.pubtype].name;
@@ -47,7 +162,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
                 this.data._pubtype_name=false;
             }
 
-            this.data.attachments_list=[];
             if (this.data.attachments > 0){
                 Ext.Ajax.request(
                     { url: Paperpile.Url('/ajax/attachments/list_files'),
@@ -57,31 +171,29 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
                               },
                       method: 'GET',
                       success: function(response){
-                          var json = Ext.util.JSON.decode(response.responseText);
-                          this.data.attachments_list=json.list;
-                          this.grid.getSidebarTemplate().singleSelection.overwrite(this.body, this.data, true);
-                          this.renderTags();
+			var json = Ext.util.JSON.decode(response.responseText);
+			Paperpile.main.onUpdate(json);
                       },
                       failure: Paperpile.main.onError,
                       scope:this
                     });
-            } else {
-                this.grid.getSidebarTemplate().singleSelection.overwrite(this.body, this.data, true);
-                this.renderTags();
             }
-        } 
+	    this.getGrid().getSidebarTemplate().singleSelection.overwrite(this.body, this.data, true);
+	    this.renderTags();
+        }
 
         if (numSelected > 1) {
-            this.grid.getSidebarTemplate().multipleSelection.overwrite(this.body, {numSelected: numSelected, id: this.id}, true);
+            this.getGrid().getSidebarTemplate().multipleSelection.overwrite(this.body, {numSelected: numSelected, id: this.id}, true);
 
             Ext.get('main-container-'+this.id).on('click', function(e, el, o){
                 switch(el.getAttribute('action')){
                 case 'batch-download':
-                    this.grid.batchDownload();
+                    this.getGrid().batchDownload();
                     break;
                 }        
             }, this, {delegate:'a'});
-            this.showTagControls();
+
+            //this.showTagControls();
         }
 
         if (numSelected == 0) {
@@ -90,39 +202,18 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
             
         }
 
-	if (this.grid.updateDetail != null) {
-	  this.grid.updateDetail();
+	if (this.getGrid().updateDetail != null) {
+	  this.getGrid().updateDetail();
 	}
 
    	},
+*/
 
-    //
     // Event handling for the HTML. Is called with 'el' as the Ext.Element of the HTML 
     // after the template was written in updateDetail
-    //
-    
+    //    
     installEvents: function(){
-	var el = Ext.get('tag-add-link-'+this.id);
-	/*
-        if (el != null) {
-	  Ext.get('tag-add-link-'+this.id).setVisibilityMode(Ext.Element.DISPLAY);
-          Ext.get('tag-add-link-'+this.id).on('click',
-                                   function(){
-                                       Ext.get('tag-add-link-'+this.id).hide();
-                                       this.showTagControls();
-                                   }, this);
-
-        // Delete function for tags
-        Ext.get("tag-container-"+this.id).on('click',
-                                             function(e){
-                                                 var t=e.getTarget('div.pp-tag-remove');
-                                                 if (!t) return;
-                                                 this.onRemoveTag(t);
-                                                 e.stopEvent();
-                                             }, this);
-
-	}
-	 */
+      var el = Ext.get('tag-add-link-'+this.id);
       this.el.on('click',this.handleClick,this);
     },
 
@@ -161,13 +252,21 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
             // Choose local PDF file and attach to database entry
             this.chooseFile(true);
             break;
-
           case 'search-pdf':
             // Search and download PDF file; if entry is already in database 
             // attach PDF directly to it
-            this.searchPDF(el.getAttribute('plugin'));
+	  //this.searchPDF(el.getAttribute('plugin'));
+	      this.getGrid().batchDownload();
             break;
-
+	  case 'cancel-download':
+	      this.getGrid().cancelDownload();
+	    break;
+	  case 'retry-download':
+	      this.getGrid().retryDownload();
+	    break;
+	  case 'clear-download':
+	      this.getGrid().clearDownload();
+	    break;
           case 'import-pdf':
             // If PDF has been downloaded for an entry that is not
             // already imported, import entry and attach PDF
@@ -218,19 +317,18 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
             }
     },
 
-    renderTags: function(){
-      var container=Ext.get("tag-container-"+this.id);
+    renderTags: function() {
 
-      if (container == null)
-	return;
-
-      //container.setVisibilityMode(Ext.Element.DISPLAY);
-
-      var asdf = new Paperpile.LabelWidget({
-	  grid_id:this.grid_id,
-	  renderTo:'tag-container-'+this.id,
-	  data:this.data
-      });
+     if (this.searchDownloadWidget == null) {
+/*       this.searchDownloadWidget = new Paperpile.SearchDownloadWidget({
+	 grid_id: this.grid_id,
+	 itemId:'search-download-widget-'+this.id
+       });
+*/
+     }
+     if (!Ext.get('search-download-widget-'+this.id))
+       return;
+     //this.searchDownloadWidget.renderData(this.data);
 
       return;
     },
@@ -352,7 +450,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         
         if (!this.multipleSelection){
             this.hideTagControls();
-            this.renderTags();
             Ext.get('tag-add-link-'+this.id).show();
         }
 
@@ -369,18 +466,8 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
             success: function(response){
                 var json = Ext.util.JSON.decode(response.responseText);
                 var grid=Ext.getCmp(this.grid_id);
-                grid.updateData(json.data);
-
-                var store=Ext.StoreMgr.lookup('tag_store');
-                if (store.find('tag',tag) == -1){
-                    Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
-                    Ext.StoreMgr.lookup('tag_store').reload({
-                                                            callback: function() {
-                                                              grid.getView().refresh();             
-                                                            }
-                                                            });
-                }
-               
+                grid.onUpdate(json.data);
+                Ext.StoreMgr.lookup('tag_store').reload();
             },
             failure: Paperpile.main.onError,
             scope: this
@@ -427,17 +514,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
                         is_pdf: (isPDF) ? 1:0
                       },
               method: 'GET',
-              success: function(response){
-                  var json = Ext.util.JSON.decode(response.responseText);
-                  var record=this.grid.store.getAt(this.grid.store.find('sha1',this.data.sha1));
-
-                  if (json.pdf_file){
-                      record.set('pdf',json.pdf_file);
-                  } else {
-                      record.set('attachments',this.data.attachments+1);
-                  }
-                  this.updateDetail();
-                  Paperpile.main.onUpdateDB(this.grid_id);
+              success: function(response) {
+		var json = Ext.util.JSON.decode(response.responseText);
+		Paperpile.main.onUpdate(json.data);
               },
               failure: Paperpile.main.onError,
               scope:this,
@@ -453,42 +532,26 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     
     deleteFile: function(isPDF, rowid){
 
-        var successFn;
-
-        var record= this.grid.store.getAt(this.grid.store.find('sha1',this.data.sha1));
-
-        if (isPDF) {
-            successFn=function(response){
-                record.set('pdf','');
-                this.updateDetail();
-                Paperpile.main.onUpdateDB(this.grid_id);
-            };
-        } else {
-            successFn=function(response){
-                record.set('attachments',this.data.attachments-1);
-                this.updateDetail();
-                Paperpile.main.onUpdateDB(this.grid_id);
-            };
-        }
+        var record= this.getGrid().store.getAt(this.getGrid().store.find('sha1',this.data.sha1));
 
         Ext.Ajax.request(
             { url: Paperpile.Url('/ajax/attachments/delete_file'),
               params: { sha1: this.data.sha1,
                         rowid: isPDF ? this.data._rowid : rowid,
                         is_pdf: (isPDF) ? 1:0,
-                        grid_id: this.grid_id,
+                        grid_id: this.grid_id
                       },
               method: 'GET',
               success: function(response){
+		var json = Ext.util.JSON.decode(response.responseText);
+		Paperpile.main.onUpdate(json.data);
+
                   var undo_msg='';
                   if (isPDF){
                       undo_msg='Deleted PDF file '+ record.get('pdf');
-                      record.set('pdf','');
                   } else {
-                      undo_msg="Deleted one attached file"
-                      record.set('attachments',this.data.attachments-1);
+                      undo_msg="Deleted one attached file";
                   }
-                  this.updateDetail();
 
                   Paperpile.status.updateMsg(
                         { msg: undo_msg,
@@ -499,26 +562,16 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
                                   method: 'GET',
                                   success: function(response){
                                       var json = Ext.util.JSON.decode(response.responseText);
-                                      var record=this.grid.store.getAt(this.grid.store.find('sha1',this.data.sha1));
-                                      if (json.pdf_file){
-                                          record.set('pdf',json.pdf_file);
-                                      } else {
-                                          record.set('attachments',this.data.attachments+1);
-                                      }
-                                      this.updateDetail();
-                                      Paperpile.main.onUpdateDB(this.grid_id);
+				      Paperpile.main.onUpdate(json.data);
                                       Paperpile.status.clearMsg();
                                   }, 
                                   scope:this
                               });
                           },
                           scope: this,
-                          hideOnClick: true,
+                          hideOnClick: true
                         }
                     );
-
-                  Paperpile.main.onUpdateDB(this.grid_id);
-
               },
               failure: Paperpile.main.onError,
               scope:this,

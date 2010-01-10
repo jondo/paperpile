@@ -18,56 +18,71 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     aboutPanel:null,
     overviewPanel:null,
     detailsPanel:null,
-
     tagStyles:{},
-
     author_shrink_threshold: 255,
                                     
     initComponent:function() {
-
-        var _pager=new Ext.PagingToolbar({
-            pageSize: this.limit,
-            store: this.createStore(),
-            displayInfo: true,
-            displayMsg: 'Displaying papers {0} - {1} of {2}',
-            emptyMsg: "No papers to display"
-        });
+      var _pager=new Ext.PagingToolbar({
+	pageSize: this.limit,
+	store: this.getStore(),
+	displayInfo: true,
+	displayMsg: 'Displaying papers {0} - {1} of {2}',
+	emptyMsg: "No papers to display"
+      });
       
-        var renderPub=function(value, p, record){
-            // Can possibly be speeded up with compiling the template.
-            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
-            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
+      var renderPub=function(value, p, record) {
+        // Can possibly be speeded up with compiling the template.
+        record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
+        record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
+        record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
 
-	    // Shrink very long author lists.
-	    record.data._long_authorlist = 0;
-	    var ad = record.data._authors_display;
-	    if (record.data._shrink_authors == null)
-	      record.data._shrink_authors = 1;
-	    if (ad != null && ad.length > this.author_shrink_threshold) {
-	      record.data._long_authorlist = 1;
-	      record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
-	      record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
-	    } 
-            return this.getPubTemplate().apply(record.data);
+/*
+	// Shrink very long author lists.
+	record.data._long_authorlist = 0;
+	var ad = record.data._authors_display;
+	if (record.data._shrink_authors == null)
+	  record.data._shrink_authors = 1;
+	if (ad != null && ad.length > this.author_shrink_threshold) {
+	  record.data._long_authorlist = 1;
+	  record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
+	  record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
+	} 
+*/
+	return this.getPubTemplate().apply(record.data);
+      };
+
+      var renderIcons=function(value, p, record) {
+        // Can possibly be speeded up with compiling the template.
+        record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
+	record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
+        record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
+        if (record.data.last_read) {
+          record.data._last_readPretty = 'Last read: '+ Paperpile.utils.prettyDate(record.data.last_read);
+        } else {
+          record.data._last_readPretty='Never read';
+        }
+
+	if (record.data.folders) {
+	  // Find out which folder we're in.
+	  var node = Paperpile.main.tree.getNodeById(record.data.folders);
+	  if (node) {
+	    var folders = [];
+	    while (node && node.type == 'FOLDER') {
+	      if (node.text == 'All Papers')
+		break;
+	      folders.unshift(node.text);
+	      node = node.parentNode;
+	    }
+	    record.data._folder_tip = folders.join(" > ");
+	  } else {
+	    record.data._folder_tip = '';
+	  }
+	}
+          record.data.pdf_path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
+          return this.getIconTemplate().apply(record.data);
         };
 
-        var renderIcons=function(value, p, record){
-            // Can possibly be speeded up with compiling the template.
-	    Paperpile.log(record.data);
-            record.data._notes_tip=Ext.util.Format.stripTags(record.data.annote);
-            record.data._citekey=Ext.util.Format.ellipsis(record.data.citekey,18);
-            record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
-            if (record.data.last_read){
-                record.data._last_readPretty = 'Last read: '+ Paperpile.utils.prettyDate(record.data.last_read);
-            } else {
-                record.data._last_readPretty='Never read';
-            }
-
-            record.data.pdf_path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
-            return this.getIconTemplate().apply(record.data);
-        };
-
-        this.actions={
+        this.actions = {
             'EDIT': new Ext.Action({
                 text: 'Edit',
                 handler: this.handleEdit,
@@ -128,6 +143,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                 scope: this,
                 itemId:'view_author_button'
 					     }),
+            'VIEW_LAST_AUTHOR': new Ext.Action({
+                text: 'Last author',
+                handler: this.viewByLastAuthor,
+                scope: this,
+                itemId:'view_last_author_button'
+					     }),
             'VIEW_JOURNAL': new Ext.Action({
                 text: 'Journal',
                 handler: this.viewByJournal,
@@ -169,18 +190,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         var tbar=[
 	  this.actions['SEARCH_TB_FILL'],
 	  this.actions['SAVE_MENU']
-/*	  {itemId:this.actions['SAVE_MENU'].itemId,
-	   iconCls:'pp-icon-save',
-	   menu:{items:[
-            { text:'Save as Active View',
-	      handler:this.actions['SAVE_AS_ACTIVE'].handler
-	    },
-	    { text:'Export contents to file',
-	      handler:this.actions['EXPORT'].handler
-	    }
-	  ]}
-	  }
-*/
         ];
 
         Ext.apply(this, {
@@ -188,7 +197,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             enableDragDrop   : true,
 	    appendOnly:true,
             itemId:'grid',
-            store: this.createStore(),
+            store: this.getStore(),
             bbar: _pager,
             tbar: new Ext.Toolbar({itemId:'toolbar'}),
             enableHdMenu : false,
@@ -222,15 +231,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  afterrender:{scope:this,fn:this.myAfterRender},
 	  beforedestroy:{scope:this,fn:this.onClose},
 	  rowdblclick:{scope:this,fn:this.onDblClick},
-	  nodedragover:{scope:this,fn:this.onNodeDrag},
-	  // Inline handlers.
-	  click:{scope:this,
-	    fn:function(e) {
-              if (Ext.get(e.target).hasClass('pp-grid-status-notes')) {
-		this.findParentByType(Paperpile.PluginPanel).items.get('center_panel').items.get('data_tabs').showNotes();
-              }
-	    }
-	  }
+	  nodedragover:{scope:this,fn:this.onNodeDrag}
 	});
 
 	this.store.on({
@@ -253,12 +254,26 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     onNodeDrop: function(target, dd, e, data) {
       if (data.node != null) {
-	var r = e.getTarget(this.grid.getView().rowSelector);
+	var r = e.getTarget(this.getView().rowSelector);
+	var index = this.getView().findRowIndex(r);
+	var record = this.store.getAt(index);
+	var sel = record.data.sha1;
 
-	var index = this.grid.getView().findRowIndex(r);
-	var record = this.grid.store.getAt(index);
 	var tagName = data.node.text;
 
+	if (data.node.type) {
+	  var type = data.node.type;
+	  if (type == 'FOLDER') {
+	    Paperpile.main.tree.addFolder(this,sel,data.node);
+	  } else if (type == 'TAGS') {
+	    Paperpile.main.tree.addTag(this,sel,data.node);
+	  }
+	}
+	return true;
+      } else {
+	return false;
+      }
+/*
 	Ext.Ajax.request({
 	  url: Paperpile.Url('/ajax/crud/add_tag'),
 	  params: {
@@ -269,7 +284,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  method: 'GET',
 	  success: function(response){
 	    var json = Ext.util.JSON.decode(response.responseText);
-	    this.grid.updateData(json.data);
+	    Paperpile.main.onUpdate(json.data);
 	  },
 	  failure: Paperpile.main.onError,
 	  scope: this
@@ -278,33 +293,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       } else {
 	return false;
       }
-    },
-
-    addGridExpanders: function() {
-      var els = Ext.select(".pp-author-expander");
-      els.on({click:{
-	fn: function(e) {
-	  var el = Ext.get(e.getTarget());
-	  var p = el.findParent(".pp-grid-data",10,true);
-
-	  var sha1 = p.getAttribute("sha1");
-	  var record=this.store.getAt(this.store.find('sha1',sha1));
-	  
-	  if (el.findParent("span",10,true).hasClass('pp-author-short')) {
-	    // Already showing short name. Hide short, show full.
-	    record.set("_shrink_authors",1);
-	  } else {
-	    record.set("_shrink_authors",0);
-	  }
-	  this.updateGrid();
-	},scope:this
-      }});
+*/
     },
 
     onStoreLoad: function() {
-      this.addGridExpanders();
-
-      var container= this.findParentByType(Paperpile.PluginPanel);
+      var container= this.getPluginPanel();
       var ep = container.items.get('east_panel');
       var tb_side = ep.getBottomToolbar();
       var activeTab=ep.getLayout().activeItem.itemId;
@@ -321,18 +314,42 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
       }
       tb_side.items.get(activeTab+'_tab_button').toggle(true);
-      container.updateButtons();
 
       // If nothing is selected, select first row
       if (!this.getSelectionModel().getSelected()) {
         this.getSelectionModel().selectRow(0);
-      };// else {
-            // else re-focus on last selection
-          //  var row=this.store.indexOf(this.getSelectionModel().getSelected());
-           // (function(){this.getView().focusRow( row )}).defer(1000,this);
-           // console.log(row);
-      //  }
+      };
+
+      container.updateDetails();
+      container.updateButtons();
       this.updateButtons();
+
+//      this.highlightNewArticles();
+    },
+
+    highlightNewArticles: function() {
+      if (!this.highlightedArticles) {
+	this.highlightedArticles = [];
+      }
+
+      var s = this.getStore();
+      var v = this.getView();
+      for (var i=0; i < s.getCount(); i++) {
+	var record = s.getAt(i);
+	var el = v.getRow(i);
+	if (record.data.created) {
+	  var secondsAgo = Paperpile.utils.secondsAgo(record.data.created);
+	  if (secondsAgo < 20) {
+	    if (!this.highlightedArticles[record.data.sha1]) {
+	      this.highlightedArticles[record.data.sha1] = 1;
+	      Ext.get(el).highlight("ffff9c",{
+		duration:3,
+		easing:'easeOut'
+	      });
+	    }
+	  }
+	}
+      }
     },
 
     myBeforeRender: function(ct) {
@@ -342,16 +359,26 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     myAfterRender: function(ct){
       this.updateButtons();
-      this.getSelectionModel().on('rowselect',
-	function(sm, rowIdx, r) {
-          var container= this.findParentByType(Paperpile.PluginPanel);
-          this.completeEntry();
-        },this);
-      this.getSelectionModel().on('selectionchange',
+
+      // Note: the 'afterselectionchange' event is a custom event, defined in 
+      // main/overrides.js
+      this.getSelectionModel().on('afterselectionchange',
 	function(sm) {
-	  var container= this.findParentByType(Paperpile.PluginPanel);
+	  var selection = this.getSelection();
+	  var selectedIds;
+	  if (selection == 'ALL') {
+	    selectedIds = selection;
+	  } else {
+	    selectedIds = selection.join("");
+	  }
+	  if (selectedIds == this.lastSelectedIds) {
+	    return;
+	  }
+	  this.lastSelectedIds = selectedIds;
+	
           this.updateButtons();
-          container.onRowSelect();
+          this.getPluginPanel().updateDetails();
+	  this.completeEntry();
 	},this);	
 
       var map=new Ext.KeyMap(this.el, {
@@ -374,7 +401,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
 
     getDragDropText: function(){
-        var num = this.getSelectionModel().getCount();
+      var num = this.getSelectionModel().getCount();
+      if (this.allSelected) {
+	num = this.getStore().getTotalCount();
+      }
+
         if ( num == 1){
             var key=this.getSelectionModel().getSelected().get('citekey');
             if (key){
@@ -387,26 +418,27 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
     },
 
-    createStore: function() {
+    getStore: function() {
       if (this._store != null) {
 	return this._store;
       }
-      this._store=new Ext.data.Store(
-            {  proxy: new Ext.data.HttpProxy({
-                url: Paperpile.Url('/ajax/plugins/resultsgrid'),
-                timeout: 10000000, // Think about this, different plugins need different timeouts...
-                method: 'GET'
-            }),
-               baseParams:{grid_id: this.id,
-                           plugin_file: this.plugin_file,
-                           plugin_name: this.plugin_name,
-                           plugin_query: this.plugin_query,
-                           plugin_mode: this.plugin_mode,
-                           plugin_order: "created DESC",
-                           limit:this.limit
-                          },
-               reader: new Ext.data.JsonReader()
-            });
+      this._store=new Ext.data.Store({
+	proxy: new Ext.data.HttpProxy({
+	  url: Paperpile.Url('/ajax/plugins/resultsgrid'),
+          timeout: 10000000, // Think about this, different plugins need different timeouts...
+          method: 'GET'
+        }),
+	baseParams: {
+	  grid_id: this.id,
+          plugin_file: this.plugin_file,
+          plugin_name: this.plugin_name,
+          plugin_query: this.plugin_query,
+          plugin_mode: this.plugin_mode,
+          plugin_order: "created DESC",
+          limit:this.limit
+        },
+        reader: new Ext.data.JsonReader()
+      });
       return this._store;
     },
 
@@ -419,17 +451,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           '<div>',
           '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
           '</div>',
-	  '<tpl if="_authors_display && _long_authorlist">',
-    	  '<p class="pp-grid-authors">',
-  	  '<tpl if="!_shrink_authors">',
-	  '<span class="pp-author-full">{_authors_display}</span>',
-	  '</tpl>',
-	  '<tpl if="_shrink_authors">',
-	  '<span class="pp-author-short">{_authors_display_short} ... {_authors_display_short_tail}</span>',
-	  '</tpl>',
-	  '</p>',
-	  '</tpl>',
-          '<tpl if="_authors_display && !_long_authorlist">',
+//	  '<tpl if="_authors_display && _long_authorlist">',
+//    	  '<p class="pp-grid-authors">',
+//  	  '<tpl if="!_shrink_authors">',
+//	  '<span class="pp-author-full">{_authors_display}</span>',
+//	  '</tpl>',
+//	  '<tpl if="_shrink_authors">',
+//	  '<span class="pp-author-short">{_authors_display_short} ... {_authors_display_short_tail}</span>',
+//	  '</tpl>',
+//	  '</p>',
+//	  '</tpl>',
+          '<tpl if="_authors_display">',
           '<p class="pp-grid-authors">{_authors_display}</p>',
           '</tpl>',
           '<tpl if="_citation_display">',
@@ -452,7 +484,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
               var totalChars = 0;
               for (var i=0; i < tags.length; i++) {
 		var tag = tags[i];
-		var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.find('tag',tag));
+		var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('tag',tag));
 		if (style != null) {
 		  style = style.get('style');
                   totalChars += tag.length;
@@ -489,9 +521,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '<tpl if="attachments">',
         '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
         '</tpl>',
-//        '<tpl if="folder">',
-//        '  <div class="pp-grid-status pp-grid-status-folder" ext:qtip="in folder: {_folder_tip}"></div>',
-//        '</tpl>',
+        '<tpl if="folders">',
+        '  <div class="pp-grid-status pp-grid-status-folder" ext:qtip="in folder: {_folder_tip}"></div>',
+        '</tpl>',
         '<tpl if="annote">',
         '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
         '</tpl>',
@@ -542,7 +574,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '  <tpl if="trashed==1">',
 	'    <dt>Deleted: </dt>',
 	'  </tpl>',
-        '  <dd>{createdPretty}</dd>',
+        '  <dd>{_createdPretty}</dd>',
         '</tpl>',
         '<tpl if="doi">',
 	'  <dt>DOI: </dt><dd>{doi}</dd>',
@@ -557,15 +589,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '<tpl if="_imported">', // Don't show the labels widget if this article isn't imported.
 	'  <dt>Labels: </dt>',
 	'  <dd>',
-        '  <div id="tag-container-{id}" class="pp-tag-container"></div>',
-        '  <div id="tag-control-{id}" class="pp-tag-control"></div>',
-	'  <div id="tag-add-link-{id}"><a href="#" class="pp-textlink">Add&nbsp;Label</a></div>',
+        '  <div id="label-widget-{id}" class="pp-label-widget"></div>',
         '  </dd>',
 	'</tpl>',
         '</dl>',
-        '<div id="bottom-actions" style="float:right;">',
-    	'  <span class="pp-img-action pp-img-span" action="show-details" ext:qtip="View Full Reference Details">...</span>',
-        '</div>',
+	'  <div style="clear:left;"></div>',
         '</div>'
       ];
 
@@ -584,38 +612,20 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '  <tpl if="pdf || _imported || linkout">',
         '    <div class="pp-box pp-box-side-panel pp-box-style2"',
         '    <h2>PDF</h2>',
-        '    <ul>',
-        '    <tpl if="pdf">',
-        '      <li id="open-pdf{id}" class="pp-action pp-action-open-pdf" >',
-        '      <a href="#" class="pp-textlink" action="open-pdf">Open PDF</a>',
-        '      &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a></li>',
-        '      <tpl if="_imported">',
-        '        <li id="delete-pdf-{id}" class="pp-action pp-action-delete-pdf"><a href="#" class="pp-textlink" action="delete-pdf">Delete PDF</a></li>',
-        '      </tpl>',
-        '      <tpl if="!_imported">',
-        '        <li id="import-pdf-{id}" class="pp-action pp-action-import-pdf"><a href="#" class="pp-textlink" action="import-pdf">Import PDF into local library.</a></li>',
-        '      </tpl>',
-        '    </tpl>',
-        '    <tpl if="!pdf">',
-        '      <tpl if="linkout || doi">',
-        '        <li id="search-pdf-{id}" class="pp-menu pp-action pp-action-search-pdf">',
-        '        <a href="#" class="pp-textlink" action="search-pdf">Search & Download PDF</a></li>',
-        '        <li><div id="pbar"></div></li>',
-        '      </tpl>',
-        '      <tpl if="_imported">',
-        '        <li id="attach-pdf-{id}" class="pp-action pp-action-attach-pdf"><a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a></li>',
-        '      </tpl>',
-        '    </tpl>',
-        '    </ul>',
+//        '    <ul>',
+        '        <div id="search-download-widget-{id}" class="pp-search-download-widget"></div>',
+//        '    </ul>',
         '    <tpl if="_imported">',
         '      <h2>Supplementary material</h2>',
         '      <tpl if="attachments">',
-        '        <ul class="pp-attachments">',
-        '        <tpl for="attachments_list">',
-        '          <li class="pp-attachment-list pp-file-generic {cls}"><a href="#" class="pp-textlink" action="open-attachment" path="{path}">{file}</a>&nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="delete-file" rowid="{rowid}">Delete</a></li>',
-        '        </tpl>',
-        '        </ul>',
-        '        <p>&nbsp;</p>',
+	'        <tpl if="_attachments_list">',
+        '          <ul class="pp-attachments">',
+        '          <tpl for="_attachments_list">',
+        '            <li class="pp-attachment-list pp-file-generic {cls}"><a href="#" class="pp-textlink" action="open-attachment" path="{path}">{file}</a>&nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="delete-file" rowid="{rowid}">Delete</a></li>',
+        '          </tpl>',
+        '          </ul>',
+	'        </tpl>',
+//        '        <p>&nbsp;</p>',
         '      </tpl>',
         '      <ul>',
         '      <li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" class="pp-textlink" action="attach-file">Attach File</a></li>',      '</ul>',
@@ -657,16 +667,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       return this.context;
     },
 
-/*    getContextMenu: function() {
-      if (this.context == null) {
-	this.context = new Ext.menu.Menu({
-	  id:'pp-grid-context',
-	  itemId:'context'
-	});
-      }
-      return this.context;
-    },
-*/
     createContextMenu: function() {
       this.context = new Ext.menu.Menu({
 	id:'pp-grid-context-'+this.id,
@@ -685,6 +685,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	menu:{
 	  items:[
 	    this.actions['VIEW_AUTHOR'],
+	    this.actions['VIEW_LAST_AUTHOR'],
 	    this.actions['VIEW_JOURNAL'],
 	    this.actions['VIEW_YEAR']
 	  ]
@@ -746,10 +747,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       return;
     },
 
-    updateGrid: function() {
-      Paperpile.main.onUpdateDB();
-    },
-
     getToolbarByItemId: function(itemId) {
       var tbar=this.getTopToolbar();
       return tbar.items.itemAt(this.getButtonIndex(itemId));
@@ -789,6 +786,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       return -1;
     },
 
+    getPluginPanel: function() {
+      return this.findParentByType(Paperpile.PluginPanel);
+    },
+
     // Returns list of sha1s for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
     getSelection: function(what){
         if (!what) what='ALL';
@@ -811,18 +812,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // only minimal info is scraped from site to build list quickly
     // without harassing the site too much. Then the details are
     // fetched only when user clicks the entry.
-
     completeEntry: function(callback,scope){
-
-        var data=this.getSelectionModel().getSelected().data;
-
+        var sel = this.getSelectionModel().getSelected();
+	if (!sel)
+	  return;
+	var data = sel.data;
         // _details_link indicates if an entry still needs to be completed or not
         if (data._details_link){
-
             Paperpile.status.showBusy('Looking up bibliographic data');
-
             var sha1=this.getSelectionModel().getSelected().data.sha1;
-
             Ext.Ajax.request({
                 url: Paperpile.Url('/ajax/crud/complete_entry'),
                 params: { sha1: sha1,
@@ -838,7 +836,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                     }
                     record.endEdit();
 
-                    this.findParentByType(Paperpile.PluginPanel).onRowSelect();
+                    this.getPluginPanel().updateDetails();
 
                     Paperpile.status.clearMsg();
 
@@ -863,7 +861,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // mode: TRASH ... move to trash
     //       RESTORE ... restore from trash
     //       DELETE ... delete permanently
-
     handleDelete: function() {
       this.deleteEntry('TRASH');
     },
@@ -881,11 +878,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
 
     deleteEntry: function(mode){
-
         selection=this.getSelection();
-
         var index=this.store.indexOf(this.getSelectionModel().getSelected());
-
         var many=false;
 
         //if (selection == 'ALL'){
@@ -913,40 +907,20 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             url: Paperpile.Url('/ajax/crud/delete_entry'),
             params: { selection: selection,
                       grid_id: this.id,
-                      mode: mode,
+                      mode: mode
                     },
             method: 'GET',
             timeout: 10000000,
-            success: function(response){
+            success: function(response) {
+	      var data = Ext.util.JSON.decode(response.responseText);
+	      var num_deleted = data.num_deleted;
 
-                var num_deleted = Ext.util.JSON.decode(response.responseText).num_deleted;
+	      Paperpile.main.onUpdate(data.data);
 
-                this.updateButtons();
-                this.store.suspendEvents();
-                if (selection == 'ALL'){
-                    this.store.removeAll();
-                } else {
-                    for (var i=0;i<selection.length;i++){
-                        this.store.remove(this.store.getAt(this.store.find('sha1',selection[i])));
-                    }
-                    this.getSelectionModel().selectRow(index);
-                }
-
-                this.store.resumeEvents();
-                this.store.fireEvent('datachanged',this.store);
-
-                var container= this.findParentByType(Paperpile.PluginPanel);
-                if (this.getSelectionModel().getCount()!=0){
-                    container.onRowSelect();
-                } else {
-                    container.onEmpty('');
-                }
-
-                if (mode == 'TRASH'){
+                if (mode == 'TRASH') {
                     var msg= num_deleted + ' references moved to Trash';
-
                     if (num_deleted == 1){
-                        msg="1 reference moved to Trash"
+                        msg="1 reference moved to Trash";
                     }
 
                     Paperpile.status.updateMsg(
@@ -958,23 +932,21 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                               Ext.Ajax.request({
                                   url: Paperpile.Url('/ajax/crud/undo_trash'),
                                   method: 'GET',
-                                  success: function(){
-                                      Paperpile.main.onUpdateDB();
-                                      Paperpile.status.clearMsg();
+                                  success: function(response){
+				    var json = Ext.util.JSON.decode(response.responseText);
+				    Paperpile.main.onUpdate(json.data);
+                                    Paperpile.status.clearMsg();
                                   }, 
                                   scope:this
                               });
                           },
                           scope: this,
-                          hideOnClick: true,
+                          hideOnClick: true
                         }
                     );
                 } else {
                     Paperpile.status.clearMsg();
                 }
-
-                Paperpile.main.onUpdateDB();
-
             },
             failure: Paperpile.main.onError,
             scope: this
@@ -999,8 +971,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                                                   east_panel.getLayout().setActiveItem('overview');
                                                   east_panel.showBbar();
                                                   if (status == 'SAVE'){
-                                                      this.updateData(data);
-                                                      this.findParentByType(Paperpile.PluginPanel).onRowSelect();
+                                                      Paperpile.main.onUpdate(data);
                                                       Paperpile.status.clearMsg();
                                                   }
                                               },
@@ -1016,7 +987,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
 
     newEntry: function(){
-        var east_panel=this.findParentByType(Paperpile.PluginPanel).items.get('east_panel');
+        var east_panel=this.getPluginPanel().items.get('east_panel');
 
         var form=new Paperpile.Forms.PubEdit({data:{pubtype:'ARTICLE'},
                                               grid_id: null,
@@ -1046,26 +1017,70 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     },
 
-
     batchDownload: function(){
-
         selection=this.getSelection();
-
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/crud/batch_download'),
             params: { selection: selection,
-                      grid_id: this.id,
+                      grid_id: this.id
                     },
             method: 'GET',
             timeout: 10000000,
             success: function(response){
-                Paperpile.main.tabs.showQueueTab();
+	      var json = Ext.util.JSON.decode(response.responseText);
+	      Paperpile.main.onUpdate(json.data);
+	      // Trigger a thread to start requesting queue updates.
+	      Paperpile.main.queueJobUpdate();
+            }
+        });
+    }, 
+
+    cancelDownload: function(){
+	var selected_id = this.getSelectionModel().getSelected().data._search_job;
+        Ext.Ajax.request({
+            url: Paperpile.Url('/ajax/queue/cancel_jobs'),
+            params: { ids: selected_id
+                    },
+            method: 'GET',
+            success: function(response){
+	      var json = Ext.util.JSON.decode(response.responseText);
+	      Paperpile.main.onUpdate(json.data);
+            }
+        });
+    }, 
+
+    retryDownload: function(){
+	var selected_id = this.getSelectionModel().getSelected().data._search_job;
+        Ext.Ajax.request({
+            url: Paperpile.Url('/ajax/queue/retry_jobs'),
+            params: { ids: selected_id
+                    },
+            method: 'GET',
+            success: function(response){
+	      var json = Ext.util.JSON.decode(response.responseText);
+	      Paperpile.main.onUpdate(json.data);
+	      Paperpile.main.queueJobUpdate();
             }
         });
 
-        
+      // TODO: Do a more immediate update to the record so we don't have a delay there.
     }, 
 
+    clearDownload: function(){
+	var selected_id = this.getSelectionModel().getSelected().data._search_job;
+        Ext.Ajax.request({
+            url: Paperpile.Url('/ajax/queue/remove_jobs'),
+            params: { ids: selected_id
+                    },
+            method: 'GET',
+            success: function(response){
+	      var json = Ext.util.JSON.decode(response.responseText);
+	      Paperpile.main.onUpdate(json.data);
+            }
+        });
+
+      // TODO: Do a more immediate update to the record so we don't have a delay there.
+    }, 
 
     formatEntry: function(){
 
@@ -1078,30 +1093,47 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         ));
     },
 
-
-
-
     // Update specific fields of specific entries to avoid complete
-    // reload of everything data is a hash of a hash with sha1 as the
-    // first key and the other fields that need to be udpated as the
-    // other keys
+    // reload of everything.
+    onUpdate: function(data){
+      var pubs = data.pubs;
+      if (!pubs) {
+	return;
+      }
 
-    updateData: function(data){
-        this.store.suspendEvents();
-        for (var sha1 in data){
-            var record=this.store.getAt(this.store.find('sha1',sha1));
-            if (!record) continue;
-            var update=data[sha1];
-            record.beginEdit();
-            for (var field in update){
-                record.set(field,update[field]);
-            }
-            record.endEdit();
+      this.store.suspendEvents();
+      var selected_sha1 = '';
+      var sel = this.getSelectionModel().getSelected();
+      if (sel) 
+	selected_sha1 = sel.data.sha1;
+
+      var updateSidePanel = false;
+      for (var sha1 in pubs) {
+        var record=this.store.getAt(this.store.findExact('sha1',sha1));
+        if (!record) {
+	  continue;
+	}
+	var update=pubs[sha1];
+	record.beginEdit();
+	for (var field in update) {
+	  if (record.get(field) != update[field]) {
+	    record.set(field,update[field]);
+	    if (sha1 == selected_sha1)
+	      updateSidePanel = true;
+	  }
         }
-        this.store.resumeEvents();
-        this.store.fireEvent('datachanged',this.store);
+        record.endEdit();
+      }
+      this.store.resumeEvents();
+      this.store.fireEvent('datachanged',this.store);
+      
+      if (data.updateSidePanel)
+	updateSidePanel = true;
+      if (updateSidePanel) {
+	var overview = this.getPluginPanel().getOverview();
+	overview.onUpdate(data);
+      }
     },
-
 
     selectAll: function(){
         this.allSelected=true;
@@ -1117,46 +1149,62 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     },
 
-    viewByAuthor:function() {
+    setSearchQuery: function() {
+      // To be implemented by subclasses.
+    },
+
+    viewByLastAuthor: function() {
+      this.viewByAuthor(true);
+    },
+
+    viewByAuthor:function(last) {
+      last = last || false;
       var sm = this.getSelectionModel();
 
       var authors = sm.getSelected().data.authors;
       var arr = authors.split(/\s+and\s+/,2);
       if (arr.length > 1) {
 	var first_author = arr[0];
-	Paperpile.main.tabs.newPluginTab('DB',
+	this.setSearchQuery('author:'+'"'+first_author+'"');
+/*
+ 	Paperpile.main.tabs.newPluginTab('DB',
 					 {plugin_mode:'FULLTEXT',
 					 plugin_query:'author:'+'"'+first_author+'"'},
 					 first_author,
 					 '',
 					 first_author
 					);
+*/
       }
     },
     viewByYear:function() {
         var sm = this.getSelectionModel();
       var year = sm.getSelected().data.year;
       if (year) {
-	Paperpile.main.tabs.newPluginTab('DB',
+	this.setSearchQuery('year:'+'"'+year+'"');
+/*	Paperpile.main.tabs.newPluginTab('DB',
 					 {plugin_mode:'FULLTEXT',
 					 plugin_query:'year:'+'"'+year+'"'},
 					 year,
 					 '',
 					 year
 					);
+*/
       }
     },
     viewByJournal:function() {
         var sm = this.getSelectionModel();
       var journal = sm.getSelected().data.journal;
       if (journal) {
-	Paperpile.main.tabs.newPluginTab('DB',
+	this.setSearchQuery('journal:'+'"'+journal+'"');
+/*	Paperpile.main.tabs.newPluginTab('DB',
 					 {plugin_mode:'FULLTEXT',
 					 plugin_query:'journal:'+'"'+journal+'"'},
 					 journal,
 					 '',
 					 journal
 					);
+*/
       }
     },
 
@@ -1210,7 +1258,8 @@ Ext.extend(Paperpile.GridDropZone, Ext.dd.DropZone, {
   },
 
   onNodeDrop: function(target, dd, e, data) {
-    return this.grid.onNodeDrop.call(this,target,dd,e,data);
+    var retVal = this.grid.onNodeDrop(target,dd,e,data);
+    return retVal;
   },
   containerScroll:true
 });

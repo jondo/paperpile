@@ -21,8 +21,14 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
     Ext.apply(grid,{
       createToolbarMenu: grid.createToolbarMenu.createSequence(function() {
 	var tbar = this.getTopToolbar();
-	tbar.insert(0, new Ext.app.SearchField({width:200,store:this.store}));
-      },grid)
+	this.searchField = new Ext.app.SearchField({width:200,store:this.store});
+								 
+	tbar.insert(0,this.searchField);
+      },grid),
+      setSearchQuery: function(text) {
+	this.searchField.setValue(text);
+	this.searchField.onTrigger2Click();
+      }
     });
 
     if (grid.plugin_query != '') {

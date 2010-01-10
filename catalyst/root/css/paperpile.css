@@ -1,3 +1,4 @@
+
 /*** Generic styles ****/
 
 .pp-basic {
@@ -28,6 +29,7 @@ h1 {
     margin: 8;
     border-style:solid;
     border-width: 1px;
+    padding: 5px;
     -moz-border-radius: 8px;
 
 
@@ -329,7 +331,7 @@ a:hover.pp-textlink {
 }
 
 #pp-cloud-checkbox {
-    width:90px;
+    width:80px;
     position:absolute;
     top:140px;
     left:8px;
@@ -411,17 +413,29 @@ a:hover.pp-textlink {
 }
 
 .pp-queue-widget {
+    background: transparent url('/images/icons/tick.png') no-repeat 2px 0;
+    text-decoration:none;
+}
+
+.pp-top-button {
     margin: 0 10px;
     padding: 0 0 0 15px;
-    background: transparent url('/images/icons/queue.gif') no-repeat 2px 0;
-    background-color:#FFF1A8;
-    color: #0015FE;
+    background-color:#ECECEC;
+    color: #565656;
+    -moz-border-radius: 5px;
+    -webkit-border-radius:5px;
+    cursor: pointer;
+    font-size:12px;
+}
+
+.pp-top-button-link, a:visited.pp-top-button-link {
+    font-size:12px;
+    color: #565656;
+    padding: 0px 10px;
     text-decoration:none;
 }
 
 a.pp-queue-widget, a:visited.pp-queue-widget {
-
- 
 }
 
 
@@ -686,6 +700,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/folder.png')!important;
 }
 
+.pp-icon-remove-folder{
+    background-image: url('/images/icons/folder_delete.png')!important;
+}
+
 .pp-icon-file{
     background-image: url('/images/icons/page.png')!important;
 }
@@ -765,7 +783,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-icon-queue{
     padding: 2 2 2 22;
-    background: transparent url('/images/icons/queue.gif') no-repeat;
+    background: transparent url('/images/icons/tick.png') no-repeat;
 }
 
 .pp-icon-pause{
@@ -833,6 +851,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-grid-status-attachments {
     background: transparent url('/images/icons/attachment.png') no-repeat;
+}
+
+.pp-grid-status-folder {
+    background: transparent url('/images/icons/folder.png') no-repeat;
 }
 
 .pp-grid-status-notes {
@@ -978,6 +1000,14 @@ div:hover.pp-grid-sort-item {
   cursor:pointer;
 }
 
+.x-dd-drag-tip {
+/*  opacity:1;
+  filter: alpha(opacity=100); */
+  padding: 1px 3px;
+  font:italic 9px arial, verdana, tahoma, arial, helvetica, sans-serif;
+  background-color:#EEEEEE;
+}
+
 .pp-tree-context-triangle-over, .pp-tree-context-triangle-down {
   width:16px;
   height:16px;
@@ -1031,18 +1061,27 @@ div:hover.pp-grid-sort-item {
 }
 
 
-
 /*** Tags ***/
 
 
 /* Tag display/control in right side-panel */
-.pp-tag-container {
+.pp-label-widget {
     line-height: 1em;
     white-space: nowrap;
-
 }
 
-.pp-tag-control{}
+.pp-search-download-widget {
+}
+
+.pp-tag-control *{
+    font-size:9px;
+    font-family: Verdana;
+    height: 18px;
+}
+
+.pp-tag-control .x-form-trigger {
+    height: 17px;
+}
 
 .pp-tag-add-link{
     float:left;
@@ -1197,7 +1236,45 @@ div:hover.pp-tag-style-sample {
     white-space:normal;
 }
 
+.pp-job-box {
+    float:left; 
+    width:200px; 
+    height:75px;
+    padding:1em;
+    text-align:center;
+}
 
+.pp-job-img {
+    display:block;
+    float:left;
+    width:24px;
+    margin:5px;
+}
+
+.pp-job-desc {
+    float:left;
+    width:140px; 
+    height:50px;
+    text-align:left;
+}
+
+.pp-job-status {
+    clear:both; 
+    height:25px;
+    width:190px;
+    overflow:none; 
+    text-align:left;
+    color:gray;
+    font-style:italic;
+    font-size:small;
+}
+
+.pp-job-table-div {
+    float:left;
+    width:30%;
+    text-align:center;
+    font-size:smaller;
+}
 
 /* Plugin logos */
 
@@ -1340,7 +1417,12 @@ div:hover.pp-tag-style-sample {
 /*Fixes combobox trigger bug. Don't know what it is exactly doing but seems to work. */
 .ext-safari .x-form-field-wrap .x-form-trigger{right:inherit;}
 
-
+.x-list-body {
+    background-color:white;
+}
+.x-list-selected {
+    background-color:#dfe8f6;
+}
 
 /* Ext.ux.Menubar */
 div.x-menu.x-menubar {

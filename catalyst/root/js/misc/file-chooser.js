@@ -242,6 +242,10 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
             filter=this.filterOptions[this.currentFilter].suffix;
         }
 
+	if (filter instanceof Array) {
+	  filter = filter.join(",");
+	}
+
         var treepanel = new Ext.ux.FileTreePanel({
 		    height:400,
             border:0,

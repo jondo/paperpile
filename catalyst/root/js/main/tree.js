@@ -35,7 +35,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       this.treeEditor.on({
 	complete:{
 	  scope:this,
-	  single:true,
 	  fn:this.commitRenameTag
 	}
       });
@@ -66,7 +65,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	},
 	insert:{scope:this,
 	  fn:function(tree,parent,node,refNode) {
-	    console.log(node);
 	  }
 	},
 	resize:{scope:this,
@@ -76,8 +74,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	  }
 	}
       });
-
-      
 
       this.treeEditor.on({
 	startedit:{
@@ -107,7 +103,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	getDropPoint: function(e,n,dd) {
 	  var node = n.node;
 	  if (dd.dragData.grid != null) { // This is a bit hacky... there should be a better way to determine where the drag data is coming from.
-	    //console.log("Dragging from grid");
 	    return "append";
 	  }
 
@@ -119,6 +114,45 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	  ddGroup: this.ddGroup,
 	  appendOnly: false
       });
+
+      this.dragZone = new Ext.tree.TreeDragZone(this, {
+	containerScroll: true,
+	ddGroup: this.ddGroup,
+	proxy: new Paperpile.StatusTipProxy(),
+
+	// This is slightly modified to remove the context triangle before loading the ghost proxy.
+	onInitDrag: function(e) {
+	  this.tree.contextTriangle.hide();
+	  var data = this.dragData;
+          this.tree.getSelectionModel().select(data.node);
+          this.tree.eventModel.disable();
+          this.proxy.update("");
+          data.node.ui.appendDDGhost(this.proxy.ghost.dom);
+          this.tree.fireEvent("startdrag", this.tree, data.node, e);
+	},
+
+	afterDragOver: function(target, e, id) {
+	  var myType = this.dragData.node.type;
+	  if (target.grid) {
+	    if (myType == 'TAGS') {
+	      this.proxy.updateTip('Apply label to reference');
+	    } else if (myType == 'FOLDER') {
+	      this.proxy.updateTip('Place reference in folder');
+	    }
+	  } else if (target.tree) {
+	    var data = target.dragOverData;
+	    var dt = data.target;
+	    if (myType == 'TAGS' && dt && dt.type == 'TAGS') {
+	      this.proxy.updateTip('Move label');
+	    } else if (myType == 'FOLDER' && dt && dt.type == 'FOLDER') {
+	      this.proxy.updateTip('Move folder');
+	    }
+	  } else {
+	    this.proxy.updateTip('');
+	  }
+	}
+      });
+
     },
 
     updateScrollSize: function(){
@@ -127,18 +161,34 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // Make sure everything is rendered; this allows to call the function via the 'resize' event;
       if (node){
         if (node.rendered){
+	  var maxHeight = Paperpile.main.globalSettings['tags_list_height'];
+	  if (!maxHeight)
+	    maxHeight=Math.round(this.getInnerHeight()/3);
+
           var el=Ext.Element.get(node.ui.getAnchor()).up('li').first('ul');
-          maxHeight=Math.round(this.getInnerHeight()/3);
           el.setStyle('overflow','auto');
-          el.setStyle('max-height',maxHeight);
+          el.setStyle('max-height',maxHeight+"px");
+
+	  this.tagResizer = new Ext.Resizable(el.id,{
+	    handles:'s',
+	    minHeight:50
+	    //maxHeight:1000,
+	    //pinned:true,
+	    //dynamic:true
+	  });
+	  this.tagResizer.on('resize', function(resizer,w,h,e) {
+	    el.setStyle('height',null);
+	    el.setStyle('max-height',h+"px");
+	    Paperpile.main.storeSettings({tags_list_height:h});
+	  },this);
         }
       }
     },
 
     myOnClick: function(node,e) {
-      Paperpile.log(e);
-      Paperpile.log(e.browserEvent);
-      Paperpile.log("Tree on Click!");
+//      Paperpile.log(e);
+//      Paperpile.log(e.browserEvent);
+//      Paperpile.log("Tree on Click!");
 
 	switch(node.type) {
 	  case 'PDFEXTRACT':
@@ -186,6 +236,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
                 Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id); 
               } else if (node.type=='TRASH') {
 		Paperpile.main.tabs.newTrashTab(); 
+		//Paperpile.main.tabs.showQueueTab();
               } else {
 		Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls);
 	      }
@@ -199,7 +250,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     },
 
     getDropPoint:function(e,n,dd) {
-      console.log("Drop point!");
       return Paperpile.Tree.superclass.getDropPoint(e,n,dd);
     },
 
@@ -242,75 +292,78 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         }
     },
 
-    onNodeDrop: function(e){
-        // We're dragging from the data grid
-        if (e.source.dragData.grid){
-            var grid=e.source.dragData.grid;
-
-            if (e.target.type == 'FOLDER'){
-                Ext.Ajax.request({
-                    url: Paperpile.Url('/ajax/crud/move_in_folder'),
-                    params: {
-                        grid_id: grid.id,
-                        selection: grid.getSelection(),
-                        node_id: e.target.id,
-                    },
-                    method: 'GET',
-                    success: function(response){
-                      var json = Ext.util.JSON.decode(response.responseText);
-                      grid.updateData(json.data);
-		      Paperpile.main.onUpdateDB();
-                    },
-                    failure: Paperpile.main.onError,
-                });
-            }
-
-            if (e.target.type == 'TAGS'){
-                Ext.Ajax.request({
-                    url: Paperpile.Url('/ajax/crud/add_tag'),
-                    params: {
-                        grid_id:grid.id,
-                        selection: grid.getSelection(),
-                        tag: e.target.text,
-                    },
-                    method: 'GET',
-
-                    success: function(response){
-                        var json = Ext.util.JSON.decode(response.responseText);
-                        grid.updateData(json.data);
-                    },
-                    failure: Paperpile.main.onError,
-                    scope: this,
-                });
-            }
-
-            if (e.target.type == 'TRASH'){
-                var grid=Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
-                grid.deleteEntry('TRASH');
-            }
-        }
-        // We're dragging nodes internally
-        else {
-            Ext.Ajax.request({
-                url: Paperpile.Url('/ajax/tree/move_node'),
-                params: { target_node: e.target.id,
-                          drop_node: e.dropNode.id,
-                          point: e.point,
-                        },
-                success: function(){
-                    //Ext.getCmp('statusbar').clearStatus();
-                    //Ext.getCmp('statusbar').setText('Moved node');
-                },
-                failure: Paperpile.main.onError
-            });
-        }
+    addFolder: function(grid,sel,node) {
+      Ext.Ajax.request( {
+	url: Paperpile.Url('/ajax/crud/move_in_folder'),
+        params: {
+          grid_id: grid.id,
+          selection: sel,
+          node_id: node.id
+        },
+        method: 'GET',
+        success: function(response) {
+          var json = Ext.util.JSON.decode(response.responseText);
+	  Paperpile.main.onUpdate(json.data);
+        },
+        failure: Paperpile.main.onError,
+	scope:this
+      });
     },
 
+    addTag: function(grid,sel,node) {
+      Paperpile.log(grid);
+      Ext.Ajax.request( {
+	url: Paperpile.Url('/ajax/crud/add_tag'),
+        params: {
+          grid_id:grid.id,
+          selection: sel,
+          tag: node.text
+        },
+        method: 'GET',
+	success: function(response) {
+	  var json = Ext.util.JSON.decode(response.responseText);
+	  Paperpile.main.onUpdate(json.data);
+        },
+        failure: Paperpile.main.onError,
+        scope: this
+      });
+    },
+
+    onNodeDrop: function(e){
+      // We're dragging from the data grid
+      if (e.source.dragData.grid) {
+        var grid=e.source.dragData.grid;
+	var sel = grid.getSelection();
+	var node = e.target;
+
+	if (node.type == 'FOLDER') {
+	  this.addFolder(grid,sel,node);
+        } else if (e.target.type == 'TAGS'){
+	  this.addTag(grid,sel,node);
+        } else if (node.type == 'TRASH') {
+          grid.deleteEntry('TRASH');
+	}
+      } else {
+        // We're dragging nodes internally
+        Ext.Ajax.request( {
+	  url: Paperpile.Url('/ajax/tree/move_node'),
+          params: {
+	    target_node: e.target.id,
+            drop_node: e.dropNode.id,
+            point: e.point
+	  },
+          success: function() {
+	    // Should we do something here?
+          },
+          failure: Paperpile.main.onError
+        });
+      }
+    },
 
     onRender:function() {
       Paperpile.Tree.superclass.onRender.apply(this, arguments);
-      // Do not show browser-context menu
       this.el.on({
+	// Do not show browser-context menu
 	contextmenu:{fn:function(){return false;},stopEvent:true}
       });
     },
@@ -693,11 +746,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       editor.editNode.plugin_title=newText;
       Ext.Ajax.request({
 	url: Paperpile.Url('/ajax/tree/rename_node'),
-        params: { node_id: node.id,
+        params: { node_id: editor.editNode.id,
 	  new_text: newText
         },
         success: function(){
-	  treeEditor.un("complete",this.onRenameComplete);
+	  editor.un("complete",this.onRenameComplete);
         },
         failure: Paperpile.main.onError
       });
@@ -869,22 +922,22 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     // information to database and updates and saves tree
     // representation to database.
     //
-    onNewTag: function(node){
-//        this.getSelectionModel().clearSelections();
-//        this.allowSelect=false;
+    onNewTag: function(node) {
+      var pars={
+	tag:node.text,
+	style: 'default'
+      };
 
-        var pars={tag:node.text,
-                  style: 'default'
-        };
-
-        Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/crud/new_tag'),
-            params: pars,
-            success: function(){
-                Ext.StoreMgr.lookup('tag_store').reload();
-            },
-            failure: Paperpile.main.onError
-        });
+      Ext.Ajax.request( {
+	url: Paperpile.Url('/ajax/crud/new_tag'),
+	params: pars,
+	success: function() {
+	  var json = Ext.util.JSON.decode(response.responseText);
+	  Paperpile.main.onUpdate(json.data);
+          Ext.StoreMgr.lookup('tag_store').reload();
+        },
+	failure: Paperpile.main.onError
+      });
     },
 
     deleteTag: function(node){
@@ -901,7 +954,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
                 // Update store with tags from the server
                 Ext.StoreMgr.lookup('tag_store').reload({
                     callback: function(){
-
+		      
                         // Afterwards update entries on all open tabs
                         Paperpile.main.tabs.items.each(
                             function(item, index, length){
@@ -947,36 +1000,20 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
             params: {tag: node.text,
                      style: number,
                     },
-            success: function(){
-                Ext.StoreMgr.lookup('tag_store').reload({
-                    callback: function(){
-                        Paperpile.main.tabs.items.each(
-                            function(item, index, length){
-                                if (item.tabType=='PLUGIN'){
-                                    if (item.title == node.text){
-                                        var el=Ext.get(Ext.DomQuery.selectNode('span.x-tab-strip-text',Paperpile.main.tabs.getTabEl(this)));
-                                        el.removeClass('pp-tag-style-'+node.tagStyle);
-                                        el.addClass('pp-tag-style-'+number);
-                                    }
-                                    var grid=item.items.get('center_panel').items.get('grid');
-                                    var sidepanel=item.items.get('east_panel').items.get('overview');
-                                    var selected=grid.getSelectionModel().getSelected();
-                                    if (selected){
-                                        sidepanel.updateDetail(selected.data, true);
-                                    }
-                                    grid.getView().refresh();
-                                }
-                            }
-                        );
-                        node.ui.removeClass('pp-tag-tree-style-'+node.tagStyle);
-                        node.ui.addClass('pp-tag-tree-style-'+number);
-                        node.tagStyle=number;
-                    }
-                });
+            success: function(response){
+	      var json = Ext.util.JSON.decode(response.responseText);
+              Ext.StoreMgr.lookup('tag_store').reload({
+		callback: function() {
+		  // Force a reload of the sidebar.
+		  json.data.updateSidePanel = true;
 
+		  Paperpile.main.onUpdate(json.data);
+		  node.ui.removeClass('pp-tag-tree-style-'+node.tagStyle);
+		  node.ui.addClass('pp-tag-tree-style-'+number);
+		  node.tagStyle=number;
 
-                //Ext.getCmp('statusbar').clearStatus();
-                //Ext.getCmp('statusbar').setText('Changes style of Tag');
+		}
+	      });
             },
             failure: Paperpile.main.onError,
             scope: this
@@ -996,6 +1033,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	     
     commitRenameTag: function(editor,newText,oldText) {
       var node = editor.editNode;
+      if (node.type != 'TAGS')
+	return;
+
       node.plugin_title=newText;
       node.plugin_query='labelid:'+Paperpile.utils.encodeTag(newText);
       node.plugin_base_query='labelid:'+Paperpile.utils.encodeTag(newText);
@@ -1007,42 +1047,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	  old_tag: tag,
           new_tag: newText
         },
-        success: function() {
+        success: function(response) {
+	  var json = Ext.util.JSON.decode(response.responseText);
           Ext.StoreMgr.lookup('tag_store').reload({
 	    callback: function() {
-              Paperpile.main.tabs.items.each(
-                function(item, index, length) {
-                  var grid=item.items.get('center_panel').items.get('grid');
-                  grid.store.suspendEvents();
-                  var records=grid.getStore().data.items;
-                  for (i=0;i<records.length;i++) {
-                    var oldTags=records[i].get('tags');
-                    var newTags=oldTags;
-
-                    newTags=newTags.replace(new RegExp("^"+tag+"$"),newText);  //  XXX
-                    newTags=newTags.replace(new RegExp("^"+tag+","),newText+",");  //  XXX,
-                    newTags=newTags.replace(new RegExp(","+tag+"$"),","+newText);  // ,XXX
-                    newTags=newTags.replace(new RegExp(","+tag+","),","+newText+","); // ,XXX,
-		      
-                    records[i].set('tags',newTags);
-                  }
-
-                  grid.store.resumeEvents();
-                  grid.store.fireEvent('datachanged',this.store);
-
-                  // If a entry is selected in a tab, also update the display
-                  var sidepanel=item.items.get('east_panel').items.get('overview');
-                  var selected=grid.getSelectionModel().getSelected();
-                  if (selected) {
-                    sidepanel.updateDetail();
-                  }
-                }
-              );
+	      Paperpile.main.onUpdate(json.data);
 	    }
-	    });
+	  });
         },
         failure: Paperpile.main.onError
         });
+
     },
 
 
@@ -1085,7 +1100,6 @@ Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
   },
 
   hideItems: function() {
-    Paperpile.log("Heya!");
     this.items.each(function(item){item.hide();});
     var shownIds = this.getShownItems(this.node);
     for (var i=0; i < shownIds.length; i++) {

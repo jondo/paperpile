@@ -8,11 +8,10 @@ Paperpile.Url = function(url){
 };
 
 Paperpile.log = function() {
-  if (console != undefined) {
+  if (window.console) {
     console.log(arguments);
   }
 };
-
 
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
@@ -41,7 +40,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                                        }
                                    ),
                                    {xtype:'tbfill'},
-                                   //new Paperpile.QueueWidget(),
+				   new Paperpile.QueueWidget(),
                                    new Ext.BoxComponent(
                                        { autoEl: {
                                            tag: 'a',
@@ -108,7 +107,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               storeId: 'tag_store',
               baseParams:{},
               reader: new Ext.data.JsonReader(),
-              pruneModifiedRecords:true,
+              pruneModifiedRecords:true
             }
         );
         this.tagStore.reload();
@@ -140,16 +139,26 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       case Ext.EventObject.W:
 	log("W!");
 	var curTab = Paperpile.main.tabs.getActiveTab();
-	console.log(curTab);
 	Paperpile.main.tabs.remove(curTab);
 	e.stopEvent();
-	console.log("Stopped ctrl-W!");
 	break;
       }
     },
 */
-    loadSettings: function(callback,scope){
 
+   storeSettings: function(newSettings,callback,scope) {
+     Ext.Ajax.request({
+       url: Paperpile.Url('/ajax/settings/set_settings'),
+       params: newSettings,
+       success: function(response) {
+         Paperpile.main.loadSettings(callback,scope);
+       },
+       failure: Paperpile.main.onError,
+       scope:this
+     });
+   },
+
+    loadSettings: function(callback,scope){
         Ext.Ajax.request({
             url: Paperpile.Url('/ajax/misc/get_settings'),
             success: function(response){
@@ -160,7 +169,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 }
             },
             failure: Paperpile.main.onError,
-            scope:this,
+            scope:this
         });
     },
 
@@ -192,8 +201,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                         url: Paperpile.Url('/ajax/pdfextract/submit'),
                         params: { path:path},
                         success: function(response){
-                            Paperpile.main.tabs.showQueueTab();
-                        },
+			  Paperpile.main.queueJobUpdate();
+                        }
                     });
                 }
             }
@@ -296,36 +305,123 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       return grid;
     },
 
-    onUpdateDB: function(ignore){
+    // Go through all the grids and update specifically the single publication.
+    // Requires each grid to have an "updateData" function.
+    onUpdate: function(data) {
+      if (data === undefined)
+	return;
+      var tabs = Paperpile.main.tabs.items.items;
 
-        Paperpile.main.tabs.items.each(
-            function(item, index, length){
+      for (var i=0; i < tabs.length; i++) {
+	var tab = tabs[i];
+	if (!tab['onUpdate'])
+	  continue;
+	tab.onUpdate(data);
+      }
 
-                if (item.tabType=='PLUGIN'){
+      // Even if the queue tab isn't showing, collect and dispatch callbacks.
+      if (data.jobs) {
+	this.doCallbacks(data);
+      }
 
-                    var grid=item.items.get('center_panel').items.get('grid');
+      Ext.getCmp('queue-widget').onUpdate(data);
+    },
 
-                    if (ignore){
-                        if (grid.id == ignore){
-                            return;
-                        }
-                    }
+    doCallbacks: function(data) {
+      if (!this.callbacksRun) {
+	this.callbacksRun = [];
+      }
 
-                    if (grid.plugin_name == 'DB' || grid.plugin_name == 'Trash'){
-                        grid.getView().holdPosition = true;
-                        grid.getStore().reload();
-                        //grid.store.reload();
-                    }
+      var callbacksToRun = [];
+      if (data.jobs) {
+	for (var id in data.jobs) {
+	  var job = data.jobs[id];
+	  // Skip if we've already run this job's callback.
+	  if (this.callbacksRun[job.id])
+	    continue;
+	  var info = job.info;
+	  if (info) {
+	    var callback = info.callback;
+	    if (callback) {
+	      var fn = callback.fn;
+	      var args = callback.args;
+	      if (this[fn]) {
+		// Collect the name of each callback to run by hashing the function name.
+		// This avoids the same grid udpate function being called a million times
+		// in a row, but maybe there's a better solution using DelayedTask...
+		callbacksToRun[fn] = 1;
+		this.callbacksRun[job.id] = 1;
+	      }
+	    }
+	  }
+	}
+      }
 
-                }
-            }
-        );
+      for (var fn in callbacksToRun) {
+	this[fn]();
+      }
+
+    },
+
+    updatePubGrid: function() {
+      var tabs = Paperpile.main.tabs.items.items;
+      for (var i=0; i < tabs.length; i++) {
+	var tab = tabs[i];
+	tab.getGrid().getStore().reload();
+      }      
+    },
+
+    stopQueueJobUpdate: function() {
+      Ext.TaskMgr.stop(this.queueJobsUpdateTask);
+    },
+
+    queueJobUpdate: function() {
+      if (!this.queueJobsUpdateTask) {
+	this.queueJobsUpdateTask = {
+	  run: this.queueJobsUpdateFn,
+	  interval:1500,
+	  scope:this
+	};
+      }
+
+      Ext.TaskMgr.start(this.queueJobsUpdateTask);
+    },
+
+    queueJobsUpdateFn: function() {
+      Ext.Ajax.request(
+      { 
+	url: Paperpile.Url('/ajax/queue/jobs'),
+        params: {ids: 'active_jobs'},
+        method: 'GET',
+        success: function(response) {
+          var data = Ext.util.JSON.decode(response.responseText).data;
+	  Paperpile.main.onUpdate(data);
+	  
+	  var hasActiveJobs = false;
+	  if (data.jobs) {
+	    var jobs = data.jobs;
+	    for (var id in jobs) {
+	      if (jobs[id].status == 'RUNNING') {
+		hasActiveJobs = true;
+		break;
+	      }
+	    }
+	    if (hasActiveJobs) {
+	      // Let the task keep running.
+	    } else {
+	      // No more active jobs! Stop the incessant updating!
+	      Ext.TaskMgr.stop(this.queueJobsUpdateTask);
+	    }
+	  }
+        },
+        failure: Paperpile.main.onError,
+        scope:this
+      });
     },
 
     onError: function(response){
-
         var error={ type:"Unknown",
-                    msg: "Empty response or timeout.",
+                    msg: "Empty response or timeout."
                   };
 
         //Timed out errors come back empty otherwise fill in error

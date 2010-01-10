@@ -3,9 +3,9 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
     initComponent:function() {
 
-    this.grid = this.createGrid(this.gridParams);
-    this.overviewPanel = new Paperpile.PubOverview();
-    this.detailPanel = new Paperpile.PubDetails();
+      this.grid = this.createGrid(this.gridParams);
+      this.overviewPanel = this.createOverview();
+      this.detailPanel = this.createDetails();
 
         Ext.apply(this, {
             tabType: 'PLUGIN',
@@ -81,7 +81,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
         // If grid has an "about" panel, create this panel and show it
         this.on('afterLayout', 
                 function(){
-                    if (this.grid.aboutPanel){
+                    if (this.grid.aboutPanel) {
                         this.items.get('east_panel').items.add(this.grid.aboutPanel);
                         var button = this.items.get('east_panel').getBottomToolbar().items.get('about_tab_button');
                         button.show();
@@ -96,6 +96,33 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
     createGrid: function(params) {
       return new Paperpile.PluginGrid(params);
+    },
+
+    createOverview: function(params) {
+      return new Paperpile.PubOverview(params);
+    },
+
+    createDetails: function(params) {
+      return new Paperpile.PubDetails(params);
+    },
+
+    getGrid: function() {
+      return this.grid;
+    },
+     
+    getOverview: function() {
+      return this.overviewPanel;
+    },
+
+    onUpdate: function(data) {
+      if (data.pubs) {
+	this.getGrid().onUpdate(data);
+      }
+
+      if (data.pub_delta) {
+	this.getGrid().getView().holdPosition = true;
+	this.getGrid().getStore().reload();
+      }
     },
 
     depressButton: function(itemId) {
@@ -118,16 +145,15 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
         }
     },
     
-    onRowSelect: function() {
+    updateDetails: function() {
         var datatabs=this.items.get('center_panel').items.get('data_tabs');
         datatabs.items.get('pubsummary').updateDetail();
         datatabs.items.get('pubnotes').updateDetail();        
-        this.items.get('east_panel').items.get('overview').updateDetail();
+	this.getOverview().onUpdate();
         this.items.get('east_panel').items.get('details').updateDetail();
     },
 
     updateButtons: function(){
-
         var tb_side = this.items.get('east_panel').getBottomToolbar();
         var tb_bottom =this.items.get('center_panel').items.get('data_tabs').getBottomToolbar();
 

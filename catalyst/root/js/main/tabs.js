@@ -73,7 +73,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
             closable:true,
             itemId: itemId
 	  };
-	  Paperpile.log(viewParams);
+	  //Paperpile.log(viewParams);
 	  if (iconCls) viewParams.iconCls = iconCls;
 	  if (title) viewParams.title = title;
           var newView=this.add(new Paperpile['PluginPanel'+javascript_ui](viewParams));
@@ -121,16 +121,19 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         var openTab=Paperpile.main.tabs.getItem('queue-tab');
 
         if (openTab){
-            openTab.items.get('grid').getStore().reload();
+            //openTab.items.get('grid').getStore().reload();
             this.activate(openTab);
         } else {
-            var panel=Paperpile.main.tabs.add(new Paperpile.QueueView({title:'Background tasks',
-                                                                       iconCls: 'pp-icon-queue',
+            var panel=Paperpile.main.tabs.add(new Paperpile.QueuePanel({
                                                                        itemId:'queue-tab'
                                                                       }
                                                                      ));
-            panel.show();
 
+            panel.show();
+	  var qs = Ext.StoreMgr.lookup('queue_store');
+	  if (qs != null) {
+	    qs.reload();
+	  }
         }
         
     },

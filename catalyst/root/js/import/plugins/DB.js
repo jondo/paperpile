@@ -59,13 +59,13 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(1)).first(), 
 	  '<div id="pp-grid-sort-container_'+this.id+'" class="pp-grid-sort-container"></div>', true);
 
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="created" status="desc">Date added</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal" status="inactive">Journal</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year" status="inactive">Year</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author" status="inactive">Author</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf" status="inactive">PDF</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive">Supp. material</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="notes" status="inactive">Notes</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="created" status="desc" default="desc">Date added</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal" status="inactive" default="asc">Journal</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year" status="inactive" default="desc">Year</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author" status="inactive" default="asc">Author</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf" status="inactive" default="desc">PDF</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive" default="desc">Supp. material</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="notes" status="inactive" default="desc">Notes</div>');
 
         target.on('click', this.handleSortButtons, this);
     },
@@ -75,6 +75,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         var currentClass=el.getAttribute('class');
         var field=el.getAttribute('action');
         var status=el.getAttribute('status');
+	var def = el.getAttribute('default');
       
         if (field != this.currentSortField) {
           //log(field);
@@ -104,9 +105,15 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         
          
         if (status == "inactive"){
+	  if (def == 'desc') {
             El.addClass(classes.desc);
             this.store.baseParams['plugin_order']=field+" DESC";
             el.setAttribute('status','desc');
+	  } else {
+            El.addClass(classes.asc);
+            this.store.baseParams['plugin_order']=field+" ASC";
+            el.setAttribute('status','asc');
+	  }
         } else {
             if (status=="desc"){
                 this.store.baseParams['plugin_order']=field;
@@ -158,6 +165,27 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
             this.filterField.onTrigger2Click();
         }
       
+    },
+
+    setSearchQuery: function(text) {
+      this.filterField.setValue(text);
+      this.filterField.onTrigger2Click();
+    },
+
+    createContextMenu: function() {
+      Paperpile.PluginGridDB.superclass.createContextMenu.call(this);
+
+      this.actions['REMOVE_FOLDER'] = new Ext.Action( {
+	text: 'Remove from Folder',
+	handler:this.deleteFromFolder,
+	scope:this,
+	iconCls:'pp-icon-remove-folder',
+	itemId:'remove_folder'
+      });
+
+      var index = this.getContextIndex(this.actions['DELETE'].itemId);
+      var context = this.getContextMenu();
+      context.insert(index+1,this.actions['REMOVE_FOLDER']);
     },
 
     createToolbarMenu: function() {
@@ -227,6 +255,43 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 	menuItem.setIconClass('pp-icon-trash');
 	menuItem.setText('Move to Trash');
       }
+
+      if (menuItem.itemId == this.actions['REMOVE_FOLDER'].itemId) {
+	if (record.data.folders == '') {
+	  menuItem.hide();
+	} else {
+	  menuItem.show();
+	}
+      }
+    },
+
+    deleteFromFolder: function() {
+      var sel = this.getSelection();
+
+      var folder = this.getSelectionModel().getSelected().get('folders');
+
+      if (!folder) {
+	return;
+      }
+      Ext.Ajax.request( {
+	url: Paperpile.Url('/ajax/crud/delete_from_folder'),
+	params: {
+	  selection: this.getSelection(),
+	  grid_id: this.id,
+          folder_id: folder
+	},
+	method: 'GET',
+	success: function(response) {
+	  var json = Ext.util.JSON.decode(response.responseText);
+	  // Update the status of the other views.
+	  Paperpile.main.onUpdate(json.data);
+	  // Reload this entire view, because the refs just got removed from the folder.
+	  this.getView().holdPosition = true;
+	  this.getStore().reload();
+	},
+	failure: Paperpile.main.onError,
+	scope:this
+      });
     }
 
 });

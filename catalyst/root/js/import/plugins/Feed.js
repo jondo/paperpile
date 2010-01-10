@@ -26,7 +26,7 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
     ],
 
     initComponent:function() {
-      this.createStore();
+      this.getStore();
         this._store.setBaseParam('plugin_url',this.plugin_url);
         this._store.setBaseParam('plugin_id',this.plugin_id);
 

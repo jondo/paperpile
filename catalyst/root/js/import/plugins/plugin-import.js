@@ -89,8 +89,6 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
 	this.allSelected=true;
         this.insertEntry(function(){
           this.allSelected=false;
-          var container= this.findParentByType(Paperpile.PluginPanel);
-          container.onRowSelect();
         },this);
       },
 
@@ -119,21 +117,7 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
 	  method: 'GET',
 	  success: function(response) {
 	    var json = Ext.util.JSON.decode(response.responseText);
-            this.store.suspendEvents();
-            for (var sha1 in json.data) {
-              var record=this.store.getAt(this.store.find('sha1',sha1));
-              if (!record) continue;
-              record.beginEdit();
-              record.set('citekey',json.data[sha1].citekey);
-              record.set('created', json.data[sha1].created);
-              record.set('_imported',1);
-              record.set('_rowid', json.data[sha1]._rowid);
-              record.endEdit();
-            }
-            this.store.resumeEvents();
-            this.store.fireEvent('datachanged',this.store);
-            this.updateButtons();
-	    Paperpile.main.onUpdateDB();
+	    Paperpile.main.onUpdate(json.data);
             Paperpile.status.clearMsg();
 	  },
 	  failure: Paperpile.main.onError,

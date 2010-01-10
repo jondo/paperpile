@@ -1,6 +1,5 @@
 log = function(text) {
-  if (console)
-    console.log(text);
+  Paperpile.log(text);
 };
 
 Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
@@ -517,7 +516,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   initPDF: function(file){
     this.file=file,
 
-    log("Init!");
+//    log("Init!");
     Ext.Ajax.request({
         url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
@@ -554,6 +553,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 	this.startPage = 0;
 	this.endPage = (this.pageN >= this.maxPages ? this.maxPages - 1 : this.pageN);
 	this.layoutPages();
+
+	
       },
       scope:this
       });
@@ -725,7 +726,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.removeBackgroundTasksByName("Layout Annotations");
     this.removeBackgroundTasksByName("Visible Pages");
 
-    this.addBackgroundTask("Load visible",this.loadVisiblePages);
+//    this.addBackgroundTask("Load visible",this.loadVisiblePages,[],this,100,'urgent');
 
     var numPages = this.endPage - this.startPage;
     var pages = [];
@@ -735,13 +736,20 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       var pdfContainer = this.fly("pages");
       var block = Ext.DomHelper.append(pdfContainer,pg,true);
       
-      if (!this.isThumbnailLoaded(pageIndex))
-	this.addBackgroundTask("Thumbnails",this.loadThumbnail,[pageIndex,true],this,500,'background');
+      if (!this.isThumbnailLoaded(pageIndex)) {
+	var priority = 'background';
+	var time = 500;
+	if (pageIndex == 0) {
+	  priority = 'urgent';
+	  time = 50;
+	}
+	this.addBackgroundTask("Thumbnails",this.loadThumbnail,[pageIndex,true],this,time,priority);
+      }
       this.addBackgroundTask("Layout Annotations",this.loadSearchAndAnnotations,[pageIndex]);
     }
     
     this.addBackgroundTask("Update Search Bar",this.updateSearchResultsView);
-    this.addBackgroundTask("ScrollDelay",this.scrollDelay);
+    this.addBackgroundTask("ScrollDelay",this.scrollDelay,[],this,50,'urgent');
     this.resumeEvents();
   },
 
