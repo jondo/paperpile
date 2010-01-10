@@ -1,17 +1,17 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
 /**
- * @class Ext.ListView.ColumnResizer
+ * @class Ext.list.ColumnResizer
  * @extends Ext.util.Observable
- * <p>Supporting Class for Ext.ListView.</p>
+ * <p>Supporting Class for Ext.list.ListView</p>
  * @constructor
  * @param {Object} config
  */
-Ext.ListView.ColumnResizer = Ext.extend(Ext.util.Observable, {
+Ext.list.ColumnResizer = Ext.extend(Ext.util.Observable, {
     /**
      * @cfg {Number} minPct The minimum percentage to allot for any column (defaults to <tt>.05</tt>)
      */
@@ -19,7 +19,7 @@ Ext.ListView.ColumnResizer = Ext.extend(Ext.util.Observable, {
 
     constructor: function(config){
         Ext.apply(this, config);
-        Ext.ListView.ColumnResizer.superclass.constructor.call(this);
+        Ext.list.ColumnResizer.superclass.constructor.call(this);
     },
     init : function(listView){
         this.view = listView;
@@ -41,20 +41,20 @@ Ext.ListView.ColumnResizer = Ext.extend(Ext.util.Observable, {
     },
 
     handleHdMove : function(e, t){
-        var hw = 5;
-        var x = e.getPageX();
-        var hd = e.getTarget('em', 3, true);
+        var hw = 5,
+            x = e.getPageX(),
+            hd = e.getTarget('em', 3, true);
         if(hd){
-            var r = hd.getRegion();
-            var ss = hd.dom.style;
-            var pn = hd.dom.parentNode;
+            var r = hd.getRegion(),
+                ss = hd.dom.style,
+                pn = hd.dom.parentNode;
 
             if(x - r.left <= hw && pn != pn.parentNode.firstChild){
                 this.activeHd = Ext.get(pn.previousSibling.firstChild);
-				ss.cursor = Ext.isWebKit ? 'e-resize' : 'col-resize';
+                ss.cursor = Ext.isWebKit ? 'e-resize' : 'col-resize';
             } else if(r.right - x <= hw && pn != pn.parentNode.lastChild.previousSibling){
                 this.activeHd = hd;
-				ss.cursor = Ext.isWebKit ? 'w-resize' : 'col-resize';
+                ss.cursor = Ext.isWebKit ? 'w-resize' : 'col-resize';
             } else{
                 delete this.activeHd;
                 ss.cursor = '';
@@ -72,8 +72,8 @@ Ext.ListView.ColumnResizer = Ext.extend(Ext.util.Observable, {
         this.proxy = this.view.el.createChild({cls:'x-list-resizer'});
         this.proxy.setHeight(this.view.el.getHeight());
 
-        var x = this.tracker.getXY()[0];
-        var w = this.view.innerHd.getWidth();
+        var x = this.tracker.getXY()[0],
+            w = this.view.innerHd.getWidth();
 
         this.hdX = this.dragHd.getX();
         this.hdIndex = this.view.findHeaderIndex(this.dragHd);
@@ -91,33 +91,39 @@ Ext.ListView.ColumnResizer = Ext.extend(Ext.util.Observable, {
     },
 
     onEnd: function(e){
+        /* calculate desired width by measuring proxy and then remove it */
         var nw = this.proxy.getWidth();
         this.proxy.remove();
 
-        var index = this.hdIndex;
-        var vw = this.view, cs = vw.columns, len = cs.length;
-        var w = this.view.innerHd.getWidth(), minPct = this.minPct * 100;
-
-        var pct = Math.ceil((nw*100) / w);
-        var diff = cs[index].width - pct;
-        var each = Math.floor(diff / (len-1-index));
-        var mod = diff - (each * (len-1-index));
+        var index = this.hdIndex,
+            vw = this.view,
+            cs = vw.columns,
+            len = cs.length,
+            w = this.view.innerHd.getWidth(),
+            minPct = this.minPct * 100,
+            pct = Math.ceil((nw * vw.maxWidth) / w),
+            diff = (cs[index].width * 100) - pct,
+            each = Math.floor(diff / (len-1-index)),
+            mod = diff - (each * (len-1-index));
 
         for(var i = index+1; i < len; i++){
-            var cw = cs[i].width + each;
-            var ncw = Math.max(minPct, cw);
+            var cw = (cs[i].width * 100) + each,
+                ncw = Math.max(minPct, cw);
             if(cw != ncw){
                 mod += cw - ncw;
             }
-            cs[i].width = ncw;
+            cs[i].width = ncw / 100;
         }
-        cs[index].width = pct;
-        cs[index+1].width += mod;
+        cs[index].width = pct / 100;
+        cs[index+1].width += (mod / 100);
         delete this.dragHd;
-        this.view.setHdWidths();
-        this.view.refresh();
+        vw.setHdWidths();
+        vw.refresh();
         setTimeout(function(){
             vw.disableHeaders = false;
         }, 100);
     }
 });
+
+// Backwards compatibility alias
+Ext.ListView.ColumnResizer = Ext.list.ColumnResizer;

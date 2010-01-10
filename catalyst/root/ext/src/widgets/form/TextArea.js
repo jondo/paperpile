@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -26,13 +26,13 @@ Ext.form.TextArea = Ext.extend(Ext.form.TextField,  {
      */
     growMax: 1000,
     growAppend : '&#160;\n&#160;',
-    growPad : Ext.isWebKit ? -6 : 0,
 
     enterIsSpecial : false,
 
     /**
      * @cfg {Boolean} preventScrollbars <tt>true</tt> to prevent scrollbars from appearing regardless of how much text is
-     * in the field (equivalent to setting overflow: hidden, defaults to <tt>false</tt>)
+     * in the field. This option is only relevant when {@link #grow} is <tt>true</tt>. Equivalent to setting overflow: hidden, defaults to 
+     * <tt>false</tt>.
      */
     preventScrollbars: false,
     /**
@@ -64,7 +64,7 @@ Ext.form.TextArea = Ext.extend(Ext.form.TextField,  {
     },
 
     onDestroy : function(){
-        Ext.destroy(this.textSizeEl);
+        Ext.removeNode(this.textSizeEl);
         Ext.form.TextArea.superclass.onDestroy.call(this);
     },
 
@@ -73,13 +73,10 @@ Ext.form.TextArea = Ext.extend(Ext.form.TextField,  {
             this.fireEvent("specialkey", this, e);
         }
     },
-
+    
     // private
-    onKeyUp : function(e){
-        if(!e.isNavKeyPress() || e.getKey() == e.ENTER){
-            this.autoSize();
-        }
-        Ext.form.TextArea.superclass.onKeyUp.call(this, e);
+    doAutoSize : function(e){
+        return !e.isNavKeyPress() || e.getKey() == e.ENTER;
     },
 
     /**
@@ -90,23 +87,22 @@ Ext.form.TextArea = Ext.extend(Ext.form.TextField,  {
         if(!this.grow || !this.textSizeEl){
             return;
         }
-        var el = this.el;
-        var v = el.dom.value;
-        var ts = this.textSizeEl;
-        ts.innerHTML = '';
-        ts.appendChild(document.createTextNode(v));
-        v = ts.innerHTML;
+        var el = this.el,
+            v = Ext.util.Format.htmlEncode(el.dom.value),
+            ts = this.textSizeEl,
+            h;
+            
         Ext.fly(ts).setWidth(this.el.getWidth());
         if(v.length < 1){
             v = "&#160;&#160;";
         }else{
             v += this.growAppend;
             if(Ext.isIE){
-                v = v.replace(/\n/g, '<br />');
+                v = v.replace(/\n/g, '&#160;<br />');
             }
         }
         ts.innerHTML = v;
-        var h = Math.min(this.growMax, Math.max(ts.offsetHeight, this.growMin) + this.growPad);
+        h = Math.min(this.growMax, Math.max(ts.offsetHeight, this.growMin));
         if(h != this.lastHeight){
             this.lastHeight = h;
             this.el.setHeight(h);

@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -14,6 +14,10 @@
  * @xtype radiogroup
  */
 Ext.form.RadioGroup = Ext.extend(Ext.form.CheckboxGroup, {
+    /**
+     * @cfg {Array} items An Array of {@link Ext.form.Radio Radio}s or Radio config objects
+     * to arrange in the group.
+     */
     /**
      * @cfg {Boolean} allowBlank True to allow every item in the group to be blank (defaults to true).
      * If allowBlank = false and no items are selected at validation time, {@link @blankText} will
@@ -60,27 +64,29 @@ Ext.form.RadioGroup = Ext.extend(Ext.form.CheckboxGroup, {
      * @param {Boolean} value The value to set the radio.
      * @return {Ext.form.RadioGroup} this
      */
-    setValue : function(id, value){
-        if(this.rendered){
-            if(arguments.length > 1){
-                var f = this.getBox(id);
-                if(f){
-                    f.setValue(value);
-                    if(f.checked){
-                        this.eachItem(function(item){
-                            if (item !== f){
-                                item.setValue(false);
-                            }
-                        });
-                    }
+    onSetValue : function(id, value){
+        if(arguments.length > 1){
+            var f = this.getBox(id);
+            if(f){
+                f.setValue(value);
+                if(f.checked){
+                    this.eachItem(function(item){
+                        if (item !== f){
+                            item.setValue(false);
+                        }
+                    });
                 }
-            }else{
-                this.setValueForItem(id);
             }
         }else{
-            this.values = arguments;
+            this.setValueForItem(id);
         }
-        return this;
+    },
+    
+    setValueForItem : function(val){
+        val = String(val).split(',')[0];
+        this.eachItem(function(item){
+            item.setValue(val == item.inputValue);
+        });
     },
     
     // private

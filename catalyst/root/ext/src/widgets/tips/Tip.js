@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -7,6 +7,7 @@
 /**
  * @class Ext.Tip
  * @extends Ext.Panel
+ * @xtype tip
  * This is the base class for {@link Ext.QuickTip} and {@link Ext.Tooltip} that provides the basic layout and
  * positioning that all tip-based classes require. This class can be used directly for simple, statically-positioned
  * tips that are displayed programmatically, or it can be extended to provide custom tip implementations.
@@ -93,12 +94,13 @@ tip.showAt([50,100]);
     },
 
     // protected
-    doAutoWidth : function(){
+    doAutoWidth : function(adjust){
+        adjust = adjust || 0;
         var bw = this.body.getTextWidth();
         if(this.title){
             bw = Math.max(bw, this.header.child('span').getTextWidth(this.title));
         }
-        bw += this.getFrameWidth() + (this.closable ? 20 : 0) + this.body.getPadding("lr");
+        bw += this.getFrameWidth() + (this.closable ? 20 : 0) + this.body.getPadding("lr") + adjust;
         this.setWidth(bw.constrain(this.minWidth, this.maxWidth));
         
         // IE7 repaint bug on initial show
@@ -134,6 +136,8 @@ tip.showBy('my-el', 'tl-tr');
         this.header.addClass('x-tip-draggable');
     }
 });
+
+Ext.reg('tip', Ext.Tip);
 
 // private - custom Tip DD implementation
 Ext.Tip.DD = function(tip, config){

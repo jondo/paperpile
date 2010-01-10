@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -72,6 +72,8 @@ Ext.layout.TableLayout = Ext.extend(Ext.layout.ContainerLayout, {
 
     // private
     monitorResize:false,
+    
+    targetCls: 'x-table-layout-ct',
 
     /**
      * @cfg {Object} tableAttrs
@@ -106,8 +108,6 @@ Ext.layout.TableLayout = Ext.extend(Ext.layout.ContainerLayout, {
         var cs = ct.items.items, len = cs.length, c, i;
 
         if(!this.table){
-            target.addClass('x-table-layout-ct');
-
             this.table = target.createChild(
                 Ext.apply({tag:'table', cls:'x-table-layout', cellspacing: 0, cn: {tag: 'tbody'}}, this.tableAttrs), null, true);
         }
@@ -173,16 +173,18 @@ Ext.layout.TableLayout = Ext.extend(Ext.layout.ContainerLayout, {
     renderItem : function(c, position, target){
         if(c && !c.rendered){
             c.render(this.getNextCell(c));
-            if(this.extraCls){
-                var t = c.getPositionEl ? c.getPositionEl() : c;
-                t.addClass(this.extraCls);
-            }
+            this.configureItem(c, position);
+        }else if(c && !this.isValidParent(c, target)){
+            var container = this.getNextCell(c);
+            container.insertBefore(c.getPositionEl().dom, null);
+            c.container = Ext.get(container);
+            this.configureItem(c, position);
         }
     },
 
     // private
     isValidParent : function(c, target){
-        return true;
+        return c.getPositionEl().up('table', 5).dom.parentNode === (target.dom || target);
     }
 
     /**

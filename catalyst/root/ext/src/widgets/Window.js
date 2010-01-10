@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -10,7 +10,7 @@
  * <p>A specialized panel intended for use as an application window.  Windows are floated, {@link #resizable}, and
  * {@link #draggable} by default.  Windows can be {@link #maximizable maximized} to fill the viewport,
  * restored to their prior size, and can be {@link #minimize}d.</p>
- * <p>Windows can also be linked to a {@link Ext.WindowGroup} or managed by the {@link Ext.WindowMgr} to provide 
+ * <p>Windows can also be linked to a {@link Ext.WindowGroup} or managed by the {@link Ext.WindowMgr} to provide
  * grouping, activation, to front, to back and other application-specific behavior.</p>
  * <p>By default, Windows will be rendered to document.body. To {@link #constrain} a Window to another element
  * specify {@link Ext.Component#renderTo renderTo}.</p>
@@ -50,8 +50,13 @@ Ext.Window = Ext.extend(Ext.Panel, {
      * A reference to the WindowGroup that should manage this window (defaults to {@link Ext.WindowMgr}).
      */
     /**
-    * @cfg {String/Number/Button} defaultButton
-    * The id / index of a button or a button instance to focus when this window received the focus.
+    * @cfg {String/Number/Component} defaultButton
+    * <p>Specifies a Component to receive focus when this Window is focussed.</p>
+    * <p>This may be one of:</p><div class="mdetail-params"><ul>
+    * <li>The index of a footer Button.</li>
+    * <li>The id of a Component.</li>
+    * <li>A Component.</li>
+    * </ul></div>
     */
     /**
     * @cfg {Function} onEsc
@@ -62,15 +67,15 @@ Ext.Window = Ext.extend(Ext.Panel, {
     */
     /**
      * @cfg {Boolean} collapsed
-     * True to render the window collapsed, false to render it expanded (defaults to false). Note that if 
-     * {@link #expandOnShow} is true (the default) it will override the <tt>collapsed</tt> config and the window 
+     * True to render the window collapsed, false to render it expanded (defaults to false). Note that if
+     * {@link #expandOnShow} is true (the default) it will override the <tt>collapsed</tt> config and the window
      * will always be expanded when shown.
      */
     /**
      * @cfg {Boolean} maximized
      * True to initially display the window in a maximized state. (Defaults to false).
      */
-    
+
     /**
     * @cfg {String} baseCls
     * The base CSS class to apply to this panel's element (defaults to 'x-window').
@@ -122,15 +127,15 @@ Ext.Window = Ext.extend(Ext.Panel, {
     /**
      * @cfg {Boolean} constrain
      * True to constrain the window within its containing element, false to allow it to fall outside of its
-     * containing element. By default the window will be rendered to document.body.  To render and constrain the 
+     * containing element. By default the window will be rendered to document.body.  To render and constrain the
      * window within another element specify {@link #renderTo}.
      * (defaults to false).  Optionally the header only can be constrained using {@link #constrainHeader}.
      */
     constrain : false,
     /**
      * @cfg {Boolean} constrainHeader
-     * True to constrain the window header within its containing element (allowing the window body to fall outside 
-     * of its containing element) or false to allow the header to fall outside its containing element (defaults to 
+     * True to constrain the window header within its containing element (allowing the window body to fall outside
+     * of its containing element) or false to allow the header to fall outside its containing element (defaults to
      * false). Optionally the entire window can be constrained using {@link #constrain}.
      */
     constrainHeader : false,
@@ -180,8 +185,17 @@ Ext.Window = Ext.extend(Ext.Panel, {
     /**
      * @cfg {Boolean} initHidden
      * True to hide the window until show() is explicitly called (defaults to true).
+     * @deprecated
      */
-    initHidden : true,
+    initHidden : undefined,
+
+    /**
+     * @cfg {Boolean} hidden
+     * Render this component hidden (default is <tt>true</tt>). If <tt>true</tt>, the
+     * {@link #hide} method will be called internally.
+     */
+    hidden : true,
+
     /**
     * @cfg {Boolean} monitorResize @hide
     * This is automatically managed based on the value of constrain and constrainToHeader
@@ -201,16 +215,17 @@ Ext.Window = Ext.extend(Ext.Panel, {
 
     // private
     initComponent : function(){
+        this.initTools();
         Ext.Window.superclass.initComponent.call(this);
         this.addEvents(
             /**
              * @event activate
-             * Fires after the window has been visually activated via {@link setActive}.
+             * Fires after the window has been visually activated via {@link #setActive}.
              * @param {Ext.Window} this
              */
             /**
              * @event deactivate
-             * Fires after the window has been visually deactivated via {@link setActive}.
+             * Fires after the window has been visually deactivated via {@link #setActive}.
              * @param {Ext.Window} this
              */
             /**
@@ -240,10 +255,13 @@ Ext.Window = Ext.extend(Ext.Panel, {
              */
             'restore'
         );
-        if(this.initHidden === false){
-            this.show();
-        }else{
+        // for backwards compat, this should be removed at some point
+        if(Ext.isDefined(this.initHidden)){
+            this.hidden = this.initHidden;
+        }
+        if(this.hidden === false){
             this.hidden = true;
+            this.show();
         }
     },
 
@@ -275,7 +293,9 @@ Ext.Window = Ext.extend(Ext.Panel, {
             this.mask.hide();
             this.mon(this.mask, 'click', this.focus, this);
         }
-        this.initTools();
+        if(this.maximizable){
+            this.mon(this.header, 'dblclick', this.toggleMaximize, this);
+        }
     },
 
     // private
@@ -374,7 +394,6 @@ Ext.Window = Ext.extend(Ext.Panel, {
                 handler: this.restore.createDelegate(this, []),
                 hidden:true
             });
-            this.mon(this.header, 'dblclick', this.toggleMaximize, this);
         }
         if(this.closable){
             this.addTool({
@@ -418,8 +437,6 @@ Ext.Window = Ext.extend(Ext.Panel, {
         this.focus();
         this.updateHandles();
         this.saveState();
-        this.doLayout();
-        this.fireEvent('resize', this, box.width, box.height);
     },
 
     /**
@@ -428,10 +445,10 @@ Ext.Window = Ext.extend(Ext.Panel, {
      */
     focus : function(){
         var f = this.focusEl, db = this.defaultButton, t = typeof db;
-        if(t != 'undefined'){
-            if(t == 'number' && this.fbar){
+        if(Ext.isDefined(db)){
+            if(Ext.isNumber(db) && this.fbar){
                 f = this.fbar.items.get(db);
-            }else if(t == 'string'){
+            }else if(Ext.isString(db)){
                 f = Ext.getCmp(db);
             }else{
                 f = db;
@@ -478,7 +495,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
      * @param {String/Element} animateTarget (optional) The target element or id from which the window should
      * animate while opening (defaults to null with no animation)
      * @param {Function} callback (optional) A callback function to call after the window is displayed
-     * @param {Object} scope (optional) The scope in which to execute the callback
+     * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the callback is executed. Defaults to this Window.
      * @return {Ext.Window} this
      */
     show : function(animateTarget, cb, scope){
@@ -496,7 +513,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
             this.on('show', cb, scope, {single:true});
         }
         this.hidden = false;
-        if(animateTarget !== undefined){
+        if(Ext.isDefined(animateTarget)){
             this.setAnimateTarget(animateTarget);
         }
         this.beforeShow();
@@ -516,7 +533,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
         if(this.maximized){
             this.fitContainer();
         }
-        if(Ext.isMac && Ext.isGecko){ // work around stupid FF 2.0/Mac scroll bar bug
+        if(Ext.isMac && Ext.isGecko2){ // work around stupid FF 2.0/Mac scroll bar bug
             this.cascade(this.setAutoScroll);
         }
 
@@ -534,6 +551,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
             var sz = this.getSize();
             this.onResize(sz.width, sz.height);
         }
+        this.onShow();
         this.fireEvent('show', this);
     },
 
@@ -542,15 +560,15 @@ Ext.Window = Ext.extend(Ext.Panel, {
         this.proxy.show();
         this.proxy.setBox(this.animateTarget.getBox());
         this.proxy.setOpacity(0);
-        var b = this.getBox(false);
-        b.callback = this.afterShow.createDelegate(this, [true], false);
-        b.scope = this;
-        b.duration = 0.25;
-        b.easing = 'easeNone';
-        b.opacity = 0.5;
-        b.block = true;
+        var b = this.getBox();
         this.el.setStyle('display', 'none');
-        this.proxy.shift(b);
+        this.proxy.shift(Ext.apply(b, {
+            callback: this.afterShow.createDelegate(this, [true], false),
+            scope: this,
+            easing: 'easeNone',
+            duration: 0.25,
+            opacity: 0.5
+        }));
     },
 
     /**
@@ -558,7 +576,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
      * @param {String/Element} animateTarget (optional) The target element or id to which the window should
      * animate while hiding (defaults to null with no animation)
      * @param {Function} callback (optional) A callback function to call after the window is hidden
-     * @param {Object} scope (optional) The scope in which to execute the callback
+     * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the callback is executed. Defaults to this Window.
      * @return {Ext.Window} this
      */
     hide : function(animateTarget, cb, scope){
@@ -594,6 +612,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
         if(this.keyMap){
             this.keyMap.disable();
         }
+        this.onHide();
         this.fireEvent('hide', this);
     },
 
@@ -604,15 +623,26 @@ Ext.Window = Ext.extend(Ext.Panel, {
         var tb = this.getBox(false);
         this.proxy.setBox(tb);
         this.el.hide();
-        var b = this.animateTarget.getBox();
-        b.callback = this.afterHide;
-        b.scope = this;
-        b.duration = 0.25;
-        b.easing = 'easeNone';
-        b.block = true;
-        b.opacity = 0;
-        this.proxy.shift(b);
+        this.proxy.shift(Ext.apply(this.animateTarget.getBox(), {
+            callback: this.afterHide,
+            scope: this,
+            duration: 0.25,
+            easing: 'easeNone',
+            opacity: 0
+        }));
     },
+
+    /**
+     * Method that is called immediately before the <code>show</code> event is fired.
+     * Defaults to <code>Ext.emptyFn</code>.
+     */
+    onShow : Ext.emptyFn,
+
+    /**
+     * Method that is called immediately before the <code>hide</code> event is fired.
+     * Defaults to <code>Ext.emptyFn</code>.
+     */
+    onHide : Ext.emptyFn,
 
     // private
     onWindowResize : function(){
@@ -671,7 +701,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
         if(show !== false){
             this.el.show();
             this.focus();
-            if(Ext.isMac && Ext.isGecko){ // work around stupid FF 2.0/Mac scroll bar bug
+            if(Ext.isMac && Ext.isGecko2){ // work around stupid FF 2.0/Mac scroll bar bug
                 this.cascade(this.setAutoScroll);
             }
         }
@@ -704,11 +734,18 @@ Ext.Window = Ext.extend(Ext.Panel, {
      */
     close : function(){
         if(this.fireEvent('beforeclose', this) !== false){
-            this.hide(null, function(){
-                this.fireEvent('close', this);
-                this.destroy();
-            }, this);
+            if(this.hidden){
+                this.doClose();
+            }else{
+                this.hide(null, this.doClose, this);
+            }
         }
+    },
+
+    // private
+    doClose : function(){
+        this.fireEvent('close', this);
+        this.destroy();
     },
 
     /**
@@ -754,9 +791,14 @@ Ext.Window = Ext.extend(Ext.Panel, {
      */
     restore : function(){
         if(this.maximized){
+            var t = this.tools;
             this.el.removeClass('x-window-maximized');
-            this.tools.restore.hide();
-            this.tools.maximize.show();
+            if(t.restore){
+                t.restore.hide();
+            }
+            if(t.maximize){
+                t.maximize.show();
+            }
             this.setPosition(this.restorePos[0], this.restorePos[1]);
             this.setSize(this.restoreSize.width, this.restoreSize.height);
             delete this.restorePos;
@@ -767,8 +809,8 @@ Ext.Window = Ext.extend(Ext.Panel, {
             if(this.dd){
                 this.dd.unlock();
             }
-            if(this.collapsible){
-                this.tools.toggle.show();
+            if(this.collapsible && t.toggle){
+                t.toggle.show();
             }
             this.container.removeClass('x-window-maximized-ct');
 
@@ -789,7 +831,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
 
     // private
     fitContainer : function(){
-        var vs = this.container.getViewSize();
+        var vs = this.container.getViewSize(false);
         this.setSize(vs.width, vs.height);
     },
 
@@ -812,7 +854,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
     /**
      * Aligns the window to the specified element
      * @param {Mixed} element The element to align to.
-     * @param {String} position The position to align to (see {@link Ext.Element#alignTo} for more details).
+     * @param {String} position (optional, defaults to "tl-bl?") The position to align to (see {@link Ext.Element#alignTo} for more details).
      * @param {Array} offsets (optional) Offset the positioning by [x, y]
      * @return {Ext.Window} this
      */
@@ -840,7 +882,7 @@ Ext.Window = Ext.extend(Ext.Panel, {
           this.alignTo(el, alignment, offsets);
       };
       Ext.EventManager.onWindowResize(this.doAnchor, this);
-      
+
       var tm = typeof monitorScroll;
       if(tm != 'undefined'){
           Ext.EventManager.on(window, 'scroll', this.doAnchor, this,
@@ -866,7 +908,8 @@ Ext.Window = Ext.extend(Ext.Panel, {
 
     /**
      * Makes this the active window by showing its shadow, or deactivates it by hiding its shadow.  This method also
-     * fires the {@link #activate} or {@link #deactivate} event depending on which action occurred.
+     * fires the {@link #activate} or {@link #deactivate} event depending on which action occurred. This method is
+     * called internally by {@link Ext.WindowMgr}.
      * @param {Boolean} active True to activate the window, false to deactivate it (defaults to false)
      */
     setActive : function(active){

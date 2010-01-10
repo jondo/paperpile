@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -8,13 +8,13 @@
  * @class Ext.form.FormPanel
  * @extends Ext.Panel
  * <p>Standard form container.</p>
- * 
+ *
  * <p><b><u>Layout</u></b></p>
  * <p>By default, FormPanel is configured with <tt>layout:'form'</tt> to use an {@link Ext.layout.FormLayout}
  * layout manager, which styles and renders fields and labels correctly. When nesting additional Containers
  * within a FormPanel, you should ensure that any descendant Containers which host input Fields use the
  * {@link Ext.layout.FormLayout} layout manager.</p>
- * 
+ *
  * <p><b><u>BasicForm</u></b></p>
  * <p>Although <b>not listed</b> as configuration options of FormPanel, the FormPanel class accepts all
  * of the config options required to configure its internal {@link Ext.form.BasicForm} for:
@@ -22,11 +22,11 @@
  * <li>{@link Ext.form.BasicForm#fileUpload file uploads}</li>
  * <li>functionality for {@link Ext.form.BasicForm#doAction loading, validating and submitting} the form</li>
  * </ul></div>
- *  
+ *
  * <p><b>Note</b>: If subclassing FormPanel, any configuration options for the BasicForm must be applied to
  * the <tt><b>initialConfig</b></tt> property of the FormPanel. Applying {@link Ext.form.BasicForm BasicForm}
  * configuration settings to <b><tt>this</tt></b> will <b>not</b> affect the BasicForm's configuration.</p>
- * 
+ *
  * <p><b><u>Form Validation</u></b></p>
  * <p>For information on form validation see the following:</p>
  * <div class="mdetail-params"><ul>
@@ -35,20 +35,20 @@
  * <li>{@link Ext.form.BasicForm#doAction BasicForm.doAction <b>clientValidation</b> notes}</li>
  * <li><tt>{@link Ext.form.FormPanel#monitorValid monitorValid}</tt></li>
  * </ul></div>
- * 
+ *
  * <p><b><u>Form Submission</u></b></p>
  * <p>By default, Ext Forms are submitted through Ajax, using {@link Ext.form.Action}. To enable normal browser
  * submission of the {@link Ext.form.BasicForm BasicForm} contained in this FormPanel, see the
  * <tt><b>{@link Ext.form.BasicForm#standardSubmit standardSubmit}</b></tt> option.</p>
- * 
+ *
  * @constructor
  * @param {Object} config Configuration options
  * @xtype form
  */
 Ext.FormPanel = Ext.extend(Ext.Panel, {
-	/**
-	 * @cfg {String} formId (optional) The id of the FORM tag (defaults to an auto-generated id).
-	 */
+    /**
+     * @cfg {String} formId (optional) The id of the FORM tag (defaults to an auto-generated id).
+     */
     /**
      * @cfg {Boolean} hideLabels
      * <p><tt>true</tt> to hide field labels by default (sets <tt>display:none</tt>). Defaults to
@@ -110,7 +110,7 @@ Ext.FormPanel = Ext.extend(Ext.Panel, {
     monitorPoll : 200,
 
     /**
-     * @cfg {String} layout Defaults to <tt>'form'</tt>.  Normally this configuration property should not be altered. 
+     * @cfg {String} layout Defaults to <tt>'form'</tt>.  Normally this configuration property should not be altered.
      * For additional details see {@link Ext.layout.FormLayout} and {@link Ext.Container#layout Ext.Container.layout}.
      */
     layout : 'form',
@@ -130,7 +130,7 @@ Ext.FormPanel = Ext.extend(Ext.Panel, {
             this.bodyCfg.enctype = 'multipart/form-data';
         }
         this.initItems();
-        
+
         this.addEvents(
             /**
              * @event clientvalidation
@@ -157,19 +157,8 @@ Ext.FormPanel = Ext.extend(Ext.Panel, {
         var fn = function(c){
             if(formPanel.isField(c)){
                 f.add(c);
-            }if(c.isFieldWrap){
-                Ext.applyIf(c, {
-                    labelAlign: c.ownerCt.labelAlign,
-                    labelWidth: c.ownerCt.labelWidth,
-                    itemCls: c.ownerCt.itemCls
-                });
-                f.add(c.field);
-            }else if(c.doLayout && c != formPanel){
-                Ext.applyIf(c, {
-                    labelAlign: c.ownerCt.labelAlign,
-                    labelWidth: c.ownerCt.labelWidth,
-                    itemCls: c.ownerCt.itemCls
-                });
+            }else if(c.findBy && c != formPanel){
+                formPanel.applySettings(c);
                 //each check required for check/radio groups.
                 if(c.items && c.items.each){
                     c.items.each(fn, this);
@@ -177,6 +166,16 @@ Ext.FormPanel = Ext.extend(Ext.Panel, {
             }
         };
         this.items.each(fn, this);
+    },
+
+    // private
+    applySettings: function(c){
+        var ct = c.ownerCt;
+        Ext.applyIf(c, {
+            labelAlign: ct.labelAlign,
+            labelWidth: ct.labelWidth,
+            itemCls: ct.itemCls
+        });
     },
 
     // private
@@ -198,21 +197,20 @@ Ext.FormPanel = Ext.extend(Ext.Panel, {
         Ext.FormPanel.superclass.onRender.call(this, ct, position);
         this.form.initEl(this.body);
     },
-    
+
     // private
     beforeDestroy : function(){
         this.stopMonitoring();
-        Ext.FormPanel.superclass.beforeDestroy.call(this);
         /*
-         * Clear the items here to prevent them being destroyed again.
          * Don't move this behaviour to BasicForm because it can be used
          * on it's own.
          */
-        this.form.items.clear();
         Ext.destroy(this.form);
+        this.form.items.clear();
+        Ext.FormPanel.superclass.beforeDestroy.call(this);
     },
 
-	// Determine if a Component is usable as a form Field.
+    // Determine if a Component is usable as a form Field.
     isField : function(c) {
         return !!c.setValue && !!c.getValue && !!c.markInvalid && !!c.clearInvalid;
     },
@@ -220,38 +218,65 @@ Ext.FormPanel = Ext.extend(Ext.Panel, {
     // private
     initEvents : function(){
         Ext.FormPanel.superclass.initEvents.call(this);
-        this.on('remove', this.onRemove, this);
-        this.on('add', this.onAdd, this);
+        // Listeners are required here to catch bubbling events from children.
+        this.on({
+            scope: this,
+            add: this.onAddEvent,
+            remove: this.onRemoveEvent
+        });
         if(this.monitorValid){ // initialize after render
             this.startMonitoring();
         }
     },
-    
+
     // private
-    onAdd : function(ct, c) {
-		// If a single form Field, add it
-        if (this.isField(c)) {
+    onAdd: function(c){
+        Ext.FormPanel.superclass.onAdd.call(this, c);
+        this.processAdd(c);
+    },
+
+    // private
+    onAddEvent: function(ct, c){
+        if(ct !== this){
+            this.processAdd(c);
+        }
+    },
+
+    // private
+    processAdd : function(c){
+        // If a single form Field, add it
+        if(this.isField(c)){
             this.form.add(c);
-		// If a Container, add any Fields it might contain
-        } else if (c.findBy) {
-            Ext.applyIf(c, {
-                labelAlign: c.ownerCt.labelAlign,
-                labelWidth: c.ownerCt.labelWidth,
-                itemCls: c.ownerCt.itemCls
-            });
+        // If a Container, add any Fields it might contain
+        }else if(c.findBy){
+            this.applySettings(c);
             this.form.add.apply(this.form, c.findBy(this.isField));
         }
     },
-	
+
     // private
-    onRemove : function(ct, c) {
-		// If a single form Field, remove it
-        if (this.isField(c)) {
-            Ext.destroy(c.container.up('.x-form-item'));
-        	this.form.remove(c);
-		// If a Container, remove any Fields it might contain
-        } else if (c.findByType) {
-            Ext.each(c.findBy(this.isField), this.form.remove, this.form);
+    onRemove: function(c){
+        Ext.FormPanel.superclass.onRemove.call(this, c);
+        this.processRemove(c);
+    },
+
+    onRemoveEvent: function(ct, c){
+        if(ct !== this){
+            this.processRemove(c);
+        }
+    },
+
+    // private
+    processRemove : function(c){
+        // If a single form Field, remove it
+        if(this.isField(c)){
+            this.form.remove(c);
+        // If a Container, its already destroyed by the time it gets here.  Remove any references to destroyed fields.
+        }else if(c.findBy){
+            var isDestroyed = function(o) {
+                return !!o.isDestroyed;
+            }
+            this.form.items.filterBy(isDestroyed, this.form).each(this.form.remove, this.form);
         }
     },
 
@@ -285,7 +310,7 @@ Ext.FormPanel = Ext.extend(Ext.Panel, {
      * @param {Object} options The options to pass to the action (see {@link Ext.form.BasicForm#doAction} for details)
      */
     load : function(){
-        this.form.load.apply(this.form, arguments);  
+        this.form.load.apply(this.form, arguments);
     },
 
     // private
@@ -332,4 +357,3 @@ Ext.FormPanel = Ext.extend(Ext.Panel, {
 Ext.reg('form', Ext.FormPanel);
 
 Ext.form.FormPanel = Ext.FormPanel;
-

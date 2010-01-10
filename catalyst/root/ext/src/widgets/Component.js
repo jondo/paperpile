@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -73,7 +73,7 @@ menutextitem     {@link Ext.menu.TextItem}
 
 Form components
 ---------------------------------------
-form             {@link Ext.FormPanel}
+form             {@link Ext.form.FormPanel}
 checkbox         {@link Ext.form.Checkbox}
 checkboxgroup    {@link Ext.form.CheckboxGroup}
 combo            {@link Ext.form.ComboBox}
@@ -143,6 +143,14 @@ Ext.Component = function(config){
     Ext.apply(this, config);
     this.addEvents(
         /**
+         * @event added
+         * Fires when a component is added to an Ext.Container
+         * @param {Ext.Component} this
+         * @param {Ext.Container} ownerCt Container which holds the component
+         * @param {number} index Position at which the component was added
+         */
+        'added',
+        /**
          * @event disable
          * Fires after the component is disabled.
          * @param {Ext.Component} this
@@ -181,6 +189,13 @@ Ext.Component = function(config){
          * @param {Ext.Component} this
          */
         'hide',
+        /**
+         * @event removed
+         * Fires when a component is removed from an Ext.Container
+         * @param {Ext.Component} this
+         * @param {Ext.Container} ownerCt Container which holds the component
+         */
+        'removed',
         /**
          * @event beforerender
          * Fires before the component is {@link #rendered}. Return false from an
@@ -276,7 +291,7 @@ Ext.Component = function(config){
     }
 
     if(this.stateful !== false){
-        this.initState(config);
+        this.initState();
     }
 
     if(this.applyTo){
@@ -292,7 +307,7 @@ Ext.Component = function(config){
 Ext.Component.AUTO_ID = 1000;
 
 Ext.extend(Ext.Component, Ext.util.Observable, {
-	// Configs below are used for all Components when rendered by FormLayout.
+    // Configs below are used for all Components when rendered by FormLayout.
     /**
      * @cfg {String} fieldLabel <p>The label text to display next to this Component (defaults to '').</p>
      * <br><p><b>Note</b>: this config is only used when this Component is rendered by a Container which
@@ -391,7 +406,11 @@ new Ext.FormPanel({
      * <p>See {@link Ext.layout.FormLayout}.{@link Ext.layout.FormLayout#fieldTpl fieldTpl} also.</p>
      */
     /**
-     * @cfg {String} itemCls <p>An additional CSS class to apply to the div wrapping the form item
+     * @cfg {String} itemCls
+     * <p><b>Note</b>: this config is only used when this Component is rendered by a Container which
+     * has been configured to use the <b>{@link Ext.layout.FormLayout FormLayout}</b> layout manager (e.g.
+     * {@link Ext.form.FormPanel} or specifying <tt>layout:'form'</tt>).</p><br>
+     * <p>An additional CSS class to apply to the div wrapping the form item
      * element of this field.  If supplied, <tt>itemCls</tt> at the <b>field</b> level will override
      * the default <tt>itemCls</tt> supplied at the <b>container</b> level. The value specified for
      * <tt>itemCls</tt> will be added to the default class (<tt>'x-form-item'</tt>).</p>
@@ -401,27 +420,27 @@ new Ext.FormPanel({
      * any other element within the markup for the field.</p>
      * <br><p><b>Note</b>: see the note for <tt>{@link #fieldLabel}</tt>.</p><br>
      * Example use:<pre><code>
-// Apply a style to the field's label:
+// Apply a style to the field&#39;s label:
 &lt;style>
     .required .x-form-item-label {font-weight:bold;color:red;}
 &lt;/style>
 
 new Ext.FormPanel({
-	height: 100,
-	renderTo: Ext.getBody(),
-	items: [{
-		xtype: 'textfield',
-		fieldLabel: 'Name',
-		itemCls: 'required' //this label will be styled
-	},{
-		xtype: 'textfield',
-		fieldLabel: 'Favorite Color'
-	}]
+    height: 100,
+    renderTo: Ext.getBody(),
+    items: [{
+        xtype: 'textfield',
+        fieldLabel: 'Name',
+        itemCls: 'required' //this label will be styled
+    },{
+        xtype: 'textfield',
+        fieldLabel: 'Favorite Color'
+    }]
 });
 </code></pre>
      */
 
-	// Configs below are used for all Components when rendered by AnchorLayout.
+    // Configs below are used for all Components when rendered by AnchorLayout.
     /**
      * @cfg {String} anchor <p><b>Note</b>: this config is only used when this Component is rendered
      * by a Container which has been configured to use an <b>{@link Ext.layout.AnchorLayout AnchorLayout}</b>
@@ -760,28 +779,75 @@ new Ext.Panel({
      * @property el
      */
     /**
-     * The component's owner {@link Ext.Container} (defaults to undefined, and is set automatically when
-     * the component is added to a container).  Read-only.
-     * <p><b>Note</b>: to access items within the container see <tt>{@link #itemId}</tt>.</p>
+     * This Component's owner {@link Ext.Container Container} (defaults to undefined, and is set automatically when
+     * this Component is added to a Container).  Read-only.
+     * <p><b>Note</b>: to access items within the Container see <tt>{@link #itemId}</tt>.</p>
      * @type Ext.Container
      * @property ownerCt
      */
     /**
      * True if this component is hidden. Read-only.
      * @type Boolean
-     * @property
+     * @property hidden
      */
     /**
      * True if this component is disabled. Read-only.
      * @type Boolean
-     * @property
+     * @property disabled
      */
     /**
      * True if this component has been rendered. Read-only.
      * @type Boolean
-     * @property
+     * @property rendered
      */
     rendered : false,
+
+    /**
+     * @cfg {String} contentEl
+     * <p>Optional. Specify an existing HTML element, or the <code>id</code> of an existing HTML element to use as the content
+     * for this component.</p>
+     * <ul>
+     * <li><b>Description</b> :
+     * <div class="sub-desc">This config option is used to take an existing HTML element and place it in the layout element
+     * of a new component (it simply moves the specified DOM element <i>after the Component is rendered</i> to use as the content.</div></li>
+     * <li><b>Notes</b> :
+     * <div class="sub-desc">The specified HTML element is appended to the layout element of the component <i>after any configured
+     * {@link #html HTML} has been inserted</i>, and so the document will not contain this element at the time the {@link #render} event is fired.</div>
+     * <div class="sub-desc">The specified HTML element used will not participate in any <code><b>{@link Ext.Container#layout layout}</b></code>
+     * scheme that the Component may use. It is just HTML. Layouts operate on child <code><b>{@link Ext.Container#items items}</b></code>.</div>
+     * <div class="sub-desc">Add either the <code>x-hidden</code> or the <code>x-hide-display</code> CSS class to
+     * prevent a brief flicker of the content before it is rendered to the panel.</div></li>
+     * </ul>
+     */
+    /**
+     * @cfg {String/Object} html
+     * An HTML fragment, or a {@link Ext.DomHelper DomHelper} specification to use as the layout element
+     * content (defaults to ''). The HTML content is added after the component is rendered,
+     * so the document will not contain this HTML at the time the {@link #render} event is fired.
+     * This content is inserted into the body <i>before</i> any configured {@link #contentEl} is appended.
+     */
+
+    /**
+     * @cfg {Mixed} tpl
+     * An <bold>{@link Ext.Template}</bold>, <bold>{@link Ext.XTemplate}</bold>
+     * or an array of strings to form an Ext.XTemplate.
+     * Used in conjunction with the <code>{@link #data}</code> and 
+     * <code>{@link #tplWriteMode}</code> configurations.
+     */
+
+    /**
+     * @cfg {String} tplWriteMode The Ext.(X)Template method to use when
+     * updating the content area of the Component. Defaults to <tt>'overwrite'</tt>
+     * (see <code>{@link Ext.XTemplate#overwrite}</code>).
+     */
+    tplWriteMode : 'overwrite',
+
+    /**
+     * @cfg {Mixed} data
+     * The initial set of data to apply to the <code>{@link #tpl}</code> to
+     * update the content area of the Component.
+     */
+
 
     // private
     ctype : 'Ext.Component',
@@ -898,7 +964,32 @@ Ext.Foo = Ext.extend(Ext.Bar, {
                 this.el.addClassOnOver(this.overCls);
             }
             this.fireEvent('render', this);
+
+
+            // Populate content of the component with html, contentEl or
+            // a tpl.
+            var contentTarget = this.getContentTarget();
+            if (this.html){
+                contentTarget.update(Ext.DomHelper.markup(this.html));
+                delete this.html;
+            }
+            if (this.contentEl){
+                var ce = Ext.getDom(this.contentEl);
+                Ext.fly(ce).removeClass(['x-hidden', 'x-hide-display']);
+                contentTarget.appendChild(ce);
+            }
+            if (this.tpl) {
+                if (!this.tpl.compile) {
+                    this.tpl = new Ext.XTemplate(this.tpl);
+                }
+                if (this.data) {
+                    this.tpl[this.tplWriteMode](contentTarget, this.data);
+                    delete this.data;
+                }
+            }
             this.afterRender(this.container);
+
+
             if(this.hidden){
                 // call this so we don't fire initial hide events.
                 this.doHide();
@@ -911,17 +1002,70 @@ Ext.Foo = Ext.extend(Ext.Bar, {
             if(this.stateful !== false){
                 this.initStateEvents();
             }
-            this.initRef();
             this.fireEvent('afterrender', this);
         }
         return this;
     },
 
-    initRef : function(){
+
+    /**
+     * Update the content area of a component.
+     * @param {Mixed} htmlOrData
+     * If this component has been configured with a template via the tpl config
+     * then it will use this argument as data to populate the template.
+     * If this component was not configured with a template, the components
+     * content area will be updated via Ext.Element update
+     * @param {Boolean} loadScripts
+     * (optional) Only legitimate when using the html configuration. Defaults to false
+     * @param {Function} callback
+     * (optional) Only legitimate when using the html configuration. Callback to execute when scripts have finished loading
+     */
+    update: function(htmlOrData, loadScripts, cb) {
+        var contentTarget = this.getContentTarget();
+        if (this.tpl && typeof htmlOrData !== "string") {
+            this.tpl[this.tplWriteMode](contentTarget, htmlOrData || {});
+        } else {
+            var html = Ext.isObject(htmlOrData) ? Ext.DomHelper.markup(htmlOrData) : htmlOrData;
+            contentTarget.update(html, loadScripts, cb);
+        }
+    },
+
+
+    /**
+     * @private
+     * Method to manage awareness of when components are added to their
+     * respective Container, firing an added event.
+     * References are established at add time rather than at render time.
+     * @param {Ext.Container} container Container which holds the component
+     * @param {number} pos Position at which the component was added
+     */
+    onAdded : function(container, pos) {
+        this.ownerCt = container;
+        this.initRef();
+        this.fireEvent('added', this, container, pos);
+    },
+
+    /**
+     * @private
+     * Method to manage awareness of when components are removed from their
+     * respective Container, firing an removed event. References are properly
+     * cleaned up after removing a component from its owning container.
+     */
+    onRemoved : function() {
+        this.removeRef();
+        this.fireEvent('removed', this, this.ownerCt);
+        delete this.ownerCt;
+    },
+
+    /**
+     * @private
+     * Method to establish a reference to a component.
+     */
+    initRef : function() {
         /**
          * @cfg {String} ref
-         * <p>A path specification, relative to the Component's {@link #ownerCt} specifying into which
-         * ancestor Container to place a named reference to this Component.</p>
+         * <p>A path specification, relative to the Component's <code>{@link #ownerCt}</code>
+         * specifying into which ancestor Container to place a named reference to this Component.</p>
          * <p>The ancestor axis can be traversed by using '/' characters in the path.
          * For example, to put a reference to a Toolbar Button into <i>the Panel which owns the Toolbar</i>:</p><pre><code>
 var myGrid = new Ext.grid.EditorGridPanel({
@@ -942,33 +1086,50 @@ var myGrid = new Ext.grid.EditorGridPanel({
     }
 });
 </code></pre>
-         * <p>In the code above, if the ref had been <code>'saveButton'</code> the reference would
-         * have been placed into the Toolbar. Each '/' in the ref moves up one level from the
-         * Component's {@link #ownerCt}.</p>
+         * <p>In the code above, if the <code>ref</code> had been <code>'saveButton'</code>
+         * the reference would have been placed into the Toolbar. Each '/' in the <code>ref</code>
+         * moves up one level from the Component's <code>{@link #ownerCt}</code>.</p>
+         * <p>Also see the <code>{@link #added}</code> and <code>{@link #removed}</code> events.</p>
          */
-        if(this.ref){
-            var levels = this.ref.split('/');
-            var last = levels.length, i = 0;
-            var t = this;
-            while(i < last){
-                if(t.ownerCt){
-                    t = t.ownerCt;
-                }
-                i++;
+        if(this.ref && !this.refOwner){
+            var levels = this.ref.split('/'),
+                last = levels.length, 
+                i = 0,
+                t = this;
+                
+            while(t && i < last){
+                t = t.ownerCt;
+                ++i;
             }
-            t[levels[--i]] = this;
+            if(t){
+                t[this.refName = levels[--i]] = this;
+                /**
+                 * @type Ext.Container
+                 * @property refOwner
+                 * The ancestor Container into which the {@link #ref} reference was inserted if this Component
+                 * is a child of a Container, and has been configured with a <code>ref</code>.
+                 */
+                this.refOwner = t;
+            }
+        }
+    },
+
+    removeRef : function() {
+        if (this.refOwner && this.refName) {
+            delete this.refOwner[this.refName];
+            delete this.refOwner;
         }
     },
 
     // private
-    initState : function(config){
+    initState : function(){
         if(Ext.state.Manager){
             var id = this.getStateId();
             if(id){
                 var state = Ext.state.Manager.get(id);
                 if(state){
                     if(this.fireEvent('beforestaterestore', this, state) !== false){
-                        this.applyState(state);
+                        this.applyState(Ext.apply({}, state));
                         this.fireEvent('staterestore', this, state);
                     }
                 }
@@ -991,7 +1152,7 @@ var myGrid = new Ext.grid.EditorGridPanel({
     },
 
     // private
-    applyState : function(state, config){
+    applyState : function(state){
         if(state){
             Ext.apply(this, state);
         }
@@ -1073,6 +1234,10 @@ var myGrid = new Ext.grid.EditorGridPanel({
             this.el = Ext.get(this.el);
             if(this.allowDomMove !== false){
                 ct.dom.insertBefore(this.el.dom, position);
+                if (div) {
+                    Ext.removeNode(div);
+                    div = null;
+                }
             }
         }
     },
@@ -1098,19 +1263,33 @@ var myGrid = new Ext.grid.EditorGridPanel({
      *
      */
     destroy : function(){
-        if(this.fireEvent('beforedestroy', this) !== false){
-            this.beforeDestroy();
-            if(this.rendered){
-                this.el.removeAllListeners();
-                this.el.remove();
-                if(this.actionMode == 'container' || this.removeMode == 'container'){
-                    this.container.remove();
+        if(!this.isDestroyed){
+            if(this.fireEvent('beforedestroy', this) !== false){
+                this.destroying = true;
+                this.beforeDestroy();
+                if(this.ownerCt && this.ownerCt.remove){
+                    this.ownerCt.remove(this, false);
                 }
+                if(this.rendered){
+                    this.el.remove();
+                    if(this.actionMode == 'container' || this.removeMode == 'container'){
+                        this.container.remove();
+                    }
+                }
+                this.onDestroy();
+                Ext.ComponentMgr.unregister(this);
+                this.fireEvent('destroy', this);
+                this.purgeListeners();
+                this.destroying = false;
+                this.isDestroyed = true;
             }
-            this.onDestroy();
-            Ext.ComponentMgr.unregister(this);
-            this.fireEvent('destroy', this);
-            this.purgeListeners();
+        }
+    },
+
+    deleteMembers : function(){
+        var args = arguments;
+        for(var i = 0, len = args.length; i < len; ++i){
+            delete this[args[i]];
         }
     },
 
@@ -1142,6 +1321,11 @@ new Ext.Panel({
      * @return {Ext.Element} The Element which encapsulates this Component.
      */
     getEl : function(){
+        return this.el;
+    },
+
+    // private
+    getContentTarget : function(){
         return this.el;
     },
 
@@ -1265,7 +1449,7 @@ new Ext.Panel({
 
     // private
     onShow : function(){
-        this.getVisibiltyEl().removeClass('x-hide-' + this.hideMode);
+        this.getVisibilityEl().removeClass('x-hide-' + this.hideMode);
     },
 
     /**
@@ -1293,11 +1477,11 @@ new Ext.Panel({
 
     // private
     onHide : function(){
-        this.getVisibiltyEl().addClass('x-hide-' + this.hideMode);
+        this.getVisibilityEl().addClass('x-hide-' + this.hideMode);
     },
 
     // private
-    getVisibiltyEl : function(){
+    getVisibilityEl : function(){
         return this.hideParent ? this.container : this.getActionEl();
     },
 
@@ -1315,7 +1499,7 @@ new Ext.Panel({
      * @return {Boolean} True if this component is visible, false otherwise.
      */
     isVisible : function(){
-        return this.rendered && this.getVisibiltyEl().isVisible();
+        return this.rendered && this.getVisibilityEl().isVisible();
     },
 
     /**
@@ -1426,8 +1610,9 @@ alert(t.getXTypes());  // alerts 'component/box/field/textfield'
             });
     },
 
-    getDomPositionEl : function(){
-        return this.getPositionEl ? this.getPositionEl() : this.getEl();
+    // protected
+    getPositionEl : function(){
+        return this.positionEl || this.el;
     },
 
     // private
@@ -1446,15 +1631,38 @@ alert(t.getXTypes());  // alerts 'component/box/field/textfield'
         this.mons = [];
     },
 
-    // internal function for auto removal of assigned event handlers on destruction
-    mon : function(item, ename, fn, scope, opt){
+    // private
+    createMons: function(){
         if(!this.mons){
             this.mons = [];
             this.on('beforedestroy', this.clearMons, this, {single: true});
         }
+    },
 
+    /**
+     * <p>Adds listeners to any Observable object (or Elements) which are automatically removed when this Component
+     * is destroyed. Usage:</p><code><pre>
+myGridPanel.mon(myGridPanel.getSelectionModel(), 'selectionchange', handleSelectionChange, null, {buffer: 50});
+</pre></code>
+     * <p>or:</p><code><pre>
+myGridPanel.mon(myGridPanel.getSelectionModel(), {
+    selectionchange: handleSelectionChange,
+    buffer: 50
+});
+</pre></code>
+     * @param {Observable|Element} item The item to which to add a listener/listeners.
+     * @param {Object|String} ename The event name, or an object containing event name properties.
+     * @param {Function} fn Optional. If the <code>ename</code> parameter was an event name, this
+     * is the handler function.
+     * @param {Object} scope Optional. If the <code>ename</code> parameter was an event name, this
+     * is the scope (<code>this</code> reference) in which the handler function is executed.
+     * @param {Object} opt Optional. If the <code>ename</code> parameter was an event name, this
+     * is the {@link Ext.util.Observable#addListener addListener} options.
+     */
+    mon : function(item, ename, fn, scope, opt){
+        this.createMons();
         if(Ext.isObject(ename)){
-        	var propRe = /^(?:scope|delay|buffer|single|stopEvent|preventDefault|stopPropagation|normalized|args|delegate)$/;
+            var propRe = /^(?:scope|delay|buffer|single|stopEvent|preventDefault|stopPropagation|normalized|args|delegate)$/;
 
             var o = ename;
             for(var e in o){
@@ -1463,21 +1671,20 @@ alert(t.getXTypes());  // alerts 'component/box/field/textfield'
                 }
                 if(Ext.isFunction(o[e])){
                     // shared options
-			        this.mons.push({
-			            item: item, ename: e, fn: o[e], scope: o.scope
-			        });
-			        item.on(e, o[e], o.scope, o);
+                    this.mons.push({
+                        item: item, ename: e, fn: o[e], scope: o.scope
+                    });
+                    item.on(e, o[e], o.scope, o);
                 }else{
                     // individual options
-			        this.mons.push({
-			            item: item, ename: e, fn: o[e], scope: o.scope
-			        });
-			        item.on(e, o[e]);
+                    this.mons.push({
+                        item: item, ename: e, fn: o[e], scope: o.scope
+                    });
+                    item.on(e, o[e]);
                 }
             }
             return;
         }
-
 
         this.mons.push({
             item: item, ename: ename, fn: fn, scope: scope
@@ -1485,9 +1692,18 @@ alert(t.getXTypes());  // alerts 'component/box/field/textfield'
         item.on(ename, fn, scope, opt);
     },
 
-    // protected, opposite of mon
+    /**
+     * Removes listeners that were added by the {@link #mon} method.
+     * @param {Observable|Element} item The item from which to remove a listener/listeners.
+     * @param {Object|String} ename The event name, or an object containing event name properties.
+     * @param {Function} fn Optional. If the <code>ename</code> parameter was an event name, this
+     * is the handler function.
+     * @param {Object} scope Optional. If the <code>ename</code> parameter was an event name, this
+     * is the scope (<code>this</code> reference) in which the handler function is executed.
+     */
     mun : function(item, ename, fn, scope){
         var found, mon;
+        this.createMons();
         for(var i = 0, len = this.mons.length; i < len; ++i){
             mon = this.mons[i];
             if(item === mon.item && ename == mon.ename && fn === mon.fn && scope === mon.scope){

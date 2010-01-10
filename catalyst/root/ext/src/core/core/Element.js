@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -33,7 +33,7 @@ el.setWidth(100);
 // default animation
 el.setWidth(100, true);
  * </code></pre>
- * 
+ *
  * <p>To configure the effects, an object literal with animation options to use as the Element animation
  * configuration object can also be specified. Note that the supported Element animation configuration
  * options are a subset of the {@link Ext.Fx} animation options specific to Fx effects.  The supported
@@ -46,7 +46,7 @@ Option    Default   Description
 {@link Ext.Fx#callback callback}  none      A function to execute when the anim completes
 {@link Ext.Fx#scope scope}     this      The scope (this) of the callback function
 </pre>
- * 
+ *
  * <pre><code>
 // Element animation options object
 var opt = {
@@ -85,8 +85,8 @@ Ext.Element = function(element, forceNew){
 
     id = dom.id;
 
-    if(!forceNew && id && Ext.Element.cache[id]){ // element object already exists
-        return Ext.Element.cache[id];
+    if(!forceNew && id && Ext.elCache[id]){ // element object already exists
+        return Ext.elCache[id].el;
     }
 
     /**
@@ -106,7 +106,8 @@ var D = Ext.lib.Dom,
     DH = Ext.DomHelper,
     E = Ext.lib.Event,
     A = Ext.lib.Anim,
-    El = Ext.Element;
+    El = Ext.Element,
+    EC = Ext.elCache;
 
 El.prototype = {
     /**
@@ -118,29 +119,37 @@ El.prototype = {
     set : function(o, useSet){
         var el = this.dom,
             attr,
-            val;        
-       
+            val,
+            useSet = (useSet !== false) && !!el.setAttribute;
+
         for(attr in o){
-            val = o[attr];
-            if (attr != "style" && !Ext.isFunction(val)) {
-                if (attr == "cls" ) {
+            if (o.hasOwnProperty(attr)) {
+                val = o[attr];
+                if (attr == 'style') {
+                    DH.applyStyles(el, val);
+                } else if (attr == 'cls') {
                     el.className = val;
-                } else if (o.hasOwnProperty(attr)) {
-                    if (useSet || !!el.setAttribute) el.setAttribute(attr, val);
-                    else el[attr] = val;
+                } else if (useSet) {
+                    el.setAttribute(attr, val);
+                } else {
+                    el[attr] = val;
                 }
             }
         }
-        if(o.style){
-            Ext.DomHelper.applyStyles(el, o.style);
-        }
         return this;
     },
-    
+
 //  Mouse events
     /**
      * @event click
      * Fires when a mouse click is detected within the element.
+     * @param {Ext.EventObject} e The {@link Ext.EventObject} encapsulating the DOM event.
+     * @param {HtmlElement} t The target of the event.
+     * @param {Object} o The options configuration passed to the {@link #addListener} call.
+     */
+    /**
+     * @event contextmenu
+     * Fires when a right click is detected within the element.
      * @param {Ext.EventObject} e The {@link Ext.EventObject} encapsulating the DOM event.
      * @param {HtmlElement} t The target of the event.
      * @param {Object} o The options configuration passed to the {@link #addListener} call.
@@ -201,7 +210,7 @@ El.prototype = {
      * @param {HtmlElement} t The target of the event.
      * @param {Object} o The options configuration passed to the {@link #addListener} call.
      */
-    
+
 //  Keyboard events
     /**
      * @event keypress
@@ -444,11 +453,11 @@ El.prototype = {
 
     /**
      * Appends an event handler to this element.  The shorthand version {@link #on} is equivalent.
-     * @param {String} eventName The type of event to handle
+     * @param {String} eventName The name of event to handle.
      * @param {Function} fn The handler function the event invokes. This function is passed
      * the following parameters:<ul>
      * <li><b>evt</b> : EventObject<div class="sub-desc">The {@link Ext.EventObject EventObject} describing the event.</div></li>
-     * <li><b>el</b> : Element<div class="sub-desc">The {@link Ext.Element Element} which was the target of the event.
+     * <li><b>el</b> : HtmlElement<div class="sub-desc">The DOM element which was the target of the event.
      * Note that this may be filtered by using the <tt>delegate</tt> option.</div></li>
      * <li><b>o</b> : Object<div class="sub-desc">The options object from the addListener call.</div></li>
      * </ul>
@@ -530,7 +539,7 @@ el.on({
     &lt;p id='p2' class='clickable'>paragraph two&lt;/p>
     &lt;p id='p3'>paragraph three&lt;/p>
 &lt;/div>
-// utilize event delegation to registering just one handler on the container element: 
+// utilize event delegation to registering just one handler on the container element:
 el = Ext.get('elId');
 el.on(
     'click',
@@ -541,7 +550,7 @@ el.on(
     this,
     {
         // filter the target element to be a descendant with the class 'clickable'
-        delegate: '.clickable' 
+        delegate: '.clickable'
     }
 );
      * </code></pre></p>
@@ -562,10 +571,10 @@ el.removeListener('click', this.handlerFn);
 // or
 el.un('click', this.handlerFn);
 </code></pre>
-     * @param {String} eventName the type of event to remove
-     * @param {Function} fn the method the event invokes
-     * @param {Object} scope (optional) The scope (The <tt>this</tt> reference) of the handler function. Defaults
-     * to this Element.
+     * @param {String} eventName The name of the event from which to remove the handler.
+     * @param {Function} fn The handler function to remove. <b>This must be a reference to the function passed into the {@link #addListener} call.</b>
+     * @param {Object} scope If a scope (<b><code>this</code></b> reference) was specified when the listener was added,
+     * then this must refer to the same object.
      * @return {Ext.Element} this
      */
     removeListener : function(eventName, fn, scope){
@@ -582,6 +591,14 @@ el.un('click', this.handlerFn);
         return this;
     },
 
+    /**
+     * Recursively removes all previous added listeners from this element and its children
+     * @return {Ext.Element} this
+     */
+    purgeAllListeners : function() {
+        Ext.EventManager.purgeElement(this, true);
+        return this;
+    },
     /**
      * @private Test if size has a unit, otherwise appends the default
      */
@@ -622,23 +639,23 @@ el.un('click', this.handlerFn);
     },
 
     /**
-     * Removes this element from the DOM and deletes it from the cache
+     * <p>Removes this element's dom reference.  Note that event and cache removal is handled at {@link Ext#removeNode}</p>
      */
     remove : function(){
         var me = this,
             dom = me.dom;
-        
-        me.removeAllListeners();
-        delete El.cache[dom.id];
-        delete El.dataCache[dom.id]
-        Ext.removeNode(dom);
+
+        if (dom) {
+            delete me.dom;
+            Ext.removeNode(dom);
+        }
     },
 
     /**
      * Sets up event handlers to call the passed functions when the mouse is moved into and out of the Element.
      * @param {Function} overFn The function to call when the mouse enters the Element.
      * @param {Function} outFn The function to call when the mouse leaves the Element.
-     * @param {Object} scope (optional) The scope (<tt>this</tt> reference) in which the functions are executed. Defaults to the Element's DOM element.
+     * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the functions are executed. Defaults to the Element's DOM element.
      * @param {Object} options (optional) Options for the listener. See {@link Ext.util.Observable#addListener the <tt>options</tt> parameter}.
      * @return {Ext.Element} this
      */
@@ -666,9 +683,9 @@ el.un('click', this.handlerFn);
      * @deprecated
      */
     getAttributeNS : function(ns, name){
-        return this.getAttribute(name, ns); 
+        return this.getAttribute(name, ns);
     },
-    
+
     /**
      * Returns the value of an attribute from the element's underlying DOM node.
      * @param {String} name The attribute name
@@ -687,14 +704,16 @@ el.un('click', this.handlerFn);
         var d = this.dom;
         return d.getAttributeNS(ns, name) || d.getAttribute(ns + ":" + name) || d.getAttribute(name) || d[name];
     },
-    
+
     /**
     * Update the innerHTML of this element
     * @param {String} html The new HTML
     * @return {Ext.Element} this
      */
     update : function(html) {
-        this.dom.innerHTML = html;
+        if (this.dom) {
+            this.dom.innerHTML = html;
+        }
         return this;
     }
 };
@@ -707,9 +726,9 @@ El.addMethods = function(o){
 
 /**
  * Appends an event handler (shorthand for {@link #addListener}).
- * @param {String} eventName The type of event to handle
- * @param {Function} fn The handler function the event invokes
- * @param {Object} scope (optional) The scope (this element) of the handler function
+ * @param {String} eventName The name of event to handle.
+ * @param {Function} fn The handler function the event invokes.
+ * @param {Object} scope (optional) The scope (<code>this</code> reference) in which the handler function is executed.
  * @param {Object} options (optional) An object containing standard {@link #addListener} options
  * @member Ext.Element
  * @method on
@@ -718,10 +737,10 @@ ep.on = ep.addListener;
 
 /**
  * Removes an event handler from this element (see {@link #removeListener} for additional notes).
- * @param {String} eventName the type of event to remove
- * @param {Function} fn the method the event invokes
- * @param {Object} scope (optional) The scope (The <tt>this</tt> reference) of the handler function. Defaults
- * to this Element.
+ * @param {String} eventName The name of the event from which to remove the handler.
+ * @param {Function} fn The handler function to remove. <b>This must be a reference to the function passed into the {@link #addListener} call.</b>
+ * @param {Object} scope If a scope (<b><code>this</code></b> reference) was specified when the listener was added,
+ * then this must refer to the same object.
  * @return {Ext.Element} this
  * @member Ext.Element
  * @method un
@@ -740,8 +759,6 @@ var unitPattern = /\d+(px|em|%|en|ex|pt|in|cm|mm|pc)$/i,
 /**
  * @private
  */
-El.cache = {};
-El.dataCache = {};
 
 /**
  * Retrieves Ext.Element objects.
@@ -765,27 +782,28 @@ El.get = function(el){
         if (!(elm = DOC.getElementById(el))) {
             return null;
         }
-        if (ex = El.cache[el]) {
+        if (EC[el] && EC[el].el) {
+            ex = EC[el].el;
             ex.dom = elm;
         } else {
-            ex = El.cache[el] = new El(elm);
+            ex = El.addToCache(new El(elm));
         }
         return ex;
     } else if (el.tagName) { // dom element
         if(!(id = el.id)){
             id = Ext.id(el);
         }
-        if(ex = El.cache[id]){
+        if (EC[id] && EC[id].el) {
+            ex = EC[id].el;
             ex.dom = el;
-        }else{
-            ex = El.cache[id] = new El(el);
+        } else {
+            ex = El.addToCache(new El(el));
         }
         return ex;
     } else if (el instanceof El) {
         if(el != docEl){
             el.dom = DOC.getElementById(el.id) || el.dom; // refresh dom element in case no longer valid,
                                                           // catch case where it hasn't been appended
-            El.cache[el.id] = el; // in case it was created directly with Element(), let's cache it
         }
         return el;
     } else if(el.isComposite) {
@@ -805,16 +823,27 @@ El.get = function(el){
     return null;
 };
 
+El.addToCache = function(el, id){
+    id = id || el.id;    
+    EC[id] = {
+        el:  el,
+        data: {},
+        events: {}
+    };
+    return el;
+};
+
 // private method for getting and setting element data
 El.data = function(el, key, value){
-    var c = El.dataCache[el.id];
-    if(!c){
-        c = El.dataCache[el.id] = {};
+    el = El.get(el);
+    if (!el) {
+        return null;
     }
+    var c = EC[el.id].data;
     if(arguments.length == 2){
-        return c[key];    
+        return c[key];
     }else{
-        c[key] = value;
+        return (c[key] = value);
     }
 };
 
@@ -823,14 +852,19 @@ El.data = function(el, key, value){
 // so we don't hold a reference and cause the browser to retain them
 function garbageCollect(){
     if(!Ext.enableGarbageCollector){
-        clearInterval(El.collectorThread);
+        clearInterval(El.collectorThreadId);
     } else {
         var eid,
             el,
-            d;
+            d,
+            o;
 
-        for(eid in El.cache){
-            el = El.cache[eid];
+        for(eid in EC){
+            o = EC[eid];
+            if(o.skipGC){
+                continue;
+            }
+            el = o.el;
             d = el.dom;
             // -------------------------------------------------------
             // Determining what is garbage:
@@ -850,11 +884,19 @@ function garbageCollect(){
             // parent.
             // -------------------------------------------------------
             if(!d || !d.parentNode || (!d.offsetParent && !DOC.getElementById(eid))){
-                delete El.cache[eid];
-                if(d && Ext.enableListenerCollection){
+                if(Ext.enableListenerCollection){
                     Ext.EventManager.removeAll(d);
                 }
+                delete EC[eid];
             }
+        }
+        // Cleanup IE Object leaks
+        if (Ext.isIE) {
+            var t = {};
+            for (eid in EC) {
+                t[eid] = EC[eid];
+            }
+            EC = Ext.elCache = t;
         }
     }
 }
@@ -938,8 +980,7 @@ if(Ext.isIE || Ext.isGecko){
 
 
 Ext.EventManager.on(window, 'unload', function(){
-    delete El.cache;
-    delete El.dataCache;
+    delete EC;
     delete El._flyweights;
 });
 })();

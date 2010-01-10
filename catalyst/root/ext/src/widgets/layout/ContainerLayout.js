@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -15,11 +15,7 @@
  * <p>This class is intended to be extended or created via the <tt><b>{@link Ext.Container#layout layout}</b></tt>
  * configuration property.  See <tt><b>{@link Ext.Container#layout}</b></tt> for additional details.</p>
  */
-Ext.layout.ContainerLayout = function(config){
-    Ext.apply(this, config);
-};
-
-Ext.layout.ContainerLayout.prototype = {
+Ext.layout.ContainerLayout = Ext.extend(Object, {
     /**
      * @cfg {String} extraCls
      * <p>An optional extra CSS class that will be added to the container. This can be useful for adding
@@ -59,11 +55,19 @@ Ext.layout.ContainerLayout.prototype = {
     // private
     activeItem : null,
 
+    constructor : function(config){
+        Ext.apply(this, config);
+    },
+
     // private
     layout : function(){
         var target = this.container.getLayoutTarget();
+        if(!(this.hasLayout || Ext.isEmpty(this.targetCls))){
+            target.addClass(this.targetCls)
+        }
         this.onLayout(this.container, target);
         this.container.fireEvent('afterlayout', this.container, this);
+        this.hasLayout = true;
     },
 
     // private
@@ -73,7 +77,7 @@ Ext.layout.ContainerLayout.prototype = {
 
     // private
     isValidParent : function(c, target){
-		return target && c.getDomPositionEl().dom.parentNode == (target.dom || target);
+        return target && c.getPositionEl().dom.parentNode == (target.dom || target);
     },
 
     // private
@@ -93,73 +97,95 @@ Ext.layout.ContainerLayout.prototype = {
             c.render(target, position);
             this.configureItem(c, position);
         }else if(c && !this.isValidParent(c, target)){
-            if(typeof position == 'number'){
+            if(Ext.isNumber(position)){
                 position = target.dom.childNodes[position];
             }
-            target.dom.insertBefore(c.getDomPositionEl().dom, position || null);
+            target.dom.insertBefore(c.getPositionEl().dom, position || null);
             c.container = target;
             this.configureItem(c, position);
         }
     },
-    
+
     // private
     configureItem: function(c, position){
         if(this.extraCls){
             var t = c.getPositionEl ? c.getPositionEl() : c;
             t.addClass(this.extraCls);
         }
+        // If we are forcing a layout, do so *before* we hide so elements have height/width
+        if(c.doLayout && this.forceLayout){
+            c.doLayout(false, true);
+        }
         if (this.renderHidden && c != this.activeItem) {
             c.hide();
         }
-        if(c.doLayout){
-            c.doLayout(false, this.forceLayout);
+    },
+
+    onRemove: function(c){
+         if(this.activeItem == c){
+            delete this.activeItem;
+         }
+         if(c.rendered && this.extraCls){
+            var t = c.getPositionEl ? c.getPositionEl() : c;
+            t.removeClass(this.extraCls);
         }
     },
 
     // private
     onResize: function(){
-        if(this.container.collapsed){
+        var ct = this.container,
+            b = ct.bufferResize;
+
+        if (ct.collapsed){
             return;
         }
-        var b = this.container.bufferResize;
-        if(b){
-            if(!this.resizeTask){
-                this.resizeTask = new Ext.util.DelayedTask(this.runLayout, this);
-                this.resizeBuffer = typeof b == 'number' ? b : 100;
+
+        // Not having an ownerCt negates the buffering: floating and top level
+        // Containers (Viewport, Window, ToolTip, Menu) need to lay out ASAP.
+        if (b && ct.ownerCt) {
+            // If we do NOT already have a layout pending from an ancestor, schedule one.
+            // If there is a layout pending, we do nothing here.
+            // buffering to be deprecated soon
+            if (!ct.hasLayoutPending()){
+                if(!this.resizeTask){
+                    this.resizeTask = new Ext.util.DelayedTask(this.runLayout, this);
+                    this.resizeBuffer = Ext.isNumber(b) ? b : 50;
+                }
+                ct.layoutPending = true;
+                this.resizeTask.delay(this.resizeBuffer);
             }
-            this.resizeTask.delay(this.resizeBuffer);
         }else{
-            this.runLayout();
+            ct.doLayout(false, this.forceLayout);
         }
     },
-    
+
     // private
     runLayout: function(){
-        this.layout();
-        this.container.onLayout();
+        var ct = this.container;
+        ct.doLayout();
+        delete ct.layoutPending;
     },
 
     // private
     setContainer : function(ct){
+        // No longer use events to handle resize. Instead this will be handled through a direct function call.
+        /*
         if(this.monitorResize && ct != this.container){
-            if(this.container){
-                this.container.un('resize', this.onResize, this);
-                this.container.un('bodyresize', this.onResize, this);
+            var old = this.container;
+            if(old){
+                old.un(old.resizeEvent, this.onResize, this);
             }
             if(ct){
-                ct.on({
-                    scope: this,
-                    resize: this.onResize,
-                    bodyresize: this.onResize
-                });
+                ct.on(ct.resizeEvent, this.onResize, this);
             }
         }
+        */
         this.container = ct;
     },
 
     // private
     parseMargins : function(v){
-        if(typeof v == 'number'){
+        if(Ext.isNumber(v)){
             v = v.toString();
         }
         var ms = v.split(' ');
@@ -185,7 +211,7 @@ Ext.layout.ContainerLayout.prototype = {
     },
 
     /**
-     * The {@link Template Ext.Template} used by Field rendering layout classes (such as
+     * The {@link Ext.Template Ext.Template} used by Field rendering layout classes (such as
      * {@link Ext.layout.FormLayout}) to create the DOM structure of a fully wrapped,
      * labeled and styled form Field. A default Template is supplied, but this may be
      * overriden to create custom field structures. The template processes values returned from
@@ -204,12 +230,19 @@ Ext.layout.ContainerLayout.prototype = {
         t.disableFormats = true;
         return t.compile();
     })(),
-	
+
     /*
      * Destroys this layout. This is a template method that is empty by default, but should be implemented
      * by subclasses that require explicit destruction to purge event handlers or remove DOM nodes.
      * @protected
      */
-    destroy : Ext.emptyFn
-};
+    destroy : function(){
+        if(!Ext.isEmpty(this.targetCls)){
+            var target = this.container.getLayoutTarget();
+            if(target){
+                target.removeClass(this.targetCls);
+            }
+        }
+    }
+});
 Ext.Container.LAYOUTS['auto'] = Ext.layout.ContainerLayout;

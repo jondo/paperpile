@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -39,6 +39,25 @@ proxy : new Ext.data.HttpProxy({
     }
 }),
  * </code></pre>
+ * <p>And <b>new in Ext version 3</b>, attach centralized event-listeners upon the DataProxy class itself!  This is a great place
+ * to implement a <i>messaging system</i> to centralize your application's user-feedback and error-handling.</p>
+ * <pre><code>
+// Listen to all "beforewrite" event fired by all proxies.
+Ext.data.DataProxy.on('beforewrite', function(proxy, action) {
+    console.log('beforewrite: ', action);
+});
+
+// Listen to "write" event fired by all proxies
+Ext.data.DataProxy.on('write', function(proxy, action, data, res, rs) {
+    console.info('write: ', action);
+});
+
+// Listen to "exception" event fired by all proxies
+Ext.data.DataProxy.on('exception', function(proxy, type, action) {
+    console.error(type + action + ' exception);
+});
+ * </code></pre>
+ * <b>Note:</b> These three events are all fired with the signature of the corresponding <i>DataProxy instance</i> event {@link #beforewrite beforewrite}, {@link #write write} and {@link #exception exception}.
  */
 Ext.data.DataProxy = function(conn){
     // make sure we have a config object here to support ux proxies.
@@ -67,7 +86,27 @@ api: {
     update  : undefined,
     destroy : undefined
 }
-</code></pre>
+     * </code></pre>
+     * <p>The url is built based upon the action being executed <tt>[load|create|save|destroy]</tt>
+     * using the commensurate <tt>{@link #api}</tt> property, or if undefined default to the
+     * configured {@link Ext.data.Store}.{@link Ext.data.Store#url url}.</p><br>
+     * <p>For example:</p>
+     * <pre><code>
+api: {
+    load :    '/controller/load',
+    create :  '/controller/new',  // Server MUST return idProperty of new record
+    save :    '/controller/update',
+    destroy : '/controller/destroy_action'
+}
+
+// Alternatively, one can use the object-form to specify each API-action
+api: {
+    load: {url: 'read.php', method: 'GET'},
+    create: 'create.php',
+    destroy: 'destroy.php',
+    save: 'update.php'
+}
+     * </code></pre>
      * <p>If the specific URL for a given CRUD action is undefined, the CRUD action request
      * will be directed to the configured <tt>{@link Ext.data.Connection#url url}</tt>.</p>
      * <br><p><b>Note</b>: To modify the URL for an action dynamically the appropriate API
@@ -85,22 +124,9 @@ myStore.on({
             // permanent, applying this URL for all subsequent requests.
             store.proxy.setUrl('changed1.php', true);
 
-            // manually set the <b>private</b> connection URL.
-            // <b>Warning:</b>  Accessing the private URL property should be avoided.
-            // Use the public method <tt>{@link Ext.data.HttpProxy#setUrl setUrl}</tt> instead, shown above.
-            // It should be noted that changing the URL like this will affect
-            // the URL for just this request.  Subsequent requests will use the
-            // API or URL defined in your initial proxy configuration.
-            store.proxy.conn.url = 'changed1.php';
-
-            // proxy URL will be superseded by API (only if proxy created to use ajax):
-            // It should be noted that proxy API changes are permanent and will
-            // be used for all subsequent requests.
-            store.proxy.api.load = 'changed2.php';
-
-            // However, altering the proxy API should be done using the public
-            // method <tt>{@link Ext.data.DataProxy#setApi setApi}</tt> instead.
-            store.proxy.setApi('load', 'changed2.php');
+            // Altering the proxy API should be done using the public
+            // method <tt>{@link Ext.data.DataProxy#setApi setApi}</tt>.
+            store.proxy.setApi('read', 'changed2.php');
 
             // Or set the entire API with a config-object.
             // When using the config-object option, you must redefine the <b>entire</b>
@@ -117,23 +143,17 @@ myStore.on({
      * </code></pre>
      * </p>
      */
-    // Prepare the proxy api.  Ensures all API-actions are defined with the Object-form.
-    try {
-        Ext.data.Api.prepare(this);
-    } catch (e) {
-        if (e instanceof Ext.data.Api.Error) {
-            e.toConsole();
-        }
-    }
 
     this.addEvents(
         /**
          * @event exception
-         * <p>Fires if an exception occurs in the Proxy during a remote request.
-         * This event is relayed through a corresponding
-         * {@link Ext.data.Store}.{@link Ext.data.Store#exception exception},
-         * so any Store instance may observe this event.
-         * This event can be fired for one of two reasons:</p>
+         * <p>Fires if an exception occurs in the Proxy during a remote request. This event is relayed
+         * through a corresponding {@link Ext.data.Store}.{@link Ext.data.Store#exception exception},
+         * so any Store instance may observe this event.</p>
+         * <p>In addition to being fired through the DataProxy instance that raised the event, this event is also fired
+         * through the Ext.data.DataProxy <i>class</i> to allow for centralized processing of exception events from <b>all</b>
+         * DataProxies by attaching a listener to the Ext.data.Proxy class itself.</p>
+         * <p>This event can be fired for one of two reasons:</p>
          * <div class="mdetail-params"><ul>
          * <li>remote-request <b>failed</b> : <div class="sub-desc">
          * The server did not return status === 200.
@@ -217,7 +237,10 @@ myStore.on({
         'loadexception',
         /**
          * @event beforewrite
-         * Fires before a request is generated for one of the actions Ext.data.Api.actions.create|update|destroy
+         * <p>Fires before a request is generated for one of the actions Ext.data.Api.actions.create|update|destroy</p>
+         * <p>In addition to being fired through the DataProxy instance that raised the event, this event is also fired
+         * through the Ext.data.DataProxy <i>class</i> to allow for centralized processing of beforewrite events from <b>all</b>
+         * DataProxies by attaching a listener to the Ext.data.Proxy class itself.</p>
          * @param {DataProxy} this The proxy for the request
          * @param {String} action [Ext.data.Api.actions.create|update|destroy]
          * @param {Record/Array[Record]} rs The Record(s) to create|update|destroy.
@@ -226,7 +249,10 @@ myStore.on({
         'beforewrite',
         /**
          * @event write
-         * Fires before the request-callback is called
+         * <p>Fires before the request-callback is called</p>
+         * <p>In addition to being fired through the DataProxy instance that raised the event, this event is also fired
+         * through the Ext.data.DataProxy <i>class</i> to allow for centralized processing of write events from <b>all</b>
+         * DataProxies by attaching a listener to the Ext.data.Proxy class itself.</p>
          * @param {DataProxy} this The proxy that sent the request
          * @param {String} action [Ext.data.Api.actions.create|upate|destroy]
          * @param {Object} data The data object extracted from the server-response
@@ -237,6 +263,17 @@ myStore.on({
         'write'
     );
     Ext.data.DataProxy.superclass.constructor.call(this);
+
+    // Prepare the proxy api.  Ensures all API-actions are defined with the Object-form.
+    try {
+        Ext.data.Api.prepare(this);
+    } catch (e) {
+        if (e instanceof Ext.data.Api.Error) {
+            e.toConsole();
+        }
+    }
+    // relay each proxy's events onto Ext.data.DataProxy class for centralized Proxy-listening
+    Ext.data.DataProxy.relayEvents(this, ['beforewrite', 'write', 'exception']);
 };
 
 Ext.extend(Ext.data.DataProxy, Ext.util.Observable, {
@@ -255,7 +292,7 @@ store: new Ext.data.Store({
     ...
 )}
      * </code></pre>
-     * There is no <code>{@link #api}</code> specified in the configuration of the proxy,
+     * If there is no <code>{@link #api}</code> specified in the configuration of the proxy,
      * all requests will be marshalled to a single RESTful url (/users) so the serverside
      * framework can inspect the HTTP Method and act accordingly:
      * <pre>
@@ -265,6 +302,18 @@ GET      /users     read
 PUT      /users/23  update
 DESTROY  /users/23  delete
      * </pre></p>
+     * <p>If set to <tt>true</tt>, a {@link Ext.data.Record#phantom non-phantom} record's
+     * {@link Ext.data.Record#id id} will be appended to the url. Some MVC (e.g., Ruby on Rails,
+     * Merb and Django) support segment based urls where the segments in the URL follow the
+     * Model-View-Controller approach:<pre><code>
+     * someSite.com/controller/action/id
+     * </code></pre>
+     * Where the segments in the url are typically:<div class="mdetail-params"><ul>
+     * <li>The first segment : represents the controller class that should be invoked.</li>
+     * <li>The second segment : represents the class function, or method, that should be called.</li>
+     * <li>The third segment : represents the ID (a variable typically passed to the method).</li>
+     * </ul></div></p>
+     * <br><p>Refer to <code>{@link Ext.data.DataProxy#api}</code> for additional information.</p>
      */
     restful: false,
 
@@ -323,7 +372,7 @@ proxy.setApi(Ext.data.Api.actions.read, '/users/new_load_url');
      * @param {Object} params
      * @param {Ext.data.DataReader} reader
      * @param {Function} callback
-     * @param {Object} scope Scope with which to call the callback (defaults to the Proxy object)
+     * @param {Object} scope The scope (<code>this</code> reference) in which the callback function is executed. Defaults to the Proxy object.
      * @param {Object} options Any options specified for the action (e.g. see {@link Ext.data.Store#load}.
      */
     request : function(action, rs, params, reader, callback, scope, options) {
@@ -352,7 +401,7 @@ proxy.setApi(Ext.data.Api.actions.read, '/users/new_load_url');
     load : null,
 
     /**
-     * @cfg {Function} doRequest Abstract method that should be implemented in all subclasses
+     * @cfg {Function} doRequest Abstract method that should be implemented in all subclasses.  <b>Note:</b> Should only be used by custom-proxy developers.
      * (e.g.: {@link Ext.data.HttpProxy#doRequest HttpProxy.doRequest},
      * {@link Ext.data.DirectProxy#doRequest DirectProxy.doRequest}).
      */
@@ -363,6 +412,27 @@ proxy.setApi(Ext.data.Api.actions.read, '/users/new_load_url');
         this.load(params, reader, callback, scope, options);
     },
 
+    /**
+     * @cfg {Function} onRead Abstract method that should be implemented in all subclasses.  <b>Note:</b> Should only be used by custom-proxy developers.  Callback for read {@link Ext.data.Api#actions action}.
+     * @param {String} action Action name as per {@link Ext.data.Api.actions#read}.
+     * @param {Object} o The request transaction object
+     * @param {Object} res The server response
+     * @fires loadexception (deprecated)
+     * @fires exception
+     * @fires load
+     * @protected
+     */
+    onRead : Ext.emptyFn,
+    /**
+     * @cfg {Function} onWrite Abstract method that should be implemented in all subclasses.  <b>Note:</b> Should only be used by custom-proxy developers.  Callback for <i>create, update and destroy</i> {@link Ext.data.Api#actions actions}.
+     * @param {String} action [Ext.data.Api.actions.create|read|update|destroy]
+     * @param {Object} trans The request transaction object
+     * @param {Object} res The server response
+     * @fires exception
+     * @fires write
+     * @protected
+     */
+    onWrite : Ext.emptyFn,
     /**
      * buildUrl
      * Sets the appropriate url based upon the action being executed.  If restful is true, and only a single record is being acted upon,
@@ -375,25 +445,32 @@ proxy.setApi(Ext.data.Api.actions.read, '/users/new_load_url');
      */
     buildUrl : function(action, record) {
         record = record || null;
-        var url = (this.api[action]) ? this.api[action].url : this.url;
+
+        // conn.url gets nullified after each request.  If it's NOT null here, that means the user must have intervened with a call
+        // to DataProxy#setUrl or DataProxy#setApi and changed it before the request was executed.  If that's the case, use conn.url,
+        // otherwise, build the url from the api or this.url.
+        var url = (this.conn && this.conn.url) ? this.conn.url : (this.api[action]) ? this.api[action].url : this.url;
         if (!url) {
             throw new Ext.data.Api.Error('invalid-url', action);
         }
 
-        var format = null;
-        var m = url.match(/(.*)(\.\w+)$/);  // <-- look for urls with "provides" suffix, e.g.: /users.json, /users.xml, etc
+        // look for urls having "provides" suffix used in some MVC frameworks like Rails/Merb and others.  The provides suffice informs
+        // the server what data-format the client is dealing with and returns data in the same format (eg: application/json, application/xml, etc)
+        // e.g.: /users.json, /users.xml, etc.
+        // with restful routes, we need urls like:
+        // PUT /users/1.json
+        // DELETE /users/1.json
+        var provides = null;
+        var m = url.match(/(.*)(\.json|\.xml|\.html)$/);
         if (m) {
-            format = m[2];
-            url = m[1];
+            provides = m[2];    // eg ".json"
+            url      = m[1];    // eg: "/users"
         }
         // prettyUrls is deprectated in favor of restful-config
-        if ((this.prettyUrls === true || this.restful === true) && record instanceof Ext.data.Record && !record.phantom) {
+        if ((this.restful === true || this.prettyUrls === true) && record instanceof Ext.data.Record && !record.phantom) {
             url += '/' + record.id;
         }
-        if (format) {   // <-- append the request format if exists (ie: /users/update/69[.json])
-            url += format;
-        }
-        return url;
+        return (provides === null) ? url : url + provides;
     },
 
     /**
@@ -403,6 +480,11 @@ proxy.setApi(Ext.data.Api.actions.read, '/users/new_load_url');
         this.purgeListeners();
     }
 });
+
+// Apply the Observable prototype to the DataProxy class so that proxy instances can relay their
+// events to the class.  Allows for centralized listening of all proxy instances upon the DataProxy class.
+Ext.apply(Ext.data.DataProxy, Ext.util.Observable.prototype);
+Ext.util.Observable.call(Ext.data.DataProxy);
 
 /**
  * @class Ext.data.DataProxy.Error
@@ -425,3 +507,5 @@ Ext.apply(Ext.data.DataProxy.Error.prototype, {
         'api-invalid': 'Recieved an invalid API-configuration.  Please ensure your proxy API-configuration contains only the actions from Ext.data.Api.actions.'
     }
 });
+
+

@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -19,7 +19,7 @@ Ext.tree.DefaultSelectionModel = function(config){
         * @param {DefaultSelectionModel} this
         * @param {TreeNode} node the new selection
         */
-       "selectionchange",
+       'selectionchange',
 
        /**
         * @event beforeselect
@@ -28,7 +28,7 @@ Ext.tree.DefaultSelectionModel = function(config){
         * @param {TreeNode} node the new selection
         * @param {TreeNode} node the old selection
         */
-       "beforeselect"
+       'beforeselect'
    );
 
     Ext.apply(this, config);
@@ -38,8 +38,8 @@ Ext.tree.DefaultSelectionModel = function(config){
 Ext.extend(Ext.tree.DefaultSelectionModel, Ext.util.Observable, {
     init : function(tree){
         this.tree = tree;
-        tree.getTreeEl().on("keydown", this.onKeyDown, this);
-        tree.on("click", this.onNodeClick, this);
+        tree.mon(tree.getTreeEl(), 'keydown', this.onKeyDown, this);
+        tree.on('click', this.onNodeClick, this);
     },
     
     onNodeClick : function(node, e){
@@ -51,17 +51,21 @@ Ext.extend(Ext.tree.DefaultSelectionModel, Ext.util.Observable, {
      * @param {TreeNode} node The node to select
      * @return {TreeNode} The selected node
      */
-    select : function(node){
+    select : function(node, /* private*/ selectNextNode){
+        // If node is hidden, select the next node in whatever direction was being moved in.
+        if (!Ext.fly(node.ui.wrap).isVisible() && selectNextNode) {
+            return selectNextNode.call(this, node);
+        }
         var last = this.selNode;
         if(node == last){
             node.ui.onSelectedChange(true);
         }else if(this.fireEvent('beforeselect', this, node, last) !== false){
-            if(last){
+            if(last && last.ui){
                 last.ui.onSelectedChange(false);
             }
             this.selNode = node;
             node.ui.onSelectedChange(true);
-            this.fireEvent("selectionchange", this, node, last);
+            this.fireEvent('selectionchange', this, node, last);
         }
         return node;
     },
@@ -69,22 +73,26 @@ Ext.extend(Ext.tree.DefaultSelectionModel, Ext.util.Observable, {
     /**
      * Deselect a node.
      * @param {TreeNode} node The node to unselect
+     * @param {Boolean} silent True to stop the selectionchange event from firing.
      */
-    unselect : function(node){
+    unselect : function(node, silent){
         if(this.selNode == node){
-            this.clearSelections();
+            this.clearSelections(silent);
         }    
     },
     
     /**
      * Clear all selections
+     * @param {Boolean} silent True to stop the selectionchange event from firing.
      */
-    clearSelections : function(){
+    clearSelections : function(silent){
         var n = this.selNode;
         if(n){
             n.ui.onSelectedChange(false);
             this.selNode = null;
-            this.fireEvent("selectionchange", this, null);
+            if(silent !== true){
+                this.fireEvent('selectionchange', this, null);
+            }
         }
         return n;
     },
@@ -110,24 +118,24 @@ Ext.extend(Ext.tree.DefaultSelectionModel, Ext.util.Observable, {
      * Selects the node above the selected node in the tree, intelligently walking the nodes
      * @return TreeNode The new selection
      */
-    selectPrevious : function(){
-        var s = this.selNode || this.lastSelNode;
-        if(!s){
+    selectPrevious : function(/* private */ s){
+        if(!(s = s || this.selNode || this.lastSelNode)){
             return null;
         }
+        // Here we pass in the current function to select to indicate the direction we're moving
         var ps = s.previousSibling;
         if(ps){
             if(!ps.isExpanded() || ps.childNodes.length < 1){
-                return this.select(ps);
+                return this.select(ps, this.selectPrevious);
             } else{
                 var lc = ps.lastChild;
-                while(lc && lc.isExpanded() && lc.childNodes.length > 0){
+                while(lc && lc.isExpanded() && Ext.fly(lc.ui.wrap).isVisible() && lc.childNodes.length > 0){
                     lc = lc.lastChild;
                 }
-                return this.select(lc);
+                return this.select(lc, this.selectPrevious);
             }
         } else if(s.parentNode && (this.tree.rootVisible || !s.parentNode.isRoot)){
-            return this.select(s.parentNode);
+            return this.select(s.parentNode, this.selectPrevious);
         }
         return null;
     },
@@ -136,20 +144,20 @@ Ext.extend(Ext.tree.DefaultSelectionModel, Ext.util.Observable, {
      * Selects the node above the selected node in the tree, intelligently walking the nodes
      * @return TreeNode The new selection
      */
-    selectNext : function(){
-        var s = this.selNode || this.lastSelNode;
-        if(!s){
+    selectNext : function(/* private */ s){
+        if(!(s = s || this.selNode || this.lastSelNode)){
             return null;
         }
-        if(s.firstChild && s.isExpanded()){
-             return this.select(s.firstChild);
+        // Here we pass in the current function to select to indicate the direction we're moving
+        if(s.firstChild && s.isExpanded() && Ext.fly(s.ui.wrap).isVisible()){
+             return this.select(s.firstChild, this.selectNext);
          }else if(s.nextSibling){
-             return this.select(s.nextSibling);
+             return this.select(s.nextSibling, this.selectNext);
          }else if(s.parentNode){
             var newS = null;
             s.parentNode.bubble(function(){
                 if(this.nextSibling){
-                    newS = this.getOwnerTree().selModel.select(this.nextSibling);
+                    newS = this.getOwnerTree().selModel.select(this.nextSibling, this.selectNext);
                     return false;
                 }
             });
@@ -212,7 +220,7 @@ Ext.tree.MultiSelectionModel = function(config){
         * @param {MultiSelectionModel} this
         * @param {Array} nodes Array of the selected nodes
         */
-       "selectionchange"
+       'selectionchange'
    );
     Ext.apply(this, config);
     Ext.tree.MultiSelectionModel.superclass.constructor.call(this);
@@ -221,8 +229,8 @@ Ext.tree.MultiSelectionModel = function(config){
 Ext.extend(Ext.tree.MultiSelectionModel, Ext.util.Observable, {
     init : function(tree){
         this.tree = tree;
-        tree.getTreeEl().on("keydown", this.onKeyDown, this);
-        tree.on("click", this.onNodeClick, this);
+        tree.mon(tree.getTreeEl(), 'keydown', this.onKeyDown, this);
+        tree.on('click', this.onNodeClick, this);
     },
     
     onNodeClick : function(node, e){
@@ -252,7 +260,7 @@ Ext.extend(Ext.tree.MultiSelectionModel, Ext.util.Observable, {
         this.selMap[node.id] = node;
         this.lastSelNode = node;
         node.ui.onSelectedChange(true);
-        this.fireEvent("selectionchange", this, this.selNodes);
+        this.fireEvent('selectionchange', this, this.selNodes);
         return node;
     },
     
@@ -269,7 +277,7 @@ Ext.extend(Ext.tree.MultiSelectionModel, Ext.util.Observable, {
                 this.selNodes.splice(index, 1);
             }
             delete this.selMap[node.id];
-            this.fireEvent("selectionchange", this, this.selNodes);
+            this.fireEvent('selectionchange', this, this.selNodes);
         }
     },
     
@@ -285,7 +293,7 @@ Ext.extend(Ext.tree.MultiSelectionModel, Ext.util.Observable, {
             this.selNodes = [];
             this.selMap = {};
             if(suppressEvent !== true){
-                this.fireEvent("selectionchange", this, this.selNodes);
+                this.fireEvent('selectionchange', this, this.selNodes);
             }
         }
     },

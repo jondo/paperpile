@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -14,34 +14,72 @@
  * {@link Ext.data.JsonWriter}.</p>
  * <p>Creating a writer is simple:</p>
  * <pre><code>
-var writer = new Ext.data.JsonWriter();
+var writer = new Ext.data.JsonWriter({
+    encode: false   // &lt;--- false causes data to be printed to jsonData config-property of Ext.Ajax#reqeust
+});
  * </code></pre>
+ * * <p>Same old JsonReader as Ext-2.x:</p>
+ * <pre><code>
+var reader = new Ext.data.JsonReader({idProperty: 'id'}, [{name: 'first'}, {name: 'last'}, {name: 'email'}]);
+ * </code></pre>
+ *
  * <p>The proxy for a writer enabled store can be configured with a simple <code>url</code>:</p>
  * <pre><code>
 // Create a standard HttpProxy instance.
 var proxy = new Ext.data.HttpProxy({
-    url: 'app.php/users'
+    url: 'app.php/users'    // &lt;--- Supports "provides"-type urls, such as '/users.json', '/products.xml' (Hello Rails/Merb)
 });
  * </code></pre>
- * <p>For finer grained control, the proxy may also be configured with an <code>api</code>:</p>
+ * <p>For finer grained control, the proxy may also be configured with an <code>API</code>:</p>
  * <pre><code>
-// Use the api specification
+// Maximum flexibility with the API-configuration
 var proxy = new Ext.data.HttpProxy({
     api: {
         read    : 'app.php/users/read',
         create  : 'app.php/users/create',
         update  : 'app.php/users/update',
-        destroy : 'app.php/users/destroy'
+        destroy : {  // &lt;--- Supports object-syntax as well
+            url: 'app.php/users/destroy',
+            method: "DELETE"
+        }
     }
 });
  * </code></pre>
- * <p>Creating a Writer enabled store:</p>
+ * <p>Pulling it all together into a Writer-enabled Store:</p>
  * <pre><code>
 var store = new Ext.data.Store({
     proxy: proxy,
     reader: reader,
-    writer: writer
+    writer: writer,
+    autoLoad: true,
+    autoSave: true  // -- Cell-level updates.
 });
+ * </code></pre>
+ * <p>Initiating write-actions <b>automatically</b>, using the existing Ext2.0 Store/Record API:</p>
+ * <pre><code>
+var rec = store.getAt(0);
+rec.set('email', 'foo@bar.com');  // &lt;--- Immediately initiates an UPDATE action through configured proxy.
+
+store.remove(rec);  // &lt;---- Immediately initiates a DESTROY action through configured proxy.
+ * </code></pre>
+ * <p>For <b>record/batch</b> updates, use the Store-configuration {@link Ext.data.Store#autoSave autoSave:false}</p>
+ * <pre><code>
+var store = new Ext.data.Store({
+    proxy: proxy,
+    reader: reader,
+    writer: writer,
+    autoLoad: true,
+    autoSave: false  // -- disable cell-updates
+});
+
+var urec = store.getAt(0);
+urec.set('email', 'foo@bar.com');
+
+var drec = store.getAt(1);
+store.remove(drec);
+
+// Push the button!
+store.save();
  * </code></pre>
  * @constructor Create a new DataWriter
  * @param {Object} meta Metadata configuration options (implementation-specific)
@@ -50,14 +88,8 @@ var store = new Ext.data.Store({
  * using {@link Ext.data.Record#create}.
  */
 Ext.data.DataWriter = function(config){
-    /**
-     * This DataWriter's configured metadata as passed to the constructor.
-     * @type Mixed
-     * @property meta
-     */
     Ext.apply(this, config);
 };
-
 Ext.data.DataWriter.prototype = {
 
     /**
@@ -75,14 +107,26 @@ Ext.data.DataWriter.prototype = {
     listful : false,    // <-- listful is actually not used internally here in DataWriter.  @see Ext.data.Store#execute.
 
     /**
-     * Writes data in preparation for server-write action.  Simply proxies to DataWriter#update, DataWriter#create
-     * DataWriter#destroy.
-     * @param {String} action [CREATE|UPDATE|DESTROY]
-     * @param {Object} params The params-hash to write-to
-     * @param {Record/Record[]} rs The recordset write.
+     * Compiles a Store recordset into a data-format defined by an extension such as {@link Ext.data.JsonWriter} or {@link Ext.data.XmlWriter} in preparation for a {@link Ext.data.Api#actions server-write action}.  The first two params are similar similar in nature to {@link Ext#apply},
+     * Where the first parameter is the <i>receiver</i> of paramaters and the second, baseParams, <i>the source</i>.
+     * @param {Object} params The request-params receiver.
+     * @param {Object} baseParams as defined by {@link Ext.data.Store#baseParams}.  The baseParms must be encoded by the extending class, eg: {@link Ext.data.JsonWriter}, {@link Ext.data.XmlWriter}.
+     * @param {String} action [{@link Ext.data.Api#actions create|update|destroy}]
+     * @param {Record/Record[]} rs The recordset to write, the subject(s) of the write action.
      */
-    write : function(action, params, rs) {
-        this.render(action, rs, params, this[action](rs));
+    apply : function(params, baseParams, action, rs) {
+        var data    = [],
+        renderer    = action + 'Record';
+        // TODO implement @cfg listful here
+        if (Ext.isArray(rs)) {
+            Ext.each(rs, function(rec){
+                data.push(this[renderer](rec));
+            }, this);
+        }
+        else if (rs instanceof Ext.data.Record) {
+            data = this[renderer](rs);
+        }
+        this.render(params, baseParams, data);
     },
 
     /**
@@ -96,56 +140,10 @@ Ext.data.DataWriter.prototype = {
     render : Ext.emptyFn,
 
     /**
-     * update
-     * @param {Object} p Params-hash to apply result to.
-     * @param {Record/Record[]} rs Record(s) to write
-     * @private
-     */
-    update : function(rs) {
-        var params = {};
-        if (Ext.isArray(rs)) {
-            var data = [],
-                ids = [];
-            Ext.each(rs, function(val){
-                ids.push(val.id);
-                data.push(this.updateRecord(val));
-            }, this);
-            params[this.meta.idProperty] = ids;
-            params[this.meta.root] = data;
-        }
-        else if (rs instanceof Ext.data.Record) {
-            params[this.meta.idProperty] = rs.id;
-            params[this.meta.root] = this.updateRecord(rs);
-        }
-        return params;
-    },
-
-    /**
-     * @cfg {Function} saveRecord Abstract method that should be implemented in all subclasses
-     * (e.g.: {@link Ext.data.JsonWriter#saveRecord JsonWriter.saveRecord}
+     * @cfg {Function} updateRecord Abstract method that should be implemented in all subclasses
+     * (e.g.: {@link Ext.data.JsonWriter#updateRecord JsonWriter.updateRecord}
      */
     updateRecord : Ext.emptyFn,
-
-    /**
-     * create
-     * @param {Object} p Params-hash to apply result to.
-     * @param {Record/Record[]} rs Record(s) to write
-     * @private
-     */
-    create : function(rs) {
-        var params = {};
-        if (Ext.isArray(rs)) {
-            var data = [];
-            Ext.each(rs, function(val){
-                data.push(this.createRecord(val));
-            }, this);
-            params[this.meta.root] = data;
-        }
-        else if (rs instanceof Ext.data.Record) {
-            params[this.meta.root] = this.createRecord(rs);
-        }
-        return params;
-    },
 
     /**
      * @cfg {Function} createRecord Abstract method that should be implemented in all subclasses
@@ -154,38 +152,22 @@ Ext.data.DataWriter.prototype = {
     createRecord : Ext.emptyFn,
 
     /**
-     * destroy
-     * @param {Object} p Params-hash to apply result to.
-     * @param {Record/Record[]} rs Record(s) to write
-     * @private
-     */
-    destroy : function(rs) {
-        var params = {};
-        if (Ext.isArray(rs)) {
-            var data = [],
-                ids = [];
-            Ext.each(rs, function(val){
-                data.push(this.destroyRecord(val));
-            }, this);
-            params[this.meta.root] = data;
-        } else if (rs instanceof Ext.data.Record) {
-            params[this.meta.root] = this.destroyRecord(rs);
-        }
-        return params;
-    },
-
-    /**
      * @cfg {Function} destroyRecord Abstract method that should be implemented in all subclasses
      * (e.g.: {@link Ext.data.JsonWriter#destroyRecord JsonWriter.destroyRecord})
      */
     destroyRecord : Ext.emptyFn,
 
     /**
-     * Converts a Record to a hash
-     * @param {Record}
-     * @private
+     * Converts a Record to a hash, taking into account the state of the Ext.data.Record along with configuration properties
+     * related to its rendering, such as {@link #writeAllFields}, {@link Ext.data.Record#phantom phantom}, {@link Ext.data.Record#getChanges getChanges} and
+     * {@link Ext.data.DataReader#idProperty idProperty}
+     * @param {Ext.data.Record}
+     * @param {Object} config <b>NOT YET IMPLEMENTED</b>.  Will implement an exlude/only configuration for fine-control over which fields do/don't get rendered.
+     * @return {Object}
+     * @protected
+     * TODO Implement excludes/only configuration with 2nd param?
      */
-    toHash : function(rec) {
+    toHash : function(rec, config) {
         var map = rec.fields.map,
             data = {},
             raw = (this.writeAllFields === false && rec.phantom === false) ? rec.getChanges() : rec.data,
@@ -195,7 +177,34 @@ Ext.data.DataWriter.prototype = {
                 data[m.mapping ? m.mapping : m.name] = value;
             }
         });
-        data[this.meta.idProperty] = rec.id;
+        // we don't want to write Ext auto-generated id to hash.  Careful not to remove it on Models not having auto-increment pk though.
+        // We can tell its not auto-increment if the user defined a DataReader field for it *and* that field's value is non-empty.
+        // we could also do a RegExp here for the Ext.data.Record AUTO_ID prefix.
+        if (rec.phantom) {
+            if (rec.fields.containsKey(this.meta.idProperty) && Ext.isEmpty(rec.data[this.meta.idProperty])) {
+                delete data[this.meta.idProperty];
+            }
+        } else {
+            data[this.meta.idProperty] = rec.id
+        }
         return data;
+    },
+
+    /**
+     * Converts a {@link Ext.data.DataWriter#toHash Hashed} {@link Ext.data.Record} to fields-array array suitable
+     * for encoding to xml via XTemplate, eg:
+<code><pre>&lt;tpl for=".">&lt;{name}>{value}&lt;/{name}&lt;/tpl></pre></code>
+     * eg, <b>non-phantom</b>:
+<code><pre>{id: 1, first: 'foo', last: 'bar'} --> [{name: 'id', value: 1}, {name: 'first', value: 'foo'}, {name: 'last', value: 'bar'}]</pre></code>
+     * {@link Ext.data.Record#phantom Phantom} records will have had their idProperty omitted in {@link #toHash} if determined to be auto-generated.
+     * Non AUTOINCREMENT pks should have been protected.
+     * @param {Hash} data Hashed by Ext.data.DataWriter#toHash
+     * @return {[Object]} Array of attribute-objects.
+     * @protected
+     */
+    toArray : function(data) {
+        var fields = [];
+        Ext.iterate(data, function(k, v) {fields.push({name: k, value: v});},this);
+        return fields;
     }
 };

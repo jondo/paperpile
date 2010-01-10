@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -59,19 +59,8 @@ Ext.ux.ProgressBarPager  = Ext.extend(Object, {
 			Ext.apply(parent, this.parentOverrides);		
 			
 			this.progressBar.on('render', function(pb) {
-				pb.el.applyStyles('cursor:pointer');
-
-				pb.el.on('click', this.handleProgressBarClick, this);
-			}, this);
-			
-		
-			// Remove the click handler from the 
-			this.progressBar.on({
-				scope         : this,
-				beforeDestroy : function() {
-					this.progressBar.el.un('click', this.handleProgressBarClick, this);	
-				}
-			});	
+                pb.mon(pb.getEl().applyStyles('cursor:pointer'), 'click', this.handleProgressBarClick, this);
+            }, this, {single: true});
 						
 		}
 		  
@@ -79,15 +68,14 @@ Ext.ux.ProgressBarPager  = Ext.extend(Object, {
 	// private
 	// This method handles the click for the progress bar
 	handleProgressBarClick : function(e){
-		var parent = this.parent;
-		var displayItem = parent.displayItem;
-		
-		var box = this.progressBar.getBox();
-		var xy = e.getXY();
-		var position = xy[0]-box.x;
-		var pages = Math.ceil(parent.store.getTotalCount()/parent.pageSize);
-		
-		var newpage = Math.ceil(position/(displayItem.width/pages));
+		var parent = this.parent,
+		    displayItem = parent.displayItem,
+		    box = this.progressBar.getBox(),
+		    xy = e.getXY(),
+		    position = xy[0]-box.x,
+		    pages = Math.ceil(parent.store.getTotalCount()/parent.pageSize),
+		    newpage = Math.ceil(position/(displayItem.width/pages));
+            
 		parent.changePage(newpage);
 	},
 	
@@ -97,11 +85,10 @@ Ext.ux.ProgressBarPager  = Ext.extend(Object, {
 		// This method updates the information via the progress bar.
 		updateInfo : function(){
 			if(this.displayItem){
-				var count   = this.store.getCount();
-				var pgData  = this.getPageData();
-				var pageNum = this.readPage(pgData);
-				
-				var msg    = count == 0 ?
+				var count = this.store.getCount(),
+				    pgData = this.getPageData(),
+				    pageNum = this.readPage(pgData),
+				    msg = count == 0 ?
 					this.emptyMsg :
 					String.format(
 						this.displayMsg,

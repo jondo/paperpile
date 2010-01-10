@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -45,38 +45,59 @@ paramOrder: 'param1|param2|param'
      */
     directFn : undefined,
 
-    // protected
+    /**
+     * DirectProxy implementation of {@link Ext.data.DataProxy#doRequest}
+     * @param {String} action The crud action type (create, read, update, destroy)
+     * @param {Ext.data.Record/Ext.data.Record[]} rs If action is load, rs will be null
+     * @param {Object} params An object containing properties which are to be used as HTTP parameters
+     * for the request to the remote server.
+     * @param {Ext.data.DataReader} reader The Reader object which converts the data
+     * object into a block of Ext.data.Records.
+     * @param {Function} callback
+     * <div class="sub-desc"><p>A function to be called after the request.
+     * The <tt>callback</tt> is passed the following arguments:<ul>
+     * <li><tt>r</tt> : Ext.data.Record[] The block of Ext.data.Records.</li>
+     * <li><tt>options</tt>: Options object from the action request</li>
+     * <li><tt>success</tt>: Boolean success indicator</li></ul></p></div>
+     * @param {Object} scope The scope (<code>this</code> reference) in which the callback function is executed. Defaults to the browser window.
+     * @param {Object} arg An optional argument which is passed to the callback as its second parameter.
+     * @protected
+     */
     doRequest : function(action, rs, params, reader, callback, scope, options) {
-        var args = [];
-        var directFn = this.api[action] || this.directFn;
+        var args = [],
+            directFn = this.api[action] || this.directFn;
 
         switch (action) {
             case Ext.data.Api.actions.create:
-                args.push(params[reader.meta.root]);		// <-- create(Hash)
+                args.push(params.jsonData);		// <-- create(Hash)
                 break;
             case Ext.data.Api.actions.read:
-                if(this.paramOrder){
-                    for(var i = 0, len = this.paramOrder.length; i < len; i++){
-                        args.push(params[this.paramOrder[i]]);
+                // If the method has no parameters, ignore the paramOrder/paramsAsHash.
+                if(directFn.directCfg.method.len > 0){
+                    if(this.paramOrder){
+                        for(var i = 0, len = this.paramOrder.length; i < len; i++){
+                            args.push(params[this.paramOrder[i]]);
+                        }
+                    }else if(this.paramsAsHash){
+                        args.push(params);
                     }
-                }else if(this.paramsAsHash){
-                    args.push(params);
                 }
                 break;
             case Ext.data.Api.actions.update:
-                args.push(params[reader.meta.idProperty]);  // <-- save(Integer/Integer[], Hash/Hash[])
-                args.push(params[reader.meta.root]);
+                args.push(params.jsonData);        // <-- update(Hash/Hash[])
                 break;
             case Ext.data.Api.actions.destroy:
-                args.push(params[reader.meta.root]);        // <-- destroy(Int/Int[])
+                args.push(params.jsonData);        // <-- destroy(Int/Int[])
                 break;
         }
 
         var trans = {
             params : params || {},
-            callback : callback,
-            scope : scope,
-            arg : options,
+            request: {
+                callback : callback,
+                scope : scope,
+                arg : options
+            },
             reader: reader
         };
 
@@ -93,7 +114,7 @@ paramOrder: 'param1|param2|param'
                     this.fireEvent("loadexception", this, trans, res, null);
                 }
                 this.fireEvent('exception', this, 'remote', action, trans, res, null);
-                trans.callback.call(trans.scope, null, trans.arg, false);
+                trans.request.callback.call(trans.request.scope, null, trans.request.arg, false);
                 return;
             }
             if (action === Ext.data.Api.actions.read) {
@@ -107,8 +128,9 @@ paramOrder: 'param1|param2|param'
      * Callback for read actions
      * @param {String} action [Ext.data.Api.actions.create|read|update|destroy]
      * @param {Object} trans The request transaction object
+     * @param {Object} result Data object picked out of the server-response.
      * @param {Object} res The server response
-     * @private
+     * @protected
      */
     onRead : function(action, trans, result, res) {
         var records;
@@ -120,22 +142,25 @@ paramOrder: 'param1|param2|param'
             this.fireEvent("loadexception", this, trans, res, ex);
 
             this.fireEvent('exception', this, 'response', action, trans, res, ex);
-            trans.callback.call(trans.scope, null, trans.arg, false);
+            trans.request.callback.call(trans.request.scope, null, trans.request.arg, false);
             return;
         }
-        this.fireEvent("load", this, res, trans.arg);
-        trans.callback.call(trans.scope, records, trans.arg, true);
+        this.fireEvent("load", this, res, trans.request.arg);
+        trans.request.callback.call(trans.request.scope, records, trans.request.arg, true);
     },
     /**
      * Callback for write actions
-     * @param {String} action [Ext.data.Api.actions.create|read|update|destroy]
+     * @param {String} action [{@link Ext.data.Api#actions create|read|update|destroy}]
      * @param {Object} trans The request transaction object
+     * @param {Object} result Data object picked out of the server-response.
      * @param {Object} res The server response
-     * @private
+     * @param {Ext.data.Record/[Ext.data.Record]} rs The Store resultset associated with the action.
+     * @protected
      */
     onWrite : function(action, trans, result, res, rs) {
-        this.fireEvent("write", this, action, result, res, rs, trans.arg);
-        trans.callback.call(trans.scope, result, res, true);
+        var data = trans.reader.extractData(result, false);
+        this.fireEvent("write", this, action, data, res, rs, trans.request.arg);
+        trans.request.callback.call(trans.request.scope, data, res, true);
     }
 });
 

@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -74,7 +74,7 @@ Ext.tree.TreeLoader = function(config){
         "loadexception"
     );
     Ext.tree.TreeLoader.superclass.constructor.call(this);
-    if(typeof this.paramOrder == 'string'){
+    if(Ext.isString(this.paramOrder)){
         this.paramOrder = this.paramOrder.split(/[\s,|]/);
     }
 };
@@ -139,6 +139,12 @@ paramOrder: 'param1|param2|param'
      * <tt>{@link #paramOrder}</tt> nullifies this configuration.
      */
     paramsAsHash: false,
+    
+    /**
+     * @cfg {String} nodeParameter The name of the parameter sent to the server which contains
+     * the identifier of the node. Defaults to <tt>'node'</tt>.
+     */
+    nodeParameter: 'node',
 
     /**
      * @cfg {Function} directFn
@@ -151,8 +157,10 @@ paramOrder: 'param1|param2|param'
      * This is called automatically when a node is expanded, but may be used to reload
      * a node (or append new children if the {@link #clearOnLoad} option is false.)
      * @param {Ext.tree.TreeNode} node
-     * @param {Function} callback
-     * @param (Object) scope
+     * @param {Function} callback Function to call after the node has been loaded. The 
+     * function is passed the TreeNode which was requested to be loaded.
+     * @param (Object) scope The cope (<code>this</code> reference) in which the callback is executed.
+     * defaults to the loaded TreeNode.
      */
     load : function(node, callback, scope){
         if(this.clearOnLoad){
@@ -161,7 +169,7 @@ paramOrder: 'param1|param2|param'
             }
         }
         if(this.doPreload(node)){ // preloaded json children
-            this.runCallback(callback, scope || node, []);
+            this.runCallback(callback, scope || node, [node]);
         }else if(this.directFn || this.dataUrl || this.url){
             this.requestData(node, callback, scope || node);
         }
@@ -200,13 +208,9 @@ paramOrder: 'param1|param2|param'
             }
             return buf;
         }else{
-            for(var key in bp){
-                if(!Ext.isFunction(bp[key])){
-                    buf.push(encodeURIComponent(key), "=", encodeURIComponent(bp[key]), "&");
-                }
-            }
-            buf.push("node=", encodeURIComponent(node.id));
-            return buf.join("");
+            var o = Ext.apply({}, bp);
+            o[this.nodeParameter] = node.id;
+            return o;
         }
     },
 
@@ -271,7 +275,7 @@ paramOrder: 'param1|param2|param'
     * Example:<pre><code>
 new Ext.tree.TreePanel({
     ...
-    new Ext.tree.TreeLoader({
+    loader: new Ext.tree.TreeLoader({
         url: 'dataUrl',
         createNode: function(attr) {
 //          Allow consolidation consignments to have
@@ -280,7 +284,7 @@ new Ext.tree.TreePanel({
                 attr.iconCls = 'x-consol',
                 attr.allowDrop = true;
             }
-            return Ext.tree.TreeLoader.prototype.call(this, attr);
+            return Ext.tree.TreeLoader.prototype.createNode.call(this, attr);
         }
     }),
     ...
@@ -293,10 +297,10 @@ new Ext.tree.TreePanel({
         if(this.baseAttrs){
             Ext.applyIf(attr, this.baseAttrs);
         }
-        if(this.applyLoader !== false){
+        if(this.applyLoader !== false && !attr.loader){
             attr.loader = this;
         }
-        if(typeof attr.uiProvider == 'string'){
+        if(Ext.isString(attr.uiProvider)){
            attr.uiProvider = this.uiProviders[attr.uiProvider] || eval(attr.uiProvider);
         }
         if(attr.nodeType){
@@ -338,5 +342,9 @@ new Ext.tree.TreePanel({
         var a = response.argument;
         this.fireEvent("loadexception", this, a.node, response);
         this.runCallback(a.callback, a.scope || a.node, [a.node]);
+    },
+    
+    destroy : function(){
+        this.purgeListeners();
     }
 });

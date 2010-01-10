@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -15,7 +15,7 @@ Ext.FlashComponent = Ext.extend(Ext.BoxComponent, {
      * @cfg {String} flashVersion
      * Indicates the version the flash content was published for. Defaults to <tt>'9.0.45'</tt>.
      */
-    flashVersion : '9.0.45',
+    flashVersion : '9.0.115',
 
     /**
      * @cfg {String} backgroundColor
@@ -28,6 +28,19 @@ Ext.FlashComponent = Ext.extend(Ext.BoxComponent, {
      * The wmode of the flash object. This can be used to control layering. Defaults to <tt>'opaque'</tt>.
      */
     wmode: 'opaque',
+    
+    /**
+     * @cfg {Object} flashVars
+     * A set of key value pairs to be passed to the flash object as flash variables. Defaults to <tt>undefined</tt>.
+     */
+    flashVars: undefined,
+    
+    /**
+     * @cfg {Object} flashParams
+     * A set of key value pairs to be passed to the flash object as parameters. Possible parameters can be found here:
+     * http://kb2.adobe.com/cps/127/tn_12701.html Defaults to <tt>undefined</tt>.
+     */
+    flashParams: undefined,
 
     /**
      * @cfg {String} url
@@ -48,21 +61,28 @@ Ext.FlashComponent = Ext.extend(Ext.BoxComponent, {
     initComponent : function(){
         Ext.FlashComponent.superclass.initComponent.call(this);
 
-        this.addEvents('initialize');
+        this.addEvents(
+            /**
+             * @event initialize
+             * 
+             * @param {Chart} this
+             */
+            'initialize'
+        );
     },
 
     onRender : function(){
         Ext.FlashComponent.superclass.onRender.apply(this, arguments);
 
-        var params = {
+        var params = Ext.apply({
             allowScriptAccess: 'always',
             bgcolor: this.backgroundColor,
             wmode: this.wmode
-        }, vars = {
+        }, this.flashParams), vars = Ext.apply({
             allowedDomain: document.location.hostname,
             elementID: this.getId(),
             eventHandler: 'Ext.FlashEventProxy.onEvent'
-        };
+        }, this.flashVars);
 
         new swfobject.embedSWF(this.url, this.id, this.swfWidth, this.swfHeight, this.flashVersion,
             this.expressInstall ? Ext.FlashComponent.EXPRESS_INSTALL_URL : undefined, vars, params);

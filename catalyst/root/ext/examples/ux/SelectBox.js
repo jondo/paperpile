@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -89,6 +89,7 @@ Ext.ux.form.SelectBox = Ext.extend(Ext.form.ComboBox, {
 		this.store.on('load', this.calcRowsPerPage, this);
 		Ext.ux.form.SelectBox.superclass.onRender.apply(this, arguments);
 		if( this.mode == 'local' ) {
+            this.initList();
 			this.calcRowsPerPage();
 		}
 	},
@@ -104,9 +105,9 @@ Ext.ux.form.SelectBox = Ext.extend(Ext.form.ComboBox, {
 		}
 	},
 
-	render : function(ct) {
-		Ext.ux.form.SelectBox.superclass.render.apply(this, arguments);
-		if( Ext.isSafari ) {
+	afterRender : function() {
+		Ext.ux.form.SelectBox.superclass.afterRender.apply(this, arguments);
+		if(Ext.isWebKit) {
 			this.el.swallowEvent('mousedown', true);
 		}
 		this.el.unselectable();
@@ -181,9 +182,9 @@ Ext.ux.form.SelectBox = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	focusAndSelect : function(record) {
-		var index = typeof record === 'number' ? record : this.store.indexOf(record);
-		this.select(index, this.isExpanded());
-		this.onSelect(this.store.getAt(record), index, this.isExpanded());
+        var index = Ext.isNumber(record) ? record : this.store.indexOf(record);
+        this.select(index, this.isExpanded());
+        this.onSelect(this.store.getAt(index), index, this.isExpanded());
 	},
 
 	calcRowsPerPage : function() {

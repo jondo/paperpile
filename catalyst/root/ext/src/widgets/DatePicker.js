@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -7,7 +7,10 @@
 /**
  * @class Ext.DatePicker
  * @extends Ext.Component
- * Simple date picker class.
+ * <p>A popup date picker. This class is used by the {@link Ext.form.DateField DateField} class
+ * to allow browsing and selection of valid dates.</p>
+ * <p>All the string values documented below may be overridden by including an Ext locale file in
+ * your page.</p>
  * @constructor
  * Create a new DatePicker
  * @param {Object} config The config object
@@ -16,48 +19,63 @@
 Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
     /**
      * @cfg {String} todayText
-     * The text to display on the button that selects the current date (defaults to <tt>'Today'</tt>)
+     * The text to display on the button that selects the current date (defaults to <code>'Today'</code>)
      */
     todayText : 'Today',
     /**
      * @cfg {String} okText
-     * The text to display on the ok button (defaults to <tt>'&#160;OK&#160;'</tt> to give the user extra clicking room)
+     * The text to display on the ok button (defaults to <code>'&#160;OK&#160;'</code> to give the user extra clicking room)
      */
     okText : '&#160;OK&#160;',
     /**
      * @cfg {String} cancelText
-     * The text to display on the cancel button (defaults to <tt>'Cancel'</tt>)
+     * The text to display on the cancel button (defaults to <code>'Cancel'</code>)
      */
     cancelText : 'Cancel',
     /**
+     * @cfg {Function} handler
+     * Optional. A function that will handle the select event of this picker.
+     * The handler is passed the following parameters:<div class="mdetail-params"><ul>
+     * <li><code>picker</code> : DatePicker<div class="sub-desc">This DatePicker.</div></li>
+     * <li><code>date</code> : Date<div class="sub-desc">The selected date.</div></li>
+     * </ul></div>
+     */
+    /**
+     * @cfg {Object} scope
+     * The scope (<code><b>this</b></code> reference) in which the <code>{@link #handler}</code>
+     * function will be called.  Defaults to this DatePicker instance.
+     */ 
+    /**
      * @cfg {String} todayTip
-     * The tooltip to display for the button that selects the current date (defaults to <tt>'{current date} (Spacebar)'</tt>)
+     * A string used to format the message for displaying in a tooltip over the button that
+     * selects the current date. Defaults to <code>'{0} (Spacebar)'</code> where
+     * the <code>{0}</code> token is replaced by today's date.
      */
     todayTip : '{0} (Spacebar)',
     /**
      * @cfg {String} minText
-     * The error text to display if the minDate validation fails (defaults to <tt>'This date is before the minimum date'</tt>)
+     * The error text to display if the minDate validation fails (defaults to <code>'This date is before the minimum date'</code>)
      */
     minText : 'This date is before the minimum date',
     /**
      * @cfg {String} maxText
-     * The error text to display if the maxDate validation fails (defaults to <tt>'This date is after the maximum date'</tt>)
+     * The error text to display if the maxDate validation fails (defaults to <code>'This date is after the maximum date'</code>)
      */
     maxText : 'This date is after the maximum date',
     /**
      * @cfg {String} format
      * The default date format string which can be overriden for localization support.  The format must be
-     * valid according to {@link Date#parseDate} (defaults to <tt>'m/d/y'</tt>).
+     * valid according to {@link Date#parseDate} (defaults to <code>'m/d/y'</code>).
      */
     format : 'm/d/y',
     /**
      * @cfg {String} disabledDaysText
-     * The tooltip to display when the date falls on a disabled day (defaults to <tt>'Disabled'</tt>)
+     * The tooltip to display when the date falls on a disabled day (defaults to <code>'Disabled'</code>)
      */
     disabledDaysText : 'Disabled',
     /**
      * @cfg {String} disabledDatesText
-     * The tooltip text to display when the date falls on a disabled date (defaults to <tt>'Disabled'</tt>)
+     * The tooltip text to display when the date falls on a disabled date (defaults to <code>'Disabled'</code>)
      */
     disabledDatesText : 'Disabled',
     /**
@@ -72,17 +90,17 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
     dayNames : Date.dayNames,
     /**
      * @cfg {String} nextText
-     * The next month navigation button tooltip (defaults to <tt>'Next Month (Control+Right)'</tt>)
+     * The next month navigation button tooltip (defaults to <code>'Next Month (Control+Right)'</code>)
      */
     nextText : 'Next Month (Control+Right)',
     /**
      * @cfg {String} prevText
-     * The previous month navigation button tooltip (defaults to <tt>'Previous Month (Control+Left)'</tt>)
+     * The previous month navigation button tooltip (defaults to <code>'Previous Month (Control+Left)'</code>)
      */
     prevText : 'Previous Month (Control+Left)',
     /**
      * @cfg {String} monthYearText
-     * The header month selector tooltip (defaults to <tt>'Choose a month (Control+Up/Down to move years)'</tt>)
+     * The header month selector tooltip (defaults to <code>'Choose a month (Control+Up/Down to move years)'</code>)
      */
     monthYearText : 'Choose a month (Control+Up/Down to move years)',
     /**
@@ -93,7 +111,7 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
     /**
      * @cfg {Boolean} showToday
      * False to hide the footer area containing the Today button and disable the keyboard handler for spacebar
-     * that selects the current date (defaults to <tt>true</tt>).
+     * that selects the current date (defaults to <code>true</code>).
      */
     showToday : true,
     /**
@@ -129,19 +147,23 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
      * In order to support regular expressions, if you are using a date format that has '.' in it, you will have to
      * escape the dot when restricting dates. For example: ['03\\.08\\.03'].
      */
+    
+    // private
+    // Set by other components to stop the picker focus being updated when the value changes.
+    focusOnSelect: true,
 
     // private
     initComponent : function(){
         Ext.DatePicker.superclass.initComponent.call(this);
 
         this.value = this.value ?
-                 this.value.clearTime() : new Date().clearTime();
+                 this.value.clearTime(true) : new Date().clearTime();
 
         this.addEvents(
             /**
              * @event select
              * Fires when a date is selected
-             * @param {DatePicker} this
+             * @param {DatePicker} this DatePicker
              * @param {Date} date The selected date
              */
             'select'
@@ -220,11 +242,8 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
      * @param {Date} value The date to set
      */
     setValue : function(value){
-        var old = this.value;
         this.value = value.clearTime(true);
-        if(this.el){
-            this.update(this.value);
-        }
+        this.update(this.value);
     },
 
     /**
@@ -237,9 +256,7 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
 
     // private
     focus : function(){
-        if(this.el){
-            this.update(this.activeDate);
-        }
+        this.update(this.activeDate);
     },
     
     // private
@@ -254,7 +271,7 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
     },
     
     // private
-    onDisable: function(){
+    onDisable : function(){
         Ext.DatePicker.superclass.onDisable.call(this);   
         this.doDisabled(true);
         if(Ext.isIE && !Ext.isIE8){
@@ -269,7 +286,7 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
     },
     
     // private
-    doDisabled: function(disabled){
+    doDisabled : function(disabled){
         this.keyNav.setDisabled(disabled);
         this.prevRepeater.setDisabled(disabled);
         this.nextRepeater.setDisabled(disabled);
@@ -593,7 +610,9 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
     handleDateClick : function(e, t){
         e.stopEvent();
         if(!this.disabled && t.dateValue && !Ext.fly(t.parentNode).hasClass('x-date-disabled')){
+            this.cancelFocus = this.focusOnSelect === false;
             this.setValue(new Date(t.dateValue));
+            delete this.cancelFocus;
             this.fireEvent('select', this, this.value);
         }
     },
@@ -608,158 +627,160 @@ Ext.DatePicker = Ext.extend(Ext.BoxComponent, {
 
     // private
     update : function(date, forceRefresh){
-        var vd = this.activeDate, vis = this.isVisible();
-        this.activeDate = date;
-        if(!forceRefresh && vd && this.el){
-            var t = date.getTime();
-            if(vd.getMonth() == date.getMonth() && vd.getFullYear() == date.getFullYear()){
-                this.cells.removeClass('x-date-selected');
-                this.cells.each(function(c){
-                   if(c.dom.firstChild.dateValue == t){
-                       c.addClass('x-date-selected');
-                       if(vis){
-                           Ext.fly(c.dom.firstChild).focus(50);
-                       }
-                       return false;
-                   }
-                });
-                return;
-            }
-        }
-        var days = date.getDaysInMonth();
-        var firstOfMonth = date.getFirstDateOfMonth();
-        var startingPos = firstOfMonth.getDay()-this.startDay;
-
-        if(startingPos <= this.startDay){
-            startingPos += 7;
-        }
-
-        var pm = date.add('mo', -1);
-        var prevStart = pm.getDaysInMonth()-startingPos;
-
-        var cells = this.cells.elements;
-        var textEls = this.textNodes;
-        days += startingPos;
-
-        // convert everything to numbers so it's fast
-        var day = 86400000;
-        var d = (new Date(pm.getFullYear(), pm.getMonth(), prevStart)).clearTime();
-        var today = new Date().clearTime().getTime();
-        var sel = date.clearTime().getTime();
-        var min = this.minDate ? this.minDate.clearTime() : Number.NEGATIVE_INFINITY;
-        var max = this.maxDate ? this.maxDate.clearTime() : Number.POSITIVE_INFINITY;
-        var ddMatch = this.disabledDatesRE;
-        var ddText = this.disabledDatesText;
-        var ddays = this.disabledDays ? this.disabledDays.join('') : false;
-        var ddaysText = this.disabledDaysText;
-        var format = this.format;
-
-        if(this.showToday){
-            var td = new Date().clearTime();
-            var disable = (td < min || td > max ||
-                (ddMatch && format && ddMatch.test(td.dateFormat(format))) ||
-                (ddays && ddays.indexOf(td.getDay()) != -1));
-
-            if(!this.disabled){
-                this.todayBtn.setDisabled(disable);
-                this.todayKeyListener[disable ? 'disable' : 'enable']();
-            }
-        }
-
-        var setCellClass = function(cal, cell){
-            cell.title = '';
-            var t = d.getTime();
-            cell.firstChild.dateValue = t;
-            if(t == today){
-                cell.className += ' x-date-today';
-                cell.title = cal.todayText;
-            }
-            if(t == sel){
-                cell.className += ' x-date-selected';
-                if(vis){
-                    Ext.fly(cell.firstChild).focus(50);
-                }
-            }
-            // disabling
-            if(t < min) {
-                cell.className = ' x-date-disabled';
-                cell.title = cal.minText;
-                return;
-            }
-            if(t > max) {
-                cell.className = ' x-date-disabled';
-                cell.title = cal.maxText;
-                return;
-            }
-            if(ddays){
-                if(ddays.indexOf(d.getDay()) != -1){
-                    cell.title = ddaysText;
-                    cell.className = ' x-date-disabled';
-                }
-            }
-            if(ddMatch && format){
-                var fvalue = d.dateFormat(format);
-                if(ddMatch.test(fvalue)){
-                    cell.title = ddText.replace('%0', fvalue);
-                    cell.className = ' x-date-disabled';
-                }
-            }
-        };
-
-        var i = 0;
-        for(; i < startingPos; i++) {
-            textEls[i].innerHTML = (++prevStart);
-            d.setDate(d.getDate()+1);
-            cells[i].className = 'x-date-prevday';
-            setCellClass(this, cells[i]);
-        }
-        for(; i < days; i++){
-            var intDay = i - startingPos + 1;
-            textEls[i].innerHTML = (intDay);
-            d.setDate(d.getDate()+1);
-            cells[i].className = 'x-date-active';
-            setCellClass(this, cells[i]);
-        }
-        var extraDays = 0;
-        for(; i < 42; i++) {
-             textEls[i].innerHTML = (++extraDays);
-             d.setDate(d.getDate()+1);
-             cells[i].className = 'x-date-nextday';
-             setCellClass(this, cells[i]);
-        }
-
-        this.mbtn.setText(this.monthNames[date.getMonth()] + ' ' + date.getFullYear());
-
-        if(!this.internalRender){
-            var main = this.el.dom.firstChild;
-            var w = main.offsetWidth;
-            this.el.setWidth(w + this.el.getBorderWidth('lr'));
-            Ext.fly(main).setWidth(w);
-            this.internalRender = true;
-            // opera does not respect the auto grow header center column
-            // then, after it gets a width opera refuses to recalculate
-            // without a second pass
-            if(Ext.isOpera && !this.secondPass){
-                main.rows[0].cells[1].style.width = (w - (main.rows[0].cells[0].offsetWidth+main.rows[0].cells[2].offsetWidth)) + 'px';
-                this.secondPass = true;
-                this.update.defer(10, this, [date]);
-            }
+        if(this.rendered){
+	        var vd = this.activeDate, vis = this.isVisible();
+	        this.activeDate = date;
+	        if(!forceRefresh && vd && this.el){
+	            var t = date.getTime();
+	            if(vd.getMonth() == date.getMonth() && vd.getFullYear() == date.getFullYear()){
+	                this.cells.removeClass('x-date-selected');
+	                this.cells.each(function(c){
+	                   if(c.dom.firstChild.dateValue == t){
+	                       c.addClass('x-date-selected');
+	                       if(vis && !this.cancelFocus){
+	                           Ext.fly(c.dom.firstChild).focus(50);
+	                       }
+	                       return false;
+	                   }
+	                }, this);
+	                return;
+	            }
+	        }
+	        var days = date.getDaysInMonth(),
+	            firstOfMonth = date.getFirstDateOfMonth(),
+	            startingPos = firstOfMonth.getDay()-this.startDay;
+	
+	        if(startingPos < 0){
+	            startingPos += 7;
+	        }
+	        days += startingPos;
+	
+	        var pm = date.add('mo', -1),
+	            prevStart = pm.getDaysInMonth()-startingPos,
+	            cells = this.cells.elements,
+	            textEls = this.textNodes,
+	            // convert everything to numbers so it's fast
+	            day = 86400000,
+	            d = (new Date(pm.getFullYear(), pm.getMonth(), prevStart)).clearTime(),
+	            today = new Date().clearTime().getTime(),
+	            sel = date.clearTime(true).getTime(),
+	            min = this.minDate ? this.minDate.clearTime(true) : Number.NEGATIVE_INFINITY,
+	            max = this.maxDate ? this.maxDate.clearTime(true) : Number.POSITIVE_INFINITY,
+	            ddMatch = this.disabledDatesRE,
+	            ddText = this.disabledDatesText,
+	            ddays = this.disabledDays ? this.disabledDays.join('') : false,
+	            ddaysText = this.disabledDaysText,
+	            format = this.format;
+	
+	        if(this.showToday){
+	            var td = new Date().clearTime(),
+	                disable = (td < min || td > max ||
+	                (ddMatch && format && ddMatch.test(td.dateFormat(format))) ||
+	                (ddays && ddays.indexOf(td.getDay()) != -1));
+	
+	            if(!this.disabled){
+	                this.todayBtn.setDisabled(disable);
+	                this.todayKeyListener[disable ? 'disable' : 'enable']();
+	            }
+	        }
+	
+	        var setCellClass = function(cal, cell){
+	            cell.title = '';
+	            var t = d.getTime();
+	            cell.firstChild.dateValue = t;
+	            if(t == today){
+	                cell.className += ' x-date-today';
+	                cell.title = cal.todayText;
+	            }
+	            if(t == sel){
+	                cell.className += ' x-date-selected';
+	                if(vis){
+	                    Ext.fly(cell.firstChild).focus(50);
+	                }
+	            }
+	            // disabling
+	            if(t < min) {
+	                cell.className = ' x-date-disabled';
+	                cell.title = cal.minText;
+	                return;
+	            }
+	            if(t > max) {
+	                cell.className = ' x-date-disabled';
+	                cell.title = cal.maxText;
+	                return;
+	            }
+	            if(ddays){
+	                if(ddays.indexOf(d.getDay()) != -1){
+	                    cell.title = ddaysText;
+	                    cell.className = ' x-date-disabled';
+	                }
+	            }
+	            if(ddMatch && format){
+	                var fvalue = d.dateFormat(format);
+	                if(ddMatch.test(fvalue)){
+	                    cell.title = ddText.replace('%0', fvalue);
+	                    cell.className = ' x-date-disabled';
+	                }
+	            }
+	        };
+	
+	        var i = 0;
+	        for(; i < startingPos; i++) {
+	            textEls[i].innerHTML = (++prevStart);
+	            d.setDate(d.getDate()+1);
+	            cells[i].className = 'x-date-prevday';
+	            setCellClass(this, cells[i]);
+	        }
+	        for(; i < days; i++){
+	            var intDay = i - startingPos + 1;
+	            textEls[i].innerHTML = (intDay);
+	            d.setDate(d.getDate()+1);
+	            cells[i].className = 'x-date-active';
+	            setCellClass(this, cells[i]);
+	        }
+	        var extraDays = 0;
+	        for(; i < 42; i++) {
+	             textEls[i].innerHTML = (++extraDays);
+	             d.setDate(d.getDate()+1);
+	             cells[i].className = 'x-date-nextday';
+	             setCellClass(this, cells[i]);
+	        }
+	
+	        this.mbtn.setText(this.monthNames[date.getMonth()] + ' ' + date.getFullYear());
+	
+	        if(!this.internalRender){
+	            var main = this.el.dom.firstChild,
+	                w = main.offsetWidth;
+	            this.el.setWidth(w + this.el.getBorderWidth('lr'));
+	            Ext.fly(main).setWidth(w);
+	            this.internalRender = true;
+	            // opera does not respect the auto grow header center column
+	            // then, after it gets a width opera refuses to recalculate
+	            // without a second pass
+	            if(Ext.isOpera && !this.secondPass){
+	                main.rows[0].cells[1].style.width = (w - (main.rows[0].cells[0].offsetWidth+main.rows[0].cells[2].offsetWidth)) + 'px';
+	                this.secondPass = true;
+	                this.update.defer(10, this, [date]);
+	            }
+	        }
         }
     },
 
     // private
     beforeDestroy : function() {
         if(this.rendered){
-            this.keyNav.disable();
-            this.keyNav = null;
             Ext.destroy(
-                this.leftClickRpt,
-                this.rightClickRpt,
+                this.keyNav,
                 this.monthPicker,
                 this.eventEl,
                 this.mbtn,
+                this.nextRepeater,
+                this.prevRepeater,
+                this.cells.el,
                 this.todayBtn
             );
+            delete this.textNodes;
+            delete this.cells.elements;
         }
     }
 

@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -11,10 +11,7 @@ Ext.Element.addMethods(
 function() {
 	var GETDOM = Ext.getDom,
 		GET = Ext.get,
-		DH = Ext.DomHelper,
-        isEl = function(el){
-            return  (el.nodeType || el.dom || typeof el == 'string');  
-        };
+		DH = Ext.DomHelper;
 	
 	return {
 	    /**
@@ -63,14 +60,14 @@ function() {
 	     */
 	    insertFirst: function(el, returnDom){
             el = el || {};
-            if(isEl(el)){ // element
+            if(el.nodeType || el.dom || typeof el == 'string'){ // element
                 el = GETDOM(el);
                 this.dom.insertBefore(el, this.dom.firstChild);
                 return !returnDom ? GET(el) : el;
             }else{ // dh config
                 return this.createChild(el, this.dom.firstChild, returnDom);
             }
-    },
+        },
 	
 	    /**
 	     * Replaces the passed element with this element
@@ -90,19 +87,20 @@ function() {
 	     * @return {Ext.Element} this
 	     */
 	    replaceWith: function(el){
-		    var me = this,
-		    	Element = Ext.Element;
-            if(isEl(el)){
+		    var me = this;
+                
+            if(el.nodeType || el.dom || typeof el == 'string'){
                 el = GETDOM(el);
                 me.dom.parentNode.insertBefore(el, me.dom);
             }else{
                 el = DH.insertBefore(me.dom, el);
             }
 	        
-	        delete Element.cache[me.id];
+	        delete Ext.elCache[me.id];
 	        Ext.removeNode(me.dom);      
 	        me.id = Ext.id(me.dom = el);
-	        return Element.cache[me.id] = me;        
+	        Ext.Element.addToCache(me.isFlyweight ? new Ext.Element(me.dom) : me);     
+            return me;
 	    },
 	    
 		/**

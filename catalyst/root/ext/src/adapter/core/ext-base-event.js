@@ -1,29 +1,28 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
 Ext.lib.Event = function() {
     var loadComplete = false,
-        listeners = [],
-        unloadListeners = [],
+        unloadListeners = {},
         retryCount = 0,
         onAvailStack = [],
         _interval,
         locked = false,
         win = window,
         doc = document,
-        
-        // constants            
+
+        // constants
         POLL_RETRYS = 200,
         POLL_INTERVAL = 20,
         EL = 0,
-        TYPE = 1,
-        FN = 2,
-        WFN = 3,
-        OBJ = 3,
-        ADJ_SCOPE = 4,   
+        TYPE = 0,
+        FN = 1,
+        WFN = 2,
+        OBJ = 2,
+        ADJ_SCOPE = 3,
         SCROLLLEFT = 'scrollLeft',
         SCROLLTOP = 'scrollTop',
         UNLOAD = 'unload',
@@ -54,7 +53,7 @@ Ext.lib.Event = function() {
                 ret = function(){};
             }
             return ret;
-        }(),    
+        }(),
         // private
         doRemove = function(){
             var ret;
@@ -64,7 +63,7 @@ Ext.lib.Event = function() {
                         eventName = MOUSEOVER;
                     } else if (eventName == 'mouseleave') {
                         eventName = MOUSEOUT;
-                    }                        
+                    }
                     el.removeEventListener(eventName, fn, (capture));
                 };
             } else if (win.detachEvent) {
@@ -75,44 +74,19 @@ Ext.lib.Event = function() {
                 ret = function(){};
             }
             return ret;
-        }();        
+        }();
 
-    var isXUL = Ext.isGecko ? function(node){ 
-        return Object.prototype.toString.call(node) == '[object XULElement]';
-    } : function(){};
-        
-    var isTextNode = Ext.isGecko ? function(node){
-        try{
-            return node.nodeType == 3;
-        }catch(e) {
-            return false;
-        }
-
-    } : function(node){
-        return node.nodeType == 3;
-    };
-        
     function checkRelatedTarget(e) {
-        var related = pub.getRelatedTarget(e);
-        return !(isXUL(related) || elContains(e.currentTarget,related));
+        return !elContains(e.currentTarget, pub.getRelatedTarget(e));
     }
 
     function elContains(parent, child) {
-       if(parent && parent.firstChild){  
+       if(parent && parent.firstChild){
          while(child) {
             if(child === parent) {
                 return true;
             }
-            try {
-                child = child.parentNode;
-            } catch(e) {
-                // In FF if you mouseout an text input element
-                // thats inside a div sometimes it randomly throws
-                // Permission denied to get property HTMLDivElement.parentNode
-                // See https://bugzilla.mozilla.org/show_bug.cgi?id=208427
-                
-                return false;
-            }                
+            child = child.parentNode;
             if(child && (child.nodeType != 1)) {
                 child = null;
             }
@@ -121,43 +95,32 @@ Ext.lib.Event = function() {
         return false;
     }
 
-        
-    // private  
-    function _getCacheIndex(el, eventName, fn) {
-        var index = -1;
-        Ext.each(listeners, function (v,i) {
-            if(v && v[FN] == fn && v[EL] == el && v[TYPE] == eventName) {
-                index = i;
-            }
-        });
-        return index;
-    }
-                    
     // private
     function _tryPreloadAttach() {
-        var ret = false,                
+        var ret = false,
             notAvail = [],
-            element,
-            tryAgain = !loadComplete || (retryCount > 0);                       
-        
+            element, i, len, v,
+            tryAgain = !loadComplete || (retryCount > 0);
+
         if (!locked) {
             locked = true;
-            
-            Ext.each(onAvailStack, function (v,i,a){
+
+            for (i = 0, len = onAvailStack.length; i < len; i++) {
+                v = onAvailStack[i];
                 if(v && (element = doc.getElementById(v.id))){
                     if(!v.checkReady || loadComplete || element.nextSibling || (doc && doc.body)) {
                         element = v.override ? (v.override === true ? v.obj : v.override) : element;
                         v.fn.call(element, v.obj);
-                        onAvailStack[i] = null;
+                        v = null;
                     } else {
                         notAvail.push(v);
                     }
-                }   
-            });
+                }
+            }
 
             retryCount = (notAvail.length === 0) ? 0 : retryCount - 1;
 
-            if (tryAgain) { 
+            if (tryAgain) {
                 startInterval();
             } else {
                 clearInterval(_interval);
@@ -168,20 +131,20 @@ Ext.lib.Event = function() {
         }
         return ret;
     }
-    
-    // private              
-    function startInterval() {            
-        if(!_interval){                    
+
+    // private
+    function startInterval() {
+        if(!_interval){
             var callback = function() {
                 _tryPreloadAttach();
             };
             _interval = setInterval(callback, POLL_INTERVAL);
         }
     }
-    
-    // private 
+
+    // private
     function getScroll() {
-        var dd = doc.documentElement, 
+        var dd = doc.documentElement,
             db = doc.body;
         if(dd && (dd[SCROLLTOP] || dd[SCROLLLEFT])){
             return [dd[SCROLLLEFT], dd[SCROLLTOP]];
@@ -191,7 +154,7 @@ Ext.lib.Event = function() {
             return [0, 0];
         }
     }
-        
+
     // private
     function getPageCoord (ev, xy) {
         ev = ev.browserEvent || ev;
@@ -208,8 +171,9 @@ Ext.lib.Event = function() {
     }
 
     var pub =  {
-        onAvailable : function(p_id, p_fn, p_obj, p_override) {             
-            onAvailStack.push({ 
+        extAdapter: true,
+        onAvailable : function(p_id, p_fn, p_obj, p_override) {
+            onAvailStack.push({
                 id:         p_id,
                 fn:         p_fn,
                 obj:        p_obj,
@@ -220,66 +184,68 @@ Ext.lib.Event = function() {
             startInterval();
         },
 
-
+        // This function should ALWAYS be called from Ext.EventManager
         addListener: function(el, eventName, fn) {
-            var ret;                
-            el = Ext.getDom(el);                
+            el = Ext.getDom(el);
             if (el && fn) {
-                if (UNLOAD == eventName) {
-                    ret = !!(unloadListeners[unloadListeners.length] = [el, eventName, fn]);                    
-                } else {
-                    listeners.push([el, eventName, fn, ret = doAdd(el, eventName, fn, false)]);
+                if (eventName == UNLOAD) {
+                    if (unloadListeners[el.id] === undefined) {
+                        unloadListeners[el.id] = [];
+                    }
+                    unloadListeners[el.id].push([eventName, fn]);
+                    return fn;
                 }
+                return doAdd(el, eventName, fn, false);
             }
-            return !!ret;
+            return false;
         },
 
+        // This function should ALWAYS be called from Ext.EventManager
         removeListener: function(el, eventName, fn) {
-            var ret = false,
-                index, 
-                cacheItem;
-
             el = Ext.getDom(el);
-
-            if(!fn) {                   
-                ret = this.purgeElement(el, false, eventName);
-            } else if (UNLOAD == eventName) {   
-                Ext.each(unloadListeners, function(v, i, a) {
-                    if( v && v[0] == el && v[1] == eventName && v[2] == fn) {
-                        unloadListeners.splice(i, 1);
-                        ret = true;
+            var i, len, li;
+            if (el && fn) {
+                if (eventName == UNLOAD) {
+                    if (unloadListeners[id] !== undefined) {
+                        for (i = 0, len = unloadListeners[id].length; i < len; i++) {
+                            li = unloadListeners[id][i];
+                            if (li && li[TYPE] == eventName && li[FN] == fn) {
+                                unloadListeners[id].splice(i, 1);
+                            }
+                        }
                     }
-                });
-            } else {    
-                index = arguments[3] || _getCacheIndex(el, eventName, fn);
-                cacheItem = listeners[index];
-                
-                if (el && cacheItem) {
-                    doRemove(el, eventName, cacheItem[WFN], false);     
-                    cacheItem[WFN] = cacheItem[FN] = null;                       
-                    listeners.splice(index, 1);     
-                    ret = true;
+                    return;
                 }
+                doRemove(el, eventName, fn, false);
             }
-            return ret;
         },
 
         getTarget : function(ev) {
-            ev = ev.browserEvent || ev;                
+            ev = ev.browserEvent || ev;
             return this.resolveTextNode(ev.target || ev.srcElement);
         },
 
-        resolveTextNode : function(node) {
-            return node && !isXUL(node) && isTextNode(node) ? node.parentNode : node;
+        resolveTextNode : Ext.isGecko ? function(node){
+            if(!node){
+                return;
+            }
+            // work around firefox bug, https://bugzilla.mozilla.org/show_bug.cgi?id=101197
+            var s = HTMLElement.prototype.toString.call(node);
+            if(s == '[xpconnect wrapped native prototype]' || s == '[object XULElement]'){
+                return;
+            }
+            return node.nodeType == 3 ? node.parentNode : node;
+        } : function(node){
+            return node && node.nodeType == 3 ? node.parentNode : node;
         },
 
         getRelatedTarget : function(ev) {
             ev = ev.browserEvent || ev;
-            return this.resolveTextNode(ev.relatedTarget || 
+            return this.resolveTextNode(ev.relatedTarget ||
                     (ev.type == MOUSEOUT ? ev.toElement :
                      ev.type == MOUSEOVER ? ev.fromElement : null));
         },
-        
+
         getPageX : function(ev) {
             return getPageCoord(ev, "X");
         },
@@ -289,26 +255,11 @@ Ext.lib.Event = function() {
         },
 
 
-        getXY : function(ev) {                             
+        getXY : function(ev) {
             return [this.getPageX(ev), this.getPageY(ev)];
         },
 
-// Is this useful?  Removing to save space unless use case exists.
-//             getTime: function(ev) {
-//                 ev = ev.browserEvent || ev;
-//                 if (!ev.time) {
-//                     var t = new Date().getTime();
-//                     try {
-//                         ev.time = t;
-//                     } catch(ex) {
-//                         return t;
-//                     }
-//                 }
-
-//                 return ev.time;
-//             },
-
-        stopEvent : function(ev) {                            
+        stopEvent : function(ev) {
             this.stopPropagation(ev);
             this.preventDefault(ev);
         },
@@ -330,7 +281,7 @@ Ext.lib.Event = function() {
                 ev.returnValue = false;
             }
         },
-        
+
         getEvent : function(e) {
             e = e || win.event;
             if (!e) {
@@ -352,92 +303,51 @@ Ext.lib.Event = function() {
         },
 
         //clearCache: function() {},
+        // deprecated, call from EventManager
+        getListeners : function(el, eventName) {
+            Ext.EventManager.getListeners(el, eventName);
+        },
+
+        // deprecated, call from EventManager
+        purgeElement : function(el, recurse, eventName) {
+            Ext.EventManager.purgeElement(el, recurse, eventName);
+        },
 
         _load : function(e) {
             loadComplete = true;
-            var EU = Ext.lib.Event;    
+            var EU = Ext.lib.Event;
             if (Ext.isIE && e !== true) {
         // IE8 complains that _load is null or not an object
         // so lets remove self via arguments.callee
                 doRemove(win, "load", arguments.callee);
             }
-        },            
-        
-        purgeElement : function(el, recurse, eventName) {
-            var me = this;
-            Ext.each( me.getListeners(el, eventName), function(v){
-                if(v){
-                    me.removeListener(el, v.type, v.fn);
-                }
-            });
-
-            if (recurse && el && el.childNodes) {
-                Ext.each(el.childNodes, function(v){
-                    me.purgeElement(v, recurse, eventName);
-                });
-            }
-        },
-
-        getListeners : function(el, eventName) {
-            var me = this,
-                results = [], 
-                searchLists;
-
-            if (eventName){  
-                searchLists = eventName == UNLOAD ? unloadListeners : listeners;
-            }else{
-                searchLists = listeners.concat(unloadListeners);
-            }
-
-            Ext.each(searchLists, function(v, i){
-                if (v && v[EL] == el && (!eventName || eventName == v[TYPE])) {
-                    results.push({
-                                type:   v[TYPE],
-                                fn:     v[FN],
-                                obj:    v[OBJ],
-                                adjust: v[ADJ_SCOPE],
-                                index:  i
-                            });
-                }   
-            });                
-
-            return results.length ? results : null;
         },
 
         _unload : function(e) {
-             var EU = Ext.lib.Event, 
-                i, 
-                j, 
-                l, 
-                len, 
-                index,
-                scope;
-                
+             var EU = Ext.lib.Event,
+                i, j, l, v, ul, id, len, index, scope;
 
-            Ext.each(unloadListeners, function(v) {
-                if (v) {
-                    try{
-                        scope =  v[ADJ_SCOPE] ? (v[ADJ_SCOPE] === true ? v[OBJ] : v[ADJ_SCOPE]) :  win; 
-                        v[FN].call(scope, EU.getEvent(e), v[OBJ]);
-                    }catch(ex){}
-                }   
-            });     
+
+            for (id in unloadListeners) {
+                ul = unloadListeners[id];
+                for (i = 0, len = ul.length; i < len; i++) {
+                    v = ul[i];
+                    if (v) {
+                        try{
+                            scope = v[ADJ_SCOPE] ? (v[ADJ_SCOPE] === true ? v[OBJ] : v[ADJ_SCOPE]) :  win;
+                            v[FN].call(scope, EU.getEvent(e), v[OBJ]);
+                        }catch(ex){}
+                    }
+                }
+            };
 
             unloadListeners = null;
-
-            if(listeners && (j = listeners.length)){                    
-                while(j){                        
-                    if((l = listeners[index = --j])){
-                        EU.removeListener(l[EL], l[TYPE], l[FN], index);
-                    }                        
-                }
-                //EU.clearCache();
-            }
+            Ext.EventManager._unload();
 
             doRemove(win, UNLOAD, EU._unload);
-        }            
-    };        
-    
+        }
+    };
+
     // Initialize stuff.
     pub.on = pub.addListener;
     pub.un = pub.removeListener;
@@ -446,8 +356,8 @@ Ext.lib.Event = function() {
     } else {
         doAdd(win, "load", pub._load);
     }
-    doAdd(win, UNLOAD, pub._unload);    
+    doAdd(win, UNLOAD, pub._unload);
     _tryPreloadAttach();
-    
+
     return pub;
 }();

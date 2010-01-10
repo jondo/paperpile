@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -84,7 +84,6 @@ Ext.DomQuery = function(){
 	    // IE runs the same speed using setAttribute, however FF slows way down
 	    // and Safari completely fails so they need to continue to use expandos.
 	    isIE = window.ActiveXObject ? true : false,
-        isOpera = Ext.isOpera,
 	    key = 30803;
 	    
     // this eval is stop the compressor from
@@ -179,7 +178,7 @@ Ext.DomQuery = function(){
         }else if(mode == "/" || mode == ">"){
             var utag = tagName.toUpperCase();
             for(var i = 0, ni, cn; ni = ns[i]; i++){
-                cn = isOpera ? ni.childNodes : (ni.children || ni.childNodes);
+                cn = ni.childNodes;
                 for(var j = 0, cj; cj = cn[j]; j++){
                     if(cj.nodeName == utag || cj.nodeName == tagName  || tagName == '*'){
                         result[++ri] = cj;
@@ -359,7 +358,7 @@ Ext.DomQuery = function(){
         if(!len1){
             return c2;
         }
-        if(isIE && c1[0].selectSingleNode){
+        if(isIE && typeof c1[0].selectSingleNode != "undefined"){
             return quickDiffIEXml(c1, c2);
         }        
         for(var i = 0; i < len1; i++){
@@ -523,9 +522,11 @@ Ext.DomQuery = function(){
             if(!valueCache[path]){
                 valueCache[path] = Ext.DomQuery.compile(path, "select");
             }
-            var n = valueCache[path](root),
-            	v;
+            var n = valueCache[path](root), v;
             n = n[0] ? n[0] : n;
+            
+            if (typeof n.normalize == 'function') n.normalize();
+            
             v = (n && n.firstChild ? n.firstChild.nodeValue : null);
             return ((v === null||v === undefined||v==='') ? defaultValue : v);
         },
@@ -628,8 +629,29 @@ Ext.DomQuery = function(){
         },
 
         /**
-         * Collection of "pseudo class" processors. Each processor is passed the current nodeset (array)
-         * and the argument (if any) supplied in the selector.
+         * <p>Object hash of "pseudo class" filter functions which are used when filtering selections. Each function is passed
+         * two parameters:</p><div class="mdetail-params"><ul>
+         * <li><b>c</b> : Array<div class="sub-desc">An Array of DOM elements to filter.</div></li>
+         * <li><b>v</b> : String<div class="sub-desc">The argument (if any) supplied in the selector.</div></li>
+         * </ul></div>
+         * <p>A filter function returns an Array of DOM elements which conform to the pseudo class.</p>
+         * <p>In addition to the provided pseudo classes listed above such as <code>first-child</code> and <code>nth-child</code>,
+         * developers may add additional, custom psuedo class filters to select elements according to application-specific requirements.</p>
+         * <p>For example, to filter <code>&lt;a></code> elements to only return links to <i>external</i> resources:</p>
+         * <code><pre>
+Ext.DomQuery.pseudos.external = function(c, v){
+    var r = [], ri = -1;
+    for(var i = 0, ci; ci = c[i]; i++){
+//      Include in result set only if it's a link to an external resource
+        if(ci.hostname != location.hostname){
+            r[++ri] = ci;
+        }
+    }
+    return r;
+};</pre></code>
+         * Then external links could be gathered with the following statement:<code><pre>
+var externalLinks = Ext.select("a:external");
+</code></pre>
          */
         pseudos : {
             "first-child" : function(c){

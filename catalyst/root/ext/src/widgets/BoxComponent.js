@@ -1,5 +1,5 @@
 /*!
- * Ext JS Library 3.0.0
+ * Ext JS Library 3.1.0
  * Copyright(c) 2006-2009 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
@@ -34,6 +34,14 @@ var myImage = new Ext.BoxComponent({
  */
 Ext.BoxComponent = Ext.extend(Ext.Component, {
 
+    // tabTip config is used when a BoxComponent is a child of a TabPanel
+    /**
+     * @cfg {String} tabTip
+     * <p><b>Note</b>: this config is only used when this BoxComponent is a child item of a TabPanel.</p>
+     * A string to be used as innerHTML (html tags are accepted) to show in a tooltip when mousing over
+     * the associated tab selector element. {@link Ext.QuickTips}.init()
+     * must be called in order for the tips to render.
+     */
     // Configs below are used for all Components when rendered by BorderLayout.
     /**
      * @cfg {String} region <p><b>Note</b>: this config is only used when this BoxComponent is rendered
@@ -93,6 +101,26 @@ Ext.BoxComponent = Ext.extend(Ext.Component, {
      * @cfg {Number} width
      * The width of this component in pixels (defaults to auto).
      * <b>Note</b> to express this dimension as a percentage or offset see {@link Ext.Component#anchor}.
+     */
+    /**
+     * @cfg {Number} boxMinHeight
+     * <p>The minimum value in pixels which this BoxComponent will set its height to.</p>
+     * <p><b>Warning:</b> This will override any size management applied by layout managers.</p>
+     */
+    /**
+     * @cfg {Number} boxMinWidth
+     * <p>The minimum value in pixels which this BoxComponent will set its width to.</p>
+     * <p><b>Warning:</b> This will override any size management applied by layout managers.</p>
+     */
+    /**
+     * @cfg {Number} boxMaxHeight
+     * <p>The maximum value in pixels which this BoxComponent will set its height to.</p>
+     * <p><b>Warning:</b> This will override any size management applied by layout managers.</p>
+     */
+    /**
+     * @cfg {Number} boxMaxWidth
+     * <p>The maximum value in pixels which this BoxComponent will set its width to.</p>
+     * <p><b>Warning:</b> This will override any size management applied by layout managers.</p>
      */
     /**
      * @cfg {Boolean} autoHeight
@@ -168,6 +196,11 @@ var myPanel = new Ext.Panel({
 });
 </code></pre>
      */
+    /**
+     * @cfg {Boolean} autoScroll
+     * <code>true</code> to use overflow:'auto' on the components layout element and show scroll bars automatically when
+     * necessary, <code>false</code> to clip any overflowing content (defaults to <code>false</code>).
+     */
 
     /* // private internal config
      * {Boolean} deferHeight
@@ -223,15 +256,26 @@ var myPanel = new Ext.Panel({
      * @return {Ext.BoxComponent} this
      */
     setSize : function(w, h){
+
         // support for standard size objects
         if(typeof w == 'object'){
-            h = w.height;
-            w = w.width;
+            h = w.height, w = w.width;
+        }
+        if (Ext.isDefined(w) && Ext.isDefined(this.boxMinWidth) && (w < this.boxMinWidth)) {
+            w = this.boxMinWidth;
+        }
+        if (Ext.isDefined(h) && Ext.isDefined(this.boxMinHeight) && (h < this.boxMinHeight)) {
+            h = this.boxMinHeight;
+        }
+        if (Ext.isDefined(w) && Ext.isDefined(this.boxMaxWidth) && (w > this.boxMaxWidth)) {
+            w = this.boxMaxWidth;
+        }
+        if (Ext.isDefined(h) && Ext.isDefined(this.boxMaxHeight) && (h > this.boxMaxHeight)) {
+            h = this.boxMaxHeight;
         }
         // not rendered
         if(!this.boxReady){
-            this.width = w;
-            this.height = h;
+            this.width = w, this.height = h;
             return this;
         }
 
@@ -240,10 +284,12 @@ var myPanel = new Ext.Panel({
             return this;
         }
         this.lastSize = {width: w, height: h};
-        var adj = this.adjustSize(w, h);
-        var aw = adj.width, ah = adj.height;
+        var adj = this.adjustSize(w, h),
+            aw = adj.width,
+            ah = adj.height,
+            rz;
         if(aw !== undefined || ah !== undefined){ // this code is nasty but performs better with floaters
-            var rz = this.getResizeEl();
+            rz = this.getResizeEl();
             if(!this.deferHeight && aw !== undefined && ah !== undefined){
                 rz.setSize(aw, ah);
             }else if(!this.deferHeight && ah !== undefined){
@@ -252,7 +298,6 @@ var myPanel = new Ext.Panel({
                 rz.setWidth(aw);
             }
             this.onResize(aw, ah, w, h);
-            this.fireEvent('resize', this, aw, ah, w, h);
         }
         return this;
     },
@@ -362,14 +407,23 @@ var myPanel = new Ext.Panel({
      * contains both the <code>&lt;input></code> Element (which is what would be returned
      * by its <code>{@link #getEl}</code> method, <i>and</i> the trigger button Element.
      * This Element is returned as the <code>resizeEl</code>.
+     * @return {Ext.Element} The Element which is to be resized by size managing layouts.
      */
     getResizeEl : function(){
         return this.resizeEl || this.el;
     },
 
-    // protected
-    getPositionEl : function(){
-        return this.positionEl || this.el;
+    /**
+     * Sets the overflow on the content element of the component.
+     * @param {Boolean} scroll True to allow the Component to auto scroll.
+     * @return {Ext.BoxComponent} this
+     */
+    setAutoScroll : function(scroll){
+        if(this.rendered){
+            this.getContentTarget().setOverflow(scroll ? 'auto' : '');
+        }
+        this.autoScroll = scroll;
+        return this;
     },
 
     /**
@@ -433,20 +487,16 @@ var myPanel = new Ext.Panel({
     },
 
     // private
-    onRender : function(ct, position){
-        Ext.BoxComponent.superclass.onRender.call(this, ct, position);
+    afterRender : function(){
+        Ext.BoxComponent.superclass.afterRender.call(this);
         if(this.resizeEl){
             this.resizeEl = Ext.get(this.resizeEl);
         }
         if(this.positionEl){
             this.positionEl = Ext.get(this.positionEl);
         }
-    },
-
-    // private
-    afterRender : function(){
-        Ext.BoxComponent.superclass.afterRender.call(this);
         this.boxReady = true;
+        this.setAutoScroll(this.autoScroll);
         this.setSize(this.width, this.height);
         if(this.x || this.y){
             this.setPosition(this.x, this.y);
@@ -474,7 +524,7 @@ var myPanel = new Ext.Panel({
      * @param {Number} rawHeight The height that was originally specified
      */
     onResize : function(adjWidth, adjHeight, rawWidth, rawHeight){
-
+        this.fireEvent('resize', this, adjWidth, adjHeight, rawWidth, rawHeight);
     },
 
     /* // protected
