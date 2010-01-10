@@ -22,13 +22,15 @@ enum 'Types' => (
   'MATCH',         # match a (partial) reference against a web resource
   'PDF_IMPORT',    # extract metadata from PDF and match agains web resource
   'PDF_SEARCH',    # search PDF online
-  'WEB_IMPORT'     # Import a reference that was sent from the browser
+  'WEB_IMPORT',     # Import a reference that was sent from the browser
+  'TEST_JOB'
 );
 
 enum 'Status' => (
   'PENDING',       # job is waiting to be started
   'RUNNING',       # job is running
-  'DONE'           # job is done
+  'DONE',          # job is successfully finished.
+  'ERROR'         # job finished with an error or was canceled.
 );
 
 has 'type'   => ( is => 'rw', isa => 'Types' );
@@ -36,6 +38,8 @@ has 'status' => ( is => 'rw', isa => 'Status' );
 
 has 'id'    => ( is => 'rw' );    # Unique id identifying the job
 has 'error' => ( is => 'rw' );    # Error message if job failed
+
+has 'message' => ( is => 'rw' );   # Long-winded progress message.
 
 # Field to store different job type specific information
 has 'info' => ( is => 'rw', isa => 'HashRef' );
@@ -50,7 +54,6 @@ has 'interrupt' => ( is => 'rw', default => '' );
 # Publication object which is needed for all job types
 has 'pub' => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
 
-
 # File name to store the job object
 has '_file' => ( is => 'rw' );
 
@@ -62,7 +65,7 @@ sub BUILD {
   if ( !$params->{id} ) {
     $self->generate_id;
     $self->status('PENDING');
-    $self->info( { msg => 'Waiting' } );
+    $self->info( { msg => $self->noun." waiting..." } );
     $self->error('');
     $self->duration(0);
 
@@ -103,6 +106,55 @@ sub restore {
   }
 }
 
+sub reset {
+  my $self = shift;
+
+  if ($self->status eq 'RUNNING') {
+    $self->interrupt('CANCEL');
+    $self->save;
+  }
+
+  $self->update_status('PENDING');
+  $self->error('');
+  $self->interrupt('');
+  $self->info({msg => ''});
+ 
+  $self->save;
+}
+
+sub noun {
+  my $self = shift;
+
+  my $type = $self->type;
+  return 'PDF download' if ($type eq 'PDF_SEARCH');
+  return 'PDF import' if ($type eq 'PDF_IMPORT');
+  return 'Test job' if ($type eq 'TEST_JOB');
+}
+
+sub remove {
+  my $self = shift;
+
+  my $dbh = Paperpile::Utils->get_queue_model->dbh;
+
+  my $id = $self->id;
+  $dbh->do("DELETE FROM Queue WHERE jobid='$id';");
+
+  unlink $self->_file;
+}
+
+sub cancel {
+  my $self = shift;
+
+  if ($self->status eq 'RUNNING') {
+    $self->interrupt('CANCEL');
+  }
+
+  $self->error($self->noun . ' canceled.');
+  $self->update_status('ERROR');
+
+  $self->save;
+}
+
 ## Generate alphanumerical random id
 
 sub generate_id {
@@ -138,11 +190,9 @@ sub update_status {
 
   $status = $dbh->quote( $self->status );
 
-  my $error = 0;
-  $error = 1 if $self->error;
   my $duration = $self->duration;
 
-  $dbh->do("UPDATE Queue SET status=$status, error=$error, duration=$duration WHERE jobid=$job_id");
+  $dbh->do("UPDATE Queue SET status=$status, duration=$duration WHERE jobid=$job_id");
 
   $dbh->commit;
 
@@ -188,19 +238,21 @@ sub run {
 
     my $start_time = time;
 
+    print STDERR " --> Started job ".$self->type." at ".$start_time."!!\n";
+
     eval {
       $self->_do_work;
     };
 
     if ($@) {
       $self->_catch_error;
+    } else {
+      $self->update_status('DONE');
     }
 
     my $end_time = time;
 
     $self->duration( $end_time - $start_time );
-
-    $self->update_status('DONE');
 
     my $q = Paperpile::Queue->new();
     $q->run;
@@ -241,19 +293,19 @@ sub _do_work {
 
   }
 
-  if ($self->type eq 'PDF_IMPORT'){
+  if ($self->type eq 'PDF_IMPORT') {
 
     $self->_lookup_pdf;
 
-    if ($self->pub->_imported){
+    if ($self->pub->_imported) {
 
-      $self->update_info('msg',"PDF already in database (".$self->pub->citekey.")");
+      $self->update_info('msg',"PDF already in database (".$self->pub->citekey.").");
 
     } else {
       $self->_extract_meta_data;
 
       if ( !$self->pub->{doi} and !$self->pub->{title} ) {
-        ExtractionError->throw("Could not find DOI or title in PDF");
+        ExtractionError->throw("Could not find DOI or title in PDF.");
       }
 
       $self->_match;
@@ -261,8 +313,22 @@ sub _do_work {
       $self->_attach_pdf;
 
       $self->update_info('msg',"PDF successfully imported.");
+      $self->update_info('callback',{fn => 'updatePubGrid'});
 
     }
+  }
+
+  if ($self->type eq 'TEST_JOB') {
+
+      $self->update_info('msg', 'Test job phase 1...');
+
+      sleep(3);
+
+      $self->update_info('msg', 'Test job phase 2...');
+
+      sleep(3);
+
+      $self->update_info('msg', 'Test job complete!');
   }
 }
 
@@ -277,8 +343,12 @@ sub _catch_error {
 
   if ( ref $e ) {
     $self->error( $e->error );
+    
+    $self->update_status('ERROR');
+#    print STDERR " --> ERROR: ".$e->error."\n";
+    $self->save;
   } else {
-    print STDERR $@; # log this error also on console
+#    print STDERR $@; # log this error also on console
     $self->error("An unexpected error has occured ($@)");
   }
 }
@@ -299,6 +369,20 @@ sub _rethrow_error {
 }
 
 
+sub get_message {
+  my $self = shift;
+
+  if ($self->error) {
+    return $self->error;
+  }
+
+  if ($self->info) {
+    return $self->info->{'msg'};
+  }
+
+  return 'Empty message...';
+}
+
 ## Dumps the job object as hash
 
 sub as_hash {
@@ -310,9 +394,8 @@ sub as_hash {
   foreach my $key ( $self->meta->get_attribute_list ) {
     my $value = $self->$key;
 
-    # Also save info->{msg} as field 'progress'
+    # Save the entire 'info' hash.
     if ( $key eq 'info' ) {
-      $hash{progress} = $self->$key->{msg};
       $hash{info}     = $self->$key;
     }
 
@@ -320,6 +403,8 @@ sub as_hash {
 
     $hash{$key} = $value;
   }
+  
+  $hash{message} = $self->get_message;
 
   $hash{citekey}  = $self->pub->citekey;
   $hash{title}    = $self->pub->title;
@@ -348,11 +433,9 @@ sub _match {
 
   my @plugin_list = split( /,/, $settings->{search_seq} );
 
-  my $matched = 0;
-
   foreach my $plugin (@plugin_list) {
 
-    $self->update_info('msg',"Matching against $plugin");
+    $self->update_info('msg',"Matching against $plugin...");
 
     eval { $self->_match_single($plugin); };
 
@@ -398,7 +481,7 @@ sub _crawl {
 
   my $self = shift;
 
-  $self->update_info('msg',"Searching PDF on publisher site.");
+  $self->update_info('msg',"Searching PDF on publisher's site...");
 
   my $crawler = Paperpile::Crawler->new;
   $crawler->debug(1);
@@ -419,7 +502,7 @@ sub _download {
 
   my $self = shift;
 
-  $self->update_info( 'msg', "Downloading PDF" );
+  $self->update_info( 'msg', "Downloading PDF..." );
 
   my $file =
     File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->sha1 . ".pdf" );
@@ -451,7 +534,7 @@ sub _download {
 
         open( FILE, ">$file" )
           or FileWriteError->throw(
-          error => "Could not open temporary file for download,  $!",
+          error => "Could not open temporary file for download,  $!.",
           file  => $file
           );
         binmode FILE;
@@ -459,7 +542,7 @@ sub _download {
 
       print FILE $data
         or FileWriteError->throw(
-        error => "Could not write data to temporary file,  $!",
+        error => "Could not write data to temporary file,  $!.",
         file  => "$file"
         );
       my $current_size = stat($file)->size;
@@ -475,16 +558,16 @@ sub _download {
     unlink($file);
     if ( $res->header("X-Died") ) {
       if ( $res->header("X-Died") =~ /CANCEL/ ) {
-        UserCancel->throw( error => 'Download cancelled.' );
+        UserCancel->throw( error => $self->noun.' canceled.' );
       } else {
         NetGetError->throw(
-          error => 'Download error (' . $res->header("X-Died") . ')',
+          error => 'Download error (' . $res->header("X-Died") . ').',
           code  => $res->code,
         );
       }
     } else {
       NetGetError->throw(
-        error => 'Unknown download error',
+        error => 'Unknown '.$self->noun.' error.',
         code  => $res->code,
       );
     }
@@ -500,7 +583,7 @@ sub _download {
   if ( $content !~ m/^\%PDF/ ) {
     unlink($file);
     NetGetError->throw(
-      'Could not download PDF. Your institution might need a subscription for the journal.');
+      $self->noun.' error: downloaded file does not appear to be a PDF!');
   }
 
   $self->pub->pdf($file);
@@ -562,6 +645,7 @@ sub _lookup_pdf {
     print STDERR Dumper($pub);
 
   }
+ 
 }
 
 

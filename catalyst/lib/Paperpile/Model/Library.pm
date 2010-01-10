@@ -195,6 +195,8 @@ sub insert_pubs {
     $values.=",''";
     $dbh->do("INSERT INTO fulltext_full ($fields) VALUES ($values)");
 
+    # GJ 2010-01-10 I *think* this should be here, but not sure...
+    $pub->_imported(1);
   }
 
   $dbh->commit;
@@ -651,6 +653,7 @@ sub update_folders {
   my @folders=split(/,/,$folders);
 
   # First update flat field in Publication and Fulltext tables
+  $folders = $dbh->quote($folders);
 
   $dbh->do("UPDATE Publications SET folders=$folders WHERE rowid=$pub_rowid;");
   $dbh->do("UPDATE Fulltext_full SET folder=$folders WHERE rowid=$pub_rowid;");
@@ -827,8 +830,6 @@ sub fulltext_count {
     $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
   }
 
-  print STDERR "Where: $where\n";
-  print STDERR "Table: $table\n";
   my $count = $self->dbh->selectrow_array(
     qq{select count(*) from Publications join $table on 
     publications.rowid=$table.rowid $where}
@@ -942,7 +943,7 @@ sub standard_search {
 
   my $sth = $self->dbh->prepare( "SELECT rowid as _rowid, * FROM Publications WHERE $query;" );
 
-  print STDERR "SELECT rowid as _rowid, * FROM Publications WHERE $query\n";
+#  print STDERR "SELECT rowid as _rowid, * FROM Publications WHERE $query\n";
 
   $sth->execute;
 
