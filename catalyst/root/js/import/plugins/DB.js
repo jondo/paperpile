@@ -2,8 +2,7 @@ Paperpile.PluginGridDB = function(config) {
   Ext.apply(this, config);
 
   Paperpile.PluginGridDB.superclass.constructor.call(this, {
-    });
-
+  });
 };
 
 Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
@@ -25,10 +24,13 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         '<a href="#" class="pp-textlink" onClick="Paperpile.main.tabs.newPluginTab(\'PubMed\', {plugin_name: \'Pubmed\', plugin_query:\'\'});">PubMed</a> or ',
         '<a href="#" class="pp-textlink" onClick="Paperpile.main.tabs.newPluginTab(\'GoogleScholar\', {plugin_name: \'GoogleScholar\', plugin_query:\'\'});">Google Scholar</a></li>',
         '</ul>',
-        '</div>',
+        '</div>'
     ],
 
     initComponent:function() {
+
+/*
+<<<<<<< HEAD:catalyst/root/js/import/plugins/DB.js
         Paperpile.PluginGridDB.superclass.initComponent.call(this);
         this.limit = Paperpile.main.globalSettings['pager_limit'];
 
@@ -101,39 +103,57 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         scope: this,
         itemId:'new_button',
         tooltip: 'Manually create a new reference for your library'
+=======
+*/
+      Paperpile.PluginGridDB.superclass.initComponent.call(this);
+      this.limit = Paperpile.main.globalSettings['pager_limit'];
+
+      // If we are viewing a virtual folders we need an additional
+      // button to remove an entry from a virtual folder
+      this.store.baseParams['plugin_search_pdf']= 0 ;
+      this.store.baseParams['limit']= this.limit ;
+      this.store.on('load', 
+	function() {
+	  if (this.store.getCount()==0) {
+            var container= this.findParentByType(Paperpile.PluginPanel);
+            if (container.itemId=='MAIN' && this.store.baseParams.plugin_query =="") {
+              container.onEmpty(this.welcomeMsg);
+	    }
+          }
+        },
+	this
+      );
+      this.store.on('load', function() {
+	this.getSelectionModel().selectFirstRow();
+      }, this, {
+        single: true
+//>>>>>>> ext3:catalyst/root/js/import/plugins/DB.js
       });
-
-    },
-
-    myOnRender: function() {
-
-      var tbar = this.getTopToolbar();
-      var index = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-      tbar.insertButton(index+1,this.actions['NEW']);
-
+      this.store.load({params:{start:0, limit: this.limit}});
+      this.on({render:{scope:this,fn:this.createSortHandles}});
     },
 
     createSortHandles: function() {
         var target=Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(1)).first(), 
-                                        '<div id="pp-grid-sort-container_'+this.id+'" class="pp-grid-sort-container"></div>', true);
+	  '<div id="pp-grid-sort-container_'+this.id+'" class="pp-grid-sort-container"></div>', true);
 
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="created" status="desc">Date added</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal" status="inactive">Journal</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year" status="inactive">Year</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author" status="inactive">Author</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf" status="inactive">PDF</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive">Supp. material</div>');
-        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="notes" status="inactive">Notes</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-desc"     action="created" status="desc" default="desc">Date added</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal" status="inactive" default="asc">Journal</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year" status="inactive" default="desc">Year</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author" status="inactive" default="asc">Author</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf" status="inactive" default="desc">PDF</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive" default="desc">Supp. material</div>');
+        Ext.DomHelper.append(target,'<div class="pp-grid-sort-item pp-grid-sort-inactive" action="notes" status="inactive" default="desc">Notes</div>');
 
         target.on('click', this.handleSortButtons, this);
     },
 
     currentSortField:'',
     handleSortButtons: function(e, el, o){
-
         var currentClass=el.getAttribute('class');
         var field=el.getAttribute('action');
         var status=el.getAttribute('status');
+	var def = el.getAttribute('default');
       
         if (field != this.currentSortField) {
           //log(field);
@@ -163,9 +183,15 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         
          
         if (status == "inactive"){
+	  if (def == 'desc') {
             El.addClass(classes.desc);
             this.store.baseParams['plugin_order']=field+" DESC";
             el.setAttribute('status','desc');
+	  } else {
+            El.addClass(classes.asc);
+            this.store.baseParams['plugin_order']=field+" ASC";
+            el.setAttribute('status','asc');
+	  }
         } else {
             if (status=="desc"){
                 this.store.baseParams['plugin_order']=field;
@@ -219,34 +245,147 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       
     },
 
-    shouldShowButton: function(menuItem) {
-      var superShow = Paperpile.PluginGridDB.superclass.shouldShowButton.call(this,menuItem);
-
-      if (menuItem.itemId == this.actions['DELETE'].itemId) {
-	menuItem.setIconClass('pp-icon-trash');
-      }
-
-      return superShow;
+    setSearchQuery: function(text) {
+      this.filterField.setValue(text);
+      this.filterField.onTrigger2Click();
     },
 
+    createContextMenu: function() {
+      Paperpile.PluginGridDB.superclass.createContextMenu.call(this);
 
-    shouldShowContextItem: function(menuItem,record) {
-      var superShow = Paperpile.PluginGridDB.superclass.shouldShowContextItem.call(this,menuItem,record);
-      
+      this.actions['REMOVE_FOLDER'] = new Ext.Action( {
+	text: 'Remove from Folder',
+	handler:this.deleteFromFolder,
+	scope:this,
+	iconCls:'pp-icon-remove-folder',
+	itemId:'remove_folder'
+      });
+
+      var index = this.getContextIndex(this.actions['DELETE'].itemId);
+      var context = this.getContextMenu();
+      context.insert(index+1,this.actions['REMOVE_FOLDER']);
+    },
+
+    createToolbarMenu: function() {
+      Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
+
+        this.filterMenu = new Ext.menu.Menu({
+            defaults: {checked: false,
+                       group: 'filter'+this.id,
+                       checkHandler: this.toggleFilter,
+                       scope:this
+                      },
+            items: [ { text: 'All fields',
+                       checked: true,
+                       itemId: 'all_nopdf'
+                     }, 
+                     { text: 'All + Fulltext',
+                       itemId: 'all_pdf'
+                     }, 
+                     '-', 
+                     { text: 'Author', itemId: 'author'}, 
+                     { text: 'Title',  itemId: 'title' },
+                     { text: 'Journal', itemId: 'journal'},
+                     { text: 'Abstract', itemId: 'abstract'},
+                     { text: 'Fulltext', itemId: 'text'},
+                     { text: 'Notes', itemId: 'notes'},
+                     { text: 'Year', itemId: 'year'}
+                   ]
+        });
+
+	this.filterButton = new Ext.Button({
+	  itemId:'filter_button',
+	  text: 'Filter',
+	  tooltip: 'Choose field(s) to search',
+	  menu: this.filterMenu
+	});
+        this.filterField=new Ext.app.FilterField({
+	  itemId:'filter_field',
+	  store: this.store, 
+	  base_query: this.plugin_base_query,
+          width: 200
+        });
+
+      var tbar = this.getTopToolbar();
+      tbar.insert(0,this.filterButton);
+      tbar.insert(0,this.filterField);
+
+      this.actions['NEW'] = new Ext.Action({
+	text: 'New Reference',
+	iconCls: 'pp-icon-add',
+        handler: this.newEntry,
+        scope: this,
+        itemId:'new_button',
+        tooltip: 'Manually create a new reference for your library'
+      });
+
+      var index = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
+      tbar.insertButton(index+1,this.actions['NEW']);
+    },
+
+    updateContextItem: function(menuItem,record) {
+      Paperpile.PluginGridDB.superclass.updateContextItem.call(this,menuItem,record);
       if (menuItem.itemId == this.actions['SELECT_ALL'].itemId) {
 	menuItem.setText('Select all ('+this.store.getTotalCount()+')');
       }
 
       if (menuItem.itemId == this.actions['DELETE'].itemId) {
-	console.log(menuItem);
 	menuItem.setIconClass('pp-icon-trash');
-//	menuItem.ownerCt.doLayout();
 	menuItem.setText('Move to Trash');
       }
 
-      return superShow;
+      if (menuItem.itemId == this.actions['REMOVE_FOLDER'].itemId) {
+	if (record.data.folders == '') {
+	  menuItem.hide();
+	} else {
+	  menuItem.show();
+	}
+      }
+    },
+
+    deleteFromFolder: function() {
+      var sel = this.getSelection();
+
+      var folder = this.getSelectionModel().getSelected().get('folders');
+
+      if (!folder) {
+	return;
+      }
+      Ext.Ajax.request( {
+	url: Paperpile.Url('/ajax/crud/delete_from_folder'),
+	params: {
+	  selection: this.getSelection(),
+	  grid_id: this.id,
+          folder_id: folder
+	},
+	method: 'GET',
+	success: function(response) {
+	  var json = Ext.util.JSON.decode(response.responseText);
+	  // Update the status of the other views.
+	  Paperpile.main.onUpdate(json.data);
+	  // Reload this entire view, because the refs just got removed from the folder.
+	  this.getView().holdPosition = true;
+	  this.getStore().reload();
+	},
+	failure: Paperpile.main.onError,
+	scope:this
+      });
     }
 
 });
 
 Ext.reg('pp-plugin-grid-db', Paperpile.PluginGridDB);
+
+
+Paperpile.PluginPanelDB = function(config) {
+  Ext.apply(this, config);
+
+  Paperpile.PluginPanelDB.superclass.constructor.call(this, {
+  });
+};
+
+Ext.extend(Paperpile.PluginPanelDB, Paperpile.PluginPanel, {
+  createGrid: function(params) {
+    return new Paperpile.PluginGridDB(params);
+  }
+});

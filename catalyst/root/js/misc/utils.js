@@ -88,6 +88,13 @@ Paperpile.utils = {
         return date.replace(/\d+:\d+:\d+/g,"");
     },
 
+    secondsAgo: function(date_str) {
+      var time = ('' + date_str).replace(/-/g,"/").replace(/[TZ]/g," ");
+      var dt = new Date;
+      var seconds = ((dt - new Date(time) + (dt.getTimezoneOffset() * 60000)) / 1000);
+      return seconds;
+    },
+
 /*
  * Javascript Humane Dates
  * Copyright (c) 2008 Dean Landolt (deanlandolt.com)
@@ -148,4 +155,4 @@ Paperpile.utils = {
         
 	    return date_str;
     }
- }
+ };

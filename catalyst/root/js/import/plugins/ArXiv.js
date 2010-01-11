@@ -1,20 +1,34 @@
-Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGridOnlineSearch, {
-    
-    plugin_title: 'ArXiv',
-    plugin_iconCls: 'pp-icon-arxiv',
+Paperpile.PluginPanelArXiv = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'ArXiv',
+      iconCls: 'pp-icon-arxiv'
+    });
+    Paperpile.PluginPanelArXiv.superclass.initComponent.call(this);
+  },
+  createGrid: function(params) {
+    return new Paperpile.PluginGridArXiv(params);
+  }
+});
+
+Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGrid, {
+  
+    plugins:[
+      new Paperpile.OnlineSearchGridPlugin(),
+      new Paperpile.ImportGridPlugin()
+    ],
     limit: 25,
 
     initComponent:function() {
-
-        this.plugin_name = 'ArXiv';
-
-        Paperpile.PluginGridArXiv.superclass.initComponent.apply(this, arguments);
-	this.sidePanel = new Paperpile.PluginSidepanelArXiv();
-    },
+      this.plugin_name = 'ArXiv';
+      this.aboutPanel = new Paperpile.AboutArXiv();
+      
+      Paperpile.PluginGridArXiv.superclass.initComponent.call(this);
+    }
  
 });
 
-Paperpile.PluginSidepanelArXiv = Ext.extend(Paperpile.PluginSidepanel, {
+Paperpile.AboutArXiv = Ext.extend(Paperpile.PluginAboutPanel, {
 
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
@@ -23,6 +37,6 @@ Paperpile.PluginSidepanelArXiv = Ext.extend(Paperpile.PluginSidepanel, {
         '<p><a target=_blank href="http://arxiv.org/" class="pp-textlink">arxiv.org</a></p>',
         '</div>'],
 
-    tabLabel: 'About ArXiv',
+    tabLabel: 'About ArXiv'
    
 });

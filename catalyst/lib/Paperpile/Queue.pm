@@ -25,7 +25,7 @@ has 'status' => (
 );
 
 # Maximum number of jobs running at the same time
-has max_running => ( is => 'rw', isa => 'Int', default => 2 );
+has max_running => ( is => 'rw', isa => 'Int', default => 1 );
 
 # Estimated time to completion
 has eta => ( is => 'rw', isa => 'Str', default => "--:--:--" );
@@ -60,16 +60,24 @@ sub save {
 
   my $self = shift;
 
+  $self->update_stats;
+
   $self->_dbh(undef);
 
   my $serialized = freeze($self);
 
-  my $dbh = Paperpile::Utils->get_queue_model->dbh;
+  # Test for existence of queue value in database.
+  $self->dbh->begin_work();
+  (my $existing_serialized) = $self->dbh->selectrow_array("SELECT value FROM Settings WHERE key='queue'");
+  $self->dbh->commit();
 
   $self->dbh->begin_work();
-  $serialized = $dbh->quote($serialized);
-  $self->dbh->do("UPDATE Settings SET value=$serialized WHERE key='queue' ");
-
+  $serialized = $self->dbh->quote($serialized);
+  if (defined $existing_serialized) {
+    $self->dbh->do("UPDATE Settings SET value=$serialized WHERE key='queue'");
+  } else {
+    $self->dbh->do("INSERT INTO Settings VALUES ('queue',$serialized)");
+  }
   $self->dbh->commit();
 
 }
@@ -86,7 +94,10 @@ sub restore {
 
   $self->dbh->commit;
 
-  return if not $serialized;
+  if (not $serialized) {
+    $self->save;
+    $serialized = freeze($self);
+  }
 
   ( my $stored ) = thaw($serialized);
 
@@ -111,34 +122,50 @@ sub submit {
   foreach my $job (@$jobs){
     my $id     = $self->dbh->quote( $job->id );
     my $status = $self->dbh->quote( $job->status );
-    $self->dbh->do("INSERT INTO Queue (jobid, status) VALUES ($id, $status)");
+    my $sha1 = $self->dbh->quote( $job->pub->sha1 );
+    $self->dbh->do("INSERT INTO Queue (jobid, status, sha1) VALUES ($id, $status, $sha1)");
   }
 
   $self->dbh->commit;
+
+  $self->save;
 
 }
 
 ## Return list of job objects currently in the queue
 
 sub get_jobs {
-
   my $self = shift;
+  my $status = shift || '';
 
-  my $sth = $self->dbh->prepare("SELECT jobid FROM Queue");
+  if (ref $status eq 'ARRAY') {
+      my @statuses = @$status;
+      @statuses = map {$self->dbh->quote($_)} @statuses;
+      $status = join(",",@statuses);
+  } elsif ($status ne '') {
+      $status = $self->dbh->quote($status);
+  }
 
-  my ($job_id);
+  my $sth;
+  if ($status ne '') {
+    $sth = $self->dbh->prepare("SELECT jobid,status FROM Queue WHERE status IN ($status);");
+  } else {
+    $sth = $self->dbh->prepare("SELECT jobid,status FROM Queue;");
+  }
 
-  $sth->bind_columns( \$job_id );
+  my ($job_id,$status2);
+
+  $sth->bind_columns( \$job_id, \$status2 );
   $sth->execute;
 
   my @jobs = ();
 
   while ( $sth->fetch ) {
+      print STDERR " ${job_id} ----> $status2\n";
     push @jobs, Paperpile::Job->new( { id => $job_id } );
   }
 
   return [@jobs];
-
 }
 
 ## Updates fields "eta", "num_pending" and "num_done" from database
@@ -225,6 +252,9 @@ sub run {
 
   $self->dbh->do('COMMIT TRANSACTION');
 
+#  $self->restore;
+#  return if ($self->status eq 'PAUSED');
+
   # If no jobs are running and no more jobs left to start we set
   # status to 'WAITING'
   if ($curr_running == 0 and @to_be_started == 0){
@@ -238,7 +268,7 @@ sub run {
       my $job = Paperpile::Job->new( { id => $id } );
       $job->run;
     }
-    $self->status('RUNNING');
+#   $self->status('RUNNING');
     $self->save;
   }
 }
@@ -286,6 +316,29 @@ sub clear {
   $self->dbh->do("DELETE FROM Queue");
 
   $self->save;
+}
+
+
+sub as_hash {
+  my $self = shift;
+
+  $self->update_stats;
+
+  my %hash = ();
+
+  foreach my $key ( $self->meta->get_attribute_list ) {
+    my $value = $self->$key;
+ 
+    if ($key ~~ ['num_pending','num_done']){
+      $value+=0;
+    }
+
+    next if ref( $self->$key );
+
+    $hash{$key} = $value;
+  }
+
+  return {%hash};
 }
 
 no Moose;

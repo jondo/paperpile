@@ -35,7 +35,7 @@ Paperpile.PdfExtractControl = Ext.extend(Ext.Panel, {
             autoScroll: true,
 		});
 		
-        Paperpile.PDFmanager.superclass.initComponent.call(this);
+        Paperpile.PdfExtractControl.superclass.initComponent.call(this);
 	},
 
     getUnimportedList: function(){

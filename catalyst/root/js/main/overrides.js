@@ -1,5 +1,44 @@
 // Ext overrides
 
+Ext.namespace("Ext.ux");
+Ext.ux.clone = function(o) {
+    if(!o || 'object' !== typeof o) {
+        return o;
+    }
+    var c = '[object Array]' === Object.prototype.toString.call(o) ? [] : {};
+    var p, v;
+    for(p in o) {
+        if(o.hasOwnProperty(p)) {
+            v = o[p];
+            if(v && 'object' === typeof v) {
+                c[p] = Ext.ux.clone(v);
+            }
+            else {
+                c[p] = v;
+            }
+        }
+    }
+    return c;
+}; // eo function clone 
+
+
+Ext.override(Ext.Component,{
+
+  findParentByType: function(t) {
+    if (!Ext.isFunction(t)) {
+      return this.findParentBy(function(p){
+                return p.constructor.xtype === t;
+            });
+    }
+    var p = this;
+    do {
+        p = p.ownerCt;
+    } while(p!=null && !(p instanceof t))
+    return p;
+  }
+
+});
+
 Ext.override(Ext.form.Field, {
     hideItem :function(){
         this.formItem = Ext.Element(this.getEl()).findParent('.x-form-item',4);
@@ -39,13 +78,150 @@ Ext.override(Ext.Panel, {
 });
 
 
+Ext.override(Ext.grid.RowSelectionModel, {
+    initEvents : function(){
+
+      // Create an event which only fires after a selection is DONE changing in response
+      // to a user interaction (i.e., when we shift-click to select 10 items, this only fires ONCE).
+      this.addEvents('afterselectionchange');
+
+      // Make the grid respond to click events.
+      this.grid.on('rowclick', this.handleMouseDown,this);
+
+        if(!this.grid.enableDragDrop && !this.grid.enableDrag){
+            this.grid.on('rowmousedown', this.handleMouseDown, this);
+        }
+
+        this.rowNav = new Ext.KeyNav(this.grid.getGridEl(), {
+            'up' : function(e){
+                if(!e.shiftKey || this.singleSelect){
+                    this.selectPrevious(false);
+                }else if(this.last !== false && this.lastActive !== false){
+                    var last = this.last;
+                    this.selectRange(this.last,  this.lastActive-1);
+                    this.grid.getView().focusRow(this.lastActive);
+                    if(last !== false){
+                        this.last = last;
+                    }
+                }else{
+                    this.selectFirstRow();
+                }
+	      this.fireEvent('afterselectionchange',this);
+            },
+            'down' : function(e){
+                if(!e.shiftKey || this.singleSelect){
+                    this.selectNext(false);
+                }else if(this.last !== false && this.lastActive !== false){
+                    var last = this.last;
+                    this.selectRange(this.last,  this.lastActive+1);
+                    this.grid.getView().focusRow(this.lastActive);
+                    if(last !== false){
+                        this.last = last;
+                    }
+                }else{
+                    this.selectFirstRow();
+                }
+	      this.fireEvent('afterselectionchange',this);
+            },
+            scope: this
+        });
+
+        this.grid.getView().on({
+            scope: this,
+            refresh: this.onRefresh,
+            rowupdated: this.onRowUpdated,
+            rowremoved: this.onRemove
+        });
+    },
+  // private
+  handleMouseDown : function(g, rowIndex, e){
+    if(e.button !== 0 || this.isLocked()){
+      return;
+    }
+    // Ignore 'click' events when ctrl or shift is held down.
+    if (e.type == 'click' && (e.ctrlKey || e.shiftKey)) {
+      return;
+    }
+    var view = this.grid.getView();
+    if(e.shiftKey && !this.singleSelect && this.last !== false){
+      var last = this.last;
+      this.selectRange(last, rowIndex, e.ctrlKey);
+      this.last = last; // reset the last
+      view.focusRow(rowIndex);
+    }else{
+      var isSelected = this.isSelected(rowIndex);
+      if(e.ctrlKey && isSelected){
+        this.deselectRow(rowIndex);
+      }else if(!isSelected || this.getCount() > 1){
+        this.selectRow(rowIndex, e.ctrlKey || e.shiftKey);
+        view.focusRow(rowIndex);
+      }
+    }
+    this.fireEvent('afterselectionchange',this);
+  },
+
+  onRefresh: function() {
+    this.suspendEvents();
+    var ds = this.grid.store, index;
+    var s = this.getSelections();
+    this.clearSelections(true);
+    for(var i = 0, len = s.length; i < len; i++){
+      var r = s[i];
+      if((index = ds.indexOfId(r.id)) != -1){
+        this.selectRow(index, true);
+      }
+    }
+    this.resumeEvents();
+    if(s.length != this.selections.getCount()){
+      this.fireEvent('selectionchange', this);
+      this.fireEvent('afterselectionchange', this);
+    }
+  },
+
+  selectAll : function(){
+    if(this.isLocked()){
+      return;
+    }
+    this.selections.clear();
+    for(var i = 0, len = this.grid.store.getCount(); i < len; i++){
+      this.selectRow(i, true);
+    }
+    this.fireEvent('afterselectionchange',this);
+  },
+
+    clearSelections : function(fast){
+        if(this.isLocked()){
+            return;
+        }
+        if(fast !== true){
+            var ds = this.grid.store;
+            var s = this.selections;
+            s.each(function(r){
+                this.deselectRow(ds.indexOfId(r.id));
+            }, this);
+            s.clear();
+        }else{
+            this.selections.clear();
+        }
+        this.last = false;
+      // DO NOT fire an 'afterselectionchange' event here!
+    }
+
+});
+
 // Avoid scrolling to top if 'holdPosition" is given
 // from: http://extjs.com/forum/showthread.php?t=13898
+
+// GJ 2010-01-03 I changed this to always avoid scrolling to top... we can
+// manually scroll to top if needed, but usually it's better to avoid the 
+// visual disruption.
+
 Ext.override(Ext.grid.GridView, {
-    holdPosition: false,
+
+//    holdPosition: false,
     onLoad : function(){
-        if (!this.holdPosition) this.scrollToTop();
-        this.holdPosition = false
+//        if (!this.holdPosition) this.scrollToTop();
+//        this.holdPosition = false;
     }
 });
 

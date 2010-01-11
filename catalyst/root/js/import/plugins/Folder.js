@@ -1,12 +1,33 @@
+Paperpile.PluginPanelFolder = Ext.extend(Paperpile.PluginPanel, {
+
+  initComponent: function() {
+    Ext.apply(this, {
+      title:this.title,
+      iconCls:'pp-icon-folder'
+    });
+
+    Paperpile.PluginPanelFolder.superclass.initComponent.call(this);
+  },
+
+  createGrid: function(gridParams) {
+    return new Paperpile.PluginGridFolder(gridParams);
+  }
+
+});
+
 Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
 
-    plugin_base_query:'',
-    plugin_iconCls: 'pp-icon-folder',
-    plugin_name:'DB',
-    limit: 25,
+  plugin_iconCls: 'pp-icon-folder',
+  plugin_name:'DB',
+  limit: 25,
+  plugin_base_query:'',
 
   initComponent: function() {
     Paperpile.PluginGridFolder.superclass.initComponent.call(this);
+  },
+
+  createToolbarMenu: function() {
+    Paperpile.PluginGridFolder.superclass.createToolbarMenu.call(this);
 
     this.actions['REMOVE_FROM_FOLDER'] = new Ext.Action({
       text:'Remove from folder',
@@ -15,25 +36,29 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
       handler:this.deleteFromFolder,
       scope:this
     });
-
-    this.on({afterrender:{scope:this,fn:this.myOnRender}});
-  },
-
-  myOnRender: function() {
+    
     var tbar = this.getTopToolbar();
+    
+    // Hide the add button.
+    this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
+
     var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
     tbar.insertButton(filterFieldIndex+1,this.actions['REMOVE_FROM_FOLDER']);
   },
 
-  updateButtons: function() {
-    Paperpile.PluginGridFolder.superclass.updateButtons.call(this);
-    
-    var selected = this.getSelection().length;
-    if (selected > 0) {
-      this.actions['REMOVE_FROM_FOLDER'].enable();
-    } else {
-      this.actions['REMOVE_FROM_FOLDER'].disable();
+  updateToolbarItem: function(item) {
+    Paperpile.PluginGridFolder.superclass.updateToolbarItem.call(this,item);
+
+    if (item.itemId == this.actions['REMOVE_FROM_FOLDER'].itemId) {
+      var selected = this.getSelection().length;
+      (selected > 0 ? item.enable() : item.disable());
     }
+
+  },
+
+  updateContextItem: function(item,record) {
+    Paperpile.PluginGridFolder.superclass.updateContextItem.call(this,item,record);
+
   },
 
   deleteFromFolder: function(){
@@ -47,8 +72,13 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
         folder_id: match[1]
       },
       method: 'GET',
-      success: function(){
-	this.updateGrid();
+      success: function(response) {
+	var json = Ext.util.JSON.decode(response.responseText);
+	// Update the status of the other views.
+	Paperpile.main.onUpdate(json.data);
+	// Reload this entire view, because the refs just got removed from the folder.
+	this.getView().holdPosition = true;
+	this.getStore().reload();
       },
       failure: Paperpile.main.onError,
       scope:this

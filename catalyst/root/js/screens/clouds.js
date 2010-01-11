@@ -47,13 +47,14 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
 
       this.field = Paperpile.main.globalSettings['cloud_field'] || 'authors';
       this.sort = Paperpile.main.globalSettings['cloud_sorting'] || 'alphabetical';
+      this.tpl = new Ext.XTemplate(this.markup);
 		
       Paperpile.PatternSettings.superclass.initComponent.call(this);
-      this.tpl = new Ext.XTemplate(this.markup);
     },
 
     afterRender: function() {
         Paperpile.Statistics.superclass.afterRender.apply(this, arguments);
+	this.updateClouds();
 
         this.tpl.overwrite(this.body, {id:this.id}, true);
 
@@ -65,6 +66,8 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
 
             var pars= { plugin_mode: 'FULLTEXT'};
 	    pars.plugin_title = key;
+	    title = key;
+
             if (this.field == 'authors'){
               pars.plugin_query = 'author:'+'"'+key+'"';
             }
@@ -84,7 +87,7 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
 
 	var fn = function(e, el, o){
 	  var action=el.getAttribute('action');
-	  console.log(action);
+	  //console.log(action);
           if (!action) return;
 
 	  if (action.indexOf('sort') > -1) {
@@ -98,7 +101,6 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
 	Ext.get('stats-tabs').on('click',fn, this);
 	Ext.get('stats-options').on('click',fn, this);
 
-      this.updateClouds();
     },
 
     updateSettings: function() {
@@ -106,19 +108,7 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
 	cloud_sorting:this.sort,
 	cloud_field:this.field
       };
-      Ext.Ajax.request({
-	url: Paperpile.Url('/ajax/settings/set_settings'),
-	params: params,
-	success: function(response){
-          Paperpile.main.loadSettings(
-            function(){
-              Paperpile.status.clearMsg();
-            }, this
-          );
-        },
-	failure: Paperpile.main.onError,
-	scope:this
-      });
+      Paperpile.main.storeSettings(params);
     },
 
     updateClouds: function(){

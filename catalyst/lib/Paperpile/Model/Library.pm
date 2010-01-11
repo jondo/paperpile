@@ -195,6 +195,8 @@ sub insert_pubs {
     $values.=",''";
     $dbh->do("INSERT INTO fulltext_full ($fields) VALUES ($values)");
 
+    # GJ 2010-01-10 I *think* this should be here, but not sure...
+    $pub->_imported(1);
   }
 
   $dbh->commit;
@@ -651,6 +653,7 @@ sub update_folders {
   my @folders=split(/,/,$folders);
 
   # First update flat field in Publication and Fulltext tables
+  $folders = $dbh->quote($folders);
 
   $dbh->do("UPDATE Publications SET folders=$folders WHERE rowid=$pub_rowid;");
   $dbh->do("UPDATE Fulltext_full SET folder=$folders WHERE rowid=$pub_rowid;");
@@ -827,8 +830,6 @@ sub fulltext_count {
     $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
   }
 
-  print STDERR "Where: $where\n";
-  print STDERR "Table: $table\n";
   my $count = $self->dbh->selectrow_array(
     qq{select count(*) from Publications join $table on 
     publications.rowid=$table.rowid $where}
@@ -942,7 +943,7 @@ sub standard_search {
 
   my $sth = $self->dbh->prepare( "SELECT rowid as _rowid, * FROM Publications WHERE $query;" );
 
-  print STDERR "SELECT rowid as _rowid, * FROM Publications WHERE $query\n";
+#  print STDERR "SELECT rowid as _rowid, * FROM Publications WHERE $query\n";
 
   $sth->execute;
 
@@ -1315,23 +1316,24 @@ sub histogram {
   if ( $field eq 'authors' ) {
 
     my $sth = $self->dbh->prepare(
-      'SELECT author_id, first, last, von, jr FROM Authors, Author_Publication WHERE author_id == Authors.rowid ;'
+      'SELECT authors from Publications WHERE trashed=0;'
     );
-    my ( $author_id, $first, $last, $von, $jr );
-    $sth->bind_columns( \$author_id, \$first, \$last, \$von, \$jr );
+
+    my ($author_list);
+    $sth->bind_columns( \$author_list );
     $sth->execute;
-
     while ( $sth->fetch ) {
-
-      my $name = $last;
-
-      if ( exists $hist{$author_id} ) {
-        $hist{$author_id}->{count}++;
-      } else {
-        $hist{$author_id}->{count} = 1;
-        $hist{$author_id}->{name}  = $name;
-        $hist{$author_id}->{id}    = $name;
-
+      my @authors = split(' and ',$author_list);
+      foreach my $author (@authors) {
+	if ( exists $hist{$author} ) {
+	  $hist{$author}->{count}++;
+	} else {
+	  $hist{$author}->{count} = 1;
+	  # Parse out the author's name.
+	  my ($surname,$initials) = split(', ',$author);
+	  $hist{$author}->{name}  = $surname;
+	  $hist{$author}->{id}    = $author;
+	}
       }
     }
   }
@@ -1339,7 +1341,8 @@ sub histogram {
   if ( $field eq 'tags' ) {
 
     my $sth = $self->dbh->prepare(
-      'SELECT tag_id,tag,style FROM Tags, Tag_Publication WHERE Tag_Publication.tag_id == Tags.rowid;'
+      qq^SELECT tag_id,tag,style FROM Tags, Tag_Publication, Publications WHERE Tag_Publication.tag_id == Tags.rowid 
+          AND Publications.rowid == Tag_Publication.publication_id AND Publications.trashed==0 ^
     );
     my ( $tag_id, $tag, $style );
     $sth->bind_columns( \$tag_id, \$tag, \$style );
@@ -1366,7 +1369,7 @@ sub histogram {
 
     $field = 'journal' if ($field eq 'journals');
 
-    my $sth = $self->dbh->prepare("SELECT $field FROM Publications;");
+    my $sth = $self->dbh->prepare("SELECT $field FROM Publications WHERE trashed=0;");
     my ($value);
     $sth->bind_columns( \$value );
     $sth->execute;

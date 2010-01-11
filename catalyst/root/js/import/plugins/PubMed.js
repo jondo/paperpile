@@ -1,27 +1,33 @@
-Paperpile.PluginGridPubMed = function(config) {
-  Ext.apply(this, config);
+Paperpile.PluginPanelPubMed = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'PubMed',
+      iconCls: 'pp-icon-pubmed'
+    });
+    Paperpile.PluginPanelPubMed.superclass.initComponent.call(this);
+  },
+  createGrid: function(gridParams) {
+    return new Paperpile.PluginGridPubMed(gridParams);
+  }
+});
 
-  Paperpile.PluginGridPubMed.superclass.constructor.call(this, {    
-    plugin_title: 'PubMed',
-    //loadMask: {msg:"Searching PubMed"},
-    plugin_iconCls: 'pp-icon-pubmed',
-    limit: 25
-  });
+Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
 
-};
-
-Ext.extend(Paperpile.PluginGridPubMed, Paperpile.PluginGridOnlineSearch, {
-
-    initComponent:function() {
-      Paperpile.PluginGridPubMed.superclass.initComponent.call(this);
-      
-      this.plugin_name = 'PubMed';
-      this.sidePanel = new Paperpile.PluginSidepanelPubMed();
-    }
+  plugins:[
+    new Paperpile.OnlineSearchGridPlugin(),
+    new Paperpile.ImportGridPlugin()
+  ],
+  initComponent:function() {
+    this.limit = 25;
+    this.plugin_name = 'PubMed';
+    this.aboutPanel = new Paperpile.AboutPubMed();
+			
+    Paperpile.PluginGridPubMed.superclass.initComponent.call(this);
+  }
 
 });
 
-Paperpile.PluginSidepanelPubMed = Ext.extend(Paperpile.PluginSidepanel, {
+Paperpile.AboutPubMed = Ext.extend(Paperpile.PluginAboutPanel, {
 
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
@@ -31,5 +37,4 @@ Paperpile.PluginSidepanelPubMed = Ext.extend(Paperpile.PluginSidepanel, {
         '</div>'],
 
     tabLabel: 'About PubMed'
-   
 });

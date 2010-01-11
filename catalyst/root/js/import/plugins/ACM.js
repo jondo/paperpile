@@ -1,20 +1,34 @@
-Paperpile.PluginGridACM = Ext.extend(Paperpile.PluginGridOnlineSearch, {
-    
-    plugin_title: 'ACM Portal',
-    plugin_iconCls: 'pp-icon-acm',
+Paperpile.PluginPanelACM = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'ACM Portal',
+      iconCls: 'pp-icon-acm'
+    });
+    Paperpile.PluginPanelACM.superclass.initComponent.call(this);
+  },
+  createGrid: function(params) {
+    return new Paperpile.PluginGridACM(params);
+  }
+});
+
+Paperpile.PluginGridACM = Ext.extend(Paperpile.PluginGrid, {    
+
+    plugins:[
+      new Paperpile.OnlineSearchGridPlugin(),
+      new Paperpile.ImportGridPlugin()
+    ],
     limit: 20,
 
     initComponent:function() {
+      this.plugin_name = 'ACM';
+      this.aboutPanel = new Paperpile.AboutACM();
 
-        this.plugin_name = 'ACM';
-
-        Paperpile.PluginGridACM.superclass.initComponent.apply(this, arguments);
-	this.sidePanel = new Paperpile.PluginSidepanelACM();
-    },   
+      Paperpile.PluginGridACM.superclass.initComponent.call(this);
+    }
  
 });
 
-Paperpile.PluginSidepanelACM = Ext.extend(Paperpile.PluginSidepanel, {
+Paperpile.AboutACM = Ext.extend(Paperpile.PluginAboutPanel, {
 
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',
@@ -23,6 +37,5 @@ Paperpile.PluginSidepanelACM = Ext.extend(Paperpile.PluginSidepanel, {
         '<p><a target=_blank href="http://portal.acm.org" class="pp-textlink">portal.acm.org</a></p>',
         '</div>'],
 
-    tabLabel: 'About ACM',
-   
+    tabLabel: 'About ACM'
 });

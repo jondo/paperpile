@@ -12,7 +12,12 @@ sub grid : Local {
   my ( $self, $c ) = @_;
 
   my $start = $c->request->params->{start};
+  $start = 0 unless (defined $start);
   my $limit = $c->request->params->{limit};
+  $limit = 1000 unless (defined $limit);
+
+  my $hide_success = $c->request->params->{hide_success};
+  $hide_success = 0 unless (defined $hide_success);
 
   my @data = ();
 
@@ -20,9 +25,16 @@ sub grid : Local {
 
   $q->update_stats;
 
-  foreach my $job ( @{ $q->get_jobs } ) {
+  my $jobs;
+  if ($hide_success) {
+    $jobs = $q->get_jobs(['PENDING','RUNNING','ERROR']);
+  } else {
+    $jobs = $q->get_jobs();
+  }
+
+  foreach my $job ( @{$jobs} ) {
     my $tmp = $job->as_hash;
-    delete($tmp->{info});
+    #delete($tmp->{info});
     push @data, $tmp;
 
     # For simplicity, simply push info for complete queue to each item
@@ -44,7 +56,7 @@ sub grid : Local {
     root          => 'data',
     id            => 'id',
     fields        => [
-      'id',    'type',     'status',  'progress',    'error',    'citekey',
+      'id',    'type',     'status',  'progress',    'error',    'info', 'message', 'citekey',
       'title', 'citation', 'authors', 'num_pending', 'num_done', 'queue_status',
       'eta', 'pdf', 'doi'
     ]
@@ -58,28 +70,101 @@ sub grid : Local {
 
 }
 
+sub overview: Local {
+  my ( $self, $c ) = @_;
+
+  my $start = $c->request->params->{start};
+  my $limit = $c->request->params->{limit};
+
+  my $types = {};
+  my $q = Paperpile::Queue->new();
+  $q->update_stats;
+
+  foreach my $job ( @{ $q->get_jobs } ) {
+
+    my $status = $job->status;
+    my $type = $job->type;
+    my $error = $job->error;
+    if (!defined $types->{$type}) {
+	$types->{$type} = {};
+	$types->{$type}->{name} = $type;
+	$types->{$type}->{finished} = 0;
+	$types->{$type}->{failed} = 0;
+	$types->{$type}->{pending} = 0;
+    }
+    $types->{$type}->{finished}++ if ($status eq "DONE");
+    $types->{$type}->{failed}++ if ($status eq "ERROR");
+    $types->{$type}->{pending}++ if ($status eq "PENDING" || $status eq "RUNNING");
+  }
+
+  my @type_arr = ();
+  foreach my $type (keys %$types) {
+      push @type_arr, $types->{$type};
+  }
+
+  $c->stash->{queue} = $q->as_hash;
+#  $c->stash->{queue_status} = $q->status;
+#  $c->stash->{num_pending} = $q->num_pending;
+#  $c->stash->{num_done} = $q->num_done;
+#  $c->stash->{eta} = $q->eta;
+  $c->stash->{types} = [@type_arr];
+
+  $c->detach('Paperpile::View::JSON');
+}
+
+
 ## Returns job information for one or more job ids.
 
 sub jobs : Local {
 
   my ( $self, $c ) = @_;
 
-  my $ids = $c->request->params->{ids};
+#  print STDERR "REQUEST RECEIVED FOR JOBS LIST\n";
+
+  my $ids = $c->request->params->{ids} || [];
 
   if (ref($ids) ne 'ARRAY'){
-    $ids = [$ids];
+    if ($ids eq 'active_jobs') {
+      my @js = ();
+      my $q = Paperpile::Queue->new();
+      foreach my $job ( @{ $q->get_jobs('RUNNING') } ) {
+	push @js,$job->id;
+      }
+      foreach my $job ( @{ $q->get_jobs('DONE') } ) {
+	push @js,$job->id;
+      }
+      foreach my $job ( @{ $q->get_jobs('ERROR') } ) {
+	push @js,$job->id;
+      }
+      $ids = [@js];
+
+    } else {
+      $ids = [$ids];
+    }
   }
 
-  my $data={};
+  my $jobs={};
+  my $pubs={};
 
-  foreach my $id (@$ids){
+  my @pub_list = ();
+  foreach my $id (@{$ids}){
     my $job = Paperpile::Job->new({id=>$id});
+    my $status = $job->status;
 
-    $data->{$id}=$job->as_hash;
+    my $pub = $job->pub;
+    push @pub_list, $pub;
+    $jobs->{$id} = $job->as_hash;
   }
+
+  $pubs = $self->_collect_pub_data(\@pub_list,['pdf','_search_job','_search_job_progress','_search_job_msg','_search_job_error']);
+  my $data={};
+  $data->{jobs} = $jobs;
+  $data->{pubs} = $pubs;
+  my $q = Paperpile::Queue->new();
+  $data->{queue} = $q->as_hash;
 
   $c->stash->{data} = $data;
-
+  $c->detach('Paperpile::View::JSON');
 }
 
 ## Cancel one or more jobs
@@ -91,22 +176,137 @@ sub cancel_jobs : Local {
   my $ids = $c->request->params->{ids};
 
   if (ref($ids) ne 'ARRAY'){
-    $ids = [$ids];
+    if ($ids eq 'all') {
+      my $q = Paperpile::Queue->new();
+      my $jobs = $q->get_jobs;
+      my @arr = map {$_->id} @$jobs;
+      $ids = \@arr;
+    } else {
+      $ids = [$ids];
+    }
+  }
+
+  my @pub_list = ();
+  foreach my $id (@$ids){
+    my $job = Paperpile::Job->new({id=>$id});
+    my $pub = $job->pub;
+    push @pub_list, $pub;
+    $job->cancel;
+  }
+
+  my $q = Paperpile::Queue->new();
+  $q->run;
+
+  my $pubs = $self->_collect_pub_data(\@pub_list,['pdf','_search_job','_search_job_progress','_search_job_msg','_search_job_error']);
+  my $data={};
+  $data->{pubs} = $pubs;
+  $data->{job_delta} = 1;
+  $c->stash->{data} = $data;
+  $c->detach('Paperpile::View::JSON');
+}
+
+# Removes finished (successful OR failed) jobs from the queue.
+
+sub clean_jobs : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $ids = $c->request->params->{ids};
+
+  if (ref($ids) ne 'ARRAY'){
+    if ($ids eq 'all') {
+      my $q = Paperpile::Queue->new();
+      my $jobs = $q->get_jobs;
+      my @arr = map {$_->id} @{$jobs};
+      $ids = \@arr;
+    } else {
+      $ids = [$ids];
+    }
   }
 
   foreach my $id (@$ids){
     my $job = Paperpile::Job->new({id=>$id});
 
-    $job->interrupt('CANCEL');
+    if ($job->status eq 'DONE') {
+	$job->remove;
+    }
 
-    print STDERR Dumper($job);
-
-    $job->save;
-
+    # Consider "canceled" jobs for cleaning too.
+    if ($job->status eq 'ERROR' && $job->error =~ /cancel/i) {
+	$job->remove;
+    }
   }
+
+  $c->stash->{job_delta} = 1;
+  $c->detach('Paperpile::View::JSON');
 }
 
-## Clears the queue
+
+sub remove_jobs : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $ids = $c->request->params->{ids};
+
+  if (ref($ids) ne 'ARRAY'){
+    $ids = [$ids];
+  }
+
+  my @pub_list = ();
+  foreach my $id (@$ids){
+    my $job = Paperpile::Job->new({id=>$id});
+    my $pub = $job->pub;
+    print STDERR "PUB PUB PUB: $pub\n";
+    push @pub_list, $pub;
+
+    $job->interrupt('CANCEL');
+    $job->remove;
+  }
+
+  my $pubs = $self->_collect_pub_data(\@pub_list,['_job_id','_search_job','_search_job_progress','_search_job_msg','_search_job_error']);
+  my $data={};
+  $data->{pubs} = $pubs;
+  $c->stash->{data} = $data;
+  $c->detach('Paperpile::View::JSON');
+
+}
+
+sub retry_jobs: Local {
+
+  my ( $self, $c ) = @_;
+
+  my $ids = $c->request->params->{ids};
+
+  if (ref($ids) ne 'ARRAY'){
+    $ids = [$ids];
+  }
+
+  my @pub_list = ();
+  foreach my $id (@$ids){
+    my $job = Paperpile::Job->new({id=>$id});
+
+    $job->reset();
+
+    my $q = Paperpile::Queue->new();
+    my $dbh = Paperpile::Utils->get_queue_model->dbh;
+    my $id = $dbh->quote( $job->id );
+    $dbh->do("DELETE FROM Queue WHERE jobid=$id;");
+
+    $q->submit($job);
+
+    my $pub = $job->pub;
+    push @pub_list, $pub;    
+  }
+
+  my $q = Paperpile::Queue->new();
+  $q->run();
+
+  my $pubs = $self->_collect_pub_data(\@pub_list,['_job_id','_search_job','_search_job_progress','_search_job_msg','_search_job_error']);
+  my $data={};
+  $data->{pubs} = $pubs;
+  $c->stash->{data} = $data;
+  $c->detach('Paperpile::View::JSON');
+}
 
 sub clear :Local {
 
@@ -118,6 +318,22 @@ sub clear :Local {
 }
 
 ## Pauses the queue
+
+sub pause_resume :Local {
+  my ( $self, $c) = @_;
+  
+  my $q = Paperpile::Queue->new();
+
+  if ($q->status eq 'PAUSED') {
+      $q->resume;
+  } else {
+      $q->pause;
+  }
+
+  $c->stash->{queue} = $q->as_hash;
+  $c->stash->{job_delta} = 1;
+  $c->detach('Paperpile::View::JSON');
+}
 
 sub pause :Local {
 
@@ -137,5 +353,24 @@ sub resume :Local {
   $q->resume;
 }
 
+# Duplicated from controller/ajax/crud.pm . Should combine somewhere.
+sub _collect_pub_data {
+  my ( $self, $pubs, $fields ) = @_;
+
+  my %output = ();
+  foreach my $pub (@$pubs) {
+    print STDERR " --> $pub\n";
+    my $hash = $pub->as_hash;
+    my $pub_fields = { };
+    if ($fields) {
+      map {$pub_fields->{$_} = $hash->{$_}} @$fields;
+    } else {
+      $pub_fields = $hash;
+    }
+    $output{ $hash->{sha1} } = $pub_fields;
+  }
+  
+  return \%output;
+}
 
 1;

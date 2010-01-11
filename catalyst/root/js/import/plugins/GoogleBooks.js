@@ -1,19 +1,33 @@
-Paperpile.PluginGridGoogleBooks = Ext.extend(Paperpile.PluginGridOnlineSearch, {
+Paperpile.PluginPanelGoogleBooks = Ext.extend(Paperpile.PluginPanel, {
+  initComponent: function() {
+    Ext.apply(this, {
+      title: 'Google Books',
+      iconCls: 'pp-icon-google'
+    });
+    Paperpile.PluginPanelGoogleBooks.superclass.initComponent.call(this);
+  },
+  createGrid: function(params) {
+    return new Paperpile.PluginGridGoogleBooks(params);
+  }
+});
+
+Paperpile.PluginGridGoogleBooks = Ext.extend(Paperpile.PluginGrid, {
     
+    plugins:[
+      new Paperpile.OnlineSearchGridPlugin(),
+      new Paperpile.ImportGridPlugin()
+    ],
     plugin_title: 'GoogleBooks',
     plugin_iconCls: 'pp-icon-google',
     limit:25,
 
     initComponent:function() {
-
         this.plugin_name = 'GoogleBooks';
-
 
         // Multiple selection behaviour and double-click import turned
         // out to be really difficult for plugins where we have a to
         // step process to get the data. Needs more thought, for now
         // we just turn these features off.
-
         this.sm=new Ext.grid.RowSelectionModel({singleSelect:true});
         this.onDblClick=function( grid, rowIndex, e ){
             Paperpile.status.updateMsg(
@@ -23,12 +37,12 @@ Paperpile.PluginGridGoogleBooks = Ext.extend(Paperpile.PluginGridOnlineSearch, {
             );
         };
 
-        Paperpile.PluginGridGoogleBooks.superclass.initComponent.apply(this, arguments);
-	this.sidePanel = new Paperpile.PluginSidepanelGoogleBooks();
-    },    
+	this.aboutPanel = new Paperpile.AboutCiteSeerX();	
+        Paperpile.PluginGridGoogleBooks.superclass.initComponent.call(this);
+    }
 });
 
-Paperpile.PluginSidepanelGoogleBooks = Ext.extend(Paperpile.PluginSidepanel, {
+Paperpile.AboutGoogleBooks = Ext.extend(Paperpile.PluginAboutPanel, {
 
     markup: [
         '<div class="pp-box pp-box-side-panel pp-box-style1">',

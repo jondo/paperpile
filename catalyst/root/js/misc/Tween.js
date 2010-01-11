@@ -40,12 +40,12 @@ Delegate.create = function (o, f) {
 	return function() {
 		var aP = [].concat(arguments, a) ;
 		f.apply(o, aP);
-	}
-}
+	};
+};
 
 Tween = function(obj, prop, func, begin, finish, duration, suffixe){
 	this.init(obj, prop, func, begin, finish, duration, suffixe)
-}
+};
 var t = Tween.prototype;
 
 t.obj = new Object();
@@ -85,23 +85,23 @@ t.setTime = function(t){
 		this._time = t;
 		this.update();
 	}
-}
+};
 t.getTime = function(){
 	return this._time;
-}
+};
 t.setDuration = function(d){
 	this._duration = (d == null || d <= 0) ? 100000 : d;
-}
+};
 t.getDuration = function(){
 	return this._duration;
-}
+};
 t.setPosition = function(p){
 	this.prevPos = this._pos;
 	var a = this.suffixe != '' ? this.suffixe : '';
 	this.obj[this.prop] = Math.round(p) + a;
 	this._pos = p;
 	this.broadcastMessage('onMotionChanged',{target:this,type:'onMotionChanged'});
-}
+};
 t.getPosition = function(t){
 	if (t == undefined) t = this._time;
 	return this.func(t, this.begin, this.change, this._duration);
@@ -126,48 +126,48 @@ t.init = function(obj, prop, func, begin, finish, duration, suffixe){
 		this.func = func;
 	}
 	this.setFinish(finish);
-}
+};
 t.start = function(){
 	this.rewind();
 	this.startEnterFrame();
 	this.broadcastMessage('onMotionStarted',{target:this,type:'onMotionStarted'});
 	//alert('in');
-}
+};
 t.rewind = function(t){
 	this.stop();
 	this._time = (t == undefined) ? 0 : t;
 	this.fixTime();
 	this.update();
-}
+};
 t.fforward = function(){
 	this._time = this._duration;
 	this.fixTime();
 	this.update();
-}
+};
 t.update = function(){
 	this.setPosition(this.getPosition(this._time));
-	}
+	};
 t.startEnterFrame = function(){
 	this.stopEnterFrame();
 	this.isPlaying = true;
 	this.onEnterFrame();
-}
+};
 t.onEnterFrame = function(){
 	if(this.isPlaying) {
 		this.nextFrame();
 		setTimeout(Delegate.create(this, this.onEnterFrame), 0);
 	}
-}
+};
 t.nextFrame = function(){
 	this.setTime((this.getTimer() - this._startTime) / 1000);
-	}
+	};
 t.stop = function(){
 	this.stopEnterFrame();
 	this.broadcastMessage('onMotionStopped',{target:this,type:'onMotionStopped'});
-}
+};
 t.stopEnterFrame = function(){
 	this.isPlaying = false;
-}
+};
 
 t.continueTo = function(finish, duration){
 	this.begin = this._pos;
@@ -175,20 +175,20 @@ t.continueTo = function(finish, duration){
 	if (this._duration != undefined)
 		this.setDuration(duration);
 	this.start();
-}
+};
 t.resume = function(){
 	this.fixTime();
 	this.startEnterFrame();
 	this.broadcastMessage('onMotionResumed',{target:this,type:'onMotionResumed'});
-}
+};
 t.yoyo = function (){
 	this.continueTo(this.begin,this._time);
-}
+};
 
 t.addListener = function(o){
 	this.removeListener (o);
 	return this._listeners.push(o);
-}
+};
 t.removeListener = function(o){
 	var a = this._listeners;	
 	var i = a.length;
@@ -199,7 +199,7 @@ t.removeListener = function(o){
 		}
 	}
 	return false;
-}
+};
 t.broadcastMessage = function(){
 	var arr = new Array();
 	for(var i = 0; i < arguments.length; i++){
@@ -212,26 +212,26 @@ t.broadcastMessage = function(){
 		if(a[i][e])
 		a[i][e].apply(a[i], arr);
 	}
-}
+};
 t.fixTime = function(){
 	this._startTime = this.getTimer() - this._time * 1000;
-}
+};
 t.getTimer = function(){
 	return new Date().getTime() - this._time;
-}
+};
 Tween.backEaseIn = function(t,b,c,d,a,p){
 	if (s == undefined) var s = 1.70158;
 	return c*(t/=d)*t*((s+1)*t - s) + b;
-}
+};
 Tween.backEaseOut = function(t,b,c,d,a,p){
 	if (s == undefined) var s = 1.70158;
 	return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
-}
+};
 Tween.backEaseInOut = function(t,b,c,d,a,p){
 	if (s == undefined) var s = 1.70158; 
 	if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
 	return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
-}
+};
 Tween.elasticEaseIn = function(t,b,c,d,a,p){
 		if (t==0) return b;  
 		if ((t/=d)==1) return b+c;  
@@ -244,20 +244,20 @@ Tween.elasticEaseIn = function(t,b,c,d,a,p){
 		
 		return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
 	
-}
+};
 Tween.elasticEaseOut = function (t,b,c,d,a,p){
 		if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
 		if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
 		else var s = p/(2*Math.PI) * Math.asin (c/a);
 		return (a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b);
-	}
+	};
 Tween.elasticEaseInOut = function (t,b,c,d,a,p){
 	if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) var p=d*(.3*1.5);
 	if (!a || a < Math.abs(c)) {var a=c; var s=p/4; }
 	else var s = p/(2*Math.PI) * Math.asin (c/a);
 	if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
 	return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
-}
+};
 
 Tween.bounceEaseOut = function(t,b,c,d){
 	if ((t/=d) < (1/2.75)) {
@@ -269,38 +269,38 @@ Tween.bounceEaseOut = function(t,b,c,d){
 	} else {
 		return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
 	}
-}
+};
 Tween.bounceEaseIn = function(t,b,c,d){
 	return c - Tween.bounceEaseOut (d-t, 0, c, d) + b;
-	}
+	};
 Tween.bounceEaseInOut = function(t,b,c,d){
 	if (t < d/2) return Tween.bounceEaseIn (t*2, 0, c, d) * .5 + b;
 	else return Tween.bounceEaseOut (t*2-d, 0, c, d) * .5 + c*.5 + b;
-	}
+	};
 
 Tween.strongEaseInOut = function(t,b,c,d){
 	return c*(t/=d)*t*t*t*t + b;
-	}
+	};
 
 Tween.regularEaseIn = function(t,b,c,d){
 	return c*(t/=d)*t + b;
-	}
+	};
 Tween.regularEaseOut = function(t,b,c,d){
 	return -c *(t/=d)*(t-2) + b;
-	}
+	};
 
 Tween.regularEaseInOut = function(t,b,c,d){
 	if ((t/=d/2) < 1) return c/2*t*t + b;
 	return -c/2 * ((--t)*(t-2) - 1) + b;
-	}
+	};
 Tween.strongEaseIn = function(t,b,c,d){
 	return c*(t/=d)*t*t*t*t + b;
-	}
+	};
 Tween.strongEaseOut = function(t,b,c,d){
 	return c*((t=t/d-1)*t*t*t*t + 1) + b;
-	}
+	};
 
 Tween.strongEaseInOut = function(t,b,c,d){
 	if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
 	return c/2*((t-=2)*t*t*t*t + 2) + b;
-	}
+	};

@@ -1,3 +1,20 @@
+Paperpile.PluginPanelRSS = Ext.extend(Paperpile.PluginPanel, {
+
+  initComponent: function() {
+    Ext.apply(this, {
+      title:this.title,
+      iconCls:'pp-icon-feed'
+    });
+
+    Paperpile.PluginPanelRSS.superclass.initComponent.call(this);
+  },
+
+  createGrid: function(gridParams) {
+    return new Paperpile.PluginGridRSS(gridParams);
+  }
+
+});
+
 Paperpile.PluginGridRSS = Ext.extend(Paperpile.PluginGridDB, {
 
     plugin_base_query:'',
@@ -5,16 +22,7 @@ Paperpile.PluginGridRSS = Ext.extend(Paperpile.PluginGridDB, {
     plugin_name:'RSS',
     
     initComponent:function() {
-
-        Paperpile.PluginGridRSS.superclass.initComponent.apply(this, arguments);
-
-        this.actions['IMPORT'].show();
-        this.actions['NEW'].hide();
-        this.actions['EDIT'].hide();
-        this.actions['TRASH'].hide();
-
-        this.actions['IMPORT_ALL'].show();
-        this.actions['IMPORT_ALL'].enable();
+        Paperpile.PluginGridRSS.superclass.initComponent.call(this);
 
         this.store.on('beforeload',
                       function(){
@@ -27,5 +35,16 @@ Paperpile.PluginGridRSS = Ext.extend(Paperpile.PluginGridDB, {
                       }, this);
 
     },
+
+    createToolbarMenu: function() {
+      Paperpile.PluginGridRSS.superclass.createToolbarMenu.call(this);
+
+      this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
+    },
+
+    updateToolbarItem: function(item) {
+      Paperpile.PluginGridFolder.superclass.updateToolbarItem.call(this,item);
+
+    }
 
 });

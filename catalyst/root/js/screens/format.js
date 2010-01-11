@@ -32,9 +32,6 @@ Paperpile.Format = Ext.extend(Ext.Panel, {
             success: function(response){
                 var json = Ext.util.JSON.decode(response.responseText);
 
-                //console.log(json);
-                //console.log(CSL);
-
                 //sys.loadData(json.data);
 
                 sys.loadData([
