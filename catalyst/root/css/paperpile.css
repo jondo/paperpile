@@ -1017,6 +1017,15 @@ div:hover.pp-grid-sort-item {
   background-color:#EEEEEE;
 }
 
+.x-resizable-handle-south, .x-resizable-pinned .x-resizable-handle-south {
+  width: 15px;
+  height:8px;
+  background: transparent url(/images/drag-handle.png) no-repeat center center;
+  padding:0px;
+  margin-left:2px;
+  bottom:2px;
+}
+
 .pp-tree-context-triangle-over, .pp-tree-context-triangle-down {
   width:16px;
   height:16px;

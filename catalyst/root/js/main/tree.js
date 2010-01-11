@@ -56,7 +56,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	    delete node.attributes.children;
           }
 	},
-	beforechildrenrendered:{scope:this,
+	expandnode:{scope:this,
 	  fn:function(node) {
             if (node.id == 'TAGS_ROOT') {
               this.updateScrollSize();
@@ -159,28 +159,50 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       var node = this.getNodeById('TAGS_ROOT');
 
       // Make sure everything is rendered; this allows to call the function via the 'resize' event;
-      if (node){
-        if (node.rendered){
+      if (node) {
+        if (node.rendered) {
+          var el=Ext.Element.get(node.ui.getEl());
+	  var curHeight = el.getHeight();
+
 	  var maxHeight = Paperpile.main.globalSettings['tags_list_height'];
-	  if (!maxHeight)
-	    maxHeight=Math.round(this.getInnerHeight()/3);
+	  if (!maxHeight) {
+	    //maxHeight=Math.round(this.getInnerHeight()/3);
+	    //Paperpile.main.storeSettings({tags_list_height:maxHeight});
+	  }
 
-          var el=Ext.Element.get(node.ui.getAnchor()).up('li').first('ul');
+
+	  var wrap = Ext.get('pp-labels-wrap');
+	  if (!wrap) {
+	    wrap = el.wrap({tag:'div',id:'pp-labels-wrap'});
+	  }
+
           el.setStyle('overflow','auto');
-          el.setStyle('max-height',maxHeight+"px");
 
-	  this.tagResizer = new Ext.Resizable(el.id,{
+	  if (maxHeight) {
+	    wrap.setStyle('height',maxHeight+"px");
+	    el.setStyle('height',maxHeight+"px");
+	  }
+
+	  this.tagResizer = new Ext.Resizable(wrap.id,{
 	    handles:'s',
-	    minHeight:50
-	    //maxHeight:1000,
-	    //pinned:true,
-	    //dynamic:true
+	    minHeight:30,
+	    pinned:true
 	  });
 	  this.tagResizer.on('resize', function(resizer,w,h,e) {
-	    el.setStyle('height',null);
-	    el.setStyle('max-height',h+"px");
-	    Paperpile.main.storeSettings({tags_list_height:h});
+	    wrap.setStyle('height',h+"px");
+	    el.setStyle('height',h+"px");
+	    Paperpile.main.storeSettings.defer(20,this,[{tags_list_height:h}]);
 	  },this);
+
+	  wrap.on('mouseover', function() {
+	    this.tagResizer.south.el.show();
+	  },this);
+	  wrap.on('mouseout', function() {
+	    this.tagResizer.south.el.hide();
+	  },this);
+	  
+	  this.tagResizer.south.el.set({'ext:qtip':"Resize the Labels area"});
+	  this.tagResizer.south.el.hide();
         }
       }
     },
@@ -931,7 +953,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       Ext.Ajax.request( {
 	url: Paperpile.Url('/ajax/crud/new_tag'),
 	params: pars,
-	success: function() {
+	success: function(response) {
 	  var json = Ext.util.JSON.decode(response.responseText);
 	  Paperpile.main.onUpdate(json.data);
           Ext.StoreMgr.lookup('tag_store').reload();
@@ -1088,7 +1110,7 @@ Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
         this.getSelectionModel().clearSelections();
         this.allowSelect=false;
       },
-      this.tree
+      Paperpile.main.tree
     );
   },
   setNode: function(node) {
