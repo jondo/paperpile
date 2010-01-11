@@ -22,8 +22,8 @@ sub set_settings {
 
   foreach my $key ( keys %$settings ) {
     my $value = $settings->{$key};
-    $self->dbh->do("INSERT INTO Settings (key,value) VALUES ('$key','$value')");
-    print STDERR "--> SET $key $value\n";
+    $self->dbh->do("REPLACE INTO Settings (key,value) VALUES ('$key','$value')");
+#    print STDERR "--> SET $key $value\n";
   }
 }
 
@@ -45,7 +45,7 @@ sub set_setting {
   ( my $self, my $key, my $value ) = @_;
   $value = $self->dbh->quote($value);
   $key = $self->dbh->quote($key);
-  $self->dbh->do("UPDATE Settings SET value=$value WHERE key=$key ");
+  $self->dbh->do('REPLACE INTO Settings (key,value) VALUES ($key,$value)');
 
   return $value;
 }

@@ -1,5 +1,5 @@
 CREATE TABLE Settings(
- key      TEXT, 
+ key      TEXT UNIQUE, 
  value    TEXT
 );
 

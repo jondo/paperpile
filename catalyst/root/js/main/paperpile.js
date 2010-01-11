@@ -15,7 +15,7 @@ Paperpile.log = function() {
 
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
-    globalSettings:null,
+    globalSettings:{},
 
     initComponent: function() {
 
@@ -151,7 +151,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
        url: Paperpile.Url('/ajax/settings/set_settings'),
        params: newSettings,
        success: function(response) {
-         Paperpile.main.loadSettings(callback,scope);
+	 for (var key in newSettings) {
+	   Paperpile.main.globalSettings[key] = newSettings[key];
+	 }
        },
        failure: Paperpile.main.onError,
        scope:this
