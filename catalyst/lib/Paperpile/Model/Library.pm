@@ -1131,15 +1131,18 @@ sub delete_from_folder {
   ( my $folders ) =
     $self->dbh->selectrow_array("SELECT folders FROM Publications WHERE rowid=$row_id");
 
-  my $newFolders=$self->_remove_from_flatlist($folders, $folder_id);
+  my $newFolders = $self->_remove_from_flatlist($folders, $folder_id);
 
-  $newFolders=$self->dbh->quote($newFolders);
+  my $quotedFolders = $self->dbh->quote($newFolders);
 
-  $self->dbh->do("UPDATE Publications SET folders=$newFolders WHERE rowid=$row_id");
-  $self->dbh->do("UPDATE fulltext_full SET folder=$newFolders WHERE rowid=$row_id");
-  $self->dbh->do("UPDATE fulltext_citation SET folder=$newFolders WHERE rowid=$row_id");
+  $self->dbh->do("UPDATE Publications SET folders=$quotedFolders WHERE rowid=$row_id");
+  $self->dbh->do("UPDATE fulltext_full SET folder=$quotedFolders WHERE rowid=$row_id");
+  $self->dbh->do("UPDATE fulltext_citation SET folder=$quotedFolders WHERE rowid=$row_id");
+  print STDERR "$row_id $folder_id\n";
   $self->dbh->do("DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)");
 
+  print STDERR "$newFolders\n";
+  return $newFolders;
 }
 
 

@@ -162,9 +162,20 @@ div.pp-menu-horizontal  li {
     padding: 0 10px;
 }
 
-div.pp-attachment-list{
+li.pp-attachment-list{
     padding: 0 20;
     background-repeat: no-repeat;
+}
+
+li.pp-folder-list{
+    padding: 0 20;
+    margin:0px;
+    background-repeat: no-repeat;
+}
+
+ul.pp-folders {
+    margin:0px;
+    font-size:10px;
 }
 
 .pp-second-link{
@@ -202,6 +213,9 @@ li:hover a.pp-second-link{
     background-image: url(/ext/resources/images/default/tree/leaf.gif);
 }
 
+.pp-folder-generic {
+    background-image: url('/images/icons/folder.png');
+}
 
 
 .pp-label-inactive {

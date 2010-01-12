@@ -26,6 +26,21 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
     Paperpile.PluginGridFolder.superclass.initComponent.call(this);
   },
 
+  createContextMenu: function() {
+    Paperpile.PluginGridFolder.superclass.createContextMenu.call(this);
+    this.actions['REMOVE_FOLDER'] = new Ext.Action( {
+      text: 'Remove from Folder',
+      handler:this.deleteFromFolder,
+      scope:this,
+      iconCls:'pp-icon-remove-folder',
+      itemId:'remove_folder'
+    });
+
+    var index = this.getContextIndex(this.actions['DELETE'].itemId);
+    var context = this.getContextMenu();
+    context.insert(index+1,this.actions['REMOVE_FOLDER']);
+  },
+
   createToolbarMenu: function() {
     Paperpile.PluginGridFolder.superclass.createToolbarMenu.call(this);
 
@@ -59,29 +74,21 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
   updateContextItem: function(item,record) {
     Paperpile.PluginGridFolder.superclass.updateContextItem.call(this,item,record);
 
+    if (item.itemId == this.actions['REMOVE_FOLDER'].itemId) {
+      if (record.data.folders == '') {
+	item.hide();
+      } else {
+	item.show();
+      }
+    }
   },
 
   deleteFromFolder: function(){
-    var selection=this.getSelection();
-    var match=this.plugin_base_query.match('folder:(.*)$');
-
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/delete_from_folder'),
-      params: { selection: selection,
-	grid_id: this.id,
-        folder_id: match[1]
-      },
-      method: 'GET',
-      success: function(response) {
-	var json = Ext.util.JSON.decode(response.responseText);
-	// Update the status of the other views.
-	Paperpile.main.onUpdate(json.data);
-	// Reload this entire view, because the refs just got removed from the folder.
-	this.getView().holdPosition = true;
-	this.getStore().reload();
-      },
-      failure: Paperpile.main.onError,
-      scope:this
-    });
+    var sel = this.getSelection();
+    var grid = this;
+    var match = this.plugin_base_query.match('folder:(.*)$');
+    var folder_id = match[1];
+    var refreshView = true;
+    Paperpile.main.deleteFromFolder(sel,grid,folder_id,refreshView);
   }
 });

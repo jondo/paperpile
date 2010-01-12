@@ -56,7 +56,8 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 	  return;
 	}
 
-	if (newData._attachments_list != oldData._attachments_list) {
+	if (newData._attachments_list != oldData._attachments_list ||
+	   newData.folders != oldData.folders) {
 	  this.updateAllInfo(newData);
 	  return;
 	}
@@ -86,9 +87,34 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     },
 
     updateAllInfo: function(data) {
+      Paperpile.log(data);
+      data = this.fillInFields(data);
+      Paperpile.log(data);
       this.getGrid().getSidebarTemplate().singleSelection.overwrite(this.body, data);
       this.updateLabels(data);
       this.updateSearchJob(data);
+    },
+
+    fillInFields: function(data) {
+      var list = [];
+	if (data.folders) {
+	  // Find out which folders we're in.
+	  var foldersString = data.folders;
+	  var folders = foldersString.split(',');
+	  for (var i=0; i < folders.length; i++) {
+	    var folder = folders[i];
+	    var node = Paperpile.main.tree.getNodeById(folder);
+	    if (node) {
+	      list[i] = {
+		folder_name:node.text,
+		folder_id:folder,
+		rowid:data._rowid
+	      };
+	    }
+	  }
+	}
+      data._folders_list = list;
+      return data;
     },
 
     updateLabels: function(data) {
@@ -232,6 +258,19 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 	var el = e.getTarget();
       
 	switch(el.getAttribute('action')) {
+
+          case 'open-folder':
+	      var folder_id = el.getAttribute('folder_id');
+	      var node = Paperpile.main.tree.getNodeById(folder_id);
+	      Paperpile.main.tree.myOnClick(node);
+	    break;
+
+	  case 'delete-folder':
+	      var sel = this.getGrid().getSelection();
+	      var grid = this.getGrid();
+	      var folder_id = el.getAttribute('folder_id');
+	      Paperpile.main.deleteFromFolder(sel,grid,folder_id);
+	    break;
 
           case 'open-pdf':
             var path=this.data.pdf;

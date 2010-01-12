@@ -62,22 +62,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           record.data._last_readPretty='Never read';
         }
 
-	if (record.data.folders) {
-	  // Find out which folder we're in.
-	  var node = Paperpile.main.tree.getNodeById(record.data.folders);
-	  if (node) {
-	    var folders = [];
-	    while (node && node.type == 'FOLDER') {
-	      if (node.text == 'All Papers')
-		break;
-	      folders.unshift(node.text);
-	      node = node.parentNode;
-	    }
-	    record.data._folder_tip = folders.join(" > ");
-	  } else {
-	    record.data._folder_tip = '';
-	  }
-	}
           record.data.pdf_path=Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
           return this.getIconTemplate().apply(record.data);
         };
@@ -451,16 +435,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           '<div>',
           '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
           '</div>',
-//	  '<tpl if="_authors_display && _long_authorlist">',
-//    	  '<p class="pp-grid-authors">',
-//  	  '<tpl if="!_shrink_authors">',
-//	  '<span class="pp-author-full">{_authors_display}</span>',
-//	  '</tpl>',
-//	  '<tpl if="_shrink_authors">',
-//	  '<span class="pp-author-short">{_authors_display_short} ... {_authors_display_short_tail}</span>',
-//	  '</tpl>',
-//	  '</p>',
-//	  '</tpl>',
           '<tpl if="_authors_display">',
           '<p class="pp-grid-authors">{_authors_display}</p>',
           '</tpl>',
@@ -516,14 +490,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '  </tpl>',
         '</tpl>',
         '<tpl if="pdf">',
-        '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br/>{_last_readPretty}<br/><img src=\'/ajax/pdf/render/{pdf_path}/0/0.2\' width=\'100\'/>"></div>',
+        '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br/>{_last_readPretty}"></div>',
         '</tpl>',
         '<tpl if="attachments">',
         '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
         '</tpl>',
-        '<tpl if="folders">',
-        '  <div class="pp-grid-status pp-grid-status-folder" ext:qtip="in folder: {_folder_tip}"></div>',
-        '</tpl>',
+//        '<tpl if="folders">',
+//        '  <div class="pp-grid-status pp-grid-status-folder" ext:qtip="in folder: {_folder_tip}"></div>',
+//        '</tpl>',
         '<tpl if="annote">',
         '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
         '</tpl>',
@@ -586,6 +560,18 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '<tpl if="pmid">',
 	'  <dt>PubMed ID: </dt><dd>{pmid}</dd>',
 	'</tpl>',
+	'<tpl if="folders">',
+	'  <dt>Folders: </dt>',
+	'  <dd>',
+        '    <ul class="pp-folders">',
+        '    <tpl for="_folders_list">',
+        '      <li class="pp-folder-list pp-folder-generic">',
+	'        <a href="#" class="pp-textlink" action="open-folder" folder_id="{folder_id}" >{folder_name}</a> &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="delete-folder" folder_id="{folder_id}" rowid="{rowid}">Remove</a>',
+	'      </li>',
+        '    </tpl>',
+	'    </ul>',
+	'  </dd>',
+	'</tpl>',
         '<tpl if="_imported">', // Don't show the labels widget if this article isn't imported.
 	'  <dt>Labels: </dt>',
 	'  <dd>',
@@ -612,9 +598,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '  <tpl if="pdf || _imported || linkout">',
         '    <div class="pp-box pp-box-side-panel pp-box-style2"',
         '    <h2>PDF</h2>',
-//        '    <ul>',
         '        <div id="search-download-widget-{id}" class="pp-search-download-widget"></div>',
-//        '    </ul>',
         '    <tpl if="_imported">',
         '      <h2>Supplementary material</h2>',
         '      <tpl if="attachments">',
@@ -625,7 +609,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '          </tpl>',
         '          </ul>',
 	'        </tpl>',
-//        '        <p>&nbsp;</p>',
         '      </tpl>',
         '      <ul>',
         '      <li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" class="pp-textlink" action="attach-file">Attach File</a></li>',      '</ul>',

@@ -146,6 +146,33 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     },
 */
 
+   // sel = 'ALL' or sha1s of selected pubs.
+   deleteFromFolder: function(sel,grid,folder_id,refreshView) {
+      Ext.Ajax.request( {
+	url: Paperpile.Url('/ajax/crud/delete_from_folder'),
+	params: {
+	  selection: sel,
+	  grid_id: grid.id,
+          folder_id: folder_id
+	},
+	method: 'GET',
+	success: function(response) {
+	  var json = Ext.util.JSON.decode(response.responseText);
+	  // Update the status of the other views.
+	  Paperpile.main.onUpdate(json.data);
+
+	  if (refreshView && grid['getStore']) {
+	    // Reload this entire view, because the refs just got removed from the folder.
+	    grid.getView().holdPosition = true;
+	    grid.getStore().reload();
+	  }
+	},
+	failure: Paperpile.main.onError,
+	scope:this
+      });
+
+   },
+
    storeSettings: function(newSettings,callback,scope) {
      Ext.Ajax.request({
        url: Paperpile.Url('/ajax/settings/set_settings'),

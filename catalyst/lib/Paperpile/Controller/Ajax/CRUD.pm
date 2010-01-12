@@ -397,9 +397,14 @@ sub move_in_folder : Local {
     my $newFolder = $node_id;
 
     foreach my $pub (@$data) {
-      $c->model('Library')->update_folders($pub->_rowid,$newFolder);
-      $pub->folders($newFolder);
-    }
+      my @folders = split( /,/, $pub->folders );
+      push @folders, $newFolder;
+      my %seen = ();
+      @folders = grep { !$seen{$_}++ } @folders;
+      my $new_folders = join( ',', @folders );
+      $c->model('Library')->update_folders( $pub->_rowid, $new_folders );
+      $pub->folders($new_folders);
+    };
   }
 
   $dbh->commit();
@@ -414,15 +419,13 @@ sub move_in_folder : Local {
 sub delete_from_folder : Local {
   my ( $self, $c ) = @_;
 
-  my $node_id   = $c->request->params->{node_id};
-#  my $folder_id = $c->request->params->{folder_id};
+  my $folder_id = $c->request->params->{folder_id};
 
   my $data = $self->_get_selection($c);
 
   foreach my $pub (@$data) {
-    my $folder_id = $pub->folders;
-    $c->model('Library')->delete_from_folder( $pub->_rowid, $folder_id );
-    $pub->folders('');
+    my $new_folders = $c->model('Library')->delete_from_folder( $pub->_rowid, $folder_id );
+    $pub->folders($new_folders);
   }
 
   my $pubs = $self->_collect_data($data,['folders']);

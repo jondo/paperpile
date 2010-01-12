@@ -692,7 +692,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         this.allowSelect=false;
 
         // Again get all plugin_* parameters to send to server
-        var pars={}
+        var pars={};
         for (var key in node){
             if (key.match('plugin_')){
                 pars[key]=node[key];
@@ -707,7 +707,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
             node_id: node.id,
             plugin_title: node.text,
             path: this.relativeFolderPath(node),
-            parent_id: node.parentNode.id,
+            parent_id: node.parentNode.id
         });
 
         // Send to backend
@@ -718,7 +718,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
                 //Ext.getCmp('statusbar').clearStatus();
                 //Ext.getCmp('statusbar').setText('Added new folder');
             },
-            failure: Paperpile.main.onError,
+            failure: Paperpile.main.onError
         });
     },
 

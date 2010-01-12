@@ -68,8 +68,8 @@ sub initdb {
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn( "dbi:SQLite:" . "library.db" );
 
-  my $config = LoadFile('../conf/settings.yaml');
-
+  my $yaml = "../conf/fields.yaml";
+  my $config = LoadFile($yaml);
   foreach my $field ( keys %{ $config->{pub_fields} } ) {
     $model->dbh->do("ALTER TABLE Publications ADD COLUMN $field TEXT");
   }
