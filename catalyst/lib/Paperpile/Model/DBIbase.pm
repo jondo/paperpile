@@ -45,7 +45,7 @@ sub set_setting {
   ( my $self, my $key, my $value ) = @_;
   $value = $self->dbh->quote($value);
   $key = $self->dbh->quote($key);
-  $self->dbh->do('REPLACE INTO Settings (key,value) VALUES ($key,$value)');
+  $self->dbh->do("REPLACE INTO Settings (key,value) VALUES ($key,$value)");
 
   return $value;
 }
