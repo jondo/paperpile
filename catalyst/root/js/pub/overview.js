@@ -87,9 +87,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     },
 
     updateAllInfo: function(data) {
-      Paperpile.log(data);
+      //      Paperpile.log(data);
       data = this.fillInFields(data);
-      Paperpile.log(data);
+      //      Paperpile.log(data);
       this.getGrid().getSidebarTemplate().singleSelection.overwrite(this.body, data);
       this.updateLabels(data);
       this.updateSearchJob(data);

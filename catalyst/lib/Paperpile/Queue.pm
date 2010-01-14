@@ -25,7 +25,7 @@ has 'status' => (
 );
 
 # Maximum number of jobs running at the same time
-has max_running => ( is => 'rw', isa => 'Int', default => 1 );
+has max_running => ( is => 'rw', isa => 'Int', default => 3 );
 
 # Estimated time to completion
 has eta => ( is => 'rw', isa => 'Str', default => "--:--:--" );
@@ -35,6 +35,12 @@ has num_pending => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Number of jobs finished (either successfully or failed)
 has num_done => ( is => 'rw', isa => 'Int', default => 0 );
+
+# Number of jobs finished (either successfully or failed)
+has num_error => ( is => 'rw', isa => 'Int', default => 0 );
+
+# Job statistics, split up by types.
+has types => ( is => 'rw', default => sub {return {};});
 
 has _dbh => ( is => 'rw');
 
@@ -122,8 +128,9 @@ sub submit {
   foreach my $job (@$jobs){
     my $id     = $self->dbh->quote( $job->id );
     my $status = $self->dbh->quote( $job->status );
+    my $type = $self->dbh->quote( $job->type);
     my $sha1 = $self->dbh->quote( $job->pub->sha1 );
-    $self->dbh->do("INSERT INTO Queue (jobid, status, sha1) VALUES ($id, $status, $sha1)");
+    $self->dbh->do("INSERT INTO Queue (jobid, status, type, sha1) VALUES ($id, $status, $type, $sha1)");
   }
 
   $self->dbh->commit;
@@ -174,28 +181,52 @@ sub update_stats {
 
   my $self = shift;
 
-  my $sth = $self->dbh->prepare("SELECT jobid, status, duration FROM Queue");
+  my $sth = $self->dbh->prepare("SELECT jobid, status, type, duration FROM Queue");
 
-  my ( $job_id, $status, $duration );
+  my ( $job_id, $status, $type, $duration );
 
-  $sth->bind_columns( \$job_id, \$status, \$duration );
+  $sth->bind_columns( \$job_id, \$status, \$type, \$duration );
   $sth->execute;
 
   my $sum_duration = 0;
   my $num_pending  = 0;
   my $num_done     = 0;
+  my $num_error    = 0;
 
+  # Collect job statistics collated by type.
+  my $types;
   while ( $sth->fetch ) {
+    my $t = $types->{$type};
+    if (!defined $t) {
+	$t = {};
+	$t->{num_pending} = 0;
+	$t->{num_done} = 0;
+	$t->{num_error} = 0;
+	$t->{name} = $type;  # This could be improved.	
+	$types->{$type} = $t;
+    }
+
     if ( $status eq 'PENDING' or $status eq 'RUNNING' ) {
+      $t->{num_pending}++;
       $num_pending++;
     } elsif ( $status eq 'DONE' ) {
+      $t->{num_done}++;
       $num_done++;
       $sum_duration += $duration;
+    } elsif ( $status eq 'ERROR' ) {
+      $t->{num_error}++;
+      $num_error++;
     }
   }
 
+  # Turn it into an array form.
+  my @type_arr = ();
+  map {push @type_arr, $types->{$_}} keys %$types;
+  $self->types(\@type_arr);
+
   $self->num_done($num_done);
   $self->num_pending($num_pending);
+  $self->num_error($num_error);
 
   if ( $num_done >= 1 ) {
     my $seconds_left = int( $sum_duration / $num_done * $num_pending );
@@ -329,10 +360,13 @@ sub as_hash {
   foreach my $key ( $self->meta->get_attribute_list ) {
     my $value = $self->$key;
  
-    if ($key ~~ ['num_pending','num_done']){
+    if ($key ~~ ['num_pending','num_done','num_error']){
       $value+=0;
     }
 
+    if ($key eq 'types') {
+      $hash{$key} = $value;
+    }
     next if ref( $self->$key );
 
     $hash{$key} = $value;

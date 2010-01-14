@@ -408,7 +408,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       if (!this.queueJobsUpdateTask) {
 	this.queueJobsUpdateTask = {
 	  run: this.queueJobsUpdateFn,
-	  interval:1500,
+	  interval:300,
 	  scope:this
 	};
       }
@@ -416,32 +416,62 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       Ext.TaskMgr.start(this.queueJobsUpdateTask);
     },
 
+    speedUpJobUpdates: function() {
+      if (this.queueJobsUpdateTask) {
+        this.queueJobsUpdateTask.interval = 250;
+      }
+    },
+
+    slowDownJobUpdates: function() {
+      if (this.queueJobsUpdateTask) {
+        this.queueJobsUpdateTask.interval = 2000;
+      }
+    },
+
     queueJobsUpdateFn: function() {
+      if (!this.jobsToIgnore) {
+	this.jobsToIgnore = {};
+      }
+      var ignoreArray = [];
+      for (var id in this.jobsToIgnore) {
+	ignoreArray.push(id);
+      }
+      //Paperpile.log(ignoreArray);
+
+      var ignoreString = ignoreArray.join(",");
+      //Paperpile.log(ignoreString);
       Ext.Ajax.request(
       { 
 	url: Paperpile.Url('/ajax/queue/jobs'),
-        params: {ids: 'active_jobs'},
+        params: {
+	  ids: 'active_jobs',
+	  ignore_ids: ignoreString
+	},
         method: 'GET',
         success: function(response) {
           var data = Ext.util.JSON.decode(response.responseText).data;
 	  Paperpile.main.onUpdate(data);
 	  
 	  var hasActiveJobs = false;
-	  if (data.jobs) {
+	  //	  if (data.jobs) {
 	    var jobs = data.jobs;
+	    var i=0;
 	    for (var id in jobs) {
+	      i++;
 	      if (jobs[id].status == 'RUNNING') {
 		hasActiveJobs = true;
-		break;
+	      } else if (jobs[id].status == 'DONE' || jobs[id].status == 'ERROR') {
+		this.jobsToIgnore[id] = 1;
 	      }
 	    }
 	    if (hasActiveJobs) {
 	      // Let the task keep running.
+	      //Ext.TaskMgr.start(this.queueJobsUpdateTask);
 	    } else {
 	      // No more active jobs! Stop the incessant updating!
 	      Ext.TaskMgr.stop(this.queueJobsUpdateTask);
 	    }
-	  }
+	    //	  }
         },
         failure: Paperpile.main.onError,
         scope:this

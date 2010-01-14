@@ -19,6 +19,13 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
     var oldContent = Ext.select("#"+this.div_id+" > *");
     oldContent.remove();
 
+    if (data._search_job_status == 'RUNNING') {
+      // Start updating quickly if we have an in-progress search job.
+      Paperpile.main.speedUpJobUpdates();
+    } else {
+      Paperpile.main.slowDownJobUpdates();
+    }
+
     if (data.pdf != '') {
       var el = [
         '    <ul>',
@@ -52,6 +59,7 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
 	text: data._search_job_msg || "",
 	renderTo:'dl-progress-'+this.id
       });
+      
     } else {
       var el = [
         '<ul>',
@@ -64,18 +72,11 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
 	'</ul>'
       ];
       Ext.DomHelper.overwrite(rootEl,el);      
+
+      // Slow down updates if we don't have an in-progress job.
+      Paperpile.main.slowDownJobUpdates();
     }
-   
 
-    // The callback to use if a download IS in progress (i.e. show a progress bar)
-    var downloadInProgess = function() {
-    };
-
-    // The callback to use if NO download is in progress (i.e. show a link)
-    var noDownloadInProgress = function() {
-    };
-
-//    this.checkForDownloadJob(data,downloadInProgess,noDownloadInProgress);
   },
 
   handleClick: function(e) {

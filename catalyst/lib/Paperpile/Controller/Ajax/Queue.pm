@@ -76,39 +76,10 @@ sub overview: Local {
   my $start = $c->request->params->{start};
   my $limit = $c->request->params->{limit};
 
-  my $types = {};
   my $q = Paperpile::Queue->new();
   $q->update_stats;
 
-  foreach my $job ( @{ $q->get_jobs } ) {
-
-    my $status = $job->status;
-    my $type = $job->type;
-    my $error = $job->error;
-    if (!defined $types->{$type}) {
-	$types->{$type} = {};
-	$types->{$type}->{name} = $type;
-	$types->{$type}->{finished} = 0;
-	$types->{$type}->{failed} = 0;
-	$types->{$type}->{pending} = 0;
-    }
-    $types->{$type}->{finished}++ if ($status eq "DONE");
-    $types->{$type}->{failed}++ if ($status eq "ERROR");
-    $types->{$type}->{pending}++ if ($status eq "PENDING" || $status eq "RUNNING");
-  }
-
-  my @type_arr = ();
-  foreach my $type (keys %$types) {
-      push @type_arr, $types->{$type};
-  }
-
   $c->stash->{queue} = $q->as_hash;
-#  $c->stash->{queue_status} = $q->status;
-#  $c->stash->{num_pending} = $q->num_pending;
-#  $c->stash->{num_done} = $q->num_done;
-#  $c->stash->{eta} = $q->eta;
-  $c->stash->{types} = [@type_arr];
-
   $c->detach('Paperpile::View::JSON');
 }
 
@@ -122,6 +93,11 @@ sub jobs : Local {
 #  print STDERR "REQUEST RECEIVED FOR JOBS LIST\n";
 
   my $ids = $c->request->params->{ids} || [];
+  my $ignore_ids = $c->request->params->{ignore_ids} || '';
+
+  my @ignore_arr = split(',',$ignore_ids);
+  my %ignore_hash;
+  map {$ignore_hash{$_}=1} @ignore_arr;
 
   if (ref($ids) ne 'ARRAY'){
     if ($ids eq 'active_jobs') {
@@ -143,6 +119,14 @@ sub jobs : Local {
     }
   }
 
+  # Remove 'ignored' IDs from the list.
+  my @filtered_ids = ();
+  foreach my $id (@$ids) {
+      push @filtered_ids, $id unless defined $ignore_hash{$id};
+  }
+  $ids = \@filtered_ids;
+  print STDERR join(",",@$ids)."\n";
+
   my $jobs={};
   my $pubs={};
 
@@ -156,7 +140,7 @@ sub jobs : Local {
     $jobs->{$id} = $job->as_hash;
   }
 
-  $pubs = $self->_collect_pub_data(\@pub_list,['pdf','_search_job','_search_job_progress','_search_job_msg','_search_job_error']);
+  $pubs = $self->_collect_pub_data(\@pub_list,['pdf','_search_job','_search_job_progress','_search_job_msg','_search_job_error','_search_job_status']);
   my $data={};
   $data->{jobs} = $jobs;
   $data->{pubs} = $pubs;

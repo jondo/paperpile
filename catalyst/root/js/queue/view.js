@@ -390,14 +390,14 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
     this.updateToolbar();
   },
 
-  // See js/import/grid.js
+  // onUpdate function for the Queue grid view.
   onUpdate: function(data) {
     var jobs = data.jobs;
     if (!jobs) {
       return;
     }
 
-    this.store.suspendEvents();
+    //    this.store.suspendEvents();
     for (var id in jobs) {
       var index = this.store.find('id',id);
       var record=this.store.getAt(index);
@@ -405,22 +405,24 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
 //	Paperpile.log("Record "+id+" not found!");
 	continue;
       }
+      var needsUpdating = false;
       var update=jobs[id];
-      record.beginEdit();
+      record.editing = true;
       for (var field in update) {
-	if (record.get(field) != update[field]) {
-	  record.set(field,update[field]);
-
-	  // Auto-expand jobs when they give an error.
-	  if (field == 'status' && update[field] == 'ERROR') {
-	    this.expander.expandRow(index);
-	  }
+	record.set(field,update[field]);
+      }
+      record.editing = false;
+      if (record.dirty) {
+	needsUpdating = true;
+	// Auto-expand jobs when they give an error.
+	if (field == 'status' && update[field] == 'ERROR') {
+	  this.expander.expandRow(index);
 	}
       }
-      record.endEdit();
+      if (needsUpdating) {
+	  this.store.fireEvent('update',this.store, record, Ext.data.Record.EDIT);
+      }
     }
-    this.store.resumeEvents();
-    this.store.fireEvent('datachanged',this.store);
   }
 				   
 });
@@ -446,12 +448,12 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
 
     this.tableTemplate = new Ext.XTemplate(
       '<div id="queue-table">',
-      '<tpl for="types">',
+      '<tpl for="queue.types">',
       '  <b>{name}</b><br/>',
       '  <div style="margin-top:3px;">',
-      '  <div class="pp-job-table-div" style="margin-left:1em;"><img src="/images/icons/tick.png"/>Finished: {finished}</div>',
-      '  <div class="pp-job-table-div"><img src="/images/icons/cross.png"/>Failed: {failed}</div>',
-      '  <div class="pp-job-table-div"><img src="/images/icons/hourglass.png"/>Waiting: {pending}</div>',
+      '  <div class="pp-job-table-div" style="margin-left:1em;"><img src="/images/icons/tick.png"/>Finished: {num_done}</div>',
+      '  <div class="pp-job-table-div"><img src="/images/icons/cross.png"/>Failed: {num_error}</div>',
+      '  <div class="pp-job-table-div"><img src="/images/icons/hourglass.png"/>Waiting: {num_pending}</div>',
       '  </div>',
       '</tpl>',
       '</div>',
@@ -488,15 +490,6 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
 	    '</div>'
     );
 
-    this.data = {
-      types: [
-	{name:'Search',
-	finished:37,
-	failed:32,
-	waiting:20}
-      ]
-    };
-
     this.pauseButton = new Ext.Button({
       text: 'Pause',
       cls: 'x-btn-text-icon pause',
@@ -521,7 +514,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       run: function() {
         this.requestUpdate();
       },
-      interval: 3000,
+      interval: 2000,
       scope:this
     };
     this.on('beforedestroy', function(){Ext.TaskMgr.stop(this.reloadTask);},this);
@@ -564,9 +557,10 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
     this.queuePanel.cancelJobs('all');
   },
 
+  // onUpdate for the Queue Overview.
   onUpdate: function(data) {
     var queue = data.queue;
-    var types = data.types;
+    var types = data.queue.types
 
     if (types) {
       if (types.length == 0) {
@@ -592,7 +586,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
 	this.pauseButton.setIcon('/images/icons/pause.png');
       }
 
-      if (queue.status == 'DONE') {
+      if (queue.status == 'WAITING') {
 	this.queueProgress.updateProgress(1, 'Queue processing complete.');
 	this.pauseButton.setDisabled(true);
       } else {
@@ -616,7 +610,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
 
 	if (obj.queue) {
 	  if (obj.queue.status == 'WAITING') {
-	    Ext.TaskMgr.stop(this.reloadTask);
+	      //Ext.TaskMgr.stop(this.reloadTask);
 	  }
 	}
       },

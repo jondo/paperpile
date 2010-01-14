@@ -1096,7 +1096,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	return;
       }
 
-      this.store.suspendEvents();
       var selected_sha1 = '';
       var sel = this.getSelectionModel().getSelected();
       if (sel) 
@@ -1108,19 +1107,23 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         if (!record) {
 	  continue;
 	}
+	var needsUpdating = false;
 	var update=pubs[sha1];
-	record.beginEdit();
+	record.editing = true; // Set the 'editing' flag.
 	for (var field in update) {
-	  if (record.get(field) != update[field]) {
-	    record.set(field,update[field]);
-	    if (sha1 == selected_sha1)
-	      updateSidePanel = true;
-	  }
-        }
-        record.endEdit();
+	  record.set(field,update[field]);
+	}
+	// Unset the 'editing' flag. Using the flag directly avoids calling store.afterEdit() for every record.
+        record.editing = false;
+	if (record.dirty) {
+	  needsUpdating = true;
+	  if (sha1 == selected_sha1)
+	    updateSidePanel = true;
+	}
+	if (needsUpdating) {
+	  this.store.fireEvent('update',this.store, record, Ext.data.Record.EDIT);
+	}
       }
-      this.store.resumeEvents();
-      this.store.fireEvent('datachanged',this.store);
       
       if (data.updateSidePanel)
 	updateSidePanel = true;
