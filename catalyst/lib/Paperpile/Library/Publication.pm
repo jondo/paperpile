@@ -132,6 +132,7 @@ has '_search_job' => ( is => 'rw' );
 has '_search_job_error' => ( is => 'rw' );
 has '_search_job_progress' => ( is => 'rw' );
 has '_search_job_msg' => ( is => 'rw' );
+has '_search_job_status' => ( is => 'rw' );
 
 # Job object, only exists if there is a current job tied to the publication
 
@@ -365,6 +366,19 @@ sub get_jobs {
   return @jobs;
 }
 
+sub remove_search_jobs {
+  my $self = shift;
+
+  my @jobs = $self->get_jobs;
+
+ # Put some job-specific info into the hash if a job exists.
+  foreach my $job (@jobs) {
+    if ($job->type eq 'PDF_SEARCH') {
+	$job->remove;
+    }
+  }
+}
+
 sub refresh_job_fields {
   my $self = shift;
 
@@ -372,12 +386,14 @@ sub refresh_job_fields {
   $self->_search_job_msg('');
   $self->_search_job_progress('');
   $self->_search_job_error('');
+  $self->_search_job_status('');
 
   my @jobs = $self->get_jobs;
 
  # Put some job-specific info into the hash if a job exists.
   foreach my $job (@jobs) {
     if ($job->type eq 'PDF_SEARCH') {
+      $self->_search_job_status($job->status);
       $self->_search_job($job->id);
       if ($job->status eq 'RUNNING' || $job->status eq 'PENDING') {
 	my $info = $job->info;

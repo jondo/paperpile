@@ -107,7 +107,11 @@ sub delete_file : Local {
   $pub->pdf('') if ($is_pdf);
   $pub->attachments($pub->attachments - 1) if (!$is_pdf);
 
-  my $update = $self->_collect_data([$pub],['attachments','_attachments_list','pdf']);
+  if ($is_pdf) {
+    $pub->remove_search_jobs;
+  }
+
+  my $update = $self->_collect_data([$pub],['attachments','_attachments_list','pdf','_search_job']);
   $c->stash->{data} = {pubs => $update};
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
