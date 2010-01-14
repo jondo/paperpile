@@ -60,6 +60,7 @@ sub journal_list : Local {
 
   my ( $self, $c ) = @_;
   my $query = $c->request->params->{query};
+  my $query_bak = $c->request->params->{query};
 
   my $model = $c->model('App');
 
@@ -76,9 +77,35 @@ sub journal_list : Local {
   $sth->bind_columns( \$short, \$long );
   $sth->execute;
 
-  my @data = ();
+  # we process the raw SQL output in three ways
+  # 1) On top we rank those hits that exactly match the query
+  # 2) Next we take those hits that start with the query. These
+  #    hits are then sorted by the second word in the short title
+  # 3) anything else
+  my @data = ( );
+  my @quality1 = ( );
+  my @quality2 = ( );
+  
   while ( $sth->fetch ) {
-    push @data, { long => $long, short => $short };
+      if ( $long =~ m/^$query_bak$/i ) {
+	  push @data, { long => $long, short => $short };
+	  next;
+      }
+      if ( $long =~ m/^$query_bak/i ) {
+	  ( my $next_words = $short ) =~ s/(\S+\s)(\S+)/$2/;
+	  $next_words =~ s/\(//;
+	  push @quality1, { long => $long, short => $short, next_words => $next_words };
+	  next;
+      }
+      push @quality2, { long => $long, short => $short };
+  }
+
+  my @sorted = sort { uc($a->{'next_words'}) cmp uc($b->{'next_words'}) } @quality1;
+  foreach my $entry ( @sorted ) {
+      push @data, $entry;
+  }
+  foreach my $entry ( @quality2 ) {
+      push @data, $entry;
   }
 
   $c->stash->{data} = [@data];
