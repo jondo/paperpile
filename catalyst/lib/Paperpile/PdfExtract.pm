@@ -72,6 +72,9 @@ sub parsePDF {
   $wrong = 1 if ( $authors =~ m/\sthe\s/ );
   $wrong = 1 if ( $authors =~ m/\ssome\s/ );
   $wrong = 1 if ( $authors =~ m/\sfew\s/ );
+  $wrong = 1 if ( $authors =~ m/\sthe\s/ );
+  $wrong = 1 if ( $authors =~ m/\ssystem\s/ );
+
 
   if ( $wrong == 1 ) {
     $authors = '';
@@ -99,19 +102,25 @@ sub parsePDF {
       $authors =~ s/1/L/g; # often OCR error
       $authors =~ s/\d//g;
       $authors =~ s/\./. /g;
-      $authors =~ s/,$//g;
-      $authors =~ s/^,//g;
-      $authors =~ s/and,/and/g;
+      $authors =~ s/,$//;
+      $authors =~ s/^,//;
+      $authors =~ s/\sand,/ and/g;
       $authors =~ s/` //g;
       $authors =~ s/\s?\x{B4}//g;
       $authors =~ s/^(by\s)//gi;
+      #print "$authors\n";
+
+      # if we observe a single word flanked by two commas,
+      # we remove the last one
+      $authors =~ s/(.*),\s([a-z]+),(.*)/$1, $2 $3/ig;
+      $authors =~ s/(.*),\s([a-z]+)$/$1 $2/i;
       $authors =~ s/\s+/ /g;
       
       # First we check if authors are separated by commas
       my @authors_array = ();
       if ($authors =~ m/,/)
       {
-	  @authors_array = split (/,/, $authors);
+	  @authors_array = split (/(,|\sand\s)/, $authors);
 	  # some sane checking
 	  pop(@authors_array) if ($authors_array[$#authors_array] !~ m/[A-Z]/i);
 
@@ -178,6 +187,7 @@ sub parsePDF {
 	  $author =~ s/\s+$//;
 	  $author =~ s/^\s+//;
 	  next if (length($author) < 3);
+	  $author =~ s/-\s/-/g;
 
 	  # sometime we have to change the order of given name 
 	  # and surename
@@ -217,7 +227,6 @@ sub parsePDF {
 		  first => $first,
 		  jr    => '',
 		  )->normalized;
-	      
 	  }
       }
   }
@@ -437,7 +446,6 @@ sub _MarkAdress {
   $adress++ if ( $tmp_line =~ m/Road/i );
   $adress++ if ( $tmp_line =~ m/U\.S\.A\./i );
   $adress++ if ( $tmp_line =~ m/College/i );
-
   return $adress;
 
 }
@@ -613,6 +621,14 @@ sub _ParseXML {
         }
         if ( $word =~ m/\x{2020}/ ) {
           $word =~ s/\x{2020}/,/g;
+          $nr_superscripts++;
+        }
+        if ( $word =~ m/\x{B9}/ ) {
+          $word =~ s/\x{B9}/,/g;
+          $nr_superscripts++;
+        }
+        if ( $word =~ m/\x{B2}/ ) {
+          $word =~ s/\x{B2}/,/g;
           $nr_superscripts++;
         }
         if ( $word =~ m/\*/ ) {
@@ -845,7 +861,7 @@ sub _ParseXML {
         }
       } else {
         if ( $#final_bad >= 0 ) {
-          $final_content[$#final_content] .= " $lines_content[$pos]";
+          $final_content[$#final_content] .= "*J* $lines_content[$pos]";
           $final_nrsuperscripts[$#final_nrsuperscripts] += $lines_nrsuperscripts[$pos];
           $final_nrwords[$#final_nrwords]               += $lines_nrwords[$pos];
           $last_line_was_a_join = 1;
@@ -915,9 +931,13 @@ sub _ParseXML {
       }
     }
     # cleanup PDF-Parsing/UTF-8/special char mess
-    $final_content[$candidate_Authors] =~ s/(\s[^[:ascii:]]\s)//g;
-    $final_content[$candidate_Title] =~ s/(\s[^[:ascii:]]\s)//g;
- 
+    (my $cand_authors_text = $final_content[$candidate_Authors]) =~ s/(\s[^[:ascii:]]\s)//g;
+    (my $cand_title_text = $final_content[$candidate_Title]) =~ s/(\s[^[:ascii:]]\s)//g;
+    # remove markers *J* that lines were joined
+    $cand_authors_text =~ s/-\s?\*J\*/-/g;
+    $cand_authors_text =~ s/\*J\*/,/g;
+    $cand_title_text =~ s/\*J\*//g;
+
     next if ( $candidate_Title == -1 or $candidate_Authors == -1 );
     #print "$final_content[$candidate_Title],        $final_content[$candidate_Authors]\n";
     # the title is normally B and has a greater fs than the authors
@@ -929,24 +949,24 @@ sub _ParseXML {
       my $flag = 0;
       # authors have usually more superscripts than titles
       ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
-        $final_content[$candidate_Title],        $final_content[$candidate_Authors],
+        $cand_title_text,        $cand_authors_text,
         $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
       );
       return ( $title, $authors, $doi, 1.1, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
       # authors usually have a higher comma to word ratio than the title
-      ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
-        $final_content[$candidate_Authors] );
+      ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text,
+        $cand_authors_text );
       return ( $title, $authors, $doi, 1.2, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
       # there could be just TWO authors
-      ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $final_content[$candidate_Title],
-        $final_content[$candidate_Authors] );
+      ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $cand_title_text,
+        $cand_authors_text );
       return ( $title, $authors, $doi, 1.3, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
       
       # there could be just ONE authors
-      ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $final_content[$candidate_Title],
-        $final_content[$candidate_Authors] );
+      ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $cand_title_text,
+        $cand_authors_text );
       return ( $title, $authors, $doi, 1.4, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
       
     }
@@ -958,7 +978,7 @@ sub _ParseXML {
 
       # authors have usually more superscripts than titles
       ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
-        $final_content[$candidate_Title],        $final_content[$candidate_Authors],
+        $cand_title_text, $cand_authors_text,
         $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
       );
       return ( $title, $authors, $doi, 1.9, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
@@ -971,19 +991,25 @@ sub _ParseXML {
       my $swap = $candidate_Title;
       $candidate_Title   = $candidate_Authors;
       $candidate_Authors = $swap;
-
+      ($cand_authors_text = $final_content[$candidate_Authors]) =~ s/(\s[^[:ascii:]]\s)//g;
+      ($cand_title_text = $final_content[$candidate_Title]) =~ s/(\s[^[:ascii:]]\s)//g;
+      # remove markers *J* that lines were joined
+      $cand_authors_text =~ s/-\s?\*J\*/-/g;
+      $cand_authors_text =~ s/\*J\*/,/g;
+      $cand_title_text =~ s/\*J\*//g;
+      
       my $flag = 0;
 
       # authors have usually more superscripts than titles
       ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
-        $final_content[$candidate_Title],        $final_content[$candidate_Authors],
+        $cand_title_text, $cand_authors_text,
         $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
       );
       return ( $title, $authors, $doi, 1.5, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
       # authors usually have a higher comma to word ratio than the title
-      ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
-        $final_content[$candidate_Authors] );
+      ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text,
+        $cand_authors_text );
       return ( $title, $authors, $doi, 1.6, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
     }
 
@@ -1039,6 +1065,10 @@ sub _ParseXML {
       {
 	  $authors = $final_content[$next];
       }
+
+      $title =~ s/\*J\*//g;
+      $authors =~ s/-\s?\*J\*/-/g;
+      $authors =~ s/\*J\*/,/g;
       
       return ( $title, $authors, $doi, 0.1, $has_cover_page, $arxiv_id ) if ( $authors ne '' );
       
@@ -1053,6 +1083,13 @@ sub _ParseXML {
     my $candidate_Authors = $IDS[1];
     my $candidate_Title   = $IDS[0];
     
+    (my $cand_authors_text = $final_content[$candidate_Authors]) =~ s/(\s[^[:ascii:]]\s)//g;
+    (my $cand_title_text = $final_content[$candidate_Title]) =~ s/(\s[^[:ascii:]]\s)//g;
+    # remove markers *J* that lines were joined
+    $cand_authors_text =~ s/-\s?\*J\*/-/g;
+    $cand_authors_text =~ s/\*J\*/,/g;
+    $cand_title_text =~ s/\*J\*//g;
+
     # if the candidate_Title is also very large
     # then this is a good sign
     
@@ -1064,31 +1101,31 @@ sub _ParseXML {
 
         # authors have usually more superscripts than titles
         ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
-          $final_content[$candidate_Title],        $final_content[$candidate_Authors],
+          $cand_title_text,        $cand_authors_text,
           $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
         );
         return ( $title, $authors, $doi, 2.1, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
         # authors usually have a higher comma to word ratio than the title
-        ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
-          $final_content[$candidate_Authors] );
+        ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text,
+          $cand_authors_text );
         return ( $title, $authors, $doi, 2.2, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
         # there could be just TWO authors
-        ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $final_content[$candidate_Title],
-          $final_content[$candidate_Authors] );
+        ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $cand_title_text,
+          $cand_authors_text );
         return ( $title, $authors, $doi, 2.3, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
         # there could be just ONE authors
-        ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $final_content[$candidate_Title],
-          $final_content[$candidate_Authors] );
+        ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $cand_title_text,
+          $cand_authors_text );
         return ( $title, $authors, $doi, 2.4, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
       
         # if Title directly preceeds Authors and Title seems to be really hughe
         if (  $candidate_Title == $candidate_Authors - 1
           and $final_fs[$candidate_Title] / $major_fs > 1.3 ) {
-          $authors = $final_content[$candidate_Authors];
-          $title   = $final_content[$candidate_Title];
+          $authors = $cand_authors_text;
+          $title   = $cand_title_text;
           return ( $title, $authors, $doi, 2.9, $has_cover_page, $arxiv_id );
         }
       }
@@ -1101,30 +1138,45 @@ sub _ParseXML {
 	my $swap = $candidate_Title;
 	$candidate_Title   = $candidate_Authors;
 	$candidate_Authors = $swap;
+	($cand_authors_text = $final_content[$candidate_Authors]) =~ s/(\s[^[:ascii:]]\s)//g;
+	($cand_title_text = $final_content[$candidate_Title]) =~ s/(\s[^[:ascii:]]\s)//g;
+	# remove markers *J* that lines were joined
+	$cand_authors_text =~ s/-\s?\*J\*/-/g;
+	$cand_authors_text =~ s/\*J\*/,/g;
+	$cand_title_text =~ s/\*J\*//g;
 	
 	my $flag = 0;
 	
 	# authors have usually more superscripts than titles
 	( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
-	    $final_content[$candidate_Title],        $final_content[$candidate_Authors],
+	    $cand_title_text, $cand_authors_text,
 	    $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
 	    );
-	return ( $title, $authors, $doi, 1.5, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+	return ( $title, $authors, $doi, 2.5, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 	
 	# authors usually have a higher comma to word ratio than the title
-	( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
-							     $final_content[$candidate_Authors] );
-	return ( $title, $authors, $doi, 1.6, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+	( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text,
+							     $cand_authors_text );
+	return ( $title, $authors, $doi, 2.6, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
     }
   
   }
 
   # there are more than two lines left
   if ( $#IDS > 1 ) {
+
+    return ( $title, $authors, $doi, 4, $has_cover_page, $arxiv_id ) if ($max_fs_line_NONEBAD + 1 > $#IDS);
+
     my $candidate_Authors = $IDS[ $max_fs_line_NONEBAD + 1 ];
     my $candidate_Title   = $IDS[$max_fs_line_NONEBAD];
 
-    return ( $title, $authors, $doi, 4, $has_cover_page, $arxiv_id ) if ($max_fs_line_NONEBAD + 1 > $#IDS);
+    (my $cand_authors_text = $final_content[$candidate_Authors]) =~ s/(\s[^[:ascii:]]\s)//g;
+    (my $cand_title_text = $final_content[$candidate_Title]) =~ s/(\s[^[:ascii:]]\s)//g;
+    # remove markers *J* that lines were joined
+    $cand_authors_text =~ s/-\s?\*J\*/-/g;
+    $cand_authors_text =~ s/\*J\*/,/g;
+    $cand_title_text =~ s/\*J\*//g;
+
     #print "$final_fs[$max_fs_line_ALL] - $final_fs[$candidate_Title] ) / $major_fs\n";
     if ( ( $final_fs[$max_fs_line_ALL] - $final_fs[$candidate_Title] ) / $major_fs < 0.2 ) {
 
@@ -1134,51 +1186,51 @@ sub _ParseXML {
 	
         # authors have usually more superscripts than titles
         ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
-          $final_content[$candidate_Title],        $final_content[$candidate_Authors],
+          $cand_title_text,        $cand_authors_text,
           $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
         );
         return ( $title, $authors, $doi, 3.1, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
         # authors usually have a higher comma to word ratio than the title
-        ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
-          $final_content[$candidate_Authors] );
+        ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text,
+          $cand_authors_text );
         return ( $title, $authors, $doi, 3.2, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
         # there could be just TWO authors
-        ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $final_content[$candidate_Title],
-          $final_content[$candidate_Authors] );
+        ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $cand_title_text,
+          $cand_authors_text );
         return ( $title, $authors, $doi, 3.3, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
         # there could be just ONE authors
-        ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $final_content[$candidate_Title],
-          $final_content[$candidate_Authors] );
+        ( $title, $authors, $flag ) = _AuthorLine_is_One_Author( $cand_title_text,
+          $cand_authors_text );
         return ( $title, $authors, $doi, 3.4, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
         # if Title directly preceeds Authors and Title seems to be really hughe
         if (  $candidate_Title == $candidate_Authors - 1
           and $final_fs[$candidate_Title] / $major_fs > 1.3 ) {
-          $authors = $final_content[$candidate_Authors];
-          $title   = $final_content[$candidate_Title];
+          $authors = $cand_authors_text;
+          $title   = $cand_title_text;
           return ( $title, $authors, $doi, 3.9, $has_cover_page, $arxiv_id );
         }
       }
     } else {
 	# very last chance to become a good hit
-	my $count_spaces = ($final_content[$candidate_Title] =~ tr/ //); # rough estimate of words
+	my $count_spaces = ($cand_title_text =~ tr/ //); # rough estimate of words
 	if ( $final_fs[$candidate_Title] / $major_fs > 1.5 and $count_spaces > 5 ) {
 	    # the heading is normally B and has a greater fs than the authors
 	    if ( $final_fs[$candidate_Title] > $final_fs[$candidate_Authors] ) {
 		my $flag = 0;
 		# authors have usually more superscripts than titles
 		( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
-		    $final_content[$candidate_Title],        $final_content[$candidate_Authors],
+		    $cand_title_text, $cand_authors_text,
 		    $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
 		    );
 		return ( $title, $authors, $doi, 5.1, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 		
 		# authors usually have a higher comma to word ratio than the title
-		( $title, $authors, $flag ) = _AuthorLine_by_Commas( $final_content[$candidate_Title],
-								     $final_content[$candidate_Authors] );
+		( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text,
+								     $cand_authors_text );
 		return ( $title, $authors, $doi, 5.2, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 	    }
 	}
