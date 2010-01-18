@@ -172,16 +172,6 @@ sub parsePDF {
       # now we parse each author separately
       foreach my $author (@authors_array) {
 	  
-	  
-	  # args needed for Lingua::EN::NameParse
-	  my %args = (
-	      auto_clean     => 1,
-	      force_case     => 1,
-	      lc_prefix      => 1,
-	      initials       => 3,
-	      allow_reversed => 1
-	      );
-	  
 	  # remove unnecessary white spaces, and forgotten 'ands'
 	  $author =~ s/and\s//;
 	  $author =~ s/\s+$//;
@@ -203,31 +193,10 @@ sub parsePDF {
 	      $author = join(' ',reverse(@tmp_author));
 	  }
 
-	  # Liu, Ute, Jan, etc. are not initial they are given
-	  # names. For correct handling we have to set the
-	  # correct value for initials
-	  my $spaces = ( $author =~ tr/ // );
-	  if ( $spaces == 1 )
-	  {
-	      (my $given_name = $author) =~ s/(.+)(\s.*)/$1/;
-	       my $lc = ( $given_name =~ tr/[a-z]// );
-	      $args{initials} = 1 if ($lc > 0);
-	  }
-	  
-	  my $parser = new Lingua::EN::NameParse(%args);
-	  my $error = $parser->parse($author);
-	  if ( $error == 0 ) {
-	      my $correct_casing = $parser->case_all_reversed;
-	      (my $last, my $first) = split(/,/, $correct_casing);
-	      next if ( !$last );
-	      # make a new author object
-	      push @authors_obj,
-	      Paperpile::Library::Author->new(
-		  last  => $last,
-		  first => $first,
-		  jr    => '',
-		  )->normalized;
-	  }
+	  #print "$author --> ";
+	  push @authors_obj,
+	    Paperpile::Library::Author->new()->parse_freestyle( $author )->bibtex();
+	  #print $authors_obj[$#authors_obj],"\n";
       }
   }
 
