@@ -6,7 +6,6 @@ use Paperpile::Library::Author;
 use Data::Dumper;
 use XML::Simple;
 use File::Temp qw(tempfile);
-use Lingua::EN::NameParse;
 
 has 'file'    => ( is => 'rw', isa => 'Str' );
 has 'pub'     => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
