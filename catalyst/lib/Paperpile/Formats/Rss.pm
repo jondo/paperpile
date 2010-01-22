@@ -2,6 +2,7 @@ package Paperpile::Formats::Rss;
 use Moose;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
+use Paperpile::Library::Author;
 
 extends 'Paperpile::Formats';
 
@@ -23,7 +24,19 @@ sub read {
   my @output = ();
 
   # read in XML
-  my $result = XMLin( $self->file, ForceArray => 1 );
+  my $file = 'RSS_temp_file.xml';
+  #my $file = $self->file;
+  
+  # XMLin crashes on empty files and if we have html content
+  return if ( -z $file );
+  open ( TESTCASE, $file );
+  my $html_flag = 0;
+  while( <TESTCASE> ) {
+      $html_flag = 1 if ( $_ =~ m/<html>/ );
+  }
+  return if ( $html_flag );
+  
+  my $result = XMLin( $file, ForceArray => 1 );
 
   # let's first screen the channel tag
   my $channel_journal_name;
@@ -34,8 +47,14 @@ sub read {
   my $channel_title;
   if ( $result->{channel}->[0]->{'title'} ) {
     $channel_title = join( '', @{ $result->{channel}->[0]->{'title'} } );
+    $channel_title =~ s/^ScienceDirect\sPublication:\s//;
+    $channel_title =~ s/^Annual\sReviews:\s//;
   }
 
+  my $channel_description;
+  if ( $result->{channel}->[0]->{'description'} ) {
+      $channel_description = join( '', @{ $result->{channel}->[0]->{'description'} } );
+  }
   $self->title($channel_title);
 
   my $issn;
@@ -50,13 +69,21 @@ sub read {
     @entries = @{ $result->{item} };
   }
 
-  # Some publishers do not use standarized formats (e.g. Springer)
-  # so we need some special handling
+  # Parsing scientific RSS feeds is a cumbersome process. There are standards
+  # but they are usually ignored. The only one that seems to have understand
+  # the concept is NPG. Guided by the idea that this is the world's one and
+  # only RSS reader for scientific RSS feeds, we try to do the job as good as
+  # possible. Clearly speaking that means that we have to implement a lot of
+  # sub functions specialized in parsing RSS feeds from particular publishers.
+  
   if ( !@entries ) {
 
     # let's see why the regular way did not work
     my $channel_title = join( '', @{ $result->{channel}->[0]->{'title'} } );
-    my $channel_link  = join( '', @{ $result->{channel}->[0]->{'link'} } );
+    my $channel_link  = ( $result->{channel}->[0]->{'link'} ) ?
+	join( '', @{ $result->{channel}->[0]->{'link'} } ) : '';
+    my $channel_description = ( $result->{channel}->[0]->{'description'} ) ?
+	join( '', @{ $result->{channel}->[0]->{'description'} } ) : '';
 
     # ScienceDirect
     if ( $channel_title =~ m/ScienceDirect/ ) {
@@ -70,14 +97,96 @@ sub read {
       return $self->_parse_SpringerLink( \@entries );
     }
 
+    # ACS Publications
+    if ( $channel_link =~ m/pubs\.acs\.org/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_ACSPublications( \@entries );
+    }
+
+    # Chicago Journals
+    if ( $channel_link =~ m/journals\.uchicago\.edu/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_ChicagoJournals( \@entries );
+    }
+
+    # Annual Reviews
+    if ( $channel_link =~ m/annualreviews\.org/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_AnnualReviews( \@entries );
+    }
+
+    # Karger
+    if ( $channel_link =~ m/karger\.com/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_Karger( \@entries );
+     }
+
+    # IOP electronic journals
+    if ( $channel_link =~ m/iop\.org/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_IOP( \@entries, $channel_title );
+    }
+
+    # Cambridge Journals
+    if ( $channel_link =~ m/journals\.cambridge\.org/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_CambridgeJournals( \@entries, $channel_title );
+    }
+
+    # Ovid
+    if ( $channel_link =~ m/ovid\.com/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_Ovid( \@entries, $channel_title );
+    }
+
+    # LA Press
+    if ( $channel_link =~ m/la-press\.com/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_LAPress( \@entries, $channel_title );
+    }
+
+    # Metapress
+    if ( $channel_link =~ m/metapress.com/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_Metapress( \@entries, $channel_title );
+    }
+
+    # Emerald Insight
+    if ( $channel_link =~ m/emeraldinsight\.com/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_Emerald( \@entries, $channel_title );
+    }
+
+    # BioOne
+    if ( $channel_link =~ m/bioone\.org/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_BioOne( \@entries, $channel_title );
+    }
+
+    # Marry Ann Liebert
+    if ( $channel_link =~ m/liebertonline.com/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_Liebert( \@entries, $channel_title );
+    }
+
+    # Dove Press
+    if ( $channel_link =~ m/dovepress.com/ ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_DovePress( \@entries, $channel_title );
+    }
+   
     # let's try it again the regular way
-    @entries = @{ $result->{channel}->[0]->{item} };
-    return $self->_parse_RegularFeed( \@entries, $channel_journal_name, $channel_title, $issn );
+    if ( $result->{channel}->[0]->{item} ) {
+	@entries = @{ $result->{channel}->[0]->{item} };
+	return $self->_parse_RegularFeed( \@entries, $channel_journal_name, $channel_title,
+					  $channel_description, $issn );
+    }
 
   } else {
-
-    # if we are here then we have a regular RSS feed
-    return $self->_parse_RegularFeed( \@entries, $channel_journal_name, $channel_title, $issn );
+  
+      # if we are here then we have a regular RSS feed
+      return $self->_parse_RegularFeed( \@entries, $channel_journal_name, $channel_title,
+					$channel_description, $issn );
   }
 
 }
@@ -88,21 +197,14 @@ sub _parse_RegularFeed {
   my @entries              = @{ $_[0] };
   my $channel_journal_name = $_[1];
   my $channel_title        = $_[2];
-  my $issn                 = $_[3];
+  my $channel_description  = $_[4];
+  my $issn                 = $_[5];
 
   my @output = ();
   foreach my $entry (@entries) {
-    my $title;
-    my $authors;
-    my $journal;
-    my $volume;
-    my $issue;
-    my $pages;
-    my $year;
-    my $month;
-    my $doi;
-    my $description;
-    my $link;
+      
+    my ( $title, $authors, $description, $doi, $journal,
+	 $volume, $issue, $year, $link, $pages, $note ); 
 
     # parsing of the title; let's try first if there is a regular
     # title tag and if not if there is a dublin core title
@@ -130,29 +232,85 @@ sub _parse_RegularFeed {
         $authors = 'Unknown';
       }
 
+      # We just have one author line, and this is where the mess starts
+      # It is amazing in how many stupid ways people can abuse
+      # a defined schema and make it awkward to extract the information
+      # Examples:
+      # Essex, M. J., Klein, M. H., Slattery, M. J., Goldsmith, H. H., Kalin, N. H.
+      # L. SCHLÜNZEN, N. JUUL, K. V. HANSEN, A. GJEDDE, G. E. COLD
+      # Graham A. Lee, Robert Ritch, Steve Y.-W. Liang, Jeffrey M. Liebmann, Philip Dubois, Matthew Bastian-Jordan, Kate Lehmann, Prin Rojanapongpun
+      
       if ( $#authors_tmp == 0 and !$authors ) {
 
         # first we check if there is really just one author
         my $nr_separators = 0;
-
         $nr_separators += ( $authors_tmp[0] =~ tr/,// );
-        if ( $nr_separators == 0 ) {
-          $authors =
-            Paperpile::Library::Author->new()->parse_freestyle( $authors_tmp[0] )->bibtex();
-        } else {
+	# The case it is meant to be
+	if ( $nr_separators == 0 ) {
+	    $authors =
+		Paperpile::Library::Author->new()->parse_freestyle( $authors_tmp[0] )->bibtex();
+	}
+	# It might be of the form Gruber, A. R.
+	if ( $nr_separators == 1 ) {
+	    if ( $authors_tmp[0] =~ m/(\S+),(.*)/ ) {
+		$authors =
+		    Paperpile::Library::Author->new()->parse_freestyle( "$2 $1" )->bibtex();
+	    }
+	}
+	if ( $nr_separators > 1 ) {
+	    my $parsed_flag = 0;
+	    # Strategy 1: works well for Oxford journals
+	    my @tmp1 = split( /\., /, $authors_tmp[0] );
+	    if ( $#tmp1 > 0 ) {
+		$authors = join( ". and ", @tmp1 );
+		$parsed_flag = 1;
+	    }
+	    
+	    # L. SCHLUENZEN, N. JUUL, K. V. HANSEN, A. GJEDDE, G. E. COLD
+	    if ( $parsed_flag == 0 and $authors_tmp[0] =~ m/,\s[A-Z]\.?\s/ ) {
+		my @tmp = split( /,/, $authors_tmp[0] );
+		my @authors_objects = ( );
+		foreach my $entry ( @tmp ) {
+		    push @authors_objects,
+		    Paperpile::Library::Author->new()->parse_freestyle( $entry )->bibtex();
+		}
+		$authors = join( ' and ', @authors_objects );
+		$parsed_flag = 1;
+	    }
+	    
+	    # Graham A. Lee, Robert Ritch, Steve Y.-W. Liang, Jeffrey M. Liebmann, Philip Dubois
+	    if ( $parsed_flag == 0 ) {
 
-          # Strategy 1: works well for Oxford journals
-          my @tmp1 = split( /\., /, $authors_tmp[0] );
-          if ( $#tmp1 > 0 ) {
-            $authors = join( " and ", @tmp1 );
-          }
+		# we need to do some quality control if splitting this way
+		# will produce something meaningful
+		
+		(my $tmp_line = $authors_tmp[0]) =~ s/\s[A-Z]\.?\s/ /g;
+		my @tmp = split( /,\s/, $tmp_line );
+		my $avg_spaces = 0;
+		foreach my $entry ( @tmp ) {
+		    $avg_spaces += ( $entry =~ tr/ // );
+		}
+		$avg_spaces = $avg_spaces/($#tmp+1);
 
-          # Strategy 2: works well for Blackwell journals
-          @tmp1 = split( /, /, $authors_tmp[0] );
-          if ( $#tmp1 > 0 and !$authors ) {
-            $authors = join( " and ", @tmp1 );
-          }
+		if ( $avg_spaces <= 2.05 ) {
+		    my @tmp = split( /,/, $authors_tmp[0] );
+		    my @authors_objects = ( );
+		    foreach my $entry ( @tmp ) {
+			push @authors_objects,
+			Paperpile::Library::Author->new()->parse_freestyle( $entry )->bibtex();
+		    }
+		    $authors = join( ' and ', @authors_objects );
+		    $parsed_flag = 1;
+		}
+	    }
 
+	    if ( $parsed_flag == 0 ) {
+		# Strategy 2: works well for Blackwell journals
+		@tmp1 = split( /, /, $authors_tmp[0] );
+		if ( $#tmp1 > 0 and !$authors ) {
+		    $authors = join( " and ", @tmp1 );
+		}
+	    }
         }
       }
       if ( $#authors_tmp > 0 and !$authors ) {
@@ -162,15 +320,13 @@ sub _parse_RegularFeed {
 
         foreach my $author (@authors_tmp) {
 
-          #print STDERR "$author\n";
-
-          # parsing using parse_freestyle seems to give properly formatted
-          # results, but it takes far too long
-          # We just use the unformtted author tags now
-          #push @authors, Paperpile::Library::Author->new()->parse_freestyle( $author )->bibtex();
-          push @authors, $author;
-
-        }
+	    # if there is a comma, we assume that it is already in bibtex format
+	    if ( $author =~ m/(.*),(.*)/ ) {
+		push @authors, $author;
+	    } else {
+		push @authors, Paperpile::Library::Author->new()->parse_freestyle( $author )->bibtex();
+	    }
+	}
 
         $authors = join( ' and ', @authors );
       }
@@ -187,12 +343,62 @@ sub _parse_RegularFeed {
       $authors = 'Unknown' if ( $authors =~ m/^HASH\(/ );
     }
 
-    # observed for Emerald journals
+    # observed for Emerald journals and others
     if ( $entry->{'author'} ) {
       $authors = join( '', @{ $entry->{'author'} } );
-      $authors =~ s/,\s/ and /g;
+      my $already_parsed_flag = 0;
+      
+      # authors are separated by semicolons
+      if ( $authors =~ m/;/ ) {
+	  my @authors_objects = ( );
+	  my @tmp = split( /;/, $authors );
+	  foreach my $entry ( @tmp ) {
+	      # if there are still commas we turn it around
+	      if ( $entry =~ m/(.*),(.*)/ ) {
+		  $entry = "$2 $1";
+	      }
+	      
+	      # if initials are at the end we turn it around
+	      if ( $entry =~ m/(.*)\s([A-Z])([A-Z])?$/ ) {
+		  $entry = ( $3 ) ? "$2 $3 $1" : "$2 $1";
+	      }
+	      push @authors_objects,
+	      Paperpile::Library::Author->new()->parse_freestyle( $entry )->bibtex();
+	  }
+	  $authors = join( ' and ', @authors_objects );
+	  $already_parsed_flag = 1;
+      }
+
+      if ( $already_parsed_flag == 0 and $authors =~ m/,/ ) {
+	  $already_parsed_flag = 1;
+      }
+
+      # seems that there is only a single author
+      if ( $already_parsed_flag == 0 and $authors =~ m/(.+)\s([A-Z])([A-Z])?$/ ) {
+	  my $tmp = ( $3 ) ? "$2 $3 $1" : "$2 $1";
+	  $authors = Paperpile::Library::Author->new()->parse_freestyle( $tmp )->bibtex();
+      }
+      
+      #$authors =~ s/,\s/ and /g;
     }
 
+    # Huanping Zhang, Xiaofeng Song, Huinan Wang, and Xiaobai Zhang
+    # observed for Hindawi Publishing
+    if ( $entry->{'Author'} ) {
+	$authors = join( '', @{ $entry->{'Author'} } );
+	my @tmp = split( /, /, $authors );
+	my @authors_objects = ( );
+	foreach my $entry ( @tmp ) {
+	    $entry =~ s/^and\s//;
+	    push @authors_objects,
+	    Paperpile::Library::Author->new()->parse_freestyle( $entry )->bibtex();
+	}
+	$authors = join( ' and ', @authors_objects );
+    }
+
+
+    
+	
     # now we parse other bibliographic data
 
     if ( $entry->{'prism:publicationName'} ) {
@@ -222,9 +428,11 @@ sub _parse_RegularFeed {
       $pages =
           join( '', @{ $entry->{'prism:startingPage'} } ) . '-'
         . join( '', @{ $entry->{'prism:endingPage'} } );
+      $pages = '' if ( $pages =~ m/HASH/ );
     }
     if ( $entry->{'prism:startingPage'} and !$pages ) {
       $pages = join( '', @{ $entry->{'prism:startingPage'} } );
+      $pages = '' if ( $pages =~ m/HASH/ );
     }
 
     if ( $entry->{'startPage'} and $entry->{'endPage'} and !$pages ) {
@@ -237,16 +445,22 @@ sub _parse_RegularFeed {
     }
 
     if ( $entry->{'dc:identifier'} ) {
-      my $tmp = join( '', @{ $entry->{'dc:identifier'} } );
-      if ( $tmp =~ m/doi/ ) {
-        $tmp =~ s/(.*doi:?\/?)(\d\d\.\d\d\d.*)/$2/;
-        if ( !$doi ) {
-          $doi = $tmp;
-        }
-      }
-      if ( $tmp =~ m/^\d\d\.\d\d\d/ and !$doi ) {
-        $doi = $tmp;
-      }
+	my $tmp = join( '', @{ $entry->{'dc:identifier'} } );
+	if ( $tmp =~ m/doi/ ) {
+	    $tmp =~ s/(.*doi:?\/?)(\d\d\.\d\d\d.*)/$2/;
+	    if ( !$doi ) {
+		$doi = $tmp;
+	    }
+	}
+	if ( $tmp =~ m/^\d\d\.\d\d\d/ and !$doi ) {
+	    $doi = $tmp;
+	}
+	if ( $tmp =~ m/HASH/ ) {
+	    if ( $entry->{'dc:identifier'}->[0]->{'rdf:resource'} ) {
+		$doi = $entry->{'dc:identifier'}->[0]->{'rdf:resource'};
+		$doi =~ s/doi://;
+	    }
+	}
     }
 
     # year
@@ -269,6 +483,13 @@ sub _parse_RegularFeed {
         $year = $1;
       }
     }
+    
+    if ( $entry->{'prism:publicationDate'} and !$year ) {
+	my $tmp = join( '', @{ $entry->{'prism:publicationDate'} } );
+	if ( $tmp =~ m/^(\d\d\d\d)-\d\d-\d\d$/i ) {
+	    $year = $1;
+	}
+    }
 
     if ( $entry->{'description'} ) {
       $description = join( '', @{ $entry->{'description'} } );
@@ -279,6 +500,18 @@ sub _parse_RegularFeed {
       $link = join( '', @{ $entry->{'link'} } );
     }
 
+    if ( $entry->{'dc:source'} ) {
+	my $tmp = join( '', @{ $entry->{'dc:source'} } );
+	
+	# Magazine of Concrete Research 61(6): 401-406
+	if ( $tmp =~ m/(.*)\s(\d+)\((\d+)\):\s(\d+-\d+)/ ) {
+	    $journal = $1 if ( !$journal );
+	    $volume = $2 if ( !$volume );
+	    $issue = $3 if ( !$issue );
+	    $pages = $4 if ( !$pages );
+	}
+    }
+    
     if ( $channel_journal_name and !$journal ) {
       $journal = $channel_journal_name;
     }
@@ -291,27 +524,52 @@ sub _parse_RegularFeed {
       $description = 'Not available';
     }
 
-    my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
+    # sometimes volume/issue information is "hidden" in the journal name
+    if ( $journal =~ m/Volume\s\d+\s?\(\d+\)/ ) {
+	( $volume = $journal ) =~ s/(.*Volume\s)(\d+)(\s?.*)/$2/i if ( !$volume );
+	( $issue = $journal ) =~ s/(.*Volume\s\d+\s?\()(\d+)(\).*)/$2/i if ( !$issue );
+	$journal =~ s/Volume\s\d+\s?\(\d+\)//;
+    }
+    if ( $journal =~ m/(200\d|201\d)$/ ) {
+	($year = $journal) =~ s/(.*\s)(200\d|201\d)$/$2/i if ( !$year );
+	$journal =~ s/(200\d|201\d)$//;
+    }
 
-    $pub->title($title)          if ($title);
-    $pub->authors($authors)      if ($authors);
-    $pub->volume($volume)        if ($volume);
-    $pub->issue($issue)          if ($issue);
-    $pub->year($year)            if ($year);
-    $pub->pages($pages)          if ($pages);
-    $pub->journal($journal)      if ($journal);
-    $pub->abstract($description) if ($description);
-    $pub->doi($doi)              if ($doi);
-    $pub->linkout($link)         if ($link);
-    $pub->issn($issn)            if ($issn);
-    $pub->year($year)            if ($year);
+    # sometime volume/issue information is "hidden" in channel_description
+    if ( $channel_description ) {
+	if ( $channel_description =~ m/vol\.?\s(\d+)/i ) {
+	    $volume = $1 if ( !$volume );
+	}
+	if ( $channel_description =~ m/num\.?\s(\d+)/i ) {
+	    $issue = $1 if ( !$issue );
+	}
+    }
+	
+    # some cleaning up
+    if ( $journal =~ m/(January|February|March|April|May|June|July|August|September|October|November|December)/i ) {
+	$journal =~ s/(January|February|March|April|May|June|July|August|September|October|November|December)\/?//gi;
+    }
 
-    #$pub->month ( $month )         if ( $month );
+    $journal =~ s/<img.*>//;
+    $journal =~ s/\s-\snew\sTOC//;
+    $journal =~ s/on\s\d\d\d\d-\d\d-\d\d\s\d\d:\d\d\s(A|P)M//;
+    $journal =~ s/"//g;
+    $journal =~ s/\s+$//;
+    $journal =~ s/\.$//;
+    $journal =~ s/\s+/ /;
+     
+    $title = _remove_html_tags( $title );
+    if ( $authors ) {
+	if ( $authors =~ m/(.*\s)(et\sal\.?)$/ ) {
+	    $authors = "$1 {$2}";
+	}
+	$authors =~ s/,/, /g;
+	$authors =~ s/\s+/ /g;
+    }
 
-    push @output, $pub;
-
-    #print STDERR "$title\n";
-
+    push @output, _fill_publication_object( $title, $authors, $description,
+					    $doi, $journal, $volume, $issue,
+					    $year, $link, $pages, $note );
   }
 
   return [@output];
@@ -324,97 +582,77 @@ sub _parse_SpringerLink {
   my @output = ();
 
   foreach my $entry (@entries) {
-    my $title;
-    my $authors;
-    my $description;
-    my $doi;
-    my $journal;
-    my $volume;
-    my $issue;
-    my $year;
-    my $link;
 
-    if ( $entry->{'title'} ) {
-      $title = join( '', @{ $entry->{'title'} } );
-    }
+      my ( $title, $authors, $description, $doi, $journal,
+	   $volume, $issue, $year, $link, $pages, $note ); 
 
-    if ( $entry->{'description'} ) {
+      $title = _easy_join ( 'title', $entry );
+      $link  = _easy_join ( 'link', $entry );
 
-      # now we have HTML markup that we can parse with XPath
-      my $html = join( '', @{ $entry->{'description'} } );
-      $html =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg;
-      $html = '<html><body>' . $html . '</html>/<body>';
-
-      my $tree = HTML::TreeBuilder::XPath->new;
-      $tree->utf8_mode(1);
-      $tree->parse_content($html);
-
-      # abstract
-      my @tmp = $tree->findnodes('/html/body/p');
-      $description = $tmp[0]->as_text();
-      $description =~ s/Abstract\s//;
-
-      # authors
-      @tmp = $tree->findnodes('/html/body/ul/li/ul/li');
-      my @authors = ();
-      foreach my $line (@tmp) {
-        my @temp = split( /,/, $line->as_text() );
-        push @authors, $temp[0];
-
+      if ( $entry->{'description'} ) {
+	  
+	  # now we have HTML markup that we can parse with XPath
+	  my $html = join( '', @{ $entry->{'description'} } );
+	  $html =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg;
+	  $html = '<html><body>' . $html . '</html>/<body>';
+	  
+	  my $tree = HTML::TreeBuilder::XPath->new;
+	  $tree->utf8_mode(1);
+	  $tree->parse_content($html);
+	  
+	  # abstract
+	  my @tmp = $tree->findnodes('/html/body/p');
+	  $description = $tmp[0]->as_text();
+	  $description =~ s/Abstract\s//;
+	  
+	  # authors
+	  @tmp = $tree->findnodes('/html/body/ul/li/ul/li');
+	  my @authors = ();
+	  foreach my $line (@tmp) {
+	      my @temp = split( /,/, $line->as_text() );
+	      push @authors, Paperpile::Library::Author->new()->parse_freestyle( $temp[0] )->bibtex();
+	      
+	  }
+	  $authors = join( ' and ', @authors );
+	  
+	  # doi
+	  @tmp = $tree->findnodes('/html/body/ul/li');
+	  foreach my $line (@tmp) {
+	      my $tmp = $line->as_text();
+	      if ( $tmp =~ m/(DOI.*)(\d\d\.\d\d\d\d.*)/i ) {
+		  $doi = $2;
+	      }
+	  }
+	  
+	  # more bibliographic data
+	  @tmp = $tree->findnodes('/html/body/ul/ul/li');
+	  foreach my $line (@tmp) {
+	      my $tmp = $line->as_text();
+	      if ( $tmp =~ m/Journal/ and $tmp !~ m/Volume/ ) {
+		  ( $journal = $tmp ) =~ s/Journal\s//;
+	      }
+	      if ( $tmp =~ m/Volume\s(\d+)/ ) {
+		  $volume = $1;
+	      }
+	      if ( $tmp =~ m/Number\s(\d+)/ ) {
+		  $issue = $1;
+	      }
+	      if ( $tmp =~ m/,\s(\d\d\d\d)$/ ) {
+		  $year = $1;
+	      }
+	  }
       }
-      $authors = join( ' and ', @authors );
-
-      # doi
-      @tmp = $tree->findnodes('/html/body/ul/li');
-      foreach my $line (@tmp) {
-        my $tmp = $line->as_text();
-        if ( $tmp =~ m/(DOI.*)(\d\d\.\d\d\d\d.*)/i ) {
-          $doi = $2;
-        }
+      
+      if ( $entry->{'pubDate'} and !$year ) {
+	  my $tmp = join( '', @{ $entry->{'pubDate'} } );
+	  if ( $tmp =~ m/\d+\s[A-Z]{3}\s(\d\d\d\d)/i ) {
+	      $year = $1;
+	  }
       }
 
-      # more bibliographic data
-      @tmp = $tree->findnodes('/html/body/ul/ul/li');
-      foreach my $line (@tmp) {
-        my $tmp = $line->as_text();
-        if ( $tmp =~ m/Journal/ and $tmp !~ m/Volume/ ) {
-          ( $journal = $tmp ) =~ s/Journal\s//;
-        }
-        if ( $tmp =~ m/Volume\s(\d+)/ ) {
-          $volume = $1;
-        }
-        if ( $tmp =~ m/Number\s(\d+)/ ) {
-          $issue = $1;
-        }
-        if ( $tmp =~ m/,\s(\d\d\d\d)$/ ) {
-          $year = $1;
-        }
-      }
-    }
-
-    if ( $entry->{'link'} ) {
-      $link = join( '', @{ $entry->{'link'} } );
-    }
-
-    if ( $entry->{'pubDate'} and !$year ) {
-      my $tmp = join( '', @{ $entry->{'pubDate'} } );
-      if ( $tmp =~ m/\d+\s[A-Z]{3}\s(\d\d\d\d)/i ) {
-        $year = $1;
-      }
-    }
-
-    my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
-
-    $pub->title($title)          if ($title);
-    $pub->authors($authors)      if ($authors);
-    $pub->abstract($description) if ($description);
-    $pub->doi($doi)              if ($doi);
-    $pub->journal($journal)      if ($journal);
-    $pub->volume($volume)        if ($volume);
-    $pub->issue($issue)          if ($issue);
-    $pub->year($year)            if ($year);
-    $pub->linkout($link)         if ($link);
-    push @output, $pub;
+      push @output, _fill_publication_object( $title, $authors, $description,
+					      $doi, $journal, $volume, $issue,
+					      $year, $link, $pages, $note );
   }
 
   return [@output];
@@ -429,84 +667,834 @@ sub _parse_ScienceDirect {
   my @output = ();
 
   foreach my $entry (@entries) {
-    my $title;
-    my $authors;
-    my $description;
-    my $doi;
-    my $journal;
-    my $volume;
-    my $issue;
-    my $year;
-    my $link;
-    my $pages;
-    my $note;
 
-    if ( $entry->{'title'} ) {
-      $title = join( '', @{ $entry->{'title'} } );
+      my ( $title, $authors, $description, $doi, $journal,
+	   $volume, $issue, $year, $link, $pages, $note );
+      
+      $title = _easy_join ( 'title', $entry );
+      $link  = _easy_join ( 'link', $entry );
+      
+      if ( $entry->{'description'} ) {
+	  my @tmp = split( /<br>/, join( '', @{ $entry->{'description'} } ) );
+
+	  # 0 .. usually the year
+	  if ( $tmp[0] =~ m/Publication\syear:\s(\d\d\d\d)/ ) {
+	      $year = $1;
+	  }
+	  
+	  # 1 .. usually journal and other bibliographic stuff
+	  my @tmp2 = split( /,/, $tmp[1] );
+	  if ( $tmp2[0] =~ m/<b>Source:<\/b>\s(.*)/ ) {
+	      $journal = $1;
+	  }
+	  
+	  if ( $tmp[1] =~ m/Volume\s(\d+)/ ) {
+	      $volume = $1;
+	  }
+	  
+	  if ( $tmp[1] =~ m/Issue\s(\d+)/ ) {
+	      $issue = $1;
+	  }
+	  
+	  if ( $tmp[1] =~ m/Pages\s(\d+-\d+)/ ) {
+	      $pages = $1;
+	  }
+	  
+	  if ( $tmp[1] =~ m/In\sPress/ and !$volume ) {
+	      $volume = "In Press";
+	  }
+	  
+	  # 2 .. usually author line ( sometimes incomplete ends with ,... )
+	  if ( $tmp[2] !~ m/No\sauthor\sname\savailable/ ) {
+	      my $etal = '';
+	      if ( $tmp[2] =~ m/(.*)(\s,\s\.\.\.)$/ ) {
+		  $tmp[2] = $1;
+		  $etal = "et al.";
+	      }
+	      my @tmp3 = split( / , /, $tmp[2] );
+	      my @authors = ();
+	      foreach my $author (@tmp3) {
+		  if ( $author =~ m/(.+)(,\s)(.+)/ ) {
+		      push @authors, "$3,$1";
+		  }
+	      }
+	      push @authors, $etal if ( $etal ne '' );
+
+	      $authors = join( ' and ', @authors );
+	      $authors =~ s/,/, /g;
+	      $authors =~ s/\./. /g;
+	      $authors =~ s/\s+/ /g;
+	      
+	  }
+	  
+	  # the rest we put into the abstract field
+	  foreach my $i ( 3 .. $#tmp ) {
+	      $description .= " $tmp[$i]" if ( $tmp[$i] );
+	  }
+      }
+      
+      push @output, _fill_publication_object( $title, $authors, $description,
+					      $doi, $journal, $volume, $issue,
+					      $year, $link, $pages, $note );
+  }
+
+  return [@output];
+}
+
+sub _parse_ACSPublications {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+	    my @tmp = split( /,/, _remove_html_tags( $temp ) );
+	    $journal = $tmp[0];
+	    ($volume = $tmp[1]) =~ s/.*Volume\s//;
+	    $volume = ( $volume > 0 ) ? $volume : 'in press';
+	    ($issue = $tmp[2]) =~ s/.*Issue\s//;
+	    $issue = ( $issue > 0 ) ? $issue : '';
+	    if ( $tmp[3] =~ m/(Page\s)(.*)/ ) {
+		$pages = $2;
+	    }
+	    if ( $tmp[5] ) {
+		if ( $tmp[5] =~ m/.*(\d\d\d\d).*/ ) {
+		    $year = $1;
+		}
+	    }
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	if ( $entry->{'author'} ) {
+	    my $tmp = join( '', @{ $entry->{'author'} } );
+	    if ( $tmp =~ m/(.*)(et al)$/ ) {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $1 )->bibtex().
+		    " and {et al.}";
+	    } else {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $tmp )->bibtex();
+	    }
+	}
+
+	$journal =~ s/<img.*>//;
+
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
     }
+    
+  return [@output];
+}
 
-    if ( $entry->{'link'} ) {
-      $link = join( '', @{ $entry->{'link'} } );
+sub _parse_ChicagoJournals {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+	    my @tmp = split( /,/, _remove_html_tags( $temp ) );
+	    $journal = $tmp[0];
+	    ($volume = $tmp[1]) =~ s/.*Volume\s//;
+	    $volume = ( $volume > 0 ) ? $volume : 'in press';
+	    ($issue = $tmp[2]) =~ s/.*Issue\s//;
+	    $issue = ( $issue > 0 ) ? $issue : '';
+	    if ( $tmp[3] =~ m/(Page\s)(.*)/ ) {
+		$pages = ( $2 ne '000' ) ? $2 : '';
+	    }
+	    if ( $tmp[4] ) {
+		if ( $tmp[4] =~ m/(\d+)?(\s[A-Z]+\s)(\d\d\d\d)\..*/i ) {
+		    $year = $3;
+		}
+	    }
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	if ( $entry->{'author'} ) {
+	    my $tmp = join( '', @{ $entry->{'author'} } );
+	    $tmp =~ s/.*\(//;
+	    $tmp =~ s/\)//;
+	    if ( $tmp =~ m/(.*)(et al)$/ ) {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $1 )->bibtex().
+		    " and {et al.}";
+	    } else {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $tmp )->bibtex();
+	    }
+	}
+	
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
     }
+    
+  return [@output];
+}
 
-    if ( $entry->{'description'} ) {
-      my @tmp = split( /<br>/, join( '', @{ $entry->{'description'} } ) );
+# RSS feeds from source annualreviews.org
+# Authors need special handling.
+# Bibliographic information is parsed from the description field.
+sub _parse_AnnualReviews {
 
-      # 0 .. usually the year
-      if ( $tmp[0] =~ m/Publication\syear:\s(\d\d\d\d)/ ) {
-        $year = $1;
-      }
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
 
-      # 1 .. usually journal and other bibliographic stuff
-      my @tmp2 = split( /,/, $tmp[1] );
-      if ( $tmp2[0] =~ m/<b>Source:<\/b>\s(.*)/ ) {
-        $journal = $1;
-      }
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
 
-      if ( $tmp[1] =~ m/Volume\s(\d+)/ ) {
-        $volume = $1;
-      }
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+	    if ( $temp =~ m/(.*)(\sVolume\s)(\d+)(,.*\s)(\d\d\d\d)/ ) {
+		$journal = $1;
+		$volume = $3;
+		$year = $5;
+	    }
+	    if ( $temp =~ m/(.*Page\s)(\d+-\d+)/ ) {
+		$pages = $2;
+	    }
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
 
-      if ( $tmp[1] =~ m/Issue\s(\d+)/ ) {
-        $issue = $1;
-      }
-
-      if ( $tmp[1] =~ m/Pages\s(\d+-\d+)/ ) {
-        $pages = $1;
-      }
-
-      if ( $tmp[1] =~ m/In\sPress/ and !$volume ) {
-        $volume = "In Press";
-      }
-
-      # 2 .. usually author line ( sometimes incomplete ends with ,... )
-      if ( $tmp[2] !~ m/No\sauthor\sname\savailable/ ) {
-        my $etal = '';
-        if ( $tmp[2] =~ m/(.*)(\s,\s\.\.\.)$/ ) {
-          $tmp[2] = $1;
-          $etal = "et al.";
-        }
-        my @tmp3 = split( / , /, $tmp[2] );
-        my @authors = ();
-        foreach my $author (@tmp3) {
-          if ( $author =~ m/(.+)(,\s)(.+)/ ) {
-            push @authors, "$3,$1";
-          }
-        }
-        push @authors, $etal if ( $etal ne '' );
-
-        $authors = join( ' and ', @authors );
-      }
-
-      # the rest we put into the abstract field
-      foreach my $i ( 3 .. $#tmp ) {
-        $description .= " $tmp[$i]" if ( $tmp[$i] );
-      }
-
+	if ( $entry->{'author'} ) {
+	    my $tmp = join( '', @{ $entry->{'author'} } );
+	    $tmp =~ s/.*\(//;
+	    $tmp =~ s/\)//;
+	    if ( $tmp =~ m/(.*)(et al)$/ ) {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $1 )->bibtex().
+		    " and {et al.}";
+	    } else {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $tmp )->bibtex();
+	    }
+	}
+	
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
     }
+    
+    return [@output];
+}
+
+
+# RSS feeds from source http://content.karger.com/
+# There is no author field and bibliographic information
+# is parsed from the description field.
+sub _parse_Karger {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+	
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+	    
+	    # EXAMPLE: Folia Primatol 2009;80:426<96>429 (DOI:10.1159/000276120)
+	    if ( $temp =~ m/(.*)\s(\d\d\d\d);(\d+):(\d+)\D(\d+)(\s.*DOI:)(10.*)\)/ ) {
+		$journal = $1;
+		$year = $2;
+		$volume = $3;
+		$pages = "$4-$5";
+		$doi = $7;
+	    }
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+# RSS feeds from source http://ej.iop.org
+# Authors are parsed from the description field.
+# There is no bibliographic information
+sub _parse_IOP {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    my $channel_title = $_[1];
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+	
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+
+	    # parse authors
+	    my @tmp = split( /<br>/, $temp );
+	    $tmp[0] =~ s/Author\(s\):\s//;
+	    my @tmp2 = split ( /, | and /, $tmp[0] );
+	    my @authors_formatted = ( );
+	    foreach my $author ( @tmp2 ) {
+		push @authors_formatted,
+		Paperpile::Library::Author->new()->parse_freestyle( $author )->bibtex();
+	    }
+	    $authors = join ( " and ", @authors_formatted );
+	    
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	( $journal = $channel_title ) =~ s/\slatest\spapers//;
+
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+# RSS feeds from source http://journals.cambridge.org
+# Authors and  bibliographic information are parsed from
+# the description field.
+sub _parse_CambridgeJournals {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    my $channel_title = $_[1];
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+	
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$title =~ s/\s+/ /g;
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+	    my @tmp = split( /<br \/>/, $temp );
+	    $tmp[1] =~ s/\s+$//;
+	    if ( $tmp[1] =~ m/,$/ ) {
+		my @tmp2 = split( /,/, $tmp[1] );
+		my @authors_formatted = ( );
+		foreach my $author ( @tmp2 ) {
+		    push @authors_formatted,
+		    Paperpile::Library::Author->new()->parse_freestyle( $author )->bibtex();
+		}
+		$authors = join ( " and ", @authors_formatted );		
+	    }
+	    
+	    if ( $temp =~ m/Volume\s(\d+)/ ) {
+		$volume = $1;
+	    }
+	    if ( $temp =~ m/Issue\s(\d+)/ ) {
+		$issue = $1;
+	    }
+	    if ( $temp =~ m/pp\s(\d+-\d+)/ ) {
+		$pages = $1;
+	    }
+	    
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	( $journal = $channel_title ) =~ s/\scurrent\sissue//i;
+
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+# RSS feeds from source http://ovidsp.ovid.com
+# Parts of bibliographic data are parsed from channel_title.
+# Authors are taken from the description field.
+# It is cumbersopme to get rid of all the titles.
+# Pages are taken from the description field.
+sub _parse_Ovid {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    my $channel_title = $_[1];
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+	
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$title =~ s/\s+/ /g;
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+	    my @tmp = split ( /\n/, $temp );
+	    my @tmp2 = split ( /;/, _remove_html_tags( $tmp[3] ) );
+	    my @authors_formatted = ( );
+	    foreach my $author ( @tmp2 ) {
+		my @tmp3 = split( /,/, $author );
+		if ( $#tmp3 > 1 ) {
+		    $author = "$tmp3[0], $tmp3[1]";
+		}
+		
+		$author =~ s/(\d,|\d)//g;
+		$author =~ s/(PhD|MD|MHA|MPH|MSc|BSc|DrPH|CGC|MSN|MS|CCRC|BSN|BS|DNSc|J\.\sEdD|RN|ADN|BA|MNS|MB|BNS|PharmD|MA|ChB)//g;
+		$author =~ s/\[.*\]//g;
+		$author =~ s/(\+|\*)//g;
+		$author =~ s/(.*)(\s[A-Z]{2,})/$1/;
+		$author =~ s/^\s+//;
+		$author =~ s/\s+$//;
+		$author =~ s/,$//;
+		$author =~ s/\s+$//;
+		$author =~ s/\s+/ /;
+		push @authors_formatted, $author;
+	    }
+	    $authors = join ( " and ", @authors_formatted );
+
+	    if ( $tmp[7] =~ m/(\d+-\d+)/ ) {
+		$pages = $1;
+	    }
+	    if ( $tmp[7] =~ m/(\d+)/ and !$pages ) {
+		$pages = $1;
+	    }
+	    
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+	
+	( $journal = $channel_title ) =~ s/(.*)(\.\s.*)/$1/;
+	
+	if ( $channel_title =~ m/Volume\s(\d+)/ ) {
+	    $volume = $1;
+	}
+	
+	if ( $channel_title =~ m/Volume\s\d+\((.*)\)/ ) {
+	    $issue = $1;
+	}
+	
+	if ( $channel_title =~ m/(2\d\d\d)$/ ) {
+	    $year = $1;
+	}
+
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+# RSS feeds from source http://la-press.com
+# No bibliographic information.
+# Authors are parsed from description field.
+sub _parse_LAPress {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    my $channel_title = $_[1];
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+	
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+	    my @tmp2 = split ( /, | and /, $temp );
+	    my @authors_formatted = ( );
+	    foreach my $author ( @tmp2 ) {
+		push @authors_formatted,
+		Paperpile::Library::Author->new()->parse_freestyle( $author )->bibtex();
+	    }
+	    $authors = join ( " and ", @authors_formatted );
+	    
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	if ( $entry->{'pubDate'} and !$year ) {
+	    my $tmp = join( '', @{ $entry->{'pubDate'} } );
+	    if ( $tmp =~ m/^[A-Z]+\s+(\d\d\d\d)$/i ) {
+		$year = $1;
+	    }
+	    if ( $tmp =~ m/\d{1,2}\s+[A-Z]{3}\s+(\d\d\d\d)/i ) {
+		$year = $1;
+	    }
+	}
+	
+	( $journal = $channel_title ) =~ s/(.*)(\.\s.*)/$1/;
+
+
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+# RSS feeds from source metapress.com
+# Everything must be parsed from the
+# description field.
+sub _parse_Metapress {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    my $channel_title = $_[1];
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+	
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+
+	    # there is great HTML markup
+	    $temp =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg;
+	    $temp = "<html><body>$temp</body></html>";
+   
+	    my $tree = HTML::TreeBuilder::XPath->new;
+	    $tree->utf8_mode(1);
+	    $tree->parse_content($temp);
+	    my @authors = $tree->findnodes('/html/body/ul/li/ul/li');
+	    my @authors_formatted = ( );
+	    foreach my $author ( @authors ) {
+		my @tmp = split( /,/, $author->as_text() );
+		push @authors_formatted,
+		Paperpile::Library::Author->new()->parse_freestyle( $tmp[0] )->bibtex();
+	    }
+	    $authors = join ( " and ", @authors_formatted );
+
+	    my @details = $tree->findnodes('/html/body/ul/ul/li/span/a');
+	    $journal = $details[0]->as_text();
+	    if ( $details[1] ) {
+		if ( $details[1]->as_text() =~ m/Volume\s(\d+),\sNumber\s(\d+)\s.*\s(\d{4})$/ ) {
+		    $volume = $1;
+		    $issue = $2;
+		    $year = $3;
+		}
+	    }
+
+	    if ( !$volume and !$issue ) {
+		if ( $temp =~ m/Volume\s(\d+)/ ) {
+		    $volume = $1;
+		}
+		if ( $temp =~ m/Number\s(\d+)/ ) {
+		    $issue = $1;
+		}
+	    }
+
+	    if ( $temp =~ m/<li>DOI (10\..*)<\/li>/ ) {
+		$doi = $1;
+	    }
+	    
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+# RSS feeds from source http://emeraldinsight.com
+# No bibliographic information.
+sub _parse_Emerald {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    my $channel_title = $_[1];
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+	
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	my @authors = split( /, /, _easy_join ( 'author', $entry ) );
+	my @authors_formatted = ( );
+	foreach my $author ( @authors ) {
+		push @authors_formatted,
+		Paperpile::Library::Author->new()->parse_freestyle( $author )->bibtex();
+	}
+	$authors = join ( " and ", @authors_formatted );
+	
+	if ( $entry->{'description'} ) {
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	( $journal = $channel_title ) =~ s/(.*)(\.\s.*)/$1/;
+	$journal =~ s/\s+$//;
+
+	if ( $link =~ m/emeraldinsight\.com\/(10\.\d\d\d.*)/ ) {
+	    $doi = $1;
+	}
+
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+# RSS feeds from source http://www.bioone.org
+# Bibliographic information is parsed from
+# description field. Authors needs special handling.
+sub _parse_BioOne {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+	    if ( $temp =~ m/(.*)(\sVolume\s)(\d+)(,.*\s)(\d\d\d\d)/ ) {
+		$journal = $1;
+		$volume = $3;
+		$year = $5;
+	    }
+	    if ( $temp =~ m/(.*Page\s)(\d+-\d+)/ ) {
+		$pages = $2;
+	    }
+	    if ( $temp =~ m/(.*Page\s)(\d+)/ and !$pages ) {
+		$pages = $2;
+	    }
+	    if ( $temp =~ m/(.*Issue\s)(\d+)/ ) {
+		$issue = $2;
+	    }
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	if ( $entry->{'author'} ) {
+	    my $tmp = join( '', @{ $entry->{'author'} } );
+	    $tmp =~ s/.*\(//;
+	    $tmp =~ s/\)//;
+	    if ( $tmp =~ m/(.*)(et al)$/ ) {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $1 )->bibtex().
+		    " and {et al.}";
+	    } else {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $tmp )->bibtex();
+	    }
+	}
+
+	if ( $link =~ m/doi\/abs\/(10.\d\d\d\d\/.*)\?/ ) {
+	    $doi = $1;
+	}
+	
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+# RSS feeds from source http://www.liebertonline.com
+# Bibliographic information is parsed from
+# description field. Authors needs special handling.
+sub _parse_Liebert {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+	
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+
+	    if ( $temp =~ m/Vol\.\s(\d+)/ ) {
+		$volume = ( $1 > 0 ) ? $1 : 'in press';
+	    }
+	    if ( $temp =~ m/No\.\s(\d+)/ ) {
+		$issue = ( $1 > 0 ) ? $1 : '';
+	    }
+	    if ( $temp =~ m/:\s(\d+-\d+)\./ ) {
+		$pages = $1;
+	    }
+	    if ( $temp =~ m/(.*)(\s+[A-Z]{3}\s)(\d{4})/i ) {
+		$journal = $1;
+		$journal =~ s/\s+$//;
+		$year = $3;
+	    }
+	    if ( $temp =~ m/\s(\d{4}),/i and !$year ) {
+		$year = $1;
+	    }
+
+	    if ( $temp =~ m/(.*)\s,\sVol\.\s0,/ and !$journal ) {
+		$journal = $1;
+	    }
+	    
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	if ( $entry->{'author'} ) {
+	    my $tmp = join( '', @{ $entry->{'author'} } );
+	    $tmp =~ s/.*\(//;
+	    $tmp =~ s/\)//;
+	    if ( $tmp =~ m/(.*)(et al)$/ ) {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $1 )->bibtex().
+		    " and {et al.}";
+	    } else {
+		$authors = Paperpile::Library::Author->new()->parse_freestyle( $tmp )->bibtex();
+	    }
+	}
+
+	if ( $link =~ m/doi\/abs\/(10.\d\d\d\d\/.*)\?/ ) {
+	    $doi = $1;
+	}
+	
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+# RSS feeds from source http://www.dovepress.com
+# No bibliographic information.
+# Authors are parsed from description field.
+sub _parse_DovePress {
+
+    my $self    = shift;
+    my @entries = @{ $_[0] };
+    my $channel_title = $_[1];
+    
+    my @output = ();
+    
+    foreach my $entry (@entries) {
+	
+	my ( $title, $authors, $description, $doi, $journal,
+	     $volume, $issue, $year, $link, $pages, $note );
+
+	$title = _easy_join ( 'title', $entry );
+	$link  = _easy_join ( 'link', $entry );
+
+	if ( $entry->{'description'} ) {
+	    my $temp = join( '', @{ $entry->{'description'} } );
+	    my @authors = split( /, /, $temp );
+	    my @authors_formatted = ( );
+	    foreach my $author ( @authors ) {
+		if ( $author !~ m/et\sal/ ) {
+		    push @authors_formatted,
+		    Paperpile::Library::Author->new()->parse_freestyle( $author )->bibtex();
+		} else {
+		    push @authors_formatted, "{et al.}";
+		}
+	    }
+	    $authors = join ( " and ", @authors_formatted );
+
+	    $description = join( '', @{ $entry->{'description'} } );
+	}
+
+	( $journal = $channel_title ) =~ s/(.*)(\.\s.*)/$1/;
+	$journal =~ s/\s+$//;
+
+	push @output, _fill_publication_object( $title, $authors, $description,
+						$doi, $journal, $volume, $issue,
+						$year, $link, $pages, $note );
+    }
+    
+    return [@output];
+}
+
+
+##################################################################################
+# Section of helper functions
+##################################################################################
+
+sub _easy_join {
+    
+    my $string = $_[0];
+    my $entry = $_[1];
+    
+    if ( $entry->{ $string } ) {
+	return join( '', @{ $entry->{ $string } } );
+    } 
+
+    return;
+}
+
+sub _fill_publication_object {
+    
+    my ( $title, $authors, $description, $doi, $journal,
+	 $volume, $issue, $year, $link, $pages, $note ) = @_;
 
     my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
-
+    
     $pub->title($title)          if ($title);
     $pub->authors($authors)      if ($authors);
     $pub->abstract($description) if ($description);
@@ -517,10 +1505,21 @@ sub _parse_ScienceDirect {
     $pub->year($year)            if ($year);
     $pub->pages($pages)          if ($pages);
     $pub->linkout($link)         if ($link);
-    push @output, $pub;
-  }
 
-  return [@output];
+    return $pub;
+}
+
+sub _remove_html_tags {
+    my $string = $_[0];
+
+    my @tags = ('b','strong','span');
+
+    foreach my $tag (@tags) {
+	$string =~ s/<$tag>//g;
+	$string =~ s/<\/$tag>//g;
+    }
+
+    return $string;
 }
 
 

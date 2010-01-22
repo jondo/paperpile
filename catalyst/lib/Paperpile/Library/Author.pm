@@ -379,6 +379,10 @@ sub bibutils {
   return $output;
 }
 
+# NOTE: It module is only able to parse names correctly if they
+# they are in correct order. That means starting with first name(s)
+# or initials and the family name at the last position.
+# Commas are not allowed.
 
 sub parse_freestyle {
 
@@ -389,6 +393,24 @@ sub parse_freestyle {
 
   ( my $first, my $last, my $level ) = _parse_freestyle_helper( $author_string );
 
+  # If words are all upper case, casing is changed 
+  if ( $last =~ m/([A-Z])([A-Z]+)$/ ) {
+      my $backup = $last;
+      $last = $1.lc( $2 );
+      $last = $backup if ( length( $last ) != length( $backup ) );
+  }
+
+  my @tmp = split( / /, $first );
+  foreach my $name ( @tmp ) {
+      if ( $name =~ m/([A-Z])([A-Z]+)$/ and length( $name ) > 2 ) {
+	  my $backup = $name;
+	  $name = $1.lc( $2 );
+	  $name = $backup if ( length( $name ) != length( $backup ) );
+      }
+  }
+  $first = join ( " ", @tmp );
+  
+  
   # We have found a match with the simple patterns
   if ( $level < 9 ) {
     $self->last( $last );
