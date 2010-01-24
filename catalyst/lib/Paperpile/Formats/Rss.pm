@@ -24,8 +24,7 @@ sub read {
   my @output = ();
 
   # read in XML
-  my $file = 'RSS_temp_file.xml';
-  #my $file = $self->file;
+  my $file = $self->file;
   
   # XMLin crashes on empty files and if we have html content
   return if ( -z $file );
