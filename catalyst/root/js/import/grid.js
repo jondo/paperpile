@@ -29,10 +29,19 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     var renderPub = function(value, p, record) {
-      // Can possibly be speeded up with compiling the template.
       record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
       record.data._citekey = Ext.util.Format.ellipsis(record.data.citekey, 18);
       record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
+
+      if (record.data.doi){
+        var wrapped =  record.data.doi;
+
+        if (wrapped.length > 25){
+          wrapped=wrapped.replace(/\//,'/<br>');
+        }
+
+        record.data._doiWrapped = wrapped;
+      }
 
       /*
 	// Shrink very long author lists.
@@ -549,7 +558,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  <dd>{_createdPretty}</dd>',
       '</tpl>',
       '<tpl if="doi">',
-      '  <dt>DOI: </dt><dd>{doi}</dd>',
+      '  <dt>DOI: </dt><dd>{_doiWrapped}</dd>',
       '</tpl>',
       '<tpl if="eprint">',
       '  <dt>Eprint: </dt>',

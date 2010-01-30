@@ -25,19 +25,10 @@ h1 {
 
 
 .pp-box {
-    /*max-width: 300px;*/
     margin: 8;
     border-style:solid;
     border-width: 1px;
     padding: 5px;
-    -moz-border-radius: 8px;
-
-
-    -webkit-border-radius-top-left: 8px;
-    -webkit-border-radius-top-right: 8px;
-    -webkit-border-radius-bottom-left: 8px;
-    -webkit-border-radius-bottom-right: 8px;
-
 }
 
 .pp-box-side-panel {
@@ -47,14 +38,6 @@ h1 {
 .pp-dashboard-box {
     width: 300px;
     margin: 10px;
-}
-
-.pp-box-top {
-    -moz-border-radius-bottomleft: 0px;
-    -moz-border-radius-bottomright: 0px;
-    -webkit-border-radius-bottom-left: 0px;
-    -webkit-border-radius-bottom-right: 0px;
-
 }
 
 .pp-box-right {
@@ -67,16 +50,28 @@ h1 {
     margin:0;
 }
 
+
+/* Different border styles disabled */
+.pp-box-top {
+    /*
+    -moz-border-radius-bottomleft: 0px;
+    -moz-border-radius-bottomright: 0px;
+    -webkit-border-radius-bottom-left: 0px;
+    -webkit-border-radius-bottom-right: 0px;
+    */
+}
+
 .pp-box-middle {
-    -moz-border-radius: 0px;
+/* -moz-border-radius: 0px;*/
 }
 
 .pp-box-bottom {
+    /*
     -moz-border-radius-topleft: 0px !important;
     -moz-border-radius-topright: 0px !important;
     -webkit-border-radius-top-left: 0px !important;
     -webkit-border-radius-top-right: 0px !important;
-    
+    */
 }
 
 .pp-box-style1{
@@ -1158,7 +1153,6 @@ div:hover.pp-grid-sort-item {
 
 .pp-tag-control *{
     font-size:9px;
-    font-family: Verdana;
     height: 18px;
 }
 
@@ -1173,9 +1167,8 @@ div:hover.pp-grid-sort-item {
 .pp-tag-box {
     border-style:solid;
     border-width: 1px 0;
-    font-family: Verdana;
     font-size: 9px;
-    font-weight:normal;
+    font-weight:bold;
     margin: 0 0.8em 0 1px;
     overflow:visible;
     display:block;
@@ -1230,8 +1223,9 @@ div:hover.pp-tag-remove{
 
 .pp-tag-tree-node a span{
     border-width:1px;
-    font-size: 10px;
-    padding: 0 4px;
+    font-size: 9px;
+    padding: 1px 4px;
+    font-weight:bold;
     -moz-border-radius: 3px;
     -webkit-border-radius: 3px;
 }
@@ -1239,6 +1233,7 @@ div:hover.pp-tag-remove{
 .pp-tag-style-tab {
     border-width: 1px;
     font-size: 11px !important;
+    font-weight:bold !important;
     margin: 3px 4px 1px 3px;
     padding: 1px 4px !important;
     -moz-border-radius: 3px;
@@ -1248,9 +1243,8 @@ div:hover.pp-tag-remove{
 .pp-tag-style-sample {
     border-style:solid;
     border-width: 1px;
-    font-family: Verdana;
     font-size: 10px;
-    font-weight:normal;
+    font-weight:bold;
     display:block;
     float:left;
     margin: 4;
@@ -1262,9 +1256,8 @@ div:hover.pp-tag-style-sample {
 
     border-style:solid;
     border-width: 1px;
-    font-family: Verdana;
     font-size: 10px;
-    font-weight:normal;
+    font-weight:bold;
     display:block;
     float:left;
     margin: 4;
@@ -1278,11 +1271,6 @@ div:hover.pp-tag-style-sample {
 } 
 
 .pp-tag-grid-block {
-/*    float:left;
-    clear:both;
-    margin-top:4px;
-    margin-left:4px;
-    margin-right:4px;*/
     display:inline-block;
     margin: 0 0 0 .75em;
 }
@@ -1311,12 +1299,12 @@ div:hover.pp-tag-style-sample {
     border-width:1px;
     font-size: 9px;
     line-height:12px;
-    padding: .1em .2em;
+    padding: 0 4px;
     text-align:center;
     opacity:0.7;
     display:inline-block;
-/*    height:12px;*/
     white-space:normal;
+    font-weight: bold;
 }
 
 .pp-job-box {
@@ -1453,7 +1441,7 @@ div:hover.pp-tag-style-sample {
 
 
 
-.pp-tag-style-default,  .pp-tag-tree-style-default  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: black !important; }
+.pp-tag-style-default,  .pp-tag-tree-style-default  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: #686868 !important; }
 .pp-tag-style-0,  .pp-tag-tree-style-0  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: black !important; }
 .pp-tag-style-1,  .pp-tag-tree-style-1  a span { border-color: rgb(124, 136, 155); border-style:solid; background-color: rgb(224, 236, 255); color: rgb(32, 108, 255) !important; }   
 .pp-tag-style-2,  .pp-tag-tree-style-2  a span { border-color: rgb(123, 126, 155);  border-style:solid; background-color: rgb(223, 226, 255); color: rgb(0, 0, 204) !important;    }   
