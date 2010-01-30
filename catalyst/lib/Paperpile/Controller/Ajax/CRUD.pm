@@ -37,8 +37,6 @@ sub insert_entry : Local {
 
   $self->_update_counts($c);
 
-  $c->forward('Paperpile::View::JSON');
-
 }
 
 sub complete_entry : Local {
@@ -83,9 +81,11 @@ sub new_entry : Local {
 
   $self->_update_counts($c);
 
-  $c->stash->{data}    = $pub->as_hash;
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
+  # That's handled as form on the front-end so we have to explicitly
+  # indicate success
+  $c->stash->{success}=\1;
+
+  $c->stash->{data}->{pub_delta} = 1;
 
 }
 
@@ -151,7 +151,6 @@ sub update_entry : Local {
 
   my $grid_id = $c->request->params->{grid_id};
 
-  #my $rowid   = $c->request->params->{_rowid};
   my $sha1 = $c->request->params->{sha1};
 
   my $plugin  = $c->session->{"grid_$grid_id"};
@@ -169,9 +168,12 @@ sub update_entry : Local {
   delete( $plugin->_hash->{ $old_pub->sha1 } );
   $plugin->_hash->{ $new_pub->sha1 } = $new_pub;
 
-  $c->stash->{data}->{ $old_pub->sha1 } = $new_pub->as_hash;
-
+  # That's handled as form on the front-end so we have to explicitly
+  # indicate success
   $c->stash->{success} = \1;
+
+  $c->stash->{data} = { pubs => {$old_pub->sha1 => $new_pub->as_hash}};
+
 
 }
 

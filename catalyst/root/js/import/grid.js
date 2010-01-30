@@ -952,12 +952,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         grid_id: isNew ? null : this.id,
         callback: function(status, data) {
           if (status == 'SAVE') {
+            Paperpile.main.onUpdate(data);
+            /*
             if (isNew) {
               this.store.reload();
             } else {
               this.updateData(data);
               this.findParentByType(Paperpile.PubView).onRowSelect();
             }
+            */
             Paperpile.status.clearMsg();
           }
           win.close();
