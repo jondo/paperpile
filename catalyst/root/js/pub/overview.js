@@ -75,7 +75,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         return;
       }
 
-      if (data){
+      if (data) {
         if (data.updateSidePanel) {
           this.updateAllInfo(newData);
           return;
@@ -89,7 +89,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       var jobChanged = 0;
 
       // Before checking fields check if _search_job got defined or undefined
-      if ((oldData._search_job && !newData._search_job) || (newData._search_job && !oldData._search_job)){
+      if ((oldData._search_job && !newData._search_job) || (newData._search_job && !oldData._search_job)) {
         jobChanged = 1;
       } else {
         for (var field in newData._search_job) {
@@ -118,7 +118,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     this.getGrid().getSidebarTemplate().singleSelection.overwrite(this.body, data);
     this.updateLabels(data);
     if (this.searchDownloadWidget) {
-      this.searchDownloadWidget=null;
+      this.searchDownloadWidget = null;
     }
     this.updateSearchJob(data);
   },
@@ -173,17 +173,10 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
   updateInfoMultiple: function(data) {
     this.getGrid().getSidebarTemplate().multipleSelection.overwrite(this.body, data, true);
-
-    Ext.get('main-container-' + this.id).on('click', function(e, el, o) {
-      switch (el.getAttribute('action')) {
-      case 'batch-download':
-        this.getGrid().batchDownload();
-        break;
-      }
-    },
-    this, {
-      delegate: 'a'
-    });
+    Ext.get('main-container-' + this.id).on('click', this.handleClick,
+      this, {
+        delegate: 'a'
+      });
   },
 
   // Event handling for the HTML. Is called with 'el' as the Ext.Element of the HTML 
@@ -307,6 +300,17 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       this.showDetails();
       break;
 
+    case 'batch-download':
+      this.getGrid().batchDownload();
+      break;
+    
+    case 'restore-ref':
+      this.getGrid().deleteEntry('RESTORE');
+      break;
+
+    case 'import-ref':
+      this.getGrid().insertEntry();
+      break;
     }
   },
 

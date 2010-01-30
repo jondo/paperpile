@@ -546,6 +546,14 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background: transparent url('/images/icons/delete.png') no-repeat;
 }
 
+.pp-action-trash {
+    background: transparent url('/images/icons/trash.png') no-repeat;
+}
+
+.pp-action-restore {
+    background: transparent url('/images/icons/arrow_rotate_anticlockwise.png') no-repeat;
+}
+
 .pp-action-go {
     background: transparent url('/images/icons/application_go.png') no-repeat;
 }
@@ -560,7 +568,6 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 .pp-action-search-pdf {
     background: transparent url('/images/icons/page_white_search.png') no-repeat;
 }
-
 
 .pp-action-open-pdf {
     background: transparent url('/images/icons/page_white_acrobat.png') no-repeat;

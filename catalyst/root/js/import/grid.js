@@ -24,8 +24,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       pageSize: this.limit,
       store: this.getStore(),
       displayInfo: true,
-      displayMsg: 'Displaying papers {0} - {1} of {2}',
-      emptyMsg: "No papers to display"
+      displayMsg: 'Displaying references {0} - {1} of {2}',
+      emptyMsg: "No references to display"
     });
 
     var renderPub = function(value, p, record) {
@@ -277,27 +277,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     } else {
       return false;
     }
-    /*
-	Ext.Ajax.request({
-	  url: Paperpile.Url('/ajax/crud/add_tag'),
-	  params: {
-	    grid_id:this.grid.id,
-            selection: record.get('sha1'),
-            tag: tagName
-	  },
-	  method: 'GET',
-	  success: function(response){
-	    var json = Ext.util.JSON.decode(response.responseText);
-	    Paperpile.main.onUpdate(json.data);
-	  },
-	  failure: Paperpile.main.onError,
-	  scope: this
-	});
-	return true;
-      } else {
-	return false;
-      }
-*/
   },
 
   onStoreLoad: function() {
@@ -585,7 +564,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <ul class="pp-folders">',
       '    <tpl for="_folders_list">',
       '      <li class="pp-folder-list pp-folder-generic">',
-      '        <a href="#" class="pp-textlink" action="open-folder" folder_id="{folder_id}" >{folder_name}</a> &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="delete-folder" folder_id="{folder_id}" rowid="{rowid}">Remove</a>',
+      '        <a href="#" class="pp-textlink" action="open-folder" folder_id="{folder_id}" >{folder_name}</a> &nbsp;&nbsp;',
+      '        <a href="#" class="pp-textlink pp-second-link" action="delete-folder" folder_id="{folder_id}" rowid="{rowid}">Remove</a>',
       '      </li>',
       '    </tpl>',
       '    </ul>',
@@ -623,7 +603,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '        <tpl if="_attachments_list">',
       '          <ul class="pp-attachments">',
       '          <tpl for="_attachments_list">',
-      '            <li class="pp-attachment-list pp-file-generic {cls}"><a href="#" class="pp-textlink" action="open-attachment" path="{path}">{file}</a>&nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="delete-file" rowid="{rowid}">Delete</a></li>',
+      '            <li class="pp-attachment-list pp-file-generic {cls}">',
+      '            <a href="#" class="pp-textlink" action="open-attachment" path="{path}">{file}</a>&nbsp;&nbsp;',
+      '            <a href="#" class="pp-textlink pp-second-link" action="delete-file" rowid="{rowid}">Delete</a></li>',
       '          </tpl>',
       '          </ul>',
       '        </tpl>',
@@ -639,16 +621,21 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   getMultipleSelectionTemplate: function() {
+
     var template = [
       '<div id="main-container-{id}">',
       '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
-      '    <p><b>{numSelected}</b> papers selected.</p>',
-      '    <div class="pp-control-container">',
-      '      <div id="tag-container-{id}" class="pp-tag-container"></div>',
-      '      <div id="tag-control-{id}" class="pp-tag-control"></div>',
-      '    </div>',
+      '  <tpl if="numSelected==0">',
+      '  <p>No references in here.</p>',
+      '  </tpl>',
+      '  <tpl if="numSelected &gt;0">',
+      '    <p><b>{numSelected}</b> references selected.</p>',
       '    <div class="pp-vspace"></div>',
-      '    <p><a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a></p>',
+      '    <ul> ',
+      '      <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
+      '      <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
+      '    </ul>',
+      '  </tpl>',
       '  </div>',
       '</div>'];
     return[].concat(template);
@@ -984,7 +971,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   batchDownload: function() {
     selection = this.getSelection();
-    Ext.getCmp('queue-widget').onUpdate({submitting:true});
+    Ext.getCmp('queue-widget').onUpdate({
+      submitting: true
+    });
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/batch_download'),
       params: {
@@ -998,7 +987,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         Paperpile.main.onUpdate(json.data);
         // Trigger a thread to start requesting queue updates.
         Paperpile.main.queueUpdate();
-      }, 
+      },
       failure: Paperpile.main.onError,
     });
   },
