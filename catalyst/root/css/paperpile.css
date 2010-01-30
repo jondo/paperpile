@@ -198,6 +198,17 @@ li:hover a.pp-second-link{
     color: #4183C4;
 }
 
+.pp-box-error {
+    padding: 5px;
+    margin: 8px;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    background-color: #FFBABA;
+    color: #D8000C;
+    font-weight: normal;
+}
+
+
+
 .pp-box-welcome p, .pp-box-welcome li{
     font-size: 13px;
     line-height: 1.5em;
@@ -303,6 +314,21 @@ td.pp-dashboard-dl{
     margin: 8px;
 }
 
+a.pp-progress-cancel {
+    background: transparent url('/images/icons/cancel_bw.png') no-repeat 0;
+    width:20px;
+    display:block;
+    text-decoration:none;
+}
+
+a.pp-progress-cancel:hover {
+    background: transparent url('/images/icons/cancel.png') no-repeat 0;
+    width:20px;
+    display:block;
+    text-decoration:none;
+}
+
+
 .pp-control-container td{
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
@@ -320,7 +346,7 @@ td.pp-dashboard-dl{
 a.pp-textlink, a:visited.pp-textlink {
     /*text-decoration:underline !important;*/
     text-decoration:none;
-    color: #0015FE;
+    color: #0015FE !important;
 }
 
 a:hover.pp-textlink {
@@ -402,7 +428,6 @@ a:hover.pp-textlink {
     z-index: 9001; /* show above mask */
     /*-moz-border-radius: 3px; Does not work with update*/
     -webkit-border-radius: 3px;
-    
 }
 
 .pp-status-msg {
@@ -431,10 +456,25 @@ a:hover.pp-textlink {
     color: #D8000C;
 }
 
-.pp-queue-widget {
-    background: transparent url('/images/icons/tick.png') no-repeat 2px 0;
-    text-decoration:none;
+.pp-queue-widget-container {
+    padding: 0px 10px;
+    -webkit-border-radius: 3px;
 }
+
+.pp-queue-widget-content {
+    background-color:#FFF1A8;
+    padding: 0px 10px;
+}
+
+.pp-queue-widget-item {
+    padding: 0px 3px;
+    font-weight: bold !important;
+}
+
+.pp-queue-widget-action {
+    font-weight: bold !important;
+}
+
 
 .pp-top-button {
     margin: 0 10px;
@@ -703,6 +743,14 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/delete.png') !important;
 }
 
+.pp-icon-cancel {
+    background-image: url('/images/icons/cancel.png') !important;
+}
+
+.pp-icon-retry {
+    background-image: url('/images/icons/arrow_refresh.png') !important;
+}
+
 .pp-icon-tags{
     background-image: url('/images/icons/tag_orange.png')!important;
 }
@@ -806,17 +854,13 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-icon-queue{
     padding: 2 2 2 22;
-    background: transparent url('/images/icons/tick.png') no-repeat;
+    background: transparent url('/images/icons/arrow_rotate_anticlockwise.png') no-repeat;
 }
 
 .pp-icon-pause{
     padding: 2 2 2 22;
     background: transparent url('/images/icons/pause.png') no-repeat;
 }
-
-
-
-
 
 
 /**** Abstract ****/
@@ -1601,5 +1645,174 @@ table.pp-meta-form {
     background: transparent url('/images/icons/tick.png') no-repeat 0;
     padding: 2 2 2 22;
     margin: 10px 15px;
+}
+ 
+.pp-header-button, pp-header-button:visited            { 
+    font-family: Arial,Helvetica,Helvetica Neue,Verdana,sans-serif;
+       background: #222 url(file:///home/wash/play/paperpile/catalyst/root/gradient.png) repeat-x; 
+    display: inline-block; 
+    text-decoration: none;
+    color: #585858; 
+    background-color: #F2F2F2;
+    font-weight: normal;
+    font-size: 11px;
+    padding: 1px 7px;
+    -moz-border-radius: 7px; 
+       -webkit-border-radius: 7px;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+    border-color: #A4A4A4;
+    outline: none;
+    cursor: pointer;
+}
+
+/*  Code for a more sophisticated and text based  dashboard button
+
+
+  <a href="#" class="pp-header-button"> 
+    <div class="pp-header-button-icon pp-header-button-icon-tasks-done"></div>
+    <div class="pp-header-button-text">Dashboard</div>
+  </a>
+
+.pp-header-button:hover         { background-color: #E6E6E6; }
+.pp-header-button:active { margin-top: 1px; }
+
+.pp-header-button-text {
+    float:right;
+}
+
+.pp-header-button-icon-cog {
+    background: url('file:///home/wash/play/paperpile/catalyst/root/images/icons/dashboard.png') no-repeat 0px 1px;
+    width:20px;
+    height:14px;
+    float:left;
+}
+
+.pp-header-button-icon-tasks-running {
+    background: url('file:///home/wash/play/paperpile/catalyst/root/images/icons/task_running.gif') no-repeat 0px 0px;
+    width:20px;
+    height:14px;
+    float:left;
+}
+
+.pp-header-button-icon-tasks-done {
+    background: url('file:///home/wash/play/paperpile/catalyst/root/images/icons/tick_small.png') no-repeat 0px 0px;
+    width:20px;
+    height:14px;
+    float:left;
+}
+*/
+
+
+
+.pp-queue-list-container{
+}
+
+.pp-queue-list-type{
+    width:100px;
+    height:30px;
+    float:left;
+}
+
+.pp-queue-list-data{
+    height:30px;
+    float:left;
+}
+
+.pp-queue-list-icon{
+    width:40px;
+    height:30px;
+    float:right;
+}
+
+
+.pp-queue-list-icon-RUNNING{
+    background: transparent url('/images/icons/job-running.gif') no-repeat 7px 0;
+}
+
+.pp-queue-list-icon-DONE{
+    background: transparent url('/images/icons/tick.png') no-repeat 7px 0;
+}
+
+.pp-queue-list-icon-ERROR{
+    background: transparent url('/images/icons/cross.png') no-repeat 7px 0;
+}
+
+.pp-queue-list-icon-PENDING{
+    color:gray;
+}
+
+
+.pp-queue-type-label-PDF_SEARCH{
+    background-color: #FFF6A9;
+}
+
+.pp-queue-type-label-PDF_IMPORT{
+    background-color: #E0ECF8;
+}
+
+
+.pp-queue-list-title{
+}
+
+.pp-queue-list-title-PENDING, .pp-queue-list-title-ERROR{
+    color:gray;
+}
+
+.pp-queue-list-title-RUNNING, .pp-queue-list-title-DONE{
+    color:black;
+}
+
+
+.pp-queue-list-status{
+
+}
+
+.pp-queue-list-status-ERROR{
+    color:red;
+}
+
+.pp-queue-list-status-RUNNING{
+    color:blue;
+}
+
+.pp-queue-list-status-PENDING{
+    color:gray;
+}
+
+.pp-queue-list-status-DONE{
+    color:#088A08;
+}
+
+
+.pp-queue-table {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    margin: 8px;
+}
+
+.pp-queue-eta {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    color: #736F6E;
+    padding: 4px;
+}
+
+.pp-queue-table td {
+    padding: 1px 5px;
+    text-align: center;
+}
+
+.pp-queue-table-error {
+    font-weight:bold;
+    color: #D8000C;
+}
+
+.pp-queue-table-ok {
+    font-weight:bold;
+    color: #009933;
+}
+
+.pp-queue-table-pending {
+    font-weight:bold;
+    color: gray;
 }
 

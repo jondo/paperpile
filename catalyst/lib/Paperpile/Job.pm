@@ -57,6 +57,9 @@ has 'pub' => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
 # File name to store the job object
 has '_file' => ( is => 'rw' );
 
+# rowid in the database table. At the moment only used to re-submit
+# jobs at the original position
+has '_rowid' => ( is => 'rw', default => undef );
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -77,6 +80,7 @@ sub BUILD {
   else {
     $self->_file( File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id ) );
     $self->restore;
+    $self->pub->refresh_job_fields($self);
   }
 }
 
@@ -118,7 +122,6 @@ sub reset {
   $self->error('');
   $self->interrupt('');
   $self->info({msg => ''});
- 
   $self->save;
 }
 
@@ -144,6 +147,8 @@ sub remove {
 
 sub cancel {
   my $self = shift;
+
+  next if ($self->status ~~ ['ERROR', 'DONE']);
 
   if ($self->status eq 'RUNNING') {
     $self->interrupt('CANCEL');
@@ -218,6 +223,8 @@ sub update_info {
 }
 
 
+
+
 ## Runs the job in a forked sub-process
 
 sub run {
@@ -247,12 +254,10 @@ sub run {
     if ($@) {
       $self->_catch_error;
     } else {
+      my $end_time = time;
+      $self->duration( $end_time - $start_time );
       $self->update_status('DONE');
     }
-
-    my $end_time = time;
-
-    $self->duration( $end_time - $start_time );
 
     my $q = Paperpile::Queue->new();
     $q->run;
@@ -271,6 +276,40 @@ sub run {
 sub _do_work {
 
   my $self = shift;
+
+  # $self->update_info('msg','Searching PDF');
+
+  # sleep(2);
+
+  # $self->update_info('msg','Starting download');
+
+  # sleep(2);
+
+  # $self->update_info('msg','Downloading');
+  # $self->update_info( 'size', 1000 );
+
+  # sleep(1);
+
+  # $self->update_info( 'downloaded', 200 );
+
+  # sleep(1);
+
+  # $self->update_info( 'downloaded', 500 );
+
+  # sleep(1);
+
+  # $self->update_info( 'downloaded', 800 );
+
+  # sleep(1);
+
+  # $self->update_info( 'downloaded', 1000 );
+
+  # sleep(1);
+
+  # ExtractionError->throw("Some random error") if (rand(1) > 0.5);
+
+  # $self->update_info('msg','File successfully downloaded.');
+  # return;
 
   if ($self->type eq 'PDF_SEARCH'){
 
@@ -343,12 +382,11 @@ sub _catch_error {
 
   if ( ref $e ) {
     $self->error( $e->error );
-    
     $self->update_status('ERROR');
-#    print STDERR " --> ERROR: ".$e->error."\n";
+    print STDERR " --> ERROR: ".$e->error."\n";
     $self->save;
   } else {
-#    print STDERR $@; # log this error also on console
+    print STDERR $@; # log this error also on console
     $self->error("An unexpected error has occured ($@)");
   }
 }
@@ -481,7 +519,7 @@ sub _crawl {
 
   my $self = shift;
 
-  $self->update_info('msg',"Searching PDF on publisher's site...");
+  $self->update_info('msg',"Searching PDF...");
 
   my $crawler = Paperpile::Crawler->new;
   $crawler->debug(1);
@@ -558,7 +596,7 @@ sub _download {
     unlink($file);
     if ( $res->header("X-Died") ) {
       if ( $res->header("X-Died") =~ /CANCEL/ ) {
-        UserCancel->throw( error => $self->noun.' canceled.' );
+        UserCancel->throw( error => $self->noun . ' canceled.' );
       } else {
         NetGetError->throw(
           error => 'Download error (' . $res->header("X-Died") . ').',
@@ -567,7 +605,7 @@ sub _download {
       }
     } else {
       NetGetError->throw(
-        error => 'Unknown '.$self->noun.' error.',
+        error => 'Unknown ' . $self->noun . ' error.',
         code  => $res->code,
       );
     }
@@ -583,7 +621,7 @@ sub _download {
   if ( $content !~ m/^\%PDF/ ) {
     unlink($file);
     NetGetError->throw(
-      $self->noun.' error: downloaded file does not appear to be a PDF!');
+      'Could not download PDF. Your institution might need a subscription for the journal!');
   }
 
   $self->pub->pdf($file);
@@ -641,11 +679,8 @@ sub _lookup_pdf {
   if ($rowid) {
     my $pub = $model->standard_search( 'rowid=' . $rowid, 0, 1 )->[0];
     $self->pub($pub);
-
-    print STDERR Dumper($pub);
-
   }
- 
+
 }
 
 

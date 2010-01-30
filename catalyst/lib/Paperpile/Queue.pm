@@ -25,7 +25,7 @@ has 'status' => (
 );
 
 # Maximum number of jobs running at the same time
-has max_running => ( is => 'rw', isa => 'Int', default => 3 );
+has max_running => ( is => 'rw', isa => 'Int', default => 2 );
 
 # Estimated time to completion
 has eta => ( is => 'rw', isa => 'Str', default => "--:--:--" );
@@ -41,6 +41,9 @@ has num_error => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Job statistics, split up by types.
 has types => ( is => 'rw', default => sub {return {};});
+
+# List of currently running jobs
+has running_jobs => ( is => 'rw', isa => 'ArrayRef', default => sub {[]} );
 
 has _dbh => ( is => 'rw');
 
@@ -68,23 +71,23 @@ sub save {
 
   $self->update_stats;
 
+  my $dbh_tmp = $self->_dbh;
+
   $self->_dbh(undef);
 
   my $serialized = freeze($self);
 
-  # Test for existence of queue value in database.
-  $self->dbh->begin_work();
-  (my $existing_serialized) = $self->dbh->selectrow_array("SELECT value FROM Settings WHERE key='queue'");
-  $self->dbh->commit();
+  $self->_dbh($dbh_tmp);
 
-  $self->dbh->begin_work();
+  # Test for existence of queue value in database.
+  (my $existing_serialized) = $self->dbh->selectrow_array("SELECT value FROM Settings WHERE key='queue'");
+
   $serialized = $self->dbh->quote($serialized);
   if (defined $existing_serialized) {
     $self->dbh->do("UPDATE Settings SET value=$serialized WHERE key='queue'");
   } else {
     $self->dbh->do("INSERT INTO Settings VALUES ('queue',$serialized)");
   }
-  $self->dbh->commit();
 
 }
 
@@ -94,11 +97,11 @@ sub restore {
 
   my $self = shift;
 
-  $self->dbh->begin_work();
+  #$self->dbh->begin_work();
 
   ( my $serialized ) = $self->dbh->selectrow_array("SELECT value FROM Settings WHERE key='queue' ");
 
-  $self->dbh->commit;
+  #$self->dbh->commit;
 
   if (not $serialized) {
     $self->save;
@@ -107,8 +110,10 @@ sub restore {
 
   ( my $stored ) = thaw($serialized);
 
+
   foreach my $key ( $self->meta->get_attribute_list ) {
     next if $key eq '_dbh';
+    next if $key eq 'running_jobs';
     $self->$key( $stored->$key );
   }
 }
@@ -130,14 +135,26 @@ sub submit {
     my $status = $self->dbh->quote( $job->status );
     my $type = $self->dbh->quote( $job->type);
     my $sha1 = $self->dbh->quote( $job->pub->sha1 );
-    $self->dbh->do("INSERT INTO Queue (jobid, status, type, sha1) VALUES ($id, $status, $type, $sha1)");
-  }
 
-  $self->dbh->commit;
+    # We re-insert on the same position when a rowid is given (used in retry_jobs)
+    if (defined $job->_rowid){
+      my $rowid = $job->_rowid;
+      $self->dbh->do("REPLACE INTO Queue (rowid, jobid, status, type, sha1, error, duration) VALUES ($rowid, $id, $status, $type, $sha1, 0, 0)");
+    } else {
+      $self->dbh->do("INSERT INTO Queue (jobid, status, type, sha1, error, duration) VALUES ($id, $status, $type, $sha1, 0, 0)");
+    }
+  }
 
   $self->save;
 
+  $self->dbh->commit;
+
 }
+
+
+
+
+
 
 ## Return list of job objects currently in the queue
 
@@ -168,7 +185,6 @@ sub get_jobs {
   my @jobs = ();
 
   while ( $sth->fetch ) {
-      print STDERR " ${job_id} ----> $status2\n";
     push @jobs, Paperpile::Job->new( { id => $job_id } );
   }
 
@@ -193,17 +209,23 @@ sub update_stats {
   my $num_done     = 0;
   my $num_error    = 0;
 
+  my @running =();
+
   # Collect job statistics collated by type.
   my $types;
   while ( $sth->fetch ) {
     my $t = $types->{$type};
-    if (!defined $t) {
-	$t = {};
-	$t->{num_pending} = 0;
-	$t->{num_done} = 0;
-	$t->{num_error} = 0;
-	$t->{name} = $type;  # This could be improved.	
-	$types->{$type} = $t;
+    if ( !defined $t ) {
+      $t                = {};
+      $t->{num_pending} = 0;
+      $t->{num_done}    = 0;
+      $t->{num_error}   = 0;
+      $t->{name}        = $type;    # This could be improved.
+      $types->{$type}   = $t;
+    }
+
+    if ($status eq 'RUNNING'){
+      push @running, $job_id;
     }
 
     if ( $status eq 'PENDING' or $status eq 'RUNNING' ) {
@@ -218,11 +240,12 @@ sub update_stats {
       $num_error++;
     }
   }
+  $self->running_jobs([@running]);
 
   # Turn it into an array form.
   my @type_arr = ();
-  map {push @type_arr, $types->{$_}} keys %$types;
-  $self->types(\@type_arr);
+  map { push @type_arr, $types->{$_} } keys %$types;
+  $self->types( \@type_arr );
 
   $self->num_done($num_done);
   $self->num_pending($num_pending);
@@ -299,7 +322,7 @@ sub run {
       my $job = Paperpile::Job->new( { id => $id } );
       $job->run;
     }
-#   $self->status('RUNNING');
+    $self->status('RUNNING');
     $self->save;
   }
 }
@@ -326,7 +349,7 @@ sub resume {
 
 ## Clears queue completely
 
-sub clear {
+sub clear_all {
 
   my $self = shift;
 
@@ -349,6 +372,36 @@ sub clear {
   $self->save;
 }
 
+## Clear all finished jobs
+
+sub clear {
+
+  my $self = shift;
+
+  my $sth = $self->dbh->prepare("SELECT jobid, status FROM Queue WHERE (status = 'DONE' OR status ='ERROR')");
+
+  my ( $job_id, $status );
+
+  $sth->bind_columns( \$job_id, \$status );
+  $sth->execute;
+
+  my @sha1s=();
+
+  while ( $sth->fetch ) {
+    my $job = Paperpile::Job->new( { id => $job_id } );
+    push @sha1s, $job->{pub}->{sha1};
+    unlink( $job->_file );
+  }
+
+  $self->dbh->do("DELETE FROM Queue WHERE (status = 'DONE' OR status ='ERROR')");
+
+  $self->save;
+
+  return [@sha1s];
+}
+
+
+
 
 sub as_hash {
   my $self = shift;
@@ -359,15 +412,16 @@ sub as_hash {
 
   foreach my $key ( $self->meta->get_attribute_list ) {
     my $value = $self->$key;
- 
-    if ($key ~~ ['num_pending','num_done','num_error']){
-      $value+=0;
+
+    if ( $key ~~ [ 'num_pending', 'num_done', 'num_error' ] ) {
+      $value += 0;
     }
 
-    if ($key eq 'types') {
+    if ( $key eq 'types' ) {
       $hash{$key} = $value;
     }
-    next if ref( $self->$key );
+
+    next if (ref( $self->$key ) && $key ne 'running_jobs');
 
     $hash{$key} = $value;
   }
