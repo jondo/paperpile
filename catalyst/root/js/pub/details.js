@@ -60,8 +60,6 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
 
       this.data = sm.getSelected().data;
 
-      console.log(Paperpile.main.globalSettings.pub_types);
-
       // Don't show details if we have only partial information that lacks pubtype
       if (this.data.pubtype) {
 

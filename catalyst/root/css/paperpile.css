@@ -163,7 +163,7 @@ li.pp-attachment-list{
 }
 
 li.pp-folder-list{
-    padding: 0 20;
+    padding: 2px 20px;
     margin:0px;
     background-repeat: no-repeat;
 }
