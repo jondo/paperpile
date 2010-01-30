@@ -123,6 +123,13 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     }
 
     if (data.pub_delta) {
+
+      if (data.pub_delta_ignore){
+        if (data.pub_delta_ignore == this.getGrid().id){
+          return;
+        }
+      }
+
       this.getGrid().getView().holdPosition = true;
       this.getGrid().getStore().reload();
     }

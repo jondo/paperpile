@@ -14,6 +14,8 @@ use 5.010;
 sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
+  my $grid_id = $c->request->params->{grid_id};
+
   my $selection = $self->_get_selection( $c, 1 );
 
   my %output = ();
@@ -22,12 +24,16 @@ sub insert_entry : Local {
 
   foreach my $pub (@$selection) {
     $pub->_imported(1);
-    #$c->model('Library')->exists_pub( [$pub] );
   }
 
   my $pubs = $self->_collect_data($selection,['_imported','citekey','created','sha1']);
   $c->stash->{data}    = {pubs => $pubs};
+
+  # Trigger a complete reload
   $c->stash->{data}->{pub_delta} = 1;
+
+  # There is no need to reload the original grid 
+  $c->stash->{data}->{pub_delta_ignore} = $grid_id;
 
   $self->_update_counts($c);
 
