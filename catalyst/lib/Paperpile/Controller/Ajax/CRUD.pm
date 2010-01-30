@@ -431,7 +431,7 @@ sub delete_from_folder : Local {
   my $pubs = $self->_collect_data($data,['folders']);
   $c->stash->{data}    = {pubs => $pubs};
   $c->stash->{success} = 'true';
-  
+
   $c->forward('Paperpile::View::JSON');
 
 }
@@ -445,24 +445,27 @@ sub batch_download : Local {
 
   my $q = Paperpile::Queue->new();
 
-  my @jobs=();
+  my @jobs = ();
 
   foreach my $pub (@$data) {
     my $j = Paperpile::Job->new(
       type => 'PDF_SEARCH',
       pub  => $pub,
     );
+
+    $j->pub->_search_job( { id => $j->id, status => $j->status, msg => $j->info->{msg} } );
+
     push @jobs, $j;
   }
 
-  $q->submit(\@jobs);
+  $q->submit( \@jobs );
   $q->save;
   $q->run;
 
-  my $pubs = $self->_collect_data($data,['_search_job_id','_search_job','_search_job_progress','_search_job_msg']);
-  $c->stash->{data}    = {pubs => $pubs};
-  
-  $c->forward('Paperpile::View::JSON');
+  my $pubs = $self->_collect_data( $data, ['_search_job'] );
+
+  $c->stash->{data} = { pubs => $pubs, job_delta => 1 };
+
 }
 
 sub _get_selection {
@@ -539,16 +542,16 @@ sub _collect_data {
 
   my %output = ();
   foreach my $pub (@$pubs) {
-    my $hash = $pub->as_hash;
-    my $pub_fields = { };
+    my $hash       = $pub->as_hash;
+
+    my $pub_fields = {};
     if ($fields) {
-	map {$pub_fields->{$_} = $hash->{$_}} @$fields;
+      map { $pub_fields->{$_} = $hash->{$_} } @$fields;
     } else {
-	$pub_fields = $hash;
+      $pub_fields = $hash;
     }
     $output{ $hash->{sha1} } = $pub_fields;
   }
-  
   return \%output;
 }
 

@@ -128,11 +128,7 @@ has '_citation_display' => ( is => 'rw');
 has '_imported' => ( is => 'rw', isa => 'Bool' );
 
 # If true, has a PDF search / download job in progress.
-has '_search_job' => ( is => 'rw' );
-has '_search_job_error' => ( is => 'rw' );
-has '_search_job_progress' => ( is => 'rw' );
-has '_search_job_msg' => ( is => 'rw' );
-has '_search_job_status' => ( is => 'rw' );
+has '_search_job' => ( is => 'rw', default => undef );
 
 # Job object, only exists if there is a current job tied to the publication
 
@@ -346,119 +342,105 @@ sub format_authors {
 }
 
 # Gets all jobs related to the current publication.
-sub get_jobs {
-  my $self = shift;
-  
-  my $q = Paperpile::Queue->new();
-  my $sha1 = $q->dbh->quote($self->sha1);
-  my $sth = $q->dbh->prepare("SELECT jobid FROM Queue WHERE sha1=$sha1;");
+#sub get_jobs {
+#  my $self = shift;
 
-  my $job_id;
-  $sth->bind_columns(\$job_id);
-  $sth->execute;
-  
-  my @jobs;
-  while ( $sth->fetch ) {
-      push @jobs, Paperpile::Job->new( { id => $job_id } );
-  }
-  
-  $sth->finish;
-  return @jobs;
-}
+#  my $q = Paperpile::Queue->new();
+#  my $sha1 = $q->dbh->quote($self->sha1);
+#  my $sth = $q->dbh->prepare("SELECT jobid FROM Queue WHERE sha1=$sha1;");
 
-sub remove_search_jobs {
-  my $self = shift;
+#  my $job_id;
+#  $sth->bind_columns(\$job_id);
+#  $sth->execute;
 
-  my @jobs = $self->get_jobs;
+#  my @jobs;
+#  while ( $sth->fetch ) {
+#    push @jobs, Paperpile::Job->new( { id => $job_id } );
+#  }
 
- # Put some job-specific info into the hash if a job exists.
-  foreach my $job (@jobs) {
-    if ($job->type eq 'PDF_SEARCH') {
-	$job->remove;
-    }
-  }
-}
+#  $sth->finish;
+#  return @jobs;
+#}
+
+#sub remove_search_jobs {
+#  my $self = shift;
+#  my @jobs = $self->get_jobs;
+#  # Put some job-specific info into the hash if a job exists.
+#  foreach my $job (@jobs) {
+#    if ($job->type eq 'PDF_SEARCH') {
+#      $job->remove;
+#    }
+#  }
+#}
 
 sub refresh_job_fields {
-  my $self = shift;
+  my ($self, $job) = @_;
 
-  $self->_search_job('');
-  $self->_search_job_msg('');
-  $self->_search_job_progress('');
-  $self->_search_job_error('');
-  $self->_search_job_status('');
+  my $data = {};
 
-  my @jobs = $self->get_jobs;
+  $data->{status} = $job->status;
+  $data->{id} = $job->id;
+  $data->{error} = $job->error;
 
- # Put some job-specific info into the hash if a job exists.
-  foreach my $job (@jobs) {
-    if ($job->type eq 'PDF_SEARCH') {
-      $self->_search_job_status($job->status);
-      $self->_search_job($job->id);
-      if ($job->status eq 'RUNNING' || $job->status eq 'PENDING') {
-	my $info = $job->info;
-	$self->_search_job_msg($info->{msg});
-	if ($info->{size}) {
-	  my $progress = $info->{downloaded} / $info->{size};
-	  $self->_search_job_progress($progress);
-	}
-      } elsif ($job->status eq 'ERROR') {
-	  $self->_search_job_error($job->error);
-      } elsif ($job->status eq 'DONE') {
-	  # Do nothing special.
-      }
-    }
+  foreach my $key (keys %{$job->info}){
+    $data->{$key} = $job->info->{$key};
   }
+
+  $self->_search_job($data);
+
 }
 
-sub refresh_attachments {
-  ( my $self ) = @_;
-
-  $self->_attachments_list([]);
-
-  if ($self->attachments > 0) {
-    my $model = Paperpile::Utils->get_library_model();
-    
-    my $rowid = $self->_rowid;
-    my $sth = $model->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
-    my ( $attachment_rowid, $file_name );
-    $sth->bind_columns( \$attachment_rowid, \$file_name );
-    $sth->execute;
-
-    my $paper_root=$model->get_setting('paper_root');
-
-    my @output=();
-    while ( $sth->fetch ) {
-      my $abs=File::Spec->catfile( $paper_root, $file_name );
-
-      my $link="/serve/$file_name";
-
-      (my $suffix)=($link=~/\.(.*+$)/);
-
-      my ($volume,$dirs,$base_name) = File::Spec->splitpath( $abs );
-      print STDERR "Base name: $base_name\n";
-      push @output, {file=>$base_name,
-		     path=>$abs,
-		     link=>$link,
-		     cls=>"file-$suffix",
-		     rowid=> $attachment_rowid};
-    }
-
-    $self->_attachments_list(\@output); 
-  }
-}
 
 # Function: as_hash
 
 # Return all fields as a simple HashRef.
+sub refresh_attachments {
+  ( my $self ) = @_;
+
+  $self->_attachments_list( [] );
+
+  if ( $self->attachments > 0 ) {
+    my $model = Paperpile::Utils->get_library_model();
+
+    my $rowid = $self->_rowid;
+    my $sth =
+      $model->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+    my ( $attachment_rowid, $file_name );
+    $sth->bind_columns( \$attachment_rowid, \$file_name );
+    $sth->execute;
+
+    my $paper_root = $model->get_setting('paper_root');
+
+    my @output = ();
+    while ( $sth->fetch ) {
+      my $abs = File::Spec->catfile( $paper_root, $file_name );
+
+      my $link = "/serve/$file_name";
+
+      ( my $suffix ) = ( $link =~ /\.(.*+$)/ );
+
+      my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($abs);
+      print STDERR "Base name: $base_name\n";
+      push @output, {
+        file  => $base_name,
+        path  => $abs,
+        link  => $link,
+        cls   => "file-$suffix",
+        rowid => $attachment_rowid
+        };
+    }
+
+    $self->_attachments_list( \@output );
+  }
+}
 
 sub as_hash {
 
   ( my $self ) = @_;
 
   my %hash = ();
-   
-  $self->refresh_job_fields;
+
+  #$self->refresh_job_fields;
   $self->refresh_attachments;
 
   foreach my $key ( $self->meta->get_attribute_list ) {
@@ -470,9 +452,9 @@ sub as_hash {
     }
 
     $hash{$key} = $value if ($key eq '_attachments_list');
-    
-    # take only simple scalar and not refs of any sort
-    next if ref($value);
+
+    # take only simple scalar and allowed refs
+    next if (ref($value) && $key ne '_search_job');
 
     $hash{$key} = $value;
   }

@@ -1,38 +1,45 @@
-#!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -w
-##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -d:NYTProf -w
+#!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -d:NYTProf -w
+
+##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -w
 
 
+BEGIN {
+  $ENV{CATALYST_DEBUG} = 0;
+}
 
 use strict;
 use Data::Dumper;
 use lib '../../lib';
+use Paperpile;
+use Paperpile::Utils;
+use Paperpile::Job;
+use Paperpile::Queue;
 use Paperpile::Library::Publication;
-use Paperpile::Library::Author;
-use Bibutils;
 
-use Paperpile::Model::Library;
+my $pub1 = Paperpile::Library::Publication->new( doi => "10.1186/1471-2105-9-248" );
 
-#`cp ~/.paperpile/paperpile.ppl ./test.db`;
+my $q = Paperpile::Queue->new();
 
-`cp ~/.paperpile/settings.db ./test.db`;
+$q->clear;
+$q->save;
 
-my $model = Paperpile::Model::User->new();
-$model->set_dsn("dbi:SQLite:test.db");
+my @jobs = ();
 
-my $dbh = $model->dbh;
+foreach my $i ( 0 .. 10 ) {
 
-for my $x (0..100){
-  $dbh->do("UPDATE Settings SET value='asdfasdf' WHERE key='proxy' ");
+  my $job = Paperpile::Job->new(
+    type  => 'PDF_SEARCH',
+    pub   => $pub1,
+    queue => $q
+  );
+
+  push @jobs, $job;
+
 }
 
+$q->submit(\@jobs);
 
-#my $model = Paperpile::Model::Library->new();
-#$model->set_dsn("dbi:SQLite:test.db");
-#$model->light_objects(0);
-##`cp ../../db/library.db  ./test.db`;
-#foreach my $i (1..500){
-#  my $result = $model->fulltext_search('Hofacker IL',  0, 25);
-#}
+#$q->save;
 
-
+#$q->run;
 

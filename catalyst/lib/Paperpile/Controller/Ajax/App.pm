@@ -115,7 +115,7 @@ sub init_session : Local {
 
   #clear queue for now at startup
   my $q = Paperpile::Queue->new();
-  $q->clear;
+  $q->clear_all;
 
 }
 

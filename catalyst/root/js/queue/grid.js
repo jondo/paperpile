@@ -1,366 +1,264 @@
-Paperpile.QueueGrid = Ext.extend(Ext.grid.GridPanel, {
+Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
 
-    region:'center',
-    path: '',
-    wasRunning: false,
+  constructor: function(queuePanel, config) {
+    this.queuePanel = queuePanel;
+    Paperpile.QueueList.superclass.constructor.call(this, config);
+  },
 
-    initComponent:function() {
+  onContextClick: function(grid, index, e) {
+    e.stopEvent();
+    var record = this.store.getAt(index);
+    if (!this.isSelected(index)) {
+      this.select(index, false, true);
+    }
 
-        
-        this.pager=new Ext.PagingToolbar({
-            pageSize: 10,
-            store: _store,
-            displayInfo: true,
-            displayMsg: 'Tasks {0} - {1} of {2}',
-            emptyMsg: "No tasks",
-        });
+    if (this.context == null) {
+      this.createContextMenu();
+    }
 
-        this.pager.on('beforechange',
-                      function(pager,params){
-                          this.wasRunning=false;
-                      }, this);
-        
-        var tbar=[ { xtype:'tbfill'},
-                   {  xtype:'button',
-                      itemId: 'delete_button',
-                      text: "Don't import",
-                      tooltip: 'Remove PDF file from the list in case you don\'t want to import it',
-                      cls: 'x-btn-text-icon delete',
-                      disabled: true,
-                      listeners: {
-                          click:  {fn: this.deleteEntry, scope: this}
-                      },
-                   }, 
-                 ];
-   
-        Ext.apply(this, {
-            itemId:'grid',
-            store: _store,
-            tbar: tbar,
-            bbar: this.pager,
-            autoExpandColumn:'title',
-            sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
-            columns:[{header: "",
-                      id: 'type',
-                      dataIndex: 'type',
-                      sortable: true,
-                      width: 30,
-                      renderer: function(value, p, record){
-
-                          var d=record.data;
-                           
-                          var tpl;
-
-                          if (d.type === 'PDF_SEARCH'){
-                              tpl='<div class="pp-action-search-pdf" style="height:20px">&nbsp;</div>';
-                          } 
-
-                          var t = new Ext.XTemplate(tpl); 
-                          return t.apply( d );
-
-                      }
-                     },
-                     { header: "Task",
-                       id: 'title',
-                       dataIndex: 'title',
-                       sortable: true,
-                       renderer: function(value, p, record){
-
-                           var tpl;
-
-                           var d = record.data;
-
-                           if (d.type === 'PDF_IMPORT'){
-                               d.task = 'Import PDF';
-                               tpl = new Ext.XTemplate(
-                                   '<div class="pp-grid-data">',
-                                   '<div><span class="pp-grid-task">{task}</span></div>',
-                                   '<div>',
-                                   '<span class="pp-grid-title">{pdf}</span>',
-                                   '</div>',
-                                   '<tpl if="title">',
-                                   '<p class="pp-grid-authors">Title: {title}</p>',
-                                   '</tpl>',
-                                   '<tpl if="doi">',
-                                   '<p class="pp-grid-citation">DOI: {doi}</p>',
-                                   '</tpl>',
-                                   '<tpl if="authors">',
-                                   '<p class="pp-grid-authors">Authors: {authors}</p>',
-                                   '</tpl>',
-                                   '<tpl if="citation">',
-                                   '<p class="pp-grid-citation">{citation}</p>',
-                                   '</tpl></div>'
-                               );
-                           } 
-
-                           if (d.type === 'PDF_SEARCH'){
-                               d.task = 'Get PDF for';
-
-                               tpl = new Ext.XTemplate(
-                                   '<div class="pp-grid-data">',
-                                   '<div><span class="pp-grid-task">{task}</span></div>',
-                                   '<div>',
-                                   '<span class="pp-grid-title">{title}</span>',
-                                   '</div>',
-                                   '<tpl if="authors">',
-                                   '<p class="pp-grid-authors">{authors}</p>',
-                                   '</tpl>',
-                                   '<tpl if="citation">',
-                                   '<p class="pp-grid-citation">{citation}</p>',
-                                   '</tpl></div>');
-                           }
-
-
-
-                           return tpl.apply(d);
-                       }
-                     },
-                     { header: "Status",
-                       id: 'status',
-                       dataIndex: 'status',
-                       sortable: true,
-                       renderer: function(value, p, record){
-
-                           var d=record.data;
-                           
-                           var tpl;
-
-                           if (d.status === 'RUNNING'){
-                               tpl='<div id="job_{id}">{progress}</div><a class="pp-textlink" href="#" id=cancel_{id} onClick="Ext.getCmp(\'{thisId}\').cancelJob(\'{id}\')">Cancel</a>';
-                           }
-
-                           if (d.status === 'PENDING'){
-                               tpl='<div id="job_{id}" class="">Pending</div>';
-                           }
-                           
-                           //if (d.queue_status === 'PAUSED'){
-                           //        tpl='<div class="">PAUSED</div>';
-                           //    }
-                           // }
-
-                           if (d.status === 'DONE'){
-                               if  (d.error){
-                                   tpl='<div id="job_{id}" ext:qtip="{error}" class="pp-icon-cross pp-grid-error">Failed</div>';
-                               } else {
-                                   tpl='<div id="job_{id}" ext:qtip="{progress}" class="pp-icon-tick pp-grid-ok">Ok</div>';
-                               }
-                           }
-
-                           d.thisId=this.id;
-
-                           var t = new Ext.XTemplate(tpl); 
-                           return t.apply( d );
-                       },
-                       scope:this
-                     },
-                    ],
-        });
-        
-        Paperpile.QueueGrid.superclass.initComponent.apply(this, arguments);
-        
-        this.reloadTask = {
-            run: function(){
-                this.getView().holdPosition=true;
-                this.store.reload();
-            },
-            interval: 2000,
-            scope:this
-        };
-
-        this.pollingTask = {
-            run: function(){
-                this.updateJobs();
-            },
-            interval: 500,
-            scope:this
-        };
-        
-        this.on('beforedestroy', 
-                function(){
-                    Ext.TaskMgr.stop(this.reloadTask);
-                    Ext.TaskMgr.stop(this.pollingTask);
-/*                    Ext.Ajax.request(
-                        { url: Paperpile.Url('/ajax/queue/save'),
-                          params: {},
-                          method: 'GET',
-                          success: function(response){
-                              
-                          },
-                          failure: Paperpile.main.onError,
-                          scope:this,
-                        });
-*/
-            }, this);
-
-        this.store.load({
-            params: { foo: 'foo', start:0 },
-            callback: function(){
-                var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
-
-                Ext.TaskMgr.start(this.reloadTask);
-                Ext.TaskMgr.start(this.pollingTask);
-
-                this.store.on('load',
-                              function(){
-                                  var controlPanel=this.ownerCt.items.get('east_panel').items.get('control_panel');
-
-                                  controlPanel.updateView.createDelegate(controlPanel)();
-
-                                  if (this.store.getCount()>1){
-                                  
-                                      if (this.wasRunning && !this.isRunning() &&  this.store.getAt(0).get('queue_status') != 'PAUSED'){
-                                      
-                                          var currPage = this.getCurrPage();
-                                          var maxPage = this.getTotalPage();
-
-                                     
-                                          if (currPage < maxPage){
-                                              this.pager.changePage(currPage+1);
-                                          }
-                                      
-                                          this.wasRunning=false;
-
-                                          return;
-                                      }
-
-                                      this.wasRunning= this.isRunning();
-                                  }
-
-                              }, this);
-
-            },
-            scope: this
-        });
-
-        this.getSelectionModel().on('rowselect',
-                                    function(sm, rowIdx, r){
-                                        this.updateButtons();
-                                    },this);
-        
+    this.context.items.each(function(item, index, length) {
+      item.enable();
+      this.updateContextItem(item, record);
     },
+    this);
 
+    (function() {
+      this.context.showAt(e.getXY());
+      this.updateButtons();
+    }).defer(20, this);
+  },
 
+  getContextMenu: function() {
+    if (this.context != null) {
+      return this.context;
+    }
+    this.context = new Ext.menu.Menu({
+      itemId: 'context'
+    });
+    var c = this.context;
+    return c;
+  },
 
-    afterRender: function(){
+  getToolbar: function() {
+    if (this._tbar != null) {
+      return this._tbar;
+    }
 
-        // This is undocumented feature in Ext 2 and was renamed to 'refreshing' (I guess) in Ext JS 3
-        //this.pager.loading.hide(); 
+    var tbar = new Ext.Toolbar({
+      itemId: 'toolbar'
+    });
+    tbar.insert(0, this.actions['REMOVE']);
+    tbar.insert(0, this.actions['RETRY']);
+    tbar.insert(0, this.actions['TB_FILL']);
 
-        Paperpile.QueueGrid.superclass.afterRender.apply(this, arguments);
+    this._tbar = tbar;
+    return tbar;
+  },
 
+  updateToolbar: function() {
+    var sel = this.getSelectedRecords();
+    var tbar = this.getToolbar();
+
+    if (sel.length == 0) {
+      tbar.items.each(function(item, index, length) {
+        item.disable();
+      },
+      this);
+    } else {
+      tbar.items.each(function(item, index, length) {
+        item.enable();
+      },
+      this);
+    }
+  },
+
+  renderItem: function(value, meta, record, row, col, store) {
+
+    var data = record.data;
+
+    if (data.size && data.downloaded && data.status === 'RUNNING') {
+      data.message = 'Downloading (' + Math.round((data.downloaded / data.size) * 100) + '%)';
+    }
+
+    if (data.authors){
+      data.shortAuthors = this.shortAuthors(data.authors);
+    } else {
+      data.shortAuthors=null;
+    }
+
+    if (data.title){
+      data.shortTitle = Ext.util.Format.ellipsis(data.title,100,true);
+    } else {
+      data.shortTitle=null;
+    }
+
+    return this.itemTemplate.apply(data);
+  },
+
+  initComponent: function() {
+
+    this.actions = {
+      'RETRY': new Ext.Action({
+        text: 'Retry Tasks',
+        tooltip: 'Run selected tasks again',
+        handler: function() {
+          this.queuePanel.retryJobs();
+        },
+        scope: this,
+        iconCls: 'pp-icon-retry'
+      }),
+      'REMOVE': new Ext.Action({
+        text: 'Cancel Tasks',
+        tooltip: 'Cancel selected tasks',
+        handler: function() {
+          this.queuePanel.cancelJobs();
+        },
+        scope: this,
+        cls: 'x-btn-text-icon',
+        iconCls: 'pp-icon-cancel'
+      }),
+      'TB_FILL': new Ext.Toolbar.Fill({
+        width: '10px',
+        itemId: 'search_tb_fill'
+      })
+    };
+
+    this._store = new Ext.data.JsonStore({
+      storeId: 'queue_store',
+      autoDestroy: true,
+      url: Paperpile.Url('/ajax/queue/grid'),
+      method: 'GET',
+      baseParams: {
+        limit: 50
+      }
+    });
+    this.pager = new Ext.PagingToolbar({
+      pageSize: 100,
+      store: this._store,
+      displayInfo: true,
+      displayMsg: 'Tasks {0} - {1} of {2}',
+      emptyMsg: "No tasks"
+    });
+
+    this.itemTemplate = new Ext.XTemplate(
+      '<div class="pp-queue-list-container">',
+      '  <tpl if="type==\'PDF_SEARCH\'">',
+      '    <div class="pp-queue-list-type"><span class="pp-queue-type-label-{type}">Search PDF</span></div>',
+      '    <div class="pp-queue-list-data">',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">{shortAuthors} <b>{shortTitle}</b></div>',
+      '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
+      '        {message}',
+      '      </div>',
+      '    </div>',
+      '  </tpl>',
+      '  <tpl if="type==\'PDF_IMPORT\'">',
+      '    <div class="pp-queue-list-type"><span class="pp-queue-type-label-{type}">Import PDF</span></div>',
+      '    <div class="pp-queue-list-data">',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">',
+      '      <tpl if="status!=\'DONE\'">{pdf} </tpl> ',
+      '      <tpl if="shortAuthors">{shortAuthors} </tpl> <tpl if="shortTitle"><b>{shortTitle}</b></tpl>',
+      '      </div>',
+      '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
+      '      {message}',
+      '      </div>',
+      '    </div>',
+      '  </tpl>',
+      '  <div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl></div>',
+      '</div>'
+    ).compile();
+
+    Ext.apply(this, {
+      store: this._store,
+      bbar: this.pager,
+      tbar: this.getToolbar(),
+      multiSelect: true,
+      cm: new Ext.grid.ColumnModel({
+        defaults: {
+          menuDisabled: true,
+          sortable: false
+        },
+        columns: [{
+          header: "Tasks",
+          id: 'title',
+          dataIndex: 'title',
+          renderer: this.renderItem.createDelegate(this),
+          sortable: false,
+          resizable: false
+        },
+        ]
+      }),
+      autoExpandColumn: 'title',
+      hideHeaders: false
+    });
+    this.store.load();
+
+    Paperpile.QueueList.superclass.initComponent.call(this);
+
+    this.on('afterrender', function() {
+      this.getSelectionModel().on('afterselectionchange', this.selChanged, this);
+      this.selChanged();
     },
+    this);
 
-    
-    getTotalPage:function(){
-        var t = this.store.getTotalCount();
-        return t < this.pager.pageSize ? 1 : Math.ceil(t / this.pager.pageSize);
-    },
+  },
 
-    getCurrPage:function(){
-        return Math.ceil((this.pager.cursor+this.pager.pageSize)/this.pager.pageSize);
-    },
- 
-    updateButtons: function(){
-        
-        var tbar = this.getTopToolbar();
-        var sm = this.getSelectionModel();
-        var record = sm.getSelected();
-        
-        /*
-        if (sm.getCount() == 1){
-            if (record){
-                if (record.data.status != 'IMPORTED'){
-                    tbar.items.get('import_button').enable();
-                    tbar.items.get('edit_button').enable();
-                    tbar.items.get('delete_button').enable();
-                }
-            }
-        }
-        */
-    },
+  getSelectedRecords: function() {
+    return this.getSelectionModel().getSelections();
+  },
 
+  getSelectedIds: function() {
+    var sel = this.getSelectedRecords();
+    var ids = [];
+    for (var i = 0; i < sel.length; i++) {
+      ids.push(sel[i].data.id);
+    }
+    return ids;
+  },
 
-    deleteEntry: function(){
+  selChanged: function(selections) {
+    this.updateToolbar();
+  },
 
-        var record=this.getSelectionModel().getSelected();
-      
-        // The next record should be selected but does not work. Fix later.
-        //this.getSelectionModel().selectNext();
-        
-        this.store.remove(record);
+  // onUpdate function for the Queue grid view.
+  onUpdate: function(data) {
+    var jobs = data.jobs;
+    if (!jobs) {
+      return;
+    }
 
-        this.controlPanel.updateView();
-        
-    }, 
+    for (var id in jobs) {
+      var index = this.store.find('id', id);
+      var record = this.store.getAt(index);
+      if (!record) {
+        continue;
+      }
 
+      var needsUpdating = false;
+      var update = jobs[id];
+      record.editing = true;
+      for (var field in update) {
+        record.set(field, update[field]);
+      }
+      record.set('size', update.info.size);
+      record.set('downloaded', update.info.downloaded);
 
-    // Determines if the current contains a running job
-    isRunning: function(){
-        if (this.store.find('status','RUNNING') == -1){
-            return false;
-        } else {
-            return true;
-        }
-    },
+      record.editing = false;
+      if (record.dirty) {
+        needsUpdating = true;
+      }
+      if (needsUpdating) {
+        this.store.fireEvent('update', this.store, record, Ext.data.Record.EDIT);
+      }
+    }
+  },
 
-
-    cancelJob: function(id){
-
-        Ext.Ajax.request(
-            { url: Paperpile.Url('/ajax/queue/cancel_jobs'),
-              params: {ids: id},
-              method: 'GET',
-              success: function(response){
-              },
-              failure: Paperpile.main.onError,
-              scope:this,
-            });
-    },
-
-    updateJobs: function(){
-        var jobs=[];
-
-        this.store.each(function(record){
-            if (record.get('status') === 'RUNNING'){
-                jobs.push(record.id);
-            }
-        }, this);
-        
-        if (jobs.length>0){
-            Ext.Ajax.request(
-                { url: Paperpile.Url('/ajax/queue/jobs'),
-                  params: {ids: jobs},
-                  method: 'GET',
-                  success: function(response){
-                      var data = Ext.util.JSON.decode(response.responseText).data;
-
-                      for (var id in data){
-
-                          var msg = data[id].info.msg;
-
-                          if (data[id].info.size && data[id].info.downloaded){
-                              msg = msg + "("+Ext.util.Format.fileSize(data[id].info.downloaded)+"/"+Ext.util.Format.fileSize(data[id].info.size)+")";
-                          }
-
-                          Ext.DomHelper.overwrite('job_'+id,msg);
-                          var record=this.store.getAt(this.store.find('id',id));
-                          if (record){
-                              record.set('status',data[id].status);
-                          }
-
-                          var cb =  data[id].info.callback;
-       
-                          if (data[id].status=='DONE' && cb){
-                              this.handleCallback(cb);
-                          }
-                      }
-                  },
-                  failure: Paperpile.main.onError,
-                  scope:this,
-                });
-        }
-    },
-
-
+  shortAuthors: function(names) {
+    var list = names.split(',');
+    if (list.length > 1) {
+      return list[0] + " <i>et al.</i>";
+    } else {
+      return names;
+    }
+  }
 
 });

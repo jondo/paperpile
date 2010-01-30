@@ -102,13 +102,15 @@ sub delete_file : Local {
     grid_id => $grid_id,
     sha1    => $sha1,
   };
-  
+
   my $pub = $plugin->find_sha1($sha1);
   $pub->pdf('') if ($is_pdf);
   $pub->attachments($pub->attachments - 1) if (!$is_pdf);
 
+  # not sure what this is for, needs testing. Have commented out
+  # _remove_search jobs function for now
   if ($is_pdf) {
-    $pub->remove_search_jobs;
+    #$pub->remove_search_jobs;
   }
 
   my $update = $self->_collect_data([$pub],['attachments','_attachments_list','pdf','_search_job']);
