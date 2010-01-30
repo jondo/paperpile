@@ -34,10 +34,10 @@ sub resultsgrid : Local {
 
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
-  my $task    = $c->request->params->{task} || '';
-  my $offset  = $c->request->params->{start};
-  my $limit   = $c->request->params->{limit};
+  my $grid_id   = $c->request->params->{grid_id};
+  my $task      = $c->request->params->{task} || '';
+  my $offset    = $c->request->params->{start};
+  my $limit     = $c->request->params->{limit};
   my $selection = $c->request->params->{selection} || '';
 
   my $plugin_name = $c->request->params->{plugin_name};
@@ -58,8 +58,9 @@ sub resultsgrid : Local {
       }
     }
 
-    if ( (( $plugin_name eq 'DB' ) and ( not $c->request->params->{plugin_file} )) or
-         ( $plugin_name eq 'Duplicates' ) or ( $plugin_name eq 'Trash' )) {
+    if ( ( ( $plugin_name eq 'DB' ) and ( not $c->request->params->{plugin_file} ) )
+      or ( $plugin_name eq 'Duplicates' )
+      or ( $plugin_name eq 'Trash' ) ) {
       $params{file} = $c->session->{library_db};
     }
 
@@ -83,23 +84,24 @@ sub resultsgrid : Local {
   my $entries;
 
   # Fetch ALL entries and filter on sha1 if the 'selection' param is defined.
-  if ($selection ne '') {
-    if (ref($selection) ne 'ARRAY'){
-      if ($selection ne 'all') {
-	$selection = [$selection];
+  if ( $selection ne '' ) {
+    if ( ref($selection) ne 'ARRAY' ) {
+      if ( $selection ne 'all' ) {
+        $selection = [$selection];
       }
     }
 
     my %sha1_hash;
-    map {$sha1_hash{$_}=1} @$selection;
+    map { $sha1_hash{$_} = 1 } @$selection;
 
     my $unfiltered_entries = $plugin->all;
     my @filtered_entries;
     foreach my $pub (@$unfiltered_entries) {
-      push @filtered_entries,$pub if ($sha1_hash{$pub->sha1});
+      push @filtered_entries, $pub if ( $sha1_hash{ $pub->sha1 } );
     }
     $entries = \@filtered_entries;
   } else {
+
     # Else, just get the normal page worth.
     $entries = $plugin->page( $offset, $limit );
   }

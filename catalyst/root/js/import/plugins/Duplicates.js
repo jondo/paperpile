@@ -71,11 +71,5 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGrid, {
             failure: Paperpile.main.onError,
             scope:this
         });
-
     },
-
-
-
-
-
 });

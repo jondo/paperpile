@@ -13,7 +13,7 @@ pub_fields:
   volume:        "Volume"
   number:        "Number"
   issue:         "Issue"
-  edition:       "edition"
+  edition:       "Edition"
   pages:         "Pages"
   url:           "URL"
   howpublished:  "How published"
