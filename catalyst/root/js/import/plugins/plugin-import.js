@@ -37,8 +37,8 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
         }
 
         var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-        tbar.insertButton(filterFieldIndex + 1, this.actions['IMPORT']);
         tbar.insertButton(filterFieldIndex + 1, this.actions['IMPORT_ALL']);
+        tbar.insertButton(filterFieldIndex + 1, this.actions['IMPORT']);
       },
       grid),
 
