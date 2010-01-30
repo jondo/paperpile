@@ -869,6 +869,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-abstract {
     width: 90%;
+    max-width: 600px;
     line-height: 1.4em;
     padding: 10px 5px 5px 10px;
  }
