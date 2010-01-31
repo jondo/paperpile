@@ -245,17 +245,24 @@ sub run {
 
     my $start_time = time;
 
-    print STDERR " --> Started job ".$self->type." at ".$start_time."!!\n";
-
     eval {
       $self->_do_work;
     };
 
+    my $end_time = time;
+
+    # Make sure that each job takes at least 1 second to be sent once
+    # as "running" to frontend which is necessary to get updated
+    # correctly. Clearly not optimal but works for now...
+    if ($end_time - $start_time <= 1){
+      sleep(1);
+    }
+
     if ($@) {
       $self->_catch_error;
     } else {
-      my $end_time = time;
       $self->duration( $end_time - $start_time );
+
       $self->update_status('DONE');
     }
 
@@ -312,6 +319,11 @@ sub _do_work {
   # return;
 
   if ($self->type eq 'PDF_SEARCH'){
+
+    if ($self->pub->pdf) {
+      $self->update_info('msg',"There is already a PDF for this reference (".$self->pub->pdf.").");
+      return;
+    }
 
     if (!$self->pub->linkout && !$self->pub->doi){
       $self->_match;
