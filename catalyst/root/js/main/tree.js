@@ -344,6 +344,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   addFolder: function(grid, sel, node) {
+    var el = Ext.get(node.getUI().getTextEl());
+    el.highlight("ffff9c", {easing: 'bounceBoth', duration:1});
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/move_in_folder'),
       params: {
