@@ -26,7 +26,7 @@ sub insert_entry : Local {
     $pub->_imported(1);
   }
 
-  my $pubs = $self->_collect_data($selection,['_imported','citekey','created','sha1']);
+  my $pubs = $self->_collect_data($selection,['_imported','citekey','created','sha1','pdf']);
   $c->stash->{data}    = {pubs => $pubs};
 
   # Trigger a complete reload
@@ -52,9 +52,6 @@ sub complete_entry : Local {
   $c->model('Library')->exists_pub( [$pub] );
 
   $c->stash->{data} = $pub->as_hash;
-
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
 
 }
 
@@ -193,15 +190,13 @@ sub update_notes : Local {
   $c->model('Library')->update_field( 'Fulltext_full',     $rowid, 'notes', $text );
   $c->model('Library')->update_field( 'Fulltext_citation', $rowid, 'notes', $text );
 
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
-
 }
 
 sub add_tag : Local {
   my ( $self, $c ) = @_;
 
-  my $tag = $c->request->params->{tag};
+  my $tag     = $c->request->params->{tag};
+  my $grid_id = $c->request->params->{grid_id};
 
   my $data = $self->_get_selection($c);
 
@@ -228,12 +223,19 @@ sub add_tag : Local {
   }
   $dbh->commit();
 
-  my $update = $self->_collect_data($data,['_imported','tags']);
-  $c->stash->{data}    = {pubs => $update};
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
+  if (@to_be_imported) {
+    my $update =
+      $self->_collect_data( $data, [ 'tags', '_imported', 'citekey', 'created', 'pdf' ] );
+    $c->stash->{data} = { pubs => $update };
+    $c->stash->{data}->{pub_delta}        = 1;
+    $c->stash->{data}->{pub_delta_ignore} = $grid_id;
+  } else {
+    my $update = $self->_collect_data( $data, ['tags'] );
+    $c->stash->{data} = { pubs => $update };
+  }
 
 }
+
 
 sub remove_tag : Local {
   my ( $self, $c ) = @_;
@@ -246,14 +248,11 @@ sub remove_tag : Local {
   $dbh->begin_work;
 
   foreach my $pub (@$data) {
-#      print STDERR " --> TAG: $tag \n";
     my $new_tags = $pub->tags;
-#      print STDERR " --> CUR TAGS: ${new_tags}\n";
     $new_tags =~ s/^\Q$tag\E,//g;
     $new_tags =~ s/^\Q$tag\E$//g;
     $new_tags =~ s/,\Q$tag\E$//g;
     $new_tags =~ s/,\Q$tag\E,/,/g;
-#      print STDERR " --> NEW TAGS: ${new_tags}\n";
     $c->model('Library')->update_tags( $pub->_rowid, $new_tags );
     $pub->tags($new_tags);
   }
@@ -275,9 +274,6 @@ sub update_tags : Local {
 
   $c->model('Library')->update_tags( $rowid, $tags );
 
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
-
 }
 
 sub style_tag : Local {
@@ -292,8 +288,6 @@ sub style_tag : Local {
   my $update = $self->_collect_data($pubs,['tags']);
   $c->stash->{data}    = {pubs => $update};  
 
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
 }
 
 sub new_tag : Local {
@@ -303,9 +297,6 @@ sub new_tag : Local {
   my $style = $c->request->params->{style};
 
   $c->model('Library')->new_tag( $tag, $style );
-
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
 
 }
 
@@ -328,8 +319,6 @@ sub delete_tag : Local {
 
   my $update = $self->_collect_data($pubs,['tags']);
   $c->stash->{data}    = {pubs => $update};
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
 
 }
 
@@ -353,8 +342,6 @@ sub rename_tag : Local {
 
   my $update = $self->_collect_data($pubs,['tags']);
   $c->stash->{data}    = {pubs => $update};
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
 
 }
 
@@ -384,6 +371,7 @@ sub generate_edit_form : Local {
 sub move_in_folder : Local {
   my ( $self, $c ) = @_;
 
+  my $grid_id = $c->request->params->{grid_id};
   my $node_id = $c->request->params->{node_id};
 
   my $data = $self->_get_selection($c);
@@ -400,7 +388,6 @@ sub move_in_folder : Local {
 
   $dbh->begin_work();
 
-  # Keep it simple: only allow articles to be inside one folder at a time.
   if ( $node_id ne 'FOLDER_ROOT' ) {
     my $newFolder = $node_id;
 
@@ -412,15 +399,23 @@ sub move_in_folder : Local {
       my $new_folders = join( ',', @folders );
       $c->model('Library')->update_folders( $pub->_rowid, $new_folders );
       $pub->folders($new_folders);
-    };
+    }
   }
 
   $dbh->commit();
 
-  my $pubs = $self->_collect_data($data);
-  $c->stash->{data}    = {pubs => $pubs};
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
+  if (@to_be_imported) {
+    my $update = $self->_collect_data( $data, [ 'folders', '_imported', 'citekey', 'created','pdf' ] );
+    $c->stash->{data} = { pubs => $update };
+    $c->stash->{data}->{pub_delta}        = 1;
+    $c->stash->{data}->{pub_delta_ignore} = $grid_id;
+  } else {
+    my $update = $self->_collect_data( $data, ['folders'] );
+    $c->stash->{data} = { pubs => $update };
+  }
+
+  #my $pubs = $self->_collect_data($data);
+  #$c->stash->{data}    = {pubs => $pubs};
 
 }
 
@@ -438,9 +433,6 @@ sub delete_from_folder : Local {
 
   my $pubs = $self->_collect_data($data,['folders']);
   $c->stash->{data}    = {pubs => $pubs};
-  $c->stash->{success} = 'true';
-
-  $c->forward('Paperpile::View::JSON');
 
 }
 

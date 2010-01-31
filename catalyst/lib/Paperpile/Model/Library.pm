@@ -149,7 +149,7 @@ sub insert_pubs {
     next if $pub->_imported;
 
     ## Insert main entry into Publications table
-    my $tmp=$pub->as_hash();
+    my $tmp = $pub->as_hash();
 
     ( my $fields, my $values ) = $self->_hash2sql( $tmp, $dbh );
 
@@ -160,16 +160,16 @@ sub insert_pubs {
 
     $pub->_rowid($pub_rowid);
 
-    if ((not $pub->_authors_display) and ($pub->authors)){
-      my @authors = split (/\band\b/,$pub->authors);
-      my @display=();
-      foreach my $a (@authors){
+    if ( ( not $pub->_authors_display ) and ( $pub->authors ) ) {
+      my @authors = split( /\band\b/, $pub->authors );
+      my @display = ();
+      foreach my $a (@authors) {
         my $tmp = Paperpile::Library::Author->_split_full($a);
-        $tmp->{initials} = Paperpile::Library::Author->_parse_initials($tmp->{first});
+        $tmp->{initials} = Paperpile::Library::Author->_parse_initials( $tmp->{first} );
         push @display, Paperpile::Library::Author->_nice($tmp);
       }
       $pub->_auto_refresh(0);
-      $pub->_authors_display(join(", ", @display));
+      $pub->_authors_display( join( ", ", @display ) );
     }
 
     my $hash = {
@@ -182,21 +182,41 @@ sub insert_pubs {
       notes    => $pub->annote,
       author   => $pub->_authors_display,
       label    => $pub->tags,
-      labelid => Paperpile::Utils->encode_tags($pub->tags),
+      labelid  => Paperpile::Utils->encode_tags( $pub->tags ),
       keyword  => $pub->keywords,
       folder   => $pub->folders,
     };
 
-    ( $fields, $values ) = $self->_hash2sql($hash, $dbh);
+    ( $fields, $values ) = $self->_hash2sql( $hash, $dbh );
 
     $dbh->do("INSERT INTO fulltext_citation ($fields) VALUES ($values)");
 
-    $fields.=",text";
-    $values.=",''";
+    $fields .= ",text";
+    $values .= ",''";
     $dbh->do("INSERT INTO fulltext_full ($fields) VALUES ($values)");
 
     # GJ 2010-01-10 I *think* this should be here, but not sure...
     $pub->_imported(1);
+
+    # Check if we can find a pdf (either directly given as pub->pdf or
+    # in download cache folder) and attach it
+
+    my $pdf_file = undef;
+
+    my $cached_file =
+      File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $pub->sha1 . ".pdf" );
+
+    if ( $pub->pdf ) {
+      $pdf_file = $pub->pdf;
+    } elsif ( -e $cached_file ) {
+      $pdf_file = $cached_file;
+    }
+
+    if ($pdf_file) {
+      my $attached_file = $self->attach_file( $pdf_file, 1, $pub_rowid, $pub );
+      unlink($pdf_file);
+      $pub->pdf($attached_file);
+    }
   }
 
   $dbh->commit;
