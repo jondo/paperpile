@@ -313,11 +313,18 @@ sub _do_work {
 
   if ($self->type eq 'PDF_SEARCH'){
 
-    if (not $self->pub->linkout){
+    if (!$self->pub->linkout && !$self->pub->doi){
       $self->_match;
+
+      # This currently does not handle the case e.g when we match
+      # successfully against PubMed but don't get a doi/linkout and a
+      # downstream plugin would give us this information
+      if (!$self->pub->linkout && !$self->pub->doi){
+        NetMatchError->throw("Could not find the PDF");
+      }
     }
 
-    if (not $self->pub->pdf_url){
+    if (!$self->pub->pdf_url){
       $self->_crawl;
     }
 
@@ -528,7 +535,17 @@ sub _crawl {
 
   my $pdf;
 
-  $pdf = $crawler->search_file( $self->pub->linkout );
+  my $start_url = '';
+
+  if ($self->pub->doi){
+    $start_url = 'http://dx.doi.org/'.$self->pub->doi;
+  } elsif ($self->pub->linkout){
+    $start_url = $self->pub->linkout;
+  } else {
+    die("No target url for PDF download");
+  }
+
+  $pdf = $crawler->search_file( $start_url );
 
   $self->pub->pdf_url($pdf) if $pdf;
 
@@ -605,7 +622,7 @@ sub _download {
       }
     } else {
       NetGetError->throw(
-        error => 'Unknown ' . $self->noun . ' error.',
+        error => 'Download error ('. $res->message . ').',
         code  => $res->code,
       );
     }
