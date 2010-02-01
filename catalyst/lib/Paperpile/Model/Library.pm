@@ -1146,23 +1146,33 @@ sub restore_tree{
 }
 
 sub delete_from_folder {
-  ( my $self, my $row_id,  my $folder_id ) = @_;
+  ( my $self, my $data,  my $folder_id ) = @_;
 
-  ( my $folders ) =
-    $self->dbh->selectrow_array("SELECT folders FROM Publications WHERE rowid=$row_id");
+  my $dbh = $self->dbh;
 
-  my $newFolders = $self->_remove_from_flatlist($folders, $folder_id);
+  $dbh->begin_work;
 
-  my $quotedFolders = $self->dbh->quote($newFolders);
+  foreach my $pub (@$data) {
 
-  $self->dbh->do("UPDATE Publications SET folders=$quotedFolders WHERE rowid=$row_id");
-  $self->dbh->do("UPDATE fulltext_full SET folder=$quotedFolders WHERE rowid=$row_id");
-  $self->dbh->do("UPDATE fulltext_citation SET folder=$quotedFolders WHERE rowid=$row_id");
-  print STDERR "$row_id $folder_id\n";
-  $self->dbh->do("DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)");
+    my $row_id=$pub->_rowid;
 
-  print STDERR "$newFolders\n";
-  return $newFolders;
+    ( my $folders ) =
+      $dbh->selectrow_array("SELECT folders FROM Publications WHERE rowid=$row_id");
+
+    my $newFolders = $self->_remove_from_flatlist($folders, $folder_id);
+
+    my $quotedFolders = $dbh->quote($newFolders);
+
+    $dbh->do("UPDATE Publications SET folders=$quotedFolders WHERE rowid=$row_id");
+    $dbh->do("UPDATE fulltext_full SET folder=$quotedFolders WHERE rowid=$row_id");
+    $dbh->do("UPDATE fulltext_citation SET folder=$quotedFolders WHERE rowid=$row_id");
+    $dbh->do("DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)");
+
+    $pub->folders($newFolders);
+  }
+
+  $dbh->commit;
+
 }
 
 

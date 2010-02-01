@@ -32,7 +32,7 @@ sub insert_entry : Local {
   # Trigger a complete reload
   $c->stash->{data}->{pub_delta} = 1;
 
-  # There is no need to reload the original grid 
+  # There is no need to reload the original grid
   $c->stash->{data}->{pub_delta_ignore} = $grid_id;
 
   $self->_update_counts($c);
@@ -414,10 +414,8 @@ sub move_in_folder : Local {
     $c->stash->{data} = { pubs => $update };
   }
 
-  #my $pubs = $self->_collect_data($data);
-  #$c->stash->{data}    = {pubs => $pubs};
-
 }
+
 
 sub delete_from_folder : Local {
   my ( $self, $c ) = @_;
@@ -426,15 +424,18 @@ sub delete_from_folder : Local {
 
   my $data = $self->_get_selection($c);
 
-  foreach my $pub (@$data) {
-    my $new_folders = $c->model('Library')->delete_from_folder( $pub->_rowid, $folder_id );
-    $pub->folders($new_folders);
-  }
+  #foreach my $pub (@$data) {
+  #  my $new_folders = $c->model('Library')->delete_from_folder( $pub->_rowid, $folder_id );
+  #  $pub->folders($new_folders);
+  #}
 
-  my $pubs = $self->_collect_data($data,['folders']);
-  $c->stash->{data}    = {pubs => $pubs};
+  $c->model('Library')->delete_from_folder( $data, $folder_id );
+
+  my $pubs = $self->_collect_data( $data, ['folders'] );
+  $c->stash->{data} = { pubs => $pubs };
 
 }
+
 
 sub batch_download : Local {
   my ( $self, $c ) = @_;
