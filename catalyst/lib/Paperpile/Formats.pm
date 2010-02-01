@@ -159,9 +159,6 @@ sub read_bibutils {
 
   my $self = shift;
 
-  print STDERR "==============> Start Bibutils\n";
-  print STDERR scalar localtime, "\n";
-
   my $bu = Bibutils->new(
     in_file    => $self->file,
     out_file   => '',
@@ -171,17 +168,11 @@ sub read_bibutils {
 
   $bu->read;
 
-  print STDERR "==============> End reading Bibutils read\n";
-  print STDERR scalar localtime, "\n";
-
   if ( $bu->error ) {
     FileFormatError->throw( error => "Could not read " . $self->file . ". Error during parsing." );
   }
 
   my $data = $bu->get_data;
-
-  print STDERR "==============> End reading Bibutils get_data\n";
-  print STDERR scalar localtime, "\n";
 
   my @output = ();
 
@@ -190,9 +181,6 @@ sub read_bibutils {
     $pub->_build_from_bibutils($entry);
     push @output, $pub;
   }
-
-  print STDERR "==============> End converting from Bibutils\n";
-  print STDERR scalar localtime, "\n";
 
   return [@output];
 

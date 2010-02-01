@@ -159,7 +159,7 @@ sub delete_grid : Local {
 
   my $plugin = $c->session->{"grid_$grid_id"};
 
-  if ($plugin){
+  if ($plugin) {
     $plugin->cleanup();
     delete( $c->session->{"grid_$grid_id"} );
   }
@@ -171,9 +171,9 @@ sub export : Local {
 
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
-  my $source_node = $c->request->params->{source_node};
-  my $selection   = $c->request->params->{selection};
+  my $grid_id     = $c->request->params->{grid_id}     || undef;
+  my $source_node = $c->request->params->{source_node} || undef;
+  my $selection   = $c->request->params->{selection}   || undef;
 
   my $grid = $c->session->{"grid_$grid_id"};
 
@@ -197,7 +197,7 @@ sub export : Local {
 
   # Get data from results grid
   if ( defined $grid_id ) {
-    if ($selection eq 'ALL'){
+    if ( $selection eq 'ALL' ) {
       $data = $grid->all;
     } else {
       my @tmp;
@@ -215,6 +215,7 @@ sub export : Local {
 
   # Data from plugin-query in tree
   if ( defined $source_node ) {
+
     # Get the node with the id specified by $source_node
     my $tree = $c->session->{"tree"};
     my $node = undef;
@@ -227,7 +228,7 @@ sub export : Local {
 
     # The rest is the same code as in "resultsgrid" to query an import plugin
     my %node_settings = %{ $node->getNodeValue };
-    my %params = ();
+    my %params        = ();
 
     foreach my $key ( keys %node_settings ) {
       if ( $key =~ /^plugin_/ ) {
@@ -248,11 +249,10 @@ sub export : Local {
     $data = $plugin->all;
   }
 
-
   # Dynamically generate export plugin instance and write data
 
   my $export_module = "Paperpile::Plugins::Export::" . $export_params{name};
-  my $export = eval( "$export_module->" . 'new(data => $data, settings=>{%export_params})' );
+  my $export        = eval( "$export_module->" . 'new(data => $data, settings=>{%export_params})' );
 
   $export->write;
 

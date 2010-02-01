@@ -228,7 +228,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       currentRoot: Paperpile.main.globalSettings.user_home,
       filterOptions: [{
         text: 'All supported formats',
-        suffix: ['ppl', 'bib', 'ris', 'enl', 'lib', 'mods', 'xml', 'rss']
+        suffix: ['bib', 'ris', 'txt', 'lib', 'mods', 'xml', 'rss']
       },
       {
         text: 'BibTeX (.bib)',
@@ -239,8 +239,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         suffix: ['ris']
       },
       {
-        text: 'Endnote (.enl, .lib )',
-        suffix: ['enl', 'lib']
+        text: 'Endnote (.txt, .lib )',
+        suffix: ['txt', 'lib']
       },
       {
         text: 'Endnote XML (.xml)',
@@ -258,10 +258,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         text: 'RSS (.rss, .xml)',
         suffix: ['rss', 'xml']
       },
-      {
-        text: 'Paperpile (.ppl)',
-        suffix: ['ppl']
-      },
+      // Paperpile import/export disabled at the moment
+      // { 
+      //   text: 'Paperpile (.ppl)',
+      //   suffix: ['ppl']
+      // },
       {
         text: 'All files',
         suffix: ['ALL']
@@ -386,10 +387,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   queueUpdateFn: function() {
-    
+
     // Make sure that request is only sent after the previous got
     // back.
-    if (this.queuePollStatus == 'null'){
+    if (this.queuePollStatus == 'null') {
       this.queuePollStatus = 'DONE';
     }
 

@@ -32,6 +32,11 @@ sub write {
 
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn( "dbi:SQLite:" . $dbfile );
+
+  foreach my $pub (@{$self->data}){
+    $pub->pdf(undef);
+  }
+
   $model->insert_pubs( $self->data );
 
 }

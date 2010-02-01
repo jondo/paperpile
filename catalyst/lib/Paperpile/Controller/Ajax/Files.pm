@@ -15,12 +15,12 @@ sub dialogue : Local {
 
   my $output;
 
-  if ($c->request->params->{cmd} eq 'get'){
-    $output=$c->forward('get');
+  if ( $c->request->params->{cmd} eq 'get' ) {
+    $output = $c->forward('get');
   }
 
-  if ($c->request->params->{cmd} eq 'newdir'){
-    $output=$c->forward('newdir');
+  if ( $c->request->params->{cmd} eq 'newdir' ) {
+    $output = $c->forward('newdir');
   }
 
   $c->stash->{tree} = $output;
@@ -43,19 +43,20 @@ sub get : Local {
     cert crt der gpg gpg p10 p12 p7c p7m p7s pem sig bin cue img iso mdf nrg
     jar java class sql moov mov qt/;
 
-  my $mode = $c->request->params->{selectionMode};
-  my $path = $c->request->params->{path};
-  my $filter=$c->request->params->{filter};
+  my $mode   = $c->request->params->{selectionMode};
+  my $path   = $c->request->params->{path};
+  my $filter = $c->request->params->{filter};
 
-  $path=Paperpile::Utils->adjust_root($path);
+  $path = Paperpile::Utils->adjust_root($path);
 
-  my @filters=();
-  if ($filter){
+  my @filters = ();
+  if ($filter) {
+
     # 'ALL' means showing all, i.e. no filter
-    if ($filter eq 'ALL'){
-      @filters=();
+    if ( $filter eq 'ALL' ) {
+      @filters = ();
     } else {
-      @filters=split(',',$filter);
+      @filters = split( ',', $filter );
     }
   }
 
@@ -94,6 +95,7 @@ sub get : Local {
         type     => 'DIR',
       };
     }
+
     # Entry is a file
     else {
       if ( $mode eq 'FILE' or $mode eq 'BOTH' ) {
@@ -101,15 +103,14 @@ sub get : Local {
         # Get file suffix
         my ( $dummy, $dummy2, $suffix ) = fileparse( $item, qr/\.[^.]*/ );
         $suffix =~ s/\.//;
-        $suffix=lc($suffix);
+        $suffix = lc($suffix);
 
         # Skip if not in list of file-extensions given in filters
-        if (@filters){
-          my $is_ok=0;
-          foreach my $s (@filters){
-            print STDERR "$s vs $suffix\n";
-            if ($suffix eq $s){
-              $is_ok=1;
+        if (@filters) {
+          my $is_ok = 0;
+          foreach my $s (@filters) {
+            if ( $suffix eq $s ) {
+              $is_ok = 1;
               last;
             }
           }
@@ -144,9 +145,9 @@ sub get : Local {
 sub newdir : Local {
   my ( $self, $c ) = @_;
 
-  my $dir  = $c->request->params->{dir};
+  my $dir = $c->request->params->{dir};
 
-  $dir=Paperpile::Utils->adjust_root($dir);
+  $dir = Paperpile::Utils->adjust_root($dir);
 
   eval { mkpath($dir); };
 
@@ -158,12 +159,11 @@ sub newdir : Local {
 
 }
 
-
 sub stats : Local {
   my ( $self, $c ) = @_;
 
   my $location = $c->request->params->{location};
-  $location=Paperpile::Utils->adjust_root($location);
+  $location = Paperpile::Utils->adjust_root($location);
 
   my %stats = ();
 
@@ -178,7 +178,5 @@ sub stats : Local {
   $c->forward('Paperpile::View::JSON');
 
 }
-
-
 
 1;

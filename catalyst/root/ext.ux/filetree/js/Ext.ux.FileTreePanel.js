@@ -17,7 +17,7 @@
 
 Ext.ux.FileTreePanel = Ext.extend(Ext.tree.TreePanel, {
 
-    selectionMode: 'BOTH', //FILE, DIR, or BOTH
+  selectionMode: 'BOTH', //FILE, DIR, or BOTH
 
     filter:null,
 
