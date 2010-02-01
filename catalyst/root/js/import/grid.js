@@ -374,7 +374,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       },
       this);
 
-    var map = new Ext.KeyMap(this.el, {
+    var map = new Ext.KeyMap(this.body, {
       key: Ext.EventObject.DELETE,
       handler: function() {
         var imported = this.getSelection('IMPORTED').length;
