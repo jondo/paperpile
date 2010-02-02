@@ -384,45 +384,45 @@ sub update_pub {
 
   my $new_pub = Paperpile::Library::Publication->new($data);
 
-
   # Save attachments in temporary dir
   my $tmp_dir = tempdir( CLEANUP => 1 );
 
-  my @attachments=();
+  my @attachments = ();
 
-  foreach my $file ($self->get_attachments($new_pub->_rowid)){
-    my ($volume,$dirs,$base_name) = File::Spec->splitpath( $file );
-    my $tmp_file=File::Spec->catfile($tmp_dir,$base_name);
-    copy($file, $tmp_dir);
+  foreach my $file ( $self->get_attachments( $new_pub->_rowid ) ) {
+    my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($file);
+    my $tmp_file = File::Spec->catfile( $tmp_dir, $base_name );
+    copy( $file, $tmp_dir );
     push @attachments, $tmp_file;
   }
 
-  my $pdf_file='';
+  my $pdf_file = '';
 
-  if ($new_pub->pdf){
-    my $paper_root=$self->get_setting('paper_root');
-    my $file=File::Spec->catfile( $paper_root, $new_pub->pdf );
-    my ($volume,$dirs,$base_name) = File::Spec->splitpath( $file );
-    copy($file, $tmp_dir);
-    $pdf_file=File::Spec->catfile($tmp_dir,$base_name);
+  if ( $new_pub->pdf ) {
+    my $paper_root = $self->get_setting('paper_root');
+    my $file = File::Spec->catfile( $paper_root, $new_pub->pdf );
+    my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($file);
+    copy( $file, $tmp_dir );
+    $pdf_file = File::Spec->catfile( $tmp_dir, $base_name );
+    $new_pub->pdf('');    # unset to avoid that create_pub tries to
+                          # attach the file which gives an error
   }
 
   # Delete and then re-create
   $self->delete_pubs( [$new_pub] );
   $self->create_pubs( [$new_pub] );
 
-
   # Attach files again afterwards. Is not the most efficient way but
   # currently the easiest and most robust solution.
-  foreach my $file (@attachments){
-    $self->attach_file($file, 0, $new_pub->_rowid, $new_pub);
+  foreach my $file (@attachments) {
+    $self->attach_file( $file, 0, $new_pub->_rowid, $new_pub );
   }
-  if ($pdf_file){
-    $self->attach_file($pdf_file, 1, $new_pub->_rowid, $new_pub);
+  if ($pdf_file) {
+    $self->attach_file( $pdf_file, 1, $new_pub->_rowid, $new_pub );
   }
 
   $new_pub->_imported(1);
-  $new_pub->attachments(scalar @attachments);
+  $new_pub->attachments( scalar @attachments );
 
   return $new_pub;
 }
