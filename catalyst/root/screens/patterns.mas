@@ -4,13 +4,13 @@
 <td>
   <div class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:140;">
 
-    <h3>Paperpile database</h3>
+    <h3>Paperpile database <span id="library_db_tooltip" class="pp-tooltip-link">?</span></h3>
     <div id="library_db">
       <div class="pp-settings-textfield" id="library_db_textfield"></div>
       <div id="library_db_button"></div>
     </div>
     
-    <h3>PDF directory</h3>
+    <h3>PDF directory <span id="paper_root_tooltip" class="pp-tooltip-link">?</span></h3>
     <div id="paper_root">
       <div id="paper_root_textfield" class="pp-settings-textfield"></div>
       <div id="paper_root_button"></div>
@@ -23,21 +23,21 @@
 <tr>
 <td>
   <div class="pp-box pp-box-style1 pp-box-bottom pp-box-settings" style="height:350;">
-    <h3>Citation key pattern</h3>
+    <h3>Citation key pattern <span id="key_pattern_tooltip" class="pp-tooltip-link">?</span></h3>
 
     <div id="key_pattern">
       <div class="pp-settings-textfield" id="key_pattern_textfield"></div>
       <div class="pp-settings-example">Example: <code id="key_pattern_example"></code></div>
     </div>
 
-    <h3>PDF file pattern</h3>
+    <h3>PDF file pattern <span id="pdf_pattern_tooltip" class="pp-tooltip-link">?</span></h3>
     
     <div id="pdf_pattern">
       <div id="pdf_pattern_textfield" class="pp-settings-textfield"><span>.pdf<span></div>
       <div class="pp-settings-example">Example: <code id="pdf_pattern_example"></code></div>
     </div>
 
-    <h3>Attachment pattern</h3>
+    <h3>Attachment pattern <span id="attachment_pattern_tooltip" class="pp-tooltip-link">?</span></h3>
 
     <div id="attachment_pattern">
       <div id="attachment_pattern_textfield" class="pp-settings-textfield"></div>
@@ -47,16 +47,18 @@
 </td>
 
 <td>
-  <div class="pp-box pp-box-style2" style="height:350; width: 400px; ">
+  <div class="pp-box pp-box-style2" style="height:350; width: 400px;">
     <h2>Patterns</h2>
     <p>You can use the following keywords in your pattern:</p>
-    <ul>
-        <li> <b>[Firstauthor], [Lastauthor]</b> ... Name of first/last author  </li>
-        <li> <b>[Authors]</b> ... Names of all authors  </li>   
-        <li> <b>[YYYY], [YY]</b> ... Publication year with four or two digits</li>
-        <li> <b>[Title]</b> ... Title of paper </li>
-        <li> <b>[Journal]</b> ... Journal name</li> 
-    </ul>
+    <dl class="pp-pattern-help">
+      <dt> <b>[firstauthor]</b> </dt> <dd>Name of first author  </dd>
+      <dt> <b>[lastauthor]</b> </dt> <dd>Name of last author  </dd>
+      <dt> <b>[authors]</b> </dt><dd>Names of all authors  </dd>   
+      <dt> <b>[YYYY]</b></dt> <dd>Publication year (four digits)</dd>
+      <dt> <b>[YY]</b></dt> <dd>Publication year (two digits)</dd>
+      <dt> <b>[title]</b></dt> <dd>Title of paper </dd>
+      <dt> <b>[journal]</b></dt> <dd>Journal name</dd> 
+    </dl>
     <p> You get uppercase/lowercase variants by using
       e.g. <b>[firstauthor],[Firstauthor]</b> or <b>[FIRSTAUTHOR] </b>
       which gives <b>knuth, Knuth or KNUTH</b>.</p>

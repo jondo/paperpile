@@ -17,7 +17,7 @@ sub pattern_example : Local {
   my ( $self, $c ) = @_;
 
   my $paper_root = $c->request->params->{paper_root};
-  my $library_db    = $c->request->params->{library_db};
+  my $library_db = $c->request->params->{library_db};
 
   my $key_pattern        = $c->request->params->{key_pattern};
   my $pdf_pattern        = $c->request->params->{pdf_pattern};
@@ -25,42 +25,45 @@ sub pattern_example : Local {
 
   my %data = ();
 
-  foreach my $field ('key_pattern', 'pdf_pattern', 'attachment_pattern'){
-    while ($c->request->params->{$field} =~ /\[\s*(.*?)\s*\]/ig){
-      if (not $1 =~ /^(firstauthor|lastauthor|authors|title|yy|yyyy|key)[:_0-9]*$/i){
-        $data{$field}->{error}="Invalid pattern [$1]";
+  foreach my $field ( 'key_pattern', 'pdf_pattern', 'attachment_pattern' ) {
+    while ( $c->request->params->{$field} =~ /\[\s*(.*?)\s*\]/ig ) {
+      if ( not $1 =~ /^(firstauthor|lastauthor|authors|title|yy|yyyy|key)[:_0-9]*$/i ) {
+        $data{$field}->{error} = "Invalid pattern [$1]";
       }
     }
   }
 
   my $minimum = qr/\[(firstauthor|lastauthor|authors|title)[:_0-9]*\]/i;
 
-  if (not $key_pattern =~ $minimum){
-    $data{key_pattern}->{error}='Your pattern must include at least [firstauthor], [lastauthor], [authors] or [title]';
+  if ( not $key_pattern =~ $minimum ) {
+    $data{key_pattern}->{error} =
+      'Your pattern must include at least [firstauthor], [lastauthor], [authors] or [title]';
   }
 
-  if (not $pdf_pattern =~ /\[key\]/i){
-    if (not $pdf_pattern =~ $minimum){
-      $data{pdf_pattern}->{error}='Your pattern must include at least [key], [firstauthor], [lastauthor], [authors] or [title]';
+  if ( not $pdf_pattern =~ /\[key\]/i ) {
+    if ( not $pdf_pattern =~ $minimum ) {
+      $data{pdf_pattern}->{error} =
+        'Your pattern must include at least [key], [firstauthor], [lastauthor], [authors] or [title]';
     }
   }
 
-  if (not $attachment_pattern =~ /\[key\]/i){
-    if (not $attachment_pattern =~ $minimum){
-      $data{attachment_pattern}->{error}='Your pattern must include at least [key], [firstauthor], [lastauthor], [authors] or [title]';
+  if ( not $attachment_pattern =~ /\[key\]/i ) {
+    if ( not $attachment_pattern =~ $minimum ) {
+      $data{attachment_pattern}->{error} =
+        'Your pattern must include at least [key], [firstauthor], [lastauthor], [authors] or [title]';
     }
   }
 
-  $paper_root=~s{/$}{}; # remove trailing /
+  $paper_root =~ s{/$}{};    # remove trailing /
 
   my %sample = (
-    pubtype   => 'ARTICLE',
-    title     => 'A note on strategy elimination in bimatrix games',
-    authors   => 'Knuth, D.E. and Papadimitriou, C.H. and Tsitsiklis, J.H.',
-    journal =>  'Operations Research Letters',
-    volume    => '7',
-    pages     => '103--107',
-    year      => '1988',
+    pubtype => 'ARTICLE',
+    title   => 'A note on strategy elimination in bimatrix games',
+    authors => 'Knuth, D.E. and Papadimitriou, C.H. and Tsitsiklis, J.H.',
+    journal => 'Operations Research Letters',
+    volume  => '7',
+    pages   => '103--107',
+    year    => '1988',
   );
 
   my $pub = Paperpile::Library::Publication->new( {%sample} );
@@ -69,16 +72,16 @@ sub pattern_example : Local {
   my $formatted_pdf        = $pub->format_pattern( $pdf_pattern, { key => $formatted_key } );
   my $formatted_attachment = $pub->format_pattern( $attachment_pattern, { key => $formatted_key } );
 
-  my @tmp=split(/\//,$paper_root);
+  my @tmp = split( /\//, $paper_root );
 
-  $formatted_pdf=".../".$tmp[$#tmp]."/<b>$formatted_pdf.pdf</b>";
-  $formatted_attachment=".../".$tmp[$#tmp]."/<b>$formatted_attachment/</b>";
+  $formatted_pdf        = ".../" . $tmp[$#tmp] . "/<b>$formatted_pdf.pdf</b>";
+  $formatted_attachment = ".../" . $tmp[$#tmp] . "/<b>$formatted_attachment/</b>";
 
   $data{key_pattern}->{string}        = $formatted_key;
   $data{pdf_pattern}->{string}        = $formatted_pdf;
   $data{attachment_pattern}->{string} = $formatted_attachment;
 
-  $self->_submit( $c, {%data} );
+  $c->stash->{data}    = {%data};
 
 }
 
@@ -156,8 +159,6 @@ sub update_patterns : Local {
   }
 
   $c->stash->{data}    = {};
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
 
 }
 
@@ -176,13 +177,12 @@ sub rename_files : Private {
 
   # If paper_root is not created or does not exist for some other
   # reason, we can stop because there are no files for us to update
-  if (!-e $old_root){
+  if ( !-e $old_root ) {
     $model->dbh->commit;
     return;
   }
 
   my $tmp_root = File::Temp::tempdir( 'paperpile-XXXXXXX', DIR => '/tmp', CLEANUP => 0 );
-
 
   eval {
 
@@ -229,7 +229,7 @@ sub rename_files : Private {
 
       if ( !-e $absolute_source ) {
         $model->dbh->do( "DELETE FROM Attachments WHERE rowid=" . $attachment_id );
-        $model->dbh->do( "UPDATE Publications SET attachments=attachments-1 WHERE rowid=$pub_id");
+        $model->dbh->do("UPDATE Publications SET attachments=attachments-1 WHERE rowid=$pub_id");
         next;
       }
 
@@ -261,7 +261,8 @@ sub rename_files : Private {
 
   if ( not move( $old_root, "$old_root\_backup" ) ) {
     $model->dbh->rollback;
-    FileError->throw("Could not apply changes (Error creating backup copy $old_root\_backup -- $!)");
+    FileError->throw(
+      "Could not apply changes (Error creating backup copy $old_root\_backup -- $!)");
   }
 
   if ( not move( $tmp_root, $old_root ) ) {
@@ -278,24 +279,21 @@ sub rename_files : Private {
   rmtree("$old_root\_backup");
 }
 
-sub set_settings : Local{
+sub set_settings : Local {
 
   my ( $self, $c ) = @_;
 
-  for my $field (keys %{$c->request->params}) {
-      print STDERR "$field \n";
+  for my $field ( keys %{ $c->request->params } ) {
+    print STDERR "$field \n";
   }
 
-#  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd','pager_limit') {
-#    $c->model('User')->set_setting($field, $c->request->params->{$field});
-#  }
+  #  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd','pager_limit') {
+  #    $c->model('User')->set_setting($field, $c->request->params->{$field});
+  #  }
 
-  $c->model('User')->set_settings($c->request->params);
+  $c->model('User')->set_settings( $c->request->params );
 
 }
-
-
-
 
 sub _submit {
 
@@ -306,7 +304,5 @@ sub _submit {
 
   $c->detach('Paperpile::View::JSON');
 }
-
-
 
 1;

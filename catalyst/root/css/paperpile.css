@@ -295,6 +295,10 @@ td.pp-dashboard-dl{
     line-height: 1.3em;
 }
 
+.pp-pattern-help dt {
+    color: #000000!important;
+}
+
 .pp-box dd { 
     margin: 0 0 0 75px; 
     padding: 0 0 5 5;
@@ -1116,7 +1120,7 @@ div:hover.pp-grid-sort-item {
     clear:left;
     color: #4183C4;
     margin: 16 0 2 8;
-    font:italic 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     font-weight:bold;
 }
 
@@ -1125,7 +1129,8 @@ div:hover.pp-grid-sort-item {
 }
 
 .pp-settings-example {
-    font:italic 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font: normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    color:gray;
     margin: 8px;
 }
 
@@ -1602,15 +1607,22 @@ table.pp-meta-form {
     font-size: 14px;
 }
 
-.pp-meta-form .tooltip-link {
+
+
+.pp-tooltip-link {
+    color: #BDBDBD!important;
+    cursor:default;
+    font-style: normal;
+    font-weight:normal;
+}
+
+.pp-meta-form .pp-tooltip-link {
     display:inline;
     padding-left: 5px;
     vertical-align:top;
-    color: #BDBDBD;
-    cursor:default;
 } 
 
-.pp-meta-form div.tooltip-link:hover {
+.pp-meta-form div.pp-tooltip-link:hover {
     color: black!important;
 }
 

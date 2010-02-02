@@ -629,8 +629,11 @@ sub format_pattern {
   # Try to change unicode character to the appropriate ASCII characters
   $pattern = unidecode($pattern);
 
-  # Remove all remaining non-alphanumeric characters that might be left
+  # Remove all remaining non-alphanumeric characters that might be
+  # left but keep slashes
+  $pattern =~s{/}{__SLASH__}g;
   $pattern =~ s/\W//g;
+  $pattern =~s{__SLASH__}{/}g;
 
   return $pattern;
 

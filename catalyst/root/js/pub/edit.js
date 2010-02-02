@@ -283,7 +283,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
         Ext.DomHelper.append(field + '-field', {
           tag: 'div',
-          cls: 'tooltip-link',
+          cls: 'pp-tooltip-link',
           id: field + '-tooltip',
           html: '?',
           hidden: hidden
