@@ -1824,3 +1824,7 @@ table.pp-meta-form {
     color: gray;
 }
 
+
+.pp-collapsed {
+    cursor:pointer;
+}

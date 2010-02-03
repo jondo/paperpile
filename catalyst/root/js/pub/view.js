@@ -25,7 +25,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
             activeItem: 0,
             height: 200,
             region: 'south',
-            collapsible: true,
+            collapsible: false,
             animCollapse: false
           }]
       },
