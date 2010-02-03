@@ -131,15 +131,13 @@ sub undo_trash : Local {
 
   my $data = $c->session->{"undo_trash"};
 
-  $c->forward('Paperpile::View::JSON');
-
   $c->model('Library')->trash_pubs( $data, 'RESTORE' );
 
   delete( $c->session->{undo_trash} );
 
   $self->_update_counts($c);
 
-  $c->forward('Paperpile::View::JSON');
+  $c->stash->{data}->{pub_delta} = 1;
 
 }
 
