@@ -246,6 +246,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     });
     this.filterField = new Ext.app.FilterField({
       itemId: 'filter_field',
+      emptyText: 'Search References',
       store: this.store,
       base_query: this.plugin_base_query,
       width: 200
