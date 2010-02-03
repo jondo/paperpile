@@ -17,6 +17,7 @@ Model::Queue:
 
 session:
   storage: "__PP_USER_DIR__/tmp/session"
+  cookie_expires: 0
 
 app_settings:
   platform: "__PLATFORM__"
