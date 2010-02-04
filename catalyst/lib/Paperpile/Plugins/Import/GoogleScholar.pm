@@ -326,7 +326,10 @@ sub complete_details {
   }
 
   # Google uses number instead of issue
-  $full_pub->issue( $full_pub->number ) if ( !$full_pub->issue and $full_pub->number );
+  if ( !$full_pub->issue and $full_pub->number ) {
+    $full_pub->issue( $full_pub->number );
+    $full_pub->number( '' );
+  }
 
   # Add the linkout from the old object because it is not in the BibTeX
   #and thus not in the new object
@@ -334,8 +337,8 @@ sub complete_details {
 
   # We call the British Library Direct link to get the
   # abstract if they have any
-  my $abstract = $self->_parse_BL($pub);
-  $full_pub->abstract($abstract) if ( $abstract ne '' );
+  #my $abstract = $self->_parse_BL($pub);
+  #$full_pub->abstract($abstract) if ( $abstract ne '' );
 
   # We don't use Google key
   $full_pub->citekey('');
@@ -664,7 +667,7 @@ sub _parse_googlescholar_page {
   );
 
   # Each entry has a h3 heading
-  my @nodes = $tree->findnodes('/html/body/h3[@class="r"]');
+  my @nodes = $tree->findnodes('/html/body/*/div/h3');
 
   foreach my $node (@nodes) {
 
@@ -694,12 +697,12 @@ sub _parse_googlescholar_page {
   # There is <div> for each entry but a <font> tag directly below the
   # <h3> header
 
-  @nodes = $tree->findnodes(q{/html/body/font[@size='-1']});
+  @nodes = $tree->findnodes(q{/html/body/*/div/font[@size='-1']});
 
   foreach my $node (@nodes) {
 
     # Most information is contained in a <span> tag
-    my $line = $node->findvalue(q{./span[@class='a']});
+    my $line = $node->findvalue(q{./span[@class='gs_a']});
     next if not $line;
 
     my ( $authors, $citation, $publisher ) = split( / - /, $line );
@@ -720,7 +723,7 @@ sub _parse_googlescholar_page {
     push @{ $data{authors} },   defined($authors)  ? $authors  : '';
     push @{ $data{citations} }, defined($citation) ? $citation : '';
 
-    my @links = $node->findnodes('./span[@class="fl"]/a');
+    my @links = $node->findnodes('./span[@class="gs_fl"]/a');
 
     # Find the BibTeX export links
     my $cluster_link_found = 0;
@@ -731,11 +734,6 @@ sub _parse_googlescholar_page {
       if ( $url =~ /\/scholar\.bib/ ) {
         $url = "http://scholar.google.com$url" if ( $url !~ m/^http/ );
         push @{ $data{bibtex} }, $url;
-      }
-      if ( $url =~ /\/scholar\?cluster/ ) {
-        $url = "http://scholar.google.com$url" if ( $url !~ m/^http/ );
-        push @{ $data{versions} }, $url;
-        $cluster_link_found = 1;
       }
       if ( $url =~ /\/scholar\?cluster/ ) {
         $url = "http://scholar.google.com$url" if ( $url !~ m/^http/ );
