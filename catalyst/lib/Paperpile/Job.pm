@@ -262,7 +262,6 @@ sub run {
       $self->_catch_error;
     } else {
       $self->duration( $end_time - $start_time );
-
       $self->update_status('DONE');
     }
 
@@ -368,7 +367,6 @@ sub _do_work {
 
       $self->_match;
       $self->_insert;
-      $self->_attach_pdf;
 
       $self->update_info('msg',"PDF successfully imported.");
       $self->update_info('callback',{fn => 'updatePubGrid'});

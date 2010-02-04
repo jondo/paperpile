@@ -52,6 +52,8 @@ sub submit : Local {
 
   }
 
+  print STDERR \@jobs;
+
   $q->submit( \@jobs );
 
   $q->save;

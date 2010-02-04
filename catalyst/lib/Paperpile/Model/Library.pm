@@ -214,7 +214,7 @@ sub insert_pubs {
 
     if ($pdf_file) {
       my $attached_file = $self->attach_file( $pdf_file, 1, $pub_rowid, $pub );
-      unlink($pdf_file);
+      unlink($pdf_file) if -e ($cached_file);
       $pub->pdf($attached_file);
     }
   }
