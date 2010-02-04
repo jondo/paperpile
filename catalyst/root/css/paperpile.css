@@ -378,35 +378,26 @@ a:hover.pp-textlink {
     width:80px;
     position:absolute;
     top:140px;
-    left:8px;
-    color:#4183C4;
+    left:22px;
     margin:0;
 }
 
 #pp-cloud-checkbox p {
-    font-size:10px;
+    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-size:11px;
+    color: gray;
 }
 
 #pp-cloud-checkbox ul {
-    font-size:9px;
-    margin:3px;
+    font-size:11px;
+    margin:0;
 }
 
 .pp-cloud-options li {
-    text-align:center;
-    padding-top:.25em;
-    padding-bottom:.25em;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-    color:#4183C4;
-    cursor:pointer;
-    border: 1px solid #FFFEEB;
+    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
+    padding: 2px 0;
 }
 
-.pp-cloud-options .pp-cloud-options-active {
-    background:#F7F4B4;
-    border: 1px solid #F7CA75;
-}
 
 .pp-textfield-with-button {
     margin-right: 5px;
