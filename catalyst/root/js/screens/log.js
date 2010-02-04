@@ -4,19 +4,14 @@ Paperpile.CatalystLog = Ext.extend(Ext.Panel, {
     iconCls: 'pp-icon-console',
     id: 'log-panel',
 
-    markup: [
-        '<div class="pp-catalyst-log">',
-        '<pre id="catalyst-log">{content}</pre>',
-        '<div id="log-last-line"></div>',
-        '</div>'
-    ],
+    markup: ['<div class="pp-catalyst-log">', '<pre id="catalyst-log">{content}</pre>', '<div id="log-last-line"></div>', '</div>'],
 
     initComponent: function() {
-		Ext.apply(this, {
-            closable:true,
-            autoScroll:true,
+        Ext.apply(this, {
+            closable: true,
+            autoScroll: true,
         });
-		
+
         Paperpile.PatternSettings.superclass.initComponent.call(this);
 
         this.tpl = new Ext.XTemplate(this.markup);
@@ -26,28 +21,28 @@ Paperpile.CatalystLog = Ext.extend(Ext.Panel, {
     afterRender: function() {
         Paperpile.Statistics.superclass.afterRender.apply(this, arguments);
 
-        this.on('activate', 
-                function(){
-                    Ext.get('log-last-line').dom.scrollIntoView();
-                }, this);
+        this.on('activate', function() {
+            Ext.get('log-last-line').dom.scrollIntoView();
+        },
+        this);
 
         this.update();
 
- 
     },
 
     update: function() {
 
-        this.tpl.overwrite(this.body, {content: Paperpile.serverLog}, true);
+        this.tpl.overwrite(this.body, {
+            content: Paperpile.serverLog
+        },
+        true);
 
-    }, 
-    
-    addLine: function(line){
-        
-        Ext.get('catalyst-log').insertHtml('beforeEnd',line); 
-        
+    },
+
+    addLine: function(line) {
+
+        Ext.get('catalyst-log').insertHtml('beforeEnd', line);
+
     }
-
-
 
 });
