@@ -52,7 +52,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       this.data = newData;
       this.oldData = Ext.ux.clone(this.data);
 
-      if (newData.sha1 != oldData.sha1) {
+      if (newData.sha1 != oldData.sha1 || newData._imported != oldData._imported) {
         this.updateAllInfo(newData);
         return;
       }

@@ -11,7 +11,6 @@ use Paperpile::Exceptions;
 
 use Paperpile::Plugins::Import;
 use Paperpile::Plugins::Export;
-#use Paperpile::Plugins::Export::Bibfile;
 
 # Import plugins dynamically from directory content alone
 BEGIN{
@@ -104,6 +103,7 @@ sub resultsgrid : Local {
 
     # Else, just get the normal page worth.
     $entries = $plugin->page( $offset, $limit );
+
   }
 
   # Skip test for existence for standard user database
