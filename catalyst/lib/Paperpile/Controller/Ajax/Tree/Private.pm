@@ -15,8 +15,9 @@ sub get_default_tree : Private {
   #### Root
 
   my $root = Tree::Simple->new( {
-      text   => 'Root',
-      hidden => 0,
+      text    => 'Root',
+      hidden  => 0,
+      builtin => 1,
     },
     Tree::Simple->ROOT
   );
@@ -32,6 +33,7 @@ sub get_default_tree : Private {
       cls     => 'pp-tree-heading',
       iconCls => 'pp-icon-empty',
       hidden  => 0,
+      builtin => 1,
     },
     $root
   );
@@ -46,19 +48,21 @@ sub get_default_tree : Private {
       path    => '/',
       iconCls => 'pp-icon-page',
       hidden  => 0,
+      builtin => 1,
     },
     $local_lib
   );
 
   $folders->setUID('FOLDER_ROOT');
 
-  #### / Local Library / Tags
+  #### / Local Library / Labels
 
   my $tags = Tree::Simple->new( {
       text    => 'Labels',
       type    => "TAGS",
       iconCls => 'pp-icon-tag',
       hidden  => 0,
+      builtin => 1,
     },
     $local_lib
   );
@@ -67,27 +71,32 @@ sub get_default_tree : Private {
   # Initialize
   $c->forward( 'get_tags', [$tags] );
 
+
+  #### / Local Library / Trash
+
   $folders = Tree::Simple->new( {
-      text    => 'Trash',
-      type    => "TRASH",
-      iconCls => 'pp-icon-trash',
-      plugin_name  => 'Trash',
-      hidden  => 0,
+      text        => 'Trash',
+      type        => "TRASH",
+      iconCls     => 'pp-icon-trash',
+      plugin_name => 'Trash',
+      hidden      => 0,
+      builtin     => 1,
     },
     $local_lib
   );
 
   $folders->setUID('TRASH');
 
-  #### / Active Folders
+  #### / Active Folders & Feeds
 
   my $active = Tree::Simple->new( {
-      text    => 'Active Views',
+      text    => 'Active Folders & Feeds',
       type    => "ACTIVE",
       path    => '/',
       iconCls => 'pp-icon-empty',
       cls     => 'pp-tree-heading',
       hidden  => 0,
+      builtin => 1,
     }
   );
   $active->setUID('ACTIVE_ROOT');
@@ -97,35 +106,60 @@ sub get_default_tree : Private {
   $active->addChild(
     Tree::Simple->new( {
         type         => 'ACTIVE',
-        text         => '2009 papers',
-        plugin_title => '2009 papers',
-        plugin_name  => 'DB',
+        text         => 'Nature',
+        plugin_title => 'Nature',
+        plugin_name  => 'Feed',
         plugin_mode  => 'FULLTEXT',
-        plugin_query => 'year:2009',
-        iconCls      => 'pp-icon-folder',
+        plugin_url   => 'http://feeds.nature.com/nature/rss/current?format=xml',
+        qtip         => 'http://feeds.nature.com/nature/rss/current?format=xml',
+        iconCls      => 'pp-icon-feed',
         hidden       => 0,
+        builtin      => 1,
       }
     )
   );
 
   $active->addChild(
     Tree::Simple->new( {
-        type    => 'CLOUDS',
-        text    => 'Cloud view',
-        iconCls => 'pp-icon-clouds',
-        hidden  => 0,
+        type         => 'ACTIVE',
+        text         => 'Science',
+        plugin_title => 'Science',
+        plugin_name  => 'Feed',
+        plugin_mode  => 'FULLTEXT',
+        plugin_url   => 'http://www.sciencemag.org/rss/current.xml',
+        qtip         => 'http://www.sciencemag.org/rss/current.xml',
+        iconCls      => 'pp-icon-feed',
+        hidden       => 0,
+        builtin      => 1,
       }
     )
   );
 
-  ##### / Plugins
+  $active->addChild(
+    Tree::Simple->new( {
+        type         => 'ACTIVE',
+        text         => 'PLoS One',
+        plugin_title => 'PLoS One',
+        plugin_name  => 'Feed',
+        plugin_mode  => 'FULLTEXT',
+        plugin_url   => 'http://feeds.plos.org/plosone/PLoSONE?format=xml',
+        qtip         => 'http://feeds.plos.org/plosone/PLoSONE?format=xml',
+        iconCls      => 'pp-icon-feed',
+        hidden       => 0,
+        builtin      => 1,
+      }
+    )
+  );
+
+  ##### / Tools & Resources
 
   my $plugins = Tree::Simple->new( {
-      text    => 'Online Search',
+      text    => 'Resources & Tools',
       type    => 'IMPORT_PLUGIN',
       cls     => 'pp-tree-heading',
       iconCls => 'pp-icon-empty',
       hidden  => 0,
+      builtin => 1,
     },
     $root
   );
@@ -140,18 +174,7 @@ sub get_default_tree : Private {
         plugin_query => '',
         iconCls      => 'pp-icon-pubmed',
         hidden       => 0,
-      }
-    )
-  );
-
-  $plugins->addChild(
-    Tree::Simple->new( {
-        type         => 'IMPORT_PLUGIN',
-        plugin_name  => 'GoogleBooks',
-        text         => 'Google Books',
-        plugin_query => '',
-        iconCls      => 'pp-icon-google',
-        hidden       => 1,
+        builtin      => 1,
       }
     )
   );
@@ -164,6 +187,7 @@ sub get_default_tree : Private {
         plugin_query => '',
         iconCls      => 'pp-icon-google',
         hidden       => 0,
+        builtin      => 1,
       }
     )
   );
@@ -176,90 +200,47 @@ sub get_default_tree : Private {
         plugin_query => '',
         iconCls      => 'pp-icon-arxiv',
         hidden       => 0,
+        builtin      => 1,
       }
     )
   );
 
   $plugins->addChild(
-    Tree::Simple->new( {
-        type         => 'IMPORT_PLUGIN',
-        plugin_name  => 'CiteSeerX',
-        text         => 'CiteSeerX',
-        plugin_query => '',
-        iconCls      => 'pp-icon-citeseerx',
-        hidden       => 1,
-      }
-    )
-  );
-
-  $plugins->addChild(
-    Tree::Simple->new( {
-        type         => 'IMPORT_PLUGIN',
-        plugin_name  => 'JSTOR',
-        text         => 'JSTOR',
-        plugin_query => '',
-        iconCls      => 'pp-icon-jstor',
-        hidden       => 1,
-      }
-    )
-  );
-
-  $plugins->addChild(
-    Tree::Simple->new( {
-        type         => 'IMPORT_PLUGIN',
-        plugin_name  => 'ACM',
-        text         => 'ACM',
-        plugin_query => '',
-        iconCls      => 'pp-icon-acm',
-        hidden       => 1,
-      }
-    )
-  );
-
-  $plugins->addChild(
-    Tree::Simple->new( {
-        type         => 'IMPORT_PLUGIN',
-        plugin_name  => 'SpringerLink',
-        text         => 'SpringerLink',
-        plugin_query => '',
-        iconCls      => 'pp-icon-springerlink',
-        hidden       => 1,
-      }
-    )
-  );
-
-  ##### / Settings
-
-  my $import = Tree::Simple->new( {
-      text    => 'Import Data',
-      cls     => 'pp-tree-heading',
-      iconCls => 'pp-icon-empty',
-      hidden  => 0,
-    },
-    $root
-  );
-
-  $import->addChild(
     Tree::Simple->new( {
         text    => 'Import PDFs',
         type    => 'PDFEXTRACT',
         iconCls => 'pp-icon-import-pdf',
         qtip    => 'Import one or more PDFs to your library',
         hidden  => 0,
+        builtin      => 1,
       }
     )
   );
 
-  $import->addChild(
+  $plugins->addChild(
     Tree::Simple->new( {
         text    => 'Import File',
         type    => 'FILE_IMPORT',
         iconCls => 'pp-icon-import-file',
         qtip    => 'Import references from EndNote, BibTeX <br> and other bibliography files.',
         hidden  => 0,
+        builtin => 1,
       }
     )
   );
+
+  $plugins->addChild(
+    Tree::Simple->new( {
+        type    => 'CLOUDS',
+        text    => 'Cloud view',
+        iconCls => 'pp-icon-clouds',
+        hidden  => 1,
+        builtin => 1,
+      }
+    )
+  );
+
+
 
   return $root;
 }

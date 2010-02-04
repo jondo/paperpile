@@ -308,10 +308,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
         e.cancel = false;
 
-        if (e.target.type == 'TRASH'){
-          var imported  = e.source.dragData.grid.getSelection('IMPORTED');
-          if (imported.length==0){
-            e.cancel=true;
+        if (e.target.type == 'TRASH') {
+          var imported = e.source.dragData.grid.getSelection('IMPORTED');
+          if (imported.length == 0) {
+            e.cancel = true;
           }
         }
 
@@ -345,7 +345,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   addFolder: function(grid, sel, node) {
     var el = Ext.get(node.getUI().getTextEl());
-    el.highlight("ffff9c", {easing: 'bounceBoth', duration:1});
+    el.highlight("ffff9c", {
+      easing: 'bounceBoth',
+      duration: 1
+    });
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/move_in_folder'),
       params: {
@@ -1225,17 +1228,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     this.tree = Paperpile.main.tree;
     var tree = this.tree;
     Ext.apply(this, {
-      items: [
-      /*            { id: 'active_menu_new', //itemId does not work here
-	      iconCls: 'pp-icon-folder',
-              text:'Create Active View from current view',
-              handler: function(){
-                  tree.newActive();
-              },
-              scope: this
-            },
-*/
-      {
+      items: [{
         id: 'active_menu_rss',
         //itemId does not work here
         iconCls: 'pp-icon-feed',
@@ -1279,8 +1272,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   getShownItems: function(node) {
     if (node.id == 'ACTIVE_ROOT') {
       return[
-      'active_menu_rss',
-      'active_menu_configure'];
+      'active_menu_rss', ];
     } else {
       return[
       'active_menu_delete',
@@ -1298,7 +1290,7 @@ Paperpile.Tree.ImportMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     Ext.apply(this, {
       items: [{
         id: 'import_menu_configure',
-        text: 'Show/Hide Items',
+        text: 'More Resources & Tools',
         handler: function() {
           this.tree.configureSubtree(this.node);
         },
