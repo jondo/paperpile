@@ -21,6 +21,7 @@ Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGrid, {
 
     initComponent:function() {
       this.plugin_name = 'ArXiv';
+      this.plugin_iconCls = 'pp-icon-arxiv';
       this.aboutPanel = new Paperpile.AboutArXiv();
       
       Paperpile.PluginGridArXiv.superclass.initComponent.call(this);

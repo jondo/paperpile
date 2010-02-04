@@ -20,6 +20,7 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
   initComponent:function() {
     this.limit = 25;
     this.plugin_name = 'PubMed';
+    this.plugin_iconCls = 'pp-icon-pubmed';
     this.aboutPanel = new Paperpile.AboutPubMed();
 			
     Paperpile.PluginGridPubMed.superclass.initComponent.call(this);
