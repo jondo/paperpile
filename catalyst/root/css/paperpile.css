@@ -1105,6 +1105,7 @@ div:hover.pp-grid-sort-item {
 .pp-box-settings {
     max-width: 1000;
     width: 420;
+    float:left;
 }
 
 .pp-box-settings h3 {
@@ -1134,6 +1135,50 @@ div:hover.pp-grid-sort-item {
     padding: 0 5;
     border-style:dotted;
 }
+
+.pp-pluginlist-panel, .pp-pluginlist-panel .x-panel-body {
+    background:none;
+}
+
+.pp-pluginlist {
+
+}
+
+.pp-pluginlist .x-tree-node-over {
+    background:none;
+}
+
+.pp-pluginlist-used {
+    background-color:#FFFFFF;
+}
+
+.pp-pluginlist-number {
+    float:left;
+    margin-right:4px;
+}
+
+.pp-pluginlist li {
+    margin:0 0;
+}
+
+.pp-pluginlist .x-tree-elbow-end, .pp-pluginlist .x-tree-elbow {
+    width:0px;
+}
+
+.pp-pluginlist-cross {
+  width:18px;
+  height:18px;
+  background: transparent url(/images/icons/cancel-small.png) no-repeat center center;
+  cursor:pointer;
+  position:absolute;
+  float:right;
+}
+.pp-pluginlist-cross-over {
+  width:16px;
+  height:16px;
+  border: 1px solid #F7CA75 ;
+}
+
 
 
 /*** Tags ***/

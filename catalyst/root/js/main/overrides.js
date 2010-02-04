@@ -1,5 +1,67 @@
 // Ext overrides
 
+Ext.override(Ext.tree.TreeNode, {
+    removeChild : function(node, destroy){
+        this.ownerTree.getSelectionModel().unselect(node);
+        Ext.tree.TreeNode.superclass.removeChild.apply(this, arguments);
+        // if it's been rendered remove dom node
+        if(node.ui && node.ui.rendered){
+            node.ui.remove();
+        }
+        if(this.childNodes.length < 1){
+            this.collapse(false, false);
+        }else{
+            this.ui.updateExpandIcon();
+        }
+        if(!this.firstChild && !this.isHiddenRoot()) {
+            this.childrenRendered = false;
+        }
+        return node;
+    }
+});
+
+Ext.override(Ext.tree.TreeLoader, {
+  clearOnLoad: false,
+  processResponse: function(response, node, callback, scope) {
+    var json = response.responseText;
+    try {
+      var o = response.responseData || Ext.decode(json);
+      node.beginUpdate();
+      for (var i = 0, len = o.length; i < len; i++) {
+        var n = this.createNode(o[i]);
+        var existingNode = node.findChild('text', n.text);
+        if (existingNode) {
+          node.removeChild(existingNode);
+        }
+        if (n) {
+          node.appendChild(n);
+        }
+      }
+      node.endUpdate();
+      this.runCallback(callback, scope || node, [node]);
+    } catch(e) {
+      this.handleFailure(response);
+    }
+  }
+});
+
+Ext.override(Ext.tree.AsyncTreeNode, {
+  reload: function(callback, scope) {
+    //Paperpile.log("Reload!");
+    //this.collapse(false, false);
+    //while (this.firstChild) {
+    //  this.removeChild(this.firstChild).destroy();
+    //}
+    this.childrenRendered = false;
+    this.loaded = false;
+    if (this.isHiddenRoot()) {
+      this.expanded = false;
+    }
+    this.expand(false, false, callback, scope);
+  }
+});
+
+
 Ext.namespace("Ext.ux");
 Ext.ux.clone = function(o) {
     if(!o || 'object' !== typeof o) {

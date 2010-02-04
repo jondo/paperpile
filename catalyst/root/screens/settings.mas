@@ -1,8 +1,6 @@
-<table>
+<div>
 
-<tr>
-<td>
-  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:300">
+  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:250">
     <div id="proxy_checkbox" style="float:left;margin:8px"></div>
     <h2 style="margin:8 20;">Proxy</h2>
 
@@ -25,25 +23,24 @@
     </table>
 
   </div>
-</td>
-<td>
-  <div id="ui-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:300">
+  <div id="ui-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:250">
     <h2>User interface</h2>
     
     <h3>Number of items per page</h3>
     <div class="pp-settings-textfield" id="pager_limit_combo"></div>
   </div>
-</td>
-</tr>
-<tr>
-<td colspan="2">
+
+  <div id="plugin-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:300">
+    <h2>Plugin Settings</h2>
+    
+    <h3>Plugin order for searching & matching</h3>
+    <div class="pp-settings-plugin-order" id="plugin_order_panel"></div>
+  </div>
 <center>
-<div style="width:190;">
+<div style="width:190;clear:both;">
   <div id="settings-save-button" class="pp-save-button"></div>
   <div id="settings-cancel-button" class="pp-cancel-button"></div>
 </div>
 </center>
-</td>
-</tr>
 
-</table>
+</div>

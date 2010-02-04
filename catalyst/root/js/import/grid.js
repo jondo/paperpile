@@ -257,20 +257,51 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
   },
 
-  onNodeOver: function(target, dd, e, data) {
-    if (data.node != null) {
-      return "x-dd-drop-ok-add";
+  onNodeOver: function(nodeData, source, e, data) {
+    if (data.grid) {
+      e.cancel = true;
+    } else if (data.node) {
+      e.cancel = false;
+    }
+    
+    var retVal = '';
+    if (e.cancel) {
+      retVal = Ext.dd.DropZone.prototype.dropNotAllowed;
     } else {
-      return Ext.dd.DropZone.prototype.dropNotAllowed;
+      retVal = Ext.dd.DropZone.prototype.dropAllowed;
+    }
+
+    this.updateDragStatus(nodeData, source, e, data);
+    return retVal;
+  },
+
+  updateDragStatus: function(nodeData, source, e, data) {
+    var proxy = source.proxy;
+    Paperpile.log(source);
+    if (source.dragData.node) {
+      var myType = source.dragData.node.type;
+      if (myType == 'TAGS') {
+	proxy.updateTip('Apply label to reference');
+      } else if (myType == 'FOLDER') {
+	proxy.updateTip('Place reference in folder');
+      }
+    } else if (source.dragData.grid) {
+      // We should never reach here -- no within-grid drag and drop!
     }
   },
 
   onNodeDrop: function(target, dd, e, data) {
     if (data.node != null) {
+      // Get the index of the node being dropped upon.
       var r = e.getTarget(this.getView().rowSelector);
       var index = this.getView().findRowIndex(r);
       var record = this.store.getAt(index);
-      var sel = record.data.sha1;
+      // If this node is *outside* the *selection*, then drop on the node instead of
+      // the whole selection.
+      var sel = this.getSelection();
+      if (!this.getSelectionModel().isSelected(index)) {
+	sel = record.get('sha1');
+      }
 
       var tagName = data.node.text;
 
@@ -283,9 +314,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
       }
       return true;
-    } else {
-      return false;
+
+      record.data.pdf_path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
+      return this.getIconTemplate().apply(record.data);
     }
+    return false;
   },
 
   onStoreLoad: function() {
@@ -390,7 +423,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       scope: this
     });
 
-    this.dz = new Paperpile.GridDropZone(this, {
+    this.dropZone = new Paperpile.GridDropZone(this, {
+      ddGroup: this.ddGroup
+    });
+
+    Paperpile.GridDragZone = Ext.extend(Ext.grid.GridDragZone, {
+      proxy: new Paperpile.StatusTipProxy()
+    });
+    this.dragZone = new Paperpile.GridDragZone(this, {
       ddGroup: this.ddGroup
     });
   },
@@ -1215,17 +1255,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/plugins/delete_grid'),
       params: {
-        grid_id: this.id,
+        grid_id: this.id
       },
       method: 'GET'
     });
-  },
+  }
 });
 
 Paperpile.GridDropZone = function(grid, config) {
   this.grid = grid;
   Paperpile.GridDropZone.superclass.constructor.call(this, grid.view.scroller.dom, config);
-}
+};
 
 Ext.extend(Paperpile.GridDropZone, Ext.dd.DropZone, {
   getTargetFromEvent: function(e) {
@@ -1235,7 +1275,7 @@ Ext.extend(Paperpile.GridDropZone, Ext.dd.DropZone, {
   onNodeEnter: function(target, dd, e, data) {},
 
   onNodeOver: function(target, dd, e, data) {
-    return this.grid.onNodeOver.call(this, target, dd, e, data);
+    return this.grid.onNodeOver(target,dd,e,data);
   },
 
   onNodeDrop: function(target, dd, e, data) {

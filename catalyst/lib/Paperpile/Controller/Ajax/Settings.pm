@@ -287,12 +287,14 @@ sub set_settings : Local {
     print STDERR "$field \n";
   }
 
-  #  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd','pager_limit') {
-  #    $c->model('User')->set_setting($field, $c->request->params->{$field});
-  #  }
-
-  $c->model('User')->set_settings( $c->request->params );
-
+  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd','pager_limit') {
+    $c->model('User')->set_setting($field, $c->request->params->{$field});
+  }
+  
+  for my $field ('search_seq') {
+    $c->model('Library')->set_setting($field, $c->request->params->{$field});
+  }
+  
 }
 
 sub _submit {

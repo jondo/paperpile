@@ -151,6 +151,18 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   },
 
+  getSetting: function(key) {
+    return this.globalSettings[key];
+  },
+
+  setSetting: function(key,value,commitToBackend) {
+    if (commitToBackend === undefined) {
+      commitToBackend = true;
+    }
+    this.globalSettings[key] = value;
+    this.storeSettings({key:value});
+  },
+
   storeSettings: function(newSettings, callback, scope) {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/settings/set_settings'),

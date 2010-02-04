@@ -16,6 +16,16 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     this.on('afterrender', this.installEvents, this);
   },
 
+    forceUpdate: function() {
+      this.onUpdate({updateSidePanel : 1});
+    },
+
+    // Called when a non-user interaction causes an update of the overview panel.
+    onUpdate: function(data) {
+      var sm = this.getGrid().getSelectionModel();
+      this.grid_id = this.getGrid().id;
+},
+
   getPluginPanel: function() {
     return this.findParentByType(Paperpile.PluginPanel);
   },
