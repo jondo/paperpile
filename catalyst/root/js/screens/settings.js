@@ -293,7 +293,6 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
     });
 
     
-    // TODO: Finish loading up the names and icons of each import plugin.
     // Create two DataViews: one for the 'unused' list, and one for the ordered list.
     Paperpile.PluginOrderPanel.superclass.initComponent.call(this);
     this.usedPlugins.on('nodedrop',this.saveAndLoad,this);
@@ -396,6 +395,9 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
     var children = root.childNodes;
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
+      if (child.type != 'IMPORT_PLUGIN') {
+	continue;
+      }
       var pluginName = child.text;
       var pluginClassName = child.plugin_name;
       var obj = {
