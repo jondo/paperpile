@@ -509,6 +509,10 @@ sub _parse_RegularFeed {
 	    $issue = $3 if ( !$issue );
 	    $pages = $4 if ( !$pages );
 	}
+	
+	if ( $tmp =~ m/\s\((20\d\d)\)$/ ) {
+	    $year = $1 if ( !$year );
+	}
     }
     
     if ( $channel_journal_name and !$journal ) {
