@@ -658,7 +658,7 @@ sub _parse_googlescholar_page {
   # Google markup is a mess, so also the code to parse is cumbersome
 
   my $tree = HTML::TreeBuilder::XPath->new;
-  $tree->utf8_mode(1);
+  $tree->utf8_mode(0);
   $content = decode_utf8($content);
   $tree->parse_content($content);
 
