@@ -54,7 +54,7 @@ sub read {
   if ( $result->{channel}->[0]->{'description'} ) {
       $channel_description = join( '', @{ $result->{channel}->[0]->{'description'} } );
   }
-  $self->title($channel_title);
+  $self->title($channel_title) if ($channel_title);
 
   my $issn;
   if ( $result->{channel}->[0]->{'prism:issn'} ) {
@@ -66,6 +66,15 @@ sub read {
 
   if ( $result->{item} ) {
     @entries = @{ $result->{item} };
+  }
+
+  # PLoS journals use some really weird XML style
+  if ( $result->{author}->[0]->{name}->[0] ) {
+    if ( $result->{author}->[0]->{name}->[0] eq 'PLoS' ) {
+      @entries = @{ $result->{entry} };
+      $self->title( $result->{title}->[0]->{content} );
+      return $self->_parse_PLoS( \@entries );
+    }
   }
 
   # Parsing scientific RSS feeds is a cumbersome process. There are standards
@@ -1473,6 +1482,69 @@ sub _parse_DovePress {
     
     return [@output];
 }
+
+# PLoS journals use some really weird XML style
+
+sub _parse_PLoS {
+
+  my $self    = shift;
+  my @entries = @{ $_[0] };
+
+  my @output = ();
+
+  foreach my $entry (@entries) {
+
+    my ( $title, $authors, $description, $doi, $journal,
+	 $volume, $issue, $year, $link, $pages, $note );
+
+    # journal name is parsed from the channel title
+    ( $journal = $self->title ) =~ s/(.*)(:.*)/$1/;
+    $journal =~ s/\sAlerts//g;
+
+    $title = _easy_join ( 'title', $entry );
+
+    # usually the form first author et al.
+    if ( $entry->{'author'}->[0]->{name}->[0] ) {
+      my $tmp = $entry->{'author'}->[0]->{name}->[0];
+      my @authors_formatted = ( );
+      if ( $tmp =~ m/(.*)\set\sal\./ ) {
+	push @authors_formatted,
+	  Paperpile::Library::Author->new()->parse_freestyle( $1 )->bibtex();
+	push @authors_formatted, "{et al.}";
+      }
+      $authors = join ( " and ", @authors_formatted );
+    }
+
+    # several linkouts (html/xml/pdf)
+    foreach my $links ( @{ $entry->{'link'} } ) {
+      if ( $links->{'rel'} eq 'alternate' ) {
+	$link = $links->{'href'};
+      }
+    }
+
+    # doi
+    if ( $entry->{'id'}->[0] ) {
+      ( $doi = $entry->{'id'}->[0] ) =~ s/info:doi\///;
+    }
+
+    # year
+    if ( $entry->{'published'}->[0] ) {
+      ( $year = $entry->{'published'}->[0] ) =~ s/^(\d\d\d\d)(-.*)/$1/;
+    }
+
+    # abstract
+    if ( $entry->{'content'}->{'content'} ) {
+      $description = $entry->{'content'}->{'content'};
+    }
+
+    push @output, _fill_publication_object( $title, $authors, $description,
+					    $doi, $journal, $volume, $issue,
+					    $year, $link, $pages, $note );
+  }
+
+  return [@output];
+}
+
 
 
 ##################################################################################
