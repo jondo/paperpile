@@ -3,12 +3,12 @@ Ext.namespace('Ext.ux');
 Ext.ux.Menubar = Ext.extend(Ext.menu.Menu, {
     plain: true,
     cls: "",
-    minWidth: 120,
-    shadow: false,
+    minWidth : 120,
+    shadow : false,
     orientation: "vertical",
     activatedClass: "x-menu-activated",
-
-    constructor: function(config) {
+    
+    constructor: function(config){
         Ext.ux.Menubar.superclass.constructor.call(this, config);
         this.cls += " x-menubar";
         if (this.orientation == "vertical") {
@@ -21,8 +21,8 @@ Ext.ux.Menubar = Ext.extend(Ext.menu.Menu, {
     },
 
     // private
-    render: function(container) {
-        if (this.el) {
+    render : function(container){
+        if(this.el){
             return;
         }
         if (container) {
@@ -31,89 +31,79 @@ Ext.ux.Menubar = Ext.extend(Ext.menu.Menu, {
         } else {
             var el = this.el = new Ext.Layer({
                 cls: "x-menu",
-                shadow: this.shadow,
+                shadow:this.shadow,
                 constrain: false,
                 parentEl: this.parentEl || document.body,
-                zindex: 15000
+                zindex:15000
             });
         }
 
         this.keyNav = new Ext.menu.MenuNav(this);
 
-        if (this.plain) {
+        if(this.plain){
             el.addClass("x-menu-plain");
         }
-        if (this.cls) {
+        if(this.cls){
             el.addClass(this.cls);
         }
         // generic focus element
         this.focusEl = el.createChild({
-            tag: "a",
-            cls: "x-menu-focus",
-            href: "#",
-            onclick: "return false;",
-            tabIndex: "-1"
+            tag: "a", cls: "x-menu-focus", href: "#", onclick: "return false;", tabIndex:"-1"
         });
-        var ul = el.createChild({
-            tag: "ul",
-            cls: "x-menu-list"
-        });
+        var ul = el.createChild({tag: "ul", cls: "x-menu-list"});
         ul.on({
-            click: this.onClick,
+            click:  this.onClick,
             mouseover: this.onMouseOver,
             mouseout: this.onMouseOut,
             scope: this
         });
-        this.items.each(function(item) {
+        this.items.each(function(item){
             var li = ul.createChild({
                 tag: 'li',
                 cls: 'x-menu-list-item',
-                style: {
-                    'float': (item.align == 'right') ? 'right' : 'left',
-                    padding: "0 2px"
+                style: {'float':(item.align == 'right') ? 'right' : 'left',
+                        padding:"0 2px"
                 }
-            },
-            null, true);
+            }, null, true);
             if (item instanceof Ext.menu.TextItem) {
-                item.addClass("menubar-textitem");
-                item.render(li, this);
+              item.addClass("menubar-textitem");
+              item.render(li,this);
             } else {
-                item.render(li, this);
+              item.render(li, this);
             }
 
-        },
-        this);
+        }, this);
         this.ul = ul;
         // this.autoWidth(); // not for menu bars.
     },
 
     show: function(container) {
         this.fireEvent("beforeshow", this);
-        if (!this.el) {
+        if(!this.el){
             this.render();
         }
         this.fireEvent("show", this);
     },
 
     forceHide: function() {
-        if (this.activeItem) {
-            this.activeItem.deactivate();
-            delete this.activeItem;
-        }
-
-        this.deactivate();
-        this.el.hide();
-        this.hidden = true;
+      if (this.activeItem) {
+        this.activeItem.deactivate();
+        delete this.activeItem;
+      }
+      
+      this.deactivate();
+      this.el.hide();
+      this.hidden = true;
     },
-
-    hide: function() {
-        // Stop auto-hiding of this menu. -GJ
-        //        this.fireEvent("beforehide", this);
-        if (this.activeItem) {
+                              
+    hide: function(){
+      // Stop auto-hiding of this menu. -GJ
+//        this.fireEvent("beforehide", this);
+        if(this.activeItem){
             this.activeItem.deactivate();
             delete this.activeItem;
         }
-        /*
+/*
         this.deactivate();
         this.el.hide();
         this.hidden=true;
@@ -121,19 +111,19 @@ Ext.ux.Menubar = Ext.extend(Ext.menu.Menu, {
 */
     },
 
-    onClick: function(e) {
+    onClick : function(e){
         var t = this.findTargetItem(e);
-
-        if (t && t.menu === undefined) {
+        
+        if(t && t.menu === undefined){
             t.onClick(e);
             this.fireEvent("click", this, t, e);
         } else {
             if (this.activated) {
                 this.deactivate();
                 this.activeItem.hideMenu();
-            } else if (t) {
+            } else if(t){
                 this.activate();
-                if (t.canActivate && !t.disabled) {
+                if(t.canActivate && !t.disabled){
                     this.setActiveItem(t, true);
                 }
                 this.fireEvent("click", this, e, t);
@@ -142,40 +132,40 @@ Ext.ux.Menubar = Ext.extend(Ext.menu.Menu, {
         }
     },
 
-    onMouseOver: function(e) {
+    onMouseOver : function(e){ 
         var t;
-        if (t = this.findTargetItem(e)) {
-            if (t.canActivate && !t.disabled) {
+        if(t = this.findTargetItem(e)){
+            if(t.canActivate && !t.disabled){
                 this.setActiveItem(t, this.activated);
             }
         }
         this.fireEvent("mouseover", this, e, t);
     },
 
-    onMouseOut: function(e) {
+    onMouseOut : function(e){
         var t;
-        if (!this.activated) {
-            if (t = this.findTargetItem(e)) {
-                if (t == this.activeItem && t.shouldDeactivate(e)) {
-                    //this.activeItem.deactivate();
+        if(!this.activated) {
+            if(t = this.findTargetItem(e)){
+                if(t == this.activeItem && t.shouldDeactivate(e)){
+                  //this.activeItem.deactivate();
                     delete this.activeItem;
                 }
             }
             this.fireEvent("mouseout", this, e, t);
         }
-    },
-
-    activate: function() {
+    },    
+    
+    activate : function(){
         // Sort of a hack to deactivate the menu when clicked somewere else or when an other menu opens.
         this.fireEvent("beforeshow", this);
         this.fireEvent("show", this);
 
         this.activated = true;
         this.ul.addClass("x-menu-activated");
-    },
-
-    deactivate: function() {
+    },    
+    
+    deactivate : function(){
         this.activated = false;
         this.ul.removeClass("x-menu-activated");
-    }
+    }    
 });
