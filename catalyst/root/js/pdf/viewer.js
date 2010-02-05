@@ -291,13 +291,13 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     this.tbItems['ZOOM_IN'] = new Ext.Button({
       handler: this.zoomIn,
-      text: '+',
+      icon: "/images/icons/zoom-in.gif",
       tooltip: "Zoom In",
       scope: this
     });
     this.tbItems['ZOOM_OUT'] = new Ext.Button({
       handler: this.zoomOut,
-      text: '-',
+      icon: "/images/icons/zoom-out.gif",
       tooltip: "Zoom Out",
       scope: this
     });
