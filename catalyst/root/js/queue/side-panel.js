@@ -63,7 +63,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       '<a href="#" class="pp-textlink" action="show-done-jobs">Successful</a>&nbsp;|&nbsp;',
       '<a href="#" class="pp-textlink" action="show-error-jobs">Failed</a>',
       '</p>',
-      '</center>',{
+      '</center>', {
         compiled: true
       });
 
@@ -200,8 +200,8 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
         if (queue.status != 'PAUSED') {
           this.queueProgress.show();
           this.queueProgress.updateProgress(num_finished / num_all, num_finished + ' of ' + num_all + ' tasks completed');
-          if (eta != ''){
-            this.updateETA('About '+eta+' left');
+          if (eta != '') {
+            this.updateETA('About ' + eta + ' left');
           } else {
             this.updateETA('');
           }
@@ -210,7 +210,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
     }
   },
 
-  updateETA: function(text){
+  updateETA: function(text) {
     Ext.DomHelper.overwrite('queue-eta', text);
   },
 
@@ -232,8 +232,8 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
         }
       });
     }
-    
-    if (action === 'close-tab'){
+
+    if (action === 'close-tab') {
       Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab());
     }
   }

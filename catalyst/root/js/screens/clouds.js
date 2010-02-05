@@ -56,7 +56,7 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
     this.tpl.overwrite(this.body, {
       id: this.id
     },
-    true);
+      true);
 
     Ext.get('cloud').on('click', function(e, el, o) {
       var key = el.getAttribute('key');

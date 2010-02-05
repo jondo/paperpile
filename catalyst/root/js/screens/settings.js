@@ -225,78 +225,80 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
   settingName: 'search_seq',
   tempSettingValue: null,
 
-  initComponent: function() {    
+  initComponent: function() {
     this.tempSettingValue = Paperpile.main.getSetting(this.settingName);
 
     var usedConfig = {
       cls: 'pp-pluginlist pp-pluginlist-used',
       border: true,
-      plugins:[
-	new Paperpile.HoverButtonPlugin({
-	  cls:'pp-pluginlist-cross',
-	  overCls:'pp-pluginlist-cross-over',
-	  fn: function(node) {
-	    node.remove();
-	    this.saveAndLoad();
-	  },
-	  showButtonIf: function(node) {
-	    // Don't show the hover button if we're the only child node!
-	    var tree = node.getOwnerTree();
-	    var root = tree.getRootNode();
-	    if (root.childNodes.length == 1) {
-	      return false;
-	    }
-	    return true;
-	  },
-	  scope:this
-      })]
+      plugins: [
+        new Paperpile.HoverButtonPlugin({
+          cls: 'pp-pluginlist-cross',
+          overCls: 'pp-pluginlist-cross-over',
+          fn: function(node) {
+            node.remove();
+            this.saveAndLoad();
+          },
+          showButtonIf: function(node) {
+            // Don't show the hover button if we're the only child node!
+            var tree = node.getOwnerTree();
+            var root = tree.getRootNode();
+            if (root.childNodes.length == 1) {
+              return false;
+            }
+            return true;
+          },
+          scope: this
+        })]
     };
     this.usedPlugins = this.createPluginOrderTreePanel(usedConfig);
     this.usedPlugins.initEvents = this.usedPlugins.initEvents.createSequence(function() {
-      this.usedPlugins.dragZone.onBeforeDrag = this.usedPlugins.dragZone.onBeforeDrag.createInterceptor(function(data,e) {
-	if (this.usedPlugins.getRootNode().childNodes.length == 1) {
-	  if (data.node) {
-	    data.node.draggable = false;
-	  }
-	}
-      },this);
-    },this);
+      this.usedPlugins.dragZone.onBeforeDrag = this.usedPlugins.dragZone.onBeforeDrag.createInterceptor(function(data, e) {
+        if (this.usedPlugins.getRootNode().childNodes.length == 1) {
+          if (data.node) {
+            data.node.draggable = false;
+          }
+        }
+      },
+      this);
+    },
+    this);
     this.usedPlugins.setWidth("50%");
-    
+
     var availableConfig = {
       cls: 'pp-pluginlist',
       border: false,
       listeners: {
-	'dblclick': {
-	  // Move plugins to the 'used' column if double-clicked.
-	  fn: function(node,event) {
-	    node.remove(false);
-	    var usedRoot = this.usedPlugins.getRootNode();
-	    usedRoot.appendChild(node);
-	    this.saveAndLoad();
-	  },
-	  scope:this
-	}
+        'dblclick': {
+          // Move plugins to the 'used' column if double-clicked.
+          fn: function(node, event) {
+            node.remove(false);
+            var usedRoot = this.usedPlugins.getRootNode();
+            usedRoot.appendChild(node);
+            this.saveAndLoad();
+          },
+          scope: this
+        }
       }
     };
     this.availablePlugins = this.createPluginOrderTreePanel(availableConfig);
     this.availablePlugins.setWidth("50%");
 
     Ext.apply(this, {
-      layout:new Ext.layout.HBoxLayout({align:'stretch'}),
+      layout: new Ext.layout.HBoxLayout({
+        align: 'stretch'
+      }),
       items: [
-	this.usedPlugins,
-	this.availablePlugins
-      ],
-      height:175,
-      cls:'pp-pluginlist-panel'
+        this.usedPlugins,
+        this.availablePlugins],
+      height: 175,
+      cls: 'pp-pluginlist-panel'
     });
 
-    
     // Create two DataViews: one for the 'unused' list, and one for the ordered list.
     Paperpile.PluginOrderPanel.superclass.initComponent.call(this);
-    this.usedPlugins.on('nodedrop',this.saveAndLoad,this);
-    this.availablePlugins.on('nodedrop',this.saveAndLoad,this);
+    this.usedPlugins.on('nodedrop', this.saveAndLoad, this);
+    this.availablePlugins.on('nodedrop', this.saveAndLoad, this);
     this.on('afterrender', function() {
       this.reloadView();
       this.doLayout();
@@ -304,22 +306,23 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
       // Add some guiding text here.
       var el = Ext.fly(this.usedPlugins.getTreeEl());
       el.insertFirst({
-	  tag:'p',
-	  html:'Current oder:',
-	  style:{
-	    margin:'0px 10px'
-	  }
+        tag: 'p',
+        html: 'Current oder:',
+        style: {
+          margin: '0px 10px'
+        }
       });
       var el = Ext.fly(this.availablePlugins.getTreeEl());
       el.insertFirst({
-	  tag:'p',
-	  html:'Available plugins:',
-	  style:{
-	    margin:'0px 10px'
-	  }
+        tag: 'p',
+        html: 'Available plugins:',
+        style: {
+          margin: '0px 10px'
+        }
       });
 
-    },this);
+    },
+    this);
   },
 
   initEvents: function() {
@@ -327,32 +330,31 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
 
     Paperpile.PluginOrderDropZone = Ext.extend(Ext.tree.TreeDropZone, {
       initComponent: function() {
-	Ext.apply(this, {
+        Ext.apply(this, {
 
-	});
+        });
       }
     });
   },
 
   createPluginOrderTreePanel: function(config) {
     config = Ext.apply(config, {
-      enableDD:true,
+      enableDD: true,
       ddGroup: 'plugin-list',
-      animate:false,
-      rootVisible:false,
-      lines:false
+      animate: false,
+      rootVisible: false,
+      lines: false
     });
     var newPanel = new Ext.tree.TreePanel(config);
     newPanel.getSelectionModel().on("beforeselect",
       function() {
-	return false;
-      }
-    );
+        return false;
+      });
     var root = new Ext.tree.TreeNode({
-        text: 'Plugin Order',
-        draggable:false,
-	id:'root',
-	children:[]
+      text: 'Plugin Order',
+      draggable: false,
+      id: 'root',
+      children: []
     });
     newPanel.setRootNode(root);
     return newPanel;
@@ -365,11 +367,11 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
 
   saveToModel: function() {
     var list = '';
-    
+
     var root = this.usedPlugins.getRootNode();
     var children = root.childNodes;
     var classNames = [];
-    for (var i=0; i < children.length; i++) {
+    for (var i = 0; i < children.length; i++) {
       var child = children[i];
       classNames.push(child.attributes.className);
     }
@@ -396,24 +398,24 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
       if (child.type != 'IMPORT_PLUGIN') {
-	continue;
+        continue;
       }
       var pluginName = child.text;
       var pluginClassName = child.plugin_name;
       var obj = {
-	id:'root/'+child.plugin_name,
-	iconCls:child.iconCls,
-	text:child.text,
-	className:child.plugin_name,
-	draggable:true,
-	leaf:true
+        id: 'root/' + child.plugin_name,
+        iconCls: child.iconCls,
+        text: child.text,
+        className: child.plugin_name,
+        draggable: true,
+        leaf: true
       };
       allPluginHash[pluginClassName] = obj;
     }
 
     var currentListString = this.tempSettingValue;
     var currentList = currentListString.split(",");
-    for (var i=0; i < currentList.length; i++) {
+    for (var i = 0; i < currentList.length; i++) {
       var item = currentList[i];
       var record = allPluginHash[item];
       usedPluginHash[item] = record;
@@ -425,15 +427,15 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
     }
     allKeys.sort();
 
-    for (var i=0; i < allKeys.length; i++) {
+    for (var i = 0; i < allKeys.length; i++) {
       var key = allKeys[i];
       if (!usedPluginHash[key]) {
-	availablePluginHash[key] = allPluginHash[key];
+        availablePluginHash[key] = allPluginHash[key];
       }
     }
 
-    this.replaceNodes(this.usedPlugins,usedPluginHash);
-    this.replaceNodes(this.availablePlugins,availablePluginHash);
+    this.replaceNodes(this.usedPlugins, usedPluginHash);
+    this.replaceNodes(this.availablePlugins, availablePluginHash);
     this.numberNodes(this.usedPlugins);
   },
 
@@ -444,23 +446,23 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
     root.eachChild(function(node) {
       var el = Ext.fly(node.getUI().getEl());
       var index = root.indexOf(node) + 1;
-      Ext.DomHelper.insertBefore(el,{
-	  tag:'div',
-	  cls:'pp-pluginlist-number',
-	  html:index+') '
+      Ext.DomHelper.insertBefore(el, {
+        tag: 'div',
+        cls: 'pp-pluginlist-number',
+        html: index + ') '
       });
     });
   },
 
   clearRoots: function() {
-    this.replaceNodes(this.availablePlugins,{});
+    this.replaceNodes(this.availablePlugins, {});
   },
 
-  replaceNodes: function(tree,nodeHash) {
+  replaceNodes: function(tree, nodeHash) {
     var root = tree.getRootNode();
     var children = root.childNodes;
     while (root.childNodes.length > 0) {
-      root.removeChild(root.childNodes[0],true);
+      root.removeChild(root.childNodes[0], true);
     }
     for (var key in nodeHash) {
       var obj = nodeHash[key];

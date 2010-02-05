@@ -225,7 +225,9 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
               Paperpile.main.tabs.setActiveTab(0);
               Paperpile.main.tabs.doLayout();
             } else {
-              Paperpile.main.onUpdate({pub_delta:1});
+              Paperpile.main.onUpdate({
+                pub_delta: 1
+              });
             }
             Paperpile.status.clearMsg();
           },

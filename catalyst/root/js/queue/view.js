@@ -38,7 +38,7 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
     if (data.queue) {
       this.getOverview().onUpdate(data);
     }
-    
+
     if (data.jobs) {
       this.getGrid().onUpdate(data);
     }
@@ -102,5 +102,3 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
   }
 
 });
-
-

@@ -1,32 +1,32 @@
 Paperpile.PluginAboutPanel = Ext.extend(Ext.Panel, {
 
-    markup: [
-        '<div class="pp-box pp-box-side-panel pp-box-style1">',
-        '<p>Put your side-panel HTML here</p>',
-        '<p></p>',
-        '</div>'],
+  markup: [
+    '<div class="pp-box pp-box-side-panel pp-box-style1">',
+    '<p>Put your side-panel HTML here</p>',
+    '<p></p>',
+    '</div>'],
 
-    tabLabel: 'About',
+  tabLabel: 'About',
 
-    initComponent: function() {
-		Ext.apply(this, {
-			bodyStyle: {
-				background: '#ffffff',
-				padding: '7px'
-			},
-            autoScroll: true,
-            itemId:'about'
-		});
+  initComponent: function() {
+    Ext.apply(this, {
+      bodyStyle: {
+        background: '#ffffff',
+        padding: '7px'
+      },
+      autoScroll: true,
+      itemId: 'about'
+    });
 
-	    this.tpl = new Ext.XTemplate(this.markup).compile();
-	
-        Paperpile.PluginAboutPanel.superclass.initComponent.call(this);
-	},
+    this.tpl = new Ext.XTemplate(this.markup).compile();
 
-    
-    update: function(){
+    Paperpile.PluginAboutPanel.superclass.initComponent.call(this);
+  },
 
-        this.tpl.overwrite(this.body, {}, true);
+  update: function() {
 
-    }
+    this.tpl.overwrite(this.body, {},
+    true);
+
+  }
 });

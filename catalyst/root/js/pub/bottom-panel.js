@@ -93,26 +93,22 @@ Paperpile.DataTabs = Ext.extend(Ext.Panel, {
     Paperpile.DataTabs.superclass.initComponent.apply(this, arguments);
   },
 
-
   afterRender: function() {
     Paperpile.DataTabs.superclass.afterRender.apply(this, arguments);
 
     // Hack to get collapsing behaviour right. We don't want the
     // strange Exts default preview but rather install our own event
     // handler that directly restores the panel. 
+    this.on('collapse', function() {
 
-    this.on('collapse', function(){
-
-      var el = Ext.get(this.id+'-xcollapsed');
+      var el = Ext.get(this.id + '-xcollapsed');
       el.addClass('pp-collapsed');
       el.removeAllListeners();
       el.on('click', this.expand, this);
 
-    }, this);
+    },
+    this);
   },
-
-
-
 
   onItemToggle: function(button, pressed) {
 

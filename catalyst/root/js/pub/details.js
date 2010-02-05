@@ -38,7 +38,6 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
     this.el.on('click', this.handleClick, this);
   },
 
-
   //
   // Redraws the HTML template panel with new data from the grid
   //
@@ -74,22 +73,22 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
 
         var list = [];
 
-        for (var i=0; i< allFields.length; i++) {
+        for (var i = 0; i < allFields.length; i++) {
           var field = allFields[i];
           var value = this.data[field];
 
           var label = fieldNames[field];
 
           // Check if we have type specific names
-          if (currType.labels){
-            if (currType.labels[field]){
+          if (currType.labels) {
+            if (currType.labels[field]) {
               label = currType.labels[field];
             }
           }
 
           // Breaks layout, needs proper fix
-          if (label === 'How published'){
-            label='How publ.';
+          if (label === 'How published') {
+            label = 'How publ.';
           }
 
           if (!value) continue;
@@ -126,11 +125,10 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
 
     var action = el.getAttribute('action');
 
-    if (action === 'edit-ref'){
+    if (action === 'edit-ref') {
       this.grid.handleEdit();
     }
   }
-
 
 });
 

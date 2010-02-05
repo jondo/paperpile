@@ -80,16 +80,16 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       data.message = 'Downloading (' + Math.round((data.downloaded / data.size) * 100) + '%)';
     }
 
-    if (data.authors){
+    if (data.authors) {
       data.shortAuthors = this.shortAuthors(data.authors);
     } else {
-      data.shortAuthors=null;
+      data.shortAuthors = null;
     }
 
-    if (data.title){
-      data.shortTitle = Ext.util.Format.ellipsis(data.title,100,true);
+    if (data.title) {
+      data.shortTitle = Ext.util.Format.ellipsis(data.title, 100, true);
     } else {
-      data.shortTitle=null;
+      data.shortTitle = null;
     }
 
     return this.itemTemplate.apply(data);
@@ -164,8 +164,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '    </div>',
       '  </tpl>',
       '  <div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl></div>',
-      '</div>'
-    ).compile();
+      '</div>').compile();
 
     Ext.apply(this, {
       store: this._store,

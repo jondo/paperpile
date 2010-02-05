@@ -39,7 +39,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
         break;
       case 'duplicates':
         Paperpile.main.tabs.newPluginTab('Duplicates', {},
-        "Duplicates", "pp-icon-folder", "duplicates")
+          "Duplicates", "pp-icon-folder", "duplicates")
         break;
       case 'catalyst':
         Paperpile.main.tabs.newScreenTab('CatalystLog', 'catalyst-log');

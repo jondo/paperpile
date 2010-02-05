@@ -8,18 +8,18 @@ Paperpile.ContextTrianglePlugin = (function() {
       });
       treePanel.initEvents = treePanel.initEvents.createSequence(this.myInitEvents);
       treePanel.onRender = treePanel.onRender.createSequence(this.myOnRender);
-      
+
     },
 
     myInitEvents: function() {
       var el = this.getTreeEl();
-//      el.on('mousedown', this.delegateClick, this);
-
+      //      el.on('mousedown', this.delegateClick, this);
       this.on('startdrag', function() {
-	var ghostDom = this.dragZone.proxy.ghost.dom;
-	var ghostEl = Ext.fly(ghostDom);
-	ghostEl.select('.pp-tree-context-triangle').remove();
-      },this);
+        var ghostDom = this.dragZone.proxy.ghost.dom;
+        var ghostEl = Ext.fly(ghostDom);
+        ghostEl.select('.pp-tree-context-triangle').remove();
+      },
+      this);
 
     },
 
@@ -32,7 +32,7 @@ Paperpile.ContextTrianglePlugin = (function() {
       true);
       this.contextTriangle.addClassOnOver('pp-tree-context-triangle-over');
 
-    }    
+    }
   };
 })();
 

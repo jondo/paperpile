@@ -24,18 +24,18 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
         '      <li id="delete-pdf-{id}" class="pp-action pp-action-delete-pdf"><a href="#" class="pp-textlink" action="delete-pdf">Delete PDF</a></li>',
         '    </ul>'];
 
-      if (!data._imported){
+      if (!data._imported) {
         el = [
-        '    <ul>',
-        '      <li id="open-pdf{id}" class="pp-action pp-action-open-pdf" >',
-        '      <a href="#" class="pp-textlink" action="open-pdf">Open PDF</a>',
-        '      &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a></li>',
-        '      <li class="pp-action pp-action-add"> <a  href="#" class="pp-textlink" action="import-ref">Import</a> </li>',
-        '    </ul>'];
+          '    <ul>',
+          '      <li id="open-pdf{id}" class="pp-action pp-action-open-pdf" >',
+          '      <a href="#" class="pp-textlink" action="open-pdf">Open PDF</a>',
+          '      &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a></li>',
+          '      <li class="pp-action pp-action-add"> <a  href="#" class="pp-textlink" action="import-ref">Import</a> </li>',
+          '    </ul>'];
       }
 
       Ext.DomHelper.overwrite(rootEl, el);
-      this.progressBar=null;
+      this.progressBar = null;
     } else if (data._search_job) {
       if (data._search_job.error) {
         var el = [
@@ -43,15 +43,15 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
           '<br><a href="#" class="pp-textlink" action="clear-download">Clear</a>',
           '</div>'];
         Ext.DomHelper.overwrite(rootEl, el);
-        this.progressBar=null;
-      } else  {
-        
-        if (!this.progressBar){
+        this.progressBar = null;
+      } else {
+
+        if (!this.progressBar) {
           var el = [
             '<table class="pp-control-container">',
-            '  <tr><td id ="dl-progress-'+this.div_id+'"></td><td><a href="#" action="cancel-download" class="pp-progress-cancel" ext:qtip="Cancel">&nbsp;</a></td></tr>',
+            '  <tr><td id ="dl-progress-' + this.div_id + '"></td><td><a href="#" action="cancel-download" class="pp-progress-cancel" ext:qtip="Cancel">&nbsp;</a></td></tr>',
             '</table>'];
-        
+
           Ext.DomHelper.overwrite(rootEl, el);
 
           this.progressBar = new Ext.ProgressBar({
@@ -60,7 +60,10 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
             renderTo: 'dl-progress-' + this.div_id
           });
 
-          this.progressBar.wait({interval: 100, text: data._search_job.msg});
+          this.progressBar.wait({
+            interval: 100,
+            text: data._search_job.msg
+          });
         }
 
         var fraction = 0;
@@ -71,12 +74,12 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
           fraction = downloaded / size;
         }
 
-        if (fraction){
-          if (this.progressBar.isWaiting()){
+        if (fraction) {
+          if (this.progressBar.isWaiting()) {
             this.progressBar.reset();
           }
-          this.progressBar.updateProgress(fraction, downloaded+" / "+size);
-          this.progressBar.updateText(Ext.util.Format.fileSize(downloaded)+' of '+Ext.util.Format.fileSize(size));
+          this.progressBar.updateProgress(fraction, downloaded + " / " + size);
+          this.progressBar.updateText(Ext.util.Format.fileSize(downloaded) + ' of ' + Ext.util.Format.fileSize(size));
         } else {
           var text = data._search_job.msg;
           this.progressBar.updateText(data._search_job.msg);
@@ -94,7 +97,7 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
         '</ul>'];
       //oldContent.remove();
       Ext.DomHelper.overwrite(rootEl, el);
-      this.progressBar=null;
+      this.progressBar = null;
     }
   },
 

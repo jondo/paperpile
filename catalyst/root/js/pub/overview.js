@@ -16,15 +16,17 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     this.on('afterrender', this.installEvents, this);
   },
 
-    forceUpdate: function() {
-      this.onUpdate({updateSidePanel : 1});
-    },
+  forceUpdate: function() {
+    this.onUpdate({
+      updateSidePanel: 1
+    });
+  },
 
-    // Called when a non-user interaction causes an update of the overview panel.
-    onUpdate: function(data) {
-      var sm = this.getGrid().getSelectionModel();
-      this.grid_id = this.getGrid().id;
-},
+  // Called when a non-user interaction causes an update of the overview panel.
+  onUpdate: function(data) {
+    var sm = this.getGrid().getSelectionModel();
+    this.grid_id = this.getGrid().id;
+  },
 
   getPluginPanel: function() {
     return this.findParentByType(Paperpile.PluginPanel);
@@ -313,7 +315,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     case 'batch-download':
       this.getGrid().batchDownload();
       break;
-    
+
     case 'restore-ref':
       this.getGrid().deleteEntry('RESTORE');
       break;

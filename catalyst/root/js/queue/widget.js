@@ -39,9 +39,9 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
       // Set defaults to avoid errors when initialized
       data: {
         num_pending: 0,
-        num_done:0,
-        num_error:0,
-        submitting:false,
+        num_done: 0,
+        num_error: 0,
+        submitting: false,
         clearing: false
       }
     });
@@ -58,49 +58,47 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
   onUpdate: function(data) {
 
     // Special display states of the widget
-
-    if (data.submitting){
+    if (data.submitting) {
       data.clearing = false;
       this.update(data);
       this.show();
       return;
     }
 
-    if (data.clearing){
+    if (data.clearing) {
       data.submitting = false;
       this.update(data);
       this.show();
       return;
     }
 
-    
     // Normal display state depends on the state of the queue. 
     if (data.queue) {
-      
+
       // Explicitely set these variables to make template happy
-      data.queue.submitting=false;
-      data.queue.clearing=false;
+      data.queue.submitting = false;
+      data.queue.clearing = false;
 
       // If only one job is in the queue and this is a pdf search, we
       // never show the widget.  In that case the user is most likely
       // watching the download and does not need extra info.
       var pdfSearchJobs = 0;
-      var allJobs = data.queue.num_pending+data.queue.num_done + data.queue.num_error;
-      if (data.queue.types){
-        for (var i=0; i<data.queue.types.length; i++){
-          if (data.queue.types[i].name === 'PDF_SEARCH'){
-            var item =  data.queue.types[i];
-            pdfSearchJobs+= item.num_pending+item.num_done + item.num_error;
+      var allJobs = data.queue.num_pending + data.queue.num_done + data.queue.num_error;
+      if (data.queue.types) {
+        for (var i = 0; i < data.queue.types.length; i++) {
+          if (data.queue.types[i].name === 'PDF_SEARCH') {
+            var item = data.queue.types[i];
+            pdfSearchJobs += item.num_pending + item.num_done + item.num_error;
             break;
           }
         }
       }
-      if (pdfSearchJobs==1 && allJobs==1){
+      if (pdfSearchJobs == 1 && allJobs == 1) {
         this.hide();
         return;
       }
 
-      if (data.queue.num_pending==0 && data.queue.num_done==0 && data.queue.num_error==0){
+      if (data.queue.num_pending == 0 && data.queue.num_done == 0 && data.queue.num_error == 0) {
         this.hide();
       } else {
         this.show();
@@ -115,12 +113,14 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
 
     var action = el.getAttribute('action');
 
-    if (action === 'queue-tab'){
+    if (action === 'queue-tab') {
       Paperpile.main.tabs.showQueueTab();
     }
 
-    if (action === 'queue-clear'){
-      this.onUpdate({clearing:true});
+    if (action === 'queue-clear') {
+      this.onUpdate({
+        clearing: true
+      });
       Ext.Ajax.request({
         url: Paperpile.Url('/ajax/queue/clear_jobs'),
         method: 'GET',

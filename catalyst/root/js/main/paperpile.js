@@ -155,12 +155,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     return this.globalSettings[key];
   },
 
-  setSetting: function(key,value,commitToBackend) {
+  setSetting: function(key, value, commitToBackend) {
     if (commitToBackend === undefined) {
       commitToBackend = true;
     }
     this.globalSettings[key] = value;
-    this.storeSettings({key:value});
+    this.storeSettings({
+      key: value
+    });
   },
 
   storeSettings: function(newSettings, callback, scope) {

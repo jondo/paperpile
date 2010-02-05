@@ -61,18 +61,18 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
           disabled: true,
           pressed: false
         },
-        '->', {
-          text: 'About',
-          itemId: 'about_tab_button',
-          enableToggle: true,
-          toggleHandler: this.onControlToggle,
-          toggleGroup: 'control_tab_buttons' + this.id,
-          scope: this,
-          disabled: true,
-          allowDepress: false,
-          pressed: false,
-          hidden: true
-        }]
+          '->', {
+            text: 'About',
+            itemId: 'about_tab_button',
+            enableToggle: true,
+            toggleHandler: this.onControlToggle,
+            toggleGroup: 'control_tab_buttons' + this.id,
+            scope: this,
+            disabled: true,
+            allowDepress: false,
+            pressed: false,
+            hidden: true
+          }]
       }]
     });
 
@@ -124,8 +124,8 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
     if (data.pub_delta) {
 
-      if (data.pub_delta_ignore){
-        if (data.pub_delta_ignore == this.getGrid().id){
+      if (data.pub_delta_ignore) {
+        if (data.pub_delta_ignore == this.getGrid().id) {
           return;
         }
       }

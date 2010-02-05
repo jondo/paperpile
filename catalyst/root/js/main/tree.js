@@ -64,20 +64,19 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       load: {
         scope: this,
         fn: function(node) {
-	  //Paperpile.log(node);
-        // This is necessary because we load the tree as a whole
-        // during startup but want to re-load single nodes
-        // afterwards. We achieve this by removing the children
-        // array which gets stored in node.attributes
+          //Paperpile.log(node);
+          // This is necessary because we load the tree as a whole
+          // during startup but want to re-load single nodes
+          // afterwards. We achieve this by removing the children
+          // array which gets stored in node.attributes
           delete node.attributes.children;
 
-	  // Here's where we ensure that only "rename-able" nodes are set as editable.
-	  if (!this.isCategoryRootNode(node) && (node.type == "TAGS" || node.type == "FOLDER"  || node.type == "ACTIVE"))
-	  {
-	    node.attributes.editable = true;
-	  } else {	    
-	    node.attributes.editable = false;
-	  }
+          // Here's where we ensure that only "rename-able" nodes are set as editable.
+          if (!this.isCategoryRootNode(node) && (node.type == "TAGS" || node.type == "FOLDER" || node.type == "ACTIVE")) {
+            node.attributes.editable = true;
+          } else {
+            node.attributes.editable = false;
+          }
         }
       },
       expandnode: {
@@ -121,16 +120,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   isCategoryRootNode: function(node) {
-    if (node.type == 'IMPORT_PLUGIN' && node.id != 'IMPORT_PLUGIN_ROOT')
-      return false;
+    if (node.type == 'IMPORT_PLUGIN' && node.id != 'IMPORT_PLUGIN_ROOT') return false;
     if (node.parentNode) {
       var parent = node.parentNode;
-      if (parent.id == 'ROOT')
-	return true;
+      if (parent.id == 'ROOT') return true;
       if (parent.parentNode) {
-	var grandparent = parent.parentNode;
-	if (grandparent.id == 'ROOT')
-	  return true;
+        var grandparent = parent.parentNode;
+        if (grandparent.id == 'ROOT') return true;
       }
     }
     return false;
@@ -142,32 +138,32 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       appendOnly: false,
       getDropPoint: function(e, n, dd) {
         var node = n.node;
-	//   -> if dragging from the grid over the Tags, it should always be in "append" mode.
-	// This is a bit hacky... there should be a better way to determine where the drag data is coming from.
+        //   -> if dragging from the grid over the Tags, it should always be in "append" mode.
+        // This is a bit hacky... there should be a better way to determine where the drag data is coming from.
         if (dd.dragData.grid != null) {
           return "append";
         }
-	return Paperpile.Tree.TreeDropZone.superclass.getDropPoint.call(this,e,n,dd);
+        return Paperpile.Tree.TreeDropZone.superclass.getDropPoint.call(this, e, n, dd);
       }
     });
-    this.dropZone = new Paperpile.Tree.TreeDropZone(this,{});
+    this.dropZone = new Paperpile.Tree.TreeDropZone(this, {});
 
     Paperpile.Tree.TreeDragZone = Ext.extend(Ext.tree.TreeDragZone, {
       containerScroll: true,
       ddGroup: this.ddGroup,
       proxy: new Paperpile.StatusTipProxy(),
-      onBeforeDrag: function(data,e) {
-	if (data.node) {
-	  var type = data.node.attributes.type;
-	  if (Paperpile.main.tree.isCategoryRootNode(data.node)) {
-	    data.node.draggable = false;
-	  }
-	}
-	return Paperpile.Tree.TreeDragZone.superclass.onBeforeDrag.call(this,data,e);
+      onBeforeDrag: function(data, e) {
+        if (data.node) {
+          var type = data.node.attributes.type;
+          if (Paperpile.main.tree.isCategoryRootNode(data.node)) {
+            data.node.draggable = false;
+          }
+        }
+        return Paperpile.Tree.TreeDragZone.superclass.onBeforeDrag.call(this, data, e);
       }
 
     });
-    this.dragZone = new Paperpile.Tree.TreeDragZone(this,{});
+    this.dragZone = new Paperpile.Tree.TreeDragZone(this, {});
 
     Paperpile.Tree.superclass.initEvents.call(this);
   },
@@ -236,18 +232,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   myOnClick: function(node, e) {
     //Paperpile.log(node);
     //      Paperpile.log(e.browserEvent);
-
     switch (node.id) {
-      case 'FOLDER_ROOT':
-	var main = Paperpile.main.tabs.getItem("MAIN");
-	Paperpile.main.tabs.activate(main);
-	return;
-      case 'TAGS_ROOT':
-      case 'ACTIVE_ROOT':
-      case 'IMPORT_PLUGIN_ROOT':
-      case 'LOCAL_ROOT':
-      case 'ROOT':
-	return;
+    case 'FOLDER_ROOT':
+      var main = Paperpile.main.tabs.getItem("MAIN");
+      Paperpile.main.tabs.activate(main);
+      return;
+    case 'TAGS_ROOT':
+    case 'ACTIVE_ROOT':
+    case 'IMPORT_PLUGIN_ROOT':
+    case 'LOCAL_ROOT':
+    case 'ROOT':
+      return;
     }
 
     switch (node.type) {
@@ -267,68 +262,68 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     case 'TAGS':
     case 'FOLDER':
     case 'ACTIVE':
-        // Collect plugin paramters
-        var pars = {};
-        for (var key in node) {
-          if (key.match('plugin_')) {
-            pars[key] = node[key];
-          }
+      // Collect plugin paramters
+      var pars = {};
+      for (var key in node) {
+        if (key.match('plugin_')) {
+          pars[key] = node[key];
         }
-
-        // Use default title and css for tab
-        var title = pars.plugin_title;
-        var iconCls = null;
-
-        // For tags use specifically styled tab
-      if (node.type == 'TAGS') {
-          var store = Ext.StoreMgr.lookup('tag_store');
-          var style = '0';
-          if (store.getAt(store.find('tag', node.text))) {
-            style = store.getAt(store.find('tag', node.text)).get('style');
-          }
-          iconCls = 'pp-tag-style-tab pp-tag-style-' + style;
-          title = node.text;
       }
-        // Call appropriate frontend, tags, active folders, and folders are opened only once
-        // and we pass the node.id as item-id for the tab
-          Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id);
+
+      // Use default title and css for tab
+      var title = pars.plugin_title;
+      var iconCls = null;
+
+      // For tags use specifically styled tab
+      if (node.type == 'TAGS') {
+        var store = Ext.StoreMgr.lookup('tag_store');
+        var style = '0';
+        if (store.getAt(store.find('tag', node.text))) {
+          style = store.getAt(store.find('tag', node.text)).get('style');
+        }
+        iconCls = 'pp-tag-style-tab pp-tag-style-' + style;
+        title = node.text;
+      }
+      // Call appropriate frontend, tags, active folders, and folders are opened only once
+      // and we pass the node.id as item-id for the tab
+      Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id);
       break;
 
-      default:
-	Paperpile.log("Unused click!");
-	Paperpile.log(node);
-	break;
+    default:
+      Paperpile.log("Unused click!");
+      Paperpile.log(node);
+      break;
     }
   },
 
   updateDragStatus: function(e) {
-      var target = e.target;
-      var proxy = e.source.proxy;
+    var target = e.target;
+    var proxy = e.source.proxy;
     if (!proxy.updateTip) {
       return;
     }
-      if (e.source.dragData.grid) {
-	var myType = e.target.type;
-	if (myType == 'TAGS') {
-	  proxy.updateTip('Apply label to reference');
-        } else if (myType == 'FOLDER') {
-	  proxy.updateTip('Place reference in folder');
-        } else {
-	  proxy.updateTip('');
-	}
-      } else if (e.data.node) {
-	var myType = e.data.node.attributes.type;
-	var targetType = target.attributes.type;
-	if (myType == 'TAGS' && targetType == 'TAGS') {
-	  proxy.updateTip('Move label');
-        } else if (myType == 'FOLDER' && targetType == 'FOLDER') {
-	  proxy.updateTip('Move folder');
-        } else {
-	  proxy.updateTip('');
-	}
+    if (e.source.dragData.grid) {
+      var myType = e.target.type;
+      if (myType == 'TAGS') {
+        proxy.updateTip('Apply label to reference');
+      } else if (myType == 'FOLDER') {
+        proxy.updateTip('Place reference in folder');
       } else {
-	proxy.updateTip('');
+        proxy.updateTip('');
       }
+    } else if (e.data.node) {
+      var myType = e.data.node.attributes.type;
+      var targetType = target.attributes.type;
+      if (myType == 'TAGS' && targetType == 'TAGS') {
+        proxy.updateTip('Move label');
+      } else if (myType == 'FOLDER' && targetType == 'FOLDER') {
+        proxy.updateTip('Move folder');
+      } else {
+        proxy.updateTip('');
+      }
+    } else {
+      proxy.updateTip('');
+    }
   },
 
   onNodeDrag: function(e) {
@@ -336,12 +331,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     if (e.source.dragData.grid) {
       // only allow drop on Folders, Tags and Trash
       if ((e.target.type == 'TAGS' || e.target.type == 'FOLDER' || e.target.type == 'TRASH') && e.target.id != 'TAGS_ROOT') {
-	if (e.target.type == 'TRASH') {
+        if (e.target.type == 'TRASH') {
           var imported = e.source.dragData.grid.getSelection('IMPORTED');
           if (imported.length == 0) {
             e.cancel = true;
           }
-	} else if (e.target.type == 'TAGS') {
+        } else if (e.target.type == 'TAGS') {
           // Be genreally permissive for trash and tags.
           e.cancel = false;
         } else if (e.target.type == 'FOLDER') {
@@ -468,10 +463,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         node.select();
         this.lastSelectedNode = node;
         menu.setNode(node);
-	menu.render();
+        menu.render();
         menu.hideItems();
         menu.showAt(e.getXY());
-	this.allowSelect = false;
+        this.allowSelect = false;
       }
     }
   },
@@ -716,10 +711,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         draggable: true,
         expanded: true,
         children: [],
-	// Important: Folders must not be created as leaf nodes, because they need to be able to hold other folders.
-	leaf:false,
-	// Also important: use the loaded:true parameter to signal the UI that there aren't children waiting to be loaded. Things mess up without this!!!
-	loaded:true,
+        // Important: Folders must not be created as leaf nodes, because they need to be able to hold other folders.
+        leaf: false,
+        // Also important: use the loaded:true parameter to signal the UI that there aren't children waiting to be loaded. Things mess up without this!!!
+        loaded: true,
         id: this.generateUID()
       }));
 
@@ -750,7 +745,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       });
 
       treeEditor.triggerEdit(newNode);
-    },this);
+    },
+    this);
 
   },
 
@@ -1054,8 +1050,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
             // Afterwards update entries on all open tabs
             Paperpile.main.tabs.items.each(
               function(item, index, length) {
-		if (!item instanceof Paperpile.PluginPanel)
-		  return;
+                if (!item instanceof Paperpile.PluginPanel) return;
                 var grid = item.getGrid();
                 grid.store.suspendEvents();
                 var records = grid.getStore().data.items;
@@ -1172,8 +1167,10 @@ Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
   node: null,
   tree: null,
   constructor: function(config) {
-    Ext.apply(this,{tree:Paperpile.main.tree});
-    Paperpile.Tree.ContextMenu.superclass.constructor.call(this,config);
+    Ext.apply(this, {
+      tree: Paperpile.main.tree
+    });
+    Paperpile.Tree.ContextMenu.superclass.constructor.call(this, config);
   },
   initComponent: function() {
     Paperpile.Tree.ContextMenu.superclass.initComponent.call(this);
@@ -1183,7 +1180,7 @@ Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
         this.allowSelect = false;
         this.tree.getSelectionModel().clearSelections();
       },
-      this);    
+      this);
   },
 
   setNode: function(node) {
@@ -1444,7 +1441,6 @@ Paperpile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
   }
 
 });
-
 
 // To use our custom TreeNode we also have to override TreeLoader
 Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {

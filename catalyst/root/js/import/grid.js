@@ -33,11 +33,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       record.data._citekey = Ext.util.Format.ellipsis(record.data.citekey, 18);
       record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
 
-      if (record.data.doi){
-        var wrapped =  record.data.doi;
+      if (record.data.doi) {
+        var wrapped = record.data.doi;
 
-        if (wrapped.length > 25){
-          wrapped=wrapped.replace(/\//,'/<br>');
+        if (wrapped.length > 25) {
+          wrapped = wrapped.replace(/\//, '/<br>');
         }
 
         record.data._doiWrapped = wrapped;
@@ -263,7 +263,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     } else if (data.node) {
       e.cancel = false;
     }
-    
+
     var retVal = '';
     if (e.cancel) {
       retVal = Ext.dd.DropZone.prototype.dropNotAllowed;
@@ -281,9 +281,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (source.dragData.node) {
       var myType = source.dragData.node.type;
       if (myType == 'TAGS') {
-	proxy.updateTip('Apply label to reference');
+        proxy.updateTip('Apply label to reference');
       } else if (myType == 'FOLDER') {
-	proxy.updateTip('Place reference in folder');
+        proxy.updateTip('Place reference in folder');
       }
     } else if (source.dragData.grid) {
       // We should never reach here -- no within-grid drag and drop!
@@ -300,7 +300,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       // the whole selection.
       var sel = this.getSelection();
       if (!this.getSelectionModel().isSelected(index)) {
-	sel = record.get('sha1');
+        sel = record.get('sha1');
       }
 
       var tagName = data.node.text;
@@ -1275,7 +1275,7 @@ Ext.extend(Paperpile.GridDropZone, Ext.dd.DropZone, {
   onNodeEnter: function(target, dd, e, data) {},
 
   onNodeOver: function(target, dd, e, data) {
-    return this.grid.onNodeOver(target,dd,e,data);
+    return this.grid.onNodeOver(target, dd, e, data);
   },
 
   onNodeDrop: function(target, dd, e, data) {
