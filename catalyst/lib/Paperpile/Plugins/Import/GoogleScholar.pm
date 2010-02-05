@@ -318,6 +318,12 @@ sub complete_details {
   # import the information from the BibTeX string
   $full_pub->import_string( $bibtex, 'BIBTEX' );
 
+  # bibtex import deactivates automatic refresh of fields
+  # we force it now at this point
+  $full_pub->_light(0);
+  $full_pub->refresh_fields();
+  $full_pub->refresh_authors();
+
   # there are cases where bibtex gives less information than we already have
   $full_pub->title( $pub->title )              if ( !$full_pub->title );
   $full_pub->authors( $pub->_authors_display ) if ( !$full_pub->authors );
@@ -668,6 +674,9 @@ sub _parse_googlescholar_page {
 
   # Each entry has a h3 heading
   my @nodes = $tree->findnodes('/html/body/*/div/h3');
+  if ( $#nodes == -1 ) {
+    NetFormatError->throw( error => 'Was not able to parse GoogleScholar HTML correctly.' );
+  }
 
   foreach my $node (@nodes) {
 
@@ -698,6 +707,9 @@ sub _parse_googlescholar_page {
   # <h3> header
 
   @nodes = $tree->findnodes(q{/html/body/*/div/font[@size='-1']});
+  if ( $#nodes == -1 ) {
+    NetFormatError->throw( error => 'Was not able to parse GoogleScholar HTML correctly.' );
+  }
 
   foreach my $node (@nodes) {
 
