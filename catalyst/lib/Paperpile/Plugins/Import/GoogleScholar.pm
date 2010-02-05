@@ -7,6 +7,7 @@ use Moose::Util::TypeConstraints;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
 use URI::Escape;
+use Encode;
 use 5.010;
 
 use Paperpile::Library::Publication;
@@ -658,6 +659,7 @@ sub _parse_googlescholar_page {
 
   my $tree = HTML::TreeBuilder::XPath->new;
   $tree->utf8_mode(1);
+  $content = decode_utf8($content);
   $tree->parse_content($content);
 
   my %data = (
