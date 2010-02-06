@@ -606,9 +606,14 @@ sub format_pattern {
   }
 
   # [YY] and [YYYY]
-  if ( defined $YYYY ) {
-    $pattern =~ s/\[YY\]/$YY/g;
-    $pattern =~ s/\[YYYY\]/$YYYY/g;
+  if ($pattern =~/\[YY\]|\[YYYY\]/){
+    if ( $YYYY ) {
+      $pattern =~ s/\[YY\]/$YY/g;
+      $pattern =~ s/\[YYYY\]/$YYYY/g;
+    } else {
+      $pattern =~ s/\[YY\]/XX/g;
+      $pattern =~ s/\[YYYY\]/XXXX/g;
+    }
   }
 
   $pattern =~ s/\[journal\]/$journal/g;
