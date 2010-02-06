@@ -87,7 +87,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
     }
 
     if (data.title) {
-      data.shortTitle = Ext.util.Format.ellipsis(data.title, 100, true);
+      data.shortTitle = Ext.util.Format.ellipsis(data.title, 70, true);
     } else {
       data.shortTitle = null;
     }

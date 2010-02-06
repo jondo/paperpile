@@ -179,8 +179,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   
   updateInfoMultiple: function(data) {
 
-    console.log("UpdateInfoMultiple");
-
     data.numImported = this.getGrid().getSelection('IMPORTED').length;
     data.allImported = this.getGrid().allImported;
     data.allSelected = this.getGrid().allSelected;
@@ -238,13 +236,13 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         file: path,
         title: this.data.pdf
       });
-      Paperpile.main.inc_read_counter(this.data._rowid);
+      Paperpile.main.inc_read_counter(this.data);
       break;
 
     case 'open-pdf-external':
       var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf);
       Paperpile.utils.openFile(path);
-      Paperpile.main.inc_read_counter(this.data._rowid);
+      Paperpile.main.inc_read_counter(this.data);
       break;
 
     case 'attach-pdf':

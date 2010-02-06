@@ -548,15 +548,19 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
   },
 
-  inc_read_counter: function(rowid) {
-
-    if (rowid) {
+  inc_read_counter: function(data) {
+    if (data._rowid) {
       Ext.Ajax.request({
         url: Paperpile.Url('/ajax/misc/inc_read_counter'),
         params: {
-          rowid: rowid
+          rowid: data._rowid,
+          sha1: data.sha1,
+          times_read: data.times_read,
         },
-        success: function(response) {},
+        success: function(response) {
+          var json = Ext.util.JSON.decode(response.responseText);
+          Paperpile.main.onUpdate(json.data);
+        },
         failure: Paperpile.main.onError,
         scope: this
       });

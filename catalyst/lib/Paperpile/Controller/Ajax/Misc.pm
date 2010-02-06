@@ -267,11 +267,16 @@ sub clean_duplicates : Local {
 sub inc_read_counter : Local {
 
   my ( $self, $c ) = @_;
-  my $rowid = $c->request->params->{rowid};
+  my $rowid      = $c->request->params->{rowid};
+  my $sha1       = $c->request->params->{sha1};
+  my $times_read = $c->request->params->{times_read};
 
-  my $touched= $c->model('Library')->dbh->quote(timestamp gmtime);
-  $c->model('Library')->dbh->do("UPDATE Publications SET times_read=times_read+1 WHERE rowid=$rowid");
-  $c->model('Library')->dbh->do("UPDATE Publications SET last_read=$touched WHERE rowid=$rowid");
+  my $touched = timestamp gmtime;
+  $c->model('Library')
+    ->dbh->do("UPDATE Publications SET times_read=times_read+1,last_read='$touched' WHERE rowid=$rowid");
+
+  $c->stash->{data} =
+    { pubs => { $sha1 => { last_read => $touched, times_read => $times_read + 1 } } };
 
 }
 
