@@ -342,6 +342,10 @@ sub complete_details {
   #and thus not in the new object
   $full_pub->linkout( $pub->linkout );
 
+  # What GoogleScholar provides is not really the abstract, but
+  # better than nothing
+  $full_pub->abstract( $pub->abstract ) if ( !$full_pub->abstract );
+
   # We call the British Library Direct link to get the
   # abstract if they have any
   #my $abstract = $self->_parse_BL($pub);
@@ -671,7 +675,8 @@ sub _parse_googlescholar_page {
     versions         => [],
     www_publisher    => [],
     related_articles => [],
-    BL               => []
+    BL               => [],
+    description      => []
   );
 
   # Each entry has a h3 heading
@@ -737,6 +742,15 @@ sub _parse_googlescholar_page {
     push @{ $data{authors} },   defined($authors)  ? $authors  : '';
     push @{ $data{citations} }, defined($citation) ? $citation : '';
 
+    # Get the few lines of text Google gives
+    my $description = $node->findnodes_as_string(q{.});
+    $description =~ s/(.*<\/span>)(.*)(<span\sclass="gs_fl">.*)/$2/;
+    $description =~ s/<b>//g;
+    $description =~ s/<\/b>//g;
+    $description =~ s/<br\s\/>//g;
+    $description = "<b>Google Scholar snippet:</b> $description";
+    push @{ $data{description} }, defined($description)  ? $description  : '';
+
     my @links = $node->findnodes('./span[@class="gs_fl"]/a');
 
     # Find the BibTeX export links
@@ -788,6 +802,7 @@ sub _parse_googlescholar_page {
     $pub->_www_publisher( $data{www_publisher}->[$i] );
     $pub->_related_articles( $data{related_articles}->[$i] );
     $pub->_google_BL_link( $data{BL}->[$i] );
+    $pub->abstract( $data{description}->[$i] );
     $pub->refresh_fields;
     push @$page, $pub;
   }
