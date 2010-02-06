@@ -170,6 +170,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   updateScrollSize: function() {
     var node = this.getNodeById('TAGS_ROOT');
+    Paperpile.log("Update scroll size");
 
     // Make sure everything is rendered; this allows to call the function via the 'resize' event;
     if (node) {
@@ -276,12 +277,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       // For tags use specifically styled tab
       if (node.type == 'TAGS') {
-        var store = Ext.StoreMgr.lookup('tag_store');
-        var style = '0';
-        if (store.getAt(store.find('tag', node.text))) {
-          style = store.getAt(store.find('tag', node.text)).get('style');
-        }
-        iconCls = 'pp-tag-style-tab pp-tag-style-' + style;
+	iconCls = 'pp-tag-style-tab '+Paperpile.main.tabs.getStyleForTag(node.text);
         title = node.text;
       }
       // Call appropriate frontend, tags, active folders, and folders are opened only once
@@ -1089,7 +1085,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       url: Paperpile.Url('/ajax/crud/style_tag'),
       params: {
         tag: node.text,
-        style: number,
+        style: number
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
@@ -1097,11 +1093,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           callback: function() {
             // Force a reload of the sidebar.
             json.data.updateSidePanel = true;
+	    json.data.updateTagStyles = true;
 
             Paperpile.main.onUpdate(json.data);
             node.ui.removeClass('pp-tag-tree-style-' + node.tagStyle);
             node.ui.addClass('pp-tag-tree-style-' + number);
             node.tagStyle = number;
+
+	    
 
           }
         });

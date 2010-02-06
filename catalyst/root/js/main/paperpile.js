@@ -320,6 +320,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (data === undefined) return;
     var tabs = Paperpile.main.tabs.items.items;
 
+    if (data.updateTagStyles) {
+      Ext.StoreMgr.lookup('tag_store').reload();
+    }
+
     for (var i = 0; i < tabs.length; i++) {
       var tab = tabs[i];
       if (!tab['onUpdate']) continue;

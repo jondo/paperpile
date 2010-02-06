@@ -504,6 +504,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '</tpl>',
         '</div>', {
           tagStyle: function(tag_string) {
+	    Paperpile.log(tag_string);
             var returnMe = ''; //<div class="pp-tag-grid-block">';
             var tags = tag_string.split(/\s*,\s*/);
             var totalChars = 0;
