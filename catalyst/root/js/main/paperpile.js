@@ -447,6 +447,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
 
     if (error.type == 'Unknown') {
+  
+      
+
       Paperpile.status.updateMsg({
         type: 'error',
         msg: 'An unexpected error has occured.',
@@ -458,7 +461,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             Ext.MessageBox.buttonText.ok = "Send error report";
             Ext.Msg.show({
               title: 'Error',
-              msg: error.msg,
+              msg: Ext.util.Format.ellipsis(error.msg, 1000),
               animEl: 'elId',
               icon: Ext.MessageBox.ERROR,
               buttons: Ext.Msg.OKCANCEL,
