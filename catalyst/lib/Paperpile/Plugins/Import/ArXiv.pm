@@ -85,7 +85,6 @@ sub connect {
   my $query_string = $self->FormatQueryString($self->query);
 
   my $response = $browser->get( $searchUrl . $query_string . '&max_results=500' );
-
   my $result = XMLin( $response->content, ForceArray => 1 );
 
   # Determine the number of hits
@@ -105,6 +104,12 @@ sub connect {
       if ( $result->{entry} ) {
 	  @entries = @{ $result->{entry} };
 	  $number = $#entries + 1;
+	  if ( $number == 1 ) {
+	    if ( $result->{entry}->[0]->{title}->[0] eq 'Error' ) {
+	      $self->total_entries( 0 );
+	      return 0;
+	    }
+	  }
 	  $self->total_entries($number);
       } else {
 	  $self->total_entries( 0 );
