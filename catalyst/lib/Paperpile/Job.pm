@@ -501,6 +501,10 @@ sub _match {
 
   my @plugin_list = split( /,/, $settings->{search_seq} );
 
+  if ($self->pub->arxivid){
+    unshift @plugin_list, 'ArXiv';
+  }
+
   foreach my $plugin (@plugin_list) {
 
     $self->update_info('msg',"Matching against $plugin...");
