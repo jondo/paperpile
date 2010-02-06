@@ -4,15 +4,10 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     Ext.apply(this, {
       id: 'pp-tabs',
       //margins: '2 2 2 2',
-      //Have at least one item on rendering to get it rendered correctly
-      items: [{
-        title: 'Welcome',
-        itemId: 'welcome'
-      }]
+      monitorResize: false
     });
 
     Paperpile.Tabs.superclass.initComponent.call(this);
-
   },
 
   newDBtab: function(query, itemId) {

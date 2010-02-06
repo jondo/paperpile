@@ -7,73 +7,18 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     this.overviewPanel = this.createOverview();
     this.detailPanel = this.createDetails();
 
+    this.centerPanel = this.createCenterPanel();
+    this.eastPanel = this.createEastPanel();
+
     Ext.apply(this, {
       tabType: 'PLUGIN',
       layout: 'border',
       hideBorders: true,
-      items: [{
-        xtype: 'panel',
-        region: 'center',
-        itemId: 'center_panel',
-        layout: 'border',
-        items: [
-          this.grid, {
-            border: false,
-            split: true,
-            xtype: 'datatabs',
-            itemId: 'data_tabs',
-            activeItem: 0,
-            height: 200,
-            region: 'south',
-            collapsible: false,
-            animCollapse: false
-          }]
-      },
-      {
-        region: 'east',
-        itemId: 'east_panel',
-        activeItem: 0,
-        split: true,
-        layout: 'card',
-        width: 300,
-        items: [
-          this.overviewPanel,
-          this.detailPanel],
-        bbar: [{
-          text: 'Overview',
-          itemId: 'overview_tab_button',
-          enableToggle: true,
-          toggleHandler: this.onControlToggle,
-          toggleGroup: 'control_tab_buttons' + this.id,
-          scope: this,
-          allowDepress: false,
-          disabled: true,
-          pressed: false
-        },
-        {
-          text: 'Details',
-          itemId: 'details_tab_button',
-          enableToggle: true,
-          toggleHandler: this.onControlToggle,
-          toggleGroup: 'control_tab_buttons' + this.id,
-          scope: this,
-          allowDepress: false,
-          disabled: true,
-          pressed: false
-        },
-          '->', {
-            text: 'About',
-            itemId: 'about_tab_button',
-            enableToggle: true,
-            toggleHandler: this.onControlToggle,
-            toggleGroup: 'control_tab_buttons' + this.id,
-            scope: this,
-            disabled: true,
-            allowDepress: false,
-            pressed: false,
-            hidden: true
-          }]
-      }]
+      items: [
+        this.centerPanel,
+        this.eastPanel
+
+        ]
     });
 
     Paperpile.PluginPanel.superclass.initComponent.call(this);
@@ -107,6 +52,76 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
   createDetails: function(params) {
     return new Paperpile.PubDetails(params);
+  },
+
+  createCenterPanel: function() {
+    var centerPanel = new Ext.Panel({
+      region: 'center',
+      itemId: 'center_panel',
+      layout: 'border',
+      items: [
+        this.grid, {
+          border: false,
+          split: true,
+          xtype: 'datatabs',
+          itemId: 'data_tabs',
+          activeItem: 0,
+          height: 200,
+          region: 'south',
+          collapsible: false,
+          animCollapse: false
+        }]
+    });
+    return centerPanel;
+  },
+
+  createEastPanel: function() {
+    var eastPanel = new Ext.Panel({
+      region: 'east',
+      itemId: 'east_panel',
+      activeItem: 0,
+      split: true,
+      layout: 'card',
+      width: 300,
+      items: [
+        this.overviewPanel,
+        this.detailPanel],
+      bbar: [{
+        text: 'Overview',
+        itemId: 'overview_tab_button',
+        enableToggle: true,
+        toggleHandler: this.onControlToggle,
+        toggleGroup: 'control_tab_buttons' + this.id,
+        scope: this,
+        allowDepress: false,
+        disabled: true,
+        pressed: false
+      },
+      {
+        text: 'Details',
+        itemId: 'details_tab_button',
+        enableToggle: true,
+        toggleHandler: this.onControlToggle,
+        toggleGroup: 'control_tab_buttons' + this.id,
+        scope: this,
+        allowDepress: false,
+        disabled: true,
+        pressed: false
+      },
+        '->', {
+          text: 'About',
+          itemId: 'about_tab_button',
+          enableToggle: true,
+          toggleHandler: this.onControlToggle,
+          toggleGroup: 'control_tab_buttons' + this.id,
+          scope: this,
+          disabled: true,
+          allowDepress: false,
+          pressed: false,
+          hidden: true
+        }]
+    });
+    return eastPanel;
   },
 
   getGrid: function() {
