@@ -19,7 +19,7 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
     grid.actions['IMPORT_ALL'] = new Ext.Action({
       text: 'Import all',
       handler: function() {
-        this.insertAll();
+        this.insertEntry(true);
       },
       scope: grid,
       iconCls: 'pp-icon-add-all',
@@ -95,15 +95,22 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
         this.allSelected = true;
         this.insertEntry(function() {
           this.allSelected = false;
+          Paperpile.main.onUpdate();
         },
         this);
       },
 
-      insertEntry: function() {
+      insertEntry: function(all) {
+
+        if (all){
+          this.allSelected = true;
+        }
+
         var selection = this.getSelection('NOT_IMPORTED');
         if (selection.length == 0) return;
         var many = false;
         if (selection == 'ALL') {
+          this.allImported = true;
           many = true;
         } else {
           if (selection.length > 10) {
@@ -125,6 +132,9 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
           method: 'GET',
           success: function(response) {
             var json = Ext.util.JSON.decode(response.responseText);
+            if (all){
+              this.allSelected=false;
+            }
             Paperpile.main.onUpdate(json.data);
             Paperpile.status.clearMsg();
           },
@@ -138,16 +148,23 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
         var template = [
           '<div id="main-container-{id}">',
           '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
-          '  <tpl if="numSelected==0">',
-          '  <p>No references in here.</p>',
-          '  </tpl>',
-          '  <tpl if="numSelected &gt;0">',
-          '    <p><b>{numSelected}</b> references selected.</p>',
-          '    <div class="pp-vspace"></div>',
-          '    <ul> ',
-          '      <li class="pp-action pp-action-add"> <a  href="#" class="pp-textlink" action="import-ref">Import</a> </li>',
-          '    </ul>',
-          '  </tpl>',
+          '    <tpl if="numSelected==0">',
+          '      <p>No references in here.</p>',
+          '    </tpl>',
+          '<p>numSelected: {numSelected}; numImported: {numImported}; allSelected: {allSelected}; allImported: {allImported}</p>',
+          '    <tpl if="numSelected &gt;0">',
+          '      <p><b>{numSelected}</b> references selected.</p>',
+          '      <div class="pp-vspace"></div>',
+          '      <ul>',
+          '      <tpl if="numImported==0 || (allSelected && !allImported)">',
+          '        <li class="pp-action pp-action-add"> <a  href="#" class="pp-textlink" action="import-ref">Import</a> </li>',
+          '      </tpl>',
+          '      <tpl if="(numImported || allImported) && (!allSelected||allImported)">',
+          '        <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
+          '        <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
+          '      </tpl>',
+          '      </ul>',
+          '    </tpl>',
           '  </div>',
           '</div>'];
         return[].concat(template);

@@ -16,6 +16,8 @@ use File::Spec;
 use File::Copy;
 use File::stat;
 use File::Compare;
+use FreezeThaw;
+
 use Storable qw(lock_store lock_retrieve);
 
 enum 'Types' => (
@@ -365,7 +367,18 @@ sub _do_work {
         ExtractionError->throw("Could not find DOI or title in PDF.");
       }
 
+      my $old_hash = $self->pub->as_hash;
+
       $self->_match;
+
+      my $new_hash = $self->pub->as_hash;
+
+      # Check if the _match function has changed any fields
+      if (FreezeThaw::cmpStr($old_hash, $new_hash) == 0){
+        NetMatchError->throw("Could not match PDF to an online resource.");
+      }
+
+
       $self->_insert;
 
       $self->update_info('msg',"PDF successfully imported.");

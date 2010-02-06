@@ -611,10 +611,12 @@ sub _ParseXML {
     
     # some publishers like 'Cold Spring Harbor Laboratory Press' have a 
     # kind of cover page. We set a flag for those cases that is returned.
+    # some all articles form oxford journals
     $has_cover_page = 1 if ($content_line =~ m/Cold\sSpring\sHarbor\sLaboratory\sPress/);
     $has_cover_page = 1 if ($content_line =~ m/rsbl\.royalsocietypublishing\.org/);
     $has_cover_page = 1 if ($content_line =~ m/PLEASE\sSCROLL\sDOWN\sFOR\sARTICLE/i);
-
+    $has_cover_page = 1 if ($content_line =~ m/Reprints\sof\sthis\sarticle\scan\sbe\sordered\sat/ );
+    
     $content_line =~ s/\s+,/,/g;
     $content_line =~ s/,+/,/g;
     #$content_line  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
@@ -857,11 +859,13 @@ sub _ParseXML {
 
   # now search for authors and title
   for my $i ( 0 .. $#final_content ) {
+    $final_content[$i] =~ s/"//g;
     $final_content[$i] =~ s/\x{C6}/,/g;      # replace dots (not points) with commas
     $final_content[$i] =~ s/\x{B7}/,/g;      # replace dots (not points) with commas
     $final_content[$i] =~ s/\s+,\s+/, /g;    # replace unnecessary spaces
+    $final_content[$i] =~ s/,\s*$//g;
     #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
-    #print $final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_content[$i],"\n";
+    #print STDERR $final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_content[$i],"\n";
   }
 
   #################### STRATEGY ONE ########################
@@ -907,7 +911,7 @@ sub _ParseXML {
     $cand_title_text =~ s/\*J\*//g;
 
     next if ( $candidate_Title == -1 or $candidate_Authors == -1 );
-    #print "$final_content[$candidate_Title],        $final_content[$candidate_Authors]\n";
+    #print STDERR "$final_content[$candidate_Title],        $final_content[$candidate_Authors]\n";
     # the title is normally B and has a greater fs than the authors
     # the heading is usually much bigger than the rest
     # Note, this is restrictive but gives confident results
@@ -1057,7 +1061,7 @@ sub _ParseXML {
     $cand_authors_text =~ s/-\s?\*J\*/-/g;
     $cand_authors_text =~ s/\*J\*/,/g;
     $cand_title_text =~ s/\*J\*//g;
-
+    #print STDERR "$cand_title_text,        $cand_authors_text\n";
     # if the candidate_Title is also very large
     # then this is a good sign
     
@@ -1126,8 +1130,30 @@ sub _ParseXML {
 	( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text,
 							     $cand_authors_text );
 	return ( $title, $authors, $doi, 2.6, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+      }
+
+    # if there are just two lines left and the have the same font size. As seen on scanned
+    # papers from Oxford journals.
+    if ( $final_fs[$candidate_Title] == $final_fs[$candidate_Authors] ) {
+      my $flag = 0;
+
+        # authors have usually more superscripts than titles
+        ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
+          $cand_title_text,        $cand_authors_text,
+          $final_nrsuperscripts[$candidate_Title], $final_nrsuperscripts[$candidate_Authors]
+        );
+        return ( $title, $authors, $doi, 2.71, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+        # authors usually have a higher comma to word ratio than the title
+        ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text,
+          $cand_authors_text );
+        return ( $title, $authors, $doi, 2.72, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+        # there could be just TWO authors
+        ( $title, $authors, $flag ) = _AuthorLine_is_Two_Authors( $cand_title_text,
+          $cand_authors_text );
+        return ( $title, $authors, $doi, 2.73, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
     }
-  
   }
 
   # there are more than two lines left

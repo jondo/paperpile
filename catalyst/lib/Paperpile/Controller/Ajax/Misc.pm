@@ -70,7 +70,7 @@ sub journal_list : Local {
     "SELECT Journals.short, Journals.long FROM Journals 
      JOIN Journals_lookup ON Journals.rowid=Journals_lookup.rowid 
      WHERE Journals_lookup MATCH $query
-     ORDER BY Journals.short LIMIT 100;"
+     ORDER BY Journals.short;"
   );
 
   my ( $short, $long );
@@ -91,9 +91,20 @@ sub journal_list : Local {
 	  push @data, { long => $long, short => $short };
 	  next;
       }
+      if ( $short =~ m/^$query_bak$/i ) {
+	  push @data, { long => $long, short => $short };
+	  next;
+      }
+      if ( $long =~ m/^$query_bak/i and $long !~ m/\s/ ) {
+	  push @data, { long => $long, short => $short };
+	  next;
+      }
       if ( $long =~ m/^$query_bak/i ) {
 	  ( my $next_words = $short ) =~ s/(\S+\s)(\S+)/$2/;
-	  $next_words =~ s/\(//;
+	  if ( $next_words =~ m/^\(/ ) {
+	    push @data, { long => $long, short => $short };
+	    next;
+	  }
 	  push @quality1, { long => $long, short => $short, next_words => $next_words };
 	  next;
       }
@@ -256,11 +267,16 @@ sub clean_duplicates : Local {
 sub inc_read_counter : Local {
 
   my ( $self, $c ) = @_;
-  my $rowid = $c->request->params->{rowid};
+  my $rowid      = $c->request->params->{rowid};
+  my $sha1       = $c->request->params->{sha1};
+  my $times_read = $c->request->params->{times_read};
 
-  my $touched= $c->model('Library')->dbh->quote(timestamp gmtime);
-  $c->model('Library')->dbh->do("UPDATE Publications SET times_read=times_read+1 WHERE rowid=$rowid");
-  $c->model('Library')->dbh->do("UPDATE Publications SET last_read=$touched WHERE rowid=$rowid");
+  my $touched = timestamp gmtime;
+  $c->model('Library')
+    ->dbh->do("UPDATE Publications SET times_read=times_read+1,last_read='$touched' WHERE rowid=$rowid");
+
+  $c->stash->{data} =
+    { pubs => { $sha1 => { last_read => $touched, times_read => $times_read + 1 } } };
 
 }
 

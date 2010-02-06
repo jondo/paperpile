@@ -7,6 +7,7 @@ use Moose::Util::TypeConstraints;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
 use URI::Escape;
+use Encode;
 use 5.010;
 
 use Paperpile::Library::Publication;
@@ -226,13 +227,10 @@ sub complete_details {
   $browser->cookie_jar( $self->_session_cookie );
   my $bibtex = '';
 
-  # Let's see if the the www_provider is a good one
+  # Let's see if the the www_provider is a one that
+  # we can already parse
   my @best_sources = (
-    'Elsevier',             'ingentaconnect.com',
-    'liebertonline.com',    'nature.com',
-    'sciencemag.org',       'Springer',
-    'Cambridge Univ Press', 'Nature Publishing Group',
-    'Oxford Univ Press',    'portal.acm.org',
+    'Springer', 'portal.acm.org',
     'ncbi.nlm.nih.gov'
   );
   my $best_flag = 0;
@@ -271,7 +269,10 @@ sub complete_details {
     my @order_flags = ();
     for ( 0 .. $#order_publishers ) { push @order_flags, -1 }
 
-    my $response_all_versions = $browser->get( $pub->_all_versions );
+    # We retrieve at most 100 aritcles and screen the page if there
+    # is a good linkout to a publisher that we can already parse or
+    # that usually gives high quality in bibtex parsing by Google
+    my $response_all_versions = $browser->get( $pub->_all_versions.'&num=100' );
     my $content_all_versions  = $response_all_versions->content;
 
     my $page = $self->_parse_googlescholar_page($content_all_versions);
@@ -318,6 +319,12 @@ sub complete_details {
   # import the information from the BibTeX string
   $full_pub->import_string( $bibtex, 'BIBTEX' );
 
+  # bibtex import deactivates automatic refresh of fields
+  # we force it now at this point
+  $full_pub->_light(0);
+  $full_pub->refresh_fields();
+  $full_pub->refresh_authors();
+
   # there are cases where bibtex gives less information than we already have
   $full_pub->title( $pub->title )              if ( !$full_pub->title );
   $full_pub->authors( $pub->_authors_display ) if ( !$full_pub->authors );
@@ -334,6 +341,10 @@ sub complete_details {
   # Add the linkout from the old object because it is not in the BibTeX
   #and thus not in the new object
   $full_pub->linkout( $pub->linkout );
+
+  # What GoogleScholar provides is not really the abstract, but
+  # better than nothing
+  $full_pub->abstract( $pub->abstract ) if ( !$full_pub->abstract );
 
   # We call the British Library Direct link to get the
   # abstract if they have any
@@ -651,7 +662,8 @@ sub _parse_googlescholar_page {
   # Google markup is a mess, so also the code to parse is cumbersome
 
   my $tree = HTML::TreeBuilder::XPath->new;
-  $tree->utf8_mode(1);
+  $tree->utf8_mode(0);
+  $content = decode_utf8($content);
   $tree->parse_content($content);
 
   my %data = (
@@ -663,11 +675,15 @@ sub _parse_googlescholar_page {
     versions         => [],
     www_publisher    => [],
     related_articles => [],
-    BL               => []
+    BL               => [],
+    description      => []
   );
 
   # Each entry has a h3 heading
   my @nodes = $tree->findnodes('/html/body/*/div/h3');
+  if ( $#nodes == -1 ) {
+    NetFormatError->throw( error => 'Was not able to parse GoogleScholar HTML correctly.' );
+  }
 
   foreach my $node (@nodes) {
 
@@ -698,6 +714,9 @@ sub _parse_googlescholar_page {
   # <h3> header
 
   @nodes = $tree->findnodes(q{/html/body/*/div/font[@size='-1']});
+  if ( $#nodes == -1 ) {
+    NetFormatError->throw( error => 'Was not able to parse GoogleScholar HTML correctly.' );
+  }
 
   foreach my $node (@nodes) {
 
@@ -722,6 +741,15 @@ sub _parse_googlescholar_page {
 
     push @{ $data{authors} },   defined($authors)  ? $authors  : '';
     push @{ $data{citations} }, defined($citation) ? $citation : '';
+
+    # Get the few lines of text Google gives
+    my $description = $node->findnodes_as_string(q{.});
+    $description =~ s/(.*<\/span>)(.*)(<span\sclass="gs_fl">.*)/$2/;
+    $description =~ s/<b>//g;
+    $description =~ s/<\/b>//g;
+    $description =~ s/<br\s\/>//g;
+    $description = "<b>Google Scholar snippet:</b> $description";
+    push @{ $data{description} }, defined($description)  ? $description  : '';
 
     my @links = $node->findnodes('./span[@class="gs_fl"]/a');
 
@@ -774,6 +802,7 @@ sub _parse_googlescholar_page {
     $pub->_www_publisher( $data{www_publisher}->[$i] );
     $pub->_related_articles( $data{related_articles}->[$i] );
     $pub->_google_BL_link( $data{BL}->[$i] );
+    $pub->abstract( $data{description}->[$i] );
     $pub->refresh_fields;
     push @$page, $pub;
   }

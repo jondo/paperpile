@@ -12,6 +12,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   region: 'center',
   limit: 25,
   allSelected: false,
+  allImported: false,
   itemId: 'grid',
   aboutPanel: null,
   overviewPanel: null,
@@ -59,7 +60,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     };
 
     var renderIcons = function(value, p, record) {
-      // Can possibly be speeded up with compiling the template.
       record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
       record.data._citekey = Ext.util.Format.ellipsis(record.data.citekey, 18);
       record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
@@ -69,6 +69,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         record.data._last_readPretty = 'Never read';
       }
 
+      
       record.data.pdf_path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
       return this.getIconTemplate().apply(record.data);
     };
@@ -1235,7 +1236,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         file: path,
         title: pdf
       });
-      Paperpile.main.inc_read_counter(sm.getSelected().data._rowid);
+      Paperpile.main.inc_read_counter(sm.getSelected().data);
     }
   },
 

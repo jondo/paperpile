@@ -332,9 +332,10 @@ sub match {
 	  $self->_linkOut($page);
 	  my $max = ( $result->{Count} > 5 ) ? 4 : $result->{Count}-1;
 	  # if there is only one result, we belive it and return
-	  # Note: Sometime we delete some words from the title (maybe
+	  # Note: Sometimes we delete some words from the title (maybe
 	  # parsing errors, e.g. review, ...) and the two titles do not
 	  # match
+	  
 	  return $self->_merge_pub( $pub, $page->[0] ) if ( $max == 0 );
 	  foreach my $i ( 0 .. $max ) {
 	      if ( $self->_match_title( $page->[$i]->title, $pub->title ) ) {
@@ -372,7 +373,8 @@ sub match {
 	      foreach my $word ( @title_words ) {
 		$counts++ if ( $to_compare_with =~ m/\s$word\s/i );
 	      }
-	      if ( $counts > $#title_words ) {
+	      my $words_current_title = ( $page->[$i]->title =~ tr/ //);
+	      if ( $counts > $#title_words and $counts/$words_current_title >= 0.9 ) {
 		  return $self->_merge_pub( $pub, $page->[$i] );
 	      }
 	  }	  
@@ -380,8 +382,8 @@ sub match {
   }
 
   # If we are here then our search against Pubmed was not successful.
-  #NetMatchError->throw( error => 'No match against PubMed.');
-  return $pub; # comment in for command line testing
+  NetMatchError->throw( error => 'No match against PubMed.');
+  #return $pub; # comment in for command line testing
 }
 
 

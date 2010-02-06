@@ -223,6 +223,12 @@ sub complete_details {
   my $full_pub = Paperpile::Library::Publication->new();
   $full_pub->import_string( $bibtex, 'BIBTEX' );
 
+  # bibtex import deactivates automatic refresh of fields
+  # we force it now at this point
+  $full_pub->_light(0);
+  $full_pub->refresh_fields();
+  $full_pub->refresh_authors();
+
   # Add the linkout and PDF url from the old object because it is not in the BibTeX
   # and thus not in the new object
   $full_pub->abstract ($abstract);
