@@ -22,12 +22,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     });
   },
 
-  // Called when a non-user interaction causes an update of the overview panel.
-  onUpdate: function(data) {
-    var sm = this.getGrid().getSelectionModel();
-    this.grid_id = this.getGrid().id;
-  },
-
   getPluginPanel: function() {
     return this.findParentByType(Paperpile.PluginPanel);
   },
@@ -182,8 +176,15 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     }
     this.searchDownloadWidget.renderData(data);
   },
-
+  
   updateInfoMultiple: function(data) {
+
+    console.log("UpdateInfoMultiple");
+
+    data.numImported = this.getGrid().getSelection('IMPORTED').length;
+    data.allImported = this.getGrid().allImported;
+    data.allSelected = this.getGrid().allSelected;
+
     this.getGrid().getSidebarTemplate().multipleSelection.overwrite(this.body, data, true);
     Ext.get('main-container-' + this.id).on('click', this.handleClick,
       this, {
