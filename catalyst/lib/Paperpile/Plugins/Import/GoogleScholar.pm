@@ -227,13 +227,10 @@ sub complete_details {
   $browser->cookie_jar( $self->_session_cookie );
   my $bibtex = '';
 
-  # Let's see if the the www_provider is a good one
+  # Let's see if the the www_provider is a one that
+  # we can already parse
   my @best_sources = (
-    'Elsevier',             'ingentaconnect.com',
-    'liebertonline.com',    'nature.com',
-    'sciencemag.org',       'Springer',
-    'Cambridge Univ Press', 'Nature Publishing Group',
-    'Oxford Univ Press',    'portal.acm.org',
+    'Springer', 'portal.acm.org',
     'ncbi.nlm.nih.gov'
   );
   my $best_flag = 0;
@@ -272,7 +269,10 @@ sub complete_details {
     my @order_flags = ();
     for ( 0 .. $#order_publishers ) { push @order_flags, -1 }
 
-    my $response_all_versions = $browser->get( $pub->_all_versions );
+    # We retrieve at most 100 aritcles and screen the page if there
+    # is a good linkout to a publisher that we can already parse or
+    # that usually gives high quality in bibtex parsing by Google
+    my $response_all_versions = $browser->get( $pub->_all_versions.'&num=100' );
     my $content_all_versions  = $response_all_versions->content;
 
     my $page = $self->_parse_googlescholar_page($content_all_versions);
