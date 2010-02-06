@@ -1748,27 +1748,17 @@ table.pp-meta-form {
 */
 
 
-
-.pp-queue-list-container{
-}
-
 .pp-queue-list-type{
     width:100px;
-    height:30px;
-    float:left;
 }
 
 .pp-queue-list-data{
-    height:30px;
-    float:left;
 }
 
 .pp-queue-list-icon{
     width:40px;
     height:30px;
-    float:right;
 }
-
 
 .pp-queue-list-icon-RUNNING{
     background: transparent url('/images/icons/job-running.gif') no-repeat 7px 0;
