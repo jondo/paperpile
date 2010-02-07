@@ -744,8 +744,8 @@ sub _parse_googlescholar_page {
         description      => []
     );
 
-    # Each entry has a h3 heading
-    my @nodes = $tree->findnodes('/html/body/*/div/h3');
+    # Each entry has a DIV
+    my @nodes = $tree->findnodes('/html/body/*/div[@class="gs_r"]');
     if ( $#nodes == -1 ) {
         NetFormatError->throw(
             error => 'Was not able to parse GoogleScholar HTML correctly.' );
@@ -756,9 +756,9 @@ sub _parse_googlescholar_page {
         my ( $title, $url );
 
         # A link to a web-resource is available
-        if ( $node->findnodes('./a') ) {
-            $title = $node->findvalue('./a');
-            $url   = $node->findvalue('./a/@href');
+        if ( $node->findnodes('./h3/a') ) {
+            $title = $node->findvalue('./h3/a');
+            $url   = $node->findvalue('./h3/a/@href');
 
             # citation only
         }
@@ -775,21 +775,9 @@ sub _parse_googlescholar_page {
         }
         push @{ $data{titles} }, $title;
         push @{ $data{urls} },   $url;
-    }
-
-    # There is <div> for each entry but a <font> tag directly below the
-    # <h3> header
-
-    @nodes = $tree->findnodes(q{/html/body/*/div/font[@size='-1']});
-    if ( $#nodes == -1 ) {
-        NetFormatError->throw(
-            error => 'Was not able to parse GoogleScholar HTML correctly.' );
-    }
-
-    foreach my $node (@nodes) {
 
         # Most information is contained in a <span> tag
-        my $line = $node->findvalue(q{./span[@class='gs_a']});
+        my $line = $node->findvalue(q{./font[@size='-1']/span[@class='gs_a']});
         next if not $line;
 
         my ( $authors, $citation, $publisher ) = split( / - /, $line );
@@ -819,7 +807,7 @@ sub _parse_googlescholar_page {
         $description = "<b>Google Scholar snippet:</b> $description";
         push @{ $data{description} }, defined($description) ? $description : '';
 
-        my @links = $node->findnodes('./span[@class="gs_fl"]/a');
+        my @links = $node->findnodes('./font[@size="-1"]/span[@class="gs_fl"]/a');
 
         # Find the BibTeX export links
         my $cluster_link_found = 0;
