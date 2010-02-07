@@ -151,7 +151,6 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
           '    <tpl if="numSelected==0">',
           '      <p>No references in here.</p>',
           '    </tpl>',
-          '<p>numSelected: {numSelected}; numImported: {numImported}; allSelected: {allSelected}; allImported: {allImported}</p>',
           '    <tpl if="numSelected &gt;0">',
           '      <p><b>{numSelected}</b> references selected.</p>',
           '      <div class="pp-vspace"></div>',

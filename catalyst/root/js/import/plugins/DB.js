@@ -9,7 +9,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   plugin_base_query: '',
   plugin_iconCls: 'pp-icon-folder',
   plugin_name: 'DB',
-  limit: 25,
 
   welcomeMsg: [
     '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome"',
@@ -30,12 +29,15 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   initComponent: function() {
 
     Paperpile.PluginGridDB.superclass.initComponent.call(this);
-    this.limit = Paperpile.main.globalSettings['pager_limit'];
+    this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
 
     // If we are viewing a virtual folders we need an additional
     // button to remove an entry from a virtual folder
     this.store.baseParams['plugin_search_pdf'] = 0;
     this.store.baseParams['limit'] = this.limit;
+
+    this.getBottomToolbar().pageSize=parseInt(this.limit);
+
     this.store.on('load',
       function() {
         if (this.store.getCount() == 0) {
@@ -261,7 +263,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     this.actions['NEW'] = new Ext.Action({
       text: 'New Reference',
       iconCls: 'pp-icon-add',
-      handler: function(){
+      handler: function() {
         this.handleEdit(true);
       },
       scope: this,

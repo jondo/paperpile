@@ -18,6 +18,7 @@ has 'mode' => ( is => 'rw', default => 'FULLTEXT', isa => 'Str' );
 has 'file' => ( is => 'rw' );
 has 'search_pdf' => (is => 'rw', default => 1);
 has 'order' => (is => 'rw', default => 'created DESC');
+has 'update_total' => (is => 'rw', default => 0);
 has '_db_file' => ( is => 'rw' );
 
 
@@ -60,6 +61,10 @@ sub page {
     $page = $model->fulltext_search( $self->query, $offset, $limit, $self->order, $self->search_pdf );
   } else {
     $page = $model->standard_search( $self->query, $offset, $limit, $self->search_pdf );
+  }
+
+  if ($self->update_total){
+    $self->update_count();
   }
 
   $self->_save_page_to_hash($page);

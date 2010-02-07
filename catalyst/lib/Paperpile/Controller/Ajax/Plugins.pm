@@ -78,6 +78,9 @@ sub resultsgrid : Local {
 
   } else {
     $plugin = $c->session->{"grid_$grid_id"};
+    if ($c->request->params->{plugin_update_total}){
+      $plugin->update_total(1);
+    }
   }
 
   my $entries;

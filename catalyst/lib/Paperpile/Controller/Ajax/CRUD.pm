@@ -222,6 +222,7 @@ sub add_tag : Local {
   $dbh->commit();
 
   if (@to_be_imported) {
+    $self->_update_counts($c);
     my $update =
       $self->_collect_data( $data, [ 'tags', '_imported', 'citekey', 'created', 'pdf' ] );
     $c->stash->{data} = { pubs => $update };
@@ -403,6 +404,7 @@ sub move_in_folder : Local {
   $dbh->commit();
 
   if (@to_be_imported) {
+    $self->_update_counts($c);
     my $update = $self->_collect_data( $data, [ 'folders', '_imported', 'citekey', 'created','pdf' ] );
     $c->stash->{data} = { pubs => $update };
     $c->stash->{data}->{pub_delta}        = 1;
