@@ -10,6 +10,16 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     Paperpile.Tabs.superclass.initComponent.call(this);
   },
 
+  closeTabByTitle: function(title) {
+    var tabs = this.items.items;
+    for (var i = 0; i < tabs.length; i++) {
+      var tab = tabs[i];
+      if (tab.title == title) {
+        this.remove(tab);
+      }
+    }
+  },
+
   newDBtab: function(query, itemId) {
 
     var gridParams = {
