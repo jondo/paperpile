@@ -72,7 +72,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
     }
   },
 
-  renderItem: function(value, meta, record, row, col, store) {
+  renderData: function(value, meta, record) {
 
     var data = record.data;
 
@@ -92,8 +92,20 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       data.shortTitle = null;
     }
 
-    return this.itemTemplate.apply(data);
+    return this.dataTemplate.apply(data);
   },
+  
+  renderType: function(value, meta, record) {
+    var data = record.data;
+    return this.typeTemplate.apply(data);
+  },
+
+  renderStatus: function(value, meta, record) {
+    var data = record.data;
+    return this.statusTemplate.apply(data);
+  },
+
+
 
   initComponent: function() {
 
@@ -140,10 +152,9 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       emptyMsg: "No tasks"
     });
 
-    this.itemTemplate = new Ext.XTemplate(
-      '<div class="pp-queue-list-container">',
+    this.dataTemplate = new Ext.XTemplate(
+      '<div style="padding: 4px 0;">',
       '  <tpl if="type==\'PDF_SEARCH\'">',
-      '    <div class="pp-queue-list-type"><span class="pp-queue-type-label-{type}">Search PDF</span></div>',
       '    <div class="pp-queue-list-data">',
       '      <div class="pp-queue-list-title pp-queue-list-title-{status}">{shortAuthors} <b>{shortTitle}</b></div>',
       '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
@@ -152,7 +163,6 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '    </div>',
       '  </tpl>',
       '  <tpl if="type==\'PDF_IMPORT\'">',
-      '    <div class="pp-queue-list-type"><span class="pp-queue-type-label-{type}">Import PDF</span></div>',
       '    <div class="pp-queue-list-data">',
       '      <div class="pp-queue-list-title pp-queue-list-title-{status}">',
       '      <tpl if="status!=\'DONE\'">{pdf} </tpl> ',
@@ -163,8 +173,26 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '      </div>',
       '    </div>',
       '  </tpl>',
-      '  <div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl></div>',
-      '</div>').compile();
+      '</div>'
+    ).compile();
+
+
+    this.typeTemplate = new Ext.XTemplate(
+      '<div style="padding: 4px 0;">',
+      '  <tpl if="type==\'PDF_SEARCH\'">',
+      '    <span class="pp-queue-type-label-{type}">Search PDF</span>',
+      '  </tpl>',
+      '  <tpl if="type==\'PDF_IMPORT\'">',
+      '    <span class="pp-queue-type-label-{type}">Match PDF</span>',
+      '  </tpl>',
+      '</div>'
+    ).compile();
+
+    this.statusTemplate = new Ext.XTemplate(
+      '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>'
+    ).compile();
+
+
 
     Ext.apply(this, {
       store: this._store,
@@ -177,17 +205,31 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
           sortable: false
         },
         columns: [{
-          header: "Tasks",
+          header: "Task",
+          id: 'type',
+          dataIndex: 'type',
+          renderer: this.renderType.createDelegate(this),
+          sortable: false,
+          resizable: false
+        },
+        { header: "Data",
           id: 'title',
           dataIndex: 'title',
-          renderer: this.renderItem.createDelegate(this),
+          renderer: this.renderData.createDelegate(this),
+          sortable: false,
+          resizable: false
+        },
+        { header: "Icon",
+          id: 'status',
+          dataIndex: 'status',
+          renderer: this.renderStatus.createDelegate(this),
           sortable: false,
           resizable: false
         },
         ]
       }),
       autoExpandColumn: 'title',
-      hideHeaders: false
+      hideHeaders: true
     });
     this.store.load();
 

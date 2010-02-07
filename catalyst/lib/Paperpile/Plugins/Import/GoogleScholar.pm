@@ -98,6 +98,11 @@ sub connect {
     return 0;
   }
 
+  # Google blocked us because of too many queries
+  if ( $content =~ /but your computer or network may be sending automated queries/ ) {
+    NetError->throw( error => 'Google Scholar blocks queries from this IP.' );
+  }
+
   # We parse the HTML via XPath
   my $tree = HTML::TreeBuilder::XPath->new;
   $tree->utf8_mode(1);
@@ -453,56 +458,66 @@ sub match {
     my $content  = $response->content;
     print STDERR "$query\n";
 
-    # parse the page and then see if a publication matches
-    if ( $pub->title() ) {
-      my $page = $self->_parse_googlescholar_page($content);
-      my $matchedpub = $self->_find_best_hit( $page, $pub );
+    my $error = 0;
+    $error = 1 if ( $content =~ m/Your\ssearch\s.*\sdid\snot\smatch\sany\sarticles\./ );
 
-      if ($matchedpub) {
+    # Google blocked us because of too many queries
+    if ( $content =~ /but your computer or network may be sending automated queries/ ) {
+      NetError->throw( error => 'Google Scholar blocks queries from this IP.' );
+    }
 
-        #print STDERR "Found a match using DOI as query.\n";
-        return $matchedpub;
+    if ( $error == 0 ) {
+      # parse the page and then see if a publication matches
+      if ( $pub->title() ) {
+	my $page = $self->_parse_googlescholar_page($content);
+	my $matchedpub = $self->_find_best_hit( $page, $pub );
+	
+	if ($matchedpub) {
+	  
+	  #print STDERR "Found a match using DOI as query.\n";
+	  return $matchedpub;
+	} else {
+	  
+	  # We resolve the doi using dx.doi.org of the first hit
+	  if ( $page->[0] ) {
+	    my $fullpub      = $self->complete_details( $page->[0] );
+	    my $doi_response = $browser->get( 'http://dx.doi.org/' . $pub->doi );
+	    ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
+	    $doi_content =~ s/\s+/ /g;
+	    $doi_content =~ s/\n//g;
+	    my $title = $fullpub->title;
+	    if ( $doi_content =~ m/\Q$title\E/i ) {
+	      return $self->_merge_pub( $pub, $fullpub );
+	    }
+	  }
+	}
       } else {
-
-        # We resolve the doi using dx.doi.org of the first hit
-        if ( $page->[0] ) {
-          my $fullpub      = $self->complete_details( $page->[0] );
-          my $doi_response = $browser->get( 'http://dx.doi.org/' . $pub->doi );
-          ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
-          $doi_content =~ s/\s+/ /g;
-          $doi_content =~ s/\n//g;
-          my $title = $fullpub->title;
-          if ( $doi_content =~ m/\Q$title\E/i ) {
-            return $self->_merge_pub( $pub, $fullpub );
-          }
-        }
-      }
-    } else {
-
-      # we do not have a title and authors; in most cases google
-      # returns more than one hit when searching with a doi
-      # we have nothing to compare with and have to search with
-      # another strategy
-
-      # let's take the first Google hit, which is usually the most
-      # promising one and let's see if we can find the title in the
-      # HTML page that we get when we resolve the doi
-      my $page = $self->_parse_googlescholar_page($content);
-      if ( $page->[0] ) {
-        my $fullpub = $self->complete_details( $page->[0] );
-
-        # We resolve the doi using dx.doi.org
-        my $doi_response = $browser->get( 'http://dx.doi.org/' . $pub->doi );
-        ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
-        $doi_content =~ s/\s+/ /g;
-        $doi_content =~ s/\n//g;
-        my $title = $fullpub->title;
-
-        # \Q \E are needed, otherwise we would need to esacpe brackets
-        # and other stuff
-        if ( $doi_content =~ m/\Q$title\E/im ) {
-          return $self->_merge_pub( $pub, $fullpub );
-        }
+	
+	# we do not have a title and authors; in most cases google
+	# returns more than one hit when searching with a doi
+	# we have nothing to compare with and have to search with
+	# another strategy
+	
+	# let's take the first Google hit, which is usually the most
+	# promising one and let's see if we can find the title in the
+	# HTML page that we get when we resolve the doi
+	my $page = $self->_parse_googlescholar_page($content);
+	if ( $page->[0] ) {
+	  my $fullpub = $self->complete_details( $page->[0] );
+	  
+	  # We resolve the doi using dx.doi.org
+	  my $doi_response = $browser->get( 'http://dx.doi.org/' . $pub->doi );
+	  ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
+	  $doi_content =~ s/\s+/ /g;
+	  $doi_content =~ s/\n//g;
+	  my $title = $fullpub->title;
+	  
+	  # \Q \E are needed, otherwise we would need to esacpe brackets
+	  # and other stuff
+	  if ( $doi_content =~ m/\Q$title\E/im ) {
+	    return $self->_merge_pub( $pub, $fullpub );
+	  }
+	}
       }
     }
   }
@@ -521,44 +536,63 @@ sub match {
     my $query    = $searchUrl . $query_string;
     my $response = $browser->get($query);
     my $content  = $response->content;
+    
+    my $error = 0;
+    $error = 1 if ( $content =~ m/Your\ssearch\s.*\sdid\snot\smatch\sany\sarticles\./ );
 
-    # parse the page and then see if a publication matches
-    my $page = $self->_parse_googlescholar_page($content);
-    my $matchedpub = $self->_find_best_hit( $page, $pub );
+    # Google blocked us because of too many queries
+    if ( $content =~ /but your computer or network may be sending automated queries/ ) {
+      NetError->throw( error => 'Google Scholar blocks queries from this IP.' );
+    }
 
-    if ($matchedpub) {
+    if ( $error == 0 ) {
 
-      #print STDERR "Found a match using Authors/Title as query.\n";
-      return $matchedpub;
+      # parse the page and then see if a publication matches
+      my $page = $self->_parse_googlescholar_page($content);
+      my $matchedpub = $self->_find_best_hit( $page, $pub );
+      
+      if ($matchedpub) {
+	return $matchedpub;
+      }
+    }
+    
+    # If we are here then Title+Auhtors failed, and we try to search
+    # only with the title and include also citations this time.
+    # Final quality check if there are enough words in the title
+    # to give a significant match
+    
+    my $count_words = ( $query_title =~ tr/\+// );
+    if ( $query_title ne '' and $count_words > 5 ) {
+      my $query_string = "$query_title" . "&as_vis=0";
+      print STDERR "$searchUrl$query_string\n";
+      
+      # Now let's ask GoogleScholar again with Authors/Title
+      my $query    = $searchUrl . $query_string;
+      my $response = $browser->get($query);
+      my $content  = $response->content;
+     
+      my $error = 0;
+      $error = 1 if ( $content =~ m/Your\ssearch\s.*\sdid\snot\smatch\sany\sarticles\./ );
+
+      # Google blocked us because of too many queries
+      if ( $content =~ /but your computer or network may be sending automated queries/ ) {
+	NetError->throw( error => 'Google Scholar blocks queries from this IP.' );
+      }
+      
+      if ( $error == 0 ) {
+
+	# parse the page and then see if a publication matches
+	my $page = $self->_parse_googlescholar_page($content);
+	my $matchedpub = $self->_find_best_hit( $page, $pub );
+	
+	if ($matchedpub) {
+	  
+	  #print STDERR "Found a match using Title as query.\n";
+	  return $matchedpub;
+	}
+      }
     }
   }
-
-  # If we are here then Title+Auhtors failed, and we try to search
-  # only with the title and include also citations this time.
-  # Final quality check if there are enough words in the title
-  # to give a significant match
-
-  my $count_words = ( $query_title =~ tr/\+// );
-  if ( $query_title ne '' and $count_words > 5 ) {
-    my $query_string = "$query_title" . "&as_vis=0";
-    print STDERR "$searchUrl$query_string\n";
-
-    # Now let's ask GoogleScholar again with Authors/Title
-    my $query    = $searchUrl . $query_string;
-    my $response = $browser->get($query);
-    my $content  = $response->content;
-
-    # parse the page and then see if a publication matches
-    my $page = $self->_parse_googlescholar_page($content);
-    my $matchedpub = $self->_find_best_hit( $page, $pub );
-
-    if ($matchedpub) {
-
-      #print STDERR "Found a match using Title as query.\n";
-      return $matchedpub;
-    }
-  }
-
   # If we are here then all search strategies failed.
   NetMatchError->throw( error => 'No match against GoogleScholar.' );
 

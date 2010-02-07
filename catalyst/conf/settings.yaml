@@ -45,7 +45,7 @@ library_settings:
   key_pattern: "[firstauthor][YYYY]"
   pdf_pattern: "[key]"
   attachment_pattern: "[key]_supplements"
-  search_seq: "PubMed"
+  search_seq: "PubMed,GoogleScholar"
   _tree: ""
 
 release:

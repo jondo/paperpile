@@ -50,7 +50,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       '        <td><span class="pp-queue-type-label-PDF_SEARCH">Search PDF</span></td>',
       '      </tpl>',
       '      <tpl if="name==\'PDF_IMPORT\'">',
-      '        <td><span class="pp-queue-type-label-PDF_IMPORT">Import PDF</span></td>',
+      '        <td><span class="pp-queue-type-label-PDF_IMPORT">Match PDF</span></td>',
       '      </tpl>',
       '      <td>{num_done}</td><td>{num_error}</td><td>{num_pending}</td>',
       '    </tr>',

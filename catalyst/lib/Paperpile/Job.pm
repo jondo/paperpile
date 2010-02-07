@@ -412,13 +412,14 @@ sub _catch_error {
 
   if ( ref $e ) {
     $self->error( $e->error );
-    $self->update_status('ERROR');
-    print STDERR " --> ERROR: ".$e->error."\n";
-    $self->save;
   } else {
     print STDERR $@; # log this error also on console
     $self->error("An unexpected error has occured ($@)");
   }
+
+  $self->update_status('ERROR');
+  $self->save;
+
 }
 
 ## Rethrows an error that was catched by an eval{}
@@ -500,6 +501,10 @@ sub _match {
   my $settings = $model->settings;
 
   my @plugin_list = split( /,/, $settings->{search_seq} );
+
+  if ($self->pub->arxivid){
+    unshift @plugin_list, 'ArXiv';
+  }
 
   foreach my $plugin (@plugin_list) {
 
@@ -653,7 +658,7 @@ sub _download {
 
   # Check if we have got really a PDF and not a "Access denied" screen
   close(FILE);
-  open( FILE, "<$file" );
+  open( FILE, "<$file" ) || die("Could not open downloaded file");
   binmode(FILE);
   my $content;
   read( FILE, $content, 64 );
