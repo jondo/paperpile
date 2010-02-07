@@ -84,7 +84,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       storeId: 'tag_store',
       baseParams: {},
       reader: new Ext.data.JsonReader(),
-      pruneModifiedRecords: true
+      pruneModifiedRecords: true,
+      listeners: {
+        load: {
+          fn: this.updateTagStyles,
+          scope: this
+        }
+      }
     });
     this.tagStore.reload();
 
@@ -314,6 +320,15 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     return grid;
   },
 
+  isTabPlugin: function(panel) {
+    var plugin_query = panel.gridParams.plugin_query;
+    if (plugin_query && plugin_query.indexOf("label") != -1) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
   // Go through all the grids and update specifically the single publication.
   // Requires each grid to have an "updateData" function.
   onUpdate: function(data) {
@@ -333,6 +348,55 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     Ext.getCmp('queue-widget').onUpdate(data);
 
+  },
+
+  reloadTagStyles: function() {
+    this.tagStore.reload();
+  },
+
+  getStyleForTag: function(tag) {
+    var record = this.tagStore.getAt(this.tagStore.findExact('tag', tag));
+    if (record == null) return '';
+    var style = record.get('style');
+    return style;
+  },
+
+  updateTagStyles: function() {
+    // First, deal with the styling for the tree nodes.
+    if (!this.tree) return;
+
+    // Collect all the possible tag style classes into an array.
+    var allTagStyles = [];
+    var n = this.tree.stylePickerMenu.getStyleCount();
+    for (var i = 0; i < n; i++) {
+      allTagStyles.push('pp-tag-tree-style-' + i);
+      allTagStyles.push('pp-tag-style-' + i);
+    }
+    var nodes = this.tree.getAllLeafNodes();
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      if (node.type != 'TAGS' || this.tree.isCategoryRootNode(node)) continue;
+
+      // Remove all possible styling from this tree node.
+      node.getUI().removeClass(allTagStyles);
+      // Add the correct style.
+      var tag = node.text;
+      node.getUI().addClass('pp-tag-tree-style-' + this.getStyleForTag(tag));
+    }
+
+    // Now, move on to the tab panel and grids.
+    var tabs = Paperpile.main.tabs.items.items;
+    for (var i = 0; i < tabs.length; i++) {
+      var tab = tabs[i];
+      if (this.isTabPlugin(tab)) {
+        // Update the tab header for any open Tags tabs.
+        tab.setIconClass('pp-tag-style-tab pp-tag-style-' + this.getStyleForTag(tab.title));
+      }
+      // Force a re-render on any grid items containing the given tag.
+      if (tab instanceof Paperpile.PluginPanel) {
+        tab.getGrid().updateTagStyles();
+      }
+    }
   },
 
   doCallbacks: function(data) {

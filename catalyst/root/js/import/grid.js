@@ -278,7 +278,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   updateDragStatus: function(nodeData, source, e, data) {
     var proxy = source.proxy;
-    Paperpile.log(source);
     if (source.dragData.node) {
       var myType = source.dragData.node.type;
       if (myType == 'TAGS') {
@@ -1103,8 +1102,22 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     Paperpile.main.tabs.add(new Paperpile.Format({
       grid_id: this.id,
-      selection: selection,
+      selection: selection
     }));
+  },
+
+  updateTagStyles: function() {
+    // Go through each record and re-render it if it has some improperly styled tags.
+    var n = this.store.getCount();
+    for (var i = 0; i < n; i++) {
+      var record = this.store.getAt(i);
+      if (record.get('tags')) {
+        this.store.fireEvent('update', this.store, record, Ext.data.Record.EDIT);
+      }
+    }
+
+    var overview = this.getPluginPanel().getOverview();
+    overview.forceUpdate();
   },
 
   // Update specific fields of specific entries to avoid complete

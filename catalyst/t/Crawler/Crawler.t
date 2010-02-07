@@ -1,12 +1,14 @@
+BEGIN {
+  $ENV{CATALYST_DEBUG}=0;
+}
+
 use lib "../../lib";
 use Test::More 'no_plan';
 use strict;
 use Data::Dumper;
+use Paperpile;
 use Paperpile::Library::Publication;
-
-BEGIN {
-  use_ok 'Paperpile::Crawler';
-}
+use Paperpile::Crawler;
 
 my $crawler = Paperpile::Crawler->new;
 
@@ -23,7 +25,7 @@ my $tests = $crawler->get_tests;
 # For testing individual sites you can override the tests array and
 # put in your own test-cases
 
-#$tests = { manual => ['http://www.nature.com/doifinder/10.1038/ng1108-1262'] };
+$tests = { manual => ['http://www.nature.com/doifinder/10.1038/ng1108-1262'] };
 
 foreach my $site ( keys %$tests ) {
   my $test_no = 1;

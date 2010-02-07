@@ -30,6 +30,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       plugins: [Paperpile.ContextTrianglePlugin]
     });
 
+    this.stylePickerMenu = new Paperpile.StylePickerMenu({
+      handler: function(cm, number) {
+        this.styleTag(number);
+      },
+      scope: this
+    });
+
     this.treeEditor.on({
       complete: {
         scope: this,
@@ -64,7 +71,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       load: {
         scope: this,
         fn: function(node) {
-          //Paperpile.log(node);
           // This is necessary because we load the tree as a whole
           // during startup but want to re-load single nodes
           // afterwards. We achieve this by removing the children
@@ -276,12 +282,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       // For tags use specifically styled tab
       if (node.type == 'TAGS') {
-        var store = Ext.StoreMgr.lookup('tag_store');
-        var style = '0';
-        if (store.getAt(store.find('tag', node.text))) {
-          style = store.getAt(store.find('tag', node.text)).get('style');
-        }
-        iconCls = 'pp-tag-style-tab pp-tag-style-' + style;
+        iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + Paperpile.main.getStyleForTag(node.text);
         title = node.text;
       }
       // Call appropriate frontend, tags, active folders, and folders are opened only once
@@ -516,6 +517,26 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       break;
     }
     return menu;
+  },
+
+  putLeavesInArray: function(node, array) {
+    var children = node.childNodes;
+    for (var i = 0; i < children.length; i++) {
+      var childNode = children[i];
+      // Recurse.
+      this.putLeavesInArray(childNode, array);
+      // Add this child if it has no children.
+      if (childNode.isLeaf) {
+        array.push(childNode);
+      }
+    }
+  },
+
+  getAllLeafNodes: function() {
+    var root = this.getRootNode();
+    var leaves = [];
+    this.putLeavesInArray(root, leaves);
+    return leaves;
   },
 
   //
@@ -1038,48 +1059,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       params: {
         tag: tag
       },
-      success: function() {
-
-        // Remove the entry of the tag in the tree
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+	Paperpile.log(json);
+	Paperpile.main.tabs.closeTabByTitle(tag);
+        Paperpile.main.onUpdate(json.data);
         node.remove();
-
-        // Update store with tags from the server
-        Ext.StoreMgr.lookup('tag_store').reload({
-          callback: function() {
-
-            // Afterwards update entries on all open tabs
-            Paperpile.main.tabs.items.each(
-              function(item, index, length) {
-                if (!item instanceof Paperpile.PluginPanel) return;
-                var grid = item.getGrid();
-                grid.store.suspendEvents();
-                var records = grid.getStore().data.items;
-                for (i = 0; i < records.length; i++) {
-                  var oldTags = records[i].get('tags');
-                  var newTags = oldTags;
-
-                  newTags = newTags.replace(new RegExp("^" + tag + "$"), ""); //  XXX
-                  newTags = newTags.replace(new RegExp("^" + tag + ","), ""); //  XXX,
-                  newTags = newTags.replace(new RegExp("," + tag + "$"), ""); // ,XXX
-                  newTags = newTags.replace(new RegExp("," + tag + ","), ","); // ,XXX,
-                  records[i].set('tags', newTags);
-                }
-
-                grid.store.resumeEvents();
-                grid.store.fireEvent('datachanged', this.store);
-
-                // If a entry is selected in a tab, also update the display
-                var sidepanel = item.getOverview();
-                var selected = grid.getSelectionModel().getSelected();
-                if (selected) {
-                  sidepanel.forceUpdate();
-                }
-              });
-          }
-        });
-      },
-      failure: Paperpile.main.onError
-    });
+      }
+      });
   },
 
   styleTag: function(number) {
@@ -1089,22 +1076,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       url: Paperpile.Url('/ajax/crud/style_tag'),
       params: {
         tag: node.text,
-        style: number,
+        style: number
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Ext.StoreMgr.lookup('tag_store').reload({
-          callback: function() {
-            // Force a reload of the sidebar.
-            json.data.updateSidePanel = true;
-
-            Paperpile.main.onUpdate(json.data);
-            node.ui.removeClass('pp-tag-tree-style-' + node.tagStyle);
-            node.ui.addClass('pp-tag-tree-style-' + number);
-            node.tagStyle = number;
-
-          }
-        });
+        Paperpile.main.reloadTagStyles();
+        Paperpile.main.onUpdate(json.data);
       },
       failure: Paperpile.main.onError,
       scope: this
@@ -1140,6 +1117,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         var json = Ext.util.JSON.decode(response.responseText);
         Ext.StoreMgr.lookup('tag_store').reload({
           callback: function() {
+            // Update the title of the tab if it's open.
+	    Paperpile.main.tabs.closeTabByTitle(tag);
+
             Paperpile.main.onUpdate(json.data);
           }
         });
@@ -1368,12 +1348,7 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       {
         id: 'tags_menu_style',
         text: 'Style',
-        menu: new Paperpile.StylePickerMenu({
-          handler: function(cm, number) {
-            this.styleTag(number);
-          },
-          scope: tree
-        })
+        menu: tree.stylePickerMenu
       },
       {
         id: 'tags_menu_export',

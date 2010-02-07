@@ -16,11 +16,13 @@ Ext.extend(Paperpile.StylePicker, Ext.Component, {
   ctype: "Paperpile.StylePicker",
   allowReselect: false,
 
+  styleCount:24,
+
   onRender: function(container, position) {
 
     var numbers = [];
 
-    for (i = 0; i < 24; i++) {
+    for (i = 0; i < this.styleCount; i++) {
       numbers.push(i);
     }
 
@@ -85,6 +87,10 @@ Paperpile.StylePickerMenu = Ext.extend(Ext.menu.Menu, {
     if (this.handler) {
       this.on('select', this.handler, this.scope || this);
     }
+  },
+
+  getStyleCount: function() {
+    return this.palette.styleCount;
   },
 
   menuHide: function() {
