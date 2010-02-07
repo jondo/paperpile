@@ -36,7 +36,7 @@ sub connect {
   # Get the results
   (my $tmp_query = $self->query) =~ s/\s+/+/g;
   my $response = $browser->get( $searchUrl . $tmp_query );
-  
+  print STDERR "$searchUrl$tmp_query\n";
   my $content  = $response->content;
 
   # save first page in cache to speed up call to first page afterwards
@@ -47,6 +47,11 @@ sub connect {
   if ( $content =~ /No Items Matched Your Search/ ) {
     $self->total_entries(0);
     return 0;
+  }
+
+  # no institutional access
+  if ( $content =~ /We do not recognize you as having access to JSTOR/ ) {
+    NetError->throw( error => 'You do not have institutional access to JSTOR from this IP.' );
   }
 
   # We parse the HTML via XPath
