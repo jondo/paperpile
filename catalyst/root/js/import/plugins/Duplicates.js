@@ -65,7 +65,9 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
     this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
 
     var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-    tbar.insertButton(filterFieldIndex + 1, this.actions['CLEAN_ALL_DUPLICATES']);
+    // We might eventually have this working, but for now it's unimplemented
+    // in the backend so leave it out of the toolbar.
+    //tbar.insertButton(filterFieldIndex + 1, this.actions['CLEAN_ALL_DUPLICATES']);
     tbar.insertButton(filterFieldIndex + 1, this.actions['DELETE']);
   },
 
