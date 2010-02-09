@@ -385,6 +385,20 @@
   </test>
 </site>
 
+<site name="ACM">
+  <signature>
+    <url>!portal\.acm\.org!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+type=pdf\S+)&quot;!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://doi.acm.org/10.1145/1186562.1015800</url>
+  </test>
+</site>
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
