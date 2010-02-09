@@ -23,28 +23,36 @@
       </tr>
     </table>
 
+    <!--
     <ul>
       <li><a href="#" class="pp-textlink pp-bullet" action="statistics">More statistics</a></li>
       <li></li>
     </ul>
+    -->
   </div>
 </td>
 <td>
   <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
-    <h2 class="pp-dashboard-settings">Tools &amp; Settings</h2>
+    <h2 class="pp-dashboard-settings">Settings</h2>
     <ul>
       <li><a href="#" class="pp-textlink  pp-bullet" action="settings-general">General settings</a></li>
       <li><a href="#" class="pp-textlink  pp-bullet" action="settings-patterns">Paths and patterns</a></li>
-      <li><a href="#" class="pp-textlink  pp-bullet" action="duplicates">Find duplicates</a></li>
-      <li><a href="#" class="pp-textlink  pp-bullet" action="catalyst">Catalyst console (debugging)</a></li>
-      <li><a href="#" class="pp-textlink  pp-bullet" action="updates">Check for updates</a></li>
     </ul>
   </div>
 </td>
 
 <tr>
+<td>
+  <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
+    <h2 class="pp-dashboard-tools">Tools</h2>
+    <ul>
+      <li><a href="#" class="pp-textlink  pp-bullet" action="duplicates">Find duplicates</a></li>
+      <li><a href="#" class="pp-textlink  pp-bullet" action="catalyst">Catalyst console (debugging)</a></li>
+    </ul>
+  </div>
+</td>
   <td>
-    <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:220;">
+    <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
       <h2 class="pp-dashboard-feedback">Support &amp; Feedback</h2>
       <p>Something broken? Something missing? Tell us about it now!</p>
       <ul>
@@ -54,13 +62,13 @@
       </ul>
       <p>Need help? Have questions? Send us an email:</p>
       <ul>
-        <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.utils.openURL('mailto:support@paperpile.org');">support@paperpile.org</a></li>
+        <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.utils.openURL('mailto:support@paperpile.com');">support@paperpile.com</a></li>
       </ul>
     </div>
   </td>
-
+</tr>
   <td>
-    <div class="pp-box pp-box-style2 pp-dashboard-box" style="height:220;">
+    <div class="pp-box pp-box-style2 pp-dashboard-box" style="height:200;">
       <h2>About Paperpile</h2>
       <p>You are running Paperpile <% $c->config->{app_settings}->{version_string} %> on <% $c->config->{app_settings}->{platform} %> </p>
       <ul>
@@ -68,8 +76,13 @@
         <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.main.tabs.newScreenTab({url:'/screens/credits', title:'Acknowledgements'});">Acknowledgements</a></li>
         <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.utils.openURL('https://github.com/wash/paperpile');">The Paperpile Open Source project</a></li>
       </ul>
+      <p>&nbsp;</p>
+      <p><a href="#" class="pp-textlink pp-action pp-action-search-updates" action="updates">Check for updates</a></p>
     </div>
   </td>
+
+<td>&nbsp;</td>
+
 </tr>
 
 
