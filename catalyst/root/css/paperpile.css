@@ -243,6 +243,11 @@ li:hover a.pp-second-link{
     padding: 1 0 0 33;
 }
 
+.pp-dashboard-tools {
+    background: transparent url('/images/icons/tools.png') no-repeat;
+    padding: 1 0 0 33;
+}
+
 .pp-dashboard-box li{
     margin: 8 21 !important;
 }
@@ -597,6 +602,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     display:block;
     float: right;
 }
+
+.pp-action-search-updates {
+    background: transparent url('/images/icons/transmit.png') no-repeat;
+}
+
 
 /*** Main toolbar ***/
 
