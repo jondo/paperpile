@@ -764,7 +764,7 @@ sub _parse_googlescholar_page {
         }
         else {
 
-            $title = $node->findvalue('.');
+            $title = $node->findvalue('./h3');
 
             # Remove the tags [CITATION] and [BOOK] (and the character
             # afterwards which is a &nbsp;)
@@ -778,7 +778,6 @@ sub _parse_googlescholar_page {
 
         # Most information is contained in a <span> tag
         my $line = $node->findvalue(q{./font[@size='-1']/span[@class='gs_a']});
-        next if not $line;
 
         my ( $authors, $citation, $publisher ) = split( / - /, $line );
 
