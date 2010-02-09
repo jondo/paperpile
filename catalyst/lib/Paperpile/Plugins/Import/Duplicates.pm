@@ -18,7 +18,10 @@ has '_db_file' => ( is => 'rw' );
 has 'file'     => ( is => 'rw' );
 has '_data'    => ( is => 'rw', isa => 'ArrayRef' );
 has '_dupl_keys' => ( is => 'rw' ); # keeps sha1 keys of duplicates
+has '_dupl_partners' => ( is => 'rw' ); # keeps sha1 keys of duplicates
 has '_searchspace' => ( is => 'rw' ); # publications that we will loop throu while searching duplicates
+
+has 'clear_duplicate_cache' => ( is => 'rw' );
 
 sub BUILD {
   my $self = shift;
@@ -38,11 +41,16 @@ sub connect {
   $self->_db_file( $self->file );
   $self->_data( [] );
   $self->_dupl_keys( {} );
+  $self->_dupl_partners( {} );
 
   my $model = $self->get_model;
 
   # get all publications
-  $self->_searchspace( \@{ $model->all_as_hash } );
+  my @all_pubs = @{$model->all_as_hash};
+  # ignore trashed publications.
+  @all_pubs = grep {!defined $_->{trashed}} @all_pubs;
+
+  $self->_searchspace( \@all_pubs );
   print STDERR "count: ", $#{ $self->_searchspace }, "\n";
 
   # print STDERR Dumper $self->_searchspace->[0];
@@ -215,6 +223,12 @@ sub connect {
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
+  my $model = $self->get_model;
+
+  if ($self->clear_duplicate_cache) {
+    $self->connect;
+  }
+
   my @page = ();
 
   for my $i ( 0 .. $limit - 1 ) {
@@ -234,18 +248,23 @@ sub page {
 sub _store {
   my ( $self, $i, $j ) = @_;
 
+  my $i_pub = $self->_searchspace->[$i];
+  my $j_pub = $self->_searchspace->[$j];
+  $self->_dupl_partners->{$i_pub->{sha1}} = $j_pub;
+  $self->_dupl_partners->{$j_pub->{sha1}} = $i_pub;
+
   # remember the i.th publication
-  if(!defined $self->_dupl_keys->{ $self->_searchspace->[$i]->{sha1} } ) {
+  if(!defined $self->_dupl_keys->{ $i_pub->{sha1} } ) {
     #$self->_searchspace->[$i]->{_highlight} = 'pp-grid-highlight3';
-    push @{ $self->_data }, Paperpile::Library::Publication->new( $self->_searchspace->[$i] );
-    $self->_dupl_keys->{ $self->_searchspace->[$i]->{sha1} } = $i;
+    push @{ $self->_data }, Paperpile::Library::Publication->new( $i_pub );
+    $self->_dupl_keys->{ $i_pub->{sha1} } = $i;
   };
 
   # remember the j.th publication
-  if(!defined $self->_dupl_keys->{ $self->_searchspace->[$j]->{sha1} } ) {
+  if(!defined $self->_dupl_keys->{ $j_pub->{sha1} } ) {
     #$self->_searchspace->[$j]->{_highlight} = 'pp-grid-highlight3';
-    push @{ $self->_data }, Paperpile::Library::Publication->new( $self->_searchspace->[$j] );
-    $self->_dupl_keys->{ $self->_searchspace->[$j]->{sha1} } = $i;
+    push @{ $self->_data }, Paperpile::Library::Publication->new( $j_pub );
+    $self->_dupl_keys->{ $j_pub->{sha1} } = $i;
   };
 }
 
