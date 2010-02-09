@@ -295,12 +295,25 @@ td.pp-dashboard-dl{
     line-height: 1.3em;
 }
 
-.pp-pattern-help dt {
-    color: #000000!important;
-}
-
 .pp-box dd { 
     margin: 0 0 0 75px; 
+    padding: 0 0 5 5;
+}
+
+
+.pp-pattern-help dt {
+    color: #000000!important;
+    float: left;
+    clear: left;
+    color: #4183C4;
+    width: 115px; 
+    text-align: right; 
+    font: normal 12px "Courier New", monospace;
+    line-height: 1.1em;
+}
+
+.pp-pattern-help dd { 
+    margin: 0 0 0 115px; 
     padding: 0 0 5 5;
 }
 
@@ -1126,12 +1139,10 @@ div:hover.pp-grid-sort-item {
     margin: 8px;
 }
 
-
 .pp-settings-example code {
     font: normal 12px "Courier New", monospace;
     background-color: #F0F0F0;
     border: 1px solid #DEDEDE;
-    color: #444444;
     padding: 0 5;
     border-style:dotted;
 }

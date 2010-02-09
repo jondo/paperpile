@@ -30,12 +30,17 @@
       <div class="pp-settings-example">Example: <code id="key_pattern_example"></code></div>
     </div>
 
+    <div class="pp-vspace" style="height:15px;"></div>
+
+
     <h3>PDF file pattern <span id="pdf_pattern_tooltip" class="pp-tooltip-link">?</span></h3>
     
     <div id="pdf_pattern">
       <div id="pdf_pattern_textfield" class="pp-settings-textfield"><span>.pdf<span></div>
       <div class="pp-settings-example">Example: <code id="pdf_pattern_example"></code></div>
     </div>
+
+    <div class="pp-vspace" style="height:15px;"></div>
 
     <h3>Attachment pattern <span id="attachment_pattern_tooltip" class="pp-tooltip-link">?</span></h3>
 
@@ -59,13 +64,14 @@
       <dt> <b>[title]</b></dt> <dd>Title of paper </dd>
       <dt> <b>[journal]</b></dt> <dd>Journal name</dd> 
     </dl>
-    <p> You get uppercase/lowercase variants by using
-      e.g. <b>[firstauthor],[Firstauthor]</b> or <b>[FIRSTAUTHOR] </b>
-      which gives <b>knuth, Knuth or KNUTH</b>.</p>
-    <p>You can abbreviate words by
-      adding a single digit. <b>[Firstauthor3]</b> only shows the first three
-      letters, e.g. <b>Knu</b>.</p>
-    
+    <p> Uppercase/lowercase variants and abbreviations:</p>
+    <dl class="pp-pattern-help">
+      <dt> <b>[firstauthor]</b> </dt> <dd> knuth  </dd>
+      <dt> <b>[Firstauthor]</b> </dt> <dd> Knuth  </dd>
+      <dt> <b>[FIRSTAUTHOR]</b> </dt> <dd> KNUTH </dd>   
+      <dt> <b>[FIRSTAUTHOR:1]</b> </dt> <dd> K</dd>   
+      <dt> <b>[FIRSTAUTHOR:3]</b> </dt> <dd> KNU</dd>   
+    </dl>
   </div>
 </td>
 </tr>
