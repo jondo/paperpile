@@ -322,6 +322,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   onStoreLoad: function() {
+
     var container = this.getPluginPanel();
     var ep = container.items.get('east_panel');
     var tb_side = ep.getBottomToolbar();
@@ -475,6 +476,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       },
       reader: new Ext.data.JsonReader()
     });
+
     return this._store;
   },
 

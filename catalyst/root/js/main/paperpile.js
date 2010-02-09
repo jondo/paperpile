@@ -434,12 +434,18 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   },
 
+  // This function is currently only used as a target for the callback
+  // when a new PDF was matched and imported. At the moment it just
+  // updates the main grid which is sufficient since new PDFs are not
+  // tagged or in any folders.
   updatePubGrid: function() {
-    var tabs = Paperpile.main.tabs.items.items;
-    for (var i = 0; i < tabs.length; i++) {
-      var tab = tabs[i];
-      tab.getGrid().getStore().reload();
-    }
+    var tab = Paperpile.main.tabs.items.items[0];
+    var store = tab.getGrid().getStore();
+    var lastOptions = store.lastOptions;
+    Ext.apply(lastOptions.params, {
+      plugin_update_total: true
+    });
+    store.reload(lastOptions);
   },
 
   stopQueueUpdate: function() {

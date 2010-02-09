@@ -98,7 +98,6 @@ sub update : Local {
     my $job = Paperpile::Job->new( { id => $id } );
     my $pub = $job->pub;
     push @pub_list, $pub;
-
     $jobs->{$id} = $job->as_hash;
   }
 
