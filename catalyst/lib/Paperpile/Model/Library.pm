@@ -1357,7 +1357,11 @@ sub histogram {
     $sth->execute;
     while ( $sth->fetch ) {
       my @authors = split(' and ',$author_list);
-      foreach my $author (@authors) {
+      foreach my $author_disp (@authors) {
+        my $tmp = Paperpile::Library::Author->_split_full($author_disp);
+        $tmp->{initials} = Paperpile::Library::Author->_parse_initials( $tmp->{first} );
+        my $author = Paperpile::Library::Author->_nice($tmp);
+
 	if ( exists $hist{$author} ) {
 	  $hist{$author}->{count}++;
 	} else {
