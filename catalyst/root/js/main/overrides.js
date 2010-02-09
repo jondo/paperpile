@@ -196,10 +196,6 @@ Ext.override(Ext.grid.RowSelectionModel, {
     if (e.button !== 0 || this.isLocked()) {
       return;
     }
-    // Ignore 'click' events when ctrl or shift is held down.
-    if (e.type == 'click' && (e.ctrlKey || e.shiftKey)) {
-      return;
-    }
     var view = this.grid.getView();
     if (e.shiftKey && !this.singleSelect && this.last !== false) {
       var last = this.last;
