@@ -3,8 +3,10 @@ Paperpile.HoverButtonPlugin = function(config) {
 };
 
 Ext.extend(Paperpile.HoverButtonPlugin, Ext.util.Observable, {
-  cls: 'pp-tree-button',
-  overCls: 'pp-tree-button-over',
+  baseCls: 'pp-hoverbutton',
+  baseOverCls: 'pp-hoverbutton-over',
+  cls: 'pp-hoverbutton-default',
+  overCls: '',
   fn: null,
   scope: null,
   showButtonIf: null,
@@ -22,7 +24,17 @@ Ext.extend(Paperpile.HoverButtonPlugin, Ext.util.Observable, {
 
   // Called from the plugin scope.
   callFunction: function(node) {
-    this.fn.defer(20, this.scope, [node]);
+    if (this.fn != null) {
+      this.fn.defer(20, this.scope, [node]);      
+    }
+  },
+
+  getClass: function() {
+      return this.cls+" "+this.baseCls;
+  },
+
+  getOverClass: function() {
+      return this.overCls+" "+this.baseOverCls;
   },
 
   // Called from the treePanel scope.
@@ -33,7 +45,7 @@ Ext.extend(Paperpile.HoverButtonPlugin, Ext.util.Observable, {
       // Once the drag has started, we hack into the Dom and hide the context triangle.
       var ghostDom = this.dragZone.proxy.ghost.dom;
       var ghostEl = Ext.fly(ghostDom);
-      ghostEl.select('.' + this.hoverButtonPlugin.cls).remove();
+      ghostEl.select('.' + this.hoverButtonPlugin.baseCls).remove();
     },
     this);
 
@@ -47,19 +59,19 @@ Ext.extend(Paperpile.HoverButtonPlugin, Ext.util.Observable, {
   // Called from the treePanel scope.
   myOnRender: function() {
     this.hoverButton = Ext.DomHelper.append(this.getEl(), {
-      id: this.itemId + "_hover_button",
+      id: this.id + "_hover_button",
       tag: "div",
-      cls: this.hoverButtonPlugin.cls
+      cls: this.hoverButtonPlugin.getClass()
     },
     true);
-    this.hoverButton.addClassOnOver(this.hoverButtonPlugin.overCls);
+    this.hoverButton.addClassOnOver(this.hoverButtonPlugin.getOverClass());
   }
 });
 
 Paperpile.HoverButtonTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
   onClick: function(e) {
     if (e.browserEvent.type == 'click') {
-      if (!Ext.fly(e.getTarget()).hasClass(this.node.ownerTree.hoverButtonPlugin.cls)) {
+      if (!Ext.fly(e.getTarget()).hasClass(this.node.ownerTree.hoverButtonPlugin.baseCls)) {
         Paperpile.HoverButtonTreeNodeUI.superclass.onClick.call(this, e);
         return;
       }
@@ -68,11 +80,12 @@ Paperpile.HoverButtonTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
     if (e.button != 0) return;
     var el = Ext.fly(e.getTarget());
     // Intercept clicks on the button.
-    if (el.hasClass(this.node.ownerTree.hoverButtonPlugin.cls)) {
+    if (el.hasClass(this.node.ownerTree.hoverButtonPlugin.baseCls)) {
       e.stopEvent();
       this.node.ownerTree.hoverButtonPlugin.callFunction(this.node);
       return;
     } else {
+      this.node.ownerTree.hoverButton.removeClass(plugin.baseOverCls);
       this.node.ownerTree.hoverButton.hide();
     }
   },
@@ -82,17 +95,15 @@ Paperpile.HoverButtonTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
     var alignEl = nodeEl.child(".x-tree-node-el");
     if (this.node.ownerTree === null) return;
 
-    // Call the showButtonIf function and exit if it returns false.
     var plugin = this.node.ownerTree.hoverButtonPlugin;
+
+    // Call the showButtonIf function and exit if it returns false.
     if (plugin.showButtonIf !== null) {
       var result = plugin.showButtonIf.call(this.node, this.node);
       if (result === false) return;
     }
 
     var btn = this.node.ownerTree.hoverButton;
-
-    //    if (this.node.ownerTree.hoverButtonPlugin.keepHidden)
-    //      return;
     alignEl.appendChild(btn);
     btn.alignTo(alignEl, 'r-r?', [-3, 0]);
     this.hideDelay.cancel();
@@ -113,6 +124,7 @@ Paperpile.HoverButtonTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
 
   hideDelay: new Ext.util.DelayedTask(),
   hideButton: function(btn) {
+    btn.removeClass(this.node.ownerTree.hoverButtonPlugin.getOverClass());
     btn.hide();
   }
 

@@ -1085,7 +1085,7 @@ div:hover.pp-grid-sort-item {
 }
 
 .x-tree-node-el {
-  cursor:pointer;
+/*  cursor:default;*/
 }
 
 .x-dd-drag-tip {
@@ -1159,12 +1159,14 @@ div:hover.pp-grid-sort-item {
 
 .pp-pluginlist-panel, .pp-pluginlist-panel .x-panel-body {
     background:none;
+    border: none;
 }
 
-.pp-pluginlist {
-
+.pp-pluginlist-panel {
+    border: 1px solid #F7CA75;
 }
 
+/*
 .pp-pluginlist .x-tree-node-over {
     background:none;
 }
@@ -1172,7 +1174,7 @@ div:hover.pp-grid-sort-item {
 .pp-pluginlist-used {
     background-color:#FFFFFF;
 }
-
+*/
 .pp-pluginlist-number {
     float:left;
     margin-right:4px;
@@ -1186,21 +1188,34 @@ div:hover.pp-grid-sort-item {
     width:0px;
 }
 
-.pp-pluginlist-cross {
+.pp-pluginlist-button {
+}
+
+.pp-pluginlist-hover-right{
+  background: transparent url(/images/icons/right-arrow-small.png) no-repeat center center;
+}
+
+.pp-pluginlist-hover-left{
+  background: transparent url(/images/icons/left-arrow-small.png) no-repeat center center;
+}
+
+.pp-hoverbutton-default {
+  background: transparent url(/images/icons/cancel-small.png) no-repeat center center;
+}
+
+.pp-hoverbutton {
   width:18px;
   height:18px;
-  background: transparent url(/images/icons/cancel-small.png) no-repeat center center;
   cursor:pointer;
   position:absolute;
   float:right;
 }
-.pp-pluginlist-cross-over {
+
+.pp-hoverbutton-over {
   width:16px;
   height:16px;
   border: 1px solid #F7CA75 ;
 }
-
-
 
 /*** Tags ***/
 
