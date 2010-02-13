@@ -502,6 +502,8 @@ sub _match {
 
   my @plugin_list = split( /,/, $settings->{search_seq} );
 
+  die("No search plugins specified.") if not @plugin_list;
+
   if ($self->pub->arxivid){
     unshift @plugin_list, 'ArXiv';
   }
