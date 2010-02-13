@@ -21,6 +21,9 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   },
 
   newDBtab: function(query, itemId) {
+    if (this.findAndActivateOpenTabByItemId(itemId)) {
+      return;
+    }
 
     var gridParams = {
       plugin_name: 'DB',
@@ -39,6 +42,10 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   },
 
   newTrashTab: function() {
+    var trashItemId = 'trash';
+    if (this.findAndActivateOpenTabByItemId(trashItemId)) {
+      return;
+    }
 
     var gridParams = {
       plugin_name: 'Trash',
@@ -51,7 +58,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       gridParams: gridParams,
       title: 'Trash',
       closable: true,
-      itemId: 'trash'
+      itemId: trashItemId
     }));
     newView.show();
   },
@@ -65,86 +72,94 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     }
 
     //var newGrid=new Paperpile['Plugin'+javascript_ui](pars);
-    var openTab = Paperpile.main.tabs.getItem(itemId);
-    if (openTab) {
-      this.activate(openTab);
-      return;
-    } else {
-      var viewParams = {
-        title: title,
-        iconCls: iconCls,
-        gridParams: pars,
-        closable: true,
-        itemId: itemId
-      };
-      if (iconCls) viewParams.iconCls = iconCls;
-      if (title) viewParams.title = title;
-      var newView = this.add(new Paperpile['PluginPanel' + javascript_ui](viewParams));
-      newView.show();
+    if (this.findAndActivateOpenTabByItemId(itemId)) {
       return;
     }
+    var viewParams = {
+      title: title,
+      iconCls: iconCls,
+      gridParams: pars,
+      closable: true,
+      itemId: itemId
+    };
+    if (iconCls) viewParams.iconCls = iconCls;
+    if (title) viewParams.title = title;
+    var newView = this.add(new Paperpile['PluginPanel' + javascript_ui](viewParams));
+    newView.show();
   },
 
   // Opens a new tab with some specialized screen. Name is either the name of a preconficured panel-class, or
   // an object specifying url and title of the tab.
   newScreenTab: function(name, itemId) {
+    if (this.findAndActivateOpenTabByItemId(itemId)) {
+      return;
+    }
 
-    var openTab = Paperpile.main.tabs.getItem(itemId);
+    var panel;
 
-    if (openTab) {
-      this.activate(openTab);
+    // Pre-configured class
+    if (Paperpile[name]) {
+      panel = Paperpile.main.tabs.add(new Paperpile[name]({
+        itemId: itemId
+      }));
+
+      // Generic panel
     } else {
 
-      var panel;
-
-      // Pre-configured class
-      if (Paperpile[name]) {
-        panel = Paperpile.main.tabs.add(new Paperpile[name]({
-          itemId: itemId
-        }));
-
-        // Generic panel
-      } else {
-
-        panel = Paperpile.main.tabs.add(new Ext.Panel({
-          closable: true,
-          autoLoad: {
-            url: Paperpile.Url(name.url),
-            callback: this.setupFields,
-            scope: this
-          },
-          autoScroll: true,
-          title: name.title
-        }));
-      }
-      panel.show();
+      panel = Paperpile.main.tabs.add(new Ext.Panel({
+        closable: true,
+        autoLoad: {
+          url: Paperpile.Url(name.url),
+          callback: this.setupFields,
+          scope: this
+        },
+        autoScroll: true,
+        title: name.title
+      }));
     }
+    panel.show();
   },
 
   showQueueTab: function() {
-    var openTab = Paperpile.main.tabs.getItem('queue-tab');
-
-    if (openTab) {
-      //openTab.items.get('grid').getStore().reload();
-      this.activate(openTab);
-    } else {
-      var panel = Paperpile.main.tabs.add(new Paperpile.QueuePanel({
-        itemId: 'queue-tab'
-      }));
-
-      panel.show();
-      var qs = Ext.StoreMgr.lookup('queue_store');
-      if (qs != null) {
-        qs.reload();
-      }
+    if (this.findAndActivateOpenTabByItemId('queue-tab')) {
+      return;
     }
 
+    var panel = Paperpile.main.tabs.add(new Paperpile.QueuePanel({
+      itemId: 'queue-tab'
+    }));
+
+    panel.show();
+    var qs = Ext.StoreMgr.lookup('queue_store');
+    if (qs != null) {
+      qs.reload();
+    }
+  },
+
+  findAndActivateOpenTabByItemId: function(itemId) {
+    var openTab = this.getItem(itemId);
+    if (openTab) {
+      this.activate(openTab);
+      return openTab;
+    }
+    return null;
+  },
+
+  findOpenPdfByFile: function(file) {
+    var tabs = Paperpile.main.tabs.items.items;
+    for (var i = 0; i < tabs.length; i++) {
+      var tab = tabs[i];
+      if (tab instanceof Paperpile.PDFviewer) {
+        if (tab.file == file) return tab;
+      }
+    }
+    return null;
   },
 
   pdfViewerCounter: 0,
   newPdfTab: function(config) {
     this.pdfViewerCounter++;
-    var defaults = {
+    var params = {
       id: 'pdf_viewer_' + this.pdfViewerCounter,
       region: 'center',
       search: '',
@@ -154,13 +169,19 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       closable: true,
       iconCls: 'pp-icon-import-pdf'
     };
-    var pars = {};
 
-    Ext.apply(pars, config, defaults);
-    var panel = Paperpile.main.tabs.add(new Paperpile.PDFviewer(pars));
+    Ext.apply(params, config);
+
+    // Look for a tab already open with this filename.
+    var existingTab = this.findOpenPdfByFile(params.file);
+    if (existingTab != null) {
+      this.activate(existingTab);
+      return;
+    }
+
+    var panel = Paperpile.main.tabs.add(new Paperpile.PDFviewer(params));
     panel.show();
   }
-
 }
 
 );
