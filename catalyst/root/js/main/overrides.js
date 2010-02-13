@@ -1,4 +1,28 @@
 // Ext overrides
+
+// Takes care of "this.lastOverNode.ui is null" bugs.
+// See http://www.extjs.com/forum/showthread.php?t=85052
+Ext.override(Ext.tree.TreeEventModel, {
+  trackExit: function(e) {
+    if (this.lastOverNode) {
+      if (this.lastOverNode.ui && !e.within(this.lastOverNode.ui.getEl())) {
+        this.onNodeOut(e, this.lastOverNode);
+      }
+      delete this.lastOverNode;
+      Ext.getBody().un('mouseover', this.trackExit, this);
+      this.trackingDoc = false;
+    }
+  },
+  beforeEvent: function(e) {
+    var node = this.getNode(e);
+    if (this.disabled || !node || !node.ui) {
+      e.stopEvent();
+      return false;
+    }
+    return true;
+  }
+});
+
 Ext.override(Ext.tree.TreeNode, {
   removeChild: function(node, destroy) {
     this.ownerTree.getSelectionModel().unselect(node);
@@ -80,7 +104,6 @@ Ext.ux.clone = function(o) {
   }
   return c;
 }; // eo function clone 
-
 Ext.override(Ext.Component, {
 
   findParentByType: function(t) {
@@ -281,7 +304,6 @@ Ext.override(Ext.grid.GridView, {
 
 // Allow dynamically change the root, should be included by default in next version
 // http://extjs.com/forum/showthread.php?p=305958
-
 Ext.override(Ext.tree.TreePanel, {
   initComponent: function() {
     Ext.tree.TreePanel.superclass.initComponent.call(this);

@@ -457,7 +457,6 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Panel, {
     if (ownerTree == this.usedPlugins) {
       otherTree = this.availablePlugins;
     }
-    ownerTree.eventModel.lastOverNode = null;
     node.remove(false);
     var otherRoot = otherTree.getRootNode();
     otherRoot.appendChild(node);
