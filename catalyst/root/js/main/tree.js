@@ -372,7 +372,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         }
       }
     }
-    this.updateDragStatus(e);
+    //this.updateDragStatus(e);
   },
 
   addFolder: function(grid, sel, node) {

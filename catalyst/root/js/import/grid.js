@@ -281,9 +281,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (source.dragData.node) {
       var myType = source.dragData.node.type;
       if (myType == 'TAGS') {
-        proxy.updateTip('Apply label to reference');
+        //proxy.updateTip('Apply label to reference');
       } else if (myType == 'FOLDER') {
-        proxy.updateTip('Place reference in folder');
+        //proxy.updateTip('Place reference in folder');
       }
     } else if (source.dragData.grid) {
       // We should never reach here -- no within-grid drag and drop!
