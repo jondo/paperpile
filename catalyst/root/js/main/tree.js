@@ -261,6 +261,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     case 'CLOUDS':
       Paperpile.main.tabs.newScreenTab('Clouds', 'clouds');
       break;
+    case 'DUPLICATES':
+      Paperpile.main.tabs.newPluginTab('Duplicates', {},
+        "Duplicates", "pp-icon-duplicates", "duplicates")
+      break;
     case 'TRASH':
       Paperpile.main.tabs.newTrashTab();
       break;
@@ -1061,12 +1065,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-	Paperpile.log(json);
-	Paperpile.main.tabs.closeTabByTitle(tag);
+        Paperpile.log(json);
+        Paperpile.main.tabs.closeTabByTitle(tag);
         Paperpile.main.onUpdate(json.data);
         node.remove();
       }
-      });
+    });
   },
 
   styleTag: function(number) {
@@ -1118,7 +1122,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         Ext.StoreMgr.lookup('tag_store').reload({
           callback: function() {
             // Update the title of the tab if it's open.
-	    Paperpile.main.tabs.closeTabByTitle(tag);
+            Paperpile.main.tabs.closeTabByTitle(tag);
 
             Paperpile.main.onUpdate(json.data);
           }

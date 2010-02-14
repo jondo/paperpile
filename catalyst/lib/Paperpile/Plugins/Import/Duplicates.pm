@@ -183,8 +183,8 @@ sub connect {
 
   #####################################
   # switch background color (highlight)
-  my $c0           = 'pp-grid-highlight2';
-  my $c1           = 'pp-grid-highlight3';
+  my $c0           = 'pp-grid-highlight1';
+  my $c1           = 'pp-grid-highlight2';
   my $cur_color    = $c0;
   my $last_cluster = 0;
 

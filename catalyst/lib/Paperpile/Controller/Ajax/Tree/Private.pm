@@ -232,13 +232,25 @@ sub get_default_tree : Private {
   $plugins->addChild(
     Tree::Simple->new( {
         type    => 'CLOUDS',
-        text    => 'Cloud view',
+        text    => 'Cloud View',
         iconCls => 'pp-icon-clouds',
         hidden  => 1,
         builtin => 1,
       }
     )
   );
+
+  $plugins->addChild(
+    Tree::Simple->new( {
+        type    => 'DUPLICATES',
+        text    => 'Find Duplicates',
+        iconCls => 'pp-icon-duplicates',
+        hidden  => 1,
+        builtin => 1,
+      }
+    )
+  );
+
 
 
 
