@@ -87,10 +87,10 @@ sub get_default_tree : Private {
 
   $folders->setUID('TRASH');
 
-  #### / Active Folders & Feeds
+  #### / Live & Feeds
 
   my $active = Tree::Simple->new( {
-      text    => 'Active Folders & Feeds',
+      text    => 'Live Folders & Feeds',
       type    => "ACTIVE",
       path    => '/',
       iconCls => 'pp-icon-empty',

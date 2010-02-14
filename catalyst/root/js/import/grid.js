@@ -118,7 +118,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
 
       'SAVE_AS_ACTIVE': new Ext.Action({
-        text: 'Save as active view',
+        text: 'Save as Live Folder',
         handler: this.handleSaveActive,
         scope: this,
         itemId: 'save_active_button'
@@ -167,7 +167,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       cls: 'x-btn-text-icon',
       menu: {
         items: [{
-          text: 'Save as Active View',
+          text: 'Save as Live Folder',
           iconCls: 'pp-icon-glasses',
           handler: this.handleSaveActive,
           scope: this
