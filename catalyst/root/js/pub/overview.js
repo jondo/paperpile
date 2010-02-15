@@ -240,7 +240,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'open-pdf-external':
-      Paperpile.main.openPdfInExternalViewer(this.data.file, this.data);
+      Paperpile.main.openPdfInExternalViewer(this.data.pdf, this.data);
       break;
 
     case 'attach-pdf':

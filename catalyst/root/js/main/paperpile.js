@@ -213,7 +213,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   openPdfInExternalViewer: function(filename, data) {
     var path = filename;
-    if (!path.indexOf(Paperpile.main.globalSettings.paper_root) == -1) {
+    if (path.indexOf(Paperpile.main.globalSettings.paper_root) == -1) {
       // Append the paper root path if necessary.
       path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
     }
