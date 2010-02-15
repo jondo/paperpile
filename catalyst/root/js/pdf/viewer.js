@@ -171,6 +171,13 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         tooltip: "Load File",
         scope: this
       }),
+      'OPEN_EXTERNAL': new Ext.Button({
+        handler: this.openInExternalViewer,
+        icon: "/images/icons/page-external.png",
+        cls: 'x-btn-icon',
+        tooltip: "Open in External Viewer",
+        scope: this
+      }),
       'ONE_UP': new Ext.Button({
         handler: this.layoutOneUp,
         icon: "/images/icons/1-up.png",
@@ -359,21 +366,22 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     var bbar = {
       items: [
-        this.tbItems['LOAD'], {
-          xtype: 'tbseparator'
-        },
-        this.tbItems['PAGE_PREV'],
-        this.tbItems['PAGE_FIELD'],
-        this.tbItems['PAGE_COUNT'],
-        this.tbItems['PAGE_NEXT'], {
-          xtype: 'tbseparator'
-        },
-        this.tbItems['ZOOM_MENU'],
-        this.tbItems['ZOOM_IN'],
-        this.tbItems['ZOOM_OUT'], {
-          xtype: 'tbseparator'
-        },
-        this.tbItems['SEARCH_FIELD']],
+      //        this.tbItems['LOAD'], 
+      this.tbItems['OPEN_EXTERNAL'], {
+        xtype: 'tbseparator'
+      },
+      this.tbItems['PAGE_PREV'],
+      this.tbItems['PAGE_FIELD'],
+      this.tbItems['PAGE_COUNT'],
+      this.tbItems['PAGE_NEXT'], {
+        xtype: 'tbseparator'
+      },
+      this.tbItems['ZOOM_MENU'],
+      this.tbItems['ZOOM_IN'],
+      this.tbItems['ZOOM_OUT'], {
+        xtype: 'tbseparator'
+      },
+      this.tbItems['SEARCH_FIELD']],
       plugins: [new Paperpile.CenterToolbar()]
     };
 
@@ -2482,8 +2490,11 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     //this.loadFullPage(scrollTarget);
   },
 
+  openInExternalViewer: function() {
+    Paperpile.main.openPdfInExternalViewer(this.file);
+  },
+
   openFile: function() {
-    log("Open file!");
     var win = new Paperpile.FileChooser({
       showFilter: true,
       filterOptions: [{
@@ -2609,16 +2620,15 @@ Ext.override(Ext.Element, {
 Paperpile.CenterToolbar = (function() {
   return {
     init: function(toolbar) {
-      Ext.apply(toolbar, {
-      });
+      Ext.apply(toolbar, {});
       toolbar.on('afterlayout', this.myAfterLayout, this);
     },
 
     myAfterLayout: function(tb) {
-        var tbl = tb.getEl().child('.x-toolbar-left table');
-        tbl.wrap({
-          tag: 'center'
-        });
+      var tbl = tb.getEl().child('.x-toolbar-left table');
+      tbl.wrap({
+        tag: 'center'
+      });
     }
   };
 });

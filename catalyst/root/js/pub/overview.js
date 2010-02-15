@@ -176,7 +176,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     }
     this.searchDownloadWidget.renderData(data);
   },
-  
+
   updateInfoMultiple: function(data) {
 
     data.numImported = this.getGrid().getSelection('IMPORTED').length;
@@ -240,9 +240,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'open-pdf-external':
-      var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf);
-      Paperpile.utils.openFile(path);
-      Paperpile.main.inc_read_counter(this.data);
+      Paperpile.main.openPdfInExternalViewer(this.data.file, this.data);
       break;
 
     case 'attach-pdf':

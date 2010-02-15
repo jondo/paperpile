@@ -211,6 +211,18 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
+  openPdfInExternalViewer: function(filename, data) {
+    var path = filename;
+    if (!path.indexOf(Paperpile.main.globalSettings.paper_root) == -1) {
+      // Append the paper root path if necessary.
+      path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
+    }
+    Paperpile.utils.openFile(path);
+    if (data !== null) {
+      Paperpile.main.inc_read_counter(data);
+    }
+  },
+
   pdfExtract: function() {
 
     win = new Paperpile.FileChooser({
@@ -517,8 +529,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
 
     if (error.type == 'Unknown') {
-  
-      
 
       Paperpile.status.updateMsg({
         type: 'error',
