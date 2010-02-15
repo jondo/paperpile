@@ -36,7 +36,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               autoEl: {
                 cls: 'pp-main-toolbar-label',
                 tag: 'div',
-                html: 'Paperpile 0.4 preview',
+                html: 'Paperpile 0.4 preview'
               }
             }), {
               xtype: 'tbfill'
@@ -298,7 +298,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       {
         text: 'All files',
         suffix: ['ALL']
-      },
+      }
       ],
 
       callback: function(button, path) {
@@ -309,7 +309,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             plugin_name: 'File',
             plugin_mode: 'FULLTEXT',
             plugin_query: '',
-            plugin_base_query: '',
+            plugin_base_query: ''
           },
             parts.file, 'pp-icon-file');
         }
@@ -498,7 +498,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       url: Paperpile.Url('/ajax/queue/update'),
       params: {
         get_queue: true,
-        ids: this.runningJobs,
+        ids: this.runningJobs
       },
       method: 'GET',
       success: function(response) {
@@ -550,7 +550,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                   Paperpile.main.reportError(error);
                 }
                 Ext.MessageBox.buttonText.ok = "Ok";
-              },
+              }
             });
 
           }
@@ -575,7 +575,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       url: Paperpile.Url('/ajax/misc/report_error'),
       params: {
         error: error.msg,
-        catalyst_log: Paperpile.serverLog,
+        catalyst_log: Paperpile.serverLog
       },
       scope: this,
       success: function() {
@@ -635,7 +635,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         params: {
           rowid: data._rowid,
           sha1: data.sha1,
-          times_read: data.times_read,
+          times_read: data.times_read
         },
         success: function(response) {
           var json = Ext.util.JSON.decode(response.responseText);
@@ -659,7 +659,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       var path = Titanium.App.getHome() + '/catalyst';
 
       var upgrader = Titanium.Process.createProcess({
-        args: [path + "/perl5/" + platform + "/bin/perl", path + '/script/updater.pl', '--check'],
+        args: [path + "/perl5/" + platform + "/bin/perl", path + '/script/updater.pl', '--check']
       });
 
       upgrader.setEnvironment("PERL5LIB", "");
@@ -688,11 +688,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                     buttons: Ext.Msg.OK,
                     fn: function(btn) {
                       Ext.Msg.close();
-                    },
+                    }
                   });
                 }
               },
-              hideOnClick: true,
+              hideOnClick: true
             });
           }
         } else {
@@ -709,13 +709,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                   Paperpile.status.clearMsg();
                 }
               },
-              hideOnClick: true,
+              hideOnClick: true
             });
           } else {
             if (!silent) {
               Paperpile.status.updateMsg({
                 msg: 'Paperpile is up-to-date.',
-                hideOnClick: true,
+                hideOnClick: true
               });
             }
           }
