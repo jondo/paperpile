@@ -28,7 +28,7 @@ Paperpile.startupFailure = function(response) {
       }
     }
   });
-}
+};
 
 Paperpile.stage0 = function() {
   Ext.Ajax.request({
@@ -52,7 +52,7 @@ Paperpile.stage0 = function() {
 
         // Set up process
         Paperpile.server = Titanium.Process.createProcess({
-          args: [path + "/perl5/" + platform + "/bin/perl", path + '/script/paperpile_server.pl', '-fork'],
+          args: [path + "/perl5/" + platform + "/bin/perl", path + '/script/paperpile_server.pl', '-fork']
         });
 
         // Make sure there is no PERL5LIB variable set in the environment
@@ -64,7 +64,7 @@ Paperpile.stage0 = function() {
             title: 'Error',
             msg: 'Could not start Paperpile server.',
             buttons: Ext.Msg.OK,
-            icon: Ext.MessageBox.ERROR,
+            icon: Ext.MessageBox.ERROR
           });
         });
 
@@ -106,7 +106,7 @@ Paperpile.stage0 = function() {
       }
     }
   });
-}
+};
 
 // Stage 1 
 //
@@ -131,7 +131,7 @@ Paperpile.stage1 = function() {
             wait: true,
             waitConfig: {
               interval: 200
-            },
+            }
           });
 
           Ext.Ajax.request({
@@ -176,14 +176,6 @@ Paperpile.stage2 = function() {
   Ext.QuickTips.init();
   Paperpile.main = new Paperpile.Viewport;
 
-  Paperpile.main.on('afterrender',
-    function() {
-      alert("layout finished");
-    },
-    this, {
-      single: true
-    });
-
   Paperpile.main.loadSettings(
     function() {
       Paperpile.main.show();
@@ -210,7 +202,7 @@ Paperpile.stage2 = function() {
     });
   }
 
-}
+};
 
 Ext.onReady(function() {
 
