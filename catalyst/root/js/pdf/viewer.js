@@ -69,9 +69,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   focusEl: null,
 
   initComponent: function() {
-    log(this.getItemId());
-    log(this.id);
-
     Ext.QuickTips.init();
 
     this.createZoomArrays();
@@ -252,14 +249,14 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       //cls:'x-btn-icon',
       scope: this,
       tooltip: "Zoom to Width",
-      icon: "/images/icons/fit-width.png",
+      icon: "/images/icons/fit-width.png"
     });
     this.zmP = new Ext.Toolbar.Button({
       handler: this.zoomPage,
       //cls:'x-btn-icon',
       scope: this,
       tooltip: "Zoom to Page",
-      icon: "/images/icons/fit-page.png",
+      icon: "/images/icons/fit-page.png"
     });
 
     bi = function(button) {
@@ -341,12 +338,17 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       cls: 'search-result-text'
     });
 
+    var searchToolbar = new Ext.Toolbar({
+      items: [
+        this.tbItems['SR_PREV'],
+        this.tbItems['SR_NEXT'],
+        this.tbItems['SR_TEXT'],
+        this.tbItems['SR_CLOSE']
+      ]
+    });
+
     this.searchBar = new Ext.Window({
       id: this.prefix() + 'search_bar',
-      //      minWidth:100,
-      //      maxWidth:200,
-      width: 180,
-      layout: 'toolbar',
       draggable: false,
       shadow: true,
       hideCollapseTool: true,
@@ -355,18 +357,14 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       floating: true,
       draggable: false,
       resizable: false,
-      unstyled: false,
-      items: [
-        this.tbItems['SR_PREV'],
-        this.tbItems['SR_NEXT'],
-        this.tbItems['SR_TEXT'],
-        this.tbItems['SR_CLOSE']],
+      unstyled: true,
+      bbar: searchToolbar,
       cls: 'pdf-search'
     });
 
     var bbar = {
       items: [
-      //        this.tbItems['LOAD'], 
+      // this.tbItems['LOAD'], 
       this.tbItems['OPEN_EXTERNAL'], {
         xtype: 'tbseparator'
       },
@@ -399,6 +397,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     Paperpile.PDFviewer.superclass.initComponent.call(this);
 
     this.on('render', this.myAfterRender, this);
+    this.on('resize', this.myOnResize,this);
   },
 
   myAfterRender: function() {
@@ -425,8 +424,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     //this.body.on('mouseover',this.onMouseOver,this);
     this.body.on("mousewheel", this.onMouseWheel, this);
 
-    //    this.getBottomToolbar().getEl().child("table").wrap({tag:'center'});
-    //    this.tbItems['LAYOUT_MENU'].show();
     this.tbItems['ZOOM_MENU'].show();
 
     this.searchBar.show();
@@ -441,14 +438,10 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     this.slide.on("changecomplete", function() {
       this.slideZoom();
-    },
-    this);
+    },this);
     this.slide.on("change", function() {
       this.slidePreview();
-    },
-    this);
-
-    //    Paperpile.PDFviewer.superclass.afterRender.call(this);
+    },this);
   },
 
   getOnePixel: function() {
@@ -460,9 +453,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.focusEl.focus.defer(50, this.focusEl);
   },
 
-  onResize: function() {
-    Paperpile.PDFviewer.superclass.onResize.apply(this, arguments);
-
+  myOnResize: function() {
     if (this.pageSizes.length == 0) {
       // We're probably getting a resize event before the pdf is loaded.
       return;
@@ -2632,38 +2623,3 @@ Paperpile.CenterToolbar = (function() {
     }
   };
 });
-
-/*
-Ext.menu.SliderItem = function(config){
-
-  Ext.menu.SliderItem.superclass.constructor.call(this, new Ext.Slider(config), config);
-  this.slider = this.component;
-  this.addEvents();
-
-  this.slider.on("render", function(slider){
-    slider.getEl().swallowEvent("click");
-    slider.container.addClass("x-menu-slider-item");
-  });
-};
-
-Ext.extend(Ext.menu.SliderItem, Ext.menu.Adapter, {
-});
-Ext.reg('slideritem', Ext.menu.SliderItem);
-*/
-/*
-Ext.menu.ButtonItem = function(config){
-
-  Ext.menu.ButtonItem.superclass.constructor.call(this, new Ext.Button(config), config);
-  this.button = this.component;
-  this.addEvents();
-
-  this.button.on("render", function(button){
-    button.getEl().swallowEvent("click");
-    button.container.addClass("x-menu-button-item");
-  });
-};
-
-Ext.extend(Ext.menu.ButtonItem, Ext.menu.Adapter, {
-});
-Ext.reg('buttonitem', Ext.menu.ButtonItem);
-*/
