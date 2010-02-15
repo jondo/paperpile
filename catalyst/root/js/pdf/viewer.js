@@ -357,23 +357,25 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       cls: 'pdf-search'
     });
 
-    var bbar = [
-      this.tbItems['LOAD'], {
-        xtype: 'tbseparator'
-      },
-      this.tbItems['PAGE_PREV'],
-      this.tbItems['PAGE_FIELD'],
-      this.tbItems['PAGE_COUNT'],
-      this.tbItems['PAGE_NEXT'], {
-        xtype: 'tbseparator'
-      },
-      //      this.tbItems['LAYOUT_MENU'],
-      this.tbItems['ZOOM_MENU'],
-      this.tbItems['ZOOM_IN'],
-      this.tbItems['ZOOM_OUT'], {
-        xtype: 'tbseparator'
-      },
-      this.tbItems['SEARCH_FIELD']];
+    var bbar = {
+      items: [
+        this.tbItems['LOAD'], {
+          xtype: 'tbseparator'
+        },
+        this.tbItems['PAGE_PREV'],
+        this.tbItems['PAGE_FIELD'],
+        this.tbItems['PAGE_COUNT'],
+        this.tbItems['PAGE_NEXT'], {
+          xtype: 'tbseparator'
+        },
+        this.tbItems['ZOOM_MENU'],
+        this.tbItems['ZOOM_IN'],
+        this.tbItems['ZOOM_OUT'], {
+          xtype: 'tbseparator'
+        },
+        this.tbItems['SEARCH_FIELD']],
+      plugins: [new Paperpile.CenterToolbar()]
+    };
 
     var pagesId = this.prefix() + "pages";
     var contentId = this.prefix() + "content";
@@ -386,11 +388,12 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       html: '<div id="' + contentId + '" class="content-pane" style="left:0pt;top:0pt"><center class="page-pane" id="' + pagesId + '"></center>'
     });
 
-    Paperpile.PDFviewer.superclass.initComponent.apply(this, arguments);
+    Paperpile.PDFviewer.superclass.initComponent.call(this);
 
+    this.on('render', this.myAfterRender, this);
   },
 
-  afterRender: function() {
+  myAfterRender: function() {
     if (this.file != "") {
       this.initPDF(this.file);
     }
@@ -424,22 +427,9 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.delayedTask = new Ext.util.DelayedTask();
     this.loadKeyEvents();
 
-    this.bbar.setStyle("z-index", 50);
-    this.bbar.setStyle("position", "relative");
-    this.bbar.on('afterlayout',
-      function(tb) {
-        tb.el.child('.x-toolbar-right').remove();
-        var t = tb.el.child('.x-toolbar-left');
-        t.removeClass('x-toolbar-left');
-        t = tb.el.child('.x-toolbar-ct');
-        t.setStyle('width', 'auto');
-        t.wrap({
-          tag: 'center'
-        });
-      },
-      null, {
-        single: true
-      });
+    var bbar = this.getBottomToolbar();
+    bbar.getEl().setStyle("z-index", 50);
+    bbar.getEl().setStyle("position", "relative");
 
     this.slide.on("changecomplete", function() {
       this.slideZoom();
@@ -450,7 +440,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     },
     this);
 
-    Paperpile.PDFviewer.superclass.afterRender.apply(this, arguments);
+    //    Paperpile.PDFviewer.superclass.afterRender.call(this);
   },
 
   getOnePixel: function() {
@@ -2614,6 +2604,25 @@ Ext.override(Ext.Element, {
     Ext.fly(child, '_scrollChildIntoView').scrollIntoView(this, hscroll, animate);
   }
 });
+
+// A plugin to make a toolbar's contents centered.
+Paperpile.CenterToolbar = (function() {
+  return {
+    init: function(toolbar) {
+      Ext.apply(toolbar, {
+      });
+      toolbar.on('afterlayout', this.myAfterLayout, this);
+    },
+
+    myAfterLayout: function(tb) {
+        var tbl = tb.getEl().child('.x-toolbar-left table');
+        tbl.wrap({
+          tag: 'center'
+        });
+    }
+  };
+});
+
 /*
 Ext.menu.SliderItem = function(config){
 
