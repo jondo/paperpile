@@ -168,8 +168,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         fieldLabel: 'Search',
         triggerClass: 'x-form-search-trigger',
         onTriggerClick: function(e) {
-          this.log(e);
-          //this.searchDelay();
+	  this.scope.searchDelay();
         },
         width: 100,
         listeners: {
