@@ -1,7 +1,7 @@
 <table>
 <tr>
 <td>
-  <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
+  <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:160;">
     <h2 class="pp-dashboard-statistics" >Statistics</h2>
 
     <table>
@@ -32,7 +32,7 @@
   </div>
 </td>
 <td>
-  <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:200;">
+  <div class="pp-box pp-box-style1 pp-dashboard-box" style="height:160;">
     <h2 class="pp-dashboard-settings">Settings</h2>
     <ul>
       <li><a href="#" class="pp-textlink  pp-bullet" action="settings-general">General settings</a></li>
