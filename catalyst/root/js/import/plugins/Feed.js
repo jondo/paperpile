@@ -2,8 +2,8 @@ Paperpile.PluginPanelFeed = Ext.extend(Paperpile.PluginPanel, {
 
   initComponent: function() {
     Ext.apply(this, {
-      title:this.title,
-      iconCls:'pp-icon-feed'
+      title: this.title,
+      iconCls: 'pp-icon-feed'
     });
 
     Paperpile.PluginPanelFeed.superclass.initComponent.call(this);
@@ -17,42 +17,42 @@ Paperpile.PluginPanelFeed = Ext.extend(Paperpile.PluginPanel, {
 
 Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
 
-    plugin_base_query:'',
-    plugin_iconCls: 'pp-icon-feed',
-    plugin_name:'Feed',
-   
-    plugins:[
-      new Paperpile.ImportGridPlugin()
-    ],
+  plugin_base_query: '',
+  plugin_iconCls: 'pp-icon-feed',
+  plugin_name: 'Feed',
 
-    initComponent:function() {
-      this.getStore();
-        this._store.setBaseParam('plugin_url',this.plugin_url);
-        this._store.setBaseParam('plugin_id',this.plugin_id);
+  plugins: [
+    new Paperpile.ImportGridPlugin()],
 
-      Paperpile.PluginGridFeed.superclass.initComponent.call(this);
+  initComponent: function() {
+    this.getStore();
+    this._store.setBaseParam('plugin_url', this.plugin_url);
+    this._store.setBaseParam('plugin_id', this.plugin_id);
 
+    Paperpile.PluginGridFeed.superclass.initComponent.call(this);
 
-        this.store.on('beforeload',
-                      function(){
-                          Paperpile.status.showBusy('Parsing feed.');
-                      }, this);
-        
-        this.store.on('load',
-                      function(){
-                          Paperpile.status.clearMsg();
-                      }, this);
+    this.store.on('beforeload',
+      function() {
+        Paperpile.status.showBusy('Parsing feed.');
+      },
+      this);
 
-    },
+    this.store.on('load',
+      function() {
+        Paperpile.status.clearMsg();
+      },
+      this);
 
-    createToolbarMenu: function() {
-      Paperpile.PluginGridFeed.superclass.createToolbarMenu.call(this);
+  },
 
-      this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
-    },
+  createToolbarMenu: function() {
+    Paperpile.PluginGridFeed.superclass.createToolbarMenu.call(this);
 
-    updateToolbarItem: function(item) {
-      Paperpile.PluginGridFolder.superclass.updateToolbarItem.call(this,item);
-    }
+    this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
+  },
+
+  updateToolbarItem: function(item) {
+    Paperpile.PluginGridFolder.superclass.updateToolbarItem.call(this, item);
+  }
 
 });

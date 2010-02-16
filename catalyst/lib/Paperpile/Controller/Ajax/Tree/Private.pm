@@ -87,10 +87,10 @@ sub get_default_tree : Private {
 
   $folders->setUID('TRASH');
 
-  #### / Active Folders & Feeds
+  #### / Live & Feeds
 
   my $active = Tree::Simple->new( {
-      text    => 'Active Folders & Feeds',
+      text    => 'Live Folders & Feeds',
       type    => "ACTIVE",
       path    => '/',
       iconCls => 'pp-icon-empty',
@@ -232,13 +232,25 @@ sub get_default_tree : Private {
   $plugins->addChild(
     Tree::Simple->new( {
         type    => 'CLOUDS',
-        text    => 'Cloud view',
+        text    => 'Cloud View',
         iconCls => 'pp-icon-clouds',
         hidden  => 1,
         builtin => 1,
       }
     )
   );
+
+  $plugins->addChild(
+    Tree::Simple->new( {
+        type    => 'DUPLICATES',
+        text    => 'Find Duplicates',
+        iconCls => 'pp-icon-duplicates',
+        hidden  => 1,
+        builtin => 1,
+      }
+    )
+  );
+
 
 
 

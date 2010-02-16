@@ -25,7 +25,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       createToolbarMenu: grid.createToolbarMenu.createSequence(function() {
         var tbar = this.getTopToolbar();
         this.searchField = new Ext.app.SearchField({
-          emptyText: 'Search '+this.plugin_name,
+          emptyText: 'Search ' + this.plugin_name,
           width: 200,
           store: this.store
         });
