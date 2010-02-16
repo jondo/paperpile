@@ -359,7 +359,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       resizable: false,
       unstyled: true,
       bbar: searchToolbar,
-      cls: 'pdf-search'
+      cls: 'pdf-search',
+      width:180
     });
 
     var bbar = {
