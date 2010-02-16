@@ -48,6 +48,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   file: '',
   zoom: 'width',
   columns: 0,
+  maxInitialWidth: 800,
   //  pageLayout:'continuous',
   // Selection state.
   selection: [],
@@ -64,9 +65,9 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   slide: null,
   focusEl: null,
 
-  destroyedFlag:false,
+  destroyedFlag: false,
 
-  debug: false,
+  debug: true,
   log: function() {
     if (this.debug) {
       Paperpile.log(arguments);
@@ -91,6 +92,22 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.continuous = true;
     if (this.zoom == "page") this.specialZoom = 'page';
     if (this.zoom == "width") this.specialZoom = 'width';
+
+    // Ensure that the initial page size isn't too huge.
+    this.on('render', function() {
+      if (this.specialZoom != '') {
+        var currentWidth = this.getRealWidth();
+	if (currentWidth > this.maxInitialWidth) {
+	    this.specialZoom = '';
+	  var scaleBy = this.maxInitialWidth / currentWidth;
+	  this.currentZoom = this.currentZoom * scaleBy;
+	  this.updateZoom();
+	}
+      }
+    },
+    this, {
+      single: true
+    });
 
     var triggerDelay = new Ext.util.DelayedTask(this.clearSearch, this);
 
@@ -380,8 +397,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         xtype: 'tbseparator'
       },
       this.tbItems['ZOOM_MENU'],
-      this.tbItems['ZOOM_IN'],
-      this.tbItems['ZOOM_OUT'], {
+      this.tbItems['ZOOM_OUT'],
+      this.tbItems['ZOOM_IN'], {
         xtype: 'tbseparator'
       },
       this.tbItems['SEARCH_FIELD']],
@@ -981,8 +998,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   },
 
   backgroundWorker: function() {
-    if (this.destroyedFlag)
-      return;
+    if (this.destroyedFlag) return;
 
     var bgTask;
     if (this.urgentTasks.length > 0) {
