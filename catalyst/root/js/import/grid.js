@@ -18,7 +18,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   overviewPanel: null,
   detailsPanel: null,
   tagStyles: {},
-  author_shrink_threshold: 255,
 
   initComponent: function() {
     var _pager = new Ext.PagingToolbar({
@@ -38,24 +37,39 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         var wrapped = record.data.doi;
 
         if (wrapped.length > 25) {
-          wrapped = wrapped.replace(/\//, '/<br>');
+          wrapped = wrapped.replace(/\//, '/<br/>');
         }
 
         record.data._doiWrapped = wrapped;
       }
 
-      /*
-	// Shrink very long author lists.
-	record.data._long_authorlist = 0;
-	var ad = record.data._authors_display;
-	if (record.data._shrink_authors == null)
-	  record.data._shrink_authors = 1;
-	if (ad != null && ad.length > this.author_shrink_threshold) {
-	  record.data._long_authorlist = 1;
-	  record.data._authors_display_short = ad.substring(0,this.author_shrink_threshold);
-	  record.data._authors_display_short_tail = ad.substring(ad.lastIndexOf(","),ad.length);
-	} 
-*/
+      // Shrink very long author lists.
+      record.data._long_authorlist = 0;
+      var ad = record.data._authors_display || '';
+      var authors_array = ad.split(",");
+
+      var n = authors_array.length;
+      var author_length_threshold = 25;
+      var author_keep_beginning = 5;
+      var author_keep_end = 5;
+      if (authors_array.length > author_length_threshold) {
+        var authors_first_five = authors_array.slice(0, author_keep_beginning);
+        var authors_middle = authors_array.slice(author_keep_beginning, n - author_keep_end);
+	var hidden_n = authors_middle.length;
+        var authors_last_five = authors_array.slice(n - author_keep_end, n);
+        record.data._authors_display = [
+          authors_first_five.join(", "),
+          ' ... <a class="pp-authortip" href="">',
+	  '('+hidden_n+' more)',
+	  '</a> ... ',
+          authors_last_five.join(", ")].join("");
+
+        var displayText = [
+          '<b>'+ n + ' authors:</b> ',
+          authors_array.join(", ")].join("");
+	record.data._authortip = displayText;
+      }
+
       return this.getPubTemplate().apply(record.data);
     };
 
@@ -69,7 +83,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         record.data._last_readPretty = 'Never read';
       }
 
-      
       record.data.pdf_path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
       return this.getIconTemplate().apply(record.data);
     };
@@ -433,6 +446,29 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
     this.dragZone = new Paperpile.GridDragZone(this, {
       ddGroup: this.ddGroup
+    });
+
+    this.createAuthorToolTip();
+  },
+
+  createAuthorToolTip: function() {
+    this.authorTip = new Ext.ToolTip({
+      maxWidth:500,
+      showDelay:0,
+      hideDelay:0,
+      target: this.getView().mainBody,
+      delegate: '.pp-authortip',
+      renderTo: document.body,
+      listeners: {
+        beforeshow: {
+          fn: function updateTipBody(tip) {
+            var rowIndex = this.getView().findRowIndex(tip.triggerElement);
+	    var record = this.getStore().getAt(rowIndex);
+            tip.body.dom.innerHTML = record.data._authortip;
+          },
+          scope: this
+        }
+      }
     });
   },
 
@@ -1196,10 +1232,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var sm = this.getSelectionModel();
 
     var authors = sm.getSelected().data.authors;
-    var arr = authors.split(/\s+and\s+/, 2);
-    if (arr.length > 1) {
-      var first_author = arr[0];
-      this.setSearchQuery('author:' + '"' + first_author + '"');
+    var arr = authors.split(/\s+and\s+/);
+    var author;
+    if (arr.length > 0 && !last) {
+      author = arr[0];
+    } else if (arr.length > 0) {
+      author = arr[arr.length-1];
+    }
+    this.setSearchQuery('author:' + '"' + author + '"');
       /*
  	Paperpile.main.tabs.newPluginTab('DB',
 					 {plugin_mode:'FULLTEXT',
@@ -1209,7 +1249,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 					 first_author
 					);
 */
-    }
   },
   viewByYear: function() {
     var sm = this.getSelectionModel();
