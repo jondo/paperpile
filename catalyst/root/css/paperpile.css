@@ -1685,7 +1685,17 @@ table.pp-meta-form {
     font-size: 14px;
 }
 
-
+.pp-authortip {
+    text-decoration:none;
+    display:inline;
+    color: #BDBDBD;
+    cursor:default;
+    font-style: normal;
+    font-weight:normal;
+}
+.pp-authortip:hover {
+    color: black;
+}
 
 .pp-tooltip-link {
     color: #BDBDBD!important;
