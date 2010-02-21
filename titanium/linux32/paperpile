@@ -1,5 +1,0 @@
-#!/bin/sh
-
-path=`dirname $0`
-$path/_paperpile.bin
-$path/stop_server.sh $path

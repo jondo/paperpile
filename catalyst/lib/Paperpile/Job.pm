@@ -243,6 +243,8 @@ sub run {
   # fork returned 0, so this branch is child
   elsif ( $pid == 0 ) {
 
+    close(STDOUT);
+
     $self->update_status('RUNNING');
 
     my $start_time = time;

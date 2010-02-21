@@ -462,10 +462,30 @@ sub batch_download : Local {
   $q->submit( \@jobs );
   $q->save;
   $q->run;
-
   my $pubs = $self->_collect_data( $data, ['_search_job'] );
 
+
+  #my $pid = undef;
+
+  #if ( !defined( $pid = fork() ) ) {
+  #  die "Cannot fork: $!";
+  #} elsif ( $pid == 0 ) {
+  #  print STDERR "================> This is the child.";
+
+  #  close(STDOUT);
+  #  close(STDERR);
+
+  #  foreach my $i (0..10){
+  #    sleep(1);
+  #  }
+  #  exit();
+  #} else {
+  #  print STDERR "================> This is the parent.";
+  #}
+
   $c->stash->{data} = { pubs => $pubs, job_delta => 1 };
+
+  $c->detach('Paperpile::View::JSON');
 
 }
 

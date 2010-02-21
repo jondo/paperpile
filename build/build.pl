@@ -1,15 +1,20 @@
 ### Run with ./perl.pl wrapper!
 
+BEGIN {
+  $ENV{CATALYST_DEBUG} = 0;
+}
+
 use strict;
 
 use FindBin;
 use lib "$FindBin::Bin/../catalyst/lib";
 
+use Paperpile;
 use Paperpile::Build;
 
 if ( $#ARGV != 0 ) {
   print 'Usage: ./perl.pl build.pl [command]', "\n";
-  print 'Commands: dist, initdb, minify, dump_includes', "\n";
+  print 'Commands: dist, initdb, minify, dump_includes, get_titanium', "\n";
   exit(1);
 }
 
@@ -26,6 +31,11 @@ my $b = Paperpile::Build->new( {
 if ( $command eq 'initdb' ) {
   $b->initdb;
 }
+
+if ( $command eq 'get_titanium' ) {
+  $b->get_titanium;
+}
+
 
 if ( $command eq 'dist' ) {
   $b->make_dist('linux64');

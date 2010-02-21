@@ -1057,6 +1057,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   batchDownload: function() {
+    console.log("===========> batchDonwload");
     selection = this.getSelection();
     Ext.getCmp('queue-widget').onUpdate({
       submitting: true
@@ -1068,8 +1069,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         grid_id: this.id
       },
       method: 'GET',
-      timeout: 10000000,
+      //timeout: 10000000,
       success: function(response) {
+        console.log("===========> batchDonwload success");
         var json = Ext.util.JSON.decode(response.responseText);
         Paperpile.main.onUpdate(json.data);
         // Trigger a thread to start requesting queue updates.
