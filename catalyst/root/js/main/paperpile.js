@@ -213,10 +213,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   openPdfInExternalViewer: function(filename, data) {
     var path = filename;
-    if (path.indexOf(Paperpile.main.globalSettings.paper_root) == -1) {
-      // Append the paper root path if necessary.
+
+    // If it is an absolute path it is the temporary copy in the tmp
+    // folder, otherwise it is stored under the paper_root folder and
+    // we need to append the paper_root
+    if (!Paperpile.utils.isAbsolute(path)){
       path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
     }
+
     Paperpile.utils.openFile(path);
     if (data !== null) {
       Paperpile.main.inc_read_counter(data);
