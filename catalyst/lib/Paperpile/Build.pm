@@ -256,7 +256,7 @@ sub get_titanium {
 
     if ( -e "$dest_dir/runtime/VERSION-$version" ) {
       $self->echo("Titanium runtime version $version already exists.");
-      return;
+      next;
     } else {
       if ( -e "$dest_dir/runtime" ) {
         $self->echo("Deleting old version of Titanium runtime.");
@@ -271,7 +271,7 @@ sub get_titanium {
       $self->echo("Downloading runtime.");
       `wget -P $tmp_dir $url`;
 
-      if (!-e $file){
+      if (!-e "$tmp_dir/$file_name"){
         $self->echo("Could not download runtime for $platform.");
         next;
       }
