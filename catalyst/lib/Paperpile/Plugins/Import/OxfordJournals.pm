@@ -43,8 +43,10 @@ sub complete_details {
     NetFormatError->throw( error => 'No link provided to get bibliographic detils.' );
   }
 
+  ( my $link = $pub->_details_link() ) =~ s/\.pdf$//;
+
   my $browser  = Paperpile::Utils->get_browser;
-  my $response = $browser->get( $pub->_details_link() );
+  my $response = $browser->get($link);
   my $content  = $response->content;
 
   # We parse the HTML via XPath
