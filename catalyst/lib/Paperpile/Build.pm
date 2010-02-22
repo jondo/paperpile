@@ -240,41 +240,50 @@ sub get_titanium {
 
   my ($self) = @_;
 
-  my $version  = Paperpile->config->{app_settings}->{titanium_version};
-  my $platform = Paperpile->config->{platform};
-
-  my $dest_dir   = $self->ti_dir . "/$platform";
-  my $source_dir = "/home/wash/tmp/pack/";
-
-  my $file_name = "titanium-$version-$platform.tar.gz";
-  my $url       = "http://paperpile.com/download/titanium/titanium-$version-$platform.tar.gz";
-
-  $self->echo("Getting Titanium runtime version $version for $platform");
-
-  if ( -e "$dest_dir/runtime/VERSION-$version" ) {
-    $self->echo("Titanium runtime version $version already exists.");
-    return;
-  } else {
-    if ( -e "$dest_dir/runtime" ) {
-      $self->echo("Deleting old version of Titanium runtime.");
-      `rm -rf $dest_dir/runtime $dest_dir/modules $dest_dir/paperpile`;
-    }
-  }
+  my $version = Paperpile->config->{app_settings}->{titanium_version};
 
   my $tmp_dir = tempdir( CLEANUP => 1 );
 
-  # Short-cut to pack and test locally
-  my $file = "/home/wash/tmp/pack/" . $file_name;
+  foreach my $platform ( 'linux32', 'linux64' ) {
 
-  if ( !-e $file ) {
-    $self->echo("Downloading runtime.");
-    `wget -P $tmp_dir $url`;
-  } else {
-    `cp $file $tmp_dir`;
+    my $dest_dir   = $self->ti_dir . "/$platform";
+    my $source_dir = "/home/wash/tmp/pack/";
+
+    my $file_name = "titanium-$version-$platform.tar.gz";
+    my $url       = "http://paperpile.com/download/titanium/titanium-$version-$platform.tar.gz";
+
+    $self->echo("Getting Titanium runtime version $version for $platform");
+
+    if ( -e "$dest_dir/runtime/VERSION-$version" ) {
+      $self->echo("Titanium runtime version $version already exists.");
+      return;
+    } else {
+      if ( -e "$dest_dir/runtime" ) {
+        $self->echo("Deleting old version of Titanium runtime.");
+        `rm -rf $dest_dir/runtime $dest_dir/modules $dest_dir/paperpile`;
+      }
+    }
+
+    # Short-cut to pack and test locally
+    my $file = "/home/wash/tmp/pack/" . $file_name;
+
+    if ( !-e $file ) {
+      $self->echo("Downloading runtime.");
+      `wget -P $tmp_dir $url`;
+
+      if (!-e $file){
+        $self->echo("Could not download runtime for $platform.");
+        next;
+      }
+
+    } else {
+      `cp $file $tmp_dir`;
+    }
+
+    `tar -C $tmp_dir -xzf $tmp_dir/$file_name`;
+    `mv $tmp_dir/titanium-$version-$platform/* $dest_dir`;
+
   }
-
-  `tar -C $tmp_dir -xzf $tmp_dir/$file_name`;
-  `mv $tmp_dir/titanium-$version-$platform/* $dest_dir`;
 
 }
 
