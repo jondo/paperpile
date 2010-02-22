@@ -18,6 +18,7 @@ use Paperpile::Utils;
 use Paperpile::Plugins::Import::SpringerLink;
 use Paperpile::Plugins::Import::ACM;
 use Paperpile::Plugins::Import::PubMed;
+use Paperpile::Plugins::Import::OxfordJournals;
 
 extends 'Paperpile::Plugins::Import';
 
@@ -232,6 +233,15 @@ m/http:\/\/www\.pubmedcentral\.nih\.gov\/articlerender\.fcgi\?artid=(\d+)/
         }
     }
 
+    # Exit point to Oxford Journals details completion
+    if ( $pub->linkout() =~ m/oxfordjournals\.org/ ) {
+      my $tmp_details_link = $pub->linkout();
+      my $OJPlugin        = Paperpile::Plugins::Import::OxfordJournals->new();
+      $pub->_details_link($tmp_details_link);
+      $full_pub = $OJPlugin->complete_details($pub);
+      $done = 1 if ( $full_pub->title );
+    }
+
     # If we have no support for the publisher yet, or it did not work
     # we return undef
     if ( $done == 0 ) {
@@ -266,14 +276,18 @@ sub complete_details {
     $browser->cookie_jar( $self->_session_cookie );
     my $bibtex = '';
 
-    # Let's see if the the www_provider is a one that
-    # we can already parse
+    # Let's see if the the www_provider or the linkout is
+    # one that we can already parse
     my @best_sources = ( 'Springer', 'portal.acm.org', 'ncbi.nlm.nih.gov' );
+    my @best_linkouts = ( 'oxfordjournals.org' );
     my $best_flag = 0;
     foreach my $j ( 0 .. $#best_sources ) {
-        $best_flag = 1 if ( $pub->_www_publisher eq $best_sources[$j] );
+      $best_flag = 1 if ( $pub->_www_publisher eq $best_sources[$j] );
     }
-
+    foreach my $link ( @best_linkouts ) {
+      $best_flag = 1 if ( $pub->linkout =~ m/$link/ );
+    }
+    
     # if the publisher is already a good one we call the BibTeX right here
     # or take another Plugin if we can recognize it
     if ( $best_flag == 1 ) {
