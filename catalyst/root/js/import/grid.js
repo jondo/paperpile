@@ -417,7 +417,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
         this.updateButtons();
         this.getPluginPanel().updateDetails();
-        this.completeEntry();
+	if (this.getSelectionModel().getCount() == 1)
+	  this.completeEntry();
       },
       this);
 
@@ -879,7 +880,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   // only minimal info is scraped from site to build list quickly
   // without harassing the site too much. Then the details are
   // fetched only when user clicks the entry.
-  completeEntry: function(callback, scope) {
+  completeEntry: function(callback, scope, args) {
+    var selection = this.getSelection();
+
     var sel = this.getSelectionModel().getSelected();
     if (!sel) return;
     var data = sel.data;
@@ -890,12 +893,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       Ext.Ajax.request({
         url: Paperpile.Url('/ajax/crud/complete_entry'),
         params: {
-          sha1: sha1,
-          grid_id: this.id,
+          selection:selection,
+          grid_id: this.id
         },
         method: 'GET',
         success: function(response) {
           var json = Ext.util.JSON.decode(response.responseText);
+
+	  Paperpile.main.onUpdate(json.data);
+	  Paperpile.status.clearMsg();
+/*
           var record = this.store.getAt(this.store.find('sha1', sha1));
           record.beginEdit();
           for (var i in json.data) {
@@ -907,13 +914,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
           Paperpile.status.clearMsg();
 
-          if (callback) callback.createDelegate(scope)();
+          if (callback) callback.createDelegate(scope,args)();
+*/
         },
         failure: Paperpile.main.onError,
         scope: this
       });
     } else {
-      if (callback) callback.createDelegate(scope)();
+      if (callback) callback.createDelegate(scope,args)();
     }
 
   },
@@ -1173,12 +1181,20 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     for (var sha1 in pubs) {
       var record = this.store.getAt(this.store.findExact('sha1', sha1));
       if (!record) {
+	record = this.store.getAt(this.store.findExact('_old_sha1',sha1));
+      }
+      if (!record) {
         continue;
       }
       var needsUpdating = false;
       var update = pubs[sha1];
       record.editing = true; // Set the 'editing' flag.
       for (var field in update) {
+	if (field == '_new_sha1') {
+	  record.set('_old_sha1',record.get('sha1'));
+	  record.set('sha1',update[field]);
+	}
+
         record.set(field, update[field]);
       }
       // Unset the 'editing' flag. Using the flag directly avoids calling store.afterEdit() for every record.
@@ -1295,14 +1311,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   onDblClick: function(grid, rowIndex, e) {
-
     var sm = this.getSelectionModel();
     if (sm.getCount() == 1) {
-      if (!sm.getSelected().data._imported) {
-        this.insertEntry();
-        return;
+      if (sm.getSelected().data._imported) {
+	this.openPDF();
       }
-      this.openPDF();
     }
   },
 

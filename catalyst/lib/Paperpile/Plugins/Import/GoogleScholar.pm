@@ -395,8 +395,14 @@ sub complete_details {
     my $new_sha1 = $full_pub->sha1;
     delete( $self->_hash->{$old_sha1} );
     $self->_hash->{$new_sha1} = $full_pub;
-
     return $full_pub;
+}
+
+sub needs_completing {
+  ( my $self, my $pub ) = @_;
+
+  return 1 if ($pub->{_details_link});
+  return 0;
 }
 
 # match function to match a given publication object against Google
