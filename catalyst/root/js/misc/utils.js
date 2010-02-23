@@ -19,23 +19,46 @@ Paperpile.utils = {
 
   openURL: function(url) {
     if (IS_TITANIUM) {
-      var process = Titanium.Process.launch('xdg-open', url);
+      var process = Titanium.Process.createProcess({
+        args: ['xdg-open', url]
+      });
+
+      process.setOnExit(function() {
+        if (process.getExitCode() != 0) {
+          Paperpile.status.updateMsg({
+            type: 'error',
+            msg: 'Could not open your browser',
+            hideOnClick: true
+          });
+        }
+      });
+      process.launch();
     } else {
       window.open(url, '_blank');
     }
   },
 
   openFile: function(file) {
-
     if (IS_TITANIUM) {
 
-      var process = Titanium.Process.launch('xdg-open', file);
-      // TODO: handle return of xdg-open; we wait until process
-      // API is more stable
+      var process = Titanium.Process.createProcess({
+        args: ['xdg-open', file]
+      });
+
+      process.setOnExit(function() {
+        if (process.getExitCode() != 0) {
+          Paperpile.status.updateMsg({
+            type: 'error',
+            msg: 'Could not open file '+ Paperpile.utils.splitPath(file).file,
+            hideOnClick: true
+          });
+        }
+      });
+
+      process.launch();
     } else {
       window.open('/serve/' + file, '_blank');
     }
-
   },
 
   get_platform: function() {

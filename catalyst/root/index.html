@@ -2,13 +2,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-<link rel="stylesheet" type="text/css" charset="utf-8" href="/ext3/resources/css/ext-all.css"></link>
+<link rel="stylesheet" type="text/css" charset="utf-8" href="/ext/resources/css/ext-all.css"></link>
+<link rel="stylesheet" type="text/css" charset="utf-8" href="/ext/resources/css/xtheme-gray.css"></link>
 <link rel="stylesheet" type="text/css" charset="utf-8" href="/ext.ux/filetree/css/all.css"></link>
 
 <link rel="stylesheet" type="text/css" charset="utf-8" href="/css/paperpile.css"></link>
 <link rel="stylesheet" type="text/css" charset="utf-8" href="/css/pdf.css"></link>
-
-
 
 
 <title>Paperpile</title>
@@ -30,23 +29,27 @@
 
 <!--  <script type="text/javascript" charset="utf-8" src="/js/all.js"></script> -->
 
-<script type="text/javascript" charset="utf-8" src="/ext3/adapter/ext/ext-base.js"></script>
-<script type="text/javascript" charset="utf-8" src="/ext3/ext-all-debug.js"></script>
-<script type="text/javascript" charset="utf-8" src="/ext3/examples/ux/StatusBar.js"></script>
-<script type="text/javascript" charset="utf-8" src="/ext3/examples/ux/Spotlight.js"></script>
+<script type="text/javascript" charset="utf-8" src="/ext/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" charset="utf-8" src="/ext/ext-all-debug.js"></script>
+<script type="text/javascript" charset="utf-8" src="/ext/examples/ux/StatusBar.js"></script>
+<script type="text/javascript" charset="utf-8" src="/ext/examples/ux/Spotlight.js"></script>
 <script type="text/javascript" charset="utf-8" src="/flashchart/swfobject.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/main/overrides.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/main/paperpile.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/main/startup.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/main/tabs.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/main/StatusTipProxy.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/main/tree-plugins.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/main/tree-hover-button.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/main/tree.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/main/dashboard.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/grid.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/search-field.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/filter-field.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/import/sidepanel.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/import/plugins/plugin-import.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/plugins/online-search.js"></script>
-<script type="text/javascript" charset="utf-8" src="/js/import/plugins/sidepanel.js"></script>
-<script type="text/javascript" charset="utf-8" src="/js/import/plugins/DB.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/import/plugins/"></script>
 <script type="text/javascript" charset="utf-8" src="/js/misc/utils.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/misc/forms.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/misc/file-chooser.js"></script>
@@ -59,13 +62,16 @@
 <script type="text/javascript" charset="utf-8" src="/js/screens/format.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/screens/settings.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/screens/clouds.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/widgets/label-widget.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/widgets/search-download-widget.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/screens/log.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/screens/updates.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pub/abstract.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pub/notes.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pub/edit.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/pub/overview.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pub/view.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pub/bottom-panel.js"></script>
-<script type="text/javascript" charset="utf-8" src="/js/pub/side-panel.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pub/details.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pdf/viewer.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pdf/hoverbutton.js"></script>
@@ -74,9 +80,11 @@
 <script type="text/javascript" charset="utf-8" src="/js/pdfextract/view.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pdfextract/grid.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/pdfextract/control.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/queue/RowExpander.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/queue/view.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/queue/grid.js"></script>
-<script type="text/javascript" charset="utf-8" src="/js/queue/control.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/queue/side-panel.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/queue/widget.js"></script>
 <script type="text/javascript" charset="utf-8" src="/ext.ux/filetree/js/Ext.ux.FileTreeMenu.js"></script>
 <script type="text/javascript" charset="utf-8" src="/ext.ux/filetree/js/Ext.ux.FileTreePanel.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/export/plugins/bibfile.js"></script>
@@ -93,14 +101,11 @@
 <script type="text/javascript" charset="utf-8" src="/js/import/plugins/GoogleScholar.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/plugins/JSTOR.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/plugins/online-search.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/import/plugins/plugin-import.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/plugins/PubMed.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/plugins/RSS.js"></script>
-<script type="text/javascript" charset="utf-8" src="/js/import/plugins/sidepanel.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/plugins/SpringerLink.js"></script>
 <script type="text/javascript" charset="utf-8" src="/js/import/plugins/Trash.js"></script>
-<script type="text/javascript" charset="utf-8" src="/js/screens/log.js"></script>
-
-
 
 
 <script type="text/javascript" src="http://cdn.uservoice.com/javascripts/widgets/tab.js"></script>

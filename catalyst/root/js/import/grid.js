@@ -1076,7 +1076,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         grid_id: this.id
       },
       method: 'GET',
-      timeout: 10000000,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         Paperpile.main.onUpdate(json.data);

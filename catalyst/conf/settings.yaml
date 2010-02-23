@@ -26,6 +26,7 @@ app_settings:
   build_number: 0
   settings_db_version: 1
   library_db_version: 1
+  titanium_version: 0.8.4
 
 user_settings:
   db_version: 1
