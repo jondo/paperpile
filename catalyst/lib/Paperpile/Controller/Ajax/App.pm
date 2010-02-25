@@ -117,6 +117,10 @@ sub init_session : Local {
   my $q = Paperpile::Queue->new();
   $q->clear_all;
 
+  # Clear temporary PDF downloads
+  unlink(glob(File::Spec->catfile( $tmp_dir, 'download','*pdf' )));
+
+
 }
 
 sub migrate_db : Local {
