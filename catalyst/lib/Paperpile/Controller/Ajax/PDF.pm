@@ -42,6 +42,8 @@ sub render : Regex('^ajax/pdf/render/(.*\.pdf)/(\d+)/(\d+\.\d+)$') {
 
   my @out=`$bin $filename`;
 
+  unlink($filename);
+
   my $png = '';
   $png .= $_ foreach @out;
 
@@ -62,13 +64,13 @@ sub extpdf : Local {
 
   my $xml = XMLout( $c->request->params, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
 
-  print STDERR $xml;
-
   my ( $fh, $filename ) = File::Temp::tempfile();
   print $fh $xml;
   close($fh);
 
   my @output = `$bin $filename`;
+
+  unlink($filename);
 
   my $output = '';
   $output .= $_ foreach @output;
