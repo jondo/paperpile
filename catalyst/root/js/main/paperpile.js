@@ -465,14 +465,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   stopQueueUpdate: function() {
-    console.log("===========> stopUpdate");
     if (!this.queueUpdateTask) return;
     Ext.TaskMgr.stop(this.queueUpdateTask);
     this.queueUpdateTask = null;
   },
 
   queueUpdate: function() {
-    console.log("===========> queueUpdate");
     if (this.queueUpdateTask) {
       Ext.TaskMgr.stop(this.queueUpdateTask);
     }
@@ -488,8 +486,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   queueUpdateFn: function() {
-    console.log("===========> queueUpdateFn");
-
     // Make sure that request is only sent after the previous got
     // back.
     if (this.queuePollStatus == null) {
