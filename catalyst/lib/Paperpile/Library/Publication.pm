@@ -288,9 +288,9 @@ sub format_citation {
   $cit .= '<i>Master\'s Thesis</i>. ' if ( $self->pubtype eq 'MASTERSTHESIS' );
   $cit .= $self->school . ' '         if ( $self->school );
 
-  $cit .= '(' . $self->year . ') ' if ( $self->year );
-  $cit .= $self->month             if ( $self->month );
-  $cit .= '; '                     if $cit;
+  $cit .= '(' . $self->year . ')' if ( $self->year );
+  $cit .= ' ' . $self->month      if ( $self->month );
+  $cit .= '; '                    if ($cit && $self->year);
 
   if ( $self->pubtype eq 'ARTICLE' or $self->pubtype eq 'INPROCEEDINGS' ) {
     $cit .= '<b>' . $self->volume . '</b>:' if ( $self->volume );
