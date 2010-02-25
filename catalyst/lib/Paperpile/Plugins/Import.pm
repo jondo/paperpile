@@ -83,6 +83,12 @@ sub complete_details {
 
 }
 
+sub needs_completing {
+  ( my $self, my $pub) = @_;
+
+  return 0;
+}
+
 # Function find_sha1
 
 # Returns an entry by the sha1 index. To ensure that this function

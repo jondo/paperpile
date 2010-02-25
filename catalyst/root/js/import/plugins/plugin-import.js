@@ -27,151 +27,164 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
       tooltip: 'Import all references to your library.'
     });
 
-    Ext.apply(grid, {
-      createToolbarMenu: grid.createToolbarMenu.createSequence(function() {
-        var tbar = this.getTopToolbar();
-
-        if (this.actions['NEW'] != null) {
-          var item = this.getToolbarByItemId(this.actions['NEW'].itemId);
-          item.setVisible(false);
+    if (!grid['isLongImport']) {
+      Ext.apply(grid, {
+        isLongImport: function() {
+          if (this.allSelected || this.getSelection('NOT_IMPORTED') == 'ALL') return true;
+          if (this.getSelection('NOT_IMPORTED').length >= 10) return true;
+          return false;
         }
+      });
+    }
 
-        var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-        tbar.insertButton(filterFieldIndex + 1, this.actions['IMPORT_ALL']);
-        tbar.insertButton(filterFieldIndex + 1, this.actions['IMPORT']);
-      },
-      grid),
+      Ext.apply(grid, {
+        createToolbarMenu: grid.createToolbarMenu.createSequence(function() {
+          var tbar = this.getTopToolbar();
 
-      createContextMenu: grid.createContextMenu.createSequence(function() {
-        this.context.insert(0, this.actions['IMPORT']);
-
-        this.getContextByItemId(this.actions['VIEW_PDF'].itemId).setVisible(false);
-        this.getContextByItemId(this.actions['DELETE'].itemId).setVisible(false);
-
-      },
-      grid),
-
-      updateContextItem: grid.updateContextItem.createSequence(function(item, record) {
-        if (item.itemId == this.actions['IMPORT'].itemId) {
-          if (record.data._imported) {
-            item.disable();
-            item.setText("Already imported.");
-          } else {
-            item.enable();
-            item.setText("Import");
+          if (this.actions['NEW'] != null) {
+            var item = this.getToolbarByItemId(this.actions['NEW'].itemId);
+            item.setVisible(false);
           }
-        }
 
-        if (item.itemId == this.actions['EDIT'].itemId) {
-          record.data._imported ? item.setVisible(false) : item.setVisible(true);
-        }
-
-      },
-      grid),
-
-      updateToolbarItem: grid.updateToolbarItem.createSequence(function(item) {
-        var selected = this.getSelection().length;
-        var totalCount = this.store.getTotalCount();
-
-        if (item.itemId == this.actions['IMPORT'].itemId) {
-          (selected > 0 ? item.enable() : item.disable());
-          if (selected == 1) {
-            // Check for an already-imported item.
-            var data = this.getSelectionModel().getSelected().data;
-            if (data._imported) {
-              item.disable();
-            }
-          }
-        }
-
-        if (item.itemId == this.actions['IMPORT_ALL'].itemId) {
-          (totalCount > 0 ? item.enable() : item.disable());
-        }
-
-      },
-      grid),
-
-      insertAll: function() {
-        this.allSelected = true;
-        this.insertEntry(function() {
-          this.allSelected = false;
-          Paperpile.main.onUpdate();
+          var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
+          tbar.insertButton(filterFieldIndex + 1, this.actions['IMPORT_ALL']);
+          tbar.insertButton(filterFieldIndex + 1, this.actions['IMPORT']);
         },
-        this);
-      },
+        grid),
 
-      insertEntry: function(all) {
+        createContextMenu: grid.createContextMenu.createSequence(function() {
+          this.context.insert(0, this.actions['IMPORT']);
 
-        if (all){
-          this.allSelected = true;
-        }
+          this.getContextByItemId(this.actions['VIEW_PDF'].itemId).setVisible(false);
+          this.getContextByItemId(this.actions['DELETE'].itemId).setVisible(false);
 
-        var selection = this.getSelection('NOT_IMPORTED');
-        if (selection.length == 0) return;
-        var many = false;
-        if (selection == 'ALL') {
-          this.allImported = true;
-          many = true;
-        } else {
-          if (selection.length > 10) {
-            many = true;
-          }
-        }
+        },
+        grid),
 
-        if (many) {
-          Paperpile.status.showBusy('Importing references to library');
-        }
-
-        Ext.Ajax.request({
-          url: Paperpile.Url('/ajax/crud/insert_entry'),
-          params: {
-            selection: selection,
-            grid_id: this.id
-          },
-          timeout: 10000000,
-          method: 'GET',
-          success: function(response) {
-            var json = Ext.util.JSON.decode(response.responseText);
-            if (all){
-              this.allSelected=false;
+        updateContextItem: grid.updateContextItem.createSequence(function(item, record) {
+          if (item.itemId == this.actions['IMPORT'].itemId) {
+            if (record.data._imported) {
+              item.disable();
+              item.setText("Already imported.");
+            } else {
+              item.enable();
+              item.setText("Import");
             }
-            Paperpile.main.onUpdate(json.data);
-            Paperpile.status.clearMsg();
-          },
-          failure: Paperpile.main.onError,
-          scope: this
-        });
-      },
+          }
 
-      getMultipleSelectionTemplate: function() {
+          if (item.itemId == this.actions['EDIT'].itemId) {
+            record.data._imported ? item.setVisible(false) : item.setVisible(true);
+          }
 
-        var template = [
-          '<div id="main-container-{id}">',
-          '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
-          '    <tpl if="numSelected==0">',
-          '      <p>No references in here.</p>',
-          '    </tpl>',
-          '    <tpl if="numSelected &gt;0">',
-          '      <p><b>{numSelected}</b> references selected.</p>',
-          '      <div class="pp-vspace"></div>',
-          '      <ul>',
-          '      <tpl if="numImported==0 || (allSelected && !allImported)">',
-          '        <li class="pp-action pp-action-add"> <a  href="#" class="pp-textlink" action="import-ref">Import</a> </li>',
-          '      </tpl>',
-          '      <tpl if="(numImported || allImported) && (!allSelected||allImported)">',
-          '        <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
-          '        <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
-          '      </tpl>',
-          '      </ul>',
-          '    </tpl>',
-          '  </div>',
-          '</div>'];
-        return[].concat(template);
-      }
+        },
+        grid),
 
-    });
-  },
+        updateToolbarItem: grid.updateToolbarItem.createSequence(function(item) {
+          var selected = this.getSelection().length;
+          var totalCount = this.store.getTotalCount();
 
-});
+          if (item.itemId == this.actions['IMPORT'].itemId) {
+            (selected > 0 ? item.enable() : item.disable());
+            if (selected == 1) {
+              // Check for an already-imported item.
+              var data = this.getSelectionModel().getSelected().data;
+              if (data._imported) {
+                item.disable();
+              }
+            }
+          }
 
-Ext.reg("import-grid-plugin", Paperpile.ImportGridPlugin);
+          if (item.itemId == this.actions['IMPORT_ALL'].itemId) {
+            (totalCount > 0 ? item.enable() : item.disable());
+          }
+
+        },
+        grid),
+
+        onDblClick: grid.onDblClick.createInterceptor(function(grid, rowIndex, e) {
+          // We're using an "interceptor" here to sneak into the grid's double-click
+          // handler. If the selected item is NOT imported, we call the "insertEntry" method
+          // and return false, causing the original onDblClick method NOT to be called.
+          // If the selected item IS already imported, we defer to the superclass method from grid.js
+          if (this.getSelectionModel().getCount() == 1) {
+            if (!this.getSelectionModel().getSelected().data._imported) {
+              Paperpile.log("Not imported!");
+              this.insertEntry();
+              return false;
+            } else {
+              Paperpile.log("Imported!");
+            }
+          }
+          return true;
+        },
+        grid),
+
+        insertAll: function() {
+          this.allSelected = true;
+          this.insertEntry(true);
+        },
+
+        insertEntry: function(all) {
+          if (all) {
+            this.allSelected = true;
+          }
+
+          var selection = this.getSelection('NOT_IMPORTED');
+          if (selection.length == 0) return;
+
+          if (this.isLongImport()) {
+            Paperpile.status.showBusy('Importing references to library');
+          }
+
+          Ext.Ajax.request({
+            url: Paperpile.Url('/ajax/crud/insert_entry'),
+            params: {
+              selection: selection,
+              grid_id: this.id
+            },
+            timeout: 10000000,
+            method: 'GET',
+            success: function(response) {
+              var json = Ext.util.JSON.decode(response.responseText);
+              if (all) {
+                this.allSelected = false;
+              }
+              Paperpile.main.onUpdate(json.data);
+              Paperpile.status.clearMsg();
+            },
+            failure: Paperpile.main.onError,
+            scope: this
+          });
+        },
+
+        getMultipleSelectionTemplate: function() {
+          var template = [
+            '<div id="main-container-{id}">',
+            '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
+            '    <tpl if="numSelected==0">',
+            '      <p>No references in here.</p>',
+            '    </tpl>',
+            '    <tpl if="numSelected &gt;0">',
+            '      <p><b>{numSelected}</b> references selected.</p>',
+            '      <div class="pp-vspace"></div>',
+            '      <ul>',
+            '      <tpl if="numImported==0 || (allSelected && !allImported)">',
+            '        <li class="pp-action pp-action-add"> <a  href="#" class="pp-textlink" action="import-ref">Import</a> </li>',
+            '      </tpl>',
+            '      <tpl if="(numImported || allImported) && (!allSelected||allImported)">',
+            '        <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
+            '        <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
+            '      </tpl>',
+            '      </ul>',
+            '    </tpl>',
+            '  </div>',
+            '</div>'];
+          return[].concat(template);
+        }
+
+      });
+    },
+
+  });
+
+  Ext.reg("import-grid-plugin", Paperpile.ImportGridPlugin);

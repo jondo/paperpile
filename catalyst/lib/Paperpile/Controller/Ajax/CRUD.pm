@@ -16,17 +16,47 @@ sub insert_entry : Local {
 
   my $grid_id = $c->request->params->{grid_id};
 
-  my $selection = $self->_get_selection( $c, 1 );
-
+  my $plugin = $self->_get_plugin($c);
+  my $selection = $self->_get_selection( $c);
+  print STDERR "  -> INSERTING ENTRY...\n";
   my %output = ();
 
-  $c->model('Library')->create_pubs($selection);
-
+  # Go through and complete publication details if necessary.
+  my @pub_array = ();
   foreach my $pub (@$selection) {
-    $pub->_imported(1);
+      print STDERR "  ->PUB: ".$pub->title."\n";
+    if ($plugin->needs_completing($pub)) {
+      my $old_sha1 = $pub->sha1;
+      my $new_pub = $plugin->complete_details($pub);
+      # Store the old / original sha1 for use later on...
+      $new_pub->{_old_sha1} = $old_sha1;
+      push @pub_array, $new_pub;
+    } else {
+      push @pub_array, $pub;
+    }
   }
 
-  my $pubs = $self->_collect_data($selection,['_imported','citekey','created','sha1','pdf']);
+  $c->model('Library')->create_pubs(\@pub_array);
+  print STDERR "  -> CREATED PUBS!\n";
+
+  my $pubs = {};
+  foreach my $pub (@pub_array) {
+    $pub->_imported(1);
+    my $pub_hash = $pub->as_hash;
+    if ($pub->{_old_sha1}) {
+	# ... now use the old / original sha1 as the sha1 to be returned to the front end,
+	# while flagging that we have a *new* sha1 that the front-end should update to.
+	# The actual updating to the new sha1 happens within the grid.js file.
+	$pub_hash->{sha1} = $pub->{_old_sha1};
+	$pub_hash->{_new_sha1} = $pub->sha1;
+    } else {
+	$pub_hash->{sha1} = $pub->sha1;
+    }
+    
+    $pubs->{$pub_hash->{sha1}} = $pub_hash;
+  }
+
+#  my $pubs = $self->_collect_data($selection,['_imported','citekey','created','sha1','pdf']);
   $c->stash->{data}    = {pubs => $pubs};
 
   # Trigger a complete reload
@@ -42,17 +72,26 @@ sub insert_entry : Local {
 sub complete_entry : Local {
 
   my ( $self, $c ) = @_;
-  my $grid_id = $c->request->params->{grid_id};
-  my $sha1    = $c->request->params->{sha1};
-  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $plugin = $self->_get_plugin($c);
+  my $selection = $self->_get_selection($c);
 
-  my $pub = $plugin->find_sha1($sha1);
-  $pub = $plugin->complete_details($pub);
+  my @new_pubs = ();
+  my $results = {};
+  foreach my $pub (@$selection) {
+    my $pub_hash;
+    if ($plugin->needs_completing($pub)) {
+      my $new_pub = $plugin->complete_details($pub);
+      my $old_sha1 = $pub->sha1;
+      my $new_sha1 = $new_pub->sha1;
+      
+      $pub_hash = $new_pub->as_hash;
+      $pub_hash->{sha1} = $old_sha1;
+      $pub_hash->{_new_sha1} = $new_sha1;
+    }
+    $results->{$pub_hash->{sha1}} = $pub_hash;
+  }
 
-  $c->model('Library')->exists_pub( [$pub] );
-
-  $c->stash->{data} = $pub->as_hash;
-
+  $c->stash->{data} = {pubs => $results};
 }
 
 sub new_entry : Local {
@@ -88,8 +127,7 @@ sub new_entry : Local {
 
 sub delete_entry : Local {
   my ( $self, $c ) = @_;
-  my $grid_id = $c->request->params->{grid_id};
-  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $plugin  = $self->_get_plugin($c);
   my $mode    = $c->request->params->{mode};
 
   my $data = $self->_get_selection($c);
@@ -144,11 +182,8 @@ sub undo_trash : Local {
 sub update_entry : Local {
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
-
   my $sha1 = $c->request->params->{sha1};
-
-  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $plugin  = $self->_get_plugin($c);
   my $old_pub = $plugin->find_sha1($sha1);
   my $data    = $old_pub->as_hash;
 
@@ -439,8 +474,7 @@ sub delete_from_folder : Local {
 
 sub batch_download : Local {
   my ( $self, $c ) = @_;
-  my $grid_id = $c->request->params->{grid_id};
-  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $plugin  = $self->_get_plugin($c);
 
   my $data = $self->_get_selection($c);
 
@@ -489,13 +523,22 @@ sub batch_download : Local {
 
 }
 
+sub _get_plugin {
+  my $self = shift;
+  my $c = shift;
+
+  my $grid_id = $c->request->params->{grid_id};
+  my $plugin = $c->session->{"grid_$grid_id"};
+  return $plugin;
+}
+
 sub _get_selection {
 
   my ( $self, $c, $light_objects ) = @_;
 
   my $grid_id   = $c->request->params->{grid_id};
   my $selection = $c->request->params->{selection};
-  my $plugin    = $c->session->{"grid_$grid_id"};
+  my $plugin    = $self->_get_plugin($c);
 
   if ($light_objects) {
     $plugin->light_objects(1);
@@ -515,6 +558,7 @@ sub _get_selection {
       push @tmp, $selection;
     }
     for my $sha1 (@tmp) {
+	print STDERR " -> SHA1: ".$sha1."\n";
       my $pub = $plugin->find_sha1($sha1);
       if ( defined $pub ) {
         push @data, $pub;
