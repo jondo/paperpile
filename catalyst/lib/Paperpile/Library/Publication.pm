@@ -681,6 +681,20 @@ sub format_csl {
 
 }
 
+sub debug {
+  my $self = shift;
+  
+  my $hash = $self->as_hash;
+
+  print STDERR "PUB: { \n";
+  foreach my $key (sort keys %$hash) {
+      my $value = $hash->{$key} || "";
+      next if ($value eq '');
+      print STDERR "  $key => ".$value."\n";
+  }
+  print STDERR "}\n";
+}
+
 # Function: list_types
 
 # Getter function for available publication types
