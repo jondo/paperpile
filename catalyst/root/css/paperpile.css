@@ -1168,19 +1168,15 @@ div:hover.pp-grid-sort-item {
     border: none;
 }
 
-.pp-pluginlist-panel {
-    border: 1px solid #F7CA75;
+.pp-pluginlist-widget {
+    margin: 8px;
 }
 
-/*
-.pp-pluginlist .x-tree-node-over {
-    background:none;
+.pp-pluginlist-widget td{
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
 
-.pp-pluginlist-used {
-    background-color:#FFFFFF;
-}
-*/
+
 .pp-pluginlist-number {
     float:left;
     margin-right:4px;
@@ -1196,6 +1192,7 @@ div:hover.pp-grid-sort-item {
 
 .pp-pluginlist-button {
 }
+
 
 .pp-pluginlist-hover-right{
   background: transparent url(/images/icons/right-arrow-small.png) no-repeat center center;

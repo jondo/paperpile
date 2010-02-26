@@ -38,6 +38,7 @@ js:
   - "js/screens/clouds.js"
   - "js/widgets/label-widget.js"
   - "js/widgets/search-download-widget.js"
+  - "js/widgets/plugin-list.js"
   - "js/screens/log.js"
   - "js/screens/updates.js"
   - "js/pub/abstract.js" 
