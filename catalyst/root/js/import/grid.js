@@ -20,7 +20,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   tagStyles: {},
 
   initComponent: function() {
-    var _pager = new Ext.PagingToolbar({
+    this.pager = new Ext.PagingToolbar({
       pageSize: this.limit,
       store: this.getStore(),
       displayInfo: true,
@@ -204,7 +204,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       appendOnly: true,
       itemId: 'grid',
       store: this.getStore(),
-      bbar: _pager,
+      bbar: this.pager,
       tbar: new Ext.Toolbar({
         itemId: 'toolbar'
       }),
@@ -398,6 +398,23 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   myAfterRender: function(ct) {
     this.updateButtons();
+
+    this.pager.on({
+      'beforechange': {
+        fn: function(pager, params) {
+          var lastParams = this.pager.store.lastOptions.params;
+          if (params.start != lastParams.start) {
+            this.getView().on('refresh', function() {
+              this.getView().scrollToTop();
+            },
+            this, {
+              single: true
+            });
+          }
+        },
+        scope: this
+      }
+    });
 
     // Note: the 'afterselectionchange' event is a custom event, defined in 
     // main/overrides.js
@@ -1174,7 +1191,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var needsUpdating = false;
       var update = pubs[sha1];
       record.editing = true; // Set the 'editing' flag.
-
       var originalSha1 = record.get('sha1');
       for (var field in update) {
         record.set(field, update[field]);
