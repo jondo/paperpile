@@ -33,28 +33,29 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     // If we are viewing a virtual folders we need an additional
     // button to remove an entry from a virtual folder
-    this.store.baseParams['plugin_search_pdf'] = 0;
-    this.store.baseParams['limit'] = this.limit;
+    var store = this.getStore();
+    store.baseParams['plugin_search_pdf'] = 0;
+    store.baseParams['limit'] = this.limit;
 
     this.getBottomToolbar().pageSize=parseInt(this.limit);
 
-    this.store.on('load',
+    store.on('load',
       function() {
-        if (this.store.getCount() == 0) {
+        if (this.getStore().getCount() == 0) {
           var container = this.findParentByType(Paperpile.PluginPanel);
-          if (container.itemId == 'MAIN' && this.store.baseParams.plugin_query == "") {
+          if (container.itemId == 'MAIN' && this.getStore().baseParams.plugin_query == "") {
             container.onEmpty(this.welcomeMsg);
           }
         }
       },
       this);
-    this.store.on('load', function() {
+    store.on('load', function() {
       this.getSelectionModel().selectFirstRow();
     },
     this, {
       single: true
     });
-    this.store.load({
+    store.load({
       params: {
         start: 0,
         limit: this.limit
@@ -117,30 +118,31 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       l.addClass(classes.inactive);
     });
 
+    var store = this.getStore();
     if (status == "inactive") {
       if (def == 'desc') {
         El.addClass(classes.desc);
-        this.store.baseParams['plugin_order'] = field + " DESC";
+        store.baseParams['plugin_order'] = field + " DESC";
         el.setAttribute('status', 'desc');
       } else {
         El.addClass(classes.asc);
-        this.store.baseParams['plugin_order'] = field + " ASC";
+        store.baseParams['plugin_order'] = field + " ASC";
         el.setAttribute('status', 'asc');
       }
     } else {
       if (status == "desc") {
-        this.store.baseParams['plugin_order'] = field;
+        store.baseParams['plugin_order'] = field;
         El.addClass(classes.asc);
         el.setAttribute('status', 'asc');
       } else {
         El.addClass(classes.desc);
-        this.store.baseParams['plugin_order'] = field + " DESC";
+        store.baseParams['plugin_order'] = field + " DESC";
         el.setAttribute('status', 'desc');
       }
     }
 
     if (this.filterField.getRawValue() == "") {
-      this.store.reload({
+      this.getStore().reload({
         params: {
           start: 0,
           task: "NEW"
@@ -157,14 +159,14 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     // Toggle 'search_pdf' option 
     if (item.itemId == 'all_pdf') {
-      this.store.baseParams['plugin_search_pdf'] = checked ? 1 : 0;
+      this.getStore().baseParams['plugin_search_pdf'] = checked ? 1 : 0;
     }
 
     // Specific fields
     if (item.itemId != 'all_pdf' && item.itemId != 'all_nopdf') {
       if (checked) {
         this.filterField.singleField = item.itemId;
-        this.store.baseParams['plugin_search_pdf'] = (item.itemId == 'text') ? 1 : 0;
+        this.getStore().baseParams['plugin_search_pdf'] = (item.itemId == 'text') ? 1 : 0;
       } else {
         if (this.filterField.singleField == item.itemId) {
           this.filterField.singleField = "";
@@ -251,7 +253,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     this.filterField = new Ext.app.FilterField({
       itemId: 'filter_field',
       emptyText: 'Search References',
-      store: this.store,
+      store: this.getStore(),
       base_query: this.plugin_base_query,
       width: 200
     });
@@ -278,7 +280,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   updateContextItem: function(menuItem, record) {
     Paperpile.PluginGridDB.superclass.updateContextItem.call(this, menuItem, record);
     if (menuItem.itemId == this.actions['SELECT_ALL'].itemId) {
-      menuItem.setText('Select all (' + this.store.getTotalCount() + ')');
+      menuItem.setText('Select all (' + this.getStore().getTotalCount() + ')');
     }
 
     if (menuItem.itemId == this.actions['DELETE'].itemId) {
