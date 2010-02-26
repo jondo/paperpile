@@ -257,7 +257,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     });
 
-    this.store.on({
+    this.getStore().on({
       loadexception: {
         scope: this,
         fn: function(exception, options, response, error) {
@@ -308,7 +308,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       // Get the index of the node being dropped upon.
       var r = e.getTarget(this.getView().rowSelector);
       var index = this.getView().findRowIndex(r);
-      var record = this.store.getAt(index);
+      var record = this.getStore().getAt(index);
       // If this node is *outside* the *selection*, then drop on the node instead of
       // the whole selection.
       var sel = this.getSelection();
@@ -340,7 +340,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var ep = container.items.get('east_panel');
     var tb_side = ep.getBottomToolbar();
     var activeTab = ep.getLayout().activeItem.itemId;
-    if (this.store.getCount() > 0) {
+    if (this.getStore().getCount() > 0) {
       if (activeTab === 'about') {
         ep.getLayout().setActiveItem('overview');
         activeTab = 'overview';
@@ -781,7 +781,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   onContextClick: function(grid, index, e) {
     e.stopEvent();
-    var record = this.store.getAt(index);
+    var record = this.getStore().getAt(index);
 
     if (!this.getSelectionModel().isSelected(index)) {
       this.getSelectionModel().selectRow(index);
@@ -957,7 +957,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   deleteEntry: function(mode) {
     selection = this.getSelection();
-    var index = this.store.indexOf(this.getSelectionModel().getSelected());
+    var index = this.getStore().indexOf(this.getSelectionModel().getSelected());
     var many = false;
 
     if (mode == 'DELETE') {
@@ -1048,14 +1048,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         callback: function(status, data) {
           if (status == 'SAVE') {
             Paperpile.main.onUpdate(data);
-            /*
-            if (isNew) {
-              this.store.reload();
-            } else {
-              this.updateData(data);
-              this.findParentByType(Paperpile.PubView).onRowSelect();
-            }
-            */
             Paperpile.status.clearMsg();
           }
           win.close();
@@ -1154,11 +1146,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   updateTagStyles: function() {
     // Go through each record and re-render it if it has some improperly styled tags.
-    var n = this.store.getCount();
+    var n = this.getStore().getCount();
     for (var i = 0; i < n; i++) {
-      var record = this.store.getAt(i);
+      var record = this.getStore().getAt(i);
       if (record.get('tags')) {
-        this.store.fireEvent('update', this.store, record, Ext.data.Record.EDIT);
+        this.getStore().fireEvent('update', this.getStore(), record, Ext.data.Record.EDIT);
       }
     }
 
@@ -1175,15 +1167,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       return;
     }
 
+    var store = this.getStore();
     var selected_sha1 = '';
     var sel = this.getSelectionModel().getSelected();
     if (sel) selected_sha1 = sel.data.sha1;
 
     var updateSidePanel = false;
     for (var sha1 in pubs) {
-      var record = this.store.getAt(this.store.findExact('sha1', sha1));
+      var record = store.getAt(store.findExact('sha1', sha1));
       if (!record) {
-        record = this.store.getAt(this.store.findExact('_old_sha1', sha1));
+        record = store.getAt(store.findExact('_old_sha1', sha1));
       }
       if (!record) {
         continue;
@@ -1210,7 +1203,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         if (sha1 == selected_sha1) updateSidePanel = true;
       }
       if (needsUpdating) {
-        this.store.fireEvent('update', this.store, record, Ext.data.Record.EDIT);
+        store.fireEvent('update', store, record, Ext.data.Record.EDIT);
       }
     }
 
