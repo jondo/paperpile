@@ -114,7 +114,8 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
           scope: this
         },
         autoScroll: true,
-        title: name.title
+        title: name.title,
+        iconCls: name.iconCls ? name.iconCls : ''
       }));
     }
     panel.show();
