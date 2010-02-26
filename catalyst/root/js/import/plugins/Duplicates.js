@@ -29,12 +29,7 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
   initComponent: function() {
     Paperpile.PluginGridDuplicates.superclass.initComponent.call(this);
 
-    this.store.on('beforeload',
-      function() {
-        Paperpile.status.showBusy('Searching duplicates');
-      },
-      this);
-
+    Paperpile.status.showBusy('Searching duplicates');
     this.store.on('load',
       function() {
         Paperpile.status.clearMsg();

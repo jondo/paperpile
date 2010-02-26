@@ -26,6 +26,7 @@ Paperpile.PluginGridRSS = Ext.extend(Paperpile.PluginGridDB, {
 
         this.store.on('beforeload',
                       function(){
+			Paperpile.log("HELLO");
                           Paperpile.status.showBusy('Parsing file.');
                       }, this);
         
