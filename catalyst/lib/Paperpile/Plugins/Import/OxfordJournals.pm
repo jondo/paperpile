@@ -59,7 +59,7 @@ sub complete_details {
     $doi,   $volume,  $issue,   $issn, $abstract, $pages
   );
 
-  my @meta_tags = $tree->findnodes('/html/head/meta[@name="citation_mjid"');
+  my @meta_tags = $tree->findnodes('/html/head/meta[@name="citation_mjid"]');
   if ( $#meta_tags == -1 ) {
     NetFormatError->throw( error => 'No meta tag named citation_mjid found.' );
   }
@@ -78,6 +78,26 @@ sub complete_details {
 
   # import the information from the BibTeX string
   $full_pub->import_string( $bibtex, 'BIBTEX' );
+
+  # It seems that there is some trouble with Bibtex export at OUP
+  # let's screen for missed information in the HTML meta tags
+
+  if ( !$full_pub->volume() ) {
+    my @tmp = $tree->findnodes('/html/head/meta[@name="citation_volume"]');
+    $full_pub->volume( $tmp[0]->attr('content') ) if ( $tmp[0] );
+  }
+  if ( !$full_pub->issue() ) {
+    my @tmp = $tree->findnodes('/html/head/meta[@name="citation_issue"]');
+    $full_pub->issue( $tmp[0]->attr('content') ) if ( $tmp[0] );
+  }
+  if ( !$full_pub->pmid() ) {
+    my @tmp = $tree->findnodes('/html/head/meta[@name="citation_pmid"]');
+    $full_pub->pmid( $tmp[0]->attr('content') ) if ( $tmp[0] );
+  }
+  if ( !$full_pub->pages() ) {
+    my @tmp = $tree->findnodes('/html/head/meta[@name="citation_firstpage"]');
+    $full_pub->pages( $tmp[0]->attr('content') ) if ( $tmp[0] );
+  }
 
   # bibtex import deactivates automatic refresh of fields
   # we force it now at this point
