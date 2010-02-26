@@ -329,7 +329,12 @@ sub _do_work {
     }
 
     if (!$self->pub->linkout && !$self->pub->doi){
+
+      print STDERR "----------> before", $self->pub->sha1, "\n";
+
       $self->_match;
+
+      print STDERR "----------> after", $self->pub->sha1, "\n";
 
       # This currently does not handle the case e.g when we match
       # successfully against PubMed but don't get a doi/linkout and a
@@ -546,7 +551,16 @@ sub _match_single {
 
   my $pub = $self->pub;
 
+  # Don't change sha1, this causes trouble when updating the
+  # frontend. Seems to work although this requires that the pub object
+  # does never update itself on the travel to the frontend. Needs more
+  # thought, when we offer "batch matching" which also updates the
+  # database.
+  my $sha1=$pub->sha1;
+
   $pub = $plugin->match($pub);
+
+  $pub->sha1($sha1);
 
   $self->pub($pub);
 
