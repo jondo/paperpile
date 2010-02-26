@@ -1,14 +1,25 @@
-<div>
+<table>
+<tr>
 
-  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:250">
-    <div id="proxy_checkbox" style="float:left;margin:8px"></div>
+<td>
+  <div id="ui-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:270; width:350">
+    <h2>User interface</h2>
+    
+    <h3>Number of references per page <span id="settings-pager-limit-tooltip" class="pp-tooltip-link">?</span></h3>
+    <div class="pp-settings-textfield" id="pager_limit_combo"></div>
+  </div>
+</td>
+
+<td>
+  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:270; width:300">
+    <div id="proxy_checkbox" style="float:left;margin: 12px 8px"></div>
     <h2 style="margin:8 20;">Proxy</h2>
 
-    <h3>Address</h3>
+    <h3>Address  <span id="settings-proxy-address-tooltip" class="pp-tooltip-link">?</span></h3>
     <div class="pp-settings-textfield" id="proxy_textfield"></div>
-    <h3>User name</h3>
+    <h3>User name <span id="settings-proxy-user-tooltip" class="pp-tooltip-link">?</span></h3>
     <div class="pp-settings-textfield" id="proxy_user_textfield"></div>
-    <h3>Password</h3>
+    <h3>Password <span id="settings-proxy-pass-tooltip" class="pp-tooltip-link">?</span></h3>
     <div class="pp-settings-textfield" id="proxy_passwd_textfield"></div>
     
     <table>
@@ -21,26 +32,31 @@
         </td>
       </tr>
     </table>
-
   </div>
-  <div id="ui-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:250">
-    <h2>User interface</h2>
-    
-    <h3>Number of items per page</h3>
-    <div class="pp-settings-textfield" id="pager_limit_combo"></div>
-  </div>
+</td>
 
-  <div id="plugin-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:300; width:300">
-    <h2>Plugin Settings</h2>
-    
-    <h3>Plugin order for searching & matching</h3>
-    <div class="pp-settings-plugin-order" id="plugin_order_panel"></div>
-  </div>
-<center>
-<div style="width:190;clear:both;">
-  <div id="settings-save-button" class="pp-save-button"></div>
-  <div id="settings-cancel-button" class="pp-cancel-button"></div>
-</div>
-</center>
+</tr>
 
-</div>
+<tr>
+
+<td>
+  <div id="plugin-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:250; width:350">
+    <h2>Searching and Matching</h2>
+    <div class="pp-pluginlist-widget" id="plugin_order_panel"></div>
+  </div>
+</td>
+<td></td>
+
+</tr>
+
+<tr><td colspan="2">
+    <div style="width:190; margin-left:auto; margin-right:auto;">
+      <div id="settings-save-button" class="pp-save-button"></div>
+      <div id="settings-cancel-button" class="pp-cancel-button"></div>
+    </div>
+</td></tr>
+
+
+</tr>
+
+
