@@ -55,19 +55,19 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       if (authors_array.length > author_length_threshold) {
         var authors_first_five = authors_array.slice(0, author_keep_beginning);
         var authors_middle = authors_array.slice(author_keep_beginning, n - author_keep_end);
-	var hidden_n = authors_middle.length;
+        var hidden_n = authors_middle.length;
         var authors_last_five = authors_array.slice(n - author_keep_end, n);
         record.data._authors_display = [
           authors_first_five.join(", "),
           ' ... <a class="pp-authortip" href="">',
-	  '('+hidden_n+' more)',
-	  '</a> ... ',
+          '(' + hidden_n + ' more)',
+          '</a> ... ',
           authors_last_five.join(", ")].join("");
 
         var displayText = [
-          '<b>'+ n + ' authors:</b> ',
+          '<b>' + n + ' authors:</b> ',
           authors_array.join(", ")].join("");
-	record.data._authortip = displayText;
+        record.data._authortip = displayText;
       }
 
       return this.getPubTemplate().apply(record.data);
@@ -417,8 +417,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
         this.updateButtons();
         this.getPluginPanel().updateDetails();
-	if (this.getSelectionModel().getCount() == 1)
-	  this.completeEntry();
+        if (this.getSelectionModel().getCount() == 1) this.completeEntry();
       },
       this);
 
@@ -454,9 +453,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   createAuthorToolTip: function() {
     this.authorTip = new Ext.ToolTip({
-      maxWidth:500,
-      showDelay:0,
-      hideDelay:0,
+      maxWidth: 500,
+      showDelay: 0,
+      hideDelay: 0,
       target: this.getView().mainBody,
       delegate: '.pp-authortip',
       renderTo: document.body,
@@ -464,7 +463,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         beforeshow: {
           fn: function updateTipBody(tip) {
             var rowIndex = this.getView().findRowIndex(tip.triggerElement);
-	    var record = this.getStore().getAt(rowIndex);
+            var record = this.getStore().getAt(rowIndex);
             tip.body.dom.innerHTML = record.data._authortip;
           },
           scope: this
@@ -880,7 +879,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   // only minimal info is scraped from site to build list quickly
   // without harassing the site too much. Then the details are
   // fetched only when user clicks the entry.
-  completeEntry: function(callback, scope, args) {
+  completeEntry: function() {
     var selection = this.getSelection();
 
     var sel = this.getSelectionModel().getSelected();
@@ -893,37 +892,24 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       Ext.Ajax.request({
         url: Paperpile.Url('/ajax/crud/complete_entry'),
         params: {
-          selection:selection,
+          selection: selection,
           grid_id: this.id
         },
         method: 'GET',
         success: function(response) {
           var json = Ext.util.JSON.decode(response.responseText);
 
-	  Paperpile.main.onUpdate(json.data);
-	  Paperpile.status.clearMsg();
-/*
-          var record = this.store.getAt(this.store.find('sha1', sha1));
-          record.beginEdit();
-          for (var i in json.data) {
-            record.set(i, json.data[i]);
-          }
-          record.endEdit();
-
-          this.getPluginPanel().updateDetails();
-
+          Paperpile.main.onUpdate(json.data);
           Paperpile.status.clearMsg();
 
-          if (callback) callback.createDelegate(scope,args)();
-*/
+          this.updateButtons();
+          this.getPluginPanel().updateDetails();
+
         },
         failure: Paperpile.main.onError,
         scope: this
       });
-    } else {
-      if (callback) callback.createDelegate(scope,args)();
     }
-
   },
 
   updateDetail: function() {
@@ -1180,7 +1166,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     for (var sha1 in pubs) {
       var record = this.store.getAt(this.store.findExact('sha1', sha1));
       if (!record) {
-	record = this.store.getAt(this.store.findExact('_old_sha1',sha1));
+        record = this.store.getAt(this.store.findExact('_old_sha1', sha1));
       }
       if (!record) {
         continue;
@@ -1188,14 +1174,19 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var needsUpdating = false;
       var update = pubs[sha1];
       record.editing = true; // Set the 'editing' flag.
-      for (var field in update) {
-	if (field == '_new_sha1') {
-	  record.set('_old_sha1',record.get('sha1'));
-	  record.set('sha1',update[field]);
-	}
 
+      var originalSha1 = record.get('sha1');
+      for (var field in update) {
         record.set(field, update[field]);
       }
+
+      // We allow plugins to change a pub's sha1 tag by setting the '_new_sha1' flag.
+      // The actual grid updating is done here.
+      if (update['_new_sha1']) {
+        record.set('_old_sha1', originalSha1);
+        record.set('sha1', update['_new_sha1']);
+      }
+
       // Unset the 'editing' flag. Using the flag directly avoids calling store.afterEdit() for every record.
       record.editing = false;
       if (record.dirty) {
@@ -1252,10 +1243,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (arr.length > 0 && !last) {
       author = arr[0];
     } else if (arr.length > 0) {
-      author = arr[arr.length-1];
+      author = arr[arr.length - 1];
     }
     this.setSearchQuery('author:' + '"' + author + '"');
-      /*
+    /*
  	Paperpile.main.tabs.newPluginTab('DB',
 					 {plugin_mode:'FULLTEXT',
 					 plugin_query:'author:'+'"'+first_author+'"'},
@@ -1313,7 +1304,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var sm = this.getSelectionModel();
     if (sm.getCount() == 1) {
       if (sm.getSelected().data._imported) {
-	this.openPDF();
+        this.openPDF();
       }
     }
   },

@@ -108,11 +108,11 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
           // If the selected item IS already imported, we defer to the superclass method from grid.js
           if (this.getSelectionModel().getCount() == 1) {
             if (!this.getSelectionModel().getSelected().data._imported) {
-              Paperpile.log("Not imported!");
               this.insertEntry();
-              return false;
+              return false; // Avoid calling the original double-click handler!
             } else {
-              Paperpile.log("Imported!");
+	      // This record is already imported. Return true and defer to the superclass double-click handler.
+	      return true;
             }
           }
           return true;
