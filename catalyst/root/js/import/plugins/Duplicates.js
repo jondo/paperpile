@@ -27,17 +27,23 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
     '</div>'],
 
   initComponent: function() {
-    Paperpile.PluginGridDuplicates.superclass.initComponent.call(this);
-
-    Paperpile.status.showBusy('Searching duplicates');
-    this.store.on('load',
+    // Need to set these store handlers before calling the superclass.initcomponent,
+    // otherwise the store will have already started loading when these are added.
+    this.getStore().on('beforeload',
+      function() {
+        Paperpile.status.showBusy('Searching duplicates');
+      },
+      this);
+    this.getStore().on('load',
       function() {
         Paperpile.status.clearMsg();
         if (this.store.getCount() == 0) {
-	  this.getPluginPanel().onEmpty(this.emptyMsg);
+          this.getPluginPanel().onEmpty(this.emptyMsg);
         }
       },
       this);
+
+    Paperpile.PluginGridDuplicates.superclass.initComponent.call(this);
 
     this.on('render', this.myOnRender, this);
   },
@@ -82,9 +88,9 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
       params: {
         start: 0,
         limit: this.limit,
-	// Cause the duplicate cache to be cleared each time the grid is reloaded.
-	// This is very slow, and will need backend optimization in Duplicates.pm.
-	plugin_clear_duplicate_cache: true
+        // Cause the duplicate cache to be cleared each time the grid is reloaded.
+        // This is very slow, and will need backend optimization in Duplicates.pm.
+        plugin_clear_duplicate_cache: true
       }
     });
 

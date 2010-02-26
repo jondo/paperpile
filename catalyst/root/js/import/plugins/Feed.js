@@ -27,16 +27,17 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
   initComponent: function() {
     this.getStore().setBaseParam('plugin_url', this.plugin_url);
     this.getStore().setBaseParam('plugin_id', this.plugin_id);
-
-    Paperpile.PluginGridFeed.superclass.initComponent.call(this);
-
-    Paperpile.status.showBusy("Parsing feed");
+    this.getStore().on('beforeload', function() {
+      Paperpile.status.showBusy("Parsing feed");
+    },
+    this);
     this.getStore().on('load', function() {
       Paperpile.status.clearMsg();
     },
-    this, {
-      single: true
-    });
+    this);
+
+    Paperpile.PluginGridFeed.superclass.initComponent.call(this);
+
 
   },
 
