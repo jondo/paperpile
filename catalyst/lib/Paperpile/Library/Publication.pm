@@ -174,6 +174,11 @@ has '_auto_refresh'    => ( is => 'rw', isa => 'Int', default => 0);
 # author objects which is not always needed (e.g. for import).
 has '_light' =>  ( is => 'rw', isa => 'Int', default => 0);
 
+# Allows to update the frontend via the old sha1 as key when the sha1
+# has changed. In such cases the original sha1 should be preserved in
+# the sha1 field and the new sha1 should go in here:
+has '_new_sha1' => ( is => 'rw', default => '' );
+
 
 sub BUILD {
   my ( $self, $params ) = @_;

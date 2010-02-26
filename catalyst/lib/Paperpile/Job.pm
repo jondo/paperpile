@@ -551,16 +551,16 @@ sub _match_single {
 
   my $pub = $self->pub;
 
-  # Don't change sha1, this causes trouble when updating the
-  # frontend. Seems to work although this requires that the pub object
-  # does never update itself on the travel to the frontend. Needs more
-  # thought, when we offer "batch matching" which also updates the
-  # database.
-  my $sha1=$pub->sha1;
+  my $old_sha1 = $pub->sha1;
 
   $pub = $plugin->match($pub);
 
-  $pub->sha1($sha1);
+  my $new_sha1 = $pub->sha1;
+
+  if ($old_sha1 ne $new_sha1){
+    $pub->_new_sha1($new_sha1);
+    $pub->sha1($old_sha1);
+  }
 
   $self->pub($pub);
 
