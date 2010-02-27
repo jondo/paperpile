@@ -50,8 +50,8 @@ library_settings:
   _tree: ""
 
 release:
-  patch: 1
+  patch: 0
   restart: 1
-  msg: "Test version for patch mechanism"
+  msg: "First beta release."
   log:
-    - "Test version for patch mechanism"
+    - "Everything is new."

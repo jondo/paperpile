@@ -5,7 +5,6 @@ css:
 js:
   - "ext/adapter/ext/ext-base.js"
   - "ext/ext-all-debug.js"
-  - "ext/examples/ux/StatusBar.js"
   - "ext/examples/ux/Spotlight.js"
   - "flashchart/swfobject.js"
   - "js/main/overrides.js"
@@ -23,7 +22,6 @@ js:
   - "js/import/sidepanel.js"
   - "js/import/plugins/plugin-import.js"
   - "js/import/plugins/online-search.js"
-  - "js/import/plugins/"
   - "js/misc/utils.js"
   - "js/misc/forms.js" 
   - "js/misc/file-chooser.js"

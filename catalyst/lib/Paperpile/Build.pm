@@ -213,6 +213,7 @@ sub minify {
     `cat $cat_dir/root/$file >> tmp.js`;
   }
   my @plugins = glob("$cat_dir/root/js/??port/plugins/*js");
+
   foreach my $file (@plugins) {
     `cat $file >> tmp.js`;
   }
