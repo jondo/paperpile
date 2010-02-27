@@ -217,7 +217,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     // If it is an absolute path it is the temporary copy in the tmp
     // folder, otherwise it is stored under the paper_root folder and
     // we need to append the paper_root
-    if (!Paperpile.utils.isAbsolute(path)){
+    if (!Paperpile.utils.isAbsolute(path)) {
       path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
     }
 
@@ -238,16 +238,64 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         text: 'PDF files',
         suffix: ['pdf']
       }],
+
       callback: function(button, path) {
         if (button == 'OK') {
+
+          // First count the PDFs
           Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/pdfextract/submit'),
+            url: Paperpile.Url('/ajax/pdfextract/count_files'),
             params: {
               path: path
             },
             success: function(response) {
-              Paperpile.main.queueUpdate();
-            }
+              var json = Ext.util.JSON.decode(response.responseText);
+
+              var submitFn = function() {
+                Ext.Ajax.request({
+                  url: Paperpile.Url('/ajax/pdfextract/submit'),
+                  params: {
+                    path: path
+                  },
+                  success: function(response) {
+                    Paperpile.main.queueUpdate();
+                  },
+                  failure: Paperpile.main.onError
+                })
+              };
+
+              // Show error message and stop if no PDFs found
+              if (json.count == 0) {
+                Paperpile.status.updateMsg({
+                  type: 'error',
+                  msg: 'No PDFs found in the selected folder.',
+                  hideOnClick: true
+                });
+                return;
+              }
+              // Warn user before large batch of PDFs is imported
+              if (json.count > 10) {
+                Ext.MessageBox.buttonText.ok = "Start import";
+
+                Ext.Msg.show({
+                  title: 'PDF Import',
+                  msg: json.count + ' PDF files found. Do you want to import them now?',
+                  animEl: 'elId',
+                  icon: Ext.MessageBox.INFO,
+                  buttons: Ext.Msg.OKCANCEL,
+                  fn: function(btn) {
+                    if (btn === 'ok') {
+                      submitFn();
+                    }
+                    Ext.MessageBox.buttonText.ok = "Ok";
+                  }
+                });
+              } else {
+                // Start import silently if less than 10 PDFs
+                submitFn();
+              }
+            },
+            failure: Paperpile.main.onError
           });
         }
       }
@@ -302,8 +350,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       {
         text: 'All files',
         suffix: ['ALL']
-      }
-      ],
+      }],
 
       callback: function(button, path) {
         if (button == 'OK') {

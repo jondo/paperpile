@@ -32,8 +32,6 @@ sub submit : Local {
     push @files, $path;
   }
 
-  #my @files = @files[ 5 .. 10 ];
-
   my $q = Paperpile::Queue->new();
 
   my @jobs = ();
@@ -60,6 +58,36 @@ sub submit : Local {
   $q->run;
 
 }
+
+
+
+sub count_files : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $path = $c->request->params->{path};
+
+  ## Get all PDFs in all subdirectories
+
+  my @files = ();
+
+  if ( -d $path ) {
+    find(
+      sub {
+        my $name = $File::Find::name;
+        push @files, $name if $name =~ /\.pdf$/i;
+      },
+      $path
+    );
+  } else {
+    push @files, $path;
+  }
+
+  $c->stash->{count} = scalar @files;
+
+}
+
+
 
 
 
