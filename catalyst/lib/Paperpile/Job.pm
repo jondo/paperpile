@@ -99,7 +99,9 @@ sub BUILD {
   else {
     $self->_file( File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id ) );
     $self->restore;
-    $self->pub->refresh_job_fields($self);
+    if ($self->pub) {
+      $self->pub->refresh_job_fields($self);
+    }
   }
 }
 
@@ -499,13 +501,14 @@ sub as_hash {
   
   $hash{message} = $self->get_message;
 
-  $hash{citekey}  = $self->pub->citekey;
-  $hash{title}    = $self->pub->title;
-  $hash{doi}    = $self->pub->doi;
-  $hash{citation} = $self->pub->_citation_display;
-  $hash{authors}  = $self->pub->_authors_display;
-  $hash{pdf}  = $self->pub->pdf;
-
+  if (defined $self->pub) {
+    $hash{citekey}  = $self->pub->citekey;
+    $hash{title}    = $self->pub->title;
+    $hash{doi}    = $self->pub->doi;
+    $hash{citation} = $self->pub->_citation_display;
+    $hash{authors}  = $self->pub->_authors_display;
+    $hash{pdf}  = $self->pub->pdf;
+  }
   return {%hash};
 
 }

@@ -112,9 +112,11 @@ sub update : Local {
   my @pub_list = ();
   foreach my $id ( @{$ids} ) {
     my $job = Paperpile::Job->new( { id => $id } );
-    my $pub = $job->pub;
-    push @pub_list, $pub;
-    $jobs->{$id} = $job->as_hash;
+    if (defined $job->pub) {
+      my $pub = $job->pub;
+      push @pub_list, $pub;
+      $jobs->{$id} = $job->as_hash;
+    }
   }
 
   $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', '_search_job' ] );
