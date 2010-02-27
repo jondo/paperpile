@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Plugins::Import::OxfordJournals;
 
 use Carp;
@@ -9,30 +25,29 @@ use 5.010;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
 
 sub BUILD {
-    my $self = shift;
-    $self->plugin_name('OxfordJournals');
+  my $self = shift;
+  $self->plugin_name('OxfordJournals');
 }
 
 sub connect {
-    my $self = shift;
+  my $self = shift;
 
-    return 0;
+  return 0;
 }
 
 sub page {
-    ( my $self, my $offset, my $limit ) = @_;
+  ( my $self, my $offset, my $limit ) = @_;
 
-    my $page = [];
+  my $page = [];
 
-    $self->_save_page_to_hash($page);
+  $self->_save_page_to_hash($page);
 
-    return $page;
+  return $page;
 }
 
 sub complete_details {
@@ -116,7 +131,5 @@ sub complete_details {
 
   return $full_pub;
 }
-
-
 
 1;

@@ -1,3 +1,18 @@
+# Copyright 2009, 2010 Paperpile
+#
+# Bibutils.pm is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
+
 package Bibutils;
 use Moose;
 
@@ -242,7 +257,6 @@ use constant {
 
 __END__
 
-# Below is stub documentation for your module. You'd better edit it!
 
 =head1 NAME
 
@@ -251,43 +265,23 @@ Bibutils - Perl wrapper for the Bibutils library
 =head1 SYNOPSIS
 
   use Bibutils;
-  blah blah blah
 
 =head1 DESCRIPTION
 
-Stub documentation for Bibutils, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
-
-Blah blah blah.
+Perl wrapper for the Bibutils library
 
 =head2 EXPORT
 
-None by default.
-
-=head1 SEE ALSO
-
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
-
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
-
 =head1 AUTHOR
 
-Stefan Washietl, E<lt>wash@E<gt>
+Stefan Washietl, E<lt>stefan@paperpile.com<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2009 by Stefan Washietl
+Copyright (C) 2009, 2010 by Paperpile
 
 This library is free software; you can redistribute it and/or
-    modify it under the same terms as Perl itself, either Perl version 5.10.0
-    or,
-  at your option, any later version of Perl 5 you may have available
-    .
+modify it under the same terms as Perl itself, either Perl version 5.10.0
+or, at your option, any later version of Perl 5 you may have available.
 
 =cut

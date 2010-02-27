@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Controller::Ajax::Queue;
 
 use strict;
@@ -138,9 +154,7 @@ sub cancel_jobs : Local {
   my $q = Paperpile::Queue->new();
   $q->run;
 
-  my $pubs =
-    $self->_collect_pub_data( \@pub_list,
-    [ 'pdf', '_search_job'] );
+  my $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', '_search_job' ] );
   my $data = {};
   $data->{pubs}      = $pubs;
   $data->{job_delta} = 1;
@@ -153,14 +167,14 @@ sub cancel_jobs : Local {
 sub clear_jobs : Local {
 
   my ( $self, $c ) = @_;
-  my $q    = Paperpile::Queue->new();
+  my $q     = Paperpile::Queue->new();
   my $sha1s = $q->clear;
 
   my $pubs;
-  for my $sha1 (@$sha1s){
-    $pubs->{$sha1}={_search_job => undef};
+  for my $sha1 (@$sha1s) {
+    $pubs->{$sha1} = { _search_job => undef };
   }
-  $c->stash->{data}->{pubs} = $pubs;
+  $c->stash->{data}->{pubs}      = $pubs;
   $c->stash->{data}->{job_delta} = 1;
 }
 
@@ -190,7 +204,7 @@ sub remove_jobs : Local {
   $q->update_stats;
 
   my $data;
-  $data->{pubs} = $pubs;
+  $data->{pubs}  = $pubs;
   $data->{queue} = $q->as_hash;
 
   $c->stash->{data} = $data;
@@ -216,7 +230,7 @@ sub retry_jobs : Local {
 
     $job->reset();
 
-    my $idq  = $dbh->quote( $job->id );
+    my $idq = $dbh->quote( $job->id );
     ( my $rowid ) = $dbh->selectrow_array("SELECT rowid FROM queue WHERE jobid=$idq");
 
     $job->_rowid($rowid);
@@ -231,9 +245,7 @@ sub retry_jobs : Local {
 
   $q->run();
 
-  my $pubs =
-    $self->_collect_pub_data( \@pub_list,
-    [ '_job_id', '_search_job' ] );
+  my $pubs = $self->_collect_pub_data( \@pub_list, [ '_job_id', '_search_job' ] );
   my $data = {};
   $data->{pubs} = $pubs;
   $c->stash->{data} = $data;
@@ -262,7 +274,7 @@ sub pause_resume : Local {
     $q->pause;
   }
 
-  $c->stash->{queue}  = $q->as_hash;
+  $c->stash->{queue}     = $q->as_hash;
   $c->stash->{job_delta} = 1;
   $c->detach('Paperpile::View::JSON');
 }

@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Controller::Ajax::Plugins;
 
 use strict;
@@ -13,16 +29,16 @@ use Paperpile::Plugins::Import;
 use Paperpile::Plugins::Export;
 
 # Import plugins dynamically from directory content alone
-BEGIN{
-  foreach my $lib_dir (@INC){
-    foreach my $plugin_dir ("$lib_dir/Paperpile/Plugins/Import",
-                            "$lib_dir/Paperpile/Plugins/Export"){
-      if (-e $plugin_dir){
-        foreach my $plugin_file (glob("$plugin_dir/*pm")){
-          $plugin_file=~s/$lib_dir.//;
-          my $module=join("::",split(/\//,$plugin_file));
-          $module=~s/\.pm$//;
-          eval ("use $module");
+BEGIN {
+  foreach my $lib_dir (@INC) {
+    foreach
+      my $plugin_dir ( "$lib_dir/Paperpile/Plugins/Import", "$lib_dir/Paperpile/Plugins/Export" ) {
+      if ( -e $plugin_dir ) {
+        foreach my $plugin_file ( glob("$plugin_dir/*pm") ) {
+          $plugin_file =~ s/$lib_dir.//;
+          my $module = join( "::", split( /\//, $plugin_file ) );
+          $module =~ s/\.pm$//;
+          eval("use $module");
         }
       }
     }
@@ -78,7 +94,7 @@ sub resultsgrid : Local {
 
   } else {
     $plugin = $c->session->{"grid_$grid_id"};
-    if ($c->request->params->{plugin_update_total}){
+    if ( $c->request->params->{plugin_update_total} ) {
       $plugin->update_total(1);
     }
   }
@@ -121,7 +137,6 @@ sub resultsgrid : Local {
   _resultsgrid_format( @_, $entries, $plugin->total_entries );
 
 }
-
 
 sub _resultsgrid_format {
 
@@ -262,6 +277,5 @@ sub export : Local {
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 }
-
 
 1;

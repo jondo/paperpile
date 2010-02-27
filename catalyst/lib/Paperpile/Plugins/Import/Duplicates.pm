@@ -1,3 +1,18 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
 
 package Paperpile::Plugins::Import::Duplicates;
 
@@ -10,16 +25,16 @@ use Paperpile::Utils;
 use Paperpile::Model::Library;
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 
 extends 'Paperpile::Plugins::Import';
 
-has '_db_file' => ( is => 'rw' );
-has 'file'     => ( is => 'rw' );
-has '_data'    => ( is => 'rw', isa => 'ArrayRef' );
-has '_dupl_keys' => ( is => 'rw' ); # keeps sha1 keys of duplicates
-has '_dupl_partners' => ( is => 'rw' ); # keeps sha1 keys of duplicates
-has '_searchspace' => ( is => 'rw' ); # publications that we will loop throu while searching duplicates
+has '_db_file'       => ( is => 'rw' );
+has 'file'           => ( is => 'rw' );
+has '_data'          => ( is => 'rw', isa => 'ArrayRef' );
+has '_dupl_keys'     => ( is => 'rw' );                      # keeps sha1 keys of duplicates
+has '_dupl_partners' => ( is => 'rw' );                      # keeps sha1 keys of duplicates
+has '_searchspace'   => ( is => 'rw' )
+  ;    # publications that we will loop throu while searching duplicates
 
 has 'clear_duplicate_cache' => ( is => 'rw' );
 
@@ -40,15 +55,16 @@ sub connect {
 
   $self->_db_file( $self->file );
   $self->_data( [] );
-  $self->_dupl_keys( {} );
+  $self->_dupl_keys(     {} );
   $self->_dupl_partners( {} );
 
   my $model = $self->get_model;
 
   # get all publications
-  my @all_pubs = @{$model->all_as_hash};
+  my @all_pubs = @{ $model->all_as_hash };
+
   # ignore trashed publications.
-  @all_pubs = grep {!defined $_->{trashed}} @all_pubs;
+  @all_pubs = grep { !defined $_->{trashed} } @all_pubs;
 
   $self->_searchspace( \@all_pubs );
   print STDERR "count: ", $#{ $self->_searchspace }, "\n";
@@ -194,7 +210,7 @@ sub connect {
   foreach my $cluster ( sort { $a <=> $b } values %{ $self->_dupl_keys } ) {
     if ( $cluster != $last_cluster ) {
       if ( $cur_color eq $c0 ) {
-        $cur_color = $c1
+        $cur_color = $c1;
       } else {
         $cur_color = $c0;
       }
@@ -225,7 +241,7 @@ sub page {
 
   my $model = $self->get_model;
 
-  if ($self->clear_duplicate_cache) {
+  if ( $self->clear_duplicate_cache ) {
     $self->connect;
   }
 
@@ -250,22 +266,24 @@ sub _store {
 
   my $i_pub = $self->_searchspace->[$i];
   my $j_pub = $self->_searchspace->[$j];
-  $self->_dupl_partners->{$i_pub->{sha1}} = $j_pub;
-  $self->_dupl_partners->{$j_pub->{sha1}} = $i_pub;
+  $self->_dupl_partners->{ $i_pub->{sha1} } = $j_pub;
+  $self->_dupl_partners->{ $j_pub->{sha1} } = $i_pub;
 
   # remember the i.th publication
-  if(!defined $self->_dupl_keys->{ $i_pub->{sha1} } ) {
+  if ( !defined $self->_dupl_keys->{ $i_pub->{sha1} } ) {
+
     #$self->_searchspace->[$i]->{_highlight} = 'pp-grid-highlight3';
-    push @{ $self->_data }, Paperpile::Library::Publication->new( $i_pub );
+    push @{ $self->_data }, Paperpile::Library::Publication->new($i_pub);
     $self->_dupl_keys->{ $i_pub->{sha1} } = $i;
-  };
+  }
 
   # remember the j.th publication
-  if(!defined $self->_dupl_keys->{ $j_pub->{sha1} } ) {
+  if ( !defined $self->_dupl_keys->{ $j_pub->{sha1} } ) {
+
     #$self->_searchspace->[$j]->{_highlight} = 'pp-grid-highlight3';
-    push @{ $self->_data }, Paperpile::Library::Publication->new( $j_pub );
+    push @{ $self->_data }, Paperpile::Library::Publication->new($j_pub);
     $self->_dupl_keys->{ $j_pub->{sha1} } = $i;
-  };
+  }
 }
 
 1;

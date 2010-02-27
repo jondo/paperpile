@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Plugins::Import::Feed;
 
 use Carp;
@@ -12,14 +28,13 @@ use Bibutils;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 use Paperpile::Utils;
 use Paperpile::Formats;
 
 extends 'Paperpile::Plugins::Import::DB';
 
-has 'id'  => ( is => 'rw', isa => 'Str' );
-has 'url'  => ( is => 'rw', isa => 'Str' );
+has 'id'    => ( is => 'rw', isa => 'Str' );
+has 'url'   => ( is => 'rw', isa => 'Str' );
 has 'file'  => ( is => 'rw', isa => 'Str' );
 has '_data' => ( is => 'rw', isa => 'ArrayRef' );
 has 'title' => ( is => 'rw', isa => 'Str', default => 'New Feed' );
@@ -37,11 +52,13 @@ sub connect {
 
   # Re-download and re-import every time for now
   #if ( !-e $self->file ) {
-    $self->update_feed;
+  $self->update_feed;
+
   #}
 
-  if (1){
-  #if ( !-e $self->_db_file ) {
+  if (1) {
+
+    #if ( !-e $self->_db_file ) {
 
     my $reader;
 
@@ -49,9 +66,9 @@ sub connect {
 
     my $data = $reader->read();
 
-    if ($reader->format eq 'RSS'){
-      if ($reader->title){
-        $self->title($reader->title);
+    if ( $reader->format eq 'RSS' ) {
+      if ( $reader->title ) {
+        $self->title( $reader->title );
       }
     }
 
@@ -82,9 +99,9 @@ sub connect {
 
 sub cleanup {
 
-  my $self=shift;
+  my $self = shift;
 
-  rmtree($self->_rss_dir) or die("Could not clean up RSS feed.");
+  rmtree( $self->_rss_dir ) or die("Could not clean up RSS feed.");
 
 }
 
@@ -98,7 +115,7 @@ sub update_feed {
 
   if ( $response->is_error ) {
     NetGetError->throw(
-      error => 'Could not load feed (' . $response->message .')',
+      error => 'Could not load feed (' . $response->message . ')',
       code  => $response->code
     );
   }
@@ -110,19 +127,16 @@ sub update_feed {
 
 }
 
-
 sub _rss_dir {
 
-  my ($self, $bibfile) = @_;
+  my ( $self, $bibfile ) = @_;
 
-  my $path=File::Spec->catfile( Paperpile::Utils->get_tmp_dir, 'rss',$self->id);
+  my $path = File::Spec->catfile( Paperpile::Utils->get_tmp_dir, 'rss', $self->id );
 
   mkpath($path);
 
   return $path;
 
 }
-
-
 
 1;

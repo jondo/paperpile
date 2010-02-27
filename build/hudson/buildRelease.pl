@@ -1,6 +1,22 @@
 #! catalyst/perl5/linux32/bin/perl -w
 
-# Our build machine is 32 bit and Hudson runs this script from the top
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
+# Note: Our build machine is 32 bit and Hudson runs this script from the top
 # level in the workspace. So we need the above perl binary.
 
 use strict;
@@ -14,10 +30,9 @@ use Data::Dumper;
 use Paperpile;
 use Paperpile::Build;
 
-
 ################# Setup configuration variables ######################
 
-my @targets = ('linux32','linux64');
+my @targets = ( 'linux32', 'linux64' );
 
 my $workspace = `pwd`;
 chomp($workspace);
@@ -56,9 +71,7 @@ for my $target (@targets) {
   `mv paperpile $target`;
 }
 
-
 ######  Move data to release directory and set up symbolic links #####
-
 
 my $rel_dir = $ENV{HOME} . "/release";
 
@@ -94,12 +107,10 @@ if ( $release_info->{patch} ) {
       "$rel_dir/$version_id/data/patch-$prev_version\_to_$version_id-$target"
     );
 
-
     $b->echo("Zipping patch for $target");
     chdir "$rel_dir/$version_id/data";
     `zip -r patch-$prev_version\_to_$version_id-$target patch-$prev_version\_to_$version_id-$target`;
     `mv patch-$prev_version\_to_$version_id-$target.zip ..`;
-
 
     my $stats =
       $b->file_stats("$rel_dir/$version_id/patch-$prev_version\_to_$version_id-$target.zip");
@@ -119,7 +130,6 @@ my $update_info = LoadFile("$rel_dir/$prev_version/updates.yaml");
 unshift @$update_info, { release => $release_info };
 
 DumpFile( "$rel_dir/$version_id/updates.yaml", $update_info );
-
 
 ################### Tag the release on github ########################
 

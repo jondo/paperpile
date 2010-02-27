@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Plugins::Import;
 
 use Moose;
@@ -10,7 +26,7 @@ use Text::Levenshtein qw(distance);
 use Paperpile::Exceptions;
 
 # Name of the plugin
-has 'plugin_name' => ( is => 'rw', isa => 'Str');
+has 'plugin_name' => ( is => 'rw', isa => 'Str' );
 
 # Number of all entries for the query/file
 has 'total_entries' => ( is => 'rw', isa => 'Int' );
@@ -18,7 +34,7 @@ has 'total_entries' => ( is => 'rw', isa => 'Int' );
 # Maximum number of entries per page
 has 'limit' => ( is => 'rw', isa => 'Int', default => 10 );
 
-has 'light_objects' => (is =>'rw', isa =>'Int', default =>0);
+has 'light_objects' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Internal hash to quickly access the entries via their sha1 key across pages
 has '_hash' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
@@ -50,7 +66,6 @@ sub page {
   return [];
 }
 
-
 # Function: all
 
 # Returns all entries. Override this function to limit maximum number
@@ -60,9 +75,8 @@ sub all {
 
   ( my $self ) = @_;
 
-  return $self->page(0,999999);
+  return $self->page( 0, 999999 );
 }
-
 
 # Function: complete_details
 
@@ -84,7 +98,7 @@ sub complete_details {
 }
 
 sub needs_completing {
-  ( my $self, my $pub) = @_;
+  ( my $self, my $pub ) = @_;
 
   return 0;
 }
@@ -107,9 +121,7 @@ sub find_sha1 {
 
 sub cleanup {
 
-
 }
-
 
 # Function _save_page_to_hash
 
@@ -122,7 +134,7 @@ sub _save_page_to_hash {
   ( my $self, my $data ) = @_;
 
   foreach my $entry (@$data) {
-    if (defined $entry->sha1) {
+    if ( defined $entry->sha1 ) {
       $self->_hash->{ $entry->sha1 } = $entry;
     }
   }
@@ -132,13 +144,14 @@ sub _save_page_to_hash {
 # Helper function for "match"
 
 sub _merge_pub {
-  my ($self, $old, $new) = @_;
-  foreach my $key (keys %{$old->as_hash}){
-      if ( $key eq 'authors' and $new->$key =~ m/\{others\}$/ ) {
-	  # keep the old authors entry and do nothing
-	  next;
-      } 
-      $old->$key($new->$key) if ($new->$key);
+  my ( $self, $old, $new ) = @_;
+  foreach my $key ( keys %{ $old->as_hash } ) {
+    if ( $key eq 'authors' and $new->$key =~ m/\{others\}$/ ) {
+
+      # keep the old authors entry and do nothing
+      next;
+    }
+    $old->$key( $new->$key ) if ( $new->$key );
   }
   return $old;
 }
@@ -154,21 +167,20 @@ sub _match_title {
 
   for my $t ( $title1, $title2 ) {
     $t =~ s/\s+//g;
+
     # be careful:
     # if there is a special char within your title
     # that is not listed here
-    # the distance gets unexpectedly large! 
+    # the distance gets unexpectedly large!
     $t =~ s/[.:!?\-;,]//g;
     $t = uc($t);
   }
 
   my $distance = distance( $title1, $title2 );
+
   #print STDERR "distance=$distance\n";
   return $distance < $cutoff;
 
 }
-
-
-
 
 1;

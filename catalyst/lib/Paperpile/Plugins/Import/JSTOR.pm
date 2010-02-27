@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Plugins::Import::JSTOR;
 
 use Carp;
@@ -10,7 +26,6 @@ use 5.010;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
@@ -21,7 +36,6 @@ has 'query' => ( is => 'rw' );
 # The main search URL
 my $searchUrl = 'http://www.jstor.org/action/doBasicSearch?dc=All+Disciplines&Query=';
 
-
 sub BUILD {
   my $self = shift;
   $self->plugin_name('JSTOR');
@@ -30,14 +44,13 @@ sub BUILD {
 sub connect {
   my $self = shift;
 
-  
   my $browser = Paperpile::Utils->get_browser;
 
   # Get the results
-  (my $tmp_query = $self->query) =~ s/\s+/+/g;
+  ( my $tmp_query = $self->query ) =~ s/\s+/+/g;
   my $response = $browser->get( $searchUrl . $tmp_query );
   print STDERR "$searchUrl$tmp_query\n";
-  my $content  = $response->content;
+  my $content = $response->content;
 
   # save first page in cache to speed up call to first page afterwards
   $self->_page_cache( {} );
@@ -82,13 +95,18 @@ sub page {
     $content = $self->_page_cache->{$offset}->{$limit};
   } else {
     my $browser = Paperpile::Utils->get_browser;
-    my $nr = $offset+1;
-    (my $tmp_query = $self->query) =~ s/\s+/+/g;
-    my $searchUrl_new = 'http://www.jstor.org/action/doBasicResults?hp=25&la=&wc=on&gw=jtx&jcpsi=1&artsi=1&Query='.$tmp_query.'&si='.$nr.'&jtxsi='.$nr;
-    my $response = $browser->get( $searchUrl_new );
+    my $nr      = $offset + 1;
+    ( my $tmp_query = $self->query ) =~ s/\s+/+/g;
+    my $searchUrl_new =
+        'http://www.jstor.org/action/doBasicResults?hp=25&la=&wc=on&gw=jtx&jcpsi=1&artsi=1&Query='
+      . $tmp_query . '&si='
+      . $nr
+      . '&jtxsi='
+      . $nr;
+    my $response = $browser->get($searchUrl_new);
     $content = $response->content;
   }
-  
+
   # now we parse the HTML for entries
   my $tree = HTML::TreeBuilder::XPath->new;
   $tree->utf8_mode(1);
@@ -100,33 +118,32 @@ sub page {
     citations => [],
     urls      => [],
     bibtex    => [],
-    pdf       => []  
+    pdf       => []
   );
 
-  # Each entry is part of an unorder list 
-  
+  # Each entry is part of an unorder list
+
   my @nodes = $tree->findnodes('/html/body/div/div/div/div/form/fieldset/ul/li');
-  
+
   foreach my $node (@nodes) {
 
     my ( $title, $author, $citation, $bibtex, $pdf, $url );
-    $title = $node->findvalue('./ul/li/a[@class="title"]');
-    $author = $node->findvalue('./ul/li/a[@class="author"]');
+    $title    = $node->findvalue('./ul/li/a[@class="title"]');
+    $author   = $node->findvalue('./ul/li/a[@class="author"]');
     $citation = $node->findvalue('./ul/li[@class="sourceInfo"]');
-    $bibtex = $node->findvalue('./ul/li/span/a[@class="exportArticle"]/@href');
+    $bibtex   = $node->findvalue('./ul/li/span/a[@class="exportArticle"]/@href');
     $bibtex =~ s/exportSingleCitation\?/downloadSingleCitation?format=bibtex&include=abs&/;
-    $bibtex = 'http://www.jstor.org'.$bibtex;
-    (my $suffix = $bibtex) =~ s/(.*suffix=)//;
-    $pdf = 'http://www.jstor.org/stable/pdfplus/'.$suffix.'.pdf';
-    $url = 'http://www.jstor.org/stable/'.$suffix;
-    push @{ $data{titles} }, $title;
+    $bibtex = 'http://www.jstor.org' . $bibtex;
+    ( my $suffix = $bibtex ) =~ s/(.*suffix=)//;
+    $pdf = 'http://www.jstor.org/stable/pdfplus/' . $suffix . '.pdf';
+    $url = 'http://www.jstor.org/stable/' . $suffix;
+    push @{ $data{titles} },    $title;
     push @{ $data{authors} },   $author;
-    push @{ $data{citations} },   $citation;
-    push @{ $data{bibtex} }, $bibtex;
-    push @{ $data{pdf} }, $pdf;
-    push @{ $data{urls} }, $url;
+    push @{ $data{citations} }, $citation;
+    push @{ $data{bibtex} },    $bibtex;
+    push @{ $data{pdf} },       $pdf;
+    push @{ $data{urls} },      $url;
   }
-
 
   # Write output list of Publication records with preliminary
   # information We save to the helper fields _authors_display and

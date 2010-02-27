@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Plugins::Import::PubMed;
 
 use Carp;
@@ -10,7 +26,6 @@ use 5.010;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
@@ -40,72 +55,74 @@ sub BUILD {
 }
 
 sub _EscapeString {
-    my $string = $_[0];
-    
-    # remove leading spaces
-    $string =~ s/^\s+//;
-    # remove spaces at the end
-    $string =~ s/\s+$//;
+  my $string = $_[0];
 
-    # escape each single word and finally join
-    # with plus signs
-    my @tmp = split( /\s+/, $string );
-    foreach my $i ( 0 .. $#tmp ) {
-	$tmp[$i] = uri_escape_utf8( $tmp[$i] );
-    }
-    
-    return join( "+", @tmp );
+  # remove leading spaces
+  $string =~ s/^\s+//;
+
+  # remove spaces at the end
+  $string =~ s/\s+$//;
+
+  # escape each single word and finally join
+  # with plus signs
+  my @tmp = split( /\s+/, $string );
+  foreach my $i ( 0 .. $#tmp ) {
+    $tmp[$i] = uri_escape_utf8( $tmp[$i] );
+  }
+
+  return join( "+", @tmp );
 }
 
 sub _FormatQueryString {
-    my $query = $_[0];
-    my $formatted_query_string = '';
+  my $query                  = $_[0];
+  my $formatted_query_string = '';
 
-    # let's see if we have signal words
-    my $special_words = 0;
+  # let's see if we have signal words
+  my $special_words = 0;
 
-    $special_words = 1 if ( $query =~ m/(author:|title:|journal:)/ );
- 
-    # there are no special words so we just do a regular escaping
-    if ( $special_words == 0 ) {
-        $formatted_query_string = _EscapeString( $query );
-    } else {
-	my @blocks = split(/(author:|title:|journal:)/, $query);
-	shift(@blocks) if (!$blocks[0]);
+  $special_words = 1 if ( $query =~ m/(author:|title:|journal:)/ );
 
-	my @tmp_query = ( );
-	for ( my $i=0; $i <= $#blocks; $i++ ) {
-	    #print STDERR "$i :: $blocks[$i]\n";
-	    if ( $blocks[$i] =~ m/^author:$/i ) {
-		if ( defined $blocks[$i+1] ) {
-		    push @tmp_query, _EscapeString( '"'.$blocks[$i+1].'"'."[Author]" );
-		}
-		$i++;
-	    }
-	    if ( $blocks[$i] =~ m/^title:$/i ) {
-		if ( defined $blocks[$i+1] ) {
-		    push @tmp_query, _EscapeString( '"'.$blocks[$i+1].'"'."[Title]" );
-		}
-		$i++;
-	    }
-	    if ( $blocks[$i] =~ m/^journal:$/i ) {
-		if ( defined $blocks[$i+1] ) {
-		    push @tmp_query, _EscapeString( '"'.$blocks[$i+1].'"'."[Journal]" );
-		}
-		$i++;
-	    }
-	    #print STDERR "   $i :: $blocks[$i]\n";
-	}
-	$formatted_query_string = join("+", @tmp_query);
-	#print STDERR "BLOCKS :: ",join("+", @blocks)," --> $formatted_query_string\n";
-	
+  # there are no special words so we just do a regular escaping
+  if ( $special_words == 0 ) {
+    $formatted_query_string = _EscapeString($query);
+  } else {
+    my @blocks = split( /(author:|title:|journal:)/, $query );
+    shift(@blocks) if ( !$blocks[0] );
 
-	#$formatted_query_string = $query;
+    my @tmp_query = ();
+    for ( my $i = 0 ; $i <= $#blocks ; $i++ ) {
+
+      #print STDERR "$i :: $blocks[$i]\n";
+      if ( $blocks[$i] =~ m/^author:$/i ) {
+        if ( defined $blocks[ $i + 1 ] ) {
+          push @tmp_query, _EscapeString( '"' . $blocks[ $i + 1 ] . '"' . "[Author]" );
+        }
+        $i++;
+      }
+      if ( $blocks[$i] =~ m/^title:$/i ) {
+        if ( defined $blocks[ $i + 1 ] ) {
+          push @tmp_query, _EscapeString( '"' . $blocks[ $i + 1 ] . '"' . "[Title]" );
+        }
+        $i++;
+      }
+      if ( $blocks[$i] =~ m/^journal:$/i ) {
+        if ( defined $blocks[ $i + 1 ] ) {
+          push @tmp_query, _EscapeString( '"' . $blocks[ $i + 1 ] . '"' . "[Journal]" );
+        }
+        $i++;
+      }
+
+      #print STDERR "   $i :: $blocks[$i]\n";
     }
+    $formatted_query_string = join( "+", @tmp_query );
 
-    return $formatted_query_string;
+    #print STDERR "BLOCKS :: ",join("+", @blocks)," --> $formatted_query_string\n";
+
+    #$formatted_query_string = $query;
+  }
+
+  return $formatted_query_string;
 }
-
 
 sub connect {
   my $self = shift;
@@ -117,8 +134,8 @@ sub connect {
   my $browser = Paperpile::Utils->get_browser;
 
   # We send our query to PubMed via a simple get
-  my $query_string = _FormatQueryString($self->query);
-  my $response = $browser->get( $esearch . $query_string );
+  my $query_string = _FormatQueryString( $self->query );
+  my $response     = $browser->get( $esearch . $query_string );
 
   if ( $response->is_error ) {
     NetGetError->throw(
@@ -135,7 +152,7 @@ sub connect {
     or ( not defined $result->{QueryKey} )
     or ( not defined $result->{Count} ) ) {
     NetFormatError->throw(
-      error    => 'PubMed query failed: unknown return format',
+      error   => 'PubMed query failed: unknown return format',
       content => $response->content
     );
   }
@@ -165,102 +182,111 @@ sub page {
   return $page;
 }
 
-
 sub all {
   ( my $self ) = @_;
-  return $self->page(0,100);
+  return $self->page( 0, 100 );
 }
 
-
 # Match function to match publication-objects
-# against Pubmed. 
+# against Pubmed.
 
 sub match {
 
   ( my $self, my $pub ) = @_;
 
-  my $query_doi = '';
-  my $query_title = '';
+  my $query_doi     = '';
+  my $query_title   = '';
   my $query_authors = '';
-  my @title_words = ( ); 
+  my @title_words   = ();
 
   # First we format the three query strings properly. Besides
   # HTML escaping we remove words that contain non-alphnumeric
   # characters. These words can cause severe problems.
   # 1) DOI
-  $query_doi = _EscapeString($pub->doi . "[AID]") if ( $pub->doi );
+  $query_doi = _EscapeString( $pub->doi . "[AID]" ) if ( $pub->doi );
 
   # 2) Title
   if ( $pub->title ) {
-      my @tmp = ( );
-      ( my $tmp_title = $pub->title ) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
-      foreach my $word ( split(/\s+/, $tmp_title ) ) {
-	  # words that contain non-alphnumeric and non-ascii 
-	  # characters are removed
-	  next if ( $word =~ m/[^\w\s-]/ );
-	  next if ( $word =~ m/[^[:ascii:]]/ );
-	  push @title_words, $word;
+    my @tmp = ();
+    ( my $tmp_title = $pub->title ) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+    foreach my $word ( split( /\s+/, $tmp_title ) ) {
 
-	  # words with less than 3 characters are removed
-	  next if (length($word) < 3 );
+      # words that contain non-alphnumeric and non-ascii
+      # characters are removed
+      next if ( $word =~ m/[^\w\s-]/ );
+      next if ( $word =~ m/[^[:ascii:]]/ );
+      push @title_words, $word;
 
-	  # Pubmed stopwords are not searched and the query will
-	  # fail if we keep them
-	  # the list is taken from here: http://www.ncbi.nlm.nih.gov/
-	  # bookshelf/br.fcgi?book=helppubmed&part=pubmedhelp&
-	  # rendertype=table&id=pubmedhelp.T43
-	  # last line contains other words that might cause problems. They
-	  # may be in the title for PDF parsing errors.
-	  
-	  my @pubmed_stopwords = ("about", "again", "all", "almost", "also", 
-				  "although", "always", "among", "and", "another", 
-				  "any", "are", "because", "been", "before",
-				  "being", "between", "both", "but", "can", "could", 
-				  "did", "does", "done", "due", "during", "each", 
-				  "either", "enough", "especially", "etc", "for", 
-				  "found", "from", "further", "had", "has", "have",
-				  "having", "here", "how", "however", "into", "its", 
-				  "itself", "just", "made", "mainly", "make", "may", 
-				  "might", "most", "mostly", "must", "nearly", 
-				  "neither", "nor", "not", "obtained", "often", "our", 
-				  "overall", "perhaps", "pmid", "quite", "rather", 
-				  "really", "regarding", "seem", "seen", "several", 
-				  "should", "show", "showed", "shown", "shows",
-				  "significantly", "since", "some", "such", "than", 
-				  "that", "the", "their", "theirs", "them", "then", 
-				  "there", "therefore", "these", "they", "this", 
-				  "those", "through", "thus", "upon", "use", "used",
-				  "using", "various", "very", "was", "were", "what", 
-				  "when", "which", "while", "with", "within", 
-				  "without", "would",
-				  "review","article");
-	  my $flag = 0;
-	  foreach my $stop_word (@pubmed_stopwords) {
-	      if (lc($word) eq $stop_word) {
-		  $flag = 1;
-		  last;
-	      }
-	  }
-	  next if ($flag == 1);
-	  
-	  # Add Title-tag
-	  push @tmp, "$word\[Title]";
+      # words with less than 3 characters are removed
+      next if ( length($word) < 3 );
+
+      # Pubmed stopwords are not searched and the query will
+      # fail if we keep them
+      # the list is taken from here: http://www.ncbi.nlm.nih.gov/
+      # bookshelf/br.fcgi?book=helppubmed&part=pubmedhelp&
+      # rendertype=table&id=pubmedhelp.T43
+      # last line contains other words that might cause problems. They
+      # may be in the title for PDF parsing errors.
+
+      my @pubmed_stopwords = (
+        "about",         "again",      "all",      "almost",
+        "also",          "although",   "always",   "among",
+        "and",           "another",    "any",      "are",
+        "because",       "been",       "before",   "being",
+        "between",       "both",       "but",      "can",
+        "could",         "did",        "does",     "done",
+        "due",           "during",     "each",     "either",
+        "enough",        "especially", "etc",      "for",
+        "found",         "from",       "further",  "had",
+        "has",           "have",       "having",   "here",
+        "how",           "however",    "into",     "its",
+        "itself",        "just",       "made",     "mainly",
+        "make",          "may",        "might",    "most",
+        "mostly",        "must",       "nearly",   "neither",
+        "nor",           "not",        "obtained", "often",
+        "our",           "overall",    "perhaps",  "pmid",
+        "quite",         "rather",     "really",   "regarding",
+        "seem",          "seen",       "several",  "should",
+        "show",          "showed",     "shown",    "shows",
+        "significantly", "since",      "some",     "such",
+        "than",          "that",       "the",      "their",
+        "theirs",        "them",       "then",     "there",
+        "therefore",     "these",      "they",     "this",
+        "those",         "through",    "thus",     "upon",
+        "use",           "used",       "using",    "various",
+        "very",          "was",        "were",     "what",
+        "when",          "which",      "while",    "with",
+        "within",        "without",    "would",    "review",
+        "article"
+      );
+      my $flag = 0;
+      foreach my $stop_word (@pubmed_stopwords) {
+        if ( lc($word) eq $stop_word ) {
+          $flag = 1;
+          last;
+        }
       }
-      $query_title = _EscapeString( join( " AND ", @tmp ) );
+      next if ( $flag == 1 );
+
+      # Add Title-tag
+      push @tmp, "$word\[Title]";
+    }
+    $query_title = _EscapeString( join( " AND ", @tmp ) );
   }
 
   # 3) Authors. We just use each author's last name
   if ( $pub->authors ) {
-      my @tmp = ( );
-      foreach my $author ( @{ $pub->get_authors } ) {
-	  # words that contain non-alphnumeric and non-ascii 
-	  # characters are removed
-	  next if ( $author->last =~ m/[^\w\s-]/ );
-	  next if ( $author->last =~ m/[^[:ascii:]]/ );
+    my @tmp = ();
+    foreach my $author ( @{ $pub->get_authors } ) {
 
-	  push @tmp, $author->last . "[au]";
-      }
-      $query_authors = _EscapeString(join(" AND ", @tmp));
+      # words that contain non-alphnumeric and non-ascii
+      # characters are removed
+      next if ( $author->last =~ m/[^\w\s-]/ );
+      next if ( $author->last =~ m/[^[:ascii:]]/ );
+
+      push @tmp, $author->last . "[au]";
+    }
+    $query_authors = _EscapeString( join( " AND ", @tmp ) );
   }
 
   # SEARCH STRATEGY:
@@ -270,132 +296,135 @@ sub match {
   #    in the PDF can cause troubles.
   # 3) Just Title: If everything till this point failed.
 
-
-  my $browser   = Paperpile::Utils->get_browser;
+  my $browser = Paperpile::Utils->get_browser;
   if ( $query_doi ne '' ) {
-      my $response  = $browser->get( $esearch . $query_doi );
-      my $resultXML = $response->content;
-      my $result    = XMLin($resultXML);
+    my $response  = $browser->get( $esearch . $query_doi );
+    my $resultXML = $response->content;
+    my $result    = XMLin($resultXML);
 
-      # If we get exactly one result then the DOI was really unique
-      # and in most cases we are done.
-      if ( $result->{Count} == 1 ) {
-	  $self->web_env( $result->{WebEnv} );
-	  $self->query_key( $result->{QueryKey} );
-      
-	  my $xml = $self->_pubFetch( 0, 1 );
-	  my $page = $self->_read_xml($xml);
-	  $self->_linkOut($page);
+    # If we get exactly one result then the DOI was really unique
+    # and in most cases we are done.
+    if ( $result->{Count} == 1 ) {
+      $self->web_env( $result->{WebEnv} );
+      $self->query_key( $result->{QueryKey} );
 
-	  if ( $page->[0]->doi eq $pub->{doi} ) {
-	      return $self->_merge_pub( $pub, $page->[0] );
-	  }
+      my $xml = $self->_pubFetch( 0, 1 );
+      my $page = $self->_read_xml($xml);
+      $self->_linkOut($page);
+
+      if ( $page->[0]->doi eq $pub->{doi} ) {
+        return $self->_merge_pub( $pub, $page->[0] );
       }
+    }
   }
 
   # If we are here then the DOI was not conducted or did not work.
   # We try a search using the title/authors now.
-  if ( $query_title ne '' and $query_authors ne '') {
-      #print STDERR "$esearch$query_title+$query_authors\n";
-      # Pubmed is queried using title and authors
-      my $response  = $browser->get( $esearch . "$query_title+$query_authors" );
-      my $resultXML = $response->content;
-      my $result    = XMLin($resultXML);
-      
-      # If some errors popup we adjust our query string and query again
-      if ( $result->{ErrorList}->{PhraseNotFound} ) {
-	  my @badtmp = ( );
-	  if ( $result->{ErrorList}->{PhraseNotFound} =~ m/^ARRAY/ ) {
-	      @badtmp = @{$result->{ErrorList}->{PhraseNotFound}};
-	  } else {
-	      push @badtmp, $result->{ErrorList}->{PhraseNotFound};
-	  }
-	  foreach my $badword ( @badtmp ) {
-	      $badword  = _EscapeString( $badword );
-	      $query_title =~ s/(\+AND\+)?$badword//;
-	      $query_authors =~ s/(\+AND\+)?$badword//;
-	  }
-	  # now query again
-	  $response  = $browser->get( $esearch . "$query_title+$query_authors" );
-	  $resultXML = $response->content;
-	  $result    = XMLin($resultXML);
-      } 
+  if ( $query_title ne '' and $query_authors ne '' ) {
 
-      # Let's check if the query returned any results and if
-      # the publication of interest is contained. The Top 5
-      # results are checked.
-       if ( $result->{Count} > 0 ) {
-	  $self->web_env( $result->{WebEnv} );
-	  $self->query_key( $result->{QueryKey} );
- 	  my $xml = $self->_pubFetch( 0, 5 );
-	  my $page = $self->_read_xml($xml);
-	  $self->_linkOut($page);
-	  my $max = ( $result->{Count} > 5 ) ? 4 : $result->{Count}-1;
-	  # if there is only one result, we belive it and return
-	  # Note: Sometimes we delete some words from the title (maybe
-	  # parsing errors, e.g. review, ...) and the two titles do not
-	  # match
-	  
-	  return $self->_merge_pub( $pub, $page->[0] ) if ( $max == 0 );
-	  foreach my $i ( 0 .. $max ) {
-	      if ( $self->_match_title( $page->[$i]->title, $pub->title ) ) {
-		  return $self->_merge_pub( $pub, $page->[$i] );
-	      }
-	  }
+    #print STDERR "$esearch$query_title+$query_authors\n";
+    # Pubmed is queried using title and authors
+    my $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+    my $resultXML = $response->content;
+    my $result    = XMLin($resultXML);
+
+    # If some errors popup we adjust our query string and query again
+    if ( $result->{ErrorList}->{PhraseNotFound} ) {
+      my @badtmp = ();
+      if ( $result->{ErrorList}->{PhraseNotFound} =~ m/^ARRAY/ ) {
+        @badtmp = @{ $result->{ErrorList}->{PhraseNotFound} };
+      } else {
+        push @badtmp, $result->{ErrorList}->{PhraseNotFound};
       }
-      
+      foreach my $badword (@badtmp) {
+        $badword = _EscapeString($badword);
+        $query_title   =~ s/(\+AND\+)?$badword//;
+        $query_authors =~ s/(\+AND\+)?$badword//;
+      }
+
+      # now query again
+      $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+      $resultXML = $response->content;
+      $result    = XMLin($resultXML);
+    }
+
+    # Let's check if the query returned any results and if
+    # the publication of interest is contained. The Top 5
+    # results are checked.
+    if ( $result->{Count} > 0 ) {
+      $self->web_env( $result->{WebEnv} );
+      $self->query_key( $result->{QueryKey} );
+      my $xml = $self->_pubFetch( 0, 5 );
+      my $page = $self->_read_xml($xml);
+      $self->_linkOut($page);
+      my $max = ( $result->{Count} > 5 ) ? 4 : $result->{Count} - 1;
+
+      # if there is only one result, we belive it and return
+      # Note: Sometimes we delete some words from the title (maybe
+      # parsing errors, e.g. review, ...) and the two titles do not
+      # match
+
+      return $self->_merge_pub( $pub, $page->[0] ) if ( $max == 0 );
+      foreach my $i ( 0 .. $max ) {
+        if ( $self->_match_title( $page->[$i]->title, $pub->title ) ) {
+          return $self->_merge_pub( $pub, $page->[$i] );
+        }
+      }
+    }
+
   }
 
   # If we are here then Title+Auhtors failed, and we try to search
   # only with the title.
   if ( $query_title ne '' ) {
-      my $response  = $browser->get( $esearch . "$query_title" );
-      my $resultXML = $response->content;
-      my $result    = XMLin($resultXML);
+    my $response  = $browser->get( $esearch . "$query_title" );
+    my $resultXML = $response->content;
+    my $result    = XMLin($resultXML);
 
-      # Let's check if the query returned any results and if
-      # the publication of interest is contained. The Top 5
-      # results are checked.
-      
-      if ( $result->{Count} > 0 ) {
-	  $self->web_env( $result->{WebEnv} );
-	  $self->query_key( $result->{QueryKey} );
-      
-	  my $xml = $self->_pubFetch( 0, 5 );
-	  my $page = $self->_read_xml($xml);
-	  $self->_linkOut($page);
-	  my $max = ( $result->{Count} > 5 ) ? 4 : $result->{Count}-1;
-	  foreach my $i ( 0 .. $max ) {
-	      # there are often PDF parsing errors so we cannot do a
-	      # simple string comparison
-	      my $counts = 0;
-	      my $to_compare_with = ' '.$page->[$i]->title.' ';
-	      foreach my $word ( @title_words ) {
-		$counts++ if ( $to_compare_with =~ m/\s$word\s/i );
-	      }
-	      my $words_current_title = ( $page->[$i]->title =~ tr/ //);
-	      if ( $counts > $#title_words and $counts/$words_current_title >= 0.9 ) {
-		  return $self->_merge_pub( $pub, $page->[$i] );
-	      }
-	  }	  
+    # Let's check if the query returned any results and if
+    # the publication of interest is contained. The Top 5
+    # results are checked.
+
+    if ( $result->{Count} > 0 ) {
+      $self->web_env( $result->{WebEnv} );
+      $self->query_key( $result->{QueryKey} );
+
+      my $xml = $self->_pubFetch( 0, 5 );
+      my $page = $self->_read_xml($xml);
+      $self->_linkOut($page);
+      my $max = ( $result->{Count} > 5 ) ? 4 : $result->{Count} - 1;
+      foreach my $i ( 0 .. $max ) {
+
+        # there are often PDF parsing errors so we cannot do a
+        # simple string comparison
+        my $counts          = 0;
+        my $to_compare_with = ' ' . $page->[$i]->title . ' ';
+        foreach my $word (@title_words) {
+          $counts++ if ( $to_compare_with =~ m/\s$word\s/i );
+        }
+        my $words_current_title = ( $page->[$i]->title =~ tr/ // );
+        if ( $counts > $#title_words and $counts / $words_current_title >= 0.9 ) {
+          return $self->_merge_pub( $pub, $page->[$i] );
+        }
       }
+    }
   }
 
   # If we are here then our search against Pubmed was not successful.
-  NetMatchError->throw( error => 'No match against PubMed.');
+  NetMatchError->throw( error => 'No match against PubMed.' );
+
   #return $pub; # comment in for command line testing
 }
 
-
 sub web_lookup {
 
-  my ($self, $url, $content) = @_;
+  my ( $self, $url, $content ) = @_;
 
   #my $pmid;
 
-  $url=~/pubmed\/(\d+)/;
+  $url =~ /pubmed\/(\d+)/;
 
-  my $pmid=$1;
+  my $pmid = $1;
 
   my $browser   = Paperpile::Utils->get_browser;
   my $response  = $browser->get( $esearch . $pmid );
@@ -403,7 +432,7 @@ sub web_lookup {
   my $result    = XMLin($resultXML);
 
   if ( $result->{Count} == 0 ) {
-    NetMatchError->throw( error => 'Could not find entry in PubMed');
+    NetMatchError->throw( error => 'Could not find entry in PubMed' );
   }
 
   $self->web_env( $result->{WebEnv} );
@@ -417,7 +446,6 @@ sub web_lookup {
   return $page;
 
 }
-
 
 # function: _pubFetch
 
@@ -498,7 +526,7 @@ sub _read_xml {
     my $doi = $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
 
     # Remove period from end of title
-    $title=~s/\.\s*$//;
+    $title =~ s/\.\s*$//;
 
     $pub->volume($volume)     if $volume;
     $pub->issue($issue)       if $issue;
@@ -509,7 +537,6 @@ sub _read_xml {
     $pub->title($title)       if $title;
     $pub->doi($doi)           if $doi;
     $pub->issn($issn)         if $issn;
-
 
     if ($journal) {
       my $jid = $journal;
@@ -529,9 +556,9 @@ sub _read_xml {
       if ( $author->{CollectiveName} ) {
         push @authors,
           Paperpile::Library::Author->new(
-          last  => '',
-          first => '',
-          jr    => '',
+          last       => '',
+          first      => '',
+          jr         => '',
           collective => $author->{CollectiveName},
           )->normalized;
       } else {
@@ -583,7 +610,7 @@ sub _linkOut {
     );
   }
 
-  my $result = XMLin( $response->content, forceArray =>['IdUrlSet']);
+  my $result = XMLin( $response->content, forceArray => ['IdUrlSet'] );
 
   foreach my $entry ( @{ $result->{LinkSet}->{IdUrlList}->{IdUrlSet} } ) {
 
@@ -608,28 +635,27 @@ sub _linkOut {
 
 sub _fetch_by_pmid {
 
-    ( my $self, my $pmid ) = @_;
+  ( my $self, my $pmid ) = @_;
 
-    my $browser   = Paperpile::Utils->get_browser;
-    if ( $pmid ne '' ) {
-	my $query = "$esearch$pmid";
-	$query .= "[uid]" if ( $pmid !~ m/^PMC/ );
+  my $browser = Paperpile::Utils->get_browser;
+  if ( $pmid ne '' ) {
+    my $query = "$esearch$pmid";
+    $query .= "[uid]" if ( $pmid !~ m/^PMC/ );
 
-	my $response  = $browser->get( $query );
-	my $resultXML = $response->content;
-	my $result    = XMLin($resultXML);
-	
-	if ( $result->{Count} == 1 ) {
-	    $self->web_env( $result->{WebEnv} );
-	    $self->query_key( $result->{QueryKey} );
-	    
-	    my $xml = $self->_pubFetch( 0, 1 );
-	    my $page = $self->_read_xml($xml);
-	    $self->_linkOut($page);
-	    return $page->[0];
-	}
+    my $response  = $browser->get($query);
+    my $resultXML = $response->content;
+    my $result    = XMLin($resultXML);
+
+    if ( $result->{Count} == 1 ) {
+      $self->web_env( $result->{WebEnv} );
+      $self->query_key( $result->{QueryKey} );
+
+      my $xml = $self->_pubFetch( 0, 1 );
+      my $page = $self->_read_xml($xml);
+      $self->_linkOut($page);
+      return $page->[0];
     }
+  }
 }
-
 
 1;

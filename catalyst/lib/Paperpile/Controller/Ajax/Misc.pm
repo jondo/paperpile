@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Controller::Ajax::Misc;
 
 use strict;
@@ -33,24 +49,25 @@ sub tag_list : Local {
 
   my ( $self, $c ) = @_;
 
-  my $tags=$c->model('Library')->get_tags;
+  my $tags = $c->model('Library')->get_tags;
 
-  my @data=();
+  my @data = ();
 
-  foreach my $row (@$tags){
-    push @data, {tag  =>$row->{tag},
-                 style=> $row->{style},
-                };
+  foreach my $row (@$tags) {
+    push @data, {
+      tag   => $row->{tag},
+      style => $row->{style},
+      };
   }
 
   my %metaData = (
-   root          => 'data',
-   fields        => ['tag', 'style'],
+    root   => 'data',
+    fields => [ 'tag', 'style' ],
   );
 
-  $c->stash->{data}          = [@data];
+  $c->stash->{data} = [@data];
 
-  $c->stash->{metaData}      = {%metaData};
+  $c->stash->{metaData} = {%metaData};
 
   $c->forward('Paperpile::View::JSON');
 
@@ -59,7 +76,7 @@ sub tag_list : Local {
 sub journal_list : Local {
 
   my ( $self, $c ) = @_;
-  my $query = $c->request->params->{query};
+  my $query     = $c->request->params->{query};
   my $query_bak = $c->request->params->{query};
 
   my $model = $c->model('App');
@@ -82,41 +99,41 @@ sub journal_list : Local {
   # 2) Next we take those hits that start with the query. These
   #    hits are then sorted by the second word in the short title
   # 3) anything else
-  my @data = ( );
-  my @quality1 = ( );
-  my @quality2 = ( );
-  
+  my @data     = ();
+  my @quality1 = ();
+  my @quality2 = ();
+
   while ( $sth->fetch ) {
-      if ( $long =~ m/^$query_bak$/i ) {
-	  push @data, { long => $long, short => $short };
-	  next;
+    if ( $long =~ m/^$query_bak$/i ) {
+      push @data, { long => $long, short => $short };
+      next;
+    }
+    if ( $short =~ m/^$query_bak$/i ) {
+      push @data, { long => $long, short => $short };
+      next;
+    }
+    if ( $long =~ m/^$query_bak/i and $long !~ m/\s/ ) {
+      push @data, { long => $long, short => $short };
+      next;
+    }
+    if ( $long =~ m/^$query_bak/i ) {
+      ( my $next_words = $short ) =~ s/(\S+\s)(\S+)/$2/;
+      if ( $next_words =~ m/^\(/ ) {
+        push @data, { long => $long, short => $short };
+        next;
       }
-      if ( $short =~ m/^$query_bak$/i ) {
-	  push @data, { long => $long, short => $short };
-	  next;
-      }
-      if ( $long =~ m/^$query_bak/i and $long !~ m/\s/ ) {
-	  push @data, { long => $long, short => $short };
-	  next;
-      }
-      if ( $long =~ m/^$query_bak/i ) {
-	  ( my $next_words = $short ) =~ s/(\S+\s)(\S+)/$2/;
-	  if ( $next_words =~ m/^\(/ ) {
-	    push @data, { long => $long, short => $short };
-	    next;
-	  }
-	  push @quality1, { long => $long, short => $short, next_words => $next_words };
-	  next;
-      }
-      push @quality2, { long => $long, short => $short };
+      push @quality1, { long => $long, short => $short, next_words => $next_words };
+      next;
+    }
+    push @quality2, { long => $long, short => $short };
   }
 
-  my @sorted = sort { uc($a->{'next_words'}) cmp uc($b->{'next_words'}) } @quality1;
-  foreach my $entry ( @sorted ) {
-      push @data, $entry;
+  my @sorted = sort { uc( $a->{'next_words'} ) cmp uc( $b->{'next_words'} ) } @quality1;
+  foreach my $entry (@sorted) {
+    push @data, $entry;
   }
-  foreach my $entry ( @quality2 ) {
-      push @data, $entry;
+  foreach my $entry (@quality2) {
+    push @data, $entry;
   }
 
   $c->stash->{data} = [@data];
@@ -130,14 +147,14 @@ sub get_settings : Local {
 
   # app_settings are read from the config file, they are never changed
   # by the user and constant for a specific version of the application
-  my @list1 = %{ $c->config->{app_settings}};
+  my @list1 = %{ $c->config->{app_settings} };
 
   my @list2 = %{ $c->model('User')->settings };
   my @list3 = %{ $c->model('Library')->settings };
 
   my %merged = ( @list1, @list2, @list3 );
 
-  my $fields = LoadFile($c->path_to('conf/fields.yaml'));
+  my $fields = LoadFile( $c->path_to('conf/fields.yaml') );
 
   foreach my $key ( 'pub_types', 'pub_fields', 'pub_tooltips', 'pub_identifiers' ) {
     $merged{$key} = $fields->{$key};
@@ -152,9 +169,9 @@ sub get_settings : Local {
 sub import_journals : Local {
   my ( $self, $c ) = @_;
 
-  my $file="/home/wash/play/Paperpile/data/jabref.txt";
+  my $file = "/home/wash/play/Paperpile/data/jabref.txt";
 
-  my $sth=$c->model('Library')->dbh->prepare("INSERT INTO Journals (key,name) VALUES(?,?)");
+  my $sth = $c->model('Library')->dbh->prepare("INSERT INTO Journals (key,name) VALUES(?,?)");
 
   open( TMP, "<$file" );
 
@@ -173,7 +190,7 @@ sub import_journals : Local {
       next;
     }
 
-    $sth->execute($short,$long);
+    $sth->execute( $short, $long );
 
   }
 
@@ -186,7 +203,7 @@ sub test_network : Local {
 
   my ( $self, $c ) = @_;
 
-  my $browser = Paperpile::Utils->get_browser($c->request->params);
+  my $browser = Paperpile::Utils->get_browser( $c->request->params );
 
   my $response = $browser->get('http://google.com');
 
@@ -198,19 +215,18 @@ sub test_network : Local {
   }
 }
 
-
 sub preprocess_csl : Local {
 
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
+  my $grid_id   = $c->request->params->{grid_id};
   my $selection = $c->request->params->{selection};
-  my $plugin = $c->session->{"grid_$grid_id"};
+  my $plugin    = $c->session->{"grid_$grid_id"};
 
   my @data = ();
 
-  if ($selection eq 'ALL'){
-    @data = @{$plugin->all};
+  if ( $selection eq 'ALL' ) {
+    @data = @{ $plugin->all };
   } else {
     my @tmp;
     if ( ref($selection) eq 'ARRAY' ) {
@@ -224,45 +240,43 @@ sub preprocess_csl : Local {
     }
   }
 
-  my @output=();
+  my @output = ();
 
-  my $style_file=$c->path_to('root/csl/style/nature.csl');
-  my $locale_file=$c->path_to('root/csl/locale/locales-en-US.xml');
+  my $style_file  = $c->path_to('root/csl/style/nature.csl');
+  my $locale_file = $c->path_to('root/csl/locale/locales-en-US.xml');
 
-  my $style='';
-  my $locale='';
+  my $style  = '';
+  my $locale = '';
 
-  open(IN,"<$style_file");
-  $style.=$_ while <IN>;
+  open( IN, "<$style_file" );
+  $style .= $_ while <IN>;
 
-  open(IN,"<$locale_file");
-  $locale.=$_ while <IN>;
+  open( IN, "<$locale_file" );
+  $locale .= $_ while <IN>;
 
-  $locale=~s/<\?.*\?>//g;
-  $style=~s/<\?.*\?>//g;
+  $locale =~ s/<\?.*\?>//g;
+  $style  =~ s/<\?.*\?>//g;
 
   print STDERR "$locale";
 
-  foreach my $pub (@data){
+  foreach my $pub (@data) {
     push @output, $pub->format_csl;
   }
 
-  $c->stash->{data}=[@output];
-  $c->stash->{style}=$style;
-  $c->stash->{locale}=$locale;
+  $c->stash->{data}   = [@output];
+  $c->stash->{style}  = $style;
+  $c->stash->{locale} = $locale;
 
 }
-
 
 sub clean_duplicates : Local {
   my ( $self, $c ) = @_;
   my $grid_id = $c->request->params->{grid_id};
-  my $plugin = $c->session->{"grid_$grid_id"};
+  my $plugin  = $c->session->{"grid_$grid_id"};
 
   $c->forward('Paperpile::View::JSON');
 
 }
-
 
 sub inc_read_counter : Local {
 
@@ -273,7 +287,8 @@ sub inc_read_counter : Local {
 
   my $touched = timestamp gmtime;
   $c->model('Library')
-    ->dbh->do("UPDATE Publications SET times_read=times_read+1,last_read='$touched' WHERE rowid=$rowid");
+    ->dbh->do(
+    "UPDATE Publications SET times_read=times_read+1,last_read='$touched' WHERE rowid=$rowid");
 
   $c->stash->{data} =
     { pubs => { $sha1 => { last_read => $touched, times_read => $times_read + 1 } } };
@@ -290,9 +305,9 @@ sub report_error : Local {
   my $browser = Paperpile::Utils->get_browser();
 
   my $version_name = $c->config->{app_settings}->{version_name};
-  my $version_id     = $c->config->{app_settings}->{version_id};
-  my $build_number   = $c->config->{app_settings}->{build_number};
-  my $platform       = $c->config->{app_settings}->{platform};
+  my $version_id   = $c->config->{app_settings}->{version_id};
+  my $build_number = $c->config->{app_settings}->{build_number};
+  my $platform     = $c->config->{app_settings}->{platform};
 
   my $subject =
     "Unknown exception on $platform;  version: $version_id ($version_name); build: $build_number";
@@ -320,9 +335,5 @@ sub report_error : Local {
   unlink($filename);
 
 }
-
-
-
-
 
 1;

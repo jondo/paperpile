@@ -1,8 +1,6 @@
 package Paperpile::Model::DBIbase;
 
-## The Catalyst::DBI model could not be used 'stand-alone' outside
-## Catalyst and had some other annoying things. So I use a modified
-## copy of it here.
+## This is a  modified copy of Catalyst::DBI
 
 use strict;
 use base 'Catalyst::Model';

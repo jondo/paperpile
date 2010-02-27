@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Plugins::Import::CiteSeerX;
 
 use Carp;
@@ -12,25 +28,20 @@ use 5.010;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
-# sinnloser kommentar
 
 # The search query to be send to CiteSeerX
-has 'query'           => ( is => 'rw' );
+has 'query' => ( is => 'rw' );
 
 # The main search URL
 my $searchUrl = 'http://citeseerx.ist.psu.edu/search?submit=Search&sort=rel&q=';
-
 
 sub BUILD {
   my $self = shift;
   $self->plugin_name('CiteSeerX');
 }
-
-
 
 sub connect {
   my $self = shift;
@@ -43,8 +54,8 @@ sub connect {
   my $browser = Paperpile::Utils->get_browser;
 
   # We have to modify the query string to fit citeseerX needs
-  my @tmp_words = split(/ /, $self->query);
-  my $query_string = join('+', @tmp_words);
+  my @tmp_words = split( / /, $self->query );
+  my $query_string = join( '+', @tmp_words );
 
   # Get the results
   my $response = $browser->get( $searchUrl . $query_string );
@@ -56,8 +67,8 @@ sub connect {
 
   # If nothing is found, we return that we have found 0 documents
   if ( $content =~ /did not match any documents/ ) {
-      $self->total_entries(0);
-      return 0;
+    $self->total_entries(0);
+    return 0;
   }
 
   # We parse the HTML via XPath
@@ -67,20 +78,18 @@ sub connect {
 
   # Try to find the number of hits
   my $stats = $tree->findnodes(q{/html/body/div/div/div/div/div/div[@class="left_content"]});
-  
+
   if ( $stats =~ /(\s)([0123456789,]+)(\sdocuments\sfound.*)/ ) {
-      my $number = $2;
-      $number =~ s/,//g;
-      $self->total_entries($number);
+    my $number = $2;
+    $number =~ s/,//g;
+    $self->total_entries($number);
   } else {
-      die('Something is wrong with the results page.');
+    die('Something is wrong with the results page.');
   }
 
   # Return the number of hits
   return $self->total_entries;
 }
-
-
 
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
@@ -225,26 +234,25 @@ sub page {
 
 }
 
-
 # We parse CiteSeerX in a two step process. First we scrape off
-# what we see and display it more or less unchanged (authors are 
+# what we see and display it more or less unchanged (authors are
 # already correctly parsed) in the front end via
 # _citation_display. If the user clicks on an
 # entry the missing information is completed from the BibTeX
-# entry there. This ensures fast search results and avoids too many 
+# entry there. This ensures fast search results and avoids too many
 # requests to CiteSeerX which is potentially harmful.
 
 sub complete_details {
 
   ( my $self, my $pub ) = @_;
-  
+
   my $browser = Paperpile::Utils->get_browser;
 
   # Get the details page inlcuding the abstract and the bibtex entry
   my $details = $browser->get( $pub->_details_link );
   my $content = $details->content;
 
-  # Create a new Publication object 
+  # Create a new Publication object
   my $full_pub = Paperpile::Library::Publication->new();
 
   # Now we parse the HTML for information of interest
@@ -257,38 +265,37 @@ sub complete_details {
   my $bibtex = $tree->findvalue('/html/body/div/div/div/div/div/div/div/div[@class="content"]');
   $bibtex =~ s/(.*)(@.*)/$2/;
   $bibtex =~ s/\x{A0}/ /g;
-  
+
   # sometimes the requested site is simply not there at CiteSeerX
   # then there is no Bibtex entry available and we die
-  if ($bibtex !~ m/@/) {
-      $full_pub->authors( $pub->authors );
-      $full_pub->title( $pub->title );
+  if ( $bibtex !~ m/@/ ) {
+    $full_pub->authors( $pub->authors );
+    $full_pub->title( $pub->title );
 
-      # now we should raise an error
-      # ERRRRRRRROOOOOOOORRRRRRRRR
+    # now we should raise an error
+    # ERRRRRRRROOOOOOOORRRRRRRRR
   } else {
 
-      $full_pub->import_string( $bibtex, 'BIBTEX' );
-      
-      # since we have already parsed the authors before, and we did
-      # in more clever way, we overwrite the authors field with the 
-      # old values
-      $full_pub->authors( $pub->authors );
-      
-      # now we look for the abstract
-      my $abstract = $tree->findvalue('/html/body/div/div/div/div/p[@class="para4"]');
-      if ($abstract) {
-	  $abstract =~ s/^Abstract.//;
-	  $full_pub->abstract($abstract);
-      } else {
-	  $full_pub->abstract( '' );
-      }
+    $full_pub->import_string( $bibtex, 'BIBTEX' );
+
+    # since we have already parsed the authors before, and we did
+    # in more clever way, we overwrite the authors field with the
+    # old values
+    $full_pub->authors( $pub->authors );
+
+    # now we look for the abstract
+    my $abstract = $tree->findvalue('/html/body/div/div/div/div/p[@class="para4"]');
+    if ($abstract) {
+      $abstract =~ s/^Abstract.//;
+      $full_pub->abstract($abstract);
+    } else {
+      $full_pub->abstract('');
+    }
   }
-      
-  
+
   # Add the linkout from the old object as it is not in the Bibtex
   $full_pub->linkout( $pub->linkout );
-  
+
   # Note that if we change title, authors, and citation also the sha1
   # will change. We have to take care of this.
   my $old_sha1 = $pub->sha1;
@@ -299,6 +306,5 @@ sub complete_details {
   return $full_pub;
 
 }
-
 
 1;

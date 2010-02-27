@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Controller::Ajax::Tree;
 
 use strict;
@@ -20,31 +36,30 @@ sub get_node : Local {
   my $tree;
 
   if ( not defined $c->session->{"tree"} ) {
-    $tree=$c->model('Library')->restore_tree();
-    if (not defined $tree){
+    $tree = $c->model('Library')->restore_tree();
+    if ( not defined $tree ) {
       $tree = $c->forward('private/get_default_tree');
     }
-    $c->session->{"tree"}=$tree;
-  }
-  else {
+    $c->session->{"tree"} = $tree;
+  } else {
     $tree = $c->session->{"tree"};
   }
 
-  if ($node eq 'ROOT'){
-    $c->stash->{tree} = $self->get_complete_tree($c, $tree);
+  if ( $node eq 'ROOT' ) {
+    $c->stash->{tree} = $self->get_complete_tree( $c, $tree );
     $c->detach('Paperpile::View::JSON::Tree');
   }
 
-  my $subtree = $c->forward('private/get_subtree',[$tree, $node]);
+  my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node ] );
 
   # Tags always generated dynamically
-  if ($subtree->getUID =~/TAGS_ROOT/){
-    $c->forward('private/get_tags',[$subtree]);
+  if ( $subtree->getUID =~ /TAGS_ROOT/ ) {
+    $c->forward( 'private/get_tags', [$subtree] );
   }
 
   my @data = ();
   foreach my $child ( $subtree->getAllChildren ) {
-    push @data, $self->_get_js_object($child,$c->request->params->{checked});
+    push @data, $self->_get_js_object( $child, $c->request->params->{checked} );
   }
   $c->stash->{tree} = [@data];
 
@@ -52,56 +67,57 @@ sub get_node : Local {
 
 }
 
-
 sub get_complete_tree {
 
-  my ($self, $c, $tree) = @_;
+  my ( $self, $c, $tree ) = @_;
 
   # Tags always generated dynamically
-  my $subtree = $c->forward('private/get_subtree',[$tree, 'TAGS_ROOT']);
-  $c->forward('private/get_tags',[$subtree]);
+  my $subtree = $c->forward( 'private/get_subtree', [ $tree, 'TAGS_ROOT' ] );
+  $c->forward( 'private/get_tags', [$subtree] );
 
-  my $dump='';
+  my $dump = '';
 
   # Simple way of getting the complete tree. We just create perl
   # expression and eval it. Not elegant but easy to implement starting
   # from the example in the Tree::Simple docs.
-  $tree->traverse(sub {
-     my ($_tree) = @_;
-     my $_dump=Dumper($self->_get_js_object($_tree,0));
-     # Remove first and last line with "$VAR1={" and "};", resp.
-     my @t=split(/\n/,$_dump);
-     my @tmp=@t[1..$#t-1];
-     $dump.='{'.join("\n",@tmp);
-     if ($_tree->isLeaf){
-       $dump.='},';
-     } else {
-       $dump.=', children=>['
-     }
-   },
-   sub {
-     my ($_tree) = @_;
-     if (!$_tree->isLeaf){
-       $dump.=']},';
-     }
-   });
+  $tree->traverse(
+    sub {
+      my ($_tree) = @_;
+      my $_dump = Dumper( $self->_get_js_object( $_tree, 0 ) );
 
-  return eval('['.$dump.']');
+      # Remove first and last line with "$VAR1={" and "};", resp.
+      my @t = split( /\n/, $_dump );
+      my @tmp = @t[ 1 .. $#t - 1 ];
+      $dump .= '{' . join( "\n", @tmp );
+      if ( $_tree->isLeaf ) {
+        $dump .= '},';
+      } else {
+        $dump .= ', children=>[';
+      }
+    },
+    sub {
+      my ($_tree) = @_;
+      if ( !$_tree->isLeaf ) {
+        $dump .= ']},';
+      }
+    }
+  );
+
+  return eval( '[' . $dump . ']' );
 
 }
-
 
 sub set_visibility : Local {
 
   my ( $self, $c ) = @_;
 
-  my $node = $c->request->params->{node_id};
-  my $hidden =$c->request->params->{hidden};
+  my $node   = $c->request->params->{node_id};
+  my $hidden = $c->request->params->{hidden};
 
   my $tree = $c->session->{"tree"};
-  my $subtree = $c->forward('private/get_subtree',[$tree, $node]);
+  my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node ] );
 
-  $subtree->getNodeValue->{hidden}=$hidden;
+  $subtree->getNodeValue->{hidden} = $hidden;
 
   $c->model('Library')->save_tree($tree);
 
@@ -110,20 +126,19 @@ sub set_visibility : Local {
 
 }
 
-
 sub new_folder : Local {
   my ( $self, $c ) = @_;
 
   my $node_id   = $c->request->params->{node_id};
   my $parent_id = $c->request->params->{parent_id};
 
-  my $path      = $c->request->params->{path};
+  my $path = $c->request->params->{path};
 
   my $tree = $c->session->{"tree"};
 
   my $sub_tree = $c->forward( 'private/get_subtree', [ $tree, $parent_id ] );
 
-  my %params = (draggable=>\1);
+  my %params = ( draggable => \1 );
 
   foreach my $key ( keys %{ $c->request->params } ) {
     next if $key =~ /^_/;
@@ -137,7 +152,7 @@ sub new_folder : Local {
   $new->setUID($node_id);
   $sub_tree->addChild($new);
 
-  $c->model('Library')->insert_folder( $node_id );
+  $c->model('Library')->insert_folder($node_id);
   $c->model('Library')->save_tree($tree);
 
   $c->stash->{success} = 'true';
@@ -156,7 +171,7 @@ sub delete_folder : Local {
   my $tree = $c->session->{"tree"};
   my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node_id ] );
 
-  my @to_delete=($node_id);
+  my @to_delete = ($node_id);
 
   $subtree->traverse(
     sub {
@@ -167,20 +182,19 @@ sub delete_folder : Local {
 
   $subtree->getParent->removeChild($subtree);
   $c->model('Library')->save_tree($tree);
-  $c->model('Library')->delete_folder([@to_delete]);
+  $c->model('Library')->delete_folder( [@to_delete] );
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 
 }
 
-
 sub delete_from_folder : Local {
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
+  my $grid_id   = $c->request->params->{grid_id};
   my $rowid     = $c->request->params->{rowid};
-  my $folder_id     = $c->request->params->{folder_id};
+  my $folder_id = $c->request->params->{folder_id};
 
   my $plugin = $c->session->{"grid_$grid_id"};
 
@@ -190,8 +204,6 @@ sub delete_from_folder : Local {
   $c->forward('Paperpile::View::JSON');
 
 }
-
-
 
 sub new_active : Local {
   my ( $self, $c ) = @_;
@@ -235,7 +247,7 @@ sub new_rss : Local {
 
   my $sub_tree = $c->forward( 'private/get_subtree', [ $tree, $parent_id ] );
 
-  my %params = ();
+  my %params        = ();
   my %plugin_params = ();
 
   foreach my $key ( keys %{ $c->request->params } ) {
@@ -252,19 +264,19 @@ sub new_rss : Local {
   $params{id} = $node_id;
   delete( $params{node_id} );
 
-  my $plugin = Paperpile::Plugins::Import::Feed->new({%plugin_params});
+  my $plugin = Paperpile::Plugins::Import::Feed->new( {%plugin_params} );
   $plugin->connect();
 
   my $title = $plugin->title;
 
-  if (length($title) > 20){
+  if ( length($title) > 20 ) {
     ($title) = $title =~ /(.{1,20}\W)/gms;
-    $title.="...";
+    $title .= "...";
   }
 
-  $params{text} = $title;
+  $params{text}         = $title;
   $params{plugin_title} = $title;
-  $params{qtip} = $params{plugin_url};
+  $params{qtip}         = $params{plugin_url};
 
   my $new = Tree::Simple->new( {%params} );
   $new->setUID($node_id);
@@ -272,13 +284,11 @@ sub new_rss : Local {
 
   $c->model('Library')->save_tree($tree);
 
-  $c->stash->{title} = $title;
+  $c->stash->{title}   = $title;
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 
 }
-
-
 
 sub delete_active : Local {
   my ( $self, $c ) = @_;
@@ -288,7 +298,6 @@ sub delete_active : Local {
   my $tree = $c->session->{"tree"};
 
   my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node_id ] );
-
 
   if ( $subtree->getNodeValue->{plugin_name} eq 'Feed' ) {
 
@@ -310,17 +319,17 @@ sub delete_active : Local {
 sub rename_node : Local {
   my ( $self, $c ) = @_;
 
-  my $node_id = $c->request->params->{node_id};
+  my $node_id  = $c->request->params->{node_id};
   my $new_text = $c->request->params->{new_text};
 
-  my $tree= $c->session->{"tree"};
+  my $tree = $c->session->{"tree"};
 
-  my $subtree = $c->forward('private/get_subtree',[$tree, $node_id]);
+  my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node_id ] );
 
-  my $pars=$subtree->getNodeValue();
+  my $pars = $subtree->getNodeValue();
 
-  $pars->{text}=$new_text;
-  $pars->{plugin_title}=$new_text;
+  $pars->{text}         = $new_text;
+  $pars->{plugin_title} = $new_text;
 
   $c->model('Library')->save_tree($tree);
 
@@ -342,22 +351,22 @@ sub move_node : Local {
   # for moving nodes on the same level
   my $point = $c->request->params->{point};
 
-  my $tree= $c->session->{"tree"};
+  my $tree = $c->session->{"tree"};
 
   # Get nodes from the ids
-  my $drop_subtree = $c->forward('private/get_subtree',[$tree, $drop_node]);
-  my $target_subtree = $c->forward('private/get_subtree',[$tree, $target_node]);
+  my $drop_subtree   = $c->forward( 'private/get_subtree', [ $tree, $drop_node ] );
+  my $target_subtree = $c->forward( 'private/get_subtree', [ $tree, $target_node ] );
 
   # Remove the subtree that was moved
-  $drop_subtree=$drop_subtree->getParent->removeChild($drop_subtree);
+  $drop_subtree = $drop_subtree->getParent->removeChild($drop_subtree);
 
   # Re-insert at the appropriate node
-  if ($point eq 'append'){
+  if ( $point eq 'append' ) {
     $target_subtree->addChild($drop_subtree);
   } else {
-    my $target_index=$target_subtree->getIndex();
-    $target_index++ if ($point eq 'below');
-    $target_subtree->getParent->insertChild($target_index, $drop_subtree);
+    my $target_index = $target_subtree->getIndex();
+    $target_index++ if ( $point eq 'below' );
+    $target_subtree->getParent->insertChild( $target_index, $drop_subtree );
   }
 
   $c->model('Library')->save_tree($tree);
@@ -392,24 +401,20 @@ sub _get_js_object {
   if ( $h->{hidden} ) {
     $h->{hidden} = \1;
   } else {
-   $h->{hidden} = \0;
- }
+    $h->{hidden} = \0;
+  }
 
   if ( $node->isLeaf() ) {
     $h->{expanded} = \1;
     $h->{children} = [];
   }
 
-  $h->{nodeType}='async';
-  $h->{leaf}=\0;
+  $h->{nodeType} = 'async';
+  $h->{leaf}     = \0;
 
   return $h;
 
 }
-
-
-
-
 
 1;
 

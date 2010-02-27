@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Controller::Ajax::Settings;
 
 use strict;
@@ -81,7 +97,7 @@ sub pattern_example : Local {
   $data{pdf_pattern}->{string}        = $formatted_pdf;
   $data{attachment_pattern}->{string} = $formatted_attachment;
 
-  $c->stash->{data}    = {%data};
+  $c->stash->{data} = {%data};
 
 }
 
@@ -158,7 +174,7 @@ sub update_patterns : Local {
     }
   }
 
-  $c->stash->{data}    = {};
+  $c->stash->{data} = {};
 
 }
 
@@ -287,14 +303,14 @@ sub set_settings : Local {
     print STDERR "$field \n";
   }
 
-  for my $field ('use_proxy','proxy','proxy_user','proxy_passwd','pager_limit') {
-    $c->model('User')->set_setting($field, $c->request->params->{$field});
+  for my $field ( 'use_proxy', 'proxy', 'proxy_user', 'proxy_passwd', 'pager_limit' ) {
+    $c->model('User')->set_setting( $field, $c->request->params->{$field} );
   }
-  
+
   for my $field ('search_seq') {
-    $c->model('Library')->set_setting($field, $c->request->params->{$field});
+    $c->model('Library')->set_setting( $field, $c->request->params->{$field} );
   }
-  
+
 }
 
 sub _submit {
