@@ -33,9 +33,6 @@ sub render : Regex('^ajax/pdf/render/(.*\.pdf)/(\d+)/(\d+\.\d+)$') {
 
   my $xml = XMLout( \%extpdf, RootName => 'extpdf', XMLDecl => 1, NoAttr => 1 );
 
-  print STDERR $xml;
-
-
   my ( $fh, $filename ) = File::Temp::tempfile();
   print $fh $xml;
   close($fh);

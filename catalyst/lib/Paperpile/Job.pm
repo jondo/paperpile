@@ -661,16 +661,26 @@ sub _download {
       if ( $res->header("X-Died") =~ /CANCEL/ ) {
         UserCancel->throw( error => $self->noun . ' canceled.' );
       } else {
+        if ( $res->code == 403 ) {
+          NetGetError->throw(
+            'Could not download PDF. Your institution might need a subscription for the journal!');
+        } else {
+          NetGetError->throw(
+            error => 'Download error (' . $res->header("X-Died") . ').',
+            code  => $res->code,
+          );
+        }
+      }
+    } else {
+      if ( $res->code == 403 ) {
         NetGetError->throw(
-          error => 'Download error (' . $res->header("X-Died") . ').',
+          'Could not download PDF. Your institution might need a subscription for the journal!');
+      } else {
+        NetGetError->throw(
+          error => 'Download error (' . $res->message . ').',
           code  => $res->code,
         );
       }
-    } else {
-      NetGetError->throw(
-        error => 'Download error ('. $res->message . ').',
-        code  => $res->code,
-      );
     }
   }
 
