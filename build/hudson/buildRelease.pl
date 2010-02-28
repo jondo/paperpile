@@ -143,12 +143,12 @@ DumpFile( "$rel_dir/$version_id/updates.yaml", [@update_info] );
 
 chdir($workspace);
 
-#my $tag = "rel_$version_id\_$version_name";
+my $tag = "rel_$version_id\_$version_name";
 
-#`git tag -f -a -m "Release $version_id (v $version_name)" $tag`;
+`git tag -f -a -m "Release $version_id (v $version_name)" $tag`;
 
 # Try to delete remote tag first in case it already exists
 # (i.e. another build came to this point but was not accepted as
 # release eventually)
-#`git push origin :refs/tags/$tag`;
-#`git push origin tag $tag`;
+`git push origin :refs/tags/$tag`;
+`git push origin tag $tag`;
