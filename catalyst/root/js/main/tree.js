@@ -53,13 +53,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       scope: this
     });
 
-    this.treeEditor.on({
-      complete: {
-        scope: this,
-        fn: this.commitRenameTag
-      }
-    });
-
     Paperpile.Tree.superclass.initComponent.call(this);
 
     this.on({
@@ -95,9 +88,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
           // Here's where we ensure that only "rename-able" nodes are set as editable.
           if (!this.isCategoryRootNode(node) && (node.type == "TAGS" || node.type == "FOLDER" || node.type == "ACTIVE")) {
-            node.attributes.editable = true;
+            node.editable = true;
           } else {
-            node.attributes.editable = false;
+            node.editable = false;
           }
         }
       },
@@ -1110,13 +1103,20 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   triggerRenameTag: function() {
     (function() {
       var node = this.lastSelectedNode;
+      this.treeEditor.on({
+        complete: {
+          scope: this,
+          single: true,
+          fn: this.commitRenameTag
+        }
+      });
+
       this.treeEditor.triggerEdit(node);
     }.defer(10, this));
   },
 
   commitRenameTag: function(editor, newText, oldText) {
     var node = editor.editNode;
-    if (node.type != 'TAGS') return;
 
     node.plugin_title = newText;
     node.plugin_query = 'labelid:' + Paperpile.utils.encodeTag(newText);
