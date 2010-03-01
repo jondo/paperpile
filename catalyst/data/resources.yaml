@@ -27,6 +27,7 @@ js:
   - "js/misc/utils.js"
   - "js/misc/forms.js" 
   - "js/misc/file-chooser.js"
+  - "js/misc/feed-chooser.js"
   - "js/misc/style-picker.js"
   - "js/misc/status.js"
   - "js/misc/browser.js"

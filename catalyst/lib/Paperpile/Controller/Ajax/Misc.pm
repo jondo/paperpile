@@ -31,6 +31,8 @@ use LWP;
 use HTTP::Request::Common;
 use File::Temp qw(tempfile);
 use YAML qw(LoadFile);
+use URI::Escape;
+use JSON;
 
 use 5.010;
 
@@ -71,6 +73,69 @@ sub tag_list : Local {
 
   $c->forward('Paperpile::View::JSON');
 
+}
+
+sub _EscapeString {
+  my $string = $_[0];
+
+  # remove leading spaces
+  $string =~ s/^\s+//;
+
+  # remove spaces at the end
+  $string =~ s/\s+$//;
+
+  # escape each single word and finally join
+  # with plus signs
+  my @tmp = split( /\s+/, $string );
+  foreach my $i ( 0 .. $#tmp ) {
+    $tmp[$i] = uri_escape_utf8( $tmp[$i] );
+  }
+
+  return join( "+", @tmp );
+}
+
+
+sub feed_list : Local {
+  my ( $self, $c ) = @_;
+  my $query     = $c->request->params->{query};
+  my $offset = $c->request->params->{start} || 0;
+  my $limit = $c->request->params->{limit} || 10;
+
+  $query = _EscapeString($query);
+
+  my $searchUrl = 'http://stage.paperpile.com/api/v1/feeds/list/';
+
+  my $full_uri = $searchUrl . '?query=' . $query;
+
+  my $browser = Paperpile::Utils->get_browser;
+  my $response     = $browser->get( $full_uri );
+  my $content      = $response->content;
+
+  my $json = new JSON;
+  my $object = $json->decode ($content);
+  my @feeds = @{$object->{feeds}};
+
+  my $start_i = $offset;
+  my $end_i = $offset + $limit;
+  my @array = ();
+  for (my $i=$start_i; $i < scalar @feeds; $i++) {
+    last if ($i > $end_i);
+
+    push @array, $feeds[$i];
+  }
+
+  my %metaData = (
+    totalProperty => 'total_entries',
+    root          => 'feeds',
+    id            => 'name',
+    fields        => ['name','url']
+  );
+
+  $c->stash->{feeds} = \@array;
+  $c->stash->{total_entries} = scalar @feeds;
+  $c->stash->{metaData} = {%metaData};
+
+  $c->forward('Paperpile::View::JSON');
 }
 
 sub journal_list : Local {

@@ -14,8 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
-
 Paperpile.Tree = function(config) {
   Ext.apply(this, config);
   Paperpile.Tree.superclass.constructor.call(this, {});
@@ -679,63 +677,59 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   newRSS: function() {
+    var window = new Paperpile.NewFeedWindow({});
+    window.show();
+  },
+
+  createNewFeedNode: function(feedUrl) {
 
     var n = this.getNodeById('ACTIVE_ROOT');
+    var newNode = n.appendChild(this.loader.createNode({
+      text: 'Loading feed',
+      iconCls: 'pp-icon-loading',
+      qtip: feedUrl,
+      draggable: true,
+      expanded: true,
+      children: [],
+      id: this.generateUID()
+    }));
 
-    Ext.Msg.prompt('Subscribe to RSS feed', 'Location:', function(btn, text) {
-      if (btn == 'ok') {
+    var pars = {
+      type: 'ACTIVE',
+      node_id: newNode.id,
+      parent_id: newNode.parentNode.id,
+      iconCls: 'pp-icon-feed',
+      plugin_name: 'Feed',
+      plugin_title: 'New RSS feed',
+      plugin_iconCls: 'pp-icon-feed',
+      plugin_mode: 'FULLTEXT',
+      plugin_url: feedUrl,
+      plugin_id: newNode.id
+    };
 
-        var newNode = n.appendChild(this.loader.createNode({
-          text: 'Loading feed',
-          iconCls: 'pp-icon-loading',
-          qtip: text,
-          draggable: true,
-          expanded: true,
-          children: [],
-          id: this.generateUID()
-        }));
+    newNode.init(pars);
 
-        var pars = {
-          type: 'ACTIVE',
-          node_id: newNode.id,
-          parent_id: newNode.parentNode.id,
-          iconCls: 'pp-icon-feed',
-          plugin_name: 'Feed',
-          plugin_title: 'New RSS feed',
-          plugin_iconCls: 'pp-icon-feed',
-          plugin_mode: 'FULLTEXT',
-          plugin_url: text,
-          plugin_id: newNode.id
-        };
-
-        newNode.init(pars);
-
-        Ext.Ajax.request({
-          url: Paperpile.Url('/ajax/tree/new_rss'),
-          params: pars,
-          success: function(response) {
-            var json = Ext.util.JSON.decode(response.responseText);
-
-            if (json.error) {
-              Paperpile.main.onError(response);
-              newNode.remove();
-            }
-
-            newNode.setText(json.title);
-
-            newNode.plugin_title = json.title;
-
-            Ext.get(newNode.getUI().getIconEl()).replaceClass('pp-icon-loading', 'pp-icon-feed');
-
-          },
-          failure: function(response) {
-            Paperpile.main.onError(response),
-            newNode.remove();
-          }
-        });
+    Paperpile.status.showBusy("Loading new RSS feed");
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/tree/new_rss'),
+      params: pars,
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        if (json.error) {
+          Paperpile.main.onError(response);
+          newNode.remove();
+        } else {
+          newNode.setText(json.title);
+          newNode.plugin_title = json.title;
+          Ext.get(newNode.getUI().getIconEl()).replaceClass('pp-icon-loading', 'pp-icon-feed');
+        }
+	Paperpile.status.clearMsg();
+      },
+      failure: function(response) {
+        Paperpile.main.onError(response),
+        newNode.remove();
       }
-    },
-    this);
+    });
   },
 
   //

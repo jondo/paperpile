@@ -1747,6 +1747,14 @@ table.pp-meta-form {
     padding: 5px;
 } 
 
+.pp-feed-chooser .active {
+    background-color: #F2F5A9;
+}
+
+.pp-feed-chooser .x-form-item {
+    padding: 5px;
+    margin:5px;
+}
 
 .pp-meta-form td.active {
     background-color: #F2F5A9;
