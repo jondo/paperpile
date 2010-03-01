@@ -56,6 +56,8 @@ my $prev_version = $version_id - 1;
 
 unlink glob("dist/*tar.gz");
 
+$b->get_titanium;
+
 $b->echo("Minifying javascript");
 $b->minify;
 
@@ -126,21 +128,27 @@ if ( $release_info->{patch} ) {
 $release_info->{id}   = $settings->{app_settings}->{version_id};
 $release_info->{name} = $settings->{app_settings}->{version_name};
 
-my $update_info = LoadFile("$rel_dir/$prev_version/updates.yaml");
-unshift @$update_info, { release => $release_info };
+my @update_info = ();
 
-DumpFile( "$rel_dir/$version_id/updates.yaml", $update_info );
+if (-e "$rel_dir/$prev_version/updates.yaml"){
+  my $old_info = LoadFile("$rel_dir/$prev_version/updates.yaml");
+  @update_info = @$old_info;
+}
+
+unshift @update_info, { release => $release_info };
+
+DumpFile( "$rel_dir/$version_id/updates.yaml", [@update_info] );
 
 ################### Tag the release on github ########################
 
 chdir($workspace);
 
-my $tag = "rel_$version_id\_$version_name";
+#my $tag = "rel_$version_id\_$version_name";
 
-`git tag -f -a -m "Release $version_id (v $version_name)" $tag`;
+#`git tag -f -a -m "Release $version_id (v $version_name)" $tag`;
 
 # Try to delete remote tag first in case it already exists
 # (i.e. another build came to this point but was not accepted as
 # release eventually)
-`git push origin :refs/tags/$tag`;
-`git push origin tag $tag`;
+#`git push origin :refs/tags/$tag`;
+#`git push origin tag $tag`;

@@ -203,6 +203,11 @@ Paperpile.stage2 = function() {
       Paperpile.main.tabs.newDBtab('', 'MAIN');
       tree.expandAll();
       Paperpile.main.tabs.remove('welcome');
+      
+      var version = 'Paperpile '+Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
+
+      Ext.DomHelper.overwrite('version-tag', version );
+    
       Ext.get('splash').remove();
     },
     this);

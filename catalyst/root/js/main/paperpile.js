@@ -53,7 +53,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               autoEl: {
                 cls: 'pp-main-toolbar-label',
                 tag: 'div',
-                html: 'Paperpile 0.4 preview'
+                id: 'version-tag'
               }
             }), {
               xtype: 'tbfill'
