@@ -14,10 +14,10 @@ has 'pdftoxml' => ( is => 'rw', isa => 'Str' );
 sub parsePDF {
 
   my $self = shift;
-
+  
   my $PDFfile = $self->file;
   my $PDF2XML = $self->pdftoxml;
-
+  
   # create a temp file
   ( undef, my $tmpfile ) = tempfile( OPEN => 0 );
 
@@ -27,11 +27,14 @@ sub parsePDF {
 
   # create and read XML file, just the first page
   system("$PDF2XML -noImage -f 1 -l 1 -q $PDFfile $tmpfile 2>/dev/null");
+  if (! -e $tmpfile ) {
+    NetError->throw( error => 'PDF to XML conversion failed.' );
+    #return;
+  }
   my $xml = new XML::Simple;
   my $data = $xml->XMLin( "$tmpfile", ForceArray => 1 );
 
   # remove temp file
-  #print STDERR "$tmpfile\n";
   unlink("$tmpfile");
 
   my @page0 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
@@ -44,22 +47,9 @@ sub parsePDF {
   my $has_cover_page = 0;
   if ( $#page0 > -1 ) {
     ( $title, $authors, $doi, $level, $has_cover_page, $arxiv_id ) = _ParseXML( \@page0 );
-  }
-
-  # maybe the first page is a strange cover page (e.g. Cold Spring Harbour Press)
-  if ( ( $title eq '' and $authors eq '' and $doi eq '' ) or ( $has_cover_page == 1 ) ) {
-
-    # create and read XML file, but now only the second page
-    system("$PDF2XML -noImage -f 2 -l 2 -q $PDFfile $tmpfile 2>/dev/null");
-    $xml = new XML::Simple;
-    $data = $xml->XMLin( "$tmpfile", ForceArray => 1 );
-    my @page1 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
-    if ( $#page1 > -1 ) {
-      ( $title, $authors, my $doi_page2, $level, $has_cover_page, my $arxiv_id_page2 ) =
-        _ParseXML( \@page1 );
-      $doi      = $doi_page2      if ( $doi      eq '' );
-      $arxiv_id = $arxiv_id_page2 if ( $arxiv_id eq '' );
-    }
+  } else {
+    NetError->throw( error => 'PDF contains only images and no parsable text.' );
+    #return;
   }
 
   # let's do some sane checking
@@ -76,6 +66,7 @@ sub parsePDF {
   $wrong = 1 if ( $authors =~ m/\sfew\s/ );
   $wrong = 1 if ( $authors =~ m/\sthe\s/ );
   $wrong = 1 if ( $authors =~ m/\ssystem\s/ );
+  $wrong = 1 if ( $authors =~ m/nucleic\s/i );
 
   if ( $wrong == 1 ) {
     $authors = '';
@@ -83,15 +74,54 @@ sub parsePDF {
     $level   = -2;
   }
 
+  #print STDERR "T:$title\nA:$authors\n$level\n$has_cover_page\n";
+  # maybe the first page is a strange cover page (e.g. Cold Spring Harbour Press)
+  if ( ( $title eq '' and $authors eq '' and $doi eq '' ) or ( $has_cover_page == 1 ) ) {
+    my $title_bak = $title;
+    my $authors_bak = $authors;
+    # create and read XML file, but now only the second page
+    system("$PDF2XML -noImage -f 2 -l 2 -q $PDFfile $tmpfile 2>/dev/null");
+    $xml = new XML::Simple;
+    $data = $xml->XMLin( "$tmpfile", ForceArray => 1 );
+    my @page1 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
+    if ( $#page1 > -1 ) {
+      ( $title, $authors, my $doi_page2, $level, $has_cover_page, my $arxiv_id_page2 ) =
+        _ParseXML( \@page1 );
+
+      my $wrong = 0;
+      $wrong = 1 if ( $title   =~ m/MAtERIALS And MEtHOdS/i );
+      $wrong = 1 if ( $title   =~ m/^MEtHOdS$/i );
+      $wrong = 1 if ( $title   =~ m/^Introduction$/i );
+      $wrong = 1 if ( $title   =~ m/^Results$/i );
+      $wrong = 1 if ( _Bad_Author_Words($authors) == 1 );
+      $wrong = 1 if ( $authors =~ m/\sfrom\s/ );
+      $wrong = 1 if ( $authors =~ m/\sare\s/ );
+      $wrong = 1 if ( $authors =~ m/\sthe\s/ );
+      $wrong = 1 if ( $authors =~ m/\ssome\s/ );
+      $wrong = 1 if ( $authors =~ m/\sfew\s/ );
+      $wrong = 1 if ( $authors =~ m/\sthe\s/ );
+      $wrong = 1 if ( $authors =~ m/\ssystem\s/ );
+      $doi      = $doi_page2      if ( $doi      eq '' );
+      $arxiv_id = $arxiv_id_page2 if ( $arxiv_id eq '' );
+      $title    = $title_bak      if ( $level >= 4 or $wrong == 1 and $title_bak ne '');
+      $authors  = $authors_bak    if ( $level >= 4 or $wrong == 1 and $authors_bak ne '');
+    }
+  }
+
   # sometime still some cleaning is required
   $title =~ s/^(Research\sarticle)//i;
   $title =~ s/^(Short\sarticle)//i;
   $title =~ s/^(Report)//i;
+  $title =~ s/^(Review\s)//i;
   $title =~ s/^([A-Z]*\sMinireview)//i;
   $title =~ s/^(Letter:?)//i;
-
+  $title =~ s/(\.|\*|\d)$//;
+  $title =~ s/\x{2019}//g;
+  $title =~ s/\x{2018}//g;
+  
   #$authors  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
-  #print "T:$title\nA:$authors\n$level\n";
+  #$title  =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
+  #print STDERR "T:$title\nA:$authors\n$level\n";
 
   # if we found some authors, we are going to convert them into
   # an authors object
@@ -101,8 +131,11 @@ sub parsePDF {
     my $processed = 0;
 
     # we clean the authors and remove numbers
-    $authors =~ s/1/L/g;           # often OCR error
+    #$authors =~ s/1/L/g;           # often OCR error
+    $authors =~ s/\x{2019}//g;
+    $authors =~ s/\x{2018}//g;
     $authors =~ s/\d//g;
+    $authors =~ s/\$//g;
     $authors =~ s/\./. /g;
     $authors =~ s/,$//;
     $authors =~ s/^,//;
@@ -121,7 +154,7 @@ sub parsePDF {
 
     # First we check if authors are separated by commas
     my @authors_array = ();
-    if ( $authors =~ m/,/ ) {
+    if ( $authors =~ m/,/ or $authors =~m/Consortium/i ) {
       @authors_array = split( /(,|\sand\s)/, $authors );
 
       # some sane checking
@@ -168,7 +201,7 @@ sub parsePDF {
 
     # now we parse each author separately
     foreach my $author (@authors_array) {
-
+      
       # remove unnecessary white spaces, and forgotten 'ands'
       $author =~ s/and\s//;
       $author =~ s/\s+$//;
@@ -261,6 +294,12 @@ sub _AuthorLine_by_Commas {
       $authors = $candidate_authors;
       $title   = $candidate_title;
       $flag    = 1;
+    } else {
+      # detailed inspection required
+      my @tmp1 = split(/, /, $candidate_title);
+      my @tmp2 = split(/, /, $candidate_authors);
+      # not implemented
+
     }
   }
 
@@ -331,11 +370,14 @@ sub _MarkBadWords {
   $bad++ if ( $tmp_line =~ m/articles?$/i );
   $bad++ if ( $tmp_line =~ m/paper$/i );
   $bad++ if ( $tmp_line =~ m/review$/i );
+  $bad++ if ( $tmp_line =~ m/^ResearchPaper/i );
+  $bad++ if ( $tmp_line =~ m/^ResearchNote$/i );
   $bad++ if ( $tmp_line =~ m/^(research)?report$/i );
   $bad++ if ( $tmp_line =~ m/^(Short)?Communication$/i );
   $bad++ if ( $tmp_line =~ m/^originalresearch$/i );
   $bad++ if ( $tmp_line =~ m/originalarticle/i );
   $bad++ if ( $tmp_line =~ m/^Letters$/i );
+  $bad++ if ( $tmp_line =~ m/^.?ExtendedAbstract.?$/i);
   $bad++ if ( $tmp_line =~ m/^(short)?(scientific)?reports?$/i );
   $bad++ if ( $tmp_line =~ m/^ORIGINALINVESTIGATION$/i );
   $bad++ if ( $tmp_line =~ m/discoverynotes/i );
@@ -343,6 +385,8 @@ sub _MarkBadWords {
   # years
   $bad++ if ( $tmp_line =~ m/20\d\d/ );
   $bad++ if ( $tmp_line =~ m/19\d\d/ );
+  $bad++ if ( $tmp_line =~ m/\d\d\d\d+/ ); # more than four numbers in a row
+  $bad++ if ( $tmp_line =~ m/\d\d\/\d\d\/\d\d/ );
 
   # other stuff like doi,...
   $bad++ if ( $tmp_line =~ m/doi/i );
@@ -406,9 +450,12 @@ sub _MarkAdress {
   $adress++ if ( $tmp_line =~ m/GeneralHospital/i );
   $adress++ if ( $tmp_line =~ m/Hospitalof/i );
   $adress++ if ( $tmp_line =~ m/Facultad/i );
-  $adress++ if ( $tmp_line =~ m/Road/i );
   $adress++ if ( $tmp_line =~ m/U\.S\.A\./i );
   $adress++ if ( $tmp_line =~ m/College/i );
+  $adress++ if ( $tmp_line =~ m/MolecularStructureSection/i );
+
+  $adress++ if ( $orig =~ m/Road\s/ );
+
   return $adress;
 
 }
@@ -533,7 +580,8 @@ sub _ParseXML {
 
     $nr_words = $#words + 1;
     $bold     = 1 if ( $bold_yes / $nr_words > 0.5 );
-    $italic   = 1 if ( $italic_yes / $nr_words > 0.5 );
+    $italic   = 1 if ( $italic_yes / $nr_words > 0.9 );
+    
 
     # now determine the fontsize for the line
     for my $key ( keys %hash_fontsize ) {
@@ -624,9 +672,12 @@ sub _ParseXML {
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Introduction$/i and $y < $y_intro );
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Results$/i and $y < $y_intro );
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Background$/i and $y < $y_intro );
-    $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Methods$/i and $y < $y_intro );
+    $y_intro    = $y if ( $content_line_tmp =~ m/^Background:/i and $y < $y_intro );
+    $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Methods$/i and $y < $y_intro and $y > 100);
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Summary$/i and $y < $y_intro );
-
+    $y_intro    = $y if ( $content_line_tmp =~ m/^Addresses$/i and $y < $y_intro );
+    $y_intro    = $y if ( $content_line_tmp =~ m/^KEYWORDS:/i and $y < $y_intro );
+    
     #print "$content_line_tmp $y $y_abstract $y_intro\n";
 
     # now we can search for the DOI
@@ -731,19 +782,21 @@ sub _ParseXML {
   # Here is the first check point if we encounter such
   # a journal
   #####################################################
-  if ( $lines_content[0] =~ m/Landes\sBioscience$/ ) {
-    my @title_tmp   = ();
-    my @authors_tmp = ();
-    for my $pos ( 0 .. $#lines_content ) {
-      push @title_tmp, $lines_content[$pos] if ( $lines_fs[$pos] == 24 );
-      push @authors_tmp, $lines_content[$pos]
-        if ( $lines_fs[$pos] == 12 and $lines_content[$pos] =~ m/,$/ );
+  if ( $lines_content[0] ) {
+    if ( $lines_content[0] =~ m/Landes\sBioscience$/ ) {
+      my @title_tmp   = ();
+      my @authors_tmp = ();
+      for my $pos ( 0 .. $#lines_content ) {
+	push @title_tmp, $lines_content[$pos] if ( $lines_fs[$pos] == 24 );
+	push @authors_tmp, $lines_content[$pos]
+	  if ( $lines_fs[$pos] == 12 and $lines_content[$pos] =~ m/,$/ );
+      }
+      $title   = join( " ", @title_tmp );
+      $authors = join( " ", @authors_tmp );
+      return ( $title, $authors, $doi, 6, 0, '' ) if ( $title ne '' and $authors ne '' );
     }
-    $title   = join( " ", @title_tmp );
-    $authors = join( " ", @authors_tmp );
-    return ( $title, $authors, $doi, 6, 0, '' ) if ( $title ne '' and $authors ne '' );
   }
-
+  
   #################################################
   # LET'S JOIN THE LINES
 
@@ -753,6 +806,7 @@ sub _ParseXML {
   my @final_nrwords        = ();
   my @final_bad            = ();
   my @final_adress         = ();
+  my @final_bold           = ();
 
   my $last_line_was_a_join = 0;
   my $last_line_diff       = 0;
@@ -783,9 +837,10 @@ sub _ParseXML {
       if ( $last_line_was_a_join == 1 ) {
         $same_diff = 0 if ( $diff != $last_line_diff );
       }
-
+      #print "$lines_fs[$pos] $lines_bold[$pos] $lines_italic[$pos] $lines_content[$pos]\n";
       $flag_new_line = 7 if ( _MarkBadWords( $lines_content[$pos] ) > 0 );
       $flag_new_line = 0 if ( $same_fs == 1 and $same_bold == 1 and $same_italic == 1 );
+      $flag_new_line = 0 if ( $same_fs == 1 and $same_bold == 1 );
       $flag_new_line = 2 if ( $lines_starts_with_superscripts[$pos] == 1 );
       $flag_new_line = 3 if ( $lines_content[$pos] =~ m/^\*/ );
       $flag_new_line = 4 if ( $lines_adress[$pos] >= 1 );
@@ -795,6 +850,9 @@ sub _ParseXML {
       $flag_new_line = 6 if ( $lc / $uc > 0.2 and $last_line_lc == 0 );
       $flag_new_line = 8 if ( $lines_content[$pos] =~ m/^\d+$/ );
 
+      # difference to previous line is really hughe
+      $flag_new_line = 9 if ( $diff > 50 );
+
       # if the previous line had signs of beeing an adress, we just append
       # if the cuurent one is also an adress line
       $flag_new_line = 0
@@ -802,13 +860,14 @@ sub _ParseXML {
         and $lines_adress[$pos] >= 1
         and $flag_new_line == 1 );
 
+      # no join on email-adresses
+      $flag_new_line = 7 if ( $lines_content[$pos] =~ m/@\w+\./ );
+
       # if a line starts with "and" it obviously is connected to the preceeding line
       my $tmp_flag = 0;
       $tmp_flag = 1 if ( $lines_adress[$prev] >= 1 and $lines_adress[$pos] >= 1 );
       $tmp_flag = 1 if ( $lines_adress[$prev] == 0 and $lines_adress[$pos] == 0 );
       $flag_new_line = 0 if ( $lines_content[$pos] =~ m/^and/ and $tmp_flag == 1 );
-
-      #print "$flag_new_line $lines_adress[$pos] $lines_content[$pos]\n";
 
       if ( $flag_new_line >= 1 ) {
         push @final_content,        $lines_content[$pos];
@@ -817,6 +876,7 @@ sub _ParseXML {
         push @final_nrwords,        $lines_nrwords[$pos];
         push @final_bad,            0;
         push @final_adress,         0;
+	push @final_bold,           $lines_bold[$pos];
         $last_line_was_a_join = 0;
 
         # now score the previous one
@@ -840,6 +900,7 @@ sub _ParseXML {
           push @final_nrwords,        $lines_nrwords[$pos];
           push @final_bad,            0;
           push @final_adress,         0;
+	  push @final_bold,           $lines_bold[$pos];
           $last_line_was_a_join = 0;
         }
       }
@@ -864,7 +925,7 @@ sub _ParseXML {
     $final_content[$i] =~ s/,\s*$//g;
 
    #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
-   #print STDERR $final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_content[$i],"\n";
+   #print STDERR $final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_fs[$i]," :: ",$final_content[$i],"\n";
   }
 
   #################### STRATEGY ONE ########################
@@ -913,7 +974,7 @@ sub _ParseXML {
 
     next if ( $candidate_Title == -1 or $candidate_Authors == -1 );
 
-    #print STDERR "$final_content[$candidate_Title],        $final_content[$candidate_Authors]\n";
+    #print STDERR "\n======================================\n$major_fs $final_fs[$candidate_Title] $final_fs[$candidate_Authors]\n","TITLE:$final_content[$candidate_Title],        $final_content[$candidate_Authors]\n";
     # the title is normally B and has a greater fs than the authors
     # the heading is usually much bigger than the rest
     # Note, this is restrictive but gives confident results
@@ -921,7 +982,7 @@ sub _ParseXML {
     if (  $final_fs[$candidate_Title] > $final_fs[$candidate_Authors]
       and $final_fs[$candidate_Title] / $major_fs > 1.2 ) {
       my $flag = 0;
-
+      
       # authors have usually more superscripts than titles
       ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
         $cand_title_text, $cand_authors_text,
@@ -957,8 +1018,45 @@ sub _ParseXML {
         $final_nrsuperscripts[$candidate_Title],
         $final_nrsuperscripts[$candidate_Authors]
       );
-      return ( $title, $authors, $doi, 1.9, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+      return ( $title, $authors, $doi, 1.91, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+    }
+    # they might be of same size, but then we do not take all rules
+    if (  $final_fs[$candidate_Title] == $final_fs[$candidate_Authors] ) {
+      if ( $final_fs[$candidate_Title] > $major_fs ) {
+	my $flag = 0;
+	
+	# authors have usually more superscripts than titles
+	( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
+        $cand_title_text, $cand_authors_text,
+        $final_nrsuperscripts[$candidate_Title],
+        $final_nrsuperscripts[$candidate_Authors]
+								 );
+	return ( $title, $authors, $doi, 1.92, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+      }
+      if ( $final_bold[$candidate_Title] == 1 and $final_bold[$candidate_Authors] == 0 ) {
+	  my $flag = 0;
+	  # authors usually have a higher comma to word ratio than the title
+	  ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text, $cand_authors_text );
+	  return ( $title, $authors, $doi, 1.94, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
 
+	  # there could be just TWO authors
+	  ( $title, $authors, $flag ) =
+	    _AuthorLine_is_Two_Authors( $cand_title_text, $cand_authors_text );
+	  return ( $title, $authors, $doi, 1.95, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+	  # there could be just ONE authors
+	  ( $title, $authors, $flag ) =
+	    _AuthorLine_is_One_Author( $cand_title_text, $cand_authors_text );
+	  return ( $title, $authors, $doi, 1.96, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+	}
+    }
+
+    # just minimal difference
+    if (  $final_fs[$candidate_Title] - $final_fs[$candidate_Authors] == 1 ) {
+	my $flag = 0;
+	# authors usually have a higher comma to word ratio than the title
+	( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text, $cand_authors_text );
+	return ( $title, $authors, $doi, 1.93, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
     }
 
     # the order might be changed, but then we do not take all rules
@@ -1007,8 +1105,9 @@ sub _ParseXML {
   my $k                   = -1;
   for my $i ( 0 .. $#final_content ) {
 
-    #print "$final_bad[$i] $final_adress[$i] $final_fs[$i] $major_fs $final_content[$i]\n";
+    #print STDERR "\t$final_bad[$i] $final_adress[$i] $final_fs[$i] $major_fs $final_content[$i]\n";
     if ( $final_bad[$i] == 0 and $final_adress[$i] == 0 and $final_fs[$i] >= $major_fs ) {
+      #print STDERR "\t$final_bad[$i] $final_adress[$i] $final_fs[$i] $major_fs $final_content[$i]\n";
       push @IDS, $i;
       $k++;
       if ( $final_fs[$i] > $max_fs_NONEBAD ) {
@@ -1066,7 +1165,6 @@ sub _ParseXML {
     $cand_authors_text =~ s/\*J\*/,/g;
     $cand_title_text   =~ s/\*J\*//g;
 
-    #print STDERR "$cand_title_text,        $cand_authors_text\n";
     # if the candidate_Title is also very large
     # then this is a good sign
 
@@ -1105,6 +1203,26 @@ sub _ParseXML {
           $title   = $cand_title_text;
           return ( $title, $authors, $doi, 2.9, $has_cover_page, $arxiv_id );
         }
+      }
+
+      if ( $final_fs[$candidate_Title] == $final_fs[$candidate_Authors] and $final_fs[$candidate_Title] / $major_fs > 1.3 ) {
+	# same fontsize but at least title is bold
+	if ( $final_bold[$candidate_Title] == 1 and $final_bold[$candidate_Authors] == 0 ) {
+	  my $flag = 0;
+	  # authors usually have a higher comma to word ratio than the title
+	  ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text, $cand_authors_text );
+	  return ( $title, $authors, $doi, 2.21, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+	  # there could be just TWO authors
+	  ( $title, $authors, $flag ) =
+	    _AuthorLine_is_Two_Authors( $cand_title_text, $cand_authors_text );
+	  return ( $title, $authors, $doi, 2.31, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+	  # there could be just ONE authors
+	  ( $title, $authors, $flag ) =
+	    _AuthorLine_is_One_Author( $cand_title_text, $cand_authors_text );
+	  return ( $title, $authors, $doi, 2.41, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+	}
       }
     }
 
@@ -1161,7 +1279,7 @@ sub _ParseXML {
       return ( $title, $authors, $doi, 2.73, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
     }
   }
-
+  
   # there are more than two lines left
   if ( $#IDS > 1 ) {
 
@@ -1215,6 +1333,25 @@ sub _ParseXML {
           $title   = $cand_title_text;
           return ( $title, $authors, $doi, 3.9, $has_cover_page, $arxiv_id );
         }
+      }
+      if ( $final_fs[$candidate_Title] == $final_fs[$candidate_Authors] and $final_fs[$candidate_Title] / $major_fs > 1.3 ) {
+	# same fontsize but at least title is bold
+	if ( $final_bold[$candidate_Title] == 1 and $final_bold[$candidate_Authors] == 0 ) {
+	  my $flag = 0;
+	  # authors usually have a higher comma to word ratio than the title
+	  ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text, $cand_authors_text );
+	  return ( $title, $authors, $doi, 2.211, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+	  # there could be just TWO authors
+	  ( $title, $authors, $flag ) =
+	    _AuthorLine_is_Two_Authors( $cand_title_text, $cand_authors_text );
+	  return ( $title, $authors, $doi, 2.311, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+	  # there could be just ONE authors
+	  ( $title, $authors, $flag ) =
+	    _AuthorLine_is_One_Author( $cand_title_text, $cand_authors_text );
+	  return ( $title, $authors, $doi, 2.411, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+	}
       }
     } else {
 

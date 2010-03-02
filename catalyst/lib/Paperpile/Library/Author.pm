@@ -468,6 +468,10 @@ sub _parse_freestyle_helper {
   # remove titles
   $name =~ s/\sPh\s?D$//i;
 
+  if ( $name =~ m/Consortium/ ) {
+      return ( $first, $last, 9.0 );
+  }
+
   my @tmp = split( /\s+/, $name );
 
   # TWO WORDS
