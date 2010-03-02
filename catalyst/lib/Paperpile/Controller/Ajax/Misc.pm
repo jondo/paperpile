@@ -231,39 +231,6 @@ sub get_settings : Local {
 
 }
 
-sub import_journals : Local {
-  my ( $self, $c ) = @_;
-
-  my $file = "/home/wash/play/Paperpile/data/jabref.txt";
-
-  my $sth = $c->model('Library')->dbh->prepare("INSERT INTO Journals (key,name) VALUES(?,?)");
-
-  open( TMP, "<$file" );
-
-  my %alreadySeen = ();
-
-  while (<TMP>) {
-    next if /^\s*\#/;
-    ( my $long, my $short ) = split /=/, $_;
-    $short =~ s/;.*$//;
-    $short =~ s/[.,-]/ /g;
-    $short =~ s/(^\s+|\s+$)//g;
-    $long  =~ s/(^\s+|\s+$)//g;
-
-    if ( not $alreadySeen{$short} ) {
-      $alreadySeen{$short} = 1;
-      next;
-    }
-
-    $sth->execute( $short, $long );
-
-  }
-
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
-
-}
-
 sub test_network : Local {
 
   my ( $self, $c ) = @_;
@@ -280,67 +247,10 @@ sub test_network : Local {
   }
 }
 
-sub preprocess_csl : Local {
-
-  my ( $self, $c ) = @_;
-
-  my $grid_id   = $c->request->params->{grid_id};
-  my $selection = $c->request->params->{selection};
-  my $plugin    = $c->session->{"grid_$grid_id"};
-
-  my @data = ();
-
-  if ( $selection eq 'ALL' ) {
-    @data = @{ $plugin->all };
-  } else {
-    my @tmp;
-    if ( ref($selection) eq 'ARRAY' ) {
-      @tmp = @$selection;
-    } else {
-      push @tmp, $selection;
-    }
-    for my $sha1 (@tmp) {
-      my $pub = $plugin->find_sha1($sha1);
-      push @data, $pub;
-    }
-  }
-
-  my @output = ();
-
-  my $style_file  = $c->path_to('root/csl/style/nature.csl');
-  my $locale_file = $c->path_to('root/csl/locale/locales-en-US.xml');
-
-  my $style  = '';
-  my $locale = '';
-
-  open( IN, "<$style_file" );
-  $style .= $_ while <IN>;
-
-  open( IN, "<$locale_file" );
-  $locale .= $_ while <IN>;
-
-  $locale =~ s/<\?.*\?>//g;
-  $style  =~ s/<\?.*\?>//g;
-
-  print STDERR "$locale";
-
-  foreach my $pub (@data) {
-    push @output, $pub->format_csl;
-  }
-
-  $c->stash->{data}   = [@output];
-  $c->stash->{style}  = $style;
-  $c->stash->{locale} = $locale;
-
-}
-
 sub clean_duplicates : Local {
   my ( $self, $c ) = @_;
   my $grid_id = $c->request->params->{grid_id};
   my $plugin  = $c->session->{"grid_$grid_id"};
-
-  $c->forward('Paperpile::View::JSON');
-
 }
 
 sub inc_read_counter : Local {
@@ -364,6 +274,10 @@ sub report_error : Local {
 
   my ( $self, $c ) = @_;
 
+  #my $url ='http://127.0.0.1:3003/api/v1/feedback/crashreport';
+
+  my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
+
   my $error        = $c->request->params->{error};
   my $catalyst_log = $c->request->params->{catalyst_log};
 
@@ -377,7 +291,8 @@ sub report_error : Local {
   my $subject =
     "Unknown exception on $platform;  version: $version_id ($version_name); build: $build_number";
 
-  my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", SUFFIX => '.txt' );
+  #TODO: Make sure that explicit /tmp is portable on MacOSX and Windows
+  my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", dir=> '/tmp', SUFFIX => '.txt' );
 
   my $attachment = undef;
 
@@ -386,7 +301,7 @@ sub report_error : Local {
     $attachment = [$filename];
   }
 
-  my $r = POST 'http://stage.paperpile.com/api/v1/feedback/bugs',
+  my $r = POST $url,
     Content_Type => 'form-data',
     Content      => [
     subject    => $subject,

@@ -23,7 +23,7 @@
 // server. Once we have verified that the server is running we
 // continue with stage1.
 Paperpile.serverLog = '';
-Paperpile.isLogging = true;
+Paperpile.isLogging = 1;
 
 Paperpile.startupFailure = function(response) {
   var error;
@@ -89,6 +89,7 @@ Paperpile.stage0 = function() {
 
         // Handler to process the STDERR output of the server
         Paperpile.server.setOnReadLine(function(line) {
+          
           if (Paperpile.isLogging) {
             Paperpile.serverLog = Paperpile.serverLog + line + "\n";
 

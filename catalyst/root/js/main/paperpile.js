@@ -636,7 +636,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     // Turn off logging to avoid logging the log when it is sent
     // to the backend...
-    Paperpile.isLogging = false;
+    Paperpile.isLogging = 0;
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/misc/report_error'),
       params: {
@@ -645,8 +645,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       },
       scope: this,
       success: function() {
-        // Turn on logging again
-        Paperpile.isLogging = true;
+        // Turn on logging again. Wait 10 seconds to make sure it is
+        // turned off when the actual log is written.
+        (function(){Paperpile.isLogging = 1;}).defer(10000);
       }
     });
   },
