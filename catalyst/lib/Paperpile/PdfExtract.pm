@@ -66,6 +66,7 @@ sub parsePDF {
   $wrong = 1 if ( $authors =~ m/\sfew\s/ );
   $wrong = 1 if ( $authors =~ m/\sthe\s/ );
   $wrong = 1 if ( $authors =~ m/\ssystem\s/ );
+  $wrong = 1 if ( $authors =~ m/which\s/ );
   $wrong = 1 if ( $authors =~ m/nucleic\s/i );
 
   if ( $wrong == 1 ) {
@@ -100,6 +101,7 @@ sub parsePDF {
       $wrong = 1 if ( $authors =~ m/\ssome\s/ );
       $wrong = 1 if ( $authors =~ m/\sfew\s/ );
       $wrong = 1 if ( $authors =~ m/\sthe\s/ );
+      $wrong = 1 if ( $authors =~ m/which\s/ );
       $wrong = 1 if ( $authors =~ m/\ssystem\s/ );
       $doi      = $doi_page2      if ( $doi      eq '' );
       $arxiv_id = $arxiv_id_page2 if ( $arxiv_id eq '' );
@@ -381,6 +383,7 @@ sub _MarkBadWords {
   $bad++ if ( $tmp_line =~ m/^(short)?(scientific)?reports?$/i );
   $bad++ if ( $tmp_line =~ m/^ORIGINALINVESTIGATION$/i );
   $bad++ if ( $tmp_line =~ m/discoverynotes/i );
+  $bad++ if ( $tmp_line =~ m/APPLICATIONSNOTE$/i);
 
   # years
   $bad++ if ( $tmp_line =~ m/20\d\d/ );
@@ -437,6 +440,7 @@ sub _MarkAdress {
   $adress++ if ( $tmp_line =~ m/Dept\./i );
   $adress++ if ( $tmp_line =~ m/Center(for)?(of)?/i );
   $adress++ if ( $tmp_line =~ m/Centre(for)?(of)?/i );
+  $adress++ if ( $tmp_line =~ m/Centro/ );
   $adress++ if ( $tmp_line =~ m/Laboratory/i );
   $adress++ if ( $tmp_line =~ m/division(of)?/i );
   $adress++ if ( $tmp_line =~ m/Institut/i );
@@ -788,7 +792,7 @@ sub _ParseXML {
       my @authors_tmp = ();
       for my $pos ( 0 .. $#lines_content ) {
 	push @title_tmp, $lines_content[$pos] if ( $lines_fs[$pos] == 24 );
-	push @authors_tmp, $lines_content[$pos]
+ 	push @authors_tmp, $lines_content[$pos]
 	  if ( $lines_fs[$pos] == 12 and $lines_content[$pos] =~ m/,$/ );
       }
       $title   = join( " ", @title_tmp );
@@ -811,6 +815,11 @@ sub _ParseXML {
   my $last_line_was_a_join = 0;
   my $last_line_diff       = 0;
   my $last_line_lc         = 0;
+
+  if ( $#lines_content == -1 ) {
+    NetError->throw( error => 'The PDF does not seem to contain proper text (maybe a scanned paper).' );
+    #return ( '', '', '', 4, 0, '' );
+  }
 
   for my $pos ( 0 .. $#lines_content ) {
     my $threshold = ( $y_abstract < $y_intro ) ? $y_abstract : $y_intro;
@@ -927,6 +936,36 @@ sub _ParseXML {
    #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
    #print STDERR $final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_fs[$i]," :: ",$final_content[$i],"\n";
   }
+
+  #####################################################
+  # EXIT POINT NUMBER TWO
+  # Some journal have such wired page setting styles
+  # that they cannot be parsed the regular way
+  # Here is the first check point if we encounter such
+  # a journal
+  #####################################################
+
+  # Cell
+  if ( $final_content[0] =~ m/^Cell,\sVol\./ ) {
+
+    # search title
+    for my $i ( 0 .. $#final_content ) {
+      $title = $final_content[$i] if ( $final_fs[$i] == 18 );
+      $title =~ s/\*J\*//g;
+    }
+    # now authors
+    for my $pos ( 0 .. $#lines_content ) {
+      next if ($lines_y[$pos] > 200);
+      next if ($lines_x[$pos] > 100);
+      next if ($lines_fs[$pos] != 8);
+      last if (_MarkAdress($lines_content[$pos]) > 0);
+      $authors .= " $lines_content[$pos]";
+      #print "$lines_y[$pos] $lines_x[$pos] $lines_italic[$pos] $lines_bold[$pos] $lines_fs[$pos] $lines_content[$pos]\n";
+    }
+
+    return ( $title, $authors, $doi, 0.11, $has_cover_page, $arxiv_id );
+  }
+
 
   #################### STRATEGY ONE ########################
   # First, we search for an adress line. Usually authors are
@@ -1105,7 +1144,7 @@ sub _ParseXML {
   my $k                   = -1;
   for my $i ( 0 .. $#final_content ) {
 
-    #print STDERR "\t$final_bad[$i] $final_adress[$i] $final_fs[$i] $major_fs $final_content[$i]\n";
+    #print STDERR "\tBAD:$final_bad[$i] AD:$final_adress[$i] FS:$final_fs[$i] MF:$major_fs $final_content[$i]\n";
     if ( $final_bad[$i] == 0 and $final_adress[$i] == 0 and $final_fs[$i] >= $major_fs ) {
       #print STDERR "\t$final_bad[$i] $final_adress[$i] $final_fs[$i] $major_fs $final_content[$i]\n";
       push @IDS, $i;
