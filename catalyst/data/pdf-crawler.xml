@@ -76,7 +76,7 @@
   <!-- We have landed on the selection page and go for the science direct path -->
   <rule>
     <pattern>
-      <match>!(http://www\.sciencedirect\.com/science\?_ob=GatewayURL.*?)&quot;!</match>
+      <match>!value=&quot;(http://www\.sciencedirect\.com/science\?_ob=GatewayURL.*?)&quot;!</match>
     </pattern>
     <pattern>
       <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
