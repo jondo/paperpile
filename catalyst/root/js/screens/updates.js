@@ -129,9 +129,7 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
                 buttons: Ext.Msg.OKCANCEL,
                 fn: function(btn) {
                   if (btn === 'ok') {
-                    Paperpile.main.reportError({
-                      msg: log.error
-                    });
+                    Paperpile.main.reportError('CRASH',log.error);
                   }
                   Ext.MessageBox.buttonText.ok = "Ok";
                 },

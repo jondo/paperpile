@@ -56,8 +56,8 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
     } else if (data._search_job) {
       if (data._search_job.error) {
         var el = [
-          '<div class="pp-box-error">' + data._search_job.error,
-          '<br><a href="#" class="pp-textlink" action="clear-download">Clear</a>',
+          '<div class="pp-box-error"><p>' + data._search_job.error + '</p>',
+          '<p><a href="#" class="pp-textlink" action="report-download-error">Get this fixed</a> | <a href="#" class="pp-textlink" action="clear-download">Clear</a></p>',
           '</div>'];
         Ext.DomHelper.overwrite(rootEl, el);
         this.progressBar = null;
@@ -112,7 +112,7 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
         '    <a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a>',
         '  </li>',
         '</ul>'];
-      //oldContent.remove();
+
       Ext.DomHelper.overwrite(rootEl, el);
       this.progressBar = null;
     }

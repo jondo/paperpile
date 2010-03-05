@@ -45,7 +45,7 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
     this.getStore().setBaseParam('plugin_url', this.plugin_url);
     this.getStore().setBaseParam('plugin_id', this.plugin_id);
     this.getStore().on('beforeload', function() {
-      Paperpile.status.showBusy("Parsing feed");
+      Paperpile.status.showBusy("Loading Feed");
     },
     this);
     this.getStore().on('load', function() {

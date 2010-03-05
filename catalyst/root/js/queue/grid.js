@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
 
   constructor: function(queuePanel, config) {
@@ -109,9 +108,12 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       data.shortTitle = null;
     }
 
+    data.errorReportInfo = data.title + ' | ' + data.authors + ' | ';
+    data.errorReportInfo += data.citation + ' | ' + data.doi + ' | ' + data.linkout;
+
     return this.dataTemplate.apply(data);
   },
-  
+
   renderType: function(value, meta, record) {
     var data = record.data;
     return this.typeTemplate.apply(data);
@@ -121,8 +123,6 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
     var data = record.data;
     return this.statusTemplate.apply(data);
   },
-
-
 
   initComponent: function() {
 
@@ -177,6 +177,9 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
       '        {message}',
       '      </div>',
+      '      <tpl if="status==\'ERROR\'">',
+      '        <p><a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfDownloadError(\'{errorReportInfo}\');">Send Error Report</a></p> ',
+      '      </tpl>',
       '    </div>',
       '  </tpl>',
       '  <tpl if="type==\'PDF_IMPORT\'">',
@@ -188,11 +191,12 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
       '      {message}',
       '      </div>',
+      '      <tpl if="status==\'ERROR\'">',
+      '        <p><a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfMatchError(\'{pdf}\');">Send Error Report</a></p> ',
+      '      </tpl>',
       '    </div>',
       '  </tpl>',
-      '</div>'
-    ).compile();
-
+      '</div>').compile();
 
     this.typeTemplate = new Ext.XTemplate(
       '<div style="padding: 4px 0;">',
@@ -202,14 +206,10 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '  <tpl if="type==\'PDF_IMPORT\'">',
       '    <span class="pp-queue-type-label-{type}">Match PDF</span>',
       '  </tpl>',
-      '</div>'
-    ).compile();
+      '</div>').compile();
 
     this.statusTemplate = new Ext.XTemplate(
-      '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>'
-    ).compile();
-
-
+      '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>').compile();
 
     Ext.apply(this, {
       store: this._store,
@@ -229,14 +229,16 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
           sortable: false,
           resizable: false
         },
-        { header: "Data",
+        {
+          header: "Data",
           id: 'title',
           dataIndex: 'title',
           renderer: this.renderData.createDelegate(this),
           sortable: false,
           resizable: false
         },
-        { header: "Icon",
+        {
+          header: "Icon",
           id: 'status',
           dataIndex: 'status',
           renderer: this.renderStatus.createDelegate(this),

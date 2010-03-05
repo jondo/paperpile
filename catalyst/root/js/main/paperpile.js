@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('Paperpile');
 
@@ -613,7 +612,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               buttons: Ext.Msg.OKCANCEL,
               fn: function(btn) {
                 if (btn === 'ok') {
-                  Paperpile.main.reportError(error);
+                  Paperpile.main.reportError('CRASH', error.msg);
                 }
                 Ext.MessageBox.buttonText.ok = "Ok";
               }
@@ -632,22 +631,73 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
-  reportError: function(error) {
+  reportPdfDownloadError: function(info) {
+
+    Ext.MessageBox.buttonText.ok = "Send error report";
+    Ext.Msg.show({
+      title: 'Feedback',
+      msg: 'Paperpile failed to download a PDF. If you have full-text access to that PDF this should not have happened.\
+            Please help us to get this fixed by sending an error report.',
+      animEl: 'elId',
+      icon: 'pp-messagebox-feedback',
+      buttons: Ext.Msg.OKCANCEL,
+      fn: function(btn) {
+        if (btn === 'ok') {
+          Paperpile.main.reportError('PDF_DOWNLOAD', info);
+        }
+        Ext.MessageBox.buttonText.ok = "Ok";
+      }
+    });
+  },
+
+  reportPdfMatchError: function(info) {
+
+    Ext.MessageBox.buttonText.ok = "Send error report";
+    Ext.Msg.show({
+      title: 'Feedback',
+      msg: 'Paperpile failed to automatically import your PDF. Please help us to get this fixed by sending an error report.<br>\
+            Note: This will upload the PDF to our bug-tracking system. We will only use it to identify the problem and delete it afterwards.',
+      animEl: 'elId',
+      icon: 'pp-messagebox-feedback',
+      buttons: Ext.Msg.OKCANCEL,
+      fn: function(btn) {
+        if (btn === 'ok') {
+          Paperpile.main.reportError('PDF_MATCH', info);
+        }
+        Ext.MessageBox.buttonText.ok = "Ok";
+      }
+    });
+  },
+
+  // Type: CRASH, PDF_DOWNLOAD, PDF_IMPORT
+  reportError: function(type, info) {
+
+    var url = '/ajax/misc/report_crash';
+
+    if (type === 'PDF_DOWNLOAD') {
+      url = '/ajax/misc/report_pdf_download_error';
+    }
+
+    if (type === 'PDF_MATCH') {
+      url = '/ajax/misc/report_pdf_match_error';
+    }
 
     // Turn off logging to avoid logging the log when it is sent
     // to the backend...
     Paperpile.isLogging = 0;
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/misc/report_error'),
+      url: Paperpile.Url(url),
       params: {
-        error: error.msg,
+        info: info,
         catalyst_log: Paperpile.serverLog
       },
       scope: this,
       success: function() {
         // Turn on logging again. Wait 10 seconds to make sure it is
         // turned off when the actual log is written.
-        (function(){Paperpile.isLogging = 1;}).defer(10000);
+        (function() {
+          Paperpile.isLogging = 1;
+        }).defer(10000);
       }
     });
   },

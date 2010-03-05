@@ -279,6 +279,11 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     case 'clear-download':
       this.getGrid().clearDownload();
       break;
+    case 'report-download-error':
+      var infoString = this.data.title + '\n' + this.data._authors_display + '\n';
+      infoString += this.data._citation_display + '\n' + this.data.doi + '\n' + this.data.linkout;
+      Paperpile.main.reportPdfDownloadError(infoString);
+      break;
     case 'import-pdf':
       // If PDF has been downloaded for an entry that is not
       // already imported, import entry and attach PDF

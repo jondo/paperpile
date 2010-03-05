@@ -908,6 +908,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background: transparent url('/images/icons/pause.png') no-repeat;
 }
 
+.pp-messagebox-feedback {
+    background: transparent url('/images/icons/feedback.png') no-repeat;
+}
+
+
 
 /**** Abstract ****/
 

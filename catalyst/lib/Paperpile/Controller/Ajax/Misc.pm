@@ -245,6 +245,9 @@ sub test_network : Local {
       code  => $response->code
     );
   }
+
+  die('Crasher test');
+
 }
 
 sub clean_duplicates : Local {
@@ -270,7 +273,7 @@ sub inc_read_counter : Local {
 
 }
 
-sub report_error : Local {
+sub report_crash : Local {
 
   my ( $self, $c ) = @_;
 
@@ -278,7 +281,7 @@ sub report_error : Local {
 
   my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
 
-  my $error        = $c->request->params->{error};
+  my $error        = $c->request->params->{info};
   my $catalyst_log = $c->request->params->{catalyst_log};
 
   my $browser = Paperpile::Utils->get_browser();
@@ -292,7 +295,7 @@ sub report_error : Local {
     "Unknown exception on $platform;  version: $version_id ($version_name); build: $build_number";
 
   #TODO: Make sure that explicit /tmp is portable on MacOSX and Windows
-  my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", dir=> '/tmp', SUFFIX => '.txt' );
+  my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", DIR=> '/tmp', SUFFIX => '.txt' );
 
   my $attachment = undef;
 
@@ -315,5 +318,69 @@ sub report_error : Local {
   unlink($filename);
 
 }
+
+sub report_pdf_download_error : Local {
+
+  my ( $self, $c ) = @_;
+
+  #my $url ='http://127.0.0.1:3003/api/v1/feedback/crashreport';
+
+  my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
+
+  my $pub          = $c->request->params->{info};
+  my $catalyst_log = $c->request->params->{catalyst_log};
+
+  my $subject = 'Automatic bug report: PDF download error';
+  my $browser = Paperpile::Utils->get_browser();
+
+  my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", DIR => '/tmp', SUFFIX => '.txt' );
+
+  my $attachment = undef;
+
+  if ($catalyst_log) {
+    print $fh $catalyst_log;
+    $attachment = [$filename];
+  }
+
+  my $r = POST $url,
+    Content_Type => 'form-data',
+    Content      => [
+    subject    => $subject,
+    body       => $pub,
+    from       => 'Paperpile client',
+    attachment => $attachment,
+    ];
+
+  my $response = $browser->request($r);
+
+  unlink($filename);
+}
+
+
+
+sub report_pdf_match_error : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
+
+  my $file = $c->request->params->{info};
+
+  my $subject = 'Automatic bug report: PDF match error';
+  my $browser = Paperpile::Utils->get_browser();
+
+  my $r = POST $url,
+    Content_Type => 'form-data',
+    Content      => [
+    subject    => $subject,
+    body       => $file,
+    from       => 'Paperpile client',
+    attachment => [$file],
+    ];
+
+  my $response = $browser->request($r);
+
+}
+
 
 1;
