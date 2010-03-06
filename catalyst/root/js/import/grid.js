@@ -96,7 +96,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         scope: this,
         cls: 'x-btn-text-icon edit',
         icon: '/images/icons/pencil.png',
-        itemId: 'edit_button',
+        itemId: 'EDIT',
         tooltip: 'Edit citation data of the selected reference'
       }),
 
@@ -105,7 +105,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         handler: this.handleDelete,
         scope: this,
         cls: 'x-btn-text-icon',
-        itemId: 'delete_button',
+        itemId: 'DELETE',
         tooltip: 'Move selected references to Trash'
       }),
 
@@ -113,28 +113,28 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         text: 'Export',
         handler: this.handleExport,
         scope: this,
-        itemId: 'export_button'
+        itemId: 'EXPORT'
       }),
 
       'SELECT_ALL': new Ext.Action({
         text: 'Select all',
         handler: this.selectAll,
         scope: this,
-        itemId: 'select_all'
+        itemId: 'SELECT_ALL'
       }),
 
       'FORMAT': new Ext.Action({
         text: 'Format',
         handler: this.formatEntry,
         scope: this,
-        itemId: 'format_button'
+        itemId: 'FORMAT'
       }),
 
       'SAVE_AS_ACTIVE': new Ext.Action({
         text: 'Save as Live Folder',
         handler: this.handleSaveActive,
         scope: this,
-        itemId: 'save_active_button'
+        itemId: 'SAVE_AS_ACTIVE'
       }),
 
       'VIEW_PDF': new Ext.Action({
@@ -142,40 +142,42 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         handler: this.openPDF,
         scope: this,
         iconCls: 'pp-icon-import-pdf',
-        itemId: 'view_pdf'
+        itemId: 'VIEW_PDF'
       }),
-      'VIEW_AUTHOR': new Ext.Action({
-        text: 'First author',
-        handler: this.viewByAuthor,
+      'MORE_FROM_FIRST_AUTHOR': new Ext.Action({
+	// Note: the text of these menu items will change dynamically depending on
+        // the selected reference. See the 'updateContextMenuItem' method.
+        text: 'First author', 
+        handler: this.moreFromFirstAuthor,
         scope: this,
-        itemId: 'view_author_button'
+        itemId: 'MORE_FROM_FIRST_AUTHOR'
       }),
-      'VIEW_LAST_AUTHOR': new Ext.Action({
+      'MORE_FROM_LAST_AUTHOR': new Ext.Action({
         text: 'Last author',
-        handler: this.viewByLastAuthor,
+        handler: this.moreFromLastAuthor,
         scope: this,
-        itemId: 'view_last_author_button'
+        itemId: 'MORE_FROM_LAST_AUTHOR'
       }),
-      'VIEW_JOURNAL': new Ext.Action({
+      'MORE_FROM_JOURNAL': new Ext.Action({
         text: 'Journal',
-        handler: this.viewByJournal,
+        handler: this.moreFromJournal,
         scope: this,
-        itemId: 'view_journal_button'
+        itemId: 'MORE_FROM_JOURNAL'
       }),
-      'VIEW_YEAR': new Ext.Action({
+      'MORE_FROM_YEAR': new Ext.Action({
         text: 'Year',
-        handler: this.viewByYear,
+        handler: this.moreFromYear,
         scope: this,
-        itemId: 'view_year_button'
+        itemId: 'MORE_FROM_YEAR'
       }),
       'SEARCH_TB_FILL': new Ext.Toolbar.Fill({
         width: '10px',
-        itemId: 'search_tb_fill'
+        itemId: 'SEARCH_TB_FILL'
       })
     };
 
     this.actions['SAVE_MENU'] = new Ext.Button({
-      itemId: 'save_menu',
+      itemId: 'SAVE_MENU',
       iconCls: 'pp-icon-save',
       cls: 'x-btn-text-icon',
       menu: {
@@ -420,6 +422,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // main/overrides.js
     this.getSelectionModel().on('afterselectionchange',
       function(sm) {
+	this.contextRecord = null;
+
         var selection = this.getSelection();
         var selectedIds;
         if (selection == 'ALL') {
@@ -767,28 +771,29 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     context.addMenuItem(this.actions['SELECT_ALL']);
     context.addSeparator();
     context.addMenuItem({
-      text: 'Search by...',
-      itemId: 'search_by',
-      menu: {
-        items: [
-          this.actions['VIEW_AUTHOR'],
-          this.actions['VIEW_LAST_AUTHOR'],
-          this.actions['VIEW_JOURNAL'],
-          this.actions['VIEW_YEAR']]
+      text: 'More from...',
+      itemId: 'MORE_FROM',
+      menu:{
+	items: [
+          this.actions['MORE_FROM_FIRST_AUTHOR'],
+          this.actions['MORE_FROM_LAST_AUTHOR'],
+          this.actions['MORE_FROM_JOURNAL'],
+          this.actions['MORE_FROM_YEAR']]
       }
     });
   },
 
+  contextRecord: null,
   onContextClick: function(grid, index, e) {
     e.stopEvent();
     var record = this.getStore().getAt(index);
+    this.contextRecord = record;
 
     if (!this.getSelectionModel().isSelected(index)) {
       this.getSelectionModel().selectRow(index);
     }
 
     this.context.items.each(function(item, index, length) {
-      item.enable();
       this.updateContextItem(item, record);
     },
     this);
@@ -800,14 +805,48 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   updateContextItem: function(menuItem, record) {
+    menuItem.enable();
+    menuItem.show();
+
+    // Recurse through sub-menus.
+    if (menuItem.menu) {
+      menuItem.menu.items.each(function(item, index, length) {
+        this.updateContextItem(item,record);
+      },this);
+    }
+
+    var id = menuItem.itemId;
+
+    if (id == 'MORE_FROM_FIRST_AUTHOR') {
+      menuItem.setText(this.getFirstAuthorFromSelection());
+    }
+    if (id == 'MORE_FROM_LAST_AUTHOR') {
+      if (this.getLastAuthorFromSelection() != '') {
+	menuItem.setText(this.getLastAuthorFromSelection());
+      } else {
+	menuItem.setText("Last author");
+	menuItem.disable();
+      }
+    }
+    if (id == 'MORE_FROM_JOURNAL') {
+      menuItem.style = {'font-style':'italic'};
+      if (menuItem.rendered) {
+	menuItem.textEl.setStyle('font-style','italic');
+      }
+      menuItem.setText(this.getJournalFromSelection());
+    }
+    if (id == 'MORE_FROM_YEAR') {
+      menuItem.setText(this.getYearFromSelection());
+    }
+
     // Override with extending classes to update context items on each showing.
-    if (menuItem.itemId == this.actions['VIEW_PDF'].itemId && record.data.pdf == '') {
+    if (id == 'VIEW_PDF' && record.data.pdf == '') {
       // Gray out if no PDF available to view.
       menuItem.disable();
       return;
     }
 
-    if (menuItem.itemId == this.actions['SELECT_ALL'].itemId && this.allSelected) {
+    if (id == 'SELECT_ALL' && this.allSelected) {
       // Gray out if already all selected.
       menuItem.disable();
       return;
@@ -826,8 +865,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   updateToolbarItem: function(menuItem) {
+    var id = menuItem.itemId;
+
     // Override with extending classes to update toolbar when the grid selection changes.
-    if (menuItem.itemId == this.actions['SELECT_ALL'].itemId && this.allSelected) {
+    if (id == 'SELECT_ALL' && this.allSelected) {
       menuItem.disable();
       return;
     }
@@ -1238,21 +1279,60 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // To be implemented by subclasses.
   },
 
-  viewByLastAuthor: function() {
-    this.viewByAuthor(true);
+  getSingleSelectionRecord: function() {
+    if (this.contextRecord != null) {
+      return this.contextRecord;
+    } else {
+      return this.getSelectionModel().getSelected();
+    }
   },
 
-  viewByAuthor: function(last) {
-    last = last || false;
-    var sm = this.getSelectionModel();
-
-    var authors = sm.getSelected().data.authors;
+  getFirstAuthorFromSelection: function() {
+    var authors = this.getSingleSelectionRecord().data.authors || '';
     var arr = authors.split(/\s+and\s+/);
-    var author;
-    if (arr.length > 0 && !last) {
+    var author = '';
+    if (arr.length > 0) {
       author = arr[0];
-    } else if (arr.length > 0) {
+    }
+    return author;
+  },
+
+  getLastAuthorFromSelection: function() {
+    var authors = this.getSingleSelectionRecord().data.authors || '';
+    var arr = authors.split(/\s+and\s+/);
+    var author = '';
+    if (arr.length > 1) {
       author = arr[arr.length - 1];
+    }
+    return author;
+  },
+
+  getJournalFromSelection: function() {
+    var journal = this.getSingleSelectionRecord().data.journal || '';
+    return journal;
+  },
+
+  getYearFromSelection: function() {
+    var year = this.getSingleSelectionRecord().data.year || '';
+    return year;
+  },
+
+  moreFromLastAuthor: function() {
+    var authors = this.getSingleSelectionRecord().data._authors_display || '';
+    var arr = authors.split(/,\s+/);
+    var author = '';
+    if (arr.length > 0) {
+      author = arr[arr.length-1];
+    }
+    this.setSearchQuery('author:' + '"' + author + '"');
+  },
+
+  moreFromFirstAuthor: function() {
+    var authors = this.getSingleSelectionRecord().data._authors_display || '';
+    var arr = authors.split(/,\s+/);
+    var author = '';
+    if (arr.length > 0) {
+      author = arr[0];
     }
     this.setSearchQuery('author:' + '"' + author + '"');
     /*
@@ -1263,11 +1343,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 					 '',
 					 first_author
 					);
-*/
+    */
   },
-  viewByYear: function() {
-    var sm = this.getSelectionModel();
-    var year = sm.getSelected().data.year;
+  moreFromYear: function() {
+    var year = this.getYearFromSelection();
     if (year) {
       this.setSearchQuery('year:' + '"' + year + '"');
       /*	Paperpile.main.tabs.newPluginTab('DB',
@@ -1280,9 +1359,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 */
     }
   },
-  viewByJournal: function() {
-    var sm = this.getSelectionModel();
-    var journal = sm.getSelected().data.journal;
+  moreFromJournal: function() {
+    var journal = this.getJournalFromSelection();
     if (journal) {
       this.setSearchQuery('journal:' + '"' + journal + '"');
       /*	Paperpile.main.tabs.newPluginTab('DB',
