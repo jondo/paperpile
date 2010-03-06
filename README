@@ -3,7 +3,7 @@ reference manager for the desktop and the web. See the
 file COPYING for the license. 
  
 Paperpile is built on web-technologies, in particular
-Catalyst (catalystwebframework.org) and
+Catalyst (catalystframework.org) and
 Titanium (appcelerator.com). At the moment, only Linux is
 supported but versions for OS X and Windows will follow soon.
  
