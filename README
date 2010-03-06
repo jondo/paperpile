@@ -1,10 +1,17 @@
-This is the open source community version of Paperpile, a reference manager for the desktop and the web.  
-
-Paperpile is built on web-technologies, in particular Catalyst (catalystwebframework.org) and Titanium (appcelerator.com). At the moment, only Linux is supported but versions for OS X and Windows will follow soon. 
-
-Please visit paperpile.com for news on the product and code.paperpile.org for information on Paperpile development. 
-
-To build Paperpile from the source follow these steps (use linux32 or linux64 depending on your architecture):
+This is the open source community version of Paperpile, a
+reference manager for the desktop and the web. See the 
+file COPYING for the license. 
+ 
+Paperpile is built on web-technologies, in particular
+Catalyst (catalystwebframework.org) and
+Titanium (appcelerator.com). At the moment, only Linux is
+supported but versions for OS X and Windows will follow soon.
+ 
+Please visit paperpile.com for news on the product and
+code.paperpile.org for information on Paperpile development.
+ 
+To build Paperpile from the source follow these steps (use
+linux32 or linux64 depending on your architecture):
 
 1. Checkout Paperpile:
 
