@@ -5,7 +5,9 @@ css:
 js:
   - "ext/adapter/ext/ext-base.js"
   - "ext/ext-all-debug.js"
-  - "ext/examples/ux/Spotlight.js"
+  - "ext.ux/Spotlight.js"
+  - "ext.ux/filetree/js/Ext.ux.FileTreeMenu.js"
+  - "ext.ux/filetree/js/Ext.ux.FileTreePanel.js"
   - "flashchart/swfobject.js"
   - "js/main/overrides.js"
   - "js/main/paperpile.js" 
@@ -54,6 +56,4 @@ js:
   - "js/queue/grid.js"
   - "js/queue/side-panel.js"
   - "js/queue/widget.js"
-  - "ext.ux/filetree/js/Ext.ux.FileTreeMenu.js"
-  - "ext.ux/filetree/js/Ext.ux.FileTreePanel.js"
 
