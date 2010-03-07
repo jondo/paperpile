@@ -39,11 +39,6 @@ CREATE VIRTUAL TABLE Fulltext_full using fts3(text,abstract,notes,title,key,auth
 
 CREATE VIRTUAL TABLE Fulltext_citation using fts3(abstract,notes,title,key,author,label,labelid,keyword,folder,year,journal);
 
-CREATE TABLE Fields(
-  field             TEXT,
-  text              TEXT
-);
-
 CREATE TABLE Tags (
   tag            TEXT UNIQUE,
   style          TEXT
