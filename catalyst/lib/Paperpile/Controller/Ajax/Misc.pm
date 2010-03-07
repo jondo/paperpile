@@ -246,8 +246,6 @@ sub test_network : Local {
     );
   }
 
-  die('Crasher test');
-
 }
 
 sub clean_duplicates : Local {

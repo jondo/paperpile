@@ -303,6 +303,13 @@ sub set_settings : Local {
     print STDERR "$field \n";
   }
 
+  if ((! $c->request->params->{pager_limit}) ||
+      (! $c->request->params->{search_seq})) {
+
+    die("Trap for bug #96: I'm about to overwrite pager_limit or search_seq with an undefined value.");
+
+  }
+
   for my $field ( 'use_proxy', 'proxy', 'proxy_user', 'proxy_passwd', 'pager_limit' ) {
     $c->model('User')->set_setting( $field, $c->request->params->{$field} );
   }
