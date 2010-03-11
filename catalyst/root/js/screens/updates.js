@@ -36,9 +36,17 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
 
   // Add details how to install updates for different operating systems
   markupNoPatch: [
-    '<div class="pp-box pp-box-top pp-box-style1" style="width:400px;">',
+    '<div class="pp-box pp-box-top pp-box-style1" style="width:600px;">',
     '<p>&nbsp;</p>',
-    '<p>Version {latestVersion} of Paperpile is available for download</p>',
+    '<p>Version <b>{latestVersion}</b> of Paperpile is available for download. This update requires you to re-install Paperpile:</p>',
+    '<ul>',
+    '  <li class="pp-bullet"><b>Close</b> Paperpile</li>',
+    '  <li class="pp-bullet"><b>Delete</b> your current Paperpile directory ({installationDir})</li>',
+    '  <li class="pp-bullet"><b>Download</b> the latest tar.gz package. </li>',
+    '  <li class="pp-bullet"><b>Extract</b> package to the old installation directory (or anywhere else)</li>',
+    '  <li class="pp-bullet"><b>Start</b> Paperpile (your personal libary will be updated if necessary)</li>',
+    '</ul>',
+    '<p>&nbsp;</p>',
     '<center><div id="download-button"></div></center>',
     '<p>&nbsp;</p>',
     '</div>', ],
@@ -68,12 +76,14 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
       action = this.performUpgrade;
     } else {
       template = new Ext.XTemplate(this.markupNoPatch).compile();
-      buttonText = 'Get update';
-      action = this.redirect;
+      buttonText = 'Go to download page';
+      action = function(){ Paperpile.utils.openURL('http://paperpile.com/beta')};
     }
 
     Paperpile.updateInfo.numUpdates = Paperpile.updateInfo.updates.length;
-    Paperpile.updateInfo.latestVersion = Paperpile.updateInfo.updates[0].string;
+    Paperpile.updateInfo.latestVersion = Paperpile.updateInfo.updates[0].name;
+
+    Paperpile.updateInfo.installationDir = Titanium.App.getHome();
 
     template.overwrite(this.body, Paperpile.updateInfo, true);
 
@@ -196,10 +206,7 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
 
     upgrader.launch();
 
-  },
-
-  redirect: function() {
-
-    // Add code to redirect to latest version
   }
+
+
 });
