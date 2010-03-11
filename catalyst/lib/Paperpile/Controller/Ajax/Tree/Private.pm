@@ -87,7 +87,6 @@ sub get_default_tree : Private {
   # Initialize
   $c->forward( 'get_tags', [$tags] );
 
-
   #### / Local Library / Trash
 
   $folders = Tree::Simple->new( {
@@ -231,7 +230,7 @@ sub get_default_tree : Private {
         iconCls => 'pp-icon-import-pdf',
         qtip    => 'Import one or more PDFs to your library',
         hidden  => 0,
-        builtin      => 1,
+        builtin => 1,
       }
     )
   );
@@ -270,8 +269,16 @@ sub get_default_tree : Private {
     )
   );
 
-
-
+  $plugins->addChild(
+    Tree::Simple->new( {
+        type    => 'FEEDBACK',
+        text    => 'Feedback',
+        iconCls => 'pp-icon-feedback',
+        hidden  => 0,
+        builtin => 1,
+      }
+    )
+  );
 
   return $root;
 }

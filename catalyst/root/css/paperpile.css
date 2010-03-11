@@ -801,6 +801,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/weather_clouds.png')!important;
 }
 
+.pp-icon-feedback{
+    background-image: url('/images/icons/feedback_small.png')!important;
+}
+
 .pp-icon-duplicates{
     background-image: url('/images/icons/duplicates.png')!important;
 }
