@@ -33,7 +33,7 @@ Via web-browser:
 # cd catalyst/script
 # ./start_linux32
 
-Open Paperpile on 127.0.0.1:3000
+Open Paperpile on 127.0.0.1:3210
 
 For officially supported packages visit paperpile.com.
 
