@@ -416,6 +416,10 @@ a:hover.pp-textlink {
     padding: 2px 0;
 }
 
+.pp-cloud-options-active {
+    list-style-type: disc;
+    list-style-position:outside;
+}
 
 .pp-textfield-with-button {
     margin-right: 5px;
@@ -1119,6 +1123,10 @@ div:hover.pp-grid-sort-item {
   width:16px;
   height:16px;
   border: 1px solid #F7CA75 ;
+}
+
+.x-toolbar-more-icon {
+  background-image: url(/ext/resources/images/default/button/arrow.gif) !important
 }
 
 /*** File chooser ***/

@@ -19,8 +19,8 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
     '<div id="pp-cloud-checkbox">',
     '<p>Sort By:</p>',
     '<ul id="stats-options" class="pp-cloud-options">',
-    '  <li class="pp-cloud-options-active" ><a action="sort_alphabetical" href="#" class="pp-textlink">Alphabetical</a></li>',
-    '  <li class="pp-cloud-options-active" ><a action="sort_count" href="#" class="pp-textlink">Paper Count</a></li>',
+    '  <li ><a action="sort_alphabetical" href="#" class="pp-textlink">Alphabetical</a></li>',
+    '  <li ><a action="sort_count" href="#" class="pp-textlink">Paper Count</a></li>',
     '</ul>',
     '</div>',
 
@@ -90,7 +90,6 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
 
     var fn = function(e, el, o) {
       var action = el.getAttribute('action');
-      //console.log(action);
       if (!action) return;
 
       if (action.indexOf('sort') > -1) {
@@ -98,12 +97,12 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
       } else if (action.indexOf('show') > -1) {
         this.field = action.split('_')[1];
       }
+
       this.updateClouds();
       this.updateSettings();
     };
     Ext.get('stats-tabs').on('click', fn, this);
     Ext.get('stats-options').on('click', fn, this);
-
   },
 
   updateSettings: function() {
@@ -127,8 +126,17 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
 
         Ext.select('#stats-tabs li', true).removeClass('pp-box-tabs-active');
         Ext.select('[action=show_' + this.field + ']').addClass('pp-box-tabs-active');
-        Ext.select('.pp-cloud-options li').removeClass('pp-cloud-options-active');
-        Ext.select('[action=sort_' + this.sort + ']').addClass('pp-cloud-options-active');
+
+	var sortOptions = Ext.select('.pp-cloud-options li');
+	sortOptions.removeClass('pp-cloud-options-active');
+	sortOptions.each(function(el,c,index) {
+	  var anchor = el.down('a');
+	  if (anchor.getAttribute('action') == 'sort_'+this.sort) {
+	    Paperpile.log(anchor);
+	    el.addClass('pp-cloud-options-active');
+	  }
+	},this);
+
 
         Ext.DomHelper.overwrite('cloud', '');
         Ext.DomHelper.insertHtml('afterBegin', Ext.get('cloud').dom, json.html);
