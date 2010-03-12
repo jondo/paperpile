@@ -24,25 +24,6 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
 
   initComponent: function() {
     Paperpile.PluginGridFolder.superclass.initComponent.call(this);
-  },
-
-  createContextMenu: function() {
-    Paperpile.PluginGridFolder.superclass.createContextMenu.call(this);
-    this.actions['REMOVE_FOLDER'] = new Ext.Action({
-      text: 'Remove from Folder',
-      handler: this.deleteFromFolder,
-      scope: this,
-      iconCls: 'pp-icon-remove-folder',
-      itemId: 'remove_folder'
-    });
-
-    var index = this.getContextIndex(this.actions['DELETE'].itemId);
-    var context = this.getContextMenu();
-    context.insert(index + 1, this.actions['REMOVE_FOLDER']);
-  },
-
-  createToolbarMenu: function() {
-    Paperpile.PluginGridFolder.superclass.createToolbarMenu.call(this);
 
     this.actions['REMOVE_FROM_FOLDER'] = new Ext.Action({
       text: 'Remove from folder',
@@ -51,35 +32,30 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
       handler: this.deleteFromFolder,
       scope: this
     });
-
-    var tbar = this.getTopToolbar();
-
-    // Hide the add button.
-    this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
-
-    var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-    tbar.insertButton(filterFieldIndex + 1, this.actions['REMOVE_FROM_FOLDER']);
   },
 
-  updateToolbarItem: function(item) {
-    Paperpile.PluginGridFolder.superclass.updateToolbarItem.call(this, item);
+  initContextMenuItemIds: function() {
+    Paperpile.PluginGridFolder.superclass.initContextMenuItemIds.call(this);
+    var ids = this.contextMenuItemIds;
 
-    if (item.itemId == this.actions['REMOVE_FROM_FOLDER'].itemId) {
-      var selected = this.getSelection().length;
-      (selected > 0 ? item.enable() : item.disable());
-    }
-
+    var index = ids.indexOf('DELETE');
+    ids.insert(index + 1, 'REMOVE_FROM_FOLDER');
   },
 
-  updateContextItem: function(item, record) {
-    Paperpile.PluginGridFolder.superclass.updateContextItem.call(this, item, record);
+  initToolbarMenuItemIds: function() {
+    Paperpile.PluginGridFolder.superclass.initToolbarMenuItemIds.call(this);
+    var ids = this.toolbarMenuItemIds;
 
-    if (item.itemId == this.actions['REMOVE_FOLDER'].itemId) {
-      if (record.data.folders == '') {
-        item.hide();
-      } else {
-        item.show();
-      }
+    var index = ids.indexOf('TB_FILL');
+    ids.insert(index+1,'REMOVE_FROM_FOLDER');
+  },    
+
+  updateButtons: function() {
+    Paperpile.PluginGridFolder.superclass.updateButtons.call(this);
+    
+    var selection = this.getSingleSelectionRecord();
+    if (!selection) {
+      this.actions['REMOVE_FROM_FOLDER'].disable();
     }
   },
 

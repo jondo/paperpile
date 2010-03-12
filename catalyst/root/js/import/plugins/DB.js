@@ -31,8 +31,17 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     Paperpile.PluginGridDB.superclass.initComponent.call(this);
     this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
 
-    // If we are viewing a virtual folders we need an additional
-    // button to remove an entry from a virtual folder
+    this.actions['NEW'] = new Ext.Action({
+      text: 'New Reference',
+      iconCls: 'pp-icon-add',
+      handler: function() {
+        this.handleEdit(true);
+      },
+      scope: this,
+      itemId: 'new_button',
+      tooltip: 'Manually create a new reference for your library'
+    });
+
     var store = this.getStore();
     store.baseParams['plugin_search_pdf'] = 0;
     store.baseParams['limit'] = this.limit;
@@ -192,12 +201,9 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
   createContextMenu: function() {
     Paperpile.PluginGridDB.superclass.createContextMenu.call(this);
-
   },
 
   createToolbarMenu: function() {
-    Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
-
     this.filterMenu = new Ext.menu.Menu({
       defaults: {
         checked: false,
@@ -244,49 +250,38 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         }]
     });
 
-    this.filterButton = new Ext.Button({
-      itemId: 'filter_button',
+    this.actions['FILTER_BUTTON'] = new Ext.Button({
+      itemId: 'FILTER_BUTTON',
       text: 'Filter',
       tooltip: 'Choose field(s) to search',
       menu: this.filterMenu
     });
-    this.filterField = new Ext.app.FilterField({
-      itemId: 'filter_field',
+    this.actions['FILTER_FIELD'] = new Ext.app.FilterField({
+      itemId: 'FILTER_FIELD',
       emptyText: 'Search References',
       store: this.getStore(),
       base_query: this.plugin_base_query,
       width: 200
     });
+    this.filterField = this.actions['FILTER_FIELD'];
 
-    var tbar = this.getTopToolbar();
-    tbar.insert(0, this.filterButton);
-    tbar.insert(0, this.filterField);
-
-    this.actions['NEW'] = new Ext.Action({
-      text: 'New Reference',
-      iconCls: 'pp-icon-add',
-      handler: function() {
-        this.handleEdit(true);
-      },
-      scope: this,
-      itemId: 'new_button',
-      tooltip: 'Manually create a new reference for your library'
-    });
-
-    var index = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-    tbar.insertButton(index + 1, this.actions['NEW']);
+    Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
   },
 
-  updateContextItem: function(menuItem, record) {
-    Paperpile.PluginGridDB.superclass.updateContextItem.call(this, menuItem, record);
-    if (menuItem.itemId == this.actions['SELECT_ALL'].itemId) {
-      menuItem.setText('Select all (' + this.getStore().getTotalCount() + ')');
-    }
+  initToolbarMenuItemIds: function() {
+    Paperpile.PluginGridDB.superclass.initToolbarMenuItemIds.call(this);
+    var ids = this.toolbarMenuItemIds;
 
-    if (menuItem.itemId == this.actions['DELETE'].itemId) {
-      menuItem.setIconClass('pp-icon-trash');
-      menuItem.setText('Move to Trash');
-    }
+    ids.insert(0,'FILTER_FIELD');
+    ids.insert(1,'FILTER_BUTTON');
+
+    var index = ids.indexOf('TB_FILL');
+    ids.insert(index+1,'NEW');
+    ids.insert(index+2,'EDIT');
+  },
+
+  updateButtons: function() {
+    Paperpile.PluginGridDB.superclass.updateButtons.call(this);
   }
 });
 

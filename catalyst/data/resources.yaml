@@ -17,6 +17,7 @@ js:
   - "js/main/tree-hover-button.js"
   - "js/main/tree.js"
   - "js/main/dashboard.js"
+  - "js/import/toolbar.js"
   - "js/import/grid.js" 
   - "js/import/search-field.js" 
   - "js/import/filter-field.js"

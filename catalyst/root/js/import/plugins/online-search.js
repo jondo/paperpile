@@ -6,6 +6,14 @@ Paperpile.OnlineSearchGridPlugin = function(config) {
 
 Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
   init: function(grid) {
+    this.searchField = new Ext.app.SearchField({
+      itemId:'SEARCH_FIELD',
+      emptyText: 'Search ' + grid.plugin_name,
+      width: 200,
+      store: grid.getStore()
+    });
+    grid.actions['SEARCH_FIELD'] = this.searchField;
+    grid.searchField = this.searchField;
 
     grid.store.on('beforeload',
       function() {
@@ -22,15 +30,9 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
 
     Ext.apply(grid, {
       hideHeaders: true,
-      createToolbarMenu: grid.createToolbarMenu.createSequence(function() {
-        var tbar = this.getTopToolbar();
-        this.searchField = new Ext.app.SearchField({
-          emptyText: 'Search ' + this.plugin_name,
-          width: 200,
-          store: this.store
-        });
-
-        tbar.insert(0, this.searchField);
+      initToolbarMenuItemIds: grid.initToolbarMenuItemIds.createSequence(function() {
+	var ids = this.toolbarMenuItemIds;
+	ids.insert(0,'SEARCH_FIELD');
       },
       grid),
       setSearchQuery: function(text) {
@@ -48,5 +50,5 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       });
     }
 
-  },
+  }
 });

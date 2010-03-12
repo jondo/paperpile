@@ -24,10 +24,6 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
 
   initComponent: function() {
     Paperpile.PluginGridTrash.superclass.initComponent.call(this);
-  },
-
-  createToolbarMenu: function() {
-    Paperpile.PluginGridTrash.superclass.createToolbarMenu.call(this);
 
     this.actions['EMPTY_TRASH'] = new Ext.Action({
       text: 'Empty Trash',
@@ -41,7 +37,6 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
       itemId: 'empty_button',
       tooltip: 'Delete all references in Trash permanently form your library.'
     });
-
     this.actions['RESTORE'] = new Ext.Action({
       text: 'Restore',
       handler: function() {
@@ -52,41 +47,61 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
       itemId: 'restore_button',
       tooltip: 'Restore selected references from Trash'
     });
-
-    var tbar = this.getTopToolbar();
-
-    var index = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-    tbar.insert(index + 1, new Ext.Button(this.actions['RESTORE']));
-    tbar.insert(index + 1, new Ext.Button(this.actions['DELETE']));
-    tbar.insert(index + 1, new Ext.Button(this.actions['EMPTY_TRASH']));
-
-    var item = this.getToolbarByItemId(this.actions['DELETE'].itemId);
-    item.setTooltip('Permanently delete selected references.');
-    item.setIconClass('pp-icon-delete');
-
-    this.getToolbarByItemId(this.actions['SAVE_MENU'].itemId).setVisible(false);
-    this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
   },
 
-  updateToolbarItem: function(item) {
-    Paperpile.PluginGridTrash.superclass.updateToolbarItem.call(this, item);
+  initToolbarMenuItemIds: function() {
+    Paperpile.PluginGridTrash.superclass.initToolbarMenuItemIds.call(this);
 
-    if (item.itemId == this.actions['DELETE'].itemId || item.itemId == this.actions['RESTORE'].itemId) {
-      var selected = this.getSelection().length;
-      if (selected > 0) {
-        item.enable();
-      } else {
-        item.disable();
+    var ids = this.toolbarMenuItemIds;
+
+    ids.remove('NEW');
+    ids.remove('EDIT');
+    ids.remove('EXPORT_MENU');
+    ids.remove('DELETE');
+
+    var index = ids.indexOf('TB_FILL');
+    ids.insert(index + 1, 'RESTORE');
+    ids.insert(index + 2, 'DELETE');
+    ids.insert(index + 3, 'EMPTY_TRASH');
+  },
+
+  initContextMenuItemIds: function() {
+    Paperpile.PluginGridTrash.superclass.initContextMenuItemIds.call(this);
+
+    var ids = this.contextMenuItemIds;
+
+    ids.remove('EDIT');
+    ids.remove('DELETE');
+    ids.remove('MORE_FROM_MENU');
+
+    ids.insert(0, 'RESTORE');
+    ids.insert(1, 'DELETE');
+    ids.insert(2, this.createContextSeparator('TRASH_SPACE'));
+  },
+
+  updateButtons: function() {
+    Paperpile.PluginGridTrash.superclass.updateButtons.call(this);
+
+    // Fix up the delete button to reflext the permanency of deleting from trash.
+    this.actions['DELETE'].setText('Delete');
+    this.actions['DELETE'].setIconClass('pp-icon-delete');
+    this.actions['DELETE'].each(function(item) {
+      if (item['setTooltip']) {
+	item.setTooltip('Permanently delete selected references.');
       }
+      if (item.ownerCt.itemId == 'context') {
+	item.setText('Delete Permanently');
+      }
+    },this);
+
+    var selected = this.getSingleSelectionRecord();
+    if (!selected) {
+      this.actions['DELETE'].disable();
+      this.actions['RESTORE'].disable();
     }
-  },
 
-  updateContextItem: function(item, record) {
-    Paperpile.PluginGridTrash.superclass.updateContextItem.call(this, item, record);
-
-    if (item.itemId == this.actions['DELETE'].itemId) {
-      item.setIconClass('pp-icon-delete');
-      item.setText('Delete permanently');
+    if (this.getTotalCount() == 0) {
+      this.actions['EMPTY_TRASH'].disable();
     }
   },
 
@@ -95,21 +110,15 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   getMultipleSelectionTemplate: function() {
-
     var template = [
       '<div id="main-container-{id}">',
       '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
-      '  <tpl if="numSelected==0">',
-      '  <p>No references in here.</p>',
-      '  </tpl>',
-      '  <tpl if="numSelected &gt;0">',
       '    <p><b>{numSelected}</b> references selected.</p>',
       '    <div class="pp-vspace"></div>',
       '    <ul> ',
       '      <li class="pp-action pp-action-delete"> <a  href="#" class="pp-textlink" action="delete-ref">Delete permanently</a> </li>',
       '      <li class="pp-action pp-action-restore"> <a  href="#" class="pp-textlink" action="restore-ref">Restore</a> </li>',
       '    </ul>',
-      '  </tpl>',
       '  </div>',
       '</div>'];
     return[].concat(template);

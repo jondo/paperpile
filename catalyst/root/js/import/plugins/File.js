@@ -33,27 +33,21 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
     Paperpile.PluginGridFile.superclass.initComponent.call(this);
   },
 
-  createToolbarMenu: function() {
-    Paperpile.PluginGridFile.superclass.createToolbarMenu.call(this);
+  initToolbarMenuItemIds: function() {
+    Paperpile.PluginGridFile.superclass.initToolbarMenuItemIds.call(this);
+    
+    var ids = this.toolbarMenuItemIds;
 
-    this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
+    ids.remove('NEW');
+    ids.remove('DELETE');
   },
 
-  updateContextItem: function(menuItem, record) {
-    var superShow = Paperpile.PluginGridFile.superclass.updateContextItem.call(this, menuItem, record);
+  initContextMenuItemIds: function() {
+    Paperpile.PluginGridFile.superclass.initContextMenuItemIds.call(this);
+    
+    var ids = this.contextMenuItemIds;
 
-    if (menuItem.itemId == this.actions['DELETE'].itemId) {
-      menuItem.setVisible(false);
-    }
-
-    if (menuItem.itemId == this.actions['VIEW_PDF'].itemId) {
-      menuItem.setVisible(false);
-    }
-
-    if (menuItem.itemId == this.actions['EDIT'].itemId) {
-      menuItem.setVisible(false);
-    }
-
-    return superShow;
+    ids.remove('DELETE');
   }
+
 });

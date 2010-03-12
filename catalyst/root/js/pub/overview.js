@@ -36,10 +36,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     var sm = this.getGrid().getSelectionModel();
     this.grid_id = this.getGrid().id;
 
-    var numSelected = sm.getCount();
-    if (this.getGrid().allSelected) {
-      numSelected = this.getGrid().store.getTotalCount();
-    }
+    var numSelected = this.getGrid().getSelectionCount();
 
     if (numSelected == 1) {
 
@@ -111,7 +108,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       }
     } else {
       var d = {
-        numSelected: numSelected,
         id: this.id
       };
       this.oldData = d;
@@ -179,11 +175,23 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
   updateInfoMultiple: function(data) {
 
+    data.numSelected = this.getGrid().getSelectionCount();
+    data.totalCount = this.getGrid().getTotalCount();
+
     data.numImported = this.getGrid().getSelection('IMPORTED').length;
     data.allImported = this.getGrid().allImported;
     data.allSelected = this.getGrid().allSelected;
 
-    this.getGrid().getSidebarTemplate().multipleSelection.overwrite(this.body, data, true);
+    var templateToUse = null;
+    if (data.totalCount == 0) {
+      templateToUse = this.getGrid().getSidebarTemplate().emptyGrid;
+    } else if (data.numSelected == 0) {
+      templateToUse = this.getGrid().getSidebarTemplate().noSelection;
+    } else {
+      templateToUse = this.getGrid().getSidebarTemplate().multipleSelection;
+    }
+    templateToUse.overwrite(this.body,data,true);
+
     Ext.get('main-container-' + this.id).on('click', this.handleClick,
       this, {
         delegate: 'a'

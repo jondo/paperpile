@@ -45,12 +45,6 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
 
     Paperpile.PluginGridDuplicates.superclass.initComponent.call(this);
 
-    this.on('render', this.myOnRender, this);
-  },
-
-  createToolbarMenu: function() {
-    Paperpile.PluginGridDuplicates.superclass.createToolbarMenu.call(this);
-
     this.actions['CLEAN_ALL_DUPLICATES'] = new Ext.Action({
       text: 'Clean all duplicates',
       handler: this.cleanDuplicates,
@@ -60,27 +54,28 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
       tooltip: 'Automatically clean all duplicates'
     });
 
-    var tbar = this.getTopToolbar();
-
-    // Hide the add button.
-    this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
-
-    var filterFieldIndex = this.getButtonIndex(this.actions['SEARCH_TB_FILL'].itemId);
-    // We might eventually have this working, but for now it's unimplemented
-    // in the backend so leave it out of the toolbar.
-    //tbar.insertButton(filterFieldIndex + 1, this.actions['CLEAN_ALL_DUPLICATES']);
-    tbar.insertButton(filterFieldIndex + 1, this.actions['DELETE']);
+    this.on('render', this.myOnRender, this);
   },
 
-  updateToolbarItem: function(item) {
-    Paperpile.PluginGridDuplicates.superclass.updateToolbarItem.call(this, item);
+  initToolbarMenuItemIds: function() {
+    Paperpile.PluginGridFile.superclass.initToolbarMenuItemIds.call(this);    
+    var ids = this.toolbarMenuItemIds;
+    var fillIndex = ids.indexOf('TB_FILL');
 
-    if (item.itemId == this.actions['DELETE'].itemId) {
-      item.setIconClass('pp-icon-trash');
-      item.setText('Move to Trash');
-      var selected = this.getSelection().length;
-      (selected > 0 ? item.enable() : item.disable());
-    }
+    ids.remove('NEW');
+    ids.remove('DELETE');
+
+    ids.insert(fillIndex+1, 'DELETE'); // move the delete button to before the break.
+
+    // We might eventually have this working, but for now it's unimplemented
+    // in the backend so leave it out of the toolbar.
+    //ids.insert(fillIndex + 1, 'CLEAN_ALL_DUPLICATES');
+  },
+
+  initContextMenuItemIds: function() {
+    Paperpile.PluginGridFile.superclass.initContextMenuItemIds.call(this);
+    var ids = this.contextMenuItemIds;
+
   },
 
   myOnRender: function() {

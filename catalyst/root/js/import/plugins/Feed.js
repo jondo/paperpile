@@ -41,14 +41,10 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
 
   },
 
-  createToolbarMenu: function() {
-    Paperpile.PluginGridFeed.superclass.createToolbarMenu.call(this);
+  initToolbarMenuItemIds: function() {
+    Paperpile.PluginGridFeed.superclass.initToolbarMenuItemIds.call(this);
 
-    this.getToolbarByItemId(this.actions['NEW'].itemId).setVisible(false);
-  },
-
-  updateToolbarItem: function(item) {
-    Paperpile.PluginGridFolder.superclass.updateToolbarItem.call(this, item);
+    var ids = this.toolbarMenuItemIds;
+    ids.remove('NEW');
   }
-
 });
