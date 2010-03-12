@@ -115,39 +115,84 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.runningJobs = [];
 
-    //	this.loadKeys();
+    this.loadKeys();
   },
 
-  /*
-    keyMap:null,
-    loadKeys:function() {
-      this.keyMap = new Ext.KeyMap(document,[
-        {
-	  key: [Ext.EventObject.TAB,Ext.EventObject.W,Ext.EventObject.A],
-//	  ctrl:true,
-	  stopEvent:true,
-	  handler: this.controlPlus,
-	  scope:this
-	}
-      ]);
-    },
+  
+  keyMap:null,
+  loadKeys:function() {
+    this.keyMap = new Ext.KeyMap(document);
+		    
+    this.keyMap.addBinding({
+      key: [Ext.EventObject.TAB],
+      ctrl:true,
+      stopEvent: true,
+      handler:this.keyControlTab,
+      scope:this
+    });
 
-    controlPlus:function(e,t) {
-      var key = e.getKey();
-      log("Key!" + key);
-      switch (key) {
-      case Ext.EventManager.TAB:
-	e.stopEvent();
-	break;
-      case Ext.EventObject.W:
-	log("W!");
-	var curTab = Paperpile.main.tabs.getActiveTab();
-	Paperpile.main.tabs.remove(curTab);
-	e.stopEvent();
-	break;
+    this.keyMap.addBinding({
+      key: [Ext.EventObject.W],
+      ctrl:true,
+      stopEvent: true,
+      handler:this.keyControlW,
+      scope:this
+    });
+
+    this.keyMap.addBinding({
+      key: [Ext.EventObject.B],
+      ctrl:true,
+      shift:true,
+      stopEvent: true,
+      handler:this.keyControlShiftB,
+      scope:this
+    });
+
+  },
+
+  keyControlShiftB: function() {
+    var node = Paperpile.main.tree.getNodeById('FOLDER_ROOT');
+
+    Paperpile.status.showBusy('Running Quick Export');
+
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/plugins/export'),
+      params: {
+        source_node: node.id,
+	selection: 'all',
+        export_name: 'Bibfile',
+	export_out_format: 'bibtex',
+	export_out_file: Paperpile.main.globalSettings.user_home + '/' + 'export.bib'
+      },
+      success: function() {
+        Paperpile.status.clearMsg();
+      },
+      scope: this,
+      failure: function(response) {
+                  Paperpile.main.onError(response);
       }
-    },
-*/
+    });
+
+  },
+
+  keyControlTab:function() {
+    var tabs = Paperpile.main.tabs;
+    var items = tabs.items;
+    var currentTabIndex = items.indexOf(tabs.getActiveTab());
+
+    if (currentTabIndex == items.getCount()-1) {
+      tabs.setActiveTab(0);
+    } else {
+      tabs.setActiveTab(currentTabIndex+1);
+    }
+  },
+      
+  keyControlW: function() {
+    var curTab = Paperpile.main.tabs.getActiveTab();
+    if (curTab.closable) {
+      Paperpile.main.tabs.remove(curTab,true);
+    }
+  },
 
   // sel = 'ALL' or sha1s of selected pubs.
   deleteFromFolder: function(sel, grid, folder_id, refreshView) {

@@ -193,8 +193,6 @@ sub export : Local {
   my $source_node = $c->request->params->{source_node} || undef;
   my $selection   = $c->request->params->{selection}   || undef;
 
-  my $grid = $c->session->{"grid_$grid_id"};
-
   # Collect all export_ parameters for the export plugin
   my %export_params = ();
   foreach my $key ( keys %{ $c->request->params } ) {
@@ -215,7 +213,9 @@ sub export : Local {
 
   # Get data from results grid
   if ( defined $grid_id ) {
-    if ( $selection eq 'ALL' ) {
+    my $grid = $c->session->{"grid_$grid_id"};
+
+    if ( $selection =~ m/all/i ) {
       $data = $grid->all;
     } else {
       my @tmp;
@@ -244,6 +244,8 @@ sub export : Local {
       }
     );
 
+    print STDERR "  -> $node\n";
+
     # The rest is the same code as in "resultsgrid" to query an import plugin
     my %node_settings = %{ $node->getNodeValue };
     my %params        = ();
@@ -255,6 +257,9 @@ sub export : Local {
         $params{$newKey} = $node_settings{$key};
       }
     }
+
+    $params{name} = 'DB' if (!defined $params{name});
+
     if ( ( $params{name} eq 'DB' ) and ( not $params{file} ) ) {
       $params{file} = $c->session->{library_db};
     }
