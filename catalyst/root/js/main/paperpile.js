@@ -118,34 +118,41 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.loadKeys();
   },
 
-  
-  keyMap:null,
-  loadKeys:function() {
+  keyMap: null,
+  loadKeys: function() {
     this.keyMap = new Ext.KeyMap(document);
-		    
+
     this.keyMap.addBinding({
       key: [Ext.EventObject.TAB],
-      ctrl:true,
+      ctrl: true,
       stopEvent: true,
-      handler:this.keyControlTab,
-      scope:this
+      handler: this.keyControlTab,
+      scope: this
+    });
+
+    this.keyMap.addBinding({
+      key: [Ext.EventObject.A],
+      ctrl: true,
+      stopEvent: true,
+      handler: this.keyControlA,
+      scope: this
     });
 
     this.keyMap.addBinding({
       key: [Ext.EventObject.W],
-      ctrl:true,
+      ctrl: true,
       stopEvent: true,
-      handler:this.keyControlW,
-      scope:this
+      handler: this.keyControlW,
+      scope: this
     });
 
     this.keyMap.addBinding({
       key: [Ext.EventObject.B],
-      ctrl:true,
-      shift:true,
+      ctrl: true,
+      shift: true,
       stopEvent: true,
-      handler:this.keyControlShiftB,
-      scope:this
+      handler: this.keyControlShiftB,
+      scope: this
     });
 
   },
@@ -159,38 +166,44 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       url: Paperpile.Url('/ajax/plugins/export'),
       params: {
         source_node: node.id,
-	selection: 'all',
+        selection: 'all',
         export_name: 'Bibfile',
-	export_out_format: 'bibtex',
-	export_out_file: Paperpile.main.globalSettings.user_home + '/' + 'export.bib'
+        export_out_format: 'bibtex',
+        export_out_file: Paperpile.main.globalSettings.user_home + '/' + 'export.bib'
       },
       success: function() {
         Paperpile.status.clearMsg();
       },
       scope: this,
       failure: function(response) {
-                  Paperpile.main.onError(response);
+        Paperpile.main.onError(response);
       }
     });
 
   },
 
-  keyControlTab:function() {
+    keyControlA: function() {
+	var tab = Paperpile.main.tabs.getActiveTab();
+	var grid = tab.getGrid();
+	grid.selectAll();
+    },
+
+  keyControlTab: function() {
     var tabs = Paperpile.main.tabs;
     var items = tabs.items;
     var currentTabIndex = items.indexOf(tabs.getActiveTab());
 
-    if (currentTabIndex == items.getCount()-1) {
+    if (currentTabIndex == items.getCount() - 1) {
       tabs.setActiveTab(0);
     } else {
-      tabs.setActiveTab(currentTabIndex+1);
+      tabs.setActiveTab(currentTabIndex + 1);
     }
   },
-      
+
   keyControlW: function() {
     var curTab = Paperpile.main.tabs.getActiveTab();
     if (curTab.closable) {
-      Paperpile.main.tabs.remove(curTab,true);
+      Paperpile.main.tabs.remove(curTab, true);
     }
   },
 
@@ -242,9 +255,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       params: newSettings,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-	Paperpile.log(json);
+        Paperpile.log(json);
         for (var key in newSettings) {
-	  //Paperpile.log(newSettings);
+          //Paperpile.log(newSettings);
           //Paperpile.main.globalSettings[key] = newSettings[key];
         }
       },
