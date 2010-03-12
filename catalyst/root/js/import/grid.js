@@ -1,3 +1,20 @@
+/* Copyright 2009, 2010 Paperpile
+
+   This file is part of Paperpile
+
+   Paperpile is free software: you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Paperpile is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.  You should have received a
+   copy of the GNU General Public License along with Paperpile.  If
+   not, see http://www.gnu.org/licenses. */
+
+
 Paperpile.PluginGrid = function(config) {
   Ext.apply(this, config);
 
@@ -741,10 +758,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  <tpl if="linkout || doi">',
       '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
       '    <tpl if="doi">',
-      '      <p><a href="http://dx.doi.org/{doi}" target="_blank" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></p>',
+      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'http://dx.doi.org/{doi}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></p>',
       '    </tpl>',
       '    <tpl if="!doi && linkout">',
-      '      <p><a href="{linkout}" target="_blank" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></p>',
+      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'{linkout}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></p>',
       '    </tpl>',
       '    </div>',
       '  </tpl>',

@@ -1,1 +1,39 @@
-Nothing to see here, move along!
+This is the open source community version of Paperpile, a
+reference manager for the desktop and the web. See the 
+file COPYING for the license. 
+ 
+Paperpile is built on web-technologies, in particular
+Catalyst (catalystframework.org) and
+Titanium (appcelerator.com). At the moment, only Linux is
+supported but versions for OS X and Windows will follow soon.
+ 
+Please visit paperpile.com for news on the product and
+code.paperpile.org for information on Paperpile development.
+ 
+To build Paperpile from the source follow these steps (use
+linux32 or linux64 depending on your architecture):
+
+1. Checkout Paperpile:
+
+# git clone git@github.com:wash/paperpile.git
+
+2. Download Titanium runtime (optional)¶
+
+# cd build
+# ./perl.pl build.pl get_titanium
+
+3. Run Paperpile
+
+Titanium (standalone) version:
+
+# titanium/linux32/paperpile
+
+Via web-browser:
+
+# cd catalyst/script
+# ./start_linux32
+
+Open Paperpile on 127.0.0.1:3210
+
+For officially supported packages visit paperpile.com.
+

@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Controller::Ajax::Attachments;
 
 use strict;
@@ -25,18 +41,18 @@ sub attach_file : Local {
   my $sha1    = $c->request->params->{sha1};
   my $plugin  = $c->session->{"grid_$grid_id"};
 
-  my $pub      = $plugin->find_sha1($sha1);
+  my $pub = $plugin->find_sha1($sha1);
 
-  my $attached_file=$c->model('Library')->attach_file($file, $is_pdf, $rowid, $pub);
+  my $attached_file = $c->model('Library')->attach_file( $file, $is_pdf, $rowid, $pub );
 
-  if ($is_pdf){
+  if ($is_pdf) {
     $pub->pdf($attached_file);
   } else {
-    $pub->attachments($pub->attachments + 1);
+    $pub->attachments( $pub->attachments + 1 );
   }
 
-  my $update = $self->_collect_data([$pub],['pdf','attachments','_attachments_list']);
-  $c->stash->{data} = {pubs => $update};
+  my $update = $self->_collect_data( [$pub], [ 'pdf', 'attachments', '_attachments_list' ] );
+  $c->stash->{data} = { pubs => $update };
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -46,38 +62,41 @@ sub attach_file : Local {
 sub list_files : Local {
   my ( $self, $c ) = @_;
 
-  my $rowid  = $c->request->params->{rowid};
-  my $sha1 = $c->request->params->{sha1};
+  my $rowid = $c->request->params->{rowid};
+  my $sha1  = $c->request->params->{sha1};
 
-  my $sth = $c->model('Library')->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+  my $sth =
+    $c->model('Library')
+    ->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
   my ( $attachment_rowid, $file_name );
   $sth->bind_columns( \$attachment_rowid, \$file_name );
   $sth->execute;
 
-  my $paper_root=$c->model('Library')->get_setting('paper_root');
+  my $paper_root = $c->model('Library')->get_setting('paper_root');
 
-  my @output=();
+  my @output = ();
   while ( $sth->fetch ) {
 
-    my $abs=File::Spec->catfile( $paper_root, $file_name );
+    my $abs = File::Spec->catfile( $paper_root, $file_name );
 
-    my $link="/serve/$file_name";
+    my $link = "/serve/$file_name";
 
-    (my $suffix)=($link=~/\.(.*+$)/);
+    ( my $suffix ) = ( $link =~ /\.(.*+$)/ );
 
+    my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($abs);
 
-    my ($volume,$dirs,$base_name) = File::Spec->splitpath( $abs );
-
-    push @output, {file=>$base_name,
-                   path=>$abs,
-                   link=>$link,
-                   cls=>"file-$suffix",
-                   rowid=> $attachment_rowid};
+    push @output, {
+      file  => $base_name,
+      path  => $abs,
+      link  => $link,
+      cls   => "file-$suffix",
+      rowid => $attachment_rowid
+      };
 
   }
 
   $c->stash->{pubs} = {};
-  $c->stash->{pubs}->{$sha1} = {_attachments_list => [@output]};
+  $c->stash->{pubs}->{$sha1} = { _attachments_list => [@output] };
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
@@ -105,16 +124,18 @@ sub delete_file : Local {
 
   my $pub = $plugin->find_sha1($sha1);
   $pub->pdf('') if ($is_pdf);
-  $pub->attachments($pub->attachments - 1) if (!$is_pdf);
+  $pub->attachments( $pub->attachments - 1 ) if ( !$is_pdf );
 
   # not sure what this is for, needs testing. Have commented out
   # _remove_search jobs function for now
   if ($is_pdf) {
+
     #$pub->remove_search_jobs;
   }
 
-  my $update = $self->_collect_data([$pub],['attachments','_attachments_list','pdf','_search_job']);
-  $c->stash->{data} = {pubs => $update};
+  my $update =
+    $self->_collect_data( [$pub], [ 'attachments', '_attachments_list', 'pdf', '_search_job' ] );
+  $c->stash->{data} = { pubs => $update };
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 
@@ -123,9 +144,9 @@ sub delete_file : Local {
 sub undo_delete : Local {
   my ( $self, $c ) = @_;
 
-  my $undo_data=$c->session->{"undo_delete_attachment"};
+  my $undo_data = $c->session->{"undo_delete_attachment"};
 
-  delete($c->session->{undo_delete_attachment});
+  delete( $c->session->{undo_delete_attachment} );
 
   my $file   = $undo_data->{file};
   my $is_pdf = $undo_data->{is_pdf};
@@ -134,43 +155,41 @@ sub undo_delete : Local {
   my $sha1    = $undo_data->{sha1};
   my $plugin  = $c->session->{"grid_$grid_id"};
 
-  my $pub      = $plugin->find_sha1($sha1);
+  my $pub = $plugin->find_sha1($sha1);
 
-  my $attached_file=$c->model('Library')->attach_file($file, $is_pdf, $pub->_rowid, $pub);
+  my $attached_file = $c->model('Library')->attach_file( $file, $is_pdf, $pub->_rowid, $pub );
 
-  if ($is_pdf){
+  if ($is_pdf) {
     $pub->pdf($attached_file);
   } else {
-    $pub->attachments($pub->attachments + 1);
+    $pub->attachments( $pub->attachments + 1 );
   }
 
-  my $update = $self->_collect_data([$pub],['pdf','attachments','_attachments_list']);
-  $c->stash->{data} = {pubs => $update};
+  my $update = $self->_collect_data( [$pub], [ 'pdf', 'attachments', '_attachments_list' ] );
+  $c->stash->{data} = { pubs => $update };
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');
 
 }
 
-
 sub _collect_data {
   my ( $self, $pubs, $fields ) = @_;
 
-  $pubs = [$pubs] if (!ref $pubs eq 'ARRAY');
+  $pubs = [$pubs] if ( !ref $pubs eq 'ARRAY' );
 
   my %output = ();
   foreach my $pub (@$pubs) {
-    my $pub_fields = { };
-    my $hash = $pub->as_hash;
+    my $pub_fields = {};
+    my $hash       = $pub->as_hash;
     if ($fields) {
-      map {$pub_fields->{$_} = $hash->{$_}} @$fields;
+      map { $pub_fields->{$_} = $hash->{$_} } @$fields;
     } else {
       $pub_fields = $pub->as_hash;
     }
     $output{ $pub->sha1 } = $pub_fields;
   }
-  
+
   return \%output;
 }
-
 
 1;

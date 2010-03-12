@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Model::Library;
 
 use strict;
@@ -1480,25 +1496,27 @@ sub _remove_from_flatlist {
 
 }
 
+
 sub _snippets {
 
   my ( $self, $rowid, $offsets, $query, $search_pdf ) = @_;
 
-  my $table='Fulltext_citation';
+  my $table = 'Fulltext_citation';
 
-  if ($search_pdf){
-    $table='Fulltext_Full';
+  if ($search_pdf) {
+    $table = 'Fulltext_Full';
   }
 
-  if (not $query){
-    return ('','','');
+  if ( not $query ) {
+    return ( '', '', '' );
   }
 
-  my @terms=split(/\s+/,$query);
-  @terms=($query) if (not @terms);
+  my @terms = split( /\s+/, $query );
+  @terms = ($query) if ( not @terms );
 
-  foreach my $field (qw/key year journal title abstract notes author label labelid keyword folder text/){
-    $query=~s/$field://g;
+  foreach
+    my $field (qw/key year journal title abstract notes author label labelid keyword folder text/) {
+    $query =~ s/$field://g;
   }
 
   # Offset format is 4 integers separated by blank
@@ -1514,25 +1532,24 @@ sub _snippets {
 
   # 4. Number of bytes in the match.
 
-
   # This is the order of our fields in the fulltext table
-  my @fields = ('text','abstract','notes');
+  my @fields = ( 'text', 'abstract', 'notes' );
 
   # We don't have the 'text' field in the Fulltext_citation table
-  if (!$search_pdf){
-    @fields =('abstract', 'notes');
+  if ( !$search_pdf ) {
+    @fields = ( 'abstract', 'notes' );
   }
 
   my %snippets = ( text => '', abstract => '', notes => '' );
 
-  my $context=45; # Characters of context
+  my $context = 45;    # Characters of context
 
   while ( $offsets =~ /(\d+) (\d+) (\d+) (\d+)/g ) {
 
     # We only generate snippets for text, abstract and notes
     # (or abstract and notes if pdfs are not searched)
-    next if ( $1 > 2 and $search_pdf);
-    next if ( $1 > 1 and !$search_pdf);
+    next if ( $1 > 2 and $search_pdf );
+    next if ( $1 > 1 and !$search_pdf );
 
     my $field = $fields[$1];
 
@@ -1541,34 +1558,33 @@ sub _snippets {
       ( my $text ) = $self->dbh->selectrow_array("SELECT $field FROM $table WHERE rowid=$rowid ");
 
       # Convert to bytes to get offsets exactly
-      $text = encode('UTF-8', $text);
+      $text = encode( 'UTF-8', $text );
 
-      my $from=$3-$context;
-      $from=0 if $from<0;
+      my $from = $3 - $context;
+      $from = 0 if $from < 0;
 
-      my $snippet = substr( $text, $from, $4+2*$context );
+      my $snippet = substr( $text, $from, $4 + 2 * $context );
 
       # Convert back to unicode
-      $snippet = decode('UTF-8', $snippet);
+      $snippet = decode( 'UTF-8', $snippet );
 
       # Remove word fragments at beginning and start
-      $snippet=~s/\w+\b//;
-      $snippet=~s/\b\w+$//;
+      $snippet =~ s/\w+\b//;
+      $snippet =~ s/\b\w+$//;
 
-      $snippet="\x{2026}".$snippet."\x{2026}";
+      $snippet = "\x{2026}" . $snippet . "\x{2026}";
 
-      foreach my $term (@terms){
-        $snippet=~s/($query)/<span class="highlight">$1<\/span>/ig;
+      foreach my $term (@terms) {
+        $snippet =~ s/($query)/<span class="highlight">$1<\/span>/ig;
       }
 
-      $snippets{$field} = $snippet ;
+      $snippets{$field} = $snippet;
     }
   }
 
-  return ($snippets{text}, $snippets{abstract}, $snippets{notes});
+  return ( $snippets{text}, $snippets{abstract}, $snippets{notes} );
 
 }
-
 
 
 1;

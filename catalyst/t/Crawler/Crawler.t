@@ -25,7 +25,7 @@ my $tests = $crawler->get_tests;
 # For testing individual sites you can override the tests array and
 # put in your own test-cases
 
-$tests = { manual => ['http://www.nature.com/doifinder/10.1038/ng1108-1262'] };
+$tests = { manual => ['http://dx.doi.org/10.1371/journal.pone.0009371'] };
 
 foreach my $site ( keys %$tests ) {
   my $test_no = 1;

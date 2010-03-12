@@ -1,3 +1,20 @@
+
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Build;
 use Moose;
 
@@ -16,7 +33,6 @@ use File::Temp qw/tempdir /;
 use Digest::MD5;
 
 use YAML qw(LoadFile DumpFile);
-
 
 has cat_dir  => ( is => 'rw' );    # catalyst directory
 has ti_dir   => ( is => 'rw' );    # titanium directory
@@ -40,14 +56,13 @@ my %ignore = (
 
 );
 
-
 sub echo {
 
   my ( $self, $msg ) = @_;
 
   my ( $sec, $min, $hour, $day, $month, $year ) = (localtime)[ 0, 1, 2, 3, 4, 5 ];
   printf "[%02d/%02d/%04d %02d:%02d:%02d] %s\n",
-    $month+1, $day, $year + 1900, $hour, $min, $sec, $msg;
+    $month + 1, $day, $year + 1900, $hour, $min, $sec, $msg;
 
 }
 
@@ -69,7 +84,7 @@ sub initdb {
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn( "dbi:SQLite:" . "library.db" );
 
-  my $yaml = "../conf/fields.yaml";
+  my $yaml   = "../conf/fields.yaml";
   my $config = LoadFile($yaml);
   foreach my $field ( keys %{ $config->{pub_fields} } ) {
     $model->dbh->do("ALTER TABLE Publications ADD COLUMN $field TEXT");
@@ -152,18 +167,17 @@ sub make_dist {
 
   symlink "catalyst/root", "$dist_dir/$platform/Resources";
 
-
   # Update configuration file for current build
-  my $yaml = "$dist_dir/$platform/catalyst/conf/settings.yaml";
+  my $yaml   = "$dist_dir/$platform/catalyst/conf/settings.yaml";
   my $config = LoadFile($yaml);
 
   $config->{app_settings}->{platform} = $platform;
 
-  if ($build_number){
+  if ($build_number) {
     $config->{app_settings}->{build_number} = $build_number;
   }
 
-  DumpFile($yaml, $config);
+  DumpFile( $yaml, $config );
 
 }
 
@@ -199,6 +213,7 @@ sub minify {
     `cat $cat_dir/root/$file >> tmp.js`;
   }
   my @plugins = glob("$cat_dir/root/js/??port/plugins/*js");
+
   foreach my $file (@plugins) {
     `cat $file >> tmp.js`;
   }
@@ -208,7 +223,6 @@ sub minify {
   unlink('tmp.js');
 
 }
-
 
 ## Concatenate/minify Javascript and CSS
 
@@ -221,7 +235,8 @@ sub dump_includes {
   my $data = LoadFile("$cat_dir/data/resources.yaml");
 
   foreach my $file ( @{ $data->{css} } ) {
-    print '<link rel="stylesheet" type="text/css" charset="utf-8" href="/'.$file.'"></link>', "\n";
+    print '<link rel="stylesheet" type="text/css" charset="utf-8" href="/' . $file . '"></link>',
+      "\n";
   }
 
   my $curr_dir = `pwd`;
@@ -230,8 +245,8 @@ sub dump_includes {
   my @plugins = glob("js/??port/plugins/*js");
   chdir $curr_dir;
 
-  foreach my $file ( @{ $data->{js} }, @plugins  ) {
-    print '<script type="text/javascript" charset="utf-8" src="/'.$file.'"></script>', "\n";
+  foreach my $file ( @{ $data->{js} }, @plugins ) {
+    print '<script type="text/javascript" charset="utf-8" src="/' . $file . '"></script>', "\n";
   }
 
 }
@@ -271,7 +286,7 @@ sub get_titanium {
       $self->echo("Downloading runtime.");
       `wget -P $tmp_dir $url`;
 
-      if (!-e "$tmp_dir/$file_name"){
+      if ( !-e "$tmp_dir/$file_name" ) {
         $self->echo("Could not download runtime for $platform.");
         next;
       }
@@ -286,7 +301,6 @@ sub get_titanium {
   }
 
 }
-
 
 sub create_patch {
 
@@ -317,7 +331,7 @@ sub create_patch {
         push @listing, "A   $b_rel";
       } else {
         if ( -f $a && -f $b ) {
-          push @listing,  "M   $b_rel";
+          push @listing, "M   $b_rel";
           rcopy( $b, "$patch_dir/$b_rel" );
         } else {
 
@@ -329,14 +343,13 @@ sub create_patch {
     }
   );
 
-  open(DIFF, ">$patch_dir/__DIFF__");
+  open( DIFF, ">$patch_dir/__DIFF__" );
 
-  foreach my $line (@listing){
+  foreach my $line (@listing) {
     print DIFF "$line\n";
   }
 
 }
-
 
 sub file_stats {
 
@@ -356,8 +369,6 @@ sub file_stats {
   };
 
 }
-
-
 
 sub _get_list {
 

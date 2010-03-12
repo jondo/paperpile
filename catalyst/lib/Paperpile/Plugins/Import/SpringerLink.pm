@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Plugins::Import::SpringerLink;
 
 use Carp;
@@ -10,7 +26,6 @@ use 5.010;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
@@ -18,9 +33,7 @@ extends 'Paperpile::Plugins::Import';
 # The search query to be send to SpringerLink Portal
 has 'query' => ( is => 'rw' );
 
-
 my $searchUrl = 'http://springerlink.com/content/?hl=u&k=';
-
 
 sub BUILD {
   my $self = shift;
@@ -30,14 +43,13 @@ sub BUILD {
 sub connect {
   my $self = shift;
 
-  
   my $browser = Paperpile::Utils->get_browser;
 
   # Get the results
-  (my $tmp_query = $self->query) =~ s/\s+/+/g;
+  ( my $tmp_query = $self->query ) =~ s/\s+/+/g;
   my $response = $browser->get( $searchUrl . $tmp_query );
-  
-  my $content  = $response->content;
+
+  my $content = $response->content;
 
   # save first page in cache to speed up call to first page afterwards
   $self->_page_cache( {} );
@@ -70,14 +82,14 @@ sub page {
   # which has been retrieved in the connect function or send new query
   my $content = '';
   if ( $self->_page_cache->{$offset}->{$limit} ) {
-      $content = $self->_page_cache->{$offset}->{$limit};
+    $content = $self->_page_cache->{$offset}->{$limit};
   } else {
-      my $browser = Paperpile::Utils->get_browser;
-      (my $tmp_query = $self->query) =~ s/\s+/+/g;
-      my $response = $browser->get( $searchUrl . $tmp_query . '&o=' . $offset );
-      $content = $response->content;
+    my $browser = Paperpile::Utils->get_browser;
+    ( my $tmp_query = $self->query ) =~ s/\s+/+/g;
+    my $response = $browser->get( $searchUrl . $tmp_query . '&o=' . $offset );
+    $content = $response->content;
   }
-  
+
   # now we parse the HTML for entries
   my $tree = HTML::TreeBuilder::XPath->new;
   $tree->utf8_mode(1);
@@ -89,49 +101,49 @@ sub page {
     citations => [],
     urls      => [],
     bibtex    => [],
-    pdf       => []  
+    pdf       => []
   );
 
-  # Each entry is part of an unorder list 
-  my @nodes = $tree->findnodes('/html/body/*/*/*/*/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]');
-  
+  # Each entry is part of an unorder list
+  my @nodes =
+    $tree->findnodes('/html/body/*/*/*/*/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]');
+
   foreach my $node (@nodes) {
-      
-      # Title 
-      my ( $title, $author, $citation, $pdf, $url );
-      $title = $node->findvalue('./div[@class="listItemName"]/a');
 
-      # authors
-      my @author_nodes = $node->findnodes('./div[@class="listAuthors"]');
-      $author = $author_nodes[0]->as_text();
-      # for some reasons it might happen that there are now authors (book chapters)
-      # this will cuase problems with the sha key.
-      # in these cases we give Nomen Nescio - NN
-      $author = 'NN' if ($author eq '');
+    # Title
+    my ( $title, $author, $citation, $pdf, $url );
+    $title = $node->findvalue('./div[@class="listItemName"]/a');
 
-      # citation
-      my @citation_nodes = $node->findnodes('./div[@class="listParents"]');
-      $citation = $citation_nodes[0]->as_text();
+    # authors
+    my @author_nodes = $node->findnodes('./div[@class="listAuthors"]');
+    $author = $author_nodes[0]->as_text();
 
-      # PDF link
-      $pdf = $node->findvalue('./table/tr/td/a/@href');
-      $pdf = 'http://springerlink.com' . $pdf;
-      $pdf =~ s/pdf\/content.*html$/pdf/;
+    # for some reasons it might happen that there are now authors (book chapters)
+    # this will cuase problems with the sha key.
+    # in these cases we give Nomen Nescio - NN
+    $author = 'NN' if ( $author eq '' );
 
-      # URL linkout
-      $url = $node->findvalue('./div[@class="listItemName"]/a/@href');
-      $url = 'http://springerlink.com' . $url;
-      
-      print STDERR "URL :: $url\n";
+    # citation
+    my @citation_nodes = $node->findnodes('./div[@class="listParents"]');
+    $citation = $citation_nodes[0]->as_text();
 
+    # PDF link
+    $pdf = $node->findvalue('./table/tr/td/a/@href');
+    $pdf = 'http://springerlink.com' . $pdf;
+    $pdf =~ s/pdf\/content.*html$/pdf/;
 
-      push @{ $data{titles} }, $title;
-      push @{ $data{authors} }, $author;
-      push @{ $data{citations} }, $citation;
-      push @{ $data{pdf} }, $pdf;
-      push @{ $data{urls} }, $url;
+    # URL linkout
+    $url = $node->findvalue('./div[@class="listItemName"]/a/@href');
+    $url = 'http://springerlink.com' . $url;
+
+    print STDERR "URL :: $url\n";
+
+    push @{ $data{titles} },    $title;
+    push @{ $data{authors} },   $author;
+    push @{ $data{citations} }, $citation;
+    push @{ $data{pdf} },       $pdf;
+    push @{ $data{urls} },      $url;
   }
-
 
   # Write output list of Publication records with preliminary
   # information. We save to the helper fields _authors_display and
@@ -171,143 +183,150 @@ sub complete_details {
   ( my $self, my $pub ) = @_;
 
   my $browser = Paperpile::Utils->get_browser;
-  
+
   # Get the HTML page. I have tried to use the RIS export, but that
   # did not work. There seems to be a protection, can only be
   # used in the borwser.
-  print STDERR $pub->_details_link,"\n";
+  print STDERR $pub->_details_link, "\n";
   my $response = $browser->get( $pub->_details_link );
-  my $content = $response->content;
+  my $content  = $response->content;
 
   # now we parse the HTML for entries
   my $tree = HTML::TreeBuilder::XPath->new;
   $tree->utf8_mode(1);
   $tree->parse_content($content);
 
-  my $title = $tree->findvalue('/html/body/form/table/tr/td[2]/table/tr/td/div[2]/table/tr/td[2]/h2');
-  
+  my $title =
+    $tree->findvalue('/html/body/form/table/tr/td[2]/table/tr/td/div[2]/table/tr/td[2]/h2');
+
   # let's find the abstract first
   my $abstract = $tree->findvalue('/*/*/*/*/*/*/*/*/*/*/*/*/*/div[@class="Abstract"]');
   $abstract =~ s/^Abstract\s+//i;
 
   # Now we complete the other details
-  my @ids = $tree->findnodes('/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]/table/tr/td/table/tr/td[@class="labelName"');
-  my @values = $tree->findnodes('/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]/table/tr/td/table/tr/td[@class="labelValue"');
+  my @ids = $tree->findnodes(
+    '/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]/table/tr/td/table/tr/td[@class="labelName"');
+  my @values = $tree->findnodes(
+    '/*/*/*/*/*/*/*/*/*/div[@class="primitiveControl"]/table/tr/td/table/tr/td[@class="labelValue"'
+  );
 
   # We first build a nice hash, than we can see what stuff we have got
-  my %details = ( );
-  foreach my $i (0 .. $#ids) {
-      # It might happen that there is the same identifier more than once
-      if (defined $details{ $ids[$i]->as_text() }) {
-	  $details{ $ids[$i]->as_text() } .= "%%BREAK%%".$values[$i]->as_text();
-      } else {
-	  $details{ $ids[$i]->as_text() } = $values[$i]->as_text();
-      }
+  my %details = ();
+  foreach my $i ( 0 .. $#ids ) {
+
+    # It might happen that there is the same identifier more than once
+    if ( defined $details{ $ids[$i]->as_text() } ) {
+      $details{ $ids[$i]->as_text() } .= "%%BREAK%%" . $values[$i]->as_text();
+    } else {
+      $details{ $ids[$i]->as_text() } = $values[$i]->as_text();
+    }
   }
 
-  (my $journal, my $doi, my $volume, my $issue, my $pages, my $year, my $month, my $issn);
-  
+  ( my $journal, my $doi, my $volume, my $issue, my $pages, my $year, my $month, my $issn );
+
   # pages are easy
-  $pages = $details{'Pages'} if ($details{'Pages'});
+  $pages = $details{'Pages'} if ( $details{'Pages'} );
 
   # If there is a copyright field, then it is the year
-  $year = $details{'Copyright'} if ($details{'Copyright'});
+  $year = $details{'Copyright'} if ( $details{'Copyright'} );
 
   # sometimes Volume, Issue and Year are in this field
-  if ($details{'Issue'}) {
-      if ($details{'Issue'} =~ m/Volume\s(\d+)/) {
-	  $volume = $1;
-      }
-      if ($details{'Issue'} =~ m/Number\s(\d+)/) {
-	  $issue = $1;
-      }
-      if ($details{'Issue'} =~ m/(January|February|March|April|May|June|July|August|September|October|November|December)/) {
-	  $month = $1;
-      }
-      if ($details{'Issue'} =~ m/((19|20)\d\d)$/) {
-	  $year = $1 if (!$year);
-      }
+  if ( $details{'Issue'} ) {
+    if ( $details{'Issue'} =~ m/Volume\s(\d+)/ ) {
+      $volume = $1;
+    }
+    if ( $details{'Issue'} =~ m/Number\s(\d+)/ ) {
+      $issue = $1;
+    }
+    if ( $details{'Issue'} =~
+      m/(January|February|March|April|May|June|July|August|September|October|November|December)/ ) {
+      $month = $1;
+    }
+    if ( $details{'Issue'} =~ m/((19|20)\d\d)$/ ) {
+      $year = $1 if ( !$year );
+    }
   }
 
   # sometimes for book series, the volume might be a separate field
-  if ($details{'Volume'}) {
-      if ($details{'Volume'} =~ m/\s(\d+)/) {
-	  $volume = $1;
-      }
+  if ( $details{'Volume'} ) {
+    if ( $details{'Volume'} =~ m/\s(\d+)/ ) {
+      $volume = $1;
+    }
   }
 
   # there might be more DOIs. Usually, the DOI which is the longest
   # is the right one
-  if ($details{'DOI'}) {
-      my @tmp = split(/%%BREAK%%/, $details{'DOI'});
-      my $max = 0;
-      my $winner = -1;
-      foreach my $i (0 .. $#tmp) {
-	  if (length($tmp[$i]) > $max) {
-	      $max = length($tmp[$i]);
-	      $winner = $i;
-  }
+  if ( $details{'DOI'} ) {
+    my @tmp    = split( /%%BREAK%%/, $details{'DOI'} );
+    my $max    = 0;
+    my $winner = -1;
+    foreach my $i ( 0 .. $#tmp ) {
+      if ( length( $tmp[$i] ) > $max ) {
+        $max    = length( $tmp[$i] );
+        $winner = $i;
       }
-      $doi = $tmp[$winner];
+    }
+    $doi = $tmp[$winner];
   }
 
-  # ISSN 
-  if ($details{'ISSN'}) {
-      if ($details{'ISSN'} =~ m/(.*)\s\(Print/) {
-	  $issn = $1;
-      } else {
-	  $issn = $details{'ISNN'};
-      }
+  # ISSN
+  if ( $details{'ISSN'} ) {
+    if ( $details{'ISSN'} =~ m/(.*)\s\(Print/ ) {
+      $issn = $1;
+    } else {
+      $issn = $details{'ISNN'};
+    }
   }
-  
+
   # let's see if there is a journal entry, otherwise it will be
   # a book chapter
-  if ($details{'Journal'}) {
-      $journal = $details{'Journal'};
+  if ( $details{'Journal'} ) {
+    $journal = $details{'Journal'};
   }
-  if ($details{'Book Series'}) {
-      $journal = $details{'Book Series'};
+  if ( $details{'Book Series'} ) {
+    $journal = $details{'Book Series'};
   }
 
   # Now we prepare the authors correctly
-  my $authors_new = $tree->findvalue('/html/body/form/table/tr/td[2]/table/tr/td/table/tr/td/div[2]/p[@class="AuthorGroup"]');
+  my $authors_new = $tree->findvalue(
+    '/html/body/form/table/tr/td[2]/table/tr/td/table/tr/td/div[2]/p[@class="AuthorGroup"]');
   $authors_new =~ s/\d//g;
   $authors_new =~ s/\x{A0}/ /g;
   $authors_new =~ s/\s+,/,/g;
   $authors_new =~ s/,+/,/g;
   $authors_new =~ s/\s+/ /g;
-  my @authors_tmp = split(/,/, $authors_new );
+  my @authors_tmp = split( /,/, $authors_new );
+
   if ( $authors_tmp[$#authors_tmp] =~ m/(.+)(\sand\s)(.*)/ ) {
-      $authors_tmp[$#authors_tmp] = $1;
-      $authors_tmp[$#authors_tmp+1] = $3;
+    $authors_tmp[$#authors_tmp] = $1;
+    $authors_tmp[ $#authors_tmp + 1 ] = $3;
   }
   if ( $authors_tmp[$#authors_tmp] =~ m/^\sand\s(.+)/ ) {
-      $authors_tmp[$#authors_tmp] = $1;
+    $authors_tmp[$#authors_tmp] = $1;
   }
   my @authors = ();
   foreach my $entry (@authors_tmp) {
-      $entry =~ s/ü/\\"{u}/;
-      $entry =~ s/ö/\\"{o}/;
-      $entry =~ s/ä/\\"{a}/;    
-      push @authors,
-        Paperpile::Library::Author->new()->parse_freestyle( $entry )->bibtex();
+    $entry =~ s/ü/\\"{u}/;
+    $entry =~ s/ö/\\"{o}/;
+    $entry =~ s/ä/\\"{a}/;
+    push @authors, Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
   }
-   
+
   # Create a new Publication object
   my $full_pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
 
-  # Add new values 
-  $full_pub->title( $title )       if ( $title );
-  $full_pub->pages( $pages )       if ( $pages );
-  $full_pub->journal( $journal )   if ( $journal );
-  $full_pub->volume( $volume )     if ( $volume );
-  $full_pub->issue( $issue )       if ( $issue );
-  $full_pub->year( $year )         if ( $year );
-  $full_pub->issn( $issn )         if ( $issn );
-  $full_pub->abstract( $abstract ) if ( $abstract );
+  # Add new values
+  $full_pub->title($title)       if ($title);
+  $full_pub->pages($pages)       if ($pages);
+  $full_pub->journal($journal)   if ($journal);
+  $full_pub->volume($volume)     if ($volume);
+  $full_pub->issue($issue)       if ($issue);
+  $full_pub->year($year)         if ($year);
+  $full_pub->issn($issn)         if ($issn);
+  $full_pub->abstract($abstract) if ($abstract);
   $full_pub->authors( join( ' and ', @authors ) );
 
-  # Add values from the old object  
+  # Add values from the old object
   $full_pub->linkout( $pub->linkout );
   $full_pub->pdf_url( $pub->pdf_url );
 

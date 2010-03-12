@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Plugins::Import::OxfordJournals;
 
 use Carp;
@@ -9,30 +25,29 @@ use 5.010;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
 
 sub BUILD {
-    my $self = shift;
-    $self->plugin_name('OxfordJournals');
+  my $self = shift;
+  $self->plugin_name('OxfordJournals');
 }
 
 sub connect {
-    my $self = shift;
+  my $self = shift;
 
-    return 0;
+  return 0;
 }
 
 sub page {
-    ( my $self, my $offset, my $limit ) = @_;
+  ( my $self, my $offset, my $limit ) = @_;
 
-    my $page = [];
+  my $page = [];
 
-    $self->_save_page_to_hash($page);
+  $self->_save_page_to_hash($page);
 
-    return $page;
+  return $page;
 }
 
 sub complete_details {
@@ -59,7 +74,7 @@ sub complete_details {
     $doi,   $volume,  $issue,   $issn, $abstract, $pages
   );
 
-  my @meta_tags = $tree->findnodes('/html/head/meta[@name="citation_mjid"');
+  my @meta_tags = $tree->findnodes('/html/head/meta[@name="citation_mjid"]');
   if ( $#meta_tags == -1 ) {
     NetFormatError->throw( error => 'No meta tag named citation_mjid found.' );
   }
@@ -79,6 +94,26 @@ sub complete_details {
   # import the information from the BibTeX string
   $full_pub->import_string( $bibtex, 'BIBTEX' );
 
+  # It seems that there is some trouble with Bibtex export at OUP
+  # let's screen for missed information in the HTML meta tags
+
+  if ( !$full_pub->volume() ) {
+    my @tmp = $tree->findnodes('/html/head/meta[@name="citation_volume"]');
+    $full_pub->volume( $tmp[0]->attr('content') ) if ( $tmp[0] );
+  }
+  if ( !$full_pub->issue() ) {
+    my @tmp = $tree->findnodes('/html/head/meta[@name="citation_issue"]');
+    $full_pub->issue( $tmp[0]->attr('content') ) if ( $tmp[0] );
+  }
+  if ( !$full_pub->pmid() ) {
+    my @tmp = $tree->findnodes('/html/head/meta[@name="citation_pmid"]');
+    $full_pub->pmid( $tmp[0]->attr('content') ) if ( $tmp[0] );
+  }
+  if ( !$full_pub->pages() ) {
+    my @tmp = $tree->findnodes('/html/head/meta[@name="citation_firstpage"]');
+    $full_pub->pages( $tmp[0]->attr('content') ) if ( $tmp[0] );
+  }
+
   # bibtex import deactivates automatic refresh of fields
   # we force it now at this point
   $full_pub->_light(0);
@@ -96,7 +131,5 @@ sub complete_details {
 
   return $full_pub;
 }
-
-
 
 1;

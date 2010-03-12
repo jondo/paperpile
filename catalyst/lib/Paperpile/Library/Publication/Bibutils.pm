@@ -1,10 +1,25 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Library::Publication::Bibutils;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Data::Dumper;
 
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 use Paperpile::Utils;
 use Bibutils;
 
@@ -61,13 +76,11 @@ sub import_string {
 
   my @data = @{ $bu->get_data };
 
-  $self->_build_from_bibutils($data[0]);
+  $self->_build_from_bibutils( $data[0] );
 
   unlink($file_name);
 
-
 }
-
 
 sub _build_from_bibutils {
 
@@ -111,7 +124,7 @@ sub _build_from_bibutils {
   my ( $page_start,   $page_end );
 
   foreach my $field (@$data) {
-      
+
     if ( $field->{tag} ~~ ['TITLE'] ) {
       push @title_fields, $field;
     }
@@ -179,7 +192,6 @@ sub _build_from_bibutils {
 
 }
 
-
 # Get the correct fields depending on publication type and 'level'
 # Takes a list of title (or subtitle) fields encountered in one bibutiils entry
 # and returns the appropriate fields of the Publication object as hash.
@@ -196,8 +208,8 @@ sub _get_titles_from_bibutils {
     my $level      = $field->{level};
 
     if ( $type eq 'ARTICLE' ) {
-      $output{journal} = $curr_title if $level==1;
-      $output{title} = $curr_title if $level==0;
+      $output{journal} = $curr_title if $level == 1;
+      $output{title}   = $curr_title if $level == 0;
     }
 
     if ( $type ~~ [ 'MASTERSTHESIS', 'PHDTHESIS', 'TECHREPORT', 'MANUAL', 'UNPUBLISHED', 'MISC' ] )
@@ -219,7 +231,7 @@ sub _get_titles_from_bibutils {
     }
 
     if ( $type eq 'INCOLLECTION' ) {
-      $output{title}     = $curr_title if ($level == 0 and not $output{title});
+      $output{title}     = $curr_title if ( $level == 0 and not $output{title} );
       $output{chapter}   = $curr_title if $level == 0;
       $output{booktitle} = $curr_title if $level == 1;
       $output{series}    = $curr_title if $level == 2;
@@ -234,7 +246,6 @@ sub _get_titles_from_bibutils {
   return {%output};
 }
 
-
 sub _format_bibutils {
 
   my ($self) = @_;
@@ -242,15 +253,16 @@ sub _format_bibutils {
   my @output = ();
 
   if ( $self->pages ) {
-    my $level=0;
+    my $level = 0;
     if ( $self->pubtype eq 'INBOOK' ) {
-      $level=1;
+      $level = 1;
     }
-    if ($self->pages=~/(\d+)\s*-+\s*(\d+)/){
-      my ( $start, $end ) = ($1,$2);
+    if ( $self->pages =~ /(\d+)\s*-+\s*(\d+)/ ) {
+      my ( $start, $end ) = ( $1, $2 );
+
       # Don't know why INBOOK has level 1 and all other types level 0
       push @output, { tag => 'PAGESTART', data => $start, level => $level };
-      if ($end){
+      if ($end) {
         push @output, { tag => 'PAGEEND', data => $end, level => $level };
       }
     } else {
@@ -279,7 +291,9 @@ sub _format_bibutils {
   given ( $self->pubtype ) {
 
     when ('ARTICLE') {
-      push @output, {tag     => 'GENRE',  data  => 'periodical', level => 1};
+      push @output, {
+        tag => 'GENRE', data => 'periodical', level => 1
+      };
       push @output, { tag => 'GENRE',    data => 'academic journal', level => 1 };
       push @output, { tag => 'ISSUANCE', data => 'continuing',       level => 1 };
       push @output, { tag => 'RESOURCE', data => 'text',             level => 0 };
@@ -288,7 +302,7 @@ sub _format_bibutils {
       push @output, { tag => 'PARTMONTH', data => $month, level => 0 } if $month;
       push @output, { tag => 'PARTDAY',   data => $day,   level => 0 } if $day;
 
-      push @output, { tag => 'VOLUME',   data => $self->volume,   level => 0 } if $self->volume;
+      push @output, { tag => 'VOLUME', data => $self->volume, level => 0 } if $self->volume;
 
       push @output, $self->_format_title_bibutils( $self->journal, 1 );
       push @output, $self->_format_title_bibutils( $self->title,   0 );
@@ -296,7 +310,9 @@ sub _format_bibutils {
     }
 
     when ('MANUAL') {
-      push @output, {tag => 'GENRE', data => 'instruction', level => 0};
+      push @output, {
+        tag => 'GENRE', data => 'instruction', level => 0
+      };
       push @output, { tag => 'RESOURCE', data => 'text', level => 0 };
 
       push @output, { tag => 'YEAR',  data => $year,  level => 0 } if $year;
@@ -307,7 +323,9 @@ sub _format_bibutils {
     }
 
     when ('UNPUBLISHED') {
-      push @output, {tag => 'GENRE', data => 'unpublished', level => 0};
+      push @output, {
+        tag => 'GENRE', data => 'unpublished', level => 0
+      };
       push @output, { tag => 'RESOURCE', data => 'text', level => 0 };
 
       push @output, { tag => 'YEAR',  data => $year,  level => 0 } if $year;
@@ -319,7 +337,9 @@ sub _format_bibutils {
     }
 
     when ('PROCEEDINGS') {
-      push @output, {tag => 'GENRE', data => 'conference publication', level => 0};
+      push @output, {
+        tag => 'GENRE', data => 'conference publication', level => 0
+      };
       push @output, { tag => 'RESOURCE', data => 'text', level => 0 };
 
       push @output, { tag => 'YEAR',  data => $year,  level => 0 } if $year;
@@ -333,7 +353,9 @@ sub _format_bibutils {
     }
 
     when ('INPROCEEDINGS') {
-      push @output, { tag => 'GENRE', data => 'conference publication', level => 1 };
+      push @output, {
+        tag => 'GENRE', data => 'conference publication', level => 1
+      };
       push @output, { tag => 'RESOURCE', data => 'text', level => 0 };
 
       push @output, { tag => 'PARTYEAR',  data => $year,  level => 0 } if $year;
@@ -349,7 +371,9 @@ sub _format_bibutils {
     }
 
     when ('BOOK') {
-      push @output, {tag => 'GENRE', data => 'book', level => 0};
+      push @output, {
+        tag => 'GENRE', data => 'book', level => 0
+      };
       push @output, { tag => 'ISSUANCE', data => 'monographic', level => 0 };
       push @output, { tag => 'RESOURCE', data => 'text',        level => 0 };
 
@@ -357,7 +381,7 @@ sub _format_bibutils {
       push @output, { tag => 'MONTH', data => $month, level => 0 } if $month;
       push @output, { tag => 'DAY',   data => $day,   level => 0 } if $day;
 
-      push @output, { tag => 'VOLUME',   data => $self->volume,   level => 0 } if $self->volume;
+      push @output, { tag => 'VOLUME', data => $self->volume, level => 0 } if $self->volume;
 
       push @output, $self->_format_title_bibutils( $self->booktitle, 0 );
       push @output, $self->_format_title_bibutils( $self->series, 1 ) if $self->series;
@@ -365,7 +389,9 @@ sub _format_bibutils {
     }
 
     when ('INBOOK') {
-      push @output, {tag => 'GENRE', data => 'book', level => 1};
+      push @output, {
+        tag => 'GENRE', data => 'book', level => 1
+      };
       push @output, { tag => 'ISSUANCE', data => 'monographic', level => 1 };
       push @output, { tag => 'RESOURCE', data => 'text',        level => 0 };
 
@@ -377,14 +403,16 @@ sub _format_bibutils {
       push @output, $self->_format_title_bibutils( $self->booktitle, 1 );
       push @output, $self->_format_title_bibutils( $self->series, 2 ) if $self->series;
 
-      push @output, { tag => 'VOLUME',   data => $self->volume,   level => 2 } if $self->volume;
+      push @output, { tag => 'VOLUME', data => $self->volume, level => 2 } if $self->volume;
 
       $general_level = 1;
 
     }
 
     when ('INCOLLECTION') {
-      push @output, { tag => 'GENRE', data => 'collection', level => 1 };
+      push @output, {
+        tag => 'GENRE', data => 'collection', level => 1
+      };
       push @output, { tag => 'ISSUANCE', data => 'monographic', level => 0 };
       push @output, { tag => 'RESOURCE', data => 'text',        level => 0 };
 
@@ -401,7 +429,9 @@ sub _format_bibutils {
     }
 
     when ('TECHREPORT') {
-      push @output, { tag => 'GENRE', data => 'report', level => 0 };
+      push @output, {
+        tag => 'GENRE', data => 'report', level => 0
+      };
       push @output, { tag => 'RESOURCE', data => 'text', level => 0 };
 
       push @output, { tag => 'YEAR',  data => $year,  level => 0 } if $year;
@@ -413,7 +443,9 @@ sub _format_bibutils {
     }
 
     when ('PHDTHESIS') {
-      push @output, { tag => 'GENRE', data => 'thesis', level => 0};
+      push @output, {
+        tag => 'GENRE', data => 'thesis', level => 0
+      };
       push @output, { tag => 'GENRE',    data => 'Ph.D. thesis', level => 0 };
       push @output, { tag => 'RESOURCE', data => 'text',         level => 0 };
 
@@ -426,7 +458,9 @@ sub _format_bibutils {
     }
 
     when ('MASTERSTHESIS') {
-      push @output, { tag => 'GENRE', data => 'thesis', level => 0 };
+      push @output, {
+        tag => 'GENRE', data => 'thesis', level => 0
+      };
       push @output, { tag => 'GENRE',    data => 'Masters thesis', level => 0 };
       push @output, { tag => 'RESOURCE', data => 'text',           level => 0 };
 
@@ -439,7 +473,10 @@ sub _format_bibutils {
     }
 
     when ('MISC') {
-      push @output, { tag => 'YEAR',  data => $year,  level => 0 } if $year;
+      push @output, {
+        tag => 'YEAR', data => $year, level => 0
+      }
+      if $year;
       push @output, { tag => 'MONTH', data => $month, level => 0 } if $month;
       push @output, { tag => 'DAY',   data => $day,   level => 0 } if $day;
 
@@ -449,23 +486,23 @@ sub _format_bibutils {
   }
 
   my %map0 = (
-    'citekey'      => 'REFNUM',
-    'sortkey'      => 'BIBKEY',
-    'abstract'     => 'ABSTRACT',
-    'doi'          => 'DOI',
-    'isbn'         => 'ISBN',
-    'issn'         => 'ISSN',
-    'issue'        => 'ISSUE',
-    'number'       => 'NUMBER',
-    'annote'       => 'NOTES',
-    'url'          => 'URL',
-    'school'       => 'DEGREEGRANTOR:ASIS',
-    'keywords'     => 'KEYWORD',
+    'citekey'  => 'REFNUM',
+    'sortkey'  => 'BIBKEY',
+    'abstract' => 'ABSTRACT',
+    'doi'      => 'DOI',
+    'isbn'     => 'ISBN',
+    'issn'     => 'ISSN',
+    'issue'    => 'ISSUE',
+    'number'   => 'NUMBER',
+    'annote'   => 'NOTES',
+    'url'      => 'URL',
+    'school'   => 'DEGREEGRANTOR:ASIS',
+    'keywords' => 'KEYWORD',
   );
 
   my %map1 = (
-    'address'   => 'ADDRESS',
-    'publisher' => 'PUBLISHER',
+    'address'      => 'ADDRESS',
+    'publisher'    => 'PUBLISHER',
     'edition'      => 'EDITION',
     'organization' => 'AUTHOR:CORP',
   );
@@ -490,43 +527,41 @@ sub _format_bibutils {
   # testing and they are here reflected just to pass the test suite
   # and in the hope that this is not very important anyway.
 
-  if ($self->pubtype eq 'MANUAL'){
+  if ( $self->pubtype eq 'MANUAL' ) {
     push @output, { tag => 'TYPE', data => 'REPORT', level => 0 };
-  } elsif ($self->pubtype ~~ ['PHDTHESIS','MASTERSTHESIS']){
+  } elsif ( $self->pubtype ~~ [ 'PHDTHESIS', 'MASTERSTHESIS' ] ) {
     push @output, { tag => 'TYPE', data => $self->pubtype, level => 0 };
-    push @output, { tag => 'TYPE', data=>'THESIS', level => 0 };
-  } elsif ($self->pubtype ~~ ['TECHREPORT']){
-    push @output, { tag => 'TYPE', data=>'REPORT', level => 0 };
+    push @output, { tag => 'TYPE', data => 'THESIS', level => 0 };
+  } elsif ( $self->pubtype ~~ ['TECHREPORT'] ) {
+    push @output, { tag => 'TYPE', data => 'REPORT', level => 0 };
     push @output, { tag => 'TYPE', data => $self->pubtype, level => 0 };
-  } elsif ($self->pubtype ~~ ['UNPUBLISHED']){
-    push @output, { tag => 'TYPE', data=>'BOOK', level => 0 };
+  } elsif ( $self->pubtype ~~ ['UNPUBLISHED'] ) {
+    push @output, { tag => 'TYPE', data => 'BOOK', level => 0 };
   } else {
     push @output, { tag => 'TYPE', data => $self->pubtype, level => 0 };
   }
 
-
   return [@output];
 }
 
-sub _format_title_bibutils{
+sub _format_title_bibutils {
 
-  my ($self, $title,$level)=@_;
+  my ( $self, $title, $level ) = @_;
 
-  my @output=();
+  my @output = ();
 
-  if ($title){
-    if ($title =~/^(.*)\s*:\s*(.*)$/){
-      push @output, {tag=>'TITLE',data=>$1,level=>$level};
-      push @output, {tag=>'SUBTITLE',data=>$2,level=>$level};
+  if ($title) {
+    if ( $title =~ /^(.*)\s*:\s*(.*)$/ ) {
+      push @output, { tag => 'TITLE',    data => $1, level => $level };
+      push @output, { tag => 'SUBTITLE', data => $2, level => $level };
     } else {
-      push @output, {tag=>'TITLE',data=>$title,level=>$level};
+      push @output, { tag => 'TITLE', data => $title, level => $level };
     }
   }
 
   return @output;
 
 }
-
 
 # this code is similar to the function
 # bibtexout_type in bibtexout.c
@@ -612,34 +647,35 @@ sub _get_type_from_bibutils {
 
 }
 
-sub _format_author{
+sub _format_author {
 
-  my ($self, $string) = @_;
-  my ($first, $von, $last, $jr, $collective);
+  my ( $self, $string ) = @_;
+  my ( $first, $von, $last, $jr, $collective );
 
-
-  my @parts=split(/\|/,$string);
+  my @parts = split( /\|/, $string );
 
   # No second name is given. For example due to wrong Bibtex: Schuster
   # P. (no comma).  When we are sure that this is an error because it
   # is obviously a name we parse it. Otherwise we convert it to a
   # collective author.
 
-  if (scalar @parts > 1 and $parts[0] eq ''){
+  if ( scalar @parts > 1 and $parts[0] eq '' ) {
+
     #binmode STDERR, ":utf8";
     #print STDERR "$string\n";
-    my $merged=join(' ',@parts);
-    $merged=~s/^\s+//;
+    my $merged = join( ' ', @parts );
+    $merged =~ s/^\s+//;
+
     #print STDERR "$merged\n";
 
     # match Stadler P. F. and that like
-    if ($merged=~/^([A-Z]\w+) (([A-Z]\.?)( [A-Z]\.?)?)$/){
-      $last=$1;
-      $first=$2;
+    if ( $merged =~ /^([A-Z]\w+) (([A-Z]\.?)( [A-Z]\.?)?)$/ ) {
+      $last  = $1;
+      $first = $2;
     } else {
-      $collective=$merged;
-      $last='';
-      $first='';
+      $collective = $merged;
+      $last       = '';
+      $first      = '';
     }
   }
 
@@ -649,14 +685,14 @@ sub _format_author{
 
   # author without first names do not exist to my knowledge. We
   # interpret this as collective name,
-  elsif (scalar @parts == 1){
+  elsif ( scalar @parts == 1 ) {
     $collective = $parts[0];
-    $last='';
-    $first='';
+    $last       = '';
+    $first      = '';
   } else {
 
-    $last=$parts[0];
-    $first=join(" ", @parts[1..$#parts]);
+    $last = $parts[0];
+    $first = join( " ", @parts[ 1 .. $#parts ] );
 
     # von and jr currently not handled explicitely Bibutils does not
     # seem to handle suffix (at least for pubmed); so we leave them
@@ -664,28 +700,24 @@ sub _format_author{
 
   }
 
-  if ($collective){
-    return '{'.$collective.'}';
+  if ($collective) {
+    return '{' . $collective . '}';
   }
 
-  my $output='';
+  my $output = '';
 
-  $output.=$von." " if ($von); #?? Check this
+  $output .= $von . " " if ($von);    #?? Check this
 
-  $output.=$last.", ";
-  $output.=$jr.", " if ($jr);
-  $output.=$first;
+  $output .= $last . ", ";
+  $output .= $jr . ", " if ($jr);
+  $output .= $first;
 
   return $output;
 
 }
 
-
-
 no Moose;
 
 __PACKAGE__->meta->make_immutable;
-
-
 
 1;

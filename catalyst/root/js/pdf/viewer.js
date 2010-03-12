@@ -1,3 +1,19 @@
+/* Copyright 2009, 2010 Paperpile
+
+   This file is part of Paperpile
+
+   Paperpile is free software: you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Paperpile is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.  You should have received a
+   copy of the GNU General Public License along with Paperpile.  If
+   not, see http://www.gnu.org/licenses. */
+
 Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
   id: '',
   pageN: 0,
@@ -97,12 +113,12 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.on('render', function() {
       if (this.specialZoom != '') {
         var currentWidth = this.getRealWidth();
-	if (currentWidth > this.maxInitialWidth) {
-	    this.specialZoom = '';
-	  var scaleBy = this.maxInitialWidth / currentWidth;
-	  this.currentZoom = this.currentZoom * scaleBy;
-	  this.updateZoom();
-	}
+        if (currentWidth > this.maxInitialWidth) {
+          this.specialZoom = '';
+          var scaleBy = this.maxInitialWidth / currentWidth;
+          this.currentZoom = this.currentZoom * scaleBy;
+          this.updateZoom();
+        }
       }
     },
     this, {
@@ -168,7 +184,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         fieldLabel: 'Search',
         triggerClass: 'x-form-search-trigger',
         onTriggerClick: function(e) {
-	  this.scope.searchDelay();
+          this.scope.searchDelay();
         },
         width: 100,
         listeners: {
@@ -316,13 +332,13 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     this.tbItems['ZOOM_IN'] = new Ext.Button({
       handler: this.zoomIn,
-      icon: "/images/icons/zoom-in.gif",
+      icon: "/images/icons/zoom-in.png",
       tooltip: "Zoom In",
       scope: this
     });
     this.tbItems['ZOOM_OUT'] = new Ext.Button({
       handler: this.zoomOut,
-      icon: "/images/icons/zoom-out.gif",
+      icon: "/images/icons/zoom-out.png",
       tooltip: "Zoom Out",
       scope: this
     });
@@ -396,8 +412,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
         xtype: 'tbseparator'
       },
       this.tbItems['ZOOM_MENU'],
-      this.tbItems['ZOOM_OUT'],
-      this.tbItems['ZOOM_IN'], {
+      this.tbItems['ZOOM_IN'],
+      this.tbItems['ZOOM_OUT'], {
         xtype: 'tbseparator'
       },
       this.tbItems['SEARCH_FIELD']],

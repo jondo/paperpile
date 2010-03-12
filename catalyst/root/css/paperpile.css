@@ -1,3 +1,21 @@
+/*
+ Copyright 2009, 2010 Paperpile
+
+ This file is part of Paperpile
+
+ Paperpile is free software: you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Paperpile is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.  You should have received a
+ copy of the GNU General Public License along with Paperpile.  If
+ not, see http://www.gnu.org/licenses.
+*/
+
 
 /*** Generic styles ****/
 
@@ -787,6 +805,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/weather_clouds.png')!important;
 }
 
+.pp-icon-feedback{
+    background-image: url('/images/icons/feedback_small.png')!important;
+}
+
 .pp-icon-duplicates{
     background-image: url('/images/icons/duplicates.png')!important;
 }
@@ -893,6 +915,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     padding: 2 2 2 22;
     background: transparent url('/images/icons/pause.png') no-repeat;
 }
+
+.pp-messagebox-feedback {
+    background: transparent url('/images/icons/feedback.png') no-repeat;
+}
+
 
 
 /**** Abstract ****/
@@ -1737,6 +1764,14 @@ table.pp-meta-form {
     padding: 5px;
 } 
 
+.pp-feed-chooser .active {
+    background-color: #F2F5A9;
+}
+
+.pp-feed-chooser .x-form-item {
+    padding: 5px;
+    margin:5px;
+}
 
 .pp-meta-form td.active {
     background-color: #F2F5A9;

@@ -1,10 +1,26 @@
+/* Copyright 2009, 2010 Paperpile
+
+   This file is part of Paperpile
+
+   Paperpile is free software: you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Paperpile is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.  You should have received a
+   copy of the GNU General Public License along with Paperpile.  If
+   not, see http://www.gnu.org/licenses. */
+
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('Paperpile');
 
 IS_TITANIUM = !(window['Titanium'] == undefined);
 
 Paperpile.Url = function(url) {
-  return (IS_TITANIUM) ? 'http://127.0.0.1:3000' + url : url;
+  return (IS_TITANIUM) ? 'http://127.0.0.1:3210' + url : url;
 };
 
 Paperpile.log = function() {
@@ -39,7 +55,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               autoEl: {
                 cls: 'pp-main-toolbar-label',
                 tag: 'div',
-                html: 'Paperpile 0.4 preview'
+                id: 'version-tag'
               }
             }), {
               xtype: 'tbfill'
@@ -220,7 +236,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     // If it is an absolute path it is the temporary copy in the tmp
     // folder, otherwise it is stored under the paper_root folder and
     // we need to append the paper_root
-    if (!Paperpile.utils.isAbsolute(path)){
+    if (!Paperpile.utils.isAbsolute(path)) {
       path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
     }
 
@@ -241,16 +257,64 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         text: 'PDF files',
         suffix: ['pdf']
       }],
+
       callback: function(button, path) {
         if (button == 'OK') {
+
+          // First count the PDFs
           Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/pdfextract/submit'),
+            url: Paperpile.Url('/ajax/pdfextract/count_files'),
             params: {
               path: path
             },
             success: function(response) {
-              Paperpile.main.queueUpdate();
-            }
+              var json = Ext.util.JSON.decode(response.responseText);
+
+              var submitFn = function() {
+                Ext.Ajax.request({
+                  url: Paperpile.Url('/ajax/pdfextract/submit'),
+                  params: {
+                    path: path
+                  },
+                  success: function(response) {
+                    Paperpile.main.queueUpdate();
+                  },
+                  failure: Paperpile.main.onError
+                })
+              };
+
+              // Show error message and stop if no PDFs found
+              if (json.count == 0) {
+                Paperpile.status.updateMsg({
+                  type: 'error',
+                  msg: 'No PDFs found in the selected folder.',
+                  hideOnClick: true
+                });
+                return;
+              }
+              // Warn user before large batch of PDFs is imported
+              if (json.count > 10) {
+                Ext.MessageBox.buttonText.ok = "Start import";
+
+                Ext.Msg.show({
+                  title: 'PDF Import',
+                  msg: json.count + ' PDF files found. Do you want to import them now?',
+                  animEl: 'elId',
+                  icon: Ext.MessageBox.INFO,
+                  buttons: Ext.Msg.OKCANCEL,
+                  fn: function(btn) {
+                    if (btn === 'ok') {
+                      submitFn();
+                    }
+                    Ext.MessageBox.buttonText.ok = "Ok";
+                  }
+                });
+              } else {
+                // Start import silently if less than 10 PDFs
+                submitFn();
+              }
+            },
+            failure: Paperpile.main.onError
           });
         }
       }
@@ -305,8 +369,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       {
         text: 'All files',
         suffix: ['ALL']
-      }
-      ],
+      }],
 
       callback: function(button, path) {
         if (button == 'OK') {
@@ -552,7 +615,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               buttons: Ext.Msg.OKCANCEL,
               fn: function(btn) {
                 if (btn === 'ok') {
-                  Paperpile.main.reportError(error);
+                  Paperpile.main.reportError('CRASH', error.msg);
                 }
                 Ext.MessageBox.buttonText.ok = "Ok";
               }
@@ -571,21 +634,73 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
-  reportError: function(error) {
+  reportPdfDownloadError: function(info) {
+
+    Ext.MessageBox.buttonText.ok = "Send error report";
+    Ext.Msg.show({
+      title: 'Feedback',
+      msg: 'Paperpile failed to download a PDF. If you have full-text access to that PDF this should not have happened.\
+            Please help us to get this fixed by sending an error report.',
+      animEl: 'elId',
+      icon: 'pp-messagebox-feedback',
+      buttons: Ext.Msg.OKCANCEL,
+      fn: function(btn) {
+        if (btn === 'ok') {
+          Paperpile.main.reportError('PDF_DOWNLOAD', info);
+        }
+        Ext.MessageBox.buttonText.ok = "Ok";
+      }
+    });
+  },
+
+  reportPdfMatchError: function(info) {
+
+    Ext.MessageBox.buttonText.ok = "Send error report";
+    Ext.Msg.show({
+      title: 'Feedback',
+      msg: 'Paperpile failed to automatically import your PDF. Please help us to get this fixed by sending an error report.<br>\
+            Note: This will upload the PDF to our bug-tracking system. We will only use it to identify the problem and delete it afterwards.',
+      animEl: 'elId',
+      icon: 'pp-messagebox-feedback',
+      buttons: Ext.Msg.OKCANCEL,
+      fn: function(btn) {
+        if (btn === 'ok') {
+          Paperpile.main.reportError('PDF_MATCH', info);
+        }
+        Ext.MessageBox.buttonText.ok = "Ok";
+      }
+    });
+  },
+
+  // Type: CRASH, PDF_DOWNLOAD, PDF_IMPORT
+  reportError: function(type, info) {
+
+    var url = '/ajax/misc/report_crash';
+
+    if (type === 'PDF_DOWNLOAD') {
+      url = '/ajax/misc/report_pdf_download_error';
+    }
+
+    if (type === 'PDF_MATCH') {
+      url = '/ajax/misc/report_pdf_match_error';
+    }
 
     // Turn off logging to avoid logging the log when it is sent
     // to the backend...
-    Paperpile.isLogging = false;
+    Paperpile.isLogging = 0;
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/misc/report_error'),
+      url: Paperpile.Url(url),
       params: {
-        error: error.msg,
+        info: info,
         catalyst_log: Paperpile.serverLog
       },
       scope: this,
       success: function() {
-        // Turn on logging again
-        Paperpile.isLogging = true;
+        // Turn on logging again. Wait 10 seconds to make sure it is
+        // turned off when the actual log is written.
+        (function() {
+          Paperpile.isLogging = 1;
+        }).defer(10000);
       }
     });
   },

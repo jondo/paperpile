@@ -1,3 +1,20 @@
+/* Copyright 2009, 2010 Paperpile
+
+   This file is part of Paperpile
+
+   Paperpile is free software: you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Paperpile is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.  You should have received a
+   copy of the GNU General Public License along with Paperpile.  If
+   not, see http://www.gnu.org/licenses. */
+
+
 Paperpile.SearchDownloadWidget = Ext.extend(Object, {
 
   constructor: function(config) {
@@ -39,8 +56,8 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
     } else if (data._search_job) {
       if (data._search_job.error) {
         var el = [
-          '<div class="pp-box-error">' + data._search_job.error,
-          '<br><a href="#" class="pp-textlink" action="clear-download">Clear</a>',
+          '<div class="pp-box-error"><p>' + data._search_job.error + '</p>',
+          '<p><a href="#" class="pp-textlink" action="report-download-error">Get this fixed</a> | <a href="#" class="pp-textlink" action="clear-download">Clear</a></p>',
           '</div>'];
         Ext.DomHelper.overwrite(rootEl, el);
         this.progressBar = null;
@@ -95,7 +112,7 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
         '    <a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a>',
         '  </li>',
         '</ul>'];
-      //oldContent.remove();
+
       Ext.DomHelper.overwrite(rootEl, el);
       this.progressBar = null;
     }

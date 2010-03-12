@@ -1,3 +1,20 @@
+
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Job;
 
 use Moose;
@@ -82,7 +99,9 @@ sub BUILD {
   else {
     $self->_file( File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id ) );
     $self->restore;
-    $self->pub->refresh_job_fields($self);
+    if ($self->pub) {
+      $self->pub->refresh_job_fields($self);
+    }
   }
 }
 
@@ -482,13 +501,14 @@ sub as_hash {
   
   $hash{message} = $self->get_message;
 
-  $hash{citekey}  = $self->pub->citekey;
-  $hash{title}    = $self->pub->title;
-  $hash{doi}    = $self->pub->doi;
-  $hash{citation} = $self->pub->_citation_display;
-  $hash{authors}  = $self->pub->_authors_display;
-  $hash{pdf}  = $self->pub->pdf;
-
+  if (defined $self->pub) {
+    $hash{citekey}  = $self->pub->citekey;
+    $hash{title}    = $self->pub->title;
+    $hash{doi}    = $self->pub->doi;
+    $hash{citation} = $self->pub->_citation_display;
+    $hash{authors}  = $self->pub->_authors_display;
+    $hash{pdf}  = $self->pub->pdf;
+  }
   return {%hash};
 
 }
@@ -661,16 +681,26 @@ sub _download {
       if ( $res->header("X-Died") =~ /CANCEL/ ) {
         UserCancel->throw( error => $self->noun . ' canceled.' );
       } else {
+        if ( $res->code == 403 ) {
+          NetGetError->throw(
+            'Could not download PDF. Your institution might need a subscription for the journal!');
+        } else {
+          NetGetError->throw(
+            error => 'Download error (' . $res->header("X-Died") . ').',
+            code  => $res->code,
+          );
+        }
+      }
+    } else {
+      if ( $res->code == 403 ) {
         NetGetError->throw(
-          error => 'Download error (' . $res->header("X-Died") . ').',
+          'Could not download PDF. Your institution might need a subscription for the journal!');
+      } else {
+        NetGetError->throw(
+          error => 'Download error (' . $res->message . ').',
           code  => $res->code,
         );
       }
-    } else {
-      NetGetError->throw(
-        error => 'Download error ('. $res->message . ').',
-        code  => $res->code,
-      );
     }
   }
 

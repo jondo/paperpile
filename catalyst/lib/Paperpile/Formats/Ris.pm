@@ -10,9 +10,5 @@ sub BUILD {
   $self->writable(1);
 }
 
-
-
 1;
-
-
 

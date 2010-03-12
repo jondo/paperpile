@@ -1,10 +1,25 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Controller::Screens;
 
 use strict;
 use warnings;
 use Data::Dumper;
 use parent 'Catalyst::Controller';
-
 
 sub patterns : Local {
   my ( $self, $c ) = @_;
@@ -30,8 +45,7 @@ sub credits : Local {
   $c->forward('Paperpile::View::Mason');
 }
 
-
-sub flash_container: Local {
+sub flash_container : Local {
 
   my ( $self, $c ) = @_;
   $c->stash->{template} = '/screens/flash_container.mas';
@@ -40,8 +54,6 @@ sub flash_container: Local {
   $c->forward('Paperpile::View::Mason');
 
 }
-
-
 
 sub dashboard : Local {
   my ( $self, $c ) = @_;
@@ -56,7 +68,5 @@ sub dashboard : Local {
   $c->stash->{template} = '/screens/dashboard.mas';
   $c->forward('Paperpile::View::Mason');
 }
-
-
 
 1;

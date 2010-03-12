@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Controller::Ajax::Tree::Private;
 
 use strict;
@@ -70,7 +86,6 @@ sub get_default_tree : Private {
 
   # Initialize
   $c->forward( 'get_tags', [$tags] );
-
 
   #### / Local Library / Trash
 
@@ -215,7 +230,7 @@ sub get_default_tree : Private {
         iconCls => 'pp-icon-import-pdf',
         qtip    => 'Import one or more PDFs to your library',
         hidden  => 0,
-        builtin      => 1,
+        builtin => 1,
       }
     )
   );
@@ -254,8 +269,16 @@ sub get_default_tree : Private {
     )
   );
 
-
-
+  $plugins->addChild(
+    Tree::Simple->new( {
+        type    => 'FEEDBACK',
+        text    => 'Feedback',
+        iconCls => 'pp-icon-feedback',
+        hidden  => 0,
+        builtin => 1,
+      }
+    )
+  );
 
   return $root;
 }

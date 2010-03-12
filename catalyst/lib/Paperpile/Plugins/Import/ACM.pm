@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.  You should have received a
+# copy of the GNU General Public License along with Paperpile.  If
+# not, see http://www.gnu.org/licenses.
+
 package Paperpile::Plugins::Import::ACM;
 
 use Carp;
@@ -11,7 +27,6 @@ use 5.010;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
-use Paperpile::Library::Journal;
 use Paperpile::Utils;
 
 extends 'Paperpile::Plugins::Import';
@@ -25,21 +40,22 @@ has 'query' => ( is => 'rw' );
 my $searchUrl = 'http://portal.acm.org/results.cfm?coll=Portal&dl=GUIDE&termshow=matchall&query=';
 
 sub _EscapeString {
-    my $string = $_[0];
-    
-    # remove leading spaces
-    $string =~ s/^\s+//;
-    # remove spaces at the end
-    $string =~ s/\s+$//;
+  my $string = $_[0];
 
-    # escape each single word and finally join
-    # with plus signs
-    my @tmp = split( /\s+/, $string );
-    foreach my $i ( 0 .. $#tmp ) {
-	$tmp[$i] = uri_escape_utf8( $tmp[$i] );
-    }
-    
-    return join( "+", @tmp );
+  # remove leading spaces
+  $string =~ s/^\s+//;
+
+  # remove spaces at the end
+  $string =~ s/\s+$//;
+
+  # escape each single word and finally join
+  # with plus signs
+  my @tmp = split( /\s+/, $string );
+  foreach my $i ( 0 .. $#tmp ) {
+    $tmp[$i] = uri_escape_utf8( $tmp[$i] );
+  }
+
+  return join( "+", @tmp );
 }
 
 sub BUILD {
@@ -50,14 +66,13 @@ sub BUILD {
 sub connect {
   my $self = shift;
 
-  
   my $browser = Paperpile::Utils->get_browser;
 
   # Get the results
-  my $tmp_query = _EscapeString($self->query);
-  my $response = $browser->get( $searchUrl . $tmp_query );
-  
-  my $content  = $response->content;
+  my $tmp_query = _EscapeString( $self->query );
+  my $response  = $browser->get( $searchUrl . $tmp_query );
+
+  my $content = $response->content;
 
   # save first page in cache to speed up call to first page afterwards
   $self->_page_cache( {} );
@@ -90,68 +105,67 @@ sub page {
   # which has been retrieved in the connect function or send new query
   my $content = '';
   if ( $self->_page_cache->{$offset}->{$limit} ) {
-      $content = $self->_page_cache->{$offset}->{$limit};
+    $content = $self->_page_cache->{$offset}->{$limit};
   } else {
-      my $browser = Paperpile::Utils->get_browser;
-      my $nr = $offset+1;
-      (my $tmp_query = $self->query) =~ s/\s+/+/g;
-      my $response = $browser->get( $searchUrl . $tmp_query . '&start=' . $nr );
-      $content = $response->content;
+    my $browser = Paperpile::Utils->get_browser;
+    my $nr      = $offset + 1;
+    ( my $tmp_query = $self->query ) =~ s/\s+/+/g;
+    my $response = $browser->get( $searchUrl . $tmp_query . '&start=' . $nr );
+    $content = $response->content;
   }
-  
+
   # now we parse the HTML for entries
   my $tree = HTML::TreeBuilder::XPath->new;
   $tree->utf8_mode(1);
   $tree->parse_content($content);
- 
+
   my %data = (
     authors   => [],
     titles    => [],
     citations => [],
     urls      => [],
     bibtex    => [],
-    pdf       => []  
+    pdf       => []
   );
 
-  # Each entry is part of an unorder list 
+  # Each entry is part of an unorder list
   my @nodes = $tree->findnodes('/html/body/table/tr/td/table/tr[@valign="top"]/td/table');
   foreach my $node (@nodes) {
-      
-      # Title is easy
-      my ( $title, $author, $citation, $pdf, $url );
-      $title = $node->findvalue('./tr/td/a[@class="medium-text"]');
 
-      # Sometime authors are linked out, sometimes not
-      my @author_nodes = $node->findnodes('./tr/td/div/a');
-      if ($#author_nodes > -1) {
-	  my @tmp = ( );
-	  foreach my $author_node (@author_nodes) {
-	      push @tmp, @{$author_node->{_content}};
-	  }
-	  $author = join(", ",@tmp) if ($#tmp > -1);
-     } else {
-	  $author = $node->findvalue('./tr/td/div[@class="authors"]');
-     }
+    # Title is easy
+    my ( $title, $author, $citation, $pdf, $url );
+    $title = $node->findvalue('./tr/td/a[@class="medium-text"]');
 
-      # Citation can be found easily, we add also the year
-      $citation = $node->findvalue('./tr/td/div[@class="addinfo"]');
-      if ($node->findvalue('./tr/td[@class="small-text"]') =~ m/.*\s(\d+)\s.*/) {
-	  $citation .= " ($1)";
+    # Sometime authors are linked out, sometimes not
+    my @author_nodes = $node->findnodes('./tr/td/div/a');
+    if ( $#author_nodes > -1 ) {
+      my @tmp = ();
+      foreach my $author_node (@author_nodes) {
+        push @tmp, @{ $author_node->{_content} };
       }
+      $author = join( ", ", @tmp ) if ( $#tmp > -1 );
+    } else {
+      $author = $node->findvalue('./tr/td/div[@class="authors"]');
+    }
 
-      # Now we look for the URLs for linkout and PDFs
-      my $linkout = $node->findvalue('./tr/td/a[@class="medium-text"]/@href');
-      $url = 'http://portal.acm.org/'.$linkout;
-      $pdf = $node->findvalue('./tr/td/table/tr/td/table/tr/td/a[@title="Pdf"]/@href');
-      $pdf = 'http://portal.acm.org/'.$pdf if ($pdf ne '');
- 
-      push @{ $data{titles} }, $title;
-      push @{ $data{authors} }, $author;
-      push @{ $data{citations} }, $citation;
-      push @{ $data{pdf} }, $pdf;
-      push @{ $data{urls} }, $url;
+    # Citation can be found easily, we add also the year
+    $citation = $node->findvalue('./tr/td/div[@class="addinfo"]');
+    if ( $node->findvalue('./tr/td[@class="small-text"]') =~ m/.*\s(\d+)\s.*/ ) {
+      $citation .= " ($1)";
+    }
+
+    # Now we look for the URLs for linkout and PDFs
+    my $linkout = $node->findvalue('./tr/td/a[@class="medium-text"]/@href');
+    $url = 'http://portal.acm.org/' . $linkout;
+    $pdf = $node->findvalue('./tr/td/table/tr/td/table/tr/td/a[@title="Pdf"]/@href');
+    $pdf = 'http://portal.acm.org/' . $pdf if ( $pdf ne '' );
+
+    push @{ $data{titles} },    $title;
+    push @{ $data{authors} },   $author;
+    push @{ $data{citations} }, $citation;
+    push @{ $data{pdf} },       $pdf;
+    push @{ $data{urls} },      $url;
   }
-
 
   # Write output list of Publication records with preliminary
   # information. We save to the helper fields _authors_display and
@@ -194,32 +208,34 @@ sub complete_details {
 
   # Get the BibTeX
   my $response = $browser->get( $pub->_details_link );
-  my $content = $response->content;
+  my $content  = $response->content;
 
   # now we parse the HTML for entries
   my $tree = HTML::TreeBuilder::XPath->new;
   $tree->utf8_mode(1);
   $tree->parse_content($content);
 
-  # finding the abstract is a little bit wired, there seem to be 
+  # finding the abstract is a little bit wired, there seem to be
   # several ways the page is made up
-  my @putative_abstract_nodes = $tree->findnodes('/html/body/div/table/tr/td/div[@class="abstract"]/p');
+  my @putative_abstract_nodes =
+    $tree->findnodes('/html/body/div/table/tr/td/div[@class="abstract"]/p');
   my $abstract = '';
   foreach my $node (@putative_abstract_nodes) {
-      my $text = $node->as_text();
-      next if ($text eq '');
-      next if ($text =~ m/^Note:\sOCR\serrors/);
-      $abstract = $text;
+    my $text = $node->as_text();
+    next if ( $text eq '' );
+    next if ( $text =~ m/^Note:\sOCR\serrors/ );
+    $abstract = $text;
   }
 
   # Now we have to find the BibTex link
-  my @nodes = $tree->findnodes('/html/body/div/table/tr/td/table/tr/td/table/tr/td/div/a[@class="small-link-text"]');
-  (my $bibtex_url = $nodes[1]->attr('onclick')) =~ s/(.*open\(')(.*)(','Bi.*)/$2/;
-  $bibtex_url = 'http://portal.acm.org/'.$bibtex_url;
+  my @nodes = $tree->findnodes(
+    '/html/body/div/table/tr/td/table/tr/td/table/tr/td/div/a[@class="small-link-text"]');
+  ( my $bibtex_url = $nodes[1]->attr('onclick') ) =~ s/(.*open\(')(.*)(','Bi.*)/$2/;
+  $bibtex_url = 'http://portal.acm.org/' . $bibtex_url;
 
   # Create a new Publication object and import the information from the BibTeX string
-  $response = $browser->get( $bibtex_url );
-  my $bibtex = $response->content;
+  $response = $browser->get($bibtex_url);
+  my $bibtex   = $response->content;
   my $full_pub = Paperpile::Library::Publication->new();
   $full_pub->import_string( $bibtex, 'BIBTEX' );
 
@@ -231,14 +247,14 @@ sub complete_details {
 
   # Add the linkout and PDF url from the old object because it is not in the BibTeX
   # and thus not in the new object
-  $full_pub->abstract ($abstract);
+  $full_pub->abstract($abstract);
   $full_pub->linkout( $pub->linkout );
   $full_pub->pdf_url( $pub->pdf_url );
 
   # clean the DOI entry
   ( my $doi = $full_pub->doi ) =~ s/http:\/\/dx\.doi\.org\///;
   $doi =~ s/http:\/\/doi.acm.org\///;
-  $full_pub->doi( $doi ) if ( $doi );
+  $full_pub->doi($doi) if ($doi);
 
   # We don't use ACM key
   $full_pub->citekey('');
