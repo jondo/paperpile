@@ -236,12 +236,16 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   storeSettings: function(newSettings, callback, scope) {
+    Paperpile.log(newSettings);
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/settings/set_settings'),
       params: newSettings,
       success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+	Paperpile.log(json);
         for (var key in newSettings) {
-          Paperpile.main.globalSettings[key] = newSettings[key];
+	  //Paperpile.log(newSettings);
+          //Paperpile.main.globalSettings[key] = newSettings[key];
         }
       },
       failure: Paperpile.main.onError,
