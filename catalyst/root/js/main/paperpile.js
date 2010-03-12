@@ -8,6 +8,9 @@ Paperpile.Url = function(url) {
 };
 
 Paperpile.log = function() {
+  if (IS_TITANIUM) {
+    return;
+  }
   if (window.console) {
     console.log(arguments);
   }
