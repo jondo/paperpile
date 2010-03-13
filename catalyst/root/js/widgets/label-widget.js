@@ -201,7 +201,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
 
     var lots = this.isLargeSelection();
     if (lots) {
-      Paperpile.status.showBusy("Adding tag '" + tag + "' to references");
+      Paperpile.status.showBusy("Adding label '" + tag + "' to references");
     }
 
     Ext.Ajax.request({
@@ -246,7 +246,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
 
     var lots = this.isLargeSelection();
     if (lots) {
-      Paperpile.status.showBusy("Removing tag '" + tag + "' from references");
+      Paperpile.status.showBusy("Removing label '" + tag + "' from references");
     }
 
     Ext.Ajax.request({
