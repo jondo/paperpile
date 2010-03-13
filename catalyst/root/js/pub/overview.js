@@ -208,7 +208,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     }
     templateToUse.overwrite(this.body, data, true);
 
-    this.labelWidget.renderMultiple();
+    if (data.numSelected >0){
+      this.labelWidget.renderMultiple();
+    }
 
     Ext.get('main-container-' + this.id).on('click', this.handleClick,
       this, {
