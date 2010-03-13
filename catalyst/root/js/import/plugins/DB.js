@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginGridDB = function(config) {
   Ext.apply(this, config);
 
@@ -63,7 +62,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     store.baseParams['plugin_search_pdf'] = 0;
     store.baseParams['limit'] = this.limit;
 
-    this.getBottomToolbar().pageSize=parseInt(this.limit);
+    this.getBottomToolbar().pageSize = parseInt(this.limit);
 
     store.on('load',
       function() {
@@ -181,7 +180,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
   toggleFilter: function(item, checked) {
 
-    var filter_button = this.getTopToolbar().items.get('filter_button');
+      var filter_button = this.filterButton;
 
     // Toggle 'search_pdf' option 
     if (item.itemId == 'all_pdf') {
@@ -273,6 +272,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       tooltip: 'Choose field(s) to search',
       menu: this.filterMenu
     });
+    this.filterButton = this.actions['FILTER_BUTTON'];
     this.actions['FILTER_FIELD'] = new Ext.app.FilterField({
       itemId: 'FILTER_FIELD',
       emptyText: 'Search References',
@@ -289,16 +289,38 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     Paperpile.PluginGridDB.superclass.initToolbarMenuItemIds.call(this);
     var ids = this.toolbarMenuItemIds;
 
-    ids.insert(0,'FILTER_FIELD');
-    ids.insert(1,'FILTER_BUTTON');
+    ids.insert(0, 'FILTER_FIELD');
+    ids.insert(1, 'FILTER_BUTTON');
 
     var index = ids.indexOf('TB_FILL');
-    ids.insert(index+1,'NEW');
-    ids.insert(index+2,'EDIT');
+    ids.insert(index + 1, 'NEW');
+
+    index = ids.indexOf('TB_BREAK');
+    ids.insert(index + 1, 'EDIT');
+
+  },
+
+  isContextItem: function(item) {
+    if (item.ownerCt.itemId == 'context') {
+      return true;
+    }
+  },
+  isToolbarItem: function(item) {
+    Paperpile.log(item);
+    return true;
   },
 
   updateButtons: function() {
     Paperpile.PluginGridDB.superclass.updateButtons.call(this);
+
+    var tbar = this.getTopToolbar();
+
+    var selectionCount = this.getSelectionModel().getCount();
+
+    if (selectionCount > 1) {
+      tbar.getComponent('EDIT').disable();
+      tbar.getComponent('VIEW_PDF').disable();
+    }
   }
 });
 

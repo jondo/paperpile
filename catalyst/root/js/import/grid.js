@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginGrid = function(config) {
   Ext.apply(this, config);
 
@@ -119,7 +118,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
       'DELETE': new Ext.Action({
         text: 'Move to Trash',
-	iconCls: 'pp-icon-trash',
+        iconCls: 'pp-icon-trash',
         handler: this.handleDelete,
         scope: this,
         cls: 'x-btn-text-icon',
@@ -163,9 +162,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'VIEW_PDF'
       }),
       'MORE_FROM_FIRST_AUTHOR': new Ext.Action({
-	// Note: the text of these menu items will change dynamically depending on
+        // Note: the text of these menu items will change dynamically depending on
         // the selected reference. See the 'updateContextMenuItem' method.
-        text: 'First author', 
+        text: 'First author',
         handler: this.moreFromFirstAuthor,
         scope: this,
         itemId: 'MORE_FROM_FIRST_AUTHOR'
@@ -188,41 +187,42 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         scope: this,
         itemId: 'MORE_FROM_YEAR'
       }),
-      'SAVE_AS_LIVE_FOLDER': new Ext.Action({
-          text: 'Save as Live Folder',
-          iconCls: 'pp-icon-glasses',
-          handler: this.handleSaveActive,
-          scope: this
+      'LIVE_FOLDER': new Ext.Action({
+        itemId: 'LIVE_FOLDER',
+        text: 'Save as Live Folder',
+        iconCls: 'pp-icon-glasses',
+        handler: this.handleSaveActive,
+        scope: this
       }),
       'EXPORT_VIEW': new Ext.Action({
-          text: 'View',
-          iconCls: 'pp-icon-disk',
-          handler: this.handleExportView,
-          scope: this
+        itemId: 'EXPORT_VIEW',
+        text: 'View',
+        handler: this.handleExportView,
+        scope: this
       }),
       'EXPORT_SELECTION': new Ext.Action({
-          text: 'Selection',
-          iconCls: 'pp-icon-disk',
-          handler: this.handleExportSelection,
-          scope: this
+        itemId: 'EXPORT_SELECTION',
+        text: 'Selection',
+        handler: this.handleExportSelection,
+        scope: this
       }),
       'TB_SPACE': new Ext.Toolbar.Spacer({
-	itemId: 'TB_SPACE',
-	width:'10px'
+        itemId: 'TB_SPACE',
+        width: '10px'
       }),
       'TB_BREAK': new Ext.Toolbar.Separator({
-	itemId: 'TB_BREAK'
+        itemId: 'TB_BREAK'
       }),
-      'TB_FILL':  new Ext.Toolbar.Fill({
-      itemId: 'TB_FILL'
+      'TB_FILL': new Ext.Toolbar.Fill({
+        itemId: 'TB_FILL'
       })
     };
 
     this.actions['MORE_FROM_MENU'] = new Ext.menu.Item({
       text: 'More from...',
-      itemId:'MORE_FROM_MENU',
+      itemId: 'MORE_FROM_MENU',
       menu: {
-	items: [
+        items: [
           this.actions['MORE_FROM_FIRST_AUTHOR'],
           this.actions['MORE_FROM_LAST_AUTHOR'],
           this.actions['MORE_FROM_JOURNAL'],
@@ -231,16 +231,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     this.actions['EXPORT_MENU'] = new Ext.Toolbar.SplitButton({
-      text:'Export to File',
+      text: 'Export to File',
       itemId: 'EXPORT_MENU',
       handler: this.handleExportView,
-      iconCls:'pp-icon-save',
-      scope:this,
+      iconCls: 'pp-icon-save',
+      scope: this,
       menu: {
-	items: [
-	      this.actions['EXPORT_VIEW'],
-	      this.actions['EXPORT_SELECTION']
-	]
+        items: [
+          this.actions['EXPORT_VIEW'],
+          this.actions['EXPORT_SELECTION']]
       }
     });
 
@@ -273,8 +272,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       bbar: this.pager,
       tbar: new Paperpile.Toolbar({
         itemId: 'toolbar',
-	enableOverflow: true,
-	menuBreakItemId: 'TB_BREAK'
+        enableOverflow: true,
+        menuBreakItemId: 'TB_BREAK'
       }),
       enableHdMenu: false,
       autoExpandColumn: 'publication',
@@ -487,7 +486,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // main/overrides.js
     this.getSelectionModel().on('afterselectionchange',
       function(sm) {
-	this.contextRecord = null;
+        this.contextRecord = null;
 
         var selection = this.getSelection();
         var selectedIds;
@@ -681,8 +680,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.sidebarTemplate = {
         singleSelection: new Ext.XTemplate(this.getSingleSelectionTemplate()).compile(),
         multipleSelection: new Ext.XTemplate(this.getMultipleSelectionTemplate()).compile(),
-	noSelection: new Ext.XTemplate(this.getNoSelectionTemplate()).compile(),
-	emptyGrid: new Ext.XTemplate(this.getEmptyGridTemplate()).compile()
+        noSelection: new Ext.XTemplate(this.getNoSelectionTemplate()).compile(),
+        emptyGrid: new Ext.XTemplate(this.getEmptyGridTemplate()).compile()
       };
     }
     return this.sidebarTemplate;
@@ -798,9 +797,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
       '    <p><b>No references here.</b></p>',
       '  </div>',
-      '</div>'
-    ];
-    return [].concat(template);
+      '</div>'];
+    return[].concat(template);
   },
 
   getNoSelectionTemplate: function() {
@@ -809,9 +807,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
       '    <p><b>No references selected.</b></p>',
       '  </div>',
-      '</div>'
-    ];
-    return [].concat(template);
+      '</div>'];
+    return[].concat(template);
   },
 
   getMultipleSelectionTemplate: function() {
@@ -831,7 +828,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     return[].concat(template);
   },
 
-  toolbarMenuItemIds:[],
+  toolbarMenuItemIds: [],
 
   // This method returns a list of itemIDs in the order we want them
   // to show up in the toolbar.
@@ -848,8 +845,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'SELECT_ALL',
       'DELETE',
       this.createSeparator('TB_DEL_SEP'),
-      'EXPORT_MENU'
-    ]);
+      'LIVE_FOLDER',
+      'EXPORT_MENU']);
   },
 
   // Same as above, but for the context menu.
@@ -862,8 +859,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'SELECT_ALL',
       'DELETE',
       this.createContextSeparator('CONTEXT_DEL_SEP'),
-      'MORE_FROM_MENU'
-    ]);
+      'MORE_FROM_MENU',
+      'EXPORT_SELECTION']);
   },
 
   createContextSeparator: function(itemId) {
@@ -886,7 +883,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.initToolbarMenuItemIds();
     var itemIds = this.toolbarMenuItemIds; // This is an Ext.util.MixedCollection.
-    for (var i=0; i < itemIds.length; i++) {
+    for (var i = 0; i < itemIds.length; i++) {
       var id = itemIds.itemAt(i);
       tbar.insert(i, this.actions[id]);
     }
@@ -904,7 +901,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var context = this.context;
     this.initContextMenuItemIds();
     var itemIds = this.contextMenuItemIds; // This is an Ext.util.MixedCollection.
-    for (var i=0; i < itemIds.length; i++) {
+    for (var i = 0; i < itemIds.length; i++) {
       var id = itemIds.itemAt(i);
       context.insert(i, this.actions[id]);
     }
@@ -924,7 +921,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     //  this.updateContextItem(item, record);
     //},
     //this);
-
     this.updateButtons();
     (function() {
       this.context.showAt(e.getXY());
@@ -935,8 +931,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // Recurse through sub-menus.
     if (menuItem.menu) {
       menuItem.menu.items.each(function(item, index, length) {
-        this.updateContextItem(item,record);
-      },this);
+        this.updateContextItem(item, record);
+      },
+      this);
     }
 
     return;
@@ -955,11 +952,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var a = this.actions['MORE_FROM_JOURNAL'];
     a.setText(this.getJournalFromSelection());
     a.each(function(item) {
-      item.style = {'font-style':'italic'};
+      item.style = {
+        'font-style': 'italic'
+      };
       if (item.rendered) {
-	item.textEl.setStyle('font-style','italic');
+        item.textEl.setStyle('font-style', 'italic');
       }
-    },this);
+    },
+    this);
 
     this.actions['MORE_FROM_YEAR'].setText(this.getYearFromSelection());
 
@@ -976,13 +976,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     var selection = this.getSingleSelectionRecord();
 
-    this.actions['SELECT_ALL'].setText('Select all (' + this.getStore().getTotalCount() + ')');
+    this.actions['SELECT_ALL'].setText('Select All (' + this.getStore().getTotalCount() + ')');
     if (this.allSelected || this.getTotalCount() == 0) {
       this.actions['SELECT_ALL'].disable();
     }
 
     if (!selection || selection.data.pdf == '') {
-      this.actions['VIEW_PDF'].disable();      
+      this.actions['VIEW_PDF'].disable();
     }
 
     if (!selection) {
@@ -995,14 +995,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
 
     var tbar = this.getTopToolbar();
-    tbar.items.each(function(item, index, length) {
-      this.updateToolbarItem(item);
-    },this);
+    var context = this.getContextMenu();
+
+    context.getComponent('EXPORT_SELECTION').setText("Export Selection...");
   },
 
   updateToolbarItem: function(menuItem) {
-    var id = menuItem.itemId;
-
     return;
   },
 
@@ -1475,7 +1473,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var arr = authors.split(/,\s+/);
     var author = '';
     if (arr.length > 0) {
-      author = arr[arr.length-1];
+      author = arr[arr.length - 1];
     }
     this.setSearchQuery('author:' + '"' + author + '"');
   },
@@ -1561,7 +1559,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   destroy: function() {
     Paperpile.PluginGrid.superclass.destroy.call(this);
-    
+
     if (this._store) {
       this._store.destroy();
     }

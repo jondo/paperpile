@@ -245,7 +245,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   myOnClick: function(node, e) {
-    //Paperpile.log(node);
+    Paperpile.log(node);
     //      Paperpile.log(e.browserEvent);
     switch (node.id) {
     case 'FOLDER_ROOT':
@@ -271,7 +271,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       Paperpile.main.tabs.newScreenTab('Clouds', 'clouds');
       break;
     case 'FEEDBACK':
-      if (window.UserVoice) {UserVoice.Popin.show()};
+      if (window.UserVoice) {
+        UserVoice.Popin.show()
+      };
       break;
     case 'DUPLICATES':
       Paperpile.main.tabs.newPluginTab('Duplicates', {},
@@ -307,8 +309,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       break;
 
     default:
-      Paperpile.log("Unused click!");
-      Paperpile.log(node);
+      //Paperpile.log("Unused click!");
+      //Paperpile.log(node);
       break;
     }
   },
@@ -719,7 +721,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           newNode.plugin_title = json.title;
           Ext.get(newNode.getUI().getIconEl()).replaceClass('pp-icon-loading', 'pp-icon-feed');
         }
-	Paperpile.status.clearMsg();
+        Paperpile.status.clearMsg();
       },
       failure: function(response) {
         Paperpile.main.onError(response),
@@ -1003,12 +1005,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var node = this.getNodeById('TAGS_ROOT');
     var treeEditor = this.treeEditor;
     var newNode;
+    var tag = 'New Label';
     node.expand(false, false, function(n) {
       newNode = n.appendChild(
         this.loader.createNode({
-          text: 'New Label',
+          text: tag,
           iconCls: 'pp-icon-empty',
-          tagStyle: 0,
+          tagStyle: 'default',
           cls: 'pp-tag-tree-node pp-tag-tree-style-0',
           draggable: true,
           leaf: true,
@@ -1019,16 +1022,25 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       var pars = {
         type: 'TAGS',
         plugin_name: 'DB',
-        plugin_title: node.text,
+        plugin_title: tag,
         plugin_iconCls: 'pp-icon-tag',
-        plugin_mode: 'FULLTEXT'
+        plugin_mode: 'FULLTEXT',
+        plugin_query: 'labelid:' + Paperpile.utils.encodeTag(tag),
+        plugin_base_query: 'labelid:' + Paperpile.utils.encodeTag(tag)
       };
-      this.onNewTag(newNode);
       newNode.init(pars);
       newNode.select();
 
       (function() {
-        treeEditor.on('canceledit', this.removeOnCancel, this);
+        this.mon(treeEditor, 'canceledit', this.removeOnCancel, this, {
+          single: true
+        });
+        this.mon(treeEditor, 'complete', function() {
+          this.onNewTag(newNode);
+        },
+        this, {
+          single: true
+        });
         treeEditor.triggerEdit(newNode);
       }.defer(10, this));
     }.createDelegate(this));
@@ -1037,7 +1049,25 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   removeOnCancel: function(editor, newText, oldText) {
     var node = editor.editNode;
     this.deleteTag(node);
-    editor.un('canceledit', this.removeOnCancel);
+    this.mun(treeEditor, 'canceledit', this.removeOnCancel);
+  },
+
+  containsTagWithText: function(text) {
+    var tagIndex = Ext.StoreMgr.lookup('tag_store').findExact('tag', text);
+    if (tagIndex > -1) {
+      return true;
+    }
+    return false;
+  },
+
+  getUniqueTag: function(text) {
+    var base = text;
+    var i = 2;
+    do {
+      text = base + " (" + i + ")";
+      i++;
+    } while (this.containsTagWithText(text));
+    return text;
   },
 
   //
@@ -1046,8 +1076,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   // representation to database.
   //
   onNewTag: function(node) {
+    Paperpile.log("NEW TAG");
+    Paperpile.log(node);
+
+    node.setText(this.getUniqueTag(node.text));
+
+    var tag = node.text;
     var pars = {
-      tag: node.text,
+      tag: tag,
       style: 'default'
     };
 
@@ -1056,8 +1092,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       params: pars,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
-        Ext.StoreMgr.lookup('tag_store').reload();
+
+        Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
+        Ext.StoreMgr.lookup('tag_store').reload({
+          callback: function() {
+            Paperpile.main.onUpdate(json.data);
+          }
+        });
+
       },
       failure: Paperpile.main.onError
     });
@@ -1073,7 +1115,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.log(json);
+        //Paperpile.log(json);
         Paperpile.main.tabs.closeTabByTitle(tag);
         Paperpile.main.onUpdate(json.data);
         node.remove();
