@@ -303,7 +303,7 @@ td.pp-dashboard-dl{
     -webkit-border-radius: 8px;
 }
 
-.pp-box dl {
+.pp-box dl, .pp-label-widget {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     margin: 8;
     line-height: 1.3em;
@@ -578,6 +578,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-action-trash {
     background: transparent url('/images/icons/trash.png') no-repeat;
+}
+
+.pp-action-label {
+    background: transparent url('/images/icons/tag_blue.png') no-repeat;
 }
 
 .pp-action-restore {
@@ -1266,6 +1270,7 @@ div:hover.pp-grid-sort-item {
 .pp-label-widget {
     line-height: 1em;
     white-space: nowrap;
+    display:inline;
 }
 
 .pp-search-download-widget {

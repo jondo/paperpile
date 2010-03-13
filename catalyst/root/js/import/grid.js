@@ -601,6 +601,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     return this._store;
   },
 
+  getBySha1: function(sha1) {
+    var index = this.getStore().find('sha1', sha1);
+    if (index > -1) {
+      return this.getStore().getAt(index);
+    }
+    return null;
+  },
+
   gridTemplates: {},
 
   getPubTemplate: function() {
@@ -817,12 +825,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
       '  <tpl if="numSelected &gt;0">',
       '    <p><b>{numSelected}</b> references selected.</p>',
-      '    <div class="pp-vspace"></div>',
       '    <ul> ',
+      '  <li class="pp-action pp-action-label" style="margin-bottom:5px;"><span style="font-weight:bold;">Labels:</span></li>',
+      '    <div id="label-widget-{id}" class="pp-label-widget"></div>',
+      '    <div style="clear:both;"></div>',
       '      <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
       '      <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
       '    </ul>',
-      '  </tpl>',
+      '    </tpl>',
       '  </div>',
       '</div>'];
     return[].concat(template);
@@ -1046,12 +1056,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     return this.findParentByType(Paperpile.PluginPanel);
   },
 
-  // Returns list of sha1s for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
-  getSelection: function(what) {
+  getSelectionAsList: function(what) {
     if (!what) what = 'ALL';
-    if (this.allSelected) {
-      return 'ALL';
-    }
     var selection = [];
     this.getSelectionModel().each(
       function(record) {
@@ -1060,6 +1066,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
       });
     return selection;
+  },
+
+  // Returns list of sha1s for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
+  getSelection: function(what) {
+    if (this.allSelected) {
+      return 'ALL';
+    } else {
+      return this.getSelectionAsList(what);
+    }
   },
 
   getSelectionCount: function() {

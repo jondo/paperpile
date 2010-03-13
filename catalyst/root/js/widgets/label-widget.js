@@ -14,15 +14,27 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.LabelWidget = Ext.extend(Object, {
+  data: null,
+  multipleSelection: false,
+  grid: null,
 
   constructor: function(config) {
     Ext.apply(this, config);
   },
 
+  getGrid: function() {
+    return this.grid;
+  },
+
   renderData: function(data) {
     this.data = data;
+    this.multipleSelection = false;
+    this.renderTags();
+  },
+
+  renderMultiple: function() {
+    this.multipleSelection = true;
     this.renderTags();
   },
 
@@ -33,6 +45,10 @@ Paperpile.LabelWidget = Ext.extend(Object, {
 
     var rootEl = Ext.get(this.div_id);
 
+    if (!rootEl) {
+      return;
+    }
+
     rootEl.un('click', this.handleClick, this);
     rootEl.on('click', this.handleClick, this);
 
@@ -40,7 +56,29 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     oldLabels.remove();
 
     var store = Ext.StoreMgr.lookup('tag_store');
-    var tags = data.tags.split(/\s*,\s*/);
+    var tags;
+    if (this.multipleSelection) {
+      // Collect all the tags from all references selected.
+      var sel = this.grid.getSelectionAsList();
+      var tag_hash = {};
+      for (var i = 0; i < sel.length; i++) {
+        var sha1 = sel[i];
+        var record = this.getGrid().getBySha1(sha1);
+        if (record) {
+          var record_tags = record.data.tags.split(/\s*,\s*/);
+          for (var j = 0; j < record_tags.length; j++) {
+            var tag = record_tags[j];
+            tag_hash[tag] = 1;
+          }
+        }
+      }
+      tags = [];
+      for (var k in tag_hash) {
+        tags.push(k);
+      }
+    } else {
+      tags = data.tags.split(/\s*,\s*/);
+    }
 
     for (var i = 0; i < tags.length; i++) {
       var name = tags[i];
@@ -114,7 +152,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       },
       this);
     var extEl = Ext.get(el);
-    extEl.replaceWith(['<div id="pp-tag-control-' + this.grid_id + '"></div>']);
+    extEl.replaceWith(['<div id="pp-tag-control-' + this.grid.id + '"></div>']);
 
     var store = new Ext.data.SimpleStore({
       fields: ['tag'],
@@ -122,7 +160,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     });
 
     this.comboBox = new Ext.form.ComboBox({
-      id: 'tag-control-combo-' + this.grid_id,
+      id: 'tag-control-combo-' + this.getGrid().id,
       ctCls: 'pp-tag-control',
       store: store,
       displayField: 'tag',
@@ -135,7 +173,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
 
       hideLabel: true,
       hideTrigger: false,
-      renderTo: 'pp-tag-control-' + this.grid_id,
+      renderTo: 'pp-tag-control-' + this.getGrid().id,
       width: 100,
       minListWidth: 100,
       listeners: {
@@ -161,17 +199,22 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     this.comboBox.disable();
     var tagIndex = Ext.StoreMgr.lookup('tag_store').findExact('tag', tag);
 
+    var lots = this.isLargeSelection();
+    if (lots) {
+      Paperpile.status.showBusy("Adding tag '" + tag + "' to references");
+    }
+
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/add_tag'),
       params: {
-        grid_id: this.grid_id,
-        selection: Ext.getCmp(this.grid_id).getSelection(),
+        grid_id: this.getGrid().id,
+        selection: this.getGrid().getSelection(),
         tag: tag
       },
       method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        var grid = Ext.getCmp(this.grid_id);
+        var grid = this.getGrid();
 
         if (tagIndex > -1) {
           Ext.StoreMgr.lookup('tag_store').reload();
@@ -185,6 +228,10 @@ Paperpile.LabelWidget = Ext.extend(Object, {
             }
           });
         }
+
+        if (lots) {
+          Paperpile.status.clearMsg();
+        }
       },
       failure: Paperpile.main.onError,
       scope: this
@@ -197,23 +244,44 @@ Paperpile.LabelWidget = Ext.extend(Object, {
 
     Ext.get(el).parent().remove();
 
+    var lots = this.isLargeSelection();
+    if (lots) {
+      Paperpile.status.showBusy("Removing tag '" + tag + "' from references");
+    }
+
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/remove_tag'),
       params: {
-        grid_id: this.grid_id,
-        selection: Ext.getCmp(this.grid_id).getSelection(),
+        grid_id: this.getGrid().id,
+        selection: this.getGrid().getSelection(),
         tag: tag
       },
       method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        var grid = Ext.getCmp(this.grid_id);
         Ext.StoreMgr.lookup('tag_store').reload();
         Paperpile.main.onUpdate(json.data);
+
+        if (lots) {
+          Paperpile.status.clearMsg();
+        }
       },
       failure: Paperpile.main.onError,
       scope: this
     });
+  },
+
+  isLargeSelection: function() {
+    var sel = this.getGrid().getSelection();
+    var count = 0;
+    if (sel == 'ALL') {
+      count = this.getGrid().getTotalCount();
+    } else {
+      count = sel.length;
+    }
+    if (count > 10) {
+      return true;
+    }
   }
 
 });

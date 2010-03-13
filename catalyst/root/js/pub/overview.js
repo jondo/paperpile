@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
   itemId: 'overview',
@@ -167,7 +166,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   updateLabels: function(data) {
     if (this.labelWidget == null) {
       this.labelWidget = new Paperpile.LabelWidget({
-        grid_id: this.grid_id,
+        grid: this.getGrid(),
         div_id: 'label-widget-' + this.id,
         renderTo: 'label-widget-' + this.id
       });
@@ -207,7 +206,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     } else {
       templateToUse = this.getGrid().getSidebarTemplate().multipleSelection;
     }
-    templateToUse.overwrite(this.body,data,true);
+    templateToUse.overwrite(this.body, data, true);
+
+    this.labelWidget.renderMultiple();
 
     Ext.get('main-container-' + this.id).on('click', this.handleClick,
       this, {
