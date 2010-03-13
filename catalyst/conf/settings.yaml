@@ -21,8 +21,8 @@ session:
 
 app_settings:
   platform: "__PLATFORM__"
-  version_id: 2
-  version_name: "0.4.1"
+  version_id: 3
+  version_name: "0.4.2"
   build_number: 0
   settings_db_version: 1
   library_db_version: 1
@@ -52,7 +52,6 @@ library_settings:
 release:
   patch: 1
   restart: 1
-  msg: "Test release to make sure patching works."
+  msg: "First public test version for Linux."
   log:
-    - "Added new icons for PDF viewer"
-    - "Show accurate version information in frontend"
+    - "Everything is new."
