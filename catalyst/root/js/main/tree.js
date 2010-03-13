@@ -1063,11 +1063,24 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   getUniqueTag: function(text) {
     var base = text;
     var i = 2;
-    do {
+    while (this.containsTagWithText(text)) {
       text = base + " (" + i + ")";
       i++;
-    } while (this.containsTagWithText(text));
+    }
     return text;
+  },
+
+  // Data is the JSON returned by a previous ajax call. Optional.
+  reloadTags: function(json) {
+    Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
+    Ext.StoreMgr.lookup('tag_store').reload({
+      callback: function() {
+        if (json) {
+          Paperpile.main.onUpdate(json.data);
+        }
+      }
+    });
+
   },
 
   //
@@ -1092,16 +1105,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       params: pars,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-
-        Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
-        Ext.StoreMgr.lookup('tag_store').reload({
-          callback: function() {
-            Paperpile.main.onUpdate(json.data);
-          }
-        });
-
+        this.reloadTags(json);
       },
-      failure: Paperpile.main.onError
+      failure: Paperpile.main.onError,
+      scope: this
     });
   },
 
@@ -1115,11 +1122,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        //Paperpile.log(json);
+        this.reloadTags(json);
         Paperpile.main.tabs.closeTabByTitle(tag);
-        Paperpile.main.onUpdate(json.data);
         node.remove();
-      }
+      },
+      scope: this
     });
   },
 
