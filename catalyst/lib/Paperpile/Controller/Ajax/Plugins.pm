@@ -103,6 +103,7 @@ sub resultsgrid : Local {
 
   # Fetch ALL entries and filter on sha1 if the 'selection' param is defined.
   if ( $selection ne '' ) {
+
     if ( ref($selection) ne 'ARRAY' ) {
       if ( $selection ne 'all' ) {
         $selection = [$selection];
@@ -126,12 +127,12 @@ sub resultsgrid : Local {
   }
 
   # Skip test for existence for standard user database
-  if ( $plugin_name eq 'DB' and not $c->request->params->{plugin_file} ) {
+  if ( $plugin_name ~~ ['DB','Trash','Duplicates']  and not $c->request->params->{plugin_file} ) {
     foreach my $pub (@$entries) {
       $pub->_imported(1);
     }
   } else {
-    $c->model('Library')->exists_pub($entries);
+    c->model('Library')->exists_pub($entries);
   }
 
   _resultsgrid_format( @_, $entries, $plugin->total_entries );

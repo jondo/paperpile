@@ -1076,7 +1076,8 @@ sub exists_pub {
   my $sth = $self->dbh->prepare("SELECT rowid, * FROM publications WHERE sha1=?");
 
   foreach my $pub (@$pubs) {
-      next unless defined ($pub);
+
+    next unless defined ($pub);
     $sth->execute( $pub->sha1 );
 
     my $exists=0;
@@ -1096,6 +1097,7 @@ sub exists_pub {
     }
 
     $pub->_imported($exists);
+
 
   }
 }
