@@ -180,7 +180,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
   toggleFilter: function(item, checked) {
 
-      var filter_button = this.filterButton;
+    var filter_button = this.filterButton;
 
     // Toggle 'search_pdf' option 
     if (item.itemId == 'all_pdf') {
@@ -318,8 +318,14 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     var selectionCount = this.getSelectionModel().getCount();
 
     if (selectionCount > 1) {
-      tbar.getComponent('EDIT').disable();
-      tbar.getComponent('VIEW_PDF').disable();
+      var item = tbar.getComponent('EDIT');
+      if (item) {
+        item.disable();
+      }
+      item = tbar.getComponent('VIEW_PDF');
+      if (item) {
+        item.disable();
+      }
     }
   }
 });
