@@ -123,7 +123,6 @@ Paperpile.LabelWidget = Ext.extend(Object, {
   handleClick: function(e) {
     e.stopEvent();
     var el = e.getTarget();
-    Paperpile.log("Click!");
 
     switch (el.getAttribute('action')) {
     case 'remove-tag':
