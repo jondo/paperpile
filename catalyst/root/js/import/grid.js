@@ -750,7 +750,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    </ul>',
       '  </dd>',
       '</tpl>',
-      '<tpl if="_imported">', // Don't show the labels widget if this article isn't imported.
+      '<tpl if="_imported && !trashed">', // Don't show the labels widget if this article isn't imported.
       '  <dt>Labels: </dt>',
       '  <dd>',
       '  <div id="label-widget-{id}" class="pp-label-widget"></div>',
