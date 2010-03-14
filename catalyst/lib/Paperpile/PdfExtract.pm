@@ -14,16 +14,18 @@ has 'pdftoxml' => ( is => 'rw', isa => 'Str' );
 sub parsePDF {
 
   my $self = shift;
-  
+
   my $PDFfile = $self->file;
   my $PDF2XML = $self->pdftoxml;
-  
+
   # create a temp file
   ( undef, my $tmpfile ) = tempfile( OPEN => 0 );
 
-  # The file may contain space, that have to be escaped. I do not
-  # know how this will be handled in Windows.
+  # The file may contain spaces or brackets, that have to be escaped. 
+  # I do not know how this will be handled in Windows.
   $PDFfile =~ s/\s/\\ /g;
+  $PDFfile =~ s/\(/\\(/g;
+  $PDFfile =~ s/\)/\\)/g;
 
   # create and read XML file, just the first page
   system("$PDF2XML -noImage -f 1 -l 1 -q $PDFfile $tmpfile 2>/dev/null");
