@@ -132,7 +132,7 @@ sub resultsgrid : Local {
       $pub->_imported(1);
     }
   } else {
-    c->model('Library')->exists_pub($entries);
+    $c->model('Library')->exists_pub($entries);
   }
 
   _resultsgrid_format( @_, $entries, $plugin->total_entries );
