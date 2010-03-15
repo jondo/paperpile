@@ -54,6 +54,8 @@ sub parsePDF {
     #return;
   }
 
+  print $arxiv_id,"\n";
+  
   # let's do some sane checking
   my $wrong = 0;
   $wrong = 1 if ( $title   =~ m/MAtERIALS And MEtHOdS/i );
@@ -458,6 +460,7 @@ sub _MarkAdress {
   $adress++ if ( $tmp_line =~ m/Facultad/i );
   $adress++ if ( $tmp_line =~ m/U\.S\.A\./i );
   $adress++ if ( $tmp_line =~ m/College/i );
+  $adress++ if ( $tmp_line =~ m/Polytechnique/i );
   $adress++ if ( $tmp_line =~ m/MolecularStructureSection/i );
 
   $adress++ if ( $orig =~ m/Road\s/ );
@@ -932,11 +935,15 @@ sub _ParseXML {
     $final_content[$i] =~ s/"//g;
     $final_content[$i] =~ s/\x{C6}/,/g;      # replace dots (not points) with commas
     $final_content[$i] =~ s/\x{B7}/,/g;      # replace dots (not points) with commas
+    $final_content[$i] =~ s/\x{B4}/,/g;      # replace dots (not points) with commas
     $final_content[$i] =~ s/\s+,\s+/, /g;    # replace unnecessary spaces
     $final_content[$i] =~ s/,\s*$//g;
 
-   #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
-   #print STDERR $final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_fs[$i]," :: ",$final_content[$i],"\n";
+    # a line must have at least five characters to be considered
+    $final_bad[$i]++ if ( length($final_content[$i]) <= 5);
+
+    #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
+    #print STDERR $final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_fs[$i]," :: ",$final_content[$i],"\n";
   }
 
   #####################################################
@@ -1023,7 +1030,7 @@ sub _ParseXML {
     if (  $final_fs[$candidate_Title] > $final_fs[$candidate_Authors]
       and $final_fs[$candidate_Title] / $major_fs > 1.2 ) {
       my $flag = 0;
-      
+
       # authors have usually more superscripts than titles
       ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
         $cand_title_text, $cand_authors_text,
@@ -1065,7 +1072,7 @@ sub _ParseXML {
     if (  $final_fs[$candidate_Title] == $final_fs[$candidate_Authors] ) {
       if ( $final_fs[$candidate_Title] > $major_fs ) {
 	my $flag = 0;
-	
+
 	# authors have usually more superscripts than titles
 	( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
         $cand_title_text, $cand_authors_text,

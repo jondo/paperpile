@@ -591,7 +591,7 @@ sub match {
   # 1) DOIs are sometimes supported, but Arxiv Ids work best. It is at the
   # moment stored in pmid
   $query_doi      = _EscapeString( $pub->doi )  if ( $pub->doi );
-  $query_arxiv_id = _EscapeString( $pub->pmid ) if ( $pub->pmid );
+  $query_arxiv_id = _EscapeString( $pub->arxivid ) if ( $pub->arxivid );
 
   # 2) Title
   if ( $pub->title ) {
