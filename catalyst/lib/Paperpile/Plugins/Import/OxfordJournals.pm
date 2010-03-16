@@ -82,8 +82,10 @@ sub complete_details {
   # Get the bibtex link
   my $id = $meta_tags[0]->attr('content');
   $id =~ s/v\d$//;
-  ( my $base_url = $pub->_details_link() ) =~ s/(.*oxfordjournals.org)(.*)/$1/;
-  my $bibtex_url = "$base_url/cgi/citmgr?type=bibtex&gca=$id";
+  @meta_tags = $tree->findnodes('/html/head/meta[@name="citation_abstract_html_url"]');
+  my $base_url = $meta_tags[0]->attr('content');
+  $base_url =~ s/(.*\/)(content.*)/$1/;
+  my $bibtex_url = $base_url."citmgr?type=bibtex&gca=$id";
 
   my $bibtex_tmp = $browser->get($bibtex_url);
   my $bibtex     = $bibtex_tmp->content;
