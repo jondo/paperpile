@@ -54,8 +54,8 @@ sub parsePDF {
     #return;
   }
 
-  print $arxiv_id,"\n";
-  
+  #print STDERR "FIRST RUN: $title || $authors\n";
+
   # let's do some sane checking
   my $wrong = 0;
   $wrong = 1 if ( $title   =~ m/MAtERIALS And MEtHOdS/i );
@@ -207,7 +207,7 @@ sub parsePDF {
 
     # now we parse each author separately
     foreach my $author (@authors_array) {
-      
+
       # remove unnecessary white spaces, and forgotten 'ands'
       $author =~ s/and\s//;
       $author =~ s/\s+$//;
@@ -805,7 +805,7 @@ sub _ParseXML {
       return ( $title, $authors, $doi, 6, 0, '' ) if ( $title ne '' and $authors ne '' );
     }
   }
-  
+
   #################################################
   # LET'S JOIN THE LINES
 
@@ -942,8 +942,8 @@ sub _ParseXML {
     # a line must have at least five characters to be considered
     $final_bad[$i]++ if ( length($final_content[$i]) <= 5);
 
-    #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
-    #print STDERR $final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_fs[$i]," :: ",$final_content[$i],"\n";
+    $final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
+    #print STDERR "$i :: ",$final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_fs[$i]," :: ",$final_content[$i],"\n";
   }
 
   #####################################################
@@ -1164,7 +1164,7 @@ sub _ParseXML {
       }
     }
 
-    if ( $final_fs[$i] > $max_fs_ALL ) {
+    if ( $final_fs[$i] > $max_fs_ALL and $final_bad[$i] == 0) {
       $max_fs_ALL      = $final_fs[$i];
       $max_fs_line_ALL = $i;
     }
@@ -1211,6 +1211,7 @@ sub _ParseXML {
     # remove markers *J* that lines were joined
     $cand_authors_text =~ s/-\s?\*J\*/-/g;
     $cand_authors_text =~ s/\*J\*/,/g;
+    $cand_authors_text =~ s/,\sand\s/, /g;
     $cand_title_text   =~ s/\*J\*//g;
 
     # if the candidate_Title is also very large
