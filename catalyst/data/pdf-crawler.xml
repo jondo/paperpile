@@ -445,6 +445,26 @@
   </test>
 </site>
 
+<site name="AmericanPhysicalSociety">
+  <signature>
+    <url>!aps\.org!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <rewrite>!(abstract|showrefs|forward)(\/\w+\/v\d+\/i\d+)!pdf$2!</rewrite>
+    </pattern>
+  </rule>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+)&quot;>PDF!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1103/PhysRevLett.97.186803</url>
+  </test>
+</site>
+
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
