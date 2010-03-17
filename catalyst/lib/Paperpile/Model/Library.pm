@@ -229,9 +229,16 @@ sub insert_pubs {
     }
 
     if ($pdf_file) {
-      my $attached_file = $self->attach_file( $pdf_file, 1, $pub_rowid, $pub );
-      unlink($pdf_file) if -e ($cached_file);
-      $pub->pdf($attached_file);
+      # First check if paper_root is set. In temporary databases
+      # eg. for opening bibtex or RSS feeds it is not set and we don't
+      # attach PDFs there
+      my $paper_root = $self->get_setting('paper_root');
+
+      if (defined $paper_root){
+        my $attached_file = $self->attach_file( $pdf_file, 1, $pub_rowid, $pub );
+        unlink($pdf_file) if -e ($cached_file);
+        $pub->pdf($attached_file);
+      }
     }
   }
 
