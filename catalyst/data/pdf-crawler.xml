@@ -417,6 +417,54 @@
   </test>
 </site>
 
+<site name="WorldScientific">
+  <signature>
+    <url>!worldscinet\.com!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+pdf)&quot;>Full!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1142/S0219720009003947</url>
+  </test>
+</site>
+
+<site name="TheScientificWorld">
+  <signature>
+    <url>!thescientificworld\.co\.uk!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+pdf)&quot;>\[Full!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1100/tsw.2008.140</url>
+  </test>
+</site>
+
+<site name="AmericanPhysicalSociety">
+  <signature>
+    <url>!aps\.org!</url>
+  </signature>
+  <rule>
+    <pattern>
+      <rewrite>!(abstract|showrefs|forward)(\/\w+\/v\d+\/i\d+)!pdf$2!</rewrite>
+    </pattern>
+  </rule>
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+)&quot;>PDF!</match>
+    </pattern>
+  </rule>
+  <test>
+    <url>http://dx.doi.org/10.1103/PhysRevLett.97.186803</url>
+  </test>
+</site>
+
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
@@ -449,7 +497,6 @@
 
 <!-- 
 
-- http://www.worldscinet.com 
 - IEEE eg, http://doi.ieeecomputersociety.org/10.1109/TVCG.2006.196
 
 
