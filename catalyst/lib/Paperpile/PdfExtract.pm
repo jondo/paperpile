@@ -234,6 +234,12 @@ sub parsePDF {
     }
   }
 
+  # repair common OCR errors
+  my %OCRerrors = ( '\x{FB01}' => 'fi' );
+  while (my ($key, $value) = each(%OCRerrors)){
+    $title =~ s/$key/$value/;
+  }
+
   # once we have our authors we can now create a
   # publication object and return it
   my $pub = Paperpile::Library::Publication->new( pubtype => 'MISC' );
@@ -942,7 +948,7 @@ sub _ParseXML {
     # a line must have at least five characters to be considered
     $final_bad[$i]++ if ( length($final_content[$i]) <= 5);
 
-    $final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
+    #$final_content[$i] =~ s/([^[:ascii:]])/sprintf("&#%d;",ord($1))/eg; # to remove none ASCII chars
     #print STDERR "$i :: ",$final_adress[$i], " ==> ",$final_bad[$i] ," --> ",$final_fs[$i]," :: ",$final_content[$i],"\n";
   }
 
