@@ -134,6 +134,10 @@ sub init_session : Local {
   # Clear temporary PDF downloads
   unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );
 
+  # Clear file with cancel handles
+
+  unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ));
+
 }
 
 sub migrate_db : Local {

@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
   title: 'General settings',
@@ -125,15 +124,15 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
         Ext.get('proxy_test_status').removeClass(['pp-icon-tick', 'pp-icon-cross']);
 
-        Paperpile.status.showBusy('Testing network connection.');
-
+        //Paperpile.status.showBusy('Testing network connection.');
         var params = {
           use_proxy: this.proxyCheckbox.getValue() ? 1 : 0,
           proxy: this.textfields['proxy'].getValue(),
           proxy_user: this.textfields['proxy_user'].getValue(),
           proxy_passwd: this.textfields['proxy_passwd'].getValue(),
+          cancel_handle: 'proxy_check',
         };
-        Ext.Ajax.request({
+        var transactionID = Ext.Ajax.request({
           url: Paperpile.Url('/ajax/misc/test_network'),
           params: params,
           success: function(response) {
@@ -150,7 +149,10 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
             } else {
               Ext.get('proxy_test_status').replaceClass('pp-icon-cross', 'pp-icon-tick');
               Paperpile.status.clearMsg();
-              Paperpile.status.updateMsg({msg:'Your network connection is working correctly.', hideOnClick:true});
+              Paperpile.status.updateMsg({
+                msg: 'Your network connection is working correctly.',
+                hideOnClick: true
+              });
             }
 
           },
@@ -159,6 +161,23 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
             Paperpile.main.onError(response);
           }
         });
+
+        Paperpile.status.updateMsg({
+          busy: true,
+          msg: 'Testing network connection.',
+          action1: 'Cancel',
+          callback: function() {
+            Ext.Ajax.abort(transactionID);
+            Paperpile.status.clearMsg();
+            Ext.Ajax.request({
+              url: Paperpile.Url('/ajax/misc/cancel_request'),
+              params: {
+                cancel_handle: 'proxy_check',
+                kill:1,
+              },
+            });
+          }
+        })
       },
       this);
 
@@ -206,11 +225,6 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       showDelay: 0,
       hideDelay: 0
     });
-
-
-
-
-    
 
     this.setSaveDisabled(true);
   },
@@ -280,4 +294,3 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
   }
 
 });
-

@@ -294,11 +294,107 @@ sub copy_file{
   return $dest;
 }
 
+
+# Registers a handle from the frontend connects it to the PID of the
+# current process. The idea is that the frontend only needs to know
+# about the handle and the backend only needs to know about its PID
+
+sub register_cancel_handle {
+
+  my ( $self, $handle ) = @_;
+
+  my $new_cancel_data = { map => {}, cancel => {} };
+
+  my $cancel_data = $self->retrieve('cancel_data');
+
+  if ($cancel_data) {
+    $new_cancel_data = $cancel_data;
+  }
+
+  $new_cancel_data->{map}->{$$} = $handle;
+  $new_cancel_data->{map}->{$handle} = $$;
+
+  $new_cancel_data->{cancel}->{$handle}   = 0;
+
+  $self->store('cancel_data', $new_cancel_data);
+
+}
+
+# Marks a handle for cancelling. The next time a process that is
+# associated with handle calls 'check_cancel' gets 1 as answer and
+# should stop. If $kill is true, the process associated with the
+# handle is killed immediately
+
+sub activate_cancel_handle {
+
+  my ( $self, $handle, $kill ) = @_;
+
+  my $cancel_data = $self->retrieve('cancel_data');
+
+  return if not defined $cancel_data;
+
+  if ($kill){
+    my $pid = $cancel_data->{map}->{$handle};
+    delete($cancel_data->{map}->{$pid});
+    delete($cancel_data->{map}->{$handle});
+    delete($cancel_data->{cancel}->{$handle});
+    kill(9,$pid);
+  } else {
+    $cancel_data->{cancel}->{$handle} = 1;
+  }
+
+  $self->store( 'cancel_data', $cancel_data );
+
+}
+
+# If it returns 1 the process with process id $pid should stop.
+
+sub check_cancel {
+
+  my ( $self, $pid ) = @_;
+
+  my $cancel_data = $self->retrieve('cancel_data');
+
+  return 0 if not defined $cancel_data;
+
+  my $handle = $cancel_data->{map}->{$pid};
+
+  return $cancel_data->{cancel}->{$handle};
+
+}
+
+# Cleanup. Should be called before a process that registered a cancel
+# handle quits.
+
+sub clear_cancel {
+
+  my ( $self, $pid ) = @_;
+
+  my $cancel_data = $self->retrieve('cancel_data');
+
+  return 0 if not defined $cancel_data;
+
+  my $handle = $cancel_data->{map}->{$pid};
+
+  delete($cancel_data->{map}->{$pid});
+  delete($cancel_data->{map}->{$handle});
+  delete($cancel_data->{cancel}->{$handle});
+
+  $self->store( 'cancel_data', $cancel_data );
+
+  print STDERR Dumper($cancel_data);
+
+
+}
+
+
+
+
 sub store {
 
   my ($self, $item, $ref) = @_;
 
-  my $file = File::Spec->catfile($self->get_tmp_dir(), 'cache', $item);
+  my $file = File::Spec->catfile($self->get_tmp_dir(), $item);
 
   lock_store($ref, $file) or  die "Can't write to cache\n";
 
@@ -309,7 +405,7 @@ sub retrieve {
 
   my ($self, $item) = @_;
 
-  my $file = File::Spec->catfile($self->get_tmp_dir(), 'cache', $item);
+  my $file = File::Spec->catfile($self->get_tmp_dir(), $item);
 
   my $ref=undef;
 

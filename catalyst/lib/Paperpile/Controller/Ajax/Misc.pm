@@ -235,6 +235,16 @@ sub test_network : Local {
 
   my ( $self, $c ) = @_;
 
+  my $cancel_handle = $c->request->params->{cancel_handle};
+
+  Paperpile::Utils->register_cancel_handle($cancel_handle);
+
+  #for my $i (0..15){
+  #  print STDERR "$i ";
+  #  last if Paperpile::Utils->check_cancel($$);
+  #  sleep(1);
+  #}
+
   my $browser = Paperpile::Utils->get_browser( $c->request->params );
 
   my $response = $browser->get('http://google.com');
@@ -246,7 +256,23 @@ sub test_network : Local {
     );
   }
 
+  Paperpile::Utils->clear_cancel($$);
+
 }
+
+sub cancel_request : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $cancel_handle = $c->request->params->{cancel_handle};
+  my $kill = $c->request->params->{kill};
+
+  $kill=0 if not defined $kill;
+
+  Paperpile::Utils->activate_cancel_handle($cancel_handle, $kill);
+
+}
+
 
 sub clean_duplicates : Local {
   my ( $self, $c ) = @_;
@@ -379,6 +405,9 @@ sub report_pdf_match_error : Local {
   my $response = $browser->request($r);
 
 }
+
+
+
 
 
 1;
