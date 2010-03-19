@@ -621,7 +621,7 @@ sub _linkOut {
       $pub_hash{$id}->linkout('');
       # There is still the chance that there is a linkout to PMC, we can query this
       # using cmd=llinks instead of cmd=prlinks. We only do this if there is no DOI.
-      if ( ! defined $pub_hash{$id}->doi ) {
+      if ( $pub_hash{$id}->doi eq '' ) {
 	my $url2 =
 	  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=llinks&db=PubMed&id=$id";
 	my $response2 = $browser->get($url2);
