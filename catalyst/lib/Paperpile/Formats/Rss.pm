@@ -74,7 +74,7 @@ sub read {
   if ( $result->{channel}->[0]->{'prism:issn'} ) {
     $issn = join( '', @{ $result->{channel}->[0]->{'prism:issn'} } );
   }
-
+  print STDERR "$channel_title\n\n";
   # get the list of items
   my @entries;
 
@@ -99,7 +99,7 @@ sub read {
   # sub functions specialized in parsing RSS feeds from particular publishers.
 
   if ( !@entries ) {
-
+    print STDERR "AAAAAAAAAAAAAAAAAAAAAAAa\n";
     # let's see why the regular way did not work
     my $channel_title = join( '', @{ $result->{channel}->[0]->{'title'} } );
     my $channel_link =
@@ -209,6 +209,15 @@ sub read {
     }
 
   } else {
+    my $channel_link =
+      ( $result->{channel}->[0]->{'link'} )
+      ? join( '', @{ $result->{channel}->[0]->{'link'} } )
+      : '';
+
+    # AmericanInstituteOfPhysics
+    if ( $channel_link =~ m/aip.org/ ) {
+      return $self->_parse_AIP( \@entries, $channel_title );
+    }
 
     # if we are here then we have a regular RSS feed
     return $self->_parse_RegularFeed( \@entries, $channel_journal_name, $channel_title,
@@ -1630,6 +1639,66 @@ sub _parse_PLoS {
 
   return [@output];
 }
+
+# RSS feeds from source http://aip.org
+# Bibliographic information and authors
+# are parsed from description field.
+sub _parse_AIP {
+
+  my $self          = shift;
+  my @entries       = @{ $_[0] };
+  my $channel_title = $_[1];
+
+  my @output = ();
+
+  foreach my $entry (@entries) {
+
+    my (
+      $title, $authors, $description, $doi,   $journal, $volume,
+      $issue, $year,    $link,        $pages, $note
+    );
+
+    $title = _easy_join( 'title', $entry );
+    $link  = _easy_join( 'link',  $entry );
+
+    if ( $entry->{'description'} ) {
+      my $temp = join( '', @{ $entry->{'description'} } );
+      my @temp2 = split(/<br\/>/, $temp );
+
+      my @authors_formatted = ();
+      my @temp3 = split(/,|\sand\s/, $temp2[0] );
+      foreach my $entry (@temp3) {
+	if ( $entry ne '' ) {
+	  if ( $entry =~ m/(.*)(et al\.)$/ ) {
+	    push @authors_formatted,
+	      Paperpile::Library::Author->new()->parse_freestyle($1)->bibtex() . " and {et al.}";
+	  } else {
+	    push @authors_formatted,
+	      Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
+	  }
+	}
+      }
+      $authors = join( " and ", @authors_formatted );
+
+      # bibliographic information
+      (my $temp4 = $temp2[1]) =~ s/(.*\[)(.*)(\].*)/$2/;
+      ( $journal = $temp4 ) =~ s/(.*)(\s\d+,.*)/$1/;
+      ( $year = $temp4 ) =~ s/(.*\()(\d\d\d\d)(\).*)/$2/;
+      ( $volume = $temp4 ) =~ s/(.*\s)(\d+)(,.*)/$2/;
+      ( $pages = $temp4 ) =~ s/(.*,\s)(\d+)(\s\(.*)/$2/;
+      $description = $temp2[1];
+    }
+
+    push @output,
+      _fill_publication_object(
+      $title, $authors, $description, $doi,   $journal, $volume,
+      $issue, $year,    $link,        $pages, $note
+      );
+  }
+
+  return [@output];
+}
+
 
 ##################################################################################
 # Section of helper functions
