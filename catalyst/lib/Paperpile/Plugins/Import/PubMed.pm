@@ -619,16 +619,24 @@ sub _linkOut {
     # got an error message
     if ( defined $entry->{Info} ) {
       $pub_hash{$id}->linkout('');
+      # There is still the chance that there is a linkout to PMC, we can query this
+      # using cmd=llinks instead of cmd=prlinks. We only do this if there is no DOI.
+      if ( ! defined $pub_hash{$id}->doi ) {
+	my $url2 =
+	  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=llinks&db=PubMed&id=$id";
+	my $response2 = $browser->get($url2);
+	my $result2 = XMLin( $response2->content, forceArray => ['IdUrlSet'] );
+	my $linkout2 = $result2->{LinkSet}->{IdUrlList}->{IdUrlSet}->[0]->{ObjUrl}->[0]->{Url};
+	$pub_hash{$id}->linkout( $linkout2 ) if ( defined $linkout2 );
+      }
     } else {
       $pub_hash{$id}->linkout( $entry->{ObjUrl}->{Url} );
-
       # Adjust the url otherwise it won't get displayed correctly
       #my $icon_url = $entry->{ObjUrl}->{IconUrl};
       #$icon_url =~ s/entrez/corehtml/;
       #$pub_hash{$id}->icon($icon_url);
     }
   }
-
 }
 
 # Function: _fetch_by_pmid

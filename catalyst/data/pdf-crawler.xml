@@ -217,11 +217,18 @@
 <site name="PMC">
   <signature>
     <url>!pubmedcentral\.nih\.gov!</url>
+    <url>!ncbi\.nlm\.nih\.gov\/pmc!</url>
   </signature>
 
   <rule>
     <pattern>
       <match>!(/picrender\.fcgi\S*blobtype=pdf)!</match>
+    </pattern>
+  </rule>
+  
+  <rule>
+    <pattern>
+      <match>!&quot;(\S+pdf)&quot;>PDF!</match>
     </pattern>
   </rule>
 
