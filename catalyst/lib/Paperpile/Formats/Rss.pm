@@ -74,7 +74,7 @@ sub read {
   if ( $result->{channel}->[0]->{'prism:issn'} ) {
     $issn = join( '', @{ $result->{channel}->[0]->{'prism:issn'} } );
   }
-  print STDERR "$channel_title\n\n";
+
   # get the list of items
   my @entries;
 
@@ -99,7 +99,7 @@ sub read {
   # sub functions specialized in parsing RSS feeds from particular publishers.
 
   if ( !@entries ) {
-    print STDERR "AAAAAAAAAAAAAAAAAAAAAAAa\n";
+
     # let's see why the regular way did not work
     my $channel_title = join( '', @{ $result->{channel}->[0]->{'title'} } );
     my $channel_link =
@@ -609,6 +609,11 @@ sub _parse_RegularFeed {
       }
       $authors =~ s/,/, /g;
       $authors =~ s/\s+/ /g;
+    } else {
+      # An empty author field will cause an empty response in
+      # the front end. In this case we set the authors to
+      # "Nomen Nescio"
+      $authors = 'N N';
     }
 
     push @output,
