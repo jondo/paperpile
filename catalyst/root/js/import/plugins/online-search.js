@@ -45,7 +45,14 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
           callback: function() {
             grid.cancelLoad();
             Paperpile.status.clearMsg();
-          }
+
+            clearTimeout(this.timeoutWarn);
+            clearTimeout(this.timeoutAbort);
+
+            this.timeoutWarn=null;
+            this.timeoutAbort=null;
+          }, 
+          scope:this
         });
 
         // Warn after 15 sec
@@ -64,7 +71,6 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
             hideOnClick: true
           });
         }).defer(35000);
-
       },
       grid);
 
@@ -77,8 +83,8 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
         clearTimeout(this.timeoutWarn);
         clearTimeout(this.timeoutAbort);
 
-        this.timoutWarn=null;
-        this.timoutAbort=null;
+        this.timeoutWarn=null;
+        this.timeoutAbort=null;
 
         this.getSelectionModel().selectFirstRow();
       },
