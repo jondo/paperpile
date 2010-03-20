@@ -183,6 +183,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
   setMsg: function(msg) {
     Ext.DomHelper.overwrite(this.msgEl, msg);
+    this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t', [0, 3]);
   },
 
   setType: function(type) {

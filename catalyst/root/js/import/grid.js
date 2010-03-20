@@ -582,8 +582,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this._store = new Ext.data.Store({
       proxy: new Ext.data.HttpProxy({
         url: Paperpile.Url('/ajax/plugins/resultsgrid'),
-        timeout: 10000000,
-        // Think about this, different plugins need different timeouts...
+        // We don't set timeout here but handle timeout separately in
+        // specific plugins.
+        timeout: 10000000, 
         method: 'GET'
       }),
       baseParams: {
@@ -599,6 +600,31 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     return this._store;
+  },
+
+  cancelLoad: function() {
+            
+    // The refresh button does not get reset and keeps
+    // spinning. It is resetted if an error occurs in the
+    // proxy. Therefore I call the exception explicitly as a
+    // workaround
+    this.store.proxy.fireEvent('exception');
+
+    this.store.proxy.getConnection().abort();
+           
+    // Kill process on the backend. Should not do any harm. On
+    // the backend side a grid call just adds papers to the
+    // _hash cache of the plugin object. I should not matter
+    // if this data gets written or not as any subsequent call
+    // will overwrite it or will never touch it because the
+    // frontend does not know about it.
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/misc/cancel_request'),
+      params: {
+        cancel_handle: 'grid_'+this.id,
+        kill:1,
+      },
+    });
   },
 
   getBySha1: function(sha1) {

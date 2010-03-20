@@ -382,9 +382,6 @@ sub clear_cancel {
 
   $self->store( 'cancel_data', $cancel_data );
 
-  print STDERR Dumper($cancel_data);
-
-
 }
 
 
