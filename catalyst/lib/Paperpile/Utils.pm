@@ -338,7 +338,20 @@ sub activate_cancel_handle {
     delete($cancel_data->{map}->{$pid});
     delete($cancel_data->{map}->{$handle});
     delete($cancel_data->{cancel}->{$handle});
+    $self->store( 'cancel_data', $cancel_data );
+
+    # Note to future-self: Make sure this works on OSX and windows
+    my $processInfo = `ps -A |grep $pid`;
+
+    # Paranoia check to make sure the process is indeed a perl process
+    if (! ($processInfo =~/perl/) ){
+      die("Cancel would have killed $processInfo. Aborted");
+    }
+
+    print STDERR "KILLING: $processInfo";
+
     kill(9,$pid);
+
   } else {
     $cancel_data->{cancel}->{$handle} = 1;
   }

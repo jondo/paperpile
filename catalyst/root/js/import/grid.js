@@ -611,7 +611,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.store.proxy.fireEvent('exception');
 
     this.store.proxy.getConnection().abort();
-           
+
     // Kill process on the backend. Should not do any harm. On
     // the backend side a grid call just adds papers to the
     // _hash cache of the plugin object. I should not matter
