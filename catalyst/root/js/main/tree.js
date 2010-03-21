@@ -87,7 +87,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           delete node.attributes.children;
 
           // Here's where we ensure that only "rename-able" nodes are set as editable.
-          if (!this.isCategoryRootNode(node) && (node.type == "TAGS" || node.type == "FOLDER" || node.type == "ACTIVE")) {
+          if (this.isNodeDraggable(node) && (node.type == "TAGS" || node.type == "FOLDER" || node.type == "ACTIVE")) {
             node.editable = true;
           } else {
             node.editable = false;
@@ -134,7 +134,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       this);
   },
 
-  isCategoryRootNode: function(node) {
+  isNodeDraggable: function(node) {
+    var id = node.id;
+    // Root nodes not allowed.
+    if (id === 'ROOT' || id === 'FOLDER_ROOT' || id === 'LOCAL_ROOT' || id === 'TAGS_ROOT' || id === 'TRASH' || id === 'ACTIVE_ROOT' || id === 'IMPORT_PLUGIN_ROOT') {
+      return false;
+    } else {
+      // Everything else is OK.
+      return true;
+    }
+
+    /*
     if (node.type == 'IMPORT_PLUGIN' && node.id != 'IMPORT_PLUGIN_ROOT') return false;
     if (node.parentNode) {
       var parent = node.parentNode;
@@ -145,6 +155,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       }
     }
     return false;
+*/
   },
 
   initEvents: function() {
@@ -170,7 +181,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       onBeforeDrag: function(data, e) {
         if (data.node) {
           var type = data.node.attributes.type;
-          if (Paperpile.main.tree.isCategoryRootNode(data.node)) {
+          if (!Paperpile.main.tree.isNodeDraggable(data.node)) {
             data.node.draggable = false;
           }
         }
@@ -245,7 +256,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   myOnClick: function(node, e) {
-    Paperpile.log(node);
+      //Paperpile.log(node);
     //      Paperpile.log(e.browserEvent);
     switch (node.id) {
     case 'FOLDER_ROOT':
@@ -1158,9 +1169,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   // representation to database.
   //
   onNewTag: function(node) {
-    Paperpile.log("NEW TAG");
-    Paperpile.log(node);
-
     node.setText(this.getUniqueTag(node.text));
 
     var index = node.parentNode.indexOf(node);
@@ -1265,7 +1273,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         // If this tab has an open grid, rename it.
         var tagTab = Paperpile.main.tabs.find("title", oldText);
         if (tagTab.length > 0) {
-            tagTab[0].setTitle(newText);
+          tagTab[0].setTitle(newText);
         }
 
         Paperpile.main.onUpdate(json);
