@@ -169,6 +169,8 @@ sub clouds : Local {
 
   my $max = $list[0]->{count};
   my $min = $list[$#list]->{count};
+  $max = 1 if ($max == 0);
+  $min = 1 if ($min == 0);
 
   my $output = '';
 
@@ -178,7 +180,8 @@ sub clouds : Local {
 
   foreach my $item ( @sorted_list ) {
 
-    my $x = $item->{count};
+    my $count = $item->{count};
+    my $x = $item->{count} || 1;
 
     my $weight = 1.0;
 
@@ -191,13 +194,18 @@ sub clouds : Local {
     my $name = $item->{name};
     my $id   = $item->{id};
 
+    my $style_string = "";
+    my $class_string = "pp-cloud-item";
+    my $key_string = "$id";
     if ($item->{style}) {
       # We have style information for the tag cloud.
       my $style = $item->{style};
-      $output .= "<a class=\"pp-tag-cloud pp-tag-style-${style}\" key=\"$name\" style_number=\"${style}\" href=\"#\" style=\"font-size:$size;\">$name</a> ";
-    } else {
-      $output .= "<a key=\"$id\" class=\"pp-cloud-item\" href=\"#\" style=\"font-size:$size;\">$name</a> ";
+      $key_string = qq^$name^;
+      $style_string = qq^style_number="$style"^;
+      $class_string = qq^pp-cloud-item pp-tag-cloud pp-tag-style-$style^;
     }
+
+    $output .= "<a key=\"$key_string\" class=\"$class_string\" href=\"#\" $style_string style=\"font-size:$size;\" count=\"$count\">$name</a> ";
 
   }
 

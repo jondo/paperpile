@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.Clouds = Ext.extend(Ext.Panel, {
 
   title: 'Clouds',
@@ -63,11 +62,31 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
     this.sort = Paperpile.main.globalSettings['cloud_sorting'] || 'alphabetical';
     this.tpl = new Ext.XTemplate(this.markup);
 
-    Paperpile.PatternSettings.superclass.initComponent.call(this);
+    Paperpile.Clouds.superclass.initComponent.call(this);
   },
 
   afterRender: function() {
-    Paperpile.Statistics.superclass.afterRender.apply(this, arguments);
+    Paperpile.Clouds.superclass.afterRender.call(this);
+
+    this.countTip = new Ext.ToolTip({
+      //      maxWidth: 500,
+      //      showDelay: 0,
+      //      hideDelay: 0,
+	target: this.getEl(),
+      delegate: '.pp-cloud-item',
+      renderTo: document.body,
+      listeners: {
+        beforeshow: {
+          fn: function updateTipBody(tip) {
+            var el = tip.triggerElement;
+	    var count = el.getAttribute("count");
+            tip.body.dom.innerHTML = "Paper Count: <b>" + count + "</b>";
+          },
+          scope: this
+        }
+      }
+    });
+
     this.updateClouds();
 
     this.tpl.overwrite(this.body, {
@@ -144,16 +163,16 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
         Ext.select('#stats-tabs li', true).removeClass('pp-box-tabs-active');
         Ext.select('[action=show_' + this.field + ']').addClass('pp-box-tabs-active');
 
-	var sortOptions = Ext.select('.pp-cloud-options li');
-	sortOptions.removeClass('pp-cloud-options-active');
-	sortOptions.each(function(el,c,index) {
-	  var anchor = el.down('a');
-	  if (anchor.getAttribute('action') == 'sort_'+this.sort) {
-	    Paperpile.log(anchor);
-	    el.addClass('pp-cloud-options-active');
-	  }
-	},this);
-
+        var sortOptions = Ext.select('.pp-cloud-options li');
+        sortOptions.removeClass('pp-cloud-options-active');
+        sortOptions.each(function(el, c, index) {
+          var anchor = el.down('a');
+          if (anchor.getAttribute('action') == 'sort_' + this.sort) {
+            Paperpile.log(anchor);
+            el.addClass('pp-cloud-options-active');
+          }
+        },
+        this);
 
         Ext.DomHelper.overwrite('cloud', '');
         Ext.DomHelper.insertHtml('afterBegin', Ext.get('cloud').dom, json.html);
