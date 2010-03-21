@@ -14,8 +14,20 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 // Ext overrides
+// Add an option to not show the loading spinner for certain nodes.
+Ext.override(Ext.tree.TreeNodeUI, {
+    beforeLoad: function() {
+    if (!this.node.silentLoad) {
+      this.addClass("x-tree-node-loading");
+    }
+  },
+    afterLoad: function() {
+    if (!this.node.silentLoad) {
+      this.removeClass("x-tree-node-loading");
+    }
+  }
+});
 
 // Takes care of "this.lastOverNode.ui is null" bugs.
 // See http://www.extjs.com/forum/showthread.php?t=85052
