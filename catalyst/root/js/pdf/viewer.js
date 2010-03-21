@@ -83,7 +83,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
   destroyedFlag: false,
 
-  debug: true,
+  debug: false,
   log: function() {
     if (this.debug) {
       Paperpile.log(arguments);
