@@ -341,8 +341,14 @@ sub rename_node : Local {
 sub set_node_order : Local {
   my ( $self, $c ) = @_;
 
-  my $target_node = $c->request->params->{target_node};
-  my @id_order    = @{ $c->request->params->{node_id_order} };
+  my $target_node   = $c->request->params->{target_node};
+  my $node_id_order = $c->request->params->{node_id_order};
+  my @id_order;
+  if ( ref $node_id_order eq 'ARRAY' ) {
+    @id_order = @{$node_id_order};
+  } else {
+    @id_order = ($node_id_order);
+  }
 
   my $tree = $c->session->{"tree"};
   my $root = $c->forward( 'private/get_subtree', [ $tree, $target_node ] );
