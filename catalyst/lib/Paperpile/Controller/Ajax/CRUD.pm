@@ -352,10 +352,10 @@ sub delete_tag : Local {
   my $pubs = $self->_get_cached_data($c);
   foreach my $pub ( @$pubs ) {
     my $new_tags = $pub->tags;
-    $new_tags =~ s/^$tag,//g;
-    $new_tags =~ s/^$tag$//g;
-    $new_tags =~ s/,$tag$//g;
-    $new_tags =~ s/,$tag,/,/g;
+    $new_tags =~ s/^\Q$tag\E,//g;
+    $new_tags =~ s/^\Q$tag\E$//g;
+    $new_tags =~ s/,\Q$tag\E$//g;
+    $new_tags =~ s/,\Q$tag\E,/,/g;
     $pub->tags($new_tags);
   }
 
@@ -375,10 +375,10 @@ sub rename_tag : Local {
   my $pubs = $self->_get_cached_data($c);
   foreach my $pub ( @$pubs ) {
     my $new_tags = $pub->tags;
-    $new_tags =~ s/^$old_tag,/$new_tag,/g;
-    $new_tags =~ s/^$old_tag$/$new_tag/g;
-    $new_tags =~ s/,$old_tag$/,$new_tag/g;
-    $new_tags =~ s/,$old_tag,/,$new_tag,/g;
+    $new_tags =~ s/^\Q$old_tag\E,/$new_tag,/g;
+    $new_tags =~ s/^\Q$old_tag\E$/$new_tag/g;
+    $new_tags =~ s/,\Q$old_tag\E$/,$new_tag/g;
+    $new_tags =~ s/,\Q$old_tag\E,/,$new_tag,/g;
     $pub->tags($new_tags);
   }
 
