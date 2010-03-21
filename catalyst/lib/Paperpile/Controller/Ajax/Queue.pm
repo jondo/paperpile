@@ -114,6 +114,11 @@ sub update : Local {
     my $job = Paperpile::Job->new( { id => $id } );
     if (defined $job->pub) {
       my $pub = $job->pub;
+      # Sha1 has changed
+      if ($pub->_old_sha1){
+        $pub->_new_sha1($pub->sha1);
+        $pub->sha1($pub->_old_sha1);
+      }
       push @pub_list, $pub;
       $jobs->{$id} = $job->as_hash;
     }

@@ -162,6 +162,11 @@ sub insert_pubs {
 
     next if $pub->_imported;
 
+    # Sanity check. Should not come to this point without sha1 but we
+    # had an error like this and that could have prevented a corrupted
+    # database
+    next if (!$pub->sha1);
+
     ## Insert main entry into Publications table
     my $tmp = $pub->as_hash();
 
