@@ -160,7 +160,10 @@ sub insert_pubs {
 
   foreach my $pub (@$pubs) {
 
-    next if $pub->_imported;
+    if ($pub->_imported){
+      print STDERR $pub->sha1, " already exists. Skipped.\n";
+      next;
+    }
 
     # Sanity check. Should not come to this point without sha1 but we
     # had an error like this and that could have prevented a corrupted

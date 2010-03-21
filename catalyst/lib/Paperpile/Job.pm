@@ -502,7 +502,8 @@ sub as_hash {
     $hash{title}    = $self->pub->title;
     $hash{doi}    = $self->pub->doi;
     $hash{citation} = $self->pub->_citation_display;
-    $hash{authors}  = $self->pub->_authors_display;
+    $hash{authors_display}  = $self->pub->_authors_display;
+    $hash{authors}  = $self->pub->authors;
     $hash{pdf}  = $self->pub->pdf;
   }
   return {%hash};

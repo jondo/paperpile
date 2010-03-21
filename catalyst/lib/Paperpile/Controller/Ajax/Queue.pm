@@ -75,9 +75,9 @@ sub grid : Local {
     root          => 'data',
     id            => 'id',
     fields        => [
-      'id',         'type',    'status',  'progress', 'error',    'size',
-      'downloaded', 'message', 'citekey', 'title',    'citation', 'authors',
-      'pdf',        'doi'
+      'id',              'type',    'status',  'progress', 'error',    'size',
+      'downloaded',      'message', 'citekey', 'title',    'citation', 'authors',
+      'authors_display', 'pdf',     'doi'
     ]
   );
 

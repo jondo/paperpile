@@ -737,6 +737,44 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
   },
 
+  // Use this simple function here for now. We can think about a more
+  // sophisticated tab panel with PDF view later.
+  addPDFManually: function(jobID, gridID){
+
+    var data = Ext.getCmp(gridID).getStore().getById(jobID).data;
+    
+    data.match_job =data.id;
+
+    console.log(data);
+
+    data.pubtype='ARTICLE';
+
+    win = new Ext.Window({
+      title: "Import "+data.pdf, 
+      modal: true,
+      shadow: false,
+      layout: 'fit',
+      width: 800,
+      height: 600,
+      resizable: false,
+      closable: true,
+      items: [new Paperpile.MetaPanel({
+        data: data,
+        grid_id: null,
+        callback: function(status, data) {
+          if (status == 'SAVE') {
+            Paperpile.main.onUpdate(data);
+            Paperpile.status.clearMsg();
+          }
+          win.close();
+        },
+        scope: this
+      })],
+    });
+
+    win.show(this);
+  },
+
   // Type: CRASH, PDF_DOWNLOAD, PDF_IMPORT
   reportError: function(type, info) {
 

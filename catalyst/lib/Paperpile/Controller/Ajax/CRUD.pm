@@ -30,11 +30,11 @@ use 5.010;
 sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
+  my $grid_id   = $c->request->params->{grid_id};
 
   my $plugin    = $self->_get_plugin($c);
   my $selection = $self->_get_selection($c);
-  my %output = ();
+  my %output    = ();
 
   # Go through and complete publication details if necessary.
   my @pub_array = ();
@@ -58,6 +58,7 @@ sub insert_entry : Local {
     $pub->_imported(1);
     my $pub_hash = $pub->as_hash;
     if ( $pub->{_old_sha1} ) {
+
       # ... now use the old / original sha1 as the sha1 to be returned to the front end,
       # while flagging that we have a *new* sha1 that the front-end should update to.
       # The actual updating to the new sha1 happens within the grid.js file.
@@ -72,9 +73,10 @@ sub insert_entry : Local {
 
   # If the number of imported pubs is reasonable, we return the updated pub data
   # directly and don't reload the entire grid that triggered the import.
-  if (scalar(keys %$pubs) < 50) {
+  if ( scalar( keys %$pubs ) < 50 ) {
     $c->stash->{data} = { pubs => $pubs };
-    # There is no need to reload the entire grid for the 
+
+    # There is no need to reload the entire grid for the
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
   }
 
@@ -114,6 +116,8 @@ sub new_entry : Local {
 
   my ( $self, $c ) = @_;
 
+  my $match_job = $c->request->params->{match_job};
+
   my %fields = ();
 
   foreach my $key ( %{ $c->request->params } ) {
@@ -133,6 +137,17 @@ sub new_entry : Local {
 
   $c->stash->{data}->{pub_delta} = 1;
 
+  # Inserting a PDF that failed to match automatically and that has a
+  # jobid in the queue. We update the job entry here.
+  if ($match_job) {
+    my $job = Paperpile::Job->new( { id => $match_job } );
+    $job->update_status('DONE');
+    $job->error('');
+    $job->update_info('msg',"Data inserted manually.");
+    $job->pub($pub);
+    $job->save;
+    $c->stash->{data}->{jobs}->{$match_job} = $job->as_hash;
+  }
 }
 
 sub delete_entry : Local {

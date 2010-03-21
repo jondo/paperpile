@@ -1729,6 +1729,14 @@ table.pp-meta-form {
     font-size: 14px;
 }
 
+.pp-meta-form caption {
+    background-color:#FFF1A8;
+    font-size:12px;
+    padding:4px;
+    margin-bottom:10px;
+}
+
+
 .pp-authortip {
     text-decoration:none;
     display:inline;
@@ -1782,7 +1790,7 @@ table.pp-meta-form {
 }
 
 .pp-meta-form td.active {
-    background-color: #F2F5A9;
+    background-color: #FFF1A8;
 }
 
 .pp-meta-form a.pp-textlink {

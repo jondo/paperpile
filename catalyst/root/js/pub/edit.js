@@ -14,10 +14,45 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   initComponent: function() {
+
+    // This is the combobox of the publication type which is always
+    // shown
+    var typeComboLine = {
+      tag: 'tbody',
+      children: [{
+        tag: 'tr',
+        children: [{
+          tag: 'td',
+          cls: 'label',
+          html: 'Type'
+        },
+        {
+          tag: 'td',
+          id: 'type-combo',
+          cls: 'field',
+          colspan: 5
+        },
+        ]
+      }]
+    };
+
+    var tableContent =  [typeComboLine];
+
+    
+    // If we are editing the data for new PDF, we show information on
+    // the PDF in the caption of the table
+    //if (this.data.pdf && !this.data._imported) {
+    if (this.data.match_job){
+      tableContent.unshift({
+        tag: 'caption',
+        cls: 'notice',
+        html: '<b>Add data for</b> ' + this.data.pdf + '<div style="float:right;"><a href="#" id="pdf-view-button" class="pp-textlink">View PDF</a></div>',
+      });
+    }
+   
 
     Ext.apply(this, {
       // The form is a table that consists of several tbody
@@ -28,24 +63,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         tag: 'table',
         cls: 'pp-meta-form',
         id: "form-table",
-        children: [{
-          tag: 'tbody',
-          children: [{
-            tag: 'tr',
-            children: [{
-              tag: 'td',
-              cls: 'label',
-              html: 'Type'
-            },
-            {
-              tag: 'td',
-              id: 'type-combo',
-              cls: 'field',
-              colspan: 5
-            },
-            ]
-          }]
-        }]
+        children: tableContent
       },
       ],
 
@@ -56,6 +74,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
           id: 'save_button',
           text: 'Save',
           cls: 'x-btn-text-icon save',
+          disabled: (this.data.title) ? false : true,
           listeners: {
             click: {
               fn: this.onSave,
@@ -145,6 +164,13 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     cb.on('focus', this.onFocus, this);
 
+    if (Ext.get('pdf-view-button')) {
+      Ext.get('pdf-view-button').on('click', function() {
+        Paperpile.utils.openFile(this.data.pdf);
+      },
+      this);
+    }
+
     this.renderForm(pubType);
 
     Ext.get('form-table').on('click', this.onClick, this);
@@ -222,6 +248,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         id: field + '-input',
         name: field,
         width: w,
+        enableKeyEvents: true,
         value: this.data[field],
       };
 
@@ -285,6 +312,13 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       input.on('focus', this.onFocus, this);
 
       input.render(field + '-field', 0);
+
+      if (field === 'title') {
+        input.on('keyup', function(field, e) {
+          Ext.getCmp('save_button').setDisabled(field.getValue() == '');
+        },
+        this);
+      }
 
       // Tricky to put tooltip next to combobox; turned off
       // tooltip for journal for now
@@ -553,12 +587,10 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     // else we are creating a new one
     else {
       url = Paperpile.Url('/ajax/crud/new_entry');
-      if (this.data['attach_pdf']) {
-        params = {
-          attach_pdf: this.data['attach_pdf']
-        };
-      }
       msg = 'Adding new entry to database';
+      if (this.data.match_job) {
+        params = {pdf: this.data.pdf, match_job: this.data.match_job};
+      }
     }
 
     Paperpile.status.showBusy(msg);

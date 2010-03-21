@@ -97,7 +97,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
     }
 
     if (data.authors) {
-      data.shortAuthors = this.shortAuthors(data.authors);
+      data.shortAuthors = this.shortAuthors(data.authors_display);
     } else {
       data.shortAuthors = null;
     }
@@ -110,6 +110,8 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
 
     data.errorReportInfo = data.title + ' | ' + data.authors + ' | ';
     data.errorReportInfo += data.citation + ' | ' + data.doi + ' | ' + data.linkout;
+
+    data.gridID=this.id;
 
     return this.dataTemplate.apply(data);
   },
@@ -192,7 +194,10 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '      {message}',
       '      </div>',
       '      <tpl if="status==\'ERROR\'">',
-      '        <p><a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfMatchError(\'{pdf}\');">Send Error Report</a></p> ',
+      '        <p>',
+      '          <a href="#" class="pp-textlink" onclick="Paperpile.main.addPDFManually(\'{id}\',\'{gridID}\');">Insert data manually</a> | ',
+      '          <a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfMatchError(\'{pdf}\');">Send Error Report</a>',
+      '       </p>',
       '      </tpl>',
       '    </div>',
       '  </tpl>',
