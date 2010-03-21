@@ -1194,9 +1194,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
+        node.remove();
         this.reloadTags(json);
         Paperpile.main.tabs.closeTabByTitle(tag);
-        node.remove();
       },
       scope: this
     });

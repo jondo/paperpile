@@ -631,10 +631,10 @@ sub delete_tag {
     # Delete tag from flat string in Publications/Fulltext table
 
     my $new_tags = $tags;
-    $new_tags =~ s/^$tag$//;
-    $new_tags =~ s/^$tag,//;
-    $new_tags =~ s/,$tag,/,/;
-    $new_tags =~ s/,$tag$//;
+    $new_tags =~ s/^\Q$tag\E$//;
+    $new_tags =~ s/^\Q$tag\E,//;
+    $new_tags =~ s/,\Q$tag\E,/,/;
+    $new_tags =~ s/,\Q$tag\E$//;
 
     $self->_update_tags( $publication_id, $new_tags );
 
@@ -670,10 +670,10 @@ sub rename_tag {
 
     my $new_tags = $old_tags;
 
-    $new_tags =~ s/^$old_tag$/$new_tag/;
-    $new_tags =~ s/^$old_tag,/$new_tag,/;
-    $new_tags =~ s/,$old_tag,/,$new_tag,/;
-    $new_tags =~ s/,$old_tag$/,$new_tag/;
+    $new_tags =~ s/^\Q$old_tag\E$/$new_tag/;
+    $new_tags =~ s/^\Q$old_tag\E,/$new_tag,/;
+    $new_tags =~ s/,\Q$old_tag\E,/,$new_tag,/;
+    $new_tags =~ s/,\Q$old_tag\E$/,$new_tag/;
 
     $self->_update_tags( $publication_id, $new_tags );
   }
