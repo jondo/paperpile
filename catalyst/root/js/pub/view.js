@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
   closable: false,
 
@@ -57,6 +56,16 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       this, {
         single: true
       });
+  },
+
+  saveScrollState: function() {
+    this.gridState = this.getGrid().getView().getScrollState();
+  },
+  restoreScrollState: function() {
+    if (this.gridState != null) {
+      this.getGrid().getView().restoreScroll(this.gridState);
+      this.gridState = null;
+    }
   },
 
   createGrid: function(params) {
