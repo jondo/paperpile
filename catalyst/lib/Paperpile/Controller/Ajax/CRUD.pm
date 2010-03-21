@@ -70,13 +70,16 @@ sub insert_entry : Local {
     $pubs->{ $pub_hash->{sha1} } = $pub_hash;
   }
 
-  $c->stash->{data} = { pubs => $pubs };
+  # If the number of imported pubs is reasonable, we return the updated pub data
+  # directly and don't reload the entire grid that triggered the import.
+  if (scalar(keys %$pubs) < 50) {
+    $c->stash->{data} = { pubs => $pubs };
+    # There is no need to reload the entire grid for the 
+    $c->stash->{data}->{pub_delta_ignore} = $grid_id;
+  }
 
   # Trigger a complete reload
   $c->stash->{data}->{pub_delta} = 1;
-
-  # There is no need to reload the original grid
-  $c->stash->{data}->{pub_delta_ignore} = $grid_id;
 
   $self->_update_counts($c);
 
@@ -156,9 +159,8 @@ sub delete_entry : Local {
     $c->session->{"undo_trash"} = $data;
   }
 
-  my $pubs = $self->_collect_data($data,['_imported','trashed']);
+  $self->_collect_data($c,$data,['_imported','trashed']);
 
-  $c->stash->{data}    = {pubs => $pubs};
   $c->stash->{data}->{pub_delta} = 1;
   $c->stash->{num_deleted} = scalar @$data;
 
@@ -265,14 +267,11 @@ sub add_tag : Local {
 
   if (@to_be_imported) {
     $self->_update_counts($c);
-    my $update =
-      $self->_collect_data( $data, [ 'tags', '_imported', 'citekey', 'created', 'pdf' ] );
-    $c->stash->{data} = { pubs => $update };
+    $self->_collect_data($c, $data, [ 'tags', '_imported', 'citekey', 'created', 'pdf' ] );
     $c->stash->{data}->{pub_delta}        = 1;
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
   } else {
-    my $update = $self->_collect_data( $data, ['tags'] );
-    $c->stash->{data} = { pubs => $update };
+    $self->_collect_data($c, $data, ['tags'] );
   }
 
 }
@@ -300,10 +299,8 @@ sub remove_tag : Local {
 
   $dbh->commit;
 
-  my $update = $self->_collect_data($data,['tags']);
-  $c->stash->{data}    = {pubs => $update};
+  $self->_collect_data($c, $data,['tags']);
   $c->forward('Paperpile::View::JSON');
-
 }
 
 sub update_tags : Local {
@@ -326,9 +323,7 @@ sub style_tag : Local {
   $c->model('Library')->set_tag_style( $tag, $style );
 
   my $pubs = $self->_get_cached_data($c);
-  my $update = $self->_collect_data($pubs,['tags']);
-  $c->stash->{data}    = {pubs => $update};  
-
+  $self->_collect_data($c, $pubs,['tags']);
 }
 
 sub new_tag : Local {
@@ -359,9 +354,7 @@ sub delete_tag : Local {
     $pub->tags($new_tags);
   }
 
-  my $update = $self->_collect_data($pubs,['tags']);
-  $c->stash->{data}    = {pubs => $update};
-
+  $self->_collect_data($c, $pubs,['tags']);
 }
 
 sub rename_tag : Local {
@@ -382,9 +375,7 @@ sub rename_tag : Local {
     $pub->tags($new_tags);
   }
 
-  my $update = $self->_collect_data($pubs,['tags']);
-  $c->stash->{data}    = {pubs => $update};
-
+  $self->_collect_data($c, $pubs,['tags']);
 }
 
 sub generate_edit_form : Local {
@@ -448,13 +439,11 @@ sub move_in_folder : Local {
 
   if (@to_be_imported) {
     $self->_update_counts($c);
-    my $update = $self->_collect_data( $data, [ 'folders', '_imported', 'citekey', 'created','pdf' ] );
-    $c->stash->{data} = { pubs => $update };
+    $self->_collect_data($c, $data, [ 'folders', '_imported', 'citekey', 'created','pdf' ] );
     $c->stash->{data}->{pub_delta}        = 1;
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
   } else {
-    my $update = $self->_collect_data( $data, ['folders'] );
-    $c->stash->{data} = { pubs => $update };
+    $self->_collect_data($c, $data, ['folders'] );
   }
 
 }
@@ -474,9 +463,7 @@ sub delete_from_folder : Local {
 
   $c->model('Library')->delete_from_folder( $data, $folder_id );
 
-  my $pubs = $self->_collect_data( $data, ['folders'] );
-  $c->stash->{data} = { pubs => $pubs };
-
+  $self->_collect_data($c, $data, ['folders'] );
 }
 
 
@@ -504,7 +491,7 @@ sub batch_download : Local {
   $q->submit( \@jobs );
   $q->save;
   $q->run;
-  my $pubs = $self->_collect_data( $data, ['_search_job'] );
+  $self->_collect_data($c, $data, ['_search_job'] );
 
 
   #my $pid = undef;
@@ -525,7 +512,7 @@ sub batch_download : Local {
   #  print STDERR "================> This is the parent.";
   #}
 
-  $c->stash->{data} = { pubs => $pubs, job_delta => 1 };
+  $c->stash->{data}->{job_delta} = 1;
 
   $c->detach('Paperpile::View::JSON');
 
@@ -609,9 +596,16 @@ sub _update_counts {
   }
 }
 
-
 sub _collect_data {
-  my ( $self, $pubs, $fields ) = @_;
+  my ( $self, $c, $pubs, $fields ) = @_;
+
+  $c->stash->{data} = {} unless (defined $c->stash->{data});
+
+  my $max_output_size = 50;
+  if (scalar(@$pubs) > $max_output_size) {
+    $c->stash->{data}->{pub_delta} = 1;
+    return ();
+  }
 
   my %output = ();
   foreach my $pub (@$pubs) {
@@ -625,7 +619,8 @@ sub _collect_data {
     }
     $output{ $hash->{sha1} } = $pub_fields;
   }
-  return \%output;
+
+  $c->stash->{data}->{pubs} = \%output;
 }
 
 1;
