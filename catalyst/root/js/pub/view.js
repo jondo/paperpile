@@ -163,7 +163,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       }
 
       this.getGrid().getView().holdPosition = true;
-      this.getGrid().getStore().reload();
+      this.getGrid().backgroundReload();
     }
   },
 

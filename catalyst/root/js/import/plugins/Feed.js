@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginPanelFeed = Ext.extend(Paperpile.PluginPanel, {
 
   initComponent: function() {
@@ -49,13 +48,13 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
     },
     this);
     this.getStore().on('load', function() {
-      Paperpile.status.clearMsg();
+      if (!this.backgroundLoading) {
+        Paperpile.status.clearMsg();
+      }
     },
     this);
 
     Paperpile.PluginGridFeed.superclass.initComponent.call(this);
-
-
   },
 
   initToolbarMenuItemIds: function() {

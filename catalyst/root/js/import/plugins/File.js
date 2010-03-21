@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginPanelFile = function(config) {
   Ext.apply(this, config);
 
@@ -43,7 +42,9 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
     },
     this);
     this.getStore().on('load', function() {
-      Paperpile.status.clearMsg();
+      if (!this.backgroundLoading) {
+        Paperpile.status.clearMsg();
+      }
     },
     this);
 
@@ -52,7 +53,7 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
 
   initToolbarMenuItemIds: function() {
     Paperpile.PluginGridFile.superclass.initToolbarMenuItemIds.call(this);
-    
+
     var ids = this.toolbarMenuItemIds;
 
     ids.remove('NEW');
@@ -61,7 +62,7 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
 
   initContextMenuItemIds: function() {
     Paperpile.PluginGridFile.superclass.initContextMenuItemIds.call(this);
-    
+
     var ids = this.contextMenuItemIds;
 
     ids.remove('DELETE');

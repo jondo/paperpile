@@ -14,17 +14,28 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   initComponent: function() {
 
     Ext.apply(this, {
       id: 'pp-tabs',
       //margins: '2 2 2 2',
+      layoutOnCardChange: true,
+      layoutOnTabChange: true,
       monitorResize: false
     });
 
     Paperpile.Tabs.superclass.initComponent.call(this);
+
+    this.on('tabchange', function(tabs, tab) {
+      // Force the grid view to re-layout on tab change. Fixes a weird bug
+      // where grids re-loaded in the background lose their DOM.
+      if (tab instanceof Paperpile.PluginPanel) {
+        var grid = tab.getGrid();
+        grid.view.layout();
+      }
+    },
+    this);
   },
 
   closeTabByTitle: function(title) {

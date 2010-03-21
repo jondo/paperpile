@@ -36,7 +36,10 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
 
     grid.store.on('beforeload',
       function() {
-        
+        if (this.backgroundLoading) {
+          return;
+        }
+
         // Show waiting message and allow canceling
         Paperpile.status.updateMsg({
           busy: true,
@@ -49,25 +52,25 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
             clearTimeout(this.timeoutWarn);
             clearTimeout(this.timeoutAbort);
 
-            this.timeoutWarn=null;
-            this.timeoutAbort=null;
-          }, 
-          scope:this
+            this.timeoutWarn = null;
+            this.timeoutAbort = null;
+          },
+          scope: this
         });
 
         // Warn after 15 sec
-        this.timeoutWarn=(function(){
-          Paperpile.status.setMsg('This takes longer than usual. Still searching '+grid.plugin_name+'...');
+        this.timeoutWarn = (function() {
+          Paperpile.status.setMsg('This is taking longer than usual. Still searching ' + grid.plugin_name + '...');
         }).defer(15000);
 
         // Abort after 35 sec
-        this.timeoutAbort=(function(){
+        this.timeoutAbort = (function() {
           grid.cancelLoad();
           Paperpile.status.clearMsg();
 
           Paperpile.status.updateMsg({
             type: 'error',
-            msg: 'Giving up. There may be problems with your network or '+grid.plugin_name+'.',
+            msg: 'Giving up. There may be problems with your network or ' + grid.plugin_name + '.',
             hideOnClick: true
           });
         }).defer(35000);
@@ -76,15 +79,16 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
 
     grid.store.on('load',
       function() {
-        
         // Clear status message and timeout timers
-        Paperpile.status.clearMsg();
+        if (!this.backgroundLoading) {
+          Paperpile.status.clearMsg();
+        }
 
         clearTimeout(this.timeoutWarn);
         clearTimeout(this.timeoutAbort);
 
-        this.timeoutWarn=null;
-        this.timeoutAbort=null;
+        this.timeoutWarn = null;
+        this.timeoutAbort = null;
 
         this.getSelectionModel().selectFirstRow();
       },

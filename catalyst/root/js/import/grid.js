@@ -277,7 +277,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       enableHdMenu: false,
       autoExpandColumn: 'publication',
-
+	
       columns: [{
         header: "",
         id: 'icons',
@@ -354,6 +354,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.updateDragStatus(nodeData, source, e, data);
     return retVal;
+  },
+
+  backgroundReload: function() {
+    this.backgroundLoading = true;
+
+    this.getStore().reload({
+      callback: function() {
+        this.backgroundLoading = false;
+      },
+      scope: this
+    });
   },
 
   updateDragStatus: function(nodeData, source, e, data) {
