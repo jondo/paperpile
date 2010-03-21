@@ -995,7 +995,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
 
     var a = this.actions['MORE_FROM_JOURNAL'];
-    a.setText(this.getJournalFromSelection());
+    if (this.getJournalFromSelection() != '') {
+      a.show();
+      a.setText(this.getJournalFromSelection());
+    } else {
+      a.hide();
+    }
     a.each(function(item) {
       item.style = {
         'font-style': 'italic'
@@ -1006,7 +1011,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
     this);
 
-    this.actions['MORE_FROM_YEAR'].setText(this.getYearFromSelection());
+    a = this.actions['MORE_FROM_YEAR'];
+    if (this.getYearFromSelection() != '') {
+      a.show();
+      a.setText(this.getYearFromSelection());
+    } else {
+      a.hide();
+    }
 
   },
 
