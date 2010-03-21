@@ -182,11 +182,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   },
 
-    keyControlA: function() {
-	var tab = Paperpile.main.tabs.getActiveTab();
-	var grid = tab.getGrid();
-	grid.selectAll();
-    },
+  keyControlA: function() {
+    var tab = Paperpile.main.tabs.getActiveTab();
+    var grid = tab.getGrid();
+    grid.selectAll();
+  },
 
   keyControlTab: function() {
     var tabs = Paperpile.main.tabs;
@@ -465,6 +465,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   isTabPlugin: function(panel) {
+    if (panel.gridParams === undefined) {
+      return false;
+    }
     var plugin_query = panel.gridParams.plugin_query;
     if (plugin_query && plugin_query.indexOf("label") != -1) {
       return true;

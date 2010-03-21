@@ -1107,7 +1107,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     tagCollection.sort('ASC', function(a, b) {
       return a.text.localeCompare(b.text);
     });
- 
+
     var sortedIds = [];
     tagCollection.each(function(obj) {
       sortedIds.push(obj.id);
@@ -1254,25 +1254,22 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var tag = oldText;
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/rename_node'),
+      url: Paperpile.Url('/ajax/crud/rename_tag'),
       params: {
-        node_id: node.id,
-        new_text: newText
+        old_tag: tag,
+        new_tag: newText
       },
-      success: function() {
-        Ext.Ajax.request({
-          url: Paperpile.Url('/ajax/crud/rename_tag'),
-          params: {
-            old_tag: tag,
-            new_tag: newText
-          },
-          success: function(response) {
-            var json = Ext.util.JSON.decode(response.responseText);
-            this.reloadTags(json);
-          },
-          failure: Paperpile.main.onError,
-          scope: this
-        });
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+
+        // If this tab has an open grid, rename it.
+        var tagTab = Paperpile.main.tabs.find("title", oldText);
+        if (tagTab.length > 0) {
+            tagTab[0].setTitle(newText);
+        }
+
+        Paperpile.main.onUpdate(json);
+        this.reloadTags(json);
       },
       failure: Paperpile.main.onError,
       scope: this
