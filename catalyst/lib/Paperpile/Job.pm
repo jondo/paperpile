@@ -349,11 +349,7 @@ sub _do_work {
 
     if (!$self->pub->linkout && !$self->pub->doi){
 
-      print STDERR "----------> before", $self->pub->sha1, "\n";
-
       $self->_match;
-
-      print STDERR "----------> after", $self->pub->sha1, "\n";
 
       # This currently does not handle the case e.g when we match
       # successfully against PubMed but don't get a doi/linkout and a
@@ -577,9 +573,9 @@ sub _match_single {
 
   my $new_sha1 = $pub->sha1;
 
+  # Store old sha1 to allow updating the frontend correctly
   if ($old_sha1 ne $new_sha1){
-    $pub->_new_sha1($new_sha1);
-    $pub->sha1($old_sha1);
+    $pub->_old_sha1($old_sha1);
   }
 
   $self->pub($pub);

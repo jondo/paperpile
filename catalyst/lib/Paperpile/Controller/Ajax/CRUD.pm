@@ -32,18 +32,17 @@ sub insert_entry : Local {
 
   my $grid_id = $c->request->params->{grid_id};
 
-  my $plugin = $self->_get_plugin($c);
-  my $selection = $self->_get_selection( $c);
-  print STDERR "  -> INSERTING ENTRY...\n";
+  my $plugin    = $self->_get_plugin($c);
+  my $selection = $self->_get_selection($c);
   my %output = ();
 
   # Go through and complete publication details if necessary.
   my @pub_array = ();
   foreach my $pub (@$selection) {
-      print STDERR "  ->PUB: ".$pub->title."\n";
-    if ($plugin->needs_completing($pub)) {
+    if ( $plugin->needs_completing($pub) ) {
       my $old_sha1 = $pub->sha1;
-      my $new_pub = $plugin->complete_details($pub);
+      my $new_pub  = $plugin->complete_details($pub);
+
       # Store the old / original sha1 for use later on...
       $new_pub->{_old_sha1} = $old_sha1;
       push @pub_array, $new_pub;
@@ -52,28 +51,26 @@ sub insert_entry : Local {
     }
   }
 
-  $c->model('Library')->create_pubs(\@pub_array);
-  print STDERR "  -> CREATED PUBS!\n";
+  $c->model('Library')->create_pubs( \@pub_array );
 
   my $pubs = {};
   foreach my $pub (@pub_array) {
     $pub->_imported(1);
     my $pub_hash = $pub->as_hash;
-    if ($pub->{_old_sha1}) {
-	# ... now use the old / original sha1 as the sha1 to be returned to the front end,
-	# while flagging that we have a *new* sha1 that the front-end should update to.
-	# The actual updating to the new sha1 happens within the grid.js file.
-	$pub_hash->{sha1} = $pub->{_old_sha1};
-	$pub_hash->{_new_sha1} = $pub->sha1;
+    if ( $pub->{_old_sha1} ) {
+      # ... now use the old / original sha1 as the sha1 to be returned to the front end,
+      # while flagging that we have a *new* sha1 that the front-end should update to.
+      # The actual updating to the new sha1 happens within the grid.js file.
+      $pub_hash->{sha1}      = $pub->{_old_sha1};
+      $pub_hash->{_new_sha1} = $pub->sha1;
     } else {
-	$pub_hash->{sha1} = $pub->sha1;
+      $pub_hash->{sha1} = $pub->sha1;
     }
-    
-    $pubs->{$pub_hash->{sha1}} = $pub_hash;
+
+    $pubs->{ $pub_hash->{sha1} } = $pub_hash;
   }
 
-#  my $pubs = $self->_collect_data($selection,['_imported','citekey','created','sha1','pdf']);
-  $c->stash->{data}    = {pubs => $pubs};
+  $c->stash->{data} = { pubs => $pubs };
 
   # Trigger a complete reload
   $c->stash->{data}->{pub_delta} = 1;
@@ -99,7 +96,7 @@ sub complete_entry : Local {
       my $new_pub = $plugin->complete_details($pub);
       my $old_sha1 = $pub->sha1;
       my $new_sha1 = $new_pub->sha1;
-      
+
       $pub_hash = $new_pub->as_hash;
       $pub_hash->{sha1} = $old_sha1;
       $pub_hash->{_new_sha1} = $new_sha1;
@@ -114,8 +111,6 @@ sub new_entry : Local {
 
   my ( $self, $c ) = @_;
 
-  my $attach_pdf = $c->request->params->{attach_pdf};
-
   my %fields = ();
 
   foreach my $key ( %{ $c->request->params } ) {
@@ -126,10 +121,6 @@ sub new_entry : Local {
   my $pub = Paperpile::Library::Publication->new( {%fields} );
 
   $c->model('Library')->create_pubs( [$pub] );
-
-  if ($attach_pdf) {
-    $c->model('Library')->attach_file( $attach_pdf, 1, $pub->_rowid, $pub );
-  }
 
   $self->_update_counts($c);
 
