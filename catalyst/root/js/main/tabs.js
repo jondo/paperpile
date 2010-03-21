@@ -27,12 +27,23 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
     Paperpile.Tabs.superclass.initComponent.call(this);
 
+    this.on('beforetabchange', function(tabs, newTab, oldTab) {
+      if (oldTab instanceof Paperpile.PluginPanel) {
+        oldTab.saveScrollState();
+      }
+    },
+    this);
+
     this.on('tabchange', function(tabs, tab) {
       // Force the grid view to re-layout on tab change. Fixes a weird bug
       // where grids re-loaded in the background lose their DOM.
       if (tab instanceof Paperpile.PluginPanel) {
         var grid = tab.getGrid();
         grid.view.layout();
+
+        if (tab instanceof Paperpile.PluginPanel) {
+          tab.restoreScrollState();
+        }
       }
     },
     this);

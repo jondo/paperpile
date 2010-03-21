@@ -522,7 +522,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var nodes = this.tree.getAllLeafNodes();
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
-      if (node.type != 'TAGS' || this.tree.isCategoryRootNode(node)) continue;
+	if (node.type != 'TAGS' || !this.tree.isNodeDraggable(node)) continue;
 
       // Remove all possible styling from this tree node.
       node.getUI().removeClass(allTagStyles);
