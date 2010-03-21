@@ -593,11 +593,17 @@ sub new_tag {
   ( my $self, my $tag, my $style, my $sort_order ) = @_;
 
   # Update tags with higher sort_order values and increment by 1.
-  $self->dbh->do("UPDATE Tags SET sort_order=sort_order+1 WHERE sort_order >= $sort_order;");
+  #$self->dbh->do("UPDATE Tags SET sort_order=sort_order+1 WHERE sort_order >= $sort_order;");
+
+  my $max_sort = 0;
+  my $sth = $self->dbh->prepare("SELECT max(sort_order) FROM Tags;");
+  $sth->bind_columns(\$max_sort);
+  $sth->execute;
+  $sth->fetch;
 
   $tag   = $self->dbh->quote($tag);
   $style = $self->dbh->quote($style);
-  $self->dbh->do("INSERT INTO Tags (tag,style,sort_order) VALUES($tag, $style, $sort_order)");
+  $self->dbh->do("INSERT INTO Tags (tag,style,sort_order) VALUES($tag, $style, $max_sort)");
 
 }
 
