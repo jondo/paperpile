@@ -126,11 +126,9 @@ sub delete_file : Local {
   $pub->pdf('') if ($is_pdf);
   $pub->attachments( $pub->attachments - 1 ) if ( !$is_pdf );
 
-  # not sure what this is for, needs testing. Have commented out
-  # _remove_search jobs function for now
+  # Kind of a hack: delete the _search_job info before sending back our JSON update.
   if ($is_pdf) {
-
-    #$pub->remove_search_jobs;
+      delete $pub->{_search_job};
   }
 
   my $update =
