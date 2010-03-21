@@ -47,6 +47,22 @@ sub reset_db : Local {
 
 }
 
+sub sorted_tag_list : Local {
+  my ( $self, $c ) = @_;
+
+  my $hist = $c->model('Library')->histogram('tags');
+  my @data = ();
+
+  foreach
+    my $key ( sort { $hist->{$b}->{count} <=> $hist->{$a}->{count} || $a <=> $b } keys %$hist ) {
+	my $tag = $hist->{$key};
+    push @data, $tag;
+  }
+
+  $c->stash->{data} = \@data;
+  $c->forward('Paperpile::View::JSON');
+}
+
 sub tag_list : Local {
 
   my ( $self, $c ) = @_;
@@ -94,12 +110,11 @@ sub _EscapeString {
   return join( "+", @tmp );
 }
 
-
 sub feed_list : Local {
   my ( $self, $c ) = @_;
-  my $query     = $c->request->params->{query};
+  my $query  = $c->request->params->{query};
   my $offset = $c->request->params->{start} || 0;
-  my $limit = $c->request->params->{limit} || 10;
+  my $limit  = $c->request->params->{limit} || 10;
 
   $query = _EscapeString($query);
 
@@ -107,19 +122,19 @@ sub feed_list : Local {
 
   my $full_uri = $searchUrl . '?query=' . $query;
 
-  my $browser = Paperpile::Utils->get_browser;
-  my $response     = $browser->get( $full_uri );
-  my $content      = $response->content;
+  my $browser  = Paperpile::Utils->get_browser;
+  my $response = $browser->get($full_uri);
+  my $content  = $response->content;
 
-  my $json = new JSON;
-  my $object = $json->decode ($content);
-  my @feeds = @{$object->{feeds}};
+  my $json   = new JSON;
+  my $object = $json->decode($content);
+  my @feeds  = @{ $object->{feeds} };
 
   my $start_i = $offset;
-  my $end_i = $offset + $limit;
-  my @array = ();
-  for (my $i=$start_i; $i < scalar @feeds; $i++) {
-    last if ($i > $end_i);
+  my $end_i   = $offset + $limit;
+  my @array   = ();
+  for ( my $i = $start_i ; $i < scalar @feeds ; $i++ ) {
+    last if ( $i > $end_i );
 
     push @array, $feeds[$i];
   }
@@ -128,12 +143,12 @@ sub feed_list : Local {
     totalProperty => 'total_entries',
     root          => 'feeds',
     id            => 'name',
-    fields        => ['name','url']
+    fields        => [ 'name', 'url' ]
   );
 
-  $c->stash->{feeds} = \@array;
+  $c->stash->{feeds}         = \@array;
   $c->stash->{total_entries} = scalar @feeds;
-  $c->stash->{metaData} = {%metaData};
+  $c->stash->{metaData}      = {%metaData};
 
   $c->forward('Paperpile::View::JSON');
 }
@@ -265,14 +280,13 @@ sub cancel_request : Local {
   my ( $self, $c ) = @_;
 
   my $cancel_handle = $c->request->params->{cancel_handle};
-  my $kill = $c->request->params->{kill};
+  my $kill          = $c->request->params->{kill};
 
-  $kill=0 if not defined $kill;
+  $kill = 0 if not defined $kill;
 
-  Paperpile::Utils->activate_cancel_handle($cancel_handle, $kill);
+  Paperpile::Utils->activate_cancel_handle( $cancel_handle, $kill );
 
 }
-
 
 sub clean_duplicates : Local {
   my ( $self, $c ) = @_;
@@ -319,7 +333,7 @@ sub report_crash : Local {
     "Unknown exception on $platform;  version: $version_id ($version_name); build: $build_number";
 
   #TODO: Make sure that explicit /tmp is portable on MacOSX and Windows
-  my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", DIR=> '/tmp', SUFFIX => '.txt' );
+  my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", DIR => '/tmp', SUFFIX => '.txt' );
 
   my $attachment = undef;
 
@@ -380,8 +394,6 @@ sub report_pdf_download_error : Local {
   unlink($filename);
 }
 
-
-
 sub report_pdf_match_error : Local {
 
   my ( $self, $c ) = @_;
@@ -405,9 +417,5 @@ sub report_pdf_match_error : Local {
   my $response = $browser->request($r);
 
 }
-
-
-
-
 
 1;

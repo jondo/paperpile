@@ -41,7 +41,8 @@ CREATE VIRTUAL TABLE Fulltext_citation using fts3(abstract,notes,title,key,autho
 
 CREATE TABLE Tags (
   tag            TEXT UNIQUE,
-  style          TEXT
+  style          TEXT,
+  sort_order     INTEGER
 );
 
 CREATE TABLE Tag_Publication (

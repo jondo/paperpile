@@ -283,9 +283,6 @@ sub get_default_tree : Private {
   return $root;
 }
 
-
-
-
 sub get_subtree : Private {
 
   my ( $self, $c, $tree, $UID ) = @_;
@@ -297,6 +294,7 @@ sub get_subtree : Private {
   if ( $tree->getUID eq $UID ) {
     return $tree;
   }
+
   # Search the tree recursively otherwise
   else {
     $tree->traverse(
@@ -304,19 +302,29 @@ sub get_subtree : Private {
         my ($_tree) = @_;
         $subtree = $_tree if $_tree->getUID eq $UID;
       }
-    )
+    );
   }
 
-  if ($subtree->getUID eq 'tags'){
-    $self->_get_tags($c,$subtree);
+  if ( $subtree->getUID eq 'tags' ) {
+    $self->_get_tags( $c, $subtree );
   }
 
-  if ($subtree->getUID eq 'folders'){
-    $self->_get_folders($c,$subtree);
+  if ( $subtree->getUID eq 'folders' ) {
+    $self->_get_folders( $c, $subtree );
   }
 
   return $subtree;
 
+}
+
+sub store_tags : Private {
+  my ( $self, $c, $tree ) = @_;
+
+  my $i = 0;
+  foreach my $child ( $tree->getAllChildren ) {
+    my $p = $child->getNodeValue();
+    $c->model('Library')->set_tag_position( $p->{text}, $i++ );
+  }
 }
 
 sub get_tags : Private {
@@ -332,14 +340,17 @@ sub get_tags : Private {
   }
 
   if ( not @tags ) {
+
     #push @tags, {tag=>'No labels',style=>'0'};
   }
 
+  # Sort the list of tags by their defined sort_order.
+  @tags = sort { $a->{sort_order} <=> $b->{sort_order} } @tags;
 
   # Add tags
   foreach my $tag (@tags) {
 
-    my $encoded=Paperpile::Utils->encode_tags($tag->{tag});
+    my $encoded = Paperpile::Utils->encode_tags( $tag->{tag} );
 
     $tree->addChild(
       Tree::Simple->new( {
@@ -347,12 +358,12 @@ sub get_tags : Private {
           type              => 'TAGS',
           hidden            => 0,
           iconCls           => 'pp-icon-empty',
-          cls               => 'pp-tag-tree-node pp-tag-tree-style-'.$tag->{style},
-          tagStyle         => $tag->{style},
+          cls               => 'pp-tag-tree-node pp-tag-tree-style-' . $tag->{style},
+          tagStyle          => $tag->{style},
           plugin_name       => 'DB',
           plugin_mode       => 'FULLTEXT',
-          plugin_query      => "labelid:".$encoded,
-          plugin_base_query => "labelid:".$encoded,
+          plugin_query      => "labelid:" . $encoded,
+          plugin_base_query => "labelid:" . $encoded,
           plugin_title      => $tag->{tag},
           plugin_iconCls    => 'pp-icon-tag',
         }
@@ -360,8 +371,5 @@ sub get_tags : Private {
     );
   }
 }
-
-
-
 
 1;

@@ -804,6 +804,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/tag_blue.png')!important;
 }
 
+.pp-icon-tag-new{
+    background-image: url('/images/icons/tag_add.png')!important;
+}
+
 .pp-icon-clouds{
     background-image: url('/images/icons/weather_clouds.png')!important;
 }

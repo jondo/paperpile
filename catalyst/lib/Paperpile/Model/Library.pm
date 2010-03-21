@@ -39,16 +39,15 @@ use Paperpile::Library::Author;
 
 with 'Catalyst::Component::InstancePerContext';
 
-has 'light_objects' => (is =>'rw', isa =>'Int', default =>0);
+has 'light_objects' => ( is => 'rw', isa => 'Int', default => 0 );
 
 sub build_per_context_instance {
-  my ($self, $c) = @_;
-  my $file=$c->session->{library_db};
+  my ( $self, $c ) = @_;
+  my $file  = $c->session->{library_db};
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn("dbi:SQLite:$file");
   return $model;
 }
-
 
 # Function: create_pubs
 #
@@ -64,7 +63,7 @@ sub create_pubs {
 
   my %to_be_inserted = ();
 
-  my $dbh=$self->dbh;
+  my $dbh = $self->dbh;
 
   foreach my $pub (@$pubs) {
     eval {
@@ -79,16 +78,15 @@ sub create_pubs {
       # Generate citation key
       my $pattern = $self->get_setting('key_pattern');
 
-      $pattern ='[firstauthor][YYYY]';
+      $pattern = '[firstauthor][YYYY]';
 
-      my $key     = $pub->format_pattern($pattern);
+      my $key = $pub->format_pattern($pattern);
 
       # Check if key already exists
 
       # First we check in the database
       my $quoted = $dbh->quote("key:$key*");
-      my $sth =
-        $dbh->prepare(qq^SELECT key FROM fulltext_full WHERE fulltext_full MATCH $quoted^);
+      my $sth = $dbh->prepare(qq^SELECT key FROM fulltext_full WHERE fulltext_full MATCH $quoted^);
       my $existing_key;
       $sth->bind_columns( \$existing_key );
       $sth->execute;
@@ -106,7 +104,7 @@ sub create_pubs {
       }
 
       # Then in the current list that have been already processed in this loop
-      foreach my $existing_key (@{$to_be_inserted{$key}}) {
+      foreach my $existing_key ( @{ $to_be_inserted{$key} } ) {
         if ( $existing_key =~ /^$key([a-z])?/ ) {
           $unique = 0;
           push @suffix, $1 if $1;
@@ -126,10 +124,10 @@ sub create_pubs {
         $key .= $new_suffix;
       }
 
-      if (not $to_be_inserted{$bare_key}){
+      if ( not $to_be_inserted{$bare_key} ) {
         $to_be_inserted{$bare_key} = [$key];
       } else {
-        push @{$to_be_inserted{$bare_key}}, $key;
+        push @{ $to_be_inserted{$bare_key} }, $key;
       }
 
       $pub->citekey($key);
@@ -229,12 +227,13 @@ sub insert_pubs {
     }
 
     if ($pdf_file) {
+
       # First check if paper_root is set. In temporary databases
       # eg. for opening bibtex or RSS feeds it is not set and we don't
       # attach PDFs there
       my $paper_root = $self->get_setting('paper_root');
 
-      if (defined $paper_root){
+      if ( defined $paper_root ) {
         my $attached_file = $self->attach_file( $pdf_file, 1, $pub_rowid, $pub );
         unlink($pdf_file) if -e ($cached_file);
         $pub->pdf($attached_file);
@@ -245,7 +244,6 @@ sub insert_pubs {
   $dbh->commit;
 
 }
-
 
 sub delete_pubs {
 
@@ -258,24 +256,25 @@ sub delete_pubs {
   # check if entry has any attachments an delete those
   foreach my $pub (@$pubs) {
 
-    my $rowid=$pub->_rowid;
+    my $rowid = $pub->_rowid;
 
     # First delete attachments from Attachments table
-    my $select=$dbh->prepare("SELECT rowid FROM Attachments WHERE publication_id=$rowid;");
+    my $select = $dbh->prepare("SELECT rowid FROM Attachments WHERE publication_id=$rowid;");
     my $attachment_rowid;
     $select->bind_columns( \$attachment_rowid );
     $select->execute;
     while ( $select->fetch ) {
-      $self->delete_attachment($attachment_rowid,0);
+      $self->delete_attachment( $attachment_rowid, 0 );
     }
+
     # Then delete the PDF
-    $self->delete_attachment($rowid,1);
+    $self->delete_attachment( $rowid, 1 );
   }
 
   # Then delete the entry in all relevant tables
-  my $delete_main     = $dbh->prepare( "DELETE FROM publications WHERE rowid=?" );
+  my $delete_main              = $dbh->prepare("DELETE FROM publications WHERE rowid=?");
   my $delete_fulltext_citation = $dbh->prepare("DELETE FROM fulltext_citation WHERE rowid=?");
-  my $delete_fulltext_full = $dbh->prepare("DELETE FROM fulltext_full WHERE rowid=?");
+  my $delete_fulltext_full     = $dbh->prepare("DELETE FROM fulltext_full WHERE rowid=?");
 
   foreach my $pub (@$pubs) {
     my $rowid = $pub->_rowid;
@@ -305,14 +304,14 @@ sub trash_pubs {
   foreach my $pub (@$pubs) {
     my $rowid = $pub->_rowid;
 
-    my $status=1;
-    $status=0 if $mode eq 'RESTORE';
+    my $status = 1;
+    $status = 0 if $mode eq 'RESTORE';
 
     $dbh->do("UPDATE Publications SET trashed=$status WHERE rowid=$rowid");
 
     # Created is used to store time of import as well as time of
     # deletion, so we set it everytime we trash or restore something
-    my $now = $self->dbh->quote(timestamp gmtime);
+    my $now = $self->dbh->quote( timestamp gmtime );
     $dbh->do("UPDATE Publications SET created=$now WHERE rowid=$rowid;");
 
     # Move attachments
@@ -327,11 +326,11 @@ sub trash_pubs {
     while ( $select->fetch ) {
       my $move_to;
 
-      if ($mode eq 'TRASH'){
+      if ( $mode eq 'TRASH' ) {
         $move_to = File::Spec->catfile( "Trash", $file_name );
       } else {
-        $move_to=$file_name;
-        $move_to=~s/Trash.//;
+        $move_to = $file_name;
+        $move_to =~ s/Trash.//;
       }
       push @files, [ $file_name, $move_to ];
       $move_to = $dbh->quote($move_to);
@@ -345,11 +344,11 @@ sub trash_pubs {
     if ($pdf) {
       my $move_to;
 
-      if ($mode eq 'TRASH'){
+      if ( $mode eq 'TRASH' ) {
         $move_to = File::Spec->catfile( "Trash", $pdf );
       } else {
-        $move_to=$pdf;
-        $move_to=~s/Trash.//;
+        $move_to = $pdf;
+        $move_to =~ s/Trash.//;
       }
       push @files, [ $pdf, $move_to ];
 
@@ -370,15 +369,16 @@ sub trash_pubs {
     $from = File::Spec->catfile( $paper_root, $from );
     $to   = File::Spec->catfile( $paper_root, $to );
 
-    my ($volume,$dir,$file_name) = File::Spec->splitpath( $to );
+    my ( $volume, $dir, $file_name ) = File::Spec->splitpath($to);
 
     mkpath($dir);
-    move($from, $to);
+    move( $from, $to );
 
-    ($volume,$dir,$file_name) = File::Spec->splitpath( $from );
+    ( $volume, $dir, $file_name ) = File::Spec->splitpath($from);
 
     # Never remove the paper_root even if its empty;
-    if (File::Spec->canonpath( $paper_root ) ne File::Spec->canonpath( $dir )){
+    if ( File::Spec->canonpath($paper_root) ne File::Spec->canonpath($dir) ) {
+
       # Simply remove it; will not do any harm if it is not empty; Did
       # not find an easy way to check if dir is empty, but it does not
       # seem necessary anyway TODO: recursively remove empty
@@ -392,7 +392,6 @@ sub trash_pubs {
   return 1;
 
 }
-
 
 sub update_pub {
 
@@ -450,18 +449,18 @@ sub update_pub {
   return $new_pub;
 }
 
-
 sub get_attachments {
 
-  my ($self, $rowid) = @_;
+  my ( $self, $rowid ) = @_;
 
-  my $sth = $self->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+  my $sth =
+    $self->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
   my ( $attachment_rowid, $file_name );
   $sth->bind_columns( \$attachment_rowid, \$file_name );
   $sth->execute;
-  my $paper_root=$self->get_setting('paper_root');
+  my $paper_root = $self->get_setting('paper_root');
 
-  my @files=();
+  my @files = ();
 
   while ( $sth->fetch ) {
     push @files, File::Spec->catfile( $paper_root, $file_name );
@@ -480,35 +479,35 @@ sub update_field {
 
 sub update_citekeys {
 
-  ( my $self, my $pattern) = @_;
+  ( my $self, my $pattern ) = @_;
 
-  my $data=$self->all('created');
+  my $data = $self->all('created');
 
-  my %seen=();
+  my %seen = ();
 
   $self->dbh->begin_work;
 
   eval {
 
-    foreach my $pub (@$data){
+    foreach my $pub (@$data) {
       my $key = $pub->format_pattern($pattern);
 
-      if (!exists $seen{$key}){
-        $seen{$key}=1;
+      if ( !exists $seen{$key} ) {
+        $seen{$key} = 1;
       } else {
         $seen{$key}++;
       }
 
-      if ($seen{$key}>1){
-        $key.=chr(ord('a')+$seen{$key}-2);
+      if ( $seen{$key} > 1 ) {
+        $key .= chr( ord('a') + $seen{$key} - 2 );
       }
 
-      $key=$self->dbh->quote($key);
+      $key = $self->dbh->quote($key);
 
-      $self->dbh->do("UPDATE Publications SET citekey=$key WHERE rowid=".$pub->_rowid);
+      $self->dbh->do( "UPDATE Publications SET citekey=$key WHERE rowid=" . $pub->_rowid );
     }
 
-    my $_pattern=$self->dbh->quote($pattern);
+    my $_pattern = $self->dbh->quote($pattern);
     $self->dbh->do("UPDATE Settings SET value=$_pattern WHERE key='key_pattern'");
     $self->dbh->commit;
 
@@ -516,24 +515,24 @@ sub update_citekeys {
 
   if ($@) {
     die("Failed to update citation keys ($@)");
+
     # DBI driver seems to rollback do this automatically when the eval statement dies
     $self->dbh->rollback;
   }
 
 }
 
-
 # Update tag flat fields in Publication and Fulltext tables
 
 sub _update_tags {
 
-  ( my $self, my $pub_rowid, my $tags) = @_;
+  ( my $self, my $pub_rowid, my $tags ) = @_;
 
   my $dbh = $self->dbh;
 
-  my $encoded_tags= Paperpile::Utils->encode_tags($tags);
+  my $encoded_tags = Paperpile::Utils->encode_tags($tags);
 
-  $tags = $dbh->quote($tags);
+  $tags         = $dbh->quote($tags);
   $encoded_tags = $dbh->quote($encoded_tags);
 
   $dbh->do("UPDATE Publications SET tags=$tags WHERE rowid=$pub_rowid;");
@@ -546,78 +545,87 @@ sub _update_tags {
 }
 
 sub update_tags {
-  ( my $self, my $pub_rowid, my $tags) = @_;
+  ( my $self, my $pub_rowid, my $tags ) = @_;
 
   my $dbh = $self->dbh;
-  my @tags=split(/,/,$tags);
+  my @tags = split( /,/, $tags );
 
-  $self->_update_tags($pub_rowid, $tags);
+  $self->_update_tags( $pub_rowid, $tags );
 
   # Remove all connections form Tag_Publication table
-  my $sth=$dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
+  my $sth = $dbh->do("DELETE FROM Tag_Publication WHERE publication_id=$pub_rowid");
 
   # Then insert tags into Tag table (if not already exists) and set
   # new connections in Tag_Publication table
 
-  my $select=$dbh->prepare("SELECT rowid FROM Tags WHERE tag=?");
-  my $insert=$dbh->prepare("INSERT INTO Tags (tag, style) VALUES(?,?)");
-  my $connection=$dbh->prepare("INSERT INTO Tag_Publication (tag_id, publication_id) VALUES(?,?)");
+  my $count = $dbh->prepare("SELECT max(sort_order) FROM Tags;");
+  my $max_sort;
+  $count->bind_columns( \$max_sort );
 
-  foreach my $tag (@tags){
-    my $tag_rowid=undef;
+  my $select = $dbh->prepare("SELECT rowid FROM Tags WHERE tag=?");
+  my $insert = $dbh->prepare("INSERT INTO Tags (tag, style, sort_order) VALUES(?,?,?)");
+  my $connection =
+    $dbh->prepare("INSERT INTO Tag_Publication (tag_id, publication_id) VALUES(?,?)");
 
-    $select->bind_columns(\$tag_rowid);
+  foreach my $tag (@tags) {
+    my $tag_rowid = undef;
+
+    $select->bind_columns( \$tag_rowid );
     $select->execute($tag);
     $select->fetch;
-    if (not defined $tag_rowid){
-      $insert->execute($tag,'0');
+    if ( not defined $tag_rowid ) {
+      $count->execute();
+      $count->fetch;
+      $insert->execute( $tag, 'default', $max_sort+1 );
       $tag_rowid = $self->dbh->func('last_insert_rowid');
     }
 
-    $connection->execute($tag_rowid,$pub_rowid);
+    $connection->execute( $tag_rowid, $pub_rowid );
   }
 }
 
 sub new_tag {
-  ( my $self, my $tag, my $style) = @_;
+  ( my $self, my $tag, my $style, my $sort_order ) = @_;
 
-  $tag=$self->dbh->quote($tag);
-  $style=$self->dbh->quote($style);
+  # Update tags with higher sort_order values and increment by 1.
+  $self->dbh->do("UPDATE Tags SET sort_order=sort_order+1 WHERE sort_order >= $sort_order;");
 
-  $self->dbh->do("INSERT INTO Tags (tag,style) VALUES($tag, $style)");
+  $tag   = $self->dbh->quote($tag);
+  $style = $self->dbh->quote($style);
+  $self->dbh->do("INSERT INTO Tags (tag,style,sort_order) VALUES($tag, $style, $sort_order)");
 
 }
 
-
 sub delete_tag {
-  ( my $self, my $tag) = @_;
+  ( my $self, my $tag ) = @_;
 
   my $dbh = $self->dbh;
 
   $dbh->begin_work;
 
-  my $_tag=$dbh->quote($tag);
+  my $_tag = $dbh->quote($tag);
 
   # Select all publications with this tag
-  ( my $tag_id ) =
-    $dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_tag");
-  my $select=$dbh->prepare("SELECT tags, publication_id FROM Publications, Tag_Publication WHERE Publications.rowid=publication_id AND tag_id=$tag_id");
+  ( my $tag_id ) = $dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_tag");
+  my $select = $dbh->prepare(
+    "SELECT tags, publication_id FROM Publications, Tag_Publication WHERE Publications.rowid=publication_id AND tag_id=$tag_id"
+  );
 
-  my ($publication_id, $tags);
-  $select->bind_columns(\$tags, \$publication_id);
+  my ( $publication_id, $tags );
+  $select->bind_columns( \$tags, \$publication_id );
   $select->execute;
 
   while ( $select->fetch ) {
 
     # Delete tag from flat string in Publications/Fulltext table
 
-    my $new_tags=$tags;
-    $new_tags =~s/^$tag$//;
-    $new_tags =~s/^$tag,//;
-    $new_tags =~s/,$tag,/,/;
-    $new_tags =~s/,$tag$//;
+    my $new_tags = $tags;
+    $new_tags =~ s/^$tag$//;
+    $new_tags =~ s/^$tag,//;
+    $new_tags =~ s/,$tag,/,/;
+    $new_tags =~ s/,$tag$//;
 
-    $self->_update_tags($publication_id, $new_tags);
+    $self->_update_tags( $publication_id, $new_tags );
 
   }
 
@@ -629,34 +637,34 @@ sub delete_tag {
 
 }
 
-
 sub rename_tag {
-  my ( $self, $old_tag, $new_tag) = @_;
+  my ( $self, $old_tag, $new_tag ) = @_;
 
   my $dbh = $self->dbh;
 
   $dbh->begin_work;
 
-  my $_old_tag=$dbh->quote($old_tag);
+  my $_old_tag = $dbh->quote($old_tag);
 
-  ( my $old_tag_id ) =
-    $dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_old_tag");
-  my $select=$self->dbh->prepare("SELECT tags, publication_id FROM Publications, Tag_Publication WHERE Publications.rowid=publication_id AND tag_id=$old_tag_id");
+  ( my $old_tag_id ) = $dbh->selectrow_array("SELECT rowid FROM Tags WHERE tag=$_old_tag");
+  my $select = $self->dbh->prepare(
+    "SELECT tags, publication_id FROM Publications, Tag_Publication WHERE Publications.rowid=publication_id AND tag_id=$old_tag_id"
+  );
 
-  my ($publication_id, $old_tags);
-  $select->bind_columns(\$old_tags, \$publication_id);
+  my ( $publication_id, $old_tags );
+  $select->bind_columns( \$old_tags, \$publication_id );
   $select->execute;
 
   while ( $select->fetch ) {
 
-    my $new_tags=$old_tags;
+    my $new_tags = $old_tags;
 
-    $new_tags =~s/^$old_tag$/$new_tag/;
-    $new_tags =~s/^$old_tag,/$new_tag,/;
-    $new_tags =~s/,$old_tag,/,$new_tag,/;
-    $new_tags =~s/,$old_tag$/,$new_tag/;
+    $new_tags =~ s/^$old_tag$/$new_tag/;
+    $new_tags =~ s/^$old_tag,/$new_tag,/;
+    $new_tags =~ s/,$old_tag,/,$new_tag,/;
+    $new_tags =~ s/,$old_tag$/,$new_tag/;
 
-    $self->_update_tags($publication_id, $new_tags);
+    $self->_update_tags( $publication_id, $new_tags );
   }
 
   $new_tag = $dbh->quote($new_tag);
@@ -667,19 +675,18 @@ sub rename_tag {
 
 }
 
-
 sub insert_folder {
-  ( my $self, my $folder_id) = @_;
+  ( my $self, my $folder_id ) = @_;
 
-  my $select=$self->dbh->prepare("SELECT rowid FROM Folders WHERE folder_id=?");
-  my $insert=$self->dbh->prepare("INSERT INTO Folders (folder_id) VALUES(?)");
+  my $select = $self->dbh->prepare("SELECT rowid FROM Folders WHERE folder_id=?");
+  my $insert = $self->dbh->prepare("INSERT INTO Folders (folder_id) VALUES(?)");
 
-  my $folder_rowid=undef;
+  my $folder_rowid = undef;
 
-  $select->bind_columns(\$folder_rowid);
+  $select->bind_columns( \$folder_rowid );
   $select->execute($folder_id);
   $select->fetch;
-  if (not defined $folder_rowid){
+  if ( not defined $folder_rowid ) {
     $insert->execute($folder_id);
     $folder_rowid = $self->dbh->func('last_insert_rowid');
   }
@@ -689,11 +696,11 @@ sub insert_folder {
 }
 
 sub update_folders {
-  ( my $self, my $pub_rowid, my $folders) = @_;
+  ( my $self, my $pub_rowid, my $folders ) = @_;
 
   my $dbh = $self->dbh;
 
-  my @folders=split(/,/,$folders);
+  my @folders = split( /,/, $folders );
 
   # First update flat field in Publication and Fulltext tables
   $folders = $dbh->quote($folders);
@@ -703,25 +710,26 @@ sub update_folders {
   $dbh->do("UPDATE Fulltext_citation SET folder=$folders WHERE rowid=$pub_rowid;");
 
   # Remove all connections from Folder_Publication table
-  my $sth=$dbh->do("DELETE FROM Folder_Publication WHERE publication_id=$pub_rowid");
+  my $sth = $dbh->do("DELETE FROM Folder_Publication WHERE publication_id=$pub_rowid");
 
   # Then insert folders into Folder table (if not already exists) and set
   # new connections in Folder_Publication table
 
-  my $select=$dbh->prepare("SELECT rowid FROM Folders WHERE folder_id=?");
-  my $connection=$dbh->prepare("INSERT INTO Folder_Publication (folder_id, publication_id) VALUES(?,?)");
+  my $select = $dbh->prepare("SELECT rowid FROM Folders WHERE folder_id=?");
+  my $connection =
+    $dbh->prepare("INSERT INTO Folder_Publication (folder_id, publication_id) VALUES(?,?)");
 
-  foreach my $folder (@folders){
-    my $folder_rowid=undef;
+  foreach my $folder (@folders) {
+    my $folder_rowid = undef;
 
-    $select->bind_columns(\$folder_rowid);
+    $select->bind_columns( \$folder_rowid );
     $select->execute($folder);
     $select->fetch;
-    if (not defined $folder_rowid){
+    if ( not defined $folder_rowid ) {
       croak('Folder does not exists');
     }
 
-    $connection->execute($folder_rowid,$pub_rowid);
+    $connection->execute( $folder_rowid, $pub_rowid );
   }
 }
 
@@ -755,7 +763,7 @@ sub delete_folder {
     $select->execute;
     while ( $select->fetch ) {
 
-      my $newFolders = $self->_remove_from_flatlist($folders,$id);
+      my $newFolders = $self->_remove_from_flatlist( $folders, $id );
 
       $update1->execute( $newFolders, $rowid );
       $update2->execute( $newFolders, $rowid );
@@ -768,72 +776,76 @@ sub delete_folder {
   }
 }
 
-
 sub get_tags {
-  ( my $self) = @_;
+  ( my $self ) = @_;
 
-  my $sth=$self->dbh->prepare("SELECT tag,style from Tags;");
+  my $sth = $self->dbh->prepare("SELECT tag,style,sort_order from Tags;");
 
-  my ( $tag, $style );
-  $sth->bind_columns( \$tag, \$style );
+  my ( $tag, $style, $sort_order );
+  $sth->bind_columns( \$tag, \$style, \$sort_order );
 
   $sth->execute;
 
-  my @out=();
+  my @out = ();
 
   while ( $sth->fetch ) {
-    push @out, {tag => $tag, style => $style};
+    push @out, { tag => $tag, style => $style, sort_order => $sort_order || 0 };
   }
 
   return [@out];
+}
 
+sub set_tag_position {
+
+  my ( $self, $tag, $position ) = @_;
+
+  $tag = $self->dbh->quote($tag);
+  $self->dbh->do("UPDATE TAGS SET sort_order=$position WHERE tag=$tag;");
 }
 
 sub set_tag_style {
 
-  my ($self, $tag, $style) = @_;
+  my ( $self, $tag, $style ) = @_;
 
-  $tag=$self->dbh->quote($tag);
-  $style=$self->dbh->quote($style);
+  $tag   = $self->dbh->quote($tag);
+  $style = $self->dbh->quote($style);
 
   $self->dbh->do("UPDATE TAGS SET style=$style WHERE tag=$tag;");
 
 }
 
 sub get_folders {
-  ( my $self) = @_;
+  ( my $self ) = @_;
 
-  my $sth=$self->dbh->prepare("SELECT folder_id from Folders;");
+  my $sth = $self->dbh->prepare("SELECT folder_id from Folders;");
 
   $sth->execute();
-  my @out=();
+  my @out = ();
 
-  foreach my $folder (@{$sth->fetchall_arrayref}){
+  foreach my $folder ( @{ $sth->fetchall_arrayref } ) {
     push @out, $folder->[0];
   }
   return [@out];
 }
-
 
 ## Return true or false, depending whether a row with unique value
 ## $value in column $column exists in table $table
 
 sub has_unique_entry {
 
-    ( my $self, my $table, my $column, my $value ) = @_;
-    $value = $self->dbh->quote($value);
+  ( my $self, my $table, my $column, my $value ) = @_;
+  $value = $self->dbh->quote($value);
 
-    my $sth = $self->dbh->prepare("SELECT $column FROM $table WHERE $column=$value");
+  my $sth = $self->dbh->prepare("SELECT $column FROM $table WHERE $column=$value");
 
-    $sth->execute();
+  $sth->execute();
 
-    if ( $sth->fetchrow_arrayref ) {
-        return 1;
-    } else {
-        return 0;
-    }
+  if ( $sth->fetchrow_arrayref ) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
-
 
 sub reset_db {
 
@@ -852,24 +864,23 @@ sub reset_db {
 sub fulltext_count {
   ( my $self, my $query, my $search_pdf, my $trash ) = @_;
 
-  my $table='Fulltext_citation';
+  my $table = 'Fulltext_citation';
 
-  if ($search_pdf){
-    $table='Fulltext_Full';
+  if ($search_pdf) {
+    $table = 'Fulltext_Full';
   }
 
-  if ($trash){
-    $trash=1;
+  if ($trash) {
+    $trash = 1;
   } else {
-    $trash=0;
+    $trash = 0;
   }
 
   my $where;
   if ($query) {
     $query = $self->dbh->quote("$query*");
     $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
-  }
-  else {
+  } else {
     $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
   }
 
@@ -884,23 +895,23 @@ sub fulltext_count {
 sub fulltext_search {
   ( my $self, my $_query, my $offset, my $limit, my $order, my $search_pdf, my $trash ) = @_;
 
-  my $table='Fulltext_citation';
+  my $table = 'Fulltext_citation';
 
-  if ($search_pdf){
-    $table='Fulltext_Full';
+  if ($search_pdf) {
+    $table = 'Fulltext_Full';
   }
 
-  if (!$order){
-    $order="created DESC";
+  if ( !$order ) {
+    $order = "created DESC";
   }
 
-  if ($trash){
-    $trash=1;
+  if ($trash) {
+    $trash = 1;
   } else {
-    $trash=0;
+    $trash = 0;
   }
 
-  my ($where, $query);
+  my ( $where, $query );
 
   if ($_query) {
     $query = $self->dbh->quote("$_query*");
@@ -926,36 +937,36 @@ sub fulltext_search {
 
   my @page = ();
 
-  my @citation_hits=();
-  my @fulltext_hits=();
+  my @citation_hits = ();
+  my @fulltext_hits = ();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
 
-    my $data={};
+    my $data = {};
 
     foreach my $field ( keys %$row ) {
 
       if ( $field eq 'offsets' ) {
         my ( $snippets_text, $snippets_abstract, $snippets_notes ) =
           $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query, $search_pdf );
-        $data->{_snippets_text}=$snippets_text;
-        $data->{_snippets_abstract}=$snippets_abstract;
-        $data->{_snippets_notes}=$snippets_notes;
+        $data->{_snippets_text}     = $snippets_text;
+        $data->{_snippets_abstract} = $snippets_abstract;
+        $data->{_snippets_notes}    = $snippets_notes;
         next;
       }
 
       # fields only in fulltext, named differently or absent in
       # Publications table
-      next if $field ~~ [ 'author', 'text', 'notes', 'label', 'labelid', 'folder'];
+      next if $field ~~ [ 'author', 'text', 'notes', 'label', 'labelid', 'folder' ];
       my $value = $row->{$field};
 
-      $field = 'citekey' if $field eq 'key';     # citekey is called 'key'
-                                                 # in ft-table for
-                                                 # convenience
+      $field = 'citekey'  if $field eq 'key';       # citekey is called 'key'
+                                                    # in ft-table for
+                                                    # convenience
       $field = 'keywords' if $field eq 'keyword';
 
-      if (defined $value and $value ne '') {
-        $data->{$field}=$value;
+      if ( defined $value and $value ne '' ) {
+        $data->{$field} = $value;
       }
     }
 
@@ -970,7 +981,6 @@ sub fulltext_search {
 
 }
 
-
 sub standard_count {
   ( my $self, my $query ) = @_;
 
@@ -980,21 +990,19 @@ sub standard_count {
 
 }
 
-
 sub standard_search {
-  ( my $self, my $query, my $offset, my $limit) = @_;
+  ( my $self, my $query, my $offset, my $limit ) = @_;
 
-  my $sth = $self->dbh->prepare( "SELECT rowid as _rowid, * FROM Publications WHERE $query;" );
+  my $sth = $self->dbh->prepare("SELECT rowid as _rowid, * FROM Publications WHERE $query;");
 
-#  print STDERR "SELECT rowid as _rowid, * FROM Publications WHERE $query\n";
+  #  print STDERR "SELECT rowid as _rowid, * FROM Publications WHERE $query\n";
 
   $sth->execute;
 
   my @page = ();
 
-
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $pub = Paperpile::Library::Publication->new({_light=>$self->light_objects});
+    my $pub = Paperpile::Library::Publication->new( { _light => $self->light_objects } );
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
@@ -1010,22 +1018,22 @@ sub standard_search {
 
 sub all {
 
-  my ($self, $order) = @_;
+  my ( $self, $order ) = @_;
 
-  my $query="SELECT rowid as _rowid, * FROM Publications ";
+  my $query = "SELECT rowid as _rowid, * FROM Publications ";
 
-  if ($order){
-    $query.="ORDER BY $order";
+  if ($order) {
+    $query .= "ORDER BY $order";
   }
 
-  my $sth = $self->dbh->prepare( $query );
+  my $sth = $self->dbh->prepare($query);
 
   $sth->execute;
 
   my @page = ();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $pub = Paperpile::Library::Publication->new({_light=>$self->light_objects});
+    my $pub = Paperpile::Library::Publication->new( { _light => $self->light_objects } );
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
@@ -1046,36 +1054,35 @@ sub all {
 
 sub all_as_hash {
 
-  my ($self, $order) = @_;
+  my ( $self, $order ) = @_;
 
-  my $query="SELECT rowid as _rowid, * FROM Publications ";
+  my $query = "SELECT rowid as _rowid, * FROM Publications ";
 
-  if ($order){
-    $query.="ORDER BY $order";
+  if ($order) {
+    $query .= "ORDER BY $order";
   }
 
-  my $sth = $self->dbh->prepare( $query );
+  my $sth = $self->dbh->prepare($query);
 
   $sth->execute;
 
   my @data = ();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
-    my $pub={};
+    my $pub = {};
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
-        $pub->{$field}=$value;
+        $pub->{$field} = $value;
       }
     }
-    $pub->{_imported}=1;
+    $pub->{_imported} = 1;
     push @data, $pub;
   }
 
   return [@data];
 
 }
-
 
 sub exists_pub {
   ( my $self, my $pubs ) = @_;
@@ -1084,16 +1091,16 @@ sub exists_pub {
 
   foreach my $pub (@$pubs) {
 
-    next unless defined ($pub);
+    next unless defined($pub);
     $sth->execute( $pub->sha1 );
 
-    my $exists=0;
+    my $exists = 0;
 
     while ( my $row = $sth->fetchrow_hashref() ) {
-      $exists=1;
+      $exists = 1;
       foreach my $field ( keys %$row ) {
         my $value = $row->{$field};
-        if ($field eq 'rowid'){
+        if ( $field eq 'rowid' ) {
           $pub->_rowid($value);
         } else {
           if ($value) {
@@ -1104,7 +1111,6 @@ sub exists_pub {
     }
 
     $pub->_imported($exists);
-
 
   }
 }
@@ -1131,10 +1137,10 @@ sub _hash2sql {
 
     push @fields, $key;
 
-    if ($value eq ''){
+    if ( $value eq '' ) {
       push @values, "''";
     } else {
-      push @values, $dbh->quote( $value );
+      push @values, $dbh->quote($value);
     }
   }
 
@@ -1148,30 +1154,30 @@ sub save_tree {
   ( my $self, my $tree ) = @_;
 
   # serialize the complete object
-  my $string=freeze($tree);
+  my $string = freeze($tree);
 
   # simply save it as user setting
-  $self->set_setting('_tree',$string);
+  $self->set_setting( '_tree', $string );
 
 }
 
-sub restore_tree{
- ( my $self ) = @_;
+sub restore_tree {
+  ( my $self ) = @_;
 
- my $string=$self->get_setting('_tree');
+  my $string = $self->get_setting('_tree');
 
- if (not $string){
-   return undef;
- }
+  if ( not $string ) {
+    return undef;
+  }
 
- (my $tree)=thaw($string);
+  ( my $tree ) = thaw($string);
 
- return $tree;
+  return $tree;
 
 }
 
 sub delete_from_folder {
-  ( my $self, my $data,  my $folder_id ) = @_;
+  ( my $self, my $data, my $folder_id ) = @_;
 
   my $dbh = $self->dbh;
 
@@ -1179,19 +1185,20 @@ sub delete_from_folder {
 
   foreach my $pub (@$data) {
 
-    my $row_id=$pub->_rowid;
+    my $row_id = $pub->_rowid;
 
-    ( my $folders ) =
-      $dbh->selectrow_array("SELECT folders FROM Publications WHERE rowid=$row_id");
+    ( my $folders ) = $dbh->selectrow_array("SELECT folders FROM Publications WHERE rowid=$row_id");
 
-    my $newFolders = $self->_remove_from_flatlist($folders, $folder_id);
+    my $newFolders = $self->_remove_from_flatlist( $folders, $folder_id );
 
     my $quotedFolders = $dbh->quote($newFolders);
 
     $dbh->do("UPDATE Publications SET folders=$quotedFolders WHERE rowid=$row_id");
     $dbh->do("UPDATE fulltext_full SET folder=$quotedFolders WHERE rowid=$row_id");
     $dbh->do("UPDATE fulltext_citation SET folder=$quotedFolders WHERE rowid=$row_id");
-    $dbh->do("DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)");
+    $dbh->do(
+      "DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)"
+    );
 
     $pub->folders($newFolders);
   }
@@ -1200,35 +1207,35 @@ sub delete_from_folder {
 
 }
 
-
 sub attach_file {
 
-  my ( $self, $file,  $is_pdf, $rowid, $pub) = @_;
+  my ( $self, $file, $is_pdf, $rowid, $pub ) = @_;
 
   my $settings = $self->settings;
 
   my $source = Paperpile::Utils->adjust_root($file);
 
-  if ($is_pdf){
+  if ($is_pdf) {
 
     # File name relative to [paper_root] is [pdf_pattern].pdf
-    my $relative_dest = $pub->format_pattern( $settings->{pdf_pattern}, { key => $pub->citekey } ) . ".pdf";
+    my $relative_dest =
+      $pub->format_pattern( $settings->{pdf_pattern}, { key => $pub->citekey } ) . ".pdf";
 
     # Absolute  path is [paper_root]/[pdf_pattern].pdf
     my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
 
     # Copy file, file name can be changed if it was not unique
-    $absolute_dest=Paperpile::Utils->copy_file($source, $absolute_dest);
+    $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
 
     # Add text of PDF to fulltext table
-    $self->index_pdf($rowid, $absolute_dest);
+    $self->index_pdf( $rowid, $absolute_dest );
 
-    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
+    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} );
 
-    $self->update_field('Publications', $rowid, 'pdf', $relative_dest);
-    $self->update_field('Publications', $rowid, 'pdf_size', stat($file)->size);
-    $self->update_field('Publications', $rowid, 'times_read', 0);
-    $self->update_field('Publications', $rowid, 'last_read', '');
+    $self->update_field( 'Publications', $rowid, 'pdf',        $relative_dest );
+    $self->update_field( 'Publications', $rowid, 'pdf_size',   stat($file)->size );
+    $self->update_field( 'Publications', $rowid, 'times_read', 0 );
+    $self->update_field( 'Publications', $rowid, 'last_read',  '' );
 
     $pub->pdf($relative_dest);
 
@@ -1237,23 +1244,22 @@ sub attach_file {
   } else {
 
     # Get file_name without dir
-    my ($volume,$dirs,$file_name) = File::Spec->splitpath( $source );
+    my ( $volume, $dirs, $file_name ) = File::Spec->splitpath($source);
 
     # Path relative to [paper_root] is [attachment_pattern]/$file_name
-    my $relative_dest = $pub->format_pattern( $settings->{attachment_pattern}, { key => $pub->citekey } );
-    $relative_dest = File::Spec->catfile( $relative_dest, $file_name);
+    my $relative_dest =
+      $pub->format_pattern( $settings->{attachment_pattern}, { key => $pub->citekey } );
+    $relative_dest = File::Spec->catfile( $relative_dest, $file_name );
 
     # Absolute  path is [paper_root]/[attachment_pattern]/$file_name
     my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
 
     # Copy file, file name can be changed if it was not unique
-    $absolute_dest=Paperpile::Utils->copy_file($source, $absolute_dest);
-    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} ) ;
-
-
+    $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
+    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} );
 
     $self->dbh->do("UPDATE Publications SET attachments=attachments+1 WHERE rowid=$rowid");
-    my $file=$self->dbh->quote($relative_dest);
+    my $file = $self->dbh->quote($relative_dest);
     $self->dbh->do("INSERT INTO Attachments (file_name,publication_id) VALUES ($file, $rowid)");
 
     return $relative_dest;
@@ -1262,13 +1268,11 @@ sub attach_file {
 
 }
 
-
 # Delete PDF or other supplementary files that are attached to an entry
 # if $is_pdf is true, the PDF file given in table 'Publications' at rowid is to be deleted
 # if $is_pdf is false, the attached file in table 'Attachments' at rowid is to be deleted
 
-sub delete_attachment{
-
+sub delete_attachment {
 
   my ( $self, $rowid, $is_pdf, $with_undo ) = @_;
 
@@ -1276,33 +1280,31 @@ sub delete_attachment{
 
   my $path;
 
-  my $undo_dir = File::Spec->catfile(Paperpile::Utils->get_tmp_dir(),"trash");
+  my $undo_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), "trash" );
   mkpath($undo_dir);
 
-  if ($is_pdf){
-    ( my $pdf ) =
-      $self->dbh->selectrow_array("SELECT pdf FROM Publications WHERE rowid=$rowid ");
+  if ($is_pdf) {
+    ( my $pdf ) = $self->dbh->selectrow_array("SELECT pdf FROM Publications WHERE rowid=$rowid ");
 
-
-    if ($pdf){
+    if ($pdf) {
       $path = File::Spec->catfile( $paper_root, $pdf );
       $self->dbh->do("UPDATE Fulltext_full SET text='' WHERE rowid=$rowid");
-      move($path, $undo_dir) if $with_undo;
+      move( $path, $undo_dir ) if $with_undo;
       unlink($path);
     }
 
-    $self->update_field('Publications', $rowid, 'pdf','');
-    $self->update_field('Publications', $rowid, 'times_read', 0);
-    $self->update_field('Publications', $rowid, 'last_read', '');
+    $self->update_field( 'Publications', $rowid, 'pdf',        '' );
+    $self->update_field( 'Publications', $rowid, 'times_read', 0 );
+    $self->update_field( 'Publications', $rowid, 'last_read',  '' );
 
   } else {
 
-    ( my $file, my $pub_rowid ) =
-      $self->dbh->selectrow_array("SELECT file_name, publication_id FROM Attachments WHERE rowid=$rowid");
+    ( my $file, my $pub_rowid ) = $self->dbh->selectrow_array(
+      "SELECT file_name, publication_id FROM Attachments WHERE rowid=$rowid");
 
-    $path = File::Spec->catfile( $paper_root, $file);
+    $path = File::Spec->catfile( $paper_root, $file );
 
-    move($path, $undo_dir) if $with_undo;
+    move( $path, $undo_dir ) if $with_undo;
     unlink($path);
 
     $self->dbh->do("DELETE FROM Attachments WHERE rowid=$rowid");
@@ -1312,10 +1314,12 @@ sub delete_attachment{
 
   ## Remove directory if empty
 
-  if ($path){
-    my ($volume,$dir,$file_name) = File::Spec->splitpath( $path );
+  if ($path) {
+    my ( $volume, $dir, $file_name ) = File::Spec->splitpath($path);
+
     # Never remove the paper_root even if its empty;
-    if (File::Spec->canonpath( $paper_root ) ne File::Spec->canonpath( $dir )){
+    if ( File::Spec->canonpath($paper_root) ne File::Spec->canonpath($dir) ) {
+
       # Simply remove it; will not do any harm if it is not empty; Did not
       # find an easy way to check if dir is empty, but it does not seem
       # necessary anyway
@@ -1323,12 +1327,10 @@ sub delete_attachment{
     }
   }
 
-  if ($with_undo){
-    my ($volume,$dir,$file_name) = File::Spec->splitpath( $path );
-    return File::Spec->catfile($undo_dir,$file_name);
+  if ($with_undo) {
+    my ( $volume, $dir, $file_name ) = File::Spec->splitpath($path);
+    return File::Spec->catfile( $undo_dir, $file_name );
   }
-
-
 
 }
 
@@ -1373,55 +1375,59 @@ sub histogram {
 
   if ( $field eq 'authors' ) {
 
-    my $sth = $self->dbh->prepare(
-      'SELECT authors from Publications WHERE trashed=0;'
-    );
+    my $sth = $self->dbh->prepare('SELECT authors from Publications WHERE trashed=0;');
 
     my ($author_list);
     $sth->bind_columns( \$author_list );
     $sth->execute;
     while ( $sth->fetch ) {
-      my @authors = split(' and ',$author_list);
+      my @authors = split( ' and ', $author_list );
       foreach my $author_disp (@authors) {
         my $tmp = Paperpile::Library::Author->_split_full($author_disp);
         $tmp->{initials} = Paperpile::Library::Author->_parse_initials( $tmp->{first} );
         my $author = Paperpile::Library::Author->_nice($tmp);
 
-	if ( exists $hist{$author} ) {
-	  $hist{$author}->{count}++;
-	} else {
-	  $hist{$author}->{count} = 1;
-	  # Parse out the author's name.
-	  my ($surname,$initials) = split(', ',$author);
-	  $hist{$author}->{name}  = $surname;
-	  $hist{$author}->{id}    = $author;
-	}
+        if ( exists $hist{$author} ) {
+          $hist{$author}->{count}++;
+        } else {
+          $hist{$author}->{count} = 1;
+
+          # Parse out the author's name.
+          my ( $surname, $initials ) = split( ', ', $author );
+          $hist{$author}->{name} = $surname;
+          $hist{$author}->{id}   = $author;
+        }
       }
     }
   }
 
   if ( $field eq 'tags' ) {
 
-    my $sth = $self->dbh->prepare(
+    my ( $tag_id, $tag, $style );
+
+    # Select all tags and initialize the histogram counts.
+    my $sth = $self->dbh->prepare(qq^SELECT rowid,tag,style FROM Tags;^);
+    $sth->bind_columns( \$tag_id, \$tag, \$style );
+    $sth->execute;
+    while ( $sth->fetch ) {
+      $style = $style || 'default';
+      $hist{$tag_id}->{count} = 0;
+      $hist{$tag_id}->{name}  = $tag;
+      $hist{$tag_id}->{id}    = $tag_id;
+      $hist{$tag_id}->{style} = $style;
+    }
+
+    # Select tag-publication links and count them up.
+    $sth = $self->dbh->prepare(
       qq^SELECT tag_id,tag,style FROM Tags, Tag_Publication, Publications WHERE Tag_Publication.tag_id == Tags.rowid 
           AND Publications.rowid == Tag_Publication.publication_id AND Publications.trashed==0 ^
     );
-    my ( $tag_id, $tag, $style );
     $sth->bind_columns( \$tag_id, \$tag, \$style );
     $sth->execute;
 
     while ( $sth->fetch ) {
-
-      my $tag_name = $tag;
-      my $style = $style || 'default';
-
       if ( exists $hist{$tag_id} ) {
         $hist{$tag_id}->{count}++;
-      } else {
-        $hist{$tag_id}->{count} = 1;
-        $hist{$tag_id}->{name}  = $tag_name;
-        $hist{$tag_id}->{id}  = $tag_name;
-        $hist{$tag_id}->{style} = $style;
       }
     }
 
@@ -1429,7 +1435,7 @@ sub histogram {
 
   if ( $field eq 'journals' or $field eq 'pubtype' ) {
 
-    $field = 'journal' if ($field eq 'journals');
+    $field = 'journal' if ( $field eq 'journals' );
 
     my $sth = $self->dbh->prepare("SELECT $field FROM Publications WHERE trashed=0;");
     my ($value);
@@ -1456,30 +1462,26 @@ sub histogram {
 
 sub dashboard_stats {
 
-  my $self=shift;
+  my $self = shift;
 
-  ( my $num_items ) =
-    $self->dbh->selectrow_array("SELECT count(*) FROM Publications;");
+  ( my $num_items ) = $self->dbh->selectrow_array("SELECT count(*) FROM Publications;");
 
   ( my $num_pdfs ) =
     $self->dbh->selectrow_array("SELECT count(*) FROM Publications WHERE PDF !='';");
 
-  ( my $num_attachments ) =
-    $self->dbh->selectrow_array("SELECT count(*) FROM Attachments;");
+  ( my $num_attachments ) = $self->dbh->selectrow_array("SELECT count(*) FROM Attachments;");
 
   ( my $last_imported ) =
     $self->dbh->selectrow_array("SELECT created FROM Publications ORDER BY created DESC limit 1;");
 
-  return {num_items => $num_items,
-          num_pdfs => $num_pdfs,
-          num_attachments => $num_attachments,
-          last_imported => $last_imported
-         };
-
+  return {
+    num_items       => $num_items,
+    num_pdfs        => $num_pdfs,
+    num_attachments => $num_attachments,
+    last_imported   => $last_imported
+  };
 
 }
-
-
 
 # Remove the item from the comma separated list
 
@@ -1489,9 +1491,9 @@ sub _remove_from_flatlist {
 
   my @parts = split( /,/, $list );
 
-  # Only one item 
-  if (not @parts){
-    $list=~s/$item//;
+  # Only one item
+  if ( not @parts ) {
+    $list =~ s/$item//;
     return $list;
   }
 
@@ -1504,7 +1506,6 @@ sub _remove_from_flatlist {
   return join( ',', @newParts );
 
 }
-
 
 sub _snippets {
 
@@ -1594,6 +1595,5 @@ sub _snippets {
   return ( $snippets{text}, $snippets{abstract}, $snippets{notes} );
 
 }
-
 
 1;

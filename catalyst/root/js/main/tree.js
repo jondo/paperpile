@@ -867,6 +867,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   // Rename node
   //
   onRenameComplete: function(editor, newText, oldText) {
+
     editor.editNode.plugin_title = newText;
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/tree/rename_node'),
@@ -1070,9 +1071,71 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return text;
   },
 
+  sortTagsByCount: function() {
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/misc/sorted_tag_list'),
+      params: {},
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        var data = json.data;
+
+        var root = this.getNodeById('TAGS_ROOT');
+
+        var ids = [];
+        for (var i = 0; i < data.length; i++) {
+          var tag = data[i].name;
+          var node = root.findChild('text', tag);
+          ids.push(node.id);
+        }
+
+        this.setTagSort(ids);
+
+      },
+      failure: Paperpile.main.onError,
+      scope: this
+    });
+  },
+
+  sortTagsByName: function() {
+    var root = this.getNodeById('TAGS_ROOT');
+
+    var tagCollection = new Ext.util.MixedCollection();
+    root.eachChild(function(node) {
+      tagCollection.add(node.id, node);
+    });
+
+    tagCollection.sort('ASC', function(a, b) {
+      return a.text.localeCompare(b.text);
+    });
+ 
+    var sortedIds = [];
+    tagCollection.each(function(obj) {
+      sortedIds.push(obj.id);
+    });
+
+    this.setTagSort(sortedIds);
+  },
+
+  setTagSort: function(tagIdList) {
+    var root = this.getNodeById('TAGS_ROOT');
+    // Move this node into the i-th position.
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/tree/set_node_order'),
+      params: {
+        target_node: root.id,
+        node_id_order: tagIdList
+      },
+      success: function() {
+        this.reloadTags();
+      },
+      failure: Paperpile.main.onError,
+      scope: this
+    });
+
+  },
+
   // Data is the JSON returned by a previous ajax call. Optional.
   reloadTags: function(json) {
-    Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
     Ext.StoreMgr.lookup('tag_store').reload({
       callback: function() {
         if (json) {
@@ -1080,7 +1143,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         }
       }
     });
-
+    var tagsRoot = this.getNodeById('TAGS_ROOT');
+    tagsRoot.silentLoad = true;
+    delete tagsRoot.attributes.children;
+    tagsRoot.reload();
+    tagsRoot.eachChild(function(node) {
+      node.render(true);
+    });
   },
 
   //
@@ -1094,10 +1163,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     node.setText(this.getUniqueTag(node.text));
 
+    var index = node.parentNode.indexOf(node);
+
     var tag = node.text;
     var pars = {
       tag: tag,
-      style: 'default'
+      style: 'default',
+      sort_order: index
     };
 
     Ext.Ajax.request({
@@ -1170,31 +1242,41 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   commitRenameTag: function(editor, newText, oldText) {
     var node = editor.editNode;
 
+    if (newText == oldText) {
+      return;
+    }
+    newText = this.getUniqueTag(newText);
+
+    node.setText(newText);
     node.plugin_title = newText;
     node.plugin_query = 'labelid:' + Paperpile.utils.encodeTag(newText);
     node.plugin_base_query = 'labelid:' + Paperpile.utils.encodeTag(newText);
     var tag = oldText;
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/rename_tag'),
+      url: Paperpile.Url('/ajax/tree/rename_node'),
       params: {
-        old_tag: tag,
-        new_tag: newText
+        node_id: node.id,
+        new_text: newText
       },
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Ext.StoreMgr.lookup('tag_store').reload({
-          callback: function() {
-            // Update the title of the tab if it's open.
-            Paperpile.main.tabs.closeTabByTitle(tag);
-
-            Paperpile.main.onUpdate(json.data);
-          }
+      success: function() {
+        Ext.Ajax.request({
+          url: Paperpile.Url('/ajax/crud/rename_tag'),
+          params: {
+            old_tag: tag,
+            new_tag: newText
+          },
+          success: function(response) {
+            var json = Ext.util.JSON.decode(response.responseText);
+            this.reloadTags(json);
+          },
+          failure: Paperpile.main.onError,
+          scope: this
         });
       },
-      failure: Paperpile.main.onError
+      failure: Paperpile.main.onError,
+      scope: this
     });
-
   },
 
   exportNode: function() {
@@ -1392,10 +1474,26 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   initComponent: function() {
     var tree = this.tree;
 
+    tree.sortByMenu = {
+      items: [{
+        id: 'sort_tags_by_count',
+        text: 'Citation Count',
+        handler: tree.sortTagsByCount,
+        scope: tree
+      },
+      {
+        id: 'sort_tags_by_name',
+        text: 'Name',
+        handler: tree.sortTagsByName,
+        scope: tree
+      }]
+    };
+
     Ext.apply(this, {
       items: [{
         id: 'tags_menu_new',
         text: 'New Label',
+        iconCls: 'pp-icon-tag-new',
         handler: tree.newTag,
         scope: tree
       },
@@ -1423,14 +1521,21 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         text: Paperpile.Tree.EXPORT_MENU_STRING,
         handler: tree.exportNode,
         scope: tree
-      }]
+      },
+      {
+        id: 'sort_by_menu',
+        text: 'Sort Labels By',
+        menu: tree.sortByMenu
+      },
+      ]
     });
     Paperpile.Tree.TagsMenu.superclass.initComponent.call(this);
   },
 
   getShownItems: function(node) {
     if (node.id == 'TAGS_ROOT') {
-      return['tags_menu_new'];
+      return['tags_menu_new',
+      'sort_by_menu'];
     } else {
       return['tags_menu_new',
       'tags_menu_delete',

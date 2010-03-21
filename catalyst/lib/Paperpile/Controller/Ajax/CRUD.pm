@@ -345,8 +345,9 @@ sub new_tag : Local {
 
   my $tag   = $c->request->params->{tag};
   my $style = $c->request->params->{style};
+  my $sort_order = $c->request->params->{sort_order};
 
-  $c->model('Library')->new_tag( $tag, $style );
+  $c->model('Library')->new_tag( $tag, $style , $sort_order);
 
 }
 

@@ -338,6 +338,35 @@ sub rename_node : Local {
 
 }
 
+sub set_node_order : Local {
+  my ( $self, $c ) = @_;
+
+  my $target_node = $c->request->params->{target_node};
+  my @id_order    = @{ $c->request->params->{node_id_order} };
+
+  my $tree = $c->session->{"tree"};
+  my $root = $c->forward( 'private/get_subtree', [ $tree, $target_node ] );
+
+  my @nodes;
+  my $i = 0;
+  foreach my $id (@id_order) {
+    my $node = $c->forward( 'private/get_subtree', [ $tree, $id ] );
+    push @nodes, $root->removeChild($node);
+  }
+
+  $i = 0;
+  foreach my $node (@nodes) {
+    $root->insertChild( $i, $node );
+    $i++;
+  }
+
+  $c->forward( 'private/store_tags', [$root] );
+  $c->model('Library')->save_tree($tree);
+
+  $c->stash->{success} = 'true';
+  $c->forward('Paperpile::View::JSON');
+}
+
 sub move_node : Local {
   my ( $self, $c ) = @_;
 
@@ -367,6 +396,11 @@ sub move_node : Local {
     my $target_index = $target_subtree->getIndex();
     $target_index++ if ( $point eq 'below' );
     $target_subtree->getParent->insertChild( $target_index, $drop_subtree );
+  }
+
+  my $parent = $target_subtree->getParent;
+  if ( $parent->getUID =~ /TAGS_ROOT/ ) {
+    $c->forward( 'private/store_tags', [$parent] );
   }
 
   $c->model('Library')->save_tree($tree);
