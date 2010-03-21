@@ -14,8 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
-
 Paperpile.ContextTrianglePlugin = (function() {
   return {
     init: function(treePanel) {
@@ -42,12 +40,13 @@ Paperpile.ContextTrianglePlugin = (function() {
     },
 
     myOnRender: function() {
-      this.contextTriangle = Ext.DomHelper.append(this.getEl(), {
+      this.contextTriangle = Ext.DomHelper.append(this.body, {
         id: this.itemId + "_context_triangle",
         tag: "div",
         cls: "pp-tree-context-triangle"
       },
-      true);
+        true);
+
       this.contextTriangle.addClassOnOver('pp-tree-context-triangle-over');
 
     }
@@ -85,7 +84,7 @@ Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
 
         menu.node = this.node;
         menu.show(tree.contextTriangle, 'tl-bl');
-        this.menuShowing = true;
+        tree.contextTriangle.menuShowing = true;
         tree.contextTriangle.addClass('pp-tree-context-triangle-down');
         tree.allowSelect = true;
         this.node.select();
@@ -93,7 +92,7 @@ Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
         tree.lastSelectedNode = this.node;
         menu.on('hide',
           function() {
-            this.menuShowing = false;
+            tree.contextTriangle.menuShowing = false;
             tree.contextTriangle.removeClass('pp-tree-context-triangle-down');
             tree.allowSelect = false;
           },
@@ -106,15 +105,19 @@ Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
   },
 
   onOver: function(e) {
+    var tri = this.node.ownerTree.contextTriangle;
+    if (tri.menuShowing) {
+      return;
+    }
     var nodeEl = Ext.fly(this.getEl());
     var alignEl = nodeEl.child(".x-tree-node-el");
-    var tri = this.node.ownerTree.contextTriangle;
     if (this.hasContextMenu()) {
       alignEl.appendChild(tri);
       tri.alignTo(alignEl, 'r-r?', [-3, 0]);
       this.hideDelay.cancel();
       tri.show();
     }
+
     Paperpile.ContextTreeNodeUI.superclass.onOver.call(this, e);
   },
 
@@ -128,9 +131,10 @@ Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
 
   onOut: function(e) {
     var nodeEl = this.getEl();
+      
     if (this.node != null) {
       var tri = this.node.ownerTree.contextTriangle;
-      if (tri != null && !this.menuShowing) {
+      if (tri != null && !tri.menuShowing) {
         this.hideDelay.delay(20, this.hideTriangle, this, [tri]);
       }
     }
