@@ -584,7 +584,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         url: Paperpile.Url('/ajax/plugins/resultsgrid'),
         // We don't set timeout here but handle timeout separately in
         // specific plugins.
-        timeout: 10000000, 
+        timeout: 10000000,
         method: 'GET'
       }),
       baseParams: {
@@ -603,7 +603,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   cancelLoad: function() {
-            
+
     // The refresh button does not get reset and keeps
     // spinning. It is resetted if an error occurs in the
     // proxy. Therefore I call the exception explicitly as a
@@ -621,8 +621,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/misc/cancel_request'),
       params: {
-        cancel_handle: 'grid_'+this.id,
-        kill:1,
+        cancel_handle: 'grid_' + this.id,
+        kill: 1,
       },
     });
   },
@@ -987,9 +987,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     if (this.getLastAuthorFromSelection() != '') {
       this.actions['MORE_FROM_LAST_AUTHOR'].setText(this.getLastAuthorFromSelection());
+      this.actions['MORE_FROM_LAST_AUTHOR'].show();
     } else {
-      this.actions['MORE_FROM_LAST_AUTHOR'].setText("Last author");
-      this.actions['MORE_FROM_LAST_AUTHOR'].disable();
+      //this.actions['MORE_FROM_LAST_AUTHOR'].setText("Last author");
+      //this.actions['MORE_FROM_LAST_AUTHOR'].disable();
+      this.actions['MORE_FROM_LAST_AUTHOR'].hide();
     }
 
     var a = this.actions['MORE_FROM_JOURNAL'];
@@ -1498,6 +1500,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   getLastAuthorFromSelection: function() {
     var authors = this.getSingleSelectionRecord().data.authors || '';
+    // Remove author entries enclosed in brackets, e.g. {et al.}
+    authors = authors.replace(/{.*}/g, "");
     var arr = authors.split(/\s+and\s+/);
     var author = '';
     if (arr.length > 1) {
