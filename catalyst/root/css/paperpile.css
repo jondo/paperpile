@@ -772,6 +772,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/glasses.png') !important;
 }
 
+.pp-icon-reload {
+    background-image: url('/images/icons/reload.png') !important;
+}
+
 .pp-icon-trash {
     background-image: url('/images/icons/trash.png') !important;
 }

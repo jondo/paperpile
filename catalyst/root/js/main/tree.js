@@ -315,6 +315,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + Paperpile.main.getStyleForTag(node.text);
         title = node.text;
       }
+
+      // For now we reload feeds whenever they are opened 
+      if (pars.plugin_name == 'Feed') {
+        pars.plugin_reload=1;
+      }
+
       // Call appropriate frontend, tags, active folders, and folders are opened only once
       // and we pass the node.id as item-id for the tab
       Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id);

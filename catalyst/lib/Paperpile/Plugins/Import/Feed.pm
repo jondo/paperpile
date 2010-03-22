@@ -39,6 +39,11 @@ has 'file'  => ( is => 'rw', isa => 'Str' );
 has '_data' => ( is => 'rw', isa => 'ArrayRef' );
 has 'title' => ( is => 'rw', isa => 'Str', default => 'New Feed' );
 
+# If reload is set the Feed is downloaded and a new database file is
+# created. Otherwise we just read from the database as in a normal DB
+# Plugin.
+has 'reload'  => ( is => 'rw', isa => 'Str' );
+
 sub BUILD {
   my $self = shift;
   $self->plugin_name('Feed');
@@ -50,15 +55,8 @@ sub connect {
   $self->file( File::Spec->catfile( $self->_rss_dir, 'feed.rss' ) );
   $self->_db_file( File::Spec->catfile( $self->_rss_dir, 'feed.ppl' ) );
 
-  # Re-download and re-import every time for now
-  #if ( !-e $self->file ) {
-  $self->update_feed;
-
-  #}
-
-  if (1) {
-
-    #if ( !-e $self->_db_file ) {
+  if ( !-e $self->file or !-e $self->_db_file or $self->reload) {
+    $self->update_feed;
 
     my $reader;
 

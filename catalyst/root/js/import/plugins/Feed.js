@@ -43,8 +43,19 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
   initComponent: function() {
     this.getStore().setBaseParam('plugin_url', this.plugin_url);
     this.getStore().setBaseParam('plugin_id', this.plugin_id);
-    this.getStore().on('beforeload', function() {
-      Paperpile.status.showBusy("Loading Feed");
+
+    this.getStore().on('beforeload', function(store, options) {
+     
+      // If this.plugin_reload is set, we want to force the backend to
+      // re-download the feed. It is set to 0 here to allow "live"
+      // search from the local database after that. 
+      if (this.plugin_reload){
+        Paperpile.status.showBusy("Loading Feed");
+        options.params.plugin_reload = 1;
+        this.plugin_reload=0;
+      } else {
+        options.params.plugin_reload = 0;
+      }
     },
     this);
     this.getStore().on('load', function() {
@@ -59,8 +70,10 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
 
   initToolbarMenuItemIds: function() {
     Paperpile.PluginGridFeed.superclass.initToolbarMenuItemIds.call(this);
-
     var ids = this.toolbarMenuItemIds;
     ids.remove('NEW');
+
+    ids.insert(3,'RELOAD_FEED');
+
   }
 });

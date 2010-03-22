@@ -15,8 +15,9 @@
    not, see http://www.gnu.org/licenses. */
 
 Paperpile.PluginGrid = function(config) {
-  Ext.apply(this, config);
 
+  Ext.apply(this, config);
+  
   Paperpile.PluginGrid.superclass.constructor.call(this, {});
 
   this.on('rowcontextmenu', this.onContextClick, this);
@@ -192,6 +193,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         text: 'Save as Live Folder',
         iconCls: 'pp-icon-glasses',
         handler: this.handleSaveActive,
+        scope: this
+      }),
+      'RELOAD_FEED': new Ext.Action({
+        itemId: 'RELOAD_FEED',
+        text: 'Reload',
+        iconCls: 'pp-icon-reload',
+        handler: this.reloadFeed,
+        tooltip: 'Reload the content of the feed',
         scope: this
       }),
       'EXPORT_VIEW': new Ext.Action({
@@ -1610,6 +1619,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       });
       Paperpile.main.inc_read_counter(sm.getSelected().data);
     }
+  },
+
+  reloadFeed: function(){
+    this.plugin_reload=1;
+    this.getStore().reload();
   },
 
   onDblClick: function(grid, rowIndex, e) {
