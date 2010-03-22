@@ -15,8 +15,8 @@ sub parsePDF {
 
   my $self = shift;
 
-  my $verbose = 0;
-  my $debug   = 0;
+  my $verbose = 1;
+  my $debug   = 1;
 
   my $PDFfile = $self->file;
   my $PDF2XML = $self->pdftoxml;
@@ -409,7 +409,7 @@ sub _MarkBadWords {
     'journal',       'ISSN',          'http:\/\/',       '\.html',
     'Copyright',     'BioMedCentral', 'BMC',             'corresponding',
     'author',        'Abbreviations', '@',               'Hindawi',
-    'Pages\d+',      '\.{5,}',        '^\*'
+    'Pages\d+',      '\.{5,}',        '^\*',             'NucleicAcidsResearch'
   );
 
   foreach my $word (@badWords) {
@@ -829,7 +829,7 @@ sub _ParseXML {
   for my $pos ( 0 .. $#lines_content ) {
     my $threshold = ( $y_abstract < $y_intro ) ? $y_abstract : $y_intro;
     if ( $lines_y[$pos] < $threshold ) {
-      my $prev = $pos - 1;
+      my $prev = ( $pos > 0 ) ? $pos - 1 : 0;
       $prev = $pos if ( $#final_content == -1 );
       my $flag_new_line = 1;
       my $adress        = 0;
@@ -852,7 +852,8 @@ sub _ParseXML {
         $same_diff = 0 if ( $diff != $last_line_diff );
       }
 
-      $flag_new_line = 7 if ( _MarkBadWords( $lines_content[$pos] ) > 0 );
+      my $nr_bad_words = _MarkBadWords( $lines_content[$pos] );
+      $flag_new_line = 7 if ( $nr_bad_words > 0 );
       $flag_new_line = 0 if ( $same_fs == 1 and $same_bold == 1 and $same_italic == 1 );
       $flag_new_line = 0 if ( $same_fs == 1 and $same_bold == 1 );
       $flag_new_line = 2 if ( $lines_starts_with_superscripts[$pos] == 1 );
@@ -861,12 +862,15 @@ sub _ParseXML {
       $flag_new_line = 5 if ( $lines_y[$pos] < $lines_y[$prev] );
       $flag_new_line = 6 if ( $lc / $uc > 0.2 and $last_line_lc == 0 );
       $flag_new_line = 8 if ( $lines_content[$pos] =~ m/^\d+$/ );
+      $flag_new_line = 8 if ( $lines_content[$prev] =~ m/Volume\s\d+/
+			      and $nr_bad_words == 0);
 
       # difference to previous line is really hughe
       $flag_new_line = 9 if ( $diff > 50 );
+      $flag_new_line = 9 if ( $diff > ($lines_fs[$pos]+$lines_fs[$prev])*1.5 );
 
       # if the previous line had signs of beeing an adress, we just append
-      # if the cuurent one is also an adress line
+      # if the current one is also an adress line
       $flag_new_line = 0
         if ($lines_adress[$prev] >= 1
         and $lines_adress[$pos] >= 1
