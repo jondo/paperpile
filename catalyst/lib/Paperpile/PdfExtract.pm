@@ -440,7 +440,8 @@ sub _MarkAdress {
     'POBox',                       'GeneralHospital',
     'Hospitalof',                  'Facultad',
     'U\.S\.A\.',                   'College',
-    'Polytechnique',               'MolecularStructureSection'
+    'Polytechnique',               'MolecularStructureSection',
+    'Chairfor'
   );
 
   foreach my $word (@adressWords) {
