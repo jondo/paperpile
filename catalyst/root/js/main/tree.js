@@ -282,10 +282,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       Paperpile.main.tabs.newScreenTab('Clouds', 'clouds');
       break;
     case 'FEEDBACK':
-      Paperpile.main.addPDFManually({pdf:'/home/wash/testpdf/booth03.pdf', title:'Testtitle', journal:'Nature', volume:'5', authors:'Doe, Joe', year:2000});
-      //if (window.UserVoice) {
-      //  UserVoice.Popin.show()
-      //};
+      if (window.UserVoice) {
+        UserVoice.Popin.show()
+      };
       break;
     case 'DUPLICATES':
       Paperpile.main.tabs.newPluginTab('Duplicates', {},
