@@ -668,6 +668,8 @@ sub _ParseXML {
     $has_cover_page = 1
       if ( $content_line =~ m/Reprints\sof\sthis\sarticle\scan\sbe\sordered\sat/ );
     $has_cover_page = 1   if ( $content_line =~ m/\d+\sarticle\(s\)\son\sthe\sISI\sWeb\sof\sScience/ );
+    $has_cover_page = 1   if ( $content_line =~ m/Receive\sfree\semail\salerts\swhen\snew\sarticles\scite\sthis\sarticle/ );
+
     $content_line =~ s/\s+,/,/g;
     $content_line =~ s/,+/,/g;
 
@@ -687,7 +689,8 @@ sub _ParseXML {
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Summary$/i and $y < $y_intro );
     $y_intro    = $y if ( $content_line_tmp =~ m/^Addresses$/i and $y < $y_intro );
     $y_intro    = $y if ( $content_line_tmp =~ m/^KEYWORDS:/i and $y < $y_intro );
-    $y_intro    = $y if ( $content_line_tmp =~ m/^SUMMARY$/i and $y < $y_intro );
+    $y_intro    = $y if ( $content_line_tmp =~ m/^SUMMARY/i and $y < $y_intro );
+    $y_intro    = $y if ( $content_line_tmp =~ m/^SYNOPSIS$/i and $y < $y_intro );
 
     # now we can search for the DOI
     if ( $doi eq '' or $doi =~ m/\/$/ ) {
