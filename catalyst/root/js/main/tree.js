@@ -1488,7 +1488,7 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     tree.sortByMenu = {
       items: [{
         id: 'sort_tags_by_count',
-        text: 'Citation Count',
+        text: 'Paper Count',
         handler: tree.sortTagsByCount,
         scope: tree
       },
