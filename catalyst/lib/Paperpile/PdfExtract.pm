@@ -15,8 +15,8 @@ sub parsePDF {
 
   my $self = shift;
 
-  my $verbose = 0;
-  my $debug   = 0;
+  my $verbose = 1;
+  my $debug   = 1;
 
   my $PDFfile = $self->file;
   my $PDF2XML = $self->pdftoxml;
@@ -99,6 +99,14 @@ sub parsePDF {
     if ( $#page1 > -1 ) {
       ( $title, $authors, my $doi_page2, $level, $has_cover_page, my $arxiv_id_page2 ) =
         _ParseXML( \@page1, $verbose, $debug );
+
+      if ( $verbose == 1 ) {
+	print STDERR "\n========== EXTRACTION RESULTS FOR PAGE 2 ===========\n" ;
+	print STDERR "\tTITLE:==$title==\n\tAUTHORS:==$authors==\n";
+	print STDERR "\tCOVERPAGE:$has_cover_page\n\tEXIT-LEVEL:$level\n";
+	print STDERR "\tDOI:$doi\n\tARXIV:$arxiv_id\n";
+	print STDERR "====================================================\n";
+      }
 
       my $wrong = 0;
       $wrong = 1 if ( $title   =~ m/MAtERIALS And MEtHOdS/i );
@@ -657,7 +665,7 @@ sub _ParseXML {
     $has_cover_page = 1   if ( $content_line =~ m/PLEASE\sSCROLL\sDOWN\sFOR\sARTICLE/i );
     $has_cover_page = 1
       if ( $content_line =~ m/Reprints\sof\sthis\sarticle\scan\sbe\sordered\sat/ );
-
+    $has_cover_page = 1   if ( $content_line =~ m/\d+\sarticle\(s\)\son\sthe\sISI\sWeb\sof\sScience/ );
     $content_line =~ s/\s+,/,/g;
     $content_line =~ s/,+/,/g;
 
@@ -793,7 +801,7 @@ sub _ParseXML {
     }
   }
 
-  if ( $ScienceMag_flag == 1 ) {
+  if ( $ScienceMag_flag == 1 and $has_cover_page == 0) {
     my @title_tmp   = ();
     my @authors_tmp = ();
     for my $pos ( 0 .. $#lines_content ) {
@@ -803,6 +811,21 @@ sub _ParseXML {
     }
     $title   = join( " ", @title_tmp );
     $authors = join( " ", @authors_tmp );
+    if ( $title eq '' ) {
+      my $last22 = -1;
+      for my $pos ( 0 .. $#lines_content ) {
+	if ( $lines_fs[$pos] == 22 ) {
+	  push @title_tmp, $lines_content[$pos];
+	  $last22 = $pos;
+	}
+      }
+      if ( $last22 > -1 ) {
+	push @authors_tmp, $lines_content[$last22+1] if ( $lines_fs[$last22+1] == 9 );
+      }
+    }
+    $title   = join( " ", @title_tmp );
+    $authors = join( " ", @authors_tmp );
+
     # We cannot trust the DOI, might be from another Pub on the same side
     $doi = '';
     return ( $title, $authors, $doi, 6, 0, '' ) if ( $title ne '' and $authors ne '' );
