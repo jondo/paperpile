@@ -160,7 +160,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       url: Paperpile.Url('/ajax/queue/grid'),
       method: 'GET',
       baseParams: {
-        limit: 50
+        limit: 100
       }
     });
     this.pager = new Ext.PagingToolbar({
