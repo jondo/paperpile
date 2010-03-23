@@ -104,7 +104,7 @@ sub parsePDF {
 	print STDERR "\n========== EXTRACTION RESULTS FOR PAGE 2 ===========\n" ;
 	print STDERR "\tTITLE:==$title==\n\tAUTHORS:==$authors==\n";
 	print STDERR "\tCOVERPAGE:$has_cover_page\n\tEXIT-LEVEL:$level\n";
-	print STDERR "\tDOI:$doi\n\tARXIV:$arxiv_id\n";
+	print STDERR "\tDOI:$doi_page2\n\tARXIV:$arxiv_id_page2\n";
 	print STDERR "====================================================\n";
       }
 
@@ -241,7 +241,7 @@ sub parsePDF {
   $title =~ s/^(Letter:?)//i;
   $title =~ s/(\.|\*)$//;
   $title =~ s/\d$// if ( $title =~ m/[A-Z]\s?\d$/i );
-  $title =~ s/\x{2019}//g;
+  $title =~ s/\x{2019}/'/g;
   $title =~ s/\x{2018}//g;
   $title =~ s/^\s+//;
   $title =~ s/\s+$//;
@@ -451,7 +451,7 @@ sub _MarkAdress {
     'Hospitalof',                  'Facultad',
     'U\.S\.A\.',                   'College',
     'Polytechnique',               'MolecularStructureSection',
-    'Chairfor'
+    'Chairfor',                    'Dipartimento'
   );
 
   foreach my $word (@adressWords) {
@@ -1005,7 +1005,7 @@ sub _ParseXML {
 	substr($final_content[$i], 0, 80) . ' ...' : $final_content[$i];
       $tmp_line_for_print =~ s/[^[:ascii:]]+//g;
       print STDERR "LineNumber:$i -- ADR:",$final_adress[$i], " ==> BAD:",$final_bad[$i] ,
-	" --> FS:",$final_fs[$i]," :: $tmp_line_for_print\n";
+	" --> FS:",$final_fs[$i]," --> SUP:",$final_nrsuperscripts[$i]," :: $tmp_line_for_print\n";
     }
   }
 
@@ -1135,6 +1135,7 @@ sub _ParseXML {
       );
       return ( $title, $authors, $doi, 1.91, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
     }
+
     # they might be of same size, but then we do not take all rules
     if (  $final_fs[$candidate_Title] == $final_fs[$candidate_Authors] ) {
       if ( $final_fs[$candidate_Title] > $major_fs ) {
@@ -1166,9 +1167,28 @@ sub _ParseXML {
 	}
     }
 
+    # Title is larger than Authors, but title is the same as major font size
+    if ( $final_fs[$candidate_Title] > $final_fs[$candidate_Authors] ) {
+      if ( $final_fs[$candidate_Title] == $major_fs ) {
+	# in this case the title has to be all upper case
+	(my $title_temp = $cand_title_text) =~ s/([^[:ascii:]])//;
+	if ( $title_temp eq uc($title_temp)) {
+	  my $flag = 0;
+
+	  # authors have usually more superscripts than titles
+	  ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
+           $cand_title_text, $cand_authors_text,
+           $final_nrsuperscripts[$candidate_Title],
+           $final_nrsuperscripts[$candidate_Authors] );
+	  return ( $title, $authors, $doi, 1.921, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+	}
+      }
+    }
+
     # just minimal difference
     if (  $final_fs[$candidate_Title] - $final_fs[$candidate_Authors] == 1 ) {
 	my $flag = 0;
+
 	# authors usually have a higher comma to word ratio than the title
 	( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text, $cand_authors_text );
 	return ( $title, $authors, $doi, 1.93, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
