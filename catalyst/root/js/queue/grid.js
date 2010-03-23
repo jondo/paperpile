@@ -103,11 +103,21 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
     }
 
     if (data.title) {
-      data.shortTitle = Ext.util.Format.ellipsis(data.title, 70, true);
+      data.shortTitle = Ext.util.Format.ellipsis(data.title, 65, true);
     } else {
       data.shortTitle = null;
     }
 
+    data.publisherLink = null;
+
+    if (data.doi){
+      data.publisherLink = 'http://dx.doi.org/'+data.doi;
+    } else {
+      if (data.linkout){
+        data.publisherLink = data.linkout;
+      }
+    }
+    
     data.errorReportInfo = data.title + ' | ' + data.authors + ' | ';
     data.errorReportInfo += data.citation + ' | ' + data.doi + ' | ' + data.linkout;
 
@@ -175,12 +185,17 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '<div style="padding: 4px 0;">',
       '  <tpl if="type==\'PDF_SEARCH\'">',
       '    <div class="pp-queue-list-data">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">{shortAuthors} <b>{shortTitle}</b></div>',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">{shortAuthors} <b>{shortTitle}</b> <i>{journal}</i></div>',
       '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
       '        {message}',
       '      </div>',
       '      <tpl if="status==\'ERROR\'">',
-      '        <p><a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfDownloadError(\'{errorReportInfo}\');">Send Error Report</a></p> ',
+      '        <p>',
+      '           <tpl if="publisherLink">',
+      '             <a href="#" class="pp-textlink" onclick="Paperpile.utils.openURL(\'{publisherLink}\')">Go to publisher site</a> | ',
+      '           </tpl>', 
+      '           <a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfDownloadError(\'{errorReportInfo}\');">Send Error Report</a>',
+      '       </p> ',
       '      </tpl>',
       '    </div>',
       '  </tpl>',
@@ -188,7 +203,9 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '    <div class="pp-queue-list-data">',
       '      <div class="pp-queue-list-title pp-queue-list-title-{status}">',
       '      <tpl if="status!=\'DONE\'">{pdf} </tpl> ',
-      '      <tpl if="shortAuthors">{shortAuthors} </tpl> <tpl if="shortTitle"><b>{shortTitle}</b></tpl>',
+      '      <tpl if="status!=\'ERROR\'">',
+      '        <tpl if="shortAuthors">{shortAuthors} </tpl> <tpl if="shortTitle"><b>{shortTitle}</b></tpl> <tpl if="journal"><i>{journal}</i></tpl>',
+      '      </tpl> ',
       '      </div>',
       '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
       '      {message}',

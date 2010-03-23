@@ -306,39 +306,39 @@ sub _do_work {
 
   my $self = shift;
 
-  # $self->update_info('msg','Searching PDF');
+   # $self->update_info('msg','Searching PDF');
 
-  # sleep(2);
+   # sleep(2);
 
-  # $self->update_info('msg','Starting download');
+   # $self->update_info('msg','Starting download');
 
-  # sleep(2);
+   # sleep(2);
 
-  # $self->update_info('msg','Downloading');
-  # $self->update_info( 'size', 1000 );
+   # $self->update_info('msg','Downloading');
+   # $self->update_info( 'size', 1000 );
 
-  # sleep(1);
+   # sleep(1);
 
-  # $self->update_info( 'downloaded', 200 );
+   # $self->update_info( 'downloaded', 200 );
 
-  # sleep(1);
+   # sleep(1);
 
-  # $self->update_info( 'downloaded', 500 );
+   # $self->update_info( 'downloaded', 500 );
 
-  # sleep(1);
+   # sleep(1);
 
-  # $self->update_info( 'downloaded', 800 );
+   # $self->update_info( 'downloaded', 800 );
 
-  # sleep(1);
+   # sleep(1);
 
-  # $self->update_info( 'downloaded', 1000 );
+   # $self->update_info( 'downloaded', 1000 );
 
-  # sleep(1);
+   # sleep(1);
 
-  # ExtractionError->throw("Some random error") if (rand(1) > 0.5);
+   # ExtractionError->throw("Some random error") if (rand(1) > 0.5);
 
-  # $self->update_info('msg','File successfully downloaded.');
-  # return;
+   # $self->update_info('msg','File successfully downloaded.');
+   # return;
 
   if ($self->type eq 'PDF_SEARCH'){
 
@@ -487,24 +487,26 @@ sub as_hash {
 
     # Save the entire 'info' hash.
     if ( $key eq 'info' ) {
-      $hash{info}     = $self->$key;
+      $hash{info} = $self->$key;
     }
 
     next if ref( $self->$key );
 
     $hash{$key} = $value;
   }
-  
+
   $hash{message} = $self->get_message;
 
-  if (defined $self->pub) {
-    $hash{citekey}  = $self->pub->citekey;
-    $hash{title}    = $self->pub->title;
-    $hash{doi}    = $self->pub->doi;
-    $hash{citation} = $self->pub->_citation_display;
-    $hash{authors_display}  = $self->pub->_authors_display;
-    $hash{authors}  = $self->pub->authors;
-    $hash{pdf}  = $self->pub->pdf;
+  if ( defined $self->pub ) {
+    $hash{citekey}         = $self->pub->citekey;
+    $hash{title}           = $self->pub->title;
+    $hash{doi}             = $self->pub->doi;
+    $hash{linkout}         = $self->pub->linkout;
+    $hash{citation}        = $self->pub->_citation_display;
+    $hash{journal}         = $self->pub->journal;
+    $hash{authors_display} = $self->pub->_authors_display;
+    $hash{authors}         = $self->pub->authors;
+    $hash{pdf}             = $self->pub->pdf;
   }
   return {%hash};
 
