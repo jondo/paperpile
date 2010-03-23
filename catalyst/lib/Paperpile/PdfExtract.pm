@@ -15,8 +15,8 @@ sub parsePDF {
 
   my $self = shift;
 
-  my $verbose = 1;
-  my $debug   = 1;
+  my $verbose = 0;
+  my $debug   = 0;
 
   my $PDFfile = $self->file;
   my $PDF2XML = $self->pdftoxml;
@@ -235,6 +235,7 @@ sub parsePDF {
   $title =~ s/^(Research\sarticle)//i;
   $title =~ s/^(Short\sarticle)//i;
   $title =~ s/^(Report)//i;
+  $title =~ s/^Articles//i;
   $title =~ s/^(Review\s)//i;
   $title =~ s/^([A-Z]*\sMinireview)//i;
   $title =~ s/^(Letter:?)//i;
@@ -331,7 +332,7 @@ sub _AuthorLine_is_Two_Authors {
   my $authors           = '';
   my $flag              = 0;
 
-  my @temp_authors = split( / and /, $candidate_authors );
+  my @temp_authors = split( / and /i, $candidate_authors );
 
   # there is exactly 1 AND
   if ( $#temp_authors == 1 ) {
@@ -417,7 +418,8 @@ sub _MarkBadWords {
     'journal',       'ISSN',          'http:\/\/',       '\.html',
     'Copyright',     'BioMedCentral', 'BMC',             'corresponding',
     'author',        'Abbreviations', '@',               'Hindawi',
-    'Pages\d+',      '\.{5,}',        '^\*',             'NucleicAcidsResearch'
+    'Pages\d+',      '\.{5,}',        '^\*',             'NucleicAcidsResearch',
+    'Printedin',     'Receivedforpublication'
   );
 
   foreach my $word (@badWords) {
@@ -685,6 +687,7 @@ sub _ParseXML {
     $y_intro    = $y if ( $content_line_tmp =~ m/^(\d\.?)?Summary$/i and $y < $y_intro );
     $y_intro    = $y if ( $content_line_tmp =~ m/^Addresses$/i and $y < $y_intro );
     $y_intro    = $y if ( $content_line_tmp =~ m/^KEYWORDS:/i and $y < $y_intro );
+    $y_intro    = $y if ( $content_line_tmp =~ m/^SUMMARY$/i and $y < $y_intro );
 
     # now we can search for the DOI
     if ( $doi eq '' or $doi =~ m/\/$/ ) {
