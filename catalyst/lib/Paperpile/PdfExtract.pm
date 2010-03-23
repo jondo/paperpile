@@ -243,6 +243,7 @@ sub parsePDF {
   $title =~ s/\d$// if ( $title =~ m/[A-Z]\s?\d$/i );
   $title =~ s/\x{2019}/'/g;
   $title =~ s/\x{2018}//g;
+  $title =~ s/'$//;
   $title =~ s/^\s+//;
   $title =~ s/\s+$//;
   $title =~ s/\.$//;
@@ -451,7 +452,8 @@ sub _MarkAdress {
     'Hospitalof',                  'Facultad',
     'U\.S\.A\.',                   'College',
     'Polytechnique',               'MolecularStructureSection',
-    'Chairfor',                    'Dipartimento'
+    'Chairfor',                    'Dipartimento',
+    'Ltd\.',                       'ResearchOrganisation'
   );
 
   foreach my $word (@adressWords) {
@@ -460,7 +462,7 @@ sub _MarkAdress {
 
   # special cases
   $adress-- if ( $tmp_line =~ m/addressed/i );
-  $adress++ if ( $orig     =~ m/Road\s/ );
+  $adress++ if ( $orig     =~ m/Road(\s|,)/ );
   $adress++ if ( $orig     =~ m/Centro\s/ );
 
   return $adress;
@@ -670,6 +672,7 @@ sub _ParseXML {
     $has_cover_page = 1   if ( $content_line =~ m/\d+\sarticle\(s\)\son\sthe\sISI\sWeb\sof\sScience/ );
     $has_cover_page = 1   if ( $content_line =~ m/Receive\sfree\semail\salerts\swhen\snew\sarticles\scite\sthis\sarticle/ );
     $has_cover_page = 1   if ( $content_line =~ m/Please\sscroll\sdown\sto\ssee\sthe\sfull\stext\sarticle/ );
+    $has_cover_page = 1   if ( $content_line =~ m/This\sProvisional\sPDF\scorresponds\sto\sthe\sarticle\sas\sit\sappeared/ );
 
     $content_line =~ s/\s+,/,/g;
     $content_line =~ s/,+/,/g;
