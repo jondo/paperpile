@@ -669,6 +669,7 @@ sub _ParseXML {
       if ( $content_line =~ m/Reprints\sof\sthis\sarticle\scan\sbe\sordered\sat/ );
     $has_cover_page = 1   if ( $content_line =~ m/\d+\sarticle\(s\)\son\sthe\sISI\sWeb\sof\sScience/ );
     $has_cover_page = 1   if ( $content_line =~ m/Receive\sfree\semail\salerts\swhen\snew\sarticles\scite\sthis\sarticle/ );
+    $has_cover_page = 1   if ( $content_line =~ m/Please\sscroll\sdown\sto\ssee\sthe\sfull\stext\sarticle/ );
 
     $content_line =~ s/\s+,/,/g;
     $content_line =~ s/,+/,/g;
