@@ -15,8 +15,8 @@ sub parsePDF {
 
   my $self = shift;
 
-  my $verbose = 1;
-  my $debug   = 1;
+  my $verbose = 0;
+  my $debug   = 0;
 
   my $PDFfile = $self->file;
   my $PDF2XML = $self->pdftoxml;
@@ -402,7 +402,7 @@ sub _MarkBadWords {
     $bad++ if ( $tmp_line =~ m/$number/i );
   }
 
-  # words thta re not supposed to appear in title or authors
+  # words that are not supposed to appear in title or authors
   my @badWords = (
     'doi',           'vol\.\d+',      'keywords',        'openaccess$',
     'ScienceDirect', 'Blackwell',     'journalhomepage', 'e-?mail',
@@ -522,6 +522,7 @@ sub _ParseXML {
   my $y_intro         = 10000;
   my $has_cover_page  = 0;
   my $ScienceMag_flag = 0;
+  my $JSTOR_flag      = 0;
 
   ###########################################
   # read in all the elements
@@ -661,6 +662,7 @@ sub _ParseXML {
     $content_line =~ s/,+/,/g;
 
     $ScienceMag_flag = 1 if ( $content_line =~ m/www\.sciencemag\.org/ );
+    $JSTOR_flag      = 1 if ( $content_line =~ m/Your\suse\sof\sthe\sJSTOR\sarchive\sindicates/ );
 
     my $content_line_tmp = join( "", @content );
 
@@ -790,6 +792,7 @@ sub _ParseXML {
       return ( $title, $authors, $doi, 6, 0, '' ) if ( $title ne '' and $authors ne '' );
     }
   }
+
   if ( $ScienceMag_flag == 1 ) {
     my @title_tmp   = ();
     my @authors_tmp = ();
@@ -802,6 +805,28 @@ sub _ParseXML {
     $authors = join( " ", @authors_tmp );
     # We cannot trust the DOI, might be from another Pub on the same side
     $doi = '';
+    return ( $title, $authors, $doi, 6, 0, '' ) if ( $title ne '' and $authors ne '' );
+  }
+
+  if ( $JSTOR_flag == 1 ) {
+    my @title_tmp   = ();
+    my @authors_tmp = ();
+    for my $pos ( 0 .. $#lines_content ) {
+      if ( $lines_content[$pos] =~ m/^(Author\(s\):\s)(.*)/ ) {
+	push @authors_tmp, $2;
+	# maybe there are more author lines following
+	for (my $j = $pos+1; $j <= $#lines_content; $j++) {
+	  last if ( $lines_content[$j] =~ m/^Source/ );
+	  push @authors_tmp, $lines_content[$j] if ( $lines_fs[$j] == 11 );
+	}
+	# everything before that line is considered to be part of the title
+	for (my $j = $pos-1; $j >= 0; $j--) {
+	  push @title_tmp, $lines_content[$j] if ( $lines_fs[$j] == 11 );
+	}
+      }
+    }
+    $title   = join( " ", @title_tmp );
+    $authors = join( " ", @authors_tmp );
     return ( $title, $authors, $doi, 6, 0, '' ) if ( $title ne '' and $authors ne '' );
   }
 
@@ -1163,11 +1188,11 @@ sub _ParseXML {
   my $max_fs_ALL          = 0;
   my $max_fs_line_ALL     = -1;
   my $k                   = -1;
+
+  print STDERR "\n============ STRATEGY TWO PRESELECTION ================\n" if ( $verbose == 1);
   for my $i ( 0 .. $#final_content ) {
-    if ( $verbose == 1) {
-      print STDERR "\n============ STRATEGY TWO PRESELECTION ================\n";
-      print STDERR "\tBAD:$final_bad[$i] AD:$final_adress[$i] FS:$final_fs[$i] MF:$major_fs $final_content[$i]\n";
-    }
+    print STDERR "\tBAD:$final_bad[$i] AD:$final_adress[$i] FS:$final_fs[$i] MF:$major_fs $final_content[$i]\n"
+      if ( $verbose == 1);
     if ( $final_bad[$i] == 0 and $final_adress[$i] == 0 and $final_fs[$i] >= $major_fs ) {
       push @IDS, $i;
       $k++;
