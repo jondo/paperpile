@@ -342,6 +342,8 @@ sub _do_work {
 
   if ($self->type eq 'PDF_SEARCH'){
 
+    print STDERR "[queue] Searching PDF for ", $self->pub->_citation_display, "\n";
+
     if ($self->pub->pdf) {
       $self->update_info('msg',"There is already a PDF for this reference (".$self->pub->pdf.").");
       return;
@@ -376,6 +378,8 @@ sub _do_work {
 
   if ($self->type eq 'PDF_IMPORT') {
 
+    print STDERR "[queue] Start import of PDF ", $self->pub->pdf, "\n";
+
     $self->_lookup_pdf;
 
     if ($self->pub->_imported) {
@@ -399,7 +403,6 @@ sub _do_work {
       if (FreezeThaw::cmpStr($old_hash, $new_hash) == 0){
         NetMatchError->throw("Could not match PDF to an online resource.");
       }
-
 
       $self->_insert;
 
@@ -536,6 +539,8 @@ sub _match {
 
   foreach my $plugin (@plugin_list) {
 
+    print STDERR "[queue] Matching against $plugin\n";
+
     $self->update_info('msg',"Matching against $plugin...");
 
     eval { $self->_match_single($plugin); };
@@ -610,6 +615,8 @@ sub _crawl {
     die("No target url for PDF download");
   }
 
+  print STDERR "[queue] Start crawling at $start_url\n";
+
   $pdf = $crawler->search_file( $start_url );
 
   $self->pub->pdf_url($pdf) if $pdf;
@@ -621,6 +628,8 @@ sub _crawl {
 sub _download {
 
   my $self = shift;
+
+  print STDERR "[queue] Start downloading ", $self->pub->pdf_url, "\n";
 
   $self->update_info( 'msg', "Downloading PDF..." );
 
@@ -726,6 +735,8 @@ sub _download {
 sub _extract_meta_data {
 
   my $self = shift;
+
+  print STDERR "[queue] Extracting meta data for ", $self->pub->pdf, "\n";
 
   my $bin = Paperpile::Utils->get_binary( 'pdftoxml');
 
