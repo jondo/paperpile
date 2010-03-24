@@ -501,7 +501,6 @@ sub match {
     my $query    = $searchUrl . $query_doi . "&as_vis=1";
     my $response = $browser->get($query);
     my $content  = $response->content;
-    print STDERR "$query\n";
 
     my $error_level = _check_content($content);
     if ( $error_level == 1 ) {

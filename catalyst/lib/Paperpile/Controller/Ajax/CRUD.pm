@@ -568,7 +568,6 @@ sub _get_selection {
       push @tmp, $selection;
     }
     for my $sha1 (@tmp) {
-	print STDERR " -> SHA1: ".$sha1."\n";
       my $pub = $plugin->find_sha1($sha1);
       if ( defined $pub ) {
         push @data, $pub;
