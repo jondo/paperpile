@@ -224,11 +224,11 @@ sub parsePDF {
   # repair common OCR errors
   my %OCRerrors = ( '\x{FB01}' => 'fi', '\x{FC}'   => 'ü',
 		    '\x{2013}' =>  '-', '\x{2032}' => "'",
-		    '\x{A8} o' => 'ö', '\x{A8} a' => 'ä',
-		    '\x{A8} u' => 'ü');
+		    '\x{A8} o' =>  'ö', '\x{A8} a' => 'ä',
+		    '\x{A8} u' =>  'ü' );
 
   while (my ($key, $value) = each(%OCRerrors)){
-    $title =~ s/$key/$value/;
+    $title =~ s/$key/$value/g;
   }
 
   # sometime still some cleaning is required
@@ -243,7 +243,9 @@ sub parsePDF {
   $title =~ s/\d$// if ( $title =~ m/[A-Z]\s?\d$/i );
   $title =~ s/\x{2019}/'/g;
   $title =~ s/\x{2018}//g;
+  $title =~ s/\x{2217}//g;
   $title =~ s/'$//;
+  $title =~ s/\s+/ /g;
   $title =~ s/^\s+//;
   $title =~ s/\s+$//;
   $title =~ s/\.$//;
@@ -396,7 +398,8 @@ sub _MarkBadWords {
     '^Letters$',                       '^.?ExtendedAbstract.?$',
     '^(short)?(scientific)?reports?$', '^ORIGINALINVESTIGATION$',
     'discoverynotes',                  '^SURVEYANDSUMMARY$',
-    'APPLICATIONSNOTE$',               'Chapter\d+'
+    'APPLICATIONSNOTE$',               'Chapter\d+',
+    '^CORRESPONDENCE$'
   );
   foreach my $type (@badTypes) {
     $bad++ if ( $tmp_line =~ m/$type/i );
