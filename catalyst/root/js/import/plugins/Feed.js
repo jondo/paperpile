@@ -50,9 +50,44 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
       // re-download the feed. It is set to 0 here to allow "live"
       // search from the local database after that. 
       if (this.plugin_reload){
-        Paperpile.status.showBusy("Loading Feed");
+        
+        // First set variable for backend
         options.params.plugin_reload = 1;
-        this.plugin_reload=0;
+        // Reset immediately to ensure the next time we do "live search"
+        this.plugin_reload=0; 
+
+        // Allow cancel and timeout when doing full load
+        options.params.cancel_handle = 'grid_' + this.id;
+
+        Paperpile.status.updateMsg({
+          busy: true,
+          msg: 'Loading Feed.',
+          action1: 'Cancel',
+          callback: function() {
+            this.cancelLoad();
+            Paperpile.status.clearMsg();
+
+            clearTimeout(this.timeoutWarn);
+            clearTimeout(this.timeoutAbort);
+          },
+          scope: this
+        });
+
+        // Warn after 10 sec
+        this.timeoutWarn = (function() {
+          Paperpile.status.setMsg('This is taking longer than usual. Still loading Feed.');
+        }).defer(10000, this);
+
+        // Abort after 35 sec
+        this.timeoutAbort = (function() {
+          this.cancelLoad();
+          Paperpile.status.clearMsg();
+          Paperpile.status.updateMsg({
+            type: 'error',
+            msg: 'Giving up. There may be problems with your network or the site hosting the Feed.',
+            hideOnClick: true
+          });
+        }).defer(20000, this);
       } else {
         options.params.plugin_reload = 0;
       }
@@ -62,6 +97,8 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
       if (!this.backgroundLoading) {
         Paperpile.status.clearMsg();
       }
+      clearTimeout(this.timeoutWarn);
+      clearTimeout(this.timeoutAbort);
     },
     this);
 
