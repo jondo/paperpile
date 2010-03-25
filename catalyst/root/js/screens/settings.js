@@ -124,7 +124,6 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
         Ext.get('proxy_test_status').removeClass(['pp-icon-tick', 'pp-icon-cross']);
 
-        //Paperpile.status.showBusy('Testing network connection.');
         var params = {
           use_proxy: this.proxyCheckbox.getValue() ? 1 : 0,
           proxy: this.textfields['proxy'].getValue(),

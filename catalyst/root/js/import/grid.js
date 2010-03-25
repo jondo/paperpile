@@ -1163,35 +1163,94 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   completeEntry: function() {
     var selection = this.getSelection();
 
+
     var sel = this.getSelectionModel().getSelected();
     if (!sel) return;
     var data = sel.data;
     // _details_link indicates if an entry still needs to be completed or not
     if (data._details_link) {
-      Paperpile.status.showBusy('Looking up bibliographic data');
+
+      this.lookingUpData = true;
+
+      // Don't allow other rows to be selected during load
+      var blockingFunction = function(){return false;};
+      this.getSelectionModel().on('beforerowselect', blockingFunction, this);
+      
       var sha1 = this.getSelectionModel().getSelected().data.sha1;
-      Ext.Ajax.request({
+
+      Paperpile.status.updateMsg({
+        busy: true,
+        msg: 'Lookup bibliographic data',
+        action1: 'Cancel',
+        callback: function() {
+          Ext.Ajax.abort(transactionID);
+          this.cancelCompleteEntry();
+          Paperpile.status.clearMsg();
+          this.getSelectionModel().un('beforerowselect', blockingFunction, this);
+        },
+        scope: this
+      });
+
+      // Warn after 10 sec
+      this.timeoutWarn = (function() {
+        Paperpile.status.setMsg('This is taking longer than usual. Still looking up data.');
+      }).defer(10000, this);
+
+      // Abort after 20 sec
+      this.timeoutAbort = (function() {
+        Ext.Ajax.abort(transactionID);
+        this.cancelCompleteEntry();
+        Paperpile.status.clearMsg();
+        Paperpile.status.updateMsg({
+          type: 'error',
+          msg: 'Giving up. There may be problems with your network or ' + this.plugin_name + '.',
+          hideOnClick: true
+        });
+        this.getSelectionModel().un('beforerowselect', blockingFunction, this);
+      }).defer(20000,this);
+
+      var transactionID = Ext.Ajax.request({
         url: Paperpile.Url('/ajax/crud/complete_entry'),
         params: {
           selection: selection,
-          grid_id: this.id
+          grid_id: this.id,
+          cancel_handle: this.id+'_lookup',
         },
         method: 'GET',
         success: function(response) {
           var json = Ext.util.JSON.decode(response.responseText);
 
+          this.getSelectionModel().un('beforerowselect', blockingFunction, this);
+
+          clearTimeout(this.timeoutWarn);
+          clearTimeout(this.timeoutAbort);
+
           Paperpile.main.onUpdate(json.data);
           Paperpile.status.clearMsg();
-
+          
           this.updateButtons();
           this.getPluginPanel().updateDetails();
-
+          
         },
         failure: Paperpile.main.onError,
         scope: this
       });
     }
   },
+  
+  cancelCompleteEntry: function(){
+
+    clearTimeout(this.timeoutWarn);
+    clearTimeout(this.timeoutAbort);
+
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/misc/cancel_request'),
+      params: {
+        cancel_handle: this.id+'_lookup',
+        kill:1,
+      },
+    });
+  }, 
 
   updateDetail: function() {
     // Override with other plugin methods to do things necessary on detail update.

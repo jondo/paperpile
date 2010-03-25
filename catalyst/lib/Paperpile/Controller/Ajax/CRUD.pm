@@ -93,6 +93,10 @@ sub complete_entry : Local {
   my $plugin = $self->_get_plugin($c);
   my $selection = $self->_get_selection($c);
 
+  my $cancel_handle = $c->request->params->{cancel_handle};
+
+  Paperpile::Utils->register_cancel_handle($cancel_handle);
+
   my @new_pubs = ();
   my $results = {};
   foreach my $pub (@$selection) {
@@ -110,6 +114,9 @@ sub complete_entry : Local {
   }
 
   $c->stash->{data} = {pubs => $results};
+
+  Paperpile::Utils->clear_cancel($$);
+
 }
 
 sub new_entry : Local {
