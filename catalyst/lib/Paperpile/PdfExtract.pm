@@ -399,7 +399,7 @@ sub _MarkBadWords {
     '^(short)?(scientific)?reports?$', '^ORIGINALINVESTIGATION$',
     'discoverynotes',                  '^SURVEYANDSUMMARY$',
     'APPLICATIONSNOTE$',               'Chapter\d+',
-    '^CORRESPONDENCE$'
+    '^CORRESPONDENCE$',                '^SPECIALTOPIC'
   );
   foreach my $type (@badTypes) {
     $bad++ if ( $tmp_line =~ m/$type/i );
@@ -700,7 +700,7 @@ sub _ParseXML {
     $y_intro    = $y if ( $content_line_tmp =~ m/^SYNOPSIS$/i and $y < $y_intro );
 
     # now we can search for the DOI
-    if ( $doi eq '' or $doi =~ m/\/$/ ) {
+    if ( $doi eq '' or $doi =~ m/(\/|-)$/ ) {
 
       # let's check if we see somehting like doi|DOI
       if ( $content_line =~ m/(10\.\d{4})/i ) {
