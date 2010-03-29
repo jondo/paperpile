@@ -197,9 +197,9 @@ sub parsePDF {
 
     # now we parse each author separately
     foreach my $author (@authors_array) {
-
       # remove unnecessary white spaces, and forgotten 'ands'
-      $author =~ s/and\s//;
+      #$author =~ s/and\s//;
+      $author =~ s/\sand//;
       $author =~ s/\s+$//;
       $author =~ s/^\s+//;
       next if ( length($author) < 3 );
@@ -242,7 +242,7 @@ sub parsePDF {
   $title =~ s/(\.|\*)$//;
   $title =~ s/\d$// if ( $title =~ m/[A-Z]\s?\d$/i );
   $title =~ s/\x{2019}/'/g;
-  $title =~ s/\x{2018}//g;
+  $title =~ s/\x{2018}/'/g;
   $title =~ s/\x{2217}//g;
   $title =~ s/'$//;
   $title =~ s/\s+/ /g;
@@ -399,7 +399,8 @@ sub _MarkBadWords {
     '^(short)?(scientific)?reports?$', '^ORIGINALINVESTIGATION$',
     'discoverynotes',                  '^SURVEYANDSUMMARY$',
     'APPLICATIONSNOTE$',               'Chapter\d+',
-    '^CORRESPONDENCE$',                '^SPECIALTOPIC'
+    '^CORRESPONDENCE$',                '^SPECIALTOPIC',
+    'Briefreport',                     'DISCOVERYNOTE$'
   );
   foreach my $type (@badTypes) {
     $bad++ if ( $tmp_line =~ m/$type/i );
@@ -423,7 +424,8 @@ sub _MarkBadWords {
     'Copyright',     'BioMedCentral', 'BMC',             'corresponding',
     'author',        'Abbreviations', '@',               'Hindawi',
     'Pages\d+',      '\.{5,}',        '^\*',             'NucleicAcidsResearch',
-    'Printedin',     'Receivedforpublication'
+    'Printedin',     'Receivedforpublication',           'Received:',
+    'Accepted:'
   );
 
   foreach my $word (@badWords) {
@@ -538,6 +540,7 @@ sub _ParseXML {
   my $has_cover_page  = 0;
   my $ScienceMag_flag = 0;
   my $JSTOR_flag      = 0;
+  my $Nature_flag     = 0;
 
   ###########################################
   # read in all the elements
@@ -682,6 +685,8 @@ sub _ParseXML {
 
     $ScienceMag_flag = 1 if ( $content_line =~ m/www\.sciencemag\.org/ );
     $JSTOR_flag      = 1 if ( $content_line =~ m/Your\suse\sof\sthe\sJSTOR\sarchive\sindicates/ );
+    $Nature_flag     = 1 if ( $content_line =~ m/www\.nature\.com\/nature/ );
+    $Nature_flag     = 1 if ( $content_line =~ m/nature\.com/ );
 
     my $content_line_tmp = join( "", @content );
 
@@ -866,6 +871,35 @@ sub _ParseXML {
     return ( $title, $authors, $doi, 6, 0, '' ) if ( $title ne '' and $authors ne '' );
   }
 
+  if ( $Nature_flag == 1 ) {
+    my @title_tmp   = ();
+    my @authors_tmp = ();
+    for my $pos ( 0 .. $#lines_content ) {
+      # Title has usually a font size of 24 or 23 and authors
+      # start usually just the line below. This strategy
+      # does not ensure that all authors are found.
+      if ( $lines_fs[$pos] == 24 or $lines_fs[$pos] == 23 ) {
+	push @title_tmp, $lines_content[$pos];
+	if ( $lines_fs[$pos+1] == 10 ) {
+	  push @authors_tmp, $lines_content[$pos+1];
+	}
+      }
+      # if ( $lines_fs[$pos] == 18 and $#title_tmp == -1 ) {
+      # 	for my $pos2 ( $pos .. $#lines_content ) {
+      # 	  push @title_tmp, $lines_content[$pos2] if ($lines_fs[$pos2] == 18);
+      # 	  if ($lines_fs[$pos2] == 9) {
+      # 	    push @authors_tmp, $lines_content[$pos2];
+      # 	    last;
+      # 	  }
+      # 	}
+      # 	last;
+      # }
+    }
+    $title   = join( " ", @title_tmp );
+    $authors = join( " ", @authors_tmp );
+    return ( $title, $authors, $doi, 6, 0, '' ) if ( $title ne '' and $authors ne '' );
+  }
+
   #################################################
   # LET'S JOIN THE LINES
 
@@ -945,6 +979,17 @@ sub _ParseXML {
       $tmp_flag = 1 if ( $lines_adress[$prev] >= 1 and $lines_adress[$pos] >= 1 );
       $tmp_flag = 1 if ( $lines_adress[$prev] == 0 and $lines_adress[$pos] == 0 );
       $flag_new_line = 0 if ( $lines_content[$pos] =~ m/^and/ and $tmp_flag == 1 );
+      # if ( $pos > 0 ) {
+      # 	my $nr_bad_words_prev = _MarkBadWords( $lines_content[$pos-1] );
+      # 	$flag_new_line = 0 if ( $lines_content[$pos-1] =~ m/,$/ and $tmp_flag == 1
+      # 				and $lines_content[$pos] =~ m/^[a-z]/ and
+      # 				$nr_bad_words_prev == 0 and
+      # 				$nr_bad_words == 0 );
+      # 	$flag_new_line = 0 if ( $lines_content[$pos-1] =~ m/\sand$/ and $tmp_flag == 1
+      # 				and $lines_content[$pos] =~ m/^[a-z]/ and
+      # 				$nr_bad_words_prev == 0 and
+      # 				$nr_bad_words == 0 );
+      # }
 
       if ( $flag_new_line >= 1 ) {
         push @final_content,        $lines_content[$pos];
@@ -1064,21 +1109,59 @@ sub _ParseXML {
     # find the previous two lines that do not have bad words
     my $candidate_Authors = -1;
     my $candidate_Title   = -1;
+    my $first_line        = -1;
+    my $second_line       = -1;
+    my $third_line        = -1;
     for ( my $i = $adress_line - 1 ; $i >= 0 ; $i-- ) {
       my $tmp_bad = $final_bad[$i] + $final_adress[$i];
-      $tmp_bad-- if ( $final_content[$i] =~ m/20\d\d$/ and $final_content[$i] !~ m/(Vol\.|no\.)/i );
-      if ( $tmp_bad == 0 and $candidate_Authors == -1 ) {
-
-        # some simple checking that we do not get normal text
-        my $flag = _Bad_Author_Words( $final_content[$i] );
-
-        if ( $flag == 0 ) {
-          $candidate_Authors = $i;
-        }
-      } else {
-        $candidate_Title = $i if ( $tmp_bad == 0 and $candidate_Title == -1 );
+      $tmp_bad-- if ( $final_content[$i] =~ m/(19\d\d|20\d\d)$/ and $final_content[$i] !~ m/(Vol\.|no\.)/i );
+      my $bad_flag = _Bad_Author_Words( $final_content[$i] );
+      if ( $tmp_bad == 0 and $first_line == -1 and $bad_flag == 0) {
+	$first_line  = $i;
+	next;
+      }
+      if ( $tmp_bad == 0 and $first_line != -1 and $second_line == -1) {
+	$second_line = $i;
+	next;
+      }
+      if ( $tmp_bad == 0 and $second_line != -1 ) {
+	$third_line  = $i;
+	last;
       }
     }
+
+    # default
+    $candidate_Title   = $second_line;
+    $candidate_Authors = $first_line;
+
+    # maybe this pair is better in some cases
+    if ( _Bad_Author_Words( $final_content[$second_line] ) == 0 ) {
+      if ( $final_fs[$third_line] / $major_fs > 1.2 and
+	   $final_fs[$third_line] > $final_fs[$second_line] and
+	   $final_nrsuperscripts[$third_line] == 0 ) {
+	$candidate_Title   = $third_line;
+	$candidate_Authors = $second_line;
+      }
+    }
+
+    # restore the default
+    my $word_count1 = ( $final_content[$third_line] =~ tr/ //);
+    my $word_count2 = ( $final_content[$second_line] =~ tr/ //);
+
+    if ( $final_nrsuperscripts[$first_line] > 0 and
+	 $final_nrsuperscripts[$second_line] == 0 and
+	 $final_nrsuperscripts[$second_line] == 0 ) {
+      $candidate_Title   = $second_line;
+      $candidate_Authors = $first_line;
+    }
+    if ( ($third_line == 0 or $third_line == 1) and
+	 $final_fs[$third_line] > $final_fs[$second_line]
+	 and $word_count1 < 5 and $word_count2 > $word_count1 ) {
+      $candidate_Title   = $second_line;
+      $candidate_Authors = $first_line;
+    }
+
+    next if ( $candidate_Title == -1 or $candidate_Authors == -1 );
 
     # cleanup PDF-Parsing/UTF-8/special char mess
     ( my $cand_authors_text = $final_content[$candidate_Authors] ) =~ s/(\s[^[:ascii:]]\s)//g;
@@ -1089,7 +1172,6 @@ sub _ParseXML {
     $cand_authors_text =~ s/\*J\*/,/g;
     $cand_title_text   =~ s/\*J\*//g;
 
-    next if ( $candidate_Title == -1 or $candidate_Authors == -1 );
     if ( $verbose == 1) {
       print STDERR "\n============ STRATEGY ONE ==========================\n";
       print STDERR "TITLE:   MFS:$major_fs FS:$final_fs[$candidate_Title] $final_content[$candidate_Title]\n";
@@ -1249,7 +1331,10 @@ sub _ParseXML {
   for my $i ( 0 .. $#final_content ) {
     print STDERR "\tBAD:$final_bad[$i] AD:$final_adress[$i] FS:$final_fs[$i] MF:$major_fs $final_content[$i]\n"
       if ( $verbose == 1);
-    if ( $final_bad[$i] == 0 and $final_adress[$i] == 0 and $final_fs[$i] >= $major_fs ) {
+    # a year in the title is okay
+    my $year_flag = ( $final_content[$i] =~ m/(18\d\d|19\d\d|20\d\d)/) ? 1 : 0 ;
+
+    if ( $final_bad[$i]-$year_flag == 0 and $final_adress[$i] == 0 and $final_fs[$i] >= $major_fs ) {
       push @IDS, $i;
       $k++;
       if ( $final_fs[$i] > $max_fs_NONEBAD ) {
@@ -1264,35 +1349,59 @@ sub _ParseXML {
     }
   }
 
-  # if there is just one line (as observed in Kellis04)
+  #####################################################################################
+  # We might just find one line. This happens e.g. if authors have a font
+  # size smaller than the major font size
   if ( $#IDS == 0 and $max_fs_line_ALL == $IDS[0] ) {
-
-    $title = $final_content[ $IDS[0] ];
-
     # let's find the next line that is none bad
-    my $next = -1;
-    for my $i ( $IDS[0] + 1 .. $#IDS ) {
-      if ( $final_bad[$i] == 0 and $final_adress[$i] == 0 ) {
-        $next = $i;
+    my $next_good_line = -1;
+    for my $i ( $IDS[0] + 1 .. $#final_content ) {
+      my $flag = 0;
+      $flag = 1 if ( $final_bad[$i] == 0 and $final_adress[$i] == 0 );
+      $flag = 1 if ( $final_nrsuperscripts[$i] > 0 and $final_adress[$i] == 0 );
+      if ( $flag == 1 ) {
+        $next_good_line = $i;
         last;
       }
     }
 
-    # now let's see if it is a good author line
-    if ( $final_nrsuperscripts[$next] > 0 ) {
-      $authors = $final_content[$next];
+    # we have found a good line and it is not that far away
+    if ( $next_good_line != -1 and abs($next_good_line-$IDS[0]) <= 3) {
+
+      ( my $cand_authors_text = $final_content[$next_good_line] ) =~ s/(\s[^[:ascii:]]\s)//g;
+      ( my $cand_title_text   = $final_content[$IDS[0]] ) =~ s/(\s[^[:ascii:]]\s)//g;
+
+      # remove markers *J* that lines were joined
+      $cand_authors_text =~ s/-\s?\*J\*/-/g;
+      $cand_authors_text =~ s/\*J\*/,/g;
+      $cand_authors_text =~ s/,\sand\s/ and /g;
+      $cand_title_text   =~ s/\*J\*//g;
+
+      my $flag = 0;
+      # authors usually have a higher comma to word ratio than the title
+      ( $title, $authors, $flag ) = _AuthorLine_by_Commas( $cand_title_text, $cand_authors_text );
+      return ( $title, $authors, $doi, 0.1, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+      # authors have usually more superscripts than titles
+      ( $title, $authors, $flag ) = _AuthorLine_by_Superscripts(
+            $cand_title_text, $cand_authors_text,
+            $final_nrsuperscripts[$IDS[0]],
+            $final_nrsuperscripts[$next_good_line] );
+      return ( $title, $authors, $doi, 0.2, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+      # there could be just TWO authors
+      ( $title, $authors, $flag ) =
+	_AuthorLine_is_Two_Authors( $cand_title_text, $cand_authors_text );
+      return ( $title, $authors, $doi, 2.3, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
+
+      # there could be just ONE authors
+      ( $title, $authors, $flag ) =
+	_AuthorLine_is_One_Author( $cand_title_text, $cand_authors_text );
+      return ( $title, $authors, $doi, 2.4, $has_cover_page, $arxiv_id ) if ( $flag == 1 );
     }
-
-    $title   =~ s/\*J\*//g;
-    $authors =~ s/-\s?\*J\*/-/g;
-    $authors =~ s/\*J\*/,/g;
-
-    return ( $title, $authors, $doi, 0.1, $has_cover_page, $arxiv_id ) if ( $authors ne '' );
-
-    $title   = '';
-    $authors = '';
   }
 
+  ######################################################################################
   # if we find just two lines, then this is a good sign
   print STDERR '======= $#IDS: ',$#IDS," =============\n" if ($verbose == 1);
   if ( $#IDS == 1 ) {
@@ -1528,7 +1637,6 @@ sub _ParseXML {
         }
       }
     }
-
   }
 
   return ( $title, $authors, $doi, 4, $has_cover_page, $arxiv_id );
