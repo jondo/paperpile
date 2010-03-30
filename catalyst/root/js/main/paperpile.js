@@ -685,7 +685,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 Ext.MessageBox.buttonText.ok = "Ok";
               }
             });
-
           }
         },
         hideOnClick: true
@@ -788,23 +787,33 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       url = '/ajax/misc/report_pdf_match_error';
     }
 
-    // Turn off logging to avoid logging the log when it is sent
-    // to the backend...
-    Paperpile.isLogging = 0;
+    // First call line_feed to make sure all of the relevant catalyst
+    // log is flushed. Wait 5 seconds to make sure it is sent to the
+    // frontend before we send it back to the backend. 
     Ext.Ajax.request({
-      url: Paperpile.Url(url),
-      params: {
-        info: info,
-        catalyst_log: Paperpile.serverLog
-      },
-      scope: this,
-      success: function() {
-        // Turn on logging again. Wait 10 seconds to make sure it is
-        // turned off when the actual log is written.
+      url: Paperpile.Url('/ajax/misc/line_feed'),
+      success: function(response) {
         (function() {
-          Paperpile.isLogging = 1;
-        }).defer(10000);
-      }
+          // Turn off logging to avoid logging the log when it is sent
+          // to the backend...
+          Paperpile.isLogging = 0;
+          Ext.Ajax.request({
+            url: Paperpile.Url(url),
+            params: {
+              info: info,
+              catalyst_log: Paperpile.serverLog
+            },
+            scope: this,
+            success: function() {
+              // Turn on logging again. Wait 10 seconds to make sure it is
+              // turned off when the actual log is written.
+              (function() {
+                Paperpile.isLogging = 1;
+              }).defer(10000);
+            }
+          })}).defer(5000);
+      },
+      scope: this
     });
   },
 

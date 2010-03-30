@@ -93,6 +93,13 @@ Paperpile.stage0 = function() {
           if (Paperpile.isLogging) {
             Paperpile.serverLog = Paperpile.serverLog + line + "\n";
 
+            // Limit length to 100,000 characters to avoid sending
+            // around huge files in error reports
+            var L = Paperpile.serverLog.length;
+            if (L>100000){
+              Paperpile.serverLog = Paperpile.serverLog.substr(L-100000);
+            }
+
             var panel = Ext.getCmp('log-panel');
 
             if (panel) {

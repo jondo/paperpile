@@ -254,12 +254,6 @@ sub test_network : Local {
 
   Paperpile::Utils->register_cancel_handle($cancel_handle);
 
-  #for my $i (0..15){
-  #  print STDERR "$i ";
-  #  last if Paperpile::Utils->check_cancel($$);
-  #  sleep(1);
-  #}
-
   my $browser = Paperpile::Utils->get_browser( $c->request->params );
 
   my $response = $browser->get('http://google.com');
@@ -293,6 +287,14 @@ sub clean_duplicates : Local {
   my $grid_id = $c->request->params->{grid_id};
   my $plugin  = $c->session->{"grid_$grid_id"};
 }
+
+sub line_feed : Local {
+  my ( $self, $c ) = @_;
+  foreach my $i (1..50){
+    print STDERR "== $i == \n";
+  }
+}
+
 
 sub inc_read_counter : Local {
 

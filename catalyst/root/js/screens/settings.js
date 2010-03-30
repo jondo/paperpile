@@ -176,7 +176,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
               },
             });
           }
-        })
+        });
       },
       this);
 
