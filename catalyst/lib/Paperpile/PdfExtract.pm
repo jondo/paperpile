@@ -24,7 +24,7 @@ sub parsePDF {
   # create a temp file
   ( undef, my $tmpfile ) = tempfile( OPEN => 0 );
 
-  # The file may contain spaces or brackets, that have to be escaped. 
+  # The file may contain spaces or brackets, that have to be escaped.
   # I do not know how this will be handled in Windows.
   $PDFfile =~ s/\s/\\ /g;
   $PDFfile =~ s/\(/\\(/g;
@@ -189,7 +189,7 @@ sub parsePDF {
 
     # there maybe just one
     my $nr_spaces = ( $authors =~ tr/ // );
-    if ( $processed == 0 and $nr_spaces <= 3 ) {
+    if ( $processed == 0 and $nr_spaces <= 4 ) {
 
       # We do some cleaning
       $authors_array[0] = $authors;
@@ -235,7 +235,7 @@ sub parsePDF {
   $title =~ s/^(Research\sarticle)//i;
   $title =~ s/^(Short\sarticle)//i;
   $title =~ s/^(Report)//i;
-  $title =~ s/^Articles//i;
+  $title =~ s/^Articles?//i;
   $title =~ s/^(Review\s)//i;
   $title =~ s/^([A-Z]*\sMinireview)//i;
   $title =~ s/^(Letter:?)//i;
@@ -270,7 +270,7 @@ sub _Bad_Author_Words {
   my @badWords = (
     '\sthis\s',   '\sthat\s',   '\shere\s', '\swhere\s', '\sstudy\s', '\sabout\s',
     '\swhat\s',   '\s?which\s', '\sfrom\s', '\sare\s',   '\ssome\s',  '\sfew\s',
-    '\ssystem\s', 'nucleic\s'
+    '\ssystem\s', 'nucleic\s',  'Fig\.\s\d'
   );
   foreach my $word (@badWords) {
     $flag = 1 if ( $line =~ m/$word/i );
@@ -400,7 +400,8 @@ sub _MarkBadWords {
     'discoverynotes',                  '^SURVEYANDSUMMARY$',
     'APPLICATIONSNOTE$',               'Chapter\d+',
     '^CORRESPONDENCE$',                '^SPECIALTOPIC',
-    'Briefreport',                     'DISCOVERYNOTE$'
+    'Briefreport',                     'DISCOVERYNOTE$',
+    'letters?to',                       'BRIEFCOMMUNICATIONS'
   );
   foreach my $type (@badTypes) {
     $bad++ if ( $tmp_line =~ m/$type/i );
@@ -458,7 +459,8 @@ sub _MarkAdress {
     'U\.S\.A\.',                   'College',
     'Polytechnique',               'MolecularStructureSection',
     'Chairfor',                    'Dipartimento',
-    'Ltd\.',                       'ResearchOrganisation'
+    'Ltd\.',                       'ResearchOrganisation',
+    'Dept\.?of'
   );
 
   foreach my $word (@adressWords) {
@@ -679,6 +681,7 @@ sub _ParseXML {
     $has_cover_page = 1   if ( $content_line =~ m/Receive\sfree\semail\salerts\swhen\snew\sarticles\scite\sthis\sarticle/ );
     $has_cover_page = 1   if ( $content_line =~ m/Please\sscroll\sdown\sto\ssee\sthe\sfull\stext\sarticle/ );
     $has_cover_page = 1   if ( $content_line =~ m/This\sProvisional\sPDF\scorresponds\sto\sthe\sarticle\sas\sit\sappeared/ );
+    $has_cover_page = 1   if ( $content_line =~ m/This\sreprint\sis\sprovided\sfor\spersonal\sand\snoncommercial\suse/ );
 
     $content_line =~ s/\s+,/,/g;
     $content_line =~ s/,+/,/g;
@@ -1069,17 +1072,26 @@ sub _ParseXML {
   #####################################################
 
   # Cell
-  if ( $final_content[0] =~ m/^Cell,\sVol\./ ) {
+  if ( $final_content[0] =~ m/^Cell,\sVol\./ or
+       $final_content[0] =~ m/^Current\sBiology,\sVol\./ or
+       $final_content[0] =~ m/^Current\sBiology\s\d+/ ) {
 
     # search title
     for my $i ( 0 .. $#final_content ) {
       $title = $final_content[$i] if ( $final_fs[$i] == 18 );
       $title =~ s/\*J\*//g;
     }
+    if ( $title =~ m/Letter\sto\s/ ) {
+      $title = '';
+      for my $i ( 0 .. $#final_content ) {
+	$title .= " $final_content[$i]" if ( $final_fs[$i] == 13 );
+	$title =~ s/\*J\*//g;
+      }
+    }
     # now authors
     for my $pos ( 0 .. $#lines_content ) {
       next if ($lines_y[$pos] > 200);
-      next if ($lines_x[$pos] > 100);
+      next if ($lines_x[$pos] > 110);
       next if ($lines_fs[$pos] != 8);
       last if (_MarkAdress($lines_content[$pos]) > 0);
       $authors .= " $lines_content[$pos]";
