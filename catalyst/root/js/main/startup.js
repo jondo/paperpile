@@ -37,7 +37,7 @@ Paperpile.startupFailure = function(response) {
 
   Ext.Msg.show({
     title: 'Error',
-    msg: 'Could not start application.<br>' + error,
+    msg: 'Could not start application. Please try again and contact support@paperpile.com if the error persists.<br>' + error,
     buttons: Ext.Msg.OK,
     animEl: 'elId',
     icon: Ext.MessageBox.ERROR,
@@ -141,7 +141,9 @@ Paperpile.stage0 = function() {
 // backend side. Once this is successfully done we move on to stage 2. 
 Paperpile.stage1 = function() {
 
-  Paperpile.status = new Paperpile.Status();
+  if (!Paperpile.status){
+    Paperpile.status = new Paperpile.Status();
+  }
 
   Ext.Ajax.request({
     url: Paperpile.Url('/ajax/app/init_session'),

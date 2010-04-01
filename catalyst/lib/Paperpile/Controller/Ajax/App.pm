@@ -150,7 +150,7 @@ sub migrate_db : Local {
   $mg->app_settings_version( $c->config->{app_settings}->{settings_db_version} );
 
   $mg->settings_db( $c->config->{'user_settings_db'} );
-  $mg->library_db( $c->config->{'user_settings'}->{library_db} );
+  $mg->library_db( $c->model('User')->get_setting('library_db') );
 
   $mg->migrate('library');
   $mg->migrate('settings');
