@@ -1,0 +1,4 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/File/ShareDir.pm relocate_as=../../../File/ShareDir.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/share/dist/File-ShareDir/sample.txt relocate_as=../../share/dist/File-ShareDir/sample.txt
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/share/dist/File-ShareDir/subdir/sample.txt relocate_as=../../share/dist/File-ShareDir/subdir/sample.txt
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/share/module/File-ShareDir/test_file.txt relocate_as=../../share/module/File-ShareDir/test_file.txt

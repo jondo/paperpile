@@ -1,0 +1,6 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/version/vxs/vxs.bs relocate_as=vxs/vxs.bs
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/version/vxs/vxs.bundle relocate_as=vxs/vxs.bundle
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/version.pm relocate_as=../../version.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/version.pod relocate_as=../../version.pod
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/version/Internals.pod relocate_as=../../version/Internals.pod
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/version/vxs.pm relocate_as=../../version/vxs.pm

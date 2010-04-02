@@ -1,0 +1,11 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine.pm relocate_as=../../../XML/XPathEngine.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/Boolean.pm relocate_as=../../../XML/XPathEngine/Boolean.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/Expr.pm relocate_as=../../../XML/XPathEngine/Expr.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/Function.pm relocate_as=../../../XML/XPathEngine/Function.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/Literal.pm relocate_as=../../../XML/XPathEngine/Literal.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/LocationPath.pm relocate_as=../../../XML/XPathEngine/LocationPath.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/NodeSet.pm relocate_as=../../../XML/XPathEngine/NodeSet.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/Number.pm relocate_as=../../../XML/XPathEngine/Number.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/Root.pm relocate_as=../../../XML/XPathEngine/Root.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/Step.pm relocate_as=../../../XML/XPathEngine/Step.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/XML/XPathEngine/Variable.pm relocate_as=../../../XML/XPathEngine/Variable.pm

@@ -1,0 +1,4 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Module/ScanDeps.pm relocate_as=../../../Module/ScanDeps.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Module/ScanDeps/Cache.pm relocate_as=../../../Module/ScanDeps/Cache.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Module/ScanDeps/DataFeed.pm relocate_as=../../../Module/ScanDeps/DataFeed.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/bin/scandeps.pl relocate_as=../../../../../../../../../catalyst/perl5/osx/bin/scandeps.pl

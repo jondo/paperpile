@@ -1,0 +1,5 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/JSON/XS.pm relocate_as=../../../JSON/XS.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/JSON/XS/Boolean.pm relocate_as=../../../JSON/XS/Boolean.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/JSON/XS/XS.bs relocate_as=XS.bs
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/JSON/XS/XS.bundle relocate_as=XS.bundle
+/Users/wash/play/paperpile/catalyst/perl5/osx/bin/json_xs relocate_as=../../../../../../../../../catalyst/perl5/osx/bin/json_xs
