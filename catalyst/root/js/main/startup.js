@@ -67,11 +67,20 @@ Paperpile.stage0 = function() {
         // Determine platform we are running on
         var platform = Paperpile.utils.get_platform();
 
+
         var path = Titanium.App.getHome() + '/catalyst';
+
+        var args;
+
+        if (platform === 'osx'){
+          args = [path + "/perl5/" + platform + "/bin/perl", path + '/script/osx_server.pl', '--fork', '--port', '3210']
+        } else {
+          args = [path + "/perl5/" + platform + "/bin/perl", path + '/script/paperpile_server.pl', '-fork']
+        }
 
         // Set up process
         Paperpile.server = Titanium.Process.createProcess({
-          args: [path + "/perl5/" + platform + "/bin/perl", path + '/script/paperpile_server.pl', '-fork']
+          args: args
         });
 
         // Make sure there is no PERL5LIB variable set in the environment

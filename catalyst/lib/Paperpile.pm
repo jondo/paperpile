@@ -91,9 +91,14 @@ sub substitutions {
     $platform = 'windows32';
   }
 
+  if ( $^O =~ /darwin/i ) {
+    $platform = 'osx';
+  }
+
+
   # This needs to be adjusted for other platfroms than Linux
   my $userhome    = $ENV{HOME};
-  my $pp_user_dir = $ENV{HOME} . '/.paperpile';
+  my $pp_user_dir = $ENV{HOME} . '/.paperpile';  
 
   # If we have a development version (i.e. no build number) we use a
   # different user dir to allow parallel usage of a stable Paperpile
