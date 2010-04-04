@@ -6,7 +6,7 @@
 <version>1.0</version>
 <publisher>wash</publisher>
 <url>paperpile.com</url>
-<icon>default_app_logo.png</icon>
+<icon>/images/app_icon.svg</icon>
 <copyright>2010 by Paperpile</copyright>
 <!-- Window Definition - these values can be edited -->
 <window>
