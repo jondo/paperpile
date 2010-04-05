@@ -17,12 +17,12 @@
 // Ext overrides
 // Add an option to not show the loading spinner for certain nodes.
 Ext.override(Ext.tree.TreeNodeUI, {
-    beforeLoad: function() {
+  beforeLoad: function() {
     if (!this.node.silentLoad) {
       this.addClass("x-tree-node-loading");
     }
   },
-    afterLoad: function() {
+  afterLoad: function() {
     if (!this.node.silentLoad) {
       this.removeClass("x-tree-node-loading");
     }
@@ -243,25 +243,61 @@ Ext.override(Ext.grid.RowSelectionModel, {
       rowremoved: this.onRemove
     });
   },
+
+  looksLikeDuplicateEvents: function(a, b) {
+    if (a !== undefined && b !== undefined && a.type === b.type &&
+      a.target === b.target &&
+      a.ctrlKey === b.ctrlKey &&
+      a.shiftKey === b.shiftKey &&
+      a.source === b.source && a.browserEvent === b.browserEvent) {
+      return true;
+    } else {
+    return false;
+    }
+  },
+    cacheEvent:{},
   // private
   handleMouseDown: function(g, rowIndex, e) {
     if (e.button !== 0 || this.isLocked()) {
       return;
     }
+
+      // We cache a shallow copy of the most recent event and compare it to the current
+      // event to avoid handling duplicate events.
+    if (this.looksLikeDuplicateEvents(this.cacheEvent, e)) {
+      return;
+    }
+    Ext.apply(this.cacheEvent,e); // Store the cache by applying the event's properties to a hash.
     var view = this.grid.getView();
-    if (e.shiftKey && !this.singleSelect && this.last !== false) {
-      var last = this.last;
-      this.selectRange(last, rowIndex, e.ctrlKey);
-      this.last = last; // reset the last
-      view.focusRow(rowIndex);
+    var isSelected = this.isSelected(rowIndex);
+    var type = e.type;
+    var ctrl = e.ctrlKey;
+    var shift = e.shiftKey;
+      if (shift) {
+	  if (type === 'mousedown' && !this.singleSelect && this.last !== false) {
+	      var last = this.last;
+	      this.selectRange(last, rowIndex, ctrl);
+	      this.last = last; // reset the last
+	      view.focusRow(rowIndex);
+	  }
+    } else if (ctrl) {
+	if (type === 'mousedown') {
+	    if (isSelected) {
+		this.deselectRow(rowIndex);
+	    } else {
+		this.selectRow(rowIndex,true);
+		view.focusRow(rowIndex);
+	    }
+	}
     } else {
-      var isSelected = this.isSelected(rowIndex);
-      if (e.ctrlKey && isSelected) {
-        this.deselectRow(rowIndex);
-      } else if (!isSelected || this.getCount() > 1) {
-        this.selectRow(rowIndex, e.ctrlKey || e.shiftKey);
-        view.focusRow(rowIndex);
-      }
+	if (type === 'mousedown' && !isSelected) {
+	    this.selectRow(rowIndex,false);
+            view.focusRow(rowIndex);
+	} else {
+	    if (isSelected) {
+		this.selectRow(rowIndex,false);
+	    }
+	}
     }
     this.fireEvent('afterselectionchange', this);
   },
@@ -289,7 +325,7 @@ Ext.override(Ext.grid.RowSelectionModel, {
     if (this.isLocked()) {
       return;
     }
-    this.selections.clear();
+    this.clearSelections(true);
     for (var i = 0, len = this.grid.store.getCount(); i < len; i++) {
       this.selectRow(i, true);
     }
