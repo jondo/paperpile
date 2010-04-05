@@ -19,6 +19,8 @@ Ext.ns('Paperpile');
 
 IS_TITANIUM = !(window['Titanium'] == undefined);
 
+IS_CHROME = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+
 Paperpile.Url = function(url) {
   return (IS_TITANIUM) ? 'http://127.0.0.1:3210' + url : url;
 };
@@ -26,8 +28,9 @@ Paperpile.Url = function(url) {
 Paperpile.log = function() {
   if (IS_TITANIUM) {
     return;
-  }
-  if (window.console) {
+  } else if (IS_CHROME) {
+    console.log(arguments[0]);
+  } else if (window.console) {
     console.log(arguments);
   }
 };
