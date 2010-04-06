@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginPanelDuplicates = Ext.extend(Paperpile.PluginPanel, {
 
   initComponent: function() {
@@ -75,15 +74,14 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   initToolbarMenuItemIds: function() {
-    Paperpile.PluginGridFile.superclass.initToolbarMenuItemIds.call(this);    
+    Paperpile.PluginGridFile.superclass.initToolbarMenuItemIds.call(this);
     var ids = this.toolbarMenuItemIds;
     var fillIndex = ids.indexOf('TB_FILL');
 
     ids.remove('NEW');
     ids.remove('DELETE');
 
-    ids.insert(fillIndex+1, 'DELETE'); // move the delete button to before the break.
-
+    ids.insert(fillIndex + 1, 'DELETE'); // move the delete button to before the break.
     // We might eventually have this working, but for now it's unimplemented
     // in the backend so leave it out of the toolbar.
     //ids.insert(fillIndex + 1, 'CLEAN_ALL_DUPLICATES');
@@ -107,7 +105,7 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
     });
 
     this.store.on('load', function() {
-      this.getSelectionModel().selectFirstRow();
+      this.getSelectionModel().selectFirstRow.defer(10, this.getSelectionModel);
     },
     this, {
       single: true

@@ -252,53 +252,58 @@ Ext.override(Ext.grid.RowSelectionModel, {
       a.source === b.source && a.browserEvent === b.browserEvent) {
       return true;
     } else {
-    return false;
+      return false;
     }
   },
-    cacheEvent:{},
+  cacheEvent: {},
   // private
   handleMouseDown: function(g, rowIndex, e) {
     if (e.button !== 0 || this.isLocked()) {
       return;
     }
 
-      // We cache a shallow copy of the most recent event and compare it to the current
-      // event to avoid handling duplicate events.
+    // We cache a shallow copy of the most recent event and compare it to the current
+    // event to avoid handling duplicate events.
     if (this.looksLikeDuplicateEvents(this.cacheEvent, e)) {
       return;
     }
-    Ext.apply(this.cacheEvent,e); // Store the cache by applying the event's properties to a hash.
+    Ext.apply(this.cacheEvent, e); // Store the cache by applying the event's properties to a hash.
     var view = this.grid.getView();
     var isSelected = this.isSelected(rowIndex);
     var type = e.type;
     var ctrl = e.ctrlKey;
     var shift = e.shiftKey;
-      if (shift) {
-	  if (type === 'mousedown' && !this.singleSelect && this.last !== false) {
-	      var last = this.last;
-	      this.selectRange(last, rowIndex, ctrl);
-	      this.last = last; // reset the last
-	      view.focusRow(rowIndex);
-	  }
+    if (shift) {
+      if (type === 'mousedown' && !this.singleSelect && this.last !== false) {
+        var last = this.last;
+        this.selectRange(last, rowIndex, ctrl);
+        this.last = last; // reset the last
+        view.focusRow(rowIndex);
+      }
     } else if (ctrl) {
-	if (type === 'mousedown') {
-	    if (isSelected) {
-		this.deselectRow(rowIndex);
-	    } else {
-		this.selectRow(rowIndex,true);
-		view.focusRow(rowIndex);
-	    }
-	}
+      if (type === 'mousedown') {
+        if (isSelected) {
+          this.deselectRow(rowIndex);
+        } else {
+          this.selectRow(rowIndex, true);
+          view.focusRow(rowIndex);
+        }
+      }
     } else {
-	if (type === 'mousedown' && !isSelected) {
-	    this.selectRow(rowIndex,false);
-            view.focusRow(rowIndex);
-	} else {
-	    if (isSelected) {
-		this.selectRow(rowIndex,false);
-	    }
-	}
+      if (type === 'mousedown' && !isSelected) {
+        this.selectRow(rowIndex, false);
+        view.focusRow(rowIndex);
+      } else {
+        if (isSelected) {
+          this.selectRow(rowIndex, false);
+        }
+      }
     }
+    this.fireEvent('afterselectionchange', this);
+  },
+
+  selectFirstRow: function() {
+    this.selectRow(0);
     this.fireEvent('afterselectionchange', this);
   },
 

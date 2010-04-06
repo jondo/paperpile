@@ -75,11 +75,12 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       },
       this);
     store.on('load', function() {
-      this.getSelectionModel().selectFirstRow();
+      this.getSelectionModel().selectFirstRow.defer(10, this.getSelectionModel());
     },
     this, {
       single: true
     });
+
     store.load({
       params: {
         start: 0,
