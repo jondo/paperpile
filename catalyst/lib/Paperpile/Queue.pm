@@ -385,7 +385,7 @@ sub clear_all {
 
   $self->dbh->do("UPDATE Settings SET value='' WHERE key='queue'");
   $self->dbh->do("DELETE FROM Queue");
-
+  $self->status('WAITING');
   $self->save;
 }
 
