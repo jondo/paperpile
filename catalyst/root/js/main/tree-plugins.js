@@ -48,6 +48,7 @@ Paperpile.ContextTrianglePlugin = (function() {
         true);
 
       this.contextTriangle.addClassOnOver('pp-tree-context-triangle-over');
+      this.contextTriangle.hide();
 
     }
   };
@@ -131,7 +132,7 @@ Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
 
   onOut: function(e) {
     var nodeEl = this.getEl();
-      
+
     if (this.node != null) {
       var tri = this.node.ownerTree.contextTriangle;
       if (tri != null && !tri.menuShowing) {

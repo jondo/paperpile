@@ -386,14 +386,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // We are dragging internal nodes from the tree
       // Only allow operations within the same subtree,
       // i.e. nodes are of the same type
-      if (e.source.dragData.node.type != e.target.type) {
+      if (!this.areNodeTypesCompatible(e.source.dragData.node.type, e.target.type)) {
         e.cancel = true;
       } else if (e.target.type == 'TAGS' && e.point == 'append') {
         e.cancel = true;
       } else {
-        // Allow only re-ordering in active folder and import plugins,
-        // because we only support one level
-        if ((e.target.type == 'ACTIVE' || e.target.type == 'IMPORT_PLUGIN') && e.point == 'append') {
+        // Allow only re-ordering for these types.
+        if ((e.target.type == 'ACTIVE' || this.toolNodeTypes[e.target.type]) && e.point == 'append') {
           e.cancel = true;
         } else {
           // Can't move node above root
@@ -404,6 +403,25 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       }
     }
     //this.updateDragStatus(e);
+  },
+
+  toolNodeTypes: {
+    IMPORT_PLUGIN: 1,
+    PDFEXTRACT: 1,
+    FILE_IMPORT: 1,
+    CLOUDS: 1,
+    DUPLICATES: 1,
+    FEEDBACK: 1
+  },
+
+  areNodeTypesCompatible: function(a, b) {
+    if (a == b) {
+      return true;
+    }
+    if (this.toolNodeTypes[a] && this.toolNodeTypes[b]) {
+      return true;
+    }
+    return false;
   },
 
   addFolder: function(grid, sel, node) {
