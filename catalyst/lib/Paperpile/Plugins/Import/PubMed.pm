@@ -487,7 +487,12 @@ sub _read_xml {
 
   my $result = XMLin( $xml, keyattr => ['IdType'], SuppressEmpty => 1 );
 
-  if ( not defined $result->{PubmedArticle} ) {
+  my $result_ok = 0;
+
+  # Eval to avoid exception when $result is not a hashref
+  eval { $result_ok = 1 if ( defined $result->{PubmedArticle} ); };
+
+  if ( $@ or !$result_ok ) {
     NetFormatError->throw(
       error   => 'PubMed query failed: unknown return format',
       content => $xml

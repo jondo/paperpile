@@ -59,8 +59,22 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     });
 
     var store = this.getStore();
-    store.baseParams['plugin_search_pdf'] = 0;
     store.baseParams['limit'] = this.limit;
+
+    // Initialize some settings from the plugin_xyz fields.
+    store.baseParams['plugin_search_pdf'] = 1;
+    if (this['plugin_search_pdf'] !== undefined) {
+      store.baseParams['plugin_search_pdf'] = this['plugin_search_pdf'];
+    }
+    this.on('render', function() {
+      if (store.baseParams['plugin_search_pdf'] == 0) {
+        var item = this.filterMenu.getComponent('all_nopdf');
+        item.setChecked(true);
+      }
+    },
+    this, {
+      single: true
+    });
 
     this.getBottomToolbar().pageSize = parseInt(this.limit);
 
@@ -75,11 +89,12 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       },
       this);
     store.on('load', function() {
-      this.getSelectionModel().selectFirstRow();
+      this.getSelectionModel().selectFirstRow.defer(10, this.getSelectionModel());
     },
     this, {
       single: true
     });
+
     store.load({
       params: {
         start: 0,
@@ -179,35 +194,39 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   },
 
   toggleFilter: function(item, checked) {
-
-    var filter_button = this.filterButton;
+    if (!checked) {
+      return;
+    }
 
     // Toggle 'search_pdf' option 
-    if (item.itemId == 'all_pdf') {
-      this.getStore().baseParams['plugin_search_pdf'] = checked ? 1 : 0;
+    this.getStore().baseParams['plugin_search_pdf'] = 0;
+    if ((item.itemId == 'all_pdf' || item.itemId == 'text') && checked) {
+      this.getStore().baseParams['plugin_search_pdf'] = 1;
     }
 
-    // Specific fields
+    this.filterField.singleField = '';
     if (item.itemId != 'all_pdf' && item.itemId != 'all_nopdf') {
-      if (checked) {
-        this.filterField.singleField = item.itemId;
-        this.getStore().baseParams['plugin_search_pdf'] = (item.itemId == 'text') ? 1 : 0;
-      } else {
-        if (this.filterField.singleField == item.itemId) {
-          this.filterField.singleField = "";
-        }
-      }
+      this.filterField.singleField = item.itemId;
     }
 
-    if (checked) {
-      if (item.itemId == 'all_pdf' || item.itemId == 'all_nopdf') {
-        filter_button.setText('Filter');
-      } else {
-        filter_button.setText(item.text);
-      }
-      this.filterField.onTrigger2Click();
-    }
+    this.updateFilterButtonText();
+    this.filterField.onTrigger2Click();
+  },
 
+  updateFilterButtonText: function() {
+    var search_pdf = this.getStore().baseParams['plugin_search_pdf'];
+    var search_field = this.filterField.singleField || '';
+
+    if (search_pdf === 1 && search_field === '') {
+      this.filterButton.setText('Filter');
+    } else if (search_pdf === 0 && search_field === '') {
+      this.filterButton.setText('No fulltext');
+    } else {
+      var button = this.filterMenu.getComponent(search_field);
+      if (button) {
+        this.filterButton.setText(button.text);
+      }
+    }
   },
 
   setSearchQuery: function(text) {
@@ -229,12 +248,12 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       },
       items: [{
         text: 'All fields',
-        checked: true,
-        itemId: 'all_nopdf'
+        itemId: 'all_pdf',
+        checked: true
       },
       {
-        text: 'All + Fulltext',
-        itemId: 'all_pdf'
+        text: 'No fulltext',
+        itemId: 'all_nopdf',
       },
         '-', {
           text: 'Author',
@@ -253,7 +272,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
           itemId: 'abstract'
         },
         {
-          text: 'Fulltext',
+          text: 'Article text',
           itemId: 'text'
         },
         {
@@ -281,6 +300,8 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       width: 200
     });
     this.filterField = this.actions['FILTER_FIELD'];
+
+    this.updateFilterButtonText();
 
     Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
   },

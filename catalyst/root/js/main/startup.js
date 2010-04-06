@@ -14,9 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
-
-
 // Stage 0 
 //
 // Check if server is already running, if not start the catalyst
@@ -37,7 +34,7 @@ Paperpile.startupFailure = function(response) {
 
   Ext.Msg.show({
     title: 'Error',
-    msg: 'Could not start application.<br>' + error,
+    msg: 'Could not start application. Please try again and contact support@paperpile.com if the error persists.<br>' + error,
     buttons: Ext.Msg.OK,
     animEl: 'elId',
     icon: Ext.MessageBox.ERROR,
@@ -89,15 +86,15 @@ Paperpile.stage0 = function() {
 
         // Handler to process the STDERR output of the server
         Paperpile.server.setOnReadLine(function(line) {
-          
+
           if (Paperpile.isLogging) {
             Paperpile.serverLog = Paperpile.serverLog + line + "\n";
 
-            // Limit length to 100,000 characters to avoid sending
-            // around huge files in error reports
+            // Reset log to last 1000 lines if longer thant 100,000
+            // (avoids sending around huge files in error reports)
             var L = Paperpile.serverLog.length;
-            if (L>100000){
-              Paperpile.serverLog = Paperpile.serverLog.substr(L-100000);
+            if (L > 100000) {
+              Paperpile.serverLog = Paperpile.serverLog.substr(L - 1000);
             }
 
             var panel = Ext.getCmp('log-panel');
@@ -141,7 +138,9 @@ Paperpile.stage0 = function() {
 // backend side. Once this is successfully done we move on to stage 2. 
 Paperpile.stage1 = function() {
 
-  Paperpile.status = new Paperpile.Status();
+  if (!Paperpile.status) {
+    Paperpile.status = new Paperpile.Status();
+  }
 
   Ext.Ajax.request({
     url: Paperpile.Url('/ajax/app/init_session'),
@@ -211,11 +210,11 @@ Paperpile.stage2 = function() {
       Paperpile.main.tabs.newDBtab('', 'MAIN');
       tree.expandAll();
       Paperpile.main.tabs.remove('welcome');
-      
-      var version = 'Paperpile '+Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
 
-      Ext.DomHelper.overwrite('version-tag', version );
-    
+      var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
+
+      Ext.DomHelper.overwrite('version-tag', version);
+
       Ext.get('splash').remove();
     },
     this);
@@ -234,6 +233,19 @@ Paperpile.stage2 = function() {
     });
   }
 
+  // Check in regular intervals of 10 minutes for updates.
+  Paperpile.updateCheckTask = {
+    run: function(){
+      if (!Paperpile.status.el.isVisible()){
+        Paperpile.main.checkForUpdates(true);
+      } 
+    },
+    interval: 600000 //every 10 minutes
+  };
+
+  // Don't check immediately after start
+  (function(){Ext.TaskMgr.start(Paperpile.updateCheckTask);}).defer(600000);
+    
 };
 
 Ext.onReady(function() {

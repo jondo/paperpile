@@ -256,7 +256,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   myOnClick: function(node, e) {
-      //Paperpile.log(node);
+    //Paperpile.log(node);
     //      Paperpile.log(e.browserEvent);
     switch (node.id) {
     case 'FOLDER_ROOT':
@@ -317,7 +317,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       // For now we reload feeds whenever they are opened 
       if (pars.plugin_name == 'Feed') {
-        pars.plugin_reload=1;
+        pars.plugin_reload = 1;
       }
 
       // Call appropriate frontend, tags, active folders, and folders are opened only once
@@ -386,14 +386,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // We are dragging internal nodes from the tree
       // Only allow operations within the same subtree,
       // i.e. nodes are of the same type
-      if (e.source.dragData.node.type != e.target.type) {
+      if (!this.areNodeTypesCompatible(e.source.dragData.node.type, e.target.type)) {
         e.cancel = true;
       } else if (e.target.type == 'TAGS' && e.point == 'append') {
         e.cancel = true;
       } else {
-        // Allow only re-ordering in active folder and import plugins,
-        // because we only support one level
-        if ((e.target.type == 'ACTIVE' || e.target.type == 'IMPORT_PLUGIN') && e.point == 'append') {
+        // Allow only re-ordering for these types.
+        if ((e.target.type == 'ACTIVE' || this.toolNodeTypes[e.target.type]) && e.point == 'append') {
           e.cancel = true;
         } else {
           // Can't move node above root
@@ -404,6 +403,25 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       }
     }
     //this.updateDragStatus(e);
+  },
+
+  toolNodeTypes: {
+    IMPORT_PLUGIN: 1,
+    PDFEXTRACT: 1,
+    FILE_IMPORT: 1,
+    CLOUDS: 1,
+    DUPLICATES: 1,
+    FEEDBACK: 1
+  },
+
+  areNodeTypesCompatible: function(a, b) {
+    if (a == b) {
+      return true;
+    }
+    if (this.toolNodeTypes[a] && this.toolNodeTypes[b]) {
+      return true;
+    }
+    return false;
   },
 
   addFolder: function(grid, sel, node) {
@@ -579,8 +597,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   //
   newActive: function() {
     var node = this.getNodeById('ACTIVE_ROOT');
-
-    var grid = Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
+    var grid = Paperpile.main.getActiveGrid();
     var treeEditor = this.treeEditor;
 
     // Get all plugin_* parameters from search plugin grid
