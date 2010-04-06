@@ -76,7 +76,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         var authors_last_five = authors_array.slice(n - author_keep_end, n);
         record.data._authors_display = [
           authors_first_five.join(", "),
-          ' ... <a class="pp-authortip" href="">',
+          ' ... <a class="pp-authortip">',
           '(' + hidden_n + ' more)',
           '</a> ... ',
           authors_last_five.join(", ")].join("");
