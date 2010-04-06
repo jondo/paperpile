@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginPanelFolder = Ext.extend(Paperpile.PluginPanel, {
 
   initComponent: function() {
@@ -64,12 +63,12 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
     var ids = this.toolbarMenuItemIds;
 
     var index = ids.indexOf('TB_FILL');
-    ids.insert(index+1,'REMOVE_FROM_FOLDER');
-  },    
+    ids.insert(index + 1, 'REMOVE_FROM_FOLDER');
+  },
 
   updateButtons: function() {
     Paperpile.PluginGridFolder.superclass.updateButtons.call(this);
-    
+
     var selection = this.getSingleSelectionRecord();
     if (!selection) {
       this.actions['REMOVE_FROM_FOLDER'].disable();
@@ -83,5 +82,26 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
     var folder_id = match[1];
     var refreshView = true;
     Paperpile.main.deleteFromFolder(sel, grid, folder_id, refreshView);
+  },
+
+  onUpdate: function(data) {
+    Paperpile.PluginGridFolder.superclass.onUpdate.call(this, data);
+
+    var pubs = data.pubs;
+    if (!pubs) {
+      return;
+    }
+
+    var refreshMe = false;
+    for (var sha1 in pubs) {
+      var update = pubs[sha1];
+      if (update['folders'] !== undefined) {
+        refreshMe = true;
+      }
+    }
+    if (refreshMe) {
+      this.getView().holdPosition = true;
+      this.getStore().reload();
+    }
   }
 });
