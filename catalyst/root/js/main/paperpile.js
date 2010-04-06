@@ -525,7 +525,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var nodes = this.tree.getAllLeafNodes();
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
-	if (node.type != 'TAGS' || !this.tree.isNodeDraggable(node)) continue;
+      if (node.type != 'TAGS' || !this.tree.isNodeDraggable(node)) continue;
 
       // Remove all possible styling from this tree node.
       node.getUI().removeClass(allTagStyles);
@@ -741,18 +741,18 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   // Use this simple function here for now. We can think about a more
   // sophisticated tab panel with PDF view later.
-  addPDFManually: function(jobID, gridID){
+  addPDFManually: function(jobID, gridID) {
 
     var data = Ext.getCmp(gridID).getStore().getById(jobID).data;
-    
-    data.match_job =data.id;
+
+    data.match_job = data.id;
 
     console.log(data);
 
-    data.pubtype='ARTICLE';
+    data.pubtype = 'ARTICLE';
 
     win = new Ext.Window({
-      title: "Import "+data.pdf, 
+      title: "Import " + data.pdf,
       modal: true,
       shadow: false,
       layout: 'fit',
@@ -814,7 +814,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 Paperpile.isLogging = 1;
               }).defer(10000);
             }
-          })}).defer(5000);
+          })
+        }).defer(5000);
       },
       scope: this
     });
@@ -882,56 +883,70 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
-  check_updates: function(silent) {
+  checkForUpdates: function(silent) {
 
-    if (IS_TITANIUM) {
-
+    if (!IS_TITANIUM) {
       if (!silent) {
-        Paperpile.status.showBusy('Searching for updates');
+        Paperpile.status.updateMsg({
+          msg: 'The auto-update feature is not available from within a browser.',
+          hideOnClick: true
+        });
       }
+      return;
+    }
 
-      var platform = Paperpile.utils.get_platform();
-      var path = Titanium.App.getHome() + '/catalyst';
+    if (!silent) {
+      Paperpile.status.showBusy('Searching for updates');
+    }
 
-      var upgrader = Titanium.Process.createProcess({
-        args: [path + "/perl5/" + platform + "/bin/perl", path + '/script/updater.pl', '--check']
-      });
+    var platform = Paperpile.utils.get_platform();
+    var path = Titanium.App.getHome() + '/catalyst';
 
-      upgrader.setEnvironment("PERL5LIB", "");
+    var upgrader = Titanium.Process.createProcess({
+      args: [path + "/perl5/" + platform + "/bin/perl", path + '/script/updater.pl', '--check']
+    });
 
-      var results;
+    upgrader.setEnvironment("PERL5LIB", "");
 
-      upgrader.setOnReadLine(function(line) {
-        results = Ext.util.JSON.decode(line);
-      });
+    var results;
 
-      upgrader.setOnExit(function() {
-        Paperpile.status.clearMsg();
-        if (results.error) {
-          if (!silent) {
-            Paperpile.status.updateMsg({
-              type: 'error',
-              msg: 'Update check failed.',
-              action1: 'Details',
-              callback: function(action) {
-                if (action === 'ACTION1') {
-                  Ext.Msg.show({
-                    title: 'Error',
-                    msg: results.error,
-                    animEl: 'elId',
-                    icon: Ext.MessageBox.ERROR,
-                    buttons: Ext.Msg.OK,
-                    fn: function(btn) {
-                      Ext.Msg.close();
-                    }
-                  });
-                }
-              },
-              hideOnClick: true
-            });
-          }
-        } else {
+    upgrader.setOnReadLine(function(line) {
+      results = Ext.util.JSON.decode(line);
+    });
+
+    upgrader.setOnExit(function() {
+      Paperpile.status.clearMsg();
+      if (results.error) {
+        if (!silent) {
+          Paperpile.status.updateMsg({
+            type: 'error',
+            msg: 'Update check failed.',
+            action1: 'Details',
+            callback: function(action) {
+              if (action === 'ACTION1') {
+                Ext.Msg.show({
+                  title: 'Error',
+                  msg: results.error,
+                  animEl: 'elId',
+                  icon: Ext.MessageBox.ERROR,
+                  buttons: Ext.Msg.OK,
+                  fn: function(btn) {
+                    Ext.Msg.close();
+                  }
+                });
+              }
+            },
+            hideOnClick: true
+          });
+        }
+      } else {
+        if (!Paperpile.status.el.isVisible()) {
           if (results.update_available) {
+
+            // Don't bother the user with this message again
+            // during this session
+            Ext.TaskMgr.stop(Paperpile.updateCheckTask);
+
             Paperpile.status.updateMsg({
               msg: 'An updated version of Paperpile is available',
               action1: 'Install Updates',
@@ -944,7 +959,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                   Paperpile.status.clearMsg();
                 }
               },
-              hideOnClick: true
             });
           } else {
             if (!silent) {
@@ -955,8 +969,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             }
           }
         }
-      });
-      upgrader.launch();
-    }
+      }
+    });
+    upgrader.launch();
   }
 });

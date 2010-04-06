@@ -233,6 +233,19 @@ Paperpile.stage2 = function() {
     });
   }
 
+  // Check in regular intervals of 10 minutes for updates.
+  Paperpile.updateCheckTask = {
+    run: function(){
+      if (!Paperpile.status.el.isVisible()){
+        Paperpile.main.checkForUpdates(true);
+      } 
+    },
+    interval: 600000 //every 10 minutes
+  };
+
+  // Don't check immediately after start
+  (function(){Ext.TaskMgr.start(Paperpile.updateCheckTask);}).defer(600000);
+    
 };
 
 Ext.onReady(function() {
