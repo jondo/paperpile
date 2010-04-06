@@ -895,6 +895,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       return;
     }
 
+    Titanium.API.notice("Searching for updates.");
+
     if (!silent) {
       Paperpile.status.showBusy('Searching for updates');
     }
