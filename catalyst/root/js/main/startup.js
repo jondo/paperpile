@@ -14,9 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
-
-
 // Stage 0 
 //
 // Check if server is already running, if not start the catalyst
@@ -89,15 +86,15 @@ Paperpile.stage0 = function() {
 
         // Handler to process the STDERR output of the server
         Paperpile.server.setOnReadLine(function(line) {
-          
+
           if (Paperpile.isLogging) {
             Paperpile.serverLog = Paperpile.serverLog + line + "\n";
 
-            // Limit length to 100,000 characters to avoid sending
-            // around huge files in error reports
+            // Reset log to last 1000 lines if longer thant 100,000
+            // (avoids sending around huge files in error reports)
             var L = Paperpile.serverLog.length;
-            if (L>100000){
-              Paperpile.serverLog = Paperpile.serverLog.substr(L-100000);
+            if (L > 100000) {
+              Paperpile.serverLog = Paperpile.serverLog.substr(L - 1000);
             }
 
             var panel = Ext.getCmp('log-panel');
@@ -141,7 +138,7 @@ Paperpile.stage0 = function() {
 // backend side. Once this is successfully done we move on to stage 2. 
 Paperpile.stage1 = function() {
 
-  if (!Paperpile.status){
+  if (!Paperpile.status) {
     Paperpile.status = new Paperpile.Status();
   }
 
@@ -213,11 +210,11 @@ Paperpile.stage2 = function() {
       Paperpile.main.tabs.newDBtab('', 'MAIN');
       tree.expandAll();
       Paperpile.main.tabs.remove('welcome');
-      
-      var version = 'Paperpile '+Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
 
-      Ext.DomHelper.overwrite('version-tag', version );
-    
+      var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
+
+      Ext.DomHelper.overwrite('version-tag', version);
+
       Ext.get('splash').remove();
     },
     this);
