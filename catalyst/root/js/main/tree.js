@@ -256,7 +256,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   myOnClick: function(node, e) {
-      //Paperpile.log(node);
+    //Paperpile.log(node);
     //      Paperpile.log(e.browserEvent);
     switch (node.id) {
     case 'FOLDER_ROOT':
@@ -317,7 +317,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       // For now we reload feeds whenever they are opened 
       if (pars.plugin_name == 'Feed') {
-        pars.plugin_reload=1;
+        pars.plugin_reload = 1;
       }
 
       // Call appropriate frontend, tags, active folders, and folders are opened only once
@@ -579,8 +579,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   //
   newActive: function() {
     var node = this.getNodeById('ACTIVE_ROOT');
-
-    var grid = Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
+    var grid = Paperpile.main.getActiveGrid();
     var treeEditor = this.treeEditor;
 
     // Get all plugin_* parameters from search plugin grid
