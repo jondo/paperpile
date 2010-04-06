@@ -17,7 +17,7 @@
 Paperpile.PluginGrid = function(config) {
 
   Ext.apply(this, config);
-  
+
   Paperpile.PluginGrid.superclass.constructor.call(this, {});
 
   this.on('rowcontextmenu', this.onContextClick, this);
@@ -286,7 +286,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       enableHdMenu: false,
       autoExpandColumn: 'publication',
-	
+
       columns: [{
         header: "",
         id: 'icons',
@@ -423,8 +423,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   onStoreLoad: function() {
 
-    var container = this.getPluginPanel();
-    var ep = container.items.get('east_panel');
+    var pluginPanel = this.getPluginPanel();
+    var ep = pluginPanel.items.get('east_panel');
     var tb_side = ep.getBottomToolbar();
     var activeTab = ep.getLayout().activeItem.itemId;
     if (this.getStore().getCount() > 0) {
@@ -433,7 +433,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         activeTab = 'overview';
       }
     } else {
-      container.onEmpty('');
+      pluginPanel.onEmpty('');
       if (this.sidePanel) {
         ep.getLayout().setActiveItem('about');
         activeTab = 'about';
@@ -441,13 +441,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
     tb_side.items.get(activeTab + '_tab_button').toggle(true);
 
-    // If nothing is selected, select first row
-    if (!this.getSelectionModel().getSelected()) {
-      this.getSelectionModel().selectRow(0);
-    };
+    if (this.getSelectionModel().getCount() == 0) {
+      this.getSelectionModel().selectFirstRow.defer(10, this.getSelectionModel());
+    }
 
-    container.updateDetails();
-    container.updateButtons();
+    pluginPanel.updateDetails();
+    pluginPanel.updateButtons();
     this.updateButtons();
 
   },
@@ -1163,7 +1162,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   completeEntry: function() {
     var selection = this.getSelection();
 
-
     var sel = this.getSelectionModel().getSelected();
     if (!sel) return;
     var data = sel.data;
@@ -1173,9 +1171,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.lookingUpData = true;
 
       // Don't allow other rows to be selected during load
-      var blockingFunction = function(){return false;};
+      var blockingFunction = function() {
+        return false;
+      };
       this.getSelectionModel().on('beforerowselect', blockingFunction, this);
-      
+
       var sha1 = this.getSelectionModel().getSelected().data.sha1;
 
       Paperpile.status.updateMsg({
@@ -1207,14 +1207,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           hideOnClick: true
         });
         this.getSelectionModel().un('beforerowselect', blockingFunction, this);
-      }).defer(20000,this);
+      }).defer(20000, this);
 
       var transactionID = Ext.Ajax.request({
         url: Paperpile.Url('/ajax/crud/complete_entry'),
         params: {
           selection: selection,
           grid_id: this.id,
-          cancel_handle: this.id+'_lookup',
+          cancel_handle: this.id + '_lookup',
         },
         method: 'GET',
         success: function(response) {
@@ -1227,18 +1227,18 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
           Paperpile.main.onUpdate(json.data);
           Paperpile.status.clearMsg();
-          
+
           this.updateButtons();
           this.getPluginPanel().updateDetails();
-          
+
         },
         failure: Paperpile.main.onError,
         scope: this
       });
     }
   },
-  
-  cancelCompleteEntry: function(){
+
+  cancelCompleteEntry: function() {
 
     clearTimeout(this.timeoutWarn);
     clearTimeout(this.timeoutAbort);
@@ -1246,11 +1246,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/misc/cancel_request'),
       params: {
-        cancel_handle: this.id+'_lookup',
-        kill:1,
+        cancel_handle: this.id + '_lookup',
+        kill: 1,
       },
     });
-  }, 
+  },
 
   updateDetail: function() {
     // Override with other plugin methods to do things necessary on detail update.
@@ -1680,8 +1680,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
   },
 
-  reloadFeed: function(){
-    this.plugin_reload=1;
+  reloadFeed: function() {
+    this.plugin_reload = 1;
     this.getStore().reload();
   },
 
