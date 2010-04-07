@@ -556,7 +556,7 @@ sub _ParseXML {
 
     # TOKEN elements are the words
     my @words = @{ $lines[$j]->{TOKEN} };
-    my $y     = $lines[$j]->{'y'};
+    my $y     = 0;
     my $x     = $lines[$j]->{'x'};
     my $width = $lines[$j]->{'width'};
 
@@ -576,6 +576,7 @@ sub _ParseXML {
     my $italic_yes    = 0;
     my $italic_no     = 0;
     my %hash_fontsize = ();
+    my %hash_y        = ();
     my $angle_flag    = 0;
     foreach my $i ( 0 .. $#words ) {
 
@@ -590,8 +591,8 @@ sub _ParseXML {
       }
 
       if ( $words[$i]->{content} ) {
-        $first_y = $words[$i]->{'y'} if ( $first_y == 0 );
         $hash_fontsize{ $words[$i]->{'font-size'} }++;
+	$hash_y{ $words[$i]->{'y'} }++;
         ( $words[$i]->{'bold'}   eq 'yes' ) ? $bold_yes++   : $bold_no++;
         ( $words[$i]->{'italic'} eq 'yes' ) ? $italic_yes++ : $italic_no++;
       }
@@ -607,6 +608,12 @@ sub _ParseXML {
       $fs = $key if ( $hash_fontsize{$key} / $nr_words > 0.5 );
       $seen_fontsizes{$key} += $hash_fontsize{$key};
     }
+
+    # now determine the vertical position of the current line
+    for my $key ( keys %hash_y ) {
+      $y = $key if ( $hash_y{$key} / $nr_words >= 0.5 and $hash_y{$key} > $y);
+    }
+    $first_y = $y if ( $first_y == 0 );
 
     # if we could not find any, let's take the largest one
     if ( $fs == 0 ) {
