@@ -113,6 +113,8 @@ Text::Levenshtein
 FCGI
 FCGI::ProcManager
 Archive::Zip
+IO::Socket::SSL
+Crypt::SSLeay
 =head1 AUTHOR
 
 Stefan Washietl <wash@paperpile.org>
