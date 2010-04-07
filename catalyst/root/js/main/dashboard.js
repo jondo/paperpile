@@ -62,7 +62,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
         Paperpile.main.tabs.newScreenTab('CatalystLog', 'catalyst-log');
         break;
       case 'updates':
-        Paperpile.main.check_updates(false);
+        Paperpile.main.checkForUpdates(false);
         break;
       }
     },

@@ -290,8 +290,8 @@ sub clean_duplicates : Local {
 
 sub line_feed : Local {
   my ( $self, $c ) = @_;
-  foreach my $i (1..50){
-    print STDERR "== $i == \n";
+  foreach my $i (1..100){
+    print STDERR "============================ $i =============================\n";
   }
 }
 
