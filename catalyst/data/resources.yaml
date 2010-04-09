@@ -15,7 +15,6 @@ js:
   - "js/main/tabs.js"
   - "js/main/StatusTipProxy.js"
   - "js/main/tree-plugins.js"
-  - "js/main/tree-hover-button.js"
   - "js/main/tree.js"
   - "js/main/dashboard.js"
   - "js/import/toolbar.js"
