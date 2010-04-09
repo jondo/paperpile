@@ -21,8 +21,8 @@ session:
 
 app_settings:
   platform: "__PLATFORM__"
-  version_id: 3
-  version_name: "0.4.2"
+  version_id: 4
+  version_name: "0.4.3"
   build_number: 0
   settings_db_version: 1
   library_db_version: 2
@@ -52,6 +52,12 @@ library_settings:
 release:
   patch: 1
   restart: 1
-  msg: "First public test version for Linux."
+  msg: "Several improvements and many bug-fixes for the public Linux beta."
   log:
-    - "Everything is new."
+    - "Improved automatic PDF download (especially for some Physics Journals)"
+    - "Improved PDF meta-data recognition (many of the PDFs you reported now work)"
+    - "Streamlined data input for PDFs that cannot not be automatically imported"
+    - "Allow re-ordering of label list and RSS feed list"
+    - "More efficient way to display and search RSS feeds"
+    - "Allow cancel of searches (e.g. when PubMed is down or slow)"
+    - "27 additional bugfixes (thanks for all the error reports)" 
