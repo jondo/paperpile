@@ -8,11 +8,11 @@
      <title>Paperpile</title>
      <url>app://index.html</url>
      <width>1010</width>
-     <height>750</height>
-      <fullscreen>false</fullscreen>
-      <minimizable>true</minimizable>
-      <maximizable>false</maximizable>
-      <closeable>true</closeable>
-      <chrome>true</chrome>
+     <height>710</height>
+     <fullscreen>false</fullscreen>
+     <minimizable>true</minimizable>
+     <maximizable>true</maximizable>
+     <closeable>true</closeable>
+     <chrome>true</chrome>
    </window>
 </ti:app>
