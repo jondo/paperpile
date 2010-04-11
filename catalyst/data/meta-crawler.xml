@@ -75,6 +75,25 @@
 
 </site>
 
-
+<site name="AmericanPhysicalSociety">
+  <signature>
+    <url>!aps\.org!</url>
+  </signature>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*.aps.org/)(abstract/)(.*)!$1export/$3?type=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  <test>
+    <page url="http://prd.aps.org/abstract/PRD/v71/i10/e103508">
+      <journal>Phys. Rev. D</journal>
+      <title>Scaling of multitension cosmic superstring networks</title>
+    </page>
+    <page url="http://dx.doi.org/10.1103/PhysRevLett.97.186803">
+      <journal>Phys. Rev. Lett.</journal>
+      <title>Detecting Non-Abelian Statistics with an Electronic Mach-Zehnder Interferometer</title>
+    </page>
+  </test>
+</site>
 
 </driver>
