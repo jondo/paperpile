@@ -151,4 +151,66 @@
     </page> -->
 </site>
 
+<site name="Atypon">
+  <signature>
+    <url>atypon</url>
+    <url>acs\.org/doi/(abs|full)</url>
+    <url>annualreviews\.org/doi/(abs|full)</url>
+    <url>liebertonline\.com/doi/(abs|full)</url>
+    <url>mitpressjournals\.org/doi/(abs|full)</url>
+    <body>atypon\.com</body>
+  </signature>
+  
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*/)(doi/\w+/)(10.*)(\?.*)!$1action/downloadCitation?doi=$3&amp;include=abs&amp;format=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*/)(doi/\w+/)(10.*)!$1action/downloadCitation?doi=$3&amp;include=abs&amp;format=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://dx.doi.org/10.1021/cb900282e">
+      <journal>ACS Chemical Biology</journal>
+      <title>Rescue of Glaucoma-Causing Mutant Myocilin Thermal Stability by Chemical Chaperones</title>
+    </page>
+    <page url="http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511">
+      <journal>Annual Review of Genetics</journal>
+      <title>Mendelian Genetics of Apomixis in Plants</title>
+    </page>
+    <page url="http://www.liebertonline.com/doi/abs/10.1089/cmb.2006.0137?ai=rz&amp;mi=cjwv&amp;af=R">
+      <journal>Journal of Computational Biology</journal>
+      <title>A Decomposition Theory for Phylogenetic Networks and Incompatible Characters</title>
+    </page>
+    <page url="http://www.mitpressjournals.org/doi/abs/10.1162/evco.2010.18.1.18101?url_ver=Z39.88-2003&amp;rfr_id=ori:rid:crossref.org&amp;rfr_dat=cr_pub%3Dncbi.nlm.nih.gov">
+      <journal>Evolutionary Computation</journal>
+      <title>Analysis of an Asymmetric Mutation Operator</title>
+    </page>
+  </test>
+</site>
+
+<site name="Metapress">
+  <signature>
+    <url>!metapress\.com!</url>
+  </signature>
+  
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!(.*)(content/)(.*)!$1export.mpx?code=$3&amp;mode=ris!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://versita.metapress.com/content/e62261755h060533">
+      <journal>Acta Pharmaceutica</journal>
+      <title>Development and optimization of a sublingual tablet formulation for physostigmine salicylate</title>
+    </page>
+  </test>
+</site>
+
+
 </driver>
