@@ -1,0 +1,216 @@
+<!-- 
+ Copyright 2009, 2010 Paperpile
+
+ This file is part of Paperpile
+
+ Paperpile is free software: you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Paperpile is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.  You should have received a
+ copy of the GNU General Public License along with Paperpile.  If
+ not, see http://www.gnu.org/licenses.
+-->
+
+<driver>
+
+<site name="BMC">
+
+  <!-- Ideally match url directly; if not possible match content of
+       page; make sure to find good tradeoff of
+       sensitivity/specificity -->
+
+  <signature>
+    <url>!biomedcentral.com!</url>
+    <body>!href=&quot;(\S*/citation)&quot;&gt;Download citation\(s\)!</body>
+  </signature>
+
+
+  <!-- Example of simple rewrite; preferable option whenever possible;
+       We rewrite the url to the Bibtex download link and the content
+       of this link is dispatched to the Bibtex subclass -->
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(http://www.biomedcentral.com/\d+-\d+/\d+/\d+)!$1/citation?action=submit&amp;format=bibtex&amp;include=cit!</rewrite>
+    </pattern>
+  </rule>
+
+  <!-- Same as above, but we now add on intermediate step and first
+       find the download link in the page and rewrite this link
+       instead of the original url; -->
+
+  <rule target="Bibtex">
+    <pattern>
+      <match>!href=&quot;(\S*/citation)&quot;&gt;Download citation\(s\)!</match>
+      <rewrite>!^(.*/citation)!$1?action=submit&amp;format=bibtex&amp;include=cit!</rewrite>
+    </pattern>
+  </rule>
+  
+  <!-- Directly dispatch the content of the url to the "Metatags"
+       subclass where the data is read from the meta-tags; -->
+
+  <rule target="Metatags">
+  </rule>
+
+  <!-- Add at least two tests for each site. The content of the
+       tags <journal>, <title>, ...  will be compared to the
+       corresponding fields in the final Publication objects. You can
+       all or only a subset of available fields for testing. -->
+
+  <test>
+    <page url="http://dx.doi.org/10.1186/1471-2105-9-248">
+      <journal>BMC Bioinformatics</journal>
+      <title>Dinucleotide controlled null models for comparative RNA gene prediction</title>
+    </page>
+    <page url="http://genomebiology.com/2008/9/12/R168">
+      <journal>Genome Biology</journal>
+      <title>Assaying the regulatory potential of mammalian conserved non-coding sequences in human cells</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="AmericanPhysicalSociety">
+  <signature>
+    <url>!aps\.org!</url>
+  </signature>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*.aps.org/)(abstract/)(.*)!$1export/$3?type=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  <test>
+    <page url="http://prd.aps.org/abstract/PRD/v71/i10/e103508">
+      <journal>Phys. Rev. D</journal>
+      <title>Scaling of multitension cosmic superstring networks</title>
+    </page>
+    <page url="http://dx.doi.org/10.1103/PhysRevLett.97.186803">
+      <journal>Phys. Rev. Lett.</journal>
+      <title>Detecting Non-Abelian Statistics with an Electronic Mach-Zehnder Interferometer</title>
+    </page>
+  </test>
+</site>
+
+<site name="Plos">
+  <signature>
+    <url>!plos!</url>
+  </signature>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*article/)(info.*)!$1getBibTexCitation.action?articleURI=$2!</rewrite>
+    </pattern>
+  </rule>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*/)(perlserv.*doi=)(10.*)!$1article/getBibTexCitation.action?articleURI=info:doi/$3!</rewrite>
+    </pattern>
+  </rule>
+  <test>
+    <page url="http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124">
+      <journal>PLoS Med</journal>
+      <title>Why Most Published Research Findings Are False</title>
+    </page>
+    <page url="http://dx.doi.org/doi:10.1371/journal.pone.0005906">
+      <journal>PLoS ONE</journal>
+      <title>Fine Mapping of Gene Regions Regulating Neurodegeneration</title>
+    </page>
+    <page url="http://biology.plosjournals.org/perlserv/?request=get-document&amp;doi=10.1371/journal.pbio.1000344">
+      <journal>PLoS Biol</journal>
+      <title>Publication Bias in Reports of Animal Stroke Studies Leads to Major Overstatement of Efficacy</title> 
+    </page>
+  </test>
+</site>
+
+<site name="IOP">
+  <signature>
+    <url>!iop\.org!</url>
+  </signature>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*iop\.org/)([\d|\-|/]+)(.*)!$1export\?articleId=$2&amp;exportFormat=iopexport_bib&amp;exportType=abs!</rewrite>
+    </pattern>
+  </rule>
+  <test>
+    <page url="http://iopscience.iop.org/0143-0807/1/3/004">
+      <journal>European Journal of Physics</journal>
+      <title>Rayleigh’s electrified water drops</title>
+    </page>
+    <page url="http://iopscience.iop.org/0143-0807/1/3/004">
+      <journal>European Journal of Physics</journal>
+      <title>Rayleigh’s electrified water drops</title>
+    </page>
+  </test>
+    <!-- <page url="http://dx.doi.org/10.1088/0964-1726/19/5/055025">
+      <journal>Smart Materials and Structures</journal>
+      <title>Self-priming dielectric elastomer generators</title>
+    </page> -->
+</site>
+
+<site name="Atypon">
+  <signature>
+    <url>atypon</url>
+    <url>acs\.org/doi/(abs|full)</url>
+    <url>annualreviews\.org/doi/(abs|full)</url>
+    <url>liebertonline\.com/doi/(abs|full)</url>
+    <url>mitpressjournals\.org/doi/(abs|full)</url>
+    <body>atypon\.com</body>
+  </signature>
+  
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*/)(doi/\w+/)(10.*)(\?.*)!$1action/downloadCitation?doi=$3&amp;include=abs&amp;format=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*/)(doi/\w+/)(10.*)!$1action/downloadCitation?doi=$3&amp;include=abs&amp;format=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://dx.doi.org/10.1021/cb900282e">
+      <journal>ACS Chemical Biology</journal>
+      <title>Rescue of Glaucoma-Causing Mutant Myocilin Thermal Stability by Chemical Chaperones</title>
+    </page>
+    <page url="http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511">
+      <journal>Annual Review of Genetics</journal>
+      <title>Mendelian Genetics of Apomixis in Plants</title>
+    </page>
+    <page url="http://www.liebertonline.com/doi/abs/10.1089/cmb.2006.0137?ai=rz&amp;mi=cjwv&amp;af=R">
+      <journal>Journal of Computational Biology</journal>
+      <title>A Decomposition Theory for Phylogenetic Networks and Incompatible Characters</title>
+    </page>
+    <page url="http://www.mitpressjournals.org/doi/abs/10.1162/evco.2010.18.1.18101?url_ver=Z39.88-2003&amp;rfr_id=ori:rid:crossref.org&amp;rfr_dat=cr_pub%3Dncbi.nlm.nih.gov">
+      <journal>Evolutionary Computation</journal>
+      <title>Analysis of an Asymmetric Mutation Operator</title>
+    </page>
+  </test>
+</site>
+
+<site name="Metapress">
+  <signature>
+    <url>!metapress\.com!</url>
+  </signature>
+  
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!(.*)(content/)(.*)!$1export.mpx?code=$3&amp;mode=ris!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://versita.metapress.com/content/e62261755h060533">
+      <journal>Acta Pharmaceutica</journal>
+      <title>Development and optimization of a sublingual tablet formulation for physostigmine salicylate</title>
+    </page>
+  </test>
+</site>
+
+
+</driver>
