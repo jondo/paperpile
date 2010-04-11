@@ -103,13 +103,6 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
         plugin_clear_duplicate_cache: true
       }
     });
-
-    this.store.on('load', function() {
-      this.getSelectionModel().selectFirstRow.defer(10, this.getSelectionModel);
-    },
-    this, {
-      single: true
-    });
   },
 
   cleanDuplicates: function() {
