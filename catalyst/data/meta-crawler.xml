@@ -1,0 +1,80 @@
+<!-- 
+ Copyright 2009, 2010 Paperpile
+
+ This file is part of Paperpile
+
+ Paperpile is free software: you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Paperpile is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.  You should have received a
+ copy of the GNU General Public License along with Paperpile.  If
+ not, see http://www.gnu.org/licenses.
+-->
+
+<driver>
+
+<site name="BMC">
+
+  <!-- Ideally match url directly; if not possible match content of
+       page; make sure to find good tradeoff of
+       sensitivity/specificity -->
+
+  <signature>
+    <url>!biomedcentral.com!</url>
+    <body>!href=&quot;(\S*/citation)&quot;&gt;Download citation\(s\)!</body>
+  </signature>
+
+
+  <!-- Example of simple rewrite; preferable option whenever possible;
+       We rewrite the url to the Bibtex download link and the content
+       of this link is dispatched to the Bibtex subclass -->
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(http://www.biomedcentral.com/\d+-\d+/\d+/\d+)!$1/citation?action=submit&amp;format=bibtex&amp;include=cit!</rewrite>
+    </pattern>
+  </rule>
+
+  <!-- Same as above, but we now add on intermediate step and first
+       find the download link in the page and rewrite this link
+       instead of the original url; -->
+
+  <rule target="Bibtex">
+    <pattern>
+      <match>!href=&quot;(\S*/citation)&quot;&gt;Download citation\(s\)!</match>
+      <rewrite>!^(.*/citation)!$1?action=submit&amp;format=bibtex&amp;include=cit!</rewrite>
+    </pattern>
+  </rule>
+  
+  <!-- Directly dispatch the content of the url to the "Metatags"
+       subclass where the data is read from the meta-tags; -->
+
+  <rule target="Metatags">
+  </rule>
+
+  <!-- Add at least two tests for each site. The content of the
+       tags <journal>, <title>, ...  will be compared to the
+       corresponding fields in the final Publication objects. You can
+       all or only a subset of available fields for testing. -->
+
+  <test>
+    <page url="http://dx.doi.org/10.1186/1471-2105-9-248">
+      <journal>BMC Bioinformatics</journal>
+      <title>Dinucleotide controlled null models for comparative RNA gene prediction</title>
+    </page>
+    <page url="http://genomebiology.com/2008/9/12/R168">
+      <journal>Genome Biology</journal>
+      <title>Assaying the regulatory potential of mammalian conserved non-coding sequences in human cells</title>
+    </page>
+  </test>
+
+</site>
+
+
+
+</driver>
