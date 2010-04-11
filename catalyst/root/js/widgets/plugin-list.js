@@ -28,23 +28,6 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.BoxComponent, {
       cls: 'pp-pluginlist pp-pluginlist-used',
       border: true,
 
-      /*
-      plugins: [
-        new Paperpile.HoverButtonPlugin({
-          cls: 'pp-pluginlist-hover-right',
-          showButtonIf: function(node) {
-            // Don't show the hover button if we're the only child node!
-            var tree = node.getOwnerTree();
-            var root = tree.getRootNode();
-            if (root.childNodes.length == 1) {
-              return false;
-            }
-            return true;
-          },
-          fn: this.switchNode,
-          scope: this
-        })]
-      */
     };
     this.usedPlugins = this.createPluginOrderTreePanel(usedConfig);
     this.usedPlugins.initEvents = this.usedPlugins.initEvents.createSequence(function() {
@@ -72,14 +55,6 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.BoxComponent, {
         }
       },
 
-      /* Deactivated for now. Does not really fit the current design  
-      plugins: [
-        new Paperpile.HoverButtonPlugin({
-          cls: 'pp-pluginlist-hover-left',
-          fn: this.switchNode,
-          scope: this
-        })]
-      */
     };
     this.availablePlugins = this.createPluginOrderTreePanel(availableConfig);
     this.availablePlugins.setWidth('100%');
@@ -367,10 +342,6 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.BoxComponent, {
     },
     newPanel);
 
-    //    newPanel.getSelectionModel().on("beforeselect",
-    //      function() {
-    //        return true;
-    //      });
     var root = new Ext.tree.TreeNode({
       text: 'Plugin Order',
       draggable: false,

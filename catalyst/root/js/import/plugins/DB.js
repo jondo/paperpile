@@ -67,19 +67,14 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     store.on('load',
       function() {
         if (this.getStore().getCount() == 0) {
-          var container = this.findParentByType(Paperpile.PluginPanel);
-          if (container.itemId == 'MAIN' && this.getStore().baseParams.plugin_query == "") {
-            container.onEmpty(this.welcomeMsg);
+	    var panel = this.getPluginPanel();
+            if (panel.itemId == 'MAIN' && this.getStore().baseParams.plugin_query == "") {
+		// This needs to be deferred by a bit, so it happens AFTER the onEmpty('') call within the grid.js onStoreLoad method.
+		panel.onEmpty.defer(10,panel,[this.welcomeMsg]);
           }
         }
       },
       this);
-    store.on('load', function() {
-      this.getSelectionModel().selectFirstRow.defer(10, this.getSelectionModel());
-    },
-    this, {
-      single: true
-    });
 
     store.load({
       params: {
