@@ -43,30 +43,30 @@ sub pattern_example : Local {
 
   foreach my $field ( 'key_pattern', 'pdf_pattern', 'attachment_pattern' ) {
     while ( $c->request->params->{$field} =~ /\[\s*(.*?)\s*\]/ig ) {
-      if ( not $1 =~ /^(firstauthor|lastauthor|authors|title|yy|yyyy|key)[:_0-9]*$/i ) {
+      if ( not $1 =~ /^(firstauthor|lastauthor|authors|title|journal|yy|yyyy|key)[:_0-9]*$/i ) {
         $data{$field}->{error} = "Invalid pattern [$1]";
       }
     }
   }
 
-  my $minimum = qr/\[(firstauthor|lastauthor|authors|title)[:_0-9]*\]/i;
+  my $minimum = qr/\[(firstauthor|lastauthor|authors|title|journal)[:_0-9]*\]/i;
+
+  my $minimum_error_text =
+    'Your pattern must include at least [firstauthor], [lastauthor], [authors], [title], or [journal]';
 
   if ( not $key_pattern =~ $minimum ) {
-    $data{key_pattern}->{error} =
-      'Your pattern must include at least [firstauthor], [lastauthor], [authors] or [title]';
+    $data{key_pattern}->{error} = $minimum_error_text;
   }
 
   if ( not $pdf_pattern =~ /\[key\]/i ) {
     if ( not $pdf_pattern =~ $minimum ) {
-      $data{pdf_pattern}->{error} =
-        'Your pattern must include at least [key], [firstauthor], [lastauthor], [authors] or [title]';
+      $data{pdf_pattern}->{error} = $minimum_error_text;
     }
   }
 
   if ( not $attachment_pattern =~ /\[key\]/i ) {
     if ( not $attachment_pattern =~ $minimum ) {
-      $data{attachment_pattern}->{error} =
-        'Your pattern must include at least [key], [firstauthor], [lastauthor], [authors] or [title]';
+      $data{attachment_pattern}->{error} = $minimum_error_text;
     }
   }
 
@@ -303,15 +303,17 @@ sub set_settings : Local {
     print STDERR "$field \n";
   }
 
-  for my $field ( 'use_proxy', 'proxy', 'proxy_user', 'proxy_passwd', 'pager_limit', 'tags_list_height' ) {
+  for my $field ( 'use_proxy', 'proxy', 'proxy_user', 'proxy_passwd', 'pager_limit',
+    'tags_list_height' ) {
+
     # Only store settings that are defined in the parameters.
-    if (defined $c->request->params->{$field}) {
+    if ( defined $c->request->params->{$field} ) {
       $c->model('User')->set_setting( $field, $c->request->params->{$field} );
     }
   }
 
   for my $field ('search_seq') {
-    if (defined $c->request->params->{$field}) {
+    if ( defined $c->request->params->{$field} ) {
       $c->model('Library')->set_setting( $field, $c->request->params->{$field} );
     }
   }
