@@ -27,14 +27,17 @@ my $tests = $crawler->get_tests;
 foreach my $site ( keys %$tests ) {
   my $test_no = 1;
   foreach my $test ( @{ $tests->{$site} } ) {
-    my $pub;
+    my $pub = undef;
     my $url = $test->{url};
     eval { $pub = $crawler->search_file($url) };
     print STDERR $@ if ($@);
     ok( $pub, "$site test $test_no: getting data for $url" );
-    foreach my $key (keys %$test){
-      next if $key eq 'url';
-      is( $pub->$key, $test->{$key}, "$site test $test_no: $key" );
+  SKIP: {
+      skip "No bibliographic data found, skipping more tests for $site test $test_no" if not defined $pub;
+      foreach my $key (keys %$test){
+        next if $key eq 'url';
+        is( $pub->$key, $test->{$key}, "$site test $test_no: $key" );
+      }
     }
     $test_no++;
   }

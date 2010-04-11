@@ -307,7 +307,7 @@ sub load_driver {
 
   my $content = '';
   $content .= $_ foreach (<XML>);
-  $self->_driver( XMLin( $content, ForceArray => ['url','body','rule','pattern','site'] , KeyAttr => {namedRegex=>'name'}) );
+  $self->_driver( XMLin( $content, ForceArray => ['url','body','rule','pattern','site','page'] , KeyAttr => {namedRegex=>'name'}) );
 
 }
 
