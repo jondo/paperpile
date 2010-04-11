@@ -96,4 +96,59 @@
   </test>
 </site>
 
+<site name="Plos">
+  <signature>
+    <url>!plos!</url>
+  </signature>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*article/)(info.*)!$1getBibTexCitation.action?articleURI=$2!</rewrite>
+    </pattern>
+  </rule>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*/)(perlserv.*doi=)(10.*)!$1article/getBibTexCitation.action?articleURI=info:doi/$3!</rewrite>
+    </pattern>
+  </rule>
+  <test>
+    <page url="http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.0020124">
+      <journal>PLoS Med</journal>
+      <title>Why Most Published Research Findings Are False</title>
+    </page>
+    <page url="http://dx.doi.org/doi:10.1371/journal.pone.0005906">
+      <journal>PLoS ONE</journal>
+      <title>Fine Mapping of Gene Regions Regulating Neurodegeneration</title>
+    </page>
+    <page url="http://biology.plosjournals.org/perlserv/?request=get-document&amp;doi=10.1371/journal.pbio.1000344">
+      <journal>PLoS Biol</journal>
+      <title>Publication Bias in Reports of Animal Stroke Studies Leads to Major Overstatement of Efficacy</title> 
+    </page>
+  </test>
+</site>
+
+<site name="IOP">
+  <signature>
+    <url>!iop\.org!</url>
+  </signature>
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*iop\.org/)([\d|\-|/]+)(.*)!$1export\?articleId=$2&amp;exportFormat=iopexport_bib&amp;exportType=abs!</rewrite>
+    </pattern>
+  </rule>
+  <test>
+    <page url="http://iopscience.iop.org/0143-0807/1/3/004">
+      <journal>European Journal of Physics</journal>
+      <title>Rayleigh’s electrified water drops</title>
+    </page>
+    <page url="http://iopscience.iop.org/0143-0807/1/3/004">
+      <journal>European Journal of Physics</journal>
+      <title>Rayleigh’s electrified water drops</title>
+    </page>
+  </test>
+    <!-- <page url="http://dx.doi.org/10.1088/0964-1726/19/5/055025">
+      <journal>Smart Materials and Structures</journal>
+      <title>Self-priming dielectric elastomer generators</title>
+    </page> -->
+</site>
+
 </driver>
