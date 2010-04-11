@@ -93,6 +93,10 @@
       <journal>Phys. Rev. Lett.</journal>
       <title>Detecting Non-Abelian Statistics with an Electronic Mach-Zehnder Interferometer</title>
     </page>
+     <page url="http://prola.aps.org/abstract/PR/v52/i8/p768_1">
+      <journal>Phys. Rev.</journal>
+      <title>Neutron-Induced Radioactivity of Long Life in Cobalt</title>
+    </page>
   </test>
 </site>
 
@@ -158,6 +162,9 @@
     <url>annualreviews\.org/doi/(abs|full)</url>
     <url>liebertonline\.com/doi/(abs|full)</url>
     <url>mitpressjournals\.org/doi/(abs|full)</url>
+    <url>reference-global\.com</url>
+    <url>informahealthcare\.com</url>
+    <url>avma\.org</url>
     <body>atypon\.com</body>
   </signature>
   
@@ -190,24 +197,146 @@
       <journal>Evolutionary Computation</journal>
       <title>Analysis of an Asymmetric Mutation Operator</title>
     </page>
+    <page url="http://www.reference-global.com/doi/abs/10.1515/BC.2008.016">
+      <journal>Biological Chemistry</journal>
+      <title>Secreted human apolipoprotein(a) kringle IV-10 and kringle V inhibit angiogenesis and xenografted tumor growth</title>
+    </page>
+    <page url="http://informahealthcare.com/doi/abs/10.3109/02713680903528345">
+      <journal>Current Eye Research</journal>
+      <title>The Effect of Curcumin on Corneal Neovascularization in Rabbit Eyes</title>
+    </page>
+    <page url="http://avmajournals.avma.org/doi/full/10.2460/javma.236.6.636">
+      <journal>Journal of the American Veterinary Medical Association</journal>
+      <title>What Is The Evidence?</title>
+    </page>    
   </test>
 </site>
 
-<site name="Metapress">
+<site name="JStage">
   <signature>
-    <url>!metapress\.com!</url>
+    <url>!jst\.go\.jp!</url>
   </signature>
-  
-  <rule target="Ris">
+
+  <rule target="Bibtex">
     <pattern>
-      <rewrite>!(.*)(content/)(.*)!$1export.mpx?code=$3&amp;mode=ris!</rewrite>
+      <rewrite>!(.*)(/article/)(.*)(_article)!$1/download/$3_bib!</rewrite>
     </pattern>
   </rule>
   
   <test>
-    <page url="http://versita.metapress.com/content/e62261755h060533">
-      <journal>Acta Pharmaceutica</journal>
-      <title>Development and optimization of a sublingual tablet formulation for physostigmine salicylate</title>
+    <page url="http://www.jstage.jst.go.jp/article/otoljpn/19/1/19_41/_article">
+      <journal>Otology Japan</journal>
+      <title>Clinical Aspects of Unilateral Hearing Loss Due To Isolated Cochlear Nerve Aplasia</title>
+    </page>
+    <page url="http://dx.doi.org/10.2208/jsceseee.26.47s">
+      <journal>STRUCTURAL ENGINEERING / EARTHQUAKE ENGINEERING</journal>
+      <title>HYBRID TIME AND FREQUENCY DOMAIN TECHNIQUE ON MODAL IDENTIFICATION USING AMBIENT VIBRATION TESTS</title>
+    </page>
+  </test>
+</site>
+
+<site name="AGU">
+  <signature>
+    <url>!agu\.org!</url>
+  </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!(.*crossref/)(\d+)(/)(.*)(\.shtml)!http://www.agu.org/journals/includes/download2.php?id=$4&amp;year=$2!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.agu.org/pubs/crossref/2010/2009GB003621.shtml">
+      <journal>Global Biogeochem. Cycles</journal>
+      <title>Carbon cost of plant nitrogen acquisition: A mechanistic, globally applicable model of plant nitrogen uptake, retranslocation, and fixation</title>
+    </page>
+    <page url="http://dx.doi.org/10.1029/2009SW000487">
+      <journal>Space Weather</journal>
+      <title>Geomagnetic influence on aircraft radiation exposure during a solar energetic particle event in October 2003</title>
+    </page>
+  </test>
+</site>
+
+<!-- <site name="MDPI">
+  <signature>
+    <url>!mdpi\.com!</url>
+  </signature>
+  
+  <rule target="Metatags">
+  </rule>
+  
+  <test>
+    <page url="http://www.mdpi.com/1999-4893/2/3/925/">
+      <journal>Algorithms</journal>
+      <title>Computer-Aided Diagnosis Systems for Brain Diseases in Magnetic Resonance Images</title>
+    </page>
+  </test>
+</site> -->
+
+<site name="EGU">
+  <signature>
+    <url>!atmos-chem-phys\.net!</url>
+    <body>!www\.egu\.eu!</body>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!html$!bib!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.atmos-chem-phys.net/10/1473/2010/acp-10-1473-2010.html">
+      <journal>Atmospheric Chemistry and Physics</journal>
+      <title>Aerosol distribution around Svalbard during intense easterly winds</title>
+    </page>
+    <page url="http://www.solid-earth.net/1/1/2010/se-1-1-2010.html">
+      <journal>Solid Earth</journal>
+      <title>The Eons of Chaos and Hades</title>
+    </page>
+  </test>
+</site>
+
+<site name="Pion">
+  <signature>
+    <url>!envplan\.com!</url>
+    <url>!perceptionweb\.com!</url>
+  </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!abstract\.cgi!ris\.cgi!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.perceptionweb.com/abstract.cgi?id=p6252">
+      <journal>Perception</journal>
+      <title>Perceptual artifacts in random-dot stereograms</title>
+    </page>
+    <page url="http://dx.doi.org/10.1068/c08130">
+      <journal>Environment and Planning C: Government and Policy</journal>
+      <title>The consideration of emergency management issues in spatial planning practices</title>
+    </page>
+  </test>
+</site>
+
+<site name="IUCr">
+  <signature>
+    <url>!iucr\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*)(paper\?)([0-9a-zA-Z]+)!$1biblio?Action=download&amp;cnor=$3&amp;saveas=BIBTeX!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://dx.doi.org/10.1107/S0907444909034106">
+      <journal>Acta Crystallographica Section D</journal>
+      <title>Dwelling in the dark: procedures for the crystallography of phytochromes and other photochromic proteins</title>
     </page>
   </test>
 </site>
