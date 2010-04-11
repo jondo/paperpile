@@ -1,7 +1,4 @@
-#!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -d:NYTProf -w
-
-##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -w
-
+#!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -w
 
 BEGIN {
   $ENV{CATALYST_DEBUG} = 0;
@@ -11,35 +8,35 @@ use strict;
 use Data::Dumper;
 use lib '../../lib';
 use Paperpile;
-use Paperpile::Utils;
-use Paperpile::Job;
-use Paperpile::Queue;
-use Paperpile::Library::Publication;
 
-my $pub1 = Paperpile::Library::Publication->new( doi => "10.1186/1471-2105-9-248" );
+my $model = Paperpile::Model::Library->new();
+$model->set_dsn( "dbi:SQLite:" . "/home/wash/.paperdev/paperpile.ppl" );
 
-my $q = Paperpile::Queue->new();
+$model->dbh->sqlite_create_function( 'now', 1, sub { 
+                                       return $_[0];
+                                     } );
 
-$q->clear;
-$q->save;
+#my $results = $model->fulltext_search('test',0,10);
 
-my @jobs = ();
+my $sth = $model->dbh->prepare("SELECT now(matchinfo(Fulltext_citation)) as time, title  FROM Fulltext_citation WHERE Fulltext_citation MATCH 'washietl OR stefan';");
 
-foreach my $i ( 0 .. 10 ) {
+$sth->execute;
 
-  my $job = Paperpile::Job->new(
-    type  => 'PDF_SEARCH',
-    pub   => $pub1,
-    queue => $q
-  );
+while ( my $row = $sth->fetchrow_hashref() ) {
 
-  push @jobs, $job;
+  my $blob = $row->{time};
+
+  my @list = unpack ('VV',$row->{time});
+
+  print $list[0], " ", $list[1], "\n";
+
+  print $row->{title}, " ",  $row->{time}, "\n";
 
 }
+#print Dumper($results);
 
-$q->submit(\@jobs);
 
-#$q->save;
+#sub fulltext_search {
+#  ( my $self, my $_query, my $offset, my $limit, my $order, my $search_pdf, my $trash ) = @_;
 
-#$q->run;
 

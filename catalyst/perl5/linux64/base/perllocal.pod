@@ -900,3 +900,47 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sun Apr 11 09:56:26 2010: C<Module> L<ExtUtils::MakeMaker|ExtUtils::MakeMaker>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 6.56>
+
+=item *
+
+C<EXE_FILES: bin/instmodsh>
+
+=back
+
+=head2 Sun Apr 11 09:57:13 2010: C<Module> L<DBD::SQLite|DBD::SQLite>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.29>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

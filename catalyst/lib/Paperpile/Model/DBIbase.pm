@@ -144,7 +144,10 @@ sub connect {
   $self->_tid( threads->tid ) if $INC{'threads.pm'};
 
   # Turn on unicode support explicitely
-  $dbh->{unicode} = 1;
+  $dbh->{sqlite_unicode} = 1;
+
+  #sqlite_unicode => 1,
+
   return $dbh;
 }
 

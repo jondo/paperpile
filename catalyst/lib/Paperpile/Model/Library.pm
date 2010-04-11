@@ -939,7 +939,6 @@ sub fulltext_search {
   # Publication class
   my $sth = $self->dbh->prepare(
     "SELECT *,
-     offsets($table) as offsets,
      publications.rowid as _rowid,
      publications.title as title,
      publications.abstract as abstract
@@ -990,6 +989,8 @@ sub fulltext_search {
 
     push @page, $pub;
   }
+
+  print STDERR "==================> fulltext_search (end)\n";
 
   return [@page];
 
