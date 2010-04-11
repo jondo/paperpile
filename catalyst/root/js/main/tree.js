@@ -256,7 +256,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   myOnClick: function(node, e) {
-      //Paperpile.log(node);
+    //Paperpile.log(node);
     //      Paperpile.log(e.browserEvent);
     switch (node.id) {
     case 'FOLDER_ROOT':
@@ -317,7 +317,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       // For now we reload feeds whenever they are opened 
       if (pars.plugin_name == 'Feed') {
-        pars.plugin_reload=1;
+        pars.plugin_reload = 1;
       }
 
       // Call appropriate frontend, tags, active folders, and folders are opened only once
@@ -1318,9 +1318,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   },
 
+  autoExportClick: function(item, event) {
+      Paperpile.log("HI!");
+  }
+
 });
 
 Paperpile.Tree.EXPORT_MENU_STRING = "Export contents...";
+Paperpile.Tree.AUTO_EXPORT_MENU_STRING = "Auto export...";
 
 Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
   node: null,
@@ -1394,6 +1399,15 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         text: Paperpile.Tree.EXPORT_MENU_STRING,
         handler: tree.exportNode,
         scope: tree
+      },
+      {
+        xtype: 'enabledisablecheckitem',
+        id: 'folder_menu_auto_export',
+        text: Paperpile.Tree.AUTO_EXPORT_MENU_STRING,
+        hideOnClick: false,
+	  textDisabled: true,
+        handler: tree.autoExportClick,
+        scope: tree
       }]
     });
     Paperpile.Tree.FolderMenu.superclass.initComponent.call(this);
@@ -1409,7 +1423,8 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       'folder_menu_new',
       'folder_menu_delete',
       'folder_menu_rename',
-      'folder_menu_export'];
+      'folder_menu_export',
+      'folder_menu_auto_export'];
     }
   }
 
