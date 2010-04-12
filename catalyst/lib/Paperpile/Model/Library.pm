@@ -86,7 +86,7 @@ sub create_pubs {
 
       # First we check in the database
       my $quoted = $dbh->quote("key:$key*");
-      my $sth = $dbh->prepare(qq^SELECT key FROM fulltext_full WHERE fulltext_full MATCH $quoted^);
+      my $sth = $dbh->prepare(qq^SELECT key FROM fulltext WHERE fulltext MATCH $quoted^);
       my $existing_key;
       $sth->bind_columns( \$existing_key );
       $sth->execute;
@@ -211,11 +211,9 @@ sub insert_pubs {
 
     ( $fields, $values ) = $self->_hash2sql( $hash, $dbh );
 
-    $dbh->do("INSERT INTO fulltext_citation ($fields) VALUES ($values)");
-
     $fields .= ",text";
     $values .= ",''";
-    $dbh->do("INSERT INTO fulltext_full ($fields) VALUES ($values)");
+    $dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
 
     # GJ 2010-01-10 I *think* this should be here, but not sure...
     $pub->_imported(1);
@@ -281,14 +279,12 @@ sub delete_pubs {
 
   # Then delete the entry in all relevant tables
   my $delete_main              = $dbh->prepare("DELETE FROM publications WHERE rowid=?");
-  my $delete_fulltext_citation = $dbh->prepare("DELETE FROM fulltext_citation WHERE rowid=?");
-  my $delete_fulltext_full     = $dbh->prepare("DELETE FROM fulltext_full WHERE rowid=?");
+  my $delete_fulltext     = $dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
 
   foreach my $pub (@$pubs) {
     my $rowid = $pub->_rowid;
     $delete_main->execute($rowid);
-    $delete_fulltext_citation->execute($rowid);
-    $delete_fulltext_full->execute($rowid);
+    $delete_fulltext->execute($rowid);
   }
 
   $dbh->commit;
@@ -544,11 +540,9 @@ sub _update_tags {
   $encoded_tags = $dbh->quote($encoded_tags);
 
   $dbh->do("UPDATE Publications SET tags=$tags WHERE rowid=$pub_rowid;");
-  $dbh->do("UPDATE Fulltext_full SET label=$tags WHERE rowid=$pub_rowid;");
-  $dbh->do("UPDATE Fulltext_citation SET label=$tags WHERE rowid=$pub_rowid;");
+  $dbh->do("UPDATE Fulltext SET label=$tags WHERE rowid=$pub_rowid;");
 
-  $dbh->do("UPDATE Fulltext_full SET labelid=$encoded_tags WHERE rowid=$pub_rowid;");
-  $dbh->do("UPDATE Fulltext_citation SET labelid=$encoded_tags WHERE rowid=$pub_rowid;");
+  $dbh->do("UPDATE Fulltext SET labelid=$encoded_tags WHERE rowid=$pub_rowid;");
 
 }
 
@@ -720,8 +714,7 @@ sub update_folders {
   $folders = $dbh->quote($folders);
 
   $dbh->do("UPDATE Publications SET folders=$folders WHERE rowid=$pub_rowid;");
-  $dbh->do("UPDATE Fulltext_full SET folder=$folders WHERE rowid=$pub_rowid;");
-  $dbh->do("UPDATE Fulltext_citation SET folder=$folders WHERE rowid=$pub_rowid;");
+  $dbh->do("UPDATE Fulltext SET folder=$folders WHERE rowid=$pub_rowid;");
 
   # Remove all connections from Folder_Publication table
   my $sth = $dbh->do("DELETE FROM Folder_Publication WHERE publication_id=$pub_rowid");
@@ -760,8 +753,7 @@ sub delete_folder {
 
   #  Update flat fields in Publication table and Fulltext table
   my $update1 = $self->dbh->prepare("UPDATE Publications SET folders=? WHERE rowid=?");
-  my $update2 = $self->dbh->prepare("UPDATE Fulltext_full SET folder=? WHERE rowid=?");
-  my $update3 = $self->dbh->prepare("UPDATE Fulltext_citation SET folder=? WHERE rowid=?");
+  my $update2 = $self->dbh->prepare("UPDATE Fulltext SET folder=? WHERE rowid=?");
 
   foreach my $id (@$folder_ids) {
 
@@ -769,8 +761,8 @@ sub delete_folder {
 
     # Get the publications that are in the given folder
     my $select = $self->dbh->prepare(
-      "SELECT publications.rowid as rowid, publications.folders as folders FROM Publications JOIN fulltext_citation
-     ON publications.rowid=fulltext_citation.rowid WHERE fulltext_citation MATCH 'folder:$id'"
+      "SELECT publications.rowid as rowid, publications.folders as folders FROM Publications JOIN fulltext
+     ON publications.rowid=fulltext.rowid WHERE fulltext MATCH 'folder:$id'"
     );
 
     $select->bind_columns( \$rowid, \$folders );
@@ -781,7 +773,6 @@ sub delete_folder {
 
       $update1->execute( $newFolders, $rowid );
       $update2->execute( $newFolders, $rowid );
-      $update3->execute( $newFolders, $rowid );
     }
 
     $delete1->execute($id);
@@ -876,13 +867,7 @@ sub reset_db {
 }
 
 sub fulltext_count {
-  ( my $self, my $query, my $search_pdf, my $trash ) = @_;
-
-  my $table = 'Fulltext_citation';
-
-  if ($search_pdf) {
-    $table = 'Fulltext_Full';
-  }
+  ( my $self, my $query, my $trash ) = @_;
 
   if ($trash) {
     $trash = 1;
@@ -893,30 +878,45 @@ sub fulltext_count {
   my $where;
   if ($query) {
     $query = $self->dbh->quote("$query*");
-    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
+    $where = "WHERE Fulltext MATCH $query AND Publications.trashed=$trash";
   } else {
     $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
   }
 
   my $count = $self->dbh->selectrow_array(
-    qq{select count(*) from Publications join $table on 
-    publications.rowid=$table.rowid $where}
+    qq{select count(*) from Publications join Fulltext on 
+    publications.rowid=Fulltext.rowid $where}
   );
 
   return $count;
 }
 
 sub fulltext_search {
-  ( my $self, my $_query, my $offset, my $limit, my $order, my $search_pdf, my $trash ) = @_;
+  ( my $self, my $_query, my $offset, my $limit, my $order, my $trash ) = @_;
 
-  my $table = 'Fulltext_citation';
+  $self->dbh->sqlite_create_function( 'rank', 1, sub { 
+                                        my $blob = $_[0];
+                                        my @list = unpack ('VV',$blob);
+                                        my $r = $list[0]." ".$list[1];
+                                        return $r;
+                                      });
 
-  if ($search_pdf) {
-    $table = 'Fulltext_Full';
-  }
 
-  if ( !$order ) {
-    $order = "created DESC";
+
+
+  my $select = 'SELECT *,
+     Publications.rowid as _rowid,
+     Publications.title as title,
+     Publications.abstract as abstract';
+
+  $order = "created DESC" if !$order;
+
+  if ($_query) {
+    $select .= ",offsets(Fulltext) as offsets, rank(matchinfo(Fulltext)) as r FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
+  } else {
+    $select .=' FROM Publications ';
+    $order =~ s/author/authors/;
+    $order =~ s/notes/annote/;
   }
 
   if ($trash) {
@@ -929,22 +929,12 @@ sub fulltext_search {
 
   if ($_query) {
     $query = $self->dbh->quote("$_query*");
-    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
+    $where = "WHERE Fulltext MATCH $query AND Publications.trashed=$trash";
   } else {
-    $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
+    $where = "WHERE Publications.trashed=$trash";
   }
 
-  # explicitely select rowid since it is not included by '*'. Make
-  # sure the selected fields are all named like the fields in the
-  # Publication class
-  my $sth = $self->dbh->prepare(
-    "SELECT *,
-     publications.rowid as _rowid,
-     publications.title as title,
-     publications.abstract as abstract
-     FROM Publications JOIN $table
-     ON publications.rowid=$table.rowid $where ORDER BY $order LIMIT $limit OFFSET $offset"
-  );
+  my $sth = $self->dbh->prepare("$select $where ORDER BY $order LIMIT $limit OFFSET $offset");
 
   $sth->execute;
 
@@ -959,9 +949,14 @@ sub fulltext_search {
 
     foreach my $field ( keys %$row ) {
 
+      if ($field eq 'title'){
+        $data->{title} = $row->{r}.": ".$row->{title};
+        next;
+      }
+
       if ( $field eq 'offsets' ) {
         my ( $snippets_text, $snippets_abstract, $snippets_notes ) =
-          $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query, $search_pdf );
+          $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query);
         $data->{_snippets_text}     = $snippets_text;
         $data->{_snippets_abstract} = $snippets_abstract;
         $data->{_snippets_notes}    = $snippets_notes;
@@ -989,8 +984,6 @@ sub fulltext_search {
 
     push @page, $pub;
   }
-
-  print STDERR "==================> fulltext_search (end)\n";
 
   return [@page];
 
@@ -1209,10 +1202,9 @@ sub delete_from_folder {
     my $quotedFolders = $dbh->quote($newFolders);
 
     $dbh->do("UPDATE Publications SET folders=$quotedFolders WHERE rowid=$row_id");
-    $dbh->do("UPDATE fulltext_full SET folder=$quotedFolders WHERE rowid=$row_id");
-    $dbh->do("UPDATE fulltext_citation SET folder=$quotedFolders WHERE rowid=$row_id");
+    $dbh->do("UPDATE fulltextl SET folder=$quotedFolders WHERE rowid=$row_id");
     $dbh->do(
-      "DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)"
+             "DELETE FROM Folder_Publication WHERE (folder_id IN (SELECT rowid FROM Folders WHERE folder_id=$folder_id) AND publication_id=$row_id)"
     );
 
     $pub->folders($newFolders);
@@ -1303,7 +1295,7 @@ sub delete_attachment {
 
     if ($pdf) {
       $path = File::Spec->catfile( $paper_root, $pdf );
-      $self->dbh->do("UPDATE Fulltext_full SET text='' WHERE rowid=$rowid");
+      $self->dbh->do("UPDATE Fulltext SET text='' WHERE rowid=$rowid");
       move( $path, $undo_dir ) if $with_undo;
       unlink($path);
     }
@@ -1378,7 +1370,7 @@ sub index_pdf {
 
   $text = $self->dbh->quote($text);
 
-  $self->dbh->do("UPDATE Fulltext_full SET text=$text WHERE rowid=$rowid");
+  $self->dbh->do("UPDATE Fulltext SET text=$text WHERE rowid=$rowid");
 
 }
 
@@ -1526,12 +1518,6 @@ sub _snippets {
 
   my ( $self, $rowid, $offsets, $query, $search_pdf ) = @_;
 
-  my $table = 'Fulltext_citation';
-
-  if ($search_pdf) {
-    $table = 'Fulltext_Full';
-  }
-
   if ( not $query ) {
     return ( '', '', '' );
   }
@@ -1560,11 +1546,6 @@ sub _snippets {
   # This is the order of our fields in the fulltext table
   my @fields = ( 'text', 'abstract', 'notes' );
 
-  # We don't have the 'text' field in the Fulltext_citation table
-  if ( !$search_pdf ) {
-    @fields = ( 'abstract', 'notes' );
-  }
-
   my %snippets = ( text => '', abstract => '', notes => '' );
 
   my $context = 45;    # Characters of context
@@ -1572,15 +1553,13 @@ sub _snippets {
   while ( $offsets =~ /(\d+) (\d+) (\d+) (\d+)/g ) {
 
     # We only generate snippets for text, abstract and notes
-    # (or abstract and notes if pdfs are not searched)
-    next if ( $1 > 2 and $search_pdf );
-    next if ( $1 > 1 and !$search_pdf );
+    next if ( $1 > 2);
 
     my $field = $fields[$1];
 
     # We currently take only the first occurence
     if ( $snippets{$field} eq '' ) {
-      ( my $text ) = $self->dbh->selectrow_array("SELECT $field FROM $table WHERE rowid=$rowid ");
+      ( my $text ) = $self->dbh->selectrow_array("SELECT $field FROM Fulltext WHERE rowid=$rowid ");
 
       # Convert to bytes to get offsets exactly
       $text = encode( 'UTF-8', $text );

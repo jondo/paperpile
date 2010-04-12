@@ -31,7 +31,6 @@ extends 'Paperpile::Plugins::Import';
 has 'query' => ( is => 'rw' );
 has 'mode'  => ( is => 'rw', default => 'FULLTEXT', isa => 'Str' );
 has 'file'  => ( is => 'rw' );
-has 'search_pdf'   => ( is => 'rw', default => 1 );
 has 'order'        => ( is => 'rw', default => 'created DESC' );
 has 'update_total' => ( is => 'rw', default => 0 );
 has '_db_file'     => ( is => 'rw' );
@@ -70,9 +69,9 @@ sub page {
 
   if ( $self->mode eq 'FULLTEXT' ) {
     $page =
-      $model->fulltext_search( $self->query, $offset, $limit, $self->order, $self->search_pdf );
+      $model->fulltext_search( $self->query, $offset, $limit, $self->order );
   } else {
-    $page = $model->standard_search( $self->query, $offset, $limit, $self->search_pdf );
+    $page = $model->standard_search( $self->query, $offset, $limit);
   }
 
   if ( $self->update_total ) {
@@ -96,9 +95,9 @@ sub update_count {
   my $model = $self->get_model;
 
   if ( $self->mode eq 'FULLTEXT' ) {
-    $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf ) );
+    $self->total_entries( $model->fulltext_count( $self->query) );
   } else {
-    $self->total_entries( $model->standard_count( $self->query, $self->search_pdf ) );
+    $self->total_entries( $model->standard_count( $self->query) );
   }
 
   return $self->total_entries;

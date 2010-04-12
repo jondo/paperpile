@@ -251,8 +251,7 @@ sub update_notes : Local {
   my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
   my $text      = $formatter->format($tree);
 
-  $c->model('Library')->update_field( 'Fulltext_full',     $rowid, 'notes', $text );
-  $c->model('Library')->update_field( 'Fulltext_citation', $rowid, 'notes', $text );
+  $c->model('Library')->update_field( 'Fulltext',     $rowid, 'notes', $text );
 
 }
 
