@@ -165,6 +165,8 @@
     <url>reference-global\.com</url>
     <url>informahealthcare\.com</url>
     <url>avma\.org</url>
+    <url>ametsoc\.org</url>
+    <url>uchicago\.edu</url>
     <body>atypon\.com</body>
   </signature>
   
@@ -185,6 +187,10 @@
       <journal>ACS Chemical Biology</journal>
       <title>Rescue of Glaucoma-Causing Mutant Myocilin Thermal Stability by Chemical Chaperones</title>
     </page>
+    <page url="http://journals.ametsoc.org/doi/abs/10.1175/2009JPO4127.1">
+      <journal>Journal of Physical Oceanography</journal>
+      <title>Airborne Observations of Fetch-Limited Waves in the Gulf of Tehuantepec</title>
+    </page>  
     <page url="http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511">
       <journal>Annual Review of Genetics</journal>
       <title>Mendelian Genetics of Apomixis in Plants</title>
@@ -208,7 +214,11 @@
     <page url="http://avmajournals.avma.org/doi/full/10.2460/javma.236.6.636">
       <journal>Journal of the American Veterinary Medical Association</journal>
       <title>What Is The Evidence?</title>
-    </page>    
+    </page>
+    <page url="http://www.journals.uchicago.edu/doi/abs/10.1086/651273">
+      <journal>The Journal of Geology</journal>
+      <title>Scale Dependence of Lithological Control on Topography: Bedrock Channel Geometry and Catchment Morphometry in Western Scotland</title>
+    </page>
   </test>
 </site>
 
@@ -340,6 +350,114 @@
     </page>
   </test>
 </site>
+
+<site name="Highwire">
+  <signature>
+    <url>!sagepub\.com!</url>
+    <url>!cshlp\.org!</url>
+    <url>!pnas\.org!</url>
+    <url>!sciencemag\.org!</url>
+    <url>!oxfordjournals\.org!</url>
+    <url>!bmj\.com!</url>
+    <url>!bmjjournals\.com!</url>
+    <url>!ajhp\.org!</url>
+    <url>!uwpress\.org!</url>
+    <url>!geoscienceworld\.org!</url>
+    <url>!hematologylibrary\.org!</url>
+    <url>!iovs\.org!</url>
+    <url>!physiology\.org!</url>
+    <url>!aphapublications\.org!</url>
+    <url>!amjpathol\.org!</url>
+    <url>!dukejournals\.org!</url>
+    <url>!psychonomic-journals\.org!</url>
+    <url>!ama-assn\.org!</url>
+    <url>!ctsnetjournals\.org!</url>
+    <url>!birjournals\.org!</url>
+    <url>!aacrjournals\.org!</url>
+    <url>!ctsnetbooks\.org!</url>
+    <url>!jwatch\.org!</url>
+    <url>!diabetesjournals\.org!</url>
+    <url>!chestpubs\.org!</url>
+    <url>!rsmjournals\.com!</url>
+    <url>!ahajournals\.org!</url>
+    <url>!biologists\.org!</url>
+    <url>!lyellcollection\.org!</url>
+    <url>!royalsocietypublishing\.org!</url>
+    <body>!a\shref=&quot;(\S+citmgr\S+)&quot;!</body>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!^(.*citmgr.*)!$1&amp;type=bibtex!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule target="Bibtex">
+    <pattern>
+      <match>!a\shref=&quot;(\S+citmgr\S+)&quot;!</match>
+      <rewrite>!^(.*citmgr.*)!$1&amp;type=bibtex!</rewrite>
+    </pattern>
+  </rule>
+ 
+  <test>
+    <page url="http://sth.sagepub.com/cgi/content/refs/28/1/5">
+      <journal>Science Technology Human Values</journal>
+      <title>Editorial</title>
+    </page>
+    <page url="http://online.sagepub.com/cgi/citmgr?gca=spsth;28/1/5">
+      <journal>Science Technology Human Values</journal>
+      <title>Editorial</title>
+    </page>
+    <page url="http://rnajournal.cshlp.org/content/16/4/664.abstract">
+      <journal>RNA</journal>
+      <title>The small nucleolar ribonucleoprotein (snoRNP) database</title>
+    </page>
+    <page url="http://www.pnas.org/content/107/14/6121.extract">
+      <journal>Proceedings of the National Academy of Sciences</journal>
+      <title>Nuclear envelope and lamin B2 function in the central nervous system</title>
+    </page>
+    <page url="http://www.sciencemag.org/cgi/content/summary/328/5975/153">
+      <journal>Science</journal>
+      <title>Cancer Gene Patents Ruled Invalid</title>
+    </page>
+    <page url="http://bioinformatics.oxfordjournals.org/cgi/content/full/24/1/11">
+      <journal>Bioinformatics</journal>
+      <title>Determination and validation of principal gene products</title>
+    </page>
+    <page url="http://www.bmj.com/cgi/content/full/330/7506/0-g?ehom">
+      <journal>BMJ</journal>
+      <title>Performance matters</title>
+    </page>
+    <page url="http://www.ajhp.org/cgi/content/full/62/3/239">
+      <journal>Am J Health Syst Pharm</journal>
+      <title>Nation is unprepared for bioterrorism threat, study finds</title>
+    </page>
+    <page url="http://dx.doi.org/10.1098/rsbl.2009.0820">
+      <journal>Biology Letters</journal>
+      <title>Organisms on the move: ecology and evolution of dispersal</title>
+    </page>   
+  </test>
+</site>
+
+<site name="IPAP">
+  <signature>
+    <url>!ipap\.jp!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*)(link\?)([A-Z]+)(/)(\d+)(/)(\d+)(/)!$1cgi-bin/dumparticle?journal=$3&amp;volume=$5&amp;page=$7&amp;mode=bibtex!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://apex.ipap.jp/link?APEX/3/046601/">
+      <journal>Applied Physics Express</journal>
+      <title>Realization of a High-Performance Point-Focusing Monochromator for X-ray Studies</title>
+    </page>
+  </test>
+</site>
+
 
 
 </driver>
