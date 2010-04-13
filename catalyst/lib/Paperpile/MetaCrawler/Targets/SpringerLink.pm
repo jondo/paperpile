@@ -15,19 +15,21 @@
 # copy of the GNU General Public License along with Paperpile.  If
 # not, see http://www.gnu.org/licenses.
 
-package Paperpile::MetaCrawler::Targets::Metatags;
+package Paperpile::MetaCrawler::Targets::SpringerLink;
 use Moose;
-use Paperpile::Formats::HTML;
+use Paperpile::Plugins::Import::SpringerLink;
 
 extends 'Paperpile::MetaCrawler::Targets';
 
 sub convert {
 
-  my ($self, $content) = @_;
+  my ($self, $content, $url) = @_;
 
-  my $f = new Paperpile::Formats::HTML;
-  $f->content($content);
-  my $pub = $f->read();
+  my $SpringerLinkPlugin = Paperpile::Plugins::Import::SpringerLink->new();
+  my $pub = Paperpile::Library::Publication->new();
+  $pub->annote( $content );
 
-  return $pub;
+  my $full_pub = $SpringerLinkPlugin->complete_details($pub);
+
+  return $full_pub;
 }

@@ -124,7 +124,7 @@ sub search_file {
 
     print STDERR $@ if $@;
 
-    return $m->convert($content);
+    return $m->convert($content, $content_url);
 
   }
 }

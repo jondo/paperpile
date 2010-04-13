@@ -23,6 +23,8 @@ use Switch;
 
 extends 'Paperpile::Formats';
 
+has 'content' => ( is => 'rw', isa => 'Str', default => '' );
+
 sub BUILD {
   my $self = shift;
   $self->format('HTML');
@@ -34,7 +36,7 @@ sub read {
 
   my $self = shift;
 
-  my $in_url = shift;
+  my $content = $self->content;
 
   my (
     $title, $authors, $journal, $issue,      $volume,   $year,
@@ -45,11 +47,6 @@ sub read {
   my @authors_creator     = ();
   my @authors_contributor = ();
   my $authors_citation    = '';
-
-  # get a browser and fetch the HTML content
-  my $browser  = Paperpile::Utils->get_browser;
-  my $response = $browser->get($in_url);
-  my $content  = $response->content;
 
   # We parse the HTML via XPath
   my $tree = HTML::TreeBuilder::XPath->new;
@@ -69,6 +66,13 @@ sub read {
         case "DC.CREATOR" {
           $content =~ s/\./. /g;
           $content =~ s/\s+/ /g;
+
+          # reverse string if necessary
+          if ( $content =~ m/\s[A-Z]{1,2}$/ ) {
+            my @tmp_author = split( /\s/, $content );
+            $content = join( ' ', reverse(@tmp_author) );
+          }
+
           my $tmp =
             ( $content =~ m/,/ )
             ? $content
@@ -79,6 +83,13 @@ sub read {
         case "DC.CONTRIBUTOR" {
           $content =~ s/\./. /g;
           $content =~ s/\s+/ /g;
+
+          # reverse string if necessary
+          if ( $content =~ m/\s[A-Z]{1,2}$/ ) {
+            my @tmp_author = split( /\s/, $content );
+            $content = join( ' ', reverse(@tmp_author) );
+          }
+
           my $tmp =
             ( $content =~ m/,/ )
             ? $content
@@ -175,6 +186,17 @@ sub read {
             $doi = $2 if ( !$doi );
           }
         }
+        case "PPL.VOLUME"    { $volume     = $content if ( !$volume ) }
+        case "PPL.ISSUE"     { $issue      = $content if ( !$issue and $content > 0 ) }
+        case "PPL.FIRSTPAGE" { $start_page = $content if ( !$start_page ) }
+        case "PPL.LASTPAGE"  { $end_page   = $content if ( !$end_page ) }
+        case "PPL.DOI" {
+          if ( $content =~ m/^10\./ ) {
+            $doi = $content if ( !$doi );
+          } elsif ( $content =~ m/(.*)(10\.\d{4}.+)/ ) {
+            $doi = $2 if ( !$doi );
+          }
+        }
       }
     }
   }
@@ -187,8 +209,7 @@ sub read {
       $authors_citation =~ s/;/ and /g;
       $authors_citation =~ s/\s+/ /g;
       $authors = $authors_citation;
-    }
-    elsif ( $authors_citation !~ m/;/ and $authors_citation =~ m/,/ ) {
+    } elsif ( $authors_citation !~ m/;/ and $authors_citation =~ m/,/ ) {
       my @tmp = split( /,/, $authors_citation );
       foreach my $entry (@tmp) {
         push @authors_creator, Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
@@ -223,3 +244,5 @@ sub read {
 
   return $pub;
 }
+
+1;

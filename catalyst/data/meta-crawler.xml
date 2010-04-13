@@ -25,7 +25,7 @@
        sensitivity/specificity -->
 
   <signature>
-    <url>!biomedcentral.com!</url>
+    <url>!biomedcentral\.com!</url>
     <body>!href=&quot;(\S*/citation)&quot;&gt;Download citation\(s\)!</body>
   </signature>
 
@@ -268,22 +268,6 @@
   </test>
 </site>
 
-<!-- <site name="MDPI">
-  <signature>
-    <url>!mdpi\.com!</url>
-  </signature>
-  
-  <rule target="Metatags">
-  </rule>
-  
-  <test>
-    <page url="http://www.mdpi.com/1999-4893/2/3/925/">
-      <journal>Algorithms</journal>
-      <title>Computer-Aided Diagnosis Systems for Brain Diseases in Magnetic Resonance Images</title>
-    </page>
-  </test>
-</site> -->
-
 <site name="EGU">
   <signature>
     <url>!atmos-chem-phys\.net!</url>
@@ -456,6 +440,122 @@
       <title>Realization of a High-Performance Point-Focusing Monochromator for X-ray Studies</title>
     </page>
   </test>
+</site>
+
+<site name="MDPI">
+
+  <signature>
+    <url>!mdpi\.com!</url>
+  </signature>
+
+  <rule target="Metatags">
+  </rule>
+
+  <test>
+    <page url="http://mdpi.com/1424-8220/10/4/3655/">
+      <journal>Sensors</journal>
+      <title>Localization of Mobile Robots Using Odometry and an External Vision Sensor</title>
+    </page>
+    <page url="http://dx.doi.org/10.3390/g1010034">
+      <journal>Games</journal>
+      <title>The Influence of Priming on Reference States</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="IEEE">
+
+  <signature>
+    <url>!ieeexplore\.ieee\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*arnumber=)(\d+)(.*)!http://ieeexplore.ieee.org/xpl/downloadCitations?recordIds=$2&amp;fromPageName=searchabstract&amp;citations-format=citation-abstract&amp;download-format=download-bibtex!</rewrite>
+    </pattern>
+  </rule>
+   
+  <test>
+    <page url="http://ieeexplore.ieee.org/search/srchabstract.jsp?tp=&amp;arnumber=5429842&amp;queryText%3Dcuda%26openedRefinements%3D*%26searchField%3DSearch+All">
+      <title>Accelerating high performance applications with CUDA and MPI</title>
+    </page>
+    <page url="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5433179">
+      <title>A performance prediction model for the CUDA GPGPU platform</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="CSDL">
+
+  <signature>
+    <url>!computer\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*)(doi.*)$!http://www.computer.org/plugins/dl/citation/abs/bibtex/description/$2.bib!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule target="Bibtex">
+    <pattern>
+      <match>!href=&quot;(\S*\.bib)&quot;&gt;BibTex!</match>
+    </pattern>
+  </rule>
+   
+  <test>
+    <page url="http://www.computer.org/portal/web/csdl/doi?doc=doi/10.1109/TSC.2009.23">
+      <title>From Web Service Artifact to a Readable and Verifiable Model</title>
+      <journal>IEEE Transactions on Services Computing</journal>
+    </page>
+  </test>
+
+</site>
+
+<!-- Strange behavior ????????
+<site name="Cell">
+
+  <signature>
+    <url>!cell\.com!</url>
+  </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!(.*)(S\d+.*\d)!http://www.cell.com/AJHG/citationexport?format=cite-abs&amp;citation-type=RIS&amp;pii=$2&amp;action=download!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.cell.com/abstract/S0092-8674%2810%2900194-7">
+      <title>Recombination Proteins Mediate Meiotic Spatial Chromosome Organization and Pairing</title>
+    </page>
+  </test>
+
+</site> -->
+
+<site name="SpringerLink">
+
+  <signature>
+    <url>!springerlink!</url>
+  </signature>
+
+  <rule target="SpringerLink">
+  </rule>
+  
+  <test>
+    <page url="http://www.springerlink.com/content/317768865g818420">
+      <title>Simple Power Analysis on Exponentiation Revisited</title>
+    </page>
+    <!-- <page url="https://commerce.metapress.com/content/hv37805027832375/resource-secured/?target=fulltext.html&amp;sid=vmnexvq2m1xrtm45kf1chr45&amp;sh=springerlink.metapress.com">
+      <title>Sperm, Eggs and Hunks: Biological Origins and Identity</title>
+    </page> -->
+    <page url="http://springerlink.metapress.com/content/x648r38004010r84/?p=6cf8b2f9e89840089cf9f03fe1647a0a&amp;pi=0">
+      <title>High Security Pairing-Based Cryptography Revisited</title>
+    </page>
+  </test>
+
 </site>
 
 
