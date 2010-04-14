@@ -58,6 +58,7 @@ sub read {
     if ( $tag->attr('name') ) {
       my $name    = uc( $tag->attr('name') );
       my $content = $tag->attr('content');
+      next if ( $content eq '' );
 
       #print STDERR "$name ==> $content\n";
 
@@ -132,8 +133,8 @@ sub read {
         case "PRISM.ENDINGPAGE"       { $end_page   = $content }
         case "CITATION_TITLE"         { $title      = $content if ( !$title ) }
         case "CITATION_JOURNAL_TITLE" { $journal    = $content if ( !$journal ) }
-        case "CITATION_VOLUME"        { $volume     = $content if ( !$volume and $content > 0 ) }
-        case "CITATION_ISSUE"         { $issue      = $content if ( !$issue and $content > 0 ) }
+        case "CITATION_VOLUME"        { $volume     = $content if ( !$volume ) }
+        case "CITATION_ISSUE"         { $issue      = $content if ( !$issue ) }
         case "CITATION_FIRSTPAGE" { $start_page = $content if ( !$start_page ) }
         case "CITATION_LASTPAGE"  { $end_page   = $content if ( !$end_page ) }
         case "CITATION_ISSN"      { $ISSN       = $content if ( !$ISSN ) }
@@ -202,6 +203,8 @@ sub read {
   }
 
   $title =~ s/\n//g;
+  $title =~ s/\t//g;
+
   $authors = join( " and ", @authors_creator );
   $authors = join( " and ", @authors_contributor ) if ( $authors eq '' );
   if ( $authors eq '' and $authors_citation ne '' ) {
@@ -223,6 +226,18 @@ sub read {
   }
   if ( $start_page and !$end_page ) {
     $pages = "$start_page";
+  }
+
+  if ( $volume ) {
+    if ( $volume =~ m/^\d+$/ ) {
+      $volume = undef if ( $volume < 1 );
+    }
+  }
+
+  if ( $issue ) {
+    if ( $issue =~ m/^\d+$/ ) {
+      $issue = undef if ( $issue < 1 );
+    }
   }
 
   my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );

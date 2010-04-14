@@ -26,6 +26,8 @@
 
   <signature>
     <url>!biomedcentral\.com!</url>
+    <url>!chemistrycentral\.com!</url>
+    <url>!physmathcentral\.com!</url>
     <body>!href=&quot;(\S*/citation)&quot;&gt;Download citation\(s\)!</body>
   </signature>
 
@@ -36,7 +38,7 @@
 
   <rule target="Bibtex">
     <pattern>
-      <rewrite>!(http://www.biomedcentral.com/\d+-\d+/\d+/\d+)!$1/citation?action=submit&amp;format=bibtex&amp;include=cit!</rewrite>
+      <rewrite>!(http:/.*central\.com/\d+-\d+/\d+/\d+)!$1/citation?action=submit&amp;format=bibtex&amp;include=cit!</rewrite>
     </pattern>
   </rule>
 
@@ -166,6 +168,7 @@
     <url>informahealthcare\.com</url>
     <url>avma\.org</url>
     <url>ametsoc\.org</url>
+    <url>bioone\.org</url>
     <url>uchicago\.edu</url>
     <body>atypon\.com</body>
   </signature>
@@ -558,6 +561,24 @@
 
 </site>
 
+<site name="Nature">
+
+  <signature>
+    <url>!nature\.com!</url>
+  </signature>
+
+  <rule target="Nature">
+  </rule>
+  
+  <test>
+    <page url="http://www.nature.com/nature/journal/vaop/ncurrent/full/nature08961.html">
+      <title>Olfactory pattern classification by discrete neuronal network states</title>
+      <journal>Nature</journal>
+    </page>
+
+  </test>
+
+</site>
 
 
 </driver>
