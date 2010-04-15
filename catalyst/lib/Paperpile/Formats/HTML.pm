@@ -69,7 +69,7 @@ sub read {
           $content =~ s/\s+/ /g;
 
           # reverse string if necessary
-          if ( $content =~ m/\s[A-Z]{1,2}$/ ) {
+          if ( $content =~ m/\s[A-Z]{1,2}$/ and $content !~ m/,/ ) {
             my @tmp_author = split( /\s/, $content );
             $content = join( ' ', reverse(@tmp_author) );
           }
@@ -86,7 +86,7 @@ sub read {
           $content =~ s/\s+/ /g;
 
           # reverse string if necessary
-          if ( $content =~ m/\s[A-Z]{1,2}$/ ) {
+          if ( $content =~ m/\s[A-Z]{1,2}$/ and $content !~ m/,/ ) {
             my @tmp_author = split( /\s/, $content );
             $content = join( ' ', reverse(@tmp_author) );
           }
@@ -198,6 +198,21 @@ sub read {
             $doi = $2 if ( !$doi );
           }
         }
+	  case "DCTERMS.BIBLIOGRAPHICCITATION" {
+						if ( $content =~ m/([A-Za-z\.\s]+),\s(\d+),\s(\d+),\s(\d+)-(\d+)/ ) {
+						  $journal   = $1 if ( !$journal );
+						  $volume    = $2 if ( !$volume );
+						  $issue     = $3 if ( !$issue );
+						  $start_page = $4 if ( !$start_page );
+						  $end_page   = $5 if ( !$end_page );
+						}
+
+					       }
+	    case "DCTERMS.ISSUED" {
+				   if ( $content =~ m/(.*\s)(\d\d\d\d)$/ ) {
+				     $year  = $2 if ( !$year );
+				   }
+				  }
       }
     }
   }
@@ -277,6 +292,10 @@ sub read {
       }
       $authors = join( " and ", @authors_creator );
     }
+  }
+
+  if ( $authors ne '' ) {
+    $authors =~ s/\s+/ /g;
   }
 
   if ( $start_page and $end_page ) {
