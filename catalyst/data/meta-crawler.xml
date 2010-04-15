@@ -580,5 +580,11 @@
 
 </site>
 
+<site name="Default">
+  <signature>
+    <url>!.*!</url>
+  </signature>
+  <rule target="Default"></rule>
+</site> 
 
 </driver>
