@@ -135,9 +135,9 @@ sub read {
         case "CITATION_JOURNAL_TITLE" { $journal    = $content if ( !$journal ) }
         case "CITATION_VOLUME"        { $volume     = $content if ( !$volume ) }
         case "CITATION_ISSUE"         { $issue      = $content if ( !$issue ) }
-        case "CITATION_FIRSTPAGE" { $start_page = $content if ( !$start_page ) }
-        case "CITATION_LASTPAGE"  { $end_page   = $content if ( !$end_page ) }
-        case "CITATION_ISSN"      { $ISSN       = $content if ( !$ISSN ) }
+        case "CITATION_FIRSTPAGE"     { $start_page = $content if ( !$start_page ) }
+        case "CITATION_LASTPAGE"      { $end_page   = $content if ( !$end_page ) }
+        case "CITATION_ISSN"          { $ISSN       = $content if ( !$ISSN ) }
         case "CITATION_DOI" {
 
           if ( $content =~ m/^10\./ ) {
@@ -202,8 +202,66 @@ sub read {
     }
   }
 
-  $title =~ s/\n//g;
-  $title =~ s/\t//g;
+  # Not found anything till now
+  if ( !$title ) {
+    foreach my $tag (@meta) {
+      if ( $tag->attr('name') ) {
+        my $name    = uc( $tag->attr('name') );
+        my $content = $tag->attr('content');
+        next if ( $content eq '' );
+
+        switch ($name) {
+          case /.*CITATION_TITLE/         { $title      = $content if ( !$title ) }
+          case /.*CITATION_JOURNAL_TITLE/ { $journal    = $content if ( !$journal ) }
+          case /.*CITATION_VOLUME/        { $volume     = $content if ( !$volume ) }
+          case /.*CITATION_ISSUE/         { $issue      = $content if ( !$issue ) }
+          case /.*CITATION_FIRSTPAGE/     { $start_page = $content if ( !$start_page ) }
+          case /.*CITATION_LASTPAGE/      { $end_page   = $content if ( !$end_page ) }
+          case /.*CITATION_ISSN/          { $ISSN       = $content if ( !$ISSN ) }
+          case /.*CITATION_DOI/ {
+
+            if ( $content =~ m/^10\./ ) {
+              $doi = $content if ( !$doi );
+            } elsif ( $content =~ m/(.*)(10\.\d{4}.+)/ ) {
+              $doi = $2 if ( !$doi );
+            }
+          }
+          case /.*CITATION_FULLTEXT_HTML_URL/ { $url              = $content }
+          case /.*CITATION_ABSTRACT_HTML_URL/ { $url              = $content if ( !$url ) }
+          case /.*CITATION_PMID/              { $pmid             = $content }
+          case /.*CITATION_PUBLISHER/         { $publisher        = $content if ( !$publisher ) }
+          case /.*CITATION_AUTHORS/           { $authors_citation = $content }
+          case /.*CITATION_ABSTRACT/          { $abstract         = $content if ( !$abstract ) }
+          case /.*CITATION_DATE/ {
+
+            if ( $content =~ m/(\d{4})-(\d{1,2})-(\d{1,2})/ ) {
+              $year  = $1 if ( !$year );
+              $month = $2 if ( !$month );
+            }
+            if ( $content =~ m/(\d{1,2})\/(\d{1,2})\/(\d{4})/ ) {
+              $year  = $3 if ( !$year );
+              $month = $1 if ( !$month );
+            }
+            if ( $content =~ m/^(\d{4})\s[A-Z]\w.*/ ) {
+              $year = $1 if ( !$year );
+            }
+          }
+          case /.*CITATION_YEAR/ { $year = $content if ( $content =~ m/^\d+$/ and !$year ) }
+
+        }
+      }
+    }
+  }
+
+  if ($title) {
+    $title =~ s/\n//g;
+    $title =~ s/\t//g;
+  }
+
+  #if ( $content =~ m/"Z3988"\stitle="(\S+)"/ ) {
+  #  print STDERR "AAAAA $1\n";
+  #}
+
 
   $authors = join( " and ", @authors_creator );
   $authors = join( " and ", @authors_contributor ) if ( $authors eq '' );
@@ -228,13 +286,13 @@ sub read {
     $pages = "$start_page";
   }
 
-  if ( $volume ) {
+  if ($volume) {
     if ( $volume =~ m/^\d+$/ ) {
       $volume = undef if ( $volume < 1 );
     }
   }
 
-  if ( $issue ) {
+  if ($issue) {
     if ( $issue =~ m/^\d+$/ ) {
       $issue = undef if ( $issue < 1 );
     }
