@@ -486,6 +486,9 @@
     <page url="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5433179">
       <title>A performance prediction model for the CUDA GPGPU platform</title>
     </page>
+    <page url="http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?reload=true&amp;arnumber=1639535">
+      <title>Phylogenetic models of rate heterogeneity: a high performance computing perspective</title>
+    </page>
   </test>
 
 </site>
@@ -575,16 +578,56 @@
       <title>Olfactory pattern classification by discrete neuronal network states</title>
       <journal>Nature</journal>
     </page>
-
   </test>
 
 </site>
 
+<site name="ScienceDirect">
+
+  <signature>
+    <url>!sciencedirect\.com/science!</url>
+  </signature>
+
+  <rule target="ScienceDirect">
+  </rule>
+
+  <test>
+    <page url="http://www.sciencedirect.com/science/article/B757H-489YK2W-2F/2/383788addfc05d519d441101045dc278">
+      <title>Bathymetry of the MODE-I region</title>
+      <journal>Deep Sea Research and Oceanographic Abstracts</journal>
+    </page>
+    <page url="http://www.sciencedirect.com/science/article/B8NS1-4X7HPCP-3/2/0ea6e5ea798d1dbd368e74dadeb4c296">
+      <title>Evaluating Internal Classroom Training</title>
+    </page>
+  </test>
+
+</site>
+
+<site name="Pubmed">
+
+  <signature>
+    <url>!ncbi\.nlm\.nih\.gov/pubmed/\d+!</url>
+  </signature>
+
+  <rule target="Pubmed">
+  </rule>
+
+  <test>
+    <page url="http://www.ncbi.nlm.nih.gov/pubmed/20373265">
+      <title>Transcriptional gene silencing through epigenetic changes mediated by non-coding RNAs</title>
+      <journal>Curr Opin Mol Ther</journal>
+    </page>
+  </test>
+</site>
+
 <site name="Default">
+
   <signature>
     <body>!.*!</body>
   </signature>
+
   <rule target="Default"></rule>
+
 </site> 
 
 </driver>
