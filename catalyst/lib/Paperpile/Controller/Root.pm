@@ -48,6 +48,14 @@ sub index : Path : Args(0) {
   $c->forward('Paperpile::View::Mason');
 }
 
+# Serves an empty page that closes itself immediately after being
+# loaded. Used for cookie setting bug workaround.
+sub empty : Local {
+  my ( $self, $c ) = @_;
+  $c->stash->{template} = 'empty.mas';
+  $c->forward('Paperpile::View::Mason');
+}
+
 sub scratch : Local {
   my ( $self, $c ) = @_;
   $c->stash->{template} = 'scratch.mas';
