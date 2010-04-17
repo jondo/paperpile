@@ -42,7 +42,7 @@ user_settings:
 
 library_settings:
   db_version: 2
-  paper_root: "__PP_USER_DIR__/papers"
+  paper_root: "__PP_PAPER_DIR__"
   key_pattern: "[firstauthor][YYYY]"
   pdf_pattern: "[key]"
   attachment_pattern: "[key]_supplements"

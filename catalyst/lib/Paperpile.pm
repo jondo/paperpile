@@ -64,6 +64,10 @@ __PACKAGE__->config( {
           my $c = shift;
           return $c->substitutions('PP_USER_DIR');
         },
+        PP_PAPER_DIR => sub {
+          my $c = shift;
+          return $c->substitutions('PP_PAPER_DIR');
+        },
       }
     },
   }
@@ -96,21 +100,36 @@ sub substitutions {
   }
 
 
-  # This needs to be adjusted for other platfroms than Linux
-  my $userhome    = $ENV{HOME};
-  my $pp_user_dir = $ENV{HOME} . '/.paperpile';
+  # Set basic locations based on platform
+  my $userhome;
+  my $pp_user_dir;
+  my $pp_paper_dir;
+
+  if ($platform =~ /linux/){
+    $userhome    =  $ENV{HOME};
+    $pp_user_dir =  $ENV{HOME} . '/.paperpile';
+    $pp_paper_dir = $ENV{HOME} . '/.paperpile/papers';
+  }
+
+  if ($platform eq 'osx'){
+    $userhome    = $ENV{HOME};
+    $pp_user_dir = $ENV{HOME} .'/Library/Application Support/Paperpile';
+    $pp_paper_dir = $ENV{HOME} .'/Documents/Paperpile';
+  }
 
   # If we have a development version (i.e. no build number) we use a
   # different user dir to allow parallel usage of a stable Paperpile
   # installation and development
   if ( $_settings->{app_settings}->{build_number} == 0 ) {
-    $pp_user_dir = $ENV{HOME} . '/.paperdev';
+    $pp_user_dir  = $ENV{HOME} . '/.paperdev';
+    $pp_paper_dir = $ENV{HOME} . '/.paperdev/papers';
   }
 
   my %fields = (
     'USERHOME'    => $userhome,
     'PLATFORM'    => $platform,
-    'PP_USER_DIR' => $pp_user_dir
+    'PP_USER_DIR' => $pp_user_dir,
+    'PP_PAPER_DIR' => $pp_paper_dir
   );
 
   return $fields{$field};
