@@ -113,6 +113,10 @@ sub read {
             $year  = $3 if ( !$year );
             $month = $1 if ( !$month );
           }
+	  if ( $content =~ m/(^\d{4})-(\d{1,2})$/ ) {
+            $year  = $1 if ( !$year );
+            $month = $2 if ( !$month );
+          }
         }
         case "DC.DESCRIPTION"        { $abstract = $content }
         case "PRISM.PUBLICATIONNAME" { $journal  = $content }
@@ -198,27 +202,32 @@ sub read {
             $doi = $2 if ( !$doi );
           }
         }
-	  case "DCTERMS.BIBLIOGRAPHICCITATION" {
-						if ( $content =~ m/([A-Za-z\.\s]+),\s(\d+),\s(\d+),\s(\d+)-(\d+)/ ) {
-						  $journal   = $1 if ( !$journal );
-						  $volume    = $2 if ( !$volume );
-						  $issue     = $3 if ( !$issue );
-						  $start_page = $4 if ( !$start_page );
-						  $end_page   = $5 if ( !$end_page );
-						}
+        case "DCTERMS.BIBLIOGRAPHICCITATION" {
+          if ( $content =~ m/([A-Za-z\.\s]+),\s(\d+),\s(\d+),\s(\d+)-(\d+)/ ) {
+            $journal    = $1 if ( !$journal );
+            $volume     = $2 if ( !$volume );
+            $issue      = $3 if ( !$issue );
+            $start_page = $4 if ( !$start_page );
+            $end_page   = $5 if ( !$end_page );
+          }
 
-					       }
-	    case "DCTERMS.ISSUED" {
-				   if ( $content =~ m/(.*\s)(\d\d\d\d)$/ ) {
-				     $year  = $2 if ( !$year );
-				   }
-				  }
+        }
+        case "DCTERMS.ISSUED" {
+          if ( $content =~ m/(.*\s)(\d\d\d\d)$/ ) {
+            $year = $2 if ( !$year );
+          }
+        }
+      }
+
+      # control each tag content if DOI hides
+      if ( $content =~ m/(.*doi:?)(10\.\d\d\d\d.\S+)(\s.*)?/i ) {
+        $doi = $2 if ( !$doi );
       }
     }
   }
 
   # Not found anything till now
-  if ( !$title ) {
+  if ( !$title or !$journal ) {
     foreach my $tag (@meta) {
       if ( $tag->attr('name') ) {
         my $name    = uc( $tag->attr('name') );
@@ -230,9 +239,13 @@ sub read {
           case /.*CITATION_JOURNAL_TITLE/ { $journal    = $content if ( !$journal ) }
           case /.*CITATION_VOLUME/        { $volume     = $content if ( !$volume ) }
           case /.*CITATION_ISSUE/         { $issue      = $content if ( !$issue ) }
+          case /.*ISSUE/                  { $issue      = $content if ( !$issue ) }
+          case /.*NUMBER/                 { $issue      = $content if ( !$issue ) }
+          case /.*VOLUME/                 { $volume     = $content if ( !$volume ) }
           case /.*CITATION_FIRSTPAGE/     { $start_page = $content if ( !$start_page ) }
           case /.*CITATION_LASTPAGE/      { $end_page   = $content if ( !$end_page ) }
           case /.*CITATION_ISSN/          { $ISSN       = $content if ( !$ISSN ) }
+          case /.*ISSN/                   { $ISSN       = $content if ( !$ISSN ) }
           case /.*CITATION_DOI/ {
 
             if ( $content =~ m/^10\./ ) {
@@ -276,7 +289,6 @@ sub read {
   #if ( $content =~ m/"Z3988"\stitle="(\S+)"/ ) {
   #  print STDERR "AAAAA $1\n";
   #}
-
 
   $authors = join( " and ", @authors_creator );
   $authors = join( " and ", @authors_contributor ) if ( $authors eq '' );

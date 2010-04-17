@@ -370,6 +370,7 @@
     <url>!biologists\.org!</url>
     <url>!lyellcollection\.org!</url>
     <url>!royalsocietypublishing\.org!</url>
+    <url>!highwire\.org!</url>
     <body>!a\shref=&quot;(\S+citmgr\S+)&quot;!</body>
   </signature>
 
@@ -606,7 +607,7 @@
 <site name="Pubmed">
 
   <signature>
-    <url>!ncbi\.nlm\.nih\.gov/pubmed/\d+!</url>
+    <url>!ncbi\.nlm\.nih\.gov!</url>
   </signature>
 
   <rule target="Pubmed">

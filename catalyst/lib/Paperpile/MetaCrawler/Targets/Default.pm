@@ -18,6 +18,7 @@
 package Paperpile::MetaCrawler::Targets::Default;
 use Moose;
 use Paperpile::Formats::HTML;
+use Paperpile::Plugins::Import::PubMed;
 
 extends 'Paperpile::MetaCrawler::Targets';
 
@@ -29,6 +30,12 @@ sub convert {
   my $f = new Paperpile::Formats::HTML;
   $f->content($content);
   my $pub = $f->read();
+
+  # If we have found a pubmed ID we call the pubmed interface
+  if ( $pub->pmid() ) {
+     my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
+    return $PubMedPlugin->_fetch_by_pmid(  $pub->pmid() );
+  }
 
   # Once the CrossRef is active, we can parse
   # for a DOI and call it then

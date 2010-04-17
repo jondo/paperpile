@@ -25,10 +25,15 @@ sub convert {
 
   my ($self, $content, $url) = @_;
 
-  if ( $url =~ m/http:\/\/www\.ncbi\.nlm\.nih\.gov\/pubmed\/(\d+)/ ) {
+  if ( $url =~ m/http:\/\/www\.ncbi\.nlm\.nih\.gov\/pubmed\/(\d+)(\D.*)?/ ) {
     my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
     return $PubMedPlugin->_fetch_by_pmid($1);
   }
+  if ( $url =~ m/http:\/\/www\.ncbi\.nlm\.nih\.gov\/sites\/entrez\/(\d+)(\D.*)?/ ) {
+    my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
+    return $PubMedPlugin->_fetch_by_pmid($1);
+  }
+  
 
   return undef;
 
