@@ -48,7 +48,8 @@ my %ignore = (
     qr{base/CORE/},          qr{base/pod/},
     qr{(base|cpan)/CPAN},    qr{(base|cpan)/Test},
     qr{base/unicore/.*txt$}, qr{runtime/(template|webinspector|installer)},
-    qr{ext3/examples},       qr{ext3/src}
+    qr{ext3/examples},       qr{ext3/src},
+    qr{journals.list},
   ],
 
   linux64 => [qr{/(perl5|bin)/(linux32|osx|win32)}],
@@ -178,7 +179,7 @@ sub make_dist {
   # Copy runtime directory explicitly for OSX (contains empty
   # directories and symlinks which get lost otherwise)
   if ($platform eq 'osx'){
-    #`rsync -r -l $ti_dir/runtime $dist_dir/$sub_dir`;
+    `rsync -r -a $ti_dir/runtime $dist_dir/$sub_dir`;
   }
 
   # Update configuration file for current build
@@ -273,10 +274,9 @@ sub get_titanium {
 
   my $tmp_dir = tempdir( CLEANUP => 1 );
 
-  foreach my $platform ( 'linux32', 'linux64' ) {
+  foreach my $platform ( 'linux32', 'linux64','osx' ) {
 
     my $dest_dir   = $self->ti_dir . "/$platform";
-    my $source_dir = "/home/wash/tmp/pack/";
 
     my $file_name = "titanium-$version-$platform.tar.gz";
     my $url       = "http://paperpile.com/download/titanium/titanium-$version-$platform.tar.gz";
@@ -294,7 +294,7 @@ sub get_titanium {
     }
 
     # Short-cut to pack and test locally
-    my $file = "/home/wash/tmp/pack/" . $file_name;
+    my $file = "/Users/wash/tmp/pack/" . $file_name;
 
     if ( !-e $file ) {
       $self->echo("Downloading runtime.");
@@ -310,7 +310,16 @@ sub get_titanium {
     }
 
     `tar -C $tmp_dir -xzf $tmp_dir/$file_name`;
-    `mv $tmp_dir/titanium-$version-$platform/* $dest_dir`;
+
+    if ($platform =~/linux/){
+      `mv $tmp_dir/titanium-$version-$platform/* $dest_dir`;
+    }
+
+    if ($platform eq 'osx'){
+      `mv $tmp_dir/titanium-$version-$platform/runtime $dest_dir/Contents`;
+      `mv $tmp_dir/titanium-$version-$platform/modules $dest_dir/Contents`;
+      `mv $tmp_dir/titanium-$version-$platform/paperpile $dest_dir/Contents/MacOS`;
+    }
 
   }
 

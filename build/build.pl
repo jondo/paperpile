@@ -55,8 +55,8 @@ if ( $command eq 'get_titanium' ) {
 
 
 if ( $command eq 'dist' ) {
-  #$b->make_dist('linux64');
-  #$b->make_dist('linux32');
+  $b->make_dist('linux64');
+  $b->make_dist('linux32');
   $b->make_dist('osx');
 }
 
