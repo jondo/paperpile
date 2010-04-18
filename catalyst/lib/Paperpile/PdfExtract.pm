@@ -731,6 +731,13 @@ sub _ParseXML {
         }
       }
       $doi =~ s/;$//;
+
+      # if doi seems to be too short
+      if ( $doi and length($doi) <= 10 ) {
+	if ( $content_line =~ m/($doi)\s(\S+)/i ) {
+	  $doi = _ParseDOI($1.$2);
+	}
+      }
     }
 
     #let's see if it has some adress tags
