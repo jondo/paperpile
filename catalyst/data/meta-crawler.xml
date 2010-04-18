@@ -52,6 +52,10 @@
       <rewrite>!^(.*/citation)!$1?action=submit&amp;format=bibtex&amp;include=cit!</rewrite>
     </pattern>
   </rule>
+
+  <rule target="Pubmed">
+    <match>!pubmed/\d+$!</match>
+  </rule>
   
   <!-- Directly dispatch the content of the url to the "Metatags"
        subclass where the data is read from the meta-tags; -->
@@ -63,6 +67,7 @@
        tags <journal>, <title>, ...  will be compared to the
        corresponding fields in the final Publication objects. You can
        all or only a subset of available fields for testing. -->
+
 
   <test>
     <page url="http://dx.doi.org/10.1186/1471-2105-9-248">
