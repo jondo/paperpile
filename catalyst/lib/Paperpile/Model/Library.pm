@@ -894,15 +894,50 @@ sub fulltext_count {
 sub fulltext_search {
   ( my $self, my $_query, my $offset, my $limit, my $order, my $trash ) = @_;
 
-  $self->dbh->sqlite_create_function( 'rank', 1, sub { 
-                                        my $blob = $_[0];
-                                        my @list = unpack ('VV',$blob);
-                                        my $r = $list[0]." ".$list[1];
-                                        return $r;
-                                      });
+  $self->dbh->sqlite_create_function(
+    'rank', 1,
+    sub {
+      my $blob = $_[0];
+
+      my @all = unpack( "V*", $blob );
+
+      print STDERR length($blob), "\n";
+      print STDERR scalar @all, "\n";
+      print STDERR Dumper(\@all);
+      return '';
+
+      #my ( $num_phrases, $num_columns ) = unpack( 'VV', $blob );
+      #my $size = $num_phrases * $num_columns * 3 + 2;
+
+      my ($num_phrases, $num_columns) = ($all[0], $all[1]);
+
+      my $size = $num_phrases * $num_columns * 2 + 2;
+
+      print STDERR $size, "\n";
 
 
+      #my @fields = ( 'text', 'abstract', 'notes' );
 
+      my $hits_text     = 0;
+      my $hits_abstract = 0;
+      my $hits_notes    = 0;
+
+      foreach my $p (0..$num_phrases-1){
+        $hits_text     += $all[ 2 + 2 * ( 0 + $num_columns * $p ) + 0 ];
+        $hits_abstract += $all[ 2 + 2 * ( 1 + $num_columns * $p ) + 0 ];
+        $hits_notes    += $all[ 2 + 2 * ( 2 + $num_columns * $p ) + 0 ];
+      }
+
+      my $r =
+          join( ",", @all )
+        . "   Text: "
+        . $hits_text
+        . " Abstract: "
+        . $hits_abstract
+        . " Notes: $hits_notes\n";
+      return $r;
+    }
+  );
 
   my $select = 'SELECT *,
      Publications.rowid as _rowid,
@@ -912,9 +947,10 @@ sub fulltext_search {
   $order = "created DESC" if !$order;
 
   if ($_query) {
-    $select .= ",offsets(Fulltext) as offsets, rank(matchinfo(Fulltext)) as r FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
+    $select .=
+      ",offsets(Fulltext) as offsets, rank(matchinfo(Fulltext)) as r FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
   } else {
-    $select .=' FROM Publications ';
+    $select .= ' FROM Publications ';
     $order =~ s/author/authors/;
     $order =~ s/notes/annote/;
   }
@@ -949,14 +985,14 @@ sub fulltext_search {
 
     foreach my $field ( keys %$row ) {
 
-      if ($field eq 'title'){
-        $data->{title} = $row->{r}.": ".$row->{title};
+      if ( $field eq 'title' ) {
+        $data->{title} = $row->{r} . ": " . $row->{title};
         next;
       }
 
       if ( $field eq 'offsets' ) {
         my ( $snippets_text, $snippets_abstract, $snippets_notes ) =
-          $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query);
+          $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query );
         $data->{_snippets_text}     = $snippets_text;
         $data->{_snippets_abstract} = $snippets_abstract;
         $data->{_snippets_notes}    = $snippets_notes;
