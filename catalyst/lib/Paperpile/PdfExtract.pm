@@ -840,22 +840,24 @@ sub _ParseXML {
     my @title_tmp   = ();
     my @authors_tmp = ();
     for my $pos ( 0 .. $#lines_content ) {
-      next if ( $lines_content[$pos] =~ m/^\d+$/ );
       push @title_tmp, $lines_content[$pos] if ( $lines_fs[$pos] == 20 );
-      push @authors_tmp, $lines_content[$pos] if ( $lines_fs[$pos] == 10 );
+      push @authors_tmp, $lines_content[$pos] if ( $lines_fs[$pos] == 10 and $#title_tmp > -1);
     }
     $title   = join( " ", @title_tmp );
     $authors = join( " ", @authors_tmp );
+
     if ( $title eq '' ) {
+      @title_tmp   = ();
+      @authors_tmp = ();
       my $last22 = -1;
       for my $pos ( 0 .. $#lines_content ) {
-	if ( $lines_fs[$pos] == 22 ) {
+	if ( $lines_fs[$pos] == 22 or $lines_fs[$pos] == 24 ) {
 	  push @title_tmp, $lines_content[$pos];
 	  $last22 = $pos;
 	}
       }
       if ( $last22 > -1 ) {
-	push @authors_tmp, $lines_content[$last22+1] if ( $lines_fs[$last22+1] == 9 );
+	push @authors_tmp, $lines_content[$last22+1] if ( $lines_fs[$last22+1] == 9 or $lines_fs[$last22+1] == 10 );
       }
     }
     $title   = join( " ", @title_tmp );
