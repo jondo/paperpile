@@ -1,10 +1,10 @@
-#appname:testapp
-#appid:paperpile.testapp.macos
-#publisher:wash
+#appname:Paperpile
+#appid:paperpile
+#publisher:paperpile.com
 #image:default_app_logo.png
 #url:paperpile.com
 #guid:28aee21a-359d-4641-a4ac-606275346caa
-#desc:No description provided
+#desc:Paperpile - a reference manager
 #type:desktop
 runtime:1.0.0
 api:1.0.0
@@ -24,4 +24,4 @@ tinetwork:1.0.0
 tinotification:1.0.0
 tiprocess:1.0.0
 tiworker:1.0.0
-#version:1.0
+#version:0.4
