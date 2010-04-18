@@ -2946,3 +2946,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sun Apr 18 11:22:21 2010: C<Module> L<Archive::Zip|Archive::Zip>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.30>
+
+=item *
+
+C<EXE_FILES: script/crc32>
+
+=back
+
