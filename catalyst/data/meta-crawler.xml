@@ -626,6 +626,18 @@
   </test>
 </site>
 
+<site name="LandesBioScience">
+
+  <signature>
+    <url>!landesbioscience\.com!</url>
+  </signature>
+
+  <rule target="LandesBioScience">
+  </rule>
+
+</site>
+
+
 <site name="Default">
 
   <signature>
