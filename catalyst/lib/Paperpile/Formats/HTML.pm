@@ -113,16 +113,27 @@ sub read {
             $year  = $3 if ( !$year );
             $month = $1 if ( !$month );
           }
-	  if ( $content =~ m/(^\d{4})-(\d{1,2})$/ ) {
+          if ( $content =~ m/(^\d{4})-(\d{1,2})$/ ) {
             $year  = $1 if ( !$year );
             $month = $2 if ( !$month );
           }
         }
-        case "DC.DESCRIPTION"        { $abstract = $content }
-        case "PRISM.PUBLICATIONNAME" { $journal  = $content }
-        case "PRISM.VOLUME"          { $volume   = $content }
-        case "PRISM.NUMBER"          { $issue    = $content }
-        case "PRISM.ISSN"            { $ISSN     = $content }
+        case "DC.DESCRIPTION" { $abstract = $content }
+        case "DC.SOURCE" {
+          if ( $content =~ m/(.*),\sVol\.\s(\d+),\sIssue\s(\d+),\spp\.\s(\d+)-(\d+)/ ) {
+            $journal    = $1 if ( !$journal );
+            $volume     = $2 if ( !$volume );
+            $issue      = $3 if ( !$issue );
+            $start_page = $4 if ( !$start_page );
+            $end_page   = $5 if ( !$end_page );
+          }
+
+        }
+
+        case "PRISM.PUBLICATIONNAME" { $journal = $content }
+        case "PRISM.VOLUME"          { $volume  = $content }
+        case "PRISM.NUMBER"          { $issue   = $content }
+        case "PRISM.ISSN"            { $ISSN    = $content }
         case "PRISM.PUBLICATIONDATE" {
           if ( $content =~ m/(\d{4})-(\d{1,2})-(\d{1,2})/ ) {
             $year  = $1;

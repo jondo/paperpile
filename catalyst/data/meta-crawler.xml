@@ -635,7 +635,37 @@
   <rule target="LandesBioScience">
   </rule>
 
+  <test>
+    <page url="http://www.landesbioscience.com/journals/cc/article/10508">
+      <title>Regulation of Akt signaling activation by ubiquitination</title>
+      <journal>Cell Cycle</journal>
+    </page>
+  </test>
+
 </site>
+
+<site name="Emerald">
+
+  <signature>
+    <url>!emeraldinsight\.com!</url>
+  </signature>
+
+  <rule target="Emerald">
+  </rule>
+
+  <test>
+    <page url="http://www.emeraldinsight.com/Insight/viewContentItem.do?contentType=Book&amp;contentId=1793045">
+      <title>Acquisition as a growth strategy for young IPO firms</title>
+      <series>Advances in Entrepreneurship, Firm Emergence and Growth</series>
+    </page>
+    <page url="http://www.emeraldinsight.com/10.1108/07358549610129622">
+      <title>The effects of aggressive policing: the Dayton traffic enforcement experiment</title>
+      <journal>American Journal of Police</journal>
+    </page>
+  </test>
+
+</site>
+
 
 
 <site name="Default">
