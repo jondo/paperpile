@@ -1,0 +1,207 @@
+=> NAME 
+
+XML::Smart::Tutorial - Tutorial and examples for XML::Smart.
+
+=> SYNOPSIS
+
+This document is a tutorial for I<XML::Smart> and shows some examples of usual things.
+
+=> Working with contents:
+
+In I<XML::Smart> the key I<CONTENT> is reserved and shouldn't be used directly,
+since I<XML::Smart> will deal with the convertion of arguments to node contents,
+including multiple node contents autimatically.
+
+==> What happens when you set a value:
+
+  $xml->{root}{foo} = 'simple value' ;
+
+Here foo will be a normal argument/attribute value, and will generate this XML data:
+
+  <root foo="simple value"/>
+
+But if you insert some tag or lines in the values by default I<XML::Smart> will convert it to a node content:
+
+  $xml->{root}{foo} = "line0\nlien1\nline2\n" ;
+  
+And will generate that XML data:
+
+  <root>
+  <foo>line0
+  lien1
+  line2
+  </foo>
+  </root>
+
+But what you can do if you want to force some type, let's say, have a node content with a simple value:
+
+  $xml->{root}{foo} = 'simple value' ;
+  $xml->{root}{foo}->set_node(1) ;
+
+And will generate that XML data:
+
+  <root>
+    <foo>simple value</foo>
+  </root>
+
+==> Multiple contents:
+
+When you have interpolated content/data you need to work in a different. Let's say that you load
+this XML data:
+
+  <root>
+  content0
+  <tag1 arg="1"/>
+  content1
+  </root>
+
+If you access directly the root key as string you will get all the content parts grouped.
+So, this code:
+
+  my $xml = new XML::Smart(q`
+  <root>
+  content0
+  <tag1 arg="1"/>
+  content1
+  </root>
+  `,'smart') ;
+  
+  print "#$xml->{root}#" ;
+
+Will print that:
+
+  #
+  content0
+  
+  content1
+  #
+
+B<To access each part of the content independently you should use an array that receive the method I<content()>:>
+
+  my @content = $xml->{root}->content ;
+  
+  print "#$content[0]#\n" ;
+
+And this will print that:
+
+  #
+  content0
+  #
+
+B<Now to set the multiple content values you should use the method I<content()> with 2 arguments:>
+
+  $xml->{root}->content(0,'new content') ;
+
+And now the XML data produced will be:
+
+  <root>new content<tag1 arg="1"/>
+  content1
+  </root>
+
+If you use the method I<content()> with only one argument it will remove all the multiple contents and will set
+the new value in the place of the 1st content.
+
+=> Setting the XML Parser.
+
+By defaul I<XML::Smart> will use L<XML::Parser> or L<XML::Smart::Parser> (in this order of preference) to load a XML data.
+
+To force or define by your self the parser you can use the 2nd argument option when creating a I<XML::Smart> object:
+
+  my $xml = new XML::Smart( 'some.xml' , 'XML::Parser' ) ;
+  
+  ## and
+  
+  my $xml = new XML::Smart( 'some.xml' , 'XML::Smart::Parser' ) ;
+
+I<XML::Smart> also has an extra parser, I<XML::Smart::HTMLParser>, that can be used to load HTML as XML, or to load wild XML data:
+
+  my $xml = new XML::Smart( 'some.xml' , 'XML::Smart::HTMLParser' ) ;
+
+Aliases for the parser options:
+
+  SMART|REGEXP   => XML::Smart::Parser
+  HTML           => XML::Smart::HTMLParser
+
+So, you can use as:
+
+  my $xml = new XML::Smart( 'some.xml' , 'smart' ) ;
+  my $xml = new XML::Smart( 'some.xml' , 'html' ) ;
+
+=> Customizing the Parser.
+
+You can customize the way that the parser will treat the XML data:
+
+==> Forcing nodes/tags and arguments/attributes to lowercase or upercase:
+
+  ## For lower case:
+
+  my $xml = new XML::Smart( 'some.xml' ,
+  lowtag => 1 ,
+  lowarg => 1 ,  
+  ) ;
+  
+  ## For uper case:
+  
+  my $xml = new XML::Smart( 'some.xml' ,
+  upertag => 1 ,
+  uperarg => 1 ,  
+  ) ;
+
+==> Loading arguments without values (flags) as a TRUE boolean:
+
+I<** Note, this option will work only when the XML is parsed by XML::Smart::HTMLParser, since only it accept arguments without values!>
+
+  my $xml = new XML::Smart(
+  '<root><foo arg1="" flag></root>' ,
+  'XML::Smart::HTMLParser' ,
+  arg_single => 1 ,
+  ) ;
+
+Here's the tree of the example above:
+
+  'root' => {
+              'foo' => {
+                         'flag' => 1,
+                         'arg1' => ''
+                       },
+            },
+
+==> Customizing the parse events:
+
+I<XML::Smart> can redirect the parsing process to personalized functions:
+
+  my $xml = XML::Smart->new( 'some.xml' ,
+  on_start => \&on_start ,
+  on_char  => \&on_char ,
+  on_end   => \&on_end ,
+  ) ;
+  
+  sub on_start {
+    my ( $tag , $pointer , $pointer_back ) = @_ ;
+    $pointer->{$tag}{type_user} = 1 if $tag =~ /(?:name|age)/ ;
+  }
+
+  sub on_char {
+    my ( $tag , $pointer , $pointer_back , $content) = @_ ;
+    $$content =~ s/\s+/ /gs ;
+  }
+  
+  sub on_end {
+    my ( $tag , $pointer , $pointer_back ) = @_ ;
+    $pointer->{$tag}{type_extra} = 1 if $tag =~ /(?:more|tel|address)/ ;
+  }
+
+
+=> AUTHOR
+
+Graciliano M. P. <gm@virtuasites.com.br>
+
+I will appreciate any type of feedback (include your opinions and/or suggestions). ;-P
+
+Enjoy and thanks for who are enjoying this tool and have sent e-mails! ;-P
+
+=> ePod
+
+This document was written in L<ePod> (easy-POD), than converted to POD, and from here you know the way.
+
+

@@ -48,11 +48,13 @@ my %ignore = (
     qr{base/CORE/},          qr{base/pod/},
     qr{(base|cpan)/CPAN},    qr{(base|cpan)/Test},
     qr{base/unicore/.*txt$}, qr{runtime/(template|webinspector|installer)},
-    qr{ext3/examples},       qr{ext3/src}
+    qr{ext3/examples},       qr{ext3/src},
+    qr{journals.list},
   ],
 
   linux64 => [qr{/(perl5|bin)/(linux32|osx|win32)}],
   linux32 => [qr{/(perl5|bin)/(linux64|osx|win32)}],
+  osx => [qr{/(perl5|bin)/(linux32|linux64|win32)}, qr{Contents/runtime}],
 
 );
 
@@ -148,7 +150,14 @@ sub make_dist {
 
   my ( $dist_dir, $cat_dir, $ti_dir ) = ( $self->dist_dir, $self->cat_dir, $self->ti_dir );
 
-  $ti_dir = catfile( $ti_dir, $platform );
+  my $sub_dir = $platform;
+
+  if ($platform eq 'osx'){
+    $ti_dir= "$ti_dir/osx/Contents";
+    $sub_dir = "osx/Contents";
+  } else {
+    $ti_dir = "$ti_dir/$platform";
+  }
 
   `rm -rf $dist_dir/$platform`;
 
@@ -157,18 +166,24 @@ sub make_dist {
   push @ignore, @{ $ignore{all} };
   push @ignore, @{ $ignore{$platform} };
 
-  mkpath( catfile("$dist_dir/$platform/catalyst") );
+  mkpath( catfile("$dist_dir/$sub_dir/catalyst") );
 
   my $list = $self->_get_list( $cat_dir, \@ignore );
-  $self->_copy_list( $list, $cat_dir, "$platform/catalyst" );
+  $self->_copy_list( $list, $cat_dir, "$sub_dir/catalyst" );
 
   $list = $self->_get_list( $ti_dir, \@ignore );
-  $self->_copy_list( $list, $ti_dir, $platform );
+  $self->_copy_list( $list, $ti_dir, $sub_dir );
 
-  symlink "catalyst/root", "$dist_dir/$platform/Resources";
+  symlink "catalyst/root", "$dist_dir/$sub_dir/Resources" || die("Could not create symlink $!");
+
+  # Copy runtime directory explicitly for OSX (contains empty
+  # directories and symlinks which get lost otherwise)
+  if ($platform eq 'osx'){
+    `rsync -r -a $ti_dir/runtime $dist_dir/$sub_dir`;
+  }
 
   # Update configuration file for current build
-  my $yaml   = "$dist_dir/$platform/catalyst/conf/settings.yaml";
+  my $yaml   = "$dist_dir/$sub_dir/catalyst/conf/settings.yaml";
   my $config = LoadFile($yaml);
 
   $config->{app_settings}->{platform} = $platform;
@@ -259,10 +274,9 @@ sub get_titanium {
 
   my $tmp_dir = tempdir( CLEANUP => 1 );
 
-  foreach my $platform ( 'linux32', 'linux64' ) {
+  foreach my $platform ( 'linux32', 'linux64','osx' ) {
 
     my $dest_dir   = $self->ti_dir . "/$platform";
-    my $source_dir = "/home/wash/tmp/pack/";
 
     my $file_name = "titanium-$version-$platform.tar.gz";
     my $url       = "http://paperpile.com/download/titanium/titanium-$version-$platform.tar.gz";
@@ -280,7 +294,7 @@ sub get_titanium {
     }
 
     # Short-cut to pack and test locally
-    my $file = "/home/wash/tmp/pack/" . $file_name;
+    my $file = "/Users/wash/tmp/pack/" . $file_name;
 
     if ( !-e $file ) {
       $self->echo("Downloading runtime.");
@@ -296,7 +310,16 @@ sub get_titanium {
     }
 
     `tar -C $tmp_dir -xzf $tmp_dir/$file_name`;
-    `mv $tmp_dir/titanium-$version-$platform/* $dest_dir`;
+
+    if ($platform =~/linux/){
+      `mv $tmp_dir/titanium-$version-$platform/* $dest_dir`;
+    }
+
+    if ($platform eq 'osx'){
+      `mv $tmp_dir/titanium-$version-$platform/runtime $dest_dir/Contents`;
+      `mv $tmp_dir/titanium-$version-$platform/modules $dest_dir/Contents`;
+      `mv $tmp_dir/titanium-$version-$platform/paperpile $dest_dir/Contents/MacOS`;
+    }
 
   }
 
@@ -380,6 +403,10 @@ sub _get_list {
       no_chdir => 1,
       wanted   => sub {
         my $name = $File::Find::name;
+
+        # Skip symlinks in Titanium runtime of OSX
+        return if ($name =~/Versions\/Current/);
+
         return if -d $name;
         foreach my $r (@$ignore) {
           return if $name =~ $r;

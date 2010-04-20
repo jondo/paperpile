@@ -1,0 +1,10 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt.pm relocate_as=../../../MooseX/Getopt.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt/Basic.pm relocate_as=../../../MooseX/Getopt/Basic.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt/Dashes.pm relocate_as=../../../MooseX/Getopt/Dashes.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt/GLD.pm relocate_as=../../../MooseX/Getopt/GLD.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt/Meta/Attribute.pm relocate_as=../../../MooseX/Getopt/Meta/Attribute.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt/Meta/Attribute/NoGetopt.pm relocate_as=../../../MooseX/Getopt/Meta/Attribute/NoGetopt.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt/Meta/Attribute/Trait.pm relocate_as=../../../MooseX/Getopt/Meta/Attribute/Trait.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt/Meta/Attribute/Trait/NoGetopt.pm relocate_as=../../../MooseX/Getopt/Meta/Attribute/Trait/NoGetopt.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt/OptionTypeMap.pm relocate_as=../../../MooseX/Getopt/OptionTypeMap.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Getopt/Strict.pm relocate_as=../../../MooseX/Getopt/Strict.pm

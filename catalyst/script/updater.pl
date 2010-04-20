@@ -385,6 +385,10 @@ sub get_platform {
     $platform = 'windows32';
   }
 
+  if ( $^O =~ /darwin/i ) {
+    $platform = 'osx';
+  }
+
   return $platform;
 
 }

@@ -1,0 +1,6 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Attribute/Params/Validate.pm relocate_as=../../../Attribute/Params/Validate.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Params/Validate.pm relocate_as=../../../Params/Validate.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Params/ValidatePP.pm relocate_as=../../../Params/ValidatePP.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Params/ValidateXS.pm relocate_as=../../../Params/ValidateXS.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/Params/Validate/Validate.bs relocate_as=Validate.bs
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/Params/Validate/Validate.bundle relocate_as=Validate.bundle

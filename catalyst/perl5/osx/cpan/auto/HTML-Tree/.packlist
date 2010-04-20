@@ -1,0 +1,9 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/AsSubs.pm relocate_as=../../HTML/AsSubs.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Element.pm relocate_as=../../HTML/Element.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Element/traverse.pm relocate_as=../../HTML/Element/traverse.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Parse.pm relocate_as=../../HTML/Parse.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Tree.pm relocate_as=../../HTML/Tree.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Tree/AboutObjects.pod relocate_as=../../HTML/Tree/AboutObjects.pod
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Tree/AboutTrees.pod relocate_as=../../HTML/Tree/AboutTrees.pod
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Tree/Scanning.pod relocate_as=../../HTML/Tree/Scanning.pod
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/TreeBuilder.pm relocate_as=../../HTML/TreeBuilder.pm

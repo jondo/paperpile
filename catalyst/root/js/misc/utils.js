@@ -36,8 +36,16 @@ Paperpile.utils = {
 
   openURL: function(url) {
     if (IS_TITANIUM) {
-      var process = Titanium.Process.createProcess({
-        args: ['xdg-open', url]
+
+      var program = 'xdg-open';
+
+      if (this.get_platform()==='osx'){
+        program = 'open';
+      }
+
+
+     var process = Titanium.Process.createProcess({
+       args: [program, url]
       });
 
       process.setOnExit(function() {
@@ -58,8 +66,14 @@ Paperpile.utils = {
   openFile: function(file) {
     if (IS_TITANIUM) {
 
+      var program = 'xdg-open';
+
+      if (this.get_platform()==='osx'){
+        program = 'open';
+      }
+
       var process = Titanium.Process.createProcess({
-        args: ['xdg-open', file]
+        args: [program, file]
       });
 
       process.setOnExit(function() {
@@ -95,6 +109,11 @@ Paperpile.utils = {
           platform = 'linux32';
         }
       }
+
+      if (osname === 'Darwin'){
+        platform = 'osx'
+      }
+
     }
 
     return (platform);

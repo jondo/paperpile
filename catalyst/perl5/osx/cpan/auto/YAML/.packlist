@@ -1,0 +1,13 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Test/YAML.pm relocate_as=../../Test/YAML.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML.pm relocate_as=../../YAML.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Any.pm relocate_as=../../YAML/Any.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Base.pm relocate_as=../../YAML/Base.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Dumper.pm relocate_as=../../YAML/Dumper.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Dumper/Base.pm relocate_as=../../YAML/Dumper/Base.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Error.pm relocate_as=../../YAML/Error.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Loader.pm relocate_as=../../YAML/Loader.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Loader/Base.pm relocate_as=../../YAML/Loader/Base.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Marshall.pm relocate_as=../../YAML/Marshall.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Node.pm relocate_as=../../YAML/Node.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Tag.pm relocate_as=../../YAML/Tag.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/YAML/Types.pm relocate_as=../../YAML/Types.pm
