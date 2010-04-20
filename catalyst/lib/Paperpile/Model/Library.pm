@@ -899,42 +899,30 @@ sub fulltext_search {
     sub {
       my $blob = $_[0];
 
+      # blob contains matchinfo as 32bit integers, we convert them
+      # into a normal array
       my @all = unpack( "V*", $blob );
 
-      print STDERR length($blob), "\n";
-      print STDERR scalar @all, "\n";
-      print STDERR Dumper(\@all);
-      return '';
+      # The first two integers are the number of phrases and the
+      # number of columns, resp.
+      my ( $num_phrases, $num_columns ) = ( $all[0], $all[1] );
 
-      #my ( $num_phrases, $num_columns ) = unpack( 'VV', $blob );
-      #my $size = $num_phrases * $num_columns * 3 + 2;
+      # We are only interested in the number of matches for each of
+      # the 12 columns in our fulltext table
+      my @counts = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
-      my ($num_phrases, $num_columns) = ($all[0], $all[1]);
-
-      my $size = $num_phrases * $num_columns * 2 + 2;
-
-      print STDERR $size, "\n";
-
-
-      #my @fields = ( 'text', 'abstract', 'notes' );
-
-      my $hits_text     = 0;
-      my $hits_abstract = 0;
-      my $hits_notes    = 0;
-
-      foreach my $p (0..$num_phrases-1){
-        $hits_text     += $all[ 2 + 2 * ( 0 + $num_columns * $p ) + 0 ];
-        $hits_abstract += $all[ 2 + 2 * ( 1 + $num_columns * $p ) + 0 ];
-        $hits_notes    += $all[ 2 + 2 * ( 2 + $num_columns * $p ) + 0 ];
+      foreach my $column ( 0 .. 11 ) {
+        foreach my $phrase ( 0 .. $num_phrases - 1 ) {
+          # The way the information is stored in the blob is different
+          # from the latest documentation at
+          # http://sqlite.org/fts3.html. In the SQLite version that is
+          # used by the DBD package we can get the number of matches
+          # like this:
+          $counts[$column] +=
+            $all[ 2 + 1 * $num_columns * $num_phrases + $num_columns * $phrase + $column ];
+        }
       }
-
-      my $r =
-          join( ",", @all )
-        . "   Text: "
-        . $hits_text
-        . " Abstract: "
-        . $hits_abstract
-        . " Notes: $hits_notes\n";
+      my $r = join( ",", @counts );
       return $r;
     }
   );
