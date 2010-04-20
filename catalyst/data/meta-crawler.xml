@@ -666,6 +666,49 @@
 
 </site>
 
+<site name="DovePress">
+
+  <signature>
+    <url>!dovepress\.com!</url>
+  </signature>
+
+  <rule target="DovePress">
+  </rule>
+  
+  <test>
+    <page url="http://www.dovepress.com/medical-complications-in-patients-with-stroke-data-validity-in-a-strok-peer-reviewed-article-CLEP">
+      <title>Medical complications in patients with stroke: data validity in a stroke registry and a hospital discharge registry</title>
+      <journal>Clinical Epidemiology</journal>
+    </page>
+    <page url="http://www.dovepress.com/nurse-stress-at-two-different-organizational-settings-in-alexandria-peer-reviewed-article-JMDH">
+      <title>Nurse stress at two different organizational settings in Alexandria</title>
+      <journal>Journal of Multidisciplinary Healthcare</journal>
+    </page>
+  </test>
+
+</site>
+
+<site name="LAPress">
+
+  <signature>
+    <url>!la-press\.com!</url>
+  </signature>
+
+  <rule target="LAPress">
+  </rule>
+  
+  <test>
+    <page url="http://la-press.com/effect-of-diet-supplementation-on-the-expression-of-bovine-genes--asso-a1970">
+      <title>Effect of Diet Supplementation on the Expression of Bovine Genes  Associated with Fatty Acid Synthesis and Metabolism</title>
+      <journal>Bioinformatics and Biology Insights</journal>
+    </page>
+    <page url="http://la-press.com/gender-ratios-in-autism-asperger-syndrome-and-autism-spectrum-disorder-a1900">
+      <title>Gender Ratios in Autism, Asperger Syndrome and Autism Spectrum Disorder</title>
+      <journal>Autism Insights</journal>
+    </page>
+  </test>
+
+</site>
 
 
 <site name="Default">
@@ -675,7 +718,12 @@
   </signature>
 
   <rule target="Default"></rule>
-
+  <test>
+    <page url="http://ccsenet.org/journal/index.php/ijb/article/view/3582">
+      <title>Environmental Estrogens Stimulate Gene Transcription in the Prolactin Promoter</title>
+      <journal>International Journal of Biology</journal>
+    </page>
+  </test>
 </site> 
 
 </driver>
