@@ -710,6 +710,28 @@
 
 </site>
 
+<site name="Lancet">
+
+  <signature>
+    <url>!thelancet\.com!</url>
+  </signature>
+
+  <rule target="Lancet">
+  </rule>
+  
+  <test>
+    <page url="http://www.thelancet.com/journals/laneur/article/PIIS1474-4422%2810%2970083-1/abstract">
+      <title>Mitochondrial DNA haplogroups and risk of transient ischaemic attack and ischaemic stroke: a genetic association study</title>
+      <journal>The Lancet Neurology</journal>
+    </page>
+    <page url="http://www.thelancet.com/journals/lancet/article/PIIS0140-6736%2800%2988194-5/fulltext.">
+      <title>OPHTHALMIA NEONATORUM</title>
+      <journal>The Lancet</journal>
+    </page>
+  </test>
+
+</site>
+
 
 <site name="Default">
 
