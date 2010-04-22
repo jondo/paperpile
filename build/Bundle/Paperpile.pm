@@ -115,6 +115,7 @@ FCGI::ProcManager
 Archive::Zip
 IO::Socket::SSL
 Crypt::SSLeay
+IO::String
 =head1 AUTHOR
 
 Stefan Washietl <wash@paperpile.org>

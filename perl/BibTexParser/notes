@@ -1,0 +1,26 @@
+from Biblio::Catalog::BibTeX :
+
+sub tex2html {
+    my $latex = shift;
+    return "" unless defined($latex);
+
+    for ($latex) {
+        s/\\textit\{([^{]+)\}/<i>$1<\/i>/g;
+        s/\\textbf\{([^{]+)\}/<b>$1<\/b>/g;
+        s/\\texttt\{([^{]+)\}/<tt>$1<\/tt>/g;
+        s/\\emph{([^{]+)}/<i>$1<\/i>/g;
+        s/\\item\b/<li>/g;
+        s/\\_/_/g;
+        s/\\mbox{([^}]+)}/$1/g;
+        s/{\\it\s([^}]+)}/<i>$1<\/i>/g;
+        s/\\LaTeX/LaTeX/g;
+        s/\\begin{itemize}/<ul>/g;
+        s/\\begin{quote}/<blockquote><i>/g;
+        s/\\end{quote}/<\/i><\/blockquote>/g;
+        s/\\end{itemize}/<\/ul>/g;
+        s/[}{]//g;
+    }
+
+    return $latex;
+}
+

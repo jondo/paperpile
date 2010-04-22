@@ -16,6 +16,12 @@
 
 package Paperpile::Formats::Bibtex;
 use Moose;
+use Data::Dumper;
+use YAML qw(LoadFile);
+use BibTeX::Parser;
+use IO::File;
+
+
 
 extends 'Paperpile::Formats';
 
@@ -25,6 +31,90 @@ sub BUILD {
   $self->readable(1);
   $self->writable(1);
 }
+
+
+sub read {
+
+  my ($self) = @_;
+
+  my $fh     = IO::File->new($self->file);
+
+  my $config = LoadFile( Paperpile::Utils->path_to('conf/fields.yaml') );
+
+  my %built_in = ();
+
+  foreach my $field ( keys %{ $config->{pub_fields} } ) {
+    $built_in{$field} = 1;
+  }
+
+  my @output = ();
+
+  my $parser = BibTeX::Parser->new($fh);
+
+  while (my $entry = $parser->next ) {
+
+    next unless $entry->parse_ok;
+
+    my $data = {};
+
+    foreach my $field (  $entry->fieldlist  ) {
+
+      if ( $built_in{$field} ) {
+        $data->{$field} = $entry->field($field);
+      }
+
+      if ( $field eq 'author' || $field eq 'editor' ) {
+
+        my @names;
+
+        if ($field eq 'author'){
+          @names = $entry->author;
+        } else {
+          @names = $entry->editor;
+        }
+
+        my @normalized = ();
+
+        foreach my $name (@names) {
+
+          my $von   = $name->von;
+          my $last  = $name->last;
+          my $jr    = $name->jr;
+          my $first = $name->first;
+
+          my $output = '';
+
+          $output .= $von . " " if ($von);
+          $output .= $last . ", ";
+          $output .= $jr . ", " if ($jr);
+          $output .= $first;
+
+          push @normalized, $output;
+        }
+        my $final = join( " and ", @normalized );
+
+        if ($field eq 'author'){
+          $data->{authors} = $final;
+        }
+
+        if ($field eq 'editor'){
+          $data->{editors} = $final;
+        }
+      }
+    }
+
+    $data->{_light}=1;
+    $data->{_auto_refresh}=0;
+
+    push @output, Paperpile::Library::Publication->new($data);
+
+  };
+
+  return [@output];
+
+}
+
+
 
 1;
 

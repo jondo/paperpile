@@ -1,0 +1,19 @@
+---
+abstract: 'A pure perl BibTeX parser'
+author:
+  - 'Gerhard Gossen <gerhard.gossen@googlemail.com>'
+generated_by: 'Dist::Zilla version 1.100160'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: BibTeX-Parser
+requires:
+  ExtUtils::MakeMaker: 6.11
+  File::Spec: 0
+  IO::File: 0
+  IO::String: 0
+  Test::More: 0
+resources:
+  repository: http://github.com/gerhardgossen/bibtex-parser/tree
+version: 0.4
