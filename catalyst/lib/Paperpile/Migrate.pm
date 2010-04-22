@@ -1,4 +1,3 @@
-
 # Copyright 2009, 2010 Paperpile
 #
 # This file is part of Paperpile
@@ -138,6 +137,8 @@ sub update_sha1s {
 
   $sth->execute;
 
+  my %sha1_seen;
+
   while ( my $row = $sth->fetchrow_hashref() ) {
 
     my $data = {};
@@ -158,9 +159,27 @@ sub update_sha1s {
 
     my $updated_sha1 = $pub->sha1;
 
+    my $new_title = undef;
+
+    # In the *very* unlikely case that our new sha1 function produces
+    # duplicates for entries that were different before, we force them
+    # to be different by adding a random number to the title
+    if ($sha1_seen{$updated_sha1}){
+      $data->{title}= $data->{title} . " " . int(rand(100));
+      $new_title = $data->{title};
+      $pub   = Paperpile::Library::Publication->new($data);
+      $updated_sha1 = $pub->sha1;
+    }
+
     if ($updated_sha1 ne $row->{sha1}){
       $dbh->do("UPDATE Publications SET sha1='$updated_sha1' WHERE rowid=$rowid");
+      # Also update the new title when it was changed
+      if ($new_title){
+        $dbh->do("UPDATE Publications SET title='$new_title' WHERE rowid=$rowid");
+      }
     }
+
+    $sha1_seen{$updated_sha1}=1;
 
   }
 }

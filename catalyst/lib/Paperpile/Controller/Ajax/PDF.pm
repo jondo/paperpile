@@ -83,6 +83,10 @@ sub extpdf : Local {
 
   my @output = `$bin $filename`;
 
+  if ($? == -1){
+    die("Failed to execute $bin ($!)");
+  }
+
   unlink($filename);
 
   my $output = '';

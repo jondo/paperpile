@@ -52,8 +52,23 @@ Paperpile.stage0 = function() {
 
     success: function(response) {
       var json = Ext.util.JSON.decode(response.responseText);
+      
+      //Titanium.UI.UserWindow.createWindow('http://127.0.0.1:3210/etst');
+
       if (json.status == 'RUNNING') {
-        Paperpile.stage1();
+        
+        // Make sure cookies are set; workaround for OSX where Ajax
+        // calls do not properly set cookies. That's why we load
+        // explicitely our server from a seperate window which sets
+        // the cookie. 
+        if (IS_TITANIUM){
+          var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
+          win.hide();
+          win.open();
+          win.addEventListener('close',function(){Paperpile.stage1();});
+        } else {
+          Paperpile.stage1();
+        }
       }
     },
 
@@ -64,11 +79,20 @@ Paperpile.stage0 = function() {
         // Determine platform we are running on
         var platform = Paperpile.utils.get_platform();
 
+
         var path = Titanium.App.getHome() + '/catalyst';
+
+        var args;
+
+        if (platform === 'osx'){
+          args = [path + "/perl5/" + platform + "/bin/perl", path + '/script/osx_server.pl', '--fork', '--port', '3210']
+        } else {
+          args = [path + "/perl5/" + platform + "/bin/perl", path + '/script/paperpile_server.pl', '-fork']
+        }
 
         // Set up process
         Paperpile.server = Titanium.Process.createProcess({
-          args: [path + "/perl5/" + platform + "/bin/perl", path + '/script/paperpile_server.pl', '-fork']
+          args: args
         });
 
         // Make sure there is no PERL5LIB variable set in the environment
@@ -110,7 +134,13 @@ Paperpile.stage0 = function() {
               // application (although it does not seem to
               // be called anyway)
               Paperpile.server.setOnExit(function() {});
-              Paperpile.stage1();
+
+              // Again workaround for cookie problem under OSX
+              var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
+              win.hide();
+              win.open();
+              win.addEventListener('close',function(){Paperpile.stage1();});
+              
             }
           }
         });
@@ -132,6 +162,7 @@ Paperpile.stage0 = function() {
   });
 };
 
+
 // Stage 1 
 //
 // Before we load the GUI elements we need basic setup tasks at the
@@ -145,7 +176,6 @@ Paperpile.stage1 = function() {
   Ext.Ajax.request({
     url: Paperpile.Url('/ajax/app/init_session'),
     success: function(response) {
-
       var json = Ext.util.JSON.decode(response.responseText);
 
       if (json.error) {

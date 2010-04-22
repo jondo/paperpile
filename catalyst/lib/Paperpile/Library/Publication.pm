@@ -270,8 +270,7 @@ sub calculate_sha1 {
 
   }
 
-
-  $self->sha1( substr( $ctx->hexdigest, 0, 15 ) );
+  $self->sha1(  $ctx->hexdigest );
 
 }
 

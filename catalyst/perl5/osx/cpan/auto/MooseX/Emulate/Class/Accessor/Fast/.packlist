@@ -1,0 +1,4 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Adopt/Class/Accessor/Fast.pm relocate_as=../../../../../../MooseX/Adopt/Class/Accessor/Fast.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Emulate/Class/Accessor/Fast.pm relocate_as=../../../../../../MooseX/Emulate/Class/Accessor/Fast.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Emulate/Class/Accessor/Fast/Meta/Accessor.pm relocate_as=../../../../../../MooseX/Emulate/Class/Accessor/Fast/Meta/Accessor.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/MooseX/Emulate/Class/Accessor/Fast/Meta/Role/Attribute.pm relocate_as=../../../../../../MooseX/Emulate/Class/Accessor/Fast/Meta/Role/Attribute.pm

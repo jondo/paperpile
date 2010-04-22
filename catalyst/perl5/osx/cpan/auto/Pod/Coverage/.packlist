@@ -1,0 +1,5 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Pod/Coverage.pm relocate_as=../../../Pod/Coverage.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Pod/Coverage/CountParents.pm relocate_as=../../../Pod/Coverage/CountParents.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Pod/Coverage/ExportOnly.pm relocate_as=../../../Pod/Coverage/ExportOnly.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/Pod/Coverage/Overloader.pm relocate_as=../../../Pod/Coverage/Overloader.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/bin/pod_cover relocate_as=../../../../../../../../../catalyst/perl5/osx/bin/pod_cover

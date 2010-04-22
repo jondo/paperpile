@@ -1,0 +1,9 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Entities.pm relocate_as=../../../HTML/Entities.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Filter.pm relocate_as=../../../HTML/Filter.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/HeadParser.pm relocate_as=../../../HTML/HeadParser.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/LinkExtor.pm relocate_as=../../../HTML/LinkExtor.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/Parser.pm relocate_as=../../../HTML/Parser.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/PullParser.pm relocate_as=../../../HTML/PullParser.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/HTML/TokeParser.pm relocate_as=../../../HTML/TokeParser.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/HTML/Parser/Parser.bs relocate_as=Parser.bs
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/HTML/Parser/Parser.bundle relocate_as=Parser.bundle

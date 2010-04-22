@@ -146,6 +146,13 @@ sub get_binary{
     $platform = ($arch_string =~ /64/) ? 'linux64' : 'linux32';
   }
 
+  if ( $arch_string =~ /osx/i ) {
+    $platform = 'osx';
+    # Make sure that fontconfig configuration files are found on OSX
+    my $fc=File::Spec->catfile($self->path_to('bin'), 'osx','fonts','fonts.conf');
+    $ENV{FONTCONFIG_FILE}=$fc;
+  }
+
   my $bin=File::Spec->catfile($self->path_to('bin'), $platform, $name);
 
   return $bin;

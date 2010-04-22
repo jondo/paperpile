@@ -1,0 +1,4 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/base/Compress/Raw/Zlib.pm relocate_as=../../../../Compress/Raw/Zlib.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/base/auto/Compress/Raw/Zlib/Zlib.bs relocate_as=Zlib.bs
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/base/auto/Compress/Raw/Zlib/Zlib.bundle relocate_as=Zlib.bundle
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/base/auto/Compress/Raw/Zlib/autosplit.ix relocate_as=autosplit.ix

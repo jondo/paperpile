@@ -1,0 +1,5 @@
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/File/ChangeNotify.pm relocate_as=../../../File/ChangeNotify.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/File/ChangeNotify/Event.pm relocate_as=../../../File/ChangeNotify/Event.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/File/ChangeNotify/Watcher.pm relocate_as=../../../File/ChangeNotify/Watcher.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/File/ChangeNotify/Watcher/Default.pm relocate_as=../../../File/ChangeNotify/Watcher/Default.pm
+/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/File/ChangeNotify/Watcher/Inotify.pm relocate_as=../../../File/ChangeNotify/Watcher/Inotify.pm

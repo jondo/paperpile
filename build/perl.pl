@@ -28,6 +28,11 @@ if ( $arch_string =~ /linux/i ) {
   $platform = ($arch_string =~ /64/) ? 'linux64' : 'linux32';
 }
 
+if ( $arch_string =~ /darwin/i ) {
+  $platform = 'osx';
+}
+
+
 $ENV{PERL5LIB}=undef;
 
 $ENV{BUILD_PLATFORM}=$platform;

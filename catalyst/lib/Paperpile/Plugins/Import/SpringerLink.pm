@@ -184,12 +184,16 @@ sub complete_details {
 
   my $browser = Paperpile::Utils->get_browser;
 
-  # Get the HTML page. I have tried to use the RIS export, but that
-  # did not work. There seems to be a protection, can only be
-  # used in the borwser.
-  print STDERR $pub->_details_link, "\n";
-  my $response = $browser->get( $pub->_details_link );
-  my $content  = $response->content;
+  # We parse the HTML. Usually we get more information than
+  # the RIS export.
+  my $content = '';
+  if ( $pub->_details_link ) {
+    print STDERR $pub->_details_link, "\n";
+    my $response = $browser->get( $pub->_details_link );
+    $content  = $response->content;
+  } else {
+    $content  = $pub->annote;
+  }
 
   # now we parse the HTML for entries
   my $tree = HTML::TreeBuilder::XPath->new;
@@ -198,6 +202,8 @@ sub complete_details {
 
   my $title =
     $tree->findvalue('/html/body/form/table/tr/td[2]/table/tr/td/div[2]/table/tr/td[2]/h2');
+  $title =~ s/^\s+//;
+  $title =~ s/\s+$//;
 
   # let's find the abstract first
   my $abstract = $tree->findvalue('/*/*/*/*/*/*/*/*/*/*/*/*/*/div[@class="Abstract"]');
