@@ -81,6 +81,23 @@ sub read {
           push @authors_creator, $tmp;
 
         }
+        case "DC.CREATOR.PERSONALNAME" {
+          $content =~ s/\./. /g;
+          $content =~ s/\s+/ /g;
+
+          # reverse string if necessary
+          if ( $content =~ m/\s[A-Z]{1,2}$/ and $content !~ m/,/ ) {
+            my @tmp_author = split( /\s/, $content );
+            $content = join( ' ', reverse(@tmp_author) );
+          }
+
+          my $tmp =
+            ( $content =~ m/,/ )
+            ? $content
+            : Paperpile::Library::Author->new()->parse_freestyle($content)->bibtex();
+          push @authors_creator, $tmp;
+
+        }
         case "DC.CONTRIBUTOR" {
           $content =~ s/\./. /g;
           $content =~ s/\s+/ /g;
@@ -129,6 +146,8 @@ sub read {
           }
 
         }
+        case "DC.SOURCE.ISSUE"  { $issue  = $content }
+        case "DC.SOURCE.VOLUME" { $volume = $content }
 
         case "PRISM.PUBLICATIONNAME" { $journal = $content }
         case "PRISM.VOLUME"          { $volume  = $content }
