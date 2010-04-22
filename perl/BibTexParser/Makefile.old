@@ -25,7 +25,7 @@
 
 # --- MakeMaker const_config section:
 
-# These definitions are from config.sh (via /home/wash/play/paperpile/catalyst/perl5/linux64/base/Config.pm)
+# These definitions are from config.sh (via /home/wash/play/paperpile/catalyst/perl5/linux32/base/Config.pm)
 
 # They may have been overridden via Makefile.PL or on the command line
 AR = ar
@@ -45,8 +45,8 @@ OBJ_EXT = .o
 OSNAME = linux
 OSVERS = 2.6.28-11-generic
 RANLIB = :
-SITELIBEXP = /home/wash/play/paperpile/catalyst/perl5/linux64/cpan
-SITEARCHEXP = /home/wash/play/paperpile/catalyst/perl5/linux64/cpan
+SITELIBEXP = /home/wash/play/paperpile/catalyst/perl5/linux32/cpan
+SITEARCHEXP = /home/wash/play/paperpile/catalyst/perl5/linux32/cpan
 SO = so
 VENDORARCHEXP = 
 VENDORLIBEXP = 
@@ -76,30 +76,30 @@ MAN3EXT = 3
 INSTALLDIRS = site
 DESTDIR = 
 PREFIX = $(SITEPREFIX)
-PERLPREFIX = /home/wash/play/paperpile/catalyst/perl5/linux64
-SITEPREFIX = /home/wash/play/paperpile/catalyst/perl5/linux64
+PERLPREFIX = /home/wash/play/paperpile/catalyst/perl5/linux32
+SITEPREFIX = /home/wash/play/paperpile/catalyst/perl5/linux32
 VENDORPREFIX = 
-INSTALLPRIVLIB = /home/wash/play/paperpile/catalyst/perl5/linux64/base
+INSTALLPRIVLIB = /home/wash/play/paperpile/catalyst/perl5/linux32/base
 DESTINSTALLPRIVLIB = $(DESTDIR)$(INSTALLPRIVLIB)
-INSTALLSITELIB = /home/wash/play/paperpile/catalyst/perl5/linux64/cpan
+INSTALLSITELIB = /home/wash/play/paperpile/catalyst/perl5/linux32/cpan
 DESTINSTALLSITELIB = $(DESTDIR)$(INSTALLSITELIB)
 INSTALLVENDORLIB = 
 DESTINSTALLVENDORLIB = $(DESTDIR)$(INSTALLVENDORLIB)
-INSTALLARCHLIB = /home/wash/play/paperpile/catalyst/perl5/linux64/base
+INSTALLARCHLIB = /home/wash/play/paperpile/catalyst/perl5/linux32/base
 DESTINSTALLARCHLIB = $(DESTDIR)$(INSTALLARCHLIB)
-INSTALLSITEARCH = /home/wash/play/paperpile/catalyst/perl5/linux64/cpan
+INSTALLSITEARCH = /home/wash/play/paperpile/catalyst/perl5/linux32/cpan
 DESTINSTALLSITEARCH = $(DESTDIR)$(INSTALLSITEARCH)
 INSTALLVENDORARCH = 
 DESTINSTALLVENDORARCH = $(DESTDIR)$(INSTALLVENDORARCH)
-INSTALLBIN = /home/wash/play/paperpile/catalyst/perl5/linux64/bin
+INSTALLBIN = /home/wash/play/paperpile/catalyst/perl5/linux32/bin
 DESTINSTALLBIN = $(DESTDIR)$(INSTALLBIN)
-INSTALLSITEBIN = /home/wash/play/paperpile/catalyst/perl5/linux64/bin
+INSTALLSITEBIN = /home/wash/play/paperpile/catalyst/perl5/linux32/bin
 DESTINSTALLSITEBIN = $(DESTDIR)$(INSTALLSITEBIN)
 INSTALLVENDORBIN = 
 DESTINSTALLVENDORBIN = $(DESTDIR)$(INSTALLVENDORBIN)
 INSTALLSCRIPT = 
 DESTINSTALLSCRIPT = $(DESTDIR)$(INSTALLSCRIPT)
-INSTALLSITESCRIPT = /home/wash/play/paperpile/catalyst/perl5/linux64/bin
+INSTALLSITESCRIPT = /home/wash/play/paperpile/catalyst/perl5/linux32/bin
 DESTINSTALLSITESCRIPT = $(DESTDIR)$(INSTALLSITESCRIPT)
 INSTALLVENDORSCRIPT = 
 DESTINSTALLVENDORSCRIPT = $(DESTDIR)$(INSTALLVENDORSCRIPT)
@@ -115,16 +115,16 @@ INSTALLSITEMAN3DIR = $(INSTALLMAN3DIR)
 DESTINSTALLSITEMAN3DIR = $(DESTDIR)$(INSTALLSITEMAN3DIR)
 INSTALLVENDORMAN3DIR = 
 DESTINSTALLVENDORMAN3DIR = $(DESTDIR)$(INSTALLVENDORMAN3DIR)
-PERL_LIB = /home/wash/play/paperpile/catalyst/perl5/linux64/base
-PERL_ARCHLIB = /home/wash/play/paperpile/catalyst/perl5/linux64/base
+PERL_LIB = /home/wash/play/paperpile/catalyst/perl5/linux32/base
+PERL_ARCHLIB = /home/wash/play/paperpile/catalyst/perl5/linux32/base
 LIBPERL_A = libperl.a
 FIRST_MAKEFILE = Makefile
 MAKEFILE_OLD = Makefile.old
 MAKE_APERL_FILE = Makefile.aperl
 PERLMAINCC = $(CC)
-PERL_INC = /home/wash/play/paperpile/catalyst/perl5/linux64/base/CORE
-PERL = /home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl
-FULLPERL = /home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl
+PERL_INC = /home/wash/play/paperpile/catalyst/perl5/linux32/base/CORE
+PERL = /home/wash/play/paperpile/catalyst/perl5/linux32/bin/perl
+FULLPERL = /home/wash/play/paperpile/catalyst/perl5/linux32/bin/perl
 ABSPERL = $(PERL)
 PERLRUN = $(PERL)
 FULLPERLRUN = $(FULLPERL)
@@ -136,7 +136,7 @@ PERL_CORE = 0
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /home/wash/play/paperpile/catalyst/perl5/linux64/base/ExtUtils/MakeMaker.pm
+MAKEMAKER   = /home/wash/play/paperpile/catalyst/perl5/linux32/base/ExtUtils/MakeMaker.pm
 MM_VERSION  = 6.42
 MM_REVISION = 41145
 
@@ -740,7 +740,7 @@ $(FIRST_MAKEFILE) : Makefile.PL $(CONFIGDEP)
 
 # --- MakeMaker makeaperl section ---
 MAP_TARGET    = perl
-FULLPERL      = /home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl
+FULLPERL      = /home/wash/play/paperpile/catalyst/perl5/linux32/bin/perl
 
 $(MAP_TARGET) :: static $(MAKE_APERL_FILE)
 	$(MAKE) $(USEMAKEFILE) $(MAKE_APERL_FILE) $@
@@ -795,7 +795,7 @@ ppd :
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="IO-String" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Test-More" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <OS NAME="$(OSNAME)" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="linux64-5.1" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="linux32-5.1" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <CODEBASE HREF="" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    </IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '</SOFTPKG>' >> $(DISTNAME).ppd

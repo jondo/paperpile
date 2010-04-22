@@ -1,4 +1,5 @@
-#!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -w
+#!../../perl5/linux32/bin/perl -w
+#!../../perl5/linux64/bin/perl -w
 
 BEGIN {
   $ENV{CATALYST_DEBUG} = 0;
