@@ -24,11 +24,44 @@ use Paperpile::Formats;
 
 sub convert {
 
-  my ($self, $content) = @_;
+  my ( $self, $content ) = @_;
 
-  my $f = Paperpile::Formats->new(format=>'BIBTEX');
-  my $pub = $f->read_string($content);
+  my $pub;
+  my $f = Paperpile::Formats->new( format => 'BIBTEX' );
+
+  # If the BIBTEX entry is embedded in HTML, we try to
+  # parse it from the HTML
+  if ( $content =~ m/<html>/ ) {
+    my @tmp = split( //, $content );
+    my $bibtex = '';
+    foreach my $i ( 0 .. $#tmp - 8 ) {
+
+      my $word = '';
+      for my $k ( $i .. $i + 7 ) {
+        $word .= $tmp[$k];
+      }
+
+      # let's see if we can find the article tag
+      if ( uc($word) eq '@ARTICLE' ) {
+
+        # we now count curly brackets
+        my $count_opening = 0;
+        my $count_closing = 0;
+        $bibtex = $word;
+        for my $k ( $i + 8 .. $#tmp ) {
+          $count_opening++ if ( $tmp[$k] eq '{' );
+          $count_closing++ if ( $tmp[$k] eq '}' );
+          $bibtex .= $tmp[$k];
+          last if ( $count_opening == $count_closing );
+        }
+        last;
+      }
+    }
+    $pub = $f->read_string($bibtex) if ( $bibtex ne '' );
+  } else {
+    # regular case, we just parse the content
+    $pub = $f->read_string($content);
+  }
 
   return $pub->[0];
-
 }
