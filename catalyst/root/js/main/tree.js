@@ -256,7 +256,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   myOnClick: function(node, e) {
-    //Paperpile.log(node);
+    Paperpile.log(node);
+    Paperpile.log(this.getAutoExportLocation(node));
     //      Paperpile.log(e.browserEvent);
     switch (node.id) {
     case 'FOLDER_ROOT':
@@ -521,7 +522,56 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         menu.hideItems();
         menu.showAt(e.getXY());
         this.allowSelect = false;
+
+        if (node.type == 'FOLDER') {
+          this.createAutoExportTip(menu);
+        }
       }
+    }
+  },
+
+  createAutoExportTip: function(contextMenu) {
+    this.autoExportTip = new Ext.ToolTip({
+      trackMouse: false,
+      anchor: 'left',
+      showDelay: 300,
+      hideDelay: 100,
+      target: contextMenu.el,
+      delegate: '.pp-auto-export-menu-item',
+      renderTo: document.body,
+      listeners: {
+        beforeshow: {
+          fn: function updateTipBody(tip) {
+            var tipText = this.getAutoExportTipForNode(tip.triggerElement, contextMenu.node);
+            if (tipText === '') {
+              return false;
+            } else {
+              tip.body.dom.innerHTML = tipText;
+            }
+          },
+          scope: this
+        }
+      }
+    });
+  },
+
+  getAutoExportTipForNode: function(triggerEl, node) {
+    var menuItemEl = Ext.fly(triggerEl).findParent('.x-menu-item', 4);
+    var item = Ext.getCmp(menuItemEl.id);
+    if (!item) {
+      return '';
+    }
+
+    if (item.textDisabled) {
+      return "Auto-export disabled";
+    } else {
+      var exportFile = this.getAutoExportLocation(node);
+      var displayText = [
+        '<b>',
+        exportFile,
+        '</b>',
+        '<br/>Click to change'].join("");
+      return displayText;
     }
   },
 
@@ -573,6 +623,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   putLeavesInArray: function(node, array) {
+    if (array === undefined) {
+      array = [];
+    }
     var children = node.childNodes;
     for (var i = 0; i < children.length; i++) {
       var childNode = children[i];
@@ -585,10 +638,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
   },
 
-  getAllLeafNodes: function() {
-    var root = this.getRootNode();
+  getAllLeafNodes: function(node) {
+    if (node === undefined) {
+      node = this.getRootNode();
+    }
     var leaves = [];
-    this.putLeavesInArray(root, leaves);
+    this.putLeavesInArray(node, leaves);
     return leaves;
   },
 
@@ -898,6 +953,26 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   },
 
+  // Saves a single node's 'plugin_xyz' parameter values back to the database.
+  saveNode: function(node) {
+    var pars = {};
+    for (var key in node) {
+      if (key.match('plugin_')) {
+        pars[key] = node[key];
+      }
+    }
+    pars.node_id = node.id;
+
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/tree/save_node_params'),
+      params: pars,
+      success: function() {
+      },
+      failure: Paperpile.main.onError
+    });
+
+  },
+
   //
   // Rename node
   //
@@ -1096,6 +1171,43 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return false;
   },
 
+  getNodeBreadcrumb: function(node, separator, limit_id) {
+    var string = node.text;
+    node = node.parentNode;
+    while (node) {
+      Paperpile.log(node.text);
+      if (node.id == limit_id) {
+        return string;
+      }
+      string = node.text + separator + string;
+      node = node.parentNode;
+    }
+    return string;
+  },
+
+  getUniqueFolderBreadcrumb: function(node) {
+    var folderRoot = this.getNodeById('FOLDER_ROOT');
+    var leaves = this.getAllLeafNodes(folderRoot);
+    var name_hash;
+    for (var i = 0; i < leaves.length; i++) {
+      var leaf = leaves[i];
+      var bc = this.getNodeBreadcrumb(leaf, "_", 'FOLDER_ROOT');
+      if (leaves[bc] === undefined) {
+        leaves[bc] = 0;
+      } else {
+        leaves[bc]++;
+      }
+      if (leaf === node) {
+        var uniqueName = bc;
+        var suffix = "";
+        if (leaves[bc] > 0) {
+          suffix = "_" + leaves[bc];
+        }
+        return uniqueName + suffix;
+      }
+    }
+  },
+
   getUniqueTag: function(text) {
     var base = text;
     var i = 2;
@@ -1153,7 +1265,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   setTagSort: function(tagIdList) {
     var root = this.getNodeById('TAGS_ROOT');
-    // Move this node into the i-th position.
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/tree/set_node_order'),
       params: {
@@ -1318,8 +1429,74 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   },
 
+  autoExportCheck: function(item, state) {
+    var parentMenu = item.parentMenu;
+    var node = parentMenu.node;
+    if (state === true) {
+      node['plugin_auto_export_enable'] = true;
+      var exportFile = this.getAutoExportLocation(node);
+      this.autoExportMessage(node.text, exportFile);
+	this.saveNode(node);
+    } else {
+      node['plugin_auto_export_enable'] = false;
+	this.saveNode(node);
+    }
+  },
+
+  getAutoExportLocation: function(node) {
+    // Gets either (a) the defined auto-export location from the node's plugin parameters, or (b) a location defined based on the folder name and ID.
+    var export_file = node['plugin_auto_export_file'] || '';
+
+    var export_filetype = Paperpile.main.globalSettings['auto_export_filetype'] || '.bib';
+
+    if (export_file === '') {
+      var unique_folder_label = this.getUniqueFolderBreadcrumb(node);
+      var file_name = unique_folder_label + export_filetype;
+      export_file = Paperpile.main.globalSettings.user_home + '/' + file_name;
+    }
+    return export_file;
+  },
+
   autoExportClick: function(item, event) {
-      Paperpile.log("HI!");
+    var parentMenu = item.parentMenu;
+    var node = parentMenu.node;
+
+    var initialFile = this.getAutoExportLocation(node);
+    var parts = Paperpile.utils.splitPath(initialFile);
+
+    var stopMenuHide = function(menu) {
+      return false;
+    };
+    parentMenu.on('beforehide', stopMenuHide);
+
+    win = new Paperpile.FileChooser({
+      saveMode: true,
+      saveDefault: parts.file,
+      currentRoot: parts.dir,
+      warnOnExisting: true,
+      callback: function(button, path) {
+        parentMenu.un('beforehide', stopMenuHide);
+        if (button == 'OK') {
+          node['plugin_auto_export_file'] = path;
+            this.saveNode(node);
+          parentMenu.hide();
+
+          this.autoExportMessage(node.text, path);
+        }
+      },
+      scope: this
+    });
+    win.show();
+    return false;
+  },
+
+  autoExportMessage: function(folder, file) {
+    Paperpile.status.updateMsg({
+      type: 'info',
+      msg: 'References in folder \'' + folder + '\' will now auto-export to ' + file,
+      hideOnClick: true,
+      duration: 5
+    });
   }
 
 });
@@ -1355,6 +1532,10 @@ Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
     return[];
   },
 
+  initShownItems: function() {
+
+  },
+
   hideItems: function() {
     this.items.each(function(item) {
       item.hide();
@@ -1363,6 +1544,8 @@ Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
     for (var i = 0; i < shownIds.length; i++) {
       this.items.get(shownIds[i]).show();
     }
+
+    this.initShownItems();
     this.doLayout();
   },
 
@@ -1404,13 +1587,26 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         xtype: 'enabledisablecheckitem',
         id: 'folder_menu_auto_export',
         text: Paperpile.Tree.AUTO_EXPORT_MENU_STRING,
-        hideOnClick: false,
-	  textDisabled: true,
+        hideOnClick: true,
+        textDisabled: true,
+        cls: 'pp-auto-export-menu-item',
         handler: tree.autoExportClick,
+        checkHandler: tree.autoExportCheck,
         scope: tree
       }]
     });
     Paperpile.Tree.FolderMenu.superclass.initComponent.call(this);
+  },
+
+  initShownItems: function() {
+    var item = this.items.get('folder_menu_auto_export');
+    if (this.node['plugin_auto_export_enable']) {
+	item.setChecked(true,true);
+      item.enableText();
+    } else {
+	item.setChecked(false,true); // Second param is true to suppress event.
+      item.disableText();
+    }
   },
 
   getShownItems: function(node) {

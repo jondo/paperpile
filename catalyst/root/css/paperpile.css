@@ -1679,7 +1679,13 @@ div.x-menu.x-menubar .x-menu-list .x-menu-list-item .x-menu-item .x-menu-item-ic
     padding-right: 15px!important
 } 
 
-
+/* EnableDisableCheckItem.js - cursor handling for the checkbutton icon. */
+a.x-item-text-disabled {
+    cursor: default;
+}
+.x-item-text-disabled .x-menu-item-icon {
+    cursor: pointer;
+}
 
 /* facebox and meta data entry */
 

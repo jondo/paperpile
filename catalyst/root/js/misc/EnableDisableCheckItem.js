@@ -1,43 +1,82 @@
 Ext.ux.EnableDisableCheckItem = Ext.extend(Ext.menu.CheckItem, {
 
   textDisabled: false,
-    onRender : function(c){
-        Ext.ux.EnableDisableCheckItem.superclass.onRender.apply(this, arguments);
 
-	if (this.textDisabled) {
-	    this.textEl.addClass('x-item-disabled');
-	}
+  onRender: function(c) {
+    Ext.ux.EnableDisableCheckItem.superclass.onRender.apply(this, arguments);
 
-	this.setHandler(this.cancelClickHandler,this);
-    },
+    if (this.textDisabled) {
+      this.disableText();
+    } else {
+      this.enableText();
+    }
 
-    cancelClickHandler: function(item,e) {
-	var returnValue = this.myHandleClick(e);
-	return returnValue;
-    },
+    //this.on('click',this.myClickHandler, this);
+  },
 
-    myHandleClick: function(e) {
-	var el = Ext.fly(e.target);
-	
-    if (el.hasClass('x-menu-item-text')) {
+  handleClick: function(e) {
+    var pm = this.parentMenu;
+    if (this.hideOnClick) {
+      if (pm.floating) {
+        pm.hide.defer(this.clickHideDelay, pm, [true]);
+      } else {
+        pm.deactivateActive();
+      }
+    }
+  },
+
+  onClick: function(e) {
+    var shouldContinue = this.myClickHandler(e);
+    if (shouldContinue && !this.disabled && this.fireEvent("click", this, e) !== false && (this.parentMenu && this.parentMenu.fireEvent("itemclick", this, e) !== false)) {
+      this.handleClick(e);
+    } else {
+      e.stopEvent();
+    }
+    //       Ext.menu.CheckItem.superclass.handleClick.apply(this, arguments);
+  },
+
+  myClickHandler: function(e) {
+    var el = Ext.get(e.target);
+
+    if (el.hasClass('x-menu-item-text') || el.hasClass('x-menu-item')) {
       if (this.textDisabled) {
+        e.stopEvent();
         return false;
       } else {
-        // Text clicked -- call actions as normal.
-	  return true;
+        return true;
       }
-    } else {
+    } else if (el.hasClass('x-menu-item-icon')) {
       if (this.textDisabled) {
-        this.textEl.removeClass('x-item-disabled');
-        this.textDisabled = false;
-        this.setChecked(false);
+        // Check button pressed, textDisabled -- turn me on, baby!
+        this.enableText();
+        this.setChecked(true);
+        var shouldActivate = !this.shouldDeactivate(e);
+        if (shouldActivate) {
+          this.activate();
+        }
       } else {
-        this.textEl.addClass('x-item-disabled');
-        this.textDisabled = true;
+        // Deactivate, un-highlight, disable, etc.
+        this.disableText();
         this.setChecked(false);
       }
-	return false;
+      e.stopEvent();
+      return false;
     }
+  },
+
+  disableText: function() {
+    this.deactivate();
+    this.textEl.addClass('x-item-disabled');
+    this.el.addClass('x-item-text-disabled');
+    this.textDisabled = true;
+    this.activeClass = '';
+  },
+
+  enableText: function() {
+    this.textEl.removeClass('x-item-disabled');
+    this.el.removeClass('x-item-text-disabled');
+    this.textDisabled = false;
+    this.activeClass = 'x-menu-item-active';
   }
 });
 

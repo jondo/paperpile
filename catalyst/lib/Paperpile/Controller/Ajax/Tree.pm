@@ -316,6 +316,26 @@ sub delete_active : Local {
 
 }
 
+sub save_node_params : Local {
+    my ($self, $c) = @_;
+
+    my $request_params = $c->request->params;
+    my $node_id = delete $request_params->{node_id};
+
+    my $tree = $c->session->{"tree"};
+    my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node_id ] );
+
+    my $node_params = $subtree->getNodeValue();
+
+    foreach my $key (keys %$request_params) {
+	$node_params->{$key} = $request_params->{$key};
+    }
+
+    $c->model('Library')->save_tree($tree);
+    $c->stash->{success} = 'true';
+    $c->forward('Paperpile::View::JSON');
+}
+
 sub rename_node : Local {
   my ( $self, $c ) = @_;
 
