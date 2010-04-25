@@ -68,10 +68,11 @@ sub page {
   my $page;
 
   if ( $self->mode eq 'FULLTEXT' ) {
-    $page =
-      $model->fulltext_search( $self->query, $offset, $limit, $self->order );
+    my $do_order = ( $self->total_entries < 1000 ) ? 1 : 0;
+    $page = $model->fulltext_search( $self->query, $offset, $limit, $self->order, 0, $do_order );
+
   } else {
-    $page = $model->standard_search( $self->query, $offset, $limit);
+    $page = $model->standard_search( $self->query, $offset, $limit, 0 );
   }
 
   if ( $self->update_total ) {
@@ -95,7 +96,7 @@ sub update_count {
   my $model = $self->get_model;
 
   if ( $self->mode eq 'FULLTEXT' ) {
-    $self->total_entries( $model->fulltext_count( $self->query) );
+    $self->total_entries( $model->fulltext_count( $self->query, 0) );
   } else {
     $self->total_entries( $model->standard_count( $self->query) );
   }

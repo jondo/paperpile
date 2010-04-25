@@ -90,6 +90,10 @@ sub initdb {
     $model->dbh->do("ALTER TABLE Publications ADD COLUMN $field TEXT");
   }
 
+  foreach my $field ('created','journal','year','authors','attachments','pdf','annote'){
+    $model->dbh->do("CREATE INDEX $field\_index ON Publications (trashed,$field);");
+  }
+
   # Just for now set some defaults here, will be refactored to set these
   # defaults with all other defaults in the Controller
   $model->dbh->do("INSERT INTO Tags (tag,style) VALUES ('Important',11);");

@@ -866,117 +866,227 @@ sub reset_db {
   return 1;
 }
 
+sub process_query_string {
+  ( my $self, my $query ) = @_;
+
+  # Remove trailing/leading whitespace
+  $query =~ s/^\s+//;
+  $query =~ s/\s+$//;
+
+  # Normalize all whitespace to one blank
+  $query =~ s/\s+/ /g;
+
+  # remove whitespaces around colons
+  $query =~ s/\s+:\s+/:/g;
+
+  # Normalize all quotes to double quotes
+  $query =~ tr/'/"/;
+
+  # Make sure quotes are balanced; if not silently remove all quotes
+  my ($quote_count) = ( $query =~ tr/"/"/ );
+  if ( $quote_count % 2 ) {
+    $query =~ s/"//g;
+  }
+
+  # Parse fields respecting quotes
+  my @chars      = split( //, $query );
+  my $curr_field = '';
+  my @fields     = ();
+  my $in_quotes  = 0;
+  foreach my $c (@chars) {
+    if ( $c eq ' ' and !$in_quotes ) {
+      push @fields, $curr_field;
+      $curr_field = '';
+      next;
+    }
+    if ( $c eq '"' ) {
+      $in_quotes = $in_quotes ? 0 : 1;
+      $curr_field .= $c;
+      next;
+    }
+    $curr_field .= $c;
+  }
+  push @fields, $curr_field;
+
+  my @new_fields = ();
+
+  foreach my $field (@fields) {
+
+    # We have a key:value pair. Silently ignore unknown fields
+    if ( $field =~ /(.*):(.*)/ ) {
+
+      my $known = 0;
+
+      foreach my $supported (
+        'text',  'abstract', 'notes',   'title',  'key',  'author',
+        'label', 'labelid',  'keyword', 'folder', 'year', 'journal'
+        ) {
+        if ( $1 eq $supported ) {
+          $known = 1;
+          last;
+        }
+      }
+      push @new_fields, $field if ($known);
+      next;
+    }
+
+    # We have a quoted "query" and use this verbatim
+    if ( $field =~ /".*"/ ) {
+      push @new_fields, $field;
+      next;
+    }
+
+    # We interpret one letter or two letters as initials and merge them
+    # with the previous term
+    if ( $field =~ /^\w{1,2}$/ ) {
+
+      # We ignore it if it is the first term
+      if ( scalar @new_fields == 0 ) {
+        next;
+      }
+
+      my $prev_field = pop @new_fields;
+      if (!( ( $prev_field =~ /:/ ) or ( $prev_field =~ /"/ ) )
+        or ( $prev_field =~ /author:/ and !( $prev_field =~ /"/ ) ) ) {
+        $prev_field =~ s/\*//;
+        $prev_field =~s/author://;
+        push @new_fields, 'author:"' . $prev_field . " " . $field . '"';
+      }
+      next;
+    }
+
+    # For all other terms:
+    $field .= "*";
+    push @new_fields, $field;
+
+  }
+
+  my $output = $self->dbh->quote(join(" ", @new_fields));
+
+  print STDERR "===========> $output\n";
+
+  return $output;
+
+}
+
 sub fulltext_count {
   ( my $self, my $query, my $trash ) = @_;
 
-  if ($trash) {
-    $trash = 1;
-  } else {
-    $trash = 0;
-  }
-
-  my $where;
+  my ( $where, $select );
   if ($query) {
-    $query = $self->dbh->quote("$query*");
-    $where = "WHERE Fulltext MATCH $query AND Publications.trashed=$trash";
+    $select =
+      "select count(*) from Publications join Fulltext on publications.rowid=Fulltext.rowid ";
+    #$query = $self->dbh->quote("$query*");
+    $query = $self->process_query_string($query);
+    $where = "WHERE Fulltext MATCH $query AND Publications.trashed=$trash ";
   } else {
-    $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
+    $select = "select count(*) from Publications ";
+    $where = "WHERE trashed=$trash ";
   }
 
-  my $count = $self->dbh->selectrow_array(
-    qq{select count(*) from Publications join Fulltext on 
-    publications.rowid=Fulltext.rowid $where}
-  );
+  print STDERR "===> Count query: $select $where\n";
+
+  my $count = $self->dbh->selectrow_array("$select $where");
 
   return $count;
 }
 
 sub fulltext_search {
-  ( my $self, my $_query, my $offset, my $limit, my $order, my $trash ) = @_;
 
-  $self->dbh->sqlite_create_function(
-    'rank', 1,
-    sub {
-      my $blob = $_[0];
+  ( my $self, my $_query, my $offset, my $limit, my $order, my $trash, my $do_order ) = @_;
 
-      # blob contains matchinfo as 32bit integers, we convert them
-      # into a normal array
-      my @all = unpack( "V*", $blob );
+  if ($do_order) {
 
-      # The first two integers are the number of phrases and the
-      # number of columns, resp.
-      my ( $num_phrases, $num_columns ) = ( $all[0], $all[1] );
+    # Custom rank function to distinguish hits in meta data and fulltext
+    $self->dbh->sqlite_create_function(
+      'rank', 1,
+      sub {
+        my $blob = $_[0];
 
-      # We are only interested in the number of matches for each of
-      # the 12 columns in our fulltext table
-      my @counts = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+        # blob contains matchinfo as 32bit integers, we convert them
+        # into a normal array
+        my @all = unpack( "V*", $blob );
 
-      foreach my $column ( 0 .. 11 ) {
-        foreach my $phrase ( 0 .. $num_phrases - 1 ) {
-          # The way the information is stored in the blob is different
-          # from the latest documentation at
-          # http://sqlite.org/fts3.html. In the SQLite version that is
-          # used by the DBD package we can get the number of matches
-          # like this:
-          $counts[$column] +=
-            $all[ 2 + 1 * $num_columns * $num_phrases + $num_columns * $phrase + $column ];
+        # The first two integers are the number of phrases and the
+        # number of columns, resp.
+        my ( $num_phrases, $num_columns ) = ( $all[0], $all[1] );
+
+        # We are only interested in the number of matches for each of
+        # the 12 columns in our fulltext table
+        # Order: text abstract notes title key author label labelid keyword folder year journal
+        my @counts = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+
+        foreach my $column ( 0 .. 11 ) {
+          foreach my $phrase ( 0 .. $num_phrases - 1 ) {
+
+            # The way the information is stored in the blob is different
+            # from the latest documentation at
+            # http://sqlite.org/fts3.html. In the SQLite version that is
+            # used by the DBD package we can get the number of matches
+            # like this:
+            $counts[$column] +=
+              $all[ 2 + 1 * $num_columns * $num_phrases + $num_columns * $phrase + $column ];
+          }
         }
-      }
-      my $r = join( ",", @counts );
-      return $r;
-    }
-  );
 
-  my $select = 'SELECT *,
-     Publications.rowid as _rowid,
-     Publications.title as title,
-     Publications.abstract as abstract';
+        my $score = 0;
+
+        my $weights = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+        # If hit occured in title, key, author, year or journal we show them first
+        my $sum = $counts[3] + $counts[4] + $counts[5] + $counts[10] + $counts[11];
+
+        $score = $sum * 10;
+
+        return $score;
+      }
+    );
+  }
+
+  my $select =
+    'SELECT *, Publications.rowid as _rowid,  Publications.title as title, Publications.abstract as abstract';
 
   $order = "created DESC" if !$order;
 
+  my ( $where, $query, $rank, $sth );
+
   if ($_query) {
+
     $select .=
-      ",offsets(Fulltext) as offsets, rank(matchinfo(Fulltext)) as r FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
+      ",offsets(Fulltext) as offsets FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
+    #$query = $self->dbh->quote("$_query*");
+
+    $query = $self->process_query_string($_query);
+
+    $where = "WHERE Fulltext MATCH $query AND Publications.trashed=$trash";
+    if ($do_order) {
+      $rank = "ORDER BY rank(matchinfo(Fulltext)) DESC, $order";
+    } else {
+      $rank = "";
+    }
+
+    $sth = $self->dbh->prepare("$select $where $rank LIMIT $limit OFFSET $offset");
+    print STDERR "$select $where $rank LIMIT $limit OFFSET $offset\n";
+
   } else {
     $select .= ' FROM Publications ';
     $order =~ s/author/authors/;
     $order =~ s/notes/annote/;
-  }
-
-  if ($trash) {
-    $trash = 1;
-  } else {
-    $trash = 0;
-  }
-
-  my ( $where, $query );
-
-  if ($_query) {
-    $query = $self->dbh->quote("$_query*");
-    $where = "WHERE Fulltext MATCH $query AND Publications.trashed=$trash";
-  } else {
     $where = "WHERE Publications.trashed=$trash";
-  }
 
-  my $sth = $self->dbh->prepare("$select $where ORDER BY $order LIMIT $limit OFFSET $offset");
+    $sth   = $self->dbh->prepare("$select $where ORDER BY $order LIMIT $limit OFFSET $offset");
+    print STDERR "$select $where ORDER BY $order LIMIT $limit OFFSET $offset\n";
+  }
 
   $sth->execute;
 
   my @page = ();
-
-  my @citation_hits = ();
-  my @fulltext_hits = ();
 
   while ( my $row = $sth->fetchrow_hashref() ) {
 
     my $data = {};
 
     foreach my $field ( keys %$row ) {
-
-      if ( $field eq 'title' ) {
-        $data->{title} = $row->{r} . ": " . $row->{title};
-        next;
-      }
 
       if ( $field eq 'offsets' ) {
         my ( $snippets_text, $snippets_abstract, $snippets_notes ) =
@@ -1010,7 +1120,6 @@ sub fulltext_search {
   }
 
   return [@page];
-
 }
 
 sub standard_count {

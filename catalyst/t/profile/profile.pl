@@ -7,36 +7,146 @@ BEGIN {
 use strict;
 use Data::Dumper;
 use lib '../../lib';
-use Paperpile;
 
-my $model = Paperpile::Model::Library->new();
-$model->set_dsn( "dbi:SQLite:" . "/home/wash/.paperdev/paperpile.ppl" );
+#use Paperpile;
+#use Paperpile::Model::Library;
 
-$model->dbh->sqlite_create_function( 'now', 1, sub { 
-                                       return $_[0];
-                                     } );
+my $query = 'author : "washietl s" 2007 text:test hofacker il "term1   term2" ';
 
-#my $results = $model->fulltext_search('test',0,10);
+print "$query\n";
 
-my $sth = $model->dbh->prepare("SELECT now(matchinfo(Fulltext_citation)) as time, title  FROM Fulltext_citation WHERE Fulltext_citation MATCH 'washietl OR stefan';");
+# Remove trailing/leading whitespace
+$query =~ s/^\s+//;
+$query =~ s/\s+$//;
 
-$sth->execute;
+# Normalize all whitespace to one blank
+$query =~ s/\s+/ /g;
 
-while ( my $row = $sth->fetchrow_hashref() ) {
+# remove whitespaces around colons
+$query =~ s/\s+:\s+/:/g;
 
-  my $blob = $row->{time};
+# Normalize all quotes to double quotes
+$query =~ tr/'/"/;
 
-  my @list = unpack ('VV',$row->{time});
+# Make sure quotes are balanced; if not silently remove all quotes
+my ($quote_count) = ( $query =~ tr/"/"/ );
+if ( $quote_count % 2 ){
+  $query=~s/"//g;
+}
 
-  print $list[0], " ", $list[1], "\n";
+# Parse fields respecting quotes
+my @chars      = split( //, $query );
+my $curr_field = '';
+my @fields     = ();
+my $in_quotes  = 0;
+foreach my $c (@chars) {
+  if ( $c eq ' ' and !$in_quotes ) {
+    push @fields, $curr_field;
+    $curr_field = '';
+    next;
+  }
+  if ( $c eq '"' ) {
+    $in_quotes = $in_quotes ? 0 : 1;
+    $curr_field .= $c;
+    next;
+  }
+  $curr_field .= $c;
+}
+push @fields, $curr_field;
 
-  print $row->{title}, " ",  $row->{time}, "\n";
+my @new_fields = ();
+
+foreach my $field (@fields) {
+
+  # We have a key:value pair. Silently ignore unknown fields
+  if ( $field =~ /(.*):(.*)/ ) {
+
+    my $known = 0;
+
+    foreach my $supported (
+      'text',  'abstract', 'notes',   'title',  'key',  'author',
+      'label', 'labelid',  'keyword', 'folder', 'year', 'journal'
+      ) {
+      if ( $1 eq $supported ) {
+        $known = 1;
+        last;
+      }
+    }
+    push @new_fields, $field if ($known);
+    next;
+  }
+
+  # We have a quoted "query" and use this verbatim
+  if ( $field =~ /".*"/ ) {
+    push @new_fields, $field;
+    next;
+  }
+
+  # We interpret one letter or two letters as initials and merge them
+  # with the previous term
+  if ( $field =~ /^\w{1,2}$/ ) {
+
+    # We ignore it if it is the first term
+    if ( scalar @new_fields == 0 ) {
+      next;
+    }
+
+    my $prev_field = pop @new_fields;
+    if (!( ( $prev_field =~ /:/ ) or ( $prev_field =~ /"/ ) )
+      or ( $prev_field =~ /author:/ and !( $prev_field =~ /"/ ) ) ) {
+      $prev_field =~ s/\*//;
+      push @new_fields, '"' . $prev_field . " " . $field . '"';
+    }
+    next;
+  }
+
+  # For all other terms:
+  $field .= "*";
+  push @new_fields, $field;
 
 }
-#print Dumper($results);
 
+foreach my $field (@new_fields) {
+  print "$field\n";
+}
 
-#sub fulltext_search {
-#  ( my $self, my $_query, my $offset, my $limit, my $order, my $search_pdf, my $trash ) = @_;
+# use Time::HiRes qw(usleep ualarm gettimeofday tv_interval);
 
+# print "Opening model... ";
 
+# my $model = Paperpile::Model::Library->new();
+# $model->set_dsn( "dbi:SQLite:" . "/home/wash/.paperdev/paperpile.ppl" );
+
+# print "Done.\n";
+
+# my $t0 = [gettimeofday];
+
+# my $page  = $model->fulltext_search( ' a*', 0,  25, undef , 0, 1);
+
+# print "Done\n";
+
+# my $t1 = [gettimeofday];
+
+# my $elapsed = tv_interval ($t0);
+
+# print "$elapsed\n";
+
+# $t0 = [gettimeofday];
+
+# my  $sth = $model->dbh->prepare(
+#    qq{
+# SELECT *,
+#      Publications.rowid as _rowid,
+#      Publications.title as title,
+#      Publications.abstract as abstract,offsets(Fulltext) as offsets FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid  WHERE Fulltext MATCH ' r*' AND Publications.trashed=0 ORDER BY author ASC LIMIT 25 OFFSET 0;
+
+#  }
+#  );
+
+# $sth->execute;
+
+# $t1 = [gettimeofday];
+
+# $elapsed = tv_interval ($t0);
+
+# print "$elapsed\n";
