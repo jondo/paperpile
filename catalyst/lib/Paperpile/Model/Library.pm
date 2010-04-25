@@ -882,6 +882,10 @@ sub process_query_string {
   # Normalize all quotes to double quotes
   $query =~ tr/'/"/;
 
+  # dashed words are indexed seperately so we can find x-chromosome by
+  # converting the query to to "x chromosome"
+  $query =~ s/(\S+)-(\S+)/"$1 $2"/;
+
   # Make sure quotes are balanced; if not silently remove all quotes
   my ($quote_count) = ( $query =~ tr/"/"/ );
   if ( $quote_count % 2 ) {
@@ -912,8 +916,16 @@ sub process_query_string {
 
   foreach my $field (@fields) {
 
-    # We have a key:value pair. Silently ignore unknown fields
+    # Special keywords are converted to uppercase and taken verbatim
+    if ( $field =~ /^(not|and|or)$/i ) {
+      push @new_fields, uc($1);
+      next;
+    }
+
+    # We have a key:value pair like author:chang
     if ( $field =~ /(.*):(.*)/ ) {
+
+      my ( $key, $value ) = ( $1, $2 );
 
       my $known = 0;
 
@@ -926,7 +938,26 @@ sub process_query_string {
           last;
         }
       }
-      push @new_fields, $field if ($known);
+
+      # Silently ignore unknown fields
+      next if not $known;
+
+      # Unfortunately syntax like author:"hofacker il" is not
+      # supported any more in the current fts3 code and yields an
+      # error. So we rewrite it to:
+      # "hofacker il" author:hofacker author:il
+
+      if ( $value =~ /"(.*)"/ ) {
+        my $inner = $1;
+        push @new_fields, "\"$inner\"";
+        foreach my $part ( split( /\s/, $inner ) ) {
+          push @new_fields, "$key:$part";
+        }
+        next;
+      }
+
+      # Normal fields: author:chang
+      push @new_fields, $field;
       next;
     }
 
@@ -936,22 +967,8 @@ sub process_query_string {
       next;
     }
 
-    # We interpret one letter or two letters as initials and merge them
-    # with the previous term
-    if ( $field =~ /^\w{1,2}$/ ) {
-
-      # We ignore it if it is the first term
-      if ( scalar @new_fields == 0 ) {
-        next;
-      }
-
-      my $prev_field = pop @new_fields;
-      if (!( ( $prev_field =~ /:/ ) or ( $prev_field =~ /"/ ) )
-        or ( $prev_field =~ /author:/ and !( $prev_field =~ /"/ ) ) ) {
-        $prev_field =~ s/\*//;
-        $prev_field =~s/author://;
-        push @new_fields, 'author:"' . $prev_field . " " . $field . '"';
-      }
+    # We ignore one and two letter words not part of a quoted phrase
+    if ( length($field) < 3 ) {
       next;
     }
 
@@ -961,9 +978,7 @@ sub process_query_string {
 
   }
 
-  my $output = $self->dbh->quote(join(" ", @new_fields));
-
-  print STDERR "===========> $output\n";
+  my $output = $self->dbh->quote( join( " ", @new_fields ) );
 
   return $output;
 
@@ -976,7 +991,6 @@ sub fulltext_count {
   if ($query) {
     $select =
       "select count(*) from Publications join Fulltext on publications.rowid=Fulltext.rowid ";
-    #$query = $self->dbh->quote("$query*");
     $query = $self->process_query_string($query);
     $where = "WHERE Fulltext MATCH $query AND Publications.trashed=$trash ";
   } else {
@@ -1054,7 +1068,6 @@ sub fulltext_search {
 
     $select .=
       ",offsets(Fulltext) as offsets FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
-    #$query = $self->dbh->quote("$_query*");
 
     $query = $self->process_query_string($_query);
 

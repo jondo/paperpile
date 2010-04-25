@@ -68,7 +68,7 @@ sub page {
   my $page;
 
   if ( $self->mode eq 'FULLTEXT' ) {
-    my $do_order = ( $self->total_entries < 1000 ) ? 1 : 0;
+    my $do_order = ( $self->total_entries < 5000 ) ? 1 : 0;
     $page = $model->fulltext_search( $self->query, $offset, $limit, $self->order, 0, $do_order );
 
   } else {
