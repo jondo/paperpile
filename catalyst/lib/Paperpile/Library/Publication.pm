@@ -163,9 +163,7 @@ has '_related_articles' => ( is => 'rw', default => '' );
 # If a search in the local database returns a hit in the fulltext,
 # abstract or notes the hit+context ('snippet') is stored in these
 # fields
-has '_snippets_text'     => ( is => 'rw');
-has '_snippets_abstract' => ( is => 'rw');
-has '_snippets_notes'    => ( is => 'rw');
+has '_snippets'     => ( is => 'rw');
 
 # CSS style to highlight the entry in the frontend
 has '_highlight' => ( is => 'rw', default => 'pp-grid-highlight0' );

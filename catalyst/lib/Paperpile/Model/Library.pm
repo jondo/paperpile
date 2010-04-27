@@ -998,7 +998,7 @@ sub fulltext_count {
     $where = "WHERE trashed=$trash ";
   }
 
-  print STDERR "===> Count query: $select $where\n";
+  #print STDERR "===> Count query: $select $where\n";
 
   my $count = $self->dbh->selectrow_array("$select $where");
 
@@ -1079,7 +1079,7 @@ sub fulltext_search {
     }
 
     $sth = $self->dbh->prepare("$select $where $rank LIMIT $limit OFFSET $offset");
-    print STDERR "$select $where $rank LIMIT $limit OFFSET $offset\n";
+    #print STDERR "$select $where $rank LIMIT $limit OFFSET $offset\n";
 
   } else {
     $select .= ' FROM Publications ';
@@ -1088,7 +1088,7 @@ sub fulltext_search {
     $where = "WHERE Publications.trashed=$trash";
 
     $sth   = $self->dbh->prepare("$select $where ORDER BY $order LIMIT $limit OFFSET $offset");
-    print STDERR "$select $where ORDER BY $order LIMIT $limit OFFSET $offset\n";
+    #print STDERR "$select $where ORDER BY $order LIMIT $limit OFFSET $offset\n";
   }
 
   $sth->execute;
@@ -1102,11 +1102,7 @@ sub fulltext_search {
     foreach my $field ( keys %$row ) {
 
       if ( $field eq 'offsets' ) {
-        my ( $snippets_text, $snippets_abstract, $snippets_notes ) =
-          $self->_snippets( $row->{_rowid}, $row->{offsets}, $_query );
-        $data->{_snippets_text}     = $snippets_text;
-        $data->{_snippets_abstract} = $snippets_abstract;
-        $data->{_snippets_notes}    = $snippets_notes;
+        $data->{_snippets} = $self->_snippets( $row, $_query );
         next;
       }
 
@@ -1662,19 +1658,32 @@ sub _remove_from_flatlist {
 
 sub _snippets {
 
-  my ( $self, $rowid, $offsets, $query, $search_pdf ) = @_;
+  my ( $self, $row, $query ) = @_;
 
   if ( not $query ) {
-    return ( '', '', '' );
+    return ('');
   }
+
+  my %data;
+
+  $data{text}     = encode( 'UTF-8', $row->{text} );
+  $data{abstract} = encode( 'UTF-8', $row->{abstract} );
+  $data{notes}    = encode( 'UTF-8', $row->{notes} );
+
+  my $offsets = $row->{offsets};
+
+  $query =~ s/^\s+//;
+  $query =~ s/\s+$//;
+  $query =~ s/"//g;
+  $query =~ s/\S+://g;
+  $query =~ s/and//gi;
+  $query =~ s/or//gi;
+  $query =~ s/not//gi;
+  $query =~ s/\s+/ /g;
 
   my @terms = split( /\s+/, $query );
-  @terms = ($query) if ( not @terms );
 
-  foreach
-    my $field (qw/key year journal title abstract notes author label labelid keyword folder text/) {
-    $query =~ s/$field://g;
-  }
+  @terms = ($query) if ( not @terms );
 
   # Offset format is 4 integers separated by blank
 
@@ -1692,48 +1701,109 @@ sub _snippets {
   # This is the order of our fields in the fulltext table
   my @fields = ( 'text', 'abstract', 'notes' );
 
-  my %snippets = ( text => '', abstract => '', notes => '' );
-
-  my $context = 45;    # Characters of context
+  my %snippets = ( text => [], abstract => [], notes => [] );
 
   while ( $offsets =~ /(\d+) (\d+) (\d+) (\d+)/g ) {
 
+    my ( $column, $term, $start, $length ) = ( $1, $2, $3, $4 );
+
     # We only generate snippets for text, abstract and notes
-    next if ( $1 > 2);
+    next if ( $column > 2 );
 
-    my $field = $fields[$1];
+    my $field = $fields[$column];
 
-    # We currently take only the first occurence
-    if ( $snippets{$field} eq '' ) {
-      ( my $text ) = $self->dbh->selectrow_array("SELECT $field FROM Fulltext WHERE rowid=$rowid ");
+    if ( scalar @{ $snippets{$field} } < 5 ) {
 
-      # Convert to bytes to get offsets exactly
-      $text = encode( 'UTF-8', $text );
+      my $snippet;
+      my $match = substr( $data{$field}, $start, $length );
 
-      my $from = $3 - $context;
-      $from = 0 if $from < 0;
+      my $context = 100;
 
-      my $snippet = substr( $text, $from, $4 + 2 * $context );
+      my $before;
 
-      # Convert back to unicode
-      $snippet = decode( 'UTF-8', $snippet );
-
-      # Remove word fragments at beginning and start
-      $snippet =~ s/\w+\b//;
-      $snippet =~ s/\b\w+$//;
-
-      $snippet = "\x{2026}" . $snippet . "\x{2026}";
-
-      foreach my $term (@terms) {
-        $snippet =~ s/($query)/<span class="highlight">$1<\/span>/ig;
+      if ( $start < $context ) {
+        $before = substr( $data{$field}, 0, $start );
+      } else {
+        $before = substr( $data{$field}, $start - $context, $context );
       }
 
-      $snippets{$field} = $snippet;
+      my $after = substr( $data{$field}, $start + $length, $context );
+
+      #$before = decode( 'UTF-8', $before );
+      #$after = decode( 'UTF-8', $before );
+
+      if ( $before =~ /(^|[.?!]\s+)([A-Z].*)/ ) {
+        $before = $2;
+      }
+
+      if ( $after =~ /(.*[.?!])\s+($|[A-Z])/ ) {
+        $after = $1;
+      }
+
+      if ( length($after) > 50 ) {
+        $after = substr( $after, 0, 50 );
+      }
+
+      if ( length($before) > 50 ) {
+        $before = substr( $before, length($before) - 50, 50 );
+      }
+
+      if ( $after =~ /\s/ ) {
+        $after =~ s/\s\w+$//;
+      }
+
+      if ( $before =~ /\s/ ) {
+        $before =~ s/\w+\s//;
+      }
+
+      my $score = 0;
+
+      $snippet = "$before $match $after";
+
+      foreach my $term (@terms) {
+        while ( $snippet =~ /$term/g ) {
+          $score += 1;
+        }
+      }
+
+      #$snippet = "\x{2026}" . $snippet . "\x{2026}";
+
+      push @{ $snippets{$field} }, { snippet => $snippet, score => $score };
     }
   }
 
-  return ( $snippets{text}, $snippets{abstract}, $snippets{notes} );
+  my $output = '<br>';
+
+  foreach my $what ( 'text', 'abstract', 'notes' ) {
+
+    $snippets{$what} = [ sort { $a->{score} <=> $b->{score} } @{ $snippets{$what} } ];
+
+    foreach my $s ( @{ $snippets{$what} } ) {
+      $output .= $s->{snippet} . "(" . $s->{score} . ")" . "<br>";
+    }
+    $output .= "<br>";
+  }
+
+  return ($output);
 
 }
+
+sub _lcss {
+  my ( $self, $needle, $haystack ) = @_;
+  ( $needle, $haystack ) = ( $haystack, $needle )
+    if length $$needle > length $$haystack;
+
+  my ( $longest_c, $longest ) = 0;
+  for my $start ( 0 .. length $$needle ) {
+    for my $len ( reverse $start + 1 .. length $$needle ) {
+      my $substr = substr( $$needle, $start, $len );
+      length $1 > $longest_c and ( $longest_c, $longest ) = ( length $1, $1 )
+        while $$haystack =~ m[($substr)]g;
+    }
+  }
+  return $longest;
+}
+
+
 
 1;
