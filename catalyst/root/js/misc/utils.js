@@ -14,8 +14,22 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.utils = {
+
+  // implementation from http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
+  generateUUID: function() {
+    // http://www.ietf.org/rfc/rfc4122.txt
+    var s = [];
+    var hexDigits = "0123456789ABCDEF";
+    for (var i = 0; i < 32; i++) {
+      s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    }
+    s[12] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
+    s[16] = hexDigits.substr((s[16] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+    var uuid = s.join("");
+    return uuid;
+  },
+
   splitPath: function(path) {
     var parts = path.split('/');
     var file = parts[parts.length - 1];
@@ -66,7 +80,7 @@ Paperpile.utils = {
         if (process.getExitCode() != 0) {
           Paperpile.status.updateMsg({
             type: 'error',
-            msg: 'Could not open file '+ Paperpile.utils.splitPath(file).file,
+            msg: 'Could not open file ' + Paperpile.utils.splitPath(file).file,
             hideOnClick: true
           });
         }

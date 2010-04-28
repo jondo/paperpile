@@ -132,8 +132,6 @@ sub new_folder : Local {
   my $node_id   = $c->request->params->{node_id};
   my $parent_id = $c->request->params->{parent_id};
 
-  my $path = $c->request->params->{path};
-
   my $tree = $c->session->{"tree"};
 
   my $sub_tree = $c->forward( 'private/get_subtree', [ $tree, $parent_id ] );

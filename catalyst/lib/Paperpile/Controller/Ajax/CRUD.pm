@@ -358,6 +358,39 @@ sub new_tag : Local {
 
 }
 
+sub new_collection : Local {
+  my ( $self, $c ) = @_;
+
+  my $guid   = $c->request->params->{node_id};
+  my $parent = $c->request->params->{parent_id};
+  my $name   = $c->request->params->{text};
+  my $type   = $c->request->params->{type};
+  my $style  = $c->request->params->{style} || '0';
+
+  my %params = ( draggable => \1 );
+  foreach my $key ( keys %{ $c->request->params } ) {
+    next if $key =~ /^_/;
+    $params{$key} = $c->request->params->{$key};
+  }
+  delete( $params{parent} );
+
+  #my $tree = $c->session->{"tree"};
+  #my $sub_tree = $c->forward( 'private/get_subtree', [ $tree, $parent_id ] );
+  #$params{id} = $node_id;
+  #delete( $params{node_id} );
+  #my $new = Tree::Simple->new( {%params} );
+  #$new->setUID($node_id);
+  #$sub_tree->addChild($new);
+
+  $c->model('Library')->new_collection( $guid, $name, $type, $parent, $style, \%params );
+
+  #$c->model('Library')->save_tree($tree);
+
+}
+
+
+
+
 sub delete_tag : Local {
   my ( $self, $c ) = @_;
 

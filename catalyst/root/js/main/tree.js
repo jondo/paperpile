@@ -642,7 +642,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         text: title,
         iconCls: pars.plugin_iconCls,
         leaf: true,
-        id: this.generateUID()
+        id: Paperpile.utils.generateUUID()
       }));
 
       // apply the parameters
@@ -724,7 +724,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       draggable: true,
       expanded: true,
       children: [],
-      id: this.generateUID()
+      id: Paperpile.utils.generateUUID()
     }));
 
     var pars = {
@@ -785,7 +785,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         leaf: false,
         // Also important: use the loaded:true parameter to signal the UI that there aren't children waiting to be loaded. Things mess up without this!!!
         loaded: true,
-        id: this.generateUID()
+        id: Paperpile.utils.generateUUID()
       }));
 
       newNode.init({
@@ -845,17 +845,15 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       iconCls: 'pp-icon-folder',
       node_id: node.id,
       plugin_title: node.text,
-      path: this.relativeFolderPath(node),
+      //path: this.relativeFolderPath(node),
       parent_id: node.parentNode.id
     });
 
     // Send to backend
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/new_folder'),
+      url: Paperpile.Url('/ajax/crud/new_collection'),
       params: pars,
       success: function() {
-        //Ext.getCmp('statusbar').clearStatus();
-        //Ext.getCmp('statusbar').setText('Added new folder');
       },
       failure: Paperpile.main.onError
     });
@@ -963,9 +961,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     node.reload();
   },
 
-  generateUID: function() {
-    return ((new Date()).getTime() + "" + Math.floor(Math.random() * 1000000)).substr(0, 18);
-  },
 
   configureSubtree: function(node) {
     this.configureNode = node;
@@ -1053,7 +1048,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           leaf: true,
           expanded: true,
           children: [],
-          id: this.generateUID()
+          id: Paperpile.utils.generateUUID()
         }));
       var pars = {
         type: 'TAGS',

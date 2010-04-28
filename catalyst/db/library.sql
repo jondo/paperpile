@@ -53,6 +53,17 @@ CREATE TABLE Folders (
   folder_id           TEXT UNIQUE
 );
 
+CREATE TABLE Collections (
+  guid          TEXT UNIQUE,
+  name          TEXT,
+  type          TEXT,
+  parent        TEXT,
+  sort_order    INTEGER,
+  style         TEXT,   
+  data          TEXT    
+);
+
+
 CREATE TABLE Folder_Publication (
   folder_id         INTEGER,
   publication_id    INTEGER,

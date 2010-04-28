@@ -683,6 +683,43 @@ sub rename_tag {
 
 }
 
+
+sub new_collection {
+
+  my ( $self, $guid, $name, $type, $parent, $style, $data ) = @_;
+
+  my $dbh = $self->dbh;
+
+  $data = freeze($data);
+
+  if ( $parent =~ /ROOT/ ) {
+    $parent = 'ROOT';
+  }
+
+  $guid   = $dbh->quote($guid);
+  $name   = $dbh->quote($name);
+  $type   = $dbh->quote($type);
+  $parent = $dbh->quote($parent);
+  $style  = $dbh->quote($style);
+  $data   = $dbh->quote($data);
+
+  ( my $sort_order ) =
+    $dbh->selectrow_array("SELECT max(sort_order) FROM Collections WHERE parent=$parent");
+
+  if (defined $sort_order){
+    $sort_order++;
+  } else {
+    $sort_order = 0;
+  }
+
+  $self->dbh->do(
+    "INSERT INTO Collections (guid, name, type, parent, sort_order, style, data) VALUES($guid, $name, $type, $parent, $sort_order, $style, $data)"
+  );
+
+  #print STDERR Dumper(\@_);
+
+}
+
 sub insert_folder {
   ( my $self, my $folder_id ) = @_;
 
