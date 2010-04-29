@@ -116,7 +116,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     }
     var viewParams = {
       title: title,
-      iconCls: iconCls,
+      iconCls: pars.plugin_iconCls,
       gridParams: pars,
       closable: true,
       itemId: itemId

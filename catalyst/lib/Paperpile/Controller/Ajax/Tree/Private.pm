@@ -372,4 +372,59 @@ sub get_tags : Private {
   }
 }
 
+sub get_collections : Private {
+
+  my ( $self, $c, $tree, $type ) = @_;
+
+  my $sth = $c->model('Library')->dbh->prepare("SELECT * from Collections;");
+
+  $sth->execute();
+  my @collections = ();
+
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    push @collections, $row;
+  }
+
+  print STDERR Dumper( \@collections );
+
+  # Remove all children (old collections) first
+  foreach my $child ( $tree->getAllChildren ) {
+    $tree->removeChild($child);
+  }
+
+  # Sort the list of tags by their defined sort_order.
+  #@tags = sort { $a->{sort_order} <=> $b->{sort_order} } @tags;
+
+  foreach my $coll (@collections) {
+
+    my $pars = {
+      text         => $coll->{name},
+      type         => $type,
+      hidden       => 0,
+      plugin_name  => 'DB',
+      plugin_mode  => 'FULLTEXT',
+      plugin_title => $coll->{name},
+    };
+
+    if ( $type eq 'FOLDER' ) {
+      $pars->{plugin_query}      = "folderid:" . $coll->{guid};
+      $pars->{plugin_base_query} = "folderid:" . $coll->{guid};
+      $pars->{iconCls}           = 'pp-icon-folder';
+      $pars->{plugin_iconCls}    = 'pp-icon-folder';
+    } else {
+
+      #$pars->{cls} ='pp-tag-tree-node pp-tag-tree-style-' . $tag->{style},
+      #$pars->{tagStyle} => $coll->{style},
+      #$pars->{plugin_iconCls} => 'pp-icon-tag';
+
+    }
+
+    # Add tags
+    $tree->addChild( Tree::Simple->new($pars) );
+  }
+}
+
+
+
+
 1;

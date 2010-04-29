@@ -57,6 +57,11 @@ sub get_node : Local {
     $c->forward( 'private/get_tags', [$subtree] );
   }
 
+  if ( $subtree->getUID =~ /FOLDER_ROOT/ ) {
+    $c->forward( 'private/get_collections', [$subtree,'FOLDER'] );
+  }
+
+
   my @data = ();
   foreach my $child ( $subtree->getAllChildren ) {
     push @data, $self->_get_js_object( $child, $c->request->params->{checked} );
@@ -74,6 +79,9 @@ sub get_complete_tree {
   # Tags always generated dynamically
   my $subtree = $c->forward( 'private/get_subtree', [ $tree, 'TAGS_ROOT' ] );
   $c->forward( 'private/get_tags', [$subtree] );
+
+  $subtree = $c->forward( 'private/get_subtree', [ $tree, 'FOLDER_ROOT' ] );
+  $c->forward( 'private/get_collections', [$subtree,'FOLDER'] );
 
   my $dump = '';
 
