@@ -372,58 +372,79 @@ sub get_tags : Private {
   }
 }
 
+# Restore subtree for labels and folders from database
+
 sub get_collections : Private {
 
   my ( $self, $c, $tree, $type ) = @_;
 
-  my $sth = $c->model('Library')->dbh->prepare("SELECT * from Collections;");
-
-  $sth->execute();
-  my @collections = ();
-
-  while ( my $row = $sth->fetchrow_hashref() ) {
-    push @collections, $row;
-  }
-
-  print STDERR Dumper( \@collections );
-
-  # Remove all children (old collections) first
+  # First remove old children
   foreach my $child ( $tree->getAllChildren ) {
     $tree->removeChild($child);
   }
 
-  # Sort the list of tags by their defined sort_order.
-  #@tags = sort { $a->{sort_order} <=> $b->{sort_order} } @tags;
+  # Collect all data from the database table
+  my @collections = ();
+  my $sth = $c->model('Library')->dbh->prepare("SELECT * from Collections;");
+  $sth->execute();
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    push @collections, $row;
+  }
 
-  foreach my $coll (@collections) {
+  # Recursively fill subtree
+  _add_collection_subtree( $tree, [@collections], 'ROOT', $type );
 
-    my $pars = {
-      text         => $coll->{name},
-      type         => $type,
-      hidden       => 0,
-      plugin_name  => 'DB',
-      plugin_mode  => 'FULLTEXT',
-      plugin_title => $coll->{name},
-    };
+}
 
-    if ( $type eq 'FOLDER' ) {
-      $pars->{plugin_query}      = "folderid:" . $coll->{guid};
-      $pars->{plugin_base_query} = "folderid:" . $coll->{guid};
-      $pars->{iconCls}           = 'pp-icon-folder';
-      $pars->{plugin_iconCls}    = 'pp-icon-folder';
-    } else {
+# Recursive function that adds all children in the right order for the
+# current parent node
 
-      #$pars->{cls} ='pp-tag-tree-node pp-tag-tree-style-' . $tag->{style},
-      #$pars->{tagStyle} => $coll->{style},
-      #$pars->{plugin_iconCls} => 'pp-icon-tag';
+sub _add_collection_subtree {
+  my ( $tree, $collections, $parent, $type ) = @_;
 
-    }
 
-    # Add tags
-    $tree->addChild( Tree::Simple->new($pars) );
+  my @nodes = grep { $_->{parent} eq $parent } @$collections;
+
+  @nodes = sort { $a->{sort_order} <=> $b->{sort_order} } @nodes;
+
+  foreach my $node (@nodes) {
+    my $new_node = Tree::Simple->new( _get_collection_pars( $node, $type ) );
+    $new_node->setUID( $node->{guid} );
+    _add_collection_subtree( $new_node, $collections, $node->{guid}, $type );
+    $tree->addChild($new_node);
   }
 }
 
+# Helper function to create a node object for a label or folder node
+
+sub _get_collection_pars {
+
+  my ( $coll, $type ) = @_;
+
+  my $pars = {
+    text         => $coll->{name},
+    type         => $type,
+    hidden       => 0,
+    plugin_name  => 'DB',
+    plugin_mode  => 'FULLTEXT',
+    plugin_title => $coll->{name},
+  };
+
+  if ( $type eq 'FOLDER' ) {
+    $pars->{plugin_query}      = "folderid:" . $coll->{guid};
+    $pars->{plugin_base_query} = "folderid:" . $coll->{guid};
+    $pars->{iconCls}           = 'pp-icon-folder';
+    $pars->{plugin_iconCls}    = 'pp-icon-folder';
+  } else {
+
+    #$pars->{cls} ='pp-tag-tree-node pp-tag-tree-style-' . $tag->{style},
+    #$pars->{tagStyle} => $coll->{style},
+    #$pars->{plugin_iconCls} => 'pp-icon-tag';
+
+  }
+
+  return $pars;
+}
 
 
 
