@@ -944,3 +944,47 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sat May  1 12:04:07 2010: C<Module> L<Data::UUID|Data::UUID>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.203>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat May  1 12:04:09 2010: C<Module> L<Data::GUID|Data::GUID>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.045>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

@@ -94,6 +94,8 @@ sub initdb {
     $model->dbh->do("CREATE INDEX $field\_index ON Publications (trashed,$field);");
   }
 
+  $model->dbh->do("CREATE INDEX guid_index ON Publications (guid);");
+
   # Just for now set some defaults here, will be refactored to set these
   # defaults with all other defaults in the Controller
   $model->dbh->do("INSERT INTO Tags (tag,style) VALUES ('Important',11);");

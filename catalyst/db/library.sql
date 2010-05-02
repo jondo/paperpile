@@ -21,6 +21,7 @@ CREATE TABLE Settings(
 
 CREATE TABLE Publications(
   sha1               TEXT UNIQUE,
+  guid               TEXT UNIQUE,
   pdf                TEXT,
   pdf_url            TEXT,
   pdftext            TEXT,
@@ -35,7 +36,7 @@ CREATE TABLE Publications(
   folders            TEXT
 );
 
-CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,label,labelid,keyword,folder,year,journal);
+CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,year,journal, keyword,folderid,labelid);
 
 CREATE TABLE Tags (
   tag            TEXT UNIQUE,
@@ -59,8 +60,13 @@ CREATE TABLE Collections (
   type          TEXT,
   parent        TEXT,
   sort_order    INTEGER,
-  style         TEXT,   
-  data          TEXT    
+  style         TEXT   
+);
+
+CREATE TABLE Collection_Publication (
+  collection_guid     Text,
+  publication_guid    Text,
+  PRIMARY KEY (collection_guid, publication_guid)
 );
 
 

@@ -431,11 +431,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       duration: 1
     });
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/move_in_folder'),
+      url: Paperpile.Url('/ajax/crud/move_in_collection'),
       params: {
         grid_id: grid.id,
         selection: sel,
-        node_id: node.id
+        node_id: node.id,
+        type: 'FOLDER'
       },
       method: 'GET',
       success: function(response) {
@@ -466,11 +467,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   onNodeDrop: function(e) {
+
+    var node = e.target;
+
     // We're dragging from the data grid
     if (e.source.dragData.grid) {
       var grid = e.source.dragData.grid;
       var sel = grid.getSelection();
-      var node = e.target;
 
       if (node.type == 'FOLDER') {
         this.addFolder(grid, sel, node);
@@ -481,18 +484,40 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       }
     } else {
       // We're dragging nodes internally
-      Ext.Ajax.request({
-        url: Paperpile.Url('/ajax/tree/move_node'),
-        params: {
-          target_node: e.target.id,
-          drop_node: e.dropNode.id,
-          point: e.point
-        },
-        success: function() {
-          // Should we do something here?
-        },
-        failure: Paperpile.main.onError
-      });
+      
+      if (node.type === 'FOLDER' || node.type === 'TAGS'){
+
+        Ext.Ajax.request({
+          url: Paperpile.Url('/ajax/crud/move_collection'),
+          params: {
+            target_node: e.target.id,
+            drop_node: e.dropNode.id,
+            point: e.point,
+            type: node.type === 'FOLDER' ? 'FOLDER':'LABEL'
+          },
+          success: function() {
+            // Should we do something here?
+          },
+          failure: Paperpile.main.onError
+        });
+
+      } else {
+
+        Ext.Ajax.request({
+          url: Paperpile.Url('/ajax/tree/move_node'),
+          params: {
+            target_node: e.target.id,
+            drop_node: e.dropNode.id,
+            point: e.point
+          },
+          success: function() {
+            // Should we do something here?
+          },
+          failure: Paperpile.main.onError
+        });
+      }
+
+
     }
   },
 
@@ -807,8 +832,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           fn: function() {
             var path = this.relativeFolderPath(newNode);
             newNode.plugin_title = newNode.text;
-            newNode.plugin_query = 'folder:' + newNode.id;
-            newNode.plugin_base_query = 'folder:' + newNode.id;
+            newNode.plugin_query = 'folderid:' + newNode.id;
+            newNode.plugin_base_query = 'folderid:' + newNode.id;
             this.onNewFolder(newNode);
           }
         }
@@ -936,15 +961,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var node = this.lastSelectedNode;
 
     Ext.Ajax.request({
-
-      url: Paperpile.Url('/ajax/tree/delete_folder'),
+      url: Paperpile.Url('/ajax/crud/delete_collection'),
       params: {
-        node_id: node.id,
-        parent_id: node.parentNode.id,
-        name: node.text,
-        path: this.relativeFolderPath(node),
+        guid: node.id,
+        type: 'FOLDER'
       },
-      success: function() {
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        Paperpile.main.onUpdate(json.data);
         //Ext.getCmp('statusbar').clearStatus();
         //Ext.getCmp('statusbar').setText('Deleted folder');
       },
@@ -1248,6 +1272,65 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     });
   },
 
+    //
+  // Rename the tag given by node globally
+  //
+  triggerRenameCollection: function() {
+    (function() {
+      var node = this.lastSelectedNode;
+      this.treeEditor.on({
+        complete: {
+          scope: this,
+          single: true,
+          fn: this.commitRenameCollection
+        }
+      });
+
+      this.treeEditor.triggerEdit(node);
+    }.defer(10, this));
+  },
+
+  commitRenameCollection: function(editor, newText, oldText) {
+    var node = editor.editNode;
+
+    if (newText == oldText) {
+      return;
+    }
+
+    node.setText(newText);
+    node.plugin_title = newText;
+
+    //if (node.type === 'FOLDER'){
+    //  node.plugin_query = 'folderid:' + Paperpile.utils.encodeTag(newText);
+    //  node.plugin_base_query = 'labelid:' + Paperpile.utils.encodeTag(newText);
+    //}
+      
+    var tag = oldText;
+
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/crud/rename_collection'),
+      params: {
+        guid: node.id,
+        new_name: newText
+      },
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+
+        // If this tab has an open grid, rename it.
+        //var tagTab = Paperpile.main.tabs.find("title", oldText);
+        //if (tagTab.length > 0) {
+        //  tagTab[0].setTitle(newText);
+        //}
+
+        Paperpile.main.onUpdate(json);
+        //this.reloadTags(json);
+      },
+      failure: Paperpile.main.onError,
+      scope: this
+    });
+  },
+
+
   //
   // Rename the tag given by node globally
   //
@@ -1381,7 +1464,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       {
         id: 'folder_menu_rename',
         text: 'Rename',
-        handler: tree.renameNode,
+        handler: tree.triggerRenameCollection,
         scope: tree
       },
       {

@@ -33,6 +33,7 @@ use Paperpile::Utils;
 use MooseX::Timestamp;
 use Encode qw(encode decode);
 use File::Temp qw/ tempfile tempdir /;
+use Data::GUID;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
@@ -170,6 +171,13 @@ sub insert_pubs {
     # database
     next if (!$pub->sha1);
 
+    if (!$pub->guid){
+      my $_guid=Data::GUID->new;
+      $_guid=$_guid->as_hex;
+      $_guid=~s/^0x//;
+      $pub->guid($_guid);
+    }
+
     ## Insert main entry into Publications table
     my $tmp = $pub->as_hash();
 
@@ -203,10 +211,9 @@ sub insert_pubs {
       abstract => $pub->abstract,
       notes    => $pub->annote,
       author   => $pub->_authors_display,
-      label    => $pub->tags,
-      labelid  => Paperpile::Utils->encode_tags( $pub->tags ),
+      labelid  => $pub->tags,
+      folderid => $pub->folders,
       keyword  => $pub->keywords,
-      folder   => $pub->folders,
     };
 
     ( $fields, $values ) = $self->_hash2sql( $hash, $dbh );
@@ -686,11 +693,9 @@ sub rename_tag {
 
 sub new_collection {
 
-  my ( $self, $guid, $name, $type, $parent, $style, $data ) = @_;
+  my ( $self, $guid, $name, $type, $parent, $style ) = @_;
 
   my $dbh = $self->dbh;
-
-  $data = freeze($data);
 
   if ( $parent =~ /ROOT/ ) {
     $parent = 'ROOT';
@@ -701,23 +706,264 @@ sub new_collection {
   $type   = $dbh->quote($type);
   $parent = $dbh->quote($parent);
   $style  = $dbh->quote($style);
-  $data   = $dbh->quote($data);
 
   ( my $sort_order ) =
     $dbh->selectrow_array("SELECT max(sort_order) FROM Collections WHERE parent=$parent");
 
-  if (defined $sort_order){
+  if ( defined $sort_order ) {
     $sort_order++;
   } else {
     $sort_order = 0;
   }
 
   $self->dbh->do(
-    "INSERT INTO Collections (guid, name, type, parent, sort_order, style, data) VALUES($guid, $name, $type, $parent, $sort_order, $style, $data)"
+    "INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES($guid, $name, $type, $parent, $sort_order, $style)"
   );
 
   #print STDERR Dumper(\@_);
 
+}
+
+sub update_collections {
+  ( my $self, my $pub, my $type ) = @_;
+
+  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+
+  my $rowid    = $pub->_rowid;
+  my $pub_guid = $pub->guid;
+
+  my $dbh = $self->dbh;
+
+  my $guid_list = $pub->$what;
+  my @guids = split( /,/, $pub->$what );
+
+  # First update flat field in Publication and Fulltext tables
+  $guid_list = $dbh->quote($guid_list);
+
+  $dbh->do("UPDATE Publications SET $what=$guid_list WHERE rowid=$rowid;");
+
+  my $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
+
+  $dbh->do("UPDATE Fulltext SET $field=$guid_list WHERE rowid=$rowid;");
+
+  # Remove all connections from Collection_Publication table
+  my $sth = $dbh->do("DELETE FROM Collection_Publication WHERE publication_guid='$pub_guid'");
+
+  # Then set new connections
+  my $connection = $dbh->prepare(
+    "INSERT INTO Collection_Publication (collection_guid, publication_guid) VALUES(?,?)");
+
+  foreach my $collection_guid (@guids) {
+    $connection->execute( $collection_guid, $pub_guid );
+  }
+}
+
+sub remove_from_collection {
+
+  my ( $self, $data, $collection_guid, $type ) = @_;
+
+  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+
+  my $dbh = $self->dbh;
+
+  $dbh->begin_work;
+
+  foreach my $pub (@$data) {
+
+    my $pub_rowid = $pub->_rowid;
+    my $pub_guid  = $pub->guid;
+
+    ( my $old_list ) =
+      $dbh->selectrow_array("SELECT $what FROM Publications WHERE rowid=$pub_rowid");
+
+    my $new_list = $self->_remove_from_flatlist( $old_list, $collection_guid );
+
+    $dbh->do("UPDATE Publications SET $what='$new_list' WHERE rowid=$pub_rowid");
+
+    my $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
+
+    $dbh->do("UPDATE fulltext SET $field='$new_list' WHERE rowid=$pub_rowid");
+    $dbh->do(
+             "DELETE FROM Collection_Publication WHERE collection_guid='$collection_guid' AND publication_guid='$pub_guid'"
+    );
+
+    $pub->$what($new_list);
+  }
+
+  $dbh->commit;
+
+}
+
+
+sub delete_collection {
+  ( my $self, my $guid, my $type ) = @_;
+
+  # We delete the given guid and all sub-collections
+  my @list = ($guid);
+
+  my $sth = $self->dbh->prepare("SELECT * FROM Collections;");
+  $sth->execute;
+  my @all = ();
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    push @all, $row;
+  }
+  $self->_find_subcollections( $guid, \@all, \@list );
+
+  #  Delete all assications in Collection_Publication table
+  my $delete1 = $self->dbh->prepare("DELETE FROM Collection_Publication WHERE collection_guid=?");
+
+  #  Delete folders from Folders table
+  my $delete2 = $self->dbh->prepare("DELETE FROM Collections WHERE guid=?");
+
+  #  Update flat fields in Publication table and Fulltext table
+  my $field = $type eq 'FOLDER' ? 'folders' : 'tags';
+  my $update1 = $self->dbh->prepare("UPDATE Publications SET $field=? WHERE rowid=?");
+
+  $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
+  my $update2 = $self->dbh->prepare("UPDATE Fulltext SET $field=? WHERE rowid=?");
+
+  foreach $guid (@list) {
+
+    my ( $list, $rowid );
+
+    $field = $type eq 'FOLDER' ? 'folders' : 'tags';
+
+    # Get the publications that are in the given folder
+    my $select = $self->dbh->prepare(
+      "SELECT publications.rowid as rowid, publications.$field as list FROM Publications JOIN fulltext
+      ON publications.rowid=fulltext.rowid WHERE fulltext MATCH '$guid'"
+    );
+
+    $select->bind_columns( \$rowid, \$list );
+    $select->execute;
+    while ( $select->fetch ) {
+
+      my $new_list = $self->_remove_from_flatlist( $list, $guid );
+
+      $update1->execute( $new_list, $rowid );
+      $update2->execute( $new_list, $rowid );
+    }
+
+    $delete1->execute($guid);
+    $delete2->execute($guid);
+  }
+
+}
+
+
+# Recursive helper function to get list of all sub-collections below
+# $guid. $all is a list of all collections and $list is the final list
+# with all guids of the desired sub-collections
+sub _find_subcollections{
+
+  my ($self, $guid, $all, $list) = @_;
+
+  foreach my $collection (@$all){
+    if ($collection->{parent} eq $guid){
+      push @$list, $collection->{guid};
+      $self->_find_subcollections($collection->{guid}, $all, $list);
+    }
+  }
+}
+
+sub rename_collection {
+  my ( $self, $guid, $new_name ) = @_;
+
+  my $dbh = $self->dbh;
+
+  $new_name=$dbh->quote($new_name);
+
+  $dbh->do("UPDATE Collections SET name=$new_name WHERE guid='$guid'");
+
+}
+
+sub move_collection {
+  my ( $self, $target_guid, $drop_guid, $position, $type ) = @_;
+
+  my $dbh = $self->dbh;
+
+  $dbh->begin_work;
+
+  # Get parent and sort_order of target
+  my ( $new_parent, $sort_order ) = $dbh->selectrow_array(
+    "SELECT parent, sort_order FROM Collections WHERE guid='$target_guid' AND TYPE='$type'");
+
+  # We move to a new sub-collection
+  if ( $position eq 'append' ) {
+
+    # Determine sort_order of last item
+    ( my $max ) = $dbh->selectrow_array(
+      "SELECT max(sort_order) FROM Collections WHERE parent='$target_guid' AND TYPE='$type'");
+
+    if ( defined $max ) {
+      $max++;
+    } else {
+      $max = 0;
+    }
+
+    # Append new item after the last item in the new sub-collection
+    $dbh->do(
+      "UPDATE Collections SET parent='$target_guid', sort_order=$max WHERE guid='$drop_guid' AND TYPE='$type'"
+    );
+
+    # We place above or below a new item within the same or another sub-collection
+  } else {
+
+    my $new_sort_order;
+
+    if ( $position eq 'above' ) {
+      $new_sort_order = $sort_order;
+    } else {
+      $new_sort_order = $sort_order + 1;
+    }
+
+    # Increase sort_order of all items below the new item
+    $dbh->do(
+      "UPDATE Collections SET sort_order=sort_order+1 WHERE parent='$new_parent' and sort_order >= $new_sort_order AND TYPE='$type'"
+    );
+
+    # Adjust parent and sort_order of new item
+    $dbh->do(
+      "UPDATE Collections SET sort_order=$new_sort_order, parent='$new_parent' WHERE guid='$drop_guid' AND TYPE='$type'"
+    );
+
+  }
+
+  # We make sure that all sort_order values are normalized,
+  # i.e. starting always with 0 and increasing always by 1. This is
+  # mainly cosmetic
+
+  ( my $old_parent ) = $dbh->selectrow_array(
+    "SELECT parent FROM Collections WHERE guid='$drop_guid' AND TYPE='$type'");
+
+  $self->_normalize_sort_order( $dbh, $old_parent, $type );
+
+  if ( $new_parent ne $old_parent ) {
+    $self->_normalize_sort_order( $dbh, $new_parent, $type );
+  }
+
+  $dbh->commit;
+
+}
+
+sub _normalize_sort_order {
+  my ( $self, $dbh, $parent, $type ) = @_;
+
+  my $select =
+    $dbh->prepare("SELECT guid FROM Collections WHERE parent='$parent' ORDER BY sort_order");
+
+  my $update = $dbh->prepare("UPDATE Collections SET sort_order=? WHERE guid=?");
+
+  my $guid;
+
+  $select->bind_columns( \$guid );
+  $select->execute;
+
+  my $counter = 0;
+  while ( $select->fetch ) {
+    $update->execute( $counter, $guid );
+    $counter++;
+  }
 }
 
 
@@ -969,8 +1215,8 @@ sub process_query_string {
       my $known = 0;
 
       foreach my $supported (
-        'text',  'abstract', 'notes',   'title',  'key',  'author',
-        'label', 'labelid',  'keyword', 'folder', 'year', 'journal'
+        'text',    'abstract', 'notes',    'title', 'key', 'author',
+        'labelid', 'keyword',  'folderid', 'year',  'journal'
         ) {
         if ( $1 eq $supported ) {
           $known = 1;
@@ -1065,11 +1311,11 @@ sub fulltext_search {
         my ( $num_phrases, $num_columns ) = ( $all[0], $all[1] );
 
         # We are only interested in the number of matches for each of
-        # the 12 columns in our fulltext table
-        # Order: text abstract notes title key author label labelid keyword folder year journal
+        # the 11 columns in our fulltext table
+        # text,abstract,notes,title,key,author,year,journal, keyword,folderid,labelid
         my @counts = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
-        foreach my $column ( 0 .. 11 ) {
+        foreach my $column ( 0 .. 10 ) {
           foreach my $phrase ( 0 .. $num_phrases - 1 ) {
 
             # The way the information is stored in the blob is different
@@ -1084,10 +1330,8 @@ sub fulltext_search {
 
         my $score = 0;
 
-        my $weights = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-
         # If hit occured in title, key, author, year or journal we show them first
-        my $sum = $counts[3] + $counts[4] + $counts[5] + $counts[10] + $counts[11];
+        my $sum = $counts[3] + $counts[4] + $counts[5] + $counts[6] + $counts[7];
 
         $score = $sum * 10;
 

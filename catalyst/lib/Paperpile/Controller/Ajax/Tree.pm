@@ -180,7 +180,7 @@ sub delete_folder : Local {
   my @to_delete = ($node_id);
 
   $subtree->traverse(
-    sub {
+     sub {
       my ($_tree) = @_;
       push @to_delete, $_tree->getUID;
     }

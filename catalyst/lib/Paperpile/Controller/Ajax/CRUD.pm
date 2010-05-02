@@ -367,28 +367,127 @@ sub new_collection : Local {
   my $type   = $c->request->params->{type};
   my $style  = $c->request->params->{style} || '0';
 
-  my %params = ( draggable => \1 );
-  foreach my $key ( keys %{ $c->request->params } ) {
-    next if $key =~ /^_/;
-    $params{$key} = $c->request->params->{$key};
+  $c->model('Library')->new_collection( $guid, $name, $type, $parent, $style );
+}
+
+sub move_in_collection : Local {
+  my ( $self, $c ) = @_;
+
+  my $grid_id = $c->request->params->{grid_id};
+  my $node_id = $c->request->params->{node_id};
+  my $type    = $c->request->params->{type};
+  my $data    = $self->_get_selection($c);
+
+  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+
+  # First import entries that are not already in the database
+  my @to_be_imported = ();
+  foreach my $pub (@$data) {
+    push @to_be_imported, $pub if !$pub->_imported;
   }
-  delete( $params{parent} );
 
-  #my $tree = $c->session->{"tree"};
-  #my $sub_tree = $c->forward( 'private/get_subtree', [ $tree, $parent_id ] );
-  #$params{id} = $node_id;
-  #delete( $params{node_id} );
-  #my $new = Tree::Simple->new( {%params} );
-  #$new->setUID($node_id);
-  #$sub_tree->addChild($new);
+  $c->model('Library')->create_pubs( \@to_be_imported );
 
-  $c->model('Library')->new_collection( $guid, $name, $type, $parent, $style, \%params );
+  my $dbh = $c->model('Library')->dbh;
 
-  #$c->model('Library')->save_tree($tree);
+  $dbh->begin_work();
+
+  if ( $node_id ne 'FOLDER_ROOT' ) {
+    my $new_guid = $node_id;
+
+    foreach my $pub (@$data) {
+      my @guids = split( /,/, $pub->$what );
+      push @guids, $new_guid;
+      my %seen = ();
+      @guids = grep { !$seen{$_}++ } @guids;
+      my $new_guids = join( ',', @guids );
+      print STDERR "===> $what $new_guids\n";
+      $pub->$what($new_guids);
+      $c->model('Library')->update_collections( $pub, $type );
+    }
+  }
+
+  $dbh->commit();
+
+  if (@to_be_imported) {
+    $self->_update_counts($c);
+    $self->_collect_data( $c, $data, [ $what, '_imported', 'citekey', 'created', 'pdf' ] );
+    $c->stash->{data}->{pub_delta}        = 1;
+    $c->stash->{data}->{pub_delta_ignore} = $grid_id;
+  } else {
+    $self->_collect_data( $c, $data, ['folders'] );
+  }
+}
+
+sub remove_from_collection : Local {
+  my ( $self, $c ) = @_;
+  my $collection_guid = $c->request->params->{collection_guid};
+  my $type            = $c->request->params->{type};
+
+  my $data = $self->_get_selection($c);
+
+  $c->model('Library')->remove_from_collection( $data, $collection_guid, $type );
+
+  $self->_collect_data( $c, $data, ['folders'] );
+}
+
+sub delete_collection : Local {
+  my ( $self, $c ) = @_;
+
+  my $guid   = $c->request->params->{guid};
+  my $type   = $c->request->params->{type};
+
+  $c->model('Library')->delete_collection( $guid, $type );
+
+  # Not sure if we need to update the tree structure in the
+  # backend in some way here.
+
+  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+
+  my $pubs = $self->_get_cached_data($c);
+  foreach my $pub ( @$pubs ) {
+    my $new_list = $pub->$what;
+    $new_list =~ s/^$guid,//g;
+    $new_list =~ s/^$guid$//g;
+    $new_list =~ s/,$guid$//g;
+    $new_list =~ s/,$guid,/,/g;
+    $pub->$what($new_list);
+  }
+
+  $self->_collect_data($c, $pubs,[$what]);
+}
+
+sub rename_collection : Local {
+  my ( $self, $c ) = @_;
+
+  my $guid = $c->request->params->{guid};
+  my $new_name = $c->request->params->{new_name};
+
+  $c->model('Library')->rename_collection( $guid, $new_name );
 
 }
 
+sub move_collection : Local {
+  my ( $self, $c ) = @_;
 
+  # The node that was moved
+  my $drop_guid = $c->request->params->{drop_node};
+
+  # The node to which it was moved
+  my $target_guid = $c->request->params->{target_node};
+
+  my $type = $c->request->params->{type};
+
+  $drop_guid   =~ s/(FOLDER_|TAGS_)ROOT/ROOT/;
+  $target_guid =~ s/(FOLDER_|TAGS_)ROOT/ROOT/;
+
+  # Either 'append' for dropping into the node, or 'below' or 'above'
+  # for moving nodes on the same level
+  my $position = $c->request->params->{point};
+
+  $c->model('Library')->move_collection( $target_guid, $drop_guid, $position, $type );
+
+}
 
 
 sub delete_tag : Local {

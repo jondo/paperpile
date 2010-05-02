@@ -62,8 +62,14 @@ our @types = qw(
 has '_rowid' => ( is => 'rw');
 
 # The unique sha1 key which is currently calculated from title,
-# authors and year.
+# authors and year. The purpose is to compare quickly if two
+# publications are the same
 has 'sha1' => ( is => 'rw' );
+
+# Globally unique identifier that never changes and that can be used
+# to track a publication also outside the local database (e.g. for
+# syncinc across networks)
+has 'guid' => ( is => 'rw' );
 
 # Timestamp when the entry was created
 has 'created' => ( is => 'rw');
