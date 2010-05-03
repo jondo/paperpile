@@ -678,12 +678,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             var tags = tag_string.split(/\s*,\s*/);
             var totalChars = 0;
             for (var i = 0; i < tags.length; i++) {
-              var tag = tags[i];
-              var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('tag', tag));
+              var guid = tags[i];
+              var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
               if (style != null) {
+                name = style.get('name');
                 style = style.get('style');
-                totalChars += tag.length;
-                returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + tag + '&nbsp;</div>&nbsp;';
+                totalChars += name.length;
+                returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
               }
             }
             if (tags.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;

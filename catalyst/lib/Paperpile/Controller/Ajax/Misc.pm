@@ -67,27 +67,27 @@ sub tag_list : Local {
 
   my ( $self, $c ) = @_;
 
-  my $tags = $c->model('Library')->get_tags;
+  my $sth = $c->model('Library')->dbh->prepare("SELECT * FROM Collections WHERE type='LABEL'");
 
   my @data = ();
 
-  foreach my $row (@$tags) {
+  $sth->execute;
+  while ( my $row = $sth->fetchrow_hashref() ) {
     push @data, {
-      tag   => $row->{tag},
+      name   => $row->{name},
       style => $row->{style},
+      guid  => $row->{guid},
       };
   }
 
   my %metaData = (
     root   => 'data',
-    fields => [ 'tag', 'style' ],
+    fields => [ 'name', 'style', 'guid' ],
   );
 
   $c->stash->{data} = [@data];
 
   $c->stash->{metaData} = {%metaData};
-
-  $c->forward('Paperpile::View::JSON');
 
 }
 

@@ -385,7 +385,7 @@ sub get_collections : Private {
 
   # Collect all data from the database table
   my @collections = ();
-  my $sth = $c->model('Library')->dbh->prepare("SELECT * from Collections;");
+  my $sth = $c->model('Library')->dbh->prepare("SELECT * from Collections WHERE type='$type';");
   $sth->execute();
   while ( my $row = $sth->fetchrow_hashref() ) {
     push @collections, $row;
@@ -423,7 +423,7 @@ sub _get_collection_pars {
 
   my $pars = {
     text         => $coll->{name},
-    type         => $type,
+    type         => $type eq 'FOLDER' ? 'FOLDER' : 'TAGS',
     hidden       => 0,
     plugin_name  => 'DB',
     plugin_mode  => 'FULLTEXT',
@@ -436,11 +436,12 @@ sub _get_collection_pars {
     $pars->{iconCls}           = 'pp-icon-folder';
     $pars->{plugin_iconCls}    = 'pp-icon-folder';
   } else {
-
-    #$pars->{cls} ='pp-tag-tree-node pp-tag-tree-style-' . $tag->{style},
-    #$pars->{tagStyle} => $coll->{style},
-    #$pars->{plugin_iconCls} => 'pp-icon-tag';
-
+    $pars->{plugin_query}      = "labelid:" . $coll->{guid};
+    $pars->{plugin_base_query} = "labelid:" . $coll->{guid};
+    $pars->{iconCls}           = 'pp-icon-empty';
+    $pars->{plugin_iconCls}    = 'pp-icon-tag';
+    $pars->{cls} ='pp-tag-tree-node pp-tag-tree-style-'.$coll->{style};
+    $pars->{tagStyle} = $coll->{style};
   }
 
   return $pars;

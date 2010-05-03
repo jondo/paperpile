@@ -708,7 +708,7 @@ sub new_collection {
   $style  = $dbh->quote($style);
 
   ( my $sort_order ) =
-    $dbh->selectrow_array("SELECT max(sort_order) FROM Collections WHERE parent=$parent");
+    $dbh->selectrow_array("SELECT max(sort_order) FROM Collections WHERE parent=$parent AND type=$type");
 
   if ( defined $sort_order ) {
     $sort_order++;
@@ -742,12 +742,14 @@ sub update_collections {
 
   $dbh->do("UPDATE Publications SET $what=$guid_list WHERE rowid=$rowid;");
 
+  print STDERR "UPDATE Publications SET $what=$guid_list WHERE rowid=$rowid;\n";
+
   my $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
 
   $dbh->do("UPDATE Fulltext SET $field=$guid_list WHERE rowid=$rowid;");
 
   # Remove all connections from Collection_Publication table
-  my $sth = $dbh->do("DELETE FROM Collection_Publication WHERE publication_guid='$pub_guid'");
+  my $sth = $dbh->do("DELETE FROM Collection_Publication WHERE collection_guid IN (SELECT guid FROM Collections WHERE Collections.type='$type') AND publication_guid='$pub_guid'");
 
   # Then set new connections
   my $connection = $dbh->prepare(

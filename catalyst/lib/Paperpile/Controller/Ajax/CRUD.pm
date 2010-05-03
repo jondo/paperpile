@@ -374,7 +374,7 @@ sub move_in_collection : Local {
   my ( $self, $c ) = @_;
 
   my $grid_id = $c->request->params->{grid_id};
-  my $node_id = $c->request->params->{node_id};
+  my $guid    = $c->request->params->{guid};
   my $type    = $c->request->params->{type};
   my $data    = $self->_get_selection($c);
 
@@ -392,8 +392,8 @@ sub move_in_collection : Local {
 
   $dbh->begin_work();
 
-  if ( $node_id ne 'FOLDER_ROOT' ) {
-    my $new_guid = $node_id;
+  if ( $guid ne 'FOLDER_ROOT' ) {
+    my $new_guid = $guid;
 
     foreach my $pub (@$data) {
       my @guids = split( /,/, $pub->$what );
@@ -401,7 +401,6 @@ sub move_in_collection : Local {
       my %seen = ();
       @guids = grep { !$seen{$_}++ } @guids;
       my $new_guids = join( ',', @guids );
-      print STDERR "===> $what $new_guids\n";
       $pub->$what($new_guids);
       $c->model('Library')->update_collections( $pub, $type );
     }
@@ -415,7 +414,7 @@ sub move_in_collection : Local {
     $c->stash->{data}->{pub_delta}        = 1;
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
   } else {
-    $self->_collect_data( $c, $data, ['folders'] );
+    $self->_collect_data( $c, $data, [ $what ] );
   }
 }
 

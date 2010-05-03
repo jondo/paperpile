@@ -505,8 +505,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.tagStore.reload();
   },
 
-  getStyleForTag: function(tag) {
-    var record = this.tagStore.getAt(this.tagStore.findExact('tag', tag));
+  getStyleForTag: function(guid) {
+    var record = this.tagStore.getAt(this.tagStore.findExact('guid', guid));
     if (record == null) return '';
     var style = record.get('style');
     return style;

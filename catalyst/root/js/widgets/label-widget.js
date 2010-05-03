@@ -81,11 +81,12 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     }
 
     for (var i = 0; i < tags.length; i++) {
-      var name = tags[i];
-      if (name == '') continue;
+      var guid = tags[i];
+      if (guid == '') continue;
       var style = '0';
-      if (store.getAt(store.findExact('tag', name))) {
-        style = store.getAt(store.findExact('tag', name)).get('style');
+      if (store.getAt(store.findExact('guid', guid))) {
+        style = store.getAt(store.findExact('guid', guid)).get('style');
+        name = store.getAt(store.findExact('guid', guid)).get('name');
       }
 
       var el = {
@@ -140,21 +141,21 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     var list = [];
     Ext.StoreMgr.lookup('tag_store').each(
       function(rec) {
-        var tag = rec.data.tag;
+        var guid = rec.data.guid;
         if (!this.multipleSelection) {
-          if (this.data.tags.match(new RegExp("," + tag + "$"))) return; // ,XXX
-          if (this.data.tags.match(new RegExp("^" + tag + "$"))) return; //  XXX
-          if (this.data.tags.match(new RegExp("^" + tag + ","))) return; //  XXX,
-          if (this.data.tags.match(new RegExp("," + tag + ","))) return; // ,XXX,
+          if (this.data.tags.match(new RegExp("," + guid + "$"))) return; // ,XXX
+          if (this.data.tags.match(new RegExp("^" + guid + "$"))) return; //  XXX
+          if (this.data.tags.match(new RegExp("^" + guid + ","))) return; //  XXX,
+          if (this.data.tags.match(new RegExp("," + guid + ","))) return; // ,XXX,
         }
-        list.push([tag]);
+        list.push([rec.data.guid, rec.data.name]);
       },
       this);
     var extEl = Ext.get(el);
     extEl.replaceWith(['<div id="pp-tag-control-' + this.grid.id + '"></div>']);
 
     var store = new Ext.data.SimpleStore({
-      fields: ['tag'],
+      fields: ['guid','name'],
       data: list
     });
 
@@ -162,7 +163,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       id: 'tag-control-combo-' + this.getGrid().id,
       ctCls: 'pp-tag-control',
       store: store,
-      displayField: 'tag',
+      displayField: 'name',
       typeAhead: true,
       mode: 'local',
       triggerAction: 'all',
@@ -186,7 +187,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
           }
         },
         'select': function(combo, record, index) {
-          this.commitTag(record.get('tag'));
+          this.commitTag(record.get('guid'));
         },
         scope: this
       }
@@ -194,21 +195,22 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     this.comboBox.focus();
   },
 
-  commitTag: function(tag) {
+  commitTag: function(guid) {
     this.comboBox.disable();
-    var tagIndex = Ext.StoreMgr.lookup('tag_store').findExact('tag', tag);
+    var tagIndex = Ext.StoreMgr.lookup('tag_store').findExact('guid', guid);
 
     var lots = this.isLargeSelection();
     if (lots) {
-      Paperpile.status.showBusy("Adding label '" + tag + "' to references");
+      Paperpile.status.showBusy("Adding label to references");
     }
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/add_tag'),
+      url: Paperpile.Url('/ajax/crud/move_in_collection'),
       params: {
         grid_id: this.getGrid().id,
         selection: this.getGrid().getSelection(),
-        tag: tag
+        guid: guid,
+        type: 'LABEL'
       },
       method: 'GET',
       success: function(response) {
@@ -227,7 +229,6 @@ Paperpile.LabelWidget = Ext.extend(Object, {
             }
           });
         }
-
         if (lots) {
           Paperpile.status.clearMsg();
         }

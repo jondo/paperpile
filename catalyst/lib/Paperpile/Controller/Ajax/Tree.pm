@@ -54,7 +54,7 @@ sub get_node : Local {
 
   # Tags always generated dynamically
   if ( $subtree->getUID =~ /TAGS_ROOT/ ) {
-    $c->forward( 'private/get_tags', [$subtree] );
+    $c->forward( 'private/get_collections', [$subtree,'LABEL'] );
   }
 
   if ( $subtree->getUID =~ /FOLDER_ROOT/ ) {
@@ -78,7 +78,7 @@ sub get_complete_tree {
 
   # Tags always generated dynamically
   my $subtree = $c->forward( 'private/get_subtree', [ $tree, 'TAGS_ROOT' ] );
-  $c->forward( 'private/get_tags', [$subtree] );
+  $c->forward( 'private/get_collections', [$subtree,'LABEL'] );
 
   $subtree = $c->forward( 'private/get_subtree', [ $tree, 'FOLDER_ROOT' ] );
   $c->forward( 'private/get_collections', [$subtree,'FOLDER'] );

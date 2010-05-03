@@ -311,7 +311,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       // For tags use specifically styled tab
       if (node.type == 'TAGS') {
-        iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + Paperpile.main.getStyleForTag(node.text);
+        iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + Paperpile.main.getStyleForTag(node.id);
         title = node.text;
       }
 
@@ -435,7 +435,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       params: {
         grid_id: grid.id,
         selection: sel,
-        node_id: node.id,
+        guid: node.id,
         type: 'FOLDER'
       },
       method: 'GET',
@@ -450,11 +450,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   addTag: function(grid, sel, node) {
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/add_tag'),
+      url: Paperpile.Url('/ajax/crud/move_in_collection'),
       params: {
         grid_id: grid.id,
         selection: sel,
-        tag: node.text
+        guid: node.id,
+        type: 'LABEL'
       },
       method: 'GET',
       success: function(response) {
@@ -834,7 +835,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
             newNode.plugin_title = newNode.text;
             newNode.plugin_query = 'folderid:' + newNode.id;
             newNode.plugin_base_query = 'folderid:' + newNode.id;
-            this.onNewFolder(newNode);
+            this.onNewCollection(newNode);
           }
         }
       });
@@ -845,42 +846,27 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   },
 
-  //
-  // Is called after a new folder has been created. Writes folder
-  // information to database and updates and saves tree
-  // representation to database.
-  //
-  onNewFolder: function(node) {
+  onNewCollection: function(node) {
 
     this.getSelectionModel().clearSelections();
     this.allowSelect = false;
 
-    // Again get all plugin_* parameters to send to server
-    var pars = {};
-    for (var key in node) {
-      if (key.match('plugin_')) {
-        pars[key] = node[key];
-      }
-    }
-
-    // Set other relevant node parameters which need to be stored
-    Ext.apply(pars, {
-      type: 'FOLDER',
-      text: node.text,
-      iconCls: 'pp-icon-folder',
-      node_id: node.id,
-      plugin_title: node.text,
-      //path: this.relativeFolderPath(node),
-      parent_id: node.parentNode.id
-    });
-
-    // Send to backend
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/new_collection'),
-      params: pars,
-      success: function() {
+      params: {
+        type: node.type === 'FOLDER' ? 'FOLDER':'LABEL',
+        text: node.text,
+        node_id: node.id,
+        parent_id: node.type === 'FOLDER' ? node.parentNode.id : 'ROOT'
       },
-      failure: Paperpile.main.onError
+      success: function(response) {
+        if (node.type==='TAGS'){
+          var json = Ext.util.JSON.decode(response.responseText);
+          this.reloadTags(json);
+        }
+      },
+      failure: Paperpile.main.onError,
+      scope:this
     });
   },
 
@@ -1091,7 +1077,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           single: true
         });
         this.mon(treeEditor, 'complete', function() {
-          this.onNewTag(newNode);
+          this.onNewCollection(newNode);
         },
         this, {
           single: true
