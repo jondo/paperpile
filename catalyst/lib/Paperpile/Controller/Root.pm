@@ -52,6 +52,7 @@ sub index : Path : Args(0) {
 # loaded. Used for cookie setting bug workaround.
 sub empty : Local {
   my ( $self, $c ) = @_;
+  $c->session->{"dummy"} = 'dummy';
   $c->stash->{template} = 'empty.mas';
   $c->forward('Paperpile::View::Mason');
 }
