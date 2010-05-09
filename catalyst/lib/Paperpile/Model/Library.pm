@@ -890,18 +890,19 @@ sub fulltext_count {
     $trash = 0;
   }
 
+  my $count;
   my $where;
   if ($query) {
     $query = $self->dbh->quote("$query*");
     $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
-  } else {
-    $where = "WHERE $table MATCH '*' AND Publications.trashed=$trash";    #Return everything if query empty
-  }
-
-  my $count = $self->dbh->selectrow_array(
+    $count = $self->dbh->selectrow_array(
     qq{select count(*) from Publications join $table on 
     publications.rowid=$table.rowid $where}
-  );
+                                        );
+  } else {
+    $where = "WHERE Publications.trashed=$trash";
+    $count = $self->dbh->selectrow_array(qq{select count(*) from Publications $where;});
+  }
 
   return $count;
 }
@@ -927,25 +928,30 @@ sub fulltext_search {
 
   my ( $where, $query );
 
+  my $sth;
+
   if ($_query) {
     $query = $self->dbh->quote("$_query*");
     $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
-  } else {
-    $where = "WHERE $table MATCH '*' AND Publications.trashed=$trash";    #Return everything if query empty
-  }
-
-  # explicitely select rowid since it is not included by '*'. Make
-  # sure the selected fields are all named like the fields in the
-  # Publication class
-  my $sth = $self->dbh->prepare(
-    "SELECT *,
+    $sth = $self->dbh->prepare(
+     "SELECT *,
      offsets($table) as offsets,
      publications.rowid as _rowid,
      publications.title as title,
      publications.abstract as abstract
      FROM Publications JOIN $table
      ON publications.rowid=$table.rowid $where ORDER BY $order LIMIT $limit OFFSET $offset"
-  );
+                                 );
+  } else {
+    $where = "WHERE Publications.trashed=$trash";
+    $sth = $self->dbh->prepare(
+                               "SELECT *,
+     publications.rowid as _rowid,
+     publications.title as title,
+     publications.abstract as abstract FROM Publications
+     $where ORDER BY $order LIMIT $limit OFFSET $offset"
+                              );
+  }
 
   $sth->execute;
 
