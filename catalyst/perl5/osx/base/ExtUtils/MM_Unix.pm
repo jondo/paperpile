@@ -1724,7 +1724,6 @@ EOP
 
     $self->{LIBPERL_A} ||= "libperl$self->{LIB_EXT}";
 
-
     # make a simple check if we find strict
     warn "Warning: PERL_LIB ($self->{PERL_LIB}) seems not to be a perl library directory
         (strict.pm not found)"

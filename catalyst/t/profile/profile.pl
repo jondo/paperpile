@@ -1,6 +1,4 @@
-#!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -d:NYTProf -w
-
-##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -w
+#!/Users/wash/play/paperpile/catalyst/perl5/osx/bin/perl -w
 
 
 BEGIN {
@@ -16,30 +14,8 @@ use Paperpile::Job;
 use Paperpile::Queue;
 use Paperpile::Library::Publication;
 
-my $pub1 = Paperpile::Library::Publication->new( doi => "10.1186/1471-2105-9-248" );
 
-my $q = Paperpile::Queue->new();
+my $model = Paperpile::Model::Library->new();
+$model->set_dsn( "dbi:SQLite:" . "/Users/wash/.paperdev/paperpile.ppl" );
 
-$q->clear;
-$q->save;
-
-my @jobs = ();
-
-foreach my $i ( 0 .. 10 ) {
-
-  my $job = Paperpile::Job->new(
-    type  => 'PDF_SEARCH',
-    pub   => $pub1,
-    queue => $q
-  );
-
-  push @jobs, $job;
-
-}
-
-$q->submit(\@jobs);
-
-#$q->save;
-
-#$q->run;
-
+$model->fulltext_search('Test', 0, 10);

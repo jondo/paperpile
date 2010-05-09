@@ -5,10 +5,10 @@ use vars qw($VERSION);	# set $VERSION early so we don't confuse PAUSE/CPAN etc
 
 # don't use Revision here because that's not in svn:keywords so that the
 # examples that use it below won't be messed up
-$VERSION = sprintf("12.%06d", q$Id: DBD.pm 11723 2008-09-02 10:09:51Z mjevans $ =~ /(\d+)/o);
+$VERSION = sprintf("12.%06d", q$Id: DBD.pm 13612 2009-11-27 11:34:26Z mjevans $ =~ /(\d+)/o);
 
 
-# $Id: DBD.pm 11723 2008-09-02 10:09:51Z mjevans $
+# $Id: DBD.pm 13612 2009-11-27 11:34:26Z mjevans $
 #
 # Copyright (c) 1997-2006 Jonathan Leffler, Jochen Wiedmann, Steffen
 # Goeldner and Tim Bunce
@@ -216,7 +216,7 @@ I<configure_requires> attributes which newer CPAN modules understand.
 You use these to tell the CPAN module (and CPANPLUS) that your build
 and configure mechanisms require DBI. The best reference for META.yml
 (at the time of writing) is
-L<http://module-build.sourceforge.net/META-spec-v1.2.html>. You can find
+L<http://module-build.sourceforge.net/META-spec-v1.4.html>. You can find
 a reasonable example of a F<META.yml> in DBD::ODBC.
 
 The F<lib/Bundle/DBD/Driver.pm> file allows you to specify other Perl
@@ -1952,7 +1952,7 @@ which were added in B<DBI> 1.41:
   DBIh_SET_ERR_CHAR(h, imp_xxh, err_c, err_i, errstr, state, method);
 
 For C<DBIh_SET_ERR_SV> the I<err>, I<errstr>, I<state>, and I<method>
-parameters are C<SV*>.
+parameters are C<SV*> (use &sv_undef instead of NULL).
 
 For C<DBIh_SET_ERR_CHAR> the I<err_c>, I<errstr>, I<state>, I<method>
 parameters are C<char*>.
@@ -3103,6 +3103,54 @@ should be set to contain the returned data.
 
 The pure Perl equivalent is the C<$sth-E<gt>_set_fbav($data)> method, as
 described in the part on pure Perl drivers.
+
+=head2 Casting strings to Perl types based on a SQL type
+
+DBI from 1.611 (and DBIXS_REVISION 13606) defines the
+sql_type_cast_svpv method which may be used to cast a string
+representation of a value to a more specific Perl type based on a SQL
+type. You should consider using this method when processing bound
+column data as it provides some support for the TYPE bind_col
+attribute which is rarely used in drivers.
+
+  int sql_type_cast_svpv(pTHX_ SV *sv, int sql_type, U32 flags, void *v)
+
+C<sv> is what you would like cast, C<sql_type> is one of the DBI defined
+SQL types (e.g., C<SQL_INTEGER>) and C<flags> is a bitmask as follows:
+
+=over
+
+=item DBIstcf_STRICT
+
+If set this indicates you want an error state returned if the cast
+cannot be performed.
+
+=item DBIstcf_DISCARD_STRING
+
+If set and the pv portion of the C<sv> is cast then this will cause
+sv's pv to be freed up.
+
+=back
+
+sql_type_cast_svpv returns the following states:
+
+ -2 sql_type is not handled - sv not changed
+ -1 sv is undef, sv not changed
+  0 sv could not be cast cleanly and DBIstcf_STRICT was specified
+  1 sv could not be case cleanly and DBIstcf_STRICT was not specified
+  2 sv was cast ok
+
+The current implementation of sql_type_cast_svpv supports
+C<SQL_INTEGER>, C<SQL_DOUBLE> and C<SQL_NUMERIC>. C<SQL_INTEGER> uses
+sv_2iv and hence may set IV, UV or NV depending on the
+number. C<SQL_DOUBLE> uses sv_2nv so may set NV and C<SQL_NUMERIC>
+will set IV or UV or NV.
+
+DBIstcf_STRICT should be implemented as the StrictlyTyped attribute
+and DBIstcf_DISCARD_STRING implemented as the DiscardString attribute
+to the bind_col method and both default to off.
+
+See DBD::Oracle for an example of how this is used.
 
 =head1 SUBCLASSING DBI DRIVERS
 

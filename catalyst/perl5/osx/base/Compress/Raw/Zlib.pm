@@ -13,7 +13,7 @@ use warnings ;
 use bytes ;
 our ($VERSION, $XS_VERSION, @ISA, @EXPORT, $AUTOLOAD);
 
-$VERSION = '2.021';
+$VERSION = '2.027';
 $XS_VERSION = $VERSION; 
 $VERSION = eval $VERSION;
 
@@ -60,6 +60,7 @@ $VERSION = eval $VERSION;
         Z_STREAM_END
         Z_STREAM_ERROR
         Z_SYNC_FLUSH
+        Z_TREES
         Z_UNKNOWN
         Z_VERSION_ERROR
 
@@ -629,7 +630,7 @@ The default is C<Z_DEFAULT_COMPRESSION>.
 =item B<-Method>
 
 Defines the compression method. The only valid value at present (and
-the default) is Z_DEFLATED.
+the default) is C<Z_DEFLATED>.
 
 =item B<-WindowBits>
 
@@ -659,7 +660,7 @@ Defines the strategy used to tune the compression. The valid values are
 C<Z_DEFAULT_STRATEGY>, C<Z_FILTERED>, C<Z_RLE>, C<Z_FIXED> and
 C<Z_HUFFMAN_ONLY>.
 
-The default is Z_DEFAULT_STRATEGY.
+The default is C<Z_DEFAULT_STRATEGY>.
 
 =item B<-Dictionary>
 
@@ -1381,7 +1382,7 @@ of I<Compress::Raw::Zlib>.
 
 =head1 SEE ALSO
 
-L<Compress::Zlib>, L<IO::Compress::Gzip>, L<IO::Uncompress::Gunzip>, L<IO::Compress::Deflate>, L<IO::Uncompress::Inflate>, L<IO::Compress::RawDeflate>, L<IO::Uncompress::RawInflate>, L<IO::Compress::Bzip2>, L<IO::Uncompress::Bunzip2>, L<IO::Compress::Lzop>, L<IO::Uncompress::UnLzop>, L<IO::Compress::Lzf>, L<IO::Uncompress::UnLzf>, L<IO::Uncompress::AnyInflate>, L<IO::Uncompress::AnyUncompress>
+L<Compress::Zlib>, L<IO::Compress::Gzip>, L<IO::Uncompress::Gunzip>, L<IO::Compress::Deflate>, L<IO::Uncompress::Inflate>, L<IO::Compress::RawDeflate>, L<IO::Uncompress::RawInflate>, L<IO::Compress::Bzip2>, L<IO::Uncompress::Bunzip2>, L<IO::Compress::Lzma>, L<IO::Uncompress::UnLzma>, L<IO::Compress::Xz>, L<IO::Uncompress::UnXz>, L<IO::Compress::Lzop>, L<IO::Uncompress::UnLzop>, L<IO::Compress::Lzf>, L<IO::Uncompress::UnLzf>, L<IO::Uncompress::AnyInflate>, L<IO::Uncompress::AnyUncompress>
 
 L<Compress::Zlib::FAQ|Compress::Zlib::FAQ>
 
@@ -1412,7 +1413,7 @@ See the Changes file.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2009 Paul Marquess. All rights reserved.
+Copyright (c) 2005-2010 Paul Marquess. All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

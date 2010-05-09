@@ -1,7 +1,8 @@
 package Catalyst::View::JSON;
 
 use strict;
-our $VERSION = '0.26';
+our $VERSION = '0.30';
+use 5.008_001;
 
 use base qw( Catalyst::View );
 use Encode ();
@@ -153,7 +154,7 @@ Catalyst::View::JSON - JSON view for your data
   sub hello : Local {
       my($self, $c) = @_;
       $c->stash->{message} = 'Hello World!';
-      $c->forward('MyApp::View::JSON');
+      $c->forward('View::JSON');
   }
 
 =head1 DESCRIPTION
@@ -286,7 +287,7 @@ For example, suppose you have the following code.
   sub end : Private {
       my($self, $c) = @_;
       if ($c->req->param('output') eq 'json') {
-          $c->forward('MyApp::View::JSON');
+          $c->forward('View::JSON');
       } else {
           ...
       }
@@ -420,6 +421,7 @@ John Wang
 kazeburo
 Daisuke Murase
 Jun Kuriyama
+Tomas Doran
 
 =head1 SEE ALSO
 

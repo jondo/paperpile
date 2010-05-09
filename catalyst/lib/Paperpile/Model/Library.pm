@@ -895,7 +895,7 @@ sub fulltext_count {
     $query = $self->dbh->quote("$query*");
     $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
   } else {
-    $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
+    $where = "WHERE $table MATCH '*' AND Publications.trashed=$trash";    #Return everything if query empty
   }
 
   my $count = $self->dbh->selectrow_array(
@@ -931,7 +931,7 @@ sub fulltext_search {
     $query = $self->dbh->quote("$_query*");
     $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
   } else {
-    $where = "WHERE Publications.trashed=$trash";    #Return everything if query empty
+    $where = "WHERE $table MATCH '*' AND Publications.trashed=$trash";    #Return everything if query empty
   }
 
   # explicitely select rowid since it is not included by '*'. Make
