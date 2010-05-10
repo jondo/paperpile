@@ -102,7 +102,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
           cls: 'pp-tag-remove pp-tag-style-' + style,
           html: 'x',
           action: 'remove-tag',
-          name: name
+          guid: guid
         }]
       };
 
@@ -159,11 +159,13 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       data: list
     });
 
+
     this.comboBox = new Ext.form.ComboBox({
       id: 'tag-control-combo-' + this.getGrid().id,
       ctCls: 'pp-tag-control',
       store: store,
       displayField: 'name',
+      valueField:'guid',
       typeAhead: true,
       mode: 'local',
       triggerAction: 'all',
@@ -179,7 +181,26 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       listeners: {
         'specialkey': function(field, e) {
           if (e.getKey() == e.ENTER) {
-            this.commitTag(field.getValue());
+            var name=field.getRawValue();
+
+            // The user entered a new label
+            if (Ext.StoreMgr.lookup('tag_store').findExact('name', name) === -1){
+              var guid = Paperpile.utils.generateUUID();
+              Ext.Ajax.request({
+                url: Paperpile.Url('/ajax/crud/new_collection'),
+                params: {
+                  type: 'LABEL',
+                  text: name,
+                  node_id: guid,
+                  parent_id: 'ROOT'
+                },
+                success: function(response) {
+                  this.commitTag(guid,true);
+                },
+                failure: Paperpile.main.onError,
+                scope:this
+              });
+            }
           } else if (e.getKey() == e.ESC) {
             this.renderTags();
           } else if (e.getKey() == e.TAB) {
@@ -187,7 +208,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
           }
         },
         'select': function(combo, record, index) {
-          this.commitTag(record.get('guid'));
+          this.commitTag(record.get('guid'), false);
         },
         scope: this
       }
@@ -195,9 +216,8 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     this.comboBox.focus();
   },
 
-  commitTag: function(guid) {
+  commitTag: function(guid, isNew) {
     this.comboBox.disable();
-    var tagIndex = Ext.StoreMgr.lookup('tag_store').findExact('guid', guid);
 
     var lots = this.isLargeSelection();
     if (lots) {
@@ -216,11 +236,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         var grid = this.getGrid();
-
-        if (tagIndex > -1) {
-          Ext.StoreMgr.lookup('tag_store').reload();
-          Paperpile.main.onUpdate(json.data);
-        } else {
+        if (isNew) {
           // Cause the tree's tag list to reload itself.
           Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
           Ext.StoreMgr.lookup('tag_store').reload({
@@ -228,6 +244,9 @@ Paperpile.LabelWidget = Ext.extend(Object, {
               Paperpile.main.onUpdate(json.data);
             }
           });
+        } else {
+          Ext.StoreMgr.lookup('tag_store').reload();
+          Paperpile.main.onUpdate(json.data);
         }
         if (lots) {
           Paperpile.status.clearMsg();
@@ -240,21 +259,22 @@ Paperpile.LabelWidget = Ext.extend(Object, {
   },
 
   removeTag: function(el) {
-    tag = el.getAttribute('name');
+    guid = el.getAttribute('guid');
 
     Ext.get(el).parent().remove();
 
     var lots = this.isLargeSelection();
     if (lots) {
-      Paperpile.status.showBusy("Removing label '" + tag + "' from references");
+      Paperpile.status.showBusy("Removing label from references");
     }
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/remove_tag'),
+      url: Paperpile.Url('/ajax/crud/remove_from_collection'),
       params: {
         grid_id: this.getGrid().id,
         selection: this.getGrid().getSelection(),
-        tag: tag
+        collection_guid: guid,
+        type: 'LABEL'
       },
       method: 'GET',
       success: function(response) {

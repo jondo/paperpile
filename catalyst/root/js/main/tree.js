@@ -943,6 +943,32 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }.defer(10));
   },
 
+  deleteCollection: function() {
+    var node = this.lastSelectedNode;
+
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/crud/delete_collection'),
+      params: {
+        guid: node.id,
+        type: node.type === 'FOLDER' ? 'FOLDER' : 'LABEL'
+      },
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        if (node.type === 'TAGS'){
+          // Greg this does not work any more:
+          //Paperple.main.tabs.closeTabByTitle(tag);
+          this.reloadTags(json);
+        } else {
+          Paperpile.main.onUpdate(json.data);
+        }
+      },
+      scope: this,
+      failure: Paperpile.main.onError,
+    });
+    node.remove();
+  },
+
+
   deleteFolder: function() {
     var node = this.lastSelectedNode;
 
@@ -955,14 +981,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         Paperpile.main.onUpdate(json.data);
-        //Ext.getCmp('statusbar').clearStatus();
-        //Ext.getCmp('statusbar').setText('Deleted folder');
       },
       failure: Paperpile.main.onError,
     });
 
     node.remove();
-
   },
 
   /* Debugging only */
@@ -1089,6 +1112,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   removeOnCancel: function(editor, newText, oldText) {
     var node = editor.editNode;
+
+    // Greg: Don't understand why we would trigger deletion of tag on
+    // cancel. In any case, we need to update this to deleteCollection.
     this.deleteTag(node);
     this.mun(treeEditor, 'canceledit', this.removeOnCancel);
   },
@@ -1285,31 +1311,21 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     node.setText(newText);
     node.plugin_title = newText;
-
-    //if (node.type === 'FOLDER'){
-    //  node.plugin_query = 'folderid:' + Paperpile.utils.encodeTag(newText);
-    //  node.plugin_base_query = 'labelid:' + Paperpile.utils.encodeTag(newText);
-    //}
-      
+     
     var tag = oldText;
 
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/rename_collection'),
       params: {
         guid: node.id,
-        new_name: newText
+        new_name: newText,
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
 
-        // If this tab has an open grid, rename it.
-        //var tagTab = Paperpile.main.tabs.find("title", oldText);
-        //if (tagTab.length > 0) {
-        //  tagTab[0].setTitle(newText);
-        //}
-
-        Paperpile.main.onUpdate(json);
-        //this.reloadTags(json);
+        // Greg: we would nee a function here to update label and
+        // folder names throughout the front-end after the re-name
+        
       },
       failure: Paperpile.main.onError,
       scope: this
@@ -1327,7 +1343,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         complete: {
           scope: this,
           single: true,
-          fn: this.commitRenameTag
+          fn: this.commitRenameCollection
         }
       });
 
@@ -1444,7 +1460,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       {
         id: 'folder_menu_delete',
         text: 'Delete',
-        handler: tree.deleteFolder,
+        handler: tree.deleteCollection,
         scope: tree
       },
       {
@@ -1593,10 +1609,8 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       {
         id: 'tags_menu_delete',
         text: 'Delete',
-        handler: function() {
-          this.tree.deleteTag(this.node);
-        },
-        scope: this
+        handler: tree.deleteCollection,
+        scope: tree
       },
       {
         id: 'tags_menu_rename',

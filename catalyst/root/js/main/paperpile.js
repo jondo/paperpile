@@ -532,7 +532,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       node.getUI().removeClass(allTagStyles);
       // Add the correct style.
       var tag = node.text;
-      node.getUI().addClass('pp-tag-tree-style-' + this.getStyleForTag(tag));
+      node.getUI().addClass('pp-tag-tree-style-' + this.getStyleForTag(node.id));
     }
 
     // Now, move on to the tab panel and grids.
@@ -540,7 +540,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     for (var i = 0; i < tabs.length; i++) {
       var tab = tabs[i];
       if (this.isTabPlugin(tab)) {
-        // Update the tab header for any open Tags tabs.
+        // TODO: Relying on the tab.title is not possible in the next
+        // statement. Greg, we need to store the guid of the
+        // folder/tab somewhere within the tab class.
         tab.setIconClass('pp-tag-style-tab pp-tag-style-' + this.getStyleForTag(tab.title));
       }
       // Force a re-render on any grid items containing the given tag.

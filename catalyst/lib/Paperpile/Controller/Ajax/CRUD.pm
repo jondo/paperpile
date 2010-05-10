@@ -420,14 +420,17 @@ sub move_in_collection : Local {
 
 sub remove_from_collection : Local {
   my ( $self, $c ) = @_;
+
   my $collection_guid = $c->request->params->{collection_guid};
   my $type            = $c->request->params->{type};
 
   my $data = $self->_get_selection($c);
 
+  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+
   $c->model('Library')->remove_from_collection( $data, $collection_guid, $type );
 
-  $self->_collect_data( $c, $data, ['folders'] );
+  $self->_collect_data( $c, $data, [$what] );
 }
 
 sub delete_collection : Local {
@@ -459,7 +462,7 @@ sub delete_collection : Local {
 sub rename_collection : Local {
   my ( $self, $c ) = @_;
 
-  my $guid = $c->request->params->{guid};
+  my $guid     = $c->request->params->{guid};
   my $new_name = $c->request->params->{new_name};
 
   $c->model('Library')->rename_collection( $guid, $new_name );
