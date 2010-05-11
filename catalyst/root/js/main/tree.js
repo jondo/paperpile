@@ -48,7 +48,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     this.stylePickerMenu = new Paperpile.StylePickerMenu({
       handler: function(cm, number) {
-        this.styleTag(number);
+        this.styleCollection(number);
       },
       scope: this
     });
@@ -1265,19 +1265,19 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     });
   },
 
-  styleTag: function(number) {
+  styleCollection: function(number) {
     var node = this.lastSelectedNode;
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/style_tag'),
+      url: Paperpile.Url('/ajax/crud/style_collection'),
       params: {
-        tag: node.text,
-        style: number
+        guid: node.id,
+        style: number,
+        type: 'LABEL'
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         Paperpile.main.reloadTagStyles();
-        Paperpile.main.onUpdate(json.data);
       },
       failure: Paperpile.main.onError,
       scope: this

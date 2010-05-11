@@ -335,16 +335,14 @@ sub update_tags : Local {
 
 }
 
-sub style_tag : Local {
+sub style_collection : Local {
   my ( $self, $c ) = @_;
 
-  my $tag   = $c->request->params->{tag};
+  my $guid   = $c->request->params->{guid};
   my $style = $c->request->params->{style};
 
-  $c->model('Library')->set_tag_style( $tag, $style );
+  $c->model('Library')->set_collection_style( $guid, $style );
 
-  my $pubs = $self->_get_cached_data($c);
-  $self->_collect_data($c, $pubs,['tags']);
 }
 
 sub new_tag : Local {

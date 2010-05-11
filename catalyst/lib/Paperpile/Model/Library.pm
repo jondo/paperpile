@@ -742,8 +742,6 @@ sub update_collections {
 
   $dbh->do("UPDATE Publications SET $what=$guid_list WHERE rowid=$rowid;");
 
-  print STDERR "UPDATE Publications SET $what=$guid_list WHERE rowid=$rowid;\n";
-
   my $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
 
   $dbh->do("UPDATE Fulltext SET $field=$guid_list WHERE rowid=$rowid;");
@@ -1095,14 +1093,11 @@ sub set_tag_position {
   $self->dbh->do("UPDATE TAGS SET sort_order=$position WHERE tag=$tag;");
 }
 
-sub set_tag_style {
+sub set_collection_style {
 
-  my ( $self, $tag, $style ) = @_;
+  my ( $self, $guid, $style ) = @_;
 
-  $tag   = $self->dbh->quote($tag);
-  $style = $self->dbh->quote($style);
-
-  $self->dbh->do("UPDATE TAGS SET style=$style WHERE tag=$tag;");
+  $self->dbh->do("UPDATE COLLECTIONS SET style='$style' WHERE guid='$guid';");
 
 }
 
