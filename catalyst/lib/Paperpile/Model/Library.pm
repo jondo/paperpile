@@ -1347,7 +1347,7 @@ sub fulltext_search {
   if ($_query) {
 
     $select .=
-      ",offsets(Fulltext) as offsets FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
+      ",offsets(Fulltext) as offsets, rank(matchinfo(Fulltext)) as rank_score FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
 
     $query = $self->process_query_string($_query);
 
@@ -1936,22 +1936,39 @@ sub _remove_from_flatlist {
 
 }
 
+
+
+
 sub _snippets {
 
   my ( $self, $row, $query ) = @_;
 
+  # Trivial case
   if ( not $query ) {
     return ('');
   }
 
-  my %data;
+  # Track if we explicitly searched for a specific field
+  my %searchExplicit;
 
-  $data{text}     = encode( 'UTF-8', $row->{text} );
-  $data{abstract} = encode( 'UTF-8', $row->{abstract} );
-  $data{notes}    = encode( 'UTF-8', $row->{notes} );
+  foreach my $field ( 'text', 'abstract', 'notes' ) {
 
-  my $offsets = $row->{offsets};
+    $row->{$field} = encode( 'utf8', $row->{$field} );
+    $searchExplicit{$field} = 1 if $query =~ /$field\s*:\s*/i;
+  }
 
+  # If we don't explicitly search fulltext or abstract and we have a
+  # hit in title, journal, authors..., we don't show snippets
+  if (  !$searchExplicit{text}
+    and !$searchExplicit{abstract}
+    and $row->{rank_score} > 0 ) {
+    return '';
+  }
+
+  #print STDERR $row->{rank_score}, "\n";
+  #print STDERR Dumper( \%searchExplicit ), "\n";
+
+  # Clean up query
   $query =~ s/^\s+//;
   $query =~ s/\s+$//;
   $query =~ s/"//g;
@@ -1978,6 +1995,8 @@ sub _snippets {
 
   # 4. Number of bytes in the match.
 
+  my $offsets = $row->{offsets};
+
   # This is the order of our fields in the fulltext table
   my @fields = ( 'text', 'abstract', 'notes' );
 
@@ -1995,23 +2014,25 @@ sub _snippets {
     if ( scalar @{ $snippets{$field} } < 5 ) {
 
       my $snippet;
-      my $match = substr( $data{$field}, $start, $length );
+      my $match = substr( $row->{$field}, $start, $length );
 
       my $context = 100;
 
+      # Get part of snippet before match
       my $before;
-
       if ( $start < $context ) {
-        $before = substr( $data{$field}, 0, $start );
+        $before = substr( $row->{$field}, 0, $start );
       } else {
-        $before = substr( $data{$field}, $start - $context, $context );
+        $before = substr( $row->{$field}, $start - $context, $context );
       }
 
-      my $after = substr( $data{$field}, $start + $length, $context );
+      # Get part of snippet after match
+      my $after = substr( $row->{$field}, $start + $length, $context );
 
-      #$before = decode( 'UTF-8', $before );
-      #$after = decode( 'UTF-8', $before );
+      $before = decode( 'utf8', $before );
+      $after  = decode( 'utf8', $after );
 
+      # Cut snippets at sentence boundaries.
       if ( $before =~ /(^|[.?!]\s+)([A-Z].*)/ ) {
         $before = $2;
       }
@@ -2020,6 +2041,7 @@ sub _snippets {
         $after = $1;
       }
 
+      # Take at most 50 characters and cut at word boundaries
       if ( length($after) > 50 ) {
         $after = substr( $after, 0, 50 );
       }
@@ -2036,9 +2058,9 @@ sub _snippets {
         $before =~ s/\w+\s//;
       }
 
-      my $score = 0;
-
       $snippet = "$before $match $after";
+
+      my $score = 0;
 
       foreach my $term (@terms) {
         while ( $snippet =~ /$term/g ) {
@@ -2052,37 +2074,87 @@ sub _snippets {
     }
   }
 
+  my @what = ( 'notes', 'abstract', 'text' );
+
+  my %shownSnippets = ();
+
+  foreach my $what (@what) {
+    $snippets{$what} = [ sort { $b->{score} <=> $a->{score} } @{ $snippets{$what} } ];
+    $shownSnippets{$what} = [];
+  }
+
+  if ( $searchExplicit{notes} or $searchExplicit{text} or $searchExplicit{abstract} ) {
+    @what = ();
+    push @what, 'notes'    if $searchExplicit{notes};
+    push @what, 'abstract' if $searchExplicit{abstract};
+    push @what, 'text'     if $searchExplicit{text};
+  }
+
+  my $count_lines  = 0;
+  my @already_seen = ();
+
+  while ( $count_lines < 5 ) {
+
+    foreach my $what (@what) {
+      my $s = pop @{ $snippets{$what} };
+      if ($s) {
+        my $overlaps = 0;
+        foreach my $prev (@already_seen) {
+          if ($self->check_string_overlap($s->{snippet}, $prev->{snippet})){
+            $overlaps=1;
+            last;
+          }
+        }
+
+        next if $overlaps;
+
+        push @already_seen, $s;
+        push @{ $shownSnippets{$what} },
+          "$what: " . $s->{snippet} . "(" . $s->{score} . ")" . "<br>";
+        $count_lines++;
+      }
+    }
+
+    last if ( !@{ $snippets{notes} } and !@{ $snippets{text} } and !@{ $snippets{abstract} } );
+  }
+
   my $output = '<br>';
 
-  foreach my $what ( 'text', 'abstract', 'notes' ) {
-
-    $snippets{$what} = [ sort { $a->{score} <=> $b->{score} } @{ $snippets{$what} } ];
-
-    foreach my $s ( @{ $snippets{$what} } ) {
-      $output .= $s->{snippet} . "(" . $s->{score} . ")" . "<br>";
-    }
-    $output .= "<br>";
+  foreach my $what (@what) {
+    $output .= join( '', reverse @{ $shownSnippets{$what} } );
   }
 
   return ($output);
 
 }
 
-sub _lcss {
-  my ( $self, $needle, $haystack ) = @_;
-  ( $needle, $haystack ) = ( $haystack, $needle )
-    if length $$needle > length $$haystack;
 
-  my ( $longest_c, $longest ) = 0;
-  for my $start ( 0 .. length $$needle ) {
-    for my $len ( reverse $start + 1 .. length $$needle ) {
-      my $substr = substr( $$needle, $start, $len );
-      length $1 > $longest_c and ( $longest_c, $longest ) = ( length $1, $1 )
-        while $$haystack =~ m[($substr)]g;
-    }
+sub check_string_overlap {
+
+  my ($self, $string_a, $string_b) = @_;
+
+  my @words_a = split(/\s+/, $string_a);
+  my @words_b = split(/\s+/, $string_b);
+
+  my %hash=();
+
+  my $total_count=0;
+  my $overlap_count=1;
+
+  foreach my $s (@words_a){
+    $hash{$s}=1;
+    $total_count++;
   }
-  return $longest;
+
+  foreach my $s (@words_b){
+    $overlap_count++ if $hash{$s};
+  }
+
+  return ($overlap_count/$total_count > 0.3);
+
 }
+
+
 
 
 
