@@ -670,7 +670,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '<p class="pp-grid-citation">{_citation_display}</p>',
         '</tpl>',
         '<tpl if="_snippets">',
-        '<p class="pp-grid-snippets"><span class="heading">Snippet:</span> {_snippets}</p>',
+        '<p class="pp-grid-snippets">{_snippets}</p>',
         '</tpl>',
         '</div>', {
           tagStyle: function(tag_string) {

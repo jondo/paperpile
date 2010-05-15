@@ -1950,9 +1950,7 @@ sub _snippets {
 
   # Track if we explicitly searched for a specific field
   my %searchExplicit;
-
   foreach my $field ( 'text', 'abstract', 'notes' ) {
-
     $row->{$field} = encode( 'utf8', $row->{$field} );
     $searchExplicit{$field} = 1 if $query =~ /$field\s*:\s*/i;
   }
@@ -1964,9 +1962,6 @@ sub _snippets {
     and $row->{rank_score} > 0 ) {
     return '';
   }
-
-  #print STDERR $row->{rank_score}, "\n";
-  #print STDERR Dumper( \%searchExplicit ), "\n";
 
   # Clean up query
   $query =~ s/^\s+//;
@@ -2011,97 +2006,96 @@ sub _snippets {
 
     my $field = $fields[$column];
 
-    if ( scalar @{ $snippets{$field} } < 5 ) {
+    my $snippet;
+    my $match = substr( $row->{$field}, $start, $length );
 
-      my $snippet;
-      my $match = substr( $row->{$field}, $start, $length );
+    my $context = 100;
 
-      my $context = 100;
+    # Get part of snippet before match
+    my $before;
+    if ( $start < $context ) {
+      $before = substr( $row->{$field}, 0, $start );
+    } else {
+      $before = substr( $row->{$field}, $start - $context, $context );
+    }
 
-      # Get part of snippet before match
-      my $before;
-      if ( $start < $context ) {
-        $before = substr( $row->{$field}, 0, $start );
-      } else {
-        $before = substr( $row->{$field}, $start - $context, $context );
+    # Get part of snippet after match
+    my $after = substr( $row->{$field}, $start + $length, $context );
+
+    $before = decode( 'utf8', $before );
+    $after  = decode( 'utf8', $after );
+
+    # Cut snippets at sentence boundaries.
+    if ( $before =~ /(^|[.?!]\s+)([A-Z].*)/ ) {
+      $before = $2;
+    }
+
+    if ( $after =~ /(.*[.?!])\s+($|[A-Z])/ ) {
+      $after = $1;
+    }
+
+    # Take at most 50 characters and cut at word boundaries
+    if ( length($after) > 50 ) {
+      $after = substr( $after, 0, 50 );
+    }
+
+    if ( length($before) > 50 ) {
+      $before = substr( $before, length($before) - 50, 50 );
+    }
+
+    if ( $after =~ /\s/ ) {
+      $after =~ s/\s\w+$//;
+    }
+
+    if ( $before =~ /\s/ ) {
+      $before =~ s/\w+\s//;
+    }
+
+    # Put back together
+    $snippet = "$before $match $after";
+
+    # Assign score depending on how many of the keywords occur in the snippet
+    my $score = 0;
+    foreach my $term (@terms) {
+      while ( $snippet =~ /$term/g ) {
+        $score += 1;
       }
-
-      # Get part of snippet after match
-      my $after = substr( $row->{$field}, $start + $length, $context );
-
-      $before = decode( 'utf8', $before );
-      $after  = decode( 'utf8', $after );
-
-      # Cut snippets at sentence boundaries.
-      if ( $before =~ /(^|[.?!]\s+)([A-Z].*)/ ) {
-        $before = $2;
-      }
-
-      if ( $after =~ /(.*[.?!])\s+($|[A-Z])/ ) {
-        $after = $1;
-      }
-
-      # Take at most 50 characters and cut at word boundaries
-      if ( length($after) > 50 ) {
-        $after = substr( $after, 0, 50 );
-      }
-
-      if ( length($before) > 50 ) {
-        $before = substr( $before, length($before) - 50, 50 );
-      }
-
-      if ( $after =~ /\s/ ) {
-        $after =~ s/\s\w+$//;
-      }
-
-      if ( $before =~ /\s/ ) {
-        $before =~ s/\w+\s//;
-      }
-
-      $snippet = "$before $match $after";
-
-      my $score = 0;
-
-      foreach my $term (@terms) {
-        while ( $snippet =~ /$term/g ) {
-          $score += 1;
-        }
-      }
-
-      #$snippet = "\x{2026}" . $snippet . "\x{2026}";
-
       push @{ $snippets{$field} }, { snippet => $snippet, score => $score };
     }
   }
 
-  my @what = ( 'notes', 'abstract', 'text' );
+  my @what;
 
-  my %shownSnippets = ();
-
-  foreach my $what (@what) {
-    $snippets{$what} = [ sort { $b->{score} <=> $a->{score} } @{ $snippets{$what} } ];
-    $shownSnippets{$what} = [];
-  }
-
+  # If specific fields are searched we only show snippets for them
   if ( $searchExplicit{notes} or $searchExplicit{text} or $searchExplicit{abstract} ) {
     @what = ();
     push @what, 'notes'    if $searchExplicit{notes};
     push @what, 'abstract' if $searchExplicit{abstract};
     push @what, 'text'     if $searchExplicit{text};
+  } else {
+    @what = ( 'notes', 'abstract', 'text' );
   }
 
-  my $count_lines  = 0;
+  my %shownSnippets = ();
+  foreach my $what (@what) {
+    $snippets{$what} = [ sort { $b->{score} <=> $a->{score} } @{ $snippets{$what} } ];
+    $shownSnippets{$what} = [];
+  }
+
+  my $count_lines  = 1;
   my @already_seen = ();
 
+  # We collect at most 5 snippets to show
   while ( $count_lines < 5 ) {
 
+    # Take the first from each category until we have enough snippets
     foreach my $what (@what) {
       my $s = pop @{ $snippets{$what} };
       if ($s) {
         my $overlaps = 0;
         foreach my $prev (@already_seen) {
-          if ($self->check_string_overlap($s->{snippet}, $prev->{snippet})){
-            $overlaps=1;
+          if ( $self->check_string_overlap( $s->{snippet}, $prev->{snippet} ) ) {
+            $overlaps = 1;
             last;
           }
         }
@@ -2109,19 +2103,34 @@ sub _snippets {
         next if $overlaps;
 
         push @already_seen, $s;
-        push @{ $shownSnippets{$what} },
-          "$what: " . $s->{snippet} . "(" . $s->{score} . ")" . "<br>";
+
+        foreach my $term (@terms) {
+          $s->{snippet} =~ s/($term)/<span class="highlight">$1<\/span>/gi;
+        }
+
+        push @{ $shownSnippets{$what} }, $s->{snippet};
         $count_lines++;
       }
     }
 
+    # Stop if nothing is left
     last if ( !@{ $snippets{notes} } and !@{ $snippets{text} } and !@{ $snippets{abstract} } );
   }
 
-  my $output = '<br>';
+  # Finally format the snippets for display
 
+  my $output = '';
   foreach my $what (@what) {
-    $output .= join( '', reverse @{ $shownSnippets{$what} } );
+    next if not @{ $shownSnippets{$what} };
+    my $type;
+    $type = 'Abstract' if $what eq 'abstract';
+    $type = 'PDF'      if $what eq 'text';
+    $type = 'Notes'    if $what eq 'notes';
+
+    $output .= "<span class=\"heading\">$type: </span>";
+    $output .= " \x{2026} ";
+    $output .= join( " \x{2026} ", reverse @{ $shownSnippets{$what} } );
+    $output .= " \x{2026} ";
   }
 
   return ($output);
