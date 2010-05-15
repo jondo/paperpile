@@ -75,8 +75,6 @@ sub insert_entry : Local {
   # directly and don't reload the entire grid that triggered the import.
   if ( scalar( keys %$pubs ) < 50 ) {
     $c->stash->{data} = { pubs => $pubs };
-
-    # There is no need to reload the entire grid for the
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
   }
 
@@ -181,7 +179,7 @@ sub delete_entry : Local {
     $c->session->{"undo_trash"} = $data;
   }
 
-  $self->_collect_data($c,$data,['_imported','trashed']);
+  $self->_collect_update_data($c,$data,['_imported','trashed']);
 
   $c->stash->{data}->{pub_delta} = 1;
   $c->stash->{num_deleted} = scalar @$data;
@@ -189,8 +187,6 @@ sub delete_entry : Local {
   $plugin->total_entries( $plugin->total_entries - scalar(@$data) );
 
   $self->_update_counts($c);
-
-  $c->forward('Paperpile::View::JSON');
 
 }
 
@@ -235,7 +231,6 @@ sub update_entry : Local {
 
   $c->stash->{data} = { pubs => {$old_pub->sha1 => $new_pub->as_hash}};
 
-
 }
 
 sub update_notes : Local {
@@ -255,106 +250,6 @@ sub update_notes : Local {
 
 }
 
-sub add_tag : Local {
-  my ( $self, $c ) = @_;
-
-  my $tag     = $c->request->params->{tag};
-  my $grid_id = $c->request->params->{grid_id};
-
-  my $data = $self->_get_selection($c);
-
-  # First import entries that are not already in the database
-  my @to_be_imported = ();
-  foreach my $pub (@$data) {
-    push @to_be_imported, $pub if !$pub->_imported;
-  }
-
-  $c->model('Library')->create_pubs( \@to_be_imported );
-
-  my $dbh = $c->model('Library')->dbh;
-
-  $dbh->begin_work();
-
-  foreach my $pub (@$data) {
-    my @tags = split( /,/, $pub->tags );
-    push @tags, $tag;
-    my %seen = ();
-    @tags = grep { !$seen{$_}++ } @tags;
-    my $new_tags = join( ',', @tags );
-    $c->model('Library')->update_tags( $pub->_rowid, $new_tags );
-    $pub->tags($new_tags);
-  }
-  $dbh->commit();
-
-  if (@to_be_imported) {
-    $self->_update_counts($c);
-    $self->_collect_data($c, $data, [ 'tags', '_imported', 'citekey', 'created', 'pdf' ] );
-    $c->stash->{data}->{pub_delta}        = 1;
-    $c->stash->{data}->{pub_delta_ignore} = $grid_id;
-  } else {
-    $self->_collect_data($c, $data, ['tags'] );
-  }
-
-}
-
-
-sub remove_tag : Local {
-  my ( $self, $c ) = @_;
-
-  my $tag  = $c->request->params->{tag};
-  my $data = $self->_get_selection($c);
-
-  my $dbh = $c->model('Library')->dbh;
-
-  $dbh->begin_work;
-
-  foreach my $pub (@$data) {
-    my $new_tags = $pub->tags;
-    $new_tags =~ s/^\Q$tag\E,//g;
-    $new_tags =~ s/^\Q$tag\E$//g;
-    $new_tags =~ s/,\Q$tag\E$//g;
-    $new_tags =~ s/,\Q$tag\E,/,/g;
-    $c->model('Library')->update_tags( $pub->_rowid, $new_tags );
-    $pub->tags($new_tags);
-  }
-
-  $dbh->commit;
-
-  $self->_collect_data($c, $data,['tags']);
-  $c->forward('Paperpile::View::JSON');
-}
-
-sub update_tags : Local {
-  my ( $self, $c ) = @_;
-
-  my $rowid = $c->request->params->{rowid};
-  my $sha1  = $c->request->params->{sha1};
-  my $tags  = $c->request->params->{tags};
-
-  $c->model('Library')->update_tags( $rowid, $tags );
-
-}
-
-sub style_collection : Local {
-  my ( $self, $c ) = @_;
-
-  my $guid   = $c->request->params->{guid};
-  my $style = $c->request->params->{style};
-
-  $c->model('Library')->set_collection_style( $guid, $style );
-
-}
-
-sub new_tag : Local {
-  my ( $self, $c ) = @_;
-
-  my $tag   = $c->request->params->{tag};
-  my $style = $c->request->params->{style};
-  my $sort_order = $c->request->params->{sort_order};
-
-  $c->model('Library')->new_tag( $tag, $style , $sort_order);
-
-}
 
 sub new_collection : Local {
   my ( $self, $c ) = @_;
@@ -408,11 +303,11 @@ sub move_in_collection : Local {
 
   if (@to_be_imported) {
     $self->_update_counts($c);
-    $self->_collect_data( $c, $data, [ $what, '_imported', 'citekey', 'created', 'pdf' ] );
+    $self->_collect_update_data( $c, $data, [ $what, '_imported', 'citekey', 'created', 'pdf' ] );
     $c->stash->{data}->{pub_delta}        = 1;
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
   } else {
-    $self->_collect_data( $c, $data, [ $what ] );
+    $self->_collect_update_data( $c, $data, [ $what ] );
   }
 }
 
@@ -428,7 +323,7 @@ sub remove_from_collection : Local {
 
   $c->model('Library')->remove_from_collection( $data, $collection_guid, $type );
 
-  $self->_collect_data( $c, $data, [$what] );
+  $self->_collect_update_data( $c, $data, [$what] );
 }
 
 sub delete_collection : Local {
@@ -454,7 +349,7 @@ sub delete_collection : Local {
     $pub->$what($new_list);
   }
 
-  $self->_collect_data($c, $pubs,[$what]);
+  $self->_collect_update_data($c, $pubs,[$what]);
 }
 
 sub rename_collection : Local {
@@ -489,136 +384,14 @@ sub move_collection : Local {
 
 }
 
-
-sub delete_tag : Local {
+sub style_collection : Local {
   my ( $self, $c ) = @_;
 
-  my $tag = $c->request->params->{tag};
+  my $guid   = $c->request->params->{guid};
+  my $style = $c->request->params->{style};
 
-  $c->model('Library')->delete_tag($tag);
-
-  my $pubs = $self->_get_cached_data($c);
-  foreach my $pub ( @$pubs ) {
-    my $new_tags = $pub->tags;
-    $new_tags =~ s/^\Q$tag\E,//g;
-    $new_tags =~ s/^\Q$tag\E$//g;
-    $new_tags =~ s/,\Q$tag\E$//g;
-    $new_tags =~ s/,\Q$tag\E,/,/g;
-    $pub->tags($new_tags);
-  }
-
-  $self->_collect_data($c, $pubs,['tags']);
+  $c->model('Library')->set_collection_style( $guid, $style );
 }
-
-sub rename_tag : Local {
-  my ( $self, $c ) = @_;
-
-  my $old_tag = $c->request->params->{old_tag};
-  my $new_tag = $c->request->params->{new_tag};
-
-  $c->model('Library')->rename_tag( $old_tag, $new_tag );
-
-  my $pubs = $self->_get_cached_data($c);
-  foreach my $pub ( @$pubs ) {
-    my $new_tags = $pub->tags;
-    $new_tags =~ s/^\Q$old_tag\E,/$new_tag,/g;
-    $new_tags =~ s/^\Q$old_tag\E$/$new_tag/g;
-    $new_tags =~ s/,\Q$old_tag\E$/,$new_tag/g;
-    $new_tags =~ s/,\Q$old_tag\E,/,$new_tag,/g;
-    $pub->tags($new_tags);
-  }
-
-  $self->_collect_data($c, $pubs,['tags']);
-}
-
-sub generate_edit_form : Local {
-  my ( $self, $c ) = @_;
-
-  my $pub = Paperpile::Library::Publication->new();
-
-  my $pubtype = $c->request->params->{pubtype};
-
-  my %config = Paperpile::Utils::get_config;
-
-  my @output = ();
-
-  foreach my $field ( split( /\s+/, $config{pubtypes}->{$pubtype}->{all} ) ) {
-    push @output, { name => $field, fieldLabel => $config{fields}->{$field} };
-  }
-
-  my $form = [@output];
-
-  $c->stash->{form} = $form;
-
-  $c->forward('Paperpile::View::JSON');
-
-}
-
-sub move_in_folder : Local {
-  my ( $self, $c ) = @_;
-
-  my $grid_id = $c->request->params->{grid_id};
-  my $node_id = $c->request->params->{node_id};
-
-  my $data = $self->_get_selection($c);
-
-  # First import entries that are not already in the database
-  my @to_be_imported = ();
-  foreach my $pub (@$data) {
-    push @to_be_imported, $pub if !$pub->_imported;
-  }
-
-  $c->model('Library')->create_pubs( \@to_be_imported );
-
-  my $dbh = $c->model('Library')->dbh;
-
-  $dbh->begin_work();
-
-  if ( $node_id ne 'FOLDER_ROOT' ) {
-    my $newFolder = $node_id;
-
-    foreach my $pub (@$data) {
-      my @folders = split( /,/, $pub->folders );
-      push @folders, $newFolder;
-      my %seen = ();
-      @folders = grep { !$seen{$_}++ } @folders;
-      my $new_folders = join( ',', @folders );
-      $c->model('Library')->update_folders( $pub->_rowid, $new_folders );
-      $pub->folders($new_folders);
-    }
-  }
-
-  $dbh->commit();
-
-  if (@to_be_imported) {
-    $self->_update_counts($c);
-    $self->_collect_data($c, $data, [ 'folders', '_imported', 'citekey', 'created','pdf' ] );
-    $c->stash->{data}->{pub_delta}        = 1;
-    $c->stash->{data}->{pub_delta_ignore} = $grid_id;
-  } else {
-    $self->_collect_data($c, $data, ['folders'] );
-  }
-
-}
-
-
-sub delete_from_folder : Local {
-  my ( $self, $c ) = @_;
-
-  my $folder_id = $c->request->params->{folder_id};
-
-  my $data = $self->_get_selection($c);
-
-  #foreach my $pub (@$data) {
-  #  my $new_folders = $c->model('Library')->delete_from_folder( $pub->_rowid, $folder_id );
-  #  $pub->folders($new_folders);
-  #}
-
-  $c->model('Library')->delete_from_folder( $data, $folder_id );
-
-  $self->_collect_data($c, $data, ['folders'] );
-}
-
 
 sub batch_download : Local {
   my ( $self, $c ) = @_;
@@ -644,26 +417,7 @@ sub batch_download : Local {
   $q->submit( \@jobs );
   $q->save;
   $q->run;
-  $self->_collect_data($c, $data, ['_search_job'] );
-
-
-  #my $pid = undef;
-
-  #if ( !defined( $pid = fork() ) ) {
-  #  die "Cannot fork: $!";
-  #} elsif ( $pid == 0 ) {
-  #  print STDERR "================> This is the child.";
-
-  #  close(STDOUT);
-  #  close(STDERR);
-
-  #  foreach my $i (0..10){
-  #    sleep(1);
-  #  }
-  #  exit();
-  #} else {
-  #  print STDERR "================> This is the parent.";
-  #}
+  $self->_collect_update_data($c, $data, ['_search_job'] );
 
   $c->stash->{data}->{job_delta} = 1;
 
@@ -671,15 +425,16 @@ sub batch_download : Local {
 
 }
 
-sub _get_plugin {
-  my $self = shift;
-  my $c = shift;
 
+# Returns the plugin object in the backend corresponding to an AJAX
+# request from the frontend
+sub _get_plugin {
+  my ( $self, $c ) = @_;
   my $grid_id = $c->request->params->{grid_id};
-  my $plugin = $c->session->{"grid_$grid_id"};
-  return $plugin;
+  return $c->session->{"grid_$grid_id"};
 }
 
+# Gets data for a selection in the frontend from the plugin object cache
 sub _get_selection {
 
   my ( $self, $c, $light_objects ) = @_;
@@ -688,11 +443,7 @@ sub _get_selection {
   my $selection = $c->request->params->{selection};
   my $plugin    = $self->_get_plugin($c);
 
-  if ($light_objects) {
-    $plugin->light_objects(1);
-  } else {
-    $plugin->light_objects(0);
-  }
+  $plugin->light_objects($light_objects? 1 : 0);
 
   my @data = ();
 
@@ -714,9 +465,10 @@ sub _get_selection {
   }
 
   return [@data];
-
 }
 
+# Returns a list of all publications objects from all current plugin
+# objects (i.e. all open grid tabs in the frontend)
 sub _get_cached_data {
 
   my ( $self, $c ) = @_;
@@ -732,8 +484,11 @@ sub _get_cached_data {
   }
 
   return [@list];
-
 }
+
+# If we add or delete items we need to update the overall count in the
+# database plugins to make sure the number is up-to-date when it is
+# reloaded the next time by the frontend.
 
 sub _update_counts {
 
@@ -748,20 +503,20 @@ sub _update_counts {
   }
 }
 
-sub _collect_data {
+sub _collect_update_data {
   my ( $self, $c, $pubs, $fields ) = @_;
 
-  $c->stash->{data} = {} unless (defined $c->stash->{data});
+  $c->stash->{data} = {} unless ( defined $c->stash->{data} );
 
   my $max_output_size = 50;
-  if (scalar(@$pubs) > $max_output_size) {
+  if ( scalar(@$pubs) > $max_output_size ) {
     $c->stash->{data}->{pub_delta} = 1;
     return ();
   }
 
   my %output = ();
   foreach my $pub (@$pubs) {
-    my $hash       = $pub->as_hash;
+    my $hash = $pub->as_hash;
 
     my $pub_fields = {};
     if ($fields) {

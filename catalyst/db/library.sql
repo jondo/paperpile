@@ -24,7 +24,6 @@ CREATE TABLE Publications(
   guid               TEXT UNIQUE,
   pdf                TEXT,
   pdf_url            TEXT,
-  pdftext            TEXT,
   pdf_size           INTEGER,
   trashed            INTEGER,
   created            TIMESTAMP,
