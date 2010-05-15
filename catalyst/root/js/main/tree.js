@@ -1003,7 +1003,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       baseParams: {
         checked: true
       },
-      requestMethod: 'GET'
+      requestMethod: 'GET',
     });
 
     // Force reload by deleting the children which get stored in

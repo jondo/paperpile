@@ -38,22 +38,6 @@ CREATE TABLE Publications(
 
 CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,year,journal, keyword,folderid,labelid);
 
-CREATE TABLE Tags (
-  tag            TEXT UNIQUE,
-  style          TEXT,
-  sort_order     INTEGER
-);
-
-CREATE TABLE Tag_Publication (
-  tag_id         INTEGER,
-  publication_id    INTEGER,
-  PRIMARY KEY (tag_id, publication_id)
-);
-
-CREATE TABLE Folders (
-  folder_id           TEXT UNIQUE
-);
-
 CREATE TABLE Collections (
   guid          TEXT UNIQUE,
   name          TEXT,
@@ -67,13 +51,6 @@ CREATE TABLE Collection_Publication (
   collection_guid     Text,
   publication_guid    Text,
   PRIMARY KEY (collection_guid, publication_guid)
-);
-
-
-CREATE TABLE Folder_Publication (
-  folder_id         INTEGER,
-  publication_id    INTEGER,
-  PRIMARY KEY (folder_id, publication_id)
 );
 
 CREATE TABLE Attachments (

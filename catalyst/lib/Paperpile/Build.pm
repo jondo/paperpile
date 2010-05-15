@@ -31,6 +31,7 @@ use File::DirCompare;
 use File::stat;
 use File::Temp qw/tempdir /;
 use Digest::MD5;
+use Data::GUID;
 
 use YAML qw(LoadFile DumpFile);
 
@@ -95,11 +96,6 @@ sub initdb {
   }
 
   $model->dbh->do("CREATE INDEX guid_index ON Publications (guid);");
-
-  # Just for now set some defaults here, will be refactored to set these
-  # defaults with all other defaults in the Controller
-  $model->dbh->do("INSERT INTO Tags (tag,style) VALUES ('Important',11);");
-  $model->dbh->do("INSERT INTO Tags (tag,style) VALUES ('Review',22);");
 
   print STDERR "Importing journal list into app.db...\n";
 
