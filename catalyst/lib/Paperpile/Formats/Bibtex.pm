@@ -21,8 +21,6 @@ use YAML qw(LoadFile);
 use BibTeX::Parser;
 use IO::File;
 
-
-
 extends 'Paperpile::Formats';
 
 sub BUILD {
@@ -37,7 +35,7 @@ sub read {
 
   my ($self) = @_;
 
-  my $fh     = IO::File->new($self->file);
+  my $fh = IO::File->new( $self->file );
 
   my $config = LoadFile( Paperpile::Utils->path_to('conf/fields.yaml') );
 
@@ -49,66 +47,64 @@ sub read {
 
   my @output = ();
 
-  my $parser = BibTeX::Parser->new($fh);
+  my $parser = BibTeX::Parser->new($fh, 1);
 
-  while (my $entry = $parser->next ) {
+  while ( my $entry = $parser->next ) {
 
     next unless $entry->parse_ok;
 
     my $data = {};
 
-    foreach my $field (  $entry->fieldlist  ) {
+    foreach my $field ( $entry->fieldlist ) {
 
+      $field = lc($field);
+
+      # 1:1 map between standard BibTeX fields and Paperpile fields
       if ( $built_in{$field} ) {
         $data->{$field} = $entry->field($field);
       }
 
-      if ( $field eq 'author' || $field eq 'editor' ) {
+      # Authors/Editors
+      elsif ( $field eq 'author' || $field eq 'editor' ) {
 
-        my @names;
+        my $names = join(' and ',  $entry->$field);
 
-        if ($field eq 'author'){
-          @names = $entry->author;
-        } else {
-          @names = $entry->editor;
+        if ( $field eq 'author' ) {
+          $data->{authors} = $names;
         }
 
-        my @normalized = ();
-
-        foreach my $name (@names) {
-
-          my $von   = $name->von;
-          my $last  = $name->last;
-          my $jr    = $name->jr;
-          my $first = $name->first;
-
-          my $output = '';
-
-          $output .= $von . " " if ($von);
-          $output .= $last . ", ";
-          $output .= $jr . ", " if ($jr);
-          $output .= $first;
-
-          push @normalized, $output;
+        if ( $field eq 'editor' ) {
+          $data->{editors} = $names;
         }
-        my $final = join( " and ", @normalized );
-
-        if ($field eq 'author'){
-          $data->{authors} = $final;
+      }
+      # Put other non-standard fields here
+      else {
+        if ($field =~ /arxiv/){
+          $data->{arxivid} = $entry->$field;
         }
 
-        if ($field eq 'editor'){
-          $data->{editors} = $final;
-        }
+        print STDERR "Field $field not handled.\n";
       }
     }
 
-    $data->{_light}=1;
-    $data->{_auto_refresh}=0;
+    my $type = $entry->type;
+
+    my @pub_types = keys %{ $config->{pub_types} };
+
+    if ( not $type ~~ [@pub_types] ) {
+      $type = 'MISC';
+    }
+
+    $data->{pubtype} = $type;
+
+    $data->{_light}        = 1;
+    $data->{_auto_refresh} = 1;
 
     push @output, Paperpile::Library::Publication->new($data);
 
-  };
+  }
+
+  print STDERR Dumper(\@output);
 
   return [@output];
 

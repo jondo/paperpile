@@ -84,6 +84,8 @@ sub connect {
 
       my $data = $reader->read();
 
+      #print STDERR Dumper($data);
+
       # Collect pubs in hash to avoid entries with duplicate sha1 which
       # causes problems when converting to database. Maybe this is too
       # simplistic to deal with duplicates at this stage but it works...

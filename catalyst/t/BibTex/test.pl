@@ -19,4 +19,9 @@ my $f = $module->new( file => $file );
 
 my $data = $f->read();
 
-print Dumper($data);
+foreach my $pub (@$data){
+
+  #print STDERR $pub->sha1, "\n";
+
+}
+

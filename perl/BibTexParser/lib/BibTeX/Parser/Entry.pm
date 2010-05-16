@@ -269,7 +269,7 @@ sub has {
 sub _sanitize_field {
   my $value = shift;
   my $clean = shift;
-  print STDERR "IN: $value\n";
+  #print STDERR "IN: $value\n";
   # some cleaning before UTF-8 conversion
   if ( $clean >= 1 ) {
     $value =~ s/\\~\{\}/~/g;
@@ -303,7 +303,7 @@ sub _sanitize_field {
     $value =~ s/\\textunderscore/_/g;
     $value =~ s/\s+/ /g;
   }
-  print STDERR "OUT: $value\n";
+  #print STDERR "OUT: $value\n";
   return $value;
 }
 
