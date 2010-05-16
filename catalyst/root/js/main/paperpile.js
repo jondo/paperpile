@@ -100,7 +100,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.tagStore = new Ext.data.Store({
       proxy: new Ext.data.HttpProxy({
-        url: Paperpile.Url('/ajax/misc/tag_list'),
+        url: Paperpile.Url('/ajax/crud/list_labels'),
         method: 'GET'
       }),
       storeId: 'tag_store',

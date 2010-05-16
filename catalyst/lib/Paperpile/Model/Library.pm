@@ -1467,31 +1467,31 @@ sub histogram {
 
   if ( $field eq 'tags' ) {
 
-    my ( $tag_id, $tag, $style );
+    my ( $guid, $tag, $style );
 
     # Select all tags and initialize the histogram counts.
-    my $sth = $self->dbh->prepare(qq^SELECT rowid,tag,style FROM Tags;^);
-    $sth->bind_columns( \$tag_id, \$tag, \$style );
+    my $sth = $self->dbh->prepare(qq^SELECT guid,name,style FROM Collections WHERE type='LABEL';^);
+    $sth->bind_columns( \$guid, \$tag, \$style );
     $sth->execute;
     while ( $sth->fetch ) {
       $style = $style || 'default';
-      $hist{$tag_id}->{count} = 0;
-      $hist{$tag_id}->{name}  = $tag;
-      $hist{$tag_id}->{id}    = $tag_id;
-      $hist{$tag_id}->{style} = $style;
+      $hist{$guid}->{count} = 0;
+      $hist{$guid}->{name}  = $tag;
+      $hist{$guid}->{id}    = $guid;
+      $hist{$guid}->{style} = $style;
     }
 
     # Select tag-publication links and count them up.
     $sth = $self->dbh->prepare(
-      qq^SELECT tag_id,tag,style FROM Tags, Tag_Publication, Publications WHERE Tag_Publication.tag_id == Tags.rowid 
-          AND Publications.rowid == Tag_Publication.publication_id AND Publications.trashed==0 ^
+      qq^SELECT collection_guid FROM Collection_Publication, Publications WHERE publication_guid = Publications.guid
+         AND Publications.trashed=0 ^
     );
-    $sth->bind_columns( \$tag_id, \$tag, \$style );
+    $sth->bind_columns( \$guid );
     $sth->execute;
 
     while ( $sth->fetch ) {
-      if ( exists $hist{$tag_id} ) {
-        $hist{$tag_id}->{count}++;
+      if ( exists $hist{$guid} ) {
+        $hist{$guid}->{count}++;
       }
     }
 

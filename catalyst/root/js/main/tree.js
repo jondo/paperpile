@@ -1137,9 +1137,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return text;
   },
 
+  // Greg, the sorting does not work any more with the new
+  // backend. I'm not how it should work (do we save the sorted state
+  // to the database or not?)
   sortTagsByCount: function() {
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/misc/sorted_tag_list'),
+      url: Paperpile.Url('/ajax/crud/list_labels_sorted'),
       params: {},
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);

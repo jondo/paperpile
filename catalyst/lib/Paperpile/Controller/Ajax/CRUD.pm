@@ -400,6 +400,51 @@ sub style_collection : Local {
   $c->model('Library')->set_collection_style( $guid, $style );
 }
 
+
+sub list_labels : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $sth = $c->model('Library')->dbh->prepare("SELECT * FROM Collections WHERE type='LABEL'");
+
+  my @data = ();
+
+  $sth->execute;
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    push @data, {
+      name   => $row->{name},
+      style => $row->{style},
+      guid  => $row->{guid},
+      };
+  }
+
+  my %metaData = (
+    root   => 'data',
+    fields => [ 'name', 'style', 'guid' ],
+  );
+
+  $c->stash->{data} = [@data];
+
+  $c->stash->{metaData} = {%metaData};
+
+}
+
+sub list_labels_sorted : Local {
+  my ( $self, $c ) = @_;
+
+  my $hist = $c->model('Library')->histogram('tags');
+  my @data = ();
+
+  foreach
+    my $key ( sort { $hist->{$b}->{count} <=> $hist->{$a}->{count} || $a <=> $b } keys %$hist ) {
+	my $tag = $hist->{$key};
+    push @data, $tag;
+  }
+
+  $c->stash->{data} = \@data;
+}
+
+
 sub batch_download : Local {
   my ( $self, $c ) = @_;
   my $plugin  = $self->_get_plugin($c);
