@@ -537,7 +537,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   attachFile: function(isPDF, path) {
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/attachments/attach_file'),
+      url: Paperpile.Url('/ajax/crud/attach_file'),
       params: {
         sha1: this.data.sha1,
         rowid: this.data._rowid,
@@ -565,7 +565,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     var record = this.getGrid().store.getAt(this.getGrid().store.find('sha1', this.data.sha1));
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/attachments/delete_file'),
+      url: Paperpile.Url('/ajax/crud/delete_file'),
       params: {
         sha1: this.data.sha1,
         rowid: isPDF ? this.data._rowid : rowid,
@@ -589,7 +589,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
           action1: 'Undo',
           callback: function(action) {
             Ext.Ajax.request({
-              url: Paperpile.Url('/ajax/attachments/undo_delete'),
+              url: Paperpile.Url('/ajax/crud/undo_delete'),
               method: 'GET',
               success: function(response) {
                 var json = Ext.util.JSON.decode(response.responseText);
