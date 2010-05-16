@@ -188,12 +188,20 @@
     </pattern>
   </rule>
 
+  <!-- Last chance, convert URL directly to PDF URL -->
+  <rule>
+    <pattern>
+      <rewrite>!(.*/journal/v\d+/n\d+/)(abs|full)(/.*\.)(html)!$1pdf$3pdf!</rewrite>
+    </pattern>
+  </rule>
+
 
   <test>
     <url>http://dx.doi.org/doi:10.1038/456842a</url>
     <url>http://www.nature.com/emboj/journal/v27/n24/abs/emboj2008242a.html</url>
     <url>http://www.nature.com/nmeth/journal/v5/n12/abs/nmeth.1266.html</url>
     <url>http://www.nature.com/doifinder/10.1038/ng1108-1262</url>
+    <url>http://www.nature.com/nbt/journal/v28/n1/abs/nbt0110-13.html</url>
   </test>
 </site>
 
