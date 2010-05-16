@@ -1603,9 +1603,9 @@ sub _snippets {
   $query =~ s/\s+$//;
   $query =~ s/"//g;
   $query =~ s/\S+://g;
-  $query =~ s/and//gi;
-  $query =~ s/or//gi;
-  $query =~ s/not//gi;
+  $query =~ s/\s+and\s+//gi;
+  $query =~ s/\s+or\s+//gi;
+  $query =~ s/\s+not\s+//gi;
   $query =~ s/\s+/ /g;
 
   my @terms = split( /\s+/, $query );
@@ -1740,6 +1740,7 @@ sub _snippets {
         push @already_seen, $s;
 
         foreach my $term (@terms) {
+          print STDERR "Subsituting $term\n";
           $s->{snippet} =~ s/($term)/<span class="highlight">$1<\/span>/gi;
         }
 
