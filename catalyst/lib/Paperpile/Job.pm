@@ -361,7 +361,7 @@ sub _do_work {
       }
     }
 
-    if (!$self->pub->pdf_url){
+    if (!$self->pub->_pdf_url){
       $self->_crawl;
     }
 
@@ -371,7 +371,7 @@ sub _do_work {
       $self->_attach_pdf;
     }
 
-    $self->update_info('callback',{fn => 'CONSOLE', args => $self->pub->pdf_url});
+    $self->update_info('callback',{fn => 'CONSOLE', args => $self->pub->_pdf_url});
     $self->update_info('msg','File successfully downloaded.');
 
   }
@@ -619,7 +619,7 @@ sub _crawl {
 
   $pdf = $crawler->search_file( $start_url );
 
-  $self->pub->pdf_url($pdf) if $pdf;
+  $self->pub->_pdf_url($pdf) if $pdf;
 
 }
 
@@ -629,7 +629,7 @@ sub _download {
 
   my $self = shift;
 
-  print STDERR "[queue] Start downloading ", $self->pub->pdf_url, "\n";
+  print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
   $self->update_info( 'msg', "Downloading PDF..." );
 
@@ -642,7 +642,7 @@ sub _download {
   my $ua = Paperpile::Utils->get_browser();
 
   my $res = $ua->request(
-    HTTP::Request->new( GET => $self->pub->pdf_url ),
+    HTTP::Request->new( GET => $self->pub->_pdf_url ),
     sub {
       my ( $data, $response, $protocol ) = @_;
 

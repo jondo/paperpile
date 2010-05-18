@@ -83,9 +83,6 @@ has 'last_read' => ( is => 'rw');
 # How many times it was read
 has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
 
-# If available, direct link to PDF goes in here
-has 'pdf_url' => ( is => 'rw', default => '' );
-
 # An attached PDF file, the path is relative to the paper_root user
 # setting
 has 'pdf' => ( is => 'rw', default => '' );
@@ -140,6 +137,9 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 }
 
 ### Helper fields which have no equivalent field in the database
+
+# If available, direct link to PDF goes in here
+has '_pdf_url' => ( is => 'rw', default => '' );
 
 # Formatted strings to be displayed in the frontend.
 has '_authors_display'  => ( is => 'rw');

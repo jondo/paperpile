@@ -246,7 +246,7 @@ sub _parse_arxiv_page {
 
     $pub->linkout($abs);
     $pub->eprint($id);
-    $pub->pdf_url($pdf);
+    $pub->_pdf_url($pdf);
 
     $pub->title($title)       if $title;
     $pub->abstract($abstract) if $abstract;

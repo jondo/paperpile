@@ -23,7 +23,6 @@ CREATE TABLE Publications(
   sha1               TEXT UNIQUE,
   guid               TEXT UNIQUE,
   pdf                TEXT,
-  pdf_url            TEXT,
   pdf_size           INTEGER,
   trashed            INTEGER,
   created            TIMESTAMP,
