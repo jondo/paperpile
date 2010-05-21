@@ -824,7 +824,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '          <tpl for="_attachments_list">',
       '            <li class="pp-attachment-list pp-file-generic {cls}">',
       '            <a href="#" class="pp-textlink" action="open-attachment" path="{path}">{file}</a>&nbsp;&nbsp;',
-      '            <a href="#" class="pp-textlink pp-second-link" action="delete-file" rowid="{rowid}">Delete</a></li>',
+      '            <a href="#" class="pp-textlink pp-second-link" action="delete-file" guid="{guid}">Delete</a></li>',
       '          </tpl>',
       '          </ul>',
       '        </tpl>',

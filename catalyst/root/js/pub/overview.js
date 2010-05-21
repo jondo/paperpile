@@ -325,7 +325,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     case 'delete-file':
       // Delete attached files
-      this.deleteFile(false, el.getAttribute('rowid'));
+      this.deleteFile(false, el.getAttribute('guid'));
       break;
 
     case 'edit-ref':
@@ -540,7 +540,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       url: Paperpile.Url('/ajax/crud/attach_file'),
       params: {
         sha1: this.data.sha1,
-        rowid: this.data._rowid,
+        guid: this.data.guid,
         grid_id: this.grid_id,
         file: path,
         is_pdf: (isPDF) ? 1 : 0
@@ -557,10 +557,10 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
   //
   // Delete file. isPDF controls whether it is *the* PDF or some
-  // other attached file. In the latter case rowid has to be
-  // specified as the rowid of the file in the 'Attachments' table
+  // other attached file. In the latter case the guid of the attached
+  // file has to be given.
   //
-  deleteFile: function(isPDF, rowid) {
+  deleteFile: function(isPDF, guid) {
 
     var record = this.getGrid().store.getAt(this.getGrid().store.find('sha1', this.data.sha1));
 
@@ -568,7 +568,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       url: Paperpile.Url('/ajax/crud/delete_file'),
       params: {
         sha1: this.data.sha1,
-        rowid: isPDF ? this.data._rowid : rowid,
+        guid: isPDF ? this.data.pdf : guid,
         is_pdf: (isPDF) ? 1 : 0,
         grid_id: this.grid_id
       },
@@ -596,6 +596,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
                 Paperpile.main.onUpdate(json.data);
                 Paperpile.status.clearMsg();
               },
+              failure: Paperpile.main.onError,
               scope: this
             });
           },

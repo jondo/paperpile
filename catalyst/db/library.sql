@@ -20,15 +20,14 @@ CREATE TABLE Settings(
 );
 
 CREATE TABLE Publications(
-  sha1               TEXT UNIQUE,
   guid               TEXT UNIQUE,
+  sha1               TEXT UNIQUE,
   pdf                TEXT,
-  pdf_size           INTEGER,
+  attachments        TEXT,
   trashed            INTEGER,
   created            TIMESTAMP,
   last_read          TIMESTAMP,
   times_read         INTEGER,
-  attachments        INTEGER,
   annote             TEXT,
   tags               TEXT,
   folders            TEXT
@@ -52,6 +51,10 @@ CREATE TABLE Collection_Publication (
 );
 
 CREATE TABLE Attachments (
-  file_name         TEXT,
-  publication_id    INTEGER
+  guid         TEXT,
+  publication  TEXT,
+  is_pdf       INTEGER,
+  name         TEXT,
+  local_file   TEXT,
+  size         INTEGER
 );

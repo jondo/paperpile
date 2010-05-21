@@ -481,7 +481,7 @@ sub batch_download : Local {
 sub attach_file : Local {
   my ( $self, $c ) = @_;
 
-  my $rowid  = $c->request->params->{rowid};
+  my $guid  = $c->request->params->{guid};
   my $file   = $c->request->params->{file};
   my $is_pdf = $c->request->params->{is_pdf};
 
@@ -491,82 +491,33 @@ sub attach_file : Local {
 
   my $pub = $plugin->find_sha1($sha1);
 
-  my $attached_file = $c->model('Library')->attach_file( $file, $is_pdf, $rowid, $pub );
-
-  if ($is_pdf) {
-    $pub->pdf($attached_file);
-  } else {
-    $pub->attachments( $pub->attachments + 1 );
-  }
+  $c->model('Library')->attach_file( $file, $is_pdf, $pub );
 
   $self->_collect_update_data($c,  [$pub], [ 'pdf', 'attachments', '_attachments_list' ] );
-
-}
-
-sub list_files : Local {
-  my ( $self, $c ) = @_;
-
-  my $rowid = $c->request->params->{rowid};
-  my $sha1  = $c->request->params->{sha1};
-
-  my $sth =
-    $c->model('Library')
-    ->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
-  my ( $attachment_rowid, $file_name );
-  $sth->bind_columns( \$attachment_rowid, \$file_name );
-  $sth->execute;
-
-  my $paper_root = $c->model('Library')->get_setting('paper_root');
-
-  my @output = ();
-  while ( $sth->fetch ) {
-
-    my $abs = File::Spec->catfile( $paper_root, $file_name );
-
-    my $link = "/serve/$file_name";
-
-    ( my $suffix ) = ( $link =~ /\.(.*+$)/ );
-
-    my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($abs);
-
-    push @output, {
-      file  => $base_name,
-      path  => $abs,
-      link  => $link,
-      cls   => "file-$suffix",
-      rowid => $attachment_rowid
-      };
-
-  }
-
-  $c->stash->{pubs} = {};
-  $c->stash->{pubs}->{$sha1} = { _attachments_list => [@output] };
-
 
 }
 
 sub delete_file : Local {
   my ( $self, $c ) = @_;
 
-  my $rowid  = $c->request->params->{rowid};
+  my $guid  = $c->request->params->{guid};
   my $is_pdf = $c->request->params->{is_pdf};
 
   my $grid_id = $c->request->params->{grid_id};
   my $sha1    = $c->request->params->{sha1};
   my $plugin  = $c->session->{"grid_$grid_id"};
 
-  my $undo_path = $c->model('Library')->delete_attachment( $rowid, $is_pdf, 1 );
+  my $pub = $plugin->find_sha1($sha1);
+
+  my $undo_path = $c->model('Library')->delete_attachment( $guid, $is_pdf, $pub, 1 );
 
   $c->session->{"undo_delete_attachment"} = {
     file    => $undo_path,
     is_pdf  => $is_pdf,
     grid_id => $grid_id,
     sha1    => $sha1,
+    old_guid => $guid
   };
-
-  my $pub = $plugin->find_sha1($sha1);
-  $pub->pdf('') if ($is_pdf);
-  $pub->attachments( $pub->attachments - 1 ) if ( !$is_pdf );
 
   # Kind of a hack: delete the _search_job info before sending back our JSON update.
   if ($is_pdf) {
@@ -589,17 +540,13 @@ sub undo_delete : Local {
 
   my $grid_id = $undo_data->{grid_id};
   my $sha1    = $undo_data->{sha1};
+  my $old_guid    = $undo_data->{old_guid};
+
   my $plugin  = $c->session->{"grid_$grid_id"};
 
   my $pub = $plugin->find_sha1($sha1);
 
-  my $attached_file = $c->model('Library')->attach_file( $file, $is_pdf, $pub->_rowid, $pub );
-
-  if ($is_pdf) {
-    $pub->pdf($attached_file);
-  } else {
-    $pub->attachments( $pub->attachments + 1 );
-  }
+  my $attached_file = $c->model('Library')->attach_file( $file, $is_pdf, $pub, $old_guid );
 
   $self->_collect_update_data( $c, [$pub], [ 'pdf', 'attachments', '_attachments_list' ] );
 

@@ -1271,110 +1271,140 @@ sub restore_tree {
 
 }
 
+# Attach $file to the publication $pub. If $is_pdf is set it is *the*
+# PDF otherwise it is treated as attachment. If $old_guid is set the
+# new file gets this guid (to avoid changing of the guid when using
+# the undo function)
+
 sub attach_file {
 
-  my ( $self, $file, $is_pdf, $rowid, $pub ) = @_;
+  my ( $self, $file, $is_pdf, $pub, $old_guid ) = @_;
 
   my $settings = $self->settings;
+  my $dbh      = $self->dbh;
+  my $source   = Paperpile::Utils->adjust_root($file);
 
-  my $source = Paperpile::Utils->adjust_root($file);
+  my $pub_guid = $pub->guid;
+
+  my $file_guid;
+
+  if ($old_guid){
+    $file_guid = $old_guid;
+  } else {
+    $file_guid = Data::GUID->new->as_hex;
+    $file_guid =~ s/^0x//;
+  }
+
+  my $file_size = stat($file)->size;
+
+  my $relative_dest;
 
   if ($is_pdf) {
 
     # File name relative to [paper_root] is [pdf_pattern].pdf
-    my $relative_dest =
+    $relative_dest =
       $pub->format_pattern( $settings->{pdf_pattern}, { key => $pub->citekey } ) . ".pdf";
-
-    # Absolute  path is [paper_root]/[pdf_pattern].pdf
-    my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
-
-    # Copy file, file name can be changed if it was not unique
-    $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
-
-    # Add text of PDF to fulltext table
-    $self->index_pdf( $rowid, $absolute_dest );
-
-    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} );
-
-    $self->update_field( 'Publications', $rowid, 'pdf',        $relative_dest );
-    $self->update_field( 'Publications', $rowid, 'pdf_size',   stat($file)->size );
-    $self->update_field( 'Publications', $rowid, 'times_read', 0 );
-    $self->update_field( 'Publications', $rowid, 'last_read',  '' );
-
-    $pub->pdf($relative_dest);
-
-    return $relative_dest;
 
   } else {
 
-    # Get file_name without dir
-    my ( $volume, $dirs, $file_name ) = File::Spec->splitpath($source);
+    my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($source);
 
     # Path relative to [paper_root] is [attachment_pattern]/$file_name
-    my $relative_dest =
+    $relative_dest =
       $pub->format_pattern( $settings->{attachment_pattern}, { key => $pub->citekey } );
-    $relative_dest = File::Spec->catfile( $relative_dest, $file_name );
-
-    # Absolute  path is [paper_root]/[attachment_pattern]/$file_name
-    my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
-
-    # Copy file, file name can be changed if it was not unique
-    $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
-    $relative_dest = File::Spec->abs2rel( $absolute_dest, $settings->{paper_root} );
-
-    $self->dbh->do("UPDATE Publications SET attachments=attachments+1 WHERE rowid=$rowid");
-    my $file = $self->dbh->quote($relative_dest);
-    $self->dbh->do("INSERT INTO Attachments (file_name,publication_id) VALUES ($file, $rowid)");
-
-    return $relative_dest;
-
+    $relative_dest = File::Spec->catfile( $relative_dest, $base_name );
   }
 
+  my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
+
+  # Copy file, file name can be changed if it was not unique
+  $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
+
+  my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($absolute_dest);
+
+  my $name       = $dbh->quote($base_name);
+  my $local_file = $dbh->quote($absolute_dest);
+
+  $dbh->do( "INSERT INTO Attachments (guid, publication, is_pdf, name, local_file, size)"
+      . "                     VALUES ('$file_guid', '$pub_guid', $is_pdf, $name, $local_file, $file_size);"
+  );
+
+  if ($is_pdf) {
+    $self->index_pdf( $pub_guid, $absolute_dest );
+    $dbh->do(
+      "UPDATE Publications SET pdf='$file_guid', times_read=0, last_read='' WHERE guid='$pub_guid';"
+    );
+    $pub->pdf($file_guid);
+    return $file_guid;
+  } else {
+
+    ( my $old_attachments ) = $dbh->selectrow_array("SELECT attachments FROM Publications WHERE guid='$pub_guid' ");
+
+    my @list = split(',',$old_attachments || '');
+
+    push @list, $file_guid;
+
+    my $new_attachments = join(',',@list);
+
+    $dbh->do("UPDATE Publications SET attachments='$new_attachments' WHERE guid='$pub_guid';");
+
+    $pub->attachments($new_attachments);
+    $pub->refresh_attachments;
+
+
+  }
 }
 
-# Delete PDF or other supplementary files that are attached to an entry
-# if $is_pdf is true, the PDF file given in table 'Publications' at rowid is to be deleted
-# if $is_pdf is false, the attached file in table 'Attachments' at rowid is to be deleted
+# Delete PDF or other supplementary file with GUID $guid that is
+# attached to $pub. If $with_undo is given the function only moves the
+# file and returns the temporary path were it is stored for undo
+# operations.
 
 sub delete_attachment {
 
-  my ( $self, $rowid, $is_pdf, $with_undo ) = @_;
+  my ( $self, $guid, $is_pdf, $pub, $with_undo ) = @_;
 
   my $paper_root = $self->get_setting('paper_root');
 
-  my $path;
+  my $dbh = $self->dbh;
 
   my $undo_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), "trash" );
   mkpath($undo_dir);
 
+  my $rowid= $pub->_rowid;
+
+  (my $path ) = $self->dbh->selectrow_array("SELECT local_file FROM Attachments WHERE guid='$guid';");
+
+  $dbh->do("DELETE FROM Attachments WHERE guid='$guid'");
+
   if ($is_pdf) {
-    ( my $pdf ) = $self->dbh->selectrow_array("SELECT pdf FROM Publications WHERE rowid=$rowid ");
-
-    if ($pdf) {
-      $path = File::Spec->catfile( $paper_root, $pdf );
-      $self->dbh->do("UPDATE Fulltext SET text='' WHERE rowid=$rowid");
-      move( $path, $undo_dir ) if $with_undo;
-      unlink($path);
-    }
-
-    $self->update_field( 'Publications', $rowid, 'pdf',        '' );
-    $self->update_field( 'Publications', $rowid, 'times_read', 0 );
-    $self->update_field( 'Publications', $rowid, 'last_read',  '' );
+    $dbh->do("UPDATE Fulltext SET text='' WHERE rowid=$rowid");
+    $dbh->do("UPDATE Publications SET pdf='', times_read=0, last_read='' WHERE rowid=$rowid");
+    $pub->pdf('');
 
   } else {
 
-    ( my $file, my $pub_rowid ) = $self->dbh->selectrow_array(
-      "SELECT file_name, publication_id FROM Attachments WHERE rowid=$rowid");
+    ( my $attachments ) = $self->dbh->selectrow_array("SELECT attachments FROM Publications WHERE rowid=$rowid");
 
-    $path = File::Spec->catfile( $paper_root, $file );
+    my @old_attachments = split(/,/, $attachments ||'');
 
-    move( $path, $undo_dir ) if $with_undo;
-    unlink($path);
+    my @new_attachments = ();
 
-    $self->dbh->do("DELETE FROM Attachments WHERE rowid=$rowid");
-    $self->dbh->do("UPDATE Publications SET attachments=attachments-1 WHERE rowid=$pub_rowid");
+    foreach my $g (@old_attachments){
+      next if ($g eq $guid);
+      push @new_attachments, $g;
+    }
 
+    my $new = join(',',@new_attachments);
+
+    $dbh->do("UPDATE Publications SET attachments='$new' WHERE rowid=$rowid");
+
+    $pub->attachments($new);
+    $pub->refresh_attachments;
   }
+
+  move( $path, $undo_dir ) if $with_undo;
+  unlink($path);
 
   ## Remove directory if empty
 
@@ -1400,11 +1430,7 @@ sub delete_attachment {
 
 sub index_pdf {
 
-  my ( $self, $rowid, $pdf_file ) = @_;
-
-  my $app_model = Paperpile::Model::App->new();
-  my $app_db    = Paperpile::Utils->path_to('db/app.db');
-  $app_model->set_dsn("dbi:SQLite:$app_db");
+  my ( $self, $guid, $pdf_file ) = @_;
 
   my $bin = Paperpile::Utils->get_binary('extpdf');
 
@@ -1427,7 +1453,7 @@ sub index_pdf {
 
   $text = $self->dbh->quote($text);
 
-  $self->dbh->do("UPDATE Fulltext SET text=$text WHERE rowid=$rowid");
+  $self->dbh->do("UPDATE Fulltext SET text=$text WHERE rowid=(SELECT rowid FROM PUBLICATIONS WHERE guid='$guid')");
 
 }
 

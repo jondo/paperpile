@@ -83,15 +83,11 @@ has 'last_read' => ( is => 'rw');
 # How many times it was read
 has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
 
-# An attached PDF file, the path is relative to the paper_root user
-# setting
+# The guid of an attached PDF file
 has 'pdf' => ( is => 'rw', default => '' );
 
-# Size of PDF in bytes
-has 'pdf_size' => ( is => 'rw', default => 0, isa => 'Int' );
-
-# The number of additional files that are associated with this entry
-has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
+# Comma separated list of guids of other attachments
+has 'attachments' => ( is => 'rw' );
 has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
 
 # User provided annotation "Notes", formatted in HTML
@@ -424,34 +420,32 @@ sub refresh_attachments {
 
   $self->_attachments_list( [] );
 
-  if ( $self->attachments > 0 ) {
+  if ( $self->attachments) {
+    print STDERR "============>",  $self->title, "\n";
     my $model = Paperpile::Utils->get_library_model();
+    my $paper_root = $model->get_setting('paper_root');
+    my $guid = $self->guid;
+    my $sth = $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
 
-    my $rowid = $self->_rowid;
-    my $sth =
-      $model->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
-    my ( $attachment_rowid, $file_name );
-    $sth->bind_columns( \$attachment_rowid, \$file_name );
+    #my ( $attachment_rowid, $file_name );
+    #$sth->bind_columns( \$attachment_rowid, \$file_name );
     $sth->execute;
 
-    my $paper_root = $model->get_setting('paper_root');
-
     my @output = ();
-    while ( $sth->fetch ) {
-      my $abs = File::Spec->catfile( $paper_root, $file_name );
+    while ( my $row = $sth->fetchrow_hashref() ) {
+      #my $a = File::Spec->catfile( $paper_root, $file_name );
 
-      my $link = "/serve/$file_name";
+      my $link = "/serve/".$row->{local_file};
 
       ( my $suffix ) = ( $link =~ /\.(.*+$)/ );
 
-      my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($abs);
-      print STDERR "Base name: $base_name\n";
+      #my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($abs);
       push @output, {
-        file  => $base_name,
-        path  => $abs,
+        file  => $row->{name},
+        path  => $row->{local_file},
         link  => $link,
         cls   => "file-$suffix",
-        rowid => $attachment_rowid
+        guid => $row->{guid}
         };
     }
 
@@ -472,7 +466,7 @@ sub as_hash {
     my $value = $self->$key;
 
     # Force it to a number to be correctly converted to JSON
-    if ($key ~~ ['attachments', 'times_read', 'trashed']){
+    if ($key ~~ ['times_read', 'trashed']){
       $value+=0;
     }
 
