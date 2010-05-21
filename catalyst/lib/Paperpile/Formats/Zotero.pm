@@ -35,7 +35,11 @@ sub read {
 
     my @output = ();
 
-    # if file is not defined we try to find it
+    # TODO: Make this behave like all other plugins such that
+    # $self->file is always given and move the function to find the
+    # local Zotero file to Paperpile::Utils.
+
+    # file is not defined we try to find it
     if ( !defined $file ) {
 
         # a typical Zotero path in windows (German)

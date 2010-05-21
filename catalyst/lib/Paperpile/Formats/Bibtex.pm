@@ -116,7 +116,7 @@ sub write {
 
   my ($self) = @_;
 
-  my $bibtex_export_fields='annote, keywords,url,isbn,arxivid,doi,abstract,issn,eprint,lccn,note,pmid';
+  my $bibtex_export_fields='annote,keywords,url,isbn,arxivid,doi,abstract,issn,eprint,lccn,note,pmid';
   my $bibtex_export_curly = 0;
   my $bibtex_export_pretty = 1;
 
@@ -128,11 +128,14 @@ sub write {
     $right_quote = '}';
   }
 
+  # We always write these fields (if non-empty) because they are
+  # needed by BibTeX to work correctly
   my @mandatory_fields = qw(sortkey title booktitle authors editors
                             address publisher organization school
                             howpublished journal volume edition series number issue chapter pages
                             year month day);
 
+  # Non standard fields are only exported if set in the user settings.
   my @optional_fields = split(/,/,$bibtex_export_fields);
 
   #linkout=>$url!!;
@@ -141,10 +144,9 @@ sub write {
 
     my @all_fields = (@mandatory_fields, @optional_fields);
 
-    my $max_width = 0;
-
+    # Collect all fields and get maximum width to align properly
     my %data;
-
+    my $max_width = 0;
     foreach my $key (@all_fields){
       if ($pub->$key){
         $data{$key} = $pub->$key;
@@ -153,28 +155,27 @@ sub write {
     }
 
     my @lines = ();
-
     foreach my $key (@all_fields){
 
-      #my $max_width = 12;
-
       if (my $value = $data{$key}){
-
+        # Wrap long fields and align the "=" sign
         if ($bibtex_export_pretty){
           my $left = sprintf("  %-".($max_width+2)."s", $key)."= ";
           my $right = $value;
           $Text::Wrap::columns=70;
           $right = wrap($left," "x($max_width+7),$left_quote.$right.$right_quote);
-
           push @lines, $right;
-        } else {
+        }
+        # Simple output one field per line
+        else {
           push @lines, "$key = {$value}";
         }
       }
-
     }
 
     my ($type, $key) = ($pub->pubtype, $pub->citekey);
+
+    # Write to STDOUT while testing
 
     print "\@$type\{$key,\n";
     print join(",\n", @lines);
