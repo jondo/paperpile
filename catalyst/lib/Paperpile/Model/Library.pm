@@ -304,6 +304,8 @@ sub trash_pubs {
 
   my $dbh = $self->dbh;
 
+  my $paper_root = $self->get_setting('paper_root');
+
   $dbh->begin_work;
 
   my @files = ();
@@ -311,72 +313,47 @@ sub trash_pubs {
   # currently no explicit error handling/rollback etc.
 
   foreach my $pub (@$pubs) {
-    my $rowid = $pub->_rowid;
+    my $pub_guid = $pub->guid;
 
     my $status = 1;
     $status = 0 if $mode eq 'RESTORE';
 
-    $dbh->do("UPDATE Publications SET trashed=$status WHERE rowid=$rowid");
-
-    # Created is used to store time of import as well as time of
+    # The field 'created' is used to store time of import as well as time of
     # deletion, so we set it everytime we trash or restore something
-    my $now = $self->dbh->quote( timestamp gmtime );
-    $dbh->do("UPDATE Publications SET created=$now WHERE rowid=$rowid;");
+    my $now = $dbh->quote( timestamp gmtime );
+    $dbh->do("UPDATE Publications SET trashed=$status,created=$now WHERE guid='$pub_guid'");
+
 
     # Move attachments
     my $select =
-      $dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
+      $dbh->prepare("SELECT guid, local_file FROM Attachments WHERE publication='$pub_guid';");
 
-    my $attachment_rowid;
-    my $file_name;
+    my $attachment_guid;
+    my $file_absolute;
 
-    $select->bind_columns( \$attachment_rowid, \$file_name );
+    $select->bind_columns( \$attachment_guid, \$file_absolute );
     $select->execute;
     while ( $select->fetch ) {
       my $move_to;
-
+      my $file_relative = File::Spec->abs2rel($file_absolute, $paper_root);
       if ( $mode eq 'TRASH' ) {
-        $move_to = File::Spec->catfile( "Trash", $file_name );
+        $move_to = File::Spec->catfile( $paper_root, "Trash", $file_relative );
       } else {
-        $move_to = $file_name;
+        $move_to = $file_relative;
         $move_to =~ s/Trash.//;
+        $move_to = File::Spec->catfile( $paper_root, $move_to );
       }
-      push @files, [ $file_name, $move_to ];
+      push @files, [ $file_absolute, $move_to ];
       $move_to = $dbh->quote($move_to);
 
-      $dbh->do("UPDATE Attachments SET file_name=$move_to WHERE rowid=$attachment_rowid; ");
+      $dbh->do("UPDATE Attachments SET local_file=$move_to WHERE guid='$attachment_guid';");
 
     }
-
-    ( my $pdf ) = $self->dbh->selectrow_array("SELECT pdf FROM Publications WHERE rowid=$rowid ");
-
-    if ($pdf) {
-      my $move_to;
-
-      if ( $mode eq 'TRASH' ) {
-        $move_to = File::Spec->catfile( "Trash", $pdf );
-      } else {
-        $move_to = $pdf;
-        $move_to =~ s/Trash.//;
-      }
-      push @files, [ $pdf, $move_to ];
-
-      $move_to = $self->dbh->quote($move_to);
-
-      $dbh->do("UPDATE Publications SET pdf=$move_to WHERE rowid=$rowid;");
-
-    }
-
   }
-
-  my $paper_root = $self->get_setting('paper_root');
 
   foreach my $pair (@files) {
 
     ( my $from, my $to ) = @$pair;
-
-    $from = File::Spec->catfile( $paper_root, $from );
-    $to   = File::Spec->catfile( $paper_root, $to );
 
     my ( $volume, $dir, $file_name ) = File::Spec->splitpath($to);
 
