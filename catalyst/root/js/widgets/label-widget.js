@@ -81,11 +81,12 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     }
 
     for (var i = 0; i < tags.length; i++) {
-      var name = tags[i];
-      if (name == '') continue;
+      var guid = tags[i];
+      if (guid == '') continue;
       var style = '0';
-      if (store.getAt(store.findExact('tag', name))) {
-        style = store.getAt(store.findExact('tag', name)).get('style');
+      if (store.getAt(store.findExact('guid', guid))) {
+        style = store.getAt(store.findExact('guid', guid)).get('style');
+        name = store.getAt(store.findExact('guid', guid)).get('name');
       }
 
       var el = {
@@ -101,7 +102,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
           cls: 'pp-tag-remove pp-tag-style-' + style,
           html: 'x',
           action: 'remove-tag',
-          name: name
+          guid: guid
         }]
       };
 
@@ -140,29 +141,31 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     var list = [];
     Ext.StoreMgr.lookup('tag_store').each(
       function(rec) {
-        var tag = rec.data.tag;
+        var guid = rec.data.guid;
         if (!this.multipleSelection) {
-          if (this.data.tags.match(new RegExp("," + tag + "$"))) return; // ,XXX
-          if (this.data.tags.match(new RegExp("^" + tag + "$"))) return; //  XXX
-          if (this.data.tags.match(new RegExp("^" + tag + ","))) return; //  XXX,
-          if (this.data.tags.match(new RegExp("," + tag + ","))) return; // ,XXX,
+          if (this.data.tags.match(new RegExp("," + guid + "$"))) return; // ,XXX
+          if (this.data.tags.match(new RegExp("^" + guid + "$"))) return; //  XXX
+          if (this.data.tags.match(new RegExp("^" + guid + ","))) return; //  XXX,
+          if (this.data.tags.match(new RegExp("," + guid + ","))) return; // ,XXX,
         }
-        list.push([tag]);
+        list.push([rec.data.guid, rec.data.name]);
       },
       this);
     var extEl = Ext.get(el);
     extEl.replaceWith(['<div id="pp-tag-control-' + this.grid.id + '"></div>']);
 
     var store = new Ext.data.SimpleStore({
-      fields: ['tag'],
+      fields: ['guid','name'],
       data: list
     });
+
 
     this.comboBox = new Ext.form.ComboBox({
       id: 'tag-control-combo-' + this.getGrid().id,
       ctCls: 'pp-tag-control',
       store: store,
-      displayField: 'tag',
+      displayField: 'name',
+      valueField:'guid',
       typeAhead: true,
       mode: 'local',
       triggerAction: 'all',
@@ -178,7 +181,26 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       listeners: {
         'specialkey': function(field, e) {
           if (e.getKey() == e.ENTER) {
-            this.commitTag(field.getValue());
+            var name=field.getRawValue();
+
+            // The user entered a new label
+            if (Ext.StoreMgr.lookup('tag_store').findExact('name', name) === -1){
+              var guid = Paperpile.utils.generateUUID();
+              Ext.Ajax.request({
+                url: Paperpile.Url('/ajax/crud/new_collection'),
+                params: {
+                  type: 'LABEL',
+                  text: name,
+                  node_id: guid,
+                  parent_id: 'ROOT'
+                },
+                success: function(response) {
+                  this.commitTag(guid,true);
+                },
+                failure: Paperpile.main.onError,
+                scope:this
+              });
+            }
           } else if (e.getKey() == e.ESC) {
             this.renderTags();
           } else if (e.getKey() == e.TAB) {
@@ -186,7 +208,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
           }
         },
         'select': function(combo, record, index) {
-          this.commitTag(record.get('tag'));
+          this.commitTag(record.get('guid'), false);
         },
         scope: this
       }
@@ -194,31 +216,27 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     this.comboBox.focus();
   },
 
-  commitTag: function(tag) {
+  commitTag: function(guid, isNew) {
     this.comboBox.disable();
-    var tagIndex = Ext.StoreMgr.lookup('tag_store').findExact('tag', tag);
 
     var lots = this.isLargeSelection();
     if (lots) {
-      Paperpile.status.showBusy("Adding label '" + tag + "' to references");
+      Paperpile.status.showBusy("Adding label to references");
     }
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/add_tag'),
+      url: Paperpile.Url('/ajax/crud/move_in_collection'),
       params: {
         grid_id: this.getGrid().id,
         selection: this.getGrid().getSelection(),
-        tag: tag
+        guid: guid,
+        type: 'LABEL'
       },
       method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         var grid = this.getGrid();
-
-        if (tagIndex > -1) {
-          Ext.StoreMgr.lookup('tag_store').reload();
-          Paperpile.main.onUpdate(json.data);
-        } else {
+        if (isNew) {
           // Cause the tree's tag list to reload itself.
           Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
           Ext.StoreMgr.lookup('tag_store').reload({
@@ -226,8 +244,10 @@ Paperpile.LabelWidget = Ext.extend(Object, {
               Paperpile.main.onUpdate(json.data);
             }
           });
+        } else {
+          Ext.StoreMgr.lookup('tag_store').reload();
+          Paperpile.main.onUpdate(json.data);
         }
-
         if (lots) {
           Paperpile.status.clearMsg();
         }
@@ -239,21 +259,22 @@ Paperpile.LabelWidget = Ext.extend(Object, {
   },
 
   removeTag: function(el) {
-    tag = el.getAttribute('name');
+    guid = el.getAttribute('guid');
 
     Ext.get(el).parent().remove();
 
     var lots = this.isLargeSelection();
     if (lots) {
-      Paperpile.status.showBusy("Removing label '" + tag + "' from references");
+      Paperpile.status.showBusy("Removing label from references");
     }
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/remove_tag'),
+      url: Paperpile.Url('/ajax/crud/remove_from_collection'),
       params: {
         grid_id: this.getGrid().id,
         selection: this.getGrid().getSelection(),
-        tag: tag
+        collection_guid: guid,
+        type: 'LABEL'
       },
       method: 'GET',
       success: function(response) {

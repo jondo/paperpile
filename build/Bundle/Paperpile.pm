@@ -38,7 +38,7 @@ Class::MOP
 Config::Any
 Config::General
 DBI
-DBD::SQLite::Amalgamation
+DBD::SQLite
 Data::Dump
 Data::OptList
 Data::Visitor
@@ -115,7 +115,7 @@ FCGI::ProcManager
 Archive::Zip
 IO::Socket::SSL
 Crypt::SSLeay
-IO::String
+Data::GUID
 =head1 AUTHOR
 
 Stefan Washietl <wash@paperpile.org>

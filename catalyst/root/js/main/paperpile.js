@@ -100,7 +100,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.tagStore = new Ext.data.Store({
       proxy: new Ext.data.HttpProxy({
-        url: Paperpile.Url('/ajax/misc/tag_list'),
+        url: Paperpile.Url('/ajax/crud/list_labels'),
         method: 'GET'
       }),
       storeId: 'tag_store',
@@ -213,11 +213,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // sel = 'ALL' or sha1s of selected pubs.
   deleteFromFolder: function(sel, grid, folder_id, refreshView) {
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/delete_from_folder'),
+      url: Paperpile.Url('/ajax/crud/remove_from_collection'),
       params: {
         selection: sel,
         grid_id: grid.id,
-        folder_id: folder_id
+        collection_guid: folder_id,
+        type: 'FOLDER',
       },
       method: 'GET',
       success: function(response) {
@@ -504,8 +505,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.tagStore.reload();
   },
 
-  getStyleForTag: function(tag) {
-    var record = this.tagStore.getAt(this.tagStore.findExact('tag', tag));
+  getStyleForTag: function(guid) {
+    var record = this.tagStore.getAt(this.tagStore.findExact('guid', guid));
     if (record == null) return '';
     var style = record.get('style');
     return style;
@@ -531,7 +532,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       node.getUI().removeClass(allTagStyles);
       // Add the correct style.
       var tag = node.text;
-      node.getUI().addClass('pp-tag-tree-style-' + this.getStyleForTag(tag));
+      node.getUI().addClass('pp-tag-tree-style-' + this.getStyleForTag(node.id));
     }
 
     // Now, move on to the tab panel and grids.
@@ -539,7 +540,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     for (var i = 0; i < tabs.length; i++) {
       var tab = tabs[i];
       if (this.isTabPlugin(tab)) {
-        // Update the tab header for any open Tags tabs.
+        // TODO: Relying on the tab.title is not possible in the next
+        // statement. Greg, we need to store the guid of the
+        // folder/tab somewhere within the tab class.
         tab.setIconClass('pp-tag-style-tab pp-tag-style-' + this.getStyleForTag(tab.title));
       }
       // Force a re-render on any grid items containing the given tag.

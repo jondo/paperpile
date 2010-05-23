@@ -36,87 +36,13 @@ use JSON;
 
 use 5.010;
 
-sub reset_db : Local {
-
-  my ( $self, $c ) = @_;
-
-  $c->model('Library')->init_db( $c->config->{pub_fields}, $c->config->{user_settings} );
-
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
-
-}
-
-sub sorted_tag_list : Local {
-  my ( $self, $c ) = @_;
-
-  my $hist = $c->model('Library')->histogram('tags');
-  my @data = ();
-
-  foreach
-    my $key ( sort { $hist->{$b}->{count} <=> $hist->{$a}->{count} || $a <=> $b } keys %$hist ) {
-	my $tag = $hist->{$key};
-    push @data, $tag;
-  }
-
-  $c->stash->{data} = \@data;
-  $c->forward('Paperpile::View::JSON');
-}
-
-sub tag_list : Local {
-
-  my ( $self, $c ) = @_;
-
-  my $tags = $c->model('Library')->get_tags;
-
-  my @data = ();
-
-  foreach my $row (@$tags) {
-    push @data, {
-      tag   => $row->{tag},
-      style => $row->{style},
-      };
-  }
-
-  my %metaData = (
-    root   => 'data',
-    fields => [ 'tag', 'style' ],
-  );
-
-  $c->stash->{data} = [@data];
-
-  $c->stash->{metaData} = {%metaData};
-
-  $c->forward('Paperpile::View::JSON');
-
-}
-
-sub _EscapeString {
-  my $string = $_[0];
-
-  # remove leading spaces
-  $string =~ s/^\s+//;
-
-  # remove spaces at the end
-  $string =~ s/\s+$//;
-
-  # escape each single word and finally join
-  # with plus signs
-  my @tmp = split( /\s+/, $string );
-  foreach my $i ( 0 .. $#tmp ) {
-    $tmp[$i] = uri_escape_utf8( $tmp[$i] );
-  }
-
-  return join( "+", @tmp );
-}
-
 sub feed_list : Local {
   my ( $self, $c ) = @_;
   my $query  = $c->request->params->{query};
   my $offset = $c->request->params->{start} || 0;
   my $limit  = $c->request->params->{limit} || 10;
 
-  $query = _EscapeString($query);
+  $query = _escapeString($query);
 
   my $searchUrl = 'http://stage.paperpile.com/api/v1/feeds/list/';
 
@@ -152,6 +78,28 @@ sub feed_list : Local {
 
   $c->forward('Paperpile::View::JSON');
 }
+
+sub _escapeString {
+  my $string = $_[0];
+
+  # remove leading spaces
+  $string =~ s/^\s+//;
+
+  # remove spaces at the end
+  $string =~ s/\s+$//;
+
+  # escape each single word and finally join
+  # with plus signs
+  my @tmp = split( /\s+/, $string );
+  foreach my $i ( 0 .. $#tmp ) {
+    $tmp[$i] = uri_escape_utf8( $tmp[$i] );
+  }
+
+  return join( "+", @tmp );
+}
+
+
+
 
 sub journal_list : Local {
 
@@ -217,7 +165,6 @@ sub journal_list : Local {
   }
 
   $c->stash->{data} = [@data];
-  $c->forward('Paperpile::View::JSON');
 
 }
 
@@ -241,8 +188,6 @@ sub get_settings : Local {
   }
 
   $c->stash->{data} = {%merged};
-
-  $c->forward('Paperpile::View::JSON');
 
 }
 

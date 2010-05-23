@@ -20,48 +20,43 @@ CREATE TABLE Settings(
 );
 
 CREATE TABLE Publications(
+  guid               TEXT UNIQUE,
   sha1               TEXT UNIQUE,
   pdf                TEXT,
-  pdf_url            TEXT,
-  pdftext            TEXT,
-  pdf_size           INTEGER,
+  pdf_name           TEXT,
+  attachments        TEXT,
   trashed            INTEGER,
   created            TIMESTAMP,
   last_read          TIMESTAMP,
   times_read         INTEGER,
-  attachments        INTEGER,
   annote             TEXT,
   tags               TEXT,
   folders            TEXT
 );
 
-CREATE VIRTUAL TABLE Fulltext_full using fts3(text,abstract,notes,title,key,author,label,labelid,keyword,folder,year,journal);
+CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,year,journal, keyword,folderid,labelid);
 
-CREATE VIRTUAL TABLE Fulltext_citation using fts3(abstract,notes,title,key,author,label,labelid,keyword,folder,year,journal);
-
-CREATE TABLE Tags (
-  tag            TEXT UNIQUE,
-  style          TEXT,
-  sort_order     INTEGER
+CREATE TABLE Collections (
+  guid          TEXT UNIQUE,
+  name          TEXT,
+  type          TEXT,
+  parent        TEXT,
+  sort_order    INTEGER,
+  style         TEXT   
 );
 
-CREATE TABLE Tag_Publication (
-  tag_id         INTEGER,
-  publication_id    INTEGER,
-  PRIMARY KEY (tag_id, publication_id)
-);
-
-CREATE TABLE Folders (
-  folder_id           TEXT UNIQUE
-);
-
-CREATE TABLE Folder_Publication (
-  folder_id         INTEGER,
-  publication_id    INTEGER,
-  PRIMARY KEY (folder_id, publication_id)
+CREATE TABLE Collection_Publication (
+  collection_guid     Text,
+  publication_guid    Text,
+  PRIMARY KEY (collection_guid, publication_guid)
 );
 
 CREATE TABLE Attachments (
-  file_name         TEXT,
-  publication_id    INTEGER
+  guid         TEXT,
+  publication  TEXT,
+  is_pdf       INTEGER,
+  name         TEXT,
+  local_file   TEXT,
+  size         INTEGER,
+  md5          TEXT
 );

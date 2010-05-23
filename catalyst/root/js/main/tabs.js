@@ -106,7 +106,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   // open and it activated instead of creating a new one
   newPluginTab: function(name, pars, title, iconCls, itemId) {
     var javascript_ui = pars.plugin_name || name;
-    if (pars.plugin_query != null && pars.plugin_query.indexOf('folder:') > -1) {
+    if (pars.plugin_query != null && pars.plugin_query.indexOf('folderid:') > -1) {
       javascript_ui = "Folder";
     }
 
@@ -116,7 +116,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     }
     var viewParams = {
       title: title,
-      iconCls: iconCls,
+      iconCls: pars.plugin_iconCls,
       gridParams: pars,
       closable: true,
       itemId: itemId

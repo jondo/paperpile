@@ -72,10 +72,19 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
 
   onTrigger2Click: function() {
     var v = this.getRawValue();
+
+    // Reload everthing when empty
     if (v.length < 1) {
       this.onTrigger1Click();
       return;
     }
+
+    // Don't trigger search with less than 3 characters for efficiency
+    // reasons
+    if (v.length < 3){
+      return;
+    }
+
     var o = {
       start: 0,
       task: 'NEW'

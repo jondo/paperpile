@@ -345,7 +345,7 @@ sub _do_work {
     print STDERR "[queue] Searching PDF for ", $self->pub->_citation_display, "\n";
 
     if ($self->pub->pdf) {
-      $self->update_info('msg',"There is already a PDF for this reference (".$self->pub->pdf.").");
+      $self->update_info('msg',"There is already a PDF for this reference (".$self->pub->pdf_name.").");
       return;
     }
 
@@ -361,7 +361,7 @@ sub _do_work {
       }
     }
 
-    if (!$self->pub->pdf_url){
+    if (!$self->pub->_pdf_url){
       $self->_crawl;
     }
 
@@ -371,7 +371,7 @@ sub _do_work {
       $self->_attach_pdf;
     }
 
-    $self->update_info('callback',{fn => 'CONSOLE', args => $self->pub->pdf_url});
+    $self->update_info('callback',{fn => 'CONSOLE', args => $self->pub->_pdf_url});
     $self->update_info('msg','File successfully downloaded.');
 
   }
@@ -509,6 +509,7 @@ sub as_hash {
     $hash{journal}         = $self->pub->journal;
     $hash{authors_display} = $self->pub->_authors_display;
     $hash{authors}         = $self->pub->authors;
+    $hash{pdf_name}        = $self->pub->pdf_name;
     $hash{pdf}             = $self->pub->pdf;
   }
   return {%hash};
@@ -619,7 +620,7 @@ sub _crawl {
 
   $pdf = $crawler->search_file( $start_url );
 
-  $self->pub->pdf_url($pdf) if $pdf;
+  $self->pub->_pdf_url($pdf) if $pdf;
 
 }
 
@@ -629,7 +630,7 @@ sub _download {
 
   my $self = shift;
 
-  print STDERR "[queue] Start downloading ", $self->pub->pdf_url, "\n";
+  print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
   $self->update_info( 'msg', "Downloading PDF..." );
 
@@ -642,7 +643,7 @@ sub _download {
   my $ua = Paperpile::Utils->get_browser();
 
   my $res = $ua->request(
-    HTTP::Request->new( GET => $self->pub->pdf_url ),
+    HTTP::Request->new( GET => $self->pub->_pdf_url ),
     sub {
       my ( $data, $response, $protocol ) = @_;
 
@@ -725,6 +726,8 @@ sub _download {
       'Could not download PDF. Your institution might need a subscription for the journal!');
   }
 
+  # Temporarily set fields. Makes frontend happy in case pub is not imported.
+  $self->pub->pdf_name($file);
   $self->pub->pdf($file);
 
 }
@@ -751,41 +754,27 @@ sub _extract_meta_data {
 }
 
 
-## Look if a PDF file is already in the database, first checks if a
-## file of the same size is in the database. If so, we do a full
-## binary comparison to be sure
+## Look if a PDF file is already in the database
 
 sub _lookup_pdf {
 
   my $self = shift;
 
-  my $size = stat($self->pub->{pdf})->size;
+  my $md5 = Paperpile::Utils->calculate_md5( $self->pub->pdf );
 
   my $model = Paperpile::Utils->get_library_model;
 
-  my $paper_root = $model->get_setting('paper_root');
+  my $data = $model->dbh->selectrow_hashref(
+    "SELECT Publications.rowid as rowid, Publications.guid as guid, * FROM Publications, Attachments WHERE Publications.guid=Attachments.publication AND md5='$md5' AND is_pdf;"
+  );
 
-  my $sth = $model->dbh->prepare("SELECT rowid,pdf,pdf_size FROM Publications WHERE pdf_size=$size;");
-  $sth->execute;
-
-  my $rowid = undef;
-
-  while ( my $row = $sth->fetchrow_hashref() ) {
-    my $file = File::Spec->catfile( $paper_root, $row->{pdf} );
-
-    if ( compare( $file, $self->pub->pdf ) == 0 ) {
-      $rowid = $row->{rowid};
-      last;
-    }
-  }
-
-  if ($rowid) {
-    my $pub = $model->standard_search( 'rowid=' . $rowid, 0, 1 )->[0];
+  if ($data) {
+    my $pub = Paperpile::Library::Publication->new($data);
+    $pub->_imported(1);
     $self->pub($pub);
   }
 
 }
-
 
 ## Inserts the current publication object into the database
 
@@ -794,6 +783,13 @@ sub _insert {
   my $self = shift;
 
   my $model = Paperpile::Utils->get_library_model;
+
+  # We here track the PDF file in the pub->pdf field, for import
+  # _pdf_tmp needs to be set
+  if ($self->pub->pdf){
+    $self->pub->_pdf_tmp($self->pub->pdf);
+    $self->pub->pdf('');
+  }
 
   $model->create_pubs( [$self->pub] );
 
@@ -810,11 +806,11 @@ sub _attach_pdf {
 
   my $model = Paperpile::Utils->get_library_model;
 
-  my $attached_file=$model->attach_file($self->pub->pdf, 1, $self->pub->_rowid, $self->pub);
+  my $file = $self->pub->pdf;
 
-  unlink($self->pub->pdf);
+  $model->attach_file($file, 1, $self->pub);
 
-  $self->pub->pdf($attached_file);
+  unlink($file);
 
 }
 

@@ -124,7 +124,7 @@ sub update : Local {
     }
   }
 
-  $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', '_search_job' ] );
+  $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', 'pdf_name', '_search_job' ] );
   $data->{jobs} = $jobs;
   $data->{pubs} = $pubs;
 

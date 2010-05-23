@@ -1027,7 +1027,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-grid-citation{}
 
-.pp-grid-snippets{}
+.pp-grid-snippets{
+    color: #585858;
+    padding-left:10px;
+    padding-top:5px;
+}
 
 .pp-grid-snippets .highlight{
     background-color: #FFF6A9;

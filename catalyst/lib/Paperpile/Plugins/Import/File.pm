@@ -103,14 +103,14 @@ sub connect {
 
       my $model = $self->get_model();
 
-      $model->insert_pubs( [ values %all ] );
+      $model->insert_pubs( [ values %all ], 0 );
 
     }
   }
 
   my $model = $self->get_model();
 
-  $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf ) );
+  $self->total_entries( $model->fulltext_count( $self->query, 0) );
   return $self->total_entries;
 
 }

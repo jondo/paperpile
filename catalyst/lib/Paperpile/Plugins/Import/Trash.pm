@@ -65,7 +65,7 @@ sub page {
   my $page;
 
   $page =
-    $model->fulltext_search( $self->query, $offset, $limit, $self->order, $self->search_pdf, 1 );
+    $model->fulltext_search( $self->query, $offset, $limit, $self->order, 1 );
 
   $self->_save_page_to_hash($page);
 
@@ -77,7 +77,7 @@ sub update_count {
   ( my $self ) = @_;
   my $model = $self->get_model;
 
-  $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf, 1 ) );
+  $self->total_entries( $model->fulltext_count( $self->query, 1 ) );
 
   return $self->total_entries;
 

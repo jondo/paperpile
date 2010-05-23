@@ -62,8 +62,14 @@ our @types = qw(
 has '_rowid' => ( is => 'rw');
 
 # The unique sha1 key which is currently calculated from title,
-# authors and year.
+# authors and year. The purpose is to compare quickly if two
+# publications are the same
 has 'sha1' => ( is => 'rw' );
+
+# Globally unique identifier that never changes and that can be used
+# to track a publication also outside the local database (e.g. for
+# syncinc across networks)
+has 'guid' => ( is => 'rw' );
 
 # Timestamp when the entry was created
 has 'created' => ( is => 'rw');
@@ -72,23 +78,20 @@ has 'created' => ( is => 'rw');
 has 'trashed' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Timestamp when it was last read
-has 'last_read' => ( is => 'rw');
+has 'last_read' => ( is => 'rw', default => '');
 
 # How many times it was read
 has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
 
-# If available, direct link to PDF goes in here
-has 'pdf_url' => ( is => 'rw', default => '' );
-
-# An attached PDF file, the path is relative to the paper_root user
-# setting
+# The guid of an attached PDF file
 has 'pdf' => ( is => 'rw', default => '' );
 
-# Size of PDF in bytes
-has 'pdf_size' => ( is => 'rw', default => 0, isa => 'Int' );
+# File name of PDF relative to paper_root. Use for display purpose and
+# to reconstruct PDF path without going back to attachments table
+has 'pdf_name' => ( is => 'rw', default => '' );
 
-# The number of additional files that are associated with this entry
-has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
+# Comma separated list of guids of other attachments
+has 'attachments' => ( is => 'rw' );
 has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
 
 # User provided annotation "Notes", formatted in HTML
@@ -135,6 +138,13 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
 ### Helper fields which have no equivalent field in the database
 
+# If available, direct link to PDF goes in here
+has '_pdf_url' => ( is => 'rw', default => '' );
+
+# Temporary store absolute file name of PDF that is to be imported
+# together with the publication object
+has '_pdf_tmp' => ( is => 'rw', default => '' );
+
 # Formatted strings to be displayed in the frontend.
 has '_authors_display'  => ( is => 'rw');
 has '_citation_display' => ( is => 'rw');
@@ -163,9 +173,7 @@ has '_related_articles' => ( is => 'rw', default => '' );
 # If a search in the local database returns a hit in the fulltext,
 # abstract or notes the hit+context ('snippet') is stored in these
 # fields
-has '_snippets_text'     => ( is => 'rw');
-has '_snippets_abstract' => ( is => 'rw');
-has '_snippets_notes'    => ( is => 'rw');
+has '_snippets'     => ( is => 'rw');
 
 # CSS style to highlight the entry in the frontend
 has '_highlight' => ( is => 'rw', default => 'pp-grid-highlight0' );
@@ -420,34 +428,31 @@ sub refresh_attachments {
 
   $self->_attachments_list( [] );
 
-  if ( $self->attachments > 0 ) {
+  if ( $self->attachments) {
     my $model = Paperpile::Utils->get_library_model();
+    my $paper_root = $model->get_setting('paper_root');
+    my $guid = $self->guid;
+    my $sth = $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
 
-    my $rowid = $self->_rowid;
-    my $sth =
-      $model->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
-    my ( $attachment_rowid, $file_name );
-    $sth->bind_columns( \$attachment_rowid, \$file_name );
+    #my ( $attachment_rowid, $file_name );
+    #$sth->bind_columns( \$attachment_rowid, \$file_name );
     $sth->execute;
 
-    my $paper_root = $model->get_setting('paper_root');
-
     my @output = ();
-    while ( $sth->fetch ) {
-      my $abs = File::Spec->catfile( $paper_root, $file_name );
+    while ( my $row = $sth->fetchrow_hashref() ) {
+      #my $a = File::Spec->catfile( $paper_root, $file_name );
 
-      my $link = "/serve/$file_name";
+      my $link = "/serve/".$row->{local_file};
 
       ( my $suffix ) = ( $link =~ /\.(.*+$)/ );
 
-      my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($abs);
-      print STDERR "Base name: $base_name\n";
+      #my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($abs);
       push @output, {
-        file  => $base_name,
-        path  => $abs,
+        file  => $row->{name},
+        path  => $row->{local_file},
         link  => $link,
         cls   => "file-$suffix",
-        rowid => $attachment_rowid
+        guid => $row->{guid}
         };
     }
 
@@ -468,7 +473,7 @@ sub as_hash {
     my $value = $self->$key;
 
     # Force it to a number to be correctly converted to JSON
-    if ($key ~~ ['attachments', 'times_read', 'trashed']){
+    if ($key ~~ ['times_read', 'trashed']){
       $value+=0;
     }
 

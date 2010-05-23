@@ -100,7 +100,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         record.data._last_readPretty = 'Never read';
       }
 
-      record.data.pdf_path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
+      if (record.data.attachments){
+        record.data._attachments_count = record.data.attachments.split(/,/).length;
+      }
+
       return this.getIconTemplate().apply(record.data);
     };
 
@@ -414,9 +417,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
       }
       return true;
-
-      record.data.pdf_path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
-      return this.getIconTemplate().apply(record.data);
     }
     return false;
   },
@@ -669,14 +669,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '<tpl if="_citation_display">',
         '<p class="pp-grid-citation">{_citation_display}</p>',
         '</tpl>',
-        '<tpl if="_snippets_text">',
-        '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
-        '</tpl>',
-        '<tpl if="_snippets_abstract">',
-        '<p class="pp-grid-snippets"><span class="heading">Abstract:</span> {_snippets_abstract}</p>',
-        '</tpl>',
-        '<tpl if="_snippets_notes">',
-        '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
+        '<tpl if="_snippets">',
+        '<p class="pp-grid-snippets">{_snippets}</p>',
         '</tpl>',
         '</div>', {
           tagStyle: function(tag_string) {
@@ -684,12 +678,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             var tags = tag_string.split(/\s*,\s*/);
             var totalChars = 0;
             for (var i = 0; i < tags.length; i++) {
-              var tag = tags[i];
-              var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('tag', tag));
+              var guid = tags[i];
+              var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
               if (style != null) {
+                name = style.get('name');
                 style = style.get('style');
-                totalChars += tag.length;
-                returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + tag + '&nbsp;</div>&nbsp;';
+                totalChars += name.length;
+                returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
               }
             }
             if (tags.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
@@ -716,10 +711,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  </tpl>',
       '</tpl>',
       '<tpl if="pdf">',
-      '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br/>{_last_readPretty}"></div>',
+      '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf_name}</b><br/>{_last_readPretty}"></div>',
       '</tpl>',
       '<tpl if="attachments">',
-      '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+      '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{_attachments_count} attached file(s)"></div>',
       '</tpl>',
       '<tpl if="annote">',
       '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
@@ -829,7 +824,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '          <tpl for="_attachments_list">',
       '            <li class="pp-attachment-list pp-file-generic {cls}">',
       '            <a href="#" class="pp-textlink" action="open-attachment" path="{path}">{file}</a>&nbsp;&nbsp;',
-      '            <a href="#" class="pp-textlink pp-second-link" action="delete-file" rowid="{rowid}">Delete</a></li>',
+      '            <a href="#" class="pp-textlink pp-second-link" action="delete-file" guid="{guid}">Delete</a></li>',
       '          </tpl>',
       '          </ul>',
       '        </tpl>',
