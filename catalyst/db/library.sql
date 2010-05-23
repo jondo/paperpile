@@ -23,6 +23,7 @@ CREATE TABLE Publications(
   guid               TEXT UNIQUE,
   sha1               TEXT UNIQUE,
   pdf                TEXT,
+  pdf_name           TEXT,
   attachments        TEXT,
   trashed            INTEGER,
   created            TIMESTAMP,
@@ -56,5 +57,6 @@ CREATE TABLE Attachments (
   is_pdf       INTEGER,
   name         TEXT,
   local_file   TEXT,
-  size         INTEGER
+  size         INTEGER,
+  md5          TEXT
 );

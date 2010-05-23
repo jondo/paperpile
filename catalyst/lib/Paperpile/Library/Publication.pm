@@ -86,6 +86,10 @@ has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
 # The guid of an attached PDF file
 has 'pdf' => ( is => 'rw', default => '' );
 
+# File name of PDF relative to paper_root. Use for display purpose and
+# to reconstruct PDF path without going back to attachments table
+has 'pdf_name' => ( is => 'rw', default => '' );
+
 # Comma separated list of guids of other attachments
 has 'attachments' => ( is => 'rw' );
 has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
@@ -136,6 +140,10 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
 # If available, direct link to PDF goes in here
 has '_pdf_url' => ( is => 'rw', default => '' );
+
+# Temporary store absolute file name of PDF that is to be imported
+# together with the publication object
+has '_pdf_tmp' => ( is => 'rw', default => '' );
 
 # Formatted strings to be displayed in the frontend.
 has '_authors_display'  => ( is => 'rw');

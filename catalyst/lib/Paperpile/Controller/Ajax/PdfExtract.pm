@@ -54,6 +54,8 @@ sub submit : Local {
 
   foreach my $file (@files) {
 
+    # Use the pdf field to set the file (this normally holds the guid
+    # of an already imported PDF)
     my $pub = Paperpile::Library::Publication->new( { pdf => $file } );
 
     my $job = Paperpile::Job->new( {

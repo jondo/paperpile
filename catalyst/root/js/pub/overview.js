@@ -256,19 +256,19 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'open-pdf':
-      var path = this.data.pdf;
+      var path = this.data.pdf_name;
       if (!Paperpile.utils.isAbsolute(path)) {
         path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
       }
       Paperpile.main.tabs.newPdfTab({
         file: path,
-        title: this.data.pdf
+        title: this.data.pdf_name
       });
       Paperpile.main.inc_read_counter(this.data);
       break;
 
     case 'open-pdf-external':
-      Paperpile.main.openPdfInExternalViewer(this.data.pdf, this.data);
+      Paperpile.main.openPdfInExternalViewer(this.data.pdf_name, this.data);
       break;
 
     case 'attach-pdf':
@@ -579,7 +579,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
         var undo_msg = '';
         if (isPDF) {
-          undo_msg = 'Deleted PDF file ' + record.get('pdf');
+          undo_msg = 'Deleted PDF file ' + record.get('pdf_name');
         } else {
           undo_msg = "Deleted one attached file";
         }

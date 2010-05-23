@@ -223,32 +223,24 @@ sub insert_pubs {
     # GJ 2010-01-10 I *think* this should be here, but not sure...
     $pub->_imported(1);
 
-    # Check if we can find a pdf (either directly given as pub->pdf or
-    # in download cache folder) and attach it
 
-    my $pdf_file = undef;
+
+    # If there is a downloaded PDF in the cache folder and
+    # "paper_root" is defined (i.e. this is our main DB and not a
+    # temporary DB for e.g. RSS or BibTeX) we consider this for
+    # import.
 
     my $cached_file =
       File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $pub->sha1 . ".pdf" );
 
-    if ( $pub->pdf ) {
-      $pdf_file = $pub->pdf;
-    } elsif ( -e $cached_file ) {
-      $pdf_file = $cached_file;
+    my $paper_root = $self->get_setting('paper_root');
+
+    if ( defined $paper_root && -e $cached_file) {
+      $pub->_pdf_tmp($cached_file);
     }
 
-    if ($pdf_file) {
-
-      # First check if paper_root is set. In temporary databases
-      # eg. for opening bibtex or RSS feeds it is not set and we don't
-      # attach PDFs there
-      my $paper_root = $self->get_setting('paper_root');
-
-      if ( defined $paper_root ) {
-        my $attached_file = $self->attach_file( $pdf_file, 1, $pub_rowid, $pub );
-        unlink($pdf_file) if -e ($cached_file);
-        $pub->pdf($attached_file);
-      }
+    if ($pub->_pdf_tmp) {
+      $self->attach_file( $pub->_pdf_tmp, 1, $pub );
     }
   }
 
@@ -264,28 +256,21 @@ sub delete_pubs {
 
   $dbh->begin_work;
 
-  # check if entry has any attachments an delete those
+  # Delete attachments
   foreach my $pub (@$pubs) {
 
-    my $rowid = $pub->_rowid;
+    # PDF
+    $self->delete_attachment($pub->pdf, 1,$pub) if $pub->pdf;
 
-    # First delete attachments from Attachments table
-    my $select = $dbh->prepare("SELECT rowid FROM Attachments WHERE publication_id=$rowid;");
-    my $attachment_rowid;
-    $select->bind_columns( \$attachment_rowid );
-    $select->execute;
-    while ( $select->fetch ) {
-      $self->delete_attachment( $attachment_rowid, 0 );
+    # Other files
+    foreach my $guid (split(',', $pub->attachments || '')) {
+      $self->delete_attachment( $guid, 0, $pub );
     }
-
-    # Then delete the PDF
-    $self->delete_attachment( $rowid, 1 );
   }
 
   # Then delete the entry in all relevant tables
-  my $delete_main              = $dbh->prepare("DELETE FROM publications WHERE rowid=?");
+  my $delete_main         = $dbh->prepare("DELETE FROM publications WHERE rowid=?");
   my $delete_fulltext     = $dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
-
   foreach my $pub (@$pubs) {
     my $rowid = $pub->_rowid;
     $delete_main->execute($rowid);
@@ -384,55 +369,103 @@ sub update_pub {
   ( my $self, my $old_pub, my $new_data ) = @_;
 
   my $data = $old_pub->as_hash;
+  my $diff = {};
+  my $settings = $self->settings;
 
-  # add new fields to old entry
+  # Figure out fields that have changed
   foreach my $field ( keys %{$new_data} ) {
+    if ($new_data->{$field} ne $data->{$field}){
+      $diff->{$field} = $new_data->{$field};
+    }
     $data->{$field} = $new_data->{$field};
   }
 
+  # Create pub object with updated data
   my $new_pub = Paperpile::Library::Publication->new($data);
 
-  # Save attachments in temporary dir
-  my $tmp_dir = tempdir( CLEANUP => 1 );
-
-  my @attachments = ();
-
-  foreach my $file ( $self->get_attachments( $new_pub->_rowid ) ) {
-    my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($file);
-    my $tmp_file = File::Spec->catfile( $tmp_dir, $base_name );
-    copy( $file, $tmp_dir );
-    push @attachments, $tmp_file;
+  # Also update sha1 if it has changed
+  if ($new_pub->sha1 ne $old_pub->sha1){
+    $diff->{sha1} = $new_pub->sha1;
   }
 
-  my $pdf_file = '';
+  my $dbh = $self->dbh;
 
-  if ( $new_pub->pdf ) {
-    my $paper_root = $self->get_setting('paper_root');
-    my $file = File::Spec->catfile( $paper_root, $new_pub->pdf );
-    my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($file);
-    copy( $file, $tmp_dir );
-    $pdf_file = File::Spec->catfile( $tmp_dir, $base_name );
-    $new_pub->pdf('');    # unset to avoid that create_pub tries to
-                          # attach the file which gives an error
+  my @list;
+
+  foreach my $field (keys %{$diff}){
+    push @list, "$field=".$dbh->quote($diff->{$field});
   }
 
-  # Delete and then re-create
-  $self->delete_pubs( [$new_pub] );
-  $self->create_pubs( [$new_pub] );
+  my $sql = join(',',@list);
+  my $guid=$new_pub->guid;
 
-  # Attach files again afterwards. Is not the most efficient way but
-  # currently the easiest and most robust solution.
-  foreach my $file (@attachments) {
-    $self->attach_file( $file, 0, $new_pub->_rowid, $new_pub );
-  }
-  if ($pdf_file) {
-    $self->attach_file( $pdf_file, 1, $new_pub->_rowid, $new_pub );
-  }
+  $dbh->do("UPDATE Publications SET $sql WHERE guid='$guid';");
 
-  $new_pub->_imported(1);
-  $new_pub->attachments( scalar @attachments );
+  if ($new_pub->{pdf} || $new_pub->{attachments}){
+
+    #my $new_name;
+
+    #if ($row->{is_pdf}){
+    #  $new_name = 
+    #}
+
+    #my $file_relative = File::Spec->abs2rel($file_absolute, $paper_root);
+
+    #$relative_dest =
+    #  $pub->format_pattern( $settings->{attachment_pattern}, { key => $pub->citekey } );
+    #$relative_dest = File::Spec->catfile( $relative_dest, $base_name );
+
+
+    my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid';");
+    $sth->execute;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+      print STDERR $row->{is_pdf}, $row->{name}, $row->{local_file}, "\n";
+    }
+  }
 
   return $new_pub;
+
+  # Save attachments in temporary dir
+  #my $tmp_dir = tempdir( CLEANUP => 1 );
+
+  #my @attachments = ();
+
+  #foreach my $file ( $self->get_attachments( $new_pub->_rowid ) ) {
+  #  my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($file);
+  #  my $tmp_file = File::Spec->catfile( $tmp_dir, $base_name );
+  #  copy( $file, $tmp_dir );
+  #  push @attachments, $tmp_file;
+  #}
+
+  #my $pdf_file = '';
+
+  # if ( $new_pub->pdf ) {
+  #   my $paper_root = $self->get_setting('paper_root');
+  #   my $file = File::Spec->catfile( $paper_root, $new_pub->pdf );
+  #   my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($file);
+  #   copy( $file, $tmp_dir );
+  #   $pdf_file = File::Spec->catfile( $tmp_dir, $base_name );
+  #   $new_pub->pdf('');    # unset to avoid that create_pub tries to
+  #                         # attach the file which gives an error
+  # }
+
+  # # Delete and then re-create
+  # $self->delete_pubs( [$new_pub] );
+  # $self->create_pubs( [$new_pub] );
+
+  # # Attach files again afterwards. Is not the most efficient way but
+  # # currently the easiest and most robust solution.
+  # foreach my $file (@attachments) {
+  #   $self->attach_file( $file, 0, $new_pub->_rowid, $new_pub );
+  # }
+  # if ($pdf_file) {
+  #   $self->attach_file( $pdf_file, 1, $new_pub->_rowid, $new_pub );
+  # }
+
+  # $new_pub->_imported(1);
+  # $new_pub->attachments( scalar @attachments );
+
+  # return $new_pub;
 }
 
 sub get_attachments {
@@ -1188,7 +1221,7 @@ sub exists_pub {
 }
 
 # Small helper function that converts hash to sql syntax (including
-# quotes). Also passed the database handel to avoid calling $self->dbh
+# quotes). Also passed the database handle to avoid calling $self->dbh
 # all the time which turned out to be a bottle neck
 sub _hash2sql {
 
@@ -1274,6 +1307,8 @@ sub attach_file {
 
   my $file_size = stat($file)->size;
 
+  my $md5 = Paperpile::Utils->calculate_md5($file);
+
   my $relative_dest;
 
   if ($is_pdf) {
@@ -1302,16 +1337,21 @@ sub attach_file {
   my $name       = $dbh->quote($base_name);
   my $local_file = $dbh->quote($absolute_dest);
 
-  $dbh->do( "INSERT INTO Attachments (guid, publication, is_pdf, name, local_file, size)"
-      . "                     VALUES ('$file_guid', '$pub_guid', $is_pdf, $name, $local_file, $file_size);"
+  $dbh->do( "INSERT INTO Attachments (guid, publication, is_pdf, name, local_file, size, md5)"
+      . "                     VALUES ('$file_guid', '$pub_guid', $is_pdf, $name, $local_file, $file_size, '$md5');"
   );
 
   if ($is_pdf) {
     $self->index_pdf( $pub_guid, $absolute_dest );
-    $dbh->do(
-      "UPDATE Publications SET pdf='$file_guid', times_read=0, last_read='' WHERE guid='$pub_guid';"
-    );
+    my $pdf_name = File::Spec->abs2rel($absolute_dest, $self->get_setting('paper_root'));
     $pub->pdf($file_guid);
+    $pub->pdf_name($pdf_name);
+
+    $pdf_name = $dbh->quote($pdf_name);
+
+    $dbh->do(
+      "UPDATE Publications SET pdf='$file_guid', pdf_name=$pdf_name, times_read=0, last_read='' WHERE guid='$pub_guid';"
+    );
     return $file_guid;
   } else {
 
@@ -1356,8 +1396,9 @@ sub delete_attachment {
 
   if ($is_pdf) {
     $dbh->do("UPDATE Fulltext SET text='' WHERE rowid=$rowid");
-    $dbh->do("UPDATE Publications SET pdf='', times_read=0, last_read='' WHERE rowid=$rowid");
+    $dbh->do("UPDATE Publications SET pdf='', pdf_name='', times_read=0, last_read='' WHERE rowid=$rowid");
     $pub->pdf('');
+    $pub->pdf_name('');
 
   } else {
 

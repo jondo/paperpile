@@ -229,14 +229,29 @@ sub update_entry : Local {
 
   my $new_pub = $c->model('Library')->update_pub( $old_pub, $new_data );
 
-  delete( $plugin->_hash->{ $old_pub->sha1 } );
-  $plugin->_hash->{ $new_pub->sha1 } = $new_pub;
+  foreach my $var ( keys %{ $c->session } ) {
+    next if !( $var =~ /^grid_/ );
+    my $plugin = $c->session->{$var};
+    if ( $plugin->plugin_name eq 'DB' or $plugin->plugin_name eq 'Trash' ) {
+      if ($plugin->_hash->{ $old_pub->sha1 }){
+        delete( $plugin->_hash->{ $old_pub->sha1 } );
+        $plugin->_hash->{ $new_pub->sha1 } = $new_pub;
+      }
+    }
+  }
+
 
   # That's handled as form on the front-end so we have to explicitly
   # indicate success
   $c->stash->{success} = \1;
 
-  $c->stash->{data} = { pubs => {$old_pub->sha1 => $new_pub->as_hash}};
+  my $hash =  $new_pub->as_hash;
+
+  if ($old_pub->sha1 ne $new_pub->sha1){
+    $hash->{_new_sha1} = $new_pub->sha1;
+  }
+
+  $c->stash->{data} = { pubs => {$old_pub->sha1 => $hash}};
 
 }
 

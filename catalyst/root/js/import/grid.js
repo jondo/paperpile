@@ -99,8 +99,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       } else {
         record.data._last_readPretty = 'Never read';
       }
-
-      record.data.pdf_path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
       return this.getIconTemplate().apply(record.data);
     };
 
@@ -414,9 +412,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
       }
       return true;
-
-      record.data.pdf_path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
-      return this.getIconTemplate().apply(record.data);
     }
     return false;
   },
@@ -711,7 +706,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  </tpl>',
       '</tpl>',
       '<tpl if="pdf">',
-      '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br/>{_last_readPretty}"></div>',
+      '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf_name}</b><br/>{_last_readPretty}"></div>',
       '</tpl>',
       '<tpl if="attachments">',
       '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
