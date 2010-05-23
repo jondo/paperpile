@@ -508,7 +508,7 @@ sub attach_file : Local {
 
   $c->model('Library')->attach_file( $file, $is_pdf, $pub );
 
-  $self->_collect_update_data($c,  [$pub], [ 'pdf', 'attachments', '_attachments_list' ] );
+  $self->_collect_update_data($c,  [$pub], [ 'pdf', 'pdf_name', 'attachments', '_attachments_list' ] );
 
 }
 

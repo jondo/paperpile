@@ -23,7 +23,7 @@ use Tree::Simple;
 use XML::Simple;
 use FreezeThaw qw/freeze thaw/;
 use File::Path;
-use File::Spec;
+use File::Spec::Functions qw(catfile splitpath canonpath abs2rel);
 use File::Copy;
 use File::stat;
 use Moose;
@@ -49,97 +49,27 @@ sub build_per_context_instance {
   return $model;
 }
 
-# Function: create_pubs
-#
-# Adds a list of publication entries to the local library. It first
-# generates a unique citation-key and then adds the entries to the
-# database via the insert_pubs function. Note that this function
-# updates the entries in the $pubs array in place by adding the
-# citekey field.
+# Adds a list of publication entries to the local library.
 
 sub create_pubs {
 
   ( my $self, my $pubs ) = @_;
 
-  my %to_be_inserted = ();
-
   my $dbh = $self->dbh;
 
   foreach my $pub (@$pubs) {
-    eval {
+    $pub->created( timestamp gmtime ) if not $pub->created;
+    $pub->times_read(0);
+    $pub->last_read('');
+    $pub->_imported(1);
+  };
 
-      # Initialize some fields
-      $pub->created( timestamp gmtime ) if not $pub->created;
-      $pub->times_read(0);
-      $pub->last_read('');
-      $pub->_imported(1);
-
-      # Generate citation key
-      my $pattern = $self->get_setting('key_pattern');
-
-      $pattern = '[firstauthor][YYYY]';
-
-      my $key = $pub->format_pattern($pattern);
-
-      # Check if key already exists
-
-      # First we check in the database
-      my $quoted = $dbh->quote("key:$key*");
-      my $sth = $dbh->prepare(qq^SELECT key FROM fulltext WHERE fulltext MATCH $quoted^);
-      my $existing_key;
-      $sth->bind_columns( \$existing_key );
-      $sth->execute;
-
-      my @suffix = ();
-      my $unique = 1;
-
-      while ( $sth->fetch ) {
-        $unique = 0;    # if we found something in the DB it is not unique
-
-        # We collect the suffixes a,b,c... that already exist
-        if ( $existing_key =~ /$key([a-z])/ ) {    #
-          push @suffix, $1;
-        }
-      }
-
-      # Then in the current list that have been already processed in this loop
-      foreach my $existing_key ( @{ $to_be_inserted{$key} } ) {
-        if ( $existing_key =~ /^$key([a-z])?/ ) {
-          $unique = 0;
-          push @suffix, $1 if $1;
-        }
-      }
-
-      my $bare_key = $key;
-
-      if ( not $unique ) {
-        my $new_suffix = 'a';
-        if (@suffix) {
-
-          # we sort them to make sure to get the 'highest' suffix and count one up
-          @suffix = sort { $a cmp $b } @suffix;
-          $new_suffix = chr( ord( pop(@suffix) ) + 1 );
-        }
-        $key .= $new_suffix;
-      }
-
-      if ( not $to_be_inserted{$bare_key} ) {
-        $to_be_inserted{$bare_key} = [$key];
-      } else {
-        push @{ $to_be_inserted{$bare_key} }, $key;
-      }
-
-      $pub->citekey($key);
-    };
-    warn $@ if $@;
-  }
+  $self->_generate_keys($pubs, $dbh);
 
   $self->insert_pubs($pubs);
 
 }
 
-# Function: insert_pubs
-#
 # Inserts a list of publications into the database
 
 sub insert_pubs {
@@ -159,7 +89,7 @@ sub insert_pubs {
 
   foreach my $pub (@$pubs) {
 
-    if ($pub->_imported){
+    if ( $pub->_imported ) {
       print STDERR $pub->sha1, " already exists. Skipped.\n";
       next;
     }
@@ -167,12 +97,12 @@ sub insert_pubs {
     # Sanity check. Should not come to this point without sha1 but we
     # had an error like this and that could have prevented a corrupted
     # database
-    next if (!$pub->sha1);
+    next if ( !$pub->sha1 );
 
-    if (!$pub->guid){
-      my $_guid=Data::GUID->new;
-      $_guid=$_guid->as_hex;
-      $_guid=~s/^0x//;
+    if ( !$pub->guid ) {
+      my $_guid = Data::GUID->new;
+      $_guid = $_guid->as_hex;
+      $_guid =~ s/^0x//;
       $pub->guid($_guid);
     }
 
@@ -188,58 +118,25 @@ sub insert_pubs {
 
     $pub->_rowid($pub_rowid);
 
-    if ( ( not $pub->_authors_display ) and ( $pub->authors ) ) {
-      my @authors = split( /\band\b/, $pub->authors );
-      my @display = ();
-      foreach my $a (@authors) {
-        my $tmp = Paperpile::Library::Author->_split_full($a);
-        $tmp->{initials} = Paperpile::Library::Author->_parse_initials( $tmp->{first} );
-        push @display, Paperpile::Library::Author->_nice($tmp);
-      }
-      $pub->_auto_refresh(0);
-      $pub->_authors_display( join( ", ", @display ) );
-    }
-
-    my $hash = {
-      rowid    => $pub_rowid,
-      key      => $pub->citekey,
-      year     => $pub->year,
-      journal  => $pub->journal,
-      title    => $pub->title,
-      abstract => $pub->abstract,
-      notes    => $pub->annote,
-      author   => $pub->_authors_display,
-      labelid  => $pub->tags,
-      folderid => $pub->folders,
-      keyword  => $pub->keywords,
-    };
-
-    ( $fields, $values ) = $self->_hash2sql( $hash, $dbh );
-
-    $fields .= ",text";
-    $values .= ",''";
-    $dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
+    $self->_update_fulltext_table( $pub, 1, $dbh );
 
     # GJ 2010-01-10 I *think* this should be here, but not sure...
     $pub->_imported(1);
-
-
 
     # If there is a downloaded PDF in the cache folder and
     # "paper_root" is defined (i.e. this is our main DB and not a
     # temporary DB for e.g. RSS or BibTeX) we consider this for
     # import.
 
-    my $cached_file =
-      File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $pub->sha1 . ".pdf" );
+    my $cached_file = catfile( Paperpile::Utils->get_tmp_dir, "download", $pub->sha1 . ".pdf" );
 
     my $paper_root = $self->get_setting('paper_root');
 
-    if ( defined $paper_root && -e $cached_file) {
+    if ( defined $paper_root && -e $cached_file ) {
       $pub->_pdf_tmp($cached_file);
     }
 
-    if ($pub->_pdf_tmp) {
+    if ( $pub->_pdf_tmp ) {
       $self->attach_file( $pub->_pdf_tmp, 1, $pub );
     }
   }
@@ -247,6 +144,8 @@ sub insert_pubs {
   $dbh->commit;
 
 }
+
+
 
 sub delete_pubs {
 
@@ -320,13 +219,13 @@ sub trash_pubs {
     $select->execute;
     while ( $select->fetch ) {
       my $move_to;
-      my $file_relative = File::Spec->abs2rel($file_absolute, $paper_root);
+      my $file_relative = abs2rel($file_absolute, $paper_root);
       if ( $mode eq 'TRASH' ) {
-        $move_to = File::Spec->catfile( $paper_root, "Trash", $file_relative );
+        $move_to = catfile( $paper_root, "Trash", $file_relative );
       } else {
         $move_to = $file_relative;
         $move_to =~ s/Trash.//;
-        $move_to = File::Spec->catfile( $paper_root, $move_to );
+        $move_to = catfile( $paper_root, $move_to );
       }
       push @files, [ $file_absolute, $move_to ];
       $move_to = $dbh->quote($move_to);
@@ -340,15 +239,15 @@ sub trash_pubs {
 
     ( my $from, my $to ) = @$pair;
 
-    my ( $volume, $dir, $file_name ) = File::Spec->splitpath($to);
+    my ( $volume, $dir, $file_name ) = splitpath($to);
 
     mkpath($dir);
     move( $from, $to );
 
-    ( $volume, $dir, $file_name ) = File::Spec->splitpath($from);
+    ( $volume, $dir, $file_name ) = splitpath($from);
 
     # Never remove the paper_root even if its empty;
-    if ( File::Spec->canonpath($paper_root) ne File::Spec->canonpath($dir) ) {
+    if ( canonpath($paper_root) ne canonpath($dir) ) {
 
       # Simply remove it; will not do any harm if it is not empty; Did
       # not find an easy way to check if dir is empty, but it does not
@@ -368,13 +267,17 @@ sub update_pub {
 
   ( my $self, my $old_pub, my $new_data ) = @_;
 
-  my $data = $old_pub->as_hash;
-  my $diff = {};
+  my $dbh      = $self->dbh;
   my $settings = $self->settings;
+
+  my $guid = $old_pub->guid;
+
+  my $diff = {};
+  my $data = $old_pub->as_hash;
 
   # Figure out fields that have changed
   foreach my $field ( keys %{$new_data} ) {
-    if ($new_data->{$field} ne $data->{$field}){
+    if ( $new_data->{$field} ne $data->{$field} ) {
       $diff->{$field} = $new_data->{$field};
     }
     $data->{$field} = $new_data->{$field};
@@ -383,110 +286,75 @@ sub update_pub {
   # Create pub object with updated data
   my $new_pub = Paperpile::Library::Publication->new($data);
 
-  # Also update sha1 if it has changed
-  if ($new_pub->sha1 ne $old_pub->sha1){
+  # Also update sha1 and citekey if necessary changed
+  if ( $new_pub->sha1 ne $old_pub->sha1 ) {
     $diff->{sha1} = $new_pub->sha1;
   }
 
-  my $dbh = $self->dbh;
+  $self->_generate_keys( [$new_pub], $dbh );
 
-  my @list;
-
-  foreach my $field (keys %{$diff}){
-    push @list, "$field=".$dbh->quote($diff->{$field});
+  if ( $new_pub->citekey ne $old_pub->citekey ) {
+    $diff->{citekey} = $new_pub->citekey;
   }
 
-  my $sql = join(',',@list);
-  my $guid=$new_pub->guid;
-
-  $dbh->do("UPDATE Publications SET $sql WHERE guid='$guid';");
-
-  if ($new_pub->{pdf} || $new_pub->{attachments}){
-
-    #my $new_name;
-
-    #if ($row->{is_pdf}){
-    #  $new_name = 
-    #}
-
-    #my $file_relative = File::Spec->abs2rel($file_absolute, $paper_root);
-
-    #$relative_dest =
-    #  $pub->format_pattern( $settings->{attachment_pattern}, { key => $pub->citekey } );
-    #$relative_dest = File::Spec->catfile( $relative_dest, $base_name );
-
+  # If we have attachments we need to check if their names have
+  # changed because of the update and if so move them to the new place
+  if ( $new_pub->{pdf} || $new_pub->{attachments} ) {
 
     my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid';");
     $sth->execute;
+
     while ( my $row = $sth->fetchrow_hashref() ) {
-      print STDERR $row->{is_pdf}, $row->{name}, $row->{local_file}, "\n";
+
+      my $old_file = $row->{local_file};
+
+      my $relative;
+
+      if ( $row->{is_pdf} ) {
+        $relative =
+          $new_pub->format_pattern( $settings->{pdf_pattern}, { key => $new_pub->citekey } )
+          . ".pdf";
+        $diff->{pdf_name} = $relative;
+        $new_pub->pdf_name($relative);
+      } else {
+        $relative =
+          $new_pub->format_pattern( $settings->{attachment_pattern}, { key => $new_pub->citekey } );
+        $relative = catfile( $relative, $row->{name} );
+      }
+
+      my $new_file = catfile( $settings->{paper_root}, $relative );
+
+      if ( $new_file ne $old_file ) {
+        my ( $volume, $dir, $file_name ) = splitpath($new_file);
+        my $f               = $dbh->quote($new_file);
+        my $ff              = $dbh->quote($file_name);
+        my $attachment_guid = $row->{guid};
+        $dbh->do("UPDATE Attachments SET local_file=$f, name=$ff WHERE guid='$attachment_guid';");
+        mkpath($dir);
+        move( $old_file, $new_file );
+        ( $volume, $dir, $file_name ) = splitpath($old_file);
+
+        if ( canonpath( $settings->{paper_root} ) ne canonpath($dir) ) {
+          rmdir $dir;
+        }
+      }
     }
   }
 
-  return $new_pub;
+  my @update_list;
 
-  # Save attachments in temporary dir
-  #my $tmp_dir = tempdir( CLEANUP => 1 );
-
-  #my @attachments = ();
-
-  #foreach my $file ( $self->get_attachments( $new_pub->_rowid ) ) {
-  #  my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($file);
-  #  my $tmp_file = File::Spec->catfile( $tmp_dir, $base_name );
-  #  copy( $file, $tmp_dir );
-  #  push @attachments, $tmp_file;
-  #}
-
-  #my $pdf_file = '';
-
-  # if ( $new_pub->pdf ) {
-  #   my $paper_root = $self->get_setting('paper_root');
-  #   my $file = File::Spec->catfile( $paper_root, $new_pub->pdf );
-  #   my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($file);
-  #   copy( $file, $tmp_dir );
-  #   $pdf_file = File::Spec->catfile( $tmp_dir, $base_name );
-  #   $new_pub->pdf('');    # unset to avoid that create_pub tries to
-  #                         # attach the file which gives an error
-  # }
-
-  # # Delete and then re-create
-  # $self->delete_pubs( [$new_pub] );
-  # $self->create_pubs( [$new_pub] );
-
-  # # Attach files again afterwards. Is not the most efficient way but
-  # # currently the easiest and most robust solution.
-  # foreach my $file (@attachments) {
-  #   $self->attach_file( $file, 0, $new_pub->_rowid, $new_pub );
-  # }
-  # if ($pdf_file) {
-  #   $self->attach_file( $pdf_file, 1, $new_pub->_rowid, $new_pub );
-  # }
-
-  # $new_pub->_imported(1);
-  # $new_pub->attachments( scalar @attachments );
-
-  # return $new_pub;
-}
-
-sub get_attachments {
-
-  my ( $self, $rowid ) = @_;
-
-  my $sth =
-    $self->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
-  my ( $attachment_rowid, $file_name );
-  $sth->bind_columns( \$attachment_rowid, \$file_name );
-  $sth->execute;
-  my $paper_root = $self->get_setting('paper_root');
-
-  my @files = ();
-
-  while ( $sth->fetch ) {
-    push @files, File::Spec->catfile( $paper_root, $file_name );
+  foreach my $field ( keys %{$diff} ) {
+    push @update_list, "$field=" . $dbh->quote( $diff->{$field} );
   }
+  my $sql = join( ',', @update_list );
 
-  return @files;
+  $dbh->do("UPDATE Publications SET $sql WHERE guid='$guid';");
+
+  $self->_update_fulltext_table( $new_pub, 0, $dbh );
+
+  return $new_pub;
 }
+
 
 sub update_field {
   ( my $self, my $table, my $rowid, my $field, my $value ) = @_;
@@ -1319,20 +1187,20 @@ sub attach_file {
 
   } else {
 
-    my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($source);
+    my ( $volume, $dirs, $base_name ) = splitpath($source);
 
     # Path relative to [paper_root] is [attachment_pattern]/$file_name
     $relative_dest =
       $pub->format_pattern( $settings->{attachment_pattern}, { key => $pub->citekey } );
-    $relative_dest = File::Spec->catfile( $relative_dest, $base_name );
+    $relative_dest = catfile( $relative_dest, $base_name );
   }
 
-  my $absolute_dest = File::Spec->catfile( $settings->{paper_root}, $relative_dest );
+  my $absolute_dest = catfile( $settings->{paper_root}, $relative_dest );
 
   # Copy file, file name can be changed if it was not unique
   $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
 
-  my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($absolute_dest);
+  my ( $volume, $dirs, $base_name ) = splitpath($absolute_dest);
 
   my $name       = $dbh->quote($base_name);
   my $local_file = $dbh->quote($absolute_dest);
@@ -1343,7 +1211,7 @@ sub attach_file {
 
   if ($is_pdf) {
     $self->index_pdf( $pub_guid, $absolute_dest );
-    my $pdf_name = File::Spec->abs2rel($absolute_dest, $self->get_setting('paper_root'));
+    my $pdf_name = abs2rel($absolute_dest, $self->get_setting('paper_root'));
     $pub->pdf($file_guid);
     $pub->pdf_name($pdf_name);
 
@@ -1385,7 +1253,7 @@ sub delete_attachment {
 
   my $dbh = $self->dbh;
 
-  my $undo_dir = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), "trash" );
+  my $undo_dir = catfile( Paperpile::Utils->get_tmp_dir(), "trash" );
   mkpath($undo_dir);
 
   my $rowid= $pub->_rowid;
@@ -1427,10 +1295,10 @@ sub delete_attachment {
   ## Remove directory if empty
 
   if ($path) {
-    my ( $volume, $dir, $file_name ) = File::Spec->splitpath($path);
+    my ( $volume, $dir, $file_name ) = splitpath($path);
 
     # Never remove the paper_root even if its empty;
-    if ( File::Spec->canonpath($paper_root) ne File::Spec->canonpath($dir) ) {
+    if ( canonpath($paper_root) ne canonpath($dir) ) {
 
       # Simply remove it; will not do any harm if it is not empty; Did not
       # find an easy way to check if dir is empty, but it does not seem
@@ -1440,8 +1308,8 @@ sub delete_attachment {
   }
 
   if ($with_undo) {
-    my ( $volume, $dir, $file_name ) = File::Spec->splitpath($path);
-    return File::Spec->catfile( $undo_dir, $file_name );
+    my ( $volume, $dir, $file_name ) = splitpath($path);
+    return catfile( $undo_dir, $file_name );
   }
 
 }
@@ -1590,6 +1458,131 @@ sub dashboard_stats {
   };
 
 }
+
+
+
+# Creates unique citation keys for a list of publications. Considers
+# the publictions already in the database and the new pubs that are to
+# be inserted.
+
+sub _generate_keys {
+
+  ( my $self, my $pubs, my $dbh ) = @_;
+
+  my %to_be_inserted = ();
+
+  foreach my $pub (@$pubs) {
+
+    # Generate citation key
+    my $pattern = $self->get_setting('key_pattern');
+
+    my $key = $pub->format_pattern($pattern);
+
+    # Check if key already exists
+
+    # First we check in the database
+    my $quoted = $dbh->quote("key:$key*");
+    my $sth    = $dbh->prepare(qq^SELECT key FROM fulltext WHERE fulltext MATCH $quoted^);
+    my $existing_key;
+    $sth->bind_columns( \$existing_key );
+    $sth->execute;
+
+    my @suffix = ();
+    my $unique = 1;
+
+    while ( $sth->fetch ) {
+      $unique = 0;    # if we found something in the DB it is not unique
+
+      # We collect the suffixes a,b,c... that already exist
+      if ( $existing_key =~ /$key([a-z])/ ) {    #
+        push @suffix, $1;
+      }
+    }
+
+    # Then in the current list that have been already processed in this loop
+    foreach my $existing_key ( @{ $to_be_inserted{$key} } ) {
+      if ( $existing_key =~ /^$key([a-z])?/ ) {
+        $unique = 0;
+        push @suffix, $1 if $1;
+      }
+    }
+
+    my $bare_key = $key;
+
+    if ( not $unique ) {
+      my $new_suffix = 'a';
+      if (@suffix) {
+
+        # we sort them to make sure to get the 'highest' suffix and count one up
+        @suffix = sort { $a cmp $b } @suffix;
+        $new_suffix = chr( ord( pop(@suffix) ) + 1 );
+      }
+      $key .= $new_suffix;
+    }
+
+    if ( not $to_be_inserted{$bare_key} ) {
+      $to_be_inserted{$bare_key} = [$key];
+    } else {
+      push @{ $to_be_inserted{$bare_key} }, $key;
+    }
+
+    $pub->citekey($key);
+  }
+
+}
+
+
+# Updates the fields in the fulltext table for $pub. If $new is true a
+# new row is inserted.
+
+sub _update_fulltext_table {
+
+  ( my $self, my $pub, my $new, my $dbh ) = @_;
+
+  if ( ( not $pub->_authors_display ) and ( $pub->authors ) ) {
+    my @authors = split( /\band\b/, $pub->authors );
+    my @display = ();
+    foreach my $a (@authors) {
+      my $tmp = Paperpile::Library::Author->_split_full($a);
+      $tmp->{initials} = Paperpile::Library::Author->_parse_initials( $tmp->{first} );
+      push @display, Paperpile::Library::Author->_nice($tmp);
+    }
+    $pub->_auto_refresh(0);
+    $pub->_authors_display( join( ", ", @display ) );
+  }
+
+  my $hash = {
+    rowid    => $pub->_rowid,
+    key      => $pub->citekey,
+    year     => $pub->year,
+    journal  => $pub->journal,
+    title    => $pub->title,
+    abstract => $pub->abstract,
+    notes    => $pub->annote,
+    author   => $pub->_authors_display,
+    labelid  => $pub->tags,
+    folderid => $pub->folders,
+    keyword  => $pub->keywords,
+  };
+
+  if ($new){
+    my ( $fields, $values ) = $self->_hash2sql( $hash, $dbh );
+    $fields .= ",text";
+    $values .= ",''";
+    $dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
+  } else {
+    my @list;
+    foreach my $field (keys %$hash){
+      push @list, "$field=" . $dbh->quote( $hash->{$field} );
+    }
+    my $sql = join( ',', @list );
+    my $rowid = $pub->_rowid;
+    $dbh->do("UPDATE Fulltext SET $sql WHERE rowid=$rowid;");
+  }
+
+}
+
+
 
 # Remove the item from the comma separated list
 
