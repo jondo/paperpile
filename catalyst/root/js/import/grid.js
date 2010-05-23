@@ -99,6 +99,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       } else {
         record.data._last_readPretty = 'Never read';
       }
+
+      if (record.data.attachments){
+        record.data._attachments_count = record.data.attachments.split(/,/).length;
+      }
+
       return this.getIconTemplate().apply(record.data);
     };
 
@@ -709,7 +714,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf_name}</b><br/>{_last_readPretty}"></div>',
       '</tpl>',
       '<tpl if="attachments">',
-      '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+      '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{_attachments_count} attached file(s)"></div>',
       '</tpl>',
       '<tpl if="annote">',
       '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',

@@ -84,7 +84,7 @@ sub connect {
 
     my $model = $self->get_model();
 
-    $model->insert_pubs( [ values %all ] );
+    $model->insert_pubs( [ values %all ], 0 );
 
   }
 

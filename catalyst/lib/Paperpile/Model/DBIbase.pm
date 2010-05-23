@@ -16,31 +16,36 @@ our $VERSION = '0.19';
 __PACKAGE__->mk_accessors( qw/_dbh _pid _tid/ );
 
 sub set_settings {
-  my ( $self, $settings ) = @_;
+  my ( $self, $settings, $dbh ) = @_;
+
+  $dbh=$self->dbh if !$dbh;
 
   foreach my $key ( keys %$settings ) {
     my $value = $settings->{$key};
-    $self->dbh->do("REPLACE INTO Settings (key,value) VALUES ('$key','$value')");
-#    print STDERR "--> SET $key $value\n";
+    $dbh->do("REPLACE INTO Settings (key,value) VALUES ('$key','$value')");
   }
 }
 
 sub get_setting {
 
-  ( my $self, my $key ) = @_;
+  ( my $self, my $key, my $dbh ) = @_;
 
-  $key = $self->dbh->quote($key);
+  $dbh=$self->dbh if !$dbh;
+
+  $key = $dbh->quote($key);
 
   ( my $value ) =
-    $self->dbh->selectrow_array("SELECT value FROM Settings WHERE key=$key ");
+    $dbh->selectrow_array("SELECT value FROM Settings WHERE key=$key ");
 
   return $value;
 
 }
 
 sub set_setting {
+  ( my $self, my $key, my $value, my $dbh ) = @_;
 
-  ( my $self, my $key, my $value ) = @_;
+  $dbh=$self->dbh if !$dbh;
+
   $value = $self->dbh->quote($value);
   $key = $self->dbh->quote($key);
   $self->dbh->do("REPLACE INTO Settings (key,value) VALUES ($key,$value)");
@@ -51,9 +56,11 @@ sub set_setting {
 
 sub settings {
 
-  ( my $self ) = @_;
+  ( my $self, my $dbh ) = @_;
 
-  my $sth = $self->dbh->prepare("SELECT key,value FROM Settings;");
+  $dbh=$self->dbh if !$dbh;
+
+  my $sth = $dbh->prepare("SELECT key,value FROM Settings;");
   my ( $key, $value );
   $sth->bind_columns( \$key, \$value );
 

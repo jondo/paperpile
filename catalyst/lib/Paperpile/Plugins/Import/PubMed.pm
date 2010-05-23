@@ -515,9 +515,6 @@ sub _read_xml {
 
     my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
 
-    print STDERR Dumper($pub);
-
-
     $pub->pmid( $cit->{PMID} );
 
     my $volume   = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};

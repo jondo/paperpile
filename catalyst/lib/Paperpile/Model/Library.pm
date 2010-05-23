@@ -29,7 +29,7 @@ use File::stat;
 use Moose;
 use MooseX::Timestamp;
 use Encode qw(encode decode);
-use File::Temp qw/ tempfile tempdir /;
+use File::Temp qw/tempfile tempdir /;
 use Data::GUID;
 
 use Paperpile::Library::Publication;
@@ -49,49 +49,38 @@ sub build_per_context_instance {
   return $model;
 }
 
-# Adds a list of publication entries to the local library.
-
-sub create_pubs {
-
-  ( my $self, my $pubs ) = @_;
-
-  my $dbh = $self->dbh;
-
-  foreach my $pub (@$pubs) {
-    $pub->created( timestamp gmtime ) if not $pub->created;
-    $pub->times_read(0);
-    $pub->last_read('');
-    $pub->_imported(1);
-  };
-
-  $self->_generate_keys($pubs, $dbh);
-
-  $self->insert_pubs($pubs);
-
-}
-
-# Inserts a list of publications into the database
+# Inserts a list $pubs of publication objects into the database. If
+# $user_library=1, we treat this as *the* library, i.e. we generate
+# citation keys and import attachments.
 
 sub insert_pubs {
 
-  ( my $self, my $pubs ) = @_;
+  ( my $self, my $pubs, my $user_library ) = @_;
 
   my $dbh = $self->dbh;
 
-  # to avoid sha1 constraint violation seems to be only very minor
-  # performance overhead and any other attempts with OR IGNOR or eval {}
-  # did not work.
-  $self->exists_pub($pubs);
-
   $dbh->begin_work;
+
+  if ($user_library){
+    $self->_generate_keys($pubs, $dbh);
+  }
+
+  # Check already existing pubs to avoid sha1 clashes
+  $self->exists_pub($pubs, $dbh);
 
   my $counter = 0;
 
   foreach my $pub (@$pubs) {
 
+    $pub->created( timestamp gmtime ) if not $pub->created;
+
     if ( $pub->_imported ) {
       print STDERR $pub->sha1, " already exists. Skipped.\n";
       next;
+    }
+    # If it is the user library we mark all as imported
+    elsif ($user_library){
+      $pub->_imported(1);
     }
 
     # Sanity check. Should not come to this point without sha1 but we
@@ -120,24 +109,14 @@ sub insert_pubs {
 
     $self->_update_fulltext_table( $pub, 1, $dbh );
 
-    # GJ 2010-01-10 I *think* this should be here, but not sure...
-    $pub->_imported(1);
-
-    # If there is a downloaded PDF in the cache folder and
-    # "paper_root" is defined (i.e. this is our main DB and not a
-    # temporary DB for e.g. RSS or BibTeX) we consider this for
-    # import.
-
     my $cached_file = catfile( Paperpile::Utils->get_tmp_dir, "download", $pub->sha1 . ".pdf" );
 
-    my $paper_root = $self->get_setting('paper_root');
-
-    if ( defined $paper_root && -e $cached_file ) {
+    if ( $user_library && -e $cached_file ) {
       $pub->_pdf_tmp($cached_file);
     }
 
     if ( $pub->_pdf_tmp ) {
-      $self->attach_file( $pub->_pdf_tmp, 1, $pub );
+      $self->attach_file( $pub->_pdf_tmp, 1, $pub);
     }
   }
 
@@ -145,7 +124,7 @@ sub insert_pubs {
 
 }
 
-
+# Delete a list of publication objects $pubs from the database.
 
 sub delete_pubs {
 
@@ -159,17 +138,17 @@ sub delete_pubs {
   foreach my $pub (@$pubs) {
 
     # PDF
-    $self->delete_attachment($pub->pdf, 1,$pub) if $pub->pdf;
+    $self->delete_attachment( $pub->pdf, 1, $pub, $dbh ) if $pub->pdf;
 
     # Other files
-    foreach my $guid (split(',', $pub->attachments || '')) {
-      $self->delete_attachment( $guid, 0, $pub );
+    foreach my $guid ( split( ',', $pub->attachments || '' ) ) {
+      $self->delete_attachment( $guid, 0, $pub, $dbh );
     }
   }
 
   # Then delete the entry in all relevant tables
-  my $delete_main         = $dbh->prepare("DELETE FROM publications WHERE rowid=?");
-  my $delete_fulltext     = $dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
+  my $delete_main     = $dbh->prepare("DELETE FROM publications WHERE rowid=?");
+  my $delete_fulltext = $dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
   foreach my $pub (@$pubs) {
     my $rowid = $pub->_rowid;
     $delete_main->execute($rowid);
@@ -178,9 +157,12 @@ sub delete_pubs {
 
   $dbh->commit;
 
-  return 1;
-
 }
+
+# Update the trash status of $pubs. If $mode is TRASH they will be
+# flagged as trashed and attachments are moved to Trash folder. If
+# $mode is RESTORE they will be flagged as active and attachments are
+# moved back to original place.
 
 sub trash_pubs {
 
@@ -188,7 +170,7 @@ sub trash_pubs {
 
   my $dbh = $self->dbh;
 
-  my $paper_root = $self->get_setting('paper_root');
+  my $paper_root = $self->get_setting('paper_root', $dbh);
 
   $dbh->begin_work;
 
@@ -258,22 +240,26 @@ sub trash_pubs {
   }
 
   $dbh->commit;
-
-  return 1;
-
 }
+
+# Updates the publication with $guid with the new data in hashref
+# $new_data. Takes care to update citation keys and location of PDFs
+# and attachments.
 
 sub update_pub {
 
-  ( my $self, my $old_pub, my $new_data ) = @_;
+  ( my $self, my $guid, my $new_data ) = @_;
 
-  my $dbh      = $self->dbh;
-  my $settings = $self->settings;
+  my $dbh = $self->dbh;
 
-  my $guid = $old_pub->guid;
+  $dbh->begin_work;
 
+  my $settings = $self->settings($dbh);
+
+  my $old_data = $dbh->selectrow_hashref("SELECT *, rowid as _rowid, 1 as _imported FROM Publications WHERE guid='$guid'");
+
+  my $data = {%$old_data};
   my $diff = {};
-  my $data = $old_pub->as_hash;
 
   # Figure out fields that have changed
   foreach my $field ( keys %{$new_data} ) {
@@ -287,13 +273,13 @@ sub update_pub {
   my $new_pub = Paperpile::Library::Publication->new($data);
 
   # Also update sha1 and citekey if necessary changed
-  if ( $new_pub->sha1 ne $old_pub->sha1 ) {
+  if ( $new_pub->sha1 ne $old_data->{sha1} ) {
     $diff->{sha1} = $new_pub->sha1;
   }
 
   $self->_generate_keys( [$new_pub], $dbh );
 
-  if ( $new_pub->citekey ne $old_pub->citekey ) {
+  if ( $new_pub->citekey ne $old_data->{citekey} ) {
     $diff->{citekey} = $new_pub->citekey;
   }
 
@@ -352,17 +338,11 @@ sub update_pub {
 
   $self->_update_fulltext_table( $new_pub, 0, $dbh );
 
+  $dbh->commit;
+
   return $new_pub;
 }
 
-
-sub update_field {
-  ( my $self, my $table, my $rowid, my $field, my $value ) = @_;
-
-  $value = $self->dbh->quote($value);
-  $self->dbh->do("UPDATE $table SET $field=$value WHERE rowid=$rowid");
-
-}
 
 sub update_citekeys {
 
@@ -409,12 +389,18 @@ sub update_citekeys {
 
 }
 
+# Creates a new collection with $guid and name $name. $type is either
+# 'LABEL' or 'FOLDER'. $parent is the guid of the parent collection
+# and $style is a number for the predefined style (only for labels at
+# the moment).
 
 sub new_collection {
 
   my ( $self, $guid, $name, $type, $parent, $style ) = @_;
 
   my $dbh = $self->dbh;
+
+  $dbh->begin_work;
 
   if ( $parent =~ /ROOT/ ) {
     $parent = 'ROOT';
@@ -426,8 +412,8 @@ sub new_collection {
   $parent = $dbh->quote($parent);
   $style  = $dbh->quote($style);
 
-  ( my $sort_order ) =
-    $dbh->selectrow_array("SELECT max(sort_order) FROM Collections WHERE parent=$parent AND type=$type");
+  ( my $sort_order ) = $dbh->selectrow_array(
+    "SELECT max(sort_order) FROM Collections WHERE parent=$parent AND type=$type");
 
   if ( defined $sort_order ) {
     $sort_order++;
@@ -435,47 +421,126 @@ sub new_collection {
     $sort_order = 0;
   }
 
-  $self->dbh->do(
+  $dbh->do(
     "INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES($guid, $name, $type, $parent, $sort_order, $style)"
   );
 
-  #print STDERR Dumper(\@_);
+  $dbh->commit;
 
 }
 
-sub update_collections {
-  ( my $self, my $pub, my $type ) = @_;
+# Delete the collection with $guid of $type (FOLDER or LABEL) and all
+# sub-collections below.
 
-  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+sub delete_collection {
+  ( my $self, my $guid, my $type ) = @_;
 
-  my $rowid    = $pub->_rowid;
-  my $pub_guid = $pub->guid;
+  my @list = ($guid);
 
   my $dbh = $self->dbh;
 
-  my $guid_list = $pub->$what;
-  my @guids = split( /,/, $pub->$what );
+  $dbh->begin_work;
 
-  # First update flat field in Publication and Fulltext tables
-  $guid_list = $dbh->quote($guid_list);
-
-  $dbh->do("UPDATE Publications SET $what=$guid_list WHERE rowid=$rowid;");
-
-  my $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
-
-  $dbh->do("UPDATE Fulltext SET $field=$guid_list WHERE rowid=$rowid;");
-
-  # Remove all connections from Collection_Publication table
-  my $sth = $dbh->do("DELETE FROM Collection_Publication WHERE collection_guid IN (SELECT guid FROM Collections WHERE Collections.type='$type') AND publication_guid='$pub_guid'");
-
-  # Then set new connections
-  my $connection = $dbh->prepare(
-    "INSERT INTO Collection_Publication (collection_guid, publication_guid) VALUES(?,?)");
-
-  foreach my $collection_guid (@guids) {
-    $connection->execute( $collection_guid, $pub_guid );
+  my $sth = $dbh->prepare("SELECT * FROM Collections;");
+  $sth->execute;
+  my @all = ();
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    push @all, $row;
   }
+  $self->_find_subcollections( $guid, \@all, \@list );
+
+  #  Delete all assications in Collection_Publication table
+  my $delete1 = $dbh->prepare("DELETE FROM Collection_Publication WHERE collection_guid=?");
+
+  #  Delete folders from Folders table
+  my $delete2 = $dbh->prepare("DELETE FROM Collections WHERE guid=?");
+
+  #  Update flat fields in Publication table and Fulltext table
+  my $field = $type eq 'FOLDER' ? 'folders' : 'tags';
+  my $update1 = $dbh->prepare("UPDATE Publications SET $field=? WHERE rowid=?");
+
+  $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
+  my $update2 = $dbh->prepare("UPDATE Fulltext SET $field=? WHERE rowid=?");
+
+  foreach $guid (@list) {
+
+    my ( $list, $rowid );
+
+    $field = $type eq 'FOLDER' ? 'folders' : 'tags';
+
+    # Get the publications that are in the given folder
+    my $select = $dbh->prepare(
+      "SELECT publications.rowid as rowid, publications.$field as list FROM Publications JOIN fulltext
+      ON publications.rowid=fulltext.rowid WHERE fulltext MATCH '$guid'"
+    );
+
+    $select->bind_columns( \$rowid, \$list );
+    $select->execute;
+    while ( $select->fetch ) {
+
+      my $new_list = $self->_remove_from_flatlist( $list, $guid );
+
+      $update1->execute( $new_list, $rowid );
+      $update2->execute( $new_list, $rowid );
+    }
+
+    $delete1->execute($guid);
+    $delete2->execute($guid);
+  }
+
+  $dbh->commit;
+
 }
+
+# Update collection <-> publication mappings throughout the database
+# for all $pubs
+
+sub update_collections {
+  ( my $self, my $pubs, my $type ) = @_;
+
+  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+
+  my $dbh = $self->dbh;
+
+  $dbh->begin_work;
+
+  foreach my $pub (@$pubs) {
+
+    my $rowid    = $pub->_rowid;
+    my $pub_guid = $pub->guid;
+
+    my $guid_list = $pub->$what;
+    my @guids = split( /,/, $pub->$what );
+
+    # First update flat field in Publication and Fulltext tables
+    $guid_list = $dbh->quote($guid_list);
+
+    $dbh->do("UPDATE Publications SET $what=$guid_list WHERE rowid=$rowid;");
+
+    my $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
+
+    $dbh->do("UPDATE Fulltext SET $field=$guid_list WHERE rowid=$rowid;");
+
+    # Remove all connections from Collection_Publication table
+    my $sth = $dbh->do(
+      "DELETE FROM Collection_Publication WHERE collection_guid IN (SELECT guid FROM Collections WHERE Collections.type='$type') AND publication_guid='$pub_guid'"
+    );
+
+    # Then set new connections
+    my $connection = $dbh->prepare(
+      "INSERT INTO Collection_Publication (collection_guid, publication_guid) VALUES(?,?)");
+
+    foreach my $collection_guid (@guids) {
+      $connection->execute( $collection_guid, $pub_guid );
+    }
+  }
+
+  $dbh->commit;
+
+}
+
+# Deletes all publication objects in list $data from collection with
+# $collection_guid and type $type.
 
 sub remove_from_collection {
 
@@ -514,77 +579,7 @@ sub remove_from_collection {
 }
 
 
-sub delete_collection {
-  ( my $self, my $guid, my $type ) = @_;
-
-  # We delete the given guid and all sub-collections
-  my @list = ($guid);
-
-  my $sth = $self->dbh->prepare("SELECT * FROM Collections;");
-  $sth->execute;
-  my @all = ();
-  while ( my $row = $sth->fetchrow_hashref() ) {
-    push @all, $row;
-  }
-  $self->_find_subcollections( $guid, \@all, \@list );
-
-  #  Delete all assications in Collection_Publication table
-  my $delete1 = $self->dbh->prepare("DELETE FROM Collection_Publication WHERE collection_guid=?");
-
-  #  Delete folders from Folders table
-  my $delete2 = $self->dbh->prepare("DELETE FROM Collections WHERE guid=?");
-
-  #  Update flat fields in Publication table and Fulltext table
-  my $field = $type eq 'FOLDER' ? 'folders' : 'tags';
-  my $update1 = $self->dbh->prepare("UPDATE Publications SET $field=? WHERE rowid=?");
-
-  $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
-  my $update2 = $self->dbh->prepare("UPDATE Fulltext SET $field=? WHERE rowid=?");
-
-  foreach $guid (@list) {
-
-    my ( $list, $rowid );
-
-    $field = $type eq 'FOLDER' ? 'folders' : 'tags';
-
-    # Get the publications that are in the given folder
-    my $select = $self->dbh->prepare(
-      "SELECT publications.rowid as rowid, publications.$field as list FROM Publications JOIN fulltext
-      ON publications.rowid=fulltext.rowid WHERE fulltext MATCH '$guid'"
-    );
-
-    $select->bind_columns( \$rowid, \$list );
-    $select->execute;
-    while ( $select->fetch ) {
-
-      my $new_list = $self->_remove_from_flatlist( $list, $guid );
-
-      $update1->execute( $new_list, $rowid );
-      $update2->execute( $new_list, $rowid );
-    }
-
-    $delete1->execute($guid);
-    $delete2->execute($guid);
-  }
-
-}
-
-
-# Recursive helper function to get list of all sub-collections below
-# $guid. $all is a list of all collections and $list is the final list
-# with all guids of the desired sub-collections
-sub _find_subcollections{
-
-  my ($self, $guid, $all, $list) = @_;
-
-  foreach my $collection (@$all){
-    if ($collection->{parent} eq $guid){
-      push @$list, $collection->{guid};
-      $self->_find_subcollections($collection->{guid}, $all, $list);
-    }
-  }
-}
-
+# Renames collection with $guid to $new_name
 sub rename_collection {
   my ( $self, $guid, $new_name ) = @_;
 
@@ -595,6 +590,10 @@ sub rename_collection {
   $dbh->do("UPDATE Collections SET name=$new_name WHERE guid='$guid'");
 
 }
+
+# Moves a collection $drop_guid to a new place relative to collection
+# $target_guid depending on $position (append -> new sub-collection,
+# below or above -> new order in old sub-collection)
 
 sub move_collection {
   my ( $self, $target_guid, $drop_guid, $position, $type ) = @_;
@@ -665,26 +664,7 @@ sub move_collection {
 
 }
 
-sub _normalize_sort_order {
-  my ( $self, $dbh, $parent, $type ) = @_;
-
-  my $select =
-    $dbh->prepare("SELECT guid FROM Collections WHERE parent='$parent' ORDER BY sort_order");
-
-  my $update = $dbh->prepare("UPDATE Collections SET sort_order=? WHERE guid=?");
-
-  my $guid;
-
-  $select->bind_columns( \$guid );
-  $select->execute;
-
-  my $counter = 0;
-  while ( $select->fetch ) {
-    $update->execute( $counter, $guid );
-    $counter++;
-  }
-}
-
+# Sets style $style for collection $guid.
 
 sub set_collection_style {
 
@@ -693,6 +673,10 @@ sub set_collection_style {
   $self->dbh->do("UPDATE COLLECTIONS SET style='$style' WHERE guid='$guid';");
 
 }
+
+# Initializes two default labels in the user's library. We do this
+# here (as opposed to shipping it in our default library) to make sure
+# everybody has a unique guid for these labels.
 
 sub set_default_collections {
 
@@ -709,26 +693,7 @@ sub set_default_collections {
 
 }
 
-
-## Return true or false, depending whether a row with unique value
-## $value in column $column exists in table $table
-
-sub has_unique_entry {
-
-  ( my $self, my $table, my $column, my $value ) = @_;
-  $value = $self->dbh->quote($value);
-
-  my $sth = $self->dbh->prepare("SELECT $column FROM $table WHERE $column=$value");
-
-  $sth->execute();
-
-  if ( $sth->fetchrow_arrayref ) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
+# Preprocess a query string for the fulltext search.
 
 sub process_query_string {
   ( my $self, my $query ) = @_;
@@ -1057,10 +1022,15 @@ sub all_as_hash {
 
 }
 
-sub exists_pub {
-  ( my $self, my $pubs ) = @_;
+# Check if publication objects in $pubs are already in database. Sets
+# _imported field accordingly.
 
-  my $sth = $self->dbh->prepare("SELECT rowid, * FROM publications WHERE sha1=?");
+sub exists_pub {
+  ( my $self, my $pubs, my $dbh ) = @_;
+
+  $dbh = $self->dbh if ( !$dbh );
+
+  my $sth = $dbh->prepare("SELECT rowid, * FROM publications WHERE sha1=?");
 
   foreach my $pub (@$pubs) {
 
@@ -1122,33 +1092,6 @@ sub _hash2sql {
   return @output;
 }
 
-sub save_tree {
-
-  ( my $self, my $tree ) = @_;
-
-  # serialize the complete object
-  my $string = freeze($tree);
-
-  # simply save it as user setting
-  $self->set_setting( '_tree', $string );
-
-}
-
-sub restore_tree {
-  ( my $self ) = @_;
-
-  my $string = $self->get_setting('_tree');
-
-  if ( not $string ) {
-    return undef;
-  }
-
-  ( my $tree ) = thaw($string);
-
-  return $tree;
-
-}
-
 # Attach $file to the publication $pub. If $is_pdf is set it is *the*
 # PDF otherwise it is treated as attachment. If $old_guid is set the
 # new file gets this guid (to avoid changing of the guid when using
@@ -1158,8 +1101,11 @@ sub attach_file {
 
   my ( $self, $file, $is_pdf, $pub, $old_guid ) = @_;
 
+  my $dbh = $self->dbh;
+
+  $dbh->begin_work;
+
   my $settings = $self->settings;
-  my $dbh      = $self->dbh;
   my $source   = Paperpile::Utils->adjust_root($file);
 
   my $pub_guid = $pub->guid;
@@ -1210,7 +1156,7 @@ sub attach_file {
   );
 
   if ($is_pdf) {
-    $self->index_pdf( $pub_guid, $absolute_dest );
+    $self->index_pdf( $pub_guid, $absolute_dest, $dbh );
     my $pdf_name = abs2rel($absolute_dest, $self->get_setting('paper_root'));
     $pub->pdf($file_guid);
     $pub->pdf_name($pdf_name);
@@ -1220,7 +1166,7 @@ sub attach_file {
     $dbh->do(
       "UPDATE Publications SET pdf='$file_guid', pdf_name=$pdf_name, times_read=0, last_read='' WHERE guid='$pub_guid';"
     );
-    return $file_guid;
+
   } else {
 
     ( my $old_attachments ) = $dbh->selectrow_array("SELECT attachments FROM Publications WHERE guid='$pub_guid' ");
@@ -1236,8 +1182,12 @@ sub attach_file {
     $pub->attachments($new_attachments);
     $pub->refresh_attachments;
 
-
   }
+
+  $dbh->commit;
+
+  return $file_guid;
+
 }
 
 # Delete PDF or other supplementary file with GUID $guid that is
@@ -1247,11 +1197,11 @@ sub attach_file {
 
 sub delete_attachment {
 
-  my ( $self, $guid, $is_pdf, $pub, $with_undo ) = @_;
+  my ( $self, $guid, $is_pdf, $pub, $with_undo, $dbh ) = @_;
+
+  $dbh = $self->dbh if !$dbh;
 
   my $paper_root = $self->get_setting('paper_root');
-
-  my $dbh = $self->dbh;
 
   my $undo_dir = catfile( Paperpile::Utils->get_tmp_dir(), "trash" );
   mkpath($undo_dir);
@@ -1314,9 +1264,13 @@ sub delete_attachment {
 
 }
 
+
+
 sub index_pdf {
 
-  my ( $self, $guid, $pdf_file ) = @_;
+  my ( $self, $guid, $pdf_file, $dbh ) = @_;
+
+  $dbh = $self->dbh if !$dbh;
 
   my $bin = Paperpile::Utils->get_binary('extpdf');
 
@@ -1342,6 +1296,38 @@ sub index_pdf {
   $self->dbh->do("UPDATE Fulltext SET text=$text WHERE rowid=(SELECT rowid FROM PUBLICATIONS WHERE guid='$guid')");
 
 }
+
+## Save tree object as string to database as setting _tree
+
+sub save_tree {
+
+  ( my $self, my $tree ) = @_;
+
+  # serialize the complete object
+  my $string = freeze($tree);
+
+  # simply save it as user setting
+  $self->set_setting( '_tree', $string );
+
+}
+
+## Restore tree object from string in database setting _tree
+
+sub restore_tree {
+  ( my $self ) = @_;
+
+  my $string = $self->get_setting('_tree');
+
+  if ( not $string ) {
+    return undef;
+  }
+
+  ( my $tree ) = thaw($string);
+
+  return $tree;
+
+}
+
 
 sub histogram {
 
@@ -1608,8 +1594,49 @@ sub _remove_from_flatlist {
 
 }
 
+# Recursive helper function to get list of all sub-collections below
+# $guid. $all is a list of all collections and $list is the final list
+# with all guids of the desired sub-collections
+sub _find_subcollections{
+
+  my ($self, $guid, $all, $list) = @_;
+
+  foreach my $collection (@$all){
+    if ($collection->{parent} eq $guid){
+      push @$list, $collection->{guid};
+      $self->_find_subcollections($collection->{guid}, $all, $list);
+    }
+  }
+}
 
 
+# We make sure that all sort_order values for collections below
+# $parent are normalized and consistent (starting 0 and increasing by
+# 1).
+
+
+sub _normalize_sort_order {
+  my ( $self, $dbh, $parent, $type ) = @_;
+
+  my $select =
+    $dbh->prepare("SELECT guid FROM Collections WHERE parent='$parent' ORDER BY sort_order");
+
+  my $update = $dbh->prepare("UPDATE Collections SET sort_order=? WHERE guid=?");
+
+  my $guid;
+
+  $select->bind_columns( \$guid );
+  $select->execute;
+
+  my $counter = 0;
+  while ( $select->fetch ) {
+    $update->execute( $counter, $guid );
+    $counter++;
+  }
+}
+
+# Generates snippets for a database row $row that was found via a
+# query $query
 
 sub _snippets {
 
@@ -1766,7 +1793,7 @@ sub _snippets {
       if ($s) {
         my $overlaps = 0;
         foreach my $prev (@already_seen) {
-          if ( $self->check_string_overlap( $s->{snippet}, $prev->{snippet} ) ) {
+          if ( $self->_check_string_overlap( $s->{snippet}, $prev->{snippet} ) ) {
             $overlaps = 1;
             last;
           }
@@ -1810,8 +1837,10 @@ sub _snippets {
 
 }
 
+# Checks what fraction of words overlap between $string_a and
+# $string_b. Returns true if overlap is higher than 0.3.
 
-sub check_string_overlap {
+sub _check_string_overlap {
 
   my ($self, $string_a, $string_b) = @_;
 

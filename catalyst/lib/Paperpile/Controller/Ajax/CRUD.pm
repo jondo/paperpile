@@ -38,7 +38,6 @@ sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
   my $grid_id   = $c->request->params->{grid_id};
-
   my $plugin    = $self->_get_plugin($c);
   my $selection = $self->_get_selection($c);
   my %output    = ();
@@ -58,7 +57,7 @@ sub insert_entry : Local {
     }
   }
 
-  $c->model('Library')->create_pubs( \@pub_array );
+  $c->model('Library')->insert_pubs( \@pub_array, 1);
 
   my $pubs = {};
   foreach my $pub (@pub_array) {
@@ -139,7 +138,7 @@ sub new_entry : Local {
 
   my $pub = Paperpile::Library::Publication->new( {%fields} );
 
-  $c->model('Library')->create_pubs( [$pub] );
+  $c->model('Library')->insert_pubs( [$pub], 1 );
 
   $self->_update_counts($c);
 
@@ -216,10 +215,9 @@ sub undo_trash : Local {
 sub update_entry : Local {
   my ( $self, $c ) = @_;
 
-  my $sha1 = $c->request->params->{sha1};
   my $plugin  = $self->_get_plugin($c);
-  my $old_pub = $plugin->find_sha1($sha1);
-  my $data    = $old_pub->as_hash;
+  my $sha1 = $c->request->params->{sha1};
+  my $guid = $c->request->params->{guid};
 
   my $new_data = {};
   foreach my $field ( keys %{ $c->request->params } ) {
@@ -227,31 +225,30 @@ sub update_entry : Local {
     $new_data->{$field} = $c->request->params->{$field};
   }
 
-  my $new_pub = $c->model('Library')->update_pub( $old_pub, $new_data );
+  my $new_pub = $c->model('Library')->update_pub( $guid, $new_data );
 
   foreach my $var ( keys %{ $c->session } ) {
     next if !( $var =~ /^grid_/ );
     my $plugin = $c->session->{$var};
     if ( $plugin->plugin_name eq 'DB' or $plugin->plugin_name eq 'Trash' ) {
-      if ($plugin->_hash->{ $old_pub->sha1 }){
-        delete( $plugin->_hash->{ $old_pub->sha1 } );
+      if ( $plugin->_hash->{ $sha1 } ) {
+        delete( $plugin->_hash->{ $sha1 } );
         $plugin->_hash->{ $new_pub->sha1 } = $new_pub;
       }
     }
   }
 
-
   # That's handled as form on the front-end so we have to explicitly
   # indicate success
   $c->stash->{success} = \1;
 
-  my $hash =  $new_pub->as_hash;
+  my $hash = $new_pub->as_hash;
 
-  if ($old_pub->sha1 ne $new_pub->sha1){
+  if ( $sha1 ne $new_pub->sha1 ) {
     $hash->{_new_sha1} = $new_pub->sha1;
   }
 
-  $c->stash->{data} = { pubs => {$old_pub->sha1 => $hash}};
+  $c->stash->{data} = { pubs => { $sha1 => $hash } };
 
 }
 
@@ -262,13 +259,20 @@ sub update_notes : Local {
   my $sha1  = $c->request->params->{sha1};
   my $html  = $c->request->params->{html};
 
-  $c->model('Library')->update_field( 'Publications', $rowid, 'annote', $html );
+  my $dbh = $c->model('Library')->dbh;
+
+  my $value = $dbh->quote($html);
+  $dbh->do("UPDATE Publications SET annote=$value WHERE rowid=$rowid");
 
   my $tree      = HTML::TreeBuilder->new->parse($html);
   my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
   my $text      = $formatter->format($tree);
 
-  $c->model('Library')->update_field( 'Fulltext',     $rowid, 'notes', $text );
+  $value = $dbh->quote($text);
+
+  $dbh->do("UPDATE Fulltext SET notes=$value WHERE rowid=$rowid");
+
+  $c->stash->{data} = { pubs => { $sha1 => { annote => $html } } };
 
 }
 
@@ -301,11 +305,10 @@ sub move_in_collection : Local {
     push @to_be_imported, $pub if !$pub->_imported;
   }
 
-  $c->model('Library')->create_pubs( \@to_be_imported );
+  $c->model('Library')->insert_pubs( \@to_be_imported, 1 );
 
   my $dbh = $c->model('Library')->dbh;
 
-  $dbh->begin_work();
 
   if ( $guid ne 'FOLDER_ROOT' ) {
     my $new_guid = $guid;
@@ -317,11 +320,10 @@ sub move_in_collection : Local {
       @guids = grep { !$seen{$_}++ } @guids;
       my $new_guids = join( ',', @guids );
       $pub->$what($new_guids);
-      $c->model('Library')->update_collections( $pub, $type );
     }
+    $c->model('Library')->update_collections( $data, $type );
   }
 
-  $dbh->commit();
 
   if (@to_be_imported) {
     $self->_update_counts($c);

@@ -78,7 +78,7 @@ has 'created' => ( is => 'rw');
 has 'trashed' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Timestamp when it was last read
-has 'last_read' => ( is => 'rw');
+has 'last_read' => ( is => 'rw', default => '');
 
 # How many times it was read
 has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
@@ -429,7 +429,6 @@ sub refresh_attachments {
   $self->_attachments_list( [] );
 
   if ( $self->attachments) {
-    print STDERR "============>",  $self->title, "\n";
     my $model = Paperpile::Utils->get_library_model();
     my $paper_root = $model->get_setting('paper_root');
     my $guid = $self->guid;
