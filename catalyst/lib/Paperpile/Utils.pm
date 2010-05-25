@@ -442,5 +442,39 @@ sub retrieve {
 
 }
 
+sub find_zotero_sqlite {
+
+  my $self = shift;
+
+  # a typical Zotero path in windows (German)
+  # C:\Dokumente und Einstellungen\someone\Anwendungsdaten\
+  # Mozilla\Firefox\Profiles\b57sxgsi.default\zotero.sqlite
+
+  # a typical Zotero path in ubuntu
+  # ~/.mozilla/firefox/iqurqbah.default/zotero/zotero.sqlite
+
+  # Try to find file in Linux environment
+  my $home         = $ENV{'HOME'};
+  my $firefox_path = "$home/.mozilla/firefox";
+  if ( -d $firefox_path ) {
+    my @profiles = ();
+    opendir( DIR, $firefox_path );
+    while ( defined( my $file = readdir(DIR) ) ) {
+
+      next if ( $file eq '.' or $file eq '..' );
+      push @profiles, "$firefox_path/$file"
+        if ( -d "$firefox_path/$file" );
+    }
+    close(DIR);
+
+    foreach my $profile (@profiles) {
+      if ( -e "$profile/zotero/zotero.sqlite" ) {
+        return "$profile/zotero/zotero.sqlite";
+      }
+    }
+  }
+
+}
+
 
 1;
