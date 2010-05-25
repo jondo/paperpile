@@ -72,6 +72,9 @@ sub connect {
 
     my %all = ();
 
+    # This silently throws away entries with the same sha1. We should
+    # think how to handle this better (eg. uniquify publication by
+    # changing the title...)
     foreach my $pub (@$data) {
       $pub->citekey('');
       if ( defined $pub->sha1 ) {

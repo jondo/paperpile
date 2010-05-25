@@ -260,7 +260,7 @@ sub calculate_sha1 {
 
   my $ctx = Digest::SHA1->new;
 
-  if ( ( $self->authors or $self->_authors_display or $self->editors ) and ($self->title or $self->booktitle)) {
+  if ( ( $self->authors or $self->_authors_display or $self->editors ) or ($self->title or $self->booktitle)) {
     if ( $self->authors ) {
       $ctx->add( encode_utf8( $self->authors ) );
     } elsif ( $self->_authors_display and !$self->editors) {

@@ -812,6 +812,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    </tpl>',
       '    </div>',
       '  </tpl>',
+      '  <tpl if="!linkout && !doi">',
+      '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style2">',
+      '      <p class="pp-action-inactive pp-action-go-inactive">No link to publisher available</p>',
+      '    </div>',
+      '  </tpl>',
       '  <tpl if="pdf || _imported || linkout || doi">',
       '    <div class="pp-box pp-box-side-panel pp-box-style2"',
       '    <h2>PDF</h2>',
@@ -842,8 +847,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getEmptyGridTemplate: function() {
     var template = [
       '<div id="main-container-{id}">',
-      '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
-      '    <p><b>No references here.</b></p>',
+      '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style2">',
+      '    <p class="pp-inactive">No references here.</p>',
       '  </div>',
       '</div>'];
     return[].concat(template);
@@ -852,8 +857,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getNoSelectionTemplate: function() {
     var template = [
       '<div id="main-container-{id}">',
-      '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
-      '    <p><b>No references selected.</b></p>',
+      '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style2">',
+      '    <p class="pp-inactive">No references selected.</p>',
       '  </div>',
       '</div>'];
     return[].concat(template);

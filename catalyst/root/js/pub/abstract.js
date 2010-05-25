@@ -55,12 +55,15 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
       this.abstractTemplate.overwrite(this.body, this.data);
     } else {
 
-      var empty = new Ext.Template('');
+      var empty = new Ext.Template('<p class="pp-basic pp-abstract pp-inactive">No abstract available.</p>');
       empty.overwrite(this.body);
     }
   },
 
   showEmpty: function(tpl) {
+
+    // Greg: I want to show this here: <p class="pp-basic pp-abstract pp-inactive">No abstract available.</p>
+
     var empty = new Ext.Template(tpl);
     empty.overwrite(this.body);
   }

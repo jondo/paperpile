@@ -530,7 +530,7 @@ sub _parse_RegularFeed {
 
     if ( $entry->{'description'} ) {
       $description = join( '', @{ $entry->{'description'} } );
-      $description = 'Not available' if ( $description =~ m/^HASH\(/ );
+      $description = '' if ( $description =~ m/^HASH\(/ );
     }
 
     if ( $entry->{'link'} ) {
@@ -562,7 +562,7 @@ sub _parse_RegularFeed {
     }
 
     if ( !$description ) {
-      $description = 'Not available';
+      $description = '';
     }
 
     # sometimes volume/issue information is "hidden" in the journal name
@@ -610,10 +610,7 @@ sub _parse_RegularFeed {
       $authors =~ s/,/, /g;
       $authors =~ s/\s+/ /g;
     } else {
-      # An empty author field will cause an empty response in
-      # the front end. In this case we set the authors to
-      # "Nomen Nescio"
-      $authors = 'N N';
+      $authors = '';
     }
 
     push @output,

@@ -36,6 +36,10 @@ h1 {
     color: #5E5E5E;
 }
 
+.pp-inactive {
+    color:gray;
+}
+
 .pp-bullet{
     padding: 2 2 2 16;
     background: transparent url('/images/icons/bullet_go.png') no-repeat 0;
@@ -560,6 +564,12 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
 
+.pp-action-inactive{
+    padding: 0 3 0 22;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    color:gray;
+}
+
 .pp-action-big{
     padding: 2 2 2 64;
     font:normal 14px arial, verdana, tahoma, arial, helvetica, sans-serif;
@@ -589,6 +599,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-action-go {
     background: transparent url('/images/icons/application_go.png') no-repeat;
+}
+
+.pp-action-go-inactive {
+    background: transparent url('/images/icons/application_go_inactive.png') no-repeat;
 }
 
 .pp-action-attach-pdf {
