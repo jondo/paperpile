@@ -245,7 +245,7 @@ sub inc_read_counter : Local {
 
   my ( $self, $c ) = @_;
   my $rowid      = $c->request->params->{rowid};
-  my $sha1       = $c->request->params->{sha1};
+  my $guid       = $c->request->params->{guid};
   my $times_read = $c->request->params->{times_read};
 
   my $touched = timestamp gmtime;
@@ -254,7 +254,7 @@ sub inc_read_counter : Local {
     "UPDATE Publications SET times_read=times_read+1,last_read='$touched' WHERE rowid=$rowid");
 
   $c->stash->{data} =
-    { pubs => { $sha1 => { last_read => $touched, times_read => $times_read + 1 } } };
+    { pubs => { $guid => { last_read => $touched, times_read => $times_read + 1 } } };
 
 }
 

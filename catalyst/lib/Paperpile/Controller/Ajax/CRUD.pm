@@ -46,11 +46,7 @@ sub insert_entry : Local {
   my @pub_array = ();
   foreach my $pub (@$selection) {
     if ( $plugin->needs_completing($pub) ) {
-      my $old_sha1 = $pub->sha1;
       my $new_pub  = $plugin->complete_details($pub);
-
-      # Store the old / original sha1 for use later on...
-      $new_pub->{_old_sha1} = $old_sha1;
       push @pub_array, $new_pub;
     } else {
       push @pub_array, $pub;
@@ -63,18 +59,7 @@ sub insert_entry : Local {
   foreach my $pub (@pub_array) {
     $pub->_imported(1);
     my $pub_hash = $pub->as_hash;
-    if ( $pub->{_old_sha1} ) {
-
-      # ... now use the old / original sha1 as the sha1 to be returned to the front end,
-      # while flagging that we have a *new* sha1 that the front-end should update to.
-      # The actual updating to the new sha1 happens within the grid.js file.
-      $pub_hash->{sha1}      = $pub->{_old_sha1};
-      $pub_hash->{_new_sha1} = $pub->sha1;
-    } else {
-      $pub_hash->{sha1} = $pub->sha1;
-    }
-
-    $pubs->{ $pub_hash->{sha1} } = $pub_hash;
+    $pubs->{ $pub_hash->{guid} } = $pub_hash;
   }
 
   # If the number of imported pubs is reasonable, we return the updated pub data
@@ -107,14 +92,9 @@ sub complete_entry : Local {
     my $pub_hash;
     if ($plugin->needs_completing($pub)) {
       my $new_pub = $plugin->complete_details($pub);
-      my $old_sha1 = $pub->sha1;
-      my $new_sha1 = $new_pub->sha1;
-
       $pub_hash = $new_pub->as_hash;
-      $pub_hash->{sha1} = $old_sha1;
-      $pub_hash->{_new_sha1} = $new_sha1;
     }
-    $results->{$pub_hash->{sha1}} = $pub_hash;
+    $results->{$pub_hash->{guid}} = $pub_hash;
   }
 
   $c->stash->{data} = {pubs => $results};
@@ -216,7 +196,6 @@ sub update_entry : Local {
   my ( $self, $c ) = @_;
 
   my $plugin  = $self->_get_plugin($c);
-  my $sha1 = $c->request->params->{sha1};
   my $guid = $c->request->params->{guid};
 
   my $new_data = {};
@@ -231,9 +210,9 @@ sub update_entry : Local {
     next if !( $var =~ /^grid_/ );
     my $plugin = $c->session->{$var};
     if ( $plugin->plugin_name eq 'DB' or $plugin->plugin_name eq 'Trash' ) {
-      if ( $plugin->_hash->{ $sha1 } ) {
-        delete( $plugin->_hash->{ $sha1 } );
-        $plugin->_hash->{ $new_pub->sha1 } = $new_pub;
+      if ( $plugin->_hash->{ $guid } ) {
+        delete( $plugin->_hash->{ $guid } );
+        $plugin->_hash->{ $new_pub->guid } = $new_pub;
       }
     }
   }
@@ -244,11 +223,7 @@ sub update_entry : Local {
 
   my $hash = $new_pub->as_hash;
 
-  if ( $sha1 ne $new_pub->sha1 ) {
-    $hash->{_new_sha1} = $new_pub->sha1;
-  }
-
-  $c->stash->{data} = { pubs => { $sha1 => $hash } };
+  $c->stash->{data} = { pubs => { $guid => $hash } };
 
 }
 
@@ -256,7 +231,7 @@ sub update_notes : Local {
   my ( $self, $c ) = @_;
 
   my $rowid = $c->request->params->{rowid};
-  my $sha1  = $c->request->params->{sha1};
+  my $guid  = $c->request->params->{guid};
   my $html  = $c->request->params->{html};
 
   my $dbh = $c->model('Library')->dbh;
@@ -272,7 +247,7 @@ sub update_notes : Local {
 
   $dbh->do("UPDATE Fulltext SET notes=$value WHERE rowid=$rowid");
 
-  $c->stash->{data} = { pubs => { $sha1 => { annote => $html } } };
+  $c->stash->{data} = { pubs => { $guid => { annote => $html } } };
 
 }
 
@@ -503,10 +478,9 @@ sub attach_file : Local {
   my $is_pdf = $c->request->params->{is_pdf};
 
   my $grid_id = $c->request->params->{grid_id};
-  my $sha1    = $c->request->params->{sha1};
   my $plugin  = $c->session->{"grid_$grid_id"};
 
-  my $pub = $plugin->find_sha1($sha1);
+  my $pub = $plugin->find_guid($guid);
 
   $c->model('Library')->attach_file( $file, $is_pdf, $pub );
 
@@ -517,23 +491,23 @@ sub attach_file : Local {
 sub delete_file : Local {
   my ( $self, $c ) = @_;
 
-  my $guid  = $c->request->params->{guid};
+  my $file_guid  = $c->request->params->{file_guid};
+  my $pub_guid  = $c->request->params->{pub_guid};
   my $is_pdf = $c->request->params->{is_pdf};
 
   my $grid_id = $c->request->params->{grid_id};
-  my $sha1    = $c->request->params->{sha1};
   my $plugin  = $c->session->{"grid_$grid_id"};
 
-  my $pub = $plugin->find_sha1($sha1);
+  my $pub = $plugin->find_guid($pub_guid);
 
-  my $undo_path = $c->model('Library')->delete_attachment( $guid, $is_pdf, $pub, 1 );
+  my $undo_path = $c->model('Library')->delete_attachment( $file_guid, $is_pdf, $pub, 1 );
 
   $c->session->{"undo_delete_attachment"} = {
     file    => $undo_path,
     is_pdf  => $is_pdf,
     grid_id => $grid_id,
-    sha1    => $sha1,
-    old_guid => $guid
+    pub_guid    => $pub_guid,
+    file_guid => $file_guid
   };
 
   # Kind of a hack: delete the _search_job info before sending back our JSON update.
@@ -556,14 +530,14 @@ sub undo_delete : Local {
   my $is_pdf = $undo_data->{is_pdf};
 
   my $grid_id = $undo_data->{grid_id};
-  my $sha1    = $undo_data->{sha1};
-  my $old_guid    = $undo_data->{old_guid};
+  my $pub_guid    = $undo_data->{pub_guid};
+  my $file_guid    = $undo_data->{file_guid};
 
   my $plugin  = $c->session->{"grid_$grid_id"};
 
-  my $pub = $plugin->find_sha1($sha1);
+  my $pub = $plugin->find_guid($pub_guid);
 
-  my $attached_file = $c->model('Library')->attach_file( $file, $is_pdf, $pub, $old_guid );
+  my $attached_file = $c->model('Library')->attach_file( $file, $is_pdf, $pub, $file_guid );
 
   $self->_collect_update_data( $c, [$pub], [ 'pdf', 'attachments', '_attachments_list' ] );
 
@@ -600,8 +574,8 @@ sub _get_selection {
     } else {
       push @tmp, $selection;
     }
-    for my $sha1 (@tmp) {
-      my $pub = $plugin->find_sha1($sha1);
+    for my $guid (@tmp) {
+      my $pub = $plugin->find_guid($guid);
       if ( defined $pub ) {
         push @data, $pub;
       }
@@ -668,7 +642,7 @@ sub _collect_update_data {
     } else {
       $pub_fields = $hash;
     }
-    $output{ $hash->{sha1} } = $pub_fields;
+    $output{ $hash->{guid} } = $pub_fields;
   }
 
   $c->stash->{data}->{pubs} = \%output;

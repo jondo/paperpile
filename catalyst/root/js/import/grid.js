@@ -403,7 +403,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       // the whole selection.
       var sel = this.getSelection();
       if (!this.getSelectionModel().isSelected(index)) {
-        sel = record.get('sha1');
+        sel = record.get('guid');
       }
 
       var tagName = data.node.text;
@@ -464,8 +464,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       if (record.data.created) {
         var secondsAgo = Paperpile.utils.secondsAgo(record.data.created);
         if (secondsAgo < 20) {
-          if (!this.highlightedArticles[record.data.sha1]) {
-            this.highlightedArticles[record.data.sha1] = 1;
+          if (!this.highlightedArticles[record.data.guid]) {
+            this.highlightedArticles[record.data.guid] = 1;
             Ext.get(el).highlight("ffff9c", {
               duration: 3,
               easing: 'easeOut'
@@ -646,8 +646,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
   },
 
-  getBySha1: function(sha1) {
-    var index = this.getStore().find('sha1', sha1);
+  getByGUID: function(guid) {
+    var index = this.getStore().find('guid', guid);
     if (index > -1) {
       return this.getStore().getAt(index);
     }
@@ -659,7 +659,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getPubTemplate: function() {
     if (this.pubTemplate == null) {
       this.pubTemplate = new Ext.XTemplate(
-        '<div class="pp-grid-data" sha1="{sha1}">',
+        '<div class="pp-grid-data" guid="{guid}">',
         '<div>',
         '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
         '</div>',
@@ -1128,13 +1128,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.getSelectionModel().each(
       function(record) {
         if ((what == 'ALL') || (what == 'IMPORTED' && record.get('_imported')) || (what == 'NOT_IMPORTED' && !record.get('_imported'))) {
-          selection.push(record.get('sha1'));
+          selection.push(record.get('guid'));
         }
       });
     return selection;
   },
 
-  // Returns list of sha1s for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
+  // Returns list of guids for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
   getSelection: function(what) {
     if (this.allSelected) {
       return 'ALL';
@@ -1177,7 +1177,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       };
       this.getSelectionModel().on('beforerowselect', blockingFunction, this);
 
-      var sha1 = this.getSelectionModel().getSelected().data.sha1;
+      var guid = this.getSelectionModel().getSelected().data.guid;
 
       Paperpile.status.updateMsg({
         busy: true,
@@ -1360,7 +1360,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     if (selection) {
       var rowid = selection.get('_rowid');
-      var sha1 = selection.data.sha1;
+      var guid = selection.data.guid;
     }
 
     win = new Ext.Window({
@@ -1500,39 +1500,28 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
 
     var store = this.getStore();
-    var selected_sha1 = '';
+    var selected_guid = '';
     var sel = this.getSingleSelectionRecord();
-    if (sel) selected_sha1 = sel.data.sha1;
+    if (sel) selected_guid = sel.data.guid;
 
     var updateSidePanel = false;
-    for (var sha1 in pubs) {
-      var record = store.getAt(store.findExact('sha1', sha1));
-      if (!record) {
-        record = store.getAt(store.findExact('_old_sha1', sha1));
-      }
+    for (var guid in pubs) {
+      var record = store.getAt(store.findExact('guid', guid));
       if (!record) {
         continue;
       }
       var needsUpdating = false;
-      var update = pubs[sha1];
+      var update = pubs[guid];
       record.editing = true; // Set the 'editing' flag.
-      var originalSha1 = record.get('sha1');
       for (var field in update) {
         record.set(field, update[field]);
-      }
-
-      // We allow plugins to change a pub's sha1 tag by setting the '_new_sha1' flag.
-      // The actual grid updating is done here.
-      if (update['_new_sha1']) {
-        record.set('_old_sha1', originalSha1);
-        record.set('sha1', update['_new_sha1']);
       }
 
       // Unset the 'editing' flag. Using the flag directly avoids calling store.afterEdit() for every record.
       record.editing = false;
       if (record.dirty) {
         needsUpdating = true;
-        if (sha1 == selected_sha1) updateSidePanel = true;
+        if (guid == selected_guid) updateSidePanel = true;
       }
       if (needsUpdating) {
         store.fireEvent('update', store, record, Ext.data.Record.EDIT);

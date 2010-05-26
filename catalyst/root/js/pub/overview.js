@@ -71,7 +71,8 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       this.data = newData;
       this.oldData = Ext.ux.clone(this.data);
 
-      if (newData.sha1 != oldData.sha1 || newData._imported != oldData._imported) {
+      //if (newData.sha1 != oldData.sha1 || newData._imported != oldData._imported) {
+      if (newData._imported != oldData._imported) {
         this.updateAllInfo(newData);
         return;
       }
@@ -539,7 +540,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/attach_file'),
       params: {
-        sha1: this.data.sha1,
         guid: this.data.guid,
         grid_id: this.grid_id,
         file: path,
@@ -562,13 +562,13 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   //
   deleteFile: function(isPDF, guid) {
 
-    var record = this.getGrid().store.getAt(this.getGrid().store.find('sha1', this.data.sha1));
+    var record = this.getGrid().store.getAt(this.getGrid().store.find('guid', this.data.guid));
 
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/delete_file'),
       params: {
-        sha1: this.data.sha1,
-        guid: isPDF ? this.data.pdf : guid,
+        file_guid: isPDF ? this.data.pdf : guid,
+        pub_guid: this.data.guid,
         is_pdf: (isPDF) ? 1 : 0,
         grid_id: this.grid_id
       },

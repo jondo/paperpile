@@ -109,7 +109,7 @@ sub insert_pubs {
 
     $self->_update_fulltext_table( $pub, 1, $dbh );
 
-    my $cached_file = catfile( Paperpile::Utils->get_tmp_dir, "download", $pub->sha1 . ".pdf" );
+    my $cached_file = catfile( Paperpile::Utils->get_tmp_dir, "download", $pub->guid . ".pdf" );
 
     if ( $user_library && -e $cached_file ) {
       $pub->_pdf_tmp($cached_file);

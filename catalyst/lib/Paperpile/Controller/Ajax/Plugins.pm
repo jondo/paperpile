@@ -168,7 +168,7 @@ sub _resultsgrid_format {
   my %metaData = (
     totalProperty => 'total_entries',
     root          => 'data',
-    id            => 'sha1',
+    id            => 'guid',
     fields        => [@fields]
   );
 

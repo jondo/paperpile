@@ -151,14 +151,14 @@ sub submit {
     my $id     = $self->dbh->quote( $job->id );
     my $status = $self->dbh->quote( $job->status );
     my $type = $self->dbh->quote( $job->type);
-    my $sha1 = $self->dbh->quote( $job->pub->sha1 );
+    my $guid = $self->dbh->quote( $job->pub->guid );
 
     # We re-insert on the same position when a rowid is given (used in retry_jobs)
     if (defined $job->_rowid){
       my $rowid = $job->_rowid;
-      $self->dbh->do("REPLACE INTO Queue (rowid, jobid, status, type, sha1, error, duration) VALUES ($rowid, $id, $status, $type, $sha1, 0, 0)");
+      $self->dbh->do("REPLACE INTO Queue (rowid, jobid, status, type, guid, error, duration) VALUES ($rowid, $id, $status, $type, $guid, 0, 0)");
     } else {
-      $self->dbh->do("INSERT INTO Queue (jobid, status, type, sha1, error, duration) VALUES ($id, $status, $type, $sha1, 0, 0)");
+      $self->dbh->do("INSERT INTO Queue (jobid, status, type, guid, error, duration) VALUES ($id, $status, $type, $guid, 0, 0)");
     }
   }
 
@@ -402,11 +402,11 @@ sub clear {
   $sth->bind_columns( \$job_id, \$status );
   $sth->execute;
 
-  my @sha1s=();
+  my @guids=();
 
   while ( $sth->fetch ) {
     my $job = Paperpile::Job->new( { id => $job_id } );
-    push @sha1s, $job->{pub}->{sha1};
+    push @guids, $job->{pub}->{guid};
     unlink( $job->_file );
   }
 
@@ -414,7 +414,7 @@ sub clear {
 
   $self->save;
 
-  return [@sha1s];
+  return [@guids];
 }
 
 

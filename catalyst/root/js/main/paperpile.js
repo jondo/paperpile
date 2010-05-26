@@ -210,7 +210,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
-  // sel = 'ALL' or sha1s of selected pubs.
+  // sel = 'ALL' or guids of selected pubs.
   deleteFromFolder: function(sel, grid, folder_id, refreshView) {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/remove_from_collection'),
@@ -873,7 +873,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         url: Paperpile.Url('/ajax/misc/inc_read_counter'),
         params: {
           rowid: data._rowid,
-          sha1: data.sha1,
+          guid: data.guid,
           times_read: data.times_read
         },
         success: function(response) {

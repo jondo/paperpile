@@ -21,7 +21,7 @@ CREATE TABLE Settings(
 
 CREATE TABLE queue(
   jobid              TEXT UNIQUE,
-  sha1               TEXT,
+  guid               TEXT,
   status             TEXT,
   type               TEXT,
   error              INTEGER,

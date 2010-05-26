@@ -93,8 +93,8 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
     }
 
     var refreshMe = false;
-    for (var sha1 in pubs) {
-      var update = pubs[sha1];
+    for (var guid in pubs) {
+      var update = pubs[guid];
       if (update['folders'] !== undefined) {
         refreshMe = true;
       }

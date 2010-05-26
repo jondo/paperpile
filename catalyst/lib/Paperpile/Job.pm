@@ -576,16 +576,8 @@ sub _match_single {
 
   my $pub = $self->pub;
 
-  my $old_sha1 = $pub->sha1;
 
   $pub = $plugin->match($pub);
-
-  my $new_sha1 = $pub->sha1;
-
-  # Store old sha1 to allow updating the frontend correctly
-  if ($old_sha1 ne $new_sha1){
-    $pub->_old_sha1($old_sha1);
-  }
 
   $self->pub($pub);
 
@@ -635,7 +627,7 @@ sub _download {
   $self->update_info( 'msg', "Downloading PDF..." );
 
   my $file =
-    File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->sha1 . ".pdf" );
+    File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->guid . ".pdf" );
 
   # In case file already exists remove it
   unlink($file);

@@ -197,10 +197,6 @@ has '_auto_refresh'    => ( is => 'rw', isa => 'Int', default => 0);
 # author objects which is not always needed (e.g. for import).
 has '_light' =>  ( is => 'rw', isa => 'Int', default => 0);
 
-# Allows to handle cases where sha1 has changed.
-has '_new_sha1' => ( is => 'rw', default => '' );
-has '_old_sha1' => ( is => 'rw', default => '' );
-
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -369,38 +365,6 @@ sub format_authors {
   }
 
 }
-
-# Gets all jobs related to the current publication.
-#sub get_jobs {
-#  my $self = shift;
-
-#  my $q = Paperpile::Queue->new();
-#  my $sha1 = $q->dbh->quote($self->sha1);
-#  my $sth = $q->dbh->prepare("SELECT jobid FROM Queue WHERE sha1=$sha1;");
-
-#  my $job_id;
-#  $sth->bind_columns(\$job_id);
-#  $sth->execute;
-
-#  my @jobs;
-#  while ( $sth->fetch ) {
-#    push @jobs, Paperpile::Job->new( { id => $job_id } );
-#  }
-
-#  $sth->finish;
-#  return @jobs;
-#}
-
-#sub remove_search_jobs {
-#  my $self = shift;
-#  my @jobs = $self->get_jobs;
-#  # Put some job-specific info into the hash if a job exists.
-#  foreach my $job (@jobs) {
-#    if ($job->type eq 'PDF_SEARCH') {
-#      $job->remove;
-#    }
-#  }
-#}
 
 sub refresh_job_fields {
   my ($self, $job) = @_;
@@ -670,46 +634,8 @@ sub format_pattern {
 
 }
 
-sub format_csl {
-
-  ( my $self ) = @_;
-
-  my %output = ();
-
-  $output{id} = $self->sha1;
-
-  if ( $self->pubtype eq 'ARTICLE' ) {
-    $output{'type'}            = 'article-journal';
-    $output{'container-title'} = $self->journal;
-
-    for my $field ( 'title', 'volume', 'issue' ) {
-      $output{$field} = $self->$field;
-    }
-
-    $output{page} = $self->pages;
-
-    $output{issued} = { year => $self->year };
-
-    my @tmp = ();
-
-    foreach my $author ( @{ $self->get_authors } ) {
-      push @tmp, {
-        'name'          => $author->full,
-        'primary-key'   => $author->last,
-        'secondary-key' => $author->first,
-        };
-    }
-
-    $output{author} = [@tmp];
-  }
-
-  return {%output};
-
-}
-
 sub debug {
   my $self = shift;
-  
   my $hash = $self->as_hash;
 
   print STDERR "PUB: { \n";
@@ -719,14 +645,6 @@ sub debug {
       print STDERR "  $key => ".$value."\n";
   }
   print STDERR "}\n";
-}
-
-# Function: list_types
-
-# Getter function for available publication types
-
-sub list_types {
-  return @types;
 }
 
 no Moose;

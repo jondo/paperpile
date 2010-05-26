@@ -62,8 +62,8 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       var sel = this.grid.getSelectionAsList();
       var tag_hash = {};
       for (var i = 0; i < sel.length; i++) {
-        var sha1 = sel[i];
-        var record = this.getGrid().getBySha1(sha1);
+        var guid = sel[i];
+        var record = this.getGrid().getByGUID(guid);
         if (record) {
           var record_tags = record.data.tags.split(/\s*,\s*/);
           for (var j = 0; j < record_tags.length; j++) {
