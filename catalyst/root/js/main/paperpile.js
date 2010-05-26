@@ -1,3 +1,4 @@
+3
 /* Copyright 2009, 2010 Paperpile
 
    This file is part of Paperpile
@@ -390,69 +391,25 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   fileImport: function() {
+    var callback = function(filenames) {
+      if (filenames.length > 0) {
+        var path = filenames[0];
+        var parts = Paperpile.utils.splitPath(path);
 
-    win = new Paperpile.FileChooser({
-      showFilter: true,
-      currentRoot: Paperpile.main.globalSettings.user_home,
-      filterOptions: [{
-        text: 'All supported formats',
-        suffix: ['bib', 'ris', 'txt', 'lib', 'mods', 'xml', 'rss']
-      },
-      {
-        text: 'BibTeX (.bib)',
-        suffix: ['bib']
-      },
-      {
-        text: 'RIS file (.ris)',
-        suffix: ['ris']
-      },
-      {
-        text: 'Endnote (.txt, .lib )',
-        suffix: ['txt', 'lib']
-      },
-      {
-        text: 'Endnote XML (.xml)',
-        suffix: ['xml']
-      },
-      {
-        text: 'Word 2007 XML (.xml)',
-        suffix: ['xml']
-      },
-      {
-        text: 'MODS (.mods, .xml)',
-        suffix: ['mods', 'xml']
-      },
-      {
-        text: 'RSS (.rss, .xml)',
-        suffix: ['rss', 'xml']
-      },
-      // Paperpile import/export disabled at the moment
-      // { 
-      //   text: 'Paperpile (.ppl)',
-      //   suffix: ['ppl']
-      // },
-      {
-        text: 'All files',
-        suffix: ['ALL']
-      }],
-
-      callback: function(button, path) {
-        if (button == 'OK') {
-          var parts = Paperpile.utils.splitPath(path);
-          Paperpile.main.tabs.newPluginTab('File', {
-            plugin_file: path,
-            plugin_name: 'File',
-            plugin_mode: 'FULLTEXT',
-            plugin_query: '',
-            plugin_base_query: ''
-          },
-            parts.file, 'pp-icon-file');
-        }
+        Paperpile.main.tabs.newPluginTab('File', {
+          plugin_file: path,
+          plugin_name: 'File',
+          plugin_mode: 'FULLTEXT',
+          plugin_query: '',
+          plugin_base_query: ''
+        },
+          parts.file, 'pp-icon-file');
       }
-    });
-
-    win.show();
-
+    };
+    var options = {
+      types: ['bib', 'ris']
+    };
+    Paperpile.openFileDialog(callback, options);
   },
 
   // Reloads DB grids upon insert/entries; it is possible to avoid

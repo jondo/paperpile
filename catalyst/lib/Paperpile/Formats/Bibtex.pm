@@ -58,7 +58,7 @@ sub read {
     my $data = {};
 
     foreach my $field (  $entry->fieldlist  ) {
-
+	print STDERR "Field: $field\n";
       if ( $built_in{$field} ) {
         $data->{$field} = $entry->field($field);
       }
@@ -78,9 +78,9 @@ sub read {
         foreach my $name (@names) {
 
           my $von   = $name->von;
-          my $last  = $name->last;
+          my $last  = $name->last || "";
           my $jr    = $name->jr;
-          my $first = $name->first;
+          my $first = $name->first || "";
 
           my $output = '';
 

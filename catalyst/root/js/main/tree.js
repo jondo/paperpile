@@ -43,7 +43,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         completeOnEnter: true,
         ignoreNoChange: true
       }),
-      plugins: [Paperpile.ContextTrianglePlugin]
+	plugins: [new Paperpile.ContextTrianglePlugin()]
     });
 
     this.stylePickerMenu = new Paperpile.StylePickerMenu({
@@ -256,8 +256,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   myOnClick: function(node, e) {
-    Paperpile.log(node);
-    Paperpile.log(this.getAutoExportLocation(node));
+      Paperpile.log("HELLOOOOO");
+    //Paperpile.log(node);
+    //Paperpile.log(this.getAutoExportLocation(node));
     //      Paperpile.log(e.browserEvent);
     switch (node.id) {
     case 'FOLDER_ROOT':

@@ -14,45 +14,45 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-Paperpile.ContextTrianglePlugin = (function() {
-  return {
-    init: function(treePanel) {
-      Ext.apply(treePanel.loader, {
-        baseAttrs: {
-          uiProvider: Paperpile.ContextTreeNodeUI
-        }
-      });
-      treePanel.initEvents = treePanel.initEvents.createSequence(this.myInitEvents);
-      treePanel.onRender = treePanel.onRender.createSequence(this.myOnRender);
+Paperpile.ContextTrianglePlugin = function(config) {
+  Ext.apply(this, config);
+};
 
+Ext.extend(Paperpile.ContextTrianglePlugin, Ext.util.Observable, {
+  init: function(treePanel) {
+    Ext.apply(treePanel.loader, {
+      baseAttrs: {
+        uiProvider: Paperpile.ContextTreeNodeUI
+      }
+    });
+    treePanel.initEvents = treePanel.initEvents.createSequence(this.myInitEvents);
+    treePanel.onRender = treePanel.onRender.createSequence(this.myOnRender);
+
+  },
+
+  myInitEvents: function() {
+    var el = this.getTreeEl();
+    //      el.on('mousedown', this.delegateClick, this);
+    this.on('startdrag', function() {
+      var ghostDom = this.dragZone.proxy.ghost.dom;
+      var ghostEl = Ext.fly(ghostDom);
+      ghostEl.select('.pp-tree-context-triangle').remove();
     },
+    this);
+  },
 
-    myInitEvents: function() {
-      var el = this.getTreeEl();
-      //      el.on('mousedown', this.delegateClick, this);
-      this.on('startdrag', function() {
-        var ghostDom = this.dragZone.proxy.ghost.dom;
-        var ghostEl = Ext.fly(ghostDom);
-        ghostEl.select('.pp-tree-context-triangle').remove();
-      },
-      this);
-
+  myOnRender: function() {
+    this.contextTriangle = Ext.DomHelper.append(this.body, {
+      id: this.itemId + "_context_triangle",
+      tag: "div",
+      cls: "pp-tree-context-triangle"
     },
+      true);
 
-    myOnRender: function() {
-      this.contextTriangle = Ext.DomHelper.append(this.body, {
-        id: this.itemId + "_context_triangle",
-        tag: "div",
-        cls: "pp-tree-context-triangle"
-      },
-        true);
-
-      this.contextTriangle.addClassOnOver('pp-tree-context-triangle-over');
-      this.contextTriangle.hide();
-
-    }
-  };
-})();
+    this.contextTriangle.addClassOnOver('pp-tree-context-triangle-over');
+    this.contextTriangle.hide();
+  }
+});
 
 Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
   menuShowing: false,
@@ -148,3 +148,5 @@ Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
   }
 
 });
+
+Ext.reg("contexttriangle", Paperpile.ContextTrianglePlugin);

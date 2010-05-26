@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.FileChooser = Ext.extend(Ext.Window, {
 
   title: "Select file",
@@ -335,3 +334,44 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     }
   }
 });
+
+Paperpile.openFileDialog = function(callback, inputOptions) {
+  var options = {
+    multiple: false,
+    types: null,
+    path: Paperpile.main.globalSettings.user_home
+  };
+  Ext.apply(options, inputOptions);
+
+  Paperpile.log(options);
+
+  if (IS_TITANIUM) {
+    // Create a Titanium dialog.
+    Titanium.UI.openFileChooserDialog(callback, options);
+  } else {
+    // Create an ExtJS dialog.
+    var fileChooserOptions = {
+      currentRoot: options.path,
+      callback: function(button, path) {
+        if (button == 'OK') {
+          callback([path]);
+        }
+      },
+    };
+    if (options.types) {
+      Ext.apply(fileChooserOptions, {
+        showFilter: true,
+        filterOptions: [
+        {
+          text: 'Supported files',
+          suffix: options.types
+        }, {
+          text: 'All files',
+          suffix: ""
+        }],
+      });
+    }
+    win = new Paperpile.FileChooser(fileChooserOptions);
+    win.show();
+  }
+};
