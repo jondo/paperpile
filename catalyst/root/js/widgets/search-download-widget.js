@@ -110,7 +110,7 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
         '  </li>'];
 
       if (data._imported) {
-        el.concat([
+        el = el.concat([
         '<li id="attach-pdf-{id}" class="pp-action pp-action-attach-pdf">',
         '    <a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a>',
         '  </li>',

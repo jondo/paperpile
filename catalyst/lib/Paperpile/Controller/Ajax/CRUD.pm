@@ -53,6 +53,16 @@ sub insert_entry : Local {
     }
   }
 
+  # In case a pdf is present but not imported (e.g. in bibtex file
+  # plugin with attachments) we set _pdf_tmp to make sure the PDF is
+  # imported
+  foreach my $pub (@pub_array){
+    if ($pub->pdf_name and !$pub->_imported){
+      $pub->_pdf_tmp($pub->pdf_name);
+    }
+  }
+
+
   $c->model('Library')->insert_pubs( \@pub_array, 1);
 
   my $pubs = {};

@@ -94,10 +94,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
       record.data._citekey = Ext.util.Format.ellipsis(record.data.citekey, 18);
       record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
-      if (record.data.last_read) {
-        record.data._last_readPretty = 'Last read: ' + Paperpile.utils.prettyDate(record.data.last_read);
+
+      if (record.data._imported){
+        if (record.data.last_read) {
+          record.data._last_readPretty = 'Last read: ' + Paperpile.utils.prettyDate(record.data.last_read);
+        } else {
+          record.data._last_readPretty = 'Never read';
+        }
       } else {
-        record.data._last_readPretty = 'Never read';
+        record.data._last_readPretty = 'Click <i>Import</i> to add file to your library.';
       }
 
       if (record.data.attachments){

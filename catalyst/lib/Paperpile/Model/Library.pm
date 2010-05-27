@@ -116,7 +116,7 @@ sub insert_pubs {
     }
 
     if ( $pub->_pdf_tmp ) {
-      $self->attach_file( $pub->_pdf_tmp, 1, $pub);
+      $self->attach_file( $pub->_pdf_tmp, 1, $pub, 0, $dbh);
     }
   }
 
@@ -1095,15 +1095,23 @@ sub _hash2sql {
 # Attach $file to the publication $pub. If $is_pdf is set it is *the*
 # PDF otherwise it is treated as attachment. If $old_guid is set the
 # new file gets this guid (to avoid changing of the guid when using
-# the undo function)
+# the undo function). A $dbh can be given if a handler with a
+# transaction is already running (in that case also $old_guid must be
+# set [0 if it should not be used] )
 
 sub attach_file {
 
-  my ( $self, $file, $is_pdf, $pub, $old_guid ) = @_;
+  my ( $self, $file, $is_pdf, $pub, $old_guid, $dbh ) = @_;
 
-  my $dbh = $self->dbh;
+  my $external_dbh;
+  if ($dbh){
+    $external_dbh=1;
+  } else {
+    $external_dbh = 0;
+    $dbh = $self->dbh;
+    $dbh->begin_work;
+  }
 
-  $dbh->begin_work;
 
   my $settings = $self->settings;
   my $source   = Paperpile::Utils->adjust_root($file);
@@ -1123,28 +1131,32 @@ sub attach_file {
 
   my $md5 = Paperpile::Utils->calculate_md5($file);
 
-  my $relative_dest;
+  my ($relative_dest, $absolute_dest);
 
-  if ($is_pdf) {
+  if ($settings->{paper_root}){
 
-    # File name relative to [paper_root] is [pdf_pattern].pdf
-    $relative_dest =
-      $pub->format_pattern( $settings->{pdf_pattern}, { key => $pub->citekey } ) . ".pdf";
+    if ($is_pdf) {
 
+      # File name relative to [paper_root] is [pdf_pattern].pdf
+      $relative_dest =
+        $pub->format_pattern( $settings->{pdf_pattern}, { key => $pub->citekey } ) . ".pdf";
+
+    } else {
+      my ( $volume, $dirs, $base_name ) = splitpath($source);
+
+      # Path relative to [paper_root] is [attachment_pattern]/$file_name
+      $relative_dest =
+        $pub->format_pattern( $settings->{attachment_pattern}, { key => $pub->citekey } );
+      $relative_dest = catfile( $relative_dest, $base_name );
+    }
+
+    $absolute_dest = catfile( $settings->{paper_root}, $relative_dest );
+
+    # Copy file, file name can be changed if it was not unique
+    $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
   } else {
-
-    my ( $volume, $dirs, $base_name ) = splitpath($source);
-
-    # Path relative to [paper_root] is [attachment_pattern]/$file_name
-    $relative_dest =
-      $pub->format_pattern( $settings->{attachment_pattern}, { key => $pub->citekey } );
-    $relative_dest = catfile( $relative_dest, $base_name );
+    $absolute_dest = $file;
   }
-
-  my $absolute_dest = catfile( $settings->{paper_root}, $relative_dest );
-
-  # Copy file, file name can be changed if it was not unique
-  $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
 
   my ( $volume, $dirs, $base_name ) = splitpath($absolute_dest);
 
@@ -1157,7 +1169,10 @@ sub attach_file {
 
   if ($is_pdf) {
     $self->index_pdf( $pub_guid, $absolute_dest, $dbh );
-    my $pdf_name = abs2rel($absolute_dest, $self->get_setting('paper_root'));
+    my $pdf_name = $absolute_dest;
+    if ($settings->{paper_root}){
+      $pdf_name = abs2rel($absolute_dest, $settings->{paper_root});
+    };
     $pub->pdf($file_guid);
     $pub->pdf_name($pdf_name);
 
@@ -1184,7 +1199,9 @@ sub attach_file {
 
   }
 
-  $dbh->commit;
+  if (!$external_dbh){
+    $dbh->commit;
+  }
 
   return $file_guid;
 

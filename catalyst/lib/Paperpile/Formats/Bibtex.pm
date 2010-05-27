@@ -48,7 +48,7 @@ sub read {
 
   my @output = ();
 
-  my $parser = BibTeX::Parser->new($fh, 1);
+  my $parser = BibTeX::Parser->new( $fh, 1 );
 
   while ( my $entry = $parser->next ) {
 
@@ -68,7 +68,7 @@ sub read {
       # Authors/Editors
       elsif ( $field eq 'author' || $field eq 'editor' ) {
 
-        my $names = join(' and ',  $entry->$field);
+        my $names = join( ' and ', $entry->$field );
 
         if ( $field eq 'author' ) {
           $data->{authors} = $names;
@@ -78,10 +78,53 @@ sub read {
           $data->{editors} = $names;
         }
       }
+
       # Put other non-standard fields here
       else {
-        if ($field =~ /arxiv/){
-          $data->{arxivid} = $entry->$field;
+        if ( $field =~ /arxiv/ ) {
+          $data->{arxivid} = $entry->field($field);
+          next;
+        }
+
+        # File attachment. The convention seems to be that multiple
+        # files are expected to be separated by semicolons and that
+        # files are stored like this:
+        # :home/wash/PDFs/file.pdf:PDF
+
+        if ( $field =~ /file/i ) {
+
+          my @files       = split( /;/, $entry->field($field) );
+          my $pdf         = '';
+          my @attachments;
+          foreach my $file (@files) {
+
+            # Try to grap the actual path
+            if ( $file =~ /^.*:(.*):.*$/ ) {
+              $file = $1;
+            }
+
+            # Mendeley does not show the first '/'. Relative paths are
+            # useless so when we don't find the file we try to make this absolute
+            # by brute force TODO: make this work for Windows
+            if ( !-e $file ) {
+              $file = "/$file";
+            }
+
+            # If we still do not find a file, we give up
+            if ( !-e $file || !-r $file ) {
+              next;
+            }
+
+            # We treat the first PDF in the list as *the* PDF and all
+            # other files as supplementary material
+            if ( ( $file =~ /\.pdf/i ) and ( !$pdf ) ) {
+              $data->{_pdf_tmp} = $file;
+              next;
+            } else {
+              push @attachments, $file;
+            }
+          }
+          next;
         }
 
         print STDERR "Field $field not handled.\n";
