@@ -43,7 +43,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         completeOnEnter: true,
         ignoreNoChange: true
       }),
-      plugins: [Paperpile.ContextTrianglePlugin]
+	plugins: [new Paperpile.ContextTrianglePlugin()]
     });
 
     this.stylePickerMenu = new Paperpile.StylePickerMenu({

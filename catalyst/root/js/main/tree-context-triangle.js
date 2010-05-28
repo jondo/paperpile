@@ -14,8 +14,11 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-Paperpile.ContextTrianglePlugin = (function() {
-  return {
+Paperpile.ContextTrianglePlugin = function(config) {
+  Ext.apply(this, config);
+};
+
+Ext.extend(Paperpile.ContextTrianglePlugin, Ext.util.Observable, {
     init: function(treePanel) {
       Ext.apply(treePanel.loader, {
         baseAttrs: {
@@ -51,8 +54,7 @@ Paperpile.ContextTrianglePlugin = (function() {
       this.contextTriangle.hide();
 
     }
-  };
-})();
+});
 
 Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
   menuShowing: false,
