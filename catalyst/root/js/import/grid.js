@@ -1665,7 +1665,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   openPDF: function() {
     var sm = this.getSelectionModel();
     if (sm.getSelected().data.pdf) {
-      var pdf = sm.getSelected().data.pdf;
+      var pdf = sm.getSelected().data.pdf_name;
       var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
       Paperpile.main.tabs.newPdfTab({
         file: path,
