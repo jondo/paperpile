@@ -867,40 +867,27 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         id: Paperpile.utils.generateUUID()
       }));
 
-      newNode.init({
+      var pars = {
         type: 'FOLDER',
+          plugin_query: 'folderid:' + newNode.id,
+          plugin_base_query: 'folderid:' + newNode.id,
         plugin_name: 'DB',
-        plugin_title: node.text,
+        plugin_title: newNode.text,
         plugin_iconCls: 'pp-icon-folder',
         plugin_mode: 'FULLTEXT'
-      });
+      };
+	newNode.init(pars);
 
       this.lastSelectedNode = newNode;
       this.allowSelect = true;
       newNode.select();
 
-      treeEditor.on({
-        complete: {
-          scope: this,
-          single: true,
-          fn: function() {
-            var path = this.relativeFolderPath(newNode);
-            newNode.plugin_title = newNode.text;
-            newNode.plugin_query = 'folderid:' + newNode.id;
-            newNode.plugin_base_query = 'folderid:' + newNode.id;
-            this.onNewCollection(newNode);
-          }
-        }
-      });
-
-      treeEditor.triggerEdit(newNode);
+      this.triggerNewNodeEdit(newNode);
     },
     this);
-
   },
 
   onNewCollection: function(node) {
-
     this.getSelectionModel().clearSelections();
     this.allowSelect = false;
 
@@ -1166,6 +1153,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       newNode.init(pars);
       newNode.select();
 
+	this.triggerNewNodeEdit(newNode);
+
+    }.createDelegate(this));
+  },
+
+    triggerNewNodeEdit: function(newNode) {
+      var treeEditor = this.treeEditor;
       (function() {
         this.mon(treeEditor, 'canceledit', this.removeOnCancel, this, {
           single: true
@@ -1176,8 +1170,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           });
         treeEditor.triggerEdit(newNode);
       }.defer(10, this));
-    }.createDelegate(this));
-  },
+    },
 
   addOnCommit: function(editor, newText, oldText) {
     var node = editor.editNode;
