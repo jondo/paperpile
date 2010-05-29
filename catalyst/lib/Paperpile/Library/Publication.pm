@@ -145,6 +145,11 @@ has '_pdf_url' => ( is => 'rw', default => '' );
 # together with the publication object
 has '_pdf_tmp' => ( is => 'rw', default => '' );
 
+# Temporary store list of absolute file names of attachments to be
+# imported together with the publication object
+has '_attachments_tmp' => ( is => 'rw', default => sub {[]} );
+
+
 # Formatted strings to be displayed in the frontend.
 has '_authors_display'  => ( is => 'rw');
 has '_citation_display' => ( is => 'rw');
@@ -200,6 +205,9 @@ has '_auto_refresh'    => ( is => 'rw', isa => 'Int', default => 0);
 # author objects which is not always needed (e.g. for import).
 has '_light' =>  ( is => 'rw', isa => 'Int', default => 0);
 
+# If object comes from a database we store the dsn of it. Currently
+# only used for function refresh_attachments
+has '_db_connection' => ( is => 'rw', default => '' );
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -398,25 +406,25 @@ sub refresh_attachments {
 
   $self->_attachments_list( [] );
 
-  if ( $self->attachments) {
-    my $model = Paperpile::Utils->get_library_model();
+  if ( $self->attachments && $self->_db_connection) {
+
+    my $model   = Paperpile::Model::Library->new();
+
+    $model->set_dsn( $self->_db_connection );
+
     my $paper_root = $model->get_setting('paper_root');
     my $guid = $self->guid;
     my $sth = $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
 
-    #my ( $attachment_rowid, $file_name );
-    #$sth->bind_columns( \$attachment_rowid, \$file_name );
     $sth->execute;
 
     my @output = ();
+    my @files = ();
     while ( my $row = $sth->fetchrow_hashref() ) {
-      #my $a = File::Spec->catfile( $paper_root, $file_name );
-
       my $link = "/serve/".$row->{local_file};
 
-      ( my $suffix ) = ( $link =~ /\.(.*+$)/ );
+      ( my $suffix ) = ( $link =~ /\.([^.]*)$/ );
 
-      #my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($abs);
       push @output, {
         file  => $row->{name},
         path  => $row->{local_file},
@@ -424,9 +432,22 @@ sub refresh_attachments {
         cls   => "file-$suffix",
         guid => $row->{guid}
         };
+
+      push @files,  $row->{local_file};
+
     }
 
     $self->_attachments_list( \@output );
+
+    # if attachments are present and pub is not imported it is an
+    # temporary database. To make sure attachments are considered
+    # during import we set _attachments_tmp here.
+    if (!$self->_imported){
+      $self->_attachments_tmp( \@files );
+    }
+
+    $self->_attachments_list( \@output );
+
   }
 }
 
@@ -649,7 +670,7 @@ sub debug {
       my $value = $hash->{$key} || "";
       next if ($value eq '');
       print STDERR "  $key => ".$value."\n";
-  }
+    }
   print STDERR "}\n";
 }
 

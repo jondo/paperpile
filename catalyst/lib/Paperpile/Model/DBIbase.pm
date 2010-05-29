@@ -108,6 +108,12 @@ sub set_dsn {
 
 }
 
+sub get_dsn {
+  my ($self)=@_;
+  return $self->{dsn};
+}
+
+
 sub stay_connected {
   my $self = shift;
   if ( $self->_dbh ) {

@@ -63,7 +63,6 @@ sub insert_entry : Local {
     }
   }
 
-
   $c->model('Library')->insert_pubs( \@pub_array, 1);
 
   my $pubs = {};
@@ -632,6 +631,7 @@ sub _get_selection {
 
   if ( $selection eq 'ALL' ) {
     @data = @{ $plugin->all };
+    $c->model('Library')->exists_pub(\@data);
   } else {
     my @tmp;
     if ( ref($selection) eq 'ARRAY' ) {
