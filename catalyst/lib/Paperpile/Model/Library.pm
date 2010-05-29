@@ -591,6 +591,19 @@ sub rename_collection {
 
 }
 
+# Stupid utility function to get a collection's type from its GUID.
+sub get_collection_type {
+  my ( $self, $guid ) = @_;
+
+  # Special cases for the root nodes.
+  return 'FOLDER' if ($guid =~ m/(FOLDER)/);
+  return 'LABEL' if ($guid =~ m/(TAGS)/);
+
+  my $dbh = $self->dbh;
+  my ($type) = $dbh->selectrow_array("SELECT type FROM Collections WHERE guid='$guid'");
+  return $type;
+}
+
 # Moves a collection $drop_guid to a new place relative to collection
 # $target_guid depending on $position (append -> new sub-collection,
 # below or above -> new order in old sub-collection)
@@ -602,9 +615,18 @@ sub move_collection {
 
   $dbh->begin_work;
 
-  # Get parent and sort_order of target
-  my ( $new_parent, $sort_order ) = $dbh->selectrow_array(
-    "SELECT parent, sort_order FROM Collections WHERE guid='$target_guid' AND TYPE='$type'");
+  my ($new_parent,$sort_order);
+  if ($target_guid =~ m/ROOT/) {
+    # Root nodes are not stored in the tables; rather, a node with a root parent
+    # simply stores "ROOT" as its parent GUID.
+    $new_parent = 'ROOT';
+    $sort_order = 0;
+    $target_guid =~ s/(FOLDER_|TAGS_)ROOT/ROOT/;
+  } else {
+      # Get parent and sort_order of target
+      ( $new_parent, $sort_order ) = $dbh->selectrow_array(
+	  "SELECT parent, sort_order FROM Collections WHERE guid='$target_guid' AND TYPE='$type'");
+  }
 
   # We move to a new sub-collection
   if ( $position eq 'append' ) {
@@ -651,12 +673,12 @@ sub move_collection {
   # i.e. starting always with 0 and increasing always by 1. This is
   # mainly cosmetic
 
-  ( my $old_parent ) = $dbh->selectrow_array(
-    "SELECT parent FROM Collections WHERE guid='$drop_guid' AND TYPE='$type'");
-
-  $self->_normalize_sort_order( $dbh, $old_parent, $type );
-
-  if ( $new_parent ne $old_parent ) {
+  my ( $old_parent ) = $dbh->selectrow_array(
+      "SELECT parent FROM Collections WHERE guid='$drop_guid' AND TYPE='$type'");
+  if (defined $old_parent) {
+    $self->_normalize_sort_order( $dbh, $old_parent, $type );
+  }
+  if (defined $new_parent && $new_parent ne $old_parent ) {
     $self->_normalize_sort_order( $dbh, $new_parent, $type );
   }
 
@@ -1636,7 +1658,7 @@ sub _normalize_sort_order {
   my ( $self, $dbh, $parent, $type ) = @_;
 
   my $select =
-    $dbh->prepare("SELECT guid FROM Collections WHERE parent='$parent' ORDER BY sort_order");
+    $dbh->prepare("SELECT guid FROM Collections WHERE parent='$parent' AND type='$type' ORDER BY sort_order");
 
   my $update = $dbh->prepare("UPDATE Collections SET sort_order=? WHERE guid=?");
 

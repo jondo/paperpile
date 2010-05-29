@@ -27,7 +27,7 @@ Paperpile.Url = function(url) {
 
 Paperpile.log = function() {
   if (IS_TITANIUM) {
-    return;
+    Titanium.API.debug(arguments[0]);
   } else if (IS_CHROME) {
     console.log(arguments[0]);
   } else if (window.console) {
@@ -468,7 +468,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     return grid;
   },
 
-  isTabPlugin: function(panel) {
+  isLabelTab: function(panel) {
     if (panel.gridParams === undefined) {
       return false;
     }
@@ -539,11 +539,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var tabs = Paperpile.main.tabs.items.items;
     for (var i = 0; i < tabs.length; i++) {
       var tab = tabs[i];
-      if (this.isTabPlugin(tab)) {
-        // TODO: Relying on the tab.title is not possible in the next
-        // statement. Greg, we need to store the guid of the
-        // folder/tab somewhere within the tab class.
-        tab.setIconClass('pp-tag-style-tab pp-tag-style-' + this.getStyleForTag(tab.title));
+      if (this.isLabelTab(tab)) {
+        // The label's GUID is currently stored in the tab's itemId property, but 
+        // this feels like a hack...
+        tab.setIconClass('pp-tag-style-tab pp-tag-style-' + this.getStyleForTag(tab.itemId));
       }
       // Force a re-render on any grid items containing the given tag.
       if (tab instanceof Paperpile.PluginPanel) {

@@ -71,14 +71,15 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       this.data = newData;
       this.oldData = Ext.ux.clone(this.data);
 
-      //if (newData.sha1 != oldData.sha1 || newData._imported != oldData._imported) {
-      if (newData._imported != oldData._imported) {
+      // Important: Check for a different GUID in order to decide whether to re-render
+      // all the data again.
+      if (newData.guid != oldData.guid ||
+        newData._imported != oldData._imported) {
         this.updateAllInfo(newData);
         return;
       }
 
       var attachmentsChanged = false;
-
       if (newData._attachments_list.length != oldData._attachments_list.length) {
         attachmentsChanged = true;
       } else {
@@ -124,6 +125,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         this.updateSearchJob(newData);
       }
     } else {
+      // Multiple articles selected.
       var d = {
         id: this.id
       };
@@ -209,7 +211,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     }
     templateToUse.overwrite(this.body, data, true);
 
-    if (data.numSelected >0){
+    if (data.numSelected > 0) {
       this.labelWidget.renderMultiple();
     }
 

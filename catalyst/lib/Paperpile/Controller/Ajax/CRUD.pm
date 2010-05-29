@@ -369,6 +369,10 @@ sub rename_collection : Local {
 
   $c->model('Library')->rename_collection( $guid, $new_name );
 
+  my $type = 'TAGS';
+  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';  
+  my $pubs = $self->_get_cached_data($c);
+  $self->_collect_update_data($c, $pubs,[$what]);
 }
 
 sub move_collection : Local {
@@ -382,15 +386,38 @@ sub move_collection : Local {
 
   my $type = $c->request->params->{type};
 
-  $drop_guid   =~ s/(FOLDER_|TAGS_)ROOT/ROOT/;
-  $target_guid =~ s/(FOLDER_|TAGS_)ROOT/ROOT/;
-
   # Either 'append' for dropping into the node, or 'below' or 'above'
   # for moving nodes on the same level
   my $position = $c->request->params->{point};
 
   $c->model('Library')->move_collection( $target_guid, $drop_guid, $position, $type );
 
+}
+
+# Sorts a set of sibling collection nodes by the given order of IDs.
+sub sort_collection : Local {
+  my ($self, $c) = @_;
+
+  my $m = $c->model('Library');
+
+  # The desired order of nodes, given as a list of GUIDs.
+  my $node_id_order = $c->request->params->{node_id_order};
+  my @id_order;
+  if ( ref $node_id_order eq 'ARRAY' ) {
+    @id_order = @{$node_id_order};
+  } else {
+    @id_order = ($node_id_order);
+  }
+
+  # The parent node under which all these nodes live, given as a GUID.
+  my $parent_id = $c->request->params->{parent_id};
+  my $type = $m->get_collection_type($parent_id);
+
+  print STDERR "TYPE: $type\n";
+  # Go in order, putting each sub-node at the end of the parent node's child list.
+  foreach my $id (@id_order) {
+      $m->move_collection($parent_id,$id,'append',$type);
+  }
 }
 
 sub style_collection : Local {
@@ -431,6 +458,7 @@ sub list_labels : Local {
 
 }
 
+# Returns the list of labels sorted by tag counts.
 sub list_labels_sorted : Local {
   my ( $self, $c ) = @_;
 

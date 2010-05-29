@@ -49,6 +49,16 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     this);
   },
 
+  closeTabById: function(guid) {
+    var tabs = this.items.items;
+    for (var i = 0; i < tabs.length; i++) {
+      var tab = tabs[i];
+      if (tab.itemId == guid) {
+        this.remove(tab);
+      }
+    }
+  },
+
   closeTabByTitle: function(title) {
     var tabs = this.items.items;
     for (var i = 0; i < tabs.length; i++) {

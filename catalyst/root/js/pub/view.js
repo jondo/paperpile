@@ -228,8 +228,8 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     east_panel.items.get('details').showEmpty(tpl);
 
     var datatabs = this.items.get('center_panel').items.get('data_tabs');
-    datatabs.items.get('pubsummary').showEmpty('');
-    datatabs.items.get('pubnotes').showEmpty('');
+    datatabs.items.get('pubsummary').showEmpty(tpl);
+    datatabs.items.get('pubnotes').showEmpty(tpl);
   }
 
 });

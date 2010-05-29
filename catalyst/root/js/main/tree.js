@@ -43,7 +43,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         completeOnEnter: true,
         ignoreNoChange: true
       }),
-	plugins: [new Paperpile.ContextTrianglePlugin()]
+      plugins: [new Paperpile.ContextTrianglePlugin()]
     });
 
     this.stylePickerMenu = new Paperpile.StylePickerMenu({
@@ -486,8 +486,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       }
     } else {
       // We're dragging nodes internally
-      
-      if (node.type === 'FOLDER' || node.type === 'TAGS'){
+      if (node.type === 'FOLDER' || node.type === 'TAGS') {
 
         Ext.Ajax.request({
           url: Paperpile.Url('/ajax/crud/move_collection'),
@@ -495,7 +494,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
             target_node: e.target.id,
             drop_node: e.dropNode.id,
             point: e.point,
-            type: node.type === 'FOLDER' ? 'FOLDER':'LABEL'
+            type: node.type === 'FOLDER' ? 'FOLDER' : 'LABEL'
           },
           success: function() {
             // Should we do something here?
@@ -518,7 +517,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           failure: Paperpile.main.onError
         });
       }
-
 
     }
   },
@@ -909,19 +907,19 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/new_collection'),
       params: {
-        type: node.type === 'FOLDER' ? 'FOLDER':'LABEL',
+        type: node.type === 'FOLDER' ? 'FOLDER' : 'LABEL',
         text: node.text,
         node_id: node.id,
         parent_id: node.type === 'FOLDER' ? node.parentNode.id : 'ROOT'
       },
       success: function(response) {
-        if (node.type==='TAGS'){
+        if (node.type === 'TAGS') {
           var json = Ext.util.JSON.decode(response.responseText);
           this.reloadTags(json);
         }
       },
       failure: Paperpile.main.onError,
-      scope:this
+      scope: this
     });
   },
 
@@ -975,8 +973,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/tree/save_node_params'),
       params: pars,
-      success: function() {
-      },
+      success: function() {},
       failure: Paperpile.main.onError
     });
 
@@ -1029,20 +1026,19 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        if (node.type === 'TAGS'){
-          // Greg this does not work any more:
-          //Paperple.main.tabs.closeTabByTitle(tag);
+        if (node.type === 'TAGS') {
+          // Close the tab using the label's GUID, which is the node's id and the tab's itemId.
+          Paperpile.main.tabs.closeTabById(node.id);
           this.reloadTags(json);
         } else {
           Paperpile.main.onUpdate(json.data);
         }
       },
       scope: this,
-      failure: Paperpile.main.onError,
+      failure: Paperpile.main.onError
     });
     node.remove();
   },
-
 
   deleteFolder: function() {
     var node = this.lastSelectedNode;
@@ -1068,7 +1064,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var node = this.lastSelectedNode;
     node.reload();
   },
-
 
   configureSubtree: function(node) {
     this.configureNode = node;
@@ -1141,6 +1136,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   newTag: function() {
+
     var node = this.getNodeById('TAGS_ROOT');
     var treeEditor = this.treeEditor;
     var newNode;
@@ -1174,24 +1170,30 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         this.mon(treeEditor, 'canceledit', this.removeOnCancel, this, {
           single: true
         });
-        this.mon(treeEditor, 'complete', function() {
-          this.onNewCollection(newNode);
-        },
-        this, {
-          single: true
-        });
+        this.mon(treeEditor, 'complete', this.addOnCommit,
+          this, {
+            single: true
+          });
         treeEditor.triggerEdit(newNode);
       }.defer(10, this));
     }.createDelegate(this));
   },
 
+  addOnCommit: function(editor, newText, oldText) {
+    var node = editor.editNode;
+    this.onNewCollection(node);
+  },
+
   removeOnCancel: function(editor, newText, oldText) {
     var node = editor.editNode;
+    var treeEditor = this.treeEditor;
 
-    // Greg: Don't understand why we would trigger deletion of tag on
-    // cancel. In any case, we need to update this to deleteCollection.
-    this.deleteTag(node);
+    // At this point, the node object exists in the front-end but wasn't added
+    // to the backend yet. So just remove the node.
+    node.remove();
+    // Now, clear the callbacks from the treeEditor.
     this.mun(treeEditor, 'canceledit', this.removeOnCancel);
+    this.mun(treeEditor, 'complete', this.addOnCommit);
   },
 
   containsTagWithText: function(text) {
@@ -1249,10 +1251,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return text;
   },
 
-  // Greg, the sorting does not work any more with the new
-  // backend. I'm not how it should work (do we save the sorted state
-  // to the database or not?)
+
   sortTagsByCount: function() {
+      // The counts of articles for each label aren't stored in the frontend,
+      // so we call the backend to give us a sorted list of GUIDs.
+
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/list_labels_sorted'),
       params: {},
@@ -1260,17 +1263,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         var json = Ext.util.JSON.decode(response.responseText);
         var data = json.data;
 
-        var root = this.getNodeById('TAGS_ROOT');
-
         var ids = [];
         for (var i = 0; i < data.length; i++) {
-          var tag = data[i].name;
-          var node = root.findChild('text', tag);
+          var id = data[i].id;
+            var node = this.getNodeById(id);
           ids.push(node.id);
         }
 
-        this.setTagSort(ids);
-
+        this.setCollectionSort(ids);
       },
       failure: Paperpile.main.onError,
       scope: this
@@ -1294,16 +1294,20 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       sortedIds.push(obj.id);
     });
 
-    this.setTagSort(sortedIds);
+    this.setCollectionSort(sortedIds);
   },
 
-  setTagSort: function(tagIdList) {
-    var root = this.getNodeById('TAGS_ROOT');
+  setCollectionSort: function(idList) {
+    var firstNodeId = idList[0];
+    var firstNode = this.getNodeById(firstNodeId);
+    var parentNode = firstNode.parentNode;
+    var parentId = parentNode.id;
+
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/set_node_order'),
+      url: Paperpile.Url('/ajax/crud/sort_collection'),
       params: {
-        target_node: root.id,
-        node_id_order: tagIdList
+        parent_id: parentId,
+        node_id_order: idList
       },
       success: function() {
         this.reloadTags();
@@ -1337,7 +1341,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   // information to database and updates and saves tree
   // representation to database.
   //
+    // [greg] nuke me -- I think we can get rid of this method...
   onNewTag: function(node) {
+      Paperpile.log("NEW TAG");
     node.setText(this.getUniqueTag(node.text));
 
     var index = node.parentNode.indexOf(node);
@@ -1361,6 +1367,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     });
   },
 
+  // [greg] nuke me.
   deleteTag: function(node) {
     var tag = node.text;
 
@@ -1398,7 +1405,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     });
   },
 
-    //
+  //
   // Rename the tag given by node globally
   //
   triggerRenameCollection: function() {
@@ -1425,7 +1432,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     node.setText(newText);
     node.plugin_title = newText;
-     
+
     var tag = oldText;
 
     Ext.Ajax.request({
@@ -1437,19 +1444,27 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
 
-        // Greg: we would nee a function here to update label and
-        // folder names throughout the front-end after the re-name
-        
+        // Things we need to rename / update when a collection changes:
+        // (1) use the onUpdate handlers to take care of the grid and sidepanel.
+        Paperpile.main.onUpdate(json);
+        this.reloadTags(json);
+
+        // (2) If this tab has an open grid, rename it.
+        var openTab = Paperpile.main.tabs.find("itemId", node.id); // Find by GUID.
+        if (openTab.length > 0) {
+          openTab[0].setTitle(newText);
+        }
+
       },
       failure: Paperpile.main.onError,
       scope: this
     });
   },
 
-
   //
   // Rename the tag given by node globally
   //
+  // [greg] nuke me.
   triggerRenameTag: function() {
     (function() {
       var node = this.lastSelectedNode;
@@ -1465,6 +1480,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }.defer(10, this));
   },
 
+  // [greg] nuke me.
   commitRenameTag: function(editor, newText, oldText) {
     var node = editor.editNode;
 
@@ -1519,10 +1535,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       node['plugin_auto_export_enable'] = true;
       var exportFile = this.getAutoExportLocation(node);
       this.autoExportMessage(node.text, exportFile);
-	this.saveNode(node);
+      this.saveNode(node);
     } else {
       node['plugin_auto_export_enable'] = false;
-	this.saveNode(node);
+      this.saveNode(node);
     }
   },
 
@@ -1561,7 +1577,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         parentMenu.un('beforehide', stopMenuHide);
         if (button == 'OK') {
           node['plugin_auto_export_file'] = path;
-            this.saveNode(node);
+          this.saveNode(node);
           parentMenu.hide();
 
           this.autoExportMessage(node.text, path);
@@ -1684,10 +1700,10 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   initShownItems: function() {
     var item = this.items.get('folder_menu_auto_export');
     if (this.node['plugin_auto_export_enable']) {
-	item.setChecked(true,true);
+      item.setChecked(true, true);
       item.enableText();
     } else {
-	item.setChecked(false,true); // Second param is true to suppress event.
+      item.setChecked(false, true); // Second param is true to suppress event.
       item.disableText();
     }
   },
