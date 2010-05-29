@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
 
   id: 'queue-widget',
@@ -100,17 +99,22 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
       // never show the widget.  In that case the user is most likely
       // watching the download and does not need extra info.
       var pdfSearchJobs = 0;
+      var metadataUpdateJobs = 0;
       var allJobs = data.queue.num_pending + data.queue.num_done + data.queue.num_error;
       if (data.queue.types) {
         for (var i = 0; i < data.queue.types.length; i++) {
           if (data.queue.types[i].name === 'PDF_SEARCH') {
             var item = data.queue.types[i];
-            pdfSearchJobs += item.num_pending + item.num_done + item.num_error;
+            pdfSearchJobs += item.num_pending;
+          }
+          if (data.queue.types[i].name === 'METADATA_UPDATE') {
+            var item = data.queue.types[i];
+            metadataUpdateJobs += item.num_pending;
             break;
           }
         }
       }
-      if (pdfSearchJobs == 1 && allJobs == 1) {
+	if ((pdfSearchJobs == 1 && allJobs == 1) || (metadataUpdateJobs == 1 && allJobs == 1)) {
         this.hide();
         return;
       }

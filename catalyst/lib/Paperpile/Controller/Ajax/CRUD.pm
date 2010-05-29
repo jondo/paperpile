@@ -30,6 +30,7 @@ use File::Spec;
 use File::Copy;
 use File::stat;
 use URI::file;
+use FreezeThaw;
 
 
 use 5.010;
@@ -474,6 +475,32 @@ sub list_labels_sorted : Local {
   $c->stash->{data} = \@data;
 }
 
+sub batch_update : Local {
+  my ( $self, $c ) = @_;
+  my $plugin  = $self->_get_plugin($c);
+  my $data = $self->_get_selection($c);
+
+  my $q = Paperpile::Queue->new();
+  my @jobs = ();
+  foreach my $pub (@$data) {
+    my $j = Paperpile::Job->new(
+      type => 'METADATA_UPDATE',
+      pub  => $pub,
+    );
+
+    $j->pub->_metadata_job( { id => $j->id, status => $j->status, msg => $j->info->{msg} } );
+
+    push @jobs, $j;
+  }
+
+  $q->submit( \@jobs );
+  $q->save;
+  $q->run;
+  $self->_collect_update_data($c, $data, ['_metadata_job'] );
+
+  $c->stash->{data}->{job_delta} = 1;
+  $c->detach('Paperpile::View::JSON');
+}
 
 sub batch_download : Local {
   my ( $self, $c ) = @_;
@@ -553,7 +580,7 @@ sub delete_file : Local {
       delete $pub->{_search_job};
   }
 
-  $self->_collect_update_data($c, [$pub], [ 'attachments', '_attachments_list', 'pdf', '_search_job' ] );
+  $self->_collect_update_data($c, [$pub], [ 'attachments', '_attachments_list', 'pdf', '_search_job'] );
 
 }
 

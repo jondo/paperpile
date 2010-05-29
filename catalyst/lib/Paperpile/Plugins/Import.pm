@@ -154,6 +154,7 @@ sub _merge_pub {
       # keep the old authors entry and do nothing
       next;
     }
+    print STDERR " [$key] ".$old->$key." -> ".$new->$key."\n" if ($new->$key);
     $old->$key( $new->$key ) if ( $new->$key );
   }
   return $old;

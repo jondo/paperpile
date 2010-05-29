@@ -120,10 +120,25 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
           }
         }
       }
-
       if (newData.pdf != oldData.pdf || jobChanged) {
         this.updateSearchJob(newData);
       }
+
+      var metaJobChanged = 0;
+      if ((oldData._metadata_job && !newData._metadata_job) || (newData._metadata_job && !oldData._metadata_job)) {
+        metaJobChanged = 1;
+      } else {
+        for (var field in newData._metadata_job) {
+          if (newData._metadata_job[field] != oldData._metadata_job[field]) {
+            metaJobChanged = true;
+            break;
+          }
+        }
+      }
+      if (metaJobChanged) {
+        this.updateAllInfo(newData);
+      }
+
     } else {
       // Multiple articles selected.
       var d = {
@@ -343,6 +358,10 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     case 'show-details':
       this.showDetails();
+      break;
+
+    case 'update-metadata':
+      this.getGrid().updateMetadata();
       break;
 
     case 'batch-download':

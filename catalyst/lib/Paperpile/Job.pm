@@ -38,9 +38,9 @@ use FreezeThaw;
 use Storable qw(lock_store lock_retrieve);
 
 enum 'Types' => (
-  'MATCH',         # match a (partial) reference against a web resource
   'PDF_IMPORT',    # extract metadata from PDF and match agains web resource
   'PDF_SEARCH',    # search PDF online
+  'METADATA_UPDATE', # Update the metadata for a given reference.
   'WEB_IMPORT',     # Import a reference that was sent from the browser
   'TEST_JOB'
 );
@@ -152,6 +152,7 @@ sub noun {
   my $type = $self->type;
   return 'PDF download' if ($type eq 'PDF_SEARCH');
   return 'PDF import' if ($type eq 'PDF_IMPORT');
+  return 'Metadata update' if ($type eq 'METADATA_UPDATE');
   return 'Test job' if ($type eq 'TEST_JOB');
 }
 
@@ -395,12 +396,12 @@ sub _do_work {
 
       my $old_hash = $self->pub->as_hash;
 
-      $self->_match;
+      my $success = $self->_match;
 
       my $new_hash = $self->pub->as_hash;
 
       # Check if the _match function has changed any fields
-      if (FreezeThaw::cmpStr($old_hash, $new_hash) == 0){
+      if (!$success){
         NetMatchError->throw("Could not match PDF to an online resource.");
       }
 
@@ -410,6 +411,42 @@ sub _do_work {
       $self->update_info('callback',{fn => 'updatePubGrid'});
 
     }
+  }
+
+  if ($self->type eq 'METADATA_UPDATE') {
+    my $pub = $self->pub;
+
+    my $old_hash = $pub->as_hash;
+
+    my $success = $self->_match;
+
+    my $new_hash = $pub->as_hash;
+    if ($success) {
+	my $m    = Paperpile::Utils->get_library_model;
+
+	# Insert the updated pub as a separate item into the database.
+	# Delete the current GUID so we get a new one.
+        $m->update_pub($pub->guid,$new_hash);
+
+	# Insert and trash a copy of the old publication, for safe-keeping.
+	# Need to delete all fields related to PDF storage, since the PDF stays
+	# with the updated copy.
+	delete $old_hash->{attachments};
+	delete $old_hash->{attachments_list};
+	delete $old_hash->{guid};
+	delete $old_hash->{pdf};
+	delete $old_hash->{pdf_name};
+	$old_hash->{title} = '[backup copy] '.$old_hash->{title};
+	my $old_pub = Paperpile::Library::Publication->new($old_hash);
+	$m->insert_pubs([$old_pub],1);
+	$m->trash_pubs([$old_pub],'TRASH');
+
+      $self->update_info('msg',"Metadata successfully gathered from $success.");
+      $self->update_info('callback',{fn => 'updatePubGrid'});
+    } else {
+      NetMatchError->throw("Could not find metadata from any online resource.");
+    }
+
   }
 
   if ($self->type eq 'TEST_JOB') {
@@ -538,6 +575,8 @@ sub _match {
     unshift @plugin_list, 'ArXiv';
   }
 
+  my $num_successful_matches = 0;
+  my $success_plugin = '';
   foreach my $plugin (@plugin_list) {
 
     print STDERR "[queue] Matching against $plugin\n";
@@ -560,9 +599,12 @@ sub _match {
     }
     # Found match -> stop now
     else {
+      $num_successful_matches++;
+      $success_plugin = $plugin;
       last;
     }
   }
+  return $success_plugin;
 }
 
 ## Does the actual match for a single pub object on a given plugin.

@@ -70,9 +70,12 @@ sub insert_pubs {
 
   my $counter = 0;
 
+  my $i=0;
   foreach my $pub (@$pubs) {
-
-    $pub->created( timestamp gmtime ) if not $pub->created;
+      $i++;
+      my $ts = timestamp gmtime;
+      $ts .= sprintf ".%03s",$i;
+    $pub->created( $ts ) if not $pub->created;
 
     if ( $pub->_imported ) {
       print STDERR $pub->sha1, " already exists. Skipped.\n";
@@ -263,7 +266,9 @@ sub update_pub {
 
   # Figure out fields that have changed
   foreach my $field ( keys %{$new_data} ) {
-    if ( $new_data->{$field} ne $data->{$field} ) {
+      next if (!$new_data->{$field});
+      print STDERR "[$field] " . $new_data->{$field}."\n";
+    if (!defined $data->{$field} || $new_data->{$field} ne $data->{$field} ) {
       $diff->{$field} = $new_data->{$field};
     }
     $data->{$field} = $new_data->{$field};
@@ -277,16 +282,20 @@ sub update_pub {
     $diff->{sha1} = $new_pub->sha1;
   }
 
-  $self->_generate_keys( [$new_pub], $dbh );
-
-  if ( $new_pub->citekey ne $old_data->{citekey} ) {
+  # Check if the citekey has changed.
+  my $pattern = $self->get_setting('key_pattern');
+  my $new_key = $new_pub->format_pattern($pattern);
+  if ($new_key ne $old_data->{citekey}) {
+      print STDERR " !!!! NEW CITEKEY\n";
+    # If we have a new citekey, make sure it doesn't conflict with other existing citekeys (this is the method called normally when inserting a new pub)
+    $self->_generate_keys( [$new_pub], $dbh );
     $diff->{citekey} = $new_pub->citekey;
   }
 
   # If we have attachments we need to check if their names have
   # changed because of the update and if so move them to the new place
   if ( $new_pub->{pdf} || $new_pub->{attachments} ) {
-
+      print STDERR " !!!! MOVE PEDF!!!!\n";
     my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid';");
     $sth->execute;
 
@@ -330,14 +339,17 @@ sub update_pub {
   my @update_list;
 
   foreach my $field ( keys %{$diff} ) {
+    next if ($field =~ m/_/);
+    #print STDERR "  field: [$field]\n";
     push @update_list, "$field=" . $dbh->quote( $diff->{$field} );
   }
   my $sql = join( ',', @update_list );
 
-  $dbh->do("UPDATE Publications SET $sql WHERE guid='$guid';");
+  if (scalar @update_list > 0) {
+    $dbh->do("UPDATE Publications SET $sql WHERE guid='$guid';");
+  }
 
   $self->_update_fulltext_table( $new_pub, 0, $dbh );
-
   $dbh->commit;
 
   return $new_pub;

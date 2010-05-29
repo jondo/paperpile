@@ -548,6 +548,13 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     margin: -1px;
 }
 
+.pp-img-action-disabled {
+    padding: 4px;
+    border: 1px solid #F0F0F0;
+    margin:-1px;
+}
+
+
 .pp-img-span {
     width:12px;
     height:12px;
@@ -614,6 +621,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 .pp-action-search-pdf {
     background: transparent url('/images/icons/page_white_search.png') no-repeat;
+}
+
+.pp-action-update-metadata {
+    background: transparent url('/images/icons/update-metadata.png') no-repeat;
 }
 
 .pp-action-open-pdf {
@@ -1925,6 +1936,9 @@ table.pp-meta-form {
     background-color: #E0ECF8;
 }
 
+.pp-queue-type-label-METADATA_UPDATE{
+    background-color: #FF00FF;
+}
 
 .pp-queue-list-title{
 }

@@ -155,6 +155,9 @@ has '_imported' => ( is => 'rw', isa => 'Bool' );
 # If true, has a PDF search / download job in progress.
 has '_search_job' => ( is => 'rw', default => undef );
 
+# If true, has a PDF search / download job in progress.
+has '_metadata_job' => ( is => 'rw', default => undef );
+
 # Job object, only exists if there is a current job tied to the publication
 
 # Some import plugins first only scrape partial information and store
@@ -379,8 +382,11 @@ sub refresh_job_fields {
     $data->{$key} = $job->info->{$key};
   }
 
-  $self->_search_job($data);
-
+  if ($job->type eq 'PDF_SEARCH') {
+    $self->_search_job($data);
+  } elsif ($job->type eq 'METADATA_UPDATE') {
+    $self->_metadata_job($data);
+  }
 }
 
 
@@ -444,7 +450,7 @@ sub as_hash {
     $hash{$key} = $value if ($key eq '_attachments_list');
 
     # take only simple scalar and allowed refs
-    next if (ref($value) && $key ne '_search_job');
+    next if (ref($value) && $key ne '_search_job' && $key ne '_metadata_job');
 
     $hash{$key} = $value;
   }

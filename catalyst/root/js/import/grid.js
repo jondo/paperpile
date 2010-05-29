@@ -510,6 +510,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // main/overrides.js
     this.getSelectionModel().on('afterselectionchange',
       function(sm) {
+	  // Delete the previously stored set of selected records.
+	delete this._selected_records;
         this.contextRecord = null;
 
         var selection = this.getSelection();
@@ -623,6 +625,31 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       reader: new Ext.data.JsonReader()
     });
 
+      // Add some callbacks to the store so we can maintain the selection between reloads.
+      this._store.on('beforeload', function(store,options) {
+	  var records = this.getSelectionModel().getSelections();
+	  var recordIds = [];
+	  for(var i = 0, len = records.length; i < len; i++){
+	      Paperpile.log(records[i].id);
+	      recordIds[i] = records[i].id;
+	  }
+	  this._selected_records = recordIds;
+      },this);
+      this._store.on('load', function(store,options) {
+	  // Select rows of records with the stored ids
+	  var rows = [];
+	  var recordIds = this._selected_records;
+	  for(var i = 0, len = recordIds.length; i < len; i++){
+	      Paperpile.log(recordIds[i]);
+	      var index = this.getStore().indexOfId(recordIds[i]);
+	      if(index >= 0){
+		  Paperpile.log(index);
+		  rows.push(index);
+	      }
+	  }
+	  this.getSelectionModel().selectRows(rows);
+	  delete this._selected_records;
+      },this);
     return this._store;
   },
 
@@ -749,6 +776,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
       '<tpl if="_imported">',
       '  <div id="ref-actions" style="float:right;">',
+      '  <tpl if="_metadata_job != null && _metadata_job.status==\'RUNNING\'">',
+      '    <img src="/images/icons/loading.gif" class="pp-img-action-disabled" ext:qtip="Updating metadata..."/>',
+      '  </tpl>',
+	'  <tpl if="_metadata_job != null && _metadata_job.status==\'PENDING\'">',
+      '    <img src="/images/icons/update-metadata.png" class="pp-img-action-disabled" ext:qtip="Waiting to update metadata..."/>',
+      '  </tpl>',
+      '  <tpl if="_metadata_job==null">',
+      '    <img src="/images/icons/update-metadata.png" class="pp-img-action" action="update-metadata" ext:qtip="Update metadata from online resources"/>',
+      '  </tpl>',
       '  <img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
       '  <tpl if="trashed==1">',
       '    <img src="/images/icons/delete.png" class="pp-img-action" action="delete-ref" ext:qtip="Permanently Delete Reference"/>',
@@ -879,6 +915,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '    <ul> ',
       '    <div style="clear:both;"></div>',
+      '      <li class="pp-action pp-action-update-metadata"> <a  href="#" class="pp-textlink" action="update-metadata">Update Metadata</a> </li>',
       '      <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
       '      <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
       '    </ul>',
@@ -1395,6 +1432,28 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     win.show(this);
   },
+
+    updateMetadata: function() {
+      var selection = this.getSelection();
+    Ext.getCmp('queue-widget').onUpdate({
+      submitting: true
+    });
+      Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/crud/batch_update'),
+      params: {
+        selection: selection,
+        grid_id: this.id
+      },
+      method: 'GET',
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        Paperpile.main.onUpdate(json.data);
+        // Trigger a thread to start requesting queue updates.
+        Paperpile.main.queueUpdate();
+      },
+      failure: Paperpile.main.onError,
+    });	
+    },
 
   batchDownload: function() {
     selection = this.getSelection();
