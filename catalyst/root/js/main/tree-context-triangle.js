@@ -19,111 +19,195 @@ Paperpile.ContextTrianglePlugin = function(config) {
 };
 
 Ext.extend(Paperpile.ContextTrianglePlugin, Ext.util.Observable, {
-    init: function(treePanel) {
-      Ext.apply(treePanel.loader, {
-        baseAttrs: {
-          uiProvider: Paperpile.ContextTreeNodeUI
+  init: function(treePanel) {
+    Ext.apply(treePanel.loader, {
+      baseAttrs: {
+        uiProvider: Paperpile.ContextTreeNodeUI
+      }
+    });
+
+    treePanel.positionTriangle = function() {
+      var tri = this.contextTriangle;
+      var node = tri.lastOverNode;
+      node.ui.positionTriangle();
+    };
+
+    treePanel.eventContainsTriangle = function(e) {
+      if (Ext.fly(e.getTarget()).hasClass('pp-tree-context-triangle')) {
+        return true;
+      }
+      return false;
+    };
+
+    treePanel.toggleContext = function(e, el, o) {
+      var node = this.eventModel.getNode(e);
+      var menu = this.getContextMenu(node);
+      if (menu != null) {
+        var tri = this.contextTriangle;
+        if (!menu.isVisible()) {
+          tri.addClass('pp-tree-context-triangle-down');
+          this.onContextMenu(node, e);
+        } else {
+          menu.hide();
         }
-      });
-      treePanel.initEvents = treePanel.initEvents.createSequence(this.myInitEvents);
-      treePanel.onRender = treePanel.onRender.createSequence(this.myOnRender);
+      }
+    };
 
+    treePanel.initEvents = treePanel.initEvents.createSequence(this.myInitEvents);
+    treePanel.onRender = treePanel.onRender.createSequence(this.myOnRender);
+  },
+
+  // This method is called from the TreePanel's scope, i.e. 'this' refers to the TreePanel, NOT this plugin object!
+  myInitEvents: function() {
+    var el = this.getTreeEl();
+
+    // Remove the triangle from the dragged DOM when dragging starts.
+    this.on('startdrag', function() {
+      var ghostDom = this.dragZone.proxy.ghost.dom;
+      var ghostEl = Ext.fly(ghostDom);
+      ghostEl.select('.pp-tree-context-triangle').remove();
     },
+    this);
 
-    myInitEvents: function() {
-      var el = this.getTreeEl();
-      //      el.on('mousedown', this.delegateClick, this);
-      this.on('startdrag', function() {
-        var ghostDom = this.dragZone.proxy.ghost.dom;
-        var ghostEl = Ext.fly(ghostDom);
-        ghostEl.select('.pp-tree-context-triangle').remove();
-      },
-      this);
+    // Unload the TreePanel's context menu callback:
+    this.un('contextmenu', this.onContextMenu);
+    // Create this plugin's version of the function:
+    this.onContextMenu = function(node, e) {
+      var menu = this.getContextMenu(node);
 
+      if (menu != null && menu.getShownItems(node).length > 0) {
+
+        /*
+         While a context menu is open, we store flags
+         depending on where the user's mouse has gone to say whether to hide
+         or show the triangle when the menu closes. Here is where those flags
+         are acted upon.
+        */
+        menu.on('beforehide', function() {
+          menu.node.unselect();
+          var tri = this.contextTriangle;
+          tri.removeClass('pp-tree-context-triangle-down');
+          if (tri.shouldHideWhenMenuCloses) {
+            tri.hide();
+          }
+          if (tri.shouldShowWhenMenuCloses) {
+            this.positionTriangle();
+            tri.show();
+          }
+          tri.shouldHideWhenMenuCloses = false;
+          tri.shouldShowWhenMenuCloses = false;
+        },
+        this, {
+          single: true
+        });
+
+        // Cause this TreeNode to be selected.
+        this.allowSelect = true;
+        node.select();
+        this.allowSelect = false;
+
+        // Initialize and show the context menu.
+        menu.setNode(node);
+        menu.render();
+        menu.hideItems();
+
+        var tri = this.contextTriangle;
+        if (this.eventContainsTriangle(e)) {
+          menu.show(tri, 'tl-bl');
+        } else {
+          menu.showAt(e.getXY());
+          tri.hide();
+        }
+
+        if (node.type == 'FOLDER') {
+          this.createAutoExportTip(menu);
+        }
+      }
+    };
+    // Add a callback for our new version of the onContextMenu function:
+    this.on({
+      contextmenu: {
+        scope: this,
+        fn: this.onContextMenu,
+        stopEvent: true
+      }
+    });
+
+  },
+
+  // This method is also called from the TreePanel's scope.
+  myOnRender: function() {
+    // Create the context triangle object.
+    this.contextTriangle = Ext.DomHelper.append(this.body, {
+      id: this.itemId + "_context_triangle",
+      tag: "div",
+      cls: "pp-tree-context-triangle"
     },
+      true);
 
-    myOnRender: function() {
-      this.contextTriangle = Ext.DomHelper.append(this.body, {
-        id: this.itemId + "_context_triangle",
-        tag: "div",
-        cls: "pp-tree-context-triangle"
-      },
-        true);
-
-      this.contextTriangle.addClassOnOver('pp-tree-context-triangle-over');
-      this.contextTriangle.hide();
-
-    }
+    // Look different on hover.
+    this.contextTriangle.addClassOnOver('pp-tree-context-triangle-over');
+    // Add a mousedown trigger (feels snappier than 'onclick').
+    this.contextTriangle.on('mousedown', this.toggleContext, this);
+    this.contextTriangle.hide();
+  }
 });
 
 Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
-  menuShowing: false,
-  lastContextedNode: null,
-  onClick: function(e) {
-    if (e.browserEvent.type == 'click') {
-      if (!Ext.fly(e.getTarget()).hasClass('pp-tree-context-triangle')) {
-        Paperpile.ContextTreeNodeUI.superclass.onClick.call(this, e);
-        return;
-      }
-    }
 
-    if (e.button != 0) return;
+  eventContainsTriangle: function(e) {
+    return this.node.ownerTree.eventContainsTriangle(e);
+  },
 
-    var el = Ext.fly(e.getTarget());
-
-    // Intercept clicks on the context trigger.
-    if (el.hasClass('pp-tree-context-triangle')) {
-      e.stopEvent();
-      var tree = this.node.ownerTree;
-      var menu = tree.getContextMenu(this.node);
-      if (menu != null) {
-        // If the context menu is already showing, hide it and return.
-        // (this gives a nice toggle-able feel to the whole thing)
-        if (tree.lastContextedNode == this.node) {
-          menu.hide();
-          tree.lastContextedNode = null;
-          return;
-        }
-
-        menu.node = this.node;
-        menu.show(tree.contextTriangle, 'tl-bl');
-        tree.contextTriangle.menuShowing = true;
-        tree.contextTriangle.addClass('pp-tree-context-triangle-down');
-        tree.allowSelect = true;
-        this.node.select();
-        tree.lastContextedNode = this.node;
-        tree.lastSelectedNode = this.node;
-        menu.on('hide',
-          function() {
-            tree.contextTriangle.menuShowing = false;
-            tree.contextTriangle.removeClass('pp-tree-context-triangle-down');
-            tree.allowSelect = false;
-          },
-          this);
-      }
-      return;
+  // Capture any click events that fall on the triangle.
+  onDblClick: function(e) {
+    if (!this.eventContainsTriangle(e)) {
+      Paperpile.ContextTreeNodeUI.superclass.onClick.call(this, e);
     } else {
-      this.node.ownerTree.contextTriangle.hide();
+      e.stopEvent();
+    }
+  },
+  onClick: function(e) {
+    if (!this.eventContainsTriangle(e)) {
+      Paperpile.ContextTreeNodeUI.superclass.onClick.call(this, e);
+    } else {
+      e.stopEvent();
     }
   },
 
   onOver: function(e) {
     var tri = this.node.ownerTree.contextTriangle;
-    if (tri.menuShowing) {
+
+    // If a menu is already showing, store this node and set a flag so the 
+    // menu hide callback (defined above) knows to show the triangle over this node
+    // when it closes.
+    if (this.node.ownerTree.isContextMenuShowing() && this.hasContextMenu()) {
+      tri.shouldShowWhenMenuCloses = true;
+      tri.shouldHideWhenMenuCloses = false;
+      tri.lastOverNode = this.node;
       return;
     }
-    var nodeEl = Ext.fly(this.getEl());
-    var alignEl = nodeEl.child(".x-tree-node-el");
+
+    // Everything looks OK, just show the triangle.
     if (this.hasContextMenu()) {
-      alignEl.appendChild(tri);
-      tri.alignTo(alignEl, 'r-r?', [-3, 0]);
-      this.hideDelay.cancel();
+      this.positionTriangle();
       tri.show();
     }
 
     Paperpile.ContextTreeNodeUI.superclass.onOver.call(this, e);
   },
 
+  // Position the triangle relative to this node.
+  positionTriangle: function() {
+    var tri = this.node.ownerTree.contextTriangle;
+    var nodeEl = Ext.fly(this.getEl());
+    var alignEl = nodeEl.child(".x-tree-node-el");
+    alignEl.appendChild(tri);
+    tri.alignTo(alignEl, 'r-r?', [-3, 0]);
+    tri.show();
+  },
+
+  // Does the TreePanel have a context menu for this node?
   hasContextMenu: function() {
     var tree = this.node.ownerTree;
     var menu = tree.getContextMenu(this.node);
@@ -136,17 +220,17 @@ Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
     var nodeEl = this.getEl();
 
     if (this.node != null) {
-      var tri = this.node.ownerTree.contextTriangle;
-      if (tri != null && !tri.menuShowing) {
-        this.hideDelay.delay(20, this.hideTriangle, this, [tri]);
+      var tree = this.node.ownerTree;
+      var tri = tree.contextTriangle;
+      if (tri != null && tri.isVisible() && !tree.isContextMenuShowing()) {
+        tri.hide();
+      } else {
+        // If a menu is already showing, set a flag to tell it to hide the triangle
+        // when closed.
+        tri.shouldHideWhenMenuCloses = true;
+        tri.shouldShowWhenMenuCloses = false;
       }
     }
     Paperpile.ContextTreeNodeUI.superclass.onOut.call(this, e);
   },
-
-  hideDelay: new Ext.util.DelayedTask(),
-  hideTriangle: function(tri) {
-    tri.hide();
-  }
-
 });

@@ -132,6 +132,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         return this.allowSelect;
       },
       this);
+    this.getSelectionModel().on('selectionchange', function(sm, node) {
+      this.lastSelectedNode = node;
+    },
+    this);
   },
 
   isNodeDraggable: function(node) {
@@ -256,9 +260,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   myOnClick: function(node, e) {
-    Paperpile.log(node);
-    Paperpile.log(this.getAutoExportLocation(node));
-    //      Paperpile.log(e.browserEvent);
+    // Only count clicks that occur right within the node text area.
+    var targetEl = e.getTarget("span", 10, true);
+    if (!targetEl) {
+      return;
+    }
     switch (node.id) {
     case 'FOLDER_ROOT':
       var main = Paperpile.main.tabs.getItem("MAIN");
@@ -327,8 +333,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       break;
 
     default:
-      //Paperpile.log("Unused click!");
-      //Paperpile.log(node);
       break;
     }
   },
@@ -535,17 +539,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   onContextMenu: function(node, e) {
+    // Note: this doesn't actually get called when the tree context triangle plugin is loaded.
     var menu = this.getContextMenu(node);
     if (menu != null) {
       if (menu.getShownItems(node).length > 0) {
         this.allowSelect = true;
         node.select();
-        this.lastSelectedNode = node;
+        this.allowSelect = false;
         menu.setNode(node);
         menu.render();
         menu.hideItems();
         menu.showAt(e.getXY());
-        this.allowSelect = false;
 
         if (node.type == 'FOLDER') {
           this.createAutoExportTip(menu);
@@ -597,6 +601,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         '<br/>Click to change'].join("");
       return displayText;
     }
+  },
+
+  isContextMenuShowing: function() {
+    var menus = [this.folderMenu, this.activeMenu, this.importMenu, this.tagsMenu, this.trashMenu, this.defaultMenu];
+    for (var i = 0; i < menus.length; i++) {
+      var menu = menus[i];
+      if (menu != null) {
+        if (menu.isVisible()) return true;
+      }
+    }
+    return false;
   },
 
   getContextMenu: function(node) {
@@ -869,14 +884,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       var pars = {
         type: 'FOLDER',
-          plugin_query: 'folderid:' + newNode.id,
-          plugin_base_query: 'folderid:' + newNode.id,
+        plugin_query: 'folderid:' + newNode.id,
+        plugin_base_query: 'folderid:' + newNode.id,
         plugin_name: 'DB',
         plugin_title: newNode.text,
         plugin_iconCls: 'pp-icon-folder',
         plugin_mode: 'FULLTEXT'
       };
-	newNode.init(pars);
+      newNode.init(pars);
 
       this.lastSelectedNode = newNode;
       this.allowSelect = true;
@@ -1153,24 +1168,24 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       newNode.init(pars);
       newNode.select();
 
-	this.triggerNewNodeEdit(newNode);
+      this.triggerNewNodeEdit(newNode);
 
     }.createDelegate(this));
   },
 
-    triggerNewNodeEdit: function(newNode) {
-      var treeEditor = this.treeEditor;
-      (function() {
-        this.mon(treeEditor, 'canceledit', this.removeOnCancel, this, {
+  triggerNewNodeEdit: function(newNode) {
+    var treeEditor = this.treeEditor;
+    (function() {
+      this.mon(treeEditor, 'canceledit', this.removeOnCancel, this, {
+        single: true
+      });
+      this.mon(treeEditor, 'complete', this.addOnCommit,
+        this, {
           single: true
         });
-        this.mon(treeEditor, 'complete', this.addOnCommit,
-          this, {
-            single: true
-          });
-        treeEditor.triggerEdit(newNode);
-      }.defer(10, this));
-    },
+      treeEditor.triggerEdit(newNode);
+    }.defer(10, this));
+  },
 
   addOnCommit: function(editor, newText, oldText) {
     var node = editor.editNode;
@@ -1201,7 +1216,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var string = node.text;
     node = node.parentNode;
     while (node) {
-      Paperpile.log(node.text);
       if (node.id == limit_id) {
         return string;
       }
@@ -1244,11 +1258,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return text;
   },
 
-
   sortTagsByCount: function() {
-      // The counts of articles for each label aren't stored in the frontend,
-      // so we call the backend to give us a sorted list of GUIDs.
-
+    // The counts of articles for each label aren't stored in the frontend,
+    // so we call the backend to give us a sorted list of GUIDs.
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/list_labels_sorted'),
       params: {},
@@ -1259,7 +1271,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         var ids = [];
         for (var i = 0; i < data.length; i++) {
           var id = data[i].id;
-            var node = this.getNodeById(id);
+          var node = this.getNodeById(id);
           ids.push(node.id);
         }
 
@@ -1334,9 +1346,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   // information to database and updates and saves tree
   // representation to database.
   //
-    // [greg] nuke me -- I think we can get rid of this method...
+  // [greg] nuke me -- I think we can get rid of this method...
   onNewTag: function(node) {
-      Paperpile.log("NEW TAG");
     node.setText(this.getUniqueTag(node.text));
 
     var index = node.parentNode.indexOf(node);

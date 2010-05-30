@@ -1157,16 +1157,25 @@ div:hover.pp-grid-sort-item {
 }
 
 .pp-tree-context-triangle {
-  width:18px;
-  height:18px;
-  background: transparent url(/ext/resources/images/default/button/arrow.gif) no-repeat center center;
+  width:16px;
+  height:16px;
+  background: transparent url(/images/icons/arrow-up.png) no-repeat center center;
   cursor:pointer;
   position:absolute;
   float:right;
 }
 
+.pp-tree-context-triangle-over, .pp-tree-context-triangle-down {
+  background: transparent url(/images/icons/arrow-over.png) no-repeat center center;
+/* 
+  width:16px;
+  height:16px;
+  border: 1px solid #F7CA75 ;
+*/
+}
+
 .x-tree-node-el {
-/*  cursor:default;*/
+  cursor:default;
 }
 
 .x-dd-drag-tip {
@@ -1186,11 +1195,6 @@ div:hover.pp-grid-sort-item {
   bottom:2px;
 }
 
-.pp-tree-context-triangle-over, .pp-tree-context-triangle-down {
-  width:16px;
-  height:16px;
-  border: 1px solid #F7CA75 ;
-}
 
 .x-toolbar-more-icon {
   background-image: url(/ext/resources/images/default/button/arrow.gif) !important
