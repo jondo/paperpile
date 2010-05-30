@@ -61,12 +61,12 @@ sub insert_pubs {
 
   $dbh->begin_work;
 
-  if ($user_library){
-    $self->_generate_keys($pubs, $dbh);
+  if ($user_library) {
+    $self->_generate_keys( $pubs, $dbh );
   }
 
   # Check already existing pubs to avoid sha1 clashes
-  $self->exists_pub($pubs, $dbh);
+  $self->exists_pub( $pubs, $dbh );
 
   my $counter = 0;
 
@@ -78,8 +78,9 @@ sub insert_pubs {
       print STDERR $pub->sha1, " already exists. Skipped.\n";
       next;
     }
+
     # If it is the user library we mark all as imported
-    elsif ($user_library){
+    elsif ($user_library) {
       $pub->_imported(1);
     }
 
@@ -94,6 +95,11 @@ sub insert_pubs {
       $_guid =~ s/^0x//;
       $pub->guid($_guid);
     }
+
+    # If imported with attachments from another database the
+    # attachments should be stored in _attachments_tmp and the guids
+    # from the old temporary database are discarded
+    $pub->attachments('');
 
     ## Insert main entry into Publications table
     my $tmp = $pub->as_hash();
@@ -116,8 +122,15 @@ sub insert_pubs {
     }
 
     if ( $pub->_pdf_tmp ) {
-      $self->attach_file( $pub->_pdf_tmp, 1, $pub, 0, $dbh);
+      $self->attach_file( $pub->_pdf_tmp, 1, $pub, 0, $dbh );
     }
+
+    if ( @{$pub->_attachments_tmp} > 0 ) {
+      foreach my $file (@{$pub->_attachments_tmp}){
+        $self->attach_file( $file, 0, $pub, 0, $dbh );
+      }
+    }
+
   }
 
   $dbh->commit;
@@ -273,6 +286,7 @@ sub update_pub {
 
   # Create pub object with updated data
   my $new_pub = Paperpile::Library::Publication->new($data);
+  $new_pub->_db_connection($self->get_dsn);
 
   # Also update sha1 and citekey if necessary changed
   if ( $new_pub->sha1 ne $old_data->{sha1} ) {
@@ -977,6 +991,11 @@ sub fulltext_search {
 
     my $pub = Paperpile::Library::Publication->new($data);
 
+    $pub->_db_connection($self->get_dsn);
+
+    # Mark all imported here for efficiency reasons. If this is a
+    # temporary db file we have to call _exists_pub somewhere on the
+    # data after calling this function.
     $pub->_imported(1);
 
     push @page, $pub;
@@ -1003,6 +1022,7 @@ sub all {
 
   while ( my $row = $sth->fetchrow_hashref() ) {
     my $pub = Paperpile::Library::Publication->new( { _light => $self->light_objects } );
+    $pub->_db_connection($self->get_dsn);
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
@@ -1199,9 +1219,9 @@ sub attach_file {
   );
 
   if ($is_pdf) {
-    $self->index_pdf( $pub_guid, $absolute_dest, $dbh );
     my $pdf_name = $absolute_dest;
     if ($settings->{paper_root}){
+      $self->index_pdf( $pub_guid, $absolute_dest, $dbh );
       $pdf_name = abs2rel($absolute_dest, $settings->{paper_root});
     };
     $pub->pdf($file_guid);
@@ -1339,9 +1359,9 @@ sub index_pdf {
 
   $text .= $_ foreach (@text);
 
-  $text = $self->dbh->quote($text);
+  $text = $dbh->quote($text);
 
-  $self->dbh->do("UPDATE Fulltext SET text=$text WHERE rowid=(SELECT rowid FROM PUBLICATIONS WHERE guid='$guid')");
+  $dbh->do("UPDATE Fulltext SET text=$text WHERE rowid=(SELECT rowid FROM PUBLICATIONS WHERE guid='$guid')");
 
 }
 

@@ -89,7 +89,7 @@ sub read {
         # File attachment. The convention seems to be that multiple
         # files are expected to be separated by semicolons and that
         # files are stored like this:
-        # :home/wash/PDFs/file.pdf:PDF
+        # :/home/wash/PDFs/file.pdf:PDF
 
         if ( $field =~ /file/i ) {
 
@@ -104,7 +104,7 @@ sub read {
             }
 
             # Mendeley does not show the first '/'. Relative paths are
-            # useless so when we don't find the file we try to make this absolute
+            # useless so if we don't find the file we try to make this absolute
             # by brute force TODO: make this work for Windows
             if ( !-e $file ) {
               $file = "/$file";
@@ -124,6 +124,10 @@ sub read {
               push @attachments, $file;
             }
           }
+          if (@attachments){
+            $data->{_attachments_tmp} = [@attachments];
+          }
+
           next;
         }
 
