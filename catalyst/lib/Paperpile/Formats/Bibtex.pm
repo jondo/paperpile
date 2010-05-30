@@ -74,23 +74,6 @@ sub read {
           $data->{authors} = $names;
         }
 
-        my @normalized = ();
-
-        foreach my $name (@names) {
-
-          my $von   = $name->von;
-          my $last  = $name->last || "";
-          my $jr    = $name->jr;
-          my $first = $name->first || "";
-
-          my $output = '';
-
-          $output .= $von . " " if ($von);
-          $output .= $last . ", ";
-          $output .= $jr . ", " if ($jr);
-          $output .= $first;
-
-          push @normalized, $output;
         if ( $field eq 'editor' ) {
           $data->{editors} = $names;
         }
