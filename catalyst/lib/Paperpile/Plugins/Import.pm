@@ -103,19 +103,19 @@ sub needs_completing {
   return 0;
 }
 
-# Function find_sha1
+# Function find_guid
 
-# Returns an entry by the sha1 index. To ensure that this function
+# Returns an entry by the guid index. To ensure that this function
 # works the entries have to be stored by the plugin to the field _hash
 # via the function _save_page_to_hash
 
 # This function should *not* be overriden.
 
-sub find_sha1 {
+sub find_guid {
 
-  ( my $self, my $sha1 ) = @_;
+  ( my $self, my $guid ) = @_;
 
-  return $self->_hash->{$sha1};
+  return $self->_hash->{$guid};
 
 }
 
@@ -126,7 +126,7 @@ sub cleanup {
 # Function _save_page_to_hash
 
 # Saves Publication objects given in the ArrayRef $data to _hash via
-# their sha1. Should be called in any implementation of the function
+# their guid. Should be called in any implementation of the function
 # "page".
 
 sub _save_page_to_hash {
@@ -134,9 +134,12 @@ sub _save_page_to_hash {
   ( my $self, my $data ) = @_;
 
   foreach my $entry (@$data) {
-    if ( defined $entry->sha1 ) {
-      $self->_hash->{ $entry->sha1 } = $entry;
+    if (! defined $entry->guid ) {
+      my $guid = Data::GUID->new->as_hex;
+      $guid =~ s/^0x//;
+      $entry->guid($guid);
     }
+    $self->_hash->{ $entry->guid } = $entry;
   }
 }
 
@@ -151,6 +154,7 @@ sub _merge_pub {
       # keep the old authors entry and do nothing
       next;
     }
+    print STDERR " [$key] ".$old->$key." -> ".$new->$key."\n" if ($new->$key);
     $old->$key( $new->$key ) if ( $new->$key );
   }
   return $old;

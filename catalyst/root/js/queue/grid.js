@@ -218,6 +218,23 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '      </tpl>',
       '    </div>',
       '  </tpl>',
+      '  <tpl if="type==\'METADATA_UPDATE\'">',
+      '    <div class="pp-queue-list-data">',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">{shortAuthors} <b>{shortTitle}</b> <i>{journal}</i></div>',
+      '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
+      '        {message}',
+      '      </div>',
+      '      <tpl if="status==\'ERROR\'">',
+      '        <p>',
+      '           <tpl if="publisherLink">',
+      '             <a href="#" class="pp-textlink" onclick="Paperpile.utils.openURL(\'{publisherLink}\')">Go to publisher site</a> | ',
+      '           </tpl>', 
+      '           <a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfDownloadError(\'{errorReportInfo}\');">Send Error Report</a>',
+      '       </p> ',
+      '      </tpl>',
+      '    </div>',
+      '  </tpl>',
+
       '</div>').compile();
 
     this.typeTemplate = new Ext.XTemplate(
@@ -227,6 +244,9 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '  </tpl>',
       '  <tpl if="type==\'PDF_IMPORT\'">',
       '    <span class="pp-queue-type-label-{type}">Match PDF</span>',
+      '  </tpl>',
+      '  <tpl if="type==\'METADATA_UPDATE\'">',
+      '    <span class="pp-queue-type-label-{type}">Update Metadata</span>',
       '  </tpl>',
       '</div>').compile();
 

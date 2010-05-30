@@ -36,6 +36,10 @@ h1 {
     color: #5E5E5E;
 }
 
+.pp-inactive {
+    color:gray;
+}
+
 .pp-bullet{
     padding: 2 2 2 16;
     background: transparent url('/images/icons/bullet_go.png') no-repeat 0;
@@ -544,6 +548,13 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     margin: -1px;
 }
 
+.pp-img-action-disabled {
+    padding: 4px;
+    border: 1px solid #F0F0F0;
+    margin:-1px;
+}
+
+
 .pp-img-span {
     width:12px;
     height:12px;
@@ -558,6 +569,12 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 .pp-action{
     padding: 2 2 2 22;
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
+.pp-action-inactive{
+    padding: 0 3 0 22;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    color:gray;
 }
 
 .pp-action-big{
@@ -591,6 +608,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background: transparent url('/images/icons/application_go.png') no-repeat;
 }
 
+.pp-action-go-inactive {
+    background: transparent url('/images/icons/application_go_inactive.png') no-repeat;
+}
+
 .pp-action-attach-pdf {
     background: transparent url('/images/icons/folder_page_white.png') no-repeat;
 }
@@ -600,6 +621,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 .pp-action-search-pdf {
     background: transparent url('/images/icons/page_white_search.png') no-repeat;
+}
+
+.pp-action-update-metadata {
+    background: transparent url('/images/icons/update-metadata.png') no-repeat;
 }
 
 .pp-action-open-pdf {
@@ -1027,7 +1052,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-grid-citation{}
 
-.pp-grid-snippets{}
+.pp-grid-snippets{
+    color: #585858;
+    padding-left:10px;
+    padding-top:5px;
+}
 
 .pp-grid-snippets .highlight{
     background-color: #FFF6A9;
@@ -1128,16 +1157,25 @@ div:hover.pp-grid-sort-item {
 }
 
 .pp-tree-context-triangle {
-  width:18px;
-  height:18px;
-  background: transparent url(/ext/resources/images/default/button/arrow.gif) no-repeat center center;
+  width:16px;
+  height:16px;
+  background: transparent url(/images/icons/arrow-up.png) no-repeat center center;
   cursor:pointer;
   position:absolute;
   float:right;
 }
 
+.pp-tree-context-triangle-over, .pp-tree-context-triangle-down {
+  background: transparent url(/images/icons/arrow-over.png) no-repeat center center;
+/* 
+  width:16px;
+  height:16px;
+  border: 1px solid #F7CA75 ;
+*/
+}
+
 .x-tree-node-el {
-/*  cursor:default;*/
+  cursor:default;
 }
 
 .x-dd-drag-tip {
@@ -1157,11 +1195,6 @@ div:hover.pp-grid-sort-item {
   bottom:2px;
 }
 
-.pp-tree-context-triangle-over, .pp-tree-context-triangle-down {
-  width:16px;
-  height:16px;
-  border: 1px solid #F7CA75 ;
-}
 
 .x-toolbar-more-icon {
   background-image: url(/ext/resources/images/default/button/arrow.gif) !important
@@ -1907,6 +1940,9 @@ table.pp-meta-form {
     background-color: #E0ECF8;
 }
 
+.pp-queue-type-label-METADATA_UPDATE{
+    background-color: #FF00FF;
+}
 
 .pp-queue-list-title{
 }

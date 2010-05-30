@@ -1,0 +1,4 @@
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/Data/UUID.pm relocate_as=../../../Data/UUID.pm
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/Data/UUID/UUID.bs relocate_as=UUID.bs
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/Data/UUID/UUID.so relocate_as=UUID.so
+/home/wash/play/paperpile/catalyst/perl5/linux64/cpan/auto/Data/UUID/autosplit.ix relocate_as=autosplit.ix

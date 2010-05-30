@@ -72,6 +72,9 @@ sub connect {
 
     my %all = ();
 
+    # This silently throws away entries with the same sha1. We should
+    # think how to handle this better (eg. uniquify publication by
+    # changing the title...)
     foreach my $pub (@$data) {
       $pub->citekey('');
       if ( defined $pub->sha1 ) {
@@ -84,13 +87,13 @@ sub connect {
 
     my $model = $self->get_model();
 
-    $model->insert_pubs( [ values %all ] );
+    $model->insert_pubs( [ values %all ], 0 );
 
   }
 
   my $model = $self->get_model();
 
-  $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf ) );
+  $self->total_entries( $model->fulltext_count( $self->query, 0 ) );
   return $self->total_entries;
 
 }

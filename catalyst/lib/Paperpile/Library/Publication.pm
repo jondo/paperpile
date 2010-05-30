@@ -62,8 +62,14 @@ our @types = qw(
 has '_rowid' => ( is => 'rw');
 
 # The unique sha1 key which is currently calculated from title,
-# authors and year.
+# authors and year. The purpose is to compare quickly if two
+# publications are the same
 has 'sha1' => ( is => 'rw' );
+
+# Globally unique identifier that never changes and that can be used
+# to track a publication also outside the local database (e.g. for
+# syncinc across networks)
+has 'guid' => ( is => 'rw' );
 
 # Timestamp when the entry was created
 has 'created' => ( is => 'rw');
@@ -72,23 +78,20 @@ has 'created' => ( is => 'rw');
 has 'trashed' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Timestamp when it was last read
-has 'last_read' => ( is => 'rw');
+has 'last_read' => ( is => 'rw', default => '');
 
 # How many times it was read
 has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
 
-# If available, direct link to PDF goes in here
-has 'pdf_url' => ( is => 'rw', default => '' );
-
-# An attached PDF file, the path is relative to the paper_root user
-# setting
+# The guid of an attached PDF file
 has 'pdf' => ( is => 'rw', default => '' );
 
-# Size of PDF in bytes
-has 'pdf_size' => ( is => 'rw', default => 0, isa => 'Int' );
+# File name of PDF relative to paper_root. Use for display purpose and
+# to reconstruct PDF path without going back to attachments table
+has 'pdf_name' => ( is => 'rw', default => '' );
 
-# The number of additional files that are associated with this entry
-has 'attachments' => ( is => 'rw', isa => 'Int', default => 0 );
+# Comma separated list of guids of other attachments
+has 'attachments' => ( is => 'rw' );
 has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
 
 # User provided annotation "Notes", formatted in HTML
@@ -135,6 +138,18 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
 ### Helper fields which have no equivalent field in the database
 
+# If available, direct link to PDF goes in here
+has '_pdf_url' => ( is => 'rw', default => '' );
+
+# Temporary store absolute file name of PDF that is to be imported
+# together with the publication object
+has '_pdf_tmp' => ( is => 'rw', default => '' );
+
+# Temporary store list of absolute file names of attachments to be
+# imported together with the publication object
+has '_attachments_tmp' => ( is => 'rw', default => sub {[]} );
+
+
 # Formatted strings to be displayed in the frontend.
 has '_authors_display'  => ( is => 'rw');
 has '_citation_display' => ( is => 'rw');
@@ -144,6 +159,9 @@ has '_imported' => ( is => 'rw', isa => 'Bool' );
 
 # If true, has a PDF search / download job in progress.
 has '_search_job' => ( is => 'rw', default => undef );
+
+# If true, has a PDF search / download job in progress.
+has '_metadata_job' => ( is => 'rw', default => undef );
 
 # Job object, only exists if there is a current job tied to the publication
 
@@ -163,9 +181,7 @@ has '_related_articles' => ( is => 'rw', default => '' );
 # If a search in the local database returns a hit in the fulltext,
 # abstract or notes the hit+context ('snippet') is stored in these
 # fields
-has '_snippets_text'     => ( is => 'rw');
-has '_snippets_abstract' => ( is => 'rw');
-has '_snippets_notes'    => ( is => 'rw');
+has '_snippets'     => ( is => 'rw');
 
 # CSS style to highlight the entry in the frontend
 has '_highlight' => ( is => 'rw', default => 'pp-grid-highlight0' );
@@ -189,10 +205,9 @@ has '_auto_refresh'    => ( is => 'rw', isa => 'Int', default => 0);
 # author objects which is not always needed (e.g. for import).
 has '_light' =>  ( is => 'rw', isa => 'Int', default => 0);
 
-# Allows to handle cases where sha1 has changed.
-has '_new_sha1' => ( is => 'rw', default => '' );
-has '_old_sha1' => ( is => 'rw', default => '' );
-
+# If object comes from a database we store the dsn of it. Currently
+# only used for function refresh_attachments
+has '_db_connection' => ( is => 'rw', default => '' );
 
 sub BUILD {
   my ( $self, $params ) = @_;
@@ -252,7 +267,7 @@ sub calculate_sha1 {
 
   my $ctx = Digest::SHA1->new;
 
-  if ( ( $self->authors or $self->_authors_display or $self->editors ) and ($self->title or $self->booktitle)) {
+  if ( ( $self->authors or $self->_authors_display or $self->editors ) or ($self->title or $self->booktitle)) {
     if ( $self->authors ) {
       $ctx->add( encode_utf8( $self->authors ) );
     } elsif ( $self->_authors_display and !$self->editors) {
@@ -362,38 +377,6 @@ sub format_authors {
 
 }
 
-# Gets all jobs related to the current publication.
-#sub get_jobs {
-#  my $self = shift;
-
-#  my $q = Paperpile::Queue->new();
-#  my $sha1 = $q->dbh->quote($self->sha1);
-#  my $sth = $q->dbh->prepare("SELECT jobid FROM Queue WHERE sha1=$sha1;");
-
-#  my $job_id;
-#  $sth->bind_columns(\$job_id);
-#  $sth->execute;
-
-#  my @jobs;
-#  while ( $sth->fetch ) {
-#    push @jobs, Paperpile::Job->new( { id => $job_id } );
-#  }
-
-#  $sth->finish;
-#  return @jobs;
-#}
-
-#sub remove_search_jobs {
-#  my $self = shift;
-#  my @jobs = $self->get_jobs;
-#  # Put some job-specific info into the hash if a job exists.
-#  foreach my $job (@jobs) {
-#    if ($job->type eq 'PDF_SEARCH') {
-#      $job->remove;
-#    }
-#  }
-#}
-
 sub refresh_job_fields {
   my ($self, $job) = @_;
 
@@ -407,8 +390,11 @@ sub refresh_job_fields {
     $data->{$key} = $job->info->{$key};
   }
 
-  $self->_search_job($data);
-
+  if ($job->type eq 'PDF_SEARCH') {
+    $self->_search_job($data);
+  } elsif ($job->type eq 'METADATA_UPDATE') {
+    $self->_metadata_job($data);
+  }
 }
 
 
@@ -420,38 +406,48 @@ sub refresh_attachments {
 
   $self->_attachments_list( [] );
 
-  if ( $self->attachments > 0 ) {
-    my $model = Paperpile::Utils->get_library_model();
+  if ( $self->attachments && $self->_db_connection) {
 
-    my $rowid = $self->_rowid;
-    my $sth =
-      $model->dbh->prepare("SELECT rowid, file_name FROM Attachments WHERE publication_id=$rowid;");
-    my ( $attachment_rowid, $file_name );
-    $sth->bind_columns( \$attachment_rowid, \$file_name );
-    $sth->execute;
+    my $model   = Paperpile::Model::Library->new();
+
+    $model->set_dsn( $self->_db_connection );
 
     my $paper_root = $model->get_setting('paper_root');
+    my $guid = $self->guid;
+    my $sth = $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
+
+    $sth->execute;
 
     my @output = ();
-    while ( $sth->fetch ) {
-      my $abs = File::Spec->catfile( $paper_root, $file_name );
+    my @files = ();
+    while ( my $row = $sth->fetchrow_hashref() ) {
+      my $link = "/serve/".$row->{local_file};
 
-      my $link = "/serve/$file_name";
+      ( my $suffix ) = ( $link =~ /\.([^.]*)$/ );
 
-      ( my $suffix ) = ( $link =~ /\.(.*+$)/ );
-
-      my ( $volume, $dirs, $base_name ) = File::Spec->splitpath($abs);
-      print STDERR "Base name: $base_name\n";
       push @output, {
-        file  => $base_name,
-        path  => $abs,
+        file  => $row->{name},
+        path  => $row->{local_file},
         link  => $link,
         cls   => "file-$suffix",
-        rowid => $attachment_rowid
+        guid => $row->{guid}
         };
+
+      push @files,  $row->{local_file};
+
     }
 
     $self->_attachments_list( \@output );
+
+    # if attachments are present and pub is not imported it is an
+    # temporary database. To make sure attachments are considered
+    # during import we set _attachments_tmp here.
+    if (!$self->_imported){
+      $self->_attachments_tmp( \@files );
+    }
+
+    $self->_attachments_list( \@output );
+
   }
 }
 
@@ -468,14 +464,14 @@ sub as_hash {
     my $value = $self->$key;
 
     # Force it to a number to be correctly converted to JSON
-    if ($key ~~ ['attachments', 'times_read', 'trashed']){
+    if ($key ~~ ['times_read', 'trashed']){
       $value+=0;
     }
 
     $hash{$key} = $value if ($key eq '_attachments_list');
 
     # take only simple scalar and allowed refs
-    next if (ref($value) && $key ne '_search_job');
+    next if (ref($value) && $key ne '_search_job' && $key ne '_metadata_job');
 
     $hash{$key} = $value;
   }
@@ -665,46 +661,8 @@ sub format_pattern {
 
 }
 
-sub format_csl {
-
-  ( my $self ) = @_;
-
-  my %output = ();
-
-  $output{id} = $self->sha1;
-
-  if ( $self->pubtype eq 'ARTICLE' ) {
-    $output{'type'}            = 'article-journal';
-    $output{'container-title'} = $self->journal;
-
-    for my $field ( 'title', 'volume', 'issue' ) {
-      $output{$field} = $self->$field;
-    }
-
-    $output{page} = $self->pages;
-
-    $output{issued} = { year => $self->year };
-
-    my @tmp = ();
-
-    foreach my $author ( @{ $self->get_authors } ) {
-      push @tmp, {
-        'name'          => $author->full,
-        'primary-key'   => $author->last,
-        'secondary-key' => $author->first,
-        };
-    }
-
-    $output{author} = [@tmp];
-  }
-
-  return {%output};
-
-}
-
 sub debug {
   my $self = shift;
-  
   my $hash = $self->as_hash;
 
   print STDERR "PUB: { \n";
@@ -712,16 +670,8 @@ sub debug {
       my $value = $hash->{$key} || "";
       next if ($value eq '');
       print STDERR "  $key => ".$value."\n";
-  }
+    }
   print STDERR "}\n";
-}
-
-# Function: list_types
-
-# Getter function for available publication types
-
-sub list_types {
-  return @types;
 }
 
 no Moose;

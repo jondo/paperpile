@@ -579,7 +579,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     if (this.grid_id) {
       url = Paperpile.Url('/ajax/crud/update_entry');
       params = {
-        sha1: this.data['sha1'],
+        guid: this.data['guid'],
         grid_id: this.grid_id,
       };
       msg = 'Updating database';

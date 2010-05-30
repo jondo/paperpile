@@ -71,13 +71,15 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       this.data = newData;
       this.oldData = Ext.ux.clone(this.data);
 
-      if (newData.sha1 != oldData.sha1 || newData._imported != oldData._imported) {
+      // Important: Check for a different GUID in order to decide whether to re-render
+      // all the data again.
+      if (newData.guid != oldData.guid ||
+        newData._imported != oldData._imported) {
         this.updateAllInfo(newData);
         return;
       }
 
       var attachmentsChanged = false;
-
       if (newData._attachments_list.length != oldData._attachments_list.length) {
         attachmentsChanged = true;
       } else {
@@ -118,11 +120,27 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
           }
         }
       }
-
       if (newData.pdf != oldData.pdf || jobChanged) {
         this.updateSearchJob(newData);
       }
+
+      var metaJobChanged = 0;
+      if ((oldData._metadata_job && !newData._metadata_job) || (newData._metadata_job && !oldData._metadata_job)) {
+        metaJobChanged = 1;
+      } else {
+        for (var field in newData._metadata_job) {
+          if (newData._metadata_job[field] != oldData._metadata_job[field]) {
+            metaJobChanged = true;
+            break;
+          }
+        }
+      }
+      if (metaJobChanged) {
+        this.updateAllInfo(newData);
+      }
+
     } else {
+      // Multiple articles selected.
       var d = {
         id: this.id
       };
@@ -208,7 +226,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     }
     templateToUse.overwrite(this.body, data, true);
 
-    if (data.numSelected >0){
+    if (data.numSelected > 0) {
       this.labelWidget.renderMultiple();
     }
 
@@ -256,19 +274,19 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'open-pdf':
-      var path = this.data.pdf;
+      var path = this.data.pdf_name;
       if (!Paperpile.utils.isAbsolute(path)) {
         path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
       }
       Paperpile.main.tabs.newPdfTab({
         file: path,
-        title: this.data.pdf
+        title: this.data.pdf_name
       });
       Paperpile.main.inc_read_counter(this.data);
       break;
 
     case 'open-pdf-external':
-      Paperpile.main.openPdfInExternalViewer(this.data.pdf, this.data);
+      Paperpile.main.openPdfInExternalViewer(this.data.pdf_name, this.data);
       break;
 
     case 'attach-pdf':
@@ -325,7 +343,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     case 'delete-file':
       // Delete attached files
-      this.deleteFile(false, el.getAttribute('rowid'));
+      this.deleteFile(false, el.getAttribute('guid'));
       break;
 
     case 'edit-ref':
@@ -340,6 +358,10 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     case 'show-details':
       this.showDetails();
+      break;
+
+    case 'update-metadata':
+      this.getGrid().updateMetadata();
       break;
 
     case 'batch-download':
@@ -537,10 +559,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   attachFile: function(isPDF, path) {
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/attachments/attach_file'),
+      url: Paperpile.Url('/ajax/crud/attach_file'),
       params: {
-        sha1: this.data.sha1,
-        rowid: this.data._rowid,
+        guid: this.data.guid,
         grid_id: this.grid_id,
         file: path,
         is_pdf: (isPDF) ? 1 : 0
@@ -557,18 +578,18 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
   //
   // Delete file. isPDF controls whether it is *the* PDF or some
-  // other attached file. In the latter case rowid has to be
-  // specified as the rowid of the file in the 'Attachments' table
+  // other attached file. In the latter case the guid of the attached
+  // file has to be given.
   //
-  deleteFile: function(isPDF, rowid) {
+  deleteFile: function(isPDF, guid) {
 
-    var record = this.getGrid().store.getAt(this.getGrid().store.find('sha1', this.data.sha1));
+    var record = this.getGrid().store.getAt(this.getGrid().store.find('guid', this.data.guid));
 
     Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/attachments/delete_file'),
+      url: Paperpile.Url('/ajax/crud/delete_file'),
       params: {
-        sha1: this.data.sha1,
-        rowid: isPDF ? this.data._rowid : rowid,
+        file_guid: isPDF ? this.data.pdf : guid,
+        pub_guid: this.data.guid,
         is_pdf: (isPDF) ? 1 : 0,
         grid_id: this.grid_id
       },
@@ -579,7 +600,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
         var undo_msg = '';
         if (isPDF) {
-          undo_msg = 'Deleted PDF file ' + record.get('pdf');
+          undo_msg = 'Deleted PDF file ' + record.get('pdf_name');
         } else {
           undo_msg = "Deleted one attached file";
         }
@@ -589,13 +610,14 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
           action1: 'Undo',
           callback: function(action) {
             Ext.Ajax.request({
-              url: Paperpile.Url('/ajax/attachments/undo_delete'),
+              url: Paperpile.Url('/ajax/crud/undo_delete'),
               method: 'GET',
               success: function(response) {
                 var json = Ext.util.JSON.decode(response.responseText);
                 Paperpile.main.onUpdate(json.data);
                 Paperpile.status.clearMsg();
               },
+              failure: Paperpile.main.onError,
               scope: this
             });
           },

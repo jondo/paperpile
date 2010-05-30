@@ -20,8 +20,7 @@ use Data::Dumper;
 use YAML qw(LoadFile);
 use BibTeX::Parser;
 use IO::File;
-
-
+use Text::Wrap;
 
 extends 'Paperpile::Formats';
 
@@ -37,7 +36,7 @@ sub read {
 
   my ($self) = @_;
 
-  my $fh     = IO::File->new($self->file);
+  my $fh = IO::File->new( $self->file );
 
   my $config = LoadFile( Paperpile::Utils->path_to('conf/fields.yaml') );
 
@@ -49,28 +48,30 @@ sub read {
 
   my @output = ();
 
-  my $parser = BibTeX::Parser->new($fh);
+  my $parser = BibTeX::Parser->new( $fh, 1 );
 
-  while (my $entry = $parser->next ) {
+  while ( my $entry = $parser->next ) {
 
     next unless $entry->parse_ok;
 
     my $data = {};
 
-    foreach my $field (  $entry->fieldlist  ) {
-	print STDERR "Field: $field\n";
+    foreach my $field ( $entry->fieldlist ) {
+
+      $field = lc($field);
+
+      # 1:1 map between standard BibTeX fields and Paperpile fields
       if ( $built_in{$field} ) {
         $data->{$field} = $entry->field($field);
       }
 
-      if ( $field eq 'author' || $field eq 'editor' ) {
+      # Authors/Editors
+      elsif ( $field eq 'author' || $field eq 'editor' ) {
 
-        my @names;
+        my $names = join( ' and ', $entry->$field );
 
-        if ($field eq 'author'){
-          @names = $entry->author;
-        } else {
-          @names = $entry->editor;
+        if ( $field eq 'author' ) {
+          $data->{authors} = $names;
         }
 
         my @normalized = ();
@@ -90,30 +91,161 @@ sub read {
           $output .= $first;
 
           push @normalized, $output;
+        if ( $field eq 'editor' ) {
+          $data->{editors} = $names;
         }
-        my $final = join( " and ", @normalized );
+      }
 
-        if ($field eq 'author'){
-          $data->{authors} = $final;
+      # Put other non-standard fields here
+      else {
+        if ( $field =~ /arxiv/ ) {
+          $data->{arxivid} = $entry->field($field);
+          next;
         }
 
-        if ($field eq 'editor'){
-          $data->{editors} = $final;
+        # File attachment. The convention seems to be that multiple
+        # files are expected to be separated by semicolons and that
+        # files are stored like this:
+        # :/home/wash/PDFs/file.pdf:PDF
+
+        if ( $field =~ /file/i ) {
+
+          my @files       = split( /;/, $entry->field($field) );
+          my $pdf         = '';
+          my @attachments;
+          foreach my $file (@files) {
+
+            # Try to grap the actual path
+            if ( $file =~ /^.*:(.*):.*$/ ) {
+              $file = $1;
+            }
+
+            # Mendeley does not show the first '/'. Relative paths are
+            # useless so if we don't find the file we try to make this absolute
+            # by brute force TODO: make this work for Windows
+            if ( !-e $file ) {
+              $file = "/$file";
+            }
+
+            # If we still do not find a file, we give up
+            if ( !-e $file || !-r $file ) {
+              next;
+            }
+
+            # We treat the first PDF in the list as *the* PDF and all
+            # other files as supplementary material
+            if ( ( $file =~ /\.pdf/i ) and ( !$pdf ) ) {
+              $data->{_pdf_tmp} = $file;
+              next;
+            } else {
+              push @attachments, $file;
+            }
+          }
+          if (@attachments){
+            $data->{_attachments_tmp} = [@attachments];
+          }
+
+          next;
         }
+
+        print STDERR "Field $field not handled.\n";
       }
     }
 
-    $data->{_light}=1;
-    $data->{_auto_refresh}=0;
+    my $type = $entry->type;
+
+    my @pub_types = keys %{ $config->{pub_types} };
+
+    if ( not $type ~~ [@pub_types] ) {
+      $type = 'MISC';
+    }
+
+    $data->{pubtype} = $type;
+    $data->{citekey} = $entry->key;
+
+    $data->{_light}        = 1;
+    $data->{_auto_refresh} = 1;
 
     push @output, Paperpile::Library::Publication->new($data);
 
-  };
+  }
+
+  #print STDERR Dumper(\@output);
 
   return [@output];
 
 }
 
+sub write {
+
+  my ($self) = @_;
+
+  my $bibtex_export_fields='annote,keywords,url,isbn,arxivid,doi,abstract,issn,eprint,lccn,note,pmid';
+  my $bibtex_export_curly = 0;
+  my $bibtex_export_pretty = 1;
+
+  my $left_quote = '"';
+  my $right_quote = '"';
+
+  if ($bibtex_export_curly){
+    $left_quote = '{';
+    $right_quote = '}';
+  }
+
+  # We always write these fields (if non-empty) because they are
+  # needed by BibTeX to work correctly
+  my @mandatory_fields = qw(sortkey title booktitle authors editors
+                            address publisher organization school
+                            howpublished journal volume edition series number issue chapter pages
+                            year month day);
+
+  # Non standard fields are only exported if set in the user settings.
+  my @optional_fields = split(/,/,$bibtex_export_fields);
+
+  #linkout=>$url!!;
+
+  foreach my $pub ( @{ $self->data } ) {
+
+    my @all_fields = (@mandatory_fields, @optional_fields);
+
+    # Collect all fields and get maximum width to align properly
+    my %data;
+    my $max_width = 0;
+    foreach my $key (@all_fields){
+      if ($pub->$key){
+        $data{$key} = $pub->$key;
+        $max_width = length($key) if (length($key)> $max_width);
+      }
+    }
+
+    my @lines = ();
+    foreach my $key (@all_fields){
+
+      if (my $value = $data{$key}){
+        # Wrap long fields and align the "=" sign
+        if ($bibtex_export_pretty){
+          my $left = sprintf("  %-".($max_width+2)."s", $key)."= ";
+          my $right = $value;
+          $Text::Wrap::columns=70;
+          $right = wrap($left," "x($max_width+7),$left_quote.$right.$right_quote);
+          push @lines, $right;
+        }
+        # Simple output one field per line
+        else {
+          push @lines, "$key = {$value}";
+        }
+      }
+    }
+
+    my ($type, $key) = ($pub->pubtype, $pub->citekey);
+
+    # Write to STDOUT while testing
+
+    print "\@$type\{$key,\n";
+    print join(",\n", @lines);
+    print "\n}\n\n";
+  }
+}
 
 
 1;

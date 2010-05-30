@@ -29,6 +29,7 @@ use File::Copy;
 use Storable qw(lock_store lock_retrieve);
 use Compress::Zlib;
 use MIME::Base64;
+use Digest::MD5;
 
 use Data::Dumper;
 use Config;
@@ -404,6 +405,13 @@ sub clear_cancel {
 
 }
 
+sub calculate_md5 {
+  my ($self, $file) = @_;
+  open( FILE, "<$file" ) or FileReadError->throw( error => "Could not read " . $self->file );
+  my $c = Digest::MD5->new;
+  $c->addfile(*FILE);
+  return $c->hexdigest;
+}
 
 
 
@@ -431,6 +439,40 @@ sub retrieve {
   };
 
   return $ref;
+
+}
+
+sub find_zotero_sqlite {
+
+  my $self = shift;
+
+  # a typical Zotero path in windows (German)
+  # C:\Dokumente und Einstellungen\someone\Anwendungsdaten\
+  # Mozilla\Firefox\Profiles\b57sxgsi.default\zotero.sqlite
+
+  # a typical Zotero path in ubuntu
+  # ~/.mozilla/firefox/iqurqbah.default/zotero/zotero.sqlite
+
+  # Try to find file in Linux environment
+  my $home         = $ENV{'HOME'};
+  my $firefox_path = "$home/.mozilla/firefox";
+  if ( -d $firefox_path ) {
+    my @profiles = ();
+    opendir( DIR, $firefox_path );
+    while ( defined( my $file = readdir(DIR) ) ) {
+
+      next if ( $file eq '.' or $file eq '..' );
+      push @profiles, "$firefox_path/$file"
+        if ( -d "$firefox_path/$file" );
+    }
+    close(DIR);
+
+    foreach my $profile (@profiles) {
+      if ( -e "$profile/zotero/zotero.sqlite" ) {
+        return "$profile/zotero/zotero.sqlite";
+      }
+    }
+  }
 
 }
 

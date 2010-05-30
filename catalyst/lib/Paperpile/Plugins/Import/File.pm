@@ -84,6 +84,8 @@ sub connect {
 
       my $data = $reader->read();
 
+      #print STDERR Dumper($data);
+
       # Collect pubs in hash to avoid entries with duplicate sha1 which
       # causes problems when converting to database. Maybe this is too
       # simplistic to deal with duplicates at this stage but it works...
@@ -101,14 +103,14 @@ sub connect {
 
       my $model = $self->get_model();
 
-      $model->insert_pubs( [ values %all ] );
+      $model->insert_pubs( [ values %all ], 0 );
 
     }
   }
 
   my $model = $self->get_model();
 
-  $self->total_entries( $model->fulltext_count( $self->query, $self->search_pdf ) );
+  $self->total_entries( $model->fulltext_count( $self->query, 0) );
   return $self->total_entries;
 
 }

@@ -89,11 +89,20 @@ sub guess_format {
 
   # File is binary
   else {
+    # Check if it is a sqlite database
     my $sample;
     read( FILE, $sample, 6 );
     if ( $sample ne 'SQLite' ) {
       FileFormatError->throw( error => "Could not open file (unknown format)" );
     } else {
+      # TODO: Here we need to check what kind of supported sqlite3
+      # database it is:
+      # * Zotero
+      # * Mendeley
+      # * Paperpile
+      # If possible we also should check the version and throw an
+      # error if we don't support it.
+
       return Paperpile::Formats::Paperpile->new( file => $file );
     }
   }

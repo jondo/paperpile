@@ -78,7 +78,7 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
   deleteFromFolder: function() {
     var sel = this.getSelection();
     var grid = this;
-    var match = this.plugin_base_query.match('folder:(.*)$');
+    var match = this.plugin_base_query.match('folderid:(.*)$');
     var folder_id = match[1];
     var refreshView = true;
     Paperpile.main.deleteFromFolder(sel, grid, folder_id, refreshView);
@@ -93,8 +93,8 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
     }
 
     var refreshMe = false;
-    for (var sha1 in pubs) {
-      var update = pubs[sha1];
+    for (var guid in pubs) {
+      var update = pubs[guid];
       if (update['folders'] !== undefined) {
         refreshMe = true;
       }

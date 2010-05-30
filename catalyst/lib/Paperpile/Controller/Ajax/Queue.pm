@@ -114,17 +114,12 @@ sub update : Local {
     my $job = Paperpile::Job->new( { id => $id } );
     if (defined $job->pub) {
       my $pub = $job->pub;
-      # Sha1 has changed
-      if ($pub->_old_sha1){
-        $pub->_new_sha1($pub->sha1);
-        $pub->sha1($pub->_old_sha1);
-      }
       push @pub_list, $pub;
       $jobs->{$id} = $job->as_hash;
     }
   }
 
-  $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', '_search_job' ] );
+  $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', 'pdf_name', '_search_job', '_metadata_job' ] );
   $data->{jobs} = $jobs;
   $data->{pubs} = $pubs;
 
@@ -161,7 +156,7 @@ sub cancel_jobs : Local {
   my $q = Paperpile::Queue->new();
   $q->run;
 
-  my $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', '_search_job' ] );
+  my $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', 'pdf_name', '_search_job','_metadata_job' ] );
   my $data = {};
   $data->{pubs}      = $pubs;
   $data->{job_delta} = 1;
@@ -175,11 +170,11 @@ sub clear_jobs : Local {
 
   my ( $self, $c ) = @_;
   my $q     = Paperpile::Queue->new();
-  my $sha1s = $q->clear;
+  my $guids = $q->clear;
 
   my $pubs;
-  for my $sha1 (@$sha1s) {
-    $pubs->{$sha1} = { _search_job => undef };
+  for my $guid (@$guids) {
+    $pubs->{$guid} = { _search_job => undef, _metadata_job => undef };
   }
   $c->stash->{data}->{pubs}      = $pubs;
   $c->stash->{data}->{job_delta} = 1;
@@ -200,12 +195,13 @@ sub remove_jobs : Local {
     my $job = Paperpile::Job->new( { id => $id } );
     my $pub = $job->pub;
     $pub->_search_job(undef);
+    $pub->_metadata_job(undef);
     push @pub_list, $pub;
     $job->interrupt('CANCEL');
     $job->remove;
   }
 
-  my $pubs = $self->_collect_pub_data( \@pub_list, ['_search_job'] );
+  my $pubs = $self->_collect_pub_data( \@pub_list, ['_search_job','_metadata_job'] );
 
   my $q = Paperpile::Queue->new();
   $q->update_stats;
@@ -252,7 +248,7 @@ sub retry_jobs : Local {
 
   $q->run();
 
-  my $pubs = $self->_collect_pub_data( \@pub_list, [ '_job_id', '_search_job' ] );
+  my $pubs = $self->_collect_pub_data( \@pub_list, [ '_job_id', '_search_job','_metadata_job' ] );
   my $data = {};
   $data->{pubs} = $pubs;
   $c->stash->{data} = $data;
@@ -299,7 +295,7 @@ sub _collect_pub_data {
     } else {
       $pub_fields = $hash;
     }
-    $output{ $hash->{sha1} } = $pub_fields;
+    $output{ $hash->{guid} } = $pub_fields;
   }
 
   return \%output;

@@ -1,5 +1,4 @@
 #!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -d:NYTProf -w
-
 ##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -w
 
 
@@ -10,36 +9,38 @@ BEGIN {
 use strict;
 use Data::Dumper;
 use lib '../../lib';
+
 use Paperpile;
-use Paperpile::Utils;
-use Paperpile::Job;
-use Paperpile::Queue;
-use Paperpile::Library::Publication;
+use Paperpile::Formats;
 
-my $pub1 = Paperpile::Library::Publication->new( doi => "10.1186/1471-2105-9-248" );
+use Time::HiRes qw(usleep ualarm gettimeofday tv_interval);
 
-my $q = Paperpile::Queue->new();
+`cp /home/wash/.paperdev/paperpile.ppl ./test.ppl`;
 
-$q->clear;
-$q->save;
+my $model = Paperpile::Model::Library->new();
+$model->set_dsn( "dbi:SQLite:" . "test.ppl" );
 
-my @jobs = ();
 
-foreach my $i ( 0 .. 10 ) {
+my $file = '/home/wash/jabref.bib';
 
-  my $job = Paperpile::Job->new(
-    type  => 'PDF_SEARCH',
-    pub   => $pub1,
-    queue => $q
-  );
+my $t0 = [gettimeofday];
 
-  push @jobs, $job;
+my $module = Paperpile::Formats->guess_format( $file );
 
-}
+my $f = $module->new( file => $file );
 
-$q->submit(\@jobs);
+my $data = $f->read();
 
-#$q->save;
+my $elapsed = tv_interval ($t0);
 
-#$q->run;
+print "Done reading. $elapsed\n";
+
+my $t1 = [gettimeofday];
+
+$model->insert_pubs( $data, 1);
+
+my $elapsed = tv_interval ($t1);
+
+print "Done importing. $elapsed\n";
+
 

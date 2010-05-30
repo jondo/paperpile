@@ -75,7 +75,6 @@ Paperpile.PubDetails = Ext.extend(Ext.Panel, {
     if (numSelected == 1) {
 
       this.data = sm.getSelected().data;
-
       // Don't show details if we have only partial information that lacks pubtype
       if (this.data.pubtype) {
 

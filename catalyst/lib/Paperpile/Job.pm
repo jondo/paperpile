@@ -38,9 +38,9 @@ use FreezeThaw;
 use Storable qw(lock_store lock_retrieve);
 
 enum 'Types' => (
-  'MATCH',         # match a (partial) reference against a web resource
   'PDF_IMPORT',    # extract metadata from PDF and match agains web resource
   'PDF_SEARCH',    # search PDF online
+  'METADATA_UPDATE', # Update the metadata for a given reference.
   'WEB_IMPORT',     # Import a reference that was sent from the browser
   'TEST_JOB'
 );
@@ -152,6 +152,7 @@ sub noun {
   my $type = $self->type;
   return 'PDF download' if ($type eq 'PDF_SEARCH');
   return 'PDF import' if ($type eq 'PDF_IMPORT');
+  return 'Metadata update' if ($type eq 'METADATA_UPDATE');
   return 'Test job' if ($type eq 'TEST_JOB');
 }
 
@@ -345,7 +346,7 @@ sub _do_work {
     print STDERR "[queue] Searching PDF for ", $self->pub->_citation_display, "\n";
 
     if ($self->pub->pdf) {
-      $self->update_info('msg',"There is already a PDF for this reference (".$self->pub->pdf.").");
+      $self->update_info('msg',"There is already a PDF for this reference (".$self->pub->pdf_name.").");
       return;
     }
 
@@ -361,7 +362,7 @@ sub _do_work {
       }
     }
 
-    if (!$self->pub->pdf_url){
+    if (!$self->pub->_pdf_url){
       $self->_crawl;
     }
 
@@ -371,7 +372,7 @@ sub _do_work {
       $self->_attach_pdf;
     }
 
-    $self->update_info('callback',{fn => 'CONSOLE', args => $self->pub->pdf_url});
+    $self->update_info('callback',{fn => 'CONSOLE', args => $self->pub->_pdf_url});
     $self->update_info('msg','File successfully downloaded.');
 
   }
@@ -395,12 +396,12 @@ sub _do_work {
 
       my $old_hash = $self->pub->as_hash;
 
-      $self->_match;
+      my $success = $self->_match;
 
       my $new_hash = $self->pub->as_hash;
 
       # Check if the _match function has changed any fields
-      if (FreezeThaw::cmpStr($old_hash, $new_hash) == 0){
+      if (!$success){
         NetMatchError->throw("Could not match PDF to an online resource.");
       }
 
@@ -410,6 +411,42 @@ sub _do_work {
       $self->update_info('callback',{fn => 'updatePubGrid'});
 
     }
+  }
+
+  if ($self->type eq 'METADATA_UPDATE') {
+    my $pub = $self->pub;
+
+    my $old_hash = $pub->as_hash;
+
+    my $success = $self->_match;
+
+    my $new_hash = $pub->as_hash;
+    if ($success) {
+	my $m    = Paperpile::Utils->get_library_model;
+
+	# Insert the updated pub as a separate item into the database.
+	# Delete the current GUID so we get a new one.
+        $m->update_pub($pub->guid,$new_hash);
+
+	# Insert and trash a copy of the old publication, for safe-keeping.
+	# Need to delete all fields related to PDF storage, since the PDF stays
+	# with the updated copy.
+	delete $old_hash->{attachments};
+	delete $old_hash->{attachments_list};
+	delete $old_hash->{guid};
+	delete $old_hash->{pdf};
+	delete $old_hash->{pdf_name};
+	$old_hash->{title} = '[backup copy] '.$old_hash->{title};
+	my $old_pub = Paperpile::Library::Publication->new($old_hash);
+	$m->insert_pubs([$old_pub],1);
+	$m->trash_pubs([$old_pub],'TRASH');
+
+      $self->update_info('msg',"Metadata successfully gathered from $success.");
+      $self->update_info('callback',{fn => 'updatePubGrid'});
+    } else {
+      NetMatchError->throw("Could not find metadata from any online resource.");
+    }
+
   }
 
   if ($self->type eq 'TEST_JOB') {
@@ -509,6 +546,7 @@ sub as_hash {
     $hash{journal}         = $self->pub->journal;
     $hash{authors_display} = $self->pub->_authors_display;
     $hash{authors}         = $self->pub->authors;
+    $hash{pdf_name}        = $self->pub->pdf_name;
     $hash{pdf}             = $self->pub->pdf;
   }
   return {%hash};
@@ -537,6 +575,8 @@ sub _match {
     unshift @plugin_list, 'ArXiv';
   }
 
+  my $num_successful_matches = 0;
+  my $success_plugin = '';
   foreach my $plugin (@plugin_list) {
 
     print STDERR "[queue] Matching against $plugin\n";
@@ -559,9 +599,12 @@ sub _match {
     }
     # Found match -> stop now
     else {
+      $num_successful_matches++;
+      $success_plugin = $plugin;
       last;
     }
   }
+  return $success_plugin;
 }
 
 ## Does the actual match for a single pub object on a given plugin.
@@ -575,16 +618,8 @@ sub _match_single {
 
   my $pub = $self->pub;
 
-  my $old_sha1 = $pub->sha1;
 
   $pub = $plugin->match($pub);
-
-  my $new_sha1 = $pub->sha1;
-
-  # Store old sha1 to allow updating the frontend correctly
-  if ($old_sha1 ne $new_sha1){
-    $pub->_old_sha1($old_sha1);
-  }
 
   $self->pub($pub);
 
@@ -619,7 +654,7 @@ sub _crawl {
 
   $pdf = $crawler->search_file( $start_url );
 
-  $self->pub->pdf_url($pdf) if $pdf;
+  $self->pub->_pdf_url($pdf) if $pdf;
 
 }
 
@@ -629,12 +664,12 @@ sub _download {
 
   my $self = shift;
 
-  print STDERR "[queue] Start downloading ", $self->pub->pdf_url, "\n";
+  print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
   $self->update_info( 'msg', "Downloading PDF..." );
 
   my $file =
-    File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->sha1 . ".pdf" );
+    File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->guid . ".pdf" );
 
   # In case file already exists remove it
   unlink($file);
@@ -642,7 +677,7 @@ sub _download {
   my $ua = Paperpile::Utils->get_browser();
 
   my $res = $ua->request(
-    HTTP::Request->new( GET => $self->pub->pdf_url ),
+    HTTP::Request->new( GET => $self->pub->_pdf_url ),
     sub {
       my ( $data, $response, $protocol ) = @_;
 
@@ -725,6 +760,8 @@ sub _download {
       'Could not download PDF. Your institution might need a subscription for the journal!');
   }
 
+  # Temporarily set fields. Makes frontend happy in case pub is not imported.
+  $self->pub->pdf_name($file);
   $self->pub->pdf($file);
 
 }
@@ -751,41 +788,27 @@ sub _extract_meta_data {
 }
 
 
-## Look if a PDF file is already in the database, first checks if a
-## file of the same size is in the database. If so, we do a full
-## binary comparison to be sure
+## Look if a PDF file is already in the database
 
 sub _lookup_pdf {
 
   my $self = shift;
 
-  my $size = stat($self->pub->{pdf})->size;
+  my $md5 = Paperpile::Utils->calculate_md5( $self->pub->pdf );
 
   my $model = Paperpile::Utils->get_library_model;
 
-  my $paper_root = $model->get_setting('paper_root');
+  my $data = $model->dbh->selectrow_hashref(
+    "SELECT Publications.rowid as rowid, Publications.guid as guid, * FROM Publications, Attachments WHERE Publications.guid=Attachments.publication AND md5='$md5' AND is_pdf;"
+  );
 
-  my $sth = $model->dbh->prepare("SELECT rowid,pdf,pdf_size FROM Publications WHERE pdf_size=$size;");
-  $sth->execute;
-
-  my $rowid = undef;
-
-  while ( my $row = $sth->fetchrow_hashref() ) {
-    my $file = File::Spec->catfile( $paper_root, $row->{pdf} );
-
-    if ( compare( $file, $self->pub->pdf ) == 0 ) {
-      $rowid = $row->{rowid};
-      last;
-    }
-  }
-
-  if ($rowid) {
-    my $pub = $model->standard_search( 'rowid=' . $rowid, 0, 1 )->[0];
+  if ($data) {
+    my $pub = Paperpile::Library::Publication->new($data);
+    $pub->_imported(1);
     $self->pub($pub);
   }
 
 }
-
 
 ## Inserts the current publication object into the database
 
@@ -794,6 +817,13 @@ sub _insert {
   my $self = shift;
 
   my $model = Paperpile::Utils->get_library_model;
+
+  # We here track the PDF file in the pub->pdf field, for import
+  # _pdf_tmp needs to be set
+  if ($self->pub->pdf){
+    $self->pub->_pdf_tmp($self->pub->pdf);
+    $self->pub->pdf('');
+  }
 
   $model->create_pubs( [$self->pub] );
 
@@ -810,11 +840,11 @@ sub _attach_pdf {
 
   my $model = Paperpile::Utils->get_library_model;
 
-  my $attached_file=$model->attach_file($self->pub->pdf, 1, $self->pub->_rowid, $self->pub);
+  my $file = $self->pub->pdf;
 
-  unlink($self->pub->pdf);
+  $model->attach_file($file, 1, $self->pub);
 
-  $self->pub->pdf($attached_file);
+  unlink($file);
 
 }
 

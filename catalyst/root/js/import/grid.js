@@ -94,13 +94,21 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
       record.data._citekey = Ext.util.Format.ellipsis(record.data.citekey, 18);
       record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
-      if (record.data.last_read) {
-        record.data._last_readPretty = 'Last read: ' + Paperpile.utils.prettyDate(record.data.last_read);
+
+      if (record.data._imported){
+        if (record.data.last_read) {
+          record.data._last_readPretty = 'Last read: ' + Paperpile.utils.prettyDate(record.data.last_read);
+        } else {
+          record.data._last_readPretty = 'Never read';
+        }
       } else {
-        record.data._last_readPretty = 'Never read';
+        record.data._last_readPretty = 'Click <i>Import</i> to add file to your library.';
       }
 
-      record.data.pdf_path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
+      if (record.data.attachments){
+        record.data._attachments_count = record.data.attachments.split(/,/).length;
+      }
+
       return this.getIconTemplate().apply(record.data);
     };
 
@@ -400,7 +408,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       // the whole selection.
       var sel = this.getSelection();
       if (!this.getSelectionModel().isSelected(index)) {
-        sel = record.get('sha1');
+        sel = record.get('guid');
       }
 
       var tagName = data.node.text;
@@ -414,9 +422,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
       }
       return true;
-
-      record.data.pdf_path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, record.data.pdf);
-      return this.getIconTemplate().apply(record.data);
     }
     return false;
   },
@@ -464,8 +469,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       if (record.data.created) {
         var secondsAgo = Paperpile.utils.secondsAgo(record.data.created);
         if (secondsAgo < 20) {
-          if (!this.highlightedArticles[record.data.sha1]) {
-            this.highlightedArticles[record.data.sha1] = 1;
+          if (!this.highlightedArticles[record.data.guid]) {
+            this.highlightedArticles[record.data.guid] = 1;
             Ext.get(el).highlight("ffff9c", {
               duration: 3,
               easing: 'easeOut'
@@ -505,6 +510,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // main/overrides.js
     this.getSelectionModel().on('afterselectionchange',
       function(sm) {
+	  // Delete the previously stored set of selected records.
+	delete this._selected_records;
         this.contextRecord = null;
 
         var selection = this.getSelection();
@@ -618,6 +625,32 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       reader: new Ext.data.JsonReader()
     });
 
+      // Add some callbacks to the store so we can maintain the selection between reloads.
+      this._store.on('beforeload', function(store,options) {
+	  var records = this.getSelectionModel().getSelections();
+	  var recordIds = [];
+	  for(var i = 0, len = records.length; i < len; i++){
+	      recordIds[i] = records[i].id;
+	  }
+	  this._selected_records = recordIds;
+      },this);
+      this._store.on('load', function(store,options) {
+	  // Select rows of records with the stored ids
+	  var rows = [];
+	  var recordIds = this._selected_records;
+	  if (recordIds === undefined) {
+	      recordIds = [];
+	  }
+	  for(var i = 0, len = recordIds.length; i < len; i++){
+	      var index = this.getStore().indexOfId(recordIds[i]);
+	      if(index >= 0){
+		  Paperpile.log(index);
+		  rows.push(index);
+	      }
+	  }
+	  this.getSelectionModel().selectRows(rows);
+	  delete this._selected_records;
+      },this);
     return this._store;
   },
 
@@ -646,8 +679,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
   },
 
-  getBySha1: function(sha1) {
-    var index = this.getStore().find('sha1', sha1);
+  getByGUID: function(guid) {
+    var index = this.getStore().find('guid', guid);
     if (index > -1) {
       return this.getStore().getAt(index);
     }
@@ -659,7 +692,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getPubTemplate: function() {
     if (this.pubTemplate == null) {
       this.pubTemplate = new Ext.XTemplate(
-        '<div class="pp-grid-data" sha1="{sha1}">',
+        '<div class="pp-grid-data" guid="{guid}">',
         '<div>',
         '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
         '</div>',
@@ -669,14 +702,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '<tpl if="_citation_display">',
         '<p class="pp-grid-citation">{_citation_display}</p>',
         '</tpl>',
-        '<tpl if="_snippets_text">',
-        '<p class="pp-grid-snippets"><span class="heading">PDF:</span> {_snippets_text}</p>',
-        '</tpl>',
-        '<tpl if="_snippets_abstract">',
-        '<p class="pp-grid-snippets"><span class="heading">Abstract:</span> {_snippets_abstract}</p>',
-        '</tpl>',
-        '<tpl if="_snippets_notes">',
-        '<p class="pp-grid-snippets"><span class="heading">Notes:</span> {_snippets_notes}</p>',
+        '<tpl if="_snippets">',
+        '<p class="pp-grid-snippets">{_snippets}</p>',
         '</tpl>',
         '</div>', {
           tagStyle: function(tag_string) {
@@ -684,12 +711,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             var tags = tag_string.split(/\s*,\s*/);
             var totalChars = 0;
             for (var i = 0; i < tags.length; i++) {
-              var tag = tags[i];
-              var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('tag', tag));
+              var guid = tags[i];
+              var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
               if (style != null) {
+                name = style.get('name');
                 style = style.get('style');
-                totalChars += tag.length;
-                returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + tag + '&nbsp;</div>&nbsp;';
+                totalChars += name.length;
+                returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
               }
             }
             if (tags.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
@@ -716,10 +744,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  </tpl>',
       '</tpl>',
       '<tpl if="pdf">',
-      '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf}</b><br/>{_last_readPretty}"></div>',
+      '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf_name}</b><br/>{_last_readPretty}"></div>',
       '</tpl>',
       '<tpl if="attachments">',
-      '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{attachments} attached file(s)"></div>',
+      '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{_attachments_count} attached file(s)"></div>',
       '</tpl>',
       '<tpl if="annote">',
       '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
@@ -749,6 +777,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
       '<tpl if="_imported">',
       '  <div id="ref-actions" style="float:right;">',
+      '  <tpl if="_metadata_job != null && _metadata_job.status==\'RUNNING\'">',
+      '    <img src="/images/icons/loading.gif" class="pp-img-action-disabled" ext:qtip="Updating metadata..."/>',
+      '  </tpl>',
+	'  <tpl if="_metadata_job != null && _metadata_job.status==\'PENDING\'">',
+      '    <img src="/images/icons/update-metadata.png" class="pp-img-action-disabled" ext:qtip="Waiting to update metadata..."/>',
+      '  </tpl>',
+      '  <tpl if="_metadata_job==null">',
+      '    <img src="/images/icons/update-metadata.png" class="pp-img-action" action="update-metadata" ext:qtip="Update metadata from online resources"/>',
+      '  </tpl>',
       '  <img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
       '  <tpl if="trashed==1">',
       '    <img src="/images/icons/delete.png" class="pp-img-action" action="delete-ref" ext:qtip="Permanently Delete Reference"/>',
@@ -807,6 +844,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     var linkOuts = [
       '<tpl if="trashed==0">',
+
       '  <tpl if="linkout || doi">',
       '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
       '    <tpl if="doi">',
@@ -817,28 +855,33 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    </tpl>',
       '    </div>',
       '  </tpl>',
-      '  <tpl if="pdf || _imported || linkout || doi">',
-      '    <div class="pp-box pp-box-side-panel pp-box-style2"',
+
+      '  <tpl if="!linkout && !doi">',
+      '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style2">',
+      '      <p class="pp-action-inactive pp-action-go-inactive">No link to publisher available</p>',
+      '    </div>',
+      '  </tpl>',
+
+      '  <div class="pp-box pp-box-side-panel pp-box-style2"',
       '    <h2>PDF</h2>',
-      '        <div id="search-download-widget-{id}" class="pp-search-download-widget"></div>',
-      '    <tpl if="_imported">',
+      '    <div id="search-download-widget-{id}" class="pp-search-download-widget"></div>',
+      '    <tpl if="_imported || attachments">',
       '      <h2>Supplementary material</h2>',
-      '      <tpl if="attachments">',
-      '        <tpl if="_attachments_list">',
-      '          <ul class="pp-attachments">',
+      '    </tpl>',
+      '      <tpl if="_attachments_list">',
+      '        <ul class="pp-attachments">',
       '          <tpl for="_attachments_list">',
       '            <li class="pp-attachment-list pp-file-generic {cls}">',
       '            <a href="#" class="pp-textlink" action="open-attachment" path="{path}">{file}</a>&nbsp;&nbsp;',
-      '            <a href="#" class="pp-textlink pp-second-link" action="delete-file" rowid="{rowid}">Delete</a></li>',
+      '            <a href="#" class="pp-textlink pp-second-link" action="delete-file" guid="{guid}">Delete</a></li>',
       '          </tpl>',
-      '          </ul>',
-      '        </tpl>',
-      '      </tpl>',
-      '      <ul>',
-      '      <li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" class="pp-textlink" action="attach-file">Attach File</a></li>', '</ul>',
+      '       </ul>',
       '    </tpl>',
-      '    </div>',
-      '  </tpl>',
+      '    <tpl if="_imported">',
+      '      <ul>',
+      '        <li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" class="pp-textlink" action="attach-file">Attach File</a></li>', 
+      '      </ul>',
+      '    </tpl>',
       '  </div>',
       '</tpl>'];
     return[].concat(prefix, referenceInfo, linkOuts, suffix);
@@ -847,8 +890,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getEmptyGridTemplate: function() {
     var template = [
       '<div id="main-container-{id}">',
-      '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
-      '    <p><b>No references here.</b></p>',
+      '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style2">',
+      '    <p class="pp-inactive">No references here.</p>',
       '  </div>',
       '</div>'];
     return[].concat(template);
@@ -857,8 +900,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getNoSelectionTemplate: function() {
     var template = [
       '<div id="main-container-{id}">',
-      '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
-      '    <p><b>No references selected.</b></p>',
+      '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style2">',
+      '    <p class="pp-inactive">No references selected.</p>',
       '  </div>',
       '</div>'];
     return[].concat(template);
@@ -873,6 +916,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '    <ul> ',
       '    <div style="clear:both;"></div>',
+      '      <li class="pp-action pp-action-update-metadata"> <a  href="#" class="pp-textlink" action="update-metadata">Update Metadata</a> </li>',
       '      <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
       '      <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
       '    </ul>',
@@ -1127,13 +1171,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.getSelectionModel().each(
       function(record) {
         if ((what == 'ALL') || (what == 'IMPORTED' && record.get('_imported')) || (what == 'NOT_IMPORTED' && !record.get('_imported'))) {
-          selection.push(record.get('sha1'));
+          selection.push(record.get('guid'));
         }
       });
     return selection;
   },
 
-  // Returns list of sha1s for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
+  // Returns list of guids for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
   getSelection: function(what) {
     if (this.allSelected) {
       return 'ALL';
@@ -1176,7 +1220,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       };
       this.getSelectionModel().on('beforerowselect', blockingFunction, this);
 
-      var sha1 = this.getSelectionModel().getSelected().data.sha1;
+      var guid = this.getSelectionModel().getSelected().data.guid;
 
       Paperpile.status.updateMsg({
         busy: true,
@@ -1359,7 +1403,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     if (selection) {
       var rowid = selection.get('_rowid');
-      var sha1 = selection.data.sha1;
+      var guid = selection.data.guid;
     }
 
     win = new Ext.Window({
@@ -1389,6 +1433,28 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     win.show(this);
   },
+
+    updateMetadata: function() {
+      var selection = this.getSelection();
+    Ext.getCmp('queue-widget').onUpdate({
+      submitting: true
+    });
+      Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/crud/batch_update'),
+      params: {
+        selection: selection,
+        grid_id: this.id
+      },
+      method: 'GET',
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        Paperpile.main.onUpdate(json.data);
+        // Trigger a thread to start requesting queue updates.
+        Paperpile.main.queueUpdate();
+      },
+      failure: Paperpile.main.onError,
+    });	
+    },
 
   batchDownload: function() {
     selection = this.getSelection();
@@ -1499,39 +1565,28 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
 
     var store = this.getStore();
-    var selected_sha1 = '';
+    var selected_guid = '';
     var sel = this.getSingleSelectionRecord();
-    if (sel) selected_sha1 = sel.data.sha1;
+    if (sel) selected_guid = sel.data.guid;
 
     var updateSidePanel = false;
-    for (var sha1 in pubs) {
-      var record = store.getAt(store.findExact('sha1', sha1));
-      if (!record) {
-        record = store.getAt(store.findExact('_old_sha1', sha1));
-      }
+    for (var guid in pubs) {
+      var record = store.getAt(store.findExact('guid', guid));
       if (!record) {
         continue;
       }
       var needsUpdating = false;
-      var update = pubs[sha1];
+      var update = pubs[guid];
       record.editing = true; // Set the 'editing' flag.
-      var originalSha1 = record.get('sha1');
       for (var field in update) {
         record.set(field, update[field]);
-      }
-
-      // We allow plugins to change a pub's sha1 tag by setting the '_new_sha1' flag.
-      // The actual grid updating is done here.
-      if (update['_new_sha1']) {
-        record.set('_old_sha1', originalSha1);
-        record.set('sha1', update['_new_sha1']);
       }
 
       // Unset the 'editing' flag. Using the flag directly avoids calling store.afterEdit() for every record.
       record.editing = false;
       if (record.dirty) {
         needsUpdating = true;
-        if (sha1 == selected_sha1) updateSidePanel = true;
+        if (guid == selected_guid) updateSidePanel = true;
       }
       if (needsUpdating) {
         store.fireEvent('update', store, record, Ext.data.Record.EDIT);
@@ -1670,7 +1725,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   openPDF: function() {
     var sm = this.getSelectionModel();
     if (sm.getSelected().data.pdf) {
-      var pdf = sm.getSelected().data.pdf;
+      var pdf = sm.getSelected().data.pdf_name;
       var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
       Paperpile.main.tabs.newPdfTab({
         file: path,

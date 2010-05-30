@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PubSummary = Ext.extend(Ext.Panel, {
 
   initComponent: function() {
@@ -49,13 +48,21 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
       numSelected = this.grid.store.getTotalCount();
     }
 
+    var isEmpty = false;
     if (numSelected == 1) {
       this.data = sm.getSelected().data;
       this.data.id = this.id;
-      this.abstractTemplate.overwrite(this.body, this.data);
+      if (this.data.abstract === '') {
+        isEmpty = true;
+      } else {
+        this.abstractTemplate.overwrite(this.body, this.data);
+      }
     } else {
+      isEmpty = true;
+    }
 
-      var empty = new Ext.Template('');
+    if (isEmpty) {
+      var empty = new Ext.Template('<p class="pp-basic pp-abstract pp-inactive">No abstract available.</p>');
       empty.overwrite(this.body);
     }
   },

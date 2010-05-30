@@ -251,10 +251,10 @@ sub _check_for_better_bibliographic_data {
 
     # If we are here we succeded in calling another Plugin and
     # we are done
-    my $old_sha1 = $pub->sha1;
-    my $new_sha1 = $full_pub->sha1;
-    delete( $self->_hash->{$old_sha1} );
-    $self->_hash->{$new_sha1} = $full_pub;
+
+    # Update plugin _hash with new data
+    $full_pub->guid($pub->guid);
+    $self->_hash->{$pub->guid} = $full_pub;
 
     return $full_pub;
   }
@@ -398,12 +398,10 @@ sub complete_details {
   # We don't use Google key
   $full_pub->citekey('');
 
-  # Note that if we change title, authors, and citation also the sha1
-  # will change. We have to take care of this.
-  my $old_sha1 = $pub->sha1;
-  my $new_sha1 = $full_pub->sha1;
-  delete( $self->_hash->{$old_sha1} );
-  $self->_hash->{$new_sha1} = $full_pub;
+  # Update plugin _hash with new data
+  $full_pub->guid($pub->guid);
+  $self->_hash->{$pub->guid} = $full_pub;
+
   return $full_pub;
 }
 

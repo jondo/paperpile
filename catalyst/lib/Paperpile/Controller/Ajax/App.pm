@@ -66,15 +66,17 @@ sub init_session : Local {
       or
       FileWriteError->throw("Could not start application (Error initializing settings database)");
 
+    $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
+
     # Don't overwrite an existing library database in the case the
     # user has just deleted the user settings database
     if ( !-e $c->config->{'user_settings'}->{library_db} ) {
       copy( $c->path_to('db/library.db')->stringify, $c->config->{'user_settings'}->{library_db} )
         or FileWriteError->throw("Could not start application. Error initializing database.");
+      $c->model('Library')->set_default_collections;
     }
 
     $c->model('User')->set_settings( $c->config->{'user_settings'} );
-    $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
     $c->model('Library')->set_settings( $c->config->{'library_settings'} );
 
   }
@@ -84,8 +86,7 @@ sub init_session : Local {
 
     my $library_db = $c->model('User')->get_setting('library_db');
 
-    # User might have deleted or moved her library. In that case we initialize an empty one and
-    # warn the user
+    # User might have deleted or moved her library. In that case we initialize an empty one
     if ( !-e $library_db ) {
 
       $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
@@ -94,6 +95,9 @@ sub init_session : Local {
         or FileWriteError->throw(
         "Could not start application. Error initializing Paperpile database.");
 
+      $c->model('Library')->set_default_collections;
+
+      # Notify frontend of missing library (is ignored right now)
       LibraryMissingError->throw(
         "Could not find your Paperpile library file $library_db. Start with an empty one.");
     }
@@ -136,7 +140,7 @@ sub init_session : Local {
 
   # Clear file with cancel handles
 
-  unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ));
+  unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ) );
 
 }
 

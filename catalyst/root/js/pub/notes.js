@@ -119,16 +119,15 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/update_notes'),
       params: {
-        sha1: this.data.sha1,
+        guid: this.data.guid,
         rowid: this.data._rowid,
         html: newNotes,
       },
       method: 'GET',
-      success: function() {
-        var record = this.grid.getStore().getAt(this.grid.getStore().find('sha1', this.data.sha1));
-        record.set('annote', newNotes);
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        Paperpile.main.onUpdate(json.data);
         this.closeEditor();
-        Paperpile.main.onUpdateDB(this.grid.id);
       },
       failure: Paperpile.main.onError,
       scope: this
