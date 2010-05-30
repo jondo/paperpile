@@ -70,11 +70,8 @@ sub insert_pubs {
 
   my $counter = 0;
 
-  my $i=0;
   foreach my $pub (@$pubs) {
-      $i++;
-      my $ts = timestamp gmtime;
-      $ts .= sprintf ".%03s",$i;
+    my $ts = timestamp gmtime;
     $pub->created( $ts ) if not $pub->created;
 
     if ( $pub->_imported ) {
