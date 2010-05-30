@@ -630,7 +630,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  var records = this.getSelectionModel().getSelections();
 	  var recordIds = [];
 	  for(var i = 0, len = records.length; i < len; i++){
-	      Paperpile.log(records[i].id);
 	      recordIds[i] = records[i].id;
 	  }
 	  this._selected_records = recordIds;
@@ -639,8 +638,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  // Select rows of records with the stored ids
 	  var rows = [];
 	  var recordIds = this._selected_records;
+	  if (recordIds === undefined) {
+	      recordIds = [];
+	  }
 	  for(var i = 0, len = recordIds.length; i < len; i++){
-	      Paperpile.log(recordIds[i]);
 	      var index = this.getStore().indexOfId(recordIds[i]);
 	      if(index >= 0){
 		  Paperpile.log(index);
