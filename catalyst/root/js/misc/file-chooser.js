@@ -361,11 +361,11 @@ Paperpile.openFileDialog = function(callback, inputOptions) {
     if (options.types) {
       Ext.apply(fileChooserOptions, {
         showFilter: true,
-        filterOptions: [
-        {
-          text: 'Supported files',
+        filterOptions: [{
+          text: options.typesDescription || 'Supported files (' + options.types.join(", ") + ')',
           suffix: options.types
-        }, {
+        },
+        {
           text: 'All files',
           suffix: ""
         }],

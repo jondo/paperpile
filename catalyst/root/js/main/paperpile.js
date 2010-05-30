@@ -393,6 +393,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   fileImport: function() {
     var callback = function(filenames) {
+      Paperpile.log(filenames);
       if (filenames.length > 0) {
         var path = filenames[0];
         var parts = Paperpile.utils.splitPath(path);
@@ -408,7 +409,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       }
     };
     var options = {
-      types: ['bib', 'ris']
+      types: ['bib', 'ris'],
+      typesDescription: 'Supported files (Bibtex, RIS)'
     };
     Paperpile.openFileDialog(callback, options);
   },
