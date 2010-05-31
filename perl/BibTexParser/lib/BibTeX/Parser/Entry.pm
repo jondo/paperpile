@@ -4,6 +4,7 @@ our $VERSION = '0.4';
 use warnings;
 use strict;
 use Encode;
+use charnames ':full';
 
 use BibTeX::Parser::Author;
 use BibTeX::Parser::Defly;
@@ -266,10 +267,15 @@ sub has {
   return defined $self->{$field};
 }
 
+sub uchr {
+  my($c) = @_;
+  encode_utf8(chr($c));
+}
+
 sub _sanitize_field {
   my $value = shift;
   my $clean = shift;
-  #print STDERR "IN: $value\n";
+
   # some cleaning before UTF-8 conversion
   if ( $clean >= 1 ) {
     $value =~ s/\\~\{\}/~/g;
@@ -278,7 +284,8 @@ sub _sanitize_field {
 
   # char conversion from LaTeX to UTF-8
   $value = defly $value;
-  # do more LaTeX parsing here
+  # do more LaTeX parsing here, not everything
+  # is covered by defly
   if ( $clean >= 1 ) {
     $value =~ s/\\textit//g;
     $value =~ s/\\textbf//g;
@@ -296,14 +303,29 @@ sub _sanitize_field {
     $value =~ s/\\emph//g;
     $value =~ s/\\%/%/g;
     $value =~ s/\\\$/\$/g;
-    $value =~ s/\\\s/ /g;
-    $value =~ s/{//g if ( $clean == 1);
-    $value =~ s/}//g if ( $clean == 1);
+    $value =~ s/\\&/&/g;
+    $value =~ s/\\#/#/g;
+    $value =~ s/\\_/_/g;
+    $value =~ s/\\pounds/encode_utf8("\N{POUND SIGN}")/ge;
+    $value =~ s/\\texttimes/uchr(hex('d7'))/ge;
+    $value =~ s/\?`/uchr(hex('bf'))/ge;
+    $value =~ s/\!`/uchr(hex('a1'))/ge;
+    $value =~ s/\$<\$/</g;
+    $value =~ s/\$>\$/>/g;
+    $value =~ s/\\texttildelow/~/g;
     $value =~ s/\\textdollar/\$/g;
     $value =~ s/\\textunderscore/_/g;
+    $value =~ s/\$\\backslash\$/\\/g;
+    $value =~ s/\\\s/ /g;
     $value =~ s/\s+/ /g;
+    $value =~ s/\\\{/**PPRPILEOPEN**/g;
+    $value =~ s/\\\}/**PPRPILECLOSE**/g;
+    $value =~ s/{//g if ( $clean == 1);
+    $value =~ s/}//g if ( $clean == 1);
+    $value =~ s/\*\*PPRPILEOPEN\*\*/{/g;
+    $value =~ s/\*\*PPRPILECLOSE\*\*/}/g;
   }
-  #print STDERR "OUT: $value\n";
+
   return $value;
 }
 

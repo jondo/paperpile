@@ -114,6 +114,8 @@ Ext.extend(Paperpile.ContextTrianglePlugin, Ext.util.Observable, {
         var tri = this.contextTriangle;
         if (this.eventContainsTriangle(e)) {
           menu.show(tri, 'tl-bl');
+          tri.shouldShowWhenMenuCloses = true;
+          tri.lastOverNode = node;
         } else {
           menu.showAt(e.getXY());
           tri.hide();
