@@ -86,7 +86,11 @@ sub read {
           next;
         }
 
-        ## annote missing
+        # annote is not defined in fields.yaml but in library.sql
+        if ( $field =~ /annote/ ) {
+          $data->{annote} = $entry->field($field);
+          next;
+        }
 
         # File attachment. The convention seems to be that multiple
         # files are expected to be separated by semicolons and that
