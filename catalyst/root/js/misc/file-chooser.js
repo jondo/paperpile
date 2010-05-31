@@ -335,19 +335,30 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
   }
 });
 
-Paperpile.openFileDialog = function(callback, inputOptions) {
+Paperpile.fileDialog = function(callback, inputOptions) {
+  // Default options. 
   var options = {
-    multiple: false,
+    title: 'File Dialog',
+    // dialogType: 'load' or 'save'
+    dialogType: 'load',
+    // selectionType: 'file' or 'folder'
+    selectionType: 'file',
+    multiple: true,
+    // types: ['txt','csv']
     types: null,
+    typesDescription: null,
     path: Paperpile.main.globalSettings.user_home
   };
   Ext.apply(options, inputOptions);
-
-  Paperpile.log(options);
-
   if (IS_TITANIUM) {
     // Create a Titanium dialog.
-    Titanium.UI.openFileChooserDialog(callback, options);
+    if (options.dialogType == 'save') {
+      Titanium.UI.openSaveAsDialog(callback, options);
+    } else if (options.selectionType == 'file') {
+      Titanium.UI.openFileChooserDialog(callback, options);
+    } else {
+      Titanium.UI.openFolderChooserDialog(callback, options);
+    }
   } else {
     // Create an ExtJS dialog.
     var fileChooserOptions = {
@@ -370,6 +381,9 @@ Paperpile.openFileDialog = function(callback, inputOptions) {
           suffix: ""
         }],
       });
+    }
+    if (options.dialogType == 'save') {
+      fileChooserOptions.saveMode = true;
     }
     win = new Paperpile.FileChooser(fileChooserOptions);
     win.show();

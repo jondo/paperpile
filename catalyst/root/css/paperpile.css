@@ -2012,3 +2012,75 @@ table.pp-meta-form {
 .pp-collapsed {
     cursor:pointer;
 }
+
+
+.ux-layout-center-item {
+    margin:0 auto;
+    text-align:left;
+}
+.ux-layout-center .x-panel-body, body.ux-layout-center {            
+    text-align:center;
+}
+
+
+/* GIGANTiC BUTTONS! */
+.x-btn-noicon .x-btn-gigantic .x-btn-text{
+    height: 128px;
+}
+.x-btn-icon .x-btn-gigantic .x-btn-text{
+    height: 128px;
+    width: 128px;
+}
+.x-btn-text-icon .x-btn-icon-gigantic-left .x-btn-text{
+    background-position: 0 center;
+    background-repeat: no-repeat;
+    padding-left: 130px;
+    height: 128px;
+}
+.x-btn-text-icon .x-btn-icon-gigantic-top .x-btn-text{
+    background-position: center 0;
+    background-repeat: no-repeat;
+    padding-top: 130px;
+}
+.x-btn-text-icon .x-btn-icon-gigantic-right .x-btn-text{
+    background-position: right center;
+    background-repeat: no-repeat;
+    padding-right: 130px;
+    height: 128px;
+}
+.x-btn-text-icon .x-btn-icon-gigantic-bottom .x-btn-text{
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    padding-bottom: 130px;
+}
+
+/* HUGE BUTTONS! */
+.x-btn-noicon .x-btn-huge .x-btn-text{
+    height: 72px;
+}
+.x-btn-icon .x-btn-huge .x-btn-text{
+    height: 72px;
+    width: 72px;
+}
+.x-btn-text-icon .x-btn-icon-huge-left .x-btn-text{
+    background-position: 0 center;
+    background-repeat: no-repeat;
+    padding-left: 74px;
+    height: 72px;
+}
+.x-btn-text-icon .x-btn-icon-huge-top .x-btn-text{
+    background-position: center 0;
+    background-repeat: no-repeat;
+    padding-top: 74px;
+}
+.x-btn-text-icon .x-btn-icon-huge-right .x-btn-text{
+    background-position: right center;
+    background-repeat: no-repeat;
+    padding-right: 74px;
+    height: 72px;
+}
+.x-btn-text-icon .x-btn-icon-huge-bottom .x-btn-text{
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    padding-bottom: 74px;
+}

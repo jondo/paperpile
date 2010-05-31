@@ -1,4 +1,3 @@
-3
 /* Copyright 2009, 2010 Paperpile
 
    This file is part of Paperpile
@@ -315,80 +314,150 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   pdfExtract: function() {
 
-    win = new Paperpile.FileChooser({
-      title: "Select single PDF file or directory to search for PDF files",
-      currentRoot: Paperpile.main.globalSettings.user_home,
-      showFilter: true,
-      selectionMode: 'BOTH',
-      filterOptions: [{
-        text: 'PDF files',
-        suffix: ['pdf']
-      }],
-
-      callback: function(button, path) {
-        if (button == 'OK') {
-
-          // First count the PDFs
-          Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/pdfextract/count_files'),
-            params: {
-              path: path
-            },
-            success: function(response) {
-              var json = Ext.util.JSON.decode(response.responseText);
-
-              var submitFn = function() {
-                Ext.Ajax.request({
-                  url: Paperpile.Url('/ajax/pdfextract/submit'),
-                  params: {
-                    path: path
-                  },
-                  success: function(response) {
-                    Paperpile.main.queueUpdate();
-                  },
-                  failure: Paperpile.main.onError
-                })
-              };
-
-              // Show error message and stop if no PDFs found
-              if (json.count == 0) {
-                Paperpile.status.updateMsg({
-                  type: 'error',
-                  msg: 'No PDFs found in the selected folder.',
-                  hideOnClick: true
-                });
-                return;
-              }
-              // Warn user before large batch of PDFs is imported
-              if (json.count > 10) {
-                Ext.MessageBox.buttonText.ok = "Start import";
-
-                Ext.Msg.show({
-                  title: 'PDF Import',
-                  msg: json.count + ' PDF files found. Do you want to import them now?',
-                  animEl: 'elId',
-                  icon: Ext.MessageBox.INFO,
-                  buttons: Ext.Msg.OKCANCEL,
-                  fn: function(btn) {
-                    if (btn === 'ok') {
-                      submitFn();
-                    }
-                    Ext.MessageBox.buttonText.ok = "Ok";
-                  }
-                });
-              } else {
-                // Start import silently if less than 10 PDFs
-                submitFn();
-              }
-            },
-            failure: Paperpile.main.onError
-          });
+    var folderExtract = function() {
+      var callback = function(filenames) {
+        window.close();
+        if (filenames.length > 0) {
+          var folder = filenames[0];
+          Paperpile.main.countFilesAndTriggerExtraction(folder);
         }
-      }
+      };
+      var options = {
+        title: 'Choose a folder containing PDFs to import',
+        selectionType: 'folder'
+      };
+      Paperpile.fileDialog(callback, options);
+
+    };
+
+    var fileExtract = function() {
+      var callback = function(filenames) {
+        window.close();
+        if (filenames.length > 0) {
+          for (var i = 0; i < filenames.length; i++) {
+            var file = filenames[i];
+            Paperpile.main.submitPdfExtractionJobs(file);
+          }
+        }
+      };
+      var options = {
+        title: 'Choose PDF file(s) to import',
+        selectionType: 'file',
+        types: ['pdf'],
+        multiple: true,
+        typesDescription: 'PDF Files'
+      };
+      Paperpile.fileDialog(callback, options);
+    };
+
+    var divDef = '<div style="width:200px;white-space:normal;">';
+    var window = new Ext.Window({
+      title: 'PDF Import',
+      layout: 'vbox',
+      width: 350,
+      height: 250,
+      plain: true,
+      modal: true,
+      layoutConfig: {
+        pack: 'center',
+        align: 'stretch',
+        defaultMargins: '5px'
+      },
+      items: [{
+        xtype: 'button',
+        scale: 'huge',
+        cls: 'x-btn-text-icon',
+        icon: '/images/icons/pdf-folder.png',
+        text: [divDef,
+          '<b>PDF Folder</b>',
+          '<br/>The chosen folder and its subdirectories will be searched for PDFs to import.',
+          '</div>'].join(''),
+        handler: folderExtract
+      },
+      {
+        xtype: 'button',
+        scale: 'huge',
+        cls: 'x-btn-text-icon',
+        icon: '/images/icons/pdf-file.png',
+        text: [divDef,
+          '<b>PDF Files</b>',
+          '<p>Choose one or more files to import.</p>', '</div>'].join(''),
+        handler: fileExtract
+      }],
+      bbar: [{
+        xtype: 'tbfill'
+      },
+      {
+        text: 'Cancel',
+        itemId: 'cancel_button',
+        cls: 'x-btn-text-icon cancel',
+        handler: function() {
+          window.close();
+        },
+        scope: this
+      }]
     });
+    window.show();
+  },
 
-    win.show();
+  submitPdfExtractionJobs: function(path) {
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/pdfextract/submit'),
+      params: {
+        path: path
+      },
+      success: function(response) {
+        Paperpile.main.queueUpdate();
+      },
+      failure: Paperpile.main.onError
+    });
+  },
 
+  countFilesAndTriggerExtraction: function(path) {
+    // First count the PDFs
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/pdfextract/count_files'),
+      params: {
+        path: path
+      },
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+
+        // Show error message and stop if no PDFs found
+        if (json.count == 0) {
+          Paperpile.status.updateMsg({
+            type: 'error',
+            msg: 'No PDFs found in the selected folder.',
+            hideOnClick: true
+          });
+          return;
+        }
+        // Warn user before large batch of PDFs is imported
+        if (json.count > 10) {
+          Ext.MessageBox.buttonText.ok = "Start import";
+
+          Ext.Msg.show({
+            title: 'PDF Import',
+            msg: json.count + ' PDF files found. Do you want to import them now?',
+            animEl: 'elId',
+            icon: Ext.MessageBox.INFO,
+            buttons: Ext.Msg.OKCANCEL,
+            fn: function(btn) {
+              if (btn === 'ok') {
+                this.submitPdfExtractionJobs(path);
+              }
+              Ext.MessageBox.buttonText.ok = "Ok";
+            },
+            scope: this
+          });
+        } else {
+          // Start import silently if less than 10 PDFs
+          this.submitPdfExtractionJobs(path);
+        }
+      },
+      scope: this,
+      failure: Paperpile.main.onError
+    });
   },
 
   fileImport: function() {
@@ -409,10 +478,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       }
     };
     var options = {
+	title: 'Choose a library file to import',
       types: ['bib', 'ris'],
       typesDescription: 'Supported files (Bibtex, RIS)'
     };
-    Paperpile.openFileDialog(callback, options);
+    Paperpile.fileDialog(callback, options);
   },
 
   // Reloads DB grids upon insert/entries; it is possible to avoid

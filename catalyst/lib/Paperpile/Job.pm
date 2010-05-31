@@ -825,7 +825,7 @@ sub _insert {
     $self->pub->pdf('');
   }
 
-  $model->create_pubs( [$self->pub] );
+  $model->insert_pubs( [$self->pub] );
 
   $self->pub->_imported(1);
 

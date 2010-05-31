@@ -1525,11 +1525,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   exportNode: function() {
     var node = this.lastSelectedNode;
 
-    var window = new Paperpile.ExportWindow({
+    var window = new Paperpile.SimpleExportWindow({
       source_node: node.id
     });
     window.show();
-
   },
 
   autoExportCheck: function(item, state) {

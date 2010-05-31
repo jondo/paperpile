@@ -178,3 +178,121 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
   }
 
 });
+
+Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
+
+  grid_id: null,
+  source_node: null,
+  selection: [],
+
+  initComponent: function() {
+
+    Ext.apply(this, {
+      layout: 'vbox',
+      title: 'Export: choose a destination format',
+      width: 300,
+      height: 500,
+      layoutConfig: {
+        pack: 'center',
+        align: 'stretch',
+        defaultMargins: '5px'
+      },
+      items: [{
+        xtype: 'button',
+        scale: 'huge',
+        width: '200',
+        autoWidth: false,
+        cls: 'x-btn-icon-text',
+        text: 'BibTex (.bib)',
+        icon: '/images/icons/page-blank.png',
+        handler: function() {
+          this.handleExport('BIBTEX');
+        },
+        scope: this
+      },
+      {
+        xtype: 'button',
+        scale: 'huge',
+        width: '200',
+        autoWidth: false,
+        cls: 'x-btn-icon-text',
+        text: 'RIS (.ris)',
+        icon: '/images/icons/page-blank.png',
+        handler: function() {
+          this.handleExport('RIS');
+        },
+        scope: this
+      },
+      {
+        xtype: 'button',
+        scale: 'huge',
+        width: '200',
+        autoWidth: false,
+        cls: 'x-btn-icon-text',
+        text: 'EndNote (.enl)',
+        icon: '/images/icons/page-blank.png',
+        handler: function() {
+          Paperpile.log("HEY!");
+          this.handleExport('ENDNOTE');
+        },
+        scope: this
+      }]
+    });
+
+    Paperpile.SimpleExportWindow.superclass.initComponent.call(this);
+  },
+
+  formatToExtensions: {
+    ENDNOTE: ['enl'],
+    BIBTEX: ['bib', 'bibtex'],
+    RIS: ['ris']
+  },
+  formatToDescriptions: {
+    ENDNOTE: 'EndNote',
+    BIBTEX: 'BibTeX',
+    RIS: 'RIS'
+  },
+
+  handleExport: function(format) {
+    var ext = this.formatToExtensions[format];
+    var desc = this.formatToDescriptions[format];
+
+    var options = {
+      title: 'Choose a destination file for ' + desc + ' export',
+      dialogType: 'save',
+      types: ext,
+      typesDescription: desc + " (" + ext.join(', ') + ")"
+    };
+    var window = this;
+    var callback = function(filenames) {
+      window.close();
+
+      if (filenames.length == 0) {
+        return;
+      }
+      var file = filenames[0];
+      if (file.indexOf('.') == -1) {
+        file = file + '.' + ext[0];
+      }
+
+      Paperpile.status.showBusy('Exporting to ' + file + '...');
+      Ext.Ajax.request({
+        url: Paperpile.Url('/ajax/plugins/export'),
+        params: {
+          source_node: this.source_node,
+          selection: 'all',
+          export_name: 'Bibfile',
+          export_out_format: format,
+          export_out_file: file
+        },
+        success: function() {
+          Paperpile.status.clearMsg();
+        },
+        failure: Paperpile.main.onError,
+        scope: this
+      });
+
+    };
+    Paperpile.fileDialog(callback, options);
+  }
+});
