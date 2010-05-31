@@ -398,9 +398,12 @@ sub refresh_job_fields {
 }
 
 
-# Function: as_hash
+# Gets attachment information from a database (given in
+# $self->_db_connection) into the pub object. Is not very efficient if
+# this is called for a long list of objects with attachments. But
+# generally non-PDF attachments are probably not so common that we can
+# keep it that way for now.
 
-# Return all fields as a simple HashRef.
 sub refresh_attachments {
   ( my $self ) = @_;
 

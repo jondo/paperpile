@@ -632,6 +632,9 @@ sub _get_selection {
   if ( $selection eq 'ALL' ) {
     @data = @{ $plugin->all };
     $c->model('Library')->exists_pub(\@data);
+    foreach my $pub (@data){
+      $pub->refresh_attachments;
+    }
   } else {
     my @tmp;
     if ( ref($selection) eq 'ARRAY' ) {

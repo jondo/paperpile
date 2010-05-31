@@ -86,22 +86,30 @@ sub read {
           next;
         }
 
+        ## annote missing
+
         # File attachment. The convention seems to be that multiple
         # files are expected to be separated by semicolons and that
         # files are stored like this:
         # :/home/wash/PDFs/file.pdf:PDF
 
         if ( $field =~ /file/i ) {
-
           my @files       = split( /;/, $entry->field($field) );
           my $pdf         = '';
           my @attachments;
+
           foreach my $file (@files) {
 
-            # Try to grap the actual path
+            # Try to grab the actual path
             if ( $file =~ /^.*:(.*):.*$/ ) {
               $file = $1;
             }
+
+            # Mendeley may escapes underscores (at least on Linux). We
+            # have to unescape them to make them work (TODO: check
+            # this under Windows).
+
+            $file=~s/\\_/_/g;
 
             # Mendeley does not show the first '/'. Relative paths are
             # useless so if we don't find the file we try to make this absolute
@@ -110,20 +118,24 @@ sub read {
               $file = "/$file";
             }
 
-            # If we still do not find a file, we give up
-            if ( !-e $file || !-r $file ) {
+            # If we still do not find a file, it is not readable, or
+            # it is a directory, we give up
+            if ( !(-e $file) || !(-r $file) || -d $file) {
               next;
             }
 
             # We treat the first PDF in the list as *the* PDF and all
             # other files as supplementary material
             if ( ( $file =~ /\.pdf/i ) and ( !$pdf ) ) {
-              $data->{_pdf_tmp} = $file;
+              $pdf = $file;
               next;
             } else {
               push @attachments, $file;
             }
           }
+
+          $data->{_pdf_tmp} = $pdf if $pdf;
+
           if (@attachments){
             $data->{_attachments_tmp} = [@attachments];
           }
