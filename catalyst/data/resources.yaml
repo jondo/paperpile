@@ -3,7 +3,7 @@ css:
   - "css/paperpile.css"
   - "css/pdf.css"
 js:
-  - "ext/adapter/ext/ext-base.js"
+  - "ext/adapter/ext/ext-base-debug.js"
   - "ext/ext-all-debug.js"
   - "ext.ux/Spotlight.js"
   - "ext.ux/filetree/js/Ext.ux.FileTreeMenu.js"

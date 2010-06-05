@@ -160,12 +160,20 @@ sub delete_pubs {
   }
 
   # Then delete the entry in all relevant tables
-  my $delete_main     = $dbh->prepare("DELETE FROM publications WHERE rowid=?");
-  my $delete_fulltext = $dbh->prepare("DELETE FROM fulltext WHERE rowid=?");
+  my $delete_main     = $dbh->prepare("DELETE FROM Publications WHERE rowid=?");
+  my $delete_fulltext = $dbh->prepare("DELETE FROM Fulltext WHERE rowid=?");
+  my $delete_collections = $dbh->prepare("DELETE FROM Collection_Publication WHERE publication_guid=?");
+
   foreach my $pub (@$pubs) {
     my $rowid = $pub->_rowid;
     $delete_main->execute($rowid);
     $delete_fulltext->execute($rowid);
+
+    if ($pub->tags or $pub->folders){
+      my $guid = $pub->guid;
+      $delete_collections->execute($guid);
+    }
+
   }
 
   $dbh->commit;
