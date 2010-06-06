@@ -33,6 +33,7 @@ user_settings:
   tmp_dir: "__PP_USER_DIR__/tmp"
   library_db: "__PP_USER_DIR__/paperpile.ppl"
   user_home: "__USERHOME__"
+  file_sync: ""
   use_proxy: ""
   proxy: ""
   proxy_user: ""

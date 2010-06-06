@@ -123,6 +123,8 @@ sub _build_from_bibutils {
   my ( @authors,      @editors );
   my ( $page_start,   $page_end );
 
+  my @files=();
+
   foreach my $field (@$data) {
 
     if ( $field->{tag} ~~ ['TITLE'] ) {
@@ -144,12 +146,18 @@ sub _build_from_bibutils {
     $page_start = $field->{data} if $field->{tag} eq 'PAGESTART';
     $page_end   = $field->{data} if $field->{tag} eq 'PAGEEND';
 
+    if ($field->{tag} eq 'FILEATTACH'){
+      my $file = Paperpile::Utils->process_attachment_name($field->{data});
+      push @files, $file if $file;
+    }
+
+
     # Already handled
     next
       if (
       $field->{tag} ~~ [
         'TITLE', 'SUBTITLE', 'AUTHOR',   'EDITOR', 'PAGESTART', 'PAGEEND',
-        'TYPE',  'GENRE',    'RESOURCE', 'ISSUANCE'
+        'TYPE',  'GENRE',    'RESOURCE', 'ISSUANCE', 'FILEATTACH'
       ]
       );
 
@@ -162,6 +170,27 @@ sub _build_from_bibutils {
       print STDERR "WARNING: Could not handle $field->{tag} of value $field->{data}\n";
     }
   }
+
+  my $pdf = '';
+  my @attachments;
+
+  foreach my $file (@files) {
+    # We treat the first PDF in the list as *the* PDF and all
+    # other files as supplementary material
+    if ( ( $file =~ /\.pdf/i ) and ( !$pdf ) ) {
+      $pdf = $file;
+      next;
+    } else {
+      push @attachments, $file;
+    }
+  }
+
+  $self->_pdf_tmp($pdf) if $pdf;
+
+  if (@attachments){
+    $self->_attachments_tmp([@attachments]);
+  }
+
 
   my $titles    = $self->_get_titles_from_bibutils( $type, [@title_fields] );
   my $subtitles = $self->_get_titles_from_bibutils( $type, [@subtitle_fields] );

@@ -29,6 +29,7 @@ use Paperpile::Exceptions;
 use MooseX::Timestamp;
 use LWP;
 use HTTP::Request::Common;
+use FreezeThaw qw/freeze thaw/;
 use File::Temp qw(tempfile);
 use YAML qw(LoadFile);
 use URI::Escape;
@@ -185,6 +186,12 @@ sub get_settings : Local {
 
   foreach my $key ( 'pub_types', 'pub_fields', 'pub_tooltips', 'pub_identifiers' ) {
     $merged{$key} = $fields->{$key};
+  }
+
+  # Reconstruct flattened hash for file_sync data
+  if ($merged{file_sync}){
+    ( my $hash ) = thaw($merged{file_sync});
+    $merged{file_sync}=$hash;
   }
 
   $c->stash->{data} = {%merged};
@@ -364,5 +371,36 @@ sub report_pdf_match_error : Local {
   my $response = $browser->request($r);
 
 }
+
+
+sub set_file_sync : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $guid   = $c->request->params->{guid};
+  my $file   = $c->request->params->{file};
+  my $active = $c->request->params->{active};
+
+   my $model = $c->model('User');
+
+  my $string = $model->get_setting('file_sync');
+
+  my $hash={};
+
+   if ($string) {
+     ( $hash ) = thaw($string);
+   }
+
+  $hash->{$guid} = { file => $file, active => $active };
+
+  $string = freeze($hash);
+
+  $model->set_setting('file_sync', $string);
+
+  print STDERR "$guid, $file\n";
+
+}
+
+
 
 1;

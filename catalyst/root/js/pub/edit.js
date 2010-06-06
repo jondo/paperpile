@@ -18,6 +18,8 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   initComponent: function() {
 
+    this.inputs = {};
+
     // This is the combobox of the publication type which is always
     // shown
     var typeComboLine = {
@@ -33,28 +35,52 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
           tag: 'td',
           id: 'type-combo',
           cls: 'field',
-          colspan: 5
+          colspan: 3
+        },
+        {
+          tag: 'td',
+          children: [{
+            tag: 'div',
+            children: [{
+              tag: 'div',
+              id: 'lookup-field',
+              style: 'float:left;',
+            },
+            {
+              tag: 'div',
+              cls: 'pp-tooltip-link',
+              id: 'lookup-tooltip',
+              html: '?'
+            },
+            ],
+          },
+          {
+            tag: 'div',
+            id: 'lookup-status',
+            cls: 'pp-lookup-status',
+            style: "float:left;",
+            hidden: true,
+          }],
+          colspan: 2
         },
         ]
-      }]
+      }],
     };
 
-    var tableContent =  [typeComboLine];
+    var tableContent = [typeComboLine];
 
-    
     // If we are editing the data for new PDF, we show information on
     // the PDF in the caption of the table
     //if (this.data.pdf && !this.data._imported) {
-    if (this.data.match_job){
+    if (this.data.match_job) {
       tableContent.unshift({
         tag: 'caption',
         cls: 'notice',
         html: '<b>Add data for</b> ' + this.data.pdf + '<div style="float:right;"><a href="#" id="pdf-view-button" class="pp-textlink">View PDF</a></div>',
       });
     }
-   
 
-    Ext.apply(this, {
+    var config = {
       // The form is a table that consists of several tbody
       // elements to group specific blocks; the first tbody is
       // the selection list for the publication type and is
@@ -96,12 +122,16 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       autoScroll: true,
       border: false,
       bodyBorder: false,
+      timeout: 5,
       bodyStyle: {
         background: '#ffffff',
         padding: '20px'
-      },
+      }
+    };
 
-    });
+    // It is essential here to use initialConfig to make sure that
+    // timeout is set in form object
+    Ext.apply(this, Ext.apply(this.initialConfig, config));
 
     Paperpile.MetaPanel.superclass.initComponent.call(this);
 
@@ -162,6 +192,8 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       },
     });
 
+    this.inputs['pubtype'] = cb;
+
     cb.on('focus', this.onFocus, this);
 
     if (Ext.get('pdf-view-button')) {
@@ -171,7 +203,32 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       this);
     }
 
+    var b = new Ext.Button({
+      id: 'lookup_button',
+      cls: 'x-btn-text-icon lookup',
+      width: 190,
+      renderTo: 'lookup-field',
+      listeners: {
+        click: {
+          fn: this.onLookup,
+          scope: this
+        }
+      },
+    });
+
+    new Ext.ToolTip({
+      target: 'lookup-tooltip',
+      minWidth: 50,
+      maxWidth: 300,
+      html: 'Get a complete reference from Title and Author(s) or look-up DOI, Pubmed ID or ArXiv ID.',
+      anchor: 'left',
+      showDelay: 0,
+      hideDelay: 0
+    });
+
     this.renderForm(pubType);
+
+    this.updateLookupButton();
 
     Ext.get('form-table').on('click', this.onClick, this);
 
@@ -204,12 +261,8 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     // pubtype selection combo; allows to redraw the form when a
     // new pubtype is selected
     var counter = 0;
-    Ext.get('form-table').select('tbody').each(
+    Ext.get('form-table').select('tbody.form').each(
       function(el) {
-        if (counter == 0) {
-          counter = 1;
-          return;
-        }
         el.remove();
       });
 
@@ -309,6 +362,8 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         input = new Ext.form.TextField(config);
       }
 
+      this.inputs[field] = input;
+
       input.on('focus', this.onFocus, this);
 
       input.render(field + '-field', 0);
@@ -316,6 +371,14 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       if (field === 'title') {
         input.on('keyup', function(field, e) {
           Ext.getCmp('save_button').setDisabled(field.getValue() == '');
+          this.updateLookupButton();
+        },
+        this);
+      }
+
+      if (field === 'authors' || field === 'doi' || field === 'pmid' || field === 'arxivid') {
+        input.on('keyup', function(field, e) {
+          this.updateLookupButton();
         },
         this);
       }
@@ -383,6 +446,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         // Push all collected rows to the list of tbodies
         tbodies.push({
           tag: 'tbody',
+          cls: 'form',
           children: trs
         })
         trs = [];
@@ -527,6 +591,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     return ({
       tag: 'tbody',
+      cls: 'form',
       id: 'identifier-group',
       children: trs
     });
@@ -567,6 +632,137 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   },
 
+  // If either title and authors or an identifier (for now pmid, doi
+  // and arxivid) is given the lookup button is activated. 
+  updateLookupButton: function() {
+
+    var button = Ext.getCmp('lookup_button');
+
+    Ext.DomHelper.overwrite('lookup-status', '');
+
+    var title = Ext.getCmp('title-input').getValue();
+    var authors = Ext.getCmp('authors-input').getValue();
+
+    var identifiers = {
+      doi: null,
+      pmid: null,
+      arxivid: null
+    };
+    
+    for (var id in identifiers) {
+      var input = Ext.getCmp(id + '-input');
+      if (input) {
+        identifiers[id] = input.getValue();
+      }
+    }
+
+    if (identifiers.pmid) {
+      this.activateLookupButton('Look-up in PubMed');
+      return;
+    }
+
+    if (identifiers.arxivid) {
+      this.activateLookupButton('Look-up in ArXiv');
+      return;
+    }
+
+    if (identifiers.doi) {
+      this.activateLookupButton('Look-up DOI');
+      return;
+    }
+
+    if (authors && title) {
+      this.activateLookupButton('Look-up online');
+      return;
+    }
+
+    button.setText('Look-up (not enough data)');
+    button.disable();
+
+  },
+
+  // Activates lookup button with a highlight effect
+  activateLookupButton: function(text){
+
+    var button = Ext.getCmp('lookup_button');
+    if (text){
+      button.setText(text);
+    }
+
+    if (button.disabled){
+      Ext.get('lookup-field').parent('td').highlight();
+      button.enable();
+    }
+
+  },
+
+
+  onLookup: function() {
+
+    Ext.get('lookup-status').show();
+
+    Ext.get('lookup-status').removeClass(['pp-lookup-status-failed', 'pp-lookup-status-success']);
+    Ext.DomHelper.overwrite('lookup-status', 'Searching online...')
+
+    this.getForm().submit({
+      url: Paperpile.Url('/ajax/crud/lookup_entry'),
+      scope: this,
+      params: {
+        guid: this.data['guid'],
+        grid_id: this.grid_id
+      },
+      success: this.onUpdate,
+      
+      failure: function(form, action) {
+        this.updateLookupButton();
+        this.setDisabledInputs(false);
+
+        // Explicitly handle timeout (e.g. network hangs in the backend; we don't
+        // have cancel for now)
+        if (!action.response.responseText) {
+          Ext.get('lookup-status').replaceClass('pp-lookup-status-success', 'pp-lookup-status-failed');
+          Ext.DomHelper.overwrite('lookup-status', 'Network error. Make sure you are online and try again later.')
+        } else {
+          Paperpile.main.onError(action.response);
+        }
+      },
+    });
+
+    this.setDisabledInputs(true);
+  },
+
+  onUpdate: function(form, action) {
+    var json = Ext.util.JSON.decode(action.response.responseText);
+
+    var success_plugin = json.success_plugin;
+
+    if (success_plugin) {
+
+      var newData = json.data;
+      for (var field in newData) {
+        if (newData[field]) {
+          this.data[field] = newData[field];
+          if (field === 'pubtype') {
+            Ext.getCmp('type-input').setValue(newData.pubtype);
+          }
+        }
+      }
+
+      this.renderForm(this.data['pubtype']);
+      this.updateLookupButton();
+      Ext.getCmp('save_button').setDisabled(this.data['title'] == '');
+      Ext.DomHelper.overwrite('lookup-status', 'Found reference on ' + success_plugin);
+      Ext.get('lookup-status').replaceClass('pp-lookup-status-failed', 'pp-lookup-status-success');
+
+    } else {
+
+      Ext.get('lookup-status').replaceClass('pp-lookup-status-success', 'pp-lookup-status-failed');
+      Ext.DomHelper.overwrite('lookup-status', 'Could not find reference online.')
+
+    }
+    this.setDisabledInputs(false);
+  },
+
   onSave: function() {
 
     this.getForm().waitMsgTarget = true;
@@ -580,7 +776,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       url = Paperpile.Url('/ajax/crud/update_entry');
       params = {
         guid: this.data['guid'],
-        grid_id: this.grid_id,
       };
       msg = 'Updating database';
     }
@@ -589,7 +784,10 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       url = Paperpile.Url('/ajax/crud/new_entry');
       msg = 'Adding new entry to database';
       if (this.data.match_job) {
-        params = {pdf: this.data.pdf, match_job: this.data.match_job};
+        params = {
+          pdf: this.data.pdf,
+          match_job: this.data.match_job
+        };
       }
     }
 
@@ -608,11 +806,39 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   onSuccess: function(form, action) {
     var json = Ext.util.JSON.decode(action.response.responseText);
+    this.cleanUp();
     this.callback.createDelegate(this.scope, ['SAVE', json.data])();
+    this.cleanUp();
   },
 
   onCancel: function() {
+    this.cleanUp();
     this.callback.createDelegate(this.scope, ['CANCEL'])();
   },
+
+  // Deletes all input objects which would live on after cancel or save otherwise.
+  cleanUp: function() {
+    for (var field in this.inputs) {
+      if (this.inputs[field]) {
+        this.inputs[field].destroy();
+      }
+    }
+    this.inputs = {};
+  },
+
+  setDisabledInputs: function(disabled) {
+    for (var field in this.inputs) {
+      if (this.inputs[field]) {
+
+        // Explicitly change CSS because with disable() the value does
+        // not get submitted
+        if (disabled) {
+          this.inputs[field].getEl().addClass('x-item-disabled');
+        } else {
+          this.inputs[field].getEl().removeClass('x-item-disabled');
+        }
+      }
+    }
+  }
 
 });

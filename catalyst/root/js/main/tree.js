@@ -1538,10 +1538,23 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       node['plugin_auto_export_enable'] = true;
       var exportFile = this.getAutoExportLocation(node);
       this.autoExportMessage(node.text, exportFile);
-      this.saveNode(node);
+      //this.saveNode(node);
+
+      Ext.Ajax.request({
+        url: Paperpile.Url('/ajax/misc/set_file_sync'),
+        params: {guid: node.id,
+                 file: exportFile,
+                 active: 1
+                },
+        success: function() {
+          //update Paperpile.main.globalSettings here (is faster than
+          //reload everything from the backend)
+        },
+        failure: Paperpile.main.onError
+      });
     } else {
-      node['plugin_auto_export_enable'] = false;
-      this.saveNode(node);
+      //node['plugin_auto_export_enable'] = false;
+      //this.saveNode(node);
     }
   },
 

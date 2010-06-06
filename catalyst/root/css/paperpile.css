@@ -762,6 +762,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/cog.png');
 }
 
+.lookup .x-btn-text {
+    background-image: url('/images/icons/magnifier.png');
+}
+
+
 .collapse {
     background-image: url('/images/icons/collapse.png');
 }
@@ -1763,7 +1768,8 @@ table.pp-meta-form {
 .pp-meta-form tbody.style2{
 }
 
-.pp-meta-form td {
+/* apply to all tds directly below <table> (don't mess up buttons within tds)*/
+.pp-meta-form > tbody > tr > td {
     font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
     vertical-align:top;
     margin:0;
@@ -1804,6 +1810,18 @@ table.pp-meta-form {
     padding-left: 5px;
     vertical-align:top;
 } 
+
+.pp-meta-form .pp-lookup-status {
+    font-size:12px;
+}
+
+.pp-meta-form .pp-lookup-status-success {
+    color: #088A08;
+}
+
+.pp-meta-form .pp-lookup-status-failed {
+    color: red;
+}
 
 .pp-meta-form div.pp-tooltip-link:hover {
     color: black!important;
