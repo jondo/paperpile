@@ -476,5 +476,45 @@ sub find_zotero_sqlite {
 
 }
 
+# Checks if a file attached in a BibTex or other file exists and
+# converts it to a canonical form. If we can't find a readable file we
+# return undef
+
+sub process_attachment_name {
+
+  (my $self, my $file) = @_;
+
+  print STDERR "$file\n";
+
+  $file=~s{^file://}{}i;
+
+  # Try to grab the actual path
+  if ( $file =~ /^.*:(.*):.*$/ ) {
+    $file = $1;
+  }
+
+  # Mendeley may escapes underscores (at least on Linux). We
+  # have to unescape them to make them work (TODO: check
+  # this under Windows).
+
+  $file=~s/\\_/_/g;
+
+  # Mendeley does not show the first '/'. Relative paths are
+  # useless so if we don't find the file we try to make this absolute
+  # by brute force TODO: make this work for Windows
+  if ( !-e $file ) {
+    $file = "/$file";
+  }
+
+  # If we still do not find a file, it is not readable, or
+  # it is a directory, we give up
+  if ( !(-e $file) || !(-r $file) || -d $file) {
+    return undef;
+  } else {
+    return $file;
+  }
+}
+
+
 
 1;

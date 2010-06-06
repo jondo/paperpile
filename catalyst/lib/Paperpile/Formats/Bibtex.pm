@@ -104,29 +104,9 @@ sub read {
 
           foreach my $file (@files) {
 
-            # Try to grab the actual path
-            if ( $file =~ /^.*:(.*):.*$/ ) {
-              $file = $1;
-            }
+            $file = Paperpile::Utils->process_attachment_name($file);
 
-            # Mendeley may escapes underscores (at least on Linux). We
-            # have to unescape them to make them work (TODO: check
-            # this under Windows).
-
-            $file=~s/\\_/_/g;
-
-            # Mendeley does not show the first '/'. Relative paths are
-            # useless so if we don't find the file we try to make this absolute
-            # by brute force TODO: make this work for Windows
-            if ( !-e $file ) {
-              $file = "/$file";
-            }
-
-            # If we still do not find a file, it is not readable, or
-            # it is a directory, we give up
-            if ( !(-e $file) || !(-r $file) || -d $file) {
-              next;
-            }
+            next if !$file;
 
             # We treat the first PDF in the list as *the* PDF and all
             # other files as supplementary material
