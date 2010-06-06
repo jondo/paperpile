@@ -486,6 +486,31 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.createContextMenu();
   },
 
+  afterSelectionChange: function(sm) {
+    // Delete the previously stored set of selected records.
+    delete this._selected_records;
+    this.contextRecord = null;
+
+    var selection = this.getSelection();
+    var selectedIds;
+    if (selection == 'ALL') {
+      selectedIds = selection;
+    } else {
+      selectedIds = selection.join("");
+    }
+
+    if (selectedIds == this.lastSelectedIds) {
+      return;
+    }
+    this.lastSelectedIds = selectedIds;
+
+    this.updateButtons();
+    this.getPluginPanel().updateDetails();
+    if (sm.getCount() == 1) {
+      this.completeEntry();
+    }
+  },
+
   myAfterRender: function(ct) {
     this.updateButtons();
 
@@ -508,29 +533,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     // Note: the 'afterselectionchange' event is a custom event, defined in 
     // main/overrides.js
-    this.getSelectionModel().on('afterselectionchange',
-      function(sm) {
-        // Delete the previously stored set of selected records.
-        delete this._selected_records;
-        this.contextRecord = null;
-
-        var selection = this.getSelection();
-        var selectedIds;
-        if (selection == 'ALL') {
-          selectedIds = selection;
-        } else {
-          selectedIds = selection.join("");
-        }
-        if (selectedIds == this.lastSelectedIds) {
-          return;
-        }
-        this.lastSelectedIds = selectedIds;
-
-        this.updateButtons();
-        this.getPluginPanel().updateDetails();
-        if (this.getSelectionModel().getCount() == 1) this.completeEntry();
-      },
-      this);
+    this.mon(this.getSelectionModel(), 'afterselectionchange', this.afterSelectionChange, this);
 
     var map = new Ext.KeyMap(this.body, {
       key: Ext.EventObject.DELETE,
@@ -559,43 +562,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       ddGroup: this.ddGroup
     });
 
-//    this.getEl().dom.addEventListener("dragenter", this.onDragOver.createDelegate(this));
-      this.getView().mainBody.dom.addEventListener("dragover", this.onDragOver.createDelegate(this));
-//    this.getEl().dom.addEventListener("dragleave", this.onDragOut.createDelegate(this));
-    this.dragToolTip = new Ext.ToolTip({
-      renderTo: document.body,
-      targetXY: [0, 0],
-      anchor: 'left',
-      showDelay: 0,
-      hideDelay: 0
-    });
+    Paperpile.main.dd.registerGridListeners(this);
 
     this.createAuthorToolTip();
-  },
-
-  onDragOver: function(event) {
-      if (this.dragTargetRow === undefined)
-	  this.dragTargetRow = 0;
-    var fileURLs = event.dataTransfer.getData("text/uri-list").split("\n");
-
-    var v = this.getView();
-    var index = v.findRowIndex(event.target);
-    if (index != this.dragTargetRow && index !== undefined) {
-      // Un-highlight the previously highlighted row.
-      Ext.fly(v.getRow(this.dragTargetRow)).removeClass('drag-target');
-      // highlight the new drag target.
-      Ext.fly(v.getRow(index)).addClass('drag-target');
-      this.dragToolTip.initTarget(v.getRow(index));
-      this.dragToolTip.update("Drag onto row " + index);
-      this.dragToolTip.show();
-      this.dragTargetRow = index;
-    }
-
-//    event.preventDefault();
-//    return true;
-  },
-
-  onDragOut: function(event) {
   },
 
   createAuthorToolTip: function() {

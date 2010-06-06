@@ -188,6 +188,16 @@ Ext.override(Ext.Panel, {
 
 });
 
+Ext.override(Ext.ToolTip, {
+
+    onShow : function() {
+	Ext.ToolTip.superclass.onShow.call(this);
+    },
+    onHide: function() {
+	Ext.ToolTip.superclass.onHide.call(this);
+    }
+});
+
 Ext.override(Ext.grid.RowSelectionModel, {
   initEvents: function() {
 
@@ -198,9 +208,9 @@ Ext.override(Ext.grid.RowSelectionModel, {
     // Make the grid respond to click events.
     this.grid.on('rowclick', this.handleMouseDown, this);
 
-    if (!this.grid.enableDragDrop && !this.grid.enableDrag) {
+//    if (!this.grid.enableDragDrop && !this.grid.enableDrag) {
       this.grid.on('rowmousedown', this.handleMouseDown, this);
-    }
+//    }
 
     this.rowNav = new Ext.KeyNav(this.grid.getGridEl(), {
       'up': function(e) {
@@ -258,6 +268,7 @@ Ext.override(Ext.grid.RowSelectionModel, {
   cacheEvent: {},
   // private
   handleMouseDown: function(g, rowIndex, e) {
+//      Paperpile.log("down...");
     if (e.button !== 0 || this.isLocked()) {
       return;
     }
@@ -300,6 +311,7 @@ Ext.override(Ext.grid.RowSelectionModel, {
       }
     }
     this.fireEvent('afterselectionchange', this);
+//      Paperpile.log("Done!");
   },
 
   selectFirstRow: function() {

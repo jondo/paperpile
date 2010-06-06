@@ -128,12 +128,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     // circumstances where it makes sense (e.g context menu selection)
     this.allowSelect = false;
     this.getSelectionModel().on("beforeselect",
-      function() {
+      function(sm, node) {
         return this.allowSelect;
       },
       this);
     this.getSelectionModel().on('selectionchange', function(sm, node) {
-      this.lastSelectedNode = node;
+      if (node) {
+        this.lastSelectedNode = node;
+      }
     },
     this);
   },
@@ -1539,13 +1541,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       var exportFile = this.getAutoExportLocation(node);
       this.autoExportMessage(node.text, exportFile);
       //this.saveNode(node);
-
       Ext.Ajax.request({
         url: Paperpile.Url('/ajax/misc/set_file_sync'),
-        params: {guid: node.id,
-                 file: exportFile,
-                 active: 1
-                },
+        params: {
+          guid: node.id,
+          file: exportFile,
+          active: 1
+        },
         success: function() {
           //update Paperpile.main.globalSettings here (is faster than
           //reload everything from the backend)

@@ -97,6 +97,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     Paperpile.Viewport.superclass.initComponent.call(this);
 
     this.tabs = Ext.getCmp('tabs');
+    this.dd = new Paperpile.DragDropManager();
 
     this.tagStore = new Ext.data.Store({
       proxy: new Ext.data.HttpProxy({
@@ -119,6 +120,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.runningJobs = [];
 
     this.loadKeys();
+  },
+
+  onRender: function() {
+
   },
 
   keyMap: null,
@@ -413,6 +418,28 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
   },
 
+  attachFile: function(grid, guid, path, isPDF) {
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/crud/attach_file'),
+      params: {
+        guid: guid,
+        grid_id: grid.id,
+        file: path,
+        is_pdf: (isPDF) ? 1 : 0
+      },
+      method: 'GET',
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        Paperpile.main.onUpdate(json.data);
+
+	  // TODO: add a status message and an undo function.
+      },
+      failure: Paperpile.main.onError,
+      scope: this,
+    });
+
+  },
+
   countFilesAndTriggerExtraction: function(path) {
     // First count the PDFs
     Ext.Ajax.request({
@@ -478,7 +505,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       }
     };
     var options = {
-	title: 'Choose a library file to import',
+      title: 'Choose a library file to import',
       types: ['bib', 'ris'],
       typesDescription: 'Supported files (Bibtex, RIS)'
     };
