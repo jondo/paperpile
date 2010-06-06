@@ -2084,3 +2084,33 @@ table.pp-meta-form {
     background-repeat: no-repeat;
     padding-bottom: 74px;
 }
+
+ #drop_target {
+      -webkit-user-drop: element;
+      border-bottom: 2px dashed black;
+      background-color: #303030;
+      color: #909090;
+      font-size: 16px;
+      text-align: center;
+      width: 99%; height: 99%;
+}
+
+.drag-target {
+    background-color:#44ff55;
+}
+
+.drag-target-no {
+    background-color:#ff4455;
+}
+
+.file {
+      -webkit-user-drag: element;
+      background-color: #609060;
+      color: white;
+      font-size: 18px;
+      text-align: center;
+      font-weight: bold;
+      display: block;
+      float: center;
+      margin: 5px;
+}

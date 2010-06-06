@@ -95,7 +95,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       record.data._citekey = Ext.util.Format.ellipsis(record.data.citekey, 18);
       record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
 
-      if (record.data._imported){
+      if (record.data._imported) {
         if (record.data.last_read) {
           record.data._last_readPretty = 'Last read: ' + Paperpile.utils.prettyDate(record.data.last_read);
         } else {
@@ -105,7 +105,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         record.data._last_readPretty = 'Click <i>Import</i> to add file to your library.';
       }
 
-      if (record.data.attachments){
+      if (record.data.attachments) {
         record.data._attachments_count = record.data.attachments.split(/,/).length;
       }
 
@@ -510,8 +510,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // main/overrides.js
     this.getSelectionModel().on('afterselectionchange',
       function(sm) {
-	  // Delete the previously stored set of selected records.
-	delete this._selected_records;
+        // Delete the previously stored set of selected records.
+        delete this._selected_records;
         this.contextRecord = null;
 
         var selection = this.getSelection();
@@ -559,7 +559,43 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       ddGroup: this.ddGroup
     });
 
+//    this.getEl().dom.addEventListener("dragenter", this.onDragOver.createDelegate(this));
+      this.getView().mainBody.dom.addEventListener("dragover", this.onDragOver.createDelegate(this));
+//    this.getEl().dom.addEventListener("dragleave", this.onDragOut.createDelegate(this));
+    this.dragToolTip = new Ext.ToolTip({
+      renderTo: document.body,
+      targetXY: [0, 0],
+      anchor: 'left',
+      showDelay: 0,
+      hideDelay: 0
+    });
+
     this.createAuthorToolTip();
+  },
+
+  onDragOver: function(event) {
+      if (this.dragTargetRow === undefined)
+	  this.dragTargetRow = 0;
+    var fileURLs = event.dataTransfer.getData("text/uri-list").split("\n");
+
+    var v = this.getView();
+    var index = v.findRowIndex(event.target);
+    if (index != this.dragTargetRow && index !== undefined) {
+      // Un-highlight the previously highlighted row.
+      Ext.fly(v.getRow(this.dragTargetRow)).removeClass('drag-target');
+      // highlight the new drag target.
+      Ext.fly(v.getRow(index)).addClass('drag-target');
+      this.dragToolTip.initTarget(v.getRow(index));
+      this.dragToolTip.update("Drag onto row " + index);
+      this.dragToolTip.show();
+      this.dragTargetRow = index;
+    }
+
+//    event.preventDefault();
+//    return true;
+  },
+
+  onDragOut: function(event) {
   },
 
   createAuthorToolTip: function() {
@@ -625,32 +661,34 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       reader: new Ext.data.JsonReader()
     });
 
-      // Add some callbacks to the store so we can maintain the selection between reloads.
-      this._store.on('beforeload', function(store,options) {
-	  var records = this.getSelectionModel().getSelections();
-	  var recordIds = [];
-	  for(var i = 0, len = records.length; i < len; i++){
-	      recordIds[i] = records[i].id;
-	  }
-	  this._selected_records = recordIds;
-      },this);
-      this._store.on('load', function(store,options) {
-	  // Select rows of records with the stored ids
-	  var rows = [];
-	  var recordIds = this._selected_records;
-	  if (recordIds === undefined) {
-	      recordIds = [];
-	  }
-	  for(var i = 0, len = recordIds.length; i < len; i++){
-	      var index = this.getStore().indexOfId(recordIds[i]);
-	      if(index >= 0){
-		  Paperpile.log(index);
-		  rows.push(index);
-	      }
-	  }
-	  this.getSelectionModel().selectRows(rows);
-	  delete this._selected_records;
-      },this);
+    // Add some callbacks to the store so we can maintain the selection between reloads.
+    this._store.on('beforeload', function(store, options) {
+      var records = this.getSelectionModel().getSelections();
+      var recordIds = [];
+      for (var i = 0, len = records.length; i < len; i++) {
+        recordIds[i] = records[i].id;
+      }
+      this._selected_records = recordIds;
+    },
+    this);
+    this._store.on('load', function(store, options) {
+      // Select rows of records with the stored ids
+      var rows = [];
+      var recordIds = this._selected_records;
+      if (recordIds === undefined) {
+        recordIds = [];
+      }
+      for (var i = 0, len = recordIds.length; i < len; i++) {
+        var index = this.getStore().indexOfId(recordIds[i]);
+        if (index >= 0) {
+          Paperpile.log(index);
+          rows.push(index);
+        }
+      }
+      this.getSelectionModel().selectRows(rows);
+      delete this._selected_records;
+    },
+    this);
     return this._store;
   },
 
@@ -780,7 +818,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  <tpl if="_metadata_job != null && _metadata_job.status==\'RUNNING\'">',
       '    <img src="/images/icons/loading.gif" class="pp-img-action-disabled" ext:qtip="Updating metadata..."/>',
       '  </tpl>',
-	'  <tpl if="_metadata_job != null && _metadata_job.status==\'PENDING\'">',
+      '  <tpl if="_metadata_job != null && _metadata_job.status==\'PENDING\'">',
       '    <img src="/images/icons/update-metadata.png" class="pp-img-action-disabled" ext:qtip="Waiting to update metadata..."/>',
       '  </tpl>',
       '  <tpl if="_metadata_job==null">',
@@ -879,7 +917,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    </tpl>',
       '    <tpl if="_imported">',
       '      <ul>',
-      '        <li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" class="pp-textlink" action="attach-file">Attach File</a></li>', 
+      '        <li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" class="pp-textlink" action="attach-file">Attach File</a></li>',
       '      </ul>',
       '    </tpl>',
       '  </div>',
@@ -1434,12 +1472,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     win.show(this);
   },
 
-    updateMetadata: function() {
-      var selection = this.getSelection();
+  updateMetadata: function() {
+    var selection = this.getSelection();
     Ext.getCmp('queue-widget').onUpdate({
       submitting: true
     });
-      Ext.Ajax.request({
+    Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/batch_update'),
       params: {
         selection: selection,
@@ -1453,8 +1491,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         Paperpile.main.queueUpdate();
       },
       failure: Paperpile.main.onError,
-    });	
-    },
+    });
+  },
 
   batchDownload: function() {
     selection = this.getSelection();
