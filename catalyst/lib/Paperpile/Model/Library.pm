@@ -284,8 +284,7 @@ sub update_pub {
 
   # Figure out fields that have changed
   foreach my $field ( keys %{$new_data} ) {
-      next if (!$new_data->{$field});
-      print STDERR "[$field] " . $new_data->{$field}."\n";
+    next if (!$new_data->{$field});
     if (!defined $data->{$field} || $new_data->{$field} ne $data->{$field} ) {
       $diff->{$field} = $new_data->{$field};
     }

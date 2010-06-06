@@ -205,7 +205,6 @@ sub undo_trash : Local {
 sub update_entry : Local {
   my ( $self, $c ) = @_;
 
-  my $plugin  = $self->_get_plugin($c);
   my $guid = $c->request->params->{guid};
 
   my $new_data = {};
@@ -236,6 +235,95 @@ sub update_entry : Local {
   $c->stash->{data} = { pubs => { $guid => $hash } };
 
 }
+
+sub lookup_entry : Local {
+  my ( $self, $c ) = @_;
+
+  my $old_data = {};
+  foreach my $field ( keys %{ $c->request->params } ) {
+    next if $field =~ /grid_id/;
+    $old_data->{$field} = $c->request->params->{$field};
+  }
+
+  my $pub = Paperpile::Library::Publication->new($old_data);
+
+  # Get default plugin order
+  my @plugin_list = split( /,/, $c->model('Library')->get_setting('search_seq'));
+
+  # Re-order list if identifiers are given
+  if ($pub->arxivid) {
+    @plugin_list = ('ArXiv', grep { $_ ne 'ArXiv' } @plugin_list);
+  }
+  if ($pub->pmid) {
+    @plugin_list = ('PubMed', grep { $_ ne 'PubMed' } @plugin_list);
+  }
+
+  # Try plugins until a match is found
+  my $success_plugin = undef;
+
+  foreach my $plugin_name (@plugin_list) {
+    eval {
+      my $plugin_module = "Paperpile::Plugins::Import::" . $plugin_name;
+      my $plugin        = eval( "use $plugin_module; $plugin_module->" . 'new()' );
+      $pub = $plugin->match($pub);
+    };
+
+    my $e;
+    if ( $e = Exception::Class->caught ) {
+
+      # Did not find a match, continue with next plugin
+      if ( $e = Exception::Class->caught('NetMatchError') ) {
+        next;
+      }
+      # Other error has occured -> stop now by rethrowing error
+      else {
+        if ( ref $e ) {
+          $e->rethrow;
+        } else {
+          die($@);
+        }
+      }
+    }
+    # Found match -> stop now
+    else {
+      $success_plugin = $plugin_name;
+      last;
+    }
+  }
+
+  $c->stash->{success_plugin} = $success_plugin;
+
+  if ($success_plugin){
+
+    my $new_data = $pub->as_hash;
+
+    $new_data->{guid}='';
+
+    $c->stash->{data} = $new_data;
+  }
+
+  # We always set success unless an unexpected exception occured and
+  # handle everything in the success callback in the front-end.
+  $c->stash->{success} = \1;
+
+}
+
+sub _match_single {
+
+  my ( $self, $match_plugin ) = @_;
+
+  my $plugin_module = "Paperpile::Plugins::Import::" . $match_plugin;
+  my $plugin        = eval( "use $plugin_module; $plugin_module->" . 'new()' );
+
+  my $pub = $self->pub;
+
+  $pub = $plugin->match($pub);
+
+  $self->pub($pub);
+
+}
+
+
 
 sub update_notes : Local {
   my ( $self, $c ) = @_;
