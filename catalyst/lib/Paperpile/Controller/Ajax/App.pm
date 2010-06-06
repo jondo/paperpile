@@ -124,6 +124,7 @@ sub init_session : Local {
 
   mkpath( File::Spec->catfile( $tmp_dir, 'download' ) );
   mkpath( File::Spec->catfile( $tmp_dir, 'queue' ) );
+  mkpath( File::Spec->catfile( $tmp_dir, 'filesync' ) );
 
   if ( not -e $c->config->{'queue_db'} ) {
     copy( $c->path_to('db/queue.db')->stringify, $c->config->{'queue_db'} )
