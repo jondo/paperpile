@@ -407,7 +407,7 @@ sub clear_cancel {
 
 sub calculate_md5 {
   my ($self, $file) = @_;
-  open( FILE, "<$file" ) or FileReadError->throw( error => "Could not read " . $self->file );
+  open( FILE, "<$file" ) or FileReadError->throw( error => "Could not read " . $file );
   my $c = Digest::MD5->new;
   $c->addfile(*FILE);
   return $c->hexdigest;
