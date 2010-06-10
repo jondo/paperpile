@@ -90,10 +90,7 @@ sub insert_pubs {
     next if ( !$pub->sha1 );
 
     if ( !$pub->guid ) {
-      my $_guid = Data::GUID->new;
-      $_guid = $_guid->as_hex;
-      $_guid =~ s/^0x//;
-      $pub->guid($_guid);
+      $pub->create_guid;
     }
 
     # If imported with attachments from another database the

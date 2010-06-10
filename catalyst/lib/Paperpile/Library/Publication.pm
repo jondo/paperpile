@@ -18,6 +18,7 @@ package Paperpile::Library::Publication;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Digest::SHA1;
+use Data::GUID;
 use Data::Dumper;
 
 use Paperpile::Library::Author;
@@ -453,6 +454,17 @@ sub refresh_attachments {
 
   }
 }
+
+sub create_guid {
+  my $self = shift;
+
+  my $_guid = Data::GUID->new;
+  $_guid = $_guid->as_hex;
+  $_guid =~ s/^0x//;
+  $self->guid($_guid);
+
+}
+
 
 sub as_hash {
 
