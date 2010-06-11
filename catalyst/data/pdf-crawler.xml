@@ -537,6 +537,22 @@
   </test>
 </site>
 
+<site name="AcademicJournals">
+  <signature>
+    <url>!academicjournals\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;>Reprint!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.academicjournals.org/ERR2/abstracts/abstract2010/Jun/Harrington.htm</url>
+  </test>
+</site>
+
 
 <site name="Meta">
   <signature>
