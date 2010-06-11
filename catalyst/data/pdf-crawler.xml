@@ -553,7 +553,25 @@
   </test>
 </site>
 
+<site name="EGU">
+  <signature>
+    <url>!atmos-chem-phys\.net!</url>
+    <url>!biogeosciences\.net!</url>
+    <body>!www\.egu\.eu!</body>
+  </signature>
 
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;\s*>\s*Final\sRevised\sPaper!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biogeosciences.net/7/1877/2010/bg-7-1877-2010.html</url>
+  </test>
+</site>
+
+  
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
