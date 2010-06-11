@@ -571,6 +571,22 @@
   </test>
 </site>
 
+<site name="LApress">
+  <signature>
+    <url>!la-press\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+fileType=pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://la-press.com/effect-of-diet-supplementation-on-the-expression-of-bovine-genes--asso-a1970</url>
+  </test>
+</site>
+
   
 <site name="Meta">
   <signature>
