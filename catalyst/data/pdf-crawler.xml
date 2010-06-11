@@ -282,8 +282,15 @@
     </pattern>
   </rule>
 
+  <rule>
+    <pattern>
+      <rewrite>!(doi/abs|doi/full)!doi/pdf!</rewrite>
+    </pattern>
+  </rule>
+
   <test>
     <url>http://arpa.allenpress.com/arpaonline/?request=get-abstract&amp;issn=1543-2165&amp;volume=132&amp;page=273</url>
+    <url>http://www.angle.org.pinnacle.allenpress.com/doi/full/10.2319/090709-506.1</url>
   </test>
 </site>
 
