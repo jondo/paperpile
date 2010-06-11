@@ -245,7 +245,7 @@ sub _parse_arxiv_page {
     }
 
     $pub->linkout($abs);
-    $pub->eprint($id);
+    $pub->arxivid($id);
     $pub->_pdf_url($pdf);
 
     $pub->title($title)       if $title;
@@ -591,7 +591,10 @@ sub match {
   # 1) DOIs are sometimes supported, but Arxiv Ids work best. It is at the
   # moment stored in pmid
   $query_doi      = _EscapeString( $pub->doi )  if ( $pub->doi );
-  $query_arxiv_id = _EscapeString( $pub->arxivid ) if ( $pub->arxivid );
+  if ( $pub->arxivid ) {
+    (my $tmp = $pub->arxivid) =~ s/(ARXIVID:?|ARXIV:?)//i;
+    $query_arxiv_id = _EscapeString( $tmp );
+  }
 
   # 2) Title
   if ( $pub->title ) {
@@ -647,8 +650,6 @@ sub match {
   # let's first see if we have an arXiv identifier
   if ( $query_arxiv_id ne '' ) {
     my $query = $searchUrl_ID . $query_arxiv_id;
-
-    #print STDERR "$query\n";
     my $response = $browser->get($query);
     my $result = XMLin( $response->content, ForceArray => 1 );
 
