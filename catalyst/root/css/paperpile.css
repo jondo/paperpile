@@ -129,6 +129,11 @@ h1 {
 /*    margin-top:3px;*/
 }
 
+.pp-drag-pane {
+    position:absolute;
+    background-color:blue;
+}
+
 .pp-box-tabs-left {
     width:100px;
     float:left;

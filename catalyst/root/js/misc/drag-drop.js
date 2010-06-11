@@ -1,11 +1,63 @@
 Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   registerGridListeners: function(grid) {
 
-    grid.getView().mainBody.dom.addEventListener("dragover", this.gridDragOver.createDelegate(grid), false);
-    grid.getView().mainBody.dom.addEventListener("dragenter", this.gridDragOver.createDelegate(grid), false);
-    grid.getView().mainBody.dom.addEventListener("dragleave", this.gridDragOver.createDelegate(grid), false);
-    grid.getView().mainBody.dom.addEventListener("drop", this.gridDrop.createDelegate(grid), false);
+      var el = Ext.getBody();
+      this.bodyDragFn = this.bodyDrag.createDelegate(this);
+      this.addAllDragEvents(el,this.bodyDragFn,false);
+//    grid.getView().mainBody.dom.addEventListener("dragover", this.gridDragOver.createDelegate(grid), false);
+//    grid.getView().mainBody.dom.addEventListener("dragenter", this.gridDragOver.createDelegate(grid), false);
+//    grid.getView().mainBody.dom.addEventListener("dragleave", this.gridDragOver.createDelegate(grid), false);
+//    grid.getView().mainBody.dom.addEventListener("drop", this.gridDrop.createDelegate(grid), false);
   },
+
+    addAllDragEvents: function(el,fn,capture) {
+      el.dom.addEventListener("dragover",fn,capture);
+	el.dom.addEventListener("dragenter",fn,capture);
+	el.dom.addEventListener("dragleave",fn,capture);
+    },
+    removeAllDragEvents: function(el,fn,capture) {
+      el.dom.removeEventListener("dragover",fn,capture);
+	el.dom.removeEventListener("dragenter",fn,capture);
+	el.dom.removeEventListener("dragleave",fn,capture);
+    },
+
+  bodyDrag: function(event) {
+      if (event.type == 'dragleave') {return;}
+      Paperpile.log("BodyDrag, type: "+event.type);
+      if (!this.dragPane) {
+	  var def = Ext.DomHelper.createDom({
+	      id:'drag-pane',
+	      tag:'div',
+	      cls:'pp-drag-pane',
+	  });
+	  this.dragPane =  Ext.getBody().appendChild(def);
+	  this.dragPane.setBox(Paperpile.main.getBox());
+	  this.dragPane.setOpacity(0.1);
+      }
+
+      Paperpile.log("Setting pane visible!");
+	  // Remove body drag listener
+	  this.removeAllDragEvents(Ext.getBody(),this.bodyDragFn,false);
+	  // Add pane drag listener.
+      this.paneDragFn = this.paneDrag.createDelegate(this);
+      this.addAllDragEvents(this.dragPane,this.paneDragFn,true);
+
+      // Show the drag pane.
+      this.dragPane.setVisible(true);      
+  },
+
+    paneDrag: function(event) {
+	Paperpile.log("PaneDrag, type: "+event.type);
+
+	if (event.type == 'dragleave') {
+	    Paperpile.log("Hiding drag pane!");
+	  this.dragPane.setVisible(false);
+	  // Remove pane drag listener.
+	  this.removeAllDragEvents(this.dragPane,this.paneDragFn,true);
+	  // Add body drag listener
+	  this.addAllDragEvents(Ext.getBody(),this.bodyDragFn,false);
+	}
+    },
 
   fileFromURL: function(url) {
     var file = url.replace("file://", "");
@@ -128,12 +180,15 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     return index;
   },
 
+  bodyDragOver: function(event) {
+    Paperpile.log(event.type+"  "+event.x+" "+event.y);
+  },
+
   // Called from the scope of the grid object.
   gridDragOver: function(event) {
     // Gotta match up the effectAllowed and dropEffect. Complete crap.
     // See for a useful overview: http://www.useragentman.com/blog/2010/01/10/cross-browser-html5-drag-and-drop/
     if (!this.dragToolTip) {
-      Paperpile.log("New tooltip!");
       this.dragToolTip = new Ext.ToolTip({
         renderTo: document.body,
         targetXY: [0, 0],
@@ -167,8 +222,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     }
 
     if (event.type == 'dragleave') {
+      Paperpile.log(event.x+" "+event.y);
       var currentRow = Ext.fly(v.getRow(this.dragTargetRow));
-
       var el = document.elementFromPoint(event.x, event.y);
       var foundWithin = false;
       while (el) {
