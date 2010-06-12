@@ -102,15 +102,19 @@ Paperpile.stage0 = function() {
         Paperpile.server.setOnExit(function(line) {
           Ext.Msg.show({
             title: 'Error',
-            msg: 'Could not start Paperpile server.',
+            msg: 'Could not start Paperpile server. Please contact support@paperpile.com for help.<br><br>'+Paperpile.serverLog,
             buttons: Ext.Msg.OK,
-            icon: Ext.MessageBox.ERROR
+            icon: Ext.MessageBox.ERROR,
+            fn: function(action) {
+              if (IS_TITANIUM) {
+                Titanium.UI.mainWindow.close();
+              }
+            }
           });
         });
 
         // Handler to process the STDERR output of the server
         Paperpile.server.setOnReadLine(function(line) {
-
           if (Paperpile.isLogging) {
             Paperpile.serverLog = Paperpile.serverLog + line + "\n";
 
