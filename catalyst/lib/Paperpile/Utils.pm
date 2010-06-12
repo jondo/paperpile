@@ -136,6 +136,30 @@ sub get_browser {
 }
 
 
+# Helper function to check if a get request via LWP user agent was
+# successful. $response is the response object of the request and $msg
+# and optional message string which will prepended to the error in the
+# exception.
+
+sub check_browser_response {
+
+  my ( $self, $response, $msg ) = @_;
+
+  if ( defined $msg ) {
+    $msg = "$msg: ";
+  } else {
+    $msg = '';
+  }
+
+  if ( $response->is_error ) {
+    NetGetError->throw(
+      error => $msg . $response->message,
+      code  => $response->code
+    );
+  }
+}
+
+
 sub get_binary{
 
   my ($self, $name)=@_;

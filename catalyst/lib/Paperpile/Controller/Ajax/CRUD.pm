@@ -31,7 +31,7 @@ use File::Copy;
 use File::stat;
 use URI::file;
 use FreezeThaw;
-
+use Paperpile::Exceptions;
 
 use 5.010;
 
@@ -261,6 +261,8 @@ sub lookup_entry : Local {
   # Try plugins until a match is found
   my $success_plugin = undef;
 
+  my $caught_error = undef;
+
   foreach my $plugin_name (@plugin_list) {
     eval {
       my $plugin_module = "Paperpile::Plugins::Import::" . $plugin_name;
@@ -270,16 +272,19 @@ sub lookup_entry : Local {
 
     my $e;
     if ( $e = Exception::Class->caught ) {
-
       # Did not find a match, continue with next plugin
-      if ( $e = Exception::Class->caught('NetMatchError') ) {
+      if ( Exception::Class->caught('NetMatchError') ) {
         next;
       }
-      # Other error has occured -> stop now by rethrowing error
+      # Other exception has occured; still try other plugins but save
+      # error message to show if all plugins fail
       else {
         if ( ref $e ) {
-          $e->rethrow;
-        } else {
+          $caught_error = $e->error;
+          next;
+        }
+        # Abort on unexpected exception
+        else {
           die($@);
         }
       }
@@ -287,10 +292,12 @@ sub lookup_entry : Local {
     # Found match -> stop now
     else {
       $success_plugin = $plugin_name;
+      $caught_error = undef;
       last;
     }
   }
 
+  $c->stash->{error} = $caught_error;
   $c->stash->{success_plugin} = $success_plugin;
 
   if ($success_plugin){

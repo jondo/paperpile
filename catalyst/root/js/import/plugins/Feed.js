@@ -45,16 +45,16 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
     this.getStore().setBaseParam('plugin_id', this.plugin_id);
 
     this.getStore().on('beforeload', function(store, options) {
-     
+
       // If this.plugin_reload is set, we want to force the backend to
       // re-download the feed. It is set to 0 here to allow "live"
       // search from the local database after that. 
-      if (this.plugin_reload){
-        
+      if (this.plugin_reload) {
+
         // First set variable for backend
         options.params.plugin_reload = 1;
         // Reset immediately to ensure the next time we do "live search"
-        this.plugin_reload=0; 
+        this.plugin_reload = 0;
 
         // Allow cancel and timeout when doing full load
         options.params.cancel_handle = 'grid_' + this.id;
@@ -102,6 +102,13 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
     },
     this);
 
+    this.getStore().on('loadexception',
+      function(exception, options, response, error) {
+        clearTimeout(this.timeoutWarn);
+        clearTimeout(this.timeoutAbort);
+      },
+      this);
+
     Paperpile.PluginGridFeed.superclass.initComponent.call(this);
   },
 
@@ -110,7 +117,7 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
     var ids = this.toolbarMenuItemIds;
     ids.remove('NEW');
 
-    ids.insert(3,'RELOAD_FEED');
+    ids.insert(3, 'RELOAD_FEED');
 
   }
 });

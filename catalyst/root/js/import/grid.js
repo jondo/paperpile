@@ -1269,6 +1269,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
 
+          if (json.error){
+            Paperpile.main.onError(response);
+            return;
+          }
+
           Paperpile.main.onUpdate(json.data);
           Paperpile.status.clearMsg();
 
@@ -1276,7 +1281,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           this.getPluginPanel().updateDetails();
 
         },
-        failure: Paperpile.main.onError,
+        failure: function(response){
+          this.getSelectionModel().un('beforerowselect', blockingFunction, this);
+          clearTimeout(this.timeoutWarn);
+          clearTimeout(this.timeoutAbort);
+          Paperpile.main.onError(response);
+        },
         scope: this
       });
     }

@@ -305,9 +305,12 @@ sub match {
   my $browser = Paperpile::Utils->get_browser;
 
   if ( $query_pmid ne '' ) {
-    my $response  = $browser->get( $esearch . $query_pmid );
+    my $response = $browser->get( $esearch . $query_pmid );
+    Paperpile::Utils->check_browser_response($response);
+
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
+
     #print STDERR "$esearch$query_pmid\n";
     # If we get exactly one result then the DOI was really unique
     # and in most cases we are done.
@@ -327,6 +330,7 @@ sub match {
 
   if ( $query_doi ne '' ) {
     my $response  = $browser->get( $esearch . $query_doi );
+    Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
 
@@ -353,6 +357,7 @@ sub match {
     #print STDERR "$esearch$query_title+$query_authors\n";
     # Pubmed is queried using title and authors
     my $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+    Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
 
@@ -372,6 +377,7 @@ sub match {
 
       # now query again
       $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+      Paperpile::Utils->check_browser_response($response);
       $resultXML = $response->content;
       $result    = XMLin($resultXML);
     }
@@ -406,6 +412,7 @@ sub match {
   # only with the title.
   if ( $query_title ne '' ) {
     my $response  = $browser->get( $esearch . "$query_title" );
+    Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
 
@@ -456,6 +463,7 @@ sub web_lookup {
 
   my $browser   = Paperpile::Utils->get_browser;
   my $response  = $browser->get( $esearch . $pmid );
+  Paperpile::Utils->check_browser_response($response);
   my $resultXML = $response->content;
   my $result    = XMLin($resultXML);
 
@@ -491,12 +499,7 @@ sub _pubFetch {
   my $url      = "$efetch&query_key=$query_key&WebEnv=$web_env&retstart=$offset&retmax=$limit";
   my $response = $browser->get($url);
 
-  if ( $response->is_error ) {
-    NetGetError->throw(
-      error => 'PubMed query failed: ' . $response->message,
-      code  => $response->code
-    );
-  }
+  Paperpile::Utils->check_browser_response($response,'PubMed query failed');
 
   my $resultXML = $response->content;
 
@@ -639,12 +642,7 @@ sub _linkOut {
 
   my $response = $browser->get($url);
 
-  if ( $response->is_error ) {
-    NetGetError->throw(
-      error => 'PubMed query failed: ' . $response->message,
-      code  => $response->code
-    );
-  }
+  Paperpile::Utils->check_browser_response($response,"PubMed query failed");
 
   my $result = XMLin( $response->content, forceArray => ['IdUrlSet'] );
 
@@ -661,6 +659,7 @@ sub _linkOut {
 	my $url2 =
 	  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=llinks&db=PubMed&id=$id";
 	my $response2 = $browser->get($url2);
+    Paperpile::Utils->check_browser_response($response2);
 	my $result2 = XMLin( $response2->content, forceArray => ['IdUrlSet'] );
 	eval {
 	  my $linkout2 = $result2->{LinkSet}->{IdUrlList}->{IdUrlSet}->[0]->{ObjUrl}->[0]->{Url};
@@ -689,6 +688,7 @@ sub _fetch_by_pmid {
     $query .= "[uid]" if ( $pmid !~ m/^PMC/ );
 
     my $response  = $browser->get($query);
+    Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
 
