@@ -301,7 +301,6 @@ sub update_pub {
   my $pattern = $self->get_setting('key_pattern');
   my $new_key = $new_pub->format_pattern($pattern);
   if ($new_key ne $old_data->{citekey}) {
-      print STDERR " !!!! NEW CITEKEY\n";
     # If we have a new citekey, make sure it doesn't conflict with other existing citekeys (this is the method called normally when inserting a new pub)
     $self->_generate_keys( [$new_pub], $dbh );
     $diff->{citekey} = $new_pub->citekey;
@@ -310,7 +309,6 @@ sub update_pub {
   # If we have attachments we need to check if their names have
   # changed because of the update and if so move them to the new place
   if ( $new_pub->{pdf} || $new_pub->{attachments} ) {
-      print STDERR " !!!! MOVE PEDF!!!!\n";
     my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid';");
     $sth->execute;
 
@@ -340,6 +338,12 @@ sub update_pub {
         my $ff              = $dbh->quote($file_name);
         my $attachment_guid = $row->{guid};
         $dbh->do("UPDATE Attachments SET local_file=$f, name=$ff WHERE guid='$attachment_guid';");
+
+        if ($row->{is_pdf}){
+          $f = $dbh->quote($new_pub->pdf_name);
+          $dbh->do("UPDATE Publications SET pdf_name=$f WHERE guid='$guid';");
+        }
+
         mkpath($dir);
         move( $old_file, $new_file );
         ( $volume, $dir, $file_name ) = splitpath($old_file);
