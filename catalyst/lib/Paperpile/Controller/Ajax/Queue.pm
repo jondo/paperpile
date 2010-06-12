@@ -90,32 +90,50 @@ sub grid : Local {
 sub update : Local {
   my ( $self, $c ) = @_;
 
-  my $get_queue = $c->request->params->{get_queue};
+  # Not in use at the moment. We always return the queue.
+  #my $get_queue = $c->request->params->{get_queue};
 
   my $data = {};
 
-  if ($get_queue) {
-    my $q = Paperpile::Queue->new();
-    $q->update_stats;
-    $data->{queue} = $q->as_hash;
-  }
-
-  my $ids = $c->request->params->{ids} || [];
-
-  if ( ref($ids) ne 'ARRAY' ) {
-    $ids = [$ids];
-  }
+  my $q = Paperpile::Queue->new();
+  $q->update_stats;
+  $data->{queue} = $q->as_hash;
 
   my $jobs = {};
   my $pubs = {};
 
   my @pub_list = ();
-  foreach my $id ( @{$ids} ) {
-    my $job = Paperpile::Job->new( { id => $id } );
-    if (defined $job->pub) {
-      my $pub = $job->pub;
-      push @pub_list, $pub;
-      $jobs->{$id} = $job->as_hash;
+
+  my $status = $data->{queue}->{status};
+
+  # If queue is finished we return all jobs to make sure everything is
+  # updated
+  if ($status ne 'RUNNING' && $status ne 'PAUSED') {
+
+    my $all = $q->get_jobs();
+
+    foreach my $job (@$all){
+      if (defined $job->pub) {
+        my $pub = $job->pub;
+        push @pub_list, $pub;
+        $jobs->{$job->id} = $job->as_hash;
+      }
+    }
+  } else {
+
+    my $ids = $c->request->params->{ids} || [];
+
+    if ( ref($ids) ne 'ARRAY' ) {
+      $ids = [$ids];
+    }
+
+    foreach my $id ( @{$ids} ) {
+      my $job = Paperpile::Job->new( { id => $id } );
+      if (defined $job->pub) {
+        my $pub = $job->pub;
+        push @pub_list, $pub;
+        $jobs->{$id} = $job->as_hash;
+      }
     }
   }
 

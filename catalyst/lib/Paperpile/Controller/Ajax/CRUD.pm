@@ -31,7 +31,7 @@ use File::Copy;
 use File::stat;
 use URI::file;
 use FreezeThaw;
-use Paperpile::Exceptions;
+
 
 use 5.010;
 
