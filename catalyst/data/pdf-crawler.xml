@@ -282,8 +282,15 @@
     </pattern>
   </rule>
 
+  <rule>
+    <pattern>
+      <rewrite>!(doi/abs|doi/full)!doi/pdf!</rewrite>
+    </pattern>
+  </rule>
+
   <test>
     <url>http://arpa.allenpress.com/arpaonline/?request=get-abstract&amp;issn=1543-2165&amp;volume=132&amp;page=273</url>
+    <url>http://www.angle.org.pinnacle.allenpress.com/doi/full/10.2319/090709-506.1</url>
   </test>
 </site>
 
@@ -512,7 +519,75 @@
   </test>
 </site>
 
+<site name="ImpactJournals">
+  <signature>
+    <url>!impactaging\.com!</url>
+    <url>!impactjournals\.com!</url>
+  </signature>
 
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.impactjournals.com/oncotarget/papers/v1/n1/html/100513.html</url>
+    <url>http://www.impactaging.com/papers/v1/n9/full/100086.html</url>
+  </test>
+</site>
+
+<site name="AcademicJournals">
+  <signature>
+    <url>!academicjournals\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;>Reprint!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.academicjournals.org/ERR2/abstracts/abstract2010/Jun/Harrington.htm</url>
+  </test>
+</site>
+
+<site name="EGU">
+  <signature>
+    <url>!atmos-chem-phys\.net!</url>
+    <url>!biogeosciences\.net!</url>
+    <body>!www\.egu\.eu!</body>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;\s*>\s*Final\sRevised\sPaper!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biogeosciences.net/7/1877/2010/bg-7-1877-2010.html</url>
+  </test>
+</site>
+
+<site name="LApress">
+  <signature>
+    <url>!la-press\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+fileType=pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://la-press.com/effect-of-diet-supplementation-on-the-expression-of-bovine-genes--asso-a1970</url>
+  </test>
+</site>
+
+  
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>

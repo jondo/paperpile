@@ -194,6 +194,7 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
+  my $query_pmid    = '';
   my $query_doi     = '';
   my $query_title   = '';
   my $query_authors = '';
@@ -202,6 +203,10 @@ sub match {
   # First we format the three query strings properly. Besides
   # HTML escaping we remove words that contain non-alphnumeric
   # characters. These words can cause severe problems.
+
+  # 0) Pubmed ID
+  $query_pmid = _EscapeString( $pub->pmid . "[PMID]" ) if ( $pub->pmid );
+
   # 1) DOI
   $query_doi = _EscapeString( $pub->doi . "[AID]" ) if ( $pub->doi );
 
@@ -290,6 +295,7 @@ sub match {
   }
 
   # SEARCH STRATEGY:
+  # 0) Use PMID if available
   # 1) Use DOI if available: This is the best strategy if a DOI is available,
   #    but it might happen that there are parsing errors in the DOI.
   # 2) Title+Authors: Most stringent, but parsing errors and strange characters
@@ -297,6 +303,28 @@ sub match {
   # 3) Just Title: If everything till this point failed.
 
   my $browser = Paperpile::Utils->get_browser;
+
+  if ( $query_pmid ne '' ) {
+    my $response  = $browser->get( $esearch . $query_pmid );
+    my $resultXML = $response->content;
+    my $result    = XMLin($resultXML);
+    #print STDERR "$esearch$query_pmid\n";
+    # If we get exactly one result then the DOI was really unique
+    # and in most cases we are done.
+    if ( $result->{Count} == 1 ) {
+      $self->web_env( $result->{WebEnv} );
+      $self->query_key( $result->{QueryKey} );
+
+      my $xml = $self->_pubFetch( 0, 1 );
+      my $page = $self->_read_xml($xml);
+      $self->_linkOut($page);
+
+      if ( $page->[0]->pmid eq $pub->pmid ) {
+        return $self->_merge_pub( $pub, $page->[0] );
+      }
+    }
+  }
+
   if ( $query_doi ne '' ) {
     my $response  = $browser->get( $esearch . $query_doi );
     my $resultXML = $response->content;
