@@ -92,6 +92,12 @@ sub read {
           next;
         }
 
+        if ( $field =~ /guid/ ) {
+          $data->{guid} = $entry->field($field);
+          next;
+        }
+
+
         # File attachment. The convention seems to be that multiple
         # files are expected to be separated by semicolons and that
         # files are stored like this:
@@ -176,12 +182,15 @@ sub write {
   my @mandatory_fields = qw(sortkey title booktitle authors editors
                             address publisher organization school
                             howpublished journal volume edition series number issue chapter pages
-                            year month day);
+                            year month day guid);
 
   # Non standard fields are only exported if set in the user settings.
   my @optional_fields = split(/,/,$bibtex_export_fields);
 
   #linkout=>$url!!;
+
+  open( OUT,  ">".$self->file )
+    || FileReadError->throw( error => "Could not write to file ".$self->file );
 
   foreach my $pub ( @{ $self->data } ) {
 
@@ -218,11 +227,9 @@ sub write {
 
     my ($type, $key) = ($pub->pubtype, $pub->citekey);
 
-    # Write to STDOUT while testing
-
-    print "\@$type\{$key,\n";
-    print join(",\n", @lines);
-    print "\n}\n\n";
+    print OUT "\@$type\{$key,\n";
+    print OUT join(",\n", @lines);
+    print OUT "\n}\n\n";
   }
 }
 
