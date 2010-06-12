@@ -322,7 +322,7 @@ sub report_pdf_download_error : Local {
   my $pub          = $c->request->params->{info};
   my $catalyst_log = $c->request->params->{catalyst_log};
 
-  my $subject = 'Automatic bug report: PDF download error';
+  my $subject = 'Automatic bug report: PDF download error on '.$self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
 
   my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", DIR => '/tmp', SUFFIX => '.txt' );
@@ -356,7 +356,7 @@ sub report_pdf_match_error : Local {
 
   my $file = $c->request->params->{info};
 
-  my $subject = 'Automatic bug report: PDF match error';
+  my $subject = 'Automatic bug report: PDF match error on '.$self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
 
   my $r = POST $url,
@@ -369,6 +369,20 @@ sub report_pdf_match_error : Local {
     ];
 
   my $response = $browser->request($r);
+
+}
+
+
+sub _system_info_string {
+
+  my ( $self, $c ) = @_;
+
+  my $version_name = $c->config->{app_settings}->{version_name};
+  my $version_id   = $c->config->{app_settings}->{version_id};
+  my $build_number = $c->config->{app_settings}->{build_number};
+  my $platform     = $c->config->{app_settings}->{platform};
+
+  return "$platform, version $version_name (build $build_number)";
 
 }
 
