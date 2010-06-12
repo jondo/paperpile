@@ -541,35 +541,38 @@ sub _read_xml {
 
     my $cit = $article->{MedlineCitation};
 
+
     my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
 
     $pub->pmid( $cit->{PMID} );
 
-    my $volume   = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
-    my $issue    = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
-    my $year     = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
-    my $month    = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Month};
-    my $pages    = $cit->{Article}->{Pagination}->{MedlinePgn};
-    my $abstract = $cit->{Article}->{Abstract}->{AbstractText};
-    my $title    = $cit->{Article}->{ArticleTitle};
-    my $status   = $article->{PubmedData}->{PublicationStatus};
-    my $journal  = $cit->{MedlineJournalInfo}->{MedlineTA};
-    my $issn     = $cit->{Article}->{Journal}->{ISSN}->{content};
+    my $volume      = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
+    my $issue       = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
+    my $year        = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
+    my $month       = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Month};
+    my $pages       = $cit->{Article}->{Pagination}->{MedlinePgn};
+    my $abstract    = $cit->{Article}->{Abstract}->{AbstractText};
+    my $title       = $cit->{Article}->{ArticleTitle};
+    my $status      = $article->{PubmedData}->{PublicationStatus};
+    my $journal     = $cit->{MedlineJournalInfo}->{MedlineTA};
+    my $issn        = $cit->{Article}->{Journal}->{ISSN}->{content};
+    my $affiliation = $cit->{Article}->{Affiliation};
 
     my $doi = $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
 
     # Remove period from end of title
     $title =~ s/\.\s*$//;
 
-    $pub->volume($volume)     if $volume;
-    $pub->issue($issue)       if $issue;
-    $pub->year($year)         if $year;
-    $pub->month($month)       if $month;
-    $pub->pages($pages)       if $pages;
-    $pub->abstract($abstract) if $abstract;
-    $pub->title($title)       if $title;
-    $pub->doi($doi)           if $doi;
-    $pub->issn($issn)         if $issn;
+    $pub->volume($volume)           if $volume;
+    $pub->issue($issue)             if $issue;
+    $pub->year($year)               if $year;
+    $pub->month($month)             if $month;
+    $pub->pages($pages)             if $pages;
+    $pub->abstract($abstract)       if $abstract;
+    $pub->title($title)             if $title;
+    $pub->doi($doi)                 if $doi;
+    $pub->issn($issn)               if $issn;
+    $pub->affiliation($affiliation) if $affiliation;
 
     if ($journal) {
       my $jid = $journal;

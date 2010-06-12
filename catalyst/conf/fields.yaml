@@ -8,6 +8,7 @@ pub_fields:
   series:        "Series"
   authors:       "Authors"
   editors:       "Editors"
+  affiliation:   "Affiliation"
   journal:       "Journal"
   chapter:       "Chapter"      
   volume:        "Volume"
