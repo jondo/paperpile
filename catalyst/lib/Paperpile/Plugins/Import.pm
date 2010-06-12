@@ -135,9 +135,24 @@ sub _save_page_to_hash {
 
   foreach my $entry (@$data) {
     if (! defined $entry->guid ) {
-      my $guid = Data::GUID->new->as_hex;
-      $guid =~ s/^0x//;
-      $entry->guid($guid);
+
+      # If entry previously cached search for it by sha1 and re-use
+      # the guid to make sure the frontend is updates properly;
+      # Assumes that plugin never returns entries with duplicate sha1s
+      # which should be the case for all currently used plugins.
+      my $guid = undef;
+      foreach my $g (keys %{$self->_hash}){
+        my $cached = $self->_hash->{$g};
+        if ($cached->sha1 eq $entry->sha1){
+          $guid = $cached->guid;
+        }
+      }
+
+      if ($guid){
+        $entry->guid($guid);
+      } else {
+        $entry->create_guid;
+      }
     }
     $self->_hash->{ $entry->guid } = $entry;
   }
