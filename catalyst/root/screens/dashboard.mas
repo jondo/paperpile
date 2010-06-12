@@ -56,7 +56,7 @@
       <h2 class="pp-dashboard-feedback">Support &amp; Feedback</h2>
       <p>Something broken? Something missing? Tell us about it now!</p>
       <ul>
-        <li><a href="#" class="pp-textlink pp-bullet" onclick=" if (window.UserVoice) {UserVoice.Popin.show()}; return false;"> 
+        <li><a href="#" class="pp-textlink pp-bullet" onclick="Paperpile.main.userVoice();"> 
             Feedback</a>
         </li>
       </ul>

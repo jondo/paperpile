@@ -289,9 +289,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       Paperpile.main.tabs.newScreenTab('Clouds', 'clouds');
       break;
     case 'FEEDBACK':
-      if (window.UserVoice) {
-        UserVoice.Popin.show()
-      };
+      Paperpile.main.userVoice();
       break;
     case 'DUPLICATES':
       Paperpile.main.tabs.newPluginTab('Duplicates', {},

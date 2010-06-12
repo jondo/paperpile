@@ -97,7 +97,6 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
     // Make sure timeouts are cleared on error 
     grid.store.on('loadexception',
       function(exception, options, response, error) {
-        console.log('Exceoption in Subclass');
         clearTimeout(this.timeoutWarn);
         clearTimeout(this.timeoutAbort);
         this.timeoutWarn = null;

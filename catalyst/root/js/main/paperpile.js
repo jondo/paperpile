@@ -885,6 +885,21 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
+  userVoice: function() {
+
+    if (window.UserVoice) {
+      UserVoice.Popin.show()
+    } else {
+      Paperpile.status.clearMsg();
+      Paperpile.status.updateMsg({
+        type: 'info',
+        msg: 'Retry with and active network connection or visit paperpile.uservoice.com',
+        duration: 5
+      });
+    }
+
+  },
+
   checkForUpdates: function(silent) {
 
     if (!IS_TITANIUM) {
