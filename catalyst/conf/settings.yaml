@@ -48,6 +48,27 @@ library_settings:
   pdf_pattern: "[key]"
   attachment_pattern: "[key]_supplements"
   search_seq: "PubMed,GoogleScholar"
+  bibtex:
+    bibtex_mode: 0
+    import_strip_tex: 1
+    export_escape: 1
+    pretty_print: 1
+    use_quotes: 1
+    double_dash: 1
+    title_quote_complete: 0 
+    title_quote:
+      - DNA
+      - RNA
+    export_fields:
+      - abstract
+      - affiliation
+      - eprint
+      - issn
+      - isbn
+      - pmid
+      - lccn
+      - doi
+      - keywords
   _tree: ""
 
 release:
