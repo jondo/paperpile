@@ -1373,37 +1373,6 @@ sub index_pdf {
 
 }
 
-## Save tree object as string to database as setting _tree
-
-sub save_tree {
-
-  ( my $self, my $tree ) = @_;
-
-  # serialize the complete object
-  my $string = freeze($tree);
-
-  # simply save it as user setting
-  $self->set_setting( '_tree', $string );
-
-}
-
-## Restore tree object from string in database setting _tree
-
-sub restore_tree {
-  ( my $self ) = @_;
-
-  my $string = $self->get_setting('_tree');
-
-  if ( not $string ) {
-    return undef;
-  }
-
-  ( my $tree ) = thaw($string);
-
-  return $tree;
-
-}
-
 
 sub histogram {
 
