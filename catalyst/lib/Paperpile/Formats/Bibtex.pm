@@ -216,29 +216,72 @@ sub write {
     foreach my $key (@all_fields) {
 
       if ( my $value = $data{$key} ) {
+	$value =~ s/\s+/ /g;
 
         # UTF-8 to TeX conversion
-	# decode_utf8 has to be called first
-	# I do not know why this is necessary, but ti does not
-	# work without
-	$value = decode_utf8($value);
+        # decode_utf8 has to be called first
+        # I do not know why this is necessary, but it does not
+        # work without
+        $value = decode_utf8($value);
 
-	# this regexp replaces the characters
+        # this regexp replaces the characters
         $value =~ s{ ($enc)([\sa-zA-Z]?)}
               { my $encoded  = $latex_encoding{$1};
                 my $nextchar = $2;
                 my $sepchars = "";
                 if ($nextchar and substr($encoded, -1) =~ /[a-zA-Z]/) {
-                    $sepchars = ($nextchar =~ /\s/) ? '{}' : ' ';
+                    $sepchars = ($nextchar =~ /\s/) ? '{}' : '';
                 }
                 "$encoded$sepchars$nextchar" }gxe;
+
+        # for the title we enclose special words
+        # in brackets
+        if ( $key eq 'title' or $key eq 'booktitle' ) {
+          my @tmp = split( /\s+/, $value );
+          my $nr_upper_case = 0;
+          foreach my $i ( 1 .. $#tmp ) {
+            $nr_upper_case++ if ( $tmp[$i] =~ m/^[A-Z]/ );
+          }
+
+          foreach my $i ( 0 .. $#tmp ) {
+
+            # enclose if we have more than one upper case letter
+            # in a single word
+            my $nr_capital_letters = ( $tmp[$i] =~ tr/[A-Z]// );
+
+            # enclose if it is a one letter abbr.
+            my $flag = ( $tmp[$i] =~ m/^[A-Z]\.$/ ) ? 1 : 0;
+
+            # enclose if there are only a few upper case words
+            if ( $i > 0 and $nr_upper_case / ( $#tmp + 1 ) < 0.25 ) {
+              $flag = 1 if ( $tmp[$i] =~ m/^[A-Z]/ and $tmp[ $i - 1 ] !~ m/\./ );
+            }
+            $flag = 1 if ( $tmp[$i] =~ m/^[A-Z]/ and $tmp[$i] =~ m/-/ );
+            $flag = 1 if ( $tmp[$i] =~ m/^[A-Z]$/ );
+            $flag = 1 if ( $tmp[$i] =~ m/[A-Z]/ and $tmp[$i] =~ m/\d/ );
+            $flag = 0 if ( $tmp[$i] eq 'A' );
+            if ( $nr_capital_letters > 1 or $flag == 1 ) {
+              $tmp[$i] = '{' . $tmp[$i] . '}';
+              if ( $tmp[$i] =~ m/(.*)(:|\.|,|\?|\!)\}$/ ) {
+                $tmp[$i] = $1 . '}' . $2;
+              }
+            }
+          }
+          $value = join( " ", @tmp );
+        }
 
         # Wrap long fields and align the "=" sign
         if ($bibtex_export_pretty) {
           my $left = sprintf( "  %-" . ( $max_width + 2 ) . "s", $key ) . "= ";
           my $right = $value;
           $Text::Wrap::columns = 70;
-          $right = wrap( $left, " " x ( $max_width + 7 ), $left_quote . $right . $right_quote );
+	  # if we have " in the regular text we change to { } as
+	  # field marks. We do not count \".
+	  if ( $value =~ m/(?<!\\)"/ ) {
+	    $right = wrap( $left, " " x ( $max_width + 7 ), '{' . $right . '}' );
+	  } else {
+	    $right = wrap( $left, " " x ( $max_width + 7 ), $left_quote . $right . $right_quote );
+	  }
           push @lines, $right;
         }
 
