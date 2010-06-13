@@ -151,8 +151,12 @@ Paperpile.stage0 = function() {
 
         // Kill the server when the application exits
         Titanium.API.addEventListener(
-          Titanium.APP_EXIT,
+          Titanium.EXIT,
           function() {
+            if (Paperpile.main.currentQueueData){
+              var status = Paperpile.main.currentQueueData.queue.status;
+            }
+
             Titanium.API.notice("Killing Catalyst");
             Paperpile.server.kill();
           });
