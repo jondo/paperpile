@@ -26,14 +26,14 @@ by a BibTeX::Parser.
     use BibTeX::Parser::Author;
 
     my $entry = BibTeX::Parser::Author->new($full_name);
-    
+
     my $firstname = $author->first;
     my $von	  = $author->von;
     my $last      = $author->last;
     my $jr	  = $author->jr;
 
     # or ...
-    
+
     my ($first, $von, $last, $jr) = BibTeX::Author->split($fullname);
 
 
@@ -46,23 +46,34 @@ Create new author object. Expects full name as parameter.
 =cut
 
 sub new {
-	my $class = shift;
+  my $class = shift;
 
-	if (@_) {
-		my $self = [ $class->split(@_) ];
-		return bless $self, $class;
-	} else {
-		return bless [], $class;
-	}
+  if (@_) {
+    my $self = [ $class->split(@_) ];
+    return bless $self, $class;
+  } else {
+    return bless [], $class;
+  }
 }
 
 sub _get_or_set_field {
-	my ($self, $field, $value) = @_;
-	if (defined $value) {
-		$self->[$field] = $value;
-	} else {
-		return $self->[$field];
-	}
+  my ( $self, $field, $value ) = @_;
+  if ( defined $value ) {
+    $self->[$field] = $value;
+  } else {
+    return if ( ! $self->[$field] );
+    # some final cleaning
+    # remove curly brackets around a single letter
+    (my $tmp = $self->[$field]) =~ s/\{(\S)\}/$1/g;
+    # remove bracktes enclosing the whole word
+    if ( $tmp =~ m/^\{([^\{\}]+)\}$/ ) {
+      $tmp = $1;
+    }
+    $tmp =~ s/~/ /g;
+    $tmp =~ s/^\s+//g;
+    $tmp =~ s/\s+$//g;
+    return $tmp;
+  }
 }
 
 =head2 first
@@ -72,7 +83,7 @@ Set or get first name(s).
 =cut
 
 sub first {
-	shift->_get_or_set_field(0, @_);
+  shift->_get_or_set_field( 0, @_ );
 }
 
 =head2 von
@@ -82,7 +93,7 @@ Set or get 'von' part of name.
 =cut
 
 sub von {
-	shift->_get_or_set_field(1, @_);
+  shift->_get_or_set_field( 1, @_ );
 }
 
 =head2 last
@@ -92,7 +103,7 @@ Set or get last name(s).
 =cut
 
 sub last {
-	shift->_get_or_set_field(2, @_);
+  shift->_get_or_set_field( 2, @_ );
 }
 
 =head2 jr
@@ -102,7 +113,37 @@ Set or get 'jr' part of name.
 =cut
 
 sub jr {
-	shift->_get_or_set_field(3, @_);
+  shift->_get_or_set_field( 3, @_ );
+}
+
+sub _get_name_parts {
+  my $name = $_[0];
+
+  my @name_parts = ();
+  my @tmp        = split( /\s+/, $name );
+  my $o          = 0;
+  my $c          = 0;
+  my $append     = 0;
+  foreach my $i ( 0 .. $#tmp ) {
+    my $o = ( $tmp[$i] =~ tr/\{// );
+    my $c = ( $tmp[$i] =~ tr/\}// );
+    if ( $o - $c >= 1 ) {
+      push @name_parts, $tmp[$i];
+      $append = 1;
+      next;
+    }
+    if ( $o - $c >= 1 ) {
+      $name_parts[$#name_parts] .= " $tmp[$i]";
+      $append = 0;
+      next;
+    }
+    if ( $append == 1 ) {
+      $name_parts[$#name_parts] .= " $tmp[$i]";
+    } else {
+      push @name_parts, $tmp[$i];
+    }
+  }
+  return @name_parts;
 }
 
 =head2 split
@@ -113,62 +154,75 @@ with four strings, some of them possibly empty.
 =cut
 
 sub split {
-	my ($self_or_class, $name) = @_;
+  my ( $self_or_class, $name ) = @_;
 
-	# remove whitespace at start and end of string
-	$name =~ s/^\s*(.*)\s*$/$1/s;
+  $name =~ s/(.*\S)\{(\s.*)/$1 \{$2/g;
 
-	if ( $name =~ /^\{\s*(.*)\s*\}$/ ) {
-	    return (undef, undef, $1, undef);
-	}
+  # remove whitespace at start and end of string
+  $name =~ s/^\s*(.*)\s*$/$1/s;
 
-	my @parts = split /\s*,\s*/, $name;
+  # everything is totally enclosed in curly brackets
+  if ( $name =~ m/^\{([^\{\}]+)\}$/ ) {
+    return ( undef, undef, $1, undef );
+  }
 
-	if (@parts == 0) {
-		return (undef, undef, undef, undef);
-	} elsif (@parts == 1) {	# name without comma
-		if ( $name =~ /(^|\s)[[:lower:]]/) { # name has von part or has only lowercase names
-			my @name_parts = split /\s+/, $parts[0];
+  my @parts = split /\s*,\s*/, $name;
 
-			my $first;
-			while (@name_parts && ucfirst($name_parts[0]) eq $name_parts[0] ) {
-				$first .= $first ? ' ' . shift @name_parts : shift @name_parts;
-			}
+  if ( $#parts == -1 ) {
+    # nothing in the string
+    return ( undef, undef, undef, undef );
+  } elsif ( $#parts == 0 ) {    # name without comma
+    my @name_parts = _get_name_parts($name);
 
-			my $von;
-			# von part are lowercase words
-			while ( @name_parts && lc($name_parts[0]) eq $name_parts[0] ) {
-				$von .= $von ? ' ' . shift @name_parts : shift @name_parts;
-			}
+    my $do_von_parsing = 0;
+    foreach my $part ( @name_parts ) {
+      $do_von_parsing = 1 if ( $part =~ m/^[[:lower:]]/ );
+    }
 
-			if (@name_parts) {
-				return ($first, $von, join(" ", @name_parts), undef);
-			} else {
-				return (undef, undef, $name, undef);
-			}
-		} else {
-			if ($name =~ /^((.*)\s+)?\b(\S+)$/) {
-				return ($2, undef, $3, undef);
-			}
-		}
+    if ( $do_von_parsing == 1 ) {    # name has von part or has only lowercase names
+      my $first;
+      while ( @name_parts && ucfirst( $name_parts[0] ) eq $name_parts[0] ) {
+        $first .= $first ? ' ' . shift @name_parts : shift @name_parts;
+      }
 
-	} elsif (@parts == 2) {
-		my @von_last_parts = split /\s+/, $parts[0];
-		my $von;
-		# von part are lowercase words
-		while ( lc($von_last_parts[0]) eq $von_last_parts[0] ) {
-			$von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
-		}
-		return ($parts[1], $von, join(" ", @von_last_parts), undef);
-	} else {
-		my @von_last_parts = split /\s+/, $parts[0];
-		my $von;
-		# von part are lowercase words
-		while ( lc($von_last_parts[0]) eq $von_last_parts[0] ) {
-			$von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
-		}
-		return ($parts[2], $von, join(" ", @von_last_parts), $parts[1]);
-	}
+      my $von;
+
+      # von part are lowercase words
+      while ( @name_parts && lc( $name_parts[0] ) eq $name_parts[0] ) {
+        $von .= $von ? ' ' . shift @name_parts : shift @name_parts;
+      }
+
+      if (@name_parts) {
+        return ( $first, $von, join( " ", @name_parts ), undef );
+      } else {
+        return ( undef, undef, $name, undef );
+      }
+    } else {
+      # regular case
+      my $last = pop @name_parts;
+      my $first = join(" ", @name_parts);
+      return ( $first, undef, $last, undef );
+    }
+
+  } elsif ( $#parts == 1 ) {
+    my @von_last_parts = _get_name_parts($parts[0]);
+    my $von;
+    # von part are lowercase words
+    while ( lc( $von_last_parts[0] ) eq $von_last_parts[0] ) {
+      last if ( ! $von_last_parts[0] );
+      $von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
+    }
+    return ( $parts[1], $von, join( " ", @von_last_parts ), undef );
+  } else {
+    my @von_last_parts = _get_name_parts($parts[0]);
+    my $von;
+
+    # von part are lowercase words
+    while ( lc( $von_last_parts[0] ) eq $von_last_parts[0] ) {
+      $von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
+    }
+    return ( $parts[2], $von, join( " ", @von_last_parts ), $parts[1] );
+  }
 
 }
 
@@ -179,13 +233,16 @@ Return string representation of the name.
 =cut
 
 sub to_string {
-	my $self = shift;
+  my $self = shift;
 
-	if ($self->jr) {
-		return $self->von . " " . $self->last . ", " . $self->jr . ", " . $self->first;
-	} else {
-		return ($self->von ? $self->von . " " : '') . $self->last . ($self->first ? ", " . $self->first : '');
-	}
+  if ( $self->jr ) {
+    return $self->von . " " . $self->last . ", " . $self->jr . ", " . $self->first;
+  } else {
+    return
+        ( $self->von ? $self->von . " " : '' )
+      . $self->last
+      . ( $self->first ? ", " . $self->first : '' );
+  }
 }
 
-1; # End of BibTeX::Entry
+1;
