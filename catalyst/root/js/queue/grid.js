@@ -292,7 +292,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       autoExpandColumn: 'title',
       hideHeaders: true
     });
-    this.store.load();
+    //this.store.load();
 
     Paperpile.QueueList.superclass.initComponent.call(this);
 
