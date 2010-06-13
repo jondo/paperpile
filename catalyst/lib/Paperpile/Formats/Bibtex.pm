@@ -21,6 +21,8 @@ use YAML qw(LoadFile);
 use BibTeX::Parser;
 use IO::File;
 use Text::Wrap;
+use Paperpile::Formats::TeXEncoding;
+use Encode;
 
 extends 'Paperpile::Formats';
 
@@ -165,59 +167,81 @@ sub write {
 
   my ($self) = @_;
 
-  my $bibtex_export_fields='annote,keywords,url,isbn,arxivid,doi,abstract,issn,eprint,lccn,note,pmid';
-  my $bibtex_export_curly = 0;
+  my $bibtex_export_fields =
+    'annote,keywords,url,isbn,arxivid,doi,abstract,issn,eprint,lccn,note,pmid';
+  my $bibtex_export_curly  = 0;
   my $bibtex_export_pretty = 1;
 
-  my $left_quote = '"';
+  my $left_quote  = '"';
   my $right_quote = '"';
 
-  if ($bibtex_export_curly){
-    $left_quote = '{';
+  my $enc            = $Paperpile::Formats::TeXEncoding::encoded_chars;
+  my %latex_encoding = %Paperpile::Formats::TeXEncoding::encoding_table;
+
+  if ($bibtex_export_curly) {
+    $left_quote  = '{';
     $right_quote = '}';
   }
 
   # We always write these fields (if non-empty) because they are
   # needed by BibTeX to work correctly
   my @mandatory_fields = qw(sortkey title booktitle authors editors
-                            address publisher organization school
-                            howpublished journal volume edition series number issue chapter pages
-                            year month day guid);
+    address publisher organization school
+    howpublished journal volume edition series number issue chapter pages
+    year month day guid);
 
   # Non standard fields are only exported if set in the user settings.
-  my @optional_fields = split(/,/,$bibtex_export_fields);
+  my @optional_fields = split( /,/, $bibtex_export_fields );
 
   #linkout=>$url!!;
 
-  open( OUT,  ">".$self->file )
-    || FileReadError->throw( error => "Could not write to file ".$self->file );
+  open( OUT, ">" . $self->file )
+    || FileReadError->throw( error => "Could not write to file " . $self->file );
 
   foreach my $pub ( @{ $self->data } ) {
 
-    my @all_fields = (@mandatory_fields, @optional_fields);
+    my @all_fields = ( @mandatory_fields, @optional_fields );
 
     # Collect all fields and get maximum width to align properly
     my %data;
     my $max_width = 0;
-    foreach my $key (@all_fields){
-      if ($pub->$key){
+    foreach my $key (@all_fields) {
+      if ( $pub->$key ) {
         $data{$key} = $pub->$key;
-        $max_width = length($key) if (length($key)> $max_width);
+        $max_width = length($key) if ( length($key) > $max_width );
       }
     }
 
     my @lines = ();
-    foreach my $key (@all_fields){
+    foreach my $key (@all_fields) {
 
-      if (my $value = $data{$key}){
+      if ( my $value = $data{$key} ) {
+
+        # UTF-8 to TeX conversion
+	# decode_utf8 has to be called first
+	# I do not know why this is necessary, but ti does not
+	# work without
+	$value = decode_utf8($value);
+
+	# this regexp replaces the characters
+        $value =~ s{ ($enc)([\sa-zA-Z]?)}
+              { my $encoded  = $latex_encoding{$1};
+                my $nextchar = $2;
+                my $sepchars = "";
+                if ($nextchar and substr($encoded, -1) =~ /[a-zA-Z]/) {
+                    $sepchars = ($nextchar =~ /\s/) ? '{}' : ' ';
+                }
+                "$encoded$sepchars$nextchar" }gxe;
+
         # Wrap long fields and align the "=" sign
-        if ($bibtex_export_pretty){
-          my $left = sprintf("  %-".($max_width+2)."s", $key)."= ";
+        if ($bibtex_export_pretty) {
+          my $left = sprintf( "  %-" . ( $max_width + 2 ) . "s", $key ) . "= ";
           my $right = $value;
-          $Text::Wrap::columns=70;
-          $right = wrap($left," "x($max_width+7),$left_quote.$right.$right_quote);
+          $Text::Wrap::columns = 70;
+          $right = wrap( $left, " " x ( $max_width + 7 ), $left_quote . $right . $right_quote );
           push @lines, $right;
         }
+
         # Simple output one field per line
         else {
           push @lines, "$key = {$value}";
@@ -225,10 +249,10 @@ sub write {
       }
     }
 
-    my ($type, $key) = ($pub->pubtype, $pub->citekey);
+    my ( $type, $key ) = ( $pub->pubtype, $pub->citekey );
 
     print OUT "\@$type\{$key,\n";
-    print OUT join(",\n", @lines);
+    print OUT join( ",\n", @lines );
     print OUT "\n}\n\n";
   }
 }
