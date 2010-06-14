@@ -562,7 +562,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     Ext.getCmp('queue-widget').onUpdate(data);
 
     // If the user is currently dragging, update the dragdrop targets.
-    if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible()) {
+    if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible() && !Paperpile.main.dd.effectBlock) {
       Paperpile.main.dd.hideDragPane();
     }
 

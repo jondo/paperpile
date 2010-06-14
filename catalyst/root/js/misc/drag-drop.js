@@ -166,7 +166,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
         action = 'pdf-attach';
       } else {
         hint = 'Attach Supplementary file';
-        dragMessage = 'Attach supplementary file' + mult + ' to this referens';
+        dragMessage = 'Attach supplementary file' + mult + ' to this reference';
         action = 'supplement-attach';
       }
 
@@ -223,7 +223,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
     // Hide the tooltip and destroy any dragdrop targets.
     this.destroyAllTargets();
-    return;
+
+    this.effectBlock = false;
   },
 
   paneDragEvent: function(event) {
@@ -310,6 +311,25 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var action = currentTarget.action;
     var object = currentTarget.object;
 
+    // Immediately hide the other targets.
+    for (var i = 0; i < this.targetsList.length; i++) {
+      var target = this.targetsList[i];
+	if (target != currentTarget) {
+	target.hide();
+	}
+    }
+
+      // Cause the current target to highlight, then hide the entire drag pane after the effect is finished.
+    var fxDuration = 750;
+      this.effectBlock = true;
+      currentTarget.getEl().highlight("00aa00", {
+      attr: 'border-color',
+      easing: 'easeOut',
+      duration: fxDuration / 1000,
+      callback: this.hideDragPane,
+      scope: this
+    });
+
     if (action == 'pdf-attach') {
       var row = object[0];
       var grid = object[1];
@@ -341,8 +361,6 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       }
 
     }
-
-    this.hideDragPane();
   },
 
   getFilesFromEvent: function(event) {
