@@ -194,6 +194,7 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
+  my $query_pmid    = '';
   my $query_doi     = '';
   my $query_title   = '';
   my $query_authors = '';
@@ -202,6 +203,10 @@ sub match {
   # First we format the three query strings properly. Besides
   # HTML escaping we remove words that contain non-alphnumeric
   # characters. These words can cause severe problems.
+
+  # 0) Pubmed ID
+  $query_pmid = _EscapeString( $pub->pmid . "[PMID]" ) if ( $pub->pmid );
+
   # 1) DOI
   $query_doi = _EscapeString( $pub->doi . "[AID]" ) if ( $pub->doi );
 
@@ -290,6 +295,7 @@ sub match {
   }
 
   # SEARCH STRATEGY:
+  # 0) Use PMID if available
   # 1) Use DOI if available: This is the best strategy if a DOI is available,
   #    but it might happen that there are parsing errors in the DOI.
   # 2) Title+Authors: Most stringent, but parsing errors and strange characters
@@ -297,8 +303,34 @@ sub match {
   # 3) Just Title: If everything till this point failed.
 
   my $browser = Paperpile::Utils->get_browser;
+
+  if ( $query_pmid ne '' ) {
+    my $response = $browser->get( $esearch . $query_pmid );
+    Paperpile::Utils->check_browser_response($response);
+
+    my $resultXML = $response->content;
+    my $result    = XMLin($resultXML);
+
+    #print STDERR "$esearch$query_pmid\n";
+    # If we get exactly one result then the DOI was really unique
+    # and in most cases we are done.
+    if ( $result->{Count} == 1 ) {
+      $self->web_env( $result->{WebEnv} );
+      $self->query_key( $result->{QueryKey} );
+
+      my $xml = $self->_pubFetch( 0, 1 );
+      my $page = $self->_read_xml($xml);
+      $self->_linkOut($page);
+
+      if ( $page->[0]->pmid eq $pub->pmid ) {
+        return $self->_merge_pub( $pub, $page->[0] );
+      }
+    }
+  }
+
   if ( $query_doi ne '' ) {
     my $response  = $browser->get( $esearch . $query_doi );
+    Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
 
@@ -325,6 +357,7 @@ sub match {
     #print STDERR "$esearch$query_title+$query_authors\n";
     # Pubmed is queried using title and authors
     my $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+    Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
 
@@ -344,6 +377,7 @@ sub match {
 
       # now query again
       $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+      Paperpile::Utils->check_browser_response($response);
       $resultXML = $response->content;
       $result    = XMLin($resultXML);
     }
@@ -378,6 +412,7 @@ sub match {
   # only with the title.
   if ( $query_title ne '' ) {
     my $response  = $browser->get( $esearch . "$query_title" );
+    Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
 
@@ -428,6 +463,7 @@ sub web_lookup {
 
   my $browser   = Paperpile::Utils->get_browser;
   my $response  = $browser->get( $esearch . $pmid );
+  Paperpile::Utils->check_browser_response($response);
   my $resultXML = $response->content;
   my $result    = XMLin($resultXML);
 
@@ -463,12 +499,7 @@ sub _pubFetch {
   my $url      = "$efetch&query_key=$query_key&WebEnv=$web_env&retstart=$offset&retmax=$limit";
   my $response = $browser->get($url);
 
-  if ( $response->is_error ) {
-    NetGetError->throw(
-      error => 'PubMed query failed: ' . $response->message,
-      code  => $response->code
-    );
-  }
+  Paperpile::Utils->check_browser_response($response,'PubMed query failed');
 
   my $resultXML = $response->content;
 
@@ -513,35 +544,38 @@ sub _read_xml {
 
     my $cit = $article->{MedlineCitation};
 
+
     my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
 
     $pub->pmid( $cit->{PMID} );
 
-    my $volume   = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
-    my $issue    = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
-    my $year     = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
-    my $month    = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Month};
-    my $pages    = $cit->{Article}->{Pagination}->{MedlinePgn};
-    my $abstract = $cit->{Article}->{Abstract}->{AbstractText};
-    my $title    = $cit->{Article}->{ArticleTitle};
-    my $status   = $article->{PubmedData}->{PublicationStatus};
-    my $journal  = $cit->{MedlineJournalInfo}->{MedlineTA};
-    my $issn     = $cit->{Article}->{Journal}->{ISSN}->{content};
+    my $volume      = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
+    my $issue       = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
+    my $year        = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
+    my $month       = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Month};
+    my $pages       = $cit->{Article}->{Pagination}->{MedlinePgn};
+    my $abstract    = $cit->{Article}->{Abstract}->{AbstractText};
+    my $title       = $cit->{Article}->{ArticleTitle};
+    my $status      = $article->{PubmedData}->{PublicationStatus};
+    my $journal     = $cit->{MedlineJournalInfo}->{MedlineTA};
+    my $issn        = $cit->{Article}->{Journal}->{ISSN}->{content};
+    my $affiliation = $cit->{Article}->{Affiliation};
 
     my $doi = $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
 
     # Remove period from end of title
     $title =~ s/\.\s*$//;
 
-    $pub->volume($volume)     if $volume;
-    $pub->issue($issue)       if $issue;
-    $pub->year($year)         if $year;
-    $pub->month($month)       if $month;
-    $pub->pages($pages)       if $pages;
-    $pub->abstract($abstract) if $abstract;
-    $pub->title($title)       if $title;
-    $pub->doi($doi)           if $doi;
-    $pub->issn($issn)         if $issn;
+    $pub->volume($volume)           if $volume;
+    $pub->issue($issue)             if $issue;
+    $pub->year($year)               if $year;
+    $pub->month($month)             if $month;
+    $pub->pages($pages)             if $pages;
+    $pub->abstract($abstract)       if $abstract;
+    $pub->title($title)             if $title;
+    $pub->doi($doi)                 if $doi;
+    $pub->issn($issn)               if $issn;
+    $pub->affiliation($affiliation) if $affiliation;
 
     if ($journal) {
       my $jid = $journal;
@@ -608,12 +642,7 @@ sub _linkOut {
 
   my $response = $browser->get($url);
 
-  if ( $response->is_error ) {
-    NetGetError->throw(
-      error => 'PubMed query failed: ' . $response->message,
-      code  => $response->code
-    );
-  }
+  Paperpile::Utils->check_browser_response($response,"PubMed query failed");
 
   my $result = XMLin( $response->content, forceArray => ['IdUrlSet'] );
 
@@ -630,6 +659,7 @@ sub _linkOut {
 	my $url2 =
 	  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=llinks&db=PubMed&id=$id";
 	my $response2 = $browser->get($url2);
+    Paperpile::Utils->check_browser_response($response2);
 	my $result2 = XMLin( $response2->content, forceArray => ['IdUrlSet'] );
 	eval {
 	  my $linkout2 = $result2->{LinkSet}->{IdUrlList}->{IdUrlSet}->[0]->{ObjUrl}->[0]->{Url};
@@ -658,6 +688,7 @@ sub _fetch_by_pmid {
     $query .= "[uid]" if ( $pmid !~ m/^PMC/ );
 
     my $response  = $browser->get($query);
+    Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
 

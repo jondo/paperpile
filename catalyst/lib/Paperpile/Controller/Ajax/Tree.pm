@@ -33,8 +33,8 @@ sub get_node : Local {
   my $tree;
 
   if ( not defined $c->session->{"tree"} ) {
-    $tree = $c->model('Library')->restore_tree();
-    if ( not defined $tree ) {
+    $tree = $c->model('Library')->get_setting('_tree');
+    if ( not $tree ) {
       $tree = $c->forward('get_default_tree');
     }
     $c->session->{"tree"} = $tree;
@@ -115,7 +115,7 @@ sub set_visibility : Local {
 
   $subtree->getNodeValue->{hidden} = $hidden;
 
-  $c->model('Library')->save_tree($tree);
+  $c->model('Library')->set_setting( '_tree', $tree );
 
 }
 
@@ -143,7 +143,7 @@ sub new_active : Local {
   $new->setUID($node_id);
   $sub_tree->addChild($new);
 
-  $c->model('Library')->save_tree($tree);
+  $c->model('Library')->set_setting( '_tree', $tree );
 }
 
 sub new_rss : Local {
@@ -192,7 +192,7 @@ sub new_rss : Local {
   $new->setUID($node_id);
   $sub_tree->addChild($new);
 
-  $c->model('Library')->save_tree($tree);
+  $c->model('Library')->set_setting( '_tree', $tree );
 
   $c->stash->{title}   = $title;
 
@@ -214,7 +214,7 @@ sub delete_active : Local {
 
   $subtree->getParent->removeChild($subtree);
 
-  $c->model('Library')->save_tree($tree);
+  $c->model('Library')->set_setting( '_tree', $tree );
 
 }
 
@@ -233,9 +233,7 @@ sub save_node_params : Local {
 	$node_params->{$key} = $request_params->{$key};
     }
 
-    $c->model('Library')->save_tree($tree);
-    $c->stash->{success} = 'true';
-    $c->forward('Paperpile::View::JSON');
+    $c->model('Library')->set_setting( '_tree', $tree );
 }
 
 sub rename_node : Local {
@@ -253,7 +251,7 @@ sub rename_node : Local {
   $pars->{text}         = $new_text;
   $pars->{plugin_title} = $new_text;
 
-  $c->model('Library')->save_tree($tree);
+  $c->model('Library')->set_setting( '_tree', $tree );
 
 }
 
@@ -285,7 +283,7 @@ sub set_node_order : Local {
     $i++;
   }
 
-  $c->model('Library')->save_tree($tree);
+  $c->model('Library')->set_setting( '_tree', $tree );
 
 }
 
@@ -320,7 +318,7 @@ sub move_node : Local {
     $target_subtree->getParent->insertChild( $target_index, $drop_subtree );
   }
 
-  $c->model('Library')->save_tree($tree);
+  $c->model('Library')->set_setting( '_tree', $tree );
 
 }
 

@@ -90,10 +90,7 @@ sub insert_pubs {
     next if ( !$pub->sha1 );
 
     if ( !$pub->guid ) {
-      my $_guid = Data::GUID->new;
-      $_guid = $_guid->as_hex;
-      $_guid =~ s/^0x//;
-      $pub->guid($_guid);
+      $pub->create_guid;
     }
 
     # If imported with attachments from another database the
@@ -304,7 +301,6 @@ sub update_pub {
   my $pattern = $self->get_setting('key_pattern');
   my $new_key = $new_pub->format_pattern($pattern);
   if ($new_key ne $old_data->{citekey}) {
-      print STDERR " !!!! NEW CITEKEY\n";
     # If we have a new citekey, make sure it doesn't conflict with other existing citekeys (this is the method called normally when inserting a new pub)
     $self->_generate_keys( [$new_pub], $dbh );
     $diff->{citekey} = $new_pub->citekey;
@@ -313,7 +309,6 @@ sub update_pub {
   # If we have attachments we need to check if their names have
   # changed because of the update and if so move them to the new place
   if ( $new_pub->{pdf} || $new_pub->{attachments} ) {
-      print STDERR " !!!! MOVE PEDF!!!!\n";
     my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid';");
     $sth->execute;
 
@@ -343,6 +338,12 @@ sub update_pub {
         my $ff              = $dbh->quote($file_name);
         my $attachment_guid = $row->{guid};
         $dbh->do("UPDATE Attachments SET local_file=$f, name=$ff WHERE guid='$attachment_guid';");
+
+        if ($row->{is_pdf}){
+          $f = $dbh->quote($new_pub->pdf_name);
+          $dbh->do("UPDATE Publications SET pdf_name=$f WHERE guid='$guid';");
+        }
+
         mkpath($dir);
         move( $old_file, $new_file );
         ( $volume, $dir, $file_name ) = splitpath($old_file);
@@ -1369,37 +1370,6 @@ sub index_pdf {
   $text = $dbh->quote($text);
 
   $dbh->do("UPDATE Fulltext SET text=$text WHERE rowid=(SELECT rowid FROM PUBLICATIONS WHERE guid='$guid')");
-
-}
-
-## Save tree object as string to database as setting _tree
-
-sub save_tree {
-
-  ( my $self, my $tree ) = @_;
-
-  # serialize the complete object
-  my $string = freeze($tree);
-
-  # simply save it as user setting
-  $self->set_setting( '_tree', $string );
-
-}
-
-## Restore tree object from string in database setting _tree
-
-sub restore_tree {
-  ( my $self ) = @_;
-
-  my $string = $self->get_setting('_tree');
-
-  if ( not $string ) {
-    return undef;
-  }
-
-  ( my $tree ) = thaw($string);
-
-  return $tree;
 
 }
 

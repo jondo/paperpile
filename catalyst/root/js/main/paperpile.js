@@ -709,9 +709,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       success: function(response) {
         this.queuePollStatus = 'DONE';
         var data = Ext.util.JSON.decode(response.responseText).data;
-        if (data.queue.status != 'RUNNING' && data.queue.status != 'PAUSED') {
+
+        if (data.queue.status === 'WAITING' || (data.queue.status == 'PAUSED' && data.queue.running_jobs.length == 0)) {
           this.stopQueueUpdate();
         }
+       
         Paperpile.main.onUpdate(data);
         this.currentQueueData = data;
         this.runningJobs = data.queue.running_jobs;
@@ -950,6 +952,21 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         scope: this
       });
     }
+  },
+
+  userVoice: function() {
+
+    if (window.UserVoice) {
+      UserVoice.Popin.show()
+    } else {
+      Paperpile.status.clearMsg();
+      Paperpile.status.updateMsg({
+        type: 'info',
+        msg: 'Retry with and active network connection or visit paperpile.uservoice.com',
+        duration: 5
+      });
+    }
+
   },
 
   checkForUpdates: function(silent) {

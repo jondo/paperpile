@@ -188,11 +188,8 @@ sub get_settings : Local {
     $merged{$key} = $fields->{$key};
   }
 
-  # Reconstruct flattened hash for file_sync data
-  if ($merged{file_sync}){
-    ( my $hash ) = thaw($merged{file_sync});
-    $merged{file_sync}=$hash;
-  }
+  # Don't need this in the frontend
+  delete $merged{_tree};
 
   $c->stash->{data} = {%merged};
 
@@ -208,11 +205,11 @@ sub test_network : Local {
 
   my $browser = Paperpile::Utils->get_browser( $c->request->params );
 
-  my $response = $browser->get('http://google.com');
+  my $response = $browser->get('http://pubmed.org');
 
   if ( $response->is_error ) {
     NetGetError->throw(
-      error => 'Error: ' . $response->message,
+      error => 'Network test failed: ' . $response->message,
       code  => $response->code
     );
   }
@@ -322,7 +319,7 @@ sub report_pdf_download_error : Local {
   my $pub          = $c->request->params->{info};
   my $catalyst_log = $c->request->params->{catalyst_log};
 
-  my $subject = 'Automatic bug report: PDF download error';
+  my $subject = 'Automatic bug report: PDF download error on '.$self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
 
   my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", DIR => '/tmp', SUFFIX => '.txt' );
@@ -356,7 +353,7 @@ sub report_pdf_match_error : Local {
 
   my $file = $c->request->params->{info};
 
-  my $subject = 'Automatic bug report: PDF match error';
+  my $subject = 'Automatic bug report: PDF match error on '.$self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
 
   my $r = POST $url,
@@ -373,6 +370,20 @@ sub report_pdf_match_error : Local {
 }
 
 
+sub _system_info_string {
+
+  my ( $self, $c ) = @_;
+
+  my $version_name = $c->config->{app_settings}->{version_name};
+  my $version_id   = $c->config->{app_settings}->{version_id};
+  my $build_number = $c->config->{app_settings}->{build_number};
+  my $platform     = $c->config->{app_settings}->{platform};
+
+  return "$platform, version $version_name (build $build_number)";
+
+}
+
+
 sub set_file_sync : Local {
 
   my ( $self, $c ) = @_;
@@ -381,23 +392,13 @@ sub set_file_sync : Local {
   my $file   = $c->request->params->{file};
   my $active = $c->request->params->{active};
 
-   my $model = $c->model('User');
+  my $model = $c->model('User');
 
-  my $string = $model->get_setting('file_sync');
-
-  my $hash={};
-
-   if ($string) {
-     ( $hash ) = thaw($string);
-   }
+  my $hash = $model->get_setting('file_sync');
 
   $hash->{$guid} = { file => $file, active => $active };
 
-  $string = freeze($hash);
-
-  $model->set_setting('file_sync', $string);
-
-  print STDERR "$guid, $file\n";
+  $model->set_setting('file_sync', $hash);
 
 }
 

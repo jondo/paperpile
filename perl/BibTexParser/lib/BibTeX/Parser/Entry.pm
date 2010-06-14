@@ -193,6 +193,13 @@ sub _split_author_field {
 
   return () if !defined $field || $field eq '';
 
+  # real world Bibtex data can be a mess
+  # we do some cleaning of standard typos
+  $field =~ s/\sand\sand\s/ and /g;
+  $field =~ s/\sand(?=[A-Z])/ and /g;
+  $field =~ s/(?<=\.)and\s/ and /g;
+  $field =~ s/(?<=\.)\sad\s(?=[A-Z])/ and /g;
+
   my @names;
   my @tmp     = split( /\s+/, $field );
   my @buffer  = ();

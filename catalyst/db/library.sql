@@ -60,3 +60,27 @@ CREATE TABLE Attachments (
   size         INTEGER,
   md5          TEXT
 );
+
+CREATE TABLE Changelog (
+ counter   INTEGER PRIMARY KEY AUTOINCREMENT,
+ guid      TEXT,
+ type      TEXT    
+);
+
+CREATE TRIGGER insert_log INSERT ON Publications 
+BEGIN
+  INSERT INTO Changelog (guid,type) VALUES (new.guid,'INSERT');
+END;
+
+CREATE TRIGGER delete_log DELETE ON Publications 
+BEGIN
+  INSERT INTO Changelog (guid,type) VALUES (old.guid,'DELETE');
+END;
+
+CREATE TRIGGER update_log UPDATE ON Publications 
+BEGIN
+  INSERT INTO Changelog (guid,type) VALUES (old.guid,'UPDATE');
+END;
+
+
+

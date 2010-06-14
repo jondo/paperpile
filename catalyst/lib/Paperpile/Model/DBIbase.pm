@@ -7,6 +7,7 @@ use base 'Catalyst::Model';
 use NEXT;
 use DBI;
 use Data::Dumper;
+use FreezeThaw qw/freeze thaw/;
 
 # For now we suppress the NEXT deprecated warning. Should think about porting DBI module...
 no warnings 'Class::C3::Adopt::NEXT';
@@ -22,7 +23,9 @@ sub set_settings {
 
   foreach my $key ( keys %$settings ) {
     my $value = $settings->{$key};
-    $dbh->do("REPLACE INTO Settings (key,value) VALUES ('$key','$value')");
+
+    $self->set_setting($key, $value, $dbh);
+    #$dbh->do("REPLACE INTO Settings (key,value) VALUES ('$key','$value')");
   }
 }
 
@@ -37,7 +40,7 @@ sub get_setting {
   ( my $value ) =
     $dbh->selectrow_array("SELECT value FROM Settings WHERE key=$key ");
 
-  return $value;
+  return $self->_thaw_value($value);
 
 }
 
@@ -46,9 +49,14 @@ sub set_setting {
 
   $dbh=$self->dbh if !$dbh;
 
-  $value = $self->dbh->quote($value);
-  $key = $self->dbh->quote($key);
-  $self->dbh->do("REPLACE INTO Settings (key,value) VALUES ($key,$value)");
+  # Transparently store hashes, lists and objects by flattening them
+  if (ref($value)){
+    $value = freeze($value);
+  }
+
+  $value = $dbh->quote($value);
+  $key = $dbh->quote($key);
+  $dbh->do("REPLACE INTO Settings (key,value) VALUES ($key,$value)");
 
   return $value;
 }
@@ -69,11 +77,22 @@ sub settings {
   my %output;
 
   while ( $sth->fetch ) {
-    $output{$key} = $value;
+    $output{$key} = $self->_thaw_value($value);
   }
 
   return {%output};
 
+}
+
+# If it was a flattened object, restore it transparently
+sub _thaw_value {
+  my ($self, $value) = @_;
+
+  if (substr($value, 0, 4) eq 'FrT;') {
+    ($value) = thaw($value);
+  }
+
+  return $value;
 }
 
 

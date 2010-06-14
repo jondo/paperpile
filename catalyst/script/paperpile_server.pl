@@ -12,7 +12,6 @@ use Getopt::Long;
 use Pod::Usage;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-
 my $debug             = 0;
 my $fork              = 0;
 my $help              = 0;

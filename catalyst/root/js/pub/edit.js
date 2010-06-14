@@ -755,9 +755,11 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       Ext.get('lookup-status').replaceClass('pp-lookup-status-failed', 'pp-lookup-status-success');
 
     } else {
-
       Ext.get('lookup-status').replaceClass('pp-lookup-status-success', 'pp-lookup-status-failed');
-      Ext.DomHelper.overwrite('lookup-status', 'Could not find reference online.')
+
+      var msg = json.error || 'Could not find reference online.';
+
+      Ext.DomHelper.overwrite('lookup-status', msg);
 
     }
     this.setDisabledInputs(false);

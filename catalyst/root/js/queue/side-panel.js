@@ -153,7 +153,14 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       params: {},
       success: function(response, opts) {
         var json = Ext.util.JSON.decode(response.responseText);
+        
+        if (json.queue.status != 'PAUSED') {
+          Paperpile.main.queueUpdate();
+        }
+
         Paperpile.main.onUpdate(json);
+
+        
       },
       failure: Paperpile.main.onError,
       scope: this
