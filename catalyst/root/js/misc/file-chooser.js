@@ -349,7 +349,13 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     typesDescription: null,
     path: Paperpile.main.globalSettings.user_home
   };
+
   Ext.apply(options, inputOptions);
+
+    if (options.scope) {
+	callback = callback.createDelegate(options.scope);
+    }
+
   if (IS_TITANIUM) {
     // Create a Titanium dialog.
     if (options.dialogType == 'save') {

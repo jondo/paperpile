@@ -663,6 +663,21 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return menu;
   },
 
+  putNodesInArray: function(node, array) {
+    if (array === undefined) {
+      array = [];
+    }
+    var children = node.childNodes;
+    for (var i = 0; i < children.length; i++) {
+      var childNode = children[i];
+      // Recurse.
+      this.putNodesInArray(childNode, array);
+      // Add this child.
+	Paperpile.log(childNode.id);
+      array.push(childNode);
+    }
+  },
+
   putLeavesInArray: function(node, array) {
     if (array === undefined) {
       array = [];
@@ -686,6 +701,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var leaves = [];
     this.putLeavesInArray(node, leaves);
     return leaves;
+  },
+
+  getAllNodes: function(node) {
+    if (node === undefined) {
+      node = this.getRootNode();
+    }
+    var nodes = [];
+    this.putNodesInArray(node, nodes);
+      nodes.push(node);
+      Paperpile.log(nodes.length);
+    return nodes;
   },
 
   //

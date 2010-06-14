@@ -98,6 +98,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.tabs = Ext.getCmp('tabs');
     this.dd = new Paperpile.DragDropManager();
+    this.dd.initListeners();
 
     this.tagStore = new Ext.data.Store({
       proxy: new Ext.data.HttpProxy({
@@ -329,7 +330,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       };
       var options = {
         title: 'Choose a folder containing PDFs to import',
-        selectionType: 'folder'
+          selectionType: 'folder'
       };
       Paperpile.fileDialog(callback, options);
 
@@ -432,7 +433,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         var json = Ext.util.JSON.decode(response.responseText);
         Paperpile.main.onUpdate(json.data);
 
-	  // TODO: add a status message and an undo function.
+        // TODO: add a status message and an undo function.
       },
       failure: Paperpile.main.onError,
       scope: this,
@@ -487,27 +488,32 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
   },
 
+  createFileImportTab: function(filename) {
+    var parts = Paperpile.utils.splitPath(filename);
+
+    Paperpile.main.tabs.newPluginTab('File', {
+      plugin_file: filename,
+      plugin_name: 'File',
+      plugin_mode: 'FULLTEXT',
+      plugin_query: '',
+      plugin_base_query: ''
+    },
+      parts.file, 'pp-icon-file');
+
+  },
+
   fileImport: function() {
     var callback = function(filenames) {
-      Paperpile.log(filenames);
       if (filenames.length > 0) {
         var path = filenames[0];
-        var parts = Paperpile.utils.splitPath(path);
-
-        Paperpile.main.tabs.newPluginTab('File', {
-          plugin_file: path,
-          plugin_name: 'File',
-          plugin_mode: 'FULLTEXT',
-          plugin_query: '',
-          plugin_base_query: ''
-        },
-          parts.file, 'pp-icon-file');
+	  this.createFileImportTab(path);
       }
     };
     var options = {
       title: 'Choose a library file to import',
       types: ['bib', 'ris'],
-      typesDescription: 'Supported files (Bibtex, RIS)'
+	typesDescription: 'Supported files (Bibtex, RIS)',
+	scope:this
     };
     Paperpile.fileDialog(callback, options);
   },
@@ -554,6 +560,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
 
     Ext.getCmp('queue-widget').onUpdate(data);
+
+    // If the user is currently dragging, update the dragdrop targets.
+    if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible()) {
+      Paperpile.main.dd.hideDragPane();
+    }
 
   },
 

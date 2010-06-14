@@ -130,8 +130,19 @@ h1 {
 }
 
 .pp-drag-pane {
-    position:absolute;
     background-color:blue;
+}
+
+.pp-drag-target {
+    border: 3px solid #333;
+    opacity: 0.5 !important;
+    -moz-border-radius-bottomleft: 5px;
+    -moz-border-radius-topleft: 5px;
+}
+
+.pp-drag-target-over {
+    opacity: 1 !important;
+    border-color:green;
 }
 
 .pp-box-tabs-left {

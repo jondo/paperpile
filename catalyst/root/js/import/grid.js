@@ -562,8 +562,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       ddGroup: this.ddGroup
     });
 
-    Paperpile.main.dd.registerGridListeners(this);
-
     this.createAuthorToolTip();
   },
 
