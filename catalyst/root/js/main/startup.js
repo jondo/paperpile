@@ -165,7 +165,7 @@ Paperpile.stage0 = function() {
 
         // Kill the server when the application exits
         Titanium.API.addEventListener(
-          Titanium.EXIT,
+          Titanium.APP_EXIT,
           function() {
             if (Paperpile.main.currentQueueData){
               var status = Paperpile.main.currentQueueData.queue.status;
