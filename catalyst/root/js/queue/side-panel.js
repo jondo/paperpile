@@ -159,8 +159,6 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
         }
 
         Paperpile.main.onUpdate(json);
-
-        
       },
       failure: Paperpile.main.onError,
       scope: this

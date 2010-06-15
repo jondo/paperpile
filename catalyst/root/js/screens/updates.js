@@ -103,7 +103,7 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
     var platform = Paperpile.utils.get_platform();
     var path = Titanium.App.getHome() + '/catalyst';
 
-    var args = [path + "/perl5/" + platform + "/bin/perl", path + '/script/updater.pl', '--update'];
+    var args = [path + "/perl5/" + platform + "/bin/paperperl", path + '/script/updater.pl', '--update'];
 
     var upgrader = Titanium.Process.createProcess({
       args: args,

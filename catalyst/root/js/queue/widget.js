@@ -114,7 +114,7 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
           }
         }
       }
-	if ((pdfSearchJobs == 1 && allJobs == 1) || (metadataUpdateJobs == 1 && allJobs == 1)) {
+      if ((pdfSearchJobs == 1 && allJobs == 1) || (metadataUpdateJobs == 1 && allJobs == 1)) {
         this.hide();
         return;
       }

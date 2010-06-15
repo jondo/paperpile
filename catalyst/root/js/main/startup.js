@@ -53,22 +53,33 @@ Paperpile.stage0 = function() {
     success: function(response) {
       var json = Ext.util.JSON.decode(response.responseText);
       
-      //Titanium.UI.UserWindow.createWindow('http://127.0.0.1:3210/etst');
-
       if (json.status == 'RUNNING') {
         
+        Ext.Msg.show({
+          title: 'Error',
+          msg: 'There is already another Paperpile instance running.',
+          buttons: Ext.Msg.OK,
+          animEl: 'elId',
+          icon: Ext.MessageBox.ERROR,
+          fn: function(action) {
+            if (IS_TITANIUM) {
+              Titanium.UI.mainWindow.close();
+            }
+          }
+        });
+
         // Make sure cookies are set; workaround for OSX where Ajax
         // calls do not properly set cookies. That's why we load
         // explicitely our server from a seperate window which sets
         // the cookie. 
-        if (IS_TITANIUM){
-          var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
-          win.hide();
-          win.open();
-          win.addEventListener('close',function(){Paperpile.stage1();});
-        } else {
-          Paperpile.stage1();
-        }
+        //if (IS_TITANIUM){
+        //  var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
+        //  win.hide();
+        //  win.open();
+        //  win.addEventListener('close',function(){Paperpile.stage1();});
+        //} else {
+        //  Paperpile.stage1();
+        //}
       }
     },
 
@@ -85,9 +96,9 @@ Paperpile.stage0 = function() {
         var args;
 
         if (platform === 'osx'){
-          args = [path + "/perl5/" + platform + "/bin/perl", path + '/script/osx_server.pl', '--fork', '--port', '3210']
+          args = [path + "/perl5/" + platform + "/bin/paperperl", path + '/script/osx_server.pl', '--fork', '--port', '3210']
         } else {
-          args = [path + "/perl5/" + platform + "/bin/perl", path + '/script/paperpile_server.pl', '-fork']
+          args = [path + "/perl5/" + platform + "/bin/paperperl", path + '/script/paperpile_server.pl', '-fork']
         }
 
         // Set up process
