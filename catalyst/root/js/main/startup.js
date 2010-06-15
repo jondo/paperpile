@@ -112,11 +112,17 @@ Paperpile.stage0 = function() {
         // Make sure there is no PERL5LIB variable set in the environment
         Paperpile.server.setEnvironment("PERL5LIB", "");
 
-        // Handler for failing start of the server
+        // Handler for failing start of the server or premature exit
         Paperpile.server.setOnExit(function(line) {
+
+          var L = Paperpile.serverLog.length;
+          if (L > 1000) {
+            Paperpile.serverLog = Paperpile.serverLog.substr(L - 1000);
+          }
+
           Ext.Msg.show({
             title: 'Error',
-            msg: 'Could not start Paperpile server. Please contact support@paperpile.com for help.<br><br>'+Paperpile.serverLog,
+            msg: 'Could not start Paperpile server or lost connection. Please contact support@paperpile.com for help.<br><br>'+'<pre>'+Paperpile.serverLog+'</pre>',
             buttons: Ext.Msg.OK,
             icon: Ext.MessageBox.ERROR,
             fn: function(action) {
@@ -151,7 +157,7 @@ Paperpile.stage0 = function() {
               // handler to avoid to call it on exit of the
               // application (although it does not seem to
               // be called anyway)
-              Paperpile.server.setOnExit(function() {});
+              Paperpile.server.setOnExit(function() {console.log("inhere");});
 
               // Again workaround for cookie problem under OSX
               var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
