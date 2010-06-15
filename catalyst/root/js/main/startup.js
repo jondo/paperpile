@@ -55,18 +55,21 @@ Paperpile.stage0 = function() {
       
       if (json.status == 'RUNNING') {
         
-        Ext.Msg.show({
-          title: 'Error',
-          msg: 'There is already another Paperpile instance running.',
-          buttons: Ext.Msg.OK,
-          animEl: 'elId',
-          icon: Ext.MessageBox.ERROR,
-          fn: function(action) {
-            if (IS_TITANIUM) {
+        if (IS_TITANIUM){
+
+          Ext.Msg.show({
+            title: 'Error',
+            msg: 'There is already another Paperpile instance running. To newly start Paperpile you have to close the other instance first.',
+            buttons: Ext.Msg.OK,
+            animEl: 'elId',
+            icon: Ext.MessageBox.ERROR,
+            fn: function(action) {
               Titanium.UI.mainWindow.close();
             }
-          }
-        });
+          });
+        } else {
+          Paperpile.stage1();
+        }
 
         // Make sure cookies are set; workaround for OSX where Ajax
         // calls do not properly set cookies. That's why we load
