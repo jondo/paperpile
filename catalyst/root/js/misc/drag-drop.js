@@ -59,9 +59,20 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       if (activeTab instanceof Paperpile.PluginPanel) {
         this.targetsList = this.targetsList.concat(this.getDropTargetsForGrid(activeTab.getGrid(), event));
       }
-
     }
 
+    // Sort the targets by the z-index.
+    var collection = new Ext.util.MixedCollection();
+    collection.addAll(this.targetsList);
+    var sortFn = function(a, b) {
+      return a.targetZIndex - b.targetZIndex;
+    };
+    collection.sort('DESC', sortFn);
+
+    this.targetsList = [];
+    for (var i = 0; i < collection.getCount(); i++) {
+      this.targetsList.push(collection.itemAt(i));
+    }
   },
 
   getDropTargetsForLibraryImport: function(event) {
@@ -77,9 +88,13 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     });
 
     var el = Ext.get(node.ui.getTextEl()).up('div');
+    var activeTab = Paperpile.main.tabs.getActiveTab();
+    if (activeTab instanceof Paperpile.PluginPanel) {
+      el = activeTab.getGrid().getEl();
+    }
     var target = new Paperpile.DragDropTarget({
       hint: 'import',
-      dragMessage: 'Load reference file',
+      dragMessage: 'Open library file',
       action: 'file-import',
       object: node
     });
@@ -92,30 +107,51 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
     var tree = Paperpile.main.tree;
 
+    var noun = '';
+    if (this.isFolderDrag(event)) {
+      noun = 'PDF folder';
+    } else if (this.isPdfDrag(event)) {
+      noun = 'PDF';
+    }
+    var mult = this.isMultipleFileDrag(event) ? 's' : '';
+
+    // Add a catch-all target to just import into the library.
+    var node = tree.getNodeById('LOCAL_ROOT');
+    var message = 'Import ' + noun + mult + ' into library';
+    var target = new Paperpile.DragDropTarget({
+      hint: 'import',
+      dragMessage: message,
+      action: 'pdf-import',
+      object: node,
+      targetZIndex: -1 // Keep on 'bottom' of the target stack.
+    });
+    target.setTargetEl(Ext.get(node.ui.getEl()));
+    targets.push(target);
+
+    // Add targets for each individual folder or tag.
     var allPapersNode = tree.getNodeById('FOLDER_ROOT');
     var nodes = tree.getAllNodes(allPapersNode);
+
+    var allTagsNode = tree.getNodeById('TAGS_ROOT');
+    nodes = nodes.concat(tree.getAllNodes(allTagsNode));
+
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
-      var el = Ext.get(node.ui.getTextEl()).up('div');
+      //      var el = Ext.get(node.ui.getTextEl()).up('div');
+      var el = Ext.get(node.ui.getTextEl());
       var dragMessage;
       if (node != allPapersNode) {
         // This hides the folder sub-nodes.
         // TODO: we need to update the backend / API to allow for directly importing a PDF into a collection.
-        continue;
+        //        continue;
       }
-
-      var noun = '';
-      if (this.isFolderDrag(event)) {
-        noun = 'PDF folder';
-      } else if (this.isPdfDrag(event)) {
-        noun = 'PDF';
-      }
-      var mult = this.isMultipleFileDrag(event) ? 's' : '';
 
       if (node == allPapersNode) {
         dragMessage = 'Import ' + noun + mult + ' into library';
-      } else {
+      } else if (node.type == 'FOLDER') {
         dragMessage = 'Import ' + noun + mult + ' into folder';
+      } else if (node.type == 'TAGS') {
+        dragMessage = 'Import ' + noun + mult + ' with label';
       }
       var target = new Paperpile.DragDropTarget({
         hint: 'import',
@@ -266,13 +302,12 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       this.currentlyHoveredTarget = null;
     }
 
-    if (isOverSomething) {
-      var be = event.browserEvent;
-      be.dataTransfer.effectAllowed = 'copy';
-      be.dataTransfer.dropEffect = 'copy';
-      be.preventDefault();
-    }
-
+    //    if (isOverSomething) {
+    var be = event.browserEvent;
+    be.dataTransfer.effectAllowed = 'copy';
+    be.dataTransfer.dropEffect = 'copy';
+    be.preventDefault();
+    //    }
   },
 
   destroyAllTargets: function() {
@@ -308,21 +343,27 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var dd = Paperpile.main.dd;
 
     var currentTarget = this.currentlyHoveredTarget;
+
+    if (!currentTarget) {
+      this.hideDragPane();
+      return;
+    }
+
     var action = currentTarget.action;
     var object = currentTarget.object;
 
     // Immediately hide the other targets.
     for (var i = 0; i < this.targetsList.length; i++) {
       var target = this.targetsList[i];
-	if (target != currentTarget) {
-	target.hide();
-	}
+      if (target != currentTarget) {
+        target.hide();
+      }
     }
 
-      // Cause the current target to highlight, then hide the entire drag pane after the effect is finished.
+    // Cause the current target to highlight, then hide the entire drag pane after the effect is finished.
     var fxDuration = 750;
-      this.effectBlock = true;
-      currentTarget.getEl().highlight("00aa00", {
+    this.effectBlock = true;
+    currentTarget.getEl().highlight("00aa00", {
       attr: 'border-color',
       easing: 'easeOut',
       duration: fxDuration / 1000,
@@ -350,14 +391,18 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       var files = this.getFilesFromEvent(event);
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.nativePath()]);
+        if (file.extension() == 'pdf') {
+          Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.nativePath()]);
+        }
       }
     } else if (action == 'file-import') {
       var files = this.getFilesFromEvent(event);
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         var path = file.nativePath();
-        Paperpile.main.createFileImportTab(path);
+        if (this.isReferenceFile(file)) {
+          Paperpile.main.createFileImportTab(path);
+        }
       }
 
     }
@@ -420,8 +465,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var hasOneRefFile = false;
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
-      var ext = file.extension();
-      if (file.extension().match(/(bib|ris|xml)/)) {
+      if (this.isReferenceFile(file)) {
         hasOneRefFile = true;
       }
     }
@@ -432,6 +476,12 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     }
 
     return false;
+  },
+  isReferenceFile: function(file) {
+    var ext = file.extension();
+    if (file.extension().match(/(bib|ris|xml)/)) {
+      return true;
+    }
   },
 
   // Return true if there is at least one file in the drag event.
@@ -464,6 +514,7 @@ Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
   shadow: false,
   renderTo: document.body,
   cls: 'pp-drag-target',
+  targetZIndex: 0,
   initComponent: function() {
     Paperpile.DragDropTarget.superclass.initComponent.call(this);
   },
