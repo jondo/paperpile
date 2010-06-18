@@ -1559,7 +1559,6 @@ sub _generate_keys {
 
     $pub->citekey($key);
   }
-
 }
 
 
