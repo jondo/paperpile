@@ -163,16 +163,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'SAVE_AS_ACTIVE'
       }),
 
-	'OPEN_PDF_FOLDER': new Ext.Action({
-	    text: '',
-	    handler: this.openPDFFolder,
-	    scope:this,
-	    icon:'/images/icons/folder.png',
-	    itemId: 'OPEN_PDF_FOLDER',
-	    tooltip:{
-		text:'Open containing folder',
-	    }
-	}),
+      'OPEN_PDF_FOLDER': new Ext.Action({
+        text: 'Open containing folder',
+        handler: this.openPDFFolder,
+        scope: this,
+        icon: '/images/icons/folder.png',
+        itemId: 'OPEN_PDF_FOLDER',
+        tooltip: {
+          text: 'Open containing folder',
+        }
+      }),
 
       'VIEW_PDF': new Ext.Action({
         text: 'View PDF',
@@ -246,12 +246,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       })
     };
 
-      this.actions['PDF_COMBINED_BUTTON'] = new Ext.ux.ButtonPlus({
-	  items: [
-	      this.actions['VIEW_PDF'],
-	      this.actions['OPEN_PDF_FOLDER']
-	  ]
-      });
+    this.actions['PDF_COMBINED_BUTTON'] = new Ext.ux.ButtonPlus({
+      items: [
+        this.actions['VIEW_PDF'],
+        this.actions['OPEN_PDF_FOLDER']]
+    });
 
     this.actions['MORE_FROM_MENU'] = new Ext.menu.Item({
       text: 'More from...',
@@ -970,7 +969,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'TB_FILL',
       'TB_BREAK',
       'VIEW_PDF',
-	'OPEN_PDF_FOLDER',
+      'OPEN_PDF_FOLDER',
       this.createSeparator('TB_VIEW_SEP'),
       'SELECT_ALL',
       'DELETE',
@@ -983,9 +982,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   initContextMenuItemIds: function() {
     this.contextMenuItemIds = new Ext.util.MixedCollection();
     this.contextMenuItemIds.addAll([
-//      'VIEW_PDF',
-//	'OPEN_PDF_FOLDER',
-	'PDF_COMBINED_BUTTON',
+    //      'VIEW_PDF',
+    //	'OPEN_PDF_FOLDER',
+    'PDF_COMBINED_BUTTON',
       this.createContextSeparator('CONTEXT_VIEW_SEP'),
       'EDIT',
       'SELECT_ALL',
@@ -1053,8 +1052,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     //  this.updateContextItem(item, record);
     //},
     //this);
-      //this.updateButtons();
-      this.afterSelectionChange(this.getSelectionModel());
+    //this.updateButtons();
+    this.afterSelectionChange(this.getSelectionModel());
     (function() {
       this.context.showAt(e.getXY());
     }).defer(10, this);
@@ -1297,7 +1296,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
 
-          if (json.error){
+          if (json.error) {
             Paperpile.main.onError(response);
             return;
           }
@@ -1309,7 +1308,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           this.getPluginPanel().updateDetails();
 
         },
-        failure: function(response){
+        failure: function(response) {
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
@@ -1760,16 +1759,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
   },
 
-    openPDFFolder: function() {
-	var sm = this.getSelectionModel();
-	if (sm.getSelected().data.pdf) {
-	    var pdf = sm.getSelected().data.pdf_name;
-	    var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root,pdf);
-	    var parts = Paperpile.utils.splitPath(path);
-	    // Need to defer this call, otherwise the context menu jumps to the upper-left side of screen... no idea why but this works!
-	    Paperpile.utils.openFile.defer(10,Paperpile.utils,[parts.dir]);
-	}
-    },
+  openPDFFolder: function() {
+    var sm = this.getSelectionModel();
+    if (sm.getSelected().data.pdf) {
+      var pdf = sm.getSelected().data.pdf_name;
+      var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
+      var parts = Paperpile.utils.splitPath(path);
+      // Need to defer this call, otherwise the context menu jumps to the upper-left side of screen... no idea why but this works!
+      Paperpile.utils.openFile.defer(10, Paperpile.utils, [parts.dir]);
+    }
+  },
 
   openPDF: function() {
     var sm = this.getSelectionModel();

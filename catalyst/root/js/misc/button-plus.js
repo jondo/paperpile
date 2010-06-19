@@ -9,7 +9,7 @@ Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
   cls: 'x-button-plus',
   internalDefaults: {},
   actionMode: 'container',
-    hideOnClick:true,
+  hideOnClick: true,
   initComponent: function() {
 
     if (this.items.length > 1) {
@@ -26,15 +26,19 @@ Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
       this.parentMenu = this.ownerCt;
     }
 
-      this.items.each(function(item,index,length) {
-	  item.on('click',this.onClick,this,[item]);
-      },this);
+    this.items.each(function(item, index, length) {
+      item.on('click', this.onClick, this, [item]);
+      if (index == 1) {
+        item.setText('');
+      }
+    },
+    this);
 
   },
   onClick: function(item) {
-      if (this.hideOnClick && this.parentMenu) {
-	  this.parentMenu.hide.defer(10,this.parentMenu);
-      }
+    if (this.hideOnClick && this.parentMenu) {
+      this.parentMenu.hide.defer(10, this.parentMenu);
+    }
   },
   handleClick: function(e) {
     var pm = this.parentMenu;
@@ -53,7 +57,7 @@ Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
     if (this.items.getCount() > 1) {
       var second = this.items.get(1);
       //second.doAutoWidth();
-	//second.el.setWidth(16);
+      //second.el.setWidth(16);
       var secondWidth = second.el.getWidth();
       var containerWidth = this.container.getWidth();
       var remainder = containerWidth - secondWidth;
@@ -71,10 +75,10 @@ Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
 
 });
 
-Ext.reg('buttonplus',Ext.ux.ButtonPlus);
+Ext.reg('buttonplus', Ext.ux.ButtonPlus);
 
 Ext.ux.UnstyledButton = Ext.extend(Ext.Button, {
-    cls: 'x-btn-plain'
+  cls: 'x-btn-plain'
 
 });
-Ext.reg('unstyledbutton',Ext.ux.UnstyledButton);
+Ext.reg('unstyledbutton', Ext.ux.UnstyledButton);
