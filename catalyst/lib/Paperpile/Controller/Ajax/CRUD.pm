@@ -128,6 +128,12 @@ sub new_entry : Local {
 
   my $pub = Paperpile::Library::Publication->new( {%fields} );
 
+  $c->model('Library')->exists_pub([$pub]);
+
+  if ($pub->_imported){
+    DuplicateError->throw("Updates duplicate an existing reference in the database");
+  }
+
   $c->model('Library')->insert_pubs( [$pub], 1 );
 
   $self->_update_counts($c);

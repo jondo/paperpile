@@ -648,7 +648,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       pmid: null,
       arxivid: null
     };
-    
+
     for (var id in identifiers) {
       var input = Ext.getCmp(id + '-input');
       if (input) {
@@ -682,20 +682,19 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
   },
 
   // Activates lookup button with a highlight effect
-  activateLookupButton: function(text){
+  activateLookupButton: function(text) {
 
     var button = Ext.getCmp('lookup_button');
-    if (text){
+    if (text) {
       button.setText(text);
     }
 
-    if (button.disabled){
+    if (button.disabled) {
       Ext.get('lookup-field').parent('td').highlight();
       button.enable();
     }
 
   },
-
 
   onLookup: function() {
 
@@ -712,7 +711,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         grid_id: this.grid_id
       },
       success: this.onUpdate,
-      
+
       failure: function(form, action) {
         this.updateLookupButton();
         this.setDisabledInputs(false);
@@ -801,6 +800,16 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       params: params,
       success: this.onSuccess,
       failure: function(form, action) {
+        var json = Ext.util.JSON.decode(action.response.responseText);
+        if (json.error) {
+          if (json.error.type === 'DuplicateError') {
+            Paperpile.status.updateMsg({
+              msg: 'Did not save. A reference with this data already exists in your library.',
+              hideOnClick: true
+            });
+            return;
+          }
+        }
         Paperpile.main.onError(action.response);
       },
     });
@@ -808,6 +817,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   onSuccess: function(form, action) {
     var json = Ext.util.JSON.decode(action.response.responseText);
+
     this.cleanUp();
     this.callback.createDelegate(this.scope, ['SAVE', json.data])();
     this.cleanUp();

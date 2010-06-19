@@ -292,6 +292,12 @@ sub update_pub {
   my $new_pub = Paperpile::Library::Publication->new($data);
   $new_pub->_db_connection($self->get_dsn);
 
+  $self->exists_pub([$new_pub], $dbh);
+
+  if ($new_pub->_imported){
+    DuplicateError->throw("Updates duplicate an existing reference in the database");
+  }
+
   # Also update sha1 and citekey if necessary changed
   if ( $new_pub->sha1 ne $old_data->{sha1} ) {
     $diff->{sha1} = $new_pub->sha1;
