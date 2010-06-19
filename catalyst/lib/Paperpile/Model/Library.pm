@@ -1482,7 +1482,7 @@ sub dashboard_stats {
   ( my $num_pdfs ) =
     $self->dbh->selectrow_array("SELECT count(*) FROM Publications WHERE PDF !='';");
 
-  ( my $num_attachments ) = $self->dbh->selectrow_array("SELECT count(*) FROM Attachments;");
+  ( my $num_attachments ) = $self->dbh->selectrow_array("SELECT count(*) FROM Attachments WHERE is_pdf=0;");
 
   ( my $last_imported ) =
     $self->dbh->selectrow_array("SELECT created FROM Publications ORDER BY created DESC limit 1;");
