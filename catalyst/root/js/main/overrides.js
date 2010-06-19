@@ -190,12 +190,12 @@ Ext.override(Ext.Panel, {
 
 Ext.override(Ext.ToolTip, {
 
-    onShow : function() {
-	Ext.ToolTip.superclass.onShow.call(this);
-    },
-    onHide: function() {
-	Ext.ToolTip.superclass.onHide.call(this);
-    }
+  onShow: function() {
+    Ext.ToolTip.superclass.onShow.call(this);
+  },
+  onHide: function() {
+    Ext.ToolTip.superclass.onHide.call(this);
+  }
 });
 
 Ext.override(Ext.grid.RowSelectionModel, {
@@ -208,10 +208,9 @@ Ext.override(Ext.grid.RowSelectionModel, {
     // Make the grid respond to click events.
     this.grid.on('rowclick', this.handleMouseDown, this);
 
-//    if (!this.grid.enableDragDrop && !this.grid.enableDrag) {
-      this.grid.on('rowmousedown', this.handleMouseDown, this);
-//    }
-
+    //    if (!this.grid.enableDragDrop && !this.grid.enableDrag) {
+    this.grid.on('rowmousedown', this.handleMouseDown, this);
+    //    }
     this.rowNav = new Ext.KeyNav(this.grid.getGridEl(), {
       'up': function(e) {
         if (!e.shiftKey || this.singleSelect) {
@@ -268,7 +267,7 @@ Ext.override(Ext.grid.RowSelectionModel, {
   cacheEvent: {},
   // private
   handleMouseDown: function(g, rowIndex, e) {
-//      Paperpile.log("down...");
+    //      Paperpile.log("down...");
     if (e.button !== 0 || this.isLocked()) {
       return;
     }
@@ -311,7 +310,7 @@ Ext.override(Ext.grid.RowSelectionModel, {
       }
     }
     this.fireEvent('afterselectionchange', this);
-//      Paperpile.log("Done!");
+    //      Paperpile.log("Done!");
   },
 
   selectFirstRow: function() {
@@ -738,5 +737,59 @@ new Ext.tree.TreePanel({
       this.afterRender();
     }
     return node;
+  }
+});
+
+// The following enables the anchoring of quicktips.
+// Taken from the ExtJS forums: http://www.sencha.com/forum/archive/index.php/t-100737.html
+Ext.override(Ext.QuickTip, {
+
+  onTargetOver: function(e) {
+    if (this.disabled) {
+      return;
+    }
+    this.targetXY = e.getXY();
+    var t = e.getTarget();
+    if (!t || t.nodeType !== 1 || t == document || t == document.body) {
+      return;
+    }
+    if (this.activeTarget && ((t == this.activeTarget.el) || Ext.fly(this.activeTarget.el).contains(t))) {
+      this.clearTimer('hide');
+      this.show();
+      return;
+    }
+    if (t && this.targets[t.id]) {
+      this.activeTarget = this.targets[t.id];
+      this.activeTarget.el = t;
+	this.anchor = this.activeTarget.anchor || this.anchor;
+      this.origAnchor = this.anchor;
+      if (this.anchor) {
+        this.anchorTarget = t;
+      }
+      this.delayShow();
+      return;
+    }
+    var ttp, et = Ext.fly(t),
+    cfg = this.tagConfig,
+    ns = cfg.namespace;
+    if (ttp = this.getTipCfg(e)) {
+      var autoHide = et.getAttribute(cfg.hide, ns);
+      this.activeTarget = {
+        el: t,
+        text: ttp,
+        width: et.getAttribute(cfg.width, ns),
+        autoHide: autoHide != "user" && autoHide !== 'false',
+        title: et.getAttribute(cfg.title, ns),
+        cls: et.getAttribute(cfg.cls, ns),
+        align: et.getAttribute(cfg.align, ns)
+
+      };
+      this.anchor = et.getAttribute(cfg.anchor, ns);
+      this.origAnchor = this.anchor;
+      if (this.anchor) {
+        this.anchorTarget = t;
+      }
+      this.delayShow();
+    }
   }
 });

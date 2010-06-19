@@ -1733,6 +1733,11 @@ div.x-menu.x-menubar .x-menu-list .x-menu-list-item .x-menu-item .x-menu-item-ic
     padding-right: 15px!important
 } 
 
+/* Override the normal value in ext-all.css to allow our ButtonPlus class to style properly in Titanium. */
+.x-button-plus .x-menu-item-active {
+    border-width: 1px;
+}
+
 /* EnableDisableCheckItem.js - cursor handling for the checkbutton icon. */
 a.x-item-text-disabled {
     cursor: default;
@@ -2147,4 +2152,10 @@ table.pp-meta-form {
       display: block;
       float: center;
       margin: 5px;
+}
+
+
+/* Fix for a less-distracting button within context menus. */
+.x-btn-plain:not(.x-btn-over) .x-btn-tl, .x-btn-plain:not(.x-btn-over) .x-btn-tr, .x-btn-plain:not(.x-btn-over) .x-btn-tc, .x-btn-plain:not(.x-btn-over) .x-btn-ml, .x-btn-plain:not(.x-btn-over) .x-btn-mr, .x-btn-plain:not(.x-btn-over) .x-btn-mc, .x-btn-plain:not(.x-btn-over) .x-btn-bl, .x-btn-plain:not(.x-btn-over) .x-btn-br, .x-btn-plain:not(.x-btn-over) .x-btn-bc{
+	background-image:none;
 }

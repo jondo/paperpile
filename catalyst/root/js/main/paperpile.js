@@ -121,6 +121,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.runningJobs = [];
 
     this.loadKeys();
+
+
+      Ext.apply(Ext.QuickTips.getQuickTip(), {
+	  showDelay: 0,
+	  dismissDelay: 0,
+	  hideDelay: 0,
+	  anchor:'left'
+      });
   },
 
   onRender: function() {

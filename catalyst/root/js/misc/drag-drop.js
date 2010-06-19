@@ -13,6 +13,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       renderTo: document.body,
       targetXY: [0, 0],
       anchor: 'left',
+      anchorToTarget: true,
       showDelay: 0,
       hideDelay: 0
     });
@@ -479,7 +480,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   },
   isReferenceFile: function(file) {
     var ext = file.extension();
-    if (file.extension().match(/(bib|ris|xml)/)) {
+    if (file.extension().match(/(bib|ris|xml|sqlite|db|ppl|mods|rss)/)) {
       return true;
     }
   },

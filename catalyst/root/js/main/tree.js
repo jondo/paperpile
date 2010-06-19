@@ -562,8 +562,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     this.autoExportTip = new Ext.ToolTip({
       trackMouse: false,
       anchor: 'left',
-      showDelay: 300,
-      hideDelay: 100,
+      showDelay: 0,
+      hideDelay: 0,
       target: contextMenu.el,
       delegate: '.pp-auto-export-menu-item',
       renderTo: document.body,
