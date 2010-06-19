@@ -818,8 +818,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     data.match_job = data.id;
 
-    console.log(data);
-
     data.pubtype = 'ARTICLE';
 
     win = new Ext.Window({

@@ -157,7 +157,7 @@ Paperpile.stage0 = function() {
               // handler to avoid to call it on exit of the
               // application (although it does not seem to
               // be called anyway)
-              Paperpile.server.setOnExit(function() {console.log("inhere");});
+              Paperpile.server.setOnExit(function() {});
 
               // Again workaround for cookie problem under OSX
               var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');

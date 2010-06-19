@@ -164,7 +164,6 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
 
         if (r) {
           var el = this.pause_button.getEl();
-          console.log(r.data);
 
           if (r.data.queue_status === 'RUNNING') {
             Ext.Ajax.request({

@@ -139,7 +139,6 @@ Paperpile.ExportBibfile = Ext.extend(Ext.FormPanel, {
                   callback: function(button, path) {
                     if (button == 'OK') {
                       this.items.get('path').items.get('textfield').setValue(path);
-                      console.log(path);
                     }
                   },
                   scope: this

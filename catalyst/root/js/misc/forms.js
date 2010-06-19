@@ -99,7 +99,6 @@ Paperpile.Forms.Settings = Ext.extend(Paperpile.Forms, {
         action: 'LOAD'
       },
       success: function() {
-        console.log(Paperpile.main.globalSettings);
       },
       failure: function() {
         alert('nope')

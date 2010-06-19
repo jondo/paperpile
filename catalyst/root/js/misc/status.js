@@ -22,7 +22,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
   type: 'info',
   anchor: Ext.getBody(),
   callback: function(action) {
-    console.log(action);
+    //console.log(action);
   },
 
   initComponent: function() {
