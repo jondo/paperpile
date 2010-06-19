@@ -307,6 +307,9 @@ sub _collect_pub_data {
   my %output = ();
   foreach my $pub (@$pubs) {
     my $hash       = $pub->as_hash;
+
+    next if !defined $hash->{guid};
+
     my $pub_fields = {};
     if ($fields) {
       map { $pub_fields->{$_} = $hash->{$_} } @$fields;
