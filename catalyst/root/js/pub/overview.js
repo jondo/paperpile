@@ -48,7 +48,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
   // Called when a non-user interaction causes an update of the overview panel.
   onUpdate: function(data) {
-
     var sm = this.getGrid().getSelectionModel();
     this.grid_id = this.getGrid().id;
 

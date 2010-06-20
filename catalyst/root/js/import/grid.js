@@ -528,6 +528,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
   },
 
+  refreshView: function() {
+    this.updateButtons();
+    this.getPluginPanel().updateDetails();
+    if (sm.getCount() == 1) {
+      this.completeEntry();
+    }
+  },
+
   myAfterRender: function(ct) {
     this.updateButtons();
 
@@ -799,20 +807,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
       '<tpl if="_imported">',
       '  <div id="ref-actions" style="float:right;">',
-      '  <tpl if="_metadata_job != null && _metadata_job.status==\'RUNNING\'">',
-      '    <img src="/images/icons/loading.gif" class="pp-img-action-disabled" ext:qtip="Updating metadata..."/>',
-      '  </tpl>',
-      '  <tpl if="_metadata_job != null && _metadata_job.status==\'PENDING\'">',
-      '    <img src="/images/icons/update-metadata.png" class="pp-img-action-disabled" ext:qtip="Waiting to update metadata..."/>',
-      '  </tpl>',
-      '  <tpl if="_metadata_job==null">',
-      '    <img src="/images/icons/update-metadata.png" class="pp-img-action" action="update-metadata" ext:qtip="Update metadata from online resources"/>',
-      '  </tpl>',
-      '  <img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
       '  <tpl if="trashed==1">',
+      '    <img src="/images/icons/arrow_rotate_anticlockwise.png" class="pp-img-action" action="restore-ref" ext:qtip="Restore Reference"/>',
       '    <img src="/images/icons/delete.png" class="pp-img-action" action="delete-ref" ext:qtip="Permanently Delete Reference"/>',
       '  </tpl>',
       '  <tpl if="trashed==0">',
+      '    <img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
       '    <img src="/images/icons/trash.png" class="pp-img-action" action="delete-ref" ext:qtip="Move Reference to Trash"/>',
       '  </tpl>',
       '  </div>',
@@ -1047,7 +1047,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.getSelectionModel().selectRow(index);
     }
 
-    this.afterSelectionChange(this.getSelectionModel());
+    this.refreshView();
     var xy = e.getXY();
     this.context.showAt.defer(10, this.context, [xy]);
     e.stopEvent();
@@ -1610,6 +1610,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var update = pubs[guid];
       record.editing = true; // Set the 'editing' flag.
       for (var field in update) {
+        Paperpile.log(field);
         record.set(field, update[field]);
       }
 
@@ -1619,16 +1620,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         needsUpdating = true;
         if (guid == selected_guid) updateSidePanel = true;
       }
+
       if (needsUpdating) {
+        Paperpile.log("Updating " + guid);
         store.fireEvent('update', store, record, Ext.data.Record.EDIT);
       }
     }
 
     if (data.updateSidePanel) updateSidePanel = true;
     if (updateSidePanel) {
-      var overview = this.getPluginPanel().getOverview();
-      overview.onUpdate(data);
-      this.updateButtons();
+	this.refreshView.defer(20,this);
     }
   },
 

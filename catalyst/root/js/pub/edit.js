@@ -76,7 +76,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       tableContent.unshift({
         tag: 'caption',
         cls: 'notice',
-        html: '<b>Add data for</b> ' + this.data.pdf + '<div style="float:right;"><a href="#" id="pdf-view-button" class="pp-textlink">View PDF</a></div>',
+        html: '<b>Add data for</b> ' + this.data.pdf_name + '<div style="float:right;"><a href="#" id="pdf-view-button" class="pp-textlink">View PDF</a></div>',
       });
     }
 
@@ -216,7 +216,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       },
     });
 
-    new Ext.ToolTip({
+    this.lookupToolTip = new Ext.ToolTip({
       target: 'lookup-tooltip',
       minWidth: 50,
       maxWidth: 300,
@@ -656,6 +656,11 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       }
     }
 
+    if (identifiers.pmid || identifiers.arxivid || identifiers.doi || (authors && title)) {
+      this.activateLookupButton('Look-up online');
+      return;
+    }
+    /*
     if (identifiers.pmid) {
       this.activateLookupButton('Look-up in PubMed');
       return;
@@ -675,7 +680,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       this.activateLookupButton('Look-up online');
       return;
     }
-
+*/
     button.setText('Look-up (not enough data)');
     button.disable();
 
@@ -737,9 +742,17 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     if (success_plugin) {
 
+      var dataDiff = [];
       var newData = json.data;
       for (var field in newData) {
         if (newData[field]) {
+          if (this.data[field] != newData[field] && !field.match('^_') && !field.match('sha1')) {
+            dataDiff.push({
+              field: field,
+              oldVal: this.data[field],
+              newVal: newData[field]
+            });
+          }
           this.data[field] = newData[field];
           if (field === 'pubtype') {
             Ext.getCmp('type-input').setValue(newData.pubtype);
@@ -750,18 +763,70 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       this.renderForm(this.data['pubtype']);
       this.updateLookupButton();
       Ext.getCmp('save_button').setDisabled(this.data['title'] == '');
-      Ext.DomHelper.overwrite('lookup-status', 'Found reference on ' + success_plugin);
+      Ext.DomHelper.overwrite('lookup-status', 'Found reference on ' + success_plugin + ".");
       Ext.get('lookup-status').replaceClass('pp-lookup-status-failed', 'pp-lookup-status-success');
-
+      this.addWhatChangedToolTip('lookup-status', dataDiff);
     } else {
       Ext.get('lookup-status').replaceClass('pp-lookup-status-success', 'pp-lookup-status-failed');
 
       var msg = json.error || 'Could not find reference online.';
 
       Ext.DomHelper.overwrite('lookup-status', msg);
-
     }
     this.setDisabledInputs(false);
+  },
+
+  addWhatChangedToolTip: function(id, dataDiff) {
+    var itemArray = [];
+
+    for (var i = 0; i < dataDiff.length; i++) {
+      var obj = dataDiff[i];
+      var key = '<b>' + obj.field + '</b>';
+      var str = '';
+      var len = 100;
+      var oldV = '' + this.midEllipse(obj.oldVal, len) + '';
+      var newV = '' + this.midEllipse(obj.newVal, len) + '';
+      if (obj.oldVal == '') {
+        str = "Added " + key + ": " + newV + "";
+      } else {
+        str = "Changed " + key + ':<ul>';
+        str += '<li style="margin-left:1em;color:gray;text-decoration:line-through;">' + oldV + "</li>";
+        str += '<li style="margin-left:1em;">' + newV + "</li>";
+        str += "</ul>";
+      }
+      str = '<li>' + str + '</li>';
+      itemArray.push(str);
+    }
+
+    if (this.whatChangedToolTip) {
+      this.whatChangedToolTip.destroy();
+    }
+
+    if (itemArray.length > 0) {
+      var listHTML = '<ul style="">' + itemArray.join('') + '</ul>';
+      var linkHTML = '<br/><a id="what-changed" href="#">(what changed?)</a>';
+      Ext.DomHelper.append(id, linkHTML);
+      this.whatChangedToolTip = new Ext.ToolTip({
+        target: 'what-changed',
+        minWidth: 50,
+        maxWidth: 500,
+        html: listHTML,
+        anchor: 'left',
+        showDelay: 0,
+        dismissDelay: 0,
+        hideDelay: 0
+      });
+    } else {
+      Ext.DomHelper.append(id, " Nothing to update.");
+    }
+  },
+
+  midEllipse: function(string, length) {
+    if (string.length > length) {
+      return string.substring(0, length / 2) + ' ... ' + string.substring(length - length / 2, length);
+    } else {
+      return string;
+    }
   },
 
   onSave: function() {
@@ -794,6 +859,11 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     Paperpile.status.showBusy(msg);
 
+    var noChangesMade = false;
+    if (Paperpile.utils.areHashesEqual(this.getForm().data, this.data)) {
+      noChangesMade = true;
+    }
+
     this.getForm().submit({
       url: url,
       scope: this,
@@ -803,11 +873,20 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         var json = Ext.util.JSON.decode(action.response.responseText);
         if (json.error) {
           if (json.error.type === 'DuplicateError') {
-            Paperpile.status.updateMsg({
-              msg: 'Did not save. A reference with this data already exists in your library.',
-              hideOnClick: true
-            });
-            return;
+            if (noChangesMade) {
+              // If we didn't expect any changes, the duplicate error is expected behavior. Turn this failure into a success.
+              this.onSuccess(form, action);
+		Paperpile.status.updateMsg({
+		    msg: 'Backend error!'
+		});
+              return;
+            } else {
+              Paperpile.status.updateMsg({
+                msg: 'Did not save. A reference with this data already exists in your library.',
+                hideOnClick: true
+              });
+              return;
+            }
           }
         }
         Paperpile.main.onError(action.response);
@@ -836,6 +915,16 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       }
     }
     this.inputs = {};
+  },
+
+  destroy: function() {
+    if (this.lookupToolTip) {
+      this.lookupToolTip.destroy();
+    }
+    if (this.whatChangedToolTip) {
+      this.whatChangedToolTip.destroy();
+    }
+    Paperpile.MetaPanel.superclass.destroy.call(this);
   },
 
   setDisabledInputs: function(disabled) {

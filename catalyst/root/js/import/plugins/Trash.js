@@ -76,10 +76,10 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
     ids.remove('EXPORT_MENU');
     ids.remove('DELETE');
 
-    var index = ids.indexOf('TB_FILL');
-    ids.insert(index + 1, 'RESTORE');
-    ids.insert(index + 2, 'DELETE');
-    ids.insert(index + 3, 'EMPTY_TRASH');
+    var index = ids.indexOf('TB_BREAK');
+    ids.insert(index, 'EMPTY_TRASH');
+//    ids.insert(index, 'RESTORE');
+//    ids.insert(index, 'DELETE');
   },
 
   initContextMenuItemIds: function() {

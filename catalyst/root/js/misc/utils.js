@@ -30,6 +30,19 @@ Paperpile.utils = {
     return uuid;
   },
 
+  areHashesEqual: function(a, b) {
+    // Quick shortcut: compare JSON strings.
+    return (Ext.encode(a) == Ext.encode(b));
+  },
+
+  midEllipse: function(string, length) {
+    if (string.length > length) {
+      return string.substring(0, length / 2) + ' ... ' + string.substring(length - length / 2, length);
+    } else {
+      return string;
+    }
+  },
+
   splitPath: function(path) {
     var parts = path.split('/');
     var file = parts[parts.length - 1];
@@ -53,13 +66,12 @@ Paperpile.utils = {
 
       var program = 'xdg-open';
 
-      if (this.get_platform()==='osx'){
+      if (this.get_platform() === 'osx') {
         program = 'open';
       }
 
-
-     var process = Titanium.Process.createProcess({
-       args: [program, url]
+      var process = Titanium.Process.createProcess({
+        args: [program, url]
       });
 
       process.setOnExit(function() {
@@ -82,7 +94,7 @@ Paperpile.utils = {
 
       var program = 'xdg-open';
 
-      if (this.get_platform()==='osx'){
+      if (this.get_platform() === 'osx') {
         program = 'open';
       }
 
@@ -124,7 +136,7 @@ Paperpile.utils = {
         }
       }
 
-      if (osname === 'Darwin'){
+      if (osname === 'Darwin') {
         platform = 'osx'
       }
 

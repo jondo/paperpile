@@ -295,7 +295,8 @@ sub update_pub {
   $self->exists_pub([$new_pub], $dbh);
 
   if ($new_pub->_imported){
-    DuplicateError->throw("Updates duplicate an existing reference in the database");
+# Don't throw duplicate errors on pub update -- we should expect this reference to already exist!
+#    DuplicateError->throw("Updates duplicate an existing reference in the database");
   }
 
   # Also update sha1 and citekey if necessary changed
@@ -376,6 +377,11 @@ sub update_pub {
 
   $self->_update_fulltext_table( $new_pub, 0, $dbh );
   $dbh->commit;
+
+#  $new_pub->_imported(1);
+#  $new_pub->_auto_refresh(1);
+#  $new_pub->refresh_fields;
+#  print STDERR " -> CITATION: ".$new_pub->_citation_display."\n";
 
   return $new_pub;
 }
@@ -1112,7 +1118,8 @@ sub exists_pub {
           $pub->_rowid($value);
         } else {
           if ($value) {
-            $pub->$field($value);
+	    # I don't think we should be updating the publication object during the exists_pub call... removing this line cleared up a bunch of problems with the grid not updating after editing metadata. (Greg 2010-06-20)
+	    #$pub->$field($value);
           }
         }
       }
