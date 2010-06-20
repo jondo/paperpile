@@ -391,6 +391,12 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     if (options.dialogType == 'save') {
       fileChooserOptions.saveMode = true;
     }
+      if (options.selectionType == 'file') {
+	  fileChooserOptions.selectionMode = 'FILE';
+      } else {
+	  fileChooserOptions.selectionMode = 'DIR';
+      }
+
     win = new Paperpile.FileChooser(fileChooserOptions);
     win.show();
   }
