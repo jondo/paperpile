@@ -180,10 +180,6 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     }));
 
     panel.show();
-    var qs = Ext.StoreMgr.lookup('queue_store');
-    if (qs != null) {
-      qs.reload();
-    }
   },
 
   findAndActivateOpenTabByItemId: function(itemId) {

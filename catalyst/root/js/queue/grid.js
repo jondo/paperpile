@@ -14,16 +14,18 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
+Paperpile.QueueList = function(config) {
+  Ext.apply(this, config);
+  Paperpile.QueueList.superclass.constructor.call(this, {});
 
-  constructor: function(queuePanel, config) {
-    this.queuePanel = queuePanel;
-    Paperpile.QueueList.superclass.constructor.call(this, config);
-  },
+  this.on('rowcontextmenu', this.onContextClick, this);
+};
+
+Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
 
   onContextClick: function(grid, index, e) {
     e.stopEvent();
-    var record = this.store.getAt(index);
+      var record = this.getStore().getAt(index);
     if (!this.isSelected(index)) {
       this.select(index, false, true);
     }
@@ -42,6 +44,10 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       this.context.showAt(e.getXY());
       this.updateButtons();
     }).defer(20, this);
+  },
+
+  getQueuePanel: function() {
+    return this.findParentByType(Paperpile.QueuePanel);
   },
 
   getContextMenu: function() {
@@ -110,18 +116,18 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
 
     data.publisherLink = null;
 
-    if (data.doi){
-      data.publisherLink = 'http://dx.doi.org/'+data.doi;
+    if (data.doi) {
+      data.publisherLink = 'http://dx.doi.org/' + data.doi;
     } else {
-      if (data.linkout){
+      if (data.linkout) {
         data.publisherLink = data.linkout;
       }
     }
-    
+
     data.errorReportInfo = data.title + ' | ' + data.authors + ' | ';
     data.errorReportInfo += data.citation + ' | ' + data.doi + ' | ' + data.linkout;
 
-    data.gridID=this.id;
+    data.gridID = this.id;
 
     return this.dataTemplate.apply(data);
   },
@@ -143,7 +149,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
         text: 'Retry Tasks',
         tooltip: 'Run selected tasks again',
         handler: function() {
-          this.queuePanel.retryJobs();
+            this.getQueuePanel().retryJobs();
         },
         scope: this,
         iconCls: 'pp-icon-retry'
@@ -152,7 +158,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
         text: 'Cancel Tasks',
         tooltip: 'Cancel selected tasks',
         handler: function() {
-          this.queuePanel.cancelJobs();
+            this.getQueuePanel().cancelJobs();
         },
         scope: this,
         cls: 'x-btn-text-icon',
@@ -164,18 +170,9 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       })
     };
 
-    this._store = new Ext.data.JsonStore({
-      storeId: 'queue_store',
-      autoDestroy: true,
-      url: Paperpile.Url('/ajax/queue/grid'),
-      method: 'GET',
-      baseParams: {
-        limit: 100
-      }
-    });
-    this.pager = new Ext.PagingToolbar({
+    var pager = new Ext.PagingToolbar({
       pageSize: 100,
-      store: this._store,
+	store: this.getStore(),
       displayInfo: true,
       displayMsg: 'Tasks {0} - {1} of {2}',
       emptyMsg: "No tasks"
@@ -193,7 +190,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '        <p>',
       '           <tpl if="publisherLink">',
       '             <a href="#" class="pp-textlink" onclick="Paperpile.utils.openURL(\'{publisherLink}\')">Go to publisher site</a> | ',
-      '           </tpl>', 
+      '           </tpl>',
       '           <a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfDownloadError(\'{errorReportInfo}\');">Send Error Report</a>',
       '       </p> ',
       '      </tpl>',
@@ -228,7 +225,7 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '        <p>',
       '           <tpl if="publisherLink">',
       '             <a href="#" class="pp-textlink" onclick="Paperpile.utils.openURL(\'{publisherLink}\')">Go to publisher site</a> | ',
-      '           </tpl>', 
+      '           </tpl>',
       '           <a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfDownloadError(\'{errorReportInfo}\');">Send Error Report</a>',
       '       </p> ',
       '      </tpl>',
@@ -254,8 +251,8 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>').compile();
 
     Ext.apply(this, {
-      store: this._store,
-      bbar: this.pager,
+	store: this.getStore(),
+      bbar: pager,
       tbar: this.getToolbar(),
       multiSelect: true,
       cm: new Ext.grid.ColumnModel({
@@ -292,9 +289,9 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       autoExpandColumn: 'title',
       hideHeaders: true
     });
-    //this.store.load();
-
     Paperpile.QueueList.superclass.initComponent.call(this);
+
+    this.getStore().load();
 
     this.on('afterrender', function() {
       this.getSelectionModel().on('afterselectionchange', this.selChanged, this);
@@ -328,9 +325,9 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       return;
     }
 
+    var store = this.getStore();
     for (var id in jobs) {
-      var index = this.store.find('id', id);
-      var record = this.store.getAt(index);
+      var record = store.getAt(this.store.findExact('id', id));
       if (!record) {
         continue;
       }
@@ -343,15 +340,43 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
       }
       record.set('size', update.info.size);
       record.set('downloaded', update.info.downloaded);
-
       record.editing = false;
+
       if (record.dirty) {
         needsUpdating = true;
       }
       if (needsUpdating) {
-        this.store.fireEvent('update', this.store, record, Ext.data.Record.EDIT);
+        store.fireEvent('update', store, record, Ext.data.Record.EDIT);
       }
     }
+  },
+
+  backgroundReload: function() {
+    this.backgroundLoading = true;
+
+    this.getStore().reload({
+      callback: function() {
+        this.backgroundLoading = false;
+      },
+      scope: this
+    });
+  },
+
+  getStore: function() {
+    if (this._store != null) {
+      return this._store;
+    }
+    this._store = new Ext.data.Store({
+      proxy: new Ext.data.HttpProxy({
+        url: Paperpile.Url('/ajax/queue/grid'),
+        method: 'GET'
+      }),
+      baseParams: {
+        limit: 100
+      },
+      reader: new Ext.data.JsonReader()
+    });
+    return this._store;
   },
 
   shortAuthors: function(names) {
@@ -361,6 +386,19 @@ Paperpile.QueueList = Ext.extend(Ext.grid.GridPanel, {
     } else {
       return names;
     }
+  },
+
+  destroy: function() {
+    Paperpile.QueueList.superclass.destroy.call(this);
+
+    if (this._store) {
+      this._store.destroy();
+    }
+
+    if (this.context) {
+      this.context.destroy();
+    }
   }
+
 
 });

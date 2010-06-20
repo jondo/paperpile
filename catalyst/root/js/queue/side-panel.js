@@ -178,6 +178,13 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
     var queue = null;
     var types = [];
 
+      if (!data.queue) {
+	  return;
+      }
+      if (!this.isVisible()) {
+	  return;
+      }
+
     if (data) {
       queue = data.queue;
       types = data.queue.types

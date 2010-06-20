@@ -303,6 +303,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       appendOnly: true,
       itemId: 'grid',
       store: this.getStore(),
+	view: new Ext.grid.GridView({grid:this}),
       bbar: this.pager,
       tbar: new Paperpile.Toolbar({
         itemId: 'toolbar',
@@ -1589,7 +1590,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   // Update specific fields of specific entries to avoid complete
   // reload of everything.
   onUpdate: function(data) {
-
     var pubs = data.pubs;
     if (!pubs) {
       return;
@@ -1610,7 +1610,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var update = pubs[guid];
       record.editing = true; // Set the 'editing' flag.
       for (var field in update) {
-        Paperpile.log(field);
         record.set(field, update[field]);
       }
 
@@ -1622,14 +1621,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
 
       if (needsUpdating) {
-        Paperpile.log("Updating " + guid);
         store.fireEvent('update', store, record, Ext.data.Record.EDIT);
       }
     }
 
     if (data.updateSidePanel) updateSidePanel = true;
     if (updateSidePanel) {
-	this.refreshView.defer(20,this);
+      this.refreshView.defer(20, this);
     }
   },
 
@@ -1844,3 +1842,26 @@ Ext.extend(Paperpile.GridDropZone, Ext.dd.DropZone, {
 });
 
 Ext.reg('pp-plugin-grid', Paperpile.PluginGrid);
+/*
+// Saving this one for later -- we could try and do some nice animation features when the user does batch imports using this code.
+Ext.grid.AnimatedGridView = Ext.extend(Ext.grid.GridView, {
+  initComponent: function() {
+    Ext.grid.AnimatedGridView.superclass.initComponent.apply(this, arguments);
+  },
+  insertRows: function(dm, firstRow, lastRow, isUpdate) {
+    Ext.grid.AnimatedGridView.superclass.insertRows.apply(this, arguments);
+    var rowAdded = Ext.get(this.getRow(firstRow));
+    if (rowAdded) {
+      rowAdded.slideIn();
+    }
+  },
+  removeRow: function(rowIndex) {
+    var rowToRemove = Ext.get(this.getRow(rowIndex));
+    var gridView = this;
+
+    rowToRemove.slideOut('t', {
+      remove: true
+    });
+  }
+});
+*/

@@ -22,7 +22,7 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
   iconCls: 'pp-icon-queue',
 
   initComponent: function() {
-    this.queueList = new Paperpile.QueueList(this, {
+    this.queueList = new Paperpile.QueueList({
       region: 'center',
       itemId: 'grid'
     });
@@ -36,6 +36,8 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
 
     Ext.apply(this, {
       layout: 'border',
+	// Fixes a nasty bug in the grid updating. See http://www.sencha.com/forum/archive/index.php/t-96398.html
+	hideMode: 'offsets',
       items: [
         this.queueList, this.queueOverview]
     });
@@ -52,18 +54,14 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
   },
 
   onUpdate: function(data) {
-    if (data.queue) {
       this.getOverview().onUpdate(data);
-    }
-
-    if (data.jobs) {
       this.getGrid().onUpdate(data);
-    }
 
     if (data.job_delta) {
+
       Paperpile.main.queueUpdateFn();
       this.getGrid().getView().holdPosition = true;
-      this.getGrid().getStore().reload();
+      this.getGrid().backgroundReload();
     }
   },
 

@@ -76,7 +76,7 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
     // Special display states of the widget
     if (data.submitting) {
       data.clearing = false;
-      this.update(data);
+//      this.update(data);
       this.show();
       return;
     }
