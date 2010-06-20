@@ -122,13 +122,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.loadKeys();
 
-
-      Ext.apply(Ext.QuickTips.getQuickTip(), {
-	  showDelay: 0,
-	  dismissDelay: 0,
-	  hideDelay: 0,
-	  anchor:'left'
-      });
+    Ext.apply(Ext.QuickTips.getQuickTip(), {
+      showDelay: 0,
+      dismissDelay: 0,
+      hideDelay: 0,
+      anchor: 'left'
+    });
   },
 
   onRender: function() {
@@ -338,7 +337,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       };
       var options = {
         title: 'Choose a folder containing PDFs to import',
-          selectionType: 'folder'
+        selectionType: 'folder'
       };
       Paperpile.fileDialog(callback, options);
 
@@ -368,34 +367,49 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var window = new Ext.Window({
       title: 'PDF Import',
       layout: 'vbox',
-      width: 350,
-      height: 250,
+      width: 250,
+      height: 190,
       plain: true,
       modal: true,
+      buttonAlign: 'center',
       layoutConfig: {
-        pack: 'center',
-        align: 'stretch',
+        align: 'center',
         defaultMargins: '5px'
       },
-      items: [{
-        xtype: 'button',
-        scale: 'huge',
-        cls: 'x-btn-text-icon',
-        icon: '/images/icons/pdf-folder.png',
-        text: [divDef,
-          '<b>PDF Folder</b>',
-          '<br/>The chosen folder and its subdirectories will be searched for PDFs to import.',
-          '</div>'].join(''),
+      items: [
+	  {
+	      xtype:'label',
+	      text: 'Choose a type of PDF import:',
+	      width:'100%',
+	      style:'text-align:left;'
+	  },
+	  {
+        xtype: 'subtlebutton',
+        text: 'PDF Folder',
+        align: 'center',
+        width: 150,
+        height: 30,
+        tooltip: {
+          text: 'The selected folder and its subdirectories will be searched for PDFs to import',
+          width: 175,
+          anchor: 'left'
+        },
         handler: folderExtract
       },
       {
-        xtype: 'button',
-        scale: 'huge',
-        cls: 'x-btn-text-icon',
-        icon: '/images/icons/pdf-file.png',
-        text: [divDef,
-          '<b>PDF Files</b>',
-          '<p>Choose one or more files to import.</p>', '</div>'].join(''),
+        xtype: 'label',
+        text: 'or'
+      },
+      {
+        width: 150,
+        height: 30,
+        xtype: 'subtlebutton',
+        text: 'PDF File(s)',
+        tooltip: {
+          text: 'Select one or more files to import.',
+          anchor: 'left',
+          width: 175
+        },
         handler: fileExtract
       }],
       bbar: [{
@@ -514,14 +528,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var callback = function(filenames) {
       if (filenames.length > 0) {
         var path = filenames[0];
-	  this.createFileImportTab(path);
+        this.createFileImportTab(path);
       }
     };
     var options = {
       title: 'Choose a library file to import',
-      types: ['bib', 'ris'],
-	typesDescription: 'Supported files (Bibtex, RIS)',
-	scope:this
+      types: ['*'],
+      typesDescription: 'Library files (Bibtex, RIS, EndNote, etc)',
+      scope: this
     };
     Paperpile.fileDialog(callback, options);
   },
@@ -721,7 +735,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         if (data.queue.status === 'WAITING' || (data.queue.status == 'PAUSED' && data.queue.running_jobs.length == 0)) {
           this.stopQueueUpdate();
         }
-       
+
         Paperpile.main.onUpdate(data);
         this.currentQueueData = data;
         this.runningJobs = data.queue.running_jobs;

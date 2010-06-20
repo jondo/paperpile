@@ -170,7 +170,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         icon: '/images/icons/folder.png',
         itemId: 'OPEN_PDF_FOLDER',
         tooltip: {
-          text: 'Open containing folder',
+          text: 'Open containing folder'
         }
       }),
 
@@ -1040,7 +1040,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   contextRecord: null,
   onContextClick: function(grid, index, e) {
-    e.stopEvent();
     var record = this.getStore().getAt(index);
     this.contextRecord = record;
 
@@ -1048,15 +1047,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.getSelectionModel().selectRow(index);
     }
 
-    //this.context.items.each(function(item, index, length) {
-    //  this.updateContextItem(item, record);
-    //},
-    //this);
-    //this.updateButtons();
     this.afterSelectionChange(this.getSelectionModel());
-    (function() {
-      this.context.showAt(e.getXY());
-    }).defer(10, this);
+    var xy = e.getXY();
+    this.context.showAt.defer(10, this.context, [xy]);
+    e.stopEvent();
   },
 
   updateContextItem: function(menuItem, record) {
@@ -1766,7 +1760,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
       var parts = Paperpile.utils.splitPath(path);
       // Need to defer this call, otherwise the context menu jumps to the upper-left side of screen... no idea why but this works!
-      Paperpile.utils.openFile.defer(10, Paperpile.utils, [parts.dir]);
+      Paperpile.utils.openFile.defer(20, Paperpile.utils, [parts.dir]);
     }
   },
 

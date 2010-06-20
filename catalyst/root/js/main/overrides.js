@@ -761,7 +761,7 @@ Ext.override(Ext.QuickTip, {
     if (t && this.targets[t.id]) {
       this.activeTarget = this.targets[t.id];
       this.activeTarget.el = t;
-	this.anchor = this.activeTarget.anchor || this.anchor;
+      this.anchor = this.activeTarget.anchor || this.anchor;
       this.origAnchor = this.anchor;
       if (this.anchor) {
         this.anchorTarget = t;

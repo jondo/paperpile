@@ -187,53 +187,74 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
 
   initComponent: function() {
 
+    var formats = [{
+      text: 'BibTeX (.bib)',
+      short: 'BIBTEX'
+    },
+    {
+      text: 'EndNote (.enl)',
+      short: 'ENDNOTE'
+    },
+    {
+      text: 'ISI Web of Science (.isi)',
+      short: 'ISI'
+    },
+    {
+      text: 'MODS (.xml)',
+      short: 'MODS'
+    },
+    {
+      text: 'RIS (.ris)',
+      short: 'RIS'
+    },
+    {
+      text: 'Word 2007 XML (.xml)',
+      short: 'WORD2007'
+    }];
+
+    var formatItems = [];
+    for (var i = 0; i < formats.length; i++) {
+      var obj = formats[i];
+      var text = obj.text;
+      var short = obj.short;
+      formatItems.push({
+        xtype: 'subtlebutton',
+        width: 150,
+        height: 30,
+        text: text,
+        shortDescription: obj.short,
+        handler: function(button, event) {
+          this.handleExport(button.shortDescription);
+        },
+        scope: this
+      });
+    }
+
     Ext.apply(this, {
-      layout: 'vbox',
-      title: 'Export: choose a destination format',
-      width: 300,
-      height: 500,
-      layoutConfig: {
-        pack: 'center',
-        align: 'stretch',
+      layout: {
+        type: 'vbox',
+        align: 'center',
         defaultMargins: '5px'
       },
+      title: 'Library Export',
+      width: 300,
+      height: 325,
+      buttonAlign: 'center',
+      layoutConfig: {},
       items: [{
-        xtype: 'button',
-        scale: 'huge',
-        width: '200',
-        autoWidth: false,
-        cls: 'x-btn-icon-text',
-        text: 'BibTex (.bib)',
-        icon: '/images/icons/page-blank.png',
-        handler: function() {
-          this.handleExport('BIBTEX');
-        },
-        scope: this
+        xtype: 'label',
+        text: 'Please choose a format for export:',
+        height: 20
+      }].concat(formatItems),
+      bbar: [{
+        xtype: 'tbfill'
       },
       {
-        xtype: 'button',
-        scale: 'huge',
-        width: '200',
-        autoWidth: false,
-        cls: 'x-btn-icon-text',
-        text: 'RIS (.ris)',
-        icon: '/images/icons/page-blank.png',
+        text: 'Cancel',
+        itemId: 'cancel_button',
+        cls: 'x-btn-text-icon cancel',
         handler: function() {
-          this.handleExport('RIS');
-        },
-        scope: this
-      },
-      {
-        xtype: 'button',
-        scale: 'huge',
-        width: '200',
-        autoWidth: false,
-        cls: 'x-btn-icon-text',
-        text: 'EndNote (.enl)',
-        icon: '/images/icons/page-blank.png',
-        handler: function() {
-          Paperpile.log("HEY!");
-          this.handleExport('ENDNOTE');
+          window.close();
         },
         scope: this
       }]
@@ -243,25 +264,41 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
   },
 
   formatToExtensions: {
-    ENDNOTE: ['enl'],
+    MODS: ['xml'],
     BIBTEX: ['bib', 'bibtex'],
-    RIS: ['ris']
+    RIS: ['ris'],
+    ENDNOTE: ['enl'],
+    ISI: ['isi'],
+    'WORD2007': ['xml']
   },
   formatToDescriptions: {
-    ENDNOTE: 'EndNote',
+    MODS: 'MODS XML',
     BIBTEX: 'BibTeX',
-    RIS: 'RIS'
+    RIS: 'RIS',
+    ENDNOTE: 'EndNote',
+    ISI: 'ISI',
+    'WORD2007': 'Word 2007 XML'
+  },
+
+  prependEach: function(array, prefix) {
+    var newArray = [];
+    for (var i = 0; i < array.length; i++) {
+      newArray.push(prefix + array[i]);
+    }
+    return newArray;
   },
 
   handleExport: function(format) {
     var ext = this.formatToExtensions[format];
     var desc = this.formatToDescriptions[format];
 
+    var includingDots = this.prependEach(ext, '.');
+
     var options = {
       title: 'Choose a destination file for ' + desc + ' export',
       dialogType: 'save',
       types: ext,
-      typesDescription: desc + " (" + ext.join(', ') + ")"
+      typesDescription: desc + " (" + includingDots.join(', ') + ")"
     };
     var window = this;
     var callback = function(filenames) {

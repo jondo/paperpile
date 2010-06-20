@@ -2155,7 +2155,18 @@ table.pp-meta-form {
 }
 
 
-/* Fix for a less-distracting button within context menus. */
+/* A less-distracting button, mostly for buttons within context menus. */
 .x-btn-plain:not(.x-btn-over) .x-btn-tl, .x-btn-plain:not(.x-btn-over) .x-btn-tr, .x-btn-plain:not(.x-btn-over) .x-btn-tc, .x-btn-plain:not(.x-btn-over) .x-btn-ml, .x-btn-plain:not(.x-btn-over) .x-btn-mr, .x-btn-plain:not(.x-btn-over) .x-btn-mc, .x-btn-plain:not(.x-btn-over) .x-btn-bl, .x-btn-plain:not(.x-btn-over) .x-btn-br, .x-btn-plain:not(.x-btn-over) .x-btn-bc{
 	background-image:none;
+}
+
+/* A less-distracting button, mostly for buttons within context menus. */
+.x-btn-subtle:not(.x-btn-over) .x-btn-tl, .x-btn-subtle:not(.x-btn-over) .x-btn-tr, .x-btn-subtle:not(.x-btn-over) .x-btn-tc, .x-btn-subtle:not(.x-btn-over) .x-btn-ml, .x-btn-subtle:not(.x-btn-over) .x-btn-mr, .x-btn-subtle:not(.x-btn-over) .x-btn-mc, .x-btn-subtle:not(.x-btn-over) .x-btn-bl, .x-btn-subtle:not(.x-btn-over) .x-btn-br, .x-btn-subtle:not(.x-btn-over) .x-btn-bc{
+	background-image:none;
+}
+
+
+table.x-btn-subtle:not(.x-btn-over) {
+    background-color: rgba(100,100,255,0.1);
+    border: 1px solid rgba(50,50,100,0.1);
 }
