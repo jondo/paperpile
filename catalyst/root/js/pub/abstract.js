@@ -69,7 +69,8 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
 
   showEmpty: function(tpl) {
     var empty = new Ext.Template(tpl);
-//    empty.overwrite(this.body);
+      var empty = new Ext.Template('<p clas="pp-basic pp-abstract pp-inactive"></p>');
+      empty.overwrite(this.body);
   }
 
 });
