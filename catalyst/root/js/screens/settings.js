@@ -262,6 +262,10 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       search_seq: this.pluginOrderPanel.getValue()
     };
 
+    for (var field in params){
+      params[field]=Ext.encode(params[field]);
+    }
+
     Paperpile.status.showBusy('Applying changes.');
 
     Ext.Ajax.request({

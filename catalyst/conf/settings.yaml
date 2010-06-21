@@ -39,6 +39,7 @@ user_settings:
   proxy_user: ""
   proxy_passwd: ""
   pager_limit: 25
+  tags_list_height: 70
   _queue: ""
 
 library_settings:
@@ -60,15 +61,15 @@ library_settings:
       - DNA
       - RNA
     export_fields:
-      - abstract
-      - affiliation
-      - eprint
-      - issn
-      - isbn
-      - pmid
-      - lccn
-      - doi
-      - keywords
+      abstract: 1
+      affiliation: 0
+      eprint: 0
+      issn: 0
+      isbn: 0
+      pmid: 1
+      lccn: 0
+      doi: 1
+      keywords: 0 
   _tree: ""
 
 release:
