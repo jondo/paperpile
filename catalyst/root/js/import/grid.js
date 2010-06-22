@@ -175,11 +175,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
 
       'VIEW_PDF': new Ext.Action({
-        text: 'View PDF',
         handler: this.openPDF,
         scope: this,
         iconCls: 'pp-icon-import-pdf',
-        itemId: 'VIEW_PDF'
+        itemId: 'VIEW_PDF',
+        text: 'View PDF',
       }),
       'MORE_FROM_FIRST_AUTHOR': new Ext.Action({
         // Note: the text of these menu items will change dynamically depending on
@@ -232,6 +232,24 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'EXPORT_SELECTION',
         text: 'Selection',
         handler: this.handleExportSelection,
+        scope: this
+      }),
+      'COPY_BIBTEX_KEY': new Ext.Action({
+        itemId: 'COPY_BIBTEX_KEY',
+        text: 'Copy BibTeX key(s)',
+        handler: this.handleCopyBibtexKey,
+        scope: this
+      }),
+      'COPY_BIBTEX_CITATION': new Ext.Action({
+        itemId: 'COPY_BIBTEX_CITATION',
+        text: 'Copy BibTeX citation(s)',
+        handler: this.handleCopyBibtexCitation,
+        scope: this
+      }),
+      'COPY_FORMATTED': new Ext.Action({
+        itemId: 'COPY_FORMATTED',
+        text: 'Copy citation',
+        handler: this.handleCopyFormatted,
         scope: this
       }),
       'TB_SPACE': new Ext.Toolbar.Spacer({
@@ -992,7 +1010,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'DELETE',
       this.createContextSeparator('CONTEXT_DEL_SEP'),
       'MORE_FROM_MENU',
-      'EXPORT_SELECTION']);
+      'EXPORT_SELECTION',
+      'COPY_FORMATTED',
+      this.createContextSeparator('CONTEXT_BIBTEX_SEP'),
+      'COPY_BIBTEX_CITATION',
+      'COPY_BIBTEX_KEY']);
   },
 
   createContextSeparator: function(itemId) {
@@ -1139,6 +1161,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var context = this.getContextMenu();
 
     context.getComponent('EXPORT_SELECTION').setText("Export Selection...");
+
+    var settings = Paperpile.main.globalSettings['bibtex'];
+    if (settings.bibtex_mode == 1) {
+      this.getContextByItemId('COPY_BIBTEX_CITATION').show();
+      this.getContextByItemId('COPY_BIBTEX_KEY').show();
+      this.getContextByItemId('CONTEXT_BIBTEX_SEP').show();
+    } else {
+      this.getContextByItemId('COPY_BIBTEX_CITATION').hide();
+      this.getContextByItemId('COPY_BIBTEX_KEY').hide();
+      this.getContextByItemId('CONTEXT_BIBTEX_SEP').hide();
+    }
   },
 
   updateToolbarItem: function(menuItem) {
@@ -1362,8 +1395,49 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     window.show();
   },
 
+  handleCopy: function(module, format, msg) {
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/plugins/export'),
+      params: {
+        grid_id: this.id,
+        selection: this.getSelection(),
+        export_name: module,
+        export_out_format: format,
+        get_string: true
+      },
+      method: 'GET',
+      timeout: 5000,
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        Paperpile.status.clearMsg();
+
+        if (IS_TITANIUM) {
+          Titanium.UI.Clipboard.setText(json.data.string);
+          Paperpile.status.updateMsg({
+            msg: msg,
+            hideOnClick: true
+          });
+        } else {
+          // TODO: Figure out a non-Titanium way to handle this.
+        }
+      },
+      scope: this,
+      failure: function(response) {
+        Paperpile.main.onError(response);
+      }
+    });
+  },
+  handleCopyBibtexCitation: function() {
+    this.handleCopy('Bibfile', 'BIBTEX', 'The selected BibTeX citations are now on the clipboard.');
+  },
+  handleCopyBibtexKey: function() {
+    this.handleCopy('Bibfile', 'CITEKEYS', 'The selected BibTeX keys are now on the clipboard.');
+  },
+  handleCopyFormatted: function() {
+    this.handleCopy('Bibfile', 'CITATIONS', 'The selected text citations are now on the clipboard.');
+  },
   deleteEntry: function(mode) {
-    selection = this.getSelection();
+    var selection = this.getSelection();
     var index = this.getStore().indexOf(this.getSelectionModel().getSelected());
     var many = false;
 

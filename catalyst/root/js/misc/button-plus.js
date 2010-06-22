@@ -51,8 +51,6 @@ Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
     }
   },
   onAfterLayout: function() {
-    Paperpile.log("Menu: " + this.parentMenu);
-
     var first = this.items.get(0);
     if (this.items.getCount() > 1) {
       var second = this.items.get(1);
@@ -77,10 +75,10 @@ Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
 Ext.reg('buttonplus', Ext.ux.ButtonPlus);
 
 Ext.ux.UnstyledButton = Ext.extend(Ext.Button, {
-    cls: 'x-btn-plain',
+  cls: 'x-btn-plain',
 });
 Ext.reg('unstyledbutton', Ext.ux.UnstyledButton);
 Ext.ux.SubtleButton = Ext.extend(Ext.Button, {
-    cls: 'x-btn-subtle',
+  cls: 'x-btn-subtle',
 });
 Ext.reg('subtlebutton', Ext.ux.SubtleButton);

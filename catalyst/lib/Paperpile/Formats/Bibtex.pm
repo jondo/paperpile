@@ -194,12 +194,10 @@ sub write {
   my @optional_fields = split( /,/, $bibtex_export_fields );
 
   #linkout=>$url!!;
-
   open( OUT, ">" . $self->file )
     || FileReadError->throw( error => "Could not write to file " . $self->file );
 
   foreach my $pub ( @{ $self->data } ) {
-
     my @all_fields = ( @mandatory_fields, @optional_fields );
 
     # Collect all fields and get maximum width to align properly
@@ -298,6 +296,7 @@ sub write {
     print OUT join( ",\n", @lines );
     print OUT "\n}\n\n";
   }
+  close(OUT);
 }
 
 

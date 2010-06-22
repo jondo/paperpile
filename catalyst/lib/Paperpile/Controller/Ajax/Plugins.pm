@@ -203,6 +203,7 @@ sub export : Local {
   my $grid_id     = $c->request->params->{grid_id}     || undef;
   my $source_node = $c->request->params->{source_node} || undef;
   my $selection   = $c->request->params->{selection}   || undef;
+  my $get_string = $c->request->params->{get_string} || 0;
 
   # Collect all export_ parameters for the export plugin
   my %export_params = ();
@@ -288,7 +289,13 @@ sub export : Local {
   my $export_module = "Paperpile::Plugins::Export::" . $export_params{name};
   my $export        = eval( "$export_module->" . 'new(data => $data, settings=>{%export_params})' );
 
-  $export->write;
+  if ($get_string) {
+      my $string = $export->write(1);
+      my @pubs = @{$data};
+      $c->stash->{data} = {string => $string};
+  } else {
+      $export->write;
+  }
 
   $c->stash->{success} = 'true';
   $c->forward('Paperpile::View::JSON');

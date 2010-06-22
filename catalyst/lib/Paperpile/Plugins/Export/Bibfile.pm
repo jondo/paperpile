@@ -40,8 +40,7 @@ extends 'Paperpile::Plugins::Export';
 #  wordout_dropkey
 
 sub write {
-
-  my ($self) = @_;
+    my ($self,$write_string) = @_;
 
   my $format = $self->settings->{out_format};
   $format = lc($format);
@@ -51,12 +50,16 @@ sub write {
 
   my $writer = eval("use $module; $module->new()");
 
-  $writer->file( $self->settings->{out_file} );
+  $writer->file( $self->settings->{out_file} ) if (defined $self->settings->{out_file});
   $writer->settings( $self->settings );
   $writer->data( $self->data );
 
-  $writer->write();
-
+    if ($write_string) {
+	my $str = $writer->write_string();
+	return $str;
+    } else {
+	$writer->write();
+    }
 }
 
 1;
