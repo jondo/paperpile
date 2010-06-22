@@ -1895,8 +1895,11 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
       text: '',
       width: 50,
       height: 10,
-	animate: {duration:1,easing:'easeOutStrong'},
-	cls: 'pp-toolbar-progress'
+      animate: {
+        duration: 1,
+        easing: 'easeOutStrong'
+      },
+      cls: 'pp-toolbar-progress'
     });
     this.progressBar.on('render', function(pb) {
       pb.getEl().applyStyles('cursor:pointer');
@@ -1904,7 +1907,9 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     },
     this);
     this.insert(2, this.progressBar);
-    this.insert(2, new Ext.Toolbar.Spacer({width:5}));
+    this.insert(2, new Ext.Toolbar.Spacer({
+      width: 5
+    }));
   },
   handleProgressBarClick: function(e) {
     var box = this.progressBar.getBox();
@@ -1921,7 +1926,7 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     var pageNum = this.readPage(pgData);
     pageNum = pgData.activePage;
     var high = pageNum / pgData.pages;
-      var low = (pageNum-1) / pgData.pages;
-      this.progressBar.updateRange(low,high, '');
+    var low = (pageNum - 1) / pgData.pages;
+    this.progressBar.updateRange(low, high, '');
   }
 });
