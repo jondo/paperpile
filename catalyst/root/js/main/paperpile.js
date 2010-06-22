@@ -182,17 +182,17 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   },
 
-    keyControlShiftK: function() {
-	var tab = Paperpile.main.tabs.getActiveTab();
-	var grid = tab.getGrid();
-	grid.handleCopyBibtexKey();
-    },
+  keyControlShiftK: function() {
+    var tab = Paperpile.main.tabs.getActiveTab();
+    var grid = tab.getGrid();
+    grid.handleCopyBibtexKey();
+  },
 
-    keyControlShiftB: function() {
-	var tab = Paperpile.main.tabs.getActiveTab();
-	var grid = tab.getGrid();
-	grid.handleCopyBibtexCitation();
-    },
+  keyControlShiftB: function() {
+    var tab = Paperpile.main.tabs.getActiveTab();
+    var grid = tab.getGrid();
+    grid.handleCopyBibtexCitation();
+  },
 
   keyControlA: function() {
     var tab = Paperpile.main.tabs.getActiveTab();
@@ -251,6 +251,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     return this.globalSettings[key];
   },
 
+  setSettings: function(settings, commitToBackend) {
+    for (key in settings) {
+      this.setSetting(key, settings[key], commitToBackend);
+    }
+  },
+
   setSetting: function(key, value, commitToBackend) {
     if (commitToBackend === undefined) {
       commitToBackend = true;
@@ -264,17 +270,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   storeSettings: function(newSettings, callback, scope) {
-    Paperpile.log(newSettings);
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/settings/set_settings'),
       params: newSettings,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.log(json);
-        for (var key in newSettings) {
-          //Paperpile.log(newSettings);
-          //Paperpile.main.globalSettings[key] = newSettings[key];
-        }
+        for (var key in newSettings) {}
       },
       failure: Paperpile.main.onError,
       scope: this
@@ -374,14 +375,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         align: 'center',
         defaultMargins: '5px'
       },
-      items: [
-	  {
-	      xtype:'label',
-	      text: 'Choose a type of PDF import:',
-	      width:'100%',
-	      style:'text-align:left;'
-	  },
-	  {
+      items: [{
+        xtype: 'label',
+        text: 'Choose a type of PDF import:',
+        width: '100%',
+        style: 'text-align:left;'
+      },
+      {
         xtype: 'subtlebutton',
         text: 'PDF Folder',
         align: 'center',

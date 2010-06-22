@@ -803,8 +803,8 @@ Ext.override(Ext.ProgressBar, {
             this.updateText(text);
         }
         if(this.rendered && !this.isDestroyed){
-            var x_low = Math.floor(low*this.el.dom.firstChild.offsetWidth);
-            var x_high = Math.ceil(high*this.el.dom.firstChild.offsetWidth);
+            var x_low = Math.floor(low*this.el.dom.firstChild.offsetWidth+1);
+            var x_high = Math.ceil(high*this.el.dom.firstChild.offsetWidth + 1);
 	    var w = Math.ceil(x_high-x_low);
 	    if (w < 2) {
 		x_low -= 1;

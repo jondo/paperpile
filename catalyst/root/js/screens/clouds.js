@@ -72,14 +72,14 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
       //      maxWidth: 500,
       //      showDelay: 0,
       //      hideDelay: 0,
-	target: this.getEl(),
+      target: this.getEl(),
       delegate: '.pp-cloud-item',
       renderTo: document.body,
       listeners: {
         beforeshow: {
           fn: function updateTipBody(tip) {
             var el = tip.triggerElement;
-	    var count = el.getAttribute("count");
+            var count = el.getAttribute("count");
             tip.body.dom.innerHTML = "Paper Count: <b>" + count + "</b>";
           },
           scope: this
@@ -146,7 +146,7 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
       cloud_sorting: this.sort,
       cloud_field: this.field
     };
-    Paperpile.main.storeSettings(params);
+    Paperpile.main.setSettings(params);
   },
 
   updateClouds: function() {
@@ -168,7 +168,6 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
         sortOptions.each(function(el, c, index) {
           var anchor = el.down('a');
           if (anchor.getAttribute('action') == 'sort_' + this.sort) {
-            Paperpile.log(anchor);
             el.addClass('pp-cloud-options-active');
           }
         },
