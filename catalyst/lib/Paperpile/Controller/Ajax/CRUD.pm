@@ -32,7 +32,6 @@ use File::stat;
 use URI::file;
 use FreezeThaw;
 
-
 use 5.010;
 
 sub insert_entry : Local {
@@ -47,23 +46,32 @@ sub insert_entry : Local {
   my @pub_array = ();
   foreach my $pub (@$selection) {
     if ( $plugin->needs_completing($pub) ) {
-      my $new_pub  = $plugin->complete_details($pub);
-      push @pub_array, $new_pub;
-    } else {
-      push @pub_array, $pub;
+      $pub = $plugin->complete_details($pub);
     }
+    if ( $plugin->needs_match_before_import($pub) ) {
+      my $j = Paperpile::Job->new(
+        type => 'METADATA_UPDATE',
+        pub  => $pub,
+      );
+      my $success = $j->_match;
+      if ($success) {
+        $pub = $j->pub;
+      }
+    }
+
+    push @pub_array, $pub;
   }
 
   # In case a pdf is present but not imported (e.g. in bibtex file
   # plugin with attachments) we set _pdf_tmp to make sure the PDF is
   # imported
-  foreach my $pub (@pub_array){
-    if ($pub->pdf_name and !$pub->_imported){
-      $pub->_pdf_tmp($pub->pdf_name);
+  foreach my $pub (@pub_array) {
+    if ( $pub->pdf_name and !$pub->_imported ) {
+      $pub->_pdf_tmp( $pub->pdf_name );
     }
   }
 
-  $c->model('Library')->insert_pubs( \@pub_array, 1);
+  $c->model('Library')->insert_pubs( \@pub_array, 1 );
 
   my $pubs = {};
   foreach my $pub (@pub_array) {
@@ -89,7 +97,7 @@ sub insert_entry : Local {
 sub complete_entry : Local {
 
   my ( $self, $c ) = @_;
-  my $plugin = $self->_get_plugin($c);
+  my $plugin    = $self->_get_plugin($c);
   my $selection = $self->_get_selection($c);
 
   my $cancel_handle = $c->request->params->{cancel_handle};
@@ -97,17 +105,17 @@ sub complete_entry : Local {
   Paperpile::Utils->register_cancel_handle($cancel_handle);
 
   my @new_pubs = ();
-  my $results = {};
+  my $results  = {};
   foreach my $pub (@$selection) {
     my $pub_hash;
-    if ($plugin->needs_completing($pub)) {
+    if ( $plugin->needs_completing($pub) ) {
       my $new_pub = $plugin->complete_details($pub);
       $pub_hash = $new_pub->as_hash;
     }
-    $results->{$pub_hash->{guid}} = $pub_hash;
+    $results->{ $pub_hash->{guid} } = $pub_hash;
   }
 
-  $c->stash->{data} = {pubs => $results};
+  $c->stash->{data} = { pubs => $results };
 
   Paperpile::Utils->clear_cancel($$);
 
@@ -128,9 +136,9 @@ sub new_entry : Local {
 
   my $pub = Paperpile::Library::Publication->new( {%fields} );
 
-  $c->model('Library')->exists_pub([$pub]);
+  $c->model('Library')->exists_pub( [$pub] );
 
-  if ($pub->_imported){
+  if ( $pub->_imported ) {
     DuplicateError->throw("Updates duplicate an existing reference in the database");
   }
 
@@ -140,7 +148,7 @@ sub new_entry : Local {
   # jobid in the queue.
   if ($match_job) {
     $job = Paperpile::Job->new( { id => $match_job } );
-    $pub->_pdf_tmp($job->pub->pdf);
+    $pub->_pdf_tmp( $job->pub->pdf );
   }
 
   $c->model('Library')->insert_pubs( [$pub], 1 );
@@ -149,7 +157,7 @@ sub new_entry : Local {
 
   # That's handled as form on the front-end so we have to explicitly
   # indicate success
-  $c->stash->{success}=\1;
+  $c->stash->{success} = \1;
 
   $c->stash->{data}->{pub_delta} = 1;
 
@@ -157,7 +165,7 @@ sub new_entry : Local {
   if ($job) {
     $job->update_status('DONE');
     $job->error('');
-    $job->update_info('msg',"Data inserted manually.");
+    $job->update_info( 'msg', "Data inserted manually." );
     $job->pub($pub);
     $job->save;
     $c->stash->{data}->{jobs}->{$match_job} = $job->as_hash;
@@ -166,8 +174,8 @@ sub new_entry : Local {
 
 sub delete_entry : Local {
   my ( $self, $c ) = @_;
-  my $plugin  = $self->_get_plugin($c);
-  my $mode    = $c->request->params->{mode};
+  my $plugin = $self->_get_plugin($c);
+  my $mode   = $c->request->params->{mode};
 
   my $data = $self->_get_selection($c);
 
@@ -188,7 +196,7 @@ sub delete_entry : Local {
     $c->session->{"undo_trash"} = $data;
   }
 
-  $self->_collect_update_data($c,$data,['_imported','trashed']);
+  $self->_collect_update_data( $c, $data, [ '_imported', 'trashed' ] );
 
   $c->stash->{data}->{pub_delta} = 1;
   $c->stash->{num_deleted} = scalar @$data;
@@ -232,8 +240,8 @@ sub update_entry : Local {
     next if !( $var =~ /^grid_/ );
     my $plugin = $c->session->{$var};
     if ( $plugin->plugin_name eq 'DB' or $plugin->plugin_name eq 'Trash' ) {
-      if ( $plugin->_hash->{ $guid } ) {
-        delete( $plugin->_hash->{ $guid } );
+      if ( $plugin->_hash->{$guid} ) {
+        delete( $plugin->_hash->{$guid} );
         $plugin->_hash->{ $new_pub->guid } = $new_pub;
       }
     }
@@ -261,14 +269,14 @@ sub lookup_entry : Local {
   my $pub = Paperpile::Library::Publication->new($old_data);
 
   # Get default plugin order
-  my @plugin_list = split( /,/, $c->model('Library')->get_setting('search_seq'));
+  my @plugin_list = split( /,/, $c->model('Library')->get_setting('search_seq') );
 
   # Re-order list if identifiers are given
-  if ($pub->arxivid) {
-    @plugin_list = ('ArXiv', grep { $_ ne 'ArXiv' } @plugin_list);
+  if ( $pub->arxivid ) {
+    @plugin_list = ( 'ArXiv', grep { $_ ne 'ArXiv' } @plugin_list );
   }
-  if ($pub->pmid) {
-    @plugin_list = ('PubMed', grep { $_ ne 'PubMed' } @plugin_list);
+  if ( $pub->pmid ) {
+    @plugin_list = ( 'PubMed', grep { $_ ne 'PubMed' } @plugin_list );
   }
 
   # Try plugins until a match is found
@@ -285,10 +293,12 @@ sub lookup_entry : Local {
 
     my $e;
     if ( $e = Exception::Class->caught ) {
+
       # Did not find a match, continue with next plugin
       if ( Exception::Class->caught('NetMatchError') ) {
         next;
       }
+
       # Other exception has occured; still try other plugins but save
       # error message to show if all plugins fail
       else {
@@ -296,28 +306,30 @@ sub lookup_entry : Local {
           $caught_error = $e->error;
           next;
         }
+
         # Abort on unexpected exception
         else {
           die($@);
         }
       }
     }
+
     # Found match -> stop now
     else {
       $success_plugin = $plugin_name;
-      $caught_error = undef;
+      $caught_error   = undef;
       last;
     }
   }
 
-  $c->stash->{error} = $caught_error;
+  $c->stash->{error}          = $caught_error;
   $c->stash->{success_plugin} = $success_plugin;
 
-  if ($success_plugin){
+  if ($success_plugin) {
 
     my $new_data = $pub->as_hash;
 
-    $new_data->{guid}='';
+    $new_data->{guid} = '';
 
     $c->stash->{data} = $new_data;
   }
@@ -343,8 +355,6 @@ sub _match_single {
 
 }
 
-
-
 sub update_notes : Local {
   my ( $self, $c ) = @_;
 
@@ -368,7 +378,6 @@ sub update_notes : Local {
   $c->stash->{data} = { pubs => { $guid => { annote => $html } } };
 
 }
-
 
 sub new_collection : Local {
   my ( $self, $c ) = @_;
@@ -402,7 +411,6 @@ sub move_in_collection : Local {
 
   my $dbh = $c->model('Library')->dbh;
 
-
   if ( $guid ne 'FOLDER_ROOT' ) {
     my $new_guid = $guid;
 
@@ -417,14 +425,13 @@ sub move_in_collection : Local {
     $c->model('Library')->update_collections( $data, $type );
   }
 
-
   if (@to_be_imported) {
     $self->_update_counts($c);
     $self->_collect_update_data( $c, $data, [ $what, '_imported', 'citekey', 'created', 'pdf' ] );
     $c->stash->{data}->{pub_delta}        = 1;
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
   } else {
-    $self->_collect_update_data( $c, $data, [ $what ] );
+    $self->_collect_update_data( $c, $data, [$what] );
   }
   $c->stash->{data}->{collection_delta} = 1;
 }
@@ -448,8 +455,8 @@ sub remove_from_collection : Local {
 sub delete_collection : Local {
   my ( $self, $c ) = @_;
 
-  my $guid   = $c->request->params->{guid};
-  my $type   = $c->request->params->{type};
+  my $guid = $c->request->params->{guid};
+  my $type = $c->request->params->{type};
 
   $c->model('Library')->delete_collection( $guid, $type );
 
@@ -459,7 +466,7 @@ sub delete_collection : Local {
   my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
 
   my $pubs = $self->_get_cached_data($c);
-  foreach my $pub ( @$pubs ) {
+  foreach my $pub (@$pubs) {
     my $new_list = $pub->$what;
     $new_list =~ s/^$guid,//g;
     $new_list =~ s/^$guid$//g;
@@ -468,7 +475,7 @@ sub delete_collection : Local {
     $pub->$what($new_list);
   }
 
-  $self->_collect_update_data($c, $pubs,[$what]);
+  $self->_collect_update_data( $c, $pubs, [$what] );
   $c->stash->{data}->{collection_delta} = 1;
 }
 
@@ -481,9 +488,9 @@ sub rename_collection : Local {
   $c->model('Library')->rename_collection( $guid, $new_name );
 
   my $type = 'TAGS';
-  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';  
+  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
   my $pubs = $self->_get_cached_data($c);
-  $self->_collect_update_data($c, $pubs,[$what]);
+  $self->_collect_update_data( $c, $pubs, [$what] );
   $c->stash->{data}->{collection_delta} = 1;
 }
 
@@ -509,7 +516,7 @@ sub move_collection : Local {
 
 # Sorts a set of sibling collection nodes by the given order of IDs.
 sub sort_collection : Local {
-  my ($self, $c) = @_;
+  my ( $self, $c ) = @_;
 
   my $m = $c->model('Library');
 
@@ -524,25 +531,25 @@ sub sort_collection : Local {
 
   # The parent node under which all these nodes live, given as a GUID.
   my $parent_id = $c->request->params->{parent_id};
-  my $type = $m->get_collection_type($parent_id);
+  my $type      = $m->get_collection_type($parent_id);
 
   print STDERR "TYPE: $type\n";
+
   # Go in order, putting each sub-node at the end of the parent node's child list.
   foreach my $id (@id_order) {
-      $m->move_collection($parent_id,$id,'append',$type);
+    $m->move_collection( $parent_id, $id, 'append', $type );
   }
 }
 
 sub style_collection : Local {
   my ( $self, $c ) = @_;
 
-  my $guid   = $c->request->params->{guid};
+  my $guid  = $c->request->params->{guid};
   my $style = $c->request->params->{style};
 
   $c->model('Library')->set_collection_style( $guid, $style );
   $c->stash->{data}->{collection_delta} = 1;
 }
-
 
 sub list_labels : Local {
 
@@ -555,7 +562,7 @@ sub list_labels : Local {
   $sth->execute;
   while ( my $row = $sth->fetchrow_hashref() ) {
     push @data, {
-      name   => $row->{name},
+      name  => $row->{name},
       style => $row->{style},
       guid  => $row->{guid},
       };
@@ -581,7 +588,7 @@ sub list_labels_sorted : Local {
 
   foreach
     my $key ( sort { $hist->{$b}->{count} <=> $hist->{$a}->{count} || $a <=> $b } keys %$hist ) {
-	my $tag = $hist->{$key};
+    my $tag = $hist->{$key};
     push @data, $tag;
   }
 
@@ -590,10 +597,10 @@ sub list_labels_sorted : Local {
 
 sub batch_update : Local {
   my ( $self, $c ) = @_;
-  my $plugin  = $self->_get_plugin($c);
-  my $data = $self->_get_selection($c);
+  my $plugin = $self->_get_plugin($c);
+  my $data   = $self->_get_selection($c);
 
-  my $q = Paperpile::Queue->new();
+  my $q    = Paperpile::Queue->new();
   my @jobs = ();
   foreach my $pub (@$data) {
     my $j = Paperpile::Job->new(
@@ -609,7 +616,7 @@ sub batch_update : Local {
   $q->submit( \@jobs );
   $q->save;
   $q->run;
-  $self->_collect_update_data($c, $data, ['_metadata_job'] );
+  $self->_collect_update_data( $c, $data, ['_metadata_job'] );
 
   $c->stash->{data}->{job_delta} = 1;
   $c->detach('Paperpile::View::JSON');
@@ -617,7 +624,7 @@ sub batch_update : Local {
 
 sub batch_download : Local {
   my ( $self, $c ) = @_;
-  my $plugin  = $self->_get_plugin($c);
+  my $plugin = $self->_get_plugin($c);
 
   my $data = $self->_get_selection($c);
 
@@ -639,7 +646,7 @@ sub batch_download : Local {
   $q->submit( \@jobs );
   $q->save;
   $q->run;
-  $self->_collect_update_data($c, $data, ['_search_job'] );
+  $self->_collect_update_data( $c, $data, ['_search_job'] );
 
   $c->stash->{data}->{job_delta} = 1;
 
@@ -647,11 +654,10 @@ sub batch_download : Local {
 
 }
 
-
 sub attach_file : Local {
   my ( $self, $c ) = @_;
 
-  my $guid  = $c->request->params->{guid};
+  my $guid   = $c->request->params->{guid};
   my $file   = $c->request->params->{file};
   my $is_pdf = $c->request->params->{is_pdf};
 
@@ -662,16 +668,17 @@ sub attach_file : Local {
 
   $c->model('Library')->attach_file( $file, $is_pdf, $pub );
 
-  $self->_collect_update_data($c,  [$pub], [ 'pdf', 'pdf_name', 'attachments', '_attachments_list' ] );
+  $self->_collect_update_data( $c, [$pub],
+    [ 'pdf', 'pdf_name', 'attachments', '_attachments_list' ] );
 
 }
 
 sub delete_file : Local {
   my ( $self, $c ) = @_;
 
-  my $file_guid  = $c->request->params->{file_guid};
+  my $file_guid = $c->request->params->{file_guid};
   my $pub_guid  = $c->request->params->{pub_guid};
-  my $is_pdf = $c->request->params->{is_pdf};
+  my $is_pdf    = $c->request->params->{is_pdf};
 
   my $grid_id = $c->request->params->{grid_id};
   my $plugin  = $c->session->{"grid_$grid_id"};
@@ -681,19 +688,20 @@ sub delete_file : Local {
   my $undo_path = $c->model('Library')->delete_attachment( $file_guid, $is_pdf, $pub, 1 );
 
   $c->session->{"undo_delete_attachment"} = {
-    file    => $undo_path,
-    is_pdf  => $is_pdf,
-    grid_id => $grid_id,
-    pub_guid    => $pub_guid,
+    file      => $undo_path,
+    is_pdf    => $is_pdf,
+    grid_id   => $grid_id,
+    pub_guid  => $pub_guid,
     file_guid => $file_guid
   };
 
   # Kind of a hack: delete the _search_job info before sending back our JSON update.
   if ($is_pdf) {
-      delete $pub->{_search_job};
+    delete $pub->{_search_job};
   }
 
-  $self->_collect_update_data($c, [$pub], [ 'attachments', '_attachments_list', 'pdf', '_search_job'] );
+  $self->_collect_update_data( $c, [$pub],
+    [ 'attachments', '_attachments_list', 'pdf', '_search_job' ] );
 
 }
 
@@ -707,11 +715,11 @@ sub undo_delete : Local {
   my $file   = $undo_data->{file};
   my $is_pdf = $undo_data->{is_pdf};
 
-  my $grid_id = $undo_data->{grid_id};
-  my $pub_guid    = $undo_data->{pub_guid};
-  my $file_guid    = $undo_data->{file_guid};
+  my $grid_id   = $undo_data->{grid_id};
+  my $pub_guid  = $undo_data->{pub_guid};
+  my $file_guid = $undo_data->{file_guid};
 
-  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $plugin = $c->session->{"grid_$grid_id"};
 
   my $pub = $plugin->find_guid($pub_guid);
 
@@ -720,7 +728,6 @@ sub undo_delete : Local {
   $self->_collect_update_data( $c, [$pub], [ 'pdf', 'attachments', '_attachments_list' ] );
 
 }
-
 
 # Returns the plugin object in the backend corresponding to an AJAX
 # request from the frontend
@@ -739,14 +746,14 @@ sub _get_selection {
   my $selection = $c->request->params->{selection};
   my $plugin    = $self->_get_plugin($c);
 
-  $plugin->light_objects($light_objects? 1 : 0);
+  $plugin->light_objects( $light_objects ? 1 : 0 );
 
   my @data = ();
 
   if ( $selection eq 'ALL' ) {
     @data = @{ $plugin->all };
-    $c->model('Library')->exists_pub(\@data);
-    foreach my $pub (@data){
+    $c->model('Library')->exists_pub( \@data );
+    foreach my $pub (@data) {
       $pub->refresh_attachments;
     }
   } else {
@@ -829,6 +836,5 @@ sub _collect_update_data {
 
   $c->stash->{data}->{pubs} = \%output;
 }
-
 
 1;

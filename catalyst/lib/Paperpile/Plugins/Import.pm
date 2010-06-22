@@ -103,6 +103,13 @@ sub needs_completing {
   return 0;
 }
 
+# Return 1 if we need to match this pub before importing.
+sub needs_match_before_import {
+    ( my $self, my $pub ) = @_;
+
+    return 0;
+}
+
 # Function find_guid
 
 # Returns an entry by the guid index. To ensure that this function

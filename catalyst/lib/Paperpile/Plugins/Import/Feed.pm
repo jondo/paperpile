@@ -42,7 +42,7 @@ has 'title' => ( is => 'rw', isa => 'Str', default => 'New Feed' );
 # If reload is set the Feed is downloaded and a new database file is
 # created. Otherwise we just read from the database as in a normal DB
 # Plugin.
-has 'reload'  => ( is => 'rw', isa => 'Str' );
+has 'reload' => ( is => 'rw', isa => 'Str' );
 
 sub BUILD {
   my $self = shift;
@@ -55,7 +55,7 @@ sub connect {
   $self->file( File::Spec->catfile( $self->_rss_dir, 'feed.rss' ) );
   $self->_db_file( File::Spec->catfile( $self->_rss_dir, 'feed.ppl' ) );
 
-  if ( !-e $self->file or !-e $self->_db_file or $self->reload) {
+  if ( !-e $self->file or !-e $self->_db_file or $self->reload ) {
     $self->update_feed;
 
     my $reader;
@@ -126,6 +126,12 @@ sub update_feed {
   print FEED $response->content;
   close(FEED);
 
+}
+
+sub needs_match_before_import {
+  ( my $self, my $pub ) = @_;
+
+  return 1;
 }
 
 sub _rss_dir {
