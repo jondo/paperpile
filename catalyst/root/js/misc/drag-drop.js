@@ -17,9 +17,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       showDelay: 0,
       hideDelay: 0
     });
-      var el = this.dragToolTip.getEl();
-      el.setStyle('position', 'absolute');
-      el.setStyle('z-index', '250'); // Important -- hover above everything else.
+    var el = this.dragToolTip.getEl();
+    el.setStyle('position', 'absolute');
+    el.setStyle('z-index', '250'); // Important -- hover above everything else.
   },
 
   addAllDragEvents: function(el, fn, targetFilter) {
@@ -76,27 +76,27 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     this.targetsList = [];
     for (var i = 0; i < collection.getCount(); i++) {
       this.targetsList.push(collection.itemAt(i));
-    }    
+    }
   },
 
-    drawAroundTargets: function(canvasEl) {
-	var c = canvasEl.dom.getContext("2d");
+  drawAroundTargets: function(canvasEl) {
+    var c = canvasEl.dom.getContext("2d");
 
-	var box = canvasEl.getBox();
-	c.clearRect(box.x,box.y,box.width,box.height);
-	c.fillStyle = 'rgba(50,50,50,0.3)';
-	c.fillRect(box.x,box.y,box.width,box.height);
+    var box = canvasEl.getBox();
+    c.clearRect(box.x, box.y, box.width, box.height);
+    c.fillStyle = 'rgba(50,50,50,0.3)';
+    c.fillRect(box.x, box.y, box.width, box.height);
 
-	for (var i = 0; i < this.targetsList.length; i++) {
-	  var target = this.targetsList[i];
-	    if (target.invisible) {
-		continue;
-	    }
-	    var box = target.getBox();
-	    c.fillStyle = 'rgba(0,255,0,0.1)';
-	    c.clearRect(box.x,box.y,box.width,box.height);
-	}
-    },
+    for (var i = 0; i < this.targetsList.length; i++) {
+      var target = this.targetsList[i];
+      if (target.invisible) {
+        continue;
+      }
+      var box = target.getBox();
+      c.fillStyle = 'rgba(0,255,0,0.1)';
+      c.clearRect(box.x, box.y, box.width, box.height);
+    }
+  },
 
   getDropTargetsForLibraryImport: function(event) {
     var targets = [];
@@ -162,7 +162,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
-            var el = Ext.get(node.ui.getTextEl()).up('div');
+      var el = Ext.get(node.ui.getTextEl()).up('div');
       //var el = Ext.get(node.ui.getEl());
       var dragMessage;
 
@@ -215,7 +215,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       action: null,
       targetZIndex: -1 // Keep on 'bottom' of the target stack.
     });
-      target.setTargetEl(gridPanel.body);
+    target.setTargetEl(gridPanel.body);
     targets.push(target);
 
     // One invisible target per visible row.
@@ -265,22 +265,23 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     // entire window, catching drag events and detecting when
     // they overlap with drag targets.
     if (!this.dragPane) {
-    // Add a canvas overlay.
+      // Add a canvas overlay.
       var box = Paperpile.main.getBox();
-      this.dragPane = Ext.DomHelper.append(Ext.getBody(),{
-	  tag: 'canvas',
-	  id: 'drag-pane',
-	  top:0,
-	  left:0,
-	  width:box.width,
-	  height:box.height,
-	  style: {
-	      'z-index':100,
-	      'position':'absolute',
-	  }
-      },true);
+      this.dragPane = Ext.DomHelper.append(Ext.getBody(), {
+        tag: 'canvas',
+        id: 'drag-pane',
+        top: 0,
+        left: 0,
+        width: box.width,
+        height: box.height,
+        style: {
+          'z-index': 100,
+          'position': 'absolute',
+        }
+      },
+      true);
     }
-    
+
     // The dragPane should capture drag events now, not the bod.
     this.removeAllDragEvents(Ext.getBody(), this.bodyDragEvent);
     this.addAllDragEvents(this.dragPane, this.paneDragEvent);
@@ -354,7 +355,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   destroyAllTargets: function() {
     if (this.currentlyHoveredTarget != null) {
       this.currentlyHoveredTarget.out(event);
-	this.currentlyHoveredTarget = null;
+      this.currentlyHoveredTarget = null;
     }
     for (var i = 0; i < this.targetsList.length; i++) {
       var target = this.targetsList[i];
@@ -398,16 +399,16 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     for (var i = 0; i < this.targetsList.length; i++) {
       var target = this.targetsList[i];
       if (target != currentTarget) {
-	  target.destroy();
+        target.destroy();
       }
     }
 
-      // Clear the drag pane shadow.
+    // Clear the drag pane shadow.
     var c = this.dragPane.dom.getContext("2d");
     var box = this.dragPane.getBox();
-    c.clearRect(box.x,box.y,box.width,box.height);
+    c.clearRect(box.x, box.y, box.width, box.height);
 
-      this.dragToolTip.hide();
+    this.dragToolTip.hide();
 
     // Cause the current target to highlight, then hide the entire drag pane after the effect is finished.
     var fxDuration = 750;
@@ -586,7 +587,7 @@ Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
       box.width += 0;
       box.height += 0;
       this.updateBox(box);
-	var el = this.el;
+      var el = this.el;
       el.setStyle('z-index', '20'); // Important -- make sure the z-index i set so we display BELOW the 'drag pane' element.
     }
   },
