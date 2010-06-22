@@ -171,32 +171,28 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       scope: this
     });
 
-  },
-
-  keyControlShiftB: function() {
-    var node = Paperpile.main.tree.getNodeById('FOLDER_ROOT');
-
-    Paperpile.status.showBusy('Running Quick Export');
-
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/plugins/export'),
-      params: {
-        source_node: node.id,
-        selection: 'all',
-        export_name: 'Bibfile',
-        export_out_format: 'bibtex',
-        export_out_file: Paperpile.main.globalSettings.user_home + '/' + 'export.bib'
-      },
-      success: function() {
-        Paperpile.status.clearMsg();
-      },
-      scope: this,
-      failure: function(response) {
-        Paperpile.main.onError(response);
-      }
+    this.keyMap.addBinding({
+      key: [Ext.EventObject.K],
+      ctrl: true,
+      shift: true,
+      stopEvent: true,
+      handler: this.keyControlShiftK,
+      scope: this
     });
 
   },
+
+    keyControlShiftK: function() {
+	var tab = Paperpile.main.tabs.getActiveTab();
+	var grid = tab.getGrid();
+	grid.handleCopyBibtexKey();
+    },
+
+    keyControlShiftB: function() {
+	var tab = Paperpile.main.tabs.getActiveTab();
+	var grid = tab.getGrid();
+	grid.handleCopyBibtexCitation();
+    },
 
   keyControlA: function() {
     var tab = Paperpile.main.tabs.getActiveTab();
