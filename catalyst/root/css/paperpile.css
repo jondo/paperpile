@@ -136,8 +136,11 @@ h1 {
 .pp-drag-target {
     border: 3px solid #333;
     opacity: 0.5 !important;
-    -moz-border-radius-bottomleft: 5px;
-    -moz-border-radius-topleft: 5px;
+}
+
+.pp-drag-target-invisible {
+    border: none !important;
+    opacity:0 !important;
 }
 
 .pp-drag-target-over {

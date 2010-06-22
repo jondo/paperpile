@@ -17,6 +17,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       showDelay: 0,
       hideDelay: 0
     });
+      var el = this.dragToolTip.getEl();
+      el.setStyle('position', 'absolute');
+      el.setStyle('z-index', '1'); // Important -- hover above everything else.
   },
 
   addAllDragEvents: function(el, fn, targetFilter) {
@@ -74,6 +77,17 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     for (var i = 0; i < collection.getCount(); i++) {
       this.targetsList.push(collection.itemAt(i));
     }
+    /*
+    // Add a canvas overlay.
+      var canvas = Ext.DomHelper.append(Ext.getBody(),{
+	  tag: 'canvas',
+	  width:200,
+	  height:200
+      });
+      var c = canvas.getContext("2d");
+          c.fillStyle = 'red';
+      c.fillRect(0, 0, 200,200);
+*/
   },
 
   getDropTargetsForLibraryImport: function(event) {
@@ -120,6 +134,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var node = tree.getNodeById('LOCAL_ROOT');
     var message = 'Import ' + noun + mult + ' into library';
     var target = new Paperpile.DragDropTarget({
+      invisible: false,
       hint: 'import',
       dragMessage: message,
       action: 'pdf-import',
@@ -130,31 +145,30 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     targets.push(target);
 
     // Add targets for each individual folder or tag.
+    var nodes = [];
     var allPapersNode = tree.getNodeById('FOLDER_ROOT');
-    var nodes = tree.getAllNodes(allPapersNode);
+    var nodes = nodes.concat(tree.getAllNodes(allPapersNode));
 
     var allTagsNode = tree.getNodeById('TAGS_ROOT');
     nodes = nodes.concat(tree.getAllNodes(allTagsNode));
 
     for (var i = 0; i < nodes.length; i++) {
       var node = nodes[i];
-      //      var el = Ext.get(node.ui.getTextEl()).up('div');
-      var el = Ext.get(node.ui.getTextEl());
+            var el = Ext.get(node.ui.getTextEl()).up('div');
+      //var el = Ext.get(node.ui.getEl());
       var dragMessage;
-      if (node != allPapersNode) {
-        // This hides the folder sub-nodes.
-        // TODO: we need to update the backend / API to allow for directly importing a PDF into a collection.
-        //        continue;
+
+      if (node == allTagsNode || node == allPapersNode) {
+        continue;
       }
 
-      if (node == allPapersNode) {
-        dragMessage = 'Import ' + noun + mult + ' into library';
-      } else if (node.type == 'FOLDER') {
-        dragMessage = 'Import ' + noun + mult + ' into folder';
+      if (node.type == 'FOLDER') {
+        dragMessage = 'Import ' + noun + mult + ' into folder ' + node.text;
       } else if (node.type == 'TAGS') {
-        dragMessage = 'Import ' + noun + mult + ' with label';
+        dragMessage = 'Import ' + noun + mult + ' with label ' + node.text;
       }
       var target = new Paperpile.DragDropTarget({
+        invisible: true,
         hint: 'import',
         dragMessage: dragMessage,
         action: 'pdf-import',
@@ -169,6 +183,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
   getDropTargetsForGrid: function(gridPanel, event) {
     // Go through and create drop targets for each visible grid row.
+    var targets = [];
     var preferPdfAction = this.isPdfDrag(event);
 
     // Get the list of visible row indices.
@@ -177,12 +192,25 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var rowCount = gridPanel.getStore().getCount();
     for (var i = 0; i < rowCount; i++) {
       var row = Ext.fly(gridPanel.getView().getRow(i));
-      if (row.getY() + row.getHeight() < gridBox.y + gridBox.height) {
+      if (row.getY() < gridBox.y + gridBox.height) {
         visibleRows.push(i);
       }
     }
 
-    var targets = [];
+    var mult = this.isMultipleFileDrag(event) ? 's' : '';
+
+    // One target for the whole grid.
+    var target = new Paperpile.DragDropTarget({
+      invisible: false,
+      hint: '',
+      dragMessage: '',
+      action: null,
+      targetZIndex: -1 // Keep on 'bottom' of the target stack.
+    });
+    target.setTargetEl(gridPanel.el);
+    targets.push(target);
+
+    // One invisible target per visible row.
     for (var i = 0; i < visibleRows.length; i++) {
       var rowIndex = visibleRows[i];
       var row = gridPanel.getStore().getAt(i);
@@ -196,7 +224,6 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       var hint = '';
       var dragMessage = '';
       var action = '';
-      var mult = this.isMultipleFileDrag(event) ? 's' : '';
       if (!data.pdf && preferPdfAction) {
         hint = 'Attach PDF';
         dragMessage = 'Attach PDF file' + mult + ' to this reference';
@@ -208,6 +235,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       }
 
       var target = new Paperpile.DragDropTarget({
+        invisible: true,
         hint: hint,
         dragMessage: dragMessage,
         action: action,
@@ -251,15 +279,14 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   },
 
   hideDragPane: function() {
-    //      Paperpile.log("Hiding drag pane!");
     this.dragPane.setVisible(false);
+
+    // Hide the tooltip and destroy any dragdrop targets.
+    this.destroyAllTargets();
 
     // Put drag events back onto the body.
     this.removeAllDragEvents(this.dragPane, this.paneDragEvent);
     this.addAllDragEvents(Ext.getBody(), this.bodyDragEvent);
-
-    // Hide the tooltip and destroy any dragdrop targets.
-    this.destroyAllTargets();
 
     this.effectBlock = false;
   },
@@ -303,17 +330,16 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       this.currentlyHoveredTarget = null;
     }
 
-    //    if (isOverSomething) {
     var be = event.browserEvent;
     be.dataTransfer.effectAllowed = 'copy';
     be.dataTransfer.dropEffect = 'copy';
     be.preventDefault();
-    //    }
   },
 
   destroyAllTargets: function() {
     if (this.currentlyHoveredTarget != null) {
       this.currentlyHoveredTarget.out(event);
+	this.currentlyHoveredTarget = null;
     }
     for (var i = 0; i < this.targetsList.length; i++) {
       var target = this.targetsList[i];
@@ -357,9 +383,11 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     for (var i = 0; i < this.targetsList.length; i++) {
       var target = this.targetsList[i];
       if (target != currentTarget) {
-        target.hide();
+	  target.destroy();
       }
     }
+
+      this.dragToolTip.hide();
 
     // Cause the current target to highlight, then hide the entire drag pane after the effect is finished.
     var fxDuration = 750;
@@ -405,7 +433,6 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
           Paperpile.main.createFileImportTab(path);
         }
       }
-
     }
   },
 
@@ -510,7 +537,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 // a DnD 'target' box, making it clear to the user where the
 // valid drop targets are.
 Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
-
+  invisible: false,
   floating: true,
   shadow: false,
   renderTo: document.body,
@@ -522,6 +549,10 @@ Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
   onRender: function(ct, position) {
     Paperpile.DragDropTarget.superclass.onRender.call(this, ct, position);
 
+    if (this.invisible && this.el) {
+      this.el.addClass('pp-drag-target-invisible');
+    }
+
     this.body.setOpacity(0);
     this.show();
   },
@@ -529,23 +560,43 @@ Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
   setTargetEl: function(targetEl) {
     if (this.rendered) {
       this.targetEl = targetEl;
-      this.updateBox(targetEl.getBox());
-      var el = this.getEl();
+      var box = targetEl.getBox();
+      box.x -= 2;
+      box.y -= 2;
+      box.width += 0;
+      box.height += 0;
+      this.updateBox(box);
+	var el = this.el;
       el.setStyle('z-index', '20'); // Important -- make sure the z-index i set so we display BELOW the 'drag pane' element.
     }
   },
   over: function(event) {
+    if (!this.getDragMessage()) {
+      return;
+    }
+
     var tip = Paperpile.main.dd.dragToolTip;
     tip.target = this.targetEl;
     tip.anchorTarget = this.targetEl;
     tip.update(this.getDragMessage());
     tip.show();
-    this.addClass('pp-drag-target-over');
+    if (this.el) {
+      this.el.addClass('pp-drag-target-over');
+      if (this.invisible) {
+        this.el.removeClass('pp-drag-target-invisible');
+      }
+    }
+
   },
   out: function(event) {
     var tip = Paperpile.main.dd.dragToolTip;
     tip.hide();
-    this.removeClass('pp-drag-target-over');
+    if (this.el) {
+      this.el.removeClass('pp-drag-target-over');
+      if (this.invisible) {
+        this.el.addClass('pp-drag-target-invisible');
+      }
+    }
   },
   getHint: function() {
     return this.hint;
