@@ -537,18 +537,38 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   // supplementary file (given by isPDF).
   //
   chooseFile: function(isPDF) {
-
-    var fc = new Paperpile.FileChooser({
-      currentRoot: Paperpile.main.globalSettings.user_home,
-      callback: function(button, path) {
-        if (button == 'OK') {
-          this.attachFile(isPDF, path);
+    var callback = function(filenames) {
+      if (filenames.length > 0) {
+        for (var i = 0; i < filenames.length; i++) {
+          var file = filenames[i];
+          this.attachFile(isPDF, file);
+          if (isPDF) {
+            return;
+          }
         }
-      },
-      scope: this
-    });
-
-    fc.show();
+      }
+    };
+    var options;
+    if (isPDF) {
+      options = {
+        title: 'Choose a PDF file to attach',
+        selectionType: 'file',
+        types: ['pdf'],
+        multiple: false,
+        typesDescription: 'PDF Files',
+        scope: this
+      };
+    } else {
+      options = {
+        title: 'Choose file(s) to attach',
+        selectionType: 'file',
+        types: ['*'],
+        multiple: true,
+        typesDescription: 'All Files',
+        scope: this
+      };
+    }
+    Paperpile.fileDialog(callback, options);
   },
 
   //
@@ -568,6 +588,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
+	  Paperpile.log("Returned!");
         Paperpile.main.onUpdate(json.data);
       },
       failure: Paperpile.main.onError,

@@ -349,10 +349,22 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     types: null,
     typesDescription: null,
       scope: null,
-    path: Paperpile.main.globalSettings.user_home
+      path: Paperpile.main.getSetting('last_file_path') || Paperpile.main.getSetting('user_home')
   };
 
   Ext.apply(options, inputOptions);
+
+    // After the original callback, store the last used file path.
+    if (callback === undefined) {
+	callback = function(filenames) {};
+    }
+    callback = callback.createSequence(function(filenames) {
+	if (filenames.length > 0) {
+	    var file = filenames[0];
+	    var dir = Paperpile.utils.splitPath(file).dir;
+	    Paperpile.main.setSetting('last_file_path',dir);
+	}
+    });
 
     if (options.scope) {
 	callback = callback.createDelegate(options.scope);
@@ -377,6 +389,14 @@ Paperpile.fileDialog = function(callback, inputOptions) {
         }
       },
     };
+
+      for (var i=0; i < options.types.length; i++) {
+	  var option = options.types[i];
+	  if (option == '*') {
+	      options.types[i] = '';
+	  }
+      }
+
     if (options.types) {
       Ext.apply(fileChooserOptions, {
         showFilter: true,

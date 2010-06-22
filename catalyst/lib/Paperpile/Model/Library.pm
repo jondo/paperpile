@@ -1225,6 +1225,8 @@ sub attach_file {
 
     $absolute_dest = catfile( $settings->{paper_root}, $relative_dest );
 
+    print STDERR "ABSOLUTE: $absolute_dest\n";
+
     # Copy file, file name can be changed if it was not unique
     $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
   } else {
@@ -1256,6 +1258,10 @@ sub attach_file {
     );
 
   } else {
+      if (!$external_dbh) {
+	  $dbh->commit;
+	  $dbh->do('BEGIN TRANSACTION');
+      }
 
     ( my $old_attachments ) = $dbh->selectrow_array("SELECT attachments FROM Publications WHERE guid='$pub_guid' ");
 
@@ -1310,7 +1316,7 @@ sub delete_attachment {
 
   } else {
 
-    ( my $attachments ) = $self->dbh->selectrow_array("SELECT attachments FROM Publications WHERE rowid=$rowid");
+    ( my $attachments ) = $dbh->selectrow_array("SELECT attachments FROM Publications WHERE rowid=$rowid");
 
     my @old_attachments = split(/,/, $attachments ||'');
 

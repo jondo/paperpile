@@ -261,6 +261,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (commitToBackend === undefined) {
       commitToBackend = true;
     }
+    Paperpile.log('[' + key + '] => [' + value + ']');
     this.globalSettings[key] = value;
 
     var s = {};
@@ -324,46 +325,47 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
+  folderExtract: function() {
+    var callback = function(filenames) {
+      if (filenames.length > 0) {
+        var folder = filenames[0];
+        Paperpile.main.countFilesAndTriggerExtraction(folder);
+      }
+      this.pdfExtractChoice.close();
+    };
+    var options = {
+      title: 'Choose a folder containing PDFs to import',
+      selectionType: 'folder',
+      scope: this
+    };
+    Paperpile.fileDialog(callback, options);
+  },
+
+  fileExtract: function() {
+    var callback = function(filenames) {
+      if (filenames.length > 0) {
+        for (var i = 0; i < filenames.length; i++) {
+          var file = filenames[i];
+          Paperpile.main.submitPdfExtractionJobs(file);
+        }
+      }
+      this.pdfExtractChoice.close();
+    };
+    var options = {
+      title: 'Choose PDF file(s) to import',
+      selectionType: 'file',
+      types: ['pdf'],
+      multiple: true,
+      typesDescription: 'PDF Files',
+      scope: this
+    };
+    Paperpile.fileDialog(callback, options);
+  },
+
   pdfExtract: function() {
 
-    var folderExtract = function() {
-      var callback = function(filenames) {
-        window.close();
-        if (filenames.length > 0) {
-          var folder = filenames[0];
-          Paperpile.main.countFilesAndTriggerExtraction(folder);
-        }
-      };
-      var options = {
-        title: 'Choose a folder containing PDFs to import',
-        selectionType: 'folder'
-      };
-      Paperpile.fileDialog(callback, options);
-
-    };
-
-    var fileExtract = function() {
-      var callback = function(filenames) {
-        window.close();
-        if (filenames.length > 0) {
-          for (var i = 0; i < filenames.length; i++) {
-            var file = filenames[i];
-            Paperpile.main.submitPdfExtractionJobs(file);
-          }
-        }
-      };
-      var options = {
-        title: 'Choose PDF file(s) to import',
-        selectionType: 'file',
-        types: ['pdf'],
-        multiple: true,
-        typesDescription: 'PDF Files'
-      };
-      Paperpile.fileDialog(callback, options);
-    };
-
     var divDef = '<div style="width:200px;white-space:normal;">';
-    var window = new Ext.Window({
+    this.pdfExtractChoice = new Ext.Window({
       title: 'PDF Import',
       layout: 'vbox',
       width: 250,
@@ -392,7 +394,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           width: 175,
           anchor: 'left'
         },
-        handler: folderExtract
+          handler: this.folderExtract,
+	  scope:this
       },
       {
         xtype: 'label',
@@ -408,7 +411,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           anchor: 'left',
           width: 175
         },
-        handler: fileExtract
+          handler: this.fileExtract,
+	  scope:this
       }],
       bbar: [{
         xtype: 'tbfill'
@@ -418,12 +422,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         itemId: 'cancel_button',
         cls: 'x-btn-text-icon cancel',
         handler: function() {
-          window.close();
+          this.pdfExtractChoice.close();
         },
         scope: this
       }]
     });
-    window.show();
+    this.pdfExtractChoice.show();
   },
 
   submitPdfExtractionJobs: function(path) {
