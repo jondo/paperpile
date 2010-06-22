@@ -193,11 +193,24 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       }
     }
 
+    if (!filter_button.oldIcon) {
+      filter_button.useSetClass = false;
+      filter_button.oldIcon = filter_button.icon;
+    }
+
     if (checked) {
       if (item.itemId == 'all') {
-        filter_button.setText(' ');
+        delete filter_button.minWidth;
+        filter_button.setText(null);
+        filter_button.setIcon(filter_button.oldIcon);
+        filter_button.el.addClass('x-btn-icon');
+        filter_button.el.removeClass('x-btn-noicon');
       } else {
+        delete filter_button.minWidth;
+        filter_button.setIcon(null);
         filter_button.setText(item.text);
+        filter_button.el.addClass('x-btn-noicon');
+        filter_button.el.removeClass('x-btn-icon');
       }
       this.filterField.onTrigger2Click();
     }
@@ -326,7 +339,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     // a collection tab, refresh the whole view.
     if (this.collection_type != '') {
       if (data.collection_delta) {
-	this.getStore().reload();
+        this.getStore().reload();
       }
     }
   }
