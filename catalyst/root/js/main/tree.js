@@ -318,14 +318,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       // For tags use specifically styled tab
       if (node.type == 'TAGS') {
-	  pars.collection_type = 'label';
+        pars.collection_type = 'label';
         iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + Paperpile.main.getStyleForTag(node.id);
         title = node.text;
       }
 
-	if (node.type == 'FOLDER') {
-	    pars.collection_type = 'folder';
-	}
+      if (node.type == 'FOLDER') {
+        pars.collection_type = 'folder';
+      }
 
       // For now we reload feeds whenever they are opened 
       if (pars.plugin_name == 'Feed') {
@@ -676,7 +676,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // Recurse.
       this.putNodesInArray(childNode, array);
       // Add this child.
-	Paperpile.log(childNode.id);
+      Paperpile.log(childNode.id);
       array.push(childNode);
     }
   },
@@ -712,8 +712,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
     var nodes = [];
     this.putNodesInArray(node, nodes);
-      nodes.push(node);
-      Paperpile.log(nodes.length);
+    nodes.push(node);
+    Paperpile.log(nodes.length);
     return nodes;
   },
 
@@ -1565,81 +1565,91 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   autoExportCheck: function(item, state) {
     var parentMenu = item.parentMenu;
     var node = parentMenu.node;
+    var id = node.id;
+
+      var filesync = this.getFileSyncData(node);
+
     if (state === true) {
-      node['plugin_auto_export_enable'] = true;
+
+      //node['plugin_auto_export_enable'] = true;
       var exportFile = this.getAutoExportLocation(node);
+      if (exportFile == '') {
+          this.autoExportClick(item,null);
+      }
       this.autoExportMessage(node.text, exportFile);
-      //this.saveNode(node);
-      Ext.Ajax.request({
-        url: Paperpile.Url('/ajax/misc/set_file_sync'),
-        params: {
-          guid: node.id,
-          file: exportFile,
-          active: 1
-        },
-        success: function() {
-          //update Paperpile.main.globalSettings here (is faster than
-          //reload everything from the backend)
-        },
-        failure: Paperpile.main.onError
-      });
+
+      filesync.file = exportFile;
+      filesync.active = 1;
+
     } else {
-      //node['plugin_auto_export_enable'] = false;
-      //this.saveNode(node);
+      filesync.active = 0;
     }
+      this.setFileSyncData(node,filesync);
+
   },
 
   getAutoExportLocation: function(node) {
     // Gets either (a) the defined auto-export location from the node's plugin parameters, or (b) a location defined based on the folder name and ID.
-    var export_file = node['plugin_auto_export_file'] || '';
-
-    var export_filetype = Paperpile.main.globalSettings['auto_export_filetype'] || '.bib';
-
-    if (export_file === '') {
-      var unique_folder_label = this.getUniqueFolderBreadcrumb(node);
-      var file_name = unique_folder_label + export_filetype;
-      export_file = Paperpile.main.globalSettings.user_home + '/' + file_name;
-    }
-    return export_file;
+      var filesync = this.getFileSyncData(node);
+      var export_file = filesync.file;
+    return export_file || '';
   },
+
+    setFileSyncData: function(node,params) {
+	var filesync = Paperpile.main.getSetting('file_sync');
+	filesync[node.id] = params;
+	Paperpile.main.setSetting('file_sync',filesync);
+    },
+
+    getFileSyncData: function(node) {
+	var filesync = Paperpile.main.getSetting('file_sync');
+
+	if (!filesync) {
+	    filesync = {};
+	    filesync[node.id] = {};
+	} else if (!filesync[node.id]) {
+	    filesync[node.id] = {};
+	}
+	return filesync[node.id];
+    },
 
   autoExportClick: function(item, event) {
     var parentMenu = item.parentMenu;
     var node = parentMenu.node;
 
+      var filesync = this.getFileSyncData(node);
     var initialFile = this.getAutoExportLocation(node);
-    var parts = Paperpile.utils.splitPath(initialFile);
 
     var stopMenuHide = function(menu) {
       return false;
     };
-    parentMenu.on('beforehide', stopMenuHide);
+//    parentMenu.on('beforehide', stopMenuHide);
 
-    win = new Paperpile.FileChooser({
-      saveMode: true,
-      saveDefault: parts.file,
-      currentRoot: parts.dir,
-      warnOnExisting: true,
-      callback: function(button, path) {
-        parentMenu.un('beforehide', stopMenuHide);
-        if (button == 'OK') {
-          node['plugin_auto_export_file'] = path;
-          this.saveNode(node);
-          parentMenu.hide();
-
-          this.autoExportMessage(node.text, path);
-        }
-      },
+    var callback = function(filenames) {
+      if (filenames.length > 0) {
+        var file = filenames[0];
+        filesync.file = file;
+	  parentMenu.hide();
+      this.setFileSyncData(node,filesync);
+        this.autoExportMessage(node.text, file);
+      }
+//      parentMenu.un('beforehide', stopMenuHide);
+    };
+    var options = {
+      title: 'Choose an output file for library sync',
+      selectionType: 'file',
+      dialogType: 'save',
+      multiple: false,
+      path: initialFile,
       scope: this
-    });
-    win.show();
-    return false;
+    };
+    Paperpile.fileDialog(callback, options);
   },
 
-  autoExportMessage: function(folder, file) {
+  autoExportMessage: function(collection_name, file) {
     Paperpile.status.updateMsg({
       type: 'info',
-      msg: 'References in folder \'' + folder + '\' will now auto-export to ' + file,
+      msg: 'References in folder \'' + collection_name + '\' will now sync to file ' + file,
       hideOnClick: true,
       duration: 5
     });
@@ -1746,7 +1756,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 
   initShownItems: function() {
     var item = this.items.get('folder_menu_auto_export');
-    if (this.node['plugin_auto_export_enable']) {
+      if (Paperpile.main.tree.getFileSyncData(this.node).active) {
       item.setChecked(true, true);
       item.enableText();
     } else {
