@@ -19,7 +19,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     });
       var el = this.dragToolTip.getEl();
       el.setStyle('position', 'absolute');
-      el.setStyle('z-index', '1'); // Important -- hover above everything else.
+      el.setStyle('z-index', '250'); // Important -- hover above everything else.
   },
 
   addAllDragEvents: function(el, fn, targetFilter) {
@@ -76,19 +76,27 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     this.targetsList = [];
     for (var i = 0; i < collection.getCount(); i++) {
       this.targetsList.push(collection.itemAt(i));
-    }
-    /*
-    // Add a canvas overlay.
-      var canvas = Ext.DomHelper.append(Ext.getBody(),{
-	  tag: 'canvas',
-	  width:200,
-	  height:200
-      });
-      var c = canvas.getContext("2d");
-          c.fillStyle = 'red';
-      c.fillRect(0, 0, 200,200);
-*/
+    }    
   },
+
+    drawAroundTargets: function(canvasEl) {
+	var c = canvasEl.dom.getContext("2d");
+
+	var box = canvasEl.getBox();
+	c.clearRect(box.x,box.y,box.width,box.height);
+	c.fillStyle = 'rgba(50,50,50,0.3)';
+	c.fillRect(box.x,box.y,box.width,box.height);
+
+	for (var i = 0; i < this.targetsList.length; i++) {
+	  var target = this.targetsList[i];
+	    if (target.invisible) {
+		continue;
+	    }
+	    var box = target.getBox();
+	    c.fillStyle = 'rgba(0,255,0,0.1)';
+	    c.clearRect(box.x,box.y,box.width,box.height);
+	}
+    },
 
   getDropTargetsForLibraryImport: function(event) {
     var targets = [];
@@ -207,7 +215,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       action: null,
       targetZIndex: -1 // Keep on 'bottom' of the target stack.
     });
-    target.setTargetEl(gridPanel.el);
+      target.setTargetEl(gridPanel.body);
     targets.push(target);
 
     // One invisible target per visible row.
@@ -257,17 +265,22 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     // entire window, catching drag events and detecting when
     // they overlap with drag targets.
     if (!this.dragPane) {
-      this.dragPane = Ext.getBody().createChild({
-        id: 'drag-pane',
-        cls: 'pp-drag-pane'
-      });
-      var el = this.dragPane;
-      el.setBox(Paperpile.main.getBox()); // Set to window size.
-      el.setOpacity(0);
-      el.setStyle('z-index', '100'); // Important -- hover above everything else.
-      el.setStyle('position', 'absolute');
+    // Add a canvas overlay.
+      var box = Paperpile.main.getBox();
+      this.dragPane = Ext.DomHelper.append(Ext.getBody(),{
+	  tag: 'canvas',
+	  id: 'drag-pane',
+	  top:0,
+	  left:0,
+	  width:box.width,
+	  height:box.height,
+	  style: {
+	      'z-index':100,
+	      'position':'absolute',
+	  }
+      },true);
     }
-
+    
     // The dragPane should capture drag events now, not the bod.
     this.removeAllDragEvents(Ext.getBody(), this.bodyDragEvent);
     this.addAllDragEvents(this.dragPane, this.paneDragEvent);
@@ -276,6 +289,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
     // Create the necessary drop targets.
     this.createDropTargets(event);
+
+    this.drawAroundTargets(this.dragPane);
   },
 
   hideDragPane: function() {
@@ -386,6 +401,11 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 	  target.destroy();
       }
     }
+
+      // Clear the drag pane shadow.
+    var c = this.dragPane.dom.getContext("2d");
+    var box = this.dragPane.getBox();
+    c.clearRect(box.x,box.y,box.width,box.height);
 
       this.dragToolTip.hide();
 
