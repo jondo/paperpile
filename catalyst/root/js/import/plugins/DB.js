@@ -67,10 +67,10 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     store.on('load',
       function() {
         if (this.getStore().getCount() == 0) {
-	    var panel = this.getPluginPanel();
-            if (panel.itemId == 'MAIN' && this.getStore().baseParams.plugin_query == "") {
-		// This needs to be deferred by a bit, so it happens AFTER the onEmpty('') call within the grid.js onStoreLoad method.
-		panel.onEmpty.defer(10,panel,[this.welcomeMsg]);
+          var panel = this.getPluginPanel();
+          if (panel.itemId == 'MAIN' && this.getStore().baseParams.plugin_query == "") {
+            // This needs to be deferred by a bit, so it happens AFTER the onEmpty('') call within the grid.js onStoreLoad method.
+            panel.onEmpty.defer(10, panel, [this.welcomeMsg]);
           }
         }
       },
@@ -179,15 +179,13 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     var filter_button = this.filterButton;
 
     // Toggle 'search_pdf' option 
-    if (item.itemId == 'all_pdf') {
-      this.getStore().baseParams['plugin_search_pdf'] = checked ? 1 : 0;
-    }
+    this.getStore().baseParams['plugin_search_pdf'] = 1;
 
     // Specific fields
-    if (item.itemId != 'all_pdf' && item.itemId != 'all_nopdf') {
+    if (item.itemId != 'all') {
       if (checked) {
         this.filterField.singleField = item.itemId;
-        this.getStore().baseParams['plugin_search_pdf'] = (item.itemId == 'text') ? 1 : 0;
+        this.getStore().baseParams['plugin_search_pdf'] = 0;
       } else {
         if (this.filterField.singleField == item.itemId) {
           this.filterField.singleField = "";
@@ -196,8 +194,8 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     }
 
     if (checked) {
-      if (item.itemId == 'all_pdf' || item.itemId == 'all_nopdf') {
-        filter_button.setText('Filter');
+      if (item.itemId == 'all') {
+        filter_button.setText(' ');
       } else {
         filter_button.setText(item.text);
       }
@@ -226,11 +224,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       items: [{
         text: 'All fields',
         checked: true,
-        itemId: 'all_nopdf'
-      },
-      {
-        text: 'All + Fulltext',
-        itemId: 'all_pdf'
+        itemId: 'all'
       },
         '-', {
           text: 'Author',
@@ -264,7 +258,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     this.actions['FILTER_BUTTON'] = new Ext.Button({
       itemId: 'FILTER_BUTTON',
-      text: 'Filter',
+      icon: '/images/icons/zoom.png',
       tooltip: 'Choose field(s) to search',
       menu: this.filterMenu
     });
@@ -321,6 +315,18 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       item = tbar.getComponent('VIEW_PDF');
       if (item) {
         item.disable();
+      }
+    }
+  },
+
+  onUpdate: function(data) {
+    Paperpile.PluginGridDB.superclass.onUpdate.call(this, data);
+
+    // If the update has to do with collections and we are 
+    // a collection tab, refresh the whole view.
+    if (this.collection_type != '') {
+      if (data.collection_delta) {
+	this.getStore().reload();
       }
     }
   }

@@ -426,6 +426,7 @@ sub move_in_collection : Local {
   } else {
     $self->_collect_update_data( $c, $data, [ $what ] );
   }
+  $c->stash->{data}->{collection_delta} = 1;
 }
 
 sub remove_from_collection : Local {
@@ -441,6 +442,7 @@ sub remove_from_collection : Local {
   $c->model('Library')->remove_from_collection( $data, $collection_guid, $type );
 
   $self->_collect_update_data( $c, $data, [$what] );
+  $c->stash->{data}->{collection_delta} = 1;
 }
 
 sub delete_collection : Local {
@@ -467,6 +469,7 @@ sub delete_collection : Local {
   }
 
   $self->_collect_update_data($c, $pubs,[$what]);
+  $c->stash->{data}->{collection_delta} = 1;
 }
 
 sub rename_collection : Local {
@@ -481,6 +484,7 @@ sub rename_collection : Local {
   my $what = $type eq 'FOLDER' ? 'folders' : 'tags';  
   my $pubs = $self->_get_cached_data($c);
   $self->_collect_update_data($c, $pubs,[$what]);
+  $c->stash->{data}->{collection_delta} = 1;
 }
 
 sub move_collection : Local {
@@ -500,6 +504,7 @@ sub move_collection : Local {
 
   $c->model('Library')->move_collection( $target_guid, $drop_guid, $position, $type );
 
+  $c->stash->{data}->{collection_delta} = 1;
 }
 
 # Sorts a set of sibling collection nodes by the given order of IDs.
@@ -535,6 +540,7 @@ sub style_collection : Local {
   my $style = $c->request->params->{style};
 
   $c->model('Library')->set_collection_style( $guid, $style );
+  $c->stash->{data}->{collection_delta} = 1;
 }
 
 

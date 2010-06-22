@@ -318,9 +318,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       // For tags use specifically styled tab
       if (node.type == 'TAGS') {
+	  pars.collection_type = 'label';
         iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + Paperpile.main.getStyleForTag(node.id);
         title = node.text;
       }
+
+	if (node.type == 'FOLDER') {
+	    pars.collection_type = 'folder';
+	}
 
       // For now we reload feeds whenever they are opened 
       if (pars.plugin_name == 'Feed') {
