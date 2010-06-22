@@ -114,11 +114,7 @@ sub restore {
 
   my $self = shift;
 
-  #$self->dbh->begin_work();
-
   ( my $serialized ) = $self->dbh->selectrow_array("SELECT value FROM Settings WHERE key='queue' ");
-
-  #$self->dbh->commit;
 
   if (not $serialized) {
     $self->save;
@@ -145,7 +141,7 @@ sub submit {
     $jobs = [$jobs];
   }
 
-  $self->dbh->begin_work;
+  $self->dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   foreach my $job (@$jobs){
     my $id     = $self->dbh->quote( $job->id );

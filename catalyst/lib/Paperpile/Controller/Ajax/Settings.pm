@@ -26,6 +26,7 @@ use File::Copy;
 use File::Copy::Recursive qw(dirmove);
 use File::Path;
 use Data::Dumper;
+use JSON;
 use 5.010;
 
 sub pattern_example : Local {
@@ -295,16 +296,24 @@ sub rename_files : Private {
   rmtree("$old_root\_backup");
 }
 
+
+# Store settings in the databases (library or user db). All data must
+# be encoded as JSON. This allows to story arbitrary objects through
+# this function.
+
 sub set_settings : Local {
 
   my ( $self, $c ) = @_;
 
+  my $json = JSON->new->allow_nonref;
+
+  # Decode JSON data
   for my $field ( keys %{ $c->request->params } ) {
-    print STDERR "$field \n";
+    $c->request->params->{$field} = $json->decode($c->request->params->{$field});
   }
 
-  for my $field ( 'use_proxy', 'proxy', 'proxy_user', 'proxy_passwd', 'pager_limit',
-    'tags_list_height' ) {
+  # Set user user_settings
+  for my $field ( keys %{$c->config->{'user_settings'}}){
 
     # Only store settings that are defined in the parameters.
     if ( defined $c->request->params->{$field} ) {
@@ -312,7 +321,8 @@ sub set_settings : Local {
     }
   }
 
-  for my $field ('search_seq') {
+  # Set library settings
+  for my $field ( keys %{$c->config->{'library_settings'}}){
     if ( defined $c->request->params->{$field} ) {
       $c->model('Library')->set_setting( $field, $c->request->params->{$field} );
     }

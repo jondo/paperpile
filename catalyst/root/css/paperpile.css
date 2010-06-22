@@ -1256,6 +1256,20 @@ div:hover.pp-grid-sort-item {
     margin: 0px 8px;
 }
 
+
+.pp-settings-table {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    margin: 4px 8px;
+}
+
+.pp-settings-table td {
+    padding: 4px 2px;
+    vertical-align:top;
+}
+
+.pp-settings-label {
+}
+
 .pp-settings-example {
     font: normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     color:gray;

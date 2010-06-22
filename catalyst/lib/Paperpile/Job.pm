@@ -213,7 +213,8 @@ sub update_status {
 
   my $job_id = $dbh->quote( $self->id );
 
-  $dbh->begin_work;
+
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   $status = $dbh->quote( $self->status );
 

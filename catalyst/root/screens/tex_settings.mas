@@ -1,0 +1,72 @@
+<table>
+<tr>
+<td>
+  <div id="ui-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="width:300; height:350">
+    <h3>BibTeX Settings</h3>
+    
+    <table class="pp-settings-table">
+      <tr>
+        <td><div class="pp-settings-checkbox" id="bibtex_mode_checkbox"></div></td>
+        <td class="pp-settings-label"><div id="bibtex_mode_button" style="float: left; margin: -3px 0px;"></div> <span id="bibtex_mode_tooltip" class="pp-tooltip-link">&nbsp;?</span></td> 
+      </tr>
+      <tr>
+        <td><div class="pp-settings-checkbox" id="import_strip_tex_checkbox"></div></td>
+        <td class="pp-settings-label">Strip LaTeX on import <span id="import_strip_tex_tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
+      <tr>
+        <td><div class="pp-settings-checkbox" id="export_escape_checkbox"></div></td>
+        <td class="pp-settings-label">Escape special characters on export <span id="export_escape_tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
+      <tr>
+        <td><div class="pp-settings-checkbox" id="pretty_print_checkbox"></div></td>
+        <td class="pp-settings-label">Pretty print BibTeX <span id="pretty_print_tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
+      <tr>
+        <td><div class="pp-settings-checkbox" id="double_dash_checkbox"></div></td>
+        <td class="pp-settings-label">Use double dash (--) in pages field <span id="double_dash_tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
+      <tr>
+        <td><div class="pp-settings-checkbox" id="use_quotes_checkbox"></div></td>
+        <td class="pp-settings-label">Use quotes (&quot;...&quot;) as field delimiter <span id="use_quotes_tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
+      <tr>
+        <td><div class="pp-settings-checkbox" id="title_quote_complete_checkbox"></div></td>
+        <td class="pp-settings-label">Quote complete title <span id="title_quote_complete_tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
+    </table>
+  </div>
+</td>
+
+<td>
+  <div id="ui-container" class="pp-box pp-box-style2 pp-box-top pp-box-settings" style="width:300; height:350;">
+    <h3>Optional fields to export <span id="export_fields_tooltip" class="pp-tooltip-link">?</span></h3>
+
+    <table class="pp-settings-table">
+% my $field;
+% foreach $field ('abstract','affiliation','doi','pmid','eprint','issn','isbn','lccn','keywords') {
+      <tr>
+        <td><div class="pp-settings-checkbox" id="export_fields_<% $field %>_checkbox"></div></td>
+        <td class="pp-settings-label"><tt><% $field %></tt></td> 
+      </tr>
+% }
+     </ul>
+    </table>
+
+    
+  </div>
+</td>
+</tr>
+
+
+<tr>
+<td>
+  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:280; width:300">
+    <h3>Words to quote in title <span id="title_quote_tooltip" class="pp-tooltip-link">?</span></h3>
+
+    <p id="title_quote_textarea"></p>
+    <p id="title_quote_button"></p>
+
+</td>
+<td></td>
+</tr>
+</table>

@@ -134,6 +134,15 @@ sub new_entry : Local {
     DuplicateError->throw("Updates duplicate an existing reference in the database");
   }
 
+  my $job;
+
+  # Inserting a PDF that failed to match automatically and that has a
+  # jobid in the queue.
+  if ($match_job) {
+    $job = Paperpile::Job->new( { id => $match_job } );
+    $pub->_pdf_tmp($job->pub->pdf);
+  }
+
   $c->model('Library')->insert_pubs( [$pub], 1 );
 
   $self->_update_counts($c);
@@ -144,10 +153,8 @@ sub new_entry : Local {
 
   $c->stash->{data}->{pub_delta} = 1;
 
-  # Inserting a PDF that failed to match automatically and that has a
-  # jobid in the queue. We update the job entry here.
-  if ($match_job) {
-    my $job = Paperpile::Job->new( { id => $match_job } );
+  # Update the job entry here.
+  if ($job) {
     $job->update_status('DONE');
     $job->error('');
     $job->update_info('msg',"Data inserted manually.");

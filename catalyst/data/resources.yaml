@@ -38,6 +38,7 @@ js:
   - "js/screens/patterns.js"
   - "js/screens/statistics.js"
   - "js/screens/settings.js"
+  - "js/screens/tex-settings.js"
   - "js/screens/clouds.js"
   - "js/widgets/label-widget.js"
   - "js/widgets/search-download-widget.js"

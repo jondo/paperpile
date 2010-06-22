@@ -54,6 +54,9 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       case 'settings-general':
         Paperpile.main.tabs.newScreenTab('GeneralSettings');
         break;
+      case 'settings-tex':
+        Paperpile.main.tabs.newScreenTab('TexSettings');
+        break;
       case 'duplicates':
         Paperpile.main.tabs.newPluginTab('Duplicates', {},
           "Duplicates", "pp-icon-folder", "duplicates")

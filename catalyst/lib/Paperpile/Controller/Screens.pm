@@ -33,6 +33,15 @@ sub settings : Local {
   $c->forward('Paperpile::View::Mason');
 }
 
+sub tex_settings : Local {
+  my ( $self, $c ) = @_;
+
+  #$c->stash->{settings} = $c->model('Library')->settings;
+
+  $c->stash->{template} = '/screens/tex_settings.mas';
+  $c->forward('Paperpile::View::Mason');
+}
+
 sub license : Local {
   my ( $self, $c ) = @_;
   $c->stash->{template} = '/screens/license.mas';

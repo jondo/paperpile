@@ -59,7 +59,7 @@ sub insert_pubs {
 
   my $dbh = $self->dbh;
 
-  $dbh->begin_work;
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   if ($user_library) {
     $self->_generate_keys( $pubs, $dbh );
@@ -142,7 +142,7 @@ sub delete_pubs {
 
   my $dbh = $self->dbh;
 
-  $dbh->begin_work;
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   # Delete attachments
   foreach my $pub (@$pubs) {
@@ -190,7 +190,7 @@ sub trash_pubs {
 
   my $paper_root = $self->get_setting('paper_root', $dbh);
 
-  $dbh->begin_work;
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   my @files = ();
 
@@ -258,6 +258,7 @@ sub trash_pubs {
   }
 
   $dbh->commit;
+
 }
 
 # Updates the publication with $guid with the new data in hashref
@@ -270,7 +271,7 @@ sub update_pub {
 
   my $dbh = $self->dbh;
 
-  $dbh->begin_work;
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   my $settings = $self->settings($dbh);
 
@@ -395,7 +396,7 @@ sub update_citekeys {
 
   my %seen = ();
 
-  $self->dbh->begin_work;
+  $self->dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   eval {
 
@@ -443,7 +444,7 @@ sub new_collection {
 
   my $dbh = $self->dbh;
 
-  $dbh->begin_work;
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   if ( $parent =~ /ROOT/ ) {
     $parent = 'ROOT';
@@ -482,7 +483,7 @@ sub delete_collection {
 
   my $dbh = $self->dbh;
 
-  $dbh->begin_work;
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   my $sth = $dbh->prepare("SELECT * FROM Collections;");
   $sth->execute;
@@ -545,8 +546,8 @@ sub update_collections {
 
   my $dbh = $self->dbh;
 
-  $dbh->begin_work;
-
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  
   foreach my $pub (@$pubs) {
 
     my $rowid    = $pub->_rowid;
@@ -593,7 +594,7 @@ sub remove_from_collection {
 
   my $dbh = $self->dbh;
 
-  $dbh->begin_work;
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   foreach my $pub (@$data) {
 
@@ -656,7 +657,7 @@ sub move_collection {
 
   my $dbh = $self->dbh;
 
-  $dbh->begin_work;
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   my ($new_parent,$sort_order);
   if ($target_guid =~ m/ROOT/) {
@@ -1181,7 +1182,7 @@ sub attach_file {
   } else {
     $external_dbh = 0;
     $dbh = $self->dbh;
-    $dbh->begin_work;
+    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
   }
 
 
