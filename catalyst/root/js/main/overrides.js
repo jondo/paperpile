@@ -793,3 +793,35 @@ Ext.override(Ext.QuickTip, {
     }
   }
 });
+
+
+Ext.override(Ext.ProgressBar, {
+    updateRange : function(low,high,text,animate){
+	this.progressBar.setStyle('position','relative');
+        this.value = high || 0;
+        if(text){
+            this.updateText(text);
+        }
+        if(this.rendered && !this.isDestroyed){
+            var x_low = Math.floor(low*this.el.dom.firstChild.offsetWidth);
+            var x_high = Math.ceil(high*this.el.dom.firstChild.offsetWidth);
+	    var w = Math.ceil(x_high-x_low);
+	    if (w < 2) {
+		x_low -= 1;
+		x_high += 1;
+		w += 2;
+	    }
+//            this.progressBar.setWidth(w, animate === true || (animate !== false && this.animate));
+	    this.progressBar.setWidth(w);
+	    this.progressBar.setX(this.el.getX()+x_low, animate === true || (animate !== false && this.animate));
+            if(this.textTopEl){
+                //textTopEl should be the same width as the bar so overflow will clip as the bar moves
+                this.textTopEl.removeClass('x-hidden').setWidth(w);
+            }
+        }
+        this.fireEvent('update', this, high, text);
+        return this;
+    },
+
+
+});

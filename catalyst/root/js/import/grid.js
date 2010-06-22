@@ -37,7 +37,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   tagStyles: {},
 
   initComponent: function() {
-    this.pager = new Ext.PagingToolbar({
+    this.pager = new Paperpile.Pager({
       pageSize: this.limit,
       store: this.getStore(),
       displayInfo: true,
@@ -303,7 +303,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       appendOnly: true,
       itemId: 'grid',
       store: this.getStore(),
-	view: new Ext.grid.GridView({grid:this}),
+      view: new Ext.grid.GridView({
+        grid: this
+      }),
       bbar: this.pager,
       tbar: new Paperpile.Toolbar({
         itemId: 'toolbar',
@@ -445,7 +447,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   onStoreLoad: function() {
-
     var pluginPanel = this.getPluginPanel();
     var ep = pluginPanel.items.get('east_panel');
     var tb_side = ep.getBottomToolbar();
@@ -465,13 +466,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     tb_side.items.get(activeTab + '_tab_button').toggle(true);
 
     if (this.getSelectionModel().getCount() == 0) {
-      this.getSelectionModel().selectFirstRow.defer(10, this.getSelectionModel());
+      this.getSelectionModel().selectFirstRow.defer(0, this.getSelectionModel());
     }
 
     pluginPanel.updateDetails();
     pluginPanel.updateButtons();
     this.updateButtons();
-
   },
 
   highlightNewArticles: function() {
@@ -1865,3 +1865,63 @@ Ext.grid.AnimatedGridView = Ext.extend(Ext.grid.GridView, {
   }
 });
 */
+
+Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
+  initComponent: function() {
+    Paperpile.Pager.superclass.initComponent.call(this);
+
+    var items = [this.first, this.inputItem, this.afterTextItem, this.last, this.refresh];
+    Paperpile.log(items.length);
+    items = items.concat(this.findByType(Ext.Toolbar.Spacer));
+    items = items.concat(this.findByType(Ext.Toolbar.Separator));
+    Paperpile.log(items.length);
+    for (var i = 0; i < items.length; i++) {
+      this.remove(items[i], true);
+    }
+
+    var pageText = this.findBy(function(item, container) {
+      if (item.text == this.beforePageText) {
+        return true;
+      }
+    },
+    this);
+    //('text',this.beforePageText);
+    this.remove(1, true);
+
+    this.on('render', this.myOnRender, this);
+  },
+  myOnRender: function() {
+    this.progressBar = new Ext.ProgressBar({
+      text: '',
+      width: 50,
+      height: 10,
+	animate: {duration:1,easing:'easeOutStrong'},
+	cls: 'pp-toolbar-progress'
+    });
+    this.progressBar.on('render', function(pb) {
+      pb.getEl().applyStyles('cursor:pointer');
+      this.mon(pb.getEl(), 'click', this.handleProgressBarClick, this);
+    },
+    this);
+    this.insert(2, this.progressBar);
+    this.insert(2, new Ext.Toolbar.Spacer({width:5}));
+  },
+  handleProgressBarClick: function(e) {
+    var box = this.progressBar.getBox();
+    var xy = e.getXY();
+    var position = xy[0] - box.x;
+    var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);
+    var newpage = Math.ceil(position / (this.progressBar.width / pages));
+    this.changePage(newpage);
+  },
+  updateInfo: function() {
+    Paperpile.Pager.superclass.updateInfo.call(this);
+    var count = this.store.getCount();
+    var pgData = this.getPageData();
+    var pageNum = this.readPage(pgData);
+    pageNum = pgData.activePage;
+    var high = pageNum / pgData.pages;
+      var low = (pageNum-1) / pgData.pages;
+      this.progressBar.updateRange(low,high, '');
+  }
+});

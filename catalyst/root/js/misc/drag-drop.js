@@ -171,9 +171,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       }
 
       if (node.type == 'FOLDER') {
-        dragMessage = 'Import ' + noun + mult + ' into folder ' + node.text;
+        dragMessage = 'Import ' + noun + mult + ' into folder <b>' + node.text+'</b>';
       } else if (node.type == 'TAGS') {
-        dragMessage = 'Import ' + noun + mult + ' with label ' + node.text;
+        dragMessage = 'Import ' + noun + mult + ' with label <b>' + node.text+'</b>';
       }
       var target = new Paperpile.DragDropTarget({
         invisible: true,
