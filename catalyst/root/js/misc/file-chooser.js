@@ -1,3 +1,4 @@
+
 /* Copyright 2009, 2010 Paperpile
 
    This file is part of Paperpile
@@ -347,6 +348,7 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     // types: ['txt','csv']
     types: null,
     typesDescription: null,
+      scope: null,
     path: Paperpile.main.globalSettings.user_home
   };
 

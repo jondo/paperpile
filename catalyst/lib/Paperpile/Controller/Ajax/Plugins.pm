@@ -116,13 +116,13 @@ sub resultsgrid : Local {
       }
     }
 
-    my %sha1_hash;
-    map { $sha1_hash{$_} = 1 } @$selection;
+    my %guid_hash;
+    map { $guid_hash{$_} = 1 } @$selection;
 
     my $unfiltered_entries = $plugin->all;
     my @filtered_entries;
     foreach my $pub (@$unfiltered_entries) {
-      push @filtered_entries, $pub if ( $sha1_hash{ $pub->sha1 } );
+      push @filtered_entries, $pub if ( $guid_hash{ $pub->guid } );
     }
     $entries = \@filtered_entries;
   } else {
@@ -235,8 +235,8 @@ sub export : Local {
       } else {
         push @tmp, $selection;
       }
-      for my $sha1 (@tmp) {
-        my $pub = $grid->find_sha1($sha1);
+      for my $guid (@tmp) {
+        my $pub = $grid->find_guid($guid);
         push @$data, $pub;
       }
     }

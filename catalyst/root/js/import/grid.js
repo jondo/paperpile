@@ -1347,7 +1347,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   handleExportSelection: function() {
     selection = this.getSelection();
-    var window = new Paperpile.ExportWindow({
+    var window = new Paperpile.SimpleExportWindow({
       grid_id: this.id,
       selection: selection
     });
@@ -1355,7 +1355,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   handleExportView: function() {
-    var window = new Paperpile.ExportWindow({
+    var window = new Paperpile.SimpleExportWindow({
       grid_id: this.id,
       selection: 'all'
     });

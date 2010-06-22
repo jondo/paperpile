@@ -180,13 +180,11 @@ Paperpile.ExportWindow = Ext.extend(Ext.Window, {
 });
 
 Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
-
   grid_id: null,
   source_node: null,
-  selection: [],
+  selection: null,
 
   initComponent: function() {
-
     var formats = [{
       text: 'BibTeX (.bib)',
       short: 'BIBTEX'
@@ -298,7 +296,8 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
       title: 'Choose a destination file for ' + desc + ' export',
       dialogType: 'save',
       types: ext,
-      typesDescription: desc + " (" + includingDots.join(', ') + ")"
+	typesDescription: desc + " (" + includingDots.join(', ') + ")",
+	scope:this
     };
     var window = this;
     var callback = function(filenames) {
@@ -317,7 +316,9 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
         url: Paperpile.Url('/ajax/plugins/export'),
         params: {
           source_node: this.source_node,
-          selection: 'all',
+          selection: this.selection,
+          grid_id: this.grid_id,
+          source_node: this.source_node,
           export_name: 'Bibfile',
           export_out_format: format,
           export_out_file: file
