@@ -131,7 +131,7 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
         var selection = this.getSelection('NOT_IMPORTED');
         if (selection.length == 0) return;
 
-	  var longImport = this.isLongImport();
+	var longImport = this.isLongImport();
         if (longImport) {
           Paperpile.status.showBusy('Importing references to library');
         }
