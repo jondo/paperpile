@@ -236,13 +236,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       'COPY_BIBTEX_KEY': new Ext.Action({
         itemId: 'COPY_BIBTEX_KEY',
-        text: 'Copy BibTeX key(s)',
+        text: 'Copy LaTeX citation',
         handler: this.handleCopyBibtexKey,
         scope: this
       }),
       'COPY_BIBTEX_CITATION': new Ext.Action({
         itemId: 'COPY_BIBTEX_CITATION',
-        text: 'Copy BibTeX citation(s)',
+        text: 'Copy as BibTeX',
         handler: this.handleCopyBibtexCitation,
         scope: this
       }),
@@ -1406,16 +1406,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         get_string: true
       },
       method: 'GET',
-      timeout: 5000,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         Paperpile.status.clearMsg();
-
         if (IS_TITANIUM) {
           Titanium.UI.Clipboard.setText(json.data.string);
           Paperpile.status.updateMsg({
             msg: msg,
-            hideOnClick: true
+            duration: 1.5
           });
         } else {
           // TODO: Figure out a non-Titanium way to handle this.
@@ -1428,13 +1426,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
   },
   handleCopyBibtexCitation: function() {
-    this.handleCopy('Bibfile', 'BIBTEX', 'The selected BibTeX citations are now on the clipboard.');
+    this.handleCopy('Bibfile', 'BIBTEX', 'BibTeX copied');
   },
   handleCopyBibtexKey: function() {
-    this.handleCopy('Bibfile', 'CITEKEYS', 'The selected BibTeX keys are now on the clipboard.');
+    this.handleCopy('Bibfile', 'CITEKEYS', 'LaTeX citations copied');
   },
   handleCopyFormatted: function() {
-    this.handleCopy('Bibfile', 'CITATIONS', 'The selected text citations are now on the clipboard.');
+    this.handleCopy('Bibfile', 'CITATIONS', 'Citations copied');
   },
   deleteEntry: function(mode) {
     var selection = this.getSelection();

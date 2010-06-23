@@ -18,10 +18,10 @@ sub write {
 
   open( OUT, ">" . $self->file )
     || FileReadError->throw( error => "Could not write to file " . $self->file );
-  
+
   my @keys = ();
   foreach my $pub ( @{ $self->data } ) {
-      push @keys, $pub->citekey;
+    push @keys, $pub->citekey;
   }
   print OUT join(",",@keys);
   close(OUT);

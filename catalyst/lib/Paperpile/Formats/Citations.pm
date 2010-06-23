@@ -3,6 +3,7 @@ package Paperpile::Formats::Citations;
 use Moose;
 use Data::Dumper;
 use IO::File;
+use Text::Wrap;
 
 extends 'Paperpile::Formats';
 
@@ -18,22 +19,30 @@ sub write {
 
   open( OUT, ">" . $self->file )
     || FileReadError->throw( error => "Could not write to file " . $self->file );
-  
+
   my @strings = ();
   foreach my $pub ( @{ $self->data } ) {
-      push @strings, $self->format_pub($pub);
+    push @strings, $self->format_pub($pub);
   }
-  print OUT join("\n",@strings);
+  print OUT join( "\n", @strings );
   close(OUT);
 }
 
 sub format_pub {
-    my $self = shift;
-    my $pub = shift;
-    
-    my $string = $pub->format_citation;
 
-    return $string;
+  my ($self, $pub)  = @_;
+
+  my $citation = $pub->format_citation;
+
+  $citation =~ s!</?\w>!!g;
+
+  my $string = $pub->title . "\n". $pub->_authors_display . "\n". $citation;
+
+  $Text::Wrap::columns = 70;
+
+  $string = wrap("","",$string);
+
+  return "$string\n";
 }
 
 1;
