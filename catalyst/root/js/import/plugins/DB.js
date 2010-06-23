@@ -271,7 +271,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     this.actions['FILTER_BUTTON'] = new Ext.Button({
       itemId: 'FILTER_BUTTON',
-      icon: '/images/icons/zoom.png',
+      icon: '/images/icons/magnifier.png',
       tooltip: 'Choose field(s) to search',
       menu: this.filterMenu
     });
