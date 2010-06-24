@@ -293,16 +293,18 @@ sub update_pub {
   my $new_pub = Paperpile::Library::Publication->new($data);
   $new_pub->_db_connection($self->get_dsn);
 
-  $self->exists_pub([$new_pub], $dbh);
-
-  if ($new_pub->_imported){
-# Don't throw duplicate errors on pub update -- we should expect this reference to already exist!
-#    DuplicateError->throw("Updates duplicate an existing reference in the database");
-  }
-
   # Also update sha1 and citekey if necessary changed
   if ( $new_pub->sha1 ne $old_data->{sha1} ) {
     $diff->{sha1} = $new_pub->sha1;
+
+    # If sha1 has changed we check if the new sha1 already exists in
+    # the database to avoid duplicates
+    $self->exists_pub([$new_pub], $dbh);
+    if ($new_pub->_imported){
+      DuplicateError->throw("Updates duplicate an existing reference in the database");
+    } else {
+      $new_pub->_imported(1);
+    }
   }
 
   # Check if the citekey has changed.
@@ -378,11 +380,6 @@ sub update_pub {
 
   $self->_update_fulltext_table( $new_pub, 0, $dbh );
   $dbh->commit;
-
-#  $new_pub->_imported(1);
-#  $new_pub->_auto_refresh(1);
-#  $new_pub->refresh_fields;
-#  print STDERR " -> CITATION: ".$new_pub->_citation_display."\n";
 
   return $new_pub;
 }

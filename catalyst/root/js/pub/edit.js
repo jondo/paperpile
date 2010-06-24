@@ -873,20 +873,11 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         var json = Ext.util.JSON.decode(action.response.responseText);
         if (json.error) {
           if (json.error.type === 'DuplicateError') {
-            if (noChangesMade) {
-              // If we didn't expect any changes, the duplicate error is expected behavior. Turn this failure into a success.
-              this.onSuccess(form, action);
-		Paperpile.status.updateMsg({
-		    msg: 'Backend error!'
-		});
-              return;
-            } else {
-              Paperpile.status.updateMsg({
-                msg: 'Did not save. A reference with this data already exists in your library.',
-                hideOnClick: true
-              });
-              return;
-            }
+            Paperpile.status.updateMsg({
+              msg: 'Did not save. A reference with this data already exists in your library.',
+              hideOnClick: true
+            });
+            return;
           }
         }
         Paperpile.main.onError(action.response);
