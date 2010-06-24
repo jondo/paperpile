@@ -203,7 +203,7 @@ sub export : Local {
   my $grid_id     = $c->request->params->{grid_id}     || undef;
   my $source_node = $c->request->params->{source_node} || undef;
   my $selection   = $c->request->params->{selection}   || undef;
-  my $get_string = $c->request->params->{get_string} || 0;
+  my $get_string  = $c->request->params->{get_string}  || 0;
 
   # Collect all export_ parameters for the export plugin
   my %export_params = ();
@@ -256,8 +256,6 @@ sub export : Local {
       }
     );
 
-    print STDERR "  -> $node\n";
-
     # The rest is the same code as in "resultsgrid" to query an import plugin
     my %node_settings = %{ $node->getNodeValue };
     my %params        = ();
@@ -270,7 +268,7 @@ sub export : Local {
       }
     }
 
-    $params{name} = 'DB' if (!defined $params{name});
+    $params{name} = 'DB' if ( !defined $params{name} );
 
     if ( ( $params{name} eq 'DB' ) and ( not $params{file} ) ) {
       $params{file} = $c->session->{library_db};
@@ -290,15 +288,12 @@ sub export : Local {
   my $export        = eval( "$export_module->" . 'new(data => $data, settings=>{%export_params})' );
 
   if ($get_string) {
-      my $string = $export->write(1);
-      my @pubs = @{$data};
-      $c->stash->{data} = {string => $string};
+    my $string = $export->write(1);
+    $c->stash->{data} = { string => $string };
   } else {
-      $export->write;
+    $export->write;
   }
 
-  $c->stash->{success} = 'true';
-  $c->forward('Paperpile::View::JSON');
 }
 
 1;

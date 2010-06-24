@@ -366,8 +366,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     var divDef = '<div style="width:200px;white-space:normal;">';
     this.pdfExtractChoice = new Ext.Window({
-      title: 'PDF Import',
+      title: 'Choose type of PDF import',
       layout: 'vbox',
+      bodyStyle: 'background-color:#FFFFFF !important;',
       width: 250,
       height: 190,
       plain: true,
@@ -379,7 +380,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       },
       items: [{
         xtype: 'label',
-        text: 'Choose a type of PDF import:',
+        text: '',
         width: '100%',
         style: 'text-align:left;'
       },
@@ -394,8 +395,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           width: 175,
           anchor: 'left'
         },
-          handler: this.folderExtract,
-	  scope:this
+        handler: this.folderExtract,
+        scope: this
       },
       {
         xtype: 'label',
@@ -411,8 +412,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           anchor: 'left',
           width: 175
         },
-          handler: this.fileExtract,
-	  scope:this
+        handler: this.fileExtract,
+        scope: this
       }],
       bbar: [{
         xtype: 'tbfill'

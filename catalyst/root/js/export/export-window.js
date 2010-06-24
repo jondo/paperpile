@@ -190,20 +190,20 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
       short: 'BIBTEX'
     },
     {
-      text: 'EndNote (.enl)',
-      short: 'ENDNOTE'
+      text: 'RIS (.ris)',
+      short: 'RIS'
     },
     {
-      text: 'ISI Web of Science (.isi)',
-      short: 'ISI'
+      text: 'EndNote (.txt)',
+      short: 'ENDNOTE'
     },
     {
       text: 'MODS (.xml)',
       short: 'MODS'
     },
     {
-      text: 'RIS (.ris)',
-      short: 'RIS'
+      text: 'ISI Web of Science (.isi)',
+      short: 'ISI'
     },
     {
       text: 'Word 2007 XML (.xml)',
@@ -229,19 +229,21 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
     }
 
     Ext.apply(this, {
+      modal: true,
       layout: {
         type: 'vbox',
         align: 'center',
-        defaultMargins: '5px'
+        defaultMargins: '5px',
       },
-      title: 'Library Export',
+      bodyStyle: 'background-color:#FFFFFF;',
+      title: 'Choose export format',
       width: 300,
-      height: 325,
+      height: 340,
       buttonAlign: 'center',
       layoutConfig: {},
       items: [{
         xtype: 'label',
-        text: 'Please choose a format for export:',
+        text: '',
         height: 20
       }].concat(formatItems),
       bbar: [{
@@ -252,7 +254,7 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
         itemId: 'cancel_button',
         cls: 'x-btn-text-icon cancel',
         handler: function() {
-            this.close();
+          this.close();
         },
         scope: this
       }]
@@ -265,7 +267,7 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
     MODS: ['xml'],
     BIBTEX: ['bib', 'bibtex'],
     RIS: ['ris'],
-    ENDNOTE: ['enl'],
+    ENDNOTE: ['txt'],
     ISI: ['isi'],
     'WORD2007': ['xml']
   },
@@ -296,8 +298,8 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
       title: 'Choose a destination file for ' + desc + ' export',
       dialogType: 'save',
       types: ext,
-	typesDescription: desc + " (" + includingDots.join(', ') + ")",
-	scope:this
+      typesDescription: desc + " (" + includingDots.join(', ') + ")",
+      scope: this
     };
     var window = this;
     var callback = function(filenames) {

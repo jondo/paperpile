@@ -2180,6 +2180,6 @@ table.pp-meta-form {
 
 
 table.x-btn-subtle:not(.x-btn-over) {
-    background-color: rgba(100,100,255,0.1);
+    background-color: #E0ECF8;
     border: 1px solid rgba(50,50,100,0.1);
 }

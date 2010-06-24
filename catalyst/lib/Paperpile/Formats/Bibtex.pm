@@ -214,7 +214,7 @@ sub write {
     foreach my $key (@all_fields) {
 
       if ( my $value = $data{$key} ) {
-	$value =~ s/\s+/ /g;
+        $value =~ s/\s+/ /g;
 
         # UTF-8 to TeX conversion
         # decode_utf8 has to be called first
@@ -273,13 +273,14 @@ sub write {
           my $left = sprintf( "  %-" . ( $max_width + 2 ) . "s", $key ) . "= ";
           my $right = $value;
           $Text::Wrap::columns = 70;
-	  # if we have " in the regular text we change to { } as
-	  # field marks. We do not count \".
-	  if ( $value =~ m/(?<!\\)"/ ) {
-	    $right = wrap( $left, " " x ( $max_width + 7 ), '{' . $right . '}' );
-	  } else {
-	    $right = wrap( $left, " " x ( $max_width + 7 ), $left_quote . $right . $right_quote );
-	  }
+
+          # if we have " in the regular text we change to { } as
+          # field marks. We do not count \".
+          if ( $value =~ m/(?<!\\)"/ ) {
+            $right = wrap( $left, " " x ( $max_width + 7 ), '{' . $right . '}' );
+          } else {
+            $right = wrap( $left, " " x ( $max_width + 7 ), $left_quote . $right . $right_quote );
+          }
           push @lines, $right;
         }
 
