@@ -23,7 +23,6 @@ use Paperpile::Library::Publication;
 use Paperpile::Exceptions;
 use File::Temp;
 use File::Copy;
-use File::Copy::Recursive qw(dirmove);
 use File::Path;
 use Data::Dumper;
 use JSON;
@@ -138,11 +137,7 @@ sub update_patterns : Local {
   }
 
   if ($root_changed) {
-    if ( dirmove( $settings->{paper_root}, $paper_root ) ) {
-      $c->model('Library')->set_setting( 'paper_root', $paper_root );
-    } else {
-      FileError->throw("Could not move PDF directory to new location ($!)");
-    }
+    $c->model('Library')->change_paper_root($paper_root);
   }
 
   if ($db_changed) {

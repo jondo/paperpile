@@ -25,6 +25,7 @@ use FreezeThaw qw/freeze thaw/;
 use File::Path;
 use File::Spec::Functions qw(catfile splitpath canonpath abs2rel);
 use File::Copy;
+use File::Copy::Recursive qw(dirmove);
 use File::stat;
 use Moose;
 use MooseX::Timestamp;
@@ -1357,6 +1358,50 @@ sub delete_attachment {
 
 }
 
+
+sub change_paper_root{
+
+  my ( $self, $new_root ) = @_;
+
+  my $dbh = $self->dbh;
+
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+
+  eval{
+
+    my $old_root = $self->get_setting('paper_root',$dbh);
+    my $find = $dbh->prepare('SELECT guid,local_file from Attachments;');
+    my $replace = $dbh->prepare('UPDATE Attachments SET local_file=? WHERE guid=?;');
+
+    my ($guid, $old_file);
+    $find->bind_columns( \$guid, \$old_file );
+    $find->execute;
+
+    while ( $find->fetch ) {
+      my $relative = abs2rel( $old_file, $old_root ) ;
+      my $new_file = catfile($new_root, $relative);
+      $replace->execute($new_file, $guid);
+
+    }
+
+    if ( dirmove( $old_root, $new_root ) ) {
+      $self->set_setting( 'paper_root', $new_root, $dbh );
+    } else {
+      FileError->throw("$!");
+    }
+  };
+
+
+  if ($@) {
+    $dbh->rollback;
+    my $msg = $@;
+    $msg = $@->error if $@->isa('PaperpileError');
+    FileError->throw("Could not move PDF directory to new location ($msg)");
+  }
+
+  $dbh->commit();
+
+}
 
 
 sub index_pdf {
