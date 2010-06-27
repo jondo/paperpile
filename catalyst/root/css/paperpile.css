@@ -177,6 +177,13 @@ h1 {
 /*    padding: 8px !important;*/
 }
 
+.pp-smallprint {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    color: grey;
+}
+
+
+
 div.pp-menu  > ul {
     display: none;   
 }
