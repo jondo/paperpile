@@ -755,8 +755,7 @@ sub _parse_googlescholar_page {
   my $i=1;
   foreach my $node (@nodes) {
 
-      my $selector = '.gs_r:nth('.$i++.') h3 a';
-      #my $selector = '.gs_r';
+      my $selector = '.gs_r:nth('.$i++.') h3';
       push @{$data{selector}}, $selector;
 
     my ( $title, $url );

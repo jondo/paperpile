@@ -14,6 +14,7 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
+Ext.ns('Paperpile');
 Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
   anim: false,
@@ -66,8 +67,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
               tag: 'td',
               children: [{
                 id: 'status-action1',
-                tag: 'a',
-                href: '#',
+                tag: 'span',
                 cls: 'pp-basic pp-textlink pp-status-action',
                 style: {
                   'font-size': '12px',
@@ -81,8 +81,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
               tag: 'td',
               children: [{
                 id: 'status-action2',
-                tag: 'a',
-                href: '#',
+                tag: 'span',
                 cls: 'pp-basic pp-textlink pp-status-action',
                 style: {
                   'font-size': '12px',
@@ -126,16 +125,16 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
     this.busyEl.setVisibilityMode(Ext.Element.DISPLAY);
 
     this.action1el.on('click',
-      function() {
+      function(event) {
         this.callback.createDelegate(this.scope, ['ACTION1'])();
       },
-      this);
+		      this,{preventDefault:true});
 
     this.action2el.on('click',
-      function() {
+      function(event) {
         this.callback.createDelegate(this.scope, ['ACTION2'])();
       },
-      this);
+		      this,{preventDefault:true});
 
   },
 

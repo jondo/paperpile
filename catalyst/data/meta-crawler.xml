@@ -527,6 +527,23 @@
 
 </site>
 
+<site name="CiteULike">
+  <signature>
+    <url>!citeulike!</url>
+  </signature>
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!(.*)/((user|group)/.*)!$1/endnote/$2!</rewrite>
+    </pattern>
+  </rule>
+  <test>
+    <page url="http://www.citeulike.org/user/gjuggler/article/503161">
+      <journal>Journal of molecular biology</journal>
+      <title>T-Coffee: A novel method for fast and accurate multiple sequence alignment.</title>
+    </page>
+  </test>
+</site>
+
 <!-- Strange behavior ????????
 <site name="Cell">
 

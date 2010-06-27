@@ -29,7 +29,7 @@ use Paperpile::Formats::Rss;
 enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS MODS ISI ENDNOTE ENDNOTEXML RIS WORD2007 MEDLINE RSS ZOTERO HTML);
 
 has 'data' => ( is => 'rw', isa => 'ArrayRef[Paperpile::Library::Publication]' );
-has format => ( is => 'rw', isa => 'Format' );
+has 'format' => ( is => 'rw', isa => 'Format' );
 has 'file' => ( is => 'rw', isa => 'Str' );
 has 'settings' => (
   is      => 'rw',

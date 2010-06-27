@@ -403,13 +403,15 @@ a.pp-progress-cancel:hover {
     padding: 5px;
 }
 
-a.pp-textlink, a:visited.pp-textlink {
+a.pp-textlink, a:visited.pp-textlink, span.pp-textlink {
     /*text-decoration:underline !important;*/
+    cursor:pointer;
     text-decoration:none;
     color: #0015FE !important;
 }
 
-a:hover.pp-textlink {
+a:hover.pp-textlink, span:hover.pp-textlink {
+    cursor:pointer;
     text-decoration:underline !important;
     /*font-weight:bold !important;*/
     color: #0015FE;

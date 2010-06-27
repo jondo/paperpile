@@ -117,6 +117,9 @@ sub search_file {
   } else {
 
     my $response = $self->_get_location($content_url);
+
+    print STDERR "  -> Looking into [$content_url]...\n" if $self->debug;
+
     my $content  = $response->content;
 
     my $module = "Paperpile::MetaCrawler::Targets::$target";

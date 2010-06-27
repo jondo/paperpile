@@ -68,5 +68,10 @@ sub convert {
   # Once the CrossRef is active, we can parse
   # for a DOI and call it then
 
+  # Important: admit defeat if we still don't have a title.
+  if (!$pub->title) {
+      return undef;
+  }
+
   return $pub;
 }
