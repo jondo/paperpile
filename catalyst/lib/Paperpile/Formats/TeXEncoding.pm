@@ -19,16 +19,20 @@ package Paperpile::Formats::TeXEncoding;
 use strict;
 use warnings;
 
+our %latex_commands_table = (
+  chr(0x0024) => '\\$', #'
+  chr(0x005c) => '\\textbackslash'
+);
+
+
 our %encoding_table = (
 
   # Characters in the range 0xA0-0xFF of the ISO 8859-1 character set.
   chr(0x0023) => '\#',
-  chr(0x0024) => '\\$',
   chr(0x0025) => '\\%',
   chr(0x0026) => '\&',
   chr(0x003c) => '$<$',
   chr(0x003e) => '$>$',
-  chr(0x005c) => '\\textbackslash',
   chr(0x005e) => '\\^{}',
   chr(0x005f) => '\\_',
   chr(0x007b) => '\\{',
@@ -46,12 +50,12 @@ our %encoding_table = (
   chr(0x00ad) => '\\-',
   chr(0x00ae) => '\\textregistered',
   #chr(0x00af) => '\\textasciimacron',
-  chr(0x00b0) => '\\mbox{$^\\circ$}',
-  chr(0x00b1) => '\\mbox{$\\pm$}',
+  chr(0x00b0) => '$^\\circ$',
+  chr(0x00b1) => '$\\pm$',
   chr(0x00b2) => '\\mbox{$^2$}',
   chr(0x00b3) => '\\mbox{$^3$}',
   chr(0x00b4) => "\\'{}",
-  chr(0x00b5) => '\\mbox{$\\mu$}',
+  chr(0x00b5) => '$\\mu$',
   chr(0x00b6) => '\\P',
   chr(0x00b7) => '\\mbox{$\\cdot$}',
   chr(0x00b8) => '\\c{}',
@@ -328,21 +332,25 @@ our %encoding_table = (
   chr(0x201d) => "''",
   chr(0x2020) => "\\dag",
   chr(0x2021) => '\\ddag',
-  chr(0x2122) => '\\mbox{$^\\mbox{TM}$}',
-  chr(0x2022) => '\\mbox{$\\bullet$}',
+  chr(0x2122) => '$^\\mbox{TM}$',
+  chr(0x2022) => '$\\bullet$',
   chr(0x2026) => '\\ldots',
-  chr(0x2202) => '\\mbox{$\\partial$}',
-  chr(0x220f) => '\\mbox{$\\prod$}',
-  chr(0x2211) => '\\mbox{$\\sum$}',
-  chr(0x221a) => '\\mbox{$\\surd$}',
-  chr(0x221e) => '\\mbox{$\\infty$}',
-  chr(0x222b) => '\\mbox{$\\int$}',
-  chr(0x2248) => '\\mbox{$\\approx$}',
-  chr(0x2260) => '\\mbox{$\\neq$}',
-  chr(0x2264) => '\\mbox{$\\leq$}',
-  chr(0x2265) => '\\mbox{$\\geq$}',
+  chr(0x2202) => '$\\partial$',
+  chr(0x220f) => '$\\prod$',
+  chr(0x2211) => '$\\sum$',
+  chr(0x221a) => '$\\surd$',
+  chr(0x221e) => '$\\infty$',
+  chr(0x222b) => '$\\int$',
+  chr(0x2248) => '$\\approx$',
+  chr(0x2260) => '$\\neq$',
+  chr(0x2264) => '$\\leq$',
+  chr(0x2265) => '$\\geq$',
 
 );
+
+our $latex_commands_chars = join( '', sort keys %latex_commands_table );
+$latex_commands_chars =~ s/\\/\\\\/;
+$latex_commands_chars = qr{ [$latex_commands_chars] }x;
 
 our $encoded_chars = join( '', sort keys %encoding_table );
 $encoded_chars =~ s/\\/\\\\/;

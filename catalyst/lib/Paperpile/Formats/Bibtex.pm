@@ -74,7 +74,7 @@ sub read {
 
   my @output = ();
 
-  my $parser = BibTeX::Parser->new( $fh, 1 );
+  my $parser = BibTeX::Parser->new( $fh, $self->settings->{import_strip_tex} );
 
   while ( my $entry = $parser->next ) {
 

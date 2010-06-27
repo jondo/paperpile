@@ -234,8 +234,8 @@ PART: {
     if (/\G(\d+)/cg) {
       $value .= $1;
     } elsif (/\G($re_name)/cgo) {
-      warn("Using undefined string $1") unless defined $strings_ref->{$1};
-      $value .= $strings_ref->{$1} || "";
+      #warn("Using undefined string $1") unless defined $strings_ref->{$1};
+      $value .= $strings_ref->{$1} || "$1";
     } elsif (/\G"(([^"\\]*(\\.)*[^\\"]*)*)"/cgs) {
 
       # quoted string with embeded escapes
