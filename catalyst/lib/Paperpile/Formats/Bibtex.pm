@@ -27,10 +27,34 @@ use Encode;
 extends 'Paperpile::Formats';
 
 sub BUILD {
-  my $self = shift;
+  my ( $self, $args ) = @_;
   $self->format('BIBTEX');
   $self->readable(1);
   $self->writable(1);
+
+  if ( not defined $args->{settings} ) {
+    $self->settings( {
+        import_strip_tex     => 1,
+        export_escape        => 1,
+        pretty_print         => 1,
+        use_quotes           => 1,
+        double_dash          => 1,
+        title_quote_complete => 0,
+        title_quote          => [ 'DNA', 'RNA' ],
+        export_fields        => {
+          abstract    => 1,
+          affiliation => 0,
+          eprint      => 0,
+          issn        => 0,
+          isbn        => 0,
+          pmid        => 1,
+          lccn        => 0,
+          doi         => 1,
+          keywords    => 0
+        }
+      }
+    );
+  }
 }
 
 
