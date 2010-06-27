@@ -746,6 +746,9 @@ sub _get_selection {
   my $selection = $c->request->params->{selection};
   my $plugin    = $self->_get_plugin($c);
 
+  # I've gotten an error or two here, where the $plugin object ends up as undefined... dunno why. -greg
+  return unless defined ($plugin);
+
   $plugin->light_objects( $light_objects ? 1 : 0 );
 
   my @data = ();

@@ -46,6 +46,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       renderTo: Ext.getBody(),
       enableKeyEvents: true,
       keys: {},
+	id: 'pp-viewport',
       items: [{
         xtype: 'panel',
         layout: 'border',

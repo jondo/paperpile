@@ -44,6 +44,7 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
     });
 
     if (!grid['isLongImport']) {
+	// Provide a default implementation of a method fo determine whether an import will take a long time or not. Subclasses should provide their own.
       Ext.apply(grid, {
         isLongImport: function() {
           if (this.allSelected || this.getSelection('NOT_IMPORTED') == 'ALL') return true;

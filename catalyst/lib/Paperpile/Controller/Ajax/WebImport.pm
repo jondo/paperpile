@@ -24,18 +24,21 @@ use Encode;
 
 use parent 'Catalyst::Controller';
 
-sub import_urls : Local {
+# Imports one or more
+sub import_refs : Local {
   my ( $self, $c ) = @_;
 
   $c->component('View::JSON')->allow_callback(1);
 
   my @link_ids = $self->_as_array( $c->request->params->{link_ids} );
-  my $url      = $c->request->params->{url};
+  my $page_url = $c->request->params->{page_url};
 
-  my $key   = $self->_url_to_key($url);
+  # We use the page's URL as the key for the session-based cache of our link objects.
+  my $key   = $self->_url_to_key($page_url);
   my $cache = $c->session->{import_cache}->{$key};
   print STDERR "Cache size: " . scalar( keys %$cache ) . "\n";
 
+  # Create a MetaCrawler.
   my $model   = Paperpile::Utils->get_library_model();
   my $crawler = new Paperpile::MetaCrawler();
   $crawler->driver_file( Paperpile::Utils->path_to( 'data', 'meta-crawler.xml' )->stringify );
@@ -47,6 +50,7 @@ sub import_urls : Local {
     my $link_id = $link_ids[$i];
     my $link    = $cache->{$link_id};
 
+    # This call does all the work.
     my $result = $self->_import_single_pub( $crawler, $link );
     push @results, $result;
   }
@@ -54,6 +58,7 @@ sub import_urls : Local {
   $c->forward('View::JSON');
 }
 
+# Convert a single or array parameter into an array.
 sub _as_array {
   my $self = shift;
   my $obj  = shift;
@@ -67,6 +72,7 @@ sub _as_array {
   return @arr;
 }
 
+# Strips a URL of all the crap in order to have a very safe hash key.
 sub _url_to_key {
   my $self = shift;
   my $url  = shift;
@@ -76,14 +82,14 @@ sub _url_to_key {
   return $key;
 }
 
+# Take the URL and content of a given page and return a list of
 sub submit_page : Local {
 
   my ( $self, $c ) = @_;
 
   $c->component('View::JSON')->allow_callback(1);
 
-  my $url             = $c->request->params->{url};
-  my $force_list_mode = $c->request->params->{force_list_mode};
+  my $url = $c->request->params->{url};
 
   $c->session->{import_cache} = {};    # if ( !defined $c->session->{import_cache} );
 
@@ -100,19 +106,33 @@ sub submit_page : Local {
     );
   }
 
-  my $page_type = $self->_detect_page_type( $c, $response );
+  # This method stores the page_type and list_type values in the stash.
+  $self->_detect_page_type( $c, $response );
 
-  $page_type = 'list' if ($force_list_mode);
+  my $page_type = $c->stash->{page_type};
 
   if ( $page_type eq 'list' ) {
     $self->_get_links_from_page( $c, $response, $key );
   } elsif ( $page_type eq 'single' ) {
+    $self->_import_single_page( $c, $response );
+  } elsif ( $page_type eq 'hybrid' ) {
+
+    # This might occur if we're looking at the HTML page of a journal article.
+    # We want to import the current article, but might also be able to collect
+    # link_objs for the 'cited works' or 'cited by' articles at the bottom.
+    #
+    # TODO: provide a nice front-end for dealing with this case. Maybe a status
+    # message like "Reference successfully imported, and 12 additional
+    # items found. (Import all, Clear)"
+    $self->_get_links_from_page( $c, $response, $key );
     $self->_import_single_page( $c, $response );
   }
 
   $c->forward('View::JSON');
 }
 
+# Once we know it's a list page, we need to know which supported
+# site it's coming from.
 sub _classify_list_page {
   my $self     = shift;
   my $url      = shift;
@@ -124,11 +144,14 @@ sub _classify_list_page {
     return 'pubmed_list';
   } elsif ( $url =~ m^citeulike.org^gi ) {
     return 'citeulike_list';
+  } elsif ( $url =~ m^arxiv.org^gi ) {
+    return 'arxiv_list';
   }
 
   return 'unknown';
 }
 
+# Extracts all the links from a list page.
 sub _get_links_from_page {
   my ( $self, $c, $response, $cache_key ) = @_;
 
@@ -139,9 +162,7 @@ sub _get_links_from_page {
   my $list_type = $self->_classify_list_page( $url, $response );
 
   if ( $list_type eq 'google_scholar' ) {
-    my $gs = Paperpile::Plugins::Import::GoogleScholar->new();
-
-    #  print STDERR $response."\n";
+    my $gs   = Paperpile::Plugins::Import::GoogleScholar->new();
     my $page = $gs->_parse_googlescholar_page( $response->content );
 
     foreach my $pub (@$page) {
@@ -153,6 +174,10 @@ sub _get_links_from_page {
       push @entries, $link;
     }
   } elsif ( $list_type eq 'pubmed_list' ) {
+
+    # Remember: we can't get URLs from PubMed search result pages,
+    # so we sent along the whole page's contents via the pubmed_content
+    # POST variable.
     my $pubmed_content = $c->request->params->{pubmed_content};
     if ( $pubmed_content ne '' ) {
       @entries = $self->_parse_pubmed_page($pubmed_content);
@@ -161,6 +186,8 @@ sub _get_links_from_page {
     }
   } elsif ( $list_type eq 'citeulike_list' ) {
     @entries = $self->_parse_citeulike_page( $response->content );
+  } elsif ( $list_type eq 'arxiv_list' ) {
+    @entries = $self->_parse_arxiv_page( $response->content );
   }
 
   # Create link_ids for each entry and store each entry hash in the session cache.
@@ -173,6 +200,46 @@ sub _get_links_from_page {
   $c->stash->{entries} = \@entries;
 }
 
+# Pretty standard style for this parsing. CiteULike and GScholar are very similar,
+# and it's *very* quick to cut-copy and implement a new page type when needed.
+sub _parse_arxiv_page {
+  my $self         = shift;
+  my $page_content = shift;
+
+  my $tree = HTML::TreeBuilder::XPath->new;
+  $tree->utf8_mode(0);
+  $page_content = decode_utf8($page_content);
+  $tree->parse_content($page_content);
+
+  my @objs;
+  my @nodes = $tree->findnodes('//div[@id="dlpage"]/dl/dt');
+
+  my $i = 1;
+  foreach my $node (@nodes) {
+    my $arxiv_link = $node->findvalue('./span/a[@title="Abstract"]');
+    my $title      = $node->findvalue('../dd//div[@class="list-title"]');
+    my $authors    = $node->findvalue('../dd//div[@class="list-authors"]');
+
+    my $arxivid = $arxiv_link;
+    $arxivid =~ s/arxiv://gi;
+
+    my $pub = new Paperpile::Library::Publication();
+    $pub->title($title);
+    $pub->authors($authors);
+    $pub->arxivid($arxivid);
+
+    my $obj = {
+      selector   => '#dlpage span.list-identifier:nth(' . $i++ . ')',
+      import_url => 'http://arxiv.org' . $arxiv_link,
+      pub        => $pub->as_hash,
+    };
+    push @objs, $obj;
+  }
+  return @objs;
+}
+
+# Note that there's also a new CiteULike entry in the MetaCrawler XML definition,
+# which gives us very quick access to the Ris file given a CiteULike article URL.
 sub _parse_citeulike_page {
   my $self         = shift;
   my $page_content = shift;
@@ -273,11 +340,15 @@ sub _import_single_pub {
 
   my $e;
   if ( !defined $pub && ( $e = Exception::Class->caught ) ) {
+
+    # Provide the UI with some info on the caught exception.
     $result = {
       status => 'failure',
       error  => $e->error
     };
   } elsif ( !defined $pub ) {
+
+    # No exception, it just didn't find anything.
     $result = {
       status => 'failure',
       error  => 'Unable to find metadata for this reference.'
@@ -285,12 +356,12 @@ sub _import_single_pub {
   } else {
 
     # Success!
-
     $pub->_light(0);         # Make sure it's not a 'light' object.
     $pub->refresh_fields;    # Refresh the citation field.
 
     my $model = Paperpile::Utils->get_library_model();
-    $model->exists_pub( [$pub] );    # Look for an existing version. Stored in '_imported'
+    $model->exists_pub( [$pub] )
+      ; # Trigger the library to search for an existing version of the same. This result gets stored in the $pub->_imported field.
 
     if ( $pub->_imported ) {
       $result = {
@@ -339,6 +410,8 @@ sub _detect_page_type {
 
   my $page_type = 'single';
 
+  # Delegate to the list classification method. Returns 'unknown' when not
+  # recognized as one of the list types.
   my $list_type = $self->_classify_list_page( $url, $response );
   if ( $list_type ne 'unknown' ) {
     $page_type = $list;

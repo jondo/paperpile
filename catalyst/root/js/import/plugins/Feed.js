@@ -121,6 +121,12 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
 
   },
 
+    isLongImport: function() {
+	return true;
+    },
+    
+    // Don't reload our store in the 'backgorund', i.e. when the local library is 
+    // changed or updated.
     allowBackgroundReload: function() {
 	return false;
     }
