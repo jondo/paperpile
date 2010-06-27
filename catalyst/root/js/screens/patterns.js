@@ -233,10 +233,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
               // guaranteed.
               Ext.StoreMgr.lookup('tag_store').reload();
 
-              var tab;
-              while (tab = Paperpile.main.tabs.items.first()) {
-                Paperpile.main.tabs.remove(tab, true);
-              }
+              Paperpile.main.tabs.removeAll();
 
               Paperpile.main.tabs.newDBtab('');
               Paperpile.main.tabs.setActiveTab(0);

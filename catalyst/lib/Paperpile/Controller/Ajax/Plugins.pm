@@ -282,6 +282,12 @@ sub export : Local {
     $data = $plugin->all;
   }
 
+  # If output format is BibTeX we add the user's BibTeX settings to
+  # the parameter list
+  if ($export_params{out_format} eq 'BIBTEX'){
+    %export_params = (%export_params, %{$c->model('Library')->get_setting('bibtex')});
+  }
+
   # Dynamically generate export plugin instance and write data
 
   my $export_module = "Paperpile::Plugins::Export::" . $export_params{name};
