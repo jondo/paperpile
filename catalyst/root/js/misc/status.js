@@ -14,22 +14,38 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
   anim: false,
   scope: this,
   type: 'info',
+    fixedPosition: false,
   anchor: Ext.getBody(),
   callback: function(action) {
     //console.log(action);
   },
 
   initComponent: function() {
+
+    var style = {
+      position: 'absolute',
+      padding: '0px 10px',
+      'z-index': 9001,
+      '-webkit-border-radius': '3px',
+    };
+    if (this.type == 'info') {
+      style['background-color'] = '#FFF1A8';
+    } else if (this.type == 'error') {
+      style['background-color'] = '#FFBABA';
+    }
+      if (this.fixedPosition) {
+	  style['position'] = 'fixed';
+      }
+
     Ext.apply(this, {
       renderTo: document.body,
       autoEl: {
-        style: 'position: absolute',
+        style: style,
         tag: 'div',
         cls: 'pp-status-line-container pp-status-' + this.type,
         children: [{
@@ -40,6 +56,11 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
               tag: 'td',
               id: 'status-msg',
               cls: 'pp-basic pp-status-msg',
+              style: {
+                'font-size': '12px',
+                'font-weight': 'bold',
+                'padding': '0px 5px'
+              }
             },
             {
               tag: 'td',
@@ -48,6 +69,11 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
                 tag: 'a',
                 href: '#',
                 cls: 'pp-basic pp-textlink pp-status-action',
+                style: {
+                  'font-size': '12px',
+                  'font-weight': 'bold',
+                  'padding': '0px 5px'
+                }
               }],
               //hidden: true,
             },
@@ -58,6 +84,11 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
                 tag: 'a',
                 href: '#',
                 cls: 'pp-basic pp-textlink pp-status-action',
+                style: {
+                  'font-size': '12px',
+                  'font-weight': 'bold',
+                  'padding': '0px 5px'
+                }
               }],
               //hidden: true,
             },
@@ -65,6 +96,11 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
               tag: 'td',
               id: 'status-busy',
               cls: 'pp-basic',
+              style: {
+                'font-size': '12px',
+                background: "transparent url('" + Paperpile.Url('/images/waiting_yellow.gif') + "') no-repeat",
+                width: '16px'
+              },
             },
             ]
           }]
@@ -118,20 +154,20 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
     }
 
     if (pars.msg) {
-      Ext.DomHelper.overwrite(this.msgEl, pars.msg);
+      this.msgEl.update(pars.msg);
     } else {
       this.msgEl.hide();
     }
 
     if (pars.action1) {
-      Ext.DomHelper.overwrite(this.action1el, pars.action1);
+      this.action1el.update(pars.action1);
       this.action1el.show();
     } else {
       this.action1el.hide();
     }
 
     if (pars.action2) {
-      Ext.DomHelper.overwrite(this.action2el, pars.action2);
+      this.action2el.update(pars.action2);
       this.action2el.show();
     } else {
       this.action2el.hide();
@@ -164,8 +200,17 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
       this.callback = pars.callback;
     }
 
-    this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t', [0, 3]);
+    this.align();
 
+  },
+
+  align: function() {
+    var mainToolbar = Ext.getCmp('main-toolbar');
+    if (mainToolbar !== undefined) {
+      this.el.alignTo(mainToolbar.getEl(), 't-t', [0, 3]);
+    } else {
+      this.el.alignTo(Ext.getDoc(), 't-t', [0, 10]);
+    }
   },
 
   clearMsg: function() {
@@ -182,8 +227,10 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
   },
 
   setMsg: function(msg) {
-    Ext.DomHelper.overwrite(this.msgEl, msg);
-    this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t', [0, 3]);
+    this.msgEl.update(msg);
+    //    Ext.DomHelper.overwrite(this.msgEl, msg);
+    //this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t', [0, 3]);
+    this.align();
   },
 
   setType: function(type) {

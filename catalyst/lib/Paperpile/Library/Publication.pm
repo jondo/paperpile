@@ -176,6 +176,9 @@ has '_details_link' => ( is => 'rw', default => '' );
 # get directly from Google.
 has '_google_BL_link' => ( is => 'rw', default => '' );
 
+# Utility field for web import.
+has '_web_import_selector' => ( is => 'rw', default => '' );
+
 # Holds the linkout for a related article search.
 has '_related_articles' => ( is => 'rw', default => '' );
 

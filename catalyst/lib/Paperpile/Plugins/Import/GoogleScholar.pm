@@ -742,7 +742,8 @@ sub _parse_googlescholar_page {
     www_publisher    => [],
     related_articles => [],
     BL               => [],
-    description      => []
+    description      => [],
+    selector         => []
   );
 
   # Each entry has a DIV
@@ -751,19 +752,26 @@ sub _parse_googlescholar_page {
     NetFormatError->throw( error => 'Was not able to parse GoogleScholar HTML correctly.' );
   }
 
+  my $i=1;
   foreach my $node (@nodes) {
+
+      my $selector = '.gs_r:nth('.$i++.') h3 a';
+      #my $selector = '.gs_r';
+      push @{$data{selector}}, $selector;
 
     my ( $title, $url );
 
+      print STDERR $node->findvalue('./div/h3/a')."\n";
+
     # A link to a web-resource is available
-    if ( $node->findnodes('./h3/a') ) {
-      $title = $node->findvalue('./h3/a');
-      $url   = $node->findvalue('./h3/a/@href');
+    if ( $node->findnodes('./div/h3/a') ) {
+      $title = $node->findvalue('./div/h3/a');
+      $url   = $node->findvalue('./div/h3/a/@href');
 
       # citation only
     } else {
 
-      $title = $node->findvalue('./h3');
+      $title = $node->findvalue('./div/h3');
 
       # Remove the tags [CITATION] and [BOOK] (and the character
       # afterwards which is a &nbsp;)
@@ -772,6 +780,8 @@ sub _parse_googlescholar_page {
 
       $url = '';
     }
+      print STDERR "TITLE: $title\n";
+      print STDERR "URL: $title\n";
     push @{ $data{titles} }, $title;
     push @{ $data{urls} },   $url;
 
@@ -856,6 +866,7 @@ sub _parse_googlescholar_page {
     $pub->_www_publisher( $data{www_publisher}->[$i] );
     $pub->_related_articles( $data{related_articles}->[$i] );
     $pub->_google_BL_link( $data{BL}->[$i] );
+    $pub->_web_import_selector( $data{selector}->[$i] );
     $pub->abstract( $data{description}->[$i] );
     $pub->refresh_fields;
     push @$page, $pub;

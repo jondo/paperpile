@@ -374,11 +374,11 @@ sub complete_details {
   #############################
   # get PDF-link
   if ( $responseDetails->{_content} =~ /a href="(\S+)">Download PDF/ ) {
-    $pub->pdf_url($1)
+    $pub->_pdf_url($1)
       ;    # we hold it in both opbjects, maybe we'll need it in the short pub object, too.
-    $full_pub->pdf_url($1);
+    $full_pub->_pdf_url($1);
 
-    #print STDERR "PDF:", $full_pub->pdf_url, "\n";
+    #print STDERR "PDF:", $full_pub->_pdf_url, "\n";
   }
 
   #############################

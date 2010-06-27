@@ -178,7 +178,7 @@ sub page {
     $pub->_authors_display( $data{authors}->[$i] );
     $pub->_citation_display( $data{citations}->[$i] );
     $pub->linkout( $data{urls}->[$i] );
-    $pub->pdf_url( $data{pdf}->[$i] );
+    $pub->_pdf_url( $data{pdf}->[$i] );
     $pub->_details_link( $data{urls}->[$i] );
     $pub->refresh_fields;
     push @$page, $pub;
@@ -249,7 +249,7 @@ sub complete_details {
   # and thus not in the new object
   $full_pub->abstract($abstract);
   $full_pub->linkout( $pub->linkout );
-  $full_pub->pdf_url( $pub->pdf_url );
+  $full_pub->_pdf_url( $pub->_pdf_url );
 
   # clean the DOI entry
   ( my $doi = $full_pub->doi ) =~ s/http:\/\/dx\.doi\.org\///;
