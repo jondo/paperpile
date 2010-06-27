@@ -25,6 +25,7 @@ use Data::Dumper;
 use File::Spec;
 use File::Path;
 use File::Copy;
+use File::Monitor;
 use Paperpile::Exceptions;
 use MooseX::Timestamp;
 use LWP;
@@ -34,6 +35,7 @@ use File::Temp qw(tempfile);
 use YAML qw(LoadFile);
 use URI::Escape;
 use JSON;
+use Time::HiRes qw(sleep);
 
 use 5.010;
 
@@ -99,8 +101,36 @@ sub _escapeString {
   return join( "+", @tmp );
 }
 
+sub listen : Local {
+  my ( $self, $c ) = @_;
 
+  my $saw_changes = 0;
+  my $model = Paperpile::Utils->get_library_model;
+  my $dbh = $model->dbh;
 
+  my $last_library_version = $c->session->{last_library_version} || 0;
+  if (!defined $last_library_version) {
+      $last_library_version = 0;
+  }
+
+  print STDERR "Watching...\n";
+  my $cur_library_version;
+  while ( !$saw_changes ) {
+#    print STDERR "  waiting...\n";
+    sleep(0.5);
+    my @rows = @{$dbh->selectcol_arrayref("SELECT max(counter) FROM Changelog;")};
+    $cur_library_version = $rows[0];
+#    print STDERR $cur_library_version."\n";
+    $saw_changes = 1 if ($cur_library_version != $last_library_version);
+  }
+
+  print STDERR "  -> Gotcha!!!!\n";
+  $c->session->{last_library_version} = $cur_library_version;
+  my $data = {
+    pub_delta => 1
+  };
+  $c->stash->{data} = $data;
+}
 
 sub journal_list : Local {
 
@@ -239,11 +269,10 @@ sub clean_duplicates : Local {
 
 sub line_feed : Local {
   my ( $self, $c ) = @_;
-  foreach my $i (1..100){
+  foreach my $i ( 1 .. 100 ) {
     print STDERR "============================ $i =============================\n";
   }
 }
-
 
 sub inc_read_counter : Local {
 
@@ -319,7 +348,7 @@ sub report_pdf_download_error : Local {
   my $pub          = $c->request->params->{info};
   my $catalyst_log = $c->request->params->{catalyst_log};
 
-  my $subject = 'Automatic bug report: PDF download error on '.$self->_system_info_string($c);
+  my $subject = 'Automatic bug report: PDF download error on ' . $self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
 
   my ( $fh, $filename ) = tempfile( "catalyst-XXXXX", DIR => '/tmp', SUFFIX => '.txt' );
@@ -353,7 +382,7 @@ sub report_pdf_match_error : Local {
 
   my $file = $c->request->params->{info};
 
-  my $subject = 'Automatic bug report: PDF match error on '.$self->_system_info_string($c);
+  my $subject = 'Automatic bug report: PDF match error on ' . $self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
 
   my $r = POST $url,
@@ -369,7 +398,6 @@ sub report_pdf_match_error : Local {
 
 }
 
-
 sub _system_info_string {
 
   my ( $self, $c ) = @_;
@@ -382,7 +410,6 @@ sub _system_info_string {
   return "$platform, version $version_name (build $build_number)";
 
 }
-
 
 sub set_file_sync : Local {
 
@@ -398,10 +425,8 @@ sub set_file_sync : Local {
 
   $hash->{$guid} = { file => $file, active => $active };
 
-  $model->set_setting('file_sync', $hash);
+  $model->set_setting( 'file_sync', $hash );
 
 }
-
-
 
 1;

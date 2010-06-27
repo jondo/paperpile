@@ -260,6 +260,9 @@ Paperpile.stage2 = function() {
   Ext.QuickTips.init();
   Paperpile.main = new Paperpile.Viewport;
 
+    // Add a hook to the end of every Ajax request, so we always start listening again after doing some 'real' communication.
+    Ext.Ajax.on('requestcomplete',Paperpile.main.postHook,Paperpile.main);
+
   Paperpile.main.loadSettings(
     function() {
       Paperpile.main.show();

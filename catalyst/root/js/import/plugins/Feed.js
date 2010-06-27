@@ -119,5 +119,9 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
 
     ids.insert(3, 'RELOAD_FEED');
 
-  }
+  },
+
+    allowBackgroundReload: function() {
+	return false;
+    }
 });

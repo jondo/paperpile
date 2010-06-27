@@ -411,7 +411,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     return retVal;
   },
 
+    allowBackgroundReload: function() {
+	return true;
+    },
+
   backgroundReload: function() {
+      if (!this.allowBackgroundReload()) { 
+	  return;
+      }
     this.backgroundLoading = true;
 
     this.getStore().reload({
