@@ -132,7 +132,7 @@ sub update_feed {
 sub needs_match_before_import {
   ( my $self, my $pub ) = @_;
 
-  return 0;
+  return 1;
 }
 
 sub _rss_dir {

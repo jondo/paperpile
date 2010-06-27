@@ -104,32 +104,30 @@ sub _escapeString {
 sub listen : Local {
   my ( $self, $c ) = @_;
 
+  my $library_version = $c->request->params->{library_version};
+
   my $model = $c->model('Library');
   my $dbh = $model->dbh;
   my $saw_changes = 0;
 
   my $k = 'last_lib_rev';
-  my $last_library_version = $c->session->{$k}->{value};
-  if (!defined $last_library_version) {
-      $last_library_version = 0;
-      $c->session->{$k} = {value => $last_library_version};
-  }
 
-  print STDERR "[ajax/misc/listen] Waiting...\n";
+  sleep(3);
+  
+  print STDERR "[ajax/misc/listen] Waiting... (v:$library_version)\n";
   my $cur_library_version;
   while ( !$saw_changes ) {
     sleep(0.5);
-
     my @rows = @{$dbh->selectcol_arrayref("SELECT max(counter) FROM Changelog;")};
-
-    $saw_changes = 1 if ($cur_library_version > $last_library_version);
+    $cur_library_version = $rows[0];
+    $saw_changes = 1 if ($cur_library_version > $library_version);
   }
 
-  print STDERR "[ajax/misc/listen] Gotcha!\n";
-  $c->session->{$k} = {value => $cur_library_version};
+  print STDERR "[ajax/misc/listen] Gotcha! $cur_library_version\n";
   
   my $data = {
-    pub_delta => 1
+    pub_delta => 1,
+    library_version => $cur_library_version
   };
   $c->stash->{data} = $data;
 }
