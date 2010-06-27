@@ -102,7 +102,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
         this.timeoutWarn = null;
         this.timeoutAbort = null;
       },
-    grid);
+      grid);
 
     Ext.apply(grid, {
       hideHeaders: true,
@@ -114,6 +114,11 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       setSearchQuery: function(text) {
         this.searchField.setValue(text);
         this.searchField.onTrigger2Click();
+      },
+      // Don't reload our store in the 'backgorund', i.e. when the local library is 
+      // changed or updated.
+      allowBackgroundReload: function() {
+        return false;
       }
     });
 

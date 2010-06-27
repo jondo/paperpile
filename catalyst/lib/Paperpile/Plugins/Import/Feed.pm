@@ -52,6 +52,7 @@ sub BUILD {
 sub connect {
   my $self = shift;
 
+
   $self->file( File::Spec->catfile( $self->_rss_dir, 'feed.rss' ) );
   $self->_db_file( File::Spec->catfile( $self->_rss_dir, 'feed.ppl' ) );
 
@@ -131,7 +132,7 @@ sub update_feed {
 sub needs_match_before_import {
   ( my $self, my $pub ) = @_;
 
-  return 1;
+  return 0;
 }
 
 sub _rss_dir {

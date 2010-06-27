@@ -165,14 +165,18 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
     if (data.pub_delta) {
 
+	var dont_reload_grid = false;
+
       if (data.pub_delta_ignore) {
         if (data.pub_delta_ignore == this.getGrid().id) {
-          return;
+            dont_reload_grid = true;
         }
       }
 
-      this.getGrid().getView().holdPosition = true;
-      this.getGrid().backgroundReload();
+	if (!dont_reload_grid) {
+	    this.getGrid().getView().holdPosition = true;
+	    this.getGrid().backgroundReload();
+	}
     }
   },
 

@@ -533,8 +533,6 @@ sub sort_collection : Local {
   my $parent_id = $c->request->params->{parent_id};
   my $type      = $m->get_collection_type($parent_id);
 
-  print STDERR "TYPE: $type\n";
-
   # Go in order, putting each sub-node at the end of the parent node's child list.
   foreach my $id (@id_order) {
     $m->move_collection( $parent_id, $id, 'append', $type );
@@ -746,9 +744,6 @@ sub _get_selection {
   my $selection = $c->request->params->{selection};
   my $plugin    = $self->_get_plugin($c);
 
-  # I've gotten an error or two here, where the $plugin object ends up as undefined... dunno why. -greg
-  return unless defined ($plugin);
-
   $plugin->light_objects( $light_objects ? 1 : 0 );
 
   my @data = ();
@@ -807,7 +802,8 @@ sub _update_counts {
   foreach my $var ( keys %{ $c->session } ) {
     next if !( $var =~ /^grid_/ );
     my $plugin = $c->session->{$var};
-    if ( $plugin->plugin_name eq 'DB' or $plugin->plugin_name eq 'Trash' ) {
+    
+    if ( $plugin->isa('Paperpile::Plugins::Import::DB') or $plugin->plugin_name eq 'Trash' ) {
       $plugin->update_count();
     }
   }

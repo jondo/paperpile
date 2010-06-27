@@ -326,7 +326,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             Paperpile.main.onUpdate(json.data);}).defer(1000);
           this.isListening = false;
         },
-        failure: Paperpile.main.onError
+        failure: function(response) {
+	    // TODO: Set a slow timed task to try re-listening...
+	}
       });
     },
 
