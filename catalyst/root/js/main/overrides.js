@@ -213,44 +213,77 @@ Ext.override(Ext.grid.RowSelectionModel, {
     //    }
     this.rowNav = new Ext.KeyNav(this.grid.getGridEl(), {
       'up': function(e) {
-        if (!e.shiftKey || this.singleSelect) {
-          this.selectPrevious(false);
-        } else if (this.last !== false && this.lastActive !== false) {
-          var last = this.last;
-          this.selectRange(this.last, this.lastActive - 1);
-          this.grid.getView().focusRow(this.lastActive);
-          if (last !== false) {
-            this.last = last;
-          }
-        } else {
-          this.selectFirstRow();
-        }
-        this.fireEvent('afterselectionchange', this);
+        this.keyNavMove(-1, e);
       },
       'down': function(e) {
-        if (!e.shiftKey || this.singleSelect) {
-          this.selectNext(false);
-        } else if (this.last !== false && this.lastActive !== false) {
-          var last = this.last;
-          this.selectRange(this.last, this.lastActive + 1);
-          this.grid.getView().focusRow(this.lastActive);
-          if (last !== false) {
-            this.last = last;
-          }
-        } else {
-          this.selectFirstRow();
-        }
-        this.fireEvent('afterselectionchange', this);
+        this.keyNavMove(1, e);
+      },
+      'pageDown': function(e) {
+        var pageDistance = this.grid.getPageSize();
+        this.keyNavMove(pageDistance, e);
+      },
+      'pageUp': function(e) {
+        var pageDistance = this.grid.getPageSize();
+        this.keyNavMove(-pageDistance, e);
+      },
+      'j': function(e) {
+        this.keyNavMove(1, e);
+      },
+      'k': function(e) {
+        this.keyNavMove(-1, e);
+      },
+      'n': function(e) {
+        this.keyNavMove(1, e);
+      },
+      'p': function(e) {
+        this.keyNavMove(-1, e);
       },
       scope: this
     });
-
+    this.rowNav.keyToHandler['74'] = 'j';
+    this.rowNav.keyToHandler['75'] = 'k';
+    this.rowNav.keyToHandler['78'] = 'n';
+    this.rowNav.keyToHandler['80'] = 'p';
     this.grid.getView().on({
       scope: this,
       refresh: this.onRefresh,
       rowupdated: this.onRowUpdated,
       rowremoved: this.onRemove
     });
+  },
+  keyNavMove: function(distance, e) {
+    if (!e.shiftKey || this.singleSelect) {
+      this.selectDistance(distance);
+    } else if (this.last !== false && this.lastActive !== false) {
+      var anchor = this.lastActive;
+      var cursor = this.constraintToGrid(this.last + distance);
+      this.selectRange(anchor, cursor);
+      this.grid.getView().focusRow(cursor);
+      this.last = cursor;
+      this.lastActive = anchor;
+    } else {
+	Paperpile.log("Dunno waht to do, selecting first row!");
+      this.selectFirstRow();
+    }
+    this.fireEvent('afterselectionchange', this);
+  },
+  constraintToGrid: function(value) {
+    if (value < 0) {
+      value = 0;
+    }
+    if (value >= this.grid.store.getCount()) {
+      value = this.grid.store.getCount() - 1;
+    }
+    return value;
+  },
+  selectDistance: function(dist, keepExisting) {
+    var cursor = this.constraintToGrid(this.last + dist);
+    this.selectRow(cursor, keepExisting);
+    this.grid.getView().focusRow(this.last);
+    return true;
+  },
+  hasDistance: function(dist) {
+    return (this.last !== false && (this.last + dist) < this.grid.store.getCount() && (this.last + dist) >= 0);
   },
 
   looksLikeDuplicateEvents: function(a, b) {
@@ -287,7 +320,7 @@ Ext.override(Ext.grid.RowSelectionModel, {
       if (type === 'mousedown' && !this.singleSelect && this.last !== false) {
         var last = this.last;
         this.selectRange(last, rowIndex, ctrl);
-        this.last = last; // reset the last
+        this.last = last; // reset the cursor point.
         view.focusRow(rowIndex);
       }
     } else if (ctrl) {
@@ -794,34 +827,65 @@ Ext.override(Ext.QuickTip, {
   }
 });
 
-
 Ext.override(Ext.ProgressBar, {
-    updateRange : function(low,high,text,animate){
-	this.progressBar.setStyle('position','relative');
-        this.value = high || 0;
-        if(text){
-            this.updateText(text);
-        }
-        if(this.rendered && !this.isDestroyed){
-            var x_low = Math.floor(low*this.el.dom.firstChild.offsetWidth+1);
-            var x_high = Math.ceil(high*this.el.dom.firstChild.offsetWidth + 1);
-	    var w = Math.ceil(x_high-x_low);
-	    if (w < 2) {
-		x_low -= 1;
-		x_high += 1;
-		w += 2;
-	    }
-//            this.progressBar.setWidth(w, animate === true || (animate !== false && this.animate));
-	    this.progressBar.setWidth(w);
-	    this.progressBar.setX(this.el.getX()+x_low, animate === true || (animate !== false && this.animate));
-            if(this.textTopEl){
-                //textTopEl should be the same width as the bar so overflow will clip as the bar moves
-                this.textTopEl.removeClass('x-hidden').setWidth(w);
-            }
-        }
-        this.fireEvent('update', this, high, text);
-        return this;
-    },
+  updateRange: function(low, high, text, animate) {
+    this.progressBar.setStyle('position', 'relative');
+    this.value = high || 0;
+    if (text) {
+      this.updateText(text);
+    }
+    if (this.rendered && !this.isDestroyed) {
+      var x_low = Math.floor(low * this.el.dom.firstChild.offsetWidth + 1);
+      var x_high = Math.ceil(high * this.el.dom.firstChild.offsetWidth + 1);
+      var w = Math.ceil(x_high - x_low);
+      if (w < 2) {
+        x_low -= 1;
+        x_high += 1;
+        w += 2;
+      }
+      //            this.progressBar.setWidth(w, animate === true || (animate !== false && this.animate));
+      this.progressBar.setWidth(w);
+      this.progressBar.setX(this.el.getX() + x_low, animate === true || (animate !== false && this.animate));
+      if (this.textTopEl) {
+        //textTopEl should be the same width as the bar so overflow will clip as the bar moves
+        this.textTopEl.removeClass('x-hidden').setWidth(w);
+      }
+    }
+    this.fireEvent('update', this, high, text);
+    return this;
+  },
 
+});
 
+Ext.override(Ext.grid.GridPanel, {
+  getPageSize: function() {
+    var numRows = this.getStore().getCount();
+    var totalHeight = this.getView().mainBody.getBox().height;
+    var viewportSize = this.body.getBox().height;
+    var numPages = totalHeight / viewportSize;
+
+    var meanPageSize = Math.round(numRows / numPages);
+    return meanPageSize;
+  },
+  getVisibleRows: function() {
+    var visibleRows = [];
+    var tbEl = this.getTopToolbar().getEl();
+    var gridBox = this.body.getBox();
+    var rowCount = this.getStore().getCount();
+    for (var i = 0; i < rowCount; i++) {
+      // Find the row element for this item.
+      var row = Ext.fly(this.getView().getRow(i));
+      // Look at the offset from this row to the toolbar element.
+      var xy = row.getOffsetsTo(tbEl);
+      if (xy[1] < 0) {
+        // If we're above the toolbar, we're too high and out of view.
+        continue;
+      }
+      if (xy[1] < gridBox.height) {
+        // If we're less than the grid's box height below the toolbar, we're probably OK.
+        visibleRows.push(i);
+      }
+    }
+    return visibleRows;
+  }
 });

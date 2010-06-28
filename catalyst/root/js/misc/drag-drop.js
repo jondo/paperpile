@@ -195,15 +195,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var preferPdfAction = this.isPdfDrag(event);
 
     // Get the list of visible row indices.
-    var visibleRows = [];
-    var gridBox = gridPanel.getBox();
-    var rowCount = gridPanel.getStore().getCount();
-    for (var i = 0; i < rowCount; i++) {
-      var row = Ext.fly(gridPanel.getView().getRow(i));
-      if (row.getY() < gridBox.y + gridBox.height) {
-        visibleRows.push(i);
-      }
-    }
+      // This is an override method for GridPanel -- see overrides.js
+      var visibleRows = gridPanel.getVisibleRows();
 
     var mult = this.isMultipleFileDrag(event) ? 's' : '';
 

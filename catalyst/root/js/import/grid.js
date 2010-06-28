@@ -40,6 +40,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.pager = new Paperpile.Pager({
       pageSize: this.limit,
       store: this.getStore(),
+	grid: this, // Provide a reference back to this grid!
       displayInfo: true,
       displayMsg: 'Displaying references {0} - {1} of {2}',
       emptyMsg: "No references to display"
@@ -505,10 +506,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
     tb_side.items.get(activeTab + '_tab_button').toggle(true);
 
-    if (this.getSelectionModel().getCount() == 0) {
-      this.getSelectionModel().selectFirstRow.defer(0, this.getSelectionModel());
-    }
-
     pluginPanel.updateDetails();
     pluginPanel.updateButtons();
     this.updateButtons();
@@ -696,34 +693,27 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     // Add some callbacks to the store so we can maintain the selection between reloads.
     this._store.on('beforeload', function(store, options) {
-      var records = this.getSelectionModel().getSelections();
-      var recordIds = [];
-      for (var i = 0, len = records.length; i < len; i++) {
-        recordIds[i] = records[i].id;
-      }
-      this._selected_records = recordIds;
     },
     this);
     this._store.on('load', function(store, options) {
-      // Select rows of records with the stored ids
-      var rows = [];
-      var recordIds = this._selected_records;
-      if (recordIds === undefined) {
-        recordIds = [];
-      }
-      for (var i = 0, len = recordIds.length; i < len; i++) {
-        var index = this.getStore().indexOfId(recordIds[i]);
-        if (index >= 0) {
-          Paperpile.log(index);
-          rows.push(index);
-        }
-      }
-      this.getSelectionModel().selectRows(rows);
-      delete this._selected_records;
+	if (!this.doAfterNextReload) {
+	    this.doAfterNextReload = [];
+	}
+	for (var i=0; i < this.doAfterNextReload.length; i++) {
+	    var fn = this.doAfterNextReload[i];
+	    fn.defer(0,this);
+	}
+	this.doAfterNextReload = [];
     },
     this);
     return this._store;
   },
+
+    onPageButtonClick: function() {
+	this.doAfterNextReload.push(function() {
+	    this.getSelectionModel().selectFirstRow();
+	});
+    },
 
   cancelLoad: function() {
 
@@ -1062,7 +1052,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     for (var i = 0; i < itemIds.length; i++) {
       var id = itemIds.itemAt(i);
       var obj = this.actions[id];
-      Paperpile.log(obj);
       tbar.insert(i, this.actions[id]);
     }
   },
@@ -1466,8 +1455,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
   deleteEntry: function(mode) {
     var selection = this.getSelection();
-    var index = this.getStore().indexOf(this.getSelectionModel().getSelected());
-    var many = false;
+
+    // Find the lowest index of the current selection.
+      var firstRecord = this.getSelectionModel().getSelected();
+      var firstIndex = this.getStore().indexOf(firstRecord);
+
+      this.getSelectionModel().lock();
 
     if (mode == 'DELETE') {
       Paperpile.status.showBusy('Deleting references from library');
@@ -1494,7 +1487,18 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         var num_deleted = data.num_deleted;
 
         Paperpile.main.onUpdate(data.data);
-
+	  
+	  // Does what it says: adds to the list of functions to call when the grid is next reloaded. This is handled in the customized 'onload' handler up at the top of the file.
+	  if (!this.doAfterNextReload) {
+	      this.doAfterNextReload = [];
+	  }
+	      this.getSelectionModel().unlock();
+	  this.doAfterNextReload.push(function() {
+	      Paperpile.log(firstIndex);
+	      if (this.getSelectionModel().isLocked()) {
+	      }
+	      this.getSelectionModel().selectRow(firstIndex);
+	  });
         if (mode == 'TRASH') {
           var msg = num_deleted + ' references moved to Trash';
           if (num_deleted == 1) {
@@ -1973,10 +1977,8 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     Paperpile.Pager.superclass.initComponent.call(this);
 
     var items = [this.first, this.inputItem, this.afterTextItem, this.last, this.refresh];
-    Paperpile.log(items.length);
     items = items.concat(this.findByType(Ext.Toolbar.Spacer));
     items = items.concat(this.findByType(Ext.Toolbar.Separator));
-    Paperpile.log(items.length);
     for (var i = 0; i < items.length; i++) {
       this.remove(items[i], true);
     }
@@ -2011,6 +2013,10 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     this.insert(2, new Ext.Toolbar.Spacer({
       width: 5
     }));
+
+      this.next.on('click',this.grid.onPageButtonClick,this.grid);
+      this.prev.on('click',this.grid.onPageButtonClick,this.grid);
+
   },
   handleProgressBarClick: function(e) {
     var box = this.progressBar.getBox();
