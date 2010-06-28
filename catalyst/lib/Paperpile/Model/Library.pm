@@ -1223,8 +1223,6 @@ sub attach_file {
 
     $absolute_dest = catfile( $settings->{paper_root}, $relative_dest );
 
-    print STDERR "ABSOLUTE: $absolute_dest\n";
-
     # Copy file, file name can be changed if it was not unique
     $absolute_dest = Paperpile::Utils->copy_file( $source, $absolute_dest );
   } else {
@@ -1402,6 +1400,106 @@ sub change_paper_root{
   $dbh->commit();
 
 }
+
+
+# Renames and moves PDFs/attachments according to $pdf_pattern and
+# $attachment_pattern. Also sets settings pdf_pattern and
+# attachment_pattern after an succesful update of the tree structure.
+
+sub rename_files {
+
+  my ( $self, $pdf_pattern, $attachment_pattern) = @_;
+
+  my $dbh = $self->dbh;
+
+  $dbh->begin_work;
+
+  my $paper_root = $self->get_setting( 'paper_root', $dbh );
+
+  # If paper_root is not created or does not exist for some other
+  # reason, we can stop because there are no files for us to update
+  if ( !-e $paper_root ) {
+    $dbh->commit;
+    return;
+  }
+
+  my $tmp_root = File::Temp::tempdir( 'paperpile-XXXXXXX', DIR => '/tmp', CLEANUP => 0 );
+
+  eval {
+
+    my $select = $dbh->prepare("SELECT guid, publication, local_file, name, is_pdf FROM Attachments;");
+
+    my ( $file_guid, $pub_guid, $file, $file_name, $is_pdf );
+
+    $select->execute;
+
+    $select->bind_columns( \$file_guid, \$pub_guid, \$file, \$file_name, \$is_pdf );
+    $select->execute;
+
+    while ( $select->fetch ) {
+
+      my $data = $dbh->selectrow_hashref("SELECT * FROM Publications WHERE guid='$pub_guid';");
+      my $pub  = Paperpile::Library::Publication->new($data);
+
+      my $relative_dest;
+
+      if ($is_pdf) {
+        $relative_dest = $pub->format_pattern( $pdf_pattern, { key => $pub->citekey } ) . '.pdf';
+      } else {
+        $relative_dest = $pub->format_pattern( $attachment_pattern, { key => $pub->citekey } );
+        $relative_dest = File::Spec->catfile( $relative_dest, $file_name );
+      }
+
+      my $absolute_dest = File::Spec->catfile( $tmp_root, $relative_dest );
+      $absolute_dest = Paperpile::Utils->copy_file( $file, $absolute_dest );
+
+      $relative_dest = File::Spec->abs2rel( $absolute_dest, $tmp_root );
+      my ( $volume, $dirs, $base_name ) = splitpath($absolute_dest);
+
+      my $new_file = $dbh->quote( File::Spec->catfile( $paper_root, $relative_dest ) );
+      my $name     = $dbh->quote($base_name);
+
+      $dbh->do("UPDATE ATTACHMENTS SET local_file=$new_file, name=$name WHERE guid='$file_guid';");
+
+      if ($is_pdf){
+        $name = $dbh->quote($relative_dest);
+        $dbh->do("UPDATE Publications SET pdf_name=$name WHERE guid='$pub_guid';");
+      }
+    }
+  };
+
+  if ($@) {
+    $dbh->rollback;
+    my $msg = $@;
+    $msg = $@->error if $@->isa('PaperpileError');
+    FileError->throw("Could not apply changes ($msg)");
+  }
+
+  if ( not move( $paper_root, "$paper_root\_backup" ) ) {
+    $dbh->rollback;
+    FileError->throw(
+      "Could not apply changes (Error creating backup copy $paper_root\_backup -- $!)");
+  }
+
+  if ( not move( $tmp_root, $paper_root ) ) {
+    $dbh->rollback;
+    move( "$paper_root\_backup", $paper_root )
+      or FileError->throw(
+      'Could not apply changes and your library is broken now. This should never happen, contact support@paperpile.org if it has happened to you.'
+      );
+    FileError->throw(
+      "Could not apply changes (Error creating new copy of directory tree in $paper_root).");
+  }
+
+  $self->set_setting( 'pdf_pattern',        $pdf_pattern, $dbh );
+  $self->set_setting( 'attachment_pattern', $attachment_pattern, $dbh );
+
+  $dbh->commit;
+  rmtree("$paper_root\_backup");
+}
+
+
+
 
 
 sub index_pdf {
