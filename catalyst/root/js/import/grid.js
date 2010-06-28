@@ -173,8 +173,25 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           text: 'Open containing folder'
         }
       }),
+      'OPEN_PDF_FOLDER2': new Ext.Action({
+        text: 'Open containing folder',
+        handler: this.openPDFFolder,
+        scope: this,
+        icon: '/images/icons/folder.png',
+        itemId: 'OPEN_PDF_FOLDER',
+        tooltip: {
+          text: 'Open containing folder'
+        }
+      }),
 
       'VIEW_PDF': new Ext.Action({
+        handler: this.openPDF,
+        scope: this,
+        iconCls: 'pp-icon-import-pdf',
+        itemId: 'VIEW_PDF',
+        text: 'View PDF',
+      }),
+      'VIEW_PDF2': new Ext.Action({
         handler: this.openPDF,
         scope: this,
         iconCls: 'pp-icon-import-pdf',
@@ -268,6 +285,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       items: [
         this.actions['VIEW_PDF'],
         this.actions['OPEN_PDF_FOLDER']]
+    });
+    this.actions['PDF_COMBINED_BUTTON2'] = new Ext.ux.ButtonPlus({
+      items: [
+        this.actions['VIEW_PDF2'],
+        this.actions['OPEN_PDF_FOLDER2']]
     });
 
     this.actions['MORE_FROM_MENU'] = new Ext.menu.Item({
@@ -987,7 +1009,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.toolbarMenuItemIds.addAll([
       'TB_FILL',
       'TB_BREAK',
-      'VIEW_PDF',
+      'PDF_COMBINED_BUTTON2',
       'OPEN_PDF_FOLDER',
       this.createSeparator('TB_VIEW_SEP'),
       'SELECT_ALL',
@@ -1039,6 +1061,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var itemIds = this.toolbarMenuItemIds; // This is an Ext.util.MixedCollection.
     for (var i = 0; i < itemIds.length; i++) {
       var id = itemIds.itemAt(i);
+      var obj = this.actions[id];
+      Paperpile.log(obj);
       tbar.insert(i, this.actions[id]);
     }
   },
@@ -1072,6 +1096,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.refreshView();
     var xy = e.getXY();
+
     this.context.showAt.defer(10, this.context, [xy]);
     e.stopEvent();
   },
@@ -1416,7 +1441,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             duration: 1.5
           });
         } else {
-          // TODO: Figure out a non-Titanium way to handle this.
+          // Not in Titanium -- use Flash if available...
+          Paperpile.status.updateMsg({
+            msg: msg,
+            duration: 1.5
+          });
+
         }
       },
       scope: this,
@@ -1998,13 +2028,13 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     pageNum = pgData.activePage;
     var high = pageNum / pgData.pages;
     var low = (pageNum - 1) / pgData.pages;
-      this.progressBar.updateRange(low, high, '');
-      if (high == 1 && low == 0) {
-	  this.progressBar.disable();
-	  this.progressBar.getEl().applyStyles('cursor:normal');
-      } else {
-	  this.progressBar.enable();
-	  this.progressBar.getEl().applyStyles('cursor:pointer');
-      }
+    this.progressBar.updateRange(low, high, '');
+    if (high == 1 && low == 0) {
+      this.progressBar.disable();
+      this.progressBar.getEl().applyStyles('cursor:normal');
+    } else {
+      this.progressBar.enable();
+      this.progressBar.getEl().applyStyles('cursor:pointer');
+    }
   }
 });

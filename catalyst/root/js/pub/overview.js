@@ -537,6 +537,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   // supplementary file (given by isPDF).
   //
   chooseFile: function(isPDF) {
+      Paperpile.log("Choose!");
     var callback = function(filenames) {
       if (filenames.length > 0) {
         for (var i = 0; i < filenames.length; i++) {
@@ -576,7 +577,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   // supplementary file (given by isPDF).
   //
   attachFile: function(isPDF, path) {
-
+      Paperpile.log("Attach!");
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/attach_file'),
       params: {
