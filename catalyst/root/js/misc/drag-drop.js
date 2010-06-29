@@ -214,8 +214,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     // One invisible target per visible row.
     for (var i = 0; i < visibleRows.length; i++) {
       var rowIndex = visibleRows[i];
-      var row = gridPanel.getStore().getAt(i);
-      var rowEl = Ext.get(gridPanel.getView().getRow(i)); // Can't use Ext.fly here, since we're storing the element in the droptarget objects.
+      var row = gridPanel.getStore().getAt(rowIndex);
+      var rowEl = Ext.get(gridPanel.getView().getRow(rowIndex)); // Can't use Ext.fly here, since we're storing the element in the droptarget objects.
       var data = row.data;
 
       if (!data._imported || data.trashed) {

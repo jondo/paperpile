@@ -1494,9 +1494,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  }
 	      this.getSelectionModel().unlock();
 	  this.doAfterNextReload.push(function() {
-	      Paperpile.log(firstIndex);
-	      if (this.getSelectionModel().isLocked()) {
-	      }
 	      this.getSelectionModel().selectRow(firstIndex);
 	  });
         if (mode == 'TRASH') {
