@@ -1,3 +1,18 @@
+Ext.ux.ButtonPlus = function(config) {
+  config = config || {};
+  if (config.initialConfig) {
+    if (config.isAction) { // actions
+      this.baseAction = config;
+    }
+    config = config.initialConfig; // component cloning / action set up
+  } else if (config.tagName || config.dom || Ext.isString(config)) { // element object
+    config = {
+      applyTo: config,
+      id: config.id || config
+    };
+  }
+};
+
 Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
   defaults: {},
   layout: 'table',
@@ -67,6 +82,20 @@ Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
 
     this.items.each(function(item, index, length) {
       item.enable();
+      // Also need to enable our base action if necessary.
+      if (item.baseAction) {
+        item.baseAction.enable();
+      }
+    });
+  },
+  disable: function() {
+    Ext.ux.ButtonPlus.superclass.disable.call(this);
+
+    this.items.each(function(item, index, length) {
+      item.disable();
+      if (item.baseAction) {
+        item.baseAction.disable();
+      }
     });
   }
 

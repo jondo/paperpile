@@ -40,7 +40,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.pager = new Paperpile.Pager({
       pageSize: this.limit,
       store: this.getStore(),
-	grid: this, // Provide a reference back to this grid!
+      grid: this,
+      // Provide a reference back to this grid!
       displayInfo: true,
       displayMsg: 'Displaying references {0} - {1} of {2}',
       emptyMsg: "No references to display"
@@ -174,25 +175,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           text: 'Open containing folder'
         }
       }),
-      'OPEN_PDF_FOLDER2': new Ext.Action({
-        text: 'Open containing folder',
-        handler: this.openPDFFolder,
-        scope: this,
-        icon: '/images/icons/folder.png',
-        itemId: 'OPEN_PDF_FOLDER',
-        tooltip: {
-          text: 'Open containing folder'
-        }
-      }),
-
       'VIEW_PDF': new Ext.Action({
-        handler: this.openPDF,
-        scope: this,
-        iconCls: 'pp-icon-import-pdf',
-        itemId: 'VIEW_PDF',
-        text: 'View PDF',
-      }),
-      'VIEW_PDF2': new Ext.Action({
         handler: this.openPDF,
         scope: this,
         iconCls: 'pp-icon-import-pdf',
@@ -283,14 +266,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     };
 
     this.actions['PDF_COMBINED_BUTTON'] = new Ext.ux.ButtonPlus({
+      itemId: 'PDF_COMBINED_BUTTON',
       items: [
         this.actions['VIEW_PDF'],
         this.actions['OPEN_PDF_FOLDER']]
     });
     this.actions['PDF_COMBINED_BUTTON2'] = new Ext.ux.ButtonPlus({
+      itemId: 'PDF_COMBINED_BUTTON2',
       items: [
-        this.actions['VIEW_PDF2'],
-        this.actions['OPEN_PDF_FOLDER2']]
+        this.actions['VIEW_PDF'],
+        this.actions['OPEN_PDF_FOLDER']]
     });
 
     this.actions['MORE_FROM_MENU'] = new Ext.menu.Item({
@@ -692,28 +677,27 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     // Add some callbacks to the store so we can maintain the selection between reloads.
-    this._store.on('beforeload', function(store, options) {
-    },
+    this._store.on('beforeload', function(store, options) {},
     this);
     this._store.on('load', function(store, options) {
-	if (!this.doAfterNextReload) {
-	    this.doAfterNextReload = [];
-	}
-	for (var i=0; i < this.doAfterNextReload.length; i++) {
-	    var fn = this.doAfterNextReload[i];
-	    fn.defer(0,this);
-	}
-	this.doAfterNextReload = [];
+      if (!this.doAfterNextReload) {
+        this.doAfterNextReload = [];
+      }
+      for (var i = 0; i < this.doAfterNextReload.length; i++) {
+        var fn = this.doAfterNextReload[i];
+        fn.defer(0, this);
+      }
+      this.doAfterNextReload = [];
     },
     this);
     return this._store;
   },
 
-    onPageButtonClick: function() {
-	this.doAfterNextReload.push(function() {
-	    this.getSelectionModel().selectFirstRow();
-	});
-    },
+  onPageButtonClick: function() {
+    this.doAfterNextReload.push(function() {
+      this.getSelectionModel().selectFirstRow();
+    });
+  },
 
   cancelLoad: function() {
 
@@ -1000,7 +984,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'TB_FILL',
       'TB_BREAK',
       'PDF_COMBINED_BUTTON2',
-      'OPEN_PDF_FOLDER',
       this.createSeparator('TB_VIEW_SEP'),
       'SELECT_ALL',
       'DELETE',
@@ -1457,10 +1440,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var selection = this.getSelection();
 
     // Find the lowest index of the current selection.
-      var firstRecord = this.getSelectionModel().getSelected();
-      var firstIndex = this.getStore().indexOf(firstRecord);
+    var firstRecord = this.getSelectionModel().getSelected();
+    var firstIndex = this.getStore().indexOf(firstRecord);
 
-      this.getSelectionModel().lock();
+    this.getSelectionModel().lock();
 
     if (mode == 'DELETE') {
       Paperpile.status.showBusy('Deleting references from library');
@@ -1487,15 +1470,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         var num_deleted = data.num_deleted;
 
         Paperpile.main.onUpdate(data.data);
-	  
-	  // Does what it says: adds to the list of functions to call when the grid is next reloaded. This is handled in the customized 'onload' handler up at the top of the file.
-	  if (!this.doAfterNextReload) {
-	      this.doAfterNextReload = [];
-	  }
-	      this.getSelectionModel().unlock();
-	  this.doAfterNextReload.push(function() {
-	      this.getSelectionModel().selectRow(firstIndex);
-	  });
+
+        // Does what it says: adds to the list of functions to call when the grid is next reloaded. This is handled in the customized 'onload' handler up at the top of the file.
+        if (!this.doAfterNextReload) {
+          this.doAfterNextReload = [];
+        }
+        this.getSelectionModel().unlock();
+        this.doAfterNextReload.push(function() {
+          this.getSelectionModel().selectRow(firstIndex);
+        });
         if (mode == 'TRASH') {
           var msg = num_deleted + ' references moved to Trash';
           if (num_deleted == 1) {
@@ -2011,8 +1994,8 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
       width: 5
     }));
 
-      this.next.on('click',this.grid.onPageButtonClick,this.grid);
-      this.prev.on('click',this.grid.onPageButtonClick,this.grid);
+    this.next.on('click', this.grid.onPageButtonClick, this.grid);
+    this.prev.on('click', this.grid.onPageButtonClick, this.grid);
 
   },
   handleProgressBarClick: function(e) {

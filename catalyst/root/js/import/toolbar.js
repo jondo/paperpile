@@ -1,4 +1,23 @@
 Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
+    // private
+    addComponentToMenu : function(m, c){
+        if(c instanceof Ext.Toolbar.Separator){
+            m.add('-');
+        }else if(Ext.isFunction(c.isXType)){
+            if(c.isXType('splitbutton')){
+                m.add(this.createMenuConfig(c, true));
+            }else if(c.isXType('button')){
+                m.add(this.createMenuConfig(c, !c.menu));
+            }else if(c.isXType('buttongroup')){
+                c.items.each(function(item){
+                     this.addComponentToMenu(m, item);
+                }, this);
+            } else if (c.isXType('buttonplus')) {
+		var bp = new Ext.ux.ButtonPlus(c);
+		m.add(bp);
+	    }
+        }
+    },
 
   fitToSize: function(t) {
     // Mostly yoinked from the Ext source, Toolbar.js.
