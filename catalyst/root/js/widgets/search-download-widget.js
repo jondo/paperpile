@@ -36,7 +36,7 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
       var el = [
         '    <ul>',
         '      <li id="open-pdf{id}" class="pp-action pp-action-open-pdf" >',
-        '      <a href="#" class="pp-textlink" action="open-pdf">Open PDF</a>',
+        '      <a href="#" class="pp-textlink" action="open-pdf">View PDF</a>',
         '      &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a></li>',
         '      <li id="delete-pdf-{id}" class="pp-action pp-action-delete-pdf"><a href="#" class="pp-textlink" action="delete-pdf">Delete PDF</a></li>',
         '    </ul>'];
