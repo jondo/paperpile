@@ -285,6 +285,10 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     });
     this.filterField = this.actions['FILTER_FIELD'];
 
+      this.filterField.on('focus', function() {
+	  Paperpile.log("HEY");
+      });
+
     Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
   },
 

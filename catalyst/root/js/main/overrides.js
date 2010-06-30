@@ -225,24 +225,8 @@ Ext.override(Ext.grid.RowSelectionModel, {
         var pageDistance = this.grid.getPageSize();
         this.keyNavMove(-pageDistance, e);
       },
-      'j': function(e) {
-        this.keyNavMove(1, e);
-      },
-      'k': function(e) {
-        this.keyNavMove(-1, e);
-      },
-      'n': function(e) {
-        this.keyNavMove(1, e);
-      },
-      'p': function(e) {
-        this.keyNavMove(-1, e);
-      },
       scope: this
     });
-    this.rowNav.keyToHandler['74'] = 'j';
-    this.rowNav.keyToHandler['75'] = 'k';
-    this.rowNav.keyToHandler['78'] = 'n';
-    this.rowNav.keyToHandler['80'] = 'p';
     this.grid.getView().on({
       scope: this,
       refresh: this.onRefresh,
@@ -363,8 +347,6 @@ Ext.override(Ext.grid.RowSelectionModel, {
       }
       this.fireEvent('rowselect', this, index, r);
       this.fireEvent('selectionchange', this);
-      // Adding this here to always focus the view when the next row is selected -- TODO, check if this causes any unforeseen problems.
-      this.grid.getView().focusRow(index);
     }
   },
 
@@ -418,7 +400,6 @@ Ext.override(Ext.grid.RowSelectionModel, {
   }
 
 });
-
 
 // Avoid scrolling to top if 'holdPosition" is given
 // from: http://extjs.com/forum/showthread.php?t=13898

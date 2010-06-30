@@ -134,54 +134,21 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   },
 
-  keyMap: null,
   loadKeys: function() {
-    this.keyMap = new Ext.KeyMap(document);
+    this.keys = new Ext.ux.KeyboardShortcuts(this.getEl());
 
-    this.keyMap.addBinding({
-      key: [Ext.EventObject.TAB],
-      ctrl: true,
-      stopEvent: true,
-      handler: this.keyControlTab,
-      scope: this
-    });
-
-    this.keyMap.addBinding({
-      key: [Ext.EventObject.A],
-      ctrl: true,
-      stopEvent: true,
-      handler: this.keyControlA,
-      scope: this
-    });
-
-    this.keyMap.addBinding({
-      key: [Ext.EventObject.W],
-      ctrl: true,
-      stopEvent: true,
-      handler: this.keyControlW,
-      scope: this
-    });
-
-    this.keyMap.addBinding({
-      key: [Ext.EventObject.B],
-      ctrl: true,
-      shift: true,
-      stopEvent: true,
-      handler: this.keyControlShiftB,
-      scope: this
-    });
-
-    this.keyMap.addBinding({
-      key: [Ext.EventObject.K],
-      ctrl: true,
-      shift: true,
-      stopEvent: true,
-      handler: this.keyControlShiftK,
-      scope: this
-    });
-
+    this.keys.bindCallback('ctrl-tab',this.keyControlTab,this);
+    this.keys.bindCallback('ctrl-w', this.keyControlW);
+    this.keys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
   },
-
+  keyQuesionMark: function() {
+    Paperpile.log("What's your problem?");
+  },
+  keyControlC: function() {
+    var tab = Paperpile.main.tabs.getActiveTab();
+    var grid = tab.getGrid();
+    grid.handleCopyFormatted();
+  },
   keyControlShiftK: function() {
     var tab = Paperpile.main.tabs.getActiveTab();
     var grid = tab.getGrid();

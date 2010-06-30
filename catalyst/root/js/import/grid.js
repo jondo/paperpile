@@ -363,6 +363,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     Paperpile.PluginGrid.superclass.initComponent.call(this);
 
+      this.keys = new Ext.ux.KeyboardShortcuts(this.body);
+      this.keys.bindAction('ctrl-c',this.actions['COPY_FORMATTED']);
+      this.keys.bindAction('ctrl-b',this.actions['COPY_BIBTEX_CITATION']);
+      this.keys.bindAction('ctrl-k',this.actions['COPY_BIBTEX_KEY']);
+      this.keys.bindAction('ctrl-a',this.actions['SELECT_ALL']);
+      this.keys.bindAction('[del,46]',this.actions['DELETE']);
+
     this.on({
       // Delegate to class methods.
       beforerender: {
@@ -583,22 +590,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // main/overrides.js
     this.mon(this.getSelectionModel(), 'afterselectionchange', this.afterSelectionChange, this);
 
-    var map = new Ext.KeyMap(this.body, {
-      key: Ext.EventObject.DELETE,
-      handler: function() {
-        var imported = this.getSelection('IMPORTED').length;
-        if (imported > 0) {
-          // Handle both cases of normal grids and Trash grid
-          if (this.getSelectionModel().getSelected().get('trashed')) {
-            this.deleteEntry('DELETE');
-          } else {
-            this.deleteEntry('TRASH');
-          }
-        }
-      },
-      scope: this
-    });
-
     this.dropZone = new Paperpile.GridDropZone(this, {
       ddGroup: this.ddGroup
     });
@@ -615,6 +606,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // Auto-select the first row when a new grid starts up.
     this.doAfterNextReload = [function() {
       this.getSelectionModel().selectFirstRow();
+      this.getView().focusRow(0);
     }];
 
   },
@@ -1075,6 +1067,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.refreshView();
     var xy = e.getXY();
 
+    this.context.doLayout(false,true);
     this.context.showAt.defer(10, this.context, [xy]);
     e.stopEvent();
   },
@@ -1138,6 +1131,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.getContextMenu().items.each(function(item, index, length) {
       item.enable();
     });
+      for (var key in this.actions) {
+	  var action = this.actions[key];
+	  if (action['setDisabled']) {
+	      action.setDisabled(false);
+	  }
+      }
 
     var selection = this.getSingleSelectionRecord();
 
@@ -1154,6 +1153,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (!selection) {
       this.actions['EDIT'].disable();
       this.actions['DELETE'].disable();
+	this.actions['COPY_FORMATTED'].disable();
     }
 
     if (selection) {
