@@ -200,7 +200,6 @@ Ext.override(Ext.ToolTip, {
 
 Ext.override(Ext.grid.RowSelectionModel, {
   initEvents: function() {
-
     // Create an event which only fires after a selection is DONE changing in response
     // to a user interaction (i.e., when we shift-click to select 10 items, this only fires ONCE).
     this.addEvents('afterselectionchange');
@@ -262,7 +261,6 @@ Ext.override(Ext.grid.RowSelectionModel, {
       this.last = cursor;
       this.lastActive = anchor;
     } else {
-      Paperpile.log("Dunno waht to do, selecting first row!");
       this.selectFirstRow();
     }
     this.fireEvent('afterselectionchange', this);
@@ -300,7 +298,6 @@ Ext.override(Ext.grid.RowSelectionModel, {
   cacheEvent: {},
   // private
   handleMouseDown: function(g, rowIndex, e) {
-    //      Paperpile.log("down...");
     if (e.button !== 0 || this.isLocked()) {
       return;
     }
@@ -343,7 +340,6 @@ Ext.override(Ext.grid.RowSelectionModel, {
       }
     }
     this.fireEvent('afterselectionchange', this);
-    //      Paperpile.log("Done!");
   },
 
   selectFirstRow: function() {
@@ -422,6 +418,7 @@ Ext.override(Ext.grid.RowSelectionModel, {
   }
 
 });
+
 
 // Avoid scrolling to top if 'holdPosition" is given
 // from: http://extjs.com/forum/showthread.php?t=13898
