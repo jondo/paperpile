@@ -262,7 +262,7 @@ Ext.override(Ext.grid.RowSelectionModel, {
       this.last = cursor;
       this.lastActive = anchor;
     } else {
-	Paperpile.log("Dunno waht to do, selecting first row!");
+      Paperpile.log("Dunno waht to do, selecting first row!");
       this.selectFirstRow();
     }
     this.fireEvent('afterselectionchange', this);
@@ -349,6 +349,27 @@ Ext.override(Ext.grid.RowSelectionModel, {
   selectFirstRow: function() {
     this.selectRow(0);
     this.fireEvent('afterselectionchange', this);
+  },
+
+  selectRow: function(index, keepExisting, preventViewNotify) {
+    if (this.isLocked() || (index < 0 || index >= this.grid.store.getCount()) || (keepExisting && this.isSelected(index))) {
+      return;
+    }
+    var r = this.grid.store.getAt(index);
+    if (r && this.fireEvent('beforerowselect', this, index, keepExisting, r) !== false) {
+      if (!keepExisting || this.singleSelect) {
+        this.clearSelections();
+      }
+      this.selections.add(r);
+      this.last = this.lastActive = index;
+      if (!preventViewNotify) {
+        this.grid.getView().onRowSelect(index);
+      }
+      this.fireEvent('rowselect', this, index, r);
+      this.fireEvent('selectionchange', this);
+      // Adding this here to always focus the view when the next row is selected -- TODO, check if this causes any unforeseen problems.
+      this.grid.getView().focusRow(index);
+    }
   },
 
   onRefresh: function() {

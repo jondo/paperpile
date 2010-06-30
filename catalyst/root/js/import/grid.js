@@ -611,6 +611,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     this.createAuthorToolTip();
+
+    // Auto-select the first row when a new grid starts up.
+    this.doAfterNextReload = [function() {
+      this.getSelectionModel().selectFirstRow();
+    }];
+
   },
 
   createAuthorToolTip: function() {
