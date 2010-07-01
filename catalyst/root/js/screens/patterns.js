@@ -94,19 +94,21 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
         b.on('click', function() {
           var parts = Paperpile.utils.splitPath(this.textfields[item].getValue());
-          new Paperpile.FileChooser({
-            saveMode: item == 'library_db' ? true : false,
-            selectionMode: item == 'library_db' ? 'FILE' : 'DIR',
-            saveDefault: item == 'library_db' ? parts.file : '',
-            currentRoot: parts.dir,
-            warnOnExisting: false,
-            callback: function(button, path) {
-              if (button == 'OK') {
-                this.textfields[item].setValue(path);
-              }
-            },
+
+          var callback = function(filenames) {
+            if (filenames.length > 0) {
+              var folder = filenames[0];
+              this.textfields[item].setValue(folder);
+            }
+          };
+
+          var options = {
+            title: item == 'library_db' ? 'Choose Paperpile database file' : 'Choose PDF folder',
+            selectionType: item == 'library_db' ? 'file' : 'folder',
             scope: this
-          }).show();
+          };
+          Paperpile.fileDialog(callback, options);
+
         },
         this);
       }
