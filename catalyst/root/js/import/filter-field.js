@@ -37,12 +37,24 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
     this);
 
     var task = new Ext.util.DelayedTask(this.onTrigger2Click, this);
-
     this.on('keydown', function(f, e) {
       task.delay(200);
     },
     this);
   },
+
+    afterRender: function() {
+	Ext.app.FilterField.superclass.afterRender.call(this);
+
+      // SwallowEvent code lifted from Editor.js -- causes
+      // this field to swallow key events which would otherwise
+      // be carried on to the grid (i.e. ctrl-A to select all)
+      this.getEl().swallowEvent([
+        'keypress', // *** Opera
+        'keydown' // *** all other browsers
+        ]);
+	
+    },
 
   validationEvent: false,
   validateOnBlur: false,

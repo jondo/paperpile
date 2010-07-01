@@ -326,8 +326,14 @@ Ext.override(Ext.grid.RowSelectionModel, {
     this.fireEvent('afterselectionchange', this);
   },
 
-  selectFirstRow: function() {
-    this.selectRow(0);
+  selectFirstRow: function(keepExisting) {
+    this.selectRow(0, keepExisting);
+    this.grid.getView().focusRow(0);
+    this.fireEvent('afterselectionchange', this);
+  },
+  selectLastRow: function(keepExisting) {
+    this.selectRow(this.grid.store.getCount() - 1, keepExisting);
+    this.grid.getView().focusRow(this.grid.store.getCount() - 1);
     this.fireEvent('afterselectionchange', this);
   },
 

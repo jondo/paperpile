@@ -1,9 +1,11 @@
 Ext.ux.KeyboardShortcuts = function(mainEl) {
-    if (mainEl === undefined) {
-	mainEl = document;
-    }
-    Ext.apply(this,{document:mainEl});
-    Ext.ux.KeyboardShortcuts.constructor.call(this);
+  if (mainEl === undefined) {
+    mainEl = document;
+  }
+  Ext.apply(this, {
+    document: mainEl
+  });
+  Ext.ux.KeyboardShortcuts.constructor.call(this);
 };
 Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
   keyMap: null,
@@ -15,7 +17,7 @@ Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
     if (config.document === undefined) {
       config.document = document;
     }
-      this.keyMap = new Ext.KeyMap(config.document);
+    this.keyMap = new Ext.KeyMap(config.document);
     Ext.ux.KeyboardShortcuts.superclass.constructor.call(this, config);
   },
   bindAction: function(string, action) {
@@ -52,16 +54,25 @@ Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
   isAlt: function(token) {
     return Boolean(token.match(/(alt)/));
   },
+  ctrlString: function() {
+    return 'ctrl';
+  },
+  shiftString: function() {
+    return 'shift';
+  },
+  altString: function() {
+    return 'alt';
+  },
   shortcutAsString: function(obj) {
     var string = '';
-    string += (obj.ctrl ? 'ctrl-' : '');
-    string += (obj.alt ? 'alt-' : '');
-    string += (obj.shift ? 'shift-' : '');
+    string += (obj.ctrl ? this.ctrlString() + '-' : '');
+    string += (obj.alt ? this.altString() + '-' : '');
+    string += (obj.shift ? this.shiftString() + '-' : '');
 
-      var key = obj.keyString;
-      if (key.length == 1) {
-	  key = key.toUpperCase();
-      }
+    var key = obj.keyString;
+    if (key.length == 1) {
+      key = key.toUpperCase();
+    }
     string += (key);
     return string;
   },
@@ -78,7 +89,7 @@ Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
         if (tokens[i].match(/\[.*\]/)) {
           // Use a custom format of [char,code] for non-canonical
           // characters and codes.
-            var matches = /\[(.*),(.*)\]/.exec(tokens[i]);
+          var matches = /\[(.*),(.*)\]/.exec(tokens[i]);
           key = matches[1];
           keyCode = matches[2];
         } else {
@@ -111,6 +122,12 @@ Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
     shortcutObj.shortcutString = this.shortcutAsString(shortcutObj);
     return shortcutObj;
   },
+  enable: function() {
+    this.keyMap.enable();
+  },
+  disable: function() {
+    this.keyMap.disable();
+  },
 });
 
 Ext.ux.KeyboardShortcut = Ext.extend(Ext.util.Observable, {
@@ -134,13 +151,13 @@ Ext.ux.KeyboardShortcut = Ext.extend(Ext.util.Observable, {
     if (this.action) {
       this.action.addComponent(this);
       this.action.setShortcutString(this.binding.shortcutString);
-	this.itemId = 'shortcut-'+this.binding.shortcutString;
+      this.itemId = 'shortcut-' + this.binding.shortcutString;
     }
   },
-  handleAction: function() {
+  handleAction: function(keyCode, event) {
     if (!this.disabled) {
       if (this.action) {
-        this.action.execute();
+        this.action.execute(keyCode, event);
       } else if (this.handler) {
         this.handler.call(this.scope);
       }
@@ -167,7 +184,6 @@ Ext.ux.KeyboardShortcut = Ext.extend(Ext.util.Observable, {
   },
 
 });
-
 
 Ext.override(Ext.Action, {
   addComponent: function(comp) {
@@ -204,6 +220,10 @@ Ext.override(Ext.Action, {
   },
 });
 
+Ext.override(Ext.menu.Menu, {
+
+});
+
 Ext.override(Ext.menu.Item, {
   onRender: function(container, position) {
     if (!this.itemTpl) {
@@ -215,7 +235,7 @@ Ext.override(Ext.menu.Item, {
         '>',
         '<img src="{icon}" class="x-menu-item-icon {iconCls}"/>',
         '<span class="x-menu-item-text">{text}</span>',
-          '<div class="x-menu-item-shortcut" style="float:right;font-size:9px;color:gray;margin-left:2px;margin-right:2px;;width:25px;text-align:right;">{shortcutString}</div>',
+        '<div class="x-menu-item-shortcut" style="float:right;font-size:9px;color:gray;margin-left:2px;margin-right:2px;;width:25px;text-align:right;">{shortcutString}</div>',
         '</a>');
     }
     var a = this.getTemplateArgs();

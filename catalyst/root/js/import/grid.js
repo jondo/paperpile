@@ -253,6 +253,31 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         handler: this.handleCopyFormatted,
         scope: this
       }),
+      'DOWN_ONE': new Ext.Action({
+        itemId: 'DOWN_ONE',
+        text: 'Move the cursor to the next reference',
+        handler: this.handleDownOne,
+        scope: this
+      }),
+      'UP_ONE': new Ext.Action({
+        itemId: 'UP_ONE',
+        text: 'Move the cursor to the previous reference',
+        handler: this.handleUpOne,
+        scope: this
+      }),
+      'MOVE_FIRST': new Ext.Action({
+        itemId: 'MOVE_FIRST',
+        text: 'Move the cursor to the first reference',
+        handler: this.handleMoveFirst,
+        scope: this
+      }),
+      'MOVE_LAST': new Ext.Action({
+        itemId: 'MOVE_LAST',
+        text: 'Move the cursor to the last reference',
+        handler: this.handleMoveLast,
+        scope: this
+      }),
+
       'TB_SPACE': new Ext.Toolbar.Spacer({
         itemId: 'TB_SPACE',
         width: '10px'
@@ -363,12 +388,29 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     Paperpile.PluginGrid.superclass.initComponent.call(this);
 
-      this.keys = new Ext.ux.KeyboardShortcuts(this.body);
-      this.keys.bindAction('ctrl-c',this.actions['COPY_FORMATTED']);
-      this.keys.bindAction('ctrl-b',this.actions['COPY_BIBTEX_CITATION']);
-      this.keys.bindAction('ctrl-k',this.actions['COPY_BIBTEX_KEY']);
-      this.keys.bindAction('ctrl-a',this.actions['SELECT_ALL']);
-      this.keys.bindAction('[del,46]',this.actions['DELETE']);
+    this.keys = new Ext.ux.KeyboardShortcuts(this.el);
+
+    // Standard grid shortcuts.
+    this.keys.bindAction('ctrl-a', this.actions['SELECT_ALL']);
+    this.keys.bindAction('[Del,46]', this.actions['DELETE']);
+
+    // Copy shortcuts.
+    this.keys.bindAction('ctrl-c', this.actions['COPY_FORMATTED']);
+    this.keys.bindAction('ctrl-b', this.actions['COPY_BIBTEX_CITATION']);
+    this.keys.bindAction('ctrl-k', this.actions['COPY_BIBTEX_KEY']);
+
+    // Gmail-style n/p, j/k movements.
+    this.keys.bindAction('n', this.actions['DOWN_ONE']);
+    this.keys.bindAction('shift-n', this.actions['DOWN_ONE']);
+    this.keys.bindAction('p', this.actions['UP_ONE']);
+    this.keys.bindAction('shift-p', this.actions['UP_ONE']);
+    this.keys.bindAction('j', this.actions['DOWN_ONE']);
+    this.keys.bindAction('shift-j', this.actions['DOWN_ONE']);
+    this.keys.bindAction('k', this.actions['UP_ONE']);
+    this.keys.bindAction('shift-k', this.actions['UP_ONE']);
+
+    this.keys.bindAction('[End,35]', this.actions['MOVE_LAST']);
+    this.keys.bindAction('[Home,36]', this.actions['MOVE_FIRST']);
 
     this.on({
       // Delegate to class methods.
@@ -1067,7 +1109,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.refreshView();
     var xy = e.getXY();
 
-    this.context.doLayout(false,true);
+    this.context.doLayout(false, true);
     this.context.showAt.defer(10, this.context, [xy]);
     e.stopEvent();
   },
@@ -1131,12 +1173,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.getContextMenu().items.each(function(item, index, length) {
       item.enable();
     });
-      for (var key in this.actions) {
-	  var action = this.actions[key];
-	  if (action['setDisabled']) {
-	      action.setDisabled(false);
-	  }
+    for (var key in this.actions) {
+      var action = this.actions[key];
+      if (action['setDisabled']) {
+        action.setDisabled(false);
       }
+    }
 
     var selection = this.getSingleSelectionRecord();
 
@@ -1153,7 +1195,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (!selection) {
       this.actions['EDIT'].disable();
       this.actions['DELETE'].disable();
-	this.actions['COPY_FORMATTED'].disable();
+      this.actions['COPY_FORMATTED'].disable();
     }
 
     if (selection) {
@@ -1368,6 +1410,19 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // Override with other plugin methods to do things necessary on detail update.
   },
 
+  handleDownOne: function(keyCode, event) {
+    this.getSelectionModel().keyNavMove(1, event);
+  },
+  handleUpOne: function(keyCode, event) {
+    this.getSelectionModel().keyNavMove(-1, event);
+  },
+  handleMoveFirst: function(keyCode, event) {
+    this.getSelectionModel().selectFirstRow();
+  },
+  handleMoveLast: function(keyCode, event) {
+    this.getSelectionModel().selectLastRow();
+  },
+
   // If trash is set entries are moved to trash, otherwise they are
   // deleted completely
   // mode: TRASH ... move to trash
@@ -1556,6 +1611,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     win.show(this);
+
+    // Disable grid key commands while the editing window is open.
+    this.keys.disable();
+    // Re-enable when it's closed!
+    win.on('close', function() {
+      this.keys.enable();
+    },
+    this, {
+      single: true
+    });
   },
 
   updateMetadata: function() {
@@ -1981,21 +2046,23 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     this.on('render', this.myOnRender, this);
   },
   myOnRender: function() {
-      this.tip = new Ext.Tip({
-	  minWidth:10,
-	  offsets:[0,-10],
-	  pager: this,
-	  renderTo:document.body,
-	  style:{'z-index':100},
-	  updatePage: function(page,string) {
-	      this.dragging=true;
-	      this.body.update(string);
-	      this.doAutoWidth();
-	      var x = this.pager.getPositionForPage(page) - this.getBox().width/2;
-	      var y = this.pager.getBox().y - this.getBox().height;
-	      this.setPagePosition(x,y);
-	  }
-      });
+    this.tip = new Ext.Tip({
+      minWidth: 10,
+      offsets: [0, -10],
+      pager: this,
+      renderTo: document.body,
+      style: {
+        'z-index': 100
+      },
+      updatePage: function(page, string) {
+        this.dragging = true;
+        this.body.update(string);
+        this.doAutoWidth();
+        var x = this.pager.getPositionForPage(page) - this.getBox().width / 2;
+        var y = this.pager.getBox().y - this.getBox().height;
+        this.setPagePosition(x, y);
+      }
+    });
 
     this.progressBar = new Ext.ProgressBar({
       text: '',
@@ -2009,7 +2076,7 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     });
     this.progressBar.on('render', function(pb) {
       this.mon(pb.getEl(), 'mousedown', this.handleProgressBarClick, this);
-	this.mon(pb.getEl(),'mousemove', this.handleMouseMove,this);
+      this.mon(pb.getEl(), 'mousemove', this.handleMouseMove, this);
       this.mon(pb.getEl(), 'mouseover', this.handleMouseOver, this);
       this.mon(pb.getEl(), 'mouseout', this.handleMouseOut, this);
     },
@@ -2023,36 +2090,36 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     this.prev.on('click', this.grid.onPageButtonClick, this.grid);
 
   },
-    handleMouseOver: function(e) {
-	this.tip.show();
-    },
-    handleMouseOut: function(e) {
-	this.tip.hide();
-    },
-    handleMouseMove: function(e) {
-	var page = this.getPageForPosition(e.getXY());
-	if (page > 0) {
-	    //var string = page+" ("+page*this.pageSize+" - "+(page+1)*this.pageSize+")";
-	    var string = "Page "+page+" of "+Math.ceil(this.store.getTotalCount()/this.pageSize);
-	    this.tip.updatePage(page,string);
-	} else {
-	    this.tip.hide();
-	}
-    },
-  handleProgressBarClick: function(e) {
-      this.changePage(this.getPageForPosition(e.getXY()));
+  handleMouseOver: function(e) {
+    this.tip.show();
   },
-    getPositionForPage: function(page) {
-	var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);
-	var position = Math.floor( page * (this.progressBar.width / pages));
-	return this.progressBar.getBox().x + position;
-    },
-    getPageForPosition: function(xy) {
-	var position = xy[0] - this.progressBar.getBox().x
+  handleMouseOut: function(e) {
+    this.tip.hide();
+  },
+  handleMouseMove: function(e) {
+    var page = this.getPageForPosition(e.getXY());
+    if (page > 0) {
+      //var string = page+" ("+page*this.pageSize+" - "+(page+1)*this.pageSize+")";
+      var string = "Page " + page + " of " + Math.ceil(this.store.getTotalCount() / this.pageSize);
+      this.tip.updatePage(page, string);
+    } else {
+      this.tip.hide();
+    }
+  },
+  handleProgressBarClick: function(e) {
+    this.changePage(this.getPageForPosition(e.getXY()));
+  },
+  getPositionForPage: function(page) {
+    var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);
+    var position = Math.floor(page * (this.progressBar.width / pages));
+    return this.progressBar.getBox().x + position;
+  },
+  getPageForPosition: function(xy) {
+    var position = xy[0] - this.progressBar.getBox().x
     var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);
     var newpage = Math.ceil(position / (this.progressBar.width / pages));
-	return newpage;
-    },
+    return newpage;
+  },
   updateInfo: function() {
     Paperpile.Pager.superclass.updateInfo.call(this);
     var count = this.store.getCount();

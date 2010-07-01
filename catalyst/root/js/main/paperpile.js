@@ -388,7 +388,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       {
         text: 'Cancel',
         itemId: 'cancel_button',
-        cls: 'x-btn-text-icon cancel',
         handler: function() {
           this.pdfExtractChoice.close();
         },

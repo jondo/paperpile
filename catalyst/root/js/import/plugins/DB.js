@@ -58,6 +58,15 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       tooltip: 'Manually create a new reference for your library'
     });
 
+    this.actions['FOCUS_SEARCH'] = new Ext.Action({
+        text: 'Search',
+        handler: this.handleFocusSearch,
+        scope: this,
+        itemId: 'FOCUS_SEARCH',
+      }),
+      this.keys.bindAction('[/,191]',this.actions['FOCUS_SEARCH']);
+      this.keys.bindAction('ctrl-f',this.actions['FOCUS_SEARCH']);
+
     var store = this.getStore();
     store.baseParams['plugin_search_pdf'] = 0;
     store.baseParams['limit'] = this.limit;
@@ -104,6 +113,10 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     target.on('click', this.handleSortButtons, this);
   },
+
+    handleFocusSearch: function() {
+	this.filterField.getEl().focus();
+    },
 
   currentSortField: '',
   handleSortButtons: function(e, el, o) {
@@ -285,9 +298,15 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     });
     this.filterField = this.actions['FILTER_FIELD'];
 
-      this.filterField.on('focus', function() {
-	  Paperpile.log("HEY");
-      });
+    this.filterField.on('specialkey', function(f, e) {
+      if (e.getKey() == e.ENTER) {
+	  // Select the first grid row on Enter.
+          this.getSelectionModel().selectRow(0);
+	  this.getView().focusRow(0);
+      }
+    },
+    this);
+
 
     Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
   },

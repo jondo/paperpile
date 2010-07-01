@@ -251,8 +251,6 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
       },
       {
         text: 'Cancel',
-        itemId: 'cancel_button',
-        cls: 'x-btn-text-icon cancel',
         handler: function() {
           this.close();
         },

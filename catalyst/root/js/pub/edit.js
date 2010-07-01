@@ -139,6 +139,10 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       function() {
         global = this.data;
         this.initForm(this.data['pubtype']);
+
+	  // Swallow key events so the grid doesn't take em
+	  // (i.e. ctrl-A, ctrl-C etc)
+        this.getEl().swallowEvent(['keypress', 'keydown']);
       },
       this);
 

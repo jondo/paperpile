@@ -19,6 +19,19 @@ Ext.app.SearchField = Ext.extend(Ext.form.TwinTriggerField, {
   hasSearch: false,
   paramName: 'plugin_query',
 
+    afterRender: function() {
+	Ext.app.SearchField.superclass.afterRender.call(this);
+
+      // SwallowEvent code lifted from Editor.js -- causes
+      // this field to swallow key events which would otherwise
+      // be carried on to the grid (i.e. ctrl-A to select all)
+      this.getEl().swallowEvent([
+        'keypress', // *** Opera
+        'keydown' // *** all other browsers
+        ]);
+
+    },
+
   onTrigger1Click: function() {
     if (this.hasSearch) {
       this.el.dom.value = '';
