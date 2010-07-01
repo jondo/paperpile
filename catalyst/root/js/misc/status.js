@@ -17,7 +17,10 @@
 
 Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
-  anim: false,
+    animConfig: {
+	duration:0.25,
+	easing:'easeOut'
+    },
   scope: this,
   type: 'info',
   anchor: Ext.getBody(),
@@ -105,8 +108,16 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
   updateMsg: function(pars) {
 
+      var anim = false;
+      if (pars.fade) {
+	  anim = this.animConfig;
+      }
+      if (pars.anim) {
+	  anim = pars.anim;
+      }
+
     if (!this.el.isVisible()) {
-      this.el.show(this.anim);
+      this.el.show(anim);
     }
 
     if (pars.type) {
@@ -146,14 +157,14 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
     if (pars.duration) {
       (function() {
-        this.clearMsg()
+        this.clearMsg(anim)
       }).defer(pars.duration * 1000, this);
     }
 
     if (pars.hideOnClick) {
       Ext.getBody().on('click',
         function(e) {
-          this.clearMsg();
+          this.clearMsg(anim);
         },
         this, {
           single: true
@@ -168,8 +179,8 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
   },
 
-  clearMsg: function() {
-    this.el.hide(this.anim);
+  clearMsg: function(anim) {
+    this.el.hide(anim);
     // back to default
     this.setType('info');
   },

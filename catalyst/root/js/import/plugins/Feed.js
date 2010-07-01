@@ -112,6 +112,10 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
     Paperpile.PluginGridFeed.superclass.initComponent.call(this);
   },
 
+    isLongImport: function() {
+	return true;
+    },
+
   initToolbarMenuItemIds: function() {
     Paperpile.PluginGridFeed.superclass.initToolbarMenuItemIds.call(this);
     var ids = this.toolbarMenuItemIds;

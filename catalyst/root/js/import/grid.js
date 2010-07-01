@@ -1454,6 +1454,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   handleCopy: function(module, format, msg) {
+      var isMultiple = this.getSelectionCount() > 1;
+      var s = '';
+      var n = '';
+      if (isMultiple) {
+	  s = 's';
+	  n = this.getSelectionCount();
+      }
+
+      msg = msg.replace("{n}",n);
+      msg = msg.replace("{s}",s);
+
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/plugins/export'),
       params: {
@@ -1471,13 +1482,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           Titanium.UI.Clipboard.setText(json.data.string);
           Paperpile.status.updateMsg({
             msg: msg,
-            duration: 1.5
+              duration: 1.5,
+	      fade:true
           });
         } else {
           // Not in Titanium -- use Flash if available...
           Paperpile.status.updateMsg({
             msg: msg,
-            duration: 1.5
+              duration: 1.5,
+	      fade:true
           });
 
         }
@@ -1492,10 +1505,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.handleCopy('Bibfile', 'BIBTEX', 'BibTeX copied');
   },
   handleCopyBibtexKey: function() {
-    this.handleCopy('Bibfile', 'CITEKEYS', 'LaTeX citations copied');
+      this.handleCopy('Bibfile', 'CITEKEYS', 'LaTeX citation{s} copied');
   },
   handleCopyFormatted: function() {
-    this.handleCopy('Bibfile', 'CITATIONS', 'Citations copied');
+      this.handleCopy('Bibfile', 'CITATIONS', '{n} Citation{s} copied');
   },
   deleteEntry: function(mode) {
     var selection = this.getSelection();
