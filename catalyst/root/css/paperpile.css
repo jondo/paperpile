@@ -679,6 +679,9 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background: transparent url('/images/icons/transmit.png') no-repeat;
 }
 
+.pp-action-clipboard {
+    background: transparent url('/images/icons/paste_plain.png') no-repeat;
+}
 
 /*** Main toolbar ***/
 

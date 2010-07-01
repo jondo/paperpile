@@ -209,6 +209,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   updateInfoMultiple: function(data) {
 
     data.numSelected = this.getGrid().getSelectionCount();
+      data.isBibtexMode = Paperpile.main.getSetting('bibtex_mode');
     data.totalCount = this.getGrid().getTotalCount();
 
     data.numImported = this.getGrid().getSelection('IMPORTED').length;
@@ -373,6 +374,15 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     case 'import-ref':
       this.getGrid().insertEntry();
+      break;
+    case 'copy-text':
+	this.getGrid().handleCopyFormatted();
+      break;
+    case 'copy-bibtex':
+	this.getGrid().handleCopyBibtexCitation();
+      break;
+    case 'copy-keys':
+	this.getGrid().handleCopyBibtexKey();
       break;
     }
   },

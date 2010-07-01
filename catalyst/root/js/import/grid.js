@@ -997,6 +997,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '      <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
       '      <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
       '    </ul>',
+      '    <ul> ',
+      '    <div style="clear:both;margin-top:2em;"></div>',
+      '      <li class="pp-action pp-action-clipboard"> <a  href="#" class="pp-textlink" action="copy-text">Copy references as text</a> </li>',
+      '      <tpl if="isBibtexMode=1">',
+      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-bibtex">Copy references as BibTeX</a> </li>',
+      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-keys">Copy LaTeX citation</a> </li>',
+      '      </tpl>',
+      '    </ul>',
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '   <dl>',
       '     <dt style="width: 50px;">Labels: </dt>',
@@ -1454,16 +1462,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   handleCopy: function(module, format, msg) {
-      var isMultiple = this.getSelectionCount() > 1;
-      var s = '';
-      var n = '';
-      if (isMultiple) {
-	  s = 's';
-	  n = this.getSelectionCount();
-      }
+    var isMultiple = this.getSelectionCount() > 1;
+    var s = '';
+    var n = '';
+    if (isMultiple) {
+      s = 's';
+      n = this.getSelectionCount();
+    }
 
-      msg = msg.replace("{n}",n);
-      msg = msg.replace("{s}",s);
+    msg = msg.replace("{n}", n);
+    msg = msg.replace("{s}", s);
 
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/plugins/export'),
@@ -1482,15 +1490,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           Titanium.UI.Clipboard.setText(json.data.string);
           Paperpile.status.updateMsg({
             msg: msg,
-              duration: 1.5,
-	      fade:true
+            duration: 1.5,
+            fade: true
           });
         } else {
           // Not in Titanium -- use Flash if available...
           Paperpile.status.updateMsg({
             msg: msg,
-              duration: 1.5,
-	      fade:true
+            duration: 1.5,
+            fade: true
           });
 
         }
@@ -1505,10 +1513,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.handleCopy('Bibfile', 'BIBTEX', 'BibTeX copied');
   },
   handleCopyBibtexKey: function() {
-      this.handleCopy('Bibfile', 'CITEKEYS', 'LaTeX citation{s} copied');
+    this.handleCopy('Bibfile', 'CITEKEYS', 'LaTeX citation{s} copied');
   },
   handleCopyFormatted: function() {
-      this.handleCopy('Bibfile', 'CITATIONS', '{n} Citation{s} copied');
+    this.handleCopy('Bibfile', 'CITATIONS', '{n} Citation{s} copied');
   },
   deleteEntry: function(mode) {
     var selection = this.getSelection();
