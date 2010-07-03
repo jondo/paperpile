@@ -49,10 +49,10 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
       // SwallowEvent code lifted from Editor.js -- causes
       // this field to swallow key events which would otherwise
       // be carried on to the grid (i.e. ctrl-A to select all)
-      this.getEl().swallowEvent([
-        'keypress', // *** Opera
-        'keydown' // *** all other browsers
-        ]);
+//      this.getEl().swallowEvent([
+//        'keypress', // *** Opera
+//        'keydown' // *** all other browsers
+//        ]);
 	
     },
 

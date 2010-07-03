@@ -18,6 +18,7 @@ js:
   - "js/main/tree.js"
   - "js/main/dashboard.js"
   - "js/import/toolbar.js"
+  - "js/import/selectionmodel.js" 
   - "js/import/grid.js" 
   - "js/import/search-field.js" 
   - "js/import/filter-field.js"

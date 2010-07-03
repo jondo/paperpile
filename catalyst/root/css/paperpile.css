@@ -2177,7 +2177,6 @@ table.pp-meta-form {
       margin: 5px;
 }
 
-
 /* A less-distracting button, mostly for buttons within context menus. */
 .x-btn-plain:not(.x-btn-over) .x-btn-tl, .x-btn-plain:not(.x-btn-over) .x-btn-tr, .x-btn-plain:not(.x-btn-over) .x-btn-tc, .x-btn-plain:not(.x-btn-over) .x-btn-ml, .x-btn-plain:not(.x-btn-over) .x-btn-mr, .x-btn-plain:not(.x-btn-over) .x-btn-mc, .x-btn-plain:not(.x-btn-over) .x-btn-bl, .x-btn-plain:not(.x-btn-over) .x-btn-br, .x-btn-plain:not(.x-btn-over) .x-btn-bc{
 	background-image:none;
@@ -2192,4 +2191,32 @@ table.pp-meta-form {
 table.x-btn-subtle:not(.x-btn-over) {
     background-color: #E0ECF8;
     border: 1px solid rgba(50,50,100,0.1);
+}
+
+.x-button-plus .x-btn {
+  float:right;
+  width:24px;
+  position:relative;
+  top:-22px;
+  right:3px;
+}
+
+
+.x-button-plus .x-menu-item-active {
+    margin: 0px 0px;
+}
+
+.x-menu-item-extraspace {
+    width: 24px;
+    float:right;
+}
+
+.x-menu-item-shortcut {
+    font-size:9px;
+    color:gray;
+    text-align:right;
+    float:right;
+    margin:0px;
+    padding:0px;
+    width:20px;
 }

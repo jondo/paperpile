@@ -55,13 +55,13 @@ Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
     return Boolean(token.match(/(alt)/));
   },
   ctrlString: function() {
-    return 'ctrl';
+    return 'Ctrl';
   },
   shiftString: function() {
-    return 'shift';
+    return 'Shift';
   },
   altString: function() {
-    return 'alt';
+    return 'Alt';
   },
   shortcutAsString: function(obj) {
     var string = '';
@@ -217,12 +217,9 @@ Ext.override(Ext.Action, {
         cs[i][fnName].apply(cs[i], args);
       }
     }
-  },
+  }
 });
 
-Ext.override(Ext.menu.Menu, {
-
-});
 
 Ext.override(Ext.menu.Item, {
   onRender: function(container, position) {
@@ -232,10 +229,9 @@ Ext.override(Ext.menu.Item, {
         '<tpl if="hrefTarget">',
         ' target="{hrefTarget}"',
         '</tpl>',
-        '>',
         '<img src="{icon}" class="x-menu-item-icon {iconCls}"/>',
         '<span class="x-menu-item-text">{text}</span>',
-        '<div class="x-menu-item-shortcut" style="float:right;font-size:9px;color:gray;margin-left:2px;margin-right:2px;;width:25px;text-align:right;">{shortcutString}</div>',
+        '<div class="x-menu-item-shortcut">{shortcutString}</div>',
         '</a>');
     }
     var a = this.getTemplateArgs();
@@ -243,6 +239,7 @@ Ext.override(Ext.menu.Item, {
     this.iconEl = this.el.child('img.x-menu-item-icon');
     this.textEl = this.el.child('.x-menu-item-text');
     this.shortcutEl = this.el.child('.x-menu-item-shortcut');
+    this.extraEl = this.el.child('.x-menu-item-extrabutton');
     if (!this.href) {
       this.mon(this.el, 'click', Ext.emptyFn, null, {
         preventDefault: true
@@ -250,7 +247,6 @@ Ext.override(Ext.menu.Item, {
     }
     Ext.menu.Item.superclass.onRender.call(this, container, position);
   },
-
   getTemplateArgs: function() {
     return {
       id: this.id,
@@ -269,5 +265,5 @@ Ext.override(Ext.menu.Item, {
       this.shortcutEl.update(this.shortcutString);
       this.parentMenu.layout.doAutoSize();
     }
-  },
+  }
 });

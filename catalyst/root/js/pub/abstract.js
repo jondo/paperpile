@@ -50,13 +50,16 @@ Paperpile.PubSummary = Ext.extend(Ext.Panel, {
 
     var isEmpty = false;
     if (numSelected == 1) {
-      this.data = sm.getSelected().data;
+	var record = sm.getSelected();
+	if (record) {
+      this.data = record.data;
       this.data.id = this.id;
       if (this.data.abstract === '') {
         isEmpty = true;
       } else {
         this.abstractTemplate.overwrite(this.body, this.data);
       }
+}
     } else {
       isEmpty = true;
     }

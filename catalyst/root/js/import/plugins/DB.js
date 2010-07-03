@@ -301,8 +301,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     this.filterField.on('specialkey', function(f, e) {
       if (e.getKey() == e.ENTER) {
 	  // Select the first grid row on Enter.
-          this.getSelectionModel().selectRow(0);
-	  this.getView().focusRow(0);
+          this.getSelectionModel().selectRowAndSetCursor(0);
       }
     },
     this);

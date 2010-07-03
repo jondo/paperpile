@@ -354,6 +354,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       appendOnly: true,
       itemId: 'grid',
       store: this.getStore(),
+      selModel: new Ext.ux.BetterRowSelectionModel(),
       view: new Ext.grid.GridView({
         grid: this
       }),
@@ -388,9 +389,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     Paperpile.PluginGrid.superclass.initComponent.call(this);
 
-    this.keys = new Ext.ux.KeyboardShortcuts(this.el);
+    this.keys = new Ext.ux.KeyboardShortcuts(this.getView().focusEl);
 
     // Standard grid shortcuts.
+    this.keys.bindAction('ctrl-v', this.actions['VIEW_PDF']);
     this.keys.bindAction('ctrl-a', this.actions['SELECT_ALL']);
     this.keys.bindAction('[Del,46]', this.actions['DELETE']);
 
@@ -448,6 +450,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         fn: this.onStoreLoad
       }
     });
+
+    // Auto-select the first row when a new grid starts up.
+    this.doAfterNextReload = [function() {
+      this.getSelectionModel().selectRowAndSetCursor(0);
+
+    }];
+
   },
 
   onNodeOver: function(nodeData, source, e, data) {
@@ -573,6 +582,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   myBeforeRender: function(ct) {
     this.createToolbarMenu();
     this.createContextMenu();
+
   },
 
   afterSelectionChange: function(sm) {
@@ -580,19 +590,18 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     delete this._selected_records;
     this.contextRecord = null;
 
-    var selection = this.getSelection();
-    var selectedIds;
-    if (selection == 'ALL') {
-      selectedIds = selection;
-    } else {
-      selectedIds = selection.join("");
-    }
-
-    if (selectedIds == this.lastSelectedIds) {
-      return;
-    }
-    this.lastSelectedIds = selectedIds;
-
+    //    var selection = this.getSelection();
+    //    var selectedIds;
+    //    if (selection == 'ALL') {
+    //      selectedIds = selection;
+    //  } else {
+    //      selectedIds = selection.join("");
+    //    }
+    //
+    //    if (selectedIds == this.lastSelectedIds) {
+    //      return;
+    //    }
+    //    this.lastSelectedIds = selectedIds;
     this.updateButtons();
     this.getPluginPanel().updateDetails();
     if (sm.getCount() == 1) {
@@ -628,8 +637,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     });
 
-    // Note: the 'afterselectionchange' event is a custom event, defined in 
-    // main/overrides.js
+    this.getView().focusEl.on({
+      'focus': function(event, target, obj) {
+        this.keys.enable();
+      },
+      'blur': function(event, target, obj) {
+        this.keys.disable();
+      },
+      scope: this
+    });
+
+    // Note: the 'afterselectionchange' event is a custom selection model event.
     this.mon(this.getSelectionModel(), 'afterselectionchange', this.afterSelectionChange, this);
 
     this.dropZone = new Paperpile.GridDropZone(this, {
@@ -644,13 +662,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     this.createAuthorToolTip();
-
-    // Auto-select the first row when a new grid starts up.
-    this.doAfterNextReload = [function() {
-      this.getSelectionModel().selectFirstRow();
-      this.getView().focusRow(0);
-    }];
-
   },
 
   createAuthorToolTip: function() {
@@ -681,7 +692,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
 
     if (num == 1) {
-      var key = this.getSelectionModel().getSelected().get('citekey');
+      var key = this.getSingleSelectionRecord().get('citekey');
       if (key) {
         return "[" + key + "]";
       } else {
@@ -724,6 +735,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         this.doAfterNextReload = [];
       }
       for (var i = 0; i < this.doAfterNextReload.length; i++) {
+        //Paperpile.log("After reload #"+i);
         var fn = this.doAfterNextReload[i];
         fn.defer(0, this);
       }
@@ -735,7 +747,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   onPageButtonClick: function() {
     this.doAfterNextReload.push(function() {
-      this.getSelectionModel().selectFirstRow();
+      this.getSelectionModel().selectRowAndSetCursor(0);
     });
   },
 
@@ -1107,11 +1119,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   contextRecord: null,
   onContextClick: function(grid, index, e) {
-    var record = this.getStore().getAt(index);
-    this.contextRecord = record;
-
     if (!this.getSelectionModel().isSelected(index)) {
       this.getSelectionModel().selectRow(index);
+    } else {
+      Paperpile.log("Setting cursor!");
+      this.getSelectionModel().setCursor(index);
     }
 
     this.refreshView();
@@ -1119,7 +1131,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.context.doLayout(false, true);
     this.context.showAt.defer(10, this.context, [xy]);
-    e.stopEvent();
+    e.preventDefault();
   },
 
   updateContextItem: function(menuItem, record) {
@@ -1314,7 +1326,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   completeEntry: function() {
     var selection = this.getSelection();
 
-    var sel = this.getSelectionModel().getSelected();
+    var sel = this.getSingleSelectionRecord();
     if (!sel) return;
     var data = sel.data;
     // _details_link indicates if an entry still needs to be completed or not
@@ -1328,7 +1340,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       };
       this.getSelectionModel().on('beforerowselect', blockingFunction, this);
 
-      var guid = this.getSelectionModel().getSelected().data.guid;
+      var guid = data.guid;
 
       Paperpile.status.updateMsg({
         busy: true,
@@ -1522,7 +1534,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var selection = this.getSelection();
 
     // Find the lowest index of the current selection.
-    var firstRecord = this.getSelectionModel().getSelected();
+    var firstRecord = this.getSelectionModel().getLowestSelected();
     var firstIndex = this.getStore().indexOf(firstRecord);
 
     this.getSelectionModel().lock();
@@ -1559,7 +1571,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
         this.getSelectionModel().unlock();
         this.doAfterNextReload.push(function() {
-          this.getSelectionModel().selectRow(firstIndex);
+          //          this.getSelectionModel().selectRow(firstIndex);
+          this.getSelectionModel().selectRowAndSetCursor(firstIndex);
         });
         if (mode == 'TRASH') {
           var msg = num_deleted + ' references moved to Trash';
@@ -1599,7 +1612,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   handleEdit: function(isNew) {
 
-    var selection = this.getSelectionModel().getSelected();
+    var selection = this.getSingleSelectionRecord();
 
     if (selection) {
       var rowid = selection.get('_rowid');
@@ -1618,7 +1631,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       items: [new Paperpile.MetaPanel({
         data: isNew ? {
           pubtype: 'ARTICLE'
-        } : this.getSelectionModel().getSelected().data,
+        } : this.getSingleSelectionRecord().data,
         grid_id: isNew ? null : this.id,
         callback: function(status, data) {
           if (status == 'SAVE') {
@@ -1689,7 +1702,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   cancelDownload: function() {
-    var selected_id = this.getSelectionModel().getSelected().data._search_job.id;
+    var selected_id = this.getSingleSelectionRecord().data._search_job.id;
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/queue/cancel_jobs'),
       params: {
@@ -1705,7 +1718,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   retryDownload: function() {
-    var selected_id = this.getSelectionModel().getSelected().data._search_job.id;
+    var selected_id = this.getSingleSelectionRecord().data._search_job.id;
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/queue/retry_jobs'),
       params: {
@@ -1724,7 +1737,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   clearDownload: function() {
-    var selected_id = this.getSelectionModel().getSelected().data._search_job.id;
+    var selected_id = this.getSingleSelectionRecord().data._search_job.id;
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/queue/remove_jobs'),
       params: {
@@ -1810,6 +1823,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   selectAll: function() {
+
     this.allSelected = true;
     this.getSelectionModel().selectAll();
     this.getSelectionModel().on('selectionchange',
@@ -1834,11 +1848,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   getSingleSelectionRecord: function() {
-    if (this.contextRecord != null) {
-      return this.contextRecord;
-    } else {
-      return this.getSelectionModel().getSelected();
-    }
+    return this.getSelectionModel().getSelected();
   },
 
   getFirstAuthorFromSelection: function() {
@@ -1932,8 +1942,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   openPDFFolder: function() {
     var sm = this.getSelectionModel();
-    if (sm.getSelected().data.pdf) {
-      var pdf = sm.getSelected().data.pdf_name;
+    var record = this.getSingleSelectionRecord();
+    if (record.data.pdf) {
+      var pdf = record.data.pdf_name;
       var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
       var parts = Paperpile.utils.splitPath(path);
       // Need to defer this call, otherwise the context menu jumps to the upper-left side of screen... no idea why but this works!
@@ -1943,8 +1954,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   openPDF: function() {
     var sm = this.getSelectionModel();
-    if (sm.getSelected().data.pdf) {
-      var pdf = sm.getSelected().data.pdf_name;
+    var record = this.getSingleSelectionRecord();
+    if (record.data.pdf) {
+      var pdf = record.data.pdf_name;
       var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
       Paperpile.main.tabs.newPdfTab({
         file: path,
@@ -1961,10 +1973,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   onDblClick: function(grid, rowIndex, e) {
     var sm = this.getSelectionModel();
-    if (sm.getCount() == 1) {
-      if (sm.getSelected().data._imported) {
-        this.openPDF();
-      }
+    var record = sm.getSelected();
+    if (record.data._imported) {
+      this.openPDF();
     }
   },
 
@@ -2128,6 +2139,9 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     }
   },
   handleProgressBarClick: function(e) {
+    this.grid.doAfterNextReload.push(function() {
+      this.getSelectionModel().selectRowAndSetCursor(0);
+    });
     this.changePage(this.getPageForPosition(e.getXY()));
   },
   getPositionForPage: function(page) {
@@ -2136,7 +2150,7 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     return this.progressBar.getBox().x + position;
   },
   getPageForPosition: function(xy) {
-    var position = xy[0] - this.progressBar.getBox().x
+    var position = xy[0] - this.progressBar.getBox().x;
     var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);
     var newpage = Math.ceil(position / (this.progressBar.width / pages));
     return newpage;

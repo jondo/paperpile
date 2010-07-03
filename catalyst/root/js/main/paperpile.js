@@ -137,7 +137,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   loadKeys: function() {
     this.keys = new Ext.ux.KeyboardShortcuts(this.getEl());
 
-    this.keys.bindCallback('ctrl-tab',this.keyControlTab,this);
+    this.keys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.keys.bindCallback('ctrl-w', this.keyControlW);
     this.keys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
   },

@@ -29,11 +29,11 @@ Ext.extend(Paperpile.NewFeedWindow, Ext.Window, {
 
     this.remoteFeedStore = new Ext.data.JsonStore({
       autoDestroy: true,
-      storeId:'rssFeedStore',
+      storeId: 'rssFeedStore',
       url: Paperpile.Url('/ajax/misc/feed_list'),
-      method:'GET',
+      method: 'GET',
       root: 'feeds',
-      idProperty:'name',
+      idProperty: 'name',
       fields: [
         'name',
         'url']
@@ -51,12 +51,12 @@ Ext.extend(Paperpile.NewFeedWindow, Ext.Window, {
       displayField: 'name',
       valueField: 'url',
       forceSelection: true,
-//      typeAhead: true,
+      //      typeAhead: true,
       tpl: ['<tpl for="."><div class="x-combo-list-item">',
         '<div style="font-weight:bold;" ext:qtip="Feed URL: {url}">{name}</div>',
-//        '<div style="color:gray;font-style:italic;">{url}</div>',
+        //        '<div style="color:gray;font-style:italic;">{url}</div>',
         '</div></tpl>'].join(''),
-      pageSize:10
+      pageSize: 10
     });
 
     this.panel = new Ext.form.FormPanel({
@@ -106,10 +106,13 @@ Ext.extend(Paperpile.NewFeedWindow, Ext.Window, {
 
   myOnRender: function() {
     this.panel.items.each(function(item, index, length) {
-      Paperpile.log(item);
       item.on('focus', this.onFocus, this, [item]);
     },
     this);
+
+    // Swallow key events so the grid doesn't take em
+    // (i.e. ctrl-A, ctrl-C etc)
+//    this.getEl().swallowEvent(['keypress', 'keydown']);
 
   },
   onFocus: function(field) {
