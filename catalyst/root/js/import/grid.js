@@ -392,7 +392,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.keys = new Ext.ux.KeyboardShortcuts(this.getView().focusEl);
 
     // Standard grid shortcuts.
-    this.keys.bindAction('ctrl-v', this.actions['VIEW_PDF']);
     this.keys.bindAction('ctrl-a', this.actions['SELECT_ALL']);
     this.keys.bindAction('[Del,46]', this.actions['DELETE']);
 
