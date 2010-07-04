@@ -122,6 +122,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.loadKeys();
 
+    this.fileSyncStatus = {
+      busy: false,
+      collections: [],
+      task: new Ext.util.DelayedTask(this.fireFileSync, this)
+    };
+
     Ext.apply(Ext.QuickTips.getQuickTip(), {
       showDelay: 0,
       dismissDelay: 0,
@@ -556,6 +562,66 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible() && !Paperpile.main.dd.effectBlock) {
       Paperpile.main.dd.hideDragPane();
     }
+
+    if (data.file_sync_delta) {
+      if (data.file_sync_delta.length > 0) {
+        this.triggerFileSync(data.file_sync_delta);
+      } else {
+        console.log("Nothing to update");
+      }
+    }
+  },
+
+  // Trigger an update of file synchronization for a list of guids of
+  // collections. The guids are queued in the global object
+  // this.fileSyncStatus.collections. The actual update is fired after
+  // 5 seconds without new collections added to the queue.
+  triggerFileSync: function(collections) {
+    
+    // Call the function without collections to trigger a new file
+    // sync for collections in the queue.
+    if (!collections){
+      collections = [];
+    }
+
+    console.log("Trigger Filesync", collections);
+
+    this.fileSyncStatus.collections = this.fileSyncStatus.collections.concat(collections);
+
+    if (!this.fileSyncStatus.busy) {
+      this.fileSyncStatus.task.delay(5000);
+    }
+  },
+
+  // Start file sync for queued collections in the backend. Empties
+  // the queue. If in the meantime new collections are added a new
+  // update is triggered vie triggerFileSync
+  fireFileSync: function() {
+
+    console.log("Sending update request to backend", this.fileSyncStatus.collections);
+
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/crud/sync_files'),
+      params: {
+        collections: this.fileSyncStatus.collections.join(',')
+      },
+      method: 'GET',
+      success: function(response) {
+        var data = Ext.util.JSON.decode(response.responseText).data;
+
+        this.fileSyncStatus.busy = false;
+
+        if (this.fileSyncStatus.collections.length > 0) {
+          this.triggerFileSync();
+        }
+
+      },
+      failure: Paperpile.main.onError,
+      scope: this
+    });
+
+    this.fileSyncStatus.busy = true;
+    this.fileSyncStatus.collections = [];
 
   },
 

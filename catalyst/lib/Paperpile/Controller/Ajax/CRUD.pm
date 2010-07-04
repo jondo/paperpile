@@ -205,6 +205,8 @@ sub delete_entry : Local {
 
   $self->_update_counts($c);
 
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections($c, $data)
+
 }
 
 sub undo_trash : Local {
@@ -220,6 +222,8 @@ sub undo_trash : Local {
   $self->_update_counts($c);
 
   $c->stash->{data}->{pub_delta} = 1;
+
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections($c, $data)
 
 }
 
@@ -254,6 +258,8 @@ sub update_entry : Local {
   my $hash = $new_pub->as_hash;
 
   $c->stash->{data} = { pubs => { $guid => $hash } };
+
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections($c, [$new_pub])
 
 }
 
@@ -434,6 +440,12 @@ sub move_in_collection : Local {
     $self->_collect_update_data( $c, $data, [$what] );
   }
   $c->stash->{data}->{collection_delta} = 1;
+
+  my $sync_files = $c->model('User')->get_setting('file_sync');
+  if ($sync_files->{$guid}->{active}){
+    $c->stash->{data}->{file_sync_delta} = [$guid];
+  }
+
 }
 
 sub remove_from_collection : Local {
@@ -450,6 +462,12 @@ sub remove_from_collection : Local {
 
   $self->_collect_update_data( $c, $data, [$what] );
   $c->stash->{data}->{collection_delta} = 1;
+
+  my $sync_files = $c->model('User')->get_setting('file_sync');
+  if ($sync_files->{$collection_guid}->{active}){
+    $c->stash->{data}->{file_sync_delta} = [$collection_guid];
+  }
+
 }
 
 sub delete_collection : Local {
@@ -728,6 +746,52 @@ sub undo_delete : Local {
   $self->_collect_update_data( $c, [$pub], [ 'pdf', 'attachments', '_attachments_list' ] );
 
 }
+
+sub sync_files : Local {
+
+  my ( $self, $c) = @_;
+
+  # Get non-redundant list of collections
+  my %tmp;
+  foreach my $collection (split(/,/,$c->request->params->{collections})){
+    $tmp{$collection} = 1;
+  }
+  my @collections = keys %tmp;
+
+  print STDERR "updating  ", join(',',@collections), "\n";
+
+}
+
+
+# Returns list of all collection guids that need to be re-synced when
+# references in $data change
+
+sub _get_sync_collections {
+  my ( $self, $c, $data ) = @_;
+
+  my $sync_files = $c->model('User')->get_setting('file_sync');
+
+  my %collections;
+  foreach my $pub (@$data){
+
+    my @tmp;
+    if ($pub->folders){
+      push @tmp, split(/,/,$pub->folders);
+    }
+    if ($pub->tags){
+      push @tmp, split(/,/,$pub->tags);
+    }
+
+    foreach my $collection (@tmp){
+      $collections{$collection} = 1 if $sync_files->{$collection}->{active};
+    }
+  }
+
+  return [keys %collections];
+
+}
+
+
 
 # Returns the plugin object in the backend corresponding to an AJAX
 # request from the frontend
