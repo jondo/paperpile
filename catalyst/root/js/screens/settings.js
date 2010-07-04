@@ -277,11 +277,16 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         // plugins will use the new setting when they are newly opened.
         var new_pager_limit = this.combos['pager_limit'].getValue();
         if (new_pager_limit != Paperpile.main.globalSettings['pager_limit']) {
-          var grid = Paperpile.main.tabs.items.get('MAIN').items.get('center_panel').items.get('grid');
-          grid.store.baseParams['limit'] = new_pager_limit;
-          grid.store.reload();
-        }
 
+	var tabs = Paperpile.main.tabs.items.items;
+          for (var i = 0; i < tabs.length; i++) {
+          var tab = tabs[i];
+  
+          if (tab instanceof Paperpile.PluginPanel) {
+	      tab.getGrid().setPageSize(new_pager_limit);
+          }
+        }
+}
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
 
         Paperpile.main.loadSettings(

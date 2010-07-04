@@ -28,7 +28,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   plugin_query: '',
   region: 'center',
   limit: 25,
-  allSelected: false,
   allImported: false,
   itemId: 'grid',
   aboutPanel: null,
@@ -442,13 +441,51 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     });
 
+    this.getSelectionModel().on('pageselected', function() {
+      var num = this.getSelectionModel().getCount();
+      var all = this.getStore().getTotalCount();
+      Paperpile.status.updateMsg({
+        type: 'info',
+        msg: 'All ' + num + ' references on this page are selected.',
+        action1: 'Select all ' + all + ' references.',
+        callback: function() {
+          this.getSelectionModel().selectAll();
+        },
+        scope: this
+      });
+    },
+    this);
+
+    this.getSelectionModel().on('allselected', function() {
+      var num = this.getSelectionModel().getCount();
+				    Paperpile.status.clearMsg();
+      Paperpile.status.updateMsg({
+        type: 'info',
+        msg: 'All ' + num + ' references are selected.',
+        action1: 'Clear selection',
+        callback: function() {
+          this.getSelectionModel().clearSelectionsAndUpdate();
+	    Paperpile.status.clearMsg();
+        },
+        scope: this
+      });
+    },
+    this);
+
     // Auto-select the first row when a new grid starts up.
     this.doAfterNextReload = [function() {
       this.getSelectionModel().selectRowAndSetCursor(0);
-
+      //      this.getSelectionModel().selectRowAndSetCursor.defer(10,this.getSelectionModel(),[0]);
     }];
 
   },
+
+  setPageSize: function(pageSize) {
+  this.limit = pageSize;
+      this.getStore().baseParams.limit = pageSize;
+    this.pager.pageSize = pageSize;
+      this.pager.doRefresh();
+},
 
   onNodeOver: function(nodeData, source, e, data) {
     if (data.grid) {
@@ -668,9 +705,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   getDragDropText: function() {
     var num = this.getSelectionModel().getCount();
-    if (this.allSelected) {
-      num = this.getStore().getTotalCount();
-    }
 
     if (num == 1) {
       var key = this.getSingleSelectionRecord().get('citekey');
@@ -729,7 +763,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   onPageButtonClick: function() {
     this.doAfterNextReload.push(function() {
-      this.getSelectionModel().selectRowAndSetCursor(0);
+      if (!this.getSelectionModel().maintainSelectionBetweenReloads || this.getSelectionModel().getCount() <= 1) {
+        this.getSelectionModel().selectRowAndSetCursor(0);
+      }
     });
   },
 
@@ -1185,7 +1221,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var selection = this.getSingleSelectionRecord();
 
     this.actions['SELECT_ALL'].setText('Select All (' + this.getStore().getTotalCount() + ')');
-    if (this.allSelected || this.getTotalCount() == 0) {
+    if (this.getSelectionModel().isAllSelected() || this.getTotalCount() == 0) {
       this.actions['SELECT_ALL'].disable();
     }
 
@@ -1281,7 +1317,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   // Returns list of guids for the selected entries, either ALL, IMPORTED, NOT_IMPORTED
   getSelection: function(what) {
-    if (this.allSelected) {
+    if (this.getSelectionModel().isAllSelected()) {
       return 'ALL';
     } else {
       return this.getSelectionAsList(what);
@@ -1291,9 +1327,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getSelectionCount: function() {
     var sm = this.getSelectionModel();
     var numSelected = sm.getCount();
-    if (this.allSelected) {
-      numSelected = this.getStore().getTotalCount();
-    }
     return numSelected;
   },
 
@@ -1603,7 +1636,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     win = new Ext.Window({
       title: isNew ? 'Add new reference' : 'Edit reference',
       modal: true,
-      floating:true,
+      floating: true,
       layout: 'fit',
       width: 800,
       height: 600,
@@ -1794,24 +1827,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   selectAll: function() {
-
-    this.allSelected = true;
     this.getSelectionModel().selectAll();
-    this.getSelectionModel().on('selectionchange',
-      function(sm) {
-        this.allSelected = false;
-      },
-      this, {
-        single: true
-      });
-    this.getSelectionModel().on('rowdeselect',
-      function(sm) {
-        sm.clearSelections();
-      },
-      this, {
-        single: true
-      });
-
   },
 
   setSearchQuery: function() {
@@ -2047,6 +2063,7 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     this.remove(1, true);
 
     this.on('render', this.myOnRender, this);
+
   },
   myOnRender: function() {
     this.tip = new Ext.Tip({
@@ -2110,10 +2127,8 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     }
   },
   handleProgressBarClick: function(e) {
-    this.grid.doAfterNextReload.push(function() {
-      this.getSelectionModel().selectRowAndSetCursor(0);
-    });
     this.changePage(this.getPageForPosition(e.getXY()));
+    this.grid.onPageButtonClick();
   },
   getPositionForPage: function(page) {
     var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);

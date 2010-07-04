@@ -1,6 +1,7 @@
 Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
   singleSelect: false,
   selectPageBeforeAll: true,
+  maintainSelectionBetweenReloads: true,
 
   // The cursor and the anchor represent the controller of this 
   // row selection. Only change these values in response to a
@@ -69,7 +70,9 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
 	         * Fires after the selection changes in response to a user input.
 	         * @param {SelectionModel} this
 	         */
-      'afterselectionchange');
+      'afterselectionchange',
+    'allselected',
+    'pageselected');
     Ext.grid.RowSelectionModel.superclass.constructor.call(this);
   },
 
@@ -101,26 +104,6 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
       rowupdated: this.onRowUpdated,
       rowremoved: this.onRemove
     });
-  },
-
-  // private
-  onRefresh: function() {
-    var ds = this.grid.store,
-    index;
-    var s = this.getSelections();
-    this.clearSelections(true);
-    var selectionChanged = false;
-    for (var i = 0, len = s.length; i < len; i++) {
-      var r = s[i];
-      if ((index = ds.indexOfId(r.id)) != -1) {
-        this.selectRow(index, true);
-      } else {
-        selectionChanged = true;
-      }
-    }
-    if (selectionChanged) {
-      this.fireEvent('selectionchange', this);
-    }
   },
 
   // private
@@ -471,12 +454,6 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     if (this.isLocked()) {
       return;
     }
-    if (this.last == index) {
-      this.last = false;
-    }
-    if (this.lastActive == index) {
-      this.lastActive = false;
-    }
     var r = this.grid.store.getAt(index);
     if (r) {
       this.selections.remove(r);
@@ -486,6 +463,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
       this.fireEvent('rowdeselect', this, index, r);
       this.fireEvent('selectionchange', this);
     }
+      this.fakeAllSelected = false;
   },
 
   // private
@@ -683,34 +661,21 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     }
   },
 
-  selectRow: function(index, keepExisting, preventViewNotify) {
-    if (this.isLocked() || (index < 0 || index >= this.grid.store.getCount()) || (keepExisting && this.isSelected(index))) {
-      return;
-    }
-    var r = this.grid.store.getAt(index);
-    if (r && this.fireEvent('beforerowselect', this, index, keepExisting, r) !== false) {
-      if (!keepExisting || this.singleSelect) {
-        this.clearSelections();
-      }
-      this.selections.add(r);
-      if (!preventViewNotify) {
-        this.grid.getView().onRowSelect(index);
-      }
-      this.fireEvent('rowselect', this, index, r);
-      this.fireEvent('selectionchange', this);
-    }
-  },
-
   onRefresh: function() {
     this.suspendEvents();
-    var ds = this.grid.store,
-    index;
+    var ds = this.grid.store;
+    var index;
     var s = this.getSelections();
-    this.clearSelections(true);
+    if (!this.maintainSelectionBetweenReloads) {
+      this.clearSelections(true);
+    }
+    var numSelected = 0;
     for (var i = 0, len = s.length; i < len; i++) {
       var r = s[i];
       if ((index = ds.indexOfId(r.id)) != -1) {
         this.selectRow(index, true);
+	  numSelected++;
+	this.grid.getView().onRowSelect(index);
       }
     }
     this.resumeEvents();
@@ -720,6 +685,12 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     }
   },
 
+  isAllSelected: function() {
+      if (this.fakeAllSelected) {
+	  return true;
+      }
+  },
+
   selectAll: function() {
     if (this.isLocked()) {
       return;
@@ -727,23 +698,29 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
 
     // If we're using the 'pageSelection' param, first select
     // this page's worth of counts. Then, if called when we're
-    // already selecting the full page, 
+    // already selecting the full pag
     if (this.selectPageBeforeAll) {
-      if (this.getCount() == this.grid.store.getCount()) {
+      if (this.fakeAllSelected || this.getCount() == this.grid.store.getCount()) {
         // The whole page is already selected,so now
         // od the fake select all flag.
         this.fakeAllSelected = true;
         this.fireEvent('afterselectionchange', this);
+        this.fireEvent('allselected', this);
       } else {
         // Do the standard thing to select all on page.
         this.clearSelections(true);
         this.selectRange(0, this.grid.store.getCount() - 1);
+        this.fakeAllSelected = false;
         this.fireEvent('afterselectionchange', this);
+        this.fireEvent('pageselected', this);
       }
     } else {
+      // If 'selectPageBeforeAll' isn't set to true, immediately select all.
       this.clearSelections(true);
       this.selectRange(0, this.grid.store.getCount() - 1);
+      this.fakeAllSelected = true;
       this.fireEvent('afterselectionchange', this);
+        this.fireEvent('allselected', this);
     }
   },
 
@@ -762,6 +739,11 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     for (var i = 0, len = rows.length; i < len; i++) {
       this.selectRow(rows[i], true);
     }
+  },
+
+  clearSelectionsAndUpdate: function(fast) {
+      this.clearSelections(fast);
+      this.fireEvent('afterselectionchange', this);
   },
 
   clearSelections: function(fast) {

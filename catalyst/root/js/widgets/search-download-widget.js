@@ -124,6 +124,12 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
 
   handleClick: function(e) {
 
-  }
+  },
+
+						destroy: function() {
+						    if (this.progressBar) {
+						    this.progressBar.destroy();
+						    }
+						}
 
 });
