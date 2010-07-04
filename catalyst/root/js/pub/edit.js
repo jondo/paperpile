@@ -92,7 +92,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         children: tableContent
       },
       ],
-
       bbar: [{
         xtype: 'tbfill'
       },
@@ -126,7 +125,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       bodyStyle: {
         background: '#ffffff',
         padding: '20px'
-      }
+      },
     };
 
     // It is essential here to use initialConfig to make sure that
@@ -142,7 +141,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
 	  // Swallow key events so the grid doesn't take em
 	  // (i.e. ctrl-A, ctrl-C etc)
-        this.getEl().swallowEvent(['keypress', 'keydown']);
+//        this.getEl().swallowEvent(['keypress', 'keydown']);
       },
       this);
 
@@ -199,6 +198,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     this.inputs['pubtype'] = cb;
 
     cb.on('focus', this.onFocus, this);
+    cb.on('blur', this.onBlur, this);
 
     if (Ext.get('pdf-view-button')) {
       Ext.get('pdf-view-button').on('click', function() {
@@ -369,6 +369,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       this.inputs[field] = input;
 
       input.on('focus', this.onFocus, this);
+      input.on('blur', this.onBlur, this);
 
       input.render(field + '-field', 0);
 
@@ -602,10 +603,15 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
   },
 
   onFocus: function(field) {
-    Ext.select('table#form-table td').removeClass("active");
     var f = field.el.findParent('td.field', 3, true);
     f.addClass("active");
     f.prev().addClass("active");
+  },
+
+  onBlur: function(field) {
+    var f = field.el.findParent('td.field', 3, true);
+    f.removeClass("active");
+    f.prev().removeClass("active");
   },
 
   // Generic handler for click events. Depending on the id of the

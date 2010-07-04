@@ -994,7 +994,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <ul> ',
       '    <div style="clear:both;margin-top:2em;"></div>',
       '      <li class="pp-action pp-action-clipboard"> <a  href="#" class="pp-textlink" action="copy-text">Copy references as text</a> </li>',
-      '      <tpl if="isBibtexMode=1">',
+      '      <tpl if="isBibtexMode==1">',
       '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-bibtex">Copy references as BibTeX</a> </li>',
       '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-keys">Copy LaTeX citation</a> </li>',
       '      </tpl>',
@@ -1603,7 +1603,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     win = new Ext.Window({
       title: isNew ? 'Add new reference' : 'Edit reference',
       modal: true,
-      shadow: false,
+      floating:true,
       layout: 'fit',
       width: 800,
       height: 600,
@@ -1622,20 +1622,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           win.close();
         },
         scope: this
-      })],
+      })]
     });
 
     win.show(this);
-
-    // Disable grid key commands while the editing window is open.
-    this.keys.disable();
-    // Re-enable when it's closed!
-    win.on('close', function() {
-      this.keys.enable();
-    },
-    this, {
-      single: true
-    });
   },
 
   updateMetadata: function() {
