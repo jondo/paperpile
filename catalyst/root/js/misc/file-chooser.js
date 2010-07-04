@@ -354,10 +354,41 @@ Paperpile.fileDialog = function(callback, inputOptions) {
 
   Ext.apply(options, inputOptions);
 
-    // After the original callback, store the last used file path.
     if (callback === undefined) {
 	callback = function(filenames) {};
     }
+
+    // Before the original callback, create an interceptor in case the user chose
+    // to save over an existing file.
+    if (options.dialogType == 'save') {
+	var originalCallback = callback;
+    callback = function(filenames) {
+	if (filenames.length > 0) {
+	    var filename = filenames[0];
+	    var parts = Paperpile.utils.splitPath(filename);
+	    var file = Titanium.Filesystem.getFile(filename);
+	    if (file.exists()) {
+          Ext.Msg.show({
+            title: 'Overwrite File?',
+            msg: 'The chosen file <b>'+parts.file+'</b> exists. Overwrite?',
+            animEl: 'elId',
+            icon: Ext.MessageBox.INFO,
+            buttons: Ext.Msg.OKCANCEL,
+            fn: function(btn) {
+              if (btn === 'ok') {
+		  originalCallback.call(options.scope,filenames);
+              } else {
+		  return false;
+	      }
+              Ext.MessageBox.buttonText.ok = "Ok";
+            },
+            scope: this
+          });
+	    }
+	}
+    };
+}
+    // After the original callback, store the last used file path.
     callback = callback.createSequence(function(filenames) {
 	if (filenames.length > 0) {
 	    var file = filenames[0];
