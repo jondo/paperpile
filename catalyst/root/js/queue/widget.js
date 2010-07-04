@@ -84,7 +84,10 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
       queue = {
         clearing: data.clearing,
         submitting: data.submitting,
-        status: ''
+        status: '',
+	  num_pending: 0,
+	  num_error: 0,
+	  num_done: 0
       };
     }
 
