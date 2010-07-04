@@ -64,8 +64,8 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       var tag_hash = {};
       for (var i = 0; i < sel.length; i++) {
         var guid = sel[i];
-	  var record = records[i];
-//        var record = this.getGrid().getByGUID(guid);
+        var record = records[i];
+        //        var record = this.getGrid().getByGUID(guid);
         if (record) {
           var record_tags = record.data.tags.split(/\s*,\s*/);
           for (var j = 0; j < record_tags.length; j++) {
@@ -157,17 +157,16 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     extEl.replaceWith(['<div id="pp-tag-control-' + this.grid.id + '"></div>']);
 
     var store = new Ext.data.SimpleStore({
-      fields: ['guid','name'],
+      fields: ['guid', 'name'],
       data: list
     });
-
 
     this.comboBox = new Ext.form.ComboBox({
       id: 'tag-control-combo-' + this.getGrid().id,
       ctCls: 'pp-tag-control',
       store: store,
       displayField: 'name',
-      valueField:'guid',
+      valueField: 'guid',
       typeAhead: true,
       mode: 'local',
       triggerAction: 'all',
@@ -183,10 +182,10 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       listeners: {
         'specialkey': function(field, e) {
           if (e.getKey() == e.ENTER) {
-            var name=field.getRawValue();
+            var name = field.getRawValue();
 
             // The user entered a new label
-            if (Ext.StoreMgr.lookup('tag_store').findExact('name', name) === -1){
+            if (Ext.StoreMgr.lookup('tag_store').findExact('name', name) === -1) {
               var guid = Paperpile.utils.generateUUID();
               Ext.Ajax.request({
                 url: Paperpile.Url('/ajax/crud/new_collection'),
@@ -197,10 +196,10 @@ Paperpile.LabelWidget = Ext.extend(Object, {
                   parent_id: 'ROOT'
                 },
                 success: function(response) {
-                  this.commitTag(guid,true);
+                  this.commitTag(guid, true);
                 },
                 failure: Paperpile.main.onError,
-                scope:this
+                scope: this
               });
             }
           } else if (e.getKey() == e.ESC) {

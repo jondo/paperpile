@@ -172,7 +172,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
               url: Paperpile.Url('/ajax/misc/cancel_request'),
               params: {
                 cancel_handle: 'proxy_check',
-                kill:1,
+                kill: 1,
               },
             });
           }
@@ -262,8 +262,8 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       search_seq: this.pluginOrderPanel.getValue()
     };
 
-    for (var field in params){
-      params[field]=Ext.encode(params[field]);
+    for (var field in params) {
+      params[field] = Ext.encode(params[field]);
     }
 
     Paperpile.status.showBusy('Applying changes.');
@@ -278,15 +278,15 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         var new_pager_limit = this.combos['pager_limit'].getValue();
         if (new_pager_limit != Paperpile.main.globalSettings['pager_limit']) {
 
-	var tabs = Paperpile.main.tabs.items.items;
+          var tabs = Paperpile.main.tabs.items.items;
           for (var i = 0; i < tabs.length; i++) {
-          var tab = tabs[i];
-  
-          if (tab instanceof Paperpile.PluginPanel) {
-	      tab.getGrid().setPageSize(new_pager_limit);
+            var tab = tabs[i];
+
+            if (tab instanceof Paperpile.PluginPanel) {
+              tab.getGrid().setPageSize(new_pager_limit);
+            }
           }
         }
-}
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
 
         Paperpile.main.loadSettings(

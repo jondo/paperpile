@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.SearchDownloadWidget = Ext.extend(Object, {
 
   constructor: function(config) {
@@ -111,10 +110,10 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
 
       if (data._imported) {
         el = el.concat([
-        '<li id="attach-pdf-{id}" class="pp-action pp-action-attach-pdf">',
-        '    <a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a>',
-        '  </li>',
-         '</ul>']);
+          '<li id="attach-pdf-{id}" class="pp-action pp-action-attach-pdf">',
+          '    <a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a>',
+          '  </li>',
+          '</ul>']);
       }
 
       Ext.DomHelper.overwrite(rootEl, el);
@@ -126,10 +125,10 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
 
   },
 
-						destroy: function() {
-						    if (this.progressBar) {
-						    this.progressBar.destroy();
-						    }
-						}
+  destroy: function() {
+    if (this.progressBar) {
+      this.progressBar.destroy();
+    }
+  }
 
 });

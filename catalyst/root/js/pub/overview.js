@@ -209,7 +209,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   updateInfoMultiple: function(data) {
 
     data.numSelected = this.getGrid().getSelectionCount();
-      data.isBibtexMode = Paperpile.main.getSetting('bibtex_mode');
+    data.isBibtexMode = Paperpile.main.getSetting('bibtex_mode');
     data.totalCount = this.getGrid().getTotalCount();
 
     data.numImported = this.getGrid().getSelection('IMPORTED').length;
@@ -376,13 +376,13 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       this.getGrid().insertEntry();
       break;
     case 'copy-text':
-	this.getGrid().handleCopyFormatted();
+      this.getGrid().handleCopyFormatted();
       break;
     case 'copy-bibtex':
-	this.getGrid().handleCopyBibtexCitation();
+      this.getGrid().handleCopyBibtexCitation();
       break;
     case 'copy-keys':
-	this.getGrid().handleCopyBibtexKey();
+      this.getGrid().handleCopyBibtexKey();
       break;
     }
   },
@@ -547,7 +547,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   // supplementary file (given by isPDF).
   //
   chooseFile: function(isPDF) {
-      Paperpile.log("Choose!");
+    Paperpile.log("Choose!");
     var callback = function(filenames) {
       if (filenames.length > 0) {
         for (var i = 0; i < filenames.length; i++) {
@@ -587,7 +587,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   // supplementary file (given by isPDF).
   //
   attachFile: function(isPDF, path) {
-      Paperpile.log("Attach!");
+    Paperpile.log("Attach!");
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/attach_file'),
       params: {
@@ -599,7 +599,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-	  Paperpile.log("Returned!");
+        Paperpile.log("Returned!");
         Paperpile.main.onUpdate(json.data);
       },
       failure: Paperpile.main.onError,

@@ -458,14 +458,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.getSelectionModel().on('allselected', function() {
       var num = this.getSelectionModel().getCount();
-				    Paperpile.status.clearMsg();
+      Paperpile.status.clearMsg();
       Paperpile.status.updateMsg({
         type: 'info',
         msg: 'All ' + num + ' references are selected.',
         action1: 'Clear selection',
         callback: function() {
           this.getSelectionModel().clearSelectionsAndUpdate();
-	    Paperpile.status.clearMsg();
+          Paperpile.status.clearMsg();
         },
         scope: this
       });
@@ -481,11 +481,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   setPageSize: function(pageSize) {
-  this.limit = pageSize;
-      this.getStore().baseParams.limit = pageSize;
+    this.limit = pageSize;
+    this.getStore().baseParams.limit = pageSize;
     this.pager.pageSize = pageSize;
-      this.pager.doRefresh();
-},
+    this.pager.doRefresh();
+  },
 
   onNodeOver: function(nodeData, source, e, data) {
     if (data.grid) {

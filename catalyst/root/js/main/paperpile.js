@@ -208,9 +208,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         // Update the status of the other views.
         Paperpile.main.onUpdate(json.data);
 
-	  if (callback) {
-	      callback.call(grid);
-	  }
+        if (callback) {
+          callback.call(grid);
+        }
       },
       failure: Paperpile.main.onError,
       scope: this
@@ -575,10 +575,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // this.fileSyncStatus.collections. The actual update is fired after
   // 5 seconds without new collections added to the queue.
   triggerFileSync: function(collections) {
-    
+
     // Call the function without collections to trigger a new file
     // sync for collections in the queue.
-    if (!collections){
+    if (!collections) {
       collections = [];
     }
 

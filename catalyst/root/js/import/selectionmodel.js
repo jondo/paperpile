@@ -71,8 +71,8 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
 	         * @param {SelectionModel} this
 	         */
       'afterselectionchange',
-    'allselected',
-    'pageselected');
+      'allselected',
+      'pageselected');
     Ext.grid.RowSelectionModel.superclass.constructor.call(this);
   },
 
@@ -463,7 +463,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
       this.fireEvent('rowdeselect', this, index, r);
       this.fireEvent('selectionchange', this);
     }
-      this.fakeAllSelected = false;
+    this.fakeAllSelected = false;
   },
 
   // private
@@ -590,8 +590,8 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
   cacheEvent: {},
   // private
   handleMouseDown: function(g, rowIndex, e) {
-      this.handleMouseEvent(g,rowIndex,e);
-},
+    this.handleMouseEvent(g, rowIndex, e);
+  },
   handleMouseEvent: function(g, rowIndex, e) {
     if (e.button !== 0 || this.isLocked()) {
       return;
@@ -674,8 +674,8 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
       var r = s[i];
       if ((index = ds.indexOfId(r.id)) != -1) {
         this.selectRow(index, true);
-	  numSelected++;
-	this.grid.getView().onRowSelect(index);
+        numSelected++;
+        this.grid.getView().onRowSelect(index);
       }
     }
     this.resumeEvents();
@@ -686,9 +686,9 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
   },
 
   isAllSelected: function() {
-      if (this.fakeAllSelected) {
-	  return true;
-      }
+    if (this.fakeAllSelected) {
+      return true;
+    }
   },
 
   selectAll: function() {
@@ -720,7 +720,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
       this.selectRange(0, this.grid.store.getCount() - 1);
       this.fakeAllSelected = true;
       this.fireEvent('afterselectionchange', this);
-        this.fireEvent('allselected', this);
+      this.fireEvent('allselected', this);
     }
   },
 
@@ -742,8 +742,8 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
   },
 
   clearSelectionsAndUpdate: function(fast) {
-      this.clearSelections(fast);
-      this.fireEvent('afterselectionchange', this);
+    this.clearSelections(fast);
+    this.fireEvent('afterselectionchange', this);
   },
 
   clearSelections: function(fast) {
