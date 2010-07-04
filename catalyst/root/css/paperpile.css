@@ -2207,7 +2207,7 @@ table.x-btn-subtle:not(.x-btn-over) {
 }
 
 .x-menu-item-extraspace {
-    width: 24px;
+    width: 26px;
     float:right;
 }
 
@@ -2217,6 +2217,8 @@ table.x-btn-subtle:not(.x-btn-over) {
     text-align:right;
     float:right;
     margin:0px;
+    margin-left:6px;
+    margin-right:6px
     padding:0px;
-    width:20px;
+    width:26px;
 }
