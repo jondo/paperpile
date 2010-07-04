@@ -209,7 +209,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   updateInfoMultiple: function(data) {
 
     data.numSelected = this.getGrid().getSelectionCount();
-    data.isBibtexMode = Paperpile.main.getSetting('bibtex_mode');
+    data.isBibtexMode = Paperpile.utils.isBibtexMode();
     data.totalCount = this.getGrid().getTotalCount();
 
     data.numImported = this.getGrid().getSelection('IMPORTED').length;

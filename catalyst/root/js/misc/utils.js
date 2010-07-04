@@ -35,6 +35,10 @@ Paperpile.utils = {
     return (Ext.encode(a) == Ext.encode(b));
   },
 
+  isBibtexMode: function() {
+      return (Paperpile.main.getSetting('bibtex').bibtex_mode == 1);
+  },
+
   midEllipse: function(string, length) {
     if (string.length > length) {
       return string.substring(0, length / 2) + ' ... ' + string.substring(length - length / 2, length);
