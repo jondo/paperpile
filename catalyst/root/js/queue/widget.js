@@ -24,13 +24,17 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
     var t = new Ext.XTemplate(
       '<div id="queue-widget-button" class="pp-queue-widget-container">',
       '  <div class="pp-queue-widget-content">',
+      '    <tpl if="status==\'PAUSED\'">',
+      '    <span class="pp-queue-widget-item"> Paused ({num_pending} remaining) </span>',
+      '     <span class="pp-queue-widget-item"><a href="#" class="pp-textlink pp-queue-widget-action" action="queue-resume">Resume</a></span>',
+      '    </tpl>',
       '    <tpl if="submitting">',
       '      <span class="pp-queue-widget-item"> Starting background tasks </span>',
       '    </tpl>',
       '    <tpl if="clearing">',
       '      <span class="pp-queue-widget-item"> Clear background tasks </span>',
       '    </tpl>',
-      '    <tpl if="!submitting && !clearing">',
+      '    <tpl if="!submitting && !clearing && status != \'PAUSED\'">',
       '      <tpl if="num_pending==1">',
       '        <span class="pp-queue-widget-item"> {num_pending} task remaining</span>',
       '      </tpl>',
@@ -42,7 +46,9 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
       '        <tpl if="num_error">{num_error} failed.</tpl>',
       '        </span>',
       '      </tpl>',
-      '     <span class="pp-queue-widget-item"><a href="#" class="pp-textlink pp-queue-widget-action" action="queue-tab">Show</a></span>',
+      '     <tpl if="status != \'PAUSED\'">',
+      '       <span class="pp-queue-widget-item"><a href="#" class="pp-textlink pp-queue-widget-action" action="queue-tab">Show</a></span>',
+      '      </tpl>',
       '     <tpl if="!num_pending">',
       '        <span class="pp-queue-widget-item"><a href="#" class="pp-textlink pp-queue-widget-action" action="queue-clear">Clear</a></span>',
       '     </tpl>',
@@ -73,58 +79,63 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
 
   onUpdate: function(data) {
 
+    var queue = data.queue;
+    if (!queue) {
+      queue = {
+        clearing: data.clearing,
+        submitting: data.submitting,
+        status: ''
+      };
+    }
+
     // Special display states of the widget
-    if (data.submitting) {
-      data.clearing = false;
-//      this.update(data);
+    if (queue.submitting) {
+      queue.clearing = false;
+      this.update(queue);
       this.show();
       return;
     }
 
-    if (data.clearing) {
-      data.submitting = false;
-      this.update(data);
+    if (queue.clearing) {
+      queue.submitting = false;
+      this.update(queue);
       this.show();
       return;
     }
 
-    // Normal display state depends on the state of the queue. 
-    if (data.queue) {
+    // Explicitely set these variables to make template happy
+    queue.submitting = false;
+    queue.clearing = false;
 
-      // Explicitely set these variables to make template happy
-      data.queue.submitting = false;
-      data.queue.clearing = false;
-
-      // If only one job is in the queue and this is a pdf search, we
-      // never show the widget.  In that case the user is most likely
-      // watching the download and does not need extra info.
-      var pdfSearchJobs = 0;
-      var metadataUpdateJobs = 0;
-      var allJobs = data.queue.num_pending + data.queue.num_done + data.queue.num_error;
-      if (data.queue.types) {
-        for (var i = 0; i < data.queue.types.length; i++) {
-          if (data.queue.types[i].name === 'PDF_SEARCH') {
-            var item = data.queue.types[i];
-            pdfSearchJobs += item.num_pending;
-          }
-          if (data.queue.types[i].name === 'METADATA_UPDATE') {
-            var item = data.queue.types[i];
-            metadataUpdateJobs += item.num_pending;
-            break;
-          }
+    // If only one job is in the queue and this is a pdf search, we
+    // never show the widget.  In that case the user is most likely
+    // watching the download and does not need extra info.
+    var pdfSearchJobs = 0;
+    var metadataUpdateJobs = 0;
+    var allJobs = queue.num_pending + queue.num_done + queue.num_error;
+    if (queue.types) {
+      for (var i = 0; i < queue.types.length; i++) {
+        if (queue.types[i].name === 'PDF_SEARCH') {
+          var item = queue.types[i];
+          pdfSearchJobs += item.num_pending;
+        }
+        if (queue.types[i].name === 'METADATA_UPDATE') {
+          var item = queue.types[i];
+          metadataUpdateJobs += item.num_pending;
+          break;
         }
       }
-      if ((pdfSearchJobs == 1 && allJobs == 1) || (metadataUpdateJobs == 1 && allJobs == 1)) {
-        this.hide();
-        return;
-      }
+    }
+    if ((pdfSearchJobs == 1 && allJobs == 1) || (metadataUpdateJobs == 1 && allJobs == 1)) {
+      this.hide();
+      return;
+    }
 
-      if (data.queue.num_pending == 0 && data.queue.num_done == 0 && data.queue.num_error == 0) {
-        this.hide();
-      } else {
-        this.show();
-        this.update(data.queue);
-      }
+    if (queue.num_pending == 0 && queue.num_done == 0 && queue.num_error == 0) {
+      this.hide();
+    } else {
+      this.update(queue);
+      this.show();
     }
   },
 
@@ -136,6 +147,23 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
 
     if (action === 'queue-tab') {
       Paperpile.main.tabs.showQueueTab();
+    }
+
+    if (action === 'queue-resume') {
+        Ext.Ajax.request({
+          url: Paperpile.Url('/ajax/queue/pause_resume'),
+          method: 'GET',
+          params: {},
+          success: function(response, opts) {
+            var json = Ext.util.JSON.decode(response.responseText);
+            if (json.queue.status != 'PAUSED') {
+              Paperpile.main.queueUpdate();
+            }
+            Paperpile.main.onUpdate(json);
+          },
+          failure: Paperpile.main.onError,
+          scope: this
+        });
     }
 
     if (action === 'queue-clear') {

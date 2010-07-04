@@ -255,6 +255,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       bbar: pager,
       tbar: this.getToolbar(),
       multiSelect: true,
+      selModel: new Ext.ux.BetterRowSelectionModel(),      
       cm: new Ext.grid.ColumnModel({
         defaults: {
           menuDisabled: true,

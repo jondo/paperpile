@@ -434,7 +434,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       var files = this.getFilesFromEvent(event);
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        if (file.extension() == 'pdf') {
+        if (file.extension() == 'pdf' || file.isDirectory()) {
           Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.nativePath()]);
         }
       }
