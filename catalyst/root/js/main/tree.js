@@ -1567,14 +1567,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var node = parentMenu.node;
     var id = node.id;
 
-      var filesync = this.getFileSyncData(node);
+    var filesync = this.getFileSyncData(node);
 
     if (state === true) {
 
       //node['plugin_auto_export_enable'] = true;
       var exportFile = this.getAutoExportLocation(node);
       if (exportFile == '') {
-          this.autoExportClick(item,null);
+        this.autoExportClick(item, null);
       }
       this.autoExportMessage(node.text, exportFile);
 
@@ -1584,63 +1584,67 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     } else {
       filesync.active = 0;
     }
-      this.setFileSyncData(node,filesync);
+
+    this.setFileSyncData(node, filesync);
 
   },
 
   getAutoExportLocation: function(node) {
     // Gets either (a) the defined auto-export location from the node's plugin parameters, or (b) a location defined based on the folder name and ID.
-      var filesync = this.getFileSyncData(node);
-      var export_file = filesync.file;
+    var filesync = this.getFileSyncData(node);
+    var export_file = filesync.file;
     return export_file || '';
   },
 
-    setFileSyncData: function(node,params) {
-	var filesync = Paperpile.main.getSetting('file_sync');
-	filesync[node.id] = params;
-	Paperpile.main.setSetting('file_sync',filesync);
-    },
+  setFileSyncData: function(node, params) {
+    var filesync = Paperpile.main.getSetting('file_sync') || {};
+    filesync[node.id] = params;
+    Paperpile.main.setSetting('file_sync', filesync);
+  },
 
-    getFileSyncData: function(node) {
-	var filesync = Paperpile.main.getSetting('file_sync');
+  getFileSyncData: function(node) {
+    var filesync = Paperpile.main.getSetting('file_sync');
 
-	if (!filesync) {
-	    filesync = {};
-	    filesync[node.id] = {};
-	} else if (!filesync[node.id]) {
-	    filesync[node.id] = {};
-	}
-	return filesync[node.id];
-    },
+    if (!filesync) {
+      filesync = {};
+      filesync[node.id] = {};
+    } else if (!filesync[node.id]) {
+      filesync[node.id] = {};
+    }
+    return filesync[node.id];
+  },
 
   autoExportClick: function(item, event) {
     var parentMenu = item.parentMenu;
     var node = parentMenu.node;
 
-      var filesync = this.getFileSyncData(node);
+    var filesync = this.getFileSyncData(node);
     var initialFile = this.getAutoExportLocation(node);
-
+    
     var stopMenuHide = function(menu) {
       return false;
     };
-//    parentMenu.on('beforehide', stopMenuHide);
-
+    //    parentMenu.on('beforehide', stopMenuHide);
     var callback = function(filenames) {
       if (filenames.length > 0) {
         var file = filenames[0];
+        console.log(file);
         filesync.file = file;
-	  parentMenu.hide();
-      this.setFileSyncData(node,filesync);
+        filesync.active = 1;
+        parentMenu.hide();
+        this.setFileSyncData(node, filesync);
         this.autoExportMessage(node.text, file);
       }
-//      parentMenu.un('beforehide', stopMenuHide);
+      //      parentMenu.un('beforehide', stopMenuHide);
     };
     var options = {
-      title: 'Choose an output file for library sync',
+      title: 'Choose BibTeX file',
       selectionType: 'file',
+      types: ['bib'],
+      typesDescription: 'BibTeX files',
       dialogType: 'save',
       multiple: false,
-      path: initialFile,
+      path: Paperpile.utils.splitPath(initialFile).dir,
       scope: this
     };
     Paperpile.fileDialog(callback, options);
@@ -1756,7 +1760,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 
   initShownItems: function() {
     var item = this.items.get('folder_menu_auto_export');
-      if (Paperpile.main.tree.getFileSyncData(this.node).active) {
+    if (Paperpile.main.tree.getFileSyncData(this.node).active) {
       item.setChecked(true, true);
       item.enableText();
     } else {
