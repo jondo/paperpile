@@ -71,15 +71,15 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
 
     var ids = this.toolbarMenuItemIds;
 
+    ids.remove('TB_DEL_SEP');
     ids.remove('NEW');
     ids.remove('EDIT');
-    ids.remove('EXPORT_MENU');
     ids.remove('DELETE');
+    ids.remove('LIVE_FOLDER');
 
     var index = ids.indexOf('TB_BREAK');
     ids.insert(index, 'EMPTY_TRASH');
-//    ids.insert(index, 'RESTORE');
-//    ids.insert(index, 'DELETE');
+    ids.insert(index, 'RESTORE');
   },
 
   initContextMenuItemIds: function() {
@@ -106,7 +106,7 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
       if (item['setTooltip']) {
 	item.setTooltip('Permanently delete selected references.');
       }
-      if (item.ownerCt.itemId == 'context') {
+      if (item.ownerCt && item.ownerCt.itemId == 'context') {
 	item.setText('Delete Permanently');
       }
     },this);

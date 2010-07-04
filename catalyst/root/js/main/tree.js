@@ -485,7 +485,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     if (e.source.dragData.grid) {
       var grid = e.source.dragData.grid;
       var sel = grid.getSelection();
-
       if (node.type == 'FOLDER') {
         this.addFolder(grid, sel, node);
       } else if (e.target.type == 'TAGS') {
@@ -554,7 +553,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         menu.setNode(node);
         menu.render();
         menu.hideItems();
-        menu.showAt(e.getXY());
+        menu.showAt.defer(10, this, [e.getXY()]);
 
         if (node.type == 'FOLDER') {
           this.createAutoExportTip(menu);
@@ -564,6 +563,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   createAutoExportTip: function(contextMenu) {
+    if (this.autoExportTip) {
+      this.autoExportTip.destroy();
+    }
     this.autoExportTip = new Ext.ToolTip({
       trackMouse: false,
       anchor: 'left',
@@ -676,7 +678,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // Recurse.
       this.putNodesInArray(childNode, array);
       // Add this child.
-      Paperpile.log(childNode.id);
+      //      Paperpile.log(childNode.id);
       array.push(childNode);
     }
   },
@@ -713,7 +715,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var nodes = [];
     this.putNodesInArray(node, nodes);
     nodes.push(node);
-    Paperpile.log(nodes.length);
+    //    Paperpile.log(nodes.length);
     return nodes;
   },
 
@@ -1421,6 +1423,32 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     });
   },
 
+  handleEmptyTrash: function() {
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/crud/empty_trash'),
+      params: {},
+      success: function(response) {
+        var json = Ext.util.JSON.decode(response.responseText);
+        Paperpile.main.onUpdate(json.data);
+
+        var numDeleted = json.num_deleted;
+	  var msg = numDeleted + " references permanently deleted.";
+	  if (numDeleted == 0) {
+	      msg = "Nothing to delete from Trash.";
+	  }
+        Paperpile.status.updateMsg({
+          type: 'info',
+          msg: msg,
+          fade: true,
+          duration: 1.5
+        });
+
+      },
+      failure: Paperpile.main.onError,
+      scope: this
+    });
+  },
+
   styleCollection: function(number) {
     var node = this.lastSelectedNode;
 
@@ -1620,7 +1648,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     var filesync = this.getFileSyncData(node);
     var initialFile = this.getAutoExportLocation(node);
-    
+
     var stopMenuHide = function(menu) {
       return false;
     };
@@ -1628,7 +1656,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var callback = function(filenames) {
       if (filenames.length > 0) {
         var file = filenames[0];
-        console.log(file);
+        //        console.log(file);
         filesync.file = file;
         filesync.active = 1;
         parentMenu.hide();
@@ -1952,7 +1980,7 @@ Paperpile.Tree.TrashMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       items: [{
         id: 'trash_menu_empty',
         text: 'Empty Trash',
-        handler: tree.emptyTrash,
+        handler: tree.handleEmptyTrash,
         scope: tree
       },
       {
@@ -1966,7 +1994,7 @@ Paperpile.Tree.TrashMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   },
 
   getShownItems: function(node) {
-    return[];
+    return['trash_menu_empty'];
   }
 });
 

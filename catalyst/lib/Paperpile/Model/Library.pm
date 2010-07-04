@@ -1023,11 +1023,22 @@ sub fulltext_search {
   return [@page];
 }
 
+sub get_trashed_pubs {
+
+  my ( $self ) = @_;
+
+  return $self->all('created',1);
+}
+
 sub all {
 
-  my ( $self, $order ) = @_;
+  my ( $self, $order, $get_trashed_pubs ) = @_;
 
   my $query = "SELECT rowid as _rowid, * FROM Publications ";
+
+  if ($get_trashed_pubs) {
+      $query .= "WHERE trashed=1 ";
+  }
 
   if ($order) {
     $query .= "ORDER BY $order";

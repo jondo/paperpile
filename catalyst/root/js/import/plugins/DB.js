@@ -59,13 +59,13 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     });
 
     this.actions['FOCUS_SEARCH'] = new Ext.Action({
-        text: 'Search',
-        handler: this.handleFocusSearch,
-        scope: this,
-        itemId: 'FOCUS_SEARCH',
-      }),
-      this.keys.bindAction('[/,191]',this.actions['FOCUS_SEARCH']);
-      this.keys.bindAction('ctrl-f',this.actions['FOCUS_SEARCH']);
+      text: 'Search',
+      handler: this.handleFocusSearch,
+      scope: this,
+      itemId: 'FOCUS_SEARCH',
+    }),
+    this.keys.bindAction('[/,191]', this.actions['FOCUS_SEARCH']);
+    this.keys.bindAction('ctrl-f', this.actions['FOCUS_SEARCH']);
 
     var store = this.getStore();
     store.baseParams['plugin_search_pdf'] = 0;
@@ -114,9 +114,9 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     target.on('click', this.handleSortButtons, this);
   },
 
-    handleFocusSearch: function() {
-	this.filterField.getEl().focus();
-    },
+  handleFocusSearch: function() {
+    this.filterField.getEl().focus();
+  },
 
   currentSortField: '',
   handleSortButtons: function(e, el, o) {
@@ -300,12 +300,11 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     this.filterField.on('specialkey', function(f, e) {
       if (e.getKey() == e.ENTER) {
-	  // Select the first grid row on Enter.
-          this.getSelectionModel().selectRowAndSetCursor(0);
+        // Select the first grid row on Enter.
+        this.getSelectionModel().selectRowAndSetCursor(0);
       }
     },
     this);
-
 
     Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
   },
@@ -359,7 +358,8 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     // If the update has to do with collections and we are 
     // a collection tab, refresh the whole view.
-    if (this.collection_type != '') {
+    if (this.collection_type) {
+      //Paperpile.log(this.collection_type);
       if (data.collection_delta) {
         this.getStore().reload();
       }

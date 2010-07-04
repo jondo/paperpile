@@ -75,8 +75,8 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
 
   initEvents: function() {
     // Collect mousedown and click events.
-    this.grid.on('rowclick', this.handleMouseDown, this);
-    this.grid.on('rowmousedown', this.handleMouseDown, this);
+    this.grid.on('rowclick', this.handleMouseEvent, this);
+    this.grid.on('rowmousedown', this.handleMouseEvent, this);
 
     this.rowNav = new Ext.KeyNav(this.grid.getGridEl(), {
       'up': function(e) {
@@ -175,7 +175,9 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
   },
 
   focusToCursor: function() {
-    this.grid.getView().focusRow(this.getCursor());
+    if (this.getCursor() !== null) {
+      this.grid.getView().focusRow(this.getCursor());
+    }
   },
 
   /**
@@ -418,9 +420,11 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
 
   selectRowAndSetCursor: function(index, keepExisting) {
     this.selectRow(index, keepExisting);
-    this.setCursor(index);
-    this.setAnchor(index);
-    this.focusToCursor();
+    if (this.isSelected(index)) {
+      this.setCursor(index);
+      this.setAnchor(index);
+      this.focusToCursor();
+    }
     //    Paperpile.log("Row selected and cursor set! "+index);
   },
 
@@ -549,7 +553,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
       this.selectDistance(distance);
     } else if (this.getAnchor() !== null && this.getCursor() !== null) {
       var anchor = this.getAnchor();
-      var cursor = this.constraintToGrid(this.getCursor() + distance);
+      var cursor = this.constrainToGrid(this.getCursor() + distance);
       this.selectRange(this.getAnchor(), cursor);
       this.setCursor(cursor);
       this.focusToCursor();
@@ -558,7 +562,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     }
     this.fireEvent('afterselectionchange', this);
   },
-  constraintToGrid: function(value) {
+  constrainToGrid: function(value) {
     if (value < 0) {
       value = 0;
     }
@@ -568,7 +572,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     return value;
   },
   selectDistance: function(dist) {
-    var cursor = this.constraintToGrid(this.getCursor() + dist);
+    var cursor = this.constrainToGrid(this.getCursor() + dist);
     this.selectRow(cursor, false);
     this.setCursor(cursor);
     this.setAnchor(cursor);
@@ -608,6 +612,9 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
   cacheEvent: {},
   // private
   handleMouseDown: function(g, rowIndex, e) {
+      this.handleMouseEvent(g,rowIndex,e);
+},
+  handleMouseEvent: function(g, rowIndex, e) {
     if (e.button !== 0 || this.isLocked()) {
       return;
     }
@@ -656,6 +663,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
         if (isSelected) {
           //	    Paperpile.log("Already selected, but selecting again!");
           this.selectRow(rowIndex, false);
+          this.focusToCursor();
         }
       }
     }

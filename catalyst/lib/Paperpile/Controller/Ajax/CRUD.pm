@@ -172,6 +172,17 @@ sub new_entry : Local {
   }
 }
 
+sub empty_trash : Local {
+  my ( $self, $c ) = @_;
+
+  my $library = $c->model('Library');
+  my $data = $library->get_trashed_pubs;
+  $library->delete_pubs($data);
+  
+  $c->stash->{data} = {pub_delta => 1};
+  $c->stash->{num_deleted} = scalar @$data;
+}
+
 sub delete_entry : Local {
   my ( $self, $c ) = @_;
   my $plugin = $self->_get_plugin($c);
@@ -442,7 +453,7 @@ sub move_in_collection : Local {
   $c->stash->{data}->{collection_delta} = 1;
 
   my $sync_files = $c->model('User')->get_setting('file_sync');
-  if ($sync_files->{$guid}->{active}){
+  if (ref $sync_files && $sync_files->{$guid}->{active}){
     $c->stash->{data}->{file_sync_delta} = [$guid];
   }
 

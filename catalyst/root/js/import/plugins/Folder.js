@@ -80,8 +80,13 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
     var grid = this;
     var match = this.plugin_base_query.match('folderid:(.*)$');
     var folder_id = match[1];
-    var refreshView = true;
-    Paperpile.main.deleteFromFolder(sel, grid, folder_id, refreshView);
+
+    var firstRecord = this.getSelectionModel().getLowestSelected();
+    var firstIndex = this.getStore().indexOf(firstRecord);
+    this.doAfterNextReload.push(function() {
+      this.getSelectionModel().selectRow(firstIndex);
+    });
+    Paperpile.main.deleteFromFolder(sel, grid, folder_id);
   },
 
   onUpdate: function(data) {

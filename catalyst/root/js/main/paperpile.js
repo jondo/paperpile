@@ -193,7 +193,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   // sel = 'ALL' or guids of selected pubs.
-  deleteFromFolder: function(sel, grid, folder_id, refreshView) {
+  deleteFromFolder: function(sel, grid, folder_id, callback) {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/remove_from_collection'),
       params: {
@@ -208,11 +208,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         // Update the status of the other views.
         Paperpile.main.onUpdate(json.data);
 
-        if (refreshView && grid['getStore']) {
-          // Reload this entire view, because the refs just got removed from the folder.
-          grid.getView().holdPosition = true;
-          grid.getStore().reload();
-        }
+	  if (callback) {
+	      callback.call(grid);
+	  }
       },
       failure: Paperpile.main.onError,
       scope: this
@@ -567,7 +565,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       if (data.file_sync_delta.length > 0) {
         this.triggerFileSync(data.file_sync_delta);
       } else {
-        console.log("Nothing to update");
+        Paperpile.log("Nothing to update");
       }
     }
   },
@@ -584,7 +582,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       collections = [];
     }
 
-    console.log("Trigger Filesync", collections);
+    Paperpile.log("Trigger Filesync", collections);
 
     this.fileSyncStatus.collections = this.fileSyncStatus.collections.concat(collections);
 
@@ -598,7 +596,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // update is triggered vie triggerFileSync
   fireFileSync: function() {
 
-    console.log("Sending update request to backend", this.fileSyncStatus.collections);
+    Paperpile.log("Sending update request to backend", this.fileSyncStatus.collections);
 
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/sync_files'),

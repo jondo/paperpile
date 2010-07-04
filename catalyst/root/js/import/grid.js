@@ -157,14 +157,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         scope: this,
         itemId: 'FORMAT'
       }),
-
-      'SAVE_AS_ACTIVE': new Ext.Action({
-        text: 'Save as Live Folder',
-        handler: this.handleSaveActive,
-        scope: this,
-        itemId: 'SAVE_AS_ACTIVE'
-      }),
-
       'OPEN_PDF_FOLDER': new Ext.Action({
         text: 'Open containing folder',
         handler: this.openPDFFolder,
@@ -589,18 +581,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     delete this._selected_records;
     this.contextRecord = null;
 
-    //    var selection = this.getSelection();
-    //    var selectedIds;
-    //    if (selection == 'ALL') {
-    //      selectedIds = selection;
-    //  } else {
-    //      selectedIds = selection.join("");
-    //    }
-    //
-    //    if (selectedIds == this.lastSelectedIds) {
-    //      return;
-    //    }
-    //    this.lastSelectedIds = selectedIds;
     this.updateButtons();
     this.getPluginPanel().updateDetails();
     if (sm.getCount() == 1) {
@@ -636,14 +616,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     });
 
-    this.getView().focusEl.on({
-      'focus': function(event, target, obj) {
-        this.keys.enable();
-      },
-      'blur': function(event, target, obj) {
+    this.mon(this.getView().focusEl, {
+      'blur': function(event, target, options) {
         this.keys.disable();
       },
-      scope: this
+      'focus': function(event, target, options) {
+        this.keys.enable();
+      },
+      scope: this,
+      delay: 20,
+      buffer: 50
     });
 
     // Note: the 'afterselectionchange' event is a custom selection model event.
@@ -727,14 +709,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     // Add some callbacks to the store so we can maintain the selection between reloads.
-    this._store.on('beforeload', function(store, options) {},
+    this.getStore().on('beforeload', function(store, options) {
+      //			   Paperpile.log("Loading...");
+    },
     this);
-    this._store.on('load', function(store, options) {
+    this.getStore().on('load', function(store, options) {
       if (!this.doAfterNextReload) {
         this.doAfterNextReload = [];
       }
       for (var i = 0; i < this.doAfterNextReload.length; i++) {
-        //Paperpile.log("After reload #"+i);
         var fn = this.doAfterNextReload[i];
         fn.defer(0, this);
       }
@@ -1570,7 +1553,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
         this.getSelectionModel().unlock();
         this.doAfterNextReload.push(function() {
-          //          this.getSelectionModel().selectRow(firstIndex);
           this.getSelectionModel().selectRowAndSetCursor(firstIndex);
         });
         if (mode == 'TRASH') {
