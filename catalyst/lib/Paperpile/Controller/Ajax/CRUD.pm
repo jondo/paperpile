@@ -819,6 +819,9 @@ sub _get_sync_collections {
     foreach my $collection (@tmp){
       $collections{$collection} = 1 if $sync_files->{$collection}->{active};
     }
+
+    $collections{'FOLDER_ROOT'} = 1;
+
   }
 
   return [keys %collections];

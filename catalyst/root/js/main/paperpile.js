@@ -592,6 +592,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // update is triggered vie triggerFileSync
   fireFileSync: function() {
 
+      var collections = this.fileSyncStatus.collections;
+      for (var i=0; i < collections.length; i++) {
+	  var guid = collections[i];
+	  var node = this.tree.getNodeById(guid);
+	  node.getUI().updateWorking('Syncing with external file');
+	}
+
+
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/sync_files'),
       params: {
@@ -606,6 +614,18 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         // can you show the warning as a tooltip over a warning icon
         // (yellow triangle) next to the tree node?
         Paperpile.log(data.warnings);
+      for (var i=0; i < collections.length; i++) {
+	  var guid = collections[i];
+	  var node = this.tree.getNodeById(guid);
+          if (data.warnings[guid]) {
+	      var error = "<b>Sync error:</b> ";
+	      error += data.warnings[guid];
+	      error += "<br/><span class='pp-smallprint'>Click to dismiss.</span>";
+	      node.getUI().updateError(error);
+	  } else {
+	      node.getUI().updateNone.defer(300,node.getUI());
+	  }
+	}
 
         this.fileSyncStatus.busy = false;
 

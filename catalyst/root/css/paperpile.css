@@ -1208,6 +1208,20 @@ div:hover.pp-grid-sort-item {
   cursor:default;
 }
 
+.x-tree-node-leftstatus {
+  position:absolute;
+  left:0px;
+  width:16px;
+  margin-left:3px;
+}
+
+.x-tree-node-rightstatus {
+  position:absolute;
+  right:18px;
+  width:16px;
+  margin-right:3px;
+}
+
 .x-dd-drag-tip {
 /*  opacity:1;
   filter: alpha(opacity=100); */

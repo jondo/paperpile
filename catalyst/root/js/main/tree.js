@@ -1635,8 +1635,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     if (!filesync) {
       filesync = {};
-      filesync[node.id] = {};
-    } else if (!filesync[node.id]) {
+    }
+    if (!filesync[node.id]) {
       filesync[node.id] = {};
     }
     return filesync[node.id];
@@ -1656,7 +1656,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var callback = function(filenames) {
       if (filenames.length > 0) {
         var file = filenames[0];
-        //        console.log(file);
         filesync.file = file;
         filesync.active = 1;
         parentMenu.hide();
@@ -1801,7 +1800,8 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     if (node.id == 'FOLDER_ROOT') {
       return[
       'folder_menu_new',
-      'folder_menu_export'];
+      'folder_menu_export',
+      'folder_menu_auto_export'];
     } else {
       return[
       'folder_menu_new',

@@ -26,7 +26,108 @@ Ext.override(Ext.tree.TreeNodeUI, {
     if (!this.node.silentLoad) {
       this.removeClass("x-tree-node-loading");
     }
+  },
+  // private
+  renderElements: function(n, a, targetNode, bulkRender) {
+    // add some indent caching, this helps performance when rendering a large tree
+    this.indentMarkup = n.parentNode ? n.parentNode.ui.getChildIndent() : '';
+
+    var cb = Ext.isBoolean(a.checked),
+    nel,
+    href = a.href ? a.href : Ext.isGecko ? "" : "#",
+    buf = ['<li class="x-tree-node"><div ext:tree-node-id="', n.id, '" class="x-tree-node-el x-tree-node-leaf x-unselectable ', a.cls, '" unselectable="on">',
+      '<div class="x-tree-node-leftstatus">', '', '</div>',
+      '<div class="x-tree-node-rightstatus">', '', '</div>',
+      '<span class="x-tree-node-indent">', this.indentMarkup, "</span>",
+      '<img src="', this.emptyIcon, '" class="x-tree-ec-icon x-tree-elbow" />',
+      '<img src="', a.icon || this.emptyIcon, '" class="x-tree-node-icon', (a.icon ? " x-tree-node-inline-icon" : ""), (a.iconCls ? " " + a.iconCls : ""), '" unselectable="on" />',
+      cb ? ('<input class="x-tree-node-cb" type="checkbox" ' + (a.checked ? 'checked="checked" />' : '/>')) : '',
+      '<a hidefocus="on" class="x-tree-node-anchor" href="', href, '" tabIndex="1" ',
+      a.hrefTarget ? ' target="' + a.hrefTarget + '"' : "", '><span unselectable="on">', n.text, "</span></a></div>",
+      '<ul class="x-tree-node-ct" style="display:none;"></ul>',
+      "</li>"].join('');
+
+    if (bulkRender !== true && n.nextSibling && (nel = n.nextSibling.ui.getEl())) {
+      this.wrap = Ext.DomHelper.insertHtml("beforeBegin", nel, buf);
+    } else {
+      this.wrap = Ext.DomHelper.insertHtml("beforeEnd", targetNode, buf);
+    }
+
+    this.elNode = this.wrap.childNodes[0];
+    this.ctNode = this.wrap.childNodes[1];
+    var cs = this.elNode.childNodes;
+    var index = 0;
+    this.leftStatusNode = cs[index++];
+    this.rightStatusNode = cs[index++];
+    this.indentNode = cs[index++];
+    this.ecNode = cs[index++];
+    this.iconNode = cs[index++];
+    if (cb) {
+      this.checkbox = cs[index++];
+      // fix for IE6
+      this.checkbox.defaultChecked = this.checkbox.checked;
+    }
+    this.anchor = cs[index];
+    this.textNode = cs[index++].firstChild;
+  },
+  updateNone: function(tip) {
+    this.updateLeftStatus();
+  },
+  updateWorking: function(tip) {
+    var options = {
+      icon: '/images/icons/cog.png',
+      tip: tip
+    };
+    this.updateLeftStatus(options);
+  },
+  updateError: function(tip) {
+    var options = {
+      icon: '/images/icons/cog_error.png',
+      tip: tip,
+      hideOnClick: true
+    };
+    this.updateLeftStatus(options);
+  },
+
+  updateLeftStatus: function(options) {
+    this.updateStatus('left', options);
+  },
+
+  updateRightStatus: function(options) {
+    this.updateStatus('right', options);
+  },
+  updateStatus: function(which, options) {
+    if (options === undefined) {
+      options = {};
+    }
+    var node = this.leftStatusNode;
+    if (which == 'right') {
+      node = this.rightStatusNode;
+    }
+    var el = Ext.get(node);
+    // Clear the status el.
+    el.update('');
+    if (options.icon) {
+      // Insert the status HTML if we're given an icon in the options hash.
+      var htmlConfig = {
+        tag: 'img',
+        src: options.icon,
+        qtip: options.tip
+      };
+      el.createChild(htmlConfig);
+    }
+
+    if (options.hideOnClick) {
+      el.on('click', function(event,target,options) {
+        el.update('');
+      },
+      this, {
+        single: true,
+	delay:50
+      });
+    }
   }
+
 });
 
 // Takes care of "this.lastOverNode.ui is null" bugs.
@@ -197,7 +298,6 @@ Ext.override(Ext.ToolTip, {
     Ext.ToolTip.superclass.onHide.call(this);
   }
 });
-
 
 // Avoid scrolling to top if 'holdPosition" is given
 // from: http://extjs.com/forum/showthread.php?t=13898
