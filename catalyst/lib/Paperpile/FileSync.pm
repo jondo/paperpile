@@ -104,7 +104,7 @@ sub _get_library_data {
   my $sth;
   if ($collection eq 'FOLDER_ROOT') {
   $sth = $dbh->prepare(
-    "SELECT * FROM Publications join Collection_Publication on guid = publication_guid;" );
+    "SELECT * FROM Publications;" );
   } else {
   $sth = $dbh->prepare(
     "SELECT * FROM Publications join Collection_Publication on guid = publication_guid WHERE collection_guid='$collection';"
