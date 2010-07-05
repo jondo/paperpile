@@ -444,6 +444,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.getSelectionModel().on('pageselected', function() {
       var num = this.getSelectionModel().getCount();
       var all = this.getStore().getTotalCount();
+      if (all <= num) {
+        return;
+      }
       Paperpile.status.updateMsg({
         type: 'info',
         msg: 'All ' + num + ' references on this page are selected.',

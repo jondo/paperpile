@@ -303,20 +303,6 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
   },
 
   /**
-     * Selects all rows if the selection model
-     * {@link Ext.grid.AbstractSelectionModel#isLocked is not locked}. 
-     */
-  selectAll: function() {
-    if (this.isLocked()) {
-      return;
-    }
-    this.selections.clear();
-    for (var i = 0, len = this.grid.store.getCount(); i < len; i++) {
-      this.selectRow(i, true);
-    }
-  },
-
-  /**
      * Returns <tt>true</tt> if there is a selection.
      * @return {Boolean}
      */
@@ -700,7 +686,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     // this page's worth of counts. Then, if called when we're
     // already selecting the full pag
     if (this.selectPageBeforeAll) {
-      if (this.fakeAllSelected || this.getCount() == this.grid.store.getCount()) {
+      if (this.fakeAllSelected || (this.getCount() == this.grid.store.getCount() && this.getCount() < this.grid.store.getTotalCount())) {
         // The whole page is already selected,so now
         // od the fake select all flag.
         this.fakeAllSelected = true;
