@@ -564,8 +564,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (data.file_sync_delta) {
       if (data.file_sync_delta.length > 0) {
         this.triggerFileSync(data.file_sync_delta);
-      } else {
-        Paperpile.log("Nothing to update");
       }
     }
   },
@@ -582,8 +580,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       collections = [];
     }
 
-    Paperpile.log("Trigger Filesync", collections);
-
     this.fileSyncStatus.collections = this.fileSyncStatus.collections.concat(collections);
 
     if (!this.fileSyncStatus.busy) {
@@ -596,8 +592,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // update is triggered vie triggerFileSync
   fireFileSync: function() {
 
-    Paperpile.log("Sending update request to backend", this.fileSyncStatus.collections);
-
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/sync_files'),
       params: {
@@ -606,6 +600,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       method: 'GET',
       success: function(response) {
         var data = Ext.util.JSON.decode(response.responseText).data;
+    
+        // When an error occurs warnings are stored in the hash
+        // data.warnings with the guid of the collection as key. Greg,
+        // can you show the warning as a tooltip over a warning icon
+        // (yellow triangle) next to the tree node?
+        Paperpile.log(data.warnings);
 
         this.fileSyncStatus.busy = false;
 

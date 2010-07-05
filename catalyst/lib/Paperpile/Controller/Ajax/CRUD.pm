@@ -22,6 +22,7 @@ use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Paperpile::Job;
 use Paperpile::Queue;
+use Paperpile::FileSync;
 use Data::Dumper;
 use HTML::TreeBuilder;
 use HTML::FormatText;
@@ -760,16 +761,38 @@ sub undo_delete : Local {
 
 sub sync_files : Local {
 
-  my ( $self, $c) = @_;
+  my ( $self, $c ) = @_;
 
   # Get non-redundant list of collections
   my %tmp;
-  foreach my $collection (split(/,/,$c->request->params->{collections})){
+  foreach my $collection ( split( /,/, $c->request->params->{collections} ) ) {
     $tmp{$collection} = 1;
   }
   my @collections = keys %tmp;
 
-  print STDERR "updating  ", join(',',@collections), "\n";
+  my $map = $c->model('User')->get_setting('file_sync');
+
+  my $sync = Paperpile::FileSync->new( map => $map );
+
+  my %warnings;
+
+  foreach my $collection (@collections) {
+    eval { $sync->sync_collection($collection); };
+    my $warning = 'A problem occured during BibTeX export. ';
+
+    if ($@) {
+      my $e = Exception::Class->caught();
+      if ( ref $e ) {
+        $warning = $e->error;
+      } else {
+        $warning .= $@;
+      }
+      $warnings{$collection} = $warning;
+      $c->log->error($warning);
+    }
+  }
+
+  $c->stash->{data}->{warnings} = {%warnings};
 
 }
 

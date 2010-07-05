@@ -21,6 +21,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 
 use Paperpile;
+use Paperpile::Exceptions;
 use Paperpile::Utils;
 use Paperpile::Formats::Bibtex;
 
@@ -39,35 +40,57 @@ sub sync_collection {
 
   my ( $self, $collection ) = @_;
 
-  my $target = $self->map->{$collection};
+  my $target = $self->map->{$collection}->{file};
 
-  # If target file does not exist we dump all data to the file
-  if ( !-e $target ) {
-    my $data = $self->_get_library_data($collection);
-    $self->_write_file( $collection, $data );
-    $self->_write_dump( $collection, 0, $data );
-  }
+  # For now we just dump the content and don't sync
 
-  # Target files already exists, so we need to sync it
-  else {
+  my $backup = '';
 
-    my $current_md5 = Paperpile::Utils->calculate_md5( $self->map->{$collection} );
+  if ( -e $target ) {
+    my $current_md5 = Paperpile::Utils->calculate_md5($target);
     my ( $old_md5, $old_library_version ) = $self->_get_dump_info($collection);
 
-    # File has changed since last sync
-    #if ( $current_md5 ne $old_md5 ) {
-    #  my $current_data = $self->_get_file_data($collection);
-    #  my $old_data     = $self->_get_dump_data($collection);
-    #}
+    if ( $old_md5 ne $current_md5 ) {
 
-    my $library_diff = $self->_get_library_diff($collection, $old_library_version);
+      # Add a timestamp for backup copy to avoid overwriting an old backup
+      my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime(time);
+      my $timestamp =
+        sprintf( "%4d-%02d-%02d-%02d-%02d-%02d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec );
+      $backup = "$target.$timestamp";
 
-    print STDERR Dumper($library_diff);
-
-    #print STDERR Dumper($data);
-    #print "$md5, $old_library_version\n";
-
+      move( $target, $backup );
+    }
   }
+
+  my $data = $self->_get_library_data($collection);
+  $self->_write_file( $collection, $data );
+  $self->_write_dump( $collection, 0, $data );
+
+  if ($backup) {
+    FileSyncConflictError->throw(
+      "$target has been changed outside of Paperpile. Saved a backup copy in $backup");
+  }
+
+  # If target file does not exist we dump all data to the file
+  #if ( !-e $target ) {
+  #  my $data = $self->_get_library_data($collection);
+  #  $self->_write_file( $collection, $data );
+  #  $self->_write_dump( $collection, 0, $data );
+  #}
+  # Target files already exists, so we need to sync it
+  #else {
+  #  my $current_md5 = Paperpile::Utils->calculate_md5( $self->map->{$collection} );
+  #  my ( $old_md5, $old_library_version ) = $self->_get_dump_info($collection);
+  # File has changed since last sync
+  #if ( $current_md5 ne $old_md5 ) {
+  #  my $current_data = $self->_get_file_data($collection);
+  #  my $old_data     = $self->_get_dump_data($collection);
+  #}
+  #  my $library_diff = $self->_get_library_diff($collection, $old_library_version);
+  #  print STDERR Dumper($library_diff);
+  #  #print STDERR Dumper($data);
+  #  #print "$md5, $old_library_version\n";
+  #}
 }
 
 sub _get_library_data {
@@ -140,7 +163,7 @@ sub _get_file_data {
 
   my ( $self, $collection ) = @_;
 
-  my $file = $self->map->{$collection};
+  my $file = $self->map->{$collection}->{file};
 
   my $f = Paperpile::Formats::Bibtex->new( file => $file );
 
@@ -195,7 +218,7 @@ sub _write_file {
 
   my ( $self, $collection, $data ) = @_;
 
-  my $file = $self->map->{$collection};
+  my $file = $self->map->{$collection}->{file};
 
   my $f = Paperpile::Formats::Bibtex->new( file => $file, data => [ values %$data ] );
 
@@ -209,7 +232,7 @@ sub _write_dump {
 
   my $dest = $self->_get_dump_file($collection);
 
-  my $md5 = Paperpile::Utils->calculate_md5( $self->map->{$collection} );
+  my $md5 = Paperpile::Utils->calculate_md5( $self->map->{$collection}->{file} );
 
   open(OUT, ">$dest.info") || die("Could not open to $dest during file sync.");
 

@@ -23,14 +23,19 @@ use Exception::Class ( PaperpileError,
     isa    => 'PaperpileError',
     fields => 'file'
   },
-  FileReadError        => { isa => 'FileError' },
-  LibraryMissingError  => { isa => 'FileReadError' },
-  DatabaseVersionError => { isa => 'FileReadError' },
-  FileWriteError       => { isa => 'FileError' },
-  FileFormatError      => { isa => 'FileError' },
-  DuplicateError       => { isa => 'PaperpileError' },
-  NetError             => { isa => 'PaperpileError' },
-  NetGetError          => {
+  FileSyncError => {
+    isa    => 'PaperpileError',
+    fields => 'file'
+  },
+  FileSyncConflictError => { isa => 'FileSyncError' },
+  FileReadError         => { isa => 'FileError' },
+  LibraryMissingError   => { isa => 'FileReadError' },
+  DatabaseVersionError  => { isa => 'FileReadError' },
+  FileWriteError        => { isa => 'FileError' },
+  FileFormatError       => { isa => 'FileError' },
+  DuplicateError        => { isa => 'PaperpileError' },
+  NetError              => { isa => 'PaperpileError' },
+  NetGetError           => {
     isa    => 'NetError',
     fields => 'code',
   },
