@@ -381,9 +381,12 @@ Paperpile.fileDialog = function(callback, inputOptions) {
 		  return false;
 	      }
               Ext.MessageBox.buttonText.ok = "Ok";
+		return false;
             },
             scope: this
           });
+	    } else {
+	  originalCallback.call(options.scope,filenames);
 	    }
 	}
     };
