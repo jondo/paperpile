@@ -66,8 +66,16 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
         width: 300,
       });
 
-      field.on('keypress', function() {
+      field.on('change', function() {
         this.setSaveDisabled(false);
+      },
+      this);
+      field.on('valid', function() {
+        this.setSaveDisabled(false);
+      },
+      this);
+      field.on('invalid', function() {
+        this.hasErrors = true;
       },
       this);
 
@@ -99,6 +107,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             if (filenames.length > 0) {
               var folder = filenames[0];
               this.textfields[item].setValue(folder);
+		this.textfields[item].onBlur();
             }
           };
 
@@ -118,7 +127,6 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
         var task = new Ext.util.DelayedTask(this.updateFields, this);
 
         field.on('keydown', function() {
-          this.isDirty = true;
           task.delay(500);
         },
         this);
@@ -137,6 +145,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
   // Validates inputs and updates example fields
   //
   updateFields: function() {
+      this.hasErrors = false;
 
     var params = {};
 
@@ -152,21 +161,18 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
       success: function(response) {
         var data = Ext.util.JSON.decode(response.responseText).data;
 
-        var hasErrors = false;
-
         for (var f in data) {
           if (data[f].error) {
             this.textfields[f].markInvalid(data[f].error);
             Ext.get(f + '_example').update('');
-            hasErrors = true;
           } else {
             Ext.get(f + '_example').update(data[f].string);
           }
         }
 
-        if (this.isDirty) {
-          this.setSaveDisabled(hasErrors);
-        }
+	  if (this.hasErrors) {
+	      this.setSaveDisabled(true);
+	  }
       },
       failure: Paperpile.main.onError,
       scope: this
@@ -175,7 +181,9 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
   },
 
   setSaveDisabled: function(disabled) {
-
+      if (this.hasErrors) {
+	  disabled = true;
+     }
     var button = Ext.get('patterns-save-button');
 
     button.un('click', this.submit, this);
