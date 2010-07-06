@@ -909,10 +909,10 @@ sub _collect_update_data {
 
   $c->stash->{data} = {} unless ( defined $c->stash->{data} );
 
-  my $max_output_size = 50;
+  my $max_output_size = 30;
   if ( scalar(@$pubs) > $max_output_size ) {
     $c->stash->{data}->{pub_delta} = 1;
-    return ();
+    @$pubs = @$pubs[ 1 .. $max_output_size ];
   }
 
   my %output = ();
