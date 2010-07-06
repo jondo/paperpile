@@ -30,7 +30,8 @@ sub submit : Local {
 
   my ( $self, $c ) = @_;
 
-  my $path = $c->request->params->{path};
+  my $path             = $c->request->params->{path};
+  my @collection_guids = $c->request->param('collection_guids');
 
   ## Get all PDFs in all subdirectories
 
@@ -59,8 +60,9 @@ sub submit : Local {
     my $pub = Paperpile::Library::Publication->new( { pdf => $file } );
 
     my $job = Paperpile::Job->new( {
-        type => 'PDF_IMPORT',
-        pub  => $pub
+        type              => 'PDF_IMPORT',
+        pub               => $pub,
+        _collection_guids => \@collection_guids
       }
     );
 

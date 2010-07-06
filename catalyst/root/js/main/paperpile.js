@@ -401,11 +401,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.pdfExtractChoice.show();
   },
 
-  submitPdfExtractionJobs: function(path) {
+  // Submit a PDF extraction job, optionally including the tree node
+  // representing the target collection for import.
+  submitPdfExtractionJobs: function(path,treeNode) {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/pdfextract/submit'),
       params: {
-        path: path
+        path: path,
+	collection_guids: [treeNode.id]
       },
       success: function(response) {
         Paperpile.main.queueUpdate();

@@ -38,18 +38,18 @@ use FreezeThaw;
 use Storable qw(lock_store lock_retrieve);
 
 enum 'Types' => (
-  'PDF_IMPORT',    # extract metadata from PDF and match agains web resource
-  'PDF_SEARCH',    # search PDF online
-  'METADATA_UPDATE', # Update the metadata for a given reference.
-  'WEB_IMPORT',     # Import a reference that was sent from the browser
+  'PDF_IMPORT',         # extract metadata from PDF and match agains web resource
+  'PDF_SEARCH',         # search PDF online
+  'METADATA_UPDATE',    # Update the metadata for a given reference.
+  'WEB_IMPORT',         # Import a reference that was sent from the browser
   'TEST_JOB'
 );
 
 enum 'Status' => (
-  'PENDING',       # job is waiting to be started
-  'RUNNING',       # job is running
-  'DONE',          # job is successfully finished.
-  'ERROR'         # job finished with an error or was canceled.
+  'PENDING',            # job is waiting to be started
+  'RUNNING',            # job is running
+  'DONE',               # job is successfully finished.
+  'ERROR'               # job finished with an error or was canceled.
 );
 
 has 'type'   => ( is => 'rw', isa => 'Types' );
@@ -58,7 +58,7 @@ has 'status' => ( is => 'rw', isa => 'Status' );
 has 'id'    => ( is => 'rw' );    # Unique id identifying the job
 has 'error' => ( is => 'rw' );    # Error message if job failed
 
-has 'message' => ( is => 'rw' );   # Long-winded progress message.
+has 'message' => ( is => 'rw' );  # Long-winded progress message.
 
 # Field to store different job type specific information
 has 'info' => ( is => 'rw', isa => 'HashRef' );
@@ -80,6 +80,10 @@ has '_file' => ( is => 'rw' );
 # jobs at the original position
 has '_rowid' => ( is => 'rw', default => undef );
 
+# Used to store the GUIDs of target collections for a job which (if successful) will
+# result in a library import.
+has '_collection_guids' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] } );
+
 sub BUILD {
   my ( $self, $params ) = @_;
 
@@ -87,7 +91,7 @@ sub BUILD {
   if ( !$params->{id} ) {
     $self->generate_id;
     $self->status('PENDING');
-    $self->info( { msg => $self->noun." waiting..." } );
+    $self->info( { msg => $self->noun . " waiting..." } );
     $self->error('');
     $self->duration(0);
 
@@ -95,11 +99,12 @@ sub BUILD {
     $self->_file($file);
     $self->save;
   }
+
   # otherwise restore object from disk
   else {
     $self->_file( File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id ) );
     $self->restore;
-    if ($self->pub) {
+    if ( $self->pub ) {
       $self->pub->refresh_job_fields($self);
     }
   }
@@ -134,7 +139,7 @@ sub restore {
 sub reset {
   my $self = shift;
 
-  if ($self->status eq 'RUNNING') {
+  if ( $self->status eq 'RUNNING' ) {
     $self->interrupt('CANCEL');
     $self->save;
   }
@@ -142,7 +147,7 @@ sub reset {
   $self->update_status('PENDING');
   $self->error('');
   $self->interrupt('');
-  $self->info({msg => ''});
+  $self->info( { msg => '' } );
   $self->save;
 }
 
@@ -150,10 +155,10 @@ sub noun {
   my $self = shift;
 
   my $type = $self->type;
-  return 'PDF download' if ($type eq 'PDF_SEARCH');
-  return 'PDF import' if ($type eq 'PDF_IMPORT');
-  return 'Metadata update' if ($type eq 'METADATA_UPDATE');
-  return 'Test job' if ($type eq 'TEST_JOB');
+  return 'PDF download'    if ( $type eq 'PDF_SEARCH' );
+  return 'PDF import'      if ( $type eq 'PDF_IMPORT' );
+  return 'Metadata update' if ( $type eq 'METADATA_UPDATE' );
+  return 'Test job'        if ( $type eq 'TEST_JOB' );
 }
 
 sub remove {
@@ -170,13 +175,13 @@ sub remove {
 sub cancel {
   my $self = shift;
 
-  next if ($self->status ~~ ['ERROR', 'DONE']);
+  next if ( $self->status ~~ [ 'ERROR', 'DONE' ] );
 
-  if ($self->status eq 'RUNNING') {
+  if ( $self->status eq 'RUNNING' ) {
     $self->interrupt('CANCEL');
   }
 
-  $self->error($self->noun . ' canceled.');
+  $self->error( $self->noun . ' canceled.' );
   $self->update_status('ERROR');
 
   $self->save;
@@ -213,7 +218,6 @@ sub update_status {
 
   my $job_id = $dbh->quote( $self->id );
 
-
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   $status = $dbh->quote( $self->status );
@@ -233,7 +237,7 @@ sub update_status {
 
 sub update_info {
 
-  my ($self, $key, $value) = @_;
+  my ( $self, $key, $value ) = @_;
 
   my $stored = lock_retrieve( $self->_file );
 
@@ -244,9 +248,6 @@ sub update_info {
   $self->{info}->{$key} = $value;
 
 }
-
-
-
 
 ## Runs the job in a forked sub-process
 
@@ -270,16 +271,14 @@ sub run {
 
     my $start_time = time;
 
-    eval {
-      $self->_do_work;
-    };
+    eval { $self->_do_work; };
 
     my $end_time = time;
 
     # Make sure that each job takes at least 1 second to be sent once
     # as "running" to frontend which is necessary to get updated
     # correctly. Clearly not optimal but works for now...
-    if ($end_time - $start_time <= 1){
+    if ( $end_time - $start_time <= 1 ) {
       sleep(1);
     }
 
@@ -297,7 +296,6 @@ sub run {
   }
 }
 
-
 # Calls the appropriate sequence of tasks for the different job
 # types. All the functions that are called here work on the $self->pub
 # object and sequentially update its contents until the job is
@@ -308,85 +306,86 @@ sub _do_work {
 
   my $self = shift;
 
-   # $self->update_info('msg','Searching PDF');
+  # $self->update_info('msg','Searching PDF');
 
-   # sleep(2);
+  # sleep(2);
 
-   # $self->update_info('msg','Starting download');
+  # $self->update_info('msg','Starting download');
 
-   # sleep(2);
+  # sleep(2);
 
-   # $self->update_info('msg','Downloading');
-   # $self->update_info( 'size', 1000 );
+  # $self->update_info('msg','Downloading');
+  # $self->update_info( 'size', 1000 );
 
-   # sleep(1);
+  # sleep(1);
 
-   # $self->update_info( 'downloaded', 200 );
+  # $self->update_info( 'downloaded', 200 );
 
-   # sleep(1);
+  # sleep(1);
 
-   # $self->update_info( 'downloaded', 500 );
+  # $self->update_info( 'downloaded', 500 );
 
-   # sleep(1);
+  # sleep(1);
 
-   # $self->update_info( 'downloaded', 800 );
+  # $self->update_info( 'downloaded', 800 );
 
-   # sleep(1);
+  # sleep(1);
 
-   # $self->update_info( 'downloaded', 1000 );
+  # $self->update_info( 'downloaded', 1000 );
 
-   # sleep(1);
+  # sleep(1);
 
-   # ExtractionError->throw("Some random error") if (rand(1) > 0.5);
+  # ExtractionError->throw("Some random error") if (rand(1) > 0.5);
 
-   # $self->update_info('msg','File successfully downloaded.');
-   # return;
+  # $self->update_info('msg','File successfully downloaded.');
+  # return;
 
-  if ($self->type eq 'PDF_SEARCH'){
+  if ( $self->type eq 'PDF_SEARCH' ) {
 
     print STDERR "[queue] Searching PDF for ", $self->pub->_citation_display, "\n";
 
-    if ($self->pub->pdf) {
-      $self->update_info('msg',"There is already a PDF for this reference (".$self->pub->pdf_name.").");
+    if ( $self->pub->pdf ) {
+      $self->update_info( 'msg',
+        "There is already a PDF for this reference (" . $self->pub->pdf_name . ")." );
       return;
     }
 
-    if (!$self->pub->linkout && !$self->pub->doi){
+    if ( !$self->pub->linkout && !$self->pub->doi ) {
 
       $self->_match;
 
       # This currently does not handle the case e.g when we match
       # successfully against PubMed but don't get a doi/linkout and a
       # downstream plugin would give us this information
-      if (!$self->pub->linkout && !$self->pub->doi){
+      if ( !$self->pub->linkout && !$self->pub->doi ) {
         NetMatchError->throw("Could not find the PDF");
       }
     }
 
-    if (!$self->pub->_pdf_url){
+    if ( !$self->pub->_pdf_url ) {
       $self->_crawl;
     }
 
     $self->_download;
 
-    if ($self->pub->_imported){
+    if ( $self->pub->_imported ) {
       $self->_attach_pdf;
     }
 
-    $self->update_info('callback',{fn => 'CONSOLE', args => $self->pub->_pdf_url});
-    $self->update_info('msg','File successfully downloaded.');
+    $self->update_info( 'callback', { fn => 'CONSOLE', args => $self->pub->_pdf_url } );
+    $self->update_info( 'msg', 'File successfully downloaded.' );
 
   }
 
-  if ($self->type eq 'PDF_IMPORT') {
+  if ( $self->type eq 'PDF_IMPORT' ) {
 
     print STDERR "[queue] Start import of PDF ", $self->pub->pdf, "\n";
 
     $self->_lookup_pdf;
 
-    if ($self->pub->_imported) {
+    if ( $self->pub->_imported ) {
 
-      $self->update_info('msg',"PDF already in database (".$self->pub->citekey.").");
+      $self->update_info( 'msg', "PDF already in database (" . $self->pub->citekey . ")." );
 
     } else {
       $self->_extract_meta_data;
@@ -402,19 +401,19 @@ sub _do_work {
       my $new_hash = $self->pub->as_hash;
 
       # Check if the _match function has changed any fields
-      if (!$success){
+      if ( !$success ) {
         NetMatchError->throw("Could not match PDF to an online resource.");
       }
 
       $self->_insert;
 
-      $self->update_info('msg',"PDF successfully imported.");
-      $self->update_info('callback',{fn => 'updatePubGrid'});
+      $self->update_info( 'msg', "PDF successfully imported." );
+      $self->update_info( 'callback', { fn => 'updatePubGrid' } );
 
     }
   }
 
-  if ($self->type eq 'METADATA_UPDATE') {
+  if ( $self->type eq 'METADATA_UPDATE' ) {
     my $pub = $self->pub;
 
     my $old_hash = $pub->as_hash;
@@ -423,47 +422,46 @@ sub _do_work {
 
     my $new_hash = $pub->as_hash;
     if ($success) {
-	my $m    = Paperpile::Utils->get_library_model;
+      my $m = Paperpile::Utils->get_library_model;
 
-	# Insert the updated pub as a separate item into the database.
-	# Delete the current GUID so we get a new one.
-        $m->update_pub($pub->guid,$new_hash);
+      # Insert the updated pub as a separate item into the database.
+      # Delete the current GUID so we get a new one.
+      $m->update_pub( $pub->guid, $new_hash );
 
-	# Insert and trash a copy of the old publication, for safe-keeping.
-	# Need to delete all fields related to PDF storage, since the PDF stays
-	# with the updated copy.
-	delete $old_hash->{attachments};
-	delete $old_hash->{attachments_list};
-	delete $old_hash->{guid};
-	delete $old_hash->{pdf};
-	delete $old_hash->{pdf_name};
-	$old_hash->{title} = '[backup copy] '.$old_hash->{title};
-	my $old_pub = Paperpile::Library::Publication->new($old_hash);
-	$m->insert_pubs([$old_pub],1);
-	$m->trash_pubs([$old_pub],'TRASH');
+      # Insert and trash a copy of the old publication, for safe-keeping.
+      # Need to delete all fields related to PDF storage, since the PDF stays
+      # with the updated copy.
+      delete $old_hash->{attachments};
+      delete $old_hash->{attachments_list};
+      delete $old_hash->{guid};
+      delete $old_hash->{pdf};
+      delete $old_hash->{pdf_name};
+      $old_hash->{title} = '[backup copy] ' . $old_hash->{title};
+      my $old_pub = Paperpile::Library::Publication->new($old_hash);
+      $m->insert_pubs( [$old_pub], 1 );
+      $m->trash_pubs( [$old_pub], 'TRASH' );
 
-      $self->update_info('msg',"Metadata successfully gathered from $success.");
-      $self->update_info('callback',{fn => 'updatePubGrid'});
+      $self->update_info( 'msg', "Metadata successfully gathered from $success." );
+      $self->update_info( 'callback', { fn => 'updatePubGrid' } );
     } else {
       NetMatchError->throw("Could not find metadata from any online resource.");
     }
 
   }
 
-  if ($self->type eq 'TEST_JOB') {
+  if ( $self->type eq 'TEST_JOB' ) {
 
-      $self->update_info('msg', 'Test job phase 1...');
+    $self->update_info( 'msg', 'Test job phase 1...' );
 
-      sleep(3);
+    sleep(3);
 
-      $self->update_info('msg', 'Test job phase 2...');
+    $self->update_info( 'msg', 'Test job phase 2...' );
 
-      sleep(3);
+    sleep(3);
 
-      $self->update_info('msg', 'Test job complete!');
+    $self->update_info( 'msg', 'Test job complete!' );
   }
 }
-
 
 ## Set error fields after an exception was thrown
 
@@ -476,7 +474,7 @@ sub _catch_error {
   if ( ref $e ) {
     $self->error( $e->error );
   } else {
-    print STDERR $@; # log this error also on console
+    print STDERR $@;    # log this error also on console
     $self->error("An unexpected error has occured ($@)");
   }
 
@@ -500,15 +498,14 @@ sub _rethrow_error {
   }
 }
 
-
 sub get_message {
   my $self = shift;
 
-  if ($self->error) {
+  if ( $self->error ) {
     return $self->error;
   }
 
-  if ($self->info) {
+  if ( $self->info ) {
     return $self->info->{'msg'};
   }
 
@@ -572,17 +569,17 @@ sub _match {
 
   die("No search plugins specified.") if not @plugin_list;
 
-  if ($self->pub->arxivid){
+  if ( $self->pub->arxivid ) {
     unshift @plugin_list, 'ArXiv';
   }
 
   my $num_successful_matches = 0;
-  my $success_plugin = '';
+  my $success_plugin         = '';
   foreach my $plugin (@plugin_list) {
 
     print STDERR "[queue] Matching against $plugin\n";
 
-    $self->update_info('msg',"Matching against $plugin...");
+    $self->update_info( 'msg', "Matching against $plugin..." );
 
     eval { $self->_match_single($plugin); };
 
@@ -593,11 +590,13 @@ sub _match {
       if ( $e = Exception::Class->caught('NetMatchError') ) {
         next;
       }
+
       # Other error has occured -> stop now by rethrowing error
       else {
         $self->_rethrow_error;
       }
     }
+
     # Found match -> stop now
     else {
       $num_successful_matches++;
@@ -619,7 +618,6 @@ sub _match_single {
 
   my $pub = $self->pub;
 
-
   $pub = $plugin->match($pub);
 
   $self->pub($pub);
@@ -632,7 +630,7 @@ sub _crawl {
 
   my $self = shift;
 
-  $self->update_info('msg',"Searching PDF...");
+  $self->update_info( 'msg', "Searching PDF..." );
 
   my $crawler = Paperpile::Crawler->new;
   $crawler->debug(1);
@@ -643,9 +641,9 @@ sub _crawl {
 
   my $start_url = '';
 
-  if ($self->pub->doi){
-    $start_url = 'http://dx.doi.org/'.$self->pub->doi;
-  } elsif ($self->pub->linkout){
+  if ( $self->pub->doi ) {
+    $start_url = 'http://dx.doi.org/' . $self->pub->doi;
+  } elsif ( $self->pub->linkout ) {
     $start_url = $self->pub->linkout;
   } else {
     die("No target url for PDF download");
@@ -653,7 +651,7 @@ sub _crawl {
 
   print STDERR "[queue] Start crawling at $start_url\n";
 
-  $pdf = $crawler->search_file( $start_url );
+  $pdf = $crawler->search_file($start_url);
 
   $self->pub->_pdf_url($pdf) if $pdf;
 
@@ -767,7 +765,6 @@ sub _download {
 
 }
 
-
 ## Extracts meta-data from a PDF
 
 sub _extract_meta_data {
@@ -776,18 +773,17 @@ sub _extract_meta_data {
 
   print STDERR "[queue] Extracting meta data for ", $self->pub->pdf, "\n";
 
-  my $bin = Paperpile::Utils->get_binary( 'pdftoxml');
+  my $bin = Paperpile::Utils->get_binary('pdftoxml');
 
   my $extract = Paperpile::PdfExtract->new( file => $self->pub->pdf, pdftoxml => $bin );
 
   my $pub = $extract->parsePDF;
 
-  $pub->pdf($self->pub->pdf);
+  $pub->pdf( $self->pub->pdf );
 
   $self->pub($pub);
 
 }
-
 
 ## Look if a PDF file is already in the database
 
@@ -821,15 +817,21 @@ sub _insert {
 
   # We here track the PDF file in the pub->pdf field, for import
   # _pdf_tmp needs to be set
-  if ($self->pub->pdf){
-    $self->pub->_pdf_tmp($self->pub->pdf);
+  if ( $self->pub->pdf ) {
+    $self->pub->_pdf_tmp( $self->pub->pdf );
     $self->pub->pdf('');
   }
 
-  $model->insert_pubs( [$self->pub], 1 );
+  $model->insert_pubs( [ $self->pub ], 1 );
+
+  # Insert into any necessary collections.
+  if ( scalar @{ $self->_collection_guids } > 0 ) {
+    foreach my $guid ( @{ $self->_collection_guids } ) {
+      $model->add_to_collection( [ $self->pub ], $guid );
+    }
+  }
 
   $self->pub->_imported(1);
-
 }
 
 ## Attaches a PDF file to the database entry of the current
@@ -843,7 +845,7 @@ sub _attach_pdf {
 
   my $file = $self->pub->pdf;
 
-  $model->attach_file($file, 1, $self->pub);
+  $model->attach_file( $file, 1, $self->pub );
 
   unlink($file);
 

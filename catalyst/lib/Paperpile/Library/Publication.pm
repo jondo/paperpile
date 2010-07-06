@@ -60,7 +60,7 @@ our @types = qw(
 ### 'Built-in' fields
 
 # The unique rowid in the SQLite table 'Publications'
-has '_rowid' => ( is => 'rw');
+has '_rowid' => ( is => 'rw' );
 
 # The unique sha1 key which is currently calculated from title,
 # authors and year. The purpose is to compare quickly if two
@@ -73,13 +73,13 @@ has 'sha1' => ( is => 'rw' );
 has 'guid' => ( is => 'rw' );
 
 # Timestamp when the entry was created
-has 'created' => ( is => 'rw');
+has 'created' => ( is => 'rw' );
 
 # Flags entry as trashed
 has 'trashed' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # Timestamp when it was last read
-has 'last_read' => ( is => 'rw', default => '');
+has 'last_read' => ( is => 'rw', default => '' );
 
 # How many times it was read
 has 'times_read' => ( is => 'rw', isa => 'Int', default => 0 );
@@ -89,12 +89,12 @@ has 'pdf' => ( is => 'rw', default => '' );
 
 # File name of PDF relative to paper_root. Use for display purpose and
 # to reconstruct PDF path without going back to attachments table
-has 'pdf_name' => ( is => 'rw', default => '' );
+has 'pdf_name'  => ( is => 'rw', default => '' );
 has '_pdf_path' => ( is => 'rw', default => '' );
 
 # Comma separated list of guids of other attachments
 has 'attachments' => ( is => 'rw' );
-has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub {[]});
+has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] } );
 
 # User provided annotation "Notes", formatted in HTML
 has 'annote' => ( is => 'rw', default => '' );
@@ -105,16 +105,15 @@ has 'tags' => ( is => 'rw', default => '' );
 # Comma separated list of folders
 has 'folders' => ( is => 'rw', default => '' );
 
-
 ### Fields from the config file
 
-my $config = LoadFile(Paperpile::Utils->path_to('conf/fields.yaml'));
+my $config = LoadFile( Paperpile::Utils->path_to('conf/fields.yaml') );
 
 foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
   # These contribute to the sha1 and need a trigger to re-calculate it
   # upon change
-  if ( $field ~~ ['year','title', 'booktitle']) {
+  if ( $field ~~ [ 'year', 'title', 'booktitle' ] ) {
     has $field => (
       is      => 'rw',
       trigger => sub {
@@ -122,7 +121,7 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
         $self->refresh_fields;
       }
     );
-  } elsif ( $field ~~ ['authors','editors']) {
+  } elsif ( $field ~~ [ 'authors', 'editors' ] ) {
     has $field => (
       is      => 'rw',
       trigger => sub {
@@ -149,12 +148,11 @@ has '_pdf_tmp' => ( is => 'rw', default => '' );
 
 # Temporary store list of absolute file names of attachments to be
 # imported together with the publication object
-has '_attachments_tmp' => ( is => 'rw', default => sub {[]} );
-
+has '_attachments_tmp' => ( is => 'rw', default => sub { [] } );
 
 # Formatted strings to be displayed in the frontend.
-has '_authors_display'  => ( is => 'rw');
-has '_citation_display' => ( is => 'rw');
+has '_authors_display'  => ( is => 'rw' );
+has '_citation_display' => ( is => 'rw' );
 
 # If an entry is already in our database this field is true.
 has '_imported' => ( is => 'rw', isa => 'Bool' );
@@ -172,8 +170,8 @@ has '_metadata_job' => ( is => 'rw', default => undef );
 has '_details_link' => ( is => 'rw', default => '' );
 
 # Is some kind of _details_link for Google Scholar. It is the link
-# to British Library Direct, where bibliographic data is available. 
-# In some cases it also offers the absract, which is impossible to  
+# to British Library Direct, where bibliographic data is available.
+# In some cases it also offers the absract, which is impossible to
 # get directly from Google.
 has '_google_BL_link' => ( is => 'rw', default => '' );
 
@@ -183,7 +181,7 @@ has '_related_articles' => ( is => 'rw', default => '' );
 # If a search in the local database returns a hit in the fulltext,
 # abstract or notes the hit+context ('snippet') is stored in these
 # fields
-has '_snippets'     => ( is => 'rw');
+has '_snippets' => ( is => 'rw' );
 
 # CSS style to highlight the entry in the frontend
 has '_highlight' => ( is => 'rw', default => 'pp-grid-highlight0' );
@@ -200,12 +198,12 @@ has '_www_publisher' => ( is => 'rw', default => '' );
 # If true fields update themselves automatically. Is only activated
 # after initial object creation in BUILD to avoid excessive redundant
 # refreshing.
-has '_auto_refresh'    => ( is => 'rw', isa => 'Int', default => 0);
+has '_auto_refresh' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # If set to true helper fields for gui (_citation_display,
 # _author_display) are not generated. Thus we avoid created tons of
 # author objects which is not always needed (e.g. for import).
-has '_light' =>  ( is => 'rw', isa => 'Int', default => 0);
+has '_light' => ( is => 'rw', isa => 'Int', default => 0 );
 
 # If object comes from a database we store the dsn of it. Currently
 # only used for function refresh_attachments
@@ -226,9 +224,9 @@ sub BUILD {
 sub refresh_fields {
   ( my $self ) = @_;
 
-  return if (not $self->_auto_refresh);
+  return if ( not $self->_auto_refresh );
 
-  if (not $self->_light){
+  if ( not $self->_light ) {
 
     ## Citation display string
     my $cit = $self->format_citation;
@@ -248,7 +246,7 @@ sub refresh_authors {
   ( my $self ) = @_;
 
   return if $self->_light;
-  return if not ($self->_auto_refresh);
+  return if not( $self->_auto_refresh );
 
   ## Author display string
   my $authors = $self->format_authors;
@@ -269,25 +267,26 @@ sub calculate_sha1 {
 
   my $ctx = Digest::SHA1->new;
 
-  if ( ( $self->authors or $self->_authors_display or $self->editors ) or ($self->title or $self->booktitle)) {
+  if ( ( $self->authors or $self->_authors_display or $self->editors )
+    or ( $self->title or $self->booktitle ) ) {
     if ( $self->authors ) {
       $ctx->add( encode_utf8( $self->authors ) );
-    } elsif ( $self->_authors_display and !$self->editors) {
+    } elsif ( $self->_authors_display and !$self->editors ) {
       $ctx->add( encode_utf8( $self->_authors_display ) );
     }
     if ( $self->editors ) {
       $ctx->add( encode_utf8( $self->editors ) );
     }
-    if ($self->title){
+    if ( $self->title ) {
       $ctx->add( encode_utf8( $self->title ) );
     }
-    if ($self->booktitle){
+    if ( $self->booktitle ) {
       $ctx->add( encode_utf8( $self->booktitle ) );
     }
 
   }
 
-  $self->sha1(  $ctx->hexdigest );
+  $self->sha1( $ctx->hexdigest );
 
 }
 
@@ -327,8 +326,8 @@ sub format_citation {
   $cit .= $self->school . ' '         if ( $self->school );
 
   $cit .= '(' . $self->year . ')' if ( $self->year );
-  $cit .= ' ' . $self->month      if ( $self->month );
-  $cit .= '; '                    if ($cit && $self->year);
+  $cit .= ' ' . $self->month if ( $self->month );
+  $cit .= '; ' if ( $cit && $self->year );
 
   if ( $self->pubtype eq 'ARTICLE' or $self->pubtype eq 'INPROCEEDINGS' ) {
     $cit .= '<b>' . $self->volume . '</b>:' if ( $self->volume );
@@ -380,25 +379,24 @@ sub format_authors {
 }
 
 sub refresh_job_fields {
-  my ($self, $job) = @_;
+  my ( $self, $job ) = @_;
 
   my $data = {};
 
   $data->{status} = $job->status;
-  $data->{id} = $job->id;
-  $data->{error} = $job->error;
+  $data->{id}     = $job->id;
+  $data->{error}  = $job->error;
 
-  foreach my $key (keys %{$job->info}){
+  foreach my $key ( keys %{ $job->info } ) {
     $data->{$key} = $job->info->{$key};
   }
 
-  if ($job->type eq 'PDF_SEARCH') {
+  if ( $job->type eq 'PDF_SEARCH' ) {
     $self->_search_job($data);
-  } elsif ($job->type eq 'METADATA_UPDATE') {
+  } elsif ( $job->type eq 'METADATA_UPDATE' ) {
     $self->_metadata_job($data);
   }
 }
-
 
 # Gets attachment information from a database (given in
 # $self->_db_connection) into the pub object. Is not very efficient if
@@ -411,34 +409,35 @@ sub refresh_attachments {
 
   $self->_attachments_list( [] );
 
-  if ( $self->attachments && $self->_db_connection) {
+  if ( $self->attachments && $self->_db_connection ) {
 
-    my $model   = Paperpile::Model::Library->new();
+    my $model = Paperpile::Model::Library->new();
 
     $model->set_dsn( $self->_db_connection );
 
     my $paper_root = $model->get_setting('paper_root');
-    my $guid = $self->guid;
-    my $sth = $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
+    my $guid       = $self->guid;
+    my $sth =
+      $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
 
     $sth->execute;
 
     my @output = ();
-    my @files = ();
+    my @files  = ();
     while ( my $row = $sth->fetchrow_hashref() ) {
-      my $link = "/serve/".$row->{local_file};
+      my $link = "/serve/" . $row->{local_file};
 
       ( my $suffix ) = ( $link =~ /\.([^.]*)$/ );
 
       push @output, {
-        file  => $row->{name},
-        path  => $row->{local_file},
-        link  => $link,
-        cls   => "file-$suffix",
+        file => $row->{name},
+        path => $row->{local_file},
+        link => $link,
+        cls  => "file-$suffix",
         guid => $row->{guid}
         };
 
-      push @files,  $row->{local_file};
+      push @files, $row->{local_file};
 
     }
 
@@ -447,7 +446,7 @@ sub refresh_attachments {
     # if attachments are present and pub is not imported it is an
     # temporary database. To make sure attachments are considered
     # during import we set _attachments_tmp here.
-    if (!$self->_imported){
+    if ( !$self->_imported ) {
       $self->_attachments_tmp( \@files );
     }
 
@@ -460,17 +459,18 @@ sub refresh_attachments {
 sub refresh_pdf {
   ( my $self ) = @_;
 
-  if ($self->pdf) {
-    my $model   = Paperpile::Model::Library->new();
+  if ( $self->pdf && $self->_db_connection ) {
+    my $model = Paperpile::Model::Library->new();
     $model->set_dsn( $self->_db_connection );
 
     my $guid = $self->guid;
-    my $sth = $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=1;");
+    my $sth =
+      $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=1;");
     $sth->execute;
 
     while ( my $row = $sth->fetchrow_hashref() ) {
-	my $path = $row->{local_file};
-	$self->_pdf_path($path);
+      my $path = $row->{local_file};
+      $self->_pdf_path($path);
     }
   }
 }
@@ -485,6 +485,35 @@ sub create_guid {
 
 }
 
+sub add_tag {
+  my $self = shift;
+  my $guid = shift;
+
+  $self->insert_guid( 'tags', $guid );
+}
+
+sub add_folder {
+  my $self = shift;
+  my $guid = shift;
+
+  $self->insert_guid( 'folders', $guid );
+}
+
+sub add_guid {
+  my $self = shift;
+  my $what = shift;
+  my $guid = shift;
+
+  $what = 'folders' if ( $what eq 'FOLDER' );
+  $what = 'tags'    if ( $what eq 'LABEL' );
+
+  my @guids = split( /,/, $self->$what );
+  push @guids, $guid;
+  my %seen = ();
+  @guids = grep { !$seen{$_}++ } @guids;
+  my $new_guids = join( ',', @guids );
+  $self->$what($new_guids);
+}
 
 sub as_hash {
 
@@ -500,15 +529,15 @@ sub as_hash {
     my $value = $self->$key;
 
     # Force it to a number to be correctly converted to JSON
-    if ($key ~~ ['times_read', 'trashed']){
-      $value+=0;
+    if ( $key ~~ [ 'times_read', 'trashed' ] ) {
+      $value += 0;
     }
 
-    $hash{$key} = $value if ($key eq '_pdf_path');
-    $hash{$key} = $value if ($key eq '_attachments_list');
+    $hash{$key} = $value if ( $key eq '_pdf_path' );
+    $hash{$key} = $value if ( $key eq '_attachments_list' );
 
     # take only simple scalar and allowed refs
-    next if (ref($value) && $key ne '_search_job' && $key ne '_metadata_job');
+    next if ( ref($value) && $key ne '_search_job' && $key ne '_metadata_job' );
 
     $hash{$key} = $value;
   }
@@ -660,8 +689,8 @@ sub format_pattern {
   }
 
   # [YY] and [YYYY]
-  if ($pattern =~/\[YY\]|\[YYYY\]/){
-    if ( $YYYY ) {
+  if ( $pattern =~ /\[YY\]|\[YYYY\]/ ) {
+    if ($YYYY) {
       $pattern =~ s/\[YY\]/$YY/g;
       $pattern =~ s/\[YYYY\]/$YYYY/g;
     } else {
@@ -690,9 +719,9 @@ sub format_pattern {
 
   # Remove all remaining non-alphanumeric characters that might be
   # left but keep slashes
-  $pattern =~s{/}{__SLASH__}g;
+  $pattern =~ s{/}{__SLASH__}g;
   $pattern =~ s/\W//g;
-  $pattern =~s{__SLASH__}{/}g;
+  $pattern =~ s{__SLASH__}{/}g;
 
   return $pattern;
 
@@ -703,11 +732,11 @@ sub debug {
   my $hash = $self->as_hash;
 
   print STDERR "PUB: { \n";
-  foreach my $key (sort keys %$hash) {
-      my $value = $hash->{$key} || "";
-      next if ($value eq '');
-      print STDERR "  $key => ".$value."\n";
-    }
+  foreach my $key ( sort keys %$hash ) {
+    my $value = $hash->{$key} || "";
+    next if ( $value eq '' );
+    print STDERR "  $key => " . $value . "\n";
+  }
   print STDERR "}\n";
 }
 

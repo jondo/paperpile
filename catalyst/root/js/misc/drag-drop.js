@@ -101,25 +101,22 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   getDropTargetsForLibraryImport: function(event) {
     var targets = [];
 
+    // Default to the local root as the drop target.
     var tree = Paperpile.main.tree;
-    var node = tree.getNodeById('IMPORT_PLUGIN_ROOT');
-    node = node.findChildBy(function(node) {
-      if (node.text == 'Import File') {
-        return true;
-      }
-      return false;
-    });
+    var node = tree.getNodeById('LOCAL_ROOT');
+    var el = Ext.get(node.ui.getEl());
 
-    var el = Ext.get(node.ui.getTextEl()).up('div');
+    // If the active tab happens to be a grid, that makes more sense.
     var activeTab = Paperpile.main.tabs.getActiveTab();
     if (activeTab instanceof Paperpile.PluginPanel) {
       el = activeTab.getGrid().getEl();
     }
+
     var target = new Paperpile.DragDropTarget({
       hint: 'import',
       dragMessage: 'Open library file',
       action: 'file-import',
-      object: node
+      object: null
     });
     target.setTargetEl(el);
     return target;
@@ -171,9 +168,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       }
 
       if (node.type == 'FOLDER') {
-        dragMessage = 'Import ' + noun + mult + ' into folder <b>' + node.text+'</b>';
+        dragMessage = 'Import ' + noun + mult + ' into folder <b>' + node.text + '</b>';
       } else if (node.type == 'TAGS') {
-        dragMessage = 'Import ' + noun + mult + ' with label <b>' + node.text+'</b>';
+        dragMessage = 'Import ' + noun + mult + ' with label <b>' + node.text + '</b>';
       }
       var target = new Paperpile.DragDropTarget({
         invisible: true,
@@ -195,10 +192,14 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var preferPdfAction = this.isPdfDrag(event);
 
     // Get the list of visible row indices.
-      // This is an override method for GridPanel -- see overrides.js
-      var visibleRows = gridPanel.getVisibleRows();
+    // This is an override method for GridPanel -- see overrides.js
+    var visibleRows = gridPanel.getVisibleRows();
 
     var mult = this.isMultipleFileDrag(event) ? 's' : '';
+
+    if (visibleRows == 0) {
+      return targets;
+    }
 
     // One target for the whole grid.
     var target = new Paperpile.DragDropTarget({
@@ -431,11 +432,12 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
         Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.data.guid, file, false]);
       }
     } else if (action == 'pdf-import') {
+      var node = object;
       var files = this.getFilesFromEvent(event);
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         if (file.extension() == 'pdf' || file.isDirectory()) {
-          Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.nativePath()]);
+          Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.nativePath(),node]);
         }
       }
     } else if (action == 'file-import') {

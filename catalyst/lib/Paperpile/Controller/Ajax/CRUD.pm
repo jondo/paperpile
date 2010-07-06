@@ -54,6 +54,10 @@ sub insert_entry : Local {
         type => 'METADATA_UPDATE',
         pub  => $pub,
       );
+
+      # We're 'stealing' the _match method from the metadata update job type
+      # in order to match the article against the user's choice of web resources
+      # before importing it here.
       my $success = $j->_match;
       if ($success) {
         $pub = $j->pub;
@@ -177,10 +181,10 @@ sub empty_trash : Local {
   my ( $self, $c ) = @_;
 
   my $library = $c->model('Library');
-  my $data = $library->get_trashed_pubs;
+  my $data    = $library->get_trashed_pubs;
   $library->delete_pubs($data);
-  
-  $c->stash->{data} = {pub_delta => 1};
+
+  $c->stash->{data} = { pub_delta => 1 };
   $c->stash->{num_deleted} = scalar @$data;
 }
 
@@ -217,7 +221,7 @@ sub delete_entry : Local {
 
   $self->_update_counts($c);
 
-  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections($c, $data)
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, $data )
 
 }
 
@@ -235,7 +239,7 @@ sub undo_trash : Local {
 
   $c->stash->{data}->{pub_delta} = 1;
 
-  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections($c, $data)
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, $data )
 
 }
 
@@ -271,7 +275,7 @@ sub update_entry : Local {
 
   $c->stash->{data} = { pubs => { $guid => $hash } };
 
-  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections($c, [$new_pub])
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, [$new_pub] )
 
 }
 
@@ -432,15 +436,7 @@ sub move_in_collection : Local {
   if ( $guid ne 'FOLDER_ROOT' ) {
     my $new_guid = $guid;
 
-    foreach my $pub (@$data) {
-      my @guids = split( /,/, $pub->$what );
-      push @guids, $new_guid;
-      my %seen = ();
-      @guids = grep { !$seen{$_}++ } @guids;
-      my $new_guids = join( ',', @guids );
-      $pub->$what($new_guids);
-    }
-    $c->model('Library')->update_collections( $data, $type );
+    $c->model('Library')->add_to_collection( $data, $new_guid );
   }
 
   if (@to_be_imported) {
@@ -454,7 +450,7 @@ sub move_in_collection : Local {
   $c->stash->{data}->{collection_delta} = 1;
 
   my $sync_files = $c->model('User')->get_setting('file_sync');
-  if (ref $sync_files && $sync_files->{$guid}->{active}){
+  if ( ref $sync_files && $sync_files->{$guid}->{active} ) {
     $c->stash->{data}->{file_sync_delta} = [$guid];
   }
 
@@ -476,7 +472,7 @@ sub remove_from_collection : Local {
   $c->stash->{data}->{collection_delta} = 1;
 
   my $sync_files = $c->model('User')->get_setting('file_sync');
-  if ($sync_files->{$collection_guid}->{active}){
+  if ( $sync_files->{$collection_guid}->{active} ) {
     $c->stash->{data}->{file_sync_delta} = [$collection_guid];
   }
 
@@ -796,7 +792,6 @@ sub sync_files : Local {
 
 }
 
-
 # Returns list of all collection guids that need to be re-synced when
 # references in $data change
 
@@ -806,17 +801,17 @@ sub _get_sync_collections {
   my $sync_files = $c->model('User')->get_setting('file_sync');
 
   my %collections;
-  foreach my $pub (@$data){
+  foreach my $pub (@$data) {
 
     my @tmp;
-    if ($pub->folders){
-      push @tmp, split(/,/,$pub->folders);
+    if ( $pub->folders ) {
+      push @tmp, split( /,/, $pub->folders );
     }
-    if ($pub->tags){
-      push @tmp, split(/,/,$pub->tags);
+    if ( $pub->tags ) {
+      push @tmp, split( /,/, $pub->tags );
     }
 
-    foreach my $collection (@tmp){
+    foreach my $collection (@tmp) {
       $collections{$collection} = 1 if $sync_files->{$collection}->{active};
     }
 
@@ -824,11 +819,9 @@ sub _get_sync_collections {
 
   }
 
-  return [keys %collections];
+  return [ keys %collections ];
 
 }
-
-
 
 # Returns the plugin object in the backend corresponding to an AJAX
 # request from the frontend
