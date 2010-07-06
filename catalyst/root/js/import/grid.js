@@ -167,7 +167,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
       }),
       'VIEW_PDF': new Ext.Action({
-        handler: this.openPDF,
+        handler: this.viewPDF,
         scope: this,
         iconCls: 'pp-icon-import-pdf',
         itemId: 'VIEW_PDF',
@@ -1969,12 +1969,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
   },
 
-  openPDF: function() {
+  viewPDF: function() {
     var sm = this.getSelectionModel();
     var record = this.getSingleSelectionRecord();
     if (record.data.pdf) {
       var pdf = record.data.pdf_name;
-      var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
+      var path = record.data._pdf_path;
       Paperpile.main.tabs.newPdfTab({
         file: path,
         title: pdf
@@ -1992,7 +1992,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var sm = this.getSelectionModel();
     var record = sm.getSelected();
     if (record.data._imported) {
-      this.openPDF();
+      this.viewPDF();
     }
   },
 

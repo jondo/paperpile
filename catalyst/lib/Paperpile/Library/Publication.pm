@@ -90,6 +90,7 @@ has 'pdf' => ( is => 'rw', default => '' );
 # File name of PDF relative to paper_root. Use for display purpose and
 # to reconstruct PDF path without going back to attachments table
 has 'pdf_name' => ( is => 'rw', default => '' );
+has '_pdf_path' => ( is => 'rw', default => '' );
 
 # Comma separated list of guids of other attachments
 has 'attachments' => ( is => 'rw' );
@@ -455,6 +456,25 @@ sub refresh_attachments {
   }
 }
 
+# Loads the full PDF path into the _pdf_path field.
+sub refresh_pdf {
+  ( my $self ) = @_;
+
+  if ($self->pdf) {
+    my $model   = Paperpile::Model::Library->new();
+    $model->set_dsn( $self->_db_connection );
+
+    my $guid = $self->guid;
+    my $sth = $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=1;");
+    $sth->execute;
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+	my $path = $row->{local_file};
+	$self->_pdf_path($path);
+    }
+  }
+}
+
 sub create_guid {
   my $self = shift;
 
@@ -473,6 +493,7 @@ sub as_hash {
   my %hash = ();
 
   #$self->refresh_job_fields;
+  $self->refresh_pdf;
   $self->refresh_attachments;
 
   foreach my $key ( $self->meta->get_attribute_list ) {
@@ -483,6 +504,7 @@ sub as_hash {
       $value+=0;
     }
 
+    $hash{$key} = $value if ($key eq '_pdf_path');
     $hash{$key} = $value if ($key eq '_attachments_list');
 
     # take only simple scalar and allowed refs
