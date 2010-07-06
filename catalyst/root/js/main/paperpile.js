@@ -612,10 +612,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         var data = Ext.util.JSON.decode(response.responseText).data;
 
         // When an error occurs warnings are stored in the hash
-        // data.warnings with the guid of the collection as key. Greg,
-        // can you show the warning as a tooltip over a warning icon
-        // (yellow triangle) next to the tree node?
-        Paperpile.log(data);
+        // data.warnings with the guid of the collection as key.
         for (var i = 0; i < collections.length; i++) {
           var guid = collections[i];
           var node = this.tree.getNodeById(guid);

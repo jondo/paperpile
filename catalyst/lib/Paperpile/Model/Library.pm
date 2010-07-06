@@ -210,29 +210,37 @@ sub trash_pubs {
     $dbh->do("UPDATE Publications SET trashed=$status,created=$now WHERE guid='$pub_guid'");
 
     # Move attachments
-    my $select =
-      $dbh->prepare("SELECT guid, local_file FROM Attachments WHERE publication='$pub_guid';");
+    my $select = $dbh->prepare(
+      "SELECT guid, local_file, is_pdf FROM Attachments WHERE publication='$pub_guid';");
 
     my $attachment_guid;
     my $file_absolute;
+    my $is_pdf;
 
-    $select->bind_columns( \$attachment_guid, \$file_absolute );
+    $select->bind_columns( \$attachment_guid, \$file_absolute, \$is_pdf );
     $select->execute;
     while ( $select->fetch ) {
-      my $move_to;
+      my $rel_path;
+      my $abs_path;
       my $file_relative = abs2rel( $file_absolute, $paper_root );
       if ( $mode eq 'TRASH' ) {
-        $move_to = catfile( $paper_root, "Trash", $file_relative );
+        $rel_path = catfile( "Trash",     $file_relative );
+        $abs_path = catfile( $paper_root, $rel_path );
       } else {
-        $move_to = $file_relative;
-        $move_to =~ s/Trash.//;
-        $move_to = catfile( $paper_root, $move_to );
+        $rel_path = $file_relative;
+        $rel_path =~ s/Trash.//;
+        $abs_path = catfile( $paper_root, $rel_path );
       }
-      push @files, [ $file_absolute, $move_to ];
-      $move_to = $dbh->quote($move_to);
+      push @files, [ $file_absolute, $abs_path ];
+      $abs_path = $dbh->quote($abs_path);
+      $rel_path = $dbh->quote($rel_path);
 
-      $dbh->do("UPDATE Attachments SET local_file=$move_to WHERE guid='$attachment_guid';");
+      $dbh->do("UPDATE Attachments SET local_file=$abs_path WHERE guid='$attachment_guid';");
 
+      if ($is_pdf) {
+        $pub->pdf_name($rel_path);
+        $dbh->do("UPDATE Publications SET pdf_name=$rel_path WHERE guid='$pub_guid';");
+      }
     }
   }
 

@@ -1589,7 +1589,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (mode == 'TRASH') {
       Paperpile.status.showBusy('Moving references to Trash');
     }
-
     if (mode == 'RESTORE') {
       Paperpile.status.showBusy('Restoring references');
     }
@@ -1973,7 +1972,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var record = this.getSingleSelectionRecord();
     if (record.data.pdf) {
       var pdf = record.data.pdf_name;
-      var path = record.data._pdf_path;
+      var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
       Paperpile.main.tabs.newPdfTab({
         file: path,
         title: pdf

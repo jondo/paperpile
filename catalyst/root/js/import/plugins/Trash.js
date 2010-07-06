@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginPanelTrash = Ext.extend(Paperpile.PluginPanel, {
 
   initComponent: function() {
@@ -98,12 +97,13 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
     this.actions['DELETE'].setIconClass('pp-icon-delete');
     this.actions['DELETE'].each(function(item) {
       if (item['setTooltip']) {
-	item.setTooltip('Permanently delete selected references.');
+        item.setTooltip('Permanently delete selected references.');
       }
       if (item.ownerCt && item.ownerCt.itemId == 'context') {
-	item.setText('Delete Permanently');
+        item.setText('Delete Permanently');
       }
-    },this);
+    },
+    this);
 
     var selected = this.getSingleSelectionRecord();
     if (!selected) {
@@ -116,12 +116,16 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
     }
   },
 
+  handleRestore: function() {
+    this.deleteEntry('RESTORE');
+  },
+
   handleDelete: function() {
     this.deleteEntry('DELETE');
   },
 
   handleEmptyTrash: function() {
-    this.deleteEntry('DELETE',true);
+    this.deleteEntry('DELETE', true);
   },
 
   getMultipleSelectionTemplate: function() {
