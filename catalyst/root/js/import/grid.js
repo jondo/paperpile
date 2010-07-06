@@ -143,6 +143,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'EXPORT'
       }),
 
+      'FORCE_SELECT_ALL': new Ext.Action({
+        text: 'Select all',
+        handler: this.forceSelectAll,
+        scope: this,
+        itemId: 'FORCE_SELECT_ALL'
+      }),
+
       'SELECT_ALL': new Ext.Action({
         text: 'Select all',
         handler: this.selectAll,
@@ -1090,7 +1097,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'TB_BREAK',
       'PDF_COMBINED_BUTTON2',
       this.createSeparator('TB_VIEW_SEP'),
-      'SELECT_ALL',
+      'FORCE_SELECT_ALL',
       'DELETE',
       this.createSeparator('TB_DEL_SEP'),
       'LIVE_FOLDER',
@@ -1246,8 +1253,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     var selection = this.getSingleSelectionRecord();
 
-    this.actions['SELECT_ALL'].setText('Select All (' + this.getStore().getTotalCount() + ')');
+    this.actions['SELECT_ALL'].setText('Select All');
+    this.actions['FORCE_SELECT_ALL'].setText('Select All (' + this.getStore().getTotalCount() + ')');
     if (this.getSelectionModel().isAllSelected() || this.getTotalCount() == 0) {
+      this.actions['FORCE_SELECT_ALL'].disable();
       this.actions['SELECT_ALL'].disable();
     }
 
@@ -1472,16 +1481,34 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   handleDownOne: function(keyCode, event) {
-    this.getSelectionModel().keyNavMove(1, event);
+      var sm = this.getSelectionModel();
+      var t = this.pager;
+      var activePage = Math.ceil((t.cursor + t.pageSize) / t.pageSize);
+    if (sm.getCount() == 1 && this.getStore().indexOf(sm.getSelected()) == this.pager.pageSize-1 && !this.pager.next.disabled) {
+	this.pager.moveNext();
+        this.doAfterNextReload.push(function() {
+          this.getSelectionModel().selectRowAndSetCursor(0);
+        });
+    } else {
+	this.getSelectionModel().keyNavMove(1, event);
+    }
   },
   handleUpOne: function(keyCode, event) {
+      var sm = this.getSelectionModel();
+    if (sm.getCount() == 1 && this.getStore().indexOf(sm.getSelected()) == 0 && !this.pager.prev.disabled) {
+	this.pager.movePrevious();
+        this.doAfterNextReload.push(function() {
+          this.getSelectionModel().selectRowAndSetCursor(this.pager.pageSize-1);
+        });
+    } else {
     this.getSelectionModel().keyNavMove(-1, event);
+    }
   },
   handleMoveFirst: function(keyCode, event) {
-    this.getSelectionModel().selectFirstRow();
+    this.getSelectionModel().selectRowAndSetCursor(0);
   },
   handleMoveLast: function(keyCode, event) {
-    this.getSelectionModel().selectLastRow();
+    this.getSelectionModel().selectRowAndSetCursor(this.getStore().getCount()-1);
   },
 
   // If trash is set entries are moved to trash, otherwise they are
@@ -1854,8 +1881,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
   },
 
+  forceSelectAll: function() {
+    // Force immediate selection of ALL items.
+    this.getSelectionModel().selectAll(true);
+  },
+
   selectAll: function() {
-    this.getSelectionModel().selectAll();
+    // First select page, then all.
+    this.getSelectionModel().selectAll(false);
   },
 
   setSearchQuery: function() {
