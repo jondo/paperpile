@@ -59,19 +59,14 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     var tags;
     if (this.multipleSelection) {
       // Collect all the tags from all references selected.
-      var sel = this.grid.getSelectionAsList();
       var records = this.grid.getSelectionModel().getSelections();
       var tag_hash = {};
-      for (var i = 0; i < sel.length; i++) {
-        var guid = sel[i];
+      for (var i = 0; i < records.length; i++) {
         var record = records[i];
-        //        var record = this.getGrid().getByGUID(guid);
-        if (record) {
-          var record_tags = record.data.tags.split(/\s*,\s*/);
-          for (var j = 0; j < record_tags.length; j++) {
-            var tag = record_tags[j];
-            tag_hash[tag] = 1;
-          }
+        var record_tags = record.data.tags.split(/\s*,\s*/);
+        for (var j = 0; j < record_tags.length; j++) {
+          var tag = record_tags[j];
+          tag_hash[tag] = 1;
         }
       }
       tags = [];

@@ -188,9 +188,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         renderTo: 'label-widget-' + this.id
       });
     }
-//    if (!Ext.get('label-widget-' + this.id)) {
-//      return;
-//    }
+    //    if (!Ext.get('label-widget-' + this.id)) {
+    //      return;
+    //    }
     this.labelWidget.renderData(data);
   },
 
@@ -228,7 +228,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     if (data.numSelected > 0) {
       if (this.labelWidget == undefined) {
-	  this.updateLabels(data);
+        this.updateLabels(data);
       }
       this.labelWidget.renderMultiple();
     }
@@ -550,7 +550,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   // supplementary file (given by isPDF).
   //
   chooseFile: function(isPDF) {
-    Paperpile.log("Choose!");
     var callback = function(filenames) {
       if (filenames.length > 0) {
         for (var i = 0; i < filenames.length; i++) {
@@ -590,7 +589,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   // supplementary file (given by isPDF).
   //
   attachFile: function(isPDF, path) {
-    Paperpile.log("Attach!");
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/attach_file'),
       params: {
@@ -602,7 +600,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.log("Returned!");
         Paperpile.main.onUpdate(json.data);
       },
       failure: Paperpile.main.onError,

@@ -529,7 +529,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   backgroundReload: function() {
     this.backgroundLoading = true;
-
     this.getStore().reload({
       callback: function() {
         this.backgroundLoading = false;
@@ -679,12 +678,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'blur': function(event, target, options) {
         if (this.keys !== undefined) {
           this.keys.disable();
-	}
+        }
       },
       'focus': function(event, target, options) {
-	if (this.keys !== undefined) {
+        if (this.keys !== undefined) {
           this.keys.enable();
-	}
+        }
       },
       scope: this,
       delay: 20,
@@ -1572,10 +1571,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   handleCopyFormatted: function() {
     this.handleCopy('Bibfile', 'CITATIONS', '{n} Citation{s} copied');
   },
-  deleteEntry: function(mode,deleteAll) {
+  deleteEntry: function(mode, deleteAll) {
     var selection = this.getSelection();
     if (deleteAll === true) {
-	selection = 'ALL';
+      selection = 'ALL';
     }
 
     // Find the lowest index of the current selection.

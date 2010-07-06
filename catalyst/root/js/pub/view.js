@@ -200,7 +200,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     var datatabs = this.items.get('center_panel').items.get('data_tabs');
     datatabs.items.get('pubsummary').updateDetail();
     datatabs.items.get('pubnotes').updateDetail();
-      this.getOverview().forceUpdate();
+    this.getOverview().forceUpdate();
     this.items.get('east_panel').items.get('details').updateDetail();
   },
 

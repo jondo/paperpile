@@ -403,12 +403,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   // Submit a PDF extraction job, optionally including the tree node
   // representing the target collection for import.
-  submitPdfExtractionJobs: function(path,treeNode) {
+  submitPdfExtractionJobs: function(path, treeNode) {
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/pdfextract/submit'),
       params: {
         path: path,
-	collection_guids: [treeNode.id]
+        collection_guids: [treeNode.id]
       },
       success: function(response) {
         Paperpile.main.queueUpdate();
@@ -595,13 +595,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // update is triggered vie triggerFileSync
   fireFileSync: function() {
 
-      var collections = this.fileSyncStatus.collections;
-      for (var i=0; i < collections.length; i++) {
-	  var guid = collections[i];
-	  var node = this.tree.getNodeById(guid);
-	  node.getUI().updateWorking('Syncing with external file');
-	}
-
+    var collections = this.fileSyncStatus.collections;
+    for (var i = 0; i < collections.length; i++) {
+      var guid = collections[i];
+      var node = this.tree.getNodeById(guid);
+      node.getUI().updateWorking('Syncing with external file');
+    }
 
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/crud/sync_files'),
@@ -611,24 +610,24 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       method: 'GET',
       success: function(response) {
         var data = Ext.util.JSON.decode(response.responseText).data;
-    
+
         // When an error occurs warnings are stored in the hash
         // data.warnings with the guid of the collection as key. Greg,
         // can you show the warning as a tooltip over a warning icon
         // (yellow triangle) next to the tree node?
-        Paperpile.log(data.warnings);
-      for (var i=0; i < collections.length; i++) {
-	  var guid = collections[i];
-	  var node = this.tree.getNodeById(guid);
+        Paperpile.log(data);
+        for (var i = 0; i < collections.length; i++) {
+          var guid = collections[i];
+          var node = this.tree.getNodeById(guid);
           if (data.warnings[guid]) {
-	      var error = "<b>Sync error:</b> ";
-	      error += data.warnings[guid];
-	      error += "<br/><span class='pp-smallprint'>Click to dismiss.</span>";
-	      node.getUI().updateError(error);
-	  } else {
-	      node.getUI().updateNone.defer(300,node.getUI());
-	  }
-	}
+            var error = "<b>Sync error:</b> ";
+            error += data.warnings[guid];
+            error += "<br/><span class='pp-smallprint'>Click to dismiss.</span>";
+            node.getUI().updateError(error);
+          } else {
+            node.getUI().updateNone.defer(300, node.getUI());
+          }
+        }
 
         this.fileSyncStatus.busy = false;
 
