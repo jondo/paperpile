@@ -17,6 +17,12 @@
 
 Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
+  // Each status update is assigned a 'message number', which allows
+  // us to uniquely identify messages. If you want to clear a specific message
+  // once it's no longer useful (but avoid clearing other messages
+  // that came up in the meantime), you should call the clearMessageNumber
+  // method.
+  messageNumber: 0,
     animConfig: {
 	duration:0.25,
 	easing:'easeOut'
@@ -107,6 +113,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
   },
 
   updateMsg: function(pars) {
+      this.messageNumber++;
 
       var anim = false;
       if (pars.fade) {
@@ -156,15 +163,17 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
     }
 
     if (pars.duration) {
+      var num = this.getMessageNumber();
       (function() {
-        this.clearMsg(anim)
+        this.clearMessageNumber(num,anim);
       }).defer(pars.duration * 1000, this);
     }
 
     if (pars.hideOnClick) {
+      var num = this.getMessageNumber();
       Ext.getBody().on('click',
         function(e) {
-          this.clearMsg(anim);
+	  this.clearMessageNumber(num,anim);
         },
         this, {
           single: true
@@ -177,12 +186,25 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
     this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t', [0, 3]);
 
+      return this.getMessageNumber();
   },
+
+  getMessageNumber: function() {
+      return this.messageNumber;
+},
+
+  clearMessageNumber: function(messageNumber,anim) {
+      if (this.messageNumber == messageNumber) {
+	  this.clearMsg(anim);
+      }
+},
 
   clearMsg: function(anim) {
     this.el.hide(anim);
     // back to default
     this.setType('info');
+    this.action1el.hide();
+    this.action2el.hide();
   },
 
   showBusy: function(msg) {
@@ -190,11 +212,13 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
       msg: msg,
       busy: true
     });
+      return this.getMessageNumber();
   },
 
   setMsg: function(msg) {
     Ext.DomHelper.overwrite(this.msgEl, msg);
     this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t', [0, 3]);
+      return this.getMessageNumber();
   },
 
   setType: function(type) {

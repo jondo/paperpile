@@ -188,9 +188,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         renderTo: 'label-widget-' + this.id
       });
     }
-    if (!Ext.get('label-widget-' + this.id)) {
-      return;
-    }
+//    if (!Ext.get('label-widget-' + this.id)) {
+//      return;
+//    }
     this.labelWidget.renderData(data);
   },
 
@@ -227,6 +227,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     templateToUse.overwrite(this.body, data, true);
 
     if (data.numSelected > 0) {
+      if (this.labelWidget == undefined) {
+	  this.updateLabels(data);
+      }
       this.labelWidget.renderMultiple();
     }
 

@@ -452,9 +452,18 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         msg: 'All ' + num + ' references on this page are selected.',
         action1: 'Select all ' + all + ' references.',
         callback: function() {
-          this.getSelectionModel().selectAll();
+          this.getSelectionModel().selectAll.defer(20, this.getSelectionModel());
         },
         scope: this
+      });
+
+      // Create a callback to clear this message if the selection changes.
+      var messageNum = Paperpile.status.getMessageNumber();
+      var clearMsg = function() {
+        Paperpile.status.clearMessageNumber(messageNum);
+      };
+      this.getSelectionModel().on('afterselectionchange', clearMsg, this, {
+        single: true
       });
     },
     this);
@@ -472,6 +481,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         },
         scope: this
       });
+
+      // Create a callback to clear this message if the selection changes.
+      var messageNum = Paperpile.status.getMessageNumber();
+      var clearMsg = function() {
+        Paperpile.status.clearMessageNumber(messageNum);
+      };
+      this.getSelectionModel().on('afterselectionchange', clearMsg, this, {
+        single: true
+      });
+
     },
     this);
 
@@ -658,10 +677,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.mon(this.getView().focusEl, {
       'blur': function(event, target, options) {
-        this.keys.disable();
+        if (this.keys !== undefined) {
+          this.keys.disable();
+	}
       },
       'focus': function(event, target, options) {
-        this.keys.enable();
+	if (this.keys !== undefined) {
+          this.keys.enable();
+	}
       },
       scope: this,
       delay: 20,
@@ -773,7 +796,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   cancelLoad: function() {
-
+    if (!this.store) {
+      return;
+    }
     // The refresh button does not get reset and keeps
     // spinning. It is resetted if an error occurs in the
     // proxy. Therefore I call the exception explicitly as a
@@ -1143,7 +1168,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (!this.getSelectionModel().isSelected(index)) {
       this.getSelectionModel().selectRow(index);
     } else {
-      Paperpile.log("Setting cursor!");
       this.getSelectionModel().setCursor(index);
     }
 
@@ -1548,8 +1572,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   handleCopyFormatted: function() {
     this.handleCopy('Bibfile', 'CITATIONS', '{n} Citation{s} copied');
   },
-  deleteEntry: function(mode) {
+  deleteEntry: function(mode,deleteAll) {
     var selection = this.getSelection();
+    if (deleteAll === true) {
+	selection = 'ALL';
+    }
 
     // Find the lowest index of the current selection.
     var firstRecord = this.getSelectionModel().getLowestSelected();
@@ -1980,15 +2007,34 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   destroy: function() {
-    Paperpile.PluginGrid.superclass.destroy.call(this);
 
-    if (this._store) {
-      this._store.destroy();
+    if (this.getSelectionModel()) {
+      this.getSelectionModel().purgeListeners();
+      this.getSelectionModel().destroy();
     }
-
+    if (this.keys) {
+      this.keys.destroy();
+      delete this.keys;
+    }
+    if (this.pager) {
+      this.pager.purgeListeners();
+      this.pager.destroy();
+    }
+    if (this.getView()) {
+      this.getView().purgeListeners();
+    }
+    if (this._store) {
+      this.getStore().purgeListeners();
+      this.getStore().destroy();
+      delete this._store;
+    }
     if (this.context) {
       this.context.destroy();
     }
+    if (this) {
+      this.purgeListeners();
+    }
+    Paperpile.PluginGrid.superclass.destroy.call(this);
   }
 });
 

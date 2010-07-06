@@ -128,6 +128,16 @@ Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
   disable: function() {
     this.keyMap.disable();
   },
+  destroy: function() {
+    this.keyMap.disable();
+    this.keyMap = null;
+
+    for (var i=0; i < this.bindings.length; i++) {
+	var shortcut = this.bindings[i];
+	shortcut.destroy();
+    }
+    this.bindings = null;
+  }
 });
 
 Ext.ux.KeyboardShortcut = Ext.extend(Ext.util.Observable, {

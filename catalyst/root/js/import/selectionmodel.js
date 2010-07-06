@@ -675,6 +675,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     if (this.fakeAllSelected) {
       return true;
     }
+    return false;
   },
 
   selectAll: function() {
@@ -711,10 +712,10 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
   },
 
   getCount: function() {
-    if (!this.fakeAllSelected) {
-      return this.selections.length;
-    } else {
+    if (this.fakeAllSelected) {
       return this.grid.store.getTotalCount();
+    } else {
+      return this.selections.length;
     }
   },
 

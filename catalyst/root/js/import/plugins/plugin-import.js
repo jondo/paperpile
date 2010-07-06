@@ -45,10 +45,12 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
 
     if (!grid['isLongImport']) {
       Ext.apply(grid, {
-        isLongImport: function() {
-          if (this.allSelected || this.getSelection('NOT_IMPORTED') == 'ALL') return true;
-          if (this.getSelection('NOT_IMPORTED').length >= 10) return true;
-          return false;
+        isLongImport: function(selection) {
+          if (selection == 'ALL' || selection >= 10) {
+            return true;
+          } else {
+            return false;
+          }
         }
       });
     }
@@ -118,20 +120,15 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
       },
       grid),
 
-      insertAll: function() {
-        this.allSelected = true;
-        this.insertEntry(true);
-      },
-
       insertEntry: function(all) {
-        if (all) {
-          this.allSelected = true;
-        }
-
         var selection = this.getSelection('NOT_IMPORTED');
-        if (selection.length == 0) return;
-
-	var longImport = this.isLongImport();
+        if (all) {
+          selection = 'ALL';
+        }
+        if (selection.length == 0 && selection != 'ALL'){
+	    return;
+	}
+        var longImport = this.isLongImport(selection);
         if (longImport) {
           Paperpile.status.showBusy('Importing references to library');
         }
@@ -146,9 +143,6 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
           method: 'GET',
           success: function(response) {
             var json = Ext.util.JSON.decode(response.responseText);
-            if (all) {
-              this.allSelected = false;
-            }
             Paperpile.main.onUpdate(json.data);
             if (longImport) {
               Paperpile.status.clearMsg();

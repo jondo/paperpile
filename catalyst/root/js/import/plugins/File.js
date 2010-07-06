@@ -38,15 +38,17 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
 
   initComponent: function() {
     this.getStore().on('beforeload', function() {
-      Paperpile.status.showBusy("Loading File");
+//      if (!this.backgroundLoading) {
+        Paperpile.status.showBusy("Loading File");
+//      }
     },
-    this);
+    this,{single:true});
     this.getStore().on('load', function() {
-      if (!this.backgroundLoading) {
+//      if (!this.backgroundLoading) {
         Paperpile.status.clearMsg();
-      }
+//      }
     },
-    this);
+    this,{single:true});
 
     Paperpile.PluginGridFile.superclass.initComponent.call(this);
   },

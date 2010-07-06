@@ -44,11 +44,7 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
 
     this.actions['EMPTY_TRASH'] = new Ext.Action({
       text: 'Empty Trash',
-      handler: function() {
-        this.allSelected = true;
-        this.deleteEntry('DELETE');
-        this.allSelected = false;
-      },
+      handler: this.handleEmptyTrash,
       scope: this,
       iconCls: 'pp-icon-clean',
       itemId: 'empty_button',
@@ -56,9 +52,7 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
     });
     this.actions['RESTORE'] = new Ext.Action({
       text: 'Restore',
-      handler: function() {
-        this.deleteEntry('RESTORE');
-      },
+      handler: this.handleRestore,
       scope: this,
       iconCls: 'pp-icon-restore',
       itemId: 'restore_button',
@@ -124,6 +118,10 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
 
   handleDelete: function() {
     this.deleteEntry('DELETE');
+  },
+
+  handleEmptyTrash: function() {
+    this.deleteEntry('DELETE',true);
   },
 
   getMultipleSelectionTemplate: function() {
