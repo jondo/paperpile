@@ -71,7 +71,8 @@ Parameters:
 
 sub new {
   my ( $class, $fh, $cleaning_flag ) = @_;
-  $cleaning_flag = ($cleaning_flag) ? $cleaning_flag : 1;
+
+  $cleaning_flag = (!$cleaning_flag) ? $cleaning_flag : 1;
 
   return bless {
     fh      => $fh,
@@ -119,13 +120,15 @@ sub _parse_next {
 
       # read rest of entry (matches braces)
       my $bracelevel = 0;
-      $bracelevel += tr/\{/\{/;    #count braces
-      $bracelevel -= tr/\}/\}/;
+      $bracelevel += _count_braces_left($_);    #count braces
+      $bracelevel -= _count_braces_right($_);
       while ( $bracelevel != 0 ) {
         my $position = pos($_);
         my $line     = $self->{fh}->getline;
         last unless defined $line;
-        $bracelevel = $bracelevel + ( $line =~ tr/\{/\{/ ) - ( $line =~ tr/\}/\}/ );
+	$bracelevel += _count_braces_left($line);
+	$bracelevel -= _count_braces_right($line);
+
         $_ .= $line;
         pos($_) = $position;
       }
@@ -192,6 +195,34 @@ sub _parse_next {
   }
 }
 
+# helper functions to count NON-ESCAPED braces
+# simply doing a tr/\{/\{/ also counts
+# escaped braces which leads to incorrect parsing
+sub _count_braces_left {
+  my $string = $_[0];
+
+  my $count = 0;
+  while ( $string =~ m/(?<!\\)\{/g ) {
+    $count++;
+  }
+
+  return $count;
+
+}
+
+sub _count_braces_right {
+  my $string = $_[0];
+
+  my $count = 0;
+  while ( $string =~ m/(?<!\\)\}/g ) {
+    $count++;
+  }
+
+  return $count;
+}
+
+
+
 =head2 next
 
 Returns the next parsed entry or undef.
@@ -227,23 +258,41 @@ BRACE: {
 # nested braces.
 sub _parse_string {
   my $strings_ref = shift;
-
   my $value = "";
 
+  #foreach my $key ( keys %{$strings_ref} ) {
+  #  print STDERR $key," ",$strings_ref->{$key},"\n";
+  #}
+
 PART: {
+
     if (/\G(\d+)/cg) {
       $value .= $1;
     } elsif (/\G($re_name)/cgo) {
       #warn("Using undefined string $1") unless defined $strings_ref->{$1};
       $value .= $strings_ref->{$1} || "$1";
-    } elsif (/\G"(([^"\\]*(\\.)*[^\\"]*)*)"/cgs) {
-
-      # quoted string with embeded escapes
-      $value .= $1;
+    #} elsif (/\G"(([^"\\]*(\\.)*[^\\"]*)*)"/cgs) {
+    } elsif (/\G"/cgs) {
+      # if the entry starts with quotes, we earch for the next
+      # quotes that have a local braces level of 0
+      # Used to be a bug in the original CPAN module
+      my $start_pos = pos($_);
+      while ( m/(?<!\\)"/g ) {
+	my $act_pos = pos($_);
+	my $a = substr($_,$start_pos, ($act_pos-$start_pos));
+	my $brace_level = _count_braces_left($a) - _count_braces_right($a);
+	last if ( $brace_level == 0 );
+      }
+      my $last_pos = pos($_)-1;
+      my $tmp_val = substr($_,$start_pos, ($last_pos-$start_pos));
+      # we use an exact match here to grab the value from the hash
+      # I have to lookup in the bibtex manual how @STRING
+      # is handled correctly
+      $value .= $strings_ref->{$tmp_val} || $tmp_val;
+      
     } else {
       my $part = _extract_bracketed($_);
       $value .= substr $part, 1, length($part) - 2;
-
       # strip quotes
     }
 

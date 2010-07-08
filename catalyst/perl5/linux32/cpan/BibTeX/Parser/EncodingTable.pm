@@ -368,8 +368,10 @@ our @latex_other_symbols = (
 );
 
 our (
-  %latex_umlaute_table,       %latex_math_symbols_table, $latex_math_symbols_string,
-  %latex_other_symbols_table, $latex_other_symbols_string
+  %latex_umlaute_table,       %latex_math_symbols_table,   $latex_math_symbols_string,
+  %latex_other_symbols_table, $latex_other_symbols_string, %out_umlaute_table,
+  $out_umlaute_string,        %out_math_symbols_table,     $out_math_symbols_string,
+  %out_other_symbols_table,   $out_other_symbols_string
 );
 
 sub init {
@@ -397,6 +399,39 @@ sub init {
   $latex_other_symbols_string =~ s/\?/\\\?/g;
   $latex_other_symbols_string =~ s/\$/\\\$/g;
   $latex_other_symbols_string =~ s/#/\\#/g;
+
+  for my $n ( 0 .. @latex_umlaute / 2 - 1 ) {
+    my ( $k, $v ) = @latex_umlaute[ 2 * $n, 1 + 2 * $n ];
+    my $symbol = chr( hex($v) );
+    $out_umlaute_table{$symbol} = $k;
+  }
+
+  $out_umlaute_string = join( '', sort keys %out_umlaute_table );
+  $out_umlaute_string =~ s/\\/\\\\/;
+  $out_umlaute_string = qr{ [$out_umlaute_string] }x;
+
+  for my $n ( 0 .. @latex_math_symbols / 2 - 1 ) {
+    my ( $k, $v ) = @latex_math_symbols[ 2 * $n, 1 + 2 * $n ];
+    my $symbol = chr( hex($v) );
+    $out_math_symbols_table{$symbol} = $k;
+  }
+
+  $out_math_symbols_string = join( '', sort keys %out_math_symbols_table );
+  $out_math_symbols_string =~ s/\\/\\\\/;
+  $out_math_symbols_string = qr{ [$out_math_symbols_string] }x;
+
+  for my $n ( 0 .. @latex_other_symbols / 2 - 1 ) {
+    my ( $k, $v ) = @latex_other_symbols[ 2 * $n, 1 + 2 * $n ];
+    # we do not keep backslashes ( handled spearately )
+    next if ( $v eq '5c' );
+    my $symbol = chr( hex($v) );
+    $out_other_symbols_table{$symbol} = $k;
+  }
+
+  $out_other_symbols_string = join( '', sort keys %out_other_symbols_table );
+  $out_other_symbols_string =~ s/\\/\\\\/;
+  $out_other_symbols_string = qr{ [$out_other_symbols_string] }x;
+
 }
 
 init();

@@ -18,10 +18,11 @@ package Paperpile::Formats::Bibtex;
 use Moose;
 use Data::Dumper;
 use YAML qw(LoadFile);
-use BibTeX::Parser;
 use IO::File;
 use Text::Wrap;
 use Paperpile::Formats::TeXEncoding;
+use BibTeX::Parser;
+use BibTeX::Parser::EncodingTable;
 use Encode;
 
 extends 'Paperpile::Formats';
@@ -191,21 +192,15 @@ sub write {
 
   my ($self) = @_;
 
-  my $bibtex_export_fields =
-    'annote,keywords,url,isbn,arxivid,doi,abstract,issn,eprint,lccn,note,pmid';
-  my $bibtex_export_curly  = 0;
-  my $bibtex_export_pretty = 1;
+  my $left_quote  = ( $self->settings->{use_quotes} == 1 ) ? '"' : '{';
+  my $right_quote = ( $self->settings->{use_quotes} == 1 ) ? '"' : '}';
 
-  my $left_quote  = '"';
-  my $right_quote = '"';
-
-  my $enc            = $Paperpile::Formats::TeXEncoding::encoded_chars;
-  my %latex_encoding = %Paperpile::Formats::TeXEncoding::encoding_table;
-
-  if ($bibtex_export_curly) {
-    $left_quote  = '{';
-    $right_quote = '}';
-  }
+  my $out_umlaute_string       = $BibTeX::Parser::EncodingTable::out_umlaute_string;
+  my %out_umlaute_table        = %BibTeX::Parser::EncodingTable::out_umlaute_table;
+  my $out_math_symbols_string  = $BibTeX::Parser::EncodingTable::out_math_symbols_string;
+  my %out_math_symbols_table   = %BibTeX::Parser::EncodingTable::out_math_symbols_table;
+  my $out_other_symbols_string = $BibTeX::Parser::EncodingTable::out_other_symbols_string;
+  my %out_other_symbols_table  = %BibTeX::Parser::EncodingTable::out_other_symbols_table;
 
   # We always write these fields (if non-empty) because they are
   # needed by BibTeX to work correctly
@@ -215,9 +210,11 @@ sub write {
     year month day guid);
 
   # Non standard fields are only exported if set in the user settings.
-  my @optional_fields = split( /,/, $bibtex_export_fields );
+  my @optional_fields = ();
+  while ( my ( $key, $value ) = each( %{ $self->settings->{export_fields} } ) ) {
+    push @optional_fields, $key if ( $value == 1 );
+  }
 
-  #linkout=>$url!!;
   open( OUT, ">" . $self->file )
     || FileReadError->throw( error => "Could not write to file " . $self->file );
 
@@ -246,9 +243,21 @@ sub write {
         # work without
         $value = decode_utf8($value);
 
-        # this regexp replaces the characters
-        $value =~ s{ ($enc)([\sa-zA-Z]?)}
-              { my $encoded  = $latex_encoding{$1};
+        if ( $self->settings->{export_escape} == 1 ) {
+
+          # before we do any conversion we convert
+          # backslahes that are in the text to \textbackslash
+          $value =~ s/\\/\\textbackslash/g;
+
+          # curly braces are escaped
+          $value =~ s/\{/\\\{/g;
+          $value =~ s/\}/\\\}/g;
+        }
+
+        # this regexp replaces all umlaute symbols
+        # this is always done as it is roundtrip safe
+        $value =~ s{ ($out_umlaute_string)([\sa-zA-Z]?)}
+              { my $encoded  = $out_umlaute_table{$1};
                 my $nextchar = $2;
                 my $sepchars = "";
                 if ($nextchar and substr($encoded, -1) =~ /[a-zA-Z]/) {
@@ -256,55 +265,70 @@ sub write {
                 }
                 "$encoded$sepchars$nextchar" }gxe;
 
-        # for the title we enclose special words
-        # in brackets
+        if ( $self->settings->{export_escape} == 1 ) {
+          $value =~ s{ ($out_other_symbols_string)([\sa-zA-Z]?)}
+              { my $encoded  = $out_other_symbols_table{$1};
+                my $nextchar = $2;
+                my $sepchars = "";
+                if ($nextchar and substr($encoded, -1) =~ /[a-zA-Z]/) {
+                    $sepchars = ($nextchar =~ /\s/) ? '{}' : '';
+                }
+                "$encoded$sepchars$nextchar" }gxe;
+          $value =~ s{ ($out_math_symbols_string)([\sa-zA-Z]?)}
+              { my $encoded  = '$'.$out_math_symbols_table{$1}.'$';
+                my $nextchar = $2;
+                my $sepchars = "";
+                if ($nextchar and substr($encoded, -1) =~ /[a-zA-Z]/) {
+                    $sepchars = ($nextchar =~ /\s/) ? '{}' : '';
+                }
+                "$encoded$sepchars$nextchar" }gxe;
+        }
+
+        # for the title we enclose special words in brackets
+
         if ( $key eq 'title' or $key eq 'booktitle' ) {
-          my @tmp = split( /\s+/, $value );
-          my $nr_upper_case = 0;
-          foreach my $i ( 1 .. $#tmp ) {
-            $nr_upper_case++ if ( $tmp[$i] =~ m/^[A-Z]/ );
-          }
+          if ( $self->settings->{title_quote_complete} == 1 ) {
+	    $value = '{'.$value.'}';
+          } else {
+            my @tmp = split( /\s+/, $value );
+            foreach my $i ( 0 .. $#tmp ) {
 
-          foreach my $i ( 0 .. $#tmp ) {
+              # enclose if we have more than one upper case letter
+              # in a single word
+              my $nr_capital_letters = ( $tmp[$i] =~ tr/[A-Z]// );
+              my $flag = ( $nr_capital_letters > 1 and $tmp[$i] !~ m/(-|\(|\)|\$|~)/ ) ? 1 : 0;
+              $flag = 0 if ( $tmp[$i] =~ m/^\{.*\}$/ );
 
-            # enclose if we have more than one upper case letter
-            # in a single word
-            my $nr_capital_letters = ( $tmp[$i] =~ tr/[A-Z]// );
+              # escape items from the list
+              foreach my $item ( @{ $self->settings->{title_quote} } ) {
+                $flag = 1 if ( $tmp[$i] eq $item );
+              }
 
-            # enclose if it is a one letter abbr.
-            my $flag = ( $tmp[$i] =~ m/^[A-Z]\.$/ ) ? 1 : 0;
-
-            # enclose if there are only a few upper case words
-            if ( $i > 0 and $nr_upper_case / ( $#tmp + 1 ) < 0.25 ) {
-              $flag = 1 if ( $tmp[$i] =~ m/^[A-Z]/ and $tmp[ $i - 1 ] !~ m/\./ );
-            }
-            $flag = 1 if ( $tmp[$i] =~ m/^[A-Z]/ and $tmp[$i] =~ m/-/ );
-            $flag = 1 if ( $tmp[$i] =~ m/^[A-Z]$/ );
-            $flag = 1 if ( $tmp[$i] =~ m/[A-Z]/ and $tmp[$i] =~ m/\d/ );
-            $flag = 0 if ( $tmp[$i] eq 'A' );
-            if ( $nr_capital_letters > 1 or $flag == 1 ) {
-              $tmp[$i] = '{' . $tmp[$i] . '}';
-              if ( $tmp[$i] =~ m/(.*)(:|\.|,|\?|\!)\}$/ ) {
-                $tmp[$i] = $1 . '}' . $2;
+              if ( $flag == 1 ) {
+                $tmp[$i] = '{' . $tmp[$i] . '}';
+                if ( $tmp[$i] =~ m/(.*)(:|\.|,|\?|\!)\}$/ ) {
+                  $tmp[$i] = $1 . '}' . $2;
+                }
               }
             }
+            $value = join( " ", @tmp );
           }
-          $value = join( " ", @tmp );
         }
 
         # Wrap long fields and align the "=" sign
-        if ($bibtex_export_pretty) {
+        if ( $self->settings->{pretty_print} == 1 ) {
           my $left = sprintf( "  %-" . ( $max_width + 2 ) . "s", $key ) . "= ";
           my $right = $value;
           $Text::Wrap::columns = 70;
 
-          # if we have " in the regular text we change to { } as
-          # field marks. We do not count \".
-          if ( $value =~ m/(?<!\\)"/ ) {
-            $right = wrap( $left, " " x ( $max_width + 7 ), '{' . $right . '}' );
-          } else {
-            $right = wrap( $left, " " x ( $max_width + 7 ), $left_quote . $right . $right_quote );
+          # if we have " in the regular text we have
+          # to esacpe it with { }
+          if ( $self->settings->{use_quotes} == 1 ) {
+            $right =~ s/(?<!\\)"/\{"\}/g;
+            $right =~ s/\{\{"\}\}/\{"\}/g;    # avoid double escapes
           }
+
+          $right = wrap( $left, " " x ( $max_width + 7 ), $left_quote . $right . $right_quote );
           push @lines, $right;
         }
 

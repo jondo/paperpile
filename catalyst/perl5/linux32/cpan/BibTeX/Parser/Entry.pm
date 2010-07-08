@@ -282,15 +282,19 @@ sub uchr {
 sub _sanitize_field {
   my $value = shift;
   my $clean = shift;
+ 
+  # We always convert Umlaute and Co. to the
+  # corresponding UTF-8 char
+  # This can do no harm as this is
+  # completely round trip safe
+  # the defly module does UTF-8 conversion
+  # for umlaute and Co.
+  $value = defly $value;
 
-  # some cleaning before UTF-8 conversion
+  # If clean >= 1 then LaTeX code is stripped
   if ( $clean >= 1 ) {
     $value =~ s/\\~\{\}/~/g;
     $value =~ s/\\\././g;
-
-    # the defly module does UTF-8 conversion
-    # for umlaute and Co.
-    $value = defly $value;
 
     # now we process math stuff
     my $tmp1 = $BibTeX::Parser::EncodingTable::latex_math_symbols_string;
@@ -313,11 +317,16 @@ sub _sanitize_field {
     $value =~ s/\\it//g;
     $value =~ s/\\emph//g;
     $value =~ s/\\em//g;
+    $value =~ s/\\tt//g;
 
-    # remove non-escaped braces 
+    # remove non-escaped braces
     # exception: $clean > 1 (e.g. authors field)
     $value =~ s/(?<!\\)\{//g if ( $clean == 1 );
     $value =~ s/(?<!\\)\}//g if ( $clean == 1 );
+
+    # convert escaped braces to regular ones
+    $value =~ s/\\\{/\{/g;
+    $value =~ s/\\\}/\}/g;
 
     # remove non-escaped dollar signs
     $value =~ s/(?<!\\)\$//g;
