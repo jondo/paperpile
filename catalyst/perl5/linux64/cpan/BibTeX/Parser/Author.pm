@@ -61,7 +61,18 @@ sub _get_or_set_field {
   if ( defined $value ) {
     $self->[$field] = $value;
   } else {
-    return $self->[$field];
+    return if ( ! $self->[$field] );
+    # some final cleaning
+    # remove curly brackets around a single letter
+    (my $tmp = $self->[$field]) =~ s/\{(\S)\}/$1/g;
+    # remove bracktes enclosing the whole word
+    if ( $tmp =~ m/^\{([^\{\}]+)\}$/ ) {
+      $tmp = $1;
+    }
+    $tmp =~ s/~/ /g;
+    $tmp =~ s/^\s+//g;
+    $tmp =~ s/\s+$//g;
+    return $tmp;
   }
 }
 
@@ -72,7 +83,7 @@ Set or get first name(s).
 =cut
 
 sub first {
-	shift->_get_or_set_field(0, @_);
+  shift->_get_or_set_field( 0, @_ );
 }
 
 =head2 von
@@ -82,7 +93,7 @@ Set or get 'von' part of name.
 =cut
 
 sub von {
-	shift->_get_or_set_field(1, @_);
+  shift->_get_or_set_field( 1, @_ );
 }
 
 =head2 last
@@ -92,7 +103,7 @@ Set or get last name(s).
 =cut
 
 sub last {
-	shift->_get_or_set_field(2, @_);
+  shift->_get_or_set_field( 2, @_ );
 }
 
 =head2 jr
@@ -102,7 +113,37 @@ Set or get 'jr' part of name.
 =cut
 
 sub jr {
-	shift->_get_or_set_field(3, @_);
+  shift->_get_or_set_field( 3, @_ );
+}
+
+sub _get_name_parts {
+  my $name = $_[0];
+
+  my @name_parts = ();
+  my @tmp        = split( /\s+/, $name );
+  my $o          = 0;
+  my $c          = 0;
+  my $append     = 0;
+  foreach my $i ( 0 .. $#tmp ) {
+    my $o = ( $tmp[$i] =~ tr/\{// );
+    my $c = ( $tmp[$i] =~ tr/\}// );
+    if ( $o - $c >= 1 ) {
+      push @name_parts, $tmp[$i];
+      $append = 1;
+      next;
+    }
+    if ( $o - $c >= 1 ) {
+      $name_parts[$#name_parts] .= " $tmp[$i]";
+      $append = 0;
+      next;
+    }
+    if ( $append == 1 ) {
+      $name_parts[$#name_parts] .= " $tmp[$i]";
+    } else {
+      push @name_parts, $tmp[$i];
+    }
+  }
+  return @name_parts;
 }
 
 =head2 split
@@ -115,21 +156,30 @@ with four strings, some of them possibly empty.
 sub split {
   my ( $self_or_class, $name ) = @_;
 
+  $name =~ s/(.*\S)\{(\s.*)/$1 \{$2/g;
+
   # remove whitespace at start and end of string
   $name =~ s/^\s*(.*)\s*$/$1/s;
 
-  if ( $name =~ /^\{\s*(.*)\s*\}$/ ) {
+  # everything is totally enclosed in curly brackets
+  if ( $name =~ m/^\{([^\{\}]+)\}$/ ) {
     return ( undef, undef, $1, undef );
   }
 
   my @parts = split /\s*,\s*/, $name;
 
-  if ( @parts == 0 ) {
+  if ( $#parts == -1 ) {
+    # nothing in the string
     return ( undef, undef, undef, undef );
-  } elsif ( @parts == 1 ) {    # name without comma
-    if ( $name =~ /(^|\s)[[:lower:]]/ ) {    # name has von part or has only lowercase names
-      my @name_parts = split /\s+/, $parts[0];
+  } elsif ( $#parts == 0 ) {    # name without comma
+    my @name_parts = _get_name_parts($name);
 
+    my $do_von_parsing = 0;
+    foreach my $part ( @name_parts ) {
+      $do_von_parsing = 1 if ( $part =~ m/^[[:lower:]]/ );
+    }
+
+    if ( $do_von_parsing == 1 ) {    # name has von part or has only lowercase names
       my $first;
       while ( @name_parts && ucfirst( $name_parts[0] ) eq $name_parts[0] ) {
         $first .= $first ? ' ' . shift @name_parts : shift @name_parts;
@@ -148,22 +198,23 @@ sub split {
         return ( undef, undef, $name, undef );
       }
     } else {
-      if ( $name =~ /^((.*)\s+)?\b(\S+)$/ ) {
-        return ( $2, undef, $3, undef );
-      }
+      # regular case
+      my $last = pop @name_parts;
+      my $first = join(" ", @name_parts);
+      return ( $first, undef, $last, undef );
     }
 
-  } elsif ( @parts == 2 ) {
-    my @von_last_parts = split /\s+/, $parts[0];
+  } elsif ( $#parts == 1 ) {
+    my @von_last_parts = _get_name_parts($parts[0]);
     my $von;
-
     # von part are lowercase words
     while ( lc( $von_last_parts[0] ) eq $von_last_parts[0] ) {
+      last if ( ! $von_last_parts[0] );
       $von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
     }
     return ( $parts[1], $von, join( " ", @von_last_parts ), undef );
   } else {
-    my @von_last_parts = split /\s+/, $parts[0];
+    my @von_last_parts = _get_name_parts($parts[0]);
     my $von;
 
     # von part are lowercase words

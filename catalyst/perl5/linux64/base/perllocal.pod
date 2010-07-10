@@ -899,3 +899,25 @@ C<VERSION: 0.57>
 C<EXE_FILES: >
 
 =back
+=head2 Sat Jul 10 10:00:42 2010: C<Module> L<BibTeX::Parser|BibTeX::Parser>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.4>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

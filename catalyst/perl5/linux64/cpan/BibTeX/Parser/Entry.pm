@@ -4,9 +4,11 @@ our $VERSION = '0.4';
 use warnings;
 use strict;
 use Encode;
+use charnames ':full';
 
 use BibTeX::Parser::Author;
 use BibTeX::Parser::Defly;
+use BibTeX::Parser::EncodingTable;
 
 =head1 NAME
 
@@ -146,7 +148,6 @@ sub field {
     return $self->{ lc($field) };
   } else {
     my ( $self, $key, $value, $clean ) = @_;
-    $clean = 1 if ( !$clean );
     # different cleaning level for authors
     $clean = 2 if ( lc($key) eq 'author'  );
     $self->{ lc($key) } = _sanitize_field( $value, $clean );
@@ -191,6 +192,13 @@ sub _split_author_field {
   my $field = shift;
 
   return () if !defined $field || $field eq '';
+
+  # real world Bibtex data can be a mess
+  # we do some cleaning of standard typos
+  $field =~ s/\sand\sand\s/ and /g;
+  $field =~ s/\sand(?=[A-Z])/ and /g;
+  $field =~ s/(?<=\.)and\s/ and /g;
+  $field =~ s/(?<=\.)\sad\s(?=[A-Z])/ and /g;
 
   my @names;
   my @tmp     = split( /\s+/, $field );
@@ -266,44 +274,74 @@ sub has {
   return defined $self->{$field};
 }
 
+sub uchr {
+  my($c) = @_;
+  encode_utf8(chr($c));
+}
+
 sub _sanitize_field {
   my $value = shift;
   my $clean = shift;
-  #print STDERR "IN: $value\n";
-  # some cleaning before UTF-8 conversion
+
+  # We always convert Umlaute and Co. to the
+  # corresponding UTF-8 char
+  # This can do no harm as this is
+  # completely round trip safe
+  # the defly module does UTF-8 conversion
+  # for umlaute and Co.
+  $value = defly $value;
+
+  # If clean >= 1 then LaTeX code is stripped
   if ( $clean >= 1 ) {
     $value =~ s/\\~\{\}/~/g;
     $value =~ s/\\\././g;
-  }
 
-  # char conversion from LaTeX to UTF-8
-  $value = defly $value;
-  # do more LaTeX parsing here
-  if ( $clean >= 1 ) {
+    # now we process math stuff
+    my $tmp1 = $BibTeX::Parser::EncodingTable::latex_math_symbols_string;
+    my %tmp2 = %BibTeX::Parser::EncodingTable::latex_math_symbols_table;
+
+    $value =~ s/($tmp1)/uchr(hex($tmp2{$1}))/gxe;
+
+    # following latex commands are replaced without any substitution
     $value =~ s/\\textit//g;
     $value =~ s/\\textbf//g;
     $value =~ s/\\textsl//g;
     $value =~ s/\\textsc//g;
     $value =~ s/\\textsf//g;
     $value =~ s/\\texttt//g;
+    $value =~ s/\\cal//g;
     $value =~ s/\\textsubscript//g;
     $value =~ s/\\textsuperscript//g;
-    $value =~ s/\\emph//g;
     $value =~ s/\\mbox//g;
     $value =~ s/\\url//g;
-    $value =~ s/\\it //g;
-    $value =~ s/\\em //g;
+    $value =~ s/\\it//g;
     $value =~ s/\\emph//g;
-    $value =~ s/\\%/%/g;
-    $value =~ s/\\\$/\$/g;
-    $value =~ s/\\\s/ /g;
-    $value =~ s/{//g if ( $clean == 1);
-    $value =~ s/}//g if ( $clean == 1);
-    $value =~ s/\\textdollar/\$/g;
-    $value =~ s/\\textunderscore/_/g;
+    $value =~ s/\\em//g;
+    $value =~ s/\\tt//g;
+
+    # remove non-escaped braces
+    # exception: $clean > 1 (e.g. authors field)
+    $value =~ s/(?<!\\)\{//g if ( $clean == 1 );
+    $value =~ s/(?<!\\)\}//g if ( $clean == 1 );
+
+    # convert escaped braces to regular ones
+    $value =~ s/\\\{/\{/g;
+    $value =~ s/\\\}/\}/g;
+
+    # remove non-escaped dollar signs
+    $value =~ s/(?<!\\)\$//g;
+
+    # remove various white space notations
+    $value =~ s/(\\\s|\\,|\\;|\\\!|\\quad|\\qquad|~)/ /g;
+
+    # other LaTeX symbols
+    my $tmp3 = $BibTeX::Parser::EncodingTable::latex_other_symbols_string;
+    my %tmp4 = %BibTeX::Parser::EncodingTable::latex_other_symbols_table;
+    $value =~ s/($tmp3)/uchr(hex($tmp4{$1}))/gxe;
+
     $value =~ s/\s+/ /g;
   }
-  #print STDERR "OUT: $value\n";
+
   return $value;
 }
 
