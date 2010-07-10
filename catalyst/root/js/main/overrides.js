@@ -75,14 +75,14 @@ Ext.override(Ext.tree.TreeNodeUI, {
   },
   updateWorking: function(tip) {
     var options = {
-      icon: '/images/icons/cog.png',
+      icon: '/images/icons/reload.png',
       tip: tip
     };
     this.updateLeftStatus(options);
   },
   updateError: function(tip) {
     var options = {
-      icon: '/images/icons/cog_error.png',
+      icon: '/images/icons/error.png',
       tip: tip,
       hideOnClick: true
     };
