@@ -95,6 +95,9 @@ sub insert_entry : Local {
   # Trigger a complete reload
   $c->stash->{data}->{pub_delta} = 1;
 
+  # Probably not the most efficient way but works for now
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, \@pub_array );
+
   $self->_update_counts($c);
 
 }
@@ -175,6 +178,9 @@ sub new_entry : Local {
     $job->save;
     $c->stash->{data}->{jobs}->{$match_job} = $job->as_hash;
   }
+
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, [$pub]);
+
 }
 
 sub empty_trash : Local {
@@ -221,7 +227,7 @@ sub delete_entry : Local {
 
   $self->_update_counts($c);
 
-  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, $data )
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, $data );
 
 }
 
@@ -814,9 +820,10 @@ sub _get_sync_collections {
     foreach my $collection (@tmp) {
       $collections{$collection} = 1 if $sync_files->{$collection}->{active};
     }
+  }
 
+  if ($sync_files->{'FOLDER_ROOT'}->{active}){
     $collections{'FOLDER_ROOT'} = 1;
-
   }
 
   return [ keys %collections ];
