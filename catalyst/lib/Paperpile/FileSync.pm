@@ -42,11 +42,12 @@ sub sync_collection {
 
   my $target = $self->map->{$collection}->{file};
 
-  # For now we just dump the content and don't sync
+  ## For now we just dump the content and don't sync
 
   my $backup = '';
 
-  if ( -e $target ) {
+  if ( (-e $target) && (-e $self->_get_dump_file($collection).".info")) {
+
     my $current_md5 = Paperpile::Utils->calculate_md5($target);
     my ( $old_md5, $old_library_version ) = $self->_get_dump_info($collection);
 
@@ -198,6 +199,8 @@ sub _get_dump_data {
   return $dump_object;
 
 }
+
+
 
 sub _get_dump_info {
 
