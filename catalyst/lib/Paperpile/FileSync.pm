@@ -229,7 +229,9 @@ sub _write_file {
 
   my $file = $self->map->{$collection}->{file};
 
-  my $f = Paperpile::Formats::Bibtex->new( file => $file, data => [ values %$data ] );
+  my $settings = Paperpile::Utils->get_library_model->get_setting('bibtex');
+
+  my $f = Paperpile::Formats::Bibtex->new( file => $file, data => [ values %$data ], settings=>$settings );
 
   $f->write;
 

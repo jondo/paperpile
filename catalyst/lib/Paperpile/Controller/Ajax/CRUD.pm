@@ -806,6 +806,8 @@ sub _get_sync_collections {
 
   my $sync_files = $c->model('User')->get_setting('file_sync');
 
+  return [] if !(ref $sync_files);
+
   my %collections;
   foreach my $pub (@$data) {
 

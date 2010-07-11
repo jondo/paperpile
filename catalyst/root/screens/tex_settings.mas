@@ -2,7 +2,7 @@
 <tr>
 <td>
   <div id="ui-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="width:300; height:350">
-    <h3>BibTeX Settings</h3>
+    <h2>BibTeX settings</h2>
     
     <table class="pp-settings-table">
       <tr>
@@ -29,17 +29,13 @@
         <td><div class="pp-settings-checkbox" id="use_quotes_checkbox"></div></td>
         <td class="pp-settings-label">Use quotes (&quot;...&quot;) as field delimiter <span id="use_quotes_tooltip" class="pp-tooltip-link">?</span></td> 
       </tr>
-      <tr>
-        <td><div class="pp-settings-checkbox" id="title_quote_complete_checkbox"></div></td>
-        <td class="pp-settings-label">Quote complete title <span id="title_quote_complete_tooltip" class="pp-tooltip-link">?</span></td> 
-      </tr>
     </table>
   </div>
 </td>
 
 <td>
   <div id="ui-container" class="pp-box pp-box-style2 pp-box-top pp-box-settings" style="width:300; height:350;">
-    <h3>Optional fields to export <span id="export_fields_tooltip" class="pp-tooltip-link">?</span></h3>
+    <h2>Optional fields to export <span id="export_fields_tooltip" class="pp-tooltip-link">?</span></h2>
 
     <table class="pp-settings-table">
 % my $field;
@@ -60,9 +56,21 @@
 
 <tr>
 <td>
-  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:280; width:300">
-    <h3>Words to quote in title <span id="title_quote_tooltip" class="pp-tooltip-link">?</span></h3>
+  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:320; width:300">
+    <h2>Title quoting <span id="title_quoting_tooltip" class="pp-tooltip-link">?</span></h2>
+    
+    <table class="pp-settings-table">
+      <tr>
+        <td><div class="pp-settings-checkbox" id="title_quote_complete_checkbox"></div></td>
+        <td class="pp-settings-label">Quote complete title <span id="title_quote_complete_tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
+      <tr>
+        <td><div class="pp-settings-checkbox" id="title_quote_smart_checkbox"></div></td>
+        <td class="pp-settings-label">Smart quoting <span id="title_quote_smart_tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
 
+    </table>
+    <h3>Words to quote in title <span id="title_quote_tooltip" class="pp-tooltip-link">?</span></h3>
     <p id="title_quote_textarea"></p>
     <p id="title_quote_button"></p>
 

@@ -97,7 +97,7 @@ Paperpile.TexSettings = Ext.extend(Ext.Panel, {
       enableKeyEvents: true,
       renderTo: 'title_quote_textarea',
       width: 280,
-      height: 200,
+      height: 120,
       disabled: settings.title_quote_complete ? false : true
     });
 
@@ -116,6 +116,10 @@ Paperpile.TexSettings = Ext.extend(Ext.Panel, {
     Ext.getCmp('title_quote_complete').on('check', function(box, checked) {
       this.titleQuoteTextarea.setDisabled(checked);
       this.titleQuoteButton.setDisabled(checked);
+      Ext.getCmp('title_quote_smart').setDisabled(checked);
+      if (checked){
+        Ext.getCmp('title_quote_smart').setValue(false);
+      }
     },
     this);
 
@@ -128,9 +132,11 @@ Paperpile.TexSettings = Ext.extend(Ext.Panel, {
       pretty_print: "Nicely format BibTeX including line breaks, aligned and indented fields. De-activate this option to show a simple key-value per line.",
       double_dash: 'Convert single dashes (<tt>-</tt>) in the "pages" field to double dashes (<tt>--</tt>).',
       use_quotes: 'Activate this option to use double quotes <tt>"..."</tt> as field delimiter in BibTeX output. If de-activated curly braces <tt>{...}</tt> are used.',
-      title_quote_complete: "Enclose the title in curly braces <tt>{...}</tt> forcing BibTeX to preserve exactly all uppercase/lowercase characters. De-activate this option to let BibTeX handle capitalization.",
+      title_quoting: "Some BibTeX styles automatically adjust capitaliztion in the title and booktitle fields. These options control quoting {...} of title words.",
+      title_quote_complete: "Quote the complete title/booktile forcing BibTeX to preserve exactly all uppercase/lowercase characters. De-activate this option to let BibTeX handle capitalization.",
+      title_quote_smart: "Automatically quote title words with special capitalization patterns that typically should not be changed by BibTeX (e.g. mRNA or HIV)",
+      title_quote: "List manually words and phrases to be quoted in title/booktitle fields. One word or phrase by line.",
       export_fields: "Include/Exclude optional fields in the BibTeX output.",
-      title_quote: "Special title words and phrases to be enclosed in curly braces <tt>{...}</tt> to prevent that capitalization is changed by BibTeX. One word or phrase by line.",
     };
 
     for (var tt in tooltips) {
@@ -187,6 +193,16 @@ Paperpile.TexSettings = Ext.extend(Ext.Panel, {
       msg: 'Settings saved.',
       duration: 2
     });
+
+    // Update all auto-export BibTeX files
+    var list = [];
+    var fileSync =  Paperpile.main.getSetting('file_sync');
+    for (var guid in fileSync){
+      if (fileSync[guid].active){
+        list.push(guid);
+      }
+    }
+    Paperpile.main.triggerFileSync(list);
 
   }
 

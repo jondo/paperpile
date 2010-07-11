@@ -38,9 +38,10 @@ sub BUILD {
         import_strip_tex     => 1,
         export_escape        => 1,
         pretty_print         => 1,
-        use_quotes           => 1,
+        use_quotes           => 0,
         double_dash          => 1,
         title_quote_complete => 0,
+        title_quote_smart    => 1,
         title_quote          => [ 'DNA', 'RNA' ],
         export_fields        => {
           abstract    => 1,
@@ -57,7 +58,6 @@ sub BUILD {
     );
   }
 }
-
 
 sub read {
 
@@ -124,15 +124,14 @@ sub read {
           next;
         }
 
-
         # File attachment. The convention seems to be that multiple
         # files are expected to be separated by semicolons and that
         # files are stored like this:
         # :/home/wash/PDFs/file.pdf:PDF
 
         if ( $field =~ /file/i ) {
-          my @files       = split( /;/, $entry->field($field) );
-          my $pdf         = '';
+          my @files = split( /;/, $entry->field($field) );
+          my $pdf = '';
           my @attachments;
 
           foreach my $file (@files) {
@@ -153,7 +152,7 @@ sub read {
 
           $data->{_pdf_tmp} = $pdf if $pdf;
 
-          if (@attachments){
+          if (@attachments) {
             $data->{_attachments_tmp} = [@attachments];
           }
 
@@ -215,11 +214,12 @@ sub write {
     push @optional_fields, $key if ( $value == 1 );
   }
 
+  my @all_fields = ( @mandatory_fields, @optional_fields );
+
   open( OUT, ">" . $self->file )
-    || FileReadError->throw( error => "Could not write to file " . $self->file );
+    || FileWriteError->throw( error => "Could not write to file " . $self->file );
 
   foreach my $pub ( @{ $self->data } ) {
-    my @all_fields = ( @mandatory_fields, @optional_fields );
 
     # Collect all fields and get maximum width to align properly
     my %data;
@@ -288,7 +288,7 @@ sub write {
 
         if ( $key eq 'title' or $key eq 'booktitle' ) {
           if ( $self->settings->{title_quote_complete} == 1 ) {
-	    $value = '{'.$value.'}';
+            $value = '{' . $value . '}';
           } else {
             my @tmp = split( /\s+/, $value );
             foreach my $i ( 0 .. $#tmp ) {
@@ -298,6 +298,8 @@ sub write {
               my $nr_capital_letters = ( $tmp[$i] =~ tr/[A-Z]// );
               my $flag = ( $nr_capital_letters > 1 and $tmp[$i] !~ m/(-|\(|\)|\$|~)/ ) ? 1 : 0;
               $flag = 0 if ( $tmp[$i] =~ m/^\{.*\}$/ );
+
+              $flag = 0 if (!$self->settings->{title_quote_smart});
 
               # escape items from the list
               foreach my $item ( @{ $self->settings->{title_quote} } ) {
@@ -347,7 +349,6 @@ sub write {
   }
   close(OUT);
 }
-
 
 1;
 

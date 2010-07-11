@@ -54,12 +54,14 @@ library_settings:
     import_strip_tex: 1
     export_escape: 1
     pretty_print: 1
-    use_quotes: 1
+    use_quotes: 0
     double_dash: 1
     title_quote_complete: 0 
+    title_quote_smart: 1 
     title_quote:
       - DNA
       - RNA
+      - CERN
     export_fields:
       abstract: 1
       affiliation: 0
