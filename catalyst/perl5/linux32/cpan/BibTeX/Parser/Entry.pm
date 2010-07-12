@@ -282,7 +282,7 @@ sub uchr {
 sub _sanitize_field {
   my $value = shift;
   my $clean = shift;
- 
+
   # We always convert Umlaute and Co. to the
   # corresponding UTF-8 char
   # This can do no harm as this is
