@@ -827,7 +827,9 @@ sub _insert {
   # Insert into any necessary collections.
   if ( scalar @{ $self->_collection_guids } > 0 ) {
     foreach my $guid ( @{ $self->_collection_guids } ) {
-      $model->add_to_collection( [ $self->pub ], $guid );
+      if ($guid ne '') {
+	$model->add_to_collection( [ $self->pub ], $guid );
+      }
     }
   }
 

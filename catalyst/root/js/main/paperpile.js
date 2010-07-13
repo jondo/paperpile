@@ -408,7 +408,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       url: Paperpile.Url('/ajax/pdfextract/submit'),
       params: {
         path: path,
-        collection_guids: [treeNode.id]
+        collection_guids: [treeNode ? treeNode.id : null]
       },
       success: function(response) {
         Paperpile.main.queueUpdate();
