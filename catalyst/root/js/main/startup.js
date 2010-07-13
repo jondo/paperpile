@@ -59,7 +59,7 @@ Paperpile.stage0 = function() {
 
           Ext.Msg.show({
             title: 'Error',
-            msg: 'There is already another Paperpile instance running. To newly start Paperpile you have to close the other instance first.',
+            msg: 'There is already another Paperpile instance running. Close the other instance first. If the error persists, please restart your computer and try again.',
             buttons: Ext.Msg.OK,
             animEl: 'elId',
             icon: Ext.MessageBox.ERROR,

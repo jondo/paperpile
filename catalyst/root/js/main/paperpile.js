@@ -1034,7 +1034,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       Paperpile.status.clearMsg();
       Paperpile.status.updateMsg({
         type: 'info',
-        msg: 'Retry with and active network connection or visit paperpile.uservoice.com',
+        msg: 'Retry with an active network connection or visit paperpile.uservoice.com',
         duration: 5
       });
     }
