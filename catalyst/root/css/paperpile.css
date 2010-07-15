@@ -222,11 +222,11 @@ ul.pp-folders {
     font-style:italic;
 }
 
-.link-hover:hover a.pp-second-link{
+.link-hover:hover .pp-second-link{
     display:inline;
 }
 
-li:hover a.pp-second-link{
+li:hover .pp-second-link{
     display:inline;
 }
 
@@ -318,7 +318,6 @@ td.pp-dashboard-dt{
 td.pp-dashboard-dl{
     text-align: left; 
 }
-
 
 .pp-chart-box {
     margin: 8;
@@ -586,6 +585,31 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     position:relative;
     top:-24px;
     left:-4px;
+}
+
+.pp-info-button {
+  padding:0px;
+  margin:0px;
+  width:16px;
+  height:16px;
+  float:right;
+  margin-right:3px;
+  margin-left:3px;
+  cursor:pointer;
+}
+
+.pp-info-link {
+  background: transparent url('/images/icons/link-16.png') no-repeat;
+}
+.pp-info-link:hover {
+  background: transparent url('/images/icons/link-16-hover.png') no-repeat;
+}
+
+.pp-info-copy {
+  background: transparent url('/images/icons/clipboard.png') no-repeat;
+}
+.pp-info-copy:hover {
+  background: transparent url('/images/icons/clipboard-hover.png') no-repeat;
 }
 
 .pp-action{
