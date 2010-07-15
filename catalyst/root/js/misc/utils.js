@@ -36,7 +36,7 @@ Paperpile.utils = {
   },
 
   isBibtexMode: function() {
-      return (Paperpile.main.getSetting('bibtex').bibtex_mode == 1);
+    return (Paperpile.main.getSetting('bibtex').bibtex_mode == 1);
   },
 
   midEllipse: function(string, length) {
@@ -119,6 +119,17 @@ Paperpile.utils = {
       process.launch();
     } else {
       window.open('/serve/' + file, '_blank');
+    }
+  },
+
+  setClipboard: function(value, msg) {
+    if (IS_TITANIUM) {
+      Titanium.UI.Clipboard.setText(value);
+      Paperpile.status.updateMsg({
+        msg: msg,
+        duration: 1.5,
+        fade: true
+      });
     }
   },
 

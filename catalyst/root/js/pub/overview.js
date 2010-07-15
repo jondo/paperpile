@@ -151,6 +151,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   updateAllInfo: function(data) {
     data = this.fillInFields(data);
     this.getGrid().getSidebarTemplate().singleSelection.overwrite(this.body, data);
+    this.updateEllipses(data);
     this.updateLabels(data);
     if (this.searchDownloadWidget) {
       this.searchDownloadWidget = null;
@@ -178,6 +179,29 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     }
     data._folders_list = list;
     return data;
+  },
+
+  updateEllipses: function(data) {
+    var ellipsable_fields = ['.pp-info-doi', '.pp-info-pmid'];
+    for (var i = 0; i < ellipsable_fields.length; i++) {
+      var field = ellipsable_fields[i];
+      var els = Ext.select(field);
+      if (els.getCount() == 0) {
+        continue;
+      }
+      var doiEl = els.first();
+      var maxWidth = doiEl.getWidth() - 30;
+      var textWidth = doiEl.getTextWidth();
+      var count = 0;
+      while (textWidth > maxWidth && count < 10) {
+        var text = doiEl.dom.innerHTML;
+        text = text.replace('...', '');
+        var shorterText = text.substring(0, text.length - 4);
+        doiEl.update(shorterText + '...');
+        textWidth = doiEl.getTextWidth();
+        count++;
+      }
+    }
   },
 
   updateLabels: function(data) {
@@ -262,6 +286,30 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     var el = e.getTarget();
 
     switch (el.getAttribute('action')) {
+
+    case 'doi-link':
+      var url = "http://dx.doi.org/" + this.data.doi;
+      Paperpile.utils.openURL(url);
+      break;
+    case 'doi-copy':
+      Paperpile.utils.setClipboard("http://dx.doi.org/" + this.data.doi, 'DOI URL copied');
+      break;
+
+    case 'pmid-link':
+      var url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + this.data.pmid;
+      Paperpile.utils.openURL(url);
+      break;
+    case 'pmid-copy':
+      Paperpile.utils.setClipboard('http://www.ncbi.nlm.nih.gov/pubmed/' + this.data.pmid, 'PubMed URL copied');
+      break;
+
+    case 'eprint-link':
+      var url = this.data.eprint;
+      Paperpile.utils.openURL(url);
+      break;
+    case 'eprint-copy':
+      Paperpile.utils.setClipboard(this.data.eprint, 'ePrint URL copied');
+      break;
 
     case 'open-folder':
       var folder_id = el.getAttribute('folder_id');

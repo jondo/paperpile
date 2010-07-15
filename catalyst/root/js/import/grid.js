@@ -937,7 +937,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  </div>',
       '</tpl>',
       '<h2>Reference Info</h2>',
-      '<dl>',
+      '<dl class="pp-ref-info">',
       '<tpl if="_pubtype_name">',
       '  <dt>Type: </dt><dd>{_pubtype_name}</dd>',
       '</tpl>',
@@ -951,14 +951,25 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  <dd>{_createdPretty}</dd>',
       '</tpl>',
       '<tpl if="doi">',
-      '  <dt>DOI: </dt><dd>{_doiWrapped}</dd>',
+      '<div class="link-hover">',
+      '  <dt>DOI: </dt>',
+      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open DOI link" action="doi-link"></div>',
+      '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy DOI URL to clipboard" action="doi-copy"></div>',
+      '<dd class="pp-info-doi">{doi}</dd>',
+      '</div>',
       '</tpl>',
       '<tpl if="eprint">',
+      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open Eprint link" action="eprint-link"></div>',
+      '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy Eprint URL to clipboard" action="eprint-copy"></div>',
       '  <dt>Eprint: </dt>',
       '  <dd>{eprint}</dd>',
       '</tpl>',
       '<tpl if="pmid">',
-      '  <dt>PubMed ID: </dt><dd>{pmid}</dd>',
+      '<div class="link-hover">',
+      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open PubMed citation" action="pmid-link"></div>',
+      '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy PubMed URL to clipboard" action="pmid-copy"></div>',
+      '  <dt>PubMed ID: </dt><dd class="pp-info-pmid">{pmid}</dd>',
+      '</div>',
       '</tpl>',
       '<tpl if="folders">',
       '  <dt>Folders: </dt>',
@@ -1481,34 +1492,34 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   handleDownOne: function(keyCode, event) {
-      var sm = this.getSelectionModel();
-      var t = this.pager;
-      var activePage = Math.ceil((t.cursor + t.pageSize) / t.pageSize);
-    if (sm.getCount() == 1 && this.getStore().indexOf(sm.getSelected()) == this.pager.pageSize-1 && !this.pager.next.disabled) {
-	this.pager.moveNext();
-        this.doAfterNextReload.push(function() {
-          this.getSelectionModel().selectRowAndSetCursor(0);
-        });
+    var sm = this.getSelectionModel();
+    var t = this.pager;
+    var activePage = Math.ceil((t.cursor + t.pageSize) / t.pageSize);
+    if (sm.getCount() == 1 && this.getStore().indexOf(sm.getSelected()) == this.pager.pageSize - 1 && !this.pager.next.disabled) {
+      this.pager.moveNext();
+      this.doAfterNextReload.push(function() {
+        this.getSelectionModel().selectRowAndSetCursor(0);
+      });
     } else {
-	this.getSelectionModel().keyNavMove(1, event);
+      this.getSelectionModel().keyNavMove(1, event);
     }
   },
   handleUpOne: function(keyCode, event) {
-      var sm = this.getSelectionModel();
+    var sm = this.getSelectionModel();
     if (sm.getCount() == 1 && this.getStore().indexOf(sm.getSelected()) == 0 && !this.pager.prev.disabled) {
-	this.pager.movePrevious();
-        this.doAfterNextReload.push(function() {
-          this.getSelectionModel().selectRowAndSetCursor(this.pager.pageSize-1);
-        });
+      this.pager.movePrevious();
+      this.doAfterNextReload.push(function() {
+        this.getSelectionModel().selectRowAndSetCursor(this.pager.pageSize - 1);
+      });
     } else {
-    this.getSelectionModel().keyNavMove(-1, event);
+      this.getSelectionModel().keyNavMove(-1, event);
     }
   },
   handleMoveFirst: function(keyCode, event) {
     this.getSelectionModel().selectRowAndSetCursor(0);
   },
   handleMoveLast: function(keyCode, event) {
-    this.getSelectionModel().selectRowAndSetCursor(this.getStore().getCount()-1);
+    this.getSelectionModel().selectRowAndSetCursor(this.getStore().getCount() - 1);
   },
 
   // If trash is set entries are moved to trash, otherwise they are
