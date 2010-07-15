@@ -190,14 +190,16 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         continue;
       }
       var doiEl = els.first();
-      var maxWidth = doiEl.getWidth() - 30;
+      var origText = doiEl.dom.innerHTML;
+      var maxWidth = doiEl.getWidth() - (50);
       var textWidth = doiEl.getTextWidth();
       var count = 0;
-      while (textWidth > maxWidth && count < 10) {
+      while (textWidth > maxWidth && count < 50) {
         var text = doiEl.dom.innerHTML;
         text = text.replace('...', '');
-        var shorterText = text.substring(0, text.length - 4);
+        var shorterText = text.substring(0, text.length - 1);
         doiEl.update(shorterText + '...');
+	doiEl.set({'ext:qtip':origText});
         textWidth = doiEl.getTextWidth();
         count++;
       }
