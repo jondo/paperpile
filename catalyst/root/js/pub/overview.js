@@ -185,8 +185,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     var ellipsable_fields = ['.pp-info-doi', '.pp-info-pmid'];
     for (var i = 0; i < ellipsable_fields.length; i++) {
       var field = ellipsable_fields[i];
-      var els = Ext.select(field);
+      var els = Ext.select("#"+this.id+" "+field);
       if (els.getCount() == 0) {
+	  Paperpile.log("Can't find any "+field);
         continue;
       }
       var doiEl = els.first();
