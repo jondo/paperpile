@@ -103,13 +103,18 @@ sub _get_library_data {
   my $dbh = $model->dbh;
 
   my $sth;
-  if ($collection eq 'FOLDER_ROOT') {
-  $sth = $dbh->prepare(
-    "SELECT * FROM Publications WHERE trashed=0;" );
+  if ( $collection eq 'FOLDER_ROOT' ) {
+    $sth = $dbh->prepare("SELECT * FROM Publications WHERE trashed=0;");
   } else {
-  $sth = $dbh->prepare(
-    "SELECT * FROM Publications join Collection_Publication on guid = publication_guid WHERE collection_guid='$collection';"
-  );
+
+    my @guids = $model->find_subcollections( $collection, $dbh );
+
+    map { $_ = "collection_guid='$_'" } @guids;
+    my $query = join( " OR ", @guids );
+
+    $sth = $dbh->prepare(
+      "SELECT * FROM Publications join Collection_Publication on guid = publication_guid WHERE ($query) AND trashed=0;"
+    );
   }
 
   $sth->execute;

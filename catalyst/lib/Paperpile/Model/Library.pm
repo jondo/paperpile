@@ -487,19 +487,11 @@ sub new_collection {
 sub delete_collection {
   ( my $self, my $guid, my $type ) = @_;
 
-  my @list = ($guid);
-
   my $dbh = $self->dbh;
 
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
-  my $sth = $dbh->prepare("SELECT * FROM Collections;");
-  $sth->execute;
-  my @all = ();
-  while ( my $row = $sth->fetchrow_hashref() ) {
-    push @all, $row;
-  }
-  $self->_find_subcollections( $guid, \@all, \@list );
+  my @list = $self->find_subcollections($guid, $dbh);
 
   #  Delete all assications in Collection_Publication table
   my $delete1 = $dbh->prepare("DELETE FROM Collection_Publication WHERE collection_guid=?");
@@ -1827,9 +1819,33 @@ sub _remove_from_flatlist {
 
 }
 
-# Recursive helper function to get list of all sub-collections below
-# $guid. $all is a list of all collections and $list is the final list
-# with all guids of the desired sub-collections
+# Returns list of guids for all sub-collection below $guid (the list
+# includes the parent guid $guid).
+
+sub find_subcollections {
+
+  my ($self, $guid, $dbh) = @_;
+
+  $dbh = $self->dbh if !$dbh;
+
+  my @list=($guid);
+
+  my $sth = $dbh->prepare("SELECT * FROM Collections;");
+  $sth->execute;
+  my @all = ();
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    push @all, $row;
+  }
+
+  $self->_find_subcollections( $guid, \@all, \@list );
+
+  return @list;
+
+}
+
+# Recursive helper function for find_subcollections
+# $all is a list of all collections and $list is
+# the final list with all guids of the desired sub-collections
 sub _find_subcollections {
 
   my ( $self, $guid, $all, $list ) = @_;

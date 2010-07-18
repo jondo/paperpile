@@ -268,6 +268,14 @@ sub export : Local {
       }
     }
 
+    # When exporting folder or label from tree add sub-collections
+    if ( $params{query} =~ /^(folder|label)id:(.*)$/ ) {
+      my ($type, $guid) = ($1, $2);
+      my @all = $c->model('Library')->find_subcollections($guid);
+      map {$_=$type."id:$_"} @all;
+      $params{query} = join(" OR ", @all);
+    }
+
     $params{name} = 'DB' if ( !defined $params{name} );
 
     if ( ( $params{name} eq 'DB' ) and ( not $params{file} ) ) {
@@ -284,8 +292,8 @@ sub export : Local {
 
   # If output format is BibTeX we add the user's BibTeX settings to
   # the parameter list
-  if ($export_params{out_format} eq 'BIBTEX'){
-    %export_params = (%export_params, %{$c->model('Library')->get_setting('bibtex')});
+  if ( $export_params{out_format} eq 'BIBTEX' ) {
+    %export_params = ( %export_params, %{ $c->model('Library')->get_setting('bibtex') } );
   }
 
   # Dynamically generate export plugin instance and write data
