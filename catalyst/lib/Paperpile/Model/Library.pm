@@ -1858,6 +1858,37 @@ sub _find_subcollections {
   }
 }
 
+
+sub find_collection_parents {
+
+  my ($self, $guid, $dbh) = @_;
+
+  $dbh = $self->dbh if !$dbh;
+
+  my $sth = $dbh->prepare("SELECT * FROM Collections;");
+  $sth->execute;
+
+  my %map;
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    $map{$row->{guid}}=$row->{parent};
+  }
+
+  my @parents = ();
+  my $current_parent = $map{$guid};
+
+  while ($current_parent ne 'ROOT'){
+    push @parents, $current_parent;
+    $current_parent = $map{$current_parent};
+  }
+
+  return @parents;
+
+}
+
+
+
+
+
 # We make sure that all sort_order values for collections below
 # $parent are normalized and consistent (starting 0 and increasing by
 # 1).

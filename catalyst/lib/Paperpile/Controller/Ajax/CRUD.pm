@@ -455,11 +455,7 @@ sub move_in_collection : Local {
   }
   $c->stash->{data}->{collection_delta} = 1;
 
-  my $sync_files = $c->model('User')->get_setting('file_sync');
-  if ( ref $sync_files && $sync_files->{$guid}->{active} ) {
-    $c->stash->{data}->{file_sync_delta} = [$guid];
-  }
-
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, undef, $guid );
 }
 
 sub remove_from_collection : Local {
@@ -477,10 +473,7 @@ sub remove_from_collection : Local {
   $self->_collect_update_data( $c, $data, [$what] );
   $c->stash->{data}->{collection_delta} = 1;
 
-  my $sync_files = $c->model('User')->get_setting('file_sync');
-  if ( $sync_files->{$collection_guid}->{active} ) {
-    $c->stash->{data}->{file_sync_delta} = [$collection_guid];
-  }
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, undef, $collection_guid );
 
 }
 
@@ -799,38 +792,68 @@ sub sync_files : Local {
 }
 
 # Returns list of all collection guids that need to be re-synced when
-# references in $data change
+# references in $data change. If $guid is given and $data is undefined
+# the function checks if $guid or its parents need to be synced,
 
 sub _get_sync_collections {
-  my ( $self, $c, $data ) = @_;
+  my ( $self, $c, $data, $guid ) = @_;
 
   my $sync_files = $c->model('User')->get_setting('file_sync');
 
-  return [] if !(ref $sync_files);
+  return [] if !( ref $sync_files );
+
+  my $model = $c->model('Library');
+  my $dbh   = $model->dbh;
 
   my %collections;
-  foreach my $pub (@$data) {
 
-    my @tmp;
-    if ( $pub->folders ) {
-      push @tmp, split( /,/, $pub->folders );
-    }
-    if ( $pub->tags ) {
-      push @tmp, split( /,/, $pub->tags );
-    }
-
-    foreach my $collection (@tmp) {
-      $collections{$collection} = 1 if $sync_files->{$collection}->{active};
+  # Either take $guid or search folders or tags field of publications
+  # in $data
+  if ( defined $guid ) {
+    $collections{$guid}=1;
+  } else {
+    foreach my $pub (@$data) {
+      my @tmp;
+      if ( $pub->folders ) {
+        push @tmp, split( /,/, $pub->folders );
+      }
+      if ( $pub->tags ) {
+        push @tmp, split( /,/, $pub->tags );
+      }
+      foreach my $collection (@tmp) {
+        $collections{$collection} = 1;
+      }
     }
   }
 
-  if ($sync_files->{'FOLDER_ROOT'}->{active}){
-    $collections{'FOLDER_ROOT'} = 1;
+
+  # Add parents for subfolder and only consider collections whith an
+  # active fileync setting
+  my %final_collections;
+
+  foreach my $collection (keys %collections) {
+    my @parents = $model->find_collection_parents( $collection, $dbh );
+
+    foreach my $parent (@parents){
+      if ($sync_files->{$parent}->{active}){
+        $final_collections{$parent} = 1;
+      }
+    }
+
+    if ($sync_files->{$collection}->{active}){
+      $final_collections{$collection} = 1;
+    }
   }
 
-  return [ keys %collections ];
+  # Always add FOLDER_ROOT if active
+  if ( $sync_files->{'FOLDER_ROOT'}->{active} ) {
+    $final_collections{'FOLDER_ROOT'} = 1;
+  }
+
+  return [keys %final_collections];
 
 }
+
 
 # Returns the plugin object in the backend corresponding to an AJAX
 # request from the frontend
