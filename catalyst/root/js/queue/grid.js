@@ -19,13 +19,38 @@ Paperpile.QueueList = function(config) {
   Paperpile.QueueList.superclass.constructor.call(this, {});
 
   this.on('rowcontextmenu', this.onContextClick, this);
+
+  this.on('rowclick', this.onRowClick, this);
+
 };
 
 Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
 
+  onRowClick: function(grid, rowIndex, e) {
+    var el = e.getTarget();
+    var record = this.getStore().getAt(rowIndex);
+    var data = record.data;
+    switch (el.getAttribute('action')) {
+    case 'pdf-match-error-report':
+      var info = this.getPdfMatchErrorInfo(data);
+      Paperpile.main.reportPdfMatchError(info);
+      break;
+    case 'pdf-match-insert-manually':
+      Paperpile.main.addPDFManually(data.id, data.gridID);
+      break;
+    case 'pdf-download-error-report':
+      var info = this.getPdfDownloadErrorInfo(data);
+      Paperpile.main.reportPdfDownloadError(info);
+      break;
+    case 'pdf-download-open-url':
+      Paperpile.utils.openURL(data.publisherLink);
+      break;
+    }
+  },
+
   onContextClick: function(grid, index, e) {
     e.stopEvent();
-      var record = this.getStore().getAt(index);
+    var record = this.getStore().getAt(index);
     if (!this.isSelected(index)) {
       this.select(index, false, true);
     }
@@ -124,12 +149,29 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       }
     }
 
-    data.errorReportInfo = data.title + ' | ' + data.authors + ' | ';
-    data.errorReportInfo += data.citation + ' | ' + data.doi + ' | ' + data.linkout;
+    if (data.type == 'PDF_DOWNLOAD' && data.status == 'ERROR') {
+      data.errorReportInfo = this.getPdfDownloadErrorInfo(data);
+    }
+
+    if (data.type == 'PDF_IMPORT' && data.status == 'ERROR') {
+      data.errorReportInfo = this.getPdfMatchErrorInfo(data);
+    }
 
     data.gridID = this.id;
 
     return this.dataTemplate.apply(data);
+  },
+
+  getPdfMatchErrorInfo: function(data) {
+    var jsonString = Ext.util.JSON.encode(data);
+    return jsonString;
+  },
+
+  getPdfDownloadErrorInfo: function(data) {
+    var jsonString = Ext.util.JSON.encode(data);
+    return jsonString;
+    //data.errorReportInfo = data.title + ' | ' + data.authors + ' | ';
+    //data.errorReportInfo += data.citation + ' | ' + data.doi + ' | ' + data.linkout;
   },
 
   renderType: function(value, meta, record) {
@@ -149,7 +191,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
         text: 'Retry Tasks',
         tooltip: 'Run selected tasks again',
         handler: function() {
-            this.getQueuePanel().retryJobs();
+          this.getQueuePanel().retryJobs();
         },
         scope: this,
         iconCls: 'pp-icon-retry'
@@ -158,7 +200,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
         text: 'Cancel Tasks',
         tooltip: 'Cancel selected tasks',
         handler: function() {
-            this.getQueuePanel().cancelJobs();
+          this.getQueuePanel().cancelJobs();
         },
         scope: this,
         cls: 'x-btn-text-icon',
@@ -172,7 +214,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
 
     var pager = new Ext.PagingToolbar({
       pageSize: 100,
-	store: this.getStore(),
+      store: this.getStore(),
       displayInfo: true,
       displayMsg: 'Tasks {0} - {1} of {2}',
       emptyMsg: "No tasks"
@@ -189,9 +231,9 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       '      <tpl if="status==\'ERROR\'">',
       '        <p>',
       '           <tpl if="publisherLink">',
-      '             <a href="#" class="pp-textlink" onclick="Paperpile.utils.openURL(\'{publisherLink}\')">Go to publisher site</a> | ',
+      '             <a href="#" class="pp-textlink" action="pdf-download-open-url">Go to publisher site</a> | ',
       '           </tpl>',
-      '           <a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfDownloadError(\'{errorReportInfo}\');">Send Error Report</a>',
+      '           <a href="#" class="pp-textlink" action="pdf-download-error-report">Send Error Report</a>',
       '       </p> ',
       '      </tpl>',
       '    </div>',
@@ -209,8 +251,8 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       '      </div>',
       '      <tpl if="status==\'ERROR\'">',
       '        <p>',
-      '          <a href="#" class="pp-textlink" onclick="Paperpile.main.addPDFManually(\'{id}\',\'{gridID}\');">Insert data manually</a> | ',
-      '          <a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfMatchError(\'{pdf}\');">Send Error Report</a>',
+      '          <a href="#" class="pp-textlink" action="pdf-match-insert-manually">Insert data manually</a> | ',
+      '          <a href="#" class="pp-textlink" action="pdf-match-error-report">Send Error Report</a>',
       '       </p>',
       '      </tpl>',
       '    </div>',
@@ -251,11 +293,11 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>').compile();
 
     Ext.apply(this, {
-	store: this.getStore(),
+      store: this.getStore(),
       bbar: pager,
       tbar: this.getToolbar(),
       multiSelect: true,
-      selModel: new Ext.ux.BetterRowSelectionModel(),      
+      selModel: new Ext.ux.BetterRowSelectionModel(),
       cm: new Ext.grid.ColumnModel({
         defaults: {
           menuDisabled: true,
@@ -400,6 +442,5 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       this.context.destroy();
     }
   }
-
 
 });

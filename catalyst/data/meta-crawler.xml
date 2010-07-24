@@ -527,7 +527,7 @@
 
 </site>
 
-<!-- Strange behavior ????????
+
 <site name="Cell">
 
   <signature>
@@ -546,7 +546,7 @@
     </page>
   </test>
 
-</site> -->
+</site>
 
 <site name="SpringerLink">
 
@@ -732,6 +732,20 @@
   </test>
 
 </site>
+
+
+<site name="Wiley">
+
+  <signature>
+    <url>!interscience\.wiley\.com!</url>
+  </signature>
+
+  <rule target="Wiley">
+  </rule>
+ 
+
+</site>
+
 
 
 <site name="Default">

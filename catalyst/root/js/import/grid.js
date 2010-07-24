@@ -534,7 +534,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     return retVal;
   },
 
+  allowBackgroundReload: function() {
+    return true;
+  },
+
   backgroundReload: function() {
+    if (!this.allowBackgroundReload()) {
+      return;
+    }
     this.backgroundLoading = true;
     this.getStore().reload({
       callback: function() {
@@ -1084,6 +1091,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-keys">Copy LaTeX citation</a> </li>',
       '      </tpl>',
       '    </ul>',
+      '    <ul>',
+      '    <div style="clear:both;margin-top:2em;"></div>',
+      '      <li class="pp-action pp-action-email"> <a  href="#" class="pp-textlink" action="email">E-mail references</a> </li>',
+      '    </ul>',
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '   <dl>',
       '     <dt style="width: 50px;">Labels: </dt>',
@@ -1112,7 +1123,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'TB_BREAK',
       'PDF_COMBINED_BUTTON2',
       this.createSeparator('TB_VIEW_SEP'),
-      'FORCE_SELECT_ALL',
+      'SELECT_ALL',
       'DELETE',
       this.createSeparator('TB_DEL_SEP'),
       'LIVE_FOLDER',
@@ -1564,9 +1575,30 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       s = 's';
       n = this.getSelectionCount();
     }
-
     msg = msg.replace("{n}", n);
     msg = msg.replace("{s}", s);
+
+    var myFn = function(string) {
+      if (IS_TITANIUM) {
+        Titanium.UI.Clipboard.setText(string);
+        Paperpile.status.updateMsg({
+          msg: msg,
+          duration: 1.5,
+          fade: true
+        });
+      } else {
+        // Not in Titanium -- use Flash if available...
+        Paperpile.status.updateMsg({
+          msg: msg,
+          duration: 1.5,
+          fade: true
+        });
+      }
+    };
+    this.getFormattedText(module, format, myFn);
+  },
+
+  getFormattedText: function(module, format, callback) {
 
     Ext.Ajax.request({
       url: Paperpile.Url('/ajax/plugins/export'),
@@ -1580,23 +1612,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.status.clearMsg();
-        if (IS_TITANIUM) {
-          Titanium.UI.Clipboard.setText(json.data.string);
-          Paperpile.status.updateMsg({
-            msg: msg,
-            duration: 1.5,
-            fade: true
-          });
-        } else {
-          // Not in Titanium -- use Flash if available...
-          Paperpile.status.updateMsg({
-            msg: msg,
-            duration: 1.5,
-            fade: true
-          });
-
-        }
+        var string = json.data.string;
+        callback.call(this, string);
       },
       scope: this,
       failure: function(response) {
@@ -1604,6 +1621,45 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     });
   },
+
+  handleEmail: function() {
+    var n = this.getSelectionCount();
+
+    var myFunc = function(string) {
+      var subject = "Papers for you";
+      var body = 'I thought you might be interested in the following:';
+
+      var attachments = [];
+      // Attachments in e-mail links aren't very well supported. Skip them for now.
+      /* 
+	var sels = this.getSelectionModel().getSelections();
+	for (var i=0; i < sels.length; i++) {
+	  if (sels[i].data.pdf) {
+	      var pdf = sels[i].data.pdf_name;
+	      var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
+	    attachments.push('&Attachment='+path);
+	  }
+	}
+*/
+
+      if (string.length > 1024) {
+        string = string.replace(/%0A/g, "\n");
+        Titanium.UI.Clipboard.setText(string);
+        string = "[Hit Ctrl-V to paste citations here]";
+      }
+
+      var link = [
+        'mailto:?',
+        'subject=' + subject,
+        '&body=' + body + "%0A%0A" + string,
+        "%0A%0A--%0AShared with Paperpile%0Ahttp://paperpile.com",
+        attachments.join('')].join('');
+      Paperpile.utils.openURL(link);
+    };
+
+    this.getFormattedText('Bibfile', 'EMAIL', myFunc);
+  },
+
   handleCopyBibtexCitation: function() {
     this.handleCopy('Bibfile', 'BIBTEX', 'BibTeX copied');
   },

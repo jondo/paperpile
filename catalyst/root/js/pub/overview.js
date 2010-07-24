@@ -187,7 +187,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       var field = ellipsable_fields[i];
       var els = Ext.select("#"+this.id+" "+field);
       if (els.getCount() == 0) {
-	  Paperpile.log("Can't find any "+field);
+	  //Paperpile.log("Can't find any "+field);
         continue;
       }
       var doiEl = els.first();
@@ -289,7 +289,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     var el = e.getTarget();
 
     switch (el.getAttribute('action')) {
-
+    case 'email':
+      this.getGrid().handleEmail();
+      break;
     case 'doi-link':
       var url = "http://dx.doi.org/" + this.data.doi;
       Paperpile.utils.openURL(url);

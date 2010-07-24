@@ -346,6 +346,19 @@ sub format_citation {
 
 }
 
+sub best_link {
+    my $self = shift;
+    
+    if ($self->doi) {
+	return 'http://dx.doi.org/'.$self->doi;
+    } elsif ($self->linkout) {
+	return $self->linkout;
+    } elsif ($self->pmid) {
+	return 'http://www.ncbi.nlm.nih.gov/pubmed/'+$self->pmid;
+    }
+    return '';
+}
+
 sub format_authors {
 
   my $self = shift;
