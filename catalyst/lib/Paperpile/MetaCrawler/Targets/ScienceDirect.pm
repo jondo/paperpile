@@ -52,7 +52,10 @@ sub convert {
   }
 
   # If we fail we follow the exportation link to the Bibtex
-  return _follow_links_to_bibtex($content) if ( !$journal );
+  if ( !$journal ) {
+    $tree->delete;
+    return _follow_links_to_bibtex($content);
+  }
 
   # DOI
   @tags = $tree->look_down( '_tag' => 'a', 'target' => 'doilink' );
@@ -75,25 +78,33 @@ sub convert {
 
   # Authors
   @tags = $tree->look_down( '_tag' => 'div', 'id' => 'authorsAnchors' );
-  my @tmp = $tags[0]->look_down( '_tag' => 'strong' );
+  if ( $#tags > -1 ) {
+    my @tmp = $tags[0]->look_down( '_tag' => 'strong' );
 
-  # We parse again the HTML, but get rid of <sup> tags before
-  my $temp_content = $tmp[0]->as_HTML;
-  $temp_content =~ s/<sup>.{0,9}<\/sup>//g;
-  my $tree2 = HTML::TreeBuilder->new;
-  $tree2->parse_content($temp_content);
+    # We parse again the HTML, but get rid of <sup> tags before
+    my $temp_content = $tmp[0]->as_HTML;
+    $temp_content =~ s/<sup>.{0,9}<\/sup>//g;
+    my $tree2 = HTML::TreeBuilder->new;
+    $tree2->parse_content($temp_content);
 
-  ( my $temp = $tree2->as_text ) =~ s/ and /,/;
-  $temp =~ s/\s+,/,/g;
-  $temp =~ s/\./. /g;
-  $temp =~ s/\s+/ /g;
-  $temp =~ s/,+/,/g;
-  @tmp = split( /,/, $temp );
-  my @authors_tmp = ();
-  foreach my $entry (@tmp) {
-    push @authors_tmp, Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
+    ( my $temp = $tree2->as_text ) =~ s/ and /,/;
+    $temp =~ s/\s+,/,/g;
+    $temp =~ s/\./. /g;
+    $temp =~ s/\s+/ /g;
+    $temp =~ s/,+/,/g;
+    @tmp = split( /,/, $temp );
+    my @authors_tmp = ();
+    foreach my $entry (@tmp) {
+      push @authors_tmp, Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
+    }
+    $authors = join( " and ", @authors_tmp );
+    $tree2->delete;
+  } else {
+
+    # If we fail we follow the exportation link to the Bibtex
+    $tree->delete;
+    return _follow_links_to_bibtex($content);
   }
-  $authors = join( " and ", @authors_tmp );
 
   # Fill publication object with data
   my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
@@ -113,7 +124,6 @@ sub convert {
   $pub->authors($authors)     if $authors;
   $pub->publisher($publisher) if $publisher;
 
-  $tree2->delete;
   $tree->delete;
 
   return $pub;

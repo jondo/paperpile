@@ -37,5 +37,5 @@ $ENV{PERL5LIB}=undef;
 
 $ENV{BUILD_PLATFORM}=$platform;
 
-exec("../catalyst/perl5/$platform/bin/perl " . join(" ",@ARGV));
+exec("../catalyst/perl5/$platform/bin/paperperl " . join(" ",@ARGV));
 

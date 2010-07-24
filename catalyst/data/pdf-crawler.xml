@@ -587,6 +587,23 @@
   </test>
 </site>
 
+<site name="BioTechniques">
+  <signature>
+    <url>!biotechniques\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+multimedia/[^&quot;]+\.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biotechniques.com/BiotechniquesJournal/2010/July/Design-of-an-in-vivo-cleavable-disulfide-linker-in-recombinant-fusion-proteins/biotechniques-296954.html</url>
+  </test>
+</site>
+
+
   
 <site name="Meta">
   <signature>
