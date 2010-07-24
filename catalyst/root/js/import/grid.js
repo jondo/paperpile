@@ -1121,7 +1121,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'TB_BREAK',
       'PDF_COMBINED_BUTTON2',
       this.createSeparator('TB_VIEW_SEP'),
-      'FORCE_SELECT_ALL',
+      'SELECT_ALL',
       'DELETE',
       this.createSeparator('TB_DEL_SEP'),
       'LIVE_FOLDER',
