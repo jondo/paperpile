@@ -707,6 +707,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background: transparent url('/images/icons/paste_plain.png') no-repeat;
 }
 
+.pp-action-email {
+    background: transparent url('/images/icons/email.png') no-repeat;
+}
+
 /*** Main toolbar ***/
 
 .pp-main-toolbar {

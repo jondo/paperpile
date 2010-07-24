@@ -289,7 +289,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     var el = e.getTarget();
 
     switch (el.getAttribute('action')) {
-
+    case 'email':
+      this.getGrid().handleEmail();
+      break;
     case 'doi-link':
       var url = "http://dx.doi.org/" + this.data.doi;
       Paperpile.utils.openURL(url);
