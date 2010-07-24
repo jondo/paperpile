@@ -534,9 +534,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     return retVal;
   },
 
-<<<<<<< Updated upstream:catalyst/root/js/import/grid.js
-  backgroundReload: function() {
-=======
   allowBackgroundReload: function() {
     return true;
   },
@@ -545,7 +542,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (!this.allowBackgroundReload()) {
       return;
     }
->>>>>>> Stashed changes:catalyst/root/js/import/grid.js
     this.backgroundLoading = true;
     this.getStore().reload({
       callback: function() {
