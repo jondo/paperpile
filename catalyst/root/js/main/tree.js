@@ -59,7 +59,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       contextmenu: {
         scope: this,
         fn: this.onContextMenu,
-        stopEvent: true
+        stopEvent: false
       },
       beforenodedrop: {
         scope: this,
@@ -543,10 +543,19 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   onContextMenu: function(node, e) {
+    // Save the position before preparing the menu -- if we don't do this,
+    // the event becomes a 'blur' event and we lose the position info!
+    var pos = e.getXY();
+    var menu = this.prepareMenu(node, e);
+    if (menu !== null) {
+      this.showMenu(menu, pos, e);
+    }
+  },
+
+  prepareMenu: function(node, e) {
     // Note: this doesn't actually get called when the tree context triangle plugin is loaded.
-    Paperpile.log(node.type);
     var menu = this.getContextMenu(node);
-    if (menu != null) {
+    if (menu !== null) {
       if (menu.getShownItems(node).length > 0) {
         this.allowSelect = true;
         node.select();
@@ -556,9 +565,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         menu.hideItems();
 
         this.prepareMenuBeforeShowing(node, menu);
-        menu.showAt.defer(10, this, [e.getXY()]);
       }
     }
+    return menu;
+  },
+
+  showMenu: function(menu, position, e) {
+    menu.showAt(position);
   },
 
   prepareMenuBeforeShowing: function(node, menu) {
@@ -1617,7 +1630,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var filesync = this.getFileSyncData(node);
     var file = filesync.file || '';
 
-    Paperpile.log(filesync);
     if (state === true && file === '') {
       this.autoExportClick(item, null);
     } else if (state === true) {
@@ -1747,11 +1759,11 @@ Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
     }
 
     this.initShownItems();
-    this.doLayout();
+    //    this.doLayout();
   },
 
-  showAt: function(el, pos) {
-    Paperpile.Tree.ContextMenu.superclass.showAt.call(this, el, pos);
+  showAt: function(pos, parentMenu) {
+    Paperpile.Tree.ContextMenu.superclass.showAt.defer(10, this, [pos, parentMenu]);
   }
 
 });
@@ -1811,19 +1823,25 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   },
 
   getShownItems: function(node) {
+    var items;
     if (node.id == 'FOLDER_ROOT') {
-      return[
-      'folder_menu_new',
-      'folder_menu_export',
-      'folder_menu_auto_export'];
+      items = [
+        'folder_menu_new',
+        'folder_menu_export'];
+      if (Paperpile.main.getSetting('bibtex').bibtex_mode == 1) {
+        items.push('folder_menu_auto_export');
+      }
     } else {
-      return[
-      'folder_menu_new',
-      'folder_menu_delete',
-      'folder_menu_rename',
-      'folder_menu_export',
-      'folder_menu_auto_export'];
+      items = [
+        'folder_menu_new',
+        'folder_menu_delete',
+        'folder_menu_rename',
+        'folder_menu_export'];
+      if (Paperpile.main.getSetting('bibtex').bibtex_mode == 1) {
+        items.push('folder_menu_auto_export');
+      }
     }
+    return items;
   }
 
 });
@@ -1994,17 +2012,21 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   },
 
   getShownItems: function(node) {
+    var items;
     if (node.id == 'TAGS_ROOT') {
-      return['tags_menu_new',
-      'sort_by_menu'];
+      items = ['tags_menu_new',
+        'sort_by_menu'];
     } else {
-      return['tags_menu_new',
-      'tags_menu_delete',
-      'tags_menu_rename',
-      'tags_menu_style',
-      'tags_menu_export',
-      'tags_menu_auto_export'];
+      items = ['tags_menu_new',
+        'tags_menu_delete',
+        'tags_menu_rename',
+        'tags_menu_style',
+        'tags_menu_export'];
+      if (Paperpile.main.getSetting('bibtex').bibtex_mode == 1) {
+        items.push('tags_menu_auto_export');
+      }
     }
+    return items;
   }
 });
 

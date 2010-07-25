@@ -69,20 +69,14 @@ Ext.extend(Paperpile.ContextTrianglePlugin, Ext.util.Observable, {
     },
     this);
 
-    // Unload the TreePanel's context menu callback:
-    this.un('contextmenu', this.onContextMenu);
-    // Create this plugin's version of the function:
-    this.onContextMenu = function(node, e) {
-      var menu = this.getContextMenu(node);
-
-      if (menu != null && menu.getShownItems(node).length > 0) {
-
-        /*
+    this.showMenu = function(menu,pos,e) {
+    /*
          While a context menu is open, we store flags
          depending on where the user's mouse has gone to say whether to hide
          or show the triangle when the menu closes. Here is where those flags
          are acted upon.
         */
+	var node = menu.node;
         menu.on('beforehide', function() {
           menu.node.unselect();
           var tri = this.contextTriangle;
@@ -101,39 +95,16 @@ Ext.extend(Paperpile.ContextTrianglePlugin, Ext.util.Observable, {
           single: true
         });
 
-        // Cause this TreeNode to be selected.
-        this.allowSelect = true;
-        node.select();
-        this.allowSelect = false;
-
-        // Initialize and show the context menu.
-        menu.setNode(node);
-        menu.render();
-        menu.hideItems();
-
-        this.prepareMenuBeforeShowing(node, menu);
-
         var tri = this.contextTriangle;
         if (this.eventContainsTriangle(e)) {
           menu.show(tri, 'tl-bl');
           tri.shouldShowWhenMenuCloses = true;
           tri.lastOverNode = node;
         } else {
-          menu.showAt(e.getXY());
+          menu.showAt(pos);
           tri.hide();
         }
-
-      }
     };
-    // Add a callback for our new version of the onContextMenu function:
-    this.on({
-      contextmenu: {
-        scope: this,
-        fn: this.onContextMenu,
-        stopEvent: true
-      }
-    });
-
   },
 
   // This method is also called from the TreePanel's scope.
