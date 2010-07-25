@@ -200,6 +200,9 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 },
 
   clearMsg: function(anim) {
+    if (anim === true) {
+      anim = this.animConfig;
+    }
     this.el.hide(anim);
     // back to default
     this.setType('info');

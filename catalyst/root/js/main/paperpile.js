@@ -846,7 +846,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
-  reportPdfDownloadError: function(info) {
+  reportPdfDownloadError: function(data) {
 
     Ext.MessageBox.buttonText.ok = "Send error report";
     Ext.Msg.show({
@@ -858,14 +858,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       buttons: Ext.Msg.OKCANCEL,
       fn: function(btn) {
         if (btn === 'ok') {
-          Paperpile.main.reportError('PDF_DOWNLOAD', info);
+          Paperpile.main.reportError('PDF_DOWNLOAD', data);
         }
         Ext.MessageBox.buttonText.ok = "Ok";
       }
     });
   },
 
-  reportPdfMatchError: function(info) {
+  reportPdfMatchError: function(data) {
 
     Ext.MessageBox.buttonText.ok = "Send error report";
     Ext.Msg.show({
@@ -877,7 +877,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       buttons: Ext.Msg.OKCANCEL,
       fn: function(btn) {
         if (btn === 'ok') {
-          Paperpile.main.reportError('PDF_MATCH', info);
+          Paperpile.main.reportError('PDF_MATCH', data);
         }
         Ext.MessageBox.buttonText.ok = "Ok";
       }
@@ -921,7 +921,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   // Type: CRASH, PDF_DOWNLOAD, PDF_IMPORT
-  reportError: function(type, info) {
+  reportError: function(type, data) {
 
     var url = '/ajax/misc/report_crash';
 
@@ -932,7 +932,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (type === 'PDF_MATCH') {
       url = '/ajax/misc/report_pdf_match_error';
     }
-
+    var number = Paperpile.status.showBusy("Reporting error");
     // First call line_feed to make sure all of the relevant catalyst
     // log is flushed. Wait 5 seconds to make sure it is sent to the
     // frontend before we send it back to the backend. 
@@ -940,25 +940,27 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       url: Paperpile.Url('/ajax/misc/line_feed'),
       success: function(response) {
         (function() {
+          var params = Ext.apply(data, {
+            catalyst_log: Paperpile.serverLog
+          });
           // Turn off logging to avoid logging the log when it is sent
           // to the backend...
           Paperpile.isLogging = 0;
           Ext.Ajax.request({
             url: Paperpile.Url(url),
-            params: {
-              info: info,
-              catalyst_log: Paperpile.serverLog
-            },
+            params: params,
             scope: this,
             success: function() {
               // Turn on logging again. Wait 10 seconds to make sure it is
               // turned off when the actual log is written.
+		Paperpile.status.clearMessageNumber(number,true);
               (function() {
                 Paperpile.isLogging = 1;
               }).defer(10000);
-            }
+            },
+            failure: Paperpile.main.onError
           })
-        }).defer(5000);
+        }).defer(3000);
       },
       scope: this
     });

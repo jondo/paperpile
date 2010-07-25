@@ -236,12 +236,17 @@ Ext.override(Ext.menu.Item, {
     if (!this.itemTpl) {
       this.itemTpl = Ext.menu.Item.prototype.itemTpl = new Ext.XTemplate(
         '<a id="{id}" class="{cls}" hidefocus="true" unselectable="on" href="{href}"',
+        '<div class="x-menu-item-shortcut">{shortcutString}</div>',
         '<tpl if="hrefTarget">',
         ' target="{hrefTarget}"',
         '</tpl>',
         '<img src="{icon}" class="x-menu-item-icon {iconCls}"/>',
         '<span class="x-menu-item-text">{text}</span>',
-        '<div class="x-menu-item-shortcut">{shortcutString}</div>',
+	// extraspace is a fake spacer which goes where the
+	// shortcutstring *would* go if we didn't have to put it
+	// up front and use absolute positioning.
+	// See paperpile.css
+        '<div class="x-menu-item-extraspace"></div>',
         '</a>');
     }
     var a = this.getTemplateArgs();
@@ -249,7 +254,7 @@ Ext.override(Ext.menu.Item, {
     this.iconEl = this.el.child('img.x-menu-item-icon');
     this.textEl = this.el.child('.x-menu-item-text');
     this.shortcutEl = this.el.child('.x-menu-item-shortcut');
-    this.extraEl = this.el.child('.x-menu-item-extrabutton');
+    this.extraEl = this.el.child('.x-menu-item-extraspace');
     if (!this.href) {
       this.mon(this.el, 'click', Ext.emptyFn, null, {
         preventDefault: true
