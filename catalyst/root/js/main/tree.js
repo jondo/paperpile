@@ -295,7 +295,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       break;
     case 'DUPLICATES':
       Paperpile.main.tabs.newPluginTab('Duplicates', {},
-        "Duplicates", "pp-icon-duplicates", "duplicates")
+        "Duplicates", "pp-icon-duplicates", "duplicates");
       break;
     case 'TRASH':
       Paperpile.main.tabs.newTrashTab();
@@ -544,6 +544,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   onContextMenu: function(node, e) {
     // Note: this doesn't actually get called when the tree context triangle plugin is loaded.
+    Paperpile.log(node.type);
     var menu = this.getContextMenu(node);
     if (menu != null) {
       if (menu.getShownItems(node).length > 0) {
@@ -553,12 +554,16 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         menu.setNode(node);
         menu.render();
         menu.hideItems();
-        menu.showAt.defer(10, this, [e.getXY()]);
 
-        if (node.type == 'FOLDER') {
-          this.createAutoExportTip(menu);
-        }
+        this.prepareMenuBeforeShowing(node, menu);
+        menu.showAt.defer(10, this, [e.getXY()]);
       }
+    }
+  },
+
+  prepareMenuBeforeShowing: function(node, menu) {
+    if (node.type == 'FOLDER' || node.type == 'TAGS') {
+      this.createAutoExportTip(menu);
     }
   },
 
@@ -583,6 +588,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
             } else {
               tip.body.dom.innerHTML = tipText;
             }
+            return true;
           },
           scope: this
         }
@@ -597,17 +603,29 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       return '';
     }
 
+    var displayText = 'crap';
     if (item.textDisabled) {
-      return "Auto-export disabled";
+      var filesync = this.getFileSyncData(node);
+      var exportFile = filesync.file;
+      if (!exportFile || exportFile == '') {
+        displayText = 'Click to choose a file.';
+      } else {
+        displayText = [
+          'File: <b>',
+          exportFile,
+          '</b>',
+          '<br/>Auto-export is disabled.'].join("");
+      }
     } else {
-      var exportFile = this.getAutoExportLocation(node);
-      var displayText = [
-        '<b>',
+      var filesync = this.getFileSyncData(node);
+      var exportFile = filesync.file;
+      displayText = [
+        'File: <b>',
         exportFile,
         '</b>',
         '<br/>Click to change'].join("");
-      return displayText;
     }
+    return displayText;
   },
 
   isContextMenuShowing: function() {
@@ -665,6 +683,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       menu = this.defaultMenu;
       break;
     }
+
     return menu;
   },
 
@@ -1432,10 +1451,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         Paperpile.main.onUpdate(json.data);
 
         var numDeleted = json.num_deleted;
-	  var msg = numDeleted + " references permanently deleted.";
-	  if (numDeleted == 0) {
-	      msg = "Nothing to delete from Trash.";
-	  }
+        var msg = numDeleted + " references permanently deleted.";
+        if (numDeleted == 0) {
+          msg = "Nothing to delete from Trash.";
+        }
         Paperpile.status.updateMsg({
           type: 'info',
           msg: msg,
@@ -1596,32 +1615,62 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var id = node.id;
 
     var filesync = this.getFileSyncData(node);
+    var file = filesync.file || '';
 
-    if (state === true) {
-
-      //node['plugin_auto_export_enable'] = true;
-      var exportFile = this.getAutoExportLocation(node);
-      if (exportFile == '') {
-        this.autoExportClick(item, null);
-      }
-      this.autoExportMessage(node.text, exportFile);
-
-      filesync.file = exportFile;
+    Paperpile.log(filesync);
+    if (state === true && file === '') {
+      this.autoExportClick(item, null);
+    } else if (state === true) {
       filesync.active = 1;
-
+      this.setFileSyncData(node, filesync);
     } else {
       filesync.active = 0;
+      this.setFileSyncData(node, filesync);
     }
-
-    this.setFileSyncData(node, filesync);
-
   },
 
-  getAutoExportLocation: function(node) {
-    // Gets either (a) the defined auto-export location from the node's plugin parameters, or (b) a location defined based on the folder name and ID.
+  autoExportClick: function(item, event) {
+    var parentMenu = item.parentMenu;
+    var node = parentMenu.node;
+
     var filesync = this.getFileSyncData(node);
-    var export_file = filesync.file;
-    return export_file || '';
+    var initialFile = filesync.file || '';
+
+    var stopMenuHide = function(menu) {
+      return false;
+    };
+    //    parentMenu.on('beforehide', stopMenuHide);
+    var callback = function(filenames) {
+      if (filenames.length > 0) {
+        var file = filenames[0];
+        filesync.file = file;
+        filesync.active = 1;
+        parentMenu.hide();
+        this.setFileSyncData(node, filesync);
+        this.autoExportMessage(node.text, file);
+      } else {
+        if (initialFile == '') {
+          // We're left with no filesync file here, so we just have to disable
+          // the filesync and un-check the checkbox.
+          filesync.active = 0;
+          this.setFileSyncData(node, filesync);
+          item.setChecked(false, false);
+          item.disableText();
+        }
+      }
+      //      parentMenu.un('beforehide', stopMenuHide);
+    };
+    var options = {
+      title: 'Choose BibTeX file',
+      selectionType: 'file',
+      types: ['bib'],
+      typesDescription: 'BibTeX files',
+      dialogType: 'save',
+      multiple: false,
+      path: Paperpile.utils.splitPath(initialFile).dir,
+      scope: this
+    };
+    Paperpile.fileDialog(callback, options);
   },
 
   setFileSyncData: function(node, params) {
@@ -1640,41 +1689,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       filesync[node.id] = {};
     }
     return filesync[node.id];
-  },
-
-  autoExportClick: function(item, event) {
-    var parentMenu = item.parentMenu;
-    var node = parentMenu.node;
-
-    var filesync = this.getFileSyncData(node);
-    var initialFile = this.getAutoExportLocation(node);
-
-    var stopMenuHide = function(menu) {
-      return false;
-    };
-    //    parentMenu.on('beforehide', stopMenuHide);
-    var callback = function(filenames) {
-      if (filenames.length > 0) {
-        var file = filenames[0];
-        filesync.file = file;
-        filesync.active = 1;
-        parentMenu.hide();
-        this.setFileSyncData(node, filesync);
-        this.autoExportMessage(node.text, file);
-      }
-      //      parentMenu.un('beforehide', stopMenuHide);
-    };
-    var options = {
-      title: 'Choose BibTeX file',
-      selectionType: 'file',
-      types: ['bib'],
-      typesDescription: 'BibTeX files',
-      dialogType: 'save',
-      multiple: false,
-      path: Paperpile.utils.splitPath(initialFile).dir,
-      scope: this
-    };
-    Paperpile.fileDialog(callback, options);
   },
 
   autoExportMessage: function(collection_name, file) {
@@ -1787,7 +1801,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 
   initShownItems: function() {
     var item = this.items.get('folder_menu_auto_export');
-    if (Paperpile.main.tree.getFileSyncData(this.node).active) {
+    if (Paperpile.main.tree.getFileSyncData(this.node).active == 1) {
       item.setChecked(true, true);
       item.enableText();
     } else {
@@ -1953,9 +1967,30 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         text: 'Sort Labels By',
         menu: tree.sortByMenu
       },
-      ]
+      {
+        xtype: 'enabledisablecheckitem',
+        id: 'tags_menu_auto_export',
+        text: Paperpile.Tree.AUTO_EXPORT_MENU_STRING,
+        hideOnClick: true,
+        textDisabled: true,
+        cls: 'pp-auto-export-menu-item',
+        handler: tree.autoExportClick,
+        checkHandler: tree.autoExportCheck,
+        scope: tree
+      }]
     });
     Paperpile.Tree.TagsMenu.superclass.initComponent.call(this);
+  },
+
+  initShownItems: function() {
+    var item = this.items.get('tags_menu_auto_export');
+    if (Paperpile.main.tree.getFileSyncData(this.node).active == 1) {
+      item.setChecked(true, true);
+      item.enableText();
+    } else {
+      item.setChecked(false, true); // Second param is true to suppress event.
+      item.disableText();
+    }
   },
 
   getShownItems: function(node) {
@@ -1967,7 +2002,8 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       'tags_menu_delete',
       'tags_menu_rename',
       'tags_menu_style',
-      'tags_menu_export'];
+      'tags_menu_export',
+      'tags_menu_auto_export'];
     }
   }
 });

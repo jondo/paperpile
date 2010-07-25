@@ -32,15 +32,17 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     var data = record.data;
     switch (el.getAttribute('action')) {
     case 'pdf-match-error-report':
-      var info = this.getPdfMatchErrorInfo(data);
-      Paperpile.main.reportPdfMatchError(info);
+      data.reportString = Paperpile.utils.hashToString(data);
+      Paperpile.main.reportPdfMatchError(data);
       break;
     case 'pdf-match-insert-manually':
       Paperpile.main.addPDFManually(data.id, data.gridID);
       break;
     case 'pdf-download-error-report':
-      var info = this.getPdfDownloadErrorInfo(data);
-      Paperpile.main.reportPdfDownloadError(info);
+      var string = Paperpile.utils.hashToString(data);
+      var job = Paperpile.utils.hashToString(data._search_job);
+      data.reportString = string+"\n\n"+job;
+      Paperpile.main.reportPdfDownloadError(data);
       break;
     case 'pdf-download-open-url':
       Paperpile.utils.openURL(data.publisherLink);
@@ -149,29 +151,9 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       }
     }
 
-    if (data.type == 'PDF_DOWNLOAD' && data.status == 'ERROR') {
-      data.errorReportInfo = this.getPdfDownloadErrorInfo(data);
-    }
-
-    if (data.type == 'PDF_IMPORT' && data.status == 'ERROR') {
-      data.errorReportInfo = this.getPdfMatchErrorInfo(data);
-    }
-
     data.gridID = this.id;
 
     return this.dataTemplate.apply(data);
-  },
-
-  getPdfMatchErrorInfo: function(data) {
-    var jsonString = Ext.util.JSON.encode(data);
-    return jsonString;
-  },
-
-  getPdfDownloadErrorInfo: function(data) {
-    var jsonString = Ext.util.JSON.encode(data);
-    return jsonString;
-    //data.errorReportInfo = data.title + ' | ' + data.authors + ' | ';
-    //data.errorReportInfo += data.citation + ' | ' + data.doi + ' | ' + data.linkout;
   },
 
   renderType: function(value, meta, record) {

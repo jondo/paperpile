@@ -2239,6 +2239,7 @@ table.x-btn-subtle:not(.x-btn-over) {
   float:right;
   width:24px;
   position:relative;
+  display:inline-block;
   top:-22px;
   right:3px;
 }
@@ -2248,19 +2249,28 @@ table.x-btn-subtle:not(.x-btn-over) {
     margin: 0px 0px;
 }
 
+.x-menu-sep {
+    overflow:visible;
+}
+
+/* We want to float this DIV to the right so the menu gets sized
+correctly when there is a keyboard shortcut to display. */
 .x-menu-item-extraspace {
     width: 26px;
     float:right;
+    margin-left:5px;
 }
 
+/* Displays a small gray keyboard shortcut, always positioned to
+the right of the menu. */
 .x-menu-item-shortcut {
     font-size:9px;
     color:gray;
     text-align:right;
+    position:absolute;
+    right:3px;
     float:right;
-    margin:0px;
-    margin-left:6px;
-    margin-right:6px
-    padding:0px;
+    margin-left:5px;
+    margin-right:5px;
     width:26px;
 }

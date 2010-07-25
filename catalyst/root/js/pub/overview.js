@@ -365,9 +365,12 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       this.getGrid().clearDownload();
       break;
     case 'report-download-error':
-      var infoString = this.data.title + '\n' + this.data._authors_display + '\n';
-      infoString += this.data._citation_display + '\n' + this.data.doi + '\n' + this.data.linkout;
-      Paperpile.main.reportPdfDownloadError(infoString);
+      var record = this.getGrid().getSingleSelectionRecord();
+      var data = record.data;
+      var string = Paperpile.utils.hashToString(data);
+      var job = Paperpile.utils.hashToString(data._search_job);
+      data.reportString = string+"\n\n"+job;
+      Paperpile.main.reportPdfDownloadError(data);
       break;
     case 'import-pdf':
       // If PDF has been downloaded for an entry that is not

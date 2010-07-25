@@ -1,4 +1,3 @@
-
 /* Copyright 2009, 2010 Paperpile
 
    This file is part of Paperpile
@@ -348,61 +347,66 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     // types: ['txt','csv']
     types: null,
     typesDescription: null,
-      scope: null,
-      path: Paperpile.main.getSetting('last_file_path') || Paperpile.main.getSetting('user_home')
+    scope: null,
+    path: Paperpile.main.getSetting('last_file_path') || Paperpile.main.getSetting('user_home')
   };
 
   Ext.apply(options, inputOptions);
 
-    if (callback === undefined) {
-	callback = function(filenames) {};
-    }
+  if (callback === undefined) {
+    callback = function(filenames) {};
+  }
 
-    // Before the original callback, create an interceptor in case the user chose
-    // to save over an existing file.
-    if (options.dialogType == 'save') {
-	var originalCallback = callback;
+  // Before the original callback, create an interceptor in case the user chose
+  // to save over an existing file.
+  if (options.dialogType == 'save') {
+    var originalCallback = callback;
     callback = function(filenames) {
-	if (filenames.length > 0) {
-	    var filename = filenames[0];
-	    var parts = Paperpile.utils.splitPath(filename);
-	    var file = Titanium.Filesystem.getFile(filename);
-	    if (file.exists()) {
-          Ext.Msg.show({
+      if (filenames.length > 0) {
+        var filename = filenames[0];
+        var parts = Paperpile.utils.splitPath(filename);
+        var file = Titanium.Filesystem.getFile(filename);
+        if (file.exists()) {
+            var msg = Ext.Msg.show({
             title: 'Overwrite File?',
-            msg: 'The chosen file <b>'+parts.file+'</b> exists. Overwrite?',
+            msg: 'The chosen file: <br/><div style="margin:5px;word-wrap:break-word;">' + filename + '</div> already exists. Overwrite?',
             animEl: 'elId',
+	    width:400,
             icon: Ext.MessageBox.INFO,
             buttons: Ext.Msg.OKCANCEL,
             fn: function(btn) {
               if (btn === 'ok') {
-		  originalCallback.call(options.scope,filenames);
+                originalCallback.call(options.scope, filenames);
               } else {
-		  return false;
-	      }
-              Ext.MessageBox.buttonText.ok = "Ok";
-		return false;
+		// Deciding not to overwrite the file should return the same
+		// callback as an empty response -- i.e. a 'cancel' on the file
+		// save dialog.
+                originalCallback.call(options.scope, []);
+              }
+              return false;
             },
             scope: this
           });
-	    } else {
-	  originalCallback.call(options.scope,filenames);
-	    }
-	}
+        } else {
+          originalCallback.call(options.scope, filenames);
+        }
+      } else {
+        originalCallback.call(options.scope, filenames);
+      }
     };
-}
-    // After the original callback, store the last used file path.
-    callback = callback.createSequence(function(filenames) {
-	if (filenames.length > 0) {
-	    var file = filenames[0];
-	    var dir = Paperpile.utils.splitPath(file).dir;
-	    Paperpile.main.setSetting('last_file_path',dir);
-	}
-    });
-
-    if (options.scope) {
-	callback = callback.createDelegate(options.scope);
+  }
+  // After the original callback, store the last used file path.
+  callback = callback.createSequence(function(filenames) {
+    if (filenames.length > 0) {
+      var file = filenames[0];
+      var dir = Paperpile.utils.splitPath(file).dir;
+      Paperpile.main.setSetting('last_file_path', dir);
     }
+  });
+
+  if (options.scope) {
+    callback = callback.createDelegate(options.scope);
+  }
 
   if (IS_TITANIUM) {
     // Create a Titanium dialog.
@@ -424,12 +428,12 @@ Paperpile.fileDialog = function(callback, inputOptions) {
       },
     };
 
-      for (var i=0; i < options.types.length; i++) {
-	  var option = options.types[i];
-	  if (option == '*') {
-	      options.types[i] = '';
-	  }
+    for (var i = 0; i < options.types.length; i++) {
+      var option = options.types[i];
+      if (option == '*') {
+        options.types[i] = '';
       }
+    }
 
     if (options.types) {
       Ext.apply(fileChooserOptions, {
@@ -447,11 +451,11 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     if (options.dialogType == 'save') {
       fileChooserOptions.saveMode = true;
     }
-      if (options.selectionType == 'file') {
-	  fileChooserOptions.selectionMode = 'FILE';
-      } else {
-	  fileChooserOptions.selectionMode = 'DIR';
-      }
+    if (options.selectionType == 'file') {
+      fileChooserOptions.selectionMode = 'FILE';
+    } else {
+      fileChooserOptions.selectionMode = 'DIR';
+    }
 
     win = new Paperpile.FileChooser(fileChooserOptions);
     win.show();
