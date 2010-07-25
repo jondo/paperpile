@@ -111,6 +111,8 @@ Ext.extend(Paperpile.ContextTrianglePlugin, Ext.util.Observable, {
         menu.render();
         menu.hideItems();
 
+        this.prepareMenuBeforeShowing(node, menu);
+
         var tri = this.contextTriangle;
         if (this.eventContainsTriangle(e)) {
           menu.show(tri, 'tl-bl');
@@ -121,9 +123,6 @@ Ext.extend(Paperpile.ContextTrianglePlugin, Ext.util.Observable, {
           tri.hide();
         }
 
-        if (node.type == 'FOLDER') {
-          this.createAutoExportTip(menu);
-        }
       }
     };
     // Add a callback for our new version of the onContextMenu function:
