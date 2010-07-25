@@ -169,6 +169,18 @@ Paperpile.utils = {
 
   },
 
+  hashToString: function(hash,recursive) {
+    var string = "{\n";
+    for (var key in hash) {
+      if (hash.hasOwnProperty(key)) {
+        var value = hash[key];
+        string += "  "+key+"  =>  "+value+"\n";
+      }
+    }
+    string += "}\n";
+    return string;
+  },
+
   catPath: function() {
 
     var parts = [];

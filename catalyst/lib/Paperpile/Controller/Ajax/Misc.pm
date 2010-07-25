@@ -316,7 +316,7 @@ sub report_pdf_download_error : Local {
 
   my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
 
-  my $pub          = $c->request->params->{info};
+  my $report          = $c->request->params->{reportString};
   my $catalyst_log = $c->request->params->{catalyst_log};
 
   my $subject = 'Automatic bug report: PDF download error on '.$self->_system_info_string($c);
@@ -335,7 +335,7 @@ sub report_pdf_download_error : Local {
     Content_Type => 'form-data',
     Content      => [
     subject    => $subject,
-    body       => $pub,
+    body       => $report,
     from       => 'Paperpile client',
     attachment => $attachment,
     ];
@@ -351,7 +351,8 @@ sub report_pdf_match_error : Local {
 
   my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
 
-  my $file = $c->request->params->{info};
+  my $report = $c->request->params->{reportString};
+  my $file = $c->request->params->{pdf};
 
   my $subject = 'Automatic bug report: PDF match error on '.$self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
@@ -360,7 +361,7 @@ sub report_pdf_match_error : Local {
     Content_Type => 'form-data',
     Content      => [
     subject    => $subject,
-    body       => $file,
+    body       => $report,
     from       => 'Paperpile client',
     attachment => [$file],
     ];
@@ -369,6 +370,12 @@ sub report_pdf_match_error : Local {
 
 }
 
+sub _hash {
+    my $self = shift;
+    my $obj = shift;
+
+    return Dumper($obj);
+}
 
 sub _system_info_string {
 

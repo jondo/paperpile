@@ -82,6 +82,31 @@
 
 </site>
 
+
+<site name="AIP">
+
+  <signature>
+    <url>!scitation\.aip\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(.*id=)(JESOAN[A-Z\d]+)(&amp;.*)!http://scitation.aip.org/getabs/servlet/GetCitation?SelectCheck=$2&amp;source=scitation&amp;PrefType=ARTICLE&amp;PrefAction=Add%20Selected&amp;downloadcitation=%20Go%20&amp;fn=view_bibtex2!</rewrite>
+    </pattern>
+  </rule>
+
+ <test>
+   <page url="http://dx.doi.org/10.1149/1.2085889">
+     <journal>Journal of The Electrochemical Society</journal>
+     <title>An Electrochemical Method to Determine Small Amounts of Palladium in Aqueous Solution</title>
+   </page>
+ </test>
+
+</site>
+
+
+
+
 <site name="AmericanPhysicalSociety">
   <signature>
     <url>!aps\.org!</url>

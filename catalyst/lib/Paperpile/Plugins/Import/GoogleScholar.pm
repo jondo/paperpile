@@ -34,6 +34,7 @@ use Paperpile::Plugins::Import::SpringerLink;
 use Paperpile::Plugins::Import::ACM;
 use Paperpile::Plugins::Import::PubMed;
 use Paperpile::Plugins::Import::OxfordJournals;
+use Paperpile::Plugins::Import::URL;
 
 extends 'Paperpile::Plugins::Import';
 
@@ -186,6 +187,8 @@ sub page {
 sub _check_for_better_bibliographic_data {
   ( my $self, my $pub ) = @_;
 
+  return undef;
+
   # Create a new Publication object
   my $full_pub = Paperpile::Library::Publication->new();
 
@@ -273,91 +276,143 @@ sub complete_details {
 
   my $browser = Paperpile::Utils->get_browser;
   $browser->cookie_jar( $self->_session_cookie );
+
+  my $URL_plugin = Paperpile::Plugins::Import::URL->new;
+
   my $bibtex = '';
 
-  # Let's see if the the www_provider or the linkout is
-  # one that we can already parse
-  my @best_sources  = ( 'Springer', 'portal.acm.org', 'ncbi.nlm.nih.gov' );
-  my @best_linkouts = ('oxfordjournals.org');
-  my $best_flag     = 0;
-  foreach my $j ( 0 .. $#best_sources ) {
-    $best_flag = 1 if ( $pub->_www_publisher eq $best_sources[$j] );
-  }
-  foreach my $link (@best_linkouts) {
-    $best_flag = 1 if ( $pub->linkout =~ m/$link/ );
-  }
+  # if the given linkout is a good one we are done
+  # the meta-crawler is called and bibliographic
+  # informations is obtained from the linkout page
+  my $full_pub = undef;
+  eval { $full_pub = $URL_plugin->match($pub) };
+  if ($full_pub) {
 
-  # if the publisher is already a good one we call the BibTeX right here
-  # or take another Plugin if we can recognize it
-  if ( $best_flag == 1 ) {
-    my $full_pub = $self->_check_for_better_bibliographic_data($pub);
-    if ($full_pub) {
-      return $full_pub;
-    } else {
-      my $bibtex_tmp = $browser->get( $pub->_details_link );
-      $bibtex = $bibtex_tmp->content;
-    }
+    $full_pub->citekey('');
+
+    # Update plugin _hash with new data
+    $full_pub->guid( $pub->guid );
+    $self->_hash->{ $pub->guid } = $full_pub;
+
+    # refresh fields
+    $full_pub->_light(0);
+    $full_pub->refresh_fields();
+    $full_pub->refresh_authors();
+
+    return $full_pub;
   }
 
   # For many articles Google provides links to several versions of
   # the same article. There are differences regarding the parsing
   # quality of the BibTeX. We search all versions if there are any
   # high quality links.
-  if ( $pub->_all_versions ne '' and $best_flag == 0 ) {
-    my @order_publishers = (
-      'ncbi.nlm.nih.gov',        'Springer',
-      'portal.acm.org',          'Elsevier',
-      'ingentaconnect.com',      'liebertonline.com',
-      'nature.com',              'sciencemag.org',
-      'Cambridge Univ Press',    'indexcopernicus.com',
-      'Nature Publishing Group', 'Oxford Univ Press',
-      'pubmedcentral.nih.gov',   'adsabs.harvard.edu',
-      'cat.inist.fr',            'arxiv.org',
-      'csa.com'
+  if ( $pub->_all_versions ne '' ) {
+
+    my @supported = (
+      "biomedcentral\.com",                     "chemistrycentral\.com",
+      "physmathcentral\.com",                   "aps\.org",
+      "plos",                                   "iop\.org",
+      "atypon",                                 "acs\.org\/doi\/(abs|full)",
+      "annualreviews\.org\/doi\/(abs|full)",    "liebertonline\.com\/doi\/(abs|full)",
+      "mitpressjournals\.org\/doi\/(abs|full)", "reference-global\.com",
+      "informahealthcare\.com",                 "avma\.org",
+      "ametsoc\.org",                           "bioone\.org",
+      "uchicago\.edu",                          "jst\.go\.jp",
+      "agu\.org",                               "atmos-chem-phys\.net",
+      "biogeosciences\.net",                    "envplan\.com",
+      "perceptionweb\.com",                     "iucr\.org",
+      "sagepub\.com",                           "cshlp\.org",
+      "pnas\.org",                              "sciencemag\.org",
+      "oxfordjournals\.org",                    "bmj\.com",
+      "bmjjournals\.com",                       "ajhp\.org",
+      "uwpress\.org",                           "geoscienceworld\.org",
+      "hematologylibrary\.org",                 "iovs\.org",
+      "physiology\.org",                        "aphapublications\.org",
+      "amjpathol\.org",                         "dukejournals\.org",
+      "psychonomic-journals\.org",              "ama-assn\.org",
+      "ctsnetjournals\.org",                    "birjournals\.org",
+      "aacrjournals\.org",                      "ctsnetbooks\.org",
+      "jwatch\.org",                            "diabetesjournals\.org",
+      "chestpubs\.org",                         "rsmjournals\.com",
+      "ahajournals\.org",                       "biologists\.org",
+      "lyellcollection\.org",                   "royalsocietypublishing\.org",
+      "highwire\.org",                          "ipap\.jp",
+      "mdpi\.com",                              "ieeexplore\.ieee\.org",
+      "computer\.org",                          "cell\.com",
+      "springerlink",                           "nature\.com",
+      "sciencedirect\.com\/science",            "landesbioscience\.com",
+      "emeraldinsight\.com",                    "dovepress\.com",
+      "la-press\.com",                          "thelancet\.com",
+      "interscience\.wiley\.com",
     );
-    my @order_flags = ();
-    for ( 0 .. $#order_publishers ) { push @order_flags, -1 }
 
     # We retrieve at most 100 aritcles and screen the page if there
     # is a good linkout to a publisher that we can already parse or
-    # that usually gives high quality in bibtex parsing by Google
     my $response_all_versions = $browser->get( $pub->_all_versions . '&num=100' );
     my $content_all_versions  = $response_all_versions->content;
 
     my $page = $self->_parse_googlescholar_page($content_all_versions);
+
+    # We trust pubmed the most and so we screen first for a pubmed entry
     for my $i ( 0 .. $#{$page} ) {
-      foreach my $j ( 0 .. $#order_publishers ) {
-        if ( $page->[$i]->_www_publisher =~ m/$order_publishers[$j]/ ) {
-          $order_flags[$j] = $i if ( $order_flags[$j] == -1 );
+      foreach my $j ( 0 .. $#supported ) {
+        if ( $page->[$i]->linkout =~ m/ncbi\.nlm\.nih\.gov/ ) {
+          $full_pub = undef;
+          eval { $full_pub = $URL_plugin->match($pub) };
+          if ($full_pub) {
+
+            $full_pub->citekey('');
+
+            # Update plugin _hash with new data
+            $full_pub->guid( $pub->guid );
+            $self->_hash->{ $pub->guid } = $full_pub;
+
+            # refresh fields
+            $full_pub->_light(0);
+            $full_pub->refresh_fields();
+            $full_pub->refresh_authors();
+
+            return $full_pub;
+          }
+          last;
         }
       }
     }
 
-    # let's define the best one
-    my $best_one = 0;
-    foreach my $j ( 0 .. $#order_flags ) {
-      if ( $order_flags[$j] > -1 ) {
-        $best_one = $order_flags[$j];
-        last;
-      }
-    }
+    # If we are here, there as no pubmed entry and we 
+    # look for other good sites
 
-    # Get the BibTeX
-    my $full_pub = $self->_check_for_better_bibliographic_data( $page->[$best_one] );
-    if ($full_pub) {
-      return $full_pub;
-    } else {
-      my $bibtex_tmp = $browser->get( $page->[$best_one]->_details_link );
-      $bibtex = $bibtex_tmp->content;
+    for my $i ( 0 .. $#{$page} ) {
+      foreach my $j ( 0 .. $#supported ) {
+        if ( $page->[$i]->linkout =~ m/$supported[$j]/ ) {
+          $full_pub = undef;
+          eval { $full_pub = $URL_plugin->match($pub) };
+          if ($full_pub) {
+
+            $full_pub->citekey('');
+
+            # Update plugin _hash with new data
+            $full_pub->guid( $pub->guid );
+            $self->_hash->{ $pub->guid } = $full_pub;
+
+            # refresh fields
+            $full_pub->_light(0);
+            $full_pub->refresh_fields();
+            $full_pub->refresh_authors();
+
+            return $full_pub;
+          }
+          last;
+        }
+      }
     }
   }
 
   # Nothing good found till here, so we take the link of the original
   # publication object
-  if ( $bibtex eq '' ) {
-    my $bibtex_tmp = $browser->get( $pub->_details_link );
-    $bibtex = $bibtex_tmp->content;
-  }
+
+  my $bibtex_tmp = $browser->get( $pub->_details_link );
+  $bibtex = $bibtex_tmp->content;
 
   # Create a new Publication object
   my $full_pub = Paperpile::Library::Publication->new();
@@ -399,8 +454,8 @@ sub complete_details {
   $full_pub->citekey('');
 
   # Update plugin _hash with new data
-  $full_pub->guid($pub->guid);
-  $self->_hash->{$pub->guid} = $full_pub;
+  $full_pub->guid( $pub->guid );
+  $self->_hash->{ $pub->guid } = $full_pub;
 
   return $full_pub;
 }
@@ -756,14 +811,14 @@ sub _parse_googlescholar_page {
     my ( $title, $url );
 
     # A link to a web-resource is available
-    if ( $node->findnodes('./h3/a') ) {
-      $title = $node->findvalue('./h3/a');
-      $url   = $node->findvalue('./h3/a/@href');
+    if ( $node->findnodes('./*/h3/a') ) {
+      $title = $node->findvalue('./*/h3/a');
+      $url   = $node->findvalue('./*/h3/a/@href');
 
       # citation only
     } else {
 
-      $title = $node->findvalue('./h3');
+      $title = $node->findvalue('./*/h3');
 
       # Remove the tags [CITATION] and [BOOK] (and the character
       # afterwards which is a &nbsp;)
