@@ -52,8 +52,9 @@ sub convert {
   $abstract =~ s/<a href="#top">Top of page<\/a>//;
   $abstract =~ s/<b>Abstract<\/b>//;
   $abstract =~ s/<p><\/p>//g;
-  $abstract =~ s/\shref="#[a-zA-Z\d\-\s_]+"//g;
+  $abstract =~ s/\shref="[^"]+"//g;
   $abstract =~ s/<\/?a>//g;
+  
 
   $pub->abstract( $abstract ) if ( $abstract );
 

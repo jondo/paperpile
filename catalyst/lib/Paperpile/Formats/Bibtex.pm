@@ -89,7 +89,9 @@ sub read {
 
       # 1:1 map between standard BibTeX fields and Paperpile fields
       if ( $built_in{$field} ) {
-        $data->{$field} = $entry->field($field);
+	my $content = $entry->field($field);
+	$content =~ s/--/-/g if ( $field eq 'pages' );
+        $data->{$field} = $content;
       }
 
       # Authors/Editors
@@ -285,6 +287,14 @@ sub write {
         }
 
         # for the title we enclose special words in brackets
+	if ( $key eq 'authors' ) {
+	  my @tmp = split(/\sand\s/, $value );
+	  foreach my $i ( 0 .. $#tmp ) {
+	    $tmp[$i] = '{'.$tmp[$i].'}' if ( $tmp[$i] !~ m/,/ );
+	  }
+	  $value = join(" and ", @tmp);
+	}
+
 
         if ( $key eq 'title' or $key eq 'booktitle' ) {
           if ( $self->settings->{title_quote_complete} == 1 ) {
@@ -316,6 +326,10 @@ sub write {
             $value = join( " ", @tmp );
           }
         }
+
+	if ( $key eq 'pages' and $self->settings->{double_dash} == 1 ) {
+	  $value =~ s/-/--/g;
+	}
 
         # Wrap long fields and align the "=" sign
         if ( $self->settings->{pretty_print} == 1 ) {

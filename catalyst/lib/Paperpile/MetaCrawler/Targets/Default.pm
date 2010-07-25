@@ -25,7 +25,7 @@ extends 'Paperpile::MetaCrawler::Targets';
 
 sub convert {
 
-  my ( $self, $content ) = @_;
+  my ( $self, $content, $content_URL ) = @_;
 
   my $pub;
 
@@ -65,8 +65,11 @@ sub convert {
     return $PubMedPlugin->_fetch_by_pmid( $pub->pmid() );
   }
 
-  # Once the CrossRef is active, we can parse
-  # for a DOI and call it then
+  if ( !$pub->title ) {
+    CrawlerUnknownSiteError->throw(error=>'No bibliographic information found with this URL.',
+                                   url => $content_URL,
+                                  );
+  }
 
   return $pub;
 }
