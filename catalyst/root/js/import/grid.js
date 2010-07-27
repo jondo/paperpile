@@ -285,7 +285,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       'TB_FILL': new Ext.Toolbar.Fill({
         itemId: 'TB_FILL'
+      }),
+      'FONT_SIZE': new Ext.Action({
+        itemId: 'FONT_SIZE',
+        handler: this.fontSize,
+        scope: this
       })
+
     };
 
     this.actions['PDF_COMBINED_BUTTON'] = new Ext.ux.ButtonPlus({
@@ -390,6 +396,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.keys = new Ext.ux.KeyboardShortcuts(this.getView().focusEl);
 
     // Standard grid shortcuts.
+    this.keys.bindAction('ctrl-q', this.actions['FONT_SIZE']);
     this.keys.bindAction('ctrl-a', this.actions['SELECT_ALL']);
     this.keys.bindAction('[Del,46]', this.actions['DELETE']);
 
@@ -507,6 +514,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       //      this.getSelectionModel().selectRowAndSetCursor.defer(10,this.getSelectionModel(),[0]);
     }];
 
+  },
+
+  fontSize: function() {
+    Paperpile.log("Hey!");
+    Ext.getBody().setStyle({
+      'font-size': '24px'
+    });
   },
 
   setPageSize: function(pageSize) {
@@ -946,7 +960,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<h2>Reference Info</h2>',
       '<dl class="pp-ref-info">',
       '<tpl if="_pubtype_name">',
-      '  <dt>Type: </dt><dd>{_pubtype_name}',  
+      '  <dt>Type: </dt><dd>{_pubtype_name}',
       '  <tpl if="howpublished">({howpublished})</tpl>',
       '</dd>',
       '</tpl>',
@@ -962,14 +976,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<tpl if="doi">',
       '<div class="link-hover">',
       '  <dt>DOI: </dt>',
-      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open DOI link" action="doi-link"></div>',
+      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open DOI link in browser" action="doi-link"></div>',
       '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy DOI URL to clipboard" action="doi-copy"></div>',
       '<dd class="pp-info-doi">{doi}</dd>',
       '</div>',
       '</tpl>',
       '<tpl if="eprint">',
       '<div class="link-hover">',
-      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open Eprint link" action="eprint-link"></div>',
+      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open Eprint link in browser" action="eprint-link"></div>',
       '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy Eprint URL to clipboard" action="eprint-copy"></div>',
       '  <dt>Eprint: </dt>',
       '  <dd>{eprint}</dd>',
@@ -977,7 +991,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '</tpl>',
       '<tpl if="pmid">',
       '<div class="link-hover">',
-      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open PubMed link" action="pmid-link"></div>',
+      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open PubMed link in browser" action="pmid-link"></div>',
       '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy PubMed URL to clipboard" action="pmid-copy"></div>',
       '  <dt>PubMed ID: </dt><dd class="pp-info-pmid">{pmid}</dd>',
       '</div>',
@@ -1007,24 +1021,26 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     var linkOuts = [
       '<tpl if="trashed==0">',
-
       '  <tpl if="linkout || doi">',
       '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
-      '    <tpl if="doi">',
-      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'http://dx.doi.org/{doi}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></p>',
-      '    </tpl>',
-      '    <tpl if="!doi && linkout">',
-      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'{linkout}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></p>',
-      '    </tpl>',
-      '    </div>',
       '  </tpl>',
-
       '  <tpl if="!linkout && !doi">',
       '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style2">',
-      '      <p class="pp-action-inactive pp-action-go-inactive">No link to publisher available</p>',
-      '    </div>',
       '  </tpl>',
-
+      '  <ul>',
+      '  <tpl if="doi">',
+      '    <li><a href="#" onClick="Paperpile.utils.openURL(\'http://dx.doi.org/{doi}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></li>',
+      '   </tpl>',
+      '   <tpl if="!doi && linkout">',
+      '     <li><a href="#" onClick="Paperpile.utils.openURL(\'{linkout}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></li>',
+      '   </tpl>',
+      '   <tpl if="!linkout && !doi">',
+      '   <li><a class="pp-action-inactive pp-action-go-inactive">No link to publisher available</a></li>',
+      '   </tpl>',
+      '   <li><a href="#" action="email" class="pp-textlink pp-action pp-action-email">E-mail Reference</a></li>',
+      '  </ul>',
+      '  </div>',
+      // Attachments box.
       '  <div class="pp-box pp-box-side-panel pp-box-style2"',
       '    <h2>PDF</h2>',
       '    <div id="search-download-widget-{id}" class="pp-search-download-widget"></div>',
@@ -1042,7 +1058,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    </tpl>',
       '    <tpl if="_imported">',
       '      <ul>',
-      '        <li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" class="pp-textlink" action="attach-file">Attach File</a></li>',
+      '        <li id="attach-file-{id}"><a href="#" class="pp-textlink pp-action pp-action-attach-file" action="attach-file">Attach File</a></li>',
       '      </ul>',
       '    </tpl>',
       '  </div>',
@@ -1079,21 +1095,21 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '    <ul> ',
       '    <div style="clear:both;"></div>',
-      '      <li class="pp-action pp-action-update-metadata"> <a  href="#" class="pp-textlink" action="update-metadata">Update Metadata</a> </li>',
-      '      <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
-      '      <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
+      '      <li><a href="#" class="pp-action pp-textlink pp-action-update-metadata" action="update-metadata">Update Metadata</a></li>',
+      '      <li><a href="#" class="pp-action pp-textlink pp-action-search-pdf" action="batch-download">Download PDFs</a> </li>',
+      '      <li><a  href="#" class="pp-textlink pp-action pp-action-trash" action="delete-ref">Move to Trash</a> </li>',
       '    </ul>',
       '    <ul> ',
       '    <div style="clear:both;margin-top:2em;"></div>',
-      '      <li class="pp-action pp-action-clipboard"> <a  href="#" class="pp-textlink" action="copy-text">Copy references as text</a> </li>',
+      '      <li><a  href="#" class="pp-textlink pp-action pp-action-clipboard" action="copy-text">Copy references as text</a> </li>',
       '      <tpl if="isBibtexMode">',
-      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-bibtex">Copy references as BibTeX</a> </li>',
-      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-keys">Copy LaTeX citation</a> </li>',
+      '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-bibtex">Copy references as BibTeX</a> </li>',
+      '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-keys">Copy LaTeX citation</a> </li>',
       '      </tpl>',
       '    </ul>',
       '    <ul>',
       '    <div style="clear:both;margin-top:2em;"></div>',
-      '      <li class="pp-action pp-action-email"> <a  href="#" class="pp-textlink" action="email">E-mail references</a> </li>',
+      '      <li><a  href="#" class="pp-textlink pp-action pp-action-email" action="email">E-mail references</a> </li>',
       '    </ul>',
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '   <dl>',
@@ -1645,7 +1661,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       if (string.length > 1024) {
         string = string.replace(/%0A/g, "\n");
         Titanium.UI.Clipboard.setText(string);
-        string = "[Hit Ctrl-V to paste citations here]";
+	var platform = Paperpile.utils.get_platform();
+	  if (platform == 'osx') {
+            string = "[Hit Command-V to paste citations here]";
+	  } else if (platform == 'windows') {
+            string = "[Hit Ctrl-V to paste citations here]";
+	  } else {
+            string = "[Use the paste command to insert citations here]";
+	  }
       }
 
       var link = [

@@ -262,10 +262,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   myOnClick: function(node, e) {
-    // Only count clicks that occur right within the node text area.
-    var targetEl = e.getTarget("span", 10, true);
-    if (!targetEl) {
-      return;
+    if (e != null) {
+      // Only take clicks that occur right within the node text area.
+      var targetEl = e.getTarget("span", 10, true);
+      if (!targetEl) {
+        return;
+      }
     }
     switch (node.id) {
     case 'FOLDER_ROOT':
@@ -540,6 +542,30 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         stopEvent: true
       }
     });
+
+    this.on('load', function(node) {
+      if (node.id == 'ACTIVE_ROOT') {
+        // Add a button to the feeds root.
+        var ui = node.ui;
+
+        this.rssButton = new Ext.Button({
+          enableToggle: true,
+          style: {
+              'position': 'relative',
+	      'float':'right'
+          },
+          scale: 'tiny',
+	  tooltip: 'Add a new journal or RSS feed',
+          icon: Paperpile.Url('/images/icons/add_small.png')
+        });
+        this.rssButton.render(ui.elNode);
+this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
+        this.rssButton.on('toggle', this.rssButtonToggle,
+          this);
+      }
+    },
+    this);
+
   },
 
   onContextMenu: function(node, e) {
@@ -868,9 +894,26 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   },
 
-  newRSS: function() {
-    var window = new Paperpile.NewFeedWindow({});
-    window.show();
+  rssButtonToggle: function(button, buttonState) {
+    if (this.newFeedPanel === undefined) {
+      var callback = function(url) {
+	if (url != '') {
+	    this.createNewFeedNode(url);
+	}
+        this.newFeedPanel.hide();
+	this.rssButton.toggle(false,true);
+      };
+      this.newFeedPanel = new Paperpile.NewFeedPanel({
+        callback: callback.createDelegate(this)
+      });
+    }
+    var panel = this.newFeedPanel;
+    if (buttonState === true) {
+      panel.show();
+      panel.getEl().alignTo(button.getEl(), 'tl-bl');
+    } else {
+      panel.hide();
+    }
   },
 
   createNewFeedNode: function(feedUrl) {
@@ -879,7 +922,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var newNode = n.appendChild(this.loader.createNode({
       text: 'Loading feed',
       iconCls: 'pp-icon-loading',
-      qtip: feedUrl,
+//      qtip: feedUrl,
       draggable: true,
       expanded: true,
       children: [],
@@ -1892,8 +1935,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 
   getShownItems: function(node) {
     if (node.id == 'ACTIVE_ROOT') {
-      return[
-      'active_menu_rss', ];
+      return[];
     } else {
       return[
       'active_menu_delete',

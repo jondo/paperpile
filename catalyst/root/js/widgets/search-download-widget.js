@@ -34,19 +34,25 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
     if (data.pdf != '') {
       var el = [
         '    <ul>',
-        '      <li id="open-pdf{id}" class="pp-action pp-action-open-pdf" >',
-        '      <a href="#" class="pp-textlink" action="open-pdf">View PDF</a>',
-        '      &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a></li>',
-        '      <li id="delete-pdf-{id}" class="pp-action pp-action-delete-pdf"><a href="#" class="pp-textlink" action="delete-pdf">Delete PDF</a></li>',
+        '      <li id="open-pdf{id}">',
+        '        <a href="#" class="pp-textlink pp-action pp-action-open-pdf" action="open-pdf">View PDF</a>',
+        '        &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a>',
+	'      </li>',
+        '      <li id="delete-pdf-{id}">',
+	'        <a href="#" class="pp-textlink pp-action pp-action-delete-pdf" action="delete-pdf">Delete PDF</a>',
+	'      </li>',
         '    </ul>'];
 
       if (!data._imported) {
         el = [
           '    <ul>',
-          '      <li id="open-pdf{id}" class="pp-action pp-action-open-pdf" >',
-          '      <a href="#" class="pp-textlink" action="open-pdf">Open PDF</a>',
-          '      &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a></li>',
-          '      <li class="pp-action pp-action-add"> <a  href="#" class="pp-textlink" action="import-ref">Import</a> </li>',
+          '      <li id="open-pdf{id}">',
+          '        <a href="#" class="pp-textlink pp-action pp-action-open-pdf" action="open-pdf">Open PDF</a>',
+          '        &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a>',
+          '      </li>',
+          '      <li>',
+          '        <a class="pp-textlink pp-action pp-action-add" href="#" action="import-ref">Import</a>',
+          '     </li>',
           '    </ul>'];
       }
 
@@ -104,14 +110,14 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
     } else {
       var el = [
         '<ul>',
-        '  <li id="search-pdf-{id}" class="pp-menu pp-action pp-action-search-pdf">',
-        '    <a href="#" class="pp-textlink" action="search-pdf">Search & Download PDF</a>',
+        '  <li id="search-pdf-{id}">',
+        '    <a href="#" class="pp-textlink pp-action pp-action-search-pdf" action="search-pdf">Search & Download PDF</a>',
         '  </li>'];
 
       if (data._imported) {
         el = el.concat([
-          '<li id="attach-pdf-{id}" class="pp-action pp-action-attach-pdf">',
-          '    <a href="#" class="pp-textlink" action="attach-pdf">Attach PDF</a>',
+          '<li id="attach-pdf-{id}">',
+          '    <a href="#" class="pp-textlink pp-action pp-action-attach-pdf" action="attach-pdf">Attach PDF</a>',
           '  </li>',
           '</ul>']);
       }
