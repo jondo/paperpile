@@ -32,7 +32,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     this.on('afterrender', this.installEvents, this);
   },
 
-  forceUpdate: function() {
+  forceUpdate: function(updateImmediately) {
     this.onUpdate({
       updateSidePanel: 1
     });
@@ -185,16 +185,16 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     var ellipsable_fields = ['.pp-info-doi', '.pp-info-pmid'];
     for (var i = 0; i < ellipsable_fields.length; i++) {
       var field = ellipsable_fields[i];
-      var els = Ext.select("#"+this.id+" "+field);
+      var els = Ext.select("#" + this.id + " " + field);
       if (els.getCount() == 0) {
-	  //Paperpile.log("Can't find any "+field);
+        //Paperpile.log("Can't find any "+field);
         continue;
       }
       var doiEl = els.first();
       var origText = doiEl.dom.innerHTML;
       if (origText.length > 30) {
-	origText = origText.substring(0,30);
-	doiEl.dom.innerHTML = origText;
+        origText = origText.substring(0, 30);
+        doiEl.dom.innerHTML = origText;
       }
       var maxWidth = doiEl.getWidth() - (50);
       var textWidth = doiEl.getTextWidth();
@@ -204,7 +204,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         text = text.replace('...', '');
         var shorterText = text.substring(0, text.length - 1);
         doiEl.update(shorterText + '...');
-	//doiEl.set({'ext:qtip':origText});
+        //doiEl.set({'ext:qtip':origText});
         textWidth = doiEl.getTextWidth();
         count++;
       }
@@ -373,7 +373,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       var data = record.data;
       var string = Paperpile.utils.hashToString(data);
       var job = Paperpile.utils.hashToString(data._search_job);
-      data.reportString = string+"\n\n"+job;
+      data.reportString = string + "\n\n" + job;
       Paperpile.main.reportPdfDownloadError(data);
       break;
     case 'import-pdf':

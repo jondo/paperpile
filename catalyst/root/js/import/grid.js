@@ -1025,7 +1025,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
       '  </tpl>',
       '  <tpl if="!linkout && !doi">',
-      '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style2">',
+      '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
       '  </tpl>',
       '  <ul>',
       '  <tpl if="doi">',
@@ -1661,14 +1661,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       if (string.length > 1024) {
         string = string.replace(/%0A/g, "\n");
         Titanium.UI.Clipboard.setText(string);
-	var platform = Paperpile.utils.get_platform();
-	  if (platform == 'osx') {
-            string = "[Hit Command-V to paste citations here]";
-	  } else if (platform == 'windows') {
-            string = "[Hit Ctrl-V to paste citations here]";
-	  } else {
-            string = "[Use the paste command to insert citations here]";
-	  }
+        var platform = Paperpile.utils.get_platform();
+        if (platform == 'osx') {
+          string = "[Hit Command-V to paste citations here]";
+        } else if (platform == 'windows') {
+          string = "[Hit Ctrl-V to paste citations here]";
+        } else {
+          string = "[Use the paste command to insert citations here]";
+        }
       }
 
       var link = [

@@ -118,24 +118,24 @@ Ext.override(Ext.tree.TreeNodeUI, {
     }
 
     if (options.hideOnClick) {
-      el.on('click', function(event,target,options) {
+      el.on('click', function(event, target, options) {
         el.update('');
       },
       this, {
         single: true,
-	delay:50
+        delay: 50
       });
     }
   },
-    onContextMenu : function(e){
-        if (this.node.hasListener("contextmenu") || this.node.getOwnerTree().hasListener("contextmenu")) {
-            e.preventDefault();
-            this.fireEvent("contextmenu", this.node, e);
-	    // Put the focus call AFTER the event triggering.
-	    // Fixed annoying context menu bug in the tree.
-            this.focus();
-        }
+  onContextMenu: function(e) {
+    if (this.node.hasListener("contextmenu") || this.node.getOwnerTree().hasListener("contextmenu")) {
+      e.preventDefault();
+      this.fireEvent("contextmenu", this.node, e);
+      // Put the focus call AFTER the event triggering.
+      // Fixed annoying context menu bug in the tree.
+      this.focus();
     }
+  }
 
 });
 

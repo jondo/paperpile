@@ -158,6 +158,10 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     return this.overviewPanel;
   },
 
+  getDetails: function() {
+    return this.detailPanel;
+  },
+
   onUpdate: function(data) {
     if (data.pubs) {
       this.getGrid().onUpdate(data);
@@ -196,12 +200,28 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     }
   },
 
-  updateDetails: function() {
+  updateDetails: function(updateImmediately) {
+    if (this.updateDetailsTask === undefined) {
+      this.updateDetailsTask = new Ext.util.DelayedTask(function() {
+        this.updateDetailsWork();
+      },
+      this);
+    }
+
+    if (updateImmediately) {
+      this.updateDetailsTask.cancel();
+      this.updateDetailsWork();
+    } else {
+      this.updateDetailsTask.delay(40);
+    }
+  },
+
+  updateDetailsWork: function() {
     var datatabs = this.items.get('center_panel').items.get('data_tabs');
     datatabs.items.get('pubsummary').updateDetail();
     datatabs.items.get('pubnotes').updateDetail();
     this.getOverview().forceUpdate();
-    this.items.get('east_panel').items.get('details').updateDetail();
+    this.getDetails().updateDetail();
   },
 
   updateButtons: function() {
