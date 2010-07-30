@@ -910,6 +910,7 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
     var panel = this.newFeedPanel;
     if (buttonState === true) {
       panel.show();
+      Ext.QuickTips.getQuickTip().hide();
       panel.getEl().alignTo(button.getEl(), 'tl-bl');
     } else {
       panel.hide();
