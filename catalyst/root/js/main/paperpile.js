@@ -98,8 +98,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.mon(Ext.getBody(),'click', function(event,target,options) {
       if (target.href) {
+	if (!target.href.match(/(app|paperpile)/i)) {
 	event.stopEvent();
 	Paperpile.utils.openURL(target.href);
+	}
       }
     });
 
