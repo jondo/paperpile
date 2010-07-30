@@ -1,6 +1,6 @@
 /*!
- * Ext JS Library 3.1.0
- * Copyright(c) 2006-2009 Ext JS, LLC
+ * Ext JS Library 3.2.1
+ * Copyright(c) 2006-2010 Ext JS, Inc.
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
@@ -440,17 +440,6 @@ new Ext.FormPanel({
 </code></pre>
      */
 
-    // Configs below are used for all Components when rendered by AnchorLayout.
-    /**
-     * @cfg {String} anchor <p><b>Note</b>: this config is only used when this Component is rendered
-     * by a Container which has been configured to use an <b>{@link Ext.layout.AnchorLayout AnchorLayout}</b>
-     * based layout manager, for example:<div class="mdetail-params"><ul>
-     * <li>{@link Ext.form.FormPanel}</li>
-     * <li>specifying <code>layout: 'anchor' // or 'form', or 'absolute'</code></li>
-     * </ul></div></p>
-     * <p>See {@link Ext.layout.AnchorLayout}.{@link Ext.layout.AnchorLayout#anchor anchor} also.</p>
-     */
-
     /**
      * @cfg {String} id
      * <p>The <b>unique</b> id of this component (defaults to an {@link #getId auto-assigned id}).
@@ -831,7 +820,7 @@ new Ext.Panel({
      * @cfg {Mixed} tpl
      * An <bold>{@link Ext.Template}</bold>, <bold>{@link Ext.XTemplate}</bold>
      * or an array of strings to form an Ext.XTemplate.
-     * Used in conjunction with the <code>{@link #data}</code> and 
+     * Used in conjunction with the <code>{@link #data}</code> and
      * <code>{@link #tplWriteMode}</code> configurations.
      */
 
@@ -847,6 +836,14 @@ new Ext.Panel({
      * The initial set of data to apply to the <code>{@link #tpl}</code> to
      * update the content area of the Component.
      */
+    
+    /**
+     * @cfg {Array} bubbleEvents
+     * <p>An array of events that, when fired, should be bubbled to any parent container.
+     * See {@link Ext.util.Observable#enableBubble}.
+     * Defaults to <tt>[]</tt>.
+     */
+    bubbleEvents: [],
 
 
     // private
@@ -901,7 +898,22 @@ Ext.Foo = Ext.extend(Ext.Bar, {
 }
 </code></pre>
      */
-    initComponent : Ext.emptyFn,
+    initComponent : function(){
+        /*
+         * this is double processing, however it allows people to be able to do
+         * Ext.apply(this, {
+         *     listeners: {
+         *         //here
+         *     }
+         * });
+         * MyClass.superclass.initComponent.call(this);
+         */
+        if(this.listeners){
+            this.on(this.listeners);
+            delete this.listeners;
+        }
+        this.enableBubble(this.bubbleEvents);
+    },
 
     /**
      * <p>Render this Component into the passed HTML element.</p>
@@ -1093,10 +1105,10 @@ var myGrid = new Ext.grid.EditorGridPanel({
          */
         if(this.ref && !this.refOwner){
             var levels = this.ref.split('/'),
-                last = levels.length, 
+                last = levels.length,
                 i = 0,
                 t = this;
-                
+
             while(t && i < last){
                 t = t.ownerCt;
                 ++i;
@@ -1139,7 +1151,7 @@ var myGrid = new Ext.grid.EditorGridPanel({
 
     // private
     getStateId : function(){
-        return this.stateId || ((this.id.indexOf('ext-comp-') == 0 || this.id.indexOf('ext-gen') == 0) ? null : this.id);
+        return this.stateId || ((/^(ext-comp-|ext-gen)/).test(String(this.id)) ? null : this.id);
     },
 
     // private
@@ -1276,6 +1288,10 @@ var myGrid = new Ext.grid.EditorGridPanel({
                         this.container.remove();
                     }
                 }
+                // Stop any buffered tasks
+                if(this.focusTask && this.focusTask.cancel){
+                    this.focusTask.cancel();
+                }
                 this.onDestroy();
                 Ext.ComponentMgr.unregister(this);
                 this.fireEvent('destroy', this);
@@ -1358,10 +1374,11 @@ new Ext.Panel({
      */
     focus : function(selectText, delay){
         if(delay){
-            this.focus.defer(Ext.isNumber(delay) ? delay : 10, this, [selectText, false]);
+            this.focusTask = new Ext.util.DelayedTask(this.focus, this, [selectText, false]);
+            this.focusTask.delay(Ext.isNumber(delay) ? delay : 10);
             return;
         }
-        if(this.rendered){
+        if(this.rendered && !this.isDestroyed){
             this.el.focus();
             if(selectText === true){
                 this.el.dom.select();

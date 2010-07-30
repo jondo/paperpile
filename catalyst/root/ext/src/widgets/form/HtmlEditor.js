@@ -1,6 +1,6 @@
 /*!
- * Ext JS Library 3.1.0
- * Copyright(c) 2006-2009 Ext JS, LLC
+ * Ext JS Library 3.2.1
+ * Copyright(c) 2006-2010 Ext JS, Inc.
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
@@ -173,7 +173,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
              * @param {Boolean} sourceEdit True if source edit, false if standard editing.
              */
             'editmodechange'
-        )
+        );
     },
 
     // private
@@ -201,7 +201,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
     createToolbar : function(editor){
         var items = [];
         var tipsEnabled = Ext.QuickTips && Ext.QuickTips.isEnabled();
-        
+
 
         function btn(id, toggle, handler){
             return {
@@ -227,7 +227,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
                     html: this.createFontOptions()
                }
             });
-            
+
             items.push(
                 fontSelectItem,
                 '-'
@@ -338,16 +338,16 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
                 );
             }
         }
- 
+
         // build the toolbar
         var tb = new Ext.Toolbar({
             renderTo: this.wrap.dom.firstChild,
             items: items
         });
-        
+
         if (fontSelectItem) {
             this.fontSelect = fontSelectItem.el;
-            
+
             this.mon(this.fontSelect, 'change', function(){
                 var font = this.fontSelect.dom.value;
                 this.relayCmd('fontname', font);
@@ -355,15 +355,13 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
             }, this);
         }
 
-
         // stop form submits
         this.mon(tb.el, 'click', function(e){
             e.preventDefault();
         });
-       
-        
-        
+
         this.tb = tb;
+        this.tb.doLayout();
     },
 
     onDisable: function(){
@@ -377,24 +375,32 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
     },
 
     setReadOnly: function(readOnly){
-        if(this.initialized){
-            var newDM = readOnly ? 'off' : 'on',
-                doc = this.getDoc();
-            if(String(doc.designMode).toLowerCase() != newDM){
-                doc.designMode = newDM;
-            }
-            this.disableItems(!readOnly);
-        }
+
         Ext.form.HtmlEditor.superclass.setReadOnly.call(this, readOnly);
+        if(this.initialized){
+            if(Ext.isIE){
+                this.getEditorBody().contentEditable = !readOnly;
+            }else{
+                this.setDesignMode(!readOnly);
+            }
+            var bd = this.getEditorBody();
+            if(bd){
+                bd.style.cursor = this.readOnly ? 'default' : 'text';
+            }
+            this.disableItems(readOnly);
+        }
     },
 
     /**
      * Protected method that will not generally be called directly. It
      * is called when the editor initializes the iframe with HTML contents. Override this method if you
      * want to change the initialization markup of the iframe (e.g. to add stylesheets).
+     *
+     * Note: IE8-Standards has unwanted scroller behavior, so the default meta tag forces IE7 compatibility
      */
     getDocMarkup : function(){
-        return '<html><head><style type="text/css">body{border:0;margin:0;padding:3px;height:98%;cursor:text;}</style></head><body></body></html>';
+        var h = Ext.fly(this.iframe).getHeight() - this.iframePad * 2;
+        return String.format('<html><head><style type="text/css">body{border: 0; margin: 0; padding: {0}px; height: {1}px; cursor: text}</style></head><body></body></html>', this.iframePad, h);
     },
 
     // private
@@ -420,7 +426,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
         this.el.dom.setAttribute('tabIndex', -1);
         this.el.addClass('x-hidden');
         if(Ext.isIE){ // fix IE 1px bogus margin
-            this.el.applyStyles('margin-top:-1px;margin-bottom:-1px;')
+            this.el.applyStyles('margin-top:-1px;margin-bottom:-1px;');
         }
         this.wrap = this.el.wrap({
             cls:'x-html-editor-wrap', cn:{cls:'x-html-editor-tb'}
@@ -429,8 +435,8 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
         this.createToolbar(this);
 
         this.disableItems(true);
-        // is this needed?
-        // this.tb.doLayout();
+
+        this.tb.doLayout();
 
         this.createIFrame();
 
@@ -445,9 +451,9 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
         var iframe = document.createElement('iframe');
         iframe.name = Ext.id();
         iframe.frameBorder = '0';
-        iframe.src = Ext.SSL_SECURE_URL;
-        this.wrap.dom.appendChild(iframe);
+        iframe.style.overflow = 'auto';
 
+        this.wrap.dom.appendChild(iframe);
         this.iframe = iframe;
 
         this.monitorTask = Ext.TaskMgr.start({
@@ -471,7 +477,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
                 var doc = this.getDoc();
                 if(doc.body || doc.readyState == 'complete'){
                     Ext.TaskMgr.stop(task);
-                    doc.designMode="on";
+                    this.setDesignMode(true);
                     this.initEditor.defer(10, this);
                 }
             },
@@ -489,10 +495,32 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
             if(!doc){
                 return;
             }
-            if(!doc.editorInitialized || String(doc.designMode).toLowerCase() != 'on'){
+            if(!doc.editorInitialized || this.getDesignMode() != 'on'){
                 this.initFrame();
             }
         }
+    },
+
+    /* private
+     * set current design mode. To enable, mode can be true or 'on', off otherwise
+     */
+    setDesignMode : function(mode){
+        var doc ;
+        if(doc = this.getDoc()){
+            if(this.readOnly){
+                mode = false;
+            }
+            doc.designMode = (/on|true/i).test(String(mode).toLowerCase()) ?'on':'off';
+        }
+
+    },
+
+    // private
+    getDesignMode : function(){
+        var doc = this.getDoc();
+        if(!doc){ return ''; }
+        return String(doc.designMode).toLowerCase();
+
     },
 
     disableItems: function(disabled){
@@ -533,45 +561,55 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
      * @param {Boolean} sourceEdit (optional) True for source edit, false for standard
      */
     toggleSourceEdit : function(sourceEditMode){
-        if(sourceEditMode === undefined){
+        var iframeHeight,
+            elHeight,
+            ls;
+
+        if (sourceEditMode === undefined) {
             sourceEditMode = !this.sourceEditMode;
         }
         this.sourceEditMode = sourceEditMode === true;
         var btn = this.tb.getComponent('sourceedit');
-        
-        if(btn.pressed !== this.sourceEditMode){
+
+        if (btn.pressed !== this.sourceEditMode) {
             btn.toggle(this.sourceEditMode);
-            if(!btn.xtbHidden){
+            if (!btn.xtbHidden) {
                 return;
             }
         }
-        if(this.sourceEditMode){
+        if (this.sourceEditMode) {
+            // grab the height of the containing panel before we hide the iframe
+            ls = this.getSize();
+
+            iframeHeight = Ext.get(this.iframe).getHeight();
+
             this.disableItems(true);
             this.syncValue();
             this.iframe.className = 'x-hidden';
             this.el.removeClass('x-hidden');
             this.el.dom.removeAttribute('tabIndex');
             this.el.focus();
-        }else{
-            if(this.initialized && !this.readOnly){
-                this.disableItems(false);
+            this.el.dom.style.height = iframeHeight + 'px';
+        }
+        else {
+            elHeight = parseInt(this.el.dom.style.height, 10);
+            if (this.initialized) {
+                this.disableItems(this.readOnly);
             }
             this.pushValue();
             this.iframe.className = '';
             this.el.addClass('x-hidden');
             this.el.dom.setAttribute('tabIndex', -1);
             this.deferFocus();
-        }
-        var lastSize = this.lastSize;
-        if(lastSize){
-            delete this.lastSize;
-            this.setSize(lastSize);
+
+            this.setSize(ls);
+            this.iframe.style.height = elHeight + 'px';
         }
         this.fireEvent('editmodechange', this, this.sourceEditMode);
     },
 
     // private used internally
-    createLink : function(){
+    createLink : function() {
         var url = prompt(this.createLinkText, this.defaultLinkValue);
         if(url && url != 'http:/'+'/'){
             this.relayCmd('createlink', url);
@@ -668,14 +706,12 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
                 this.getEditorBody().innerHTML = v;
                 if(Ext.isGecko){
                     // Gecko hack, see: https://bugzilla.mozilla.org/show_bug.cgi?id=232791#c8
-                    var d = this.getDoc(),
-                        mode = d.designMode.toLowerCase();
-
-                    d.designMode = mode.toggle('on', 'off');
-                    d.designMode = mode;
+                    this.setDesignMode(false);  //toggle off first
+                    this.setDesignMode(true);
                 }
                 this.fireEvent('push', this, v);
             }
+
         }
     },
 
@@ -698,15 +734,15 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
         //Destroying the component during/before initEditor can cause issues.
         try{
             var dbody = this.getEditorBody(),
-                ss = this.el.getStyles('font-size', 'font-family', 'background-image', 'background-repeat'),
+                ss = this.el.getStyles('font-size', 'font-family', 'background-image', 'background-repeat', 'background-color', 'color'),
                 doc,
                 fn;
-                
+
             ss['background-attachment'] = 'fixed'; // w3c
             dbody.bgProperties = 'fixed'; // ie
 
             Ext.DomHelper.applyStyles(dbody, ss);
-            
+
             doc = this.getDoc();
 
             if(doc){
@@ -765,7 +801,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
                 this.wrap.remove();
             }
         }
-        
+
         if(this.el){
             this.el.removeAllListeners();
             this.el.remove();
@@ -776,7 +812,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
     // private
     onFirstFocus : function(){
         this.activated = true;
-        this.disableItems(false);
+        this.disableItems(this.readOnly);
         if(Ext.isGecko){ // prevent silly gecko errors
             this.win.focus();
             var s = this.win.getSelection();
@@ -846,7 +882,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
             return;
         }
 
-        var btns = this.tb.items.map, 
+        var btns = this.tb.items.map,
             doc = this.getDoc();
 
         if(this.enableFont && !Ext.isSafari2){
@@ -963,7 +999,7 @@ Ext.form.HtmlEditor = Ext.extend(Ext.form.Field, {
     fixKeys : function(){ // load time branching for fastest keydown performance
         if(Ext.isIE){
             return function(e){
-                var k = e.getKey(), 
+                var k = e.getKey(),
                     doc = this.getDoc(),
                         r;
                 if(k == e.TAB){

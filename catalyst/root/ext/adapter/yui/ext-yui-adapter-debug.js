@@ -1,10 +1,9 @@
 /*!
- * Ext JS Library 3.1.0
- * Copyright(c) 2006-2009 Ext JS, LLC
+ * Ext JS Library 3.2.1
+ * Copyright(c) 2006-2010 Ext JS, Inc.
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
-
 // for old browsers
 window.undefined = window.undefined;
 
@@ -19,7 +18,12 @@ Ext = {
      * The version of the framework
      * @type String
      */
-    version : '3.1.0'
+    version : '3.2.1',
+    versionDetail : {
+        major: 3,
+        minor: 2,
+        patch: 1
+    }
 };
 
 /**
@@ -53,7 +57,7 @@ Ext.apply = function(o, c, defaults){
         DOC = document,
         isStrict = DOC.compatMode == "CSS1Compat",
         isOpera = check(/opera/),
-        isChrome = check(/chrome/),
+        isChrome = check(/\bchrome\b/),
         isWebKit = check(/webkit/),
         isSafari = !isChrome && check(/safari/),
         isSafari2 = isSafari && check(/applewebkit\/4/), // unique to Safari 2
@@ -161,7 +165,11 @@ Ext.apply = function(o, c, defaults){
          * @return {String} The generated Id.
          */
         id : function(el, prefix){
-            return (el = Ext.getDom(el) || {}).id = el.id || (prefix || "ext-gen") + (++idSeed);
+            el = Ext.getDom(el, true) || {};
+            if (!el.id) {
+                el.id = (prefix || "ext-gen") + (++idSeed);
+            }
+            return el.id;
         },
 
         /**
@@ -223,7 +231,7 @@ MyGridPanel = Ext.extend(Ext.grid.GridPanel, {
             var oc = Object.prototype.constructor;
 
             return function(sb, sp, overrides){
-                if(Ext.isObject(sp)){
+                if(typeof sp == 'object'){
                     overrides = sp;
                     sp = sb;
                     sb = overrides.constructor != oc ? overrides.constructor : function(){sp.apply(this, arguments);};
@@ -404,7 +412,7 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
             }
             //NodeList has an item and length property
             //IXMLDOMNodeList has nextNode method, needs to be checked first.
-            return ((v.nextNode || v.item) && Ext.isNumber(v.length));
+            return ((typeof v.nextNode != 'undefined' || v.item) && Ext.isNumber(v.length));
         },
 
         /**
@@ -471,7 +479,7 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
             if(Ext.isIterable(obj)){
                 Ext.each(obj, fn, scope);
                 return;
-            }else if(Ext.isObject(obj)){
+            }else if(typeof obj == 'object'){
                 for(var prop in obj){
                     if(obj.hasOwnProperty(prop)){
                         if(fn.call(scope || obj, prop, obj[prop], obj) === false){
@@ -484,6 +492,8 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
 
         /**
          * Return the dom node for the passed String (id), dom node, or Ext.Element.
+         * Optional 'strict' flag is needed for IE since it can return 'name' and
+         * 'id' elements by using getElementById.
          * Here are some examples:
          * <pre><code>
 // gets dom node based on id
@@ -503,11 +513,29 @@ function(el){
          * @param {Mixed} el
          * @return HTMLElement
          */
-        getDom : function(el){
+        getDom : function(el, strict){
             if(!el || !DOC){
                 return null;
             }
-            return el.dom ? el.dom : (Ext.isString(el) ? DOC.getElementById(el) : el);
+            if (el.dom){
+                return el.dom;
+            } else {
+                if (typeof el == 'string') {
+                    var e = DOC.getElementById(el);
+                    // IE returns elements with the 'name' and 'id' attribute.
+                    // we do a strict check to return the element with only the id attribute
+                    if (e && isIE && strict) {
+                        if (el == e.getAttribute('id')) {
+                            return e;
+                        } else {
+                            return null;
+                        }
+                    }
+                    return e;
+                } else {
+                    return el;
+                }
+            }
         },
 
         /**
@@ -641,7 +669,7 @@ function(el){
          * @return {Boolean}
          */
         isElement : function(v) {
-            return !!v && v.tagName;
+            return v ? !!v.tagName : false;
         },
 
         /**
@@ -1009,7 +1037,7 @@ Ext.ns("Ext.grid", "Ext.list", "Ext.dd", "Ext.tree", "Ext.form", "Ext.menu",
      */
 
 Ext.apply(Ext, function(){
-    var E = Ext, 
+    var E = Ext,
         idSeed = 0,
         scrollWidth = null;
 
@@ -1022,13 +1050,13 @@ Ext.apply(Ext, function(){
         emptyFn : function(){},
 
         /**
-         * URL to a 1x1 transparent gif image used by Ext to create inline icons with CSS background images. 
+         * URL to a 1x1 transparent gif image used by Ext to create inline icons with CSS background images.
          * In older versions of IE, this defaults to "http://extjs.com/s.gif" and you should change this to a URL on your server.
          * For other browsers it uses an inline data URL.
          * @type String
          */
         BLANK_IMAGE_URL : Ext.isIE6 || Ext.isIE7 || Ext.isAir ?
-                            'http:/' + '/extjs.com/s.gif' :
+                            'http:/' + '/www.extjs.com/s.gif' :
                             'data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==',
 
         extendX : function(supr, fn){
@@ -1050,7 +1078,7 @@ Ext.apply(Ext, function(){
          * @return {Number} Value, if numeric, else defaultValue
          */
         num : function(v, defaultValue){
-            v = Number(Ext.isEmpty(v) || Ext.isBoolean(v) ? NaN : v);
+            v = Number(Ext.isEmpty(v) || Ext.isArray(v) || typeof v == 'boolean' || (typeof v == 'string' && v.trim().length == 0) ? NaN : v);
             return isNaN(v) ? defaultValue : v;
         },
 
@@ -1093,13 +1121,13 @@ Ext.addBehaviors({
     '#foo a&#64;click' : function(e, t){
         // do something
     },
-    
+
     // add the same listener to multiple selectors (separated by comma BEFORE the &#64;)
     '#foo a, #bar span.some-class&#64;mouseover' : function(){
         // do something
     }
 });
-         * </code></pre> 
+         * </code></pre>
          * @param {Object} obj The list of behaviors to apply
          */
         addBehaviors : function(o){
@@ -1124,7 +1152,7 @@ Ext.addBehaviors({
                 cache = null;
             }
         },
-        
+
         /**
          * Utility method for getting the width of the browser scrollbar. This can differ depending on
          * operating system settings, such as the theme or font size.
@@ -1135,7 +1163,7 @@ Ext.addBehaviors({
             if(!Ext.isReady){
                 return 0;
             }
-            
+
             if(force === true || scrollWidth === null){
                     // Append our div, do our calculation and then remove it
                 var div = Ext.getBody().createChild('<div class="x-hide-offsets" style="width:100px;height:50px;overflow:hidden;"><div style="height:200px;"></div></div>'),
@@ -1177,15 +1205,15 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
         this.initialBox = Ext.copyTo({}, this.initialConfig, 'x,y,width,height');
     }
 });
-         * </code></pre> 
-         * @param {Object} The destination object.
-         * @param {Object} The source object.
-         * @param {Array/String} Either an Array of property names, or a comma-delimited list
+         * </code></pre>
+         * @param {Object} dest The destination object.
+         * @param {Object} source The source object.
+         * @param {Array/String} names Either an Array of property names, or a comma-delimited list
          * of property names to copy.
          * @return {Object} The modified object.
         */
         copyTo : function(dest, source, names){
-            if(Ext.isString(names)){
+            if(typeof names == 'string'){
                 names = names.split(/[,;\s]/);
             }
             Ext.each(names, function(name){
@@ -1211,11 +1239,11 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
                 if(arg){
                     if(Ext.isArray(arg)){
                         this.destroy.apply(this, arg);
-                    }else if(Ext.isFunction(arg.destroy)){
+                    }else if(typeof arg.destroy == 'function'){
                         arg.destroy();
                     }else if(arg.dom){
                         arg.remove();
-                    }    
+                    }
                 }
             }, this);
         },
@@ -1324,7 +1352,7 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
          * @return {Number} The mean.
          */
         mean : function(arr){
-           return Ext.sum(arr) / arr.length;
+           return arr.length > 0 ? Ext.sum(arr) / arr.length : undefined;
         },
 
         /**
@@ -1342,8 +1370,8 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
 
         /**
          * Partitions the set into two sets: a true set and a false set.
-         * Example: 
-         * Example2: 
+         * Example:
+         * Example2:
          * <pre><code>
 // Example 1:
 Ext.partition([true, false, true, true, false]); // [[true, true, true], [false, false]]
@@ -1380,14 +1408,14 @@ Ext.invoke(Ext.query("p"), "getAttribute", "id");
          * </code></pre>
          * @param {Array|NodeList} arr The Array of items to invoke the method on.
          * @param {String} methodName The method name to invoke.
-         * @param {Anything} ... Arguments to send into the method invocation.
+         * @param {...*} args Arguments to send into the method invocation.
          * @return {Array} The results of invoking the method on each item in the array.
          */
         invoke : function(arr, methodName){
             var ret = [],
                 args = Array.prototype.slice.call(arguments, 2);
             Ext.each(arr, function(v,i) {
-                if (v && Ext.isFunction(v[methodName])) {
+                if (v && typeof v[methodName] == 'function') {
                     ret.push(v[methodName].apply(v, args));
                 } else {
                     ret.push(undefined);
@@ -1434,7 +1462,7 @@ Ext.zip(
          * @return {Array} The zipped set.
          */
         zip : function(){
-            var parts = Ext.partition(arguments, function( val ){ return !Ext.isFunction(val); }),
+            var parts = Ext.partition(arguments, function( val ){ return typeof val != 'function'; }),
                 arrs = parts[0],
                 fn = parts[1][0],
                 len = Ext.max(Ext.pluck(arrs, "length")),
@@ -1511,7 +1539,7 @@ Ext.zip(
                     case RegExp: return 'regexp';
                     case Date: return 'date';
                 }
-                if(Ext.isNumber(o.length) && Ext.isFunction(o.item)) {
+                if(typeof o.length == 'number' && typeof o.item == 'function') {
                     return 'nodelist';
                 }
             }
@@ -1524,7 +1552,7 @@ Ext.zip(
 
         // internal
         callback : function(cb, scope, args, delay){
-            if(Ext.isFunction(cb)){
+            if(typeof cb == 'function'){
                 if(delay){
                     cb.defer(delay, scope, args || []);
                 }else{
@@ -1564,7 +1592,7 @@ sayGoodbye('Fred'); // both alerts show
      */
     createSequence : function(fcn, scope){
         var method = this;
-        return !Ext.isFunction(fcn) ?
+        return (typeof fcn != 'function') ?
                 this :
                 function(){
                     var retval = method.apply(this || window, arguments);
@@ -1704,6 +1732,7 @@ Ext.TaskMgr.start({
 });
 
  * </code></pre>
+ * <p>See the {@link #start} method for details about how to configure a task object.</p>
  * Also see {@link Ext.util.DelayedTask}. 
  * 
  * @constructor
@@ -1775,21 +1804,25 @@ Ext.util.TaskRunner = function(interval){
     /**
      * Starts a new task.
      * @method start
-     * @param {Object} task A config object that supports the following properties:<ul>
-     * <li><code>run</code> : Function<div class="sub-desc">The function to execute each time the task is run. The
-     * function will be called at each interval and passed the <code>args</code> argument if specified.  If a
-     * particular scope is required, be sure to specify it using the <code>scope</code> argument.</div></li>
+     * @param {Object} task <p>A config object that supports the following properties:<ul>
+     * <li><code>run</code> : Function<div class="sub-desc"><p>The function to execute each time the task is invoked. The
+     * function will be called at each interval and passed the <code>args</code> argument if specified, and the
+     * current invocation count if not.</p>
+     * <p>If a particular scope (<code>this</code> reference) is required, be sure to specify it using the <code>scope</code> argument.</p>
+     * <p>Return <code>false</code> from this function to terminate the task.</p></div></li>
      * <li><code>interval</code> : Number<div class="sub-desc">The frequency in milliseconds with which the task
-     * should be executed.</div></li>
+     * should be invoked.</div></li>
      * <li><code>args</code> : Array<div class="sub-desc">(optional) An array of arguments to be passed to the function
-     * specified by <code>run</code>.</div></li>
+     * specified by <code>run</code>. If not specified, the current invocation count is passed.</div></li>
      * <li><code>scope</code> : Object<div class="sub-desc">(optional) The scope (<tt>this</tt> reference) in which to execute the
      * <code>run</code> function. Defaults to the task config object.</div></li>
-     * <li><code>duration</code> : Number<div class="sub-desc">(optional) The length of time in milliseconds to execute
+     * <li><code>duration</code> : Number<div class="sub-desc">(optional) The length of time in milliseconds to invoke
      * the task before stopping automatically (defaults to indefinite).</div></li>
-     * <li><code>repeat</code> : Number<div class="sub-desc">(optional) The number of times to execute the task before
+     * <li><code>repeat</code> : Number<div class="sub-desc">(optional) The number of times to invoke the task before
      * stopping automatically (defaults to indefinite).</div></li>
-     * </ul>
+     * </ul></p>
+     * <p>Before each invocation, Ext injects the property <code>taskRunCount</code> into the task object so
+     * that calculations based on the repeat count can be performed.</p>
      * @return {Object} The task
      */
     this.start = function(task){
@@ -1843,6 +1876,7 @@ var task = {
 }
 Ext.TaskMgr.start(task);
 </code></pre>
+ * <p>See the {@link #start} method for details about how to configure a task object.</p>
  * @singleton
  */
 Ext.TaskMgr = new Ext.util.TaskRunner();if(typeof YAHOO == "undefined"){

@@ -1,6 +1,6 @@
 /*!
- * Ext JS Library 3.1.0
- * Copyright(c) 2006-2009 Ext JS, LLC
+ * Ext JS Library 3.2.1
+ * Copyright(c) 2006-2010 Ext JS, Inc.
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
@@ -111,7 +111,7 @@ Ext.grid.Column = Ext.extend(Object, {
      * @cfg {Boolean} hidden
      * Optional. <tt>true</tt> to initially hide this column. Defaults to <tt>false</tt>.
      * A hidden column {@link Ext.grid.GridPanel#enableColumnHide may be shown via the header row menu}.
-     * If a column is never to be shown, simply do not include this column in the Column Model at all. 
+     * If a column is never to be shown, simply do not include this column in the Column Model at all.
      */
     /**
      * @cfg {String} tooltip Optional. A text string to use as the column header's tooltip.  If Quicktips
@@ -216,7 +216,7 @@ var grid = new Ext.grid.GridPanel({
      * Defaults to true.
      */
     isColumn : true,
-    
+
     constructor : function(config){
         Ext.apply(this, config);
 
@@ -230,9 +230,9 @@ var grid = new Ext.grid.GridPanel({
             this.scope = this;
         }
 
-        if(this.editor){
-            this.editor = Ext.create(this.editor, 'textfield');
-        }
+        var ed = this.editor;
+        delete this.editor;
+        this.setEditor(ed);
     },
 
     /**
@@ -266,24 +266,46 @@ var grid = new Ext.grid.GridPanel({
     },
 
     /**
+     * Sets a new editor for this column.
+     * @param {Ext.Editor/Ext.form.Field} editor The editor to set
+     */
+    setEditor : function(editor){
+        var ed = this.editor;
+        if(ed){
+            if(ed.gridEditor){
+                ed.gridEditor.destroy();
+                delete ed.gridEditor;
+            }else{
+                ed.destroy();
+            }
+        }
+        this.editor = null;
+        if(editor){
+            //not an instance, create it
+            if(!editor.isXType){
+                editor = Ext.create(editor, 'textfield');
+            }
+            this.editor = editor;
+        }
+    },
+
+    /**
      * Returns the {@link Ext.Editor editor} defined for this column that was created to wrap the {@link Ext.form.Field Field}
      * used to edit the cell.
      * @param {Number} rowIndex The row index
      * @return {Ext.Editor}
      */
     getCellEditor: function(rowIndex){
-        var editor = this.getEditor(rowIndex);
-        if(editor){
-            if(!editor.startEdit){
-                if(!editor.gridEditor){
-                    editor.gridEditor = new Ext.grid.GridEditor(editor);
+        var ed = this.getEditor(rowIndex);
+        if(ed){
+            if(!ed.startEdit){
+                if(!ed.gridEditor){
+                    ed.gridEditor = new Ext.grid.GridEditor(ed);
                 }
-                return editor.gridEditor;
-            }else if(editor.startEdit){
-                return editor;
+                ed = ed.gridEditor;
             }
         }
-        return null;
+        return ed;
     }
 });
 

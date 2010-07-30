@@ -1,6 +1,6 @@
 /*!
- * Ext JS Library 3.1.0
- * Copyright(c) 2006-2009 Ext JS, LLC
+ * Ext JS Library 3.2.1
+ * Copyright(c) 2006-2010 Ext JS, Inc.
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
@@ -121,6 +121,7 @@ Ext.layout.FormLayout = Ext.extend(Ext.layout.AnchorLayout, {
      */
     trackLabels: false,
 
+    type: 'form',
 
     onRemove: function(c){
         Ext.layout.FormLayout.superclass.onRemove.call(this, c);
@@ -130,14 +131,14 @@ Ext.layout.FormLayout = Ext.extend(Ext.layout.AnchorLayout, {
         }
         // check for itemCt, since we may be removing a fieldset or something similar
         var el = c.getPositionEl(),
-                ct = c.getItemCt && c.getItemCt();
-        if(c.rendered && ct){
+            ct = c.getItemCt && c.getItemCt();
+        if (c.rendered && ct) {
             if (el && el.dom) {
                 el.insertAfter(ct);
             }
             Ext.destroy(ct);
             Ext.destroyMembers(c, 'label', 'itemCt');
-            if(c.customItemCt){
+            if (c.customItemCt) {
                 Ext.destroyMembers(c, 'getItemCt', 'customItemCt');
             }
         }
@@ -184,6 +185,11 @@ Ext.layout.FormLayout = Ext.extend(Ext.layout.AnchorLayout, {
 
     onFieldShow: function(c){
         c.getItemCt().removeClass('x-hide-' + c.hideMode);
+
+        // Composite fields will need to layout after the container is made visible
+        if (c.isComposite) {
+            c.doLayout();
+        }
     },
 
     onFieldHide: function(c){
@@ -197,7 +203,7 @@ Ext.layout.FormLayout = Ext.extend(Ext.layout.AnchorLayout, {
             if (items[i]){
                 ls += items[i];
                 if (ls.substr(-1, 1) != ';'){
-                    ls += ';'
+                    ls += ';';
                 }
             }
         }
@@ -238,7 +244,10 @@ new Ext.Template(
      * <p>Also see <tt>{@link #getTemplateArgs}</tt></p>
      */
 
-    // private
+    /**
+     * @private
+     *
+     */
     renderItem : function(c, position, target){
         if(c && (c.isFormField || c.fieldLabel) && c.inputType != 'hidden'){
             var args = this.getTemplateArgs(c);
@@ -296,7 +305,7 @@ new Ext.Template(
      * A CSS style specification string to add to the field label for this field (defaults to <tt>''</tt> or the
      * {@link #labelStyle layout's value for <tt>labelStyle</tt>}).</div></li>
      * <li><b><tt>label</tt></b> : String<div class="sub-desc">The text to display as the label for this
-     * field (defaults to <tt>''</tt>)</div></li>
+     * field (defaults to the field's configured fieldLabel property)</div></li>
      * <li><b><tt>{@link #labelSeparator}</tt></b> : String<div class="sub-desc">The separator to display after
      * the text of the label for this field (defaults to a colon <tt>':'</tt> or the
      * {@link #labelSeparator layout's value for labelSeparator}). To hide the separator use empty string ''.</div></li>
@@ -305,18 +314,19 @@ new Ext.Template(
      * rendered directly after each form field wrapper (defaults to <tt>'x-form-clear-left'</tt>)</div></li>
      * </ul></div>
      * @param (Ext.form.Field} field The {@link Ext.form.Field Field} being rendered.
-     * @return An object hash containing the properties required to render the Field.
+     * @return {Object} An object hash containing the properties required to render the Field.
      */
     getTemplateArgs: function(field) {
         var noLabelSep = !field.fieldLabel || field.hideLabel;
+
         return {
-            id: field.id,
-            label: field.fieldLabel,
-            labelStyle: this.getLabelStyle(field.labelStyle),
-            elementStyle: this.elementStyle||'',
-            labelSeparator: noLabelSep ? '' : (Ext.isDefined(field.labelSeparator) ? field.labelSeparator : this.labelSeparator),
-            itemCls: (field.itemCls||this.container.itemCls||'') + (field.hideLabel ? ' x-hide-label' : ''),
-            clearCls: field.clearCls || 'x-form-clear-left'
+            id            : field.id,
+            label         : field.fieldLabel,
+            itemCls       : (field.itemCls || this.container.itemCls || '') + (field.hideLabel ? ' x-hide-label' : ''),
+            clearCls      : field.clearCls || 'x-form-clear-left',
+            labelStyle    : this.getLabelStyle(field.labelStyle),
+            elementStyle  : this.elementStyle || '',
+            labelSeparator: noLabelSep ? '' : (Ext.isDefined(field.labelSeparator) ? field.labelSeparator : this.labelSeparator)
         };
     },
 

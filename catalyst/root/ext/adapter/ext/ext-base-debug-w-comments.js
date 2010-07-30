@@ -1,10 +1,9 @@
 /*!
- * Ext JS Library 3.1.0
- * Copyright(c) 2006-2009 Ext JS, LLC
+ * Ext JS Library 3.2.1
+ * Copyright(c) 2006-2010 Ext JS, Inc.
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
-
 // for old browsers
 window.undefined = window.undefined;
 
@@ -19,7 +18,12 @@ Ext = {
      * The version of the framework
      * @type String
      */
-    version : '3.1.0'
+    version : '3.2.1',
+    versionDetail : {
+        major: 3,
+        minor: 2,
+        patch: 1
+    }
 };
 
 /**
@@ -53,7 +57,7 @@ Ext.apply = function(o, c, defaults){
         DOC = document,
         isStrict = DOC.compatMode == "CSS1Compat",
         isOpera = check(/opera/),
-        isChrome = check(/chrome/),
+        isChrome = check(/\bchrome\b/),
         isWebKit = check(/webkit/),
         isSafari = !isChrome && check(/safari/),
         isSafari2 = isSafari && check(/applewebkit\/4/), // unique to Safari 2
@@ -161,7 +165,11 @@ Ext.apply = function(o, c, defaults){
          * @return {String} The generated Id.
          */
         id : function(el, prefix){
-            return (el = Ext.getDom(el) || {}).id = el.id || (prefix || "ext-gen") + (++idSeed);
+            el = Ext.getDom(el, true) || {};
+            if (!el.id) {
+                el.id = (prefix || "ext-gen") + (++idSeed);
+            }
+            return el.id;
         },
 
         /**
@@ -223,7 +231,7 @@ MyGridPanel = Ext.extend(Ext.grid.GridPanel, {
             var oc = Object.prototype.constructor;
 
             return function(sb, sp, overrides){
-                if(Ext.isObject(sp)){
+                if(typeof sp == 'object'){
                     overrides = sp;
                     sp = sb;
                     sb = overrides.constructor != oc ? overrides.constructor : function(){sp.apply(this, arguments);};
@@ -404,7 +412,7 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
             }
             //NodeList has an item and length property
             //IXMLDOMNodeList has nextNode method, needs to be checked first.
-            return ((v.nextNode || v.item) && Ext.isNumber(v.length));
+            return ((typeof v.nextNode != 'undefined' || v.item) && Ext.isNumber(v.length));
         },
 
         /**
@@ -471,7 +479,7 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
             if(Ext.isIterable(obj)){
                 Ext.each(obj, fn, scope);
                 return;
-            }else if(Ext.isObject(obj)){
+            }else if(typeof obj == 'object'){
                 for(var prop in obj){
                     if(obj.hasOwnProperty(prop)){
                         if(fn.call(scope || obj, prop, obj[prop], obj) === false){
@@ -484,6 +492,8 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
 
         /**
          * Return the dom node for the passed String (id), dom node, or Ext.Element.
+         * Optional 'strict' flag is needed for IE since it can return 'name' and
+         * 'id' elements by using getElementById.
          * Here are some examples:
          * <pre><code>
 // gets dom node based on id
@@ -503,11 +513,29 @@ function(el){
          * @param {Mixed} el
          * @return HTMLElement
          */
-        getDom : function(el){
+        getDom : function(el, strict){
             if(!el || !DOC){
                 return null;
             }
-            return el.dom ? el.dom : (Ext.isString(el) ? DOC.getElementById(el) : el);
+            if (el.dom){
+                return el.dom;
+            } else {
+                if (typeof el == 'string') {
+                    var e = DOC.getElementById(el);
+                    // IE returns elements with the 'name' and 'id' attribute.
+                    // we do a strict check to return the element with only the id attribute
+                    if (e && isIE && strict) {
+                        if (el == e.getAttribute('id')) {
+                            return e;
+                        } else {
+                            return null;
+                        }
+                    }
+                    return e;
+                } else {
+                    return el;
+                }
+            }
         },
 
         /**
@@ -641,7 +669,7 @@ function(el){
          * @return {Boolean}
          */
         isElement : function(v) {
-            return !!v && v.tagName;
+            return v ? !!v.tagName : false;
         },
 
         /**
@@ -1009,7 +1037,7 @@ Ext.ns("Ext.grid", "Ext.list", "Ext.dd", "Ext.tree", "Ext.form", "Ext.menu",
      */
 
 Ext.apply(Ext, function(){
-    var E = Ext, 
+    var E = Ext,
         idSeed = 0,
         scrollWidth = null;
 
@@ -1022,13 +1050,13 @@ Ext.apply(Ext, function(){
         emptyFn : function(){},
 
         /**
-         * URL to a 1x1 transparent gif image used by Ext to create inline icons with CSS background images. 
+         * URL to a 1x1 transparent gif image used by Ext to create inline icons with CSS background images.
          * In older versions of IE, this defaults to "http://extjs.com/s.gif" and you should change this to a URL on your server.
          * For other browsers it uses an inline data URL.
          * @type String
          */
         BLANK_IMAGE_URL : Ext.isIE6 || Ext.isIE7 || Ext.isAir ?
-                            'http:/' + '/extjs.com/s.gif' :
+                            'http:/' + '/www.extjs.com/s.gif' :
                             'data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==',
 
         extendX : function(supr, fn){
@@ -1050,7 +1078,7 @@ Ext.apply(Ext, function(){
          * @return {Number} Value, if numeric, else defaultValue
          */
         num : function(v, defaultValue){
-            v = Number(Ext.isEmpty(v) || Ext.isBoolean(v) ? NaN : v);
+            v = Number(Ext.isEmpty(v) || Ext.isArray(v) || typeof v == 'boolean' || (typeof v == 'string' && v.trim().length == 0) ? NaN : v);
             return isNaN(v) ? defaultValue : v;
         },
 
@@ -1093,13 +1121,13 @@ Ext.addBehaviors({
     '#foo a&#64;click' : function(e, t){
         // do something
     },
-    
+
     // add the same listener to multiple selectors (separated by comma BEFORE the &#64;)
     '#foo a, #bar span.some-class&#64;mouseover' : function(){
         // do something
     }
 });
-         * </code></pre> 
+         * </code></pre>
          * @param {Object} obj The list of behaviors to apply
          */
         addBehaviors : function(o){
@@ -1124,7 +1152,7 @@ Ext.addBehaviors({
                 cache = null;
             }
         },
-        
+
         /**
          * Utility method for getting the width of the browser scrollbar. This can differ depending on
          * operating system settings, such as the theme or font size.
@@ -1135,7 +1163,7 @@ Ext.addBehaviors({
             if(!Ext.isReady){
                 return 0;
             }
-            
+
             if(force === true || scrollWidth === null){
                     // Append our div, do our calculation and then remove it
                 var div = Ext.getBody().createChild('<div class="x-hide-offsets" style="width:100px;height:50px;overflow:hidden;"><div style="height:200px;"></div></div>'),
@@ -1177,15 +1205,15 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
         this.initialBox = Ext.copyTo({}, this.initialConfig, 'x,y,width,height');
     }
 });
-         * </code></pre> 
-         * @param {Object} The destination object.
-         * @param {Object} The source object.
-         * @param {Array/String} Either an Array of property names, or a comma-delimited list
+         * </code></pre>
+         * @param {Object} dest The destination object.
+         * @param {Object} source The source object.
+         * @param {Array/String} names Either an Array of property names, or a comma-delimited list
          * of property names to copy.
          * @return {Object} The modified object.
         */
         copyTo : function(dest, source, names){
-            if(Ext.isString(names)){
+            if(typeof names == 'string'){
                 names = names.split(/[,;\s]/);
             }
             Ext.each(names, function(name){
@@ -1211,11 +1239,11 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
                 if(arg){
                     if(Ext.isArray(arg)){
                         this.destroy.apply(this, arg);
-                    }else if(Ext.isFunction(arg.destroy)){
+                    }else if(typeof arg.destroy == 'function'){
                         arg.destroy();
                     }else if(arg.dom){
                         arg.remove();
-                    }    
+                    }
                 }
             }, this);
         },
@@ -1324,7 +1352,7 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
          * @return {Number} The mean.
          */
         mean : function(arr){
-           return Ext.sum(arr) / arr.length;
+           return arr.length > 0 ? Ext.sum(arr) / arr.length : undefined;
         },
 
         /**
@@ -1342,8 +1370,8 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
 
         /**
          * Partitions the set into two sets: a true set and a false set.
-         * Example: 
-         * Example2: 
+         * Example:
+         * Example2:
          * <pre><code>
 // Example 1:
 Ext.partition([true, false, true, true, false]); // [[true, true, true], [false, false]]
@@ -1380,14 +1408,14 @@ Ext.invoke(Ext.query("p"), "getAttribute", "id");
          * </code></pre>
          * @param {Array|NodeList} arr The Array of items to invoke the method on.
          * @param {String} methodName The method name to invoke.
-         * @param {Anything} ... Arguments to send into the method invocation.
+         * @param {...*} args Arguments to send into the method invocation.
          * @return {Array} The results of invoking the method on each item in the array.
          */
         invoke : function(arr, methodName){
             var ret = [],
                 args = Array.prototype.slice.call(arguments, 2);
             Ext.each(arr, function(v,i) {
-                if (v && Ext.isFunction(v[methodName])) {
+                if (v && typeof v[methodName] == 'function') {
                     ret.push(v[methodName].apply(v, args));
                 } else {
                     ret.push(undefined);
@@ -1434,7 +1462,7 @@ Ext.zip(
          * @return {Array} The zipped set.
          */
         zip : function(){
-            var parts = Ext.partition(arguments, function( val ){ return !Ext.isFunction(val); }),
+            var parts = Ext.partition(arguments, function( val ){ return typeof val != 'function'; }),
                 arrs = parts[0],
                 fn = parts[1][0],
                 len = Ext.max(Ext.pluck(arrs, "length")),
@@ -1511,7 +1539,7 @@ Ext.zip(
                     case RegExp: return 'regexp';
                     case Date: return 'date';
                 }
-                if(Ext.isNumber(o.length) && Ext.isFunction(o.item)) {
+                if(typeof o.length == 'number' && typeof o.item == 'function') {
                     return 'nodelist';
                 }
             }
@@ -1524,7 +1552,7 @@ Ext.zip(
 
         // internal
         callback : function(cb, scope, args, delay){
-            if(Ext.isFunction(cb)){
+            if(typeof cb == 'function'){
                 if(delay){
                     cb.defer(delay, scope, args || []);
                 }else{
@@ -1564,7 +1592,7 @@ sayGoodbye('Fred'); // both alerts show
      */
     createSequence : function(fcn, scope){
         var method = this;
-        return !Ext.isFunction(fcn) ?
+        return (typeof fcn != 'function') ?
                 this :
                 function(){
                     var retval = method.apply(this || window, arguments);
@@ -1704,6 +1732,7 @@ Ext.TaskMgr.start({
 });
 
  * </code></pre>
+ * <p>See the {@link #start} method for details about how to configure a task object.</p>
  * Also see {@link Ext.util.DelayedTask}. 
  * 
  * @constructor
@@ -1775,21 +1804,25 @@ Ext.util.TaskRunner = function(interval){
     /**
      * Starts a new task.
      * @method start
-     * @param {Object} task A config object that supports the following properties:<ul>
-     * <li><code>run</code> : Function<div class="sub-desc">The function to execute each time the task is run. The
-     * function will be called at each interval and passed the <code>args</code> argument if specified.  If a
-     * particular scope is required, be sure to specify it using the <code>scope</code> argument.</div></li>
+     * @param {Object} task <p>A config object that supports the following properties:<ul>
+     * <li><code>run</code> : Function<div class="sub-desc"><p>The function to execute each time the task is invoked. The
+     * function will be called at each interval and passed the <code>args</code> argument if specified, and the
+     * current invocation count if not.</p>
+     * <p>If a particular scope (<code>this</code> reference) is required, be sure to specify it using the <code>scope</code> argument.</p>
+     * <p>Return <code>false</code> from this function to terminate the task.</p></div></li>
      * <li><code>interval</code> : Number<div class="sub-desc">The frequency in milliseconds with which the task
-     * should be executed.</div></li>
+     * should be invoked.</div></li>
      * <li><code>args</code> : Array<div class="sub-desc">(optional) An array of arguments to be passed to the function
-     * specified by <code>run</code>.</div></li>
+     * specified by <code>run</code>. If not specified, the current invocation count is passed.</div></li>
      * <li><code>scope</code> : Object<div class="sub-desc">(optional) The scope (<tt>this</tt> reference) in which to execute the
      * <code>run</code> function. Defaults to the task config object.</div></li>
-     * <li><code>duration</code> : Number<div class="sub-desc">(optional) The length of time in milliseconds to execute
+     * <li><code>duration</code> : Number<div class="sub-desc">(optional) The length of time in milliseconds to invoke
      * the task before stopping automatically (defaults to indefinite).</div></li>
-     * <li><code>repeat</code> : Number<div class="sub-desc">(optional) The number of times to execute the task before
+     * <li><code>repeat</code> : Number<div class="sub-desc">(optional) The number of times to invoke the task before
      * stopping automatically (defaults to indefinite).</div></li>
-     * </ul>
+     * </ul></p>
+     * <p>Before each invocation, Ext injects the property <code>taskRunCount</code> into the task object so
+     * that calculations based on the repeat count can be performed.</p>
      * @return {Object} The task
      */
     this.start = function(task){
@@ -1843,6 +1876,7 @@ var task = {
 }
 Ext.TaskMgr.start(task);
 </code></pre>
+ * <p>See the {@link #start} method for details about how to configure a task object.</p>
  * @singleton
  */
 Ext.TaskMgr = new Ext.util.TaskRunner();(function(){
@@ -2104,20 +2138,22 @@ Ext.TaskMgr = new Ext.util.TaskRunner();(function(){
     function _tryPreloadAttach() {
         var ret = false,
             notAvail = [],
-            element, i, len, v,
+            element, i, v, override,
             tryAgain = !loadComplete || (retryCount > 0);
 
-        if (!locked) {
+        if(!locked){
             locked = true;
-
-            for (i = 0, len = onAvailStack.length; i < len; i++) {
+            
+            for(i = 0; i < onAvailStack.length; ++i){
                 v = onAvailStack[i];
                 if(v && (element = doc.getElementById(v.id))){
                     if(!v.checkReady || loadComplete || element.nextSibling || (doc && doc.body)) {
-                        element = v.override ? (v.override === true ? v.obj : v.override) : element;
+                        override = v.override;
+                        element = override ? (override === true ? v.obj : override) : element;
                         v.fn.call(element, v.obj);
-                        v = null;
-                    } else {
+                        onAvailStack.remove(v);
+                        --i;
+                    }else{
                         notAvail.push(v);
                     }
                 }
@@ -2131,7 +2167,6 @@ Ext.TaskMgr = new Ext.util.TaskRunner();(function(){
                 clearInterval(_interval);
                 _interval = null;
             }
-
             ret = !(locked = false);
         }
         return ret;
@@ -2208,14 +2243,13 @@ Ext.TaskMgr = new Ext.util.TaskRunner();(function(){
         // This function should ALWAYS be called from Ext.EventManager
         removeListener: function(el, eventName, fn) {
             el = Ext.getDom(el);
-            var i, len, li;
+            var i, len, li, lis;
             if (el && fn) {
-                if (eventName == UNLOAD) {
-                    if (unloadListeners[id] !== undefined) {
-                        for (i = 0, len = unloadListeners[id].length; i < len; i++) {
-                            li = unloadListeners[id][i];
-                            if (li && li[TYPE] == eventName && li[FN] == fn) {
-                                unloadListeners[id].splice(i, 1);
+                if(eventName == UNLOAD){
+                    if((lis = unloadListeners[el.id]) !== undefined){
+                        for(i = 0, len = lis.length; i < len; i++){
+                            if((li = lis[i]) && li[TYPE] == eventName && li[FN] == fn){
+                                unloadListeners[el.id].splice(i, 1);
                             }
                         }
                     }
@@ -2346,7 +2380,6 @@ Ext.TaskMgr = new Ext.util.TaskRunner();(function(){
                 }
             };
 
-            unloadListeners = null;
             Ext.EventManager._unload();
 
             doRemove(win, UNLOAD, EU._unload);
@@ -2372,37 +2405,37 @@ Ext.TaskMgr = new Ext.util.TaskRunner();(function(){
 * YUI licensed under the BSD License:
 * http://developer.yahoo.net/yui/license.txt
 */
-Ext.lib.Ajax = function() {     
+Ext.lib.Ajax = function() {
     var activeX = ['MSXML2.XMLHTTP.3.0',
                    'MSXML2.XMLHTTP',
                    'Microsoft.XMLHTTP'],
         CONTENTTYPE = 'Content-Type';
-                   
+
     // private
     function setHeader(o) {
         var conn = o.conn,
             prop;
-        
+
         function setTheHeaders(conn, headers){
             for (prop in headers) {
                 if (headers.hasOwnProperty(prop)) {
                     conn.setRequestHeader(prop, headers[prop]);
                 }
-            }   
-        }       
-        
+            }
+        }
+
         if (pub.defaultHeaders) {
             setTheHeaders(conn, pub.defaultHeaders);
         }
 
         if (pub.headers) {
             setTheHeaders(conn, pub.headers);
-            delete pub.headers;                
+            delete pub.headers;
         }
-    }    
-    
+    }
+
     // private
-    function createExceptionObject(tId, callbackArg, isAbort, isTimeout) {          
+    function createExceptionObject(tId, callbackArg, isAbort, isTimeout) {
         return {
             tId : tId,
             status : isAbort ? -1 : 0,
@@ -2411,23 +2444,25 @@ Ext.lib.Ajax = function() {
             isTimeout: isTimeout,
             argument : callbackArg
         };
-    }  
-    
-    // private 
-    function initHeader(label, value) {         
-        (pub.headers = pub.headers || {})[label] = value;                       
     }
-    
+
+    // private
+    function initHeader(label, value) {
+        (pub.headers = pub.headers || {})[label] = value;
+    }
+
     // private
     function createResponseObject(o, callbackArg) {
         var headerObj = {},
-            headerStr,              
+            headerStr,
             conn = o.conn,
             t,
-            s;
+            s,
+            // see: https://prototype.lighthouseapp.com/projects/8886/tickets/129-ie-mangles-http-response-status-code-204-to-1223
+            isBrokenStatus = conn.status == 1223;
 
         try {
-            headerStr = o.conn.getAllResponseHeaders();   
+            headerStr = o.conn.getAllResponseHeaders();
             Ext.each(headerStr.replace(/\r\n/g, '\n').split('\n'), function(v){
                 t = v.indexOf(':');
                 if(t >= 0){
@@ -2439,11 +2474,12 @@ Ext.lib.Ajax = function() {
                 }
             });
         } catch(e) {}
-                    
+
         return {
             tId : o.tId,
-            status : conn.status,
-            statusText : conn.statusText,
+            // Normalize the status and statusText when IE returns 1223, see the above link.
+            status : isBrokenStatus ? 204 : conn.status,
+            statusText : isBrokenStatus ? 'No Content' : conn.statusText,
             getResponseHeader : function(header){return headerObj[header.toLowerCase()];},
             getAllResponseHeaders : function(){return headerStr},
             responseText : conn.responseText,
@@ -2451,13 +2487,16 @@ Ext.lib.Ajax = function() {
             argument : callbackArg
         };
     }
-    
+
     // private
     function releaseObject(o) {
+        if (o.tId) {
+            pub.conn[o.tId] = null;
+        }
         o.conn = null;
         o = null;
-    }        
-    
+    }
+
     // private
     function handleTransactionResponse(o, callback, isAbort, isTimeout) {
         if (!callback) {
@@ -2523,8 +2562,8 @@ Ext.lib.Ajax = function() {
 
         releaseObject(o);
         responseObject = null;
-    }  
-    
+    }
+
     // private
     function handleReadyState(o, callback){
     callback = callback || {};
@@ -2534,6 +2573,7 @@ Ext.lib.Ajax = function() {
             cbTimeout = callback.timeout || null;
 
         if (cbTimeout) {
+            pub.conn[tId] = conn;
             pub.timeout[tId] = setTimeout(function() {
                 pub.abort(o, callback, true);
             }, cbTimeout);
@@ -2555,7 +2595,7 @@ Ext.lib.Ajax = function() {
             },
             pub.pollInterval);
     }
-    
+
     // private
     function asyncRequest(method, uri, callback, postData) {
         var o = getConnectionObject() || null;
@@ -2563,7 +2603,7 @@ Ext.lib.Ajax = function() {
         if (o) {
             o.conn.open(method, uri, true);
 
-            if (pub.useDefaultXhrHeader) {                    
+            if (pub.useDefaultXhrHeader) {
                 initHeader('X-Requested-With', pub.defaultXhrHeader);
             }
 
@@ -2580,10 +2620,10 @@ Ext.lib.Ajax = function() {
         }
         return o;
     }
-    
+
     // private
     function getConnectionObject() {
-        var o;          
+        var o;
 
         try {
             if (o = createXhrObject(pub.transactionId)) {
@@ -2594,17 +2634,17 @@ Ext.lib.Ajax = function() {
             return o;
         }
     }
-       
+
     // private
     function createXhrObject(transactionId) {
         var http;
-            
+
         try {
-            http = new XMLHttpRequest();                
+            http = new XMLHttpRequest();
         } catch(e) {
-            for (var i = 0; i < activeX.length; ++i) {              
+            for (var i = 0; i < activeX.length; ++i) {
                 try {
-                    http = new ActiveXObject(activeX[i]);                        
+                    http = new ActiveXObject(activeX[i]);
                     break;
                 } catch(e) {}
             }
@@ -2612,17 +2652,17 @@ Ext.lib.Ajax = function() {
             return {conn : http, tId : transactionId};
         }
     }
-         
+
     var pub = {
         request : function(method, uri, cb, data, options) {
             if(options){
-                var me = this,              
+                var me = this,
                     xmlData = options.xmlData,
                     jsonData = options.jsonData,
                     hs;
-                    
-                Ext.applyIf(me, options);           
-                
+
+                Ext.applyIf(me, options);
+
                 if(xmlData || jsonData){
                     hs = me.headers;
                     if(!hs || !hs[CONTENTTYPE]){
@@ -2630,7 +2670,7 @@ Ext.lib.Ajax = function() {
                     }
                     data = xmlData || (!Ext.isPrimitive(jsonData) ? Ext.encode(jsonData) : jsonData);
                 }
-            }                       
+            }
             return asyncRequest(method || options.method || "POST", uri, cb, data);
         },
 
@@ -2639,95 +2679,96 @@ Ext.lib.Ajax = function() {
                 hasSubmit = false,
                 encoder = encodeURIComponent,
                 element,
-                options, 
-                name, 
-                val,                
+                options,
+                name,
+                val,
                 data = '',
                 type;
-                
-            Ext.each(fElements, function(element) {                 
-                name = element.name;                 
+
+            Ext.each(fElements, function(element) {
+                name = element.name;
                 type = element.type;
-                
+
                 if (!element.disabled && name){
                     if(/select-(one|multiple)/i.test(type)) {
                         Ext.each(element.options, function(opt) {
                             if (opt.selected) {
                                 data += String.format("{0}={1}&", encoder(name), encoder((opt.hasAttribute ? opt.hasAttribute('value') : opt.getAttribute('value') !== null) ? opt.value : opt.text));
-                            }                               
+                            }
                         });
                     } else if(!/file|undefined|reset|button/i.test(type)) {
                             if(!(/radio|checkbox/i.test(type) && !element.checked) && !(type == 'submit' && hasSubmit)){
-                                
-                                data += encoder(name) + '=' + encoder(element.value) + '&';                     
-                                hasSubmit = /submit/i.test(type);    
-                            }                       
-                    } 
+
+                                data += encoder(name) + '=' + encoder(element.value) + '&';
+                                hasSubmit = /submit/i.test(type);
+                            }
+                    }
                 }
-            });            
+            });
             return data.substr(0, data.length - 1);
         },
-        
+
         useDefaultHeader : true,
         defaultPostHeader : 'application/x-www-form-urlencoded; charset=UTF-8',
         useDefaultXhrHeader : true,
-        defaultXhrHeader : 'XMLHttpRequest',        
+        defaultXhrHeader : 'XMLHttpRequest',
         poll : {},
         timeout : {},
+        conn: {},
         pollInterval : 50,
         transactionId : 0,
-        
-//  This is never called - Is it worth exposing this?               
+
+//  This is never called - Is it worth exposing this?
 //          setProgId : function(id) {
 //              activeX.unshift(id);
 //          },
 
-//  This is never called - Is it worth exposing this?   
+//  This is never called - Is it worth exposing this?
 //          setDefaultPostHeader : function(b) {
 //              this.useDefaultHeader = b;
 //          },
-        
-//  This is never called - Is it worth exposing this?   
+
+//  This is never called - Is it worth exposing this?
 //          setDefaultXhrHeader : function(b) {
 //              this.useDefaultXhrHeader = b;
 //          },
 
-//  This is never called - Is it worth exposing this?           
+//  This is never called - Is it worth exposing this?
 //          setPollingInterval : function(i) {
 //              if (typeof i == 'number' && isFinite(i)) {
 //                  this.pollInterval = i;
 //              }
 //          },
-        
+
 //  This is never called - Is it worth exposing this?
 //          resetDefaultHeaders : function() {
 //              this.defaultHeaders = null;
 //          },
-    
-            abort : function(o, callback, isTimeout) {
-                var me = this,
-                    tId = o.tId,
-                    isAbort = false;
-                
-                if (me.isCallInProgress(o)) {
-                    o.conn.abort();
-                    clearInterval(me.poll[tId]);
-                    me.poll[tId] = null;
-                    clearTimeout(pub.timeout[tId]);
-                    me.timeout[tId] = null;
-                    
-                    handleTransactionResponse(o, callback, (isAbort = true), isTimeout);                
-                }
-                return isAbort;
-            },
-    
-            isCallInProgress : function(o) {
-                // if there is a connection and readyState is not 0 or 4
-                return o.conn && !{0:true,4:true}[o.conn.readyState];           
+
+        abort : function(o, callback, isTimeout) {
+            var me = this,
+                tId = o.tId,
+                isAbort = false;
+
+            if (me.isCallInProgress(o)) {
+                o.conn.abort();
+                clearInterval(me.poll[tId]);
+                me.poll[tId] = null;
+                clearTimeout(pub.timeout[tId]);
+                me.timeout[tId] = null;
+
+                handleTransactionResponse(o, callback, (isAbort = true), isTimeout);
             }
-        };
-        return pub;
-    }();	Ext.lib.Region = function(t, r, b, l) {
+            return isAbort;
+        },
+
+        isCallInProgress : function(o) {
+            // if there is a connection and readyState is not 0 or 4
+            return o.conn && !{0:true,4:true}[o.conn.readyState];
+        }
+    };
+    return pub;
+}();	Ext.lib.Region = function(t, r, b, l) {
 		var me = this;
         me.top = t;
         me[1] = t;
@@ -2812,7 +2853,7 @@ Ext.lib.Ajax = function() {
     };
 
     Ext.lib.Point.prototype = new Ext.lib.Region();
-(function(){    
+(function(){
     var EXTLIB = Ext.lib,
         noNegatives = /width|height|opacity|padding/i,
         offsetAttribute = /^((width|height)|(top|left))$/,
@@ -2822,9 +2863,9 @@ Ext.lib.Ajax = function() {
             return typeof v !== 'undefined';
         },
         now = function(){
-            return new Date();    
+            return new Date();
         };
-        
+
     EXTLIB.Anim = {
         motion : function(el, args, duration, easing, cb, scope) {
             return this.run(el, args, duration, easing, cb, scope, Ext.lib.Motion);
@@ -2844,7 +2885,7 @@ Ext.lib.Ajax = function() {
             return anim;
         }
     };
-    
+
     EXTLIB.AnimBase = function(el, attributes, duration, method) {
         if (el) {
             this.init(el, attributes, duration, method);
@@ -2869,7 +2910,7 @@ Ext.lib.Ajax = function() {
         getAttr: function(attr) {
             var el = Ext.fly(this.el),
                 val = el.getStyle(attr),
-                a = offsetAttribute.exec(attr) || []
+                a = offsetAttribute.exec(attr) || [];
 
             if (val !== 'auto' && !offsetUnit.test(val)) {
                 return parseFloat(val);
@@ -2896,7 +2937,7 @@ Ext.lib.Ajax = function() {
         },
 
 
-        setRunAttr: function(attr) {            
+        setRunAttr: function(attr) {
             var me = this,
                 a = this.attributes[attr],
                 to = a.to,
@@ -2916,9 +2957,9 @@ Ext.lib.Ajax = function() {
             }else if(isset(by)) {
                 if (Ext.isArray(start)){
                     end = [];
-					for(var i=0,len=start.length; i<len; i++) {
-						end[i] = start[i] + by[i];
-					}
+                    for(var i=0,len=start.length; i<len; i++) {
+                        end[i] = start[i] + by[i];
+                    }
                 }else{
                     end = start + by;
                 }
@@ -2936,7 +2977,7 @@ Ext.lib.Ajax = function() {
             var me = this,
                 actualFrames = 0,
                 mgr = EXTLIB.AnimMgr;
-                
+
             Ext.apply(me, {
                 isAnimated: false,
                 startTime: null,
@@ -2951,19 +2992,19 @@ Ext.lib.Ajax = function() {
                 animate: function(){
                     var me = this,
                         d = me.duration;
-                    
+
                     if(me.isAnimated){
                         return false;
                     }
 
                     me.curFrame = 0;
                     me.totalFrames = me.useSec ? Math.ceil(mgr.fps * d) : d;
-                    mgr.registerElement(me); 
+                    mgr.registerElement(me);
                 },
-                
+
                 stop: function(finish){
                     var me = this;
-                
+
                     if(finish){
                         me.curFrame = me.totalFrames;
                         me._onTween.fire();
@@ -2975,7 +3016,7 @@ Ext.lib.Ajax = function() {
             var onStart = function(){
                 var me = this,
                     attr;
-                
+
                 me.onStart.fire();
                 me.runAttrs = {};
                 for(attr in this.attributes){
@@ -3019,11 +3060,11 @@ Ext.lib.Ajax = function() {
             };
 
             me.onStart = new Ext.util.Event(me);
-            me.onTween = new Ext.util.Event(me);            
+            me.onTween = new Ext.util.Event(me);
             me.onComplete = new Ext.util.Event(me);
             (me._onStart = new Ext.util.Event(me)).addListener(onStart);
             (me._onTween = new Ext.util.Event(me)).addListener(onTween);
-            (me._onComplete = new Ext.util.Event(me)).addListener(onComplete); 
+            (me._onComplete = new Ext.util.Event(me)).addListener(onComplete);
         }
     };
 
@@ -3044,7 +3085,7 @@ Ext.lib.Ajax = function() {
                 tween._onStart.fire();
                 me.start();
             },
-            
+
             unRegister: function(tween, index){
                 tween._onComplete.fire();
                 index = index || getIndex(tween);
@@ -3056,13 +3097,13 @@ Ext.lib.Ajax = function() {
                     me.stop();
                 }
             },
-            
+
             start: function(){
                 if(thread === null){
                     thread = setInterval(me.run, me.delay);
                 }
             },
-            
+
             stop: function(tween){
                 if(!tween){
                     clearInterval(thread);
@@ -3079,7 +3120,7 @@ Ext.lib.Ajax = function() {
                     me.unRegister(tween);
                 }
             },
-            
+
             run: function(){
                 var tf, i, len, tween;
                 for(i = 0, len = queue.length; i<len; i++) {
@@ -3095,7 +3136,7 @@ Ext.lib.Ajax = function() {
                         }else{
                             me.stop(tween);
                         }
-                    }                   
+                    }
                 }
             }
         });
@@ -3137,7 +3178,7 @@ Ext.lib.Ajax = function() {
         this.getPosition = function(points, t) {
             var n = points.length,
                 tmp = [],
-                c = 1 - t, 
+                c = 1 - t,
                 i,
                 j;
 
@@ -3191,7 +3232,7 @@ Ext.lib.Ajax = function() {
             setAttr: function(attr, val, unit){
                 var me = this,
                     setAttr = superclass.setAttr;
-                    
+
                 if (pointsRe.test(attr)) {
                     unit = unit || 'px';
                     setAttr.call(me, 'left', val[0], unit);
@@ -3200,25 +3241,25 @@ Ext.lib.Ajax = function() {
                     setAttr.call(me, attr, val, unit);
                 }
             },
-            
+
             getAttr: function(attr){
                 var me = this,
                     getAttr = superclass.getAttr;
-                    
+
                 return pointsRe.test(attr) ? [getAttr.call(me, 'left'), getAttr.call(me, 'top')] : getAttr.call(me, attr);
             },
-            
+
             doMethod: function(attr, start, end){
                 var me = this;
-                
+
                 return pointsRe.test(attr)
                         ? EXTLIB.Bezier.getPosition(me.runAttrs[attr], me.method(me.curFrame, 0, 100, me.totalFrames) / 100)
                         : superclass.doMethod.call(me, attr, start, end);
             },
-            
+
             setRunAttr: function(attr){
                 if(pointsRe.test(attr)){
-                    
+
                     var me = this,
                         el = this.el,
                         points = this.attributes.points,
@@ -3232,7 +3273,7 @@ Ext.lib.Ajax = function() {
                         end,
                         len,
                         ra;
-                  
+
 
                     if(control.length > 0 && !Ext.isArray(control[0])){
                         control = [control];
@@ -3283,20 +3324,20 @@ Ext.lib.Ajax = function() {
     })();
 })();// Easing functions
 (function(){
-	// shortcuts to aid compression
-	var abs = Math.abs,
-	 	pi = Math.PI,
-	 	asin = Math.asin,
-	 	pow = Math.pow,
-	 	sin = Math.sin,
-		EXTLIB = Ext.lib;
-	 	
+    // shortcuts to aid compression
+    var abs = Math.abs,
+        pi = Math.PI,
+        asin = Math.asin,
+        pow = Math.pow,
+        sin = Math.sin,
+        EXTLIB = Ext.lib;
+
     Ext.apply(EXTLIB.Easing, {
-        
+
         easeBoth: function (t, b, c, d) {
-	        return ((t /= d / 2) < 1)  ?  c / 2 * t * t + b  :  -c / 2 * ((--t) * (t - 2) - 1) + b;               
+            return ((t /= d / 2) < 1)  ?  c / 2 * t * t + b  :  -c / 2 * ((--t) * (t - 2) - 1) + b;
         },
-        
+
         easeInStrong: function (t, b, c, d) {
             return c * (t /= d) * t * t * t + b;
         },
@@ -3310,62 +3351,62 @@ Ext.lib.Ajax = function() {
         },
 
         elasticIn: function (t, b, c, d, a, p) {
-	        if (t == 0 || (t /= d) == 1) {
+            if (t == 0 || (t /= d) == 1) {
                 return t == 0 ? b : b + c;
-            }	            
-            p = p || (d * .3);	            
-
-			var s;
-			if (a >= abs(c)) {
-				s = p / (2 * pi) * asin(c / a);
-			} else {
-				a = c;
-				s = p / 4;
-			}
-	
-            return -(a * pow(2, 10 * (t -= 1)) * sin((t * d - s) * (2 * pi) / p)) + b;
-            	      
-        }, 	
-	
-		elasticOut: function (t, b, c, d, a, p) {
-	        if (t == 0 || (t /= d) == 1) {
-                return t == 0 ? b : b + c;
-            }	            
-            p = p || (d * .3);	            
-
-			var s;
-			if (a >= abs(c)) {
-				s = p / (2 * pi) * asin(c / a);
-			} else {
-				a = c;
-				s = p / 4;
-			}
-	
-            return a * pow(2, -10 * t) * sin((t * d - s) * (2 * pi) / p) + c + b;	 
-        }, 	
-	
-        elasticBoth: function (t, b, c, d, a, p) {
-            if (t == 0 || (t /= d / 2) == 2) {
-                return t == 0 ? b : b + c;
-            }		         	
-	            
-            p = p || (d * (.3 * 1.5)); 	            
+            }
+            p = p || (d * .3);
 
             var s;
             if (a >= abs(c)) {
-	            s = p / (2 * pi) * asin(c / a);
+                s = p / (2 * pi) * asin(c / a);
             } else {
-	            a = c;
+                a = c;
+                s = p / 4;
+            }
+
+            return -(a * pow(2, 10 * (t -= 1)) * sin((t * d - s) * (2 * pi) / p)) + b;
+
+        },
+
+        elasticOut: function (t, b, c, d, a, p) {
+            if (t == 0 || (t /= d) == 1) {
+                return t == 0 ? b : b + c;
+            }
+            p = p || (d * .3);
+
+            var s;
+            if (a >= abs(c)) {
+                s = p / (2 * pi) * asin(c / a);
+            } else {
+                a = c;
+                s = p / 4;
+            }
+
+            return a * pow(2, -10 * t) * sin((t * d - s) * (2 * pi) / p) + c + b;
+        },
+
+        elasticBoth: function (t, b, c, d, a, p) {
+            if (t == 0 || (t /= d / 2) == 2) {
+                return t == 0 ? b : b + c;
+            }
+
+            p = p || (d * (.3 * 1.5));
+
+            var s;
+            if (a >= abs(c)) {
+                s = p / (2 * pi) * asin(c / a);
+            } else {
+                a = c;
                 s = p / 4;
             }
 
             return t < 1 ?
-            	   	-.5 * (a * pow(2, 10 * (t -= 1)) * sin((t * d - s) * (2 * pi) / p)) + b :
+                    -.5 * (a * pow(2, 10 * (t -= 1)) * sin((t * d - s) * (2 * pi) / p)) + b :
                     a * pow(2, -10 * (t -= 1)) * sin((t * d - s) * (2 * pi) / p) * .5 + c + b;
         },
 
         backIn: function (t, b, c, d, s) {
-            s = s ||  1.70158; 	            
+            s = s ||  1.70158;
             return c * (t /= d) * t * ((s + 1) * t - s) + b;
         },
 
@@ -3379,11 +3420,11 @@ Ext.lib.Ajax = function() {
 
 
         backBoth: function (t, b, c, d, s) {
-            s = s || 1.70158; 	            
+            s = s || 1.70158;
 
             return ((t /= d / 2 ) < 1) ?
-                    c / 2 * (t * t * (((s *= (1.525)) + 1) * t - s)) + b : 	            
-            		c / 2 * ((t -= 2) * t * (((s *= (1.525)) + 1) * t + s) + 2) + b;
+                    c / 2 * (t * t * (((s *= (1.525)) + 1) * t - s)) + b :
+                    c / 2 * ((t -= 2) * t * (((s *= (1.525)) + 1) * t + s) + 2) + b;
         },
 
 
@@ -3406,19 +3447,19 @@ Ext.lib.Ajax = function() {
 
         bounceBoth: function (t, b, c, d) {
             return (t < d / 2) ?
-                   EXTLIB.Easing.bounceIn(t * 2, 0, c, d) * .5 + b : 
-            	   EXTLIB.Easing.bounceOut(t * 2 - d, 0, c, d) * .5 + c * .5 + b;
+                    EXTLIB.Easing.bounceIn(t * 2, 0, c, d) * .5 + b :
+                    EXTLIB.Easing.bounceOut(t * 2 - d, 0, c, d) * .5 + c * .5 + b;
         }
     });
 })();
 
 (function() {
     var EXTLIB = Ext.lib;
-	// Color Animation
-	EXTLIB.Anim.color = function(el, args, duration, easing, cb, scope) {
-	    return EXTLIB.Anim.run(el, args, duration, easing, cb, scope, EXTLIB.ColorAnim);
-	}
-	
+    // Color Animation
+    EXTLIB.Anim.color = function(el, args, duration, easing, cb, scope) {
+        return EXTLIB.Anim.run(el, args, duration, easing, cb, scope, EXTLIB.ColorAnim);
+    }
+
     EXTLIB.ColorAnim = function(el, attributes, duration, method) {
         EXTLIB.ColorAnim.superclass.constructor.call(this, el, attributes, duration, method);
     };
@@ -3426,26 +3467,26 @@ Ext.lib.Ajax = function() {
     Ext.extend(EXTLIB.ColorAnim, EXTLIB.AnimBase);
 
     var superclass = EXTLIB.ColorAnim.superclass,
-    	colorRE = /color$/i,
-    	transparentRE = /^transparent|rgba\(0, 0, 0, 0\)$/,
+        colorRE = /color$/i,
+        transparentRE = /^transparent|rgba\(0, 0, 0, 0\)$/,
         rgbRE = /^rgb\(([0-9]+)\s*,\s*([0-9]+)\s*,\s*([0-9]+)\)$/i,
         hexRE= /^#?([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$/i,
         hex3RE = /^#?([0-9A-F]{1})([0-9A-F]{1})([0-9A-F]{1})$/i,
         isset = function(v){
             return typeof v !== 'undefined';
-        }
-         	
-   	// private	
-    function parseColor(s) {	
+        };
+
+    // private
+    function parseColor(s) {
         var pi = parseInt,
             base,
             out = null,
             c;
-        
-	    if (s.length == 3) {
+
+        if (s.length == 3) {
             return s;
         }
-		
+
         Ext.each([hexRE, rgbRE, hex3RE], function(re, idx){
             base = (idx % 2 == 0) ? 16 : 10;
             c = re.exec(s);
@@ -3455,13 +3496,13 @@ Ext.lib.Ajax = function() {
             }
         });
         return out;
-    }	
+    }
 
     Ext.apply(EXTLIB.ColorAnim.prototype, {
         getAttr : function(attr) {
             var me = this,
                 el = me.el,
-                val;                
+                val;
             if(colorRE.test(attr)){
                 while(el && transparentRE.test(val = Ext.fly(el).getStyle(attr))){
                     el = el.parentNode;
@@ -3475,17 +3516,20 @@ Ext.lib.Ajax = function() {
 
         doMethod : function(attr, start, end) {
             var me = this,
-            	val,
-            	floor = Math.floor,
-				i, len = start.length, v;            
+                val,
+                floor = Math.floor,
+                i,
+                len,
+                v;
 
             if(colorRE.test(attr)){
                 val = [];
-				
-				for(i=0; i<len; i++) {
-					v = start[i];
-					val[i] = superclass.doMethod.call(me, attr, v, end[i]);
-				}
+                end = end || [];
+
+                for(i = 0, len = start.length; i < len; i++) {
+                    v = start[i];
+                    val[i] = superclass.doMethod.call(me, attr, v, end[i]);
+                }
                 val = 'rgb(' + floor(val[0]) + ',' + floor(val[1]) + ',' + floor(val[2]) + ')';
             }else{
                 val = superclass.doMethod.call(me, attr, start, end);
@@ -3499,7 +3543,7 @@ Ext.lib.Ajax = function() {
                 to = a.to,
                 by = a.by,
                 ra;
-                
+
             superclass.setRunAttr.call(me, attr);
             ra = me.runAttrs[attr];
             if(colorRE.test(attr)){
@@ -3508,25 +3552,25 @@ Ext.lib.Ajax = function() {
 
                 if(!isset(to) && isset(by)){
                     end = parseColor(by);
-					for(var i=0,len=start.length; i<len; i++) {
-						end[i] = start[i] + end[i];
-					}
+                    for(var i=0,len=start.length; i<len; i++) {
+                        end[i] = start[i] + end[i];
+                    }
                 }
                 ra.start = start;
                 ra.end = end;
             }
         }
-	});
-})();	
+    });
+})();
 
-	
+
 (function() {
-	    // Scroll Animation	
+    // Scroll Animation
     var EXTLIB = Ext.lib;
-	EXTLIB.Anim.scroll = function(el, args, duration, easing, cb, scope) {	        
-	    return EXTLIB.Anim.run(el, args, duration, easing, cb, scope, EXTLIB.Scroll);
-	}
-	
+    EXTLIB.Anim.scroll = function(el, args, duration, easing, cb, scope) {
+        return EXTLIB.Anim.run(el, args, duration, easing, cb, scope, EXTLIB.Scroll);
+    };
+
     EXTLIB.Scroll = function(el, attributes, duration, method) {
         if(el){
             EXTLIB.Scroll.superclass.constructor.call(this, el, attributes, duration, method);
@@ -3536,15 +3580,15 @@ Ext.lib.Ajax = function() {
     Ext.extend(EXTLIB.Scroll, EXTLIB.ColorAnim);
 
     var superclass = EXTLIB.Scroll.superclass,
-    	SCROLL = 'scroll';
+        SCROLL = 'scroll';
 
     Ext.apply(EXTLIB.Scroll.prototype, {
 
         doMethod : function(attr, start, end) {
             var val,
-            	me = this,
-            	curFrame = me.curFrame,
-            	totalFrames = me.totalFrames;
+                me = this,
+                curFrame = me.curFrame,
+                totalFrames = me.totalFrames;
 
             if(attr == SCROLL){
                 val = [me.method(curFrame, start[0], end[0] - start[0], totalFrames),
