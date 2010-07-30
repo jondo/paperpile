@@ -96,6 +96,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     Paperpile.Viewport.superclass.initComponent.call(this);
 
+    this.mon(Ext.getBody(),'click', function(event,target,options) {
+      if (target.href) {
+	event.stopEvent();
+	Paperpile.utils.openURL(target.href);
+      }
+    });
+
     this.tabs = Ext.getCmp('tabs');
     this.dd = new Paperpile.DragDropManager();
     this.dd.initListeners();
