@@ -155,8 +155,8 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
     },
     this);
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/settings/pattern_example'),
+    Paperpile.Ajax({
+      url: '/ajax/settings/pattern_example',
       params: params,
       success: function(response) {
         var data = Ext.util.JSON.decode(response.responseText).data;
@@ -174,7 +174,6 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 	      this.setSaveDisabled(true);
 	  }
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
 
@@ -214,8 +213,8 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
     this.spot.show('main-toolbar');
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/settings/update_patterns'),
+    Paperpile.Ajax({
+      url: '/ajax/settings/update_patterns',
       params: params,
       success: function(response) {
         this.spot.hide();

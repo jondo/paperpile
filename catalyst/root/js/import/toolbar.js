@@ -1,30 +1,34 @@
 Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
-    // private
-    addComponentToMenu : function(m, c){
-        if(c instanceof Ext.Toolbar.Separator){
-            m.add('-');
-        }else if(Ext.isFunction(c.isXType)){
-            if(c.isXType('splitbutton')){
-                m.add(this.createMenuConfig(c, true));
-            }else if(c.isXType('button')){
-                m.add(this.createMenuConfig(c, !c.menu));
-            }else if(c.isXType('buttongroup')){
-                c.items.each(function(item){
-                     this.addComponentToMenu(m, item);
-                }, this);
-            } else if (c.isXType('buttonplus')) {
-		var bp = new Ext.ux.ButtonPlus(c);
-		m.add(bp);
-	    }
-        }
-    },
+  // private
+  addComponentToMenu: function(m, c) {
+    if (c instanceof Ext.Toolbar.Separator) {
+      m.add('-');
+    } else if (Ext.isFunction(c.isXType)) {
+      if (c.isXType('splitbutton')) {
+        m.add(this.createMenuConfig(c, true));
+      } else if (c.isXType('button')) {
+        m.add(this.createMenuConfig(c, !c.menu));
+      } else if (c.isXType('buttongroup')) {
+        c.items.each(function(item) {
+          this.addComponentToMenu(m, item);
+        },
+        this);
+      } else if (c.isXType('buttonplus')) {
+        var bp = new Ext.ux.ButtonPlus(c);
+        m.add(bp);
+      }
+    }
+  },
 
-  fitToSize: function(t) {
+  fitToSize: function(target) {
     // Mostly yoinked from the Ext source, Toolbar.js.
     // Changes are noted.
-
-    if(this.container.enableOverflow === false){
+    if (this.container.enableOverflow === false) {
       return;
+    }
+
+    if (this.hiddenItems === undefined) {
+      this.hiddenItems = [];
     }
 
     var tb = this.container;
@@ -33,62 +37,72 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
 
     // Figure out if and where the menuBreak is set.
     var menuBreakIndex = len;
-    for (i=0; i < len; i++) {
+    for (i = 0; i < len; i++) {
       var item = items[i];
       if (item.itemId == tb.menuBreakItemId) {
-	menuBreakIndex = i;
+        menuBreakIndex = i;
       }
     }
 
-    var w = t.dom.clientWidth,
-    lw = this.lastWidth || 0,
-    iw = t.dom.firstChild.offsetWidth,
-    clipWidth = w - this.triggerWidth,
-    hideIndex = -1;
-    
-    this.lastWidth = w;
-    
-    if(iw > w || (this.hiddens && w >= lw) || menuBreakIndex < len-1) {
-      var i, c, loopWidth = 0;
+    var width = target.dom.clientWidth,
+    tableWidth = target.dom.firstChild.offsetWidth,
+    clipWidth = width - this.triggerWidth,
+    lastWidth = this.lastWidth || 0,
+    hiddenItems = this.hiddenItems,
+    hasHiddens = hiddenItems.length != 0,
+    isLarger = width >= lastWidth;
 
-      for(i = 0; i < len; i++) {
-	c = items[i];
-	if(!c.isFill){
-	  loopWidth += this.getItemWidth(c);
-	  // Start hiding items at whichever comes first: the menuBreak item, or the natural overflow.
-          if(loopWidth > clipWidth || i > menuBreakIndex){
-            if(!(c.hidden || c.xtbHidden)){
-	      this.hideItem(c);
-	    }
+    this.lastWidth = width;
+
+    if (tableWidth > width || (hasHiddens && isLarger)) {
+      var items = this.container.items.items,
+      len = items.length,
+      loopWidth = 0,
+      item;
+
+      for (i = 0; i < len; i++) {
+        item = items[i];
+        if (!item.isFill) {
+          loopWidth += this.getItemWidth(item);
+          // Start hiding items at whichever comes first: the menuBreak item, or the natural overflow.
+          if (loopWidth > clipWidth || i > menuBreakIndex) {
+            if (! (item.hidden || item.xtbHidden)) {
+              this.hideItem(item);
+            }
           }
-        }else if(c.xtbHidden){
-	  this.unhideItem(c);
+        } else if (item.xtbHidden) {
+          this.unhideItem(item);
         }
       }
     }
-    if(this.hiddens){
+
+    hasHiddens = hiddenItems.length != 0;
+
+    if (hasHiddens) {
       this.initMore();
-      if(!this.lastOverflow){
-	this.container.fireEvent('overflowchange', this.container, true);
-	this.lastOverflow = true;
+
+      if (!this.lastOverflow) {
+        this.container.fireEvent('overflowchange', this.container, true);
+        this.lastOverflow = true;
       }
-    }else if(this.more){
+    } else if (this.more) {
       this.clearMenu();
       this.more.destroy();
       delete this.more;
-      if(this.lastOverflow){
-	this.container.fireEvent('overflowchange', this.container, false);
-	this.lastOverflow = false;
+
+      if (this.lastOverflow) {
+        this.container.fireEvent('overflowchange', this.container, false);
+        this.lastOverflow = false;
       }
     }
   }
 });
 
 Paperpile.Toolbar = function(config) {
-  Ext.apply(this,config);
+  Ext.apply(this, config);
   Paperpile.Toolbar.superclass.constructor.call(this);
 };
-Ext.extend(Paperpile.Toolbar,Ext.Toolbar, {
+Ext.extend(Paperpile.Toolbar, Ext.Toolbar, {
   menuBreakItemId: 'asdf',
   initComponent: function() {
     Ext.apply(this, {

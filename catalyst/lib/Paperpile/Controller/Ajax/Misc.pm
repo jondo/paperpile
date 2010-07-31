@@ -40,8 +40,11 @@ use 5.010;
 sub feed_list : Local {
   my ( $self, $c ) = @_;
   my $query  = $c->request->params->{query};
-  my $offset = $c->request->params->{start} || 0;
-  my $limit  = $c->request->params->{limit} || 10;
+  my $offset = $c->request->params->{start};
+  my $limit  = $c->request->params->{limit};
+
+  $offset = 0 unless (defined $offset);
+  $limit = 50 unless (defined $limit);
 
   $query = _escapeString($query);
 

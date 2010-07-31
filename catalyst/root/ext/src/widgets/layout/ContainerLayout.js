@@ -1,17 +1,11 @@
 /*!
- * Ext JS Library 3.1.0
- * Copyright(c) 2006-2009 Ext JS, LLC
+ * Ext JS Library 3.2.1
+ * Copyright(c) 2006-2010 Ext JS, Inc.
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
 /**
  * @class Ext.layout.ContainerLayout
- * <p>The ContainerLayout class is the default layout manager delegated by {@link Ext.Container} to
- * render any child Components when no <tt>{@link Ext.Container#layout layout}</tt> is configured into
- * a {@link Ext.Container Container}. ContainerLayout provides the basic foundation for all other layout
- * classes in Ext. It simply renders all child Components into the Container, performing no sizing or
- * positioning services. To utilize a layout that provides sizing and positioning of child Components,
- * specify an appropriate <tt>{@link Ext.Container#layout layout}</tt>.</p>
  * <p>This class is intended to be extended or created via the <tt><b>{@link Ext.Container#layout layout}</b></tt>
  * configuration property.  See <tt><b>{@link Ext.Container#layout}</b></tt> for additional details.</p>
  */
@@ -56,18 +50,48 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
     activeItem : null,
 
     constructor : function(config){
+        this.id = Ext.id(null, 'ext-layout-');
         Ext.apply(this, config);
     },
 
+    type: 'container',
+
+    /* Workaround for how IE measures autoWidth elements.  It prefers bottom-up measurements
+      whereas other browser prefer top-down.  We will hide all target child elements before we measure and
+      put them back to get an accurate measurement.
+    */
+    IEMeasureHack : function(target, viewFlag) {
+        var tChildren = target.dom.childNodes, tLen = tChildren.length, c, d = [], e, i, ret;
+        for (i = 0 ; i < tLen ; i++) {
+            c = tChildren[i];
+            e = Ext.get(c);
+            if (e) {
+                d[i] = e.getStyle('display');
+                e.setStyle({display: 'none'});
+            }
+        }
+        ret = target ? target.getViewSize(viewFlag) : {};
+        for (i = 0 ; i < tLen ; i++) {
+            c = tChildren[i];
+            e = Ext.get(c);
+            if (e) {
+                e.setStyle({display: d[i]});
+            }
+        }
+        return ret;
+    },
+
+    // Placeholder for the derived layouts
+    getLayoutTargetSize : Ext.EmptyFn,
+
     // private
     layout : function(){
-        var target = this.container.getLayoutTarget();
+        var ct = this.container, target = ct.getLayoutTarget();
         if(!(this.hasLayout || Ext.isEmpty(this.targetCls))){
-            target.addClass(this.targetCls)
+            target.addClass(this.targetCls);
         }
-        this.onLayout(this.container, target);
-        this.container.fireEvent('afterlayout', this.container, this);
-        this.hasLayout = true;
+        this.onLayout(ct, target);
+        ct.fireEvent('afterlayout', ct, this);
     },
 
     // private
@@ -82,39 +106,65 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
 
     // private
     renderAll : function(ct, target){
-        var items = ct.items.items;
-        for(var i = 0, len = items.length; i < len; i++) {
-            var c = items[i];
+        var items = ct.items.items, i, c, len = items.length;
+        for(i = 0; i < len; i++) {
+            c = items[i];
             if(c && (!c.rendered || !this.isValidParent(c, target))){
                 this.renderItem(c, i, target);
             }
         }
     },
 
-    // private
+    /**
+     * @private
+     * Renders the given Component into the target Element. If the Component is already rendered,
+     * it is moved to the provided target instead.
+     * @param {Ext.Component} c The Component to render
+     * @param {Number} position The position within the target to render the item to
+     * @param {Ext.Element} target The target Element
+     */
     renderItem : function(c, position, target){
-        if(c && !c.rendered){
-            c.render(target, position);
-            this.configureItem(c, position);
-        }else if(c && !this.isValidParent(c, target)){
-            if(Ext.isNumber(position)){
-                position = target.dom.childNodes[position];
+        if (c) {
+            if (!c.rendered) {
+                c.render(target, position);
+                this.configureItem(c, position);
+            } else if (!this.isValidParent(c, target)) {
+                if (Ext.isNumber(position)) {
+                    position = target.dom.childNodes[position];
+                }
+                
+                target.dom.insertBefore(c.getPositionEl().dom, position || null);
+                c.container = target;
+                this.configureItem(c, position);
             }
-            target.dom.insertBefore(c.getPositionEl().dom, position || null);
-            c.container = target;
-            this.configureItem(c, position);
         }
     },
 
-    // private
+    // private.
+    // Get all rendered items to lay out.
+    getRenderedItems: function(ct){
+        var t = ct.getLayoutTarget(), cti = ct.items.items, len = cti.length, i, c, items = [];
+        for (i = 0; i < len; i++) {
+            if((c = cti[i]).rendered && this.isValidParent(c, t)){
+                items.push(c);
+            }
+        };
+        return items;
+    },
+
+    /**
+     * @private
+     * Applies extraCls and hides the item if renderHidden is true
+     */
     configureItem: function(c, position){
-        if(this.extraCls){
+        if (this.extraCls) {
             var t = c.getPositionEl ? c.getPositionEl() : c;
             t.addClass(this.extraCls);
         }
+        
         // If we are forcing a layout, do so *before* we hide so elements have height/width
-        if(c.doLayout && this.forceLayout){
-            c.doLayout(false, true);
+        if (c.doLayout && this.forceLayout) {
+            c.doLayout();
         }
         if (this.renderHidden && c != this.activeItem) {
             c.hide();
@@ -122,54 +172,57 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
     },
 
     onRemove: function(c){
-         if(this.activeItem == c){
+        if(this.activeItem == c){
             delete this.activeItem;
-         }
-         if(c.rendered && this.extraCls){
+        }
+        if(c.rendered && this.extraCls){
             var t = c.getPositionEl ? c.getPositionEl() : c;
             t.removeClass(this.extraCls);
+        }
+    },
+
+    afterRemove: function(c){
+        if(c.removeRestore){
+            c.removeMode = 'container';
+            delete c.removeRestore;
         }
     },
 
     // private
     onResize: function(){
         var ct = this.container,
-            b = ct.bufferResize;
-
-        if (ct.collapsed){
+            b;
+        if(ct.collapsed){
             return;
         }
-
-        // Not having an ownerCt negates the buffering: floating and top level
-        // Containers (Viewport, Window, ToolTip, Menu) need to lay out ASAP.
-        if (b && ct.ownerCt) {
-            // If we do NOT already have a layout pending from an ancestor, schedule one.
-            // If there is a layout pending, we do nothing here.
-            // buffering to be deprecated soon
-            if (!ct.hasLayoutPending()){
-                if(!this.resizeTask){
-                    this.resizeTask = new Ext.util.DelayedTask(this.runLayout, this);
-                    this.resizeBuffer = Ext.isNumber(b) ? b : 50;
-                }
-                ct.layoutPending = true;
-                this.resizeTask.delay(this.resizeBuffer);
+        if(b = ct.bufferResize && ct.shouldBufferLayout()){
+            if(!this.resizeTask){
+                this.resizeTask = new Ext.util.DelayedTask(this.runLayout, this);
+                this.resizeBuffer = Ext.isNumber(b) ? b : 50;
             }
+            ct.layoutPending = true;
+            this.resizeTask.delay(this.resizeBuffer);
         }else{
-            ct.doLayout(false, this.forceLayout);
+            this.runLayout();
         }
     },
 
-    // private
     runLayout: function(){
         var ct = this.container;
-        ct.doLayout();
+        this.layout();
+        ct.onLayout();
         delete ct.layoutPending;
     },
 
     // private
     setContainer : function(ct){
-        // No longer use events to handle resize. Instead this will be handled through a direct function call.
-        /*
+        /**
+         * This monitorResize flag will be renamed soon as to avoid confusion
+         * with the Container version which hooks onWindowResize to doLayout
+         *
+         * monitorResize flag in this context attaches the resize event between
+         * a container and it's layout
+         */
         if(this.monitorResize && ct != this.container){
             var old = this.container;
             if(old){
@@ -179,34 +232,36 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
                 ct.on(ct.resizeEvent, this.onResize, this);
             }
         }
-        */
         this.container = ct;
     },
 
-    // private
+    /**
+     * Parses a number or string representing margin sizes into an object. Supports CSS-style margin declarations
+     * (e.g. 10, "10", "10 10", "10 10 10" and "10 10 10 10" are all valid options and would return the same result)
+     * @param {Number|String} v The encoded margins
+     * @return {Object} An object with margin sizes for top, right, bottom and left
+     */
     parseMargins : function(v){
-        if(Ext.isNumber(v)){
+        if (Ext.isNumber(v)) {
             v = v.toString();
         }
-        var ms = v.split(' ');
-        var len = ms.length;
-        if(len == 1){
-            ms[1] = ms[0];
-            ms[2] = ms[0];
-            ms[3] = ms[0];
-        }
-        if(len == 2){
+        var ms  = v.split(' '),
+            len = ms.length;
+            
+        if (len == 1) {
+            ms[1] = ms[2] = ms[3] = ms[0];
+        } else if(len == 2) {
             ms[2] = ms[0];
             ms[3] = ms[1];
-        }
-        if(len == 3){
+        } else if(len == 3) {
             ms[3] = ms[1];
         }
+        
         return {
-            top:parseInt(ms[0], 10) || 0,
-            right:parseInt(ms[1], 10) || 0,
+            top   :parseInt(ms[0], 10) || 0,
+            right :parseInt(ms[1], 10) || 0,
             bottom:parseInt(ms[2], 10) || 0,
-            left:parseInt(ms[3], 10) || 0
+            left  :parseInt(ms[3], 10) || 0
         };
     },
 
@@ -237,6 +292,10 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
      * @protected
      */
     destroy : function(){
+        // Stop any buffered layout tasks
+        if(this.resizeTask && this.resizeTask.cancel){
+            this.resizeTask.cancel();
+        }
         if(!Ext.isEmpty(this.targetCls)){
             var target = this.container.getLayoutTarget();
             if(target){
@@ -245,4 +304,3 @@ Ext.layout.ContainerLayout = Ext.extend(Object, {
         }
     }
 });
-Ext.Container.LAYOUTS['auto'] = Ext.layout.ContainerLayout;

@@ -106,16 +106,11 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   cleanDuplicates: function() {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/misc/clean_duplicates'),
+    Paperpile.Ajax({
+      url: '/ajax/misc/clean_duplicates',
       params: {
         grid_id: this.id
       },
-      method: 'GET',
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-      },
-      failure: Paperpile.main.onError,
       scope: this
     });
   }

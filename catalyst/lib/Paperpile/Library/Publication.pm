@@ -496,6 +496,8 @@ sub add_guid {
   my $what = shift;
   my $guid = shift;
 
+  return unless (defined $what);
+
   $what = 'folders' if ( $what eq 'FOLDER' );
   $what = 'tags'    if ( $what eq 'LABEL' );
 

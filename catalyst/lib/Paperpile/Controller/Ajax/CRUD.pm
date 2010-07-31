@@ -228,6 +228,7 @@ sub delete_entry : Local {
   $self->_update_counts($c);
 
   $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, $data );
+  $c->stash->{data}->{undo_url} = '/ajax/crud/undo_trash';
 
 }
 
@@ -633,7 +634,9 @@ sub batch_update : Local {
       pub  => $pub,
     );
 
-    $j->pub->_metadata_job( { id => $j->id, status => $j->status, msg => $j->info->{msg} } );
+    $j->hidden(1) if (scalar(@$data) == 1);
+
+    $j->pub->_metadata_job( { id => $j->id, status => $j->status, msg => $j->info->{msg}, hidden => $j->hidden } );
 
     push @jobs, $j;
   }
@@ -660,10 +663,12 @@ sub batch_download : Local {
   foreach my $pub (@$data) {
     my $j = Paperpile::Job->new(
       type => 'PDF_SEARCH',
-      pub  => $pub,
+      pub  => $pub
     );
 
-    $j->pub->_search_job( { id => $j->id, status => $j->status, msg => $j->info->{msg} } );
+    $j->hidden(1) if (scalar(@$data) == 1);
+
+    $j->pub->_search_job( { id => $j->id, status => $j->status, msg => $j->info->{msg}, hidden => $j->hidden } );
 
     push @jobs, $j;
   }

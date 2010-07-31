@@ -133,22 +133,18 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
           Paperpile.status.showBusy('Importing references to library');
         }
 
-        Ext.Ajax.request({
-          url: Paperpile.Url('/ajax/crud/insert_entry'),
+        Paperpile.Ajax({
+          url: '/ajax/crud/insert_entry',
           params: {
             selection: selection,
             grid_id: this.id
           },
           timeout: 10000000,
-          method: 'GET',
           success: function(response) {
-            var json = Ext.util.JSON.decode(response.responseText);
-            Paperpile.main.onUpdate(json.data);
             if (longImport) {
               Paperpile.status.clearMsg();
             }
           },
-          failure: Paperpile.main.onError,
           scope: this
         });
       },

@@ -54,6 +54,8 @@ sub grid : Local {
   }
 
   foreach my $job ( @{$jobs} ) {
+    next if ($job->hidden);
+
     my $tmp = $job->as_hash;
 
     $tmp->{size}       = $tmp->{info}->{size};
@@ -113,6 +115,7 @@ sub update : Local {
     my $all = $q->get_jobs();
 
     foreach my $job (@$all){
+      next if ($job->hidden);
       if (defined $job->pub) {
         my $pub = $job->pub;
         push @pub_list, $pub;
@@ -129,6 +132,7 @@ sub update : Local {
 
     foreach my $id ( @{$ids} ) {
       my $job = Paperpile::Job->new( { id => $id } );
+      next if ($job->hidden);
       if (defined $job->pub) {
         my $pub = $job->pub;
         push @pub_list, $pub;
@@ -170,6 +174,7 @@ sub cancel_jobs : Local {
     push @pub_list, $pub;
     $job->cancel;
   }
+
 
   my $q = Paperpile::Queue->new();
   $q->run;

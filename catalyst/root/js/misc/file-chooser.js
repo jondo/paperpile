@@ -191,12 +191,11 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
     path = path.replace(/^ROOT/, '');
 
     if (this.saveMode && this.warnOnExisting) {
-      Ext.Ajax.request({
-        url: Paperpile.Url('/ajax/files/stats'),
+      Paperpile.Ajax({
+        url: '/ajax/files/stats',
         params: {
           location: path
         },
-        method: 'GET',
         success: function(response) {
           var json = Ext.util.JSON.decode(response.responseText);
           if (json.stats.exists) {
@@ -212,7 +211,6 @@ Paperpile.FileChooser = Ext.extend(Ext.Window, {
             this.close();
           }
         },
-        failure: Paperpile.main.onError,
         scope: this
       });
     } else {

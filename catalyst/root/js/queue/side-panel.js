@@ -147,9 +147,8 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
   },
 
   pauseQueue: function() {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/queue/pause_resume'),
-      method: 'GET',
+    Paperpile.Ajax({
+      url: '/ajax/queue/pause_resume',
       params: {},
       success: function(response, opts) {
         var json = Ext.util.JSON.decode(response.responseText);
@@ -158,9 +157,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
           Paperpile.main.queueUpdate();
         }
 
-        Paperpile.main.onUpdate(json);
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
 

@@ -1,30 +1,11 @@
-Paperpile.NewFeedWindow = function(config) {
-  Ext.apply(this, config);
-  Paperpile.NewFeedWindow.superclass.constructor.call(this, config);
-};
-
-Ext.extend(Paperpile.NewFeedWindow, Ext.Window, {
-
+Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
   initComponent: function() {
+    var cb = this.callback;
 
-    // Create the manual entry text box.
-    this.manualEntryTextBox = new Ext.form.TextField({
-      emptyText: 'Paste your RSS URL here.',
-      itemId: 'manual_entry',
-      fieldLabel: 'Load RSS feed',
-      value: '',
-      width: 300
-    });
-
-    // Dummy store for RSS feed 'search'...
-    this.dummyFeedStore = new Ext.data.ArrayStore({
-      id: 'name',
-      fields: [
-        'name',
-        'url'],
-      data: [
-        ['Science', 'http://www.sciencemag.org/asdf.xml'],
-        ['Nature', 'http://www.nature.com/asdf.xml']]
+    this.addButton = new Ext.Button({
+      text: 'Add',
+      cls: 'x-btn-text',
+      handler: Ext.emptyFn
     });
 
     this.remoteFeedStore = new Ext.data.JsonStore({
@@ -39,108 +20,107 @@ Ext.extend(Paperpile.NewFeedWindow, Ext.Window, {
         'url']
     });
 
-    this.remoteFeedCombobox = new Ext.form.ComboBox({
-      fieldLabel: 'Find a Journal Feed',
-      emptyText: 'Start typing to search',
-      width: 300,
+    this.entryField = new Ext.form.ComboBox({
+      hideLabel: true,
       itemId: 'remote_feed_combo',
       store: this.remoteFeedStore,
-      loadingText: 'Searching the RSS library...',
-      listEmptyText: 'No feeds found!',
+      maxHeight: 200,
+      loadingText: '',
+      listEmptyText: '',
       mode: 'remote',
       displayField: 'name',
       valueField: 'url',
-      forceSelection: true,
-      //      typeAhead: true,
+      forceSelection: false,
+      lazyRender: true,
       tpl: ['<tpl for="."><div class="x-combo-list-item">',
-        '<div style="font-weight:bold;" ext:qtip="Feed URL: {url}">{name}</div>',
-        //        '<div style="color:gray;font-style:italic;">{url}</div>',
-        '</div></tpl>'].join(''),
-      pageSize: 10
-    });
-
-    this.panel = new Ext.form.FormPanel({
-      labelAlign: 'top',
-      frame: true,
-      bodyStyle: 'padding:10px 10px 0',
-      cls: 'pp-feed-chooser',
-      defaults: {},
-      items: [
-        this.manualEntryTextBox, {
-          xtype: 'label',
-          text: '- or -',
-          height: 100,
-          width: '100%'
-        },
-        this.remoteFeedCombobox],
-      buttons: [{
-        text: 'Cancel',
-        itemId: 'cancel_button',
-        cls: 'x-btn-text-icon cancel',
-        handler: this.onCancelButton,
-        scope: this
-      },
-      {
-        text: 'Ok',
-        itemId: 'ok_button',
-        cls: 'x-btn-text-icon ok',
-        handler: this.onOkButton,
-        scope: this
-      }]
+        '<div style="">{name}</div>',
+        '</div></tpl>'].join('')
     });
 
     Ext.apply(this, {
-      title: 'New RSS Feed',
-      width: 500,
-      height: 250,
-      plain: true,
-      modal: true,
-      layout: 'fit',
-      items: this.panel
+      floating: true,
+      frame: true,
+      defaultType: 'label',
+      bodyStyle: 'font-size:9px;padding:5px;',
+      header: false,
+      width: 300,
+      renderTo: document.body,
+      style: {
+        padding: '5px'
+      },
+      items: [{
+        xtype: 'label',
+        text: 'Begin typing to find a journal or paste a feed url'
+      },
+      {
+        xtype: 'compositefield',
+        hideLabel: true,
+        style: {
+          'margin-top': '5px',
+          'margin-bottom': '5px'
+        },
+        items: [
+          this.entryField, {
+            xtype: 'button',
+            text: 'Add',
+            width: '35px',
+            handler: this.addFeed,
+            scope: this
+          }]
+      },
+      {
+        xtype: 'label',
+        text: 'e.g., http://www.pnas.org/rss/current.xml or PLoS One'
+      }]
     });
 
-    Paperpile.NewFeedWindow.superclass.initComponent.call(this);
+    Paperpile.NewFeedPanel.superclass.initComponent.call(this);
 
-    this.on('afterrender', this.myOnRender, this);
-  },
+    Ext.apply(this, {
+      callback: cb
+    });
 
-  myOnRender: function() {
-    this.panel.items.each(function(item, index, length) {
-      item.on('focus', this.onFocus, this, [item]);
+    this.on('show', function(panel) {
+      this.entryField.focus();
     },
     this);
-
-    // Swallow key events so the grid doesn't take em
-    // (i.e. ctrl-A, ctrl-C etc)
-//    this.getEl().swallowEvent(['keypress', 'keydown']);
-
+    this.on('hide', function(panel) {
+      this.entryField.setValue('');
+    },
+    this);
+    this.on('render', function(panel) {
+      this.myAfterRender();
+    },
+    this, {
+      single: true
+    });
   },
-  onFocus: function(field) {
-    this.panel.getEl().select('.x-form-item').removeClass("active");
-    var f = field.el.findParent('.x-form-item', 5, true);
-    if (f !== undefined) {
-      f.addClass("active");
+
+  addFeed: function() {
+    var url = this.entryField.getValue();
+    if (url == '') {
+      url = this.entryField.el.dom.value;
     }
+    this.callback(url);
+    this.onCancel();
   },
 
-  getFeedUrl: function() {
-    if (this.manualEntryTextBox.getValue() != '') {
-      return this.manualEntryTextBox.getValue();
-    } else if (this.remoteFeedCombobox.getValue() != '') {
-      return this.remoteFeedCombobox.getValue();
-    } else return '';
+  myAfterRender: function() {
+    this.keys = new Ext.KeyMap(this.getEl(), [{
+      key: Ext.EventObject.ESC,
+      fn: this.onCancel,
+      scope: this
+    },
+    {
+      key: Ext.EventObject.ENTER,
+      fn: this.addFeed,
+      scope: this
+    }]);
+    this.entryField.on('select', this.addFeed, this);
   },
 
-  onOkButton: function() {
-    this.hide(); // Hide but keep UI elements (so we can get the value from the DOM).
-    var url = this.getFeedUrl();
-    Paperpile.main.tree.createNewFeedNode(url);
-
-    this.close(); // Dispose of UI elements.
-  },
-
-  onCancelButton: function() {
-    this.close();
+  onCancel: function() {
+    this.hide();
+    this.entryField.setValue('');
   }
-
 });

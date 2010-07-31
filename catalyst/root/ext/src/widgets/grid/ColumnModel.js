@@ -1,6 +1,6 @@
 /*!
- * Ext JS Library 3.1.0
- * Copyright(c) 2006-2009 Ext JS, LLC
+ * Ext JS Library 3.2.1
+ * Copyright(c) 2006-2010 Ext JS, Inc.
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
@@ -111,7 +111,7 @@ Ext.grid.ColumnModel = Ext.extend(Ext.util.Observable, {
      * configuration options to all <tt><b>{@link #columns}</b></tt>.  Configuration options specified with
      * individual {@link Ext.grid.Column column} configs will supersede these <tt><b>{@link #defaults}</b></tt>.
      */
-    
+
     constructor : function(config){
         /**
 	     * An Array of {@link Ext.grid.Column Column definition} objects representing the configuration
@@ -201,8 +201,9 @@ Ext.grid.ColumnModel = Ext.extend(Ext.util.Observable, {
             delete this.totalWidth;
             for(i = 0, len = this.config.length; i < len; i++){
                 c = this.config[i];
-                if(c.editor){
-                    c.editor.destroy();
+                if(c.setEditor){
+                    //check here, in case we have a special column like a CheckboxSelectionModel
+                    c.setEditor(null);
                 }
             }
         }
@@ -219,7 +220,7 @@ Ext.grid.ColumnModel = Ext.extend(Ext.util.Observable, {
         for(i = 0, len = config.length; i < len; i++){
             c = Ext.applyIf(config[i], this.defaults);
             // if no id, create one using column's ordinal position
-            if(typeof c.id == 'undefined'){
+            if(Ext.isEmpty(c.id)){
                 c.id = i;
             }
             if(!c.isColumn){
@@ -343,7 +344,7 @@ var columns = grid.getColumnModel().getColumnsBy(function(c){
         }
         return this.config[col].renderer;
     },
-    
+
     getRendererScope : function(col){
         return this.config[col].scope;
     },
@@ -508,7 +509,11 @@ var grid = new Ext.grid.GridPanel({
      * @return {Boolean}
      */
     isCellEditable : function(colIndex, rowIndex){
-        return (this.config[colIndex].editable || (typeof this.config[colIndex].editable == "undefined" && this.config[colIndex].editor)) ? true : false;
+        var c = this.config[colIndex],
+            ed = c.editable;
+
+        //force boolean
+        return !!(ed || (!Ext.isDefined(ed) && c.editor));
     },
 
     /**
@@ -581,16 +586,19 @@ myGrid.getColumnModel().setHidden(0, true); // hide column 0 (0 = the first colu
      * @param {Object} editor The editor object
      */
     setEditor : function(col, editor){
-        Ext.destroy(this.config[col].editor);
-        this.config[col].editor = editor;
+        this.config[col].setEditor(editor);
     },
 
     /**
      * Destroys this column model by purging any event listeners, and removing any editors.
      */
     destroy : function(){
-        for(var i = 0, c = this.config, len = c.length; i < len; i++){
-            Ext.destroy(c[i].editor);
+        var c;
+        for(var i = 0, len = this.config.length; i < len; i++){
+            c = this.config[i];
+            if(c.setEditor){
+                c.setEditor(null);
+            }
         }
         this.purgeListeners();
     }

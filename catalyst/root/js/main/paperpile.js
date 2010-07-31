@@ -22,6 +22,9 @@ IS_TITANIUM = !(window['Titanium'] == undefined);
 IS_CHROME = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
 Paperpile.Url = function(url) {
+  if (url.match("127.0.0.1")) {
+    return url;
+  }
   return (IS_TITANIUM) ? 'http://127.0.0.1:3210' + url : url;
 };
 
@@ -33,6 +36,58 @@ Paperpile.log = function() {
   } else if (window.console) {
     console.log(arguments);
   }
+};
+
+// This is a wrapper around the Ext.Ajax.request function call.
+// If we need to add any global behavior to Ajax calls, put it
+// here.
+Paperpile.Ajax = function(config) {
+
+  // A method which will run *before* the success function defined
+  // by the passed config.
+  var success = function(response) {
+    var json = Ext.util.JSON.decode(response.responseText);
+    if (json.data) {
+      Paperpile.main.onUpdate(json.data);
+    }
+    if (json.callback) {
+      Paperpile.main.onCallback(json.callback);
+    }
+  };
+
+  var failure = function() {
+    Paperpile.log("Failure!");
+  };
+  if (Paperpile.main != undefined) {
+    failure = Paperpile.main.onError;
+  }
+
+  if (!config.suppressDefaults) {
+
+    if (config.success) {
+      config.success = config.success.createInterceptor(success);
+    } else {
+      config.success = success;
+    }
+    if (config.failure) {
+      config.failure = config.failure.createInterceptor(failure);
+    } else {
+      config.failure = failure;
+    }
+  }
+
+  config.url = Paperpile.Url(config.url);
+
+  if (!config.method) {
+    config.method = 'GET';
+  }
+
+  if (!config.scope) {
+    config.scope = Paperpile.main;
+  }
+
+  Paperpile.log(config);
+  return Ext.Ajax.request(config);
 };
 
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
@@ -95,6 +150,15 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
 
     Paperpile.Viewport.superclass.initComponent.call(this);
+
+    this.mon(Ext.getBody(), 'click', function(event, target, options) {
+      if (target.href) {
+        if (!target.href.match(/(app|paperpile)/i)) {
+          event.stopEvent();
+          Paperpile.utils.openURL(target.href);
+        }
+      }
+    });
 
     this.tabs = Ext.getCmp('tabs');
     this.dd = new Paperpile.DragDropManager();
@@ -194,25 +258,19 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   // sel = 'ALL' or guids of selected pubs.
   deleteFromFolder: function(sel, grid, folder_id, callback) {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/remove_from_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/remove_from_collection',
       params: {
         selection: sel,
         grid_id: grid.id,
         collection_guid: folder_id,
-        type: 'FOLDER',
+        type: 'FOLDER'
       },
-      method: 'GET',
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        // Update the status of the other views.
-        Paperpile.main.onUpdate(json.data);
-
         if (callback) {
           callback.call(grid);
         }
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
 
@@ -242,21 +300,15 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   storeSettings: function(newSettings, callback, scope) {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/settings/set_settings'),
-      params: newSettings,
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        for (var key in newSettings) {}
-      },
-      failure: Paperpile.main.onError,
-      scope: this
+    Paperpile.Ajax({
+      url: '/ajax/settings/set_settings',
+      params: newSettings
     });
   },
 
   loadSettings: function(callback, scope) {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/misc/get_settings'),
+    Paperpile.Ajax({
+      url: '/ajax/misc/get_settings',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         this.globalSettings = json.data;
@@ -264,7 +316,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           callback.createDelegate(scope)();
         }
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
@@ -404,45 +455,39 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // Submit a PDF extraction job, optionally including the tree node
   // representing the target collection for import.
   submitPdfExtractionJobs: function(path, treeNode) {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/pdfextract/submit'),
+    Paperpile.Ajax({
+      url: '/ajax/pdfextract/submit',
       params: {
         path: path,
         collection_guids: [treeNode ? treeNode.id : null]
       },
       success: function(response) {
         Paperpile.main.queueUpdate();
-      },
-      failure: Paperpile.main.onError
+      }
     });
   },
 
   attachFile: function(grid, guid, path, isPDF) {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/attach_file'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/attach_file',
       params: {
         guid: guid,
         grid_id: grid.id,
         file: path,
         is_pdf: (isPDF) ? 1 : 0
       },
-      method: 'GET',
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
-
         // TODO: add a status message and an undo function.
       },
-      failure: Paperpile.main.onError,
-      scope: this,
+      scope: this
     });
 
   },
 
   countFilesAndTriggerExtraction: function(path) {
     // First count the PDFs
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/pdfextract/count_files'),
+    Paperpile.Ajax({
+      url: '/ajax/pdfextract/count_files',
       params: {
         path: path
       },
@@ -481,8 +526,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           this.submitPdfExtractionJobs(path);
         }
       },
-      scope: this,
-      failure: Paperpile.main.onError
+      scope: this
     });
   },
 
@@ -565,10 +609,23 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
 
     if (data.file_sync_delta) {
-      if (data.file_sync_delta.length > 0) {
+      if (data.file_sync_delta.length > 0 && this.bibtexModeIsEnabled()) {
         this.triggerFileSync(data.file_sync_delta);
       }
     }
+  },
+
+  bibtexModeIsEnabled: function() {
+    var bibtex = this.getSetting('bibtex');
+    if (bibtex.bibtex_mode == 1) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  onCallback: function(callback) {
+    Paperpile.log(callback);
   },
 
   // Trigger an update of file synchronization for a list of guids of
@@ -595,6 +652,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // update is triggered vie triggerFileSync
   fireFileSync: function() {
 
+    // Don't fire anything if bibtex mode is off.
     var collections = this.fileSyncStatus.collections;
     for (var i = 0; i < collections.length; i++) {
       var guid = collections[i];
@@ -602,12 +660,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       node.getUI().updateWorking('Syncing with external file');
     }
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/sync_files'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/sync_files',
       params: {
         collections: this.fileSyncStatus.collections.join(',')
       },
-      method: 'GET',
       success: function(response) {
         var data = Ext.util.JSON.decode(response.responseText).data;
 
@@ -633,7 +690,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         }
 
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
 
@@ -773,13 +829,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.queuePollStatus = 'WAITING';
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/queue/update'),
+    Paperpile.Ajax({
+      url: '/ajax/queue/update',
       params: {
         get_queue: true,
         ids: this.runningJobs
       },
-      method: 'GET',
       success: function(response) {
         this.queuePollStatus = 'DONE';
         var data = Ext.util.JSON.decode(response.responseText).data;
@@ -788,11 +843,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           this.stopQueueUpdate();
         }
 
-        Paperpile.main.onUpdate(data);
         this.currentQueueData = data;
         this.runningJobs = data.queue.running_jobs;
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
@@ -936,8 +989,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     // First call line_feed to make sure all of the relevant catalyst
     // log is flushed. Wait 5 seconds to make sure it is sent to the
     // frontend before we send it back to the backend. 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/misc/line_feed'),
+    Paperpile.Ajax({
+      url: '/ajax/misc/line_feed',
       success: function(response) {
         (function() {
           var params = Ext.apply(data, {
@@ -946,20 +999,19 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           // Turn off logging to avoid logging the log when it is sent
           // to the backend...
           Paperpile.isLogging = 0;
-          Ext.Ajax.request({
-            url: Paperpile.Url(url),
+          Paperpile.Ajax({
+            url: url,
             params: params,
             scope: this,
             success: function() {
               // Turn on logging again. Wait 10 seconds to make sure it is
               // turned off when the actual log is written.
-		Paperpile.status.clearMessageNumber(number,true);
+              Paperpile.status.clearMessageNumber(number, true);
               (function() {
                 Paperpile.isLogging = 1;
               }).defer(10000);
-            },
-            failure: Paperpile.main.onError
-          })
+            }
+          });
         }).defer(3000);
       },
       scope: this
@@ -978,15 +1030,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   pollServer: function() {
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/app/heartbeat'),
+    Paperpile.Ajax({
+      url: '/ajax/app/heartbeat',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
 
         for (var jobID in json.queue) {
-
           var callback = json.queue[jobID].callback;
-
           if (callback) {
             if (callback.notify) {
               Paperpile.status.clearMsg();
@@ -999,10 +1049,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               this.onUpdateDB();
             }
           }
-
         }
       },
-
       failure: function(response) {
         // do something reasonable here when server contact breaks down.
       }
@@ -1011,18 +1059,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   inc_read_counter: function(data) {
     if (data._rowid) {
-      Ext.Ajax.request({
-        url: Paperpile.Url('/ajax/misc/inc_read_counter'),
+      Paperpile.Ajax({
+        url: '/ajax/misc/inc_read_counter',
         params: {
           rowid: data._rowid,
           guid: data.guid,
           times_read: data.times_read
         },
-        success: function(response) {
-          var json = Ext.util.JSON.decode(response.responseText);
-          Paperpile.main.onUpdate(json.data);
-        },
-        failure: Paperpile.main.onError,
         scope: this
       });
     }

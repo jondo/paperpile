@@ -146,15 +146,16 @@ sub submit {
   foreach my $job (@$jobs){
     my $id     = $self->dbh->quote( $job->id );
     my $status = $self->dbh->quote( $job->status );
+    my $hidden = $self->dbh->quote( $job->hidden );
     my $type = $self->dbh->quote( $job->type);
     my $guid = $self->dbh->quote( $job->pub->guid );
 
     # We re-insert on the same position when a rowid is given (used in retry_jobs)
     if (defined $job->_rowid){
       my $rowid = $job->_rowid;
-      $self->dbh->do("REPLACE INTO Queue (rowid, jobid, status, type, guid, error, duration) VALUES ($rowid, $id, $status, $type, $guid, 0, 0)");
+      $self->dbh->do("REPLACE INTO Queue (rowid, jobid, status, hidden, type, guid, error, duration) VALUES ($rowid, $id, $status, $hidden, $type, $guid, 0, 0)");
     } else {
-      $self->dbh->do("INSERT INTO Queue (jobid, status, type, guid, error, duration) VALUES ($id, $status, $type, $guid, 0, 0)");
+      $self->dbh->do("INSERT INTO Queue (jobid, status, hidden, type, guid, error, duration) VALUES ($id, $status, $hidden, $type, $guid, 0, 0)");
     }
   }
 
@@ -210,11 +211,11 @@ sub update_stats {
 
   my $self = shift;
 
-  my $sth = $self->dbh->prepare("SELECT jobid, status, type, duration FROM Queue");
+  my $sth = $self->dbh->prepare("SELECT jobid, status, hidden, type, duration FROM Queue");
 
-  my ( $job_id, $status, $type, $duration );
+  my ( $job_id, $status, $hidden, $type, $duration );
 
-  $sth->bind_columns( \$job_id, \$status, \$type, \$duration );
+  $sth->bind_columns( \$job_id, \$status, \$hidden, \$type, \$duration );
   $sth->execute;
 
   my $sum_duration = 0;
@@ -239,6 +240,10 @@ sub update_stats {
 
     if ($status eq 'RUNNING'){
       push @running, $job_id;
+    }
+
+    if ($hidden == 1) {
+	next;
     }
 
     if ( $status eq 'PENDING' or $status eq 'RUNNING' ) {

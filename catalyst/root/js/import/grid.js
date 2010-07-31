@@ -125,6 +125,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'EDIT',
         tooltip: 'Edit the selected reference'
       }),
+      'AUTO_FILL': new Ext.Action({
+        text: 'Edit',
+        handler: function() {
+          this.updateMetadata();
+        },
+        scope: this,
+        cls: 'x-btn-text-icon edit',
+        icon: '/images/icons/pencil_go.png',
+        itemId: 'AUTO_FILL',
+        tooltip: 'Auto-fill data gathered from online resources.'
+      }),
 
       'DELETE': new Ext.Action({
         text: 'Move to Trash',
@@ -285,7 +296,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       'TB_FILL': new Ext.Toolbar.Fill({
         itemId: 'TB_FILL'
+      }),
+      'FONT_SIZE': new Ext.Action({
+        itemId: 'FONT_SIZE',
+        handler: this.fontSize,
+        scope: this
       })
+
     };
 
     this.actions['PDF_COMBINED_BUTTON'] = new Ext.ux.ButtonPlus({
@@ -390,6 +407,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.keys = new Ext.ux.KeyboardShortcuts(this.getView().focusEl);
 
     // Standard grid shortcuts.
+    this.keys.bindAction('ctrl-q', this.actions['FONT_SIZE']);
     this.keys.bindAction('ctrl-a', this.actions['SELECT_ALL']);
     this.keys.bindAction('[Del,46]', this.actions['DELETE']);
 
@@ -507,6 +525,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       //      this.getSelectionModel().selectRowAndSetCursor.defer(10,this.getSelectionModel(),[0]);
     }];
 
+  },
+
+  fontSize: function() {
+    Paperpile.log("Hey!");
+    Ext.getBody().setStyle({
+      'font-size': '24px'
+    });
   },
 
   setPageSize: function(pageSize) {
@@ -826,12 +851,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // if this data gets written or not as any subsequent call
     // will overwrite it or will never touch it because the
     // frontend does not know about it.
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/misc/cancel_request'),
+    Paperpile.Ajax({
+      url: '/ajax/misc/cancel_request',
       params: {
         cancel_handle: 'grid_' + this.id,
-        kill: 1,
-      },
+        kill: 1
+      }
     });
   },
 
@@ -946,7 +971,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<h2>Reference Info</h2>',
       '<dl class="pp-ref-info">',
       '<tpl if="_pubtype_name">',
-      '  <dt>Type: </dt><dd>{_pubtype_name}',  
+      '  <dt>Type: </dt><dd>{_pubtype_name}',
       '  <tpl if="howpublished">({howpublished})</tpl>',
       '</dd>',
       '</tpl>',
@@ -962,14 +987,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<tpl if="doi">',
       '<div class="link-hover">',
       '  <dt>DOI: </dt>',
-      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open DOI link" action="doi-link"></div>',
+      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open DOI link in browser" action="doi-link"></div>',
       '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy DOI URL to clipboard" action="doi-copy"></div>',
       '<dd class="pp-info-doi">{doi}</dd>',
       '</div>',
       '</tpl>',
       '<tpl if="eprint">',
       '<div class="link-hover">',
-      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open Eprint link" action="eprint-link"></div>',
+      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open Eprint link in browser" action="eprint-link"></div>',
       '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy Eprint URL to clipboard" action="eprint-copy"></div>',
       '  <dt>Eprint: </dt>',
       '  <dd>{eprint}</dd>',
@@ -977,7 +1002,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '</tpl>',
       '<tpl if="pmid">',
       '<div class="link-hover">',
-      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open PubMed link" action="pmid-link"></div>',
+      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open PubMed link in browser" action="pmid-link"></div>',
       '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy PubMed URL to clipboard" action="pmid-copy"></div>',
       '  <dt>PubMed ID: </dt><dd class="pp-info-pmid">{pmid}</dd>',
       '</div>',
@@ -1007,9 +1032,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     var linkOuts = [
       '<tpl if="trashed==0">',
-
       '  <tpl if="linkout || doi">',
       '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
+<<<<<<< HEAD:catalyst/root/js/import/grid.js
       '    <tpl if="doi">',
       '      <p><a href="#" onClick="Paperpile.utils.openURL(\'http://dx.doi.org/{doi}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s Site</a></p>',
       '    </tpl>',
@@ -1017,14 +1042,26 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '      <p><a href="#" onClick="Paperpile.utils.openURL(\'{linkout}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s Site</a></p>',
       '    </tpl>',
       '    </div>',
+=======
+>>>>>>> 63940181c1cdc7b8188deb130f4649b2f84b3b0c:catalyst/root/js/import/grid.js
       '  </tpl>',
-
       '  <tpl if="!linkout && !doi">',
-      '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style2">',
-      '      <p class="pp-action-inactive pp-action-go-inactive">No link to publisher available</p>',
-      '    </div>',
+      '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
       '  </tpl>',
-
+      '  <ul>',
+      '  <tpl if="doi">',
+      '    <li><a href="#" onClick="Paperpile.utils.openURL(\'http://dx.doi.org/{doi}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></li>',
+      '   </tpl>',
+      '   <tpl if="!doi && linkout">',
+      '     <li><a href="#" onClick="Paperpile.utils.openURL(\'{linkout}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></li>',
+      '   </tpl>',
+      '   <tpl if="!linkout && !doi">',
+      '   <li><a class="pp-action-inactive pp-action-go-inactive">No link to publisher available</a></li>',
+      '   </tpl>',
+      '   <li><a href="#" action="email" class="pp-textlink pp-action pp-action-email">E-mail Reference</a></li>',
+      '  </ul>',
+      '  </div>',
+      // Attachments box.
       '  <div class="pp-box pp-box-side-panel pp-box-style2"',
       '    <h2>PDF</h2>',
       '    <div id="search-download-widget-{id}" class="pp-search-download-widget"></div>',
@@ -1042,7 +1079,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    </tpl>',
       '    <tpl if="_imported">',
       '      <ul>',
-      '        <li id="attach-file-{id}" class="pp-action pp-action-attach-file"><a href="#" class="pp-textlink" action="attach-file">Attach File</a></li>',
+      '        <li id="attach-file-{id}"><a href="#" class="pp-textlink pp-action pp-action-attach-file" action="attach-file">Attach File</a></li>',
       '      </ul>',
       '    </tpl>',
       '  </div>',
@@ -1079,21 +1116,32 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '    <ul> ',
       '    <div style="clear:both;"></div>',
-      '      <li class="pp-action pp-action-update-metadata"> <a  href="#" class="pp-textlink" action="update-metadata">Update Metadata</a> </li>',
-      '      <li class="pp-action pp-action-search-pdf"> <a  href="#" class="pp-textlink" action="batch-download">Download PDFs</a> </li>',
-      '      <li class="pp-action pp-action-trash"> <a  href="#" class="pp-textlink" action="delete-ref">Move to Trash</a> </li>',
+      '      <li><a href="#" class="pp-action pp-textlink pp-action-update-metadata" action="update-metadata">Auto-complete data</a></li>',
+      '      <li><a href="#" class="pp-action pp-textlink pp-action-search-pdf" action="batch-download">Download PDFs</a> </li>',
+      '      <li><a  href="#" class="pp-textlink pp-action pp-action-trash" action="delete-ref">Move to Trash</a> </li>',
       '    </ul>',
       '    <ul> ',
       '    <div style="clear:both;margin-top:2em;"></div>',
+<<<<<<< HEAD:catalyst/root/js/import/grid.js
       '      <li class="pp-action pp-action-clipboard"> <a  href="#" class="pp-textlink" action="copy-text">Copy as Text</a> </li>',
       '      <tpl if="isBibtexMode">',
       '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-bibtex">Copy as BibTeX</a> </li>',
       '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-keys">Copy LaTeX Citation</a> </li>',
+=======
+      '      <li><a  href="#" class="pp-textlink pp-action pp-action-clipboard" action="copy-text">Copy references as text</a> </li>',
+      '      <tpl if="isBibtexMode">',
+      '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-bibtex">Copy references as BibTeX</a> </li>',
+      '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-keys">Copy LaTeX citation</a> </li>',
+>>>>>>> 63940181c1cdc7b8188deb130f4649b2f84b3b0c:catalyst/root/js/import/grid.js
       '      </tpl>',
       '    </ul>',
       '    <ul>',
       '    <div style="clear:both;margin-top:2em;"></div>',
+<<<<<<< HEAD:catalyst/root/js/import/grid.js
       '      <li class="pp-action pp-action-email"> <a  href="#" class="pp-textlink" action="email">E-mail References</a> </li>',
+=======
+      '      <li><a  href="#" class="pp-textlink pp-action pp-action-email" action="email">E-mail references</a> </li>',
+>>>>>>> 63940181c1cdc7b8188deb130f4649b2f84b3b0c:catalyst/root/js/import/grid.js
       '    </ul>',
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '   <dl>',
@@ -1123,6 +1171,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'TB_BREAK',
       'PDF_COMBINED_BUTTON2',
       this.createSeparator('TB_VIEW_SEP'),
+      'EDIT',
+      'AUTO_FILL',
       'SELECT_ALL',
       'DELETE',
       this.createSeparator('TB_DEL_SEP'),
@@ -1139,6 +1189,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     'PDF_COMBINED_BUTTON',
       this.createContextSeparator('CONTEXT_VIEW_SEP'),
       'EDIT',
+      'AUTO_FILL',
       'SELECT_ALL',
       'DELETE',
       this.createContextSeparator('CONTEXT_DEL_SEP'),
@@ -1447,14 +1498,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         this.getSelectionModel().un('beforerowselect', blockingFunction, this);
       }).defer(20000, this);
 
-      var transactionID = Ext.Ajax.request({
-        url: Paperpile.Url('/ajax/crud/complete_entry'),
+      var transactionID = Paperpile.Ajax({
+        url: '/ajax/crud/complete_entry',
         params: {
           selection: selection,
           grid_id: this.id,
-          cancel_handle: this.id + '_lookup',
+          cancel_handle: this.id + '_lookup'
         },
-        method: 'GET',
         success: function(response) {
           var json = Ext.util.JSON.decode(response.responseText);
 
@@ -1468,18 +1518,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             return;
           }
 
-          Paperpile.main.onUpdate(json.data);
           Paperpile.status.clearMsg();
 
           this.updateButtons();
           this.getPluginPanel().updateDetails();
-
         },
         failure: function(response) {
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
-          Paperpile.main.onError(response);
         },
         scope: this
       });
@@ -1491,12 +1538,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     clearTimeout(this.timeoutWarn);
     clearTimeout(this.timeoutAbort);
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/misc/cancel_request'),
+    Paperpile.Ajax({
+      url: '/ajax/misc/cancel_request',
       params: {
         cancel_handle: this.id + '_lookup',
-        kill: 1,
-      },
+        kill: 1
+      }
     });
   },
 
@@ -1598,8 +1645,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   getFormattedText: function(module, format, callback) {
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/plugins/export'),
+    Paperpile.Ajax({
+      url: '/ajax/plugins/export',
       params: {
         grid_id: this.id,
         selection: this.getSelection(),
@@ -1607,16 +1654,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         export_out_format: format,
         get_string: true
       },
-      method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         var string = json.data.string;
         callback.call(this, string);
       },
-      scope: this,
-      failure: function(response) {
-        Paperpile.main.onError(response);
-      }
+      scope: this
     });
   },
 
@@ -1643,7 +1686,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       if (string.length > 1024) {
         string = string.replace(/%0A/g, "\n");
         Titanium.UI.Clipboard.setText(string);
-        string = "[Hit Ctrl-V to paste citations here]";
+        var platform = Paperpile.utils.get_platform();
+        if (platform == 'osx') {
+          string = "[Hit Command-V to paste citations here]";
+        } else if (platform == 'windows') {
+          string = "[Hit Ctrl-V to paste citations here]";
+        } else {
+          string = "[Use the paste command to insert citations here]";
+        }
       }
 
       var link = [
@@ -1689,20 +1739,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       Paperpile.status.showBusy('Restoring references');
     }
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/delete_entry'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/delete_entry',
       params: {
         selection: selection,
         grid_id: this.id,
         mode: mode
       },
-      method: 'GET',
       timeout: 10000000,
       success: function(response) {
         var data = Ext.util.JSON.decode(response.responseText);
         var num_deleted = data.num_deleted;
-
-        Paperpile.main.onUpdate(data.data);
 
         // Does what it says: adds to the list of functions to call when the grid is next reloaded. This is handled in the customized 'onload' handler up at the top of the file.
         if (!this.doAfterNextReload) {
@@ -1724,12 +1771,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             callback: function(action) {
               // TODO: does not show up, don't know why:
               Paperpile.status.showBusy('Undo...');
-              Ext.Ajax.request({
-                url: Paperpile.Url('/ajax/crud/undo_trash'),
-                method: 'GET',
+              Paperpile.Ajax({
+                url: '/ajax/crud/undo_trash',
                 success: function(response) {
-                  var json = Ext.util.JSON.decode(response.responseText);
-                  Paperpile.main.onUpdate(json.data);
                   Paperpile.status.clearMsg();
                 },
                 scope: this
@@ -1742,7 +1786,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           Paperpile.status.clearMsg();
         }
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
 
@@ -1787,78 +1830,64 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   updateMetadata: function() {
     var selection = this.getSelection();
-    Ext.getCmp('queue-widget').onUpdate({
-      submitting: true
-    });
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/batch_update'),
+    if (selection.length > 30) {
+      Ext.getCmp('queue-widget').onUpdate({
+        submitting: true
+      });
+    }
+    Paperpile.Ajax({
+      url: '/ajax/crud/batch_update',
       params: {
         selection: selection,
         grid_id: this.id
       },
-      method: 'GET',
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
         // Trigger a thread to start requesting queue updates.
         Paperpile.main.queueUpdate();
-      },
-      failure: Paperpile.main.onError,
+      }
     });
   },
 
   batchDownload: function() {
     selection = this.getSelection();
-    Ext.getCmp('queue-widget').onUpdate({
-      submitting: true
-    });
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/batch_download'),
+    if (selection.length > 30) {
+      Ext.getCmp('queue-widget').onUpdate({
+        submitting: true
+      });
+    }
+    Paperpile.Ajax({
+      url: '/ajax/crud/batch_download',
       params: {
         selection: selection,
         grid_id: this.id
       },
-      method: 'GET',
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
         // Trigger a thread to start requesting queue updates.
         Paperpile.main.queueUpdate();
-      },
-      failure: Paperpile.main.onError,
+      }
     });
   },
 
   cancelDownload: function() {
     var selected_id = this.getSingleSelectionRecord().data._search_job.id;
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/queue/cancel_jobs'),
+    Paperpile.Ajax({
+      url: '/ajax/queue/cancel_jobs',
       params: {
         ids: selected_id
-      },
-      method: 'GET',
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
-      },
-      failure: Paperpile.main.onError
+      }
     });
   },
 
   retryDownload: function() {
     var selected_id = this.getSingleSelectionRecord().data._search_job.id;
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/queue/retry_jobs'),
+    Paperpile.Ajax({
+      url: '/ajax/queue/retry_jobs',
       params: {
         ids: selected_id
       },
-      method: 'GET',
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
         Paperpile.main.queueJobUpdate();
-      },
-      failure: Paperpile.main.onError,
+      }
     });
 
     // TODO: Do a more immediate update to the record so we don't have a delay there.
@@ -1866,17 +1895,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   clearDownload: function() {
     var selected_id = this.getSingleSelectionRecord().data._search_job.id;
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/queue/remove_jobs'),
+    Paperpile.Ajax({
+      url: '/ajax/queue/remove_jobs',
       params: {
         ids: selected_id
-      },
-      method: 'GET',
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
-      },
-      failure: Paperpile.main.onError,
+      }
     });
 
     // TODO: Do a more immediate update to the record so we don't have a delay there.
@@ -2097,12 +2120,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   onClose: function(cont, comp) {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/plugins/delete_grid'),
+    Paperpile.Ajax({
+      url: '/ajax/plugins/delete_grid',
       params: {
         grid_id: this.id
-      },
-      method: 'GET'
+      }
     });
   },
 
