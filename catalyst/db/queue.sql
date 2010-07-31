@@ -24,6 +24,7 @@ CREATE TABLE queue(
   guid               TEXT,
   status             TEXT,
   type               TEXT,
+  hidden             INTEGER,
   error              INTEGER,
   duration           INTEGER
 );
