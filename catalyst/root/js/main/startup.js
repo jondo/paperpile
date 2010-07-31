@@ -54,7 +54,7 @@ Paperpile.stage0 = function() {
       var json = Ext.util.JSON.decode(response.responseText);
       
       if (json.status == 'RUNNING') {
-        
+       /* 
         if (IS_TITANIUM){
 
           Ext.Msg.show({
@@ -67,9 +67,9 @@ Paperpile.stage0 = function() {
               Titanium.UI.mainWindow.close();
             }
           });
-        } else {
+        } else {*/
           Paperpile.stage1();
-        }
+        //}
 
         // Make sure cookies are set; workaround for OSX where Ajax
         // calls do not properly set cookies. That's why we load

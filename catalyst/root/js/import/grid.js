@@ -42,7 +42,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       grid: this,
       // Provide a reference back to this grid!
       displayInfo: true,
-      displayMsg: 'Displaying references {0} - {1} of {2}',
+      displayMsg: '<span style="color:black;">Displaying {0} - {1} of {2}</span>',
       emptyMsg: "No references to display"
     });
 
@@ -123,7 +123,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         cls: 'x-btn-text-icon edit',
         icon: '/images/icons/pencil.png',
         itemId: 'EDIT',
-        tooltip: 'Edit citation data of the selected reference'
+        tooltip: 'Edit the selected reference'
       }),
 
       'DELETE': new Ext.Action({
@@ -164,13 +164,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'FORMAT'
       }),
       'OPEN_PDF_FOLDER': new Ext.Action({
-        text: 'Open containing folder',
+        text: 'Show in folder',
         handler: this.openPDFFolder,
         scope: this,
         icon: '/images/icons/folder.png',
         itemId: 'OPEN_PDF_FOLDER',
         tooltip: {
-          text: 'Open containing folder'
+          text: 'Show in folder'
         }
       }),
       'VIEW_PDF': new Ext.Action({
@@ -183,13 +183,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'MORE_FROM_FIRST_AUTHOR': new Ext.Action({
         // Note: the text of these menu items will change dynamically depending on
         // the selected reference. See the 'updateContextMenuItem' method.
-        text: 'First author',
+        text: 'First Author',
         handler: this.moreFromFirstAuthor,
         scope: this,
         itemId: 'MORE_FROM_FIRST_AUTHOR'
       }),
       'MORE_FROM_LAST_AUTHOR': new Ext.Action({
-        text: 'Last author',
+        text: 'Last Author',
         handler: this.moreFromLastAuthor,
         scope: this,
         itemId: 'MORE_FROM_LAST_AUTHOR'
@@ -235,7 +235,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       'COPY_BIBTEX_KEY': new Ext.Action({
         itemId: 'COPY_BIBTEX_KEY',
-        text: 'Copy LaTeX citation',
+        text: 'Copy LaTeX Citation',
         handler: this.handleCopyBibtexKey,
         scope: this
       }),
@@ -247,7 +247,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       'COPY_FORMATTED': new Ext.Action({
         itemId: 'COPY_FORMATTED',
-        text: 'Copy citation',
+        text: 'Copy Citation',
         handler: this.handleCopyFormatted,
         scope: this
       }),
@@ -1011,10 +1011,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  <tpl if="linkout || doi">',
       '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
       '    <tpl if="doi">',
-      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'http://dx.doi.org/{doi}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></p>',
+      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'http://dx.doi.org/{doi}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s Site</a></p>',
       '    </tpl>',
       '    <tpl if="!doi && linkout">',
-      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'{linkout}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></p>',
+      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'{linkout}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s Site</a></p>',
       '    </tpl>',
       '    </div>',
       '  </tpl>',
@@ -1029,7 +1029,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <h2>PDF</h2>',
       '    <div id="search-download-widget-{id}" class="pp-search-download-widget"></div>',
       '    <tpl if="_imported || attachments">',
-      '      <h2>Supplementary material</h2>',
+      '      <h2>Supplementary Material</h2>',
       '    </tpl>',
       '      <tpl if="_attachments_list">',
       '        <ul class="pp-attachments">',
@@ -1085,15 +1085,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    </ul>',
       '    <ul> ',
       '    <div style="clear:both;margin-top:2em;"></div>',
-      '      <li class="pp-action pp-action-clipboard"> <a  href="#" class="pp-textlink" action="copy-text">Copy references as text</a> </li>',
+      '      <li class="pp-action pp-action-clipboard"> <a  href="#" class="pp-textlink" action="copy-text">Copy as Text</a> </li>',
       '      <tpl if="isBibtexMode">',
-      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-bibtex">Copy references as BibTeX</a> </li>',
-      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-keys">Copy LaTeX citation</a> </li>',
+      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-bibtex">Copy as BibTeX</a> </li>',
+      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-keys">Copy LaTeX Citation</a> </li>',
       '      </tpl>',
       '    </ul>',
       '    <ul>',
       '    <div style="clear:both;margin-top:2em;"></div>',
-      '      <li class="pp-action pp-action-email"> <a  href="#" class="pp-textlink" action="email">E-mail references</a> </li>',
+      '      <li class="pp-action pp-action-email"> <a  href="#" class="pp-textlink" action="email">E-mail References</a> </li>',
       '    </ul>',
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '   <dl>',
@@ -1144,8 +1144,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.createContextSeparator('CONTEXT_DEL_SEP'),
       'MORE_FROM_MENU',
       'EXPORT_SELECTION',
-      'COPY_FORMATTED',
       this.createContextSeparator('CONTEXT_BIBTEX_SEP'),
+      'COPY_FORMATTED',
       'COPY_BIBTEX_CITATION',
       'COPY_BIBTEX_KEY']);
   },
@@ -1310,11 +1310,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (settings.bibtex_mode == 1) {
       this.getContextByItemId('COPY_BIBTEX_CITATION').show();
       this.getContextByItemId('COPY_BIBTEX_KEY').show();
-      this.getContextByItemId('CONTEXT_BIBTEX_SEP').show();
     } else {
       this.getContextByItemId('COPY_BIBTEX_CITATION').hide();
       this.getContextByItemId('COPY_BIBTEX_KEY').hide();
-      this.getContextByItemId('CONTEXT_BIBTEX_SEP').hide();
     }
   },
 

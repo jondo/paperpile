@@ -1702,8 +1702,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
 });
 
-Paperpile.Tree.EXPORT_MENU_STRING = "Export contents...";
-Paperpile.Tree.AUTO_EXPORT_MENU_STRING = "Auto export...";
+Paperpile.Tree.EXPORT_MENU_STRING = "Export...";
+Paperpile.Tree.AUTO_EXPORT_MENU_STRING = "BibTeX Sync...";
 
 Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
   node: null,
@@ -1836,7 +1836,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         id: 'active_menu_rss',
         //itemId does not work here
         iconCls: 'pp-icon-feed',
-        text: 'Subscribe to RSS feed',
+        text: 'Subscribe to RSS Feed',
         handler: function() {
           tree.newRSS();
         },
@@ -1918,15 +1918,15 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 
     tree.sortByMenu = {
       items: [{
-        id: 'sort_tags_by_count',
-        text: 'Paper Count',
-        handler: tree.sortTagsByCount,
+        id: 'sort_tags_by_name',
+        text: 'Alphabetically',
+        handler: tree.sortTagsByName,
         scope: tree
       },
       {
-        id: 'sort_tags_by_name',
-        text: 'Name',
-        handler: tree.sortTagsByName,
+        id: 'sort_tags_by_count',
+        text: 'Paper Count',
+        handler: tree.sortTagsByCount,
         scope: tree
       }]
     };
@@ -1938,6 +1938,11 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         iconCls: 'pp-icon-tag-new',
         handler: tree.newTag,
         scope: tree
+      },
+      {
+        id: 'tags_menu_style',
+        text: 'Style',
+        menu: tree.stylePickerMenu
       },
       {
         id: 'tags_menu_delete',
@@ -1952,11 +1957,6 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         scope: tree
       },
       {
-        id: 'tags_menu_style',
-        text: 'Style',
-        menu: tree.stylePickerMenu
-      },
-      {
         id: 'tags_menu_export',
         text: Paperpile.Tree.EXPORT_MENU_STRING,
         handler: tree.exportNode,
@@ -1964,7 +1964,7 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       },
       {
         id: 'sort_by_menu',
-        text: 'Sort Labels By',
+        text: 'Sort Labels',
         menu: tree.sortByMenu
       },
       {
@@ -1999,9 +1999,9 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       'sort_by_menu'];
     } else {
       return['tags_menu_new',
+      'tags_menu_style',
       'tags_menu_delete',
       'tags_menu_rename',
-      'tags_menu_style',
       'tags_menu_export',
       'tags_menu_auto_export'];
     }
@@ -2019,12 +2019,7 @@ Paperpile.Tree.TrashMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         handler: tree.handleEmptyTrash,
         scope: tree
       },
-      {
-        id: 'trash_menu_restore',
-        text: 'Restore All Items',
-        handler: tree.restoreTrash,
-        scope: tree
-      }]
+      ]
     });
     Paperpile.Tree.TrashMenu.superclass.initComponent.call(this);
   },

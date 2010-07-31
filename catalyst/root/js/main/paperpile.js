@@ -508,9 +508,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       }
     };
     var options = {
-      title: 'Choose a library file to import',
+      title: 'Choose a bibliography file to import',
       types: ['*'],
-      typesDescription: 'Library files (Bibtex, RIS, EndNote, etc)',
+      typesDescription: 'Bibliography files (BibTeX, RIS, EndNote, and others)',
       scope: this
     };
     Paperpile.fileDialog(callback, options);

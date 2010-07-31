@@ -35,9 +35,9 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
     this.tooltips = {
       library_db: 'The database file that holds all your information of your Paperpile library',
       paper_root: 'The root folder where your PDFs and supplementary files are stored.',
-      key_pattern: 'The pattern for the citation keys of your references (see help box).',
-      pdf_pattern: 'The pattern to name your PDFs. Can include the citation key pattern <code>[key]</code> and slashes <code>/</code> to use subfolders.',
-      attachment_pattern: 'The pattern for the folder where your supplementary files get stored. Can include the citation key pattern <code>[key]</code> and slashes <code>/</code> to use subfolders.'
+      key_pattern: 'The pattern for the reference identifier (see help box).',
+      pdf_pattern: 'The pattern to name your PDFs. Can include the reference identifier <code>[key]</code> and slashes <code>/</code> to use subfolders.',
+      attachment_pattern: 'The pattern for the folder where your supplementary files get stored. Can include the reference identifier <code>[key]</code> and slashes <code>/</code> to use subfolders.'
     };
 
     Paperpile.PatternSettings.superclass.initComponent.call(this);

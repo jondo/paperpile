@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.Dashboard = Ext.extend(Ext.Panel, {
 
   title: 'Dashboard',
@@ -23,7 +22,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
   initComponent: function() {
     Ext.apply(this, {
       closable: true,
-      autoScroll:true,
+      autoScroll: true,
       autoLoad: {
         url: Paperpile.Url('/screens/dashboard'),
         callback: this.setupFields,
@@ -74,5 +73,56 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       delegate: 'a'
     });
 
+    var settings = Paperpile.main.globalSettings['bibtex'];
+
+    var field = new Ext.form.Checkbox({
+      checked: settings.bibtex_mode === '1' ? true : false,
+      id: 'bibtex-checkbox',
+      renderTo: 'bibtex-mode-checkbox',
+    });
+
+    Ext.get('bibtex-checkbox').parent().setStyle({display:'inline'});
+    Ext.get('bibtex-checkbox').setStyle({'vertical-align':'middle'});
+
+
+    if (settings.bibtex_mode === '1'){
+      Ext.get('bibtex-mode-text-active').show();
+      Ext.get('bibtex-mode-text-inactive').hide();
+    } else {
+      Ext.get('bibtex-mode-text-active').hide();
+      Ext.get('bibtex-mode-text-inactive').show();
+    }
+
+    
+    field.on('check',
+      function(box, checked) {
+        var currentSettings = Paperpile.main.getSetting('bibtex');
+
+        var value = (checked) ? "1" : "0";
+
+        currentSettings['bibtex_mode'] = value;
+
+        Paperpile.main.setSetting('bibtex', currentSettings);
+
+        Paperpile.status.updateMsg({
+          msg: (checked) ? 'Activated BibTeX mode' : 'De-activated BibTeX mode',
+          duration: 2
+        });
+
+        if (checked){
+          //Ext.get('bibtex-mode-settings').show();
+          Ext.get('bibtex-mode-text-active').show();
+          Ext.get('bibtex-mode-text-inactive').hide();
+        } else {
+          //Ext.get('bibtex-mode-settings').hide();
+          Ext.get('bibtex-mode-text-inactive').show();
+          Ext.get('bibtex-mode-text-active').hide();
+        }
+
+        
+      },
+      this);
+
   },
+
 });

@@ -697,7 +697,7 @@ sub get_default_tree : Private {
         type    => 'CLOUDS',
         text    => 'Cloud View',
         iconCls => 'pp-icon-clouds',
-        hidden  => 1,
+        hidden  => 0,
         builtin => 1,
       }
     )
@@ -708,7 +708,7 @@ sub get_default_tree : Private {
         type    => 'DUPLICATES',
         text    => 'Find Duplicates',
         iconCls => 'pp-icon-duplicates',
-        hidden  => 1,
+        hidden  => 0,
         builtin => 1,
       }
     )

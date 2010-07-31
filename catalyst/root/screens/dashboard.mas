@@ -36,7 +36,15 @@
   <ul>
     <li><a href="#" class="pp-textlink  pp-bullet" action="settings-general">General settings</a></li>
     <li><a href="#" class="pp-textlink  pp-bullet" action="settings-patterns">Paths and patterns</a></li>
-    <li><a href="#" class="pp-textlink  pp-bullet" action="settings-tex">BibTeX</a></li>
+    <li>
+      <a href="#" class="pp-textlink"><span id="bibtex-mode-checkbox"></span></a>
+      <a href="#" class="pp-textlink"><span id="bibtex-mode-text-active">BibTeX settings</span></a>
+      <p id="bibtex-mode-text-inactive" class="pp-inactive">BibTeX mode inactivated</p>
+      <!--<a href="#" class="pp-textlink" action="settings-tex"><span id="bibtex-mode-settings">Settings</span></a>-->
+      </a>
+
+    </li>
+    
   </ul>
   <h2 class="pp-dashboard-tools">Tools</h2>
   <ul>

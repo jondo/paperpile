@@ -38,7 +38,13 @@ h1 {
 
 .pp-inactive {
     color:gray;
+    cursor:default;
 }
+
+a.pp-inactive:hover {
+    text-decoration:none!important;
+}
+
 
 .pp-bullet{
     padding: 2 2 2 16;

@@ -42,11 +42,14 @@ sub format_pub {
 
   my $title   = $pub->title;
   my $authors = $self->format_authors($pub);
+  my $citation = $pub->_citation_display;
+  $citation =~ s!</?\w>!!g;
   my $link    = $pub->best_link;
 
-  my $string = ( $title ? "$title$cr" : '' );
-  $string .= ( $authors ? "$authors$cr" : '' );
-  $string .= ( $link    ? "$link"       : '' );
+  my $string = ( $title ? "$title" : '' );
+  $string .= ( $authors ? "$cr$authors" : '' );
+  $string .= ( $citation ? "$cr$citation" : '' );
+  $string .= ( $link    ? "$cr$link"       : '' );
 
   return "$string";
 }
