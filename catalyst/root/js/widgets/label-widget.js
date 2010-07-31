@@ -182,8 +182,8 @@ Paperpile.LabelWidget = Ext.extend(Object, {
             // The user entered a new label
             if (Ext.StoreMgr.lookup('tag_store').findExact('name', name) === -1) {
               var guid = Paperpile.utils.generateUUID();
-              Ext.Ajax.request({
-                url: Paperpile.Url('/ajax/crud/new_collection'),
+              Paperpile.Ajax({
+                url: '/ajax/crud/new_collection',
                 params: {
                   type: 'LABEL',
                   text: name,
@@ -193,7 +193,6 @@ Paperpile.LabelWidget = Ext.extend(Object, {
                 success: function(response) {
                   this.commitTag(guid, true);
                 },
-                failure: Paperpile.main.onError,
                 scope: this
               });
             }
@@ -220,15 +219,14 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       Paperpile.status.showBusy("Adding label to references");
     }
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/move_in_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/move_in_collection',
       params: {
         grid_id: this.getGrid().id,
         selection: this.getGrid().getSelection(),
         guid: guid,
         type: 'LABEL'
       },
-      method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         var grid = this.getGrid();
@@ -248,7 +246,6 @@ Paperpile.LabelWidget = Ext.extend(Object, {
           Paperpile.status.clearMsg();
         }
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
 
@@ -264,25 +261,21 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       Paperpile.status.showBusy("Removing label from references");
     }
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/remove_from_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/remove_from_collection',
       params: {
         grid_id: this.getGrid().id,
         selection: this.getGrid().getSelection(),
         collection_guid: guid,
         type: 'LABEL'
       },
-      method: 'GET',
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
         Ext.StoreMgr.lookup('tag_store').reload();
-        Paperpile.main.onUpdate(json.data);
 
         if (lots) {
           Paperpile.status.clearMsg();
         }
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },

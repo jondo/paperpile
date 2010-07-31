@@ -442,39 +442,27 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       easing: 'bounceBoth',
       duration: 1
     });
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/move_in_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/move_in_collection',
       params: {
         grid_id: grid.id,
         selection: sel,
         guid: node.id,
         type: 'FOLDER'
       },
-      method: 'GET',
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
-      },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
 
   addTag: function(grid, sel, node) {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/move_in_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/move_in_collection',
       params: {
         grid_id: grid.id,
         selection: sel,
         guid: node.id,
         type: 'LABEL'
       },
-      method: 'GET',
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
-      },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
@@ -498,33 +486,25 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // We're dragging nodes internally
       if (node.type === 'FOLDER' || node.type === 'TAGS') {
 
-        Ext.Ajax.request({
-          url: Paperpile.Url('/ajax/crud/move_collection'),
+        Paperpile.Ajax({
+          url: '/ajax/crud/move_collection',
           params: {
             target_node: e.target.id,
             drop_node: e.dropNode.id,
             point: e.point,
             type: node.type === 'FOLDER' ? 'FOLDER' : 'LABEL'
-          },
-          success: function() {
-            // Should we do something here?
-          },
-          failure: Paperpile.main.onError
+          }
         });
 
       } else {
 
-        Ext.Ajax.request({
-          url: Paperpile.Url('/ajax/tree/move_node'),
+        Paperpile.Ajax({
+          url: '/ajax/tree/move_node',
           params: {
             target_node: e.target.id,
             drop_node: e.dropNode.id,
             point: e.point
-          },
-          success: function() {
-            // Should we do something here?
-          },
-          failure: Paperpile.main.onError
+          }
         });
       }
 
@@ -878,20 +858,14 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
       plugin_title: node.text,
       iconCls: pars.plugin_iconCls,
       node_id: node.id,
-      parent_id: node.parentNode.id,
+      parent_id: node.parentNode.id
     });
 
     // Send to backend
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/new_active'),
-      params: pars,
-      success: function() {
-        //Ext.getCmp('statusbar').clearStatus();
-        //Ext.getCmp('statusbar').setText('Added new active folder');
-      },
-      failure: Paperpile.main.onError,
+    Paperpile.Ajax({
+      url: '/ajax/tree/new_active',
+      params: pars
     });
-
   },
 
   rssButtonToggle: function(button, buttonState) {
@@ -946,8 +920,8 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
     newNode.init(pars);
 
     Paperpile.status.showBusy("Loading new RSS feed");
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/new_rss'),
+    Paperpile.Ajax({
+      url: '/ajax/tree/new_rss',
       params: pars,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
@@ -1015,8 +989,8 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
     this.getSelectionModel().clearSelections();
     this.allowSelect = false;
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/new_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/new_collection',
       params: {
         type: node.type === 'FOLDER' ? 'FOLDER' : 'LABEL',
         text: node.text,
@@ -1029,7 +1003,6 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
           this.reloadTags(json);
         }
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
@@ -1040,13 +1013,11 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   deleteRss: function() {
     var node = this.getSelectionModel().getSelectedNode();
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/delete_rss'),
+    Paperpile.Ajax({
+      url: '/ajax/tree/delete_rss',
       params: {
         node_id: node.id
-      },
-      success: function() {},
-      failure: Paperpile.main.onError,
+      }
     });
 
     node.remove();
@@ -1058,13 +1029,11 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   deleteActive: function() {
     var node = this.getSelectionModel().getSelectedNode();
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/delete_active'),
+    Paperpile.Ajax({
+      url: '/ajax/tree/delete_active',
       params: {
         node_id: node.id
-      },
-      success: function() {},
-      failure: Paperpile.main.onError,
+      }
     });
 
     node.remove();
@@ -1081,11 +1050,9 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
     }
     pars.node_id = node.id;
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/save_node_params'),
-      params: pars,
-      success: function() {},
-      failure: Paperpile.main.onError
+    Paperpile.Ajax({
+      url: '/ajax/tree/save_node_params',
+      params: pars
     });
 
   },
@@ -1096,16 +1063,15 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   onRenameComplete: function(editor, newText, oldText) {
 
     editor.editNode.plugin_title = newText;
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/rename_node'),
+    Paperpile.Ajax({
+      url: '/ajax/tree/rename_node',
       params: {
         node_id: editor.editNode.id,
         new_text: newText
       },
       success: function() {
         editor.un("complete", this.onRenameComplete);
-      },
-      failure: Paperpile.main.onError
+      }
     });
   },
 
@@ -1129,8 +1095,8 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   deleteCollection: function() {
     var node = this.lastSelectedNode;
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/delete_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/delete_collection',
       params: {
         guid: node.id,
         type: node.type === 'FOLDER' ? 'FOLDER' : 'LABEL'
@@ -1141,12 +1107,9 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
           // Close the tab using the label's GUID, which is the node's id and the tab's itemId.
           Paperpile.main.tabs.closeTabById(node.id);
           this.reloadTags(json);
-        } else {
-          Paperpile.main.onUpdate(json.data);
         }
       },
-      scope: this,
-      failure: Paperpile.main.onError
+      scope: this
     });
     node.remove();
   },
@@ -1154,17 +1117,12 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   deleteFolder: function() {
     var node = this.lastSelectedNode;
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/delete_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/delete_collection',
       params: {
         guid: node.id,
         type: 'FOLDER'
-      },
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
-      },
-      failure: Paperpile.main.onError,
+      }
     });
 
     node.remove();
@@ -1219,18 +1177,12 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
       hidden = 0;
     }
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/tree/set_visibility'),
+    Paperpile.Ajax({
+      url: '/ajax/tree/set_visibility',
       params: {
         node_id: node.id,
         hidden: hidden
-      },
-      success: function() {
-        //Ext.getCmp('statusbar').clearStatus();
-        //Ext.getCmp('statusbar').setText('Hide/Show node');
-      },
-      failure: Paperpile.main.onError,
-
+      }
     });
   },
 
@@ -1370,8 +1322,8 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   sortTagsByCount: function() {
     // The counts of articles for each label aren't stored in the frontend,
     // so we call the backend to give us a sorted list of GUIDs.
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/list_labels_sorted'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/list_labels_sorted',
       params: {},
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
@@ -1386,7 +1338,6 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
 
         this.setCollectionSort(ids);
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
@@ -1417,8 +1368,8 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
     var parentNode = firstNode.parentNode;
     var parentId = parentNode.id;
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/sort_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/sort_collection',
       params: {
         parent_id: parentId,
         node_id_order: idList
@@ -1426,7 +1377,6 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
       success: function() {
         this.reloadTags();
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
 
@@ -1468,14 +1418,13 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
       sort_order: index
     };
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/new_tag'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/new_tag',
       params: pars,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         this.reloadTags(json);
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
@@ -1484,8 +1433,8 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   deleteTag: function(node) {
     var tag = node.text;
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/delete_tag'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/delete_tag',
       params: {
         tag: tag
       },
@@ -1500,12 +1449,11 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   },
 
   handleEmptyTrash: function() {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/empty_trash'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/empty_trash',
       params: {},
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
 
         var numDeleted = json.num_deleted;
         var msg = numDeleted + " references permanently deleted.";
@@ -1518,9 +1466,7 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
           fade: true,
           duration: 1.5
         });
-
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
@@ -1528,8 +1474,8 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   styleCollection: function(number) {
     var node = this.lastSelectedNode;
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/style_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/style_collection',
       params: {
         guid: node.id,
         style: number,
@@ -1539,7 +1485,6 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
         var json = Ext.util.JSON.decode(response.responseText);
         Paperpile.main.reloadTagStyles();
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
@@ -1574,18 +1519,19 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
 
     var tag = oldText;
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/rename_collection'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/rename_collection',
       params: {
         guid: node.id,
-        new_name: newText,
+        new_name: newText
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
 
         // Things we need to rename / update when a collection changes:
-        // (1) use the onUpdate handlers to take care of the grid and sidepanel.
-        Paperpile.main.onUpdate(json);
+	// (0) The grid is automatically taken care of by the Paperpile.Ajax handler's calling Paperpile.main.onUpdate.
+	
+        // (1) Take care of the grid and sidepanel.
         this.reloadTags(json);
 
         // (2) If this tab has an open grid, rename it.
@@ -1595,7 +1541,6 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
         }
 
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },
@@ -1634,8 +1579,8 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
     node.plugin_base_query = 'labelid:' + Paperpile.utils.encodeTag(newText);
     var tag = oldText;
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/rename_tag'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/rename_tag',
       params: {
         old_tag: tag,
         new_tag: newText
@@ -1649,10 +1594,8 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
           tagTab[0].setTitle(newText);
         }
 
-        Paperpile.main.onUpdate(json);
         this.reloadTags(json);
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
   },

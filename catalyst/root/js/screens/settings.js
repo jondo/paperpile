@@ -131,8 +131,8 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
           proxy_passwd: this.textfields['proxy_passwd'].getValue(),
           cancel_handle: 'proxy_check',
         };
-        var transactionID = Ext.Ajax.request({
-          url: Paperpile.Url('/ajax/misc/test_network'),
+        var transactionID = Paperpile.Ajax({
+          url: '/ajax/misc/test_network',
           params: params,
           success: function(response) {
 
@@ -168,12 +168,12 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
           callback: function() {
             Ext.Ajax.abort(transactionID);
             Paperpile.status.clearMsg();
-            Ext.Ajax.request({
-              url: Paperpile.Url('/ajax/misc/cancel_request'),
+            Paperpile.Ajax({
+              url: '/ajax/misc/cancel_request',
               params: {
                 cancel_handle: 'proxy_check',
-                kill: 1,
-              },
+                kill: 1
+              }
             });
           }
         });
@@ -268,8 +268,8 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
     Paperpile.status.showBusy('Applying changes.');
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/settings/set_settings'),
+    Paperpile.Ajax({
+      url: '/ajax/settings/set_settings',
       params: params,
       success: function(response) {
 
@@ -295,7 +295,6 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
           },
           this);
       },
-      failure: Paperpile.main.onError,
       scope: this
     });
 

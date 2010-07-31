@@ -584,22 +584,13 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       Ext.get('tag-add-link-' + this.id).show();
     }
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/add_tag'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/add_tag',
       params: {
         grid_id: this.grid_id,
         selection: Ext.getCmp(this.grid_id).getSelection(),
         tag: tag
       },
-      method: 'GET',
-
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        var grid = Ext.getCmp(this.grid_id);
-        grid.onUpdate(json.data);
-        Ext.StoreMgr.lookup('tag_store').reload();
-      },
-      failure: Paperpile.main.onError,
       scope: this
     });
 
@@ -649,21 +640,15 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   // supplementary file (given by isPDF).
   //
   attachFile: function(isPDF, path) {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/attach_file'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/attach_file',
       params: {
         guid: this.data.guid,
         grid_id: this.grid_id,
         file: path,
         is_pdf: (isPDF) ? 1 : 0
       },
-      method: 'GET',
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
-      },
-      failure: Paperpile.main.onError,
-      scope: this,
+      scope: this
     });
   },
 
@@ -676,18 +661,16 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     var record = this.getGrid().store.getAt(this.getGrid().store.find('guid', this.data.guid));
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/crud/delete_file'),
+    Paperpile.Ajax({
+      url: '/ajax/crud/delete_file',
       params: {
         file_guid: isPDF ? this.data.pdf : guid,
         pub_guid: this.data.guid,
         is_pdf: (isPDF) ? 1 : 0,
         grid_id: this.grid_id
       },
-      method: 'GET',
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
 
         var undo_msg = '';
         if (isPDF) {
@@ -700,15 +683,11 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
           msg: undo_msg,
           action1: 'Undo',
           callback: function(action) {
-            Ext.Ajax.request({
-              url: Paperpile.Url('/ajax/crud/undo_delete'),
-              method: 'GET',
+            Paperpile.Ajax({
+              url: '/ajax/crud/undo_delete',
               success: function(response) {
-                var json = Ext.util.JSON.decode(response.responseText);
-                Paperpile.main.onUpdate(json.data);
                 Paperpile.status.clearMsg();
               },
-              failure: Paperpile.main.onError,
               scope: this
             });
           },
@@ -716,8 +695,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
           hideOnClick: true
         });
       },
-      failure: Paperpile.main.onError,
-      scope: this,
+      scope: this
     });
 
   },

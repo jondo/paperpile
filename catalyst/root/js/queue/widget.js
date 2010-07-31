@@ -129,11 +129,14 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
         }
       }
     }
+
+// Comment out this annoying logic.
+/*
     if ((pdfSearchJobs == 1 && allJobs == 1) || (metadataUpdateJobs == 1 && allJobs == 1)) {
       this.hide();
       return;
     }
-
+*/
     if (queue.num_pending == 0 && queue.num_done == 0 && queue.num_error == 0) {
       this.hide();
     } else {
@@ -153,18 +156,15 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
     }
 
     if (action === 'queue-resume') {
-        Ext.Ajax.request({
-          url: Paperpile.Url('/ajax/queue/pause_resume'),
-          method: 'GET',
+        Paperpile.Ajax({
+          url: '/ajax/queue/pause_resume',
           params: {},
           success: function(response, opts) {
             var json = Ext.util.JSON.decode(response.responseText);
             if (json.queue.status != 'PAUSED') {
               Paperpile.main.queueUpdate();
             }
-            Paperpile.main.onUpdate(json);
           },
-          failure: Paperpile.main.onError,
           scope: this
         });
     }
@@ -173,15 +173,11 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
       this.onUpdate({
         clearing: true
       });
-      Ext.Ajax.request({
-        url: Paperpile.Url('/ajax/queue/clear_jobs'),
-        method: 'GET',
+      Paperpile.Ajax({
+        url: '/ajax/queue/clear_jobs',
         success: function(response) {
-          var json = Ext.util.JSON.decode(response.responseText);
-          Paperpile.main.onUpdate(json.data);
           Paperpile.main.queueUpdateFn();
         },
-        failure: Paperpile.main.onError,
         scope: this
       });
     }

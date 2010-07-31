@@ -320,7 +320,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     ids.insert(index + 1, 'NEW');
 
     index = ids.indexOf('TB_BREAK');
-    ids.insert(index + 1, 'EDIT');
+//    ids.insert(index + 1, 'EDIT');
 
   },
 

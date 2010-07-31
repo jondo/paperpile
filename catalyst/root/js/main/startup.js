@@ -47,9 +47,8 @@ Paperpile.startupFailure = function(response) {
 };
 
 Paperpile.stage0 = function() {
-  Ext.Ajax.request({
-    url: Paperpile.Url('/ajax/app/heartbeat'),
-
+  Paperpile.Ajax({
+    url: '/ajax/app/heartbeat',
     success: function(response) {
       var json = Ext.util.JSON.decode(response.responseText);
       
@@ -201,8 +200,8 @@ Paperpile.stage1 = function() {
     Paperpile.status = new Paperpile.Status();
   }
 
-  Ext.Ajax.request({
-    url: Paperpile.Url('/ajax/app/init_session'),
+  Paperpile.Ajax({
+    url: '/ajax/app/init_session',
     success: function(response) {
       var json = Ext.util.JSON.decode(response.responseText);
 
@@ -218,8 +217,8 @@ Paperpile.stage1 = function() {
             }
           });
 
-          Ext.Ajax.request({
-            url: Paperpile.Url('/ajax/app/migrate_db'),
+          Paperpile.Ajax({
+            url: '/ajax/app/migrate_db',
             success: function(response) {
               Ext.MessageBox.hide();
               Paperpile.stage1();

@@ -66,15 +66,8 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
   },
 
   clearJobs: function(sel) {
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/queue/clear_jobs'),
-      method: 'GET',
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.onUpdate(json.data);
-      },
-      failure: function() {},
-      scope: this
+    Paperpile.Ajax({
+      url: '/ajax/queue/clear_jobs'
     });
   },
 
@@ -82,16 +75,14 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
     if (!selection) {
       selection = this.queueList.getSelectedIds();
     }
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/queue/cancel_jobs'),
-      method: 'GET',
+    Paperpile.Ajax({
+      url: '/ajax/queue/cancel_jobs',
       params: {
         ids: selection
       },
       success: function(response, opts) {
         this.getGrid().getStore().reload();
       },
-      failure: function() {},
       scope: this
     });
   },
@@ -103,9 +94,8 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
 
 
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/queue/retry_jobs'),
-      method: 'GET',
+    Paperpile.Ajax({
+      url: '/ajax/queue/retry_jobs',
       params: {
         ids: selection
       },
@@ -116,7 +106,6 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
             filter: 'all'
           }});
       },
-      failure: function() {},
       scope: this
     });
   }

@@ -151,8 +151,8 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
 
   updateClouds: function() {
 
-    Ext.Ajax.request({
-      url: Paperpile.Url('/ajax/charts/clouds'),
+    Paperpile.Ajax({
+      url: '/ajax/charts/clouds',
       params: {
         field: this.field,
         sorting: this.sort
@@ -176,8 +176,7 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
         Ext.DomHelper.overwrite('cloud', '');
         Ext.DomHelper.insertHtml('afterBegin', Ext.get('cloud').dom, json.html);
       },
-      failure: Paperpile.main.onError,
-      scope: this,
+      scope: this
     });
   }
 

@@ -166,37 +166,33 @@ Paperpile.QueueControl = Ext.extend(Ext.Panel, {
           var el = this.pause_button.getEl();
 
           if (r.data.queue_status === 'RUNNING') {
-            Ext.Ajax.request({
-              url: Paperpile.Url('/ajax/queue/pause'),
-              method: 'GET',
+            Paperpile.Ajax({
+              url: '/ajax/queue/pause',
               success: function(response) {
                 this.grid.store.reload();
                 this.pause_button.setText('Resume');
                 el.replaceClass('pause', 'resume');
 
               },
-              failure: Paperpile.main.onError,
-              scope: this,
+              scope: this
             });
           }
 
           if (r.data.queue_status === 'PAUSED') {
-            Ext.Ajax.request({
-              url: Paperpile.Url('/ajax/queue/resume'),
-              method: 'GET',
+            Paperpile.Ajax({
+              url: '/ajax/queue/resume',
               success: function(response) {
                 this.grid.store.reload();
                 this.pause_button.setText('Pause queue');
                 el.replaceClass('resume', 'pause');
               },
-              failure: Paperpile.main.onError,
-              scope: this,
+              scope: this
             });
           }
         }
 
       },
-      scope: this,
+      scope: this
     });
 
     this.pause_button.render('pause-button', 0);
