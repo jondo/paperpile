@@ -45,12 +45,12 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
       caps: 'WORD2007'
     }];
 
-    var formatItems = [];
+    var items = [];
     for (var i = 0; i < formats.length; i++) {
       var obj = formats[i];
       var text = obj.text;
       var caps = obj.caps;
-      formatItems.push({
+      items.push({
         xtype: 'subtlebutton',
         width: 150,
         height: 30,
@@ -63,6 +63,28 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
       });
     }
 
+      items = [{
+        xtype: 'label',
+        text: '',
+        height: 5
+      }].concat(items);
+
+      items = items.concat(
+        {
+	  xtype:'textbutton',
+          text: 'Cancel',
+          itemId: 'cancel_button',
+	  style:{
+	      position:'absolute',
+	      top:'0px',
+	      left:'0px'
+	  },
+          handler: function() {
+            this.close();
+          },
+          scope: this
+        });
+
     Ext.apply(this, {
       modal: true,
       layout: {
@@ -72,28 +94,19 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
       },
       bodyStyle: 'background-color:#FFFFFF;',
       title: 'Choose export format',
-      width: 300,
-      height: 340,
+      width: 270,
+      height: 320,
       buttonAlign: 'center',
       layoutConfig: {},
-      items: [{
-        xtype: 'label',
-        text: '',
-        height: 20
-      }].concat(formatItems),
-      bbar: [{
-        xtype: 'tbfill'
-      },
-      {
-        text: 'Cancel',
-        handler: function() {
-          this.close();
-        },
-        scope: this
-      }]
+      items: items
     });
 
     Paperpile.SimpleExportWindow.superclass.initComponent.call(this);
+
+    this.on('show', function(window) {
+	var b = window.get('cancel_button');
+	b.getEl().alignTo(window.getEl(),'br-br',[-10,-10]);
+    });
   },
 
   formatToExtensions: {

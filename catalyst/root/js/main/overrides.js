@@ -15,6 +15,108 @@
    not, see http://www.gnu.org/licenses. */
 
 // Ext overrides
+
+Ext.override(Ext.Button, {
+    // private
+    onRender : function(ct, position){
+        if(!this.template){
+            if(!Ext.Button.buttonTemplate){
+                // hideous table template
+                Ext.Button.buttonTemplate = new Ext.Template(
+                    '<table id="{4}" cellspacing="0" class="x-btn {3}"><tbody class="{1}" id="{4}_body">',
+                    '<tr><td class="x-btn-tl"><i>&#160;</i></td><td class="x-btn-tc"></td><td class="x-btn-tr"><i>&#160;</i></td></tr>',
+                    '<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{2}" unselectable="on"><button type="{0}"></button></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
+                    '<tr><td class="x-btn-bl"><i>&#160;</i></td><td class="x-btn-bc"></td><td class="x-btn-br"><i>&#160;</i></td></tr>',
+                    '</tbody></table>');
+                Ext.Button.buttonTemplate.compile();
+            }
+            this.template = Ext.Button.buttonTemplate;
+        }
+
+        var btn, targs = this.getTemplateArgs();
+
+        if(position){
+            btn = this.template.insertBefore(position, targs, true);
+        }else{
+            btn = this.template.append(ct, targs, true);
+        }
+        /**
+         * An {@link Ext.Element Element} encapsulating the Button's clickable element. By default,
+         * this references a <tt>&lt;button&gt;</tt> element. Read only.
+         * @type Ext.Element
+         * @property btnEl
+         */
+        this.btnEl = btn.child(this.buttonSelector);
+	this.tooltipEl = Ext.get(targs[4]).child('tbody');
+        this.mon(this.btnEl, {
+            scope: this,
+            focus: this.onFocus,
+            blur: this.onBlur
+        });
+
+        this.initButtonEl(btn, this.btnEl);
+
+        Ext.ButtonToggleMgr.register(this);
+    },
+    setTooltip : function(tooltip, /* private */ initial){
+        if(this.rendered){
+            if(!initial){
+                this.clearTip();
+            }
+            if(Ext.isObject(tooltip)){
+                Ext.QuickTips.register(Ext.apply({
+                      target: this.tooltipEl.id
+                }, tooltip));
+                this.tooltip = tooltip;
+            }else{
+                this.tooltipEl.dom[this.tooltipType] = tooltip;
+		Paperpile.log(this.tooltipEl.id);
+            }
+        }else{
+            this.tooltip = tooltip;
+        }
+        return this;
+    }
+		 
+});
+
+Ext.override(Ext.Element, {
+    fireEvent: (function() {
+        var HTMLEvts = /^(scroll|resize|load|unload|abort|error)$/,
+            mouseEvts = /^(click|dblclick|mousedown|mouseup|mouseover|mouseout|contextmenu|mousenter|mouseleave)$/,
+            UIEvts = /^(focus|blur|select|change|reset|keypress|keydown|keyup)$/,
+            onPref = /^on/;
+
+        return Ext.isIE ? function(e) {
+            e = e.toLowerCase();
+            if (!onPref.test(e)) {
+                e = 'on' + e;
+            }
+            this.dom.fireEvent(e, document.createEventObject());
+        } : function(e) {
+            e = e.toLowerCase();
+            e.replace(onPref, '');
+            var evt;
+            if (mouseEvts.test(e)) {
+                var b = this.getBox(),
+                    x = b.x + b.width / 2,
+                    y = b.y + b.height / 2;
+                evt = document.createEvent("MouseEvents");
+                evt.initMouseEvent(e, true, true, window, (e=='dblclick')?2:1, x, y, x, y, false, false, false, false, 0, null);
+            } else if (UIEvts.test(e)) {
+                evt = document.createEvent("UIEvents");
+                evt.initUIEvent(e, true, true, window, 0);
+            } else if (HTMLEvts.test(e)) {
+                evt = document.createEvent("HTMLEvents");
+                evt.initEvent(e, true, true);
+            }
+            if (evt) {
+                this.dom.dispatchEvent(evt);
+            }
+        }; 
+    })()
+});
+
 // Add an option to not show the loading spinner for certain nodes.
 Ext.override(Ext.tree.TreeNodeUI, {
   beforeLoad: function() {

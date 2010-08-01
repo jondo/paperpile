@@ -147,3 +147,8 @@ Ext.ux.SubtleButton = Ext.extend(Ext.Button, {
   cls: 'x-btn-subtle'
 });
 Ext.reg('subtlebutton', Ext.ux.SubtleButton);
+
+Ext.ux.TextButton = Ext.extend(Ext.Button, {
+  cls: 'x-btn-textlink'
+});
+Ext.reg('textbutton', Ext.ux.TextButton);

@@ -2003,23 +2003,14 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       items = ['tags_menu_new',
         'sort_by_menu'];
     } else {
-<<<<<<< HEAD:catalyst/root/js/main/tree.js
-      return['tags_menu_new',
-      'tags_menu_style',
-      'tags_menu_delete',
-      'tags_menu_rename',
-      'tags_menu_export',
-      'tags_menu_auto_export'];
-=======
       items = ['tags_menu_new',
+        'tags_menu_style',
         'tags_menu_delete',
         'tags_menu_rename',
-        'tags_menu_style',
         'tags_menu_export'];
       if (Paperpile.main.getSetting('bibtex').bibtex_mode == 1) {
         items.push('tags_menu_auto_export');
       }
->>>>>>> 63940181c1cdc7b8188deb130f4649b2f84b3b0c:catalyst/root/js/main/tree.js
     }
     return items;
   }

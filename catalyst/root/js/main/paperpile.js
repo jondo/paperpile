@@ -387,69 +387,94 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   pdfExtract: function() {
 
     var divDef = '<div style="width:200px;white-space:normal;">';
-    this.pdfExtractChoice = new Ext.Window({
-      title: 'Choose type of PDF import',
-      layout: 'vbox',
-      bodyStyle: 'background-color:#FFFFFF !important;',
-      width: 250,
-      height: 190,
-      plain: true,
-      modal: true,
-      buttonAlign: 'center',
-      layoutConfig: {
-        align: 'center',
-        defaultMargins: '5px'
-      },
-      items: [{
-        xtype: 'label',
-        text: '',
-        width: '100%',
-        style: 'text-align:left;'
-      },
-      {
-        xtype: 'subtlebutton',
-        text: 'PDF Folder',
-        align: 'center',
-        width: 150,
-        height: 30,
-        tooltip: {
-          text: 'The selected folder and its subdirectories will be searched for PDFs to import',
-          width: 175,
-          anchor: 'left'
+    var justCreated = false;
+    if (this.pdfExtractChoice === undefined) {
+      justCreated = true;
+      this.pdfExtractChoice = new Ext.Window({
+        title: 'Choose type of PDF import',
+	closeAction:'hide',
+        layout: 'vbox',
+        bodyStyle: 'background-color:#FFFFFF !important;',
+        width: 200,
+        height: 175,
+        plain: true,
+        modal: true,
+        buttonAlign: 'center',
+        layoutConfig: {
+          align: 'center',
+          defaultMargins: '5px'
         },
-        handler: this.folderExtract,
-        scope: this
-      },
-      {
-        xtype: 'label',
-        text: 'or'
-      },
-      {
-        width: 150,
-        height: 30,
-        xtype: 'subtlebutton',
-        text: 'PDF File(s)',
-        tooltip: {
-          text: 'Select one or more files to import.',
-          anchor: 'left',
-          width: 175
+        items: [
+	    {
+		xtype:'label',
+		text:' ',
+		height:5
+	    },
+	    {
+          xtype: 'subtlebutton',
+          id: 'folder_extract_button',
+          text: 'PDF Folder',
+          //	tooltip: 'The selected folder and its subdirectories will be searched for PDFs to import',
+          align: 'center',
+          width: 150,
+          height: 30,
+          handler: this.folderExtract,
+          scope: this
         },
-        handler: this.fileExtract,
-        scope: this
-      }],
-      bbar: [{
-        xtype: 'tbfill'
-      },
-      {
-        text: 'Cancel',
-        itemId: 'cancel_button',
-        handler: function() {
-          this.pdfExtractChoice.close();
+        {
+          xtype: 'label',
+          text: 'or'
         },
-        scope: this
-      }]
+        {
+          width: 150,
+          height: 30,
+          id: 'file_extract_button',
+          xtype: 'subtlebutton',
+          text: 'PDF File(s)',
+          tooltip: 'Select one or more files to import.',
+          handler: this.fileExtract,
+          scope: this
+        },
+        {
+	  xtype:'textbutton',
+          text: 'Cancel',
+          itemId: 'cancel_button',
+	  style:{
+	      position:'absolute',
+	      top:'0px',
+	      left:'0px'
+	  },
+          handler: function() {
+            this.pdfExtractChoice.close();
+          },
+          scope: this
+        }]
+      });
+
+    this.pdfExtractChoice.on('show', function(window) {
+	var b = window.get('cancel_button');
+	b.getEl().alignTo(window.getEl(),'br-br',[-10,-10]);
     });
+    }
+
+
     this.pdfExtractChoice.show();
+
+    if (justCreated) {
+      var folderTip = new Ext.ToolTip({
+        html: 'The selected folder and its subdirectories will be searched for PDFs to import',
+        target: Ext.get('folder_extract_button').child('tbody')
+      });
+      Ext.getCmp('folder_extract_button').setTooltip(folderTip);
+
+      var fileTip = new Ext.ToolTip({
+        html: 'The selected folder and its subdirectories will be searched for PDFs to import',
+        target: Ext.get('file_extract_button').child('tbody')
+      });
+      Ext.getCmp('file_extract_button').setTooltip(fileTip);
+
+    }
+
   },
 
   // Submit a PDF extraction job, optionally including the tree node

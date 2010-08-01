@@ -291,6 +291,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     this.filterButton = this.actions['FILTER_BUTTON'];
     this.actions['FILTER_FIELD'] = new Ext.app.FilterField({
       itemId: 'FILTER_FIELD',
+      id: 'grid_filter_field',
       emptyText: 'Search References',
       store: this.getStore(),
       base_query: this.plugin_base_query,
@@ -319,13 +320,9 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     var index = ids.indexOf('TB_FILL');
     ids.insert(index + 1, 'NEW');
 
-<<<<<<< HEAD:catalyst/root/js/import/plugins/DB.js
     index = ids.indexOf('SELECT_ALL');
     ids.insert(index + 0, 'EDIT');
-=======
-    index = ids.indexOf('TB_BREAK');
-    ids.insert(index + 1, 'EDIT');
->>>>>>> 63940181c1cdc7b8188deb130f4649b2f84b3b0c:catalyst/root/js/import/plugins/DB.js
+//    ids.insert(index + 1, 'EDIT');
 
   },
 

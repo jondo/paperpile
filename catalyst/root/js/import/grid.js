@@ -125,16 +125,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'EDIT',
         tooltip: 'Edit the selected reference'
       }),
-      'AUTO_FILL': new Ext.Action({
-        text: 'Edit',
+      'AUTO_COMPLETE': new Ext.Action({
+        text: 'Auto-complete Data',
         handler: function() {
           this.updateMetadata();
         },
         scope: this,
         cls: 'x-btn-text-icon edit',
-        icon: '/images/icons/pencil_go.png',
-        itemId: 'AUTO_FILL',
-        tooltip: 'Auto-fill data gathered from online resources.'
+        icon: '/images/icons/update-metadata.png',
+        itemId: 'AUTO_COMPLETE',
+        tooltip: 'Auto-complete citation with data from online resources.'
       }),
 
       'DELETE': new Ext.Action({
@@ -1034,16 +1034,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<tpl if="trashed==0">',
       '  <tpl if="linkout || doi">',
       '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
-<<<<<<< HEAD:catalyst/root/js/import/grid.js
-      '    <tpl if="doi">',
-      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'http://dx.doi.org/{doi}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s Site</a></p>',
-      '    </tpl>',
-      '    <tpl if="!doi && linkout">',
-      '      <p><a href="#" onClick="Paperpile.utils.openURL(\'{linkout}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s Site</a></p>',
-      '    </tpl>',
-      '    </div>',
-=======
->>>>>>> 63940181c1cdc7b8188deb130f4649b2f84b3b0c:catalyst/root/js/import/grid.js
       '  </tpl>',
       '  <tpl if="!linkout && !doi">',
       '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
@@ -1122,26 +1112,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    </ul>',
       '    <ul> ',
       '    <div style="clear:both;margin-top:2em;"></div>',
-<<<<<<< HEAD:catalyst/root/js/import/grid.js
-      '      <li class="pp-action pp-action-clipboard"> <a  href="#" class="pp-textlink" action="copy-text">Copy as Text</a> </li>',
+      '      <li><a  href="#" class="pp-textlink pp-action pp-action-clipboard" action="copy-text">Copy as Text</a> </li>',
       '      <tpl if="isBibtexMode">',
-      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-bibtex">Copy as BibTeX</a> </li>',
-      '        <li class="pp-action "> <a  href="#" class="pp-textlink" action="copy-keys">Copy LaTeX Citation</a> </li>',
-=======
-      '      <li><a  href="#" class="pp-textlink pp-action pp-action-clipboard" action="copy-text">Copy references as text</a> </li>',
-      '      <tpl if="isBibtexMode">',
-      '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-bibtex">Copy references as BibTeX</a> </li>',
+      '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-bibtex">Copy as BibTeX</a> </li>',
       '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-keys">Copy LaTeX citation</a> </li>',
->>>>>>> 63940181c1cdc7b8188deb130f4649b2f84b3b0c:catalyst/root/js/import/grid.js
       '      </tpl>',
       '    </ul>',
       '    <ul>',
       '    <div style="clear:both;margin-top:2em;"></div>',
-<<<<<<< HEAD:catalyst/root/js/import/grid.js
-      '      <li class="pp-action pp-action-email"> <a  href="#" class="pp-textlink" action="email">E-mail References</a> </li>',
-=======
-      '      <li><a  href="#" class="pp-textlink pp-action pp-action-email" action="email">E-mail references</a> </li>',
->>>>>>> 63940181c1cdc7b8188deb130f4649b2f84b3b0c:catalyst/root/js/import/grid.js
+      '      <li><a  href="#" class="pp-textlink pp-action pp-action-email" action="email">E-mail References</a> </li>',
       '    </ul>',
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '   <dl>',
@@ -1172,7 +1151,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'PDF_COMBINED_BUTTON2',
       this.createSeparator('TB_VIEW_SEP'),
       'EDIT',
-      'AUTO_FILL',
+      'AUTO_COMPLETE',
       'SELECT_ALL',
       'DELETE',
       this.createSeparator('TB_DEL_SEP'),
@@ -1189,7 +1168,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     'PDF_COMBINED_BUTTON',
       this.createContextSeparator('CONTEXT_VIEW_SEP'),
       'EDIT',
-      'AUTO_FILL',
+      'AUTO_COMPLETE',
       'SELECT_ALL',
       'DELETE',
       this.createContextSeparator('CONTEXT_DEL_SEP'),

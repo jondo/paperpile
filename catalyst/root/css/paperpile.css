@@ -2297,6 +2297,20 @@ table.x-btn-subtle:not(.x-btn-over) {
     margin: 0px 0px;
 }
 
+.x-btn-textlink, .x-btn-textlink *{
+    background:none;
+    background-image:none;
+    border:none;
+}
+
+.x-btn-textlink button {
+    color: #0015FE;
+}
+
+.x-btn-textlink:hover button {
+  text-decoration: underline;
+}
+
 .x-menu-sep {
     overflow:visible;
 }
