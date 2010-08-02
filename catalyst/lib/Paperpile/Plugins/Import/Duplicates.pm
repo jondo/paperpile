@@ -31,8 +31,8 @@ extends 'Paperpile::Plugins::Import';
 has '_db_file'       => ( is => 'rw' );
 has 'file'           => ( is => 'rw' );
 has '_data'          => ( is => 'rw', isa => 'ArrayRef' );
-has '_dupl_keys'     => ( is => 'rw' );                      # keeps sha1 keys of duplicates
-has '_dupl_partners' => ( is => 'rw' );                      # keeps sha1 keys of duplicates
+has '_dupl_keys'     => ( is => 'rw' );                      # keeps guid keys of duplicates
+has '_dupl_partners' => ( is => 'rw' );                      # keeps guid keys of duplicates
 has '_searchspace'   => ( is => 'rw' )
   ;    # publications that we will loop throu while searching duplicates
 
@@ -102,7 +102,7 @@ sub connect {
 
   foreach my $i ( 0 .. $#{ $self->_searchspace } ) {
 
-    next if ( exists $self->_dupl_keys->{ $self->_searchspace->[$i]->{sha1} } );
+    next if ( exists $self->_dupl_keys->{ $self->_searchspace->[$i]->{guid} } );
 
     my @words = keys %{ $index[$i] };
 
@@ -115,7 +115,7 @@ sub connect {
       # and don't check pairs twice (i vs j and j vs i, i vs j is enough)
       next if $i >= $j;
 
-      next if ( exists $self->_dupl_keys->{ $self->_searchspace->[$j]->{sha1} } );
+      next if ( exists $self->_dupl_keys->{ $self->_searchspace->[$j]->{guid} } );
 
       # Don't compare if lengths are too different
       # play with this cutoff
@@ -148,9 +148,9 @@ sub connect {
       if ( $mismatches <= $max_mismatch ) {
         $countDuplCandidates++;
         print STDERR $i, "\t", $self->_searchspace->[$i]->{title}, "\t(",
-          $self->_searchspace->[$i]->{sha1}, ")\n";
+          $self->_searchspace->[$i]->{guid}, ")\n";
         print STDERR $j, "\t", $self->_searchspace->[$j]->{title}, "\t(",
-          $self->_searchspace->[$j]->{sha1}, ")\n";
+          $self->_searchspace->[$j]->{guid}, ")\n";
         print STDERR
           "(words: $wordcount_i vs $wordcount_j, matches=$matches, mismatches=$mismatches, max_mismatches=$max_mismatch)\n";
 
@@ -226,9 +226,11 @@ sub connect {
 
   # update the background color
   for ( my $i = 0 ; $i < scalar( @{ $self->_data } ) ; $i++ ) {
-    if ( defined $self->_dupl_keys->{ $self->_data->[$i]->{'sha1'} } ) {
-      $self->_data->[$i]->{'_highlight'} =
-        $cluster2color{ $self->_dupl_keys->{ $self->_data->[$i]->{'sha1'} } };
+      my $data = $self->_data->[$i];
+    if ( defined $self->_dupl_keys->{ $data->{guid} } ) {
+      $data->{'_highlight'} =
+        $cluster2color{ $self->_dupl_keys->{ $data->{guid} } };
+      $data->{'_dup_id'} = $self->_dupl_keys->{$data->{guid}};
     }
     print STDERR $self->_data->[$i]->{'_highlight'}, "\n";
   }
@@ -259,30 +261,30 @@ sub page {
 }
 
 # take care of pairwise duplications
-# remind the sha1 keys of identified duplicates
+# remind the guid keys of identified duplicates
 # and label the clusters
 sub _store {
   my ( $self, $i, $j ) = @_;
 
   my $i_pub = $self->_searchspace->[$i];
   my $j_pub = $self->_searchspace->[$j];
-  $self->_dupl_partners->{ $i_pub->{sha1} } = $j_pub;
-  $self->_dupl_partners->{ $j_pub->{sha1} } = $i_pub;
+  $self->_dupl_partners->{ $i_pub->{guid} } = $j_pub;
+  $self->_dupl_partners->{ $j_pub->{guid} } = $i_pub;
 
   # remember the i.th publication
-  if ( !defined $self->_dupl_keys->{ $i_pub->{sha1} } ) {
+  if ( !defined $self->_dupl_keys->{ $i_pub->{guid} } ) {
 
     #$self->_searchspace->[$i]->{_highlight} = 'pp-grid-highlight3';
     push @{ $self->_data }, Paperpile::Library::Publication->new($i_pub);
-    $self->_dupl_keys->{ $i_pub->{sha1} } = $i;
+    $self->_dupl_keys->{ $i_pub->{guid} } = $i;
   }
 
   # remember the j.th publication
-  if ( !defined $self->_dupl_keys->{ $j_pub->{sha1} } ) {
+  if ( !defined $self->_dupl_keys->{ $j_pub->{guid} } ) {
 
     #$self->_searchspace->[$j]->{_highlight} = 'pp-grid-highlight3';
     push @{ $self->_data }, Paperpile::Library::Publication->new($j_pub);
-    $self->_dupl_keys->{ $j_pub->{sha1} } = $i;
+    $self->_dupl_keys->{ $j_pub->{guid} } = $i;
   }
 }
 

@@ -47,12 +47,12 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
     // otherwise the store will have already started loading when these are added.
     this.getStore().on('beforeload',
       function() {
-        Paperpile.status.showBusy('Searching duplicates');
+        this.busyStatus = Paperpile.status.showBusy('Searching duplicates');
       },
       this);
     this.getStore().on('load',
       function() {
-        Paperpile.status.clearMsg();
+        Paperpile.status.clearMessageNumber(this.busyStatus);
         if (this.store.getCount() == 0) {
           this.getPluginPanel().onEmpty(this.emptyMsg);
         }
@@ -62,12 +62,20 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
     Paperpile.PluginGridDuplicates.superclass.initComponent.call(this);
 
     this.actions['CLEAN_ALL_DUPLICATES'] = new Ext.Action({
-      text: 'Clean all duplicates',
+      text: 'Clean all Duplicates',
       handler: this.cleanDuplicates,
       scope: this,
       iconCls: 'pp-icon-clean',
       itemId: 'remove_duplicates',
       tooltip: 'Automatically clean all duplicates'
+    });
+    this.actions['MERGE_DUPLICATES'] = new Ext.Action({
+      text: 'Merge to Selected',
+      handler: this.mergeDuplicates,
+      scope: this,
+      icon: '/images/icons/page_white_stack.png',
+      itemId: 'MERGE_DUPLICATES',
+      tooltip: 'Merge duplicates into the selected reference'
     });
 
     this.on('render', this.myOnRender, this);
@@ -85,6 +93,7 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
     // We might eventually have this working, but for now it's unimplemented
     // in the backend so leave it out of the toolbar.
     //ids.insert(fillIndex + 1, 'CLEAN_ALL_DUPLICATES');
+    ids.insert(fillIndex + 1, 'MERGE_DUPLICATES');
   },
 
   initContextMenuItemIds: function() {
@@ -102,6 +111,54 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
         // This is very slow, and will need backend optimization in Duplicates.pm.
         plugin_clear_duplicate_cache: true
       }
+    });
+  },
+
+  mergeDuplicates: function() {
+
+    var ref = this.getSingleSelectionRecord();
+
+    var other_dups = this.getStore().queryBy(function(record, id) {
+      if (record.data._dup_id == ref.data._dup_id && record.data.guid != ref.data.guid) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    var other_guids = [];
+    other_dups.each(function(item, index, length) {
+      Paperpile.log(item);
+      other_guids = other_guids.concat(item.data.guid);
+    });
+
+    Paperpile.log(other_guids);
+
+    var n = other_guids.length + 1;
+
+    //    Paperpile.status.updateMsg("Merging duplicate references");
+    Paperpile.Ajax({
+      url: '/ajax/crud/merge_duplicates',
+      params: {
+        grid_id: this.id,
+        ref_guid: ref.data.guid,
+        other_guids: other_guids
+      },
+      success: function(response) {
+        var msg = n + " duplicate references were merged.";
+	var undoMessage = Paperpile.status.updateMsg({
+          msg: msg,
+          action1: 'Undo',
+          callback: function(action) {
+	    Paperpile.status.clearMessageNumber(undoMessage);
+            Paperpile.Ajax({
+              url: '/ajax/crud/undo_merge_duplicates'
+            });
+          },
+          scope: this
+        });
+      },
+      scope: this
     });
   },
 

@@ -412,6 +412,32 @@ sub set_file_sync : Local {
 
 }
 
+sub _collect_update_data {
+  my ( $self, $c, $pubs, $fields ) = @_;
+
+  $c->stash->{data} = {} unless ( defined $c->stash->{data} );
+
+  my $max_output_size = 30;
+  if ( scalar(@$pubs) > $max_output_size ) {
+    $c->stash->{data}->{pub_delta} = 1;
+    @$pubs = @$pubs[ 1 .. $max_output_size ];
+  }
+
+  my %output = ();
+  foreach my $pub (@$pubs) {
+    my $hash = $pub->as_hash;
+
+    my $pub_fields = {};
+    if ($fields) {
+      map { $pub_fields->{$_} = $hash->{$_} } @$fields;
+    } else {
+      $pub_fields = $hash;
+    }
+    $output{ $hash->{guid} } = $pub_fields;
+  }
+
+  $c->stash->{data}->{pubs} = \%output;
+}
 
 
 1;

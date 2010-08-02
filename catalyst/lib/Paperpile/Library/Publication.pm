@@ -359,6 +359,90 @@ sub best_link {
     return '';
 }
 
+# Takes any fields that are defined in $other_pub and aren't defined in $self
+# and applies them to $self. Also brings over $other_pub's PDF (if $self does not
+# have one defined) and attachments.
+sub merge_into_me {
+    my $self = shift;
+    my $other_pub = shift;
+    my $library = shift;
+
+    my $dbh = $library->dbh;
+    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+
+    my $guid = $self->guid;
+    my $other_guid = $other_pub->guid;
+
+    # He's got a PDF that we want.
+    if (!$self->pdf && $other_pub->pdf) {
+	my $dbh = $library->dbh;	
+        my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$other_guid' and is_pdf=1;");
+	$sth->execute;
+
+	while ( my $row = $sth->fetchrow_hashref() ) {
+	    my $other_pdf = $row->{local_file};
+	    $library->attach_file($other_pdf,1,$self,0,$dbh);
+	}
+
+	$sth->finish;
+    }
+
+    # Now bring over all attachments.
+    if ($other_pub->attachments) {
+	my $dbh = $library->dbh;	
+        my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$other_guid' and is_pdf=0;");
+	$sth->execute;
+
+	while ( my $row = $sth->fetchrow_hashref() ) {
+	    my $other_pdf = $row->{local_file};
+	    $library->attach_file($other_pdf,0,$self,0,$dbh);
+	}
+	$sth->finish;
+    }
+    
+    foreach my $folder (split(',',$other_pub->folders)) {
+	$library->add_to_collection([$self],$folder,$dbh);
+    }
+    foreach my $tag (split(',',$other_pub->tags)) {
+	$library->add_to_collection([$self],$tag,$dbh);
+    }
+
+   foreach my $key ( $self->meta->get_attribute_list ) {
+    my $value = $self->$key;
+
+    next if ($key =~ m/(folders|tags|pdf_name|pdf|attachments)/gi);
+    next if (ref($value));
+
+    if ($self->is_trivial_value($key,$value) && !$self->is_trivial_value($key,$other_pub->$key)) {
+	my $other_value = $other_pub->$key;
+	#print STDERR "Filling in key $key with value $other_value\n";
+	$self->$key($other_pub->$key);
+    }
+
+   }
+    
+  $dbh->commit;
+
+}
+
+sub is_trivial_value {
+    my $self = shift;
+    my $key = shift;
+    my $value = shift;
+
+    my $tmp = $value;
+
+
+    return 1 if (!defined $tmp);
+    return 1 if ($tmp eq '');
+
+    $tmp =~ s/\s+//g; # All spaces.
+
+    return 1 if ($tmp eq '');
+    #print STDERR "NOT trivial: $key \t\t $value\n";
+    return 0;
+}
+
 sub format_authors {
 
   my $self = shift;
@@ -417,7 +501,7 @@ sub refresh_job_fields {
 # keep it that way for now.
 
 sub refresh_attachments {
-  ( my $self ) = @_;
+  ( my $self, my $dbh ) = @_;
 
   $self->_attachments_list( [] );
 
@@ -429,8 +513,9 @@ sub refresh_attachments {
 
     my $paper_root = $model->get_setting('paper_root');
     my $guid       = $self->guid;
+    $dbh = $model->dbh unless (defined $dbh);
     my $sth =
-      $model->dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
+      $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
 
     $sth->execute;
 
@@ -481,14 +566,14 @@ sub add_tag {
   my $self = shift;
   my $guid = shift;
 
-  $self->insert_guid( 'tags', $guid );
+  $self->add_guid( 'tags', $guid );
 }
 
 sub add_folder {
   my $self = shift;
   my $guid = shift;
 
-  $self->insert_guid( 'folders', $guid );
+  $self->add_guid( 'folders', $guid );
 }
 
 sub add_guid {
@@ -526,7 +611,6 @@ sub as_hash {
       $value += 0;
     }
 
-    $hash{$key} = $value if ( $key eq '_pdf_path' );
     $hash{$key} = $value if ( $key eq '_attachments_list' );
 
     # take only simple scalar and allowed refs

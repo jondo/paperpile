@@ -70,7 +70,6 @@ Ext.override(Ext.Button, {
                 this.tooltip = tooltip;
             }else{
                 this.tooltipEl.dom[this.tooltipType] = tooltip;
-		Paperpile.log(this.tooltipEl.id);
             }
         }else{
             this.tooltip = tooltip;

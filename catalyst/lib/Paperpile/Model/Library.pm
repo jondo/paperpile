@@ -141,21 +141,26 @@ sub delete_pubs {
 
   ( my $self, my $pubs ) = @_;
 
+  print STDERR "DELETING PUBS!!!\n";
+
   my $dbh = $self->dbh;
 
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   # Delete attachments
   foreach my $pub (@$pubs) {
-
+  print STDERR "DELETING PDF!!!\n";
     # PDF
-    $self->delete_attachment( $pub->pdf, 1, $pub, $dbh ) if $pub->pdf;
+    $self->delete_attachment( $pub->pdf, 1, $pub, 0, $dbh ) if $pub->pdf;
+  print STDERR "DELETING OTHERS!!!\n";
 
     # Other files
     foreach my $guid ( split( ',', $pub->attachments || '' ) ) {
-      $self->delete_attachment( $guid, 0, $pub, $dbh );
+      $self->delete_attachment( $guid, 0, $pub, 0, $dbh );
     }
   }
+
+  print STDERR "DLETING FROM TABLES!!!\n";
 
   # Then delete the entry in all relevant tables
   my $delete_main     = $dbh->prepare("DELETE FROM Publications WHERE rowid=?");
@@ -546,7 +551,9 @@ sub update_collections {
 
   my $dbh = $self->dbh;
 
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  if (!$dbh->{BegunWork}) {
+    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  }
 
   foreach my $pub (@$pubs) {
 
@@ -584,10 +591,12 @@ sub update_collections {
 }
 
 sub add_to_collection {
-  my ( $self, $pubs, $guid ) = @_;
+  my ( $self, $pubs, $guid, $dbh ) = @_;
+
+  $dbh = $self->dbh unless (defined $dbh);
 
   # Figure out the type from the GUID.
-  my $sth = $self->dbh->prepare("SELECT * FROM Collections WHERE guid=?");
+  my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
   $sth->execute($guid);
   my $type;
   while ( my $row = $sth->fetchrow_hashref ) {
@@ -605,10 +614,12 @@ sub add_to_collection {
 # $collection_guid and type $type.
 
 sub remove_from_collection {
-  my ( $self, $pubs, $guid ) = @_;
+  my ( $self, $pubs, $guid, $dbh ) = @_;
+
+  $dbh = $self->dbh unless (defined $dbh);
 
   # Figure out the type from the GUID.
-  my $sth = $self->dbh->prepare("SELECT * FROM Collections WHERE guid=?");
+  my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
   $sth->execute($guid);
   my $type;
   while ( my $row = $sth->fetchrow_hashref ) {
@@ -617,8 +628,6 @@ sub remove_from_collection {
   $sth->finish;
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
-
-  my $dbh = $self->dbh;
 
   foreach my $pub (@$pubs) {
 
@@ -1328,7 +1337,7 @@ sub delete_attachment {
   my $rowid = $pub->_rowid;
 
   ( my $path ) =
-    $self->dbh->selectrow_array("SELECT local_file FROM Attachments WHERE guid='$guid';");
+    $dbh->selectrow_array("SELECT local_file FROM Attachments WHERE guid='$guid';");
 
   $dbh->do("DELETE FROM Attachments WHERE guid='$guid'");
 
@@ -1358,7 +1367,7 @@ sub delete_attachment {
     $dbh->do("UPDATE Publications SET attachments='$new' WHERE rowid=$rowid");
 
     $pub->attachments($new);
-    $pub->refresh_attachments;
+    $pub->refresh_attachments($dbh);
   }
 
   move( $path, $undo_dir ) if $with_undo;

@@ -415,7 +415,7 @@ sub complete_details {
   $bibtex = $bibtex_tmp->content;
 
   # Create a new Publication object
-  my $full_pub = Paperpile::Library::Publication->new();
+  $full_pub = Paperpile::Library::Publication->new();
 
   # Google Bug: everything is twice escaped in bibtex
   $bibtex =~ s/\\\\/\\/g;
