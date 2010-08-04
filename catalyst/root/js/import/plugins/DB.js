@@ -111,7 +111,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive" default="desc">Supp. material</div>');
     Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="notes" status="inactive" default="desc">Notes</div>');
 
-    target.on('click', this.handleSortButtons, this);
+    this.mon(target,'click',this.handleSortButtons,this);
   },
 
   handleFocusSearch: function() {
@@ -291,7 +291,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     this.filterButton = this.actions['FILTER_BUTTON'];
     this.actions['FILTER_FIELD'] = new Ext.app.FilterField({
       itemId: 'FILTER_FIELD',
-      id: 'grid_filter_field',
       emptyText: 'Search References',
       store: this.getStore(),
       base_query: this.plugin_base_query,
@@ -332,7 +331,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     }
   },
   isToolbarItem: function(item) {
-    Paperpile.log(item);
     return true;
   },
 

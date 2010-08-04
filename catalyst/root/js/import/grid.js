@@ -370,9 +370,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       itemId: 'grid',
       store: this.getStore(),
       selModel: new Ext.ux.BetterRowSelectionModel(),
-      view: new Ext.grid.GridView({
-        grid: this
-      }),
       bbar: this.pager,
       tbar: new Paperpile.Toolbar({
         itemId: 'toolbar',
@@ -528,7 +525,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   fontSize: function() {
-    Paperpile.log("Hey!");
     Ext.getBody().setStyle({
       'font-size': '24px'
     });
@@ -686,6 +682,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   refreshView: function() {
+    if (!this.isVisible()) {
+//      return;
+    }
     this.updateButtons();
     this.getPluginPanel().updateDetails();
     if (sm.getCount() == 1) {
@@ -730,7 +729,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     // Note: the 'afterselectionchange' event is a custom selection model event.
-    this.mon(this.getSelectionModel(), 'afterselectionchange', this.afterSelectionChange, this);
+    this.getSelectionModel().on('afterselectionchange', this.afterSelectionChange, this);
 
     this.dropZone = new Paperpile.GridDropZone(this, {
       ddGroup: this.ddGroup
@@ -1296,7 +1295,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   updateButtons: function() {
     this.getTopToolbar().items.each(function(item, index, length) {
       item.enable();
-    });
+    },this);
+
     this.getContextMenu().items.each(function(item, index, length) {
       item.enable();
     });
@@ -1913,7 +1913,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   onUpdate: function(data) {
     var pubs = data.pubs;
     if (!pubs) {
-      return;
+      pubs = [];
     }
 
     var store = this.getStore();
@@ -2107,35 +2107,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
   },
 
-  destroy: function() {
+  onDestroy: function() {
+    Paperpile.PluginGrid.superclass.onDestroy.call(this);
 
-    if (this.getSelectionModel()) {
-      this.getSelectionModel().purgeListeners();
-      this.getSelectionModel().destroy();
-    }
-    if (this.keys) {
-      this.keys.destroy();
-      delete this.keys;
-    }
-    if (this.pager) {
-      this.pager.purgeListeners();
-      this.pager.destroy();
-    }
-    if (this.getView()) {
-      this.getView().purgeListeners();
-    }
-    if (this._store) {
-      this.getStore().purgeListeners();
-      this.getStore().destroy();
-      delete this._store;
-    }
-    if (this.context) {
-      this.context.destroy();
-    }
-    if (this) {
-      this.purgeListeners();
-    }
-    Paperpile.PluginGrid.superclass.destroy.call(this);
+      Ext.destroy(this.keys);
+      Ext.destroy(this.pager);
+      Ext.destroy(this.context);
   }
 });
 
