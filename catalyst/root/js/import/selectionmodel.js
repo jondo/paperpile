@@ -506,9 +506,16 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
 
   destroy: function() {
     if (this.rowNav) {
-      this.rowNav.disable();
+      this.rowNav.destroy();
       this.rowNav = null;
     }
+
+    this.grid.un('rowclick', this.handleMouseEvent, this);
+    this.grid.un('rowmousedown', this.handleMouseEvent, this);
+    this.grid.getView().un('refresh', this.onRefresh, this);
+    this.grid.getView().un('rowupdated', this.onRowUpdated, this);
+    this.grid.getView().un('rowremoved', this.onRemove, this);
+
     Ext.grid.RowSelectionModel.superclass.destroy.call(this);
   },
 
