@@ -168,7 +168,7 @@
   </signature>
   <rule target="Bibtex">
     <pattern>
-      <rewrite>!(.*iop\.org/)([\d|\-|/]+)(.*)!$1export\?articleId=$2&amp;exportFormat=iopexport_bib&amp;exportType=abs!</rewrite>
+      <rewrite>!(.*iop\.org/)([\w|\-|/]+)(.*)!$1export\?articleId=$2&amp;exportFormat=iopexport_bib&amp;exportType=abs!</rewrite>
     </pattern>
   </rule>
   <test>
@@ -768,6 +768,17 @@
   <rule target="Wiley">
   </rule>
  
+
+</site>
+
+<site name="AFS">
+
+  <signature>
+    <url>!afsjournals\.org!</url>
+  </signature>
+
+  <rule target="AFS">
+  </rule>
 
 </site>
 
