@@ -604,6 +604,24 @@
 </site>
 
 
+<site name="JCI">
+  <signature>
+    <url>!jci\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*view/\d+)!$1/files/pdf\?disposition=attachment!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biotechniques.com/BiotechniquesJournal/2010/July/Design-of-an-in-vivo-cleavable-disulfide-linker-in-recombinant-fusion-proteins/biotechniques-296954.html</url>
+  </test>
+</site>
+
+
+
   
 <site name="Meta">
   <signature>
