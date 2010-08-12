@@ -556,7 +556,7 @@ Paperpile.log("debug 5");
 
     //    this.log("Init!");
     Ext.Ajax.request({
-      url: '/ajax/pdf/extpdf',
+      url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'INFO',
         inFile: this.file
@@ -1277,7 +1277,7 @@ Paperpile.log("debug 5");
     this.fly("search_field").addClass("pdf-search-busy");
 
     Ext.Ajax.request({
-      url: '/ajax/pdf/extpdf',
+      url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'SEARCH',
         inFile: this.file,
@@ -1641,7 +1641,7 @@ Paperpile.log("debug 5");
 
     //this.log("Loading words...");
     Ext.ajax.Request({
-      url: '/ajax/pdf/extpdf',
+      url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'WORDLIST',
         page: pageIndex,
