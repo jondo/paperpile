@@ -1,4 +1,3 @@
-
 # Copyright 2009, 2010 Paperpile
 #
 # This file is part of Paperpile
@@ -17,19 +16,90 @@
 
 package Paperpile::MetaCrawler::Targets::SpringerLink;
 use Moose;
-use Paperpile::Plugins::Import::SpringerLink;
+use Paperpile::Utils;
+use WWW::Mechanize;
+use HTML::TreeBuilder;
 
 extends 'Paperpile::MetaCrawler::Targets';
 
 sub convert {
 
-  my ($self, $content, $url) = @_;
+  my ( $self, $content, $url ) = @_;
 
-  my $SpringerLinkPlugin = Paperpile::Plugins::Import::SpringerLink->new();
+  # Any export format reurned by Springer skips the middle names of
+  # the authors
+  # We parse them from the HTML page and then correct the Bibtex
+  # author sting
+  # I THINK THEY JUST DO IT TO MAKE PEOPLE GO MAD
+  my $tree = HTML::TreeBuilder->new;
+  $tree->utf8_mode(1);
+  $tree->parse_content($content);
+
+  my @tags = $tree->look_down( '_tag' => 'p', 'class' => 'authors' );
+  my @authors = split( /,\s+|\s+and\s+/, $tags[0]->as_text() );
+
+  # Now that we're done with it, we must destroy it.
+  $tree = $tree->delete;
+
+  my $id;
+  if ( $url =~ m/(.*content\/)(\w+)(.*)/ ) {
+    $id = $2;
+  }
+
+  my $new_url = "http://www.springerlink.com/content/$id/export-citation/";
+
+  my $mech = WWW::Mechanize->new( autocheck => 1 );
+  $mech->agent_alias('Windows IE 6');
+
+  $mech->get($new_url);
+
+  my $form = $mech->form_name("aspnetForm");
+
+  my @input_fields = $form->inputs;
+
+  $mech->field( 'ctl00$ContentPrimary$ctl00$ctl00$Export', "AbstractRadioButton" );
+  $mech->field( 'ctl00$ContentPrimary$ctl00$ctl00$Format', "TextRadioButton" );
+  $mech->select( 'ctl00$ContentPrimary$ctl00$ctl00$CitationManagerDropDownList', "BibTex" );
+
+  my $response = $mech->click('ctl00$ContentPrimary$ctl00$ctl00$ExportCitationButton');
+  my $bibtex   = $response->decoded_content();
+
+  # Create a new Publication object
   my $pub = Paperpile::Library::Publication->new();
-  $pub->annote( $content );
 
-  my $full_pub = $SpringerLinkPlugin->complete_details($pub);
+  # import the information from the BibTeX string
+  $pub->import_string( $bibtex, 'BIBTEX' );
 
-  return $full_pub;
+  # here we correct the authors from the bibtex 
+  my @authors_bib = split( /\s+and\s+/, $pub->authors );
+  if ( $#authors_bib == $#authors ) {
+    foreach my $i ( 0 .. $#authors_bib ) {
+      ( my $last, my $first ) = split( /,\s+/, $authors_bib[$i] );
+      $authors[$i] =~ s/$last//;
+      ( my $tmp_first   = $first )       =~ s/\s+//g;
+      ( my $tmp_authors = $authors[$i] ) =~ s/\s+//g;
+      if ( $tmp_first ne $tmp_authors ) {
+        $first = $authors[$i];
+        $authors_bib[$i] = "$last, $first";
+      }
+    }
+
+    my $new_authors = join( " and ", @authors_bib );
+    $new_authors =~ s/\s+/ /g;
+    $pub->authors($new_authors);
+  }
+
+  if ( $pub->annote() =~ m/^10\./ ) {
+    $pub->doi($pub->annote());
+    $pub->annote('');
+  }
+
+  # bibtex import deactivates automatic refresh of fields
+  # we force it now at this point
+  $pub->_light(0);
+  $pub->refresh_fields();
+  $pub->refresh_authors();
+
+  return $pub;
 }
+
