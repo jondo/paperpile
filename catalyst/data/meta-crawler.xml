@@ -288,6 +288,12 @@
       <rewrite>!(.*crossref/)(\d+)(/)(.*)(\.shtml)!http://www.agu.org/journals/includes/download2.php?id=$4&amp;year=$2!</rewrite>
     </pattern>
   </rule>
+
+  <rule target="Ris">
+    <pattern>
+      <match>!.*"([^"]+includes/download2\.php[^"]+)".*!</match>
+    </pattern>
+  </rule>
   
   <test>
     <page url="http://www.agu.org/pubs/crossref/2010/2009GB003621.shtml">
