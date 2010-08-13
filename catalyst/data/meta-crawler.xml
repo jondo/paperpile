@@ -779,6 +779,18 @@
 
 </site>
 
+<site name="LWW">
+
+  <signature>
+    <url>!journals\.lww\.com!</url>
+  </signature>
+
+  <rule target="LWW">
+  </rule>
+
+</site>
+
+
 <site name="AFS">
 
   <signature>
