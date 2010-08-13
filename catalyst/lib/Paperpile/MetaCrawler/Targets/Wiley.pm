@@ -1,4 +1,3 @@
-
 # Copyright 2009, 2010 Paperpile
 #
 # This file is part of Paperpile
@@ -20,40 +19,35 @@ use Moose;
 use Paperpile::Utils;
 use Paperpile::Formats;
 use Encode;
+use WWW::Mechanize;
 
 extends 'Paperpile::MetaCrawler::Targets';
 
 sub convert {
 
   my ( $self, $content, $content_URL ) = @_;
-  my $browser =  Paperpile::Utils->get_browser;
 
-  my $id;
+  ( my $linkout = $content ) =~ s/(.*")(\/documentcitationdownload[^"]+)(".*)/$2/ms;
+  $linkout =~ s/&amp;/&/g;
+  $linkout = 'http://onlinelibrary.wiley.com' . $linkout;
 
-  if ( $content_URL =~ m/(.*journal\/)(\d+)(\/.*)/ ) {
-    $id = $2;
-  }
-  if ( ! $id ) {
-    if ( $content =~ m/oid=(\d+)/ ) {
-      $id = $2;
-    }
-  }
+  my $mech = WWW::Mechanize->new( autocheck => 1 );
+  $mech->agent_alias('Windows IE 6');
 
-  if ( $id ) {
-    my $base = 'http://www3.interscience.wiley.com/tools/citex?clienttype=1&subtype=1&mode';
-    my $tmp_page_URL = "$base=1&version=1&id=$2&redirect=/journal/$id/abstract/";
-    my $endnote_URL = "$base=2&format=3&type=2&file=1&id=$id";
-    my $tmp_response = $browser->get($tmp_page_URL);
-    my $response_endnote = $browser->get($endnote_URL);
+  $mech->get($linkout);
 
-    my $endnote = encode_utf8($response_endnote->content());
+  my $form = $mech->form_number(2);
 
-    my $f = Paperpile::Formats->new(format=>'ENDNOTE');
-    my $pub = $f->read_string($endnote);
-    return $pub->[0];
-  } else {
-    return undef;
-  }
+  my @input_fields = $form->inputs;
 
+  $mech->select( 'fileFormat',  "ENDNOTE" );
+  $mech->select( 'hasAbstract', "CITATION_AND_ABSTRACT" );
+
+  my $response = $mech->click();
+
+  my $f = Paperpile::Formats->new( format => 'RIS' );
+  my $pub = $f->read_string( $response->decoded_content() );
+
+  return $pub->[0];
 }
 

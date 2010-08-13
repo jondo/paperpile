@@ -765,12 +765,11 @@
 <site name="Wiley">
 
   <signature>
-    <url>!interscience\.wiley\.com!</url>
+    <url>!onlinelibrary\.wiley\.com!</url>
   </signature>
 
   <rule target="Wiley">
   </rule>
- 
 
 </site>
 
@@ -807,3 +806,5 @@
 </site> 
 
 </driver>
+
+
