@@ -648,6 +648,7 @@
 
   <signature>
     <url>!ncbi\.nlm\.nih\.gov!</url>
+    <url>!ukpmc\.ac\.uk!</url>
   </signature>
 
   <rule target="Pubmed">

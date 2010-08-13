@@ -41,6 +41,10 @@ sub convert {
     my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
     return $PubMedPlugin->_fetch_by_pmid($1);
   }
+  if ( $url =~ m/.*ukpmc\.ac\.uk\/articles\/(PMC\d+)/ ) {
+    my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
+    return $PubMedPlugin->_fetch_by_pmid($1);
+  }
 
   return undef;
 }
