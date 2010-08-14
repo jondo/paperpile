@@ -31,15 +31,16 @@ extends 'Paperpile::Plugins::Import';
 has '_db_file'       => ( is => 'rw' );
 has 'file'           => ( is => 'rw' );
 has '_data'          => ( is => 'rw', isa => 'ArrayRef' );
-has '_dupl_keys'     => ( is => 'rw' );                      # keeps guid keys of duplicates
-has '_dupl_partners' => ( is => 'rw' );                      # keeps guid keys of duplicates
-has '_searchspace'   => ( is => 'rw' )
-  ;    # publications that we will loop throu while searching duplicates
-
+has '_clusters'      => ( is => 'rw' );                      # hash of list with guids
 has 'clear_duplicate_cache' => ( is => 'rw' );
+
+has 'index' => ( is => 'rw', isa => 'HashRef');
 
 sub BUILD {
   my $self = shift;
+
+  $self->index( { words => {}, lengths => {}, pubs => {} } );
+
   $self->plugin_name('Duplicates');
 }
 
@@ -50,154 +51,65 @@ sub get_model {
   return $model;
 }
 
+
 sub connect {
   my $self = shift;
 
   $self->_db_file( $self->file );
   $self->_data( [] );
-  $self->_dupl_keys(     {} );
-  $self->_dupl_partners( {} );
 
-  my $model = $self->get_model;
+  my $dupl_keys={} ;
+  my $dupl_partners = {};
 
-  # get all publications
-  my @all_pubs = @{ $model->all_as_hash };
+  $self->build_index;
 
-  # ignore trashed publications.
-  @all_pubs = grep { !defined $_->{trashed} } @all_pubs;
+  my $N = @{ $self->index->{pubs} };
 
-  $self->_searchspace( \@all_pubs );
-  print STDERR "count: ", $#{ $self->_searchspace }, "\n";
+  foreach my $i ( 0 .. $N - 1 ) {
 
-  # print STDERR Dumper $self->_searchspace->[0];
+    my $guid_i = $self->index->{pubs}->[$i]->{guid};
 
-  # number of words for each title
-  my @lengths = ();
+    next if ( exists $dupl_keys->{$guid_i} );
 
-  # array of hashes to index words of each title
-  my @index = ();
+    my @words_i  = keys %{ $self->index->{words}->{$guid_i} };
+    my $title_i  = $self->index->{pubs}->[$i]->{title};
+    my $length_i = $self->index->{lengths}->{$guid_i};
 
-  # number of general candidate duplications
-  # e.g. title i might be substr of title j.
-  my $countDuplCandidates = 0;
+    # 1/3 of words may mismatch
+    my $max_mismatch = int( $self->index->{lengths}->{$guid_i} * 0.33 );
 
-  # number of directly identified duplications
-  my $countDuplDirect = 0;
+    foreach my $j ( 0 .. $N - 1 ) {
 
-  # number of duplications that additionally needed matching
-  my $countDuplMatching = 0;
-
-  # number of real duplications
-  my $countDuplOverall = 0;
-
-  # get and count words of titles
-  foreach my $i ( 0 .. $#{ $self->_searchspace } ) {
-    $index[$i] = {};
-    my @words = split( /\s+/, lc( $self->_searchspace->[$i]->{title} ) );
-    $lengths[$i] = scalar @words;
-    foreach my $word (@words) {
-      $index[$i]->{$word} = 1;
-    }
-  }
-
-  foreach my $i ( 0 .. $#{ $self->_searchspace } ) {
-
-    next if ( exists $self->_dupl_keys->{ $self->_searchspace->[$i]->{guid} } );
-
-    my @words = keys %{ $index[$i] };
-
-    # 1/3 of words may mismatch; play with this cutoff
-    my $max_mismatch = int( $lengths[$i] * 0.33 );
-
-    foreach my $j ( 0 .. $#{ $self->_searchspace } ) {
-
-      # don't check papers with themselves
-      # and don't check pairs twice (i vs j and j vs i, i vs j is enough)
+      # Only consider half of the matrix and ignore diagonal
       next if $i >= $j;
 
-      next if ( exists $self->_dupl_keys->{ $self->_searchspace->[$j]->{guid} } );
+      my $guid_j = $self->index->{pubs}->[$j]->{guid};
 
-      # Don't compare if lengths are too different
-      # play with this cutoff
-      next if abs( $lengths[$i] - $lengths[$j] ) > 5;
+      next if ( exists $dupl_keys->{$guid_j} );
 
-      my $matches    = 0;
-      my $mismatches = 0;
+      if ( $self->_compare_pubs( $j, $length_i, \@words_i, $title_i, $max_mismatch ) ) {
+        my $i_pub = $self->index->{pubs}->[$i];
+        my $j_pub = $self->index->{pubs}->[$j];
+        $dupl_partners->{ $i_pub->{guid} } = $j_pub;
+        $dupl_partners->{ $j_pub->{guid} } = $i_pub;
 
-      # Match each word, stop if too many words are missing
-      foreach my $word (@words) {
-        if ( $index[$j]->{$word} ) {
-          $matches++;
-        } else {
-          $mismatches++;
-        }
-        last if $mismatches > $max_mismatch;
-      }
-
-      # Matches for further analysis; right now matches are printed if
-      # all words could be matched;
-      # Todo: choose criterion to select those for edit distance calculation
-      #       if exact equality (x eq y) then we don't need distance calculation
-      #       This should limit distance calculations to a reasonable number
-      my $wordcount_i = scalar @words;
-      my $wordcount_j = keys %{ $index[$j] };
-
-      # extend mismatches (to get all differences	if wordcount differs)
-      $mismatches += abs( $wordcount_i - $wordcount_j );
-
-      if ( $mismatches <= $max_mismatch ) {
-        $countDuplCandidates++;
-        print STDERR $i, "\t", $self->_searchspace->[$i]->{title}, "\t(",
-          $self->_searchspace->[$i]->{guid}, ")\n";
-        print STDERR $j, "\t", $self->_searchspace->[$j]->{title}, "\t(",
-          $self->_searchspace->[$j]->{guid}, ")\n";
-        print STDERR
-          "(words: $wordcount_i vs $wordcount_j, matches=$matches, mismatches=$mismatches, max_mismatches=$max_mismatch)\n";
-
-        if ( abs( $wordcount_i - $wordcount_j ) <= $max_mismatch ) {
-          print STDERR "BE CAREFULL...";
-
-          if ( $mismatches == 0 ) {
-
-            # exact equality (i eq j), we don't need distance calculation
-            print STDERR "GOT YA! (direct)\n";
-            $countDuplDirect++;
-            $self->_store( $i, $j );
-          } else {    # perform distance calculation
-            if (
-              $self->_match_title(
-                lc( $self->_searchspace->[$i]->{title} ),
-                lc( $self->_searchspace->[$j]->{title} )
-              )
-              ) {
-              print STDERR "GOT YA! (matching)\n";
-              $countDuplMatching++;
-              $self->_store( $i, $j );
-            } else {
-              print STDERR "\n";
-            }
-          }
+        # remember the i.th publication
+        if ( !defined $dupl_keys->{ $i_pub->{guid} } ) {
+          push @{ $self->_data }, Paperpile::Library::Publication->new($i_pub);
+          $dupl_keys->{ $i_pub->{guid} } = $i;
         }
 
-        print STDERR "\n";
+        # remember the j.th publication
+        if ( !defined $dupl_keys->{ $j_pub->{guid} } ) {
+          push @{ $self->_data }, Paperpile::Library::Publication->new($j_pub);
+          $dupl_keys->{ $j_pub->{guid} } = $i;
+        }
       }
     }
   }
-
-  $countDuplOverall = $countDuplDirect + $countDuplMatching;
-
-  print STDERR "max candidate duplicates     : ", $countDuplCandidates, "\n";
-  print STDERR "  ->      directly identified: ", $countDuplDirect,     "\n";
-  print STDERR "  -> via distance calculation: ", $countDuplMatching,   "\n";
-  print STDERR "overall identified duplicates: ", $countDuplOverall,    "\n";
-  print STDERR "neglected candidates         : ", ( $countDuplCandidates - $countDuplOverall ),
-    "\n\n";
-
-  print STDERR Dumper $self->_dupl_keys;
 
   $self->total_entries( scalar @{ $self->_data } );
 
-  #####################################
   # switch background color (highlight)
   my $c0           = 'pp-grid-highlight1';
   my $c1           = 'pp-grid-highlight2';
@@ -207,7 +119,7 @@ sub connect {
   # define the color-scheme
   # currently implemented: alternate between 2 colors
   my %cluster2color;
-  foreach my $cluster ( sort { $a <=> $b } values %{ $self->_dupl_keys } ) {
+  foreach my $cluster ( sort { $a <=> $b } values %{ $dupl_keys } ) {
     if ( $cluster != $last_cluster ) {
       if ( $cur_color eq $c0 ) {
         $cur_color = $c1;
@@ -215,24 +127,19 @@ sub connect {
         $cur_color = $c0;
       }
     }
-
-    print STDERR $cluster, " ", $cur_color, "\n";
     $cluster2color{$cluster} = $cur_color;
     $last_cluster = $cluster;
   }
 
   my $cluster_count = keys %cluster2color;
-  print STDERR "Nr of clusters: ", $cluster_count, "\n";
 
   # update the background color
   for ( my $i = 0 ; $i < scalar( @{ $self->_data } ) ; $i++ ) {
-      my $data = $self->_data->[$i];
-    if ( defined $self->_dupl_keys->{ $data->{guid} } ) {
-      $data->{'_highlight'} =
-        $cluster2color{ $self->_dupl_keys->{ $data->{guid} } };
-      $data->{'_dup_id'} = $self->_dupl_keys->{$data->{guid}};
+    my $data = $self->_data->[$i];
+    if ( defined $dupl_keys->{ $data->{guid} } ) {
+      $data->{'_highlight'} = $cluster2color{ $dupl_keys->{ $data->{guid} } };
+      $data->{'_dup_id'}    = $dupl_keys->{ $data->{guid} };
     }
-    print STDERR $self->_data->[$i]->{'_highlight'}, "\n";
   }
 
   return $self->total_entries;
@@ -260,32 +167,93 @@ sub page {
 
 }
 
-# take care of pairwise duplications
-# remind the guid keys of identified duplicates
-# and label the clusters
-sub _store {
-  my ( $self, $i, $j ) = @_;
 
-  my $i_pub = $self->_searchspace->[$i];
-  my $j_pub = $self->_searchspace->[$j];
-  $self->_dupl_partners->{ $i_pub->{guid} } = $j_pub;
-  $self->_dupl_partners->{ $j_pub->{guid} } = $i_pub;
+## Generates data structure that holds all publications, the length of
+## the titles and indices for the title words
 
-  # remember the i.th publication
-  if ( !defined $self->_dupl_keys->{ $i_pub->{guid} } ) {
+sub build_index {
 
-    #$self->_searchspace->[$i]->{_highlight} = 'pp-grid-highlight3';
-    push @{ $self->_data }, Paperpile::Library::Publication->new($i_pub);
-    $self->_dupl_keys->{ $i_pub->{guid} } = $i;
+  my $self = shift;
+
+  my $model = $self->get_model;
+
+  my @all_pubs = @{ $model->all_as_hash };
+
+  @all_pubs = grep { !defined $_->{trashed} } @all_pubs;
+
+  my %lengths = ();
+  my %index   = ();
+
+  foreach my $i ( 0 .. $#all_pubs ) {
+
+    my $guid = $all_pubs[$i]->{guid};
+
+    $index{$guid} = {};
+    my @words = split( /\s+/, lc( $all_pubs[$i]->{title} ) );
+    $lengths{$guid} = scalar @words;
+    foreach my $word (@words) {
+      $index{$guid}->{$word} = 1;
+    }
   }
 
-  # remember the j.th publication
-  if ( !defined $self->_dupl_keys->{ $j_pub->{guid} } ) {
+  # List of all publications as flat hashes
+  $self->index->{pubs}    = \@all_pubs;
 
-    #$self->_searchspace->[$j]->{_highlight} = 'pp-grid-highlight3';
-    push @{ $self->_data }, Paperpile::Library::Publication->new($j_pub);
-    $self->_dupl_keys->{ $j_pub->{guid} } = $i;
-  }
+  # Hash for all pubs indexed by guid that holds hash with title words
+  $self->index->{words}   = \%index;
+
+  # Hash for all pubs indexed by guid that holds length of title
+  $self->index->{lengths} = \%lengths;
+
 }
+
+# Compare two publications. The first is given by the index number in
+# $self->index->{pubs}, the second is given by length of tiltle, list
+# of title words, and the title. The cutoff $max_mismatch specific for
+# this comparison must also be passed. This function can be used to
+# cluster all pubs or to compare one arbitrary pub to the index.
+
+sub _compare_pubs {
+
+  my ( $self, $j, $length_i, $words_i, $title_i, $max_mismatch ) = @_;
+
+  my $guid_j   = $self->index->{pubs}->[$j]->{guid};
+  my $length_j = $self->index->{lengths}->{$guid_j};
+
+  # Don't compare if lengths are too different
+  return (0) if abs( $length_j - $length_i ) > 5;
+
+  my $matches    = 0;
+  my $mismatches = 0;
+
+  # Match each word, stop if too many words are missing
+  foreach my $word (@$words_i) {
+    if ( $self->index->{words}->{$guid_j}->{$word} ) {
+      $matches++;
+    } else {
+      $mismatches++;
+    }
+    last if $mismatches > $max_mismatch;
+  }
+
+  # Add wordcount difference to mismatch count
+  $mismatches += abs( $length_i - $length_j );
+
+  if ( $mismatches <= $max_mismatch ) {
+    #if ( abs( $length_i - $length_j ) <= $max_mismatch ) {
+    # Exact equality
+    if ( $mismatches == 0 ) {
+      return 1;
+
+      # Try distance comparison
+    } elsif ( $self->_match_title( lc($title_i), lc( $self->index->{pubs}->[$j]->{title} ) ) ) {
+      return 1;
+    }
+    #}
+  }
+
+  return 0;
+}
+
 
 1;

@@ -563,23 +563,18 @@ sub create_guid {
 }
 
 sub add_tag {
-  my $self = shift;
-  my $guid = shift;
-
+  my ($self, $guid) = @_;
   $self->add_guid( 'tags', $guid );
 }
 
 sub add_folder {
-  my $self = shift;
-  my $guid = shift;
-
+  my ($self, $guid) = @_;
   $self->add_guid( 'folders', $guid );
 }
 
 sub add_guid {
-  my $self = shift;
-  my $what = shift;
-  my $guid = shift;
+
+  my ($self, $what, $guid) = @_;
 
   return unless (defined $what);
 

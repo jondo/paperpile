@@ -611,7 +611,7 @@ sub add_to_collection {
 }
 
 # Deletes all publication objects in list $data from collection with
-# $collection_guid and type $type.
+# $collection_guid
 
 sub remove_from_collection {
   my ( $self, $pubs, $guid, $dbh ) = @_;
@@ -630,7 +630,6 @@ sub remove_from_collection {
   my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
 
   foreach my $pub (@$pubs) {
-
     my $old_list = $pub->$what;
     my $new_list = $self->_remove_from_flatlist( $old_list, $guid );
     $pub->$what($new_list);

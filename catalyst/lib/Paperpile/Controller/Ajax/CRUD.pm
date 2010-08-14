@@ -20,6 +20,7 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
+use Paperpile::Plugins::Import::Duplicates; # <-- delete me afterwards
 use Paperpile::Job;
 use Paperpile::Queue;
 use Paperpile::FileSync;
@@ -760,58 +761,59 @@ sub undo_delete : Local {
 }
 
 sub merge_duplicates : Local {
-    my ($self, $c) = @_;
+  my ( $self, $c ) = @_;
 
-    my $grid_id = $c->request->params->{grid_id};
-    my $ref_guid = $c->request->param('ref_guid');
-    my @other_guids = $c->request->param('other_guids');
+  my $grid_id     = $c->request->params->{grid_id};
+  my $ref_guid    = $c->request->param('ref_guid');
+  my @other_guids = $c->request->param('other_guids');
 
-    my $plugin = $c->session->{"grid_$grid_id"};
-    my $library = $c->model('Library');
+  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $library = $c->model('Library');
 
-    my $undo_data;
+  my $undo_data;
 
-    my $ref_pub = $plugin->find_guid($ref_guid);
-#    Error->throw("No ref pub!") unless (defined $ref_pub);
+  my $ref_pub = $plugin->find_guid($ref_guid);
 
-    my $merged_pub = Paperpile::Library::Publication->new($ref_pub->as_hash);
-    $merged_pub->refresh_fields;
-    $merged_pub->_imported(0);
-    $merged_pub->guid(undef);
-    $merged_pub->title('');
-    $library->insert_pubs([$merged_pub],1);
+  #    Error->throw("No ref pub!") unless (defined $ref_pub);
 
-    my @other_pubs;
-    my @orig_pub_hashes;
-    foreach my $other_guid ($ref_guid,@other_guids) {
-	print STDERR "$ref_guid  -> $other_guid\n";
-	my $pub = $plugin->find_guid($other_guid);
-	push @orig_pub_hashes, $pub->as_hash;
-	if ($pub) {
-	    $merged_pub->merge_into_me($pub,$library);
-	    $pub->title('[Discarded Duplicate] '.$pub->title);
-	    $library->update_pub($pub->guid,$pub->as_hash);
-	    push @other_pubs,$pub;
-	}
+  my $merged_pub = Paperpile::Library::Publication->new( $ref_pub->as_hash );
+  $merged_pub->refresh_fields;
+  $merged_pub->_imported(0);
+  $merged_pub->guid(undef);
+  $merged_pub->title('');
+  $library->insert_pubs( [$merged_pub], 1 );
+
+  my @other_pubs;
+  my @orig_pub_hashes;
+  foreach my $other_guid ( $ref_guid, @other_guids ) {
+    print STDERR "$ref_guid  -> $other_guid\n";
+    my $pub = $plugin->find_guid($other_guid);
+    push @orig_pub_hashes, $pub->as_hash;
+    if ($pub) {
+      $merged_pub->merge_into_me( $pub, $library );
+      $pub->title( '[Discarded Duplicate] ' . $pub->title );
+      $library->update_pub( $pub->guid, $pub->as_hash );
+      push @other_pubs, $pub;
     }
+  }
 
-    push @orig_pub_hashes, $ref_pub->as_hash;
-    push @other_pubs, $ref_pub;
-    
-    $undo_data->{orig_pubs} = \@orig_pub_hashes;
-    $undo_data->{merged_pub} = $merged_pub->as_hash;
+  push @orig_pub_hashes, $ref_pub->as_hash;
+  push @other_pubs,      $ref_pub;
 
-    # Trash all the pre-merge pubs.
-    $library->trash_pubs(\@other_pubs,'TRASH');
-    $library->update_pub($merged_pub->guid,$merged_pub->as_hash);
-    
-    # Delete the duplicates cache.
-    $plugin->connect;
+  $undo_data->{orig_pubs}  = \@orig_pub_hashes;
+  $undo_data->{merged_pub} = $merged_pub->as_hash;
 
-    $self->_collect_update_data($c, [$merged_pub]);
-    $c->stash->{data}->{pub_delta} = 1;
+  # Trash all the pre-merge pubs.
+  $library->trash_pubs( \@other_pubs, 'TRASH' );
+  $library->update_pub( $merged_pub->guid, $merged_pub->as_hash );
 
-    $c->session->{"undo_merge_duplicates"} = $undo_data;
+  # Delete the duplicates cache.
+  $plugin->connect;
+
+  $self->_collect_update_data( $c, [$merged_pub] );
+  $c->stash->{data}->{pub_delta} = 1;
+
+  $c->session->{"undo_merge_duplicates"} = $undo_data;
 }
 
 sub undo_merge_duplicates : Local {
