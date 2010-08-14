@@ -184,85 +184,6 @@ sub page {
   return $page;
 }
 
-sub _check_for_better_bibliographic_data {
-  ( my $self, my $pub ) = @_;
-
-  return undef;
-
-  # Create a new Publication object
-  my $full_pub = Paperpile::Library::Publication->new();
-
-  my $backup_details_link = $pub->_details_link;
-  my $done                = 0;
-
-  # Exit point to direct PubMed calls
-  if ( $pub->_www_publisher eq 'ncbi.nlm.nih.gov' ) {
-    if ( $pub->linkout() =~ m/http:\/\/www\.ncbi\.nlm\.nih\.gov\/pubmed\/(\d+)/ ) {
-      my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
-      $full_pub = $PubMedPlugin->_fetch_by_pmid($1);
-      $done = 1 if ( $full_pub->title );
-    }
-  }
-
-  # Exit point to direct PubMed calls via Pubmed Central Id
-  if ( $pub->_www_publisher eq 'pubmedcentral.nih.gov' and $done == 0 ) {
-    if ( $pub->linkout() =~
-      m/http:\/\/www\.pubmedcentral\.nih\.gov\/articlerender\.fcgi\?artid=(\d+)/ ) {
-      my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
-      $full_pub = $PubMedPlugin->_fetch_by_pmid("PMC$1");
-      $done = 1 if ( $full_pub->title );
-    }
-  }
-
-  # Exit point to SpringerLink details completion
-  if ( $pub->_www_publisher eq 'Springer' and $done == 0 ) {
-    if ( $pub->linkout() =~ m/http:\/\/www.springerlink.com\/index\/(\w+)(\.pdf)/ ) {
-      my $tmp_details_link   = 'http://www.springerlink.com/content/' . $1;
-      my $SpringerLinkPlugin = Paperpile::Plugins::Import::SpringerLink->new();
-      $pub->_details_link($tmp_details_link);
-      $full_pub = $SpringerLinkPlugin->complete_details($pub);
-      $done = 1 if ( $full_pub->title );
-    }
-  }
-
-  # Exit point to ACM details completion
-  if ( $pub->_www_publisher eq 'portal.acm.org' and $done == 0 ) {
-    if ( $pub->linkout() =~ m/http:\/\/portal\.acm\.org\/citation\.cfm\?id=/ ) {
-      my $tmp_details_link = $pub->linkout();
-      my $ACMPlugin        = Paperpile::Plugins::Import::ACM->new();
-      $pub->_details_link($tmp_details_link);
-      $full_pub = $ACMPlugin->complete_details($pub);
-      $done = 1 if ( $full_pub->title );
-    }
-  }
-
-  # Exit point to Oxford Journals details completion
-  if ( $pub->linkout() =~ m/oxfordjournals\.org/ ) {
-    my $tmp_details_link = $pub->linkout();
-    my $OJPlugin         = Paperpile::Plugins::Import::OxfordJournals->new();
-    $pub->_details_link($tmp_details_link);
-    $full_pub = $OJPlugin->complete_details($pub);
-    $done = 1 if ( $full_pub->title );
-  }
-
-  # If we have no support for the publisher yet, or it did not work
-  # we return undef
-  if ( $done == 0 ) {
-    $pub->_details_link($backup_details_link);
-    return undef;
-  } else {
-
-    # If we are here we succeded in calling another Plugin and
-    # we are done
-
-    # Update plugin _hash with new data
-    $full_pub->guid($pub->guid);
-    $self->_hash->{$pub->guid} = $full_pub;
-
-    return $full_pub;
-  }
-}
-
 # We parse GoogleScholar in a two step process. First we scrape off
 # what we see and display it unchanged in the front end via
 # _authors_display and _citation_display. If the user clicks on an
@@ -343,7 +264,7 @@ sub complete_details {
       "sciencedirect\.com\/science",            "landesbioscience\.com",
       "emeraldinsight\.com",                    "dovepress\.com",
       "la-press\.com",                          "thelancet\.com",
-      "interscience\.wiley\.com",
+      "\.wiley\.com",                           "lww\.com"
     );
 
     # We retrieve at most 100 aritcles and screen the page if there
@@ -358,9 +279,8 @@ sub complete_details {
       foreach my $j ( 0 .. $#supported ) {
         if ( $page->[$i]->linkout =~ m/ncbi\.nlm\.nih\.gov/ ) {
           $full_pub = undef;
-          eval { $full_pub = $URL_plugin->match($pub) };
+          eval { $full_pub = $URL_plugin->match($page->[$i]) };
           if ($full_pub) {
-
             $full_pub->citekey('');
 
             # Update plugin _hash with new data
@@ -386,7 +306,7 @@ sub complete_details {
       foreach my $j ( 0 .. $#supported ) {
         if ( $page->[$i]->linkout =~ m/$supported[$j]/ ) {
           $full_pub = undef;
-          eval { $full_pub = $URL_plugin->match($pub) };
+          eval { $full_pub = $URL_plugin->match($page->[$i]) };
           if ($full_pub) {
 
             $full_pub->citekey('');
