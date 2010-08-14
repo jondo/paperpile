@@ -14,7 +14,7 @@
 # copy of the GNU General Public License along with Paperpile.  If
 # not, see http://www.gnu.org/licenses.
 
-package Paperpile::MetaCrawler::Targets::Wiley;
+package Paperpile::MetaCrawler::Targets::LWW;
 use Moose;
 use Paperpile::Utils;
 use Paperpile::Formats;
@@ -27,23 +27,27 @@ sub convert {
 
   my ( $self, $content, $content_URL ) = @_;
 
-  ( my $linkout = $content ) =~ s/(.*")(\/documentcitationdownload[^"]+)(".*)/$2/ms;
-  $linkout =~ s/&amp;/&/g;
-  $linkout = 'http://onlinelibrary.wiley.com' . $linkout;
-
   my $mech = WWW::Mechanize->new( autocheck => 1 );
   $mech->agent_alias('Windows IE 6');
 
-  $mech->get($linkout);
+  $mech->get($content_URL);
 
-  my $form = $mech->form_number(2);
+  my $form = $mech->form_number(1);
 
   my @input_fields = $form->inputs;
 
-  $mech->select( 'fileFormat',  "ENDNOTE" );
-  $mech->select( 'hasAbstract', "CITATION_AND_ABSTRACT" );
+  my $go_button;
+  foreach my $field ( @input_fields ) {
+    next if ( ! $field->name() );
+    if ( $field->name() =~ m/radioBtnExportTypes/ ) {
+      $mech->set_fields( $field->name(),  "Procite" );
+    }
+    if ( $field->name() =~ m/btnOpenExportDialog/ ) {
+      $go_button = $field->name();
+    }
+  }
 
-  my $response = $mech->click();
+  my $response = $mech->click($go_button);
 
   my $f = Paperpile::Formats->new( format => 'RIS' );
   my $pub = $f->read_string( $response->decoded_content() );

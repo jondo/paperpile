@@ -17,6 +17,7 @@
 
 package Paperpile::MetaCrawler::Targets::Nature;
 use Moose;
+use HTML::TreeBuilder;
 use HTML::TreeBuilder::XPath;
 use Paperpile::Formats::HTML;
 
@@ -26,7 +27,16 @@ sub convert {
 
   my ($self, $content, $url) = @_;
 
-  print STDERR "AAAAA\n";
+  # Some strange Citation pages do not have embedded meta-data
+  # and there is no linkout to bibliographic data
+  if ( $url =~ m/doifinder\/10\./ ) {
+    # it would be best to call CrossRef in this case
+    # authors in the HTML code are not separated properly
+    return;
+  }
+
+
+
   # First we parse Meta Tags with the regular module
   my $f = new Paperpile::Formats::HTML;
   $f->content($content);

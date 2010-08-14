@@ -97,13 +97,6 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     var transparentDot = new Image(1, 1);
     transparentDot.src = this.getOnePixel();
 
-    // Handle initial options.
-    //    this.columnCount = this.columns;
-    //    if (this.pageLayout == "continuous")
-    //      this.continuous = true;
-    //    else
-    //      this.continuous = false;
-    // GJ 2009-10-20 override defaults.
     this.columnCount = 1;
     this.continuous = true;
     if (this.zoom == "page") this.specialZoom = 'page';
@@ -423,6 +416,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     var pagesId = this.prefix() + "pages";
     var contentId = this.prefix() + "content";
 
+      Paperpile.log("debug 2");
+      
     Ext.apply(this, {
       autoScroll: true,
       enableKeyEvents: true,
@@ -435,13 +430,16 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
 
     this.on('render', this.myAfterRender, this);
     this.on('resize', this.myOnResize, this);
+
+    Paperpile.log("debug 3");
+
   },
 
   myAfterRender: function() {
     if (this.file != "") {
       this.initPDF(this.file);
     }
-
+      Paperpile.log("debug 4");
     this.focusEl = this.el.createChild({
       tag: 'a',
       cls: 'x-menu-focus',
@@ -481,6 +479,7 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
       this.slidePreview();
     },
     this);
+Paperpile.log("debug 5");
   },
 
   getOnePixel: function() {
@@ -556,8 +555,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.file = file,
 
     //    this.log("Init!");
-    Paperpile.Ajax({
-      url: '/ajax/pdf/extpdf',
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'INFO',
         inFile: this.file
@@ -1277,8 +1276,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     this.lastSearchText = searchText;
     this.fly("search_field").addClass("pdf-search-busy");
 
-    Paperpile.Ajax({
-      url: '/ajax/pdf/extpdf',
+    Ext.Ajax.request({
+      url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'SEARCH',
         inFile: this.file,
@@ -1641,8 +1640,8 @@ Paperpile.PDFviewer = Ext.extend(Ext.Panel, {
     if (this.words[pageIndex].length > 0) return;
 
     //this.log("Loading words...");
-    Paperpile.Ajax({
-      url: '/ajax/pdf/extpdf',
+    Ext.ajax.Request({
+      url: Paperpile.Url('/ajax/pdf/extpdf'),
       params: {
         command: 'WORDLIST',
         page: pageIndex,

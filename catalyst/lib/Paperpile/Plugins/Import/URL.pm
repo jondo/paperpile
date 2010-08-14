@@ -36,7 +36,9 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
-  NetMatchError->throw( error => 'No match found resolving URL.' ) if ( $pub->best_link eq '' );
+  if ( $pub->best_link eq '' or $pub->best_link =~ m/(\.doc|\.pdf)$/ ) {
+    NetMatchError->throw( error => 'No match found resolving URL.' )
+  }
 
   print STDERR "\n\n===================================================\n";
   print STDERR $pub->best_link,"\n";
