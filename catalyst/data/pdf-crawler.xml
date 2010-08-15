@@ -51,6 +51,12 @@
 
   <rule>
     <pattern>
+      <rewrite>!(.*type=pdf)!$1!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
       <match>!.*&quot;([^&quot;]+type=pdf)&quot;.*!</match>
     </pattern>
   </rule>
