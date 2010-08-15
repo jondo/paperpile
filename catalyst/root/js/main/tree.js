@@ -531,15 +531,15 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         this.rssButton = new Ext.Button({
           enableToggle: true,
           style: {
-              'position': 'relative',
-	      'float':'right'
+            'position': 'relative',
+            'float': 'right'
           },
           scale: 'tiny',
-	  tooltip: 'Add a new journal or RSS feed',
-          icon: Paperpile.Url('/images/icons/add_small.png')
+          tooltip: 'Add a new journal or RSS feed',
+          icon: Paperpile.Url('/images/icons/plus.png')
         });
         this.rssButton.render(ui.elNode);
-this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
+        this.rssButton.getEl().alignTo(ui.elNode, 'r-r', [-2, 0]);
         this.rssButton.on('toggle', this.rssButtonToggle,
           this);
       }
@@ -871,11 +871,11 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
   rssButtonToggle: function(button, buttonState) {
     if (this.newFeedPanel === undefined) {
       var callback = function(url) {
-	if (url != '') {
-	    this.createNewFeedNode(url);
-	}
+        if (url != '') {
+          this.createNewFeedNode(url);
+        }
         this.newFeedPanel.hide();
-	this.rssButton.toggle(false,true);
+        this.rssButton.toggle(false, true);
       };
       this.newFeedPanel = new Paperpile.NewFeedPanel({
         callback: callback.createDelegate(this)
@@ -897,7 +897,7 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
     var newNode = n.appendChild(this.loader.createNode({
       text: 'Loading feed',
       iconCls: 'pp-icon-loading',
-//      qtip: feedUrl,
+      //      qtip: feedUrl,
       draggable: true,
       expanded: true,
       children: [],
@@ -1529,8 +1529,7 @@ this.rssButton.getEl().alignTo(ui.elNode, 'r-r',[-2,0]);
         var json = Ext.util.JSON.decode(response.responseText);
 
         // Things we need to rename / update when a collection changes:
-	// (0) The grid is automatically taken care of by the Paperpile.Ajax handler's calling Paperpile.main.onUpdate.
-	
+        // (0) The grid is automatically taken care of by the Paperpile.Ajax handler's calling Paperpile.main.onUpdate.
         // (1) Take care of the grid and sidepanel.
         this.reloadTags(json);
 

@@ -681,7 +681,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .pp-action-go-inactive {
-    background: transparent url('/images/icons/world_go_inactive.png') no-repeat;
+    background: transparent url('/images/icons/world_go.png') no-repeat;
 }
 
 .pp-action-attach-pdf {
@@ -696,7 +696,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .pp-action-update-metadata {
-    background: transparent url('/images/icons/update-metadata.png') no-repeat;
+    background: transparent url('/images/icons/reload.png') no-repeat;
 }
 
 .pp-action-open-pdf {
@@ -842,7 +842,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .lookup .x-btn-text {
-    background-image: url('/images/icons/magnifier.png');
+    background-image: url('/images/icons/reload.png');
 }
 
 

@@ -132,7 +132,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         },
         scope: this,
         cls: 'x-btn-text-icon edit',
-        icon: '/images/icons/update-metadata.png',
+        icon: '/images/icons/reload.png',
         itemId: 'AUTO_COMPLETE',
         tooltip: 'Auto-complete citation with data from online resources.'
       }),
@@ -220,7 +220,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'LIVE_FOLDER': new Ext.Action({
         itemId: 'LIVE_FOLDER',
         text: 'Save as Live Folder',
-        iconCls: 'pp-icon-glasses',
+        //iconCls: 'pp-icon-glasses',
         handler: this.handleSaveActive,
         scope: this
       }),
@@ -334,7 +334,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       text: 'Export to File',
       itemId: 'EXPORT_MENU',
       handler: this.handleExportView,
-      iconCls: 'pp-icon-save',
+      //iconCls: 'pp-icon-save',
       scope: this,
       menu: {
         items: [
@@ -1105,7 +1105,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <div class="pp-vspace" style="height:5px;"></div>',
       '    <ul> ',
       '    <div style="clear:both;"></div>',
-      '      <li><a href="#" class="pp-action pp-textlink pp-action-update-metadata" action="update-metadata">Auto-complete data</a></li>',
+      '      <li><a href="#" class="pp-action pp-textlink pp-action-update-metadata" action="update-metadata">Auto-complete Data</a></li>',
       '      <li><a href="#" class="pp-action pp-textlink pp-action-search-pdf" action="batch-download">Download PDFs</a> </li>',
       '      <li><a  href="#" class="pp-textlink pp-action pp-action-trash" action="delete-ref">Move to Trash</a> </li>',
       '    </ul>',

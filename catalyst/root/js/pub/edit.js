@@ -667,7 +667,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     }
 
     if (identifiers.pmid || identifiers.arxivid || identifiers.doi || (authors && title)) {
-      this.activateLookupButton('Look-up online');
+      this.activateLookupButton('Auto-complete Data');
       return;
     }
     /*
@@ -691,7 +691,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       return;
     }
 */
-    button.setText('Look-up (not enough data)');
+    button.setText('Auto-complete (not enough data)');
     button.disable();
 
   },
