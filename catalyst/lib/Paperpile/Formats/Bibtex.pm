@@ -205,7 +205,7 @@ sub write {
 
   # We always write these fields (if non-empty) because they are
   # needed by BibTeX to work correctly
-  my @mandatory_fields = qw(sortkey title booktitle authors editors
+  my @mandatory_fields = qw(sortkey title booktitle author editor
     address publisher organization school
     howpublished journal volume edition series number issue chapter pages
     year month day guid);
@@ -227,8 +227,19 @@ sub write {
     my %data;
     my $max_width = 0;
     foreach my $key (@all_fields) {
-      if ( $pub->$key ) {
-        $data{$key} = $pub->$key;
+      my $value;
+      # Note, there is a little discrepancy
+      # In paperile we have 'authors' and 'editors'
+      # while in Bibtex there is 'author' and 'editor'
+      if ( $key eq 'author' ) {
+	$value = $pub->authors();
+      } elsif ( $key eq 'editor' ) {
+	$value = $pub->editors();
+      } else {
+	$value = $pub->$key;
+      }
+      if ( $value ) {
+        $data{$key} = $value;
         $max_width = length($key) if ( length($key) > $max_width );
       }
     }

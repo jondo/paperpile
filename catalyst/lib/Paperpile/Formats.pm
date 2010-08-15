@@ -53,10 +53,10 @@ sub guess_format {
   # Text file
   if ( -T $file ) {
 
-    # Read only first 100 lines. Should be enough to identify file-type
+    # Read only first 500 lines. Should be enough to identify file-type
     my $line;
     my @lines = ();
-    while ( @lines < 100 and $line = <FILE> ) {
+    while ( @lines < 500 and $line = <FILE> ) {
       next if $line =~ /^$/;
       push @lines, $line;
     }

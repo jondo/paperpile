@@ -108,12 +108,17 @@ sub _parse_next {
 
     until (/@/m) {
       my $line = $self->{fh}->getline;
+      # there are a lot of malformed bibtex files 
+      # out there. If we find a bracket before the 
+      # entry, we simply ignore it
+      next if ( $line =~ m/^\s*\}\s*\n$/ );
       return 0 unless defined $line;
       $_ .= $line;
     }
 
     my $current_entry = new BibTeX::Parser::Entry;
     if (/@($re_name)/cgo) {
+      print STDERR "$_\n";
       my $type = uc $1;
       $current_entry->type($type);
       my $start_pos = pos($_) - length($type) - 1;

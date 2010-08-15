@@ -43,6 +43,30 @@
 
 </site>
 
+<site name="CiteSeerx">
+
+  <signature>
+    <url>!citeseerx!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*type=pdf)!$1!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!.*&quot;([^&quot;]+type=pdf)&quot;.*!</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.47.7924</url>
+  </test>
+
+</site>
+
 <site name="ScienceDirect">
   <signature>
     <url>!sciencedirect!</url>
