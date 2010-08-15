@@ -31,7 +31,6 @@ extends 'Paperpile::Plugins::Import';
 has '_db_file'       => ( is => 'rw' );
 has 'file'           => ( is => 'rw' );
 has '_data'          => ( is => 'rw', isa => 'ArrayRef' );
-has '_clusters'      => ( is => 'rw' );                      # hash of list with guids
 has 'clear_duplicate_cache' => ( is => 'rw' );
 
 has 'index' => ( is => 'rw', isa => 'HashRef');
@@ -135,26 +134,61 @@ sub connect {
 
   # update the background color
   for ( my $i = 0 ; $i < scalar( @{ $self->_data } ) ; $i++ ) {
-    my $data = $self->_data->[$i];
-    if ( defined $dupl_keys->{ $data->{guid} } ) {
-      $data->{'_highlight'} = $cluster2color{ $dupl_keys->{ $data->{guid} } };
-      $data->{'_dup_id'}    = $dupl_keys->{ $data->{guid} };
+    my $pub = $self->_data->[$i];
+    if ( defined $dupl_keys->{ $pub->{guid} } ) {
+      $pub->{'_highlight'} = $cluster2color{ $dupl_keys->{ $pub->{guid} } };
+      $pub->{'_dup_id'}    = $dupl_keys->{ $pub->{guid} };
+
+      # Make sure attachments are handled correctly
+      $pub->_db_connection( "dbi:SQLite:" . $self->_db_file );
+      $pub->refresh_attachments;
     }
   }
 
   return $self->total_entries;
 }
 
+
+
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
 
-  my $model = $self->get_model;
-
-  if ( $self->clear_duplicate_cache ) {
-    $self->connect;
-  }
+  my $dbh = $self->get_model->dbh;
 
   my @page = ();
+
+  # Check if data still exists and remove items that have been trashed
+  my @new_data = ();
+  my $sth      = $dbh->prepare("SELECT guid FROM publications WHERE guid=? AND trashed=0;");
+
+  foreach my $pub ( @{ $self->_data } ) {
+    $sth->execute( $pub->guid );
+    my $exists = 0;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+      $exists = 1;
+    }
+    push @new_data, $pub if $exists;
+  }
+
+  # remove color from single item clusters that may occur after merge or trashing
+  foreach my $i ( 0 .. $#new_data ) {
+
+    my $curr = $new_data[$i]->_dup_id;
+    my $prev = $i > 0 ? $new_data[ $i - 1 ]->_dup_id : undef;
+    my $next = $i < $#new_data ? $new_data[ $i + 1 ]->_dup_id : undef;
+
+    if ( ( !$prev && !$next )
+      || ( !$prev && $curr ne $next )
+      || ( !$next && $curr ne $prev )
+      || ( $curr ne $prev && $curr ne $next ) ) {
+
+      $new_data[$i]->_highlight('pp-grid-highlight0');
+
+    }
+  }
+
+  $self->_data( \@new_data );
+  $self->total_entries( scalar @{ $self->_data } );
 
   for my $i ( 0 .. $limit - 1 ) {
     last if ( $offset + $i == $self->total_entries );
@@ -253,6 +287,38 @@ sub _compare_pubs {
   }
 
   return 0;
+}
+
+# Replace the cluster with $dup_id with a new merged publication
+# object $merged_pub. The highlight is resetted.
+
+sub replace_merged_items {
+
+  my ($self, $dup_id, $merged_pub) = @_;
+
+  my @new_data = ();
+
+  my $is_first=1;
+
+  foreach my $pub (@{$self->_data}){
+
+    if ($is_first and ($pub->_dup_id eq $dup_id)){
+      push @new_data, $merged_pub;
+      $self->_hash->{$merged_pub->guid} = $merged_pub;
+      $is_first=0;
+    }
+
+    if  ($pub->_dup_id eq $dup_id){
+      delete($self->_hash->{$pub->guid});
+    } else {
+      push @new_data, $pub;
+    }
+  }
+
+  $self->_data(\@new_data);
+
+  $self->total_entries( scalar @{ $self->_data } );
+
 }
 
 

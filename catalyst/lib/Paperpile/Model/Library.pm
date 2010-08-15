@@ -544,16 +544,10 @@ sub delete_collection {
 # Update collection <-> publication mappings throughout the database
 # for all $pubs
 
-sub update_collections {
-  ( my $self, my $pubs, my $type ) = @_;
+sub _update_collections {
+  ( my $self, my $pubs, my $type, my $dbh ) = @_;
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
-
-  my $dbh = $self->dbh;
-
-  if (!$dbh->{BegunWork}) {
-    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
-  }
 
   foreach my $pub (@$pubs) {
 
@@ -585,15 +579,17 @@ sub update_collections {
       $connection->execute( $collection_guid, $pub_guid );
     }
   }
-
-  $dbh->commit;
-
 }
 
 sub add_to_collection {
   my ( $self, $pubs, $guid, $dbh ) = @_;
 
-  $dbh = $self->dbh unless (defined $dbh);
+  my $external_dbh = $dbh ? 1 : 0;
+
+  if ( !$external_dbh ) {
+    $dbh = $self->dbh;
+    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  }
 
   # Figure out the type from the GUID.
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
@@ -607,7 +603,10 @@ sub add_to_collection {
   foreach my $pub (@$pubs) {
     $pub->add_guid( $type, $guid );
   }
-  $self->update_collections( $pubs, $type );
+  $self->_update_collections( $pubs, $type, $dbh );
+
+  $dbh->commit if ( !$external_dbh );
+
 }
 
 # Deletes all publication objects in list $data from collection with
@@ -616,7 +615,12 @@ sub add_to_collection {
 sub remove_from_collection {
   my ( $self, $pubs, $guid, $dbh ) = @_;
 
-  $dbh = $self->dbh unless (defined $dbh);
+  my $external_dbh = $dbh ? 1 : 0;
+
+  if ( !$external_dbh ) {
+    $dbh = $self->dbh;
+    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  }
 
   # Figure out the type from the GUID.
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
@@ -635,7 +639,10 @@ sub remove_from_collection {
     $pub->$what($new_list);
   }
 
-  $self->update_collections( $pubs, $type );
+  $self->_update_collections( $pubs, $type, $dbh );
+
+  $dbh->commit if ( !$external_dbh );
+
 }
 
 # Renames collection with $guid to $new_name
@@ -1151,9 +1158,10 @@ sub exists_pub {
           $pub->_rowid($value);
         } else {
           if ($value) {
-
-# I don't think we should be updating the publication object during the exists_pub call... removing this line cleared up a bunch of problems with the grid not updating after editing metadata. (Greg 2010-06-20)
-#$pub->$field($value);
+# I don't think we should be updating the publication object during
+# the exists_pub call... removing this line cleared up a bunch of
+# problems with the grid not updating after editing metadata. (Greg
+# 2010-06-20) $pub->$field($value);
           }
         }
       }
@@ -1218,7 +1226,7 @@ sub attach_file {
     $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
   }
 
-  my $settings = $self->settings;
+  my $settings = $self->settings($dbh);
   my $source   = Paperpile::Utils->adjust_root($file);
 
   my $pub_guid = $pub->guid;
@@ -1269,7 +1277,7 @@ sub attach_file {
   my $local_file = $dbh->quote($absolute_dest);
 
   $dbh->do( "INSERT INTO Attachments (guid, publication, is_pdf, name, local_file, size, md5)"
-      . "                     VALUES ('$file_guid', '$pub_guid', $is_pdf, $name, $local_file, $file_size, '$md5');"
+            . "                     VALUES ('$file_guid', '$pub_guid', $is_pdf, $name, $local_file, $file_size, '$md5');"
   );
 
   if ($is_pdf) {
@@ -1305,7 +1313,7 @@ sub attach_file {
     $dbh->do("UPDATE Publications SET attachments='$new_attachments' WHERE guid='$pub_guid';");
 
     $pub->attachments($new_attachments);
-    $pub->refresh_attachments;
+    $pub->refresh_attachments($dbh);
 
   }
 

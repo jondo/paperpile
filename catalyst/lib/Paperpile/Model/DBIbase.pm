@@ -33,6 +33,8 @@ sub get_setting {
 
   ( my $self, my $key, my $dbh ) = @_;
 
+  my ($package, $filename, $line) = caller;
+
   $dbh=$self->dbh if !$dbh;
 
   $key = $dbh->quote($key);

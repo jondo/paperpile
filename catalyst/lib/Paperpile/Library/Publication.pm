@@ -185,6 +185,9 @@ has '_snippets' => ( is => 'rw' );
 # CSS style to highlight the entry in the frontend
 has '_highlight' => ( is => 'rw', default => 'pp-grid-highlight0' );
 
+# ID of the cluster the publication belongs to after a duplicate search
+has '_dup_id' => ( is => 'rw' );
+
 # Holds the Google Scholar link to other versions of
 # the same publication.
 has '_all_versions' => ( is => 'rw', default => '' );
@@ -347,100 +350,95 @@ sub format_citation {
 }
 
 sub best_link {
-    my $self = shift;
-    
-    if ($self->doi) {
-	return 'http://dx.doi.org/'.$self->doi;
-    } elsif ($self->linkout) {
-	return $self->linkout;
-    } elsif ($self->pmid) {
-	return 'http://www.ncbi.nlm.nih.gov/pubmed/'+$self->pmid;
-    }
-    return '';
+  my $self = shift;
+
+  if ( $self->doi ) {
+    return 'http://dx.doi.org/' . $self->doi;
+  } elsif ( $self->linkout ) {
+    return $self->linkout;
+  } elsif ( $self->pmid ) {
+    return 'http://www.ncbi.nlm.nih.gov/pubmed/' + $self->pmid;
+  }
+  return '';
 }
 
 # Takes any fields that are defined in $other_pub and aren't defined in $self
 # and applies them to $self. Also brings over $other_pub's PDF (if $self does not
 # have one defined) and attachments.
 sub merge_into_me {
-    my $self = shift;
-    my $other_pub = shift;
-    my $library = shift;
+  my $self      = shift;
+  my $other_pub = shift;
+  my $library   = shift;
 
-    my $dbh = $library->dbh;
-    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my $dbh = $library->dbh;
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
-    my $guid = $self->guid;
-    my $other_guid = $other_pub->guid;
+  my $guid       = $self->guid;
+  my $other_guid = $other_pub->guid;
 
-    # He's got a PDF that we want.
-    if (!$self->pdf && $other_pub->pdf) {
-	my $dbh = $library->dbh;	
-        my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$other_guid' and is_pdf=1;");
-	$sth->execute;
+  # He's got a PDF that we want.
+  if ( !$self->pdf && $other_pub->pdf ) {
+    my $sth =
+      $dbh->prepare("SELECT * FROM Attachments WHERE publication='$other_guid' and is_pdf=1;");
+    $sth->execute;
 
-	while ( my $row = $sth->fetchrow_hashref() ) {
-	    my $other_pdf = $row->{local_file};
-	    $library->attach_file($other_pdf,1,$self,0,$dbh);
-	}
-
-	$sth->finish;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+      my $other_pdf = $row->{local_file};
+      $library->attach_file( $other_pdf, 1, $self, 0, $dbh );
     }
+  }
 
-    # Now bring over all attachments.
-    if ($other_pub->attachments) {
-	my $dbh = $library->dbh;	
-        my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$other_guid' and is_pdf=0;");
-	$sth->execute;
+  # Now bring over all attachments.
+  if ( $other_pub->attachments ) {
+    my $sth =
+      $dbh->prepare("SELECT * FROM Attachments WHERE publication='$other_guid' and is_pdf=0;");
+    $sth->execute;
 
-	while ( my $row = $sth->fetchrow_hashref() ) {
-	    my $other_pdf = $row->{local_file};
-	    $library->attach_file($other_pdf,0,$self,0,$dbh);
-	}
-	$sth->finish;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+      my $other_pdf = $row->{local_file};
+      $library->attach_file( $other_pdf, 0, $self, 0, $dbh );
     }
-    
-    foreach my $folder (split(',',$other_pub->folders)) {
-	$library->add_to_collection([$self],$folder,$dbh);
-    }
-    foreach my $tag (split(',',$other_pub->tags)) {
-	$library->add_to_collection([$self],$tag,$dbh);
-    }
+  }
 
-   foreach my $key ( $self->meta->get_attribute_list ) {
+  foreach my $folder ( split( ',', $other_pub->folders ) ) {
+    $library->add_to_collection( [$self], $folder, $dbh );
+  }
+  foreach my $tag ( split( ',', $other_pub->tags ) ) {
+    $library->add_to_collection( [$self], $tag, $dbh );
+  }
+
+  foreach my $key ( $self->meta->get_attribute_list ) {
     my $value = $self->$key;
 
-    next if ($key =~ m/(folders|tags|pdf_name|pdf|attachments)/gi);
-    next if (ref($value));
+    next if ( $key =~ m/(folders|tags|pdf_name|pdf|attachments)/gi );
+    next if ( ref($value) );
 
-    if ($self->is_trivial_value($key,$value) && !$self->is_trivial_value($key,$other_pub->$key)) {
-	my $other_value = $other_pub->$key;
-	#print STDERR "Filling in key $key with value $other_value\n";
-	$self->$key($other_pub->$key);
+    if ( $self->is_trivial_value( $key, $value )
+      && !$self->is_trivial_value( $key, $other_pub->$key ) ) {
+      my $other_value = $other_pub->$key;
+      $self->$key( $other_pub->$key );
     }
+  }
 
-   }
-    
   $dbh->commit;
-
 }
 
 sub is_trivial_value {
-    my $self = shift;
-    my $key = shift;
-    my $value = shift;
+  my $self  = shift;
+  my $key   = shift;
+  my $value = shift;
 
-    my $tmp = $value;
+  my $tmp = $value;
 
+  return 1 if ( !defined $tmp );
+  return 1 if ( $tmp eq '' );
 
-    return 1 if (!defined $tmp);
-    return 1 if ($tmp eq '');
+  $tmp =~ s/\s+//g;    # All spaces.
 
-    $tmp =~ s/\s+//g; # All spaces.
+  return 1 if ( $tmp eq '' );
 
-    return 1 if ($tmp eq '');
-    #print STDERR "NOT trivial: $key \t\t $value\n";
-    return 0;
+  #print STDERR "NOT trivial: $key \t\t $value\n";
+  return 0;
 }
 
 sub format_authors {
@@ -505,17 +503,16 @@ sub refresh_attachments {
 
   $self->_attachments_list( [] );
 
-  if ( $self->attachments && $self->_db_connection ) {
+  if ($self->attachments && $self->_db_connection)  {
 
     my $model = Paperpile::Model::Library->new();
-
     $model->set_dsn( $self->_db_connection );
 
-    my $paper_root = $model->get_setting('paper_root');
+    $dbh = $model->dbh unless ( defined $dbh );
+
+    my $paper_root = $model->get_setting('paper_root', $dbh);
     my $guid       = $self->guid;
-    $dbh = $model->dbh unless (defined $dbh);
-    my $sth =
-      $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
+    my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
 
     $sth->execute;
 
@@ -563,20 +560,20 @@ sub create_guid {
 }
 
 sub add_tag {
-  my ($self, $guid) = @_;
+  my ( $self, $guid ) = @_;
   $self->add_guid( 'tags', $guid );
 }
 
 sub add_folder {
-  my ($self, $guid) = @_;
+  my ( $self, $guid ) = @_;
   $self->add_guid( 'folders', $guid );
 }
 
 sub add_guid {
 
-  my ($self, $what, $guid) = @_;
+  my ( $self, $what, $guid ) = @_;
 
-  return unless (defined $what);
+  return unless ( defined $what );
 
   $what = 'folders' if ( $what eq 'FOLDER' );
   $what = 'tags'    if ( $what eq 'LABEL' );

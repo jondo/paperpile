@@ -73,7 +73,7 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
       text: 'Merge to Selected',
       handler: this.mergeDuplicates,
       scope: this,
-      icon: '/images/icons/page_white_stack.png',
+      icon: '/images/icons/arrow_in.png',
       itemId: 'MERGE_DUPLICATES',
       tooltip: 'Merge duplicates into the selected reference'
     });
@@ -109,7 +109,7 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
         limit: this.limit,
         // Cause the duplicate cache to be cleared each time the grid is reloaded.
         // This is very slow, and will need backend optimization in Duplicates.pm.
-        plugin_clear_duplicate_cache: true
+        //plugin_clear_duplicate_cache: true
       }
     });
   },
@@ -136,7 +136,8 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
 
     var n = other_guids.length + 1;
 
-    //    Paperpile.status.updateMsg("Merging duplicate references");
+    //Paperpile.status.updateMsg("Merging duplicate references");
+
     Paperpile.Ajax({
       url: '/ajax/crud/merge_duplicates',
       params: {
@@ -146,11 +147,12 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
       },
       success: function(response) {
         var msg = n + " duplicate references were merged.";
-	var undoMessage = Paperpile.status.updateMsg({
+        var undoMessage = Paperpile.status.updateMsg({
           msg: msg,
+          hideOnClick: true,
           action1: 'Undo',
           callback: function(action) {
-	    Paperpile.status.clearMessageNumber(undoMessage);
+            Paperpile.status.clearMessageNumber(undoMessage);
             Paperpile.Ajax({
               url: '/ajax/crud/undo_merge_duplicates'
             });

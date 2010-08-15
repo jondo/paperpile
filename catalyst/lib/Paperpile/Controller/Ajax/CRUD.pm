@@ -443,7 +443,6 @@ sub move_in_collection : Local {
 
   if ( $guid ne 'FOLDER_ROOT' ) {
     my $new_guid = $guid;
-
     $c->model('Library')->add_to_collection( $data, $new_guid );
   }
 
@@ -774,17 +773,21 @@ sub merge_duplicates : Local {
 
   my $ref_pub = $plugin->find_guid($ref_guid);
 
-  #    Error->throw("No ref pub!") unless (defined $ref_pub);
+  my $dup_id = $ref_pub->_dup_id;
 
   my $merged_pub = Paperpile::Library::Publication->new( $ref_pub->as_hash );
   $merged_pub->refresh_fields;
   $merged_pub->_imported(0);
   $merged_pub->guid(undef);
-  $merged_pub->title('');
+
+  my $title = $merged_pub->title;
+  $merged_pub->title('Dummy');
   $library->insert_pubs( [$merged_pub], 1 );
+  $merged_pub->title($title);
 
   my @other_pubs;
   my @orig_pub_hashes;
+
   foreach my $other_guid ( $ref_guid, @other_guids ) {
     print STDERR "$ref_guid  -> $other_guid\n";
     my $pub = $plugin->find_guid($other_guid);
@@ -807,49 +810,50 @@ sub merge_duplicates : Local {
   $library->trash_pubs( \@other_pubs, 'TRASH' );
   $library->update_pub( $merged_pub->guid, $merged_pub->as_hash );
 
-  # Delete the duplicates cache.
-  $plugin->connect;
+  $plugin->replace_merged_items( $dup_id, $merged_pub );
 
   $self->_collect_update_data( $c, [$merged_pub] );
   $c->stash->{data}->{pub_delta} = 1;
 
-  $c->session->{"undo_merge_duplicates"} = $undo_data;
+  #$c->session->{"undo_merge_duplicates"} = $undo_data;
 }
 
+
+# not in use for now
 sub undo_merge_duplicates : Local {
-    my ($self, $c) = @_;
+  my ( $self, $c ) = @_;
 
-    my $data = $c->session->{"undo_merge_duplicates"};
-    my $library = $c->model('Library');
+  my $data    = $c->session->{"undo_merge_duplicates"};
+  my $library = $c->model('Library');
 
-    # So, we've got the 'other' pubs, which are trashed and have a prefix added
-    # to their title. Take care of those first.
+  # So, we've got the 'other' pubs, which are trashed and have a prefix added
+  # to their title. Take care of those first.
 
-    # Restore the other pubs.
-    my $orig_pub_hashes = $data->{orig_pubs};
-    my @orig_pub_objs;
-    foreach my $pub_hash (@{$orig_pub_hashes}) {
-	my $pub = Paperpile::Library::Publication->new($pub_hash);
-	push @orig_pub_objs, $pub;
-    }
-    $library->trash_pubs(\@orig_pub_objs,'RESTORE');
+  # Restore the other pubs.
+  my $orig_pub_hashes = $data->{orig_pubs};
+  my @orig_pub_objs;
+  foreach my $pub_hash ( @{$orig_pub_hashes} ) {
+    my $pub = Paperpile::Library::Publication->new($pub_hash);
+    push @orig_pub_objs, $pub;
+  }
+  $library->trash_pubs( \@orig_pub_objs, 'RESTORE' );
 
-    # Delete the merged pub.
-    my $merged_hash = $data->{merged_pub};
-    my $merged_pub = Paperpile::Library::Publication->new($merged_hash);
-    $library->delete_pubs([$merged_pub]);
+  # Delete the merged pub.
+  my $merged_hash = $data->{merged_pub};
+  my $merged_pub  = Paperpile::Library::Publication->new($merged_hash);
+  $library->delete_pubs( [$merged_pub] );
 
-    # Remove the prefix from their titles.
-    foreach my $pub_hash (@{$orig_pub_hashes}) {
-	my $title = $pub_hash->{title};
-	$title =~ s/\[Discarded Duplicate\] //gi;
-	print STDERR "Title: $title\n";
-	$pub_hash->{$title} = $title;
-	$library->update_pub($pub_hash->{guid},$pub_hash);
-    }
+  # Remove the prefix from their titles.
+  foreach my $pub_hash ( @{$orig_pub_hashes} ) {
+    my $title = $pub_hash->{title};
+    $title =~ s/\[Discarded Duplicate\] //gi;
+    print STDERR "Title: $title\n";
+    $pub_hash->{$title} = $title;
+    $library->update_pub( $pub_hash->{guid}, $pub_hash );
+  }
 
-    $self->_collect_update_data($c, \@orig_pub_objs);
-    $c->stash->{data}->{pub_delta} = 1;
+  $self->_collect_update_data( $c, \@orig_pub_objs );
+  $c->stash->{data}->{pub_delta} = 1;
 }
 
 sub sync_files : Local {
