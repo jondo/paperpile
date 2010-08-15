@@ -24,6 +24,7 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
       hideLabel: true,
       itemId: 'remote_feed_combo',
       store: this.remoteFeedStore,
+      minChars:2,
       maxHeight: 200,
       loadingText: '',
       listEmptyText: '',
