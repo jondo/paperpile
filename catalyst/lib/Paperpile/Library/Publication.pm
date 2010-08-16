@@ -356,6 +356,8 @@ sub best_link {
     return 'http://dx.doi.org/' . $self->doi;
   } elsif ( $self->linkout ) {
     return $self->linkout;
+  } elsif ( $self->url ) {
+    return $self->url;
   } elsif ( $self->pmid ) {
     return 'http://www.ncbi.nlm.nih.gov/pubmed/' + $self->pmid;
   }
