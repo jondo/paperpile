@@ -317,10 +317,11 @@ sub write {
               # enclose if we have more than one upper case letter
               # in a single word
               my $nr_capital_letters = ( $tmp[$i] =~ tr/[A-Z]// );
-              my $flag = ( $nr_capital_letters > 1 and $tmp[$i] !~ m/(-|\(|\)|\$|~)/ ) ? 1 : 0;
+              my $flag = ( $nr_capital_letters > 1 and $tmp[$i] !~ m/(\(|\)|\$|~)/ ) ? 1 : 0;
+	      $flag = 1 if ( $tmp[$i] =~ m/^[A-Z\d-]+$/ and $tmp[$i] =~ m/[A-Z]/ );
               $flag = 0 if ( $tmp[$i] =~ m/^\{.*\}$/ );
-
               $flag = 0 if (!$self->settings->{title_quote_smart});
+	      $flag = 0 if ( $tmp[$i] eq 'A' );
 
               # escape items from the list
               foreach my $item ( @{ $self->settings->{title_quote} } ) {
