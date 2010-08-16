@@ -82,6 +82,28 @@
 
 </site>
 
+<site name="JSTOR">
+
+  <signature>
+    <url>!jstor\.org!</url>
+  </signature>
+
+  <rule target="Bibtex">
+    <pattern>
+      <rewrite>!(http://www.jstor.org/pss/)(\d+)!http://www.jstor.org/action/downloadSingleCitation?format=bibtex&amp;direct=true&amp;singleCitation=true&amp;suffix=$2!</rewrite>
+    </pattern>
+  </rule>
+
+ <test>
+   <page url="http://www.jstor.org/pss/1935784">
+     <journal>The Review of Economics and Statistics</journal>
+     <title>The Casual Causal Relationship Between Money and Income: Some Caveats for Time Series Analysis</title>
+   </page>
+ </test>
+
+</site>
+
+
 
 <site name="AIP">
 
