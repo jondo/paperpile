@@ -103,6 +103,22 @@
 
 </site>
 
+<site name="GoogleBooks">
+
+  <signature>
+    <url>!books\.google\.com!</url>
+  </signature>
+
+  <rule target="GoogleBooks">
+    <pattern>
+      <rewrite>!(.*&amp;id=)([\w|-]+)(&amp;.*)!http://books.google.com/books?id=$2&amp;hl=en&amp;source=gbs_navlinks_s!</rewrite>
+    </pattern>
+  </rule>
+
+ <test>
+ </test>
+
+</site>
 
 
 <site name="AIP">
