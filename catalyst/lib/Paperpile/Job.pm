@@ -74,7 +74,7 @@ has 'interrupt' => ( is => 'rw', default => '' );
 has 'pub' => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
 
 # Should this job be hidden from the queue widget and grid?
-has 'hidden' => ( is => 'rw', default => undef );
+has 'hidden' => ( is => 'rw', default => 0 );
 
 # File name to store the job object
 has '_file' => ( is => 'rw' );
