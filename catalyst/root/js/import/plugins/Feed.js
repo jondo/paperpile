@@ -100,6 +100,7 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
       }
       clearTimeout(this.timeoutWarn);
       clearTimeout(this.timeoutAbort);
+      this.isLoading = false;
     },
     this);
 
