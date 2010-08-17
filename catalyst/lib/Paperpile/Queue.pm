@@ -243,7 +243,7 @@ sub update_stats {
     }
 
     if ($hidden == 1) {
-	next;
+      next;
     }
 
     if ( $status eq 'PENDING' or $status eq 'RUNNING' ) {

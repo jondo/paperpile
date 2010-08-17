@@ -661,14 +661,17 @@ sub batch_download : Local {
   my @jobs = ();
 
   foreach my $pub (@$data) {
+
+    my $hidden =  ( scalar(@$data) == 1 ) ? 1 : 0;
+
     my $j = Paperpile::Job->new(
-      type => 'PDF_SEARCH',
-      pub  => $pub
+      type   => 'PDF_SEARCH',
+      pub    => $pub,
+      hidden => $hidden
     );
 
-    $j->hidden(1) if (scalar(@$data) == 1);
-
-    $j->pub->_search_job( { id => $j->id, status => $j->status, msg => $j->info->{msg}, hidden => $j->hidden } );
+    $j->pub->_search_job(
+      { id => $j->id, status => $j->status, msg => $j->info->{msg}, hidden => $j->hidden } );
 
     push @jobs, $j;
   }

@@ -115,7 +115,6 @@ sub update : Local {
     my $all = $q->get_jobs();
 
     foreach my $job (@$all){
-      next if ($job->hidden);
       if (defined $job->pub) {
         my $pub = $job->pub;
         push @pub_list, $pub;
@@ -132,7 +131,6 @@ sub update : Local {
 
     foreach my $id ( @{$ids} ) {
       my $job = Paperpile::Job->new( { id => $id } );
-      next if ($job->hidden);
       if (defined $job->pub) {
         my $pub = $job->pub;
         push @pub_list, $pub;
