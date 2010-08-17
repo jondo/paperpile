@@ -1156,14 +1156,31 @@ sub exists_pub {
         my $value = $row->{$field};
         if ( $field eq 'rowid' ) {
           $pub->_rowid($value);
-        } else {
-          if ($value) {
+        }
+        if ( $field eq 'citekey' ) {
+          $pub->citekey($value);
+        }
+
+        if ( $field eq 'trashed' ) {
+          $pub->trashed($value);
+        }
+
+
+        #else {
+        #  if ($value) {
 # I don't think we should be updating the publication object during
 # the exists_pub call... removing this line cleared up a bunch of
 # problems with the grid not updating after editing metadata. (Greg
-# 2010-06-20) $pub->$field($value);
-          }
-        }
+# 2010-06-20)
+
+# I only set 'citekey' and 'trashed' now to make the frontend work
+# e.g. for BibTeX files. I hope this does not cause the problems you
+# were refering to. 2010-08-17 Stefan
+
+#$pub->$field($value);
+        #  }
+        #}
+
       }
     }
 
