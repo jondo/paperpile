@@ -34,6 +34,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   overviewPanel: null,
   detailsPanel: null,
   tagStyles: {},
+  isLocked: false,
 
   initComponent: function() {
     this.pager = new Paperpile.Pager({
@@ -1428,6 +1429,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   // without harassing the site too much. Then the details are
   // fetched only when user clicks the entry.
   completeEntry: function() {
+
+    if (this.isLocked) return; // Call completeEntry only for one item at a time 
+
     var selection = this.getSelection();
 
     var sel = this.getSingleSelectionRecord();
@@ -1443,6 +1447,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         return false;
       };
       this.getSelectionModel().on('beforerowselect', blockingFunction, this);
+      this.isLocked=true;
 
       var guid = data.guid;
 
@@ -1455,6 +1460,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           this.cancelCompleteEntry();
           Paperpile.status.clearMsg();
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
+          this.isLocked=false;
         },
         scope: this
       });
@@ -1470,11 +1476,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         this.cancelCompleteEntry();
         Paperpile.status.clearMsg();
         Paperpile.status.updateMsg({
-          type: 'error',
           msg: 'Giving up. There may be problems with your network or ' + this.plugin_name + '.',
           hideOnClick: true
         });
         this.getSelectionModel().un('beforerowselect', blockingFunction, this);
+        this.isLocked=false;
       }).defer(20000, this);
 
       var transactionID = Paperpile.Ajax({
@@ -1488,6 +1494,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           var json = Ext.util.JSON.decode(response.responseText);
 
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
+          this.isLocked=false;
 
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
@@ -1504,6 +1511,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         },
         failure: function(response) {
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
+          this.isLocked=false;
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
         },
