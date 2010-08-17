@@ -131,13 +131,12 @@ pub_types:
     name: "In Book"
     info: "Untitled part of a book (chapter, pages,...)"
     labels: 
-      title: "Chapter Title"
+      title: "Book Title"
     tooltips:
-      booktitle: "The title of book"
-      title: "The title of the chapter/part of the book"  
+      title: "The title of the book"  
     fields:
       - ["-"]
-      - ["booktitle:6"]
+      - ["title:6"]
       - ["authors:6"]
       - ["editors:6"]
       - ["-"]

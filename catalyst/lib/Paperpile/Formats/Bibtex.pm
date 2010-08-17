@@ -89,8 +89,8 @@ sub read {
 
       # 1:1 map between standard BibTeX fields and Paperpile fields
       if ( $built_in{$field} ) {
-	my $content = $entry->field($field);
-	$content =~ s/--/-/g if ( $field eq 'pages' );
+        my $content = $entry->field($field);
+        $content =~ s/--/-/g if ( $field eq 'pages' );
         $data->{$field} = $content;
       }
 
@@ -171,6 +171,14 @@ sub read {
 
     if ( not $type ~~ [@pub_types] ) {
       $type = 'MISC';
+    }
+
+    # Sometimes booktitle is not correctly used, we override it here
+    if ( $type eq 'BOOK' || $type eq 'INBOOK' ) {
+      if ( ( !$data->{title} ) && ( $data->{booktitle} ) ) {
+        $data->{title} = $data->{booktitle};
+        delete $data->{booktitle};
+      }
     }
 
     $data->{pubtype} = $type;
