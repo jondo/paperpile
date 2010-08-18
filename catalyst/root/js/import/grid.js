@@ -129,7 +129,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'AUTO_COMPLETE': new Ext.Action({
         text: 'Auto-complete Data',
         handler: function() {
-          this.updateMetadata();
+          this.handleEdit(false,true);
         },
         scope: this,
         cls: 'x-btn-text-icon edit',
@@ -1778,7 +1778,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   },
 
-  handleEdit: function(isNew) {
+  handleEdit: function(isNew, autoComplete) {
 
     var selection = this.getSingleSelectionRecord();
 
@@ -1800,6 +1800,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         data: isNew ? {
           pubtype: 'ARTICLE'
         } : this.getSingleSelectionRecord().data,
+        autoComplete: autoComplete,
         grid_id: isNew ? null : this.id,
         callback: function(status, data) {
           if (status == 'SAVE') {

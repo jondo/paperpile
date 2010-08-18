@@ -139,6 +139,12 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         global = this.data;
         this.initForm(this.data['pubtype']);
 
+
+        if (this.autoComplete){
+          this.onLookup();
+        }
+
+
 	  // Swallow key events so the grid doesn't take em
 	  // (i.e. ctrl-A, ctrl-C etc)
 //        this.getEl().swallowEvent(['keypress', 'keydown']);
@@ -929,6 +935,11 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
   },
 
   setDisabledInputs: function(disabled) {
+
+
+    Ext.getCmp('save_button').setDisabled(disabled);
+    Ext.getCmp('cancel_button').setDisabled(disabled);
+
     for (var field in this.inputs) {
       if (this.inputs[field]) {
 
