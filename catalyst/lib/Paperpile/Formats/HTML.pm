@@ -46,7 +46,7 @@ sub read {
 
   my @authors_creator     = ();
   my @authors_contributor = ();
-  my $authors_citation    = '';
+  my @authors_citation    = ();
 
   # We parse the HTML via XPath
   my $tree = HTML::TreeBuilder::XPath->new;
@@ -167,6 +167,7 @@ sub read {
         case "PRISM.ENDINGPAGE"       { $end_page   = $content }
         case "CITATION_TITLE"         { $title      = $content if ( !$title ) }
         case "CITATION_JOURNAL_TITLE" { $journal    = $content if ( !$journal ) }
+	case "CITATION_CONFERENCE"    { $journal    = $content if ( !$journal ) }
         case "CITATION_VOLUME"        { $volume     = $content if ( !$volume ) }
         case "CITATION_ISSUE"         { $issue      = $content if ( !$issue ) }
         case "CITATION_FIRSTPAGE"     { $start_page = $content if ( !$start_page ) }
@@ -184,7 +185,7 @@ sub read {
         case "CITATION_ABSTRACT_HTML_URL" { $url              = $content if ( !$url ) }
         case "CITATION_PMID"              { $pmid             = $content }
         case "CITATION_PUBLISHER"         { $publisher        = $content if ( !$publisher ) }
-        case "CITATION_AUTHORS"           { $authors_citation = $content }
+        case "CITATION_AUTHORS"           { push @authors_citation, $content }
         case "CITATION_ABSTRACT"          { $abstract         = $content if ( !$abstract ) }
         case "CITATION_DATE" {
 
@@ -288,7 +289,7 @@ sub read {
           case /.*CITATION_ABSTRACT_HTML_URL/ { $url              = $content if ( !$url ) }
           case /.*CITATION_PMID/              { $pmid             = $content }
           case /.*CITATION_PUBLISHER/         { $publisher        = $content if ( !$publisher ) }
-          case /.*CITATION_AUTHORS/           { $authors_citation = $content }
+          case /.*CITATION_AUTHORS/           { push @authors_citation, $content }
           case /.*CITATION_ABSTRACT/          { $abstract         = $content if ( !$abstract ) }
           case /.*CITATION_DATE/ {
 
@@ -322,15 +323,33 @@ sub read {
 
   $authors = join( " and ", @authors_creator );
   $authors = join( " and ", @authors_contributor ) if ( $authors eq '' );
-  if ( $authors eq '' and $authors_citation ne '' ) {
-    if ( $authors_citation =~ m/;/ and $authors_citation =~ m/,/ ) {
-      $authors_citation =~ s/;/ and /g;
-      $authors_citation =~ s/\s+/ /g;
-      $authors = $authors_citation;
-    } elsif ( $authors_citation !~ m/;/ and $authors_citation =~ m/,/ ) {
-      my @tmp = split( /,/, $authors_citation );
-      foreach my $entry (@tmp) {
-        push @authors_creator, Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
+
+  if ( $authors eq '' and $#authors_citation > -1 ) {
+    if ( $#authors_citation == 0 ) {
+      if ( $authors_citation[0] =~ m/;/ and $authors_citation[0] =~ m/,/ ) {
+	$authors_citation[0] =~ s/;/ and /g;
+	$authors_citation[0] =~ s/\s+/ /g;
+	$authors = $authors_citation[0];
+      } elsif ( $authors_citation[0] !~ m/;/ and $authors_citation[0] =~ m/,/ ) {
+	my @tmp = split( /,/, $authors_citation[0] );
+	@authors_creator = ( );
+	foreach my $entry (@tmp) {
+	  push @authors_creator, Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
+	}
+	$authors = join( " and ", @authors_creator );
+      }
+    } else {
+      # more than one entry
+      @authors_creator = ( );
+      foreach my $entry (@authors_citation) {
+	my $count = ($entry =~ tr/,//);
+	if ( $count == 0 ) {
+	  push @authors_creator, Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
+	} elsif ( $count == 1 ) {
+	  push @authors_creator, $entry;
+	} else {
+	  # I do not know if this case exists
+	}
       }
       $authors = join( " and ", @authors_creator );
     }
