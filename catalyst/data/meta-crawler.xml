@@ -549,11 +549,14 @@
     <url>!ieeexplore\.ieee\.org!</url>
   </signature>
 
-  <rule target="Bibtex">
+  <rule target="IEEE">
+  </rule>
+
+  <!--<rule target="Bibtex">
     <pattern>
       <rewrite>!(.*arnumber=)(\d+)(.*)!http://ieeexplore.ieee.org/xpl/downloadCitations?recordIds=$2&amp;fromPageName=searchabstract&amp;citations-format=citation-abstract&amp;download-format=download-bibtex!</rewrite>
     </pattern>
-  </rule>
+  </rule>-->
    
   <test>
     <page url="http://ieeexplore.ieee.org/search/srchabstract.jsp?tp=&amp;arnumber=5429842&amp;queryText%3Dcuda%26openedRefinements%3D*%26searchField%3DSearch+All">

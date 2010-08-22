@@ -202,6 +202,8 @@ sub complete_details {
 
   my $bibtex = '';
 
+  print STDERR "\nGS compete_details: ", $pub->linkout, "\n";
+
   # if the given linkout is a good one we are done
   # the meta-crawler is called and bibliographic
   # informations is obtained from the linkout page
@@ -209,18 +211,20 @@ sub complete_details {
   eval { $full_pub = $URL_plugin->match($pub) };
   if ($full_pub) {
 
-    $full_pub->citekey('');
+    if ( $full_pub->title() ) {
+      $full_pub->citekey('');
 
-    # Update plugin _hash with new data
-    $full_pub->guid( $pub->guid );
-    $self->_hash->{ $pub->guid } = $full_pub;
+      # Update plugin _hash with new data
+      $full_pub->guid( $pub->guid );
+      $self->_hash->{ $pub->guid } = $full_pub;
 
-    # refresh fields
-    $full_pub->_light(0);
-    $full_pub->refresh_fields();
-    $full_pub->refresh_authors();
+      # refresh fields
+      $full_pub->_light(0);
+      $full_pub->refresh_fields();
+      $full_pub->refresh_authors();
 
-    return $full_pub;
+      return $full_pub;
+    }
   }
 
   # For many articles Google provides links to several versions of
@@ -279,48 +283,51 @@ sub complete_details {
       foreach my $j ( 0 .. $#supported ) {
         if ( $page->[$i]->linkout =~ m/ncbi\.nlm\.nih\.gov/ ) {
           $full_pub = undef;
-          eval { $full_pub = $URL_plugin->match($page->[$i]) };
+          eval { $full_pub = $URL_plugin->match( $page->[$i] ) };
           if ($full_pub) {
-            $full_pub->citekey('');
+            if ( $full_pub->title() ) {
+              $full_pub->citekey('');
 
-            # Update plugin _hash with new data
-            $full_pub->guid( $pub->guid );
-            $self->_hash->{ $pub->guid } = $full_pub;
+              # Update plugin _hash with new data
+              $full_pub->guid( $pub->guid );
+              $self->_hash->{ $pub->guid } = $full_pub;
 
-            # refresh fields
-            $full_pub->_light(0);
-            $full_pub->refresh_fields();
-            $full_pub->refresh_authors();
+              # refresh fields
+              $full_pub->_light(0);
+              $full_pub->refresh_fields();
+              $full_pub->refresh_authors();
 
-            return $full_pub;
+              return $full_pub;
+            }
           }
           last;
         }
       }
     }
 
-    # If we are here, there as no pubmed entry and we 
+    # If we are here, there as no pubmed entry and we
     # look for other good sites
 
     for my $i ( 0 .. $#{$page} ) {
       foreach my $j ( 0 .. $#supported ) {
         if ( $page->[$i]->linkout =~ m/$supported[$j]/ ) {
           $full_pub = undef;
-          eval { $full_pub = $URL_plugin->match($page->[$i]) };
+          eval { $full_pub = $URL_plugin->match( $page->[$i] ) };
           if ($full_pub) {
+            if ( $full_pub->title() ) {
+              $full_pub->citekey('');
 
-            $full_pub->citekey('');
+              # Update plugin _hash with new data
+              $full_pub->guid( $pub->guid );
+              $self->_hash->{ $pub->guid } = $full_pub;
 
-            # Update plugin _hash with new data
-            $full_pub->guid( $pub->guid );
-            $self->_hash->{ $pub->guid } = $full_pub;
+              # refresh fields
+              $full_pub->_light(0);
+              $full_pub->refresh_fields();
+              $full_pub->refresh_authors();
 
-            # refresh fields
-            $full_pub->_light(0);
-            $full_pub->refresh_fields();
-            $full_pub->refresh_authors();
-
-            return $full_pub;
+              return $full_pub;
+            }
           }
           last;
         }
