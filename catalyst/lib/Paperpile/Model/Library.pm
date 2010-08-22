@@ -331,7 +331,9 @@ sub update_pub {
   my $new_key = $new_pub->format_pattern($pattern);
   if ( $new_key ne $old_data->{citekey} ) {
 
-# If we have a new citekey, make sure it doesn't conflict with other existing citekeys (this is the method called normally when inserting a new pub)
+    # If we have a new citekey, make sure it doesn't conflict with other
+    # existing citekeys (this is the method called normally when inserting
+    # a new pub)
     $self->_generate_keys( [$new_pub], $dbh );
     $diff->{citekey} = $new_pub->citekey;
   }
@@ -1779,14 +1781,14 @@ sub _generate_keys {
       $unique = 0;    # if we found something in the DB it is not unique
 
       # We collect the suffixes a,b,c... that already exist
-      if ( $existing_key =~ /$key([a-z])/ ) {    #
+      if ( $existing_key =~ /$key\_?([a-z])/ ) {    #
         push @suffix, $1;
       }
     }
 
     # Then in the current list that have been already processed in this loop
     foreach my $existing_key ( @{ $to_be_inserted{$key} } ) {
-      if ( $existing_key =~ /^$key([a-z])?/ ) {
+      if ( $existing_key =~ /^$key\_?([a-z])?/ ) {
         $unique = 0;
         push @suffix, $1 if $1;
       }
@@ -1802,7 +1804,13 @@ sub _generate_keys {
         @suffix = sort { $a cmp $b } @suffix;
         $new_suffix = chr( ord( pop(@suffix) ) + 1 );
       }
-      $key .= $new_suffix;
+
+      if ($key =~/\d$/){
+        $key .= $new_suffix;
+      } else {
+        $key .= "_".$new_suffix;
+      }
+
     }
 
     if ( not $to_be_inserted{$bare_key} ) {

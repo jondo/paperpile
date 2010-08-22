@@ -30,6 +30,8 @@ use Paperpile::PdfExtract;
 use Data::Dumper;
 use File::Path;
 use File::Spec;
+use File::Spec::Functions qw(splitpath);
+
 use File::Copy;
 use File::stat;
 use File::Compare;
@@ -419,9 +421,13 @@ sub _do_work {
         }
       }
 
+      # If we encountered an error upstream we do not have the full
+      # reference info and import it as 'incomplete'
       if ($error){
         if (!$self->pub->title){
-          $self->pub->title($self->pub->pdf);
+          my ( $volume, $dirs, $base_name ) = splitpath($self->pub->pdf);
+          $base_name=~s/\.pdf//i;
+          $self->pub->title($base_name);
         }
         $self->pub->pubtype('MISC');
         $self->pub->_incomplete(1);
