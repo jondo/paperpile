@@ -1963,6 +1963,12 @@ sub find_collection_parents {
 
   my ($self, $guid, $dbh) = @_;
 
+  # Ignore if guid is ROOT (or 'FOLDER_ROOT' which is the collection
+  # root id in the frontend)
+  if ($guid =~/ROOT/){
+    return ();
+  }
+
   $dbh = $self->dbh if !$dbh;
 
   my $sth = $dbh->prepare("SELECT * FROM Collections;");
