@@ -39,7 +39,7 @@ user_settings:
   proxy_user: ""
   proxy_passwd: ""
   pager_limit: 25
-  tags_list_height: 70
+  tags_list_height: 120
   _queue: ""
 
 library_settings:

@@ -134,8 +134,6 @@ sub new_entry : Local {
 
   my ( $self, $c ) = @_;
 
-  my $match_job = $c->request->params->{match_job};
-
   my %fields = ();
 
   foreach my $key ( %{ $c->request->params } ) {
@@ -151,14 +149,6 @@ sub new_entry : Local {
     DuplicateError->throw("Updates duplicate an existing reference in the database");
   }
 
-  my $job;
-
-  # Inserting a PDF that failed to match automatically and that has a
-  # jobid in the queue.
-  if ($match_job) {
-    $job = Paperpile::Job->new( { id => $match_job } );
-    $pub->_pdf_tmp( $job->pub->pdf );
-  }
 
   $c->model('Library')->insert_pubs( [$pub], 1 );
 
@@ -169,16 +159,6 @@ sub new_entry : Local {
   $c->stash->{success} = \1;
 
   $c->stash->{data}->{pub_delta} = 1;
-
-  # Update the job entry here.
-  if ($job) {
-    $job->update_status('DONE');
-    $job->error('');
-    $job->update_info( 'msg', "Data inserted manually." );
-    $job->pub($pub);
-    $job->save;
-    $c->stash->{data}->{jobs}->{$match_job} = $job->as_hash;
-  }
 
   $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, [$pub]);
 
@@ -256,6 +236,8 @@ sub update_entry : Local {
 
   my $guid = $c->request->params->{guid};
 
+  my $match_job = $c->request->params->{match_job};
+
   my $new_data = {};
   foreach my $field ( keys %{ $c->request->params } ) {
     next if $field =~ /grid_id/;
@@ -275,13 +257,28 @@ sub update_entry : Local {
     }
   }
 
+  my $job;
+
+  # Inserting a PDF that failed to match automatically and that has a
+  # jobid in the queue.
+  if ($match_job) {
+    $job = Paperpile::Job->new( { id => $match_job } );
+    $job->update_status('DONE');
+    $job->error('');
+    $job->update_info( 'msg', "Data inserted manually." );
+    $job->pub($new_pub);
+    $job->save;
+    $c->stash->{data}->{jobs}->{$match_job} = $job->as_hash;
+  }
+
+
   # That's handled as form on the front-end so we have to explicitly
   # indicate success
   $c->stash->{success} = \1;
 
   my $hash = $new_pub->as_hash;
 
-  $c->stash->{data} = { pubs => { $guid => $hash } };
+  $c->stash->{data}->{pubs} = { $guid => $hash };
 
   $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, [$new_pub] )
 
@@ -292,7 +289,6 @@ sub lookup_entry : Local {
 
   my $old_data = {};
   foreach my $field ( keys %{ $c->request->params } ) {
-    next if $field =~ /grid_id/;
     $old_data->{$field} = $c->request->params->{$field};
   }
 

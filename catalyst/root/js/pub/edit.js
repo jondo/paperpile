@@ -71,7 +71,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     // If we are editing the data for new PDF, we show information on
     // the PDF in the caption of the table
-    //if (this.data.pdf && !this.data._imported) {
     if (this.data.match_job) {
       tableContent.unshift({
         tag: 'caption',
@@ -208,7 +207,9 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     if (Ext.get('pdf-view-button')) {
       Ext.get('pdf-view-button').on('click', function() {
-        Paperpile.utils.openFile(this.data.pdf);
+        var pdf = this.data.pdf_name;
+        var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
+        Paperpile.utils.openFile(path);
       },
       this);
     }
@@ -729,7 +730,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       scope: this,
       params: {
         guid: this.data['guid'],
-        grid_id: this.grid_id
       },
       success: this.onUpdate,
 
@@ -853,24 +853,21 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     var url;
     var params;
 
-    // If we are given a grid_id we are updating an entry
-    if (this.grid_id) {
+    if (!this.isNew) {
       url = Paperpile.Url('/ajax/crud/update_entry');
       params = {
         guid: this.data['guid'],
       };
       msg = 'Updating database';
+      if (this.data.match_job) {
+        params.pdf = this.data.pdf;
+        params.match_job = this.data.match_job;
+      }
     }
     // else we are creating a new one
     else {
       url = Paperpile.Url('/ajax/crud/new_entry');
       msg = 'Adding new entry to database';
-      if (this.data.match_job) {
-        params = {
-          pdf: this.data.pdf,
-          match_job: this.data.match_job
-        };
-      }
     }
 
     Paperpile.status.showBusy(msg);

@@ -117,9 +117,6 @@ sub BUILD {
 
 sub save {
   my $self = shift;
-  my @tmp = caller;
-
-  print STDERR Dumper(@tmp);
   my $file = $self->_file;
   lock_store( $self, $self->_file );
 
@@ -393,27 +390,52 @@ sub _do_work {
       $self->update_info( 'msg', "PDF already in database (" . $self->pub->citekey . ")." );
 
     } else {
-      $self->_extract_meta_data;
 
-      if ( !$self->pub->{doi} and !$self->pub->{title} ) {
-        ExtractionError->throw("Could not find DOI or title in PDF.");
+      my $error;
+
+      eval {
+        $self->_extract_meta_data;
+      };
+
+
+      if ($@) {
+        my $e = Exception::Class->caught();
+        if ( ref $e ) {
+          $error = $e->error;
+        } else {
+          die($@);
+        }
       }
 
-      my $old_hash = $self->pub->as_hash;
+      if (!$error and !$self->pub->{doi} and !$self->pub->{title} ) {
+        $error = "Could not find DOI or title in PDF.";
+      }
 
-      my $success = $self->_match;
+      if (!$error){
+        my $success = $self->_match;
 
-      my $new_hash = $self->pub->as_hash;
+        if ( !$success ) {
+          $error = "Could not match PDF to an online resource.";
+        }
+      }
 
-      # Check if the _match function has changed any fields
-      if ( !$success ) {
-        NetMatchError->throw("Could not match PDF to an online resource.");
+      if ($error){
+        if (!$self->pub->title){
+          $self->pub->title($self->pub->pdf);
+        }
+        $self->pub->pubtype('MISC');
+        $self->pub->_incomplete(1);
       }
 
       $self->_insert;
 
-      $self->update_info( 'msg', "PDF successfully imported." );
       $self->update_info( 'callback', { fn => 'updatePubGrid' } );
+
+      if ($error){
+        NetMatchError->throw($error);
+      }
+
+      $self->update_info( 'msg', "PDF successfully imported." );
 
     }
   }
@@ -541,6 +563,7 @@ sub as_hash {
   $hash{message} = $self->get_message;
 
   if ( defined $self->pub ) {
+    $hash{guid}             = $self->pub->guid;
     $hash{citekey}         = $self->pub->citekey;
     $hash{title}           = $self->pub->title;
     $hash{doi}             = $self->pub->doi;
@@ -551,6 +574,7 @@ sub as_hash {
     $hash{authors}         = $self->pub->authors;
     $hash{pdf_name}        = $self->pub->pdf_name;
     $hash{pdf}             = $self->pub->pdf;
+
   }
   return {%hash};
 
@@ -832,8 +856,9 @@ sub _insert {
   # Insert into any necessary collections.
   if ( scalar @{ $self->_collection_guids } > 0 ) {
     foreach my $guid ( @{ $self->_collection_guids } ) {
-      if ($guid ne '') {
-	$model->add_to_collection( [ $self->pub ], $guid );
+      if ( ($guid ne '') and ($guid ne 'LOCAL_ROOT') ) {
+        print STDERR "==============> INHERE $guid\n";
+        $model->add_to_collection( [ $self->pub ], $guid );
       }
     }
   }

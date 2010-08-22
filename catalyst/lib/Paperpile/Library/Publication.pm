@@ -211,6 +211,10 @@ has '_light' => ( is => 'rw', isa => 'Int', default => 0 );
 # only used for function refresh_attachments
 has '_db_connection' => ( is => 'rw', default => '' );
 
+# Flag indicating that publication has been imported from PDF and could
+# not be matched to an online reference
+has '_incomplete' => ( is => 'rw', default => '' );
+
 sub BUILD {
   my ( $self, $params ) = @_;
 
