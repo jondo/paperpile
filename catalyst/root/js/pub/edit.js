@@ -75,7 +75,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       tableContent.unshift({
         tag: 'caption',
         cls: 'notice',
-        html: '<b>Add data for</b> ' + this.data.pdf_name + '<div style="float:right;"><a href="#" id="pdf-view-button" class="pp-textlink">View PDF</a></div>',
+        html: '<b>Add data for</b> ' + this.data._pdf_tmp + '<div style="float:right;"><a href="#" id="pdf-view-button" class="pp-textlink">View PDF</a></div>',
       });
     }
 
