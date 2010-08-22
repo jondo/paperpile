@@ -578,8 +578,13 @@ sub as_hash {
     $hash{journal}         = $self->pub->journal;
     $hash{authors_display} = $self->pub->_authors_display;
     $hash{authors}         = $self->pub->authors;
+
+    # We have to store the original file name, the file name after
+    # import and the guid of the imported PDF in various fields. This
+    # is kind of a mess but it does not work with less variables
     $hash{pdf_name}        = $self->pub->pdf_name;
     $hash{pdf}             = $self->pub->pdf;
+    $hash{_pdf_tmp}        = $self->pub->_pdf_tmp;
 
   }
   return {%hash};
@@ -863,7 +868,6 @@ sub _insert {
   if ( scalar @{ $self->_collection_guids } > 0 ) {
     foreach my $guid ( @{ $self->_collection_guids } ) {
       if ( ($guid ne '') and ($guid ne 'LOCAL_ROOT') ) {
-        print STDERR "==============> INHERE $guid\n";
         $model->add_to_collection( [ $self->pub ], $guid );
       }
     }
