@@ -22,6 +22,8 @@ use Paperpile::Model::User;
 use Paperpile::Model::Library;
 use Paperpile::Utils;
 
+use Config;
+
 use Data::Dumper;
 use File::Path;
 use File::Find;
@@ -75,19 +77,30 @@ sub initdb {
 
   my $self = shift;
 
-  chdir $self->cat_dir . "/db";
+  chdir $self->cat_dir;
+
+  my $arch_string=$Config{archname};
+  if ( $arch_string =~ /(darwin|osx)/i ) {
+     $ENV{PATH} = "bin/osx:".$ENV{PATH};
+     $ENV{DYLD_LIBRARY_PATH} = "bin/osx";
+  }
+
+#  chdir $self->cat_dir . "/db";
 
   foreach my $key ( 'app', 'user', 'library', 'queue' ) {
-    print STDERR "Initializing $key.db...\n";
-    unlink "$key.db";
-    my @out = `sqlite3 $key.db < $key.sql`;
+    print STDERR "Initializing db/$key.db...\n";
+    unlink "db/$key.db";
+    my @out = `sqlite3 db/$key.db < db/$key.sql;`;
     print @out;
   }
 
   my $model = Paperpile::Model::Library->new();
-  $model->set_dsn( "dbi:SQLite:" . "library.db" );
+  $model->set_dsn( "dbi:SQLite:" . "db/library.db" );
+  $model->connect;
 
-  my $yaml   = "../conf/fields.yaml";
+  print join(" ",keys(%{$model->dbh}))."\n";
+
+  my $yaml   = "conf/fields.yaml";
   my $config = LoadFile($yaml);
   foreach my $field ( keys %{ $config->{pub_fields} } ) {
     $model->dbh->do("ALTER TABLE Publications ADD COLUMN $field TEXT");
@@ -101,9 +114,9 @@ sub initdb {
 
   print STDERR "Importing journal list into app.db...\n";
 
-  open( JOURNALS, "<../data/journals.list" );
+  open( JOURNALS, "<data/journals.list" );
   $model = Paperpile::Model::App->new();
-  $model->set_dsn( "dbi:SQLite:" . "../db/app.db" );
+  $model->set_dsn( "dbi:SQLite:" . "db/app.db" );
 
   $model->dbh->begin_work();
 

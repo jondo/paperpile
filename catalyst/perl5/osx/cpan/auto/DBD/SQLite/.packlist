@@ -1,4 +1,8 @@
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/DBD/SQLite.pm relocate_as=../../../DBD/SQLite.pm
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/DBD/SQLite/Amalgamation.pm relocate_as=../../../DBD/SQLite/Amalgamation.pm
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/DBD/SQLite/SQLite.bs relocate_as=SQLite.bs
-/Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/auto/DBD/SQLite/SQLite.bundle relocate_as=SQLite.bundle
+/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/DBD/SQLite.pm relocate_as=../../../DBD/SQLite.pm
+/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/DBD/SQLite/Cookbook.pod relocate_as=../../../DBD/SQLite/Cookbook.pod
+/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/auto/DBD/SQLite/SQLite.bs relocate_as=SQLite.bs
+/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/auto/DBD/SQLite/SQLite.bundle relocate_as=SQLite.bundle
+/Users/greg/Documents/pp/paperpile/catalyst/perl5/osx/cpan/DBD/SQLite.pm relocate_as=../../../../../../../../../catalyst/perl5/osx/cpan/DBD/SQLite.pm
+/Users/greg/Documents/pp/paperpile/catalyst/perl5/osx/cpan/DBD/SQLite/Amalgamation.pm relocate_as=../../../../../../../../../catalyst/perl5/osx/cpan/DBD/SQLite/Amalgamation.pm
+/Users/greg/Documents/pp/paperpile/catalyst/perl5/osx/cpan/auto/DBD/SQLite/SQLite.bs relocate_as=../../../../../../../../../catalyst/perl5/osx/cpan/auto/DBD/SQLite/SQLite.bs
+/Users/greg/Documents/pp/paperpile/catalyst/perl5/osx/cpan/auto/DBD/SQLite/SQLite.bundle relocate_as=../../../../../../../../../catalyst/perl5/osx/cpan/auto/DBD/SQLite/SQLite.bundle

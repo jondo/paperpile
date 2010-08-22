@@ -95,7 +95,7 @@ sub substitutions {
     $platform = 'windows32';
   }
 
-  if ( $^O =~ /darwin/i ) {
+  if ( $^O =~ /(darwin|osx)/i ) {
     $platform = 'osx';
   }
 

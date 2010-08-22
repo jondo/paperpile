@@ -369,7 +369,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   },
 
   fileFromURL: function(url) {
-    var file = url.replace("file://", "");
+    var file = url;
+    file = file.replace("file://localhost", "");
+    file = file.replace("file://", "");
     file = decodeURIComponent(file);
     file = file.replace(/\n|\r|\r\n/g, "");
     return file;

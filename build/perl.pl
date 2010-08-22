@@ -28,7 +28,7 @@ if ( $arch_string =~ /linux/i ) {
   $platform = ($arch_string =~ /64/) ? 'linux64' : 'linux32';
 }
 
-if ( $arch_string =~ /darwin/i ) {
+if ( $arch_string =~ /(darwin|osx)/i ) {
   $platform = 'osx';
 }
 
