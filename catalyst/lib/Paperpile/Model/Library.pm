@@ -129,6 +129,10 @@ sub insert_pubs {
       }
     }
 
+    if ($pub->_incomplete){
+      $self->_flag_as_incomplete($pub, $dbh);
+    }
+
   }
 
   $dbh->commit;
@@ -453,11 +457,14 @@ sub update_citekeys {
 
 sub new_collection {
 
-  my ( $self, $guid, $name, $type, $parent, $style ) = @_;
+  my ( $self, $guid, $name, $type, $parent, $style, $dbh ) = @_;
 
-  my $dbh = $self->dbh;
+  my $external_dbh = $dbh ? 1 : 0;
 
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  if ( !$external_dbh ) {
+    $dbh = $self->dbh;
+    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  }
 
   if ( $parent =~ /ROOT/ ) {
     $parent = 'ROOT';
@@ -482,7 +489,7 @@ sub new_collection {
     "INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES($guid, $name, $type, $parent, $sort_order, $style)"
   );
 
-  $dbh->commit;
+  $dbh->commit if !$external_dbh;
 
 }
 
@@ -764,7 +771,7 @@ sub set_collection_style {
 
 }
 
-# Initializes two default labels in the user's library. We do this
+# Initializes default labels in the user's library. We do this
 # here (as opposed to shipping it in our default library) to make sure
 # everybody has a unique guid for these labels.
 
@@ -778,11 +785,18 @@ sub set_default_collections {
   my $guid2 = Data::GUID->new->as_hex;
   $guid2 =~ s/^0x//;
 
+  my $guid3 = Data::GUID->new->as_hex;
+  $guid2 =~ s/^0x//;
+
+
   $self->dbh->do(
     "INSERT INTO Collections (guid,name,type,parent,sort_order,style) VALUES ('$guid1', 'Important','LABEL','ROOT',0,'11');"
   );
   $self->dbh->do(
     "INSERT INTO Collections (guid,name,type,parent,sort_order,style) VALUES ('$guid2', 'Review','LABEL','ROOT',1,'22');"
+  );
+  $self->dbh->do(
+    "INSERT INTO Collections (guid,name,type,parent,sort_order,style) VALUES ('$guid3', 'Incomplete','LABEL','ROOT',2,'0');"
   );
 
 }
@@ -1708,6 +1722,29 @@ sub dashboard_stats {
   };
 
 }
+
+
+sub _flag_as_incomplete {
+
+  ( my $self, my $pub, my $dbh ) = @_;
+
+  # Check if we have a label 'Incomplete'
+  ( my $guid ) = $dbh->selectrow_array("SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
+
+  # If not create it
+  if (!$guid){
+    $guid = Data::GUID->new;
+    $guid = $guid->as_hex;
+    $guid =~ s/^0x//;
+    $self->new_collection($guid, 'Incomplete', 'LABEL', 'ROOT', 0, $dbh );
+  }
+
+  # Assign the label to the publication
+  $pub->add_tag($guid);
+  $self->_update_collections([$pub],'LABEL',$dbh);
+
+}
+
 
 # Creates unique citation keys for a list of publications. Considers
 # the publictions already in the database and the new pubs that are to

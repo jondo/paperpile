@@ -873,7 +873,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getPubTemplate: function() {
     if (this.pubTemplate == null) {
       this.pubTemplate = new Ext.XTemplate(
-        '<div class="pp-grid-data" guid="{guid}">',
+        '<div class="pp-grid-data {[this.isInactive(values.tags)]}" guid="{guid}">',
         '<div>',
         '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
         '</div>',
@@ -903,6 +903,20 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             }
             if (tags.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
             return returnMe;
+          },
+          isInactive: function(tag_string){
+            var tags = tag_string.split(/\s*,\s*/);
+            for (var i = 0; i < tags.length; i++) {
+              var guid = tags[i];
+              var tag = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
+              if (tag != null) {
+                name = tag.get('name');
+                if (name === 'Incomplete'){
+                  return('pp-inactive');
+                }
+              }
+            }
+            return('');
           }
         }).compile();
     }
@@ -1801,7 +1815,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           pubtype: 'ARTICLE'
         } : this.getSingleSelectionRecord().data,
         autoComplete: autoComplete,
-        grid_id: isNew ? null : this.id,
+        isNew: isNew,
         callback: function(status, data) {
           if (status == 'SAVE') {
             Paperpile.main.onUpdate(data);

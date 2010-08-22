@@ -79,7 +79,7 @@ sub grid : Local {
     fields        => [
       'id',              'type',    'status',  'progress', 'error',    'size',
       'downloaded',      'message', 'citekey', 'title',    'citation', 'authors',
-      'authors_display', 'linkout', 'journal', 'pdf',      'doi'
+      'authors_display', 'linkout', 'journal', 'pdf', 'pdf_name', 'doi', 'guid'
     ]
   );
 
@@ -139,7 +139,7 @@ sub update : Local {
     }
   }
 
-  $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', 'pdf_name', '_search_job', '_metadata_job' ] );
+  $pubs = $self->_collect_pub_data( \@pub_list, [ 'guid','pdf', 'pdf_name', '_search_job', '_metadata_job' ] );
   $data->{jobs} = $jobs;
   $data->{pubs} = $pubs;
 

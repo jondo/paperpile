@@ -983,7 +983,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       closable: true,
       items: [new Paperpile.MetaPanel({
         data: data,
-        grid_id: null,
+        isNew:false,
         callback: function(status, data) {
           if (status == 'SAVE') {
             Paperpile.main.onUpdate(data);
