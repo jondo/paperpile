@@ -575,6 +575,37 @@ sub add_folder {
   $self->add_guid( 'folders', $guid );
 }
 
+
+sub remove_tag {
+  my ( $self, $guid ) = @_;
+  $self->remove_guid( 'tags', $guid );
+}
+
+sub remove_folder {
+  my ( $self, $guid ) = @_;
+  $self->remove_guid( 'folders', $guid );
+}
+
+sub remove_guid {
+
+  my ( $self, $what, $guid ) = @_;
+
+  return unless ( defined $what );
+
+  $what = 'folders' if ( $what eq 'FOLDER' );
+  $what = 'tags'    if ( $what eq 'LABEL' );
+
+  my $list = $self->$what;
+
+  $list=~s/^$guid,//;
+  $list=~s/$guid,//;
+  $list=~s/$guid$//;
+
+  $self->$what($list);
+
+}
+
+
 sub add_guid {
 
   my ( $self, $what, $guid ) = @_;

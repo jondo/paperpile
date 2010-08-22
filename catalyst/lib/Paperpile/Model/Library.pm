@@ -338,6 +338,12 @@ sub update_pub {
     $diff->{citekey} = $new_pub->citekey;
   }
 
+  # If flagged with label 'Incomplete' remove this label during update
+  # when at least authors/editors and title are given.
+  if (($new_pub->authors || $new_pub->editors) && $new_pub->title){
+    $self->_flag_as_complete($new_pub, $dbh);
+  }
+
   # If we have attachments we need to check if their names have
   # changed because of the update and if so move them to the new place
   if ( $new_pub->{pdf} || $new_pub->{attachments} ) {
@@ -1746,6 +1752,22 @@ sub _flag_as_incomplete {
   $self->_update_collections([$pub],'LABEL',$dbh);
 
 }
+
+sub _flag_as_complete {
+
+  ( my $self, my $pub, my $dbh ) = @_;
+
+  ( my $guid ) = $dbh->selectrow_array("SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
+
+  return if not $guid;
+  return if (not $pub->tags=~/$guid/);
+
+  $pub->remove_tag($guid);
+  $self->_update_collections([$pub],'LABEL',$dbh);
+
+}
+
+
 
 
 # Creates unique citation keys for a list of publications. Considers
