@@ -128,9 +128,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       'AUTO_COMPLETE': new Ext.Action({
         text: 'Auto-complete Data',
-        handler: function() {
-          this.handleEdit(false,true);
-        },
+        handler: this.updateMetadata,
         scope: this,
         cls: 'x-btn-text-icon edit',
         icon: '/images/icons/reload.png',
@@ -1832,22 +1830,48 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   updateMetadata: function() {
     var selection = this.getSelection();
-    if (selection.length > 30) {
-      Ext.getCmp('queue-widget').onUpdate({
-        submitting: true
+
+    if (selection.length == 1){
+      this.handleEdit(false,true);
+      return;
+    }
+    
+    if (selection.length > 1) {
+
+      Ext.MessageBox.buttonText.ok = "Start Update";
+
+      Ext.Msg.show({
+        title: 'Auto-complete',
+        msg: 'Data for '+selection.length + ' references will be matched to online resources and automatically updated. Backup copies of the old data will be copied to the Trash. Continue?',
+        animEl: 'elId',
+        icon: Ext.MessageBox.INFO,
+        buttons: Ext.Msg.OKCANCEL,
+        fn: function(btn) {
+          if (btn === 'ok') {
+            if (selection.length > 30) {
+              Ext.getCmp('queue-widget').onUpdate({
+                submitting: true
+              });
+            }
+            Paperpile.Ajax({
+              url: '/ajax/crud/batch_update',
+              params: {
+                selection: selection,
+                grid_id: this.id
+              },
+              success: function(response) {
+                // Trigger a thread to start requesting queue updates.
+                Paperpile.main.queueUpdate();
+              }
+            });
+          }
+          Ext.MessageBox.buttonText.ok = "Ok";
+        },
+        scope: this
       });
     }
-    Paperpile.Ajax({
-      url: '/ajax/crud/batch_update',
-      params: {
-        selection: selection,
-        grid_id: this.id
-      },
-      success: function(response) {
-        // Trigger a thread to start requesting queue updates.
-        Paperpile.main.queueUpdate();
-      }
-    });
+
+    
   },
 
   batchDownload: function() {

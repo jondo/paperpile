@@ -921,3 +921,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sun Aug 22 19:15:47 2010: C<Module> L<Text::LevenshteinXS|Text::LevenshteinXS>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

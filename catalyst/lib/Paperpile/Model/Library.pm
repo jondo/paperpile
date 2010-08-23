@@ -301,7 +301,7 @@ sub update_pub {
 
   # Figure out fields that have changed
   foreach my $field ( keys %{$new_data} ) {
-    next if ( !$new_data->{$field} );
+    next if ( !$new_data->{$field} && !$data->{$field});
     if ( !defined $data->{$field} || $new_data->{$field} ne $data->{$field} ) {
       $diff->{$field} = $new_data->{$field};
     }
@@ -331,9 +331,17 @@ sub update_pub {
   my $new_key = $new_pub->format_pattern($pattern);
   if ( $new_key ne $old_data->{citekey} ) {
 
-# If we have a new citekey, make sure it doesn't conflict with other existing citekeys (this is the method called normally when inserting a new pub)
+    # If we have a new citekey, make sure it doesn't conflict with other
+    # existing citekeys (this is the method called normally when inserting
+    # a new pub)
     $self->_generate_keys( [$new_pub], $dbh );
     $diff->{citekey} = $new_pub->citekey;
+  }
+
+  # If flagged with label 'Incomplete' remove this label during update
+  # when at least authors/editors and title are given.
+  if (($new_pub->authors || $new_pub->editors) && $new_pub->title){
+    $self->_flag_as_complete($new_pub, $dbh);
   }
 
   # If we have attachments we need to check if their names have
@@ -786,7 +794,7 @@ sub set_default_collections {
   $guid2 =~ s/^0x//;
 
   my $guid3 = Data::GUID->new->as_hex;
-  $guid2 =~ s/^0x//;
+  $guid3 =~ s/^0x//;
 
 
   $self->dbh->do(
@@ -1745,6 +1753,22 @@ sub _flag_as_incomplete {
 
 }
 
+sub _flag_as_complete {
+
+  ( my $self, my $pub, my $dbh ) = @_;
+
+  ( my $guid ) = $dbh->selectrow_array("SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
+
+  return if not $guid;
+  return if (not $pub->tags=~/$guid/);
+
+  $pub->remove_tag($guid);
+  $self->_update_collections([$pub],'LABEL',$dbh);
+
+}
+
+
+
 
 # Creates unique citation keys for a list of publications. Considers
 # the publictions already in the database and the new pubs that are to
@@ -1779,14 +1803,14 @@ sub _generate_keys {
       $unique = 0;    # if we found something in the DB it is not unique
 
       # We collect the suffixes a,b,c... that already exist
-      if ( $existing_key =~ /$key([a-z])/ ) {    #
+      if ( $existing_key =~ /$key\_?([a-z])/ ) {    #
         push @suffix, $1;
       }
     }
 
     # Then in the current list that have been already processed in this loop
     foreach my $existing_key ( @{ $to_be_inserted{$key} } ) {
-      if ( $existing_key =~ /^$key([a-z])?/ ) {
+      if ( $existing_key =~ /^$key\_?([a-z])?/ ) {
         $unique = 0;
         push @suffix, $1 if $1;
       }
@@ -1802,7 +1826,13 @@ sub _generate_keys {
         @suffix = sort { $a cmp $b } @suffix;
         $new_suffix = chr( ord( pop(@suffix) ) + 1 );
       }
-      $key .= $new_suffix;
+
+      if ($key =~/\d$/){
+        $key .= $new_suffix;
+      } else {
+        $key .= "_".$new_suffix;
+      }
+
     }
 
     if ( not $to_be_inserted{$bare_key} ) {
@@ -1932,6 +1962,12 @@ sub _find_subcollections {
 sub find_collection_parents {
 
   my ($self, $guid, $dbh) = @_;
+
+  # Ignore if guid is ROOT (or 'FOLDER_ROOT' which is the collection
+  # root id in the frontend)
+  if ($guid =~/ROOT/){
+    return ();
+  }
 
   $dbh = $self->dbh if !$dbh;
 

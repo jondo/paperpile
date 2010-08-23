@@ -22,7 +22,6 @@ sub _min
 sub distance
 {
 	my ($s,@t)=@_;
-
 	my $n=length($s);
 	my @result;
 

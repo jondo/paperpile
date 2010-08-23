@@ -47,6 +47,15 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     case 'pdf-download-open-url':
       Paperpile.utils.openURL(data.publisherLink);
       break;
+    case 'pdf-view':
+      var path;
+      if (data._pdf_tmp){
+        path = data._pdf_tmp;
+      } else {
+        path = data.pdf;
+      }
+      Paperpile.utils.openFile(path);
+      break;
     }
   },
 
@@ -223,7 +232,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       '  <tpl if="type==\'PDF_IMPORT\'">',
       '    <div class="pp-queue-list-data">',
       '      <div class="pp-queue-list-title pp-queue-list-title-{status}">',
-      '      <tpl if="status!=\'DONE\'">{pdf} </tpl> ',
+      '      <tpl if="status!=\'DONE\'">{_pdf_tmp} </tpl> ',
       '      <tpl if="status!=\'ERROR\'">',
       '        <tpl if="shortAuthors">{shortAuthors} </tpl> <tpl if="shortTitle"><b>{shortTitle}</b></tpl> <tpl if="journal"><i>{journal}</i></tpl>',
       '      </tpl> ',
@@ -234,6 +243,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       '      <tpl if="status==\'ERROR\'">',
       '        <p>',
       '          <a href="#" class="pp-textlink" action="pdf-match-insert-manually">Insert data manually</a> | ',
+      '          <a href="#" class="pp-textlink" action="pdf-view">View PDF</a> | ',
       '          <a href="#" class="pp-textlink" action="pdf-match-error-report">Send Error Report</a>',
       '       </p>',
       '      </tpl>',

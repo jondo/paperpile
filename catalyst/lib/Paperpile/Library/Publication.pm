@@ -575,6 +575,37 @@ sub add_folder {
   $self->add_guid( 'folders', $guid );
 }
 
+
+sub remove_tag {
+  my ( $self, $guid ) = @_;
+  $self->remove_guid( 'tags', $guid );
+}
+
+sub remove_folder {
+  my ( $self, $guid ) = @_;
+  $self->remove_guid( 'folders', $guid );
+}
+
+sub remove_guid {
+
+  my ( $self, $what, $guid ) = @_;
+
+  return unless ( defined $what );
+
+  $what = 'folders' if ( $what eq 'FOLDER' );
+  $what = 'tags'    if ( $what eq 'LABEL' );
+
+  my $list = $self->$what;
+
+  $list=~s/^$guid,//;
+  $list=~s/$guid,//;
+  $list=~s/$guid$//;
+
+  $self->$what($list);
+
+}
+
+
 sub add_guid {
 
   my ( $self, $what, $guid ) = @_;
@@ -682,7 +713,7 @@ sub format_pattern {
     }
   }
   if ( not @authors ) {
-    @authors = ('unnamed');
+    @authors = ('_unnamed_');
   }
 
   my $first_author = $authors[0];
@@ -694,6 +725,8 @@ sub format_pattern {
 
   my $YYYY = $self->year;
   my $YY   = $YYYY;
+
+
 
   my $title = $self->title;
 
@@ -707,6 +740,8 @@ sub format_pattern {
 
   if ( defined $YY && length($YY) == 4 ) {
     $YY = substr( $YYYY, 2, 2 );
+  } else {
+    $YY = $YYYY = '_undated_';
   }
 
   # [firstauthor]
@@ -768,9 +803,6 @@ sub format_pattern {
     if ($YYYY) {
       $pattern =~ s/\[YY\]/$YY/g;
       $pattern =~ s/\[YYYY\]/$YYYY/g;
-    } else {
-      $pattern =~ s/\[YY\]/XX/g;
-      $pattern =~ s/\[YYYY\]/XXXX/g;
     }
   }
 
@@ -797,6 +829,36 @@ sub format_pattern {
   $pattern =~ s{/}{__SLASH__}g;
   $pattern =~ s/\W//g;
   $pattern =~ s{__SLASH__}{/}g;
+
+
+  if ($pattern=~/(unnamed__undated|undated__unnamed)/){
+
+    my $subst;
+
+    my $max = $#title_words;
+    $max = 3 if $max>=3;
+
+    my $title_string = join( '_', @title_words[ 0 .. $max] );
+
+    if ($title_string){
+      if (not $pattern=~/$title_string/){
+        $subst=$title_string;
+      } else {
+        $subst='this';
+      }
+    } else {
+      $subst = 'incomplete_reference';
+    }
+
+    $pattern=~s/(unnamed__undated|undated__unnamed)/$subst/;
+  }
+
+  # Fix underscores
+  $pattern=~s/__/_/g; # merge double underscores
+  $pattern=~s/^_//; # remove underscores from beginning
+  $pattern=~s/_$//; # remove underscores from end
+  $pattern=~s/\/_/\//g; # remove underscores from paths: path/_unnamed_2000
+
 
   return $pattern;
 

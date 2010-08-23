@@ -30,6 +30,8 @@ use Paperpile::PdfExtract;
 use Data::Dumper;
 use File::Path;
 use File::Spec;
+use File::Spec::Functions qw(splitpath);
+
 use File::Copy;
 use File::stat;
 use File::Compare;
@@ -419,9 +421,13 @@ sub _do_work {
         }
       }
 
+      # If we encountered an error upstream we do not have the full
+      # reference info and import it as 'incomplete'
       if ($error){
         if (!$self->pub->title){
-          $self->pub->title($self->pub->pdf);
+          my ( $volume, $dirs, $base_name ) = splitpath($self->pub->pdf);
+          $base_name=~s/\.pdf//i;
+          $self->pub->title($base_name);
         }
         $self->pub->pubtype('MISC');
         $self->pub->_incomplete(1);
@@ -572,8 +578,13 @@ sub as_hash {
     $hash{journal}         = $self->pub->journal;
     $hash{authors_display} = $self->pub->_authors_display;
     $hash{authors}         = $self->pub->authors;
+
+    # We have to store the original file name, the file name after
+    # import and the guid of the imported PDF in various fields. This
+    # is kind of a mess but it does not work with less variables
     $hash{pdf_name}        = $self->pub->pdf_name;
     $hash{pdf}             = $self->pub->pdf;
+    $hash{_pdf_tmp}        = $self->pub->_pdf_tmp;
 
   }
   return {%hash};
@@ -857,7 +868,6 @@ sub _insert {
   if ( scalar @{ $self->_collection_guids } > 0 ) {
     foreach my $guid ( @{ $self->_collection_guids } ) {
       if ( ($guid ne '') and ($guid ne 'LOCAL_ROOT') ) {
-        print STDERR "==============> INHERE $guid\n";
         $model->add_to_collection( [ $self->pub ], $guid );
       }
     }

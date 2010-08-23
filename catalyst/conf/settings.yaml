@@ -46,7 +46,7 @@ user_settings:
 library_settings:
   db_version: 2
   paper_root: "__PP_PAPER_DIR__"
-  key_pattern: "[firstauthor][YYYY]"
+  key_pattern: "[Firstauthor][YYYY]"
   pdf_pattern: "[key]"
   attachment_pattern: "[key]_supplements"
   search_seq: "PubMed,GoogleScholar"

@@ -1,6 +1,6 @@
-#!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -w
+#!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/paperperl -w
 
-##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/perl -d:NYTProf -w
+##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/paperperl -d:NYTProf -w
 
 BEGIN {
   $ENV{CATALYST_DEBUG} = 0;
@@ -11,10 +11,13 @@ use Data::Dumper;
 use lib '../../lib';
 
 use Paperpile;
-use Paperpile::FileSync;
+use Paperpile::Plugins::Import;
+use Paperpile::Plugins::Import::Duplicates;
+use Text::LevenshteinXS qw(distance);
 
-my $map = { '91035A4871BC11DFA6B0E0AC40B6B6F9' => '/home/wash/sync.bib' };
+my $plugin = Paperpile::Plugins::Import::Duplicates->new(file=>'/home/wash/.paperdev/paperpile.ppl');
 
-my $fs = Paperpile::FileSync->new( map => $map);
+$plugin->connect();
 
-$fs->sync_collection('91035A4871BC11DFA6B0E0AC40B6B6F9');
+#my $distance = distance('CONSERVEDRNASECONDARYSTRUCTURESINPICORNAVIRIDAEGENOMES','CONSERVEDRNASECONDARYSTRUCTURESINFLAVIVIRIDAEGENOMES');
+#print "$distance\n";

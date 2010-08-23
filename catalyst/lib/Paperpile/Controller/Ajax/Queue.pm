@@ -79,7 +79,7 @@ sub grid : Local {
     fields        => [
       'id',              'type',    'status',  'progress', 'error',    'size',
       'downloaded',      'message', 'citekey', 'title',    'citation', 'authors',
-      'authors_display', 'linkout', 'journal', 'pdf', 'pdf_name', 'doi', 'guid'
+      'authors_display', 'linkout', 'journal', 'pdf', 'pdf_name', '_pdf_tmp', 'doi', 'guid'
     ]
   );
 
@@ -177,7 +177,7 @@ sub cancel_jobs : Local {
   my $q = Paperpile::Queue->new();
   $q->run;
 
-  my $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', 'pdf_name', '_search_job','_metadata_job' ] );
+  my $pubs = $self->_collect_pub_data( \@pub_list, [ 'pdf', 'pdf_name', '_pdf_tmp', '_search_job','_metadata_job' ] );
   my $data = {};
   $data->{pubs}      = $pubs;
   $data->{job_delta} = 1;

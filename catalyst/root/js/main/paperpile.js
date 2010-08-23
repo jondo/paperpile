@@ -442,7 +442,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       justCreated = true;
       this.pdfExtractChoice = new Ext.Window({
         title: 'Choose type of PDF import',
-	closeAction:'hide',
+        closeAction: 'hide',
         layout: 'vbox',
         bodyStyle: 'background-color:#FFFFFF !important;',
         width: 200,
@@ -454,13 +454,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           align: 'center',
           defaultMargins: '5px'
         },
-        items: [
-	    {
-		xtype:'label',
-		text:' ',
-		height:5
-	    },
-	    {
+        items: [{
+          xtype: 'label',
+          text: ' ',
+          height: 5
+        },
+        {
           xtype: 'subtlebutton',
           id: 'folder_extract_button',
           text: 'PDF Folder',
@@ -486,14 +485,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           scope: this
         },
         {
-	  xtype:'textbutton',
+          xtype: 'textbutton',
           text: 'Cancel',
           itemId: 'cancel_button',
-	  style:{
-	      position:'absolute',
-	      top:'0px',
-	      left:'0px'
-	  },
+          style: {
+            position: 'absolute',
+            top: '0px',
+            left: '0px'
+          },
           handler: function() {
             this.pdfExtractChoice.close();
           },
@@ -501,12 +500,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         }]
       });
 
-    this.pdfExtractChoice.on('show', function(window) {
-	var b = window.get('cancel_button');
-	b.getEl().alignTo(window.getEl(),'br-br',[-10,-10]);
-    });
+      this.pdfExtractChoice.on('show', function(window) {
+        var b = window.get('cancel_button');
+        b.getEl().alignTo(window.getEl(), 'br-br', [-10, -10]);
+      });
     }
-
 
     this.pdfExtractChoice.show();
 
@@ -1012,8 +1010,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
   },
 
-  // Use this simple function here for now. We can think about a more
-  // sophisticated tab panel with PDF view later.
   addPDFManually: function(jobID, gridID) {
 
     var data = Ext.getCmp(gridID).getStore().getById(jobID).data;
@@ -1023,7 +1019,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     data.pubtype = 'ARTICLE';
 
     win = new Ext.Window({
-      title: "Import " + data.pdf,
+      title: "Edit Reference",
       modal: true,
       shadow: false,
       layout: 'fit',
@@ -1033,7 +1029,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       closable: true,
       items: [new Paperpile.MetaPanel({
         data: data,
-        isNew:false,
+        isNew: false,
         callback: function(status, data) {
           if (status == 'SAVE') {
             Paperpile.main.onUpdate(data);
