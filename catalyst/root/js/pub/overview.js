@@ -245,7 +245,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     data.numImported = this.getGrid().getSelection('IMPORTED').length;
     data.allImported = this.getGrid().allImported;
-    data.allSelected = this.getGrid().allSelected;
+    data.allSelected = this.getGrid().getSelectionModel().isAllSelected();
 
     var templateToUse = null;
     if (data.totalCount == 0) {
