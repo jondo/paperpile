@@ -404,6 +404,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         Paperpile.main.countFilesAndTriggerExtraction(folder);
       }
       this.pdfExtractChoice.close();
+      this.pdfExtractChoice = undefined;
     };
     var options = {
       title: 'Choose a folder containing PDFs to import',
@@ -422,6 +423,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         }
       }
       this.pdfExtractChoice.close();
+      this.pdfExtractChoice = undefined;
     };
     var options = {
       title: 'Choose PDF file(s) to import',
@@ -438,7 +440,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     var divDef = '<div style="width:200px;white-space:normal;">';
     var justCreated = false;
-    if (this.pdfExtractChoice === undefined) {
+    if (!this.pdfExtractChoice) {
       justCreated = true;
       this.pdfExtractChoice = new Ext.Window({
         title: 'Choose type of PDF import',
@@ -495,6 +497,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           },
           handler: function() {
             this.pdfExtractChoice.close();
+	    this.pdfExtractChoice = undefined;
           },
           scope: this
         }]
@@ -623,9 +626,15 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         this.createFileImportTab(path);
       }
     };
+
+    var types = null;
+    if (Paperpile.utils.get_platform() != 'osx') {
+	types = ['*'];
+    }
+    
     var options = {
       title: 'Choose a bibliography file to import',
-      types: ['*'],
+      types: types,
       typesDescription: 'Bibliography files (BibTeX, RIS, EndNote, and others)',
       scope: this
     };

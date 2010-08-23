@@ -1695,12 +1695,26 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         }
       }
 
-      var link = [
+      var link;
+
+      var platform = Paperpile.utils.get_platform();
+      if (platform == 'osx') {
+	  string = string.replace(/%0A/g, "\n");
+	link = [
+		'mailto:?',
+		'subject=' + subject,
+		'&body=' + body + "\n\n" + string,
+		"\n\n--\nShared with Paperpile\nhttp://paperpile.com",
+		attachments.join('')]
+		.join('');
+      } else {
+      link = [
         'mailto:?',
         'subject=' + subject,
         '&body=' + body + "%0A%0A" + string,
         "%0A%0A--%0AShared with Paperpile%0Ahttp://paperpile.com",
         attachments.join('')].join('');
+      }
       Paperpile.utils.openURL(link);
     };
 

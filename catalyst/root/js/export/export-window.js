@@ -161,7 +161,7 @@ Paperpile.SimpleExportWindow = Ext.extend(Ext.Window, {
 
       Paperpile.status.showBusy('Exporting to ' + file + '...');
       Paperpile.Ajax({
-        url: '/ajax/plugins/export',
+	url: Paperpile.Url('/ajax/plugins/export'),
         params: {
           source_node: this.source_node,
           selection: this.selection,

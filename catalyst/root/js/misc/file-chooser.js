@@ -351,6 +351,8 @@ Paperpile.fileDialog = function(callback, inputOptions) {
 
   Ext.apply(options, inputOptions);
 
+  Paperpile.log("Types: "+options.types);
+
   if (callback === undefined) {
     callback = function(filenames) {};
   }
@@ -411,6 +413,7 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     if (options.dialogType == 'save') {
       Titanium.UI.openSaveAsDialog(callback, options);
     } else if (options.selectionType == 'file') {
+	Paperpile.log("FILE");
       Titanium.UI.openFileChooserDialog(callback, options);
     } else {
       Titanium.UI.openFolderChooserDialog(callback, options);
