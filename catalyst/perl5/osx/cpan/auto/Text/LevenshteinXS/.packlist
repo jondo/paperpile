@@ -1,0 +1,4 @@
+/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/Text/LevenshteinXS.pm relocate_as=../../../Text/LevenshteinXS.pm
+/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/auto/Text/LevenshteinXS/LevenshteinXS.bs relocate_as=LevenshteinXS.bs
+/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/auto/Text/LevenshteinXS/LevenshteinXS.bundle relocate_as=LevenshteinXS.bundle
+/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/auto/Text/LevenshteinXS/autosplit.ix relocate_as=autosplit.ix
