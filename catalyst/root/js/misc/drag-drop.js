@@ -2,7 +2,6 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   initListeners: function() {
 
     var el = Ext.getBody();
-    //    Paperpile.log("Body id: " + el.id);
     this.addAllDragEvents(el, this.bodyDragEvent);
 
     this.createToolTip();
@@ -77,6 +76,15 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     for (var i = 0; i < collection.getCount(); i++) {
       this.targetsList.push(collection.itemAt(i));
     }
+  },
+
+  clearTargets: function(canvasEl) {
+    var c = canvasEl.dom.getContext("2d");
+
+    var box = canvasEl.getBox();
+    c.clearRect(box.x, box.y, box.width, box.height);
+    c.fillStyle = 'rgba(50,50,50,0.3)';
+    c.fillRect(box.x, box.y, box.width, box.height);
   },
 
   drawAroundTargets: function(canvasEl) {
@@ -275,6 +283,14 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       },
       true);
     }
+    /*
+    else {
+      var box = Paperpile.main.getBox();
+      this.dragPane.setBox(box);
+      this.clearTargets(this.dragPane);
+      return;
+    }
+    */
 
     // The dragPane should capture drag events now, not the bod.
     this.removeAllDragEvents(Ext.getBody(), this.bodyDragEvent);
@@ -299,6 +315,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     this.addAllDragEvents(Ext.getBody(), this.bodyDragEvent);
 
     this.effectBlock = false;
+
+    this.dragPane.remove();
+    this.dragPane = null;
   },
 
   paneDragEvent: function(event) {
