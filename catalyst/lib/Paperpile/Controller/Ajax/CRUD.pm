@@ -1042,14 +1042,16 @@ sub _collect_update_data {
 
   $c->stash->{data} = {} unless ( defined $c->stash->{data} );
 
+  my @pubs_copy;
+
   my $max_output_size = 30;
   if ( scalar(@$pubs) > $max_output_size ) {
     $c->stash->{data}->{pub_delta} = 1;
-    @$pubs = @$pubs[ 1 .. $max_output_size ];
+    @pubs_copy = @$pubs[ 1 .. $max_output_size ];
   }
 
   my %output = ();
-  foreach my $pub (@$pubs) {
+  foreach my $pub (@pubs_copy) {
     my $hash = $pub->as_hash;
 
     my $pub_fields = {};

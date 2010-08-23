@@ -1732,9 +1732,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
   deleteEntry: function(mode, deleteAll) {
     var selection = this.getSelection();
-    if (deleteAll === true) {
-      selection = 'ALL';
-    }
 
     // Find the lowest index of the current selection.
     var firstRecord = this.getSelectionModel().getLowestSelected();

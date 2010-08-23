@@ -239,7 +239,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   afterLoadSettings: function() {
 	    var zoom = this.getSetting('zoom_level');
-	    Paperpile.log(zoom);
 	    if (zoom === undefined) {
 		zoom = 1
 	    }
@@ -247,7 +246,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 	    if (zoom > 2) {
 		zoom = zoom / 100;
 	    }
-	    Paperpile.log(zoom);
 	    this.onZoomChange(zoom);
   },
 
