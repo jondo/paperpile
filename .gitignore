@@ -11,3 +11,4 @@ catalyst/root/js/all.js
 catalyst/root/css/all.css
 \#*
 .\#*
+.DS_Store
