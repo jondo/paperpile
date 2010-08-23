@@ -257,11 +257,13 @@ Paperpile.stage1 = function() {
 Paperpile.stage2 = function() {
 
   Ext.QuickTips.init();
+
   Paperpile.main = new Paperpile.Viewport;
 
   Paperpile.main.loadSettings(
     function() {
-      Paperpile.main.show();
+	Paperpile.main.afterLoadSettings();
+	//Paperpile.main.show();
       var tree = Ext.getCmp('treepanel');
       Paperpile.main.tree = tree;
       Paperpile.main.tabs.newDBtab('', 'MAIN');

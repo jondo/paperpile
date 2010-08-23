@@ -96,9 +96,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   initComponent: function() {
 
+	    Paperpile.main = this;
+
     Ext.apply(this, {
       layout: 'border',
-      renderTo: Ext.getBody(),
       enableKeyEvents: true,
       keys: {},
       items: [{
@@ -136,7 +137,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           region: 'west',
           margins: '2 2 2 2',
           cmargins: '5 5 0 5',
-          width: 200
+          width: '200px'
         },
         {
           region: 'center',
@@ -200,8 +201,54 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
   },
 
-  onRender: function() {
+  getZoom: function() {
+    return parseFloat(Ext.getBody().getStyle('zoom'));
+  },
 
+  onZoomChange: function(zoomLevel) {
+	    var oldZoomLevel = this.getZoom();
+
+	    if (oldZoomLevel == zoomLevel) {
+		return;
+	    }
+	    var zoomRatio = zoomLevel / oldZoomLevel;
+
+	    if (IS_TITANIUM) {
+		// Resize the Titanium window accordingly.
+		var win = Titanium.UI.getMainWindow();
+		var oldWidth = win.getWidth();
+		var oldHeight = win.getHeight();
+		win.setWidth(oldWidth*zoomRatio);
+		win.setHeight(oldHeight*zoomRatio);
+	    }
+
+	    Ext.getBody().setStyle('zoom',zoomLevel);
+	    // Now resize the body element.
+	    this.resizeWithZoom(this.getWidth(),this.getHeight());
+	},
+
+  resizeWithZoom: function(w,h) {
+	    var item = this.items.get(0);
+	    var zoom = Ext.getBody().getStyle('zoom');
+	    item.setSize(w/zoom,h/zoom);	    
+	},
+
+  fireResize: function(w,h) {
+	    this.resizeWithZoom(w,h);
+	},
+
+  afterLoadSettings: function() {
+	    var zoom = this.getSetting('zoom_level');
+	    Paperpile.log(zoom);
+	    if (zoom === undefined) {
+		zoom = 1
+	    }
+	    zoom = zoom.replace("%","");
+	    if (zoom > 2) {
+		zoom = zoom / 100;
+	    }
+	    Paperpile.log(zoom);
+	    this.onZoomChange(zoom);
   },
 
   loadKeys: function() {
@@ -211,14 +258,17 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.keys.bindCallback('ctrl-w', this.keyControlW);
     this.keys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
   },
+
   keyQuesionMark: function() {
     Paperpile.log("What's your problem?");
   },
+
   keyControlC: function() {
     var tab = Paperpile.main.tabs.getActiveTab();
     var grid = tab.getGrid();
     grid.handleCopyFormatted();
   },
+
   keyControlShiftK: function() {
     var tab = Paperpile.main.tabs.getActiveTab();
     var grid = tab.getGrid();

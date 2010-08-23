@@ -37,6 +37,11 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
   },
 
+  onSettingChange: function() {
+    this.isDirty = true;
+    this.setSaveDisabled(false);
+  },
+
   //
   // Creates textfields, buttons and installs event handlers
   //
@@ -66,8 +71,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
       field.on('keypress',
         function() {
-          this.isDirty = true;
-          this.setSaveDisabled(false);
+	  this.onSettingChange();
         },
         this);
 
@@ -89,10 +93,29 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
     this.combos['pager_limit'].on('select',
       function() {
-        this.isDirty = true;
-        this.setSaveDisabled(false);
+        this.onSettingChange();
       },
       this);
+
+    this.combos['zoom_level'] = new Ext.form.ComboBox({
+      renderTo: 'zoom_level_combo',
+      editable: false,
+      forceSelection: true,
+      triggerAction: 'all',
+      disableKeyFilter: true,
+      fieldLabel: 'Type',
+      mode: 'local',
+      width: 60,
+      store: ['75%','100%','110%','125%'],
+      value: Paperpile.main.globalSettings['zoom_level'],
+    });
+
+    this.combos['zoom_level'].on('select',
+      function() {
+        this.onSettingChange();
+      },
+      this);
+
 
     this.proxyCheckbox = new Ext.form.Checkbox({
       renderTo: 'proxy_checkbox'
@@ -101,8 +124,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
     this.proxyCheckbox.on('check',
       function(box, checked) {
         this.onToggleProxy(box, checked);
-        this.isDirty = true;
-        this.setSaveDisabled(false);
+        this.onSettingChange();
       },
       this);
 
@@ -225,6 +247,16 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       hideDelay: 0
     });
 
+    new Ext.ToolTip({
+      target: 'settings-zoom-level-tooltip',
+      minWidth: 50,
+      maxWidth: 300,
+      html: 'The zoom level of the user interface. Increase the value if text appears too small.',
+      anchor: 'left',
+      showDelay: 0,
+      hideDelay: 0
+    });
+
     this.setSaveDisabled(true);
   },
 
@@ -259,6 +291,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       proxy_user: this.textfields['proxy_user'].getValue(),
       proxy_passwd: this.textfields['proxy_passwd'].getValue(),
       pager_limit: this.combos['pager_limit'].getValue(),
+      zoom_level: this.combos['zoom_level'].getValue(),
       search_seq: this.pluginOrderPanel.getValue()
     };
 
@@ -288,6 +321,10 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
           }
         }
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
+
+	var new_zoom_level = this.combos['zoom_level'].getValue();
+	Paperpile.main.globalSettings['zoom_level'] = new_zoom_level;
+	Paperpile.main.afterLoadSettings();
 
         Paperpile.main.loadSettings(
           function() {
