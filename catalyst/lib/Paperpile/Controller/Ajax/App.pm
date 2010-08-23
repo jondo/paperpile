@@ -130,11 +130,11 @@ sub init_session : Local {
     copy( $c->path_to('db/queue.db')->stringify, $c->config->{'queue_db'} )
       or
       FileWriteError->throw("Could not start application (Error initializing queue database,  $!)");
+  } else {
+    #clear queue for now at startup
+    my $q = Paperpile::Queue->new();
+    $q->clear_all;
   }
-
-  #clear queue for now at startup
-  my $q = Paperpile::Queue->new();
-  $q->clear_all;
 
   # Clear temporary PDF downloads
   unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );

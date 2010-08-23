@@ -35,5 +35,5 @@ if ($arch_string =~ /darwin/){
 
 `unset PERL5LIB`;
 # add '.' to @INC to allow access to Bundle::Paperpile.pm
-system ("../catalyst/perl5/$platform/bin/perl -MCPAN -e 'push \@INC, \".\";shell;'");
+system ("../catalyst/perl5/$platform/bin/paperperl -MCPAN -e 'push \@INC, \".\";shell;'");
 

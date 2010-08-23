@@ -21,7 +21,7 @@ use Moose::Util::TypeConstraints;
 use Data::Dumper;
 use Data::Page;
 use POSIX qw(ceil floor);
-use Text::Levenshtein qw(distance);
+use Text::LevenshteinXS qw(distance);
 
 use Paperpile::Exceptions;
 
@@ -204,7 +204,6 @@ sub _match_title {
 
   my $distance = distance( $title1, $title2 );
 
-  #print STDERR "distance=$distance\n";
   return $distance < $cutoff;
 
 }

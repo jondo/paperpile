@@ -274,6 +274,9 @@ sub _compare_pubs {
   $mismatches += abs( $length_i - $length_j );
 
   if ( $mismatches <= $max_mismatch ) {
+
+    #print STDERR "=> $title_i vs. ", $self->index->{pubs}->[$j]->{title}, "<= ($mismatches)\n";
+
     #if ( abs( $length_i - $length_j ) <= $max_mismatch ) {
     # Exact equality
     if ( $mismatches == 0 ) {
