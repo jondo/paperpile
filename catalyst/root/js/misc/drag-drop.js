@@ -440,6 +440,11 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       var row = object[0];
       var grid = object[1];
       var files = this.getFilesFromEvent(event);
+
+      // Select the current row in the grid.
+      var index = grid.getStore().findExact('guid',row.data.guid);
+      grid.getSelectionModel().selectRow(index);
+
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.data.guid, file, true]);
@@ -447,6 +452,11 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     } else if (action == 'supplement-attach') {
       var row = object[0];
       var grid = object[1];
+
+      // Select the current row in the grid.
+      var index = grid.getStore().findExact('guid',row.data.guid);
+      grid.getSelectionModel().selectRow(index);
+
       var files = this.getFilesFromEvent(event);
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
