@@ -16,7 +16,6 @@
  not, see http://www.gnu.org/licenses.
 */
 
-
 /*** Generic styles ****/
 
 .pp-basic {
@@ -28,7 +27,7 @@
 }
 
 h1 {
-    margin: 8;
+    margin: 8px;
     font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
     font-size: 32px;
     font-weight: normal;
@@ -47,13 +46,13 @@ a.pp-inactive:hover {
 
 
 .pp-bullet{
-    padding: 2 2 2 16;
+    padding: 2px 2px 2px 16px;
     background: transparent url('/images/icons/bullet_go.png') no-repeat 0;
 }
 
 
 .pp-box {
-    margin: 8;
+    margin: 8px;
     border-style:solid;
     border-width: 1px;
     padding: 5px;
@@ -75,7 +74,7 @@ a.pp-inactive:hover {
     -webkit-border-radius-bottom-left: 0px;
     -webkit-border-radius-top-left: 0px;
     z-index:-10;
-    margin:0;
+    margin:0px;
 }
 
 
@@ -114,14 +113,14 @@ a.pp-inactive:hover {
 
 .pp-box p, .pp-box ul, .pp-box ol, .pp-box h2 {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    margin: 8;
+    margin: 8px;
     line-height: 1.5em;
 } 
 
 .pp-box li{
-    margin: 8 0;
-    margin-bottom:8;
-    margin-top:8;
+    margin: 8p 0px;
+    margin-bottom:8px;
+    margin-top:8px;
 }
 
 .pp-box-table {
@@ -130,7 +129,7 @@ a.pp-inactive:hover {
 }
 
 .pp-box-tabs ul, .pp-box-tabs .pp-box{
-    margin:0;
+    margin:0px;
 }
 
 .pp-box-right, .pp-box-tabs-left {
@@ -197,7 +196,7 @@ div.pp-menu  > ul {
 }
 
 div.pp-menu {
-/*    width: 120; */
+/*    width: 120px; */
 }
 
 div.pp-menu:hover > ul {
@@ -206,11 +205,11 @@ div.pp-menu:hover > ul {
 
 div.pp-menu-horizontal  li {
     display:inline;
-    padding: 0 10px;
+    padding: 0px 10px;
 }
 
 li.pp-attachment-list{
-    padding: 0 20;
+    padding: 0px 20px;
     background-repeat: no-repeat;
 }
 
@@ -239,7 +238,7 @@ li:hover .pp-second-link{
 }
 
 .pp-box h2 {
-    margin: 8 8 10 8;
+    margin: 8px 8px 10px 8px;
     font-size: 18px;
     font-weight: normal;
     color: #4183C4;
@@ -263,7 +262,7 @@ li:hover .pp-second-link{
 
 .pp-box-welcome ul {
     list-style-type:disc;
-    margin: 0 24;
+    margin: 0px 24px;
 }
 
 
@@ -282,40 +281,40 @@ li:hover .pp-second-link{
 
 .pp-dashboard-statistics {
     background: transparent url('/images/icons/statistics.png') no-repeat;
-    padding: 3 0 0 30;
+    padding: 3px 0px 0px 30px;
 }
 
 .pp-dashboard-feedback {
     background: transparent url('/images/icons/feedback.png') no-repeat;
-    padding: 1 0 0 33;
+    padding: 1px 0px 0px 33px;
 }
 
 .pp-dashboard-settings {
     background: transparent url('/images/icons/settings.png') no-repeat;
-    padding: 1 0 0 33;
+    padding: 1px 0px 0px 33px;
 }
 
 .pp-dashboard-tools {
     background: transparent url('/images/icons/tools.png') no-repeat;
-    padding: 1 0 0 33;
+    padding: 1px 0px 0px 33px;
 }
 
 .pp-dashboard-box li{
-    margin: 8 21 !important;
+    margin: 8px 21px !important;
 }
 
 .pp-dashboard-box p{
-    margin: 8 21 !important;
+    margin: 8px 21px !important;
 }
 
 .pp-dashboard-box table{
-    margin: 8 21 !important;
+    margin: 8px 21px !important;
 }
 
 .pp-dashboard-box td{
     line-height: 1.3em;
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    padding: 2 4;
+    padding: 2px 4px;
 }
 
 td.pp-dashboard-dt{
@@ -328,8 +327,8 @@ td.pp-dashboard-dl{
 }
 
 .pp-chart-box {
-    margin: 8;
-    padding:20;
+    margin: 8px;
+    padding:20px;
     border-style:solid;
     border-width: 1px;
     -moz-border-radius: 8px;
@@ -338,7 +337,7 @@ td.pp-dashboard-dl{
 
 .pp-box dl, .pp-label-widget {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-    margin: 8;
+    margin: 8px;
     line-height: 1.3em;
 }
 
@@ -352,8 +351,8 @@ td.pp-dashboard-dl{
 }
 
 .pp-box dd { 
-    margin: 0 0 0 75px; 
-    padding: 0 0 5 5;
+    margin: 0px 0px 0px 75px; 
+    padding: 0px 0px 5px 5px;
 }
 
 .pp-pattern-help dt {
@@ -368,8 +367,8 @@ td.pp-dashboard-dl{
 }
 
 .pp-pattern-help dd { 
-    margin: 0 0 0 115px; 
-    padding: 0 0 5 5;
+    margin: 0px 0px 0px 115px; 
+    padding: 0px 0px 5px 5px;
 }
 
 .pp-box .pp-vspace{
@@ -382,14 +381,14 @@ td.pp-dashboard-dl{
 }
 
 a.pp-progress-cancel {
-    background: transparent url('/images/icons/cancel_bw.png') no-repeat 0;
+    background: transparent url('/images/icons/cancel_bw.png') no-repeat 0px;
     width:20px;
     display:block;
     text-decoration:none;
 }
 
 a.pp-progress-cancel:hover {
-    background: transparent url('/images/icons/cancel.png') no-repeat 0;
+    background: transparent url('/images/icons/cancel.png') no-repeat 0px;
     width:20px;
     display:block;
     text-decoration:none;
@@ -402,7 +401,7 @@ a.pp-progress-cancel:hover {
 
 .pp-button-control{
     float: left;
-    padding: 5px 10px 0 0
+    padding: 5px 10px 0px 0px
 }
 
 .pp-textlink-control{
@@ -461,7 +460,7 @@ a:hover.pp-textlink {
     position:absolute;
     top:140px;
     left:22px;
-    margin:0;
+    margin:0px;
 }
 
 #pp-cloud-checkbox p {
@@ -472,12 +471,12 @@ a:hover.pp-textlink {
 
 #pp-cloud-checkbox ul {
     font-size:11px;
-    margin:0;
+    margin:0px;
 }
 
 .pp-cloud-options li {
     font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
-    padding: 2px 0;
+    padding: 2px 0px;
 }
 
 .pp-cloud-options-active {
@@ -495,7 +494,7 @@ a:hover.pp-textlink {
 }
 
 .pp-progress-box-status {
-    margin: 0 8;
+    margin: 0px 8px;
     font-size:11;
 }
 
@@ -553,8 +552,8 @@ a:hover.pp-textlink {
 
 
 .pp-top-button {
-    margin: 0 10px;
-    padding: 0 0 0 15px;
+    margin: 0px 10px;
+    padding: 0px 0px 0px 15px;
     background-color:#ECECEC;
     color: #565656;
     -moz-border-radius: 5px;
@@ -635,7 +634,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .pp-action{
-    padding: 2 2 2 22;
+    padding: 2px 2px 2px 22px;
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
 
@@ -644,13 +643,13 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .pp-action-inactive{
-    padding: 2 2 2 22;
+    padding: 2px 2px 2px 22px;
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     color:gray;
 }
 
 .pp-action-big{
-    padding: 2 2 2 64;
+    padding: 2px 2px 2px 64px;
     font:normal 14px arial, verdana, tahoma, arial, helvetica, sans-serif;
     line-height:64px;
     height:64px;
@@ -747,14 +746,14 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 .pp-main-toolbar-label {
     color: #FFFFFF;
     font-weight: bold !important;
-    padding: 0 5;
+    padding: 0px 5px;
 }
 
 .pp-dashboard-button {
     background: transparent url('/images/icons/dashboard_button.png') no-repeat;
     width: 97px;
     height: 16px;
-    padding: 1 5;
+    padding: 1px 5px;
 }
 
 /*** Custom buttons ***/
@@ -1012,27 +1011,27 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 
 .pp-icon-tick{
-    padding: 2 2 2 22;
+    padding: 2px 2px 2px 22px;
     background: transparent url('/images/icons/tick.png') no-repeat;
 }
 
 .pp-icon-cross{
-    padding: 2 2 2 22;
+    padding: 2px 2px 2px 22px;
     background: transparent url('/images/icons/cross.png') no-repeat;
 }
 
 .pp-icon-loading{
-    padding: 2 2 2 22;
+    padding: 2px 2px 2px 22px;
     background: transparent url('/images/icons/loading.gif') no-repeat !important;
 }
 
 .pp-icon-queue{
-    padding: 2 2 2 22;
+    padding: 2px 2px 2px 22px;
     background: transparent url('/images/icons/arrow_rotate_anticlockwise.png') no-repeat;
 }
 
 .pp-icon-pause{
-    padding: 2 2 2 22;
+    padding: 2px 2px 2px 22px;
     background: transparent url('/images/icons/pause.png') no-repeat;
 }
 
@@ -1074,7 +1073,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-grid-info{
     line-height: 1.5em;
-    width: 50;
+    width: 50px;
     float: left;
 }
 
@@ -1082,7 +1081,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background: transparent url('/images/icons/bullet_green.png') no-repeat;
     padding-left: 16px;
     color: gray;
-    width: 120;
+    width: 120px;
 }
 
 .pp-grid-status {
@@ -1205,8 +1204,8 @@ div:hover.pp-grid-sort-container .pp-grid-sort-inactive {
 
 div.pp-grid-sort-item {
     display:inline;
-    margin: 0 2 0 2;
-    padding: 0 15 0 0;
+    margin: 0px 2px 0px 2px;
+    padding: 0px 15px 0px 0px;
 }
 
 div:hover.pp-grid-sort-item {
@@ -1307,21 +1306,21 @@ div:hover.pp-grid-sort-item {
 
 .pp-filechooser-separator {
     float:left;
-    margin: 0 5 0 5;
+    margin: 0px 5px 0px 5px;
 }
 
 /*** Settings ***/
 
 .pp-box-settings {
-    max-width: 1000;
-    width: 420;
+    max-width: 1000px;
+    width: 420px;
     float:left;
 }
 
 .pp-box-settings h3 {
     clear:left;
     color: #4183C4;
-    margin: 16 0 2 8;
+    margin: 16px 0px 2px 8px;
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     font-weight:bold;
 }
@@ -1354,7 +1353,7 @@ div:hover.pp-grid-sort-item {
     font: normal 12px "Courier New", monospace;
     background-color: #F0F0F0;
     border: 1px solid #DEDEDE;
-    padding: 0 5;
+    padding: 0px 5px;
     border-style:dotted;
 }
 
@@ -1374,11 +1373,11 @@ div:hover.pp-grid-sort-item {
 
 .pp-pluginlist-number {
     float:left;
-    margin-right:4px;
+    margin-right: 4px;
 }
 
 .pp-pluginlist li {
-    margin:0 0;
+    margin:0px 0px;
 }
 
 .pp-pluginlist .x-tree-elbow-end, .pp-pluginlist .x-tree-elbow {
@@ -1443,53 +1442,53 @@ div:hover.pp-grid-sort-item {
 
 .pp-tag-box {
     border-style:solid;
-    border-width: 1px 0;
+    border-width: 1px 0px;
     font-size: 9px;
     font-weight:bold;
-    margin: 0 0.8em 0 1px;
+    margin: 0px 0.8em 0px 1px;
     overflow:visible;
     display:block;
     float:left;
-    margin: 0 6 6 0;
+    margin: 0px 6px 6px 0px;
 }
 
 .pp-tag-name {
     overflow:hidden;
     display:inline;
     padding: 0 2px;
-    border-width: 0 0 0 1px;
-    margin: 0 0 0 -1px;
+    border-width: 0px 0px 0px 1px;
+    margin: 0px 0px 0px -1px;
     cursor: default;
 }
 
 .pp-tag-cloud {
     display:inline-block;
     padding: 2px;
-    border-width: 1px 0;
-    margin: 0 6 6 0;
+    border-width: 1px 0px;
+    margin: 0px 6px 6px 0px;
     vertical-align:middle;
     border-width:1px;
-    padding: 0 4px;
+    padding: 0px 4px;
     -moz-border-radius: 3px;
     -webkit-border-radius:3px;
     text-decoration:none;
 }
 
 .pp-tag-remove{
-    border-width:0 1px;
-    margin: 0 2px 0 4px;
+    border-width:0px 1px;
+    margin: 0px 2px 0px 4px;
     display:inline;
-    padding: 0 2px;
-    margin: 0 -1px 0 0;
+    padding: 0px 2px;
+    margin: 0px -1px 0px 0px;
     cursor: default;
 }
 
 div:hover.pp-tag-remove{
-    border-width:0 1px;
-    margin: 0 2px 0 4px;
+    border-width:0px 1px;
+    margin: 0px 2px 0px 4px;
     display:inline;
-    padding: 0 2px;
-    margin: 0 -1px 0 0;
+    padding: 0px 2px;
+    margin: 0px -1px 0px 0px;
     outline: black solid 1px;
     cursor: pointer;
     color:white;
@@ -1524,8 +1523,8 @@ div:hover.pp-tag-remove{
     font-weight:bold;
     display:block;
     float:left;
-    margin: 4;
-    padding: 2;
+    margin: 4px;
+    padding: 2px;
     cursor: pointer;
 }
 
@@ -1537,8 +1536,8 @@ div:hover.pp-tag-style-sample {
     font-weight:bold;
     display:block;
     float:left;
-    margin: 4;
-    padding: 2;
+    margin: 4px;
+    padding: 2px;
     outline: blue solid 3px;
     cursor: pointer;
 }
@@ -1549,7 +1548,7 @@ div:hover.pp-tag-style-sample {
 
 .pp-tag-grid-block {
     display:inline-block;
-    margin: 0 0 0 .75em;
+    margin: 0px 0px 0px .75em;
 }
 
 .pp-tag-grid {
@@ -1560,8 +1559,8 @@ div:hover.pp-tag-style-sample {
     height:12px;
     width:1.1em;
     line-height:10px;
-    margin:0 2px 2px 0;
-    padding: 0 0.1em;
+    margin:0px 2px 2px 0px;
+    padding: 0px 0.1em;
     text-align:center;
     overflow:hidden;
     position:relative;
@@ -1627,7 +1626,7 @@ div:hover.pp-tag-style-sample {
 /* Plugin logos */
 
 .pp-pubmed-logo{
-    margin: 20 auto;
+    margin: 20px auto;
     width: 165px;
     height: 60px;
     background: transparent url('/images/pubmed_logo.png') no-repeat;
@@ -1704,7 +1703,7 @@ div:hover.pp-tag-style-sample {
 /*** PDF Extract ***/
 
 .pp-pdfextract-file{
-    padding: 2 2 2 22;
+    padding: 2px 2px 2px 22px;
     background: transparent url('/images/icons/page_white_acrobat.png') no-repeat;
 }
 
@@ -1884,7 +1883,7 @@ table.pp-meta-form {
 .pp-meta-form > tbody > tr > td {
     font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
     vertical-align:top;
-    margin:0;
+    margin:0px;
     padding: 8px 5px 8px 5px;
     width:100px;
     font-size: 14px;
@@ -1963,7 +1962,7 @@ table.pp-meta-form {
 
 .pp-update-log li{
     background: transparent url('/images/icons/tick.png') no-repeat 0;
-    padding: 2 2 2 22;
+    padding: 2px 2px 2px 22px;
     margin: 10px 15px;
 }
  
@@ -2136,7 +2135,7 @@ table.pp-meta-form {
 
 
 .ux-layout-center-item {
-    margin:0 auto;
+    margin:0px auto;
     text-align:left;
 }
 .ux-layout-center .x-panel-body, body.ux-layout-center {            
@@ -2152,13 +2151,13 @@ table.pp-meta-form {
     width: 10px;
 }
 .x-btn-text-icon .x-btn-icon-tiny-left .x-btn-text{
-    background-position: 0 center;
+    background-position: 0px center;
     background-repeat: no-repeat;
     padding-left: 12px;
     height: 10px;
 }
 .x-btn-text-icon .x-btn-icon-tiny-top .x-btn-text{
-    background-position: center 0;
+    background-position: center 0px;
     background-repeat: no-repeat;
     padding-top: 12px;
 }
@@ -2184,13 +2183,13 @@ table.pp-meta-form {
     width: 128px;
 }
 .x-btn-text-icon .x-btn-icon-gigantic-left .x-btn-text{
-    background-position: 0 center;
+    background-position: 0px center;
     background-repeat: no-repeat;
     padding-left: 130px;
     height: 128px;
 }
 .x-btn-text-icon .x-btn-icon-gigantic-top .x-btn-text{
-    background-position: center 0;
+    background-position: center 0px;
     background-repeat: no-repeat;
     padding-top: 130px;
 }
@@ -2215,7 +2214,7 @@ table.pp-meta-form {
     width: 72px;
 }
 .x-btn-text-icon .x-btn-icon-huge-left .x-btn-text{
-    background-position: 0 center;
+    background-position: 0px center;
     background-repeat: no-repeat;
     padding-left: 74px;
     height: 72px;
