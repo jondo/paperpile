@@ -97,6 +97,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       },
       this);
 
+    /*
     this.combos['zoom_level'] = new Ext.form.ComboBox({
       renderTo: 'zoom_level_combo',
       editable: false,
@@ -115,7 +116,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         this.onSettingChange();
       },
       this);
-
+    */
 
     this.proxyCheckbox = new Ext.form.Checkbox({
       renderTo: 'proxy_checkbox'
@@ -291,7 +292,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       proxy_user: this.textfields['proxy_user'].getValue(),
       proxy_passwd: this.textfields['proxy_passwd'].getValue(),
       pager_limit: this.combos['pager_limit'].getValue(),
-      zoom_level: this.combos['zoom_level'].getValue(),
+      //      zoom_level: this.combos['zoom_level'].getValue(),
       search_seq: this.pluginOrderPanel.getValue()
     };
 
@@ -322,9 +323,11 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         }
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
 
+	if (this.combos['zoom_level']) {
 	var new_zoom_level = this.combos['zoom_level'].getValue();
 	Paperpile.main.globalSettings['zoom_level'] = new_zoom_level;
 	Paperpile.main.afterLoadSettings();
+	}
 
         Paperpile.main.loadSettings(
           function() {

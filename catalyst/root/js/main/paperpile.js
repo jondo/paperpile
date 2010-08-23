@@ -520,7 +520,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         target: Ext.get('file_extract_button').child('tbody')
       });
       Ext.getCmp('file_extract_button').setTooltip(fileTip);
-
     }
 
   },

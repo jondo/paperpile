@@ -7,10 +7,10 @@
     
     <h3>Number of references per page <span id="settings-pager-limit-tooltip" class="pp-tooltip-link">?</span></h3>
     <div class="pp-settings-textfield" id="pager_limit_combo"></div>
-
+<!--
     <h3>User interface zoom level <span id="settings-zoom-level-tooltip" class="pp-tooltip-link">?</span></h3>
     <div class="pp-settings-textfield" id="zoom_level_combo"></div>
-
+-->
   </div>
 </td>
 
