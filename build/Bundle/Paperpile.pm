@@ -109,7 +109,7 @@ WWW::Mechanize
 Lingua::EN::NameParse
 Time::Duration
 FreezeThaw
-Text::Levenshtein
+Text::LevenshteinXS
 FCGI
 FCGI::ProcManager
 Archive::Zip
