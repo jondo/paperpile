@@ -794,7 +794,7 @@ sub set_default_collections {
   $guid2 =~ s/^0x//;
 
   my $guid3 = Data::GUID->new->as_hex;
-  $guid2 =~ s/^0x//;
+  $guid3 =~ s/^0x//;
 
 
   $self->dbh->do(
