@@ -14,7 +14,6 @@ $CPAN::Config = {
   'bzip2' => q[/usr/bin/bzip2],
   'cache_metadata' => q[1],
   'check_sigs' => q[0],
-  'colorize_output' => q[0],
   'commandnumber_in_prompt' => q[1],
   'connect_to_internet_ok' => q[1],
   'cpan_home' => q[/Users/wash/.cpan],
@@ -67,7 +66,7 @@ $CPAN::Config = {
   'unzip' => q[/usr/bin/unzip],
   'urllist' => [],
   'use_sqlite' => q[0],
-  'wget' => q[],
+  'wget' => q[/usr/local/bin/wget],
   'yaml_load_code' => q[0],
   'yaml_module' => q[YAML],
 };

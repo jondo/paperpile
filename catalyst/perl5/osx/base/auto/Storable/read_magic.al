@@ -1,9 +1,9 @@
-# NOTE: Derived from ../../lib/Storable.pm.
+# NOTE: Derived from blib/lib/Storable.pm.
 # Changes made here will be lost when autosplit is run again.
 # See AutoSplit.pm.
 package Storable;
 
-#line 131 "../../lib/Storable.pm (autosplit into ../../lib/auto/Storable/read_magic.al)"
+#line 131 "blib/lib/Storable.pm (autosplit into blib/lib/auto/Storable/read_magic.al)"
 sub read_magic {
     my($buf, $file) = @_;
     my %info;

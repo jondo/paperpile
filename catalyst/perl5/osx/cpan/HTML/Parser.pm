@@ -1,6 +1,6 @@
 package HTML::Parser;
 
-# Copyright 1996-2008, Gisle Aas.
+# Copyright 1996-2009, Gisle Aas.
 # Copyright 1999-2000, Michael A. Chase.
 #
 # This library is free software; you can redistribute it and/or
@@ -9,7 +9,7 @@ package HTML::Parser;
 use strict;
 use vars qw($VERSION @ISA);
 
-$VERSION = "3.62";
+$VERSION = "3.65";
 
 require HTML::Entities;
 
@@ -92,7 +92,7 @@ sub parse_file
     if (!ref($file) && ref(\$file) ne "GLOB") {
         # Assume $file is a filename
         local(*F);
-        open(F, $file) || return undef;
+        open(F, "<", $file) || return undef;
 	binmode(F);  # should we? good for byte counts
         $opened++;
         $file = *F;
@@ -891,7 +891,7 @@ likely to find is <!DOCTYPE ...>.
 Example:
 
   <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-  "http://www.w3.org/TR/html40/strict.dtd">
+      "http://www.w3.org/TR/html4/strict.dtd">
 
 DTDs inside <!DOCTYPE ...> will confuse HTML::Parser.
 
@@ -954,7 +954,7 @@ of whitespace between two text events.
 
 =head2 Unicode
 
-The C<HTML::Parser> can parse Unicode strings when running under
+C<HTML::Parser> can parse Unicode strings when running under
 perl-5.8 or better.  If Unicode is passed to $p->parse() then chunks
 of Unicode will be reported to the handlers.  The offset and length
 argspecs will also report their position in terms of characters.
@@ -1224,10 +1224,10 @@ L<HTML::LinkExtor>, L<HTML::Form>
 
 L<HTML::TreeBuilder> (part of the I<HTML-Tree> distribution)
 
-http://www.w3.org/TR/html4
+L<http://www.w3.org/TR/html4/>
 
 More information about marked sections and processing instructions may
-be found at C<http://www.sgml.u-net.com/book/sgml-8.htm>.
+be found at L<http://www.is-thought.co.uk/book/sgml-8.htm>.
 
 =head1 COPYRIGHT
 

@@ -179,11 +179,12 @@ sub get_settings : Local {
   # app_settings are read from the config file, they are never changed
   # by the user and constant for a specific version of the application
   my @list1 = %{ $c->config->{app_settings} };
-
+  
   my @list2 = %{ $c->model('User')->settings };
   my @list3 = %{ $c->model('Library')->settings };
 
   my %merged = ( @list1, @list2, @list3 );
+
 
   my $fields = LoadFile( $c->path_to('conf/fields.yaml') );
 

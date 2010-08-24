@@ -1,4 +1,4 @@
-# Index created by AutoSplit for ../../lib/Storable.pm
+# Index created by AutoSplit for blib/lib/Storable.pm
 #    (file acts as timestamp)
 package Storable;
 sub logcroak  ;

@@ -837,6 +837,7 @@ sub process_query_string {
     $query =~ s/"//g;
   }
 
+#<<<<<<< HEAD
   # Parse fields respecting quotes
   my @chars      = split( //, $query );
   my $curr_field = '';
@@ -858,6 +859,22 @@ sub process_query_string {
   push @fields, $curr_field;
 
   my @new_fields = ();
+
+#=======
+#  my $count;
+#  my $where;
+#  if ($query) {
+#    $query = $self->dbh->quote("$query*");
+#    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
+#    $count = $self->dbh->selectrow_array(
+#    qq{select count(*) from Publications join $table on 
+#    publications.rowid=$table.rowid $where}
+#                                        );
+#  } else {
+#    $where = "WHERE Publications.trashed=$trash";
+#    $count = $self->dbh->selectrow_array(qq{select count(*) from Publications $where;});
+#  }
+#>>>>>>> osx
 
   foreach my $field (@fields) {
 
@@ -1005,7 +1022,10 @@ sub fulltext_search {
 
   my ( $where, $query, $rank, $sth );
 
+  my $sth;
+
   if ($_query) {
+<<<<<<< HEAD
 
     $select .=
       ",offsets(Fulltext) as offsets, rank(matchinfo(Fulltext)) as rank_score FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
@@ -1028,6 +1048,28 @@ sub fulltext_search {
     $where = "WHERE Publications.trashed=$trash";
 
     $sth = $self->dbh->prepare("$select $where ORDER BY $order LIMIT $limit OFFSET $offset");
+#=======
+#    $query = $self->dbh->quote("$_query*");
+#    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
+#    $sth = $self->dbh->prepare(
+#     "SELECT *,
+#     offsets($table) as offsets,
+#     publications.rowid as _rowid,
+#     publications.title as title,
+#     publications.abstract as abstract
+#     FROM Publications JOIN $table
+#     ON publications.rowid=$table.rowid $where ORDER BY $order LIMIT $limit OFFSET $offset"
+                                 );
+#  } else {
+#    $where = "WHERE Publications.trashed=$trash";
+#    $sth = $self->dbh->prepare(
+                               "SELECT *,
+#     publications.rowid as _rowid,
+#     publications.title as title,
+#     publications.abstract as abstract FROM Publications
+#     $where ORDER BY $order LIMIT $limit OFFSET $offset"
+#                             );
+#>>>>>>> osx
   }
 
   $sth->execute;

@@ -2,9 +2,47 @@
 
 DBI::Changes - List of significant changes to the DBI
 
-(As of $Date: 2009-06-08 11:07:26 +0100 (Mon, 08 Jun 2009) $ $Revision: 12816 $)
+(As of $Date: 2010-04-29 18:35:57 +0100 (Thu, 29 Apr 2010) $ $Revision: 13936 $)
 
 =cut
+
+=head2 Changes in DBI 1.611 (svn r13935) 29th April 2010
+
+  NOTE: minimum perl version is now 5.8.1 (as announced in DBI 1.607)
+
+  Fixed selectcol_arrayref MaxRows attribute to count rows not values
+    thanks to Vernon Lyon.
+  Fixed DBI->trace(0, *STDERR); (H.Merijn Brand)
+    which tried to open a file named "*main::STDERR" in perl-5.10.x
+  Fixes in DBD::DBM for use under threads (Jens Rehsack)
+
+  Changed "Issuing rollback() due to DESTROY without explicit disconnect"
+    warning to not be issued if ReadOnly set for that dbh.
+
+  Added f_lock and f_encoding support to DBD::File (H.Merijn Brand)
+  Added ChildCallbacks => { ... } to Callbacks as a way to
+    specify Callbacks for child handles.
+    With tests added by David E. Wheeler.
+  Added DBI::sql_type_cast($value, $type, $flags) to cast a string value
+    to an SQL type. e.g. SQL_INTEGER effectively does $value += 0;
+    Has other options plus an internal interface for drivers.
+
+  Documentation changes:
+  Small fixes in the documentation of DBD::DBM (H.Merijn Brand)
+  Documented specification of type casting behaviour for bind_col()
+    based on DBI::sql_type_cast() and two new bind_col attributes
+    StrictlyTyped and DiscardString. Thanks to Martin Evans.
+  Document fetchrow_hashref() behaviour for functions,
+    aliases and duplicate names (H.Merijn Brand)
+  Updated DBI::Profile and DBD::File docs to fix pod nits
+    thanks to Frank Wiegand.
+  Corrected typos in Gopher documentation reported by Jan Krynicky.
+  Documented the Callbacks attribute thanks to David E. Wheeler.
+  Corrected the Timeout examples as per rt 50621 (Martin J. Evans).
+  Removed some internal broken links in the pod (Martin J. Evans)
+  Added Note to column_info for drivers which do not
+    support it (Martin J. Evans)
+  Updated dbipport.h to Devel::PPPort 3.19 (H.Merijn Brand)
 
 =head2 Changes in DBI 1.609 (svn r12816) 8th June 2009
 

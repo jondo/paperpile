@@ -9,7 +9,7 @@ use Scalar::Util 'blessed';
 use Carp         'confess';
 use Devel::GlobalDestruction 'in_global_destruction';
 
-our $VERSION   = '1.01';
+our $VERSION   = '1.02';
 $VERSION = eval $VERSION;
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -399,7 +399,7 @@ sub alias_method {
 ## ------------------------------------------------------------------
 
 sub apply {
-    my ($self, $other, @args) = @_;
+    my ($self, $other, %args) = @_;
 
     (blessed($other))
         || Moose->throw_error("You must pass in an blessed instance");
@@ -416,7 +416,7 @@ sub apply {
     }
 
     Class::MOP::load_class($application_class);
-    return $application_class->new(@args)->apply($self, $other);
+    return $application_class->new(%args)->apply($self, $other, \%args);
 }
 
 sub composition_class_roles { }

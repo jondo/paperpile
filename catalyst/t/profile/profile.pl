@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/paperperl -w
+=======
+#!/Users/wash/play/paperpile/catalyst/perl5/osx/bin/perl -w
+>>>>>>> osx
 
 ##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/paperperl -d:NYTProf -w
 
