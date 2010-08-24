@@ -238,15 +238,17 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 	},
 
   afterLoadSettings: function() {
-	    var zoom = this.getSetting('zoom_level');
-	    if (zoom === undefined) {
-		zoom = 1
-	    }
-	    zoom = zoom.replace("%","");
-	    if (zoom > 2) {
-		zoom = zoom / 100;
-	    }
-	    this.onZoomChange(zoom);
+	/*
+    var zoom = this.getSetting('zoom_level');
+	if (zoom === undefined) {
+	  zoom = 1
+	}
+	zoom = zoom.replace("%","");
+	if (zoom > 2) {
+	  zoom = zoom / 100;
+	}
+	this.onZoomChange(zoom);
+*/
   },
 
   loadKeys: function() {
