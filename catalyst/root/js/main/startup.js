@@ -67,21 +67,21 @@ Paperpile.stage0 = function() {
             }
           });
         } else {*/
-          Paperpile.stage1();
+        //  Paperpile.stage1();
         //}
 
         // Make sure cookies are set; workaround for OSX where Ajax
         // calls do not properly set cookies. That's why we load
         // explicitely our server from a seperate window which sets
         // the cookie. 
-        //if (IS_TITANIUM){
-        //  var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
-        //  win.hide();
-        //  win.open();
-        //  win.addEventListener('close',function(){Paperpile.stage1();});
-        //} else {
-        //  Paperpile.stage1();
-        //}
+        if (IS_TITANIUM){
+          var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
+          win.hide();
+          win.open();
+          win.addEventListener('close',function(){Paperpile.stage1();});
+        } else {
+          Paperpile.stage1();
+        }
       }
     },
 

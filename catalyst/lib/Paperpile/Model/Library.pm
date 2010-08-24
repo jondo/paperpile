@@ -1022,10 +1022,8 @@ sub fulltext_search {
 
   my ( $where, $query, $rank, $sth );
 
-  my $sth;
-
   if ($_query) {
-<<<<<<< HEAD
+#<<<<<<< HEAD
 
     $select .=
       ",offsets(Fulltext) as offsets, rank(matchinfo(Fulltext)) as rank_score FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
@@ -1059,11 +1057,11 @@ sub fulltext_search {
 #     publications.abstract as abstract
 #     FROM Publications JOIN $table
 #     ON publications.rowid=$table.rowid $where ORDER BY $order LIMIT $limit OFFSET $offset"
-                                 );
+#                                 );
 #  } else {
 #    $where = "WHERE Publications.trashed=$trash";
 #    $sth = $self->dbh->prepare(
-                               "SELECT *,
+#                               "SELECT *,
 #     publications.rowid as _rowid,
 #     publications.title as title,
 #     publications.abstract as abstract FROM Publications
