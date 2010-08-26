@@ -23,6 +23,7 @@ use Data::Dumper;
 
 use Paperpile::Library::Author;
 use Paperpile::Utils;
+use Paperpile::Exceptions;
 use Encode qw(encode_utf8);
 use Text::Unidecode;
 use YAML qw(LoadFile);
@@ -553,6 +554,73 @@ sub refresh_attachments {
     $self->_attachments_list( \@output );
 
   }
+}
+
+# Lookup data via the match function of the search plugins given in
+# the array $plugin_list. If a match is found the name of the
+# sucessful plugin, otherwise undef is returned.
+
+sub auto_complete {
+
+  my ( $self, $plugin_list ) = @_;
+
+  # Re-order list if identifiers are given
+  if ( $self->arxivid ) {
+    @$plugin_list = ( 'ArXiv', grep { $_ ne 'ArXiv' } @$plugin_list );
+  }
+  if ( $self->pmid ) {
+    @$plugin_list = ( 'PubMed', grep { $_ ne 'PubMed' } @$plugin_list );
+  }
+
+  # Try plugins until a match is found
+  my $success_plugin = undef;
+  my $caught_error   = undef;
+
+  foreach my $plugin_name (@$plugin_list) {
+
+    eval {
+      my $plugin_module = "Paperpile::Plugins::Import::" . $plugin_name;
+      my $plugin        = eval( "use $plugin_module; $plugin_module->" . 'new()' );
+      $self = $plugin->match($self);
+    };
+
+    my $e;
+    if ( $e = Exception::Class->caught ) {
+
+      # Did not find a match, continue with next plugin
+      if ( Exception::Class->caught('NetMatchError') ) {
+        next;
+      }
+
+      # Other exception has occured; still try other plugins but save
+      # error message to show if all plugins fail
+      else {
+        if ( ref $e ) {
+          $caught_error = $e->error;
+          next;
+        }
+
+        # Abort on unexpected exception
+        else {
+          die($@);
+        }
+      }
+    }
+
+    # Found match -> stop now
+    else {
+      $success_plugin = $plugin_name;
+      $caught_error   = undef;
+      last;
+    }
+  }
+
+  if ($caught_error) {
+    PaperpileError->throw($caught_error);
+  }
+
+  return $success_plugin;
+
 }
 
 sub create_guid {

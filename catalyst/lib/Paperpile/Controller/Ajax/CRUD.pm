@@ -20,7 +20,6 @@ use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
-use Paperpile::Plugins::Import::Duplicates; # <-- delete me afterwards
 use Paperpile::Job;
 use Paperpile::Queue;
 use Paperpile::FileSync;
@@ -45,24 +44,23 @@ sub insert_entry : Local {
   my %output    = ();
 
   # Go through and complete publication details if necessary.
+
   my @pub_array = ();
+  my $plugin_list = undef;
+
   foreach my $pub (@$selection) {
+
     if ( $plugin->needs_completing($pub) ) {
       $pub = $plugin->complete_details($pub);
     }
-    if ( $plugin->needs_match_before_import($pub) ) {
-      my $j = Paperpile::Job->new(
-        type => 'METADATA_UPDATE',
-        pub  => $pub,
-      );
 
-      # We're 'stealing' the _match method from the metadata update job type
-      # in order to match the article against the user's choice of web resources
-      # before importing it here.
-      my $success = $j->_match;
-      if ($success) {
-        $pub = $j->pub;
+    if ( $plugin->needs_match_before_import($pub) ) {
+
+      if (!defined $plugin_list){
+        $plugin_list = [split( /,/, $c->model('Library')->get_setting('search_seq') )];
       }
+
+      $pub->auto_complete($plugin_list);
     }
 
     push @pub_array, $pub;
@@ -297,61 +295,25 @@ sub lookup_entry : Local {
   # Get default plugin order
   my @plugin_list = split( /,/, $c->model('Library')->get_setting('search_seq') );
 
-  # Re-order list if identifiers are given
-  if ( $pub->arxivid ) {
-    @plugin_list = ( 'ArXiv', grep { $_ ne 'ArXiv' } @plugin_list );
-  }
-  if ( $pub->pmid ) {
-    @plugin_list = ( 'PubMed', grep { $_ ne 'PubMed' } @plugin_list );
-  }
+  my $success_plugin;
 
-  # Try plugins until a match is found
-  my $success_plugin = undef;
+  eval {
+    $success_plugin = $pub->auto_complete([@plugin_list]);
+  };
 
-  my $caught_error = undef;
+  my $e;
 
-  foreach my $plugin_name (@plugin_list) {
-    eval {
-      my $plugin_module = "Paperpile::Plugins::Import::" . $plugin_name;
-      my $plugin        = eval( "use $plugin_module; $plugin_module->" . 'new()' );
-      $pub = $plugin->match($pub);
-    };
-
-    my $e;
-    if ( $e = Exception::Class->caught ) {
-
-      # Did not find a match, continue with next plugin
-      if ( Exception::Class->caught('NetMatchError') ) {
-        next;
-      }
-
-      # Other exception has occured; still try other plugins but save
-      # error message to show if all plugins fail
-      else {
-        if ( ref $e ) {
-          $caught_error = $e->error;
-          next;
-        }
-
-        # Abort on unexpected exception
-        else {
-          die($@);
-        }
-      }
-    }
-
-    # Found match -> stop now
-    else {
-      $success_plugin = $plugin_name;
-      $caught_error   = undef;
-      last;
+  if ( $e = Exception::Class->caught ) {
+    if ( ref $e ) {
+      $c->stash->{error} = $e->error;
+    } else {
+      die($@);
     }
   }
-
-  $c->stash->{error}          = $caught_error;
-  $c->stash->{success_plugin} = $success_plugin;
 
   if ($success_plugin) {
+
+    $c->stash->{success_plugin} = $success_plugin;
 
     my $new_data = $pub->as_hash;
 
