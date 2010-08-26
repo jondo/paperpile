@@ -260,7 +260,6 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       '           <tpl if="publisherLink">',
       '             <a href="#" class="pp-textlink" onclick="Paperpile.utils.openURL(\'{publisherLink}\')">Go to publisher site</a> | ',
       '           </tpl>',
-      '           <a href="#" class="pp-textlink" onclick="Paperpile.main.reportPdfDownloadError(\'{errorReportInfo}\');">Send Error Report</a>',
       '       </p> ',
       '      </tpl>',
       '    </div>',
@@ -271,13 +270,13 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     this.typeTemplate = new Ext.XTemplate(
       '<div style="padding: 4px 0;">',
       '  <tpl if="type==\'PDF_SEARCH\'">',
-      '    <span class="pp-queue-type-label-{type}">Search PDF</span>',
+      '    <span class="pp-queue-type-label-{type}">Download PDF</span>',
       '  </tpl>',
       '  <tpl if="type==\'PDF_IMPORT\'">',
-      '    <span class="pp-queue-type-label-{type}">Match PDF</span>',
+      '    <span class="pp-queue-type-label-{type}">Import PDF</span>',
       '  </tpl>',
       '  <tpl if="type==\'METADATA_UPDATE\'">',
-      '    <span class="pp-queue-type-label-{type}">Update Metadata</span>',
+      '    <span class="pp-queue-type-label-{type}">Auto-complete</span>',
       '  </tpl>',
       '</div>').compile();
 

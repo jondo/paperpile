@@ -2061,7 +2061,7 @@ table.pp-meta-form {
 }
 
 .pp-queue-type-label-METADATA_UPDATE{
-    background-color: #FF00FF;
+    background-color: #FFECEC;
 }
 
 .pp-queue-list-title{
@@ -2109,7 +2109,7 @@ table.pp-meta-form {
 }
 
 .pp-queue-table td {
-    padding: 1px 5px;
+    padding: 1px 4px;
     text-align: center;
 }
 

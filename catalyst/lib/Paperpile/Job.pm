@@ -161,7 +161,7 @@ sub noun {
   my $type = $self->type;
   return 'PDF download'    if ( $type eq 'PDF_SEARCH' );
   return 'PDF import'      if ( $type eq 'PDF_IMPORT' );
-  return 'Metadata update' if ( $type eq 'METADATA_UPDATE' );
+  return 'Auto-complete'   if ( $type eq 'METADATA_UPDATE' );
   return 'Test job'        if ( $type eq 'TEST_JOB' );
 }
 
@@ -442,8 +442,7 @@ sub _do_work {
     if ($success) {
       my $m = Paperpile::Utils->get_library_model;
 
-      # Insert the updated pub as a separate item into the database.
-      # Delete the current GUID so we get a new one.
+      # Update the database entry
       $m->update_pub( $pub->guid, $new_hash );
 
       # Insert and trash a copy of the old publication, for safe-keeping.
@@ -454,15 +453,15 @@ sub _do_work {
       delete $old_hash->{guid};
       delete $old_hash->{pdf};
       delete $old_hash->{pdf_name};
-      $old_hash->{title} = '[backup copy] ' . $old_hash->{title};
+      $old_hash->{title} = '[Backup Copy] ' . $old_hash->{title};
       my $old_pub = Paperpile::Library::Publication->new($old_hash);
       $m->insert_pubs( [$old_pub], 1 );
       $m->trash_pubs( [$old_pub], 'TRASH' );
 
-      $self->update_info( 'msg', "Metadata successfully gathered from $success." );
+      $self->update_info( 'msg', "Reference matched to $success and data updated." );
       $self->update_info( 'callback', { fn => 'updatePubGrid' } );
     } else {
-      NetMatchError->throw("Could not find metadata from any online resource.");
+      NetMatchError->throw("Could not match to any online resource.");
     }
 
   }
