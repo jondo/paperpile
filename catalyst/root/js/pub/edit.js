@@ -838,6 +838,9 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
   },
 
   midEllipse: function(string, length) {
+
+    if (!string) return '';
+
     if (string.length > length) {
       return string.substring(0, length / 2) + ' ... ' + string.substring(length - length / 2, length);
     } else {
@@ -933,6 +936,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   setDisabledInputs: function(disabled) {
 
+    console.log("INHERE", disabled);
 
     Ext.getCmp('save_button').setDisabled(disabled);
     Ext.getCmp('cancel_button').setDisabled(disabled);
