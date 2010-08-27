@@ -936,8 +936,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   setDisabledInputs: function(disabled) {
 
-    console.log("INHERE", disabled);
-
     Ext.getCmp('save_button').setDisabled(disabled);
     Ext.getCmp('cancel_button').setDisabled(disabled);
 
