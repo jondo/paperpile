@@ -762,7 +762,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       var newData = json.data;
       for (var field in newData) {
         if (newData[field]) {
-          if (this.data[field] != newData[field] && !field.match('^_') && !field.match('sha1')) {
+          if (this.data[field] != newData[field] && !field.match('citekey') && !field.match('^_') && !field.match('sha1')) {
             dataDiff.push({
               field: field,
               oldVal: this.data[field],

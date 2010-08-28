@@ -564,15 +564,31 @@ sub auto_complete {
 
   my ( $self, $plugin_list ) = @_;
 
-  # Re-order list if identifiers are given
+  # First check if the user wants to search PubMed at all
+  my $hasPubMed = 0;
+  if ( grep { $_ eq 'PubMed' } @$plugin_list ) {
+    $hasPubMed = 1;
+  }
+
+  # If we have a ArXiv ID we rank the ArXiv plugin first
   if ( $self->arxivid ) {
     @$plugin_list = ( 'ArXiv', grep { $_ ne 'ArXiv' } @$plugin_list );
   }
-  if ( $self->pmid ) {
+
+  # If a doi or linkout is given we use the URL module to look first
+  # directly on the publisher site
+  if ($self->doi || $self->linkout){
+    unshift @$plugin_list, 'URL';
+  }
+
+  # If a we have a PMID we search PubMed, likewise if we have a DOI
+  # and the user uses PubMed because PubMed data is usually the most
+  # reliable
+  if ( $self->pmid || ($self->doi && $hasPubMed)) {
     @$plugin_list = ( 'PubMed', grep { $_ ne 'PubMed' } @$plugin_list );
   }
 
-  # Try plugins until a match is found
+  # Try all plugins sequentially until a match is found
   my $success_plugin = undef;
   my $caught_error   = undef;
 
@@ -615,11 +631,16 @@ sub auto_complete {
     }
   }
 
+  # Rethrow errors that were observed previously
   if ($caught_error) {
     PaperpileError->throw($caught_error);
   }
 
-  return $success_plugin;
+  my $name = $success_plugin;
+
+  $name = 'publisher site' if ($name eq 'URL');
+
+  return $name;
 
 }
 
