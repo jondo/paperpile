@@ -628,19 +628,19 @@
 </site>
 
 
-<site name="JCI">
+<site name="JBSD">
   <signature>
-    <url>!jci\.org!</url>
+    <url>!jbsdonline\.com!</url>
   </signature>
 
   <rule>
     <pattern>
-      <rewrite>!(.*view/\d+)!$1/files/pdf\?disposition=attachment!</rewrite>
+      <match>!href\s*=\s*'([^']+category[^']+\.pdf)'!</match>
     </pattern>
   </rule>
   
   <test>
-    <url>http://www.biotechniques.com/BiotechniquesJournal/2010/July/Design-of-an-in-vivo-cleavable-disulfide-linker-in-recombinant-fusion-proteins/biotechniques-296954.html</url>
+    <url>http://www.jbsdonline.com/c3035/c4276/Nucleosome-DNA-Bendability-Matrix-C-elegans-p-403-411-p17018.html</url>
   </test>
 </site>
 
