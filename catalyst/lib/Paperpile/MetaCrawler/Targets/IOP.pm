@@ -34,7 +34,9 @@ sub convert {
 
   # Then follow the bibtex export, to be sure to get all data
   if ( $content_URL =~ m/(.*iop\.org\/)([\w|\-|\/]+)(.*)/ ) {
-    my $bibtexurl = "$1export\?articleId=$2&exportFormat=iopexport_bib&exportType=abs";
+    my $base = $1;
+    (my $id = $2) =~ s/\/$//;
+    my $bibtexurl = $base."export\?articleId=".$id."&exportFormat=iopexport_bib&exportType=abs";
     my $browser    = Paperpile::Utils->get_browser;
     my $response   = $browser->get($bibtexurl);
     $content = $response->content();
