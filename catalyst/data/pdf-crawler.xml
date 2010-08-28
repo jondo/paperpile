@@ -651,7 +651,21 @@
   </test>
 </site>
 
+<site name="InformaWorld">
+  <signature>
+    <url>!informaworld\.com!</url>
+  </signature>
 
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+frm=content)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1080/15257770802260741 </url>
+  </test>
+</site>
 
   
 <site name="Meta">
