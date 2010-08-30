@@ -115,6 +115,10 @@ sub _parse_next {
       # entry, we simply ignore it
       next if ( $line =~ m/^\s*\}\s*\n$/ );
       next if ( $line =~ m/^%/ );
+      # if there is no citekey we add a dummy
+      if ( $line =~ m/^\s*@(article|book|booklet|conference|inbook|incollection|inproceedings|manual|mastersthesis|misc|phdthesis|proceedings|techreport|unpublished|comment|string)\s*\{\s*,\s*$/i ) {
+	$line =~ s/,\s*$/dummycitekey,/;
+      }
       $_ .= $line;
     }
 
