@@ -1866,6 +1866,7 @@ sub _update_fulltext_table {
 
   my $hash = {
     rowid    => $pub->_rowid,
+    guid     => $pub->guid,
     key      => $pub->citekey,
     year     => $pub->year,
     journal  => $pub->journal,

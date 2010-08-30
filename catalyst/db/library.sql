@@ -34,7 +34,7 @@ CREATE TABLE Publications(
   folders            TEXT
 );
 
-CREATE VIRTUAL TABLE Fulltext using fts3(text,abstract,notes,title,key,author,year,journal, keyword,folderid,labelid);
+CREATE VIRTUAL TABLE Fulltext using fts3(guid,text,abstract,notes,title,key,author,year,journal, keyword,folderid,labelid);
 
 CREATE TABLE Collections (
   guid          TEXT UNIQUE,
