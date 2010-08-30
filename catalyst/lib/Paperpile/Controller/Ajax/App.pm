@@ -122,6 +122,8 @@ sub init_session : Local {
 
   my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
 
+  mkpath( File::Spec->catfile( $tmp_dir, 'rss' ) );
+  mkpath( File::Spec->catfile( $tmp_dir, 'import' ) );
   mkpath( File::Spec->catfile( $tmp_dir, 'download' ) );
   mkpath( File::Spec->catfile( $tmp_dir, 'queue' ) );
   mkpath( File::Spec->catfile( $tmp_dir, 'filesync' ) );
@@ -149,7 +151,10 @@ sub migrate_db : Local {
 
   my ( $self, $c ) = @_;
 
-  my $mg = Paperpile::Migrate->new();
+  my $mg = Paperpile::Migrate->new('tmp_dir'=>$c->model('User')->get_setting('tmp_dir'),
+                                   'user_settings' => $c->config->{'user_settings'},
+                                   'library_settings' => $c->config->{'library_settings'},
+                                  );
 
   $mg->app_library_version( $c->config->{app_settings}->{library_db_version} );
   $mg->app_settings_version( $c->config->{app_settings}->{settings_db_version} );

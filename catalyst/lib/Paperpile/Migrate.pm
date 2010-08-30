@@ -20,6 +20,10 @@ use Moose;
 use DBI;
 use Data::Dumper;
 use File::Copy;
+use File::Spec::Functions qw(catfile splitpath);
+use Data::GUID;
+use File::Path qw(rmtree);
+use File::stat;
 
 use Paperpile::Library::Publication;
 
@@ -30,6 +34,14 @@ has app_settings_version => ( is => 'rw' );
 # The files to be migrated
 has library_db  => ( is => 'rw' );
 has settings_db => ( is => 'rw' );
+
+# The path to the 'tmp' dir that holds temporary information and may
+# need to be resetted/updated together with a db_update
+has tmp_dir => ( is => 'rw' );
+
+# The default settings of the current version
+has library_settings => ( is => 'rw' );
+has user_settings => ( is => 'rw' );
 
 sub get_dbh {
 
@@ -114,7 +126,190 @@ sub lift_library_1_2 {
 }
 
 sub lift_settings_1_2 {
+
+  print STDERR "Migrating settings DB from version 1 to 2\n";
+
 }
+
+
+sub lift_library_2_3 {
+
+  my ($self) = @_;
+
+  print STDERR "Migrating library DB from version 2 to 3\n";
+
+  ### Backup old library file and get database handle
+
+  copy( $self->library_db, $self->library_db . ".backup" )
+    or die("Could not backup library file. Aborting migration ($!)");
+
+  my $dbh_old = $self->get_dbh( $self->library_db . ".backup" );
+
+  ### Initialize empty database from template and get handle
+
+  my ( $volume, $dirs, $base_name ) = splitpath( $self->library_db );
+  copy( Paperpile::Utils->path_to('db/library.db')->stringify, catfile( $dirs, $base_name ) )
+    or die("Error initializing new database. Aborting migration ($!)");
+
+  my $dbh_new = $self->get_dbh( $self->library_db );
+
+  $dbh_new->do('BEGIN EXCLUSIVE TRANSACTION');
+
+  my ( $fields, $values );
+
+  ( my $paper_root ) =
+    $dbh_old->selectrow_array("SELECT value FROM Settings WHERE key='paper_root'");
+
+  my $sth = $dbh_old->prepare("SELECT *, rowid as _rowid FROM Publications;");
+  $sth->execute;
+
+  my %rowid_to_guid;
+
+  while ( my $old_data = $sth->fetchrow_hashref() ) {
+
+    my $pub = Paperpile::Library::Publication->new($old_data);
+    $pub->create_guid;
+    $pub->tags(undef);
+    $pub->folders(undef);
+
+    $rowid_to_guid{ $old_data->{_rowid} } = $pub->guid;
+
+    ### Handle PDF attachments
+
+    if ( $old_data->{pdf} ) {
+      my $file = catfile( $paper_root, $old_data->{pdf} );
+      my $stats = $self->_attachments_stats($file);
+      $stats->{publication} = $pub->guid;
+      $stats->{is_pdf}      = 1;
+      $stats->{name}        = $old_data->{pdf};
+      ( $fields, $values ) = $self->_hash2sql( $stats, $dbh_new );
+      $dbh_new->do("INSERT INTO Attachments ($fields) VALUES ($values)");
+
+      $pub->pdf( $stats->{guid} );
+      $pub->pdf_name( $old_data->{pdf} );
+    }
+
+    ### Handle other attachments
+
+    if ( $old_data->{attachments} > 0 ) {
+
+      my $rowid = $old_data->{_rowid};
+
+      my $sth1 = $dbh_old->prepare("SELECT * FROM Attachments WHERE publication_id=$rowid;");
+      $sth1->execute;
+
+      my @guids;
+
+      while ( my $attachments = $sth1->fetchrow_hashref() ) {
+        my $file = catfile( $paper_root, $attachments->{file_name} );
+        my $stats = $self->_attachments_stats($file);
+        $stats->{publication} = $pub->guid;
+        $stats->{is_pdf}      = 0;
+        $stats->{name}        = $attachments->{file_name};
+        ( $fields, $values ) = $self->_hash2sql( $stats, $dbh_new );
+        $dbh_new->do("INSERT INTO Attachments ($fields) VALUES ($values)");
+        push @guids, $stats->{guid};
+      }
+
+      $pub->attachments( join( ',', @guids ) );
+
+    } else {
+      $pub->attachments(undef);
+    }
+
+    ### Insert into main Publication table
+
+    ( $fields, $values ) = $self->_hash2sql( $pub->as_hash(), $dbh_new );
+
+    $dbh_new->do("INSERT INTO Publications ($fields) VALUES ($values)");
+
+    my $pub_rowid = $dbh_new->func('last_insert_rowid');
+
+    ### Insert into Fulltext table
+
+    my $ft = $dbh_old->selectrow_hashref("SELECT * FROM Fulltext_full WHERE rowid=$pub_rowid");
+
+    $ft->{rowid} = $pub_rowid;
+
+    delete( $ft->{folder} );
+    delete( $ft->{label} );
+    delete( $ft->{folderid} );
+    delete( $ft->{labelid} );
+
+    ( $fields, $values ) = $self->_hash2sql( $ft, $dbh_new );
+
+    $dbh_new->do("INSERT INTO Fulltext ($fields) VALUES ($values)");
+
+  }
+
+  ### Handle Tags
+
+  $sth = $dbh_old->prepare("SELECT *, rowid FROM Tags ORDER BY sort_order;");
+  $sth->execute;
+
+  my $sort_order = 0;
+
+  my %tagrowid_to_tagguid;
+
+  while ( my $tag = $sth->fetchrow_hashref() ) {
+
+    my $guid = Data::GUID->new->as_hex;
+    $guid =~ s/^0x//;
+    my $style = $tag->{style};
+    my $name  = $dbh_new->quote( $tag->{tag} );
+
+    $dbh_new->do(
+      "INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES ('$guid',$name,'LABEL','ROOT', $sort_order, $style)"
+    );
+
+    $tagrowid_to_tagguid{ $tag->{rowid} } = $guid;
+
+    $sort_order++;
+  }
+
+  $sth = $dbh_old->prepare("SELECT * FROM Tag_Publication;");
+  $sth->execute;
+
+  my %tags;
+
+  while ( my $link = $sth->fetchrow_hashref() ) {
+
+    my $pub_guid = $rowid_to_guid{ $link->{publication_id} };
+    my $tag_guid = $tagrowid_to_tagguid{ $link->{tag_id} };
+
+    if ( !exists $tags{$pub_guid} ) {
+      $tags{$pub_guid} = [$tag_guid];
+    } else {
+      push @{$tags{$pub_guid}}, $tag_guid;
+    }
+
+    $dbh_new->do("INSERT INTO Collection_Publication (collection_guid, publication_guid) VALUES ('$tag_guid','$pub_guid') ");
+  }
+
+  foreach my $pub_guid (keys %tags){
+    my $list = join(',', @{$tags{$pub_guid}});
+    $dbh_new->do("UPDATE Publications SET tags='$list' WHERE guid = '$pub_guid'");
+  }
+
+
+
+  my $old_settings = Paperpile::Model::Library->settings($dbh_old);
+  $old_settings->{db_version} = 3;
+
+  Paperpile::Model::Library->set_settings( $self->library_settings, $dbh_new );
+
+  $dbh_new->commit;
+
+  foreach my $dir ( 'rss', 'import', 'download', 'queue' ) {
+    rmtree( catfile( $self->tmp_dir, $dir ) );
+  }
+  unlink( catfile( $self->tmp_dir, 'queue.db' ) );
+
+}
+
+
+
+
 
 sub backup_library_file {
 
@@ -182,6 +377,54 @@ sub update_sha1s {
     $sha1_seen{$updated_sha1}=1;
 
   }
+}
+
+
+sub _hash2sql {
+
+  ( my $self, my $hash, my $dbh ) = @_;
+
+  my @fields = ();
+  my @values = ();
+
+  foreach my $key ( keys %{$hash} ) {
+
+    my $value = $hash->{$key};
+
+    # ignore fields starting with underscore
+    # They are not stored to the database by convention
+    next if $key =~ /^_/;
+
+    next if not defined $value;
+
+    push @fields, $key;
+
+    if ( $value eq '' ) {
+      push @values, "''";
+    } else {
+      push @values, $dbh->quote($value);
+    }
+  }
+
+  my @output = ( join( ',', @fields ), join( ',', @values ) );
+
+  return @output;
+}
+
+sub _attachments_stats {
+
+  my ($self, $file) = @_;
+
+  my $output = {};
+
+  $output->{guid} = Data::GUID->new->as_hex;
+  $output->{guid} =~ s/^0x//;
+  $output->{size} = stat($file)->size;
+  $output->{md5} = Paperpile::Utils->calculate_md5($file);
+  $output->{local_file} = $file;
+
+  return $output;
+
 }
 
 no Moose;
