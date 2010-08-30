@@ -338,9 +338,9 @@ sub normalized {
 
   $output .= $self->von if ( $self->von ) . " ";
 
-  $output .= $self->last . ", ";
-  $output .= $self->jr . ", " if ( $self->jr );
-  $output .= $self->initials;
+  $output .= $self->last . ", " if ( $self->last );
+  $output .= $self->jr . ", "   if ( $self->jr );
+  $output .= $self->initials    if ( $self->initials );
 
   return $output;
 }

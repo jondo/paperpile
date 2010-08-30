@@ -306,9 +306,13 @@ sub write {
         }
 
         # for the title we enclose special words in brackets
-	if ( $key eq 'authors' ) {
+	if ( $key eq 'author' ) {
 	  my @tmp = split(/\sand\s/, $value );
 	  foreach my $i ( 0 .. $#tmp ) {
+	    if ( $tmp[$i] !~ m/\w/ ) {
+	      $tmp[$i] = '';
+	      next;
+	    }
 	    $tmp[$i] = '{'.$tmp[$i].'}' if ( $tmp[$i] !~ m/,/ );
 	  }
 	  $value = join(" and ", @tmp);
