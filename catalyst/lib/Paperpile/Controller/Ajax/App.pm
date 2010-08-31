@@ -114,7 +114,8 @@ sub init_session : Local {
   my $app_settings_version = $c->config->{app_settings}->{settings_db_version};
 
   if ( ( $db_library_version != $app_library_version )
-    or ( $db_settings_version != $app_settings_version ) ) {
+       #or ( $db_settings_version != $app_settings_version ) 
+     ) {
     DatabaseVersionError->throw("Database needs to be migrated to latest version");
   }
 

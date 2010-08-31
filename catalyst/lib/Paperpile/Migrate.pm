@@ -170,7 +170,6 @@ sub lift_library_2_3 {
     my $pub = Paperpile::Library::Publication->new($old_data);
     $pub->create_guid;
     $pub->tags(undef);
-    $pub->folders(undef);
 
     $rowid_to_guid{ $old_data->{_rowid} } = $pub->guid;
 
@@ -230,6 +229,7 @@ sub lift_library_2_3 {
     my $ft = $dbh_old->selectrow_hashref("SELECT * FROM Fulltext_full WHERE rowid=$pub_rowid");
 
     $ft->{rowid} = $pub_rowid;
+    $ft->{guid}  = $pub->guid;
 
     delete( $ft->{folder} );
     delete( $ft->{label} );
@@ -280,17 +280,94 @@ sub lift_library_2_3 {
     if ( !exists $tags{$pub_guid} ) {
       $tags{$pub_guid} = [$tag_guid];
     } else {
-      push @{$tags{$pub_guid}}, $tag_guid;
+      push @{ $tags{$pub_guid} }, $tag_guid;
     }
 
-    $dbh_new->do("INSERT INTO Collection_Publication (collection_guid, publication_guid) VALUES ('$tag_guid','$pub_guid') ");
+    $dbh_new->do(
+      "INSERT INTO Collection_Publication (collection_guid, publication_guid) VALUES ('$tag_guid','$pub_guid') "
+    );
   }
 
-  foreach my $pub_guid (keys %tags){
-    my $list = join(',', @{$tags{$pub_guid}});
+  foreach my $pub_guid ( keys %tags ) {
+    my $list = join( ',', @{ $tags{$pub_guid} } );
     $dbh_new->do("UPDATE Publications SET tags='$list' WHERE guid = '$pub_guid'");
+    $dbh_new->do("UPDATE Fulltext SET labelid='$list' WHERE guid = '$pub_guid'");
   }
 
+  ### Handle Folders
+
+  my $tree = Paperpile::Model::Library->get_setting( '_tree', $dbh_old );
+
+  my @folders;
+
+  $tree->traverse(
+    sub {
+      my ($_tree) = @_;
+      my $params = $_tree->getNodeValue();
+      return if $params->{type} ne 'FOLDER';
+      return if $params->{text} eq 'All Papers';
+
+      my $id     = $params->{id};
+      my $name   = $params->{text};
+      my $parent = $_tree->getParent;
+
+      my $parent_id;
+
+      if ( (!defined $parent->getNodeValue->{id}) && ($parent->getNodeValue->{path} eq '/') ) {
+        $parent_id = 'ROOT';
+      } else {
+        $parent_id = $parent->getNodeValue->{id};
+      }
+
+      push @folders, { name => $name, id => $id, parent_id => $parent_id };
+    }
+  );
+
+  my %folderid_to_folder_guid=(ROOT=>'ROOT');
+
+  foreach my $folder (@folders){
+    my $guid = Data::GUID->new->as_hex;
+    $guid =~ s/^0x//;
+    $folder->{guid} = $guid;
+    $folderid_to_folder_guid{$folder->{id}}=$guid;
+  }
+
+  my %sort_order_by_parent;
+  foreach my $folder (@folders){
+    $sort_order_by_parent{$folderid_to_folder_guid{$folder->{parent_id}}}=0;
+  }
+
+
+  foreach my $folder (@folders){
+    my $name  = $dbh_new->quote( $folder->{name} );
+    my $guid = $folder->{guid};
+    my $parent = $folderid_to_folder_guid{$folder->{parent_id}};
+
+    my $sort_order = $sort_order_by_parent{$parent}++;
+
+    $dbh_new->do("INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES ('$guid',$name,'FOLDER','$parent', $sort_order, 0)");
+
+  }
+
+  $sth = $dbh_new->prepare("SELECT guid, folders FROM Publications WHERE Folders !=''");
+  $sth->execute;
+
+  while ( my $row = $sth->fetchrow_hashref() ) {
+
+    my $guid =$row->{guid};
+    my @old_folders = split(/,/,$row->{folders});
+
+    my @new_folders;
+
+    foreach my $old_folder (@old_folders){
+      push @new_folders, $folderid_to_folder_guid{$old_folder};
+    }
+
+    my $folders = join(',',@new_folders);
+
+    $dbh_new->do("UPDATE Publications SET Folders='$folders' WHERE guid='$guid'");
+    $dbh_new->do("UPDATE Fulltext SET folderid='$folders' WHERE guid='$guid'");
+  }
 
 
   my $old_settings = Paperpile::Model::Library->settings($dbh_old);
