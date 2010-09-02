@@ -34,7 +34,6 @@
 #include "config.h"
 #include "Parameters.h"
 #include "Outline.h"
-#include "utf8.h"
 
 #include "PDFDocXrce.h"
 
@@ -299,13 +298,15 @@ int main(int argc, char *argv[]) {
     if (info.isDict()) {
       
       if (info.getDict()->lookup("Title", &obj)->isString()) {
-	string temp1 = obj.getString()->getCString();
-	string temp;
-	utf8::replace_invalid(temp1.begin(), temp1.end(), back_inserter(temp));
+	string temp = obj.getString()->getCString();
 	char *a = new char[temp.size()+1];
 	a[temp.size()]=0;
 	memcpy(a,temp.c_str(),temp.size());
-	
+	// use only ASCII chars
+	for (int i = 0; i < temp.size(); i++ ) {
+	  if ( a[i] > 255 ) { a[i] = 32; }
+	  if ( a[i] < 32 ) { a[i] = 32; }
+	}
 	title = new GString(a);
       }
     }
