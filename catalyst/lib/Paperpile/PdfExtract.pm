@@ -42,6 +42,43 @@ sub parsePDF {
   # remove temp file
   unlink("$tmpfile");
 
+  my $metadata_title = '';
+  my $metadata_DOI = '';
+  my $metadata_arxiv = '';
+  if ( $data->{METADATA}->[0]->{PROCESS}->{pdftoxml}->{TITLE}->[0]->{value} ) {
+    $metadata_title = $data->{METADATA}->[0]->{PROCESS}->{pdftoxml}->{TITLE}->[0]->{value};
+    if ( $metadata_title =~ m/^doi:(10\.\d{4}\S+)/ )  {
+      $metadata_DOI = $1;
+      $metadata_title = '';
+    }
+    if ( $metadata_title =~ m/^(10\.\d{4}\S+)/ )  {
+      $metadata_DOI = $1;
+      $metadata_title = '';
+    }
+    if ( $metadata_title =~ m/^arXiv:(\S+)/i ) {
+      $metadata_arxiv = $1;
+      $metadata_title = '';
+    }
+    $metadata_title = '' if ( $metadata_title =~ m/(\.doc|\.tex|\.dvi|\.ps|\.pdf|\.rtf|\.qxd|\.fm|\.fm\))$/ );
+    $metadata_title = '' if ( $metadata_title =~ m/^\s*$/ );
+    $metadata_title = '' if ( $metadata_title =~ m/^Microsoft/ );
+    $metadata_title = '' if ( $metadata_title =~ m/^gk[a-z]\d+/i );
+    $metadata_title = '' if ( $metadata_title =~ m/\d/ and $metadata_title !~ m/\s/ );
+    $metadata_title = '' if ( $metadata_title =~ m/^PII:/ ); # maybe we convert this to a doi once
+    $metadata_title = '' if ( $metadata_title =~ m/^\d+\s/ );
+    $metadata_title = '' if ( $metadata_title =~ m/\d+\s*\.+\s*\d+$/ );
+    $metadata_title = '' if ( $metadata_title =~ m/Vol\.?\s\d+/i );
+    $metadata_title =~ s/\s+/ /g;
+    $metadata_title =~ s/^\s+//g;
+    $metadata_title =~ s/\s+$//g;
+    my $count_spaces = ($metadata_title =~ tr/ //);
+    $metadata_title = '' if ( $count_spaces < 3 );
+  }
+  open (FILE, ">$PDFfile.metadata.tmp" );
+  print FILE "TITLE:$metadata_title\n";
+  print FILE "  DOI:$metadata_DOI\n";
+  close(FILE);
+
   my @page0 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
 
   my ( $title, $authors, $doi, $arxiv_id, $level, $has_cover_page );
@@ -256,9 +293,11 @@ sub parsePDF {
     $pub->title($title);
     $pub->authors( join( ' and ', @authors_obj ) );
   }
-  $pub->doi($doi)          if ( $doi      ne '' );
-  $pub->arxivid($arxiv_id) if ( $arxiv_id ne '' );
-
+  $pub->title($metadata_title)   if ( $metadata_title ne '' and !$pub->title );
+  $pub->doi($doi)                if ( $doi      ne '' );
+  $pub->doi($metadata_DOI)       if ( $metadata_DOI ne ''   and !$pub->doi );
+  $pub->arxivid($arxiv_id)       if ( $arxiv_id ne '' );
+  $pub->arxivid($metadata_arxiv) if ( $metadata_arxiv ne '' and !$pub->arxivid );
   return $pub;
 }
 
