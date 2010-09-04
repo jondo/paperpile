@@ -728,6 +728,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background: transparent url('/images/icons/transmit.png') no-repeat;
 }
 
+.pp-action-feedback {
+    background: transparent url('/images/icons/feedback_small.png') no-repeat;
+}
+
+
 .pp-action-clipboard {
     background: transparent url('/images/icons/paste_plain.png') no-repeat;
 }

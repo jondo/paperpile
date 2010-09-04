@@ -67,6 +67,9 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       case 'updates':
         Paperpile.main.checkForUpdates(false);
         break;
+      case 'feedback':
+        Paperpile.main.userVoice();
+        break;
       }
     },
     this, {
@@ -78,14 +81,22 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
     var field = new Ext.form.Checkbox({
       checked: settings.bibtex_mode === '1' ? true : false,
       id: 'bibtex-checkbox',
+      hideLabel: true, // no effect (?)
+      labelStyle: 'display:none;', // no effect (?)
       renderTo: 'bibtex-mode-checkbox',
     });
 
-    Ext.get('bibtex-checkbox').parent().setStyle({display:'inline'});
-    Ext.get('bibtex-checkbox').setStyle({'vertical-align':'middle'});
+    Ext.get('bibtex-checkbox').parent().setStyle({
+      display: 'inline'
+    });
+    Ext.get('bibtex-checkbox').setStyle({
+      'vertical-align': 'middle'
+    });
 
+    Ext.get('bibtex-mode-text-active').setVisibilityMode(Ext.Element.DISPLAY);
+    Ext.get('bibtex-mode-text-inactive').setVisibilityMode(Ext.Element.DISPLAY);
 
-    if (settings.bibtex_mode === '1'){
+    if (settings.bibtex_mode === '1') {
       Ext.get('bibtex-mode-text-active').show();
       Ext.get('bibtex-mode-text-inactive').hide();
     } else {
@@ -93,10 +104,13 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       Ext.get('bibtex-mode-text-inactive').show();
     }
 
-    
     field.on('check',
       function(box, checked) {
         var currentSettings = Paperpile.main.getSetting('bibtex');
+
+        // If the checkbox is focused this looks strange in Webkit, so
+        // we unfocus it
+        box.blur();
 
         var value = (checked) ? "1" : "0";
 
@@ -109,17 +123,14 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
           duration: 2
         });
 
-        if (checked){
-          //Ext.get('bibtex-mode-settings').show();
+        if (checked) {
           Ext.get('bibtex-mode-text-active').show();
           Ext.get('bibtex-mode-text-inactive').hide();
         } else {
-          //Ext.get('bibtex-mode-settings').hide();
           Ext.get('bibtex-mode-text-inactive').show();
           Ext.get('bibtex-mode-text-active').hide();
         }
 
-        
       },
       this);
 
