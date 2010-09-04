@@ -572,9 +572,17 @@ sub auto_complete {
     $hasPubMed = 1;
   }
 
-  # If we have a ArXiv ID we rank the ArXiv plugin first
-  if ( $self->arxivid ) {
-    @$plugin_list = ( 'ArXiv', grep { $_ ne 'ArXiv' } @$plugin_list );
+  if ( $self->arxivid) {
+    # If we have only an ArXiv ID we rank the ArXiv plugin first
+    if (!$self->title){
+      @$plugin_list = ( 'ArXiv', grep { $_ ne 'ArXiv' } @$plugin_list );
+    } else {
+      # If we have other data and the arxivid but ArXiv is not in the
+      # list we add it as last option
+      if ( !(grep { $_ eq 'ArXiv' } @$plugin_list )) {
+        @$plugin_list = ( grep { $_ ne 'ArXiv'} @$plugin_list, 'ArXiv' );
+      }
+    }
   }
 
   # If a doi or linkout is given we use the URL module to look first
