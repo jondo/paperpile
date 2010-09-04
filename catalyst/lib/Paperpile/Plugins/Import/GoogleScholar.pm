@@ -202,8 +202,6 @@ sub complete_details {
 
   my $bibtex = '';
 
-  print STDERR "\nGS compete_details: ", $pub->linkout, "\n";
-
   # if the given linkout is a good one we are done
   # the meta-crawler is called and bibliographic
   # informations is obtained from the linkout page
@@ -222,6 +220,7 @@ sub complete_details {
       $full_pub->_light(0);
       $full_pub->refresh_fields();
       $full_pub->refresh_authors();
+      $full_pub->_details_link('');
 
       return $full_pub;
     }
@@ -296,6 +295,7 @@ sub complete_details {
               $full_pub->_light(0);
               $full_pub->refresh_fields();
               $full_pub->refresh_authors();
+              $full_pub->_details_link('');
 
               return $full_pub;
             }
@@ -325,6 +325,7 @@ sub complete_details {
               $full_pub->_light(0);
               $full_pub->refresh_fields();
               $full_pub->refresh_authors();
+              $full_pub->_details_link('');
 
               return $full_pub;
             }
@@ -379,6 +380,9 @@ sub complete_details {
 
   # We don't use Google key
   $full_pub->citekey('');
+
+  # Unset to mark as completed
+  $full_pub->_details_link('');
 
   # Update plugin _hash with new data
   $full_pub->guid( $pub->guid );
