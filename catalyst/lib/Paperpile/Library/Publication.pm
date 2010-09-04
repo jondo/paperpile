@@ -74,7 +74,7 @@ has 'sha1' => ( is => 'rw' );
 has 'guid' => ( is => 'rw' );
 
 # Timestamp when the entry was created
-has 'created' => ( is => 'rw' );
+has 'created' => ( is => 'rw', default => '' );
 
 # Flags entry as trashed
 has 'trashed' => ( is => 'rw', isa => 'Int', default => 0 );
@@ -93,7 +93,7 @@ has 'pdf' => ( is => 'rw', default => '' );
 has 'pdf_name' => ( is => 'rw', default => '' );
 
 # Comma separated list of guids of other attachments
-has 'attachments' => ( is => 'rw' );
+has 'attachments' => ( is => 'rw', default=>'');
 has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] } );
 
 # User provided annotation "Notes", formatted in HTML
@@ -116,6 +116,7 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
   if ( $field ~~ [ 'year', 'title', 'booktitle' ] ) {
     has $field => (
       is      => 'rw',
+      default => '',
       trigger => sub {
         my $self = shift;
         $self->refresh_fields;
@@ -124,6 +125,7 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
   } elsif ( $field ~~ [ 'authors', 'editors' ] ) {
     has $field => (
       is      => 'rw',
+      default => '',
       trigger => sub {
         my $self = shift;
         $self->refresh_authors;
