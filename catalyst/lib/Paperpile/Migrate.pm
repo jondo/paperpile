@@ -398,7 +398,6 @@ sub lift_library_2_3 {
 
     Paperpile::Model::Library->set_settings( $self->library_settings, $dbh_new );
 
-    die("I died");
 
   };
 
