@@ -128,15 +128,10 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
 
     var other_guids = [];
     other_dups.each(function(item, index, length) {
-      Paperpile.log(item);
       other_guids = other_guids.concat(item.data.guid);
     });
 
-    Paperpile.log(other_guids);
-
     var n = other_guids.length + 1;
-
-    //Paperpile.status.updateMsg("Merging duplicate references");
 
     Paperpile.Ajax({
       url: '/ajax/crud/merge_duplicates',

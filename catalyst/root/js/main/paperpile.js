@@ -86,7 +86,6 @@ Paperpile.Ajax = function(config) {
     config.scope = Paperpile.main;
   }
 
-  Paperpile.log(config);
   return Ext.Ajax.request(config);
 };
 
@@ -260,7 +259,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   keyQuesionMark: function() {
-    Paperpile.log("What's your problem?");
+    //Paperpile.log("What's your problem?");
   },
 
   keyControlC: function() {
@@ -340,7 +339,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (commitToBackend === undefined) {
       commitToBackend = true;
     }
-    Paperpile.log('[' + key + '] => [' + value + ']');
     this.globalSettings[key] = value;
 
     var s = {};
