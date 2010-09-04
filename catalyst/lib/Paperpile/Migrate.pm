@@ -127,7 +127,20 @@ sub lift_library_1_2 {
 
 sub lift_settings_1_2 {
 
-  print STDERR "Migrating settings DB from version 1 to 2\n";
+  my ($self) = @_;
+
+  my $dbh = $self->get_dbh( $self->settings_db );
+
+  # Add new settings
+  foreach my $new_setting ('zoom_level','tags_list_height'){
+    Paperpile::Model::Library->set_setting($new_setting, $self->user_settings->{$new_setting}, $dbh);
+  }
+
+  # Drop unused settings
+  $dbh->do("DELETE FROM SETTINGS WHERE key='_queue';");
+
+  # Update database version number
+  $dbh->do("UPDATE SETTINGS SET value='2' WHERE key='db_version';");
 
 }
 
@@ -135,8 +148,6 @@ sub lift_settings_1_2 {
 sub lift_library_2_3 {
 
   my ($self) = @_;
-
-  print STDERR "Migrating library DB from version 2 to 3\n";
 
   ### Backup old library file and get database handle
 
@@ -155,228 +166,253 @@ sub lift_library_2_3 {
 
   $dbh_new->do('BEGIN EXCLUSIVE TRANSACTION');
 
-  my ( $fields, $values );
+  eval {
 
-  ( my $paper_root ) =
-    $dbh_old->selectrow_array("SELECT value FROM Settings WHERE key='paper_root'");
+    my ( $fields, $values );
 
-  my $sth = $dbh_old->prepare("SELECT *, rowid as _rowid FROM Publications;");
-  $sth->execute;
+    ( my $paper_root ) =
+      $dbh_old->selectrow_array("SELECT value FROM Settings WHERE key='paper_root'");
 
-  my %rowid_to_guid;
+    my $sth = $dbh_old->prepare("SELECT *, rowid as _rowid FROM Publications;");
+    $sth->execute;
 
-  while ( my $old_data = $sth->fetchrow_hashref() ) {
+    my %rowid_to_guid;
 
-    my $pub = Paperpile::Library::Publication->new($old_data);
-    $pub->create_guid;
-    $pub->tags(undef);
+    while ( my $old_data = $sth->fetchrow_hashref() ) {
 
-    $rowid_to_guid{ $old_data->{_rowid} } = $pub->guid;
+      my $pub = Paperpile::Library::Publication->new($old_data);
+      $pub->create_guid;
+      $pub->tags(undef);
 
-    ### Handle PDF attachments
+      $rowid_to_guid{ $old_data->{_rowid} } = $pub->guid;
 
-    if ( $old_data->{pdf} ) {
-      my $file = catfile( $paper_root, $old_data->{pdf} );
-      my $stats = $self->_attachments_stats($file);
-      $stats->{publication} = $pub->guid;
-      $stats->{is_pdf}      = 1;
-      $stats->{name}        = $old_data->{pdf};
-      ( $fields, $values ) = $self->_hash2sql( $stats, $dbh_new );
-      $dbh_new->do("INSERT INTO Attachments ($fields) VALUES ($values)");
+      ### Handle PDF attachments
 
-      $pub->pdf( $stats->{guid} );
-      $pub->pdf_name( $old_data->{pdf} );
-    }
-
-    ### Handle other attachments
-
-    if ( $old_data->{attachments} > 0 ) {
-
-      my $rowid = $old_data->{_rowid};
-
-      my $sth1 = $dbh_old->prepare("SELECT * FROM Attachments WHERE publication_id=$rowid;");
-      $sth1->execute;
-
-      my @guids;
-
-      while ( my $attachments = $sth1->fetchrow_hashref() ) {
-        my $file = catfile( $paper_root, $attachments->{file_name} );
+      if ( $old_data->{pdf} ) {
+        my $file = catfile( $paper_root, $old_data->{pdf} );
         my $stats = $self->_attachments_stats($file);
         $stats->{publication} = $pub->guid;
-        $stats->{is_pdf}      = 0;
-        $stats->{name}        = $attachments->{file_name};
+        $stats->{is_pdf}      = 1;
+        $stats->{name}        = $old_data->{pdf};
         ( $fields, $values ) = $self->_hash2sql( $stats, $dbh_new );
         $dbh_new->do("INSERT INTO Attachments ($fields) VALUES ($values)");
-        push @guids, $stats->{guid};
+
+        $pub->pdf( $stats->{guid} );
+        $pub->pdf_name( $old_data->{pdf} );
       }
 
-      $pub->attachments( join( ',', @guids ) );
+      ### Handle other attachments
 
-    } else {
-      $pub->attachments(undef);
-    }
+      if ( $old_data->{attachments} > 0 ) {
 
-    ### Insert into main Publication table
+        my $rowid = $old_data->{_rowid};
 
-    ( $fields, $values ) = $self->_hash2sql( $pub->as_hash(), $dbh_new );
+        my $sth1 = $dbh_old->prepare("SELECT * FROM Attachments WHERE publication_id=$rowid;");
+        $sth1->execute;
 
-    $dbh_new->do("INSERT INTO Publications ($fields) VALUES ($values)");
+        my @guids;
 
-    my $pub_rowid = $dbh_new->func('last_insert_rowid');
+        while ( my $attachments = $sth1->fetchrow_hashref() ) {
+          my $file = catfile( $paper_root, $attachments->{file_name} );
+          my $stats = $self->_attachments_stats($file);
+          $stats->{publication} = $pub->guid;
+          $stats->{is_pdf}      = 0;
+          $stats->{name}        = $attachments->{file_name};
+          ( $fields, $values ) = $self->_hash2sql( $stats, $dbh_new );
+          $dbh_new->do("INSERT INTO Attachments ($fields) VALUES ($values)");
+          push @guids, $stats->{guid};
+        }
 
-    ### Insert into Fulltext table
+        $pub->attachments( join( ',', @guids ) );
 
-    my $ft = $dbh_old->selectrow_hashref("SELECT * FROM Fulltext_full WHERE rowid=$pub_rowid");
-
-    $ft->{rowid} = $pub_rowid;
-    $ft->{guid}  = $pub->guid;
-
-    delete( $ft->{folder} );
-    delete( $ft->{label} );
-    delete( $ft->{folderid} );
-    delete( $ft->{labelid} );
-
-    ( $fields, $values ) = $self->_hash2sql( $ft, $dbh_new );
-
-    $dbh_new->do("INSERT INTO Fulltext ($fields) VALUES ($values)");
-
-  }
-
-  ### Handle Tags
-
-  $sth = $dbh_old->prepare("SELECT *, rowid FROM Tags ORDER BY sort_order;");
-  $sth->execute;
-
-  my $sort_order = 0;
-
-  my %tagrowid_to_tagguid;
-
-  while ( my $tag = $sth->fetchrow_hashref() ) {
-
-    my $guid = Data::GUID->new->as_hex;
-    $guid =~ s/^0x//;
-    my $style = $tag->{style};
-    my $name  = $dbh_new->quote( $tag->{tag} );
-
-    $dbh_new->do(
-      "INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES ('$guid',$name,'LABEL','ROOT', $sort_order, $style)"
-    );
-
-    $tagrowid_to_tagguid{ $tag->{rowid} } = $guid;
-
-    $sort_order++;
-  }
-
-  $sth = $dbh_old->prepare("SELECT * FROM Tag_Publication;");
-  $sth->execute;
-
-  my %tags;
-
-  while ( my $link = $sth->fetchrow_hashref() ) {
-
-    my $pub_guid = $rowid_to_guid{ $link->{publication_id} };
-    my $tag_guid = $tagrowid_to_tagguid{ $link->{tag_id} };
-
-    if ( !exists $tags{$pub_guid} ) {
-      $tags{$pub_guid} = [$tag_guid];
-    } else {
-      push @{ $tags{$pub_guid} }, $tag_guid;
-    }
-
-    $dbh_new->do(
-      "INSERT INTO Collection_Publication (collection_guid, publication_guid) VALUES ('$tag_guid','$pub_guid') "
-    );
-  }
-
-  foreach my $pub_guid ( keys %tags ) {
-    my $list = join( ',', @{ $tags{$pub_guid} } );
-    $dbh_new->do("UPDATE Publications SET tags='$list' WHERE guid = '$pub_guid'");
-    $dbh_new->do("UPDATE Fulltext SET labelid='$list' WHERE guid = '$pub_guid'");
-  }
-
-  ### Handle Folders
-
-  my $tree = Paperpile::Model::Library->get_setting( '_tree', $dbh_old );
-
-  my @folders;
-
-  $tree->traverse(
-    sub {
-      my ($_tree) = @_;
-      my $params = $_tree->getNodeValue();
-      return if $params->{type} ne 'FOLDER';
-      return if $params->{text} eq 'All Papers';
-
-      my $id     = $params->{id};
-      my $name   = $params->{text};
-      my $parent = $_tree->getParent;
-
-      my $parent_id;
-
-      if ( (!defined $parent->getNodeValue->{id}) && ($parent->getNodeValue->{path} eq '/') ) {
-        $parent_id = 'ROOT';
       } else {
-        $parent_id = $parent->getNodeValue->{id};
+        $pub->attachments(undef);
       }
 
-      push @folders, { name => $name, id => $id, parent_id => $parent_id };
-    }
-  );
+      ### Insert into main Publication table
 
-  my %folderid_to_folder_guid=(ROOT=>'ROOT');
+      ( $fields, $values ) = $self->_hash2sql( $pub->as_hash(), $dbh_new );
 
-  foreach my $folder (@folders){
-    my $guid = Data::GUID->new->as_hex;
-    $guid =~ s/^0x//;
-    $folder->{guid} = $guid;
-    $folderid_to_folder_guid{$folder->{id}}=$guid;
-  }
+      $dbh_new->do("INSERT INTO Publications ($fields) VALUES ($values)");
 
-  my %sort_order_by_parent;
-  foreach my $folder (@folders){
-    $sort_order_by_parent{$folderid_to_folder_guid{$folder->{parent_id}}}=0;
-  }
+      my $pub_rowid = $dbh_new->func('last_insert_rowid');
 
+      ### Insert into Fulltext table
 
-  foreach my $folder (@folders){
-    my $name  = $dbh_new->quote( $folder->{name} );
-    my $guid = $folder->{guid};
-    my $parent = $folderid_to_folder_guid{$folder->{parent_id}};
+      my $ft = $dbh_old->selectrow_hashref("SELECT * FROM Fulltext_full WHERE rowid=$pub_rowid");
 
-    my $sort_order = $sort_order_by_parent{$parent}++;
+      $ft->{rowid} = $pub_rowid;
+      $ft->{guid}  = $pub->guid;
 
-    $dbh_new->do("INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES ('$guid',$name,'FOLDER','$parent', $sort_order, 0)");
+      delete( $ft->{folder} );
+      delete( $ft->{label} );
+      delete( $ft->{folderid} );
+      delete( $ft->{labelid} );
 
-  }
+      ( $fields, $values ) = $self->_hash2sql( $ft, $dbh_new );
 
-  $sth = $dbh_new->prepare("SELECT guid, folders FROM Publications WHERE Folders !=''");
-  $sth->execute;
+      $dbh_new->do("INSERT INTO Fulltext ($fields) VALUES ($values)");
 
-  while ( my $row = $sth->fetchrow_hashref() ) {
-
-    my $guid =$row->{guid};
-    my @old_folders = split(/,/,$row->{folders});
-
-    my @new_folders;
-
-    foreach my $old_folder (@old_folders){
-      push @new_folders, $folderid_to_folder_guid{$old_folder};
     }
 
-    my $folders = join(',',@new_folders);
+    ### Handle Tags
 
-    $dbh_new->do("UPDATE Publications SET Folders='$folders' WHERE guid='$guid'");
-    $dbh_new->do("UPDATE Fulltext SET folderid='$folders' WHERE guid='$guid'");
+    $sth = $dbh_old->prepare("SELECT *, rowid FROM Tags ORDER BY sort_order;");
+    $sth->execute;
+
+    my $sort_order = 0;
+
+    my %tagrowid_to_tagguid;
+
+    while ( my $tag = $sth->fetchrow_hashref() ) {
+
+      my $guid = Data::GUID->new->as_hex;
+      $guid =~ s/^0x//;
+      my $style = $tag->{style};
+      my $name  = $dbh_new->quote( $tag->{tag} );
+
+      $dbh_new->do(
+        "INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES ('$guid',$name,'LABEL','ROOT', $sort_order, $style)"
+      );
+
+      $tagrowid_to_tagguid{ $tag->{rowid} } = $guid;
+
+      $sort_order++;
+    }
+
+    $sth = $dbh_old->prepare("SELECT * FROM Tag_Publication;");
+    $sth->execute;
+
+    my %tags;
+
+    while ( my $link = $sth->fetchrow_hashref() ) {
+
+      my $pub_guid = $rowid_to_guid{ $link->{publication_id} };
+      my $tag_guid = $tagrowid_to_tagguid{ $link->{tag_id} };
+
+      if ( !exists $tags{$pub_guid} ) {
+        $tags{$pub_guid} = [$tag_guid];
+      } else {
+        push @{ $tags{$pub_guid} }, $tag_guid;
+      }
+
+      $dbh_new->do(
+        "INSERT INTO Collection_Publication (collection_guid, publication_guid) VALUES ('$tag_guid','$pub_guid') "
+      );
+    }
+
+    foreach my $pub_guid ( keys %tags ) {
+      my $list = join( ',', @{ $tags{$pub_guid} } );
+      $dbh_new->do("UPDATE Publications SET tags='$list' WHERE guid = '$pub_guid'");
+      $dbh_new->do("UPDATE Fulltext SET labelid='$list' WHERE guid = '$pub_guid'");
+    }
+
+    ### Handle Folders
+
+    my $tree = Paperpile::Model::Library->get_setting( '_tree', $dbh_old );
+
+    my @folders;
+
+    $tree->traverse(
+      sub {
+        my ($_tree) = @_;
+        my $params = $_tree->getNodeValue();
+        return if $params->{type} ne 'FOLDER';
+        return if $params->{text} eq 'All Papers';
+
+        my $id     = $params->{id};
+        my $name   = $params->{text};
+        my $parent = $_tree->getParent;
+
+        my $parent_id;
+
+        if ( ( !defined $parent->getNodeValue->{id} ) && ( $parent->getNodeValue->{path} eq '/' ) )
+        {
+          $parent_id = 'ROOT';
+        } else {
+          $parent_id = $parent->getNodeValue->{id};
+        }
+
+        push @folders, { name => $name, id => $id, parent_id => $parent_id };
+      }
+    );
+
+    my %folderid_to_folder_guid = ( ROOT => 'ROOT' );
+
+    foreach my $folder (@folders) {
+      my $guid = Data::GUID->new->as_hex;
+      $guid =~ s/^0x//;
+      $folder->{guid} = $guid;
+      $folderid_to_folder_guid{ $folder->{id} } = $guid;
+    }
+
+    my %sort_order_by_parent;
+    foreach my $folder (@folders) {
+      $sort_order_by_parent{ $folderid_to_folder_guid{ $folder->{parent_id} } } = 0;
+    }
+
+    foreach my $folder (@folders) {
+      my $name   = $dbh_new->quote( $folder->{name} );
+      my $guid   = $folder->{guid};
+      my $parent = $folderid_to_folder_guid{ $folder->{parent_id} };
+
+      my $sort_order = $sort_order_by_parent{$parent}++;
+
+      $dbh_new->do(
+        "INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES ('$guid',$name,'FOLDER','$parent', $sort_order, 0)"
+      );
+
+    }
+
+    $sth = $dbh_new->prepare("SELECT guid, folders FROM Publications WHERE Folders !=''");
+    $sth->execute;
+
+    while ( my $row = $sth->fetchrow_hashref() ) {
+
+      my $guid = $row->{guid};
+      my @old_folders = split( /,/, $row->{folders} );
+
+      my @new_folders;
+
+      foreach my $old_folder (@old_folders) {
+        push @new_folders, $folderid_to_folder_guid{$old_folder};
+      }
+
+      my $folders = join( ',', @new_folders );
+
+      $dbh_new->do("UPDATE Publications SET Folders='$folders' WHERE guid='$guid'");
+      $dbh_new->do("UPDATE Fulltext SET folderid='$folders' WHERE guid='$guid'");
+    }
+
+    ### Migrate Library settings
+
+    my $old_settings = Paperpile::Model::Library->settings($dbh_old);
+    my $new_settings = $self->library_settings;
+
+    # We take the new defaults for '_tree', 'bibtex' and db_version and
+    # take old settings for all other fields:
+    foreach
+      my $key ( 'attachment_pattern', 'key_pattern', 'pdf_pattern', 'paper_root', 'search_seq' ) {
+      $new_settings->{$key} = $old_settings->{$key};
+    }
+
+    Paperpile::Model::Library->set_settings( $self->library_settings, $dbh_new );
+
+    die("I died");
+
+  };
+
+  if ($@) {
+    $dbh_new->rollback;
+    # Copy old file back from backup
+    copy( $self->library_db . ".backup", $self->library_db );
+    unlink($self->library_db . ".backup");
+    die("Error while updating library: $@");
   }
-
-
-  my $old_settings = Paperpile::Model::Library->settings($dbh_old);
-  $old_settings->{db_version} = 3;
-
-  Paperpile::Model::Library->set_settings( $self->library_settings, $dbh_new );
 
   $dbh_new->commit;
 
+  # Reset all temporary data by deleting all folders in "tmp"
   foreach my $dir ( 'rss', 'import', 'download', 'queue' ) {
     rmtree( catfile( $self->tmp_dir, $dir ) );
   }
@@ -472,7 +508,12 @@ sub _hash2sql {
     # They are not stored to the database by convention
     next if $key =~ /^_/;
 
-    next if not defined $value;
+    if (($key ne 'trashed') && ($key ne 'last_read') && 
+        ($key ne 'times_read') && ($key ne 'created')){
+      $value ='' if not defined $value;
+    } else {
+      next if not defined $value;
+    }
 
     push @fields, $key;
 

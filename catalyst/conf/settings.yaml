@@ -39,9 +39,8 @@ user_settings:
   proxy_user: ""
   proxy_passwd: ""
   pager_limit: 25
-  zoom_level: "100%"
+  zoom_level: 100
   tags_list_height: 120
-  _queue: ""
 
 library_settings:
   db_version: 3
