@@ -63,7 +63,11 @@ sub insert_pubs {
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   if ($user_library) {
-    $self->_generate_keys( $pubs, $dbh );
+    my @existing;
+    foreach my $pub (@$pubs) {
+      my $key = $self->generate_unique_key($pub, \@existing, $dbh);
+      push @existing, $key;
+    }
   }
 
   # Check already existing pubs to avoid sha1 clashes
@@ -145,26 +149,20 @@ sub delete_pubs {
 
   ( my $self, my $pubs ) = @_;
 
-  print STDERR "DELETING PUBS!!!\n";
-
   my $dbh = $self->dbh;
 
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   # Delete attachments
   foreach my $pub (@$pubs) {
-  print STDERR "DELETING PDF!!!\n";
     # PDF
     $self->delete_attachment( $pub->pdf, 1, $pub, 0, $dbh ) if $pub->pdf;
-  print STDERR "DELETING OTHERS!!!\n";
 
     # Other files
     foreach my $guid ( split( ',', $pub->attachments || '' ) ) {
       $self->delete_attachment( $guid, 0, $pub, 0, $dbh );
     }
   }
-
-  print STDERR "DLETING FROM TABLES!!!\n";
 
   # Then delete the entry in all relevant tables
   my $delete_main     = $dbh->prepare("DELETE FROM Publications WHERE rowid=?");
@@ -203,6 +201,28 @@ sub trash_pubs {
 
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
+  # if ($mode eq 'TRASH'){
+  #   foreach my $pub (@$pubs) {
+  #     $pub->citekey('trash_'.$pub->citekey);
+  #   }
+  # } else {
+  #   my @not_unique=();
+  #   foreach my $pub (@$pubs) {
+  #     my $key = $pub->citekey;
+  #     $key=~s/^trash_//;
+  #     $pub->citekey($key);
+
+  #     $key=$dbh->quote($key);
+
+  #     (my $count) = $dbh->selectrow_array("SELECT count(*) FROM Publications WHERE citekey=$key;");
+
+  #     if ($count){
+  #       push $pub, @not_unique;
+  #     }
+
+  #   }
+  # }
+
   my @files = ();
 
   # currently no explicit error handling/rollback etc.
@@ -216,7 +236,9 @@ sub trash_pubs {
     # The field 'created' is used to store time of import as well as time of
     # deletion, so we set it everytime we trash or restore something
     my $now = $dbh->quote( timestamp gmtime );
-    $dbh->do("UPDATE Publications SET trashed=$status,created=$now WHERE guid='$pub_guid'");
+    my $key = $dbh->quote( $pub->citekey );
+
+    $dbh->do("UPDATE Publications SET trashed=$status,created=$now, citekey=$key WHERE guid='$pub_guid'");
 
     # Move attachments
     my $select = $dbh->prepare(
@@ -332,9 +354,7 @@ sub update_pub {
   if ( $new_key ne $old_data->{citekey} ) {
 
     # If we have a new citekey, make sure it doesn't conflict with other
-    # existing citekeys (this is the method called normally when inserting
-    # a new pub)
-    $self->_generate_keys( [$new_pub], $dbh );
+    $self->generate_unique_key( $new_pub, [], $dbh );
     $diff->{citekey} = $new_pub->citekey;
   }
 
@@ -1768,82 +1788,96 @@ sub _flag_as_complete {
 }
 
 
+# Generates a unique citation key for $pub taking into account already
+# existing keys in the database and additional keys in the list
+# $existing.
 
+sub generate_unique_key {
 
-# Creates unique citation keys for a list of publications. Considers
-# the publictions already in the database and the new pubs that are to
-# be inserted.
+  my ( $self, $pub, $existing, $dbh ) = @_;
 
-sub _generate_keys {
+  my $pattern = $self->get_setting( 'key_pattern', $dbh );
 
-  ( my $self, my $pubs, my $dbh ) = @_;
+  my $key = $pub->format_pattern($pattern);
 
-  my %to_be_inserted = ();
+  # First we search for similar keys already in the database. We use
+  # the fulltext search for efficiency
 
-  foreach my $pub (@$pubs) {
+  my $quoted = $dbh->quote("key:$key*");
+  my $sth    = $dbh->prepare(qq^SELECT key FROM fulltext WHERE fulltext MATCH $quoted^);
+  my $existing_key;
+  $sth->bind_columns( \$existing_key );
+  $sth->execute;
 
-    # Generate citation key
-    my $pattern = $self->get_setting('key_pattern');
+  my @suffix = ();
+  my $unique = 1;
 
-    my $key = $pub->format_pattern($pattern);
+  while ( $sth->fetch ) {
+    if ( $existing_key =~ /$key\_?([a-z]{0,3})/ ) {
+      push @suffix, $1 if $1;
+      $unique = 0;
+    }
+  }
+  foreach $existing_key (@$existing) {
+    if ( $existing_key =~ /$key\_?([a-z]{0,3})/ ) {
+      push @suffix, $1 if $1;
+      $unique = 0;
+    }
+  }
 
-    # Check if key already exists
+  # We need to disambiguate by adding suffixes
+  if ( !$unique ) {
 
-    # First we check in the database
-    my $quoted = $dbh->quote("key:$key*");
-    my $sth    = $dbh->prepare(qq^SELECT key FROM fulltext WHERE fulltext MATCH $quoted^);
-    my $existing_key;
-    $sth->bind_columns( \$existing_key );
-    $sth->execute;
+    # Consider suffixes a,b,c,...,ab,ac,...zzx,zzy,zzz; should be more
+    # than enough
 
-    my @suffix = ();
-    my $unique = 1;
+    my @all_suffixes;
+    my ( $start, $stop ) = ( ord('a'), ord('z') );
 
-    while ( $sth->fetch ) {
-      $unique = 0;    # if we found something in the DB it is not unique
-
-      # We collect the suffixes a,b,c... that already exist
-      if ( $existing_key =~ /$key\_?([a-z])/ ) {    #
-        push @suffix, $1;
+    foreach my $i ( $start .. $stop ) {
+      foreach my $j ( $start .. $stop ) {
+        foreach my $k ( $start .. $stop ) {
+          my $suffix = chr($i);
+          $suffix .= chr($j) if ( $j > $start );
+          $suffix .= chr($k) if ( $k > $start );
+          push @all_suffixes, $suffix;
+        }
       }
     }
+    @all_suffixes = sort { length($a) <=> length($b) || $a cmp $b } @all_suffixes;
 
-    # Then in the current list that have been already processed in this loop
-    foreach my $existing_key ( @{ $to_be_inserted{$key} } ) {
-      if ( $existing_key =~ /^$key\_?([a-z])?/ ) {
-        $unique = 0;
-        push @suffix, $1 if $1;
-      }
+    my %map;
+    foreach my $i ( 0 .. $#all_suffixes ) {
+      $map{ $all_suffixes[$i] } = $i;
     }
 
+    # Find the next suffix for the current non uniqe key
     my $bare_key = $key;
 
-    if ( not $unique ) {
-      my $new_suffix = 'a';
-      if (@suffix) {
-
-        # we sort them to make sure to get the 'highest' suffix and count one up
-        @suffix = sort { $a cmp $b } @suffix;
-        $new_suffix = chr( ord( pop(@suffix) ) + 1 );
-      }
-
-      if ($key =~/\d$/){
-        $key .= $new_suffix;
-      } else {
-        $key .= "_".$new_suffix;
-      }
-
-    }
-
-    if ( not $to_be_inserted{$bare_key} ) {
-      $to_be_inserted{$bare_key} = [$key];
+    my $new_suffix;
+    if (@suffix) {
+      # we sort them to make sure to get the 'highest' suffix and count one up
+      @suffix = sort { length($a) <=> length($b) || $a cmp $b } @suffix;
+      my $pos = $map{ pop(@suffix) } + 1;
+      $new_suffix = $all_suffixes[$pos];
     } else {
-      push @{ $to_be_inserted{$bare_key} }, $key;
+      $new_suffix = 'a';
     }
 
-    $pub->citekey($key);
+    # We add suffixes directly to number (Stadler2000a) but use an underscore if key ends in a non-number (Stadler_2000_Bioinformatics_a)
+    if ( $key =~ /\d$/ ) {
+      $key .= $new_suffix;
+    } else {
+      $key .= "_" . $new_suffix;
+    }
   }
+
+  $pub->citekey($key);
+
+  return $key;
+
 }
+
 
 # Updates the fields in the fulltext table for $pub. If $new is true a
 # new row is inserted.
