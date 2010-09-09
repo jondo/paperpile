@@ -298,7 +298,16 @@ int main(int argc, char *argv[]) {
     if (info.isDict()) {
       
       if (info.getDict()->lookup("Title", &obj)->isString()) {
-        title = obj.getString();
+	string temp = obj.getString()->getCString();
+	char *a = new char[temp.size()+1];
+	a[temp.size()]=0;
+	memcpy(a,temp.c_str(),temp.size());
+	// use only ASCII chars
+	for (int i = 0; i < temp.size(); i++ ) {
+	  if ( a[i] > 255 ) { a[i] = 32; }
+	  if ( a[i] < 32 ) { a[i] = 32; }
+	}
+	title = new GString(a);
       }
     }
     info.free();

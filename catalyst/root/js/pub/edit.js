@@ -762,7 +762,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       var newData = json.data;
       for (var field in newData) {
         if (newData[field]) {
-          if (this.data[field] != newData[field] && !field.match('^_') && !field.match('sha1')) {
+          if (this.data[field] != newData[field] && !field.match('citekey') && !field.match('^_') && !field.match('sha1')) {
             dataDiff.push({
               field: field,
               oldVal: this.data[field],
@@ -838,6 +838,9 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
   },
 
   midEllipse: function(string, length) {
+
+    if (!string) return '';
+
     if (string.length > length) {
       return string.substring(0, length / 2) + ' ... ' + string.substring(length - length / 2, length);
     } else {
@@ -932,7 +935,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
   },
 
   setDisabledInputs: function(disabled) {
-
 
     Ext.getCmp('save_button').setDisabled(disabled);
     Ext.getCmp('cancel_button').setDisabled(disabled);

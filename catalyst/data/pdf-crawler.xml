@@ -27,11 +27,18 @@
 
   <signature>
     <body>!http://\S*/content/pdf/.*\.pdf!</body>
+    <body>!/content/pdf/.*\.pdf!</body>
   </signature>
 
   <rule>
     <pattern>
       <match>!(http://\S*/content/pdf/.*?\.pdf)!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!(/content/pdf/.*?\.pdf)!</match>
     </pattern>
   </rule>
 
@@ -628,23 +635,37 @@
 </site>
 
 
-<site name="JCI">
+<site name="JBSD">
   <signature>
-    <url>!jci\.org!</url>
+    <url>!jbsdonline\.com!</url>
   </signature>
 
   <rule>
     <pattern>
-      <rewrite>!(.*view/\d+)!$1/files/pdf\?disposition=attachment!</rewrite>
+      <match>!href\s*=\s*'([^']+category[^']+\.pdf)'!</match>
     </pattern>
   </rule>
   
   <test>
-    <url>http://www.biotechniques.com/BiotechniquesJournal/2010/July/Design-of-an-in-vivo-cleavable-disulfide-linker-in-recombinant-fusion-proteins/biotechniques-296954.html</url>
+    <url>http://www.jbsdonline.com/c3035/c4276/Nucleosome-DNA-Bendability-Matrix-C-elegans-p-403-411-p17018.html</url>
   </test>
 </site>
 
+<site name="InformaWorld">
+  <signature>
+    <url>!informaworld\.com!</url>
+  </signature>
 
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+frm=content)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1080/15257770802260741 </url>
+  </test>
+</site>
 
   
 <site name="Meta">

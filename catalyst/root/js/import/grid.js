@@ -1039,6 +1039,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  </dd>',
       '</tpl>',
       '</dl>',
+      '<tpl if="_details_link">',
+      '<p class="pp-inactive">No data available.</p>',
+      '</tpl>',
       '  <div style="clear:left;"></div>',
       '</div>'];
 
@@ -1441,7 +1444,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   // without harassing the site too much. Then the details are
   // fetched only when user clicks the entry.
   completeEntry: function() {
-
     if (this.isLocked) return; // Call completeEntry only for one item at a time 
 
     var selection = this.getSelection();

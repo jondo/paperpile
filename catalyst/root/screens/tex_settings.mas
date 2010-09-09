@@ -5,7 +5,9 @@
     <h2>BibTeX settings</h2>
     
     <table class="pp-settings-table">
-      <tr>
+
+    <!-- Hide bibtex mode button for now-->
+      <tr style="display:none;">
         <td><div class="pp-settings-checkbox" id="bibtex_mode_checkbox"></div></td>
         <td class="pp-settings-label"><div id="bibtex_mode_button" style="float: left; margin: -3px 0px;"></div> <span id="bibtex_mode_tooltip" class="pp-tooltip-link">&nbsp;?</span></td> 
       </tr>

@@ -23,6 +23,7 @@ use Data::Dumper;
 
 use Paperpile::Library::Author;
 use Paperpile::Utils;
+use Paperpile::Exceptions;
 use Encode qw(encode_utf8);
 use Text::Unidecode;
 use YAML qw(LoadFile);
@@ -73,7 +74,7 @@ has 'sha1' => ( is => 'rw' );
 has 'guid' => ( is => 'rw' );
 
 # Timestamp when the entry was created
-has 'created' => ( is => 'rw' );
+has 'created' => ( is => 'rw', default => '' );
 
 # Flags entry as trashed
 has 'trashed' => ( is => 'rw', isa => 'Int', default => 0 );
@@ -92,7 +93,7 @@ has 'pdf' => ( is => 'rw', default => '' );
 has 'pdf_name' => ( is => 'rw', default => '' );
 
 # Comma separated list of guids of other attachments
-has 'attachments' => ( is => 'rw' );
+has 'attachments' => ( is => 'rw', default=>'');
 has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] } );
 
 # User provided annotation "Notes", formatted in HTML
@@ -115,6 +116,7 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
   if ( $field ~~ [ 'year', 'title', 'booktitle' ] ) {
     has $field => (
       is      => 'rw',
+      default => '',
       trigger => sub {
         my $self = shift;
         $self->refresh_fields;
@@ -123,6 +125,7 @@ foreach my $field ( keys %{ $config->{pub_fields} } ) {
   } elsif ( $field ~~ [ 'authors', 'editors' ] ) {
     has $field => (
       is      => 'rw',
+      default => '',
       trigger => sub {
         my $self = shift;
         $self->refresh_authors;
@@ -553,6 +556,102 @@ sub refresh_attachments {
     $self->_attachments_list( \@output );
 
   }
+}
+
+# Lookup data via the match function of the search plugins given in
+# the array $plugin_list. If a match is found the name of the
+# sucessful plugin, otherwise undef is returned.
+
+sub auto_complete {
+
+  my ( $self, $plugin_list ) = @_;
+
+  # First check if the user wants to search PubMed at all
+  my $hasPubMed = 0;
+  if ( grep { $_ eq 'PubMed' } @$plugin_list ) {
+    $hasPubMed = 1;
+  }
+
+  if ( $self->arxivid) {
+    # If we have only an ArXiv ID we rank the ArXiv plugin first
+    if (!$self->title){
+      @$plugin_list = ( 'ArXiv', grep { $_ ne 'ArXiv' } @$plugin_list );
+    } else {
+      # If we have other data and the arxivid but ArXiv is not in the
+      # list we add it as last option
+      if ( !(grep { $_ eq 'ArXiv' } @$plugin_list )) {
+        @$plugin_list = ( grep { $_ ne 'ArXiv'} @$plugin_list, 'ArXiv' );
+      }
+    }
+  }
+
+  # If a doi or linkout is given we use the URL module to look first
+  # directly on the publisher site
+  if ($self->doi || $self->linkout){
+    unshift @$plugin_list, 'URL';
+  }
+
+  # If a we have a PMID we search PubMed, likewise if we have a DOI
+  # and the user uses PubMed because PubMed data is usually the most
+  # reliable
+  if ( $self->pmid || ($self->doi && $hasPubMed)) {
+    @$plugin_list = ( 'PubMed', grep { $_ ne 'PubMed' } @$plugin_list );
+  }
+
+  # Try all plugins sequentially until a match is found
+  my $success_plugin = undef;
+  my $caught_error   = undef;
+
+  foreach my $plugin_name (@$plugin_list) {
+
+    eval {
+      my $plugin_module = "Paperpile::Plugins::Import::" . $plugin_name;
+      my $plugin        = eval( "use $plugin_module; $plugin_module->" . 'new()' );
+      $self = $plugin->match($self);
+    };
+
+    my $e;
+    if ( $e = Exception::Class->caught ) {
+
+      # Did not find a match, continue with next plugin
+      if ( Exception::Class->caught('NetMatchError') ) {
+        next;
+      }
+
+      # Other exception has occured; still try other plugins but save
+      # error message to show if all plugins fail
+      else {
+        if ( ref $e ) {
+          $caught_error = $e->error;
+          next;
+        }
+
+        # Abort on unexpected exception
+        else {
+          die($@);
+        }
+      }
+    }
+
+    # Found match -> stop now
+    else {
+      $success_plugin = $plugin_name;
+      $caught_error   = undef;
+      last;
+    }
+  }
+
+  # Rethrow errors that were observed previously
+  if ($caught_error) {
+    PaperpileError->throw($caught_error);
+  }
+
+  my $name = $success_plugin;
+
+  $name = 'publisher site' if ($name eq 'URL');
+
+  return $name;
+
 }
 
 sub create_guid {

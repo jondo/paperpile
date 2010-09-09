@@ -161,7 +161,7 @@ sub noun {
   my $type = $self->type;
   return 'PDF download'    if ( $type eq 'PDF_SEARCH' );
   return 'PDF import'      if ( $type eq 'PDF_IMPORT' );
-  return 'Metadata update' if ( $type eq 'METADATA_UPDATE' );
+  return 'Auto-complete'   if ( $type eq 'METADATA_UPDATE' );
   return 'Test job'        if ( $type eq 'TEST_JOB' );
 }
 
@@ -311,36 +311,21 @@ sub _do_work {
   my $self = shift;
 
   # $self->update_info('msg','Searching PDF');
-
   # sleep(2);
-
   # $self->update_info('msg','Starting download');
-
   # sleep(2);
-
   # $self->update_info('msg','Downloading');
   # $self->update_info( 'size', 1000 );
-
   # sleep(1);
-
   # $self->update_info( 'downloaded', 200 );
-
   # sleep(1);
-
   # $self->update_info( 'downloaded', 500 );
-
   # sleep(1);
-
   # $self->update_info( 'downloaded', 800 );
-
   # sleep(1);
-
   # $self->update_info( 'downloaded', 1000 );
-
   # sleep(1);
-
   # ExtractionError->throw("Some random error") if (rand(1) > 0.5);
-
   # $self->update_info('msg','File successfully downloaded.');
   # return;
 
@@ -457,8 +442,7 @@ sub _do_work {
     if ($success) {
       my $m = Paperpile::Utils->get_library_model;
 
-      # Insert the updated pub as a separate item into the database.
-      # Delete the current GUID so we get a new one.
+      # Update the database entry
       $m->update_pub( $pub->guid, $new_hash );
 
       # Insert and trash a copy of the old publication, for safe-keeping.
@@ -469,30 +453,17 @@ sub _do_work {
       delete $old_hash->{guid};
       delete $old_hash->{pdf};
       delete $old_hash->{pdf_name};
-      $old_hash->{title} = '[backup copy] ' . $old_hash->{title};
+      $old_hash->{title} = '[Backup Copy] ' . $old_hash->{title};
       my $old_pub = Paperpile::Library::Publication->new($old_hash);
       $m->insert_pubs( [$old_pub], 1 );
       $m->trash_pubs( [$old_pub], 'TRASH' );
 
-      $self->update_info( 'msg', "Metadata successfully gathered from $success." );
+      $self->update_info( 'msg', "Reference matched to $success and data updated." );
       $self->update_info( 'callback', { fn => 'updatePubGrid' } );
     } else {
-      NetMatchError->throw("Could not find metadata from any online resource.");
+      NetMatchError->throw("Could not match to any online resource.");
     }
 
-  }
-
-  if ( $self->type eq 'TEST_JOB' ) {
-
-    $self->update_info( 'msg', 'Test job phase 1...' );
-
-    sleep(3);
-
-    $self->update_info( 'msg', 'Test job phase 2...' );
-
-    sleep(3);
-
-    $self->update_info( 'msg', 'Test job complete!' );
   }
 }
 
@@ -609,60 +580,19 @@ sub _match {
 
   die("No search plugins specified.") if not @plugin_list;
 
-  if ( $self->pub->arxivid ) {
-    unshift @plugin_list, 'ArXiv';
+  my $success_plugin;
+
+  eval {
+    $success_plugin = $self->pub->auto_complete([@plugin_list]);
+  };
+
+  if (Exception::Class->caught ) {
+    $self->_rethrow_error;
   }
 
-  my $num_successful_matches = 0;
-  my $success_plugin         = '';
-  foreach my $plugin (@plugin_list) {
-
-    print STDERR "[queue] Matching against $plugin\n";
-
-    $self->update_info( 'msg', "Matching against $plugin..." );
-
-    eval { $self->_match_single($plugin); };
-
-    my $e;
-    if ( $e = Exception::Class->caught ) {
-
-      # Did not find a match, continue with next plugin
-      if ( $e = Exception::Class->caught('NetMatchError') ) {
-        next;
-      }
-
-      # Other error has occured -> stop now by rethrowing error
-      else {
-        $self->_rethrow_error;
-      }
-    }
-
-    # Found match -> stop now
-    else {
-      $num_successful_matches++;
-      $success_plugin = $plugin;
-      last;
-    }
-  }
   return $success_plugin;
 }
 
-## Does the actual match for a single pub object on a given plugin.
-
-sub _match_single {
-
-  my ( $self, $match_plugin ) = @_;
-
-  my $plugin_module = "Paperpile::Plugins::Import::" . $match_plugin;
-  my $plugin        = eval( "use $plugin_module; $plugin_module->" . 'new()' );
-
-  my $pub = $self->pub;
-
-  $pub = $plugin->match($pub);
-
-  $self->pub($pub);
-
-}
 
 ## Crawls for the PDF on the publisher site
 

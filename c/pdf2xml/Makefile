@@ -12,7 +12,7 @@
 XPDF = xpdf-3.02
 
 CC=gcc
-CFLAGS=-Wall   -I$(XPDF)
+CFLAGS=-Wall   -I$(XPDF) -Iutf8
 CXX=g++
 CXXFLAGS=$(CFLAGS)
 CXXFLAGSGOO=-I$(XPDF)/goo

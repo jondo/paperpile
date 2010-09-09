@@ -37,32 +37,21 @@
     <li><a href="#" class="pp-textlink  pp-bullet" action="settings-general">General settings</a></li>
     <li><a href="#" class="pp-textlink  pp-bullet" action="settings-patterns">Paths and patterns</a></li>
     <li>
-      <a href="#" class="pp-textlink"><span id="bibtex-mode-checkbox"></span></a>
-      <a href="#" class="pp-textlink"><span id="bibtex-mode-text-active">BibTeX settings</span></a>
-      <p id="bibtex-mode-text-inactive" class="pp-inactive">BibTeX mode inactivated</p>
-      <!--<a href="#" class="pp-textlink" action="settings-tex"><span id="bibtex-mode-settings">Settings</span></a>-->
+      <span id="bibtex-mode-checkbox"></span>
+      <a href="#" class="pp-textlink" action="settings-tex"><span id="bibtex-mode-text-active">BibTeX settings</span></a>
+      <span id="bibtex-mode-text-inactive" class="pp-inactive">BibTeX mode inactivated</span>
       </a>
 
     </li>
     
   </ul>
+</div>
+
+<div class="pp-box pp-box-style1 pp-dashboard-box" style="">
   <h2 class="pp-dashboard-tools">Tools</h2>
   <ul>
     <li><a href="#" class="pp-textlink  pp-bullet" action="duplicates">Find duplicates</a></li>
     <li><a href="#" class="pp-textlink  pp-bullet" action="catalyst">Catalyst console (debugging)</a></li>
-  </ul>
-</div>
-
-<div class="pp-box pp-box-style1 pp-dashboard-box" style="">
-  <h2 class="pp-dashboard-feedback">Support &amp; Feedback</h2>
-  <p>Something broken? Something missing? Tell us about it now!</p>
-  <ul>
-    <li><a href="#" class="pp-textlink pp-bullet" onclick="Paperpile.main.userVoice();"> Feedback</a>
-    </li>
-  </ul>
-  <p>Need help? Have questions? Send us an email:</p>
-  <ul>
-    <li><a href="#" class="pp-textlink pp-bullet" onClick="Paperpile.utils.openURL('mailto:support@paperpile.com');">support@paperpile.com</a></li>
   </ul>
 </div>
 
@@ -76,5 +65,6 @@
   </ul>
   <p>&nbsp;</p>
   <p><a href="#" class="pp-textlink pp-action pp-action-search-updates" action="updates">Check for updates</a></p>
+  <p><a href="#" class="pp-textlink pp-action pp-action-feedback" action="feedback">Feedback</a></p>
 </div>
 

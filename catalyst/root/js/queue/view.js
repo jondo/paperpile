@@ -29,7 +29,7 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
 
     this.queueOverview = new Paperpile.QueueOverview(this, {
       region: 'east',
-      width: 300,
+      width: 320,
       itemId: 'overview',
       split: false
     });

@@ -90,7 +90,6 @@ Paperpile.Ajax = function(config) {
     config.scope = Paperpile.main;
   }
 
-  Paperpile.log(config);
   return Ext.Ajax.request(config);
 };
 
@@ -242,15 +241,17 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 	},
 
   afterLoadSettings: function() {
-	    var zoom = this.getSetting('zoom_level');
-	    if (zoom === undefined) {
-		zoom = 1
-	    }
-	    zoom = zoom.replace("%","");
-	    if (zoom > 2) {
-		zoom = zoom / 100;
-	    }
-	    this.onZoomChange(zoom);
+	/*
+    var zoom = this.getSetting('zoom_level');
+	if (zoom === undefined) {
+	  zoom = 1
+	}
+	zoom = zoom.replace("%","");
+	if (zoom > 2) {
+	  zoom = zoom / 100;
+	}
+	this.onZoomChange(zoom);
+*/
   },
 
   loadKeys: function() {
@@ -262,7 +263,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   keyQuesionMark: function() {
-    Paperpile.log("What's your problem?");
+    //Paperpile.log("What's your problem?");
   },
 
   keyControlC: function() {
@@ -342,7 +343,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (commitToBackend === undefined) {
       commitToBackend = true;
     }
-    Paperpile.log('[' + key + '] => [' + value + ']');
     this.globalSettings[key] = value;
 
     var s = {};

@@ -40,9 +40,6 @@ sub match {
     NetMatchError->throw( error => 'No match found resolving URL.' )
   }
 
-  print STDERR "\n\n===================================================\n";
-  print STDERR $pub->best_link,"\n";
-
   my $crawler = Paperpile::MetaCrawler->new;
   $crawler->debug(0);
   $crawler->driver_file( Paperpile::Utils->path_to( 'data', 'meta-crawler.xml' )->stringify );
@@ -51,11 +48,9 @@ sub match {
   my $fullpub = undef;
   eval { $fullpub = $crawler->search_file( $pub->best_link ) };
 
-  print STDERR $fullpub->title(),"\n\n\n";
-
   NetMatchError->throw( error => 'No match found resolving URL.' ) if ( !$fullpub );
 
-  return $fullpub;
+  return $self->_merge_pub($pub, $fullpub);
 }
 
 1;

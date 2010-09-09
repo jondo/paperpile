@@ -728,6 +728,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background: transparent url('/images/icons/transmit.png') no-repeat;
 }
 
+.pp-action-feedback {
+    background: transparent url('/images/icons/feedback_small.png') no-repeat;
+}
+
+
 .pp-action-clipboard {
     background: transparent url('/images/icons/paste_plain.png') no-repeat;
 }
@@ -2061,7 +2066,7 @@ table.pp-meta-form {
 }
 
 .pp-queue-type-label-METADATA_UPDATE{
-    background-color: #FF00FF;
+    background-color: #FFECEC;
 }
 
 .pp-queue-list-title{
@@ -2109,7 +2114,7 @@ table.pp-meta-form {
 }
 
 .pp-queue-table td {
-    padding: 1px 5px;
+    padding: 1px 4px;
     text-align: center;
 }
 
