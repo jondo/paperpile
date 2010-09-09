@@ -1010,3 +1010,47 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sun Sep  5 01:42:10 2010: C<Module> L<FCGI|FCGI>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.71>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sun Sep  5 01:43:57 2010: C<Module> L<FCGI::ProcManager|FCGI::ProcManager>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.19>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

@@ -248,7 +248,8 @@ sub minify {
     `cat $file >> tmp.js`;
   }
 
-  `java -jar $yui tmp.js -o $all_js`;
+  #`java -jar $yui tmp.js -o $all_js`;
+  `cp tmp.js $all_js`;
 
   unlink('tmp.js');
 

@@ -17,7 +17,9 @@
 Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
 Ext.ns('Paperpile');
 
-IS_TITANIUM = !(window['Titanium'] == undefined);
+IS_TITANIUM=null;
+
+IS_QT = !(window['QRuntime'] == undefined);
 
 IS_CHROME = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
@@ -25,7 +27,7 @@ Paperpile.Url = function(url) {
   if (url.match("127.0.0.1")) {
     return url;
   }
-  return (IS_TITANIUM) ? 'http://127.0.0.1:3210' + url : url;
+  return (IS_QT) ? 'http://127.0.0.1:3210' + url : url;
 };
 
 Paperpile.log = function() {
@@ -77,6 +79,8 @@ Paperpile.Ajax = function(config) {
   }
 
   config.url = Paperpile.Url(config.url);
+
+  config.xdomain=true;
 
   if (!config.method) {
     config.method = 'GET';

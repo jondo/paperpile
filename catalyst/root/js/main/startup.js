@@ -47,9 +47,11 @@ Paperpile.startupFailure = function(response) {
 };
 
 Paperpile.stage0 = function() {
+
   Paperpile.Ajax({
     url: '/ajax/app/heartbeat',
     success: function(response) {
+
       var json = Ext.util.JSON.decode(response.responseText);
       
       if (json.status == 'RUNNING') {
@@ -70,23 +72,11 @@ Paperpile.stage0 = function() {
         //  Paperpile.stage1();
         //}
 
-        // Make sure cookies are set; workaround for OSX where Ajax
-        // calls do not properly set cookies. That's why we load
-        // explicitely our server from a seperate window which sets
-        // the cookie. 
-        if (IS_TITANIUM){
-          var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
-          win.hide();
-          win.open();
-          win.addEventListener('close',function(){Paperpile.stage1();});
-        } else {
-          Paperpile.stage1();
-        }
+        Paperpile.stage1();
       }
     },
 
     failure: function(response) {
-
       if (IS_TITANIUM) {
 
         // Determine platform we are running on

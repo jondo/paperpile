@@ -41,7 +41,7 @@ my $b = Paperpile::Build->new( {
     cat_dir  => '../catalyst',
     ti_dir   => "../titanium",
     dist_dir => '../dist/data',
-    yui_jar => '/home/wash/bin/yuicompressor-2.4.2.jar',
+    yui_jar => $ENV{HOME}.'/bin/yuicompressor-2.4.2.jar',
   }
 );
 
