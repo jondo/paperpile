@@ -201,27 +201,25 @@ sub trash_pubs {
 
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
-  # if ($mode eq 'TRASH'){
-  #   foreach my $pub (@$pubs) {
-  #     $pub->citekey('trash_'.$pub->citekey);
-  #   }
-  # } else {
-  #   my @not_unique=();
-  #   foreach my $pub (@$pubs) {
-  #     my $key = $pub->citekey;
-  #     $key=~s/^trash_//;
-  #     $pub->citekey($key);
-
-  #     $key=$dbh->quote($key);
-
-  #     (my $count) = $dbh->selectrow_array("SELECT count(*) FROM Publications WHERE citekey=$key;");
-
-  #     if ($count){
-  #       push $pub, @not_unique;
-  #     }
-
-  #   }
-  # }
+  # Flag trashed citation keys with trash_*. Mainly to avoid
+  # that they are considered during disambiguation of keys
+  if ($mode eq 'TRASH'){
+    foreach my $pub (@$pubs) {
+       $pub->citekey('trash_'.$pub->citekey);
+     }
+  } else {
+    # Remove trash_* flag again. Call generate_unique_key to make sure
+    # it is still unique and update if necessary
+    my @existing=();
+    foreach my $pub (@$pubs) {
+      my $key = $pub->citekey;
+      $key=~s/^trash_//;
+      $pub->citekey($key);
+      $key = $self->generate_unique_key($pub, \@existing, $dbh);
+      $pub->citekey($key);
+      push @existing, $key;
+    }
+  }
 
   my @files = ();
 
@@ -239,6 +237,7 @@ sub trash_pubs {
     my $key = $dbh->quote( $pub->citekey );
 
     $dbh->do("UPDATE Publications SET trashed=$status,created=$now, citekey=$key WHERE guid='$pub_guid'");
+    $dbh->do("UPDATE Fulltext SET key=$key WHERE guid='$pub_guid'");
 
     # Move attachments
     my $select = $dbh->prepare(
@@ -321,6 +320,8 @@ sub update_pub {
   my $data = {%$old_data};
   my $diff = {};
 
+  print STDERR "Updateing ".$data->{title}, " ", $data->{citekey}, "\n";
+
   # Figure out fields that have changed
   foreach my $field ( keys %{$new_data} ) {
     next if ( !$new_data->{$field} && !$data->{$field});
@@ -349,13 +350,14 @@ sub update_pub {
   }
 
   # Check if the citekey has changed.
-  my $pattern = $self->get_setting('key_pattern');
+  my $pattern = $self->get_setting('key_pattern', $dbh);
   my $new_key = $new_pub->format_pattern($pattern);
   if ( $new_key ne $old_data->{citekey} ) {
-
+    print STDERR "Old: ".$old_data->{citekey}."  ", "New: $new_key\n";
     # If we have a new citekey, make sure it doesn't conflict with other
     $self->generate_unique_key( $new_pub, [], $dbh );
     $diff->{citekey} = $new_pub->citekey;
+    print STDERR "Generated key ".$new_pub->{citekey}."\n";
   }
 
   # If flagged with label 'Incomplete' remove this label during update
@@ -417,8 +419,6 @@ sub update_pub {
 
   foreach my $field ( keys %{$diff} ) {
     next if ( $field =~ m/_/ );
-
-    #print STDERR "  field: [$field]\n";
     push @update_list, "$field=" . $dbh->quote( $diff->{$field} );
   }
   my $sql = join( ',', @update_list );
@@ -1796,29 +1796,61 @@ sub generate_unique_key {
 
   my ( $self, $pub, $existing, $dbh ) = @_;
 
-  my $pattern = $self->get_setting( 'key_pattern', $dbh );
+  # If a citekey is already set we check if it is unique. If it is
+  # unique we return it directly. This is used to ensure that trashed
+  # items get their original citekey back if it is still unique.
 
+  my $guid = $pub->guid;
+
+  my $unique = 1;
+  my $original_key = $pub->citekey;
+  if ($original_key) {
+    foreach my $existing_key (@$existing) {
+      if ( $existing_key eq $original_key ) {
+        $unique = 0;
+        last;
+      }
+    }
+
+    if ($unique) {
+      my $_key = $dbh->quote($original_key);
+      ( my $guid ) = $dbh->selectrow_array("SELECT guid FROM Publications WHERE citekey=$_key AND guid !='$guid'");
+      if ( !$guid ) {
+        $pub->citekey($original_key);
+        return $original_key;
+      }
+    }
+  }
+
+  # If not citekey is set we generate one and make sure it is not ambiguous
+
+  my $pattern = $self->get_setting( 'key_pattern', $dbh );
   my $key = $pub->format_pattern($pattern);
 
   # First we search for similar keys already in the database. We use
   # the fulltext search for efficiency
 
   my $quoted = $dbh->quote("key:$key*");
-  my $sth    = $dbh->prepare(qq^SELECT key FROM fulltext WHERE fulltext MATCH $quoted^);
+  my $sth    = $dbh->prepare(qq^SELECT key FROM fulltext WHERE fulltext MATCH $quoted AND guid !='$guid'^);
   my $existing_key;
   $sth->bind_columns( \$existing_key );
   $sth->execute;
 
   my @suffix = ();
-  my $unique = 1;
+  $unique = 1;
 
   while ( $sth->fetch ) {
+    next if ( $existing_key =~ /^trash_/ );
     if ( $existing_key =~ /$key\_?([a-z]{0,3})/ ) {
       push @suffix, $1 if $1;
       $unique = 0;
     }
   }
+
+  # We also search keys in the $existing array to allow generating
+  # unique keys also during batch imports
   foreach $existing_key (@$existing) {
+    next if ( $existing_key =~ /^trash_/ );
     if ( $existing_key =~ /$key\_?([a-z]{0,3})/ ) {
       push @suffix, $1 if $1;
       $unique = 0;
@@ -1828,7 +1860,7 @@ sub generate_unique_key {
   # We need to disambiguate by adding suffixes
   if ( !$unique ) {
 
-    # Consider suffixes a,b,c,...,ab,ac,...zzx,zzy,zzz; should be more
+    # Precompute list of all possible suffixes a,b,c,...,ab,ac,...zzx,zzy,zzz; should be more
     # than enough
 
     my @all_suffixes;
@@ -1851,20 +1883,25 @@ sub generate_unique_key {
       $map{ $all_suffixes[$i] } = $i;
     }
 
-    # Find the next suffix for the current non uniqe key
+    # Now find the correct suffix for the ambiguous key
     my $bare_key = $key;
+    my $new_suffix = '';
 
-    my $new_suffix;
+    # These are the collected suffixes that already exist
     if (@suffix) {
       # we sort them to make sure to get the 'highest' suffix and count one up
       @suffix = sort { length($a) <=> length($b) || $a cmp $b } @suffix;
       my $pos = $map{ pop(@suffix) } + 1;
       $new_suffix = $all_suffixes[$pos];
-    } else {
+    }
+    # It is the second item so start with suffix 'a'
+    else {
       $new_suffix = 'a';
     }
 
-    # We add suffixes directly to number (Stadler2000a) but use an underscore if key ends in a non-number (Stadler_2000_Bioinformatics_a)
+    # We add suffixes directly to number (Stadler2000a) but use an
+    # underscore if key ends in a non-number
+    # (Stadler_2000_Bioinformatics_a)
     if ( $key =~ /\d$/ ) {
       $key .= $new_suffix;
     } else {
