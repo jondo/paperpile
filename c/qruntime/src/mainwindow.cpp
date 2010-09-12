@@ -32,7 +32,9 @@ MainWindow::MainWindow(){
   exportRuntime();
   connect(page->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(exportRuntime()));
 
-  view->load(QUrl::fromLocalFile("/Users/wash/play/paperpile/catalyst/root/index.html"));
+  //view->load(QUrl::fromLocalFile("/Users/wash/play/paperpile/catalyst/root/index.html"));
+  view->load(QUrl::fromLocalFile("/Users/wash/play/paperpile/catalyst/root/runtime.html"));
+  
 
   
   // Set up main Window

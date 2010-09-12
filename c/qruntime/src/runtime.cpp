@@ -85,15 +85,14 @@ void Runtime::startCatalyst(){
 
   catalystProcess->start(program, arguments);
 
-  
-
   connect(catalystProcess, SIGNAL(stateChanged(QProcess::ProcessState)), this, SLOT(catalystStateChanged(QProcess::ProcessState)));
   connect(catalystProcess, SIGNAL(readyRead()), this, SLOT(readyReadCatalyst()));
-
+  
   connect(catalystProcess, SIGNAL(error(QProcess::ProcessError)), this, SLOT(emitCatalystError(QProcess::ProcessError)));
 
-
 }
+
+
 
 void Runtime::emitCatalystError(QProcess::ProcessError error){
 
