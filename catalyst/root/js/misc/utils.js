@@ -66,65 +66,24 @@ Paperpile.utils = {
   },
 
   openURL: function(url) {
-    if (IS_TITANIUM) {
-
-      var program = 'xdg-open';
-
-      if (this.get_platform() === 'osx') {
-        program = 'open';
-      }
-
-      var process = Titanium.Process.createProcess({
-        args: [program, url]
-      });
-
-      process.setOnExit(function() {
-        if (process.getExitCode() != 0) {
-          Paperpile.status.updateMsg({
-            type: 'error',
-            msg: 'Could not open your browser',
-            hideOnClick: true
-          });
-        }
-      });
-      process.launch();
+    if (IS_QT) {
+      QRuntime.openUrl(url);
     } else {
       window.open(url, '_blank');
     }
   },
 
   openFile: function(file) {
-    if (IS_TITANIUM) {
-
-      var program = 'xdg-open';
-
-      if (this.get_platform() === 'osx') {
-        program = 'open';
-      }
-
-      var process = Titanium.Process.createProcess({
-        args: [program, file]
-      });
-
-      process.setOnExit(function() {
-        if (process.getExitCode() != 0) {
-          Paperpile.status.updateMsg({
-            type: 'error',
-            msg: 'Could not open file ' + Paperpile.utils.splitPath(file).file,
-            hideOnClick: true
-          });
-        }
-      });
-
-      process.launch();
+    if (IS_QT) {
+      QRuntime.openFile(file);
     } else {
       window.open('/serve/' + file, '_blank');
     }
   },
 
   setClipboard: function(value, msg) {
-    if (IS_TITANIUM) {
-      Titanium.UI.Clipboard.setText(value);
+    if (IS_QT) {
+      QRuntime.setClipboard(value);
       Paperpile.status.updateMsg({
         msg: msg,
         duration: 1.5,

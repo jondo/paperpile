@@ -1625,8 +1625,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     msg = msg.replace("{s}", s);
 
     var myFn = function(string) {
-      if (IS_TITANIUM) {
-        Titanium.UI.Clipboard.setText(string);
+      if (IS_QT) {
+        QRuntime.setClipboard(string);
         Paperpile.status.updateMsg({
           msg: msg,
           duration: 1.5,
