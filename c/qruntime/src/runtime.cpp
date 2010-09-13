@@ -46,17 +46,16 @@ void Runtime::setClipboard(const QString & text = QString()){
 }
 
 
-void Runtime::catalystStateChanged(QProcess::ProcessState newState){
-
-  qDebug() << "State changed: " << newState;
-  
-}
-
 void Runtime::readyReadCatalyst(){
 
   QString string(catalystProcess->readAll());
 
-  qDebug() << "line" << string;
+  if (string.contains("powered by Catalyst")){
+    emit catalystReady();
+    qDebug() << "Catalyst READY";
+  }
+
+  //qDebug() << "line" << string;
 
   emit catalystRead(string);
 
@@ -64,39 +63,73 @@ void Runtime::readyReadCatalyst(){
 
 QString Runtime::getCatalystDir(){
 
-  return(QString("/Users/wash/play/paperpile/catalyst"));
+  if (getPlatform() == "osx"){
+    QDir path(QCoreApplication::applicationDirPath()+"/../Resources/catalyst/");
+    return(path.canonicalPath());
+  }
+
+  return("");
 
 }
 
 QString Runtime::getPlatform(){
-  
+
+#ifdef Q_OS_MAC
   return QString("osx");
+#endif
+ 
 
 }
 
-void Runtime::startCatalyst(){
+void Runtime::catalystStateChanged(QProcess::ProcessState newState){
 
-  QString program = "/Users/wash/play/paperpile/catalyst/perl5/osx/bin/paperperl";
+  qDebug() << "New State" << newState ;
+
+  if (newState == QProcess::NotRunning){
+    emit catalystExit("");
+  }
+}
+
+void Runtime::catalystError(QProcess::ProcessError error){
+
+  qDebug() << "Catalyst EXIT";
+  emit catalystExit("");
+  
+}
+
+void Runtime::catalystStart(){
+
+  QString program;
   QStringList arguments;
-  arguments << "/Users/wash/play/paperpile/catalyst/script/osx_server.pl" << "--port" << "3210" << "--fork";
+
+  program = getCatalystDir() + "/" + "/perl5/" + getPlatform() + "/bin/paperperl";
+
+  if (getPlatform() == "osx"){
+    arguments << getCatalystDir() + "/script/osx_server.pl" << "--port" << "3210" << "--fork";
+  }
 
   catalystProcess = new QProcess;
+
   catalystProcess->setReadChannel(QProcess::StandardError);
 
   catalystProcess->start(program, arguments);
 
-  connect(catalystProcess, SIGNAL(stateChanged(QProcess::ProcessState)), this, SLOT(catalystStateChanged(QProcess::ProcessState)));
   connect(catalystProcess, SIGNAL(readyRead()), this, SLOT(readyReadCatalyst()));
   
-  connect(catalystProcess, SIGNAL(error(QProcess::ProcessError)), this, SLOT(emitCatalystError(QProcess::ProcessError)));
+  connect(catalystProcess, SIGNAL(error(QProcess::ProcessError)), this, SLOT(catalystError(QProcess::ProcessError)));
+  connect(catalystProcess, SIGNAL(stateChanged(QProcess::ProcessState)), this, SLOT(catalystStateChanged(QProcess::ProcessState)));
 
 }
 
+void Runtime::catalystKill(){
 
+  catalystProcess->close();
 
-void Runtime::emitCatalystError(QProcess::ProcessError error){
+}
 
-  qDebug() << "Catalyst process error:" << error;
+void Runtime::closeApp(){
+
+  mainWindow->close();
 
 }
 

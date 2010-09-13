@@ -55,8 +55,7 @@ Paperpile.stage0 = function() {
       var json = Ext.util.JSON.decode(response.responseText);
       
       if (json.status == 'RUNNING') {
-       /* 
-        if (IS_TITANIUM){
+        if (IS_QT){
 
           Ext.Msg.show({
             title: 'Error',
@@ -65,115 +64,55 @@ Paperpile.stage0 = function() {
             animEl: 'elId',
             icon: Ext.MessageBox.ERROR,
             fn: function(action) {
-              Titanium.UI.mainWindow.close();
+              QRuntime.closeApp();
             }
           });
-        } else {*/
-        //  Paperpile.stage1();
-        //}
-
-        Paperpile.stage1();
+        } else {
+          Paperpile.stage1();
+        }
       }
     },
 
     failure: function(response) {
-      if (IS_TITANIUM) {
 
-        // Determine platform we are running on
-        var platform = Paperpile.utils.get_platform();
-
-
-        var path = Titanium.App.getHome() + '/catalyst';
-
-        var args;
-
-        if (platform === 'osx'){
-          args = [path + "/perl5/" + platform + "/bin/paperperl", path + '/script/osx_server.pl', '--fork', '--port', '3210']
-        } else {
-          args = [path + "/perl5/" + platform + "/bin/paperperl", path + '/script/paperpile_server.pl', '-fork']
-        }
-
-        // Set up process
-        Paperpile.server = Titanium.Process.createProcess({
-          args: args
-        });
-
-        // Make sure there is no PERL5LIB variable set in the environment
-        Paperpile.server.setEnvironment("PERL5LIB", "");
-
-        // Handler for failing start of the server or premature exit
-        Paperpile.server.setOnExit(function(line) {
-
-          var L = Paperpile.serverLog.length;
-          if (L > 1000) {
-            Paperpile.serverLog = Paperpile.serverLog.substr(L - 1000);
+      if (IS_QT) {
+        QRuntime.catalystReady.connect(
+          function(){
+            Paperpile.stage1();
           }
+        );
 
-          Ext.Msg.show({
-            title: 'Error',
-            msg: 'Could not start Paperpile server or lost connection. Please contact support@paperpile.com for help.<br><br>'+'<pre>'+Paperpile.serverLog+'</pre>',
-            buttons: Ext.Msg.OK,
-            icon: Ext.MessageBox.ERROR,
-            fn: function(action) {
-              if (IS_TITANIUM) {
-                Titanium.UI.mainWindow.close();
+        QRuntime.catalystExit.connect(
+          function(error){
+            Ext.Msg.show({
+              title: 'Error',
+              msg: 'Could not start Paperpile server or lost connection. Please contact support@paperpile.com for help.<br><br>'+'<pre>'+Paperpile.serverLog+'</pre>',
+              buttons: Ext.Msg.OK,
+              icon: Ext.MessageBox.ERROR,
+              fn: function(action) {
+                if (IS_QT) {
+                  QRuntime.closeApp();
+                }
               }
-            }
-          });
-        });
+            });
+          }
+        );
 
-        // Handler to process the STDERR output of the server
-        Paperpile.server.setOnReadLine(function(line) {
+        QRuntime.catalystRead.connect(function(string) {
           if (Paperpile.isLogging) {
-            Paperpile.serverLog = Paperpile.serverLog + line + "\n";
-
-            // Reset log to last 1000 lines if longer thant 100,000
-            // (avoids sending around huge files in error reports)
+            Paperpile.serverLog = Paperpile.serverLog + string;
             var L = Paperpile.serverLog.length;
             if (L > 100000) {
               Paperpile.serverLog = Paperpile.serverLog.substr(L - 1000);
             }
-
             var panel = Ext.getCmp('log-panel');
-
             if (panel) {
-              panel.addLine(line + "\n");
-            }
-
-            if (line.match(/powered by Catalyst 5.8/)) {
-              Titanium.API.notice("Catalyst successfully started");
-              // We are successful so we remove the failure
-              // handler to avoid to call it on exit of the
-              // application (although it does not seem to
-              // be called anyway)
-              Paperpile.server.setOnExit(function() {});
-
-              // Again workaround for cookie problem under OSX
-              var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
-              win.hide();
-              win.open();
-              win.addEventListener('close',function(){Paperpile.stage1();});
-              
+              panel.addLine(string);
             }
           }
         });
 
-        // Kill the server when the application exits
-        Titanium.API.addEventListener(
-          Titanium.APP_EXIT,
-          function() {
-            if (Paperpile.main.currentQueueData){
-              var status = Paperpile.main.currentQueueData.queue.status;
-            }
-
-            Titanium.API.notice("Killing Catalyst");
-            Paperpile.server.kill();
-          });
-
-        // Finally start the actual process
-        Titanium.API.notice("Starting Catalyst");
-        Paperpile.server.launch();
-
+        QRuntime.catalystStart();
       }
     }
   });

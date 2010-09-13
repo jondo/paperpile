@@ -139,6 +139,20 @@ update = function(string) {
 startCatalyst = function(){
 
   window.QRuntime.catalystRead.connect(update);
+
+  window.QRuntime.catalystReady.connect(
+    function(){
+      //alert("Catalyst ready");
+    }
+  );
+
+  window.QRuntime.catalystExit.connect(
+    function(error){
+      //alert("Catalyst error"+error);
+    }
+  );
+  
+  
   window.QRuntime.startCatalyst();
 
 }

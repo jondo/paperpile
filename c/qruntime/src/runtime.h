@@ -21,20 +21,22 @@ class Runtime : public QObject{
   Q_INVOKABLE QString getPlatform();
   Q_INVOKABLE QString getCatalystDir();
   Q_INVOKABLE void setClipboard( const QString & text);
-  Q_INVOKABLE void startCatalyst();
+  Q_INVOKABLE void catalystStart();
+  Q_INVOKABLE void closeApp();
+
+  void catalystKill();
 
   
  signals:
   void catalystReady();
   void catalystRead(QString data);
-  void catalystError(QProcess::ProcessError error);
-
+  void catalystExit(QString error);
+  
   private slots:
   void readyReadCatalyst();
   void catalystStateChanged(QProcess::ProcessState newState);
-  void emitCatalystError(QProcess::ProcessError error);
+  void catalystError(QProcess::ProcessError error);
   
-
  private:
   QWidget *mainWindow;
   QProcess *catalystProcess;

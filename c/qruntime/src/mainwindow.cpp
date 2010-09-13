@@ -32,8 +32,8 @@ MainWindow::MainWindow(){
   exportRuntime();
   connect(page->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(exportRuntime()));
 
-  //view->load(QUrl::fromLocalFile("/Users/wash/play/paperpile/catalyst/root/index.html"));
-  view->load(QUrl::fromLocalFile("/Users/wash/play/paperpile/catalyst/root/runtime.html"));
+  view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/index.html"));
+  //view->load(QUrl::fromLocalFile("/Users/wash/play/paperpile/catalyst/root/runtime.html"));
   
 
   
@@ -56,6 +56,8 @@ void MainWindow::exportRuntime(){
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
+
+  runtime->catalystKill();
 
   qDebug() << "Now closing window, add shutdown code here";
 
