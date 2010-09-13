@@ -6,6 +6,7 @@
 Runtime::Runtime(QWidget *window){
 
   mainWindow = window;
+  catalystProcess = 0;
 
 };
 
@@ -81,6 +82,12 @@ QString Runtime::getPlatform(){
 
 }
 
+void Runtime::resizeWindow(int w, int h){
+
+  mainWindow->resize(w,h);
+
+}
+
 void Runtime::catalystStateChanged(QProcess::ProcessState newState){
 
   qDebug() << "New State" << newState ;
@@ -123,8 +130,11 @@ void Runtime::catalystStart(){
 
 void Runtime::catalystKill(){
 
-  catalystProcess->close();
-
+  if (catalystProcess !=0){
+    if (catalystProcess->state() == QProcess::Running){
+      catalystProcess->close();
+    }
+  }
 }
 
 void Runtime::closeApp(){

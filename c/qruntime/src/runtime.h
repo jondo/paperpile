@@ -23,6 +23,7 @@ class Runtime : public QObject{
   Q_INVOKABLE void setClipboard( const QString & text);
   Q_INVOKABLE void catalystStart();
   Q_INVOKABLE void closeApp();
+  Q_INVOKABLE void resizeWindow(int w, int h);
 
   void catalystKill();
 

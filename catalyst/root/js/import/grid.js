@@ -1633,7 +1633,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           fade: true
         });
       } else {
-        // Not in Titanium -- use Flash if available...
+        // Not in Qt -- use Flash if available...
         Paperpile.status.updateMsg({
           msg: msg,
           duration: 1.5,
@@ -1683,10 +1683,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  }
 	}
 */
-
+     
+      // The following does not bring up the e-mail client on
+      // OSX. don't know why because it works for < 1024
       if (string.length > 1024) {
         string = string.replace(/%0A/g, "\n");
-        Titanium.UI.Clipboard.setText(string);
+        QRuntime.setClipboard(string);
         var platform = Paperpile.utils.get_platform();
         if (platform == 'osx') {
           string = "[Hit Command-V to paste citations here]";
@@ -1702,7 +1704,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var platform = Paperpile.utils.get_platform();
       if (platform == 'osx') {
 	  string = string.replace(/%0A/g, "\n");
-	link = [
+	    link = [
 		'mailto:?',
 		'subject=' + subject,
 		'&body=' + body + "\n\n" + string,

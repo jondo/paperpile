@@ -10,6 +10,7 @@ Ext.onReady(function() {
   Ext.select('a#start-ajax1').on('click',testAjax1, this);
   Ext.select('a#start-ajax2').on('click',testAjax2, this);
   Ext.select('a#start-catalyst').on('click',startCatalyst, this);
+  Ext.select('a#start-window-resize').on('click',resizeWindow, this);
 
 });
 
@@ -157,5 +158,9 @@ startCatalyst = function(){
 
 }
 
+
+resizeWindow = function(){
+  window.QRuntime.resizeWindow(800,600);
+}
 
 

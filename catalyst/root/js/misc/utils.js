@@ -96,24 +96,8 @@ Paperpile.utils = {
 
     var platform = '';
 
-    if (IS_TITANIUM) {
-
-      // Determine platform we are running on
-      var osname = Titanium.Platform.name;
-      var ostype = Titanium.Platform.ostype;
-
-      if (osname === 'Linux') {
-        if (ostype === '64bit') {
-          platform = 'linux64';
-        } else {
-          platform = 'linux32';
-        }
-      }
-
-      if (osname === 'Darwin') {
-        platform = 'osx'
-      }
-
+    if (IS_QT) {
+      return(QRuntime.getPlatform());
     }
 
     return (platform);
