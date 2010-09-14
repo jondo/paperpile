@@ -4,6 +4,7 @@ our $VERSION = '0.4';
 # ABSTRACT: A pure perl BibTeX parser
 use warnings;
 use strict;
+use Encode;
 
 use BibTeX::Parser::Entry;
 
@@ -109,11 +110,27 @@ sub _parse_next {
     until (/@/m) {
       my $line = $self->{fh}->getline;
       return 0 unless defined $line;
+      # there are a lot of malformed bibtex files 
+      # out there. If we find a bracket before the 
+      # entry, we simply ignore it
+      next if ( $line =~ m/^\s*\}\s*\n$/ );
+      next if ( $line =~ m/^%/ );
+      # if there is no citekey we add a dummy
+      if ( $line =~ m/^\s*@(article|book|booklet|conference|inbook|incollection|inproceedings|manual|mastersthesis|misc|phdthesis|proceedings|techreport|unpublished|comment|string)\s*\{\s*,\s*$/i ) {
+	$line =~ s/,\s*$/dummycitekey,/;
+      }
+      #remove white spaces from the citation key
+      if ( $line =~ m/(.*\{)(.*),\s*$/ ) {
+	my $tmp1 = $1;
+ 	(my $tmp2 = $2) =~ s/\s//g;
+ 	$line = $tmp1.$tmp2.",\n";
+      }
       $_ .= $line;
     }
 
     my $current_entry = new BibTeX::Parser::Entry;
     if (/@($re_name)/cgo) {
+      #print STDERR "$_\n";
       my $type = uc $1;
       $current_entry->type($type);
       my $start_pos = pos($_) - length($type) - 1;
@@ -124,8 +141,16 @@ sub _parse_next {
       $bracelevel -= _count_braces_right($_);
       while ( $bracelevel != 0 ) {
         my $position = pos($_);
+	my $backup_pos = $self->{fh}->getpos;
         my $line     = $self->{fh}->getline;
         last unless defined $line;
+	# sometimes there are missing braces
+	# we also stopp if we see that a next
+	# entry starts already
+	if ( $line =~ m/^\s*@(article|book|booklet|conference|inbook|incollection|inproceedings|manual|mastersthesis|misc|phdthesis|proceedings|techreport|unpublished|comment|string)/i ) {
+	  $self->{fh}->setpos($backup_pos);
+	  last;
+	}
 	$bracelevel += _count_braces_left($line);
 	$bracelevel -= _count_braces_right($line);
 
@@ -135,8 +160,15 @@ sub _parse_next {
 
       # Remember raw bibtex code
       my $raw = substr( $_, $start_pos );
+      if ( $bracelevel > 0 ) {
+	print STDERR "This entry is not correctly formatted and will";
+	print STDERR " be skipped.\n$raw\n";
+	next;
+      }
+
       $raw =~ s/^\s+//;
       $raw =~ s/\s+$//;
+      $raw = encode_utf8($raw);
       $current_entry->raw_bibtex($raw);
 
       my $pos = pos $_;

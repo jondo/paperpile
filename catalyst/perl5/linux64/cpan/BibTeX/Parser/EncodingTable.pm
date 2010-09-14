@@ -403,6 +403,7 @@ sub init {
   for my $n ( 0 .. @latex_umlaute / 2 - 1 ) {
     my ( $k, $v ) = @latex_umlaute[ 2 * $n, 1 + 2 * $n ];
     my $symbol = chr( hex($v) );
+    $k = '{'.$k.'}' if ( $k !~ m/[\."'`\^=~\{\}]/ );
     $out_umlaute_table{$symbol} = $k;
   }
 
