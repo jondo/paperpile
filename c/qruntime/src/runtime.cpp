@@ -144,5 +144,65 @@ void Runtime::closeApp(){
 }
 
 
+QVariantMap Runtime::fileDialog(const QVariantMap & config){
+
+  qDebug() << config;
+
+  QVariantMap map;
+
+  QFileDialog dialog(mainWindow);
+
+  if (config.contains("AcceptMode")){
+    //dialog.setAcceptMode(config["AcceptMode"].toInt());
+  }
+
+  //dialog.setFileMode(QFileDialog::AnyFile);
+
+  QStringList fileNames;
+  if (dialog.exec()){
+    fileNames = dialog.selectedFiles();
+  }
+  
+  map["files"]=fileNames;
+ 
+  
+  return(map);
+  
+}
+
+QVariantMap Runtime::fileInfo(const QString & file){
+
+  QVariantMap map;
+
+  QFileInfo info(file);
+
+  map["exists"] = info.exists();
+  map["absoluteDir"] = info.absoluteDir().path(); 
+  map["absoluteFilePath"] = info.absoluteFilePath();
+  map["absolutePath"] = info.absolutePath(); 
+  map["baseName"] = info.baseName(); 
+  map["bundleName"] = info.bundleName(); 
+  map["canonicalFilePath"] = info.canonicalFilePath(); 
+  map["canonicalPath"] = info.canonicalPath(); 
+  map["completeBaseName"] = info.completeBaseName(); 
+  map["completeSuffix"] = info.completeSuffix(); 
+  map["dir"] = info.dir().path(); 
+  map["fileName"] = info.fileName(); 
+  map["filePath"] = info.filePath(); 
+  map["isAbsolute"] = info.isAbsolute(); 
+  map["isDir"] = info.isDir(); 
+  map["isExecutable"] = info.isExecutable(); 
+  map["isFile"] = info.isFile(); 
+  map["isHidden"] = info.isHidden(); 
+  map["isReadable"] = info.isReadable(); 
+  map["isRelative"] = info.isRelative(); 
+  map["isRoot"] = info.isRoot(); 
+  map["isSymLink"] = info.isSymLink(); 
+  map["isWritable"] = info.isWritable(); 
+
+  return map;
+
+}
+
 
 

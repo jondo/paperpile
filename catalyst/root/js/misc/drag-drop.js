@@ -494,8 +494,11 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     for (var i = 0; i < fileURLs.length; i++) {
       var fileURL = fileURLs[i];
       fileURL = this.fileFromURL(fileURL);
-      var file = Titanium.Filesystem.getFile(fileURL);
+      //var file = Titanium.Filesystem.getFile(fileURL);
+      //files.push(file);
       files.push(file);
+      
+
     }
     return files;
   },

@@ -39,8 +39,8 @@ Paperpile.startupFailure = function(response) {
     animEl: 'elId',
     icon: Ext.MessageBox.ERROR,
     fn: function(action) {
-      if (IS_TITANIUM) {
-        Titanium.UI.mainWindow.close();
+      if (IS_QT) {
+        QRuntime.closeApp();
       }
     }
   });
@@ -166,8 +166,8 @@ Paperpile.stage1 = function() {
             animEl: 'elId',
             icon: Ext.MessageBox.ERROR,
             fn: function(action) {
-              if (IS_TITANIUM) {
-                Titanium.UI.mainWindow.close();
+              if (IS_QT) {
+                QRuntime.closeApp();
               }
             }
           });

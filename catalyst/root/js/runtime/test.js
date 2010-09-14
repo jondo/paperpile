@@ -11,15 +11,39 @@ Ext.onReady(function() {
   Ext.select('a#start-ajax2').on('click',testAjax2, this);
   Ext.select('a#start-catalyst').on('click',startCatalyst, this);
   Ext.select('a#start-window-resize').on('click',resizeWindow, this);
+  Ext.select('a#start-file-info').on('click',fileInfo, this);
 
 });
 
 
 testSelectFile = function(){
 
-  var file = window.QRuntime.getOpenFileName("Select any file","/","All files (*.*)");
+/*
+AcceptMode
+ AcceptOpen  0
+ AcceptSave  1
 
-  Ext.select('p#result-select-file').update('<tt>'+file+'</tt>').highlight();
+DialogLabel
+ LookIn	      0
+ FileName	  1
+ FileType	  2
+ Accept	      3
+ Reject	      4
+
+FileMode
+ AnyFile       0    The name of a file, whether it exists or not.
+ ExistingFile  1    The name of a single existing file.
+ Directory	   2    The name of a directory. Both files and directories are displayed.
+ ExistingFiles 3    The names of zero or more existing files. 
+
+*/
+
+
+  //var file = window.QRuntime.getOpenFileName("Select any file","/","All files (*.*)");
+
+  var results = window.QRuntime.fileDialog({'AcceptMode':0, 'DialogLabel':0, 'FileMode':0});
+
+  Ext.select('p#result-select-file-files').update('<tt>'+results.files.join(',')+'</tt>').highlight();
   
 }
 
@@ -161,6 +185,14 @@ startCatalyst = function(){
 
 resizeWindow = function(){
   window.QRuntime.resizeWindow(800,600);
+}
+
+
+fileInfo = function(){
+  
+
+  QRuntime.fileInfo("/Users/wash/test.txt");
+
 }
 
 

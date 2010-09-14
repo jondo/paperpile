@@ -24,6 +24,8 @@ class Runtime : public QObject{
   Q_INVOKABLE void catalystStart();
   Q_INVOKABLE void closeApp();
   Q_INVOKABLE void resizeWindow(int w, int h);
+  Q_INVOKABLE QVariantMap fileDialog(const QVariantMap & config);
+  Q_INVOKABLE QVariantMap fileInfo(const QString & file);
 
   void catalystKill();
 
