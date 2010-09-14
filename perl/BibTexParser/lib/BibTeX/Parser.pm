@@ -119,6 +119,12 @@ sub _parse_next {
       if ( $line =~ m/^\s*@(article|book|booklet|conference|inbook|incollection|inproceedings|manual|mastersthesis|misc|phdthesis|proceedings|techreport|unpublished|comment|string)\s*\{\s*,\s*$/i ) {
 	$line =~ s/,\s*$/dummycitekey,/;
       }
+      #remove white spaces from the citation key
+      if ( $line =~ m/(.*\{)(.*),\s*$/ ) {
+	my $tmp1 = $1;
+ 	(my $tmp2 = $2) =~ s/\s//g;
+ 	$line = $tmp1.$tmp2.",\n";
+      }
       $_ .= $line;
     }
 
