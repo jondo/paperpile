@@ -120,11 +120,7 @@ sub _parse_next {
 	$line =~ s/,\s*$/dummycitekey,/;
       }
       #remove white spaces from the citation key
-      if ( $line =~ m/(.*\{)(.*),\s*$/ ) {
-	my $tmp1 = $1;
- 	(my $tmp2 = $2) =~ s/\s//g;
- 	$line = $tmp1.$tmp2.",\n";
-      }
+      $line =~ s/\s//g if ( $line =~ m/^\s*@.*,\s*\n?$/ );
       $_ .= $line;
     }
 
