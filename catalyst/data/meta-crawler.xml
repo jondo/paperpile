@@ -843,6 +843,26 @@
 
 </site>
 
+<site name="IngentaConnect">
+
+  <signature>
+    <url>!ingentaconnect\.com!</url>
+  </signature>
+  
+  <rule target="Bibtex">
+    <pattern>
+      <match>!href=&quot;(http:\S*format=bib)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.ingentaconnect.com/content/iop/jphyscm/2010/00000022/00000033/art334202">
+      <title>Thermal enhancement of chemical doping in graphene: a Raman spectroscopy study</title>
+      <journal>Journal of Physics: Condensed Matter</journal>
+    </page>
+  </test>
+  
+</site>
 
 
 <site name="Default">
