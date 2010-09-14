@@ -90,7 +90,16 @@ sub read {
       # 1:1 map between standard BibTeX fields and Paperpile fields
       if ( $built_in{$field} ) {
         my $content = $entry->field($field);
-        $content =~ s/--/-/g if ( $field eq 'pages' );
+        if ( $field eq 'pages' ) {
+	  $content =~ s/--/-/g;
+	  $content =~ s/(.*)(\(\d+\))$/$1/; # remove number of pages in braces
+	}
+	if ( $field eq 'doi' ) {
+	  $content =~ s/^doi://;
+	}
+	if ( $field eq 'year' ) {
+	  $content =~ s/(.*)(\d{4})$/$2/;
+	}
         $data->{$field} = $content;
       }
 
