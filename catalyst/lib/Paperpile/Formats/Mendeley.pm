@@ -28,10 +28,13 @@ sub BUILD {
   $self->writable(0);
 }
 
+
+1;
+
 sub read {
 
   my $self = shift;
-  my $file = $self->file;
+  my $file = $self->file;    # the mendeley sqlite db
 
   if ( !defined $file ) {
     FileFormatError->throw(
@@ -39,8 +42,6 @@ sub read {
     find Mendeley sqllite database file."
     );
   }
-
-  #( my $path = $file ) =~ s/zotero\.sqlite$//;
 
   my @output = ();
 
@@ -58,7 +59,7 @@ sub read {
       $month,   $issn,    $pages,   $doi,          $abstract,  $booktitle,
       $url,     $pmid,    $arxivid, $editors,      $publisher, $edition,
       $series,  $address, $chapter, $organization, $linkout,   $local_pdfs,
-      $citekey, $tags,    $note
+      $citekey, $tags,    $note,    $howpublished
     );
 
     ############################################
@@ -88,6 +89,8 @@ sub read {
     my $pubtype       = '';
     my $mend_id       = $tmp[0];
     my $mend_itemType = $tmp[6];
+    $howpublished = $mend_itemType;
+    $howpublished =~ s/Article/ Article/g;
 
     switch ($mend_itemType) {
       case 'JournalArticle' {
@@ -108,6 +111,7 @@ sub read {
       }
       case 'ConferenceProceedings' {
         $pubtype = 'PROCEEDINGS';
+        $howpublished =~ s/Proceedings/ Proceedings/g;
       }
       case 'Report' {
         $pubtype = 'TECHREPORT';
@@ -120,6 +124,8 @@ sub read {
       }
       else {
         $pubtype = 'MISC';
+        $howpublished =~ s/Program/ Program/g;
+        $howpublished =~ s/Broadcast/ Broadcast/g;
       }
     }
 
@@ -187,9 +193,10 @@ sub read {
     # problem for attachments: it is not known
     # which PDF is the actual paper and which files are just attachments
     # Mendeley does not distinguish...
-    # maybe we have to parse the PDFs again?
-    my $sth5 = $dbh->prepare(
-      'SELECT localUrl FROM DocumentFiles d, Files f ' . 'WHERE d.documentId=? AND d.hash=f.hash' );
+    my $sth5 =
+      $dbh->prepare( 'SELECT localUrl '
+        . 'FROM DocumentFiles d, Files f '
+        . 'WHERE d.documentId=? AND d.hash=f.hash' );
     $sth5->execute($mend_id);
     my @attachments = ();
     my @pdfs        = ();
@@ -229,7 +236,7 @@ sub read {
     $pub->doi($doi)                   if $doi;
     $pub->issn($issn)                 if $issn;
     $pub->pmid($pmid)                 if $pmid;
-    $pub->eprint($arxivid)            if $arxivid;
+    $pub->arxivid($arxivid)           if $arxivid;
     $pub->authors($authors)           if $authors;
     $pub->editors($editors)           if $editors;
     $pub->edition($edition)           if $edition;
@@ -238,9 +245,10 @@ sub read {
     $pub->organization($organization) if $organization;
     $pub->linkout($linkout)           if $linkout;
     $pub->_pdf_tmp($local_pdfs)       if $local_pdfs;
-    $pub->{_attachments_tmp} = [@attachments] if (@attachments);
-    $pub->tags($tags) if $tags;
-    $pub->note($note) if $note;
+    $pub->{_attachments_tmp} = [@attachments] if ( ( scalar @attachments ) > 0 );
+    $pub->tags($tags)                 if $tags;
+    $pub->note($note)                 if $note;
+    $pub->howpublished($howpublished) if $howpublished;
 
     push @output, $pub;
   }
@@ -250,6 +258,3 @@ sub read {
   return [@output];
 
 }
-
-1;
-
