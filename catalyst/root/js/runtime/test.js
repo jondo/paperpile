@@ -2,7 +2,12 @@ Ext.onReady(function() {
 
   Ext.select('p#check').update('<i>Ext Core successfully loaded</i>');
   
-  Ext.select('a#start-select-file').on('click',testSelectFile, this);
+  Ext.select('a#start-select-file-1').on('click',function(){testSelectFile(1)}, this);
+  Ext.select('a#start-select-file-2').on('click',function(){testSelectFile(2)}, this);
+  Ext.select('a#start-select-file-3').on('click',function(){testSelectFile(3)}, this);
+  Ext.select('a#start-select-file-4').on('click',function(){testSelectFile(4)}, this);
+
+
   Ext.select('a#start-open-file').on('click',testOpenFile, this);
   Ext.select('a#start-open-url').on('click',testOpenUrl, this);
   Ext.select('a#start-read-clipboard').on('click',testReadClipboard, this);
@@ -16,34 +21,53 @@ Ext.onReady(function() {
 });
 
 
-testSelectFile = function(){
+testSelectFile = function(type){
 
-/*
-AcceptMode
- AcceptOpen  0
- AcceptSave  1
+  var results;
 
-DialogLabel
- LookIn	      0
- FileName	  1
- FileType	  2
- Accept	      3
- Reject	      4
+  if (type == 1){
 
-FileMode
- AnyFile       0    The name of a file, whether it exists or not.
- ExistingFile  1    The name of a single existing file.
- Directory	   2    The name of a directory. Both files and directories are displayed.
- ExistingFiles 3    The names of zero or more existing files. 
+    
+    results = window.QRuntime.fileDialog({'AcceptMode':'AcceptOpen', 
+                                          'NameFilters':["BibTeX (*.bib)",
+                                                         "Zotero, Mendeley (*.sqlite)",
+                                                         "All supported files (*)"],
+                                          'Caption': 'Test caption'
+                                         });
+  }
 
-*/
+  if (type == 2){
+
+    
+    results = window.QRuntime.fileDialog({'AcceptMode':'AcceptSave', 
+                                          'NameFilters':["BibTeX (*.bib)",
+                                                         "Zotero (*.sqlite)",
+                                                         "Paperpile (*.ppl)"],
+                                          'RejectLabel':'Forget it'
+                                         });
+  }
+
+  if (type == 3){
+
+    
+    results = window.QRuntime.fileDialog({'AcceptMode':'AcceptOpen', 
+                                          'FileMode':'Directory',
+                                         });
+  }
+
+  
+  if (type == 4){
+
+    
+    results = window.QRuntime.fileDialog({'AcceptMode':'AcceptOpen', 
+                                          'FileMode':'ExistingFiles',
+                                         });
+  }
 
 
-  //var file = window.QRuntime.getOpenFileName("Select any file","/","All files (*.*)");
-
-  var results = window.QRuntime.fileDialog({'AcceptMode':0, 'DialogLabel':0, 'FileMode':0});
-
+  Ext.select('p#result-select-file-answer').update('<tt>'+results.answer+'</tt>').highlight();
   Ext.select('p#result-select-file-files').update('<tt>'+results.files.join(',')+'</tt>').highlight();
+  Ext.select('p#result-select-file-filter').update('<tt>'+results.filter+'</tt>').highlight();
   
 }
 
@@ -191,7 +215,7 @@ resizeWindow = function(){
 fileInfo = function(){
   
 
-  QRuntime.fileInfo("/Users/wash/test.txt");
+  QRuntime.fileInfo("file:///Users/wash/test.txt");
 
 }
 

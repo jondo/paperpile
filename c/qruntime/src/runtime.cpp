@@ -143,30 +143,69 @@ void Runtime::closeApp(){
 
 }
 
-
 QVariantMap Runtime::fileDialog(const QVariantMap & config){
 
-  qDebug() << config;
 
-  QVariantMap map;
+  QString caption;
 
-  QFileDialog dialog(mainWindow);
+  if (config.contains("Caption")){
+    caption = config["Caption"].toString();
+  }
+ 
+  QFileDialog dialog(mainWindow, caption);
 
   if (config.contains("AcceptMode")){
-    //dialog.setAcceptMode(config["AcceptMode"].toInt());
+    if (config["AcceptMode"] == "AcceptOpen") dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    if (config["AcceptMode"] == "AcceptSave") dialog.setAcceptMode(QFileDialog::AcceptSave);
   }
 
-  //dialog.setFileMode(QFileDialog::AnyFile);
+  if (config.contains("LookInLabel")) dialog.setLabelText(QFileDialog::LookIn,config["LookInLabel"].toString());
+  if (config.contains("FileNameLabel")) dialog.setLabelText(QFileDialog::FileName,config["FileNameLabel"].toString());
+  if (config.contains("FileTypeLabel")) dialog.setLabelText(QFileDialog::FileType,config["FileTypeLabel"].toString());
+  if (config.contains("AcceptLabel")) dialog.setLabelText(QFileDialog::Accept,config["AcceptLabel"].toString());
+  if (config.contains("RejectLabel")) dialog.setLabelText(QFileDialog::Reject,config["RejectLabel"].toString());
 
-  QStringList fileNames;
+  if (config.contains("FileMode")){
+  if (config["FileMode"] == "AnyFile") dialog.setFileMode(QFileDialog::AnyFile);
+    if (config["FileMode"] == "ExistingFile") dialog.setFileMode(QFileDialog::ExistingFile);
+    if (config["FileMode"] == "Directory") dialog.setFileMode(QFileDialog::Directory);
+    if (config["FileMode"] == "ExistingFiles") dialog.setFileMode(QFileDialog::ExistingFiles);
+  }
+
+
+  if (config.contains("ShowDirsOnly")) dialog.setOption(QFileDialog::ShowDirsOnly,config["ShowDirsOnly"].toBool());
+  if (config.contains("DontResolveSymlinks")) dialog.setOption(QFileDialog::DontResolveSymlinks,config["DontResolveSymlinks"].toBool());
+  if (config.contains("DontConfirmOverwrite")) dialog.setOption(QFileDialog::DontConfirmOverwrite,config["DontConfirmOverwrite"].toBool());
+
+
+  if (config.contains("NameFilters")){
+    dialog.setNameFilters(config["NameFilters"].toStringList());
+  }
+
+  if (config.contains("DefaultSuffix")){
+    dialog.setDefaultSuffix(config["DefaultSuffix"].toString());
+  }
+
+  if (config.contains("DefaultSuffix")){
+    dialog.setDefaultSuffix(config["DefaultSuffix"].toString());
+  }
+
+  if (config.contains("Directory")){
+    dialog.setDirectory(config["Directory"].toString());
+  }
+
+  QVariantMap output;
+  
   if (dialog.exec()){
-    fileNames = dialog.selectedFiles();
+    output["files"]=dialog.selectedFiles();
+    output["answer"]=QString("OK");
+  } else {
+    output["answer"]=QString("CANCEL");
   }
   
-  map["files"]=fileNames;
+  output["filter"]=dialog.selectedNameFilter();
  
-  
-  return(map);
+  return(output);
   
 }
 
