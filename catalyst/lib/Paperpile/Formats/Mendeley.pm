@@ -172,11 +172,11 @@ sub read {
       }
     }
 
-    if ( scalar @tmpauthors > 1 ) {
+    if ( @tmpauthors ) {
       $authors = join( " and ", @tmpauthors );
       $authors =~ s/\s+/ /g;
     }
-    if ( scalar @tmpeditors > 1 ) {
+    if ( @tmpeditors ) {
       $editors = join( " and ", @tmpeditors );
       $editors =~ s/\s+/ /g;
     }
@@ -196,7 +196,7 @@ sub read {
     my $sth5 =
       $dbh->prepare( 'SELECT localUrl '
         . 'FROM DocumentFiles d, Files f '
-        . 'WHERE d.documentId=? AND d.hash=f.hash' );
+        . 'WHERE d.documentId=? AND d.hash=f.hash ORDER BY d.rowid ASC' );
     $sth5->execute($mend_id);
     my @attachments = ();
     my @pdfs        = ();
@@ -209,7 +209,7 @@ sub read {
         push @attachments, $t[0];
       }
     }
-    $local_pdfs = join( ";", @pdfs ) if ( scalar @pdfs > 1 );
+    $local_pdfs = join( ";", @pdfs ) if ( @pdfs );
 
     # get tags as comma separated list
     my $sth6 = $dbh->prepare('SELECT tag FROM DocumentTags WHERE documentId=?');
@@ -245,7 +245,7 @@ sub read {
     $pub->organization($organization) if $organization;
     $pub->linkout($linkout)           if $linkout;
     $pub->_pdf_tmp($local_pdfs)       if $local_pdfs;
-    $pub->{_attachments_tmp} = [@attachments] if ( ( scalar @attachments ) > 0 );
+    $pub->{_attachments_tmp} = [@attachments] if ( @attachments  > 0 );
     $pub->tags($tags)                 if $tags;
     $pub->note($note)                 if $note;
     $pub->howpublished($howpublished) if $howpublished;
