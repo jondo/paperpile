@@ -20,21 +20,28 @@ MainWindow::MainWindow(){
   RuntimeNetworkAccessManager* proxy = new RuntimeNetworkAccessManager();
   page->setNetworkAccessManager( proxy );
 
-  QWebInspector *inspector = new QWebInspector;
-  inspector->setPage(page);
+  if (isDebugMode()){
+    page->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled,true);
+    QWebInspector *inspector = new QWebInspector;
+    inspector->setPage(page);
+  }
 
   page->settings()->setAttribute(QWebSettings::LocalContentCanAccessRemoteUrls,true);
   page->settings()->setAttribute(QWebSettings::LocalContentCanAccessFileUrls,true);
-  page->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled,true);
 
   view->setPage(page);
 
   exportRuntime();
   connect(page->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(exportRuntime()));
 
-  //view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/index.html"));
-  view->load(QUrl::fromLocalFile("/Users/wash/play/paperpile/catalyst/root/runtime.html"));
-  
+
+  if (QCoreApplication::arguments().contains("--test")){
+    view->load(QUrl::fromLocalFile("/Users/wash/play/paperpile/catalyst/root/runtime.html"));
+  } else {
+    view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/index.html"));
+  }
+
+  qDebug() << isDebugMode();
 
   
   // Set up main Window
@@ -61,5 +68,11 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
   qDebug() << "Now closing window, add shutdown code here";
 
+
 }
 
+bool MainWindow::isDebugMode(){
+
+  return(QCoreApplication::arguments().contains("--debug"));
+
+}

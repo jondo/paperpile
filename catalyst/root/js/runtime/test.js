@@ -17,6 +17,7 @@ Ext.onReady(function() {
   Ext.select('a#start-catalyst').on('click',startCatalyst, this);
   Ext.select('a#start-window-resize').on('click',resizeWindow, this);
   Ext.select('a#start-file-info').on('click',fileInfo, this);
+  Ext.select('a#start-message-box').on('click',messageBox, this);
 
 });
 
@@ -218,5 +219,12 @@ fileInfo = function(){
   QRuntime.fileInfo("file:///Users/wash/test.txt");
 
 }
+
+messageBox = function(){
+  
+  //QRuntime.("file:///Users/wash/test.txt");
+
+}
+
 
 

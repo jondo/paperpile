@@ -11,15 +11,6 @@ Runtime::Runtime(QWidget *window){
 };
 
 
-QString Runtime::getOpenFileName (const QString & caption = QString(), 
-                                  const QString & dir = QString(), 
-                                  const QString & filter = QString()){
- 
-
-  QString fileName = QFileDialog::getOpenFileName(mainWindow, caption, dir, filter);
-
-  return(fileName);
-}
 
 void Runtime::openFile( const QString & file = QString()){
 
@@ -32,6 +23,31 @@ void Runtime::openUrl( const QString & url = QString()){
   QDesktopServices::openUrl(QUrl(url));
 
 }
+
+
+/*
+
+	#ifdef Q_WS_MAC
+	    QStringList args;
+	    args << "-e";
+	    args << "tell application \"Finder\"";
+	    args << "-e";
+	    args << "activate";
+        args << "-e";
+	    args << "select POSIX file \""+filePath+"\"";
+	    args << "-e";
+	    args << "end tell";
+	    QProcess::startDetached("osascript", args);
+	#endif
+	 
+	#ifdef Q_WS_WIN
+	    QStringList args;
+	    args << "/select," << QDir::toNativeSeparators(filePath);
+	    QProcess::startDetached("explorer", args);
+    #endif
+
+
+*/
 
 QString Runtime::getClipboard(){
 
@@ -243,5 +259,10 @@ QVariantMap Runtime::fileInfo(const QString & file){
 
 }
 
+bool Runtime::isDebugMode(){
+
+  return(QCoreApplication::arguments().contains("--debug"));
+
+}
 
 

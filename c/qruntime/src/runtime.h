@@ -9,12 +9,6 @@ class Runtime : public QObject{
   Runtime(QWidget *window);
 
  public:
-  Q_INVOKABLE QString getOpenFileName
-    ( const QString & caption, 
-      const QString & dir, 
-      const QString & filter
-     );
-
   Q_INVOKABLE void openFile( const QString & file);
   Q_INVOKABLE void openUrl( const QString & url);
   Q_INVOKABLE QString getClipboard();
@@ -43,5 +37,6 @@ class Runtime : public QObject{
  private:
   QWidget *mainWindow;
   QProcess *catalystProcess;
+  bool isDebugMode();
   
 };

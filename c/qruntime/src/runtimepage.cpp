@@ -9,9 +9,9 @@ RuntimePage::RuntimePage(QObject * parent) : QWebPage(parent) {
 
 };
 
-void RuntimePage::javaScriptConsoleMessage ( const QString & message, int lineNumber, const QString & sourceID ) const {
+void RuntimePage::javaScriptConsoleMessage ( const QString & message, int lineNumber, const QString & sourceID ) {
 
-  qDebug() << "inhere";
+  qDebug() << message << " (Line:" << lineNumber << "," << sourceID << ")";
 
 }
 
