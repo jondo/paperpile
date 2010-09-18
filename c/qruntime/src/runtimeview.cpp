@@ -7,7 +7,6 @@ RuntimeView::RuntimeView(QWidget * parent) : QWebView(parent) {
 
   QWebView::QWebView();
 
-
 };
 
 

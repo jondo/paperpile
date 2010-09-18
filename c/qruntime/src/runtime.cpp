@@ -11,7 +11,6 @@ Runtime::Runtime(QWidget *window){
 };
 
 
-
 void Runtime::openFile( const QString & file = QString()){
 
   QDesktopServices::openUrl(QUrl::fromLocalFile(file));
@@ -24,30 +23,28 @@ void Runtime::openUrl( const QString & url = QString()){
 
 }
 
+void Runtime::openFolder( const QString & folder = QString()){
 
-/*
-
-	#ifdef Q_WS_MAC
-	    QStringList args;
-	    args << "-e";
-	    args << "tell application \"Finder\"";
-	    args << "-e";
-	    args << "activate";
-        args << "-e";
-	    args << "select POSIX file \""+filePath+"\"";
-	    args << "-e";
-	    args << "end tell";
-	    QProcess::startDetached("osascript", args);
-	#endif
+#ifdef Q_WS_MAC
+  QStringList args;
+  args << "-e";
+  args << "tell application \"Finder\"";
+  args << "-e";
+  args << "activate";
+  args << "-e";
+  args << "select POSIX file \""+folder+"\"";
+  args << "-e";
+  args << "end tell";
+  QProcess::startDetached("osascript", args);
+#endif
 	 
-	#ifdef Q_WS_WIN
-	    QStringList args;
-	    args << "/select," << QDir::toNativeSeparators(filePath);
-	    QProcess::startDetached("explorer", args);
-    #endif
+#ifdef Q_WS_WIN
+  QStringList args;
+  args << "/select," << QDir::toNativeSeparators(filePath);
+  QProcess::startDetached("explorer", args);
+#endif
 
-
-*/
+}
 
 QString Runtime::getClipboard(){
 
@@ -69,10 +66,7 @@ void Runtime::readyReadCatalyst(){
 
   if (string.contains("powered by Catalyst")){
     emit catalystReady();
-    qDebug() << "Catalyst READY";
   }
-
-  //qDebug() << "line" << string;
 
   emit catalystRead(string);
 
@@ -106,16 +100,13 @@ void Runtime::resizeWindow(int w, int h){
 
 void Runtime::catalystStateChanged(QProcess::ProcessState newState){
 
-  qDebug() << "New State" << newState ;
-
   if (newState == QProcess::NotRunning){
-    emit catalystExit("");
+    //emit catalystExit("StateChange");
   }
 }
 
 void Runtime::catalystError(QProcess::ProcessError error){
 
-  qDebug() << "Catalyst EXIT";
   emit catalystExit("");
   
 }
@@ -257,6 +248,22 @@ QVariantMap Runtime::fileInfo(const QString & file){
 
   return map;
 
+}
+
+
+void Runtime::log(const QString & msg){
+
+  fprintf( stderr, "[%s] %s\n", qPrintable(QDateTime::currentDateTime().toString()), qPrintable(msg) );
+}
+
+QVariantMap Runtime::msgBox(const QVariantMap & config){
+
+
+  QVariantMap output;
+  output["dummy"]=QString();
+  
+  return(output);
+  
 }
 
 bool Runtime::isDebugMode(){

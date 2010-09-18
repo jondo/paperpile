@@ -11,7 +11,15 @@ RuntimePage::RuntimePage(QObject * parent) : QWebPage(parent) {
 
 void RuntimePage::javaScriptConsoleMessage ( const QString & message, int lineNumber, const QString & sourceID ) {
 
-  qDebug() << message << " (Line:" << lineNumber << "," << sourceID << ")";
-
+  if (!sourceID.isEmpty()){
+    QFileInfo fileInfo(QUrl(sourceID).toLocalFile());
+    fprintf( stderr, "[%s] %s (Line: %i, %s)\n", 
+             qPrintable(QDateTime::currentDateTime().toString()), 
+             qPrintable(message), 
+             lineNumber, 
+             qPrintable(fileInfo.fileName()));
+  } else {
+    fprintf( stderr, "[%s] %s\n", qPrintable(QDateTime::currentDateTime().toString()), qPrintable(message));
+  }
 }
 

@@ -10,6 +10,7 @@ Ext.onReady(function() {
 
   Ext.select('a#start-open-file').on('click',testOpenFile, this);
   Ext.select('a#start-open-url').on('click',testOpenUrl, this);
+  Ext.select('a#start-open-folder').on('click',testOpenFolder, this);
   Ext.select('a#start-read-clipboard').on('click',testReadClipboard, this);
   Ext.select('a#start-write-clipboard').on('click',testWriteClipboard, this);
   Ext.select('a#start-ajax1').on('click',testAjax1, this);
@@ -18,6 +19,7 @@ Ext.onReady(function() {
   Ext.select('a#start-window-resize').on('click',resizeWindow, this);
   Ext.select('a#start-file-info').on('click',fileInfo, this);
   Ext.select('a#start-message-box').on('click',messageBox, this);
+  Ext.select('a#start-log').on('click',log, this);
 
 });
 
@@ -225,6 +227,24 @@ messageBox = function(){
   //QRuntime.("file:///Users/wash/test.txt");
 
 }
+
+log = function(){
+  
+  QRuntime.log("This is a log message to STDERR");
+
+}
+
+testOpenFolder = function(){
+
+  results = window.QRuntime.fileDialog({'AcceptMode':'AcceptOpen', 
+                                        'FileMode':'Directory',
+                                       });
+
+  
+  QRuntime.openFolder(results.files[0]);
+
+}
+
 
 
 

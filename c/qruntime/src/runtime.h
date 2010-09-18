@@ -11,6 +11,7 @@ class Runtime : public QObject{
  public:
   Q_INVOKABLE void openFile( const QString & file);
   Q_INVOKABLE void openUrl( const QString & url);
+  Q_INVOKABLE void openFolder( const QString & folder);
   Q_INVOKABLE QString getClipboard();
   Q_INVOKABLE QString getPlatform();
   Q_INVOKABLE QString getCatalystDir();
@@ -19,7 +20,9 @@ class Runtime : public QObject{
   Q_INVOKABLE void closeApp();
   Q_INVOKABLE void resizeWindow(int w, int h);
   Q_INVOKABLE QVariantMap fileDialog(const QVariantMap & config);
+  Q_INVOKABLE QVariantMap msgBox(const QVariantMap & config);
   Q_INVOKABLE QVariantMap fileInfo(const QString & file);
+  Q_INVOKABLE void log(const QString & msg);
 
   void catalystKill();
 

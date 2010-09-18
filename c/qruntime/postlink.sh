@@ -1,5 +1,5 @@
 #!/bin/bash
 cd ..
-rm qruntime.app/Contents/Resources/catalyst
-ln -s `pwd`/../../catalyst qruntime.app/Contents/Resources/catalyst
+rm paperpile.app/Contents/Resources/catalyst
+ln -s `pwd`/../../catalyst paperpile.app/Contents/Resources/catalyst
 cd src

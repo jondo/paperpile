@@ -41,9 +41,6 @@ MainWindow::MainWindow(){
     view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/index.html"));
   }
 
-  qDebug() << isDebugMode();
-
-  
   // Set up main Window
   resize(1024,768);
   QRect frect = frameGeometry();
@@ -65,10 +62,6 @@ void MainWindow::exportRuntime(){
 void MainWindow::closeEvent(QCloseEvent *event) {
 
   runtime->catalystKill();
-
-  qDebug() << "Now closing window, add shutdown code here";
-
-
 }
 
 bool MainWindow::isDebugMode(){

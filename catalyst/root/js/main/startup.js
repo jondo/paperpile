@@ -14,11 +14,7 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-// Stage 0 
-//
-// Check if server is already running, if not start the catalyst
-// server. Once we have verified that the server is running we
-// continue with stage1.
+
 Paperpile.serverLog = '';
 Paperpile.isLogging = 1;
 
@@ -46,10 +42,20 @@ Paperpile.startupFailure = function(response) {
   });
 };
 
+// Stage 0 
+//
+// Check if server is already running, if not start the catalyst
+// server. Once we have verified that the server is running we
+// continue with stage1.
+
+
 Paperpile.stage0 = function() {
 
   Paperpile.Ajax({
     url: '/ajax/app/heartbeat',
+
+
+    // Server already running
     success: function(response) {
 
       var json = Ext.util.JSON.decode(response.responseText);
@@ -76,14 +82,17 @@ Paperpile.stage0 = function() {
     failure: function(response) {
 
       if (IS_QT) {
-        QRuntime.catalystReady.connect(
-          function(){
-            Paperpile.stage1();
-          }
-        );
+
+        //Set up signals/slot connection for catalyst process
+
+        QRuntime.catalystReady.connect(function(){
+          QRuntime.log("Catalyst succesfully started.");
+          Paperpile.stage1();
+        });
 
         QRuntime.catalystExit.connect(
           function(error){
+            QRuntime.log("Catalyst process stopped."+error);
             Ext.Msg.show({
               title: 'Error',
               msg: 'Could not start Paperpile server or lost connection. Please contact support@paperpile.com for help.<br><br>'+'<pre>'+Paperpile.serverLog+'</pre>',
@@ -111,6 +120,8 @@ Paperpile.stage0 = function() {
             }
           }
         });
+
+        QRuntime.log("Starting Catalyst");
 
         QRuntime.catalystStart();
       }
