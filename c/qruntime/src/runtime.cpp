@@ -100,14 +100,38 @@ void Runtime::resizeWindow(int w, int h){
 
 void Runtime::catalystStateChanged(QProcess::ProcessState newState){
 
+  QString msg;
+
   if (newState == QProcess::NotRunning){
-    //emit catalystExit("StateChange");
+    emit catalystExit(QString("State changed to 'Not Running'"));
+    msg="'Not Running'";
   }
+
+  if (newState == QProcess::Starting) msg ="'Starting'";
+  if (newState == QProcess::Running) msg ="'Running'";
+
+  msg.prepend("Catalyst process status changed to ");
+
+  log(msg);
+
 }
 
 void Runtime::catalystError(QProcess::ProcessError error){
+  
+  QString msg;
 
-  emit catalystExit("");
+  if (error == QProcess::FailedToStart)	msg="Failed to start";
+  if (error == QProcess::Crashed)	msg="Killed";
+  if (error == QProcess::Timedout)	msg="Timed out";
+  if (error == QProcess::WriteError)	msg="Write error";
+  if (error == QProcess::ReadError)	msg="Read Error";
+  if (error == QProcess::UnknownError)	msg="Unknown Error";
+
+  msg.prepend("Catalyst process: ");
+
+  log(msg);
+
+  emit catalystExit(msg);
   
 }
 
@@ -232,6 +256,7 @@ QVariantMap Runtime::fileInfo(const QString & file){
   map["canonicalPath"] = info.canonicalPath(); 
   map["completeBaseName"] = info.completeBaseName(); 
   map["completeSuffix"] = info.completeSuffix(); 
+  map["suffix"] = info.suffix(); 
   map["dir"] = info.dir().path(); 
   map["fileName"] = info.fileName(); 
   map["filePath"] = info.filePath(); 

@@ -54,7 +54,6 @@ Paperpile.stage0 = function() {
   Paperpile.Ajax({
     url: '/ajax/app/heartbeat',
 
-
     // Server already running
     success: function(response) {
 
@@ -92,10 +91,21 @@ Paperpile.stage0 = function() {
 
         QRuntime.catalystExit.connect(
           function(error){
-            QRuntime.log("Catalyst process stopped."+error);
+
+            var msg  = Paperpile.serverLog;
+
+            if (msg.length > 800) {
+              msg = msg.substr(msg.length - 800);
+            }
+
+            if (msg){
+              msg.replace('\n','<br>');
+              msg='<code>'+msg+'</code>';
+            }
+
             Ext.Msg.show({
               title: 'Error',
-              msg: 'Could not start Paperpile server or lost connection. Please contact support@paperpile.com for help.<br><br>'+'<pre>'+Paperpile.serverLog+'</pre>',
+              msg: 'Could not start Paperpile server or lost connection. Please restart Paperpile and contact support@paperpile.com if the problem persits.<br><br>'+msg,
               buttons: Ext.Msg.OK,
               icon: Ext.MessageBox.ERROR,
               fn: function(action) {

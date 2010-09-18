@@ -31,8 +31,8 @@ Paperpile.Url = function(url) {
 };
 
 Paperpile.log = function() {
-  if (IS_TITANIUM) {
-    Titanium.API.debug(arguments[0]);
+  if (IS_QT) {
+    QRuntime.log(arguments[0]);
   } else if (IS_CHROME) {
     console.log(arguments[0]);
   } else if (window.console) {
@@ -58,7 +58,7 @@ Paperpile.Ajax = function(config) {
   };
 
   var failure = function() {
-    Paperpile.log("Failure!");
+    Paperpile.log("Ajax call failed.");
   };
   if (Paperpile.main != undefined) {
     failure = Paperpile.main.onError;
