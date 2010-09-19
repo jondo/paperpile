@@ -14,14 +14,14 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-Ext.BLANK_IMAGE_URL = './ext/resources/images/default/s.gif';
+IS_TITANIUM=null;
+IS_QT = !(window['QRuntime'] == undefined);
+IS_CHROME = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+
+Ext.BLANK_IMAGE_URL = 'ext/resources/images/default/s.gif';
+
 Ext.ns('Paperpile');
 
-IS_TITANIUM=null;
-
-IS_QT = !(window['QRuntime'] == undefined);
-
-IS_CHROME = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
 Paperpile.Url = function(url) {
   if (url.match("127.0.0.1")) {

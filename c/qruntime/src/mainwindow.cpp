@@ -18,8 +18,9 @@ MainWindow::MainWindow(){
   RuntimePage* page = new RuntimePage();
 
   RuntimeNetworkAccessManager* proxy = new RuntimeNetworkAccessManager();
+  proxy->catalystDir = runtime->getCatalystDir();
   page->setNetworkAccessManager( proxy );
-
+  
   if (isDebugMode()){
     page->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled,true);
     QWebInspector *inspector = new QWebInspector;
@@ -36,7 +37,7 @@ MainWindow::MainWindow(){
 
 
   if (QCoreApplication::arguments().contains("--test")){
-    view->load(QUrl::fromLocalFile("/Users/wash/play/paperpile/catalyst/root/runtime.html"));
+    view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/runtime.html"));
   } else {
     view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/index.html"));
   }

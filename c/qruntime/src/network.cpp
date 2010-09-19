@@ -11,7 +11,7 @@ QNetworkReply *RuntimeNetworkAccessManager::createRequest( Operation op,
                                                              const QNetworkRequest &req,
                                                              QIODevice *outgoingData ){
 
-  QString root("/Users/wash/play/paperpile/catalyst/root");
+  QString root = catalystDir+"/root";
 
   QNetworkRequest myReq( req );
 
