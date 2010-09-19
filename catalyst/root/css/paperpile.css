@@ -71,8 +71,8 @@ a.pp-inactive:hover {
     float:left;
     -moz-border-radius-bottomleft: 0px;
     -moz-border-radius-topleft: 0px;
-    -webkit-border-radius-bottom-left: 0px;
-    -webkit-border-radius-top-left: 0px;
+    /*-webkit-border-radius-bottom-left: 0px;*/
+    /*-webkit-border-radius-top-left: 0px;*/
     z-index:-10;
     margin:0px;
 }
@@ -332,7 +332,7 @@ td.pp-dashboard-dl{
     border-style:solid;
     border-width: 1px;
     -moz-border-radius: 8px;
-    -webkit-border-radius: 8px;
+    /*-webkit-border-radius: 8px;*/
 }
 
 .pp-box dl, .pp-label-widget {
@@ -502,7 +502,7 @@ a:hover.pp-textlink {
     padding: 0px 10px;
     z-index: 9001; /* show above mask */
     /*-moz-border-radius: 3px; Does not work with update*/
-    -webkit-border-radius: 3px;
+    /*-webkit-border-radius: 3px;*/
 }
 
 .pp-status-msg {
@@ -533,7 +533,7 @@ a:hover.pp-textlink {
 
 .pp-queue-widget-container {
     padding: 0px 10px;
-    -webkit-border-radius: 3px;
+    /*-webkit-border-radius: 3px;*/
 }
 
 .pp-queue-widget-content {
@@ -557,7 +557,7 @@ a:hover.pp-textlink {
     background-color:#ECECEC;
     color: #565656;
     -moz-border-radius: 5px;
-    -webkit-border-radius:5px;
+    /*-webkit-border-radius:5px;*/
     cursor: pointer;
     font-size:12px;
 }
@@ -1461,8 +1461,8 @@ div:hover.pp-grid-sort-item {
     overflow:hidden;
     display:inline;
     padding: 0 2px;
-    border-width: 0px 0px 0px 1px;
-    margin: 0px 0px 0px -1px;
+    border-width: 0px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
     cursor: default;
 }
 
@@ -1475,7 +1475,7 @@ div:hover.pp-grid-sort-item {
     border-width:1px;
     padding: 0px 4px;
     -moz-border-radius: 3px;
-    -webkit-border-radius:3px;
+    /*-webkit-border-radius:3px;*/
     text-decoration:none;
 }
 
@@ -1484,7 +1484,7 @@ div:hover.pp-grid-sort-item {
     margin: 0px 2px 0px 4px;
     display:inline;
     padding: 0px 2px;
-    margin: 0px -1px 0px 0px;
+    margin: 0px 0px 0px 0px;
     cursor: default;
 }
 
@@ -1493,7 +1493,7 @@ div:hover.pp-tag-remove{
     margin: 0px 2px 0px 4px;
     display:inline;
     padding: 0px 2px;
-    margin: 0px -1px 0px 0px;
+    margin: 0px 0px 0px 0px;
     outline: black solid 1px;
     cursor: pointer;
     color:white;
@@ -1505,10 +1505,10 @@ div:hover.pp-tag-remove{
 .pp-tag-tree-node a span{
     border-width:1px;
     font-size: 9px;
-    padding: 1px 4px;
+    padding: 1px 3px;
     font-weight:bold;
     -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
+    /*-webkit-border-radius: 3px;*/
 }
 
 .pp-tag-style-tab {
@@ -1518,7 +1518,7 @@ div:hover.pp-tag-remove{
     margin: 3px 4px 1px 3px;
     padding: 1px 4px !important;
     -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
+    /*-webkit-border-radius: 3px;*/
 }
 
 .pp-tag-style-sample {
@@ -1558,7 +1558,7 @@ div:hover.pp-tag-style-sample {
 
 .pp-tag-grid {
     -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
+    /*-webkit-border-radius: 3px;*/
     border-width:1px;
     font-size: 9px;
     height:12px;
@@ -1576,7 +1576,7 @@ div:hover.pp-tag-style-sample {
 
 .pp-tag-grid-inline {
     -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
+    /*-webkit-border-radius: 3px;*/
     border-width:1px;
     font-size: 9px;
     line-height:12px;
@@ -1982,7 +1982,7 @@ table.pp-meta-form {
     font-size: 11px;
     padding: 1px 7px;
     -moz-border-radius: 7px; 
-       -webkit-border-radius: 7px;
+    /*-webkit-border-radius: 7px;*/
     border-bottom: 1px solid;
     border-right: 1px solid;
     border-color: #A4A4A4;
@@ -2242,7 +2242,7 @@ table.pp-meta-form {
 }
 
  #drop_target {
-      -webkit-user-drop: element;
+     -webkit-user-drop: element;
       border-bottom: 2px dashed black;
       background-color: #303030;
       color: #909090;
