@@ -116,10 +116,8 @@ sub journal_list : Local {
   $query = $model->dbh->quote("$query*");
 
   my $sth = $model->dbh->prepare(
-    "SELECT Journals.short, Journals.long FROM Journals 
-     JOIN Journals_lookup ON Journals.rowid=Journals_lookup.rowid 
-     WHERE Journals_lookup MATCH $query
-     ORDER BY Journals.short;"
+     "SELECT short, long FROM Journals_lookup WHERE Journals_lookup MATCH $query
+     ORDER BY short;"
   );
 
   my ( $short, $long );

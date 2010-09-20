@@ -28,9 +28,19 @@ Paperpile.startupFailure = function(response) {
     }
   }
 
+  var msg  = Paperpile.serverLog;
+  if (msg.length > 800) {
+    msg = msg.substr(msg.length - 800);
+  }
+
+  if (msg){
+    msg.replace('\n','<br>');
+    msg='<code>'+msg+'</code>';
+  }
+
   Ext.Msg.show({
     title: 'Error',
-    msg: 'Could not start application. Please try again and contact support@paperpile.com if the error persists.<br>' + error,
+    msg: 'Could not start application. Please try again and contact support@paperpile.com if the error persists.<br>' + error + '<br><br>'+msg,
     buttons: Ext.Msg.OK,
     animEl: 'elId',
     icon: Ext.MessageBox.ERROR,

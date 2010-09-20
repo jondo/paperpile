@@ -1,4 +1,3 @@
-
 # Copyright 2009, 2010 Paperpile
 #
 # This file is part of Paperpile
@@ -38,7 +37,7 @@ use Data::GUID;
 use YAML qw(LoadFile DumpFile);
 
 has cat_dir  => ( is => 'rw' );    # catalyst directory
-has ti_dir   => ( is => 'rw' );    # titanium directory
+has qt_dir   => ( is => 'rw' );    # qt directory
 has dist_dir => ( is => 'rw' );    # distribution directory
 has yui_jar  => ( is => 'rw' );    #YUI compressor jar
 
@@ -48,11 +47,17 @@ my %ignore = (
   all => [
     qr([~#]),                qr{/tmp/},
     qr{/t/},                 qr{\.gitignore},
-    qr{base/CORE/},          qr{base/pod/},
+    qr{base/CORE/},          qr{base/pods?/},
     qr{(base|cpan)/CPAN},    qr{(base|cpan)/Test},
-    qr{base/unicore/.*txt$}, qr{runtime/(template|webinspector|installer)},
-    qr{ext3/examples},       qr{ext3/src},
+    qr{base/unicore/.*txt$},
+    qr{ext/examples},       qr{ext/src},
     qr{journals.list},
+    qr{ext-all\.js}, # we use the debug version of extjs for now
+    qr{ext-all-debug-w-comments\.js},
+    qr{bin/osx/.*sqlite.*},
+    qr{PlugIns/codecs}, # Don't include JP/CN etc. unicode codecs for now
+    qr{PlugIns/imageformats/libqtiff.dylib},
+
   ],
 
   linux64 => [qr{/(perl5|bin)/(linux32|osx|win32)}],
@@ -79,16 +84,13 @@ sub initdb {
 
   chdir $self->cat_dir;
 
-  my $arch_string=$Config{archname};
-  if ( $arch_string =~ /(darwin|osx)/i ) {
-     $ENV{PATH} = "bin/osx:".$ENV{PATH};
-     $ENV{DYLD_LIBRARY_PATH} = "bin/osx";
+  if (Paperpile::Utils->get_platform eq 'osx'){
+    $ENV{PATH} = "bin/osx:".$ENV{PATH};
+    $ENV{DYLD_LIBRARY_PATH} = "bin/osx";
   }
 
-#  chdir $self->cat_dir . "/db";
-
   foreach my $key ( 'app', 'user', 'library', 'queue' ) {
-    print STDERR "Initializing db/$key.db...\n";
+    $self->echo("Initializing db/$key.db...");
     unlink "db/$key.db";
     my @out = `sqlite3 db/$key.db < db/$key.sql;`;
     print @out;
@@ -97,8 +99,6 @@ sub initdb {
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn( "dbi:SQLite:" . "db/library.db" );
   $model->connect;
-
-  print join(" ",keys(%{$model->dbh}))."\n";
 
   my $yaml   = "conf/fields.yaml";
   my $config = LoadFile($yaml);
@@ -112,7 +112,7 @@ sub initdb {
 
   $model->dbh->do("CREATE INDEX guid_index ON Publications (guid);");
 
-  print STDERR "Importing journal list into app.db...\n";
+  $self->echo("Importing journal list into app.db...");
 
   open( JOURNALS, "<data/journals.list" );
   $model = Paperpile::Model::App->new();
@@ -124,6 +124,7 @@ sub initdb {
 
   my %seen = ();
 
+  my $counter=0;
   foreach my $line (<JOURNALS>) {
 
     next if $line =~ /^$/;
@@ -140,18 +141,21 @@ sub initdb {
     $reviewed = $model->dbh->quote($reviewed);
 
     next if $seen{$short};
-
     $seen{$short} = 1;
 
-    $model->dbh->do(
-      "INSERT OR IGNORE INTO Journals (short, long, issn, essn, source, url, reviewed) VALUES ($short, $long, $issn, $essn, $source, $url, $reviewed);"
-    );
+    # We don't fill the main table for now because it is not in use but very big
+    #$model->dbh->do(
+    #  "INSERT OR IGNORE INTO Journals (short, long, issn, essn, source, url, reviewed) VALUES ($short, $long, $issn, $essn, $source, $url, $reviewed);"
+    #);
 
-    my $rowid = $model->dbh->func('last_insert_rowid');
-    print STDERR "$rowid $short $long\n";
-    $model->dbh->do("INSERT INTO Journals_lookup (rowid,short,long) VALUES ($rowid,$short,$long)");
+    #my $rowid = $model->dbh->func('last_insert_rowid');
+    print STDERR "." if ($counter % 100 == 0);
+    $model->dbh->do("INSERT INTO Journals_lookup (short,long) VALUES ($short,$long)");
+
+    $counter++;
 
   }
+  print STDERR "\n";
 
   $model->dbh->commit();
 
@@ -163,16 +167,17 @@ sub make_dist {
 
   my ( $self, $platform, $build_number ) = @_;
 
-  my ( $dist_dir, $cat_dir, $ti_dir ) = ( $self->dist_dir, $self->cat_dir, $self->ti_dir );
+  my ( $dist_dir, $cat_dir, $qt_dir ) = ( $self->dist_dir, $self->cat_dir, $self->qt_dir );
 
   my $sub_dir = $platform;
 
   if ($platform eq 'osx'){
-    $ti_dir= "$ti_dir/osx/Contents";
-    $sub_dir = "osx/Contents";
+    $qt_dir= "$qt_dir/osx/Contents";
   } else {
-    $ti_dir = "$ti_dir/$platform";
+    $qt_dir = "$qt_dir/$platform";
   }
+
+  $self->echo("Cleaning up old builds.");
 
   `rm -rf $dist_dir/$platform`;
 
@@ -181,21 +186,28 @@ sub make_dist {
   push @ignore, @{ $ignore{all} };
   push @ignore, @{ $ignore{$platform} };
 
-  mkpath( catfile("$dist_dir/$sub_dir/catalyst") );
+  $self->echo("Copying runtime files.");
+  $sub_dir = 'osx/Contents' if ($platform eq 'osx');
 
-  my $list = $self->_get_list( $cat_dir, \@ignore );
+  my $list = $self->_get_list( $qt_dir, \@ignore );
+  $self->_copy_list( $list, $qt_dir, $sub_dir );
+
+
+  $self->echo("Copying catalyst files.");
+  $sub_dir = 'osx/Contents/Resources' if ($platform eq 'osx');
+
+  mkpath( catfile("$dist_dir/$sub_dir/catalyst") );
+  $list = $self->_get_list( $cat_dir, \@ignore );
   $self->_copy_list( $list, $cat_dir, "$sub_dir/catalyst" );
 
-  $list = $self->_get_list( $ti_dir, \@ignore );
-  $self->_copy_list( $list, $ti_dir, $sub_dir );
 
-  symlink "catalyst/root", "$dist_dir/$sub_dir/Resources" || die("Could not create symlink $!");
+  #symlink "catalyst/root", "$dist_dir/$sub_dir/Resources" || die("Could not create symlink $!");
 
   # Copy runtime directory explicitly for OSX (contains empty
   # directories and symlinks which get lost otherwise)
-  if ($platform eq 'osx'){
-    `rsync -r -a $ti_dir/runtime $dist_dir/$sub_dir`;
-  }
+  #if ($platform eq 'osx'){
+  #  `rsync -r -a $qt_dir/runtime $dist_dir/$sub_dir`;
+  #}
 
   # Update configuration file for current build
   my $yaml   = "$dist_dir/$sub_dir/catalyst/conf/settings.yaml";
@@ -255,7 +267,6 @@ sub minify {
 
 }
 
-## Concatenate/minify Javascript and CSS
 
 sub dump_includes {
 
@@ -282,64 +293,6 @@ sub dump_includes {
 
 }
 
-sub get_titanium {
-
-  my ($self) = @_;
-
-  my $version = Paperpile->config->{app_settings}->{titanium_version};
-
-  my $tmp_dir = tempdir( CLEANUP => 1 );
-
-  foreach my $platform ( 'linux32', 'linux64','osx' ) {
-
-    my $dest_dir   = $self->ti_dir . "/$platform";
-
-    my $file_name = "titanium-$version-$platform.tar.gz";
-    my $url       = "http://paperpile.com/download/titanium/titanium-$version-$platform.tar.gz";
-
-    $self->echo("Getting Titanium runtime version $version for $platform");
-
-    if ( -e "$dest_dir/runtime/VERSION-$version" ) {
-      $self->echo("Titanium runtime version $version already exists.");
-      next;
-    } else {
-      if ( -e "$dest_dir/runtime" ) {
-        $self->echo("Deleting old version of Titanium runtime.");
-        `rm -rf $dest_dir/runtime $dest_dir/modules $dest_dir/paperpile`;
-      }
-    }
-
-    # Short-cut to pack and test locally
-    my $file = "/Users/wash/tmp/pack/" . $file_name;
-
-    if ( !-e $file ) {
-      $self->echo("Downloading runtime.");
-      `wget -P $tmp_dir $url`;
-
-      if ( !-e "$tmp_dir/$file_name" ) {
-        $self->echo("Could not download runtime for $platform.");
-        next;
-      }
-
-    } else {
-      `cp $file $tmp_dir`;
-    }
-
-    `tar -C $tmp_dir -xzf $tmp_dir/$file_name`;
-
-    if ($platform =~/linux/){
-      `mv $tmp_dir/titanium-$version-$platform/* $dest_dir`;
-    }
-
-    if ($platform eq 'osx'){
-      `mv $tmp_dir/titanium-$version-$platform/runtime $dest_dir/Contents`;
-      `mv $tmp_dir/titanium-$version-$platform/modules $dest_dir/Contents`;
-      `mv $tmp_dir/titanium-$version-$platform/paperpile $dest_dir/Contents/MacOS`;
-    }
-
-  }
-
-}
 
 sub create_patch {
 
@@ -408,6 +361,144 @@ sub file_stats {
   };
 
 }
+
+# Downloads Qt Runtime libraries. If platform is given for a specific
+# platform, if empty for the current platform. If platform is 'all'
+# the libraries for all platforms are downloaded.
+
+sub get_qruntime {
+
+  my ($self,$platform) = @_;
+
+  my $version = Paperpile->config->{app_settings}->{qruntime_version};
+
+  my $tmp_dir = tempdir( CLEANUP => 1 );
+
+  my @platforms;
+
+  if ($platform){
+    if ($platform eq 'all'){
+      @platforms = ( 'linux32', 'linux64','osx' );
+    } else {
+      @platforms = ($platform);
+    }
+  } else {
+    @platforms = (Paperpile::Utils->get_platform);
+  }
+
+
+  foreach my $platform (@platforms) {
+
+    my $dest_dir   = $self->qt_dir . "/$platform";
+
+    my $file_name = "qruntime-$version-$platform.tar.gz";
+    my $url       = "http://paperpile.com/download/qruntime/$file_name";
+
+    $self->echo("Getting QRuntime version $version for $platform");
+
+    if ($platform eq 'osx'){
+      if ( -e "$dest_dir/Contents/Frameworks/QRUNTIME-$version" ) {
+        $self->echo("QRuntime version $version already exists.");
+        next;
+      } else {
+        if ( -e "$dest_dir/Contents/Frameworks" ) {
+          $self->echo("Deleting old version of QRuntime runtime.");
+          `rm -rf $dest_dir/Contents/Frameworks/* $dest_dir/Contents/PlugIns/*`;
+        }
+      }
+    }
+
+    # Short-cut to pack and test locally
+    my $file = "/Users/wash/tmp/pack/" . $file_name;
+
+    if ( !-e $file ) {
+      $self->echo("Downloading runtime.");
+      `wget -P $tmp_dir $url`;
+
+      if ( !-e "$tmp_dir/$file_name" ) {
+        $self->echo("Could not download runtime for $platform.");
+        next;
+      }
+
+    } else {
+      `cp $file $tmp_dir`;
+    }
+
+    $self->echo("Extracting files.");
+
+    `tar -C $tmp_dir -xzf $tmp_dir/$file_name`;
+
+    $file_name=~s/\.tar\.gz//;
+
+    if ($platform =~/linux/){
+      `mv $tmp_dir/titanium-$version-$platform/* $dest_dir`;
+    }
+
+    $self->echo("Copying files.");
+
+    if ($platform eq 'osx'){
+      `mv $tmp_dir/$file_name/Contents/Frameworks/* $dest_dir/Contents/Frameworks`;
+      `mv $tmp_dir/$file_name/Contents/PlugIns/* $dest_dir/Contents/PlugIns`;
+    }
+  }
+}
+
+
+
+sub push_qruntime {
+
+  my ( $self ) = @_;
+
+  my $platform = Paperpile::Utils->get_platform;
+
+  my $qruntime_version = Paperpile->config->{app_settings}->{qruntime_version};
+
+  my $dest_dir = "qruntime-$qruntime_version-$platform";
+
+  $self->echo("Creating $dest_dir...");
+
+  `rm -rf $dest_dir` if (-e $dest_dir);
+  mkdir $dest_dir;
+
+
+  if ($platform eq 'osx'){
+
+    my $contents = Paperpile::Utils->path_to("")."/../c/qruntime/paperpile.app/Contents";
+
+    mkdir "$dest_dir/Contents";
+    mkdir "$dest_dir/Contents/Frameworks";
+    mkdir "$dest_dir/Contents/PlugIns";
+
+    die("Frameworks not in Bundle. Run macdeployqt first.") if (!-e "$contents/Frameworks");
+
+    $self->echo("Copying frameworks...");
+
+    `cp -r $contents/Frameworks/* $dest_dir/Contents/Frameworks`;
+
+    `touch $dest_dir/Contents/Frameworks/QRUNTIME-$qruntime_version`;
+
+    $self->echo("Copying plugins...");
+
+    foreach my $plugin ('codecs', 'imageformats'){
+      `cp -r $contents/PlugIns/$plugin $dest_dir/Contents/PlugIns`;
+    }
+
+  }
+
+  $self->echo("Packaging...");
+
+  `tar czf $dest_dir.tar.gz $dest_dir`;
+
+  $self->echo("Uploading (needs ssh keys so if you're not me it won't work...)");
+
+  system("scp $dest_dir.tar.gz paperpile.com:/scratch/qruntime");
+
+  $self->echo("Cleaning up");
+
+  `rm -rf $dest_dir $dest_dir.tar.gz`;
+
+}
+
 
 sub _get_list {
 

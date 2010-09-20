@@ -496,10 +496,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       var fileURL = fileURLs[i];
       fileURL = this.fileFromURL(fileURL);
       var file = QRuntime.fileInfo(fileURL);
-      //files.push(file);
       files.push(file);
       Paperpile.log(file);
-      
     }
     return files;
   },
