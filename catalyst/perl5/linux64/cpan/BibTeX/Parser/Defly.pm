@@ -84,6 +84,11 @@ sub extva {
       return $v;
     } else {
       defly_warn "unknown flying accented letter ($all)";
+      # we warn and convert it to the letter in braces
+      # otherwise we have the ugly backslash in the name
+      if ( $k =~ m/.*\{([a-z])\}$/ ) {
+	return $1;
+      }
     }
   }
   return $all;

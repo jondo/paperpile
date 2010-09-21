@@ -314,7 +314,7 @@ sub read {
     $pub->doi($doi)                   if $doi;
     $pub->issn($ISSN)                 if $ISSN;
     $pub->pmid($pmid)                 if $pmid;
-    $pub->eprint($arxivid)            if $arxivid;
+    $pub->arxivid($arxivid)           if $arxivid;
     $pub->authors($authors)           if $authors;
     $pub->editors($editors)           if $editors;
     $pub->edition($edition)           if $edition;

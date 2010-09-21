@@ -20,14 +20,15 @@ package Paperpile::MetaCrawler::Targets::Bibtex;
 use Moose;
 extends 'Paperpile::MetaCrawler::Targets';
 
-use Paperpile::Formats;
+use Paperpile::Formats::Bibtex;
+use File::Temp qw(tempfile);
 
 sub convert {
 
   my ( $self, $content ) = @_;
 
   my $pub;
-  my $f = Paperpile::Formats->new( format => 'BIBTEX' );
+  my $f = Paperpile::Formats::Bibtex->new( );
 
   # If the BIBTEX entry is embedded in HTML, we try to
   # parse it from the HTML
@@ -57,10 +58,27 @@ sub convert {
         last;
       }
     }
-    $pub = $f->read_string($bibtex) if ( $bibtex ne '' );
+    if ( $bibtex ne '' ) {
+      my ( $fh, $file_name ) = tempfile();
+      print $fh $bibtex;
+      close($fh);
+
+      $f->file($file_name);
+
+      $pub = $f->read();
+      unlink($file_name);
+    }
   } else {
+
     # regular case, we just parse the content
-    $pub = $f->read_string($content);
+    my ( $fh, $file_name ) = tempfile();
+    print $fh $content;
+    close($fh);
+
+    $f->file($file_name);
+
+    $pub = $f->read();
+    unlink($file_name);
   }
 
   return $pub->[0];
