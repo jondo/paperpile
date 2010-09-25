@@ -74,8 +74,15 @@ void Runtime::readyReadCatalyst(){
 
 QString Runtime::getCatalystDir(){
 
-  if (getPlatform() == "osx"){
+  QString platform = getPlatform();
+
+  if (platform == "osx"){
     QDir path(QCoreApplication::applicationDirPath()+"/../Resources/catalyst/");
+    return(path.canonicalPath());
+  }
+
+  if (platform == "linux32" || platform == "linux64"){
+    QDir path(QCoreApplication::applicationDirPath()+"/../catalyst/");
     return(path.canonicalPath());
   }
 
@@ -88,7 +95,15 @@ QString Runtime::getPlatform(){
 #ifdef Q_OS_MAC
   return QString("osx");
 #endif
- 
+
+#if defined Q_OS_LINUX && defined __x86_64
+  return QString("linux64");
+#endif
+
+#if defined Q_OS_LINUX && defined __i386__
+  return QString("linux32");
+#endif
+
 
 }
 
@@ -140,13 +155,24 @@ void Runtime::catalystStart(){
   QString program;
   QStringList arguments;
 
-  program = getCatalystDir() + "/" + "/perl5/" + getPlatform() + "/bin/paperperl";
+  QString platform = getPlatform();
 
-  if (getPlatform() == "osx"){
+  program = getCatalystDir() + "/" + "/perl5/" + platform + "/bin/paperperl";
+
+  if (platform == "osx"){
     arguments << getCatalystDir() + "/script/osx_server.pl" << "--port" << "3210" << "--fork";
   }
 
+  if (platform == "linux32" || platform == "linux64"){
+    arguments << getCatalystDir() + "/script/paperpile_server.pl" << "-fork";
+  }
+
+
   catalystProcess = new QProcess;
+
+  QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+  env.remove("PERL5LIB");
+  catalystProcess->setProcessEnvironment(env);
 
   catalystProcess->setReadChannel(QProcess::StandardError);
 

@@ -1,9 +1,9 @@
 #include <QtGui>
-#include <QWebview>
 #include <QApplication>
 #include "mainwindow.h"
 #include "network.h"
 #include <QProcess>
+#include <qwebview.h>
 
 int main(int argc, char * argv[]){
   QApplication app(argc, argv);

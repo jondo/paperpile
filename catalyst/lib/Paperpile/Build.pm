@@ -38,6 +38,7 @@ use YAML qw(LoadFile DumpFile);
 
 has cat_dir  => ( is => 'rw' );    # catalyst directory
 has qt_dir   => ( is => 'rw' );    # qt directory
+has qt_sdk   => ( is => 'rw' );    # qt sdk directory
 has dist_dir => ( is => 'rw' );    # distribution directory
 has yui_jar  => ( is => 'rw' );    #YUI compressor jar
 
@@ -408,8 +409,22 @@ sub get_qruntime {
       }
     }
 
+    if ($platform=~/linux(64|32)/){
+      if ( -e "$dest_dir/lib/QRUNTIME-$version" ) {
+        $self->echo("QRuntime version $version already exists.");
+        next;
+      } else {
+        if ( -e "$dest_dir/lib" ) {
+          $self->echo("Deleting old version of QRuntime runtime.");
+          `rm -rf $dest_dir/lib/* $dest_dir/plugins/*`;
+        }
+      }
+    }
+
     # Short-cut to pack and test locally
-    my $file = "/Users/wash/tmp/pack/" . $file_name;
+    my $file='';
+    #$file = "/Users/wash/tmp/pack/" . $file_name;
+    #$file = "/home/wash/tmp/pack/" . $file_name;
 
     if ( !-e $file ) {
       $self->echo("Downloading runtime.");
@@ -430,15 +445,16 @@ sub get_qruntime {
 
     $file_name=~s/\.tar\.gz//;
 
-    if ($platform =~/linux/){
-      `mv $tmp_dir/titanium-$version-$platform/* $dest_dir`;
-    }
-
     $self->echo("Copying files.");
 
     if ($platform eq 'osx'){
       `mv $tmp_dir/$file_name/Contents/Frameworks/* $dest_dir/Contents/Frameworks`;
       `mv $tmp_dir/$file_name/Contents/PlugIns/* $dest_dir/Contents/PlugIns`;
+    }
+
+    if ($platform=~/linux(64|32)/){
+      `mv $tmp_dir/$file_name/lib/* $dest_dir/lib`;
+      `mv $tmp_dir/$file_name/plugins/* $dest_dir/plugins`;
     }
   }
 }
@@ -482,7 +498,35 @@ sub push_qruntime {
     foreach my $plugin ('codecs', 'imageformats'){
       `cp -r $contents/PlugIns/$plugin $dest_dir/Contents/PlugIns`;
     }
+  }
 
+  if ($platform=~/linux(64|32)/) {
+
+    my $runtime = Paperpile::Utils->path_to("")."/../c/qruntime";
+
+    mkdir "$dest_dir/lib";
+    mkdir "$dest_dir/plugins";
+
+    $self->echo("Copying libraries...");
+
+    my @qt_libs = ('libQtCore.so.4','libQtDBus.so.4','libQtGui.so.4',
+                   'libQtNetwork.so.4','libQtWebKit.so.4','libQtXml.so.4',
+                   'libphonon.so.4'
+                  );
+
+    my $lib_dir = $self->qt_sdk."/lib";
+
+    foreach my $lib (@qt_libs){
+      `cp -r -L $lib_dir/$lib $dest_dir/lib`;
+    }
+
+    `touch $dest_dir/lib/QRUNTIME-$qruntime_version`;
+
+    $self->echo("Copying plugins...");
+
+    foreach my $plugin ('codecs', 'imageformats'){
+      `cp -r $lib_dir/../qt/plugins/$plugin $dest_dir/plugins`;
+    }
   }
 
   $self->echo("Packaging...");

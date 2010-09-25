@@ -37,6 +37,7 @@ MainWindow::MainWindow(){
 
 
   if (QCoreApplication::arguments().contains("--test")){
+    qDebug() << runtime->getCatalystDir()+"/root/runtime.html";
     view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/runtime.html"));
   } else {
     view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/index.html"));
