@@ -346,22 +346,23 @@ sub _match_single {
 sub update_notes : Local {
   my ( $self, $c ) = @_;
 
-  my $rowid = $c->request->params->{rowid};
   my $guid  = $c->request->params->{guid};
   my $html  = $c->request->params->{html};
 
   my $dbh = $c->model('Library')->dbh;
 
   my $value = $dbh->quote($html);
-  $dbh->do("UPDATE Publications SET annote=$value WHERE rowid=$rowid");
+  $dbh->do("UPDATE Publications SET annote=$value WHERE guid='$guid'");
 
   my $tree      = HTML::TreeBuilder->new->parse($html);
   my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
   my $text      = $formatter->format($tree);
 
+  # Issue 614: Text seems to come out empty (used to work all the time before).
+
   $value = $dbh->quote($text);
 
-  $dbh->do("UPDATE Fulltext SET notes=$value WHERE rowid=$rowid");
+  $dbh->do("UPDATE Fulltext SET notes=$value WHERE guid='$guid'");
 
   $c->stash->{data} = { pubs => { $guid => { annote => $html } } };
 

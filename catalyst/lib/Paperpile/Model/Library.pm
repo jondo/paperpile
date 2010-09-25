@@ -2148,7 +2148,7 @@ sub _snippets {
   my $offsets = $row->{offsets};
 
   # This is the order of our fields in the fulltext table
-  my @fields = ( 'text', 'abstract', 'notes' );
+  my @fields = ( 'guid', 'text', 'abstract', 'notes' );
 
   my %snippets = ( text => [], abstract => [], notes => [] );
 
@@ -2160,6 +2160,8 @@ sub _snippets {
     next if ( $column > 2 );
 
     my $field = $fields[$column];
+
+    #print STDERR "$column $term $start $length $field", $row->{$field}, "\n";
 
     my $snippet;
     my $match = substr( $row->{$field}, $start, $length );
@@ -2260,7 +2262,6 @@ sub _snippets {
         push @already_seen, $s;
 
         foreach my $term (@terms) {
-          print STDERR "Subsituting $term\n";
           $s->{snippet} =~ s/($term)/<span class="highlight">$1<\/span>/gi;
         }
 
