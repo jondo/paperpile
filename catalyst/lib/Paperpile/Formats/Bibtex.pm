@@ -128,8 +128,17 @@ sub read {
         }
 
         # annote is not defined in fields.yaml but in library.sql
-        if ( $field =~ /annote/ ) {
-          $data->{annote} = $entry->field($field);
+        if ( $field =~ /(annote|comments?)/ ) {
+
+          my $value = $entry->field($field);
+
+          # Specifically handle CiteULike BibTex
+          if ($field eq 'comment'){
+            $value=~s/\(private-note\)//g;
+            $value=~s/---=note-separator=---/<br><br>/g;
+          }
+
+          $data->{annote} = $value;
           next;
         }
 
