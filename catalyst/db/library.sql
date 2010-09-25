@@ -31,6 +31,7 @@ CREATE TABLE Publications(
   times_read         INTEGER,
   annote             TEXT,
   tags               TEXT,
+  tags_tmp           TEXT,
   folders            TEXT
 );
 

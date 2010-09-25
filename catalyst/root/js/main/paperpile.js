@@ -669,6 +669,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (data === undefined) return;
     var tabs = Paperpile.main.tabs.items.items;
 
+    // Update this part of the code when the new label widget is in
+    // place. Right now the label list does not get updated. There
+    // might be also a race condition when the tagStore response comas
+    // after the subsequent grid updates. 
+    if (data.collection_delta){
+      this.tagStore.reload();      
+    }
+
     for (var i = 0; i < tabs.length; i++) {
       var tab = tabs[i];
       if (!tab['onUpdate']) continue;

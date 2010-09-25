@@ -73,6 +73,9 @@ sub read {
     $built_in{$field} = 1;
   }
 
+  # Keywords are handled special
+  $built_in{keywords} = 0;
+
   my @output = ();
 
   my $parser = BibTeX::Parser->new( $fh, $self->settings->{import_strip_tex} );
@@ -91,15 +94,15 @@ sub read {
       if ( $built_in{$field} ) {
         my $content = $entry->field($field);
         if ( $field eq 'pages' ) {
-	  $content =~ s/--/-/g;
-	  $content =~ s/(.*)(\(\d+\))$/$1/; # remove number of pages in braces
-	}
-	if ( $field eq 'doi' ) {
-	  $content =~ s/^doi://;
-	}
-	if ( $field eq 'year' ) {
-	  $content =~ s/(.*)(\d{4})$/$2/;
-	}
+          $content =~ s/--/-/g;
+          $content =~ s/(.*)(\(\d+\))$/$1/;    # remove number of pages in braces
+        }
+        if ( $field eq 'doi' ) {
+          $content =~ s/^doi://;
+        }
+        if ( $field eq 'year' ) {
+          $content =~ s/(.*)(\d{4})$/$2/;
+        }
         $data->{$field} = $content;
       }
 
@@ -132,6 +135,14 @@ sub read {
 
         if ( $field =~ /guid/ ) {
           $data->{guid} = $entry->field($field);
+          next;
+        }
+
+        if ( $field =~ /(tags|labels|keywords)/ ) {
+          # Expects a comma separated list of tags, might need to be
+          # extended with a heuristic if a different seperator is
+          # used.
+          $data->{tags_tmp} = $entry->field($field);
           next;
         }
 

@@ -45,8 +45,10 @@ sub insert_entry : Local {
 
   # Go through and complete publication details if necessary.
 
-  my @pub_array = ();
+  my @pub_array   = ();
   my $plugin_list = undef;
+
+  my $collection_delta = 0;
 
   foreach my $pub (@$selection) {
 
@@ -56,12 +58,15 @@ sub insert_entry : Local {
 
     if ( $plugin->needs_match_before_import($pub) ) {
 
-      if (!defined $plugin_list){
-        $plugin_list = [split( /,/, $c->model('Library')->get_setting('search_seq') )];
+      if ( !defined $plugin_list ) {
+        $plugin_list = [ split( /,/, $c->model('Library')->get_setting('search_seq') ) ];
       }
 
       $pub->auto_complete($plugin_list);
     }
+
+    # Make sure we update the labels list when we insert pubs that come with tags
+    $collection_delta = 1 if ( !$collection_delta && $pub->tags_tmp );
 
     push @pub_array, $pub;
   }
@@ -89,6 +94,10 @@ sub insert_entry : Local {
   if ( scalar( keys %$pubs ) < 50 ) {
     $c->stash->{data} = { pubs => $pubs };
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
+  }
+
+  if ($collection_delta){
+    $c->stash->{data}->{collection_delta} = 1;
   }
 
   # Trigger a complete reload
