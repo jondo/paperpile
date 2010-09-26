@@ -57,6 +57,7 @@ my %ignore = (
     qr{ext-all-debug-w-comments\.js},
     qr{bin/osx/.*sqlite.*},
     qr{PlugIns/codecs}, # Don't include JP/CN etc. unicode codecs for now
+    qr{plugins/codecs},
     qr{PlugIns/imageformats/libqtiff.dylib},
 
   ],
@@ -200,15 +201,6 @@ sub make_dist {
   mkpath( catfile("$dist_dir/$sub_dir/catalyst") );
   $list = $self->_get_list( $cat_dir, \@ignore );
   $self->_copy_list( $list, $cat_dir, "$sub_dir/catalyst" );
-
-
-  #symlink "catalyst/root", "$dist_dir/$sub_dir/Resources" || die("Could not create symlink $!");
-
-  # Copy runtime directory explicitly for OSX (contains empty
-  # directories and symlinks which get lost otherwise)
-  #if ($platform eq 'osx'){
-  #  `rsync -r -a $qt_dir/runtime $dist_dir/$sub_dir`;
-  #}
 
   # Update configuration file for current build
   my $yaml   = "$dist_dir/$sub_dir/catalyst/conf/settings.yaml";
