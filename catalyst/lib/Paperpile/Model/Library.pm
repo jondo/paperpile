@@ -75,6 +75,13 @@ sub insert_pubs {
 
   my $counter = 0;
 
+  # If we insert to the user library we need to create new labels that
+  # may be given in the tags_tmp field.
+  my $label_map;
+  if ($user_library){
+    $label_map = $self->insert_labels($pubs, $dbh);
+  }
+
   foreach my $pub (@$pubs) {
     my $ts = timestamp gmtime;
     $pub->created($ts) if not $pub->created;
@@ -96,6 +103,20 @@ sub insert_pubs {
 
     if ( !$pub->guid ) {
       $pub->create_guid;
+    }
+
+    # If we insert to the user library map temporary tags to new or
+    # already existing labels in the database. If it is not the user
+    # libary we save the tags_tmp field upon insert.
+    if ($user_library && $pub->tags_tmp){
+      my @guids;
+      foreach my $tag (split(/\s*,\s*/,$pub->tags_tmp)){
+        if ($label_map->{$tag}){
+          push @guids, $label_map->{$tag};
+        }
+      }
+      $pub->tags(join(',',@guids));
+      $pub->tags_tmp('');
     }
 
     # If imported with attachments from another database the
@@ -136,7 +157,6 @@ sub insert_pubs {
     if ($pub->_incomplete){
       $self->_flag_as_incomplete($pub, $dbh);
     }
-
   }
 
   $dbh->commit;
@@ -1230,6 +1250,54 @@ sub exists_pub {
 
   }
 }
+
+
+# Creates new entries for all labels stored in tags_tmp fields in a
+# list of pubs. Returns hash that maps the temporary tag to the guids
+# of the newly created labels (or of already existing labels if a
+# label with the same name is already in the database)
+
+sub insert_labels {
+  ( my $self, my $pubs, my $dbh ) = @_;
+
+  my %map;
+
+  # Collect all label names
+  my @tags;
+  foreach my $pub (@$pubs){
+    push @tags, split(/\s*,\s*/,$pub->tags_tmp);
+  }
+
+  # Create guid for each of them and make sure that the list is
+  # non-redundant
+  foreach my $tag (@tags){
+    my $guid = Data::GUID->new->as_hex;
+    $guid =~ s/^0x//;
+
+    if (!exists($map{$tag})){
+      $map{$tag} = $guid;
+    }
+  }
+
+  # Go through all labels and either create a new collection in the
+  # database or get guid of already existing label
+  foreach my $label (keys %map){
+
+    my $name = $dbh->quote($label);
+    ( my $guid ) =  $dbh->selectrow_array("SELECT guid FROM Collections WHERE name=$name AND type='LABEL';");
+
+    if ($guid){
+      $map{$label}=$guid;
+    } else {
+      $self->new_collection($map{$label}, $label, 'LABEL', 'ROOT', 0, $dbh);
+    }
+
+  }
+
+  return \%map;
+}
+
+
 
 # Small helper function that converts hash to sql syntax (including
 # quotes). Also passed the database handle to avoid calling $self->dbh

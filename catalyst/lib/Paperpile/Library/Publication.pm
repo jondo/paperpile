@@ -99,8 +99,13 @@ has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] 
 # User provided annotation "Notes", formatted in HTML
 has 'annote' => ( is => 'rw', default => '' );
 
-# Comma separated list of tags (known as "labels" in the UI)
+# Comma separated list of guids for tags (known as "labels" in the UI)
 has 'tags' => ( is => 'rw', default => '' );
+
+# Temporary field to handle tags which are not imported into the
+# user's library.
+has 'tags_tmp' => ( is => 'rw', default => '' );
+
 
 # Comma separated list of folders
 has 'folders' => ( is => 'rw', default => '' );

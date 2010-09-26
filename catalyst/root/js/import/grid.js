@@ -873,7 +873,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.pubTemplate = new Ext.XTemplate(
         '<div class="pp-grid-data {[this.isInactive(values.tags)]}" guid="{guid}">',
         '<div>',
-        '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags)]}',
+        '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags, values.tags_tmp)]}',
         '</div>',
         '<tpl if="_authors_display">',
         '<p class="pp-grid-authors">{_authors_display}</p>',
@@ -885,18 +885,25 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '<p class="pp-grid-snippets">{_snippets}</p>',
         '</tpl>',
         '</div>', {
-          tagStyle: function(tag_string) {
-            var returnMe = ''; //<div class="pp-tag-grid-block">';
-            var tags = tag_string.split(/\s*,\s*/);
-            var totalChars = 0;
-            for (var i = 0; i < tags.length; i++) {
-              var guid = tags[i];
-              var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
-              if (style != null) {
-                name = style.get('name');
-                style = style.get('style');
-                totalChars += name.length;
+          tagStyle: function(tags_guid,tags_tmp) {
+            var returnMe = '';
+            if (tags_tmp){
+              var tags = tags_tmp.split(/\s*,\s*/);
+              for (var i = 0; i < tags.length; i++) {
+                name = tags[i];
+                style = '0';
                 returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
+              }
+            } else {
+              var tags = tags_guid.split(/\s*,\s*/);
+              for (var i = 0; i < tags.length; i++) {
+                var guid = tags[i];
+                var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
+                if (style != null) {
+                  name = style.get('name');
+                  style = style.get('style');
+                  returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
+                }
               }
             }
             if (tags.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
