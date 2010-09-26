@@ -7,6 +7,7 @@ Runtime::Runtime(QWidget *window){
 
   mainWindow = window;
   catalystProcess = 0;
+  updaterProcess = 0;
 
 };
 
@@ -72,6 +73,18 @@ void Runtime::readyReadCatalyst(){
 
 }
 
+void Runtime::readyReadUpdater(){
+
+  while (updaterProcess->canReadLine()){
+    QString string(updaterProcess->readLine());
+    string = string.replace(QRegExp("\n$"), QString::null); 
+    log("Updater output: "+string);
+    emit updaterReadLine(string);
+  }
+}
+
+
+
 QString Runtime::getCatalystDir(){
 
   QString platform = getPlatform();
@@ -89,6 +102,25 @@ QString Runtime::getCatalystDir(){
   return("");
 
 }
+
+QString Runtime::getInstallationDir(){
+
+  QString platform = getPlatform();
+
+  if (platform == "osx"){
+    QDir path(QCoreApplication::applicationDirPath()+"/../..");
+    return(path.canonicalPath());
+  }
+
+  if (platform == "linux32" || platform == "linux64"){
+    QDir path(QCoreApplication::applicationDirPath()+"/..");
+    return(path.canonicalPath());
+  }
+
+  return("");
+
+}
+
 
 QString Runtime::getPlatform(){
 
@@ -150,6 +182,48 @@ void Runtime::catalystError(QProcess::ProcessError error){
   
 }
 
+
+void Runtime::updaterStart(const QString & mode){
+
+  QString program;
+  QStringList arguments;
+
+  QString platform = getPlatform();
+
+  program = getCatalystDir() + "/" + "/perl5/" + platform + "/bin/paperperl";
+
+  arguments << getCatalystDir() + "/script/updater.pl" << "--" + mode;
+
+  updaterProcess = new QProcess;
+
+  QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+  env.remove("PERL5LIB");
+  updaterProcess->setProcessEnvironment(env);
+
+  connect(updaterProcess, SIGNAL(readyRead()), this, SLOT(readyReadUpdater()));
+  connect(updaterProcess, SIGNAL(stateChanged(QProcess::ProcessState)), this, SLOT(updaterStateChanged(QProcess::ProcessState)));
+
+  updaterProcess->start(program, arguments);
+
+}
+
+
+void Runtime::updaterStateChanged(QProcess::ProcessState newState){
+  
+  QString msg;
+
+  if (newState == QProcess::NotRunning){
+    emit updaterExit(QString("State changed to 'Not Running'"));
+    msg="'Not Running'";
+  }
+
+  if (newState == QProcess::Starting) msg ="'Starting'";
+  if (newState == QProcess::Running) msg ="'Running'";
+
+  msg.prepend("Updater process status changed to ");
+  log(msg);
+}
+
 void Runtime::catalystStart(){
 
   QString program;
@@ -167,7 +241,6 @@ void Runtime::catalystStart(){
     arguments << getCatalystDir() + "/script/paperpile_server.pl" << "-fork";
   }
 
-
   catalystProcess = new QProcess;
 
   QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -176,14 +249,14 @@ void Runtime::catalystStart(){
 
   catalystProcess->setReadChannel(QProcess::StandardError);
 
-  catalystProcess->start(program, arguments);
-
   connect(catalystProcess, SIGNAL(readyRead()), this, SLOT(readyReadCatalyst()));
-  
   connect(catalystProcess, SIGNAL(error(QProcess::ProcessError)), this, SLOT(catalystError(QProcess::ProcessError)));
   connect(catalystProcess, SIGNAL(stateChanged(QProcess::ProcessState)), this, SLOT(catalystStateChanged(QProcess::ProcessState)));
 
+  catalystProcess->start(program, arguments);
+
 }
+
 
 void Runtime::catalystKill(){
 
@@ -308,7 +381,6 @@ void Runtime::log(const QString & msg){
 }
 
 QVariantMap Runtime::msgBox(const QVariantMap & config){
-
 
   QVariantMap output;
   output["dummy"]=QString();
