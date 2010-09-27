@@ -19,10 +19,12 @@ QNetworkReply *RuntimeNetworkAccessManager::createRequest( Operation op,
 
   QUrl originalUrl = req.url();
   QString url = req.url().toString();
-
-  if (url.contains("http://127.0.0.1")){
+  
+  // http queries are handled normally
+  if (url.contains("http://")){
     //qDebug() << "passing through";
   } else {
+    // Add root directory to file queries if not already absolute
     if (!url.contains(root)){
       url.replace("file://", "");
       url= root+url;
