@@ -67,9 +67,9 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
             this.cancelLoad();
             this.isLoading = false;
             Paperpile.status.clearMsg();
-
             clearTimeout(this.timeoutWarn);
             clearTimeout(this.timeoutAbort);
+            
           },
           scope: this
         });
@@ -81,6 +81,7 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
 
         // Abort after 35 sec
         this.timeoutAbort = (function() {
+          this.isLoading = false;
           this.cancelLoad();
           Paperpile.status.clearMsg();
           Paperpile.status.updateMsg({
@@ -88,7 +89,7 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
             msg: 'Giving up. There may be problems with your network or the site hosting the Feed.',
             hideOnClick: true
           });
-        }).defer(20000, this);
+        }).defer(35000, this);
       } else {
         options.params.plugin_reload = 0;
       }
