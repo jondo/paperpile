@@ -14,14 +14,13 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-IS_TITANIUM=null;
+IS_TITANIUM = null;
 IS_QT = !(window['QRuntime'] == undefined);
 IS_CHROME = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
 Ext.BLANK_IMAGE_URL = 'ext/resources/images/default/s.gif';
 
 Ext.ns('Paperpile');
-
 
 Paperpile.Url = function(url) {
   if (url.match("127.0.0.1")) {
@@ -80,7 +79,7 @@ Paperpile.Ajax = function(config) {
 
   config.url = Paperpile.Url(config.url);
 
-  config.xdomain=true;
+  config.xdomain = true;
 
   if (!config.method) {
     config.method = 'GET';
@@ -99,7 +98,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   initComponent: function() {
 
-	    Paperpile.main = this;
+    Paperpile.main = this;
 
     Ext.apply(this, {
       layout: 'border',
@@ -209,39 +208,39 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   onZoomChange: function(zoomLevel) {
-	    var oldZoomLevel = this.getZoom();
+    var oldZoomLevel = this.getZoom();
 
-	    if (oldZoomLevel == zoomLevel) {
-		return;
-	    }
-	    var zoomRatio = zoomLevel / oldZoomLevel;
+    if (oldZoomLevel == zoomLevel) {
+      return;
+    }
+    var zoomRatio = zoomLevel / oldZoomLevel;
 
-	    if (IS_TITANIUM) {
-		// Resize the Titanium window accordingly.
-		var win = Titanium.UI.getMainWindow();
-		var oldWidth = win.getWidth();
-		var oldHeight = win.getHeight();
-		win.setWidth(oldWidth*zoomRatio);
-		win.setHeight(oldHeight*zoomRatio);
-	    }
+    if (IS_TITANIUM) {
+      // Resize the Titanium window accordingly.
+      var win = Titanium.UI.getMainWindow();
+      var oldWidth = win.getWidth();
+      var oldHeight = win.getHeight();
+      win.setWidth(oldWidth * zoomRatio);
+      win.setHeight(oldHeight * zoomRatio);
+    }
 
-	    Ext.getBody().setStyle('zoom',zoomLevel);
-	    // Now resize the body element.
-	    this.resizeWithZoom(this.getWidth(),this.getHeight());
-	},
+    Ext.getBody().setStyle('zoom', zoomLevel);
+    // Now resize the body element.
+    this.resizeWithZoom(this.getWidth(), this.getHeight());
+  },
 
-  resizeWithZoom: function(w,h) {
-	    var item = this.items.get(0);
-	    var zoom = Ext.getBody().getStyle('zoom');
-	    item.setSize(w/zoom,h/zoom);	    
-	},
+  resizeWithZoom: function(w, h) {
+    var item = this.items.get(0);
+    var zoom = Ext.getBody().getStyle('zoom');
+    item.setSize(w / zoom, h / zoom);
+  },
 
-  fireResize: function(w,h) {
-	    this.resizeWithZoom(w,h);
-	},
+  fireResize: function(w, h) {
+    this.resizeWithZoom(w, h);
+  },
 
   afterLoadSettings: function() {
-	/*
+    /*
     var zoom = this.getSetting('zoom_level');
 	if (zoom === undefined) {
 	  zoom = 1
@@ -499,7 +498,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           },
           handler: function() {
             this.pdfExtractChoice.close();
-	    this.pdfExtractChoice = undefined;
+            this.pdfExtractChoice = undefined;
           },
           scope: this
         }]
@@ -631,9 +630,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     var types = null;
     if (Paperpile.utils.get_platform() != 'osx') {
-	types = ['*'];
+      types = ['*'];
     }
-    
+
     var options = {
       title: 'Choose a bibliography file to import',
       types: types,
@@ -1164,12 +1163,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         duration: 5
       });
     }
-
   },
 
   checkForUpdates: function(silent) {
 
-    if (!IS_TITANIUM) {
+    if (!IS_QT) {
       if (!silent) {
         Paperpile.status.updateMsg({
           msg: 'The auto-update feature is not available from within a browser.',
@@ -1179,29 +1177,24 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       return;
     }
 
-    Titanium.API.notice("Searching for updates.");
+    QRuntime.log("Searching for updates.");
 
     if (!silent) {
       Paperpile.status.showBusy('Searching for updates');
     }
 
-    var platform = Paperpile.utils.get_platform();
-    var path = Titanium.App.getHome() + '/catalyst';
-
-    var upgrader = Titanium.Process.createProcess({
-      args: [path + "/perl5/" + platform + "/bin/perl", path + '/script/updater.pl', '--check']
-    });
-
-    upgrader.setEnvironment("PERL5LIB", "");
-
     var results;
 
-    upgrader.setOnReadLine(function(line) {
-      results = Ext.util.JSON.decode(line);
-    });
+    var readLineCallback = function(string) {
+      results = Ext.util.JSON.decode(string);
+    }
 
-    upgrader.setOnExit(function() {
+    var exitCallback = function(string) {
+
       Paperpile.status.clearMsg();
+      QRuntime.updaterReadLine.disconnect(readLineCallback);
+      QRuntime.updaterExit.disconnect(exitCallback);
+
       if (results.error) {
         if (!silent) {
           Paperpile.status.updateMsg({
@@ -1217,7 +1210,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                   icon: Ext.MessageBox.ERROR,
                   buttons: Ext.Msg.OK,
                   fn: function(btn) {
-                    Ext.Msg.close();
+                    //Ext.Msg.close();
                   }
                 });
               }
@@ -1241,9 +1234,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                 if (action === 'ACTION1') {
                   Paperpile.updateInfo = results;
                   Paperpile.main.tabs.newScreenTab('Updates', 'updates');
-                } else {
-                  Paperpile.status.clearMsg();
                 }
+                Paperpile.status.clearMsg();
               },
             });
           } else {
@@ -1256,7 +1248,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           }
         }
       }
-    });
-    upgrader.launch();
-  }
-});
+    };
+
+    QRuntime.updaterReadLine.connect(readLineCallback);
+    QRuntime.updaterExit.connect(exitCallback);
+    QRuntime.updaterStart("check");
+
+  }});
+

@@ -51,6 +51,7 @@ my $b = Paperpile::Build->new( {
     cat_dir  => '../catalyst',
     qt_dir   => "../qt",
     dist_dir => '../dist/data',
+    qt_sdk => '/opt/qtsdk',
     yui_jar => $ENV{HOME}.'/bin/yuicompressor-2.4.2.jar',
   }
 );

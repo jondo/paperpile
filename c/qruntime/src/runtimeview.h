@@ -1,4 +1,4 @@
-#include <QWebview>
+#include <qwebview.h>
 
 class QWebview;
 
