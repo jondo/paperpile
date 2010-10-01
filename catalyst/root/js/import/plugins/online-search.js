@@ -102,13 +102,19 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
         this.timeoutWarn = null;
         this.timeoutAbort = null;
       },
-    grid);
+      grid);
 
     Ext.apply(grid, {
       hideHeaders: true,
       initToolbarMenuItemIds: grid.initToolbarMenuItemIds.createSequence(function() {
         var ids = this.toolbarMenuItemIds;
         ids.insert(0, 'SEARCH_FIELD');
+      },
+      grid),
+      initContextMenuItemIds: grid.initContextMenuItemIds.createSequence(function() {
+        var ids = this.contextMenuItemIds;
+        ids.remove('AUTO_COMPLETE');
+
       },
       grid),
       setSearchQuery: function(text) {
