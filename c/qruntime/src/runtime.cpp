@@ -65,7 +65,10 @@ void Runtime::readyReadCatalyst(){
 
   QString string(catalystProcess->readAll());
 
-  if (string.contains("powered by Catalyst")){
+  // Requires modification of Catalyst/Engine/HTTP.pm. Add the line
+  // print STDERR "CATALYST READY" right after the "You can connect to
+  // the server at..." line. 
+  if (string.contains("CATALYST READY")){
     emit catalystReady();
   }
 

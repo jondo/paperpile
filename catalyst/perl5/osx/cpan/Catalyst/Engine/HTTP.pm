@@ -224,6 +224,7 @@ sub run {
     $url .= ":$port" unless $port == 80;
 
     print "You can connect to your server at $url\n";
+    print STDERR "CATALYST READY\n";
 
     if ($options->{background}) {
         open STDIN,  "+</dev/null" or die $!;
