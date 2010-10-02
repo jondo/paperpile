@@ -1740,7 +1740,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.handleCopy('Bibfile', 'CITATIONS', '{n} Citation{s} copied');
   },
   deleteEntry: function(mode, deleteAll) {
+
     var selection = this.getSelection();
+    if (deleteAll) {
+       selection = 'ALL';
+    }
+
 
     // Find the lowest index of the current selection.
     var firstRecord = this.getSelectionModel().getLowestSelected();
