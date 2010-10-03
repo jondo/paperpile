@@ -35,7 +35,9 @@ MainWindow::MainWindow(){
   exportRuntime();
   connect(page->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(exportRuntime()));
 
-  QApplication::setWindowIcon(QIcon(runtime->getCatalystDir()+"/root/images/app_icon.svg"));
+  if (runtime->getPlatform() != "osx"){
+    QApplication::setWindowIcon(QIcon(runtime->getCatalystDir()+"/root/images/app_icon.svg"));
+  }
 
   if (QCoreApplication::arguments().contains("--test")){
     qDebug() << runtime->getCatalystDir()+"/root/runtime.html";
