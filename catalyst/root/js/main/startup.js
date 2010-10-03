@@ -17,6 +17,7 @@
 
 Paperpile.serverLog = '';
 Paperpile.isLogging = 1;
+Paperpile.pingAttempts = 0;
 
 Paperpile.startupFailure = function(response) {
   var error;
@@ -61,16 +62,22 @@ Paperpile.startupFailure = function(response) {
 
 Paperpile.stage0 = function() {
 
+  Paperpile.pingAttempts++;
+
+  if (IS_QT) QRuntime.log("Pinging the server (attempt #"+Paperpile.pingAttempts+')');
+
   Paperpile.Ajax({
     url: '/ajax/app/heartbeat',
 
-    // Server already running
+    // Server responds
     success: function(response) {
 
       var json = Ext.util.JSON.decode(response.responseText);
       
       if (json.status == 'RUNNING') {
-        if (IS_QT){
+        
+        // Server was already running before we have started it
+        if (IS_QT && Paperpile.pingAttempts == 1){
 
           Ext.Msg.show({
             title: 'Error',
@@ -83,6 +90,7 @@ Paperpile.stage0 = function() {
             }
           });
         } else {
+          if (IS_QT) QRuntime.log("Loading frontend.");
           Paperpile.stage1();
         }
       }
@@ -91,59 +99,74 @@ Paperpile.stage0 = function() {
     failure: function(response) {
 
       if (IS_QT) {
+    
+        // Start catalyst server after the first failed ping attempt
+        if (Paperpile.pingAttempts == 1){
 
-        //Set up signals/slot connection for catalyst process
+          //Set up signals/slot connection for catalyst process
 
-        QRuntime.catalystReady.connect(function(){
-          QRuntime.log("Catalyst succesfully started.");
-          Paperpile.stage1();
-        });
+          QRuntime.catalystReady.connect(function(){
+            QRuntime.log("Catalyst succesfully started.");
+            Paperpile.stage0();
+          });
 
-        QRuntime.catalystExit.connect(
-          function(error){
+          QRuntime.catalystExit.connect(
+            function(error){
 
-            var msg  = Paperpile.serverLog;
+              var msg  = Paperpile.serverLog;
 
-            if (msg.length > 800) {
-              msg = msg.substr(msg.length - 800);
-            }
-
-            if (msg){
-              msg.replace('\n','<br>');
-              msg='<code>'+msg+'</code>';
-            }
-
-            Ext.Msg.show({
-              title: 'Error',
-              msg: 'Could not start Paperpile server or lost connection. Please restart Paperpile and contact support@paperpile.com if the problem persits.<br><br>'+msg,
-              buttons: Ext.Msg.OK,
-              icon: Ext.MessageBox.ERROR,
-              fn: function(action) {
-                if (IS_QT) {
-                  QRuntime.closeApp();
-                }
+              if (msg.length > 800) {
+                msg = msg.substr(msg.length - 800);
               }
-            });
-          }
-        );
 
-        QRuntime.catalystRead.connect(function(string) {
-          if (Paperpile.isLogging) {
-            Paperpile.serverLog = Paperpile.serverLog + string;
-            var L = Paperpile.serverLog.length;
-            if (L > 100000) {
-              Paperpile.serverLog = Paperpile.serverLog.substr(L - 1000);
+              if (msg){
+                msg.replace('\n','<br>');
+                msg='<code>'+msg+'</code>';
+              }
+
+              Ext.Msg.show({
+                title: 'Error',
+                msg: 'Could not start Paperpile server or lost connection. Please restart Paperpile and contact support@paperpile.com if the problem persits.<br><br>'+msg,
+                buttons: Ext.Msg.OK,
+                icon: Ext.MessageBox.ERROR,
+                fn: function(action) {
+                  if (IS_QT) {
+                    QRuntime.closeApp();
+                  }
+                }
+              });
             }
-            var panel = Ext.getCmp('log-panel');
-            if (panel) {
-              panel.addLine(string);
+          );
+
+          QRuntime.catalystRead.connect(function(string) {
+            if (Paperpile.isLogging) {
+              Paperpile.serverLog = Paperpile.serverLog + string;
+              var L = Paperpile.serverLog.length;
+              if (L > 100000) {
+                Paperpile.serverLog = Paperpile.serverLog.substr(L - 1000);
+              }
+              var panel = Ext.getCmp('log-panel');
+              if (panel) {
+                panel.addLine(string);
+              }
             }
-          }
-        });
+          });
 
-        QRuntime.log("Starting Catalyst");
+          QRuntime.log("Starting Catalyst");
 
-        QRuntime.catalystStart();
+          QRuntime.catalystStart();
+        }
+
+        // Try pinging the server until we get a response
+        if ((Paperpile.pingAttempts) > 1 && (Paperpile.pingAttempts<10)){
+          Paperpile.stage0.defer(200);
+        }
+
+        // Giving up
+        if (Paperpile.pingAttempts >= 10){
+          if (IS_QT) QRuntime.log("Giving up.");
+          Paperpile.startupFailure(response);
+        }
       }
     }
   });
