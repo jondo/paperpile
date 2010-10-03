@@ -17,6 +17,7 @@
 package Paperpile::Formats::Zotero;
 use Moose;
 use DBI;
+use Paperpile::Utils;
 
 extends 'Paperpile::Formats';
 
@@ -75,8 +76,12 @@ sub read {
       $title,  $authors, $journal, $issue,   $volume,    $year,
       $month,  $ISSN,    $pages,   $doi,     $abstract,  $booktitle,
       $url,    $pmid,    $arxivid, $editors, $publisher, $edition,
-      $series, $address, $school,  $howpublished
+      $series, $address, $school,  $howpublished, $note
     );
+
+    my @pdfs = ();
+    my @snapshots = ( );
+    my @regular_attachements = ( );
 
     # now we gather data for each itemID
     my $sth2 = $dbh->prepare("SELECT * FROM itemData WHERE itemID=?;");
@@ -236,8 +241,7 @@ sub read {
     $editors = join( " and ", @tmpeditors );
     $editors =~ s/\s+/ /g;
 
-    # let's screen for PDF attachments
-    my @pdfs = ();
+    # let's screen for attachments
     my $sth4 = $dbh->prepare( "SELECT * FROM itemAttachments WHERE " . "sourceItemID=?;" );
     $sth4->execute($itemID);
     while ( my @tmp4 = $sth4->fetchrow_array ) {
@@ -245,19 +249,40 @@ sub read {
       my $mimeType     = $tmp4[3];
       my $filename     = $tmp4[5];
       next if ( !$filename );
-      if ( $mimeType eq 'application/pdf' ) {
-        my $sth5 = $dbh->prepare("SELECT * FROM items WHERE itemID=?;");
-        $sth5->execute($attachmentID);
-        my @tmp5 = $sth5->fetchrow_array();
-        my $pdf;
-        if ( $filename =~ m/storage:(.*)/ ) {
-          $pdf = $path . "storage/$tmp5[6]/$1";
-        } else {
-          $pdf = $filename;
-        }
-        push @pdfs, $pdf;
+
+      my $sth5 = $dbh->prepare("SELECT * FROM items WHERE itemID=?;");
+      $sth5->execute($attachmentID);
+      my @tmp5 = $sth5->fetchrow_array();
+
+      my $file;
+      next if ( ! $tmp5[6] );
+      if ( $filename =~ m/storage:(.*)/ ) {
+	$file = $path . "storage/$tmp5[6]/$1";
+      } else {
+	$file = $filename;
       }
+
+      $file = Paperpile::Utils->process_attachment_name($file);
+      next if ( ! $file );
+
+      # if we find a PDF we assume the first one is THE PDF
+      push @pdfs, $file if ( $mimeType eq 'application/pdf' );
+
+      # most likely this is the website snapshot
+      push @snapshots, $file if ( $mimeType eq 'text/html' );
+
+      # the other stuff is assigned as regular attachement
+      push @regular_attachements, $file if ( $mimeType ne 'text/html' and $mimeType ne 'application/pdf');
     }
+
+    # let's screen for notes
+    my $sth6 = $dbh->prepare( "SELECT note FROM itemNotes WHERE " . "sourceItemID=?;" );
+    $sth6->execute($itemID);
+    while ( my @tmp6 = $sth6->fetchrow_array ) {
+      ($note = $tmp6[0]) =~ s/<div\s+class="[^"]+">//;
+      $note =~ s/<\/div>$//;
+    }
+
 
     # if it does not have a title, we are not interested
     next if ( !defined $title );
@@ -298,7 +323,6 @@ sub read {
       $howpublished = 'Document'             if ( $itemTypeID == 34 );
       $howpublished = 'Encyclopedia article' if ( $itemTypeID == 35 );
       $howpublished = 'Dictionary entry'     if ( $itemTypeID == 36 );
-
     }
 
     my $pub = Paperpile::Library::Publication->new( pubtype => $pubtype );
@@ -323,6 +347,19 @@ sub read {
     $pub->address($address)           if $address;
     $pub->howpublished($howpublished) if $howpublished;
     $pub->school($school)             if $school;
+    $pub->annote($note)               if $note;
+
+    # add PDFs and other attachements
+    foreach my $i ( 0 .. $#pdfs ) {
+      if ( $i == 0 ) {
+	$pub->{_pdf_tmp} = $pdfs[$i];
+      } else {
+	unshift (@regular_attachements, $pdfs[$i]);
+      }
+    }
+    if (@regular_attachements) {
+      $pub->{_attachments_tmp} = [@regular_attachements] if ( $#regular_attachements > -1 );
+    }
 
     push @output, $pub;
   }
