@@ -28,7 +28,7 @@ require utf8;
 } unless defined &utf8::is_utf8;
 
 $DBI::PurePerl = $ENV{DBI_PUREPERL} || 1;
-$DBI::PurePerl::VERSION = sprintf("2.%06d", q$Revision: 11372 $ =~ /(\d+)/o);
+$DBI::PurePerl::VERSION = sprintf("2.%06d", q$Revision: 13911 $ =~ /(\d+)/o);
 
 $DBI::neat_maxlen ||= 400;
 
@@ -129,6 +129,9 @@ use constant IMA_SHOW_ERR_STMT  => 0x2000; #/* dbh meth relates to Statement*/
 use constant IMA_HIDE_ERR_PARAMVALUES => 0x4000; #/* ParamValues are not relevant */
 use constant IMA_IS_FACTORY     => 0x8000; #/* new h ie connect & prepare */
 use constant IMA_CLEAR_CACHED_KIDS    => 0x10000; #/* clear CachedKids before call */
+
+use constant DBIstcf_STRICT           => 0x0001;
+use constant DBIstcf_DISCARD_STRING   => 0x0002;
 
 my %is_flag_attribute = map {$_ =>1 } qw(
 	Active
@@ -562,6 +565,12 @@ sub _set_trace_file {
         $DBI::tfh_needs_close = 0;
         return 1;
     }
+    if ($file && ref \$file eq 'GLOB') {
+	$DBI::tfh = *{$file}{IO};
+        select((select($DBI::tfh), $| = 1)[0]);
+        $DBI::tfh_needs_close = 0;
+        return 1;
+    }
     $DBI::tfh_needs_close = 1;
     if (!$file || $file eq 'STDERR') {
 	open $DBI::tfh, ">&STDERR" or carp "Can't dup STDERR: $!";
@@ -666,6 +675,42 @@ sub neat {
     }
     $v =~ s/[^[:print:]]/./g;
     return "$quote$v$quote";
+}
+
+sub sql_type_cast {
+    my (undef, $sql_type, $flags) = @_;
+
+    return -1 unless defined $_[0];
+
+    my $cast_ok = 1;
+
+    my $evalret = eval {
+        use warnings FATAL => qw(numeric);
+        if ($sql_type == SQL_INTEGER) {
+            my $dummy = $_[0] + 0;
+            return 1;
+        }
+        elsif ($sql_type == SQL_DOUBLE) {
+            my $dummy = $_[0] + 0.0;
+            return 1;
+        }
+        elsif ($sql_type == SQL_NUMERIC) {
+            my $dummy = $_[0] + 0.0;
+            return 1;
+        }
+        else {
+            return -2;
+        }
+    } or $^W && warn $@; # XXX warnings::warnif("numeric", $@) ?
+
+    return $evalret if defined($evalret) && ($evalret == -2);
+    $cast_ok = 0 unless $evalret;
+
+    # DBIstcf_DISCARD_STRING not supported for PurePerl currently
+
+    return 2 if $cast_ok;
+    return 0 if $flags & DBIstcf_STRICT;
+    return 1;
 }
 
 sub dbi_time {

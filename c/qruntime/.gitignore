@@ -1,0 +1,5 @@
+Makefile
+paperpile.app
+src/Makefile
+src/*o
+src/moc_*

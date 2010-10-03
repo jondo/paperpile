@@ -139,11 +139,11 @@ sub init_session : Local {
     $q->clear_all;
   }
 
-  # Clear temporary PDF downloads
+  # Clear temporary PDF downloads and file imports
   unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );
+  unlink( glob( File::Spec->catfile( $tmp_dir, 'import', '*ppl' ) ) );
 
   # Clear file with cancel handles
-
   unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ) );
 
 }

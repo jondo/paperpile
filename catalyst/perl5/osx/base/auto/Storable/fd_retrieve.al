@@ -1,9 +1,9 @@
-# NOTE: Derived from ../../lib/Storable.pm.
+# NOTE: Derived from blib/lib/Storable.pm.
 # Changes made here will be lost when autosplit is run again.
 # See AutoSplit.pm.
 package Storable;
 
-#line 387 "../../lib/Storable.pm (autosplit into ../../lib/auto/Storable/fd_retrieve.al)"
+#line 387 "blib/lib/Storable.pm (autosplit into blib/lib/auto/Storable/fd_retrieve.al)"
 #
 # fd_retrieve
 #

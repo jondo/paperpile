@@ -179,10 +179,12 @@ sub connect {
 
   # Turn on unicode support explicitely
   $dbh->{sqlite_unicode} = 1;
+#<<<<<<< HEAD
+ #sqlite_unicode => 1,
 
-  #sqlite_unicode => 1,
-
-  return $dbh;
+#=======
+#>>>>>>> osx
+ return $dbh;
 }
 
 

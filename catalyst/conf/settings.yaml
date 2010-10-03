@@ -27,6 +27,8 @@ app_settings:
   settings_db_version: 2
   library_db_version: 3
   titanium_version: 1.0.0
+  qruntime_version: 1
+
 
 user_settings:
   db_version: 2

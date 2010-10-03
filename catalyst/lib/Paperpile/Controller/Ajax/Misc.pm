@@ -116,10 +116,8 @@ sub journal_list : Local {
   $query = $model->dbh->quote("$query*");
 
   my $sth = $model->dbh->prepare(
-    "SELECT Journals.short, Journals.long FROM Journals 
-     JOIN Journals_lookup ON Journals.rowid=Journals_lookup.rowid 
-     WHERE Journals_lookup MATCH $query
-     ORDER BY Journals.short;"
+     "SELECT short, long FROM Journals_lookup WHERE Journals_lookup MATCH $query
+     ORDER BY short;"
   );
 
   my ( $short, $long );
@@ -179,11 +177,12 @@ sub get_settings : Local {
   # app_settings are read from the config file, they are never changed
   # by the user and constant for a specific version of the application
   my @list1 = %{ $c->config->{app_settings} };
-
+  
   my @list2 = %{ $c->model('User')->settings };
   my @list3 = %{ $c->model('Library')->settings };
 
   my %merged = ( @list1, @list2, @list3 );
+
 
   my $fields = LoadFile( $c->path_to('conf/fields.yaml') );
 

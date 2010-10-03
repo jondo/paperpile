@@ -1,11 +1,5 @@
 #!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/paperperl -w
 
-##!/home/wash/play/paperpile/catalyst/perl5/linux64/bin/paperperl -d:NYTProf -w
-
-BEGIN {
-  $ENV{CATALYST_DEBUG} = 0;
-}
-
 use strict;
 use Data::Dumper;
 use lib '../../lib';

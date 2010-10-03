@@ -1,5 +1,5 @@
 /*
-#  $Id: Driver_xst.h 10378 2007-12-06 10:48:17Z timbo $
+#  $Id: Driver_xst.h 13334 2009-09-14 09:12:07Z hmbrand $
 #  Copyright (c) 2002  Tim Bunce  Ireland
 #
 #  You may distribute under the terms of either the GNU General Public
@@ -33,13 +33,13 @@ dbixst_bounce_method(char *methname, int params)
     EXTEND(SP, params);
     PUSHMARK(SP);
     for (i=0; i < params; ++i) {
-	sv = (i >= items) ? &sv_undef : ST(i);
+	sv = (i >= items) ? &PL_sv_undef : ST(i);
         PUSHs(sv);
     }
     PUTBACK;
-    i = perl_call_method(methname, G_SCALAR);
+    i = call_method(methname, G_SCALAR);
     SPAGAIN;
-    sv = (i) ? POPs : &sv_undef;
+    sv = (i) ? POPs : &PL_sv_undef;
     PUTBACK;
     if (debug >= 3)
 	PerlIO_printf(DBIc_LOGPIO(imp_xxh),
@@ -92,7 +92,7 @@ dbdxst_fetchall_arrayref(SV *sth, SV *slice, SV *batch_row_count)
 	sprintf(errmsg,"slice param not supported by XS version of fetchall_arrayref");
 	sv_setpv(DBIc_ERRSTR(imp_sth), errmsg);
 	sv_setiv(DBIc_ERR(imp_sth), (IV)-1);
-	return &sv_undef;
+	return &PL_sv_undef;
     }
     else {
 	IV maxrows = SvOK(batch_row_count) ? SvIV(batch_row_count) : -1;
@@ -101,7 +101,7 @@ dbdxst_fetchall_arrayref(SV *sth, SV *slice, SV *batch_row_count)
 	if ( !DBIc_ACTIVE(imp_sth) && maxrows>0 ) {
 	    /* to simplify application logic we return undef without an error	*/
 	    /* if we've fetched all the rows and called with a batch_row_count	*/
-	    return &sv_undef;
+	    return &PL_sv_undef;
 	}
 	av_extend(rows_av, (maxrows>0) ? maxrows : 31);
 	while ( (maxrows < 0 || maxrows-- > 0)

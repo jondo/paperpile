@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.Updates = Ext.extend(Ext.Panel, {
 
   title: 'Updates',
@@ -35,7 +34,7 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
     '</div>', ],
 
   // Add details how to install updates for different operating systems
-  markupNoPatch: [
+  markupNoPatchLinux: [
     '<div class="pp-box pp-box-top pp-box-style1" style="width:600px;">',
     '<p>&nbsp;</p>',
     '<p>Version <b>{latestVersion}</b> of Paperpile is available for download. This update requires you to re-install Paperpile:</p>',
@@ -75,15 +74,17 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
       buttonText = 'Install updates (' + Ext.util.Format.fileSize(Paperpile.updateInfo.download_size) + ')';
       action = this.performUpgrade;
     } else {
-      template = new Ext.XTemplate(this.markupNoPatch).compile();
+      template = new Ext.XTemplate(this.markupNoPatchLinux).compile();
       buttonText = 'Go to download page';
-      action = function(){ Paperpile.utils.openURL('http://paperpile.com/beta')};
+      action = function() {
+        Paperpile.utils.openURL('http://paperpile.com/beta')
+      };
     }
 
     Paperpile.updateInfo.numUpdates = Paperpile.updateInfo.updates.length;
     Paperpile.updateInfo.latestVersion = Paperpile.updateInfo.updates[0].name;
 
-    Paperpile.updateInfo.installationDir = Titanium.App.getHome();
+    Paperpile.updateInfo.installationDir = QRuntime.getInstallationDir();
 
     template.overwrite(this.body, Paperpile.updateInfo, true);
 
@@ -100,29 +101,18 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
 
     Ext.Msg.progress("Downloading updates");
 
-    var platform = Paperpile.utils.get_platform();
-    var path = Titanium.App.getHome() + '/catalyst';
-
-    var args = [path + "/perl5/" + platform + "/bin/paperperl", path + '/script/updater.pl', '--update'];
-
-    var upgrader = Titanium.Process.createProcess({
-      args: args,
-    });
-
-    upgrader.setEnvironment("PERL5LIB", "");
-
     var downloadSize = Paperpile.updateInfo.download_size;
     var downloadSizeString = Ext.util.Format.fileSize(downloadSize);
 
-    var error = false;
+    Paperpile.updateInfo.error = false;
 
-    upgrader.setOnReadLine(function(line) {
+    var readLineCallback = function(string) {
 
-      log = Ext.util.JSON.decode(line);
+      log = Ext.util.JSON.decode(string);
 
       if (log.error) {
 
-        error = true;
+        Paperpile.updateInfo.error = true;
 
         Paperpile.status.updateMsg({
           type: 'error',
@@ -139,7 +129,7 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
                 buttons: Ext.Msg.OKCANCEL,
                 fn: function(btn) {
                   if (btn === 'ok') {
-                    Paperpile.main.reportError('CRASH',log.error);
+                    Paperpile.main.reportError('CRASH', log.error);
                   }
                   Ext.MessageBox.buttonText.ok = "Ok";
                 },
@@ -166,12 +156,11 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
           interval: 100
         });
       }
+    }
 
-    });
+    var exitCallback = function() {
 
-    upgrader.setOnExit(function() {
-
-      if (error) {
+      if (Paperpile.updateInfo.error) {
         Ext.Msg.hide();
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
         return;
@@ -180,7 +169,7 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
       var msg = 'Paperpile is now up-to-date.';
 
       if (Paperpile.updateInfo.restart) {
-        Ext.MessageBox.buttonText.ok = "Restart now";
+        Ext.MessageBox.buttonText.ok = "Close Paperpile now";
         msg = 'The updates were successfully installed. Please restart Paperpile to finish the update process.';
       }
 
@@ -195,18 +184,23 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
         fn: function(btn) {
           if (btn === 'ok') {
             if (Paperpile.updateInfo.restart) {
-              Titanium.App.restart();
+              QRuntime.closeApp();
             }
             Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
           }
           Ext.MessageBox.buttonText.ok = "Ok";
         },
       });
-    });
 
-    upgrader.launch();
+      QRuntime.updaterReadLine.disconnect(readLineCallback);
+      QRuntime.updaterExit.disconnect(exitCallback);
+    }
+
+    QRuntime.updaterReadLine.connect(readLineCallback);
+    QRuntime.updaterExit.connect(exitCallback);
+
+    QRuntime.updaterStart("update");
 
   }
-
 
 });

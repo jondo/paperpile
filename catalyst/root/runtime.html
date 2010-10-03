@@ -1,0 +1,153 @@
+<html>
+
+<header>
+
+<link rel="stylesheet" type="text/css" charset="utf-8" href="ext/resources/css/ext-all.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" href="ext/resources/css/xtheme-gray.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" href="ext.ux/filetree/css/all.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" href="css/paperpile.css">
+
+<script type="text/javascript" charset="utf-8" src="ext/adapter/ext/ext-base.js"></script>
+<script type="text/javascript" charset="utf-8" src="ext/ext-all-debug.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/runtime/test.js"></script>
+
+</header>
+
+<body>
+
+<h1>QRuntime test page</h1>
+
+
+<div class="pp-box pp-box-style1 pp-dashboard-box" style="width:450px;">
+<h2>1. Loading external JS</h2>
+
+<p id="check"></p>
+
+</div>
+
+<div class="pp-box pp-box-style2" style="width:450px;">
+<h2>2. Loading an image</h2>
+
+<img src="/images/pubmed_logo.png">
+
+</div>
+
+<div class="pp-box pp-box-style1" style="width:450px;">
+<h2>3. Loading external style sheet</h2>
+
+<p id="csstest">If I'm in a box the css is loaded</p>
+
+</div>
+
+<div class="pp-box pp-box-style2" style="width:450px;">
+<h2>4. File Dialogs</h2>
+
+
+<p><a id="start-select-file-1" class="pp-textlink  pp-bullet">Open a file</a></p>
+
+<p><a id="start-select-file-2" class="pp-textlink  pp-bullet">Save a file</a></p>
+<p><a id="start-select-file-3" class="pp-textlink  pp-bullet">Choose a folder</a></p>
+<p><a id="start-select-file-4" class="pp-textlink  pp-bullet">Open multiple files</a></p>
+
+
+<p id="result-select-file-answer"></p>
+<p id="result-select-file-files"></p>
+<p id="result-select-file-filter"></p>
+
+
+</div>
+
+<div class="pp-box pp-box-style1" style="width:450px;">
+<h2>5. Open files with default application</h2>
+
+<p><a id="start-open-file" class="pp-textlink  pp-bullet">Select a file to open</a></p>
+
+</div>
+
+<div class="pp-box pp-box-style2" style="width:450px;">
+<h2>6. Open URL in external Browser</h2>
+
+<p><a id="start-open-url" class="pp-textlink  pp-bullet">Open google.com</a></p>
+
+</div>
+
+<div class="pp-box pp-box-style2" style="width:450px;">
+  <h2>X. Open Folder in Finder/Explorer/Nautilus etc.</h2>
+
+  <p><a id="start-open-folder" class="pp-textlink  pp-bullet">Open </a></p>
+
+</div>
+
+
+
+<div class="pp-box pp-box-style1" style="width:450px;">
+<h2>7. Read text from clipboard</h2>
+
+<p><a id="start-read-clipboard" class="pp-textlink  pp-bullet">Show current clipboard contents</a></p>
+
+<p id="result-read-clipboard"></p>
+
+</div>
+
+<div class="pp-box pp-box-style2" style="width:450px;">
+<h2>8. Copy text to clipboard</h2>
+
+<p><a id="start-write-clipboard" class="pp-textlink  pp-bullet">Copy the string "Qt rocks" to the clipboard</a></p>
+
+<p id="result-write-clipboard"></p>
+
+</div>
+
+<div class="pp-box pp-box-style1" style="width:450px;">
+<h2>9. Ajax call</h2>
+
+<p><a id="start-ajax2" class="pp-textlink  pp-bullet">Click to request 127.0.0.1:3210/ajax/app/heartbeat</a></p>
+
+<p id="result-ajax"></p>
+
+</div>
+
+<div class="pp-box pp-box-style2" style="width:650px;">
+  <h2>11. Start Catalyst server</h2>
+
+  <p><a id="start-catalyst" class="pp-textlink  pp-bullet">Start catalyst server</a></p>
+
+<pre id="result-catalyst-output"> </pre>
+
+</div>
+
+<div class="pp-box pp-box-style1" style="width:450px;">
+  <h2>12. Resize window</h2>
+
+  <p><a id="start-window-resize" class="pp-textlink  pp-bullet">Resize window</a></p>
+
+</div>
+
+<div class="pp-box pp-box-style2" style="width:450px;">
+  <h2>12. File info</h2>
+
+  <p><a id="start-file-info" class="pp-textlink  pp-bullet">Get file info</a></p>
+
+  <p id="result-file-info"> </p>
+
+</div>
+
+<div class="pp-box pp-box-style1" style="width:450px;">
+  <h2>12. Message Box</h2>
+
+  <p><a id="start-message-box" class="pp-textlink  pp-bullet">Show message Box</a></p>
+
+  <p id="result-message-box"> </p>
+
+</div>
+
+<div class="pp-box pp-box-style2" style="width:450px;">
+  <h2>13. Logging</h2>
+
+  <p><a id="start-log" class="pp-textlink  pp-bullet">Print log message to STDERR</a></p>
+
+</div>
+
+
+</body>
+</html>

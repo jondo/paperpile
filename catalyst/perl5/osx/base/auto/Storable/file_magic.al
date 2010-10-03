@@ -1,9 +1,9 @@
-# NOTE: Derived from ../../lib/Storable.pm.
+# NOTE: Derived from blib/lib/Storable.pm.
 # Changes made here will be lost when autosplit is run again.
 # See AutoSplit.pm.
 package Storable;
 
-#line 118 "../../lib/Storable.pm (autosplit into ../../lib/auto/Storable/file_magic.al)"
+#line 118 "blib/lib/Storable.pm (autosplit into blib/lib/auto/Storable/file_magic.al)"
 sub file_magic {
     my $file = shift;
     my $fh = new FileHandle;

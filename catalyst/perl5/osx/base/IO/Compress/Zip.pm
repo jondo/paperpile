@@ -4,27 +4,27 @@ use strict ;
 use warnings;
 use bytes;
 
-use IO::Compress::Base::Common  2.021 qw(:Status createSelfTiedObject);
-use IO::Compress::RawDeflate 2.021 ;
-use IO::Compress::Adapter::Deflate 2.021 ;
-use IO::Compress::Adapter::Identity 2.021 ;
-use IO::Compress::Zlib::Extra 2.021 ;
-use IO::Compress::Zip::Constants 2.021 ;
+use IO::Compress::Base::Common  2.020 qw(:Status createSelfTiedObject);
+use IO::Compress::RawDeflate 2.020 ;
+use IO::Compress::Adapter::Deflate 2.020 ;
+use IO::Compress::Adapter::Identity 2.020 ;
+use IO::Compress::Zlib::Extra 2.020 ;
+use IO::Compress::Zip::Constants 2.020 ;
 
 
-use Compress::Raw::Zlib  2.021 qw(crc32) ;
+use Compress::Raw::Zlib  2.020 qw(crc32) ;
 BEGIN
 {
     eval { require IO::Compress::Adapter::Bzip2 ; 
-           import  IO::Compress::Adapter::Bzip2 2.021 ; 
+           import  IO::Compress::Adapter::Bzip2 2.020 ; 
            require IO::Compress::Bzip2 ; 
-           import  IO::Compress::Bzip2 2.021 ; 
+           import  IO::Compress::Bzip2 2.020 ; 
          } ;
-    eval { require IO::Compress::Adapter::Lzma ; 
-           import  IO::Compress::Adapter::Lzma 2.020 ; 
-           require IO::Compress::Lzma ; 
-           import  IO::Compress::Lzma 2.020 ; 
-         } ;
+#    eval { require IO::Compress::Adapter::Lzma ; 
+#           import  IO::Compress::Adapter::Lzma 2.018 ; 
+#           require IO::Compress::Lzma ; 
+#           import  IO::Compress::Lzma 2.018 ; 
+#         } ;
 }
 
 
@@ -32,7 +32,7 @@ require Exporter ;
 
 our ($VERSION, @ISA, @EXPORT_OK, %EXPORT_TAGS, $ZipError);
 
-$VERSION = '2.021';
+$VERSION = '2.020';
 $ZipError = '';
 
 @ISA = qw(Exporter IO::Compress::RawDeflate);
@@ -40,7 +40,7 @@ $ZipError = '';
 %EXPORT_TAGS = %IO::Compress::RawDeflate::DEFLATE_CONSTANTS ;
 push @{ $EXPORT_TAGS{all} }, @EXPORT_OK ;
 
-$EXPORT_TAGS{zip_method} = [qw( ZIP_CM_STORE ZIP_CM_DEFLATE ZIP_CM_BZIP2 ZIP_CM_LZMA)];
+$EXPORT_TAGS{zip_method} = [qw( ZIP_CM_STORE ZIP_CM_DEFLATE ZIP_CM_BZIP2 )];
 push @{ $EXPORT_TAGS{all} }, @{ $EXPORT_TAGS{zip_method} };
 
 Exporter::export_ok_tags('all');
@@ -89,21 +89,19 @@ sub mkComp
                                                );
         *$self->{ZipData}{CRC32} = crc32(undef);
     }
-    elsif (*$self->{ZipData}{Method} == ZIP_CM_LZMA) {
-        ($obj, $errstr, $errno) = IO::Compress::Adapter::Lzma::mkCompObject();
-        *$self->{ZipData}{CRC32} = crc32(undef);
-    }
+#    elsif (*$self->{ZipData}{Method} == ZIP_CM_LZMA) {
+#        ($obj, $errstr, $errno) = IO::Compress::Adapter::Lzma::mkCompObject(
+#                                               );
+#        *$self->{ZipData}{CRC32} = crc32(undef);
+#    }
 
     return $self->saveErrorString(undef, $errstr, $errno)
        if ! defined $obj;
 
-    if (! defined *$self->{ZipData}{SizesOffset}) {
-        *$self->{ZipData}{SizesOffset} = 0;
+    if (! defined *$self->{ZipData}{StartOffset}) {
+        *$self->{ZipData}{StartOffset} = 0;
         *$self->{ZipData}{Offset} = new U64 ;
     }
-
-    *$self->{ZipData}{AnyZip64} = 0
-        if ! defined  *$self->{ZipData}{AnyZip64} ;
 
     return $obj;    
 }
@@ -136,8 +134,7 @@ sub mkHeader
     my $self  = shift;
     my $param = shift ;
     
-
-    *$self->{ZipData}{LocalHdrOffset} = U64::clone(*$self->{ZipData}{Offset});
+    *$self->{ZipData}{StartOffset} = *$self->{ZipData}{Offset}->get32bit() ;
 
     my $filename = '';
     $filename = $param->value('Name') || '';
@@ -165,7 +162,12 @@ sub mkHeader
         my $x = '';
         $x .= pack "V V", 0, 0 ; # uncompressedLength   
         $x .= pack "V V", 0, 0 ; # compressedLength   
-        $extra .= IO::Compress::Zlib::Extra::mkSubField(ZIP_EXTRA_ID_ZIP64, $x);
+        $x .= *$self->{ZipData}{Offset}->getPacked_V64() ; # offset to local hdr
+        $x .= pack "V", 0    ; # disk no
+
+        $x = IO::Compress::Zlib::Extra::mkSubField(ZIP_EXTRA_ID_ZIP64, $x);
+        $extra .= $x;
+        $ctlExtra .= $x;
     }
 
     if (! $param->value('Minimal')) {
@@ -225,18 +227,6 @@ sub mkHeader
     $hdr .= pack 'v', length $extra ; # extra length
     
     $hdr .= $filename ;
-
-    # Remember the offset for the compressed & uncompressed lengths in the
-    # local header.
-    if (*$self->{ZipData}{Zip64}) {
-        *$self->{ZipData}{SizesOffset} = *$self->{ZipData}{Offset}->get64bit()
-            + length($hdr) + 4 ;
-    }
-    else {
-        *$self->{ZipData}{SizesOffset} = *$self->{ZipData}{Offset}->get64bit()
-                                            + 18;
-    }
-
     $hdr .= $extra ;
 
 
@@ -252,25 +242,20 @@ sub mkHeader
     $ctl .= pack 'V', $empty     ; # compressed length
     $ctl .= pack 'V', $empty     ; # uncompressed length
     $ctl .= pack 'v', length $filename ; # filename length
-
-    *$self->{ZipData}{ExtraOffset} = length $ctl;
-    *$self->{ZipData}{ExtraSize} = length $ctlExtra ;
-
     $ctl .= pack 'v', length $ctlExtra ; # extra length
     $ctl .= pack 'v', length $comment ;  # file comment length
     $ctl .= pack 'v', 0          ; # disk number start 
     $ctl .= pack 'v', $ifa       ; # internal file attributes
     $ctl .= pack 'V', $extFileAttr   ; # external file attributes
-
-    # offset to local hdr
-    if (*$self->{ZipData}{LocalHdrOffset}->is64bit() ) { 
-        $ctl .= pack 'V', 0xFFFFFFFF ;
+    if (! *$self->{ZipData}{Zip64}) {
+        $ctl .= pack 'V', *$self->{ZipData}{Offset}->get32bit()  ; # offset to local header
     }
     else {
-        $ctl .= *$self->{ZipData}{LocalHdrOffset}->getPacked_V32() ; 
+        $ctl .= pack 'V', $empty ; # offset to local header
     }
     
     $ctl .= $filename ;
+    *$self->{ZipData}{StartOffset64} = 4 + length $ctl;
     $ctl .= $ctlExtra ;
     $ctl .= $comment ;
 
@@ -307,8 +292,6 @@ sub mkTrailer
 
     my $data = $crc32 . $sizes ;
 
-    my $xtrasize  = *$self->{UnCompSize}->getPacked_V64() ; # Uncompressed size
-       $xtrasize .= *$self->{CompSize}->getPacked_V64() ;   # Compressed size
 
     my $hdr = '';
 
@@ -317,47 +300,17 @@ sub mkTrailer
         $hdr .= $data ;
     }
     else {
-        $self->writeAt(*$self->{ZipData}{LocalHdrOffset}->get64bit() + 14,  $crc32)
-            or return undef;
-        $self->writeAt(*$self->{ZipData}{SizesOffset}, 
-                *$self->{ZipData}{Zip64} ? $xtrasize : $sizes)
+        $self->writeAt(*$self->{ZipData}{StartOffset} + 14, $data)
             or return undef;
     }
 
-    # Central Header Record/Zip64 extended field
-
-    substr($ctl, 16, length $crc32) = $crc32 ;
-
-    my $x = '';
-
-    # uncompressed length
-    if (*$self->{UnCompSize}->is64bit() ) {
-        $x .= *$self->{UnCompSize}->getPacked_V64() ; 
-    } else {
-        substr($ctl, 24, 4) = *$self->{UnCompSize}->getPacked_V32() ;
-    }
-
-    # compressed length
-    if (*$self->{CompSize}->is64bit() ) {
-        $x .= *$self->{CompSize}->getPacked_V64() ; 
-    } else {
-        substr($ctl, 20, 4) = *$self->{CompSize}->getPacked_V32() ;
-    }
-
-    # Local Header offset
-    $x .= *$self->{ZipData}{LocalHdrOffset}->getPacked_V64()
-        if *$self->{ZipData}{LocalHdrOffset}->is64bit() ; 
-
-    # disk no - always zero, so don't need it
-    #$x .= pack "V", 0    ; 
-
-    if (length $x) {
-        my $xtra = IO::Compress::Zlib::Extra::mkSubField(ZIP_EXTRA_ID_ZIP64, $x);
-        $ctl .= $xtra ;
-        substr($ctl, *$self->{ZipData}{ExtraOffset}, 2) = 
-             pack 'v', *$self->{ZipData}{ExtraSize} + length $xtra;
-
-        *$self->{ZipData}{AnyZip64} = 1;
+    if (! *$self->{ZipData}{Zip64})
+      { substr($ctl, 16, length $data) = $data }
+    else {
+        substr($ctl, 16, length $crc32) = $crc32 ;
+        my $s  = *$self->{UnCompSize}->getPacked_V64() ; # Uncompressed size
+           $s .= *$self->{CompSize}->getPacked_V64() ;   # Compressed size
+        substr($ctl, *$self->{ZipData}{StartOffset64}, length $s) = $s ;
     }
 
     *$self->{ZipData}{Offset}->add(length($hdr));
@@ -382,12 +335,12 @@ sub mkFinalTrailer
 
     my $z64e = '';
 
-    if ( *$self->{ZipData}{AnyZip64} ) {
+    if ( *$self->{ZipData}{Zip64} ) {
 
         my $v  = *$self->{ZipData}{Version} ;
         my $mb = *$self->{ZipData}{MadeBy} ;
-        $z64e .= pack 'v', $mb            ; # Version made by
-        $z64e .= pack 'v', $v             ; # Version to extract
+        $z64e .= pack 'v', $v             ; # Version made by
+        $z64e .= pack 'v', $mb            ; # Version to extract
         $z64e .= pack 'V', 0              ; # number of disk
         $z64e .= pack 'V', 0              ; # number of disk with central dir
         $z64e .= U64::pack_V64 $entries   ; # entries in central dir on this disk
@@ -406,9 +359,10 @@ sub mkFinalTrailer
         $z64e .= *$self->{ZipData}{Offset}->getPacked_V64() ; # offset to end zip64 central dir
         $z64e .= pack 'V', 1              ; # Total number of disks 
 
-        $cd_offset = 0xFFFFFFFF ;
-        $cd_len = 0xFFFFFFFF if $cd_len >= 0xFFFFFFFF ;
-        $entries = 0xFFFF if $entries >= 0xFFFF ;
+        # TODO - fix these when info-zip 3 is fixed.
+        #$cd_len = 
+        #$cd_offset = 
+        $entries = 0xFFFF ;
     }
 
     my $ecd = '';
@@ -461,10 +415,11 @@ sub ckParams
         $got->value("GID", $timeRef->[1]);
     }
 
-    *$self->{ZipData}{AnyZip64} = 1
-        if $got->value('Zip64');
     *$self->{ZipData}{Zip64} = $got->value('Zip64');
     *$self->{ZipData}{Stream} = $got->value('Stream');
+
+    return $self->saveErrorString(undef, "Zip64 only supported if Stream enabled")   
+        if  *$self->{ZipData}{Zip64} && ! *$self->{ZipData}{Stream} ;
 
     my $method = $got->value('Method');
     return $self->saveErrorString(undef, "Unknown Method '$method'")   
@@ -474,9 +429,9 @@ sub ckParams
         if $method == ZIP_CM_BZIP2 and 
            ! defined $IO::Compress::Adapter::Bzip2::VERSION;
 
-    return $self->saveErrorString(undef, "Lzma not available")
-        if $method == ZIP_CM_LZMA and 
-           ! defined $IO::Compress::Adapter::Lzma::VERSION;
+#    return $self->saveErrorString(undef, "Lzma not available")
+#        if $method == ZIP_CM_LZMA and 
+#           ! defined $IO::Compress::Adapter::Lzma::VERSION;
 
     *$self->{ZipData}{Method} = $method;
 
@@ -512,8 +467,8 @@ sub getExtraParams
 {
     my $self = shift ;
 
-    use IO::Compress::Base::Common  2.021 qw(:Parse);
-    use Compress::Raw::Zlib  2.021 qw(Z_DEFLATED Z_DEFAULT_COMPRESSION Z_DEFAULT_STRATEGY);
+    use IO::Compress::Base::Common  2.020 qw(:Parse);
+    use Compress::Raw::Zlib  2.020 qw(Z_DEFLATED Z_DEFAULT_COMPRESSION Z_DEFAULT_STRATEGY);
 
     my @Bzip2 = ();
     
@@ -1119,11 +1074,14 @@ Create a Zip64 zip file/buffer. This option should only be used if you want
 to store files larger than 4 Gig.
 
 If you intend to manipulate the Zip64 zip files created with this module
-using an external zip/unzip make sure that it supports Zip64.  
+using an external zip/unzip make sure that it supports streaming Zip64.  
 
 In particular, if you are using Info-Zip you need to have zip version 3.x
 or better to update a Zip64 archive and unzip version 6.x to read a zip64
-archive. 
+archive. At the time of writing both are beta status.
+
+When the C<Zip64> option is enabled, the C<Stream> option I<must> be
+enabled as well.
 
 The default is 0.
 
