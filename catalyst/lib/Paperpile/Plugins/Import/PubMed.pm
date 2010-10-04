@@ -667,7 +667,14 @@ sub _linkOut {
 	};
       }
     } else {
-      $pub_hash{$id}->linkout( $entry->{ObjUrl}->{Url} );
+
+	if( UNIVERSAL::isa ( $entry->{ObjUrl} , 'HASH' ) && exists $entry->{ObjUrl}->{Url} ) {
+	  $pub_hash{$id}->linkout( $entry->{ObjUrl}->{Url} );
+	}
+        elsif( UNIVERSAL::isa ( $entry->{ObjUrl} , 'ARRAY' ) && exists $entry->{ObjUrl}->[0]->{Url} ) {
+	  $pub_hash{$id}->linkout( $entry->{ObjUrl}->[0]->{Url} );
+        }
+
       # Adjust the url otherwise it won't get displayed correctly
       #my $icon_url = $entry->{ObjUrl}->{IconUrl};
       #$icon_url =~ s/entrez/corehtml/;
