@@ -673,7 +673,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     } else if (this.searchField) {
       value = this.searchField.getValue();
     }
-    Paperpile.log("Search value: " + value);
     return value;
   },
 

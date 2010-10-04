@@ -13,12 +13,12 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       targetXY: [0, 0],
       anchor: 'left',
       anchorToTarget: true,
-      showDelay: 0,
-      hideDelay: 0
+      showDelay: 5,
+      hideDelay: 5
     });
     var el = this.dragToolTip.getEl();
     el.setStyle('position', 'absolute');
-    el.setStyle('z-index', '250'); // Important -- hover above everything else.
+    el.setStyle('z-index', '250'); // Tooltip needs to hover above everything else!
   },
 
   addAllDragEvents: function(el, fn, targetFilter) {
@@ -101,7 +101,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
         continue;
       }
       var box = target.getBox();
-      c.fillStyle = 'rgba(0,255,0,0.1)';
+      c.fillStyle = 'rgba(0,255,0,1)';
       c.clearRect(box.x, box.y, box.width, box.height);
     }
   },
@@ -321,7 +321,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   },
 
   paneDragEvent: function(event) {
-    //    Paperpile.log("PaneDrag, type: " + event.type + "  target:" + event.target.id + " dragPane:" + this.dragPane.id + "  " + event.getXY());
+    //Paperpile.log("PaneDrag, type: " + event.type + "  target:" + event.target.id + " dragPane:" + this.dragPane.id + "  " + event.getXY());
     // Dispatching other events to relevant functions.
     if (event.type == 'drop') {
       this.onDrop(event);
@@ -442,12 +442,12 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       var files = this.getFilesFromEvent(event);
 
       // Select the current row in the grid.
-      var index = grid.getStore().findExact('guid',row.data.guid);
+      var index = grid.getStore().findExact('guid', row.data.guid);
       grid.getSelectionModel().selectRow(index);
 
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        Paperpile.log("Attach "+file.canonicalFilePath);
+        Paperpile.log("Attach " + file.canonicalFilePath);
         Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.data.guid, file.canonicalFilePath, true]);
       }
     } else if (action == 'supplement-attach') {
@@ -455,7 +455,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       var grid = object[1];
 
       // Select the current row in the grid.
-      var index = grid.getStore().findExact('guid',row.data.guid);
+      var index = grid.getStore().findExact('guid', row.data.guid);
       grid.getSelectionModel().selectRow(index);
 
       var files = this.getFilesFromEvent(event);
@@ -469,7 +469,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         if (file.suffix == 'pdf' || file.isDir) {
-          Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.canonicalFilePath,node]);
+          Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.canonicalFilePath, node]);
         }
       }
     } else if (action == 'file-import') {
@@ -491,13 +491,15 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       event = event.browserEvent;
     }
     var fileURLs = event.dataTransfer.getData("text/uri-list").split("\n");
-    if (fileURLs.length == 0) return false;
+    if (fileURLs.length == 0) return files;
     for (var i = 0; i < fileURLs.length; i++) {
       var fileURL = fileURLs[i];
+      if (fileURL == '') {
+        continue;
+      }
       fileURL = this.fileFromURL(fileURL);
       var file = QRuntime.fileInfo(fileURL);
       files.push(file);
-      Paperpile.log(file);
     }
     return files;
   },
@@ -554,11 +556,13 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
     return false;
   },
+
   isReferenceFile: function(file) {
     var ext = file.suffix;
     if (file.suffix.match(/(bib|ris|xml|sqlite|db|ppl|mods|rss)/)) {
       return true;
     }
+    return false;
   },
 
   // Return true if there is at least one file in the drag event.
@@ -620,6 +624,11 @@ Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
     }
   },
   over: function(event) {
+    //Paperpile.log("  Over!");
+    if (this.tipHideTask) {
+      this.tipHideTask.cancel();
+    }
+
     if (!this.getDragMessage()) {
       return;
     }
@@ -628,7 +637,12 @@ Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
     tip.target = this.targetEl;
     tip.anchorTarget = this.targetEl;
     tip.update(this.getDragMessage());
-    tip.show();
+    if (!tip.isVisible()) {
+      tip.show();
+    } else {
+      var xy = tip.getTargetXY();
+      tip.setPagePosition(xy[0], xy[1]);
+    }
     if (this.el) {
       this.el.addClass('pp-drag-target-over');
       if (this.invisible) {
@@ -637,9 +651,14 @@ Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
     }
 
   },
+  fireShowTip: function(tip) {
+    Paperpile.main.dd.dragToolTip.show();
+  },
+  fireHideTip: function(tip) {
+    Paperpile.main.dd.dragToolTip.hide();
+  },
   out: function(event) {
-    var tip = Paperpile.main.dd.dragToolTip;
-    tip.hide();
+    //Paperpile.log("  Out!");
     if (this.el) {
       this.el.removeClass('pp-drag-target-over');
       if (this.invisible) {
