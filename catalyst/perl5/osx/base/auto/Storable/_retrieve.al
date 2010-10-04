@@ -1,9 +1,9 @@
-# NOTE: Derived from ../../lib/Storable.pm.
+# NOTE: Derived from blib/lib/Storable.pm.
 # Changes made here will be lost when autosplit is run again.
 # See AutoSplit.pm.
 package Storable;
 
-#line 364 "../../lib/Storable.pm (autosplit into ../../lib/auto/Storable/_retrieve.al)"
+#line 364 "blib/lib/Storable.pm (autosplit into blib/lib/auto/Storable/_retrieve.al)"
 # Internal retrieve routine
 sub _retrieve {
 	my ($file, $use_locking) = @_;

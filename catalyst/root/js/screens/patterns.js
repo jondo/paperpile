@@ -107,7 +107,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             if (filenames.length > 0) {
               var folder = filenames[0];
               this.textfields[item].setValue(folder);
-		this.textfields[item].onBlur();
+		      this.textfields[item].onBlur();
             }
           };
 

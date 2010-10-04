@@ -4,3 +4,9 @@
 /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/JSON/PP5005.pm relocate_as=../../JSON/PP5005.pm
 /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/JSON/PP56.pm relocate_as=../../JSON/PP56.pm
 /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan/JSON/PP58.pm relocate_as=../../JSON/PP58.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/JSON.pm relocate_as=../../../../../../../../catalyst/perl5/osx/cpan/JSON.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/JSON/PP.pm relocate_as=../../../../../../../../catalyst/perl5/osx/cpan/JSON/PP.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/JSON/PP/Boolean.pm relocate_as=../../../../../../../../catalyst/perl5/osx/cpan/JSON/PP/Boolean.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/JSON/PP5005.pm relocate_as=../../../../../../../../catalyst/perl5/osx/cpan/JSON/PP5005.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/JSON/PP56.pm relocate_as=../../../../../../../../catalyst/perl5/osx/cpan/JSON/PP56.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/JSON/PP58.pm relocate_as=../../../../../../../../catalyst/perl5/osx/cpan/JSON/PP58.pm

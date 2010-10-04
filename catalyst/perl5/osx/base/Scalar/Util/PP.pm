@@ -16,7 +16,7 @@ use B qw(svref_2object);
 
 @ISA     = qw(Exporter);
 @EXPORT  = qw(blessed reftype tainted readonly refaddr looks_like_number);
-$VERSION = "1.21";
+$VERSION = "1.23";
 $VERSION = eval $VERSION;
 
 sub blessed ($) {
@@ -41,20 +41,19 @@ sub refaddr($) {
 
   $addr =~ /0x(\w+)/;
   local $^W;
+  no warnings 'portable';
   hex($1);
 }
 
 {
   my %tmap = qw(
-    B::HV HASH
-    B::AV ARRAY
-    B::CV CODE
-    B::IO IO
-    B::NULL SCALAR
-    B::NV SCALAR
-    B::PV SCALAR
-    B::GV GLOB
-    B::RV REF
+    B::NULL   SCALAR
+
+    B::HV     HASH
+    B::AV     ARRAY
+    B::CV     CODE
+    B::IO     IO
+    B::GV     GLOB
     B::REGEXP REGEXP
   );
 
@@ -98,8 +97,8 @@ sub looks_like_number {
     require overload;
     return overload::Overloaded($_) ? defined(0 + $_) : 0;
   }
-  return 1 if (/^[+-]?\d+$/); # is a +/- integer
-  return 1 if (/^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/); # a C float
+  return 1 if (/^[+-]?[0-9]+$/); # is a +/- integer
+  return 1 if (/^([+-]?)(?=[0-9]|\.[0-9])[0-9]*(\.[0-9]*)?([Ee]([+-]?[0-9]+))?$/); # a C float
   return 1 if ($] >= 5.008 and /^(Inf(inity)?|NaN)$/i) or ($] >= 5.006001 and /^Inf$/i);
 
   0;

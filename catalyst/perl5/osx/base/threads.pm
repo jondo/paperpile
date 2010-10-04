@@ -5,7 +5,7 @@ use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '1.72';
+our $VERSION = '1.77';
 my $XS_VERSION = $VERSION;
 $VERSION = eval $VERSION;
 
@@ -134,7 +134,7 @@ threads - Perl interpreter-based threads
 
 =head1 VERSION
 
-This document describes threads version 1.72
+This document describes threads version 1.77
 
 =head1 SYNOPSIS
 
@@ -221,28 +221,38 @@ This document describes threads version 1.72
 
 =head1 DESCRIPTION
 
-Perl 5.6 introduced something called interpreter threads.  Interpreter threads
-are different from I<5005threads> (the thread model of Perl 5.005) by creating
-a new Perl interpreter per thread, and not sharing any data or state between
-threads by default.
+Since Perl 5.8, thread programming has been available using a model called
+I<interpreter threads> which provides a new Perl interpreter for each
+thread, and, by default, results in no data or state information being shared
+between threads.
 
-Prior to Perl 5.8, this has only been available to people embedding Perl, and
-for emulating fork() on Windows.
+(Prior to Perl 5.8, I<5005threads> was available through the C<Thread.pm> API.
+This threading model has been deprecated, and was removed as of Perl 5.10.0.)
 
-The I<threads> API is loosely based on the old Thread.pm API. It is very
-important to note that variables are not shared between threads, all variables
-are by default thread local.  To use shared variables one must also use
-L<threads::shared>:
+As just mentioned, all variables are, by default, thread local.  To use shared
+variables, you need to also load L<threads::shared>:
 
     use threads;
     use threads::shared;
 
-It is also important to note that you must enable threads by doing C<use
-threads> as early as possible in the script itself, and that it is not
-possible to enable threading inside an C<eval "">, C<do>, C<require>, or
-C<use>.  In particular, if you are intending to share variables with
-L<threads::shared>, you must C<use threads> before you C<use threads::shared>.
-(C<threads> will emit a warning if you do it the other way around.)
+When loading L<threads::shared>, you must C<use threads> before you
+C<use threads::shared>.  (C<threads> will emit a warning if you do it the
+other way around.)
+
+It is strongly recommended that you enable threads via C<use threads> as early
+as possible in your script.
+
+If needed, scripts can be written so as to run on both threaded and
+non-threaded Perls:
+
+    my $can_use_threads = eval 'use threads; 1';
+    if ($can_use_threads) {
+        # Do processing using threads
+        ...
+    } else {
+        # Do it without using threads
+        ...
+    }
 
 =over
 
@@ -351,9 +361,10 @@ key) will cause its ID to be used as the value:
 =item threads->object($tid)
 
 This will return the I<threads> object for the I<active> thread associated
-with the specified thread ID.  Returns C<undef> if there is no thread
-associated with the TID, if the thread is joined or detached, if no TID is
-specified or if the specified TID is undef.
+with the specified thread ID.  If C<$tid> is the value for the current thread,
+then this call works the same as C<-E<gt>self()>.  Otherwise, returns C<undef>
+if there is no thread associated with the TID, if the thread is joined or
+detached, if no TID is specified or if the specified TID is undef.
 
 =item threads->yield()
 
@@ -892,6 +903,18 @@ other threads are started afterwards.
 If the above does not work, or is not adequate for your application, then file
 a bug report on L<http://rt.cpan.org/Public/> against the problematic module.
 
+=item Memory consumption
+
+On most systems, frequent and continual creation and destruction of threads
+can lead to ever-increasing growth in the memory footprint of the Perl
+interpreter.  While it is simple to just launch threads and then
+C<-E<gt>join()> or C<-E<gt>detach()> them, for long-lived applications, it is
+better to maintain a pool of threads, and to reuse them for the work needed,
+using L<queues|/Thread::Queue> to notify threads of pending work.  The CPAN
+distribution of this module contains a simple example
+(F<examples/pool_reuse.pl>) illustrating the creation, use and monitoring of a
+pool of I<reusable> threads.
+
 =item Current working directory
 
 On all platforms except MSWin32, the setting for the current working directory
@@ -965,7 +988,7 @@ involved, you may be able to work around this by returning a serialized
 version of the object (e.g., using L<Data::Dumper> or L<Storable>), and then
 reconstituting it in the joining thread.  If you're using Perl 5.10.0 or
 later, and if the class supports L<shared objects|threads::shared/"OBJECTS">,
-you can pass them via L<shared queues| Thread::Queue>.
+you can pass them via L<shared queues|Thread::Queue>.
 
 =item END blocks in threads
 
@@ -1011,7 +1034,7 @@ L<threads> Discussion Forum on CPAN:
 L<http://www.cpanforum.com/dist/threads>
 
 Annotated POD for L<threads>:
-L<http://annocpan.org/~JDHEDDEN/threads-1.72/threads.pm>
+L<http://annocpan.org/~JDHEDDEN/threads-1.77/threads.pm>
 
 Source repository:
 L<http://code.google.com/p/threads-shared/>

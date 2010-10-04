@@ -1,9 +1,9 @@
-# NOTE: Derived from ../../lib/Storable.pm.
+# NOTE: Derived from blib/lib/Storable.pm.
 # Changes made here will be lost when autosplit is run again.
 # See AutoSplit.pm.
 package Storable;
 
-#line 239 "../../lib/Storable.pm (autosplit into ../../lib/auto/Storable/_store.al)"
+#line 239 "blib/lib/Storable.pm (autosplit into blib/lib/auto/Storable/_store.al)"
 # Internal store to file routine
 sub _store {
 	my $xsptr = shift;

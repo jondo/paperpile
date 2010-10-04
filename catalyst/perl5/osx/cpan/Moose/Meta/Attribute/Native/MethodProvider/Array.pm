@@ -4,7 +4,7 @@ use Moose::Role;
 use List::Util;
 use List::MoreUtils;
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 $VERSION = eval $VERSION;
 our $AUTHORITY = 'cpan:STEVAN';
 
@@ -346,12 +346,13 @@ sub natatime : method {
     return sub {
         my ( $instance, $n, $f ) = @_;
         my $it = List::MoreUtils::natatime($n, @{ $reader->($instance) });
-        if ($f) {
-            while (my @vals = $it->()) {
-                $f->(@vals);
-            }
+        return $it unless $f;
+
+        while (my @vals = $it->()) {
+            $f->(@vals);
         }
-        $it;
+
+        return;
     };
 }
 

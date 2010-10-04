@@ -447,7 +447,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.data.guid, file, true]);
+        Paperpile.log("Attach "+file.canonicalFilePath);
+        Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.data.guid, file.canonicalFilePath, true]);
       }
     } else if (action == 'supplement-attach') {
       var row = object[0];
@@ -460,22 +461,22 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       var files = this.getFilesFromEvent(event);
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.data.guid, file, false]);
+        Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.data.guid, file.canonicalFilePath, false]);
       }
     } else if (action == 'pdf-import') {
       var node = object;
       var files = this.getFilesFromEvent(event);
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        if (file.extension() == 'pdf' || file.isDirectory()) {
-          Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.nativePath(),node]);
+        if (file.suffix == 'pdf' || file.isDir) {
+          Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.canonicalFilePath,node]);
         }
       }
     } else if (action == 'file-import') {
       var files = this.getFilesFromEvent(event);
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
-        var path = file.nativePath();
+        var path = file.canonicalFilePath;
         if (this.isReferenceFile(file)) {
           Paperpile.main.createFileImportTab(path);
         }
@@ -494,8 +495,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     for (var i = 0; i < fileURLs.length; i++) {
       var fileURL = fileURLs[i];
       fileURL = this.fileFromURL(fileURL);
-      var file = Titanium.Filesystem.getFile(fileURL);
+      var file = QRuntime.fileInfo(fileURL);
       files.push(file);
+      Paperpile.log(file);
     }
     return files;
   },
@@ -508,7 +510,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var hasOnePdf = false;
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
-      if (file.extension() == 'pdf') {
+      if (file.suffix == 'pdf') {
         hasOnePdf = true;
       }
     }
@@ -525,7 +527,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
-      if (file.isDirectory()) {
+      if (file.isDir) {
         return true;
       }
     }
@@ -553,8 +555,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     return false;
   },
   isReferenceFile: function(file) {
-    var ext = file.extension();
-    if (file.extension().match(/(bib|ris|xml|sqlite|db|ppl|mods|rss)/)) {
+    var ext = file.suffix;
+    if (file.suffix.match(/(bib|ris|xml|sqlite|db|ppl|mods|rss)/)) {
       return true;
     }
   },
@@ -565,7 +567,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
-      if (file.isFile()) {
+      if (file.isFile) {
         return true;
       }
     }

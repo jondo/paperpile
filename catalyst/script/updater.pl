@@ -95,6 +95,7 @@ $curr_version_name = $app_settings->{version_name} || die("version name not foun
 
 my $needs_sudo = ( -w "$app_dir/catalyst/conf/settings.yaml" ) ? 0 : 1;
 
+
 ########### Get update information from remote server ################
 
 my $browser = LWP::UserAgent->new();

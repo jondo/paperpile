@@ -1,4 +1,4 @@
-#  $Id: Driver.xst 12816 2009-06-08 10:07:26Z timbo $
+#  $Id: Driver.xst 13257 2009-09-02 10:13:15Z timbo $
 #  Copyright (c) 1997-2002  Tim Bunce  Ireland
 #  Copyright (c) 2002       Jonathan Leffler
 #
@@ -367,8 +367,9 @@ DESTROY(dbh)
                     XXX Could add an attribute flag to indicate that the driver
                     doesn't have this problem. Patches welcome.
                 */
-                if (DBIc_WARN(imp_dbh)
+                if (DBIc_WARN(imp_dbh) /* only warn if likely to be useful... */
                 &&  DBIc_is(imp_dbh, DBIcf_Executed) /* has not just called commit/rollback */
+            /*  && !DBIc_is(imp_dbh, DBIcf_ReadOnly) -- is not read only */
                 && (!dirty || DBIc_DBISTATE(imp_dbh)->debug >= 3)
                 ) {
                     warn("Issuing rollback() due to DESTROY without explicit disconnect() of %s handle %s",

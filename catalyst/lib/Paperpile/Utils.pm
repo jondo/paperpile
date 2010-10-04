@@ -164,6 +164,23 @@ sub get_binary{
 
   my ($self, $name)=@_;
 
+  my $platform=$self->get_platform;
+
+  if ($platform eq 'osx'){
+    # Make sure that fontconfig configuration files are found on OSX
+    my $fc=File::Spec->catfile($self->path_to('bin'), 'osx','fonts','fonts.conf');
+    $ENV{FONTCONFIG_FILE}=$fc;
+  }
+
+  my $bin=File::Spec->catfile($self->path_to('bin'), $platform, $name);
+
+  return $bin;
+}
+
+sub get_platform{
+
+  my ($self) = @_;
+
   my $platform='';
   my $arch_string=$Config{archname};
 
@@ -173,14 +190,10 @@ sub get_binary{
 
   if ( $arch_string =~ /osx/i ) {
     $platform = 'osx';
-    # Make sure that fontconfig configuration files are found on OSX
-    my $fc=File::Spec->catfile($self->path_to('bin'), 'osx','fonts','fonts.conf');
-    $ENV{FONTCONFIG_FILE}=$fc;
   }
 
-  my $bin=File::Spec->catfile($self->path_to('bin'), $platform, $name);
+  return $platform;
 
-  return $bin;
 }
 
 

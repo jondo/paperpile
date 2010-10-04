@@ -1,0 +1,7 @@
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.5
+TEMPLATE = subdirs
+SUBDIRS += src
+
+
+
+
