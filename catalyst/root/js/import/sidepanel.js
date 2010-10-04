@@ -14,11 +14,14 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginAboutPanel = Ext.extend(Ext.Panel, {
 
+  /*
+   * Use the markup and tabLabel configuration options to create a sub-class of the 
+   * about panel for other plugins. See the createAboutPanel method in PubMed.js for example.
+   */
   markup: [
-    '<div class="pp-box pp-box-side-panel pp-box-style1">',
+    '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-center">',
     '<p>Put your side-panel HTML here</p>',
     '<p></p>',
     '</div>'],
@@ -41,9 +44,12 @@ Paperpile.PluginAboutPanel = Ext.extend(Ext.Panel, {
   },
 
   update: function() {
-
     this.tpl.overwrite(this.body, {},
-    true);
+      true);
+  },
 
+  forceUpdate: function() {
+    this.update();
   }
+
 });

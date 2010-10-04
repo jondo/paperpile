@@ -27,6 +27,10 @@ Paperpile.PluginPanelTrash = Ext.extend(Paperpile.PluginPanel, {
 
   createGrid: function(gridParams) {
     return new Paperpile.PluginGridTrash(gridParams);
+  },
+
+  createAboutPanel: function() {
+    return undefined;
   }
 
 });
@@ -57,6 +61,10 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
       itemId: 'restore_button',
       tooltip: 'Restore selected references from Trash'
     });
+  },
+
+  getEmptyBeforeSearchTemplate: function() {
+    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No items in the Trash. <a href="#" class="pp-textlink" action="close-tab">Close tab</a></p></div>']).compile();
   },
 
   initToolbarMenuItemIds: function() {

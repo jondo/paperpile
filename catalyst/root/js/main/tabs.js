@@ -119,6 +119,9 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     if (pars.plugin_query != null && pars.plugin_query.indexOf('folderid:') > -1) {
       javascript_ui = "Folder";
     }
+    if (pars.plugin_query != null && pars.plugin_query.indexOf('labelid:') > -1) {
+      javascript_ui = "Label";
+    }
 
     //var newGrid=new Paperpile['Plugin'+javascript_ui](pars);
     if (this.findAndActivateOpenTabByItemId(itemId)) {

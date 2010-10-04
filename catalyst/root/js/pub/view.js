@@ -20,10 +20,11 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
   initComponent: function() {
 
     this.grid = this.createGrid(this.gridParams);
-    this.overviewPanel = this.createOverview();
-    this.detailPanel = this.createDetails();
-
+    // Center panel is composed of grid, abstract and notes.
     this.centerPanel = this.createCenterPanel();
+
+    this.overviewPanel = this.createOverview();
+    // East panel is composed of overview and details.
     this.eastPanel = this.createEastPanel();
 
     Ext.apply(this, {
@@ -32,30 +33,22 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       hideBorders: true,
       items: [
         this.centerPanel,
-        this.eastPanel
-
-        ]
+        this.eastPanel]
     });
 
     Paperpile.PluginPanel.superclass.initComponent.call(this);
 
-    // If grid has an "about" panel, create this panel and show it
-    this.on('afterLayout',
-      function() {
-        if (this.grid.aboutPanel) {
-          this.items.get('east_panel').items.add(this.grid.aboutPanel);
-          var button = this.items.get('east_panel').getBottomToolbar().items.get('about_tab_button');
-          button.show();
-          button.enable();
-          button.toggle(true);
-          button.setText(this.grid.aboutPanel.tabLabel);
-          this.grid.aboutPanel.update();
-          this.items.get('east_panel').getLayout().setActiveItem('about');
-        }
-      },
-      this, {
-        single: true
-      });
+    this.eastPanel.on('afterrender', this.afterEastRender, this);
+
+  },
+
+  afterEastRender: function() {
+    if (this.hasAboutPanel()) {
+      this.getEastPanel().getLayout().setActiveItem(this.getAboutPanel());
+      this.depressButton('about_tab_button');
+    } else {
+      this.depressButton('overview_tab_button');
+    }
   },
 
   saveScrollState: function() {
@@ -74,10 +67,6 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
   createOverview: function(params) {
     return new Paperpile.PubOverview(params);
-  },
-
-  createDetails: function(params) {
-    return new Paperpile.PubDetails(params);
   },
 
   createCenterPanel: function() {
@@ -102,6 +91,11 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
   },
 
   createEastPanel: function() {
+    var eastPanelItems = [this.getOverviewPanel()];
+    if (this.hasAboutPanel()) {
+      eastPanelItems.push(this.getAboutPanel());
+    }
+
     var eastPanel = new Ext.Panel({
       region: 'east',
       itemId: 'east_panel',
@@ -109,9 +103,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       split: true,
       layout: 'card',
       width: 300,
-      items: [
-        this.overviewPanel,
-        this.detailPanel],
+      items: eastPanelItems,
       bbar: [{
         text: 'Overview',
         itemId: 'overview_tab_button',
@@ -147,20 +139,48 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
           hidden: true
         }]
     });
-    return eastPanel;
+    this.eastPanel = eastPanel;
+    return this.eastPanel;
+  },
+
+  getEastPanel: function() {
+    return this.eastPanel;
   },
 
   getGrid: function() {
     return this.grid;
   },
 
-  getOverview: function() {
+  getOverviewPanel: function() {
     return this.overviewPanel;
   },
 
-  getDetails: function() {
-    return this.detailPanel;
+  getAboutPanel: function() {
+    if (!this.aboutPanel) {
+      this.aboutPanel = this.createAboutPanel();
+    }
+    return this.aboutPanel;
   },
+
+  createAboutPanel: function() {
+    return new Paperpile.PluginAboutPanel();
+  },
+
+  removeAboutPanel: function() {
+    var panel = this.getAboutPanel();
+
+    if (this.hasAboutPanel() && this.getEastPanel().items.get('about')) {
+      this.getEastPanel().items.remove(panel);
+      this.getEastPanel().getBottomToolbar().items.get('about_tab_button').hide();
+      this.showOverview();
+    }
+  },
+
+  hasAboutPanel: function() {
+    return (this.getAboutPanel() !== undefined);
+  },
+
+  onEmpty: function() {},
 
   onUpdate: function(data) {
     if (data.pubs) {
@@ -183,21 +203,57 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
   depressButton: function(itemId) {
     var button = this.items.get('east_panel').getBottomToolbar().items.get(itemId);
     button.toggle(true);
-    this.onControlToggle(button, true);
+    this.onControlToggle(button, true, true);
   },
 
   onControlToggle: function(button, pressed) {
+    var newActiveItem;
+
+    if (!pressed) {
+      return;
+    }
     if (button.itemId == 'overview_tab_button' && pressed) {
-      this.items.get('east_panel').getLayout().setActiveItem('overview');
+      newActiveItem = this.getOverviewPanel();
+      newActiveItem.singleSelectionDisplay = 'overview';
+    } else if (button.itemId == 'details_tab_button' && pressed) {
+      newActiveItem = this.getOverviewPanel();
+      newActiveItem.singleSelectionDisplay = 'details';
+    } else if (button.itemId == 'about_tab_button' && pressed) {
+      newActiveItem = this.getAboutPanel();
+    } else {
+      Paperpile.log("Didn't recognize button " + button.itemId);
     }
 
-    if (button.itemId == 'details_tab_button' && pressed) {
-      this.items.get('east_panel').getLayout().setActiveItem('details');
+    newActiveItem.forceUpdate();
+    this.getEastPanel().getLayout().setActiveItem(newActiveItem);
+  },
+
+  updateView: function() {
+    var count = this.getGrid().getStore().getCount();
+
+    var about_button = this.getEastPanel().getBottomToolbar().get('about_tab_button');
+    if (this.hasAboutPanel() && !about_button.isVisible()) {
+      about_button.show();
+      about_button.enable();
+      about_button.setText(this.getAboutPanel().tabLabel);
     }
 
-    if (button.itemId == 'about_tab_button' && pressed) {
-      this.items.get('east_panel').getLayout().setActiveItem('about');
+    if (count == 0 && this.getGrid().isLoaded()) {
+      this.onEmpty();
+      this.getGrid().onEmpty();
     }
+
+    if (count > 0) {
+      // Change the active tab to 'overview'
+      var activeTab = this.getEastPanel().getLayout().activeItem;
+      if (activeTab == this.getAboutPanel()) {
+        this.getEastPanel().getLayout().setActiveItem(this.getOverviewPanel());
+        this.depressButton('overview_tab_button');
+      }
+    }
+    this.updateDetails();
+    this.updateButtons();
+    this.getGrid().updateButtons();
   },
 
   updateDetails: function(updateImmediately) {
@@ -218,10 +274,12 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
   updateDetailsWork: function() {
     var datatabs = this.items.get('center_panel').items.get('data_tabs');
+    // Abstract.
     datatabs.items.get('pubsummary').updateDetail();
+    // Notes.
     datatabs.items.get('pubnotes').updateDetail();
-    this.getOverview().forceUpdate();
-    this.getDetails().updateDetail();
+    // Overview.
+    this.getOverviewPanel().forceUpdate();
   },
 
   updateButtons: function() {
@@ -239,17 +297,5 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       tb_bottom.items.get('summary_tab_button').disable();
       tb_bottom.items.get('notes_tab_button').disable();
     }
-  },
-
-  onEmpty: function(tpl) {
-    var east_panel = this.items.get('east_panel');
-
-    east_panel.items.get('overview').showEmpty(tpl);
-    east_panel.items.get('details').showEmpty(tpl);
-
-    var datatabs = this.items.get('center_panel').items.get('data_tabs');
-    datatabs.items.get('pubsummary').showEmpty(tpl);
-    datatabs.items.get('pubnotes').showEmpty(tpl);
   }
-
 });

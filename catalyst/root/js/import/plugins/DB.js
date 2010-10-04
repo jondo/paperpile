@@ -26,25 +26,10 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   plugin_iconCls: 'pp-icon-folder',
   plugin_name: 'DB',
 
-  welcomeMsg: [
-    '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome"',
-    '<h2>Welcome to Paperpile</h2>',
-    '<p>Your library is still empty. <p>',
-    '<p>To get started, <p>',
-    '<ul>',
-    '<li>import your <a href="#" class="pp-textlink" onClick="Paperpile.main.pdfExtract();">PDF collection</a></li>',
-    '<li>get references from a <a href="#" class="pp-textlink" onClick="Paperpile.main.fileImport();">bibliography file</a></li>',
-    '<li>start searching for papers using ',
-    '<a href="#" class="pp-textlink" onClick=',
-    '"Paperpile.main.tabs.newPluginTab(\'PubMed\', {plugin_name: \'PubMed\', plugin_query:\'\'});">PubMed</a> or ',
-    '<a href="#" class="pp-textlink" onClick=',
-    '"Paperpile.main.tabs.newPluginTab(\'GoogleScholar\', {plugin_name: \'GoogleScholar\', plugin_query:\'\'});">Google Scholar</a></li>',
-    '</ul>',
-    '</div>'],
-
   initComponent: function() {
 
     Paperpile.PluginGridDB.superclass.initComponent.call(this);
+
     this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
 
     this.actions['NEW'] = new Ext.Action({
@@ -73,18 +58,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     this.getBottomToolbar().pageSize = parseInt(this.limit);
 
-    store.on('load',
-      function() {
-        if (this.getStore().getCount() == 0) {
-          var panel = this.getPluginPanel();
-          if (panel.itemId == 'MAIN' && this.getStore().baseParams.plugin_query == "") {
-            // This needs to be deferred by a bit, so it happens AFTER the onEmpty('') call within the grid.js onStoreLoad method.
-            panel.onEmpty.defer(10, panel, [this.welcomeMsg]);
-          }
-        }
-      },
-      this);
-
     store.load({
       params: {
         start: 0,
@@ -111,7 +84,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive" default="desc">Supp. material</div>');
     Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="notes" status="inactive" default="desc">Notes</div>');
 
-    this.mon(target,'click',this.handleSortButtons,this);
+    this.mon(target, 'click', this.handleSortButtons, this);
   },
 
   handleFocusSearch: function() {
@@ -321,14 +294,14 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     index = ids.indexOf('SELECT_ALL');
     ids.insert(index + 0, 'EDIT');
-//    ids.insert(index + 1, 'EDIT');
-
+    //    ids.insert(index + 1, 'EDIT');
   },
 
   isContextItem: function(item) {
     if (item.ownerCt.itemId == 'context') {
       return true;
     }
+    return false;
   },
   isToolbarItem: function(item) {
     return true;
@@ -364,6 +337,25 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         this.getStore().reload();
       }
     }
+  },
+
+  getEmptyBeforeSearchTemplate: function() {
+    var markup = [
+      '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome pp-box-center"',
+      '<h2>Welcome to Paperpile</h2>',
+      '<p>Your library is still empty. <p>',
+      '<p>To get started, <p>',
+      '<ul>',
+      '<li>import your <a href="#" class="pp-textlink" onClick="Paperpile.main.pdfExtract();">PDF collection</a></li>',
+      '<li>get references from a <a href="#" class="pp-textlink" onClick="Paperpile.main.fileImport();">bibliography file</a></li>',
+      '<li>start searching for papers using ',
+      '<a href="#" class="pp-textlink" onClick=',
+      '"Paperpile.main.tabs.newPluginTab(\'PubMed\', {plugin_name: \'PubMed\', plugin_query:\'\'});">PubMed</a> or ',
+      '<a href="#" class="pp-textlink" onClick=',
+      '"Paperpile.main.tabs.newPluginTab(\'GoogleScholar\', {plugin_name: \'GoogleScholar\', plugin_query:\'\'});">Google Scholar</a></li>',
+      '</ul>',
+      '</div>'];
+    return new Ext.XTemplate(markup).compile();
   }
 });
 
@@ -378,5 +370,10 @@ Paperpile.PluginPanelDB = function(config) {
 Ext.extend(Paperpile.PluginPanelDB, Paperpile.PluginPanel, {
   createGrid: function(params) {
     return new Paperpile.PluginGridDB(params);
+  },
+
+  createAboutPanel: function() {
+    return undefined;
   }
+
 });

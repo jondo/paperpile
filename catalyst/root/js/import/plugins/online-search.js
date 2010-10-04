@@ -120,7 +120,11 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       setSearchQuery: function(text) {
         this.searchField.setValue(text);
         this.searchField.onTrigger2Click();
+      },
+      getNoResultsTemplate: function() {
+        return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No results found. <a href="#" class="pp-textlink" action="clear-search">Try a new search</a></p></div>']).compile();
       }
+
     });
 
     if (grid.plugin_query != '') {

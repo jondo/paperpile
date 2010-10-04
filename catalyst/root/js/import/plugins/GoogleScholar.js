@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PluginPanelGoogleScholar = Ext.extend(Paperpile.PluginPanel, {
   initComponent: function() {
     Ext.apply(this, {
@@ -25,7 +24,19 @@ Paperpile.PluginPanelGoogleScholar = Ext.extend(Paperpile.PluginPanel, {
   },
   createGrid: function(params) {
     return new Paperpile.PluginGridGoogleScholar(params);
+  },
+  createAboutPanel: function() {
+    return new Paperpile.PluginAboutPanel({
+      markup: [
+        '<div class="pp-box pp-box-side-panel pp-box-style1">',
+        '<div class="pp-googlescholar-logo">&nbsp</div>',
+        '<p class="pp-plugins-description">Google Scholar searches across many disciplines and sources: peer-reviewed papers, theses, books, abstracts and articles, from academic publishers, professional societies, preprint repositories, universities and other scholarly organizations.</p>',
+        '<p><a target=_blank href="http://scholar.google.com" class="pp-textlink">scholar.google.com</a></p>',
+        '</div>'],
+      tabLabel: 'About GoogleScholar'
+    });
   }
+
 });
 
 Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
@@ -38,7 +49,6 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
   initComponent: function() {
     this.plugin_name = 'GoogleScholar';
     this.plugin_iconCls = 'pp-icon-google';
-    this.aboutPanel = new Paperpile.AboutGoogleScholar();
 
     Paperpile.PluginGridGoogleScholar.superclass.initComponent.call(this);
   },
@@ -46,16 +56,5 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
   isLongImport: function() {
     return true;
   }
-
-});
-
-Paperpile.AboutGoogleScholar = Ext.extend(Paperpile.PluginAboutPanel, {
-  markup: [
-    '<div class="pp-box pp-box-side-panel pp-box-style1">',
-    '<div class="pp-googlescholar-logo">&nbsp</div>',
-    '<p class="pp-plugins-description">Google Scholar searches across many disciplines and sources: peer-reviewed papers, theses, books, abstracts and articles, from academic publishers, professional societies, preprint repositories, universities and other scholarly organizations.</p>',
-    '<p><a target=_blank href="http://scholar.google.com" class="pp-textlink">scholar.google.com</a></p>',
-    '</div>'],
-  tabLabel: 'About GoogleScholar'
 
 });

@@ -86,6 +86,10 @@ Paperpile.Ajax = function(config) {
     config.scope = Paperpile.main;
   }
 
+  if (config.debug) {
+    Paperpile.log(config);
+  }
+
   return Ext.Ajax.request(config);
 };
 
@@ -95,7 +99,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   initComponent: function() {
 
-	    Paperpile.main = this;
+    Paperpile.main = this;
 
     Ext.apply(this, {
       layout: 'border',
@@ -153,7 +157,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.mon(Ext.getBody(), 'click', function(event, target, options) {
       if (target.href) {
-        if (!target.href.match(/(app|paperpile)/i)) {
+        Paperpile.log(target.href);
+        if (!target.href.match(/(app|paperpile|localhost)/i)) {
           event.stopEvent();
           Paperpile.utils.openURL(target.href);
         }
@@ -198,6 +203,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       hideDelay: 0,
       anchor: 'left'
     });
+
+    //    var lp = new Paperpile.LabelPanel();
+    //    lp.setPosition(300, 200);
+    //    lp.show();
   },
 
   getZoom: function() {
@@ -205,39 +214,39 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   onZoomChange: function(zoomLevel) {
-	    var oldZoomLevel = this.getZoom();
+    var oldZoomLevel = this.getZoom();
 
-	    if (oldZoomLevel == zoomLevel) {
-		return;
-	    }
-	    var zoomRatio = zoomLevel / oldZoomLevel;
+    if (oldZoomLevel == zoomLevel) {
+      return;
+    }
+    var zoomRatio = zoomLevel / oldZoomLevel;
 
-	    if (IS_TITANIUM) {
-		// Resize the Titanium window accordingly.
-		var win = Titanium.UI.getMainWindow();
-		var oldWidth = win.getWidth();
-		var oldHeight = win.getHeight();
-		win.setWidth(oldWidth*zoomRatio);
-		win.setHeight(oldHeight*zoomRatio);
-	    }
+    if (IS_TITANIUM) {
+      // Resize the Titanium window accordingly.
+      var win = Titanium.UI.getMainWindow();
+      var oldWidth = win.getWidth();
+      var oldHeight = win.getHeight();
+      win.setWidth(oldWidth * zoomRatio);
+      win.setHeight(oldHeight * zoomRatio);
+    }
 
-	    Ext.getBody().setStyle('zoom',zoomLevel);
-	    // Now resize the body element.
-	    this.resizeWithZoom(this.getWidth(),this.getHeight());
-	},
+    Ext.getBody().setStyle('zoom', zoomLevel);
+    // Now resize the body element.
+    this.resizeWithZoom(this.getWidth(), this.getHeight());
+  },
 
-  resizeWithZoom: function(w,h) {
-	    var item = this.items.get(0);
-	    var zoom = Ext.getBody().getStyle('zoom');
-	    item.setSize(w/zoom,h/zoom);	    
-	},
+  resizeWithZoom: function(w, h) {
+    var item = this.items.get(0);
+    var zoom = Ext.getBody().getStyle('zoom');
+    item.setSize(w / zoom, h / zoom);
+  },
 
-  fireResize: function(w,h) {
-	    this.resizeWithZoom(w,h);
-	},
+  fireResize: function(w, h) {
+    this.resizeWithZoom(w, h);
+  },
 
   afterLoadSettings: function() {
-	/*
+    /*
     var zoom = this.getSetting('zoom_level');
 	if (zoom === undefined) {
 	  zoom = 1
@@ -305,15 +314,22 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
+  removeFromFolder: function(sel, grid, guid, callback) {
+    this.removeFromCollection(sel, grid, guid, 'FOLDER', callback);
+  },
+  removeFromLabel: function(sel, grid, guid, callback) {
+    this.removeFromCollection(sel, grid, guid, 'LABEL', callback);
+  },
+
   // sel = 'ALL' or guids of selected pubs.
-  deleteFromFolder: function(sel, grid, folder_id, callback) {
+  removeFromCollection: function(sel, grid, guid, type, callback) {
     Paperpile.Ajax({
       url: '/ajax/crud/remove_from_collection',
       params: {
         selection: sel,
         grid_id: grid.id,
-        collection_guid: folder_id,
-        type: 'FOLDER'
+        collection_guid: guid,
+        type: type
       },
       success: function(response) {
         if (callback) {
@@ -495,7 +511,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           },
           handler: function() {
             this.pdfExtractChoice.close();
-	    this.pdfExtractChoice = undefined;
+            this.pdfExtractChoice = undefined;
           },
           scope: this
         }]
@@ -627,9 +643,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     var types = null;
     if (Paperpile.utils.get_platform() != 'osx') {
-	types = ['*'];
+      types = ['*'];
     }
-    
+
     var options = {
       title: 'Choose a bibliography file to import',
       types: types,
@@ -673,8 +689,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     // place. Right now the label list does not get updated. There
     // might be also a race condition when the tagStore response comas
     // after the subsequent grid updates. 
-    if (data.collection_delta){
-      this.tagStore.reload();      
+    if (data.collection_delta) {
+      this.tagStore.reload();
     }
 
     for (var i = 0; i < tabs.length; i++) {
@@ -823,11 +839,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var tabs = Paperpile.main.tabs.items.items;
     for (var i = 0; i < tabs.length; i++) {
       var tab = tabs[i];
-      if (this.isLabelTab(tab)) {
-        // The label's GUID is currently stored in the tab's itemId property, but 
-        // this feels like a hack...
-        tab.setIconClass('pp-tag-style-tab pp-tag-style-' + this.getStyleForTag(tab.itemId));
-      }
       // Force a re-render on any grid items containing the given tag.
       if (tab instanceof Paperpile.PluginPanel) {
         tab.getGrid().updateTagStyles();

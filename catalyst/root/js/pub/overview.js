@@ -150,7 +150,17 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
   updateAllInfo: function(data) {
     data = this.fillInFields(data);
-    this.getGrid().getSidebarTemplate().singleSelection.overwrite(this.body, data);
+
+    var templateToUse;
+    if (this.singleSelectionDisplay == 'overview') {
+      templateToUse = this.getGrid().getSidebarTemplate().singleSelection;
+    } else if (this.singleSelectionDisplay == 'details') {
+      templateToUse = this.getGrid().getSidebarTemplate().details;
+    } else {
+      templateToUse = this.getGrid().getSidebarTemplate().singleSelection;
+    }
+    templateToUse.overwrite(this.body, data);
+
     this.updateEllipses(data);
     this.updateLabels(data);
     if (this.searchDownloadWidget) {
@@ -178,6 +188,45 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       }
     }
     data._folders_list = list;
+
+    if (data.pubtype) {
+      // Fill in the values for the details panel if availabe.
+      var currType = Paperpile.main.globalSettings.pub_types[data.pubtype];
+      var fieldNames = Paperpile.main.globalSettings.pub_fields;
+
+      var allFields = ['sortkey', 'title', 'booktitle', 'series', 'authors', 'editors', 'journal',
+        'chapter', 'volume', 'number', 'issue', 'edition', 'pages', 'url', 'howpublished',
+        'publisher', 'organization', 'school', 'address', 'year', 'month', 'day', 'eprint',
+        'issn', 'isbn', 'pmid', 'lccn', 'arxivid', 'doi', 'keywords', 'note'];
+      var list = [];
+      for (var i = 0; i < allFields.length; i++) {
+        var field = allFields[i];
+        var value = this.data[field];
+
+        var label = fieldNames[field];
+
+        // Check if we have type-specific names
+        if (currType.labels) {
+          if (currType.labels[field]) {
+            label = currType.labels[field];
+          }
+        }
+
+        // Breaks layout, needs proper fix
+        if (label === 'How published') {
+          label = 'How publ.';
+        }
+
+        if (!value) continue;
+        list.push({
+          label: label,
+          value: value
+        });
+      }
+      data.fields = list;
+      data._pubtype = currType.name;
+    }
+
     return data;
   },
 
@@ -264,28 +313,19 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       this.labelWidget.renderMultiple();
     }
 
+    /*
     Ext.get('main-container-' + this.id).on('click', this.handleClick,
       this, {
         delegate: 'a'
       });
+       */
   },
 
   // Event handling for the HTML. Is called with 'el' as the Ext.Element of the HTML 
   // after the template was written in updateDetail
   //    
   installEvents: function() {
-    var el = Ext.get('tag-add-link-' + this.id);
     this.el.on('click', this.handleClick, this);
-  },
-
-  showOverview: function() {
-    var view = Paperpile.main.getActiveView();
-    view.depressButton('overview_tab_button');
-  },
-
-  showDetails: function() {
-    var view = Paperpile.main.getActiveView();
-    view.depressButton('details_tab_button');
   },
 
   handleClick: function(e) {
@@ -417,10 +457,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     case 'delete-ref':
       var grid = Paperpile.main.getActiveGrid();
       grid.handleDelete();
-      break;
-
-    case 'show-details':
-      this.showDetails();
       break;
 
     case 'update-metadata':

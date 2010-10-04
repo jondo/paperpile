@@ -14,87 +14,107 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-Paperpile.PluginPanelFolder = Ext.extend(Paperpile.PluginPanel, {
+Paperpile.PluginPanelLabel = Ext.extend(Paperpile.PluginPanel, {
 
   initComponent: function() {
     Ext.apply(this, {
       title: this.title,
-      iconCls: 'pp-icon-folder'
+      iconCls: 'pp-icon-label'
     });
 
-    Paperpile.log("Folder plugin!");
-    Paperpile.PluginPanelFolder.superclass.initComponent.call(this);
+    Paperpile.PluginPanelLabel.superclass.initComponent.call(this);
+
+    this.on('afterrender', this.myAfterRender, this);
+  },
+
+  myAfterRender: function() {
+    this.getGrid().updateTagStyles();
   },
 
   createGrid: function(gridParams) {
-    return new Paperpile.PluginGridFolder(gridParams);
+    return new Paperpile.PluginGridLabel(gridParams);
   }
 });
 
-Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
+Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
 
-  plugin_iconCls: 'pp-icon-folder',
+  plugin_iconCls: 'pp-icon-label',
   plugin_name: 'DB',
   limit: 25,
   plugin_base_query: '',
 
   initComponent: function() {
-    Paperpile.PluginGridFolder.superclass.initComponent.call(this);
+    Paperpile.PluginGridLabel.superclass.initComponent.call(this);
 
-    this.actions['REMOVE_FROM_FOLDER'] = new Ext.Action({
-      text: 'Remove from folder',
+    this.actions['REMOVE_FROM_LABEL'] = new Ext.Action({
+      text: 'Remove label from references',
       cls: 'x-btn-text-icon',
-      icon: '/images/icons/folder_delete.png',
-      handler: this.removeFromFolder,
+      icon: '/images/icons/label_delete.png',
+      handler: this.removeFromLabel,
       scope: this
     });
+
+  },
+
+  getGUID: function() {
+    var match = this.plugin_base_query.match('labelid:(.*)$');
+    var guid = match[1];
+    return guid;
+  },
+
+  updateTagStyles: function() {
+    Paperpile.PluginGridLabel.superclass.updateTagStyles.call(this);
+
+    var pp = this.getPluginPanel();
+    var guid = this.getGUID();
+    pp.setIconClass('pp-tag-style-tab pp-tag-style-' + Paperpile.main.getStyleForTag(guid));
   },
 
   getEmptyBeforeSearchTemplate: function() {
-    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>This folder is empty. <a href="#" class="pp-textlink" action="close-tab">Close tab</a></p></div>']).compile();
+    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No references are tagged with this label. <a href="#" class="pp-textlink" action="close-tab">Close tab</a></p></div>']).compile();
   },
 
   initContextMenuItemIds: function() {
-    Paperpile.PluginGridFolder.superclass.initContextMenuItemIds.call(this);
+    Paperpile.PluginGridLabel.superclass.initContextMenuItemIds.call(this);
     var ids = this.contextMenuItemIds;
 
     var index = ids.indexOf('DELETE');
-    ids.insert(index + 1, 'REMOVE_FROM_FOLDER');
+    ids.insert(index + 1, 'REMOVE_FROM_LABEL');
   },
 
   initToolbarMenuItemIds: function() {
-    Paperpile.PluginGridFolder.superclass.initToolbarMenuItemIds.call(this);
+    Paperpile.PluginGridLabel.superclass.initToolbarMenuItemIds.call(this);
     var ids = this.toolbarMenuItemIds;
 
     var index = ids.indexOf('TB_FILL');
-    ids.insert(index + 1, 'REMOVE_FROM_FOLDER');
+    ids.insert(index + 1, 'REMOVE_FROM_LABEL');
   },
 
   updateButtons: function() {
-    Paperpile.PluginGridFolder.superclass.updateButtons.call(this);
+    Paperpile.PluginGridLabel.superclass.updateButtons.call(this);
 
     var selection = this.getSingleSelectionRecord();
     if (!selection) {
-      this.actions['REMOVE_FROM_FOLDER'].disable();
+      this.actions['REMOVE_FROM_LABEL'].disable();
     }
   },
 
-  removeFromFolder: function() {
+  removeFromLabel: function() {
     var sel = this.getSelection();
     var grid = this;
-    var match = this.plugin_base_query.match('folderid:(.*)$');
-    var folder_id = match[1];
+    var match = this.plugin_base_query.match('labelid:(.*)$');
+    var guid = match[1];
 
     var firstRecord = this.getSelectionModel().getLowestSelected();
     var firstIndex = this.getStore().indexOf(firstRecord);
     this.doAfterNextReload.push(function() {
       this.getSelectionModel().selectRow(firstIndex);
     });
-    Paperpile.main.removeFromFolder(sel, grid, folder_id);
+    Paperpile.main.removeFromLabel(sel, grid, guid);
   },
 
   onUpdate: function(data) {
-    Paperpile.PluginGridFolder.superclass.onUpdate.call(this, data);
+    Paperpile.PluginGridLabel.superclass.onUpdate.call(this, data);
 
     var pubs = data.pubs;
     if (!pubs) {
@@ -104,7 +124,7 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
     var refreshMe = false;
     for (var guid in pubs) {
       var update = pubs[guid];
-      if (update['folders'] !== undefined) {
+      if (update['tags'] !== undefined) {
         refreshMe = true;
       }
     }

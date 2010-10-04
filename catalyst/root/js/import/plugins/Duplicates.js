@@ -81,8 +81,19 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
     this.on('render', this.myOnRender, this);
   },
 
+  getEmptyTemplate: function() {
+    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No duplicate references found. <a href="#" class="pp-textlink" action="close-tab">Close tab</a></p></div>']).compile();
+  },
+
+  getNoResultsTemplate: function() {
+      return this.getEmptyTemplate();
+  },
+  getEmptyBeforeSearchTemplate: function() {
+      return this.getEmptyTemplate();
+  },
+
   initToolbarMenuItemIds: function() {
-    Paperpile.PluginGridFile.superclass.initToolbarMenuItemIds.call(this);
+    Paperpile.PluginGridDuplicates.superclass.initToolbarMenuItemIds.call(this);
     var ids = this.toolbarMenuItemIds;
     var fillIndex = ids.indexOf('TB_FILL');
 
@@ -97,7 +108,7 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   initContextMenuItemIds: function() {
-    Paperpile.PluginGridFile.superclass.initContextMenuItemIds.call(this);
+    Paperpile.PluginGridDuplicates.superclass.initContextMenuItemIds.call(this);
     var ids = this.contextMenuItemIds;
 
   },
@@ -142,7 +153,8 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
       },
       success: function(response) {
         var msg = n + " duplicate references were merged.";
-        var undoMessage = Paperpile.status.updateMsg({
+/* Not allowing undos on this for now.
+ *         var undoMessage = Paperpile.status.updateMsg({
           msg: msg,
           hideOnClick: true,
           action1: 'Undo',
@@ -154,6 +166,7 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
           },
           scope: this
         });
+*/
       },
       scope: this
     });

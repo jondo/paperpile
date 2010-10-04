@@ -51,9 +51,9 @@ Paperpile.stage0 = function() {
     url: '/ajax/app/heartbeat',
     success: function(response) {
       var json = Ext.util.JSON.decode(response.responseText);
-      
+
       if (json.status == 'RUNNING') {
-       /* 
+        /* 
         if (IS_TITANIUM){
 
           Ext.Msg.show({
@@ -67,9 +67,8 @@ Paperpile.stage0 = function() {
             }
           });
         } else {*/
-          Paperpile.stage1();
+        Paperpile.stage1();
         //}
-
         // Make sure cookies are set; workaround for OSX where Ajax
         // calls do not properly set cookies. That's why we load
         // explicitely our server from a seperate window which sets
@@ -92,12 +91,11 @@ Paperpile.stage0 = function() {
         // Determine platform we are running on
         var platform = Paperpile.utils.get_platform();
 
-
         var path = Titanium.App.getHome() + '/catalyst';
 
         var args;
 
-        if (platform === 'osx'){
+        if (platform === 'osx') {
           args = [path + "/perl5/" + platform + "/bin/paperperl", path + '/script/osx_server.pl', '--fork', '--port', '3210']
         } else {
           args = [path + "/perl5/" + platform + "/bin/paperperl", path + '/script/paperpile_server.pl', '-fork']
@@ -121,7 +119,7 @@ Paperpile.stage0 = function() {
 
           Ext.Msg.show({
             title: 'Error',
-            msg: 'Could not start Paperpile server or lost connection. Please contact support@paperpile.com for help.<br><br>'+'<pre>'+Paperpile.serverLog+'</pre>',
+            msg: 'Could not start Paperpile server or lost connection. Please contact support@paperpile.com for help.<br><br>' + '<pre>' + Paperpile.serverLog + '</pre>',
             buttons: Ext.Msg.OK,
             icon: Ext.MessageBox.ERROR,
             fn: function(action) {
@@ -162,8 +160,10 @@ Paperpile.stage0 = function() {
               var win = Titanium.UI.createWindow('http://127.0.0.1:3210/empty');
               win.hide();
               win.open();
-              win.addEventListener('close',function(){Paperpile.stage1();});
-              
+              win.addEventListener('close', function() {
+                Paperpile.stage1();
+              });
+
             }
           }
         });
@@ -172,7 +172,7 @@ Paperpile.stage0 = function() {
         Titanium.API.addEventListener(
           Titanium.APP_EXIT,
           function() {
-            if (Paperpile.main.currentQueueData){
+            if (Paperpile.main.currentQueueData) {
               var status = Paperpile.main.currentQueueData.queue.status;
             }
 
@@ -188,7 +188,6 @@ Paperpile.stage0 = function() {
     }
   });
 };
-
 
 // Stage 1 
 //
@@ -262,8 +261,8 @@ Paperpile.stage2 = function() {
 
   Paperpile.main.loadSettings(
     function() {
-	Paperpile.main.afterLoadSettings();
-	//Paperpile.main.show();
+      Paperpile.main.afterLoadSettings();
+      //Paperpile.main.show();
       var tree = Ext.getCmp('treepanel');
       Paperpile.main.tree = tree;
       Paperpile.main.tabs.newDBtab('', 'MAIN');
@@ -294,17 +293,19 @@ Paperpile.stage2 = function() {
 
   // Check in regular intervals of 10 minutes for updates.
   Paperpile.updateCheckTask = {
-    run: function(){
-      if (!Paperpile.status.el.isVisible()){
+    run: function() {
+      if (!Paperpile.status.el.isVisible()) {
         Paperpile.main.checkForUpdates(true);
-      } 
+      }
     },
     interval: 600000 //every 10 minutes
   };
 
   // Don't check immediately after start
-  (function(){Ext.TaskMgr.start(Paperpile.updateCheckTask);}).defer(600000);
-    
+  (function() {
+    Ext.TaskMgr.start(Paperpile.updateCheckTask);
+  }).defer(600000);
+
 };
 
 Ext.onReady(function() {

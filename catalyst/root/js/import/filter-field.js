@@ -14,7 +14,6 @@
    copy of the GNU General Public License along with Paperpile.  If
    not, see http://www.gnu.org/licenses. */
 
-
 Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
 
   singleField: '',
@@ -43,18 +42,17 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
     this);
   },
 
-    afterRender: function() {
-	Ext.app.FilterField.superclass.afterRender.call(this);
+  afterRender: function() {
+    Ext.app.FilterField.superclass.afterRender.call(this);
 
-      // SwallowEvent code lifted from Editor.js -- causes
-      // this field to swallow key events which would otherwise
-      // be carried on to the grid (i.e. ctrl-A to select all)
-//      this.getEl().swallowEvent([
-//        'keypress', // *** Opera
-//        'keydown' // *** all other browsers
-//        ]);
-	
-    },
+    // SwallowEvent code lifted from Editor.js -- causes
+    // this field to swallow key events which would otherwise
+    // be carried on to the grid (i.e. ctrl-A to select all)
+    //      this.getEl().swallowEvent([
+    //        'keypress', // *** Opera
+    //        'keydown' // *** all other browsers
+    //        ]);
+  },
 
   validationEvent: false,
   validateOnBlur: false,
@@ -93,7 +91,7 @@ Ext.app.FilterField = Ext.extend(Ext.form.TwinTriggerField, {
 
     // Don't trigger search with less than 3 characters for efficiency
     // reasons
-    if (v.length < 3){
+    if (v.length < 3) {
       return;
     }
 

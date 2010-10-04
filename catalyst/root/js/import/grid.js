@@ -30,13 +30,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   limit: 25,
   allImported: false,
   itemId: 'grid',
-  aboutPanel: null,
   overviewPanel: null,
   detailsPanel: null,
   tagStyles: {},
   isLocked: false,
 
   initComponent: function() {
+
     this.pager = new Paperpile.Pager({
       pageSize: this.limit,
       store: this.getStore(),
@@ -400,6 +400,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     Paperpile.PluginGrid.superclass.initComponent.call(this);
 
+    this.on('afterrender', this.installEvents, this);
+
     this.keys = new Ext.ux.KeyboardShortcuts(this.getView().focusEl);
 
     // Standard grid shortcuts.
@@ -523,6 +525,30 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   },
 
+  installEvents: function() {
+    this.el.on('click', this.handleClick, this);
+  },
+
+  handleClick: function(e) {
+    e.stopEvent();
+    var el = e.getTarget();
+
+    switch (el.getAttribute('action')) {
+    case 'clear-search':
+      if (this.filterField) {
+        this.filterField.onTrigger1Click();
+        this.filterField.getEl().focus();
+      } else if (this.searchField) {
+        this.searchField.selectText();
+        this.searchField.getEl().focus();
+      }
+      break;
+    case 'close-tab':
+      Paperpile.main.tabs.remove(this.getPluginPanel());
+      break;
+    }
+  },
+
   fontSize: function() {
     Ext.getBody().setStyle({
       'font-size': '24px'
@@ -614,27 +640,49 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   onStoreLoad: function() {
-    var pluginPanel = this.getPluginPanel();
-    var ep = pluginPanel.items.get('east_panel');
-    var tb_side = ep.getBottomToolbar();
-    var activeTab = ep.getLayout().activeItem.itemId;
-    if (this.getStore().getCount() > 0) {
-      if (activeTab === 'about') {
-        ep.getLayout().setActiveItem('overview');
-        activeTab = 'overview';
-      }
-    } else {
-      pluginPanel.onEmpty('');
-      if (this.sidePanel) {
-        ep.getLayout().setActiveItem('about');
-        activeTab = 'about';
-      }
-    }
-    tb_side.items.get(activeTab + '_tab_button').toggle(true);
+    this.getPluginPanel().updateView();
+  },
 
-    pluginPanel.updateDetails();
-    pluginPanel.updateButtons();
-    this.updateButtons();
+  isLoaded: function() {
+    return this.getStore() && this.getStore().isLoaded;
+  },
+
+  onEmpty: function() {
+    var tpl;
+    if (this.getStore().isLoaded && this.getSearchFieldValue() != '') {
+      if (!this._noResultsTpl) {
+        this._noResultsTpl = this.getNoResultsTemplate();
+      }
+      tpl = this._noResultsTpl;
+    } else {
+      if (!this._emptyBeforeSearchTpl) {
+        this._emptyBeforeSearchTpl = this.getEmptyBeforeSearchTemplate();
+      }
+      tpl = this._emptyBeforeSearchTpl;
+    }
+    if (tpl) {
+      tpl.overwrite(this.getView().mainBody, {},
+      true);
+    }
+  },
+
+  getSearchFieldValue: function() {
+    var value = '';
+    if (this.filterField) {
+      value = this.filterField.getValue();
+    } else if (this.searchField) {
+      value = this.searchField.getValue();
+    }
+    Paperpile.log("Search value: " + value);
+    return value;
+  },
+
+  getEmptyBeforeSearchTemplate: function() {
+    return new Ext.XTemplate(['<div class="pp-box pp-box-side-panel pp-box-style1" style="width:300px;margin:auto;"><p>Use the search bar above to find papers.</p></div>']).compile();
+  },
+
+  getNoResultsTemplate: function() {
+    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No results to show. <a href="#" class="pp-textlink" action="clear-search">Clear search</a></p></div>']).compile();
   },
 
   highlightNewArticles: function() {
@@ -682,7 +730,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   refreshView: function() {
     if (!this.isVisible()) {
-//      return;
+      //      return;
     }
     this.updateButtons();
     this.getPluginPanel().updateDetails();
@@ -692,7 +740,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   myAfterRender: function(ct) {
-    this.updateButtons();
+    this.getPluginPanel().updateView();
 
     this.pager.on({
       'beforechange': {
@@ -785,6 +833,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       return this._store;
     }
     this._store = new Ext.data.Store({
+      isLoaded: false,
       proxy: new Ext.data.HttpProxy({
         url: Paperpile.Url('/ajax/plugins/resultsgrid'),
         // We don't set timeout here but handle timeout separately in
@@ -805,11 +854,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     // Add some callbacks to the store so we can maintain the selection between reloads.
-    this.getStore().on('beforeload', function(store, options) {
-      //			   Paperpile.log("Loading...");
-    },
+    this.getStore().on('beforeload', function(store, options) {},
     this);
     this.getStore().on('load', function(store, options) {
+      this.getStore().isLoaded = true;
       if (!this.doAfterNextReload) {
         this.doAfterNextReload = [];
       }
@@ -885,9 +933,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '<p class="pp-grid-snippets">{_snippets}</p>',
         '</tpl>',
         '</div>', {
-          tagStyle: function(tags_guid,tags_tmp) {
+          tagStyle: function(tags_guid, tags_tmp) {
             var returnMe = '';
-            if (tags_tmp){
+            if (tags_tmp) {
               var tags = tags_tmp.split(/\s*,\s*/);
               for (var i = 0; i < tags.length; i++) {
                 name = tags[i];
@@ -909,19 +957,19 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
             if (tags.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
             return returnMe;
           },
-          isInactive: function(tag_string){
+          isInactive: function(tag_string) {
             var tags = tag_string.split(/\s*,\s*/);
             for (var i = 0; i < tags.length; i++) {
               var guid = tags[i];
               var tag = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
               if (tag != null) {
                 name = tag.get('name');
-                if (name === 'Incomplete'){
-                  return('pp-inactive');
+                if (name === 'Incomplete') {
+                  return ('pp-inactive');
                 }
               }
             }
-            return('');
+            return ('');
           }
         }).compile();
     }
@@ -962,10 +1010,30 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         singleSelection: new Ext.XTemplate(this.getSingleSelectionTemplate()).compile(),
         multipleSelection: new Ext.XTemplate(this.getMultipleSelectionTemplate()).compile(),
         noSelection: new Ext.XTemplate(this.getNoSelectionTemplate()).compile(),
-        emptyGrid: new Ext.XTemplate(this.getEmptyGridTemplate()).compile()
+        emptyGrid: new Ext.XTemplate(this.getEmptyGridTemplate()).compile(),
+        details: new Ext.XTemplate(this.getDetailsTemplate()).compile()
       };
     }
     return this.sidebarTemplate;
+  },
+
+  getDetailsTemplate: function() {
+    return[
+    '<div id="main-container-{id}">',
+    '<div class="pp-box pp-box-top pp-box-style2">',
+    '  <div class="ref-actions" style="float:right;">',
+    '    <img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
+    '  </div>',
+    '  <div style="height: 5px;"></div>',
+    '    <dl>',
+    '      <tpl if="citekey"><dt>Key: </dt><dd>{citekey}</dd></tpl>',
+    '      <dt>Type: </dt><dd>{_pubtype}</dd>',
+    '      <tpl for="fields">',
+    '        <dt>{label}:</dt><dd>{value}</dd>',
+    '      </tpl>',
+    '    </dl>',
+    '  </div>',
+    '</div>'].join('');
   },
 
   getSingleSelectionTemplate: function() {
@@ -1318,7 +1386,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   updateButtons: function() {
     this.getTopToolbar().items.each(function(item, index, length) {
       item.enable();
-    },this);
+    },
+    this);
 
     this.getContextMenu().items.each(function(item, index, length) {
       item.enable();
@@ -1452,7 +1521,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   // fetched only when user clicks the entry.
   completeEntry: function() {
     if (this.isLocked) return; // Call completeEntry only for one item at a time 
-
     var selection = this.getSelection();
 
     var sel = this.getSingleSelectionRecord();
@@ -1468,7 +1536,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         return false;
       };
       this.getSelectionModel().on('beforerowselect', blockingFunction, this);
-      this.isLocked=true;
+      this.isLocked = true;
 
       var guid = data.guid;
 
@@ -1481,7 +1549,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           this.cancelCompleteEntry();
           Paperpile.status.clearMsg();
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
-          this.isLocked=false;
+          this.isLocked = false;
         },
         scope: this
       });
@@ -1501,7 +1569,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           hideOnClick: true
         });
         this.getSelectionModel().un('beforerowselect', blockingFunction, this);
-        this.isLocked=false;
+        this.isLocked = false;
       }).defer(20000, this);
 
       var transactionID = Paperpile.Ajax({
@@ -1515,7 +1583,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           var json = Ext.util.JSON.decode(response.responseText);
 
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
-          this.isLocked=false;
+          this.isLocked = false;
 
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
@@ -1532,7 +1600,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         },
         failure: function(response) {
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
-          this.isLocked=false;
+          this.isLocked = false;
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
         },
@@ -1708,21 +1776,20 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
       var platform = Paperpile.utils.get_platform();
       if (platform == 'osx') {
-	  string = string.replace(/%0A/g, "\n");
-	link = [
-		'mailto:?',
-		'subject=' + subject,
-		'&body=' + body + "\n\n" + string,
-		"\n\n--\nShared with Paperpile\nhttp://paperpile.com",
-		attachments.join('')]
-		.join('');
+        string = string.replace(/%0A/g, "\n");
+        link = [
+          'mailto:?',
+          'subject=' + subject,
+          '&body=' + body + "\n\n" + string,
+          "\n\n--\nShared with Paperpile\nhttp://paperpile.com",
+          attachments.join('')].join('');
       } else {
-      link = [
-        'mailto:?',
-        'subject=' + subject,
-        '&body=' + body + "%0A%0A" + string,
-        "%0A%0A--%0AShared with Paperpile%0Ahttp://paperpile.com",
-        attachments.join('')].join('');
+        link = [
+          'mailto:?',
+          'subject=' + subject,
+          '&body=' + body + "%0A%0A" + string,
+          "%0A%0A--%0AShared with Paperpile%0Ahttp://paperpile.com",
+          attachments.join('')].join('');
       }
       Paperpile.utils.openURL(link);
     };
@@ -1743,9 +1810,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     var selection = this.getSelection();
     if (deleteAll) {
-       selection = 'ALL';
+      selection = 'ALL';
     }
-
 
     // Find the lowest index of the current selection.
     var firstRecord = this.getSelectionModel().getLowestSelected();
@@ -1856,18 +1922,18 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   updateMetadata: function() {
     var selection = this.getSelection();
 
-    if (selection.length == 1){
-      this.handleEdit(false,true);
+    if (selection.length == 1) {
+      this.handleEdit(false, true);
       return;
     }
-    
+
     if (selection.length > 1) {
 
       Ext.MessageBox.buttonText.ok = "Start Update";
 
       Ext.Msg.show({
         title: 'Auto-complete',
-        msg: 'Data for '+selection.length + ' references will be matched to online resources and automatically updated. Backup copies of the old data will be copied to the Trash. Continue?',
+        msg: 'Data for ' + selection.length + ' references will be matched to online resources and automatically updated. Backup copies of the old data will be copied to the Trash. Continue?',
         animEl: 'elId',
         icon: Ext.MessageBox.INFO,
         buttons: Ext.Msg.OKCANCEL,
@@ -1896,7 +1962,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       });
     }
 
-    
   },
 
   batchDownload: function() {
@@ -1976,8 +2041,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     }
 
-    var overview = this.getPluginPanel().getOverview();
-    overview.forceUpdate();
+    var overview = this.getPluginPanel().getOverviewPanel();
+    if (overview.rendered) {
+      overview.forceUpdate();
+    }
   },
 
   // Update specific fields of specific entries to avoid complete
@@ -2182,9 +2249,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   onDestroy: function() {
     Paperpile.PluginGrid.superclass.onDestroy.call(this);
 
-      Ext.destroy(this.keys);
-      Ext.destroy(this.pager);
-      Ext.destroy(this.context);
+    Ext.destroy(this.keys);
+    Ext.destroy(this.pager);
+    Ext.destroy(this.context);
   }
 });
 

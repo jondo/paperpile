@@ -128,12 +128,25 @@ a.pp-inactive:hover {
     vertical-align:top;
 }
 
+.pp-box-center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .pp-box-tabs ul, .pp-box-tabs .pp-box{
     margin:0px;
 }
 
 .pp-box-right, .pp-box-tabs-left {
 /*    margin-top:3px;*/
+}
+
+.pp-box-grid {
+    max-width: 300px;
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align:center;
 }
 
 .pp-drag-target {
@@ -351,6 +364,7 @@ td.pp-dashboard-dl{
 }
 
 .pp-box dd { 
+    display:block;
     margin: 0px 0px 0px 75px; 
     padding: 0px 0px 5px 5px;
 }
@@ -1587,6 +1601,26 @@ div:hover.pp-tag-style-sample {
     white-space:normal;
     font-weight: bold;
 }
+
+.pp-label-panel-selected {
+    background-image:url(../images/default/menu/checked.gif);
+}
+
+.pp-label-panel-item {
+    background-image:url(../images/default/menu/unchecked.gif);
+    cursor: pointer;
+    border-width: 1px;
+    display:inline-block;
+    font-size: 9px;
+    line-height: 12px;
+    padding: 0 4px;
+    margin: 2px;
+    padding-left: 20px;
+    text-align: center;
+    white-space: normal;
+    font-weight: bold;
+}
+
 
 .pp-job-box {
     float:left; 
