@@ -1605,19 +1605,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   handleExportSelection: function() {
     selection = this.getSelection();
-    var window = new Paperpile.SimpleExportWindow({
-      grid_id: this.id,
-      selection: selection
-    });
-    window.show();
+    Paperpile.main.handleExport(this.id,selection);
   },
 
   handleExportView: function() {
-    var window = new Paperpile.SimpleExportWindow({
-      grid_id: this.id,
-      selection: 'all'
-    });
-    window.show();
+    Paperpile.main.handleExport(this.id, 'all');
   },
 
   handleCopy: function(module, format, msg) {

@@ -1601,11 +1601,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   exportNode: function() {
     var node = this.lastSelectedNode;
-
-    var window = new Paperpile.SimpleExportWindow({
-      source_node: node.id
-    });
-    window.show();
+    Paperpile.main.handleExport(null, null, node.id);
   },
 
   autoExportCheck: function(item, state) {
@@ -1663,6 +1659,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       selectionType: 'file',
       types: ['bib'],
       typesDescription: 'BibTeX files',
+      nameFiler:"BibTeX (*.bib)",
       dialogType: 'save',
       multiple: false,
       path: Paperpile.utils.splitPath(initialFile).dir,

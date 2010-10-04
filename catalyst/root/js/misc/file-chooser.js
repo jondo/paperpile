@@ -344,6 +344,7 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     multiple: true,
     // types: ['txt','csv']
     types: null,
+    nameFilters: null,
     typesDescription: null,
     scope: null,
     path: Paperpile.main.getSetting('last_file_path') || Paperpile.main.getSetting('user_home')
@@ -351,14 +352,13 @@ Paperpile.fileDialog = function(callback, inputOptions) {
 
   Ext.apply(options, inputOptions);
 
-  Paperpile.log("Types: "+options.types);
-
   if (callback === undefined) {
     callback = function(filenames) {};
   }
 
   // Before the original callback, create an interceptor in case the user chose
   // to save over an existing file.
+  /*
   if (options.dialogType == 'save') {
     var originalCallback = callback;
     callback = function(filenames) {
@@ -370,18 +370,15 @@ Paperpile.fileDialog = function(callback, inputOptions) {
             var msg = Ext.Msg.show({
             title: 'Overwrite File?',
             msg: 'The chosen file: <br/><div style="margin:5px;word-wrap:break-word;">' + filename + '</div> already exists. Overwrite?',
-            animEl: 'elId',
-	    width:400,
-            icon: Ext.MessageBox.INFO,
+              animEl: 'elId',
+	          width:400,
+              icon: Ext.MessageBox.INFO,
             buttons: Ext.Msg.OKCANCEL,
             fn: function(btn) {
               if (btn === 'ok') {
                 originalCallback.call(options.scope, filenames);
               } else {
-		// Deciding not to overwrite the file should return the same
-		// callback as an empty response -- i.e. a 'cancel' on the file
-		// save dialog.
-                originalCallback.call(options.scope, []);
+              originalCallback.call(options.scope, []);
               }
               return false;
             },
@@ -395,6 +392,8 @@ Paperpile.fileDialog = function(callback, inputOptions) {
       }
     };
   }
+*/
+
   // After the original callback, store the last used file path.
   callback = callback.createSequence(function(filenames) {
     if (filenames.length > 0) {
@@ -408,16 +407,45 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     callback = callback.createDelegate(options.scope);
   }
 
-  if (IS_TITANIUM) {
-    // Create a Titanium dialog.
+  if (IS_QT) {
+
+    var config={};
+
     if (options.dialogType == 'save') {
-      Titanium.UI.openSaveAsDialog(callback, options);
-    } else if (options.selectionType == 'file') {
-	Paperpile.log("FILE");
-      Titanium.UI.openFileChooserDialog(callback, options);
+      config['AcceptMode'] = 'AcceptSave';
     } else {
-      Titanium.UI.openFolderChooserDialog(callback, options);
+      config['AcceptMode'] = 'AcceptOpen';
     }
+
+    if (options.selectionType == 'file') {
+      config['FileMode'] = "AnyFile";
+    } else {
+      config['FileMode'] = "Directory";
+    }
+
+    if (options.multiple && options.selectionType=='file'){
+      config['FileMode'] = "ExistingFiles";
+    }
+
+    if (options.nameFilters) {
+      config['NameFilters']=options.nameFilters;
+    }
+    
+    if (options.path) {
+      config['Directory']=options.path;
+    }
+    
+    if (options.title) {
+      config['Caption']=options.title;
+    }
+
+
+    var results = QRuntime.fileDialog(config);
+    
+    if (!results.files) results.files=[];
+
+    callback(results.files, results.filter, results.answer);
+
   } else {
     // Create an ExtJS dialog.
     var fileChooserOptions = {

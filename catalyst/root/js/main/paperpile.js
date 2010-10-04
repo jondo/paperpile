@@ -409,6 +409,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     };
     var options = {
       title: 'Choose a folder containing PDFs to import',
+      dialogType:'load',
       selectionType: 'folder',
       scope: this
     };
@@ -432,6 +433,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       types: ['pdf'],
       multiple: true,
       typesDescription: 'PDF Files',
+      nameFilters: ["PDF (*.pdf)"],
       scope: this
     };
     Paperpile.fileDialog(callback, options);
@@ -628,15 +630,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       }
     };
 
-    var types = null;
-    if (Paperpile.utils.get_platform() != 'osx') {
-      types = ['*'];
-    }
-
     var options = {
       title: 'Choose a bibliography file to import',
-      types: types,
+      types: ['*'],
       typesDescription: 'Bibliography files (BibTeX, RIS, EndNote, and others)',
+      nameFilters: ["BibTeX (*.bib)",
+                    "Zotero, Mendeley (*.sqlite)",
+                    "All supported files (*)"],
       scope: this
     };
     Paperpile.fileDialog(callback, options);
@@ -705,6 +705,56 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
+  handleExport: function(gridId, selection, sourceNode) {
+  
+    var callback = function(filenames,filter) {
+
+      if (filenames.length == 0) {
+        return;
+      }
+
+      var formatsMap = {'BibTeX (*.bib)':'BIBTEX',
+                        'RIS (.ris)':'RIS',
+                        'EndNote (.txt)':'ENDNOTE',
+                        'MODS (.xml)':'MODS',
+                        'ISI Web of Science (.isi)':'ISI',
+                        'Word 2007 XML (.xml)':'WORD2007'};
+
+      var format = formatsMap[filter];
+
+      var file = filenames[0];
+
+      Paperpile.status.showBusy('Exporting to ' + file + '...');
+      Paperpile.Ajax({
+	    url: Paperpile.Url('/ajax/plugins/export'),
+        params: {
+          source_node: sourceNode,
+          selection: selection,
+          grid_id: gridId,
+          export_name: 'Bibfile',
+          export_out_format: format, 
+          export_out_file: file
+        },
+        success: function() {
+          Paperpile.status.clearMsg();
+        },
+        scope: this
+      });
+    };
+
+    Paperpile.fileDialog(callback, {
+      'dialogType':'save',
+      'selectionType':'folder',
+      'nameFilters':["BibTeX (*.bib)",
+                     'RIS (.ris)',
+                     'EndNote (.txt)',
+                     'MODS (.xml)',
+                     'ISI Web of Science (.isi)',
+                     'Word 2007 XML (.xml)',
+                    ],
+    });
+  },
+  
   bibtexModeIsEnabled: function() {
     var bibtex = this.getSetting('bibtex');
     if (bibtex.bibtex_mode == 1) {

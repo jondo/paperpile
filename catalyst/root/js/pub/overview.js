@@ -618,8 +618,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         title: 'Choose a PDF file to attach',
         selectionType: 'file',
         types: ['pdf'],
-        multiple: false,
         typesDescription: 'PDF Files',
+        multiple: false,
+        nameFilters:["PDF (*.pdf)"],
         scope: this
       };
     } else {
@@ -627,8 +628,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         title: 'Choose file(s) to attach',
         selectionType: 'file',
         types: ['*'],
-        multiple: true,
         typesDescription: 'All Files',
+        multiple: true,
+        nameFilters:["All files (*)"],
         scope: this
       };
     }
