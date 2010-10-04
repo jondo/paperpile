@@ -151,16 +151,13 @@ a.pp-inactive:hover {
 
 .pp-drag-target {
     border: 3px solid #333;
-    opacity: 0.5 !important;
 }
 
 .pp-drag-target-invisible {
     border: none !important;
-    opacity:0 !important;
 }
 
 .pp-drag-target-over {
-    opacity: 1 !important;
     border-color:green;
 }
 

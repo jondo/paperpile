@@ -31,13 +31,30 @@ Paperpile.Url = function(url) {
 
 Paperpile.log = function() {
   if (IS_QT) {
-    QRuntime.log(arguments[0]);
+    QRuntime.log(obj2str(arguments[0]));
   } else if (IS_CHROME) {
     console.log(arguments[0]);
   } else if (window.console) {
     console.log(arguments);
   }
 };
+
+function obj2str(o) {
+  if (typeof o !== 'object') {
+      return o;
+  }
+  var out = '{';
+  for (var p in o) {
+    if (!o.hasOwnProperty(p)) {
+	continue;
+    }
+    out += '\n ';
+    out += p + ': ' + o[p];
+  }
+  out += '\n}';
+  return out;
+}
+
 
 // This is a wrapper around the Ext.Ajax.request function call.
 // If we need to add any global behavior to Ajax calls, put it
@@ -160,7 +177,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.mon(Ext.getBody(), 'click', function(event, target, options) {
       if (target.href) {
-        Paperpile.log(target.href);
         if (!target.href.match(/(app|paperpile|localhost)/i)) {
           event.stopEvent();
           Paperpile.utils.openURL(target.href);
@@ -232,7 +248,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       win.setWidth(oldWidth * zoomRatio);
       win.setHeight(oldHeight * zoomRatio);
     }
-
+bin
     Ext.getBody().setStyle('zoom', zoomLevel);
     // Now resize the body element.
     this.resizeWithZoom(this.getWidth(), this.getHeight());
@@ -268,6 +284,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.keys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.keys.bindCallback('ctrl-w', this.keyControlW);
     this.keys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
+
+    this.getEl().on('keydown',this.onKeyDown);
+  },
+
+  onKeyDown: function(e) {
+      Paperpile.log(e);
+      var tab = Paperpile.main.tabs.getActiveTab();
+      
   },
 
   keyQuesionMark: function() {
