@@ -644,12 +644,12 @@ sub _linkOut {
 
   Paperpile::Utils->check_browser_response($response,"PubMed query failed");
 
-  my $result = XMLin( $response->content, forceArray => ['IdUrlSet'] );
+  my $result = XMLin( $response->content, forceArray => ['IdUrlSet', 'ObjUrl'] );
 
   foreach my $entry ( @{ $result->{LinkSet}->{IdUrlList}->{IdUrlSet} } ) {
 
     my $id = $entry->{Id};
-
+    
     # got an error message
     if ( defined $entry->{Info} ) {
       $pub_hash{$id}->linkout('');
@@ -668,12 +668,7 @@ sub _linkOut {
       }
     } else {
 
-	if( UNIVERSAL::isa ( $entry->{ObjUrl} , 'HASH' ) && exists $entry->{ObjUrl}->{Url} ) {
-	  $pub_hash{$id}->linkout( $entry->{ObjUrl}->{Url} );
-	}
-        elsif( UNIVERSAL::isa ( $entry->{ObjUrl} , 'ARRAY' ) && exists $entry->{ObjUrl}->[0]->{Url} ) {
-	  $pub_hash{$id}->linkout( $entry->{ObjUrl}->[0]->{Url} );
-        }
+      $pub_hash{$id}->linkout( $entry->{ObjUrl}->[0]->{Url} );
 
       # Adjust the url otherwise it won't get displayed correctly
       #my $icon_url = $entry->{ObjUrl}->{IconUrl};
