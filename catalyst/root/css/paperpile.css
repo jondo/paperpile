@@ -1458,7 +1458,7 @@ div:hover.pp-grid-sort-item {
 
 .pp-tag-box {
     border-style:solid;
-    border-width: 1px 0px;
+    border-width: 1px;
     font-size: 9px;
     font-weight:bold;
     margin: 0px 0.8em 0px 1px;
@@ -1491,7 +1491,7 @@ div:hover.pp-grid-sort-item {
 }
 
 .pp-tag-remove{
-    border-width:0px 1px;
+    border-width:0px 0px 0px 1px;
     margin: 0px 2px 0px 4px;
     display:inline;
     padding: 0px 2px;
@@ -1500,7 +1500,7 @@ div:hover.pp-grid-sort-item {
 }
 
 div:hover.pp-tag-remove{
-    border-width:0px 1px;
+    border-width:1px;
     margin: 0px 2px 0px 4px;
     display:inline;
     padding: 0px 2px;
