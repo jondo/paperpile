@@ -26,7 +26,7 @@ use Paperpile::Library::Author;
 use Paperpile::Exceptions;
 use Paperpile::Formats::Rss;
 
-enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS EMAIL MODS ISI ENDNOTE ENDNOTEXML RIS WORD2007 MEDLINE RSS ZOTERO MENDELEY HTML);
+enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS EMAIL MODS ISI ENDNOTE ENDNOTEXML RIS WORD2007 MEDLINE RSS ZOTERO MENDELEY HTML XMP);
 
 has 'data' => ( is => 'rw', isa => 'ArrayRef[Paperpile::Library::Publication]' );
 has format => ( is => 'rw', isa => 'Format' );
