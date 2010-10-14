@@ -58,6 +58,16 @@ sub read {
     # We do not process notes at this sages
     next if ( $itemTypeID == 1 );
 
+    # check if deleted
+    my $sth_deleted = $dbh->prepare("SELECT * FROM deletedItems WHERE itemID=?;");
+    $sth_deleted->execute($itemID);
+    my $flag_deleted = 0;
+    while ( my @tmp_deleted = $sth_deleted->fetchrow_array ) {
+      $flag_deleted = 1;
+    }
+    next if ( $flag_deleted == 1 );
+
+
     # Values/Key pairs for itemTypeID
     # 1 note             2 book                 3 bookSection
     # 4 journalArticle   5 magazineArticle      6 newspaperArticle
