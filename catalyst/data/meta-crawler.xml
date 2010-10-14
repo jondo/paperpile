@@ -111,7 +111,7 @@
 
   <rule target="GoogleBooks">
     <pattern>
-      <rewrite>!(.*&amp;id=)([\w|-]+)(&amp;.*)!http://books.google.com/books?id=$2&amp;hl=en&amp;source=gbs_navlinks_s!</rewrite>
+      <rewrite>!(.*&amp;?\??id=)([\w|-]+)(&amp;.*)!http://books.google.com/books?id=$2&amp;hl=en&amp;source=gbs_navlinks_s!</rewrite>
     </pattern>
   </rule>
 
