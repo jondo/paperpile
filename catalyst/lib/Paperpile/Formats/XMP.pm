@@ -36,10 +36,39 @@ sub read {
 
   my $self = shift;
 
+  if ( $self->file and !$self->content ) {
+    open( FILE, $self->file );
+    my ( $buf, $data, $n );
+    my $last_entry = '';
+    my $buffer     = '';
+    my $flag       = 0;
+    while ( ( $n = read FILE, $data, 16 ) != 0 ) {
+
+      #print "$n bytes read $data\n";
+      my $tmp = $last_entry . $data;
+      if ( $tmp =~ m/(.*<?xpacket end=[^>]*>).*/ ) {
+        if ( $data =~ m/([^>]*>).*/ ) {
+          $buffer .= $1;
+        }
+        last;
+      }
+      if ( $flag == 1 ) {
+        $buffer .= $data;
+      }
+      if ( $tmp =~ m/.*(<\?xpacket begin=.*)/ ) {
+        $buffer = $1;
+        $flag   = 1;
+      }
+
+      $last_entry = $data;
+    }
+    close(FILE);
+    $self->content($buffer);
+  }
+
   my $xmp = $self->content;
 
   my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
-
 
   return $pub if ( !$xmp );
   return $pub if ( $xmp eq '' );
@@ -48,7 +77,7 @@ sub read {
   my (
     $title,   $authors,    $journal,  $issue,     $volume,    $year, $month,
     $ISSN,    $pages,      $doi,      $abstract,  $booktitle, $url,  $pmid,
-    $arxivid, $start_page, $end_page, $publisher, $dummy, $keywords
+    $arxivid, $start_page, $end_page, $publisher, $dummy,     $keywords
   );
 
   my $xml = new XML::Simple;
@@ -61,12 +90,13 @@ sub read {
   my $tmp1 = ( $tmp0 =~ m/^ARRAY/ ) ? $tmp0 : [];
   foreach my $entry ( @{$tmp1} ) {
     foreach my $key ( keys %{$entry} ) {
+
       #print $key, " =================================\n";
       #print Dumper( $entry->{$key} );
 
       # PRISM
       if ( lc($key) eq 'prism:number' ) {
-	next if ( $entry->{$key} =~ m/^HASH/ );
+        next if ( $entry->{$key} =~ m/^HASH/ );
         if ( $entry->{$key} =~ m/^ARRAY/ ) {
           next if ( $entry->{$key}->[0] =~ m/^ARRAY/ );
           next if ( $entry->{$key}->[0] =~ m/^HASH/ );
@@ -76,7 +106,7 @@ sub read {
         }
       }
       if ( lc($key) eq 'prism:volume' ) {
-	next if ( $entry->{$key} =~ m/^HASH/ );
+        next if ( $entry->{$key} =~ m/^HASH/ );
         if ( $entry->{$key} =~ m/^ARRAY/ ) {
           next if ( $entry->{$key}->[0] =~ m/^ARRAY/ );
           next if ( $entry->{$key}->[0] =~ m/^HASH/ );
@@ -86,7 +116,7 @@ sub read {
         }
       }
       if ( lc($key) eq 'prism:startingpage' ) {
-	next if ( $entry->{$key} =~ m/^HASH/ );
+        next if ( $entry->{$key} =~ m/^HASH/ );
         if ( $entry->{$key} =~ m/^ARRAY/ ) {
           next if ( $entry->{$key}->[0] =~ m/^ARRAY/ );
           next if ( $entry->{$key}->[0] =~ m/^HASH/ );
@@ -96,7 +126,7 @@ sub read {
         }
       }
       if ( lc($key) eq 'prism:endingpage' ) {
-	next if ( $entry->{$key} =~ m/^HASH/ );
+        next if ( $entry->{$key} =~ m/^HASH/ );
         if ( $entry->{$key} =~ m/^ARRAY/ ) {
           next if ( $entry->{$key}->[0] =~ m/^ARRAY/ );
           next if ( $entry->{$key}->[0] =~ m/^HASH/ );
@@ -106,7 +136,7 @@ sub read {
         }
       }
       if ( lc($key) eq 'prism:doi' ) {
-	next if ( $entry->{$key} =~ m/^HASH/ );
+        next if ( $entry->{$key} =~ m/^HASH/ );
         if ( $entry->{$key} =~ m/^ARRAY/ ) {
           next if ( $entry->{$key}->[0] =~ m/^ARRAY/ );
           next if ( $entry->{$key}->[0] =~ m/^HASH/ );
@@ -116,7 +146,7 @@ sub read {
         }
       }
       if ( lc($key) eq 'prism:issn' ) {
-	next if ( $entry->{$key} =~ m/^HASH/ );
+        next if ( $entry->{$key} =~ m/^HASH/ );
         if ( $entry->{$key} =~ m/^ARRAY/ ) {
           next if ( $entry->{$key}->[0] =~ m/^ARRAY/ );
           next if ( $entry->{$key}->[0] =~ m/^HASH/ );
@@ -127,16 +157,15 @@ sub read {
       }
       if ( lc($key) eq 'prism:publicationdate' ) {
         my $ref = $entry->{$key}->[0]->{'rdf:Bag'}->[0]->{'rdf:li'};
-	next if ( ! $ref );
-	next if ( $ref !~ m/^ARRAY/ );
+        next if ( !$ref );
+        next if ( $ref !~ m/^ARRAY/ );
         if ( $ref->[0] =~ m/(\d{4})-\d\d-\d\d/ ) {
           $year = $1;
         }
-	if ( $ref->[0] =~ m/^(\d{4})$/ ) {
+        if ( $ref->[0] =~ m/^(\d{4})$/ ) {
           $year = $1;
         }
       }
-
 
       # Dublin Core
       if ( lc($key) eq 'dc:creator' ) {
@@ -153,14 +182,14 @@ sub read {
 
       if ( lc($key) eq 'dc:title' ) {
         my $ref = $entry->{$key}->[0]->{'rdf:Alt'}->[0]->{'rdf:li'};
-	next if ( ! $ref );
+        next if ( !$ref );
         next if ( $ref !~ m/^ARRAY/ );
         $title = $ref->[0]->{'content'} if ( $ref->[0]->{'content'} );
       }
 
       if ( lc($key) eq 'dc:identifier' ) {
         my $tmp_doi = '';
-	next if ( $entry->{$key} =~ m/^HASH/ );
+        next if ( $entry->{$key} =~ m/^HASH/ );
         if ( $entry->{$key} =~ m/^ARRAY/ ) {
           $tmp_doi = $entry->{$key}->[0];
         } else {
@@ -184,8 +213,8 @@ sub read {
 
       if ( lc($key) eq 'dc:date' ) {
         my $ref = $entry->{$key}->[0]->{'rdf:Seq'}->[0]->{'rdf:li'};
-	next if ( ! $ref );
-	next if ( $ref !~ m/^ARRAY/ );
+        next if ( !$ref );
+        next if ( $ref !~ m/^ARRAY/ );
         if ( $ref->[0] =~ m/(\d{4})-\d\d-\d\d/ ) {
           $year = $1 if ( !$year );
         }
@@ -195,8 +224,8 @@ sub read {
       }
       if ( lc($key) eq 'dc:description' ) {
         my $ref = $entry->{$key}->[0]->{'rdf:Alt'}->[0]->{'rdf:li'};
-	next if ( ! $ref );
-	next if ( $ref !~ m/^ARRAY/ );
+        next if ( !$ref );
+        next if ( $ref !~ m/^ARRAY/ );
         $dummy = $ref->[0]->{'content'} if ( $ref->[0]->{'content'} );
       }
 
@@ -321,7 +350,7 @@ sub read {
   if ( $start_page and !$end_page ) {
     $pages = "$start_page";
   }
-  if ( $pages ) {
+  if ($pages) {
     $pages =~ s/-+/-/g;
   }
 
