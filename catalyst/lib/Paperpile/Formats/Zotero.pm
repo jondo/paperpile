@@ -457,7 +457,7 @@ sub read {
     # add PDFs and other attachements
     foreach my $i ( 0 .. $#pdfs ) {
       if ( $i == 0 ) {
-        $pub->{_pdf_tmp} = $pdfs[$i];
+        $pub->_pdf_tmp($pdfs[$i]);
       } else {
         unshift( @regular_attachements, $pdfs[$i] );
       }
