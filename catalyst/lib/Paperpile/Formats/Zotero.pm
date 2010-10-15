@@ -85,7 +85,7 @@ sub read {
       $title,  $authors, $journal, $issue,        $volume,    $year,
       $month,  $ISSN,    $pages,   $doi,          $abstract,  $booktitle,
       $url,    $pmid,    $arxivid, $editors,      $publisher, $edition,
-      $series, $address, $school,  $howpublished, $note
+      $series, $address, $school,  $howpublished, $note,      $isbn
     );
 
     my @pdfs                 = ();
@@ -106,7 +106,7 @@ sub read {
       #  1 *url                  2 rights             3 *series
       #  4 *volume               5 *issue             6 *edition
       #  7 *place                8 *publisher        10 *pages
-      # 11 ISBN                 12 *publicationTitle 13 *ISSN
+      # 11 *ISBN                12 *publicationTitle 13 *ISSN
       # 14 date                 15 section           18 callNumber
       # 19 archiveLocation      21 distributor       22 *extra
       # 25 *journalAbbreviation 26 *DOI              27 accessDate
@@ -141,7 +141,6 @@ sub read {
 
       my %unsupported = (
         '2'   => 'rights',
-        '11'  => 'ISBN',
         '14'  => 'date',
         '15'  => 'section',
         '18'  => 'callNumber',
@@ -275,6 +274,8 @@ sub read {
         if ( $fieldID == 118 and !$pages );
       $ISSN = $dbh->selectrow_array( $statement, undef, $valueID )
         if ( $fieldID == 13 );
+      $isbn = $dbh->selectrow_array( $statement, undef, $valueID )
+	if ( $fieldID == 11 );
       $doi = $dbh->selectrow_array( $statement, undef, $valueID )
         if ( $fieldID == 26 );
       $abstract = $dbh->selectrow_array( $statement, undef, $valueID )
@@ -440,6 +441,7 @@ sub read {
     $pub->title($title)               if $title;
     $pub->doi($doi)                   if $doi;
     $pub->issn($ISSN)                 if $ISSN;
+    $pub->isbn($isbn)                 if $isbn;
     $pub->pmid($pmid)                 if $pmid;
     $pub->arxivid($arxivid)           if $arxivid;
     $pub->authors($authors)           if $authors;
