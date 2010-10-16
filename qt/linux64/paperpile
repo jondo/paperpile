@@ -1,6 +1,4 @@
 #!/bin/sh
-appname=`basename $0`
-
 dirname=`dirname $0`
 tmp="${dirname#?}"
 
@@ -8,7 +6,7 @@ if [ "${dirname%$tmp}" != "/" ]; then
 dirname=$PWD/$dirname
 fi
 
-LD_LIBRARY_PATH=$dirname/lib
+LD_LIBRARY_PATH="$dirname/lib"
 export LD_LIBRARY_PATH
 
 export QTDIR=""
@@ -16,4 +14,4 @@ export QT_PLUGIN_PATH=""
 export KDEDIRS=""
 export KDEDIR=""
 
-$dirname/bin/$appname $*
+"$dirname/bin/paperpile" $*
