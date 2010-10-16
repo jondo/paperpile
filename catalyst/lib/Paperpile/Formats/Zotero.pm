@@ -464,7 +464,7 @@ sub read {
     $pub->howpublished($howpublished) if $howpublished;
     $pub->school($school)             if $school;
     $pub->annote($note)               if $note;
-    $pub->tags($tags)                 if $tags;
+    $pub->tags_tmp($tags)                 if $tags;
 
     # add PDFs and other attachements
     foreach my $i ( 0 .. $#pdfs ) {
