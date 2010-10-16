@@ -188,11 +188,8 @@ sub read {
       $linkout = $t[0];
     }
 
-    # get local PDF and attachments
-    # result should be :/home/wash/PDFs/file.pdf:PDF
-    # problem for attachments: it is not known
-    # which PDF is the actual paper and which files are just attachments
-    # Mendeley does not distinguish...
+    # get PDF and attachments; use first PDF in database as PDF file
+    # and store the rest as supplementary files
     my $sth5 =
       $dbh->prepare( 'SELECT localUrl '
         . 'FROM DocumentFiles d, Files f '
@@ -201,12 +198,13 @@ sub read {
     my @attachments = ();
     my @pdfs        = ();
     while ( my @t = $sth5->fetchrow_array ) {
-      $t[0] =~ s/^file\:\/\//\:/g;
-      if ( $t[0] =~ /\.pdf$/i ) {
-        $t[0] .= ':PDF';
-        push @pdfs, $t[0];
+      my $file = Paperpile::Utils->process_attachment_name($t[0]);
+      next if !$file;
+
+      if ( $file =~ /\.pdf$/i && !@pdfs) {
+        push @pdfs, $file;
       } else {
-        push @attachments, $t[0];
+        push @attachments, $file;
       }
     }
     $local_pdfs = join( ";", @pdfs ) if ( @pdfs );
