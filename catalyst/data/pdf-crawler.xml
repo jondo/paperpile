@@ -155,12 +155,21 @@
 
 </site>
 
-<!-- There are many other patterns for books, all seem different. I hope this is at least valid for most journals. -->
 <site name="Wiley">
   <signature>
     <url>!wiley!</url>
   </signature>
 
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!id=&quot;pdfDocument&quot;\s+src=&quot;([^&quot;]+)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <!-- Old rules don't think we need this any more, but it does not do any harm -->
   <rule>
     <pattern>
       <match>!(/cgi-bin/fulltext/\d+/PDFSTART)!</match>
