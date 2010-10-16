@@ -233,7 +233,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       'EXPORT_VIEW': new Ext.Action({
         itemId: 'EXPORT_VIEW',
-        text: 'View',
+        text: 'All',
         handler: this.handleExportView,
         scope: this
       }),

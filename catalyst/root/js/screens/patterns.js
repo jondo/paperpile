@@ -34,7 +34,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
     this.tooltips = {
       library_db: 'The database file that holds all your information of your Paperpile library',
-      paper_root: 'The root folder where your PDFs and supplementary files are stored.',
+      paper_root: 'The folder where your PDFs and supplementary files are stored.',
       key_pattern: 'The pattern for the reference identifier (see help box).',
       pdf_pattern: 'The pattern to name your PDFs. Can include the reference identifier <code>[key]</code> and slashes <code>/</code> to use subfolders.',
       attachment_pattern: 'The pattern for the folder where your supplementary files get stored. Can include the reference identifier <code>[key]</code> and slashes <code>/</code> to use subfolders.'
@@ -114,6 +114,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
           var options = {
             title: item == 'library_db' ? 'Choose Paperpile database file' : 'Choose PDF folder',
             selectionType: item == 'library_db' ? 'file' : 'folder',
+            dialogType:'save',
             scope: this
           };
           Paperpile.fileDialog(callback, options);

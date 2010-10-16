@@ -681,7 +681,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       nameFilters: ["All supported files (*)",
         "BibTeX (*.bib)",
         "RIS (*.ris)",
-        //"Endnote XML (*.xml)",
+       //"Endnote XML (*.xml)", //Backend does not work at the moment
         "ISI (*.isi)",
         "MODS (*.xml)",
         "RSS (*.xml)",
@@ -795,8 +795,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     };
 
     Paperpile.fileDialog(callback, {
+      'title':'Choose file and format for export',
       'dialogType': 'save',
-      'selectionType': 'folder',
+      'selectionType': 'file',
       'nameFilters': ["BibTeX (*.bib)",
         'RIS (.ris)',
         'EndNote (.txt)',

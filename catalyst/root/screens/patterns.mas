@@ -10,7 +10,7 @@
       <div id="library_db_button"></div>
     </div>
     
-    <h3>PDF directory <span id="paper_root_tooltip" class="pp-tooltip-link">?</span></h3>
+    <h3>PDF folder <span id="paper_root_tooltip" class="pp-tooltip-link">?</span></h3>
     <div id="paper_root">
       <div id="paper_root_textfield" class="pp-settings-textfield"></div>
       <div id="paper_root_button"></div>
