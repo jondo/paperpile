@@ -959,7 +959,7 @@ sub process_query_string {
       }
 
       # Normal fields: author:chang
-      push @new_fields, $field;
+      push @new_fields, $field.'*';
       next;
     }
 

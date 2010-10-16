@@ -6,6 +6,7 @@ use Paperpile::Library::Author;
 use Data::Dumper;
 use XML::Simple;
 use File::Temp qw(tempfile);
+use Paperpile::Formats::XMP;
 
 has 'file'     => ( is => 'rw', isa => 'Str' );
 has 'pub'      => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
@@ -29,6 +30,15 @@ sub parsePDF {
   $PDFfile =~ s/\s/\\ /g;
   $PDFfile =~ s/\(/\\(/g;
   $PDFfile =~ s/\)/\\)/g;
+
+  # Read XMP data if present in PDF file
+  my $xmp_parser = Paperpile::Formats::XMP->new();
+  $xmp_parser->file($PDFfile);
+  my $xmp_pub = $xmp_parser->read();
+
+  if ( $xmp_pub->title and $xmp_pub->authors ) {
+    return $xmp_pub;
+  }
 
   # create and read XML file, just the first page
   system("$PDF2XML -noImage -f 1 -l 1 -q $PDFfile $tmpfile 2>/dev/null");
@@ -74,10 +84,10 @@ sub parsePDF {
     my $count_spaces = ($metadata_title =~ tr/ //);
     $metadata_title = '' if ( $count_spaces < 3 );
   }
-  open (FILE, ">$PDFfile.metadata.tmp" );
-  print FILE "TITLE:$metadata_title\n";
-  print FILE "  DOI:$metadata_DOI\n";
-  close(FILE);
+
+  if ( $metadata_DOI eq '' and $xmp_pub->doi ) {
+    $metadata_DOI = $xmp_pub->doi;
+  }
 
   my @page0 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
 

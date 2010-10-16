@@ -354,7 +354,7 @@ sub report_pdf_match_error : Local {
   my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
 
   my $report = $c->request->params->{reportString};
-  my $file = $c->request->params->{pdf};
+  my $file = $c->request->params->{file};
 
   my $subject = 'Automatic bug report: PDF match error on '.$self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
