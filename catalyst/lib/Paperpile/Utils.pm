@@ -174,6 +174,8 @@ sub get_binary{
 
   my $bin=File::Spec->catfile($self->path_to('bin'), $platform, $name);
 
+  $bin=~s/ /\\ /g;
+
   return $bin;
 }
 
