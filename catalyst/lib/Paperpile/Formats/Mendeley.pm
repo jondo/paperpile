@@ -37,13 +37,24 @@ sub read {
   my $file = $self->file;    # the mendeley sqlite db
 
   if ( !defined $file ) {
-    FileFormatError->throw(
-      error => "Could not
-    find Mendeley sqllite database file."
-    );
+    FileFormatError->throw( error => "Could not find Mendeley sqlite database file." );
   }
 
   my @output = ();
+
+  my %ignore_fields = (
+    'id'              => 1,
+    'confirmed'       => 1,
+    'deletionPending' => 1,
+    'favourite'       => 1,
+    'read'            => 1,
+    'type'            => 1,
+    'uuid'            => 1,
+    'added'           => 1,
+    'modified'        => 1,
+    'importer'        => 1,
+    'privacy'         => 1
+  );
 
   # get a DBI connection to the SQLite file
   my $dbh = DBI->connect( "dbi:SQLite:$file", '', '', { AutoCommit => 1, RaiseError => 1 } );
@@ -51,7 +62,14 @@ sub read {
   # publications are stored in table 'Documents' and various related tables
   my $sth = $dbh->prepare("SELECT * FROM Documents;");
   $sth->execute();
-  while ( my @tmp = $sth->fetchrow_array ) {
+
+  while ( my $row = $sth->fetchrow_hashref() ) {
+
+    my %tmp = %{$row};
+
+    # do not keep parsed references, that do not appear in the
+    # library to the user
+    next if ( $tmp{'onlyReference'} eq 'true' );
 
     # what we try to parse
     my (
@@ -59,8 +77,10 @@ sub read {
       $month,   $issn,    $pages,   $doi,          $abstract,  $booktitle,
       $url,     $pmid,    $arxivid, $editors,      $publisher, $edition,
       $series,  $address, $chapter, $organization, $linkout,   $local_pdfs,
-      $citekey, $tags,    $note,    $howpublished
+      $citekey, $tags,    $note,    $howpublished, $isbn,      $keywords
     );
+
+    my @unsupported_fields = ();
 
     ############################################
     # mendeley types:      ->   paperpile types:
@@ -86,13 +106,8 @@ sub read {
     # WebPage                 MISC
     # WorkingPaper            UNPUBLISHED
 
-    my $pubtype       = '';
-    my $mend_id       = $tmp[0];
-    my $mend_itemType = $tmp[6];
-    $howpublished = $mend_itemType;
-    $howpublished =~ s/Article/ Article/g;
-
-    switch ($mend_itemType) {
+    my $pubtype = '';
+    switch ( $tmp{'type'} ) {
       case 'JournalArticle' {
         $pubtype = 'ARTICLE';
       }
@@ -106,12 +121,10 @@ sub read {
         $pubtype = 'BOOK';
       }
       case 'BookSection' {
-        $pubtype   = 'INBOOK';
-        $booktitle = $tmp[53];    # 53 = publication
+        $pubtype = 'INBOOK';
       }
       case 'ConferenceProceedings' {
         $pubtype = 'PROCEEDINGS';
-        $howpublished =~ s/Proceedings/ Proceedings/g;
       }
       case 'Report' {
         $pubtype = 'TECHREPORT';
@@ -124,37 +137,103 @@ sub read {
       }
       else {
         $pubtype = 'MISC';
-        $howpublished =~ s/Program/ Program/g;
-        $howpublished =~ s/Broadcast/ Broadcast/g;
+        ( $howpublished = $tmp{'type'} ) =~ s/(.*[a-z])([A-Z].*)/$1 $2/;
       }
     }
 
-    $abstract     = $tmp[8];
-    $note         = $tmp[12];
-    $title        = $tmp[14];
-    $arxivid      = $tmp[18];
-    $chapter      = $tmp[19];
-    $citekey      = $tmp[20];
-    $doi          = $tmp[31];
-    $edition      = $tmp[32];
-    $organization = $tmp[35];
-    $issn         = $tmp[41];
-    $issue        = $tmp[42];
-    $month        = $tmp[48];
-    $pages        = $tmp[51];
-    $pmid         = $tmp[52];
-    $journal      = $tmp[53];
-    $series       = $tmp[61];
-    $volume       = $tmp[67];
-    $year         = $tmp[68];
+    foreach my $key ( keys %tmp ) {
 
-    # TODO: get keywords
-    # my $sth2 = $dbh->prepare("
-    # SELECT keyword FROM DocumentKeywords WHERE documentId=$mend_id;");
-    # $sth2->execute();
-    # while ( my @tmp = $sth2->fetchrow_array ) {
-    #  $keywords .= $tmp[0]" ";
-    # }
+      # skip field if empty
+      next if ( !$tmp{$key} );
+
+      #print STDERR "$key: $tmp{$key}\n";
+
+      my $supported = 0;
+      switch ($key) {
+        case 'title' {
+          $title     = $tmp{$key};
+          $supported = 1;
+        }
+        case 'abstract' {
+          $abstract  = $tmp{$key};
+          $supported = 1;
+        }
+        case 'arxivId' {
+          $arxivid   = $tmp{$key};
+          $supported = 1;
+        }
+        case 'doi' {
+          $doi       = $tmp{$key};
+          $supported = 1;
+        }
+        case 'edition' {
+          $edition   = $tmp{$key};
+          $supported = 1;
+        }
+        case 'issn' {
+          $issn      = $tmp{$key};
+          $supported = 1;
+        }
+        case 'isbn' {
+          $isbn      = $tmp{$key};
+          $supported = 1;
+        }
+        case 'issue' {
+          $issue     = $tmp{$key};
+          $supported = 1;
+        }
+        case 'month' {
+          $month     = $tmp{$key};
+          $supported = 1;
+        }
+        case 'pages' {
+          $pages     = $tmp{$key};
+          $supported = 1;
+        }
+        case 'pmid' {
+          $pmid      = $tmp{$key};
+          $supported = 1;
+        }
+        case 'publication' {
+          $journal   = $tmp{$key};
+          $supported = 1;
+        }
+        case 'volume' {
+          $volume    = $tmp{$key};
+          $supported = 1;
+        }
+        case 'year' {
+          $year      = $tmp{$key};
+          $supported = 1;
+        }
+        case 'series' {
+          $series    = $tmp{$key};
+          $supported = 1;
+        }
+        case 'institution' {
+          $organization = $tmp{$key};
+          $supported    = 1;
+        }
+        case 'publisher' {
+          $publisher = $tmp{$key};
+          $supported = 1;
+        }
+      }
+
+      if ( !defined $ignore_fields{$key} and $supported == 0 ) {
+        push @unsupported_fields, "Mendeley field \"$key\": $tmp{$key}";
+      }
+
+    }
+
+    # get keywords
+    my $sth2 = $dbh->prepare("SELECT keyword FROM DocumentKeywords WHERE documentId=?;");
+    $sth2->execute( $tmp{'id'} );
+    my @keywords_tmp = ();
+    while ( my @tmp = $sth2->fetchrow_array ) {
+      push @keywords_tmp, $tmp[0];
+    }
+    $keywords = join( ";", @keywords_tmp );
 
     # get authors
     my @tmpauthors = ();
@@ -163,7 +242,7 @@ sub read {
       $dbh->prepare( 'SELECT contribution, lastName || ", " || firstNames '
         . 'FROM DocumentContributors '
         . 'WHERE documentId=?;' );
-    $sth3->execute($mend_id);
+    $sth3->execute( $tmp{'id'} );
     while ( my @t = $sth3->fetchrow_array ) {
       if ( $t[0] eq 'DocumentEditor' ) {
         push @tmpeditors, $t[1] if ( $t[1] );
@@ -172,18 +251,18 @@ sub read {
       }
     }
 
-    if ( @tmpauthors ) {
+    if (@tmpauthors) {
       $authors = join( " and ", @tmpauthors );
       $authors =~ s/\s+/ /g;
     }
-    if ( @tmpeditors ) {
+    if (@tmpeditors) {
       $editors = join( " and ", @tmpeditors );
       $editors =~ s/\s+/ /g;
     }
 
     # get link_out
     my $sth4 = $dbh->prepare('SELECT url FROM DocumentUrls WHERE documentId=?;');
-    $sth4->execute($mend_id);
+    $sth4->execute( $tmp{'id'} );
     if ( my @t = $sth4->fetchrow_array ) {    # guess only one
       $linkout = $t[0];
     }
@@ -194,29 +273,33 @@ sub read {
       $dbh->prepare( 'SELECT localUrl '
         . 'FROM DocumentFiles d, Files f '
         . 'WHERE d.documentId=? AND d.hash=f.hash ORDER BY d.rowid ASC' );
-    $sth5->execute($mend_id);
+    $sth5->execute( $tmp{'id'} );
     my @attachments = ();
     my @pdfs        = ();
     while ( my @t = $sth5->fetchrow_array ) {
-      my $file = Paperpile::Utils->process_attachment_name($t[0]);
+      my $file = Paperpile::Utils->process_attachment_name( $t[0] );
       next if !$file;
 
-      if ( $file =~ /\.pdf$/i && !@pdfs) {
+      if ( $file =~ /\.pdf$/i && !@pdfs ) {
         push @pdfs, $file;
       } else {
         push @attachments, $file;
       }
     }
-    $local_pdfs = join( ";", @pdfs ) if ( @pdfs );
+    $local_pdfs = join( ";", @pdfs ) if (@pdfs);
 
     # get tags as comma separated list
     my $sth6 = $dbh->prepare('SELECT tag FROM DocumentTags WHERE documentId=?');
-    $sth6->execute($mend_id);
+    $sth6->execute( $tmp{'id'} );
     my @tags = ();
     while ( my @t = $sth6->fetchrow_array ) {
       push @tags, $t[0];
     }
     $tags = join( ",", @tags );
+
+    # add unsupported fields to note tag
+    $note .= "<br />\n".join("<br />\n", @unsupported_fields)."<br />\n" if ( $#unsupported_fields  > -1 and $note);
+    $note = join("<br />\n", @unsupported_fields)."<br />\n" if ( $#unsupported_fields > -1 and !$note);
 
     # create publication object
     my $pub = Paperpile::Library::Publication->new( pubtype => $pubtype );
@@ -233,6 +316,7 @@ sub read {
     $pub->title($title)               if $title;
     $pub->doi($doi)                   if $doi;
     $pub->issn($issn)                 if $issn;
+    $pub->isbn($isbn)                 if $isbn;
     $pub->pmid($pmid)                 if $pmid;
     $pub->arxivid($arxivid)           if $arxivid;
     $pub->authors($authors)           if $authors;
@@ -242,8 +326,9 @@ sub read {
     $pub->booktitle($booktitle)       if $booktitle;
     $pub->organization($organization) if $organization;
     $pub->linkout($linkout)           if $linkout;
+    $pub->keywords($keywords)         if $keywords;
     $pub->_pdf_tmp($local_pdfs)       if $local_pdfs;
-    $pub->{_attachments_tmp} = [@attachments] if ( @attachments  > 0 );
+    $pub->{_attachments_tmp} = [@attachments] if ( @attachments > 0 );
     $pub->tags($tags)                 if $tags;
     $pub->note($note)                 if $note;
     $pub->howpublished($howpublished) if $howpublished;
