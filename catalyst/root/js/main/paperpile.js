@@ -41,12 +41,12 @@ Paperpile.log = function() {
 
 function obj2str(o) {
   if (typeof o !== 'object') {
-      return o;
+    return o;
   }
   var out = '{';
   for (var p in o) {
     if (!o.hasOwnProperty(p)) {
-	continue;
+      continue;
     }
     out += '\n ';
     out += p + ': ' + o[p];
@@ -54,7 +54,6 @@ function obj2str(o) {
   out += '\n}';
   return out;
 }
-
 
 // This is a wrapper around the Ext.Ajax.request function call.
 // If we need to add any global behavior to Ajax calls, put it
@@ -248,7 +247,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       win.setWidth(oldWidth * zoomRatio);
       win.setHeight(oldHeight * zoomRatio);
     }
-bin
+    bin
     Ext.getBody().setStyle('zoom', zoomLevel);
     // Now resize the body element.
     this.resizeWithZoom(this.getWidth(), this.getHeight());
@@ -285,13 +284,13 @@ bin
     this.keys.bindCallback('ctrl-w', this.keyControlW);
     this.keys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
 
-    this.getEl().on('keydown',this.onKeyDown);
+    this.getEl().on('keydown', this.onKeyDown);
   },
 
   onKeyDown: function(e) {
-      Paperpile.log(e);
-      var tab = Paperpile.main.tabs.getActiveTab();
-      
+    Paperpile.log(e);
+    var tab = Paperpile.main.tabs.getActiveTab();
+
   },
 
   keyQuesionMark: function() {
@@ -449,7 +448,7 @@ bin
     };
     var options = {
       title: 'Choose a folder containing PDFs to import',
-      dialogType:'load',
+      dialogType: 'load',
       selectionType: 'folder',
       scope: this
     };
@@ -679,9 +678,15 @@ bin
       title: 'Choose a bibliography file to import',
       types: ['*'],
       typesDescription: 'Bibliography files (BibTeX, RIS, EndNote, and others)',
-      nameFilters: ["BibTeX (*.bib)",
-                    "Zotero, Mendeley (*.sqlite)",
-                    "All supported files (*)"],
+      nameFilters: ["All supported files (*)",
+        "BibTeX (*.bib)",
+        "RIS (*.ris)",
+        //"Endnote XML (*.xml)",
+        "ISI (*.isi)",
+        "MODS (*.xml)",
+        "RSS (*.xml)",
+        "Zotero (*.sqlite)",
+        "Mendeley (*.sqlite)"],
       scope: this
     };
     Paperpile.fileDialog(callback, options);
@@ -751,19 +756,21 @@ bin
   },
 
   handleExport: function(gridId, selection, sourceNode) {
-  
-    var callback = function(filenames,filter) {
+
+    var callback = function(filenames, filter) {
 
       if (filenames.length == 0) {
         return;
       }
 
-      var formatsMap = {'BibTeX (*.bib)':'BIBTEX',
-                        'RIS (.ris)':'RIS',
-                        'EndNote (.txt)':'ENDNOTE',
-                        'MODS (.xml)':'MODS',
-                        'ISI Web of Science (.isi)':'ISI',
-                        'Word 2007 XML (.xml)':'WORD2007'};
+      var formatsMap = {
+        'BibTeX (*.bib)': 'BIBTEX',
+        'RIS (.ris)': 'RIS',
+        'EndNote (.txt)': 'ENDNOTE',
+        'MODS (.xml)': 'MODS',
+        'ISI Web of Science (.isi)': 'ISI',
+        'Word 2007 XML (.xml)': 'WORD2007'
+      };
 
       var format = formatsMap[filter];
 
@@ -771,13 +778,13 @@ bin
 
       Paperpile.status.showBusy('Exporting to ' + file + '...');
       Paperpile.Ajax({
-	    url: Paperpile.Url('/ajax/plugins/export'),
+        url: Paperpile.Url('/ajax/plugins/export'),
         params: {
           source_node: sourceNode,
           selection: selection,
           grid_id: gridId,
           export_name: 'Bibfile',
-          export_out_format: format, 
+          export_out_format: format,
           export_out_file: file
         },
         success: function() {
@@ -788,18 +795,17 @@ bin
     };
 
     Paperpile.fileDialog(callback, {
-      'dialogType':'save',
-      'selectionType':'folder',
-      'nameFilters':["BibTeX (*.bib)",
-                     'RIS (.ris)',
-                     'EndNote (.txt)',
-                     'MODS (.xml)',
-                     'ISI Web of Science (.isi)',
-                     'Word 2007 XML (.xml)',
-                    ],
+      'dialogType': 'save',
+      'selectionType': 'folder',
+      'nameFilters': ["BibTeX (*.bib)",
+        'RIS (.ris)',
+        'EndNote (.txt)',
+        'MODS (.xml)',
+        'ISI Web of Science (.isi)',
+        'Word 2007 XML (.xml)', ],
     });
   },
-  
+
   bibtexModeIsEnabled: function() {
     var bibtex = this.getSetting('bibtex');
     if (bibtex.bibtex_mode == 1) {
@@ -1061,7 +1067,9 @@ bin
               buttons: Ext.Msg.OKCANCEL,
               fn: function(btn) {
                 if (btn === 'ok') {
-                  Paperpile.main.reportError('CRASH', {info: error.msg});
+                  Paperpile.main.reportError('CRASH', {
+                    info: error.msg
+                  });
                 }
                 Ext.MessageBox.buttonText.ok = "Ok";
               }
@@ -1180,7 +1188,8 @@ bin
           Paperpile.isLogging = 0;
           Paperpile.Ajax({
             url: url,
-            method: 'POST', // GET did mess up the parameters so we use POST
+            method: 'POST',
+            // GET did mess up the parameters so we use POST
             params: params,
             scope: this,
             success: function() {
@@ -1354,5 +1363,5 @@ bin
     QRuntime.updaterExit.connect(exitCallback);
     QRuntime.updaterStart("check");
 
-  }});
-
+  }
+});

@@ -78,7 +78,7 @@ Paperpile.stage0 = function() {
 
         // Set debug=true to bypass to allow to use an externally
         // started server for developing
-        debug=false;
+        debug=true;
         
         // Server was already running before we have started it
         if (IS_QT && Paperpile.pingAttempts == 1 && !debug){
