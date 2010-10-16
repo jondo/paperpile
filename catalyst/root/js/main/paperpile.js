@@ -1061,7 +1061,7 @@ bin
               buttons: Ext.Msg.OKCANCEL,
               fn: function(btn) {
                 if (btn === 'ok') {
-                  Paperpile.main.reportError('CRASH', error.msg);
+                  Paperpile.main.reportError('CRASH', {info: error.msg});
                 }
                 Ext.MessageBox.buttonText.ok = "Ok";
               }
@@ -1163,7 +1163,7 @@ bin
     if (type === 'PDF_MATCH') {
       url = '/ajax/misc/report_pdf_match_error';
     }
-    var number = Paperpile.status.showBusy("Reporting error");
+    var number = Paperpile.status.showBusy("Sending error report");
     // First call line_feed to make sure all of the relevant catalyst
     // log is flushed. Wait 5 seconds to make sure it is sent to the
     // frontend before we send it back to the backend. 
@@ -1171,6 +1171,7 @@ bin
       url: '/ajax/misc/line_feed',
       success: function(response) {
         (function() {
+
           var params = Ext.apply(data, {
             catalyst_log: Paperpile.serverLog
           });
@@ -1179,6 +1180,7 @@ bin
           Paperpile.isLogging = 0;
           Paperpile.Ajax({
             url: url,
+            method: 'POST', // GET did mess up the parameters so we use POST
             params: params,
             scope: this,
             success: function() {
