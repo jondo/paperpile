@@ -85,7 +85,8 @@ sub read {
       $title,  $authors, $journal, $issue,        $volume,    $year,
       $month,  $ISSN,    $pages,   $doi,          $abstract,  $booktitle,
       $url,    $pmid,    $arxivid, $editors,      $publisher, $edition,
-      $series, $address, $school,  $howpublished, $note,      $isbn
+      $series, $address, $school,  $howpublished, $note,      $isbn,
+      $tags
     );
 
     my @pdfs                 = ();
@@ -141,13 +142,13 @@ sub read {
 
       my %unsupported = (
         '2'   => 'rights',
-        '14'  => 'date',
+        #'14'  => 'date',
         '15'  => 'section',
         '18'  => 'callNumber',
         '19'  => 'archiveLocation',
         '21'  => 'distributor',
-        '22'  => 'extra',
-        '27'  => 'accessDate',
+        #'22'  => 'extra',
+        #'27'  => 'accessDate',
         '29'  => 'seriesText',
         '30'  => 'seriesNumber',
         '32'  => 'reportType',
@@ -169,7 +170,7 @@ sub read {
         '59'  => 'artworkMedium',
         '60'  => 'number',
         '61'  => 'artworkSize',
-        '62'  => 'libraryCatalog',
+        #'62'  => 'libraryCatalog',
         '63'  => 'videoRecordingFormat',
         '64'  => 'interviewMedium',
         '65'  => 'letterType',
@@ -213,7 +214,7 @@ sub read {
         '112' => 'nameOfAct',
         '113' => 'subject',
         '114' => 'proceedingsTitle',
-        '116' => 'shortTitle',
+        #'116' => 'shortTitle',
         '117' => 'docketNumber',
         '118' => 'numPages',
         '119' => 'programTitle',
@@ -295,7 +296,7 @@ sub read {
       # could not be parsed correctly (e.g. Arxiv bibliogrpahic lines)
       if ( $fieldID == 22 ) {
         my $tmpstring = $dbh->selectrow_array( $statement, undef, $valueID );
-        if ( $tmpstring =~ m/PMID:\s(\d+)/ ) {
+        if ( $tmpstring =~ m/PMID:\s*(\d+)/ ) {
           $pmid = $1;
         }
       }
@@ -380,9 +381,19 @@ sub read {
     my $sth6 = $dbh->prepare( "SELECT note FROM itemNotes WHERE " . "sourceItemID=?;" );
     $sth6->execute($itemID);
     while ( my @tmp6 = $sth6->fetchrow_array ) {
-      ( $note = $tmp6[0] ) =~ s/<div\s+class="[^"]+">//;
-      $note =~ s/<\/div>$//;
+      ( my $tmp_note = $tmp6[0] ) =~ s/<div\s+class="[^"]+">//;
+      $tmp_note =~ s/<\/div>$//;
+      $note .= "$tmp_note<br />";
     }
+
+    # get tags as comma separated list
+    my $sth7 = $dbh->prepare('SELECT name FROM itemTags JOIN tags ON itemTags.tagID = tags.tagID WHERE itemID = ?;');
+    $sth7->execute( $itemID );
+    my @tags_tmp = ();
+    while ( my @t = $sth7->fetchrow_array ) {
+      push @tags_tmp, $t[0];
+    }
+    $tags = join( ",", @tags_tmp );
 
     # if it does not have a title, we are not interested
     next if ( !defined $title );
@@ -453,6 +464,7 @@ sub read {
     $pub->howpublished($howpublished) if $howpublished;
     $pub->school($school)             if $school;
     $pub->annote($note)               if $note;
+    $pub->tags($tags)                 if $tags;
 
     # add PDFs and other attachements
     foreach my $i ( 0 .. $#pdfs ) {
