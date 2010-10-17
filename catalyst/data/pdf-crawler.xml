@@ -85,6 +85,17 @@
     </pattern>
   </rule>
 
+  <!-- We have landed on the selection page and have to choose -->
+  <rule>
+    <pattern>
+      <match>.*action=&quot;(http.*value=&quot;\d+&quot;).*</match>
+      <rewrite>!(.*md5=[^%]+)(%.*value=%22)(\d+)(%.*)!$1&amp;dept=$3!</rewrite>
+    </pattern>
+    <pattern>
+      <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
+    </pattern>
+  </rule>
+  
   <test>
     <url>http://dx.doi.org/doi:10.1016/j.tig.2008.09.003</url>
   </test>
@@ -114,6 +125,17 @@
     </pattern>
   </rule>
 
+  <!-- We have landed on the selection page and have to choose -->
+  <rule>
+    <pattern>
+      <match>.*action=&quot;(http.*value=&quot;\d+&quot;).*</match>
+      <rewrite>!(.*md5=[^%]+)(%.*value=%22)(\d+)(%.*)!$1&amp;dept=$3!</rewrite>
+    </pattern>
+    <pattern>
+      <match>!window\.open\(\'(http://www.sciencedirect.com/science.*?/sdarticle.pdf)!</match>
+    </pattern>
+  </rule>
+  
   <test>
     <url>http://linkinghub.elsevier.com/retrieve/pii/S1470-2045(08)70008-1</url>
     <url>http://linkinghub.elsevier.com/retrieve/pii/S0168-9525(08)00255-2</url>
