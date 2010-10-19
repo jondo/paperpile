@@ -37,7 +37,6 @@ js:
   - "js/misc/browser.js"
   - "js/misc/EnableDisableCheckItem.js"
   - "js/misc/label-panel.js"
-  - "js/export/export-window.js"
   - "js/screens/patterns.js"
   - "js/screens/statistics.js"
   - "js/screens/settings.js"

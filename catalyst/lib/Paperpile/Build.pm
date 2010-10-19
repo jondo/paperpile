@@ -230,7 +230,7 @@ sub minify {
     die("YUI compressor jar file not found. $yui does not exist");
   }
 
-  my $data = LoadFile("$cat_dir/data/resources.yaml");
+  my $data = LoadFile("$cat_dir/conf/resources.yaml");
 
   my $all_css = "$cat_dir/root/css/all.css";
 
@@ -267,7 +267,7 @@ sub dump_includes {
 
   my $cat_dir = $self->cat_dir;
 
-  my $data = LoadFile("$cat_dir/data/resources.yaml");
+  my $data = LoadFile("$cat_dir/conf/resources.yaml");
 
   foreach my $file ( @{ $data->{css} } ) {
     print '<link rel="stylesheet" type="text/css" charset="utf-8" href="/' . $file . '"></link>',
