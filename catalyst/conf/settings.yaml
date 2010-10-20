@@ -39,6 +39,7 @@ user_settings:
   proxy_user: ""
   proxy_passwd: ""
   pager_limit: 25
+  check_updates: 1
   zoom_level: 100
   tags_list_height: 120
 
@@ -49,6 +50,7 @@ library_settings:
   pdf_pattern: "[key]"
   attachment_pattern: "[key]_supplements"
   search_seq: "PubMed,GoogleScholar"
+  sort_field: "created DESC"
   bibtex:
     bibtex_mode: 0
     import_strip_tex: 1

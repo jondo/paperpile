@@ -1333,6 +1333,8 @@ div:hover.pp-grid-sort-item {
     float:left;
 }
 
+
+
 .pp-box-settings h3 {
     clear:left;
     color: #4183C4;
@@ -1340,6 +1342,13 @@ div:hover.pp-grid-sort-item {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     font-weight:bold;
 }
+
+.pp-box-settings h4{
+    clear:left;
+    margin: 16px 0px 2px 8px;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
 
 .pp-settings-textfield {
     margin: 0px 8px;
@@ -1353,7 +1362,7 @@ div:hover.pp-grid-sort-item {
 
 .pp-settings-table td {
     padding: 4px 2px;
-    vertical-align:top;
+    /*vertical-align:top;*/
 }
 
 .pp-settings-label {

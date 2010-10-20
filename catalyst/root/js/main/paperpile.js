@@ -1277,6 +1277,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   checkForUpdates: function(silent) {
 
+    if (Paperpile.main.globalSettings['check_updates'] == 0){
+      return;
+    }
+
     if (!IS_QT) {
       if (!silent) {
         Paperpile.status.updateMsg({
