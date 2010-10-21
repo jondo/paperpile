@@ -65,8 +65,6 @@ sub connect {
   # The response is XML formatted and can be parsed with XML::Simple
   my $result = XMLin( $response->content, ForceArray => 1 );
 
-  #print STDERR Dumper $result;
-
   # overall number f results, although google only submits max 20 per query
   my $number = $result->{'openSearch:totalResults'}[0];
 
