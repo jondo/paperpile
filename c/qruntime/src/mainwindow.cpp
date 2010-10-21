@@ -66,7 +66,8 @@ void MainWindow::exportRuntime(){
 
 void MainWindow::closeEvent(QCloseEvent *event) {
 
-  runtime->catalystKill();
+  runtime->closeEvent(event);
+
 }
 
 bool MainWindow::isDebugMode(){

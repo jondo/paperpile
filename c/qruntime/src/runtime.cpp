@@ -8,6 +8,7 @@ Runtime::Runtime(QWidget *window){
   mainWindow = window;
   catalystProcess = 0;
   updaterProcess = 0;
+  saveToClose = 0;
 
 };
 
@@ -267,6 +268,16 @@ void Runtime::catalystKill(){
   }
 }
 
+// If saveToClose is false the close event is dispatched to the
+// frontend. The frontend either ignores the close event or explicitly
+// sets saveToClose to true and then calls closeApp again.
+void Runtime::setSaveToClose(const bool & state){
+
+  saveToClose = state;
+
+}
+
+
 void Runtime::closeApp(){
 
   mainWindow->close();
@@ -396,3 +407,12 @@ bool Runtime::isDebugMode(){
 }
 
 
+void Runtime::closeEvent(QCloseEvent* event){
+
+  if (saveToClose){
+    catalystKill();
+  } else {
+    event->ignore();
+    emit appExit();
+  }
+}

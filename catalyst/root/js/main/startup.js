@@ -95,6 +95,37 @@ Paperpile.stage0 = function() {
           });
         } else {
           if (IS_QT) QRuntime.log("Loading frontend.");
+
+          // Connect appExit event to custom function which either explicitly closes the application or ignores the event
+          QRuntime.appExit.connect(
+            function(){
+
+              var unfinishedTasks = false;
+
+              if (Paperpile.main.currentQueueData){
+                if (Paperpile.main.currentQueueData.queue.status === 'RUNNING'){
+                  unfinishedTasks = true;
+                }
+              }
+
+              if (unfinishedTasks){
+                // Just show simple warning for now. Ideally we offer to cancel all tasks from the dialog
+                Ext.Msg.show({
+                  title: 'Unfinished tasks',
+                  msg: 'There are unfinished background tasks. Wait until all tasks are finished or cancel the tasks before closing Paperpile.',
+                  buttons: Ext.Msg.OK,
+                  animEl: 'elId',
+                  icon: Ext.MessageBox.INFO,
+                });
+              } else {
+                QRuntime.setSaveToClose(true);
+                // Defer call to closeApp to make sure the close event
+                // can be fired again. It seems it is enough to add just
+                // 1ms delay, so 100ms should be safe.
+                (function(){ QRuntime.closeApp()}).defer(100);
+              }
+            }
+          );
           Paperpile.stage1();
         }
       }
@@ -157,7 +188,6 @@ Paperpile.stage0 = function() {
           });
 
           QRuntime.log("Starting Catalyst");
-
           QRuntime.catalystStart();
         }
 
