@@ -726,11 +726,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .pp-action-add-notes {
-    background: transparent url('/images/icons/postit.png') no-repeat;
+    background: transparent url('/images/icons/note_add.png') no-repeat;
 }
 
 .pp-action-edit-notes {
-    background: transparent url('/images/icons/pencil.png') no-repeat;
+    background: transparent url('/images/icons/note_edit.png') no-repeat;
     display:block;
     float: right;
 }
@@ -1120,7 +1120,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .pp-grid-status-notes {
-    background: transparent url('/images/icons/pencil.png') no-repeat;
+    background: transparent url('/images/icons/note.png') no-repeat;
 }
 
 .pp-grid-status-imported {
