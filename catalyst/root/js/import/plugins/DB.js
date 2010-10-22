@@ -33,7 +33,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
 
     this.actions['NEW'] = new Ext.Action({
-      text: 'New Reference',
+      text: 'New',
       iconCls: 'pp-icon-add',
       handler: function() {
         this.handleEdit(true);
