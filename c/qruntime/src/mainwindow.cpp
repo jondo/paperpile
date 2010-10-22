@@ -37,6 +37,7 @@ MainWindow::MainWindow(){
 
   if (runtime->getPlatform() != "osx"){
     QApplication::setWindowIcon(QIcon(runtime->getCatalystDir()+"/root/images/app_icon.svg"));
+    setWindowTitle("Paperpile");
   }
 
   if (QCoreApplication::arguments().contains("--test")){
