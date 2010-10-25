@@ -36,7 +36,8 @@ sub parsePDF {
   $xmp_parser->file($PDFfile);
   my $xmp_pub = $xmp_parser->read();
 
-  if ( $xmp_pub->title and $xmp_pub->authors ) {
+  # immediate return if we get a more or less complete entry
+  if ( $xmp_pub->title and $xmp_pub->authors and $xmp_pub->doi ) {
     return $xmp_pub;
   }
 
@@ -69,7 +70,7 @@ sub parsePDF {
       $metadata_arxiv = $1;
       $metadata_title = '';
     }
-    $metadata_title = '' if ( $metadata_title =~ m/(\.doc|\.tex|\.dvi|\.ps|\.pdf|\.rtf|\.qxd|\.fm|\.fm\))$/ );
+    $metadata_title = '' if ( $metadata_title =~ m/(\.doc|\.tex|\.dvi|\.ps|\.pdf|\.rtf|\.qxd|\.fm|\.fm\)|\.eps)$/ );
     $metadata_title = '' if ( $metadata_title =~ m/^\s*$/ );
     $metadata_title = '' if ( $metadata_title =~ m/^Microsoft/ );
     $metadata_title = '' if ( $metadata_title =~ m/^gk[a-z]\d+/i );
@@ -300,14 +301,32 @@ sub parsePDF {
   # We can now create the publication object and return it
   my $pub = Paperpile::Library::Publication->new( pubtype => 'MISC' );
   if ( $#authors_obj > -1 and $title ne '' ) {
-    $pub->title($title);
+    # choose wich title to take
+    if ( $metadata_title and $title ) {
+      my $words1 = ( $title =~ tr/ / / );
+      my $words2 = ( $metadata_title =~ tr/ / / );
+      if ( $words2 > 5 and $words1 > $words2 * 5 ) {
+	$pub->title($metadata_title);
+      } else {
+	$pub->title($title);
+      }
+    } else {
+      $pub->title($title);
+    }
     $pub->authors( join( ' and ', @authors_obj ) );
   }
-  $pub->title($metadata_title)   if ( $metadata_title ne '' and !$pub->title );
-  $pub->doi($doi)                if ( $doi      ne '' );
-  $pub->doi($metadata_DOI)       if ( $metadata_DOI ne ''   and !$pub->doi );
-  $pub->arxivid($arxiv_id)       if ( $arxiv_id ne '' );
-  $pub->arxivid($metadata_arxiv) if ( $metadata_arxiv ne '' and !$pub->arxivid );
+  $pub->title($metadata_title)     if ( $metadata_title ne '' and !$pub->title );
+  $pub->title($xmp_pub->title)     if ( $xmp_pub->title       and !$pub->title );
+  $pub->doi($doi)                  if ( $doi      ne '' );
+  $pub->doi($metadata_DOI)         if ( $metadata_DOI ne ''   and !$pub->doi );
+  $pub->arxivid($arxiv_id)         if ( $arxiv_id ne '' );
+  $pub->arxivid($metadata_arxiv)   if ( $metadata_arxiv ne '' and !$pub->arxivid );
+  $pub->volume($xmp_pub->volume)   if ( $xmp_pub->volume );
+  $pub->issue($xmp_pub->issue)     if ( $xmp_pub->issue );
+  $pub->year($xmp_pub->year)       if ( $xmp_pub->year );
+  $pub->pages($xmp_pub->pages)     if ( $xmp_pub->pages );
+  $pub->journal($xmp_pub->journal) if ( $xmp_pub->journal );
+
   return $pub;
 }
 

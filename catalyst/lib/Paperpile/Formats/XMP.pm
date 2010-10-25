@@ -80,8 +80,10 @@ sub read {
     $arxivid, $start_page, $end_page, $publisher, $dummy,     $keywords
   );
 
-  my $xml = new XML::Simple;
-  my $data = $xml->XMLin( $xmp, ForceArray => 1 );
+  my $xml  = new XML::Simple;
+  my $data = undef;
+  eval { $data = $xml->XMLin( $xmp, ForceArray => 1 ) };
+  return $pub if ( !$data );
 
   # parse as seen for NPG PDFs
   my $tmp0 = $data->{'rdf:RDF'}->[0]->{'rdf:Description'};
@@ -169,11 +171,20 @@ sub read {
 
       # Dublin Core
       if ( lc($key) eq 'dc:creator' ) {
+	next if ( $entry->{$key} !~ m/^ARRAY/ );
+	next if ( $entry->{$key}->[0] !~ m/^HASH/ );
         my $ref = $entry->{$key}->[0]->{'rdf:Seq'}->[0]->{'rdf:li'};
         if ($ref) {
           next if ( $ref !~ m/^ARRAY/ );
           my @creators = ();
           foreach my $creator ( @{$ref} ) {
+            next if ( $creator =~ m/^ARRAY/ );
+            next if ( $creator =~ m/^HASH/ );
+	    next if ( $creator !~ m/[a-z]/i );
+	    if ( $creator =~ m/et\sal\.$/ ) {
+	      @creators = ();
+	      last;
+	    }
             push @creators, Paperpile::Library::Author->new()->parse_freestyle($creator)->bibtex();
           }
           $authors = join( " and ", @creators );
@@ -364,6 +375,50 @@ sub read {
     if ( $issue =~ m/^\d+$/ ) {
       $issue = undef if ( $issue < 1 );
     }
+  }
+
+  # title filtering
+  if ($title) {
+    if ( $title =~ m/^doi:(.*)/ ) {
+      $doi = $1 if ( !$doi );
+      $title = undef;
+    }
+  }
+  if ($title) {
+    if ( $title =~ m/^.*doi\.org\/(10\..*)/ ) {
+      $doi   = $1;
+      $title = undef;
+    }
+  }
+  if ($title) {
+    if ( $title =~ m/^(10\..*)/ ) {
+      $doi   = $1;
+      $title = undef;
+    }
+  }
+
+  if ($title) {
+    $title =~ s/\s+/ /g;
+    my $title_flag = 0;
+    $title_flag = 1 if ( $title =~ m/(\.doc|\.tex|\.dvi|\.ps|\.pdf|\.rtf|\.qxd|\.fm|\.fm\)|\.eps)$/ );
+    $title_flag = 1 if ( $title =~ m/^\s*$/ );
+    $title_flag = 1 if ( $title =~ m/^Microsoft/ );
+    $title_flag = 1 if ( $title =~ m/^gk[a-z]\d+/i );
+    $title_flag = 1 if ( $title =~ m/^Title/i );
+    $title_flag = 1 if ( $title =~ m/\.\.\.$/ );
+    $title_flag = 1 if ( $title =~ m/^LNCS/ );
+    
+    my $nr_words = ($title =~ tr/ / /);
+    $title_flag = 1 if ( $nr_words <= 1 );
+    $title = undef if ( $title_flag == 1 );
+  }
+
+  if ($authors) {
+    my $authors_flag = 0;
+    $authors_flag = 1 if ( $authors =~ m/^\d/ );
+    $authors_flag = 1 if ( $authors =~ m/^Author/ );
+    $authors_flag = 1 if ( $authors =~ m/.*,\s*$/ );
+    $authors = undef if ( $authors_flag == 1 );
   }
 
   # parse journal name from description dummy tag
