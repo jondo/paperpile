@@ -149,16 +149,9 @@ a.pp-inactive:hover {
     text-align:center;
 }
 
-.pp-drag-target {
-    border: 3px solid #333;
-}
-
-.pp-drag-target-invisible {
-    border: none !important;
-}
-
-.pp-drag-target-over {
-    border-color:green;
+.pp-dd-target {
+    border: 2px solid blue;
+    position:absolute;
 }
 
 .pp-box-tabs-left {
@@ -2284,6 +2277,7 @@ table.pp-meta-form {
 
 .drag-target {
     background-color:#44ff55;
+    z-index: 120;
 }
 
 .drag-target-no {
@@ -2300,6 +2294,35 @@ table.pp-meta-form {
       display: block;
       float: center;
       margin: 5px;
+}
+
+div.pp-dd-action {
+  text-align: center;
+  margin: 10px;
+  padding:4px;
+  border: 2px solid white;
+}
+
+.pp-dd-panel {
+  position: absolute;
+  z-index: 20;
+}
+
+.pp-dd-panel-over {
+  background-color:yellow;
+}
+
+.pp-dd-panel h1 {
+    text-align:center;
+    border: none;
+  font-size: 14px;
+}
+.pp-dd-action h2 {
+  font-size: 12px;
+}
+
+.pp-dd-action p {
+  font-size: 9px;
 }
 
 /* A less-distracting button, mostly for buttons within context menus. */

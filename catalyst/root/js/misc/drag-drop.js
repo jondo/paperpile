@@ -1,24 +1,10 @@
 Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   initListeners: function() {
+    this.targetsList = [];
 
     var el = Ext.getBody();
     this.addAllDragEvents(el, this.bodyDragEvent);
 
-    this.createToolTip();
-  },
-
-  createToolTip: function() {
-    this.dragToolTip = new Ext.ToolTip({
-      renderTo: document.body,
-      targetXY: [0, 0],
-      anchor: 'left',
-      anchorToTarget: true,
-      showDelay: 5,
-      hideDelay: 5
-    });
-    var el = this.dragToolTip.getEl();
-    el.setStyle('position', 'absolute');
-    el.setStyle('z-index', '250'); // Tooltip needs to hover above everything else!
   },
 
   addAllDragEvents: function(el, fn, targetFilter) {
@@ -37,25 +23,36 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   createDropTargets: function(event) {
     this.targetsList = [];
 
+    if (!this.ddp) {
+      this.ddp = new Paperpile.DragDropPanel();
+    }
+    this.ddp.setPosition(50, 350);
+    this.ddp.clearActions();
+    this.ddp.show();
+    this.targetsList.concat(this.ddp);
+
     if (this.isFolderDrag(event)) {
       // 1) 'Import PDF folder' to All Papers (and folders) tree nodes
       // 2) 'Attach contained files' to visible grid rows
       this.targetsList = this.targetsList.concat(this.getDropTargetsForTreeImport(event));
 
     } else if (this.isPdfDrag(event)) {
-      // 1) 'import PDF' to All Papers (and folders) tree node
-      // 2) 'Attach PDF' to visible grid rows
+      // Preview PDF drop action.
+      var da1 = new Paperpile.DragDropAction({
+        action: 'pdf-preview',
+        label: 'Preview PDF',
+        description: 'Preview using Paperpile\'s PDF viewer'
+      });
+      this.ddp.addAction(da1);
+
+      // Import PDF drop action.
+      // 1) 'Attach PDF' to visible grid rows
       var activeTab = Paperpile.main.tabs.getActiveTab();
       if (activeTab instanceof Paperpile.PluginPanel) {
-
         this.targetsList = this.targetsList.concat(this.getDropTargetsForGrid(activeTab.getGrid(), event));
       }
-      this.targetsList = this.targetsList.concat(this.getDropTargetsForTreeImport(event));
-
     } else if (this.isReferenceFileDrag(event)) {
       // 1) 'Open reference file' over whole Grid.
-      this.targetsList = this.targetsList.concat(this.getDropTargetsForLibraryImport(event));
-
     } else if (this.isFileDrag(event)) {
       // 1) 'Attach supp. file' to visible grid rows
       var activeTab = Paperpile.main.tabs.getActiveTab();
@@ -64,134 +61,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       }
     }
 
-    // Sort the targets by the z-index.
-    var collection = new Ext.util.MixedCollection();
-    collection.addAll(this.targetsList);
-    var sortFn = function(a, b) {
-      return a.targetZIndex - b.targetZIndex;
-    };
-    collection.sort('DESC', sortFn);
+    Paperpile.log(this.ddp.getActions());
+    this.targetsList = this.targetsList.concat(this.ddp.getActions());
 
-    this.targetsList = [];
-    for (var i = 0; i < collection.getCount(); i++) {
-      this.targetsList.push(collection.itemAt(i));
-    }
-  },
-
-  clearTargets: function(canvasEl) {
-    var c = canvasEl.dom.getContext("2d");
-
-    var box = canvasEl.getBox();
-    c.clearRect(box.x, box.y, box.width, box.height);
-    c.fillStyle = 'rgba(50,50,50,0.3)';
-    c.fillRect(box.x, box.y, box.width, box.height);
-  },
-
-  drawAroundTargets: function(canvasEl) {
-    var c = canvasEl.dom.getContext("2d");
-
-    var box = canvasEl.getBox();
-    c.clearRect(box.x, box.y, box.width, box.height);
-    c.fillStyle = 'rgba(50,50,50,0.3)';
-    c.fillRect(box.x, box.y, box.width, box.height);
-
-    for (var i = 0; i < this.targetsList.length; i++) {
-      var target = this.targetsList[i];
-      if (target.invisible) {
-        continue;
-      }
-      var box = target.getBox();
-      c.fillStyle = 'rgba(0,255,0,1)';
-      c.clearRect(box.x, box.y, box.width, box.height);
-    }
-  },
-
-  getDropTargetsForLibraryImport: function(event) {
-    var targets = [];
-
-    // Default to the local root as the drop target.
-    var tree = Paperpile.main.tree;
-    var node = tree.getNodeById('LOCAL_ROOT');
-    var el = Ext.get(node.ui.getEl());
-
-    // If the active tab happens to be a grid, that makes more sense.
-    var activeTab = Paperpile.main.tabs.getActiveTab();
-    if (activeTab instanceof Paperpile.PluginPanel) {
-      el = activeTab.getGrid().getEl();
-    }
-
-    var target = new Paperpile.DragDropTarget({
-      hint: 'import',
-      dragMessage: 'Open library file',
-      action: 'file-import',
-      object: null
-    });
-    target.setTargetEl(el);
-    return target;
-  },
-
-  getDropTargetsForTreeImport: function(event) {
-    var targets = [];
-
-    var tree = Paperpile.main.tree;
-
-    var noun = '';
-    if (this.isFolderDrag(event)) {
-      noun = 'PDF folder';
-    } else if (this.isPdfDrag(event)) {
-      noun = 'PDF';
-    }
-    var mult = this.isMultipleFileDrag(event) ? 's' : '';
-
-    // Add a catch-all target to just import into the library.
-    var node = tree.getNodeById('LOCAL_ROOT');
-    var message = 'Import ' + noun + mult + ' into library';
-    var target = new Paperpile.DragDropTarget({
-      invisible: false,
-      hint: 'import',
-      dragMessage: message,
-      action: 'pdf-import',
-      object: node,
-      targetZIndex: -1 // Keep on 'bottom' of the target stack.
-    });
-    target.setTargetEl(Ext.get(node.ui.getEl()));
-    targets.push(target);
-
-    // Add targets for each individual folder or tag.
-    var nodes = [];
-    var allPapersNode = tree.getNodeById('FOLDER_ROOT');
-    var nodes = nodes.concat(tree.getAllNodes(allPapersNode));
-
-    var allTagsNode = tree.getNodeById('TAGS_ROOT');
-    nodes = nodes.concat(tree.getAllNodes(allTagsNode));
-
-    for (var i = 0; i < nodes.length; i++) {
-      var node = nodes[i];
-      var el = Ext.get(node.ui.getTextEl()).up('div');
-      //var el = Ext.get(node.ui.getEl());
-      var dragMessage;
-
-      if (node == allTagsNode || node == allPapersNode) {
-        continue;
-      }
-
-      if (node.type == 'FOLDER') {
-        dragMessage = 'Import ' + noun + mult + ' into folder <b>' + node.text + '</b>';
-      } else if (node.type == 'TAGS') {
-        dragMessage = 'Import ' + noun + mult + ' with label <b>' + node.text + '</b>';
-      }
-      var target = new Paperpile.DragDropTarget({
-        invisible: true,
-        hint: 'import',
-        dragMessage: dragMessage,
-        action: 'pdf-import',
-        object: node
-      });
-      target.setTargetEl(el);
-      targets.push(target);
-    }
-
-    return targets;
   },
 
   getDropTargetsForGrid: function(gridPanel, event) {
@@ -209,18 +81,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       return targets;
     }
 
-    // One target for the whole grid.
-    var target = new Paperpile.DragDropTarget({
-      invisible: false,
-      hint: '',
-      dragMessage: '',
-      action: null,
-      targetZIndex: -1 // Keep on 'bottom' of the target stack.
-    });
-    target.setTargetEl(gridPanel.body);
-    targets.push(target);
-
-    // One invisible target per visible row.
+    // One target per visible row.
     for (var i = 0; i < visibleRows.length; i++) {
       var rowIndex = visibleRows[i];
       var row = gridPanel.getStore().getAt(rowIndex);
@@ -245,9 +106,6 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       }
 
       var target = new Paperpile.DragDropTarget({
-        invisible: true,
-        hint: hint,
-        dragMessage: dragMessage,
         action: action,
         object: [row, gridPanel]
       });
@@ -258,77 +116,79 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   },
 
   bodyDragEvent: function(event) {
-    //    Paperpile.log("bodyDrag, type: " + event.type + "  target:" + event.target.id + " " + event.getXY());
-    if (event.type == 'dragleave') {
-      return;
-    }
-
-    // Create the 'drag pane'. This is a transparent pane that
-    // entire window, catching drag events and detecting when
-    // they overlap with drag targets.
+    var tgt = event.getTarget('#dd-mask', 3, false);
+    //    if (event.type == 'dragleave' && tgt !== null) {
+    //      this.hideDragPane();
+    //      return;
+    //    }
     if (!this.dragPane) {
-      // Add a canvas overlay.
       var box = Paperpile.main.getBox();
       this.dragPane = Ext.DomHelper.append(Ext.getBody(), {
-        tag: 'canvas',
-        id: 'drag-pane',
-        top: 0,
-        left: 0,
-        width: box.width,
-        height: box.height,
+        tag: 'div',
+        id: 'dd-mask',
         style: {
+          top: 0,
+          left: 0,
+          width: box.width,
+          height: box.height,
+          border: '1px solid red',
           'z-index': 100,
-          'position': 'absolute',
+          position: 'absolute' // The pane won't properly hover above everything if we don't set this!
         }
       },
       true);
-    }
-    /*
-    else {
+    } else {
       var box = Paperpile.main.getBox();
       this.dragPane.setBox(box);
-      this.clearTargets(this.dragPane);
-      return;
+      this.dragPane.setVisible(true);
     }
-    */
 
     // The dragPane should capture drag events now, not the bod.
+    this.addAllDragEvents(this.dragPane, this.dragEvent);
     this.removeAllDragEvents(Ext.getBody(), this.bodyDragEvent);
-    this.addAllDragEvents(this.dragPane, this.paneDragEvent);
 
-    this.dragPane.setVisible(true);
-
-    // Create the necessary drop targets.
     this.createDropTargets(event);
 
-    this.drawAroundTargets(this.dragPane);
+    /*
+    var da1 = new Paperpile.DragDropAction({
+      action: 'pdf-preview',
+      label: 'Preview PDF',
+      description: 'Preview using Paperpile\'s PDF viewer'
+    });
+    var da2 = new Paperpile.DragDropAction({
+      action: 'pdf-import',
+      label: 'Import PDF',
+      description: 'Import into your library'
+    });
+
+    ddp.addAction(da1);
+    ddp.addAction(da2);
+    this.targetsList.push(da1);
+    this.targetsList.push(da2);
+    */
   },
 
   hideDragPane: function() {
     this.dragPane.setVisible(false);
 
-    // Hide the tooltip and destroy any dragdrop targets.
-    this.destroyAllTargets();
+    // Destroy any dragdrop targets.
+    this.destroyAllTargets(event);
 
     // Put drag events back onto the body.
-    this.removeAllDragEvents(this.dragPane, this.paneDragEvent);
+    this.removeAllDragEvents(this.dragPane, this.dragEvent);
     this.addAllDragEvents(Ext.getBody(), this.bodyDragEvent);
-
-    this.effectBlock = false;
-
-    this.dragPane.remove();
-    this.dragPane = null;
   },
 
-  paneDragEvent: function(event) {
-    //Paperpile.log("PaneDrag, type: " + event.type + "  target:" + event.target.id + " dragPane:" + this.dragPane.id + "  " + event.getXY());
+  dragEvent: function(event) {
     // Dispatching other events to relevant functions.
     if (event.type == 'drop') {
       this.onDrop(event);
       return;
     }
-    var tgt = event.getTarget('#drag-pane', 3, false);
+
+    var tgt = event.getTarget('#dd-mask', 2, false);
     if (event.type == 'dragleave' && tgt !== null) {
+      event.stopEvent();
       this.hideDragPane();
       return;
     }
@@ -360,12 +220,18 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     }
 
     var be = event.browserEvent;
-    be.dataTransfer.effectAllowed = 'copy';
-    be.dataTransfer.dropEffect = 'copy';
-    be.preventDefault();
+    if (isOverSomething) {
+//	be.dataTransfer.effectAllowed = 'copy';
+//	be.dataTransfer.dropEffect = 'copy';
+//	be.preventDefault();
+    } else {
+//	be.dataTransfer.effectAllowed = '';
+//	be.dataTransfer.dropEffect = '';
+//	be.preventDefault();
+    }
   },
 
-  destroyAllTargets: function() {
+  destroyAllTargets: function(event) {
     if (this.currentlyHoveredTarget != null) {
       this.currentlyHoveredTarget.out(event);
       this.currentlyHoveredTarget = null;
@@ -375,6 +241,10 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       target.destroy();
     }
     this.targetsList = [];
+
+    if (this.ddp) {
+      this.ddp.setVisible(false);
+    }
   },
 
   withinBox: function(obj, box) {
@@ -398,6 +268,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
   onDrop: function(event) {
     event.stopEvent();
+
     var dd = Paperpile.main.dd;
 
     var currentTarget = this.currentlyHoveredTarget;
@@ -419,12 +290,10 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     }
 
     // Clear the drag pane shadow.
-    var c = this.dragPane.dom.getContext("2d");
-    var box = this.dragPane.getBox();
-    c.clearRect(box.x, box.y, box.width, box.height);
-
-    this.dragToolTip.hide();
-
+    //var c = this.dragPane.dom.getContext("2d");
+    //var box = this.dragPane.getBox();
+    //c.clearRect(box.x, box.y, box.width, box.height);
+    //this.dragToolTip.hide();
     // Cause the current target to highlight, then hide the entire drag pane after the effect is finished.
     var fxDuration = 750;
     this.effectBlock = true;
@@ -589,12 +458,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 // A DragDropTarget is used to encapsulate the functionality of
 // a DnD 'target' box, making it clear to the user where the
 // valid drop targets are.
-Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
-  invisible: false,
-  floating: true,
-  shadow: false,
+Paperpile.DragDropTarget = Ext.extend(Ext.BoxComponent, {
   renderTo: document.body,
-  cls: 'pp-drag-target',
+  cls: 'pp-dd-target',
   targetZIndex: 0,
   initComponent: function() {
     Paperpile.DragDropTarget.superclass.initComponent.call(this);
@@ -602,11 +468,7 @@ Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
   onRender: function(ct, position) {
     Paperpile.DragDropTarget.superclass.onRender.call(this, ct, position);
 
-    if (this.invisible && this.el) {
-      this.el.addClass('pp-drag-target-invisible');
-    }
-
-    this.body.setOpacity(0);
+    this.el.setOpacity(1);
     this.show();
   },
 
@@ -620,63 +482,145 @@ Paperpile.DragDropTarget = Ext.extend(Ext.Panel, {
       box.height += 0;
       this.updateBox(box);
       var el = this.el;
-      el.setStyle('z-index', '20'); // Important -- make sure the z-index i set so we display BELOW the 'drag pane' element.
+      el.setStyle('z-index', '10'); // Important -- make sure the z-index i set so we display BELOW the 'drag pane' element.
     }
   },
   over: function(event) {
-    //Paperpile.log("  Over!");
-    if (this.tipHideTask) {
-      this.tipHideTask.cancel();
-    }
-
-    if (!this.getDragMessage()) {
-      return;
-    }
-
-    var tip = Paperpile.main.dd.dragToolTip;
-    tip.target = this.targetEl;
-    tip.anchorTarget = this.targetEl;
-    tip.update(this.getDragMessage());
-    if (!tip.isVisible()) {
-      tip.show();
-    } else {
-      var xy = tip.getTargetXY();
-      tip.setPagePosition(xy[0], xy[1]);
-    }
-    if (this.el) {
-      this.el.addClass('pp-drag-target-over');
-      if (this.invisible) {
-        this.el.removeClass('pp-drag-target-invisible');
+      Paperpile.log("Over "+this.el.id);
+      if (this.el.hasActiveFx()) {
+	  return;
       }
-    }
+	this.el.animate({
+		'border-color':{from:'#FFFFFF',to: '#88CC88' },
+			},
+			    0.5,
+			    null,
+			    'easeOut',
+			    'color'
 
-  },
-  fireShowTip: function(tip) {
-    Paperpile.main.dd.dragToolTip.show();
-  },
-  fireHideTip: function(tip) {
-    Paperpile.main.dd.dragToolTip.hide();
+		);
   },
   out: function(event) {
-    //Paperpile.log("  Out!");
-    if (this.el) {
-      this.el.removeClass('pp-drag-target-over');
-      if (this.invisible) {
-        this.el.addClass('pp-drag-target-invisible');
+      Paperpile.log("Out "+this.el.id);
+      if (this.el.hasActiveFx()) {
+	  return;
       }
-    }
+	this.el.animate({
+		'border-color':{from:'#88CC88',to: '#FFFFFF' },
+			},
+			    0.2,
+			    null,
+			    'easeOut',
+			    'color'
+
+		);
+  }
+});
+
+Paperpile.DragDropAction = Ext.extend(Ext.Panel, {
+  //  cls: 'pp-drag-action',
+  action: 'pdf-import',
+  label: 'Import PDF',
+  description: 'Import the PDF(s) into your library',
+  forceLayout: true,
+  initComponent: function() {
+    Paperpile.DragDropAction.superclass.initComponent.call(this);
   },
-  getHint: function() {
-    return this.hint;
+  onRender: function(ct, position) {
+    this.tpl = new Ext.Template([
+      '<div class="pp-dd-action pp-box-style2">',
+      '  <h1>',
+      '  ' + this.label,
+      '  </h1>',
+      '  <img src="/images/icons/bullet_go.png"/>',
+      '  <p>' + this.description + '</p>',
+      '</div>']);
+
+    this.el = this.tpl.append(ct);
+
+    Paperpile.DragDropAction.superclass.onRender.call(this, ct, position);
+
   },
-  setHint: function(hint) {
-    this.hint = hint;
+  getString: function() {
+    return this.action + " " + this.el.id;
   },
-  getDragMessage: function() {
-    return this.dragMessage;
+  over: function(event) {
+      this.el.stopFx();
+	this.el.animate({
+		'border-color':{from:'#FFFFFF',to: '#88CC88' },
+			},
+			    0.2,
+			    null,
+			    'easeOut',
+			    'color'
+
+		);
   },
-  setDragMessage: function(dragMessage) {
-    this.dragMessage = dragMessage;
+  out: function(event) {
+      this.el.stopFx();
+	this.el.animate({
+		'border-color':{from:'#88CC88',to: '#FFFFFF' },
+			},
+			    0.2,
+			    null,
+			    'easeOut',
+			    'color'
+
+		);
   }
 
+});
+
+Paperpile.DragDropPanel = Ext.extend(Ext.Panel, {
+  width: 150,
+  autoHeight: true,
+  floating: false,
+  shadow: false,
+  renderTo: document.body,
+  cls: 'pp-dd-panel',
+  over: function(event) {
+    if (this.el) {
+    }
+  },
+  out: function(event) {
+    if (this.el) {
+      this.el.removeClass('pp-dd-panel-over');
+    }
+  },
+  initComponent: function() {
+
+    Ext.apply(this, {
+      items: [{
+        html: '<h1><b>Drag and drop</b></h1>'
+      }]
+    });
+
+    Paperpile.DragDropPanel.superclass.initComponent.call(this);
+  },
+  addAction: function(ddAction) {
+    this.add(ddAction);
+    this.doLayout(true);
+  },
+  getActions: function() {
+    var actions = [];
+    this.items.each(function(i) {
+      if (i instanceof Paperpile.DragDropAction) {
+        actions.push(i);
+      }
+    });
+    return actions;
+  },
+  clearActions: function() {
+    var rem = [];
+    this.items.each(function(i) {
+      if (i instanceof Paperpile.DragDropAction) {
+        rem.push(i);
+      }
+    });
+
+    for (var i = 0, len = rem.length; i < len; ++i) {
+      item = rem[i];
+      this.remove(item, true);
+    }
+  }
 });
