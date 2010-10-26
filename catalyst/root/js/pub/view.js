@@ -238,7 +238,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       about_button.setText(this.getAboutPanel().tabLabel);
     }
 
-    if (count == 0 && this.getGrid().isLoaded()) {
+    if (count == 0) {
       this.onEmpty();
       this.getGrid().onEmpty();
     }

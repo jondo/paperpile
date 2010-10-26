@@ -52,6 +52,17 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
     this.plugin_iconCls = 'pp-icon-pubmed';
 
     Paperpile.PluginGridPubMed.superclass.initComponent.call(this);
+  },
+  getEmptyBeforeSearchTemplate: function() {
+    var markup = [
+      '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-center">',
+      '  <h2>Example searches:</h2>',
+      '  <ul>',
+      '    <li><a href="#" class="pp-textlink" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">1953[publication date] nature[journal] "Watson JD"[author] "Crick FH"[author]</a></li>',
+      '    <li><a href="#" class="pp-textlink" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">"lander es"[au] "linton lm"[au] 2001[publication date] nature[journal]</a></li>',
+      '  </ul>',
+      '</div>'];
+    return new Ext.XTemplate(markup).compile();
   }
 
 });

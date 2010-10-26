@@ -288,7 +288,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   onKeyDown: function(e) {
-    Paperpile.log(e);
+    //Paperpile.log(e);
     var tab = Paperpile.main.tabs.getActiveTab();
 
   },
@@ -681,7 +681,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       nameFilters: ["All supported files (*)",
         "BibTeX (*.bib)",
         "RIS (*.ris)",
-       //"Endnote XML (*.xml)", //Backend does not work at the moment
+        //"Endnote XML (*.xml)", //Backend does not work at the moment
         "ISI (*.isi)",
         "MODS (*.xml)",
         "RSS (*.xml)",
@@ -702,6 +702,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var panel = Paperpile.main.tabs.getActiveTab();
     var grid = panel.items.get('center_panel').items.get('grid');
     return grid;
+  },
+
+  setSearchQuery: function(text) {
+    var grid = this.getActiveGrid();
+    grid.setSearchQuery(text);
   },
 
   isLabelTab: function(panel) {
@@ -795,7 +800,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     };
 
     Paperpile.fileDialog(callback, {
-      'title':'Choose file and format for export',
+      'title': 'Choose file and format for export',
       'dialogType': 'save',
       'selectionType': 'file',
       'nameFilters': ["BibTeX (*.bib)",
@@ -1277,7 +1282,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   checkForUpdates: function(silent) {
 
-    if (Paperpile.main.globalSettings['check_updates'] == 0){
+    if (Paperpile.main.globalSettings['check_updates'] == 0) {
       return;
     }
 

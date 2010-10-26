@@ -78,13 +78,13 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     var created_class, journal_class, year_class, author_class;
     created_class = journal_class = year_class = author_class = 'pp-grid-sort-inactive';
-    
+
     var field = Paperpile.main.globalSettings['sort_field'];
 
     if (field === 'created DESC') created_class = 'pp-grid-sort-desc';
-    if (field === 'year DESC')    year_class    = 'pp-grid-sort-desc';
-    if (field === 'journal')      journal_class = 'pp-grid-sort-asc';
-    if (field === 'author')       author_class  = 'pp-grid-sort-asc';
+    if (field === 'year DESC') year_class = 'pp-grid-sort-desc';
+    if (field === 'journal') journal_class = 'pp-grid-sort-asc';
+    if (field === 'author') author_class = 'pp-grid-sort-asc';
 
     Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + created_class + '"     action="created" status="desc" default="desc">Date added</div>');
     Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + journal_class + '" action="journal" status="inactive" default="asc">Journal</div>');
@@ -349,12 +349,16 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     }
   },
 
+  showEmptyMessageBeforeStoreLoaded: function() {
+    return false;
+  },
+
   getEmptyBeforeSearchTemplate: function() {
     var markup = [
-      '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome pp-box-center"',
+      '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome pp-box-center">',
       '<h2>Welcome to Paperpile</h2>',
-      '<p>Your library is still empty. <p>',
-      '<p>To get started, <p>',
+      '<p>Your library is still empty. </p>',
+      '<p>To get started, </p>',
       '<ul>',
       '<li>import your <a href="#" class="pp-textlink" onClick="Paperpile.main.pdfExtract();">PDF collection</a></li>',
       '<li>get references from a <a href="#" class="pp-textlink" onClick="Paperpile.main.fileImport();">bibliography file</a></li>',

@@ -104,14 +104,15 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       },
       grid);
 
-    grid.store.on('destroy',function(){
+    grid.store.on('destroy', function() {
       if (this.isLoading) {
         clearTimeout(this.timeoutWarn);
         clearTimeout(this.timeoutAbort);
         this.cancelLoad();
         Paperpile.status.clearMsg();
       }
-    }, grid);
+    },
+    grid);
 
     Ext.apply(grid, {
       hideHeaders: true,

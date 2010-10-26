@@ -517,11 +517,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
     this);
 
-    // Auto-select the first row when a new grid starts up.
-    this.doAfterNextReload = [function() {
-      this.getSelectionModel().selectRowAndSetCursor(0);
-      //      this.getSelectionModel().selectRowAndSetCursor.defer(10,this.getSelectionModel(),[0]);
-    }];
+    // Auto-select the first row when the store finally loads up.
+    this.getStore().on('load', function() {
+	this.getSelectionModel().selectRowAndSetCursor(0);
+	this.getPluginPanel().updateView();
+    },this);
+
+    this.on('viewready', function() {
+	this.getPluginPanel().updateView();
+    },this);
 
   },
 
@@ -644,25 +648,30 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   isLoaded: function() {
-    return this.getStore() && this.getStore().isLoaded;
+    return this.getStore() !== undefined && this.getStore().isLoaded;
+  },
+
+  showEmptyMessageBeforeStoreLoaded: function() {
+    return true;
   },
 
   onEmpty: function() {
     var tpl;
-    if (this.getStore().isLoaded && this.getSearchFieldValue() != '') {
+    if (this.isLoaded() && this.getSearchFieldValue() != '') {
       if (!this._noResultsTpl) {
         this._noResultsTpl = this.getNoResultsTemplate();
       }
       tpl = this._noResultsTpl;
-    } else {
+    } else if (this.showEmptyMessageBeforeStoreLoaded() || this.isLoaded()) {
       if (!this._emptyBeforeSearchTpl) {
         this._emptyBeforeSearchTpl = this.getEmptyBeforeSearchTemplate();
       }
       tpl = this._emptyBeforeSearchTpl;
     }
     if (tpl) {
-      tpl.overwrite(this.getView().mainBody, {},
-      true);
+	tpl.overwrite(this.getView().mainBody);
+    } else {
+	//Paperpile.log("No tpl!");
     }
   },
 
@@ -739,8 +748,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   myAfterRender: function(ct) {
-    this.getPluginPanel().updateView();
-
     this.pager.on({
       'beforechange': {
         fn: function(pager, params) {
@@ -789,6 +796,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     this.createAuthorToolTip();
+
+    this.getPluginPanel().updateView();
   },
 
   createAuthorToolTip: function() {
