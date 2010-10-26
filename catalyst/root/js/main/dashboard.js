@@ -46,16 +46,16 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       switch (el.getAttribute('action')) {
 
       case 'statistics':
-        Paperpile.main.tabs.newScreenTab('Statistics');
+        Paperpile.main.tabs.newScreenTab('Statistics','statistics_tab');
         break;
       case 'settings-patterns':
-        Paperpile.main.tabs.newScreenTab('PatternSettings');
+        Paperpile.main.tabs.newScreenTab('PatternSettings','pattern_settings_tab');
         break;
       case 'settings-general':
-        Paperpile.main.tabs.newScreenTab('GeneralSettings');
+        Paperpile.main.tabs.newScreenTab('GeneralSettings','general_settings_tab');
         break;
       case 'settings-tex':
-        Paperpile.main.tabs.newScreenTab('TexSettings');
+        Paperpile.main.tabs.newScreenTab('TexSettings','tex_settings_tab');
         break;
       case 'duplicates':
         Paperpile.main.tabs.newPluginTab('Duplicates', {},
@@ -119,8 +119,9 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
         Paperpile.main.setSetting('bibtex', currentSettings);
 
         Paperpile.status.updateMsg({
-          msg: (checked) ? 'Activated BibTeX mode' : 'De-activated BibTeX mode',
-          duration: 2
+          msg: (checked) ? 'BibTeX mode active: advanced BibTeX functions are now available' : 
+            'BibTeX mode inactive: advanced BibTeX functions have been disabled',
+          duration: 5
         });
 
         if (checked) {

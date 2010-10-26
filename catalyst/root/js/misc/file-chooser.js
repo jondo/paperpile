@@ -341,7 +341,7 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     dialogType: 'load',
     // selectionType: 'file' or 'folder'
     selectionType: 'file',
-    multiple: true,
+    multiple: false,
     // types: ['txt','csv']
     types: null,
     nameFilters: null,

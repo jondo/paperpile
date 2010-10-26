@@ -491,7 +491,7 @@ sub get_default_tree : Private {
   #### / Local Library
 
   my $local_lib = Tree::Simple->new( {
-      text    => 'My Paperpile',
+      text    => 'Library',
       type    => 'DB',
       query   => '',
       cls     => 'pp-tree-heading',

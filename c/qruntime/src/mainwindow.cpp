@@ -37,6 +37,7 @@ MainWindow::MainWindow(){
 
   if (runtime->getPlatform() != "osx"){
     QApplication::setWindowIcon(QIcon(runtime->getCatalystDir()+"/root/images/app_icon.svg"));
+    setWindowTitle("Paperpile");
   }
 
   if (QCoreApplication::arguments().contains("--test")){
@@ -66,7 +67,8 @@ void MainWindow::exportRuntime(){
 
 void MainWindow::closeEvent(QCloseEvent *event) {
 
-  runtime->catalystKill();
+  runtime->closeEvent(event);
+
 }
 
 bool MainWindow::isDebugMode(){

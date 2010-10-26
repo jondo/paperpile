@@ -78,16 +78,16 @@ Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
     Paperpile.PluginGridLabel.superclass.initContextMenuItemIds.call(this);
     var ids = this.contextMenuItemIds;
 
-    var index = ids.indexOf('DELETE');
-    ids.insert(index + 1, 'REMOVE_FROM_LABEL');
+    //var index = ids.indexOf('DELETE');
+    //ids.insert(index + 1, 'REMOVE_FROM_LABEL');
   },
 
   initToolbarMenuItemIds: function() {
     Paperpile.PluginGridLabel.superclass.initToolbarMenuItemIds.call(this);
     var ids = this.toolbarMenuItemIds;
 
-    var index = ids.indexOf('TB_FILL');
-    ids.insert(index + 1, 'REMOVE_FROM_LABEL');
+    //var index = ids.indexOf('TB_FILL');
+    //ids.insert(index + 1, 'REMOVE_FROM_LABEL');
   },
 
   updateButtons: function() {

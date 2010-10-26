@@ -24,9 +24,10 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
     '<div class="pp-notes">{annote}</div>',
     '</tpl>',
     '<tpl if="!annote">',
-    '<div class="pp-action-big pp-action-add-notes" id="add-notes-{id}">',
+    '<div style="position:absolute; top:45%; left:45%;">',
+    '<div class="pp-action pp-action-add-notes" id="add-notes-{id}">',
     '<a href="#" class="pp-textlink">Add notes</a>',
-    '</div>',
+    '</div></div>',
     '</tpl>'],
 
   initComponent: function() {

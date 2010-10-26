@@ -233,7 +233,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }),
       'EXPORT_VIEW': new Ext.Action({
         itemId: 'EXPORT_VIEW',
-        text: 'View',
+        text: 'All',
         handler: this.handleExportView,
         scope: this
       }),
@@ -846,7 +846,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         plugin_name: this.plugin_name,
         plugin_query: this.plugin_query,
         plugin_mode: this.plugin_mode,
-        plugin_order: "created DESC",
+        plugin_order: Paperpile.main.globalSettings['sort_field'],
         limit: this.limit
       },
       reader: new Ext.data.JsonReader()

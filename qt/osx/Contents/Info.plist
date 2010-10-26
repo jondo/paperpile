@@ -2,17 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleShortVersionString</key>
+	<string>Paperpile beta for OS X</string>
+	<key>CFBundleName</key>
+	<string>Paperpile</string>
 	<key>CFBundleExecutable</key>
 	<string>paperpile</string>
-	<key>CFBundleGetInfoString</key>
-	<string>Created by Qt/QMake</string>
 	<key>CFBundleIconFile</key>
-	<string>app</string>
+	<string>paperpile.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.yourcompany.paperpile</string>
+	<string>com.paperpile.paperpile</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
 </dict>
 </plist>

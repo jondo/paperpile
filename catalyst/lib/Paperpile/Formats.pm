@@ -20,13 +20,14 @@ use Moose::Util::TypeConstraints;
 use Data::Dumper;
 use File::Temp qw(tempfile);
 use Bibutils;
+use DBI;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Exceptions;
 use Paperpile::Formats::Rss;
 
-enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS EMAIL MODS ISI ENDNOTE ENDNOTEXML RIS WORD2007 MEDLINE RSS ZOTERO MENDELEY HTML);
+enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS EMAIL MODS ISI ENDNOTE ENDNOTEXML RIS WORD2007 MEDLINE RSS ZOTERO MENDELEY HTML XMP);
 
 has 'data' => ( is => 'rw', isa => 'ArrayRef[Paperpile::Library::Publication]' );
 has format => ( is => 'rw', isa => 'Format' );
@@ -65,13 +66,14 @@ sub guess_format {
     # Very simplistic. Probably need to get more specific/sensitive
     # patterns for real life data sometime
     my %patterns = (
-      MODS    => qr/<\s*mods\s*/i,
-      MEDLINE => qr/<PubmedArticle>/i,
-      BIBTEX  => qr/\@\w+\{/i,
-      ISI     => qr/^\s*AU /i,
-      ENDNOTE => qr/^\s*%0 /i,
-      RIS     => qr/^\s*TY\s+-\s+/i,
-      RSS     => qr/rss/i,               # add here proper signature for RSS
+      MODS       => qr/<\s*mods\s*/i,
+      MEDLINE    => qr/<PubmedArticle>/i,
+      BIBTEX     => qr/\@\w+\{/i,
+      ISI        => qr/^\s*AU /i,
+      ENDNOTE    => qr/^\s*%0 /i,
+      #ENDNOTEXML => qr/<XML>\s*<RECORDS>/i # Does not work at the moment
+      RIS        => qr/^\s*TY\s+-\s+/i,
+      RSS        => qr/xml.*\/rss/i,
     );
 
     foreach my $line (@lines) {
@@ -89,21 +91,45 @@ sub guess_format {
 
   # File is binary
   else {
+
     # Check if it is a sqlite database
     my $sample;
     read( FILE, $sample, 6 );
     if ( $sample ne 'SQLite' ) {
       FileFormatError->throw( error => "Could not open file (unknown format)" );
     } else {
-      # TODO: Here we need to check what kind of supported sqlite3
-      # database it is:
-      # * Zotero
-      # * Mendeley
-      # * Paperpile
-      # If possible we also should check the version and throw an
-      # error if we don't support it.
 
-      return Paperpile::Formats::Paperpile->new( file => $file );
+      # get a DBI connection to the SQLite file
+      my $dbh = DBI->connect( "dbi:SQLite:$file", '', '', { AutoCommit => 1, RaiseError => 1 } );
+
+      my $zotero_flag    = 0;
+      my $mendeley_flag  = 0;
+      my $paperpile_flag = 0;
+
+      my $sth = $dbh->prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;");
+      $sth->execute();
+      while ( my @tmp = $sth->fetchrow_array ) {
+        $zotero_flag    = 1   if ( $tmp[0] eq 'zoteroDummyTable' );
+        $mendeley_flag  = 0.5 if ( $tmp[0] eq 'DocumentContributors' );
+        $mendeley_flag  = 1   if ( $tmp[0] eq 'RunsSinceLastCleanup' and $mendeley_flag == 0.5 );
+        $paperpile_flag = 0.5 if ( $tmp[0] eq 'Fulltext_citation' );
+        $paperpile_flag = 1   if ( $tmp[0] eq 'Fulltext_full' and $paperpile_flag == 0.5 );
+      }
+
+      #print STDERR "$zotero_flag $mendeley_flag $paperpile_flag\n";
+
+      if ( $zotero_flag == 1 and $mendeley_flag == 0 and $paperpile_flag == 0 ) {
+        my $module = "Paperpile::Formats::Zotero";
+        return eval("use $module; $module->new(file=>'$file')");
+      }
+      if ( $zotero_flag == 0 and $mendeley_flag == 1 and $paperpile_flag == 0 ) {
+        my $module = "Paperpile::Formats::Mendeley";
+        return eval("use $module; $module->new(file=>'$file')");
+      }
+      if ( $zotero_flag == 0 and $mendeley_flag == 0 and $paperpile_flag == 1 ) {
+        my $module = "Paperpile::Formats::Paperpile";
+        return eval("use $module; $module->new(file=>'$file')");
+      }
     }
   }
 

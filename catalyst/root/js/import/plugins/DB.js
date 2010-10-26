@@ -33,7 +33,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
 
     this.actions['NEW'] = new Ext.Action({
-      text: 'New Reference',
+      text: 'New',
       iconCls: 'pp-icon-add',
       handler: function() {
         this.handleEdit(true);
@@ -76,10 +76,20 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     var target = Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(1)).first(),
     '<div id="pp-grid-sort-container_' + this.id + '" class="pp-grid-sort-container"></div>', true);
 
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-desc"     action="created" status="desc" default="desc">Date added</div>');
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="journal" status="inactive" default="asc">Journal</div>');
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="year" status="inactive" default="desc">Year</div>');
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="author" status="inactive" default="asc">Author</div>');
+    var created_class, journal_class, year_class, author_class;
+    created_class = journal_class = year_class = author_class = 'pp-grid-sort-inactive';
+    
+    var field = Paperpile.main.globalSettings['sort_field'];
+
+    if (field === 'created DESC') created_class = 'pp-grid-sort-desc';
+    if (field === 'year DESC')    year_class    = 'pp-grid-sort-desc';
+    if (field === 'journal')      journal_class = 'pp-grid-sort-asc';
+    if (field === 'author')       author_class  = 'pp-grid-sort-asc';
+
+    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + created_class + '"     action="created" status="desc" default="desc">Date added</div>');
+    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + journal_class + '" action="journal" status="inactive" default="asc">Journal</div>');
+    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + year_class + '" action="year" status="inactive" default="desc">Year</div>');
+    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + author_class + '" action="author" status="inactive" default="asc">Author</div>');
     Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf" status="inactive" default="desc">PDF</div>');
     Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive" default="desc">Supp. material</div>');
     Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="notes" status="inactive" default="desc">Notes</div>');

@@ -1,7 +1,7 @@
 <table>
 <tr>
 <td>
-  <div id="ui-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="width:300; height:350">
+  <div class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="width:300; height:350">
     <h2>BibTeX settings</h2>
     
     <table class="pp-settings-table">
@@ -36,7 +36,7 @@
 </td>
 
 <td>
-  <div id="ui-container" class="pp-box pp-box-style2 pp-box-top pp-box-settings" style="width:300; height:350;">
+  <div class="pp-box pp-box-style2 pp-box-top pp-box-settings" style="width:300; height:350;">
     <h2>Optional fields to export <span id="export_fields_tooltip" class="pp-tooltip-link">?</span></h2>
 
     <table class="pp-settings-table">
@@ -58,7 +58,7 @@
 
 <tr>
 <td>
-  <div id="proxy-container" class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:320; width:300">
+  <div class="pp-box pp-box-style1 pp-box-top pp-box-settings" style="height:320; width:300">
     <h2>Title quoting <span id="title_quoting_tooltip" class="pp-tooltip-link">?</span></h2>
     
     <table class="pp-settings-table">

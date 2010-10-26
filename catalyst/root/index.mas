@@ -12,7 +12,7 @@
 
   use YAML qw(LoadFile);
 
-  my $data = LoadFile($c->path_to('data/resources.yaml'));
+  my $data = LoadFile($c->path_to('conf/resources.yaml'));
 
   # If debug environment variable is set or minified version of js is not available load all files
   # separately

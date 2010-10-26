@@ -58,6 +58,15 @@ sub read {
     # We do not process notes at this sages
     next if ( $itemTypeID == 1 );
 
+    # check if deleted
+    my $sth_deleted = $dbh->prepare("SELECT * FROM deletedItems WHERE itemID=?;");
+    $sth_deleted->execute($itemID);
+    my $flag_deleted = 0;
+    while ( my @tmp_deleted = $sth_deleted->fetchrow_array ) {
+      $flag_deleted = 1;
+    }
+    next if ( $flag_deleted == 1 );
+
     # Values/Key pairs for itemTypeID
     # 1 note             2 book                 3 bookSection
     # 4 journalArticle   5 magazineArticle      6 newspaperArticle
@@ -73,15 +82,17 @@ sub read {
     #34 document        35 encyclopediaArticle 36 dictionaryEntry
 
     my (
-      $title,  $authors, $journal, $issue,   $volume,    $year,
-      $month,  $ISSN,    $pages,   $doi,     $abstract,  $booktitle,
-      $url,    $pmid,    $arxivid, $editors, $publisher, $edition,
-      $series, $address, $school,  $howpublished, $note
+      $title,  $authors, $journal, $issue,        $volume,    $year,
+      $month,  $ISSN,    $pages,   $doi,          $abstract,  $booktitle,
+      $url,    $pmid,    $arxivid, $editors,      $publisher, $edition,
+      $series, $address, $school,  $howpublished, $note,      $isbn,
+      $tags
     );
 
-    my @pdfs = ();
-    my @snapshots = ( );
-    my @regular_attachements = ( );
+    my @pdfs                 = ();
+    my @snapshots            = ();
+    my @regular_attachements = ();
+    my @notes_dummy          = ();
 
     # now we gather data for each itemID
     my $sth2 = $dbh->prepare("SELECT * FROM itemData WHERE itemID=?;");
@@ -96,7 +107,7 @@ sub read {
       #  1 *url                  2 rights             3 *series
       #  4 *volume               5 *issue             6 *edition
       #  7 *place                8 *publisher        10 *pages
-      # 11 ISBN                 12 *publicationTitle 13 *ISSN
+      # 11 *ISBN                12 *publicationTitle 13 *ISSN
       # 14 date                 15 section           18 callNumber
       # 19 archiveLocation      21 distributor       22 *extra
       # 25 *journalAbbreviation 26 *DOI              27 accessDate
@@ -129,11 +140,92 @@ sub read {
       #119 programTitle        120 issuingAuthority 121 filingDate
       #122 genre               123 archive
 
+      my %unsupported = (
+        '2'   => 'rights',
+        #'14'  => 'date',
+        '15'  => 'section',
+        '18'  => 'callNumber',
+        '19'  => 'archiveLocation',
+        '21'  => 'distributor',
+        #'22'  => 'extra',
+        #'27'  => 'accessDate',
+        '29'  => 'seriesText',
+        '30'  => 'seriesNumber',
+        '32'  => 'reportType',
+        '36'  => 'code',
+        '40'  => 'session',
+        '41'  => 'legislativeBody',
+        '42'  => 'history',
+        '43'  => 'reporter',
+        '44'  => 'court',
+        '45'  => 'numberOfVolumes',
+        '46'  => 'committee',
+        '48'  => 'assignee',
+        '50'  => 'patentNumber',
+        '51'  => 'priorityNumbers',
+        '52'  => 'issueDate',
+        '53'  => 'references',
+        '54'  => 'legalStatus',
+        '55'  => 'codeNumber',
+        '59'  => 'artworkMedium',
+        '60'  => 'number',
+        '61'  => 'artworkSize',
+        #'62'  => 'libraryCatalog',
+        '63'  => 'videoRecordingFormat',
+        '64'  => 'interviewMedium',
+        '65'  => 'letterType',
+        '66'  => 'manuscriptType',
+        '67'  => 'mapType',
+        '68'  => 'scale',
+        '69'  => 'thesisType',
+        '70'  => 'websiteType',
+        '71'  => 'audioRecordingFormat',
+        '72'  => 'label',
+        '74'  => 'presentationType',
+        '75'  => 'meetingName',
+        '76'  => 'studio',
+        '77'  => 'runningTime',
+        '78'  => 'network',
+        '79'  => 'postType',
+        '80'  => 'audioFileType',
+        '81'  => 'version',
+        '82'  => 'system',
+        '83'  => 'company',
+        '84'  => 'conferenceName',
+        '87'  => 'language',
+        '88'  => 'programmingLanguage',
+        '91'  => 'websiteTitle',
+        '92'  => 'reportNumber',
+        '93'  => 'billNumber',
+        '94'  => 'codeVolume',
+        '95'  => 'codePages',
+        '96'  => 'dateDecided',
+        '97'  => 'reporterVolume',
+        '98'  => 'firstPage',
+        '99'  => 'documentNumber',
+        '100' => 'dateEnacted',
+        '101' => 'publicLawNumber',
+        '102' => 'country',
+        '103' => 'applicationNumber',
+        '105' => 'episodeNumber',
+        '108' => 'type',
+        '109' => 'medium',
+        '111' => 'caseName',
+        '112' => 'nameOfAct',
+        '113' => 'subject',
+        '114' => 'proceedingsTitle',
+        #'116' => 'shortTitle',
+        '117' => 'docketNumber',
+        '118' => 'numPages',
+        '119' => 'programTitle',
+        '120' => 'issuingAuthority',
+        '121' => 'filingDate',
+        '122' => 'genre',
+        '123' => 'archive'
+      );
+
       my $statement = 'SELECT value FROM itemDataValues WHERE valueID=?';
 
-      my $a = $dbh->selectrow_array( $statement, undef, $valueID )
-        if ( $fieldID == 28 );
-      print "a: $a\n" if ($a);
       $school = $dbh->selectrow_array( $statement, undef, $valueID )
         if ( $fieldID == 89 );
       $school = $dbh->selectrow_array( $statement, undef, $valueID )
@@ -183,6 +275,8 @@ sub read {
         if ( $fieldID == 118 and !$pages );
       $ISSN = $dbh->selectrow_array( $statement, undef, $valueID )
         if ( $fieldID == 13 );
+      $isbn = $dbh->selectrow_array( $statement, undef, $valueID )
+	if ( $fieldID == 11 );
       $doi = $dbh->selectrow_array( $statement, undef, $valueID )
         if ( $fieldID == 26 );
       $abstract = $dbh->selectrow_array( $statement, undef, $valueID )
@@ -202,10 +296,17 @@ sub read {
       # could not be parsed correctly (e.g. Arxiv bibliogrpahic lines)
       if ( $fieldID == 22 ) {
         my $tmpstring = $dbh->selectrow_array( $statement, undef, $valueID );
-        if ( $tmpstring =~ m/PMID:\s(\d+)/ ) {
+        if ( $tmpstring =~ m/PMID:\s*(\d+)/ ) {
           $pmid = $1;
         }
       }
+
+      # now we add everything else to notes that has not been parsed yet
+      if ( defined $unsupported{$fieldID} ) {
+	my $tmpstring = $dbh->selectrow_array( $statement, undef, $valueID );
+	push @notes_dummy, "ZOTERO field \"$unsupported{$fieldID}\": $tmpstring";
+      }
+
     }
 
     # now we gather data for each itemID
@@ -255,15 +356,15 @@ sub read {
       my @tmp5 = $sth5->fetchrow_array();
 
       my $file;
-      next if ( ! $tmp5[6] );
+      next if ( !$tmp5[6] );
       if ( $filename =~ m/storage:(.*)/ ) {
-	$file = $path . "storage/$tmp5[6]/$1";
+        $file = $path . "storage/$tmp5[6]/$1";
       } else {
-	$file = $filename;
+        $file = $filename;
       }
 
       $file = Paperpile::Utils->process_attachment_name($file);
-      next if ( ! $file );
+      next if ( !$file );
 
       # if we find a PDF we assume the first one is THE PDF
       push @pdfs, $file if ( $mimeType eq 'application/pdf' );
@@ -272,17 +373,27 @@ sub read {
       push @snapshots, $file if ( $mimeType eq 'text/html' );
 
       # the other stuff is assigned as regular attachement
-      push @regular_attachements, $file if ( $mimeType ne 'text/html' and $mimeType ne 'application/pdf');
+      push @regular_attachements, $file
+        if ( $mimeType ne 'text/html' and $mimeType ne 'application/pdf' );
     }
 
     # let's screen for notes
     my $sth6 = $dbh->prepare( "SELECT note FROM itemNotes WHERE " . "sourceItemID=?;" );
     $sth6->execute($itemID);
     while ( my @tmp6 = $sth6->fetchrow_array ) {
-      ($note = $tmp6[0]) =~ s/<div\s+class="[^"]+">//;
-      $note =~ s/<\/div>$//;
+      ( my $tmp_note = $tmp6[0] ) =~ s/<div\s+class="[^"]+">//;
+      $tmp_note =~ s/<\/div>$//;
+      $note .= "$tmp_note<br />";
     }
 
+    # get tags as comma separated list
+    my $sth7 = $dbh->prepare('SELECT name FROM itemTags JOIN tags ON itemTags.tagID = tags.tagID WHERE itemID = ?;');
+    $sth7->execute( $itemID );
+    my @tags_tmp = ();
+    while ( my @t = $sth7->fetchrow_array ) {
+      push @tags_tmp, $t[0];
+    }
+    $tags = join( ",", @tags_tmp );
 
     # if it does not have a title, we are not interested
     next if ( !defined $title );
@@ -325,6 +436,10 @@ sub read {
       $howpublished = 'Dictionary entry'     if ( $itemTypeID == 36 );
     }
 
+    # add unsupported fields to note tag
+    $note .= "<br />\n".join("<br />\n", @notes_dummy)."<br />\n" if ( $#notes_dummy  > -1 and $note);
+    $note = join("<br />\n", @notes_dummy)."<br />\n" if ( $#notes_dummy  > -1 and !$note);
+
     my $pub = Paperpile::Library::Publication->new( pubtype => $pubtype );
 
     $pub->journal($journal)           if $journal;
@@ -337,6 +452,7 @@ sub read {
     $pub->title($title)               if $title;
     $pub->doi($doi)                   if $doi;
     $pub->issn($ISSN)                 if $ISSN;
+    $pub->isbn($isbn)                 if $isbn;
     $pub->pmid($pmid)                 if $pmid;
     $pub->arxivid($arxivid)           if $arxivid;
     $pub->authors($authors)           if $authors;
@@ -348,13 +464,14 @@ sub read {
     $pub->howpublished($howpublished) if $howpublished;
     $pub->school($school)             if $school;
     $pub->annote($note)               if $note;
+    $pub->tags_tmp($tags)                 if $tags;
 
     # add PDFs and other attachements
     foreach my $i ( 0 .. $#pdfs ) {
       if ( $i == 0 ) {
-	$pub->{_pdf_tmp} = $pdfs[$i];
+        $pub->_pdf_tmp($pdfs[$i]);
       } else {
-	unshift (@regular_attachements, $pdfs[$i]);
+        unshift( @regular_attachements, $pdfs[$i] );
       }
     }
     if (@regular_attachements) {

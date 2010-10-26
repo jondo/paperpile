@@ -33,6 +33,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     switch (el.getAttribute('action')) {
     case 'pdf-match-error-report':
       data.reportString = Paperpile.utils.hashToString(data);
+      data.file = record.data['_pdf_tmp'];
       Paperpile.main.reportPdfMatchError(data);
       break;
     case 'pdf-match-insert-manually':

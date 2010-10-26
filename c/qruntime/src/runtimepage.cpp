@@ -23,3 +23,15 @@ void RuntimePage::javaScriptConsoleMessage ( const QString & message, int lineNu
   }
 }
 
+bool RuntimePage::acceptNavigationRequest ( QWebFrame * frame, const QNetworkRequest & request, NavigationType type ){
+
+  // Webpage wants to open a new window, we delegate to the system browser
+  if (frame == 0){
+    QDesktopServices::openUrl(QUrl(request.url()));
+    return 0;
+  // Call parent function for all other requests
+  } else {
+    return(QWebPage::acceptNavigationRequest (frame, request, type ));
+  }
+
+}

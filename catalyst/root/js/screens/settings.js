@@ -56,6 +56,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
     this.textfields = {};
     this.combos = {};
+    this.checkboxes = {};
 
     Ext.each(['proxy', 'proxy_user', 'proxy_passwd'],
     function(item) {
@@ -86,17 +87,48 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       disableKeyFilter: true,
       fieldLabel: 'Type',
       mode: 'local',
-      width: 60,
+      width: 100,
       store: [10, 25, 50, 75, 100],
       value: Paperpile.main.globalSettings['pager_limit'],
     });
 
-    this.combos['pager_limit'].on('select',
+    this.combos['sort_field'] = new Ext.form.ComboBox({
+      renderTo: 'sort_field_combo',
+      editable: false,
+      forceSelection: true,
+      triggerAction: 'all',
+      disableKeyFilter: true,
+      fieldLabel: 'displayText',
+      mode: 'local',
+      width: 100,
+      store: new Ext.data.ArrayStore({
+        id: 0,
+        fields: [
+          'id',
+          'displayText'
+        ],
+        data: [['created DESC', 'Date added'], ['year DESC', 'Year'],['author','Author'], ['journal','Journal']]
+      }),
+      displayField: 'displayText',
+      valueField: 'id',
+      value: Paperpile.main.globalSettings['sort_field'],
+    });
+    
+
+    this.combos['pager_limit'].on('select', this.onSettingChange,this);
+    this.combos['sort_field'].on('select', this.onSettingChange,this);
+
+    this.checkboxes['check_updates'] =  new Ext.form.Checkbox({
+      renderTo: 'check_updates_checkbox',
+      checked: Paperpile.main.globalSettings['check_updates'] == '1' ? true : false,
+    });
+
+    this.checkboxes['check_updates'].on('check',
       function() {
         this.onSettingChange();
       },
       this);
-
+    
     /*
     this.combos['zoom_level'] = new Ext.form.ComboBox({
       renderTo: 'zoom_level_combo',
@@ -258,6 +290,31 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       hideDelay: 0
     });
 
+    new Ext.ToolTip({
+      target: 'settings-sort-field-tooltip',
+      minWidth: 50,
+      maxWidth: 300,
+      html: 'Default sort order of references in a new tab.',
+      anchor: 'left',
+      showDelay: 0,
+      hideDelay: 0
+    });
+
+    new Ext.ToolTip({
+      target: 'settings-check-updates-tooltip',
+      minWidth: 50,
+      maxWidth: 300,
+      html: 'Let Paperpile automatically check for updates online. During beta phase it is highly recommended to always update to the latest available version',
+      anchor: 'left',
+      showDelay: 0,
+      hideDelay: 0
+    });
+
+
+
+
+
+
     this.setSaveDisabled(true);
   },
 
@@ -267,9 +324,9 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
     this.textfields['proxy_passwd'].setDisabled(!checked);
 
     if (checked) {
-      Ext.select('h2,h3', true, 'proxy-container').removeClass('pp-label-inactive');
+      Ext.select('h2,h4', true, 'proxy-container').removeClass('pp-label-inactive');
     } else {
-      Ext.select('h2,h3', true, 'proxy-container').addClass('pp-label-inactive');
+      Ext.select('h2,h4', true, 'proxy-container').addClass('pp-label-inactive');
     }
   },
 
@@ -285,13 +342,14 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
   },
 
   submit: function() {
-    Paperpile.log(this.pluginOrderPanel.getValue());
     var params = {
       use_proxy: this.proxyCheckbox.getValue() ? 1 : 0,
       proxy: this.textfields['proxy'].getValue(),
       proxy_user: this.textfields['proxy_user'].getValue(),
       proxy_passwd: this.textfields['proxy_passwd'].getValue(),
       pager_limit: this.combos['pager_limit'].getValue(),
+      sort_field: this.combos['sort_field'].getValue(),
+      check_updates: this.checkboxes['check_updates'].getValue() ? 1 : 0,
       //      zoom_level: this.combos['zoom_level'].getValue(),
       search_seq: this.pluginOrderPanel.getValue()
     };
@@ -324,9 +382,9 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
 
 	if (this.combos['zoom_level']) {
-	var new_zoom_level = this.combos['zoom_level'].getValue();
-	Paperpile.main.globalSettings['zoom_level'] = new_zoom_level;
-	Paperpile.main.afterLoadSettings();
+	  var new_zoom_level = this.combos['zoom_level'].getValue();
+	  Paperpile.main.globalSettings['zoom_level'] = new_zoom_level;
+	  Paperpile.main.afterLoadSettings();
 	}
 
         Paperpile.main.loadSettings(

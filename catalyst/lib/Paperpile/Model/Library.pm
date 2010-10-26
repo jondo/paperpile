@@ -959,7 +959,7 @@ sub process_query_string {
       }
 
       # Normal fields: author:chang
-      push @new_fields, $field;
+      push @new_fields, $field.'*';
       next;
     }
 
@@ -1854,7 +1854,7 @@ sub dashboard_stats {
     num_items       => $num_items,
     num_pdfs        => $num_pdfs,
     num_attachments => $num_attachments,
-    last_imported   => $last_imported
+    last_imported   => $last_imported || "Nothing imported yet"
   };
 
 }

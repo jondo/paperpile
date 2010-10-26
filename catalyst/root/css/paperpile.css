@@ -719,11 +719,11 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .pp-action-add-notes {
-    background: transparent url('/images/icons/postit.png') no-repeat;
+    background: transparent url('/images/icons/note_add.png') no-repeat;
 }
 
 .pp-action-edit-notes {
-    background: transparent url('/images/icons/pencil.png') no-repeat;
+    background: transparent url('/images/icons/note_edit.png') no-repeat;
     display:block;
     float: right;
 }
@@ -1113,7 +1113,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .pp-grid-status-notes {
-    background: transparent url('/images/icons/pencil.png') no-repeat;
+    background: transparent url('/images/icons/note.png') no-repeat;
 }
 
 .pp-grid-status-imported {
@@ -1326,6 +1326,8 @@ div:hover.pp-grid-sort-item {
     float:left;
 }
 
+
+
 .pp-box-settings h3 {
     clear:left;
     color: #4183C4;
@@ -1333,6 +1335,13 @@ div:hover.pp-grid-sort-item {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     font-weight:bold;
 }
+
+.pp-box-settings h4{
+    clear:left;
+    margin: 16px 0px 2px 8px;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
 
 .pp-settings-textfield {
     margin: 0px 8px;
@@ -1346,7 +1355,7 @@ div:hover.pp-grid-sort-item {
 
 .pp-settings-table td {
     padding: 4px 2px;
-    vertical-align:top;
+    /*vertical-align:top;*/
 }
 
 .pp-settings-label {
@@ -1451,7 +1460,7 @@ div:hover.pp-grid-sort-item {
 
 .pp-tag-box {
     border-style:solid;
-    border-width: 1px 0px;
+    border-width: 1px;
     font-size: 9px;
     font-weight:bold;
     margin: 0px 0.8em 0px 1px;
@@ -1484,7 +1493,7 @@ div:hover.pp-grid-sort-item {
 }
 
 .pp-tag-remove{
-    border-width:0px 1px;
+    border-width:0px 0px 0px 1px;
     margin: 0px 2px 0px 4px;
     display:inline;
     padding: 0px 2px;
@@ -1493,7 +1502,7 @@ div:hover.pp-grid-sort-item {
 }
 
 div:hover.pp-tag-remove{
-    border-width:0px 1px;
+    border-width:1px;
     margin: 0px 2px 0px 4px;
     display:inline;
     padding: 0px 2px;

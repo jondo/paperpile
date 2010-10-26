@@ -20,13 +20,16 @@ class Runtime : public QObject{
   Q_INVOKABLE void catalystStart();
   Q_INVOKABLE void updaterStart(const QString & mode);
   Q_INVOKABLE void closeApp();
+  Q_INVOKABLE void setSaveToClose(const bool & state);
   Q_INVOKABLE void resizeWindow(int w, int h);
   Q_INVOKABLE QVariantMap fileDialog(const QVariantMap & config);
   Q_INVOKABLE QVariantMap msgBox(const QVariantMap & config);
   Q_INVOKABLE QVariantMap fileInfo(const QString & file);
   Q_INVOKABLE void log(const QString & msg);
 
+  bool saveToClose;
   void catalystKill();
+  void closeEvent(QCloseEvent* event);
 
   
  signals:
@@ -35,6 +38,7 @@ class Runtime : public QObject{
   void catalystExit(QString error);
   void updaterReadLine(QString data);
   void updaterExit(QString error);
+  void appExit();
 
   
  private slots:

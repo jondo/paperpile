@@ -6,6 +6,7 @@ use Paperpile::Library::Author;
 use Data::Dumper;
 use XML::Simple;
 use File::Temp qw(tempfile);
+use Paperpile::Formats::XMP;
 
 has 'file'     => ( is => 'rw', isa => 'Str' );
 has 'pub'      => ( is => 'rw', isa => 'Paperpile::Library::Publication' );
@@ -29,6 +30,16 @@ sub parsePDF {
   $PDFfile =~ s/\s/\\ /g;
   $PDFfile =~ s/\(/\\(/g;
   $PDFfile =~ s/\)/\\)/g;
+
+  # Read XMP data if present in PDF file
+  my $xmp_parser = Paperpile::Formats::XMP->new();
+  $xmp_parser->file($PDFfile);
+  my $xmp_pub = $xmp_parser->read();
+
+  # immediate return if we get a more or less complete entry
+  if ( $xmp_pub->title and $xmp_pub->authors and $xmp_pub->doi ) {
+    return $xmp_pub;
+  }
 
   # create and read XML file, just the first page
   system("$PDF2XML -noImage -f 1 -l 1 -q $PDFfile $tmpfile 2>/dev/null");
@@ -59,7 +70,7 @@ sub parsePDF {
       $metadata_arxiv = $1;
       $metadata_title = '';
     }
-    $metadata_title = '' if ( $metadata_title =~ m/(\.doc|\.tex|\.dvi|\.ps|\.pdf|\.rtf|\.qxd|\.fm|\.fm\))$/ );
+    $metadata_title = '' if ( $metadata_title =~ m/(\.doc|\.tex|\.dvi|\.ps|\.pdf|\.rtf|\.qxd|\.fm|\.fm\)|\.eps)$/ );
     $metadata_title = '' if ( $metadata_title =~ m/^\s*$/ );
     $metadata_title = '' if ( $metadata_title =~ m/^Microsoft/ );
     $metadata_title = '' if ( $metadata_title =~ m/^gk[a-z]\d+/i );
@@ -74,10 +85,10 @@ sub parsePDF {
     my $count_spaces = ($metadata_title =~ tr/ //);
     $metadata_title = '' if ( $count_spaces < 3 );
   }
-  open (FILE, ">$PDFfile.metadata.tmp" );
-  print FILE "TITLE:$metadata_title\n";
-  print FILE "  DOI:$metadata_DOI\n";
-  close(FILE);
+
+  if ( $metadata_DOI eq '' and $xmp_pub->doi ) {
+    $metadata_DOI = $xmp_pub->doi;
+  }
 
   my @page0 = @{ $data->{PAGE}->[0]->{TEXT} } if ( defined $data->{PAGE}->[0]->{TEXT} );
 
@@ -290,14 +301,32 @@ sub parsePDF {
   # We can now create the publication object and return it
   my $pub = Paperpile::Library::Publication->new( pubtype => 'MISC' );
   if ( $#authors_obj > -1 and $title ne '' ) {
-    $pub->title($title);
+    # choose wich title to take
+    if ( $metadata_title and $title ) {
+      my $words1 = ( $title =~ tr/ / / );
+      my $words2 = ( $metadata_title =~ tr/ / / );
+      if ( $words2 > 5 and $words1 > $words2 * 5 ) {
+	$pub->title($metadata_title);
+      } else {
+	$pub->title($title);
+      }
+    } else {
+      $pub->title($title);
+    }
     $pub->authors( join( ' and ', @authors_obj ) );
   }
-  $pub->title($metadata_title)   if ( $metadata_title ne '' and !$pub->title );
-  $pub->doi($doi)                if ( $doi      ne '' );
-  $pub->doi($metadata_DOI)       if ( $metadata_DOI ne ''   and !$pub->doi );
-  $pub->arxivid($arxiv_id)       if ( $arxiv_id ne '' );
-  $pub->arxivid($metadata_arxiv) if ( $metadata_arxiv ne '' and !$pub->arxivid );
+  $pub->title($metadata_title)     if ( $metadata_title ne '' and !$pub->title );
+  $pub->title($xmp_pub->title)     if ( $xmp_pub->title       and !$pub->title );
+  $pub->doi($doi)                  if ( $doi      ne '' );
+  $pub->doi($metadata_DOI)         if ( $metadata_DOI ne ''   and !$pub->doi );
+  $pub->arxivid($arxiv_id)         if ( $arxiv_id ne '' );
+  $pub->arxivid($metadata_arxiv)   if ( $metadata_arxiv ne '' and !$pub->arxivid );
+  $pub->volume($xmp_pub->volume)   if ( $xmp_pub->volume );
+  $pub->issue($xmp_pub->issue)     if ( $xmp_pub->issue );
+  $pub->year($xmp_pub->year)       if ( $xmp_pub->year );
+  $pub->pages($xmp_pub->pages)     if ( $xmp_pub->pages );
+  $pub->journal($xmp_pub->journal) if ( $xmp_pub->journal );
+
   return $pub;
 }
 

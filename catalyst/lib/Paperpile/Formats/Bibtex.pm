@@ -300,8 +300,8 @@ sub write {
           $value =~ s/\\/\\textbackslash/g;
 
           # curly braces are escaped
-          $value =~ s/\{/\\\{/g;
-          $value =~ s/\}/\\\}/g;
+          $value =~ s/\{/\\\{/g if ( $key ne 'author' and $key ne 'editor' );
+          $value =~ s/\}/\\\}/g if ( $key ne 'author' and $key ne 'editor' );
         }
 
         # this regexp replaces all umlaute symbols
@@ -335,14 +335,14 @@ sub write {
         }
 
         # for the title we enclose special words in brackets
-	if ( $key eq 'author' ) {
+	if ( $key eq 'author' or $key eq 'editor' ) {
 	  my @tmp = split(/\sand\s/, $value );
 	  foreach my $i ( 0 .. $#tmp ) {
 	    if ( $tmp[$i] !~ m/\w/ ) {
 	      $tmp[$i] = '';
 	      next;
 	    }
-	    $tmp[$i] = '{'.$tmp[$i].'}' if ( $tmp[$i] !~ m/,/ );
+	    $tmp[$i] = '{'.$tmp[$i].'}' if ( $tmp[$i] !~ m/,/ and $tmp[$i] !~ m/^\{.*\}$/);
 	  }
 	  $value = join(" and ", @tmp);
 	}
