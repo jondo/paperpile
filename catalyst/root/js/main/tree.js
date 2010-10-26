@@ -919,12 +919,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     newNode.init(pars);
 
-    Paperpile.status.showBusy("Loading new RSS feed");
+    Paperpile.status.showBusy("Subscribing to RSS feed");
     Paperpile.Ajax({
       url: '/ajax/tree/new_rss',
       params: pars,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
+        Paperpile.status.clearMsg();
         if (json.error) {
           Paperpile.main.onError(response);
           newNode.remove();
@@ -932,13 +933,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           newNode.setText(json.title);
           newNode.plugin_title = json.title;
           Ext.get(newNode.getUI().getIconEl()).replaceClass('pp-icon-loading', 'pp-icon-feed');
+          this.myOnClick(newNode);
         }
-        Paperpile.status.clearMsg();
       },
       failure: function(response) {
         Paperpile.main.onError(response),
         newNode.remove();
-      }
+      },
+      scope: this
     });
   },
 
