@@ -46,16 +46,16 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       switch (el.getAttribute('action')) {
 
       case 'statistics':
-        Paperpile.main.tabs.newScreenTab('Statistics');
+        Paperpile.main.tabs.newScreenTab('Statistics','statistics_tab');
         break;
       case 'settings-patterns':
-        Paperpile.main.tabs.newScreenTab('PatternSettings');
+        Paperpile.main.tabs.newScreenTab('PatternSettings','pattern_settings_tab');
         break;
       case 'settings-general':
-        Paperpile.main.tabs.newScreenTab('GeneralSettings');
+        Paperpile.main.tabs.newScreenTab('GeneralSettings','general_settings_tab');
         break;
       case 'settings-tex':
-        Paperpile.main.tabs.newScreenTab('TexSettings');
+        Paperpile.main.tabs.newScreenTab('TexSettings','tex_settings_tab');
         break;
       case 'duplicates':
         Paperpile.main.tabs.newPluginTab('Duplicates', {},
