@@ -57,6 +57,7 @@ library_settings:
     export_escape: 1
     pretty_print: 1
     use_quotes: 0
+    cite_wrap: 1
     double_dash: 1
     title_quote_complete: 0 
     title_quote_smart: 1 

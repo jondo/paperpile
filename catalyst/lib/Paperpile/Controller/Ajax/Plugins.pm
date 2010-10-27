@@ -290,9 +290,9 @@ sub export : Local {
     $data = $plugin->all;
   }
 
-  # If output format is BibTeX we add the user's BibTeX settings to
-  # the parameter list
-  if ( $export_params{out_format} eq 'BIBTEX' ) {
+  # If output format is BibTeX or LateX cite-keys we add the user's
+  # BibTeX settings to the parameter list
+  if (( $export_params{out_format} eq 'BIBTEX') or ( $export_params{out_format} eq 'CITEKEYS')) {
     %export_params = ( %export_params, %{ $c->model('Library')->get_setting('bibtex') } );
   }
 

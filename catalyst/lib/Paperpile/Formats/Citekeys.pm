@@ -23,7 +23,15 @@ sub write {
   foreach my $pub ( @{ $self->data } ) {
     push @keys, $pub->citekey;
   }
-  print OUT join(",",@keys);
+
+
+  my $output = join(",",@keys);
+
+  if ($self->settings->{cite_wrap}){
+    $output="\\cite{$output}";
+  }
+
+  print OUT $output;
   close(OUT);
 }
 

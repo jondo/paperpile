@@ -31,6 +31,10 @@
         <td><div class="pp-settings-checkbox" id="use_quotes_checkbox"></div></td>
         <td class="pp-settings-label">Use quotes (&quot;...&quot;) as field delimiter <span id="use_quotes_tooltip" class="pp-tooltip-link">?</span></td> 
       </tr>
+      <tr>
+        <td><div class="pp-settings-checkbox" id="cite_wrap_checkbox"></div></td>
+        <td class="pp-settings-label">Wrap copied keys in <tt>\cite</tt> command <span id="cite_wrap_tooltip" class="pp-tooltip-link">?</span></td> 
+      </tr>
     </table>
   </div>
 </td>

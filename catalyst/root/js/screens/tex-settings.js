@@ -137,6 +137,7 @@ Paperpile.TexSettings = Ext.extend(Ext.Panel, {
       title_quote_smart: "Automatically quote title words with special capitalization patterns that typically should not be changed by BibTeX (e.g. mRNA or HIV)",
       title_quote: "List manually words and phrases to be quoted in title/booktitle fields. One word or phrase by line.",
       export_fields: "Include/Exclude optional fields in the BibTeX output.",
+      cite_wrap: "Copy a complete LaTeX <tt>\\cite</tt> command when citation keys are copied to the clipboard. Disable this function to paste the citation key(s) only.",
     };
 
     for (var tt in tooltips) {
