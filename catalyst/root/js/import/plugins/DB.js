@@ -108,8 +108,10 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     var status = el.getAttribute('status');
     var def = el.getAttribute('default');
 
+    // We have not hit a sort field
+    if (!status) return;
+
     if (field != this.currentSortField) {
-      //log(field);
       status = "inactive";
     }
     this.currentSortField = field;

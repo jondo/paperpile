@@ -2234,8 +2234,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   onDblClick: function(grid, rowIndex, e) {
     var sm = this.getSelectionModel();
     var record = sm.getSelected();
-    if (record.data._imported) {
-      this.viewPDF();
+    if (record){
+      if (record.data._imported) {
+        this.viewPDF();
+      }
     }
   },
 
