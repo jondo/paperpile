@@ -52,6 +52,16 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
 
     Paperpile.PluginGridGoogleScholar.superclass.initComponent.call(this);
   },
+  getEmptyBeforeSearchTemplate: function() {
+    var markup = [
+      '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-center">',
+      '  <h2>Example searches:</h2>',
+      '  <ul>',
+      '    <li><a href="#" class="pp-textlink" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">author:lipman "basic local alignment search tool"</a></li>',
+      '  </ul>',
+      '</div>'];
+    return new Ext.XTemplate(markup).compile();
+  },
 
   isLongImport: function() {
     return true;
