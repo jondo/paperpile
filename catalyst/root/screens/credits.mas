@@ -26,16 +26,6 @@ projects. If not contained in the installed package all sources
     </li>
 
     <li>
-      <a href="#" class="pp-textlink pp-bullet" <% url("http://appcelerator.com") %> >Titanium</a>, 
-      a cross platform application runtime by Appcelerator Inc. (<a href="#" <% toggle('apache-license') %> >View license</a>)
-    </li>
-    
-    <li>
-      <a href="#" class="pp-textlink pp-bullet" <% url("http://extjs.com") %> > ExtJS</a>, 
-      a javascript framework (<a href="#" <% toggle('extjs-license') %> >View license</a>)
-    </li>
-   
-    <li>
       <a href="#" class="pp-textlink pp-bullet" <% url("http://www.iinteractive.com/moose") %> >Moose</a>, 
       an object system for Perl (same <a href="#" <% toggle('perl-license') %> >license</a> as Perl itself)
     </li>
@@ -44,7 +34,18 @@ projects. If not contained in the installed package all sources
       <a href="#" class="pp-textlink pp-bullet" <% url("http://cpan.org") %> >CPAN</a>, 
       a code repository (CPAN modules used in Paperpile have the same <a href="#" <% toggle('perl-license') %> >license</a> as Perl itself)
     </li>
+
+    <li>
+      <a href="#" class="pp-textlink pp-bullet" <% url("http://qt.nokia.com") %> >Qt</a>, 
+      a cross platform application platform by Nokia (<a href="#" <% toggle('lgpl-license') %> >View license</a>)
+    </li>
+    
+    <li>
+      <a href="#" class="pp-textlink pp-bullet" <% url("http://extjs.com") %> > ExtJS</a>, 
+      a javascript framework (<a href="#" <% toggle('extjs-license') %> >View license</a>)
+    </li>
    
+  
     <li>
       <a href="#" class="pp-textlink pp-bullet" <% url("http://www.scripps.edu/~cdputnam/software/bibutils") %> > Bibutils</a>, 
       bibliography conversion C-library by Chris Putnam (<a href="#" <% toggle('gpl2-license') %> >View license</a>)
