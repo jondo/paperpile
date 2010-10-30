@@ -14,7 +14,6 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.serverLog = '';
 Paperpile.isLogging = 1;
 Paperpile.pingAttempts = 0;
@@ -29,19 +28,19 @@ Paperpile.startupFailure = function(response) {
     }
   }
 
-  var msg  = Paperpile.serverLog;
+  var msg = Paperpile.serverLog;
   if (msg.length > 800) {
     msg = msg.substr(msg.length - 800);
   }
 
-  if (msg){
-    msg.replace('\n','<br>');
-    msg='<code>'+msg+'</code>';
+  if (msg) {
+    msg.replace('\n', '<br>');
+    msg = '<code>' + msg + '</code>';
   }
 
   Ext.Msg.show({
     title: 'Error',
-    msg: 'Could not start application. Please try again and contact support@paperpile.com if the error persists.<br>' + error + '<br><br>'+msg,
+    msg: 'Could not start application. Please try again and contact support@paperpile.com if the error persists.<br>' + error + '<br><br>' + msg,
     buttons: Ext.Msg.OK,
     animEl: 'elId',
     icon: Ext.MessageBox.ERROR,
@@ -59,12 +58,11 @@ Paperpile.startupFailure = function(response) {
 // server. Once we have verified that the server is running we
 // continue with stage1.
 
-
 Paperpile.stage0 = function() {
 
   Paperpile.pingAttempts++;
 
-  if (IS_QT) QRuntime.log("Pinging the server (attempt #"+Paperpile.pingAttempts+')');
+  if (IS_QT) QRuntime.log("Pinging the server (attempt #" + Paperpile.pingAttempts + ')');
 
   Paperpile.Ajax({
     url: '/ajax/app/heartbeat',
@@ -78,10 +76,10 @@ Paperpile.stage0 = function() {
 
         // Set debug=true to bypass to allow to use an externally
         // started server for developing
-        debug=true;
-        
+        debug = true;
+
         // Server was already running before we have started it
-        if (IS_QT && Paperpile.pingAttempts == 1 && !debug){
+        if (IS_QT && Paperpile.pingAttempts == 1 && !debug) {
 
           Ext.Msg.show({
             title: 'Error',
@@ -94,38 +92,40 @@ Paperpile.stage0 = function() {
             }
           });
         } else {
-          if (IS_QT) QRuntime.log("Loading frontend.");
+          if (IS_QT) {
+            QRuntime.log("Loading frontend.");
+            // Connect appExit event to custom function which either explicitly closes the application or ignores the event
+            QRuntime.appExit.connect(
+              function() {
 
-          // Connect appExit event to custom function which either explicitly closes the application or ignores the event
-          QRuntime.appExit.connect(
-            function(){
+                var unfinishedTasks = false;
 
-              var unfinishedTasks = false;
-
-              if (Paperpile.main.currentQueueData){
-                if (Paperpile.main.currentQueueData.queue.status === 'RUNNING'){
-                  unfinishedTasks = true;
+                if (Paperpile.main.currentQueueData) {
+                  if (Paperpile.main.currentQueueData.queue.status === 'RUNNING') {
+                    unfinishedTasks = true;
+                  }
                 }
-              }
 
-              if (unfinishedTasks){
-                // Just show simple warning for now. Ideally we offer to cancel all tasks from the dialog
-                Ext.Msg.show({
-                  title: 'Unfinished tasks',
-                  msg: 'There are unfinished background tasks. Wait until all tasks are finished or cancel the tasks before closing Paperpile.',
-                  buttons: Ext.Msg.OK,
-                  animEl: 'elId',
-                  icon: Ext.MessageBox.INFO,
-                });
-              } else {
-                QRuntime.setSaveToClose(true);
-                // Defer call to closeApp to make sure the close event
-                // can be fired again. It seems it is enough to add just
-                // 1ms delay, so 100ms should be safe.
-                (function(){ QRuntime.closeApp()}).defer(100);
-              }
-            }
-          );
+                if (unfinishedTasks) {
+                  // Just show simple warning for now. Ideally we offer to cancel all tasks from the dialog
+                  Ext.Msg.show({
+                    title: 'Unfinished tasks',
+                    msg: 'There are unfinished background tasks. Wait until all tasks are finished or cancel the tasks before closing Paperpile.',
+                    buttons: Ext.Msg.OK,
+                    animEl: 'elId',
+                    icon: Ext.MessageBox.INFO,
+                  });
+                } else {
+                  QRuntime.setSaveToClose(true);
+                  // Defer call to closeApp to make sure the close event
+                  // can be fired again. It seems it is enough to add just
+                  // 1ms delay, so 100ms should be safe.
+                  (function() {
+                    QRuntime.closeApp()
+                  }).defer(100);
+                }
+              });
+          }
           Paperpile.stage1();
         }
       }
@@ -134,34 +134,33 @@ Paperpile.stage0 = function() {
     failure: function(response) {
 
       if (IS_QT) {
-    
+
         // Start catalyst server after the first failed ping attempt
-        if (Paperpile.pingAttempts == 1){
+        if (Paperpile.pingAttempts == 1) {
 
           //Set up signals/slot connection for catalyst process
-
-          QRuntime.catalystReady.connect(function(){
+          QRuntime.catalystReady.connect(function() {
             QRuntime.log("Catalyst succesfully started.");
             Paperpile.stage0();
           });
 
           QRuntime.catalystExit.connect(
-            function(error){
+            function(error) {
 
-              var msg  = Paperpile.serverLog;
+              var msg = Paperpile.serverLog;
 
               if (msg.length > 800) {
                 msg = msg.substr(msg.length - 800);
               }
 
-              if (msg){
-                msg.replace('\n','<br>');
-                msg='<code>'+msg+'</code>';
+              if (msg) {
+                msg.replace('\n', '<br>');
+                msg = '<code>' + msg + '</code>';
               }
 
               Ext.Msg.show({
                 title: 'Error',
-                msg: 'Could not start Paperpile server or lost connection. Please restart Paperpile and contact support@paperpile.com if the problem persits.<br><br>'+msg,
+                msg: 'Could not start Paperpile server or lost connection. Please restart Paperpile and contact support@paperpile.com if the problem persits.<br><br>' + msg,
                 buttons: Ext.Msg.OK,
                 icon: Ext.MessageBox.ERROR,
                 fn: function(action) {
@@ -170,8 +169,7 @@ Paperpile.stage0 = function() {
                   }
                 }
               });
-            }
-          );
+            });
 
           QRuntime.catalystRead.connect(function(string) {
             if (Paperpile.isLogging) {
@@ -192,12 +190,12 @@ Paperpile.stage0 = function() {
         }
 
         // Try pinging the server until we get a response
-        if ((Paperpile.pingAttempts) > 1 && (Paperpile.pingAttempts<10)){
+        if ((Paperpile.pingAttempts) > 1 && (Paperpile.pingAttempts < 10)) {
           Paperpile.stage0.defer(200);
         }
 
         // Giving up
-        if (Paperpile.pingAttempts >= 10){
+        if (Paperpile.pingAttempts >= 10) {
           if (IS_QT) QRuntime.log("Giving up.");
           Paperpile.startupFailure(response);
         }
