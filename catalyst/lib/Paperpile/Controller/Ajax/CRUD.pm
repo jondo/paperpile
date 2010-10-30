@@ -364,11 +364,9 @@ sub update_notes : Local {
   my $value = $dbh->quote($html);
   $dbh->do("UPDATE Publications SET annote=$value WHERE guid='$guid'");
 
-  my $tree      = HTML::TreeBuilder->new->parse($html);
+  my $tree      = HTML::TreeBuilder->new->parse_content($html);
   my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
   my $text      = $formatter->format($tree);
-
-  # Issue 614: Text seems to come out empty (used to work all the time before).
 
   $value = $dbh->quote($text);
 
