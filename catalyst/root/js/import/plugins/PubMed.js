@@ -53,14 +53,26 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
 
     Paperpile.PluginGridPubMed.superclass.initComponent.call(this);
   },
+
   getEmptyBeforeSearchTemplate: function() {
     var markup = [
-      '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-center">',
-      '  <h2>Example searches:</h2>',
+      '<div class="pp-hint-box">',
+      '  <h1>Search hints</h1>',
+      '<p>For a simple search type keywords, authors, journal names or PubMed IDs:</p>',
       '  <ul>',
-      '    <li><a href="#" class="pp-textlink" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">1953[publication date] nature[journal] "Watson JD"[author] "Crick FH"[author]</a></li>',
-      '    <li><a href="#" class="pp-textlink" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">"lander es"[au] "linton lm"[au] 2001[publication date] nature[journal]</a></li>',
+      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">Watson JD</a></li>',
+      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">cell cycle</a></li>',
+      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">"Journal of molecular biology"</a></li>',
+      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">123667123</a></li>',
       '  </ul>',
+      '<p>For an advanced search specify and combine fields:</p>',
+      '  <ul>',
+      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);"><b>author:</b>"Watson JD" <b>author:</b>"Crick FH" <b>year:</b>1953 <b>journal:</b>Nature</a></li>',
+      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);"><b>title:</b>microRNA <b>journal:</b>Cell <b>year:</b>2000-2010</a></li>',
+      '  </ul>',
+
+
+
       '</div>'];
     return new Ext.XTemplate(markup).compile();
   }
