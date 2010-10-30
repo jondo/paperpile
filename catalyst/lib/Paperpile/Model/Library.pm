@@ -341,8 +341,6 @@ sub update_pub {
   my $data = {%$old_data};
   my $diff = {};
 
-  print STDERR "Updateing ".$data->{title}, " ", $data->{citekey}, "\n";
-
   # Figure out fields that have changed
   foreach my $field ( keys %{$new_data} ) {
     next if ( !$new_data->{$field} && !$data->{$field});
@@ -1029,9 +1027,9 @@ sub fulltext_search {
         # We are only interested in the number of matches for each of
         # the 11 columns in our fulltext table
         # text,abstract,notes,title,key,author,year,journal, keyword,folderid,labelid
-        my @counts = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+        my @counts = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
-        foreach my $column ( 0 .. 10 ) {
+        foreach my $column ( 0 .. 11 ) {
           foreach my $phrase ( 0 .. $num_phrases - 1 ) {
 
             # The way the information is stored in the blob is different
@@ -1047,7 +1045,7 @@ sub fulltext_search {
         my $score = 0;
 
         # If hit occured in title, key, author, year or journal we show them first
-        my $sum = $counts[3] + $counts[4] + $counts[5] + $counts[6] + $counts[7];
+        my $sum = $counts[4] + $counts[5] + $counts[6] + $counts[7] + $counts[8];
 
         $score = $sum * 10;
 
@@ -2261,16 +2259,15 @@ sub _snippets {
 
   my %snippets = ( text => [], abstract => [], notes => [] );
 
+
   while ( $offsets =~ /(\d+) (\d+) (\d+) (\d+)/g ) {
 
     my ( $column, $term, $start, $length ) = ( $1, $2, $3, $4 );
 
     # We only generate snippets for text, abstract and notes
-    next if ( $column > 2 );
+    next if ( $column > 3 );
 
     my $field = $fields[$column];
-
-    #print STDERR "$column $term $start $length $field", $row->{$field}, "\n";
 
     my $snippet;
     my $match = substr( $row->{$field}, $start, $length );
@@ -2398,6 +2395,7 @@ sub _snippets {
     $output .= join( " \x{2026} ", reverse @{ $shownSnippets{$what} } );
     $output .= " \x{2026} ";
   }
+
 
   return ($output);
 
