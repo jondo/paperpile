@@ -386,6 +386,16 @@ sub new_collection : Local {
   my $style  = $c->request->params->{style} || '0';
 
   $c->model('Library')->new_collection( $guid, $name, $type, $parent, $style );
+
+  # Reload tree representation of collections
+  my $tree = $c->session->{tree};
+
+  if ($type eq 'LABEL'){
+    $c->forward( '/ajax/tree/get_subtree', [ $tree, "TAGS_ROOT" ] );
+  } else {
+    $c->forward( '/ajax/tree/get_subtree', [ $tree, "FOLDER_ROOT" ] );
+  }
+
 }
 
 sub move_in_collection : Local {
