@@ -1661,7 +1661,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       selectionType: 'file',
       types: ['bib'],
       typesDescription: 'BibTeX files',
-      nameFiler:"BibTeX (*.bib)",
+      nameFilters:["BibTeX (*.bib)"],
       dialogType: 'save',
       multiple: false,
       path: Paperpile.utils.splitPath(initialFile).dir,
