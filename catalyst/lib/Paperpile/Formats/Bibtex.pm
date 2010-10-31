@@ -85,7 +85,10 @@ sub read {
 
     next unless $entry->parse_ok;
 
-    my $data = {};
+    # Collect meta data, $pdf file and attachments
+    my $data        = {};
+    my $pdf         = '';
+    my @attachments = ();
 
     foreach my $field ( $entry->fieldlist ) {
 
@@ -134,9 +137,9 @@ sub read {
           my $value = $entry->field($field);
 
           # Specifically handle CiteULike BibTex
-          if ($field eq 'comment'){
-            $value=~s/\(private-note\)//g;
-            $value=~s/---=note-separator=---/<br><br>/g;
+          if ( $field eq 'comment' ) {
+            $value =~ s/\(private-note\)//g;
+            $value =~ s/---=note-separator=---/<br><br>/g;
           }
 
           $data->{annote} = $value;
@@ -149,6 +152,7 @@ sub read {
         }
 
         if ( $field =~ /(tags|labels|keywords)/ ) {
+
           # Expects a comma separated list of tags, might need to be
           # extended with a heuristic if a different seperator is
           # used.
@@ -163,16 +167,13 @@ sub read {
 
         if ( $field =~ /file/i ) {
           my @files = split( /;/, $entry->field($field) );
-          my $pdf = '';
-          my @attachments;
-
           foreach my $file (@files) {
 
             $file = Paperpile::Utils->process_attachment_name($file);
 
             next if !$file;
 
-            # We treat the first PDF in the list as *the* PDF and all
+            # We treat the first PDF we find  as *the* PDF and all
             # other files as supplementary material
             if ( ( $file =~ /\.pdf/i ) and ( !$pdf ) ) {
               $pdf = $file;
@@ -181,17 +182,16 @@ sub read {
               push @attachments, $file;
             }
           }
-
-          $data->{_pdf_tmp} = $pdf if $pdf;
-
-          if (@attachments) {
-            $data->{_attachments_tmp} = [@attachments];
-          }
-
           next;
         }
 
         print STDERR "Field $field not handled.\n";
+      }
+
+      $data->{_pdf_tmp} = $pdf if $pdf;
+
+      if (@attachments) {
+        $data->{_attachments_tmp} = [@attachments];
       }
     }
 
