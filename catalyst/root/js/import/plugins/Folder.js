@@ -28,7 +28,13 @@ Paperpile.PluginPanelFolder = Ext.extend(Paperpile.PluginPanel, {
 
   createGrid: function(gridParams) {
     return new Paperpile.PluginGridFolder(gridParams);
+  },
+
+  createAboutPanel: function() {
+    return undefined;
   }
+
+
 });
 
 Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
@@ -51,7 +57,7 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   getEmptyBeforeSearchTemplate: function() {
-    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>This folder is empty. <a href="#" class="pp-textlink" action="close-tab">Close tab</a></p></div>']).compile();
+    return new Ext.XTemplate(['<div class="pp-hint-box"><p>This folder is empty. <a href="#" class="pp-textlink" action="close-tab">Close tab</a>.</p></div>']).compile();
   },
 
   initContextMenuItemIds: function() {

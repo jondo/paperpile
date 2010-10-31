@@ -188,6 +188,7 @@ a.pp-inactive:hover {
     color: grey;
 }
 
+
 .pp-hint-box p, .pp-hint-box ul, .pp-hin-box ol {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     margin: 5px 0px;
@@ -218,8 +219,6 @@ a.pp-inactive:hover {
     text-decoration:none;
     padding:1px 3px;
 }
-
-
 
 .pp-smallprint {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;

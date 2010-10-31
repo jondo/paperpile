@@ -705,6 +705,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   setSearchQuery: function(text) {
+
+    //Strip <b></b> tags that are used for clarity in some templates
+    text = text.replace(/<\/?b>/g,'');
+
     var grid = this.getActiveGrid();
     grid.setSearchQuery(text);
   },

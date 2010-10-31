@@ -63,7 +63,7 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
       '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">Watson JD</a></li>',
       '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">cell cycle</a></li>',
       '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">"Journal of molecular biology"</a></li>',
-      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">123667123</a></li>',
+      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">11237011</a></li>',
       '  </ul>',
       '<p>For an advanced search specify and combine fields:</p>',
       '  <ul>',

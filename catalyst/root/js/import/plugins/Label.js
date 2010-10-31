@@ -33,7 +33,12 @@ Paperpile.PluginPanelLabel = Ext.extend(Paperpile.PluginPanel, {
 
   createGrid: function(gridParams) {
     return new Paperpile.PluginGridLabel(gridParams);
+  },
+
+  createAboutPanel: function() {
+    return undefined;
   }
+
 });
 
 Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
@@ -71,7 +76,7 @@ Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   getEmptyBeforeSearchTemplate: function() {
-    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No references are tagged with this label. <a href="#" class="pp-textlink" action="close-tab">Close tab</a></p></div>']).compile();
+    return new Ext.XTemplate(['<div class="pp-hint-box"><p>No references are tagged with this label. <a href="#" class="pp-textlink" action="close-tab">Close tab</a>.</p></div>']).compile();
   },
 
   initContextMenuItemIds: function() {

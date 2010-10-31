@@ -26,7 +26,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
     this.searchField = new Ext.app.SearchField({
       itemId: 'SEARCH_FIELD',
       emptyText: 'Search ' + grid.plugin_name,
-      width: 200,
+      width: 250,
       store: grid.getStore()
     });
     grid.actions['SEARCH_FIELD'] = this.searchField;
@@ -132,7 +132,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
         this.searchField.onTrigger2Click();
       },
       getNoResultsTemplate: function() {
-        return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No results found. <a href="#" class="pp-textlink" action="clear-search">Try a new search</a></p></div>']).compile();
+        return new Ext.XTemplate(['<div class="pp-hint-box"><p>No results found. Try a <a href="#" class="pp-textlink" action="clear-search"> new search</a>.</p></div>']).compile();
       }
 
     });

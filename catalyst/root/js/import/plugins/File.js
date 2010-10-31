@@ -26,8 +26,12 @@ Ext.extend(Paperpile.PluginPanelFile, Paperpile.PluginPanelDB, {
 
   createGrid: function(gridParams) {
     return new Paperpile.PluginGridFile(gridParams);
-  }
+  },
 
+  createAboutPanel: function() {
+    return undefined;
+  }
+  
 });
 
 Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
@@ -68,6 +72,11 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
     var ids = this.contextMenuItemIds;
 
     ids.remove('DELETE');
-  }
+  },
+
+  getNoResultsTemplate: function() {
+    return new Ext.XTemplate(['<div class="pp-hint-box"><p>No references to show. <a href="#" class="pp-textlink" action="close-tab">Close tab</a>.</p></div>']).compile();
+  },
+
 
 });

@@ -64,7 +64,7 @@ Paperpile.PluginGridTrash = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   getEmptyBeforeSearchTemplate: function() {
-    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No items in the Trash. <a href="#" class="pp-textlink" action="close-tab">Close tab</a></p></div>']).compile();
+    return new Ext.XTemplate(['<div class="pp-hint-box"><p>No items in the Trash. <a href="#" class="pp-textlink" action="close-tab">Close tab</a>.</p></div>']).compile();
   },
 
   initToolbarMenuItemIds: function() {

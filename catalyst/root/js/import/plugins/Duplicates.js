@@ -26,6 +26,10 @@ Paperpile.PluginPanelDuplicates = Ext.extend(Paperpile.PluginPanel, {
 
   createGrid: function(gridParams) {
     return new Paperpile.PluginGridDuplicates(gridParams);
+  },
+
+  createAboutPanel: function() {
+    return undefined;
   }
 
 });
@@ -82,7 +86,7 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   getEmptyTemplate: function() {
-    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No duplicate references found. <a href="#" class="pp-textlink" action="close-tab">Close tab</a></p></div>']).compile();
+    return new Ext.XTemplate(['<div class="pp-hint-box"><p>No duplicates found. <a href="#" class="pp-textlink" action="close-tab">Close tab</a>.</p></div>']).compile();
   },
 
   getNoResultsTemplate: function() {

@@ -545,6 +545,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       } else if (this.searchField) {
         this.searchField.selectText();
         this.searchField.getEl().focus();
+        this.getEmptyBeforeSearchTemplate().overwrite(this.getView().mainBody);
       }
       break;
     case 'close-tab':
@@ -669,7 +670,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       tpl = this._emptyBeforeSearchTpl;
     }
     if (tpl) {
-	tpl.overwrite(this.getView().mainBody);
+	  tpl.overwrite(this.getView().mainBody);
     } else {
 	//Paperpile.log("No tpl!");
     }
@@ -686,11 +687,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   getEmptyBeforeSearchTemplate: function() {
-    return new Ext.XTemplate(['<div class="pp-box pp-box-side-panel pp-box-style1" style="width:300px;margin:auto;"><p>Use the search bar above to find papers.</p></div>']).compile();
+    return new Ext.XTemplate(['<div class="pp-hint-box"><p>Use the search bar above to find papers.</p></div>']).compile();
   },
 
   getNoResultsTemplate: function() {
-    return new Ext.XTemplate(['<div class="pp-box pp-box-grid pp-box-style2 pp-inactive"><p>No results to show. <a href="#" class="pp-textlink" action="clear-search">Clear search</a></p></div>']).compile();
+    return new Ext.XTemplate(['<div class="pp-hint-box"><p>No results to show. <a href="#" class="pp-textlink" action="clear-search">Clear search</a>.</p></div>']).compile();
   },
 
   highlightNewArticles: function() {
@@ -1179,7 +1180,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var template = [
       '<div id="main-container-{id}">',
       '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style2">',
-      '    <p class="pp-inactive">No references here.</p>',
+      '    <p class="pp-inactive">No references selected.</p>',
       '  </div>',
       '</div>'];
     return[].concat(template);

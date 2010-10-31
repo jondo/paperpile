@@ -27,7 +27,13 @@ Paperpile.PluginPanelFeed = Ext.extend(Paperpile.PluginPanel, {
 
   createGrid: function(gridParams) {
     return new Paperpile.PluginGridFeed(gridParams);
+  },
+
+  createAboutPanel: function() {
+    return undefined;
   }
+
+
 
 });
 
@@ -117,6 +123,10 @@ Paperpile.PluginGridFeed = Ext.extend(Paperpile.PluginGridDB, {
 
   isLongImport: function() {
     return true;
+  },
+
+  getNoResultsTemplate: function() {
+    return new Ext.XTemplate(['<div class="pp-hint-box"><p>No references to show. <a href="#" class="pp-textlink" action="close-tab">Close tab</a>.</p></div>']).compile();
   },
 
   destroy: function() {
