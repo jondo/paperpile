@@ -112,7 +112,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
 
     this.ADD_LABEL_MARKUP = [
       '<div style="display:block;float:left;">',
-      '<img width="12px" style="padding:2px;" src="/images/icons/tag_add.png" class="pp-img-action " action="add-tag" ext:qtip="Add Label"/>',
+      '<img style="padding:2px;" src="/images/icons/tag_add_small.png" class="pp-img-action " action="add-tag" ext:qtip="Add Label"/>',
       '</div>'];
     if (tags.length == 0) Ext.DomHelper.append(rootEl, el);
     else Ext.DomHelper.append(rootEl, this.ADD_LABEL_MARKUP);
