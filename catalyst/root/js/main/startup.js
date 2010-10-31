@@ -306,11 +306,13 @@ Paperpile.stage2 = function() {
     });
   }
 
+  /* The timer seems to consume lots of CPU, so we disabled it for now
+
   // Check in regular intervals of 10 minutes for updates.
   Paperpile.updateCheckTask = {
     run: function() {
       if (!Paperpile.status.el.isVisible()) {
-        Paperpile.main.checkForUpdates(true);
+        //Paperpile.main.checkForUpdates(true);
       }
     },
     interval: 600000 //every 10 minutes
@@ -319,7 +321,16 @@ Paperpile.stage2 = function() {
   // Don't check immediately after start
   (function() {
     Ext.TaskMgr.start(Paperpile.updateCheckTask);
+  }).defer(60000);
+  */
+
+  // Check 10 minutes after start for updates
+  (function() {
+    if (!Paperpile.status.el.isVisible()) {
+      Paperpile.main.checkForUpdates(true);
+    }
   }).defer(600000);
+
 
 };
 

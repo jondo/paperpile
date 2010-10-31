@@ -70,9 +70,6 @@ Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
       '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);"><b>author:</b>"Watson JD" <b>author:</b>"Crick FH" <b>year:</b>1953 <b>journal:</b>Nature</a></li>',
       '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);"><b>title:</b>microRNA <b>journal:</b>Cell <b>year:</b>2000-2010</a></li>',
       '  </ul>',
-
-
-
       '</div>'];
     return new Ext.XTemplate(markup).compile();
   }
