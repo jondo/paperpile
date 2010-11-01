@@ -1619,8 +1619,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     } else if (state === true) {
       filesync.active = 1;
       this.setFileSyncData(node, filesync);
+      this.autoExportMessage(node.text, file);
+      Paperpile.main.triggerFileSync([node.id]);
+      parentMenu.hide();
     } else {
       filesync.active = 0;
+      Paperpile.status.updateMsg({
+        type: 'info',
+        msg: 'De-activated BibTeX file sync for \'' + node.text + '\'',
+        duration: 5
+      });
+      parentMenu.hide();
       this.setFileSyncData(node, filesync);
     }
   },
@@ -1644,6 +1653,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         parentMenu.hide();
         this.setFileSyncData(node, filesync);
         this.autoExportMessage(node.text, file);
+        Paperpile.main.triggerFileSync([node.id]);
       } else {
         if (initialFile == '') {
           // We're left with no filesync file here, so we just have to disable
@@ -1692,7 +1702,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     Paperpile.status.updateMsg({
       type: 'info',
       msg: 'References in folder \'' + collection_name + '\' will now sync to file ' + file,
-      hideOnClick: true,
       duration: 5
     });
   }

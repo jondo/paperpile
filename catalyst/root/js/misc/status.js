@@ -14,7 +14,6 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
   // Each status update is assigned a 'message number', which allows
@@ -23,10 +22,10 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
   // that came up in the meantime), you should call the clearMessageNumber
   // method.
   messageNumber: 0,
-    animConfig: {
-	duration:0.25,
-	easing:'easeOut'
-    },
+  animConfig: {
+    duration: 0.25,
+    easing: 'easeOut'
+  },
   scope: this,
   type: 'info',
   anchor: Ext.getBody(),
@@ -113,15 +112,16 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
   },
 
   updateMsg: function(pars) {
-      this.messageNumber++;
 
-      var anim = false;
-      if (pars.fade) {
-	  anim = this.animConfig;
-      }
-      if (pars.anim) {
-	  anim = pars.anim;
-      }
+    this.messageNumber++;
+
+    var anim = false;
+    if (pars.fade) {
+      anim = this.animConfig;
+    }
+    if (pars.anim) {
+      anim = pars.anim;
+    }
 
     if (!this.el.isVisible()) {
       this.el.show(anim);
@@ -165,7 +165,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
     if (pars.duration) {
       var num = this.getMessageNumber();
       (function() {
-        this.clearMessageNumber(num,anim);
+        this.clearMessageNumber(num, anim);
       }).defer(pars.duration * 1000, this);
     }
 
@@ -173,7 +173,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
       var num = this.getMessageNumber();
       Ext.getBody().on('click',
         function(e) {
-	  this.clearMessageNumber(num,anim);
+          this.clearMessageNumber(num, anim);
         },
         this, {
           single: true
@@ -186,18 +186,18 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
     this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t', [0, 3]);
 
-      return this.getMessageNumber();
+    return this.getMessageNumber();
   },
 
   getMessageNumber: function() {
-      return this.messageNumber;
-},
+    return this.messageNumber;
+  },
 
-  clearMessageNumber: function(messageNumber,anim) {
-      if (this.messageNumber == messageNumber) {
-	  this.clearMsg(anim);
-      }
-},
+  clearMessageNumber: function(messageNumber, anim) {
+    if (this.messageNumber == messageNumber) {
+      this.clearMsg(anim);
+    }
+  },
 
   clearMsg: function(anim) {
     if (anim === true) {
@@ -215,13 +215,13 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
       msg: msg,
       busy: true
     });
-      return this.getMessageNumber();
+    return this.getMessageNumber();
   },
 
   setMsg: function(msg) {
     Ext.DomHelper.overwrite(this.msgEl, msg);
     this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t', [0, 3]);
-      return this.getMessageNumber();
+    return this.getMessageNumber();
   },
 
   setType: function(type) {
