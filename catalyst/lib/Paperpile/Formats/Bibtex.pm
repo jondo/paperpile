@@ -25,6 +25,8 @@ use Paperpile::Formats::TeXEncoding;
 use BibTeX::Parser;
 use BibTeX::Parser::EncodingTable;
 use Encode;
+use File::Temp qw/ tempfile tempdir /;
+use MIME::Base64;
 
 extends 'Paperpile::Formats';
 
@@ -183,6 +185,18 @@ sub read {
             }
           }
           next;
+        }
+
+        # Handle BibDesk file attachments
+        if ( $field =~ /Bdsk-File-\d+/i ) {
+
+          my $dir = tempdir( CLEANUP => 1 );
+          my ($fh, $filename) = tempfile( DIR => $dir );
+          print STDERR "$filename";
+
+          print $fh $entry->field($field);
+
+
         }
 
         print STDERR "Field $field not handled.\n";

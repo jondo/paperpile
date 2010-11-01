@@ -119,30 +119,40 @@ sub jr {
 sub _get_name_parts {
   my $name = $_[0];
 
-  my @name_parts = ();
-  my @tmp        = split( /\s+/, $name );
-  my $o          = 0;
-  my $c          = 0;
-  my $append     = 0;
+  my @name_parts   = ();
+  my $braces_level = 0;
+  my @tmp = split( /\s+/, $name );
+
   foreach my $i ( 0 .. $#tmp ) {
     my $o = ( $tmp[$i] =~ tr/\{// );
     my $c = ( $tmp[$i] =~ tr/\}// );
-    if ( $o - $c >= 1 ) {
-      push @name_parts, $tmp[$i];
-      $append = 1;
+
+    #print STDERR " $tmp[$i] $braces_level\n";
+
+    if ( $braces_level + $o - $c == 0 and $braces_level > 0 ) {
+      $tmp[$i] =~ s/(\{|\})//g;
+      if ( $#name_parts > -1 ) {
+        $name_parts[$#name_parts] .= " $tmp[$i]";
+      } else {
+        push @name_parts, $tmp[$i];
+      }
+      $braces_level += $o - $c;
       next;
     }
-    if ( $o - $c >= 1 ) {
+    if ( $braces_level > 0 ) {
+      $tmp[$i] =~ s/(\{|\})//g;
       $name_parts[$#name_parts] .= " $tmp[$i]";
-      $append = 0;
+      $braces_level += $o - $c;
       next;
     }
-    if ( $append == 1 ) {
-      $name_parts[$#name_parts] .= " $tmp[$i]";
-    } else {
+
+    if ( $braces_level == 0 ) {
+      $tmp[$i] =~ s/(\{|\})//g;
       push @name_parts, $tmp[$i];
     }
+    $braces_level += $o - $c;
   }
+
   return @name_parts;
 }
 
@@ -166,7 +176,28 @@ sub split {
     return ( undef, undef, $1, undef );
   }
 
-  my @parts = split /\s*,\s*/, $name;
+  # This simple split does not work, because
+  # commas in braces are not considered correctly
+  # we now do a split in a while loop and control
+  # the braces nesting level of each comma
+  #my @parts = split /\s*,\s*/, $name;
+
+  my @parts  = ();
+  my $last_one = 0;
+  while ( $name =~ m/,/g ) {
+    my $current = pos($name);
+    my $left_part = substr( $name, $last_one, $current - 1 -$last_one );
+    my $bracelevel = _count_braces_left($left_part) -
+      _count_braces_right($left_part);
+    if ( $bracelevel == 0 ) {
+      push @parts, $left_part;
+      $last_one = $current;
+    }
+  }
+
+  # now add the last part
+  my $last_part = substr( $name, $last_one, length($name) - $last_one );
+  push @parts, $last_part;
 
   if ( $#parts == -1 ) {
     # nothing in the string
@@ -244,5 +275,32 @@ sub to_string {
       . ( $self->first ? ", " . $self->first : '' );
   }
 }
+
+# helper functions to count NON-ESCAPED braces
+# simply doing a tr/\{/\{/ also counts
+# escaped braces which leads to incorrect parsing
+sub _count_braces_left {
+  my $string = $_[0];
+
+  my $count = 0;
+  while ( $string =~ m/(?<!\\)\{/g ) {
+    $count++;
+  }
+
+  return $count;
+
+}
+
+sub _count_braces_right {
+  my $string = $_[0];
+
+  my $count = 0;
+  while ( $string =~ m/(?<!\\)\}/g ) {
+    $count++;
+  }
+
+  return $count;
+}
+
 
 1;
