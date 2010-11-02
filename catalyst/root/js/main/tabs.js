@@ -112,9 +112,36 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     newView.show();
   },
 
+  newCollectionTab: function(node, type) {
+
+    var javascript_ui;
+    var iconCls;
+    if (type == 'FOLDER') {
+      iconCls = 'pp-icon-folder';
+      javascript_ui = 'Folder';
+    } else {
+      iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + node.style;
+      javascript_ui = 'Label';
+    }
+
+    if (this.findAndActivateOpenTabByItemId(node.id)) {
+      return;
+    }
+
+    this.newPluginTab(node.plugin_name, node, node.text, iconCls, node.id);
+
+  },
+
   // If itemId is given it is checked if the same tab already is
   // open and it activated instead of creating a new one
-  newPluginTab: function(name, pars, title, iconCls, itemId) {
+  newPluginTab: function(name, origPars, title, iconCls, itemId) {
+    var pars = {};
+    for (var key in origPars) {
+      if (key.match('plugin_')) {
+        pars[key] = origPars[key];
+      }
+    }
+
     var javascript_ui = pars.plugin_name || name;
     if (pars.plugin_query != null && pars.plugin_query.indexOf('folderid:') > -1) {
       javascript_ui = "Folder";

@@ -1547,7 +1547,6 @@ div:hover.pp-tag-remove{
 }
 
 div:hover.pp-tag-style-sample {
-
     border-style:solid;
     border-width: 1px;
     font-size: 10px;
@@ -1601,20 +1600,51 @@ div:hover.pp-tag-style-sample {
     font-weight: bold;
 }
 
+input.x-tree-node-cb {
+    position:relative;
+    left:-20px;
+    margin:0px;
+    margin-right:-18px;
+    height: 16px;
+    vertical-align: middle;
+}
+
+.pp-label-panel-check {
+    display:inline-block;
+    height: 16px;
+    width: 16px;
+    margin: 0px;
+    padding: 0px;
+    vertical-align:middle;
+}
+
 .pp-label-panel-selected {
     background-image:url(../images/default/menu/checked.gif);
 }
 
+.pp-label-panel-down {
+    background-color:#FFFEEB;
+    border: 1px solid #F7CA75;
+}
+
+.pp-tag-tree-node a span{
+    border-width:1px;
+    font-size: 9px;
+    padding: 1px 3px;
+    font-weight:bold;
+    -moz-border-radius: 3px;
+    /*-webkit-border-radius: 3px;*/
+}
+
+
 .pp-label-panel-item {
-    background-image:url(../images/default/menu/unchecked.gif);
     cursor: pointer;
     border-width: 1px;
     display:inline-block;
     font-size: 9px;
     line-height: 12px;
-    padding: 0 4px;
-    margin: 2px;
-    padding-left: 20px;
+    padding: 1px 3px;
+    margin: 0px;
     text-align: center;
     white-space: normal;
     font-weight: bold;
@@ -2402,4 +2432,10 @@ the right of the menu. */
     margin-left:5px;
     margin-right:5px;
     width:26px;
+}
+
+
+.no-icon {
+  display : none;
+  background-image:url('/ext/resources/images/default/s.gif') !important;
 }

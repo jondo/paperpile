@@ -14,7 +14,6 @@
 # received a copy of the GNU Affero General Public License along with
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
-
 package Paperpile::Controller::Ajax::CRUD;
 
 use strict;
@@ -67,7 +66,7 @@ sub insert_entry : Local {
     }
 
     # Make sure we update the labels list when we insert pubs that come with tags
-    $collection_delta = 1 if ( !$collection_delta && $pub->tags_tmp );
+    $collection_delta = 1 if ( $pub->tags_tmp );
 
     push @pub_array, $pub;
   }
@@ -83,6 +82,11 @@ sub insert_entry : Local {
 
   $c->model('Library')->insert_pubs( \@pub_array, 1 );
 
+  if ($collection_delta) {
+    my $dbh = $c->model('Library')->dbh;
+    $c->model('Library')->_update_collections( \@pub_array, 'LABEL', $dbh );
+  }
+
   my $pubs = {};
   foreach my $pub (@pub_array) {
     $pub->_imported(1);
@@ -97,7 +101,7 @@ sub insert_entry : Local {
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
   }
 
-  if ($collection_delta){
+  if ($collection_delta) {
     $c->stash->{data}->{collection_delta} = 1;
   }
 
@@ -157,7 +161,6 @@ sub new_entry : Local {
     DuplicateError->throw("Updates duplicate an existing reference in the database");
   }
 
-
   $c->model('Library')->insert_pubs( [$pub], 1 );
 
   $self->_update_counts($c);
@@ -168,7 +171,7 @@ sub new_entry : Local {
 
   $c->stash->{data}->{pub_delta} = 1;
 
-  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, [$pub]);
+  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, [$pub] );
 
 }
 
@@ -279,7 +282,6 @@ sub update_entry : Local {
     $c->stash->{data}->{jobs}->{$match_job} = $job->as_hash;
   }
 
-
   # That's handled as form on the front-end so we have to explicitly
   # indicate success
   $c->stash->{success} = \1;
@@ -307,9 +309,7 @@ sub lookup_entry : Local {
 
   my $success_plugin;
 
-  eval {
-    $success_plugin = $pub->auto_complete([@plugin_list]);
-  };
+  eval { $success_plugin = $pub->auto_complete( [@plugin_list] ); };
 
   my $e;
 
@@ -356,8 +356,8 @@ sub _match_single {
 sub update_notes : Local {
   my ( $self, $c ) = @_;
 
-  my $guid  = $c->request->params->{guid};
-  my $html  = $c->request->params->{html};
+  my $guid = $c->request->params->{guid};
+  my $html = $c->request->params->{html};
 
   my $dbh = $c->model('Library')->dbh;
 
@@ -438,12 +438,13 @@ sub remove_from_collection : Local {
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
 
-  $c->model('Library')->remove_from_collection( $data, $collection_guid);
+  $c->model('Library')->remove_from_collection( $data, $collection_guid );
 
   $self->_collect_update_data( $c, $data, [$what] );
   $c->stash->{data}->{collection_delta} = 1;
 
-  $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, undef, $collection_guid );
+  $c->stash->{data}->{file_sync_delta} =
+    $self->_get_sync_collections( $c, undef, $collection_guid );
 
 }
 
@@ -536,58 +537,128 @@ sub sort_collection : Local {
   }
 }
 
-sub style_collection : Local {
+sub update_collection : Local {
   my ( $self, $c ) = @_;
 
-  my $guid  = $c->request->params->{guid};
-  my $style = $c->request->params->{style};
+  my $guid       = $c->request->params->{guid};
+  my $name       = $c->request->params->{name};
+  my $style      = $c->request->params->{style};
+  my $sort_order = $c->request->params->{sort_order};
+  my $hidden     = $c->request->params->{hidden};
 
-  $c->model('Library')->set_collection_style( $guid, $style );
-  $c->stash->{data}->{collection_delta} = 1;
+  $c->model('Library')->set_collection_field( $guid, 'name',  $name )  if ( defined $name );
+  $c->model('Library')->set_collection_field( $guid, 'style', $style ) if ( defined $style );
+  $c->model('Library')->set_collection_field( $guid, 'sort_order', $sort_order )
+    if ( defined $sort_order );
+  $c->model('Library')->set_collection_field( $guid, 'hidden', $hidden ) if ( defined $hidden );
+
+  $c->stash->{data}->{collection_update} = 1;
 }
 
 sub list_labels : Local {
 
   my ( $self, $c ) = @_;
 
-  my $sth = $c->model('Library')->dbh->prepare("SELECT * FROM Collections WHERE type='LABEL'");
+  my $sth =
+    $c->model('Library')
+    ->dbh->prepare("SELECT * FROM Collections WHERE type='LABEL' order by hidden,sort_order");
 
   my @data = ();
 
   $sth->execute;
   while ( my $row = $sth->fetchrow_hashref() ) {
     push @data, {
-      name  => $row->{name},
-      style => $row->{style},
-      guid  => $row->{guid},
+      guid       => $row->{guid},
+      name       => $row->{name},
+      type       => $row->{type},
+      parent     => $row->{parent},
+      sort_order => $row->{sort_order},
+      hidden     => $row->{hidden},
+      style      => $row->{style},
       };
   }
 
   my %metaData = (
     root   => 'data',
-    fields => [ 'name', 'style', 'guid' ],
+    fields => [ 'guid', 'name', 'type', 'parent', 'sort_order', 'hidden', 'style' ],
   );
 
-  $c->stash->{data} = [@data];
-
+  $c->stash->{data}     = [@data];
   $c->stash->{metaData} = {%metaData};
 
 }
 
+sub list_collections : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $type = $c->request->params->{type};
+
+  my $hist = $c->model('Library')->histogram('tags');
+
+  my $sth =
+    $c->model('Library')
+    ->dbh->prepare("SELECT * FROM Collections WHERE type='LABEL' order by sort_order");
+
+  my @data = ();
+
+  $sth->execute;
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    push @data, {
+      guid       => $row->{guid},
+      name       => $row->{name},
+      type       => $row->{type},
+      parent     => $row->{parent},
+      sort_order => $row->{sort_order},
+      hidden     => $row->{hidden},
+      style      => $row->{style},
+      count      => $hist->{ $row->{guid} }->{count}
+      };
+  }
+
+  my %metaData = (
+    root   => 'data',
+    fields => [ 'guid', 'name', 'type', 'parent', 'sort_order', 'hidden', 'style', 'count' ],
+  );
+
+  $c->stash->{data}     = [@data];
+  $c->stash->{metaData} = {%metaData};
+}
+
 # Returns the list of labels sorted by tag counts.
-sub list_labels_sorted : Local {
+sub sort_labels_by_name : Local {
+  my ( $self, $c ) = @_;
+
+  my $sth =
+    $c->model('Library')
+    ->dbh->prepare("SELECT * FROM Collections WHERE type='LABEL' order by UPPER(name) ASC");
+
+  $sth->execute;
+  my $i = 0;
+  while ( my $row = $sth->fetchrow_hashref ) {
+    my $guid = $row->{guid};
+    $c->model('Library')->set_collection_field( $guid, 'sort_order', $i );
+    $i++;
+  }
+
+  $c->stash->{data}->{collection_delta} = 1;
+}
+
+# Returns the list of labels sorted by tag counts.
+sub sort_labels_by_count : Local {
   my ( $self, $c ) = @_;
 
   my $hist = $c->model('Library')->histogram('tags');
-  my @data = ();
 
-  foreach
-    my $key ( sort { $hist->{$b}->{count} <=> $hist->{$a}->{count} || $a <=> $b } keys %$hist ) {
-    my $tag = $hist->{$key};
-    push @data, $tag;
+  my @sorted_keys = sort { $hist->{$a}->{count} <=> $hist->{$b}->{count} } keys %$hist;
+
+  my $i = 0;
+  foreach my $guid ( reverse @sorted_keys ) {
+    $c->model('Library')->set_collection_field( $guid, 'sort_order', $i );
+    $i++;
   }
 
-  $c->stash->{data} = \@data;
+  $c->stash->{data}->{collection_delta} = 1;
 }
 
 sub batch_update : Local {
@@ -603,9 +674,10 @@ sub batch_update : Local {
       pub  => $pub,
     );
 
-    $j->hidden(1) if (scalar(@$data) == 1);
+    $j->hidden(1) if ( scalar(@$data) == 1 );
 
-    $j->pub->_metadata_job( { id => $j->id, status => $j->status, msg => $j->info->{msg}, hidden => $j->hidden } );
+    $j->pub->_metadata_job(
+      { id => $j->id, status => $j->status, msg => $j->info->{msg}, hidden => $j->hidden } );
 
     push @jobs, $j;
   }
@@ -631,7 +703,7 @@ sub batch_download : Local {
 
   foreach my $pub (@$data) {
 
-    my $hidden =  ( scalar(@$data) == 1 ) ? 1 : 0;
+    my $hidden = ( scalar(@$data) == 1 ) ? 1 : 0;
 
     my $j = Paperpile::Job->new(
       type   => 'PDF_SEARCH',
@@ -742,7 +814,7 @@ sub merge_duplicates : Local {
   my $library = $c->model('Library');
 
   my $ref_pub = $plugin->find_guid($ref_guid);
-  my $dup_id = $ref_pub->_dup_id;
+  my $dup_id  = $ref_pub->_dup_id;
 
   # Create new object from reference pub
   my $merged_pub = Paperpile::Library::Publication->new( $ref_pub->as_hash );
@@ -772,14 +844,12 @@ sub merge_duplicates : Local {
   $library->trash_pubs( \@other_pubs, 'TRASH' );
 
   $merged_pub->citekey('');
-  $merged_pub=$library->update_pub( $merged_pub->guid, $merged_pub->as_hash );
+  $merged_pub = $library->update_pub( $merged_pub->guid, $merged_pub->as_hash );
   $plugin->replace_merged_items( $dup_id, $merged_pub );
 
   $self->_collect_update_data( $c, [$merged_pub] );
   $c->stash->{data}->{pub_delta} = 1;
 }
-
-
 
 sub sync_files : Local {
 
@@ -837,7 +907,7 @@ sub _get_sync_collections {
   # Either take $guid or search folders or tags field of publications
   # in $data
   if ( defined $guid ) {
-    $collections{$guid}=1;
+    $collections{$guid} = 1;
   } else {
     foreach my $pub (@$data) {
       my @tmp;
@@ -853,21 +923,20 @@ sub _get_sync_collections {
     }
   }
 
-
   # Add parents for subfolder and only consider collections whith an
   # active fileync setting
   my %final_collections;
 
-  foreach my $collection (keys %collections) {
+  foreach my $collection ( keys %collections ) {
     my @parents = $model->find_collection_parents( $collection, $dbh );
 
-    foreach my $parent (@parents){
-      if ($sync_files->{$parent}->{active}){
+    foreach my $parent (@parents) {
+      if ( $sync_files->{$parent}->{active} ) {
         $final_collections{$parent} = 1;
       }
     }
 
-    if ($sync_files->{$collection}->{active}){
+    if ( $sync_files->{$collection}->{active} ) {
       $final_collections{$collection} = 1;
     }
   }
@@ -877,10 +946,9 @@ sub _get_sync_collections {
     $final_collections{'FOLDER_ROOT'} = 1;
   }
 
-  return [keys %final_collections];
+  return [ keys %final_collections ];
 
 }
-
 
 # Returns the plugin object in the backend corresponding to an AJAX
 # request from the frontend

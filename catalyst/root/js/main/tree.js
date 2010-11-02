@@ -80,6 +80,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       load: {
         scope: this,
         fn: function(node) {
+
+          if (node.id == "TAGS_ROOT") {
+            this.reloadTags();
+          }
+
           // This is necessary because we load the tree as a whole
           // during startup but want to re-load single nodes
           // afterwards. We achieve this by removing the children
@@ -92,26 +97,22 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           } else {
             node.editable = false;
           }
+
         }
       },
       expandnode: {
         scope: this,
-        fn: function(node) {
-          if (node.id == 'TAGS_ROOT') {
-            this.updateScrollSize();
-          }
-        }
+        fn: function(node) {}
       },
-      insert: {
+      beforeappend: {
         scope: this,
-        fn: function(tree, parent, node, refNode) {}
+        fn: function(tree, parent, node) {
+          return true;
+        }
       },
       resize: {
         scope: this,
-        // Set scroll size the first time, when the node is rendered
-        fn: function(node) {
-          this.updateScrollSize();
-        }
+        fn: function(node) {}
       }
     });
 
@@ -200,67 +201,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     Paperpile.Tree.superclass.initEvents.call(this);
   },
 
-  updateScrollSize: function() {
-    var node = this.getNodeById('TAGS_ROOT');
-
-    // Make sure everything is rendered; this allows to call the function via the 'resize' event;
-    if (node) {
-      if (node.rendered) {
-        var el = Ext.Element.get(node.ui.getEl());
-        var curHeight = el.getHeight();
-
-        var maxHeight = Paperpile.main.globalSettings['tags_list_height'];
-        if (!maxHeight) {
-          //maxHeight=Math.round(this.getInnerHeight()/3);
-          //Paperpile.main.storeSettings({tags_list_height:maxHeight});
-        }
-
-        var wrap = Ext.get('pp-labels-wrap');
-        if (!wrap) {
-          wrap = el.wrap({
-            tag: 'div',
-            id: 'pp-labels-wrap'
-          });
-        }
-
-        el.setStyle('overflow', 'auto');
-
-        if (maxHeight) {
-          wrap.setStyle('height', maxHeight + "px");
-          el.setStyle('height', maxHeight + "px");
-        }
-
-        this.tagResizer = new Ext.Resizable(wrap.id, {
-          handles: 's',
-          minHeight: 30,
-          pinned: true
-        });
-        this.tagResizer.on('resize', function(resizer, w, h, e) {
-          wrap.setStyle('height', h + "px");
-          el.setStyle('height', h + "px");
-          Paperpile.main.storeSettings.defer(20, this, [{
-            tags_list_height: h
-          }]);
-        },
-        this);
-
-        wrap.on('mouseover', function() {
-          this.tagResizer.south.el.show();
-        },
-        this);
-        wrap.on('mouseout', function() {
-          this.tagResizer.south.el.hide();
-        },
-        this);
-
-        this.tagResizer.south.el.set({
-          'ext:qtip': "Resize the Labels area"
-        });
-        this.tagResizer.south.el.hide();
-      }
-    }
-  },
-
   myOnClick: function(node, e) {
     if (e != null) {
       // Only take clicks that occur right within the node text area.
@@ -283,6 +223,26 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
 
     switch (node.type) {
+    case 'MORE_LABELS':
+      if (!this.labelPanel) {
+        this.labelPanel = new Paperpile.LabelPanel();
+        this.labelPanel.setVisible(false);
+      }
+      var el = this.moreLabelsNode.getUI().getTextEl();
+      if (!this.labelPanel.isVisible()) {
+        this.labelPanel.alignTo(node.ui.getTextEl());
+        this.labelPanel.refresh();
+        this.hideShowMode = true;
+        this.reloadTags();
+        Ext.fly(el).addClass('pp-label-panel-down');
+        this.labelPanel.show();
+      } else {
+        this.hideShowMode = false;
+        this.reloadTags();
+        Ext.fly(el).removeClass('pp-label-panel-down');
+        this.labelPanel.hide();
+      }
+      break;
     case 'PDFEXTRACT':
       Paperpile.main.pdfExtract();
       break;
@@ -321,7 +281,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // For tags use specifically styled tab
       if (node.type == 'TAGS') {
         pars.collection_type = 'label';
-        iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + Paperpile.main.getStyleForTag(node.id);
+        iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + node.style;
         title = node.text;
       }
 
@@ -1108,7 +1068,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         if (node.type === 'TAGS') {
           // Close the tab using the label's GUID, which is the node's id and the tab's itemId.
           Paperpile.main.tabs.closeTabById(node.id);
-          this.reloadTags(json);
+          Paperpile.main.triggerTagStoreReload();
         }
       },
       scope: this
@@ -1173,6 +1133,22 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   onCheckChange: function(node, checked) {
+
+    if (node.type == 'TAGS') {
+      var store = Ext.StoreMgr.lookup('tag_store');
+      var tagIndex = store.findExact('guid', node.id);
+      if (tagIndex !== -1) {
+        var record = store.getAt(tagIndex);
+        var num = 0;
+        if (!checked) {
+          num = 1;
+        }
+        record.set('hidden', num);
+        store.updateCollection(record);
+        return;
+      }
+
+    }
 
     var hidden = 1;
     if (checked) {
@@ -1322,46 +1298,25 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   sortTagsByCount: function() {
-    // The counts of articles for each label aren't stored in the frontend,
-    // so we call the backend to give us a sorted list of GUIDs.
     Paperpile.Ajax({
-      url: '/ajax/crud/list_labels_sorted',
+      url: '/ajax/crud/sort_labels_by_count',
       params: {},
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        var data = json.data;
-
-        var ids = [];
-        for (var i = 0; i < data.length; i++) {
-          var id = data[i].id;
-          var node = this.getNodeById(id);
-          ids.push(node.id);
-        }
-
-        this.setCollectionSort(ids);
+      success: function() {
+        Ext.StoreMgr.lookup('tag_store').reload();
       },
       scope: this
     });
   },
 
   sortTagsByName: function() {
-    var root = this.getNodeById('TAGS_ROOT');
-
-    var tagCollection = new Ext.util.MixedCollection();
-    root.eachChild(function(node) {
-      tagCollection.add(node.id, node);
+    Paperpile.Ajax({
+      url: '/ajax/crud/sort_labels_by_name',
+      params: {},
+      success: function() {
+        Ext.StoreMgr.lookup('tag_store').reload();
+      },
+      scope: this
     });
-
-    tagCollection.sort('ASC', function(a, b) {
-      return a.text.localeCompare(b.text);
-    });
-
-    var sortedIds = [];
-    tagCollection.each(function(obj) {
-      sortedIds.push(obj.id);
-    });
-
-    this.setCollectionSort(sortedIds);
   },
 
   setCollectionSort: function(idList) {
@@ -1377,77 +1332,122 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         node_id_order: idList
       },
       success: function() {
-        this.reloadTags();
+        Ext.StoreMgr.lookup('tag_store').reload();
       },
       scope: this
     });
+  },
 
+  hideCollection: function() {
+    var store = Ext.StoreMgr.lookup('tag_store');
+    var node = this.lastSelectedNode;
+    var index = store.findExact('guid', node.id);
+    if (index !== -1) {
+      record = store.getAt(index);
+      record.set('hidden', 1);
+      store.updateCollection(record);
+    }
   },
 
   // Data is the JSON returned by a previous ajax call. Optional.
   reloadTags: function(json) {
-    Ext.StoreMgr.lookup('tag_store').reload({
-      callback: function() {
-        if (json) {
-          Paperpile.main.onUpdate(json.data);
-        }
-      }
-    });
+    if (json) {
+      json.data.collection_delta = 0;
+      Paperpile.main.onUpdate(json.data);
+    }
+
     var tagsRoot = this.getNodeById('TAGS_ROOT');
     tagsRoot.silentLoad = true;
-    delete tagsRoot.attributes.children;
-    tagsRoot.reload();
-    tagsRoot.eachChild(function(node) {
-      node.render(true);
-    });
+    tagsRoot.removeAll();
+
+    var hiddenNodeCount = 0;
+
+    var store = Ext.StoreMgr.lookup('tag_store');
+    for (var i = 0; i < store.getCount(); i++) {
+      var record = store.getAt(i);
+      if (record.get('hidden') !== 1) {
+        var node = this.recordToNode(record, 'TAGS');
+        tagsRoot.appendChild(node);
+      } else {
+        hiddenNodeCount++;
+      }
+    }
+
+    if (hiddenNodeCount > 0) {
+      if (!this.moreLabelsNode) {
+        this.moreLabelsNode = this.loader.createNode({
+          text: hiddenNodeCount + " more...",
+          iconCls: 'no-icon',
+          leaf: true,
+          type: 'MORE_LABELS',
+          id: 'MORE_LABELS'
+        });
+      }
+      this.moreLabelsNode.setText(hiddenNodeCount + " more...");
+      this.on({
+        beforeappend: {
+          fn: function(tree, parent, node, index) {
+            if (node.id == 'MORE_LABELS') {
+              if (this.labelPanel && this.labelPanel.isVisible()) {
+                this.labelPanel.alignTo.defer(1, this.labelPanel, [this.moreLabelsNode.ui.getTextEl()]);
+              }
+            }
+          },
+          scope: this,
+          single: true
+        }
+      });
+      tagsRoot.appendChild(this.moreLabelsNode);
+    } else {
+      if (this.labelPanel && this.labelPanel.isVisible()) {
+        this.labelPanel.hide();
+      }
+    }
+
+    tagsRoot.expand();
   },
 
-  //
-  // Is called after a new tag has been created. Writes tag
-  // information to database and updates and saves tree
-  // representation to database.
-  //
-  // [greg] nuke me -- I think we can get rid of this method...
-  onNewTag: function(node) {
-    node.setText(this.getUniqueTag(node.text));
-
-    var index = node.parentNode.indexOf(node);
-
-    var tag = node.text;
+  recordToNode: function(record, type) {
     var pars = {
-      tag: tag,
-      style: 'default',
-      sort_order: index
+      id: record.get('guid'),
+      text: record.get('name'),
+      type: record.get('type'),
+      parent: record.get('parent'),
+      sort_order: record.get('sort_order'),
+      hidden: record.get('hidden'),
+      style: record.get('style'),
+      expanded: true,
+      loaded: true,
+      draggable: true,
+      children: [],
+      plugin_name: 'DB',
+      plugin_mode: 'FULLTEXT',
+      plugin_title: record.get('name')
     };
 
-    Paperpile.Ajax({
-      url: '/ajax/crud/new_tag',
-      params: pars,
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        this.reloadTags(json);
-      },
-      scope: this
-    });
-  },
+    if (this.hideShowMode) {
+      pars.checked = true;
+    }
 
-  // [greg] nuke me.
-  deleteTag: function(node) {
-    var tag = node.text;
-
-    Paperpile.Ajax({
-      url: '/ajax/crud/delete_tag',
-      params: {
-        tag: tag
-      },
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        node.remove();
-        this.reloadTags(json);
-        Paperpile.main.tabs.closeTabByTitle(tag);
-      },
-      scope: this
-    });
+    if (type == 'FOLDER') {
+      pars.type = 'FOLDER';
+      pars.collection_type = 'folder';
+      pars.plugin_query = "folderid:" + record.get('guid');
+      pars.plugin_base_query = "folderid:" + record.get('guid');
+      pars.iconCls = "pp-icon-folder";
+      pars.plugin_iconCls = "pp-icon-folder";
+    } else {
+      pars.cls = "pp-tag-tree-node pp-tag-tree-style-" + record.get('style');
+      pars.iconCls = "pp-icon-empty";
+      pars.type = 'TAGS';
+      pars.plugin_query = "labelid:" + record.get('guid');
+      pars.plugin_base_query = "labelid:" + record.get('guid');
+      pars.plugin_iconCls = "pp-icon-tag";
+      pars.tagStyle = record.get('style');
+    }
+    var node = this.loader.createNode(pars);
+    //    Paperpile.log(node);
+    return node;
   },
 
   handleEmptyTrash: function() {
@@ -1477,15 +1477,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var node = this.lastSelectedNode;
 
     Paperpile.Ajax({
-      url: '/ajax/crud/style_collection',
+      url: '/ajax/crud/update_collection',
       params: {
         guid: node.id,
         style: number,
-        type: 'LABEL'
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.reloadTagStyles();
+        Paperpile.main.triggerTagStoreReload();
       },
       scope: this
     });
@@ -1516,16 +1515,15 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       return;
     }
 
-    node.setText(newText);
-    node.plugin_title = newText;
-
+    //    node.setText(newText);
+    //    node.plugin_title = newText;
     var tag = oldText;
 
     Paperpile.Ajax({
-      url: '/ajax/crud/rename_collection',
+      url: '/ajax/crud/update_collection',
       params: {
         guid: node.id,
-        new_name: newText
+        name: newText
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
@@ -1541,61 +1539,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           openTab[0].setTitle(newText);
         }
 
-      },
-      scope: this
-    });
-  },
-
-  //
-  // Rename the tag given by node globally
-  //
-  // [greg] nuke me.
-  triggerRenameTag: function() {
-    (function() {
-      var node = this.lastSelectedNode;
-      this.treeEditor.on({
-        complete: {
-          scope: this,
-          single: true,
-          fn: this.commitRenameCollection
-        }
-      });
-
-      this.treeEditor.triggerEdit(node);
-    }.defer(10, this));
-  },
-
-  // [greg] nuke me.
-  commitRenameTag: function(editor, newText, oldText) {
-    var node = editor.editNode;
-
-    if (newText == oldText) {
-      return;
-    }
-    newText = this.getUniqueTag(newText);
-
-    node.setText(newText);
-    node.plugin_title = newText;
-    node.plugin_query = 'labelid:' + Paperpile.utils.encodeTag(newText);
-    node.plugin_base_query = 'labelid:' + Paperpile.utils.encodeTag(newText);
-    var tag = oldText;
-
-    Paperpile.Ajax({
-      url: '/ajax/crud/rename_tag',
-      params: {
-        old_tag: tag,
-        new_tag: newText
-      },
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-
-        // If this tab has an open grid, rename it.
-        var tagTab = Paperpile.main.tabs.find("title", oldText);
-        if (tagTab.length > 0) {
-          tagTab[0].setTitle(newText);
-        }
-
-        this.reloadTags(json);
       },
       scope: this
     });
@@ -1661,7 +1604,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       selectionType: 'file',
       types: ['bib'],
       typesDescription: 'BibTeX files',
-      nameFiler:"BibTeX (*.bib)",
+      nameFiler: "BibTeX (*.bib)",
       dialogType: 'save',
       multiple: false,
       path: Paperpile.utils.splitPath(initialFile).dir,
@@ -1955,7 +1898,13 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       {
         id: 'tags_menu_rename',
         text: 'Rename',
-        handler: tree.triggerRenameTag,
+        handler: tree.triggerRenameCollection,
+        scope: tree
+      },
+      {
+        id: 'tags_menu_hide',
+        text: 'Hide from List',
+        handler: tree.hideCollection,
         scope: tree
       },
       {
@@ -2001,9 +1950,10 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       items = ['tags_menu_new',
         'sort_by_menu'];
     } else {
-      items = ['tags_menu_new',
+      items = [
         'tags_menu_style',
         'tags_menu_delete',
+        'tags_menu_hide',
         'tags_menu_rename',
         'tags_menu_export'];
       if (Paperpile.main.getSetting('bibtex').bibtex_mode == 1) {

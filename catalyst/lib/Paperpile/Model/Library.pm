@@ -14,7 +14,6 @@
 # received a copy of the GNU Affero General Public License along with
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
-
 package Paperpile::Model::Library;
 
 use strict;
@@ -66,7 +65,7 @@ sub insert_pubs {
   if ($user_library) {
     my @existing;
     foreach my $pub (@$pubs) {
-      my $key = $self->generate_unique_key($pub, \@existing, $dbh);
+      my $key = $self->generate_unique_key( $pub, \@existing, $dbh );
       push @existing, $key;
     }
   }
@@ -79,8 +78,8 @@ sub insert_pubs {
   # If we insert to the user library we need to create new labels that
   # may be given in the tags_tmp field.
   my $label_map;
-  if ($user_library){
-    $label_map = $self->insert_labels($pubs, $dbh);
+  if ($user_library) {
+    $label_map = $self->insert_labels( $pubs, $dbh );
   }
 
   foreach my $pub (@$pubs) {
@@ -109,14 +108,14 @@ sub insert_pubs {
     # If we insert to the user library map temporary tags to new or
     # already existing labels in the database. If it is not the user
     # libary we save the tags_tmp field upon insert.
-    if ($user_library && $pub->tags_tmp){
+    if ( $user_library && $pub->tags_tmp ) {
       my @guids;
-      foreach my $tag (split(/\s*,\s*/,$pub->tags_tmp)){
-        if ($label_map->{$tag}){
+      foreach my $tag ( split( /\s*,\s*/, $pub->tags_tmp ) ) {
+        if ( $label_map->{$tag} ) {
           push @guids, $label_map->{$tag};
         }
       }
-      $pub->tags(join(',',@guids));
+      $pub->tags( join( ',', @guids ) );
       $pub->tags_tmp('');
     }
 
@@ -155,8 +154,8 @@ sub insert_pubs {
       }
     }
 
-    if ($pub->_incomplete){
-      $self->_flag_as_incomplete($pub, $dbh);
+    if ( $pub->_incomplete ) {
+      $self->_flag_as_incomplete( $pub, $dbh );
     }
   }
 
@@ -176,6 +175,7 @@ sub delete_pubs {
 
   # Delete attachments
   foreach my $pub (@$pubs) {
+
     # PDF
     $self->delete_attachment( $pub->pdf, 1, $pub, 0, $dbh ) if $pub->pdf;
 
@@ -224,19 +224,20 @@ sub trash_pubs {
 
   # Flag trashed citation keys with trash_*. Mainly to avoid
   # that they are considered during disambiguation of keys
-  if ($mode eq 'TRASH'){
+  if ( $mode eq 'TRASH' ) {
     foreach my $pub (@$pubs) {
-       $pub->citekey('trash_'.$pub->citekey);
-     }
+      $pub->citekey( 'trash_' . $pub->citekey );
+    }
   } else {
+
     # Remove trash_* flag again. Call generate_unique_key to make sure
     # it is still unique and update if necessary
-    my @existing=();
+    my @existing = ();
     foreach my $pub (@$pubs) {
       my $key = $pub->citekey;
-      $key=~s/^trash_//;
+      $key =~ s/^trash_//;
       $pub->citekey($key);
-      $key = $self->generate_unique_key($pub, \@existing, $dbh);
+      $key = $self->generate_unique_key( $pub, \@existing, $dbh );
       $pub->citekey($key);
       push @existing, $key;
     }
@@ -257,7 +258,8 @@ sub trash_pubs {
     my $now = $dbh->quote( timestamp gmtime );
     my $key = $dbh->quote( $pub->citekey );
 
-    $dbh->do("UPDATE Publications SET trashed=$status,created=$now, citekey=$key WHERE guid='$pub_guid'");
+    $dbh->do(
+      "UPDATE Publications SET trashed=$status,created=$now, citekey=$key WHERE guid='$pub_guid'");
     $dbh->do("UPDATE Fulltext SET key=$key WHERE guid='$pub_guid'");
 
     # Move attachments
@@ -341,11 +343,11 @@ sub update_pub {
   my $data = {%$old_data};
   my $diff = {};
 
-  print STDERR "Updateing ".$data->{title}, " ", $data->{citekey}, "\n";
+  print STDERR "Updateing " . $data->{title}, " ", $data->{citekey}, "\n";
 
   # Figure out fields that have changed
   foreach my $field ( keys %{$new_data} ) {
-    next if ( !$new_data->{$field} && !$data->{$field});
+    next if ( !$new_data->{$field} && !$data->{$field} );
     if ( !defined $data->{$field} || $new_data->{$field} ne $data->{$field} ) {
       $diff->{$field} = $new_data->{$field};
     }
@@ -371,20 +373,21 @@ sub update_pub {
   }
 
   # Check if the citekey has changed.
-  my $pattern = $self->get_setting('key_pattern', $dbh);
+  my $pattern = $self->get_setting( 'key_pattern', $dbh );
   my $new_key = $new_pub->format_pattern($pattern);
   if ( $new_key ne $old_data->{citekey} ) {
-    print STDERR "Old: ".$old_data->{citekey}."  ", "New: $new_key\n";
+    print STDERR "Old: " . $old_data->{citekey} . "  ", "New: $new_key\n";
+
     # If we have a new citekey, make sure it doesn't conflict with other
     $self->generate_unique_key( $new_pub, [], $dbh );
     $diff->{citekey} = $new_pub->citekey;
-    print STDERR "Generated key ".$new_pub->{citekey}."\n";
+    print STDERR "Generated key " . $new_pub->{citekey} . "\n";
   }
 
   # If flagged with label 'Incomplete' remove this label during update
   # when at least authors/editors and title are given.
-  if (($new_pub->authors || $new_pub->editors) && $new_pub->title){
-    $self->_flag_as_complete($new_pub, $dbh);
+  if ( ( $new_pub->authors || $new_pub->editors ) && $new_pub->title ) {
+    $self->_flag_as_complete( $new_pub, $dbh );
   }
 
   # If we have attachments we need to check if their names have
@@ -524,6 +527,7 @@ sub new_collection {
   $type   = $dbh->quote($type);
   $parent = $dbh->quote($parent);
   $style  = $dbh->quote($style);
+  my $hidden = $dbh->quote(0);
 
   ( my $sort_order ) = $dbh->selectrow_array(
     "SELECT max(sort_order) FROM Collections WHERE parent=$parent AND type=$type");
@@ -535,7 +539,7 @@ sub new_collection {
   }
 
   $dbh->do(
-    "INSERT INTO Collections (guid, name, type, parent, sort_order, style) VALUES($guid, $name, $type, $parent, $sort_order, $style)"
+    "INSERT INTO Collections (guid, name, type, parent, sort_order, style, hidden) VALUES($guid, $name, $type, $parent, $sort_order, $style, $hidden)"
   );
 
   $dbh->commit if !$external_dbh;
@@ -552,7 +556,7 @@ sub delete_collection {
 
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
-  my @list = $self->find_subcollections($guid, $dbh);
+  my @list = $self->find_subcollections( $guid, $dbh );
 
   #  Delete all assications in Collection_Publication table
   my $delete1 = $dbh->prepare("DELETE FROM Collection_Publication WHERE collection_guid=?");
@@ -820,6 +824,15 @@ sub set_collection_style {
 
 }
 
+sub set_collection_field {
+
+  my ( $self, $guid, $field, $value ) = @_;
+
+  my $quoted_value = $self->dbh->quote($value);
+  $self->dbh->do("UPDATE COLLECTIONS SET $field=${quoted_value} WHERE guid='$guid';");
+
+}
+
 # Initializes default labels in the user's library. We do this
 # here (as opposed to shipping it in our default library) to make sure
 # everybody has a unique guid for these labels.
@@ -837,15 +850,14 @@ sub set_default_collections {
   my $guid3 = Data::GUID->new->as_hex;
   $guid3 =~ s/^0x//;
 
-
   $self->dbh->do(
-    "INSERT INTO Collections (guid,name,type,parent,sort_order,style) VALUES ('$guid1', 'Important','LABEL','ROOT',0,'11');"
+    "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid1', 'Important','LABEL','ROOT',0,'11',0);"
   );
   $self->dbh->do(
-    "INSERT INTO Collections (guid,name,type,parent,sort_order,style) VALUES ('$guid2', 'Review','LABEL','ROOT',1,'22');"
+    "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid2', 'Review','LABEL','ROOT',1,'22',0);"
   );
   $self->dbh->do(
-    "INSERT INTO Collections (guid,name,type,parent,sort_order,style) VALUES ('$guid3', 'Incomplete','LABEL','ROOT',2,'0');"
+    "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid3', 'Incomplete','LABEL','ROOT',2,'0',0);"
   );
 
 }
@@ -878,7 +890,7 @@ sub process_query_string {
     $query =~ s/"//g;
   }
 
-#<<<<<<< HEAD
+  #<<<<<<< HEAD
   # Parse fields respecting quotes
   my @chars      = split( //, $query );
   my $curr_field = '';
@@ -901,21 +913,21 @@ sub process_query_string {
 
   my @new_fields = ();
 
-#=======
-#  my $count;
-#  my $where;
-#  if ($query) {
-#    $query = $self->dbh->quote("$query*");
-#    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
-#    $count = $self->dbh->selectrow_array(
-#    qq{select count(*) from Publications join $table on 
-#    publications.rowid=$table.rowid $where}
-#                                        );
-#  } else {
-#    $where = "WHERE Publications.trashed=$trash";
-#    $count = $self->dbh->selectrow_array(qq{select count(*) from Publications $where;});
-#  }
-#>>>>>>> osx
+  #=======
+  #  my $count;
+  #  my $where;
+  #  if ($query) {
+  #    $query = $self->dbh->quote("$query*");
+  #    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
+  #    $count = $self->dbh->selectrow_array(
+  #    qq{select count(*) from Publications join $table on
+  #    publications.rowid=$table.rowid $where}
+  #                                        );
+  #  } else {
+  #    $where = "WHERE Publications.trashed=$trash";
+  #    $count = $self->dbh->selectrow_array(qq{select count(*) from Publications $where;});
+  #  }
+  #>>>>>>> osx
 
   foreach my $field (@fields) {
 
@@ -960,7 +972,7 @@ sub process_query_string {
       }
 
       # Normal fields: author:chang
-      push @new_fields, $field.'*';
+      push @new_fields, $field . '*';
       next;
     }
 
@@ -1064,7 +1076,8 @@ sub fulltext_search {
   my ( $where, $query, $rank, $sth );
 
   if ($_query) {
-#<<<<<<< HEAD
+
+    #<<<<<<< HEAD
 
     $select .=
       ",offsets(Fulltext) as offsets, rank(matchinfo(Fulltext)) as rank_score FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
@@ -1087,28 +1100,29 @@ sub fulltext_search {
     $where = "WHERE Publications.trashed=$trash";
 
     $sth = $self->dbh->prepare("$select $where ORDER BY $order LIMIT $limit OFFSET $offset");
-#=======
-#    $query = $self->dbh->quote("$_query*");
-#    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
-#    $sth = $self->dbh->prepare(
-#     "SELECT *,
-#     offsets($table) as offsets,
-#     publications.rowid as _rowid,
-#     publications.title as title,
-#     publications.abstract as abstract
-#     FROM Publications JOIN $table
-#     ON publications.rowid=$table.rowid $where ORDER BY $order LIMIT $limit OFFSET $offset"
-#                                 );
-#  } else {
-#    $where = "WHERE Publications.trashed=$trash";
-#    $sth = $self->dbh->prepare(
-#                               "SELECT *,
-#     publications.rowid as _rowid,
-#     publications.title as title,
-#     publications.abstract as abstract FROM Publications
-#     $where ORDER BY $order LIMIT $limit OFFSET $offset"
-#                             );
-#>>>>>>> osx
+
+    #=======
+    #    $query = $self->dbh->quote("$_query*");
+    #    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
+    #    $sth = $self->dbh->prepare(
+    #     "SELECT *,
+    #     offsets($table) as offsets,
+    #     publications.rowid as _rowid,
+    #     publications.title as title,
+    #     publications.abstract as abstract
+    #     FROM Publications JOIN $table
+    #     ON publications.rowid=$table.rowid $where ORDER BY $order LIMIT $limit OFFSET $offset"
+    #                                 );
+    #  } else {
+    #    $where = "WHERE Publications.trashed=$trash";
+    #    $sth = $self->dbh->prepare(
+    #                               "SELECT *,
+    #     publications.rowid as _rowid,
+    #     publications.title as title,
+    #     publications.abstract as abstract FROM Publications
+    #     $where ORDER BY $order LIMIT $limit OFFSET $offset"
+    #                             );
+    #>>>>>>> osx
   }
 
   $sth->execute;
@@ -1268,19 +1282,18 @@ sub exists_pub {
           $pub->trashed($value);
         }
 
-
         #else {
         #  if ($value) {
-# I don't think we should be updating the publication object during
-# the exists_pub call... removing this line cleared up a bunch of
-# problems with the grid not updating after editing metadata. (Greg
-# 2010-06-20)
+        # I don't think we should be updating the publication object during
+        # the exists_pub call... removing this line cleared up a bunch of
+        # problems with the grid not updating after editing metadata. (Greg
+        # 2010-06-20)
 
-# I only set 'citekey' and 'trashed' now to make the frontend work
-# e.g. for BibTeX files. I hope this does not cause the problems you
-# were refering to. 2010-08-17 Stefan
+        # I only set 'citekey' and 'trashed' now to make the frontend work
+        # e.g. for BibTeX files. I hope this does not cause the problems you
+        # were refering to. 2010-08-17 Stefan
 
-#$pub->$field($value);
+        #$pub->$field($value);
         #  }
         #}
 
@@ -1291,7 +1304,6 @@ sub exists_pub {
 
   }
 }
-
 
 # Creates new entries for all labels stored in tags_tmp fields in a
 # list of pubs. Returns hash that maps the temporary tag to the guids
@@ -1305,40 +1317,46 @@ sub insert_labels {
 
   # Collect all label names
   my @tags;
-  foreach my $pub (@$pubs){
-    push @tags, split(/\s*,\s*/,$pub->tags_tmp);
+  foreach my $pub (@$pubs) {
+    push @tags, split( /\s*,\s*/, $pub->tags_tmp );
   }
 
   # Create guid for each of them and make sure that the list is
   # non-redundant
-  foreach my $tag (@tags){
+  foreach my $tag (@tags) {
     my $guid = Data::GUID->new->as_hex;
     $guid =~ s/^0x//;
 
-    if (!exists($map{$tag})){
+    if ( !exists( $map{$tag} ) ) {
       $map{$tag} = $guid;
     }
   }
 
   # Go through all labels and either create a new collection in the
   # database or get guid of already existing label
-  foreach my $label (keys %map){
+  foreach my $label ( keys %map ) {
 
     my $name = $dbh->quote($label);
-    ( my $guid ) =  $dbh->selectrow_array("SELECT guid FROM Collections WHERE name=$name AND type='LABEL';");
+    ( my $guid ) =
+      $dbh->selectrow_array("SELECT guid FROM Collections WHERE name=$name AND type='LABEL';");
 
-    if ($guid){
-      $map{$label}=$guid;
+    if ($guid) {
+      $map{$label} = $guid;
     } else {
-      $self->new_collection($map{$label}, $label, 'LABEL', 'ROOT', 0, $dbh);
+      $self->new_collection( $map{$label}, $label, 'LABEL', 'ROOT', 0, $dbh );
+
+      # Do something here to auto-hide tmp collections.
+      ( my $count ) = $dbh->selectrow_array(
+        "SELECT count(*) FROM Collections WHERE type='LABEL' and hidden == 0;");
+      if ( $count > 5 ) {
+        $self->set_collection_field( $map{$label}, 'hidden', 1 );
+      }
     }
 
   }
 
   return \%map;
 }
-
-
 
 # Small helper function that converts hash to sql syntax (including
 # quotes). Also passed the database handle to avoid calling $self->dbh
@@ -1445,7 +1463,7 @@ sub attach_file {
   my $local_file = $dbh->quote($absolute_dest);
 
   $dbh->do( "INSERT INTO Attachments (guid, publication, is_pdf, name, local_file, size, md5)"
-            . "                     VALUES ('$file_guid', '$pub_guid', $is_pdf, $name, $local_file, $file_size, '$md5');"
+      . "                     VALUES ('$file_guid', '$pub_guid', $is_pdf, $name, $local_file, $file_size, '$md5');"
   );
 
   if ($is_pdf) {
@@ -1511,8 +1529,7 @@ sub delete_attachment {
 
   my $rowid = $pub->_rowid;
 
-  ( my $path ) =
-    $dbh->selectrow_array("SELECT local_file FROM Attachments WHERE guid='$guid';");
+  ( my $path ) = $dbh->selectrow_array("SELECT local_file FROM Attachments WHERE guid='$guid';");
 
   $dbh->do("DELETE FROM Attachments WHERE guid='$guid'");
 
@@ -1860,25 +1877,25 @@ sub dashboard_stats {
 
 }
 
-
 sub _flag_as_incomplete {
 
   ( my $self, my $pub, my $dbh ) = @_;
 
   # Check if we have a label 'Incomplete'
-  ( my $guid ) = $dbh->selectrow_array("SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
+  ( my $guid ) = $dbh->selectrow_array(
+    "SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
 
   # If not create it
-  if (!$guid){
+  if ( !$guid ) {
     $guid = Data::GUID->new;
     $guid = $guid->as_hex;
     $guid =~ s/^0x//;
-    $self->new_collection($guid, 'Incomplete', 'LABEL', 'ROOT', 0, $dbh );
+    $self->new_collection( $guid, 'Incomplete', 'LABEL', 'ROOT', 0, $dbh );
   }
 
   # Assign the label to the publication
   $pub->add_tag($guid);
-  $self->_update_collections([$pub],'LABEL',$dbh);
+  $self->_update_collections( [$pub], 'LABEL', $dbh );
 
 }
 
@@ -1886,16 +1903,16 @@ sub _flag_as_complete {
 
   ( my $self, my $pub, my $dbh ) = @_;
 
-  ( my $guid ) = $dbh->selectrow_array("SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
+  ( my $guid ) = $dbh->selectrow_array(
+    "SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
 
   return if not $guid;
-  return if (not $pub->tags=~/$guid/);
+  return if ( not $pub->tags =~ /$guid/ );
 
   $pub->remove_tag($guid);
-  $self->_update_collections([$pub],'LABEL',$dbh);
+  $self->_update_collections( [$pub], 'LABEL', $dbh );
 
 }
-
 
 # Generates a unique citation key for $pub taking into account already
 # existing keys in the database and additional keys in the list
@@ -1911,7 +1928,7 @@ sub generate_unique_key {
 
   my $guid = $pub->guid;
 
-  my $unique = 1;
+  my $unique       = 1;
   my $original_key = $pub->citekey;
   if ($original_key) {
     foreach my $existing_key (@$existing) {
@@ -1923,7 +1940,8 @@ sub generate_unique_key {
 
     if ($unique) {
       my $_key = $dbh->quote($original_key);
-      ( my $guid ) = $dbh->selectrow_array("SELECT guid FROM Publications WHERE citekey=$_key AND guid !='$guid'");
+      ( my $guid ) = $dbh->selectrow_array(
+        "SELECT guid FROM Publications WHERE citekey=$_key AND guid !='$guid'");
       if ( !$guid ) {
         $pub->citekey($original_key);
         return $original_key;
@@ -1940,7 +1958,8 @@ sub generate_unique_key {
   # the fulltext search for efficiency
 
   my $quoted = $dbh->quote("key:$key*");
-  my $sth    = $dbh->prepare(qq^SELECT key FROM fulltext WHERE fulltext MATCH $quoted AND guid !='$guid'^);
+  my $sth =
+    $dbh->prepare(qq^SELECT key FROM fulltext WHERE fulltext MATCH $quoted AND guid !='$guid'^);
   my $existing_key;
   $sth->bind_columns( \$existing_key );
   $sth->execute;
@@ -1993,16 +2012,18 @@ sub generate_unique_key {
     }
 
     # Now find the correct suffix for the ambiguous key
-    my $bare_key = $key;
+    my $bare_key   = $key;
     my $new_suffix = '';
 
     # These are the collected suffixes that already exist
     if (@suffix) {
+
       # we sort them to make sure to get the 'highest' suffix and count one up
       @suffix = sort { length($a) <=> length($b) || $a cmp $b } @suffix;
       my $pos = $map{ pop(@suffix) } + 1;
       $new_suffix = $all_suffixes[$pos];
     }
+
     # It is the second item so start with suffix 'a'
     else {
       $new_suffix = 'a';
@@ -2023,7 +2044,6 @@ sub generate_unique_key {
   return $key;
 
 }
-
 
 # Updates the fields in the fulltext table for $pub. If $new is true a
 # new row is inserted.
@@ -2105,11 +2125,11 @@ sub _remove_from_flatlist {
 
 sub find_subcollections {
 
-  my ($self, $guid, $dbh) = @_;
+  my ( $self, $guid, $dbh ) = @_;
 
   $dbh = $self->dbh if !$dbh;
 
-  my @list=($guid);
+  my @list = ($guid);
 
   my $sth = $dbh->prepare("SELECT * FROM Collections;");
   $sth->execute;
@@ -2139,14 +2159,13 @@ sub _find_subcollections {
   }
 }
 
-
 sub find_collection_parents {
 
-  my ($self, $guid, $dbh) = @_;
+  my ( $self, $guid, $dbh ) = @_;
 
   # Ignore if guid is ROOT (or 'FOLDER_ROOT' which is the collection
   # root id in the frontend)
-  if ($guid =~/ROOT/){
+  if ( $guid =~ /ROOT/ ) {
     return ();
   }
 
@@ -2157,13 +2176,13 @@ sub find_collection_parents {
 
   my %map;
   while ( my $row = $sth->fetchrow_hashref() ) {
-    $map{$row->{guid}}=$row->{parent};
+    $map{ $row->{guid} } = $row->{parent};
   }
 
-  my @parents = ();
+  my @parents        = ();
   my $current_parent = $map{$guid};
 
-  while ($current_parent ne 'ROOT'){
+  while ( $current_parent ne 'ROOT' ) {
     push @parents, $current_parent;
     $current_parent = $map{$current_parent};
   }
@@ -2171,10 +2190,6 @@ sub find_collection_parents {
   return @parents;
 
 }
-
-
-
-
 
 # We make sure that all sort_order values for collections below
 # $parent are normalized and consistent (starting 0 and increasing by

@@ -187,21 +187,15 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.dd = new Paperpile.DragDropManager();
     this.dd.initListeners();
 
-    this.tagStore = new Ext.data.Store({
-      proxy: new Ext.data.HttpProxy({
-        url: Paperpile.Url('/ajax/crud/list_labels'),
-        method: 'GET'
-      }),
-      storeId: 'tag_store',
-      baseParams: {},
-      reader: new Ext.data.JsonReader(),
-      pruneModifiedRecords: true,
+    this.tagStore = new Paperpile.CollectionStore({
+      collectionType: 'LABEL',
       listeners: {
         load: {
-          fn: this.updateTagStyles,
+          fn: this.onTagStoreLoad,
           scope: this
         }
-      }
+      },
+      storeId: 'tag_store'
     });
     this.tagStore.reload();
 
@@ -280,6 +274,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   loadKeys: function() {
     this.keys = new Ext.ux.KeyboardShortcuts(this.getEl());
 
+    this.keys.bindCallback('ctrl-r', this.keyControlR, this);
     this.keys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.keys.bindCallback('ctrl-w', this.keyControlW);
     this.keys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
@@ -295,6 +290,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   keyQuesionMark: function() {
     //Paperpile.log("What's your problem?");
+  },
+
+  keyControlR: function() {
+    Ext.StoreMgr.lookup('tag_store').reload();
   },
 
   keyControlC: function() {
@@ -895,41 +894,21 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   },
 
-  reloadTagStyles: function() {
-    this.tagStore.reload();
+  triggerTagStoreReload: function() {
+    Ext.StoreMgr.lookup('tag_store').reload();
   },
 
-  getStyleForTag: function(guid) {
-    var record = this.tagStore.getAt(this.tagStore.findExact('guid', guid));
-    if (record == null) return '';
-    var style = record.get('style');
-    return style;
-  },
-
-  updateTagStyles: function() {
-    // First, deal with the styling for the tree nodes.
-    if (!this.tree) return;
-
-    // Collect all the possible tag style classes into an array.
-    var allTagStyles = [];
-    var n = this.tree.stylePickerMenu.getStyleCount();
-    for (var i = 0; i < n; i++) {
-      allTagStyles.push('pp-tag-tree-style-' + i);
-      allTagStyles.push('pp-tag-style-' + i);
+  onTagStoreLoad: function() {
+    var hiddenTags = Ext.StoreMgr.lookup('hidden_tag_store');
+    if (hiddenTags) {
+      hiddenTags.reload();
     }
-    var nodes = this.tree.getAllLeafNodes();
-    for (var i = 0; i < nodes.length; i++) {
-      var node = nodes[i];
-      if (node.type != 'TAGS' || !this.tree.isNodeDraggable(node)) continue;
-
-      // Remove all possible styling from this tree node.
-      node.getUI().removeClass(allTagStyles);
-      // Add the correct style.
-      var tag = node.text;
-      node.getUI().addClass('pp-tag-tree-style-' + this.getStyleForTag(node.id));
+    // Do the tree.
+    if (Paperpile.main.tree) {
+      Paperpile.main.tree.reloadTags();
     }
 
-    // Now, move on to the tab panel and grids.
+    // Now tab panel and grids.
     var tabs = Paperpile.main.tabs.items.items;
     for (var i = 0; i < tabs.length; i++) {
       var tab = tabs[i];
@@ -938,6 +917,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         tab.getGrid().updateTagStyles();
       }
     }
+
   },
 
   doCallbacks: function(data) {

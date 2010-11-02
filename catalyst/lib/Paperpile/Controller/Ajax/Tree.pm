@@ -414,7 +414,7 @@ sub get_collections : Private {
   my $sth = $c->model('Library')->dbh->prepare("SELECT * from Collections WHERE type='$type';");
   $sth->execute();
   while ( my $row = $sth->fetchrow_hashref() ) {
-    push @collections, $row;
+#    push @collections, $row;
   }
 
   # Recursively fill subtree

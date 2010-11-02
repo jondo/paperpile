@@ -43,6 +43,7 @@ CREATE TABLE Collections (
   type          TEXT,
   parent        TEXT,
   sort_order    INTEGER,
+  hidden        INTEGER,
   style         TEXT   
 );
 

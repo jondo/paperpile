@@ -67,7 +67,13 @@ Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
 
     var pp = this.getPluginPanel();
     var guid = this.getGUID();
-    pp.setIconClass('pp-tag-style-tab pp-tag-style-' + Paperpile.main.getStyleForTag(guid));
+      
+      var store = Ext.StoreMgr.lookup('tag_store');
+      var index = store.findExact('guid',guid);
+      if (index !== -1) {
+	  var record = store.getAt(index);
+    pp.setIconClass('pp-tag-style-tab pp-tag-style-' + record.get('style'));
+      }
   },
 
   getEmptyBeforeSearchTemplate: function() {

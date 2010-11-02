@@ -344,7 +344,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     // If the update has to do with collections and we are 
     // a collection tab, refresh the whole view.
     if (this.collection_type) {
-      //Paperpile.log(this.collection_type);
       if (data.collection_delta) {
         this.getStore().reload();
       }

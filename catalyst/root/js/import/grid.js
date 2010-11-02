@@ -519,7 +519,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     // Auto-select the first row when the store finally loads up.
     this.getStore().on('load', function() {
-	this.getSelectionModel().selectRowAndSetCursor(0);
+//	this.getSelectionModel().selectRowAndSetCursor(0);
 	this.getPluginPanel().updateView();
     },this);
 
