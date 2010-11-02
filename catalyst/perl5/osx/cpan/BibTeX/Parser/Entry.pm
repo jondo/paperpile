@@ -149,7 +149,17 @@ sub field {
   } else {
     my ( $self, $key, $value, $clean ) = @_;
     # different cleaning level for authors
-    $clean = 2 if ( lc($key) eq 'author'  );
+    if ( lc($key) eq 'author'  ) {
+      $clean = 2;
+      # sometimes we see BibTex files with multiple
+      # author fields, we do a simple 'and' join
+      # it is not correct BibTex style, but it is 
+      # necessary to read it
+      if ( $self->{ lc($key) } ) {
+	$value = $self->{ lc($key) } . ' and ' . $value;
+      }
+    }
+
     $self->{ lc($key) } = _sanitize_field( $value, $clean );
   }
 

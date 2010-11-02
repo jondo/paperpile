@@ -18,13 +18,16 @@
 package Paperpile::Formats::Bibtex;
 use Moose;
 use Data::Dumper;
-use YAML qw(LoadFile);
+use YAML qw/LoadFile/;
 use IO::File;
 use Text::Wrap;
 use Paperpile::Formats::TeXEncoding;
 use BibTeX::Parser;
 use BibTeX::Parser::EncodingTable;
 use Encode;
+use File::Temp qw/tempfile tempdir/;
+use File::Spec::Functions qw/catfile splitpath/;
+use MIME::Base64;
 
 extends 'Paperpile::Formats';
 
@@ -85,7 +88,10 @@ sub read {
 
     next unless $entry->parse_ok;
 
-    my $data = {};
+    # Collect meta data, $pdf file and attachments
+    my $data        = {};
+    my $pdf         = '';
+    my @attachments = ();
 
     foreach my $field ( $entry->fieldlist ) {
 
@@ -134,9 +140,9 @@ sub read {
           my $value = $entry->field($field);
 
           # Specifically handle CiteULike BibTex
-          if ($field eq 'comment'){
-            $value=~s/\(private-note\)//g;
-            $value=~s/---=note-separator=---/<br><br>/g;
+          if ( $field eq 'comment' ) {
+            $value =~ s/\(private-note\)//g;
+            $value =~ s/---=note-separator=---/<br><br>/g;
           }
 
           $data->{annote} = $value;
@@ -149,6 +155,7 @@ sub read {
         }
 
         if ( $field =~ /(tags|labels|keywords)/ ) {
+
           # Expects a comma separated list of tags, might need to be
           # extended with a heuristic if a different seperator is
           # used.
@@ -161,18 +168,15 @@ sub read {
         # files are stored like this:
         # :/home/wash/PDFs/file.pdf:PDF
 
-        if ( $field =~ /file/i ) {
+        if ( $field =~ /^file/i ) {
           my @files = split( /;/, $entry->field($field) );
-          my $pdf = '';
-          my @attachments;
-
           foreach my $file (@files) {
 
             $file = Paperpile::Utils->process_attachment_name($file);
 
             next if !$file;
 
-            # We treat the first PDF in the list as *the* PDF and all
+            # We treat the first PDF we find  as *the* PDF and all
             # other files as supplementary material
             if ( ( $file =~ /\.pdf/i ) and ( !$pdf ) ) {
               $pdf = $file;
@@ -181,17 +185,58 @@ sub read {
               push @attachments, $file;
             }
           }
+          next;
+        }
 
-          $data->{_pdf_tmp} = $pdf if $pdf;
+        # Handle BibDesk file attachments. The file names are stored
+        # as MIME64 encoded binary Mac property list file (argh!!)
+        if ( $field =~ /Bdsk-File-\d+/i ) {
 
-          if (@attachments) {
-            $data->{_attachments_tmp} = [@attachments];
+          my $dir = tempdir( CLEANUP => 1 );
+          my ($fh, $tmp_file) = tempfile( DIR => $dir );
+
+          # Get current directory of BibTeX file. All attachemnts seem
+          # to be relative to this file.
+          my ( $dummy, $base_dir, $dummy1 ) = splitpath($self->file);
+
+          # First check if the "plutil" tool is available. This
+          # implicitly checks whether we are on OSX.
+          my $check = `which plutil`;
+          chomp($check);
+          if ($check eq '/usr/bin/plutil'){
+
+            # First write the decoded plist file into a temporary file.
+            print $fh decode_base64($entry->field($field)) || die("Could not write to tmp file");
+
+            # Then convert the binary plist format to readable xml.
+            my $xml = `plutil -convert xml1 $tmp_file -o -`;
+
+            # I don't understand the XML format, so I just parse all
+            # <string> tags and see if they contain a readable file
+            while ($xml =~/<string>(.*?)<\/string>/mgi){
+              my $file = catfile($base_dir, $1);
+              if (-r $file){
+                if ( ( $file =~ /\.pdf/i ) and ( !$pdf ) ) {
+                  $pdf = $file;
+                  next;
+                } else {
+                  push @attachments, $file;
+                }
+              }
+            }
+          } else {
+            print STDERR "Skipping Bdsk-File. plutil executable not found.\n";
           }
-
           next;
         }
 
         print STDERR "Field $field not handled.\n";
+      }
+
+      $data->{_pdf_tmp} = $pdf if $pdf;
+
+      if (@attachments) {
+        $data->{_attachments_tmp} = [@attachments];
       }
     }
 

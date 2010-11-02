@@ -1,3 +1,8 @@
-/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/BibTeX/Parser.pm relocate_as=../../../BibTeX/Parser.pm
-/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/BibTeX/Parser/Author.pm relocate_as=../../../BibTeX/Parser/Author.pm
-/Users/greg/Documents/pp/paperpile/build/../catalyst/perl5/osx/cpan/BibTeX/Parser/Entry.pm relocate_as=../../../BibTeX/Parser/Entry.pm
+../../catalyst/perl5/osx/cpan/BibTeX/Parser.pm
+../../catalyst/perl5/osx/cpan/BibTeX/Parser/Author.pm
+../../catalyst/perl5/osx/cpan/BibTeX/Parser/Defly.pm
+../../catalyst/perl5/osx/cpan/BibTeX/Parser/EncodingTable.pm
+../../catalyst/perl5/osx/cpan/BibTeX/Parser/Entry.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/BibTeX/Parser.pm relocate_as=../../../BibTeX/Parser.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/BibTeX/Parser/Author.pm relocate_as=../../../BibTeX/Parser/Author.pm
+/Users/wash/play/paperpile/catalyst/perl5/osx/cpan/BibTeX/Parser/Entry.pm relocate_as=../../../BibTeX/Parser/Entry.pm

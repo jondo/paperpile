@@ -370,7 +370,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       var sel = this.getGrid().getSelection();
       var grid = this.getGrid();
       var folder_id = el.getAttribute('folder_id');
-      Paperpile.main.deleteFromFolder(sel, grid, folder_id);
+      Paperpile.main.removeFromFolder(sel, grid, folder_id);
       break;
 
     case 'open-pdf':

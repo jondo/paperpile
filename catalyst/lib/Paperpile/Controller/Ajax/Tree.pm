@@ -66,11 +66,8 @@ sub get_complete_tree {
   my ( $self, $c, $tree ) = @_;
 
   # Collections always generated dynamically
-  my $subtree = $c->forward( 'get_subtree', [ $tree, 'TAGS_ROOT' ] );
-  $c->forward( 'get_collections', [$subtree,'LABEL'] );
-
-  $subtree = $c->forward( 'get_subtree', [ $tree, 'FOLDER_ROOT' ] );
-  $c->forward( 'get_collections', [$subtree,'FOLDER'] );
+  $c->forward( 'get_subtree', [ $tree, 'TAGS_ROOT' ] );
+  $c->forward( 'get_subtree', [ $tree, 'FOLDER_ROOT' ] );
 
   my $dump = '';
 
@@ -395,7 +392,6 @@ sub get_subtree : Private {
   }
 
   return $subtree;
-
 }
 
 # Restore subtree for labels and folders from database

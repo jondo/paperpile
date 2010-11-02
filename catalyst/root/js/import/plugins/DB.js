@@ -355,21 +355,28 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   },
 
   getEmptyBeforeSearchTemplate: function() {
-    var markup = [
-      '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome pp-box-center">',
-      '<h2>Welcome to Paperpile</h2>',
-      '<p>Your library is still empty. </p>',
-      '<p>To get started, </p>',
-      '<ul>',
-      '<li>import your <a href="#" class="pp-textlink" onClick="Paperpile.main.pdfExtract();">PDF collection</a></li>',
-      '<li>get references from a <a href="#" class="pp-textlink" onClick="Paperpile.main.fileImport();">bibliography file</a></li>',
-      '<li>start searching for papers using ',
-      '<a href="#" class="pp-textlink" onClick=',
-      '"Paperpile.main.tabs.newPluginTab(\'PubMed\', {plugin_name: \'PubMed\', plugin_query:\'\'});">PubMed</a> or ',
-      '<a href="#" class="pp-textlink" onClick=',
-      '"Paperpile.main.tabs.newPluginTab(\'GoogleScholar\', {plugin_name: \'GoogleScholar\', plugin_query:\'\'});">Google Scholar</a></li>',
-      '</ul>',
-      '</div>'];
+
+    var markup = '<div class="pp-hint-box"><p>No results to show. <a href="#" class="pp-textlink" action="close-tab">Close tab</a>.</p></div>';
+
+    // If tab is not filtered and still empty, the whole DB must be empty and we show welcome message
+    if (this.plugin_query == '' && this.plugin_base_query == '') {
+      markup = [
+        '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome pp-box-center">',
+        '<h2>Welcome to Paperpile</h2>',
+        '<p>Your library is still empty. </p>',
+        '<p>To get started, </p>',
+        '<ul>',
+        '<li>import your <a href="#" class="pp-textlink" onClick="Paperpile.main.pdfExtract();">PDF collection</a></li>',
+        '<li>get references from a <a href="#" class="pp-textlink" onClick="Paperpile.main.fileImport();">bibliography file</a></li>',
+        '<li>start searching for papers using ',
+        '<a href="#" class="pp-textlink" onClick=',
+        '"Paperpile.main.tabs.newPluginTab(\'PubMed\', {plugin_name: \'PubMed\', plugin_query:\'\'});">PubMed</a> or ',
+        '<a href="#" class="pp-textlink" onClick=',
+        '"Paperpile.main.tabs.newPluginTab(\'GoogleScholar\', {plugin_name: \'GoogleScholar\', plugin_query:\'\'});">Google Scholar</a></li>',
+        '</ul>',
+        '</div>'];
+    }
+
     return new Ext.XTemplate(markup).compile();
   }
 });

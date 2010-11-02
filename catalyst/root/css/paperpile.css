@@ -26,15 +26,6 @@
     font-size:large;
 }
 
-h1 {
-    margin: 8px;
-    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
-    font-size: 32px;
-    font-weight: normal;
-    letter-spacing: -1px;
-    color: #5E5E5E;
-}
-
 .pp-inactive {
     color:gray;
     cursor:default;
@@ -185,6 +176,48 @@ a.pp-inactive:hover {
     background-color:#FFFEEB !important;
     padding-left: 16px !important;
 /*    padding: 8px !important;*/
+}
+
+
+/* Hint box for empty grids */
+
+.pp-hint-box  {
+    margin-top: 50px;
+    margin-left: 50px;
+    max-width: 600px;
+    color: grey;
+}
+
+
+.pp-hint-box p, .pp-hint-box ul, .pp-hin-box ol {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    margin: 5px 0px;
+    line-height: 1.8em;
+} 
+
+.pp-hint-box ul {
+    margin: 0px 20px;
+    list-style-type: disc; 
+}
+
+.pp-hint-box h1 {
+    font-family: arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-size: 24px;
+    font-weight: normal;
+    letter-spacing: -1px;
+}
+
+.pp-hint-box li{
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-size: 12px;
+    margin: 8px 0px;
+}
+
+.pp-hint-box a.search-example{
+    background-color:#E8E8E8;
+    color: #606060;
+    text-decoration:none;
+    padding:1px 3px;
 }
 
 .pp-smallprint {

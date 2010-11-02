@@ -1054,3 +1054,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sun Oct 31 22:25:16 2010: C<Module> L<BibTeX::Parser|BibTeX::Parser>
+
+=over 4
+
+=item *
+
+C<installed into: ../../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.4>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

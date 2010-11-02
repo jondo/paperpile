@@ -364,11 +364,9 @@ sub update_notes : Local {
   my $value = $dbh->quote($html);
   $dbh->do("UPDATE Publications SET annote=$value WHERE guid='$guid'");
 
-  my $tree      = HTML::TreeBuilder->new->parse($html);
+  my $tree      = HTML::TreeBuilder->new->parse_content($html);
   my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
   my $text      = $formatter->format($tree);
-
-  # Issue 614: Text seems to come out empty (used to work all the time before).
 
   $value = $dbh->quote($text);
 
@@ -388,6 +386,16 @@ sub new_collection : Local {
   my $style  = $c->request->params->{style} || '0';
 
   $c->model('Library')->new_collection( $guid, $name, $type, $parent, $style );
+
+  # Reload tree representation of collections
+  my $tree = $c->session->{tree};
+
+  if ($type eq 'LABEL'){
+    $c->forward( '/ajax/tree/get_subtree', [ $tree, "TAGS_ROOT" ] );
+  } else {
+    $c->forward( '/ajax/tree/get_subtree', [ $tree, "FOLDER_ROOT" ] );
+  }
+
 }
 
 sub move_in_collection : Local {
