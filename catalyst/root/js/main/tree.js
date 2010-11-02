@@ -1351,7 +1351,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   // Data is the JSON returned by a previous ajax call. Optional.
   reloadTags: function(json) {
-    if (json) {
+    if (json && json.data) {
       json.data.collection_delta = 0;
       Paperpile.main.onUpdate(json.data);
     }
