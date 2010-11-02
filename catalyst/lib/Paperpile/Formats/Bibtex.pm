@@ -18,14 +18,15 @@
 package Paperpile::Formats::Bibtex;
 use Moose;
 use Data::Dumper;
-use YAML qw(LoadFile);
+use YAML qw/LoadFile/;
 use IO::File;
 use Text::Wrap;
 use Paperpile::Formats::TeXEncoding;
 use BibTeX::Parser;
 use BibTeX::Parser::EncodingTable;
 use Encode;
-use File::Temp qw/ tempfile tempdir /;
+use File::Temp qw/tempfile tempdir/;
+use File::Spec::Functions qw/catfile splitpath/;
 use MIME::Base64;
 
 extends 'Paperpile::Formats';
@@ -167,7 +168,7 @@ sub read {
         # files are stored like this:
         # :/home/wash/PDFs/file.pdf:PDF
 
-        if ( $field =~ /file/i ) {
+        if ( $field =~ /^file/i ) {
           my @files = split( /;/, $entry->field($field) );
           foreach my $file (@files) {
 
@@ -187,16 +188,46 @@ sub read {
           next;
         }
 
-        # Handle BibDesk file attachments
+        # Handle BibDesk file attachments. The file names are stored
+        # as MIME64 encoded binary Mac property list file (argh!!)
         if ( $field =~ /Bdsk-File-\d+/i ) {
 
           my $dir = tempdir( CLEANUP => 1 );
-          my ($fh, $filename) = tempfile( DIR => $dir );
-          print STDERR "$filename";
+          my ($fh, $tmp_file) = tempfile( DIR => $dir );
 
-          print $fh $entry->field($field);
+          # Get current directory of BibTeX file. All attachemnts seem
+          # to be relative to this file.
+          my ( $dummy, $base_dir, $dummy1 ) = splitpath($self->file);
 
+          # First check if the "plutil" tool is available. This
+          # implicitly checks whether we are on OSX.
+          my $check = `which plutil`;
+          chomp($check);
+          if ($check eq '/usr/bin/plutil'){
 
+            # First write the decoded plist file into a temporary file.
+            print $fh decode_base64($entry->field($field)) || die("Could not write to tmp file");
+
+            # Then convert the binary plist format to readable xml.
+            my $xml = `plutil -convert xml1 $tmp_file -o -`;
+
+            # I don't understand the XML format, so I just parse all
+            # <string> tags and see if they contain a readable file
+            while ($xml =~/<string>(.*?)<\/string>/mgi){
+              my $file = catfile($base_dir, $1);
+              if (-r $file){
+                if ( ( $file =~ /\.pdf/i ) and ( !$pdf ) ) {
+                  $pdf = $file;
+                  next;
+                } else {
+                  push @attachments, $file;
+                }
+              }
+            }
+          } else {
+            print STDERR "Skipping Bdsk-File. plutil executable not found.\n";
+          }
+          next;
         }
 
         print STDERR "Field $field not handled.\n";
