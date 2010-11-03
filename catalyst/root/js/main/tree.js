@@ -1449,6 +1449,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
 
     var tagsRoot = this.getNodeById('TAGS_ROOT');
+    var expanded = tagsRoot.isExpanded();
+
     if (!tagsRoot) {
       return;
     }
@@ -1473,11 +1475,21 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       tagsRoot.appendChild(this.moreLabelsNode);
     } else {
       if (this.labelPanel.isVisible()) {
+	  // We've got a visible panel, but no hidden nodes.
+	  // Suppress events to avoid endless loop, hide the panel,
+	  // and remove the checkboxe
+        this.labelPanel.suspendEvents();
         this.labelPanel.hide();
+	this.hideShowMode = false;
+	  Ext.fly(this.moreLabelsNode.getUI().getEl()).removeClass('more-labels-node-down');
+	this.reloadTags();
+	this.labelPanel.resumeEvents();
       }
     }
 
-    tagsRoot.expand();
+    if (expanded) {
+      tagsRoot.expand();
+    }
   },
 
   recordToNode: function(record, type) {

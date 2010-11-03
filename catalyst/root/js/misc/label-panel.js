@@ -108,16 +108,6 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
     }
     this._dataViewport.setHeight(viewSize);
     this.syncSize();
-    /*
-    if (this.filterBar) {
-      this.setHeight(viewSize);
-    } else {
-      this.setHeight(viewSize + 5);
-    }
-    this._dataViewport.setHeight(200);
-*/
-    //    Paperpile.log(viewSize);
-    //    this.doLayout();
   },
 
   updateFilter: function() {
@@ -197,6 +187,8 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       return;
     } else if (e.getTarget("input")) {
       return;
+    } else if (e.getTarget(".pp-tag-tree-node") ) {
+	
     } else {
       this.hide();
     }

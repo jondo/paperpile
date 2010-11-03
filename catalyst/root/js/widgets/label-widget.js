@@ -229,19 +229,11 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        var grid = this.getGrid();
-        if (isNew) {
-          // Cause the tree's tag list to reload itself.
-          Paperpile.main.tree.getNodeById('TAGS_ROOT').reload();
-          Ext.StoreMgr.lookup('tag_store').reload({
-            callback: function() {
-              Paperpile.main.onUpdate(json.data);
-            }
-          });
-        } else {
-          Ext.StoreMgr.lookup('tag_store').reload();
-          Paperpile.main.onUpdate(json.data);
-        }
+        Ext.StoreMgr.lookup('tag_store').reload({
+          callback: function() {
+            Paperpile.main.onUpdate(json.data);
+          }
+        });
         if (lots) {
           Paperpile.status.clearMsg();
         }

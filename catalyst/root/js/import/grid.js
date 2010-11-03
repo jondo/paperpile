@@ -1931,8 +1931,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   updateMetadata: function() {
     var selection = this.getSelection();
+    var selectionCount = this.getSelectionCount();
 
-    if (selection.length == 1) {
+    if (selectionCount == 1) {
       this.handleEdit(false, true);
       return;
     }
@@ -1943,7 +1944,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
       Ext.Msg.show({
         title: 'Auto-complete',
-        msg: 'Data for ' + selection.length + ' references will be matched to online resources and automatically updated. Backup copies of the old data will be copied to the Trash. Continue?',
+        msg: 'Data for ' + selectionCount + ' references will be matched to online resources and automatically updated. Backup copies of the old data will be copied to the Trash. Continue?',
         animEl: 'elId',
         icon: Ext.MessageBox.INFO,
         buttons: Ext.Msg.OKCANCEL,
