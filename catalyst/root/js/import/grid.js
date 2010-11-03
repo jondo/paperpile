@@ -964,7 +964,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                 var guid = tags[i];
                 var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
                 if (style != null) {
-                  name = style.get('name');
+                  name = style.get('display_name');
                   style = style.get('style');
                   returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
                 }

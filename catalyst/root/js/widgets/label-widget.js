@@ -83,7 +83,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       var style = '0';
       if (store.getAt(store.findExact('guid', guid))) {
         style = store.getAt(store.findExact('guid', guid)).get('style');
-        name = store.getAt(store.findExact('guid', guid)).get('name');
+        name = store.getAt(store.findExact('guid', guid)).get('display_name');
       }
 
       var el = {

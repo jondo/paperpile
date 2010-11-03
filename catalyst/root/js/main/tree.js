@@ -172,6 +172,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       startedit: {
         scope: this,
         fn: function() {
+          /*
+	     * TreeEditor takes the node.text by default, but we 
+	     * want to edit the full node name which is stored
+	     * in node.name (b/c we may shorten node.text if the
+	     * node.name is too long)
+	     */
+          var fullName = this.treeEditor.editNode.name;
+          this.treeEditor.field.setValue(fullName);
           this.treeEditor.field.selectText();
         }
       }
@@ -1475,15 +1483,15 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       tagsRoot.appendChild(this.moreLabelsNode);
     } else {
       if (this.labelPanel.isVisible()) {
-	  // We've got a visible panel, but no hidden nodes.
-	  // Suppress events to avoid endless loop, hide the panel,
-	  // and remove the checkboxe
+        // We've got a visible panel, but no hidden nodes.
+        // Suppress events to avoid endless loop, hide the panel,
+        // and remove the checkboxe
         this.labelPanel.suspendEvents();
         this.labelPanel.hide();
-	this.hideShowMode = false;
-	  Ext.fly(this.moreLabelsNode.getUI().getEl()).removeClass('more-labels-node-down');
-	this.reloadTags();
-	this.labelPanel.resumeEvents();
+        this.hideShowMode = false;
+        Ext.fly(this.moreLabelsNode.getUI().getEl()).removeClass('more-labels-node-down');
+        this.reloadTags();
+        this.labelPanel.resumeEvents();
       }
     }
 
@@ -1495,7 +1503,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   recordToNode: function(record, type) {
     var pars = {
       id: record.get('guid'),
-      text: record.get('name'),
+      text: record.get('display_name'),
+      name: record.get('name'),
       type: record.get('type'),
       parent: record.get('parent'),
       sort_order: record.get('sort_order'),

@@ -41,10 +41,10 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       '<tpl for=".">',
       '    <div id="{name}-wrap" class="pp-label-panel-wrap">',
       '    <input type="checkbox" class="pp-label-panel-check" index="{#}"></input>',
-      '      <div id="{name}" class="pp-label-panel-item pp-tag-style-{style}">{name}</div>',
+      '      <div id="{name}" class="pp-label-panel-item pp-tag-style-{style}">{display_name}</div>',
       '    </div>',
       '</tpl>',
-      '<div id="label-panel-spacing" style="height:4px;"></div>');
+      '<div id="label-panel-spacing" style="height:4px;"></div>').compile();
     this._dataView = new Ext.DataView({
       store: this._store,
       tpl: this._template,
@@ -187,8 +187,8 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       return;
     } else if (e.getTarget("input")) {
       return;
-    } else if (e.getTarget(".pp-tag-tree-node") ) {
-	
+    } else if (e.getTarget(".pp-tag-tree-node")) {
+
     } else {
       this.hide();
     }
