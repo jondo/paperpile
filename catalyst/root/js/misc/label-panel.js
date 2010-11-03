@@ -100,14 +100,9 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
 
   },
 
+  
+
   onStoreLoad: function() {
-    this.updateFilter();
-    var viewSize = this._dataView.getSize().height;
-    if (viewSize > 200) {
-      viewSize = 200;
-    }
-    this._dataViewport.setHeight(viewSize);
-    this.syncSize();
   },
 
   updateFilter: function() {
@@ -137,10 +132,8 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       var index = el.getAttribute('index') - 1;
       var record = this._store.getAt(index);
       record.set('hidden', 0);
+      Paperpile.main.tree.refreshLabels();
       this.updateCollection(record);
-      this._store.remove(record);
-      this._dataView.refresh();
-      this.syncSize();
     }
   },
 
@@ -160,8 +153,22 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
     this.getEl().alignTo(el, 'tl-bl', [-1, 0]);
   },
 
-  refresh: function() {
-    this._store.reload();
+  refreshView: function() {
+    var tags = Ext.StoreMgr.lookup('tag_store');
+    
+    // Take all of our Records and add them to the hidden tag store.
+    this._store.removeAll();
+    var allRecords = tags.getRange();
+    this._store.add(allRecords);
+
+    this.updateFilter();
+//    this._dataView.refresh();
+    var viewSize = this._dataView.getSize().height;
+    if (viewSize > 200) {
+      viewSize = 200;
+    }
+    this._dataViewport.setHeight(viewSize);
+    this.syncSize();
   },
 
   show: function() {

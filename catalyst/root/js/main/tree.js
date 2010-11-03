@@ -93,17 +93,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
                 id: 'MORE_LABELS',
                 cls: 'more-labels-node'
               });
-              this.on({
-                beforeappend: {
-                  fn: function(tree, parent, node, index) {
-                    if (node.id == 'MORE_LABELS') {
-                      if (this.labelPanel && this.labelPanel.isVisible()) {
-                        this.labelPanel.alignTo.defer(1, this.labelPanel, [this.moreLabelsNode.ui.getTextEl()]);
-                      }
+
+              node.on({
+                expand: {
+                  fn: function(node) {
+                    if (this.labelPanel && this.labelPanel.isVisible()) {
+                      this.labelPanel.alignTo(this.moreLabelsNode.getUI().getTextEl());
+                      //                        this.labelPanel.alignTo.defer(5, this.labelPanel, [this.moreLabelsNode.ui.getTextEl()]);
                     }
-                  },
-                  scope: this
-                }
+                  }
+                },
+                scope: this
               });
             }
 
@@ -117,14 +117,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
                 if (el) {
                   el.removeClass('more-labels-node-down');
                   this.hideShowMode = false;
-                  this.reloadTags();
+                  this.refreshLabels();
                 }
 
               },
               this);
               this.labelPanel.on('beforeshow', function() {
                 this.hideShowMode = true;
-                this.reloadTags();
+                this.refreshLabels();
                 var el = Ext.fly(this.moreLabelsNode.getUI().getEl());
                 if (el) {
                   el.addClass('more-labels-node-down');
@@ -134,7 +134,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
               this.labelPanel.setVisible(false);
             }
 
-            this.reloadTags();
+            this.refreshLabels();
           }
 
           // This is necessary because we load the tree as a whole
@@ -323,7 +323,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // For tags use specifically styled tab
       if (node.type == 'TAGS') {
         pars.collection_type = 'label';
-        iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + node.style;
+        iconCls = null;
         title = node.text;
       }
 
@@ -566,7 +566,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var textEl = this.moreLabelsNode.getUI().getTextEl();
     if (!this.labelPanel.isVisible()) {
       this.labelPanel.alignTo(textEl);
-      this.labelPanel.refresh();
+      this.labelPanel.refreshView();
       this.labelPanel.show();
     } else {
       this.labelPanel.hide();
@@ -1212,6 +1212,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           hidden = 0;
         }
         record.set('hidden', hidden);
+        this.refreshLabels();
         store.updateCollection(record);
         return;
       }
@@ -1253,6 +1254,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       newNode = this.loader.createNode({
         text: tag,
+	name: tag,
+	display_name: tag,
         iconCls: 'pp-icon-empty',
         tagStyle: 'default',
         cls: 'pp-tag-tree-node pp-tag-tree-style-0',
@@ -1396,12 +1399,16 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       url: '/ajax/crud/sort_labels_by_count',
       params: {},
       success: function() {
-        Ext.StoreMgr.lookup('tag_store').reload();
-        Paperpile.status.updateMsg({
-          type: 'info',
-          msg: totalCount + " labels were sorted by paper count.",
-          fade: true,
-          duration: 1.5
+        var store = Ext.StoreMgr.lookup('tag_store');
+        store.reload({
+          callback: function() {
+            Paperpile.status.updateMsg({
+              type: 'info',
+              msg: store.getTotalCount() + " labels were sorted by paper count.",
+              fade: true,
+              duration: 1.5
+            });
+          }
         });
       },
       scope: this
@@ -1413,7 +1420,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       url: '/ajax/crud/sort_labels_by_name',
       params: {},
       success: function() {
-        Ext.StoreMgr.lookup('tag_store').reload();
+        var store = Ext.StoreMgr.lookup('tag_store');
+        store.reload({
+          callback: function() {
+            Paperpile.status.updateMsg({
+              type: 'info',
+              msg: store.getTotalCount() + " labels were sorted alphabetically.",
+              fade: true,
+              duration: 1.5
+            });
+          }
+        });
       },
       scope: this
     });
@@ -1450,7 +1467,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   // Data is the JSON returned by a previous ajax call. Optional.
-  reloadTags: function(json) {
+  refreshLabels: function(json) {
     if (json && json.data) {
       json.data.collection_delta = 0;
       Paperpile.main.onUpdate(json.data);
@@ -1490,9 +1507,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         this.labelPanel.hide();
         this.hideShowMode = false;
         Ext.fly(this.moreLabelsNode.getUI().getEl()).removeClass('more-labels-node-down');
-        this.reloadTags();
+        this.refreshLabels();
         this.labelPanel.resumeEvents();
       }
+    }
+
+    if (this.labelPanel.isVisible()) {
+      this.labelPanel.refreshView();
+      //      this.labelPanel.alignTo(this.moreLabelsNode.getUI().getTextEl());
     }
 
     if (expanded) {

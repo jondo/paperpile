@@ -2056,16 +2056,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (overview.rendered) {
       overview.forceUpdate();
     }
-
-    // If we're a Label grid, update our title...
-    var itemId = this.getPluginPanel().itemId;
-    var ts = Ext.StoreMgr.lookup('tag_store');
-    var index = ts.findExact('guid', itemId);
-    if (index !== -1) {
-      var record = ts.getAt(index);
-      var title = record.get('name');
-      this.getPluginPanel().setTitle(title);
-    }
   },
 
   // Update specific fields of specific entries to avoid complete
