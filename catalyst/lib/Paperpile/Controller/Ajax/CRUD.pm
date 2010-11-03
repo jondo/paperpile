@@ -669,6 +669,28 @@ sub sort_labels_by_count : Local {
   $c->stash->{data}->{collection_delta} = 1;
 }
 
+# Returns the list of labels sorted by tag counts.
+sub sort_and_hide_labels : Local {
+  my ( $self, $c ) = @_;
+
+  my $hist = $c->model('Library')->histogram('tags');
+
+  my @sorted_keys = sort { $hist->{$a}->{count} <=> $hist->{$b}->{count} } keys %$hist;
+
+  my $i = 0;
+  foreach my $guid ( reverse @sorted_keys ) {
+    $c->model('Library')->set_collection_field( $guid, 'sort_order', $i );
+    if ($i >= 5) {
+	$c->model('Library')->set_collection_field( $guid, 'hidden', 1 );	
+    } else {
+	$c->model('Library')->set_collection_field( $guid, 'hidden', 0 );	
+    }
+    $i++;
+  }
+
+  $c->stash->{data}->{collection_delta} = 1;
+}
+
 sub batch_update : Local {
   my ( $self, $c ) = @_;
   my $plugin = $self->_get_plugin($c);
