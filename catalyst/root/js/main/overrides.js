@@ -16,6 +16,19 @@
 
 // Ext overrides
 
+Ext.override(Ext.grid.GridView, {
+
+    // Implement a more sensible check for whether a gridview has 
+    // rows at the moment. This allows us to have 'empty' content
+    // within the GridView without it thinking that it has rows 
+    // in view.
+    hasRows : function(){
+	return (this.grid.getStore().getCount() > 0);
+        var fc = this.mainBody.dom.firstChild;
+        return fc && fc.nodeType == 1 && fc.className != 'x-grid-empty';
+    }
+});
+
 Ext.override(Ext.Button, {
     // private
     onRender : function(ct, position){
