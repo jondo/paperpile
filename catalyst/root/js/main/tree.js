@@ -1090,6 +1090,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function() {
         editor.un("complete", this.onRenameComplete);
+        Paperpile.main.triggerTagStoreReload();
       }
     });
   },
@@ -1124,13 +1125,15 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         var json = Ext.util.JSON.decode(response.responseText);
         if (node.type === 'TAGS') {
           // Close the tab using the label's GUID, which is the node's id and the tab's itemId.
-          Paperpile.main.tabs.closeTabById(node.id);
+          Paperpile.main.tabs.closeTabById.defer(100, Paperpile.main.tabs, [node.id]);
           Paperpile.main.triggerTagStoreReload();
         }
       },
       scope: this
     });
-    node.remove();
+    if (node.el) {
+      node.remove();
+    }
   },
 
   deleteFolder: function() {
@@ -1585,11 +1588,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     if (newText == oldText) {
       return;
     }
-
-    //    node.setText(newText);
-    //    node.plugin_title = newText;
     var tag = oldText;
-
     Paperpile.Ajax({
       url: '/ajax/crud/update_collection',
       params: {
@@ -1597,19 +1596,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         name: newText
       },
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-
-        // Things we need to rename / update when a collection changes:
-        // (0) The grid is automatically taken care of by the Paperpile.Ajax handler's calling Paperpile.main.onUpdate.
-        // (1) Take care of the grid and sidepanel.
-        this.reloadTags(json);
-
-        // (2) If this tab has an open grid, rename it.
-        var openTab = Paperpile.main.tabs.find("itemId", node.id); // Find by GUID.
-        if (openTab.length > 0) {
-          openTab[0].setTitle(newText);
-        }
-
+        Paperpile.main.triggerTagStoreReload();
       },
       scope: this
     });

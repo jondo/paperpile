@@ -519,11 +519,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     // Auto-select the first row when the store finally loads up.
     this.getStore().on('load', function() {
-      this.getPluginPanel().updateView();
-    },
-    this);
-
-    this.getStore().on('load', function() {
       if (this.getStore().getCount() > 0) {
         this.getSelectionModel().selectRowAndSetCursor(0);
       }
@@ -655,7 +650,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   onStoreLoad: function() {
-    this.getPluginPanel().updateView();
+    if (this.getPluginPanel()) {
+      this.getPluginPanel().updateView();
+    }
   },
 
   isLoaded: function() {
@@ -2058,6 +2055,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (overview.rendered) {
       overview.forceUpdate();
     }
+
+    // If we're a Label grid, update our title...
+    var itemId = this.getPluginPanel().itemId;
+    var ts = Ext.StoreMgr.lookup('tag_store');
+    var index = ts.findExact('guid', itemId);
+    if (index !== -1) {
+      var record = ts.getAt(index);
+      var title = record.get('name');
+      this.getPluginPanel().setTitle(title);
+    }
   },
 
   // Update specific fields of specific entries to avoid complete
@@ -2262,11 +2269,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   onDestroy: function() {
-    Paperpile.PluginGrid.superclass.onDestroy.call(this);
-
+    Ext.destroy(this.getSelectionModel());
+    Ext.destroy(this.getStore());
     Ext.destroy(this.keys);
     Ext.destroy(this.pager);
     Ext.destroy(this.context);
+
+    Paperpile.PluginGrid.superclass.onDestroy.call(this);
+
   }
 });
 

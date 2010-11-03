@@ -656,7 +656,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         types: ['pdf'],
         typesDescription: 'PDF Files',
         multiple: false,
-        nameFilters:["PDF (*.pdf)"],
+        nameFilters: ["PDF (*.pdf)"],
         scope: this
       };
     } else {
@@ -666,7 +666,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         types: ['*'],
         typesDescription: 'All Files',
         multiple: true,
-        nameFilters:["All files (*)"],
+        nameFilters: ["All files (*)"],
         scope: this
       };
     }
@@ -745,6 +745,15 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     var empty = new Ext.Template(tpl);
     empty.overwrite(this.body);
+
+  },
+
+  onDestroy: function() {
+
+    Ext.destroy(this.searchDownloadWidget);
+    Ext.destroy(this.labelWidget);
+
+    Paperpile.PubOverview.superclass.onDestroy.call(this);
 
   }
 
