@@ -297,5 +297,15 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       tb_bottom.items.get('summary_tab_button').disable();
       tb_bottom.items.get('notes_tab_button').disable();
     }
+  },
+
+  onDestroy: function() {
+    if (this.updateDetailsTask) {
+      this.updateDetailsTask.cancel();
+      Ext.destroy(this.updateDetailsTask);
+    }
+    Ext.destroy(this.overviewPanel);
+
+    Paperpile.PluginPanel.superclass.onDestroy.call(this);
   }
 });
