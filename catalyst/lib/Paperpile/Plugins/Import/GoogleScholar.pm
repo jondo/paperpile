@@ -789,7 +789,6 @@ sub _parse_googlescholar_page {
     $description =~ s/<b>//g;
     $description =~ s/<\/b>//g;
     $description =~ s/<br\s\/>//g;
-    $description = "<b>Google Scholar snippet:</b> $description";
     push @{ $data{description} }, defined($description) ? $description : '';
 
     my @links = $node->findnodes('./font[@size="-1"]/span[@class="gs_fl"]/a');
