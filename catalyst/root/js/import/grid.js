@@ -519,13 +519,23 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     // Auto-select the first row when the store finally loads up.
     this.getStore().on('load', function() {
-//	this.getSelectionModel().selectRowAndSetCursor(0);
-	this.getPluginPanel().updateView();
-    },this);
+      this.getPluginPanel().updateView();
+    },
+    this);
+
+    this.getStore().on('load', function() {
+      if (this.getStore().getCount() > 0) {
+        this.getSelectionModel().selectRowAndSetCursor(0);
+      }
+    },
+    this, {
+      single: true
+    });
 
     this.on('viewready', function() {
-	this.getPluginPanel().updateView();
-    },this);
+      this.getPluginPanel().updateView();
+    },
+    this);
 
   },
 
@@ -670,9 +680,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       tpl = this._emptyBeforeSearchTpl;
     }
     if (tpl) {
-	  tpl.overwrite(this.getView().mainBody);
+      tpl.overwrite(this.getView().mainBody);
     } else {
-	//Paperpile.log("No tpl!");
+      //Paperpile.log("No tpl!");
     }
   },
 
@@ -1682,7 +1692,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   handleExportSelection: function() {
     selection = this.getSelection();
-    Paperpile.main.handleExport(this.id,selection);
+    Paperpile.main.handleExport(this.id, selection);
   },
 
   handleExportView: function() {
@@ -1759,7 +1769,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	  }
 	}
 */
-     
+
       // The following does not bring up the e-mail client on
       // OSX. don't know why because it works for < 1024
       if (string.length > 1024) {
@@ -2235,7 +2245,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   onDblClick: function(grid, rowIndex, e) {
     var sm = this.getSelectionModel();
     var record = sm.getSelected();
-    if (record){
+    if (record) {
       if (record.data._imported) {
         this.viewPDF();
       }

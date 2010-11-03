@@ -1633,19 +1633,27 @@ div:hover.pp-tag-style-sample {
     font-weight: bold;
 }
 
-input.x-tree-node-cb {
+.pp-tag-node input.x-tree-node-cb, .pp-folder-node input.x-tree-node-cb {
     position:relative;
-    left:-20px;
+    left:-16px;
     margin:0px;
-    margin-right:-18px;
-    height: 16px;
+    margin-right:-12px;
+    height: 12px;
     vertical-align: middle;
+}
+
+.pp-label-panel-filter {
+    font-size: 9px;
+    line-height: 12px;
+    height: 16px;
+    vertical-align:middle;
+    margin-bottom: 2px;
 }
 
 .pp-label-panel-check {
     display:inline-block;
-    height: 16px;
-    width: 16px;
+    height: 12px;
+    width: 12px;
     margin: 0px;
     padding: 0px;
     vertical-align:middle;
@@ -1655,9 +1663,45 @@ input.x-tree-node-cb {
     background-image:url(../images/default/menu/checked.gif);
 }
 
-.pp-label-panel-down {
-    background-color:#FFFEEB;
-    border: 1px solid #F7CA75;
+.more-labels-node-down a span {
+    background-color:#FFFFFF;
+    border: 1px solid gray;
+    border-bottom: none;
+    margin:-1px;
+}
+
+.pp-label-panel, .pp-label-panel .x-panel-body {
+    background-color:#FFFFFF;
+}
+.pp-label-panel {
+    border: 1px solid gray;
+    border-top: none;
+}
+.pp-label-panel .x-panel-body {
+    padding: 2px;
+}
+
+.more-labels-node .x-tree-node-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: top;
+    background-image: url(/ext/resources/images/default/tree/arrows.gif);
+    background-position-x: 0px;
+    background-position-y: 0px;
+}
+
+.more-labels-node-down .x-tree-node-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: top;
+    background-image: url(/ext/resources/images/default/tree/arrows.gif);
+    background-position-x: -18px;
+    background-position-y: 0px;
+}
+
+
+.more-labels-node {
+    margin-bottom: 8px;
 }
 
 .pp-tag-tree-node a span{
@@ -2471,4 +2515,50 @@ the right of the menu. */
 .no-icon {
   display : none;
   background-image:url('/ext/resources/images/default/s.gif') !important;
+}
+
+/* common settings checkbox and radiobutton */
+
+input[type="checkbox"] {
+  cursor:pointer;
+}
+
+input[type="checkbox"],
+input[type="radio"]
+{
+ -khtml-appearance: none;
+ background: url('/images/goog-ticks.png') no-repeat;
+ width: 12px;
+ height: 12px;
+ vertical-align: middle;
+}
+input[type="checkbox"]
+{
+ background-position-x: -48px;
+ background-position-y: 0;
+}
+input[type="radio"]
+{
+ background-position-x: -48px;
+}
+input[type="checkbox"]:hover,
+input[type="radio"]:hover
+{
+ background-position-x: -48px;
+}
+input[type="checkbox"]:checked,
+input[type="radio"]:checked
+{
+ background-position-x: -60px;
+}
+input[type="checkbox"]:checked:hover,
+input[type="radio"]:checked:hover
+{
+ background-position-x: -60px;
+}
+/* disabled settings for checkbox and radiobutton */
+input[type="radio"]:disabled,
+input[type="checkbox"]:disabled
+{
+ opacity: .3;
 }

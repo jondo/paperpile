@@ -82,6 +82,58 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         fn: function(node) {
 
           if (node.id == "TAGS_ROOT") {
+
+            // Create the 'more...' node.
+            if (!this.moreLabelsNode) {
+              this.moreLabelsNode = this.loader.createNode({
+                text: "0 more...",
+                leaf: true,
+                draggable: false,
+                type: 'MORE_LABELS',
+                id: 'MORE_LABELS',
+                cls: 'more-labels-node'
+              });
+              this.on({
+                beforeappend: {
+                  fn: function(tree, parent, node, index) {
+                    if (node.id == 'MORE_LABELS') {
+                      if (this.labelPanel && this.labelPanel.isVisible()) {
+                        this.labelPanel.alignTo.defer(1, this.labelPanel, [this.moreLabelsNode.ui.getTextEl()]);
+                      }
+                    }
+                  },
+                  scope: this
+                }
+              });
+            }
+
+            // Create the panel that's hidden / shown when the "more..." node is clicked.
+            if (!this.labelPanel) {
+              this.labelPanel = new Paperpile.LabelPanel({
+                filterBar: true
+              });
+              this.labelPanel.on('beforehide', function() {
+                var el = Ext.fly(this.moreLabelsNode.getUI().getEl());
+                if (el) {
+                  el.removeClass('more-labels-node-down');
+                  this.hideShowMode = false;
+                  this.reloadTags();
+                }
+
+              },
+              this);
+              this.labelPanel.on('beforeshow', function() {
+                this.hideShowMode = true;
+                this.reloadTags();
+                var el = Ext.fly(this.moreLabelsNode.getUI().getEl());
+                if (el) {
+                  el.addClass('more-labels-node-down');
+                }
+              },
+              this);
+              this.labelPanel.setVisible(false);
+            }
+
             this.reloadTags();
           }
 
@@ -224,24 +276,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     switch (node.type) {
     case 'MORE_LABELS':
-      if (!this.labelPanel) {
-        this.labelPanel = new Paperpile.LabelPanel();
-        this.labelPanel.setVisible(false);
-      }
-      var el = this.moreLabelsNode.getUI().getTextEl();
-      if (!this.labelPanel.isVisible()) {
-        this.labelPanel.alignTo(node.ui.getTextEl());
-        this.labelPanel.refresh();
-        this.hideShowMode = true;
-        this.reloadTags();
-        Ext.fly(el).addClass('pp-label-panel-down');
-        this.labelPanel.show();
-      } else {
-        this.hideShowMode = false;
-        this.reloadTags();
-        Ext.fly(el).removeClass('pp-label-panel-down');
-        this.labelPanel.hide();
-      }
       break;
     case 'PDFEXTRACT':
       Paperpile.main.pdfExtract();
@@ -506,6 +540,29 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     },
     this);
 
+    this.mon(this.el, 'mousedown', this.myMouseDown, this);
+
+  },
+
+  myMouseDown: function(e) {
+    var target = e.target;
+    var el = Ext.fly(target);
+    if (el.findParent(".more-labels-node", 5)) {
+      e.stopEvent();
+      this.moreLabelsDown();
+      return;
+    }
+  },
+
+  moreLabelsDown: function() {
+    var textEl = this.moreLabelsNode.getUI().getTextEl();
+    if (!this.labelPanel.isVisible()) {
+      this.labelPanel.alignTo(textEl);
+      this.labelPanel.refresh();
+      this.labelPanel.show();
+    } else {
+      this.labelPanel.hide();
+    }
   },
 
   onContextMenu: function(node, e) {
@@ -962,7 +1019,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       success: function(response) {
         if (node.type === 'TAGS') {
           var json = Ext.util.JSON.decode(response.responseText);
-          this.reloadTags(json);
+          Paperpile.main.triggerTagStoreReload();
         }
       },
       scope: this
@@ -1139,11 +1196,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       var tagIndex = store.findExact('guid', node.id);
       if (tagIndex !== -1) {
         var record = store.getAt(tagIndex);
-        var num = 0;
-        if (!checked) {
-          num = 1;
+        var hidden = 1;
+        if (checked) {
+          hidden = 0;
         }
-        record.set('hidden', num);
+        record.set('hidden', hidden);
         store.updateCollection(record);
         return;
       }
@@ -1177,25 +1234,22 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   newTag: function() {
-
     var node = this.getNodeById('TAGS_ROOT');
     var treeEditor = this.treeEditor;
     var newNode;
     var tag = 'New Label';
     node.expand(false, false, function(n) {
-      newNode = n.appendChild(
-        this.loader.createNode({
-          text: tag,
-          iconCls: 'pp-icon-empty',
-          tagStyle: 'default',
-          cls: 'pp-tag-tree-node pp-tag-tree-style-0',
-          draggable: true,
-          leaf: true,
-          expanded: true,
-          children: [],
-          id: Paperpile.utils.generateUUID()
-        }));
-      var pars = {
+
+      newNode = this.loader.createNode({
+        text: tag,
+        iconCls: 'pp-icon-empty',
+        tagStyle: 'default',
+        cls: 'pp-tag-tree-node pp-tag-tree-style-0',
+        draggable: true,
+        leaf: true,
+        expanded: true,
+        children: [],
+        id: Paperpile.utils.generateUUID(),
         type: 'TAGS',
         plugin_name: 'DB',
         plugin_title: tag,
@@ -1203,8 +1257,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         plugin_mode: 'FULLTEXT',
         plugin_query: 'labelid:' + Paperpile.utils.encodeTag(tag),
         plugin_base_query: 'labelid:' + Paperpile.utils.encodeTag(tag)
-      };
-      newNode.init(pars);
+      });
+      if (this.moreLabelsNode) {
+        node.insertBefore(newNode, this.moreLabelsNode);
+      } else {
+        Paperpile.log("Wazza");
+      }
       newNode.select();
 
       this.triggerNewNodeEdit(newNode);
@@ -1297,12 +1355,43 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return text;
   },
 
+  sortAndHideTags: function() {
+    Paperpile.Ajax({
+      url: '/ajax/crud/sort_and_hide_labels',
+      params: {},
+      success: function() {
+        var store = Ext.StoreMgr.lookup('tag_store');
+        var hidden_store = Ext.StoreMgr.lookup('hidden_tag_store');
+        store.reload({
+          callback: function() {
+            var totalCount = store.getTotalCount();
+            var hidden_total = hidden_store.getCount();
+            Paperpile.status.updateMsg({
+              type: 'info',
+              msg: totalCount + " labels were auto-arranged (" + hidden_total + " now hidden from view)",
+              fade: true,
+              duration: 3.5
+            });
+
+          }
+        });
+      },
+      scope: this
+    });
+  },
+
   sortTagsByCount: function() {
     Paperpile.Ajax({
       url: '/ajax/crud/sort_labels_by_count',
       params: {},
       success: function() {
         Ext.StoreMgr.lookup('tag_store').reload();
+        Paperpile.status.updateMsg({
+          type: 'info',
+          msg: totalCount + " labels were sorted by paper count.",
+          fade: true,
+          duration: 1.5
+        });
       },
       scope: this
     });
@@ -1357,6 +1446,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
 
     var tagsRoot = this.getNodeById('TAGS_ROOT');
+    if (!tagsRoot) {
+      return;
+    }
     tagsRoot.silentLoad = true;
     tagsRoot.removeAll();
 
@@ -1374,32 +1466,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
 
     if (hiddenNodeCount > 0) {
-      if (!this.moreLabelsNode) {
-        this.moreLabelsNode = this.loader.createNode({
-          text: hiddenNodeCount + " more...",
-          iconCls: 'no-icon',
-          leaf: true,
-          type: 'MORE_LABELS',
-          id: 'MORE_LABELS'
-        });
-      }
       this.moreLabelsNode.setText(hiddenNodeCount + " more...");
-      this.on({
-        beforeappend: {
-          fn: function(tree, parent, node, index) {
-            if (node.id == 'MORE_LABELS') {
-              if (this.labelPanel && this.labelPanel.isVisible()) {
-                this.labelPanel.alignTo.defer(1, this.labelPanel, [this.moreLabelsNode.ui.getTextEl()]);
-              }
-            }
-          },
-          scope: this,
-          single: true
-        }
-      });
       tagsRoot.appendChild(this.moreLabelsNode);
     } else {
-      if (this.labelPanel && this.labelPanel.isVisible()) {
+      if (this.labelPanel.isVisible()) {
         this.labelPanel.hide();
       }
     }
@@ -1436,8 +1506,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       pars.plugin_base_query = "folderid:" + record.get('guid');
       pars.iconCls = "pp-icon-folder";
       pars.plugin_iconCls = "pp-icon-folder";
+      pars.cls = 'pp-folder-node';
     } else {
-      pars.cls = "pp-tag-tree-node pp-tag-tree-style-" + record.get('style');
+      pars.cls = "pp-tag-node pp-tag-tree-node pp-tag-tree-style-" + record.get('style');
       pars.iconCls = "pp-icon-empty";
       pars.type = 'TAGS';
       pars.plugin_query = "labelid:" + record.get('guid');
@@ -1614,7 +1685,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       selectionType: 'file',
       types: ['bib'],
       typesDescription: 'BibTeX files',
-      nameFilters:["BibTeX (*.bib)"],
+      nameFilters: ["BibTeX (*.bib)"],
       dialogType: 'save',
       multiple: false,
       path: Paperpile.utils.splitPath(initialFile).dir,
@@ -1846,7 +1917,7 @@ Paperpile.Tree.ImportMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     Ext.apply(this, {
       items: [{
         id: 'import_menu_configure',
-        text: 'More Resources & Tools',
+        text: 'Hide / Show Tools',
         handler: function() {
           this.tree.configureSubtree(this.node);
         },
@@ -1891,6 +1962,13 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         text: 'New Label',
         iconCls: 'pp-icon-tag-new',
         handler: tree.newTag,
+        scope: tree
+      },
+      {
+        id: 'tags_menu_arrange',
+        iconCls: 'pp-icon-clean',
+        text: 'Auto-arrange Labels',
+        handler: tree.sortAndHideTags,
         scope: tree
       },
       {
@@ -1957,6 +2035,7 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     var items;
     if (node.id == 'TAGS_ROOT') {
       items = ['tags_menu_new',
+        'tags_menu_arrange',
         'sort_by_menu'];
     } else {
       items = [

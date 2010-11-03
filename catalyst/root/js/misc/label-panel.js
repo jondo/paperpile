@@ -9,6 +9,34 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
     this._store.on('load', this.onStoreLoad, this);
     this._store.load();
 
+    if (this.filterBar === true) {
+      this._filter = new Ext.form.TextField({
+        cls: 'pp-label-panel-filter',
+        width: '100%',
+        itemId: 'LABEL_FILTER',
+        emptyText: 'Search Labels',
+        enableKeyEvents: true,
+        store: this._store,
+      });
+
+      var task = new Ext.util.DelayedTask(this.onStoreLoad, this);
+      this._filter.on('keydown', function(f, e) {
+        task.delay(20);
+      },
+      this);
+      var task = new Ext.util.DelayedTask(this.onStoreLoad, this);
+      this._filter.on('specialkey', function(f, e) {
+        if (e.getKey() == e.ENTER && this._store.getCount() == 1) {
+          var record = this._store.getAt(0);
+          var node = Paperpile.main.tree.recordToNode(record, 'LABEL');
+          Paperpile.main.tabs.newCollectionTab(node, 'LABEL');
+          this.hide();
+        }
+      },
+      this);
+
+    }
+
     this._template = new Ext.XTemplate(
       '<tpl for=".">',
       '    <div id="{name}-wrap" class="pp-label-panel-wrap">',
@@ -20,7 +48,9 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
     this._dataView = new Ext.DataView({
       store: this._store,
       tpl: this._template,
-      trackOver: true,
+      autoHeight: true,
+      border: false,
+      frame: true,
       overClass: 'pp-labelview-over',
       selectedClass: 'pp-label-panel-selected',
       itemSelector: 'div.pp-label-panel-item',
@@ -35,14 +65,22 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
         containerclick: {
           fn: this.myContainerClick,
           scope: this
-        },
-        selectionchange: {
-          fn: function(dv, nodes) {
-            Paperpile.log(nodes);
-          }
         }
       }
     });
+
+    this._dataViewport = new Ext.Container({
+      autoEl: 'div',
+      autoScroll: true,
+      items: [this._dataView]
+    });
+
+    var items;
+    if (this._filter) {
+      items = [this._filter, this._dataViewport];
+    } else {
+      items = [this._dataViewport];
+    }
 
     Ext.apply(this, {
       floating: true,
@@ -51,10 +89,11 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       header: false,
       renderTo: document.body,
       width: 150,
+      autoHeight: true,
       autoScroll: true,
-      id: 'label-panel',
+      cls: 'pp-label-panel',
       title: null,
-      items: [this._dataView]
+      items: items
     });
 
     Paperpile.LabelPanel.superclass.initComponent.call(this);
@@ -62,15 +101,44 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
   },
 
   onStoreLoad: function() {
-    this._store.filter([{
-      property: 'hidden',
-      value: '1'
-    }]);
+    this.updateFilter();
     var viewSize = this._dataView.getSize().height;
     if (viewSize > 200) {
       viewSize = 200;
     }
-    this.setHeight(viewSize + 5);
+    this._dataViewport.setHeight(viewSize);
+    this.syncSize();
+    /*
+    if (this.filterBar) {
+      this.setHeight(viewSize);
+    } else {
+      this.setHeight(viewSize + 5);
+    }
+    this._dataViewport.setHeight(200);
+*/
+    //    Paperpile.log(viewSize);
+    //    this.doLayout();
+  },
+
+  updateFilter: function() {
+    var text = this._filter.getValue();
+    var filters = [{
+      property: 'hidden',
+      value: 1,
+      exactMatch: true
+    }];
+    if (text != '') {
+      filters.push({
+        property: 'name',
+        value: text,
+        anyMatch: true,
+        caseSensitive: false
+      });
+    }
+    this._store.filter(filters);
+    if (this._store.getCount() == 1) {
+      this._dataView.select(0, false);
+    }
   },
 
   myContainerClick: function(dataView, e) {
@@ -82,6 +150,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       this.updateCollection(record);
       this._store.remove(record);
       this._dataView.refresh();
+      this.syncSize();
     }
   },
 
@@ -93,15 +162,44 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
     var record = this._store.getAt(index);
     var node = Paperpile.main.tree.recordToNode(record, 'LABEL');
     Paperpile.main.tabs.newCollectionTab(node, 'LABEL');
+    this.hide();
   },
 
   // Aligns this labelpanel to show up below an element.
   alignTo: function(el) {
-    this.getEl().alignTo(el, 'tl-bl', [-20, 0]);
+    this.getEl().alignTo(el, 'tl-bl', [-1, 0]);
   },
 
   refresh: function() {
     this._store.reload();
+  },
+
+  show: function() {
+    Paperpile.LabelPanel.superclass.show.call(this);
+    Ext.getDoc().on("mousedown", this.onMouseDown, this);
+    if (this._filter) {
+      this._filter.setValue('');
+      this._filter.el.focus();
+    } else {
+      this.getEl().focus();
+    }
+  },
+
+  hide: function() {
+    Paperpile.LabelPanel.superclass.hide.call(this);
+    Ext.getDoc().un("mousedown", this.onMouseDown, this);
+  },
+
+  onMouseDown: function(e) {
+    if (e.getTarget(".pp-label-panel")) {
+      return;
+    } else if (e.getTarget(".more-labels-node")) {
+      return;
+    } else if (e.getTarget("input")) {
+      return;
+    } else {
+      this.hide();
+    }
   }
 
 });
