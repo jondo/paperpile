@@ -903,13 +903,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   onTagStoreLoad: function() {
-    var hiddenTags = Ext.StoreMgr.lookup('hidden_tag_store');
-    if (hiddenTags) {
-      hiddenTags.reload();
-    }
     // Do the tree.
     if (Paperpile.main.tree) {
-      Paperpile.main.tree.reloadTags();
+      Paperpile.main.tree.refreshLabels();
     }
 
     // Now tab panel and grids.

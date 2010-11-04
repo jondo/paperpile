@@ -128,8 +128,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       return;
     }
 
-    this.newPluginTab(node.plugin_name, node, node.text, iconCls, node.id);
-
+    this.newPluginTab(node.plugin_name, node, node.display_name, iconCls, node.id);
   },
 
   // If itemId is given it is checked if the same tab already is

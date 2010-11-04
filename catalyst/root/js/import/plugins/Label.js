@@ -72,13 +72,27 @@ Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
 
     var pp = this.getPluginPanel();
     var guid = this.getGUID();
-      
-      var store = Ext.StoreMgr.lookup('tag_store');
-      var index = store.findExact('guid',guid);
-      if (index !== -1) {
-	  var record = store.getAt(index);
-    pp.setIconClass('pp-tag-style-tab pp-tag-style-' + record.get('style'));
+
+    // If we're a Label grid, update our title...
+    var itemId = this.getPluginPanel().itemId;
+    var ts = Ext.StoreMgr.lookup('tag_store');
+    var index = ts.findExact('guid', itemId);
+    if (index !== -1) {
+      var record = ts.getAt(index);
+      var title = record.get('display_name');
+      var style = record.get('style');
+      var iconCls = 'pp-tag-style-' + style;
+      var tabDom = Paperpile.main.tabs.getTabEl(this.getPluginPanel());
+      var tabEl = Ext.fly(tabDom);
+      var textEl = tabEl.child('.x-tab-strip-text');
+      for (var i = 0; i <= 24; i++) {
+        textEl.removeClass('pp-tag-style-' + i);
       }
+      textEl.dom.innerHTML = title;
+      textEl.addClass('pp-tag-style-tab');
+      textEl.addClass(iconCls);
+    }
+
   },
 
   getEmptyBeforeSearchTemplate: function() {

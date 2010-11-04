@@ -132,9 +132,9 @@ Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
     this.keyMap.disable();
     this.keyMap = null;
 
-    for (var i=0; i < this.bindings.length; i++) {
-	var shortcut = this.bindings[i];
-	shortcut.destroy();
+    for (var i = 0; i < this.bindings.length; i++) {
+      var shortcut = this.bindings[i];
+      shortcut.destroy();
     }
     this.bindings = null;
   }
@@ -230,7 +230,6 @@ Ext.override(Ext.Action, {
   }
 });
 
-
 Ext.override(Ext.menu.Item, {
   onRender: function(container, position) {
     if (!this.itemTpl) {
@@ -242,10 +241,10 @@ Ext.override(Ext.menu.Item, {
         '</tpl>',
         '<img src="{icon}" class="x-menu-item-icon {iconCls}"/>',
         '<span class="x-menu-item-text">{text}</span>',
-	// extraspace is a fake spacer which goes where the
-	// shortcutstring *would* go if we didn't have to put it
-	// up front and use absolute positioning.
-	// See paperpile.css
+        // extraspace is a fake spacer which goes where the
+        // shortcutstring *would* go if we didn't have to put it
+        // up front and use absolute positioning.
+        // See paperpile.css
         '<div class="x-menu-item-extraspace"></div>',
         '</a>');
     }

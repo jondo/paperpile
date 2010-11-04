@@ -563,39 +563,6 @@ sub update_collection : Local {
   $c->stash->{data}->{collection_update} = 1;
 }
 
-sub list_labels : Local {
-
-  my ( $self, $c ) = @_;
-
-  my $sth =
-    $c->model('Library')
-    ->dbh->prepare("SELECT * FROM Collections WHERE type='LABEL' order by hidden,sort_order");
-
-  my @data = ();
-
-  $sth->execute;
-  while ( my $row = $sth->fetchrow_hashref() ) {
-    push @data, {
-      guid       => $row->{guid},
-      name       => $row->{name},
-      type       => $row->{type},
-      parent     => $row->{parent},
-      sort_order => $row->{sort_order},
-      hidden     => $row->{hidden},
-      style      => $row->{style},
-      };
-  }
-
-  my %metaData = (
-    root   => 'data',
-    fields => [ 'guid', 'name', 'type', 'parent', 'sort_order', 'hidden', 'style' ],
-  );
-
-  $c->stash->{data}     = [@data];
-  $c->stash->{metaData} = {%metaData};
-
-}
-
 sub list_collections : Local {
 
   my ( $self, $c ) = @_;
@@ -612,9 +579,15 @@ sub list_collections : Local {
 
   $sth->execute;
   while ( my $row = $sth->fetchrow_hashref() ) {
+    my $name = $row->{name};
+    if ( length($name) >= 23 ) {
+      $name = substr($name,0,20) . '...';
+    }
+
     push @data, {
       guid       => $row->{guid},
       name       => $row->{name},
+      display_name => $name,
       type       => $row->{type},
       parent     => $row->{parent},
       sort_order => $row->{sort_order},
@@ -626,7 +599,7 @@ sub list_collections : Local {
 
   my %metaData = (
     root   => 'data',
-    fields => [ 'guid', 'name', 'type', 'parent', 'sort_order', 'hidden', 'style', 'count' ],
+    fields => [ 'guid', 'name', 'display_name', 'type', 'parent', 'sort_order', 'hidden', 'style', 'count' ],
   );
 
   $c->stash->{data}     = [@data];

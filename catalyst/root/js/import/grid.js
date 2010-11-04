@@ -964,7 +964,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
                 var guid = tags[i];
                 var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
                 if (style != null) {
-                  name = style.get('name');
+                  name = style.get('display_name');
                   style = style.get('style');
                   returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
                 }
@@ -1931,8 +1931,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   updateMetadata: function() {
     var selection = this.getSelection();
+    var selectionCount = this.getSelectionCount();
 
-    if (selection.length == 1) {
+    if (selectionCount == 1) {
       this.handleEdit(false, true);
       return;
     }
@@ -1943,7 +1944,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
       Ext.Msg.show({
         title: 'Auto-complete',
-        msg: 'Data for ' + selection.length + ' references will be matched to online resources and automatically updated. Backup copies of the old data will be copied to the Trash. Continue?',
+        msg: 'Data for ' + selectionCount + ' references will be matched to online resources and automatically updated. Backup copies of the old data will be copied to the Trash. Continue?',
         animEl: 'elId',
         icon: Ext.MessageBox.INFO,
         buttons: Ext.Msg.OKCANCEL,
@@ -2054,16 +2055,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var overview = this.getPluginPanel().getOverviewPanel();
     if (overview.rendered) {
       overview.forceUpdate();
-    }
-
-    // If we're a Label grid, update our title...
-    var itemId = this.getPluginPanel().itemId;
-    var ts = Ext.StoreMgr.lookup('tag_store');
-    var index = ts.findExact('guid', itemId);
-    if (index !== -1) {
-      var record = ts.getAt(index);
-      var title = record.get('name');
-      this.getPluginPanel().setTitle(title);
     }
   },
 
