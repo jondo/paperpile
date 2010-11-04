@@ -20,9 +20,9 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       this._filterTask = new Ext.util.DelayedTask(this.updateFilterAndView, this);
       this._filter.on('keyup', function(f, e) {
         var k = e.getKey();
-	if (k == e.DOWN || k == e.UP || k == e.ENTER || k == e.TAB) {
-	    return;
-	} else {
+        if (k == e.DOWN || k == e.UP || k == e.ENTER || k == e.TAB) {
+          return;
+        } else {
           this._filterTask.delay(20);
         }
       },
@@ -133,10 +133,10 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
 
   selectNext: function(keyCode, event) {
     var ind = this.getSingleSel();
-    if (ind < this._store.getCount()-1) {
+    if (ind < this._store.getCount() - 1) {
       ind++;
     }
-    
+
     this._dataView.select(ind, false);
     this.scrollTo(ind);
   },

@@ -1254,8 +1254,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       newNode = this.loader.createNode({
         text: tag,
-	name: tag,
-	display_name: tag,
+        name: tag,
+        display_name: tag,
         iconCls: 'pp-icon-empty',
         tagStyle: 'default',
         cls: 'pp-tag-tree-node pp-tag-tree-style-0',
