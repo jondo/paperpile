@@ -548,17 +548,17 @@ sub sort_collection : Local {
 sub update_collection : Local {
   my ( $self, $c ) = @_;
 
-  my $guid       = $c->request->params->{guid};
-  my $name       = $c->request->params->{name};
-  my $style      = $c->request->params->{style};
-  my $sort_order = $c->request->params->{sort_order};
-  my $hidden     = $c->request->params->{hidden};
+  my $guid = $c->request->params->{guid};
 
-  $c->model('Library')->set_collection_field( $guid, 'name',  $name )  if ( defined $name );
-  $c->model('Library')->set_collection_field( $guid, 'style', $style ) if ( defined $style );
-  $c->model('Library')->set_collection_field( $guid, 'sort_order', $sort_order )
-    if ( defined $sort_order );
-  $c->model('Library')->set_collection_field( $guid, 'hidden', $hidden ) if ( defined $hidden );
+  my $data = {};
+
+  foreach my $field ('name','style','sort_order','hidden'){
+    if (defined $c->request->params->{$field}){
+      $data->{$field} = $c->request->params->{$field};
+    }
+  }
+
+  $c->model('Library')->update_collection_fields( $guid, $data);
 
   $c->stash->{data}->{collection_update} = 1;
 }

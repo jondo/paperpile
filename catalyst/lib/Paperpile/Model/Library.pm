@@ -812,24 +812,25 @@ sub move_collection {
 
 }
 
-# Sets style $style for collection $guid.
+# Updates the fields of collection with $guid. New values are given in
+# the hashref $data.
+sub update_collection_fields {
 
-sub set_collection_style {
+  my ( $self, $guid, $data ) = @_;
 
-  my ( $self, $guid, $style ) = @_;
+  my $dbh = $self->dbh;
 
-  $self->dbh->do("UPDATE COLLECTIONS SET style='$style' WHERE guid='$guid';");
+  my @updates;
+
+  foreach my $field (keys %$data){
+    push @updates, "$field = ". $dbh->quote($data->{$field});
+  }
+
+  $dbh->do("UPDATE Collections SET " . join(',',@updates) . " WHERE guid='$guid';");
 
 }
 
-sub set_collection_field {
 
-  my ( $self, $guid, $field, $value ) = @_;
-
-  my $quoted_value = $self->dbh->quote($value);
-  $self->dbh->do("UPDATE COLLECTIONS SET $field=${quoted_value} WHERE guid='$guid';");
-
-}
 
 # Initializes default labels in the user's library. We do this
 # here (as opposed to shipping it in our default library) to make sure
