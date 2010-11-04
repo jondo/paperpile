@@ -1643,7 +1643,9 @@ div:hover.pp-tag-style-sample {
 }
 
 .pp-label-panel-filter {
-    font-size: 9px;
+    background: url('/images/goog-mag.png') no-repeat;
+    background-position: right center;
+    font-size: 10px;
     line-height: 12px;
     height: 16px;
     vertical-align:middle;
@@ -1659,9 +1661,6 @@ div:hover.pp-tag-style-sample {
     vertical-align:middle;
 }
 
-.pp-label-panel-selected {
-    background-image:url(../images/default/menu/checked.gif);
-}
 
 .more-labels-node-down a span {
     background-color:#FFFFFF;
@@ -1713,6 +1712,9 @@ div:hover.pp-tag-style-sample {
     /*-webkit-border-radius: 3px;*/
 }
 
+.pp-label-panel-wrap {
+    vertical-align: middle;
+}
 
 .pp-label-panel-item {
     cursor: pointer;
@@ -1725,8 +1727,18 @@ div:hover.pp-tag-style-sample {
     text-align: center;
     white-space: normal;
     font-weight: bold;
+    vertical-align: bottom;
+    position:relative;
+    top: -2px;
 }
 
+.pp-label-panel-over {
+    background-color: #eee;
+}
+
+.pp-label-panel-selected {
+    background-color:#dfe8f6;    
+}
 
 .pp-job-box {
     float:left; 

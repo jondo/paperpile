@@ -6,7 +6,6 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       collectionType: 'LABEL',
       storeId: 'hidden_tag_store'
     });
-    this._store.on('load', this.onStoreLoad, this);
     this._store.load();
 
     if (this.filterBar === true) {
@@ -15,26 +14,19 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
         width: '100%',
         itemId: 'LABEL_FILTER',
         emptyText: 'Search Labels',
-        enableKeyEvents: true,
-        store: this._store,
+        enableKeyEvents: true
       });
 
-      var task = new Ext.util.DelayedTask(this.onStoreLoad, this);
-      this._filter.on('keydown', function(f, e) {
-        task.delay(20);
-      },
-      this);
-      var task = new Ext.util.DelayedTask(this.onStoreLoad, this);
-      this._filter.on('specialkey', function(f, e) {
-        if (e.getKey() == e.ENTER && this._store.getCount() == 1) {
-          var record = this._store.getAt(0);
-          var node = Paperpile.main.tree.recordToNode(record, 'LABEL');
-          Paperpile.main.tabs.newCollectionTab(node, 'LABEL');
-          this.hide();
+      this._filterTask = new Ext.util.DelayedTask(this.updateFilterAndView, this);
+      this._filter.on('keyup', function(f, e) {
+        var k = e.getKey();
+	if (k == e.DOWN || k == e.UP || k == e.ENTER || k == e.TAB) {
+	    return;
+	} else {
+          this._filterTask.delay(20);
         }
       },
       this);
-
     }
 
     this._template = new Ext.XTemplate(
@@ -51,9 +43,11 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       autoHeight: true,
       border: false,
       frame: true,
-      overClass: 'pp-labelview-over',
+      trackOver: true,
+      overClass: 'pp-label-panel-over',
       selectedClass: 'pp-label-panel-selected',
-      itemSelector: 'div.pp-label-panel-item',
+      singleSelect: true,
+      itemSelector: 'div.pp-label-panel-wrap',
       boxMaxHeight: 250,
       boxMinHeight: 50,
       emptyText: '',
@@ -98,11 +92,76 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
 
     Paperpile.LabelPanel.superclass.initComponent.call(this);
 
+    this.actions = [];
+    this.actions['SELECT_FIRST'] = new Ext.Action({
+      handler: this.selectFirst,
+      scope: this
+    });
+    this.actions['DOWN_ONE'] = new Ext.Action({
+      handler: this.selectNext,
+      scope: this
+    });
+    this.actions['UP_ONE'] = new Ext.Action({
+      handler: this.selectPrev,
+      scope: this
+    });
+    this.actions['OPEN_SELECTED'] = new Ext.Action({
+      handler: this.openSelected,
+      scope: this
+    });
+
+    this.keys = new Ext.ux.KeyboardShortcuts(this.getEl());
+    this.keys.bindAction('tab', this.actions['SELECT_FIRST']);
+    this.keys.bindAction('down', this.actions['DOWN_ONE']);
+    this.keys.bindAction('up', this.actions['UP_ONE']);
+    this.keys.bindAction('enter', this.actions['OPEN_SELECTED']);
   },
 
-  
+  getSingleSel: function() {
+    var selectedIndices = this._dataView.getSelectedIndexes();
+    if (selectedIndices.length > 0) {
+      return selectedIndices[selectedIndices.length - 1];
+    } else {
+      return -1;
+    }
+  },
 
-  onStoreLoad: function() {
+  selectFirst: function(keyCode, event) {
+    this._dataView.select(0, false);
+    this.scrollTo(0);
+  },
+
+  selectNext: function(keyCode, event) {
+    var ind = this.getSingleSel();
+    if (ind < this._store.getCount()-1) {
+      ind++;
+    }
+    
+    this._dataView.select(ind, false);
+    this.scrollTo(ind);
+  },
+
+  selectPrev: function(keyCode, event) {
+    var ind = this.getSingleSel();
+    ind--;
+    if (ind < 0) {
+      ind = 0;
+    }
+    this._dataView.select(ind, false);
+    this.scrollTo(ind);
+  },
+
+  openSelected: function(keyCode, event) {
+    var ind = this.getSingleSel();
+    var record = this._store.getAt(ind);
+    var node = Paperpile.main.tree.recordToNode(record, 'LABEL');
+    Paperpile.main.tabs.newCollectionTab(node, 'LABEL');
+    this.hide();
+  },
+
+  scrollTo: function(index) {
+    var dom = this._dataView.getNode(index);
+    Ext.get(dom).scrollIntoView(this._dataViewport.getEl());
   },
 
   updateFilter: function() {
@@ -121,9 +180,9 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       });
     }
     this._store.filter(filters);
-    if (this._store.getCount() == 1) {
-      this._dataView.select(0, false);
-    }
+    //    if (this._store.getCount() == 1) {
+    //      this._dataView.select(0, false);
+    //    }
   },
 
   myContainerClick: function(dataView, e) {
@@ -142,10 +201,14 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
   },
 
   myOnClick: function(view, index, el, e) {
-    var record = this._store.getAt(index);
-    var node = Paperpile.main.tree.recordToNode(record, 'LABEL');
-    Paperpile.main.tabs.newCollectionTab(node, 'LABEL');
-    this.hide();
+    if (e.getTarget(".pp-label-panel-item", 1)) {
+      var record = this._store.getAt(index);
+      var node = Paperpile.main.tree.recordToNode(record, 'LABEL');
+      Paperpile.main.tabs.newCollectionTab(node, 'LABEL');
+      this.hide();
+    } else {
+      this.myContainerClick(view, e);
+    }
   },
 
   // Aligns this labelpanel to show up below an element.
@@ -153,16 +216,17 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
     this.getEl().alignTo(el, 'tl-bl', [-1, 0]);
   },
 
-  refreshView: function() {
+  loadRecordsFromStore: function() {
     var tags = Ext.StoreMgr.lookup('tag_store');
-    
+
     // Take all of our Records and add them to the hidden tag store.
     this._store.removeAll();
     var allRecords = tags.getRange();
     this._store.add(allRecords);
+  },
 
+  updateFilterAndView: function() {
     this.updateFilter();
-//    this._dataView.refresh();
     var viewSize = this._dataView.getSize().height;
     if (viewSize > 200) {
       viewSize = 200;
@@ -171,12 +235,18 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
     this.syncSize();
   },
 
+  refreshView: function() {
+    this.loadRecordsFromStore();
+    this.updateFilterAndView();
+  },
+
   show: function() {
     Paperpile.LabelPanel.superclass.show.call(this);
     Ext.getDoc().on("mousedown", this.onMouseDown, this);
     if (this._filter) {
       this._filter.setValue('');
       this._filter.el.focus();
+      this.updateFilterAndView();
     } else {
       this.getEl().focus();
     }

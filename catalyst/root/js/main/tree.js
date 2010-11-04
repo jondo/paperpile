@@ -1474,11 +1474,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
 
     var tagsRoot = this.getNodeById('TAGS_ROOT');
-    var expanded = tagsRoot.isExpanded();
-
     if (!tagsRoot) {
       return;
     }
+
+    var expanded = tagsRoot.isExpanded();
+
     tagsRoot.silentLoad = true;
     tagsRoot.removeAll();
 
