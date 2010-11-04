@@ -79,7 +79,7 @@ Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
     var index = ts.findExact('guid', itemId);
     if (index !== -1) {
       var record = ts.getAt(index);
-      var title = record.get('name');
+      var title = record.get('display_name');
       var style = record.get('style');
       var iconCls = 'pp-tag-style-' + style;
       var tabDom = Paperpile.main.tabs.getTabEl(this.getPluginPanel());

@@ -323,8 +323,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // For tags use specifically styled tab
       if (node.type == 'TAGS') {
         pars.collection_type = 'label';
-        iconCls = null;
-        title = node.text;
       }
 
       if (node.type == 'FOLDER') {
@@ -1539,7 +1537,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       children: [],
       plugin_name: 'DB',
       plugin_mode: 'FULLTEXT',
-      plugin_title: record.get('name')
+      plugin_title: record.get('display_name')
     };
 
     if (this.hideShowMode) {
