@@ -569,11 +569,11 @@ sub list_collections : Local {
 
   my $type = $c->request->params->{type};
 
-  my $hist = $c->model('Library')->histogram('tags');
+  my $dbh = $c->model('Library')->dbh;
 
-  my $sth =
-    $c->model('Library')
-    ->dbh->prepare("SELECT * FROM Collections WHERE type='LABEL' order by sort_order");
+  my $hist = $c->model('Library')->histogram('tags', $dbh);
+
+  my $sth = $dbh->prepare("SELECT * FROM Collections WHERE type='LABEL' order by sort_order");
 
   my @data = ();
 
@@ -638,28 +638,6 @@ sub sort_labels_by_count : Local {
   my $i = 0;
   foreach my $guid ( reverse @sorted_keys ) {
     $c->model('Library')->update_collection_fields( $guid, {'sort_order' => $i}, $dbh );
-    $i++;
-  }
-
-  $c->stash->{data}->{collection_delta} = 1;
-}
-
-# Returns the list of labels sorted by tag counts.
-sub sort_and_hide_labels : Local {
-  my ( $self, $c ) = @_;
-
-  my $hist = $c->model('Library')->histogram('tags');
-
-  my @sorted_keys = sort { $hist->{$a}->{count} <=> $hist->{$b}->{count} } keys %$hist;
-
-  my $i = 0;
-  foreach my $guid ( reverse @sorted_keys ) {
-    $c->model('Library')->set_collection_field( $guid, 'sort_order', $i );
-    if ($i >= 5) {
-	$c->model('Library')->set_collection_field( $guid, 'hidden', 1 );	
-    } else {
-	$c->model('Library')->set_collection_field( $guid, 'hidden', 0 );	
-    }
     $i++;
   }
 
