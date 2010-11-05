@@ -22,7 +22,6 @@ Paperpile.PluginPanelFolder = Ext.extend(Paperpile.PluginPanel, {
       iconCls: 'pp-icon-folder'
     });
 
-    Paperpile.log("Folder plugin!");
     Paperpile.PluginPanelFolder.superclass.initComponent.call(this);
   },
 

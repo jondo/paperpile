@@ -82,7 +82,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       bodyStyle: 'font-size:9px,padding:5px;',
       header: false,
       renderTo: document.body,
-      width: 150,
+      width: 175,
       autoHeight: true,
       autoScroll: true,
       cls: 'pp-label-panel',

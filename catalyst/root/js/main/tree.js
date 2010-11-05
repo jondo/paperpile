@@ -982,8 +982,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     node.expand(false, false, function(n) {
       newNode = n.appendChild(this.loader.createNode({
         text: 'New Folder',
-	name: 'New Folder',
-	display_name: 'New Folder',
+        name: 'New Folder',
+        display_name: 'New Folder',
         iconCls: 'pp-icon-folder',
         draggable: true,
         expanded: true,
@@ -1478,10 +1478,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     for (var guid in nodeHash) {
       var node = nodeHash[guid];
       if (node.parent && node.parent != 'ROOT') {
-	  var parent = nodeHash[node.parent];
-	  parent.appendChild(node);
+        var parent = nodeHash[node.parent];
+        parent.appendChild(node);
       } else {
-	  folderRoot.appendChild(node);
+        folderRoot.appendChild(node);
       }
     }
 
@@ -1666,7 +1666,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         name: newText
       },
       success: function(response) {
-        Paperpile.main.triggerLabelStoreReload();
+        if (node.type == 'LABEL') {
+          Paperpile.main.triggerLabelStoreReload();
+        } else if (node.type == 'FOLDER') {
+          Paperpile.main.triggerFolderStoreReload();
+        }
       },
       scope: this
     });
@@ -2085,7 +2089,7 @@ Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     var items;
     if (node.id == 'LABEL_ROOT') {
       items = ['labels_menu_new',
-               'sort_by_menu'];
+        'sort_by_menu'];
     } else {
       items = [
         'labels_menu_style',
