@@ -812,24 +812,25 @@ sub move_collection {
 
 }
 
-# Sets style $style for collection $guid.
+# Updates the fields of collection with $guid. New values are given in
+# the hashref $data.
+sub update_collection_fields {
 
-sub set_collection_style {
+  my ( $self, $guid, $data, $dbh ) = @_;
 
-  my ( $self, $guid, $style ) = @_;
+  $dbh = $self->dbh if ( !$dbh );
 
-  $self->dbh->do("UPDATE COLLECTIONS SET style='$style' WHERE guid='$guid';");
+  my @updates;
+
+  foreach my $field (keys %$data){
+    push @updates, "$field = ". $dbh->quote($data->{$field});
+  }
+
+  $dbh->do("UPDATE Collections SET " . join(',',@updates) . " WHERE guid='$guid';");
 
 }
 
-sub set_collection_field {
 
-  my ( $self, $guid, $field, $value ) = @_;
-
-  my $quoted_value = $self->dbh->quote($value);
-  $self->dbh->do("UPDATE COLLECTIONS SET $field=${quoted_value} WHERE guid='$guid';");
-
-}
 
 # Initializes default labels in the user's library. We do this
 # here (as opposed to shipping it in our default library) to make sure
@@ -1347,7 +1348,7 @@ sub insert_labels {
       ( my $count ) = $dbh->selectrow_array(
         "SELECT count(*) FROM Collections WHERE type='LABEL' and hidden == 0;");
       if ( $count > 5 ) {
-        $self->set_collection_field( $map{$label}, 'hidden', 1 );
+        $self->update_collection_fields( $map{$label}, {'hidden' => 1} );
       }
     }
 
@@ -1760,13 +1761,15 @@ sub index_pdf {
 
 sub histogram {
 
-  my ( $self, $field ) = @_;
+  my ( $self, $field, $dbh ) = @_;
+
+  $dbh = $self->dbh if ( !$dbh );
 
   my %hist = ();
 
   if ( $field eq 'authors' ) {
 
-    my $sth = $self->dbh->prepare('SELECT authors from Publications WHERE trashed=0;');
+    my $sth = $dbh->prepare('SELECT authors from Publications WHERE trashed=0;');
 
     my ($author_list);
     $sth->bind_columns( \$author_list );
@@ -1797,7 +1800,7 @@ sub histogram {
     my ( $guid, $tag, $style );
 
     # Select all tags and initialize the histogram counts.
-    my $sth = $self->dbh->prepare(qq^SELECT guid,name,style FROM Collections WHERE type='LABEL';^);
+    my $sth = $dbh->prepare(qq^SELECT guid,name,style FROM Collections WHERE type='LABEL';^);
     $sth->bind_columns( \$guid, \$tag, \$style );
     $sth->execute;
     while ( $sth->fetch ) {
@@ -1809,7 +1812,7 @@ sub histogram {
     }
 
     # Select tag-publication links and count them up.
-    $sth = $self->dbh->prepare(
+    $sth = $dbh->prepare(
       qq^SELECT collection_guid FROM Collection_Publication, Publications WHERE publication_guid = Publications.guid
          AND Publications.trashed=0 ^
     );
@@ -1828,7 +1831,7 @@ sub histogram {
 
     $field = 'journal' if ( $field eq 'journals' );
 
-    my $sth = $self->dbh->prepare("SELECT $field FROM Publications WHERE trashed=0;");
+    my $sth = $dbh->prepare("SELECT $field FROM Publications WHERE trashed=0;");
     my ($value);
     $sth->bind_columns( \$value );
     $sth->execute;

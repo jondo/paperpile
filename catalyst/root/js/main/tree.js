@@ -1367,31 +1367,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return text;
   },
 
-  sortAndHideTags: function() {
-    Paperpile.Ajax({
-      url: '/ajax/crud/sort_and_hide_labels',
-      params: {},
-      success: function() {
-        var store = Ext.StoreMgr.lookup('tag_store');
-        var hidden_store = Ext.StoreMgr.lookup('hidden_tag_store');
-        store.reload({
-          callback: function() {
-            var totalCount = store.getTotalCount();
-            var hidden_total = hidden_store.getCount();
-            Paperpile.status.updateMsg({
-              type: 'info',
-              msg: totalCount + " labels were auto-arranged (" + hidden_total + " now hidden from view)",
-              fade: true,
-              duration: 3.5
-            });
-
-          }
-        });
-      },
-      scope: this
-    });
-  },
-
   sortTagsByCount: function() {
     Paperpile.Ajax({
       url: '/ajax/crud/sort_labels_by_count',
@@ -1994,13 +1969,6 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         scope: tree
       },
       {
-        id: 'tags_menu_arrange',
-        iconCls: 'pp-icon-clean',
-        text: 'Auto-arrange Labels',
-        handler: tree.sortAndHideTags,
-        scope: tree
-      },
-      {
         id: 'tags_menu_style',
         text: 'Style',
         menu: tree.stylePickerMenu
@@ -2064,8 +2032,7 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     var items;
     if (node.id == 'TAGS_ROOT') {
       items = ['tags_menu_new',
-        'tags_menu_arrange',
-        'sort_by_menu'];
+               'sort_by_menu'];
     } else {
       items = [
         'tags_menu_style',
