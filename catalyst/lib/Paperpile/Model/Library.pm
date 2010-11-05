@@ -830,7 +830,41 @@ sub update_collection_fields {
 
 }
 
+sub sort_labels {
 
+  my ( $self, $field ) = @_;
+
+  my $dbh = $self->dbh;
+
+  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+
+  my @guids;
+
+  if ( $field eq 'name' ) {
+    my $sth =
+      $dbh->prepare("SELECT guid FROM Collections WHERE type='LABEL' order by UPPER(name) ASC");
+    $sth->execute;
+    while ( my $row = $sth->fetchrow_hashref ) {
+      push @guids, $row->{guid};
+    }
+  }
+
+  if ( $field eq 'count' ) {
+    my $hist = $self->histogram( 'tags', $dbh );
+    @guids = reverse sort { $hist->{$a}->{count} <=> $hist->{$b}->{count} } keys %$hist;
+  }
+
+  my $sth = $dbh->prepare("UPDATE Collections SET sort_order = ? WHERE guid=?");
+
+  my $i = 0;
+  foreach my $guid (@guids) {
+    $sth->execute( $i, $guid );
+    $i++;
+  }
+
+  $dbh->commit;
+
+}
 
 # Initializes default labels in the user's library. We do this
 # here (as opposed to shipping it in our default library) to make sure

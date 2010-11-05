@@ -33,6 +33,7 @@ CREATE TABLE Publications(
   tags               TEXT,
   tags_tmp           TEXT,
   folders            TEXT
+  -- additional fields are added dynamically in init_db in Build.pm
 );
 
 CREATE VIRTUAL TABLE Fulltext using fts3(guid,text,abstract,notes,title,key,author,year,journal, keyword,folderid,labelid);
@@ -46,6 +47,8 @@ CREATE TABLE Collections (
   hidden        INTEGER,
   style         TEXT   
 );
+
+CREATE INDEX collections_guid_index ON Collections ('guid');
 
 CREATE TABLE Collection_Publication (
   collection_guid     Text,
