@@ -580,8 +580,8 @@ sub list_collections : Local {
   $sth->execute;
   while ( my $row = $sth->fetchrow_hashref() ) {
     my $name = $row->{name};
-    if ( length($name) >= 23 ) {
-      $name = substr($name,0,20) . '...';
+    if ( length($name) >= 13 ) {
+      $name = substr($name,0,10) . '...';
     }
 
     push @data, {
