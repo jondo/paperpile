@@ -816,9 +816,9 @@ sub move_collection {
 # the hashref $data.
 sub update_collection_fields {
 
-  my ( $self, $guid, $data ) = @_;
+  my ( $self, $guid, $data, $dbh ) = @_;
 
-  my $dbh = $self->dbh;
+  $dbh = $self->dbh if ( !$dbh );
 
   my @updates;
 
@@ -1761,13 +1761,15 @@ sub index_pdf {
 
 sub histogram {
 
-  my ( $self, $field ) = @_;
+  my ( $self, $field, $dbh ) = @_;
+
+  $dbh = $self->dbh if ( !$dbh );
 
   my %hist = ();
 
   if ( $field eq 'authors' ) {
 
-    my $sth = $self->dbh->prepare('SELECT authors from Publications WHERE trashed=0;');
+    my $sth = $dbh->prepare('SELECT authors from Publications WHERE trashed=0;');
 
     my ($author_list);
     $sth->bind_columns( \$author_list );
@@ -1798,7 +1800,7 @@ sub histogram {
     my ( $guid, $tag, $style );
 
     # Select all tags and initialize the histogram counts.
-    my $sth = $self->dbh->prepare(qq^SELECT guid,name,style FROM Collections WHERE type='LABEL';^);
+    my $sth = $dbh->prepare(qq^SELECT guid,name,style FROM Collections WHERE type='LABEL';^);
     $sth->bind_columns( \$guid, \$tag, \$style );
     $sth->execute;
     while ( $sth->fetch ) {
@@ -1810,7 +1812,7 @@ sub histogram {
     }
 
     # Select tag-publication links and count them up.
-    $sth = $self->dbh->prepare(
+    $sth = $dbh->prepare(
       qq^SELECT collection_guid FROM Collection_Publication, Publications WHERE publication_guid = Publications.guid
          AND Publications.trashed=0 ^
     );
@@ -1829,7 +1831,7 @@ sub histogram {
 
     $field = 'journal' if ( $field eq 'journals' );
 
-    my $sth = $self->dbh->prepare("SELECT $field FROM Publications WHERE trashed=0;");
+    my $sth = $dbh->prepare("SELECT $field FROM Publications WHERE trashed=0;");
     my ($value);
     $sth->bind_columns( \$value );
     $sth->execute;

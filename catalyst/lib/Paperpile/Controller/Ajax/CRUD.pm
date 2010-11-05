@@ -606,36 +606,38 @@ sub list_collections : Local {
   $c->stash->{metaData} = {%metaData};
 }
 
-# Returns the list of labels sorted by tag counts.
+# Returns the list of labels sorted by name.
 sub sort_labels_by_name : Local {
   my ( $self, $c ) = @_;
 
-  my $sth =
-    $c->model('Library')
-    ->dbh->prepare("SELECT * FROM Collections WHERE type='LABEL' order by UPPER(name) ASC");
+  my $dbh = $c->model('Library')->dbh;
+
+  my $sth = $dbh->prepare("SELECT guid FROM Collections WHERE type='LABEL' order by UPPER(name) ASC");
 
   $sth->execute;
   my $i = 0;
   while ( my $row = $sth->fetchrow_hashref ) {
     my $guid = $row->{guid};
-    $c->model('Library')->set_collection_field( $guid, 'sort_order', $i );
+    $c->model('Library')->update_collection_fields( $guid, {'sort_order' => $i}, $dbh );
     $i++;
   }
 
   $c->stash->{data}->{collection_delta} = 1;
 }
 
-# Returns the list of labels sorted by tag counts.
+# Returns the list of labels sorted by paper count.
 sub sort_labels_by_count : Local {
   my ( $self, $c ) = @_;
 
-  my $hist = $c->model('Library')->histogram('tags');
+  my $dbh = $c->model('Library')->dbh;
+
+  my $hist = $c->model('Library')->histogram('tags', $dbh);
 
   my @sorted_keys = sort { $hist->{$a}->{count} <=> $hist->{$b}->{count} } keys %$hist;
 
   my $i = 0;
   foreach my $guid ( reverse @sorted_keys ) {
-    $c->model('Library')->set_collection_field( $guid, 'sort_order', $i );
+    $c->model('Library')->update_collection_fields( $guid, {'sort_order' => $i}, $dbh );
     $i++;
   }
 
