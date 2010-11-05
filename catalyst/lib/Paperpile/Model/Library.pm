@@ -1348,7 +1348,7 @@ sub insert_labels {
       ( my $count ) = $dbh->selectrow_array(
         "SELECT count(*) FROM Collections WHERE type='LABEL' and hidden == 0;");
       if ( $count > 5 ) {
-        $self->set_collection_field( $map{$label}, 'hidden', 1 );
+        $self->update_collection_fields( $map{$label}, {'hidden' => 1} );
       }
     }
 
