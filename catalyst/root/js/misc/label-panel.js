@@ -4,7 +4,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
 
     this._store = new Paperpile.CollectionStore({
       collectionType: 'LABEL',
-      storeId: 'hidden_tag_store'
+      storeId: 'hidden_label_store'
     });
     this._store.load();
 
@@ -33,7 +33,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       '<tpl for=".">',
       '    <div id="{name}-wrap" class="pp-label-panel-wrap">',
       '    <input type="checkbox" class="pp-label-panel-check" index="{#}"></input>',
-      '      <div id="{name}" class="pp-label-panel-item pp-tag-style-{style}">{display_name}</div>',
+      '      <div id="{name}" class="pp-label-panel-item pp-label-style-{style}">{display_name}</div>',
       '    </div>',
       '</tpl>',
       '<div id="label-panel-spacing" style="height:4px;"></div>').compile();
@@ -197,7 +197,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
   },
 
   updateCollection: function(record) {
-    Ext.StoreMgr.lookup('tag_store').updateCollection(record);
+    Ext.StoreMgr.lookup('label_store').updateCollection(record);
   },
 
   myOnClick: function(view, index, el, e) {
@@ -217,11 +217,11 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
   },
 
   loadRecordsFromStore: function() {
-    var tags = Ext.StoreMgr.lookup('tag_store');
+    var labels = Ext.StoreMgr.lookup('label_store');
 
-    // Take all of our Records and add them to the hidden tag store.
+    // Take all of our Records and add them to the hidden label store.
     this._store.removeAll();
-    var allRecords = tags.getRange();
+    var allRecords = labels.getRange();
     this._store.add(allRecords);
   },
 
@@ -264,7 +264,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       return;
     } else if (e.getTarget("input")) {
       return;
-    } else if (e.getTarget(".pp-tag-tree-node")) {
+    } else if (e.getTarget(".pp-label-tree-node")) {
 
     } else {
       this.hide();

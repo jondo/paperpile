@@ -187,17 +187,29 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.dd = new Paperpile.DragDropManager();
     this.dd.initListeners();
 
-    this.tagStore = new Paperpile.CollectionStore({
+    this.labelStore = new Paperpile.CollectionStore({
       collectionType: 'LABEL',
       listeners: {
         load: {
-          fn: this.onTagStoreLoad,
+          fn: this.onLabelStoreLoad,
           scope: this
         }
       },
-      storeId: 'tag_store'
+      storeId: 'label_store'
     });
-    this.tagStore.reload();
+    this.labelStore.reload();
+
+    this.folderStore = new Paperpile.CollectionStore({
+      collectionType: 'FOLDER',
+      listeners: {
+        load: {
+          fn: this.onFolderStoreLoad,
+          scope: this
+        }
+      },
+      storeId: 'folder_store'
+    });
+    this.folderStore.reload();
 
     this.runningJobs = [];
 
@@ -293,7 +305,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   keyControlR: function() {
-    Ext.StoreMgr.lookup('tag_store').reload();
+    Ext.StoreMgr.lookup('label_store').reload();
   },
 
   keyControlC: function() {
@@ -732,10 +744,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     // Update this part of the code when the new label widget is in
     // place. Right now the label list does not get updated. There
-    // might be also a race condition when the tagStore response comas
+    // might be also a race condition when the labelStore response comas
     // after the subsequent grid updates. 
     if (data.collection_delta) {
-      this.tagStore.reload();
+      this.labelStore.reload();
     }
 
     for (var i = 0; i < tabs.length; i++) {
@@ -898,11 +910,31 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   },
 
-  triggerTagStoreReload: function() {
-    Ext.StoreMgr.lookup('tag_store').reload();
+  triggerFolderStoreReload: function() {
+    Ext.StoreMgr.lookup('folder_store').reload();
   },
 
-  onTagStoreLoad: function() {
+  triggerLabelStoreReload: function() {
+    Ext.StoreMgr.lookup('label_store').reload();
+  },
+
+  onFolderStoreLoad: function() {
+    // Do the tree.
+    if (Paperpile.main.tree) {
+      Paperpile.main.tree.refreshFolders();
+    }
+
+    // Now tab panel and grids.
+    var tabs = Paperpile.main.tabs.items.items;
+    for (var i = 0; i < tabs.length; i++) {
+      var tab = tabs[i];
+      if (tab instanceof Paperpile.PluginPanel) {
+        tab.getGrid().refreshCollections();
+      }
+    }
+  },
+
+  onLabelStoreLoad: function() {
     // Do the tree.
     if (Paperpile.main.tree) {
       Paperpile.main.tree.refreshLabels();
@@ -912,9 +944,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var tabs = Paperpile.main.tabs.items.items;
     for (var i = 0; i < tabs.length; i++) {
       var tab = tabs[i];
-      // Force a re-render on any grid items containing the given tag.
       if (tab instanceof Paperpile.PluginPanel) {
-        tab.getGrid().updateTagStyles();
+        tab.getGrid().refreshCollections();
       }
     }
 

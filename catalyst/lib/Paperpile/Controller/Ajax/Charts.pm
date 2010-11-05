@@ -45,8 +45,8 @@ sub chart : Local {
     $chart = $self->_chart($hist, 'bar');
   }
 
-  if ($type eq 'top_tags'){
-    my $hist = $c->model('Library')->histogram('tags');
+  if ($type eq 'top_labels'){
+    my $hist = $c->model('Library')->histogram('labels');
     $chart = $self->_chart($hist, 'bar');
   }
 
@@ -199,11 +199,11 @@ sub clouds : Local {
     my $class_string = "pp-cloud-item";
     my $key_string = "$id";
     if ($item->{style}) {
-      # We have style information for the tag cloud.
+      # We have style information for the label cloud.
       my $style = $item->{style};
       $key_string = qq^$name^;
       $style_string = qq^style_number="$style"^;
-      $class_string = qq^pp-cloud-item pp-tag-cloud pp-tag-style-$style^;
+      $class_string = qq^pp-cloud-item pp-label-cloud pp-label-style-$style^;
     }
 
     $output .= "<a key=\"$key_string\" class=\"$class_string\" href=\"#\" $style_string style=\"font-size:$size;\" count=\"$count\">$name</a> ";

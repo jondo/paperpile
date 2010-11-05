@@ -27,10 +27,10 @@ Ext.extend(Paperpile.StylePicker, Ext.Component, {
     }
 
     var t = this.tpl || new Ext.XTemplate(
-      '<tpl for="."><div class="pp-tag-style-sample pp-tag-style-{.}"><span unselectable="on">Label</span></div></tpl>');
+      '<tpl for="."><div class="pp-label-style-sample pp-label-style-{.}"><span unselectable="on">Label</span></div></tpl>');
     var el = document.createElement("div");
     el.id = this.getId();
-    el.className = 'pp-tag-style-picker';
+    el.className = 'pp-label-style-picker';
     t.overwrite(el, numbers);
     container.dom.insertBefore(el, position);
     this.el = Ext.get(el);
@@ -57,7 +57,7 @@ Ext.extend(Paperpile.StylePicker, Ext.Component, {
   handleClick: function(e, t) {
     e.preventDefault();
     if (!this.disabled) {
-      var number = t.className.match(/pp-tag-style-(\d+)/)[1];
+      var number = t.className.match(/pp-label-style-(\d+)/)[1];
       this.select(number);
     }
   },

@@ -705,7 +705,7 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 
 .pp-action-label {
-    background: transparent url('/images/icons/tag_blue.png') no-repeat;
+    background: transparent url('/images/icons/label_blue.png') no-repeat;
 }
 
 .pp-action-restore {
@@ -950,16 +950,16 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/arrow_refresh.png') !important;
 }
 
-.pp-icon-tags{
-    background-image: url('/images/icons/tag_orange.png')!important;
+.pp-icon-labels{
+    background-image: url('/images/icons/label_orange.png')!important;
 }
 
-.pp-icon-tag{
-    background-image: url('/images/icons/tag_blue.png')!important;
+.pp-icon-label{
+    background-image: url('/images/icons/label_blue.png')!important;
 }
 
-.pp-icon-tag-new{
-    background-image: url('/images/icons/tag_add.png')!important;
+.pp-icon-label-new{
+    background-image: url('/images/icons/label_add.png')!important;
 }
 
 .pp-icon-clouds{
@@ -1465,10 +1465,10 @@ div:hover.pp-grid-sort-item {
   border: 1px solid #F7CA75 ;
 }
 
-/*** Tags ***/
+/*** Labels ***/
 
 
-/* Tag display/control in right side-panel */
+/* Label display/control in right side-panel */
 .pp-label-widget {
     line-height: 1em;
     white-space: nowrap;
@@ -1478,20 +1478,20 @@ div:hover.pp-grid-sort-item {
 .pp-search-download-widget {
 }
 
-.pp-tag-control *{
+.pp-label-control *{
     font-size:9px;
     height: 18px;
 }
 
-.pp-tag-control .x-form-trigger {
+.pp-label-control .x-form-trigger {
     height: 17px;
 }
 
-.pp-tag-add-link{
+.pp-label-add-link{
     float:left;
 }
 
-.pp-tag-box {
+.pp-label-box {
     border-style:solid;
     border-width: 1px;
     font-size: 9px;
@@ -1503,7 +1503,7 @@ div:hover.pp-grid-sort-item {
     margin: 0px 6px 6px 0px;
 }
 
-.pp-tag-name {
+.pp-label-name {
     overflow:hidden;
     display:inline;
     padding: 0 2px;
@@ -1512,7 +1512,7 @@ div:hover.pp-grid-sort-item {
     cursor: default;
 }
 
-.pp-tag-cloud {
+.pp-label-cloud {
     display:inline-block;
     padding: 2px;
     border-width: 1px 0px;
@@ -1525,7 +1525,7 @@ div:hover.pp-grid-sort-item {
     text-decoration:none;
 }
 
-.pp-tag-remove{
+.pp-label-remove{
     border-width:0px 0px 0px 1px;
     margin: 0px 2px 0px 4px;
     display:inline;
@@ -1534,7 +1534,7 @@ div:hover.pp-grid-sort-item {
     cursor: default;
 }
 
-div:hover.pp-tag-remove{
+div:hover.pp-label-remove{
     border-width:1px;
     margin: 0px 2px 0px 4px;
     display:inline;
@@ -1546,9 +1546,9 @@ div:hover.pp-tag-remove{
 }
 
 
-/* Display of tags at other places */
+/* Display of labels at other places */
 
-.pp-tag-tree-node a span{
+.pp-label-tree-node a span{
     border-width:1px;
     font-size: 9px;
     padding: 1px 3px;
@@ -1557,7 +1557,7 @@ div:hover.pp-tag-remove{
     /*-webkit-border-radius: 3px;*/
 }
 
-.pp-tag-style-tab {
+.pp-label-style-tab {
     border-width: 1px;
     font-size: 11px !important;
     font-weight:bold !important;
@@ -1567,7 +1567,7 @@ div:hover.pp-tag-remove{
     /*-webkit-border-radius: 3px;*/
 }
 
-.pp-tag-style-sample {
+.pp-label-style-sample {
     border-style:solid;
     border-width: 1px;
     font-size: 10px;
@@ -1579,7 +1579,7 @@ div:hover.pp-tag-remove{
     cursor: pointer;
 }
 
-div:hover.pp-tag-style-sample {
+div:hover.pp-label-style-sample {
     border-style:solid;
     border-width: 1px;
     font-size: 10px;
@@ -1592,16 +1592,16 @@ div:hover.pp-tag-style-sample {
     cursor: pointer;
 }
 
-.pp-tag-style-picker {
+.pp-label-style-picker {
     width: 200px;
 } 
 
-.pp-tag-grid-block {
+.pp-label-grid-block {
     display:inline-block;
     margin: 0px 0px 0px .75em;
 }
 
-.pp-tag-grid {
+.pp-label-grid {
     -moz-border-radius: 3px;
     /*-webkit-border-radius: 3px;*/
     border-width:1px;
@@ -1619,7 +1619,7 @@ div:hover.pp-tag-style-sample {
     display:inline-block;
 }
 
-.pp-tag-grid-inline {
+.pp-label-grid-inline {
     -moz-border-radius: 3px;
     /*-webkit-border-radius: 3px;*/
     border-width:1px;
@@ -1633,7 +1633,7 @@ div:hover.pp-tag-style-sample {
     font-weight: bold;
 }
 
-.pp-tag-node input.x-tree-node-cb, .pp-folder-node input.x-tree-node-cb {
+.pp-label-node input.x-tree-node-cb, .pp-folder-node input.x-tree-node-cb {
     position:relative;
     left:-16px;
     margin:0px;
@@ -1703,7 +1703,7 @@ div:hover.pp-tag-style-sample {
     margin-bottom: 8px;
 }
 
-.pp-tag-tree-node a span{
+.pp-label-tree-node a span{
     border-width:1px;
     font-size: 9px;
     padding: 1px 3px;
@@ -1874,32 +1874,32 @@ div:hover.pp-tag-style-sample {
 
 
 
-.pp-tag-style-default,  .pp-tag-tree-style-default  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: #686868 !important; }
-.pp-tag-style-0,  .pp-tag-tree-style-0  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: #686868 !important; }
-.pp-tag-style-1,  .pp-tag-tree-style-1  a span { border-color: rgb(124, 136, 155); border-style:solid; background-color: rgb(224, 236, 255); color: rgb(32, 108, 255) !important; }   
-.pp-tag-style-2,  .pp-tag-tree-style-2  a span { border-color: rgb(123, 126, 155);  border-style:solid; background-color: rgb(223, 226, 255); color: rgb(0, 0, 204) !important;    }   
-.pp-tag-style-3,  .pp-tag-tree-style-3  a span { border-color: rgb(124, 113, 149); border-style:solid; background-color: rgb(224, 213, 249); color: rgb(82, 41, 163) !important;  }   
-.pp-tag-style-4,  .pp-tag-tree-style-4  a span { border-color: rgb(153, 133, 144); border-style:solid; background-color: rgb(253, 233, 244); color: rgb(133, 79, 97) !important;  }   
-.pp-tag-style-5,  .pp-tag-tree-style-5  a span { border-color: rgb(155, 127, 127); border-style:solid; background-color: rgb(255, 227, 227); color: rgb(204, 0, 0) !important;    }  
-.pp-tag-style-6,  .pp-tag-tree-style-6  a span { border-color: rgb(70, 105, 134);  border-style:solid; background-color: rgb(90, 105, 134);  color: rgb(222, 229, 242) !important; }  
-.pp-tag-style-1-reverse, .pp-tag-style-7,  .pp-tag-tree-style-7  a span { border-color: rgb(32, 108, 255);  border-style:solid; background-color: rgb(32, 108, 255);  color: rgb(224, 236, 255) !important; }  
-.pp-tag-style-8,  .pp-tag-tree-style-8  a span { border-color: rgb(0, 0, 204);     border-style:solid; background-color: rgb(0, 0, 204);     color: rgb(223, 226, 255) !important;    }  
-.pp-tag-style-9, .pp-tag-tree-style-9 a span   { border-color: rgb(82, 41, 163);   border-style:solid; background-color: rgb(82, 41, 163);   color: rgb(224, 213, 249) !important;  }   
-.pp-tag-style-10, .pp-tag-tree-style-10 a span { border-color: rgb(133, 79, 97);   border-style:solid; background-color: rgb(133, 79, 97);   color: rgb(253, 233, 244) !important;  }   
-.pp-tag-style-11, .pp-tag-tree-style-11 a span { border-color: rgb(204, 0, 0);     border-style:solid; background-color: rgb(204, 0, 0);     color: rgb(255, 227, 227) !important;    }   
-.pp-tag-style-12, .pp-tag-tree-style-12 a span { border-color: rgb(255, 240, 225); border-style:solid; background-color: rgb(255, 240, 225); color: rgb(236, 112, 0) !important;  }   
-.pp-tag-style-13, .pp-tag-tree-style-13 a span { border-color: rgb(250, 220, 179); border-style:solid; background-color: rgb(250, 220, 179); color: rgb(179, 109, 0) !important;  }   
-.pp-tag-style-14, .pp-tag-tree-style-14 a span { border-color: rgb(243, 231, 179); border-style:solid; background-color: rgb(243, 231, 179); color: rgb(171, 139, 0) !important;  }   
-.pp-tag-style-15, .pp-tag-tree-style-15 a span { border-color: rgb(255, 255, 212); border-style:solid; background-color: rgb(255, 255, 212); color: rgb(99, 99, 48) !important;   }   
-.pp-tag-style-16, .pp-tag-tree-style-16 a span { border-color: rgb(249, 255, 239); border-style:solid; background-color: rgb(249, 255, 239); color: rgb(100, 153, 44) !important; }   
-.pp-tag-style-17, .pp-tag-tree-style-17 a span { border-color: rgb(241, 245, 236); border-style:solid; background-color: rgb(241, 245, 236); color: rgb(0, 102, 51) !important;   }   
-.pp-tag-style-18, .pp-tag-tree-style-18 a span { border-color: rgb(236, 112, 0);   border-style:solid; background-color: rgb(236, 112, 0);   color: rgb(255, 240, 225) !important;  }   
-.pp-tag-style-19, .pp-tag-tree-style-19 a span { border-color: rgb(179, 109, 0);   border-style:solid; background-color: rgb(179, 109, 0);   color: rgb(250, 220, 179) !important;  }   
-.pp-tag-style-20, .pp-tag-tree-style-20 a span { border-color: rgb(171, 139, 0);   border-style:solid; background-color: rgb(171, 139, 0);   color: rgb(243, 231, 179) !important;  }   
-.pp-tag-style-21, .pp-tag-tree-style-21 a span { border-color: rgb(99, 99, 48);    border-style:solid; background-color: rgb(99, 99, 48);    color: rgb(255, 255, 212) !important;   }   
-.pp-tag-style-22, .pp-tag-tree-style-22 a span { border-color: rgb(100, 153, 44);  border-style:solid; background-color: rgb(100, 153, 44);  color: rgb(249, 255, 239) !important; }   
-.pp-tag-style-23 .pp-tag-tree-style-23 a span { border-color: rgb(0, 102, 51);    border-style:solid; background-color: rgb(0, 102, 51);    color: rgb(241, 245, 236) !important;   }   
-.pp-tag-style-24,  .pp-tag-tree-style-24  a span { border-color:#BDBDBD; border-style:solid; background-color: rgb(222, 229, 242); color: rgb(90, 105, 134) !important; } 
+.pp-label-style-default,  .pp-label-tree-style-default  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: #686868 !important; }
+.pp-label-style-0,  .pp-label-tree-style-0  a span { border-color:#BDBDBD; border-style:solid; background-color: #EDEDED; color: #686868 !important; }
+.pp-label-style-1,  .pp-label-tree-style-1  a span { border-color: rgb(124, 136, 155); border-style:solid; background-color: rgb(224, 236, 255); color: rgb(32, 108, 255) !important; }   
+.pp-label-style-2,  .pp-label-tree-style-2  a span { border-color: rgb(123, 126, 155);  border-style:solid; background-color: rgb(223, 226, 255); color: rgb(0, 0, 204) !important;    }   
+.pp-label-style-3,  .pp-label-tree-style-3  a span { border-color: rgb(124, 113, 149); border-style:solid; background-color: rgb(224, 213, 249); color: rgb(82, 41, 163) !important;  }   
+.pp-label-style-4,  .pp-label-tree-style-4  a span { border-color: rgb(153, 133, 144); border-style:solid; background-color: rgb(253, 233, 244); color: rgb(133, 79, 97) !important;  }   
+.pp-label-style-5,  .pp-label-tree-style-5  a span { border-color: rgb(155, 127, 127); border-style:solid; background-color: rgb(255, 227, 227); color: rgb(204, 0, 0) !important;    }  
+.pp-label-style-6,  .pp-label-tree-style-6  a span { border-color: rgb(70, 105, 134);  border-style:solid; background-color: rgb(90, 105, 134);  color: rgb(222, 229, 242) !important; }  
+.pp-label-style-1-reverse, .pp-label-style-7,  .pp-label-tree-style-7  a span { border-color: rgb(32, 108, 255);  border-style:solid; background-color: rgb(32, 108, 255);  color: rgb(224, 236, 255) !important; }  
+.pp-label-style-8,  .pp-label-tree-style-8  a span { border-color: rgb(0, 0, 204);     border-style:solid; background-color: rgb(0, 0, 204);     color: rgb(223, 226, 255) !important;    }  
+.pp-label-style-9, .pp-label-tree-style-9 a span   { border-color: rgb(82, 41, 163);   border-style:solid; background-color: rgb(82, 41, 163);   color: rgb(224, 213, 249) !important;  }   
+.pp-label-style-10, .pp-label-tree-style-10 a span { border-color: rgb(133, 79, 97);   border-style:solid; background-color: rgb(133, 79, 97);   color: rgb(253, 233, 244) !important;  }   
+.pp-label-style-11, .pp-label-tree-style-11 a span { border-color: rgb(204, 0, 0);     border-style:solid; background-color: rgb(204, 0, 0);     color: rgb(255, 227, 227) !important;    }   
+.pp-label-style-12, .pp-label-tree-style-12 a span { border-color: rgb(255, 240, 225); border-style:solid; background-color: rgb(255, 240, 225); color: rgb(236, 112, 0) !important;  }   
+.pp-label-style-13, .pp-label-tree-style-13 a span { border-color: rgb(250, 220, 179); border-style:solid; background-color: rgb(250, 220, 179); color: rgb(179, 109, 0) !important;  }   
+.pp-label-style-14, .pp-label-tree-style-14 a span { border-color: rgb(243, 231, 179); border-style:solid; background-color: rgb(243, 231, 179); color: rgb(171, 139, 0) !important;  }   
+.pp-label-style-15, .pp-label-tree-style-15 a span { border-color: rgb(255, 255, 212); border-style:solid; background-color: rgb(255, 255, 212); color: rgb(99, 99, 48) !important;   }   
+.pp-label-style-16, .pp-label-tree-style-16 a span { border-color: rgb(249, 255, 239); border-style:solid; background-color: rgb(249, 255, 239); color: rgb(100, 153, 44) !important; }   
+.pp-label-style-17, .pp-label-tree-style-17 a span { border-color: rgb(241, 245, 236); border-style:solid; background-color: rgb(241, 245, 236); color: rgb(0, 102, 51) !important;   }   
+.pp-label-style-18, .pp-label-tree-style-18 a span { border-color: rgb(236, 112, 0);   border-style:solid; background-color: rgb(236, 112, 0);   color: rgb(255, 240, 225) !important;  }   
+.pp-label-style-19, .pp-label-tree-style-19 a span { border-color: rgb(179, 109, 0);   border-style:solid; background-color: rgb(179, 109, 0);   color: rgb(250, 220, 179) !important;  }   
+.pp-label-style-20, .pp-label-tree-style-20 a span { border-color: rgb(171, 139, 0);   border-style:solid; background-color: rgb(171, 139, 0);   color: rgb(243, 231, 179) !important;  }   
+.pp-label-style-21, .pp-label-tree-style-21 a span { border-color: rgb(99, 99, 48);    border-style:solid; background-color: rgb(99, 99, 48);    color: rgb(255, 255, 212) !important;   }   
+.pp-label-style-22, .pp-label-tree-style-22 a span { border-color: rgb(100, 153, 44);  border-style:solid; background-color: rgb(100, 153, 44);  color: rgb(249, 255, 239) !important; }   
+.pp-label-style-23 .pp-label-tree-style-23 a span { border-color: rgb(0, 102, 51);    border-style:solid; background-color: rgb(0, 102, 51);    color: rgb(241, 245, 236) !important;   }   
+.pp-label-style-24,  .pp-label-tree-style-24  a span { border-color:#BDBDBD; border-style:solid; background-color: rgb(222, 229, 242); color: rgb(90, 105, 134) !important; } 
 
 
 /* Overrides of ExtJS styles */
@@ -1907,7 +1907,7 @@ div:hover.pp-tag-style-sample {
 /*Never show red markers in grid*/
 
 .x-grid3-cell-inner {
-    white-space:normal; /* Helsp make the tags flow correctly when displayed as inline-block */
+    white-space:normal; /* Helsp make the labels flow correctly when displayed as inline-block */
 }
 
 .x-grid3-dirty-cell {
@@ -2426,14 +2426,18 @@ table.pp-meta-form {
 
 div.pp-dd-action {
   text-align: center;
-  margin: 10px;
-  padding:4px;
-  border: 2px solid white;
+/*  margin: 10px;
+  padding:8px;
+  border: 5px dashed green;
+  -webkit-border-radius: 10px;
+*/
+  background-color: blue;
 }
 
-.pp-dd-panel {
+div.pp-dd-panel {
   position: absolute;
   z-index: 20;
+  background-color:red;
 }
 
 .pp-dd-panel-over {

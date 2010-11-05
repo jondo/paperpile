@@ -78,7 +78,7 @@ sub read {
       $month,   $issn,    $pages,   $doi,          $abstract,  $booktitle,
       $url,     $pmid,    $arxivid, $editors,      $publisher, $edition,
       $series,  $address, $chapter, $organization, $linkout,   $local_pdfs,
-      $citekey, $tags,    $note,    $howpublished, $isbn,      $keywords
+      $citekey, $labels,    $note,    $howpublished, $isbn,      $keywords
     );
 
     my @unsupported_fields = ();
@@ -292,11 +292,11 @@ sub read {
     # get tags as comma separated list
     my $sth6 = $dbh->prepare('SELECT tag FROM DocumentTags WHERE documentId=?');
     $sth6->execute( $tmp{'id'} );
-    my @tags = ();
+    my @labels = ();
     while ( my @t = $sth6->fetchrow_array ) {
-      push @tags, $t[0];
+      push @labels, $t[0];
     }
-    $tags = join( ",", @tags );
+    $labels = join( ",", @labels );
 
     # add unsupported fields to note tag
     $note .= "<br />\n".join("<br />\n", @unsupported_fields)."<br />\n" if ( $#unsupported_fields  > -1 and $note);
@@ -330,7 +330,7 @@ sub read {
     $pub->keywords($keywords)         if $keywords;
     $pub->_pdf_tmp($local_pdfs)       if $local_pdfs;
     $pub->{_attachments_tmp} = [@attachments] if ( @attachments > 0 );
-    $pub->tags($tags)                 if $tags;
+    $pub->labels($labels)                 if $labels;
     $pub->note($note)                 if $note;
     $pub->howpublished($howpublished) if $howpublished;
 

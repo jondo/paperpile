@@ -66,7 +66,7 @@ sub get_complete_tree {
   my ( $self, $c, $tree ) = @_;
 
   # Collections always generated dynamically
-  $c->forward( 'get_subtree', [ $tree, 'TAGS_ROOT' ] );
+  $c->forward( 'get_subtree', [ $tree, 'LABEL_ROOT' ] );
   $c->forward( 'get_subtree', [ $tree, 'FOLDER_ROOT' ] );
 
   my $dump = '';
@@ -383,7 +383,7 @@ sub get_subtree : Private {
   }
 
   # Collections always generated dynamically
-  if ( $subtree->getUID eq 'TAGS_ROOT' ) {
+  if ( $subtree->getUID eq 'LABEL_ROOT' ) {
     $c->forward( 'get_collections', [$subtree,'LABEL'] );
   }
 
@@ -445,7 +445,7 @@ sub _get_collection_pars {
 
   my $pars = {
     text         => $coll->{name},
-    type         => $type eq 'FOLDER' ? 'FOLDER' : 'TAGS',
+    type         => $type eq 'FOLDER' ? 'FOLDER' : 'LABEL',
     hidden       => 0,
     plugin_name  => 'DB',
     plugin_mode  => 'FULLTEXT',
@@ -461,9 +461,9 @@ sub _get_collection_pars {
     $pars->{plugin_query}      = "labelid:" . $coll->{guid};
     $pars->{plugin_base_query} = "labelid:" . $coll->{guid};
     $pars->{iconCls}           = 'pp-icon-empty';
-    $pars->{plugin_iconCls}    = 'pp-icon-tag';
-    $pars->{cls} ='pp-tag-tree-node pp-tag-tree-style-'.$coll->{style};
-    $pars->{tagStyle} = $coll->{style};
+    $pars->{plugin_iconCls}    = 'pp-icon-label';
+    $pars->{cls} ='pp-label-tree-node pp-label-tree-style-'.$coll->{style};
+    $pars->{labelStyle} = $coll->{style};
   }
 
   return $pars;
@@ -505,7 +505,7 @@ sub get_default_tree : Private {
 
   my $folders = Tree::Simple->new( {
       text    => 'All Papers',
-      type    => "FOLDER",
+      type    => "FOLDER_ROOT",
       path    => '/',
       iconCls => 'pp-icon-page',
       hidden  => 0,
@@ -518,16 +518,16 @@ sub get_default_tree : Private {
 
   #### / Local Library / Labels
 
-  my $tags = Tree::Simple->new( {
+  my $labels = Tree::Simple->new( {
       text    => 'Labels',
-      type    => "TAGS",
-      iconCls => 'pp-icon-tag',
+      type    => "LABEL_ROOT",
+      iconCls => 'pp-icon-label',
       hidden  => 0,
       builtin => 1,
     },
     $local_lib
   );
-  $tags->setUID('TAGS_ROOT');
+  $labels->setUID('LABEL_ROOT');
 
   #### / Local Library / Trash
 

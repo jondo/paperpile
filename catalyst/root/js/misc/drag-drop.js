@@ -26,9 +26,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     if (!this.ddp) {
       this.ddp = new Paperpile.DragDropPanel();
     }
-    this.ddp.setPosition(50, 350);
     this.ddp.clearActions();
     this.ddp.show();
+    this.ddp.getEl().alignTo(Ext.getDoc(),'c-c');
     this.targetsList.concat(this.ddp);
 
     if (this.isFolderDrag(event)) {
@@ -43,14 +43,16 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
         label: 'Preview PDF',
         description: 'Preview using Paperpile\'s PDF viewer'
       });
+      var da2 = new Paperpile.DragDropAction({
+        action: 'pdf-import',
+        label: 'Import PDF',
+        description: 'Import PDF reference to your library'
+      });
+
       this.ddp.addAction(da1);
+      this.ddp.addAction(da2);
 
       // Import PDF drop action.
-      // 1) 'Attach PDF' to visible grid rows
-      var activeTab = Paperpile.main.tabs.getActiveTab();
-      if (activeTab instanceof Paperpile.PluginPanel) {
-        this.targetsList = this.targetsList.concat(this.getDropTargetsForGrid(activeTab.getGrid(), event));
-      }
     } else if (this.isReferenceFileDrag(event)) {
       // 1) 'Open reference file' over whole Grid.
     } else if (this.isFileDrag(event)) {
@@ -517,8 +519,9 @@ Paperpile.DragDropTarget = Ext.extend(Ext.BoxComponent, {
   }
 });
 
-Paperpile.DragDropAction = Ext.extend(Ext.Panel, {
+Paperpile.DragDropAction = Ext.extend(Ext.BoxComponent, {
   //  cls: 'pp-drag-action',
+  width:'100%',
   action: 'pdf-import',
   label: 'Import PDF',
   description: 'Import the PDF(s) into your library',
@@ -528,18 +531,16 @@ Paperpile.DragDropAction = Ext.extend(Ext.Panel, {
   },
   onRender: function(ct, position) {
     this.tpl = new Ext.Template([
-      '<div class="pp-dd-action pp-box-style2">',
+      '<div class="pp-dd-action">',
       '  <h1>',
       '  ' + this.label,
       '  </h1>',
-      '  <img src="/images/icons/bullet_go.png"/>',
       '  <p>' + this.description + '</p>',
       '</div>']);
 
     this.el = this.tpl.append(ct);
 
     Paperpile.DragDropAction.superclass.onRender.call(this, ct, position);
-
   },
   getString: function() {
     return this.action + " " + this.el.id;
@@ -572,10 +573,16 @@ Paperpile.DragDropAction = Ext.extend(Ext.Panel, {
 });
 
 Paperpile.DragDropPanel = Ext.extend(Ext.Panel, {
-  width: 150,
-  autoHeight: true,
+  width: 250,
+  height: 350,
   floating: false,
   shadow: false,
+  layout: {
+      type:'vbox',
+      defaultMargins: '10px',
+      align:'center',
+  },
+  defaults: {flex:1},
   renderTo: document.body,
   cls: 'pp-dd-panel',
   over: function(event) {
@@ -590,9 +597,6 @@ Paperpile.DragDropPanel = Ext.extend(Ext.Panel, {
   initComponent: function() {
 
     Ext.apply(this, {
-      items: [{
-        html: '<h1><b>Drag and drop</b></h1>'
-      }]
     });
 
     Paperpile.DragDropPanel.superclass.initComponent.call(this);

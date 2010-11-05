@@ -30,8 +30,8 @@ CREATE TABLE Publications(
   last_read          TIMESTAMP,
   times_read         INTEGER,
   annote             TEXT,
-  tags               TEXT,
-  tags_tmp           TEXT,
+  labels               TEXT,
+  labels_tmp           TEXT,
   folders            TEXT
   -- additional fields are added dynamically in init_db in Build.pm
 );

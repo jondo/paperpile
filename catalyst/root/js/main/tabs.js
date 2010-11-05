@@ -120,7 +120,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       iconCls = 'pp-icon-folder';
       javascript_ui = 'Folder';
     } else {
-      iconCls = 'pp-tag-style-tab ' + 'pp-tag-style-' + node.style;
+      iconCls = 'pp-label-style-tab ' + 'pp-label-style-' + node.style;
       javascript_ui = 'Label';
     }
 

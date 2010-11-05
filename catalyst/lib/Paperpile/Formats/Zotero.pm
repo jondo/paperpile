@@ -87,7 +87,7 @@ sub read {
       $month,  $ISSN,    $pages,   $doi,          $abstract,  $booktitle,
       $url,    $pmid,    $arxivid, $editors,      $publisher, $edition,
       $series, $address, $school,  $howpublished, $note,      $isbn,
-      $tags
+      $labels
     );
 
     my @pdfs                 = ();
@@ -387,14 +387,14 @@ sub read {
       $note .= "$tmp_note<br />";
     }
 
-    # get tags as comma separated list
+    # get labels as comma separated list
     my $sth7 = $dbh->prepare('SELECT name FROM itemTags JOIN tags ON itemTags.tagID = tags.tagID WHERE itemID = ?;');
     $sth7->execute( $itemID );
-    my @tags_tmp = ();
+    my @labels_tmp = ();
     while ( my @t = $sth7->fetchrow_array ) {
-      push @tags_tmp, $t[0];
+      push @labels_tmp, $t[0];
     }
-    $tags = join( ",", @tags_tmp );
+    $labels = join( ",", @labels_tmp );
 
     # if it does not have a title, we are not interested
     next if ( !defined $title );
@@ -465,7 +465,7 @@ sub read {
     $pub->howpublished($howpublished) if $howpublished;
     $pub->school($school)             if $school;
     $pub->annote($note)               if $note;
-    $pub->tags_tmp($tags)                 if $tags;
+    $pub->labels_tmp($labels)                 if $labels;
 
     # add PDFs and other attachements
     foreach my $i ( 0 .. $#pdfs ) {

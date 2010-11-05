@@ -100,12 +100,12 @@ has '_attachments_list' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] 
 # User provided annotation "Notes", formatted in HTML
 has 'annote' => ( is => 'rw', default => '' );
 
-# Comma separated list of guids for tags (known as "labels" in the UI)
-has 'tags' => ( is => 'rw', default => '' );
+# Comma separated list of guids for labels (known as "labels" in the UI)
+has 'labels' => ( is => 'rw', default => '' );
 
-# Temporary field to handle tags which are not imported into the
+# Temporary field to handle labels which are not imported into the
 # user's library.
-has 'tags_tmp' => ( is => 'rw', default => '' );
+has 'labels_tmp' => ( is => 'rw', default => '' );
 
 
 # Comma separated list of folders
@@ -418,14 +418,14 @@ sub merge_into_me {
   foreach my $folder ( split( ',', $other_pub->folders ) ) {
     $library->add_to_collection( [$self], $folder, $dbh );
   }
-  foreach my $tag ( split( ',', $other_pub->tags ) ) {
-    $library->add_to_collection( [$self], $tag, $dbh );
+  foreach my $label ( split( ',', $other_pub->labels ) ) {
+    $library->add_to_collection( [$self], $label, $dbh );
   }
 
   foreach my $key ( $self->meta->get_attribute_list ) {
     my $value = $self->$key;
 
-    next if ( $key =~ m/(folders|tags|pdf_name|pdf|attachments)/gi );
+    next if ( $key =~ m/(folders|labels|pdf_name|pdf|attachments)/gi );
     next if ( ref($value) );
 
     if ( $self->is_trivial_value( $key, $value )
@@ -670,9 +670,9 @@ sub create_guid {
 
 }
 
-sub add_tag {
+sub add_label {
   my ( $self, $guid ) = @_;
-  $self->add_guid( 'tags', $guid );
+  $self->add_guid( 'labels', $guid );
 }
 
 sub add_folder {
@@ -681,9 +681,9 @@ sub add_folder {
 }
 
 
-sub remove_tag {
+sub remove_label {
   my ( $self, $guid ) = @_;
-  $self->remove_guid( 'tags', $guid );
+  $self->remove_guid( 'labels', $guid );
 }
 
 sub remove_folder {
@@ -698,7 +698,7 @@ sub remove_guid {
   return unless ( defined $what );
 
   $what = 'folders' if ( $what eq 'FOLDER' );
-  $what = 'tags'    if ( $what eq 'LABEL' );
+  $what = 'labels'    if ( $what eq 'LABEL' );
 
   my $list = $self->$what;
 
@@ -718,7 +718,7 @@ sub add_guid {
   return unless ( defined $what );
 
   $what = 'folders' if ( $what eq 'FOLDER' );
-  $what = 'tags'    if ( $what eq 'LABEL' );
+  $what = 'labels'    if ( $what eq 'LABEL' );
 
   my @guids = split( /,/, $self->$what );
   push @guids, $guid;

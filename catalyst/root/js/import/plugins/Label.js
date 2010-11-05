@@ -19,7 +19,7 @@ Paperpile.PluginPanelLabel = Ext.extend(Paperpile.PluginPanel, {
   initComponent: function() {
     Ext.apply(this, {
       title: this.title,
-      iconCls: 'pp-icon-label'
+      iconCls: 'pp-icon-empty'
     });
 
     Paperpile.PluginPanelLabel.superclass.initComponent.call(this);
@@ -28,7 +28,7 @@ Paperpile.PluginPanelLabel = Ext.extend(Paperpile.PluginPanel, {
   },
 
   myAfterRender: function() {
-    this.getGrid().updateTagStyles();
+    this.getGrid().refreshCollections();
   },
 
   createGrid: function(gridParams) {
@@ -43,7 +43,7 @@ Paperpile.PluginPanelLabel = Ext.extend(Paperpile.PluginPanel, {
 
 Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
 
-  plugin_iconCls: 'pp-icon-label',
+  plugin_iconCls: 'pp-icon-empty',
   plugin_name: 'DB',
   limit: 25,
   plugin_base_query: '',
@@ -67,29 +67,29 @@ Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
     return guid;
   },
 
-  updateTagStyles: function() {
-    Paperpile.PluginGridLabel.superclass.updateTagStyles.call(this);
+  refreshCollections: function() {
+    Paperpile.PluginGridLabel.superclass.refreshCollections.call(this);
 
     var pp = this.getPluginPanel();
     var guid = this.getGUID();
 
     // If we're a Label grid, update our title...
     var itemId = this.getPluginPanel().itemId;
-    var ts = Ext.StoreMgr.lookup('tag_store');
-    var index = ts.findExact('guid', itemId);
+    var labels = Ext.StoreMgr.lookup('label_store');
+    var index = labels.findExact('guid', itemId);
     if (index !== -1) {
-      var record = ts.getAt(index);
+      var record = labels.getAt(index);
       var title = record.get('display_name');
       var style = record.get('style');
-      var iconCls = 'pp-tag-style-' + style;
+      var iconCls = 'pp-label-style-' + style;
       var tabDom = Paperpile.main.tabs.getTabEl(this.getPluginPanel());
       var tabEl = Ext.fly(tabDom);
       var textEl = tabEl.child('.x-tab-strip-text');
       for (var i = 0; i <= 24; i++) {
-        textEl.removeClass('pp-tag-style-' + i);
+        textEl.removeClass('pp-label-style-' + i);
       }
       textEl.dom.innerHTML = title;
-      textEl.addClass('pp-tag-style-tab');
+      textEl.addClass('pp-label-style-tab');
       textEl.addClass(iconCls);
     }
 
@@ -149,7 +149,7 @@ Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
     var refreshMe = false;
     for (var guid in pubs) {
       var update = pubs[guid];
-      if (update['tags'] !== undefined) {
+      if (update['labels'] !== undefined) {
         refreshMe = true;
       }
     }

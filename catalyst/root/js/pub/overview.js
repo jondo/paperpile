@@ -102,7 +102,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         }
       }
 
-      if (newData.tags != oldData.tags) {
+      if (newData.labels != oldData.labels) {
         this.updateLabels(newData);
       }
 
@@ -486,7 +486,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     }
   },
 
-  renderTags: function() {
+  renderLabels: function() {
 
     if (this.searchDownloadWidget == null) {
       /*       this.searchDownloadWidget = new Paperpile.SearchDownloadWidget({
@@ -500,44 +500,44 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     return;
   },
 
-  hideTagControls: function() {
-    var container = Ext.get('tag-control-' + this.id);
+  hideLabelControls: function() {
+    var container = Ext.get('label-control-' + this.id);
     while (container.first()) {
       container.first().remove();
     }
   },
 
-  showTagControls: function() {
-    // Skip tags for combo which are already in list (unless we have multiple selection where this
+  showLabelControls: function() {
+    // Skip labels for combo which are already in list (unless we have multiple selection where this
     // does not make too much sense
     var list = [];
 
-    Ext.StoreMgr.lookup('tag_store').each(function(rec) {
-      var tag = rec.data.tag;
+    Ext.StoreMgr.lookup('label_store').each(function(rec) {
+      var label = rec.data.label;
       if (!this.multipleSelection) {
-        if (this.data.tags.match(new RegExp("," + tag + "$"))) return; // ,XXX
-        if (this.data.tags.match(new RegExp("^" + tag + "$"))) return; //  XXX
-        if (this.data.tags.match(new RegExp("^" + tag + ","))) return; //  XXX,
-        if (this.data.tags.match(new RegExp("," + tag + ","))) return; // ,XXX,
+        if (this.data.labels.match(new RegExp("," + label + "$"))) return; // ,XXX
+        if (this.data.labels.match(new RegExp("^" + label + "$"))) return; //  XXX
+        if (this.data.labels.match(new RegExp("^" + label + ","))) return; //  XXX,
+        if (this.data.labels.match(new RegExp("," + label + ","))) return; // ,XXX,
       }
-      list.push([tag]);
+      list.push([label]);
     },
     this);
 
     var store = new Ext.data.SimpleStore({
-      fields: ['tag'],
+      fields: ['label'],
       data: list
     });
 
     var combo = new Ext.form.ComboBox({
-      id: 'tag-control-combo-' + this.id,
+      id: 'label-control-combo-' + this.id,
       store: store,
-      displayField: 'tag',
+      displayField: 'label',
       forceSelection: false,
       triggerAction: 'all',
       mode: 'local',
       enableKeyEvents: true,
-      renderTo: 'tag-control-' + this.id,
+      renderTo: 'label-control-' + this.id,
       width: 120,
       listWidth: 120,
       initEvents: function() {
@@ -547,8 +547,8 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
             this.onViewClick();
             this.delayedCheck = true;
             this.unsetDelayCheck.defer(10, this);
-            scope = Ext.getCmp(this.id.replace('tag-control-combo-', ''));
-            scope.onAddTag();
+            scope = Ext.getCmp(this.id.replace('label-control-combo-', ''));
+            scope.onAddLabel();
             this.destroy();
           },
           doRelay: function(foo, bar, hname) {
@@ -564,11 +564,11 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     combo.focus();
 
     var button = new Ext.Button({
-      id: 'tag-control-ok-' + this.id,
+      id: 'label-control-ok-' + this.id,
       text: 'Add Label',
     });
 
-    button.render(Ext.DomHelper.append('tag-control-' + this.id, {
+    button.render(Ext.DomHelper.append('label-control-' + this.id, {
       tag: 'div',
       cls: 'pp-button-control',
     }));
@@ -581,7 +581,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
           cls: 'pp-textlink-control',
           children: [{
             tag: 'a',
-            id: 'tag-control-cancel-' + this.id,
+            id: 'label-control-cancel-' + this.id,
             href: '#',
             cls: 'pp-textlink',
             html: 'Cancel'
@@ -589,43 +589,43 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         }
       });
 
-      cancel.render('tag-control-' + this.id);
+      cancel.render('label-control-' + this.id);
 
-      Ext.get('tag-control-cancel-' + this.id).on('click', function() {
-        Ext.get('tag-add-link-' + this.id).show();
-        this.hideTagControls();
+      Ext.get('label-control-cancel-' + this.id).on('click', function() {
+        Ext.get('label-add-link-' + this.id).show();
+        this.hideLabelControls();
       },
       this);
     }
 
-    Ext.get('tag-control-ok-' + this.id).on('click', this.onAddTag, this);
+    Ext.get('label-control-ok-' + this.id).on('click', this.onAddLabel, this);
 
   },
 
-  onAddTag: function() {
+  onAddLabel: function() {
 
-    var combo = Ext.getCmp('tag-control-combo-' + this.id);
-    var tag = combo.getValue();
+    var combo = Ext.getCmp('label-control-combo-' + this.id);
+    var label = combo.getValue();
 
     combo.setValue('');
 
-    if (this.data.tags != '') {
-      this.data.tags = this.data.tags + "," + tag;
+    if (this.data.labels != '') {
+      this.data.labels = this.data.labels + "," + label;
     } else {
-      this.data.tags = tag;
+      this.data.labels = label;
     }
 
     if (!this.multipleSelection) {
-      this.hideTagControls();
-      Ext.get('tag-add-link-' + this.id).show();
+      this.hideLabelControls();
+      Ext.get('label-add-link-' + this.id).show();
     }
 
     Paperpile.Ajax({
-      url: '/ajax/crud/add_tag',
+      url: '/ajax/crud/add_label',
       params: {
         grid_id: this.grid_id,
         selection: Ext.getCmp(this.grid_id).getSelection(),
-        tag: tag
+        label: label
       },
       scope: this
     });

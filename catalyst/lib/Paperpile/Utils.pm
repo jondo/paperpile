@@ -267,30 +267,30 @@ sub decode_db {
 }
 
 
-# Convert tags that can consists of several words to one
+# Convert labels that can consists of several words to one
 # string. Start, end and spaces are encoded by numbers. We cannot
 # encode with special characters as they are ignored by FTS.
 # eg. "Really crap papers" gets to "88Really99crap99papers88" This hack
-# is necessary to allow searching for a specific tag using FTS.
-sub encode_tags {
+# is necessary to allow searching for a specific label using FTS.
+sub encode_labels {
 
-  (my $self, my $tags) = @_;
+  (my $self, my $labels) = @_;
 
-  return "" if not $tags;
+  return "" if not $labels;
 
-  my @tags = split(/,/, $tags);
+  my @labels = split(/,/, $labels);
 
-  my @new_tags=();
+  my @new_labels=();
 
-  foreach my $tag (@tags){
+  foreach my $label (@labels){
 
-    $tag=~s/ /99/g;
-    $tag='88'.$tag.'88';
-    push @new_tags, $tag;
+    $label=~s/ /99/g;
+    $label='88'.$label.'88';
+    push @new_labels, $label;
 
   }
 
-  return join(',', @new_tags);
+  return join(',', @new_labels);
 
 }
 

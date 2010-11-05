@@ -76,7 +76,7 @@ sub insert_pubs {
   my $counter = 0;
 
   # If we insert to the user library we need to create new labels that
-  # may be given in the tags_tmp field.
+  # may be given in the labels_tmp field.
   my $label_map;
   if ($user_library) {
     $label_map = $self->insert_labels( $pubs, $dbh );
@@ -105,18 +105,18 @@ sub insert_pubs {
       $pub->create_guid;
     }
 
-    # If we insert to the user library map temporary tags to new or
+    # If we insert to the user library map temporary labels to new or
     # already existing labels in the database. If it is not the user
-    # libary we save the tags_tmp field upon insert.
-    if ( $user_library && $pub->tags_tmp ) {
+    # libary we save the labels_tmp field upon insert.
+    if ( $user_library && $pub->labels_tmp ) {
       my @guids;
-      foreach my $tag ( split( /\s*,\s*/, $pub->tags_tmp ) ) {
-        if ( $label_map->{$tag} ) {
-          push @guids, $label_map->{$tag};
+      foreach my $label ( split( /\s*,\s*/, $pub->labels_tmp ) ) {
+        if ( $label_map->{$label} ) {
+          push @guids, $label_map->{$label};
         }
       }
-      $pub->tags( join( ',', @guids ) );
-      $pub->tags_tmp('');
+      $pub->labels( join( ',', @guids ) );
+      $pub->labels_tmp('');
     }
 
     # If imported with attachments from another database the
@@ -196,7 +196,7 @@ sub delete_pubs {
     $delete_main->execute($rowid);
     $delete_fulltext->execute($rowid);
 
-    if ( $pub->tags or $pub->folders ) {
+    if ( $pub->labels or $pub->folders ) {
       my $guid = $pub->guid;
       $delete_collections->execute($guid);
     }
@@ -563,7 +563,7 @@ sub delete_collection {
   my $delete2 = $dbh->prepare("DELETE FROM Collections WHERE guid=?");
 
   #  Update flat fields in Publication table and Fulltext table
-  my $field = $type eq 'FOLDER' ? 'folders' : 'tags';
+  my $field = $type eq 'FOLDER' ? 'folders' : 'labels';
   my $update1 = $dbh->prepare("UPDATE Publications SET $field=? WHERE rowid=?");
 
   $field = $type eq 'FOLDER' ? 'folderid' : 'labelid';
@@ -573,7 +573,7 @@ sub delete_collection {
 
     my ( $list, $rowid );
 
-    $field = $type eq 'FOLDER' ? 'folders' : 'tags';
+    $field = $type eq 'FOLDER' ? 'folders' : 'labels';
 
     # Get the publications that are in the given folder
     my $select = $dbh->prepare(
@@ -605,7 +605,7 @@ sub delete_collection {
 sub _update_collections {
   ( my $self, my $pubs, my $type, my $dbh ) = @_;
 
-  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+  my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
   foreach my $pub (@$pubs) {
 
@@ -689,7 +689,7 @@ sub remove_from_collection {
   }
   $sth->finish;
 
-  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+  my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
   foreach my $pub (@$pubs) {
     my $old_list = $pub->$what;
@@ -721,7 +721,7 @@ sub get_collection_type {
 
   # Special cases for the root nodes.
   return 'FOLDER' if ( $guid =~ m/(FOLDER)/ );
-  return 'LABEL'  if ( $guid =~ m/(TAGS)/ );
+  return 'LABEL'  if ( $guid =~ m/(LABELS)/ );
 
   my $dbh = $self->dbh;
   my ($type) = $dbh->selectrow_array("SELECT type FROM Collections WHERE guid='$guid'");
@@ -746,7 +746,7 @@ sub move_collection {
     # simply stores "ROOT" as its parent GUID.
     $new_parent = 'ROOT';
     $sort_order = 0;
-    $target_guid =~ s/(FOLDER_|TAGS_)ROOT/ROOT/;
+    $target_guid =~ s/(FOLDER_|LABEL_)ROOT/ROOT/;
   } else {
 
     # Get parent and sort_order of target
@@ -850,7 +850,7 @@ sub sort_labels {
   }
 
   if ( $field eq 'count' ) {
-    my $hist = $self->histogram( 'tags', $dbh );
+    my $hist = $self->histogram( 'labels', $dbh );
     @guids = reverse sort { $hist->{$a}->{count} <=> $hist->{$b}->{count} } keys %$hist;
   }
 
@@ -1338,8 +1338,8 @@ sub exists_pub {
   }
 }
 
-# Creates new entries for all labels stored in tags_tmp fields in a
-# list of pubs. Returns hash that maps the temporary tag to the guids
+# Creates new entries for all labels stored in labels_tmp fields in a
+# list of pubs. Returns hash that maps the temporary label to the guids
 # of the newly created labels (or of already existing labels if a
 # label with the same name is already in the database)
 
@@ -1349,19 +1349,19 @@ sub insert_labels {
   my %map;
 
   # Collect all label names
-  my @tags;
+  my @labels;
   foreach my $pub (@$pubs) {
-    push @tags, split( /\s*,\s*/, $pub->tags_tmp );
+    push @labels, split( /\s*,\s*/, $pub->labels_tmp );
   }
 
   # Create guid for each of them and make sure that the list is
   # non-redundant
-  foreach my $tag (@tags) {
+  foreach my $label (@labels) {
     my $guid = Data::GUID->new->as_hex;
     $guid =~ s/^0x//;
 
-    if ( !exists( $map{$tag} ) ) {
-      $map{$tag} = $guid;
+    if ( !exists( $map{$label} ) ) {
+      $map{$label} = $guid;
     }
   }
 
@@ -1829,23 +1829,23 @@ sub histogram {
     }
   }
 
-  if ( $field eq 'tags' ) {
+  if ( $field eq 'labels' ) {
 
-    my ( $guid, $tag, $style );
+    my ( $guid, $label, $style );
 
-    # Select all tags and initialize the histogram counts.
+    # Select all labels and initialize the histogram counts.
     my $sth = $dbh->prepare(qq^SELECT guid,name,style FROM Collections WHERE type='LABEL';^);
-    $sth->bind_columns( \$guid, \$tag, \$style );
+    $sth->bind_columns( \$guid, \$label, \$style );
     $sth->execute;
     while ( $sth->fetch ) {
       $style = $style || 'default';
       $hist{$guid}->{count} = 0;
-      $hist{$guid}->{name}  = $tag;
+      $hist{$guid}->{name}  = $label;
       $hist{$guid}->{id}    = $guid;
       $hist{$guid}->{style} = $style;
     }
 
-    # Select tag-publication links and count them up.
+    # Select label-publication links and count them up.
     $sth = $dbh->prepare(
       qq^SELECT collection_guid FROM Collection_Publication, Publications WHERE publication_guid = Publications.guid
          AND Publications.trashed=0 ^
@@ -1929,7 +1929,7 @@ sub _flag_as_incomplete {
   }
 
   # Assign the label to the publication
-  $pub->add_tag($guid);
+  $pub->add_label($guid);
   $self->_update_collections( [$pub], 'LABEL', $dbh );
 
 }
@@ -1942,9 +1942,9 @@ sub _flag_as_complete {
     "SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
 
   return if not $guid;
-  return if ( not $pub->tags =~ /$guid/ );
+  return if ( not $pub->labels =~ /$guid/ );
 
-  $pub->remove_tag($guid);
+  $pub->remove_label($guid);
   $self->_update_collections( [$pub], 'LABEL', $dbh );
 
 }
@@ -2109,7 +2109,7 @@ sub _update_fulltext_table {
     abstract => $pub->abstract,
     notes    => $pub->annote,
     author   => $pub->_authors_display,
-    labelid  => $pub->tags,
+    labelid  => $pub->labels,
     folderid => $pub->folders,
     keyword  => $pub->keywords,
   };

@@ -30,16 +30,16 @@ Paperpile.LabelWidget = Ext.extend(Object, {
   renderData: function(data) {
     this.data = data;
     this.multipleSelection = false;
-    this.renderTags();
+    this.renderLabels();
   },
 
   renderMultiple: function() {
     this.multipleSelection = true;
-    this.renderTags();
+    this.renderLabels();
   },
 
   // private!
-  renderTags: function() {
+  renderLabels: function() {
     var data = this.data;
     if (!data || !data._imported) return;
 
@@ -55,30 +55,30 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     var oldLabels = Ext.select("#" + this.div_id + " > *");
     oldLabels.remove();
 
-    var store = Ext.StoreMgr.lookup('tag_store');
-    var tags;
+    var store = Ext.StoreMgr.lookup('label_store');
+    var labels;
     if (this.multipleSelection) {
-      // Collect all the tags from all references selected.
+      // Collect all the labels from all references selected.
       var records = this.grid.getSelectionModel().getSelections();
-      var tag_hash = {};
+      var label_hash = {};
       for (var i = 0; i < records.length; i++) {
         var record = records[i];
-        var record_tags = record.data.tags.split(/\s*,\s*/);
-        for (var j = 0; j < record_tags.length; j++) {
-          var tag = record_tags[j];
-          tag_hash[tag] = 1;
+        var record_labels = record.data.labels.split(/\s*,\s*/);
+        for (var j = 0; j < record_labels.length; j++) {
+          var label = record_labels[j];
+          label_hash[label] = 1;
         }
       }
-      tags = [];
-      for (var k in tag_hash) {
-        tags.push(k);
+      labels = [];
+      for (var k in label_hash) {
+        labels.push(k);
       }
     } else {
-      tags = data.tags.split(/\s*,\s*/);
+      labels = data.labels.split(/\s*,\s*/);
     }
 
-    for (var i = 0; i < tags.length; i++) {
-      var guid = tags[i];
+    for (var i = 0; i < labels.length; i++) {
+      var guid = labels[i];
       if (guid == '') continue;
       var style = '0';
       if (store.getAt(store.findExact('guid', guid))) {
@@ -87,18 +87,18 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       }
 
       var el = {
-        tag: 'div',
-        cls: 'pp-tag-box pp-tag-style-' + style,
+        label: 'div',
+        cls: 'pp-label-box pp-label-style-' + style,
         children: [{
-          tag: 'div',
-          cls: 'pp-tag-name pp-tag-style-' + style,
+          label: 'div',
+          cls: 'pp-label-name pp-label-style-' + style,
           html: name
         },
         {
-          tag: 'div',
-          cls: 'pp-tag-remove pp-tag-style-' + style,
+          label: 'div',
+          cls: 'pp-label-remove pp-label-style-' + style,
           html: 'x',
-          action: 'remove-tag',
+          action: 'remove-label',
           guid: guid
         }]
       };
@@ -112,9 +112,9 @@ Paperpile.LabelWidget = Ext.extend(Object, {
 
     this.ADD_LABEL_MARKUP = [
       '<div style="display:block;float:left;">',
-      '<img style="padding:2px;" src="/images/icons/tag_add_small.png" class="pp-img-action " action="add-tag" ext:qtip="Add Label"/>',
+      '<img style="padding:2px;" src="/images/icons/label_add_small.png" class="pp-img-action " action="add-label" ext:qtip="Add Label"/>',
       '</div>'];
-    if (tags.length == 0) Ext.DomHelper.append(rootEl, el);
+    if (labels.length == 0) Ext.DomHelper.append(rootEl, el);
     else Ext.DomHelper.append(rootEl, this.ADD_LABEL_MARKUP);
   },
 
@@ -123,33 +123,33 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     var el = e.getTarget();
 
     switch (el.getAttribute('action')) {
-    case 'remove-tag':
-      this.removeTag(el);
+    case 'remove-label':
+      this.removeLabel(el);
       break;
-    case 'add-tag':
-      this.addTag(el);
+    case 'add-label':
+      this.addLabel(el);
       break;
     default:
       break;
     };
   },
 
-  addTag: function(el) {
+  addLabel: function(el) {
     var list = [];
-    Ext.StoreMgr.lookup('tag_store').each(
+    Ext.StoreMgr.lookup('label_store').each(
       function(rec) {
         var guid = rec.data.guid;
         if (!this.multipleSelection) {
-          if (this.data.tags.match(new RegExp("," + guid + "$"))) return; // ,XXX
-          if (this.data.tags.match(new RegExp("^" + guid + "$"))) return; //  XXX
-          if (this.data.tags.match(new RegExp("^" + guid + ","))) return; //  XXX,
-          if (this.data.tags.match(new RegExp("," + guid + ","))) return; // ,XXX,
+          if (this.data.labels.match(new RegExp("," + guid + "$"))) return; // ,XXX
+          if (this.data.labels.match(new RegExp("^" + guid + "$"))) return; //  XXX
+          if (this.data.labels.match(new RegExp("^" + guid + ","))) return; //  XXX,
+          if (this.data.labels.match(new RegExp("," + guid + ","))) return; // ,XXX,
         }
         list.push([rec.data.guid, rec.data.name]);
       },
       this);
     var extEl = Ext.get(el);
-    extEl.replaceWith(['<div id="pp-tag-control-' + this.grid.id + '"></div>']);
+    extEl.replaceWith(['<div id="pp-label-control-' + this.grid.id + '"></div>']);
 
     var store = new Ext.data.SimpleStore({
       fields: ['guid', 'name'],
@@ -157,8 +157,8 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     });
 
     this.comboBox = new Ext.form.ComboBox({
-      id: 'tag-control-combo-' + this.getGrid().id,
-      ctCls: 'pp-tag-control',
+      id: 'label-control-combo-' + this.getGrid().id,
+      ctCls: 'pp-label-control',
       store: store,
       displayField: 'name',
       valueField: 'guid',
@@ -171,7 +171,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
 
       hideLabel: true,
       hideTrigger: false,
-      renderTo: 'pp-tag-control-' + this.getGrid().id,
+      renderTo: 'pp-label-control-' + this.getGrid().id,
       width: 100,
       minListWidth: 100,
       listeners: {
@@ -180,7 +180,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
             var name = field.getRawValue();
 
             // The user entered a new label
-            if (Ext.StoreMgr.lookup('tag_store').findExact('name', name) === -1) {
+            if (Ext.StoreMgr.lookup('label_store').findExact('name', name) === -1) {
               var guid = Paperpile.utils.generateUUID();
               Paperpile.Ajax({
                 url: '/ajax/crud/new_collection',
@@ -191,19 +191,19 @@ Paperpile.LabelWidget = Ext.extend(Object, {
                   parent_id: 'ROOT'
                 },
                 success: function(response) {
-                  this.commitTag(guid, true);
+                  this.commitLabel(guid, true);
                 },
                 scope: this
               });
             }
           } else if (e.getKey() == e.ESC) {
-            this.renderTags();
+            this.renderLabels();
           } else if (e.getKey() == e.TAB) {
-            // TODO: Tab key should trigger an add-tag while keeping the editor open for further adding.
+            // TODO: Tab key should trigger an add-label while keeping the editor open for further adding.
           }
         },
         'select': function(combo, record, index) {
-          this.commitTag(record.get('guid'), false);
+          this.commitLabel(record.get('guid'), false);
         },
         scope: this
       }
@@ -211,7 +211,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     this.comboBox.focus();
   },
 
-  commitTag: function(guid, isNew) {
+  commitLabel: function(guid, isNew) {
     this.comboBox.disable();
 
     var lots = this.isLargeSelection();
@@ -229,7 +229,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Ext.StoreMgr.lookup('tag_store').reload({
+        Ext.StoreMgr.lookup('label_store').reload({
           callback: function() {
             Paperpile.main.onUpdate(json.data);
           }
@@ -243,7 +243,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
 
   },
 
-  removeTag: function(el) {
+  removeLabel: function(el) {
     guid = el.getAttribute('guid');
 
     Ext.get(el).parent().remove();
@@ -262,7 +262,7 @@ Paperpile.LabelWidget = Ext.extend(Object, {
         type: 'LABEL'
       },
       success: function(response) {
-        Ext.StoreMgr.lookup('tag_store').reload();
+        Ext.StoreMgr.lookup('label_store').reload();
 
         if (lots) {
           Paperpile.status.clearMsg();

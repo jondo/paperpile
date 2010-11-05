@@ -27,7 +27,7 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
     '   <ul id="stats-tabs">',
     '     <li class="pp-bullet pp-box-tabs-first pp-box-tabs-active" action="show_authors">Authors</li>',
     '     <li class="pp-bullet" action="show_journals">Journals</li>',
-    '     <li class="pp-bullet" action="show_tags">Labels</li>',
+    '     <li class="pp-bullet" action="show_labels">Labels</li>',
     '     </li>',
     '   </ul>',
     '</div>',
@@ -112,11 +112,11 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
       if (this.field == 'journals') {
         pars.plugin_query = 'journal:' + '"' + key + '"';
       }
-      if (this.field == 'tags') {
-        // A little customized for tags. This stuff copied from tree.jsn
-        pars.plugin_query = 'labelid:' + Paperpile.utils.encodeTag(key);
+      if (this.field == 'labels') {
+        // A little customized for labels. This stuff copied from tree.jsn
+        pars.plugin_query = 'labelid:' + Paperpile.utils.encodeLabel(key);
         var style_num = el.getAttribute('style_number');
-        iconCls = 'pp-tag-style-tab pp-tag-style-' + style_num;
+        iconCls = 'pp-label-style-tab pp-label-style-' + style_num;
       }
 
       pars.plugin_base_query = pars.plugin_query;

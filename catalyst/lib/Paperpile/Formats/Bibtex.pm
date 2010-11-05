@@ -159,7 +159,7 @@ sub read {
           # Expects a comma separated list of tags, might need to be
           # extended with a heuristic if a different seperator is
           # used.
-          $data->{tags_tmp} = $entry->field($field);
+          $data->{labels_tmp} = $entry->field($field);
           next;
         }
 

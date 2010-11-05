@@ -237,11 +237,11 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
               Paperpile.main.tree.getRootNode().reload();
               Paperpile.main.tree.expandAll();
 
-              // Note that this as async. Tags
+              // Note that this as async. Labels
               // should be loaded before results for
               // grid appear but it is not
               // guaranteed.
-              Ext.StoreMgr.lookup('tag_store').reload();
+              Ext.StoreMgr.lookup('label_store').reload();
 
               Paperpile.main.tabs.removeAll();
 

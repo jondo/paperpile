@@ -103,12 +103,12 @@ Paperpile.utils = {
     return (platform);
   },
 
-  // Encode tag using our special format to allow unique full text searches
-  encodeTag: function(tag) {
+  // Encode label using our special format to allow unique full text searches
+  encodeLabel: function(label) {
 
-    tag = tag.replace(/ /g, "99");
+    label = label.replace(/ /g, "99");
 
-    return '88' + tag + '88';
+    return '88' + label + '88';
 
   },
 

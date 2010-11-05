@@ -81,7 +81,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         scope: this,
         fn: function(node) {
 
-          if (node.id == "TAGS_ROOT") {
+          if (node.id == "LABEL_ROOT") {
 
             // Create the 'more...' node.
             if (!this.moreLabelsNode) {
@@ -135,6 +135,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
             }
 
             this.refreshLabels();
+            this.refreshFolders();
           }
 
           // This is necessary because we load the tree as a whole
@@ -144,7 +145,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           delete node.attributes.children;
 
           // Here's where we ensure that only "rename-able" nodes are set as editable.
-          if (this.isNodeDraggable(node) && (node.type == "TAGS" || node.type == "FOLDER" || node.type == "ACTIVE")) {
+          if (this.isNodeDraggable(node) && (node.type == "LABEL" || node.type == "FOLDER" || node.type == "ACTIVE")) {
             node.editable = true;
           } else {
             node.editable = false;
@@ -204,7 +205,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   isNodeDraggable: function(node) {
     var id = node.id;
     // Root nodes not allowed.
-    if (id === 'ROOT' || id === 'FOLDER_ROOT' || id === 'LOCAL_ROOT' || id === 'TAGS_ROOT' || id === 'TRASH' || id === 'ACTIVE_ROOT' || id === 'IMPORT_PLUGIN_ROOT') {
+    if (id === 'ROOT' || id === 'FOLDER_ROOT' || id === 'LOCAL_ROOT' || id === 'LABEL_ROOT' || id === 'TRASH' || id === 'ACTIVE_ROOT' || id === 'IMPORT_PLUGIN_ROOT') {
       return false;
     } else {
       // Everything else is OK.
@@ -231,7 +232,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       appendOnly: false,
       getDropPoint: function(e, n, dd) {
         var node = n.node;
-        //   -> if dragging from the grid over the Tags, it should always be in "append" mode.
+        //   -> if dragging from the grid over the Labels, it should always be in "append" mode.
         // This is a bit hacky... there should be a better way to determine where the drag data is coming from.
         if (dd.dragData.grid != null) {
           return "append";
@@ -274,7 +275,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       var main = Paperpile.main.tabs.getItem("MAIN");
       Paperpile.main.tabs.activate(main);
       return;
-    case 'TAGS_ROOT':
+    case 'LABEL_ROOT':
     case 'ACTIVE_ROOT':
     case 'IMPORT_PLUGIN_ROOT':
     case 'LOCAL_ROOT':
@@ -305,7 +306,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       Paperpile.main.tabs.newTrashTab();
       break;
     case 'IMPORT_PLUGIN':
-    case 'TAGS':
+    case 'LABEL':
     case 'FOLDER':
     case 'ACTIVE':
       // Collect plugin paramters
@@ -320,8 +321,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       var title = pars.plugin_title;
       var iconCls = null;
 
-      // For tags use specifically styled tab
-      if (node.type == 'TAGS') {
+      // For labels use specifically styled tab
+      if (node.type == 'LABEL') {
         pars.collection_type = 'label';
       }
 
@@ -334,7 +335,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         pars.plugin_reload = 1;
       }
 
-      // Call appropriate frontend, tags, active folders, and folders are opened only once
+      // Call appropriate frontend, labels, active folders, and folders are opened only once
       // and we pass the node.id as item-id for the tab
       Paperpile.main.tabs.newPluginTab(node.plugin_name, pars, title, iconCls, node.id);
       break;
@@ -352,7 +353,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
     if (e.source.dragData.grid) {
       var myType = e.target.type;
-      if (myType == 'TAGS') {
+      if (myType == 'LABEL') {
         proxy.updateTip('Apply label to reference');
       } else if (myType == 'FOLDER') {
         proxy.updateTip('Place reference in folder');
@@ -362,7 +363,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     } else if (e.data.node) {
       var myType = e.data.node.attributes.type;
       var targetType = target.attributes.type;
-      if (myType == 'TAGS' && targetType == 'TAGS') {
+      if (myType == 'LABEL' && targetType == 'LABEL') {
         proxy.updateTip('Move label');
       } else if (myType == 'FOLDER' && targetType == 'FOLDER') {
         proxy.updateTip('Move folder');
@@ -377,21 +378,21 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   onNodeDrag: function(e) {
     // We are dragging from the data grid
     if (e.source.dragData.grid) {
-      // only allow drop on Folders, Tags and Trash
-      if ((e.target.type == 'TAGS' || e.target.type == 'FOLDER' || e.target.type == 'TRASH') && e.target.id != 'TAGS_ROOT') {
+      // only allow drop on Folders, Labels and Trash
+      if ((e.target.type == 'LABEL' || e.target.type == 'FOLDER' || e.target.type == 'TRASH') && e.target.id != 'LABEL_ROOT') {
         if (e.target.type == 'TRASH') {
           var imported = e.source.dragData.grid.getSelection('IMPORTED');
           if (imported.length == 0) {
             e.cancel = true;
           }
-        } else if (e.target.type == 'TAGS') {
-          // Be genreally permissive for trash and tags.
+        } else if (e.target.type == 'LABEl') {
+          // Be genreally permissive for trash and labels.
           e.cancel = false;
         } else if (e.target.type == 'FOLDER') {
           e.cancel = false;
         }
       } else {
-        // Cancel if not on a folder, tag or trash.
+        // Cancel if not on a folder, label or trash.
         e.cancel = true;
       }
     } else {
@@ -400,7 +401,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // i.e. nodes are of the same type
       if (!this.areNodeTypesCompatible(e.source.dragData.node.type, e.target.type)) {
         e.cancel = true;
-      } else if (e.target.type == 'TAGS' && e.point == 'append') {
+      } else if (e.target.type == 'LABEL' && e.point == 'append') {
         e.cancel = true;
       } else {
         // Allow only re-ordering for these types.
@@ -454,7 +455,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     });
   },
 
-  addTag: function(grid, sel, node) {
+  addLabel: function(grid, sel, node) {
     Paperpile.Ajax({
       url: '/ajax/crud/move_in_collection',
       params: {
@@ -477,14 +478,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       var sel = grid.getSelection();
       if (node.type == 'FOLDER') {
         this.addFolder(grid, sel, node);
-      } else if (e.target.type == 'TAGS') {
-        this.addTag(grid, sel, node);
+      } else if (e.target.type == 'LABEL') {
+        this.addLabel(grid, sel, node);
       } else if (node.type == 'TRASH') {
         grid.deleteEntry('TRASH');
       }
     } else {
       // We're dragging nodes internally
-      if (node.type === 'FOLDER' || node.type === 'TAGS') {
+      if (node.type === 'FOLDER' || node.type === 'LABEL') {
 
         Paperpile.Ajax({
           url: '/ajax/crud/move_collection',
@@ -604,7 +605,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   prepareMenuBeforeShowing: function(node, menu) {
-    if (node.type == 'FOLDER' || node.type == 'TAGS') {
+    if (node.type == 'FOLDER' || node.type == 'LABEL') {
       this.createAutoExportTip(menu);
     }
   },
@@ -671,7 +672,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   isContextMenuShowing: function() {
-    var menus = [this.folderMenu, this.activeMenu, this.importMenu, this.tagsMenu, this.trashMenu, this.defaultMenu];
+    var menus = [this.folderMenu, this.activeMenu, this.importMenu, this.labelsMenu, this.trashMenu, this.defaultMenu];
     for (var i = 0; i < menus.length; i++) {
       var menu = menus[i];
       if (menu != null) {
@@ -685,6 +686,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var menu = null;
     switch (node.type) {
     case 'FOLDER':
+    case 'FOLDER_ROOT':
       if (this.folderMenu == null) {
         this.folderMenu = new Paperpile.Tree.FolderMenu();
       }
@@ -705,11 +707,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       menu = this.importMenu;
       break;
 
-    case 'TAGS':
-      if (this.tagsMenu == null) {
-        this.tagsMenu = new Paperpile.Tree.TagsMenu();
+    case 'LABEL':
+    case 'LABEL_ROOT':
+      if (this.labelsMenu == null) {
+        this.labelsMenu = new Paperpile.Tree.LabelsMenu();
       }
-      menu = this.tagsMenu;
+      menu = this.labelsMenu;
       break;
 
     case 'TRASH':
@@ -979,6 +982,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     node.expand(false, false, function(n) {
       newNode = n.appendChild(this.loader.createNode({
         text: 'New Folder',
+	name: 'New Folder',
+	display_name: 'New Folder',
         iconCls: 'pp-icon-folder',
         draggable: true,
         expanded: true,
@@ -1023,9 +1028,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         parent_id: node.type === 'FOLDER' ? node.parentNode.id : 'ROOT'
       },
       success: function(response) {
-        if (node.type === 'TAGS') {
+        if (node.type === 'LABEL') {
           var json = Ext.util.JSON.decode(response.responseText);
-          Paperpile.main.triggerTagStoreReload();
+          Paperpile.main.triggerLabelStoreReload();
         }
       },
       scope: this
@@ -1096,7 +1101,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function() {
         editor.un("complete", this.onRenameComplete);
-        Paperpile.main.triggerTagStoreReload();
+        Paperpile.main.triggerLabelStoreReload();
       }
     });
   },
@@ -1129,11 +1134,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        if (node.type === 'TAGS') {
+        if (node.type === 'LABEL') {
           // Close the tab using the label's GUID, which is the node's id and the tab's itemId.
           Paperpile.main.tabs.closeTabById.defer(100, Paperpile.main.tabs, [node.id]);
-          Paperpile.main.triggerTagStoreReload();
+          Paperpile.main.triggerLabelStoreReload();
         }
+        if (node.type === 'FOLDER') {
+          // Close the tab using the label's GUID, which is the node's id and the tab's itemId.
+          Paperpile.main.tabs.closeTabById.defer(100, Paperpile.main.tabs, [node.id]);
+          Paperpile.main.triggerFolderStoreReload();
+        }
+
       },
       scope: this
     });
@@ -1200,11 +1211,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   onCheckChange: function(node, checked) {
 
-    if (node.type == 'TAGS') {
-      var store = Ext.StoreMgr.lookup('tag_store');
-      var tagIndex = store.findExact('guid', node.id);
-      if (tagIndex !== -1) {
-        var record = store.getAt(tagIndex);
+    if (node.type == 'LABEL') {
+      var store = Ext.StoreMgr.lookup('label_store');
+      var labelIndex = store.findExact('guid', node.id);
+      if (labelIndex !== -1) {
+        var record = store.getAt(labelIndex);
         var hidden = 1;
         if (checked) {
           hidden = 0;
@@ -1243,32 +1254,32 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return (path);
   },
 
-  newTag: function() {
-    var node = this.getNodeById('TAGS_ROOT');
+  newLabel: function() {
+    var node = this.getNodeById('LABEL_ROOT');
     var treeEditor = this.treeEditor;
     var newNode;
-    var tag = 'New Label';
+    var label = 'New Label';
     node.expand(false, false, function(n) {
 
       newNode = this.loader.createNode({
-        text: tag,
-        name: tag,
-        display_name: tag,
+        text: label,
+        name: label,
+        display_name: label,
         iconCls: 'pp-icon-empty',
-        tagStyle: 'default',
-        cls: 'pp-tag-tree-node pp-tag-tree-style-0',
+        labelStyle: 'default',
+        cls: 'pp-label-tree-node pp-label-tree-style-0',
         draggable: true,
         leaf: true,
         expanded: true,
         children: [],
         id: Paperpile.utils.generateUUID(),
-        type: 'TAGS',
+        type: 'LABEL',
         plugin_name: 'DB',
-        plugin_title: tag,
-        plugin_iconCls: 'pp-icon-tag',
+        plugin_title: label,
+        plugin_iconCls: 'pp-icon-label',
         plugin_mode: 'FULLTEXT',
-        plugin_query: 'labelid:' + Paperpile.utils.encodeTag(tag),
-        plugin_base_query: 'labelid:' + Paperpile.utils.encodeTag(tag)
+        plugin_query: 'labelid:' + Paperpile.utils.encodeLabel(label),
+        plugin_base_query: 'labelid:' + Paperpile.utils.encodeLabel(label)
       });
       if (this.moreLabelsNode) {
         node.insertBefore(newNode, this.moreLabelsNode);
@@ -1313,9 +1324,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     this.mun(treeEditor, 'complete', this.addOnCommit);
   },
 
-  containsTagWithText: function(text) {
-    var tagIndex = Ext.StoreMgr.lookup('tag_store').findExact('tag', text);
-    if (tagIndex > -1) {
+  containsLabelWithText: function(text) {
+    var labelIndex = Ext.StoreMgr.lookup('label_store').findExact('label', text);
+    if (labelIndex > -1) {
       return true;
     }
     return false;
@@ -1357,22 +1368,22 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
   },
 
-  getUniqueTag: function(text) {
+  getUniqueLabel: function(text) {
     var base = text;
     var i = 2;
-    while (this.containsTagWithText(text)) {
+    while (this.containsLabelWithText(text)) {
       text = base + " (" + i + ")";
       i++;
     }
     return text;
   },
 
-  sortTagsByCount: function() {
+  sortLabelsByCount: function() {
     Paperpile.Ajax({
       url: '/ajax/crud/sort_labels_by_count',
       params: {},
       success: function() {
-        var store = Ext.StoreMgr.lookup('tag_store');
+        var store = Ext.StoreMgr.lookup('label_store');
         store.reload({
           callback: function() {
             Paperpile.status.updateMsg({
@@ -1388,12 +1399,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     });
   },
 
-  sortTagsByName: function() {
+  sortLabelsByName: function() {
     Paperpile.Ajax({
       url: '/ajax/crud/sort_labels_by_name',
       params: {},
       success: function() {
-        var store = Ext.StoreMgr.lookup('tag_store');
+        var store = Ext.StoreMgr.lookup('label_store');
         store.reload({
           callback: function() {
             Paperpile.status.updateMsg({
@@ -1422,20 +1433,60 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         node_id_order: idList
       },
       success: function() {
-        Ext.StoreMgr.lookup('tag_store').reload();
+        Ext.StoreMgr.lookup('label_store').reload();
       },
       scope: this
     });
   },
 
   hideCollection: function() {
-    var store = Ext.StoreMgr.lookup('tag_store');
+    var store = Ext.StoreMgr.lookup('label_store');
     var node = this.lastSelectedNode;
     var index = store.findExact('guid', node.id);
     if (index !== -1) {
       record = store.getAt(index);
       record.set('hidden', 1);
       store.updateCollection(record);
+    }
+  },
+
+  refreshFolders: function(json) {
+    if (json && json.data) {
+      json.data.collection_delta = 0;
+      Paperpile.main.onUpdate(json.data);
+    }
+
+    var folderRoot = this.getNodeById('FOLDER_ROOT');
+    if (!folderRoot) {
+      return;
+    }
+
+    var expanded = folderRoot.isExpanded();
+
+    folderRoot.silentLoad = true;
+    folderRoot.removeAll();
+
+    // Create nodes and store in hash.
+    var nodeHash = {};
+    var store = Ext.StoreMgr.lookup('folder_store');
+    for (var i = 0; i < store.getCount(); i++) {
+      var record = store.getAt(i);
+      var node = this.recordToNode(record, 'FOLDER');
+      nodeHash[node.guid] = node;
+    }
+
+    for (var guid in nodeHash) {
+      var node = nodeHash[guid];
+      if (node.parent && node.parent != 'ROOT') {
+	  var parent = nodeHash[node.parent];
+	  parent.appendChild(node);
+      } else {
+	  folderRoot.appendChild(node);
+      }
+    }
+
+    if (expanded) {
+      folderRoot.expand();
     }
   },
 
@@ -1446,24 +1497,24 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       Paperpile.main.onUpdate(json.data);
     }
 
-    var tagsRoot = this.getNodeById('TAGS_ROOT');
-    if (!tagsRoot) {
+    var labelRoot = this.getNodeById('LABEL_ROOT');
+    if (!labelRoot) {
       return;
     }
 
-    var expanded = tagsRoot.isExpanded();
+    var expanded = labelRoot.isExpanded();
 
-    tagsRoot.silentLoad = true;
-    tagsRoot.removeAll();
+    labelRoot.silentLoad = true;
+    labelRoot.removeAll();
 
     var hiddenNodeCount = 0;
 
-    var store = Ext.StoreMgr.lookup('tag_store');
+    var store = Ext.StoreMgr.lookup('label_store');
     for (var i = 0; i < store.getCount(); i++) {
       var record = store.getAt(i);
       if (record.get('hidden') !== 1) {
-        var node = this.recordToNode(record, 'TAGS');
-        tagsRoot.appendChild(node);
+        var node = this.recordToNode(record, 'LABEL');
+        labelRoot.appendChild(node);
       } else {
         hiddenNodeCount++;
       }
@@ -1471,7 +1522,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     if (hiddenNodeCount > 0) {
       this.moreLabelsNode.setText(hiddenNodeCount + " more...");
-      tagsRoot.appendChild(this.moreLabelsNode);
+      labelRoot.appendChild(this.moreLabelsNode);
     } else {
       if (this.labelPanel.isVisible()) {
         // We've got a visible panel, but no hidden nodes.
@@ -1492,7 +1543,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
 
     if (expanded) {
-      tagsRoot.expand();
+      labelRoot.expand();
     }
   },
 
@@ -1500,6 +1551,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var pars = {
       id: record.get('guid'),
       text: record.get('display_name'),
+      guid: record.get('guid'),
+      display_name: record.get('display_name'),
       name: record.get('name'),
       type: record.get('type'),
       parent: record.get('parent'),
@@ -1528,13 +1581,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       pars.plugin_iconCls = "pp-icon-folder";
       pars.cls = 'pp-folder-node';
     } else {
-      pars.cls = "pp-tag-node pp-tag-tree-node pp-tag-tree-style-" + record.get('style');
+      pars.cls = "pp-label-node pp-label-tree-node pp-label-tree-style-" + record.get('style');
       pars.iconCls = "pp-icon-empty";
-      pars.type = 'TAGS';
+      pars.type = 'LABEL';
       pars.plugin_query = "labelid:" + record.get('guid');
       pars.plugin_base_query = "labelid:" + record.get('guid');
-      pars.plugin_iconCls = "pp-icon-tag";
-      pars.tagStyle = record.get('style');
+      pars.plugin_iconCls = "pp-icon-empty";
+      pars.labelStyle = record.get('style');
     }
     var node = this.loader.createNode(pars);
     //    Paperpile.log(node);
@@ -1575,14 +1628,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
-        Paperpile.main.triggerTagStoreReload();
+        Paperpile.main.triggerLabelStoreReload();
       },
       scope: this
     });
   },
 
   //
-  // Rename the tag given by node globally
+  // Rename the label given by node globally
   //
   triggerRenameCollection: function() {
     (function() {
@@ -1605,7 +1658,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     if (newText == oldText) {
       return;
     }
-    var tag = oldText;
+    var label = oldText;
     Paperpile.Ajax({
       url: '/ajax/crud/update_collection',
       params: {
@@ -1613,7 +1666,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         name: newText
       },
       success: function(response) {
-        Paperpile.main.triggerTagStoreReload();
+        Paperpile.main.triggerLabelStoreReload();
       },
       scope: this
     });
@@ -1941,58 +1994,58 @@ Paperpile.Tree.ImportMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   }
 });
 
-Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
+Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   initComponent: function() {
     var tree = this.tree;
 
     tree.sortByMenu = {
       items: [{
-        id: 'sort_tags_by_name',
+        id: 'sort_labels_by_name',
         text: 'Alphabetically',
-        handler: tree.sortTagsByName,
+        handler: tree.sortLabelsByName,
         scope: tree
       },
       {
-        id: 'sort_tags_by_count',
+        id: 'sort_labels_by_count',
         text: 'Paper Count',
-        handler: tree.sortTagsByCount,
+        handler: tree.sortLabelsByCount,
         scope: tree
       }]
     };
 
     Ext.apply(this, {
       items: [{
-        id: 'tags_menu_new',
+        id: 'labels_menu_new',
         text: 'New Label',
-        iconCls: 'pp-icon-tag-new',
-        handler: tree.newTag,
+        iconCls: 'pp-icon-label-new',
+        handler: tree.newLabel,
         scope: tree
       },
       {
-        id: 'tags_menu_style',
+        id: 'labels_menu_style',
         text: 'Style',
         menu: tree.stylePickerMenu
       },
       {
-        id: 'tags_menu_delete',
+        id: 'labels_menu_delete',
         text: 'Delete',
         handler: tree.deleteCollection,
         scope: tree
       },
       {
-        id: 'tags_menu_rename',
+        id: 'labels_menu_rename',
         text: 'Rename',
         handler: tree.triggerRenameCollection,
         scope: tree
       },
       {
-        id: 'tags_menu_hide',
+        id: 'labels_menu_hide',
         text: 'Hide from List',
         handler: tree.hideCollection,
         scope: tree
       },
       {
-        id: 'tags_menu_export',
+        id: 'labels_menu_export',
         text: Paperpile.Tree.EXPORT_MENU_STRING,
         handler: tree.exportNode,
         scope: tree
@@ -2004,7 +2057,7 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       },
       {
         xtype: 'enabledisablecheckitem',
-        id: 'tags_menu_auto_export',
+        id: 'labels_menu_auto_export',
         text: Paperpile.Tree.AUTO_EXPORT_MENU_STRING,
         hideOnClick: true,
         textDisabled: true,
@@ -2014,11 +2067,11 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         scope: tree
       }]
     });
-    Paperpile.Tree.TagsMenu.superclass.initComponent.call(this);
+    Paperpile.Tree.LabelsMenu.superclass.initComponent.call(this);
   },
 
   initShownItems: function() {
-    var item = this.items.get('tags_menu_auto_export');
+    var item = this.items.get('labels_menu_auto_export');
     if (Paperpile.main.tree.getFileSyncData(this.node).active == 1) {
       item.setChecked(true, true);
       item.enableText();
@@ -2030,18 +2083,18 @@ Paperpile.Tree.TagsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 
   getShownItems: function(node) {
     var items;
-    if (node.id == 'TAGS_ROOT') {
-      items = ['tags_menu_new',
+    if (node.id == 'LABEL_ROOT') {
+      items = ['labels_menu_new',
                'sort_by_menu'];
     } else {
       items = [
-        'tags_menu_style',
-        'tags_menu_delete',
-        'tags_menu_hide',
-        'tags_menu_rename',
-        'tags_menu_export'];
+        'labels_menu_style',
+        'labels_menu_delete',
+        'labels_menu_hide',
+        'labels_menu_rename',
+        'labels_menu_export'];
       if (Paperpile.main.getSetting('bibtex').bibtex_mode == 1) {
-        items.push('tags_menu_auto_export');
+        items.push('labels_menu_auto_export');
       }
     }
     return items;

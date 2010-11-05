@@ -65,8 +65,8 @@ sub insert_entry : Local {
       $pub->auto_complete($plugin_list);
     }
 
-    # Make sure we update the labels list when we insert pubs that come with tags
-    $collection_delta = 1 if ( $pub->tags_tmp );
+    # Make sure we update the labels list when we insert pubs that come with labels
+    $collection_delta = 1 if ( $pub->labels_tmp );
 
     push @pub_array, $pub;
   }
@@ -391,7 +391,7 @@ sub new_collection : Local {
   my $tree = $c->session->{tree};
 
   if ($type eq 'LABEL'){
-    $c->forward( '/ajax/tree/get_subtree', [ $tree, "TAGS_ROOT" ] );
+    $c->forward( '/ajax/tree/get_subtree', [ $tree, "LABEL_ROOT" ] );
   } else {
     $c->forward( '/ajax/tree/get_subtree', [ $tree, "FOLDER_ROOT" ] );
   }
@@ -406,7 +406,7 @@ sub move_in_collection : Local {
   my $type    = $c->request->params->{type};
   my $data    = $self->_get_selection($c);
 
-  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+  my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
   # First import entries that are not already in the database
   my @to_be_imported = ();
@@ -444,7 +444,7 @@ sub remove_from_collection : Local {
 
   my $data = $self->_get_selection($c);
 
-  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+  my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
   $c->model('Library')->remove_from_collection( $data, $collection_guid );
 
@@ -467,7 +467,7 @@ sub delete_collection : Local {
   # Not sure if we need to update the tree structure in the
   # backend in some way here.
 
-  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+  my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
   my $pubs = $self->_get_cached_data($c);
   foreach my $pub (@$pubs) {
@@ -491,8 +491,8 @@ sub rename_collection : Local {
 
   $c->model('Library')->rename_collection( $guid, $new_name );
 
-  my $type = 'TAGS';
-  my $what = $type eq 'FOLDER' ? 'folders' : 'tags';
+  my $type = 'LABELS';
+  my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
   my $pubs = $self->_get_cached_data($c);
   $self->_collect_update_data( $c, $pubs, [$what] );
   $c->stash->{data}->{collection_delta} = 1;
@@ -571,9 +571,9 @@ sub list_collections : Local {
 
   my $dbh = $c->model('Library')->dbh;
 
-  my $hist = $c->model('Library')->histogram('tags', $dbh);
+  my $hist = $c->model('Library')->histogram('labels', $dbh);
 
-  my $sth = $dbh->prepare("SELECT * FROM Collections WHERE type='LABEL' order by sort_order");
+  my $sth = $dbh->prepare("SELECT * FROM Collections WHERE type='$type' order by sort_order");
 
   my @data = ();
 
@@ -869,7 +869,7 @@ sub _get_sync_collections {
 
   my %collections;
 
-  # Either take $guid or search folders or tags field of publications
+  # Either take $guid or search folders or labels field of publications
   # in $data
   if ( defined $guid ) {
     $collections{$guid} = 1;
@@ -879,8 +879,8 @@ sub _get_sync_collections {
       if ( $pub->folders ) {
         push @tmp, split( /,/, $pub->folders );
       }
-      if ( $pub->tags ) {
-        push @tmp, split( /,/, $pub->tags );
+      if ( $pub->labels ) {
+        push @tmp, split( /,/, $pub->labels );
       }
       foreach my $collection (@tmp) {
         $collections{$collection} = 1;

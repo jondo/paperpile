@@ -32,7 +32,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   itemId: 'grid',
   overviewPanel: null,
   detailsPanel: null,
-  tagStyles: {},
+  labelStyles: {},
   isLocked: false,
 
   initComponent: function() {
@@ -611,7 +611,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var proxy = source.proxy;
     if (source.dragData.node) {
       var myType = source.dragData.node.type;
-      if (myType == 'TAGS') {
+      if (myType == 'LABEL') {
         //proxy.updateTip('Apply label to reference');
       } else if (myType == 'FOLDER') {
         //proxy.updateTip('Place reference in folder');
@@ -634,14 +634,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         sel = record.get('guid');
       }
 
-      var tagName = data.node.text;
+      var labelName = data.node.text;
 
       if (data.node.type) {
         var type = data.node.type;
         if (type == 'FOLDER') {
           Paperpile.main.tree.addFolder(this, sel, data.node);
-        } else if (type == 'TAGS') {
-          Paperpile.main.tree.addTag(this, sel, data.node);
+        } else if (type == 'LABEL') {
+          Paperpile.main.tree.addLabel(this, sel, data.node);
         }
       }
       return true;
@@ -935,9 +935,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getPubTemplate: function() {
     if (this.pubTemplate == null) {
       this.pubTemplate = new Ext.XTemplate(
-        '<div class="pp-grid-data {[this.isInactive(values.tags)]}" guid="{guid}">',
+        '<div class="pp-grid-data {[this.isInactive(values.labels)]}" guid="{guid}">',
         '<div>',
-        '<span class="pp-grid-title {_highlight}">{title}</span>{[this.tagStyle(values.tags, values.tags_tmp)]}',
+        '<span class="pp-grid-title {_highlight}">{title}</span>{[this.labelStyle(values.labels, values.labels_tmp)]}',
         '</div>',
         '<tpl if="_authors_display">',
         '<p class="pp-grid-authors">{_authors_display}</p>',
@@ -949,37 +949,37 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         '<p class="pp-grid-snippets">{_snippets}</p>',
         '</tpl>',
         '</div>', {
-          tagStyle: function(tags_guid, tags_tmp) {
+          labelStyle: function(labels_guid, labels_tmp) {
             var returnMe = '';
-            if (tags_tmp) {
-              var tags = tags_tmp.split(/\s*,\s*/);
-              for (var i = 0; i < tags.length; i++) {
-                name = tags[i];
+            if (labels_tmp) {
+              var labels = labels_tmp.split(/\s*,\s*/);
+              for (var i = 0; i < labels.length; i++) {
+                name = labels[i];
                 style = '0';
-                returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
+                returnMe += '<div class="pp-label-grid-inline pp-label-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
               }
             } else {
-              var tags = tags_guid.split(/\s*,\s*/);
-              for (var i = 0; i < tags.length; i++) {
-                var guid = tags[i];
-                var style = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
+              var labels = labels_guid.split(/\s*,\s*/);
+              for (var i = 0; i < labels.length; i++) {
+                var guid = labels[i];
+                var style = Paperpile.main.labelStore.getAt(Paperpile.main.labelStore.findExact('guid', guid));
                 if (style != null) {
                   name = style.get('display_name');
                   style = style.get('style');
-                  returnMe += '<div class="pp-tag-grid-inline pp-tag-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
+                  returnMe += '<div class="pp-label-grid-inline pp-label-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
                 }
               }
             }
-            if (tags.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
+            if (labels.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
             return returnMe;
           },
-          isInactive: function(tag_string) {
-            var tags = tag_string.split(/\s*,\s*/);
-            for (var i = 0; i < tags.length; i++) {
-              var guid = tags[i];
-              var tag = Paperpile.main.tagStore.getAt(Paperpile.main.tagStore.findExact('guid', guid));
-              if (tag != null) {
-                name = tag.get('name');
+          isInactive: function(label_string) {
+            var labels = label_string.split(/\s*,\s*/);
+            for (var i = 0; i < labels.length; i++) {
+              var guid = labels[i];
+              var label = Paperpile.main.labelStore.getAt(Paperpile.main.labelStore.findExact('guid', guid));
+              if (label != null) {
+                name = label.get('name');
                 if (name === 'Incomplete') {
                   return ('pp-inactive');
                 }
@@ -2042,12 +2042,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }));
   },
 
-  updateTagStyles: function() {
-    // Go through each record and re-render it if it has some improperly styled tags.
+  refreshCollections: function() {
+    // Go through each record and re-render it if it has some improperly styled labels.
     var n = this.getStore().getCount();
     for (var i = 0; i < n; i++) {
       var record = this.getStore().getAt(i);
-      if (record.get('tags')) {
+      if (record.get('labels') || record.get('folders')) {
         this.getStore().fireEvent('update', this.getStore(), record, Ext.data.Record.EDIT);
       }
     }
