@@ -1400,7 +1400,6 @@ div:hover.pp-grid-sort-item {
     margin: 0px 8px;
 }
 
-
 .pp-settings-table {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     margin: 4px 8px;
@@ -1434,17 +1433,12 @@ div:hover.pp-grid-sort-item {
 }
 
 .pp-pluginlist-widget {
-    margin: 8px;
+
 }
 
-.pp-pluginlist-widget td{
+.pp-pluginlist-widget .label{
+    text-align:center;
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-}
-
-
-.pp-pluginlist-number {
-    float:left;
-    margin-right: 4px;
 }
 
 .pp-pluginlist li {
@@ -2484,15 +2478,6 @@ div.pp-dd-panel {
   z-index: 20;
 }
 
-.pp-dd-panel-over {
-  background-color:yellow;
-}
-
-.pp-dd-panel h1 {
-    text-align:center;
-    border: none;
-    font-size: 14px;
-}
 .pp-dd-action h2 {
   font-size: 12px;
 }
@@ -2500,6 +2485,21 @@ div.pp-dd-panel {
 .pp-dd-action p {
   font-size: 10px;
 }
+
+/* Animations for hide / show effect. */
+div.pp-hideable {
+  opacity: 1;
+  -webkit-transition-property: opacity;
+  -webkit-transition-timing-function: linear;
+  -webkit-transition-duration: 0.3s;
+}
+div.pp-hidden {
+  opacity: 0;
+  -webkit-transition-property: opacity;
+  -webkit-transition-timing-function: linear;
+  -webkit-transition-duration: 0.3s;
+}
+
 
 /* A less-distracting button, mostly for buttons within context menus. */
 .x-btn-plain:not(.x-btn-over) .x-btn-tl, .x-btn-plain:not(.x-btn-over) .x-btn-tr, .x-btn-plain:not(.x-btn-over) .x-btn-tc, .x-btn-plain:not(.x-btn-over) .x-btn-ml, .x-btn-plain:not(.x-btn-over) .x-btn-mr, .x-btn-plain:not(.x-btn-over) .x-btn-mc, .x-btn-plain:not(.x-btn-over) .x-btn-bl, .x-btn-plain:not(.x-btn-over) .x-btn-br, .x-btn-plain:not(.x-btn-over) .x-btn-bc{
