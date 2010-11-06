@@ -494,10 +494,9 @@ Paperpile.DragDropAction = Ext.extend(Ext.BoxComponent, {
   onRender: function(ct, position) {
 
     this.tpl = new Ext.Template([
-      '<div class="pp-dd-action-wrap">',
+      '<div class="pp-dd-action-wrap pp-dd-action-icon {1}">',
       '  <div class="pp-dd-action">',
       '    <h1>{0}</h1>',
-      '    <div class="pp-dd-action-icon {1}"></div>',
       '    <p>{2}</p>',
       '  </div>',
       '</div>']);
@@ -527,6 +526,7 @@ Paperpile.DragDropPanel = Ext.extend(Ext.Panel, {
   shadow: true,
   renderTo: document.body,
   cls: 'pp-dd-panel',
+  bodyStyle: 'background:#F0F0F0',
 
   initComponent: function() {
     Paperpile.DragDropPanel.superclass.initComponent.call(this);

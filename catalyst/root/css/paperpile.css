@@ -2445,11 +2445,9 @@ table.pp-meta-form {
 }
 
 div.pp-dd-action-wrap {
-    margin: 10px;
-  border: 5px dashed black;
-  background-color: white;
-  -webkit-border-radius: 10px;
-
+  margin: 10px;
+  border: 5px dashed #808080;
+  background-color: #F0F0F0;
   -webkit-transition-property: border-color, background-color;
   -webkit-transition-timing-function: ease-out, ease-out;
   -webkit-transition-duration: 0.3s, 0.3s;
@@ -2457,7 +2455,7 @@ div.pp-dd-action-wrap {
 
 div.pp-dd-action-wrap-over {
   border: 5px dashed green;
-  background-color: #EEFFEE;
+  background-color: #C3FDB8;
   -webkit-transition-property: border-color, background-color;
   -webkit-transition-timing-function: ease-out, ease-out;
   -webkit-transition-duration: 0.3s, 0.3s;
@@ -2477,10 +2475,8 @@ div.pp-dd-action p {
 }
 
 div.pp-dd-action-icon {
-  width:16px;
-  height:16px;
-  margin: auto;
-  margin-bottom: .5em;
+  background-repeat:no-repeat;
+  background-position: 10px 10px;
 }
 
 div.pp-dd-panel {
