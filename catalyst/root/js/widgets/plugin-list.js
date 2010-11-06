@@ -14,8 +14,12 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
+Paperpile.PluginButton = Ext.extend(Ext.Button, {
+  height: 20,
+  width: 20
+});
 
-Paperpile.PluginOrderPanel = Ext.extend(Ext.BoxComponent, {
+Paperpile.PluginOrderPanel = Ext.extend(Ext.Container, {
 
   settingsPanel: null,
   settingName: 'search_seq',
@@ -25,9 +29,7 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.BoxComponent, {
     this.tempSettingValue = Paperpile.main.getSetting(this.settingName);
 
     var usedConfig = {
-      cls: 'pp-pluginlist pp-pluginlist-used',
-      border: true,
-
+      cls: 'pp-pluginlist pp-pluginlist-used'
     };
     this.usedPlugins = this.createPluginOrderTreePanel(usedConfig);
     this.usedPlugins.initEvents = this.usedPlugins.initEvents.createSequence(function() {
@@ -41,45 +43,39 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.BoxComponent, {
       this);
     },
     this);
-    this.usedPlugins.setWidth('100%');
-    this.usedPlugins.setHeight(100);
 
     var availableConfig = {
       cls: 'pp-pluginlist',
-      border: true,
       listeners: {
         'dblclick': {
           // Move plugins to the 'used' column if double-clicked.
           fn: function(node, event) {},
           scope: this
         }
-      },
-
+      }
     };
     this.availablePlugins = this.createPluginOrderTreePanel(availableConfig);
-    this.availablePlugins.setWidth('100%');
-    this.availablePlugins.setHeight(100);
 
     this.actions = {};
-    this.actions['BUTTON_UP'] = new Ext.Button({
+    this.actions['BUTTON_UP'] = new Paperpile.PluginButton({
       itemId: 'BUTTON_UP',
       icon: '/images/icons/up.png',
       handler: this.moveUp,
       scope: this
     });
-    this.actions['BUTTON_DOWN'] = new Ext.Button({
+    this.actions['BUTTON_DOWN'] = new Paperpile.PluginButton({
       itemId: 'BUTTON_DOWN',
       icon: '/images/icons/down-small.png',
       handler: this.moveDown,
       scope: this
     });
-    this.actions['BUTTON_LEFT'] = new Ext.Button({
+    this.actions['BUTTON_LEFT'] = new Paperpile.PluginButton({
       itemId: 'BUTTON_LEFT',
       icon: '/images/icons/back.png',
       handler: this.switchSelected,
       scope: this
     });
-    this.actions['BUTTON_RIGHT'] = new Ext.Button({
+    this.actions['BUTTON_RIGHT'] = new Paperpile.PluginButton({
       itemId: 'BUTTON_RIGHT',
       icon: '/images/icons/next.png',
       handler: this.switchSelected,
@@ -87,62 +83,99 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.BoxComponent, {
     });
 
     Ext.apply(this, {
-      autoEl: {
-        tag: 'table',
-        width: '100%',
-        children: [{
-          tag: 'tr',
-          children: [{
-            tag: 'td',
-            width: '45%',
-            html: 'Current search order <span id="current-tooltip" class="pp-tooltip-link">?</span>',
-          },
-          {
-            tag: 'td',
-            width: '10%',
-          },
-          {
-            tag: 'td',
-            width: '45%',
-            html: 'Available Resources <span id="available-tooltip" class="pp-tooltip-link">?</span>',
-          }]
+      width: 330,
+      height: 150,
+      layout: {
+        type: 'vbox',
+        align: 'stretch',
+      },
+      defaults: {
+	  border: false,
+        flex: 4
+      },
+      items: [{
+        flex: 1,
+        layout: 'hbox',
+        defaults: {
+	  border: false,
+          flex: 4,
+	  align:'stretch'
+        },
+        items: [{
+	  tag:'div',
+	  cls: 'label',
+          html:'Current search order <span id="current-tooltip" class="pp-tooltip-link">?</span>'
+        },
+	{
+	    xtype:'spacer',
+	    flex: 1
+	},
+        {
+	  tag:'div',
+	  cls: 'label',
+          html:'Available Resources <span id="available-tooltip" class="pp-tooltip-link">?</span>'
+        }]
+      },
+      {
+        layout: {
+          type: 'hbox',
+          align: 'stretch'
+        },
+        defaults: {
+	  border: false,
+          flex: 3
+        },
+        items: [{
+		    border: false,
+          items: [this.usedPlugins]
         },
         {
-          tag: 'tr',
-          children: [{
-            tag: 'td',
-            id: 'used-plugins'
+          layout: 'vbox',
+          flex: 1,
+          layoutConfig: {
+            align: 'center',
+            pack: 'center'
           },
-          {
-            tag: 'td',
-            html: '<center id="plugin-list-button-left"></center>&nbsp;<center id="plugin-list-button-right"></center>',
+          defaults: {
+	  border: false,
+            flex: 1
           },
-          {
-            tag: 'td',
-            id: 'available-plugins'
-          }]
+          items: [this.actions['BUTTON_LEFT'],
+          this.actions['BUTTON_RIGHT']]
         },
         {
-          tag: 'tr',
-          children: [{
-            tag: 'td',
-            html: '<center><table><tr><td id="plugin-list-button-up" style="float:left;"></td><td>&nbsp;</td><td id="plugin-list-button-down"></td></tr></table></center>',
-          },
-          {
-            tag: 'td',
-            html: '&nbsp;'
-          },
-          {
-            tag: 'td',
-            html: '&nbsp;'
-          }]
+	    border: false,
+          items: [this.availablePlugins]
+        }]
+      },
+      {
+	flex: 1,
+        layout: {
+          type: 'hbox',
+          align: 'stretch'
         },
-
-        ]
-      }
+        defaults: {
+	  border: false,
+          flex: 1
+        },
+        items: [{
+          layout: {
+	      type: 'hbox',
+	      align: 'middle',
+	      pack: 'center'
+	  },
+          defaults: {flex:1},
+          items: [this.actions['BUTTON_UP'], this.actions['BUTTON_DOWN']]
+        },
+        {
+          type: 'spacer',
+          flex: 1
+        }]
+      }]
     });
 
     Paperpile.PluginOrderPanel.superclass.initComponent.call(this);
+
     this.usedPlugins.on('nodedrop', this.saveAndLoad, this);
     this.usedPlugins.getSelectionModel().on('selectionchange', function() {
       this.clearSelections(this.availablePlugins);
@@ -157,13 +190,6 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.BoxComponent, {
     this);
 
     this.on('afterrender', function() {
-      this.usedPlugins.applyToMarkup('used-plugins');
-      this.availablePlugins.applyToMarkup('available-plugins');
-
-      this.actions['BUTTON_LEFT'].render('plugin-list-button-left');
-      this.actions['BUTTON_RIGHT'].render('plugin-list-button-right');
-      this.actions['BUTTON_UP'].render('plugin-list-button-up');
-      this.actions['BUTTON_DOWN'].render('plugin-list-button-down');
 
       new Ext.ToolTip({
         target: 'current-tooltip',
@@ -300,7 +326,9 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.BoxComponent, {
       dropConfig: {},
       animate: false,
       rootVisible: false,
-      lines: false
+      lines: false,
+      border: true,
+      height: 100
     });
     var newPanel = new Ext.tree.TreePanel(config);
 

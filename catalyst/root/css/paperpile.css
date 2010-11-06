@@ -1400,7 +1400,6 @@ div:hover.pp-grid-sort-item {
     margin: 0px 8px;
 }
 
-
 .pp-settings-table {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     margin: 4px 8px;
@@ -1434,17 +1433,12 @@ div:hover.pp-grid-sort-item {
 }
 
 .pp-pluginlist-widget {
-    margin: 8px;
+
 }
 
-.pp-pluginlist-widget td{
+.pp-pluginlist-widget .label{
+    text-align:center;
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
-}
-
-
-.pp-pluginlist-number {
-    float:left;
-    margin-right: 4px;
 }
 
 .pp-pluginlist li {
