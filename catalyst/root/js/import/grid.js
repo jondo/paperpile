@@ -1158,7 +1158,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  </ul>',
       '  </div>',
       // Attachments box.
-      '  <div class="pp-box pp-box-side-panel pp-box-style2"',
+      '  <div class="pp-box pp-box-side-panel pp-box-style2 pp-box-files"',
       '    <h2>PDF</h2>',
       '    <div id="search-download-widget-{id}" class="pp-search-download-widget"></div>',
       '    <tpl if="_imported || attachments">',

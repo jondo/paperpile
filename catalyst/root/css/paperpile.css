@@ -2424,20 +2424,48 @@ table.pp-meta-form {
       margin: 5px;
 }
 
-div.pp-dd-action {
-  text-align: center;
-/*  margin: 10px;
-  padding:8px;
-  border: 5px dashed green;
+div.pp-dd-action-wrap {
+    margin: 10px;
+  border: 5px dashed black;
+  background-color: white;
   -webkit-border-radius: 10px;
-*/
-  background-color: blue;
+
+  -webkit-transition-property: border-color, background-color;
+  -webkit-transition-timing-function: ease-out, ease-out;
+  -webkit-transition-duration: 0.3s, 0.3s;
+}
+
+div.pp-dd-action-wrap-over {
+  border: 5px dashed green;
+  background-color: #EEFFEE;
+  -webkit-transition-property: border-color, background-color;
+  -webkit-transition-timing-function: ease-out, ease-out;
+  -webkit-transition-duration: 0.3s, 0.3s;
+}
+
+div.pp-dd-action {
+  width: 100%;
+  text-align: center;
+}
+
+div.pp-dd-action h1 {
+  margin-bottom: .5em;
+}
+
+div.pp-dd-action p {
+  margin-bottom: .5em;
+}
+
+div.pp-dd-action-icon {
+  width:16px;
+  height:16px;
+  margin: auto;
+  margin-bottom: .5em;
 }
 
 div.pp-dd-panel {
   position: absolute;
   z-index: 20;
-  background-color:red;
 }
 
 .pp-dd-panel-over {
@@ -2447,14 +2475,14 @@ div.pp-dd-panel {
 .pp-dd-panel h1 {
     text-align:center;
     border: none;
-  font-size: 14px;
+    font-size: 14px;
 }
 .pp-dd-action h2 {
   font-size: 12px;
 }
 
 .pp-dd-action p {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 /* A less-distracting button, mostly for buttons within context menus. */

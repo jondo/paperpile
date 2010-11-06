@@ -448,6 +448,25 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
+  getCurrentGrid: function() {
+    var activeTab = Paperpile.main.tabs.getActiveTab();
+    if (activeTab instanceof Paperpile.PluginPanel) {
+      return activeTab.getGrid();
+    }
+    return null;
+  },
+
+  getCurrentlySelectedRow: function() {
+    var activeTab = Paperpile.main.tabs.getActiveTab();
+    if (activeTab instanceof Paperpile.PluginPanel) {
+      var grid = activeTab.getGrid();
+      if (grid.getSelectionCount() == 1) {
+        return grid.getSingleSelectionRecord();
+      }
+    }
+    return null;
+  },
+
   folderExtract: function() {
     var callback = function(filenames) {
       if (filenames.length > 0) {
