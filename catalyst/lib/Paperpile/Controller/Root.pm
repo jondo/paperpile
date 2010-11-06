@@ -25,66 +25,54 @@ use Data::Dumper;
 
 __PACKAGE__->config->{namespace} = '';
 
+# Load index file dynamically (i.e. when opened in a browser)
 sub index : Path : Args(0) {
   my ( $self, $c ) = @_;
 
-  # Add dynamically all *js files in the  plugins directory
+  # Add dynamically all *js files in the plugins directory
   my @list = glob( $c->path_to('root/js/import/plugins') . "/*js" );
-  push @list, glob( $c->path_to('root/js/export/plugins') . "/*js" );
 
   my @plugins = ();
 
   foreach my $plugin (@list) {
     my ( $volume, $directories, $file ) = File::Spec->splitpath($plugin);
-    if ( $directories =~ /import/ ) {
-      push @plugins, "js/import/plugins/$file";
-    } else {
-      push @plugins, "js/export/plugins/$file";
-    }
-
+    push @plugins, "js/import/plugins/$file";
   }
+
   $c->stash->{plugins} = [@plugins];
 
   $c->stash->{template} = 'index.mas';
   $c->forward('Paperpile::View::Mason');
 }
 
-# Serves an empty page that closes itself immediately after being
-# loaded. Used for cookie setting bug workaround.
-sub empty : Local {
+# Serves dynamic HTML templates for the frontend.
+sub screens : Regex('^screens/(.*)$') {
+
   my ( $self, $c ) = @_;
-  $c->session->{"dummy"} = 'dummy';
-  $c->stash->{template} = 'empty.mas';
+
+  my $screen = $c->req->captures->[0];
+
+  if ($screen eq 'dashboard'){
+    my $stats = $c->model('Library')->dashboard_stats;
+    $c->stash->{num_items}       = $stats->{num_items};
+    $c->stash->{num_pdfs}        = $stats->{num_pdfs};
+    $c->stash->{num_attachments} = $stats->{num_attachments};
+    $c->stash->{last_imported}   = $stats->{last_imported};
+  }
+
+  $c->stash->{template} = "/screens/$screen.mas";
+
   $c->forward('Paperpile::View::Mason');
-}
-
-sub scratch : Local {
-  my ( $self, $c ) = @_;
-  $c->stash->{template} = 'scratch.mas';
-  $c->forward('Paperpile::View::Mason');
-}
-
-sub scratch2 : Local {
-  my ( $self, $c ) = @_;
-  $c->stash->{template} = 'scratch2.mas';
-  $c->forward('Paperpile::View::Mason');
-}
-
-sub default : Path {
-  my ( $self, $c ) = @_;
-  $c->response->body('Page not found');
-  $c->response->status(404);
 
 }
 
+
+# Serves static files and sets appropriate MIME type.
 sub serve : Regex('^serve/(.*)$') {
 
   my ( $self, $c ) = @_;
 
   my $file = $c->req->captures->[0];
-
-  #my $root= $c->model('Library')->get_setting('paper_root');
-  #my $path= File::Spec->catfile( $root, $file );
 
   if ( not open( IN, $file ) ) {
     $c->response->status(404);
@@ -101,6 +89,13 @@ sub serve : Regex('^serve/(.*)$') {
     $c->response->body($data);
   }
 }
+
+sub default : Path {
+  my ( $self, $c ) = @_;
+  $c->response->body('Page not found');
+  $c->response->status(404);
+}
+
 
 sub end : Private {
   my ( $self, $c ) = @_;
