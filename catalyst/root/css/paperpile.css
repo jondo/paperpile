@@ -2484,15 +2484,6 @@ div.pp-dd-panel {
   z-index: 20;
 }
 
-.pp-dd-panel-over {
-  background-color:yellow;
-}
-
-.pp-dd-panel h1 {
-    text-align:center;
-    border: none;
-    font-size: 14px;
-}
 .pp-dd-action h2 {
   font-size: 12px;
 }
@@ -2500,6 +2491,21 @@ div.pp-dd-panel {
 .pp-dd-action p {
   font-size: 10px;
 }
+
+/* Animations for hide / show effect. */
+div.pp-hideable {
+  opacity: 1;
+  -webkit-transition-property: opacity;
+  -webkit-transition-timing-function: linear;
+  -webkit-transition-duration: 0.3s;
+}
+div.pp-hidden {
+  opacity: 0;
+  -webkit-transition-property: opacity;
+  -webkit-transition-timing-function: linear;
+  -webkit-transition-duration: 0.3s;
+}
+
 
 /* A less-distracting button, mostly for buttons within context menus. */
 .x-btn-plain:not(.x-btn-over) .x-btn-tl, .x-btn-plain:not(.x-btn-over) .x-btn-tr, .x-btn-plain:not(.x-btn-over) .x-btn-tc, .x-btn-plain:not(.x-btn-over) .x-btn-ml, .x-btn-plain:not(.x-btn-over) .x-btn-mr, .x-btn-plain:not(.x-btn-over) .x-btn-mc, .x-btn-plain:not(.x-btn-over) .x-btn-bl, .x-btn-plain:not(.x-btn-over) .x-btn-br, .x-btn-plain:not(.x-btn-over) .x-btn-bc{

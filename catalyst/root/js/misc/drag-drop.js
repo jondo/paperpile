@@ -44,13 +44,13 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       ATTACH_SUPPLEMENT: new Paperpile.DragDropAction({
         handler: this.attachSupplement,
         iconCls: 'pp-file-generic',
-        label: 'Attach as Supplementary File',
+        label: 'Attach as Supplement',
         description: 'Attach as supplementary file'
       }),
       ATTACH_MULTIPLE_SUPPLEMENTS: new Paperpile.DragDropAction({
         handler: this.attachMultipleSupplements,
         iconCls: 'pp-file-generic',
-        label: 'Attach Supplementary Files',
+        label: 'Attach Supplements',
         description: 'Attach supplementary files'
       })
 
@@ -87,6 +87,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       this.sideDdp = new Paperpile.DragDropPanel();
       this.sideDdp.actionHeight = 100;
     }
+
+    this.ddp.clearActions();
+    this.sideDdp.clearActions();
 
     if (this.isFolder(event)) {
       this.ddp.addAction(this.actions['IMPORT_PDF_FOLDER']);
@@ -171,6 +174,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       return;
     }
 
+    this.hideTask.delay(2000);
+
     // If we get here, the event is a 'normal' drag event.
     // Loop through the droptargets, checking for overlap.
     var isOverSomething = false;
@@ -216,6 +221,11 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       return;
     }
 
+    if (!this.hideTask) {
+      this.hideTask = new Ext.util.DelayedTask(this.hideDragPane, this);
+    }
+    this.hideTask.cancel();
+
     if (!this.dragPane) {
       var box = Paperpile.main.getBox();
       this.dragPane = Ext.DomHelper.append(Ext.getBody(), {
@@ -245,6 +255,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   },
 
   hideDragPane: function() {
+    this.hideTask.cancel();
 
     // Call the out() method on any hanging hovered action.
     if (this.currentlyHoveredAction != null) {
@@ -258,9 +269,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     // Clear the actions from each DragDropPanel.
     // This doesn't destroy the actions, just hides them and removes them
     // from the DragDropPanel.
-    this.ddp.clearActions();
     this.ddp.hide();
-    this.sideDdp.clearActions();
     this.sideDdp.hide();
 
     // Put drag events back onto the body and hide the drag pane.
@@ -519,24 +528,44 @@ Paperpile.DragDropAction = Ext.extend(Ext.BoxComponent, {
 
 });
 
-Paperpile.DragDropPanel = Ext.extend(Ext.Panel, {
+Paperpile.FadingPanel = Ext.extend(Ext.Panel, {
+  shadow: false,
+  timeout: -1,
+  initComponent: function() {
+    Paperpile.FadingPanel.superclass.initComponent.call(this);
+
+    this.on('render', function() {
+      this.addClass('pp-hidden');
+    },
+    this);
+  },
+  show: function() {
+    if (this.timeout != -1) {
+      clearTimeout(this.timeout);
+      timeout = -1;
+    }
+    this.el.addClass('pp-hidden');
+    Paperpile.FadingPanel.superclass.show.call(this);
+    this.el.replaceClass('pp-hidden', 'pp-hideable');
+  },
+
+  hide: function() {
+    this.el.addClass('pp-hideable');
+    this.timeout = Paperpile.FadingPanel.superclass.hide.defer(1000, this);
+    this.el.replaceClass('pp-hideable', 'pp-hidden');
+  }
+});
+
+Paperpile.DragDropPanel = Ext.extend(Paperpile.FadingPanel, {
   width: 300,
   autoHeight: true,
   floating: true,
-  shadow: true,
   renderTo: document.body,
   cls: 'pp-dd-panel',
   bodyStyle: 'background:#F0F0F0',
 
   initComponent: function() {
     Paperpile.DragDropPanel.superclass.initComponent.call(this);
-
-    this.on('show', function() {
-      // I empirically found this mystical order of method calls to get a nice layout.
-      this.doLayout();
-      this.syncSize();
-    },
-    this);
   },
 
   addAction: function(ddAction) {
@@ -572,9 +601,6 @@ Paperpile.DragDropPanel = Ext.extend(Ext.Panel, {
       this.removeAction(i);
     },
     this);
-
-    this.doLayout();
-    this.syncSize();
   },
 
   fitToEl: function(el) {
@@ -587,9 +613,6 @@ Paperpile.DragDropPanel = Ext.extend(Ext.Panel, {
       i.setHeight(box.height / n);
       i.alignCenter();
     });
-
-    this.doLayout();
-    this.syncSize();
   },
 
   alignToScreen: function(string) {
@@ -598,6 +621,5 @@ Paperpile.DragDropPanel = Ext.extend(Ext.Panel, {
 
   alignToElement: function(el, string) {
     this.getEl().alignTo(el, string);
-  },
-
+  }
 });
