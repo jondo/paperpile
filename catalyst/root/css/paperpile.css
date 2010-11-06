@@ -336,15 +336,15 @@ li:hover .pp-second-link{
 }
 
 .pp-dashboard-box li{
-    margin: 8px 21px !important;
+    margin: 8px 21px ;
 }
 
 .pp-dashboard-box p{
-    margin: 8px 21px !important;
+    margin: 8px 21px ;
 }
 
 .pp-dashboard-box table{
-    margin: 8px 21px !important;
+   /* margin: 8px 21px !important;*/
 }
 
 .pp-dashboard-box td{
@@ -361,6 +361,26 @@ td.pp-dashboard-dt{
 td.pp-dashboard-dl{
     text-align: left; 
 }
+
+
+td.pp-stats-number{
+    border-style:solid;
+    color: 	#404040;
+    font-size: 32px;
+    font-weight:bold;
+    text-align: right; 
+    padding: 1px;
+    line-height:0.8;
+    
+}
+
+td.pp-stats-label{
+    color: gray;
+    text-align: right; 
+    padding: 1px;
+    line-height:1.0;
+}
+
 
 .pp-chart-box {
     margin: 8px;

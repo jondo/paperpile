@@ -10,24 +10,27 @@
 
 <div class="pp-box pp-box-style1 pp-dashboard-box" style="">
   <h2 class="pp-dashboard-statistics" >Statistics</h2>
-  <table>
+
+  <table style="padding-top:30px; padding-bottom:40px; width:270px;">
     <tr>
-      <td class="pp-dashboard-dt"># References: </td>
-      <td class="pp-dashboard-dl"><% $c->{stash}->{num_items} %></td>
+      <td class="pp-stats-number" style="width:90px;"><% $c->{stash}->{num_items} %></td>
+      <td class="pp-stats-number" style="width:90px;"><% $c->{stash}->{num_pdfs} %></td>
+      <td class="pp-stats-number" style="width:90px;"><% $c->{stash}->{num_attachments} %></td>
     </tr>
+
     <tr>
-      <td class="pp-dashboard-dt"># PDFs: </td>
-      <td class="pp-dashboard-dl"><% $c->{stash}->{num_pdfs} %></td>
-    </tr>
-    <tr>
-      <td class="pp-dashboard-dt"># Suppl. files: </td>
-      <td class="pp-dashboard-dl"><% $c->{stash}->{num_attachments} %></td>
-    </tr>
-    <tr>
-      <td class="pp-dashboard-dt">Last imported: </td>
-      <td class="pp-dashboard-dl" id="dashboard-last-imported"><% $c->{stash}->{last_imported} %></td>
+      <td class="pp-stats-label">References</td>
+      <td class="pp-stats-label">PDFs</td>
+      <td class="pp-stats-label">Suppl. files</td>
     </tr>
   </table>
+
+ <table style="padding-left:22px;">   
+   <tr>
+     <td class="pp-dashboard-dt">Last imported: </td>
+     <td class="pp-dashboard-dl" id="dashboard-last-imported"><% $c->{stash}->{last_imported} %></td>
+    </tr>
+ </table>
 
 </div>
 
