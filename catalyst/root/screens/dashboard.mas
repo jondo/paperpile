@@ -40,11 +40,7 @@
     <li><a href="#" class="pp-textlink  pp-bullet" action="settings-general">General settings</a></li>
     <li><a href="#" class="pp-textlink  pp-bullet" action="settings-patterns">Paths and patterns</a></li>
     <li>
-      <span id="bibtex-mode-checkbox"></span>
-      <a href="#" class="pp-textlink" action="settings-tex"><span id="bibtex-mode-text-active">BibTeX settings</span></a>
-      <span id="bibtex-mode-text-inactive" class="pp-inactive">BibTeX mode inactivated</span>
-      </a>
-
+      <div id="bibtex-mode-checkbox"></div>
     </li>
     
   </ul>

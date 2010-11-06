@@ -79,29 +79,27 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
     var settings = Paperpile.main.globalSettings['bibtex'];
 
     var field = new Ext.form.Checkbox({
+      cls: 'pp-bibtex-checkbox-check',
       checked: settings.bibtex_mode === '1' ? true : false,
-      id: 'bibtex-checkbox',
-      hideLabel: true, // no effect (?)
-      labelStyle: 'display:none;', // no effect (?)
-      renderTo: 'bibtex-mode-checkbox',
+      label: '',
+      checkedLabel: '<a href="#" class="pp-textlink" action="settings-tex" >Bibtex Settings</a>',
+      uncheckedLabel: '<span id="bibtex-mode-text-inactive" class="pp-inactive">BibTeX mode inactivated</span>',
+      hideLabel: true
     });
 
-    Ext.get('bibtex-checkbox').parent().setStyle({
-      display: 'inline'
+    var panel = new Ext.Panel({
+	cls: 'pp-bibtex-checkbox',
+	border: false,
+	hideLabels:true,
+	layout:'form',
+	renderTo: 'bibtex-mode-checkbox',
+	items: [field]
     });
-    Ext.get('bibtex-checkbox').setStyle({
-      'vertical-align': 'middle'
-    });
-
-    Ext.get('bibtex-mode-text-active').setVisibilityMode(Ext.Element.DISPLAY);
-    Ext.get('bibtex-mode-text-inactive').setVisibilityMode(Ext.Element.DISPLAY);
 
     if (settings.bibtex_mode === '1') {
-      Ext.get('bibtex-mode-text-active').show();
-      Ext.get('bibtex-mode-text-inactive').hide();
+	field.wrap.child('.x-form-cb-label').update(field.checkedLabel);
     } else {
-      Ext.get('bibtex-mode-text-active').hide();
-      Ext.get('bibtex-mode-text-inactive').show();
+	field.wrap.child('.x-form-cb-label').update(field.uncheckedLabel);
     }
 
     field.on('check',
@@ -117,20 +115,17 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
         currentSettings['bibtex_mode'] = value;
 
         Paperpile.main.setSetting('bibtex', currentSettings);
-
         Paperpile.status.updateMsg({
           msg: (checked) ? 'BibTeX mode active: advanced BibTeX functions are now available' : 
             'BibTeX mode inactive: advanced BibTeX functions have been disabled',
           duration: 5
         });
 
-        if (checked) {
-          Ext.get('bibtex-mode-text-active').show();
-          Ext.get('bibtex-mode-text-inactive').hide();
-        } else {
-          Ext.get('bibtex-mode-text-inactive').show();
-          Ext.get('bibtex-mode-text-active').hide();
-        }
+    if (checked) {
+	field.wrap.child('.x-form-cb-label').update(field.checkedLabel);
+    } else {
+	field.wrap.child('.x-form-cb-label').update(field.uncheckedLabel);
+    }
 
       },
       this);

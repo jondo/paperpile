@@ -37,8 +37,8 @@ a.pp-inactive:hover {
 
 
 .pp-bullet{
-    padding: 2px 2px 2px 16px;
-    background: transparent url('/images/icons/bullet_go.png') no-repeat 0;
+    padding: 2px 2px 2px 18px;
+    background: transparent url('/images/icons/bullet_go.png') no-repeat -1px;
 }
 
 
@@ -2621,4 +2621,17 @@ input[type="radio"]:disabled,
 input[type="checkbox"]:disabled
 {
  opacity: .3;
+}
+
+.pp-dashboard-box a, .pp-dashboard-box span {
+  font: normal normal normal 12px/normal arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
+.pp-bibtex-checkbox .x-panel-body {
+    margin-left: .1em;
+    background: none;
+}
+
+.pp-bibtex-checkbox-check {
+    margin-right: .1em;
 }
