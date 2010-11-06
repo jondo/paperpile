@@ -14,14 +14,14 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       OPEN_FILE: new Paperpile.DragDropAction({
         handler: this.openFile,
         iconCls: 'pp-icon-file',
-        label: 'Open Libray File',
+        label: 'Open Library File',
         description: 'Open reference library file into a new tab'
       }),
       IMPORT_PDF_FOLDER: new Paperpile.DragDropAction({
         handler: this.importPdf,
         iconCls: 'pp-icon-import-pdf',
         label: 'Import PDF Folder',
-        description: 'Import PDFs contained in this folder'
+        description: 'Import all PDFs contained in this folder'
       }),
       PREVIEW_PDF: new Paperpile.DragDropAction({
         handler: this.previewPdf,
@@ -33,24 +33,24 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
         handler: this.importPdf,
         iconCls: 'pp-icon-import-pdf',
         label: 'Import PDF',
-        description: 'Import PDF reference to your library'
+        description: 'Import PDF to your library'
       }),
       ATTACH_PDF: new Paperpile.DragDropAction({
         handler: this.attachPdf,
         iconCls: 'pp-icon-import-pdf',
-        label: 'Attach as PDF',
-        description: 'Attach as main PDF'
+        label: 'Attach PDF',
+        description: 'Attach a PDF of the selected reference'
       }),
       ATTACH_SUPPLEMENT: new Paperpile.DragDropAction({
         handler: this.attachSupplement,
         iconCls: 'pp-file-generic',
-        label: 'Attach as Supplementary File',
+        label: 'Attach File',
         description: 'Attach as supplementary file'
       }),
       ATTACH_MULTIPLE_SUPPLEMENTS: new Paperpile.DragDropAction({
         handler: this.attachMultipleSupplements,
         iconCls: 'pp-file-generic',
-        label: 'Attach Supplementary Files',
+        label: 'Attach Files',
         description: 'Attach supplementary files'
       })
 
