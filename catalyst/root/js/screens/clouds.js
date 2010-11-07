@@ -114,7 +114,7 @@ Paperpile.Clouds = Ext.extend(Ext.Panel, {
       }
       if (this.field == 'labels') {
         // A little customized for labels. This stuff copied from tree.jsn
-        pars.plugin_query = 'labelid:' + Paperpile.utils.encodeLabel(key);
+        pars.plugin_query = 'labelid:' + key;
         var style_num = el.getAttribute('style_number');
         iconCls = 'pp-label-style-tab pp-label-style-' + style_num;
       }
