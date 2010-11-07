@@ -44,8 +44,8 @@ void RuntimeView::contextMenuEvent ( QContextMenuEvent * ev ) {
 // re-entering after a previous drag-event. This override seems to fix
 // it.
 
-void RuntimeView::dragLeaveEvent(QDragLeaveEvent * event) {
+//void RuntimeView::dragLeaveEvent(QDragLeaveEvent * event) {
 
 
-}
+//}
 
