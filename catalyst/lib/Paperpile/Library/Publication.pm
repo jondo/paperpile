@@ -467,7 +467,7 @@ sub format_authors {
 
     my $tmp = Paperpile::Library::Author->new();
 
-    foreach my $a ( split( /\band\b/, $self->authors ) ) {
+    foreach my $a ( split( /\band\b/i, $self->authors ) ) {
 
       #push @display, Paperpile::Library::Author->new( full => $a )->nice;
       $tmp->full($a);
@@ -479,7 +479,7 @@ sub format_authors {
 
   # We only show editors when no authors are given
   if ( $self->editors and !$self->authors ) {
-    foreach my $a ( split( /\band\b/, $self->editors ) ) {
+    foreach my $a ( split( /\band\b/i, $self->editors ) ) {
       push @display, Paperpile::Library::Author->new( full => $a )->nice;
     }
     $self->_authors_display( join( ', ', @display ) . ' (eds.)' );
@@ -776,7 +776,7 @@ sub get_authors {
 
   return [] if not $data;
 
-  foreach my $a ( split( /\band\b/, $data ) ) {
+  foreach my $a ( split( /\band\b/i, $data ) ) {
     $a =~ s/^\s+//;
     $a =~ s/\s+$//;
     push @authors, Paperpile::Library::Author->new( full => $a );
