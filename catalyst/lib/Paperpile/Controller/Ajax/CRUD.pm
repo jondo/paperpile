@@ -83,8 +83,7 @@ sub insert_entry : Local {
   $c->model('Library')->insert_pubs( \@pub_array, 1 );
 
   if ($collection_delta) {
-    my $dbh = $c->model('Library')->dbh;
-    $c->model('Library')->_update_collections( \@pub_array, 'LABEL', $dbh );
+    $c->model('Library')->update_collections( \@pub_array, 'LABEL');
   }
 
   my $pubs = {};
