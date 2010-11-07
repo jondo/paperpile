@@ -1766,6 +1766,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     var myFunc = function(string) {
       var subject = "Papers for you";
+      if (n == 1) {
+        subject = "Paper for you";
+      }
       var body = 'I thought you might be interested in the following:';
 
       var attachments = [];
@@ -1781,41 +1784,29 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 	}
 */
 
-      // The following does not bring up the e-mail client on
-      // OSX. don't know why because it works for < 1024
-      if (string.length > 1024) {
-        string = string.replace(/%0A/g, "\n");
+      string = string.replace(/%0A/g, "\n");
+
+      // The QRuntime appears capable of sending URLs of very long lengths, at least to Thunderbird.
+      // So we don't need to use as low of a cut-off threshold as before...
+      if (string.length > 1024 * 50) {
         QRuntime.setClipboard(string);
         var platform = Paperpile.utils.get_platform();
         if (platform == 'osx') {
-          string = "[Hit Command-V to paste citations here]";
+          string = "(Hit Command-V to paste citations here)";
         } else if (platform == 'windows') {
-          string = "[Hit Ctrl-V to paste citations here]";
+          string = "(Hit Ctrl-V to paste citations here)";
         } else {
-          string = "[Use the paste command to insert citations here]";
+          string = "(Use the paste command to insert citations here)";
         }
       }
 
-      var link;
-
-      var platform = Paperpile.utils.get_platform();
-      if (platform == 'osx') {
-        string = string.replace(/%0A/g, "\n");
-        link = [
-          'mailto:?',
-          'subject=' + subject,
-          '&body=' + body + "\n\n" + string,
-          "\n\n--\nShared with Paperpile\nhttp://paperpile.com",
-          attachments.join('')].join('');
-      } else {
-        link = [
-          'mailto:?',
-          'subject=' + subject,
-          '&body=' + body + "%0A%0A" + string,
-          "%0A%0A--%0AShared with Paperpile%0Ahttp://paperpile.com",
-          attachments.join('')].join('');
-      }
-      Paperpile.utils.openURL(link);
+      var link = [
+        'mailto:?',
+        'subject=' + subject,
+        '&body=' + body + "\n\n" + string,
+        "\n\n--\nShared with Paperpile\nhttp://paperpile.com",
+        attachments.join('')].join('');
+      Paperpile.utils.openURL.defer(10, this, [link]);
     };
 
     this.getFormattedText('Bibfile', 'EMAIL', myFunc);
