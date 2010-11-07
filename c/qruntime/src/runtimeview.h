@@ -11,5 +11,6 @@ class RuntimeView : public QWebView {
 
   //javaScriptConsoleMessage ( const QString & message, int lineNumber, const QString & sourceID ) const;
 
+  void dragLeaveEvent(QDragLeaveEvent * event);
 
 };

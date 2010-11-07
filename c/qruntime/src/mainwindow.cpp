@@ -70,6 +70,9 @@ MainWindow::MainWindow(){
   move(frect.topLeft());
 
   setCentralWidget(view);
+
+  
+
   setUnifiedTitleAndToolBarOnMac(true);
   
 }
@@ -87,8 +90,11 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 }
 
+
+
 bool MainWindow::isDebugMode(){
 
   return(QCoreApplication::arguments().contains("--debug"));
 
 }
+

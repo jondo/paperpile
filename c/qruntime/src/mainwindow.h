@@ -12,6 +12,7 @@ public:
 protected:
     void closeEvent(QCloseEvent *event);
 
+
 private:
     RuntimeView *view;
     Runtime* runtime;

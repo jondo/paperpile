@@ -16,6 +16,7 @@
 
 #include <QWebView>
 #include <QApplication>
+#include <QDragLeaveEvent>
 #include <QDebug>
 #include "runtimeview.h"
 
@@ -34,3 +35,17 @@ void RuntimeView::contextMenuEvent ( QContextMenuEvent * ev ) {
   }
 
 }
+
+
+// Override dragLeaveEvent with empty function. The dragLeaveEvent is
+// not correctly handled on OS X. We therefore have a workaround in
+// the frontend to hide the D&D targets based on mouse movement and
+// not on this event. However, the runtime seems to crash upon
+// re-entering after a previous drag-event. This override seems to fix
+// it.
+
+void RuntimeView::dragLeaveEvent(QDragLeaveEvent * event) {
+
+
+}
+
