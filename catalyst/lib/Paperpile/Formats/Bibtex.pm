@@ -48,7 +48,7 @@ sub BUILD {
         title_quote_smart    => 1,
         title_quote          => [ 'DNA', 'RNA' ],
         export_fields        => {
-          abstract    => 1,
+          abstract    => 0,
           affiliation => 0,
           eprint      => 0,
           issn        => 0,

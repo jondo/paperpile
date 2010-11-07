@@ -66,7 +66,7 @@ library_settings:
       - RNA
       - CERN
     export_fields:
-      abstract: 1
+      abstract: 0
       affiliation: 0
       eprint: 0
       issn: 0
