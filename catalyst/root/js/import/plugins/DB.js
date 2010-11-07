@@ -297,7 +297,96 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     },
     this);
 
+    if (this.hasBaseQuery()) {
+      this.actions['BASE_QUERY_INFO'] = new Ext.Toolbar.Button({
+        id: 'pp-query-info-' + this.id,
+        cls: 'pp-query-info-button',
+        iconCls: 'pp-icon-info',
+        disabled: true,
+        allowDepress: false,
+        enableToggle: false,
+        handleMouseEvents: false
+      });
+      this.updateBaseQueryTooltip();
+    }
+
     Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
+  },
+
+  hasBaseQuery: function() {
+    return this.plugin_base_query != '';
+  },
+
+  refreshCollections: function() {
+    Paperpile.PluginGridDB.superclass.refreshCollections.call(this);
+
+    this.updateBaseQueryTooltip();
+  },
+
+  updateBaseQueryTooltip: function() {
+    if (!this.hasBaseQuery()) {
+      return;
+    }
+
+    var item = this.actions['BASE_QUERY_INFO'];
+    var normalized = this.normalizeQuery(this.plugin_base_query);
+    var str = this.parenthesizeQuery(normalized);
+
+    var html = [
+      '<div class="pp-query-info-body">',
+      '  <strong>Base query: </strong><br/>&nbsp;&nbsp;',
+      '  ' + str,
+      '</div>'].join('');
+
+    if (item && !item.rendered) {
+      item.on('render', function() {
+        this.baseQueryTip = new Ext.ToolTip({
+          target: 'pp-query-info-' + this.id,
+          minWidth: 50,
+          maxWidth: 500,
+          html: html,
+          anchor: 'top',
+          showDelay: 0,
+          dismissDelay: 0,
+          hideDelay: 0
+        });
+      },
+      this);
+    } else if (this.baseQueryTip && this.baseQueryTip.rendered) {
+      this.baseQueryTip.body.dom.innerHTML = html;
+    } else if (this.basQueryTip) {
+      this.baseQueryTip.html = html;
+    }
+  },
+
+  normalizeQuery: function(query) {
+    // Do some magic here to turn the query into a data structure
+    //return [['123','and','456'],'or','asdf'];
+    return query;
+  },
+
+  parenthesizeQuery: function(array) {
+    if (Ext.isArray(array) && array.length == 3) {
+      return "(" + this.parenthesizeQuery(array[0]) + " " + array[1] + " " + this.parenthesizeQuery(array[2]) + ")";
+    } else {
+      // array is actually a single string. Format it and return.
+      return this.formatQueryToken(array);
+    }
+  },
+
+  formatQueryToken: function(token) {
+    if (token.match('labelid')) {
+      var labelid = token.match('labelid:(.*)')[1];
+      var store = Ext.StoreMgr.lookup('label_store');
+      var record = store.findByGUID(labelid);
+      return '<div class="pp-label-grid-inline pp-label-style-' + record.get('style') + '">' + record.get('display_name') + '</div>';
+    } else if (token.match('folderid')) {
+      var folderid = token.match('folderid:(.*)')[1];
+      var store = Ext.StoreMgr.lookup('folder_store');
+      var record = store.findByGUID(folderid);
+      return '<li class="pp-folder-list pp-folder-generic">' + record.get('display_name') + '</li>';
+    }
+    return token;
   },
 
   initToolbarMenuItemIds: function() {
@@ -313,6 +402,9 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     index = ids.indexOf('SELECT_ALL');
     ids.insert(index + 0, 'EDIT');
     //    ids.insert(index + 1, 'EDIT');
+    if (this.hasBaseQuery()) {
+      ids.insert(0, 'BASE_QUERY_INFO');
+    }
   },
 
   isContextItem: function(item) {

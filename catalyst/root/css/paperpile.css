@@ -1027,6 +1027,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/folder.png')!important;
 }
 
+.pp-icon-info{
+    background-image: url('/images/icons/information.png')!important;
+}
+
 .pp-icon-remove-folder{
     background-image: url('/images/icons/folder_delete.png')!important;
 }
@@ -2175,7 +2179,15 @@ table.pp-meta-form {
     padding: 2px 2px 2px 22px;
     margin: 10px 15px;
 }
+
+.pp-query-info-button, .pp-query-info-button button {
+    cursor: default;
+}
  
+.pp-query-info-body div, .pp-query-info-body li {
+    display: inline-block;
+}
+
 .pp-header-button, pp-header-button:visited            { 
     font-family: Arial,Helvetica,Helvetica Neue,Verdana,sans-serif;
        background: #222 url(file:///home/wash/play/paperpile/catalyst/root/gradient.png) repeat-x; 

@@ -19,6 +19,15 @@ Paperpile.CollectionStore = Ext.extend(Ext.data.Store, {
     Paperpile.CollectionStore.superclass.initComponent.call(this);
   },
 
+  findByGUID: function(guid) {
+    var labelIndex = this.findExact('guid', guid);
+    if (labelIndex !== -1) {
+      return this.getAt(labelIndex);
+    } else {
+      return null;
+    }
+  },
+
   updateCollection: function(record) {
     var params = {};
     Ext.apply(params, record.data);

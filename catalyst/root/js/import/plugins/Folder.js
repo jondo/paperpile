@@ -33,7 +33,6 @@ Paperpile.PluginPanelFolder = Ext.extend(Paperpile.PluginPanel, {
     return undefined;
   }
 
-
 });
 
 Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
@@ -53,6 +52,35 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
       handler: this.removeFromFolder,
       scope: this
     });
+  },
+
+  // Almost the same stuff as the Labels panel to update the tab title.
+  // Maybe we can reduce duplication by creating a Collection.js plugin type.
+  // This will also come in handy if / when we turn Feeds into collections.
+  refreshCollections: function() {
+    Paperpile.PluginGridFolder.superclass.refreshCollections.call(this);
+
+    var pp = this.getPluginPanel();
+    var guid = this.getGUID();
+
+    // If we're a Label grid, update our title...
+    var itemId = this.getPluginPanel().itemId;
+    var folders = Ext.StoreMgr.lookup('folder_store');
+    var index = folders.findExact('guid', itemId);
+    if (index !== -1) {
+      var record = folders.getAt(index);
+      var title = record.get('display_name');
+      var tabDom = Paperpile.main.tabs.getTabEl(this.getPluginPanel());
+      var tabEl = Ext.fly(tabDom);
+      var textEl = tabEl.child('.x-tab-strip-text');
+      textEl.dom.innerHTML = title;
+    }
+  },
+
+  getGUID: function() {
+    var match = this.plugin_base_query.match('folderid:(.*)$');
+    var guid = match[1];
+    return guid;
   },
 
   getEmptyBeforeSearchTemplate: function() {
