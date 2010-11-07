@@ -29,7 +29,13 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     Paperpile.PubOverview.superclass.initComponent.call(this);
 
+    this.on('resize', this.myOnResize, this);
+
     this.on('afterrender', this.installEvents, this);
+  },
+
+  myOnResize: function() {
+    this.forceUpdate();
   },
 
   forceUpdate: function(updateImmediately) {
@@ -219,6 +225,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
         if (!value) continue;
         list.push({
+          field: field,
           label: label,
           value: value
         });
@@ -234,6 +241,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     var ellipsable_fields = ['.pp-info-doi', '.pp-info-pmid'];
     for (var i = 0; i < ellipsable_fields.length; i++) {
       var field = ellipsable_fields[i];
+      if (!field) {
+        continue;
+      }
       var els = Ext.select("#" + this.id + " " + field);
       if (els.getCount() == 0) {
         //Paperpile.log("Can't find any "+field);

@@ -260,14 +260,35 @@ ul.pp-folders {
     font-size:10px;
 }
 
-.pp-second-link{
-    display:none;
+div.link-hover .pp-second-link{
+    opacity: 0;
     font-style:italic;
+    -webkit-transition-property: opacity;
+    -webkit-transition-timing-function: linear;
+    -webkit-transition-duration: 0.1s;
 }
 
-.link-hover:hover .pp-second-link{
-    display:inline;
+div.link-hover:hover .pp-second-link{
+    opacity: 1;
+    -webkit-transition-property: opacity;
+    -webkit-transition-timing-function: linear;
+    -webkit-transition-duration: 0.2s;    
 }
+
+li .pp-second-link {
+    opacity:0;
+    -webkit-transition-property: opacity;
+    -webkit-transition-timing-function: linear;
+    -webkit-transition-duration: 0.1s;
+}
+
+li:hover .pp-second-link {
+    opacity:1;
+    -webkit-transition-property: opacity;
+    -webkit-transition-timing-function: linear;
+    -webkit-transition-duration: 0.2s;
+}
+
 
 li:hover .pp-second-link{
     display:inline;
