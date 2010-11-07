@@ -41,6 +41,14 @@ a.pp-inactive:hover {
     background: transparent url('/images/icons/bullet_go.png') no-repeat -1px;
 }
 
+.pp-root-node .x-tree-elbow-minus, .pp-root-node .x-tree-elbow-plus, .pp-root-node .x-tree-elbow-end-minus, .pp-root-node .x-tree-elbow-end-plus {
+    display:none;
+    background-image:none;
+}
+
+.pp-root-node .x-tree-node-anchor {
+    margin-left: 1em;
+}
 
 .pp-box {
     margin: 8px;

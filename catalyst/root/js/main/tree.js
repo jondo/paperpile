@@ -77,9 +77,18 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         scope: this,
         fn: this.myOnClick
       },
+      beforeLoad: {
+        scope: this,
+        fn: function(node) {
+
+        }
+      },
       load: {
         scope: this,
         fn: function(node) {
+          if (node.id == "LOCAL_ROOT" || node.id == "ACTIVE_ROOT" || node.id == "IMPORT_PLUGIN_ROOT") {
+            node.getUI().addClass('pp-root-node');
+          }
 
           if (node.id == "LABEL_ROOT") {
 
