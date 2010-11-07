@@ -217,10 +217,12 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
   // This should only be called once: when the drag mouse first enters the window.
   bodyDragEvent: function(event) {
+    if (event.type == 'dragleave' && event.target != this.dragPane) {
+      return;
+    }
     if (this.eventMode == 'pane') {
       return;
     }
-
     if (!this.hideTask) {
       this.hideTask = new Ext.util.DelayedTask(this.hideDragPane, this);
     }
@@ -255,7 +257,9 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
   },
 
   hideDragPane: function() {
-    this.hideTask.cancel();
+    if (this.hideTask) {
+      this.hideTask.cancel();
+    }
 
     // Call the out() method on any hanging hovered action.
     if (this.currentlyHoveredAction != null) {
@@ -285,7 +289,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var row = Paperpile.main.getCurrentlySelectedRow();
     var grid = Paperpile.main.getCurrentGrid();
     var files = this.getFilesFromEvent(event);
-
+    1
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
       Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.get('guid'), file.canonicalFilePath, true]);
@@ -334,7 +338,6 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       return;
     }
 
-    // Immediately hide the other targets.
     this.hideDragPane();
 
     // Call the action's handler, passing the event object.
