@@ -270,7 +270,6 @@ ul.pp-folders {
 
 div.link-hover .pp-second-link{
     opacity: 0;
-    font-style:italic;
     -webkit-transition-property: opacity;
     -webkit-transition-timing-function: linear;
     -webkit-transition-duration: 0.1s;
@@ -285,6 +284,7 @@ div.link-hover:hover .pp-second-link{
 
 li .pp-second-link {
     opacity:0;
+    font-style:italic;
     -webkit-transition-property: opacity;
     -webkit-transition-timing-function: linear;
     -webkit-transition-duration: 0.1s;
@@ -292,6 +292,7 @@ li .pp-second-link {
 
 li:hover .pp-second-link {
     opacity:1;
+    font-style:italic;
     -webkit-transition-property: opacity;
     -webkit-transition-timing-function: linear;
     -webkit-transition-duration: 0.2s;
