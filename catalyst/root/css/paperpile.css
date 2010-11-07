@@ -1916,6 +1916,9 @@ div:hover.pp-label-style-sample {
 .pp-catalyst-log{
     background: #000000;
     color:#5FB404;
+    font-weight:bold;
+    padding-left: 10px;
+    padding-top:10px;
 }
 
 
