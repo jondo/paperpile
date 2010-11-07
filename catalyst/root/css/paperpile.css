@@ -1277,20 +1277,27 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 div.pp-grid-sort-container{
     color: #888;
-    display:inline;
-    visibility:visible;
+    height: 18px;
+    margin-top: -5px;
+    z-index: 20;
+    position: relative;
+    padding-left: 4px;
 }
 
 div:hover.pp-grid-sort-container{
-    display:inline;
-    visibility:visible;
 }
 
 div.pp-grid-sort-container .pp-grid-sort-inactive {
-    visibility:hidden;
+    opacity: 0;
+  -webkit-transition-property: opacity;
+  -webkit-transition-timing-function: linear;
+  -webkit-transition-duration: 0.2s;
 }
 div:hover.pp-grid-sort-container .pp-grid-sort-inactive {
-    visibility:visible;
+    opacity: 1;
+  -webkit-transition-property: opacity;
+  -webkit-transition-timing-function: linear;
+  -webkit-transition-duration: 0.2s;
 }
 
 div.pp-grid-sort-item {

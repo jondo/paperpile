@@ -30,6 +30,11 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     Paperpile.PluginGridDB.superclass.initComponent.call(this);
 
+    // Replace the 'handleHdOver' with an empty function to remove the 
+    // build-in header highlighting.
+    var view = this.getView();
+    view.handleHdOver = Ext.emptyFn;
+
     this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
 
     this.actions['NEW'] = new Ext.Action({
@@ -65,7 +70,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       }
     });
     this.on({
-      render: {
+      afterrender: {
         scope: this,
         fn: this.createSortHandles
       }
@@ -73,7 +78,8 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   },
 
   createSortHandles: function() {
-    var target = Ext.DomHelper.append(Ext.get(this.getView().getHeaderCell(1)).first(),
+
+    var target = Ext.DomHelper.append(Ext.fly(this.getView().getHeaderCell(1)),
     '<div id="pp-grid-sort-container_' + this.id + '" class="pp-grid-sort-container"></div>', true);
 
     var created_class, journal_class, year_class, author_class;
