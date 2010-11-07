@@ -2667,3 +2667,13 @@ input[type="checkbox"]:disabled
 .pp-bibtex-checkbox-check {
     margin-right: .1em;
 }
+
+/* Override Ext loading indicator */
+.loading-indicator {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    color: #C8C8C8;
+    font-weight: bold;
+    background-image:url('/ext/resources/images/default/s.gif') !important;
+    margin-left: 40%;
+    margin-top:40%;
+}
