@@ -267,7 +267,7 @@ sub to_string {
   my $self = shift;
 
   if ( $self->jr ) {
-    return $self->von . " " . $self->last . ", " . $self->jr . ", " . $self->first;
+    return ( $self->von ? $self->von . " " : '' ) . $self->last . ", " . $self->jr . ", " . $self->first;
   } else {
     return
         ( $self->von ? $self->von . " " : '' )
