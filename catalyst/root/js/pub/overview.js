@@ -238,7 +238,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   },
 
   updateEllipses: function(data) {
-    var ellipsable_fields = ['.pp-info-doi', '.pp-info-pmid'];
+    var ellipsable_fields = ['.pp-info-doi', '.pp-info-pmid', '.pp-info-url', '.pp-info-eprint'];
     for (var i = 0; i < ellipsable_fields.length; i++) {
       var field = ellipsable_fields[i];
       if (!field) {
@@ -368,6 +368,14 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
     case 'eprint-copy':
       Paperpile.utils.setClipboard(this.data.eprint, 'ePrint URL copied');
+      break;
+
+    case 'url-link':
+      var url = this.data.url;
+      Paperpile.utils.openURL(url);
+      break;
+    case 'url-copy':
+      Paperpile.utils.setClipboard(this.data.url, 'URL copied');
       break;
 
     case 'open-folder':
