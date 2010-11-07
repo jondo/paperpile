@@ -602,8 +602,15 @@ sub delete_collection {
 # Update collection <-> publication mappings throughout the database
 # for all $pubs
 
-sub _update_collections {
+sub update_collections {
   ( my $self, my $pubs, my $type, my $dbh ) = @_;
+
+  my $external_dbh = $dbh ? 1 : 0;
+
+  if ( !$external_dbh ) {
+    $dbh = $self->dbh;
+    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  }
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
@@ -637,6 +644,9 @@ sub _update_collections {
       $connection->execute( $collection_guid, $pub_guid );
     }
   }
+
+  $dbh->commit if ( !$external_dbh );
+
 }
 
 sub add_to_collection {
@@ -661,7 +671,7 @@ sub add_to_collection {
   foreach my $pub (@$pubs) {
     $pub->add_guid( $type, $guid );
   }
-  $self->_update_collections( $pubs, $type, $dbh );
+  $self->update_collections( $pubs, $type, $dbh );
 
   $dbh->commit if ( !$external_dbh );
 
@@ -697,7 +707,7 @@ sub remove_from_collection {
     $pub->$what($new_list);
   }
 
-  $self->_update_collections( $pubs, $type, $dbh );
+  $self->update_collections( $pubs, $type, $dbh );
 
   $dbh->commit if ( !$external_dbh );
 
@@ -1930,7 +1940,7 @@ sub _flag_as_incomplete {
 
   # Assign the label to the publication
   $pub->add_label($guid);
-  $self->_update_collections( [$pub], 'LABEL', $dbh );
+  $self->update_collections( [$pub], 'LABEL', $dbh );
 
 }
 
@@ -1945,7 +1955,7 @@ sub _flag_as_complete {
   return if ( not $pub->labels =~ /$guid/ );
 
   $pub->remove_label($guid);
-  $self->_update_collections( [$pub], 'LABEL', $dbh );
+  $self->update_collections( [$pub], 'LABEL', $dbh );
 
 }
 
