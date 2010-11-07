@@ -289,7 +289,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var row = Paperpile.main.getCurrentlySelectedRow();
     var grid = Paperpile.main.getCurrentGrid();
     var files = this.getFilesFromEvent(event);
-
+    1
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
       Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.get('guid'), file.canonicalFilePath, true]);
@@ -331,12 +331,14 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
   onDrop: function(event) {
     event.stopEvent();
-    this.hideDragPane();
 
     var dropAction = this.currentlyHoveredAction;
     if (!dropAction) {
+      this.hideDragPane();
       return;
     }
+
+    this.hideDragPane();
 
     // Call the action's handler, passing the event object.
     if (dropAction.handler) {
