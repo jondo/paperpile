@@ -105,7 +105,11 @@ sub read {
           $content =~ s/(.*)(\(\d+\))$/$1/;    # remove number of pages in braces
         }
         if ( $field eq 'doi' ) {
+          # Normalize doi to just something like 10.1038/nature06340
+          # without urls or anything else.
           $content =~ s/^doi://;
+          $content =~ s!^(http://)?dx.doi.org/!!;
+          print STDERR "$content\n";
         }
         if ( $field eq 'year' ) {
           $content =~ s/(.*)(\d{4})$/$2/;
