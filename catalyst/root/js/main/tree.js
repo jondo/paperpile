@@ -530,6 +530,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         var ui = node.ui;
 
         this.rssButton = new Ext.Button({
+          cls: 'pp-rss-button',
           enableToggle: true,
           style: {
             'position': 'relative',
@@ -537,12 +538,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           },
           scale: 'tiny',
           tooltip: 'Add a new journal or RSS feed',
-          icon: Paperpile.Url('/images/icons/plus.png')
+          icon: Paperpile.Url('/images/icons/plus.png'),
+          onClick: function() {}
         });
         this.rssButton.render(ui.elNode);
         this.rssButton.getEl().alignTo(ui.elNode, 'r-r', [-2, 0]);
-        this.rssButton.on('toggle', this.rssButtonToggle,
-          this);
       }
     },
     this);
@@ -559,6 +559,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       this.moreLabelsDown();
       return;
     }
+    if (el.findParent(".pp-rss-button", 20)) {
+      e.stopEvent();
+      this.rssButtonToggle();
+      return;
+    }
+
   },
 
   moreLabelsDown: function() {
@@ -900,20 +906,25 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         if (url != '') {
           this.createNewFeedNode(url);
         }
-        this.newFeedPanel.hide();
-        this.rssButton.toggle(false, true);
       };
       this.newFeedPanel = new Paperpile.NewFeedPanel({
         callback: callback.createDelegate(this)
       });
+      this.newFeedPanel.on('hide', function() {
+        this.rssButton.toggle(false);
+      },
+      this);
+      this.newFeedPanel.hide();
     }
+
     var panel = this.newFeedPanel;
-    if (buttonState === true) {
+    if (panel.isVisible()) {
+      panel.hide();
+    } else {
       panel.show();
       Ext.QuickTips.getQuickTip().hide();
-      panel.getEl().alignTo(button.getEl(), 'tl-bl');
-    } else {
-      panel.hide();
+      panel.getEl().alignTo(this.rssButton.getEl(), 'tl-bl');
+      this.rssButton.toggle(true);
     }
   },
 

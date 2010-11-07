@@ -1683,15 +1683,18 @@ div:hover.pp-label-style-sample {
     margin:-1px;
 }
 
-.pp-label-panel, .pp-label-panel .x-panel-body {
+.pp-label-panel, .pp-label-panel .x-panel-body, .pp-feed-chooser, .pp-feed-chooser .x-panel-body {
     background-color:#FFFFFF;
 }
-.pp-label-panel {
-    border: 1px solid gray;
+.pp-label-panel, .pp-feed-chooser {
     border-top: none;
 }
-.pp-label-panel .x-panel-body {
+.pp-label-panel .x-panel-body, .pp-feed-chooser .x-panel-body {
     padding: 5px;
+}
+
+.pp-feed-chooser {
+    font-size: 9px;
 }
 
 .more-labels-node .x-tree-node-icon {
