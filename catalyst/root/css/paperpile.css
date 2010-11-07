@@ -37,8 +37,8 @@ a.pp-inactive:hover {
 
 
 .pp-bullet{
-    padding: 2px 2px 2px 16px;
-    background: transparent url('/images/icons/bullet_go.png') no-repeat 0;
+    padding: 2px 2px 2px 18px;
+    background: transparent url('/images/icons/bullet_go.png') no-repeat -1px;
 }
 
 
@@ -1683,15 +1683,18 @@ div:hover.pp-label-style-sample {
     margin:-1px;
 }
 
-.pp-label-panel, .pp-label-panel .x-panel-body {
+.pp-label-panel, .pp-label-panel .x-panel-body, .pp-feed-chooser, .pp-feed-chooser .x-panel-body {
     background-color:#FFFFFF;
 }
-.pp-label-panel {
-    border: 1px solid gray;
+.pp-label-panel, .pp-feed-chooser {
     border-top: none;
 }
-.pp-label-panel .x-panel-body {
+.pp-label-panel .x-panel-body, .pp-feed-chooser .x-panel-body {
     padding: 5px;
+}
+
+.pp-feed-chooser {
+    font-size: 9px;
 }
 
 .more-labels-node .x-tree-node-icon {
@@ -2621,4 +2624,17 @@ input[type="radio"]:disabled,
 input[type="checkbox"]:disabled
 {
  opacity: .3;
+}
+
+.pp-dashboard-box a, .pp-dashboard-box span {
+  font: normal normal normal 12px/normal arial, verdana, tahoma, arial, helvetica, sans-serif;
+}
+
+.pp-bibtex-checkbox .x-panel-body {
+    margin-left: .1em;
+    background: none;
+}
+
+.pp-bibtex-checkbox-check {
+    margin-right: .1em;
 }

@@ -2,12 +2,6 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
   initComponent: function() {
     var cb = this.callback;
 
-    this.addButton = new Ext.Button({
-      text: 'Add',
-      cls: 'x-btn-text',
-      handler: Ext.emptyFn
-    });
-
     this.remoteFeedStore = new Ext.data.JsonStore({
       autoDestroy: true,
       storeId: 'rssFeedStore',
@@ -24,7 +18,7 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
       hideLabel: true,
       itemId: 'remote_feed_combo',
       store: this.remoteFeedStore,
-      minChars:2,
+      minChars: 2,
       maxHeight: 200,
       loadingText: '',
       listEmptyText: '',
@@ -39,16 +33,15 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
     });
 
     Ext.apply(this, {
+      cls: 'pp-feed-chooser',
       floating: true,
-      frame: true,
+      border: true,
       defaultType: 'label',
-      bodyStyle: 'font-size:9px;padding:5px;',
-      header: false,
-      width: 300,
-      renderTo: document.body,
+      width: 310,
       style: {
-        padding: '5px'
+
       },
+      renderTo: document.body,
       items: [{
         xtype: 'label',
         text: 'Begin typing to find a journal or paste a feed url'
@@ -60,11 +53,16 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
           'margin-top': '5px',
           'margin-bottom': '5px'
         },
+        layoutConfig: {},
+        defaults: {
+          flex: 1
+        },
         items: [
           this.entryField, {
             xtype: 'button',
+            flex: 0,
+            width: 35,
             text: 'Add',
-            width: '35px',
             handler: this.addFeed,
             scope: this
           }]
@@ -104,6 +102,26 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
     }
     this.callback(url);
     this.onCancel();
+  },
+
+  show: function() {
+    Paperpile.NewFeedPanel.superclass.show.call(this);
+    Ext.getDoc().on("mousedown", this.onMouseDown, this);
+  },
+
+  hide: function() {
+    Paperpile.NewFeedPanel.superclass.hide.call(this);
+    Ext.getDoc().un("mousedown", this.onMouseDown, this);
+  },
+
+  onMouseDown: function(e) {
+    if (e.getTarget(".pp-feed-chooser")) {
+      return;
+    } else if (e.getTarget(".pp-rss-button")) {
+      return;
+    } else {
+      this.hide();
+    }
   },
 
   myAfterRender: function() {
