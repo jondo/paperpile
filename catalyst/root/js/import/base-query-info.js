@@ -5,13 +5,18 @@ Paperpile.BaseQueryInfoPlugin = function(config) {
 Ext.extend(Paperpile.BaseQueryInfoPlugin, Ext.util.Observable, {
   init: function(grid) {
     grid.hasBaseQuery = function() {
-      return this.plugin_base_query != '';
+      if (this.plugin_base_query !== undefined && this.plugin_base_query !== '') {
+        return true;
+      } else {
+        return false;
+      }
     };
 
     // Creates a new 'base query' toolbar item and a tooltip for it
     // if it hasn't been created already. If the item and tooltip
     // already exist, update them with the current base query.
     grid.updateBaseQueryTooltip = function() {
+      Paperpile.log(this.plugin_base_query);
       if (!this.hasBaseQuery()) {
         return;
       }
