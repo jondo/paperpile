@@ -286,6 +286,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   loadKeys: function() {
     this.keys = new Ext.ux.KeyboardShortcuts(this.getEl());
 
+    this.keys.bindCallback('ctrl-shift-c', this.keyControlShiftC, this);
+    this.keys.bindCallback('ctrl-a', this.keyControlA, this);
     this.keys.bindCallback('ctrl-r', this.keyControlR, this);
     this.keys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.keys.bindCallback('ctrl-w', this.keyControlW);
@@ -302,6 +304,17 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   keyQuesionMark: function() {
     //Paperpile.log("What's your problem?");
+  },
+
+  keyControlA: function() {
+    var grid = this.getCurrentGrid();
+    if (grid) {
+      grid.selectAll();
+    }
+  },
+
+  keyControlShiftC: function() {
+    Paperpile.main.tabs.newScreenTab('CatalystLog', 'catalyst-log');
   },
 
   keyControlR: function() {

@@ -1304,7 +1304,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       if (this.moreLabelsNode) {
         node.insertBefore(newNode, this.moreLabelsNode);
       } else {
-        Paperpile.log("Wazza");
+
       }
       newNode.select();
 

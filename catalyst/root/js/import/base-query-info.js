@@ -16,7 +16,6 @@ Ext.extend(Paperpile.BaseQueryInfoPlugin, Ext.util.Observable, {
     // if it hasn't been created already. If the item and tooltip
     // already exist, update them with the current base query.
     grid.updateBaseQueryTooltip = function() {
-      Paperpile.log(this.plugin_base_query);
       if (!this.hasBaseQuery()) {
         return;
       }
