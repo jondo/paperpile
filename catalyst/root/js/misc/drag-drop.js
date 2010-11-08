@@ -35,6 +35,12 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
         label: 'Import PDF',
         description: 'Import PDF to your library'
       }),
+      IMPORT_MULTIPLE_PDFS: new Paperpile.DragDropAction({
+        handler: this.importPdf,
+        iconCls: 'pp-icon-import-pdf',
+        label: 'Import PDFs',
+        description: 'Import PDFs to your library'
+      }),
       ATTACH_PDF: new Paperpile.DragDropAction({
         handler: this.attachPdf,
         iconCls: 'pp-icon-import-pdf',
@@ -48,7 +54,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
         description: 'Attach as supplementary file'
       }),
       ATTACH_MULTIPLE_SUPPLEMENTS: new Paperpile.DragDropAction({
-        handler: this.attachMultipleSupplements,
+        handler: this.attachSupplement,
         iconCls: 'pp-file-generic',
         label: 'Attach Files',
         description: 'Attach supplementary files'
@@ -95,12 +101,12 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       this.ddp.addAction(this.actions['IMPORT_PDF_FOLDER']);
 
     } else if (this.isPdf(event)) {
-      this.ddp.addAction(this.actions['IMPORT_PDF']);
+      this.ddp.addAction(this.getPdfImportAction(event));
       // Maybe we'll implement this later...
       // this.ddp.addAction(this.actions['PREVIEW_PDF']); 
       if (this.activeTabIsGrid()) {
         var row = Paperpile.main.getCurrentlySelectedRow();
-        if (!row.data.pdf){
+        if (!row.data.pdf && !this.isMultipleFiles(event)) {
           this.sideDdp.addAction(this.actions['ATTACH_PDF']);
         }
         this.sideDdp.addAction(this.getSupplementAction(event));
@@ -145,6 +151,15 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       var el = Ext.select(".pp-box-files").first();
       this.sideDdp.fitToEl(el);
       this.sideDdp.alignToElement(el, 't-t');
+    }
+  },
+
+  // Return the appropriate supplementary material action for the given event.
+  getPdfImportAction: function(event) {
+    if (this.isMultipleFiles(event)) {
+      return this.actions['IMPORT_MULTIPLE_PDFS'];
+    } else {
+      return this.actions['IMPORT_PDF'];
     }
   },
 
@@ -327,7 +342,6 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var files = this.getFilesFromEvent(event);
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
-      Paperpile.log(row.get('guid'));
       Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.get('guid'), file.canonicalFilePath, false]);
     }
   },
