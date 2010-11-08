@@ -91,9 +91,18 @@ sub read {
 
     # now we have to parse each tag
     foreach my $ref (@ris) {    # each reference
-        my $data    = {};       # hash_ref to data
-        my @authors = ();
-        my @editors = ();
+        my $data     = {};      # hash_ref to data
+        my @authors  = ();
+        my @editors  = ();
+        my @keywords = ();
+        my ( $start_page, $end_page );
+        my ( $city, $address ) = ( '', '' );
+        my $sn;
+        my @urls       = ();
+        my @pdfs       = ();
+        my @full_texts = ();
+        my ( $journal_full_name, $journal_short_name );
+
         foreach my $tag ( @{$ref} ) {    # each tag of reference
             $tag =~ /^(\S\S)\s\s\-\s(.+)/;
             my $t = $1;                  # tag
@@ -163,10 +172,10 @@ sub read {
                     _add_to_note( $data, $tmp_note ) if ( $tmp_note ne '' );
                 }
                 case 'N1' {    # notes can be different things...
-                    if ( _test_for_doi($d) ) {
+                    if ( _is_doi($d) ) {
                         $data->{doi} = $d;
                     }
-                    elsif ( _test_for_abstract($d) ) {
+                    elsif ( _is_abstract($d) ) {
                         $data->{abstract} = $d;
                     }
                 }
@@ -176,11 +185,154 @@ sub read {
                 case 'N2' {    # abstract
                     $data->{abstract} = $d;
                 }
+                case 'KW' {    # keywords
+                    push @keywords, $d;
+                }
+
+                # we ignore the RP tag, its not needed
+                # http://www.refman.com/support/risformat_tags_04.asp
+
+                case 'JF' {    # journal full name
+                    $journal_full_name = $d;
+                }
+                case 'JO' {    # journal full name, alternative
+                    $journal_full_name = $d;
+                }
+                case 'JA' {    # journal short name
+                    $journal_short_name = $d;
+                }
+
+                case 'VL' {    # volume
+                    $data->{volume} = $d;
+                }
+                case 'IS' {    # issue
+                    $data->{issue} = $d;
+                }
+                case 'CP' {    # issue, alternative
+                    $data->{issue} = $d;
+                }
+                case 'SP' {    # start page number
+                    $start_page = $d;
+                }
+                case 'EP' {    # end page number
+                    $end_page = $d;
+                }
+                case 'CY' {    # city
+                    $city = $d;
+                }
+                case 'AD' {    # address
+                    $address = $d;
+                }
+                case 'PB' {    # publisher
+                    $data->{publisher} = $d;
+                }
+                case 'SN' {    # issn OR isbn
+                    $sn = $d;
+                }
+
+                # TODO:
+                # http://www.refman.com/support/risformat_tags_07.asp
+                # AV, M1-3, U1-5 probably add them to notes?  or
+                # should we try to parse them and figure out what they are?
+
+                case 'UR' {    # URL, one per tag or comma seperated list
+                    if ( $d !~ /\;/ ) {
+                        push @urls, $d;
+                    }
+                    else {
+                        @urls = split /\;/, $d;
+                    }
+                }
+
+                case 'L1' {
+
+                    # link to PDF
+                    # one per tag or comma seperated list
+                    if ( $d !~ /\;/ ) {
+                        push @pdfs, $d;
+                    }
+                    else {
+                        @pdfs = split /\;/, $d;
+                    }
+                }
+
+                case 'L2' {
+
+                    # link to full-text
+                    # probably our linkout field?
+                    if ( $d !~ /\;/ ) {
+                        push @full_texts, $d;
+                    }
+                    else {
+                        @full_texts = split /\;/, $d;
+                    }
+                }
+
+                else {
+                    print STDERR "Warning: field '$t' ignored!\n";
+                }
             }
         }
 
-        $data->{authors} = join( ' and ', @authors ) if (@authors);
-        $data->{editors} = join( ' and ', @editors ) if (@editors);
+        $data->{authors}  = join( ' and ', @authors )  if (@authors);
+        $data->{editors}  = join( ' and ', @editors )  if (@editors);
+        $data->{keywords} = join( ';',     @keywords ) if (@keywords);
+
+        # set journal, try to keep full name, otherwise short name
+        if ($journal_full_name) {
+            $data->{journal} = $journal_full_name;
+        }
+        elsif ($journal_short_name) {
+            $data->{journal} = $journal_short_name;
+        }
+
+        # set page numbers
+        # if both, then join
+        # otherwise keep single entry
+        if ( $start_page && $end_page ) {
+            $data->{pages} = $start_page . '-' . $end_page;
+        }
+        elsif ($start_page) {
+            $data->{pages} = $start_page;
+        }
+        elsif ($end_page) {
+            $data->{pages} = $end_page;
+        }
+
+        # set address
+        if ($address) {    # if possible keep full address, otherwise only city
+            $data->{address} = $address;
+        }
+        elsif ($city) {    # no address but city
+            $data->{address} = $city;
+        }
+
+        # issn OR isbn?
+        if ( _is_issn($sn) ) {
+            $data->{issn} = $sn;
+        }
+        else {
+            $data->{isbn} = $sn;
+        }
+
+        # simply keep the first URL
+        if (@urls) {
+            $data->{url} = $urls[0];
+        }
+
+        # simply keep the first PDF link
+        if (@pdfs) {
+            $data->{_pdf_url} = $pdfs[0];
+        }
+
+        # simply keep the first full-text link
+        if (@full_texts) {
+            $data->{linkout} = $full_texts[0];
+        }
+
+        # TODO:
+        # L3 = related records
+        # L4 = images
 
         push @output, Paperpile::Library::Publication->new($data);
     }
@@ -188,8 +340,22 @@ sub read {
     return [@output];
 }
 
+# test if argument is an issn
+# an issn is a 4 digit number, followed by '-', and then 3 digits, followed by a digit or an X
+sub _is_issn {
+    my $no = shift;
+    if ($no) {
+        if ( $no =~ /\d\d\d\d\-\d\d\d[\dX]/ ) {
+            return 1;
+        }
+    }
+
+    return 0;
+
+}
+
 # we assume that a huge text with many words is an abstract
-sub _test_for_abstract {
+sub _is_abstract {
     my $s         = shift;
     my $min_words = 7;
 
@@ -204,7 +370,7 @@ sub _test_for_abstract {
 
 # checks whether a string is a DOI or not
 # TODO: the tests are probably too weak
-sub _test_for_doi {
+sub _is_doi {
     my $s = shift;
     if ( $s =~ /^http:\/\/dx\.doi\.org/ || $s =~ /^\d\d\.\d+\/\S+/ ) {
         return 1;
