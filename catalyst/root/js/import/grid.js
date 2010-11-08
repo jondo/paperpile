@@ -470,6 +470,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     });
 
+    this.getSelectionModel().on('afterselectionchange', function() {
+      if (Paperpile.status.messageToHideOnClick) {
+        Paperpile.status.clearMessageNumber(Paperpile.status.messageToHideOnClick);
+        Paperpile.status.messageToHideOnClick = null;
+      }
+    },
+    this);
+
     this.getSelectionModel().on('pageselected', function() {
       var num = this.getSelectionModel().getCount();
       var all = this.getStore().getTotalCount();
