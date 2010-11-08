@@ -271,7 +271,7 @@ sub to_string {
   } else {
     return
         ( $self->von ? $self->von . " " : '' )
-      . $self->last
+      . ( $self->last ? $self->last : '' )
       . ( $self->first ? ", " . $self->first : '' );
   }
 }

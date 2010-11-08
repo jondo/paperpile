@@ -67,7 +67,9 @@ sub extva {
   my $k;
 
   if ($baserr) {
-    defly_warn "unsupported flying accent format ($all)";
+    if ( $all ne '\~{}' ) {
+      defly_warn "unsupported flying accent format ($all)";
+    }
   } elsif ($coderr) {
     defly_warn "unsupported use of \\uchar ($all)";
   } elsif ($trf) {
@@ -86,10 +88,13 @@ sub extva {
       defly_warn "unknown flying accented letter ($all)";
       # we warn and convert it to the letter in braces
       # otherwise we have the ugly backslash in the name
+
       if ( $k =~ m/.*\{([a-z])\}$/ ) {
 	return $1;
       }
     }
+  } else {
+    return '\~{}' if ( $all eq '\~{}' );
   }
   return $all;
 }

@@ -303,6 +303,11 @@ sub _sanitize_field {
 
   # If clean >= 1 then LaTeX code is stripped
   if ( $clean >= 1 ) {
+
+    # remove various white space notations
+    $value =~ s/(\\\s|\\,|\\;|\\\!|\\quad|\\qquad)/ /g;
+    $value =~ s/(?<!\\)~/ /g;
+
     $value =~ s/\\~\{\}/~/g;
     $value =~ s/\\\././g;
 
@@ -340,9 +345,6 @@ sub _sanitize_field {
 
     # remove non-escaped dollar signs
     $value =~ s/(?<!\\)\$//g;
-
-    # remove various white space notations
-    $value =~ s/(\\\s|\\,|\\;|\\\!|\\quad|\\qquad|~)/ /g;
 
     # other LaTeX symbols
     my $tmp3 = $BibTeX::Parser::EncodingTable::latex_other_symbols_string;
