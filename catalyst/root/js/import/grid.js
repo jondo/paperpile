@@ -37,6 +37,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   initComponent: function() {
 
+    if (this.plugins) {
+      this.plugins.push(new Paperpile.BaseQueryInfoPlugin());
+    } else {
+      this.plugins = [new Paperpile.BaseQueryInfoPlugin()];
+    }
+
     this.pager = new Paperpile.Pager({
       pageSize: this.limit,
       store: this.getStore(),

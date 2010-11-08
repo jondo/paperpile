@@ -2188,8 +2188,21 @@ table.pp-meta-form {
     cursor: default;
 }
  
-.pp-query-info-body div, .pp-query-info-body li {
+.pp-query-info-body {
+    text-align: center;
+}
+
+.pp-query-info-body h2 {
+    margin-bottom: .5em;
+}
+
+.pp-query-info-body div, .pp-query-info-body li, .pp-query-info-body span {
     display: inline-block;
+}
+
+.pp-query-info-token {
+    background-color: #FFF6A9;
+    padding: .2em .5em;
 }
 
 .pp-header-button, pp-header-button:visited            { 

@@ -23,6 +23,7 @@ js:
   - "js/import/filter-field.js"
   - "js/import/sidepanel.js"
   - "js/import/plugin-import.js"
+  - "js/import/base-query-info.js"
   - "js/import/online-search.js"
   - "js/misc/utils.js"
   - "js/misc/forms.js" 
