@@ -81,6 +81,7 @@ sub read {
   $built_in{keywords} = 0;
 
   my @output = ();
+  my %warnings;
 
   my $parser = BibTeX::Parser->new( $fh, $self->settings->{import_strip_tex} );
 
@@ -109,7 +110,6 @@ sub read {
           # without urls or anything else.
           $content =~ s/^doi://;
           $content =~ s!^(http://)?dx.doi.org/!!;
-          print STDERR "$content\n";
         }
         if ( $field eq 'year' ) {
           $content =~ s/(.*)(\d{4})$/$2/;
@@ -234,7 +234,11 @@ sub read {
           next;
         }
 
-        print STDERR "Field $field not handled.\n";
+        # Warn only once for an unsupported field.
+        if (!$warnings{$field}){
+          print STDERR "Field $field not handled.\n";
+          $warnings{$field}=1;
+        }
       }
 
       $data->{_pdf_tmp} = $pdf if $pdf;
@@ -269,8 +273,6 @@ sub read {
     push @output, Paperpile::Library::Publication->new($data);
 
   }
-
-  #print STDERR Dumper(\@output);
 
   return [@output];
 

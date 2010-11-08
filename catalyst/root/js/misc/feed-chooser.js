@@ -38,8 +38,8 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
       border: true,
       defaultType: 'label',
       width: 310,
+      bodyStyle:'padding:10px;',
       style: {
-
       },
       renderTo: document.body,
       items: [{

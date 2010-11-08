@@ -270,7 +270,6 @@ ul.pp-folders {
 
 div.link-hover .pp-second-link{
     opacity: 0;
-    font-style:italic;
     -webkit-transition-property: opacity;
     -webkit-transition-timing-function: linear;
     -webkit-transition-duration: 0.1s;
@@ -285,6 +284,7 @@ div.link-hover:hover .pp-second-link{
 
 li .pp-second-link {
     opacity:0;
+    font-style:italic;
     -webkit-transition-property: opacity;
     -webkit-transition-timing-function: linear;
     -webkit-transition-duration: 0.1s;
@@ -292,6 +292,7 @@ li .pp-second-link {
 
 li:hover .pp-second-link {
     opacity:1;
+    font-style:italic;
     -webkit-transition-property: opacity;
     -webkit-transition-timing-function: linear;
     -webkit-transition-duration: 0.2s;
@@ -1927,6 +1928,9 @@ div:hover.pp-label-style-sample {
 .pp-catalyst-log{
     background: #000000;
     color:#5FB404;
+    font-weight:bold;
+    padding-left: 10px;
+    padding-top:10px;
 }
 
 
@@ -2685,4 +2689,14 @@ input[type="checkbox"]:disabled
 
 .pp-bibtex-checkbox-check {
     margin-right: .1em;
+}
+
+/* Override Ext loading indicator */
+.loading-indicator {
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    color: #C8C8C8;
+    font-weight: bold;
+    background-image:url('/ext/resources/images/default/s.gif') !important;
+    margin-left: 40%;
+    margin-top:40%;
 }

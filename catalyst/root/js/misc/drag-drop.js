@@ -99,7 +99,10 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       // Maybe we'll implement this later...
       // this.ddp.addAction(this.actions['PREVIEW_PDF']); 
       if (this.activeTabIsGrid()) {
-        this.sideDdp.addAction(this.actions['ATTACH_PDF']);
+        var row = Paperpile.main.getCurrentlySelectedRow();
+        if (!row.data.pdf){
+          this.sideDdp.addAction(this.actions['ATTACH_PDF']);
+        }
         this.sideDdp.addAction(this.getSupplementAction(event));
       }
     } else if (this.isReferenceFile(event)) {
