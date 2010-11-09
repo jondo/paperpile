@@ -564,12 +564,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var target = e.target;
     var el = Ext.fly(target);
     if (el.findParent(".more-labels-node", 5)) {
-      e.stopEvent();
       this.moreLabelsDown();
       return;
     }
     if (el.findParent(".pp-rss-button", 20)) {
-      e.stopEvent();
       this.rssButtonToggle();
       return;
     }

@@ -171,7 +171,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
     if (pars.hideOnClick) {
       var num = this.getMessageNumber();
-      this.mon(Ext.getBody(), 'mousedown',
+      this.mon(Ext.getBody(), 'click',
       function(e) {
         this.clearMessageNumber(num, anim);
       },
