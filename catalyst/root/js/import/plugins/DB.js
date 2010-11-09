@@ -26,8 +26,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   plugin_iconCls: 'pp-icon-folder',
   plugin_name: 'DB',
 
-  plugins: [
-  ],
+  plugins: [],
 
   initComponent: function() {
 
@@ -76,9 +75,8 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       afterrender: {
         scope: this,
         fn: function() {
-	    this.createSortHandles();
-	    this.updateBaseQueryTooltip();
-	}
+          this.createSortHandles();
+        }
       }
     });
   },
@@ -309,9 +307,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   refreshCollections: function() {
     Paperpile.PluginGridDB.superclass.refreshCollections.call(this);
 
-    this.updateBaseQueryTooltip();
   },
-
 
   initToolbarMenuItemIds: function() {
     Paperpile.PluginGridDB.superclass.initToolbarMenuItemIds.call(this);

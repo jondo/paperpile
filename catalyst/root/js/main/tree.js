@@ -844,6 +844,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       newNode = n.appendChild(this.loader.createNode({
         text: title,
+        display_name: title,
+        name: title,
         iconCls: pars.plugin_iconCls,
         leaf: true,
         id: Paperpile.utils.generateUUID()

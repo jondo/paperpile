@@ -16,6 +16,9 @@ Ext.extend(Paperpile.BaseQueryInfoPlugin, Ext.util.Observable, {
     // if it hasn't been created already. If the item and tooltip
     // already exist, update them with the current base query.
     grid.updateBaseQueryTooltip = function() {
+      if (!this.showBaseQueryInfo()) {
+        return;
+      }
       if (!this.hasBaseQuery()) {
         return;
       }
@@ -27,7 +30,7 @@ Ext.extend(Paperpile.BaseQueryInfoPlugin, Ext.util.Observable, {
       var str = this.parenthesizeQuery(normalized);
       var html = [
         '<div class="pp-query-info-body">',
-        '  <h2>Base query:</h2>',
+        '  <h2>Live folder:</h2>',
         '  ' + str,
         '</div>'].join('');
 
@@ -108,7 +111,9 @@ Ext.extend(Paperpile.BaseQueryInfoPlugin, Ext.util.Observable, {
       }
     };
 
-    grid.on('render', grid.updateBaseQueryTooltip, grid);
+    if (grid.showBaseQueryInfo()) {
+      grid.on('render', grid.updateBaseQueryTooltip, grid);
+    }
   }
 });
 
