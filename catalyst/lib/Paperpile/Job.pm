@@ -456,6 +456,9 @@ sub _do_work {
       delete $old_hash->{pdf_name};
       $old_hash->{title} = '[Backup Copy] ' . $old_hash->{title};
       my $old_pub = Paperpile::Library::Publication->new($old_hash);
+
+      $old_pub->create_guid;
+
       $m->insert_pubs( [$old_pub], 1 );
       $m->trash_pubs( [$old_pub], 'TRASH' );
 
