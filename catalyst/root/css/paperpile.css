@@ -324,7 +324,17 @@ li:hover .pp-second-link{
     font-weight: normal;
 }
 
+.pp-grid-dup-subselect {
+    border-color:#ddd;
+    background-color:#ffeeee;
+    background-image:url(../images/default/grid/row-over.gif);
+}
 
+.pp-grid-dup-ok {
+    border-color:#ddd;
+    background-color:#ddffdd;
+    background-image:url(../images/default/grid/row-over.gif);
+}
 
 .pp-box-welcome p, .pp-box-welcome li{
     font-size: 13px;

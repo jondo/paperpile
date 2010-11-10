@@ -90,10 +90,10 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   getNoResultsTemplate: function() {
-      return this.getEmptyTemplate();
+    return this.getEmptyTemplate();
   },
   getEmptyBeforeSearchTemplate: function() {
-      return this.getEmptyTemplate();
+    return this.getEmptyTemplate();
   },
 
   initToolbarMenuItemIds: function() {
@@ -109,6 +109,25 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
     // in the backend so leave it out of the toolbar.
     //ids.insert(fillIndex + 1, 'CLEAN_ALL_DUPLICATES');
     ids.insert(fillIndex + 1, 'MERGE_DUPLICATES');
+  },
+
+  updateButtons: function() {
+    Paperpile.PluginGridDuplicates.superclass.updateButtons.call(this);
+
+    if (this.getSelectionCount() > 1 || this.getSelectionCount() == 0) {
+      this.actions['MERGE_DUPLICATES'].setDisabled(true);
+    } else {
+      var singleSelection = this.getSingleSelectionRecord();
+      if (singleSelection.get('_dup_id') === null) {
+        this.actions['MERGE_DUPLICATES'].setDisabled(true);
+      }
+    }
+  },
+
+  afterSelectionChange: function(sm) {
+    Paperpile.PluginGridDuplicates.superclass.afterSelectionChange.call(this, sm);
+
+    this.getView().refresh();
   },
 
   initContextMenuItemIds: function() {
@@ -127,6 +146,20 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
         //plugin_clear_duplicate_cache: true
       }
     });
+
+    this.getView().getRowClass = function(record, index, rowParams, store) {
+      var singleSelection = this.grid.getSingleSelectionRecord();
+      if (record.get('_dup_id') === null) {
+        return 'pp-grid-dup-ok';
+      }
+      if (singleSelection) {
+        if (record.get('_dup_id') == singleSelection.get('_dup_id')) {
+          return 'pp-grid-dup-subselect';
+        }
+      }
+      return '';
+    };
+
   },
 
   mergeDuplicates: function() {
@@ -157,7 +190,11 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
       },
       success: function(response) {
         var msg = n + " duplicate references were merged.";
-/* Not allowing undos on this for now.
+        Paperpile.status.updateMsg({
+          msg: msg,
+          hideOnClick: true
+        });
+        /* Not allowing undos on this for now.
  *         var undoMessage = Paperpile.status.updateMsg({
           msg: msg,
           hideOnClick: true,
