@@ -137,15 +137,6 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
   },
 
   myOnRender: function() {
-    this.store.load({
-      params: {
-        start: 0,
-        limit: this.limit,
-        // Cause the duplicate cache to be cleared each time the grid is reloaded.
-        // This is very slow, and will need backend optimization in Duplicates.pm.
-        //plugin_clear_duplicate_cache: true
-      }
-    });
 
     this.getView().getRowClass = function(record, index, rowParams, store) {
       var singleSelection = this.grid.getSingleSelectionRecord();
