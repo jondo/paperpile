@@ -697,6 +697,30 @@
   </test>
 </site>
 
+<site name="TheScientificWorldJOURNAL">
+
+  <signature>
+    <url>!thescientificworld\.co\.uk!</url>
+    <url>!thescientificworld\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*ArticleId=)(\d+)$!http://www.thescientificworld.com/TSW/TOC/DownloadPdf.asp?ArticleId=$2!i</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!(http://www.thescientificworld.com/TSW/TOC/DownloadPdf.asp?ArticleId=\d+)!i</match>
+    </pattern>
+  </rule>
+
+  <test>
+    <url>http://www.thescientificworld.com/TSW/toc/TSWJ_ArticleLanding.asp?jid=141&amp;ArticleId=2738</url>
+  </test>
+
+</site>
   
 <site name="Meta">
   <signature>
