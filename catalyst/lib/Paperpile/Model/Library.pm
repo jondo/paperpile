@@ -129,6 +129,7 @@ sub insert_pubs {
 
     ( my $fields, my $values ) = $self->_hash2sql( $tmp, $dbh );
 
+
     $dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
 
     ## Insert searchable fields into fulltext table
@@ -374,12 +375,9 @@ sub update_pub {
   my $pattern = $self->get_setting( 'key_pattern', $dbh );
   my $new_key = $new_pub->format_pattern($pattern);
   if ( $new_key ne $old_data->{citekey} ) {
-    print STDERR "Old: " . $old_data->{citekey} . "  ", "New: $new_key\n";
-
     # If we have a new citekey, make sure it doesn't conflict with other
     $self->generate_unique_key( $new_pub, [], $dbh );
     $diff->{citekey} = $new_pub->citekey;
-    print STDERR "Generated key " . $new_pub->{citekey} . "\n";
   }
 
   # If flagged with label 'Incomplete' remove this label during update
@@ -1993,7 +1991,7 @@ sub generate_unique_key {
       }
     }
   }
-
+  
   # If not citekey is set we generate one and make sure it is not ambiguous
 
   my $pattern = $self->get_setting( 'key_pattern', $dbh );
