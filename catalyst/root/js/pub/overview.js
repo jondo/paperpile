@@ -339,7 +339,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   },
 
   handleClick: function(e) {
-    e.stopEvent();
     var el = e.getTarget();
 
     switch (el.getAttribute('action')) {

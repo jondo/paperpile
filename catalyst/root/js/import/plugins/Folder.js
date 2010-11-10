@@ -54,6 +54,10 @@ Paperpile.PluginGridFolder = Ext.extend(Paperpile.PluginGridDB, {
     });
   },
 
+  showBaseQueryInfo: function() {
+    return false;
+  },
+
   // Almost the same stuff as the Labels panel to update the tab title.
   // Maybe we can reduce duplication by creating a Collection.js plugin type.
   // This will also come in handy if / when we turn Feeds into collections.

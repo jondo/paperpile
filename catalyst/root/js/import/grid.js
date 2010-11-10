@@ -37,12 +37,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   initComponent: function() {
 
-    if (this.plugins) {
-      this.plugins.push(new Paperpile.BaseQueryInfoPlugin());
-    } else {
-      this.plugins = [new Paperpile.BaseQueryInfoPlugin()];
-    }
-
     this.pager = new Paperpile.Pager({
       pageSize: this.limit,
       store: this.getStore(),
@@ -404,6 +398,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }]
     });
 
+    if (this.plugins) {
+      this.plugins.push(new Paperpile.BaseQueryInfoPlugin());
+    } else {
+      this.plugins = [new Paperpile.BaseQueryInfoPlugin()];
+    }
+
     Paperpile.PluginGrid.superclass.initComponent.call(this);
 
     this.on('afterrender', this.installEvents, this);
@@ -571,6 +571,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       Paperpile.main.tabs.remove(this.getPluginPanel());
       break;
     }
+  },
+
+  // Base classes should return /false/ if the base query info should be hidden.
+  showBaseQueryInfo: function() {
+    return true;
   },
 
   fontSize: function() {

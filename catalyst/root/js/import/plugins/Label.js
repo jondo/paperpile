@@ -61,6 +61,10 @@ Paperpile.PluginGridLabel = Ext.extend(Paperpile.PluginGridDB, {
 
   },
 
+  showBaseQueryInfo: function() {
+    return false;
+  },
+
   getGUID: function() {
     var match = this.plugin_base_query.match('labelid:(.*)$');
     var guid = match[1];
