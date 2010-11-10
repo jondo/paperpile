@@ -94,6 +94,7 @@ sub connect {
 
       foreach my $pub (@$data) {
         $pub->citekey('');
+        $pub->guid(undef);
         if ( defined $pub->sha1 ) {
           $all{ $pub->sha1 } = $pub;
         }

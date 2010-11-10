@@ -564,12 +564,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var target = e.target;
     var el = Ext.fly(target);
     if (el.findParent(".more-labels-node", 5)) {
-      e.stopEvent();
       this.moreLabelsDown();
       return;
     }
     if (el.findParent(".pp-rss-button", 20)) {
-      e.stopEvent();
       this.rssButtonToggle();
       return;
     }
@@ -846,6 +844,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       newNode = n.appendChild(this.loader.createNode({
         text: title,
+        display_name: title,
+        name: title,
         iconCls: pars.plugin_iconCls,
         leaf: true,
         id: Paperpile.utils.generateUUID()

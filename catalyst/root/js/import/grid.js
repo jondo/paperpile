@@ -37,12 +37,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   initComponent: function() {
 
-    if (this.plugins) {
-      this.plugins.push(new Paperpile.BaseQueryInfoPlugin());
-    } else {
-      this.plugins = [new Paperpile.BaseQueryInfoPlugin()];
-    }
-
     this.pager = new Paperpile.Pager({
       pageSize: this.limit,
       store: this.getStore(),
@@ -404,6 +398,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }]
     });
 
+    if (this.plugins) {
+      this.plugins.push(new Paperpile.BaseQueryInfoPlugin());
+    } else {
+      this.plugins = [new Paperpile.BaseQueryInfoPlugin()];
+    }
+
     Paperpile.PluginGrid.superclass.initComponent.call(this);
 
     this.on('afterrender', this.installEvents, this);
@@ -571,6 +571,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       Paperpile.main.tabs.remove(this.getPluginPanel());
       break;
     }
+  },
+
+  // Base classes should return /false/ if the base query info should be hidden.
+  showBaseQueryInfo: function() {
+    return true;
   },
 
   fontSize: function() {
@@ -1056,7 +1061,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     '  </div>',
     '  <div style="height: 5px;"></div>',
     '    <dl>',
-    '      <tpl if="citekey"><dt>Key: </dt><dd>{citekey}</dd></tpl>',
+    '      <tpl if="citekey"><dt>Key: </dt><dd class="pp-word-wrap">{citekey}</dd></tpl>',
     '      <dt>Type: </dt><dd>{_pubtype}</dd>',
     '      <tpl for="fields">',
     '        <div class="link-hover">',
@@ -1076,10 +1081,20 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open link in browser" action="url-link"></div>',
     '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy URL to clipboard" action="url-copy"></div>',
     '          </tpl>',
-    '          <dt>{label}:</dt><dd class="pp-info-{field}">{value}</dd>',
+    '          <dt>{label}:</dt><dd class="pp-word-wrap pp-info-{field}">{value}</dd>',
     '        </div>',
     '      </tpl>',
     '    </dl>',
+    '  </div>',
+
+    '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style2">',
+    '    <ul> ',
+    '      <li><a  href="#" class="pp-textlink pp-action pp-action-clipboard" action="copy-text">Copy as Text</a> </li>',
+    '      <tpl if="isBibtexMode">',
+    '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-bibtex">Copy as BibTeX</a> </li>',
+    '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-keys">Copy LaTeX citation</a> </li>',
+    '      </tpl>',
+    '    </ul>',
     '  </div>',
     '</div>'].join('');
   },

@@ -144,7 +144,31 @@ Ext.ux.UnstyledButton = Ext.extend(Ext.Button, {
 });
 Ext.reg('unstyledbutton', Ext.ux.UnstyledButton);
 Ext.ux.SubtleButton = Ext.extend(Ext.Button, {
-  cls: 'x-btn-subtle'
+  cls: 'x-btn-subtle',
+    setTooltip : function(tooltip, /* private */ initial){
+        if(this.rendered){
+            if(!initial){
+                this.clearTip();
+            }
+            if(Ext.isObject(tooltip)){
+                Ext.QuickTips.register(Ext.apply({
+                      target: this.btnEl.parent('td').id
+                }, tooltip));
+                this.tooltip = tooltip;
+            }else{
+		this.btnEl.parent('td').dom[this.tooltipType] = tooltip;
+            }
+        }else{
+            this.tooltip = tooltip;
+        }
+        return this;
+    },
+    // private
+    clearTip : function(){
+        if(Ext.isObject(this.tooltip)){
+            Ext.QuickTips.unregister(this.btnEl.parent('td'));
+        }
+    }  
 });
 Ext.reg('subtlebutton', Ext.ux.SubtleButton);
 

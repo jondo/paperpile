@@ -307,6 +307,7 @@ sub replace_merged_items {
   foreach my $pub (@{$self->_data}){
 
     if ($is_first and ($pub->_dup_id eq $dup_id)){
+      $merged_pub->_dup_id(undef);
       push @new_data, $merged_pub;
       $self->_hash->{$merged_pub->guid} = $merged_pub;
       $is_first=0;
