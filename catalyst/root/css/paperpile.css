@@ -710,6 +710,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     left:-4px;
 }
 
+.pp-word-wrap {
+  word-wrap: break-word;
+}
+
 .pp-info-button {
   padding:0px;
   margin:0px;
