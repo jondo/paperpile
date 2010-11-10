@@ -31,12 +31,13 @@ Ext.override(Ext.grid.GridView, {
 
 Ext.override(Ext.Button, {
     // private
+    // private
     onRender : function(ct, position){
         if(!this.template){
             if(!Ext.Button.buttonTemplate){
                 // hideous table template
                 Ext.Button.buttonTemplate = new Ext.Template(
-                    '<table id="{4}" cellspacing="0" class="x-btn {3}"><tbody class="{1}" id="{4}_body">',
+                    '<table id="{4}" cellspacing="0" class="x-btn {3}"><tbody class="{1}">',
                     '<tr><td class="x-btn-tl"><i>&#160;</i></td><td class="x-btn-tc"></td><td class="x-btn-tr"><i>&#160;</i></td></tr>',
                     '<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{2}" unselectable="on"><button type="{0}"></button></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
                     '<tr><td class="x-btn-bl"><i>&#160;</i></td><td class="x-btn-bc"></td><td class="x-btn-br"><i>&#160;</i></td></tr>',
@@ -60,7 +61,7 @@ Ext.override(Ext.Button, {
          * @property btnEl
          */
         this.btnEl = btn.child(this.buttonSelector);
-	this.tooltipEl = Ext.get(targs[4]).child('tbody');
+	this.tooltipEl = btn;
         this.mon(this.btnEl, {
             scope: this,
             focus: this.onFocus,
@@ -70,26 +71,7 @@ Ext.override(Ext.Button, {
         this.initButtonEl(btn, this.btnEl);
 
         Ext.ButtonToggleMgr.register(this);
-    },
-    setTooltip : function(tooltip, /* private */ initial){
-        if(this.rendered){
-            if(!initial){
-                this.clearTip();
-            }
-            if(Ext.isObject(tooltip)){
-                Ext.QuickTips.register(Ext.apply({
-                      target: this.tooltipEl.id
-                }, tooltip));
-                this.tooltip = tooltip;
-            }else{
-                this.tooltipEl.dom[this.tooltipType] = tooltip;
-            }
-        }else{
-            this.tooltip = tooltip;
-        }
-        return this;
     }
-		 
 });
 
 Ext.override(Ext.Element, {
