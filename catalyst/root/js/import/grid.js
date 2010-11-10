@@ -1086,6 +1086,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     '      </tpl>',
     '    </dl>',
     '  </div>',
+
+    '  <div class="pp-box pp-box-side-panel pp-box-top pp-box-style2">',
+    '    <ul> ',
+    '      <li><a  href="#" class="pp-textlink pp-action pp-action-clipboard" action="copy-text">Copy as Text</a> </li>',
+    '      <tpl if="isBibtexMode">',
+    '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-bibtex">Copy as BibTeX</a> </li>',
+    '        <li> <a  href="#" class="pp-textlink pp-action" action="copy-keys">Copy LaTeX citation</a> </li>',
+    '      </tpl>',
+    '    </ul>',
+    '  </div>',
     '</div>'].join('');
   },
 
