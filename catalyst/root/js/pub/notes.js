@@ -110,7 +110,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
     this.spot.show(this.ownerCt.id);
 
     // Does not work, don't know why
-    //editor.focus();
+    this.editor.on('initialize', function(){this.editor.focus();},this,{single:true});
   },
 
   onSave: function() {
