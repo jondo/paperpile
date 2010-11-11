@@ -64,6 +64,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
     });
 
     this._dataViewport = new Ext.Container({
+      cls: 'pp-label-panel-vp',
       autoEl: 'div',
       autoScroll: true,
       items: [this._dataView]

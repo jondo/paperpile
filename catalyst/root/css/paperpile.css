@@ -1716,6 +1716,62 @@ div:hover.pp-label-style-sample {
     vertical-align: middle;
 }
 
+html {
+    overflow-y: auto;
+    /* Kudos to @sami for pointing out that setting the overflow to "auto" instead of "hidden" fixes the keyboard nav bug! */
+    background-color: transparent;
+}
+
+@media only screen and (max-device-width:480px) {
+    html {
+	overflow: auto;
+	}
+}
+
+
+
+body.custom {
+
+    background-position: center top;
+    background-image: url(images/bg.jpg);
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 10px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+
+/* Label panel custom scrollbar styling. */
+.pp-label-panel-vp::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.pp-label-panel-vp::-webkit-scrollbar-button:start:decrement,
+.pp-label-panel-vp::-webkit-scrollbar-button:end:increment {
+    height: 0px;
+    display: block;
+    background-color: transparent;
+}
+.pp-label-panel-vp::-webkit-scrollbar-track-piece {
+    background-color: #eee;
+    -webkit-border-radius: 6px;
+}
+.pp-label-panel-vp::-webkit-scrollbar-thumb:vertical {
+    height: 20px;
+    background-color: #666;
+    -webkit-border-radius: 6px;
+}
+.pp-label-panel-vp::-webkit-scrollbar-thumb:horizontal {
+    width: 20px;
+    background-color: #666;
+    -webkit-border-radius: 6px;
+}
+
+
 .pp-label-panel-filter {
     background: url('/images/goog-mag.png') no-repeat;
     background-position: right center;
