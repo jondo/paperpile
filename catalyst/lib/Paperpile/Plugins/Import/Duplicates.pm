@@ -114,7 +114,7 @@ sub connect {
   my $c0           = 'pp-grid-highlight1';
   my $c1           = 'pp-grid-highlight2';
   my $cur_color    = $c0;
-  my $last_cluster = 0;
+  my $last_cluster = -1;
 
   # define the color-scheme
   # currently implemented: alternate between 2 colors
@@ -130,8 +130,6 @@ sub connect {
     $cluster2color{$cluster} = $cur_color;
     $last_cluster = $cluster;
   }
-
-  my $cluster_count = keys %cluster2color;
 
   # update the background color
   for ( my $i = 0 ; $i < scalar( @{ $self->_data } ) ; $i++ ) {
@@ -169,23 +167,6 @@ sub page {
       $exists = 1;
     }
     push @new_data, $pub if $exists;
-  }
-
-  # remove color from single item clusters that may occur after merge or trashing
-  foreach my $i ( 0 .. $#new_data ) {
-
-    my $curr = $new_data[$i]->_dup_id;
-    my $prev = $i > 0 ? $new_data[ $i - 1 ]->_dup_id : undef;
-    my $next = $i < $#new_data ? $new_data[ $i + 1 ]->_dup_id : undef;
-
-    if ( ( !$prev && !$next )
-      || ( !$prev && $curr ne $next )
-      || ( !$next && $curr ne $prev )
-      || ( $curr ne $prev && $curr ne $next ) ) {
-
-      $new_data[$i]->_highlight('pp-grid-highlight0');
-
-    }
   }
 
   $self->_data( \@new_data );

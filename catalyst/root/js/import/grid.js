@@ -956,7 +956,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.pubTemplate = new Ext.XTemplate(
         '<div class="pp-grid-data {[this.isInactive(values.labels)]}" guid="{guid}">',
         '<div>',
-        '<span class="pp-grid-title {_highlight}">{title}</span>{[this.labelStyle(values.labels, values.labels_tmp)]}',
+        '<span class="pp-grid-title">{title}</span>{[this.labelStyle(values.labels, values.labels_tmp)]}',
         '</div>',
         '<tpl if="_authors_display">',
         '<p class="pp-grid-authors">{_authors_display}</p>',

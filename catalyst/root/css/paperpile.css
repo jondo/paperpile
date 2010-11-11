@@ -324,18 +324,6 @@ li:hover .pp-second-link{
     font-weight: normal;
 }
 
-.pp-grid-dup-subselect {
-    border-color:#ddd;
-    background-color:#ffeeee;
-    background-image:url(../images/default/grid/row-over.gif);
-}
-
-.pp-grid-dup-ok {
-    border-color:#ddd;
-    background-color:#ddffdd;
-    background-image:url(../images/default/grid/row-over.gif);
-}
-
 .pp-box-welcome p, .pp-box-welcome li{
     font-size: 13px;
     line-height: 1.5em;
@@ -1268,21 +1256,22 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-color: #FFF6A9;
 }
 
-.pp-grid-highlight0{
-
+.pp-grid-dup-ok {
+    border-color:#ddd;
+    background-color:#ddffdd;
+    background-image:url(../images/default/grid/row-over.gif);
 }
 
 .pp-grid-highlight1{
-    background-color: #FFF6A9;
-
+    border-color:#ddd;
+    background-color:#ffeeee;
+    background-image:url(../images/default/grid/row-over.gif);
 }
 
 .pp-grid-highlight2{
-    background-color: #99FF99;
-}
-
-.pp-grid-highlight3{
-    background-color: #E0ECF8;
+    border-color:#ddd;
+    background-color:#ffffdd;
+    background-image:url(../images/default/grid/row-over.gif);
 }
 
 .pp-grid-error{

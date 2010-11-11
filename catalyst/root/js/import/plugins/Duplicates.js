@@ -143,14 +143,11 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
       if (record.get('_dup_id') === null) {
         return 'pp-grid-dup-ok';
       }
-      if (singleSelection) {
-        if (record.get('_dup_id') == singleSelection.get('_dup_id')) {
-          return 'pp-grid-dup-subselect';
-        }
+      if (record.get('_highlight')) {
+	return record.get('_highlight');
       }
       return '';
     };
-
   },
 
   mergeDuplicates: function() {
