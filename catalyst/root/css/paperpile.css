@@ -1945,12 +1945,21 @@ div:hover.pp-label-style-sample {
 /*** Catalyst log screen ***/
 
 .pp-catalyst-log{
+    -webkit-user-select: text;
+    cursor:text;
     background: #000000;
     color:#5FB404;
     font-weight:bold;
     padding-left: 10px;
     padding-top:10px;
 }
+
+.pp-catalyst-log strong{
+    background: red;
+    color:white;
+    font-weight:bold;
+}
+
 
 
 

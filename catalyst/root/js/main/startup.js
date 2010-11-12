@@ -183,6 +183,19 @@ Paperpile.stage0 = function() {
 
           QRuntime.catalystRead.connect(function(string) {
             if (Paperpile.isLogging) {
+
+              // Show warnings for unitialized values in debug mode
+              if (Paperpile.isDebugMode){
+                if (string.match(/uninitialized value/i)){
+                  string = string.replace(/uninitialized value/i, '<strong>uninitialized value</strong>');
+                  Paperpile.status.updateMsg({
+                    type: 'error',
+                    msg: "Uninitialized values. Check log for details.",
+                    hideOnClick: true
+                  });
+                }
+              }
+              
               Paperpile.serverLog = Paperpile.serverLog + string;
               var L = Paperpile.serverLog.length;
               if (L > 100000) {
