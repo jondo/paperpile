@@ -26,6 +26,7 @@ class Runtime : public QObject{
   Q_INVOKABLE QVariantMap msgBox(const QVariantMap & config);
   Q_INVOKABLE QVariantMap fileInfo(const QString & file);
   Q_INVOKABLE void log(const QString & msg);
+  Q_INVOKABLE bool isDebugMode();
 
   bool saveToClose;
   void catalystKill();
@@ -52,6 +53,6 @@ class Runtime : public QObject{
   QWidget *mainWindow;
   QProcess *catalystProcess;
   QProcess *updaterProcess;
-  bool isDebugMode();
+
   
 };
