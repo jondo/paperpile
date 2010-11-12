@@ -17,6 +17,7 @@
 Paperpile.serverLog = '';
 Paperpile.isLogging = 1;
 Paperpile.pingAttempts = 0;
+Paperpile.isDebugMode = false;
 
 Paperpile.startupFailure = function(response) {
   var error;
@@ -62,7 +63,17 @@ Paperpile.stage0 = function() {
 
   Paperpile.pingAttempts++;
 
-  if (IS_QT) QRuntime.log("Pinging the server (attempt #" + Paperpile.pingAttempts + ')');
+  if (IS_QT) {
+
+    if (QRuntime.isDebugMode()){
+      Paperpile.isDebugMode = true;
+      Paperpile.log("Started in debug mode");
+    }
+
+    QRuntime.log("Pinging the server (attempt #" + Paperpile.pingAttempts + ')');
+
+  }
+
 
   Paperpile.Ajax({
     url: '/ajax/app/heartbeat',
@@ -74,12 +85,10 @@ Paperpile.stage0 = function() {
 
       if (json.status == 'RUNNING') {
 
-        // Set debug=true to bypass to allow to use an externally
-        // started server for developing
-        debug = true;
-
-        // Server was already running before we have started it
-        if (IS_QT && Paperpile.pingAttempts == 1 && !debug) {
+        // Server was already running before we have started it;
+        // ignore this in debug mode to allow running an external
+        // server for debugging
+        if (IS_QT && Paperpile.pingAttempts == 1 && !Paperpile.isDebugMode) {
 
           Ext.Msg.show({
             title: 'Error',
@@ -88,6 +97,7 @@ Paperpile.stage0 = function() {
             animEl: 'elId',
             icon: Ext.MessageBox.ERROR,
             fn: function(action) {
+              QRuntime.setSaveToClose(true);
               QRuntime.closeApp();
             }
           });
