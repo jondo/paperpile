@@ -386,10 +386,19 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
           this.updateLookupButton();
         },
         this);
+        input.on('change', function(field, e) {
+          Ext.getCmp('save_button').setDisabled(field.getValue() == '');
+          this.updateLookupButton();
+        },
+        this);
       }
 
       if (field === 'authors' || field === 'doi' || field === 'pmid' || field === 'arxivid') {
         input.on('keyup', function(field, e) {
+          this.updateLookupButton();
+        },
+        this);
+        input.on('change', function(field, e) {
           this.updateLookupButton();
         },
         this);

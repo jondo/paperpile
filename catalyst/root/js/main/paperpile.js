@@ -221,13 +221,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       task: new Ext.util.DelayedTask(this.fireFileSync, this)
     };
 
+/*
     Ext.apply(Ext.QuickTips.getQuickTip(), {
       showDelay: 0,
       dismissDelay: 0,
       hideDelay: 0,
       anchor: 'left'
     });
-
+*/
     //    var lp = new Paperpile.LabelPanel();
     //    lp.setPosition(300, 200);
     //    lp.show();
@@ -550,7 +551,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           xtype: 'subtlebutton',
           id: 'folder_extract_button',
           text: 'PDF Folder',
-          //	tooltip: 'The selected folder and its subdirectories will be searched for PDFs to import',
+          tooltip: 'The selected folder and its subdirectories will be searched for PDFs to import',
           align: 'center',
           width: 150,
           height: 30,
@@ -596,6 +597,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.pdfExtractChoice.show();
 
+/*
     if (justCreated) {
       var folderTip = new Ext.ToolTip({
         html: 'The selected folder and its subdirectories will be searched for PDFs to import',
@@ -609,7 +611,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       });
       Ext.getCmp('file_extract_button').setTooltip(fileTip);
     }
-
+*/
   },
 
   // Submit a PDF extraction job, optionally including the tree node

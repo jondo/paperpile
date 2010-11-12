@@ -64,6 +64,8 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       var oldData = this.oldData || {};
       var newData = sm.getSelected().data || {};
 
+      newData.isBibtexMode = Paperpile.utils.isBibtexMode();
+
       newData.id = this.id;
       newData._pubtype_name = false;
       if (newData.pubtype) {

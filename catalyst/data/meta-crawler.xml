@@ -863,6 +863,26 @@
   
 </site>
 
+<site name="TheScientificWorldJOURNAL">
+
+  <signature>
+    <url>!thescientificworld\.co\.uk!</url>
+    <url>!thescientificworld\.com!</url>
+  </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <rewrite>!(.*ArticleID=)(\d+)!http://www.thescientificworld.co.uk/TSW/support/export.asp?format=endnote&amp;articleID=$2!i</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <page url="http://www.thescientificworld.co.uk/TSW/toc/TSWJ_ArticleLanding.asp?ArticleId=3419">
+      <title>Long Noncoding RNAs, Chromatin, and Development</title>
+    </page>
+  </test>
+
+</site>
 
 <site name="Default">
 
