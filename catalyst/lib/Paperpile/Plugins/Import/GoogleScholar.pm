@@ -462,7 +462,7 @@ sub match {
 
       # words that contain non-alphnumeric and non-ascii
       # characters are removed
-      next if ( ! defined $author->last );
+      next if ( !defined $author->last );
       next if ( $author->last =~ m/[^\w\s-]/ );
       next if ( $author->last =~ m/[^[:ascii:]]/ );
       next if ( $author->last eq '' );
@@ -472,13 +472,13 @@ sub match {
     $query_authors = _EscapeString( join( " ", @tmp ) );
 
     # make a query string containing at most the first two authors
-    if ( my $tmp_author = shift( @tmp ) ) {
+    if ( my $tmp_author = shift(@tmp) ) {
       $query_authors2 = $tmp_author;
     }
-    if ( my $tmp_author = shift( @tmp ) ) {
-      $query_authors2 .= ' '. $tmp_author;
+    if ( my $tmp_author = shift(@tmp) ) {
+      $query_authors2 .= ' ' . $tmp_author;
     }
-    $query_authors2 = _EscapeString( $query_authors2 );
+    $query_authors2 = _EscapeString($query_authors2);
   }
 
   # First set preferences (necessary to show BibTeX export links)
@@ -513,8 +513,9 @@ sub match {
       # parse the page and then see if a publication matches
       if ( $pub->title() ) {
         my $page = $self->_parse_googlescholar_page($content);
-	# generate guids
-	$self->_save_page_to_hash($page);
+
+        # generate guids
+        $self->_save_page_to_hash($page);
         my $matchedpub = $self->_find_best_hit( $page, $pub );
 
         if ($matchedpub) {
@@ -568,37 +569,37 @@ sub match {
   # If we are here, it means a search using the DOI was not conducted or
   # not successfull. Now we try a query using title and authors.
 
-  if ( $query_title ne '' and $query_authors ne '' ) {
+  #   if ( $query_title ne '' and $query_authors ne '' ) {
 
-    # we add "&as_vis=1" to exclude citations and get only those links
-    # that have stronger support
-    my $query_string = "$query_title+$query_authors" . "&as_vis=1";
-    print STDERR "Searching with title and full author list.\n";
-    print STDERR "$searchUrl$query_string\n";
+  #     # we add "&as_vis=1" to exclude citations and get only those links
+  #     # that have stronger support
+  #     my $query_string = "$query_title+$query_authors" . "&as_vis=1";
+  #     print STDERR "Searching with title and full author list.\n";
+  #     print STDERR "$searchUrl$query_string\n";
 
-    # Now let's ask GoogleScholar again with Authors/Title
-    my $query    = $searchUrl . $query_string;
-    my $response = $browser->get($query);
-    my $content  = $response->content;
+  #     # Now let's ask GoogleScholar again with Authors/Title
+  #     my $query    = $searchUrl . $query_string;
+  #     my $response = $browser->get($query);
+  #     my $content  = $response->content;
 
-    my $error_level = _check_content($content);
-    if ( $error_level == 1 ) {
-      NetError->throw( error => 'Google Scholar blocks queries from this IP.' );
-    }
+  #     my $error_level = _check_content($content);
+  #     if ( $error_level == 1 ) {
+  #       NetError->throw( error => 'Google Scholar blocks queries from this IP.' );
+  #     }
 
-    # everything is fine we can process this page
-    if ( $error_level == 0 ) {
+  #     # everything is fine we can process this page
+  #     if ( $error_level == 0 ) {
 
-      # parse the page and then see if a publication matches
-      my $page = $self->_parse_googlescholar_page($content);
-      # generate guids
-      $self->_save_page_to_hash($page);
-      my $matchedpub = $self->_find_best_hit( $page, $pub );
-      if ($matchedpub) {
-        return $matchedpub;
-      }
-    }
-  }
+  #       # parse the page and then see if a publication matches
+  #       my $page = $self->_parse_googlescholar_page($content);
+  #       # generate guids
+  #       $self->_save_page_to_hash($page);
+  #       my $matchedpub = $self->_find_best_hit( $page, $pub );
+  #       if ($matchedpub) {
+  #         return $matchedpub;
+  #       }
+  #     }
+  #   }
 
   # If we are here we failed to a get a candidate hit with
   # title and full author list search
@@ -626,6 +627,7 @@ sub match {
 
       # parse the page and then see if a publication matches
       my $page = $self->_parse_googlescholar_page($content);
+
       # generate guids
       $self->_save_page_to_hash($page);
       my $matchedpub = $self->_find_best_hit( $page, $pub );
@@ -661,15 +663,12 @@ sub match {
 
       # parse the page and then see if a publication matches
       my $page = $self->_parse_googlescholar_page($content);
+
       # generate guids
       $self->_save_page_to_hash($page);
       my $matchedpub = $self->_find_best_hit( $page, $pub );
-      print STDERR "AAAAAAA",$matchedpub->title,"\n";
-      print STDERR "AAAAAAA",$matchedpub->authors,"\n";
 
       if ($matchedpub) {
-	print STDERR "AAAAAAA",$matchedpub->title,"\n";
-	print STDERR "AAAAAAA",$matchedpub->authors,"\n";
         return $matchedpub;
       }
     }
