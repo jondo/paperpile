@@ -62,6 +62,15 @@ sub insert_pubs {
 
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
+  # First make sure all objects have a guid
+  foreach my $pub (@$pubs) {
+    if ( !$pub->guid ) {
+      $pub->create_guid;
+    }
+  }
+
+  # Generate unique keys taking into accounts keys already in the
+  # database and the pubs about to be imported now.
   if ($user_library) {
     my @existing;
     foreach my $pub (@$pubs) {
@@ -72,8 +81,6 @@ sub insert_pubs {
 
   # Check already existing pubs to avoid sha1 clashes
   $self->exists_pub( $pubs, $dbh );
-
-  my $counter = 0;
 
   # If we insert to the user library we need to create new labels that
   # may be given in the labels_tmp field.
@@ -101,10 +108,6 @@ sub insert_pubs {
     # database
     next if ( !$pub->sha1 );
 
-    if ( !$pub->guid ) {
-      $pub->create_guid;
-    }
-
     # If we insert to the user library map temporary labels to new or
     # already existing labels in the database. If it is not the user
     # libary we save the labels_tmp field upon insert.
@@ -129,16 +132,16 @@ sub insert_pubs {
 
     ( my $fields, my $values ) = $self->_hash2sql( $tmp, $dbh );
 
-
     $dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
 
     ## Insert searchable fields into fulltext table
     my $pub_rowid = $dbh->func('last_insert_rowid');
-
     $pub->_rowid($pub_rowid);
 
     $self->_update_fulltext_table( $pub, 1, $dbh );
 
+    ## Attach PDFs either if it is downloaded already in the cache or
+    ## it is given as absolute path in the _pdf_tmp field
     my $cached_file = catfile( Paperpile::Utils->get_tmp_dir, "download", $pub->guid . ".pdf" );
 
     if ( $user_library && -e $cached_file ) {
@@ -149,6 +152,7 @@ sub insert_pubs {
       $self->attach_file( $pub->_pdf_tmp, 1, $pub, 0, $dbh );
     }
 
+    # Attach other attachments if given in _attachments_tmp field
     if ( @{ $pub->_attachments_tmp } > 0 ) {
       foreach my $file ( @{ $pub->_attachments_tmp } ) {
         $self->attach_file( $file, 0, $pub, 0, $dbh );
