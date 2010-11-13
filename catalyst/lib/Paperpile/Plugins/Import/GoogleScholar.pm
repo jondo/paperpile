@@ -452,7 +452,7 @@ sub match {
       push @tmp, $word;
     }
     $query_title = _EscapeString( join( " ", @tmp ) );
-    $query_title = 'allintitle:' . $query_title;
+    $query_title = $query_title;
   }
 
   # 3) Authors. We just use each author's last name
@@ -608,7 +608,7 @@ sub match {
 
     # we add "&as_vis=1" to exclude citations and get only those links
     # that have stronger support
-    my $query_string = "$query_title+$query_authors2" . "&as_vis=1";
+    my $query_string = "allintitle:$query_title+$query_authors2" . "&as_vis=1";
     print STDERR "Seaching with title and reduced author list.\n";
     print STDERR "$searchUrl$query_string\n";
 
