@@ -281,15 +281,19 @@ sub match {
   }
 
   # 3) Authors. We just use each author's last name
+  # At the moment we use the first two authors at most.
   if ( $pub->authors ) {
     my @tmp = ();
+    my $max_number = 2;
+    my $nr_authors = 0;
     foreach my $author ( @{ $pub->get_authors } ) {
 
       # words that contain non-alphnumeric and non-ascii
       # characters are removed
       next if ( $author->last =~ m/[^\w\s-]/ );
       next if ( $author->last =~ m/[^[:ascii:]]/ );
-
+      next if ( $nr_authors >= $max_number );
+      $nr_authors++;
       push @tmp, $author->last . "[au]";
     }
     $query_authors = _EscapeString( join( " AND ", @tmp ) );
