@@ -214,9 +214,6 @@ sub complete_details {
       $full_pub->citekey('');
 
       # Update plugin _hash with new data
-      if ( ! defined $pub->guid ) {
-	$pub->create_guid;
-      }
       $full_pub->guid( $pub->guid );
       $self->_hash->{ $pub->guid } = $full_pub;
 
@@ -229,6 +226,7 @@ sub complete_details {
       return $full_pub;
     }
   }
+  print STDERR "GoogleScholar complete_details: first URL match call was not successful.\n";
 
   # For many articles Google provides links to several versions of
   # the same article. There are differences regarding the parsing
@@ -285,6 +283,7 @@ sub complete_details {
     for my $i ( 0 .. $#{$page} ) {
       foreach my $j ( 0 .. $#supported ) {
         if ( $page->[$i]->linkout =~ m/ncbi\.nlm\.nih\.gov/ ) {
+	  print STDERR "GoogleScholar complete_details: found an ncbi linkout.\n";
           $full_pub = undef;
           eval { $full_pub = $URL_plugin->match( $page->[$i] ) };
           if ($full_pub) {
@@ -315,6 +314,7 @@ sub complete_details {
     for my $i ( 0 .. $#{$page} ) {
       foreach my $j ( 0 .. $#supported ) {
         if ( $page->[$i]->linkout =~ m/$supported[$j]/ ) {
+	  print STDERR "GoogleScholar complete_details: now trying ",$page->[$i]->linkout,".\n";
           $full_pub = undef;
           eval { $full_pub = $URL_plugin->match( $page->[$i] ) };
           if ($full_pub) {
@@ -409,9 +409,10 @@ sub match {
 
   ( my $self, my $pub ) = @_;
 
-  my $query_doi     = '';
-  my $query_title   = '';
-  my $query_authors = '';
+  my $query_doi      = '';
+  my $query_title    = '';
+  my $query_authors  = '';
+  my $query_authors2 = '';
 
   # First we format the three query strings properly. Besides
   # HTML escaping we remove words that contain non-alphnumeric
@@ -469,6 +470,15 @@ sub match {
       push @tmp, 'author:' . $author->last;
     }
     $query_authors = _EscapeString( join( " ", @tmp ) );
+
+    # make a query string containing at most the first two authors
+    if ( my $tmp_author = shift( @tmp ) ) {
+      $query_authors2 = $tmp_author;
+    }
+    if ( my $tmp_author = shift( @tmp ) ) {
+      $query_authors2 .= ' '. $tmp_author;
+    }
+    $query_authors2 = _EscapeString( $query_authors2 );
   }
 
   # First set preferences (necessary to show BibTeX export links)
@@ -503,6 +513,8 @@ sub match {
       # parse the page and then see if a publication matches
       if ( $pub->title() ) {
         my $page = $self->_parse_googlescholar_page($content);
+	# generate guids
+	$self->_save_page_to_hash($page);
         my $matchedpub = $self->_find_best_hit( $page, $pub );
 
         if ($matchedpub) {
@@ -561,6 +573,7 @@ sub match {
     # we add "&as_vis=1" to exclude citations and get only those links
     # that have stronger support
     my $query_string = "$query_title+$query_authors" . "&as_vis=1";
+    print STDERR "Searching with title and full author list.\n";
     print STDERR "$searchUrl$query_string\n";
 
     # Now let's ask GoogleScholar again with Authors/Title
@@ -578,6 +591,43 @@ sub match {
 
       # parse the page and then see if a publication matches
       my $page = $self->_parse_googlescholar_page($content);
+      # generate guids
+      $self->_save_page_to_hash($page);
+      my $matchedpub = $self->_find_best_hit( $page, $pub );
+      if ($matchedpub) {
+        return $matchedpub;
+      }
+    }
+  }
+
+  # If we are here we failed to a get a candidate hit with
+  # title and full author list search
+  # let's try it with a reduced list of authors
+  if ( $query_title ne '' and $query_authors2 ne '' ) {
+
+    # we add "&as_vis=1" to exclude citations and get only those links
+    # that have stronger support
+    my $query_string = "$query_title+$query_authors2" . "&as_vis=1";
+    print STDERR "Seaching with title and reduced author list.\n";
+    print STDERR "$searchUrl$query_string\n";
+
+    # Now let's ask GoogleScholar again with Authors/Title
+    my $query    = $searchUrl . $query_string;
+    my $response = $browser->get($query);
+    my $content  = $response->content;
+
+    my $error_level = _check_content($content);
+    if ( $error_level == 1 ) {
+      NetError->throw( error => 'Google Scholar blocks queries from this IP.' );
+    }
+
+    # everything is fine we can process this page
+    if ( $error_level == 0 ) {
+
+      # parse the page and then see if a publication matches
+      my $page = $self->_parse_googlescholar_page($content);
+      # generate guids
+      $self->_save_page_to_hash($page);
       my $matchedpub = $self->_find_best_hit( $page, $pub );
       if ($matchedpub) {
         return $matchedpub;
@@ -591,8 +641,9 @@ sub match {
   # to give a significant match
 
   my $count_words = ( $query_title =~ tr/\+// );
-  if ( $query_title ne '' and $count_words > 5 ) {
+  if ( $query_title ne '' and $count_words >= 5 ) {
     my $query_string = "$query_title" . "&as_vis=0";
+    print STDERR "Searching with title only.\n";
     print STDERR "$searchUrl$query_string\n";
 
     # Now let's ask GoogleScholar again with Authors/Title
@@ -610,9 +661,15 @@ sub match {
 
       # parse the page and then see if a publication matches
       my $page = $self->_parse_googlescholar_page($content);
+      # generate guids
+      $self->_save_page_to_hash($page);
       my $matchedpub = $self->_find_best_hit( $page, $pub );
+      print STDERR "AAAAAAA",$matchedpub->title,"\n";
+      print STDERR "AAAAAAA",$matchedpub->authors,"\n";
 
       if ($matchedpub) {
+	print STDERR "AAAAAAA",$matchedpub->title,"\n";
+	print STDERR "AAAAAAA",$matchedpub->authors,"\n";
         return $matchedpub;
       }
     }
@@ -633,13 +690,14 @@ sub _find_best_hit {
     # let's get rid of words that contain none ASCII chars
     # and other bad stuff (often PDF utf-8 issues)
     my @words = ();
-    ( my $tmp_orig_title = $orig_pub->title ) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+    ( my $tmp_orig_title = $orig_pub->title ) =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!|\*)/ /g;
     $tmp_orig_title =~ s/\s+/ /g;
     foreach my $word ( split( /\s+/, $tmp_orig_title ) ) {
       next if ( $word =~ m/([^[:ascii:]])/ );
       next if ( length($word) < 2 );    # skip one letter words
       push @words, $word if ( $word =~ m/^\w+$/ );
     }
+    print STDERR "GS - title publication: $tmp_orig_title\n";
 
     # now we screen each hit and see which one matches best
     my $max_counts = $#words;
@@ -662,13 +720,14 @@ sub _find_best_hit {
 
       # some preprocessing again
       my @words2 = ();
-      $tmp_title =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+      $tmp_title =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!|\*)/ /g;
       $tmp_title =~ s/\s+/ /g;
       foreach my $word ( split( /\s+/, $tmp_title ) ) {
         next if ( $word =~ m/([^[:ascii:]])/ );
         push @words2, $word if ( $word =~ m/^\w+$/ );
       }
       $tmp_title = " " . join( " ", @words2 ) . " ";
+      print STDERR "GS - title hit $i: $tmp_title\n";
 
       # let's check how many of the words in the title match
       my $counts = 0;
@@ -677,6 +736,7 @@ sub _find_best_hit {
 
         #print "$counts || $word || $tmp_title\n";
       }
+      print STDERR "counts: $counts max_counts: $max_counts\n";
 
       if ( $counts > $max_counts ) {
         $max_counts = $counts;
@@ -689,14 +749,16 @@ sub _find_best_hit {
           $best_hit = $i;
         }
       }
-
-      #print "$counts of $max_counts --> $best_hit\n";
     }
 
     # now let's look up the BibTeX record and see if it is really
     # what we are looking for
     if ( $best_hit > -1 ) {
       my $fullpub = $self->complete_details( $google_hits[$best_hit] );
+      print STDERR "Input: ",$orig_pub->title,"\n";
+      print STDERR $orig_pub->authors,"\n";
+      print STDERR "Google Scholar Hit final: ",$fullpub->title,"\n";
+      print STDERR $fullpub->authors,"\n";
 
       #if ( $self->_match_title( $fullpub->title, $orig_pub->title ) ) {
       return $self->_merge_pub( $orig_pub, $fullpub );

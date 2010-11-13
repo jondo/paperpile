@@ -46,6 +46,8 @@ sub match {
   $crawler->driver_file( Paperpile::Utils->path_to( 'data', 'meta-crawler.xml' )->stringify );
   $crawler->load_driver();
 
+  print STDERR "URL Plugin called with ",$pub->best_link,"\n";
+
   my $fullpub = undef;
   eval { $fullpub = $crawler->search_file( $pub->best_link ) };
 
