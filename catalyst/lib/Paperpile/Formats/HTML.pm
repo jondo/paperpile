@@ -187,6 +187,7 @@ sub read {
         case "CITATION_PMID"              { $pmid             = $content }
         case "CITATION_PUBLISHER"         { $publisher        = $content if ( !$publisher ) }
         case "CITATION_AUTHORS"           { push @authors_citation, $content }
+        case "CITATION_AUTHOR"            { push @authors_citation, $content }
         case "CITATION_ABSTRACT"          { $abstract         = $content if ( !$abstract ) }
         case "CITATION_DATE" {
 
