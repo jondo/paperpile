@@ -47,6 +47,7 @@ Paperpile.startupFailure = function(response) {
     icon: Ext.MessageBox.ERROR,
     fn: function(action) {
       if (IS_QT) {
+        QRuntime.setSaveToClose(true);
         QRuntime.closeApp();
       }
     }
@@ -175,6 +176,7 @@ Paperpile.stage0 = function() {
                 icon: Ext.MessageBox.ERROR,
                 fn: function(action) {
                   if (IS_QT) {
+                    QRuntime.setSaveToClose(true);
                     QRuntime.closeApp();
                   }
                 }
@@ -275,6 +277,7 @@ Paperpile.stage1 = function() {
             icon: Ext.MessageBox.ERROR,
             fn: function(action) {
               if (IS_QT) {
+                QRuntime.setSaveToClose(true);
                 QRuntime.closeApp();
               }
             }
