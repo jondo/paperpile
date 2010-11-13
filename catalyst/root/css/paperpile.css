@@ -1746,18 +1746,18 @@ body.custom {
     background-color: transparent;
 }
 .pp-label-panel-vp::-webkit-scrollbar-track-piece {
-    background-color: #eee;
-    -webkit-border-radius: 6px;
+    background-color: #D8D8D8 ;
+    -webkit-border-radius: 0px;
 }
 .pp-label-panel-vp::-webkit-scrollbar-thumb:vertical {
     height: 20px;
-    background-color: #666;
-    -webkit-border-radius: 6px;
+    background-color: #C0C0C0;
+    -webkit-border-radius: 0px;
 }
 .pp-label-panel-vp::-webkit-scrollbar-thumb:horizontal {
     width: 20px;
-    background-color: #666;
-    -webkit-border-radius: 6px;
+    background-color: #C0C0C0;
+    -webkit-border-radius: 0px;
 }
 
 
