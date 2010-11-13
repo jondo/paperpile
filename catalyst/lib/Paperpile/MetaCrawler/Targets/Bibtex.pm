@@ -1,4 +1,3 @@
-
 # Copyright 2009, 2010 Paperpile
 #
 # This file is part of Paperpile
@@ -29,7 +28,7 @@ sub convert {
   my ( $self, $content ) = @_;
 
   my $pub;
-  my $f = Paperpile::Formats::Bibtex->new( );
+  my $f = Paperpile::Formats::Bibtex->new();
 
   # If the BIBTEX entry is embedded in HTML, we try to
   # parse it from the HTML
@@ -61,7 +60,7 @@ sub convert {
     }
     if ( $bibtex ne '' ) {
       my ( $fh, $file_name ) = tempfile();
-      print $fh $bibtex;
+      print $fh _check_bibtex($bibtex);
       close($fh);
 
       $f->file($file_name);
@@ -73,7 +72,7 @@ sub convert {
 
     # regular case, we just parse the content
     my ( $fh, $file_name ) = tempfile();
-    print $fh $content;
+    print $fh _check_bibtex($content);
     close($fh);
 
     $f->file($file_name);
@@ -84,3 +83,58 @@ sub convert {
 
   return $pub->[0];
 }
+
+sub _check_bibtex {
+  my $bibtex = $_[0];
+
+  # let's do a quick check if the bibtex is okay
+  my $braves_level_left  = _count_braces_left($bibtex);
+  my $braves_level_right = _count_braces_right($bibtex);
+  my $nr_entries         = _count_entries($bibtex);
+
+  if ( $braves_level_right == $braves_level_left - 1 and $nr_entries == 1 ) {
+
+    # add closing one
+    $bibtex .= "}";
+  }
+
+  return $bibtex;
+}
+
+sub _count_braces_left {
+  my $string = $_[0];
+
+  my $count = 0;
+  while ( $string =~ m/(?<!\\)\{/g ) {
+    $count++;
+  }
+
+  return $count;
+
+}
+
+sub _count_braces_right {
+  my $string = $_[0];
+
+  my $count = 0;
+  while ( $string =~ m/(?<!\\)\}/g ) {
+    $count++;
+  }
+
+  return $count;
+}
+
+sub _count_entries {
+  my $string = $_[0];
+
+  my $count = 0;
+  while ( $string =~
+    m/@(article|book|booklet|conference|inbook|incollection|inproceedings|manual|mastersthesis|misc|phdthesis|proceedings|techreport|unpublished|comment|string)/g
+    ) {
+    $count++;
+  }
+
+  return $count;
+}
+
+1;
