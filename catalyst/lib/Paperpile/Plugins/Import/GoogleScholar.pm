@@ -214,6 +214,9 @@ sub complete_details {
       $full_pub->citekey('');
 
       # Update plugin _hash with new data
+      if ( ! defined $pub->guid ) {
+	$pub->create_guid;
+      }
       $full_pub->guid( $pub->guid );
       $self->_hash->{ $pub->guid } = $full_pub;
 
@@ -458,8 +461,10 @@ sub match {
 
       # words that contain non-alphnumeric and non-ascii
       # characters are removed
+      next if ( ! defined $author->last );
       next if ( $author->last =~ m/[^\w\s-]/ );
       next if ( $author->last =~ m/[^[:ascii:]]/ );
+      next if ( $author->last eq '' );
 
       push @tmp, 'author:' . $author->last;
     }
@@ -574,7 +579,6 @@ sub match {
       # parse the page and then see if a publication matches
       my $page = $self->_parse_googlescholar_page($content);
       my $matchedpub = $self->_find_best_hit( $page, $pub );
-
       if ($matchedpub) {
         return $matchedpub;
       }
