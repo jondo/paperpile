@@ -966,7 +966,6 @@ sub format_pattern {
   $pattern=~s/_$//; # remove underscores from end
   $pattern=~s/\/_/\//g; # remove underscores from paths: path/_unnamed_2000
 
-
   return $pattern;
 
 }

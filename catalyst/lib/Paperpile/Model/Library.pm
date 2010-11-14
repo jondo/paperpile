@@ -74,6 +74,8 @@ sub insert_pubs {
   if ($user_library) {
     my @existing;
     foreach my $pub (@$pubs) {
+      # For now we ignore pre-set keys and always generate our own keys on insert
+      $pub->citekey(undef);
       my $key = $self->generate_unique_key( $pub, \@existing, $dbh );
       push @existing, $key;
     }

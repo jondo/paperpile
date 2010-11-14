@@ -117,7 +117,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
         Paperpile.main.setSetting('bibtex', currentSettings);
         Paperpile.status.updateMsg({
           msg: (checked) ? 'BibTeX mode active: advanced BibTeX functions are now available' : 'BibTeX mode inactive: advanced BibTeX functions have been disabled',
-          duration: 5
+          duration: 4
         });
 
         if (checked) {
