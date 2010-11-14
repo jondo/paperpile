@@ -823,6 +823,12 @@ sub format_pattern {
     @authors = ('_unnamed_');
   }
 
+  # Make sure there are no slashes or backslashes in the author names
+  foreach my $i (0..$#authors){
+    $authors[$i]=~s!/!_!g;
+    $authors[$i]=~s!\\!_!g;
+  }
+
   my $first_author = $authors[0];
   my $last_author  = $authors[$#authors];
 
@@ -833,9 +839,16 @@ sub format_pattern {
   my $YYYY = $self->year;
   my $YY   = $YYYY;
 
-
-
   my $title = $self->title;
+
+  # Make sure there are no slashes or backslashes in any of the other fields
+  $title =~ s!/!_!g;
+  $YY    =~ s!/!_!g;
+  $YYYY  =~ s!/!_!g;
+  $title =~ s!\\!_!g;
+  $YY    =~ s!\\!_!g;
+  $YYYY  =~ s!\\!_!g;
+
 
   my @title_words = split( /\s+/, $title );
 
@@ -937,34 +950,33 @@ sub format_pattern {
   $pattern =~ s/\W//g;
   $pattern =~ s{__SLASH__}{/}g;
 
-
-  if ($pattern=~/(unnamed__undated|undated__unnamed)/){
+  if ( $pattern =~ /(unnamed__undated|undated__unnamed)/ ) {
 
     my $subst;
 
     my $max = $#title_words;
-    $max = 3 if $max>=3;
+    $max = 3 if $max >= 3;
 
-    my $title_string = join( '_', @title_words[ 0 .. $max] );
+    my $title_string = join( '_', @title_words[ 0 .. $max ] );
 
-    if ($title_string){
-      if (not $pattern=~/$title_string/){
-        $subst=$title_string;
+    if ($title_string) {
+      if ( not $pattern =~ /$title_string/ ) {
+        $subst = $title_string;
       } else {
-        $subst='this';
+        $subst = 'this';
       }
     } else {
       $subst = 'incomplete_reference';
     }
 
-    $pattern=~s/(unnamed__undated|undated__unnamed)/$subst/;
+    $pattern =~ s/(unnamed__undated|undated__unnamed)/$subst/;
   }
 
   # Fix underscores
-  $pattern=~s/__/_/g; # merge double underscores
-  $pattern=~s/^_//; # remove underscores from beginning
-  $pattern=~s/_$//; # remove underscores from end
-  $pattern=~s/\/_/\//g; # remove underscores from paths: path/_unnamed_2000
+  $pattern =~ s/__/_/g;      # merge double underscores
+  $pattern =~ s/^_//;        # remove underscores from beginning
+  $pattern =~ s/_$//;        # remove underscores from end
+  $pattern =~ s/\/_/\//g;    # remove underscores from paths: path/_unnamed_2000
 
   return $pattern;
 
