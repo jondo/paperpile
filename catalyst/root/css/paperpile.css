@@ -1466,6 +1466,7 @@ div:hover.pp-grid-sort-item {
     font: normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     color:gray;
     margin: 8px;
+    word-wrap: break-word;
 }
 
 .pp-settings-example code {

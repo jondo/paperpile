@@ -22,7 +22,7 @@
 
 <tr>
 <td>
-  <div class="pp-box pp-box-style1 pp-box-bottom pp-box-settings" style="height:350;width:400;">
+  <div class="pp-box pp-box-style1 pp-box-bottom pp-box-settings" style="height:380;width:400;">
     <h3>Citation key pattern <span id="key_pattern_tooltip" class="pp-tooltip-link">?</span></h3>
 
     <div id="key_pattern">
@@ -52,7 +52,7 @@
 </td>
 
 <td>
-  <div class="pp-box pp-box-style2" style="height:350; width: 340px;">
+  <div class="pp-box pp-box-style2" style="height:380; width: 340px;">
     <h2>Patterns</h2>
     <p>You can use the following keywords in your pattern:</p>
     <dl class="pp-pattern-help">
