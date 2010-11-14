@@ -101,6 +101,8 @@ sub read {
       # 1:1 map between standard BibTeX fields and Paperpile fields
       if ( $built_in{$field} ) {
         my $content = $entry->field($field);
+	# sometimes people code UTF-8 in bibtex, we have to decode it here
+	$content = decode_utf8($content);
         if ( $field eq 'pages' ) {
           $content =~ s/--/-/g;
           $content =~ s/(.*)(\(\d+\))$/$1/;    # remove number of pages in braces
@@ -122,6 +124,9 @@ sub read {
 
         my $names = join( ' and ', $entry->$field );
 
+	# sometimes people code UTF-8 in bibtex, we have to decode it here
+	$names = decode_utf8($names);
+
         if ( $field eq 'author' ) {
           $data->{authors} = $names;
         }
@@ -142,6 +147,8 @@ sub read {
         if ( $field =~ /(annote|comments?)/ ) {
 
           my $value = $entry->field($field);
+	  # sometimes people code UTF-8 in bibtex, we have to decode it here
+	  $value = decode_utf8($value);
 
           # Specifically handle CiteULike BibTex
           if ( $field eq 'comment' ) {
