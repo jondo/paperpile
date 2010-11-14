@@ -652,11 +652,13 @@ sub auto_complete {
     PaperpileError->throw($caught_error);
   }
 
-  my $name = $success_plugin;
-
-  $name = 'publisher site' if ($name eq 'URL');
-
-  return $name;
+  if ($success_plugin){
+    my $name = $success_plugin;
+    $name = 'publisher site' if ($name eq 'URL');
+    return $name;
+  } else {
+    return undef;
+  }
 
 }
 
