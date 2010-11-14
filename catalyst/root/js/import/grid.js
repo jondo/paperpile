@@ -1059,7 +1059,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     '  <div class="ref-actions" style="float:right;">',
     '    <img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
     '  </div>',
-    '  <div style="height: 5px;"></div>',
+    '  <div style="margin:-5px 0px; clear:both;"></div>',
     '    <dl>',
     '      <tpl if="citekey"><dt>Key: </dt><dd class="pp-word-wrap">{citekey}</dd></tpl>',
     '      <dt>Type: </dt><dd>{_pubtype}</dd>',
