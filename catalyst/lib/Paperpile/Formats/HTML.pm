@@ -115,7 +115,30 @@ sub read {
             : Paperpile::Library::Author->new()->parse_freestyle($content)->bibtex();
           push @authors_contributor, $tmp;
         }
+        case "DC.CONTRIBUTOR.PERSONALNAME" {
+          $content =~ s/\./. /g;
+          $content =~ s/\s+/ /g;
+
+          # reverse string if necessary
+          if ( $content =~ m/\s[A-Z]{1,2}$/ and $content !~ m/,/ ) {
+            my @tmp_author = split( /\s/, $content );
+            $content = join( ' ', reverse(@tmp_author) );
+          }
+
+          my $tmp =
+            ( $content =~ m/,/ )
+            ? $content
+            : Paperpile::Library::Author->new()->parse_freestyle($content)->bibtex();
+          push @authors_contributor, $tmp;
+        }
         case "DC.IDENTIFIER" {
+          if ( $content =~ m/^10\./ ) {
+            $doi = $content;
+          } elsif ( $content =~ m/(.*)(10\.\d{4}.+)/ ) {
+            $doi = $2;
+          }
+        }
+        case "DC.IDENTIFIER.DOI" {
           if ( $content =~ m/^10\./ ) {
             $doi = $content;
           } elsif ( $content =~ m/(.*)(10\.\d{4}.+)/ ) {
@@ -136,6 +159,21 @@ sub read {
             $month = $2 if ( !$month );
           }
         }
+        case "DC.DATE.CREATED" {
+          if ( $content =~ m/(\d{4})-(\d{1,2})-(\d{1,2})/ ) {
+            $year  = $1 if ( !$year );
+            $month = $2 if ( !$month );
+          }
+          if ( $content =~ m/(\d{1,2})\/(\d{1,2})\/(\d{4})/ ) {
+            $year  = $3 if ( !$year );
+            $month = $1 if ( !$month );
+          }
+          if ( $content =~ m/(^\d{4})-(\d{1,2})$/ ) {
+            $year  = $1 if ( !$year );
+            $month = $2 if ( !$month );
+          }
+        }
+
         case "DC.DESCRIPTION" { $abstract = $content }
         case "DC.SOURCE" {
           if ( $content =~ m/(.*),\sVol\.\s(\d+),\sIssue\s(\d+),\spp\.\s(\d+)-(\d+)/ ) {
@@ -145,10 +183,10 @@ sub read {
             $start_page = $4 if ( !$start_page );
             $end_page   = $5 if ( !$end_page );
           }
-
         }
         case "DC.SOURCE.ISSUE"  { $issue  = $content }
         case "DC.SOURCE.VOLUME" { $volume = $content }
+	case "DC.SOURCE.ISSN"   { $ISSN   = $content }
 
         case "PRISM.PUBLICATIONNAME" { $journal = $content }
         case "PRISM.VOLUME"          { $volume  = $content }
@@ -366,6 +404,9 @@ sub read {
   }
   if ( $start_page and !$end_page ) {
     $pages = "$start_page";
+  }
+  if ( $pages ) {
+    $pages =~ s/pp\.\s+//; 
   }
 
   if ($volume) {
