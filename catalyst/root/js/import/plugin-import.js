@@ -160,7 +160,7 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
           '      <li class="pp-action pp-action-add"> <a  href="#" class="pp-textlink" action="import-ref">Import</a> </li>',
           '    </tpl>',
           '    <tpl if="numImported==numSelected">',
-          '    <li> Selection is already imported</li>',
+          '    <li> Selected references have been imported</li>',
           '    </tpl>',
           '    </ul>',
           '  </div>',
