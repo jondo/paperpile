@@ -231,7 +231,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       target: 'lookup-tooltip',
       minWidth: 50,
       maxWidth: 300,
-      html: 'Get a complete reference from Title and Author(s) or look-up DOI, Pubmed ID or ArXiv ID.',
+      html: 'Find complete reference for Title and Author(s). To lookup a DOI, Pubmed ID or ArXiv ID click "Add identifier" first.',
       anchor: 'left',
       showDelay: 0,
       hideDelay: 0
