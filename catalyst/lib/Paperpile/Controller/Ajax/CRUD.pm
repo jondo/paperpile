@@ -361,9 +361,14 @@ sub update_notes : Local {
   my $guid = $c->request->params->{guid};
   my $html = $c->request->params->{html};
 
+  # If input field in rich text editor is empty it still contains a
+  # "<br>"
+  $html = '' if $html eq '<br>';
+
   my $dbh = $c->model('Library')->dbh;
 
   my $value = $dbh->quote($html);
+
   $dbh->do("UPDATE Publications SET annote=$value WHERE guid='$guid'");
 
   my $tree      = HTML::TreeBuilder->new->parse_content($html);
