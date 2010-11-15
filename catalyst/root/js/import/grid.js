@@ -1055,7 +1055,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getDetailsTemplate: function() {
     return[
     '<div id="main-container-{id}">',
-    '<div class="pp-box pp-box-top pp-box-style2">',
+    '<div class="pp-box pp-box-top pp-box-side-panel pp-box-style2">',
     '  <div class="ref-actions" style="float:right;">',
     '    <img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
     '  </div>',
