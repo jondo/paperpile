@@ -1604,3 +1604,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Mon Nov 15 22:17:51 2010: C<Module> L<BibTeX::Parser|BibTeX::Parser>
+
+=over 4
+
+=item *
+
+C<installed into: /home/agruber/WORK/paperpile/catalyst/perl5/linux32/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.4>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

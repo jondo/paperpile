@@ -205,6 +205,7 @@ sub _split_author_field {
 
   # real world Bibtex data can be a mess
   # we do some cleaning of standard typos
+  $field =~ s/\s+AND\s+/ and /g;
   $field =~ s/\sand\sand\s/ and /g;
   $field =~ s/\sand(?=[A-Z])/ and /g;
   $field =~ s/(?<=\.)and\s/ and /g;
