@@ -19,6 +19,7 @@
 package Paperpile::MetaCrawler::Targets::Default;
 use Moose;
 use Paperpile::Formats::HTML;
+use Paperpile::MetaCrawler::Targets::Bibtex;
 use Paperpile::Plugins::Import::PubMed;
 use Paperpile::Utils;
 
@@ -60,16 +61,29 @@ sub convert {
     }
   }
 
-  # If we have found a pubmed ID we call the pubmed interface
-  if ( $pub->pmid() ) {
-    my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
-    return $PubMedPlugin->_fetch_by_pmid( $pub->pmid() );
+  if ( !$pub->title ) {
+    my $b = new Paperpile::MetaCrawler::Targets::Bibtex;
+    $pub = $b->convert($content);
   }
 
-  if ( !$pub->title ) {
+  # If we have found a pubmed ID we call the pubmed interface
+  if ( $pub ) {
+    if ( $pub->pmid() ) {
+      my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
+      return $PubMedPlugin->_fetch_by_pmid( $pub->pmid() );
+    }
+  }
+
+  if ( $pub ) {
+    if ( !$pub->title ) {
+      CrawlerUnknownSiteError->throw(error=>'No bibliographic information found with this URL.',
+				     url => $content_URL,
+				    );
+    }
+  } else {
     CrawlerUnknownSiteError->throw(error=>'No bibliographic information found with this URL.',
-                                   url => $content_URL,
-                                  );
+				   url => $content_URL,
+				  );
   }
 
   return $pub;

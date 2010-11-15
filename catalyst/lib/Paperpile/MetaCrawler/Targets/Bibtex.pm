@@ -53,7 +53,10 @@ sub convert {
           $count_opening++ if ( $tmp[$k] eq '{' );
           $count_closing++ if ( $tmp[$k] eq '}' );
           $bibtex .= $tmp[$k];
-          last if ( $count_opening == $count_closing );
+	  if ( $count_opening == $count_closing ) {
+	    $bibtex =~ s/<a\s+href.*<\/a>//;
+	    last;
+	  }
         }
         last;
       }
