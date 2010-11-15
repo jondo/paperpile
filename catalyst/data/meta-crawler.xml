@@ -606,7 +606,8 @@
 
   <rule target="Ris">
     <pattern>
-      <rewrite>!(.*)(S\d+.*\d)!http://www.cell.com/AJHG/citationexport?format=cite-abs&amp;citation-type=RIS&amp;pii=$2&amp;action=download!</rewrite>
+      <match>!.*href=&quot;([^&quot;]+citationexport?[^quot;]+)&quot;.*</match>
+      <rewrite>!([^&quot;]+)!$1&amp;format=cite-abs&amp;citation-type=RIS&amp;action=download!</rewrite>
     </pattern>
   </rule>
   
