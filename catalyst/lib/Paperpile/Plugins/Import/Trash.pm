@@ -65,8 +65,11 @@ sub page {
 
   my $page;
 
-  $page =
-    $model->fulltext_search( $self->query, $offset, $limit, $self->order, 1 );
+
+  my $do_order = ( $self->total_entries < 5000 ) ? 1 : 0;
+  $page = $model->fulltext_search( $self->query, $offset, $limit, $self->order, 1, $do_order );
+  
+
 
   $self->_save_page_to_hash($page);
 
