@@ -167,10 +167,16 @@ sub read {
 
         if ( $field =~ /(tags|labels|keywords)/ ) {
 
-          # Expects a comma separated list of tags, might need to be
-          # extended with a heuristic if a different seperator is
-          # used.
-          $data->{labels_tmp} = $entry->field($field);
+          my $tags = $entry->field($field);
+
+          # Delimiter is generally either comma or semicolon. We
+          # internally use commas, so we simply convert semicolons to
+          # commas (ignoring more complex scenarios of having both
+          # commas and semicolons)
+
+          $tags=~s/;/,/g;
+
+          $data->{labels_tmp} = $tags;
           next;
         }
 

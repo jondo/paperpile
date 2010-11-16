@@ -115,9 +115,11 @@ sub insert_pubs {
     # libary we save the labels_tmp field upon insert.
     if ( $user_library && $pub->labels_tmp ) {
       my @guids;
+      my %seen; # Make sure that the same label does not occur twice in labels_tmp
       foreach my $label ( split( /\s*,\s*/, $pub->labels_tmp ) ) {
-        if ( $label_map->{$label} ) {
+        if ( $label_map->{$label} && !$seen{$label} ) {
           push @guids, $label_map->{$label};
+          $seen{$label} = 1;
         }
       }
       $pub->labels( join( ',', @guids ) );
@@ -1399,7 +1401,6 @@ sub insert_labels {
         $self->update_collection_fields( $map{$label}, {'hidden' => 1} );
       }
     }
-
   }
 
   return \%map;
