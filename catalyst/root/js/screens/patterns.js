@@ -234,17 +234,16 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             // database has only be renamed but we
             // update also in this case.
             if (old_library_db != Paperpile.main.globalSettings.library_db) {
-              Paperpile.main.tree.getRootNode().reload();
-              Paperpile.main.tree.expandAll();
+              //Paperpile.main.tree.getRootNode().reload();
+              //Paperpile.main.tree.expandAll();
 
               // Note that this as async. Labels
               // should be loaded before results for
               // grid appear but it is not
               // guaranteed.
-              Ext.StoreMgr.lookup('label_store').reload();
+              //Ext.StoreMgr.lookup('label_store').reload();
 
               Paperpile.main.tabs.removeAll();
-
               Paperpile.main.tabs.newDBtab('');
               Paperpile.main.tabs.setActiveTab(0);
               Paperpile.main.tabs.doLayout();
