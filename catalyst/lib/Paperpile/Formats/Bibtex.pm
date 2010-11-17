@@ -101,13 +101,15 @@ sub read {
       # 1:1 map between standard BibTeX fields and Paperpile fields
       if ( $built_in{$field} ) {
         my $content = $entry->field($field);
-	# sometimes people code UTF-8 in bibtex, we have to decode it here
-	$content = decode_utf8($content);
+
+        # sometimes people code UTF-8 in bibtex, we have to decode it here
+        $content = decode_utf8($content);
         if ( $field eq 'pages' ) {
           $content =~ s/--/-/g;
           $content =~ s/(.*)(\(\d+\))$/$1/;    # remove number of pages in braces
         }
         if ( $field eq 'doi' ) {
+
           # Normalize doi to just something like 10.1038/nature06340
           # without urls or anything else.
           $content =~ s/^doi://;
@@ -122,10 +124,37 @@ sub read {
       # Authors/Editors
       elsif ( $field eq 'author' || $field eq 'editor' ) {
 
-        my $names = join( ' and ', $entry->$field );
+        # get all authors as BibTeX::Parser::Author objects an process each
+        # object separately, they are mapped to Paperpile::Library::Author objects
+        my @authors_tmp = ();
 
-	# sometimes people code UTF-8 in bibtex, we have to decode it here
-	$names = decode_utf8($names);
+        @authors_tmp = $entry->author if ( $field eq 'author' );
+        @authors_tmp = $entry->editor if ( $field eq 'editor' );
+
+        my @tmp = ();
+        foreach my $author_tmp (@authors_tmp) {
+          my $firstname  = $author_tmp->first;
+          my $von        = $author_tmp->von;
+          my $lastname   = $author_tmp->last;
+          my $jr         = $author_tmp->jr;
+          my $collective = $author_tmp->collective;
+
+          my $author = Paperpile::Library::Author->new();
+          if ($collective) {
+            $author->collective($collective);
+          } else {
+            $author->first($firstname) if ($firstname);
+            $author->last($lastname)   if ($lastname);
+            $author->von($von)         if ($von);
+            $author->jr($jr)           if ($jr);
+          }
+          push @tmp, $author->bibtex();
+        }
+
+        my $names = join( " and ", @tmp );
+
+        # sometimes people code UTF-8 in bibtex, we have to decode it here
+        $names = decode_utf8($names);
 
         if ( $field eq 'author' ) {
           $data->{authors} = $names;
@@ -147,8 +176,9 @@ sub read {
         if ( $field =~ /(annote|comments?)/ ) {
 
           my $value = $entry->field($field);
-	  # sometimes people code UTF-8 in bibtex, we have to decode it here
-	  $value = decode_utf8($value);
+
+          # sometimes people code UTF-8 in bibtex, we have to decode it here
+          $value = decode_utf8($value);
 
           # Specifically handle CiteULike BibTex
           if ( $field eq 'comment' ) {
@@ -174,7 +204,7 @@ sub read {
           # commas (ignoring more complex scenarios of having both
           # commas and semicolons)
 
-          $tags=~s/;/,/g;
+          $tags =~ s/;/,/g;
 
           $data->{labels_tmp} = $tags;
           next;
@@ -210,29 +240,29 @@ sub read {
         if ( $field =~ /Bdsk-File-\d+/i ) {
 
           my $dir = tempdir( CLEANUP => 1 );
-          my ($fh, $tmp_file) = tempfile( DIR => $dir );
+          my ( $fh, $tmp_file ) = tempfile( DIR => $dir );
 
           # Get current directory of BibTeX file. All attachemnts seem
           # to be relative to this file.
-          my ( $dummy, $base_dir, $dummy1 ) = splitpath($self->file);
+          my ( $dummy, $base_dir, $dummy1 ) = splitpath( $self->file );
 
           # First check if the "plutil" tool is available. This
           # implicitly checks whether we are on OSX.
           my $check = `which plutil`;
           chomp($check);
-          if ($check eq '/usr/bin/plutil'){
+          if ( $check eq '/usr/bin/plutil' ) {
 
             # First write the decoded plist file into a temporary file.
-            print $fh decode_base64($entry->field($field)) || die("Could not write to tmp file");
+            print $fh decode_base64( $entry->field($field) ) || die("Could not write to tmp file");
 
             # Then convert the binary plist format to readable xml.
             my $xml = `plutil -convert xml1 $tmp_file -o -`;
 
             # I don't understand the XML format, so I just parse all
             # <string> tags and see if they contain a readable file
-            while ($xml =~/<string>(.*?)<\/string>/mgi){
-              my $file = catfile($base_dir, $1);
-              if (-r $file){
+            while ( $xml =~ /<string>(.*?)<\/string>/mgi ) {
+              my $file = catfile( $base_dir, $1 );
+              if ( -r $file ) {
                 if ( ( $file =~ /\.pdf/i ) and ( !$pdf ) ) {
                   $pdf = $file;
                   next;
@@ -248,9 +278,9 @@ sub read {
         }
 
         # Warn only once for an unsupported field.
-        if (!$warnings{$field}){
+        if ( !$warnings{$field} ) {
           print STDERR "Field $field not handled.\n";
-          $warnings{$field}=1;
+          $warnings{$field} = 1;
         }
       }
 

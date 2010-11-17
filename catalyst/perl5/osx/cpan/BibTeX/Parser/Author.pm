@@ -116,6 +116,17 @@ sub jr {
   shift->_get_or_set_field( 3, @_ );
 }
 
+=head2 collective
+
+Set or get collective name.
+
+=cut
+
+sub collective {
+  shift->_get_or_set_field( 4, @_ );
+}
+
+
 sub _get_name_parts {
   my $name = $_[0];
 
@@ -172,8 +183,9 @@ sub split {
   $name =~ s/^\s*(.*)\s*$/$1/s;
 
   # everything is totally enclosed in curly brackets
+  # treat it as collective name
   if ( $name =~ m/^\{([^\{\}]+)\}$/ ) {
-    return ( undef, undef, $1, undef );
+    return ( undef, undef, undef, undef, $1 );
   }
 
   # This simple split does not work, because
@@ -201,7 +213,7 @@ sub split {
 
   if ( $#parts == -1 ) {
     # nothing in the string
-    return ( undef, undef, undef, undef );
+    return ( undef, undef, undef, undef, undef );
   } elsif ( $#parts == 0 ) {    # name without comma
     my @name_parts = _get_name_parts($name);
 
@@ -224,26 +236,26 @@ sub split {
       }
 
       if (@name_parts) {
-        return ( $first, $von, join( " ", @name_parts ), undef );
+        return ( $first, $von, join( " ", @name_parts ), undef, undef );
       } else {
-        return ( undef, undef, $name, undef );
+        return ( undef, undef, $name, undef, undef );
       }
     } else {
       # regular case
       my $last = pop @name_parts;
       my $first = join(" ", @name_parts);
-      return ( $first, undef, $last, undef );
+      return ( $first, undef, $last, undef, undef );
     }
 
   } elsif ( $#parts == 1 ) {
     my @von_last_parts = _get_name_parts($parts[0]);
     my $von;
     # von part are lowercase words
-    while ( lc( $von_last_parts[0] ) eq $von_last_parts[0] ) {
+    while ( $von_last_parts[0] =~ m/^[a-z]/ ) {
       last if ( ! $von_last_parts[0] );
       $von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
     }
-    return ( $parts[1], $von, join( " ", @von_last_parts ), undef );
+    return ( $parts[1], $von, join( " ", @von_last_parts ), undef, undef );
   } else {
     my @von_last_parts = _get_name_parts($parts[0]);
     my $von;
@@ -252,7 +264,7 @@ sub split {
     while ( lc( $von_last_parts[0] ) eq $von_last_parts[0] ) {
       $von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
     }
-    return ( $parts[2], $von, join( " ", @von_last_parts ), $parts[1] );
+    return ( $parts[2], $von, join( " ", @von_last_parts ), $parts[1], undef );
   }
 
 }
