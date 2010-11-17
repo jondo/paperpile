@@ -1146,6 +1146,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   deleteCollection: function() {
     var node = this.lastSelectedNode;
 
+    if (node.type === 'LABEL' && 
+        (node.name === 'Incomplete')||(node.name === 'Review')){
+      Paperpile.status.updateMsg({
+        type: 'info',
+        msg: '"'+node.name+'"'+' is a reserved label used by Paperpile and cannot be deleted.',
+        fade: true,
+        duration: 3.5
+      });
+      return;
+    }
+
     Paperpile.Ajax({
       url: '/ajax/crud/delete_collection',
       params: {

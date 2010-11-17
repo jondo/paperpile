@@ -898,17 +898,11 @@ sub set_default_collections {
   my $guid2 = Data::GUID->new->as_hex;
   $guid2 =~ s/^0x//;
 
-  my $guid3 = Data::GUID->new->as_hex;
-  $guid3 =~ s/^0x//;
-
   $self->dbh->do(
-    "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid1', 'Important','LABEL','ROOT',0,'11',0);"
+    "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid1', 'Review','LABEL','ROOT',1,'22',0);"
   );
   $self->dbh->do(
-    "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid2', 'Review','LABEL','ROOT',1,'22',0);"
-  );
-  $self->dbh->do(
-    "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid3', 'Incomplete','LABEL','ROOT',2,'0',0);"
+    "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid2', 'Incomplete','LABEL','ROOT',2,'0',0);"
   );
 
 }
