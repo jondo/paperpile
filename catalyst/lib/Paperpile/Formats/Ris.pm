@@ -121,10 +121,14 @@ sub read {
                     $data->{title} = $d;
                 }
                 case 'TI' {    # TODO: some title, don't know what TI stands for
-                    $data->{title} = $d;
+                    if ( !exists $data->{title} ) {
+                        $data->{title} = $d;
+                    }
                 }
                 case 'CT' {    # TODO: chapter title?
-                    $data->{title} = $d;
+                    if ( !exists $data->{title} ) {
+                        $data->{title} = $d;
+                    }
                 }
                 case 'BT' {    # book title
                     $data->{booktitle} = $d;
@@ -156,20 +160,13 @@ sub read {
                     push @authors, $d;
                 }
                 case 'Y1' {    # primary date
-                    ( $data->{year}, $data->{month}, $data->{day}, $tmp_note ) =
-                      _parse_date($d);
-                    _add_to_note( $data, $tmp_note ) if ( $tmp_note ne '' );
-
+                    _handle_dates( $data, $d );
                 }
                 case 'PY' {    # primary date (year)
-                    ( $data->{year}, $data->{month}, $data->{day}, $tmp_note ) =
-                      _parse_date($d);
-                    _add_to_note( $data, $tmp_note ) if ( $tmp_note ne '' );
+                    _handle_dates( $data, $d );
                 }
                 case 'Y2' {    # secondary date, TODO: purpose?
-                    ( $data->{year}, $data->{month}, $data->{day}, $tmp_note ) =
-                      _parse_date($d);
-                    _add_to_note( $data, $tmp_note ) if ( $tmp_note ne '' );
+                    _handle_dates( $data, $d );
                 }
                 case 'N1' {    # notes can be different things...
                     if ( _is_doi($d) ) {
@@ -340,6 +337,133 @@ sub read {
     return [@output];
 }
 
+# write ris data to file
+sub write {
+    my ($self) = @_;
+
+    # map of paperpile types to ris types
+    my %types = (
+        'ARTICLE'     => 'JOUR',
+        'BOOK'        => 'BOOK',
+        'INBOOK'      => 'CHAP',
+        'PROCEEDINGS' => 'CONF',
+        'PHDTHESIS'   => 'THES',
+        'TECHREPORT'  => 'RPRT',
+        'UNPUBLISHED' => 'UNPB'
+    );
+
+    open( OUT, ">" . $self->file )
+      || FileWriteError->throw(
+        error => "Could not write to file " . $self->file );
+
+    foreach my $pub ( @{ $self->data } ) {
+        my @output;    # collect output data
+                       # nested array (array of arrays)
+                       # each entry is a key/value pair
+
+        # pubtype
+        push @output, [ 'TY', $pub->{pubtype} ]
+          if ( $pub->{pubtype} );
+
+        # title
+        push @output, [ 'T1', $pub->{title} ]
+          if ( $pub->{title} );
+
+        # booktitle
+        push @output, [ 'BT', $pub->{booktitle} ]
+          if ( $pub->{booktitle} );
+
+        # series title
+        push @output, [ 'T3', $pub->{series} ]
+          if ( $pub->{series} );
+
+        # authors
+        if ( $pub->{authors} ) {
+            my @auth = split / and /, $pub->{authors};
+            foreach my $name (@auth) {
+                push @output, [ 'AU', $name ];
+            }
+        }
+
+        # editors
+        if ( $pub->{editors} ) {
+            my @edit = split / and /, $pub->{editors};
+            foreach my $name (@edit) {
+                push @output, [ 'ED', $name ];
+            }
+        }
+
+        # date, as YYYY/MM/DD
+        my $date = '';
+        $date .= $pub->{year}        if ( $pub->{year} );
+        $date .= '/' . $pub->{month} if ( $pub->{month} );
+        $date .= '/' . $pub->{day}   if ( $pub->{day} );
+        push @output, [ 'Y1', $date ] if ( $date ne '' );
+
+        # note
+        push @output, [ 'N1', $pub->{note} ] if ( $pub->{note} );
+
+        # abstract
+        push @output, [ 'AB', $pub->{abstract} ] if ( $pub->{abstract} );
+
+        # keywords
+        if ( $pub->{keywords} ) {
+            my @kw = split /;/, $pub->{keywords};
+            foreach my $keyw (@kw) {
+                push @output, [ 'KW', $keyw ];
+            }
+        }
+
+        # now we have all data and can output them
+        _print_ris( \*OUT, \@output );
+    }
+
+    close OUT;
+}
+
+# dates are "complicated", since we have different date tags in ris
+# e.g.
+# Y1  - 1990///6th Annual
+# Y2  - 1990/6/20
+# but it can also happen that Y1 and Y2 contain different dates.
+sub _handle_dates {
+    my $data_ptr = shift;
+    my $date     = shift;
+
+    my ( $tmp_year, $tmp_month, $tmp_day, $tmp_note ) = _parse_date($date);
+    my $newdate = '';
+    $newdate .= $tmp_year        if ($tmp_year);
+    $newdate .= '/' . $tmp_month if ($tmp_month);
+    $newdate .= '/' . $tmp_day   if ($tmp_day);
+
+    my $olddate = '';
+    $olddate .= $data_ptr->{year}        if ( $data_ptr->{year} );
+    $olddate .= '/' . $data_ptr->{month} if ( $data_ptr->{month} );
+    $olddate .= '/' . $data_ptr->{day}   if ( $data_ptr->{day} );
+
+    if ( length $newdate > length $olddate ) {    #is the new one more complete?
+        $data_ptr->{year}  = $tmp_year if ($tmp_year);
+        $data_ptr->{month} = $tmp_month if ($tmp_month);
+        $data_ptr->{day}   = $tmp_day if ($tmp_day);
+    }
+
+    _add_to_note( $data_ptr, $tmp_note )
+      if ( $tmp_note ne '' );
+}
+
+# just an output routine
+# takes the data which we have collected in an array of arrays
+# and prints them using a given filehandle
+sub _print_ris {
+    my $fh = shift;    # the filehandle
+    my $a  = shift;    # the nested array
+
+    foreach my $entry ( @{$a} ) {    # for each tag/value pair
+        print $fh $entry->[0] . '  - ' . $entry->[1] . "\n";
+    }
+    print $fh "ER  - \n\n";          # end tag, must always be written
+}
+
 # test if argument is an issn
 # an issn is a 4 digit number, followed by '-', and then 3 digits, followed by a digit or an X
 sub _is_issn {
@@ -386,7 +510,7 @@ sub _add_to_note {
 
     if ( exists $data_ptr->{note} ) {
         $data_ptr->{note} .= '; ' . $note;
-	print STDERR  $data_ptr->{note};
+        print STDERR $data_ptr->{note};
     }
     else {
         $data_ptr->{note} = $note;
@@ -398,11 +522,10 @@ sub _parse_date {
     my $string = shift;
 
     my @ret;
-    if ( $string =~ /(.*)\/(.*)\/(.*)\/(.*)/ ) {    # full date
-        ( $ret[0], $ret[1], $ret[2], $ret[3] ) = ( $1, $2, $3, $4 );
-        for ( my $i = 0 ; $i <= $#ret ; $i++ ) {
-            if ( ! $ret[$i] ) {
-                $ret[$i] = '';                      # don't return undef
+    if ( @ret = split /\//, $string ) {
+        for ( my $i = 0 ; $i <= 3 ; $i++ ) {    # don't return undef
+            if ( !$ret[$i] ) {
+                $ret[$i] = '';
             }
         }
         return (@ret);
@@ -410,7 +533,7 @@ sub _parse_date {
     else {    # at least try to get single year
         $string =~ /^(\d\d\d\d)/;
         my $year = $1;
-        return ($year, '', '', '');
+        return ( $year, '', '', '' );
     }
 }
 
