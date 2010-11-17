@@ -50,6 +50,7 @@ sub build_per_context_instance {
   return $model;
 }
 
+
 # Inserts a list $pubs of publication objects into the database. If
 # $user_library=1, we treat this as *the* library, i.e. we generate
 # citation keys and import attachments.
@@ -61,6 +62,7 @@ sub insert_pubs {
   my $dbh = $self->dbh;
 
   $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+
 
   # First make sure all objects have a guid
   foreach my $pub (@$pubs) {

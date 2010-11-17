@@ -127,6 +127,16 @@ sub find_guid {
 
 }
 
+# Returns list of all cached references
+sub get_cache {
+
+  ( my $self ) = @_;
+
+  return [values %{$self->_hash}];
+
+}
+
+
 sub cleanup {
 
 }

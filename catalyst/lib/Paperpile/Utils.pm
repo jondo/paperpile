@@ -555,6 +555,27 @@ sub process_attachment_name {
   }
 }
 
+# Check list of pubs $pubs for duplicate sha1 and modify title to make
+# sure all pubs in the list are unique
+sub uniquify_pubs {
+
+  my ($self, $pubs) = @_;
+
+  my %seen;
+
+  foreach my $pub (@$pubs) {
+    $seen{$pub->sha1} = 0;
+  }
+
+  foreach my $pub (@$pubs) {
+    my $sha1 = $pub->sha1;
+    if ($seen{$sha1} > 0 ){
+      $pub->title($pub->title." (Duplicate ".$seen{$sha1}.")");
+    }
+    $seen{$sha1}++;
+  }
+}
+
 
 
 1;

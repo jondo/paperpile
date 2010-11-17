@@ -178,6 +178,10 @@ sub page {
 
   my $page = $self->_parse_googlescholar_page($content);
 
+  # Make sure all items are unique to avoid nasty sha1 and guid
+  # clashes
+  Paperpile::Utils->uniquify_pubs([(@{$self->get_cache},@$page)]);
+
   # we should always call this function to make the results available
   # afterwards via find_sha1
   $self->_save_page_to_hash($page);
