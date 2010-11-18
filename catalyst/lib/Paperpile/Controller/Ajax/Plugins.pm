@@ -168,10 +168,14 @@ sub _resultsgrid_format {
 
     foreach my $field (keys %$hash){
       if (defined $hash->{$field}){
-        $hash->{$field}=~s/\x{2028}/ /g;
-      }
-    }
+        #if ($hash->{$field}=~/\x{2028}/){
+        #  print "$field\n";
+        #}
 
+        #$hash->{$field}=~s/\x{2028}/ /g;
+      }
+      print STDERR Dumper($hash->{imported});
+    }
     push @data, $hash;
   }
 

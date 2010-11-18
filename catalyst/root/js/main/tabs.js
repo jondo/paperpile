@@ -22,7 +22,8 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       //margins: '2 2 2 2',
       layoutOnCardChange: true,
       layoutOnTabChange: true,
-      monitorResize: false
+      monitorResize: false,
+      enableTabScroll: true
     });
 
     Paperpile.Tabs.superclass.initComponent.call(this);
