@@ -167,7 +167,9 @@ sub _resultsgrid_format {
     # the frontend whitout the following:
 
     foreach my $field (keys %$hash){
-      $hash->{$field}=~tr/\x{2028}/ /;
+      if (defined $hash->{$field}){
+        $hash->{$field}=~s/\x{2028}/ /g;
+      }
     }
 
     push @data, $hash;
