@@ -76,10 +76,6 @@ sub read {
         elsif ( $data[$i] =~ /\S/ ) {    # entry over several lines
             $line .= $data[$i];
         }
-        else {
-
-            # print STDERR "skipped line: \'$data[$i]\'\n";
-        }
     }
 
     # don't forget last one
@@ -179,8 +175,14 @@ sub read {
                 case 'AB' {    # abstract
                     $data->{abstract} = $d;
                 }
-                case 'N2' {    # abstract
-                    $data->{abstract} = $d;
+                case 'N2' {    # often abstract
+                    if ( _is_abstract($d) ) {
+                        $data->{abstract} = $d;
+                    }
+                    else {
+                        print STDERR
+"Warning: could not parse field '$t', content='$d'!\n";
+                    }
                 }
                 case 'KW' {    # keywords
                     push @keywords, $d;
@@ -229,15 +231,42 @@ sub read {
 
                 # TODO:
                 # http://www.refman.com/support/risformat_tags_07.asp
-                # AV, M1-3, U1-5 probably add them to notes?  or
+                # AV, U1-5 probably add them to notes?  or
                 # should we try to parse them and figure out what they are?
 
+                case 'M1' {
+                    if ( _is_doi($d) ) {
+                        $data->{doi} = $d;
+                    }
+                    else {
+                        print STDERR
+"Warning: could not parse field '$t', content='$d'!\n";
+                    }
+                }
+                case 'M2' {
+                    if ( _is_doi($d) ) {
+                        $data->{doi} = $d;
+                    }
+                    else {
+                        print STDERR
+"Warning: could not parse field '$t', content='$d'!\n";
+                    }
+                }
+                case 'M3' {
+                    if ( _is_doi($d) ) {
+                        $data->{doi} = $d;
+                    }
+                    else {
+                        print STDERR
+"Warning: could not parse field '$t', content='$d'!\n";
+                    }
+                }
                 case 'UR' {    # URL, one per tag or comma seperated list
-                    if ( $d !~ /\;/ ) {
+                    if ( $d !~ /;/ ) {
                         push @urls, $d;
                     }
                     else {
-                        @urls = split /\;/, $d;
+                        @urls = split /;/, $d;
                     }
                 }
 
@@ -266,7 +295,7 @@ sub read {
                 }
 
                 else {
-                    print STDERR "Warning: field '$t' ignored!\n";
+                    print STDERR "Warning: field '$t' ignored, content='$d'!\n";
                 }
             }
         }
@@ -313,19 +342,13 @@ sub read {
         }
 
         # simply keep the first URL
-        if (@urls) {
-            $data->{url} = $urls[0];
-        }
+        $data->{url} = $urls[0] if (@urls);
 
         # simply keep the first PDF link
-        if (@pdfs) {
-            $data->{_pdf_url} = $pdfs[0];
-        }
+        $data->{_pdf_url} = $pdfs[0] if (@pdfs);
 
         # simply keep the first full-text link
-        if (@full_texts) {
-            $data->{linkout} = $full_texts[0];
-        }
+        $data->{linkout} = $full_texts[0] if (@full_texts);
 
         # TODO:
         # L3 = related records
@@ -362,8 +385,8 @@ sub write {
                        # each entry is a key/value pair
 
         # pubtype
-        push @output, [ 'TY', $pub->{pubtype} ]
-          if ( $pub->{pubtype} );
+        push @output, [ 'TY', $types{$pub->{pubtype}} ]
+          if ( $pub->{pubtype} && exists $types{$pub->{pubtype}} );
 
         # title
         push @output, [ 'T1', $pub->{title} ]
@@ -413,6 +436,51 @@ sub write {
                 push @output, [ 'KW', $keyw ];
             }
         }
+
+        # journal
+        # TODO: probably try to recognize short name
+        # e.g. if it contains a dot, it could be the short name etc
+        #
+        # however, e.g. science exports both fields (JF and JO) at once
+        # I don't know why
+        if ( $pub->{journal} ) {
+            push @output, [ 'JF', $pub->{journal} ];
+            push @output, [ 'JO', $pub->{journal} ];
+        }
+
+        # volume
+        push @output, [ 'VL', $pub->{volume} ] if ( $pub->{volume} );
+
+        #issue
+        push @output, [ 'IS', $pub->{issue} ] if ( $pub->{issue} );
+
+        # pages
+        if ( $pub->{pages} =~ /(.+)--*(.+)/ ) {    # start and end
+            push @output, [ 'SP', $1 ] if ( $pub->{pages} );
+            push @output, [ 'EP', $2 ] if ( $pub->{pages} );
+        }    # a single number must be the start page
+        else {
+            push @output, [ 'SP', $pub->{pages} ] if ( $pub->{pages} );
+        }
+
+        #address, TODO: don't know how to distinguish between address and city
+        push @output, [ 'AD', $pub->{address} ] if ( $pub->{address} );
+
+        # publisher
+        push @output, [ 'PB', $pub->{publisher} ] if ( $pub->{publisher} );
+
+        # issn/isbn
+        push @output, [ 'SN', $pub->{issn} ] if ( $pub->{issn} );
+        push @output, [ 'SN', $pub->{isbn} ] if ( $pub->{isbn} );
+
+        # url
+        push @output, [ 'UR', $pub->{url} ] if ( $pub->{url} );
+
+        # pdf-url
+        push @output, [ 'L1', $pub->{_pdf_url} ] if ( $pub->{_pdf_url} );
+
+        # pdf-url
+        push @output, [ 'L2', $pub->{linkout} ] if ( $pub->{linkout} );
 
         # now we have all data and can output them
         _print_ris( \*OUT, \@output );
