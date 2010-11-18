@@ -815,6 +815,7 @@ sub merge_duplicates : Local {
   # Trash all the pre-merge pubs.
   $library->trash_pubs( \@other_pubs, 'TRASH' );
 
+  # Make sure a new citation key is generated
   $merged_pub->citekey('');
   $merged_pub = $library->update_pub( $merged_pub->guid, $merged_pub->as_hash );
   $plugin->replace_merged_items( $dup_id, $merged_pub );

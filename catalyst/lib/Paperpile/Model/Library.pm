@@ -367,7 +367,7 @@ sub update_pub {
   my $new_pub = Paperpile::Library::Publication->new($data);
   $new_pub->_db_connection( $self->get_dsn );
 
-  # Also update sha1 and citekey if necessary changed
+  # Also update sha1
   if ( $new_pub->sha1 ne $old_data->{sha1} ) {
     $diff->{sha1} = $new_pub->sha1;
 
@@ -384,7 +384,13 @@ sub update_pub {
   # Check if the citekey has changed.
   my $pattern = $self->get_setting( 'key_pattern', $dbh );
   my $new_key = $new_pub->format_pattern($pattern);
+
+  # Note: In case case a ref. Smith2000a is to be updated "$new_key"
+  # will be Smith2000 and we will enter the block. The result might be
+  # that Smith2000a is changed back to Smith2000 if the other
+  # Smith2000 is no longer in the database.
   if ( $new_key ne $old_data->{citekey} ) {
+    $new_pub->citekey($new_key);
     # If we have a new citekey, make sure it doesn't conflict with other
     $self->generate_unique_key( $new_pub, [], $dbh );
     $diff->{citekey} = $new_pub->citekey;
