@@ -42,6 +42,7 @@ sub read {
         'JOUR' => 'ARTICLE',
         'JFUL' => 'ARTICLE',
         'MGZN' => 'ARTICLE',
+	'ABST' => 'ARTICLE',
         'BOOK' => 'BOOK',
         'CHAP' => 'INBOOK',
         'CONF' => 'PROCEEDINGS',
