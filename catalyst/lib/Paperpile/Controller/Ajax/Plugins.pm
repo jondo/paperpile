@@ -157,7 +157,20 @@ sub _resultsgrid_format {
   my @data = ();
 
   foreach my $pub (@$entries) {
-    push @data, $pub->as_hash;
+    my $hash = $pub->as_hash;
+
+    # Remove strange unicode characters that cause problems in JSON
+    # interpreter in the frontend. Right no we just clear \x{2028} but
+    # there might be more; see here:
+    # http://stackoverflow.com/questions/2965293/javascript-parse-error-on-u2028-unicode-character
+    # PMID 21070612 is a test case which contains \x{2028} and breaks
+    # the frontend whitout the following:
+
+    foreach my $field (keys %$hash){
+      $hash->{$field}=~tr/\x{2028}/ /;
+    }
+
+    push @data, $hash;
   }
 
   my @fields = ();
