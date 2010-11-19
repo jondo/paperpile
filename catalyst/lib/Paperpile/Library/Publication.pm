@@ -742,8 +742,20 @@ sub as_hash {
   foreach my $key ( $self->meta->get_attribute_list ) {
     my $value = $self->$key;
 
+
+    # Remove strange unicode characters that cause problems in JSON
+    # interpreter in the frontend. Right no we just clear \x{2028} but
+    # there might be more; see here:
+    # http://stackoverflow.com/questions/2965293/javascript-parse-error-on-u2028-unicode-character
+    # PMID 21070612 is a test case which contains \x{2028} and breaks
+    # the frontend whitout the following:
+
+    if (defined $value){
+      $value=~s/\x{2028}//g;
+    }
+
     # Force it to a number to be correctly converted to JSON
-    if ( $key ~~ [ 'times_read', 'trashed' ] ) {
+    if ( $key ~~ [ 'times_read', 'trashed', '_imported' ] ) {
       $value += 0;
     }
 
