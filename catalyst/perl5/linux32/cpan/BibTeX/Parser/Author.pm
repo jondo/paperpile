@@ -252,8 +252,8 @@ sub split {
     my $von;
     # von part are lowercase words
     while ( $von_last_parts[0] =~ m/^[a-z]/ ) {
-      last if ( ! $von_last_parts[0] );
       $von .= $von ? ' ' . shift @von_last_parts : shift @von_last_parts;
+      last if ( ! $von_last_parts[0] );
     }
     return ( $parts[1], $von, join( " ", @von_last_parts ), undef, undef );
   } else {
