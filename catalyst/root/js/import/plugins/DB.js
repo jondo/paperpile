@@ -376,14 +376,14 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     // If tab is not filtered and still empty, the whole DB must be empty and we show welcome message
     if (this.plugin_query == '' && this.plugin_base_query == '') {
       markup = [
-        '<div class="pp-box pp-box-side-panel pp-box-style1 pp-box-welcome pp-box-center">',
-        '<h2>Welcome to Paperpile</h2>',
+        '<div class="pp-hint-box">',
+        '<h1>Welcome to Paperpile</h1>',
         '<p>Your library is still empty. </p>',
         '<p>To get started, </p>',
         '<ul>',
         '<li>import your <a href="#" class="pp-textlink" onClick="Paperpile.main.pdfExtract();">PDF collection</a></li>',
         '<li>get references from a <a href="#" class="pp-textlink" onClick="Paperpile.main.fileImport();">bibliography file</a></li>',
-        '<li>start searching for papers using ',
+        '<li>search for papers using ',
         '<a href="#" class="pp-textlink" onClick=',
         '"Paperpile.main.tabs.newPluginTab(\'PubMed\', {plugin_name: \'PubMed\', plugin_query:\'\'});">PubMed</a> or ',
         '<a href="#" class="pp-textlink" onClick=',
