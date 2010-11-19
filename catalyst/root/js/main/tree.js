@@ -189,6 +189,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	     * node.name is too long)
 	     */
           var fullName = this.treeEditor.editNode.name;
+	  if (!fullName && this.treeEditor.editNode.text) {
+	      fullName = this.treeEditor.editNode.text;
+	  }
           this.treeEditor.field.setValue(fullName);
           this.treeEditor.field.selectText();
         }
@@ -1146,11 +1149,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   deleteCollection: function() {
     var node = this.lastSelectedNode;
 
-    if (node.type === 'LABEL' && 
-        (node.name === 'Incomplete')||(node.name === 'Review')){
+    if (node.type === 'LABEL' && (node.name === 'Incomplete') || (node.name === 'Review')) {
       Paperpile.status.updateMsg({
         type: 'info',
-        msg: '"'+node.name+'"'+' is a reserved label used by Paperpile and cannot be deleted.',
+        msg: '"' + node.name + '"' + ' is a reserved label used by Paperpile and cannot be deleted.',
         fade: true,
         duration: 3.5
       });
@@ -1916,7 +1918,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   },
 
   initShownItems: function() {
-      Paperpile.Tree.FolderMenu.superclass.initShownItems.call(this);
+    Paperpile.Tree.FolderMenu.superclass.initShownItems.call(this);
     var item = this.items.get('folder_menu_auto_export');
     if (Paperpile.main.tree.getFileSyncData(this.node).active == 1) {
       item.setChecked(true, true);
@@ -1996,6 +1998,9 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   },
 
   getShownItems: function(node) {
+    if (!node) {
+	return [];
+    }
     if (node.id == 'ACTIVE_ROOT') {
       return[];
     } else {
@@ -2111,7 +2116,7 @@ Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   },
 
   initShownItems: function() {
-      Paperpile.Tree.LabelsMenu.superclass.initShownItems.call(this);
+    Paperpile.Tree.LabelsMenu.superclass.initShownItems.call(this);
     var item = this.items.get('labels_menu_auto_export');
     if (Paperpile.main.tree.getFileSyncData(this.node).active == 1) {
       item.setChecked(true, true);
@@ -2130,7 +2135,7 @@ Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       item = this.items.get('labels_menu_rename');
       var str = 'This is a reserved label used by Paperpile and cannot be renamed';
       item.setDisabledTooltip(str);
-      item.disable();	
+      item.disable();
     }
   },
 
