@@ -196,37 +196,9 @@ Ext.ux.KeyboardShortcut = Ext.extend(Ext.util.Observable, {
 });
 
 Ext.override(Ext.Action, {
-  addComponent: function(comp) {
-    this.items.push(comp);
-    comp.on('destroy', this.removeComponent, this);
-    if (comp['setHandler']) {
-      comp.setHandler(this.initialConfig.handler, this.initialConfig.scope);
-    }
-    if (comp['setText']) {
-      comp.setText(this.initialConfig.text);
-    }
-    if (comp['setIconCls']) {
-      comp.setIconCls(this.initialConfig.iconCls);
-    }
-    if (comp['setDisabled']) {
-      comp.setDisabled(this.initialConfig.disabled);
-    }
-    if (comp['setVisible']) {
-      comp.setVisible(!this.initialConfig.hidden);
-    }
-  },
   setShortcutString: function(string) {
     this.initialConfig.shortcutString = string;
     this.callEach('setShortcutString', [string]);
-  },
-  // private
-  callEach: function(fnName, args) {
-    var cs = this.items;
-    for (var i = 0, len = cs.length; i < len; i++) {
-      if (cs[i][fnName]) {
-        cs[i][fnName].apply(cs[i], args);
-      }
-    }
   }
 });
 

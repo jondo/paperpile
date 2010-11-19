@@ -1846,6 +1846,10 @@ Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
   },
 
   initShownItems: function() {
+    var shownIds = this.getShownItems(this.node);
+    for (var i = 0; i < shownIds.length; i++) {
+      this.items.get(shownIds[i]).enable();
+    }
 
   },
 
@@ -1912,6 +1916,7 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   },
 
   initShownItems: function() {
+      Paperpile.Tree.FolderMenu.superclass.initShownItems.call(this);
     var item = this.items.get('folder_menu_auto_export');
     if (Paperpile.main.tree.getFileSyncData(this.node).active == 1) {
       item.setChecked(true, true);
@@ -2106,6 +2111,7 @@ Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   },
 
   initShownItems: function() {
+      Paperpile.Tree.LabelsMenu.superclass.initShownItems.call(this);
     var item = this.items.get('labels_menu_auto_export');
     if (Paperpile.main.tree.getFileSyncData(this.node).active == 1) {
       item.setChecked(true, true);
@@ -2113,6 +2119,18 @@ Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     } else {
       item.setChecked(false, true); // Second param is true to suppress event.
       item.disableText();
+    }
+
+    if (this.node.name == 'Incomplete' || this.node.name == 'Review') {
+      item = this.items.get('labels_menu_delete');
+      var str = 'This is a reserved label used by Paperpile and cannot be deleted';
+      item.setDisabledTooltip(str);
+      item.disable();
+
+      item = this.items.get('labels_menu_rename');
+      var str = 'This is a reserved label used by Paperpile and cannot be renamed';
+      item.setDisabledTooltip(str);
+      item.disable();	
     }
   },
 

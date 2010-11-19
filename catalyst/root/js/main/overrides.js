@@ -15,100 +15,100 @@
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
 // Ext overrides
-
 Ext.override(Ext.grid.GridView, {
 
-    // Implement a more sensible check for whether a gridview has 
-    // rows at the moment. This allows us to have 'empty' content
-    // within the GridView without it thinking that it has rows 
-    // in view.
-    hasRows : function(){
-	return (this.grid.getStore().getCount() > 0);
-        var fc = this.mainBody.dom.firstChild;
-        return fc && fc.nodeType == 1 && fc.className != 'x-grid-empty';
-    }
+  // Implement a more sensible check for whether a gridview has 
+  // rows at the moment. This allows us to have 'empty' content
+  // within the GridView without it thinking that it has rows 
+  // in view.
+  hasRows: function() {
+    return (this.grid.getStore().getCount() > 0);
+    var fc = this.mainBody.dom.firstChild;
+    return fc && fc.nodeType == 1 && fc.className != 'x-grid-empty';
+  }
 });
 
 Ext.override(Ext.Button, {
-    // private
-    // private
-    onRender : function(ct, position){
-        if(!this.template){
-            if(!Ext.Button.buttonTemplate){
-                // hideous table template
-                Ext.Button.buttonTemplate = new Ext.Template(
-                    '<table id="{4}" cellspacing="0" class="x-btn {3}"><tbody class="{1}">',
-                    '<tr><td class="x-btn-tl"><i>&#160;</i></td><td class="x-btn-tc"></td><td class="x-btn-tr"><i>&#160;</i></td></tr>',
-                    '<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{2}" unselectable="on"><button type="{0}"></button></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
-                    '<tr><td class="x-btn-bl"><i>&#160;</i></td><td class="x-btn-bc"></td><td class="x-btn-br"><i>&#160;</i></td></tr>',
-                    '</tbody></table>');
-                Ext.Button.buttonTemplate.compile();
-            }
-            this.template = Ext.Button.buttonTemplate;
-        }
+  // private
+  // private
+  onRender: function(ct, position) {
+    if (!this.template) {
+      if (!Ext.Button.buttonTemplate) {
+        // hideous table template
+        Ext.Button.buttonTemplate = new Ext.Template(
+          '<table id="{4}" cellspacing="0" class="x-btn {3}"><tbody class="{1}">',
+          '<tr><td class="x-btn-tl"><i>&#160;</i></td><td class="x-btn-tc"></td><td class="x-btn-tr"><i>&#160;</i></td></tr>',
+          '<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{2}" unselectable="on"><button type="{0}"></button></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
+          '<tr><td class="x-btn-bl"><i>&#160;</i></td><td class="x-btn-bc"></td><td class="x-btn-br"><i>&#160;</i></td></tr>',
+          '</tbody></table>');
+        Ext.Button.buttonTemplate.compile();
+      }
+      this.template = Ext.Button.buttonTemplate;
+    }
 
-        var btn, targs = this.getTemplateArgs();
+    var btn, targs = this.getTemplateArgs();
 
-        if(position){
-            btn = this.template.insertBefore(position, targs, true);
-        }else{
-            btn = this.template.append(ct, targs, true);
-        }
-        /**
+    if (position) {
+      btn = this.template.insertBefore(position, targs, true);
+    } else {
+      btn = this.template.append(ct, targs, true);
+    }
+    /**
          * An {@link Ext.Element Element} encapsulating the Button's clickable element. By default,
          * this references a <tt>&lt;button&gt;</tt> element. Read only.
          * @type Ext.Element
          * @property btnEl
          */
-        this.btnEl = btn.child(this.buttonSelector);
-	this.tooltipEl = btn;
-        this.mon(this.btnEl, {
-            scope: this,
-            focus: this.onFocus,
-            blur: this.onBlur
-        });
+    this.btnEl = btn.child(this.buttonSelector);
+    this.tooltipEl = btn;
+    this.mon(this.btnEl, {
+      scope: this,
+      focus: this.onFocus,
+      blur: this.onBlur
+    });
 
-        this.initButtonEl(btn, this.btnEl);
+    this.initButtonEl(btn, this.btnEl);
 
-        Ext.ButtonToggleMgr.register(this);
-    }
+    Ext.ButtonToggleMgr.register(this);
+  }
 });
 
 Ext.override(Ext.Element, {
-    fireEvent: (function() {
-        var HTMLEvts = /^(scroll|resize|load|unload|abort|error)$/,
-            mouseEvts = /^(click|dblclick|mousedown|mouseup|mouseover|mouseout|contextmenu|mousenter|mouseleave)$/,
-            UIEvts = /^(focus|blur|select|change|reset|keypress|keydown|keyup)$/,
-            onPref = /^on/;
+  fireEvent: (function() {
+    var HTMLEvts = /^(scroll|resize|load|unload|abort|error)$/,
+    mouseEvts = /^(click|dblclick|mousedown|mouseup|mouseover|mouseout|contextmenu|mousenter|mouseleave)$/,
+    UIEvts = /^(focus|blur|select|change|reset|keypress|keydown|keyup)$/,
+    onPref = /^on/;
 
-        return Ext.isIE ? function(e) {
-            e = e.toLowerCase();
-            if (!onPref.test(e)) {
-                e = 'on' + e;
-            }
-            this.dom.fireEvent(e, document.createEventObject());
-        } : function(e) {
-            e = e.toLowerCase();
-            e.replace(onPref, '');
-            var evt;
-            if (mouseEvts.test(e)) {
-                var b = this.getBox(),
-                    x = b.x + b.width / 2,
-                    y = b.y + b.height / 2;
-                evt = document.createEvent("MouseEvents");
-                evt.initMouseEvent(e, true, true, window, (e=='dblclick')?2:1, x, y, x, y, false, false, false, false, 0, null);
-            } else if (UIEvts.test(e)) {
-                evt = document.createEvent("UIEvents");
-                evt.initUIEvent(e, true, true, window, 0);
-            } else if (HTMLEvts.test(e)) {
-                evt = document.createEvent("HTMLEvents");
-                evt.initEvent(e, true, true);
-            }
-            if (evt) {
-                this.dom.dispatchEvent(evt);
-            }
-        }; 
-    })()
+    return Ext.isIE ?
+    function(e) {
+      e = e.toLowerCase();
+      if (!onPref.test(e)) {
+        e = 'on' + e;
+      }
+      this.dom.fireEvent(e, document.createEventObject());
+    } : function(e) {
+      e = e.toLowerCase();
+      e.replace(onPref, '');
+      var evt;
+      if (mouseEvts.test(e)) {
+        var b = this.getBox(),
+        x = b.x + b.width / 2,
+        y = b.y + b.height / 2;
+        evt = document.createEvent("MouseEvents");
+        evt.initMouseEvent(e, true, true, window, (e == 'dblclick') ? 2 : 1, x, y, x, y, false, false, false, false, 0, null);
+      } else if (UIEvts.test(e)) {
+        evt = document.createEvent("UIEvents");
+        evt.initUIEvent(e, true, true, window, 0);
+      } else if (HTMLEvts.test(e)) {
+        evt = document.createEvent("HTMLEvents");
+        evt.initEvent(e, true, true);
+      }
+      if (evt) {
+        this.dom.dispatchEvent(evt);
+      }
+    };
+  })()
 });
 
 // Add an option to not show the loading spinner for certain nodes.
@@ -392,6 +392,99 @@ Ext.override(Ext.Panel, {
     }
   }
 
+});
+
+Ext.override(Ext.Action, {
+  addComponent: function(comp) {
+    this.items.push(comp);
+    comp.on('destroy', this.removeComponent, this);
+    if (comp['setHandler']) {
+      comp.setHandler(this.initialConfig.handler, this.initialConfig.scope);
+    }
+    if (comp['setText']) {
+      comp.setText(this.initialConfig.text);
+    }
+    if (comp['setIconCls']) {
+      comp.setIconCls(this.initialConfig.iconCls);
+    }
+    if (comp['setDisabled']) {
+      comp.setDisabled(this.initialConfig.disabled);
+    }
+    if (comp['setVisible']) {
+      comp.setVisible(!this.initialConfig.hidden);
+    }
+  },
+  setTooltip: function(string) {
+    this.initialConfig.tooltip = string;
+    this.callEach('setTooltip', [string]);
+  },
+  setDisabledTooltip: function(string) {
+    this.initialConfig.tooltip = string;
+    this.callEach('setDisabledTooltip', [string]);
+  },
+  setDisabled: function(v) {
+    this.initialConfig.disabled = v;
+    this.callEach('setDisabled', [v]);
+  },
+  // private
+  callEach: function(fnName, args) {
+    var cs = this.items;
+    for (var i = 0, len = cs.length; i < len; i++) {
+      if (cs[i][fnName]) {
+        cs[i][fnName].apply(cs[i], args);
+      }
+    }
+  }
+});
+
+Ext.override(Ext.menu.BaseItem, {
+  // private
+  onRender: function(container, position) {
+    Ext.menu.BaseItem.superclass.onRender.apply(this, arguments);
+    if (this.ownerCt && this.ownerCt instanceof Ext.menu.Menu) {
+      this.parentMenu = this.ownerCt;
+    } else {
+      this.container.addClass('x-menu-list-item');
+      this.mon(this.el, {
+        scope: this,
+        click: this.onClick,
+        mouseenter: this.activate,
+        mouseleave: this.deactivate
+      });
+    }
+    if (this.tooltip && this.parentMenu && !this.parentMenu.hideTooltips) {
+      this.el.dom['qtip'] = this.tooltip;
+    }
+  },
+  setDisabledTooltip: function(tooltip) {
+    this.disabledTooltip = tooltip;
+    if (this.rendered && this.disabled) {
+      this.el.dom['qtip'] = tooltip;
+    }
+  },
+  setTooltip: function(tooltip) {
+    this.tooltip = tooltip;
+    if (this.rendered && !this.disabled && this.parentMenu && !this.parentMenu.hideTooltips) {
+      this.el.dom['qtip'] = tooltip;
+    }
+  },
+  onDisable: function() {
+    Ext.menu.BaseItem.superclass.onDisable.call(this);
+
+    if (this.rendered) {
+      this.el.dom['qtip'] = this.disabledTooltip || '';
+    }
+  },
+  onEnable: function() {
+    Ext.menu.BaseItem.superclass.onEnable.call(this);
+
+    if (this.rendered && this.parentMenu && !this.parentMenu.hideTooltips) {
+      this.el.dom['qtip'] = this.tooltip || '';
+    } else {
+      this.el.dom['qtip'] = '';
+    }
+
+  }
 });
 
 Ext.override(Ext.ToolTip, {

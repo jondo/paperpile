@@ -179,9 +179,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         scope: this,
         icon: '/images/icons/folder.png',
         itemId: 'OPEN_PDF_FOLDER',
-        tooltip: {
-          text: 'Show in folder'
-        }
+        tooltip: 'Show in folder',
+        disabledTooltip: 'No PDF attached to this reference'
       }),
       'VIEW_PDF': new Ext.Action({
         handler: this.viewPDF,
@@ -189,6 +188,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         iconCls: 'pp-icon-import-pdf',
         itemId: 'VIEW_PDF',
         text: 'View PDF',
+        disabledTooltip: 'No PDF attached to this reference'
       }),
       'MORE_FROM_FIRST_AUTHOR': new Ext.Action({
         // Note: the text of these menu items will change dynamically depending on
@@ -1367,7 +1367,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   createContextMenu: function() {
     this.context = new Ext.menu.Menu({
       id: 'pp-grid-context-' + this.id,
-      itemId: 'context'
+      itemId: 'context',
+      hideTooltips: true // Custom flag which hides tooltips in menu items.
     });
     var context = this.context;
     this.initContextMenuItemIds();
@@ -1477,6 +1478,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
 
     if (!selection) {
+      this.actions['AUTO_COMPLETE'].disable();
       this.actions['EDIT'].disable();
       this.actions['DELETE'].disable();
       this.actions['COPY_FORMATTED'].disable();
