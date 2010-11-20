@@ -124,6 +124,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         cls: 'x-btn-text-icon edit',
         icon: '/images/icons/pencil.png',
         itemId: 'EDIT',
+	triggerKey: 'e',
         tooltip: 'Edit the selected reference'
       }),
       'AUTO_COMPLETE': new Ext.Action({
@@ -143,6 +144,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         scope: this,
         cls: 'x-btn-text-icon',
         itemId: 'DELETE',
+	triggerKey: 'd',
         tooltip: 'Move selected references to Trash'
       }),
 
@@ -188,6 +190,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         iconCls: 'pp-icon-import-pdf',
         itemId: 'VIEW_PDF',
         text: 'View PDF',
+	triggerKey: 'v',
         disabledTooltip: 'No PDF attached to this reference'
       }),
       'MORE_FROM_FIRST_AUTHOR': new Ext.Action({
@@ -241,6 +244,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'EXPORT_SELECTION',
         text: 'Selection',
         handler: this.handleExportSelection,
+	triggerKey: 'x',
         scope: this
       }),
       'COPY_BIBTEX_KEY': new Ext.Action({
@@ -803,9 +807,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           this.keys.enable();
         }
       },
-      scope: this,
-      delay: 20,
-      buffer: 50
+      scope: this
+//      delay: 20,
+//      buffer: 50
     });
 
     // Note: the 'afterselectionchange' event is a custom selection model event.
@@ -1366,6 +1370,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   createContextMenu: function() {
     this.context = new Ext.menu.Menu({
+      plugins: [new Ext.ux.TDGi.MenuKeyTrigger()],
       id: 'pp-grid-context-' + this.id,
       itemId: 'context',
       hideTooltips: true // Custom flag which hides tooltips in menu items.

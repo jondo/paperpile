@@ -38,6 +38,7 @@ js:
   - "js/misc/EnableDisableCheckItem.js"
   - "js/misc/label-panel.js"
   - "js/misc/collection-store.js"
+  - "js/misc/menu-key-trigger.js"
   - "js/screens/patterns.js"
   - "js/screens/statistics.js"
   - "js/screens/settings.js"
