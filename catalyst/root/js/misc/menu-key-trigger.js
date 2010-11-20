@@ -1,3 +1,4 @@
+
 Ext.ns('Ext.ux.TDGi');
 
 Ext.ux.TDGi.MenuKeyTrigger = Ext.extend(Object, {
@@ -71,9 +72,7 @@ Ext.ux.TDGi.MenuKeyTrigger = Ext.extend(Object, {
       if (item.triggerKey) {
         keys[item.triggerKey.substr(0, 1).toUpperCase()] = item;
 
-        if (item.text.match(new RegExp(item.triggerKey, 'i'))) {
-          item.setText(item.text.replace(new RegExp('(' + item.triggerKey + ')', 'i'), '<u>$1</u>'));
-        }
+        item.setText(item.text);
 
       }
 
@@ -164,11 +163,11 @@ Ext.ux.TDGi.MenuKeyTrigger = Ext.extend(Object, {
 
 Ext.preg('ux.MenuKeyTrigger', Ext.ux.TDGi.MenuKeyTrigger);
 
+// Ugly override to Ext.menu.Item to auto-underline hotkey when setText is called.
 Ext.override(Ext.menu.Item, {
   setText: function(text) {
     this.text = text || '&#160;';
     if (this.rendered) {
-
       if (this.triggerKey) {
         if (this.text.match(new RegExp(this.triggerKey, 'i'))) {
           this.text = this.text.replace(new RegExp('(' + this.triggerKey + ')', 'i'), '<u>$1</u>');
@@ -177,7 +176,5 @@ Ext.override(Ext.menu.Item, {
       this.textEl.update(this.text);
       this.parentMenu.layout.doAutoSize();
     }
-
   }
-
 });
