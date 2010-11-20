@@ -80,8 +80,7 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     // Collect mousedown and click events.
     this.grid.on('rowclick', this.handleMouseEvent, this);
     this.grid.on('rowmousedown', this.handleMouseEvent, this);
-
-    this.rowNav = new Ext.KeyNav(this.grid.getGridEl(), {
+    this.rowNav = new Ext.KeyNav(this.grid.getView().focusEl, {
       'up': function(e) {
         this.keyNavMove(-1, e);
       },
@@ -90,10 +89,12 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
       },
       'pageDown': function(e) {
         var pageDistance = this.grid.getPageSize();
+	e.stopEvent();
         this.keyNavMove(pageDistance, e);
       },
       'pageUp': function(e) {
         var pageDistance = this.grid.getPageSize();
+	e.stopEvent();
         this.keyNavMove(-pageDistance, e);
       },
       scope: this
