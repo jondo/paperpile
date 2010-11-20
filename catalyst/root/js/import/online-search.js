@@ -90,7 +90,11 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
         this.timeoutWarn = null;
         this.timeoutAbort = null;
 
-        this.getSelectionModel().selectFirstRow.defer(10, this.getSelectionModel());
+      if (this.getStore().getCount() > 0) {
+        this.getSelectionModel().selectRowAndSetCursor(0);
+	this.afterSelectionChange(this.getSelectionModel());
+      }
+
       },
       grid);
 

@@ -65,40 +65,47 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
         ids.insert(index + 1, 'IMPORT_SELECTED');
         ids.insert(index + 2, 'IMPORT_ALL');
 
-        // Move the 'Edit' to after the jump.
         ids.remove('EDIT');
+	ids.remove('DELETE');
+	ids.remove('AUTO_COMPLETE');
+
+        // Move the 'Edit' to after the jump.
         index = ids.indexOf('TB_BREAK');
-        ids.insert(index + 1, 'EDIT');
+//        ids.insert(index + 1, 'EDIT');
       },
       grid),
 
       initContextMenuItemIds: grid.initContextMenuItemIds.createSequence(function() {
         var ids = this.contextMenuItemIds;
 
-        ids.remove('NEW');
-        ids.remove('DELETE');
-
         ids.insert(0, 'IMPORT_SELECTED');
+	ids.remove('EDIT');
+	ids.remove('DELETE');
+	ids.remove('AUTO_COMPLETE');
       },
       grid),
 
       updateButtons: grid.updateButtons.createSequence(function() {
-        this.actions['EDIT'].disable();
+	this.actions['DELETE'].disable(); // This action doesn't show up in any menu, but has associated keyboard shortcuts that we want disabled too.
 
         var selection = this.getSingleSelectionRecord();
         if (!selection) {
           this.actions['IMPORT_SELECTED'].disable();
+          this.actions['IMPORT_SELECTED'].setDisabledTooltip("");
         } else {
           if (selection && selection.data._imported) {
             this.actions['IMPORT_SELECTED'].disable();
-            this.actions['EDIT'].enable();
-          }
+            this.actions['IMPORT_SELECTED'].setDisabledTooltip("Reference already imported");	    
+
+          } else if (selection && !selection.data._imported) {
+
+
+	  }
         }
 
         if (this.getTotalCount() == 0) {
           this.actions['IMPORT_ALL'].disable();
         }
-
       },
       grid),
 

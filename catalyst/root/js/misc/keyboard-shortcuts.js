@@ -1,47 +1,72 @@
-Ext.ux.KeyboardShortcuts = function(mainEl) {
-  if (mainEl === undefined) {
-    mainEl = document;
-  }
-  Ext.apply(this, {
-    document: mainEl
-  });
-  Ext.ux.KeyboardShortcuts.constructor.call(this);
-};
 Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
   keyMap: null,
   bindings: [],
-  constructor: function(config) {
-    if (config === undefined) {
-      config = {};
+  constructor: function(listenerEl, config) {
+
+    Ext.apply(this, {
+      el: listenerEl
+    });
+    Ext.apply(this, config);
+
+    if (this.disableOnBlur === undefined) {
+      this.disableOnBlur = true;
     }
-    if (config.document === undefined) {
-      config.document = document;
+
+    this.keyMap = new Ext.KeyMap(this.el);
+
+    if (this.disableOnBlur) {
+      Paperpile.log("Disable on blur for " + this.el.id);
+      this.el.on('blur', this.onBlur, this);
+      this.el.on('focus', this.onFocus, this);
     }
-    this.keyMap = new Ext.KeyMap(config.document);
-    Ext.ux.KeyboardShortcuts.superclass.constructor.call(this, config);
+
   },
-  bindAction: function(string, action) {
+  onBlur: function() {
+    Paperpile.log("Blur " + this.el.id);
+    if (this.keys !== undefined) {
+      this.keys.disable();
+    }
+  },
+  onFocus: function() {
+    Paperpile.log("Focus " + this.el.id);
+    if (this.keys !== undefined) {
+      this.keys.enable();
+    }
+  },
+  bindAction: function(string, action, stopEvent) {
     var obj = this.parseKeyString(string);
+
+    if (stopEvent === undefined) {
+      stopEvent = true;
+    }
 
     var shortcut = new Ext.ux.KeyboardShortcut({
       action: action,
-      binding: obj
+      binding: obj,
+      stopEvent: stopEvent
     });
 
     this.keyMap.addBinding(shortcut.binding);
     this.bindings.push(shortcut);
   },
-  bindCallback: function(string, handler, scope) {
+  bindCallback: function(string, handler, scope, stopEvent) {
     var obj = this.parseKeyString(string);
 
     if (scope === undefined) {
       scope = this;
     }
 
+    if (stopEvent === undefined) {
+      stopEvent = true;
+    }
+
+    obj.stopEvent = stopEvent;
+
     var shortcut = new Ext.ux.KeyboardShortcut({
       binding: obj,
       handler: handler,
-      scope: scope
+      scope: scope,
+      stopEvent: stopEvent
     });
     this.keyMap.addBinding(shortcut.binding);
   },
@@ -169,7 +194,7 @@ Ext.ux.KeyboardShortcut = Ext.extend(Ext.util.Observable, {
       if (this.action) {
         this.action.execute(keyCode, event);
       } else if (this.handler) {
-        this.handler.call(this.scope);
+        this.handler.call(this.scope, event);
       }
     }
   },

@@ -55,9 +55,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       handler: this.handleFocusSearch,
       scope: this,
       itemId: 'FOCUS_SEARCH',
-    }),
-    this.keys.bindAction('[/,191]', this.actions['FOCUS_SEARCH']);
-    this.keys.bindAction('ctrl-f', this.actions['FOCUS_SEARCH']);
+    });
 
     var store = this.getStore();
     store.baseParams['plugin_search_pdf'] = 0;
@@ -79,6 +77,12 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
         }
       }
     });
+  },
+
+  loadKeyboardShortcuts: function() {
+      Paperpile.PluginGridDB.superclass.loadKeyboardShortcuts.call(this);
+    this.keys.bindAction('[/,191]', this.actions['FOCUS_SEARCH']);
+    this.keys.bindAction('ctrl-f', this.actions['FOCUS_SEARCH']);
   },
 
   createSortHandles: function() {

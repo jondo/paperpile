@@ -124,7 +124,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         cls: 'x-btn-text-icon edit',
         icon: '/images/icons/pencil.png',
         itemId: 'EDIT',
-	triggerKey: 'e',
+        triggerKey: 'e',
         tooltip: 'Edit the selected reference'
       }),
       'AUTO_COMPLETE': new Ext.Action({
@@ -144,7 +144,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         scope: this,
         cls: 'x-btn-text-icon',
         itemId: 'DELETE',
-	triggerKey: 'd',
+        triggerKey: 'd',
         tooltip: 'Move selected references to Trash'
       }),
 
@@ -152,6 +152,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         text: 'Export',
         handler: this.handleExport,
         scope: this,
+        triggerKey: 'x',
         itemId: 'EXPORT'
       }),
 
@@ -190,7 +191,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         iconCls: 'pp-icon-import-pdf',
         itemId: 'VIEW_PDF',
         text: 'View PDF',
-	triggerKey: 'v',
+        triggerKey: 'v',
         disabledTooltip: 'No PDF attached to this reference'
       }),
       'MORE_FROM_FIRST_AUTHOR': new Ext.Action({
@@ -244,7 +245,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'EXPORT_SELECTION',
         text: 'Selection',
         handler: this.handleExportSelection,
-	triggerKey: 'x',
+        triggerKey: 'x',
         scope: this
       }),
       'COPY_BIBTEX_KEY': new Ext.Action({
@@ -412,31 +413,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.on('afterrender', this.installEvents, this);
 
-    this.keys = new Ext.ux.KeyboardShortcuts(this.getView().focusEl);
-
-    // Standard grid shortcuts.
-    this.keys.bindAction('ctrl-q', this.actions['FONT_SIZE']);
-    this.keys.bindAction('ctrl-a', this.actions['SELECT_ALL']);
-    this.keys.bindAction('[Del,46]', this.actions['DELETE']);
-
-    // Copy shortcuts.
-    this.keys.bindAction('ctrl-c', this.actions['COPY_FORMATTED']);
-    this.keys.bindAction('ctrl-b', this.actions['COPY_BIBTEX_CITATION']);
-    this.keys.bindAction('ctrl-k', this.actions['COPY_BIBTEX_KEY']);
-
-    // Gmail-style n/p, j/k movements.
-    this.keys.bindAction('n', this.actions['DOWN_ONE']);
-    this.keys.bindAction('shift-n', this.actions['DOWN_ONE']);
-    this.keys.bindAction('p', this.actions['UP_ONE']);
-    this.keys.bindAction('shift-p', this.actions['UP_ONE']);
-    this.keys.bindAction('j', this.actions['DOWN_ONE']);
-    this.keys.bindAction('shift-j', this.actions['DOWN_ONE']);
-    this.keys.bindAction('k', this.actions['UP_ONE']);
-    this.keys.bindAction('shift-k', this.actions['UP_ONE']);
-
-    this.keys.bindAction('[End,35]', this.actions['MOVE_LAST']);
-    this.keys.bindAction('[Home,36]', this.actions['MOVE_FIRST']);
-
     this.on({
       // Delegate to class methods.
       beforerender: {
@@ -539,6 +515,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.getStore().on('load', function() {
       if (this.getStore().getCount() > 0) {
         this.getSelectionModel().selectRowAndSetCursor(0);
+	this.afterSelectionChange(this.getSelectionModel());
       }
     },
     this, {
@@ -554,6 +531,34 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   installEvents: function() {
     this.el.on('click', this.handleClick, this);
+    this.loadKeyboardShortcuts();
+  },
+
+  loadKeyboardShortcuts: function() {
+    this.keys = new Ext.ux.KeyboardShortcuts(this.getView().focusEl);
+
+    // Standard grid shortcuts.
+    this.keys.bindAction('ctrl-q', this.actions['FONT_SIZE']);
+    this.keys.bindAction('ctrl-a', this.actions['SELECT_ALL']);
+    this.keys.bindAction('[Del,46]', this.actions['DELETE']);
+
+    // Copy shortcuts.
+    this.keys.bindAction('ctrl-c', this.actions['COPY_FORMATTED']);
+    this.keys.bindAction('ctrl-b', this.actions['COPY_BIBTEX_CITATION']);
+    this.keys.bindAction('ctrl-k', this.actions['COPY_BIBTEX_KEY']);
+
+    // Gmail-style n/p, j/k movements.
+    this.keys.bindAction('n', this.actions['DOWN_ONE']);
+    this.keys.bindAction('shift-n', this.actions['DOWN_ONE']);
+    this.keys.bindAction('p', this.actions['UP_ONE']);
+    this.keys.bindAction('shift-p', this.actions['UP_ONE']);
+    this.keys.bindAction('j', this.actions['DOWN_ONE']);
+    this.keys.bindAction('shift-j', this.actions['DOWN_ONE']);
+    this.keys.bindAction('k', this.actions['UP_ONE']);
+    this.keys.bindAction('shift-k', this.actions['UP_ONE']);
+
+    this.keys.bindAction('[End,35]', this.actions['MOVE_LAST']);
+    this.keys.bindAction('[Home,36]', this.actions['MOVE_FIRST']);
   },
 
   handleClick: function(e) {
@@ -794,22 +799,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         },
         scope: this
       }
-    });
-
-    this.mon(this.getView().focusEl, {
-      'blur': function(event, target, options) {
-        if (this.keys !== undefined) {
-          this.keys.disable();
-        }
-      },
-      'focus': function(event, target, options) {
-        if (this.keys !== undefined) {
-          this.keys.enable();
-        }
-      },
-      scope: this
-//      delay: 20,
-//      buffer: 50
     });
 
     // Note: the 'afterselectionchange' event is a custom selection model event.

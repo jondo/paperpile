@@ -40,6 +40,13 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
     this.eastPanel.on('afterrender', this.afterEastRender, this);
 
+    this.on('afterrender', function() {
+      this.el.on('click', function() {
+        Paperpile.main.grabFocus();
+      },
+      this);
+    },
+    this);
   },
 
   afterEastRender: function() {

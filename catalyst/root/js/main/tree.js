@@ -189,9 +189,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 	     * node.name is too long)
 	     */
           var fullName = this.treeEditor.editNode.name;
-	  if (!fullName && this.treeEditor.editNode.text) {
-	      fullName = this.treeEditor.editNode.text;
-	  }
+          if (!fullName && this.treeEditor.editNode.text) {
+            fullName = this.treeEditor.editNode.text;
+          }
           this.treeEditor.field.setValue(fullName);
           this.treeEditor.field.selectText();
         }
@@ -279,6 +279,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // Only take clicks that occur right within the node text area.
       var targetEl = e.getTarget("span", 10, true);
       if (!targetEl) {
+	Paperpile.main.grabFocus();
         return;
       }
     }
@@ -353,6 +354,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       break;
 
     default:
+      Paperpile.main.grabFocus();
       break;
     }
   },
@@ -574,7 +576,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       this.rssButtonToggle();
       return;
     }
-
   },
 
   moreLabelsDown: function() {
@@ -1883,28 +1884,28 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         id: 'folder_menu_new',
         text: 'New Folder',
         handler: tree.newFolder,
-	triggerKey: 'n',
+        triggerKey: 'n',
         scope: tree
       },
       {
         id: 'folder_menu_delete',
         text: 'Delete',
         handler: tree.deleteCollection,
-	triggerKey: 'd',
+        triggerKey: 'd',
         scope: tree
       },
       {
         id: 'folder_menu_rename',
         text: 'Rename',
         handler: tree.triggerRenameCollection,
-	triggerKey: 'r',
+        triggerKey: 'r',
         scope: tree
       },
       {
         id: 'folder_menu_export',
         text: Paperpile.Tree.EXPORT_MENU_STRING,
         handler: tree.exportNode,
-	triggerKey: 'e',
+        triggerKey: 'e',
         scope: tree
       },
       {
@@ -1976,21 +1977,21 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         id: 'active_menu_delete',
         text: 'Delete',
         handler: tree.deleteActive,
-	triggerKey: 'd',
+        triggerKey: 'd',
         scope: tree
       },
       {
         id: 'active_menu_rename',
         text: 'Rename',
         handler: tree.renameNode,
-	triggerKey: 'r',
+        triggerKey: 'r',
         scope: tree
       },
       {
         id: 'active_menu_export',
         text: Paperpile.Tree.EXPORT_MENU_STRING,
         handler: tree.exportNode,
-	triggerKey: 'e',
+        triggerKey: 'e',
         scope: tree
       },
       {
@@ -2007,7 +2008,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 
   getShownItems: function(node) {
     if (!node) {
-	return [];
+      return[];
     }
     if (node.id == 'ACTIVE_ROOT') {
       return[];
@@ -2071,7 +2072,7 @@ Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         id: 'labels_menu_new',
         text: 'New Label',
         iconCls: 'pp-icon-label-new',
-	triggerKey: 'n',
+        triggerKey: 'n',
         handler: tree.newLabel,
         scope: tree
       },
@@ -2084,20 +2085,20 @@ Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         id: 'labels_menu_delete',
         text: 'Delete',
         handler: tree.deleteCollection,
-	triggerKey: 'd',
+        triggerKey: 'd',
         scope: tree
       },
       {
         id: 'labels_menu_rename',
         text: 'Rename',
-	triggerKey: 'r',
+        triggerKey: 'r',
         handler: tree.triggerRenameCollection,
         scope: tree
       },
       {
         id: 'labels_menu_hide',
         text: 'Hide from List',
-	triggerKey: 'h',
+        triggerKey: 'h',
         handler: tree.hideCollection,
         scope: tree
       },
@@ -2105,7 +2106,7 @@ Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         id: 'labels_menu_export',
         text: Paperpile.Tree.EXPORT_MENU_STRING,
         handler: tree.exportNode,
-	triggerKey: 'e',
+        triggerKey: 'e',
         scope: tree
       },
       {
@@ -2180,7 +2181,7 @@ Paperpile.Tree.TrashMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
       items: [{
         id: 'trash_menu_empty',
         text: 'Empty Trash',
-	triggerKey: 'e',
+        triggerKey: 'e',
         handler: tree.handleEmptyTrash,
         scope: tree
       },
@@ -2249,5 +2250,3 @@ Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
   }
 
 });
-
-Ext.reg('tree', Paperpile.Tree);
