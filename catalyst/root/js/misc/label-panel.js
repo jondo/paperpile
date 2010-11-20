@@ -111,11 +111,14 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       scope: this
     });
 
-    this.keys = new Ext.ux.KeyboardShortcuts(this.getEl());
-    this.keys.bindAction('tab', this.actions['SELECT_FIRST']);
-    this.keys.bindAction('down', this.actions['DOWN_ONE']);
-    this.keys.bindAction('up', this.actions['UP_ONE']);
-    this.keys.bindAction('enter', this.actions['OPEN_SELECTED']);
+    this.on('render', function() {
+      this.keys = new Ext.ux.KeyboardShortcuts(this.body);
+      this.keys.bindAction('tab', this.actions['DOWN_ONE']);
+      this.keys.bindAction('down', this.actions['DOWN_ONE']);
+      this.keys.bindAction('up', this.actions['UP_ONE']);
+      this.keys.bindAction('enter', this.actions['OPEN_SELECTED']);
+    },
+    this);
   },
 
   getSingleSel: function() {
@@ -134,6 +137,13 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
 
   selectNext: function(keyCode, event) {
     var ind = this.getSingleSel();
+
+    if (ind == -1) {
+      this._dataView.select(0, false);
+      this.scrollTo(0);
+      return;
+    }
+
     if (ind < this._store.getCount() - 1) {
       ind++;
     }
