@@ -1,4 +1,4 @@
-#! catalyst/perl5/linux32/bin/perl -w
+#! catalyst/perl5/linux32/bin/paperperl -w
 
 # Copyright 2009, 2010 Paperpile
 #
@@ -20,6 +20,10 @@
 # Note: Our build machine is 32 bit and Hudson runs this script from the top
 # level in the workspace. So we need the above perl binary.
 
+BEGIN {
+  $ENV{CATALYST_DEBUG} = 0;
+}
+
 use strict;
 
 use FindBin;
@@ -33,14 +37,18 @@ use Paperpile::Build;
 
 ################# Setup configuration variables ######################
 
-my @targets = ( 'linux32', 'linux64' );
+my @targets = ( 'linux32', 'linux64','osx' );
 
 my $workspace = `pwd`;
 chomp($workspace);
 
+my $git_branch =`git branch 2>/dev/null | sed -e "/^\\s/d" -e "s/^\\*\\s//"`;
+chomp($git_branch);
+
+
 my $b = Paperpile::Build->new( {
     cat_dir  => "$workspace/catalyst",
-    ti_dir   => "$workspace/titanium",
+    qt_dir   => "$workspace/qt",
     dist_dir => "$workspace/dist/data",
     yui_jar  => $ENV{HOME} . '/bin/yuicompressor-2.4.2.jar',
   }
@@ -53,11 +61,11 @@ my ( $version_name, $version_id ) =
 
 my $prev_version = $version_id - 1;
 
+$b->echo("Build release $version_name (id: $version_id)");
+
 #################### Create distribution #############################
 
-unlink glob("dist/*tar.gz");
-
-$b->get_titanium;
+$b->get_qruntime('all');
 
 $b->echo("Minifying javascript");
 $b->minify;
@@ -70,13 +78,20 @@ for my $target (@targets) {
   chdir "$workspace/dist/data";
   $b->echo("Packaging $target");
   `mv $target paperpile`;
-  `tar czf ../paperpile-$version_name-$target.tar.gz paperpile`;
+  `tar cjf ../paperpile-$version_name-$target.tbz paperpile`;
   `mv paperpile $target`;
 }
+
 
 ######  Move data to release directory and set up symbolic links #####
 
 my $rel_dir = $ENV{HOME} . "/release";
+
+# On all other branches than stables we use a test directory to not
+# interfere with the actual production release data
+if ($git_branch ne 'stable'){
+  $rel_dir.= "_test";
+}
 
 `rm -rf  $rel_dir/$version_name` if -e "$rel_dir/$version_name";
 `rm  $rel_dir/$version_id`       if -l "$rel_dir/$version_id";
@@ -87,8 +102,6 @@ my $rel_dir = $ENV{HOME} . "/release";
 chdir $rel_dir;
 
 `ln -s $version_name $version_id`;
-`rm  stage` if -l "stage";
-`ln -s $version_name stage`;
 
 #################### Create patches if necessary #####################
 
@@ -142,14 +155,18 @@ DumpFile( "$rel_dir/$version_id/updates.yaml", [@update_info] );
 
 ################### Tag the release on github ########################
 
-chdir($workspace);
+if ($git_branch eq 'stable'){
 
-my $tag = "rel_$version_id\_$version_name";
+  chdir($workspace);
 
-`git tag -f -a -m "Release $version_id (v $version_name)" $tag`;
+  my $tag = "rel_$version_id\_$version_name";
 
-# Try to delete remote tag first in case it already exists
-# (i.e. another build came to this point but was not accepted as
-# release eventually)
-`git push origin :refs/tags/$tag`;
-`git push origin tag $tag`;
+  `git tag -f -a -m "Release $version_id (v $version_name)" $tag`;
+
+  # Try to delete remote tag first in case it already exists
+  # (i.e. another build came to this point but was not accepted as
+  # release eventually)
+  `git push origin :refs/tags/$tag`;
+  `git push origin tag $tag`;
+}
+
