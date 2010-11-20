@@ -77,6 +77,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         scope: this,
         fn: this.myOnClick
       },
+       containerClick: {
+	   scope: this,
+	   fn: this.myContainerClick
+       },
       beforeLoad: {
         scope: this,
         fn: function(node) {
@@ -272,6 +276,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     this.dragZone = new Paperpile.Tree.TreeDragZone(this, {});
 
     Paperpile.Tree.superclass.initEvents.call(this);
+  },
+
+  myContainerClick: function(tree,e) {
+      var targetEl = e.getTarget("span", 10, true);
+      if (!targetEl) {
+	Paperpile.main.grabFocus();
+        return;
+      }      
   },
 
   myOnClick: function(node, e) {
