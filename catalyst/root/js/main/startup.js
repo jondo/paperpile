@@ -302,13 +302,9 @@ Paperpile.stage2 = function() {
 
   Paperpile.main.loadSettings(
     function() {
-      Paperpile.main.afterLoadSettings();
-      //Paperpile.main.show();
-      var tree = Ext.getCmp('treepanel');
-      Paperpile.main.tree = tree;
       Paperpile.main.tabs.newDBtab('', 'MAIN');
-      tree.expandAll();
-      Paperpile.main.tabs.remove('welcome');
+      Paperpile.main.getTree().expandAll();
+      Paperpile.main.afterLoadSettings();
 
       var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
 

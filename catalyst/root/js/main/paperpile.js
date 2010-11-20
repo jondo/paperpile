@@ -118,7 +118,25 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   initComponent: function() {
 
-    Paperpile.main = this;
+    this.tabs = new Paperpile.Tabs({
+      border: false,
+      region: 'center',
+      xtype: 'tabs',
+      id: 'pp-tabs',
+      activeItem: 0
+    });
+
+    this.tree = new Paperpile.Tree({
+      border: false,
+      xtype: 'pp-tree',
+      rootVisible: false,
+      id: 'treepanel',
+      itemId: 'treepanel',
+      region: 'west',
+      margins: '2 2 2 2',
+      cmargins: '5 5 0 5',
+      width: '200px'
+    });
 
     Ext.apply(this, {
       layout: 'border',
@@ -150,25 +168,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               id: 'dashboard-button'
             })]
         }),
-        items: [{
-          border: 0,
-          xtype: 'tree',
-          rootVisible: false,
-          id: 'treepanel',
-          itemId: 'navigation',
-          region: 'west',
-          margins: '2 2 2 2',
-          cmargins: '5 5 0 5',
-          width: '200px'
-        },
-        {
-          region: 'center',
-          border: false,
-          border: false,
-          xtype: 'tabs',
-          id: 'tabs',
-          activeItem: 0
-        }]
+        items: [this.tree,
+          this.tabs]
       }]
     });
 
@@ -183,7 +184,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       }
     });
 
-    this.tabs = Ext.getCmp('tabs');
     this.dd = new Paperpile.DragDropManager();
     this.dd.initListeners();
 
@@ -212,7 +212,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.folderStore.reload();
 
     this.runningJobs = [];
-
     this.loadKeys();
 
     this.fileSyncStatus = {
@@ -221,17 +220,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       task: new Ext.util.DelayedTask(this.fireFileSync, this)
     };
 
-/*
-    Ext.apply(Ext.QuickTips.getQuickTip(), {
-      showDelay: 0,
-      dismissDelay: 0,
-      hideDelay: 0,
-      anchor: 'left'
-    });
-*/
-    //    var lp = new Paperpile.LabelPanel();
-    //    lp.setPosition(300, 200);
-    //    lp.show();
   },
 
   getZoom: function() {
@@ -285,47 +273,70 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   loadKeys: function() {
-    this.keys = new Ext.ux.KeyboardShortcuts(this.getEl());
 
-    this.keys.bindCallback('ctrl-shift-c', this.keyControlShiftC, this);
-    this.keys.bindCallback('ctrl-a', this.keyControlA, this);
-    this.keys.bindCallback('ctrl-r', this.keyControlR, this);
-    this.keys.bindCallback('ctrl-tab', this.keyControlTab, this);
-    this.keys.bindCallback('ctrl-w', this.keyControlW);
-    this.keys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
+    // Borrowed from Window.js
+    this.focusEl = this.el.createChild({
+      tag: 'a',
+      href: '#',
+      cls: 'pp-focus',
+      tabIndex: '1',
+      html: '&#160;'
+    });
 
-    this.getEl().on('keydown', this.onKeyDown);
+    // This will hold keyboard shortcuts that should only be active when nothing else has
+    // keyboard focus. Mostly for forwarding stuff on to the currently active grid.
+    this.sometimesKeys = new Ext.ux.KeyboardShortcuts(this.focusEl, {
+      disableOnBlur: true
+    });
+
+    // Hold keyboard shortcuts that are *always* active. Mostly for closing / switching tabs.
+    this.alwaysKeys = new Ext.ux.KeyboardShortcuts(this.el, {
+      disableOnBlur: false
+    });
+
+    var keys = ['ctrl-a', 'ctrl-c', 'ctrl-b', 'ctrl-k', 'n', 'p', 'shift-n', 'shift-p', 'j', 'k', 'shift-j', 'shift-k', '[End,35]', '[Home,36]', '[Del,46]', '[/,191]', 'ctrl-f'];
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      this.sometimesKeys.bindCallback(key, this.forwardToGrid, this);
+    }
+
+    this.sometimesKeys.bindCallback('ctrl-r', this.keyControlR, this);
+
+    this.alwaysKeys.bindCallback('ctrl-y', this.keyControlY, this);
+    this.alwaysKeys.bindCallback('ctrl-tab', this.keyControlTab, this);
+    this.alwaysKeys.bindCallback('ctrl-w', this.keyControlW);
+    this.alwaysKeys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
+
   },
 
-  onKeyDown: function(e) {
-    //Paperpile.log(e);
-    var tab = Paperpile.main.tabs.getActiveTab();
-
+  grabFocus: function() {
+    this.focusEl.focus(10);
   },
 
   keyQuesionMark: function() {
     //Paperpile.log("What's your problem?");
   },
 
-  keyControlA: function() {
-    var grid = this.getCurrentGrid();
-    if (grid) {
-      grid.selectAll();
+  forwardToGrid: function(e) {
+    if (this.getCurrentGrid()) {
+      this.getCurrentGrid().keys.keyMap.handleKeyDown(e);
     }
   },
 
-  keyControlShiftC: function() {
+  keyControlY: function() {
     Paperpile.main.tabs.newScreenTab('CatalystLog', 'catalyst-log');
   },
 
   keyControlR: function() {
-    Ext.StoreMgr.lookup('label_store').reload();
+    if (this.getCurrentGrid()) {
+      this.getCurrentGrid().getStore().reload();
+    }
   },
 
   keyControlC: function() {
-    var tab = Paperpile.main.tabs.getActiveTab();
-    var grid = tab.getGrid();
-    grid.handleCopyFormatted();
+    if (this.getCurrentGrid()) {
+      this.getCurrentGrid().handleCopyFormatted();
+    }
   },
 
   keyControlShiftK: function() {
@@ -460,6 +471,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (data !== null) {
       Paperpile.main.inc_read_counter(data);
     }
+  },
+
+  getTree: function() {
+    return this.tree;
+  },
+
+  getTabs: function() {
+    return this.tabs;
   },
 
   getCurrentGrid: function() {
@@ -597,7 +616,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.pdfExtractChoice.show();
 
-/*
+    /*
     if (justCreated) {
       var folderTip = new Ext.ToolTip({
         html: 'The selected folder and its subdirectories will be searched for PDFs to import',
@@ -774,7 +793,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // Requires each grid to have an "updateData" function.
   onUpdate: function(data) {
     if (data === undefined) return;
-    var tabs = Paperpile.main.tabs.items.items;
 
     // Update this part of the code when the new label widget is in
     // place. Right now the label list does not get updated. There
@@ -784,10 +802,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       this.labelStore.reload();
     }
 
-    for (var i = 0; i < tabs.length; i++) {
-      var tab = tabs[i];
-      if (!tab['onUpdate']) continue;
-      tab.onUpdate(data);
+    if (this.tabs) {
+      var tabs = this.tabs.items.items;
+      for (var i = 0; i < tabs.length; i++) {
+        var tab = tabs[i];
+        if (!tab['onUpdate']) continue;
+        tab.onUpdate(data);
+      }
     }
 
     // Even if the queue tab isn't showing, collect and dispatch callbacks.
@@ -954,16 +975,18 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   onFolderStoreLoad: function() {
     // Do the tree.
-    if (Paperpile.main.tree) {
-      Paperpile.main.tree.refreshFolders();
+    if (this.tree) {
+      this.tree.refreshFolders();
     }
 
     // Now tab panel and grids.
-    var tabs = Paperpile.main.tabs.items.items;
-    for (var i = 0; i < tabs.length; i++) {
-      var tab = tabs[i];
-      if (tab instanceof Paperpile.PluginPanel) {
-        tab.getGrid().refreshCollections();
+    if (this.tabs) {
+      var tabs = this.tabs.items.items;
+      for (var i = 0; i < tabs.length; i++) {
+        var tab = tabs[i];
+        if (tab instanceof Paperpile.PluginPanel) {
+          tab.getGrid().refreshCollections();
+        }
       }
     }
   },
@@ -975,11 +998,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
 
     // Now tab panel and grids.
-    var tabs = Paperpile.main.tabs.items.items;
-    for (var i = 0; i < tabs.length; i++) {
-      var tab = tabs[i];
-      if (tab instanceof Paperpile.PluginPanel) {
-        tab.getGrid().refreshCollections();
+    if (this.tabs) {
+      var tabs = this.tabs.items.items;
+      for (var i = 0; i < tabs.length; i++) {
+        var tab = tabs[i];
+        if (tab instanceof Paperpile.PluginPanel) {
+          tab.getGrid().refreshCollections();
+        }
       }
     }
 
