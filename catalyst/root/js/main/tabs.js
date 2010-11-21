@@ -146,7 +146,13 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       plugin_name = "Label";
     }
 
-    if (this.findAndActivateOpenTab(plugin_name)) {
+    var found_existing = false;
+    if (this.isUniqueByItemId(plugin_name)) {
+      found_existing = this.findAndActivateOpenTab(itemId);
+    } else {
+      found_existing = this.findAndActivateOpenTab(plugin_name);
+    }
+    if (found_existing) {
       return;
     }
 
@@ -159,7 +165,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       itemId: itemId
     };
 
-    if (this.isMultiInstancePlugin(plugin_name)) {
+    if (this.isMultiInstancePlugin(plugin_name) && !this.isUniqueByItemId()) {
       delete viewParams.itemId;
     }
 
@@ -210,6 +216,10 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     }));
 
     panel.show();
+  },
+
+  isUniqueByItemId: function(plugin_name) {
+    return (plugin_name == 'Label' || plugin_name == 'Folder');
   },
 
   isMultiInstancePlugin: function(plugin_name) {
