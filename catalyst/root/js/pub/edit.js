@@ -198,10 +198,10 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     this.inputs['pubtype'] = cb;
 
-    this.mon(cb,'focus', this.onFocus, this);
-    this.mon(cb,'blur', this.onBlur, this);
-
-    if (Ext.get('pdf-view-button')) {
+      cb.on('focus', this.onFocus, this);
+      cb.on('blur', this.onBlur, this);
+    if
+      (Ext.get('pdf-view-button')) {
       this.mon(Ext.get('pdf-view-button'),'click', function() {
         var pdf = this.data.pdf_name;
         var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
@@ -371,18 +371,18 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
       this.inputs[field] = input;
 
-      this.mon(input,'focus', this.onFocus, this);
-      this.mon('blur', this.onBlur, this);
+      input.on('focus', this.onFocus, this);
+      input.on('blur', this.onBlur, this);
 
       input.render(field + '-field', 0);
 
       if (field === 'title') {
-        this.mon(input,'keyup', function(field, e) {
+        input.on('keyup', function(field, e) {
           Ext.getCmp('save_button').setDisabled(field.getValue() == '');
           this.updateLookupButton();
         },
         this);
-        this.mon(input,'change', function(field, e) {
+        input.on('change', function(field, e) {
           Ext.getCmp('save_button').setDisabled(field.getValue() == '');
           this.updateLookupButton();
         },
@@ -390,11 +390,11 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       }
 
       if (field === 'authors' || field === 'doi' || field === 'pmid' || field === 'arxivid') {
-        this.mon(input,'keyup', function(field, e) {
+        input.on('keyup', function(field, e) {
           this.updateLookupButton();
         },
         this);
-        this.mon(input,'change', function(field, e) {
+        input.on('change', function(field, e) {
           this.updateLookupButton();
         },
         this);

@@ -670,15 +670,28 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     if (storeCount == 0 || !this.maintainSelectionBetweenReloads) {
       this.clearSelections(true);
     }
-    var numSelected = 0;
     for (var i = 0, len = s.length; i < len; i++) {
       var r = s[i];
       if ((index = ds.indexOfId(r.id)) != -1) {
         this.selectRow(index, true);
-        numSelected++;
         this.grid.getView().onRowSelect(index);
       }
     }
+
+    // Re-sort selections so they match up with the (possibly) new ordering.
+    this.selections.sort('ASC', function(a, b) {
+      var ind_a = ds.indexOfId(a.id);
+      var ind_b = ds.indexOfId(b.id);
+      // Go to the end of list if it's gone from the grid...
+      if (ind_a == -1) {
+        ind_a = 999;
+      }
+      if (ind_b == -1) {
+        ind_b = 999;
+      }
+      return ind_a - ind_b;
+    });
+
     this.resumeEvents();
     if (s.length != this.selections.getCount()) {
       this.fireEvent('selectionchange', this);
