@@ -243,10 +243,40 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
               // guaranteed.
               //Ext.StoreMgr.lookup('label_store').reload();
 
-              Paperpile.main.tabs.removeAll();
-              Paperpile.main.tabs.newDBtab('');
-              Paperpile.main.tabs.setActiveTab(0);
-              Paperpile.main.tabs.doLayout();
+
+
+              // Explicitly delete all open grid objects from the
+              // session variable in the backend. This needs to be
+              // done *before* the new grid is loaded because of
+              // strange race conditions that might occur when several
+              // processes read/write the session variable.
+
+              var open_grids = [];
+
+              var tabs = Paperpile.main.tabs.items.items;
+              for (var i = 0; i < tabs.length; i++) {
+                if (tabs[i].grid){
+                  open_grids.push(tabs[i].grid.id);
+                }
+              }
+        
+              Paperpile.Ajax({
+                url: '/ajax/plugins/delete_grids',
+                params: { 
+                  grid_ids: open_grids
+                },
+                success: function(response) {
+
+                  // Now close all tabs (this again calls
+                  // 'delete_grids' which is redundant but does not do
+                  // any harm)
+                  Paperpile.main.tabs.removeAll();
+                  Paperpile.main.tabs.newDBtab('');
+                  Paperpile.main.tabs.setActiveTab(0);
+                  Paperpile.main.tabs.doLayout();
+                }
+              });
+
             } else {
               Paperpile.main.onUpdate({
                 pub_delta: 1

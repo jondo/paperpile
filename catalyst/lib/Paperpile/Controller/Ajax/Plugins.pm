@@ -183,15 +183,20 @@ sub _resultsgrid_format {
 
 }
 
-sub delete_grid : Local {
+sub delete_grids : Local {
   my ( $self, $c ) = @_;
-  my $grid_id = $c->request->params->{grid_id};
+  my $grid_ids = $c->request->params->{grid_ids};
 
-  my $plugin = $c->session->{"grid_$grid_id"};
+  if (!(ref $grid_ids eq 'ARRAY')){
+    $grid_ids = [$grid_ids];
+  }
 
-  if ($plugin) {
-    $plugin->cleanup();
-    delete( $c->session->{"grid_$grid_id"} );
+  foreach my $grid_id (@$grid_ids){
+    my $plugin = $c->session->{"grid_$grid_id"};
+    if ($plugin) {
+      $plugin->cleanup();
+      delete( $c->session->{"grid_$grid_id"} );
+    }
   }
 
   $c->forward('Paperpile::View::JSON');
