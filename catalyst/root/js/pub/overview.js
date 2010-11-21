@@ -38,7 +38,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     this.forceUpdate();
   },
 
-  forceUpdate: function(updateImmediately) {
+  forceUpdate: function() {
     this.onUpdate({
       updateSidePanel: 1
     });
@@ -146,13 +146,18 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         this.updateAllInfo(newData);
       }
 
-    } else {
+    } else if (numSelected > 1) {
       // Multiple articles selected.
       var d = {
         id: this.id
       };
       this.oldData = d;
       this.updateInfoMultiple(d);
+    } else {
+      // No articles selected
+      if (data && data.updateSidePanel) {
+        this.updateInfoMultiple({});
+      }
     }
   },
 

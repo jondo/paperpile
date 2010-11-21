@@ -89,12 +89,12 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
       },
       'pageDown': function(e) {
         var pageDistance = this.grid.getPageSize();
-	e.stopEvent();
+        e.stopEvent();
         this.keyNavMove(pageDistance, e);
       },
       'pageUp': function(e) {
         var pageDistance = this.grid.getPageSize();
-	e.stopEvent();
+        e.stopEvent();
         this.keyNavMove(-pageDistance, e);
       },
       scope: this
@@ -660,7 +660,8 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     var ds = this.grid.store;
     var index;
     var s = this.getSelections();
-    if (!this.maintainSelectionBetweenReloads) {
+    var storeCount = ds.getCount();
+    if (storeCount == 0 || !this.maintainSelectionBetweenReloads) {
       this.clearSelections(true);
     }
     var numSelected = 0;
