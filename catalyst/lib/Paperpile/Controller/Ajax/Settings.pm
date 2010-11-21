@@ -151,16 +151,8 @@ sub update_patterns : Local {
 
     if ($ok) {
 
-      # update library_db in session variable and also all active plugins
-      # that have stored a reference to the database file
+      # update library_db in session variable
       $c->session->{library_db} = $library_db;
-      foreach my $key ( keys %{ $c->session } ) {
-        next if not $key =~ /^grid_/;
-        next if not $c->session->{$key}->plugin_name eq 'DB';
-        if ( $c->session->{$key}->file eq $settings->{library_db} ) {
-          $c->session->{$key}->file($library_db);
-        }
-      }
 
       # Force reload of tree
       #delete $c->session->{tree};

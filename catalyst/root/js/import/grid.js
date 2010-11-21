@@ -2284,9 +2284,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   onClose: function(cont, comp) {
     Paperpile.Ajax({
-      url: '/ajax/plugins/delete_grid',
+      url: '/ajax/plugins/delete_grids',
       params: {
-        grid_id: this.id
+        grid_ids: this.id
       }
     });
   },
