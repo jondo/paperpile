@@ -77,10 +77,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         scope: this,
         fn: this.myOnClick
       },
-       containerClick: {
-	   scope: this,
-	   fn: this.myContainerClick
-       },
+      containerClick: {
+        scope: this,
+        fn: this.myContainerClick
+      },
       beforeLoad: {
         scope: this,
         fn: function(node) {
@@ -278,12 +278,12 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     Paperpile.Tree.superclass.initEvents.call(this);
   },
 
-  myContainerClick: function(tree,e) {
-      var targetEl = e.getTarget("span", 10, true);
-      if (!targetEl) {
-	Paperpile.main.grabFocus();
-        return;
-      }      
+  myContainerClick: function(tree, e) {
+    var targetEl = e.getTarget("span", 10, true);
+    if (!targetEl) {
+      Paperpile.main.grabFocus();
+      return;
+    }
   },
 
   myOnClick: function(node, e) {
@@ -291,7 +291,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // Only take clicks that occur right within the node text area.
       var targetEl = e.getTarget("span", 10, true);
       if (!targetEl) {
-	Paperpile.main.grabFocus();
+        Paperpile.main.grabFocus();
         return;
       }
     }
@@ -332,7 +332,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       break;
     case 'IMPORT_PLUGIN':
     case 'LABEL':
+      Paperpile.main.tabs.newCollectionTab(node, 'LABEL');
+      break;
     case 'FOLDER':
+      Paperpile.main.tabs.newCollectionTab(node, 'FOLDER');
+      break;
     case 'ACTIVE':
       // Collect plugin paramters
       var pars = {};
@@ -342,23 +346,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         }
       }
 
-      // Use default title and css for tab
-      var title = pars.plugin_title;
-      var iconCls = null;
-
-      // For labels use specifically styled tab
-      if (node.type == 'LABEL') {
-        pars.collection_type = 'label';
-      }
-
-      if (node.type == 'FOLDER') {
-        pars.collection_type = 'folder';
-      }
-
       // For now we reload feeds whenever they are opened 
       if (pars.plugin_name == 'Feed') {
         pars.plugin_reload = 1;
       }
+
+      // Use default title and css for tab
+      var title = pars.plugin_title;
 
       // Call appropriate frontend, labels, active folders, and folders are opened only once
       // and we pass the node.id as item-id for the tab
@@ -1016,31 +1010,17 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var newNode;
 
     node.expand(false, false, function(n) {
-      newNode = n.appendChild(this.loader.createNode({
-        text: 'New Folder',
+      var id = Paperpile.utils.generateUUID();
+      var record = new Ext.data.Record({
         name: 'New Folder',
         display_name: 'New Folder',
-        iconCls: 'pp-icon-folder',
-        draggable: true,
-        expanded: true,
-        children: [],
-        // Important: Folders must not be created as leaf nodes, because they need to be able to hold other folders.
-        leaf: false,
-        // Also important: use the loaded:true parameter to signal the UI that there aren't children waiting to be loaded. Things mess up without this!!!
-        loaded: true,
-        id: Paperpile.utils.generateUUID()
-      }));
-
-      var pars = {
         type: 'FOLDER',
-        plugin_query: 'folderid:' + newNode.id,
-        plugin_base_query: 'folderid:' + newNode.id,
-        plugin_name: 'DB',
-        plugin_title: newNode.text,
-        plugin_iconCls: 'pp-icon-folder',
-        plugin_mode: 'FULLTEXT'
-      };
-      newNode.init(pars);
+        guid: id
+      },
+      id);
+      var newNode = this.recordToNode(record, 'FOLDER');
+
+      n.appendChild(newNode);
 
       this.lastSelectedNode = newNode;
       this.allowSelect = true;
@@ -1065,8 +1045,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       success: function(response) {
         if (node.type === 'LABEL') {
-          var json = Ext.util.JSON.decode(response.responseText);
           Paperpile.main.triggerLabelStoreReload();
+        } else if (node.type === 'FOLDER') {
+          Paperpile.main.triggerFolderStoreReload();
         }
       },
       scope: this
@@ -1307,35 +1288,23 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var label = 'New Label';
     node.expand(false, false, function(n) {
 
-      newNode = this.loader.createNode({
-        text: label,
-        name: label,
-        display_name: label,
-        iconCls: 'pp-icon-empty',
-        labelStyle: 'default',
-        cls: 'pp-label-tree-node pp-label-tree-style-0',
-        draggable: true,
-        leaf: true,
-        expanded: true,
-        children: [],
-        id: Paperpile.utils.generateUUID(),
-        type: 'LABEL',
-        plugin_name: 'DB',
-        plugin_title: label,
-        plugin_iconCls: 'pp-icon-label',
-        plugin_mode: 'FULLTEXT',
-        plugin_query: 'labelid:' + Paperpile.utils.encodeLabel(label),
-        plugin_base_query: 'labelid:' + Paperpile.utils.encodeLabel(label)
-      });
+      var id = Paperpile.utils.generateUUID();
+      var record = new Ext.data.Record({
+        name: 'New Label',
+        display_name: 'New Label',
+        type: 'FOLDER',
+        guid: id
+      },
+        id);
+      var newNode = this.recordToNode(record, 'LABEL');
+
       if (this.moreLabelsNode) {
         node.insertBefore(newNode, this.moreLabelsNode);
       } else {
 
       }
       newNode.select();
-
       this.triggerNewNodeEdit(newNode);
-
     }.createDelegate(this));
   },
 
@@ -1368,60 +1337,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     // Now, clear the callbacks from the treeEditor.
     this.mun(treeEditor, 'canceledit', this.removeOnCancel);
     this.mun(treeEditor, 'complete', this.addOnCommit);
-  },
-
-  containsLabelWithText: function(text) {
-    var labelIndex = Ext.StoreMgr.lookup('label_store').findExact('label', text);
-    if (labelIndex > -1) {
-      return true;
-    }
-    return false;
-  },
-
-  getNodeBreadcrumb: function(node, separator, limit_id) {
-    var string = node.text;
-    node = node.parentNode;
-    while (node) {
-      if (node.id == limit_id) {
-        return string;
-      }
-      string = node.text + separator + string;
-      node = node.parentNode;
-    }
-    return string;
-  },
-
-  getUniqueFolderBreadcrumb: function(node) {
-    var folderRoot = this.getNodeById('FOLDER_ROOT');
-    var leaves = this.getAllLeafNodes(folderRoot);
-    var name_hash;
-    for (var i = 0; i < leaves.length; i++) {
-      var leaf = leaves[i];
-      var bc = this.getNodeBreadcrumb(leaf, "_", 'FOLDER_ROOT');
-      if (leaves[bc] === undefined) {
-        leaves[bc] = 0;
-      } else {
-        leaves[bc]++;
-      }
-      if (leaf === node) {
-        var uniqueName = bc;
-        var suffix = "";
-        if (leaves[bc] > 0) {
-          suffix = "_" + leaves[bc];
-        }
-        return uniqueName + suffix;
-      }
-    }
-  },
-
-  getUniqueLabel: function(text) {
-    var base = text;
-    var i = 2;
-    while (this.containsLabelWithText(text)) {
-      text = base + " (" + i + ")";
-      i++;
-    }
-    return text;
   },
 
   sortLabelsByCount: function() {

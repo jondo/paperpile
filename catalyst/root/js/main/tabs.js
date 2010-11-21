@@ -128,7 +128,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     if (this.findAndActivateOpenTabByItemId(node.id)) {
       return;
     }
-
+      Paperpile.log(node.display_name);
     this.newPluginTab(node.plugin_name, node, node.display_name, iconCls, node.id);
   },
 
@@ -162,7 +162,6 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       itemId: itemId
     };
     if (iconCls) viewParams.iconCls = iconCls;
-    if (title) viewParams.title = title;
     var newView = this.add(new Paperpile['PluginPanel' + javascript_ui](viewParams));
     newView.show();
   },
