@@ -1527,12 +1527,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   getSelectionAsList: function(what) {
     if (!what) what = 'ALL';
     var selection = [];
-    this.getSelectionModel().each(
-      function(record) {
-        if ((what == 'ALL') || (what == 'IMPORTED' && record.get('_imported')) || (what == 'NOT_IMPORTED' && !record.get('_imported'))) {
-          selection.push(record.get('guid'));
-        }
-      });
+    var sels = this.getSelectionModel().getSelections();
+    for (var i = 0; i < sels.length; i++) {
+      var record = sels[i];
+      if ((what == 'ALL') || (what == 'IMPORTED' && record.get('_imported')) || (what == 'NOT_IMPORTED' && !record.get('_imported'))) {
+        selection.push(record.get('guid'));
+      }
+    }
     return selection;
   },
 
@@ -1752,7 +1753,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   getFormattedText: function(module, format, callback) {
-
     Paperpile.Ajax({
       url: '/ajax/plugins/export',
       params: {
