@@ -515,7 +515,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.getStore().on('load', function() {
       if (this.getStore().getCount() > 0) {
         this.getSelectionModel().selectRowAndSetCursor(0);
-	this.afterSelectionChange(this.getSelectionModel());
+        this.afterSelectionChange(this.getSelectionModel());
       }
     },
     this, {
@@ -1045,6 +1045,41 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     return this.sidebarTemplate;
   },
 
+  getAllCopyLinks: function(type) {
+    // Generates the conditional template strings to create hover-links for the identifier fields.
+    var fields = ['doi', 'pmid', 'url', 'eprint', 'arxivid'];
+    var labels = ['DOI', 'PubMed', 'URL', 'E-Print', 'arXiv'];
+    var strings = [];
+    for (var i = 0; i < labels.length; i++) {
+      if (type == 'details') {
+        strings = strings.concat(this.getDetailsCopyLinks(fields[i], labels[i]));
+      } else if (type == 'overview') {
+        strings = strings.concat(this.getOverviewCopyLinks(fields[i], labels[i]));
+      }
+    }
+    return strings.join("\n");
+  },
+
+  getDetailsCopyLinks: function(field, label) {
+    return[
+    '          <tpl if="field == \'' + field + '\'">',
+    '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + ' link in browser" action="' + field + '-link"></div>',
+    '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + ' URL to clipboard" action="' + field + '-copy"></div>',
+    '          </tpl>'];
+  },
+
+  getOverviewCopyLinks: function(field, label) {
+    return[
+    '<tpl if="' + field + '">',
+    '<div class="link-hover">',
+    '  <dt>' + label + ': </dt>',
+    '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + ' link in browser" action="' + field + '-link"></div>',
+    '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + ' URL to clipboard" action="' + field + '-copy"></div>',
+    '<dd class="pp-info-' + field + '">{' + field + '}</dd>',
+    '</div>',
+    '</tpl>'];
+  },
+
   getDetailsTemplate: function() {
     return[
     '<div id="main-container-{id}">',
@@ -1058,22 +1093,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     '      <dt>Type: </dt><dd>{_pubtype}</dd>',
     '      <tpl for="fields">',
     '        <div class="link-hover">',
-    '          <tpl if="field == \'doi\'">',
-    '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open DOI link in browser" action="doi-link"></div>',
-    '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy DOI URL to clipboard" action="doi-copy"></div>',
-    '          </tpl>',
-    '          <tpl if="field == \'pmid\'">',
-    '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open PubMed link in browser" action="pmid-link"></div>',
-    '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy PubMed URL to clipboard" action="pmid-copy"></div>',
-    '          </tpl>',
-    '          <tpl if="field == \'eprint\'">',
-    '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open Eprint link in browser" action="eprint-link"></div>',
-    '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy Eprint URL to clipboard" action="eprint-copy"></div>',
-    '          </tpl>',
-    '          <tpl if="field == \'url\'">',
-    '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open link in browser" action="url-link"></div>',
-    '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy URL to clipboard" action="url-copy"></div>',
-    '          </tpl>',
+    this.getAllCopyLinks('details'),
     '          <dt>{label}:</dt><dd class="pp-word-wrap pp-info-{field}">{value}</dd>',
     '        </div>',
     '      </tpl>',
@@ -1127,29 +1147,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  </tpl>',
       '  <dd>{_createdPretty}</dd>',
       '</tpl>',
-      '<tpl if="doi">',
-      '<div class="link-hover">',
-      '  <dt>DOI: </dt>',
-      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open DOI link in browser" action="doi-link"></div>',
-      '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy DOI URL to clipboard" action="doi-copy"></div>',
-      '<dd class="pp-info-doi">{doi}</dd>',
-      '</div>',
-      '</tpl>',
-      '<tpl if="eprint">',
-      '<div class="link-hover">',
-      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open Eprint link in browser" action="eprint-link"></div>',
-      '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy Eprint URL to clipboard" action="eprint-copy"></div>',
-      '  <dt>Eprint: </dt>',
-      '  <dd>{eprint}</dd>',
-      '</div>',
-      '</tpl>',
-      '<tpl if="pmid">',
-      '<div class="link-hover">',
-      '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open PubMed link in browser" action="pmid-link"></div>',
-      '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy PubMed URL to clipboard" action="pmid-copy"></div>',
-      '  <dt>PubMed ID: </dt><dd class="pp-info-pmid">{pmid}</dd>',
-      '</div>',
-      '</tpl>',
+      this.getAllCopyLinks('overview'),
       '<tpl if="folders">',
       '  <dt>Folders: </dt>',
       '  <dd>',

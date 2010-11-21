@@ -240,7 +240,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   },
 
   updateEllipses: function(data) {
-    var ellipsable_fields = ['.pp-info-doi', '.pp-info-pmid', '.pp-info-url', '.pp-info-eprint'];
+    var ellipsable_fields = ['.pp-info-doi', '.pp-info-pmid', '.pp-info-url', '.pp-info-eprint', '.pp-info-arxivid'];
     for (var i = 0; i < ellipsable_fields.length; i++) {
       var field = ellipsable_fields[i];
       if (!field) {
