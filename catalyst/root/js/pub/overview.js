@@ -24,7 +24,6 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         background: '#ffffff',
         padding: '7px'
       },
-      autoScroll: true
     });
 
     Paperpile.PubOverview.superclass.initComponent.call(this);
@@ -336,7 +335,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   // after the template was written in updateDetail
   //    
   installEvents: function() {
-    this.mon(this.el,'click', this.handleClick, this);
+    this.mon(this.el, 'click', this.handleClick, this);
   },
 
   handleClick: function(e) {
@@ -609,14 +608,14 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
       cancel.render('label-control-' + this.id);
 
-      this.mon(Ext.get('label-control-cancel-'+this.id),'click', function() {
+      this.mon(Ext.get('label-control-cancel-' + this.id), 'click', function() {
         Ext.get('label-add-link-' + this.id).show();
         this.hideLabelControls();
       },
       this);
     }
 
-    this.mon(Ext.get('label-control-ok-' + this.id),'click', this.onAddLabel, this);
+    this.mon(Ext.get('label-control-ok-' + this.id), 'click', this.onAddLabel, this);
 
   },
 
