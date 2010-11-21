@@ -1477,13 +1477,18 @@ div:hover.pp-grid-sort-item {
     border-style:dotted;
 }
 
-.pp-pluginlist-panel, .pp-pluginlist-panel .x-panel-body {
-    background:none;
-    border: none;
+.pp-pluginlist-base .x-panel-body {
+   background: none;
 }
 
-.pp-pluginlist-widget {
+.pp-pluginlist-wrap {
+    /* Yellow bg for plugin-list widget panel. */
+    background-color: #FFFEEB;
+}
 
+.pp-pluginlist-base .x-panel.x-tree {
+    /* White bg for tree panels */
+    background-color: #FFFFFF;
 }
 
 .pp-pluginlist-widget .label{

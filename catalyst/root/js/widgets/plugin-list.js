@@ -85,6 +85,8 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Container, {
     Ext.apply(this, {
       width: 330,
       height: 150,
+      cls: 'pp-pluginlist-base',
+      bodyCssClass: 'pp-pluginlist-wrap',
       layout: {
         type: 'vbox',
         align: 'stretch',
