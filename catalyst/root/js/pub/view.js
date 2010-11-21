@@ -19,18 +19,24 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
   initComponent: function() {
 
-    this.grid = this.createGrid(this.gridParams);
     // Center panel is composed of grid, abstract and notes.
+    this.grid = this.createGrid(this.gridParams);
     this.centerPanel = this.createCenterPanel();
 
-    this.overviewPanel = this.createOverview();
     // East panel is composed of overview and details.
+    this.overviewPanel = this.createOverview();
     this.eastPanel = this.createEastPanel();
+
+    this.centerPanel.flex = 3;
+    this.eastPanel.flex = 2;
 
     Ext.apply(this, {
       tabType: 'PLUGIN',
-      layout: 'border',
       hideBorders: true,
+      layout: 'hbox',
+      layoutConfig: {
+        align: 'stretch'
+      },
       items: [
         this.centerPanel,
         this.eastPanel]
@@ -38,10 +44,43 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
 
     Paperpile.PluginPanel.superclass.initComponent.call(this);
 
-    this.eastPanel.on('afterrender', this.afterEastRender, this);
+    this.on('afterlayout', function() {
+
+      // Roll-your-own horizontal stretch layout.
+      var fraction = 1 / 3; // Fraction of smaller half to larger half.
+      var width = this.getWidth();
+
+      var w2 = width * (fraction);
+      var w1 = width * (1 - fraction);
+
+      var min2 = 300;
+      var max = 500;
+      if (w2 > max) {
+        w2 = max;
+        w1 = width - max;
+      }
+      // Respect minimum sizes. The larger half (w1) takes precedence.
+      if (w2 < min2) {
+        w2 = min2;
+        w1 = width - min2;
+      }
+      var min1 = 300;
+      if (w1 < min1) {
+        w1 = min1;
+        w2 = width - min1;
+      }
+
+      this.centerPanel.setWidth(w1);
+      this.eastPanel.setWidth(w2);
+      this.centerPanel.setPosition(0, 0);
+      this.eastPanel.setPosition(width - w2, 0);
+    },
+    this);
+
+    this.mon(this.eastPanel, 'afterrender', this.afterEastRender, this);
 
     this.on('afterrender', function() {
-      this.el.on('click', function() {
+      this.mon(this.el, 'click', function() {
         Paperpile.main.grabFocus();
       },
       this);
@@ -61,6 +100,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
   saveScrollState: function() {
     this.gridState = this.getGrid().getView().getScrollState();
   },
+
   restoreScrollState: function() {
     if (this.gridState != null) {
       this.getGrid().getView().restoreScroll(this.gridState);
@@ -68,17 +108,16 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     }
   },
 
-  createGrid: function(params) {
-    return new Paperpile.PluginGrid(params);
+  createGrid: function() {
+    return new Paperpile.PluginGrid();
   },
 
-  createOverview: function(params) {
-    return new Paperpile.PubOverview(params);
+  createOverview: function() {
+    return new Paperpile.PubOverview();
   },
 
   createCenterPanel: function() {
     var centerPanel = new Ext.Panel({
-      region: 'center',
       itemId: 'center_panel',
       layout: 'border',
       items: [
@@ -104,13 +143,10 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     }
 
     var eastPanel = new Ext.Panel({
-      region: 'east',
       itemId: 'east_panel',
       activeItem: 0,
-      split: true,
       layout: 'card',
-      width: 300,
-      items: eastPanelItems,
+      items: [eastPanelItems],
       bbar: [{
         text: 'Overview',
         itemId: 'overview_tab_button',
@@ -133,18 +169,18 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
         disabled: true,
         pressed: false
       },
-        '->', {
-          text: 'About',
-          itemId: 'about_tab_button',
-          enableToggle: true,
-          toggleHandler: this.onControlToggle,
-          toggleGroup: 'control_tab_buttons' + this.id,
-          scope: this,
-          disabled: true,
-          allowDepress: false,
-          pressed: false,
-          hidden: true
-        }]
+      {
+        text: 'About',
+        itemId: 'about_tab_button',
+        enableToggle: true,
+        toggleHandler: this.onControlToggle,
+        toggleGroup: 'control_tab_buttons' + this.id,
+        scope: this,
+        disabled: true,
+        allowDepress: false,
+        pressed: false,
+        hidden: true
+      }]
     });
     this.eastPanel = eastPanel;
     return this.eastPanel;
@@ -275,7 +311,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       this.updateDetailsTask.cancel();
       this.updateDetailsWork();
     } else {
-      this.updateDetailsTask.delay(40);
+      this.updateDetailsTask.delay(50);
     }
   },
 

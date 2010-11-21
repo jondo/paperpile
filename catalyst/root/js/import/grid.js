@@ -437,20 +437,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     });
 
-    this.getStore().on({
-      loadexception: {
-        scope: this,
-        fn: function(exception, options, response, error) {
-          Paperpile.main.onError(response);
-        }
-      },
-      load: {
-        scope: this,
-        fn: this.onStoreLoad
-      }
-    });
+    this.mon(this.getStore(), 'load', this.onStoreLoad, this);
+    this.mon(this.getStore(), 'loadexception', function(exception, options, response, error) {
+      Paperpile.main.onError(response);
+    },
+    this);
 
-    this.getSelectionModel().on('afterselectionchange', function() {
+    this.mon(this.getSelectionModel(), 'afterselectionchange', function() {
       if (Paperpile.status.messageToHideOnClick) {
         Paperpile.status.clearMessageNumber(Paperpile.status.messageToHideOnClick);
         Paperpile.status.messageToHideOnClick = null;
@@ -458,7 +451,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
     this);
 
-    this.getSelectionModel().on('pageselected', function() {
+    this.mon(this.getSelectionModel(), 'pageselected', function() {
       var num = this.getSelectionModel().getCount();
       var all = this.getStore().getTotalCount();
       if (all <= num) {
@@ -479,13 +472,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var clearMsg = function() {
         Paperpile.status.clearMessageNumber(messageNum);
       };
-      this.getSelectionModel().on('afterselectionchange', clearMsg, this, {
+      this.mon(this.getSelectionModel(), 'afterselectionchange', clearMsg, this, {
         single: true
       });
     },
     this);
 
-    this.getSelectionModel().on('allselected', function() {
+    this.mon(this.getSelectionModel(), 'allselected', function() {
       var num = this.getSelectionModel().getCount();
       Paperpile.status.clearMsg();
       Paperpile.status.updateMsg({
@@ -504,7 +497,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var clearMsg = function() {
         Paperpile.status.clearMessageNumber(messageNum);
       };
-      this.getSelectionModel().on('afterselectionchange', clearMsg, this, {
+      this.mon(this.getSelectionModel(), 'afterselectionchange', clearMsg, this, {
         single: true
       });
 
@@ -512,7 +505,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this);
 
     // Auto-select the first row when the store finally loads up.
-    this.getStore().on('load', function() {
+    this.mon(this.getStore(), 'load', function() {
       if (this.getStore().getCount() > 0) {
         this.getSelectionModel().selectRowAndSetCursor(0);
         this.afterSelectionChange(this.getSelectionModel());
@@ -530,7 +523,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   installEvents: function() {
-    this.el.on('click', this.handleClick, this);
+    this.mon(this.el, 'click', this.handleClick, this);
     this.loadKeyboardShortcuts();
   },
 
@@ -761,10 +754,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   afterSelectionChange: function(sm) {
-    // Delete the previously stored set of selected records.
-    delete this._selected_records;
-    this.contextRecord = null;
-
     this.updateButtons();
     this.getPluginPanel().updateDetails();
     if (sm.getCount() == 1) {
@@ -784,25 +773,21 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   myAfterRender: function(ct) {
-    this.pager.on({
-      'beforechange': {
-        fn: function(pager, params) {
-          var lastParams = this.pager.store.lastOptions.params;
-          if (params.start != lastParams.start) {
-            this.getView().on('refresh', function() {
-              this.getView().scrollToTop();
-            },
-            this, {
-              single: true
-            });
-          }
+    this.mon(this.pager, 'beforechange', function(pager, params) {
+      var lastParams = this.pager.store.lastOptions.params;
+      if (params.start != lastParams.start) {
+        this.mon(this.getView(), 'refresh', function() {
+          this.getView().scrollToTop();
         },
-        scope: this
+        this, {
+          single: true
+        });
       }
-    });
+    },
+    this);
 
     // Note: the 'afterselectionchange' event is a custom selection model event.
-    this.getSelectionModel().on('afterselectionchange', this.afterSelectionChange, this);
+    this.mon(this.getSelectionModel(), 'afterselectionchange', this.afterSelectionChange, this);
 
     this.dropZone = new Paperpile.GridDropZone(this, {
       ddGroup: this.ddGroup
@@ -882,9 +867,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     });
 
     // Add some callbacks to the store so we can maintain the selection between reloads.
-    this.getStore().on('beforeload', function(store, options) {},
-    this);
-    this.getStore().on('load', function(store, options) {
+    this.mon(this.getStore(), 'load', function(store, options) {
       this.getStore().isLoaded = true;
       if (!this.doAfterNextReload) {
         this.doAfterNextReload = [];
@@ -896,6 +879,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.doAfterNextReload = [];
     },
     this);
+
     return this._store;
   },
 
@@ -1371,7 +1355,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
   },
 
-  contextRecord: null,
   onContextClick: function(grid, index, e) {
     if (!this.getSelectionModel().isSelected(index)) {
       this.getSelectionModel().selectRow(index);
@@ -1592,7 +1575,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var blockingFunction = function() {
         return false;
       };
-      this.getSelectionModel().on('beforerowselect', blockingFunction, this);
+      this.mon(this.getSelectionModel(), 'beforerowselect', blockingFunction, this);
       this.isLocked = true;
 
       var guid = data.guid;
@@ -2370,6 +2353,8 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     var pageText = this.findBy(function(item, container) {
       if (item.text == this.beforePageText) {
         return true;
+      } else {
+        return false;
       }
     },
     this);
@@ -2408,20 +2393,21 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
       },
       cls: 'pp-toolbar-progress'
     });
-    this.progressBar.on('render', function(pb) {
-      this.mon(pb.getEl(), 'mousedown', this.handleProgressBarClick, this);
-      this.mon(pb.getEl(), 'mousemove', this.handleMouseMove, this);
-      this.mon(pb.getEl(), 'mouseover', this.handleMouseOver, this);
-      this.mon(pb.getEl(), 'mouseout', this.handleMouseOut, this);
-    },
-    this);
+    this.mon(
+      this.progressBar, 'render', function(pb) {
+        this.mon(pb.getEl(), 'mousedown', this.handleProgressBarClick, this);
+        this.mon(pb.getEl(), 'mousemove', this.handleMouseMove, this);
+        this.mon(pb.getEl(), 'mouseover', this.handleMouseOver, this);
+        this.mon(pb.getEl(), 'mouseout', this.handleMouseOut, this);
+      },
+      this);
     this.insert(2, this.progressBar);
     this.insert(2, new Ext.Toolbar.Spacer({
       width: 5
     }));
 
-    this.next.on('click', this.grid.onPageButtonClick, this.grid);
-    this.prev.on('click', this.grid.onPageButtonClick, this.grid);
+    this.mon(this.next, 'click', this.grid.onPageButtonClick, this.grid);
+    this.mon(this.prev, 'click', this.grid.onPageButtonClick, this.grid);
 
   },
   handleMouseOver: function(e) {

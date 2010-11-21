@@ -18,7 +18,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       });
 
       this._filterTask = new Ext.util.DelayedTask(this.updateFilterAndView, this);
-      this._filter.on('keyup', function(f, e) {
+      this.mon(this._filter,'keyup',function(f, e) {
         var k = e.getKey();
         if (k == e.DOWN || k == e.UP || k == e.ENTER || k == e.TAB) {
           return;
@@ -253,7 +253,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
 
   show: function() {
     Paperpile.LabelPanel.superclass.show.call(this);
-    Ext.getDoc().on("mousedown", this.onMouseDown, this);
+    this.mon(Ext.getDoc(),"mousedown", this.onMouseDown, this);
     if (this._filter) {
       this._filter.setValue('');
       this._filter.el.focus();
@@ -265,7 +265,7 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
 
   hide: function() {
     Paperpile.LabelPanel.superclass.hide.call(this);
-    Ext.getDoc().un("mousedown", this.onMouseDown, this);
+    this.mun(Ext.getDoc(),"mousedown", this.onMouseDown, this);
   },
 
   onMouseDown: function(e) {

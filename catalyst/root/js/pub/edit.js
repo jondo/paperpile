@@ -198,11 +198,11 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     this.inputs['pubtype'] = cb;
 
-    cb.on('focus', this.onFocus, this);
-    cb.on('blur', this.onBlur, this);
+    this.mon(cb,'focus', this.onFocus, this);
+    this.mon(cb,'blur', this.onBlur, this);
 
     if (Ext.get('pdf-view-button')) {
-      Ext.get('pdf-view-button').on('click', function() {
+      this.mon(Ext.get('pdf-view-button'),'click', function() {
         var pdf = this.data.pdf_name;
         var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
         Paperpile.utils.openFile(path);
@@ -237,7 +237,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     this.updateLookupButton();
 
-    Ext.get('form-table').on('click', this.onClick, this);
+    this.mon(Ext.get('form-table'),'click', this.onClick, this);
 
   },
 
@@ -371,18 +371,18 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
       this.inputs[field] = input;
 
-      input.on('focus', this.onFocus, this);
-      input.on('blur', this.onBlur, this);
+      this.mon(input,'focus', this.onFocus, this);
+      this.mon('blur', this.onBlur, this);
 
       input.render(field + '-field', 0);
 
       if (field === 'title') {
-        input.on('keyup', function(field, e) {
+        this.mon(input,'keyup', function(field, e) {
           Ext.getCmp('save_button').setDisabled(field.getValue() == '');
           this.updateLookupButton();
         },
         this);
-        input.on('change', function(field, e) {
+        this.mon(input,'change', function(field, e) {
           Ext.getCmp('save_button').setDisabled(field.getValue() == '');
           this.updateLookupButton();
         },
@@ -390,11 +390,11 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       }
 
       if (field === 'authors' || field === 'doi' || field === 'pmid' || field === 'arxivid') {
-        input.on('keyup', function(field, e) {
+        this.mon(input,'keyup', function(field, e) {
           this.updateLookupButton();
         },
         this);
-        input.on('change', function(field, e) {
+        this.mon(input,'change', function(field, e) {
           this.updateLookupButton();
         },
         this);

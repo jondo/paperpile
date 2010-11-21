@@ -317,6 +317,9 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
      * @return {Boolean}
      */
   isSelected: function(index) {
+    if (!this.grid) {
+      return;
+    }
     var r = Ext.isNumber(index) ? this.grid.store.getAt(index) : index;
     return (r && this.selections.key(r.id) ? true : false);
   },
@@ -410,6 +413,9 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
      * prevent notifying the view (disables updating the selected appearance)
      */
   selectRow: function(index, keepExisting, preventViewNotify) {
+    if (!this.grid) {
+      return;
+    }
     if (this.isLocked() || (index < 0 || index >= this.grid.store.getCount()) || (keepExisting && this.isSelected(index))) {
       return;
     }

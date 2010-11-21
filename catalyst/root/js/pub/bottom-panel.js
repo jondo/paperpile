@@ -121,7 +121,7 @@ Paperpile.DataTabs = Ext.extend(Ext.Panel, {
       var el = Ext.get(this.id + '-xcollapsed');
       el.addClass('pp-collapsed');
       el.removeAllListeners();
-      el.on('click', this.expand, this);
+      this.mon(el,'click', this.expand, this);
 
     },
     this);

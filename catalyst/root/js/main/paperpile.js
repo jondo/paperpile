@@ -135,8 +135,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       region: 'west',
       margins: '2 2 2 2',
       cmargins: '5 5 0 5',
-      width: '200px'
     });
+
+    this.tree.flex = 1;
+    this.tabs.flex = 3;
 
     Ext.apply(this, {
       layout: 'border',
@@ -144,7 +146,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       keys: {},
       items: [{
         xtype: 'panel',
-        layout: 'border',
+        layout: 'hbox',
+        layoutConfig: {
+          align: 'stretch',
+        },
         region: 'center',
         tbar: new Ext.Toolbar({
           id: 'main-toolbar',
@@ -174,6 +179,39 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
 
     Paperpile.Viewport.superclass.initComponent.call(this);
+
+    var restrictMax = function() {
+      // Roll-your-own horizontal stretch layout.
+      var fraction = 1 / 5; // Fraction of the size of smaller panel (w2) to the larger one (w1)
+      var width = this.getWidth();
+
+      var w2 = width * (fraction);
+      var w1 = width * (1 - fraction);
+
+      var min2 = 150;
+      var max = 400;
+      if (w2 > max) {
+        w2 = max;
+        w1 = width - max;
+      }
+      // Respect minimum sizes. The larger half (w1) takes precedence.
+      if (w2 < min2) {
+        w2 = min2;
+        w1 = width - min2;
+      }
+      var min1 = 400;
+      if (w1 < min1) {
+        w1 = min1;
+        w2 = width - min1;
+      }
+      this.tree.setWidth(w2);
+      this.tabs.setWidth(w1);
+      this.tree.setPosition(0, 0);
+      this.tabs.setPosition(w2, 0);
+    };
+    this.on('afterlayout', restrictMax, this);
+
+    restrictMax.call(this);
 
     this.mon(Ext.getBody(), 'click', function(event, target, options) {
       if (target.href) {
@@ -242,7 +280,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       win.setWidth(oldWidth * zoomRatio);
       win.setHeight(oldHeight * zoomRatio);
     }
-    bin
     Ext.getBody().setStyle('zoom', zoomLevel);
     // Now resize the body element.
     this.resizeWithZoom(this.getWidth(), this.getHeight());
@@ -255,6 +292,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   fireResize: function(w, h) {
+    Paperpile.Viewport.superclass.fireResize.call(this, w, h);
     this.resizeWithZoom(w, h);
   },
 
@@ -302,11 +340,19 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.sometimesKeys.bindCallback('ctrl-r', this.keyControlR, this);
 
+    this.alwaysKeys.bindCallback('ctrl-x', this.keyControlX, this);
     this.alwaysKeys.bindCallback('ctrl-y', this.keyControlY, this);
     this.alwaysKeys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.alwaysKeys.bindCallback('ctrl-w', this.keyControlW);
     this.alwaysKeys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
 
+  },
+
+  keyControlX: function() {
+    var itemId = 'pp-dash';
+    for (var i = 0; i < 3; i++) {
+      this.tabs.newScreenTab('Dashboard', itemId);
+    }
   },
 
   grabFocus: function() {

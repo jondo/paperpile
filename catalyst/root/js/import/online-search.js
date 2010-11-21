@@ -34,7 +34,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
 
     grid.getStore().baseParams.cancel_handle = 'grid_' + grid.id;
 
-    grid.store.on('beforeload',
+    grid.mon(grid.getStore(),'beforeload',
       function() {
         if (this.backgroundLoading) {
           return;
@@ -77,7 +77,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       },
       grid);
 
-    grid.store.on('load',
+    grid.mon(grid.getStore(),'load',
       function() {
         // Clear status message and timeout timers
         if (!this.backgroundLoading) {
@@ -99,7 +99,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       grid);
 
     // Make sure timeouts are cleared on error 
-    grid.store.on('loadexception',
+    grid.mon(grid.getStore(),'loadexception',
       function(exception, options, response, error) {
         clearTimeout(this.timeoutWarn);
         clearTimeout(this.timeoutAbort);
@@ -108,7 +108,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       },
       grid);
 
-    grid.store.on('destroy', function() {
+    grid.mon(grid.getStore(),'destroy', function() {
       if (this.isLoading) {
         clearTimeout(this.timeoutWarn);
         clearTimeout(this.timeoutAbort);

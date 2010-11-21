@@ -14,7 +14,6 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PubNotes = Ext.extend(Ext.Panel, {
   markup: [
     '<tpl if="annote">',
@@ -80,8 +79,12 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
     var addLink = Ext.get('add-notes-' + this.id);
     var editLink = Ext.get('edit-notes-' + this.id);
 
-    if (addLink) addLink.on('click', this.editNotes, this);
-    if (editLink) editLink.on('click', this.editNotes, this);
+    if (addLink) {
+      this.mon(addLink, 'click', this.editNotes, this);
+    }
+    if (editLink) {
+      this.mon(editLink, 'click', this.editNotes, this);
+    }
 
   },
 
@@ -109,8 +112,7 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
 
     this.spot.show(this.ownerCt.id);
 
-    // Does not work, don't know why
-    this.editor.on('initialize', function(){this.editor.focus();},this,{single:true});
+    this.mon(this.editor,'initialize', function(){this.editor.focus(20);},this,{single:true});
   },
 
   onSave: function() {
