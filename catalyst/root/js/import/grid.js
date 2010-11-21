@@ -1907,7 +1907,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   handleEdit: function(isNew, autoComplete) {
-
     var selection = this.getSingleSelectionRecord();
 
     if (selection) {
@@ -2406,8 +2405,8 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
       width: 5
     }));
 
-    this.mon(this.next, 'click', this.grid.onPageButtonClick, this.grid);
-    this.mon(this.prev, 'click', this.grid.onPageButtonClick, this.grid);
+    this.grid.mon(this.next, 'click', this.grid.onPageButtonClick, this.grid);
+    this.grid.mon(this.prev, 'click', this.grid.onPageButtonClick, this.grid);
 
   },
   handleMouseOver: function(e) {
