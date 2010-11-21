@@ -15,20 +15,17 @@ Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
     this.keyMap = new Ext.KeyMap(this.el);
 
     if (this.disableOnBlur) {
-      Paperpile.log("Disable on blur for " + this.el.id);
       this.el.on('blur', this.onBlur, this);
       this.el.on('focus', this.onFocus, this);
     }
 
   },
   onBlur: function() {
-    Paperpile.log("Blur " + this.el.id);
     if (this.keys !== undefined) {
       this.keys.disable();
     }
   },
   onFocus: function() {
-    Paperpile.log("Focus " + this.el.id);
     if (this.keys !== undefined) {
       this.keys.enable();
     }
