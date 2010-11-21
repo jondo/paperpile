@@ -42,9 +42,9 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         var grid = tab.getGrid();
         grid.view.layout();
 
-        if (tab instanceof Paperpile.PluginPanel) {
-          tab.restoreScrollState();
-        }
+        grid.getView().focusEl.focus(20);
+
+        tab.restoreScrollState();
       }
     },
     this);
@@ -71,7 +71,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   },
 
   newDBtab: function(query, itemId) {
-    if (this.findAndActivateOpenTabByItemId(itemId)) {
+    if (this.findAndActivateOpenTab(itemId)) {
       return;
     }
 
@@ -93,7 +93,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
   newTrashTab: function() {
     var trashItemId = 'trash';
-    if (this.findAndActivateOpenTabByItemId(trashItemId)) {
+    if (this.findAndActivateOpenTab(trashItemId)) {
       return;
     }
 
@@ -125,10 +125,6 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       javascript_ui = 'Label';
     }
 
-    if (this.findAndActivateOpenTabByItemId(node.id)) {
-      return;
-    }
-      Paperpile.log(node.display_name);
     this.newPluginTab(node.plugin_name, node, node.display_name, iconCls, node.id);
   },
 
@@ -142,34 +138,39 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       }
     }
 
-    var javascript_ui = pars.plugin_name || name;
+    var plugin_name = pars.plugin_name || name;
     if (pars.plugin_query != null && pars.plugin_query.indexOf('folderid:') > -1) {
-      javascript_ui = "Folder";
+      plugin_name = "Folder";
     }
     if (pars.plugin_query != null && pars.plugin_query.indexOf('labelid:') > -1) {
-      javascript_ui = "Label";
+      plugin_name = "Label";
     }
 
-    //var newGrid=new Paperpile['Plugin'+javascript_ui](pars);
-    if (this.findAndActivateOpenTabByItemId(itemId)) {
+    if (this.findAndActivateOpenTab(plugin_name)) {
       return;
     }
+
     var viewParams = {
+      plugin_name: plugin_name,
       title: title,
-      iconCls: pars.plugin_iconCls,
+      iconCls: iconCls ? iconCls : pars.plugin_iconCls,
       gridParams: pars,
       closable: true,
       itemId: itemId
     };
-    if (iconCls) viewParams.iconCls = iconCls;
-    var newView = this.add(new Paperpile['PluginPanel' + javascript_ui](viewParams));
+
+    if (this.isMultiInstancePlugin(plugin_name)) {
+      delete viewParams.itemId;
+    }
+
+    var newView = this.add(new Paperpile['PluginPanel' + plugin_name](viewParams));
     newView.show();
   },
 
   // Opens a new tab with some specialized screen. Name is either the name of a preconficured panel-class, or
   // an object specifying url and title of the tab.
   newScreenTab: function(name, itemId) {
-    if (this.findAndActivateOpenTabByItemId(itemId)) {
+    if (this.findAndActivateOpenTab(itemId)) {
       return;
     }
 
@@ -200,7 +201,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   },
 
   showQueueTab: function() {
-    if (this.findAndActivateOpenTabByItemId('queue-tab')) {
+    if (this.findAndActivateOpenTab('queue-tab')) {
       return;
     }
 
@@ -211,13 +212,52 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     panel.show();
   },
 
-  findAndActivateOpenTabByItemId: function(itemId) {
+  isMultiInstancePlugin: function(plugin_name) {
+    var multiInstancePlugins = {
+      PubMed: true,
+      GoogleScholar: true,
+      ArXiV: true,
+      GoogleBooks: true,
+      JSTOR: true,
+      SpringerLink: true,
+      ACM: true
+    };
+    if (multiInstancePlugins[plugin_name] === true) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
+  findAndActivateOpenTab: function(itemId) {
     var openTab = this.getItem(itemId);
+
+    if (!openTab) {
+      // Didn't find by itemId -- search by plugin_name instead.
+      var plugin_name = itemId;
+      var tabs = this.items.items;
+      for (var i = 0; i < tabs.length; i++) {
+        var tab = tabs[i];
+        if (tab.plugin_name === itemId) {
+          openTab = tab;
+          break;
+        }
+      }
+    }
+
+    if (openTab && openTab.plugin_name) {
+      // We've found a matching plugin -- if it's allowed to be multi-instance, return false
+      // to indicate that the caller should be allowed to create a new tab.
+      if (this.isMultiInstancePlugin(openTab.plugin_name)) {
+        return false;
+      }
+    }
+
     if (openTab) {
       this.activate(openTab);
-      return openTab;
+      return true;
     }
-    return null;
+    return false;
   },
 
   findOpenPdfByFile: function(file) {

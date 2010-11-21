@@ -330,13 +330,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     case 'TRASH':
       Paperpile.main.tabs.newTrashTab();
       break;
-    case 'IMPORT_PLUGIN':
     case 'LABEL':
       Paperpile.main.tabs.newCollectionTab(node, 'LABEL');
       break;
     case 'FOLDER':
       Paperpile.main.tabs.newCollectionTab(node, 'FOLDER');
       break;
+    case 'IMPORT_PLUGIN':
     case 'ACTIVE':
       // Collect plugin paramters
       var pars = {};
@@ -353,6 +353,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
       // Use default title and css for tab
       var title = pars.plugin_title;
+
+	var iconCls = null;
 
       // Call appropriate frontend, labels, active folders, and folders are opened only once
       // and we pass the node.id as item-id for the tab
