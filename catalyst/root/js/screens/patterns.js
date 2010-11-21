@@ -229,21 +229,10 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
         var old_library_db = Paperpile.main.globalSettings.library_db;
         Paperpile.main.loadSettings(
           function() {
-            // Complete reload only if database has
-            // changed. This is not necessary if the
-            // database has only be renamed but we
-            // update also in this case.
+            // Complete reload only if database has changed. This is
+            // not necessary if the database has only be renamed but
+            // we update also in this case.
             if (old_library_db != Paperpile.main.globalSettings.library_db) {
-              //Paperpile.main.tree.getRootNode().reload();
-              //Paperpile.main.tree.expandAll();
-
-              // Note that this as async. Labels
-              // should be loaded before results for
-              // grid appear but it is not
-              // guaranteed.
-              //Ext.StoreMgr.lookup('label_store').reload();
-
-
 
               // Explicitly delete all open grid objects from the
               // session variable in the backend. This needs to be
@@ -267,16 +256,27 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                 },
                 success: function(response) {
 
-                  // Now close all tabs (this again calls
-                  // 'delete_grids' which is redundant but does not do
-                  // any harm)
-                  Paperpile.main.tabs.removeAll();
-                  Paperpile.main.tabs.newDBtab('');
-                  Paperpile.main.tabs.setActiveTab(0);
-                  Paperpile.main.tabs.doLayout();
+                  // Also make sure that tree is reloaded before other
+                  // processes start to make sure the $session->{tree}
+                  // is not overwritten due to some race condition
+                  Paperpile.main.getTree().getRootNode().reload(function(){
+                    
+                    // Now close all tabs (this again calls
+                    // 'delete_grids' which is redundant but does not do
+                    // any harm)
+                    Paperpile.main.tabs.removeAll();
+                    Paperpile.main.tabs.newDBtab('','MAIN');
+
+                    Paperpile.main.tabs.setActiveTab(0);
+                    Paperpile.main.tabs.doLayout();
+                    Paperpile.main.getTree().expandAll();
+                    Paperpile.main.afterLoadSettings();
+                    Paperpile.main.triggerLabelStoreReload();
+                    Paperpile.main.triggerFolderStoreReload();
+
+                  });
                 }
               });
-
             } else {
               Paperpile.main.onUpdate({
                 pub_delta: 1

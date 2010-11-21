@@ -155,10 +155,10 @@ sub update_patterns : Local {
       $c->session->{library_db} = $library_db;
 
       # Force reload of tree
-      #delete $c->session->{tree};
+      delete $c->session->{tree};
       $c->model('User')->set_setting( 'library_db', $library_db );
     } else {
-      FileError->throw("Could not change database file to library_db ($!)");
+      FileError->throw("Could not change database file to $library_db ($!)");
     }
   }
 

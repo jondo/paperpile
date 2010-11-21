@@ -544,8 +544,6 @@ sub sort_collection : Local {
   my $parent_id = $c->request->params->{parent_id};
   my $type      = $m->get_collection_type($parent_id);
 
-  print STDERR "TYPE: $type\n";
-
   # Go in order, putting each sub-node at the end of the parent node's child list.
   foreach my $id (@id_order) {
     $m->move_collection( $parent_id, $id, 'append', $type );
