@@ -63,16 +63,29 @@ MainWindow::MainWindow(){
     view->load(QUrl::fromLocalFile(runtime->getCatalystDir()+"/root/index.html"));
   }
 
-  // Set up main Window
-  resize(1024,768);
-  QRect frect = frameGeometry();
-  frect.moveCenter(QDesktopWidget().availableGeometry().center());
-  move(frect.topLeft());
+  QCoreApplication::setOrganizationName("Paperpile");
+  QCoreApplication::setOrganizationDomain("paperpile.com");
+  QCoreApplication::setApplicationName("Paperpile");
+
+  // Set window geometry either from stored settings or if started the
+  // first time to a default state
+  
+  QSettings settings;
+  QByteArray geometry = settings.value("geometry").toByteArray();
+  QByteArray windowState = settings.value("windowState").toByteArray();
+
+  if (geometry.isEmpty() || windowState.isEmpty()){
+    resize(1024,768);
+    QRect frect = frameGeometry();
+    frect.moveCenter(QDesktopWidget().availableGeometry().center());
+    move(frect.topLeft());
+  } else {
+    restoreGeometry(geometry);
+    restoreState(windowState);
+  }
+
 
   setCentralWidget(view);
-
-  
-
   setUnifiedTitleAndToolBarOnMac(true);
   
 }
@@ -87,6 +100,10 @@ void MainWindow::exportRuntime(){
 void MainWindow::closeEvent(QCloseEvent *event) {
 
   runtime->closeEvent(event);
+
+  QSettings settings;
+  settings.setValue("geometry", saveGeometry());
+  settings.setValue("windowState", saveState());
 
 }
 
