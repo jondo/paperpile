@@ -48,10 +48,6 @@ has '_session_cookie' => ( is => 'rw' );
 # The main search URL
 my $searchUrl = 'http://scholar.google.com/scholar?hl=en&lr=&btnG=Search&q=';
 
-# The URL with the settings form. We use it to turn on BibTeX output.
-my $settingsUrl =
-  'http://scholar.google.com/scholar_setprefs?output=search&inststart=0&hl=en&lang=all&instq=&submit=Save+Preferences&scis=yes';
-
 sub BUILD {
   my $self = shift;
   $self->plugin_name('GoogleScholar');
@@ -101,20 +97,55 @@ sub _check_content {
   return $error_level;
 }
 
+sub prefs_url {
+    my $self = shift;
+    # The base URL, where we get the preferences form from.
+    return 'http://scholar.google.com/scholar_preferences?hl=en&as_sdt=2000';
+}
+sub settings_url {
+    my $self = shift;
+    my $scisig = shift;
+    # The preferences submission URL.
+    my $url = 'http://scholar.google.com/scholar_setprefs?q=&scisig='.$scisig.'&inststart=0&hl=en&lang=all&as_sdt=2001&as_sdtp=on&instq=&num=10&scis=yes&scisf=4&submit=Save+Preferences';
+    return $url;
+}
+
+sub fetch_cookie {
+    my $self = shift;
+
+    # Load the form URL to get our unique "scisig" value, which needs to be included in the
+    # prefs submission to get the cookie.
+
+    my $browser = Paperpile::Utils->get_browser;
+    my $response = $browser->get($self->prefs_url);
+    my $content = $response->content;
+
+    # Get the scisig value from the hidden form element.
+    my $tree = HTML::TreeBuilder::XPath->new;
+    $tree->utf8_mode(1);
+    $tree->parse_content($content);
+    my @nodes = $tree->findnodes('//input[@name="scisig"');
+    my $scisig = '';
+    foreach my $node (@nodes) {
+	$scisig = $node->findvalue('./@value');
+    }
+
+    # Submit the settings, which loads the cookie into the current browser.
+    $browser->get($self->settings_url($scisig));
+
+    $self->_session_cookie( $browser->cookie_jar );    
+}
+
 sub connect {
   my $self = shift;
-
   # First set preferences (necessary to show BibTeX export links)
   # We simulate submitting the form which sets a cookie. We save
   # the cookie for this session.
 
-  my $browser = Paperpile::Utils->get_browser;
-  $settingsUrl .= 'num=10&scisf=4';    # gives us BibTeX
-  $browser->get($settingsUrl);
-  $self->_session_cookie( $browser->cookie_jar );
+  $self->fetch_cookie;
 
   # Then start real query
-  $browser = Paperpile::Utils->get_browser;          # get new browser
+  my $browser = Paperpile::Utils->get_browser;          # get new browser
   $browser->cookie_jar( $self->_session_cookie );    # set the session cookie
 
   # Get the results
@@ -489,13 +520,10 @@ sub match {
   # We simulate submitting the form which sets a cookie. We save
   # the cookie for this session.
 
-  my $browser = Paperpile::Utils->get_browser;
-  $settingsUrl .= 'num=10&scisf=4';    # gives us BibTeX
-  $browser->get($settingsUrl);
-  $self->_session_cookie( $browser->cookie_jar );
+  $self->fetch_cookie;
 
   # Then start real query
-  $browser = Paperpile::Utils->get_browser;          # get new browser
+  my $browser = Paperpile::Utils->get_browser;          # get new browser
   $browser->cookie_jar( $self->_session_cookie );    # set the session cookie
 
   # Once the browser is properly set
@@ -860,7 +888,7 @@ sub _parse_googlescholar_page {
     $description =~ s/<br\s\/>//g;
     push @{ $data{description} }, defined($description) ? $description : '';
 
-    my @links = $node->findnodes('./font[@size="-1"]/span[@class="gs_fl"]/a');
+    my @links = $node->findnodes('./font/span[@class="gs_fl"]/a');
 
     # Find the BibTeX export links
     my $cluster_link_found = 0;
