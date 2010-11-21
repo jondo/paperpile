@@ -330,19 +330,13 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       this.labelWidget.renderMultiple();
     }
 
-    /*
-    Ext.get('main-container-' + this.id).on('click', this.handleClick,
-      this, {
-        delegate: 'a'
-      });
-       */
   },
 
   // Event handling for the HTML. Is called with 'el' as the Ext.Element of the HTML 
   // after the template was written in updateDetail
   //    
   installEvents: function() {
-    this.el.on('click', this.handleClick, this);
+    this.mon(this.el,'click', this.handleClick, this);
   },
 
   handleClick: function(e) {
@@ -615,14 +609,14 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
       cancel.render('label-control-' + this.id);
 
-      Ext.get('label-control-cancel-' + this.id).on('click', function() {
+      this.mon(Ext.get('label-control-cancel-'+this.id),'click', function() {
         Ext.get('label-add-link-' + this.id).show();
         this.hideLabelControls();
       },
       this);
     }
 
-    Ext.get('label-control-ok-' + this.id).on('click', this.onAddLabel, this);
+    this.mon(Ext.get('label-control-ok-' + this.id),'click', this.onAddLabel, this);
 
   },
 

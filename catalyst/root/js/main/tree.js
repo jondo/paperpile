@@ -354,7 +354,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // Use default title and css for tab
       var title = pars.plugin_title;
 
-	var iconCls = null;
+      var iconCls = null;
 
       // Call appropriate frontend, labels, active folders, and folders are opened only once
       // and we pass the node.id as item-id for the tab
@@ -1019,7 +1019,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         type: 'FOLDER',
         guid: id
       },
-      id);
+        id);
       var newNode = this.recordToNode(record, 'FOLDER');
 
       n.appendChild(newNode);

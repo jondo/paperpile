@@ -302,11 +302,19 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.sometimesKeys.bindCallback('ctrl-r', this.keyControlR, this);
 
+    this.alwaysKeys.bindCallback('ctrl-x', this.keyControlX, this);
     this.alwaysKeys.bindCallback('ctrl-y', this.keyControlY, this);
     this.alwaysKeys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.alwaysKeys.bindCallback('ctrl-w', this.keyControlW);
     this.alwaysKeys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
 
+  },
+
+  keyControlX: function() {
+      var itemId = 'pp-dash';
+      for (var i=0; i < 3; i++) {
+        this.tabs.newScreenTab('Dashboard',itemId);
+      }
   },
 
   grabFocus: function() {

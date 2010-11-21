@@ -275,7 +275,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       this.updateDetailsTask.cancel();
       this.updateDetailsWork();
     } else {
-      this.updateDetailsTask.delay(40);
+      this.updateDetailsTask.delay(50);
     }
   },
 

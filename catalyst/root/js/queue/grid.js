@@ -329,7 +329,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     this.getStore().load();
 
     this.on('afterrender', function() {
-      this.getSelectionModel().on('afterselectionchange', this.selChanged, this);
+      this.mon(this.getSelectionModel(),'afterselectionchange', this.selChanged, this);
       this.selChanged();
     },
     this);
