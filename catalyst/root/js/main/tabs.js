@@ -219,7 +219,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   },
 
   isUniqueByItemId: function(plugin_name) {
-    return (plugin_name == 'Label' || plugin_name == 'Folder');
+    return (plugin_name == 'Label' || plugin_name == 'Folder' || plugin_name == 'Feed');
   },
 
   isMultiInstancePlugin: function(plugin_name) {
