@@ -97,6 +97,47 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
         this.lastOverflow = false;
       }
     }
+  },
+
+  /**
+     * @private
+     * Creates the expand trigger and menu, adding them to the <tr> at the extreme right of the
+     * Toolbar table
+     */
+  initMore: function() {
+    if (!this.more) {
+      /**
+             * @private
+             * @property moreMenu
+             * @type Ext.menu.Menu
+             * The expand menu - holds items for every Toolbar item that cannot be shown
+             * because the Toolbar is currently not wide enough.
+             */
+      this.moreMenu = new Ext.menu.Menu({
+        ownerCt: this.container,
+        listeners: {
+          beforeshow: this.beforeMoreShow,
+          scope: this
+        }
+      });
+
+      /**
+             * @private
+             * @property more
+             * @type Ext.Button
+             * The expand button which triggers the overflow menu to be shown
+             */
+      this.more = new Ext.Button({
+        iconCls: 'pp-toolbar-more-icon',
+        cls: 'pp-toolbar-more',
+        menu: this.moreMenu,
+        ownerCt: this.container,
+        tooltip: 'More tools and actions'
+      });
+
+      var td = this.insertCell(this.more, this.extrasTr, 100);
+      this.more.render(td);
+    }
   }
 });
 
