@@ -48,6 +48,7 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
     tableWidth = target.dom.firstChild.offsetWidth,
     clipWidth = width - this.triggerWidth,
     lastWidth = this.lastWidth || 0,
+
     hiddenItems = this.hiddenItems,
     hasHiddens = hiddenItems.length != 0,
     isLarger = width >= lastWidth;
@@ -60,7 +61,7 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
       loopWidth = 0,
       item;
 
-      for (i = 0; i < len; i++) {
+      for (var i = 0; i < len; i++) {
         item = items[i];
         if (!item.isFill) {
           loopWidth += this.getItemWidth(item);
@@ -69,13 +70,14 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
             if (! (item.hidden || item.xtbHidden)) {
               this.hideItem(item);
             }
+          } else if (item.xtbHidden) {
+            this.unhideItem(item);
           }
-        } else if (item.xtbHidden) {
-          this.unhideItem(item);
         }
       }
     }
 
+    //test for number of hidden items again here because they may have changed above
     hasHiddens = hiddenItems.length != 0;
 
     if (hasHiddens) {
