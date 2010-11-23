@@ -1368,6 +1368,27 @@ div:hover.pp-grid-sort-item {
 */
 }
 
+.pp-toolbar-more-icon {
+  background-image: url(/images/icons/arrow-up.png) !important;  
+}
+
+.pp-toolbar-more .x-btn-small .x-btn-text{
+  height: 16px;
+  width: 16px;
+  margin-right:-2px;
+}
+
+.pp-toolbar-more em.x-btn-arrow {
+  display:inline;
+  background:transparent;
+  padding-right:0;
+}
+
+.pp-toolbar-more .x-btn-mc em.x-btn-arrow {
+    background-image: none;
+}
+
+
 .x-tree-node-el {
   cursor:default;
 }

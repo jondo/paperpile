@@ -48,6 +48,7 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
     tableWidth = target.dom.firstChild.offsetWidth,
     clipWidth = width - this.triggerWidth,
     lastWidth = this.lastWidth || 0,
+
     hiddenItems = this.hiddenItems,
     hasHiddens = hiddenItems.length != 0,
     isLarger = width >= lastWidth;
@@ -60,7 +61,7 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
       loopWidth = 0,
       item;
 
-      for (i = 0; i < len; i++) {
+      for (var i = 0; i < len; i++) {
         item = items[i];
         if (!item.isFill) {
           loopWidth += this.getItemWidth(item);
@@ -69,13 +70,14 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
             if (! (item.hidden || item.xtbHidden)) {
               this.hideItem(item);
             }
+          } else if (item.xtbHidden) {
+            this.unhideItem(item);
           }
-        } else if (item.xtbHidden) {
-          this.unhideItem(item);
         }
       }
     }
 
+    //test for number of hidden items again here because they may have changed above
     hasHiddens = hiddenItems.length != 0;
 
     if (hasHiddens) {
@@ -94,6 +96,47 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
         this.container.fireEvent('overflowchange', this.container, false);
         this.lastOverflow = false;
       }
+    }
+  },
+
+  /**
+     * @private
+     * Creates the expand trigger and menu, adding them to the <tr> at the extreme right of the
+     * Toolbar table
+     */
+  initMore: function() {
+    if (!this.more) {
+      /**
+             * @private
+             * @property moreMenu
+             * @type Ext.menu.Menu
+             * The expand menu - holds items for every Toolbar item that cannot be shown
+             * because the Toolbar is currently not wide enough.
+             */
+      this.moreMenu = new Ext.menu.Menu({
+        ownerCt: this.container,
+        listeners: {
+          beforeshow: this.beforeMoreShow,
+          scope: this
+        }
+      });
+
+      /**
+             * @private
+             * @property more
+             * @type Ext.Button
+             * The expand button which triggers the overflow menu to be shown
+             */
+      this.more = new Ext.Button({
+        iconCls: 'pp-toolbar-more-icon',
+        cls: 'pp-toolbar-more',
+        menu: this.moreMenu,
+        ownerCt: this.container,
+        tooltip: 'More tools and actions'
+      });
+
+      var td = this.insertCell(this.more, this.extrasTr, 100);
+      this.more.render(td);
     }
   }
 });

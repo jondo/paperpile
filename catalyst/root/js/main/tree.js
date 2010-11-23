@@ -400,17 +400,20 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   onNodeDrag: function(e) {
     // We are dragging from the data grid
     if (e.source.dragData.grid) {
+	var grid = e.source.dragData.grid;
+	var t = e.target.type;
       // only allow drop on Folders, Labels and Trash
-      if ((e.target.type == 'LABEL' || e.target.type == 'FOLDER' || e.target.type == 'TRASH') && e.target.id != 'LABEL_ROOT') {
-        if (e.target.type == 'TRASH') {
-          var imported = e.source.dragData.grid.getSelection('IMPORTED');
-          if (imported.length == 0) {
+      if ((t == 'FOLDER_ROOT' || t == 'LABEL' || t == 'FOLDER' || t == 'TRASH') && e.target.id != 'LABEL_ROOT') {
+        if (t == 'TRASH') {
+          var imported = grid.getSelection('IMPORTED');
+          var trashed = grid.getSelection('TRASHED');
+          if (imported.length == 0 || trashed.length == imported.length) {
             e.cancel = true;
           }
-        } else if (e.target.type == 'LABEl') {
+        } else if (t == 'LABEl') {
           // Be genreally permissive for trash and labels.
           e.cancel = false;
-        } else if (e.target.type == 'FOLDER') {
+        } else if (t == 'FOLDER') {
           e.cancel = false;
         }
       } else {

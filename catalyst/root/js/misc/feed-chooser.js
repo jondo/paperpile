@@ -80,7 +80,8 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
     });
 
     this.on('show', function(panel) {
-      this.entryField.focus();
+      Ext.QuickTips.getQuickTip().hide();
+      this.entryField.focus(false,30);
     },
     this);
     this.on('hide', function(panel) {
@@ -136,6 +137,7 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
       scope: this
     }]);
     this.entryField.on('select', this.addFeed, this);
+      
   },
 
   onCancel: function() {

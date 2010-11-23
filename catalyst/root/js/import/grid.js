@@ -1530,7 +1530,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var sels = this.getSelectionModel().getSelections();
     for (var i = 0; i < sels.length; i++) {
       var record = sels[i];
-      if ((what == 'ALL') || (what == 'IMPORTED' && record.get('_imported')) || (what == 'NOT_IMPORTED' && !record.get('_imported'))) {
+      if ((what == 'ALL') || (what == 'IMPORTED' && record.get('_imported')) || (what == 'NOT_IMPORTED' && !record.get('_imported')) || (what == 'TRASHED' && record.get('trashed'))) {
         selection.push(record.get('guid'));
       }
     }
