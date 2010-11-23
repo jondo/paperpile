@@ -114,7 +114,10 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
           var options = {
             title: item == 'library_db' ? 'Choose Paperpile database file' : 'Choose PDF folder',
             selectionType: item == 'library_db' ? 'file' : 'folder',
-            dialogType:'save',
+            dialogType: 'save',
+            nameFilters:item == 'library_db' ? ["Paperpile library file (*.ppl)","All files (*)"] : null,
+            dontConfirmOverwrite: item == 'library_db' ? true : false,
+            fileNameLabel: item == 'library_db' ? "File Name" : "Folder Name",
             scope: this
           };
           Paperpile.fileDialog(callback, options);

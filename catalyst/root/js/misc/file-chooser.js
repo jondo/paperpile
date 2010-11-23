@@ -439,6 +439,30 @@ Paperpile.fileDialog = function(callback, inputOptions) {
       config['Caption']=options.title;
     }
 
+    if (options.dontConfirmOverwrite) {
+      config['DontConfirmOverwrite']=options.dontConfirmOverwrite;
+    }
+
+    if (options.lookInLabel){
+      config['LookInLabel'] = options.lookInLabel;
+    }
+
+    if (options.fileNameLabel){
+      config['FileNameLabel'] = options.fileNameLabel;
+    }
+
+    if (options.fileTypeLabel){
+      config['FileTypeLabel'] = options.fileTypeLabel;
+    }
+
+    if (options.acceptInLabel){
+      config['AcceptLabel'] = options.acceptLabel;
+    }
+
+    if (options.rejectLabel){
+      config['RejectLabel'] = options.rejectLabel;
+    }
+
 
     var results = QRuntime.fileDialog(config);
     
