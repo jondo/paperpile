@@ -201,6 +201,17 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
   submit: function() {
 
+    if (Paperpile.main.unfinishedTasks()) {
+      Ext.Msg.show({
+        title: 'Unfinished tasks',
+        msg: 'There are unfinished background tasks. Wait until all tasks are finished before applying your changes.',
+        buttons: Ext.Msg.OK,
+        animEl: 'elId',
+        icon: Ext.MessageBox.INFO,
+      });
+      return;
+    }
+
     var params = {};
 
     Ext.each(['library_db', 'paper_root', 'key_pattern', 'pdf_pattern', 'attachment_pattern'],
