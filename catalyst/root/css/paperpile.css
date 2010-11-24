@@ -1617,19 +1617,18 @@ div:hover.pp-grid-sort-item {
 
 .pp-label-remove{
     border-width:0px 0px 0px 1px;
-    margin: 0px 2px 0px 4px;
     display:inline;
-    padding: 0px 2px;
-    margin: 0px 0px 0px 0px;
+    padding: 0px 2px 0px 2px;
+    margin: 0px;
     cursor: default;
 }
 
 div:hover.pp-label-remove{
     border-width:1px;
-    margin: 0px 2px 0px 4px;
     display:inline;
-    padding: 0px 2px;
-    margin: 0px 0px 0px 0px;
+    padding: 0px 2px 0px 2px;
+    margin: 0px;
+    margin-right: -1px;
     outline: black solid 1px;
     cursor: pointer;
     color:white;
