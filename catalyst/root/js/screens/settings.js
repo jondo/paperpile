@@ -21,14 +21,19 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
   initComponent: function() {
     Ext.apply(this, {
       closable: true,
-      autoLoad: {
-        url: Paperpile.Url('/screens/settings'),
-        callback: this.setupFields,
-        scope: this
-      },
-      bodyStyle: 'pp-settings',
-      autoScroll: true,
-      iconCls: 'pp-icon-tools'
+      layout: 'fit',
+      items: [{
+        xtype: 'panel',
+        height: '100%',
+        bodyStyle: 'pp-settings',
+        autoScroll: true,
+        iconCls: 'pp-icon-tools',
+        autoLoad: {
+          url: Paperpile.Url('/screens/settings'),
+          callback: this.setupFields,
+          scope: this
+        }
+      }]
     });
 
     Paperpile.PatternSettings.superclass.initComponent.call(this);
@@ -72,7 +77,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
       field.on('keypress',
         function() {
-	  this.onSettingChange();
+          this.onSettingChange();
         },
         this);
 
@@ -105,20 +110,22 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         id: 0,
         fields: [
           'id',
-          'displayText'
-        ],
-        data: [['created DESC', 'Date added'], ['year DESC', 'Year'],['author','Author'], ['journal','Journal']]
+          'displayText'],
+        data: [
+          ['created DESC', 'Date added'],
+          ['year DESC', 'Year'],
+          ['author', 'Author'],
+          ['journal', 'Journal']]
       }),
       displayField: 'displayText',
       valueField: 'id',
       value: Paperpile.main.globalSettings['sort_field'],
     });
-    
 
-    this.combos['pager_limit'].on('select', this.onSettingChange,this);
-    this.combos['sort_field'].on('select', this.onSettingChange,this);
+    this.combos['pager_limit'].on('select', this.onSettingChange, this);
+    this.combos['sort_field'].on('select', this.onSettingChange, this);
 
-    this.checkboxes['check_updates'] =  new Ext.form.Checkbox({
+    this.checkboxes['check_updates'] = new Ext.form.Checkbox({
       renderTo: 'check_updates_checkbox',
       checked: Paperpile.main.globalSettings['check_updates'] == '1' ? true : false,
     });
@@ -128,7 +135,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         this.onSettingChange();
       },
       this);
-    
+
     /*
     this.combos['zoom_level'] = new Ext.form.ComboBox({
       renderTo: 'zoom_level_combo',
@@ -310,11 +317,6 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       hideDelay: 0
     });
 
-
-
-
-
-
     this.setSaveDisabled(true);
   },
 
@@ -381,11 +383,11 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         }
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
 
-	if (this.combos['zoom_level']) {
-	  var new_zoom_level = this.combos['zoom_level'].getValue();
-	  Paperpile.main.globalSettings['zoom_level'] = new_zoom_level;
-	  Paperpile.main.afterLoadSettings();
-	}
+        if (this.combos['zoom_level']) {
+          var new_zoom_level = this.combos['zoom_level'].getValue();
+          Paperpile.main.globalSettings['zoom_level'] = new_zoom_level;
+          Paperpile.main.afterLoadSettings();
+        }
 
         Paperpile.main.loadSettings(
           function() {

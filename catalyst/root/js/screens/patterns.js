@@ -14,7 +14,6 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-
 Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
   title: 'Location and Patterns Settings',
@@ -22,14 +21,17 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
   initComponent: function() {
     Ext.apply(this, {
       closable: true,
-      autoLoad: {
-        url: Paperpile.Url('/screens/patterns'),
-        callback: this.setupFields,
-        scope: this
-      },
-      bodyStyle: 'pp-settings',
-      iconCls: 'pp-icon-tools',
-      autoScroll: true,
+      layout: 'fit',
+      items: [{
+        autoLoad: {
+          url: Paperpile.Url('/screens/patterns'),
+          callback: this.setupFields,
+          scope: this
+        },
+        bodyStyle: 'pp-settings',
+        iconCls: 'pp-icon-tools',
+        autoScroll: true
+      }]
     });
 
     this.tooltips = {
@@ -107,7 +109,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             if (filenames.length > 0) {
               var folder = filenames[0];
               this.textfields[item].setValue(folder);
-		      this.textfields[item].onBlur();
+              this.textfields[item].onBlur();
             }
           };
 
@@ -115,7 +117,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             title: item == 'library_db' ? 'Choose Paperpile database file' : 'Choose PDF folder',
             selectionType: item == 'library_db' ? 'file' : 'folder',
             dialogType: 'save',
-            nameFilters:item == 'library_db' ? ["Paperpile library file (*.ppl)","All files (*)"] : null,
+            nameFilters: item == 'library_db' ? ["Paperpile library file (*.ppl)", "All files (*)"] : null,
             dontConfirmOverwrite: item == 'library_db' ? true : false,
             fileNameLabel: item == 'library_db' ? "File Name" : "Folder Name",
             scope: this
@@ -149,7 +151,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
   // Validates inputs and updates example fields
   //
   updateFields: function() {
-      this.hasErrors = false;
+    this.hasErrors = false;
 
     var params = {};
 
@@ -174,9 +176,9 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
           }
         }
 
-	  if (this.hasErrors) {
-	      this.setSaveDisabled(true);
-	  }
+        if (this.hasErrors) {
+          this.setSaveDisabled(true);
+        }
       },
       scope: this
     });
@@ -184,9 +186,9 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
   },
 
   setSaveDisabled: function(disabled) {
-      if (this.hasErrors) {
-	  disabled = true;
-     }
+    if (this.hasErrors) {
+      disabled = true;
+    }
     var button = Ext.get('patterns-save-button');
 
     button.un('click', this.submit, this);
@@ -253,19 +255,18 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
               // done *before* the new grid is loaded because of
               // strange race conditions that might occur when several
               // processes read/write the session variable.
-
               var open_grids = [];
 
               var tabs = Paperpile.main.tabs.items.items;
               for (var i = 0; i < tabs.length; i++) {
-                if (tabs[i].grid){
+                if (tabs[i].grid) {
                   open_grids.push(tabs[i].grid.id);
                 }
               }
-        
+
               Paperpile.Ajax({
                 url: '/ajax/plugins/delete_grids',
-                params: { 
+                params: {
                   grid_ids: open_grids
                 },
                 success: function(response) {
@@ -273,13 +274,13 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                   // Also make sure that tree is reloaded before other
                   // processes start to make sure the $session->{tree}
                   // is not overwritten due to some race condition
-                  Paperpile.main.getTree().getRootNode().reload(function(){
-                    
+                  Paperpile.main.getTree().getRootNode().reload(function() {
+
                     // Now close all tabs (this again calls
                     // 'delete_grids' which is redundant but does not do
                     // any harm)
                     Paperpile.main.tabs.removeAll();
-                    Paperpile.main.tabs.newDBtab('','MAIN');
+                    Paperpile.main.tabs.newDBtab('', 'MAIN');
 
                     Paperpile.main.tabs.setActiveTab(0);
                     Paperpile.main.tabs.doLayout();
