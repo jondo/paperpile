@@ -941,7 +941,6 @@ sub process_query_string {
     $query =~ s/"//g;
   }
 
-  #<<<<<<< HEAD
   # Parse fields respecting quotes
   my @chars      = split( //, $query );
   my $curr_field = '';
@@ -964,21 +963,6 @@ sub process_query_string {
 
   my @new_fields = ();
 
-  #=======
-  #  my $count;
-  #  my $where;
-  #  if ($query) {
-  #    $query = $self->dbh->quote("$query*");
-  #    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
-  #    $count = $self->dbh->selectrow_array(
-  #    qq{select count(*) from Publications join $table on
-  #    publications.rowid=$table.rowid $where}
-  #                                        );
-  #  } else {
-  #    $where = "WHERE Publications.trashed=$trash";
-  #    $count = $self->dbh->selectrow_array(qq{select count(*) from Publications $where;});
-  #  }
-  #>>>>>>> osx
 
   foreach my $field (@fields) {
 
@@ -1128,8 +1112,6 @@ sub fulltext_search {
 
   if ($_query) {
 
-    #<<<<<<< HEAD
-
     $select .=
       ",offsets(Fulltext) as offsets, rank(matchinfo(Fulltext)) as rank_score FROM Publications JOIN Fulltext ON Publications.rowid=Fulltext.rowid ";
 
@@ -1151,29 +1133,6 @@ sub fulltext_search {
     $where = "WHERE Publications.trashed=$trash";
 
     $sth = $self->dbh->prepare("$select $where ORDER BY $order LIMIT $limit OFFSET $offset");
-
-    #=======
-    #    $query = $self->dbh->quote("$_query*");
-    #    $where = "WHERE $table MATCH $query AND Publications.trashed=$trash";
-    #    $sth = $self->dbh->prepare(
-    #     "SELECT *,
-    #     offsets($table) as offsets,
-    #     publications.rowid as _rowid,
-    #     publications.title as title,
-    #     publications.abstract as abstract
-    #     FROM Publications JOIN $table
-    #     ON publications.rowid=$table.rowid $where ORDER BY $order LIMIT $limit OFFSET $offset"
-    #                                 );
-    #  } else {
-    #    $where = "WHERE Publications.trashed=$trash";
-    #    $sth = $self->dbh->prepare(
-    #                               "SELECT *,
-    #     publications.rowid as _rowid,
-    #     publications.title as title,
-    #     publications.abstract as abstract FROM Publications
-    #     $where ORDER BY $order LIMIT $limit OFFSET $offset"
-    #                             );
-    #>>>>>>> osx
   }
 
   $sth->execute;
@@ -1909,16 +1868,16 @@ sub dashboard_stats {
 
   my $self = shift;
 
-  ( my $num_items ) = $self->dbh->selectrow_array("SELECT count(*) FROM Publications;");
+  ( my $num_items ) = $self->dbh->selectrow_array("SELECT count(*) FROM Publications WHERE trashed=0;");
 
   ( my $num_pdfs ) =
-    $self->dbh->selectrow_array("SELECT count(*) FROM Publications WHERE PDF !='';");
+    $self->dbh->selectrow_array("SELECT count(*) FROM Publications WHERE PDF !='' AND trashed=0;");
 
   ( my $num_attachments ) =
-    $self->dbh->selectrow_array("SELECT count(*) FROM Attachments WHERE is_pdf=0;");
+    $self->dbh->selectrow_array("SELECT count(*) FROM Attachments,Publications WHERE Attachments.publication==Publications.guid AND is_pdf=0 AND trashed=0;");
 
   ( my $last_imported ) =
-    $self->dbh->selectrow_array("SELECT created FROM Publications ORDER BY created DESC limit 1;");
+    $self->dbh->selectrow_array("SELECT created FROM Publications WHERE trashed=0 ORDER BY created DESC limit 1;");
 
   return {
     num_items       => $num_items,

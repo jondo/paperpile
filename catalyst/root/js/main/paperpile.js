@@ -1200,10 +1200,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
   },
 
-  unfinishedTasks: function() {
+  unfinishedTasks: function(){
     if (Paperpile.main.currentQueueData) {
       if (Paperpile.main.currentQueueData.queue.status === 'RUNNING') {
-        return (true);
+        return(true);
       }
     }
   },

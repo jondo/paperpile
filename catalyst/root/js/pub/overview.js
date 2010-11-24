@@ -369,6 +369,14 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       Paperpile.utils.setClipboard(this.data.eprint, 'ePrint URL copied');
       break;
 
+    case 'arxivid-link':
+      var url = 'http://arxiv.org/abs/' + this.data.arxivid;
+      Paperpile.utils.openURL(url);
+      break;
+    case 'arxivid-copy':
+      Paperpile.utils.setClipboard('http://arxiv.org/abs/' + this.data.arxivid, 'ArXiv URL copied');
+      break;
+
     case 'url-link':
       var url = this.data.url;
       Paperpile.utils.openURL(url);

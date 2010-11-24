@@ -176,12 +176,12 @@ sub page {
   my $page = $self->_read_xml($xml);
   $self->_linkOut($page);
 
-  # Make sure all items are unique to avoid nasty sha1 and guid
-  # clashes
-  Paperpile::Utils->uniquify_pubs([(@{$self->get_cache},@$page)]);
+  # We clear the cache on every page
+  $self->clear_cache();
+  Paperpile::Utils->uniquify_pubs([@$page]);
 
   # we should always call this function to make the results available
-  # afterwards via find_sha1
+  # afterwards via find_guid
   $self->_save_page_to_hash($page);
 
 
@@ -190,7 +190,9 @@ sub page {
 
 sub all {
   ( my $self ) = @_;
+
   return $self->page( 0, 100 );
+
 }
 
 # Match function to match publication-objects

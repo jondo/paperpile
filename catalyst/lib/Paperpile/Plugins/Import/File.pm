@@ -85,27 +85,18 @@ sub connect {
 
       my $data = $reader->read();
 
-      #print STDERR Dumper($data);
-
-      # Collect pubs in hash to avoid entries with duplicate sha1 which
-      # causes problems when converting to database. Maybe this is too
-      # simplistic to deal with duplicates at this stage but it works...
-      my %all = ();
-
       foreach my $pub (@$data) {
         $pub->citekey('');
-        $pub->guid(undef);
-        if ( defined $pub->sha1 ) {
-          $all{ $pub->sha1 } = $pub;
-        }
       }
+
+      Paperpile::Utils->uniquify_pubs($data);
 
       my $empty_db = Paperpile::Utils->path_to('db/library.db')->stringify;
       copy( $empty_db, $self->_db_file ) or die "Could not initialize empty db ($!)";
 
       my $model = $self->get_model();
 
-      $model->insert_pubs( [ values %all ], 0 );
+      $model->insert_pubs( $data, 0 );
 
     }
   }

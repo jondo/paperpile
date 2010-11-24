@@ -8,6 +8,8 @@
 }
 </style>
 
+<div style="max-width:1000px;">
+
 <div class="pp-box pp-box-style1 pp-dashboard-box" style="">
   <h2 class="pp-dashboard-statistics" >Statistics</h2>
 
@@ -67,3 +69,4 @@
   <p><a href="#" class="pp-textlink pp-action pp-action-feedback" action="feedback">Feedback</a></p>
 </div>
 
+</div>

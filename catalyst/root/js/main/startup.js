@@ -109,15 +109,7 @@ Paperpile.stage0 = function() {
             QRuntime.appExit.connect(
               function() {
 
-                var unfinishedTasks = false;
-
-                if (Paperpile.main.currentQueueData) {
-                  if (Paperpile.main.currentQueueData.queue.status === 'RUNNING') {
-                    unfinishedTasks = true;
-                  }
-                }
-
-                if (unfinishedTasks) {
+                if (Paperpile.main.unfinishedTasks()) {
                   // Just show simple warning for now. Ideally we offer to cancel all tasks from the dialog
                   Ext.Msg.show({
                     title: 'Unfinished tasks',
