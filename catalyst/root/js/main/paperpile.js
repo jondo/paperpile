@@ -115,6 +115,7 @@ Paperpile.Ajax = function(config) {
 Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   globalSettings: {},
+  splitFraction: 1 / 5,
 
   initComponent: function() {
 
@@ -134,7 +135,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       itemId: 'treepanel',
       region: 'west',
       margins: '2 2 2 2',
-      cmargins: '5 5 0 5',
+      cmargins: '5 5 0 5'
     });
 
     this.tree.flex = 1;
@@ -144,11 +145,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       layout: 'border',
       enableKeyEvents: true,
       keys: {},
+      plugins: [new Ext.ux.PanelSplit(this.tree, this.updateSplitFraction, this)],
       items: [{
         xtype: 'panel',
         layout: 'hbox',
         layoutConfig: {
-          align: 'stretch',
+          align: 'stretch'
         },
         region: 'center',
         tbar: new Ext.Toolbar({
@@ -180,38 +182,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     Paperpile.Viewport.superclass.initComponent.call(this);
 
-    var restrictMax = function() {
-      // Roll-your-own horizontal stretch layout.
-      var fraction = 1 / 5; // Fraction of the size of smaller panel (w2) to the larger one (w1)
-      var width = this.getWidth();
-
-      var w2 = width * (fraction);
-      var w1 = width * (1 - fraction);
-
-      var min2 = 150;
-      var max = 400;
-      if (w2 > max) {
-        w2 = max;
-        w1 = width - max;
-      }
-      // Respect minimum sizes. The larger half (w1) takes precedence.
-      if (w2 < min2) {
-        w2 = min2;
-        w1 = width - min2;
-      }
-      var min1 = 400;
-      if (w1 < min1) {
-        w1 = min1;
-        w2 = width - min1;
-      }
-      this.tree.setWidth(w2);
-      this.tabs.setWidth(w1);
-      this.tree.setPosition(0, 0);
-      this.tabs.setPosition(w2, 0);
-    };
-    this.on('afterlayout', restrictMax, this);
-
-    restrictMax.call(this);
+    this.on('afterlayout', this.resizeToSplitFraction, this);
 
     this.mon(Ext.getBody(), 'click', function(event, target, options) {
       if (target.href) {
@@ -264,6 +235,61 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     return parseFloat(Ext.getBody().getStyle('zoom'));
   },
 
+  updateSplitFraction: function(newFraction) {
+    this.splitFraction = newFraction;
+    Paperpile.main.setSetting('split_fraction_tree', this.splitFraction, true);
+    this.resizeToSplitFraction();
+  },
+
+  resizeToSplitFraction: function() {
+    var fraction = this.splitFraction; // Fraction of left to right panel.
+    if (Paperpile.main) {
+      var set_fraction = Paperpile.main.getSetting('split_fraction_tree');
+      if (set_fraction) {
+        fraction = set_fraction;
+      }
+    }
+  
+    var width = this.getWidth();
+    var w1 = width * (fraction); // tree width
+    var w2 = width * (1 - fraction); // panel width
+
+          // Minimum tree width.
+      var min1 = 150;
+      // Minimum panel width.
+      var min2 = 550;
+      // Maximum tree width.
+      var max1 = 300;
+      // Maximum panel width.
+      var max2 = 9999;
+
+      // Respect max sizes
+      if (w1 > max1) {
+        w1 = max1;
+        w2 = width - max1;
+      }
+      if (w2 > max2) {
+        w2 = max2;
+        w1 = width - max2;
+      }
+
+      // Respect minimum sizes.
+      if (w2 < min2) {
+        w2 = min2;
+        w1 = width - min2;
+      }
+      // Top priority -- keep tree above min size!
+      if (w1 < min1) {
+        w1 = min1;
+        w2 = width - min1;
+      }
+
+    this.tree.setWidth(w1);
+    this.tabs.setWidth(w2);
+    this.tree.setPosition(0, 0);
+    this.tabs.setPosition(w1, 0);
+  },
+
   onZoomChange: function(zoomLevel) {
     var oldZoomLevel = this.getZoom();
 
@@ -297,6 +323,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   afterLoadSettings: function() {
+
+    this.resizeToSplitFraction();
+
+    var grid = this.getCurrentGrid();
+    if (grid) {
+      grid.getPluginPanel().resizeToSplitFraction();
+    }
+
     /*
     var zoom = this.getSetting('zoom_level');
 	if (zoom === undefined) {
@@ -468,13 +502,21 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var s = {};
     s[key] = Ext.util.JSON.encode(value);
 
-    this.storeSettings(s);
+    if (commitToBackend) {
+      this.storeSettings(s);
+    }
   },
 
   storeSettings: function(newSettings, callback, scope) {
     Paperpile.Ajax({
       url: '/ajax/settings/set_settings',
-      params: newSettings
+      params: newSettings,
+      success: function(response) {
+        if (callback) {
+          callback.createDelegate(scope)();
+        }
+      },
+      scope: this
     });
   },
 
@@ -924,7 +966,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         'EndNote (.txt)',
         'MODS (.xml)',
         'ISI Web of Science (.isi)',
-        'Word 2007 XML (.xml)', ],
+        'Word 2007 XML (.xml)']
     });
   },
 
@@ -1158,6 +1200,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
   },
 
+  unfinishedTasks: function() {
+    if (Paperpile.main.currentQueueData) {
+      if (Paperpile.main.currentQueueData.queue.status === 'RUNNING') {
+        return (true);
+      }
+    }
+  },
+
   onError: function(response) {
     var error = {
       type: "Unknown",
@@ -1275,7 +1325,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           win.close();
         },
         scope: this
-      })],
+      })]
     });
 
     win.show(this);
@@ -1385,7 +1435,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   userVoice: function() {
 
     if (window.UserVoice) {
-      UserVoice.Popin.show()
+      UserVoice.Popin.show();
     } else {
       Paperpile.status.clearMsg();
       Paperpile.status.updateMsg({
@@ -1422,7 +1472,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     var readLineCallback = function(string) {
       results = Ext.util.JSON.decode(string);
-    }
+    };
 
     var exitCallback = function(string) {
 
@@ -1471,7 +1521,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
                   Paperpile.main.tabs.newScreenTab('Updates', 'updates');
                 }
                 Paperpile.status.clearMsg();
-              },
+              }
             });
           } else {
             if (!silent) {

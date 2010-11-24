@@ -298,7 +298,7 @@ Paperpile.stage2 = function() {
 
   Ext.QuickTips.init();
 
-  Paperpile.main = new Paperpile.Viewport;
+  Paperpile.main = new Paperpile.Viewport();
 
   Paperpile.main.loadSettings(
     function() {

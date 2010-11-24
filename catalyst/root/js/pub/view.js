@@ -16,6 +16,7 @@
 
 Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
   closable: false,
+  splitFraction: 2/3,
 
   initComponent: function() {
 
@@ -27,13 +28,14 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     this.overviewPanel = this.createOverview();
     this.eastPanel = this.createEastPanel();
 
-    this.centerPanel.flex = 3;
-    this.eastPanel.flex = 2;
+    this.centerPanel.flex = 1;
+    this.eastPanel.flex = 1;
 
     Ext.apply(this, {
       tabType: 'PLUGIN',
       hideBorders: true,
       layout: 'hbox',
+      plugins: [new Ext.ux.PanelSplit(this.centerPanel, this.updateSplitFraction,this)],
       layoutConfig: {
         align: 'stretch'
       },
@@ -45,35 +47,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     Paperpile.PluginPanel.superclass.initComponent.call(this);
 
     this.on('afterlayout', function() {
-
-      // Roll-your-own horizontal stretch layout.
-      var fraction = 1 / 3; // Fraction of smaller half to larger half.
-      var width = this.getWidth();
-
-      var w2 = width * (fraction);
-      var w1 = width * (1 - fraction);
-
-      var min2 = 300;
-      var max = 500;
-      if (w2 > max) {
-        w2 = max;
-        w1 = width - max;
-      }
-      // Respect minimum sizes. The larger half (w1) takes precedence.
-      if (w2 < min2) {
-        w2 = min2;
-        w1 = width - min2;
-      }
-      var min1 = 300;
-      if (w1 < min1) {
-        w1 = min1;
-        w2 = width - min1;
-      }
-
-      this.centerPanel.setWidth(w1);
-      this.eastPanel.setWidth(w2);
-      this.centerPanel.setPosition(0, 0);
-      this.eastPanel.setPosition(width - w2, 0);
+	this.resizeToSplitFraction();
     },
     this);
 
@@ -87,6 +61,68 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     },
     this);
   },
+
+  updateSplitFraction: function(newFraction) {
+  // REFACTOR: right now this is largely duplicated here and in paperpile.js.
+      this.splitFraction = newFraction;
+
+      // Store the new fraction setting.
+      Paperpile.main.setSetting('split_fraction_grid',this.splitFraction,true);
+      // Update the panel sizes.
+      this.resizeToSplitFraction();
+  },
+
+  resizeToSplitFraction: function() {
+  // REFACTOR: right now this is largely duplicated here and in paperpile.js.
+
+      var fraction = this.splitFraction; // Default panel if there's no setting yet.
+      var set_fraction = Paperpile.main.getSetting('split_fraction_grid');
+      if (set_fraction) {
+	  fraction = set_fraction;
+      }
+
+      var width = this.getWidth();
+      var w1 = width * (fraction); // grid width
+      var w2 = width * (1 - fraction); // sidepanel width
+
+      // Minimum grid width.
+      var min1 = 400;
+      // Minimum sidepanel width.
+      var min2 = 150;
+      // Maximum grid width.
+      var max1 = 9999;
+      // Maximum sidepanel width.
+      var max2 = 400;
+
+      // Respect max sizes
+      if (w1 > max1) {
+        w1 = max1;
+        w2 = width - max1;
+      }
+      if (w2 > max2) {
+        w2 = max2;
+        w1 = width - max2;
+      }
+
+      // Respect minimum sizes.
+      if (w2 < min2) {
+        w2 = min2;
+        w1 = width - min2;
+      }
+      // Top priority -- keep grid above min size!
+      if (w1 < min1) {
+        w1 = min1;
+        w2 = width - min1;
+      }
+
+//      this.suspendEvents(true);
+      this.centerPanel.setWidth(w1);
+      this.eastPanel.setWidth(w2);
+      this.centerPanel.setPosition(0, 0);
+      this.eastPanel.setPosition(width - w2, 0);
+//      this.resumeEvents();
+
+},
 
   afterEastRender: function() {
     if (this.hasAboutPanel()) {

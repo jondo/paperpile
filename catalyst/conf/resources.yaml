@@ -6,6 +6,7 @@ js:
   - "ext/adapter/ext/ext-base-debug.js"
   - "ext/ext-all-debug.js"
   - "ext.ux/Spotlight.js"
+  - "js/misc/panel-split.js"
   - "ext.ux/filetree/js/Ext.ux.FileTreeMenu.js"
   - "ext.ux/filetree/js/Ext.ux.FileTreePanel.js"
   - "js/main/overrides.js"
