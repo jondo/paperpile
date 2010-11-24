@@ -1012,7 +1012,7 @@ sub _collect_update_data {
   my $max_output_size = 30;
   if ( scalar(@$pubs) > $max_output_size ) {
     $c->stash->{data}->{pub_delta} = 1;
-    @pubs_copy = @$pubs[ 1 .. $max_output_size ];
+    @pubs_copy = @$pubs[ 0 .. $max_output_size ];
   } else {
     @pubs_copy = @$pubs;
   }
