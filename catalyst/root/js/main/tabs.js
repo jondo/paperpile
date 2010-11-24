@@ -39,11 +39,15 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       // Force the grid view to re-layout on tab change. Fixes a weird bug
       // where grids re-loaded in the background lose their DOM.
       if (tab instanceof Paperpile.PluginPanel) {
+
         var grid = tab.getGrid();
         grid.view.layout();
 
-        grid.getView().focusEl.focus(20);
+	// This can't have a delay on it -- we need to focus completely before
+	// restoring the scroll state.
+        grid.getView().focusEl.focus();
 
+	// This needs to come last.
         tab.restoreScrollState();
       }
     },
