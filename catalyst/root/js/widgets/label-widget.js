@@ -55,14 +55,20 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     var oldLabels = Ext.select("#" + this.div_id + " > *");
     oldLabels.remove();
 
+    if (this.comboBox) {
+      this.comboBox.destroy();
+    }
+
     var store = Ext.StoreMgr.lookup('label_store');
     var labels;
     if (this.multipleSelection) {
       // Collect all the labels from all references selected.
-      var records = this.grid.getSelectionModel().getSelections();
+      var guids = this.grid.getSelectionAsList();
+      var grid_store = this.grid.getStore();
       var label_hash = {};
-      for (var i = 0; i < records.length; i++) {
-        var record = records[i];
+      for (var i = 0; i < guids.length; i++) {
+        var guid = guids[i];
+        var record = grid_store.getById(guid);
         var record_labels = record.data.labels.split(/\s*,\s*/);
         for (var j = 0; j < record_labels.length; j++) {
           var label = record_labels[j];
@@ -202,6 +208,9 @@ Paperpile.LabelWidget = Ext.extend(Object, {
             // TODO: Tab key should trigger an add-label while keeping the editor open for further adding.
           }
         },
+        'blur': function(combo) {
+          this.renderLabels();
+        },
         'select': function(combo, record, index) {
           this.commitLabel(record.get('guid'), false);
         },
@@ -228,12 +237,6 @@ Paperpile.LabelWidget = Ext.extend(Object, {
         type: 'LABEL'
       },
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        Ext.StoreMgr.lookup('label_store').reload({
-          callback: function() {
-            Paperpile.main.onUpdate(json.data);
-          }
-        });
         if (lots) {
           Paperpile.status.clearMsg();
         }
@@ -262,8 +265,6 @@ Paperpile.LabelWidget = Ext.extend(Object, {
         type: 'LABEL'
       },
       success: function(response) {
-        Ext.StoreMgr.lookup('label_store').reload();
-
         if (lots) {
           Paperpile.status.clearMsg();
         }
