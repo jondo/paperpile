@@ -304,8 +304,8 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       return;
     }
 
-    var panel = Paperpile.main.tabs.add(new Paperpile.PDFPanel(params));
-//    var panel = Paperpile.main.tabs.add(new Paperpile.PDFviewer(params));
+//    var panel = Paperpile.main.tabs.add(new Paperpile.PDFPanel(params));
+    var panel = Paperpile.main.tabs.add(new Paperpile.PDFviewer(params));
     panel.show();
   }
 }
