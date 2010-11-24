@@ -123,6 +123,8 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       initToolbarMenuItemIds: grid.initToolbarMenuItemIds.createSequence(function() {
         var ids = this.toolbarMenuItemIds;
         ids.insert(0, 'SEARCH_FIELD');
+
+	ids.remove('IMPORT_ALL');
       },
       grid),
       initContextMenuItemIds: grid.initContextMenuItemIds.createSequence(function() {
