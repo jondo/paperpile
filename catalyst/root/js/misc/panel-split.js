@@ -23,13 +23,17 @@ Ext.ux.PanelSplit = Ext.extend(Ext.util.Observable, {
   },
 
   afterRender: function() {
+    this.el.setStyle({
+      'border-right-color': '#F0F0F0',
+      'border-right-width': '4px'
+    });
     this.splitMoved = function(split, newSize) {
       // use the splitbar position parent panel to define the new fraction
       var box = this.splitParent.getBox();
       var fraction = newSize / box.width;
 
       // Call the callback function with the new fraction defined by the split bar.
-      this.splitCallback.call(this.splitCallbackScope,fraction);
+      this.splitCallback.call(this.splitCallbackScope, fraction);
 
       this.updateSplitPos();
     };
@@ -41,8 +45,8 @@ Ext.ux.PanelSplit = Ext.extend(Ext.util.Observable, {
       var sd = this.splitEl.dom;
       var s = sd.style;
       var sw = sd.offsetWidth;
-      s.left = (b1.width - sw / 2) + 'px';
-      s.top = (b1.y) + 'px';
+      s.left = (b1.width - sw) + 'px';
+      s.top = (0) + 'px';
       s.height = Math.max(0, b1.height) + 'px';
     };
 

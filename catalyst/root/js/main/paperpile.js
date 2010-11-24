@@ -128,7 +128,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
 
     this.tree = new Paperpile.Tree({
-      border: false,
       xtype: 'pp-tree',
       rootVisible: false,
       id: 'treepanel',
@@ -249,40 +248,39 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         fraction = set_fraction;
       }
     }
-  
+
     var width = this.getWidth();
     var w1 = width * (fraction); // tree width
     var w2 = width * (1 - fraction); // panel width
+    // Minimum tree width.
+    var min1 = 150;
+    // Minimum panel width.
+    var min2 = 550;
+    // Maximum tree width.
+    var max1 = 300;
+    // Maximum panel width.
+    var max2 = 9999;
 
-          // Minimum tree width.
-      var min1 = 150;
-      // Minimum panel width.
-      var min2 = 550;
-      // Maximum tree width.
-      var max1 = 300;
-      // Maximum panel width.
-      var max2 = 9999;
+    // Respect max sizes
+    if (w1 > max1) {
+      w1 = max1;
+      w2 = width - max1;
+    }
+    if (w2 > max2) {
+      w2 = max2;
+      w1 = width - max2;
+    }
 
-      // Respect max sizes
-      if (w1 > max1) {
-        w1 = max1;
-        w2 = width - max1;
-      }
-      if (w2 > max2) {
-        w2 = max2;
-        w1 = width - max2;
-      }
-
-      // Respect minimum sizes.
-      if (w2 < min2) {
-        w2 = min2;
-        w1 = width - min2;
-      }
-      // Top priority -- keep tree above min size!
-      if (w1 < min1) {
-        w1 = min1;
-        w2 = width - min1;
-      }
+    // Respect minimum sizes.
+    if (w2 < min2) {
+      w2 = min2;
+      w1 = width - min2;
+    }
+    // Top priority -- keep tree above min size!
+    if (w1 < min1) {
+      w1 = min1;
+      w2 = width - min1;
+    }
 
     this.tree.setWidth(w1);
     this.tabs.setWidth(w2);
@@ -1200,10 +1198,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     });
   },
 
-  unfinishedTasks: function(){
+  unfinishedTasks: function() {
     if (Paperpile.main.currentQueueData) {
       if (Paperpile.main.currentQueueData.queue.status === 'RUNNING') {
-        return(true);
+        return (true);
       }
     }
   },

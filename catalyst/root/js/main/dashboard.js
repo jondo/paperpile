@@ -23,12 +23,16 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
     Ext.apply(this, {
       closable: true,
       autoScroll: true,
-      autoLoad: {
-        url: Paperpile.Url('/screens/dashboard'),
-        callback: this.setupFields,
-        scope: this
-      },
-
+      layout: 'fit',
+      items: [{
+        xtype: 'panel',
+        height: '100%',
+        autoLoad: {
+          url: Paperpile.Url('/screens/dashboard'),
+          callback: this.setupFields,
+          scope: this
+        }
+      }]
     });
 
     Paperpile.PatternSettings.superclass.initComponent.call(this);
