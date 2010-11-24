@@ -142,6 +142,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     Ext.apply(this, {
       layout: 'border',
+      border: false,
       enableKeyEvents: true,
       keys: {},
       plugins: [new Ext.ux.PanelSplit(this.tree, this.updateSplitFraction, this)],
