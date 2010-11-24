@@ -164,9 +164,8 @@ sub page {
   # then parse the results page
   my $page = $self->_parse_arxiv_page( \@tmp_content );
 
-  # Make sure all items are unique to avoid nasty sha1 and guid
-  # clashes
-  Paperpile::Utils->uniquify_pubs([(@{$self->get_cache},@$page)]);
+  $self->clear_cache();
+  Paperpile::Utils->uniquify_pubs([@$page]);
 
   $self->_save_page_to_hash($page);
 

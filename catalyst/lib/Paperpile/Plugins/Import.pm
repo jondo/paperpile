@@ -136,6 +136,14 @@ sub get_cache {
 
 }
 
+sub clear_cache {
+
+  ( my $self ) = @_;
+
+  $self->_hash({});
+
+}
+
 
 sub cleanup {
 
