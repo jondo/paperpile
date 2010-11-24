@@ -165,7 +165,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
       'SELECT_ALL': new Ext.Action({
         text: 'Select all',
-        handler: this.selectAll,
+        handler: function() {
+	    this.selectAll();
+	},
         scope: this,
         itemId: 'SELECT_ALL'
       }),
@@ -451,58 +453,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
     this);
 
-    this.mon(this.getSelectionModel(), 'pageselected', function() {
-      var num = this.getSelectionModel().getCount();
-      var all = this.getStore().getTotalCount();
-      if (all <= num) {
-        return;
-      }
-      Paperpile.status.updateMsg({
-        type: 'info',
-        msg: 'All ' + num + ' references on this page are selected.',
-        action1: 'Select all ' + all + ' references.',
-        callback: function() {
-          this.getSelectionModel().selectAll.defer(20, this.getSelectionModel());
-        },
-        scope: this
-      });
-
-      // Create a callback to clear this message if the selection changes.
-      var messageNum = Paperpile.status.getMessageNumber();
-      var clearMsg = function() {
-        Paperpile.status.clearMessageNumber(messageNum);
-      };
-      this.mon(this.getSelectionModel(), 'afterselectionchange', clearMsg, this, {
-        single: true
-      });
-    },
-    this);
-
-    this.mon(this.getSelectionModel(), 'allselected', function() {
-      var num = this.getSelectionModel().getCount();
-      Paperpile.status.clearMsg();
-      Paperpile.status.updateMsg({
-        type: 'info',
-        msg: 'All ' + num + ' references are selected.',
-        action1: 'Clear selection',
-        callback: function() {
-          this.getSelectionModel().clearSelectionsAndUpdate();
-          Paperpile.status.clearMsg();
-        },
-        scope: this
-      });
-
-      // Create a callback to clear this message if the selection changes.
-      var messageNum = Paperpile.status.getMessageNumber();
-      var clearMsg = function() {
-        Paperpile.status.clearMessageNumber(messageNum);
-      };
-      this.mon(this.getSelectionModel(), 'afterselectionchange', clearMsg, this, {
-        single: true
-      });
-
-    },
-    this);
+    this.mon(this.getSelectionModel(), 'pageselected', function() {this.onPageSelected()},this);
+    this.mon(this.getSelectionModel(), 'allselected', function(){this.onAllSelected()},this);
 
     // Auto-select the first row when the store finally loads up.
     this.mon(this.getStore(), 'load', function() {
@@ -573,6 +525,56 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       Paperpile.main.tabs.remove(this.getPluginPanel());
       break;
     }
+  },
+
+  onPageSelected: function() {
+    var num = this.getSelectionModel().getCount();
+    var all = this.getStore().getTotalCount();
+    if (all <= num) {
+      return;
+    }
+    Paperpile.status.updateMsg({
+      type: 'info',
+      msg: 'All ' + num + ' references on this page are selected.',
+      action1: 'Select all ' + all + ' references.',
+      callback: function() {
+        this.getSelectionModel().selectAll.defer(20, this.getSelectionModel());
+      },
+      scope: this
+    });
+
+    // Create a callback to clear this message if the selection changes.
+    var messageNum = Paperpile.status.getMessageNumber();
+    var clearMsg = function() {
+      Paperpile.status.clearMessageNumber(messageNum);
+    };
+    this.mon(this.getSelectionModel(), 'afterselectionchange', clearMsg, this, {
+      single: true
+    });
+  },
+
+  onAllSelected: function() {
+    var num = this.getSelectionModel().getCount();
+    Paperpile.status.clearMsg();
+    Paperpile.status.updateMsg({
+      type: 'info',
+      msg: 'All ' + num + ' references are selected.',
+      action1: 'Clear selection',
+      callback: function() {
+        this.getSelectionModel().clearSelectionsAndUpdate();
+        Paperpile.status.clearMsg();
+      },
+      scope: this
+    });
+
+    // Create a callback to clear this message if the selection changes.
+    var messageNum = Paperpile.status.getMessageNumber();
+    var clearMsg = function() {
+      Paperpile.status.clearMessageNumber(messageNum);
+    };
+    this.mon(this.getSelectionModel(), 'afterselectionchange', clearMsg, this, {
+      single: true
+    });
   },
 
   // Base classes should return /false/ if the base query info should be hidden.

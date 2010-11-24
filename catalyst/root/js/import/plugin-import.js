@@ -94,8 +94,10 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
           this.actions['IMPORT_SELECTED'].setDisabledTooltip("");
         } else {
           if (selection && selection.data._imported) {
-            this.actions['IMPORT_SELECTED'].disable();
-            this.actions['IMPORT_SELECTED'].setDisabledTooltip("Reference already imported");	    
+	    if (this.getSelectionCount() == 1) {
+              this.actions['IMPORT_SELECTED'].disable();
+              this.actions['IMPORT_SELECTED'].setDisabledTooltip("Reference already imported");	    
+	    }
 
           } else if (selection && !selection.data._imported) {
 

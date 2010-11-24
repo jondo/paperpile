@@ -23,6 +23,9 @@ Paperpile.OnlineSearchGridPlugin = function(config) {
 Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
   init: function(grid) {
 
+    grid.selectAll = this.selectAll.createDelegate(grid);
+    grid.onPageSelected = this.onPageSelected.createDelegate(grid);
+
     this.searchField = new Ext.app.SearchField({
       itemId: 'SEARCH_FIELD',
       emptyText: 'Search ' + grid.plugin_name,
@@ -34,72 +37,72 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
 
     grid.getStore().baseParams.cancel_handle = 'grid_' + grid.id;
 
-    grid.mon(grid.getStore(),'beforeload',
-      function() {
-        if (this.backgroundLoading) {
-          return;
-        }
+    grid.mon(grid.getStore(), 'beforeload',
+    function() {
+      if (this.backgroundLoading) {
+        return;
+      }
 
-        // Show waiting message and allow canceling
-        Paperpile.status.updateMsg({
-          busy: true,
-          msg: 'Searching ' + this.plugin_name,
-          action1: 'Cancel',
-          callback: function() {
-            grid.cancelLoad();
-            Paperpile.status.clearMsg();
-
-            clearTimeout(this.timeoutWarn);
-            clearTimeout(this.timeoutAbort);
-
-            this.timeoutWarn = null;
-            this.timeoutAbort = null;
-          },
-          scope: this
-        });
-
-        // Warn after 15 sec
-        this.timeoutWarn = (function() {
-          Paperpile.status.setMsg('This is taking longer than usual. Still searching ' + grid.plugin_name + '...');
-        }).defer(15000);
-
-        // Abort after 35 sec
-        this.timeoutAbort = (function() {
+      // Show waiting message and allow canceling
+      Paperpile.status.updateMsg({
+        busy: true,
+        msg: 'Searching ' + this.plugin_name,
+        action1: 'Cancel',
+        callback: function() {
           grid.cancelLoad();
           Paperpile.status.clearMsg();
 
-          Paperpile.status.updateMsg({
-            type: 'error',
-            msg: 'Giving up. There may be problems with your network or ' + grid.plugin_name + '.',
-            hideOnClick: true
-          });
-        }).defer(35000);
-      },
-      grid);
+          clearTimeout(this.timeoutWarn);
+          clearTimeout(this.timeoutAbort);
 
-    grid.mon(grid.getStore(),'load',
-      function() {
-        // Clear status message and timeout timers
-        if (!this.backgroundLoading) {
-          Paperpile.status.clearMsg();
-        }
+          this.timeoutWarn = null;
+          this.timeoutAbort = null;
+        },
+        scope: this
+      });
 
-        clearTimeout(this.timeoutWarn);
-        clearTimeout(this.timeoutAbort);
+      // Warn after 15 sec
+      this.timeoutWarn = (function() {
+        Paperpile.status.setMsg('This is taking longer than usual. Still searching ' + grid.plugin_name + '...');
+      }).defer(15000);
 
-        this.timeoutWarn = null;
-        this.timeoutAbort = null;
+      // Abort after 35 sec
+      this.timeoutAbort = (function() {
+        grid.cancelLoad();
+        Paperpile.status.clearMsg();
+
+        Paperpile.status.updateMsg({
+          type: 'error',
+          msg: 'Giving up. There may be problems with your network or ' + grid.plugin_name + '.',
+          hideOnClick: true
+        });
+      }).defer(35000);
+    },
+    grid);
+
+    grid.mon(grid.getStore(), 'load',
+    function() {
+      // Clear status message and timeout timers
+      if (!this.backgroundLoading) {
+        Paperpile.status.clearMsg();
+      }
+
+      clearTimeout(this.timeoutWarn);
+      clearTimeout(this.timeoutAbort);
+
+      this.timeoutWarn = null;
+      this.timeoutAbort = null;
 
       if (this.getStore().getCount() > 0) {
         this.getSelectionModel().selectRowAndSetCursor(0);
-	this.afterSelectionChange(this.getSelectionModel());
+        this.afterSelectionChange(this.getSelectionModel());
       }
 
-      },
-      grid);
+    },
+    grid);
 
     // Make sure timeouts are cleared on error 
-    grid.mon(grid.getStore(),'loadexception',
+    grid.getStore().on('loadexception',
       function(exception, options, response, error) {
         clearTimeout(this.timeoutWarn);
         clearTimeout(this.timeoutAbort);
@@ -108,7 +111,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
       },
       grid);
 
-    grid.mon(grid.getStore(),'destroy', function() {
+    grid.getStore().on('destroy', function() {
       if (this.isLoading) {
         clearTimeout(this.timeoutWarn);
         clearTimeout(this.timeoutAbort);
@@ -124,7 +127,7 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
         var ids = this.toolbarMenuItemIds;
         ids.insert(0, 'SEARCH_FIELD');
 
-	ids.remove('IMPORT_ALL');
+        ids.remove('IMPORT_ALL');
       },
       grid),
       initContextMenuItemIds: grid.initContextMenuItemIds.createSequence(function() {
@@ -151,6 +154,27 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
         }
       });
     }
+  },
 
+  selectAll: function() {
+    this.getSelectionModel().selectPage();
+  },
+
+  onPageSelected: function() {
+    var num = this.getStore().getCount();
+    Paperpile.status.updateMsg({
+      type: 'info',
+      msg: 'All ' + num + ' references on this page are selected.',
+      scope: this
+    });
+
+    // Create a callback to clear this message if the selection changes.
+    var messageNum = Paperpile.status.getMessageNumber();
+    var clearMsg = function() {
+      Paperpile.status.clearMessageNumber(messageNum);
+    };
+    this.mon(this.getSelectionModel(), 'afterselectionchange', clearMsg, this, {
+      single: true
+    });
   }
 });

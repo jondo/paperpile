@@ -710,6 +710,14 @@ Ext.ux.BetterRowSelectionModel = Ext.extend(Ext.grid.AbstractSelectionModel, {
     return (this.getCount() == this.grid.store.getCount() && this.getCount() < this.grid.store.getTotalCount());
   },
 
+  selectPage: function() {
+    this.clearSelections(true);
+    this.selectRange(0, this.grid.store.getCount() - 1);
+    this.fakeAllSelected = false;
+    this.fireEvent('afterselectionchange', this);
+    this.fireEvent('pageselected', this);
+  },
+
   selectAll: function(forceAll) {
     if (this.isLocked()) {
       return;
