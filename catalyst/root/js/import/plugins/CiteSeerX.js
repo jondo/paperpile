@@ -44,8 +44,8 @@ Paperpile.PluginPanelCiteSeerX = Ext.extend(Paperpile.PluginPanel, {
 Paperpile.PluginGridCiteSeerX = Ext.extend(Paperpile.PluginGrid, {
 
   plugins: [
-    new Paperpile.OnlineSearchGridPlugin(),
-    new Paperpile.ImportGridPlugin()],
+    new Paperpile.ImportGridPlugin(),
+    new Paperpile.OnlineSearchGridPlugin()],
   plugin_title: 'CiteSeerX',
   plugin_iconCls: 'pp-icon-citeseerx',
   limit: 25,

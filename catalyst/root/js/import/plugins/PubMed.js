@@ -44,8 +44,8 @@ Paperpile.PluginPanelPubMed = Ext.extend(Paperpile.PluginPanel, {
 Paperpile.PluginGridPubMed = Ext.extend(Paperpile.PluginGrid, {
 
   plugins: [
-    new Paperpile.OnlineSearchGridPlugin(),
-    new Paperpile.ImportGridPlugin()],
+    new Paperpile.ImportGridPlugin(),
+    new Paperpile.OnlineSearchGridPlugin()],
   initComponent: function() {
     this.limit = 25;
     this.plugin_name = 'PubMed';

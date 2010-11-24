@@ -43,8 +43,8 @@ Paperpile.PluginPanelArXiv = Ext.extend(Paperpile.PluginPanel, {
 Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGrid, {
 
   plugins: [
-    new Paperpile.OnlineSearchGridPlugin(),
-    new Paperpile.ImportGridPlugin()],
+    new Paperpile.ImportGridPlugin(),
+    new Paperpile.OnlineSearchGridPlugin()],
   limit: 25,
 
   initComponent: function() {
@@ -54,9 +54,8 @@ Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGrid, {
     Paperpile.PluginGridArXiv.superclass.initComponent.call(this);
   },
 
-
   getEmptyBeforeSearchTemplate: function() {
-    
+
     var markup = [
       '<div class="pp-hint-box">',
       '  <h1>Search hints (Andreas: update examples)</h1>',
@@ -69,7 +68,6 @@ Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGrid, {
       '</div>'];
     return new Ext.XTemplate(markup).compile();
   },
-
 
 });
 

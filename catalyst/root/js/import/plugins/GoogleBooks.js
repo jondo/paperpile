@@ -43,8 +43,8 @@ Paperpile.PluginPanelGoogleBooks = Ext.extend(Paperpile.PluginPanel, {
 Paperpile.PluginGridGoogleBooks = Ext.extend(Paperpile.PluginGrid, {
 
   plugins: [
-    new Paperpile.OnlineSearchGridPlugin(),
-    new Paperpile.ImportGridPlugin()],
+    new Paperpile.ImportGridPlugin(),
+    new Paperpile.OnlineSearchGridPlugin()],
   plugin_title: 'GoogleBooks',
   plugin_iconCls: 'pp-icon-google',
   limit: 25,

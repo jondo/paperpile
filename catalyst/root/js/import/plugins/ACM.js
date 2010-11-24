@@ -44,8 +44,8 @@ Paperpile.PluginPanelACM = Ext.extend(Paperpile.PluginPanel, {
 Paperpile.PluginGridACM = Ext.extend(Paperpile.PluginGrid, {
 
   plugins: [
-    new Paperpile.OnlineSearchGridPlugin(),
-    new Paperpile.ImportGridPlugin()],
+    new Paperpile.ImportGridPlugin(),
+    new Paperpile.OnlineSearchGridPlugin()],
   limit: 20,
 
   initComponent: function() {

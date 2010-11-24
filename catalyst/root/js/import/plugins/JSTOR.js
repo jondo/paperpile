@@ -42,8 +42,8 @@ Paperpile.PluginPanelJSTOR = Ext.extend(Paperpile.PluginPanel, {
 Paperpile.PluginGridJSTOR = Ext.extend(Paperpile.PluginGrid, {
 
   plugins: [
-    new Paperpile.OnlineSearchGridPlugin(),
-    new Paperpile.ImportGridPlugin()],
+    new Paperpile.ImportGridPlugin(),
+    new Paperpile.OnlineSearchGridPlugin()],
   limit: 25,
 
   initComponent: function() {

@@ -42,8 +42,8 @@ Paperpile.PluginPanelSpringerLink = Ext.extend(Paperpile.PluginPanel, {
 Paperpile.PluginGridSpringerLink = Ext.extend(Paperpile.PluginGrid, {
 
   plugins: [
-    new Paperpile.OnlineSearchGridPlugin(),
-    new Paperpile.ImportGridPlugin()],
+    new Paperpile.ImportGridPlugin(),
+    new Paperpile.OnlineSearchGridPlugin()],
   limit: 10,
 
   initComponent: function() {

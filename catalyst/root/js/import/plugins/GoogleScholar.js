@@ -42,8 +42,8 @@ Paperpile.PluginPanelGoogleScholar = Ext.extend(Paperpile.PluginPanel, {
 Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
 
   plugins: [
-    new Paperpile.OnlineSearchGridPlugin(),
-    new Paperpile.ImportGridPlugin()],
+    new Paperpile.ImportGridPlugin(),
+    new Paperpile.OnlineSearchGridPlugin()],
   limit: 10,
 
   initComponent: function() {
@@ -54,7 +54,7 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
   },
 
   getEmptyBeforeSearchTemplate: function() {
-    
+
     var markup = [
       '<div class="pp-hint-box">',
       '  <h1>Search hints</h1>',
@@ -67,7 +67,6 @@ Paperpile.PluginGridGoogleScholar = Ext.extend(Paperpile.PluginGrid, {
       '</div>'];
     return new Ext.XTemplate(markup).compile();
   },
-
 
   isLongImport: function() {
     return true;
