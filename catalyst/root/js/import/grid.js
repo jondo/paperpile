@@ -1578,7 +1578,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var blockingFunction = function() {
         return false;
       };
-      this.mon(this.getSelectionModel(), 'beforerowselect', blockingFunction, this);
+//      this.getSelectionModel().on('beforerowselect', blockingFunction, this);
       this.isLocked = true;
 
       var guid = data.guid;
