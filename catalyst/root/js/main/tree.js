@@ -27,16 +27,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       animate: false,
       lines: false,
       autoScroll: true,
+      root: {
+        id: 'asdf'
+      },
+      rootVisible: false,
       loader: new Paperpile.TreeLoader({
         url: Paperpile.Url('/ajax/tree/get_node'),
         requestMethod: 'GET'
       }),
-      root: {
-        nodeType: 'async',
-        text: 'Root',
-        leaf: false,
-        id: 'ROOT'
-      },
       treeEditor: new Ext.tree.TreeEditor(this, {
         allowBlank: false,
         cancelOnEsc: true,
@@ -112,7 +110,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
                   fn: function(node) {
                     if (this.labelPanel && this.labelPanel.isVisible()) {
                       this.labelPanel.alignTo(this.moreLabelsNode.getUI().getTextEl());
-                      //                        this.labelPanel.alignTo.defer(5, this.labelPanel, [this.moreLabelsNode.ui.getTextEl()]);
                     }
                   }
                 },
@@ -216,6 +213,23 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       }
     },
     this);
+  },
+
+  loadTree: function() {
+    var root = this.getRootNode();
+    // The backend only returns the whole tree if the passed node
+    // has an ID of 'ROOT'... so to keep the tree from immediately
+    // loading we only set the right ID when this method is called.
+    root.id = 'ROOT';
+    this.reloadNode(root);
+  },
+
+  reloadNode: function(node, expandAll) {
+    if (expandAll === undefined) {
+      expandAll = true;
+    }
+    node.loaded = false;
+    node.expand(expandAll);
   },
 
   isNodeDraggable: function(node) {
@@ -400,8 +414,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   onNodeDrag: function(e) {
     // We are dragging from the data grid
     if (e.source.dragData.grid) {
-	var grid = e.source.dragData.grid;
-	var t = e.target.type;
+      var grid = e.source.dragData.grid;
+      var t = e.target.type;
       // only allow drop on Folders, Labels and Trash
       if ((t == 'FOLDER_ROOT' || t == 'LABEL' || t == 'FOLDER' || t == 'TRASH') && e.target.id != 'LABEL_ROOT') {
         if (t == 'TRASH') {
@@ -2127,58 +2141,15 @@ Paperpile.Tree.TrashMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   }
 });
 
-// Extend TreeNode to allow to pass additional parameters from the server,
-// Note that TreeNode is not a 'component' but only an observable, so we
-// can't override as usual but have do define (and call) an init function
-// for ourselves.
-Paperpile.AsyncTreeNode = Ext.extend(Ext.tree.AsyncTreeNode, {
-  init: function(attr) {
-    Ext.apply(this, attr);
-  }
-
-});
-
-Paperpile.TreeNode = Ext.extend(Ext.tree.TreeNode, {
-  init: function(attr) {
-    Ext.apply(this, attr);
-  }
-
-});
-
 // To use our custom TreeNode we also have to override TreeLoader
 Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
 
   // This function is taken from extjs-debug.js and modified
   createNode: function(attr) {
-    if (this.baseAttrs) {
-      Ext.applyIf(attr, this.baseAttrs);
-    }
-    if (this.applyLoader !== false) {
-      attr.loader = this;
-    }
-    if (typeof attr.uiProvider == 'string') {
-      attr.uiProvider = this.uiProviders[attr.uiProvider] || eval(attr.uiProvider);
-    }
-
-    // Return our custom TreeNode here
-    if (attr.leaf) {
-      var node = new Paperpile.TreeNode(attr);
-      node.init(attr);
-      return node;
-    } else {
-      var node = new Paperpile.AsyncTreeNode(attr);
-      node.init(attr);
-      return node;
-    }
-
     // code in the original implementation
-    //if(attr.nodeType){
-    //    return new Ext.tree.TreePanel.nodeTypes[attr.nodeType](attr);
-    //}else{
-    //    return attr.leaf ?
-    //        new Ext.tree.TreeNode(attr) :
-    //        new Ext.tree.AsyncTreeNode(attr);
-    //}
+    var node = new Ext.tree.AsyncTreeNode(attr);
+    Ext.apply(node, attr);
+    return node;
   }
 
 });

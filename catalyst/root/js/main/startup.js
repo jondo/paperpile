@@ -298,6 +298,9 @@ Paperpile.stage2 = function() {
       Paperpile.main.getTree().expandAll();
       Paperpile.main.afterLoadSettings();
 
+      // Stefan: example code to use to load the tree...
+      Paperpile.main.tree.loadTree.defer(2000,Paperpile.main.tree);
+
       var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
 
       Ext.DomHelper.overwrite('version-tag', version);

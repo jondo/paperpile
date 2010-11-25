@@ -6,7 +6,6 @@ Paperpile.LabelPanel = Ext.extend(Ext.Panel, {
       collectionType: 'LABEL',
       storeId: 'hidden_label_store'
     });
-    this._store.load();
 
     if (this.filterBar === true) {
       this._filter = new Ext.form.TextField({
