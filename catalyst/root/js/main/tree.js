@@ -220,7 +220,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     // The backend only returns the whole tree if the passed node
     // has an ID of 'ROOT'... so to keep the tree from immediately
     // loading we only set the right ID when this method is called.
-    root.id = 'ROOT';
+    root.setId('ROOT');
     this.reloadNode(root);
   },
 
@@ -229,6 +229,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       expandAll = true;
     }
     node.loaded = false;
+    node.loading = false;
     node.expand(expandAll);
   },
 
