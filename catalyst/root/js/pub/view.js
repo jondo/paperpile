@@ -347,18 +347,20 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       this.updateDetailsTask.cancel();
       this.updateDetailsWork();
     } else {
-      this.updateDetailsTask.delay(50);
+      this.updateDetailsTask.delay(80);
     }
   },
 
   updateDetailsWork: function() {
     var datatabs = this.items.get('center_panel').items.get('data_tabs');
+    // Grid.
+    this.getGrid().updateButtons();
+    // Overview.
+    this.getOverviewPanel().forceUpdate();
     // Abstract.
     datatabs.items.get('pubsummary').updateDetail();
     // Notes.
     datatabs.items.get('pubnotes').updateDetail();
-    // Overview.
-    this.getOverviewPanel().forceUpdate();
   },
 
   updateButtons: function() {

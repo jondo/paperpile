@@ -69,6 +69,9 @@ Paperpile.LabelWidget = Ext.extend(Object, {
       for (var i = 0; i < guids.length; i++) {
         var guid = guids[i];
         var record = grid_store.getById(guid);
+	if (!record) {
+	    continue;
+	}
         var record_labels = record.data.labels.split(/\s*,\s*/);
         for (var j = 0; j < record_labels.length; j++) {
           var label = record_labels[j];

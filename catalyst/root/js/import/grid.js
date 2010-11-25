@@ -756,7 +756,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   afterSelectionChange: function(sm) {
-    this.updateButtons();
     this.getPluginPanel().updateDetails();
     if (sm.getCount() == 1) {
       this.completeEntry();
@@ -1724,6 +1723,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   handleCopy: function(module, format, msg) {
+    if (this.getSelectionCount() == 0) {
+	return;
+    }
     var isMultiple = this.getSelectionCount() > 1;
     var s = '';
     var n = '';
@@ -1840,6 +1842,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       selection = 'ALL';
     }
 
+    if (this.getSelectionCount() == 0) {
+	return;
+    }
+
     // Find the lowest index of the current selection.
     var firstRecord = this.getSelectionModel().getLowestSelected();
     var firstIndex = this.getStore().indexOf(firstRecord);
@@ -1903,6 +1909,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           Paperpile.status.clearMsg();
         }
       },
+	  failure: function() {
+	      this.getSelectionModel().unlock();
+	  },
       scope: this
     });
 
