@@ -36,7 +36,7 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
     var len = items.length;
 
     // Figure out if and where the menuBreak is set.
-    var menuBreakIndex = len;
+    var menuBreakIndex = -1;
     for (i = 0; i < len; i++) {
       var item = items[i];
       if (item.itemId == tb.menuBreakItemId) {
@@ -55,7 +55,7 @@ Paperpile.ToolbarLayout = Ext.extend(Ext.layout.ToolbarLayout, {
 
     this.lastWidth = width;
 
-    if (tableWidth > width || (hasHiddens && isLarger)) {
+    if (tableWidth > width || (hasHiddens && isLarger) || menuBreakIndex != -1 ) {
       var items = this.container.items.items,
       len = items.length,
       loopWidth = 0,
