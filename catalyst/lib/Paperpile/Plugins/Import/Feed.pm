@@ -25,6 +25,7 @@ use Data::Dumper;
 use File::Copy;
 use File::Path;
 use File::Temp qw(tempfile);
+use URI::Escape;
 use Bibutils;
 
 use Paperpile::Library::Publication;
@@ -35,7 +36,7 @@ use Paperpile::Formats;
 extends 'Paperpile::Plugins::Import::DB';
 
 has 'id'    => ( is => 'rw', isa => 'Str' );
-has 'url'   => ( is => 'rw', isa => 'Str' );
+has 'url'   => ( is => 'rw', isa => 'Str' ); # URI escaped url
 has 'file'  => ( is => 'rw', isa => 'Str' );
 has '_data' => ( is => 'rw', isa => 'ArrayRef' );
 has 'title' => ( is => 'rw', isa => 'Str', default => 'New Feed' );
@@ -107,7 +108,7 @@ sub update_feed {
 
   my $browser = Paperpile::Utils->get_browser;
 
-  my $response = $browser->get( $self->url );
+  my $response = $browser->get( uri_unescape($self->url) );
 
   if ( $response->is_error ) {
     NetGetError->throw(

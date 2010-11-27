@@ -983,22 +983,15 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       plugin_title: 'New RSS feed',
       plugin_iconCls: 'pp-icon-feed',
       plugin_mode: 'FULLTEXT',
-      plugin_url: feedUrl,
+      plugin_url: escape(feedUrl),
       plugin_id: new_id
     };
 
-    Ext.apply(pars, {
-      text: 'Loading feed',
-      iconCls: 'pp-icon-loading',
-      draggable: true,
-      expanded: true,
-      children: [],
-      id: new_id
-    });
+    // Don't know what this is but it causes trouble if sent to the backend
+    delete pars.uiProvider;
 
-    var newNode = n.appendChild(this.loader.createNode(pars));
+    Paperpile.log(pars);
 
-    Paperpile.status.showBusy("Subscribing to RSS feed");
     Paperpile.Ajax({
       url: '/ajax/tree/new_rss',
       params: pars,
@@ -1021,6 +1014,21 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       scope: this
     });
+
+
+    Ext.apply(pars, {
+      text: 'Loading feed',
+      iconCls: 'pp-icon-loading',
+      draggable: true,
+      expanded: true,
+      children: [],
+      id: new_id
+    });
+
+    var newNode = n.appendChild(this.loader.createNode(pars));
+
+    Paperpile.status.showBusy("Subscribing to RSS feed");
+
   },
 
   //

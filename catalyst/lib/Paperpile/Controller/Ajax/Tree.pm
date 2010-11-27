@@ -23,6 +23,7 @@ use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Paperpile::Plugins::Import::Feed;
 use Data::Dumper;
+use URI::Escape;
 use 5.010;
 
 
@@ -184,7 +185,7 @@ sub new_rss : Local {
 
   $params{text}         = $title;
   $params{plugin_title} = $title;
-  $params{qtip}         = $params{plugin_url};
+  $params{qtip}         = uri_unescape($params{plugin_url});
 
   my $new = Tree::Simple->new( {%params} );
   $new->setUID($node_id);
