@@ -23,7 +23,6 @@ Ext.override(Ext.BoxComponent, {
 
   setAutoScroll: function(scroll) {
     if (this.rendered) {
-      Paperpile.log("scroll: " + scroll);
       if (Ext.isString(scroll)) {
         if (scroll.toLowerCase().match('x')) {
           this.getContentTarget().setStyle({
