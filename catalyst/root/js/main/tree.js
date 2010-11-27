@@ -884,7 +884,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       }));
 
       // apply the parameters
-      newNode.init(pars);
       newNode.select();
 
       // Allow the user to edit the name of the active folder
@@ -972,30 +971,32 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   createNewFeedNode: function(feedUrl) {
 
     var n = this.getNodeById('ACTIVE_ROOT');
-    var newNode = n.appendChild(this.loader.createNode({
-      text: 'Loading feed',
-      iconCls: 'pp-icon-loading',
-      //      qtip: feedUrl,
-      draggable: true,
-      expanded: true,
-      children: [],
-      id: Paperpile.utils.generateUUID()
-    }));
+
+    var new_id = Paperpile.utils.generateUUID();
 
     var pars = {
       type: 'ACTIVE',
-      node_id: newNode.id,
-      parent_id: newNode.parentNode.id,
+      node_id: new_id,
+      parent_id: n.id,
       iconCls: 'pp-icon-feed',
       plugin_name: 'Feed',
       plugin_title: 'New RSS feed',
       plugin_iconCls: 'pp-icon-feed',
       plugin_mode: 'FULLTEXT',
       plugin_url: feedUrl,
-      plugin_id: newNode.id
+      plugin_id: new_id
     };
 
-    newNode.init(pars);
+    Ext.apply(pars, {
+      text: 'Loading feed',
+      iconCls: 'pp-icon-loading',
+      draggable: true,
+      expanded: true,
+      children: [],
+      id: new_id
+    });
+
+    var newNode = n.appendChild(this.loader.createNode(pars));
 
     Paperpile.status.showBusy("Subscribing to RSS feed");
     Paperpile.Ajax({
@@ -1315,7 +1316,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         name: 'New Label',
         display_name: 'New Label',
         type: 'FOLDER',
-        guid: id
+        guid: id,
+	style: '0'
       },
         id);
       var newNode = this.recordToNode(record, 'LABEL');
@@ -2146,12 +2148,12 @@ Paperpile.Tree.TrashMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
 
   createNode: function(attr) {
-    var node = Paperpile.TreeLoader.superclass.createNode.call(this,attr);
+    var node = Paperpile.TreeLoader.superclass.createNode.call(this, attr);
 
-      // We apply the passed attributes directly to the created node, so that
-      // we can easily access things like node.type, node.plugin_params, etc.
-      Ext.apply(node,attr);
-      return node;
+    // We apply the passed attributes directly to the created node, so that
+    // we can easily access things like node.type, node.plugin_params, etc.
+    Ext.apply(node, attr);
+    return node;
   }
 
 });
