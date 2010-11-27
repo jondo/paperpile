@@ -57,7 +57,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       contextmenu: {
         scope: this,
         fn: this.onContextMenu,
-        stopEvent: false
+        stopEvent: true
       },
       beforenodedrop: {
         scope: this,
@@ -82,8 +82,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       beforeLoad: {
         scope: this,
         fn: function(node) {
-          if (node.id === 'NO_LOAD' || node.id === 'MORE_LABELS'){
+          if (node.id === 'NO_LOAD' || node.id === 'MORE_LABELS') {
             return false;
+          } else {
+            return true;
           }
         }
       },
@@ -620,13 +622,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     // Save the position before preparing the menu -- if we don't do this,
     // the event becomes a 'blur' event and we lose the position info!
     var pos = e.getXY();
-    var menu = this.prepareMenu(node, e);
+    var menu = this.prepareMenu(node);
     if (menu !== null) {
-      this.showMenu(menu, pos, e);
+      this.showMenu(menu, pos);
     }
+    e.stopEvent();
   },
 
-  prepareMenu: function(node, e) {
+  prepareMenu: function(node) {
     // Note: this doesn't actually get called when the tree context triangle plugin is loaded.
     var menu = this.getContextMenu(node);
     if (menu !== null) {
@@ -644,7 +647,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     return menu;
   },
 
-  showMenu: function(menu, position, e) {
+  showMenu: function(menu, position) {
     menu.showAt(position);
   },
 
@@ -786,7 +789,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       // Recurse.
       this.putNodesInArray(childNode, array);
       // Add this child.
-      //      Paperpile.log(childNode.id);
       array.push(childNode);
     }
   },
@@ -823,7 +825,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var nodes = [];
     this.putNodesInArray(node, nodes);
     nodes.push(node);
-    //    Paperpile.log(nodes.length);
     return nodes;
   },
 
@@ -1572,7 +1573,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       pars.labelStyle = record.get('style');
     }
     var node = this.loader.createNode(pars);
-    //    Paperpile.log(node);
     return node;
   },
 
@@ -2143,15 +2143,15 @@ Paperpile.Tree.TrashMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   }
 });
 
-// To use our custom TreeNode we also have to override TreeLoader
 Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
 
-  // This function is taken from extjs-debug.js and modified
   createNode: function(attr) {
-    // code in the original implementation
-    var node = new Ext.tree.AsyncTreeNode(attr);
-    Ext.apply(node, attr);
-    return node;
+    var node = Paperpile.TreeLoader.superclass.createNode.call(this,attr);
+
+      // We apply the passed attributes directly to the created node, so that
+      // we can easily access things like node.type, node.plugin_params, etc.
+      Ext.apply(node,attr);
+      return node;
   }
 
 });
