@@ -74,6 +74,15 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       case 'feedback':
         Paperpile.main.userVoice();
         break;
+      case 'license':
+        Paperpile.main.tabs.newScreenTab({url:'/screens/license', title:'License'}, 'License');
+        break;
+      case 'credits':
+        Paperpile.main.tabs.newScreenTab({url:'/screens/credits', title:'Credits', iconCls:'pp-icon-smiley'},'Credits');
+        break;
+      case 'github':
+        Paperpile.utils.openURL('https://github.com/wash/paperpile');
+        break;
       }
     },
     this, {
