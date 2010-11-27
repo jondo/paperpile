@@ -308,6 +308,7 @@ Paperpile.stage2 = function() {
   Paperpile.startupProgress(0.5);
 
   Paperpile.main.loadSettings(function(){
+    Paperpile.main.afterLoadSettings();
     Paperpile.startupProgress(0.6);
     Paperpile.main.tree.on('load',function(){
       Paperpile.stage3();
