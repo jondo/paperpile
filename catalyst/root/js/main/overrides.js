@@ -15,6 +15,44 @@
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
 // Ext overrides
+
+
+// Allow the autoScroll property to set the x- and y- scrollbars independently.
+// http://www.brunildo.org/test/Overflowxy2.html and http://www.w3.org/TR/css3-box/#overflow-x
+Ext.override(Ext.BoxComponent, {
+
+  setAutoScroll: function(scroll) {
+    if (this.rendered) {
+      Paperpile.log("scroll: " + scroll);
+      if (Ext.isString(scroll)) {
+        if (scroll.toLowerCase().match('x')) {
+          this.getContentTarget().setStyle({
+            'overflow-x': 'auto'
+          });
+        } else {
+          this.getContentTarget().setStyle({
+            'overflow-x': 'hidden'
+          });
+        }
+        if (scroll.toLowerCase().match('y')) {
+          this.getContentTarget().setStyle({
+            'overflow-y': 'auto'
+          });
+        } else {
+          this.getContentTarget().setStyle({
+            'overflow-y': 'hidden'
+          });
+        }
+      } else {
+        this.getContentTarget().setOverflow(scroll ? 'auto' : '');
+      }
+    }
+    this.autoScroll = scroll;
+    return this;
+  }
+
+});
+
 Ext.override(Ext.grid.GridView, {
 
   // Implement a more sensible check for whether a gridview has 
@@ -510,7 +548,6 @@ Ext.override(Ext.grid.GridView, {
     //        this.holdPosition = false;
   }
 });
-
 
 // The following enables the anchoring of quicktips.
 // Taken from the ExtJS forums: http://www.sencha.com/forum/archive/index.php/t-100737.html

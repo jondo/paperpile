@@ -20,6 +20,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
   initComponent: function() {
     Ext.apply(this, {
+      autoScroll: 'y',
       bodyStyle: {
         background: '#ffffff',
         padding: '7px'

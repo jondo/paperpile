@@ -26,7 +26,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       ddGroup: 'gridDD',
       animate: false,
       lines: false,
-      autoScroll: true,
+      autoScroll: 'y',
       root: {
         id: 'NO_LOAD'
       },
