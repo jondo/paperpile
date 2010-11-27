@@ -23,6 +23,16 @@ body {
   cursor: default;
 }
 
+
+input[type="text"] {
+    /* These are kind of magic numbers -- is it some sort of QTWebkit
+     * bug that without this the inputs are cut off at the bottom? 
+     */
+   font-size: 13px;
+  line-height: 18px;
+}
+
+
 .pp-basic {
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
 }
