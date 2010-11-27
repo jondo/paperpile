@@ -133,8 +133,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       id: 'treepanel',
       itemId: 'treepanel',
       region: 'west',
-      margins: '2 2 2 2',
-      cmargins: '5 5 0 5'
     });
 
     this.tree.flex = 1;
