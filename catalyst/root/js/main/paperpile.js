@@ -255,11 +255,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var w1 = width * (fraction); // tree width
     var w2 = width * (1 - fraction); // panel width
     // Minimum tree width.
-    var min1 = 150;
+    var min1 = 200;
     // Minimum panel width.
     var min2 = 550;
     // Maximum tree width.
-    var max1 = 300;
+    var max1 = 270;
     // Maximum panel width.
     var max2 = 9999;
 

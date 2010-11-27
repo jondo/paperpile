@@ -88,11 +88,11 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       // Minimum grid width.
       var min1 = 400;
       // Minimum sidepanel width.
-      var min2 = 150;
+      var min2 = 250;
       // Maximum grid width.
       var max1 = 9999;
       // Maximum sidepanel width.
-      var max2 = 400;
+      var max2 = 600;
 
       // Respect max sizes
       if (w1 > max1) {
