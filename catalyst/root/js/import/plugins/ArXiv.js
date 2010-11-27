@@ -58,11 +58,11 @@ Paperpile.PluginGridArXiv = Ext.extend(Paperpile.PluginGrid, {
 
     var markup = [
       '<div class="pp-hint-box">',
-      '  <h1>Search hints (Andreas: update examples)</h1>',
-      '<p>For a simple search type keywords, authors, journal names or PubMed IDs:</p>',
+      '  <h1>Search hints</h1>',
+      '<p>For a simple search type authors, keywords or arXiv IDs:</p>',
       '  <ul>',
-      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">AUTHORS</a></li>',
-      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">KEYWORDS</a></li>',
+      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">T Bhattacharya</a></li>',
+      '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">spin glass</a></li>',
       '   <li><a href="#" class="search-example" onClick="Paperpile.main.setSearchQuery(this.innerHTML);">1010.4601</a></li>',
       '  </ul>',
       '</div>'];
