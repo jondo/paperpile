@@ -87,7 +87,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       checked: settings.bibtex_mode === '1' ? true : false,
       label: '',
       checkedLabel: '<a href="#" class="pp-textlink" action="settings-tex" >Bibtex Settings</a>',
-      uncheckedLabel: '<span id="bibtex-mode-text-inactive" class="pp-inactive">BibTeX mode inactivated</span>',
+      uncheckedLabel: '<span id="bibtex-mode-text-inactive" class="pp-inactive">BibTeX mode inactive</span>',
       hideLabel: true
     });
 
@@ -100,11 +100,23 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       items: [field]
     });
 
+
+    this.bibtexTooltip = new Ext.ToolTip({
+      target: 'bibtex-mode-checkbox',
+      minWidth: 50,
+      maxWidth: 200,
+      html: 'Turn BibTeX mode on or off. In BibTeX mode many advanced BibTeX functions are available throughout Paperpile.',
+      anchor: 'right',
+      showDelay: 200,
+      hideDelay: 0
+    });
+
     if (settings.bibtex_mode === '1') {
       field.wrap.child('.x-form-cb-label').update(field.checkedLabel);
     } else {
       field.wrap.child('.x-form-cb-label').update(field.uncheckedLabel);
     }
+
 
     field.on('check',
       function(box, checked) {
@@ -120,8 +132,8 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
 
         Paperpile.main.setSetting('bibtex', currentSettings);
         Paperpile.status.updateMsg({
-          msg: (checked) ? 'BibTeX mode active: advanced BibTeX functions are now available' : 'BibTeX mode inactive: advanced BibTeX functions have been disabled',
-          duration: 4
+          msg: (checked) ? 'BibTeX mode activated' : 'BibTeX mode deactivated',
+          duration: 2
         });
 
         if (checked) {
@@ -132,7 +144,5 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
 
       },
       this);
-
   },
-
 });

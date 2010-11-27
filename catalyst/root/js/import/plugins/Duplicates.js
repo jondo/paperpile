@@ -79,7 +79,7 @@ Paperpile.PluginGridDuplicates = Ext.extend(Paperpile.PluginGridDB, {
       scope: this,
       icon: '/images/icons/arrow_in.png',
       itemId: 'MERGE_DUPLICATES',
-      tooltip: 'Merge duplicates into the selected reference'
+      tooltip: 'Keep the selected reference and merge all additional data from the other duplicates into it.'
     });
 
     this.on('render', this.myOnRender, this);
