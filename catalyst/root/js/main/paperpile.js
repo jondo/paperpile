@@ -14,7 +14,6 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-IS_TITANIUM = null;
 IS_QT = !(window['QRuntime'] == undefined);
 IS_CHROME = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
 
@@ -298,14 +297,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
     var zoomRatio = zoomLevel / oldZoomLevel;
 
-    if (IS_TITANIUM) {
-      // Resize the Titanium window accordingly.
-      var win = Titanium.UI.getMainWindow();
-      var oldWidth = win.getWidth();
-      var oldHeight = win.getHeight();
-      win.setWidth(oldWidth * zoomRatio);
-      win.setHeight(oldHeight * zoomRatio);
-    }
     Ext.getBody().setStyle('zoom', zoomLevel);
     // Now resize the body element.
     this.resizeWithZoom(this.getWidth(), this.getHeight());

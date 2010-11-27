@@ -347,7 +347,7 @@ Paperpile.fileDialog = function(callback, inputOptions) {
     nameFilters: null,
     typesDescription: null,
     scope: null,
-    path: Paperpile.main.getSetting('last_file_path') || Paperpile.main.getSetting('user_home')
+    path: Paperpile.main.getSetting('user_home')
   };
 
   Ext.apply(options, inputOptions);
@@ -355,53 +355,6 @@ Paperpile.fileDialog = function(callback, inputOptions) {
   if (callback === undefined) {
     callback = function(filenames) {};
   }
-
-  // Before the original callback, create an interceptor in case the user chose
-  // to save over an existing file.
-  /*
-  if (options.dialogType == 'save') {
-    var originalCallback = callback;
-    callback = function(filenames) {
-      if (filenames.length > 0) {
-        var filename = filenames[0];
-        var parts = Paperpile.utils.splitPath(filename);
-        var file = Titanium.Filesystem.getFile(filename);
-        if (file.exists()) {
-            var msg = Ext.Msg.show({
-            title: 'Overwrite File?',
-            msg: 'The chosen file: <br/><div style="margin:5px;word-wrap:break-word;">' + filename + '</div> already exists. Overwrite?',
-              animEl: 'elId',
-	          width:400,
-              icon: Ext.MessageBox.INFO,
-            buttons: Ext.Msg.OKCANCEL,
-            fn: function(btn) {
-              if (btn === 'ok') {
-                originalCallback.call(options.scope, filenames);
-              } else {
-              originalCallback.call(options.scope, []);
-              }
-              return false;
-            },
-            scope: this
-          });
-        } else {
-          originalCallback.call(options.scope, filenames);
-        }
-      } else {
-        originalCallback.call(options.scope, filenames);
-      }
-    };
-  }
-*/
-
-  // After the original callback, store the last used file path.
-  callback = callback.createSequence(function(filenames) {
-    if (filenames.length > 0) {
-      var file = filenames[0];
-      var dir = Paperpile.utils.splitPath(file).dir;
-      Paperpile.main.setSetting('last_file_path', dir);
-    }
-  });
 
   if (options.scope) {
     callback = callback.createDelegate(options.scope);
