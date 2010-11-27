@@ -28,7 +28,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       lines: false,
       autoScroll: true,
       root: {
-        id: 'asdf'
+        id: 'NO_LOAD'
       },
       rootVisible: false,
       loader: new Paperpile.TreeLoader({
@@ -82,7 +82,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       beforeLoad: {
         scope: this,
         fn: function(node) {
-
+          if (node.id === 'NO_LOAD' || node.id === 'MORE_LABELS'){
+            return false;
+          }
         }
       },
       load: {
@@ -217,9 +219,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   loadTree: function() {
     var root = this.getRootNode();
-    // The backend only returns the whole tree if the passed node
-    // has an ID of 'ROOT'... so to keep the tree from immediately
-    // loading we only set the right ID when this method is called.
+    // To keep the tree from immediately loading we only set the right
+    // ID when this method is called. 
     root.setId('ROOT');
     this.reloadNode(root);
   },

@@ -673,6 +673,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   onStoreLoad: function() {
+
+    // Used to indicate complete loading during startup
+    if (this.getPluginPanel().itemId === 'MAIN'){
+      Paperpile.main.fireEvent('mainGridLoaded');
+    }
+    
     if (this.getPluginPanel()) {
       this.getPluginPanel().updateView();
     }

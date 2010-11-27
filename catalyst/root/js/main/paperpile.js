@@ -206,7 +206,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       },
       storeId: 'label_store'
     });
-    this.labelStore.reload();
+
 
     this.folderStore = new Paperpile.CollectionStore({
       collectionType: 'FOLDER',
@@ -218,7 +218,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       },
       storeId: 'folder_store'
     });
-    this.folderStore.reload();
+
 
     this.runningJobs = [];
     this.loadKeys();
@@ -228,6 +228,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       collections: [],
       task: new Ext.util.DelayedTask(this.fireFileSync, this)
     };
+
+    // Used in startup sequence
+    this.addEvents({'mainGridLoaded':true});
 
   },
 

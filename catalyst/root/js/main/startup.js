@@ -19,6 +19,11 @@ Paperpile.isLogging = 1;
 Paperpile.pingAttempts = 0;
 Paperpile.isDebugMode = false;
 
+Paperpile.startupProgress =  function(progress){
+  var width = 40;
+  Ext.get('splash-progress').setWidth(width*progress);
+};
+
 Paperpile.startupFailure = function(response) {
   var error;
 
@@ -74,13 +79,17 @@ Paperpile.stage0 = function() {
     QRuntime.log("Pinging the server (attempt #" + Paperpile.pingAttempts + ')');
 
   }
-
+  if (Paperpile.pingAttempts == 1) {
+    Paperpile.startupProgress(0.1);
+  }
 
   Paperpile.Ajax({
     url: '/ajax/app/heartbeat',
 
     // Server responds
     success: function(response) {
+
+      Paperpile.startupProgress(0.3);
 
       var json = Ext.util.JSON.decode(response.responseText);
 
@@ -135,6 +144,8 @@ Paperpile.stage0 = function() {
     },
 
     failure: function(response) {
+
+      Paperpile.startupProgress(0.2);
 
       if (IS_QT) {
 
@@ -231,6 +242,8 @@ Paperpile.stage1 = function() {
     Paperpile.status = new Paperpile.Status();
   }
 
+  Paperpile.startupProgress(0.5);
+
   Paperpile.Ajax({
     url: '/ajax/app/init_session',
     success: function(response) {
@@ -285,29 +298,52 @@ Paperpile.stage1 = function() {
 
 // Stage 2 
 //
-// Load the rest of the GUI
+// Load the main viewport class, settings and tree
+
 Paperpile.stage2 = function() {
 
   Ext.QuickTips.init();
-
   Paperpile.main = new Paperpile.Viewport();
 
-  Paperpile.main.loadSettings(
-    function() {
-      Paperpile.main.tabs.newDBtab('', 'MAIN');
-      Paperpile.main.getTree().expandAll();
-      Paperpile.main.afterLoadSettings();
+  Paperpile.startupProgress(0.5);
 
-      // Stefan: example code to use to load the tree...
-      Paperpile.main.tree.loadTree.defer(2000,Paperpile.main.tree);
+  Paperpile.main.loadSettings(function(){
+    Paperpile.startupProgress(0.6);
+    Paperpile.main.tree.on('load',function(){
+      Paperpile.stage3();
+    }, this, {single:true});
+    Paperpile.main.tree.loadTree();
+  });
+};
 
+
+// Stage 3 
+//
+// Load folders, labels and the main grid 
+
+Paperpile.stage3 = function() {
+
+  Paperpile.startupProgress(0.7);
+
+  Paperpile.main.folderStore.on('load', function(){
+    Paperpile.main.labelStore.on('load', function(){
       var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
-
       Ext.DomHelper.overwrite('version-tag', version);
 
-      Ext.get('splash').remove();
-    },
-    this);
+      Paperpile.main.on('mainGridLoaded',function(){
+        //Paperpile.startupProgress(1.0);
+        Ext.get('splash').remove();
+      }, this, {single:true});
+
+      Paperpile.startupProgress(1.0);
+      Paperpile.main.tabs.newDBtab('', 'MAIN');
+    }, this, {single:true});
+    
+    Paperpile.startupProgress(0.8);
+    Paperpile.main.labelStore.reload();
+  }, this, {single:true});
+
+  Paperpile.main.folderStore.reload();     
 
   Ext.get('dashboard-button').on('click', function() {
     Paperpile.main.tabs.newScreenTab('Dashboard', 'dashboard');
@@ -342,14 +378,14 @@ Paperpile.stage2 = function() {
   */
 
   // Check 10 minutes after start for updates
+
   (function() {
     if (!Paperpile.status.el.isVisible()) {
       Paperpile.main.checkForUpdates(true);
     }
   }).defer(600000);
-
-
 };
+
 
 Ext.onReady(function() {
 
