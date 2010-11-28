@@ -117,13 +117,18 @@ sub restore {
 
   ( my $serialized ) = $self->dbh->selectrow_array("SELECT value FROM Settings WHERE key='queue' ");
 
+  # Seems not really necessary to freeze/thaw itself if not stored
+  # before. However, simplifying it led to errors and I leave it for
+  # now
   if (not $serialized) {
     $self->save;
+    my $dbh_tmp = $self->_dbh;
+    $self->_dbh(undef);
     $serialized = freeze($self);
+    $self->_dbh($dbh_tmp);
   }
 
   ( my $stored ) = thaw($serialized);
-
 
   foreach my $key ( $self->meta->get_attribute_list ) {
     next if $key eq '_dbh';
