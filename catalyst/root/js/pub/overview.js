@@ -377,6 +377,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       Paperpile.utils.setClipboard(this.data.url, 'URL copied');
       break;
 
+    case 'lookup-details':
+      this.getGrid().completeEntry();
+      break;
     case 'open-folder':
       var folder_id = el.getAttribute('folder_id');
       var node = Paperpile.main.tree.getNodeById(folder_id);

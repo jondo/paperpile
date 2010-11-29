@@ -166,8 +166,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'SELECT_ALL': new Ext.Action({
         text: 'Select all',
         handler: function() {
-	    this.selectAll();
-	},
+          this.selectAll();
+        },
         scope: this,
         itemId: 'SELECT_ALL'
       }),
@@ -453,8 +453,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
     this);
 
-    this.mon(this.getSelectionModel(), 'pageselected', function() {this.onPageSelected()},this);
-    this.mon(this.getSelectionModel(), 'allselected', function(){this.onAllSelected()},this);
+    this.mon(this.getSelectionModel(), 'pageselected', function() {
+      this.onPageSelected()
+    },
+    this);
+    this.mon(this.getSelectionModel(), 'allselected', function() {
+      this.onAllSelected()
+    },
+    this);
 
     // Auto-select the first row when the store finally loads up.
     this.mon(this.getStore(), 'load', function() {
@@ -675,10 +681,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   onStoreLoad: function() {
 
     // Used to indicate complete loading during startup
-    if (this.getPluginPanel().itemId === 'MAIN'){
+    if (this.getPluginPanel().itemId === 'MAIN') {
       Paperpile.main.fireEvent('mainGridLoaded');
     }
-    
+
     if (this.getPluginPanel()) {
       this.getPluginPanel().updateView();
     }
@@ -763,9 +769,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   afterSelectionChange: function(sm) {
     this.getPluginPanel().updateDetails();
-    if (sm.getCount() == 1) {
-      this.completeEntry();
-    }
   },
 
   refreshView: function() {
@@ -774,9 +777,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
     this.updateButtons();
     this.getPluginPanel().updateDetails();
-    if (sm.getCount() == 1) {
-      this.completeEntry();
-    }
   },
 
   myAfterRender: function(ct) {
@@ -1160,7 +1160,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '</tpl>',
       '</dl>',
       '<tpl if="_details_link">',
-      '<p class="pp-inactive">No data available.</p>',
+      '<p class="pp-inactive">No data available. <a href="#" class="pp-textlink" action="lookup-details">Lookup details</a></p>',
       '</tpl>',
       '  <div style="clear:left;"></div>',
       '</div>'];
@@ -1568,24 +1568,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   // without harassing the site too much. Then the details are
   // fetched only when user clicks the entry.
   completeEntry: function() {
-    if (this.isLocked) return; // Call completeEntry only for one item at a time 
+    if (this.completeEntryLock) return; // Call completeEntry only for one item at a time 
+    this.completeEntryLock = true;
+
     var selection = this.getSelection();
 
     var sel = this.getSingleSelectionRecord();
     if (!sel) return;
     var data = sel.data;
-    // _details_link indicates if an entry still needs to be completed or not
     if (data._details_link) {
-
-      this.lookingUpData = true;
-
-      // Don't allow other rows to be selected during load
-      var blockingFunction = function() {
-        return false;
-      };
-//      this.getSelectionModel().on('beforerowselect', blockingFunction, this);
-      this.isLocked = true;
-
       var guid = data.guid;
 
       Paperpile.status.updateMsg({
@@ -1593,7 +1584,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         msg: 'Lookup bibliographic data',
         action1: 'Cancel',
         callback: function() {
-          Ext.Ajax.abort(transactionID);
+          Ext.Ajax.abort(this.completeEntryTransaction);
           this.cancelCompleteEntry();
           Paperpile.status.clearMsg();
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
@@ -1609,18 +1600,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
       // Abort after 20 sec
       this.timeoutAbort = (function() {
-        Ext.Ajax.abort(transactionID);
+        Ext.Ajax.abort(this.completeEntryTransaction);
         this.cancelCompleteEntry();
         Paperpile.status.clearMsg();
         Paperpile.status.updateMsg({
-          msg: 'Giving up. There may be problems with your network or ' + this.plugin_name + '.',
+          msg: 'Data lookup failed. There may be problems with your network or ' + this.plugin_name + '.',
           hideOnClick: true
         });
-        this.getSelectionModel().un('beforerowselect', blockingFunction, this);
-        this.isLocked = false;
+        this.completeEntryLock = false;
       }).defer(20000, this);
 
-      var transactionID = Paperpile.Ajax({
+      this.completeEntryTransaction = Paperpile.Ajax({
         url: '/ajax/crud/complete_entry',
         params: {
           selection: selection,
@@ -1629,9 +1619,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         },
         success: function(response) {
           var json = Ext.util.JSON.decode(response.responseText);
-
-          this.getSelectionModel().un('beforerowselect', blockingFunction, this);
-          this.isLocked = false;
+          this.completeEntryLock = false;
 
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
@@ -1642,15 +1630,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           }
 
           Paperpile.status.clearMsg();
-
           this.updateButtons();
           this.getPluginPanel().updateDetails();
         },
         failure: function(response) {
-          this.getSelectionModel().un('beforerowselect', blockingFunction, this);
-          this.isLocked = false;
+          this.completeEntryLock = false;
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
+          Paperpile.status.clearMsg();
         },
         scope: this
       });
@@ -1662,6 +1649,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     clearTimeout(this.timeoutWarn);
     clearTimeout(this.timeoutAbort);
 
+    Ext.Ajax.abort(this.completeEntryTransaction);
     Paperpile.Ajax({
       url: '/ajax/misc/cancel_request',
       params: {
@@ -1730,7 +1718,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   handleCopy: function(module, format, msg) {
     if (this.getSelectionCount() == 0) {
-	return;
+      return;
     }
     var isMultiple = this.getSelectionCount() > 1;
     var s = '';
@@ -1849,7 +1837,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
 
     if (this.getSelectionCount() == 0) {
-	return;
+      return;
     }
 
     // Find the lowest index of the current selection.
@@ -1915,9 +1903,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           Paperpile.status.clearMsg();
         }
       },
-	  failure: function() {
-	      this.getSelectionModel().unlock();
-	  },
+      failure: function() {
+        this.getSelectionModel().unlock();
+      },
       scope: this
     });
 
