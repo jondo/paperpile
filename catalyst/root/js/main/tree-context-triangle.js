@@ -188,6 +188,9 @@ Paperpile.ContextTreeNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
 
   // Position the triangle relative to this node.
   positionTriangle: function() {
+    if (!this.node || !this.node.ownerTree) {
+	return;
+    }
     var tri = this.node.ownerTree.contextTriangle;
     tri.currentNode = this.node;
     var nodeEl = Ext.fly(this.getEl());

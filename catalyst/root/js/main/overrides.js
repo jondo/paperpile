@@ -15,7 +15,35 @@
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
 // Ext overrides
-
+/**
+ *  * Clone Function
+ *  * @param {Object/Array} o Object or array to clone
+ *  * @return {Object/Array} Deep clone of an object or an array
+ *  * @author Ing. Jozef Sakáloš
+ *  */
+Ext.ns('Ext.ux.util');
+Ext.ux.util.clone = function(o) {
+  if (!o || 'object' !== typeof o) {
+    return o;
+  }
+  if ('function' === typeof o.clone) {
+    return o.clone();
+  }
+  var c = '[object Array]' === Object.prototype.toString.call(o) ? [] : {};
+  var p, v;
+  for (p in o) {
+    if (o.hasOwnProperty(p)) {
+      v = o[p];
+      if (v && 'object' === typeof v) {
+        c[p] = Ext.ux.util.clone(v);
+      }
+      else {
+        c[p] = v;
+      }
+    }
+  }
+  return c;
+}; // eo function clone  
 
 // Allow the autoScroll property to set the x- and y- scrollbars independently.
 // http://www.brunildo.org/test/Overflowxy2.html and http://www.w3.org/TR/css3-box/#overflow-x

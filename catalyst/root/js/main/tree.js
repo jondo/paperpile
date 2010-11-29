@@ -834,7 +834,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   newActive: function() {
     var node = this.getNodeById('ACTIVE_ROOT');
 
-    var grid = Paperpile.main.tabs.getActiveTab().items.get('center_panel').items.get('grid');
+    var grid = Paperpile.main.getCurrentGrid();
     var treeEditor = this.treeEditor;
 
     // Get all plugin_* parameters from search plugin grid
@@ -864,24 +864,20 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
 
     Ext.apply(pars, {
+      text: title,
+      display_name: title,
+      name: title,
+      iconCls: pars.plugin_iconCls,
       type: 'ACTIVE',
       plugin_title: title,
-      // current query becomes base query for further filtering
       plugin_base_query: pars.plugin_query,
+      id: Paperpile.utils.generateUUID()
     });
 
     // Now create new child
-    var newNode;
     node.expand(false, false, function(n) {
-
-      newNode = n.appendChild(this.loader.createNode({
-        text: title,
-        display_name: title,
-        name: title,
-        iconCls: pars.plugin_iconCls,
-        leaf: true,
-        id: Paperpile.utils.generateUUID()
-      }));
+      var newNode = this.loader.createNode(pars);
+      n.appendChild(newNode);
 
       // apply the parameters
       newNode.select();
@@ -974,7 +970,9 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     var new_id = Paperpile.utils.generateUUID();
 
-    var pars = {
+    // Create the params we want to save to the backend.
+    var parsToSave = {
+      id: new_id,
       type: 'ACTIVE',
       node_id: new_id,
       parent_id: n.id,
@@ -987,14 +985,22 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       plugin_id: new_id
     };
 
-    // Don't know what this is but it causes trouble if sent to the backend
-    delete pars.uiProvider;
+    // Clone those params and make some modifications for the temporary 'loading feed'
+    // display in the front-end.
+    var pars = Ext.ux.util.clone(parsToSave);
+    Ext.apply(pars, {
+      text: 'Loading feed',
+      iconCls: 'pp-icon-loading',
+      leaf: true
+    });
 
-    Paperpile.log(pars);
+    var newNode = this.loader.createNode(pars);
+    n.appendChild(newNode);
+    Paperpile.status.showBusy("Subscribing to RSS feed");
 
     Paperpile.Ajax({
       url: '/ajax/tree/new_rss',
-      params: pars,
+      params: parsToSave,
       success: function(response) {
         var json = Ext.util.JSON.decode(response.responseText);
         Paperpile.status.clearMsg();
@@ -1005,6 +1011,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           newNode.setText(json.title);
           newNode.plugin_title = json.title;
           Ext.get(newNode.getUI().getIconEl()).replaceClass('pp-icon-loading', 'pp-icon-feed');
+          newNode.iconCls = 'pp-icon-feed';
           this.myOnClick(newNode);
         }
       },
@@ -1014,20 +1021,6 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       },
       scope: this
     });
-
-
-    Ext.apply(pars, {
-      text: 'Loading feed',
-      iconCls: 'pp-icon-loading',
-      draggable: true,
-      expanded: true,
-      children: [],
-      id: new_id
-    });
-
-    var newNode = n.appendChild(this.loader.createNode(pars));
-
-    Paperpile.status.showBusy("Subscribing to RSS feed");
 
   },
 
@@ -1325,7 +1318,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         display_name: 'New Label',
         type: 'FOLDER',
         guid: id,
-	style: '0'
+        style: '0'
       },
         id);
       var newNode = this.recordToNode(record, 'LABEL');

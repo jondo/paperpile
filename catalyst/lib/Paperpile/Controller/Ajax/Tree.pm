@@ -356,6 +356,7 @@ sub _get_js_object {
 
   $h->{nodeType} = 'async';
   $h->{leaf}     = \0;
+  delete $h->{uiProvider};
 
   return $h;
 
