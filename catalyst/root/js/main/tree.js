@@ -1280,21 +1280,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         store.updateCollection(record);
         return;
       }
-
     }
-
-    var hidden = 1;
-    if (checked) {
-      hidden = 0;
-    }
-
-    Paperpile.Ajax({
-      url: '/ajax/tree/set_visibility',
-      params: {
-        node_id: node.id,
-        hidden: hidden
-      }
-    });
   },
 
   //
@@ -1948,15 +1934,8 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         handler: tree.exportNode,
         triggerKey: 'e',
         scope: tree
-      },
-      {
-        id: 'active_menu_configure',
-        text: 'Show/Hide Items',
-        handler: function() {
-          this.tree.configureSubtree(this.node);
-        },
-        scope: this
-      }]
+      }
+      ]
     });
     Paperpile.Tree.ActiveMenu.superclass.initComponent.call(this);
   },
@@ -1981,24 +1960,16 @@ Paperpile.Tree.ImportMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
     var tree = this.tree;
 
     Ext.apply(this, {
-      items: [{
-        id: 'import_menu_configure',
-        text: 'Hide / Show Tools',
-        handler: function() {
-          this.tree.configureSubtree(this.node);
-        },
-        scope: this
-      }]
+      items: []
     });
     Paperpile.Tree.ImportMenu.superclass.initComponent.call(this);
   },
 
   getShownItems: function(node) {
     if (node.id == 'IMPORT_PLUGIN_ROOT') {
-      return[
-      'import_menu_configure'];
+      return [];
     } else {
-      return[];
+      return [];
     }
   }
 });

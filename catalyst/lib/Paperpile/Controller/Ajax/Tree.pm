@@ -102,22 +102,6 @@ sub get_complete_tree {
 
 }
 
-sub set_visibility : Local {
-
-  my ( $self, $c ) = @_;
-
-  my $node   = $c->request->params->{node_id};
-  my $hidden = $c->request->params->{hidden};
-
-  my $tree = $c->session->{"tree"};
-  my $subtree = $c->forward( 'get_subtree', [ $tree, $node ] );
-
-  $subtree->getNodeValue->{hidden} = $hidden;
-
-  $c->model('Library')->set_setting( '_tree', $tree );
-
-}
-
 sub new_active : Local {
   my ( $self, $c ) = @_;
 
@@ -333,27 +317,12 @@ sub _get_js_object {
   # "node.id" in frontend
   $h->{id} = $node->getUID;
 
-  # draw a checkbox for configuration mode
-  if ($checked) {
-    if ( $h->{hidden} ) {
-      $h->{checked} = \0;
-      $h->{hidden}  = 0;    # During configuration we have to show all nodes
-    } else {
-      $h->{checked} = \1;
-    }
-  }
-
-  if ( $h->{hidden} ) {
-    $h->{hidden} = \1;
-  } else {
-    $h->{hidden} = \0;
-  }
-
   if ( $node->isLeaf() ) {
     $h->{expanded} = \1;
     $h->{children} = [];
   }
 
+  $h->{hidden} = \0;
   $h->{nodeType} = 'async';
   $h->{leaf}     = \0;
   delete $h->{uiProvider};
