@@ -1483,6 +1483,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.getContextByItemId('COPY_BIBTEX_CITATION').hide();
       this.getContextByItemId('COPY_BIBTEX_KEY').hide();
     }
+
+    if (this.getStore().getCount() == 0) {
+      this.actions['EXPORT_MENU'].disable();
+      this.actions['EXPORT_SELECTION'].disable();
+      this.actions['EXPORT_VIEW'].disable();
+    }
   },
 
   updateToolbarItem: function(menuItem) {
