@@ -864,6 +864,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     }
 
     Ext.apply(pars, {
+      leaf: true,
       text: title,
       display_name: title,
       name: title,
@@ -874,31 +875,34 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       id: Paperpile.utils.generateUUID()
     });
 
-    // Now create new child
-    node.expand(false, false, function(n) {
-      var newNode = this.loader.createNode(pars);
-      n.appendChild(newNode);
+    var newNode = this.loader.createNode(pars);
+    node.appendChild(newNode);
 
-      // apply the parameters
-      newNode.select();
+    // apply the parameters
+    newNode.select();
 
-      // Allow the user to edit the name of the active folder
-      treeEditor.on({
-        complete: {
-          scope: this,
-          single: true,
-          fn: function() {
-            newNode.plugin_title = newNode.text;
-            // if everything is done call onNewActive
-            this.onNewActive(newNode);
-          }
+    // Allow the user to edit the name of the active folder
+    treeEditor.on({
+      complete: {
+        scope: this,
+        single: true,
+        fn: function() {
+          newNode.plugin_title = newNode.text;
+          // if everything is done call onNewActive
+          this.onNewActive(newNode);
         }
-      });
-      (function() {
-        treeEditor.triggerEdit(newNode);
-      }.defer(10));
-
-    }.createDelegate(this));
+      },
+      canceledit: {
+        scope: this,
+        single: true,
+        fn: function() {
+          newNode.remove();
+        }
+      }
+    });
+    (function() {
+      treeEditor.triggerEdit(newNode);
+    }.defer(10));
   },
 
   //
