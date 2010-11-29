@@ -31,7 +31,7 @@ Ext.extend(Paperpile.PluginPanelFile, Paperpile.PluginPanelDB, {
   createAboutPanel: function() {
     return undefined;
   }
-  
+
 });
 
 Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
@@ -41,26 +41,42 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
   plugin_name: 'File',
 
   initComponent: function() {
-    this.getStore().on('beforeload', function() {
-//      if (!this.backgroundLoading) {
-        Paperpile.status.showBusy("Loading File");
-//      }
-    },
-    this,{single:true});
-    this.getStore().on('load', function() {
-//      if (!this.backgroundLoading) {
-        Paperpile.status.clearMsg();
-//      }
-    },
-    this,{single:true});
 
     Paperpile.PluginGridFile.superclass.initComponent.call(this);
+
+    this.getStore().on('beforeload', function() {
+      Paperpile.status.showBusy("Loading File");
+    },
+    this, {
+      single: true
+    });
+    this.getStore().on('load', function() {
+      Paperpile.status.clearMsg();
+    },
+    this, {
+      single: true
+    });
+
+    this.actions['IMPORT_ALL'] = new Ext.Action({
+      itemId: 'IMPORT_ALL',
+      text: 'Import all',
+      handler: function() {
+        this.insertEntry(true);
+      },
+      scope: this,
+      iconCls: 'pp-icon-add-all',
+      tooltip: 'Import all references to your library.'
+    });
+
   },
 
   initToolbarMenuItemIds: function() {
     Paperpile.PluginGridFile.superclass.initToolbarMenuItemIds.call(this);
 
     var ids = this.toolbarMenuItemIds;
+
+    var index = ids.indexOf('TB_FILL');
+    ids.insert(index + 2, 'IMPORT_ALL');
 
     ids.remove('NEW');
     ids.remove('DELETE');
@@ -74,9 +90,17 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
     ids.remove('DELETE');
   },
 
+  updateButtons: function() {
+    Paperpile.PluginGridFile.superclass.updateButtons.call(this);
+
+    if (this.getTotalCount() == 0) {
+      this.actions['IMPORT_ALL'].disable();
+    }
+
+  },
+
   getNoResultsTemplate: function() {
     return new Ext.XTemplate(['<div class="pp-hint-box"><p>No references to show. <a href="#" class="pp-textlink" action="close-tab">Close tab</a>.</p></div>']).compile();
   },
-
 
 });

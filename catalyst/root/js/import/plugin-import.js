@@ -32,17 +32,6 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
       tooltip: 'Import selected references to your library.'
     });
 
-    grid.actions['IMPORT_ALL'] = new Ext.Action({
-      itemId: 'IMPORT_ALL',
-      text: 'Import all',
-      handler: function() {
-        this.insertEntry(true);
-      },
-      scope: grid,
-      iconCls: 'pp-icon-add-all',
-      tooltip: 'Import all references to your library.'
-    });
-
     if (!grid['isLongImport']) {
       Ext.apply(grid, {
         isLongImport: function(selection) {
@@ -63,15 +52,14 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
 
         var index = ids.indexOf('TB_FILL');
         ids.insert(index + 1, 'IMPORT_SELECTED');
-        ids.insert(index + 2, 'IMPORT_ALL');
 
         ids.remove('EDIT');
-	ids.remove('DELETE');
-	ids.remove('AUTO_COMPLETE');
+        ids.remove('DELETE');
+        ids.remove('AUTO_COMPLETE');
 
         // Move the 'Edit' to after the jump.
         index = ids.indexOf('TB_BREAK');
-//        ids.insert(index + 1, 'EDIT');
+        //        ids.insert(index + 1, 'EDIT');
       },
       grid),
 
@@ -79,34 +67,28 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
         var ids = this.contextMenuItemIds;
 
         ids.insert(0, 'IMPORT_SELECTED');
-	ids.remove('EDIT');
-	ids.remove('DELETE');
-	ids.remove('AUTO_COMPLETE');
+        ids.remove('EDIT');
+        ids.remove('DELETE');
+        ids.remove('AUTO_COMPLETE');
       },
       grid),
 
       updateButtons: grid.updateButtons.createSequence(function() {
-	this.actions['DELETE'].disable(); // This action doesn't show up in any menu, but has associated keyboard shortcuts that we want disabled too.
-
+        this.actions['DELETE'].disable(); // This action doesn't show up in any menu, but has associated keyboard shortcuts that we want disabled too.
         var selection = this.getSingleSelectionRecord();
         if (!selection) {
           this.actions['IMPORT_SELECTED'].disable();
           this.actions['IMPORT_SELECTED'].setDisabledTooltip("");
         } else {
           if (selection && selection.data._imported) {
-	    if (this.getSelectionCount() == 1) {
+            if (this.getSelectionCount() == 1) {
               this.actions['IMPORT_SELECTED'].disable();
-              this.actions['IMPORT_SELECTED'].setDisabledTooltip("Reference already imported");	    
-	    }
+              this.actions['IMPORT_SELECTED'].setDisabledTooltip("Reference already imported");
+            }
 
           } else if (selection && !selection.data._imported) {
 
-
-	  }
-        }
-
-        if (this.getTotalCount() == 0) {
-          this.actions['IMPORT_ALL'].disable();
+          }
         }
       },
       grid),
@@ -134,9 +116,9 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
         if (all) {
           selection = 'ALL';
         }
-        if (selection.length == 0 && selection != 'ALL'){
-	    return;
-	}
+        if (selection.length == 0 && selection != 'ALL') {
+          return;
+        }
         var longImport = this.isLongImport(selection);
         if (longImport) {
           Paperpile.status.showBusy('Importing references to library');
