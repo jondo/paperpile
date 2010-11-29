@@ -16,7 +16,7 @@
 
 Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
   closable: false,
-  splitFraction: 2/3,
+  splitFraction: 2 / 3,
 
   initComponent: function() {
 
@@ -35,7 +35,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       tabType: 'PLUGIN',
       hideBorders: true,
       layout: 'hbox',
-      plugins: [new Ext.ux.PanelSplit(this.centerPanel, this.updateSplitFraction,this)],
+      plugins: [new Ext.ux.PanelSplit(this.centerPanel, this.updateSplitFraction, this)],
       layoutConfig: {
         align: 'stretch'
       },
@@ -47,7 +47,7 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     Paperpile.PluginPanel.superclass.initComponent.call(this);
 
     this.on('afterlayout', function() {
-	this.resizeToSplitFraction();
+      this.resizeToSplitFraction();
     },
     this);
 
@@ -63,66 +63,63 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
   },
 
   updateSplitFraction: function(newFraction) {
-  // REFACTOR: right now this is largely duplicated here and in paperpile.js.
-      this.splitFraction = newFraction;
+    // REFACTOR: right now this is largely duplicated here and in paperpile.js.
+    this.splitFraction = newFraction;
 
-      // Store the new fraction setting.
-      Paperpile.main.setSetting('split_fraction_grid',this.splitFraction,true);
-      // Update the panel sizes.
-      this.resizeToSplitFraction();
+    // Store the new fraction setting.
+    Paperpile.main.setSetting('split_fraction_grid', this.splitFraction, true);
+    // Update the panel sizes.
+    this.resizeToSplitFraction();
   },
 
   resizeToSplitFraction: function() {
-  // REFACTOR: right now this is largely duplicated here and in paperpile.js.
+    // REFACTOR: right now this is largely duplicated here and in paperpile.js.
+    var fraction = this.splitFraction; // Default panel if there's no setting yet.
+    var set_fraction = Paperpile.main.getSetting('split_fraction_grid');
+    if (set_fraction) {
+      fraction = set_fraction;
+    }
 
-      var fraction = this.splitFraction; // Default panel if there's no setting yet.
-      var set_fraction = Paperpile.main.getSetting('split_fraction_grid');
-      if (set_fraction) {
-	  fraction = set_fraction;
-      }
+    var width = this.getWidth();
+    var w1 = width * (fraction); // grid width
+    var w2 = width * (1 - fraction); // sidepanel width
+    // Minimum grid width.
+    var min1 = 400;
+    // Minimum sidepanel width.
+    var min2 = 250;
+    // Maximum grid width.
+    var max1 = 9999;
+    // Maximum sidepanel width.
+    var max2 = 600;
 
-      var width = this.getWidth();
-      var w1 = width * (fraction); // grid width
-      var w2 = width * (1 - fraction); // sidepanel width
+    // Respect max sizes
+    if (w1 > max1) {
+      w1 = max1;
+      w2 = width - max1;
+    }
+    if (w2 > max2) {
+      w2 = max2;
+      w1 = width - max2;
+    }
 
-      // Minimum grid width.
-      var min1 = 400;
-      // Minimum sidepanel width.
-      var min2 = 250;
-      // Maximum grid width.
-      var max1 = 9999;
-      // Maximum sidepanel width.
-      var max2 = 600;
+    // Respect minimum sizes.
+    if (w2 < min2) {
+      w2 = min2;
+      w1 = width - min2;
+    }
+    // Top priority -- keep grid above min size!
+    if (w1 < min1) {
+      w1 = min1;
+      w2 = width - min1;
+    }
 
-      // Respect max sizes
-      if (w1 > max1) {
-        w1 = max1;
-        w2 = width - max1;
-      }
-      if (w2 > max2) {
-        w2 = max2;
-        w1 = width - max2;
-      }
-
-      // Respect minimum sizes.
-      if (w2 < min2) {
-        w2 = min2;
-        w1 = width - min2;
-      }
-      // Top priority -- keep grid above min size!
-      if (w1 < min1) {
-        w1 = min1;
-        w2 = width - min1;
-      }
-
-//      this.suspendEvents(true);
-      this.centerPanel.setWidth(w1);
-      this.eastPanel.setWidth(w2);
-      this.centerPanel.setPosition(0, 0);
-      this.eastPanel.setPosition(width - w2, 0);
-//      this.resumeEvents();
-
-},
+    //      this.suspendEvents(true);
+    this.centerPanel.setWidth(w1);
+    this.eastPanel.setWidth(w2);
+    this.centerPanel.setPosition(0, 0);
+    this.eastPanel.setPosition(width - w2, 0);
+    //      this.resumeEvents();
+  },
 
   afterEastRender: function() {
     if (this.hasAboutPanel()) {
@@ -291,6 +288,9 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     if (!pressed) {
       return;
     }
+
+    var oldActiveItem = this.getEastPanel().getLayout().activeItem;
+
     if (button.itemId == 'overview_tab_button' && pressed) {
       newActiveItem = this.getOverviewPanel();
       newActiveItem.singleSelectionDisplay = 'overview';
@@ -299,11 +299,17 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       newActiveItem.singleSelectionDisplay = 'details';
     } else if (button.itemId == 'about_tab_button' && pressed) {
       newActiveItem = this.getAboutPanel();
+      newActiveItem.singleSelectionDisplay = 'details';
     } else {
       Paperpile.log("Didn't recognize button " + button.itemId);
     }
 
     newActiveItem.forceUpdate();
+
+    if (oldActiveItem.itemId == 'about') {
+      newActiveItem.forceUpdate.defer(50, newActiveItem);
+    }
+
     this.getEastPanel().getLayout().setActiveItem(newActiveItem);
   },
 
