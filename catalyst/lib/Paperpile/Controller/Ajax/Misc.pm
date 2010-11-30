@@ -49,7 +49,7 @@ sub feed_list : Local {
 
   $query = _escapeString($query);
 
-  my $searchUrl = 'http://stage.paperpile.com/api/v1/feeds/list/';
+  my $searchUrl = $c->config->{app_settings}->{paperserve_url}.'/api/v1/feeds/list/';
 
   my $full_uri = $searchUrl . '?query=' . $query;
 
@@ -271,7 +271,7 @@ sub report_crash : Local {
 
   #my $url ='http://127.0.0.1:3003/api/v1/feedback/crashreport';
 
-  my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
+  my $url = $c->config->{app_settings}->{paperserve_url}.'/api/v1/feedback/crashreport';
 
   my $error        = $c->request->params->{info};
   my $catalyst_log = $c->request->params->{catalyst_log};
@@ -317,7 +317,7 @@ sub report_pdf_download_error : Local {
 
   #my $url ='http://127.0.0.1:3003/api/v1/feedback/crashreport';
 
-  my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
+  my $url = $c->config->{app_settings}->{paperserve_url}.'/api/v1/feedback/crashreport';
 
   my $report          = $c->request->params->{reportString};
   my $catalyst_log = $c->request->params->{catalyst_log};
@@ -352,7 +352,7 @@ sub report_pdf_match_error : Local {
 
   my ( $self, $c ) = @_;
 
-  my $url = 'http://stage.paperpile.com/api/v1/feedback/crashreport';
+  my $url = $c->config->{app_settings}->{paperserve_url}.'/api/v1/feedback/crashreport';
 
   my $report = $c->request->params->{reportString};
   my $file = $c->request->params->{file};

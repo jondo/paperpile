@@ -27,6 +27,7 @@ app_settings:
   settings_db_version: 2
   library_db_version: 3
   qruntime_version: 1
+  paperserve_url: "http://s.paperpile.com"
 
 user_settings:
   db_version: 2
