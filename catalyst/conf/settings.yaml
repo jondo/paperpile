@@ -42,7 +42,6 @@ user_settings:
   pager_limit: 25
   check_updates: 1
   zoom_level: 100
-  tags_list_height: 120
   split_fraction_tree: 0.2
   split_fraction_grid: 0.67
 

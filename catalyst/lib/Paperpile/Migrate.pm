@@ -133,7 +133,7 @@ sub lift_settings_1_2 {
   my $dbh = $self->get_dbh( $self->settings_db );
 
   # Add new settings
-  foreach my $new_setting ('zoom_level','tags_list_height'){
+  foreach my $new_setting ('zoom_level','split_fraction_tree','split_fraction_grid'){
     Paperpile::Model::Library->set_setting($new_setting, $self->user_settings->{$new_setting}, $dbh);
   }
 
@@ -149,6 +149,12 @@ sub lift_settings_1_2 {
 sub lift_library_2_3 {
 
   my ($self) = @_;
+
+  # Reset all temporary data by deleting all folders in "tmp"
+  foreach my $dir ( 'rss', 'import', 'download', 'queue' ) {
+    rmtree( catfile( $self->tmp_dir, $dir ) );
+  }
+  unlink( catfile( $self->tmp_dir, 'queue.db' ) );
 
   ### Backup old library file and get database handle
 
@@ -183,7 +189,7 @@ sub lift_library_2_3 {
 
       my $pub = Paperpile::Library::Publication->new($old_data);
       $pub->create_guid;
-      $pub->tags(undef);
+      $pub->labels(undef);
 
       $rowid_to_guid{ $old_data->{_rowid} } = $pub->guid;
 
@@ -195,6 +201,7 @@ sub lift_library_2_3 {
         $stats->{publication} = $pub->guid;
         $stats->{is_pdf}      = 1;
         $stats->{name}        = $old_data->{pdf};
+        $stats->{name} =~s/^(.*\/)(.*)$/$2/;
         ( $fields, $values ) = $self->_hash2sql( $stats, $dbh_new );
         $dbh_new->do("INSERT INTO Attachments ($fields) VALUES ($values)");
 
@@ -219,6 +226,7 @@ sub lift_library_2_3 {
           $stats->{publication} = $pub->guid;
           $stats->{is_pdf}      = 0;
           $stats->{name}        = $attachments->{file_name};
+          $stats->{name} =~s/^(.*\/)(.*)$/$2/;
           ( $fields, $values ) = $self->_hash2sql( $stats, $dbh_new );
           $dbh_new->do("INSERT INTO Attachments ($fields) VALUES ($values)");
           push @guids, $stats->{guid};
@@ -304,7 +312,7 @@ sub lift_library_2_3 {
 
     foreach my $pub_guid ( keys %tags ) {
       my $list = join( ',', @{ $tags{$pub_guid} } );
-      $dbh_new->do("UPDATE Publications SET tags='$list' WHERE guid = '$pub_guid'");
+      $dbh_new->do("UPDATE Publications SET labels='$list' WHERE guid = '$pub_guid'");
       $dbh_new->do("UPDATE Fulltext SET labelid='$list' WHERE guid = '$pub_guid'");
     }
 
@@ -399,7 +407,6 @@ sub lift_library_2_3 {
 
     Paperpile::Model::Library->set_settings( $self->library_settings, $dbh_new );
 
-
   };
 
   if ($@) {
@@ -411,12 +418,6 @@ sub lift_library_2_3 {
   }
 
   $dbh_new->commit;
-
-  # Reset all temporary data by deleting all folders in "tmp"
-  foreach my $dir ( 'rss', 'import', 'download', 'queue' ) {
-    rmtree( catfile( $self->tmp_dir, $dir ) );
-  }
-  unlink( catfile( $self->tmp_dir, 'queue.db' ) );
 
 }
 
