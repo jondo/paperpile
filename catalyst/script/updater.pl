@@ -48,7 +48,6 @@ open STDERR, ">/dev/null";
 
 my $app_dir             = "$FindBin::Bin/../../";
 my $update_url          = 'http://paperpile.com/download/files';
-my $latest              = 'latest';
 my $progress_resolution = 10;
 my $platform            = get_platform();
 
@@ -75,13 +74,13 @@ GetOptions(
 
 $check = 0 if ($update);
 
-# To test the release before it is live we can use the --debug option
-# or set the PP_DEBUG environment variable
+# To test the release before it is live set the PP_DEBUG environment
+# variable. TODO: link this to --debug flag of QRuntime
 if ( $ENV{PP_DEBUG} ) {
   $debug = 1;
 }
 
-$latest = 'stage' if $debug;
+$update_url = 'http://paperpile.com/download/stage' if $debug;
 
 ######### Read version information from current installation #########
 
@@ -101,7 +100,7 @@ my $needs_sudo = ( -w "$app_dir/catalyst/conf/settings.yaml" ) ? 0 : 1;
 
 my $browser = LWP::UserAgent->new();
 
-my $response = $browser->get("$update_url/$latest/updates.yaml");
+my $response = $browser->get("$update_url/latest/updates.yaml");
 
 if ( $response->is_error ) {
   die( $response->message, " Code: ", $response->code );
@@ -163,7 +162,7 @@ if ($needs_sudo) {
   my $cat_path = $INC[0];
   $cat_path =~ s!/perl5/$platform/base!!;
 
-  my $call = "$cat_path/perl5/$platform/bin/perl $cat_path/script/updater.pl --update";
+  my $call = "$cat_path/perl5/$platform/bin/paperperl $cat_path/script/updater.pl --update";
 
   if ($debug) {
     $call .= " --debug";

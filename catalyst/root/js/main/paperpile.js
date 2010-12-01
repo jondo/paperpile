@@ -1466,7 +1466,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     };
 
     var exitCallback = function(string) {
-
       Paperpile.status.clearMsg();
       QRuntime.updaterReadLine.disconnect(readLineCallback);
       QRuntime.updaterExit.disconnect(exitCallback);
@@ -1497,10 +1496,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       } else {
         if (!Paperpile.status.el.isVisible()) {
           if (results.update_available) {
-
             // Don't bother the user with this message again
             // during this session
-            Ext.TaskMgr.stop(Paperpile.updateCheckTask);
+            //Ext.TaskMgr.stop(Paperpile.updateCheckTask);
 
             Paperpile.status.updateMsg({
               msg: 'An updated version of Paperpile is available',
