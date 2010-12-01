@@ -81,7 +81,7 @@ library_settings:
   _tree: ""
 
 release:
-  patch: 1
+  patch: 0
   restart: 1
   msg: "Several improvements and many bug-fixes for the public Linux beta."
   log:
