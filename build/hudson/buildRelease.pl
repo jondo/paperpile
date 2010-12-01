@@ -54,6 +54,18 @@ my $b = Paperpile::Build->new( {
   }
 );
 
+my $rel_dir = $ENV{HOME} . "/release";
+
+# On all other branches than "stable" we use a test directory to not
+# interfere with the actual production release data and assign a dummy
+# build number
+if ($git_branch ne 'stable'){
+  $rel_dir.= "_test";
+  if (!$ENV{BUILD_NUMBER}){
+    $ENV{BUILD_NUMBER}=9999;
+  }
+}
+
 my $settings = LoadFile('catalyst/conf/settings.yaml');
 
 my ( $version_name, $version_id ) =
@@ -84,14 +96,6 @@ for my $target (@targets) {
 
 
 ######  Move data to release directory and set up symbolic links #####
-
-my $rel_dir = $ENV{HOME} . "/release";
-
-# On all other branches than stables we use a test directory to not
-# interfere with the actual production release data
-if ($git_branch ne 'stable'){
-  $rel_dir.= "_test";
-}
 
 `rm -rf  $rel_dir/$version_name` if -e "$rel_dir/$version_name";
 `rm  $rel_dir/$version_id`       if -l "$rel_dir/$version_id";
