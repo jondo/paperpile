@@ -46,10 +46,19 @@ open STDERR, ">/dev/null";
 
 ####################### General settings #############################
 
-my $app_dir             = "$FindBin::Bin/../../";
 my $update_url          = 'http://paperpile.com/download/files';
 my $progress_resolution = 10;
 my $platform            = get_platform();
+
+my ($app_dir, $cat_dir);
+
+if ($platform eq 'osx'){
+  $app_dir = "$FindBin::Bin/../../../..";
+} else {
+  $app_dir = "$FindBin::Bin/../..";
+}
+
+$cat_dir = "$FindBin::Bin/../../catalyst";
 
 # Mock dir for testing; It is not wise to patch the development
 # working directory
@@ -87,13 +96,13 @@ $update_url = 'http://paperpile.com/download/stage' if $debug;
 my $curr_version_id;
 my $curr_version_name;
 
-my $app_settings = YAML::LoadFile("$app_dir/catalyst/conf/settings.yaml")->{app_settings}
+my $app_settings = YAML::LoadFile("$cat_dir/conf/settings.yaml")->{app_settings}
   || die($!);
 
 $curr_version_id   = $app_settings->{version_id}   || die("version_id not found");
 $curr_version_name = $app_settings->{version_name} || die("version name not found");
 
-my $needs_sudo = ( -w "$app_dir/catalyst/conf/settings.yaml" ) ? 0 : 1;
+my $needs_sudo = ( -w "$cat_dir/conf/settings.yaml" ) ? 0 : 1;
 
 
 ########### Get update information from remote server ################
@@ -335,22 +344,22 @@ sub apply_patch {
       wanted   => sub {
         my $file_abs = $File::Find::name;
         my $file_rel = File::Spec->abs2rel( $file_abs, $patch_dir );
-        rcopy( $file_abs, "$dest_dir/$file_rel" );
+        rcopy( $file_abs, "$dest_dir/$file_rel" ) or die("Error copying file $file_abs ($!)");
         }
     },
     $patch_dir
   );
 
   open( DIFF, "<$patch_dir/__DIFF__" )
-    || die("Could not read __DIFF__ listing in patch directory ( $!)");
+    || die("Could not read __DIFF__ listing in patch directory ($!)");
 
   while (<DIFF>) {
     my ( $status, $file ) = split;
     if ( $status eq 'D' ) {
       if ( -d "$dest_dir/$file" ) {
-        rmtree("$dest_dir/$file");
+        rmtree("$dest_dir/$file") or die("Error deleting folder $file ($!)");
       } else {
-        unlink("$dest_dir/$file");
+        unlink("$dest_dir/$file") or die("Error deleting folder $file ($!)");
       }
     }
   }
