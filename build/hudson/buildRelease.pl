@@ -90,9 +90,9 @@ for my $target (@targets) {
   chdir "$workspace/dist/data";
   $b->echo("Packaging $target");
   if ($target eq "osx"){
-    `mv $target paperpile.app`;
-    `tar cjf ../paperpile-$version_name-$target.tbz paperpile.app`;
-    `mv paperpile.app $target`;
+    `mv $target Paperpile.app`;
+    `tar cjf ../paperpile-$version_name-$target.tbz Paperpile.app`;
+    `mv Paperpile.app $target`;
   } else {
     `mv $target paperpile`;
     `tar cjf ../paperpile-$version_name-$target.tbz paperpile`;
