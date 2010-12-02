@@ -17,6 +17,7 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
     this.entryField = new Ext.form.ComboBox({
       hideLabel: true,
       itemId: 'remote_feed_combo',
+      cls: 'pp-feed-combo',
       store: this.remoteFeedStore,
       minChars: 2,
       maxHeight: 200,
@@ -38,9 +39,8 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
       border: true,
       defaultType: 'label',
       width: 310,
-      bodyStyle:'padding:10px;',
-      style: {
-      },
+      bodyStyle: 'padding:10px;',
+      style: {},
       renderTo: document.body,
       items: [{
         xtype: 'label',
@@ -80,12 +80,12 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
     });
 
     this.on('show', function(panel) {
-      Ext.QuickTips.getQuickTip().hide();
-      this.entryField.focus(false,30);
+      Ext.QuickTips.disable();
     },
     this);
     this.on('hide', function(panel) {
       this.entryField.setValue('');
+      Ext.QuickTips.enable();
     },
     this);
     this.on('render', function(panel) {
@@ -107,6 +107,8 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
 
   show: function() {
     Paperpile.NewFeedPanel.superclass.show.call(this);
+
+    this.entryField.focus(false, 1);
     Ext.getDoc().on("mousedown", this.onMouseDown, this);
   },
 
@@ -116,9 +118,7 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
   },
 
   onMouseDown: function(e) {
-    if (e.getTarget(".pp-feed-chooser")) {
-      return;
-    } else if (e.getTarget(".pp-rss-button")) {
+    if (e.getTarget(".pp-feed-chooser") || e.getTarget('.pp-rss-button') || e.getTarget('.pp-feed-combo') || e.getTarget('.x-combo-list-inner')) {
       return;
     } else {
       this.hide();
@@ -137,7 +137,7 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
       scope: this
     }]);
     this.entryField.on('select', this.addFeed, this);
-      
+
   },
 
   onCancel: function() {
