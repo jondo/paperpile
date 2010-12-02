@@ -41,7 +41,7 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
     '<ul>',
     '  <li class="pp-bullet"><b>Close</b> Paperpile</li>',
     '  <li class="pp-bullet"><b>Delete</b> your current Paperpile directory (<tt>{installationDir}</tt>)</li>',
-    '  <li class="pp-bullet"><b>Download</b> the latest tbz (bzip2 compressed tar) package. </li>',
+    '  <li class="pp-bullet"><b>Download</b> the latest tbz (bzip2 compressed tar) package </li>',
     '  <li class="pp-bullet"><b>Extract</b> package to the old installation directory (or anywhere else)</li>',
     '  <li class="pp-bullet"><b>Start</b> Paperpile (your personal libary will be updated if necessary)</li>',
     '</ul>',
@@ -58,6 +58,33 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
     '</ul>',
     '</tpl>',
     '</div>', ],
+
+  markupNoPatchOSX: [
+    '<div class="pp-box pp-box-top pp-box-style1" style="width:600px;">',
+    '<h2>Version <b>{latestVersion}</b> of Paperpile is available for download.</h2>',
+    '<p>Updating is simple:</p>',
+    '<ul>',
+    '  <li class="pp-bullet"><b>Close</b> Paperpile</li>',
+    '  <li class="pp-bullet"><b>Delete</b> the Paperpile application folder (<tt>{installationDir}</tt>)</li>',
+    '  <li class="pp-bullet"><b>Download</b> the new version</li>',
+    '  <li class="pp-bullet"><b>Extract</b> the package by double-clicking on it</li>',
+    '  <li class="pp-bullet"><b>Move</b> Paperpile to your Application folder</li>',
+    '  <li class="pp-bullet"><b>Start</b> Paperpile (your personal libary will be updated if necessary)</li>',
+    '</ul>',
+    '<p>&nbsp;</p>',
+    '<center><div id="download-button"></div></center>',
+    '<p>&nbsp;</p>',
+    '<tpl for="updates">',
+    '<h2>New in {name}</h2>',
+    '<p>{msg}</p>',
+    '<ul class="pp-update-log">',
+    '<tpl for="log">',
+    '<li>{.}</li>',
+    '</tpl>',
+    '</ul>',
+    '</tpl>',
+    '</div>', ],
+
 
   initComponent: function() {
     Ext.apply(this, {
@@ -83,7 +110,13 @@ Paperpile.Updates = Ext.extend(Ext.Panel, {
       buttonText = 'Install updates (' + Ext.util.Format.fileSize(Paperpile.updateInfo.download_size) + ')';
       action = this.performUpgrade;
     } else {
-      template = new Ext.XTemplate(this.markupNoPatchLinux).compile();
+
+      if (Paperpile.utils.get_platform() === 'osx'){
+        template = new Ext.XTemplate(this.markupNoPatchOSX).compile();
+      } else {
+        template = new Ext.XTemplate(this.markupNoPatchLinux).compile();
+      }
+
       buttonText = 'Go to download page';
       action = function() {
         Paperpile.utils.openURL('http://paperpile.com/beta')
