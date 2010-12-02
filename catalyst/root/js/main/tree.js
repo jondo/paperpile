@@ -1000,6 +1000,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
     var newNode = this.loader.createNode(pars);
     n.appendChild(newNode);
+    n.expand(true);
     Paperpile.status.showBusy("Subscribing to RSS feed");
 
     Paperpile.Ajax({
