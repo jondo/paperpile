@@ -77,7 +77,11 @@ Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
     return Boolean(token.match(/(alt)/));
   },
   ctrlString: function() {
-    return 'Ctrl';
+    if (Paperpile.utils.isMac()) {
+      return '⌘';
+    } else {
+      return 'Ctrl';
+    }
   },
   shiftString: function() {
     return 'Shift';

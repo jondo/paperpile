@@ -92,6 +92,10 @@ Paperpile.utils = {
     }
   },
 
+  isMac: function() {
+    return this.get_platform() == 'osx';
+  },
+
   get_platform: function() {
 
     var platform = '';
