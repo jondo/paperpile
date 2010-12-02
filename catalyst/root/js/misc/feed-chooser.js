@@ -83,7 +83,7 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
       Ext.QuickTips.disable();
     },
     this);
-    this.on('hide', function(panel) {
+    this.on('beforehide', function(panel) {
       this.entryField.setValue('');
       Ext.QuickTips.enable();
     },
@@ -101,6 +101,7 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
     if (url == '') {
       url = this.entryField.el.dom.value;
     }
+    this.entryField.collapse();
     this.callback(url);
     this.onCancel();
   },
@@ -142,6 +143,5 @@ Paperpile.NewFeedPanel = Ext.extend(Ext.form.FormPanel, {
 
   onCancel: function() {
     this.hide();
-    this.entryField.setValue('');
   }
 });
