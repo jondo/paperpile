@@ -42,20 +42,22 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
 
   initComponent: function() {
 
-    Paperpile.PluginGridFile.superclass.initComponent.call(this);
-
     this.getStore().on('beforeload', function() {
+			   Paperpile.log("asdf");
       Paperpile.status.showBusy("Loading File");
     },
     this, {
       single: true
     });
     this.getStore().on('load', function() {
+			   Paperpile.log("Done loading");
       Paperpile.status.clearMsg();
     },
     this, {
       single: true
     });
+
+    Paperpile.PluginGridFile.superclass.initComponent.call(this);
 
     this.actions['IMPORT_ALL'] = new Ext.Action({
       itemId: 'IMPORT_ALL',
