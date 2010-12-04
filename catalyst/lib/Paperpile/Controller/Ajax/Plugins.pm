@@ -289,24 +289,21 @@ sub export : Local {
     $data = $plugin->all;
   }
 
+  # Data from a collection
   if (defined $collection_id) {
     my %params;
 
     my $guid = $collection_id;
     my $type = $c->model('Library')->get_collection_type($guid);
     $type = lc($type);
-    print STDERR "TYPE:$type\n";
 
-    # When exporting folder or label from tree add sub-collections
+    # Add sub-collections
     my @all = $c->model('Library')->find_subcollections($guid);
     map {$_=$type."id:$_"} @all;
     $params{query} = join(" OR ", @all);
-    print STDERR "QUERY:[".$params{query}."]\n";
-    $params{name} = 'DB';
     $params{file} = $c->session->{library_db};
 
-    my $plugin_module = "Paperpile::Plugins::Import::" . $params{name};
-    my $plugin        = eval( "$plugin_module->" . 'new(%params)' );
+    my $plugin =  Paperpile::Plugins::Import::DB->new(%params);
     $plugin->connect;
     $data = $plugin->all;
   }
