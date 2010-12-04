@@ -1270,13 +1270,13 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 
 .pp-grid-highlight1{
     border-color:#ddd;
-    background-color:#ffeeee;
+    background-color:#F5D9D9;
     background-image:url(../images/default/grid/row-over.gif);
 }
 
 .pp-grid-highlight2{
     border-color:#ddd;
-    background-color:#ffffdd;
+    background-color:#F2FFD9;
     background-image:url(../images/default/grid/row-over.gif);
 }
 
