@@ -34,6 +34,7 @@ use FreezeThaw qw/freeze thaw/;
 use File::Temp qw(tempfile);
 use YAML qw(LoadFile);
 use URI::Escape;
+use Encode;
 use JSON;
 
 use 5.010;
@@ -320,6 +321,10 @@ sub report_pdf_download_error : Local {
   my $url = $c->config->{app_settings}->{paperserve_url}.'/api/v1/feedback/crashreport';
 
   my $report          = $c->request->params->{reportString};
+
+  # UTF-8 caused some problems, so we send it as ASCII
+  $report = encode("ascii", $report);
+
   my $catalyst_log = $c->request->params->{catalyst_log};
 
   my $subject = 'Automatic bug report: PDF download error on '.$self->_system_info_string($c);
@@ -355,6 +360,9 @@ sub report_pdf_match_error : Local {
   my $url = $c->config->{app_settings}->{paperserve_url}.'/api/v1/feedback/crashreport';
 
   my $report = $c->request->params->{reportString};
+
+  $report = encode("ascii", $report);
+
   my $file = $c->request->params->{file};
 
   my $subject = 'Automatic bug report: PDF match error on '.$self->_system_info_string($c);
