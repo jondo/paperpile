@@ -24,6 +24,13 @@ sub parsePDF {
   # create a temp file
   ( undef, my $tmpfile ) = tempfile( OPEN => 0 );
 
+  # Since we don't open the tmp file there may be race conditions. We
+  # add the file name of the PDF to make it unique (assuming we are
+  # not importing the same file at the very same time)
+  my $unique_string = $PDFfile;
+  $unique_string=~s/\//_/g;
+  $tmpfile.=$unique_string.".tmp";
+
   # The file may contain spaces or brackets, that have to be escaped.
   # I do not know how this will be handled in Windows.
   $PDFfile =~ s/\s/\\ /g;
