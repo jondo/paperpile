@@ -224,6 +224,9 @@ has '_db_connection' => ( is => 'rw', default => '' );
 # not be matched to an online reference
 has '_incomplete' => ( is => 'rw', default => '' );
 
+# Used to store old guid when guid changes in some cases on import
+has '_old_guid' => ( is => 'rw' );
+
 sub BUILD {
   my ( $self, $params ) = @_;
 

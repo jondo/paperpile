@@ -43,31 +43,14 @@ sub insert_entry : Local {
   my $selection = $self->_get_selection($c);
   my %output    = ();
 
-  # Go through and complete publication details if necessary.
-
   my @pub_array   = ();
-  my $plugin_list = undef;
-
   my $collection_delta = 0;
 
-  foreach my $pub (@$selection) {
+  $self->_complete_pubs($c, $plugin, $selection);
 
-    if ( $plugin->needs_completing($pub) ) {
-      $pub = $plugin->complete_details($pub);
-    }
-
-    if ( $plugin->needs_match_before_import($pub) ) {
-
-      if ( !defined $plugin_list ) {
-        $plugin_list = [ split( /,/, $c->model('Library')->get_setting('search_seq') ) ];
-      }
-
-      $pub->auto_complete($plugin_list);
-    }
-
+  foreach my $pub (@$selection){
     # Make sure we update the labels list when we insert pubs that come with labels
     $collection_delta = 1 if ( $pub->labels_tmp );
-
     push @pub_array, $pub;
   }
 
@@ -92,8 +75,22 @@ sub insert_entry : Local {
   my $pubs = {};
   foreach my $pub (@pub_array) {
     $pub->_imported(1);
+
+    my $old_guid = $pub->guid;
+
+    # If guid has changed because pub was already in database we set
+    # the old guid as key to the update hash. The guid field holds the
+    # new guid and will update the store in the frontend. We also
+    # update the backend cache of the plugin
+    if ($pub->_old_guid){
+      $old_guid = $pub->_old_guid;
+      $plugin->update_cache($pub);
+    }
+
     my $pub_hash = $pub->as_hash;
-    $pubs->{ $pub_hash->{guid} } = $pub_hash;
+
+    $pubs->{ $old_guid } = $pub_hash;
+
   }
 
   # If the number of imported pubs is reasonable, we return the updated pub data
@@ -128,14 +125,31 @@ sub complete_entry : Local {
   Paperpile::Utils->register_cancel_handle($cancel_handle);
 
   my @new_pubs = ();
-  my $results  = {};
   foreach my $pub (@$selection) {
-    my $pub_hash;
     if ( $plugin->needs_completing($pub) ) {
-      my $new_pub = $plugin->complete_details($pub);
-      $pub_hash = $new_pub->as_hash;
+      push @new_pubs, $plugin->complete_details($pub);
     }
-    $results->{ $pub_hash->{guid} } = $pub_hash;
+  }
+
+  $c->model('Library')->exists_pub( \@new_pubs );
+
+  my $results  = {};
+
+  foreach my $pub (@new_pubs){
+    my $pub_hash;
+    $pub_hash = $pub->as_hash;
+
+    my $old_guid = $pub->guid;
+
+    # Handle guid changes when entry turned out to be already in the
+    # database after completion
+    if ($pub->_old_guid){
+      $old_guid = $pub->_old_guid;
+      $plugin->update_cache($pub);
+    }
+
+    $results->{ $old_guid } = $pub_hash;
+
   }
 
   $c->stash->{data} = { pubs => $results };
@@ -411,17 +425,37 @@ sub move_in_collection : Local {
   my $grid_id = $c->request->params->{grid_id};
   my $guid    = $c->request->params->{guid};
   my $type    = $c->request->params->{type};
+  my $plugin  = $self->_get_plugin($c);
   my $data    = $self->_get_selection($c);
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
-  # First import entries that are not already in the database
+  # First import entries that are not already in the database. Note:
+  # Pushing on @to_be_imported actually copies the pub objects and
+  # modifications are not reflected in $data. That's why we need this
+  # clumsy code
   my @to_be_imported = ();
-  foreach my $pub (@$data) {
-    push @to_be_imported, $pub if !$pub->_imported;
+  foreach my $i (0..@$data-1){
+    my $pub=$data->[$i];
+    if (!$pub->_imported){
+      push @to_be_imported, $pub;
+      $data->[$i]=undef;
+    }
   }
 
-  $c->model('Library')->insert_pubs( \@to_be_imported, 1 );
+  if (@to_be_imported){
+    $self->_complete_pubs($c, $plugin, \@to_be_imported);
+    $c->model('Library')->insert_pubs( \@to_be_imported, 1 );
+    my @new_data =();
+    foreach my $pub (@to_be_imported){
+      push @new_data, $pub;
+    }
+    foreach my $pub (@$data){
+      next if !defined $pub;
+      push @new_data, $pub;
+    }
+    $data=\@new_data;
+  }
 
   my $dbh = $c->model('Library')->dbh;
 
@@ -432,7 +466,24 @@ sub move_in_collection : Local {
 
   if (@to_be_imported) {
     $self->_update_counts($c);
-    $self->_collect_update_data( $c, $data, [ $what, '_imported', 'citekey', 'created', 'pdf' ] );
+    my $pubs={};
+
+    foreach my $pub (@to_be_imported) {
+      my $pub_hash = $pub->as_hash;
+
+      my $old_guid = $pub->guid;
+
+      # Handle cases where guids have changed because it turned out to
+      # be already in database after completing a partial ref
+      if ($pub->_old_guid){
+        $old_guid = $pub->_old_guid;
+        $plugin->update_cache($pub);
+      }
+
+      $pubs->{ $old_guid} = $pub_hash;
+    }
+
+    $c->stash->{data}->{pubs} = $pubs;
     $c->stash->{data}->{pub_delta}        = 1;
     $c->stash->{data}->{pub_delta_ignore} = $grid_id;
   } else {
@@ -965,6 +1016,33 @@ sub _get_selection {
 
   return [@data];
 }
+
+
+# Complete details for plugins that don't provide full information
+
+sub _complete_pubs {
+
+  my ( $self, $c, $plugin, $pubs ) = @_;
+
+  my $plugin_list = undef;
+
+  foreach my $pub (@$pubs) {
+
+    next if $pub->_imported;
+
+    if ( $plugin->needs_completing($pub) ) {
+      $pub = $plugin->complete_details($pub);
+    }
+
+    if ( $plugin->needs_match_before_import($pub) ) {
+      if ( !defined $plugin_list ) {
+        $plugin_list = [ split( /,/, $c->model('Library')->get_setting('search_seq') ) ];
+      }
+      $pub->auto_complete($plugin_list);
+    }
+  }
+}
+
 
 # Returns a list of all publications objects from all current plugin
 # objects (i.e. all open grid tabs in the frontend)

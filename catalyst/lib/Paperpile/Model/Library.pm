@@ -1281,9 +1281,16 @@ sub exists_pub {
       $exists = 1;
       foreach my $field ( keys %$row ) {
         my $value = $row->{$field};
+
         if ( $field eq 'rowid' ) {
           $pub->_rowid($value);
         }
+
+        if ( $field eq 'guid' ) {
+          $pub->_old_guid($pub->guid) if ($pub->guid);
+          $pub->guid($value);
+        }
+
         if ( $field eq 'citekey' ) {
           $pub->citekey($value);
         }
@@ -1291,6 +1298,11 @@ sub exists_pub {
         if ( $field eq 'trashed' ) {
           $pub->trashed($value);
         }
+
+        if ( $field eq 'created' ) {
+          $pub->created($value);
+        }
+
 
         #else {
         #  if ($value) {
@@ -1313,6 +1325,8 @@ sub exists_pub {
     $pub->_imported($exists);
 
   }
+
+
 }
 
 # Creates new entries for all labels stored in labels_tmp fields in a
