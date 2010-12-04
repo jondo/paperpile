@@ -1654,7 +1654,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 
   exportNode: function() {
     var node = this.lastSelectedNode;
-    Paperpile.main.handleExport(null, null, node.id);
+    Paperpile.main.handleExport(null, null, node);
   },
 
   autoExportCheck: function(item, state) {

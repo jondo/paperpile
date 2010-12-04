@@ -930,13 +930,27 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
       var file = filenames[0];
 
+      var collection_id = null;
+      var node_id = null;
+      var grid_id = null;
+      if (sourceNode && (sourceNode.type == 'FOLDER' || sourceNode.type == 'LABEL')) {
+	collection_id = sourceNode.id;
+      } else if (sourceNode) {
+	node_id = sourceNode.id;
+      } else if (gridId) {
+	grid_id = gridId;
+      } else {
+	return;
+      }
+
       Paperpile.status.showBusy('Exporting to ' + file + '...');
       Paperpile.Ajax({
         url: Paperpile.Url('/ajax/plugins/export'),
         params: {
-          source_node: sourceNode,
+          source_node: node_id,
+	  collection_id: collection_id,
           selection: selection,
-          grid_id: gridId,
+          grid_id: grid_id,
           export_name: 'Bibfile',
           export_out_format: format,
           export_out_file: file

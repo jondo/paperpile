@@ -208,6 +208,7 @@ sub export : Local {
 
   my $grid_id     = $c->request->params->{grid_id}     || undef;
   my $source_node = $c->request->params->{source_node} || undef;
+  my $collection_id = $c->request->params->{collection_id} || undef;
   my $selection   = $c->request->params->{selection}   || undef;
   my $get_string  = $c->request->params->{get_string}  || 0;
 
@@ -274,14 +275,6 @@ sub export : Local {
       }
     }
 
-    # When exporting folder or label from tree add sub-collections
-    if ( $params{query} =~ /^(folder|label)id:(.*)$/ ) {
-      my ($type, $guid) = ($1, $2);
-      my @all = $c->model('Library')->find_subcollections($guid);
-      map {$_=$type."id:$_"} @all;
-      $params{query} = join(" OR ", @all);
-    }
-
     $params{name} = 'DB' if ( !defined $params{name} );
 
     if ( ( $params{name} eq 'DB' ) and ( not $params{file} ) ) {
@@ -293,6 +286,28 @@ sub export : Local {
 
     $plugin->connect;
 
+    $data = $plugin->all;
+  }
+
+  if (defined $collection_id) {
+    my %params;
+
+    my $guid = $collection_id;
+    my $type = $c->model('Library')->get_collection_type($guid);
+    $type = lc($type);
+    print STDERR "TYPE:$type\n";
+
+    # When exporting folder or label from tree add sub-collections
+    my @all = $c->model('Library')->find_subcollections($guid);
+    map {$_=$type."id:$_"} @all;
+    $params{query} = join(" OR ", @all);
+    print STDERR "QUERY:[".$params{query}."]\n";
+    $params{name} = 'DB';
+    $params{file} = $c->session->{library_db};
+
+    my $plugin_module = "Paperpile::Plugins::Import::" . $params{name};
+    my $plugin        = eval( "$plugin_module->" . 'new(%params)' );
+    $plugin->connect;
     $data = $plugin->all;
   }
 
