@@ -357,7 +357,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       disableOnBlur: false
     });
 
-    var keys = ['ctrl-a', 'ctrl-c', 'ctrl-b', 'ctrl-k', 'n', 'p', 'shift-n', 'shift-p', 'j', 'k', 'shift-j', 'shift-k', '[End,35]', '[Home,36]', '[Del,46]', '[/,191]', 'ctrl-f'];
+    var keys = ['ctrl-a', 'ctrl-c', 'ctrl-b', 'ctrl-k', 'n', 'p', 'shift-n', 'shift-p', 'j', 'k', 'shift-j', 'shift-k', '[End,35]', '[Home,36]', '[Del,46]', '[Del,8]', '[/,191]', 'ctrl-f'];
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i];
       this.sometimesKeys.bindCallback(key, this.forwardToGrid, this);

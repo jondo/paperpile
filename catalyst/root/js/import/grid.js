@@ -500,6 +500,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.keys.bindAction('ctrl-q', this.actions['FONT_SIZE']);
     this.keys.bindAction('ctrl-a', this.actions['SELECT_ALL']);
     this.keys.bindAction('[Del,46]', this.actions['DELETE']);
+    this.keys.bindAction('[Del,8]', this.actions['DELETE']);
 
     // Copy shortcuts.
     this.keys.bindAction('ctrl-c', this.actions['COPY_FORMATTED']);
