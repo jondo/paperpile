@@ -233,7 +233,7 @@ sub remove_jobs : Local {
   $data->{queue} = $q->as_hash;
 
   $c->stash->{data} = $data;
-
+  $c->stash->{data}->{job_delta} = 1;
 }
 
 sub retry_jobs : Local {
@@ -272,7 +272,9 @@ sub retry_jobs : Local {
 
   my $pubs = $self->_collect_pub_data( \@pub_list, [ '_job_id', '_search_job','_metadata_job' ] );
   my $data = {};
+  $data->{queue} = $q->as_hash;
   $data->{pubs} = $pubs;
+  $data->{job_delta} = 1;
   $c->stash->{data} = $data;
   $c->detach('Paperpile::View::JSON');
 }
@@ -284,6 +286,8 @@ sub clear : Local {
   my $q = Paperpile::Queue->new();
   $q->clear;
 
+  $c->stash->{data}->queue       = $q->as_hash;
+  $c->stash->{data}->{job_delta} = 1;
 }
 
 ## Pauses the queue
@@ -299,8 +303,8 @@ sub pause_resume : Local {
     $q->pause;
   }
 
-  $c->stash->{queue}     = $q->as_hash;
-  $c->stash->{job_delta} = 1;
+  $c->stash->{data}->{queue}     = $q->as_hash;
+  $c->stash->{data}->{job_delta} = 1;
   $c->detach('Paperpile::View::JSON');
 }
 

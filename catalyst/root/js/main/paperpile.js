@@ -134,6 +134,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       region: 'west',
     });
 
+    this.queueWidget = new Paperpile.QueueWidget();
+
     this.tree.flex = 1;
     this.tabs.flex = 3;
 
@@ -163,7 +165,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             }), {
               xtype: 'tbfill'
             },
-            new Paperpile.QueueWidget(), new Ext.BoxComponent({
+	    this.queueWidget,
+	    new Ext.BoxComponent({
               autoEl: {
                 tag: 'a',
                 href: '#',
@@ -720,9 +723,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       params: {
         path: path,
         collection_guids: [treeNode ? treeNode.id : null]
-      },
-      success: function(response) {
-        Paperpile.main.queueUpdate();
       }
     });
   },
@@ -881,6 +881,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       this.labelStore.reload();
     }
 
+    this.queueWidget.onUpdate(data);
+    if (data.job_delta) {
+      this.queueUpdate();
+    }
+
     if (this.tabs) {
       var tabs = this.tabs.items.items;
       for (var i = 0; i < tabs.length; i++) {
@@ -894,8 +899,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (data.jobs) {
       this.doCallbacks(data);
     }
-
-    Ext.getCmp('queue-widget').onUpdate(data);
 
     // If the user is currently dragging, update the dragdrop targets.
     if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible() && !Paperpile.main.dd.effectBlock) {
@@ -1180,7 +1183,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       this.queuePollStatus = 'DONE';
     }
 
-    if (this.queuePollStatus === 'WAITING') return;
+    if (this.queuePollStatus === 'WAITING') {
+      return;
+    }
 
     this.queuePollStatus = 'WAITING';
 
