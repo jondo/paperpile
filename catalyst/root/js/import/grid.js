@@ -292,6 +292,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         handler: this.handleMoveLast,
         scope: this
       }),
+      'FOCUS_SEARCH': new Ext.Action({
+        text: 'Search',
+        handler: function() {
+          this.handleFocusSearch();
+        },
+        scope: this,
+        itemId: 'FOCUS_SEARCH'
+      }),
 
       'TB_SPACE': new Ext.Toolbar.Spacer({
         itemId: 'TB_SPACE',
@@ -510,6 +518,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.keys.bindAction('[End,35]', this.actions['MOVE_LAST']);
     this.keys.bindAction('[Home,36]', this.actions['MOVE_FIRST']);
+
+    this.keys.bindAction('[/,191]', this.actions['FOCUS_SEARCH']);
+    this.keys.bindAction('ctrl-f', this.actions['FOCUS_SEARCH']);
+  },
+
+  handleFocusSearch: function() {
+    // To be implemented by subclasses or plugins.
   },
 
   handleClick: function(e) {

@@ -50,13 +50,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       tooltip: 'Manually create a new reference for your library'
     });
 
-    this.actions['FOCUS_SEARCH'] = new Ext.Action({
-      text: 'Search',
-      handler: this.handleFocusSearch,
-      scope: this,
-      itemId: 'FOCUS_SEARCH',
-    });
-
     var store = this.getStore();
     store.baseParams['plugin_search_pdf'] = 0;
     store.baseParams['limit'] = this.limit;
@@ -80,9 +73,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
   },
 
   loadKeyboardShortcuts: function() {
-      Paperpile.PluginGridDB.superclass.loadKeyboardShortcuts.call(this);
-    this.keys.bindAction('[/,191]', this.actions['FOCUS_SEARCH']);
-    this.keys.bindAction('ctrl-f', this.actions['FOCUS_SEARCH']);
+    Paperpile.PluginGridDB.superclass.loadKeyboardShortcuts.call(this);
   },
 
   createSortHandles: function() {
@@ -297,7 +288,7 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     });
     this.filterField = this.actions['FILTER_FIELD'];
 
-    this.mon(this.filterField,'specialkey', function(f, e) {
+    this.mon(this.filterField, 'specialkey', function(f, e) {
       if (e.getKey() == e.ENTER) {
         // Select the first grid row on Enter.
         this.getSelectionModel().selectRowAndSetCursor(0);
