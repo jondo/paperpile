@@ -32,12 +32,6 @@ sub parsePDF {
   $unique_string=~s/\//_/g;
   $tmpfile.=$unique_string.".tmp";
 
-  # The file may contain spaces or brackets, that have to be escaped.
-  # I do not know how this will be handled in Windows.
-  $PDFfile =~ s/\s/\\ /g;
-  $PDFfile =~ s/\(/\\(/g;
-  $PDFfile =~ s/\)/\\)/g;
-
   # Read XMP data if present in PDF file
   my $xmp_parser = Paperpile::Formats::XMP->new();
   $xmp_parser->file($PDFfile);
@@ -49,7 +43,7 @@ sub parsePDF {
   }
 
   # create and read XML file, just the first page
-  system("$PDF2XML -noImage -f 1 -l 1 -q $PDFfile $tmpfile 2>/dev/null");
+  system("$PDF2XML -noImage -f 1 -l 1 -q '$PDFfile' '$tmpfile' 2>/dev/null");
   if (! -e $tmpfile ) {
     NetError->throw( error => 'PDF to XML conversion failed.' ) if ( $debug == 0 );
     return;
@@ -146,7 +140,7 @@ sub parsePDF {
     ( undef, my $tmpfile2 ) = tempfile( OPEN => 0 );
 
     # create and read XML file, but now only the second page
-    system("$PDF2XML -noImage -f 2 -l 2 -q $PDFfile $tmpfile2 2>/dev/null");
+    system("$PDF2XML -noImage -f 2 -l 2 -q '$PDFfile' '$tmpfile2' 2>/dev/null");
     $data = $xml->XMLin( "$tmpfile2", ForceArray => 1 );
 
     # remove temp file
