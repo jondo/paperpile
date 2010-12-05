@@ -198,8 +198,9 @@ Paperpile.TexSettings = Ext.extend(Ext.Panel, {
     // Update all auto-export BibTeX files
     var list = [];
     var fileSync =  Paperpile.main.getSetting('file_sync');
+
     for (var guid in fileSync){
-      if (fileSync[guid].active){
+      if (fileSync[guid].active == 1){
         list.push(guid);
       }
     }
