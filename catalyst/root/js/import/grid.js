@@ -34,6 +34,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   detailsPanel: null,
   labelStyles: {},
   isLocked: false,
+  doAfterNextReload: [],
 
   initComponent: function() {
 
@@ -546,6 +547,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     case 'close-tab':
       Paperpile.main.tabs.remove(this.getPluginPanel());
       break;
+    case 'locate-ref':
+      this.locateInLibrary();
+      break;
     }
   },
 
@@ -892,9 +896,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // Add some callbacks to the store so we can maintain the selection between reloads.
     this.mon(this.getStore(), 'load', function(store, options) {
       this.getStore().isLoaded = true;
-      if (!this.doAfterNextReload) {
-        this.doAfterNextReload = [];
-      }
       for (var i = 0; i < this.doAfterNextReload.length; i++) {
         var fn = this.doAfterNextReload[i];
         fn.defer(0, this);
@@ -1012,6 +1013,17 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     return this.pubTemplate;
   },
 
+  getImportedIconTemplate: function() {
+    var tpl = [
+      '  <tpl if="trashed==0">',
+      '    <div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
+      '  </tpl>',
+      '  <tpl if="trashed==1">',
+      '    <div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
+      '  </tpl>'];
+    return tpl.join('');
+  },
+
   getIconTemplate: function() {
     if (this.iconTemplate != null) {
       return this.iconTemplate;
@@ -1019,12 +1031,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.iconTemplate = new Ext.XTemplate(
       '<div class="pp-grid-info">',
       '<tpl if="_imported">',
-      '  <tpl if="trashed==0">',
-      '    <div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
-      '  </tpl>',
-      '  <tpl if="trashed==1">',
-      '    <div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
-      '  </tpl>',
+      this.getImportedIconTemplate(),
       '</tpl>',
       '<tpl if="pdf">',
       '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf_name}</b><br/>{_last_readPretty}"></div>',
@@ -1119,14 +1126,10 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     '</div>'].join('');
   },
 
-  getSingleSelectionTemplate: function() {
-    var prefix = [
-      '<div id="main-container-{id}">'];
-    var suffix = [
-      '</div>'];
-    var referenceInfo = [
-      '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
-      '<tpl if="_imported">',
+  getImportedReferenceTemplate: function() {
+    // Return the buttons which should show up when a reference is imported. Subclasses where
+    // editing imported refs is not allowed should override this method.
+    var tpl = [
       '  <div id="ref-actions" style="float:right;">',
       '  <tpl if="trashed==1">',
       '    <img src="/images/icons/arrow_rotate_anticlockwise.png" class="pp-img-action" action="restore-ref" ext:qtip="Restore Reference"/>',
@@ -1136,7 +1139,19 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '    <img src="/images/icons/pencil.png" class="pp-img-action" action="edit-ref" ext:qtip="Edit Reference"/>',
       '    <img src="/images/icons/trash.png" class="pp-img-action" action="delete-ref" ext:qtip="Move Reference to Trash"/>',
       '  </tpl>',
-      '  </div>',
+      '  </div>'];
+    return tpl.join('');
+  },
+
+  getSingleSelectionTemplate: function() {
+    var prefix = [
+      '<div id="main-container-{id}">'];
+    var suffix = [
+      '</div>'];
+    var referenceInfo = [
+      '<div class="pp-box pp-box-side-panel pp-box-top pp-box-style1">',
+      '<tpl if="_imported">',
+      this.getImportedReferenceTemplate(),
       '</tpl>',
       '<h2>Reference Info</h2>',
       '<dl class="pp-ref-info">',
@@ -1891,9 +1906,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         var num_deleted = data.num_deleted;
 
         // Does what it says: adds to the list of functions to call when the grid is next reloaded. This is handled in the customized 'onload' handler up at the top of the file.
-        if (!this.doAfterNextReload) {
-          this.doAfterNextReload = [];
-        }
         this.getSelectionModel().unlock();
         this.doAfterNextReload.push(function() {
           this.getSelectionModel().selectRowAndSetCursor(firstIndex);
@@ -2016,8 +2028,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   },
 
+  locateInLibrary: function() {
+    var record = this.getSingleSelectionRecord();
+    Paperpile.main.showReferenceInLibrary(record);
+  },
+
   batchDownload: function() {
-    selection = this.getSelection();
+    var selection = this.getSelection();
     if (selection.length > 30) {
       Ext.getCmp('queue-widget').onUpdate({
         submitting: true

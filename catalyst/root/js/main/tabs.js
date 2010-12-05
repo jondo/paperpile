@@ -43,11 +43,11 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         var grid = tab.getGrid();
         grid.view.layout();
 
-	// This can't have a delay on it -- we need to focus completely before
-	// restoring the scroll state.
+        // This can't have a delay on it -- we need to focus completely before
+        // restoring the scroll state.
         grid.getView().focusEl.focus();
 
-	// This needs to come last.
+        // This needs to come last.
         tab.restoreScrollState();
       }
     },
@@ -222,6 +222,18 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     panel.show();
   },
 
+  showTrashTab: function() {
+    this.newTrashTab();
+  },
+
+  showMainLibraryTab: function() {
+    this.findAndActivateOpenTab('MAIN');
+  },
+
+  getMainLibraryTab: function() {
+    return this.getItem('MAIN');
+  },
+
   isUniqueByItemId: function(plugin_name) {
     return (plugin_name == 'Label' || plugin_name == 'Folder' || plugin_name == 'Feed');
   },
@@ -308,7 +320,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
       return;
     }
 
-//    var panel = Paperpile.main.tabs.add(new Paperpile.PDFPanel(params));
+    //    var panel = Paperpile.main.tabs.add(new Paperpile.PDFPanel(params));
     var panel = Paperpile.main.tabs.add(new Paperpile.PDFviewer(params));
     panel.show();
   }

@@ -571,6 +571,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     return null;
   },
 
+  getMainLibraryGrid: function() {
+    var mainTab = this.tabs.getMainLibraryTab();
+    return mainTab.getGrid();
+  },
+
   getCurrentlySelectedRow: function() {
     var activeTab = Paperpile.main.tabs.getActiveTab();
     if (activeTab instanceof Paperpile.PluginPanel) {
@@ -580,6 +585,25 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       }
     }
     return null;
+  },
+
+  showReferenceInLibrary: function(record) {
+    var grid;
+    if (record.data.trashed) {
+      this.tabs.showTrashTab();
+      grid = this.tabs.getItem('trash').getGrid();
+    } else {
+      // Activate the library tab.
+      this.tabs.showMainLibraryTab();
+    
+      // Get the library grid and set the query.
+      grid = this.getMainLibraryGrid();
+    }
+    grid.setSearchQuery('key:'+record.data.citekey);
+    var selectSet = function() {
+      this.getSelectionModel().selectRowAndSetCursor(0);
+    };
+    grid.doAfterNextReload.push(selectSet);
   },
 
   folderExtract: function() {
