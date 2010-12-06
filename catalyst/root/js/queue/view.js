@@ -92,15 +92,12 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
       selection = this.queueList.getSelectedIds();
     }
 
-
-
     Paperpile.Ajax({
       url: '/ajax/queue/retry_jobs',
       params: {
         ids: selection
       },
       success: function(response, opts) {
-        Paperpile.main.queueUpdate();
         this.getGrid().getStore().reload({
           params: {
             filter: 'all'

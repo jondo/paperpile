@@ -62,6 +62,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
 
   onContextClick: function(grid, index, e) {
     e.stopEvent();
+    return;
     var record = this.getStore().getAt(index);
     if (!this.isSelected(index)) {
       this.select(index, false, true);

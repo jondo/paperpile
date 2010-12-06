@@ -676,6 +676,14 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     margin:4px;
 }
 
+.pp-grid-action {
+  cursor: pointer;
+}
+
+.pp-grid-added-text {
+  color: gray;
+}
+
 .pp-img-action {
     cursor: pointer;
     padding: 4px;
@@ -2793,7 +2801,7 @@ input[type="radio"]:checked:hover
 input[type="radio"]:disabled,
 input[type="checkbox"]:disabled
 {
- opacity: .3;
+ opacity: .6;
 }
 
 .pp-dashboard-box a, .pp-dashboard-box span {
