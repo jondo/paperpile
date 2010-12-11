@@ -1076,3 +1076,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sat Dec 11 11:31:58 2010: C<Module> L<Crypt::SSLeay|Crypt::SSLeay>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.58>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
