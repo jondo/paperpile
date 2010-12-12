@@ -31,11 +31,13 @@ use Paperpile::Plugins::Export;
 
 # Import plugins dynamically from directory content alone
 BEGIN {
+  # normal glob fails on spaces so use bsd_glob
+  use File::Glob ':glob';
   foreach my $lib_dir (@INC) {
     foreach
       my $plugin_dir ( "$lib_dir/Paperpile/Plugins/Import", "$lib_dir/Paperpile/Plugins/Export" ) {
       if ( -e $plugin_dir ) {
-        foreach my $plugin_file ( glob("$plugin_dir/*pm") ) {
+        foreach my $plugin_file (bsd_glob("$plugin_dir/*pm") ) {
           $plugin_file =~ s/$lib_dir.//;
           my $module = join( "::", split( /\//, $plugin_file ) );
           $module =~ s/\.pm$//;
