@@ -130,13 +130,6 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
       }
     }
 
-// Comment out this annoying logic.
-/*
-    if ((pdfSearchJobs == 1 && allJobs == 1) || (metadataUpdateJobs == 1 && allJobs == 1)) {
-      this.hide();
-      return;
-    }
-*/
     if (queue.num_pending == 0 && queue.num_done == 0 && queue.num_error == 0) {
       this.hide();
     } else {
@@ -159,12 +152,6 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
         Paperpile.Ajax({
           url: '/ajax/queue/pause_resume',
           params: {},
-          success: function(response, opts) {
-            var json = Ext.util.JSON.decode(response.responseText);
-            if (json.queue.status != 'PAUSED') {
-              Paperpile.main.queueUpdate();
-            }
-          },
           scope: this
         });
     }

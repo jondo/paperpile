@@ -134,6 +134,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       region: 'west',
     });
 
+    this.queueWidget = new Paperpile.QueueWidget();
+
     this.tree.flex = 1;
     this.tabs.flex = 3;
 
@@ -163,7 +165,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             }), {
               xtype: 'tbfill'
             },
-            new Paperpile.QueueWidget(), new Ext.BoxComponent({
+	    this.queueWidget,
+	    new Ext.BoxComponent({
               autoEl: {
                 tag: 'a',
                 href: '#',
@@ -357,7 +360,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       disableOnBlur: false
     });
 
-    var keys = ['ctrl-a', 'ctrl-c', 'ctrl-b', 'ctrl-k', 'n', 'p', 'shift-n', 'shift-p', 'j', 'k', 'shift-j', 'shift-k', '[End,35]', '[Home,36]', '[Del,46]', '[/,191]', 'ctrl-f'];
+    var keys = ['ctrl-a', 'ctrl-c', 'ctrl-b', 'ctrl-k', 'n', 'p', 'shift-n', 'shift-p', 'j', 'k', 'shift-j', 'shift-k', '[End,35]', '[Home,36]', '[Del,46]', '[Del,8]', '[/,191]', 'ctrl-f'];
     for (var i = 0; i < keys.length; i++) {
       var key = keys[i];
       this.sometimesKeys.bindCallback(key, this.forwardToGrid, this);
@@ -568,6 +571,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     return null;
   },
 
+  getMainLibraryGrid: function() {
+    var mainTab = this.tabs.getMainLibraryTab();
+    return mainTab.getGrid();
+  },
+
   getCurrentlySelectedRow: function() {
     var activeTab = Paperpile.main.tabs.getActiveTab();
     if (activeTab instanceof Paperpile.PluginPanel) {
@@ -577,6 +585,25 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       }
     }
     return null;
+  },
+
+  showReferenceInLibrary: function(record) {
+    var grid;
+    if (record.data.trashed) {
+      this.tabs.showTrashTab();
+      grid = this.tabs.getItem('trash').getGrid();
+    } else {
+      // Activate the library tab.
+      this.tabs.showMainLibraryTab();
+    
+      // Get the library grid and set the query.
+      grid = this.getMainLibraryGrid();
+    }
+    grid.setSearchQuery('key:'+record.data.citekey);
+    var selectSet = function() {
+      this.getSelectionModel().selectRowAndSetCursor(0);
+    };
+    grid.doAfterNextReload.push(selectSet);
   },
 
   folderExtract: function() {
@@ -631,7 +658,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         closeAction: 'hide',
         layout: 'vbox',
         bodyStyle: 'background-color:#FFFFFF !important;',
-        width: 200,
+        width: 220,
         height: 175,
         plain: true,
         modal: true,
@@ -720,9 +747,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       params: {
         path: path,
         collection_guids: [treeNode ? treeNode.id : null]
-      },
-      success: function(response) {
-        Paperpile.main.queueUpdate();
       }
     });
   },
@@ -881,6 +905,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       this.labelStore.reload();
     }
 
+    this.queueWidget.onUpdate(data);
+    if (data.job_delta) {
+      this.queueUpdate();
+    }
+
     if (this.tabs) {
       var tabs = this.tabs.items.items;
       for (var i = 0; i < tabs.length; i++) {
@@ -894,8 +923,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (data.jobs) {
       this.doCallbacks(data);
     }
-
-    Ext.getCmp('queue-widget').onUpdate(data);
 
     // If the user is currently dragging, update the dragdrop targets.
     if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible() && !Paperpile.main.dd.effectBlock) {
@@ -1180,7 +1207,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       this.queuePollStatus = 'DONE';
     }
 
-    if (this.queuePollStatus === 'WAITING') return;
+    if (this.queuePollStatus === 'WAITING') {
+      return;
+    }
 
     this.queuePollStatus = 'WAITING';
 

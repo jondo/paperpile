@@ -35,6 +35,13 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
       }]
     });
 
+    // Test javascript time-out warning
+    //for (var i=0; i<100000; i++){
+    //  for (var j=0; j<100000; j++){
+    //  var x=x*100;
+    //  }
+    //}
+
     Paperpile.PatternSettings.superclass.initComponent.call(this);
 
   },

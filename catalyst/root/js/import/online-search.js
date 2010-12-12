@@ -134,6 +134,9 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
 
       },
       grid),
+      handleFocusSearch: function() {
+        this.searchField.getEl().focus();
+      },
       setSearchQuery: function(text) {
         this.searchField.setValue(text);
         this.searchField.onTrigger2Click();

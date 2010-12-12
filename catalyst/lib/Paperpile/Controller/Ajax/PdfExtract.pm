@@ -71,13 +71,12 @@ sub submit : Local {
 
   }
 
-  print STDERR \@jobs;
-
   $q->submit( \@jobs );
 
   $q->save;
   $q->run;
 
+  $c->stash->{data}->{job_delta} = 1;
 }
 
 sub count_files : Local {

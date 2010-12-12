@@ -201,7 +201,7 @@ sub lift_library_2_3 {
         $stats->{publication} = $pub->guid;
         $stats->{is_pdf}      = 1;
         $stats->{name}        = $old_data->{pdf};
-        $stats->{name} =~s/^(.*\/)(.*)$/$2/;
+        $stats->{name} =~ s/^(.*\/)(.*)$/$2/;
         ( $fields, $values ) = $self->_hash2sql( $stats, $dbh_new );
         $dbh_new->do("INSERT INTO Attachments ($fields) VALUES ($values)");
 
@@ -226,7 +226,7 @@ sub lift_library_2_3 {
           $stats->{publication} = $pub->guid;
           $stats->{is_pdf}      = 0;
           $stats->{name}        = $attachments->{file_name};
-          $stats->{name} =~s/^(.*\/)(.*)$/$2/;
+          $stats->{name} =~ s/^(.*\/)(.*)$/$2/;
           ( $fields, $values ) = $self->_hash2sql( $stats, $dbh_new );
           $dbh_new->do("INSERT INTO Attachments ($fields) VALUES ($values)");
           push @guids, $stats->{guid};
@@ -299,6 +299,11 @@ sub lift_library_2_3 {
       my $pub_guid = $rowid_to_guid{ $link->{publication_id} };
       my $tag_guid = $tagrowid_to_tagguid{ $link->{tag_id} };
 
+      # Some databases seem to be corrupted and the publication entry
+      # referenced in the tag_publication table does not exist any
+      # more
+      next if ( !$pub_guid or !$tag_guid );
+
       if ( !exists $tags{$pub_guid} ) {
         $tags{$pub_guid} = [$tag_guid];
       } else {
@@ -322,29 +327,32 @@ sub lift_library_2_3 {
 
     my @folders;
 
-    $tree->traverse(
-      sub {
-        my ($_tree) = @_;
-        my $params = $_tree->getNodeValue();
-        return if $params->{type} ne 'FOLDER';
-        return if $params->{text} eq 'All Papers';
+    # Tree might be empty if user has not changed anything
+    if ($tree) {
+      $tree->traverse(
+        sub {
+          my ($_tree) = @_;
+          my $params = $_tree->getNodeValue();
+          return if $params->{type} ne 'FOLDER';
+          return if $params->{text} eq 'All Papers';
 
-        my $id     = $params->{id};
-        my $name   = $params->{text};
-        my $parent = $_tree->getParent;
+          my $id     = $params->{id};
+          my $name   = $params->{text};
+          my $parent = $_tree->getParent;
 
-        my $parent_id;
+          my $parent_id;
 
-        if ( ( !defined $parent->getNodeValue->{id} ) && ( $parent->getNodeValue->{path} eq '/' ) )
-        {
-          $parent_id = 'ROOT';
-        } else {
-          $parent_id = $parent->getNodeValue->{id};
+          if ( ( !defined $parent->getNodeValue->{id} )
+            && ( $parent->getNodeValue->{path} eq '/' ) ) {
+            $parent_id = 'ROOT';
+          } else {
+            $parent_id = $parent->getNodeValue->{id};
+          }
+
+          push @folders, { name => $name, id => $id, parent_id => $parent_id };
         }
-
-        push @folders, { name => $name, id => $id, parent_id => $parent_id };
-      }
-    );
+      );
+    }
 
     my %folderid_to_folder_guid = ( ROOT => 'ROOT' );
 
@@ -411,9 +419,10 @@ sub lift_library_2_3 {
 
   if ($@) {
     $dbh_new->rollback;
+
     # Copy old file back from backup
     copy( $self->library_db . ".backup", $self->library_db );
-    unlink($self->library_db . ".backup");
+    unlink( $self->library_db . ".backup" );
     die("Error while updating library: $@");
   }
 

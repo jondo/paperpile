@@ -22,7 +22,7 @@ session:
 app_settings:
   platform: "__PLATFORM__"
   version_id: 5
-  version_name: "0.5"
+  version_name: "0.5RC1"
   build_number: 0
   settings_db_version: 2
   library_db_version: 3

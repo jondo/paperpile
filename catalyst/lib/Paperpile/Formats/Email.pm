@@ -34,10 +34,6 @@ sub format_pub {
 
   my ( $self, $pub ) = @_;
 
-  my $citation = $pub->format_citation;
-
-  $citation =~ s!</?\w>!!g;
-
   my $cr = "%0A";
 
   my $title   = $pub->title;

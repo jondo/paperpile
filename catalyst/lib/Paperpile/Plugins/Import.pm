@@ -127,6 +127,16 @@ sub find_guid {
 
 }
 
+
+# Updates the data for $pub in the cache
+sub update_cache {
+
+  ( my $self, my $pub ) = @_;
+
+  $self->_hash->{$pub->guid} = $pub;
+
+}
+
 # Returns list of all cached references
 sub get_cache {
 

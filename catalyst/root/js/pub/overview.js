@@ -439,7 +439,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     case 'import-pdf':
       // If PDF has been downloaded for an entry that is not
       // already imported, import entry and attach PDF
-      var grid = this.ownerCt.ownerCt.items.get('center_panel').items.get(0);
+      var grid = this.getGrid();
       var pdf = this.data.pdf;
       grid.insertEntry(
         function(data) {
@@ -470,13 +470,11 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'edit-ref':
-      var grid = Paperpile.main.getActiveGrid();
-      grid.handleEdit();
+      this.getGrid().handleEdit();
       break;
 
     case 'delete-ref':
-      var grid = Paperpile.main.getActiveGrid();
-      grid.handleDelete();
+      this.getGrid().handleDelete();
       break;
 
     case 'update-metadata':
@@ -489,6 +487,10 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     case 'restore-ref':
       this.getGrid().deleteEntry('RESTORE');
+      break;
+
+    case 'locate-ref':
+      this.getGrid().locateInLibrary();
       break;
 
     case 'import-ref':

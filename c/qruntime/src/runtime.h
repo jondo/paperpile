@@ -5,7 +5,7 @@ class QProcess;
 class Runtime : public QObject{
   Q_OBJECT
 
-    public:
+ public:
   Runtime(QWidget *window);
 
  public:

@@ -140,6 +140,30 @@ Ext.extend(Paperpile.ImportGridPlugin, Ext.util.Observable, {
         });
       },
 
+      getImportedReferenceTemplate: function() {
+        var template = [
+          '  <div id="ref-actions" style="float:right;">',
+          '  <tpl if="trashed==0">',
+          '    <img src="/images/icons/page.png" class="pp-img-action" action="locate-ref" ext:qtip="Find reference in Library"/>',
+          '  </tpl>',
+          '  <tpl if="trashed==1">',
+          '    <img src="/images/icons/trashed.png" class="pp-img-action" action="locate-ref" ext:qtip="Find reference in Trash"/>',
+          '  </tpl>',
+          '  </div>'];
+        return template.join('');
+      },
+
+      getImportedIconTemplate: function() {
+        var tpl = [
+          '  <tpl if="trashed==0">',
+          '    <div class="pp-grid-status pp-grid-status-imported pp-grid-action" action="locate-ref" ext:qtip="[<b>{_citekey}</b>]<br><span class=\'pp-grid-added-text\'>added {_createdPretty}</span><br><b>Click to find in Library</b>"></div>',
+          '  </tpl>',
+          '  <tpl if="trashed==1">',
+          '    <div class="pp-grid-status pp-grid-status-deleted pp-grid-action" action="locate-ref" ext:qtip="[<b>{_citekey}</b>]<br><span class=\'pp-grid-added-text\'>deleted {_createdPretty}</span><br><b>Click to find in Trash</b>"></div>',
+          '  </tpl>'];
+        return tpl.join('');
+      },
+
       getMultipleSelectionTemplate: function() {
         var template = [
           '<div id="main-container-{id}">',
