@@ -6,7 +6,7 @@ use Socket;
 use Carp;
 
 use vars qw(@ISA $VERSION $NEW_ARGS);
-$VERSION = '2.84';
+$VERSION = '2.85';
 
 require IO::Socket;
 @ISA=qw(IO::Socket::INET);
@@ -106,7 +106,7 @@ sub connect {
         }
     }
     else {
-        *$self->{io_socket_peername}=@_ == 1 ? $_[0] : IO::Socket::sockaddr_in(@_);    
+        *$self->{io_socket_peername}=@_ == 1 ? $_[0] : IO::Socket::sockaddr_in(@_);
         if(!$self->SUPER::connect(@_)) {
             # better to die than return here
             $@ = "Connect failed: $@; $!";
@@ -133,7 +133,8 @@ sub connect {
         if (not defined $rv or $rv <= 0) {
             _alarm_set(0);
             $ssl = undef;
-            my %args = (%$new_arg, %$arg);
+            # See RT #59312
+            my %args = (%$arg, %$new_arg);
             if(*$self->{ssl_version} == 23) {
                 $args{SSL_Version} = 3;
                 # the new connect might itself be overridden with a REAL SSL
@@ -169,7 +170,7 @@ sub connect {
 }
 
 # Delegate these calls to the Crypt::SSLeay::Conn object
-sub get_peer_certificate { 
+sub get_peer_certificate {
     my $self = shift;
     $self = $REAL{$self} || $self;
     *$self->{ssl_ssl}->get_peer_certificate(@_);
@@ -181,13 +182,13 @@ sub get_peer_verify {
     *$self->{ssl_peer_verify};
 }
 
-sub get_shared_ciphers { 
+sub get_shared_ciphers {
     my $self = shift;
     $self = $REAL{$self} || $self;
     *$self->{ssl_ssl}->get_shared_ciphers(@_);
 }
 
-sub get_cipher { 
+sub get_cipher {
     my $self = shift;
     $self = $REAL{$self} || $self;
     *$self->{ssl_ssl}->get_cipher(@_);
@@ -311,7 +312,7 @@ sub proxy_connect_helper {
 
     my $proxy_addr = gethostbyname($proxy_host);
     $proxy_addr || croak("can't resolve proxy server name: $proxy_host, $!");
-    
+
     my($peer_port, $peer_addr) = (*$self->{ssl_peer_port}, *$self->{ssl_peer_addr});
     $peer_addr || croak("no peer addr given");
     $peer_port || croak("no peer port given");
@@ -332,7 +333,9 @@ sub proxy_connect_helper {
           || croak("proxy connect to $proxy_host:$proxy_port failed: $!");
     }
     else {
-        $self->SUPER::connect($peer_port, $peer_addr)
+        # see RT #57836
+        my $peer_addr_packed = gethostbyname($peer_addr);
+        $self->SUPER::connect($peer_port, $peer_addr_packed)
           || croak("proxy bypass to $peer_addr:$peer_addr failed: $!");
     }
 
@@ -342,7 +345,7 @@ sub proxy_connect_helper {
         my $pass = $ENV{"HTTPS_PROXY_PASSWORD"};
 
         my $credentials = encode_base64("$user:$pass", "");
-        $connect_string = join($CRLF, 
+        $connect_string = join($CRLF,
             "CONNECT $peer_addr:$peer_port HTTP/1.0",
             "Proxy-authorization: Basic $credentials"
         );
@@ -361,8 +364,17 @@ sub proxy_connect_helper {
 
     $connect_string .= $CRLF;
     $self->SUPER::send($connect_string);
-    my $header;
-    my $n = $self->SUPER::sysread($header, 8192);
+
+    my $timeout;
+    my $header = '';
+    # See RT #33954
+    while ( $header !~ m{HTTP/\d+\.\d+\s+200\s+.*$CRLF$CRLF}s ) {
+        $timeout = $self->timeout(5) unless length $header;
+        my $n = $self->SUPER::sysread($header, 8192, length $header);
+        last if $n <= 0;
+    }
+
+    $self->timeout($timeout) if defined $timeout;
     my $conn_ok = ($header =~ /HTTP\/\d+\.\d+\s+200\s+/is) ? 1 : 0;
 
     if (not $conn_ok) {
@@ -373,9 +385,29 @@ sub proxy_connect_helper {
 }
 
 # code adapted from LWP::UserAgent, with $ua->env_proxy API
+# see also RT #57836
 sub proxy {
+    my $self = shift;
     my $proxy_server = $ENV{HTTPS_PROXY} || $ENV{https_proxy};
     return unless $proxy_server;
+
+    my($peer_port, $peer_addr) = (
+        *$self->{ssl_peer_port},
+        *$self->{ssl_peer_addr}
+    );
+    $peer_addr || croak("no peer addr given");
+    $peer_port || croak("no peer port given");
+
+    # see if the proxy should be bypassed
+    my @no_proxy = split( /\s*,\s*/,
+        $ENV{NO_PROXY} || $ENV{no_proxy} || ''
+    );
+    my $is_proxied = 1;
+    for my $domain (@no_proxy) {
+        if ($peer_addr =~ /\Q$domain\E\z/) {
+            return;
+        }
+    }
 
     $proxy_server =~ s|\Ahttps?://||i;
     $proxy_server;
@@ -415,7 +447,7 @@ sub configure_certs {
             croak("Private key and certificate do not match");
         }
     }
-    
+
     $count; # number of successful cert loads/checks
 }
 

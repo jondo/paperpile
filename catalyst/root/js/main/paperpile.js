@@ -658,7 +658,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         closeAction: 'hide',
         layout: 'vbox',
         bodyStyle: 'background-color:#FFFFFF !important;',
-        width: 200,
+        width: 220,
         height: 175,
         plain: true,
         modal: true,

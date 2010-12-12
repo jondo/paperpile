@@ -51,3 +51,15 @@ bool RuntimePage::acceptNavigationRequest ( QWebFrame * frame, const QNetworkReq
   }
 
 }
+
+bool RuntimePage::shouldInterruptJavaScript() {
+  
+  fprintf( stderr, "[%s] %s\n", qPrintable(QDateTime::currentDateTime().toString()), "Caught Javascript timeout warning.");
+
+  // In debug mode we want to see the warning in the frontend, we never show it to the user though. 
+  if (QCoreApplication::arguments().contains("--debug")){
+    return QWebPage::shouldInterruptJavaScript();
+  } else {
+    return false;
+  }
+}
