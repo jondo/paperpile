@@ -20,10 +20,10 @@ AC_ARG_WITH([libs],
 )
 
 AC_CHECK_FILE([${LOCAL_PREFIX}/lib/libmxml.a],,AC_MSG_ERROR("Static miniXML library not found."))
-AC_CHECK_HEADERS([mxml.h],,AC_MSG_ERROR("miniXML headers not found."))
+AC_CHECK_HEADERS([${LOCAL_PREFIX}/include/mxml.h],,AC_MSG_ERROR("miniXML headers not found."))
 
 AC_CHECK_FILE([${LOCAL_PREFIX}/lib/libpodofo.a],,AC_MSG_ERROR("Static PoDoFo library not found."))
-AC_CHECK_HEADER([podofo/podofoapi.h],,AC_MSG_ERROR("PoDoFo headers not found."))
+AC_CHECK_HEADER([${LOCAL_PREFIX}/include/podofo/podofoapi.h],,AC_MSG_ERROR("PoDoFo headers not found."))
 
 AC_CHECK_FILE([${LOCAL_PREFIX}/lib/libpoppler.a],,AC_MSG_ERROR("Static Poppler library not found."))
 AC_CHECK_HEADER([${LOCAL_PREFIX}/include/poppler/poppler-config.h],,AC_MSG_ERROR("Poppler headers not found."))
