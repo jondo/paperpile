@@ -89,17 +89,17 @@ sub _parse_refereces {
   if ( $flag_reference_heading == 1 ) {
     if ( $max_split_by_numbers > 2 and $count_indention < $max_split_by_numbers ) {
       my $tmp = _split_by_numbers( $output_ref, $split_by_numbers_forward, $split_by_numbers_backward,
-				   $max_split_by_numbers, $counter_hash, $nr_pages, $x_coords_ref, $y_coords_ref );
+				   $max_split_by_numbers, $counter_hash, $nr_pages, $x_coords_ref, $y_coords_ref, $fontsize_ref );
       return $tmp if ( $#{$tmp} > -1 );
     } elsif ( $max_split_by_numbers > 5 and $max_split_by_numbers > $count_indention * 0.25  ) {
       my $tmp = _split_by_numbers( $output_ref, $split_by_numbers_forward, $split_by_numbers_backward,
-				   $max_split_by_numbers, $counter_hash, $nr_pages, $x_coords_ref, $y_coords_ref );
+				   $max_split_by_numbers, $counter_hash, $nr_pages, $x_coords_ref, $y_coords_ref, $fontsize_ref );
       return $tmp if ( $#{$tmp} > -1 );
     }
   } else {
     if ( $max_split_by_numbers > 2 ) {
       my $tmp = _split_by_numbers( $output_ref, $split_by_numbers_forward, $split_by_numbers_backward,
-				   $max_split_by_numbers, $counter_hash, $nr_pages, $x_coords_ref, $y_coords_ref );
+				   $max_split_by_numbers, $counter_hash, $nr_pages, $x_coords_ref, $y_coords_ref, $fontsize_ref );
       return $tmp if ( $#{$tmp} > -1 );
     }
   }
@@ -176,6 +176,7 @@ sub _parseXML {
         push @tmp, $words[$i]->{content};
         $x_end = $words[$i]->{'x'} + $words[$i]->{'width'};
       }
+
       my $line = join( " ", @tmp );
       $line =~ s/\x{2013}/-/g;
       $line =~ s/\x{B1}/-/g;
@@ -218,6 +219,7 @@ sub _parseXML {
         $ref_y = $y;
         last;
       }
+
       push @output,   $line;
       push @x_coords, $lines[$j]->{'x'};
       push @y_coords, $y;
@@ -240,7 +242,13 @@ sub _parseXML {
   # to limit the output we have to parse
   if ( $flag == 0 ) {
     my $last_ref;
-    my @tmp = ();
+    my @tmp1 = ();
+    my @tmp2 = ();
+    my @tmp3 = ();
+    my @tmp4 = ();
+    my @tmp5 = ();
+    my @tmp6 = ();
+
     for ( my $i = $#output ; $i >= 0 ; $i-- ) {
       ( my $forparsing = $output[$i] ) =~ s/\s//g;
       my $parsing_flag = ( $forparsing =~ m/^\d+$/ ) ? 0 : 1;
@@ -251,13 +259,23 @@ sub _parseXML {
         }
         $last_ref = $1 if ( $1 == $last_ref - 1 );
       }
-      push @tmp, $output[$i];
+      push @tmp1, $output[$i];
+      push @tmp2, $x_coords[$i];
+      push @tmp3, $y_coords[$i];
+      push @tmp4, $fontsize[$i];
+      push @tmp5, $pages_nr[$i];
+      push @tmp6, $x_ends[$i];
       if ($last_ref) {
         last if ( $last_ref == 1 );
       }
     }
     if ($last_ref) {
-      @output = reverse(@tmp) if ( $last_ref == 1 );
+      @output = reverse(@tmp1) if ( $last_ref == 1 );
+      @x_coords = reverse(@tmp2) if ( $last_ref == 1 );
+      @y_coords = reverse(@tmp3) if ( $last_ref == 1 );
+      @fontsize = reverse(@tmp4) if ( $last_ref == 1 );
+      @pages_nr = reverse(@tmp5) if ( $last_ref == 1 );
+      @x_ends   = reverse(@tmp6) if ( $last_ref == 1 );
     }
   }
 
@@ -431,6 +449,7 @@ sub _split_by_numbers {
   my $nr_pages                  = $_[5];
   my $x_coords                  = $_[6];
   my $y_coords                  = $_[7];
+  my $fontsize                  = $_[8];
 
   my @reference_strings = ();
 
@@ -463,6 +482,7 @@ sub _split_by_numbers {
   my $current_y = 0;
   for ( my $i = $kickoff_position ; $i <= $#{$output} ; $i++ ) {
     my $counts = $counter_hash->{ $output->[$i] };
+    #print "$i|$fontsize->[$i]|$output->[$i]\n";
     if ( $counts > 1 ) {
       next
         if (length( $output->[$i] ) > 15
@@ -486,14 +506,17 @@ sub _split_by_numbers {
         next;
       }
     }
-
     next if ( $current == 0 );
+
 
     # let's check if the string is really the next one to come
     my $diff_y = $y_coords->[$i] - $current_y;
     my $diff_x = abs( $current_x - $x_coords->[$i] );
+
+    # we can jump from the bottom of the page in one column
+    # to the top of the next column
     next if ( $diff_y > 50 );
-    next if ( $diff_x > 50 );
+    next if ( $diff_x > 50 and $diff_y > 0);
 
     if ( $current < $max_split_by_numbers ) {
       push @tmp, $output->[$i];
