@@ -559,7 +559,7 @@ sub _read_xml {
 
     my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
 
-    $pub->pmid( $cit->{PMID} );
+    $pub->pmid( $cit->{PMID}->{content} );
 
     my $volume      = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
     my $issue       = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
@@ -574,6 +574,13 @@ sub _read_xml {
     my $affiliation = $cit->{Article}->{Affiliation};
 
     my $doi = $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
+
+    # backup strategy for pubmed id
+    if ( $pub->pmid() ) {
+      if ( $pub->pmid() !~ m/^\d+$/ ) {
+	$pub->pmid( $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{pubmed}->{content} );
+      }
+    }
 
     # Remove period from end of title
     $title =~ s/\.\s*$//;
