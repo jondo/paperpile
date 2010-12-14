@@ -134,6 +134,9 @@ Ext.extend(Paperpile.OnlineSearchGridPlugin, Ext.util.Observable, {
 
       },
       grid),
+      allowBackgroundReload: function() {
+	return false;
+      },
       handleFocusSearch: function() {
         this.searchField.getEl().focus();
       },
