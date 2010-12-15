@@ -196,17 +196,15 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         var transactionID = Paperpile.Ajax({
           url: '/ajax/misc/test_network',
           params: params,
-          success: function(response) {
-
+          success: function(response, options) {
             var error;
-
             if (response.responseText) {
               error = Ext.util.JSON.decode(response.responseText).error;
             }
 
             if (error) {
               Ext.get('proxy_test_status').replaceClass('pp-icon-tick', 'pp-icon-cross');
-              Paperpile.main.onError(response);
+              Paperpile.main.onError(response, options);
             } else {
               Ext.get('proxy_test_status').replaceClass('pp-icon-cross', 'pp-icon-tick');
               Paperpile.status.clearMsg();
@@ -215,11 +213,9 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
                 hideOnClick: true
               });
             }
-
           },
-          failure: function(response) {
+          failure: function(response, options) {
             Ext.get('proxy_test_status').replaceClass('pp-icon-tick', 'pp-icon-cross');
-            Paperpile.main.onError(response);
           }
         });
 

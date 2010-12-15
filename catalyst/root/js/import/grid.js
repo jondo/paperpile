@@ -450,7 +450,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.mon(this.getStore(), 'load', this.onStoreLoad, this);
     this.mon(this.getStore(), 'loadexception', function(exception, options, response, error) {
-      Paperpile.main.onError(response);
+      Paperpile.main.onError(response,options);
     },
     this);
 
@@ -1654,7 +1654,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           grid_id: this.id,
           cancel_handle: this.id + '_lookup'
         },
-        success: function(response) {
+        success: function(response, options) {
           var json = Ext.util.JSON.decode(response.responseText);
           this.completeEntryLock = false;
 
@@ -1662,7 +1662,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           clearTimeout(this.timeoutAbort);
 
           if (json.error) {
-            Paperpile.main.onError(response);
+            Paperpile.main.onError(response, options);
             return;
           }
 
@@ -1670,7 +1670,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           this.updateButtons();
           this.getPluginPanel().updateDetails();
         },
-        failure: function(response) {
+        failure: function(response, options) {
           this.completeEntryLock = false;
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);

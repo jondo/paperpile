@@ -233,11 +233,11 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
     Paperpile.Ajax({
       url: '/ajax/settings/update_patterns',
       params: params,
-      success: function(response) {
+      success: function(response, options) {
         this.spot.hide();
         var error = Ext.util.JSON.decode(response.responseText).error;
         if (error) {
-          Paperpile.main.onError(response);
+          Paperpile.main.onError(response, options);
           return;
         }
 
@@ -302,11 +302,10 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
           this);
       },
 
-      failure: function(response) {
+      failure: function(response, options) {
         this.spot.hide();
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab());
         Paperpile.main.loadSettings();
-        Paperpile.main.onError(response);
       },
       scope: this
     });

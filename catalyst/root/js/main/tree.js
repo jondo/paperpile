@@ -1007,11 +1007,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     Paperpile.Ajax({
       url: '/ajax/tree/new_rss',
       params: parsToSave,
-      success: function(response) {
+      success: function(response, options) {
         var json = Ext.util.JSON.decode(response.responseText);
         Paperpile.status.clearMsg();
         if (json.error) {
-          Paperpile.main.onError(response);
+          Paperpile.main.onError(response, options);
           newNode.remove();
         } else {
           newNode.setText(json.title);
@@ -1021,8 +1021,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
           this.myOnClick(newNode);
         }
       },
-      failure: function(response) {
-        Paperpile.main.onError(response),
+      failure: function(response, options) {
         newNode.remove();
       },
       scope: this

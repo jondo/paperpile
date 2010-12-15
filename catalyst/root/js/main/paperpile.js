@@ -1242,16 +1242,24 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
-  onError: function(response) {
-    var error = {
-      type: "Unknown",
-      msg: "Empty response or timeout."
-    };
+  onError: function(response,options) {
+
+    var error;
 
     //Timed out errors come back empty otherwise fill in error
     //data from backend
     if (response.responseText) {
       error = Ext.util.JSON.decode(response.responseText).error;
+    } else {
+      error = {
+        type: "Unknown",
+        msg: "Empty response or timeout."
+      };
+
+      if (options){
+        error.msg += "<br>URL: " + options.url;
+        error.msg += "<br>Timeout set: " + options.timeout;
+      }
     }
 
     if (error.type == 'Unknown') {
