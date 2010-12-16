@@ -22,7 +22,7 @@ session:
 app_settings:
   platform: "__PLATFORM__"
   version_id: 5
-  version_name: "0.5RC1"
+  version_name: "0.5R"
   build_number: 0
   settings_db_version: 2
   library_db_version: 3
@@ -82,12 +82,13 @@ library_settings:
 release:
   patch: 0
   restart: 1
-  msg: "Several improvements and many bug-fixes for the public Linux beta."
+  msg: "Major update with many more features."
   log:
-    - "Improved automatic PDF download (especially for some Physics Journals)"
-    - "Improved PDF meta-data recognition (many of the PDFs you reported now work)"
-    - "Streamlined data input for PDFs that cannot not be automatically imported"
-    - "Allow re-ordering of label list and RSS feed list"
-    - "More efficient way to display and search RSS feeds"
-    - "Allow cancel of searches (e.g. when PubMed is down or slow)"
-    - "27 additional bugfixes (thanks for all the error reports)" 
+    - "Streamlined user interface including native file open/save dialogs"
+    - "Advanced BibTeX support with improved import/export and citation functions"
+    - "Auto-export of folder or labels to BibTeX files"
+    - "Improved import functions. Import your references including tags and PDFs from various other programs"
+    - "Drag and drop support. Drag PDFs, attachments or library files directly into Paperpile"
+    - "Improved workflow to import PDFs"
+    - "Smart online lookup to auto-complete partial references"
+    - "Keyboard shortcuts for all major functions"
