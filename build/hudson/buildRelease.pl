@@ -42,9 +42,8 @@ my @targets = ( 'linux32', 'linux64','osx' );
 my $workspace = `pwd`;
 chomp($workspace);
 
-my $git_branch =`git branch 2>/dev/null | sed -e "/^\\s/d" -e "s/^\\*\\s//"`;
-chomp($git_branch);
-
+# Set GIT_BRANCH in hudson job definition.
+my $git_branch = $ENV{GIT_BRANCH};
 
 my $b = Paperpile::Build->new( {
     cat_dir  => "$workspace/catalyst",
