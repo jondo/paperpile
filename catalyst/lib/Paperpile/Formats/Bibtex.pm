@@ -68,6 +68,22 @@ sub read {
   my ($self) = @_;
 
   my $fh = IO::File->new( $self->file );
+  my $fhtmp =  IO::File->new_tmpfile();
+
+  # some files may only contain carriage returns \r instead
+  # of newlines \n. The Parser module can only handle newlines
+  # since we read with $fh->getnewline(). Maybe there is a way
+  # in Perl how to change that, but all efforts in changing
+  # Perl variables like $: or $/ did not make it better.
+  # We generate a temp-filehandle that has all \r converted to \n.
+
+  while (1) {    # loop until regular entry is finished
+    last if $fh->eof;
+    my $line = $fh->getline();
+    $line =~ s/\r/\n/g;
+    print $fhtmp $line;
+  }
+  seek($fhtmp,0,0);
 
   my $config = LoadFile( Paperpile::Utils->path_to('conf/fields.yaml') );
 
@@ -83,7 +99,7 @@ sub read {
   my @output = ();
   my %warnings;
 
-  my $parser = BibTeX::Parser->new( $fh, $self->settings->{import_strip_tex} );
+  my $parser = BibTeX::Parser->new( $fhtmp, $self->settings->{import_strip_tex} );
 
   while ( my $entry = $parser->next ) {
 
@@ -316,6 +332,9 @@ sub read {
     push @output, Paperpile::Library::Publication->new($data);
 
   }
+
+  undef $fhtmp;
+  undef $fh;
 
   return [@output];
 
