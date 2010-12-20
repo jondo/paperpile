@@ -63,6 +63,15 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         scope: this,
         fn: this.onNodeDrop
       },
+      beforedblclick: {
+	  scope:this,
+	  fn: function(node,event) {
+	      if (this.isCategoryRoot(node)) {
+		  return false;
+	      }
+	      return true;
+	  }
+      },
       nodedragover: {
         scope: this,
         fn: this.onNodeDrag
@@ -217,6 +226,14 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       }
     },
     this);
+  },
+
+  isCategoryRoot: function(node) {
+      var id = node.id;
+    if (id === 'LOCAL_ROOT' || id === 'ACTIVE_ROOT' || id === 'IMPORT_PLUGIN_ROOT') {
+	return true;
+    }
+      return false;
   },
 
   loadTree: function() {
