@@ -44,8 +44,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
     Paperpile.PatternSettings.superclass.initComponent.call(this);
 
-    this.isDirty = false;
-
+    this.textfields = {};
   },
 
   //
@@ -53,31 +52,31 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
   //
   setupFields: function() {
 
-    this.textfields = {};
-
     Ext.get('patterns-cancel-button').on('click',
       function() {
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
       });
 
-    Ext.each(['library_db', 'paper_root', 'key_pattern', 'pdf_pattern', 'attachment_pattern'],
+    Ext.each(this.getFields(),
     function(item) {
       var field = new Ext.form.TextField({
         value: Paperpile.main.globalSettings[item],
         enableKeyEvents: true,
-        width: 300,
+        validationEvent: false,
+        validateOnBlur: false,
+        width: 300
       });
 
       field.on('change', function() {
-        this.setSaveDisabled(false);
+        this.updateSaveDisabled();
       },
       this);
       field.on('valid', function() {
-        this.setSaveDisabled(false);
+        this.updateSaveDisabled();
       },
       this);
       field.on('invalid', function() {
-        this.hasErrors = true;
+        this.updateSaveDisabled();
       },
       this);
 
@@ -123,17 +122,16 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             scope: this
           };
           Paperpile.fileDialog(callback, options);
-
         },
         this);
       }
 
       if (item == 'key_pattern' || item == 'pdf_pattern' || item == 'attachment_pattern') {
-
-        var task = new Ext.util.DelayedTask(this.updateFields, this);
-
+        if (this.updateTask === undefined) {
+          this.updateTask = new Ext.util.DelayedTask(this.updateFields, this);
+        }
         field.on('keydown', function() {
-          task.delay(500);
+          this.updateTask.delay(500);
         },
         this);
       }
@@ -142,22 +140,21 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
     this);
 
     this.updateFields();
+  },
 
-    this.setSaveDisabled(true);
-
+  getFields: function() {
+    return['library_db', 'paper_root', 'key_pattern', 'pdf_pattern', 'attachment_pattern'];
   },
 
   //
   // Validates inputs and updates example fields
   //
   updateFields: function() {
-    this.hasErrors = false;
-
     var params = {};
 
-    Ext.each(['library_db', 'paper_root', 'key_pattern', 'pdf_pattern', 'attachment_pattern'],
+    Ext.each(this.getFields(),
     function(key) {
-      params[key] = Ext.get(key + '_textfield').first().getValue();
+      params[key] = this.textfields[key].getValue();
     },
     this);
 
@@ -172,27 +169,50 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             this.textfields[f].markInvalid(data[f].error);
             Ext.get(f + '_example').update('');
           } else {
+            this.textfields[f].clearInvalid();
             Ext.get(f + '_example').update(data[f].string);
           }
         }
 
-        if (this.hasErrors) {
-          this.setSaveDisabled(true);
-        }
       },
       scope: this
     });
 
   },
 
-  setSaveDisabled: function(disabled) {
-    if (this.hasErrors) {
-      disabled = true;
-    }
+  updateSaveDisabled: function() {
     var button = Ext.get('patterns-save-button');
+
+    // Default to the disabled state.
+    var disabled = true;
+
+    // DIRTY: If any of the fields are dirty, enable the save button.
+    Ext.each(this.getFields(), function(f) {
+      var field = this.textfields[f];
+      if (!field) {
+        return;
+      }
+      if (field.isDirty()) {
+        disabled = false;
+      }
+    },
+    this);
+
+    // ERRORS: If any of the fields have errors, disable the save button.
+    Ext.each(this.getFields(), function(f) {
+      var field = this.textfields[f];
+      if (!field) {
+        return;
+      }
+      if (!field.isValid()) {
+        disabled = true;
+      }
+    },
+    this);
 
     button.un('click', this.submit, this);
 
+    // Update the button according to the disabled flag.
     if (disabled) {
       button.replaceClass('pp-save-button', 'pp-save-button-disabled');
     } else {
@@ -216,7 +236,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
     var params = {};
 
-    Ext.each(['library_db', 'paper_root', 'key_pattern', 'pdf_pattern', 'attachment_pattern'],
+    Ext.each(this.getFields(),
     function(item) {
       params[item] = this.textfields[item].getValue();
     },
@@ -234,6 +254,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
       url: '/ajax/settings/update_patterns',
       params: params,
       success: function(response, options) {
+
         this.spot.hide();
         var error = Ext.util.JSON.decode(response.responseText).error;
         if (error) {
@@ -309,6 +330,24 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
       },
       scope: this
     });
+
+  },
+
+  destroy: function() {
+    Paperpile.PatternSettings.superclass.destroy.call(this);
+
+    if (this.updateTask) {
+      this.updateTask.cancel();
+    }
+
+    Ext.each(this.getFields(),
+    function(item) {
+      var field = this.textfields[item];
+      if (field) {
+        field.destroy();
+      }
+    },
+    this);
 
   }
 
