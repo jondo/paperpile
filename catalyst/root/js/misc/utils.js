@@ -52,9 +52,17 @@ Paperpile.utils = {
     var file = parts[parts.length - 1];
     var newParts = parts.slice(0, parts.length - 1);
     var dir = newParts.join('/');
+
+    var fileParts = file.split('.');
+    var extension = fileParts[fileParts.length - 1];
+    var newFileParts = fileParts.slice(0, fileParts.length - 1);
+    var fileBase = newFileParts.join('.');
+
     return {
       dir: dir,
-      file: file
+      file: file,
+      extension: extension,
+      base: fileBase
     };
   },
 
@@ -101,7 +109,7 @@ Paperpile.utils = {
     var platform = '';
 
     if (IS_QT) {
-      return(QRuntime.getPlatform());
+      return (QRuntime.getPlatform());
     }
 
     return (platform);
@@ -116,12 +124,12 @@ Paperpile.utils = {
 
   },
 
-  hashToString: function(hash,recursive) {
+  hashToString: function(hash, recursive) {
     var string = "{\n";
     for (var key in hash) {
       if (hash.hasOwnProperty(key)) {
         var value = hash[key];
-        string += "  "+key+"  =>  "+value+"\n";
+        string += "  " + key + "  =>  " + value + "\n";
       }
     }
     string += "}\n";

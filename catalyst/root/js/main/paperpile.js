@@ -165,8 +165,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             }), {
               xtype: 'tbfill'
             },
-	    this.queueWidget,
-	    new Ext.BoxComponent({
+            this.queueWidget,
+            new Ext.BoxComponent({
               autoEl: {
                 tag: 'a',
                 href: '#',
@@ -207,7 +207,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       storeId: 'label_store'
     });
 
-
     this.folderStore = new Paperpile.CollectionStore({
       collectionType: 'FOLDER',
       listeners: {
@@ -219,7 +218,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       storeId: 'folder_store'
     });
 
-
     this.runningJobs = [];
     this.loadKeys();
 
@@ -230,7 +228,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     };
 
     // Used in startup sequence
-    this.addEvents({'mainGridLoaded':true});
+    this.addEvents({
+      'mainGridLoaded': true
+    });
 
   },
 
@@ -595,11 +595,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     } else {
       // Activate the library tab.
       this.tabs.showMainLibraryTab();
-    
+
       // Get the library grid and set the query.
       grid = this.getMainLibraryGrid();
     }
-    grid.setSearchQuery('key:'+record.data.citekey);
+    grid.setSearchQuery('key:' + record.data.citekey);
     var selectSet = function() {
       this.getSelectionModel().selectRowAndSetCursor(0);
     };
@@ -817,6 +817,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   createFileImportTab: function(filename) {
     var parts = Paperpile.utils.splitPath(filename);
 
+    // Contingency plan for when a PDF file is accidentally
+    // selected in the file import dialog.
+    if (parts.extension == 'pdf') {
+      Paperpile.main.submitPdfExtractionJobs(filename);
+      return;
+    }
+
     Paperpile.main.tabs.newPluginTab('File', {
       plugin_file: filename,
       plugin_name: 'File',
@@ -961,13 +968,13 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       var node_id = null;
       var grid_id = null;
       if (sourceNode && (sourceNode.type == 'FOLDER' || sourceNode.type == 'LABEL')) {
-	collection_id = sourceNode.id;
+        collection_id = sourceNode.id;
       } else if (sourceNode) {
-	node_id = sourceNode.id;
+        node_id = sourceNode.id;
       } else if (gridId) {
-	grid_id = gridId;
+        grid_id = gridId;
       } else {
-	return;
+        return;
       }
 
       Paperpile.status.showBusy('Exporting to ' + file + '...');
@@ -975,7 +982,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         url: Paperpile.Url('/ajax/plugins/export'),
         params: {
           source_node: node_id,
-	  collection_id: collection_id,
+          collection_id: collection_id,
           selection: selection,
           grid_id: grid_id,
           export_name: 'Bibfile',
@@ -1242,7 +1249,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     }
   },
 
-  onError: function(response,options) {
+  onError: function(response, options) {
 
     var error;
 
@@ -1256,7 +1263,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         msg: "Empty response or timeout."
       };
 
-      if (options){
+      if (options) {
         error.msg += "<br>URL: " + options.url;
         error.msg += "<br>Timeout set: " + options.timeout;
       }
@@ -1550,7 +1557,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
             // Don't bother the user with this message again
             // during this session
             //Ext.TaskMgr.stop(Paperpile.updateCheckTask);
-
             Paperpile.status.updateMsg({
               msg: 'An updated version of Paperpile is available',
               action1: 'Install Updates',
