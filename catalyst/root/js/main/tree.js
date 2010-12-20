@@ -64,13 +64,13 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
         fn: this.onNodeDrop
       },
       beforedblclick: {
-	  scope:this,
-	  fn: function(node,event) {
-	      if (this.isCategoryRoot(node)) {
-		  return false;
-	      }
-	      return true;
-	  }
+        scope: this,
+        fn: function(node, event) {
+          if (this.isCategoryRoot(node)) {
+            return false;
+          }
+          return true;
+        }
       },
       nodedragover: {
         scope: this,
@@ -229,11 +229,11 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   isCategoryRoot: function(node) {
-      var id = node.id;
+    var id = node.id;
     if (id === 'LOCAL_ROOT' || id === 'ACTIVE_ROOT' || id === 'IMPORT_PLUGIN_ROOT') {
-	return true;
+      return true;
     }
-      return false;
+    return false;
   },
 
   loadTree: function() {
@@ -537,7 +537,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     if (e.source.dragData.grid) {
       var grid = e.source.dragData.grid;
       var sel = grid.getSelection();
-      if (node.type == 'FOLDER' || node.type=="FOLDER_ROOT") {
+      if (node.type == 'FOLDER' || node.type == "FOLDER_ROOT") {
         this.addFolder(grid, sel, node);
       } else if (e.target.type == 'LABEL') {
         this.addLabel(grid, sel, node);
@@ -1716,6 +1716,22 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var callback = function(filenames) {
       if (filenames.length > 0) {
         var file = filenames[0];
+
+        var existingSync = this.getExistingSyncedFiles();
+        for (var i = 0; i < existingSync.length; i++) {
+          if (existingSync[i] === file) {
+            Paperpile.status.updateMsg({
+              type: 'error',
+              msg: 'Error: the chosen file is already a sync destination. Please choose a different file.'
+            });
+            filesync.file = '';
+            filesync.active = 0;
+            parentMenu.hide();
+            this.setFileSyncData(node, filesync);
+            return;
+          }
+        }
+
         filesync.file = file;
         filesync.active = 1;
         parentMenu.hide();
@@ -1752,6 +1768,19 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     var filesync = Paperpile.main.getSetting('file_sync') || {};
     filesync[node.id] = params;
     Paperpile.main.setSetting('file_sync', filesync);
+  },
+
+  getExistingSyncedFiles: function() {
+    var filesync = Paperpile.main.getSetting('file_sync');
+
+    var files = [];
+    for (var i in filesync) {
+      var obj = filesync[i];
+      if (obj.file) {
+        files.push(obj.file);
+      }
+    }
+    return files;
   },
 
   getFileSyncData: function(node) {
@@ -1952,8 +1981,7 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
         handler: tree.exportNode,
         triggerKey: 'e',
         scope: tree
-      }
-      ]
+      }]
     });
     Paperpile.Tree.ActiveMenu.superclass.initComponent.call(this);
   },
@@ -1985,9 +2013,9 @@ Paperpile.Tree.ImportMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 
   getShownItems: function(node) {
     if (node.id == 'IMPORT_PLUGIN_ROOT') {
-      return [];
+      return[];
     } else {
-      return [];
+      return[];
     }
   }
 });
