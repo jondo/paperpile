@@ -943,3 +943,91 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Mon Dec 20 19:59:11 2010: C<Module> L<Test::Class|Test::Class>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.36>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Mon Dec 20 21:44:29 2010: C<Module> L<XML::Generator|XML::Generator>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Mon Dec 20 21:44:51 2010: C<Module> L<Algorithm::Diff|Algorithm::Diff>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.1902>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Mon Dec 20 21:45:11 2010: C<Module> L<Class::Field|Class::Field>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.15>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
