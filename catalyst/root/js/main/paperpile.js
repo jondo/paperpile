@@ -234,10 +234,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   },
 
-  getZoom: function() {
-    return parseFloat(Ext.getBody().getStyle('zoom'));
-  },
-
   updateSplitFraction: function(newFraction) {
     this.splitFraction = newFraction;
     Paperpile.main.setSetting('split_fraction_tree', this.splitFraction, true);
@@ -292,29 +288,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.tabs.setPosition(w1, 0);
   },
 
-  onZoomChange: function(zoomLevel) {
-    var oldZoomLevel = this.getZoom();
-
-    if (oldZoomLevel == zoomLevel) {
-      return;
-    }
-    var zoomRatio = zoomLevel / oldZoomLevel;
-
-    Ext.getBody().setStyle('zoom', zoomLevel);
-    // Now resize the body element.
-    this.resizeWithZoom(this.getWidth(), this.getHeight());
-  },
-
-  resizeWithZoom: function(w, h) {
-    var item = this.items.get(0);
-    var zoom = Ext.getBody().getStyle('zoom');
-    item.setSize(w / zoom, h / zoom);
-  },
-
-  fireResize: function(w, h) {
-    Paperpile.Viewport.superclass.fireResize.call(this, w, h);
-    this.resizeWithZoom(w, h);
-  },
 
   afterLoadSettings: function() {
 
@@ -325,17 +298,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       grid.getPluginPanel().resizeToSplitFraction();
     }
 
-    /*
-    var zoom = this.getSetting('zoom_level');
-	if (zoom === undefined) {
-	  zoom = 1
-	}
-	zoom = zoom.replace("%","");
-	if (zoom > 2) {
-	  zoom = zoom / 100;
-	}
-	this.onZoomChange(zoom);
-*/
   },
 
   loadKeys: function() {

@@ -136,27 +136,6 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       },
       this);
 
-    /*
-    this.combos['zoom_level'] = new Ext.form.ComboBox({
-      renderTo: 'zoom_level_combo',
-      editable: false,
-      forceSelection: true,
-      triggerAction: 'all',
-      disableKeyFilter: true,
-      fieldLabel: 'Type',
-      mode: 'local',
-      width: 60,
-      store: ['75%','100%','110%','125%'],
-      value: Paperpile.main.globalSettings['zoom_level'],
-    });
-
-    this.combos['zoom_level'].on('select',
-      function() {
-        this.onSettingChange();
-      },
-      this);
-    */
-
     this.proxyCheckbox = new Ext.form.Checkbox({
       renderTo: 'proxy_checkbox'
     });
