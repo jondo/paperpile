@@ -2565,6 +2565,8 @@ Paperpile.log("debug 5");
   destroy: function() {
     this.destroyedFlag = true;
 
+    this.searchBar.destroy();
+
     this.urgentTasks = [];
     this.normalTasks = [];
     this.backgroundTasks = [];
