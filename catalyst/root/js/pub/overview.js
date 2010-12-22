@@ -334,6 +334,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     var el = e.getTarget();
 
     switch (el.getAttribute('action')) {
+    case 'view-online':
+      this.getGrid().handleViewOnline();
+      break;
     case 'email':
       this.getGrid().handleEmail();
       break;

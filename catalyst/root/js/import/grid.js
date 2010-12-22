@@ -1198,22 +1198,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     var linkOuts = [
       '<tpl if="trashed==0">',
-      '  <tpl if="linkout || doi">',
-      '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
-      '  </tpl>',
-      '  <tpl if="!linkout && !doi">',
-      '    <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
-      '  </tpl>',
+      '  <div class="pp-box pp-box-side-panel pp-box-bottom pp-box-style1">',
       '  <ul>',
-      '  <tpl if="doi">',
-      '    <li><a href="#" onClick="Paperpile.utils.openURL(\'http://dx.doi.org/{doi}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></li>',
-      '   </tpl>',
-      '   <tpl if="!doi && linkout">',
-      '     <li><a href="#" onClick="Paperpile.utils.openURL(\'{linkout}\');" class="pp-textlink pp-action pp-action-go">Go to Publisher\'s site</a></li>',
-      '   </tpl>',
-      '   <tpl if="!linkout && !doi">',
-      '   <li><a class="pp-action-inactive pp-action-go-inactive">No link to publisher available</a></li>',
-      '   </tpl>',
+      '    <tpl if="doi || linkout || url || eprint || arxivid">',
+      '      <li><a class="pp-textlink pp-action pp-action-go" action="view-online">View Online</a></li>',
+      '    </tpl>',
+      '    <tpl if="!doi && !linkout && !url && !eprint && !arxivid">',
+      '      <li><a class="pp-action-inactive pp-action-go-inactive">No online link available</a></li>',
+      '    </tpl>',
       '   <li><a href="#" action="email" class="pp-textlink pp-action pp-action-email">E-mail Reference</a></li>',
       '  </ul>',
       '  </div>',
@@ -1804,6 +1796,26 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       },
       scope: this
     });
+  },
+
+  handleViewOnline: function() {
+    // Chooses which data source to use to link to the article online.
+    var selection = this.getSingleSelectionRecord();
+
+      var url;
+      var data = selection.data;
+      if (data.pmid) {
+	  url = 'http://www.ncbi.nlm.nih.gov/pubmed/'+data.pmid;
+      } else if (data.doi) {
+	  url = 'http://dx.doi.org/'+data.doi;
+      } else if (data.eprint) {
+	  url = data.eprint;
+      } else if (data.arxivid) {
+	  url = 'http://arxiv.org/abs/'+data.arxivid;
+      } else if (data.url) {
+	  url = data.url;
+      }
+      Paperpile.utils.openURL(url);
   },
 
   handleEmail: function() {
