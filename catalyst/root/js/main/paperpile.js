@@ -288,6 +288,27 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.tabs.setPosition(w1, 0);
   },
 
+  onFontSizeChange: function(fontSize) {
+    fontSize = fontSize.toLowerCase();
+
+    if (fontSize == 'normal') {
+      this.loadCssFile('/css/normal-fonts.css');
+    } else if (fontSize == 'large') {
+      this.loadCssFile('/css/large-fonts.css');
+    } else if (fontSize == 'x-large') {
+      this.loadCssFile('/css/x-large-fonts.css');
+    }
+  },
+
+  loadCssFile: function(filename) {
+    var link = document.createElement("link");
+    link.setAttribute("rel", "stylesheet");
+    link.setAttribute("type", "text/css");
+    link.setAttribute("href", filename);
+    if (typeof link != 'undefined') {
+      document.getElementsByTagName("head")[0].appendChild(link);
+    }
+  },
 
   afterLoadSettings: function() {
 
@@ -296,6 +317,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var grid = this.getCurrentGrid();
     if (grid) {
       grid.getPluginPanel().resizeToSplitFraction();
+    }
+
+    var fontSize = this.getSetting('font_size');
+    if (fontSize) {
+	this.onFontSizeChange(fontSize);
     }
 
   },

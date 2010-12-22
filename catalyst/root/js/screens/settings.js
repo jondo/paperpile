@@ -136,6 +136,25 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       },
       this);
 
+    this.combos['font_size'] = new Ext.form.ComboBox({
+      renderTo: 'font_size_combo',
+      editable: false,
+      forceSelection: true,
+      triggerAction: 'all',
+      disableKeyFilter: true,
+      fieldLabel: 'Type',
+      mode: 'local',
+      width: 120,
+      store: ['Normal', 'Large', 'X-Large'],
+      value: Paperpile.main.globalSettings['font_size'],
+    });
+
+    this.combos['font_size'].on('select',
+      function() {
+        this.onSettingChange();
+      },
+      this);
+
     this.proxyCheckbox = new Ext.form.Checkbox({
       renderTo: 'proxy_checkbox'
     });
@@ -263,10 +282,10 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
     });
 
     new Ext.ToolTip({
-      target: 'settings-zoom-level-tooltip',
+      target: 'settings-font-size-tooltip',
       minWidth: 50,
       maxWidth: 300,
-      html: 'The zoom level of the user interface. Increase the value if text appears too small.',
+      html: 'The font size of the user interface. Increase the value if text appears too small.',
       anchor: 'left',
       showDelay: 0,
       hideDelay: 0
@@ -327,7 +346,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       pager_limit: this.combos['pager_limit'].getValue(),
       sort_field: this.combos['sort_field'].getValue(),
       check_updates: this.checkboxes['check_updates'].getValue() ? 1 : 0,
-      //      zoom_level: this.combos['zoom_level'].getValue(),
+      font_size: this.combos['font_size'].getValue(),
       search_seq: this.pluginOrderPanel.getValue()
     };
 
@@ -358,9 +377,9 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         }
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
 
-        if (this.combos['zoom_level']) {
-          var new_zoom_level = this.combos['zoom_level'].getValue();
-          Paperpile.main.globalSettings['zoom_level'] = new_zoom_level;
+        if (this.combos['font_size']) {
+          var new_font_size = this.combos['font_size'].getValue();
+          Paperpile.main.globalSettings['font_size'] = new_font_size;
           Paperpile.main.afterLoadSettings();
         }
 

@@ -13,6 +13,10 @@
     </table>
     <h4>References per page <span id="settings-pager-limit-tooltip" class="pp-tooltip-link">?</span></h4>
     <div class="pp-settings-textfield" id="pager_limit_combo"></div>
+    
+    <h4>User interface font size <span id="settings-font-size-tooltip" class="pp-tooltip-link">?</span></h4>
+    <div class="pp-settings-textfield" id="font_size_combo"></div>
+
     <h4>Sort references by <span id="settings-sort-field-tooltip" class="pp-tooltip-link">?</span></h4>
     <div class="pp-settings-textfield" id="sort_field_combo"></div>
   </div>
