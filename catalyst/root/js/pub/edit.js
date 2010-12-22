@@ -373,6 +373,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
       input.on('focus', this.onFocus, this);
       input.on('blur', this.onBlur, this);
+      input.on('change', this.onChange, this);
 
       input.render(field + '-field', 0);
 
@@ -624,6 +625,10 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     var f = field.el.findParent('td.field', 3, true);
     f.removeClass("active");
     f.prev().removeClass("active");
+  },
+
+  onChange: function(field) {
+    this.data[field.name] = field.getValue();  
   },
 
   // Generic handler for click events. Depending on the id of the
