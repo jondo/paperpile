@@ -1220,9 +1220,10 @@ Paperpile.log("debug 5");
       var imgEl = this.fly("img." + pageIndex);
       if (imgEl != null) {
         var desiredUrl = this.desiredUrls[pageIndex];
+	var src = decodeURIComponent(img.src);
         //        this.log(img.src);
         //        this.log(desiredUrl);
-        if (img.src.indexOf(desiredUrl) > -1) {
+        if (src.indexOf(desiredUrl) > -1) {
           imgEl.set({
             src: img.src
           });
@@ -1235,7 +1236,6 @@ Paperpile.log("debug 5");
   },
 
   onSearch: function(e) {
-    this.log(e);
   },
 
   clearSearch: function() {
