@@ -157,13 +157,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'EXPORT'
       }),
 
-      'FORCE_SELECT_ALL': new Ext.Action({
-        text: 'Select all',
-        handler: this.forceSelectAll,
-        scope: this,
-        itemId: 'FORCE_SELECT_ALL'
-      }),
-
       'SELECT_ALL': new Ext.Action({
         text: 'Select all',
         handler: function() {
@@ -462,12 +455,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     },
     this);
 
-    this.mon(this.getSelectionModel(), 'pageselected', function() {
-      this.onPageSelected()
-    },
-    this);
     this.mon(this.getSelectionModel(), 'allselected', function() {
-      this.onAllSelected()
+      this.onAllSelected();
     },
     this);
 
@@ -551,32 +540,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       this.locateInLibrary();
       break;
     }
-  },
-
-  onPageSelected: function() {
-    var num = this.getSelectionModel().getCount();
-    var all = this.getStore().getTotalCount();
-    if (all <= num) {
-      return;
-    }
-    Paperpile.status.updateMsg({
-      type: 'info',
-      msg: 'All ' + num + ' references on this page are selected.',
-      action1: 'Select all ' + all + ' references.',
-      callback: function() {
-        this.getSelectionModel().selectAll.defer(20, this.getSelectionModel());
-      },
-      scope: this
-    });
-
-    // Create a callback to clear this message if the selection changes.
-    var messageNum = Paperpile.status.getMessageNumber();
-    var clearMsg = function() {
-      Paperpile.status.clearMessageNumber(messageNum);
-    };
-    this.mon(this.getSelectionModel(), 'afterselectionchange', clearMsg, this, {
-      single: true
-    });
   },
 
   onAllSelected: function() {
@@ -1480,9 +1443,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var selection = this.getSingleSelectionRecord();
 
     this.actions['SELECT_ALL'].setText('Select All');
-    this.actions['FORCE_SELECT_ALL'].setText('Select All (' + this.getStore().getTotalCount() + ')');
     if (this.getSelectionModel().isAllSelected() || this.getTotalCount() == 0) {
-      this.actions['FORCE_SELECT_ALL'].disable();
       this.actions['SELECT_ALL'].disable();
     }
 
@@ -2181,14 +2142,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
   },
 
-  forceSelectAll: function() {
-    // Force immediate selection of ALL items.
-    this.getSelectionModel().selectAll(true);
-  },
-
   selectAll: function() {
-    // First select page, then all.
-    this.getSelectionModel().selectAll(false);
+    this.getSelectionModel().selectAll(true);
   },
 
   setSearchQuery: function() {
