@@ -42,7 +42,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     case 'pdf-download-error-report':
       var string = Paperpile.utils.hashToString(data);
       var job = Paperpile.utils.hashToString(data._search_job);
-      data.reportString = string+"\n\n"+job;
+      data.reportString = string + "\n\n" + job;
       Paperpile.main.reportPdfDownloadError(data);
       break;
     case 'pdf-download-open-url':
@@ -50,7 +50,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       break;
     case 'pdf-view':
       var path;
-      if (data._pdf_tmp){
+      if (data._pdf_tmp) {
         path = data._pdf_tmp;
       } else {
         path = data.pdf;
@@ -107,7 +107,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     var tbar = new Ext.Toolbar({
       itemId: 'toolbar'
     });
-    tbar.insert(0, this.actions['REMOVE']);
+    tbar.insert(0, this.actions['CANCEL']);
     tbar.insert(0, this.actions['RETRY']);
     tbar.insert(0, this.actions['TB_FILL']);
 
@@ -130,6 +130,17 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       },
       this);
     }
+
+    if (sel.length == 1) {
+      var data = sel[0].data;
+      if (data.status === 'DONE' || data.status === 'ERROR') {
+        this.actions['CANCEL'].disable();
+      } else {
+        this.actions['RETRY'].disable();
+      }
+
+    }
+
   },
 
   renderData: function(value, meta, record) {
@@ -189,7 +200,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
         scope: this,
         iconCls: 'pp-icon-retry'
       }),
-      'REMOVE': new Ext.Action({
+      'CANCEL': new Ext.Action({
         text: 'Cancel Tasks',
         tooltip: 'Cancel selected tasks',
         handler: function() {
@@ -330,7 +341,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     this.getStore().load();
 
     this.on('afterrender', function() {
-      this.mon(this.getSelectionModel(),'afterselectionchange', this.selChanged, this);
+      this.mon(this.getSelectionModel(), 'afterselectionchange', this.selChanged, this);
       this.selChanged();
     },
     this);
