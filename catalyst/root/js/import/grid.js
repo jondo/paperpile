@@ -450,7 +450,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
     this.mon(this.getStore(), 'load', this.onStoreLoad, this);
     this.mon(this.getStore(), 'loadexception', function(exception, options, response, error) {
-      Paperpile.main.onError(response,options);
+      Paperpile.main.onError(response, options);
     },
     this);
 
@@ -622,20 +622,25 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   onNodeOver: function(nodeData, source, e, data) {
+    var dragAllowed = true;
+
     if (data.grid) {
       e.cancel = true;
+      dragAllowed = false;
     } else if (data.node) {
       e.cancel = false;
+      dragAllowed = true;
     }
 
+    dragAllowed = this.updateDragStatus(nodeData, source, e, data);
+
     var retVal = '';
-    if (e.cancel) {
+    if (!dragAllowed) {
       retVal = Ext.dd.DropZone.prototype.dropNotAllowed;
     } else {
       retVal = Ext.dd.DropZone.prototype.dropAllowed;
     }
 
-    this.updateDragStatus(nodeData, source, e, data);
     return retVal;
   },
 
@@ -661,9 +666,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (source.dragData.node) {
       var myType = source.dragData.node.type;
       if (myType == 'LABEL') {
+        return true;
         //proxy.updateTip('Apply label to reference');
       } else if (myType == 'FOLDER') {
+        return true;
         //proxy.updateTip('Place reference in folder');
+      } else {
+        return false;
       }
     } else if (source.dragData.grid) {
       // We should never reach here -- no within-grid drag and drop!
@@ -1802,20 +1811,20 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     // Chooses which data source to use to link to the article online.
     var selection = this.getSingleSelectionRecord();
 
-      var url;
-      var data = selection.data;
-      if (data.pmid) {
-	  url = 'http://www.ncbi.nlm.nih.gov/pubmed/'+data.pmid;
-      } else if (data.doi) {
-	  url = 'http://dx.doi.org/'+data.doi;
-      } else if (data.eprint) {
-	  url = data.eprint;
-      } else if (data.arxivid) {
-	  url = 'http://arxiv.org/abs/'+data.arxivid;
-      } else if (data.url) {
-	  url = data.url;
-      }
-      Paperpile.utils.openURL(url);
+    var url;
+    var data = selection.data;
+    if (data.pmid) {
+      url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + data.pmid;
+    } else if (data.doi) {
+      url = 'http://dx.doi.org/' + data.doi;
+    } else if (data.eprint) {
+      url = data.eprint;
+    } else if (data.arxivid) {
+      url = 'http://arxiv.org/abs/' + data.arxivid;
+    } else if (data.url) {
+      url = data.url;
+    }
+    Paperpile.utils.openURL(url);
   },
 
   handleEmail: function() {
