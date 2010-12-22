@@ -47,6 +47,10 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         // restoring the scroll state.
         grid.getView().focusEl.focus();
 
+	// Also update the view of the gridpanel of the now-focused tab.
+	// See bug #739.
+	grid.getPluginPanel().updateView();
+
         // This needs to come last.
         tab.restoreScrollState();
       }
