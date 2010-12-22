@@ -31,16 +31,21 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
     var rootEl = Ext.get(this.div_id);
     var oldContent = Ext.select("#" + this.div_id + " > *");
 
+    if (this.progressBar) {
+      this.progressBar.destroy();
+      this.progressBar = null;
+    }
+
     if (data.pdf != '') {
       var el = [
         '    <ul>',
         '      <li id="open-pdf{id}">',
         '        <a href="#" class="pp-textlink pp-action pp-action-open-pdf" action="open-pdf">View PDF</a>',
         '        &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a>',
-	'      </li>',
+        '      </li>',
         '      <li id="delete-pdf-{id}">',
-	'        <a href="#" class="pp-textlink pp-action pp-action-delete-pdf" action="delete-pdf">Delete PDF</a>',
-	'      </li>',
+        '        <a href="#" class="pp-textlink pp-action pp-action-delete-pdf" action="delete-pdf">Delete PDF</a>',
+        '      </li>',
         '    </ul>'];
 
       if (!data._imported) {
@@ -57,7 +62,6 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
       }
 
       Ext.DomHelper.overwrite(rootEl, el);
-      this.progressBar = null;
     } else if (data._search_job) {
       if (data._search_job.error) {
         var el = [
@@ -65,28 +69,7 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
           '<p><a href="#" class="pp-textlink" action="report-download-error">Get this fixed</a> | <a href="#" class="pp-textlink" action="clear-download">Clear</a></p>',
           '</div>'];
         Ext.DomHelper.overwrite(rootEl, el);
-        this.progressBar = null;
       } else {
-
-        if (!this.progressBar) {
-          var el = [
-            '<table class="pp-control-container">',
-            '  <tr><td id ="dl-progress-' + this.div_id + '"></td><td><a href="#" action="cancel-download" class="pp-progress-cancel" ext:qtip="Cancel">&nbsp;</a></td></tr>',
-            '</table>'];
-
-          Ext.DomHelper.overwrite(rootEl, el);
-
-          this.progressBar = new Ext.ProgressBar({
-            text: data._search_job.msg || "",
-            width: 200,
-            renderTo: 'dl-progress-' + this.div_id
-          });
-
-          this.progressBar.wait({
-            interval: 100,
-            text: data._search_job.msg
-          });
-        }
 
         var fraction = 0;
         var downloaded = data._search_job.downloaded;
@@ -97,14 +80,45 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
         }
 
         if (fraction) {
-          if (this.progressBar.isWaiting()) {
-            this.progressBar.reset();
-          }
+          var el = [
+            '<table class="pp-control-container">',
+            '  <tr><td id ="dl-progress-' + this.div_id + '"></td><td width="10%">',
+            '<a href="#" action="cancel-download" class="pp-progress-cancel" ext:qtip="Cancel">&nbsp;</a>',
+            '</td></tr>',
+            '</table>'];
+          Ext.DomHelper.overwrite(rootEl, el);
+
+          this.progressBar = new Ext.ProgressBar({
+            text: data._search_job.msg || "",
+            width: "90%",
+            renderTo: 'dl-progress-' + this.div_id
+          });
+
           this.progressBar.updateProgress(fraction, downloaded + " / " + size);
           this.progressBar.updateText(Ext.util.Format.fileSize(downloaded) + ' of ' + Ext.util.Format.fileSize(size));
         } else {
-          var text = data._search_job.msg;
-          this.progressBar.updateText(data._search_job.msg);
+          var msg = data._search_job.msg;
+
+          if (data._search_job.start) {
+            var dateObj = new Date;
+            var time = dateObj.getTime() / 1000;
+            var timeDiff = time - data._search_job.start;
+
+            if (timeDiff > 8) {
+              msg = "Still searching...";
+            }
+          }
+
+          var el = [
+            '<table class="pp-control-container">',
+            '  <tr><td>',
+            '<span class="pp-icon-running">' + msg + '</span>',
+            '</td><td width="10%">',
+            '<a href="#" action="cancel-download" class="pp-progress-cancel" ext:qtip="Cancel">&nbsp;</a>',
+            '</td></tr>',
+            '</table>'];
+
+          Ext.DomHelper.overwrite(rootEl, el);
         }
       }
     } else {
@@ -123,7 +137,6 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
       }
 
       Ext.DomHelper.overwrite(rootEl, el);
-      this.progressBar = null;
     }
   },
 

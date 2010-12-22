@@ -67,6 +67,7 @@ has 'message' => ( is => 'rw' );  # Long-winded progress message.
 has 'info' => ( is => 'rw', isa => 'HashRef' );
 
 # Time (in seconds) that was used to finish a job
+has 'start' => ( is => 'rw', isa => 'Int' );
 has 'duration' => ( is => 'rw', isa => 'Int' );
 
 # This field serves as way to send interrupts to a running job. If set
@@ -100,6 +101,7 @@ sub BUILD {
     $self->info( { msg => $self->noun . " waiting..." } );
     $self->error('');
     $self->duration(0);
+    $self->start(0);
 
     my $file = File::Spec->catfile( Paperpile::Utils->get_tmp_dir(), 'queue', $self->id );
     $self->_file($file);
@@ -272,13 +274,12 @@ sub run {
 
     close(STDOUT);
 
+    my $start_time = time;
+    $self->start($start_time);
+
     $self->update_status('RUNNING');
 
-    my $start_time = time;
-
     eval { $self->_do_work; };
-
-    my $end_time = time;
 
     # Make sure that each job takes at least 1 second to be sent once
     # as "running" to frontend which is necessary to get updated
@@ -639,7 +640,7 @@ sub _download {
 
   print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
-  $self->update_info( 'msg', "Downloading PDF..." );
+#  $self->update_info( 'msg', "Downloading PDF..." );
 
   my $file =
     File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->guid . ".pdf" );

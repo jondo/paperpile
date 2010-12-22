@@ -480,6 +480,7 @@ a.pp-progress-cancel {
     background: transparent url('/images/icons/cancel_bw.png') no-repeat 0px;
     width:20px;
     display:block;
+    float:right;
     text-decoration:none;
 }
 
@@ -1117,6 +1118,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background-image: url('/images/icons/console.png')!important;
 }
 
+.pp-icon-running{
+    padding: 2px 2px 2px 22px;
+    background: transparent url('/images/icons/job-running.gif') no-repeat !important;
+}
 
 .pp-icon-feed{
     background: transparent url('/images/icons/feed.png') no-repeat !important;
