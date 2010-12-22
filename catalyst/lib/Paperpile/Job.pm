@@ -281,6 +281,8 @@ sub run {
 
     eval { $self->_do_work; };
 
+    my $end_time = time;
+
     # Make sure that each job takes at least 1 second to be sent once
     # as "running" to frontend which is necessary to get updated
     # correctly. Clearly not optimal but works for now...
