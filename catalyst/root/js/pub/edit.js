@@ -138,8 +138,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         global = this.data;
         this.initForm(this.data['pubtype']);
 
-
-        if (this.autoComplete){
+        if (this.autoComplete) {
           this.onLookup();
         }
 
@@ -198,11 +197,10 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     this.inputs['pubtype'] = cb;
 
-      cb.on('focus', this.onFocus, this);
-      cb.on('blur', this.onBlur, this);
-    if
-      (Ext.get('pdf-view-button')) {
-      this.mon(Ext.get('pdf-view-button'),'click', function() {
+    cb.on('focus', this.onFocus, this);
+    cb.on('blur', this.onBlur, this);
+    if (Ext.get('pdf-view-button')) {
+      this.mon(Ext.get('pdf-view-button'), 'click', function() {
         var pdf = this.data.pdf_name;
         var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
         Paperpile.utils.openFile(path);
@@ -237,7 +235,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     this.updateLookupButton();
 
-    this.mon(Ext.get('form-table'),'click', this.onClick, this);
+    this.mon(Ext.get('form-table'), 'click', this.onClick, this);
 
   },
 
@@ -628,7 +626,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
   },
 
   onChange: function(field) {
-    this.data[field.name] = field.getValue();  
+    this.data[field.name] = field.getValue();
   },
 
   // Generic handler for click events. Depending on the id of the
