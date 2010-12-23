@@ -125,10 +125,6 @@ td.pp-stats-number
   font-size: 32px;
 }
 
-.pp-patterns input[type="text"]
-{
-  line-height: 16px;
-}
 
 /*
  * LINE HEIGHTS AND HEIGHTS.
@@ -143,7 +139,12 @@ td.pp-stats-number
 .ext-ie6 .x-form-text, .ext-ie7 .x-form-text
  {
   height:22px;
-  line-height:18px;
+  line-height:16px;
+}
+
+.x-form-field-wrap .x-form-trigger{
+  width:17px;
+  height:21px;
 }
 
 .ext-strict .x-form-text {
@@ -153,23 +154,19 @@ td.pp-stats-number
 /* select boxes */
 .x-form-select-one {
   height: 20px;
-  line-height: 18px;
+  line-height: 16px;
 }
 
 .x-editor .x-form-checkbox {
   height: 13px;
 }
 
-.x-form-field-wrap .x-form-trigger{
-  width:17px;
-  height:21px;
-}
 
 .x-small-editor .x-form-text,
 .ext-ie6 .x-small-editor .x-form-text, .ext-ie7 .x-small-editor .x-form-text
 {
   height:20px;
-  line-height:16px;
+  line-height:14px;
 }
 
 .ext-strict .x-small-editor .x-form-text {
@@ -220,7 +217,7 @@ td.pp-stats-number
 }
 
 .x-menu-item-icon {
-  height: 12px;
+  height: 16px;
 }
 
 .x-panel-header {
@@ -254,7 +251,7 @@ div.pp-grid-sort-container,
 }
 
 .pp-label-control .x-form-trigger {
-    height: 21px;
+    height: 17px;
 }
 
 .pp-label-grid {

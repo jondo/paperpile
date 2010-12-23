@@ -156,7 +156,7 @@ td.pp-stats-number
 }
 
 .x-form-field-wrap .x-form-trigger{
-  width:19px;
+  width:17px; /* This needs to stay constant, no matter what the font size. */
   height:23px;
 }
 
