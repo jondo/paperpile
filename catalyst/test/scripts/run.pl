@@ -1,5 +1,7 @@
 # Call via ../run.pl to run with the right perl interpreter
 
+BEGIN { $ENV{CATALYST_DEBUG} = 0 }
+
 use TAP::Harness;
 
 my %args = (

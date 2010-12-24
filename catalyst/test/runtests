@@ -18,4 +18,4 @@ if ( $arch_string =~ /(darwin|osx)/i ) {
 $ENV{PERL5LIB}=undef;
 $ENV{BUILD_PLATFORM}=$platform;
 
-exec("../perl5/$platform/bin/paperperl t/run.pl " . join(" ",@ARGV));
+exec("../perl5/$platform/bin/paperperl scripts/run.pl " . join(" ",@ARGV));
