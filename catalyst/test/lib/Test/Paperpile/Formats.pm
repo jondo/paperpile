@@ -20,21 +20,19 @@ sub startup : Tests(startup => 1) {
 
 sub test_read {
 
-  my ( $self, $file ) = @_;
+  my ( $self, $infile, $outfile, $settings ) = @_;
 
-  my @observed = @{$self->class->new( file => "$file.in" )->read};
-  my @expected = YAML::LoadFile("$file.out");
+  my @observed = @{ $self->class->new( file => "$infile", settings => $settings )->read };
+  my @expected = YAML::LoadFile("$outfile");
 
-  my $msg = $file;
-  $msg=~s!data/Formats/!!;
+  my $msg = $infile;
+  $msg =~ s!data/Formats/!!;
 
-  is($#observed, $#expected, "$msg: number of read items");
+  is( $#observed, $#expected, "$msg: number of read items" );
 
-  foreach my $i (0 .. $#expected){
-    $self->test_fields($observed[$i],$expected[$i], $msg);
+  foreach my $i ( 0 .. $#expected ) {
+    $self->test_fields( $observed[$i], $expected[$i], $msg );
   }
-
-
 }
 
 1;

@@ -2,31 +2,36 @@
 
 BEGIN { $ENV{CATALYST_DEBUG} = 0 }
 
+use strict;
 use TAP::Harness;
 use Getopt::Long;
 use File::Basename;
 
-my @all_tests = ('basic','metacrawler','pdfcrawler','import_plugins');
+my @all_tests = ( 'basic', 'metacrawler', 'pdfcrawler', 'import_plugins' );
 
 my %test_names = (
-  basic       => 'Basic tests',
-  metacrawler => 'Metadata crawler',
-  pdfcrawler  => 'PDF file crawler',
+  basic          => 'Basic tests',
+  metacrawler    => 'Metadata crawler',
+  pdfcrawler     => 'PDF file crawler',
   import_plugins => 'Import plugins',
 );
 
-my $verbose = 1;
-my $color = 1;
+my $verbosity = 1;
+my $nocolor     = 0;
+my $junit     = 0;
 
-GetOptions ("color" => \$color,
-            "verbose" => \$verbose);
+GetOptions(
+  "nocolor"     => \$nocolor,
+  "verbosity:i" => \$verbosity,
+  "junit"       => \$junit
+);
 
 my @tests;
 
-foreach my $file (@ARGV){
-  $test = basename($file,'.t');
+foreach my $file (@ARGV) {
+  my $test = basename( $file, '.t' );
 
-  if ((!exists $test_names{$test}) || (!-e $file)){
+  if ( ( !exists $test_names{$test} ) || ( !-e $file ) ) {
     usage();
     exit(1);
   }
@@ -35,17 +40,17 @@ foreach my $file (@ARGV){
 }
 
 my %args = (
-  verbosity => 1,
-  lib       => ['lib'],
-  color     => 1,
-  #formatter_class => 'TAP::Formatter::JUnit',
+  verbosity       => $verbosity,
+  lib             => ['lib'],
+  color           => !$nocolor,
+  formatter_class => $junit ? 'TAP::Formatter::JUnit' : undef,
 );
 
 my $harness = TAP::Harness->new( \%args );
 
-@tests = ('basic') if (!@tests);
+@tests = ('basic') if ( !@tests );
 
-foreach my $test (@tests){
+foreach my $test (@tests) {
   $harness->runtests( [ "t/$test.t", $test_names{$test} ] );
 }
 
@@ -55,12 +60,12 @@ sub usage {
 
   print STDERR "\nAVAILABLE TESTS:\n";
 
-  foreach my $test (@all_tests){
-    $padded = sprintf("%-20s", "$test.t");
+  foreach my $test (@all_tests) {
+    my $padded = sprintf( "%-20s", "$test.t" );
     print STDERR "  $padded\t", $test_names{$test}, "\n";
 
   }
 
-  print STDERR "\nOPTIPONS:\n";
+  print STDERR "\nOPTIONS:\n";
 
 }

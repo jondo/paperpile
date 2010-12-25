@@ -11,27 +11,46 @@ sub class { 'Paperpile::Formats::Bibtex' }
 # Run once before all other tests
 sub startup : Tests(startup => 1) {
   my ($self) = @_;
+
+  $self->{settings} = {
+    import_strip_tex     => 1,
+    export_escape        => 1,
+    pretty_print         => 1,
+    use_quotes           => 0,
+    double_dash          => 1,
+    title_quote_complete => 0,
+    title_quote_smart    => 1,
+    title_quote          => [ 'DNA', 'RNA' ],
+    export_fields        => {
+      abstract    => 0,
+      affiliation => 0,
+      eprint      => 0,
+      issn        => 0,
+      isbn        => 0,
+      pmid        => 1,
+      lccn        => 0,
+      doi         => 1,
+      keywords    => 0
+    }
+  };
+
   use_ok $self->class;
+
 }
 
-# Add test functions functions here
+# Add test functions here
 
-sub misc : Tests(25){
+sub read : Tests(25){
 
   my ($self) = @_;
 
-  # Test xxx.in vs xxx.out. "xxx.in" is the BibTeX file while
-  # "xxx.out" is a YAML formatted files with the expected fields
+  #Test::More::note("Misc. BibTeX tests");
+  $self->test_read("data/Formats/Bibtex/read/misc.bib", "data/Formats/Bibtex/read/misc.out", $self->{settings});
 
-  diag("Misc. BibTeX tests");
-  $self->test_read("data/Formats/Bibtex/read/misc");
-
-  diag("BibTeX Publication types");
-  $self->test_read("data/Formats/Bibtex/read/pubtypes");
+  #note("BibTeX Publication types");
+  $self->test_read("data/Formats/Bibtex/read/pubtypes.bib","data/Formats/Bibtex/read/pubtypes.out", $self->{settings});
 
 }
-
-
 
 
 1;
