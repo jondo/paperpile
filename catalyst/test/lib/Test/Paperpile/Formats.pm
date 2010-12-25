@@ -25,10 +25,13 @@ sub test_read {
   my @observed = @{$self->class->new( file => "$file.in" )->read};
   my @expected = YAML::LoadFile("$file.out");
 
-  is($#observed, $#expected, "$file: number of read items");
+  my $msg = $file;
+  $msg=~s!data/Formats/!!;
+
+  is($#observed, $#expected, "$msg: number of read items");
 
   foreach my $i (0 .. $#expected){
-    $self->test_fields($observed[$i],$expected[$i], $file);
+    $self->test_fields($observed[$i],$expected[$i], $msg);
   }
 
 

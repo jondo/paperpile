@@ -28,6 +28,13 @@ sub test_fields {
   my ($self, $pub, $data, $msg) = @_;
 
   foreach my $key (keys %$data){
+    if ($key eq 'test_comment'){
+      $msg.=" (".$data->{test_comment}.")";
+      delete($data->{test_comment});
+    }
+  }
+
+  foreach my $key (keys %$data){
 
     my $action = 'IS';
 
