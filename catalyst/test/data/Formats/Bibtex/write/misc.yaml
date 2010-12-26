@@ -1,0 +1,37 @@
+---
+test_comment: "Some test for demonstrating purpose"
+pubtype: ARTICLE
+citekey: testkey
+title: Test title
+authors: 'Smith, D'
+journal: Nature
+volume: 100
+issue: 100
+test_expected: |
+  @ARTICLE{testkey,
+    title    = {Test title},
+    author   = {Smith, D},
+    journal  = {Nature},
+    volume   = {100},
+    issue    = {100}
+  }
+
+---
+test_comment: "Some test with setting"
+pubtype: ARTICLE
+citekey: testkey
+title: Test title
+authors: 'Smith, D'
+journal: Nature
+volume: 100
+issue: 100
+test_settings:
+  use_quotes: 1
+test_expected: |
+  @ARTICLE{testkey,
+    title    = "Test title",
+    author   = "Smith, D",
+    journal  = "Nature",
+    volume   = "100",
+    issue    = "100"
+  }

@@ -3,6 +3,8 @@ package Test::Paperpile::PdfCrawler;
 use strict;
 use Test::More;
 use Data::Dumper;
+use Paperpile;
+use Paperpile::Utils;
 use base 'Test::Paperpile';
 
 sub class { 'Paperpile::PdfCrawler' }

@@ -7,16 +7,19 @@ use TAP::Harness;
 use Getopt::Long;
 use File::Basename;
 
-## Define available tests here
+## Define available testsuites here
 
-my @all_tests = ( 'basic', 'metacrawler', 'pdfcrawler', 'import_plugins', 'cover' );
+my %suites = (
+  basic => {
+    name  => 'Basic tests',
+    files => ["t/basic.t","t/formats/bibtex.t"]
+  },
+  cover => {
+    name  => 'Coverate analysis',
+    files => ["t/cover.t"]
+  },
 
-my %test_names = (
-  basic          => 'Basic tests',
-  metacrawler    => 'Metadata crawler',
-  pdfcrawler     => 'PDF file crawler',
-  import_plugins => 'Import plugins',
-  cover          => 'Code coverage',
+
 );
 
 ## Handle command line options
@@ -31,23 +34,25 @@ GetOptions(
   "junit"       => \$junit
 );
 
-
 ## Collect tests from the rest of the command line
 
-my @tests;
+my ( @tests, @files );
 
 foreach my $file (@ARGV) {
-  my $test = basename( $file, '.t' );
 
-  if ( ( !exists $test_names{$test} ) || ( !-e $file ) ) {
-    usage();
-    exit(1);
+  if ( $file =~ /\.t$/ ) {
+    usage() if ( !-e $file );
+    push @files, $file;
+  } else {
+    if ( $suites{$file} ) {
+      push @files, @{ $suites{$file}->{files} };
+    } else {
+      usage();
+    }
   }
-
-  push @tests, $test;
 }
 
-@tests = ('basic') if ( !@tests );
+@tests = ('t/basic.t') if ( !@tests );
 
 ## Setup test harness
 
@@ -62,35 +67,38 @@ my $harness = TAP::Harness->new( \%args );
 
 ## Run tests
 
-my $cover=0;
+my $cover = 0;
 
-foreach my $test (@tests) {
+my @to_run;
 
-  $harness->runtests( [ "t/$test.t", $test_names{$test} ] );
-
-  $cover = 1 if $test eq 'cover';
-
+foreach my $file (@files) {
+  push @to_run, [$file, $file];
+  $cover = 1 if $file =~ /cover\.t/;
 }
 
+$harness->runtests( @to_run );
+
 ## Generate HTML coverage reports
-if ($cover){
+if ($cover) {
   my $platform = $ENV{PLATFORM};
   system("../perl5/$platform/bin/paperperl  ../perl5/$platform/bin/cover coverage");
 }
 
-
 sub usage {
 
-  print STDERR "\nUSAGE: runtests [OPTIONS] suite1.t suite2.t ...\n";
+  print STDERR "\nUSAGE: runtests [OPTIONS] suite1 suite2 ...\n";
+  print STDERR "       runtests [OPTIONS] t/file1.t t/file2.t ...\n";
 
   print STDERR "\nAVAILABLE TESTS:\n";
 
-  foreach my $test (@all_tests) {
-    my $padded = sprintf( "%-20s", "$test.t" );
-    print STDERR "  $padded\t", $test_names{$test}, "\n";
+  foreach my $test ( keys %suites ) {
 
+    my $padded = sprintf( "%-20s", $test );
+    print STDERR "  $padded\t", $suites{$test}->{name}, "\n";
   }
 
   print STDERR "\nOPTIONS:\n";
+
+  exit(1);
 
 }

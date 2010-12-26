@@ -40,17 +40,49 @@ sub startup : Tests(startup => 1) {
 
 # Add test functions here
 
-sub read : Tests(25){
+sub read : Tests(29) {
 
   my ($self) = @_;
 
-  #Test::More::note("Misc. BibTeX tests");
-  $self->test_read("data/Formats/Bibtex/read/misc.bib", "data/Formats/Bibtex/read/misc.out", $self->{settings});
+  $self->test_read(
+    "Misc. test",
+    "data/Formats/Bibtex/read/misc.bib",
+    "data/Formats/Bibtex/read/misc.out",
+    $self->{settings}
+  );
 
-  #note("BibTeX Publication types");
-  $self->test_read("data/Formats/Bibtex/read/pubtypes.bib","data/Formats/Bibtex/read/pubtypes.out", $self->{settings});
+  $self->test_read(
+    "Publication types",
+    "data/Formats/Bibtex/read/pubtypes.bib",
+    "data/Formats/Bibtex/read/pubtypes.out",
+    $self->{settings}
+  );
+
+  $self->{settings}->{import_strip_tex} = 1;
+  $self->test_read(
+    "Strip TeX",
+    "data/Formats/Bibtex/read/latex.bib",
+    "data/Formats/Bibtex/read/strip_latex.out",
+    $self->{settings}
+  );
+
+  $self->{settings}->{import_strip_tex} = 0;
+  $self->test_read(
+    "Preserve TeX",
+    "data/Formats/Bibtex/read/latex.bib",
+    "data/Formats/Bibtex/read/no_strip_latex.out",
+    $self->{settings}
+  );
 
 }
 
+
+sub write : Tests(2) {
+
+  my ($self) = @_;
+
+  $self->test_write( "Misc", "data/Formats/Bibtex/write/misc.yaml", $self->{settings} );
+
+}
 
 1;
