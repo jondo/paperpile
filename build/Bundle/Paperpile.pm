@@ -116,6 +116,9 @@ Archive::Zip
 IO::Socket::SSL
 Crypt::SSLeay
 Data::GUID
+Test::Class
+TAP::Harness
+TAP::Formatter::JUnit
 =head1 AUTHOR
 
 Stefan Washietl <wash@paperpile.org>

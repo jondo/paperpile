@@ -17,7 +17,7 @@
 
 
 
-package Paperpile::Crawler;
+package Paperpile::PdfCrawler;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Carp;

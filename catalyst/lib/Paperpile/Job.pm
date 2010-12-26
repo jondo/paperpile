@@ -25,7 +25,7 @@ use Paperpile::Utils;
 use Paperpile::Exceptions;
 use Paperpile::Queue;
 use Paperpile::Library::Publication;
-use Paperpile::Crawler;
+use Paperpile::PdfCrawler;
 use Paperpile::PdfExtract;
 
 use Data::Dumper;
@@ -609,7 +609,7 @@ sub _crawl {
 
   $self->update_info( 'msg', "Searching PDF..." );
 
-  my $crawler = Paperpile::Crawler->new;
+  my $crawler = Paperpile::PdfCrawler->new;
   $crawler->debug(1);
   $crawler->driver_file( Paperpile::Utils->path_to( 'data', 'pdf-crawler.xml' )->stringify );
   $crawler->load_driver();

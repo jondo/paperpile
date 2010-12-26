@@ -365,6 +365,7 @@ sub format_citation {
 
 }
 
+
 sub best_link {
   my $self = shift;
 
@@ -774,6 +775,7 @@ sub as_hash {
   return {%hash};
 
 }
+
 
 # Function: get_authors
 
