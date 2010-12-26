@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Wrapper script to ensure the t/run.pl is calles with the right perl executable
+# Wrapper script to ensure the scripts/run.pl is called with the right perl executable
 
 use Config;
 
@@ -16,6 +16,7 @@ if ( $arch_string =~ /(darwin|osx)/i ) {
 }
 
 $ENV{PERL5LIB}=undef;
-$ENV{BUILD_PLATFORM}=$platform;
+$ENV{PLATFORM}=$platform;
 
 exec("../perl5/$platform/bin/paperperl scripts/run.pl " . join(" ",@ARGV));
+

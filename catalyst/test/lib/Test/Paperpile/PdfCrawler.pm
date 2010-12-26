@@ -3,13 +3,10 @@ package Test::Paperpile::PdfCrawler;
 use strict;
 use Test::More;
 use Data::Dumper;
-
 use base 'Test::Paperpile';
 
-# The class being tested
 sub class { 'Paperpile::PdfCrawler' }
 
-# Run once before all other tests
 sub startup : Tests(startup => 2) {
   my ($self) = @_;
 
@@ -40,7 +37,7 @@ sub crawler : Tests(99) {
       diag($@) if ($@);
       ok( $file, "$site: getting pdf-url for $test" );
     SKIP: {
-        skip("No valid url found, not downloading PDF",1) if not defined $file;
+        skip( "No valid url found, not downloading PDF", 1 ) if not defined $file;
         is( $crawler->check_pdf($file), 1, "$site: checking if PDF" );
       }
       $test_no++;

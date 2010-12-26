@@ -7,17 +7,22 @@ use TAP::Harness;
 use Getopt::Long;
 use File::Basename;
 
-my @all_tests = ( 'basic', 'metacrawler', 'pdfcrawler', 'import_plugins' );
+## Define available tests here
+
+my @all_tests = ( 'basic', 'metacrawler', 'pdfcrawler', 'import_plugins', 'cover' );
 
 my %test_names = (
   basic          => 'Basic tests',
   metacrawler    => 'Metadata crawler',
   pdfcrawler     => 'PDF file crawler',
   import_plugins => 'Import plugins',
+  cover          => 'Code coverage',
 );
 
+## Handle command line options
+
 my $verbosity = 1;
-my $nocolor     = 0;
+my $nocolor   = 0;
 my $junit     = 0;
 
 GetOptions(
@@ -25,6 +30,9 @@ GetOptions(
   "verbosity:i" => \$verbosity,
   "junit"       => \$junit
 );
+
+
+## Collect tests from the rest of the command line
 
 my @tests;
 
@@ -39,6 +47,10 @@ foreach my $file (@ARGV) {
   push @tests, $test;
 }
 
+@tests = ('basic') if ( !@tests );
+
+## Setup test harness
+
 my %args = (
   verbosity       => $verbosity,
   lib             => ['lib'],
@@ -48,15 +60,28 @@ my %args = (
 
 my $harness = TAP::Harness->new( \%args );
 
-@tests = ('basic') if ( !@tests );
+## Run tests
+
+my $cover=0;
 
 foreach my $test (@tests) {
+
   $harness->runtests( [ "t/$test.t", $test_names{$test} ] );
+
+  $cover = 1 if $test eq 'cover';
+
 }
+
+## Generate HTML coverage reports
+if ($cover){
+  my $platform = $ENV{PLATFORM};
+  system("../perl5/$platform/bin/paperperl  ../perl5/$platform/bin/cover coverage");
+}
+
 
 sub usage {
 
-  print STDERR "\nUSAGE: runtests [OPTIONS] test1.t test2.t ...\n";
+  print STDERR "\nUSAGE: runtests [OPTIONS] suite1.t suite2.t ...\n";
 
   print STDERR "\nAVAILABLE TESTS:\n";
 
