@@ -401,9 +401,18 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       if (!Paperpile.utils.isAbsolute(path)) {
         path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
       }
+
+      var title = this.data.pdf_name;
+
+      // Don't show guids of temporary file names 
+      Paperpile.log(title);
+      if (title.match(/tmp.download..{32}\.pdf/)){
+        title = Ext.util.Format.ellipsis(this.data.title,25);
+      }
+
       Paperpile.main.tabs.newPdfTab({
         file: path,
-        title: this.data.pdf_name
+        title: title
       });
       Paperpile.main.inc_read_counter(this.data);
       break;
