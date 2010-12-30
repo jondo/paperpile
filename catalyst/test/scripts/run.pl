@@ -11,14 +11,17 @@ use File::Basename;
 
 my %suites = (
   basic => {
-    name  => 'Basic tests',
-    files => ["t/basic.t","t/formats/bibtex.t"]
+    name  => 'Basic backend unit and regression tests',
+    files => [ "t/basic.t", "t/formats/bibtex.t" ]
   },
   cover => {
-    name  => 'Coverate analysis',
+    name  => 'Coverage analysis (see coverage/coverage.html)',
     files => ["t/cover.t"]
   },
-
+  pdfcrawler => {
+    name  => 'PDF crawler',
+    files => ["t/pdfcrawler.t"]
+  },
 
 );
 
@@ -27,12 +30,16 @@ my %suites = (
 my $verbosity = 1;
 my $nocolor   = 0;
 my $junit     = 0;
+my $help      = 0;
 
 GetOptions(
   "nocolor"     => \$nocolor,
   "verbosity:i" => \$verbosity,
-  "junit"       => \$junit
+  "junit"       => \$junit,
+  "help"        => \$help
 );
+
+usage() if ( @ARGV == 0 || $help );
 
 ## Collect tests from the rest of the command line
 
@@ -72,11 +79,11 @@ my $cover = 0;
 my @to_run;
 
 foreach my $file (@files) {
-  push @to_run, [$file, $file];
+  push @to_run, [ $file, $file ];
   $cover = 1 if $file =~ /cover\.t/;
 }
 
-$harness->runtests( @to_run );
+$harness->runtests(@to_run);
 
 ## Generate HTML coverage reports
 if ($cover) {
@@ -89,7 +96,7 @@ sub usage {
   print STDERR "\nUSAGE: runtests [OPTIONS] suite1 suite2 ...\n";
   print STDERR "       runtests [OPTIONS] t/file1.t t/file2.t ...\n";
 
-  print STDERR "\nAVAILABLE TESTS:\n";
+  print STDERR "\nAVAILABLE TEST SUITES:\n";
 
   foreach my $test ( keys %suites ) {
 
@@ -98,6 +105,11 @@ sub usage {
   }
 
   print STDERR "\nOPTIONS:\n";
+
+  print STDERR "  --nocolor     Don't colorize outpout\n";
+  print STDERR "  --verbosity   Verbosity level (-3..1, see TAP::Harness)\n";
+  print STDERR "  --junit       JUnit formatted output\n\n";
+
 
   exit(1);
 
