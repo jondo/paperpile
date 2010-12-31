@@ -168,7 +168,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
   },
 
   cancelAll: function() {
-    this.queuePanel.cancelJobs('all');
+    this.queuePanel.cancelAllJobs();
   },
 
   onUpdate: function(data) {

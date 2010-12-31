@@ -87,6 +87,17 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
     });
   },
 
+  cancelAllJobs: function() {
+    Paperpile.Ajax({
+      url: '/ajax/queue/cancel_all_jobs',
+      success: function(response, opts) {
+        this.getGrid().getStore().reload();
+      },
+      scope: this
+    });
+  },
+
+
   retryJobs: function(selection) {
     if (!selection) {
       selection = this.queueList.getSelectedIds();

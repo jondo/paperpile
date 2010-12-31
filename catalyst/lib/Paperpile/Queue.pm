@@ -370,6 +370,39 @@ sub resume {
   $self->save;
 }
 
+sub cancel_all {
+  my $self = shift;
+
+  $self->dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+
+  my $sth = $self->dbh->prepare("SELECT jobid, status FROM Queue");
+
+  my ( $job_id, $status );
+
+  $sth->bind_columns( \$job_id, \$status );
+  $sth->execute;
+
+  while ( $sth->fetch ) {
+    my $job = Paperpile::Job->new( { id => $job_id } );
+
+    if ( $job->status eq 'RUNNING' ) {
+      $job->interrupt('CANCEL');
+    }
+
+    if ($job->status eq 'RUNNING' or $job->status eq 'PENDING'){
+      $job->error( $job->noun . ' canceled.' );
+      $job->status('ERROR');
+    }
+
+    $job->save;
+  }
+
+  $self->dbh->do("UPDATE Queue SET status='ERROR' WHERE (status='PENDING' OR status='RUNNING')");
+
+  $self->dbh->commit;
+
+}
+
 
 ## Clears queue completely
 
