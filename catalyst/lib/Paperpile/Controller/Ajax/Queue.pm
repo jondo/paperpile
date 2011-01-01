@@ -157,7 +157,6 @@ sub cancel_all_jobs : Local {
 }
 
 
-
 ## Cancel one or more jobs
 
 sub cancel_jobs : Local {
