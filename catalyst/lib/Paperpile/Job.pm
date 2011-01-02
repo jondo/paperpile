@@ -314,24 +314,28 @@ sub _do_work {
 
   my $self = shift;
 
-  $self->update_info('msg','Searching PDF');
-  sleep(2);
-  $self->update_info('msg','Starting download');
-  sleep(2);
-  $self->update_info('msg','Downloading');
-  $self->update_info( 'size', 1000 );
-  sleep(1);
-  $self->update_info( 'downloaded', 200 );
-  sleep(1);
-  $self->update_info( 'downloaded', 500 );
-  sleep(1);
-  $self->update_info( 'downloaded', 800 );
-  sleep(1);
-  $self->update_info( 'downloaded', 1000 );
-  sleep(1);
-  ExtractionError->throw("Some random error") if (rand(1) > 0.5);
-  $self->update_info('msg','File successfully downloaded.');
-  return;
+  if ( $self->type eq 'METADATA_UPDATE' ) {
+
+    $self->update_info( 'msg', 'Searching PDF' );
+    sleep(2);
+    $self->update_info( 'msg', 'Starting download' );
+    sleep(2);
+    $self->update_info( 'msg',  'Downloading' );
+    $self->update_info( 'size', 1000 );
+    sleep(1);
+    $self->update_info( 'downloaded', 200 );
+    sleep(1);
+    $self->update_info( 'downloaded', 500 );
+    sleep(1);
+    $self->update_info( 'downloaded', 800 );
+    sleep(1);
+    $self->update_info( 'downloaded', 1000 );
+    sleep(1);
+    ExtractionError->throw("Some random error") if ( rand(1) > 0.5 );
+    $self->update_info( 'msg', 'File successfully downloaded.' );
+    return;
+
+  }
 
   if ( $self->type eq 'PDF_SEARCH' ) {
 
@@ -384,10 +388,7 @@ sub _do_work {
 
       my $error;
 
-      eval {
-        $self->_extract_meta_data;
-      };
-
+      eval { $self->_extract_meta_data; };
 
       if ($@) {
         my $e = Exception::Class->caught();
@@ -398,11 +399,11 @@ sub _do_work {
         }
       }
 
-      if (!$error and !$self->pub->{doi} and !$self->pub->{title} ) {
+      if ( !$error and !$self->pub->{doi} and !$self->pub->{title} ) {
         $error = "Could not find DOI or title in PDF.";
       }
 
-      if (!$error){
+      if ( !$error ) {
         my $success = $self->_match;
 
         if ( !$success ) {
@@ -412,10 +413,10 @@ sub _do_work {
 
       # If we encountered an error upstream we do not have the full
       # reference info and import it as 'incomplete'
-      if ($error){
-        if (!$self->pub->title){
-          my ( $volume, $dirs, $base_name ) = splitpath($self->pub->pdf);
-          $base_name=~s/\.pdf//i;
+      if ($error) {
+        if ( !$self->pub->title ) {
+          my ( $volume, $dirs, $base_name ) = splitpath( $self->pub->pdf );
+          $base_name =~ s/\.pdf//i;
           $self->pub->title($base_name);
         }
         $self->pub->pubtype('MISC');
@@ -426,7 +427,7 @@ sub _do_work {
 
       $self->update_info( 'callback', { fn => 'updatePubGrid' } );
 
-      if ($error){
+      if ($error) {
         NetMatchError->throw($error);
       }
 

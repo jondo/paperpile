@@ -1346,11 +1346,23 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   addPDFManually: function(jobID, gridID) {
 
+    // Get data from queue grid
     var data = Ext.getCmp(gridID).getStore().getById(jobID).data;
 
     data.match_job = data.id;
 
     data.pubtype = 'ARTICLE';
+
+    // After cancel we have not imported the PDF yet and we have to
+    // treat it differently from the case when it already has been
+    // imported
+    var isNew;
+    if (!data.guid){
+      isNew = true;
+      data._pdf_tmp = data.pdf;
+    } else {
+      isNew = false;
+    }
 
     win = new Ext.Window({
       title: "Edit Reference",
@@ -1363,7 +1375,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       closable: true,
       items: [new Paperpile.MetaPanel({
         data: data,
-        isNew: false,
+        isNew: isNew,
         callback: function(status, data) {
           if (status == 'SAVE') {
             Paperpile.main.onUpdate(data);
