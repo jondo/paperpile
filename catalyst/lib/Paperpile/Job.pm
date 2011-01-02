@@ -314,24 +314,24 @@ sub _do_work {
 
   my $self = shift;
 
-  # $self->update_info('msg','Searching PDF');
-  # sleep(2);
-  # $self->update_info('msg','Starting download');
-  # sleep(2);
-  # $self->update_info('msg','Downloading');
-  # $self->update_info( 'size', 1000 );
-  # sleep(1);
-  # $self->update_info( 'downloaded', 200 );
-  # sleep(1);
-  # $self->update_info( 'downloaded', 500 );
-  # sleep(1);
-  # $self->update_info( 'downloaded', 800 );
-  # sleep(1);
-  # $self->update_info( 'downloaded', 1000 );
-  # sleep(1);
-  # ExtractionError->throw("Some random error") if (rand(1) > 0.5);
-  # $self->update_info('msg','File successfully downloaded.');
-  # return;
+  $self->update_info('msg','Searching PDF');
+  sleep(2);
+  $self->update_info('msg','Starting download');
+  sleep(2);
+  $self->update_info('msg','Downloading');
+  $self->update_info( 'size', 1000 );
+  sleep(1);
+  $self->update_info( 'downloaded', 200 );
+  sleep(1);
+  $self->update_info( 'downloaded', 500 );
+  sleep(1);
+  $self->update_info( 'downloaded', 800 );
+  sleep(1);
+  $self->update_info( 'downloaded', 1000 );
+  sleep(1);
+  ExtractionError->throw("Some random error") if (rand(1) > 0.5);
+  $self->update_info('msg','File successfully downloaded.');
+  return;
 
   if ( $self->type eq 'PDF_SEARCH' ) {
 

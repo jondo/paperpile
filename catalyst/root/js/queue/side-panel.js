@@ -152,7 +152,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       success: function(response, opts) {
         var json = Ext.util.JSON.decode(response.responseText);
         
-        if (json.queue.status != 'PAUSED') {
+        if (json.data.queue.status != 'PAUSED') {
           Paperpile.main.queueUpdate();
         }
 
@@ -209,7 +209,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       var eta = queue.eta;
 
       if (queue.status == 'PAUSED') {
-        this.queueProgress.updateProgress(0, 'Queue is paused.');
+        this.queueProgress.updateProgress(0, 'Task are paused.');
         this.pauseButton.setText('Resume');
         this.pauseButton.setIcon('/images/icons/resume.png');
       } else {
