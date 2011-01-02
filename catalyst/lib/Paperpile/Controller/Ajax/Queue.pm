@@ -198,7 +198,7 @@ sub clear_jobs : Local {
   my $guids = $q->clear;
 
   my $pubs;
-  for my $guid (@$guids) {
+  foreach my $guid (@$guids) {
     $pubs->{$guid} = { _search_job => undef, _metadata_job => undef };
   }
   $c->stash->{data}->{pubs}      = $pubs;

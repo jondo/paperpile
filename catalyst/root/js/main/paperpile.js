@@ -737,6 +737,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   // representing the target collection for import. paths can either
   // be a single PDF file/folder or an array of files/folders 
   submitPdfExtractionJobs: function(paths, treeNode) {
+    Ext.getCmp('queue-widget').onUpdate({
+      submitting: true
+    });
     Paperpile.Ajax({
       url: '/ajax/pdfextract/submit',
       params: {

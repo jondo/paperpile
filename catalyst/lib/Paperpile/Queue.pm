@@ -446,7 +446,7 @@ sub clear {
 
   while ( $sth->fetch ) {
     my $job = Paperpile::Job->new( { id => $job_id } );
-    push @guids, $job->{pub}->{guid};
+    push @guids, $job->{pub}->{guid} if (defined $job->{pub}->{guid});
     unlink( $job->_file );
   }
 
