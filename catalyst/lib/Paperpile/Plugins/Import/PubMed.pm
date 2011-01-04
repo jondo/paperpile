@@ -526,113 +526,146 @@ sub _pubFetch {
 
 sub _read_xml {
 
-  ( my $self, my $xml ) = @_;
+    ( my $self, my $xml ) = @_;
 
-  my $result = XMLin( $xml, keyattr => ['IdType'], SuppressEmpty => 1 );
+    my $result = XMLin( $xml, keyattr => ['IdType'], SuppressEmpty => 1 );
 
-  my $result_ok = 0;
+    my $result_ok = 0;
 
-  # Eval to avoid exception when $result is not a hashref
-  eval { $result_ok = 1 if ( defined $result->{PubmedArticle} ); };
+    # Eval to avoid exception when $result is not a hashref
+    eval { $result_ok = 1 if ( defined $result->{PubmedArticle} ); };
 
-  if ( $@ or !$result_ok ) {
-    NetFormatError->throw(
-      error   => 'PubMed query failed: unknown return format',
-      content => $xml
-    );
-  }
-
-  my @output = ();
-
-  my @list;
-
-  if ( ref( $result->{PubmedArticle} ) eq 'ARRAY' ) {
-    @list = @{ $result->{PubmedArticle} };
-  } else {
-    @list = ( $result->{PubmedArticle} );
-  }
-
-  foreach my $article (@list) {
-
-    my $cit = $article->{MedlineCitation};
-
-
-    my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
-
-    $pub->pmid( $cit->{PMID}->{content} );
-
-    my $volume      = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
-    my $issue       = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
-    my $year        = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
-    my $month       = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Month};
-    my $pages       = $cit->{Article}->{Pagination}->{MedlinePgn};
-    my $abstract    = $cit->{Article}->{Abstract}->{AbstractText};
-    my $title       = $cit->{Article}->{ArticleTitle};
-    my $status      = $article->{PubmedData}->{PublicationStatus};
-    my $journal     = $cit->{MedlineJournalInfo}->{MedlineTA};
-    my $issn        = $cit->{Article}->{Journal}->{ISSN}->{content};
-    my $affiliation = $cit->{Article}->{Affiliation};
-
-    my $doi = $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}->{content};
-
-    # backup strategy for pubmed id
-    if ( $pub->pmid() ) {
-      if ( $pub->pmid() !~ m/^\d+$/ ) {
-	$pub->pmid( $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{pubmed}->{content} );
-      }
+    if ( $@ or !$result_ok ) {
+        NetFormatError->throw(
+            error   => 'PubMed query failed: unknown return format',
+            content => $xml
+        );
     }
 
-    # Remove period from end of title
-    $title =~ s/\.\s*$//;
+    my @output = ();
 
-    $pub->volume($volume)           if $volume;
-    $pub->issue($issue)             if $issue;
-    $pub->year($year)               if $year;
-    $pub->month($month)             if $month;
-    $pub->pages($pages)             if $pages;
-    $pub->abstract($abstract)       if $abstract;
-    $pub->title($title)             if $title;
-    $pub->doi($doi)                 if $doi;
-    $pub->issn($issn)               if $issn;
-    $pub->affiliation($affiliation) if $affiliation;
+    my @list;
 
-    if ($journal) {
-      my $jid = $journal;
-      $pub->journal($journal),;
+    if ( ref( $result->{PubmedArticle} ) eq 'ARRAY' ) {
+        @list = @{ $result->{PubmedArticle} };
+    }
+    else {
+        @list = ( $result->{PubmedArticle} );
     }
 
-    my @authors = ();
-    my @tmp     = ();
-    if ( ref( $cit->{Article}->{AuthorList}->{Author} ) eq 'ARRAY' ) {
-      @tmp = @{ $cit->{Article}->{AuthorList}->{Author} };
-    } else {
-      @tmp = ( $cit->{Article}->{AuthorList}->{Author} );
+    foreach my $article (@list) {
+
+        my $cit = $article->{MedlineCitation};
+        my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
+
+        $pub->pmid( $cit->{PMID}->{content} );
+
+        my $volume = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
+        my $issue  = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
+        my $year =
+          $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
+        my $month =
+          $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Month};
+        my $pages = $cit->{Article}->{Pagination}->{MedlinePgn};
+
+        # check if abstract is given as blank string or in a more complex format
+        my $abstract = '';
+        if ( ref( $cit->{Article}->{Abstract}->{AbstractText} ) eq 'SCALAR' ) {
+            $abstract = $cit->{Article}->{Abstract}->{AbstractText};
+        }
+        elsif ( ref( $cit->{Article}->{Abstract}->{AbstractText} ) eq 'ARRAY' )
+        {
+            foreach
+              my $absPart ( @{ $cit->{Article}->{Abstract}->{AbstractText} } )
+            {
+                if ( exists $absPart->{Label} ) {
+                    $abstract .= $absPart->{Label};
+                    $abstract =~ s/\s+$//g;    # remove endstanding spaces
+                    $abstract .= ": " if ( $abstract !~ /:$/ );
+                }
+
+                if ( exists $absPart->{content} ) {
+                    $abstract .= $absPart->{content};
+		    $abstract =~ s/\s+$//g;    # remove endstanding spaces
+		    $abstract .= ' ';
+                }
+            }
+        }
+        else {
+            # unknown format, not seen yet.
+        }
+
+        my $title       = $cit->{Article}->{ArticleTitle};
+        my $status      = $article->{PubmedData}->{PublicationStatus};
+        my $journal     = $cit->{MedlineJournalInfo}->{MedlineTA};
+        my $issn        = $cit->{Article}->{Journal}->{ISSN}->{content};
+        my $affiliation = $cit->{Article}->{Affiliation};
+
+        my $doi =
+          $article->{PubmedData}->{ArticleIdList}->{ArticleId}->{doi}
+          ->{content};
+
+        # backup strategy for pubmed id
+        if ( $pub->pmid() ) {
+            if ( $pub->pmid() !~ m/^\d+$/ ) {
+                $pub->pmid( $article->{PubmedData}->{ArticleIdList}->{ArticleId}
+                      ->{pubmed}->{content} );
+            }
+        }
+
+        # Remove period from end of title
+        $title =~ s/\.\s*$//;
+
+        $pub->volume($volume)           if $volume;
+        $pub->issue($issue)             if $issue;
+        $pub->year($year)               if $year;
+        $pub->month($month)             if $month;
+        $pub->pages($pages)             if $pages;
+        $pub->abstract($abstract)       if $abstract;
+        $pub->title($title)             if $title;
+        $pub->doi($doi)                 if $doi;
+        $pub->issn($issn)               if $issn;
+        $pub->affiliation($affiliation) if $affiliation;
+
+        if ($journal) {
+            my $jid = $journal;
+            $pub->journal($journal),;
+        }
+
+        my @authors = ();
+        my @tmp     = ();
+        if ( ref( $cit->{Article}->{AuthorList}->{Author} ) eq 'ARRAY' ) {
+            @tmp = @{ $cit->{Article}->{AuthorList}->{Author} };
+        }
+        else {
+            @tmp = ( $cit->{Article}->{AuthorList}->{Author} );
+        }
+
+        foreach my $author (@tmp) {
+
+            if ( $author->{CollectiveName} ) {
+                push @authors,
+                  Paperpile::Library::Author->new(
+                    last       => '',
+                    first      => '',
+                    jr         => '',
+                    collective => $author->{CollectiveName},
+                  )->normalized;
+            }
+            else {
+                push @authors,
+                  Paperpile::Library::Author->new(
+                    last  => $author->{LastName} ? $author->{LastName} : '',
+                    first => $author->{Initials} ? $author->{Initials} : '',
+                    jr    => $author->{Suffix}   ? $author->{Suffix}   : '',
+                  )->normalized;
+            }
+
+        }
+        $pub->authors( join( ' and ', @authors ) );
+        push @output, $pub;
     }
-
-    foreach my $author (@tmp) {
-
-      if ( $author->{CollectiveName} ) {
-        push @authors,
-          Paperpile::Library::Author->new(
-          last       => '',
-          first      => '',
-          jr         => '',
-          collective => $author->{CollectiveName},
-          )->normalized;
-      } else {
-        push @authors,
-          Paperpile::Library::Author->new(
-          last  => $author->{LastName} ? $author->{LastName} : '',
-          first => $author->{Initials} ? $author->{Initials} : '',
-          jr    => $author->{Suffix}   ? $author->{Suffix}   : '',
-          )->normalized;
-      }
-
-    }
-    $pub->authors( join( ' and ', @authors ) );
-    push @output, $pub;
-  }
-  return [@output];
+    return [@output];
 }
 
 # Function: _linkOut
