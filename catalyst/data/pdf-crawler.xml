@@ -777,7 +777,23 @@
   </rule>
   
   <test>
-    <url></url>
+    <url>http://www.ingentaconnect.com/content/scs/chimia/2010/00000064/00000004/art00004</url>
+  </test>
+</site>
+
+<site name="IUCrJournals">
+  <signature>
+    <url>!iucr\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1107/S0021889810030256</url>
   </test>
 </site>
 
