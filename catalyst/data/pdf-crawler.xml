@@ -183,6 +183,24 @@
 
   <rule>
     <pattern>
+      <match>!name\s*=\s*&quot;citation_pdf_url&quot;\s*content\s*=\s*&quot;([^&quot;]+pdf)&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!id=&quot;pdfDocument&quot;\s+src=&quot;([^&quot;]+)&quot;!</match>
+    </pattern>
+  </rule> 
+  
+  <rule>
+    <pattern>
+      <match>!href=&quot;([^&quot;]+pdf)&quot;\s*title\s*=\s*&quot;Article\sin\spdf\sformat&quot;!</match>
+    </pattern>
+    <pattern>
+      <match>!id=&quot;pdfDocument&quot;\s+src=&quot;([^&quot;]+)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
       <match>!href=&quot;([^&quot;]+pdf)&quot;!</match>
     </pattern>
     <pattern>
