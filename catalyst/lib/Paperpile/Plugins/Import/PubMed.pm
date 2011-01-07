@@ -567,7 +567,8 @@ sub _read_xml {
 
     # check if abstract is given as blank string or in a more complex format
     my $abstract = '';
-    if ( ref( $cit->{Article}->{Abstract}->{AbstractText} ) eq 'SCALAR' ) {
+    if ( ref( $cit->{Article}->{Abstract}->{AbstractText} ) eq ''
+      || ref( $cit->{Article}->{Abstract}->{AbstractText} ) eq 'SCALAR' ) {
       $abstract = $cit->{Article}->{Abstract}->{AbstractText};
     } elsif ( ref( $cit->{Article}->{Abstract}->{AbstractText} ) eq 'ARRAY' ) {
       foreach my $absPart ( @{ $cit->{Article}->{Abstract}->{AbstractText} } ) {
@@ -583,9 +584,6 @@ sub _read_xml {
           $abstract .= ' ';
         }
       }
-    } else {
-
-      # unknown format, not seen yet.
     }
 
     my $title       = $cit->{Article}->{ArticleTitle};
