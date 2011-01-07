@@ -274,7 +274,6 @@
     </pattern>
   </rule>
 
-
   <test>
     <url>http://dx.doi.org/doi:10.1038/456842a</url>
     <url>http://www.nature.com/emboj/journal/v27/n24/abs/emboj2008242a.html</url>
@@ -288,6 +287,12 @@
   <signature>
     <url>!sciencemag\.org!</url>
   </signature>
+  
+  <rule>
+    <pattern>
+      <match>!content\s*=\s*&quot;([^&quot;]+)&quot;\s*name\s*=\s*&quot;citation_pdf_url&quot;!</match>
+    </pattern>
+  </rule>
 
   <rule>
     <pattern>
