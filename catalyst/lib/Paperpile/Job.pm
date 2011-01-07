@@ -314,28 +314,28 @@ sub _do_work {
 
   my $self = shift;
 
-  if ( $self->type eq 'METADATA_UPDATE' ) {
+  # if ( $self->type eq 'METADATA_UPDATE' ) {
 
-    $self->update_info( 'msg', 'Searching PDF' );
-    sleep(2);
-    $self->update_info( 'msg', 'Starting download' );
-    sleep(2);
-    $self->update_info( 'msg',  'Downloading' );
-    $self->update_info( 'size', 1000 );
-    sleep(1);
-    $self->update_info( 'downloaded', 200 );
-    sleep(1);
-    $self->update_info( 'downloaded', 500 );
-    sleep(1);
-    $self->update_info( 'downloaded', 800 );
-    sleep(1);
-    $self->update_info( 'downloaded', 1000 );
-    sleep(1);
-    ExtractionError->throw("Some random error") if ( rand(1) > 0.5 );
-    $self->update_info( 'msg', 'File successfully downloaded.' );
-    return;
+  #   $self->update_info( 'msg', 'Searching PDF' );
+  #   sleep(2);
+  #   $self->update_info( 'msg', 'Starting download' );
+  #   sleep(2);
+  #   $self->update_info( 'msg',  'Downloading' );
+  #   $self->update_info( 'size', 1000 );
+  #   sleep(1);
+  #   $self->update_info( 'downloaded', 200 );
+  #   sleep(1);
+  #   $self->update_info( 'downloaded', 500 );
+  #   sleep(1);
+  #   $self->update_info( 'downloaded', 800 );
+  #   sleep(1);
+  #   $self->update_info( 'downloaded', 1000 );
+  #   sleep(1);
+  #   ExtractionError->throw("Some random error") if ( rand(1) > 0.5 );
+  #   $self->update_info( 'msg', 'File successfully downloaded.' );
+  #   return;
 
-  }
+  # }
 
   if ( $self->type eq 'PDF_SEARCH' ) {
 
@@ -548,12 +548,13 @@ sub as_hash {
   $hash{message} = $self->get_message;
 
   if ( defined $self->pub ) {
-    $hash{guid}             = $self->pub->guid;
+    $hash{guid}            = $self->pub->guid;
     $hash{citekey}         = $self->pub->citekey;
     $hash{title}           = $self->pub->title;
     $hash{doi}             = $self->pub->doi;
     $hash{linkout}         = $self->pub->linkout;
     $hash{citation}        = $self->pub->_citation_display;
+    $hash{year}            = $self->pub->year;
     $hash{journal}         = $self->pub->journal;
     $hash{authors_display} = $self->pub->_authors_display;
     $hash{authors}         = $self->pub->authors;
@@ -561,9 +562,9 @@ sub as_hash {
     # We have to store the original file name, the file name after
     # import and the guid of the imported PDF in various fields. This
     # is kind of a mess but it does not work with less variables
-    $hash{pdf_name}        = $self->pub->pdf_name;
-    $hash{pdf}             = $self->pub->pdf;
-    $hash{_pdf_tmp}        = $self->pub->_pdf_tmp;
+    $hash{pdf_name} = $self->pub->pdf_name;
+    $hash{pdf}      = $self->pub->pdf;
+    $hash{_pdf_tmp} = $self->pub->_pdf_tmp;
 
   }
   return {%hash};
@@ -643,7 +644,7 @@ sub _download {
 
   print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
-#  $self->update_info( 'msg', "Downloading PDF..." );
+  #  $self->update_info( 'msg', "Downloading PDF..." );
 
   my $file =
     File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->guid . ".pdf" );

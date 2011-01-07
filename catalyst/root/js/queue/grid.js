@@ -50,12 +50,23 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       break;
     case 'pdf-view':
       var path;
+      // Find the right field depending on the circumstances...
       if (data._pdf_tmp) {
         path = data._pdf_tmp;
       } else {
-        path = data.pdf;
+        if (data.pdf_name){
+          path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, data.pdf_name);
+        } else {
+          path = data.pdf;
+        }
       }
       Paperpile.utils.openFile(path);
+      break;
+    case 'cancel-task':
+      this.getQueuePanel().cancelJobs();
+      break;
+    case 'retry-task':
+      this.getQueuePanel().retryJobs();
       break;
     }
   },
@@ -99,53 +110,11 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     return c;
   },
 
-  getToolbar: function() {
-    if (this._tbar != null) {
-      return this._tbar;
-    }
-
-    var tbar = new Ext.Toolbar({
-      itemId: 'toolbar'
-    });
-    tbar.insert(0, this.actions['CANCEL']);
-    tbar.insert(0, this.actions['RETRY']);
-    tbar.insert(0, this.actions['TB_FILL']);
-
-    this._tbar = tbar;
-    return tbar;
-  },
-
-  updateToolbar: function() {
-    var sel = this.getSelectedRecords();
-    var tbar = this.getToolbar();
-
-    if (sel.length == 0) {
-      tbar.items.each(function(item, index, length) {
-        item.disable();
-      },
-      this);
-    } else {
-      tbar.items.each(function(item, index, length) {
-        item.enable();
-      },
-      this);
-    }
-
-    if (sel.length == 1) {
-      var data = sel[0].data;
-      if (data.status === 'DONE' || data.status === 'ERROR') {
-        this.actions['CANCEL'].disable();
-      } else {
-        this.actions['RETRY'].disable();
-      }
-
-    }
-
-  },
-
   renderData: function(value, meta, record) {
 
     var data = record.data;
+
+    Paperpile.log(data.message);
 
     if (data.size && data.downloaded && data.status === 'RUNNING') {
       data.message = 'Downloading (' + Math.round((data.downloaded / data.size) * 100) + '%)';
@@ -178,14 +147,14 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     return this.dataTemplate.apply(data);
   },
 
-  renderType: function(value, meta, record) {
-    var data = record.data;
-    return this.typeTemplate.apply(data);
-  },
-
   renderStatus: function(value, meta, record) {
     var data = record.data;
     return this.statusTemplate.apply(data);
+  },
+
+  renderType: function(value, meta, record) {
+    var data = record.data;
+    return this.typeTemplate.apply(data);
   },
 
   initComponent: function() {
@@ -224,22 +193,66 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       emptyMsg: "No tasks"
     });
 
+
+    this.dataTemplate = new Ext.XTemplate(
+      
+      '<div>',
+      '    <tpl if="type==\'PDF_SEARCH\'||type==\'METADATA_UPDATE\'">',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{shortTitle}</b></div>',
+      '      <div class="pp-queue-list-citation">{shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></div></div>',
+      '    </tpl>',
+      '    <tpl if="type==\'PDF_IMPORT\'">',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{_pdf_tmp}</b></div>',
+      '       <tpl if="status==\'DONE\'">',
+      '         <div class="pp-queue-list-citation"><b>{shortTitle}</b> {shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></div></div>',
+      '       </tpl>',
+      '    </tpl>',
+      '     <div class="pp-queue-list-status-container"><span class="pp-queue-list-status pp-queue-list-status-{status}">{message}</span></div>',
+      '     <div class="pp-queue-list-action">',
+      '       <tpl if="status==\'DONE\'">',
+      '         <tpl if="type==\'PDF_SEARCH\'||type==\'PDF_IMPORT\'"><a href="#" class="pp-textlink" action="pdf-view">View PDF</a></tpl>',
+      '       </tpl>',
+      '       <tpl if="status==\'ERROR\'">',
+      '         <tpl if="type==\'PDF_SEARCH\'">',
+      '           <tpl if="publisherLink">',
+      '               <a href="#" class="pp-textlink" action="pdf-download-open-url">Go to publisher site</a> | ',
+      '            </tpl>',
+      '            <a href="#" class="pp-textlink" action="pdf-download-error-report">Send Error Report</a> |',
+      '         </tpl>',
+      '         <tpl if="type==\'PDF_IMPORT\'">',
+      '            <a href="#" class="pp-textlink" action="pdf-match-insert-manually">Insert Data Manually</a> | ',
+      '            <a href="#" class="pp-textlink" action="pdf-match-error-report">Send Error Report</a> |',
+      '         </tpl>',
+      '        <a href="#" class="pp-textlink" action="retry-task">Retry</a>',
+      '       </tpl>',
+      '       <tpl if="status==\'RUNNING\'||status==\'PENDING\'">',
+      '          <a href="#" class="pp-textlink" action=cancel-task">Cancel</a>',
+      '       </tpl>',
+      '     </div> ',
+      '</div>'
+      
+    ).compile();
+    
+    /*
     this.dataTemplate = new Ext.XTemplate(
       '<div style="padding: 4px 0;">',
       '  <tpl if="type==\'PDF_SEARCH\'">',
       '    <div class="pp-queue-list-data">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">{shortAuthors} <b>{shortTitle}</b> <i>{journal}</i></div>',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{shortTitle}</b><br><span class="pp-inactive">{shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></span></div>',
+      '<div class="pp-queue-list-box">',
       '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
       '        {message}',
+      '      <tpl if="status==\'DONE\'"><div class="pp-queue-list-action"><a href="#" class="pp-textlink" action="pdf-view">View PDF</a></div></tpl>',
       '      </div>',
       '      <tpl if="status==\'ERROR\'">',
-      '        <p>',
+      '        <div class="pp-queue-list-action">',
       '           <tpl if="publisherLink">',
       '             <a href="#" class="pp-textlink" action="pdf-download-open-url">Go to publisher site</a> | ',
       '           </tpl>',
       '           <a href="#" class="pp-textlink" action="pdf-download-error-report">Send Error Report</a>',
-      '       </p> ',
+      '         </div> ',
       '      </tpl>',
+      ' {[this.drawStatus(values.status)]} </div>',
       '    </div>',
       '  </tpl>',
       '  <tpl if="type==\'PDF_IMPORT\'">',
@@ -277,8 +290,19 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       '      </tpl>',
       '    </div>',
       '  </tpl>',
+      '</div>', {
+        drawStatus: function(status) {
+          var content = '<div class="pp-queue-list-icon pp-queue-list-icon-'+status+'">';
+          if (status === 'PENDING') {
+            content += 'Waiting';
+          }
+          if (status === 'PENDING') {
+            content += '<div style="padding: 0 0 0 30px"><a href="#" class="pp-textlink" action="cancel-task">Cancel</a></div>';
+          }
+          return ('<div style="float:right;">'+content+'</div>');
+        }
+      }).compile();*/
 
-      '</div>').compile();
 
     this.typeTemplate = new Ext.XTemplate(
       '<div style="padding: 4px 0;">',
@@ -295,11 +319,10 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
 
     this.statusTemplate = new Ext.XTemplate(
       '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>').compile();
-
+    
     Ext.apply(this, {
       store: this.getStore(),
       bbar: pager,
-      tbar: this.getToolbar(),
       multiSelect: true,
       selModel: new Ext.ux.BetterRowSelectionModel(),
       cm: new Ext.grid.ColumnModel({
@@ -329,9 +352,9 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
           dataIndex: 'status',
           renderer: this.renderStatus.createDelegate(this),
           sortable: false,
-          resizable: false
-        },
-        ]
+          resizable: false,
+          width: 70,
+        }]
       }),
       autoExpandColumn: 'title',
       hideHeaders: true
@@ -362,7 +385,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
   },
 
   selChanged: function(selections) {
-    this.updateToolbar();
+
   },
 
   // onUpdate function for the Queue grid view.
