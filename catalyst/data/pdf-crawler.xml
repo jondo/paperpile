@@ -730,7 +730,7 @@
 
   <rule>
     <pattern>
-      <match>!href=&quot;([^&quot;]+)&quot;\s*title\s*=\s*&quot;View\sPDF&quot;!</match>
+      <match>!href\s*=\s*&quot;([^&quot;]+)&quot;\s*title\s*=\s*&quot;View\sPDF&quot;!</match>
     </pattern>
     <pattern>
       <match>!iframe\s*src=\s*&quot;(/action/displayFulltext\?[^&quot;]+)&quot;!</match>
@@ -739,6 +739,22 @@
   
   <test>
     <url>http://journals.cambridge.org/action/displayAbstract?fromPage=online&amp;aid=7118840</url>
+  </test>
+</site>
+
+<site name="IngentaConnect">
+  <signature>
+    <url>!ingentaconnect\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href=&quot;(/search/download[^&quot;]+mimetype=application%2fpdf[^&quot;]+)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url></url>
   </test>
 </site>
 
