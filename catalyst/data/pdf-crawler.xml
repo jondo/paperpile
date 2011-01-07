@@ -797,6 +797,22 @@
   </test>
 </site>
 
+<site name="BiochemicalJournal">
+  <signature>
+    <url>!biochemj\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+\.pdf)&quot;!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biochemj.org/bj/320/0697/bj3200697.htm</url>
+  </test>
+</site>
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
