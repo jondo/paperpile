@@ -44,6 +44,9 @@ has '_hash' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
 # stored by the first and last index, e.g. _page_cache->{0}->{10}
 has '_page_cache' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
 
+# Allows to update status information for queue task.
+has 'jobid' => ( is => 'rw', default => undef );
+
 # Function: connect
 
 # Sets up connection to the source and sets and returns total_entries.

@@ -194,6 +194,23 @@ sub cancel {
   $self->save;
 }
 
+
+sub is_canceled {
+
+  my $self = shift;
+
+  my $stored;
+
+  eval { $stored = lock_retrieve( $self->_file ); };
+  return 0 if not $stored;
+
+  if ($stored->interrupt eq 'CANCEL'){
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 ## Generate alphanumerical random id
 
 sub generate_id {
@@ -597,6 +614,9 @@ sub _match {
 
   my $success_plugin;
 
+
+  print STDERR "[queue] Start matching against online resources.\n";
+
   eval {
     $success_plugin = $self->pub->auto_complete([@plugin_list]);
   };
@@ -648,6 +668,8 @@ sub _crawl {
 sub _download {
 
   my $self = shift;
+
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
   print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
@@ -757,6 +779,8 @@ sub _extract_meta_data {
 
   my $self = shift;
 
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
+
   print STDERR "[queue] Extracting meta data for ", $self->pub->pdf, "\n";
 
   my $bin = Paperpile::Utils->get_binary('pdftoxml');
@@ -776,6 +800,8 @@ sub _extract_meta_data {
 sub _lookup_pdf {
 
   my $self = shift;
+
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
   my $md5 = Paperpile::Utils->calculate_md5( $self->pub->pdf );
 
@@ -798,6 +824,8 @@ sub _lookup_pdf {
 sub _insert {
 
   my $self = shift;
+
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
   my $model = Paperpile::Utils->get_library_model;
 
@@ -829,9 +857,14 @@ sub _attach_pdf {
 
   my $self = shift;
 
-  my $model = Paperpile::Utils->get_library_model;
-
   my $file = $self->pub->pdf;
+
+  if ($self->is_canceled){
+    unlink($file);
+    UserCancel->throw( error => $self->noun . ' canceled.' )
+  }
+
+  my $model = Paperpile::Utils->get_library_model;
 
   $model->attach_file( $file, 1, $self->pub );
 

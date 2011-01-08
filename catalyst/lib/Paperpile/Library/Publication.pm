@@ -621,11 +621,16 @@ sub auto_complete {
 
   foreach my $plugin_name (@$plugin_list) {
 
-    Paperpile::Utils->update_job_info($self->_jobid, 'msg', "Searching $plugin_name", "Auto-complete canceled");
+    my $msg = "Searching $plugin_name";
+
+    $msg = "Search publisher's site" if $plugin_name eq 'URL';
+
+    Paperpile::Utils->update_job_info($self->_jobid, 'msg', $msg, "Auto-complete canceled");
 
     eval {
       my $plugin_module = "Paperpile::Plugins::Import::" . $plugin_name;
       my $plugin        = eval( "use $plugin_module; $plugin_module->" . 'new()' );
+      $plugin->jobid($self->_jobid);
       $self = $plugin->match($self);
     };
 

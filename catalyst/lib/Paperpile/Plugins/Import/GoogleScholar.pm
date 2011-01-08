@@ -231,7 +231,7 @@ sub complete_details {
   my $browser = Paperpile::Utils->get_browser;
   $browser->cookie_jar( $self->_session_cookie );
 
-  my $URL_plugin = Paperpile::Plugins::Import::URL->new;
+  my $URL_plugin = Paperpile::Plugins::Import::URL->new(jobid=>$self->jobid);
 
   my $bibtex = '';
 
@@ -258,7 +258,6 @@ sub complete_details {
       return $full_pub;
     }
   }
-  print STDERR "GoogleScholar complete_details: first URL match call was not successful.\n";
 
   # For many articles Google provides links to several versions of
   # the same article. There are differences regarding the parsing
