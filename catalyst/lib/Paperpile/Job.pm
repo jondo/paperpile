@@ -337,6 +337,8 @@ sub _do_work {
 
   # }
 
+  $self->pub->_jobid($self->id);
+
   if ( $self->type eq 'PDF_SEARCH' ) {
 
     print STDERR "[queue] Searching PDF for ", $self->pub->_citation_display, "\n";
@@ -439,8 +441,6 @@ sub _do_work {
   if ( $self->type eq 'METADATA_UPDATE' ) {
     my $pub = $self->pub;
 
-    $pub->_jobid($self->id);
-
     my $old_hash = $pub->as_hash;
 
     my $success = $self->_match;
@@ -486,7 +486,11 @@ sub _catch_error {
   my $e = Exception::Class->caught();
 
   if ( ref $e ) {
-    $self->error( $e->error );
+    if (Exception::Class->caught('UserCancel')){
+      $self->error( $self->noun. ' canceled.');
+    } else {
+      $self->error( $e->error );
+    }
   } else {
     print STDERR $@;    # log this error also on console
     $self->error("An unexpected error has occured ($@)");

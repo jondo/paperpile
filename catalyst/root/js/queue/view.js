@@ -75,6 +75,11 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
     if (!selection) {
       selection = this.queueList.getSelectedIds();
     }
+
+    for (var i=0; i< selection.length;i++){
+      this.getGrid().flaggedForCancel[selection[i]]=true;
+    }
+
     Paperpile.Ajax({
       url: '/ajax/queue/cancel_jobs',
       params: {

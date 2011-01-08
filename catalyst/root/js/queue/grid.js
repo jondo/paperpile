@@ -71,50 +71,21 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     }
   },
 
-  onContextClick: function(grid, index, e) {
-    e.stopEvent();
-    return;
-    var record = this.getStore().getAt(index);
-    if (!this.isSelected(index)) {
-      this.select(index, false, true);
-    }
-
-    if (this.context == null) {
-      this.createContextMenu();
-    }
-
-    this.context.items.each(function(item, index, length) {
-      item.enable();
-      this.updateContextItem(item, record);
-    },
-    this);
-
-    (function() {
-      this.context.showAt(e.getXY());
-      this.updateButtons();
-    }).defer(20, this);
-  },
-
   getQueuePanel: function() {
     return this.findParentByType(Paperpile.QueuePanel);
-  },
-
-  getContextMenu: function() {
-    if (this.context != null) {
-      return this.context;
-    }
-    this.context = new Ext.menu.Menu({
-      itemId: 'context'
-    });
-    var c = this.context;
-    return c;
   },
 
   renderData: function(value, meta, record) {
 
     var data = record.data;
 
-    Paperpile.log(data.message);
+    // Show that canceling is in progress
+    if (data.status === 'RUNNING' && this.flaggedForCancel[data.id]){
+      data.message = "Canceling Task...";
+      data.flaggedForCancel = true;
+    } else {
+      data.flaggedForCancel = false;
+    }
 
     if (data.size && data.downloaded && data.status === 'RUNNING') {
       data.message = 'Downloading (' + Math.round((data.downloaded / data.size) * 100) + '%)';
@@ -159,31 +130,9 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
 
   initComponent: function() {
 
-    this.actions = {
-      'RETRY': new Ext.Action({
-        text: 'Retry Tasks',
-        tooltip: 'Run selected tasks again',
-        handler: function() {
-          this.getQueuePanel().retryJobs();
-        },
-        scope: this,
-        iconCls: 'pp-icon-retry'
-      }),
-      'CANCEL': new Ext.Action({
-        text: 'Cancel Tasks',
-        tooltip: 'Cancel selected tasks',
-        handler: function() {
-          this.getQueuePanel().cancelJobs();
-        },
-        scope: this,
-        cls: 'x-btn-text-icon',
-        iconCls: 'pp-icon-cancel'
-      }),
-      'TB_FILL': new Ext.Toolbar.Fill({
-        width: '10px',
-        itemId: 'search_tb_fill'
-      })
-    };
+    // Helper construct to show appropriate status messages when
+    // cancel is in progress
+    this.flaggedForCancel = {};
 
     var pager = new Ext.PagingToolbar({
       pageSize: 100,
@@ -207,7 +156,9 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       '         <div class="pp-queue-list-citation"><b>{shortTitle}</b> {shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></div></div>',
       '       </tpl>',
       '    </tpl>',
-      '     <div class="pp-queue-list-status-container"><span class="pp-queue-list-status pp-queue-list-status-{status}">{message}</span></div>',
+      '     <div id="queue-job-{id}" class="pp-queue-list-status-container">',
+      '        <span class="pp-queue-list-status pp-queue-list-status-{status}">{message}</span>',
+      '     </div>',
       '     <div class="pp-queue-list-action">',
       '       <tpl if="status==\'DONE\'">',
       '         <tpl if="type==\'PDF_SEARCH\'||type==\'PDF_IMPORT\'"><a href="#" class="pp-textlink" action="pdf-view">View PDF</a></tpl>',
@@ -226,84 +177,15 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       '        <tpl if="type==\'PDF_SEARCH\'||type==\'METADATA_UPDATE\'"><a href="#" class="pp-textlink" action="retry-task"> Retry</a></tpl>',
       '       </tpl>',
       '       <tpl if="status==\'RUNNING\'||status==\'PENDING\'">',
-      '          <a href="#" class="pp-textlink" action="cancel-task">Cancel</a>',
+      '          <tpl if="!flaggedForCancel"><a href="#" class="pp-textlink" action="cancel-task">Cancel</a></tpl>',
+      '          <tpl if="flaggedForCancel"><span class="pp-inactive">Cancel</span></tpl>',
       '       </tpl>',
       '     </div> ',
       '</div>'
       
     ).compile();
     
-    /*
-    this.dataTemplate = new Ext.XTemplate(
-      '<div style="padding: 4px 0;">',
-      '  <tpl if="type==\'PDF_SEARCH\'">',
-      '    <div class="pp-queue-list-data">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{shortTitle}</b><br><span class="pp-inactive">{shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></span></div>',
-      '<div class="pp-queue-list-box">',
-      '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
-      '        {message}',
-      '      <tpl if="status==\'DONE\'"><div class="pp-queue-list-action"><a href="#" class="pp-textlink" action="pdf-view">View PDF</a></div></tpl>',
-      '      </div>',
-      '      <tpl if="status==\'ERROR\'">',
-      '        <div class="pp-queue-list-action">',
-      '           <tpl if="publisherLink">',
-      '             <a href="#" class="pp-textlink" action="pdf-download-open-url">Go to publisher site</a> | ',
-      '           </tpl>',
-      '           <a href="#" class="pp-textlink" action="pdf-download-error-report">Send Error Report</a>',
-      '         </div> ',
-      '      </tpl>',
-      ' {[this.drawStatus(values.status)]} </div>',
-      '    </div>',
-      '  </tpl>',
-      '  <tpl if="type==\'PDF_IMPORT\'">',
-      '    <div class="pp-queue-list-data">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">',
-      '      <tpl if="status!=\'DONE\'">{_pdf_tmp} </tpl> ',
-      '      <tpl if="status!=\'ERROR\'">',
-      '        <tpl if="shortAuthors">{shortAuthors} </tpl> <tpl if="shortTitle"><b>{shortTitle}</b></tpl> <tpl if="journal"><i>{journal}</i></tpl>',
-      '      </tpl> ',
-      '      </div>',
-      '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
-      '      {message}',
-      '      </div>',
-      '      <tpl if="status==\'ERROR\'">',
-      '        <p>',
-      '          <a href="#" class="pp-textlink" action="pdf-match-insert-manually">Insert data manually</a> | ',
-      '          <a href="#" class="pp-textlink" action="pdf-view">View PDF</a> | ',
-      '          <a href="#" class="pp-textlink" action="pdf-match-error-report">Send Error Report</a>',
-      '       </p>',
-      '      </tpl>',
-      '    </div>',
-      '  </tpl>',
-      '  <tpl if="type==\'METADATA_UPDATE\'">',
-      '    <div class="pp-queue-list-data">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">{shortAuthors} <b>{shortTitle}</b> <i>{journal}</i></div>',
-      '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
-      '        {message}',
-      '      </div>',
-      '      <tpl if="status==\'ERROR\'">',
-      '        <p>',
-      '           <tpl if="publisherLink">',
-      '             <a href="#" class="pp-textlink" onclick="Paperpile.utils.openURL(\'{publisherLink}\')">Go to publisher site</a> | ',
-      '           </tpl>',
-      '       </p> ',
-      '      </tpl>',
-      '    </div>',
-      '  </tpl>',
-      '</div>', {
-        drawStatus: function(status) {
-          var content = '<div class="pp-queue-list-icon pp-queue-list-icon-'+status+'">';
-          if (status === 'PENDING') {
-            content += 'Waiting';
-          }
-          if (status === 'PENDING') {
-            content += '<div style="padding: 0 0 0 30px"><a href="#" class="pp-textlink" action="cancel-task">Cancel</a></div>';
-          }
-          return ('<div style="float:right;">'+content+'</div>');
-        }
-      }).compile();*/
-
-
+  
     this.typeTemplate = new Ext.XTemplate(
       '<div style="padding: 4px 0;">',
       '  <tpl if="type==\'PDF_SEARCH\'">',
@@ -411,6 +293,11 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       record.set('size', update.info.size);
       record.set('downloaded', update.info.downloaded);
       record.editing = false;
+
+      // Clear flaggedForCancel when job is done
+      if (this.flaggedForCancel[record.get('id')] && record.get('status') != "RUNNING"){
+        this.flaggedForCancel[record.get('id')] = false;
+      }
 
       if (record.dirty) {
         needsUpdating = true;

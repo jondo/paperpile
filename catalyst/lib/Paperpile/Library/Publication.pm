@@ -505,6 +505,7 @@ sub refresh_job_fields {
   $data->{id}     = $job->id;
   $data->{error}  = $job->error;
   $data->{start}  = $job->start;
+  $data->{interrupt}  = $job->interrupt;
 
   foreach my $key ( keys %{ $job->info } ) {
     $data->{$key} = $job->info->{$key};
