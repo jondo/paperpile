@@ -201,12 +201,11 @@ sub _merge_pub {
   my ( $self, $old, $new ) = @_;
   foreach my $key ( keys %{ $old->as_hash } ) {
     if ( $key eq 'authors' and $new->$key =~ m/\{others\}$/ ) {
-
       # keep the old authors entry and do nothing
       next;
     }
     #print STDERR " [$key] ".$old->$key." -> ".$new->$key."\n" if ($new->$key);
-    $old->$key( $new->$key ) if ( $new->$key );
+    $old->$key( $new->$key ) if ( $new->$key && $key ne 'guid');
   }
   return $old;
 }

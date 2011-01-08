@@ -391,6 +391,7 @@ sub update_pub {
   # Smith2000 is no longer in the database.
   if ( $new_key ne $old_data->{citekey} ) {
     $new_pub->citekey($new_key);
+
     # If we have a new citekey, make sure it doesn't conflict with other
     $self->generate_unique_key( $new_pub, [], $dbh );
     $diff->{citekey} = $new_pub->citekey;
