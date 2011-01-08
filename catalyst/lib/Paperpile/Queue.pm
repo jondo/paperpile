@@ -389,7 +389,7 @@ sub cancel_all {
       $job->interrupt('CANCEL');
     }
 
-    if ($job->status eq 'RUNNING' or $job->status eq 'PENDING'){
+    if ($job->status eq 'PENDING'){
       $job->error( $job->noun . ' canceled.' );
       $job->status('ERROR');
     }
@@ -397,7 +397,7 @@ sub cancel_all {
     $job->save;
   }
 
-  $self->dbh->do("UPDATE Queue SET status='ERROR' WHERE (status='PENDING' OR status='RUNNING')");
+  $self->dbh->do("UPDATE Queue SET status='ERROR' WHERE (status='PENDING')");
 
   $self->dbh->commit;
 
