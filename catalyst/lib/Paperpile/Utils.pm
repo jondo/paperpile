@@ -576,6 +576,36 @@ sub uniquify_pubs {
   }
 }
 
+# Updates the job information for job with $jobid. If $jobid is not
+# defined it just returns without doing anything.  The function
+# returns 1 if the job was not interrupted, otherwise it returns 0.
+# If the optional $cancel_msg is given, it directly throws a
+# UserCancel expection with $cancel_msg as content.
+
+sub update_job_info {
+
+  my ( $self, $jobid, $key, $value, $cancel_msg ) = @_;
+
+  return(1) if (!$jobid);
+
+  my $job = Paperpile::Job->new( { id => $jobid } );
+
+  $job->update_info( $key, $value );
+
+  if ($job->interrupt eq "CANCEL"){
+    if ($cancel_msg){
+      UserCancel->throw( error => $cancel_msg );
+    } else {
+      return 0;
+    }
+  } else {
+    return 1;
+  }
+
+}
+
+
+
 
 
 1;

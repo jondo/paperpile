@@ -165,9 +165,11 @@ sub new_entry : Local {
   my %fields = ();
 
   foreach my $key ( %{ $c->request->params } ) {
-    next if $key =~ /^_/;
+    next if (($key =~ /^_/) && ($key ne '_pdf_tmp'));
     $fields{$key} = $c->request->params->{$key};
   }
+
+  my $match_job = $c->request->params->{match_job};
 
   my $pub = Paperpile::Library::Publication->new( {%fields} );
 
@@ -180,6 +182,19 @@ sub new_entry : Local {
   $c->model('Library')->insert_pubs( [$pub], 1 );
 
   $self->_update_counts($c);
+
+
+  # Inserting a PDF that failed to match automatically and that has a
+  # jobid in the queue.
+  if ($match_job) {
+    my $job = Paperpile::Job->new( { id => $match_job } );
+    $job->update_status('DONE');
+    $job->error('');
+    $job->update_info( 'msg', "Data inserted manually." );
+    $job->pub($pub);
+    $job->save;
+    $c->stash->{data}->{jobs}->{$match_job} = $job->as_hash;
+  }
 
   # That's handled as form on the front-end so we have to explicitly
   # indicate success
@@ -284,12 +299,11 @@ sub update_entry : Local {
     }
   }
 
-  my $job;
 
   # Inserting a PDF that failed to match automatically and that has a
   # jobid in the queue.
   if ($match_job) {
-    $job = Paperpile::Job->new( { id => $match_job } );
+    my $job = Paperpile::Job->new( { id => $match_job } );
     $job->update_status('DONE');
     $job->error('');
     $job->update_info( 'msg', "Data inserted manually." );
@@ -324,6 +338,7 @@ sub lookup_entry : Local {
   my @plugin_list = split( /,/, $c->model('Library')->get_setting('search_seq') );
 
   my $success_plugin;
+
 
   eval { $success_plugin = $pub->auto_complete( [@plugin_list] ); };
 

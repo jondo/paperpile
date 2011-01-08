@@ -78,8 +78,8 @@ sub grid : Local {
     root          => 'data',
     id            => 'id',
     fields        => [
-      'id',              'type',    'status',  'progress', 'error',    'size',
-      'downloaded',      'message', 'citekey', 'title',    'citation', 'authors',
+      'id',              'type',    'status',  'progress', 'error',    'size', 'interrupt',
+      'downloaded',     'message', 'citekey', 'title',    'citation', 'authors', 'year',
       'authors_display', 'linkout', 'journal', 'pdf', 'pdf_name', '_pdf_tmp', 'doi', 'guid'
     ]
   );
@@ -147,6 +147,16 @@ sub update : Local {
   $c->stash->{data} = $data;
 }
 
+sub cancel_all_jobs : Local {
+
+  my ( $self, $c ) = @_;
+
+  my $q = Paperpile::Queue->new();
+  $q->cancel_all;
+
+}
+
+
 ## Cancel one or more jobs
 
 sub cancel_jobs : Local {
@@ -156,14 +166,7 @@ sub cancel_jobs : Local {
   my $ids = $c->request->params->{ids};
 
   if ( ref($ids) ne 'ARRAY' ) {
-    if ( $ids eq 'all' ) {
-      my $q    = Paperpile::Queue->new();
-      my $jobs = $q->get_jobs;
-      my @arr  = map { $_->id } @$jobs;
-      $ids = \@arr;
-    } else {
-      $ids = [$ids];
-    }
+    $ids = [$ids];
   }
 
   my @pub_list = ();
@@ -173,7 +176,6 @@ sub cancel_jobs : Local {
     push @pub_list, $pub;
     $job->cancel;
   }
-
 
   my $q = Paperpile::Queue->new();
   $q->run;
@@ -195,7 +197,7 @@ sub clear_jobs : Local {
   my $guids = $q->clear;
 
   my $pubs;
-  for my $guid (@$guids) {
+  foreach my $guid (@$guids) {
     $pubs->{$guid} = { _search_job => undef, _metadata_job => undef };
   }
   $c->stash->{data}->{pubs}      = $pubs;

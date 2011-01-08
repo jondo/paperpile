@@ -614,11 +614,17 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   fileExtract: function() {
     var callback = function(filenames) {
+
       if (filenames.length > 0) {
+        // Create new array because the "filenames" parameter coming
+        // back from the file dialog behaves strange. It seems to be
+        // an array but when sent as Ajax parameter in
+        // submitPdfExtractionJobs it is not transferred as array.
+        var newFiles =[];
         for (var i = 0; i < filenames.length; i++) {
-          var file = filenames[i];
-          Paperpile.main.submitPdfExtractionJobs(file);
+          newFiles.push(filenames[i]);
         }
+        Paperpile.main.submitPdfExtractionJobs(newFiles);
       }
       this.pdfExtractChoice.close();
       this.pdfExtractChoice = undefined;
@@ -728,12 +734,16 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   },
 
   // Submit a PDF extraction job, optionally including the tree node
-  // representing the target collection for import.
-  submitPdfExtractionJobs: function(path, treeNode) {
+  // representing the target collection for import. paths can either
+  // be a single PDF file/folder or an array of files/folders 
+  submitPdfExtractionJobs: function(paths, treeNode) {
+    Ext.getCmp('queue-widget').onUpdate({
+      submitting: true
+    });
     Paperpile.Ajax({
       url: '/ajax/pdfextract/submit',
       params: {
-        path: path,
+        paths: paths,
         collection_guids: [treeNode ? treeNode.id : null]
       }
     });
@@ -1336,11 +1346,23 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   addPDFManually: function(jobID, gridID) {
 
+    // Get data from queue grid
     var data = Ext.getCmp(gridID).getStore().getById(jobID).data;
 
     data.match_job = data.id;
 
     data.pubtype = 'ARTICLE';
+
+    // After cancel we have not imported the PDF yet and we have to
+    // treat it differently from the case when it already has been
+    // imported
+    var isNew;
+    if (!data.guid){
+      isNew = true;
+      data._pdf_tmp = data.pdf;
+    } else {
+      isNew = false;
+    }
 
     win = new Ext.Window({
       title: "Edit Reference",
@@ -1353,7 +1375,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       closable: true,
       items: [new Paperpile.MetaPanel({
         data: data,
-        isNew: false,
+        isNew: isNew,
         callback: function(status, data) {
           if (status == 'SAVE') {
             Paperpile.main.onUpdate(data);

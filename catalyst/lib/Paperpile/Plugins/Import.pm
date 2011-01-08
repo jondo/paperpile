@@ -44,6 +44,9 @@ has '_hash' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
 # stored by the first and last index, e.g. _page_cache->{0}->{10}
 has '_page_cache' => ( is => 'rw', isa => 'HashRef', default => sub { return {} } );
 
+# Allows to update status information for queue task.
+has 'jobid' => ( is => 'rw', default => undef );
+
 # Function: connect
 
 # Sets up connection to the source and sets and returns total_entries.
@@ -201,12 +204,11 @@ sub _merge_pub {
   my ( $self, $old, $new ) = @_;
   foreach my $key ( keys %{ $old->as_hash } ) {
     if ( $key eq 'authors' and $new->$key =~ m/\{others\}$/ ) {
-
       # keep the old authors entry and do nothing
       next;
     }
     #print STDERR " [$key] ".$old->$key." -> ".$new->$key."\n" if ($new->$key);
-    $old->$key( $new->$key ) if ( $new->$key );
+    $old->$key( $new->$key ) if ( $new->$key && $key ne 'guid');
   }
   return $old;
 }

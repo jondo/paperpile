@@ -36,6 +36,7 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
       this.progressBar = null;
     }
 
+    // We already have a PDF
     if (data.pdf != '') {
       var el = [
         '    <ul>',
@@ -62,14 +63,33 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
       }
 
       Ext.DomHelper.overwrite(rootEl, el);
-    } else if (data._search_job) {
+    } 
+
+    // We are downloading a PDF
+    else if (data._search_job) {
+
+      // Download ended in an error
       if (data._search_job.error) {
+
         var el = [
           '<div class="pp-box-error"><p>' + data._search_job.error + '</p>',
           '<p><a href="#" class="pp-textlink" action="report-download-error">Get this fixed</a> | <a href="#" class="pp-textlink" action="clear-download">Clear</a></p>',
           '</div>'];
+
+        // we don't want error reports on canceled downloads
+        if (data._search_job.error.match(/download canceled/)){
+          el = [
+            '<div class="pp-box-error"><p>' + data._search_job.error + '</p>',
+            '<p><a href="#" class="pp-textlink" action="clear-download">Clear</a></p>',
+            '</div>'];
+        }
+
         Ext.DomHelper.overwrite(rootEl, el);
-      } else {
+
+      }
+
+      // Download is still going on
+      else {
 
         var fraction = 0;
         var downloaded = data._search_job.downloaded;
@@ -79,49 +99,56 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
           fraction = downloaded / size;
         }
 
-        if (fraction) {
+        // Download is flagged for cancel but still running.
+        if (data._search_job.interrupt === "CANCEL" && data._search_job.status === 'RUNNING') {
           var el = [
-            '<table class="pp-control-container">',
-            '  <tr><td id ="dl-progress-' + this.div_id + '"></td><td width="10%">',
-            '<a href="#" action="cancel-download" class="pp-progress-cancel" ext:qtip="Cancel">&nbsp;</a>',
-            '</td></tr>',
-            '</table>'];
+            '<div class="pp-download-widget">',
+            '<div class="pp-download-widget-msg"><span class="pp-download-widget-msg-running"> Canceling download...</span></div>',
+            '<div><span class="pp-inactive">Cancel</a></div>',
+            '</div>'];
           Ext.DomHelper.overwrite(rootEl, el);
 
-          this.progressBar = new Ext.ProgressBar({
-            text: data._search_job.msg || "",
-            width: "90%",
-            renderTo: 'dl-progress-' + this.div_id
-          });
-
-          this.progressBar.updateProgress(fraction, downloaded + " / " + size);
-          this.progressBar.updateText(Ext.util.Format.fileSize(downloaded) + ' of ' + Ext.util.Format.fileSize(size));
         } else {
-          var msg = data._search_job.msg;
 
-          if (data._search_job.start) {
-            var dateObj = new Date;
-            var time = dateObj.getTime() / 1000;
-            var timeDiff = time - data._search_job.start;
 
-            if (timeDiff > 8) {
-              msg = "Still searching...";
-            }
+          // The actual download being performed and we have information how much we already got
+          if (fraction) {
+            var el = [
+              '<div class="pp-download-widget">',
+              '<div class="pp-download-widget-msg"><span id ="dl-progress-' + this.div_id + '"></span></div>',
+              '<div><a href="#" action="cancel-download" class="pp-textlink">Cancel</a></div>',
+              '</div>'];
+            Ext.DomHelper.overwrite(rootEl, el);
+
+            this.progressBar = new Ext.ProgressBar({
+              text: data._search_job.msg || "",
+              width: "90%",
+              renderTo: 'dl-progress-' + this.div_id
+            });
+
+            this.progressBar.updateProgress(fraction, downloaded + " / " + size);
+            this.progressBar.updateText(Ext.util.Format.fileSize(downloaded) + ' of ' + Ext.util.Format.fileSize(size));
+          } 
+
+          // We are still searching
+          else {
+            var msg = data._search_job.msg;
+
+            var el = [
+              '<div class="pp-download-widget">',
+              '<div class="pp-download-widget-msg"><span class="pp-download-widget-msg-running"> ' + msg + '</span></div>',
+              '<div><a href="#" action="cancel-download" class="pp-textlink">Cancel</a></div>',
+              '</div>'];
+
+            Ext.DomHelper.overwrite(rootEl, el);
           }
 
-          var el = [
-            '<table class="pp-control-container">',
-            '  <tr><td>',
-            '<span class="pp-icon-running">' + msg + '</span>',
-            '</td><td width="10%">',
-            '<a href="#" action="cancel-download" class="pp-progress-cancel" ext:qtip="Cancel">&nbsp;</a>',
-            '</td></tr>',
-            '</table>'];
-
-          Ext.DomHelper.overwrite(rootEl, el);
         }
+
       }
-    } else {
+    } 
+    // We don't have a PDF (and not downloading)
+    else {
       var el = [
         '<ul>',
         '  <li id="search-pdf-{id}">',

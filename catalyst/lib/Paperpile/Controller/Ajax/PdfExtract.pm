@@ -31,23 +31,30 @@ sub submit : Local {
 
   my ( $self, $c ) = @_;
 
-  my $path             = $c->request->params->{path};
+  my $paths            = $c->request->params->{paths};
   my @collection_guids = $c->request->param('collection_guids');
+
+
+  if (ref($paths) ne 'ARRAY'){
+    $paths =[$paths];
+  }
 
   ## Get all PDFs in all subdirectories
 
   my @files = ();
 
-  if ( -d $path ) {
-    find(
-      sub {
-        my $name = $File::Find::name;
-        push @files, $name if $name =~ /\.pdf$/i;
-      },
-      $path
-    );
-  } else {
-    push @files, $path;
+  foreach my $path (@$paths){
+    if ( -d $path ) {
+      find(
+           sub {
+             my $name = $File::Find::name;
+             push @files, $name if $name =~ /\.pdf$/i;
+           },
+           $path
+          );
+    } else {
+      push @files, $path;
+    }
   }
 
   my $q = Paperpile::Queue->new();

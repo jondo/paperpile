@@ -35,10 +35,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
     Paperpile.QueueOverview.superclass.initComponent.call(this);
 
     this.mainTemplate = new Ext.XTemplate(
-      '<div class="pp-box pp-box-side-panel pp-box-style1" style="padding-bottom:15px;">',
-      '  <h2>Tasks</h2>',
-      '  <div id="queue-table"></div>',
-      '</div>',
+      '<div id="queue-main-box"></div>',
       '<div id="queue-button-box" class="pp-box pp-box-side-panel pp-box-style2" style="padding-top:20px;">',
       '  <center><div id="queue-progress"></div></center>',
       '  <center><div id="queue-eta" class="pp-queue-eta"></div></center>',
@@ -59,6 +56,8 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       });
 
     this.tableTemplate = new Ext.XTemplate(
+      '<div class="pp-box pp-box-side-panel pp-box-style1" style="padding-bottom:15px;">',
+      '<h2>Tasks</h2>',
       '<table class="pp-queue-table">',
       '  <tr><td></td><td class="pp-queue-table-ok">OK</td><td class="pp-queue-table-error">Failed</td><td class="pp-queue-table-pending">Waiting</td></tr>',
       '  <tpl for="queue.types">',
@@ -83,13 +82,13 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       '<a href="#" class="pp-textlink" action="show-done-jobs">Successful</a>&nbsp;|&nbsp;',
       '<a href="#" class="pp-textlink" action="show-error-jobs">Failed</a>',
       '</p>',
-      '</center>', {
+      '</center></div>', {
         compiled: true
       });
 
     this.emptyTable = new Ext.XTemplate(
-      '<div>',
-      '  <p>No tasks to show.</p>',
+      '<div class="pp-box pp-box-side-panel pp-box-style2">',
+      '  <p class="pp-inactive">No Tasks to show.</p>',
       '  <p><a href="#" class="pp-textlink" action="close-tab">Close Tab</a></p>',
       '</div>', {
         compiled: true
@@ -153,7 +152,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       success: function(response, opts) {
         var json = Ext.util.JSON.decode(response.responseText);
         
-        if (json.queue.status != 'PAUSED') {
+        if (json.data.queue.status != 'PAUSED') {
           Paperpile.main.queueUpdate();
         }
 
@@ -168,7 +167,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
   },
 
   cancelAll: function() {
-    this.queuePanel.cancelJobs('all');
+    this.queuePanel.cancelAllJobs();
   },
 
   onUpdate: function(data) {
@@ -190,11 +189,11 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
     // Show overview table or emtpy message
     if (types) {
       if (types.length == 0) {
-        this.emptyTable.overwrite(Ext.get('queue-table'), data);
+        this.emptyTable.overwrite(Ext.get('queue-main-box'), data);
         Ext.get('queue-button-box').hide();
         return;
       } else {
-        this.tableTemplate.overwrite(Ext.get('queue-table'), data);
+        this.tableTemplate.overwrite(Ext.get('queue-main-box'), data);
       }
     }
 
@@ -210,7 +209,7 @@ Paperpile.QueueOverview = Ext.extend(Ext.Panel, {
       var eta = queue.eta;
 
       if (queue.status == 'PAUSED') {
-        this.queueProgress.updateProgress(0, 'Queue is paused.');
+        this.queueProgress.updateProgress(0, 'Task are paused.');
         this.pauseButton.setText('Resume');
         this.pauseButton.setIcon('/images/icons/resume.png');
       } else {

@@ -182,16 +182,33 @@ sub remove {
 sub cancel {
   my $self = shift;
 
-  next if ( $self->status ~~ [ 'ERROR', 'DONE' ] );
+  return if ( $self->status ~~ [ 'ERROR', 'DONE' ] );
 
   if ( $self->status eq 'RUNNING' ) {
     $self->interrupt('CANCEL');
+  } else {
+    $self->error( $self->noun . ' canceled.' );
+    $self->update_status('ERROR');
   }
 
-  $self->error( $self->noun . ' canceled.' );
-  $self->update_status('ERROR');
-
   $self->save;
+}
+
+
+sub is_canceled {
+
+  my $self = shift;
+
+  my $stored;
+
+  eval { $stored = lock_retrieve( $self->_file ); };
+  return 0 if not $stored;
+
+  if ($stored->interrupt eq 'CANCEL'){
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 ## Generate alphanumerical random id
@@ -314,24 +331,30 @@ sub _do_work {
 
   my $self = shift;
 
-  # $self->update_info('msg','Searching PDF');
-  # sleep(2);
-  # $self->update_info('msg','Starting download');
-  # sleep(2);
-  # $self->update_info('msg','Downloading');
-  # $self->update_info( 'size', 1000 );
-  # sleep(1);
-  # $self->update_info( 'downloaded', 200 );
-  # sleep(1);
-  # $self->update_info( 'downloaded', 500 );
-  # sleep(1);
-  # $self->update_info( 'downloaded', 800 );
-  # sleep(1);
-  # $self->update_info( 'downloaded', 1000 );
-  # sleep(1);
-  # ExtractionError->throw("Some random error") if (rand(1) > 0.5);
-  # $self->update_info('msg','File successfully downloaded.');
-  # return;
+  # if ( $self->type eq 'METADATA_UPDATE' ) {
+
+  #   $self->update_info( 'msg', 'Searching PDF' );
+  #   sleep(2);
+  #   $self->update_info( 'msg', 'Starting download' );
+  #   sleep(2);
+  #   $self->update_info( 'msg',  'Downloading' );
+  #   $self->update_info( 'size', 1000 );
+  #   sleep(1);
+  #   $self->update_info( 'downloaded', 200 );
+  #   sleep(1);
+  #   $self->update_info( 'downloaded', 500 );
+  #   sleep(1);
+  #   $self->update_info( 'downloaded', 800 );
+  #   sleep(1);
+  #   $self->update_info( 'downloaded', 1000 );
+  #   sleep(1);
+  #   ExtractionError->throw("Some random error") if ( rand(1) > 0.5 );
+  #   $self->update_info( 'msg', 'File successfully downloaded.' );
+  #   return;
+
+  # }
+
+  $self->pub->_jobid($self->id);
 
   if ( $self->type eq 'PDF_SEARCH' ) {
 
@@ -384,10 +407,7 @@ sub _do_work {
 
       my $error;
 
-      eval {
-        $self->_extract_meta_data;
-      };
-
+      eval { $self->_extract_meta_data; };
 
       if ($@) {
         my $e = Exception::Class->caught();
@@ -398,11 +418,11 @@ sub _do_work {
         }
       }
 
-      if (!$error and !$self->pub->{doi} and !$self->pub->{title} ) {
+      if ( !$error and !$self->pub->{doi} and !$self->pub->{title} ) {
         $error = "Could not find DOI or title in PDF.";
       }
 
-      if (!$error){
+      if ( !$error ) {
         my $success = $self->_match;
 
         if ( !$success ) {
@@ -412,10 +432,10 @@ sub _do_work {
 
       # If we encountered an error upstream we do not have the full
       # reference info and import it as 'incomplete'
-      if ($error){
-        if (!$self->pub->title){
-          my ( $volume, $dirs, $base_name ) = splitpath($self->pub->pdf);
-          $base_name=~s/\.pdf//i;
+      if ($error) {
+        if ( !$self->pub->title ) {
+          my ( $volume, $dirs, $base_name ) = splitpath( $self->pub->pdf );
+          $base_name =~ s/\.pdf//i;
           $self->pub->title($base_name);
         }
         $self->pub->pubtype('MISC');
@@ -426,7 +446,7 @@ sub _do_work {
 
       $self->update_info( 'callback', { fn => 'updatePubGrid' } );
 
-      if ($error){
+      if ($error) {
         NetMatchError->throw($error);
       }
 
@@ -483,7 +503,11 @@ sub _catch_error {
   my $e = Exception::Class->caught();
 
   if ( ref $e ) {
-    $self->error( $e->error );
+    if (Exception::Class->caught('UserCancel')){
+      $self->error( $self->noun. ' canceled.');
+    } else {
+      $self->error( $e->error );
+    }
   } else {
     print STDERR $@;    # log this error also on console
     $self->error("An unexpected error has occured ($@)");
@@ -547,12 +571,13 @@ sub as_hash {
   $hash{message} = $self->get_message;
 
   if ( defined $self->pub ) {
-    $hash{guid}             = $self->pub->guid;
+    $hash{guid}            = $self->pub->guid;
     $hash{citekey}         = $self->pub->citekey;
     $hash{title}           = $self->pub->title;
     $hash{doi}             = $self->pub->doi;
     $hash{linkout}         = $self->pub->linkout;
     $hash{citation}        = $self->pub->_citation_display;
+    $hash{year}            = $self->pub->year;
     $hash{journal}         = $self->pub->journal;
     $hash{authors_display} = $self->pub->_authors_display;
     $hash{authors}         = $self->pub->authors;
@@ -560,9 +585,9 @@ sub as_hash {
     # We have to store the original file name, the file name after
     # import and the guid of the imported PDF in various fields. This
     # is kind of a mess but it does not work with less variables
-    $hash{pdf_name}        = $self->pub->pdf_name;
-    $hash{pdf}             = $self->pub->pdf;
-    $hash{_pdf_tmp}        = $self->pub->_pdf_tmp;
+    $hash{pdf_name} = $self->pub->pdf_name;
+    $hash{pdf}      = $self->pub->pdf;
+    $hash{_pdf_tmp} = $self->pub->_pdf_tmp;
 
   }
   return {%hash};
@@ -589,6 +614,9 @@ sub _match {
 
   my $success_plugin;
 
+
+  print STDERR "[queue] Start matching against online resources.\n";
+
   eval {
     $success_plugin = $self->pub->auto_complete([@plugin_list]);
   };
@@ -610,6 +638,7 @@ sub _crawl {
   $self->update_info( 'msg', "Searching PDF..." );
 
   my $crawler = Paperpile::PdfCrawler->new;
+  $crawler->jobid($self->id);
   $crawler->debug(1);
   $crawler->driver_file( Paperpile::Utils->path_to( 'data', 'pdf-crawler.xml' )->stringify );
   $crawler->load_driver();
@@ -640,9 +669,11 @@ sub _download {
 
   my $self = shift;
 
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
+
   print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
-#  $self->update_info( 'msg', "Downloading PDF..." );
+  #  $self->update_info( 'msg', "Downloading PDF..." );
 
   my $file =
     File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->guid . ".pdf" );
@@ -748,6 +779,8 @@ sub _extract_meta_data {
 
   my $self = shift;
 
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
+
   print STDERR "[queue] Extracting meta data for ", $self->pub->pdf, "\n";
 
   my $bin = Paperpile::Utils->get_binary('pdftoxml');
@@ -767,6 +800,8 @@ sub _extract_meta_data {
 sub _lookup_pdf {
 
   my $self = shift;
+
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
   my $md5 = Paperpile::Utils->calculate_md5( $self->pub->pdf );
 
@@ -789,6 +824,8 @@ sub _lookup_pdf {
 sub _insert {
 
   my $self = shift;
+
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
   my $model = Paperpile::Utils->get_library_model;
 
@@ -820,9 +857,14 @@ sub _attach_pdf {
 
   my $self = shift;
 
-  my $model = Paperpile::Utils->get_library_model;
-
   my $file = $self->pub->pdf;
+
+  if ($self->is_canceled){
+    unlink($file);
+    UserCancel->throw( error => $self->noun . ' canceled.' )
+  }
+
+  my $model = Paperpile::Utils->get_library_model;
 
   $model->attach_file( $file, 1, $self->pub );
 

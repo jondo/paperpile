@@ -42,6 +42,7 @@ sub match {
   }
 
   my $crawler = Paperpile::MetaCrawler->new;
+  $crawler->jobid($self->jobid);
   $crawler->debug(0);
   $crawler->driver_file( Paperpile::Utils->path_to( 'data', 'meta-crawler.xml' )->stringify );
   $crawler->load_driver();

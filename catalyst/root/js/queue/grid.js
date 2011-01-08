@@ -50,102 +50,42 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       break;
     case 'pdf-view':
       var path;
+      // Find the right field depending on the circumstances...
       if (data._pdf_tmp) {
         path = data._pdf_tmp;
       } else {
-        path = data.pdf;
+        if (data.pdf_name){
+          path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, data.pdf_name);
+        } else {
+          path = data.pdf;
+        }
       }
       Paperpile.utils.openFile(path);
       break;
+    case 'cancel-task':
+      this.getQueuePanel().cancelJobs();
+      break;
+    case 'retry-task':
+      this.getQueuePanel().retryJobs();
+      break;
     }
-  },
-
-  onContextClick: function(grid, index, e) {
-    e.stopEvent();
-    return;
-    var record = this.getStore().getAt(index);
-    if (!this.isSelected(index)) {
-      this.select(index, false, true);
-    }
-
-    if (this.context == null) {
-      this.createContextMenu();
-    }
-
-    this.context.items.each(function(item, index, length) {
-      item.enable();
-      this.updateContextItem(item, record);
-    },
-    this);
-
-    (function() {
-      this.context.showAt(e.getXY());
-      this.updateButtons();
-    }).defer(20, this);
   },
 
   getQueuePanel: function() {
     return this.findParentByType(Paperpile.QueuePanel);
   },
 
-  getContextMenu: function() {
-    if (this.context != null) {
-      return this.context;
-    }
-    this.context = new Ext.menu.Menu({
-      itemId: 'context'
-    });
-    var c = this.context;
-    return c;
-  },
-
-  getToolbar: function() {
-    if (this._tbar != null) {
-      return this._tbar;
-    }
-
-    var tbar = new Ext.Toolbar({
-      itemId: 'toolbar'
-    });
-    tbar.insert(0, this.actions['CANCEL']);
-    tbar.insert(0, this.actions['RETRY']);
-    tbar.insert(0, this.actions['TB_FILL']);
-
-    this._tbar = tbar;
-    return tbar;
-  },
-
-  updateToolbar: function() {
-    var sel = this.getSelectedRecords();
-    var tbar = this.getToolbar();
-
-    if (sel.length == 0) {
-      tbar.items.each(function(item, index, length) {
-        item.disable();
-      },
-      this);
-    } else {
-      tbar.items.each(function(item, index, length) {
-        item.enable();
-      },
-      this);
-    }
-
-    if (sel.length == 1) {
-      var data = sel[0].data;
-      if (data.status === 'DONE' || data.status === 'ERROR') {
-        this.actions['CANCEL'].disable();
-      } else {
-        this.actions['RETRY'].disable();
-      }
-
-    }
-
-  },
-
   renderData: function(value, meta, record) {
 
     var data = record.data;
+
+    // Show that canceling is in progress
+    if (data.status === 'RUNNING' && this.flaggedForCancel[data.id]){
+      data.message = "Canceling Task...";
+      data.flaggedForCancel = true;
+    } else {
+      data.flaggedForCancel = false;
+    }
 
     if (data.size && data.downloaded && data.status === 'RUNNING') {
       data.message = 'Downloading (' + Math.round((data.downloaded / data.size) * 100) + '%)';
@@ -178,43 +118,21 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     return this.dataTemplate.apply(data);
   },
 
-  renderType: function(value, meta, record) {
-    var data = record.data;
-    return this.typeTemplate.apply(data);
-  },
-
   renderStatus: function(value, meta, record) {
     var data = record.data;
     return this.statusTemplate.apply(data);
   },
 
+  renderType: function(value, meta, record) {
+    var data = record.data;
+    return this.typeTemplate.apply(data);
+  },
+
   initComponent: function() {
 
-    this.actions = {
-      'RETRY': new Ext.Action({
-        text: 'Retry Tasks',
-        tooltip: 'Run selected tasks again',
-        handler: function() {
-          this.getQueuePanel().retryJobs();
-        },
-        scope: this,
-        iconCls: 'pp-icon-retry'
-      }),
-      'CANCEL': new Ext.Action({
-        text: 'Cancel Tasks',
-        tooltip: 'Cancel selected tasks',
-        handler: function() {
-          this.getQueuePanel().cancelJobs();
-        },
-        scope: this,
-        cls: 'x-btn-text-icon',
-        iconCls: 'pp-icon-cancel'
-      }),
-      'TB_FILL': new Ext.Toolbar.Fill({
-        width: '10px',
-        itemId: 'search_tb_fill'
-      })
-    };
+    // Helper construct to show appropriate status messages when
+    // cancel is in progress
+    this.flaggedForCancel = {};
 
     var pager = new Ext.PagingToolbar({
       pageSize: 100,
@@ -224,62 +142,50 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       emptyMsg: "No tasks"
     });
 
+
     this.dataTemplate = new Ext.XTemplate(
-      '<div style="padding: 4px 0;">',
-      '  <tpl if="type==\'PDF_SEARCH\'">',
-      '    <div class="pp-queue-list-data">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">{shortAuthors} <b>{shortTitle}</b> <i>{journal}</i></div>',
-      '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
-      '        {message}',
-      '      </div>',
-      '      <tpl if="status==\'ERROR\'">',
-      '        <p>',
+      
+      '<div>',
+      '    <tpl if="type==\'PDF_SEARCH\'||type==\'METADATA_UPDATE\'">',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{shortTitle}</b></div>',
+      '      <div class="pp-queue-list-citation">{shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></div></div>',
+      '    </tpl>',
+      '    <tpl if="type==\'PDF_IMPORT\'">',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{_pdf_tmp}</b></div>',
+      '       <tpl if="status==\'DONE\'">',
+      '         <div class="pp-queue-list-citation"><b>{shortTitle}</b> {shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></div></div>',
+      '       </tpl>',
+      '    </tpl>',
+      '     <div id="queue-job-{id}" class="pp-queue-list-status-container">',
+      '        <span class="pp-queue-list-status pp-queue-list-status-{status}">{message}</span>',
+      '     </div>',
+      '     <div class="pp-queue-list-action">',
+      '       <tpl if="status==\'DONE\'">',
+      '         <tpl if="type==\'PDF_SEARCH\'||type==\'PDF_IMPORT\'"><a href="#" class="pp-textlink" action="pdf-view">View PDF</a></tpl>',
+      '       </tpl>',
+      '       <tpl if="status==\'ERROR\'">',
+      '         <tpl if="type==\'PDF_SEARCH\'">',
       '           <tpl if="publisherLink">',
-      '             <a href="#" class="pp-textlink" action="pdf-download-open-url">Go to publisher site</a> | ',
-      '           </tpl>',
-      '           <a href="#" class="pp-textlink" action="pdf-download-error-report">Send Error Report</a>',
-      '       </p> ',
-      '      </tpl>',
-      '    </div>',
-      '  </tpl>',
-      '  <tpl if="type==\'PDF_IMPORT\'">',
-      '    <div class="pp-queue-list-data">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">',
-      '      <tpl if="status!=\'DONE\'">{_pdf_tmp} </tpl> ',
-      '      <tpl if="status!=\'ERROR\'">',
-      '        <tpl if="shortAuthors">{shortAuthors} </tpl> <tpl if="shortTitle"><b>{shortTitle}</b></tpl> <tpl if="journal"><i>{journal}</i></tpl>',
-      '      </tpl> ',
-      '      </div>',
-      '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
-      '      {message}',
-      '      </div>',
-      '      <tpl if="status==\'ERROR\'">',
-      '        <p>',
-      '          <a href="#" class="pp-textlink" action="pdf-match-insert-manually">Insert data manually</a> | ',
-      '          <a href="#" class="pp-textlink" action="pdf-view">View PDF</a> | ',
-      '          <a href="#" class="pp-textlink" action="pdf-match-error-report">Send Error Report</a>',
-      '       </p>',
-      '      </tpl>',
-      '    </div>',
-      '  </tpl>',
-      '  <tpl if="type==\'METADATA_UPDATE\'">',
-      '    <div class="pp-queue-list-data">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}">{shortAuthors} <b>{shortTitle}</b> <i>{journal}</i></div>',
-      '      <div class="pp-queue-list-status pp-queue-list-status-{status}">',
-      '        {message}',
-      '      </div>',
-      '      <tpl if="status==\'ERROR\'">',
-      '        <p>',
-      '           <tpl if="publisherLink">',
-      '             <a href="#" class="pp-textlink" onclick="Paperpile.utils.openURL(\'{publisherLink}\')">Go to publisher site</a> | ',
-      '           </tpl>',
-      '       </p> ',
-      '      </tpl>',
-      '    </div>',
-      '  </tpl>',
-
-      '</div>').compile();
-
+      '               <a href="#" class="pp-textlink" action="pdf-download-open-url">Go to publisher site</a> | ',
+      '            </tpl>',
+      '            <a href="#" class="pp-textlink" action="pdf-download-error-report">Send Error Report</a> |',
+      '         </tpl>',
+      '         <tpl if="type==\'PDF_IMPORT\'">',
+      '            <a href="#" class="pp-textlink" action="pdf-match-insert-manually">Insert Data Manually</a> |',
+      '            <a href="#" class="pp-textlink" action="pdf-match-error-report">Send Error Report</a> ',
+      '         </tpl>',
+      '        <tpl if="type==\'PDF_SEARCH\'||type==\'METADATA_UPDATE\'"><a href="#" class="pp-textlink" action="retry-task"> Retry</a></tpl>',
+      '       </tpl>',
+      '       <tpl if="status==\'RUNNING\'||status==\'PENDING\'">',
+      '          <tpl if="!flaggedForCancel"><a href="#" class="pp-textlink" action="cancel-task">Cancel</a></tpl>',
+      '          <tpl if="flaggedForCancel"><span class="pp-inactive">Cancel</span></tpl>',
+      '       </tpl>',
+      '     </div> ',
+      '</div>'
+      
+    ).compile();
+    
+  
     this.typeTemplate = new Ext.XTemplate(
       '<div style="padding: 4px 0;">',
       '  <tpl if="type==\'PDF_SEARCH\'">',
@@ -295,11 +201,10 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
 
     this.statusTemplate = new Ext.XTemplate(
       '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>').compile();
-
+    
     Ext.apply(this, {
       store: this.getStore(),
       bbar: pager,
-      tbar: this.getToolbar(),
       multiSelect: true,
       selModel: new Ext.ux.BetterRowSelectionModel(),
       cm: new Ext.grid.ColumnModel({
@@ -329,9 +234,9 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
           dataIndex: 'status',
           renderer: this.renderStatus.createDelegate(this),
           sortable: false,
-          resizable: false
-        },
-        ]
+          resizable: false,
+          width: 70,
+        }]
       }),
       autoExpandColumn: 'title',
       hideHeaders: true
@@ -362,7 +267,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
   },
 
   selChanged: function(selections) {
-    this.updateToolbar();
+
   },
 
   // onUpdate function for the Queue grid view.
@@ -388,6 +293,11 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       record.set('size', update.info.size);
       record.set('downloaded', update.info.downloaded);
       record.editing = false;
+
+      // Clear flaggedForCancel when job is done
+      if (this.flaggedForCancel[record.get('id')] && record.get('status') != "RUNNING"){
+        this.flaggedForCancel[record.get('id')] = false;
+      }
 
       if (record.dirty) {
         needsUpdating = true;

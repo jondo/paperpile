@@ -322,7 +322,7 @@ li:hover .pp-second-link{
 }
 
 .pp-box-error {
-    padding: 5px;
+    padding: 2px;
     margin: 8px;
     font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
     background-color: #FFBABA;
@@ -1583,8 +1583,31 @@ div:hover.pp-grid-sort-item {
     display:inline;
 }
 
-.pp-search-download-widget {
+.pp-download-widget {
+    padding: 5px;
+    margin: 8px;
+    font:normal 12px arial, verdana, tahoma, arial, helvetica, sans-serif;
+    font-weight: normal;
 }
+
+.pp-download-widget-msg{
+    padding: 0 0 3px 0;
+}
+
+.pp-download-widget-msg-running{
+    background-color:#2D77E5;
+    color:#FFFFFF;
+    padding: 0 3px;
+    font-weight:bold;
+}
+
+
+
+.pp-download-widget-action{
+
+}
+
+
 
 .pp-label-control *{
     font-size:9px;
@@ -2384,6 +2407,7 @@ table.pp-meta-form {
 }
 
 .pp-queue-list-data{
+    padding: 5px;
 }
 
 .pp-queue-list-icon{
@@ -2407,6 +2431,10 @@ table.pp-meta-form {
     color:gray;
 }
 
+.pp-queue-type-label{
+    padding: 0 2px;
+    margin: 0 4px 0 0;
+}
 
 .pp-queue-type-label-PDF_SEARCH{
     background-color: #FFF6A9;
@@ -2421,7 +2449,14 @@ table.pp-meta-form {
 }
 
 .pp-queue-list-title{
+    padding: 1px 0px;
 }
+
+.pp-queue-list-citation{
+    padding: 1px 0px;
+    color:gray;
+}
+
 
 .pp-queue-list-title-PENDING, .pp-queue-list-title-ERROR{
     color:gray;
@@ -2431,26 +2466,48 @@ table.pp-meta-form {
     color:black;
 }
 
+.pp-queue-list-status-container{
+    margin: 3px 0;
+}
 
 .pp-queue-list-status{
-
 }
 
 .pp-queue-list-status-ERROR{
-    color:red;
+    color: #D8000C;
+    font-weight:bold;
 }
 
 .pp-queue-list-status-RUNNING{
-    color:blue;
+    background-color:#2D77E5;
+    color:#FFFFFF;
+    padding: 0px 2px;
+    font-weight:bold;
 }
 
 .pp-queue-list-status-PENDING{
     color:gray;
+    background-color:#F0F0F0;
 }
 
 .pp-queue-list-status-DONE{
     color:#088A08;
+    font-weight:bold;
 }
+
+.pp-queue-list-action{
+    padding: 3px 0px;
+}
+
+.pp-queue-list-box{
+    background-color:#F0F0F0;
+    border-color: #D8D8D8;
+    border-width: 1px 0 0 0;
+    border-style:solid;
+    padding: 2px;
+    margin: 3px 0 0 0;
+}
+
 
 
 .pp-queue-table {

@@ -307,7 +307,6 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var row = Paperpile.main.getCurrentlySelectedRow();
     var grid = Paperpile.main.getCurrentGrid();
     var files = this.getFilesFromEvent(event);
-    1
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
       Paperpile.main.attachFile.defer(100 * (i + 1), this, [grid, row.get('guid'), file.canonicalFilePath, true]);
@@ -316,12 +315,20 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
   importPdf: function(event) {
     var files = this.getFilesFromEvent(event);
+
+    var newFiles =[];
+
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
       if (file.suffix == 'pdf' || file.isDir) {
-        Paperpile.main.submitPdfExtractionJobs.defer(100 * (i + 1), this, [file.canonicalFilePath]);
+        newFiles.push(file.canonicalFilePath);
       }
     }
+
+    Paperpile.log(newFiles);
+
+    Paperpile.main.submitPdfExtractionJobs(newFiles);
+    
   },
 
   openFile: function(event) {

@@ -201,8 +201,14 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     cb.on('blur', this.onBlur, this);
     if (Ext.get('pdf-view-button')) {
       this.mon(Ext.get('pdf-view-button'), 'click', function() {
-        var pdf = this.data.pdf_name;
-        var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
+        var path;
+
+        // Set path depending on wheter PDF was already imported or not
+        if (this.data.guid){
+          path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf_name);
+        } else {
+          path = this.data._pdf_tmp;
+        }
         Paperpile.utils.openFile(path);
       },
       this);
@@ -862,7 +868,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
     var msg = '';
     var url;
-    var params;
+    var params = {};
 
     if (!this.isNew) {
       url = Paperpile.Url('/ajax/crud/update_entry');
@@ -870,6 +876,9 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         guid: this.data['guid'],
       };
       msg = 'Updating database';
+
+      // Add data for a failed PDF import job (PDF has been imported
+      // before but data is incomplete)
       if (this.data.match_job) {
         params.pdf = this.data.pdf;
         params.match_job = this.data.match_job;
@@ -879,6 +888,13 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     else {
       url = Paperpile.Url('/ajax/crud/new_entry');
       msg = 'Adding new entry to database';
+
+      // Add data for a failed PDF import job (job has been canceled
+      // and PDF has not been imported)
+      if (this.data.match_job) {
+        params._pdf_tmp = this.data._pdf_tmp;
+        params.match_job = this.data.match_job;
+      }
     }
 
     Paperpile.status.showBusy(msg);

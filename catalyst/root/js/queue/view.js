@@ -75,6 +75,11 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
     if (!selection) {
       selection = this.queueList.getSelectedIds();
     }
+
+    for (var i=0; i< selection.length;i++){
+      this.getGrid().flaggedForCancel[selection[i]]=true;
+    }
+
     Paperpile.Ajax({
       url: '/ajax/queue/cancel_jobs',
       params: {
@@ -86,6 +91,24 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
       scope: this
     });
   },
+
+  cancelAllJobs: function() {
+
+    for (var id in Paperpile.main.currentQueueData.jobs) {
+      if (Paperpile.main.currentQueueData.jobs[id].status === 'RUNNING'){
+        this.getGrid().flaggedForCancel[id]=true;
+      }
+    }
+
+    Paperpile.Ajax({
+      url: '/ajax/queue/cancel_all_jobs',
+      success: function(response, opts) {
+        this.getGrid().getStore().reload();
+      },
+      scope: this
+    });
+  },
+
 
   retryJobs: function(selection) {
     if (!selection) {
