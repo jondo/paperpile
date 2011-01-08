@@ -339,6 +339,7 @@ sub lookup_entry : Local {
 
   my $success_plugin;
 
+
   eval { $success_plugin = $pub->auto_complete( [@plugin_list] ); };
 
   my $e;

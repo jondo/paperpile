@@ -182,14 +182,14 @@ sub remove {
 sub cancel {
   my $self = shift;
 
-  next if ( $self->status ~~ [ 'ERROR', 'DONE' ] );
+  return if ( $self->status ~~ [ 'ERROR', 'DONE' ] );
 
   if ( $self->status eq 'RUNNING' ) {
     $self->interrupt('CANCEL');
+  } else {
+    $self->error( $self->noun . ' canceled.' );
+    $self->update_status('ERROR');
   }
-
-  $self->error( $self->noun . ' canceled.' );
-  $self->update_status('ERROR');
 
   $self->save;
 }
@@ -439,6 +439,8 @@ sub _do_work {
   if ( $self->type eq 'METADATA_UPDATE' ) {
     my $pub = $self->pub;
 
+    $pub->_jobid($self->id);
+
     my $old_hash = $pub->as_hash;
 
     my $success = $self->_match;
@@ -612,6 +614,7 @@ sub _crawl {
   $self->update_info( 'msg', "Searching PDF..." );
 
   my $crawler = Paperpile::PdfCrawler->new;
+  $crawler->jobid($self->id);
   $crawler->debug(1);
   $crawler->driver_file( Paperpile::Utils->path_to( 'data', 'pdf-crawler.xml' )->stringify );
   $crawler->load_driver();

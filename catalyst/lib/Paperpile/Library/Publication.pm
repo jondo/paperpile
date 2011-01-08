@@ -165,6 +165,11 @@ has '_citation_display' => ( is => 'rw' );
 # If an entry is already in our database this field is true.
 has '_imported' => ( is => 'rw', isa => 'Bool' );
 
+
+# Can be set to a job id of the task queue. It allows to update job
+# status messages from functions in Publication class.
+has '_jobid' => ( is => 'rw', default => undef );
+
 # If true, has a PDF search / download job in progress.
 has '_search_job' => ( is => 'rw', default => undef );
 
@@ -614,6 +619,8 @@ sub auto_complete {
   my $caught_error   = undef;
 
   foreach my $plugin_name (@$plugin_list) {
+
+    Paperpile::Utils->update_job_info($self->_jobid, 'msg', "Searching $plugin_name", "Auto-complete canceled");
 
     eval {
       my $plugin_module = "Paperpile::Plugins::Import::" . $plugin_name;

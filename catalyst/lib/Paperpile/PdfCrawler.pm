@@ -48,6 +48,10 @@ has '_browser' => ( is => 'rw', isa => 'LWP::UserAgent' );
 has 'debug'    => ( is => 'rw', isa => 'Bool', default => 1 );
 has '_cache'   => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
 
+# Allows to update status information for queue task.
+has 'jobid' => ( is => 'rw', default => undef );
+
+
 sub BUILD {
 
   my $self = shift;
@@ -363,6 +367,18 @@ sub _get_location {
   if ($self->_cache->{$URL}){
     return $self->_cache->{$URL};
   }
+
+  my ($scheme, $auth, $path, $query, $frag) = uri_split($URL);
+
+  $auth=~s/^www\.//i;
+
+  my $msg = "Waiting for $auth...";
+
+  if ($auth =~/doi\.org/){
+    $msg = "Resolving DOI...";
+  }
+
+  Paperpile::Utils->update_job_info($self->jobid, 'msg', $msg, "PDF download canceled");
 
   my $response=$self->_browser->get($URL);
 

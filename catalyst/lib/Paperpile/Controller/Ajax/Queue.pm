@@ -177,7 +177,6 @@ sub cancel_jobs : Local {
     $job->cancel;
   }
 
-
   my $q = Paperpile::Queue->new();
   $q->run;
 
