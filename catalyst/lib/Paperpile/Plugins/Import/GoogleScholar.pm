@@ -118,6 +118,14 @@ sub fetch_cookie {
 
     my $browser = Paperpile::Utils->get_browser;
     my $response = $browser->get($self->prefs_url);
+
+    if ( $response->is_error ) {
+      NetGetError->throw(
+			 error => 'Google Scholar query failed: ' . $response->message,
+			 code  => $response->code
+			);
+    }
+
     my $content = $response->content;
 
     # Get the scisig value from the hidden form element.
@@ -151,6 +159,14 @@ sub connect {
   # Get the results
   my $query_string = FormatQueryString( $self->query );
   my $response     = $browser->get( $searchUrl . $query_string );
+
+  if ( $response->is_error ) {
+    NetGetError->throw(
+		       error => 'Google Scholar query failed: ' . $response->message,
+		       code  => $response->code
+		      );
+  }
+
   my $content      = $response->content;
 
   # save first page in cache to speed up call to first page afterwards
@@ -204,6 +220,14 @@ sub page {
     my $query_string = FormatQueryString( $self->query );
     my $query        = $searchUrl . $query_string . "&start=$offset";
     my $response     = $browser->get($query);
+
+    if ( $response->is_error ) {
+      NetGetError->throw(
+			 error => 'Google Scholar query failed: ' . $response->message,
+			 code  => $response->code
+			);
+    }
+
     $content = $response->content;
   }
 
@@ -307,6 +331,14 @@ sub complete_details {
     # We retrieve at most 100 aritcles and screen the page if there
     # is a good linkout to a publisher that we can already parse or
     my $response_all_versions = $browser->get( $pub->_all_versions . '&num=100' );
+
+    if ( $response_all_versions->is_error ) {
+      NetGetError->throw(
+			 error => 'Google Scholar query failed: ' . $response_all_versions->message,
+			 code  => $response_all_versions->code
+			);
+    }
+
     my $content_all_versions  = $response_all_versions->content;
 
     my $page = $self->_parse_googlescholar_page($content_all_versions);
@@ -376,6 +408,12 @@ sub complete_details {
   # publication object
 
   my $bibtex_tmp = $browser->get( $pub->_details_link );
+  if ( $bibtex_tmp->is_error ) {
+    NetGetError->throw(
+		       error => 'Google Scholar query failed: ' . $bibtex_tmp->message,
+		       code  => $bibtex_tmp->code
+		      );
+  }
   $bibtex = $bibtex_tmp->content;
 
   # Create a new Publication object
@@ -529,6 +567,14 @@ sub match {
 
     my $query    = $searchUrl . $query_doi . "&as_vis=1";
     my $response = $browser->get($query);
+
+    if ( $response->is_error ) {
+      NetGetError->throw(
+			 error => 'Google Scholar query failed: ' . $response->message,
+			 code  => $response->code
+			);
+    }
+
     my $content  = $response->content;
 
     my $error_level = _check_content($content);
@@ -555,6 +601,14 @@ sub match {
           if ( $page->[0] ) {
             my $fullpub      = $self->complete_details( $page->[0] );
             my $doi_response = $browser->get( 'http://dx.doi.org/' . $pub->doi );
+
+	    if ( $doi_response->is_error ) {
+	      NetGetError->throw(
+				 error => 'Google Scholar query failed: ' . $doi_response->message,
+				 code  => $doi_response->code
+				);
+	    }
+
             ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
             $doi_content =~ s/\s+/ /g;
             $doi_content =~ s/\n//g;
@@ -580,6 +634,12 @@ sub match {
 
           # We resolve the doi using dx.doi.org
           my $doi_response = $browser->get( 'http://dx.doi.org/' . $pub->doi );
+	  if ( $doi_response->is_error ) {
+	    NetGetError->throw(
+			       error => 'Google Scholar query failed: ' . $doi_response->message,
+			       code  => $doi_response->code
+			      );
+	  }
           ( my $doi_content = $doi_response->content ) =~ s/({|})//g;
           $doi_content =~ s/\s+/ /g;
           $doi_content =~ s/\n//g;
@@ -644,6 +704,12 @@ sub match {
     # Now let's ask GoogleScholar again with Authors/Title
     my $query    = $searchUrl . $query_string;
     my $response = $browser->get($query);
+    if ( $response->is_error ) {
+      NetGetError->throw(
+			 error => 'Google Scholar query failed: ' . $response->message,
+			 code  => $response->code
+			);
+    }
     my $content  = $response->content;
 
     my $error_level = _check_content($content);
@@ -680,6 +746,12 @@ sub match {
     # Now let's ask GoogleScholar again with Authors/Title
     my $query    = $searchUrl . $query_string;
     my $response = $browser->get($query);
+    if ( $response->is_error ) {
+      NetGetError->throw(
+			 error => 'Google Scholar query failed: ' . $response->message,
+			 code  => $response->code
+			);
+    }
     my $content  = $response->content;
 
     my $error_level = _check_content($content);
