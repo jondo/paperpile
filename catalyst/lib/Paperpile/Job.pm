@@ -605,6 +605,8 @@ sub _match {
 
   my $self = shift;
 
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
+
   my $model    = Paperpile::Utils->get_library_model;
   my $settings = $model->settings;
 
@@ -635,7 +637,7 @@ sub _crawl {
 
   my $self = shift;
 
-  $self->update_info( 'msg', "Searching PDF..." );
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
   my $crawler = Paperpile::PdfCrawler->new;
   $crawler->jobid($self->id);

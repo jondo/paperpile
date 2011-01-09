@@ -344,19 +344,22 @@ sub _get_location {
     return $self->_cache->{$URL};
   }
 
-  my ($scheme, $auth, $path, $query, $frag) = uri_split($URL);
+  my $domain = Paperpile::Utils->domain_from_url($URL);
 
-  $auth=~s/^www\.//i;
+  my $msg = "Waiting for $domain...";
 
-  my $msg = "Waiting for $auth...";
-
-  if ($auth =~/doi\.org/){
+  if ( $domain =~ /doi\.org/ ) {
     $msg = "Resolving DOI...";
   }
 
-  Paperpile::Utils->update_job_info($self->jobid, 'msg', $msg, "Meta-data lookup canceled.");
-
-  my $response = $self->_browser->get($URL);
+  my $response = $self->_browser->request(
+    HTTP::Request->new( GET => $URL ),
+    sub {
+      my ( $data, $response, $protocol ) = @_;
+      $response->content( $response->content . $data );
+      Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg, "Meta-data lookup canceled." );
+    }
+  );
 
   if ( $response->is_error ) {
     NetGetError->throw(

@@ -27,7 +27,6 @@ use HTML::LinkExtor;
 use HTML::TreeBuilder;
 use XML::Simple;
 use URI::URL;
-use URI::Split qw(uri_split uri_join);
 use Encode;
 use Data::Dumper;
 use Config::Any;
@@ -263,6 +262,10 @@ sub _matchURL {
 
   $pattern =~ s/!//g;
 
+  my $msg = "Locating PDF on " . Paperpile::Utils->domain_from_url($URL). "...";
+
+  Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg, "PDF download canceled" );
+
   print STDERR "    Trying to match pattern $pattern in content of $URL...\n"
     if $self->debug;
 
@@ -275,7 +278,6 @@ sub _matchURL {
     print STDERR "    ..but did not find anything...\n" if $self->debug;
     return undef;
   }
-
 }
 
 ## function to rewrite URL (see _followURL for description)
@@ -362,25 +364,30 @@ sub _resolve_pattern {
 
 sub _get_location {
 
-  my ($self, $URL) = @_;
+  my ( $self, $URL ) = @_;
 
-  if ($self->_cache->{$URL}){
+  if ( $self->_cache->{$URL} ) {
     return $self->_cache->{$URL};
   }
 
-  my ($scheme, $auth, $path, $query, $frag) = uri_split($URL);
+  my $domain = Paperpile::Utils->domain_from_url($URL);
 
-  $auth=~s/^www\.//i;
+  my $msg = "Waiting for $domain...";
 
-  my $msg = "Waiting for $auth...";
-
-  if ($auth =~/doi\.org/){
+  if ( $domain =~ /doi\.org/ ) {
     $msg = "Resolving DOI...";
   }
 
-  Paperpile::Utils->update_job_info($self->jobid, 'msg', $msg, "PDF download canceled");
+  #my $response=$self->_browser->get($URL);
 
-  my $response=$self->_browser->get($URL);
+  my $response = $self->_browser->request(
+    HTTP::Request->new( GET => $URL ),
+    sub {
+      my ( $data, $response, $protocol ) = @_;
+      $response->content( $response->content . $data );
+      Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg, "PDF download canceled" );
+    }
+  );
 
   if ( $response->is_error ) {
     NetGetError->throw(
@@ -389,7 +396,7 @@ sub _get_location {
     );
   }
 
-  $self->_cache->{$URL}=$response;
+  $self->_cache->{$URL} = $response;
 
   return $response;
 }

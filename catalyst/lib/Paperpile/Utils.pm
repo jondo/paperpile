@@ -31,6 +31,7 @@ use Storable qw(lock_store lock_retrieve);
 use Compress::Zlib;
 use MIME::Base64;
 use Digest::MD5;
+use URI::Split qw(uri_split uri_join);
 
 use Data::Dumper;
 use Config;
@@ -604,8 +605,15 @@ sub update_job_info {
 
 }
 
+sub domain_from_url {
 
+  my ($self, $url) = @_;
 
+  my ( $scheme, $auth, $path, $query, $frag ) = uri_split($url);
+  $auth =~ s/^www\.//i;
 
+  return $auth;
+
+}
 
 1;
