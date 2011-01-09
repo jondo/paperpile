@@ -1,0 +1,21 @@
+---
+test_comment: "Some test for demonstrating purpose"
+authors: 'Waterman, M. S. and Smith, T. F.'
+journal: Mathematical Biosciences
+pages: 257-266
+pubtype: ARTICLE
+title: 'RNA secondary structure: A complete mathematical analysis'
+volume: 42
+year: 1978
+test_expected: |
+  TY  - JOUR
+  T1  - RNA secondary structure: A complete mathematical analysis
+  AU  - Waterman, M. S.
+  AU  - Smith, T. F.
+  Y1  - 1978
+  JF  - Mathematical Biosciences
+  JO  - Mathematical Biosciences
+  VL  - 42
+  SP  - 257
+  EP  - 266
+  ER  -
