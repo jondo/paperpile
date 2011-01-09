@@ -569,6 +569,11 @@ sub _ParseDOI {
   # remove points at the end
   $doi =~ s/\.$//;
 
+  # check for minimal length
+  if ( $doi =~ m/(10\.\d{4}\/)(.*)/ ) {
+    $doi = '' if ( length($2) < 5 );
+  }
+
   return $doi;
 }
 
