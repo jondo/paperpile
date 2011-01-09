@@ -333,17 +333,17 @@
 <site name="Atypon">
   <signature>
     <url>atypon</url>
-    <url>acs\.org/doi/(abs|full)</url>
-    <url>annualreviews\.org/doi/(abs|full)</url>
-    <url>liebertonline\.com/doi/(abs|full)</url>
-    <url>mitpressjournals\.org/doi/(abs|full)</url>
-    <url>esajournals.org/doi/(abs|full)</url>
+    <url>acs\.org/doi/(abs|full|pdf)</url>
+    <url>annualreviews\.org/doi/(abs|full|pdf)</url>
+    <url>liebertonline\.com/doi/(abs|full|pdf)</url>
+    <url>mitpressjournals\.org/doi/(abs|full|pdf)</url>
+    <url>esajournals.org/doi/(abs|full|pdf)</url>
     <body>atypon\.com</body>
   </signature>
 
   <rule>
     <pattern>
-      <rewrite>!(abs|full)!pdf!</rewrite>
+      <rewrite>!(abs|full|pdf)!pdf!</rewrite>
     </pattern>
   </rule>
 
@@ -358,6 +358,7 @@
 <site name="AllenPress">
   <signature>
     <url>!allenpress\.com!</url>
+    <body>!href=&quot;/doi/pdf/\d\d.\d{4}/[^&quot;]+&quot;!</body>
     <body>!(/pdfserv/\S*)&quot;!</body>
   </signature>
 
@@ -369,12 +370,13 @@
 
   <rule>
     <pattern>
-      <rewrite>!(doi/abs|doi/full)!doi/pdf!</rewrite>
+      <rewrite>!(doi/abs|doi/full|doi/pdf)!doi/pdf!</rewrite>
     </pattern>
   </rule>
 
   <test>
-    <url>http://arpa.allenpress.com/arpaonline/?request=get-abstract&amp;issn=1543-2165&amp;volume=132&amp;page=273</url>
+    <url>http://www.chelonianjournals.org/doi/abs/10.2744/CCB-0833.1</url>
+    <url>http://www.archivesofpathology.org/doi/abs/10.1043/2010-0048-OAR.1</url>
     <url>http://www.angle.org.pinnacle.allenpress.com/doi/full/10.2319/090709-506.1</url>
   </test>
 </site>
@@ -416,7 +418,7 @@
   </rule>
 
   <test>
-    <url>http://www.jstage.jst.go.jp/article/mandi/51/11/51_1099/_article</url>
+    <url>http://www.jstage.jst.go.jp/article/jibirinsuppl/124/0/124_43/_article</url>
     <url>http://www.journalarchive.jst.go.jp/english/jnlabstract_en.php?cdjournal=bbb1961&amp;cdvol=55&amp;noissue=12&amp;startpage=3059</url>
   </test>
 </site>
