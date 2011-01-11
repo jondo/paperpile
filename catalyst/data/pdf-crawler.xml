@@ -815,6 +815,25 @@
   </test>
 </site>
 
+<site name="Ivyspring">
+  <signature>
+    <url>!biolsci\.org!</url>
+    <url>!medsci\.org!</url>
+    <url>!jcancer\.org!</url>
+    <url>!thno\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*(?:'|&quot;)([^&quot;']+\.pdf)(?:'|&quot;)!</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.biolsci.org/v07p0028</url>
+  </test>
+</site>
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
