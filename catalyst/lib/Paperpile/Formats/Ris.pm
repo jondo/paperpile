@@ -19,6 +19,7 @@ use Moose;
 use Data::Dumper;
 use IO::File;
 use Switch;
+use Encode;
 
 extends 'Paperpile::Formats';
 
@@ -30,464 +31,444 @@ sub BUILD {
 }
 
 sub read {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    my @output;
-    my @entries;    # array of ris text blocks
-    my @ris;        # array (references) of arrays (tags)
-    my $tmp_note = '';
+  my @output;
+  my @entries;    # array of ris text blocks
+  my @ris;        # array (references) of arrays (tags)
+  my $tmp_note = '';
 
-    # map of ris types to paperpile types
-    my %types = (
-        'JOUR' => 'ARTICLE',
-        'JFUL' => 'ARTICLE',
-        'MGZN' => 'ARTICLE',
-	'ABST' => 'ARTICLE',
-        'BOOK' => 'BOOK',
-        'CHAP' => 'INBOOK',
-        'CONF' => 'PROCEEDINGS',
-        'THES' => 'PHDTHESIS',
-        'RPRT' => 'TECHREPORT',
-        'UNPB' => 'UNPUBLISHED'
-    );
+  # map of ris types to paperpile types
+  my %types = (
+    'JOUR' => 'ARTICLE',
+    'JFUL' => 'ARTICLE',
+    'MGZN' => 'ARTICLE',
+    'ABST' => 'ARTICLE',
+    'BOOK' => 'BOOK',
+    'CHAP' => 'INBOOK',
+    'CONF' => 'PROCEEDINGS',
+    'THES' => 'PHDTHESIS',
+    'RPRT' => 'TECHREPORT',
+    'UNPB' => 'UNPUBLISHED'
+  );
 
-    my $fh = new IO::File $self->file, "r";
+  my $fh = new IO::File $self->file, "r";
 
-    my $line = '';    # get a whole tag
-    my @tmp;          # collect tags of current ref
-    my @data = <$fh>;
-    for ( my $i = 0 ; $i <= $#data ; $i++ ) {
-        if ( $data[$i] =~ /ER  -\s*/ ) {
-            chomp $line;
-            push @tmp, $line;
-            push @ris, [@tmp];    # store previous ref
-            @tmp  = ();
-            $line = '';
-        }
-        elsif ( $data[$i] =~ /^\S\S\s\s\- / ) {
-            if ( $line eq '' ) {
-                $line = $data[$i];    # initialise/read tag
-            }
-            else {
-                chomp $line;
-                push @tmp, $line;     # store previously read tag
-                $line = $data[$i];    # init next round
-            }
-        }
-        elsif ( $data[$i] =~ /\S/ ) {    # entry over several lines
-            $line .= $data[$i];
-        }
-    }
-
-    # don't forget last one
-    if ( $line ne '' ) {
+  my $line = '';    # get a whole tag
+  my @tmp;          # collect tags of current ref
+  my @data = <$fh>;
+  for ( my $i = 0 ; $i <= $#data ; $i++ ) {
+    if ( $data[$i] =~ /ER  -\s*/ ) {
+      chomp $line;
+      push @tmp, $line;
+      push @ris, [@tmp];    # store previous ref
+      @tmp  = ();
+      $line = '';
+    } elsif ( $data[$i] =~ /^\S\S\s\s\- / ) {
+      if ( $line eq '' ) {
+        $line = $data[$i];    # initialise/read tag
+      } else {
         chomp $line;
-        push @tmp, $line;
-        push @ris, [@tmp];
+        push @tmp, $line;     # store previously read tag
+        $line = $data[$i];    # init next round
+      }
+    } elsif ( $data[$i] =~ /\S/ ) {    # entry over several lines
+      $line .= $data[$i];
     }
+  }
 
-    # now we have to parse each tag
-    foreach my $ref (@ris) {    # each reference
-        my $data     = {};      # hash_ref to data
-        my @authors  = ();
-        my @editors  = ();
-        my @keywords = ();
-        my ( $start_page, $end_page );
-        my ( $city, $address ) = ( '', '' );
-        my $sn;
-        my @urls       = ();
-        my @pdfs       = ();
-        my @full_texts = ();
-        my ( $journal_full_name, $journal_short_name );
+  # don't forget last one
+  if ( $line ne '' ) {
+    chomp $line;
+    push @tmp, $line;
+    push @ris, [@tmp];
+  }
 
-        foreach my $tag ( @{$ref} ) {    # each tag of reference
-            $tag =~ /^(\S\S)\s\s\-\s(.+)/;
-            my $t = $1;                  # tag
-            my $d = $2;                  # data
+  # now we have to parse each tag
+  foreach my $ref (@ris) {    # each reference
+    my $data     = {};        # hash_ref to data
+    my @authors  = ();
+    my @editors  = ();
+    my @keywords = ();
+    my ( $start_page, $end_page );
+    my ( $city, $address ) = ( '', '' );
+    my $sn;
+    my @urls       = ();
+    my @pdfs       = ();
+    my @full_texts = ();
+    my ( $journal_full_name, $journal_short_name );
 
-            switch ($t) {
-                case 'TY' {
-                    if ( exists $types{$d} ) {
-                        $data->{pubtype} = $types{$d};
-                    }
-                    else {
-                        $data->{pubtype} = 'MISC';
-                    }
-                }
-                case 'T1' {              # primary title
-                    $data->{title} = $d;
-                }
-                case 'TI' {    # TODO: some title, don't know what TI stands for
-                    if ( !exists $data->{title} ) {
-                        $data->{title} = $d;
-                    }
-                }
-                case 'CT' {    # TODO: chapter title?
-                    if ( !exists $data->{title} ) {
-                        $data->{title} = $d;
-                    }
-                }
-                case 'BT' {    # book title
-                    $data->{booktitle} = $d;
-                }
-                case 'T2' {    # secondary title
-                    if ( !exists $data->{title} ) {
-                        $data->{title} = $d;
-                    }
-                    else {
-                        $data->{title} .= " - " . $d;
-                    }
-                }
-                case 'T3' {    # series title
-                    $data->{series} = $d;
-                }
-                case 'A1' {    # primary author
-                    push @authors, $d;
-                }
-                case 'AU' {    # primary author
-                    push @authors, $d;
-                }
-                case 'A2' {    # secondary author
-                    push @editors, $d;
-                }
-                case 'ED' {    # secondary author (editor)
-                    push @editors, $d;
-                }
-                case 'A3' {    # tertiary author, TODO: purpose?
-                    push @authors, $d;
-                }
-                case 'Y1' {    # primary date
-                    _handle_dates( $data, $d );
-                }
-                case 'PY' {    # primary date (year)
-                    _handle_dates( $data, $d );
-                }
-                case 'Y2' {    # secondary date, TODO: purpose?
-                    _handle_dates( $data, $d );
-                }
-                case 'N1' {    # notes can be different things...
-                    if ( _is_doi($d) ) {
-                        $data->{doi} = $d;
-                    }
-                    elsif ( _is_abstract($d) ) {
-                        $data->{abstract} = $d;
-                    }
-                }
-                case 'AB' {    # abstract
-                    $data->{abstract} = $d;
-                }
-                case 'N2' {    # often abstract
-                    if ( _is_abstract($d) ) {
-                        $data->{abstract} = $d;
-                    }
-                    else {
-                        print STDERR
-"Warning: could not parse field '$t', content='$d'!\n";
-                    }
-                }
-                case 'KW' {    # keywords
-                    push @keywords, $d;
-                }
+    foreach my $tag ( @{$ref} ) {    # each tag of reference
+      $tag =~ /^(\S\S)\s\s\-\s(.+)/;
+      my $t = $1;                    # tag
+      my $d = $2;                    # data
 
-                # we ignore the RP tag, its not needed
-                # http://www.refman.com/support/risformat_tags_04.asp
-
-                case 'JF' {    # journal full name
-                    $journal_full_name = $d;
-                }
-                case 'JO' {    # journal full name, alternative
-                    $journal_full_name = $d;
-                }
-                case 'JA' {    # journal short name
-                    $journal_short_name = $d;
-                }
-
-                case 'VL' {    # volume
-                    $data->{volume} = $d;
-                }
-                case 'IS' {    # issue
-                    $data->{issue} = $d;
-                }
-                case 'CP' {    # issue, alternative
-                    $data->{issue} = $d;
-                }
-                case 'SP' {    # start page number
-                    $start_page = $d;
-                }
-                case 'EP' {    # end page number
-                    $end_page = $d;
-                }
-                case 'CY' {    # city
-                    $city = $d;
-                }
-                case 'AD' {    # address
-                    $address = $d;
-                }
-                case 'PB' {    # publisher
-                    $data->{publisher} = $d;
-                }
-                case 'SN' {    # issn OR isbn
-                    $sn = $d;
-                }
-
-                # TODO:
-                # http://www.refman.com/support/risformat_tags_07.asp
-                # AV, U1-5 probably add them to notes?  or
-                # should we try to parse them and figure out what they are?
-
-                case 'M1' {
-                    if ( _is_doi($d) ) {
-                        $data->{doi} = $d;
-                    }
-                    else {
-                        print STDERR
-"Warning: could not parse field '$t', content='$d'!\n";
-                    }
-                }
-                case 'M2' {
-                    if ( _is_doi($d) ) {
-                        $data->{doi} = $d;
-                    }
-                    else {
-                        print STDERR
-"Warning: could not parse field '$t', content='$d'!\n";
-                    }
-                }
-                case 'M3' {
-                    if ( _is_doi($d) ) {
-                        $data->{doi} = $d;
-                    }
-                    else {
-                        print STDERR
-"Warning: could not parse field '$t', content='$d'!\n";
-                    }
-                }
-                case 'UR' {    # URL, one per tag or comma seperated list
-                    if ( $d !~ /;/ ) {
-                        push @urls, $d;
-                    }
-                    else {
-                        @urls = split /;/, $d;
-                    }
-                }
-
-                case 'L1' {
-
-                    # link to PDF
-                    # one per tag or comma seperated list
-                    if ( $d !~ /\;/ ) {
-                        push @pdfs, $d;
-                    }
-                    else {
-                        @pdfs = split /\;/, $d;
-                    }
-                }
-
-                case 'L2' {
-
-                    # link to full-text
-                    # probably our linkout field?
-                    if ( $d !~ /\;/ ) {
-                        push @full_texts, $d;
-                    }
-                    else {
-                        @full_texts = split /\;/, $d;
-                    }
-                }
-
-                else {
-                    print STDERR "Warning: field '$t' ignored, content='$d'!\n";
-                }
-            }
+      switch ($t) {
+        case 'TY' {
+          if ( exists $types{$d} ) {
+            $data->{pubtype} = $types{$d};
+          } else {
+            $data->{pubtype} = 'MISC';
+          }
+        }
+        case 'T1' {                  # primary title
+          $data->{title} = $d;
+        }
+        case 'TI' {                  # TODO: some title, don't know what TI stands for
+          if ( !exists $data->{title} ) {
+            $data->{title} = $d;
+          }
+        }
+        case 'CT' {                  # TODO: chapter title?
+          if ( !exists $data->{title} ) {
+            $data->{title} = $d;
+          }
+        }
+        case 'BT' {                  # book title
+          $data->{booktitle} = $d;
+        }
+        case 'T2' {                  # secondary title
+          if ( !exists $data->{title} ) {
+            $data->{title} = $d;
+          } else {
+            $data->{title} .= " - " . $d;
+          }
+        }
+        case 'T3' {                  # series title
+          $data->{series} = $d;
+        }
+        case 'A1' {                  # primary author
+          push @authors, $d;
+        }
+        case 'AU' {                  # primary author
+          push @authors, $d;
+        }
+        case 'A2' {                  # secondary author
+          push @editors, $d;
+        }
+        case 'ED' {                  # secondary author (editor)
+          push @editors, $d;
+        }
+        case 'A3' {                  # tertiary author, TODO: purpose?
+          push @authors, $d;
+        }
+        case 'Y1' {                  # primary date
+          _handle_dates( $data, $d );
+        }
+        case 'PY' {                  # primary date (year)
+          _handle_dates( $data, $d );
+        }
+        case 'Y2' {                  # secondary date, TODO: purpose?
+          _handle_dates( $data, $d );
+        }
+        case 'N1' {                  # notes can be different things...
+          if ( _is_doi($d) ) {
+            $data->{doi} = $d;
+          } elsif ( _is_abstract($d) ) {
+            $data->{abstract} = $d;
+          }
+        }
+        case 'AB' {                  # abstract
+          $data->{abstract} = $d;
+        }
+        case 'N2' {                  # often abstract
+          if ( _is_abstract($d) ) {
+            $data->{abstract} = $d;
+          } else {
+            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
+          }
+        }
+        case 'KW' {                  # keywords
+          push @keywords, $d;
         }
 
-        $data->{authors}  = join( ' and ', @authors )  if (@authors);
-        $data->{editors}  = join( ' and ', @editors )  if (@editors);
-        $data->{keywords} = join( ';',     @keywords ) if (@keywords);
+        # we ignore the RP tag, its not needed
+        # http://www.refman.com/support/risformat_tags_04.asp
 
-        # set journal, try to keep full name, otherwise short name
-        if ($journal_full_name) {
-            $data->{journal} = $journal_full_name;
+        case 'JF' {                  # journal full name
+          $journal_full_name = $d;
         }
-        elsif ($journal_short_name) {
-            $data->{journal} = $journal_short_name;
+        case 'JO' {                  # journal full name, alternative
+          $journal_full_name = $d;
         }
-
-        # set page numbers
-        # if both, then join
-        # otherwise keep single entry
-        if ( $start_page && $end_page ) {
-            $data->{pages} = $start_page . '-' . $end_page;
-        }
-        elsif ($start_page) {
-            $data->{pages} = $start_page;
-        }
-        elsif ($end_page) {
-            $data->{pages} = $end_page;
+        case 'JA' {                  # journal short name
+          $journal_short_name = $d;
         }
 
-        # set address
-        if ($address) {    # if possible keep full address, otherwise only city
-            $data->{address} = $address;
+        case 'VL' {                  # volume
+          $data->{volume} = $d;
         }
-        elsif ($city) {    # no address but city
-            $data->{address} = $city;
+        case 'IS' {                  # issue
+          $data->{issue} = $d;
         }
-
-        # issn OR isbn?
-        if ( _is_issn($sn) ) {
-            $data->{issn} = $sn;
+        case 'CP' {                  # issue, alternative
+          $data->{issue} = $d;
         }
-        else {
-            $data->{isbn} = $sn;
+        case 'SP' {                  # start page number
+          $start_page = $d;
         }
-
-        # simply keep the first URL
-        $data->{url} = $urls[0] if (@urls);
-
-        # simply keep the first PDF link
-        $data->{_pdf_url} = $pdfs[0] if (@pdfs);
-
-        # simply keep the first full-text link
-        $data->{linkout} = $full_texts[0] if (@full_texts);
+        case 'EP' {                  # end page number
+          $end_page = $d;
+        }
+        case 'CY' {                  # city
+          $city = $d;
+        }
+        case 'AD' {                  # address
+          $address = $d;
+        }
+        case 'PB' {                  # publisher
+          $data->{publisher} = $d;
+        }
+        case 'SN' {                  # issn OR isbn
+          $sn = $d;
+        }
 
         # TODO:
-        # L3 = related records
-        # L4 = images
+        # http://www.refman.com/support/risformat_tags_07.asp
+        # AV, U1-5 probably add them to notes?  or
+        # should we try to parse them and figure out what they are?
 
-        push @output, Paperpile::Library::Publication->new($data);
+        case 'M1' {
+          if ( _is_doi($d) ) {
+            $data->{doi} = $d;
+          } else {
+            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
+          }
+        }
+        case 'M2' {
+          if ( _is_doi($d) ) {
+            $data->{doi} = $d;
+          } else {
+            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
+          }
+        }
+        case 'M3' {
+          if ( _is_doi($d) ) {
+            $data->{doi} = $d;
+          } else {
+            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
+          }
+        }
+        case 'UR' {    # URL, one per tag or comma seperated list
+          if ( $d !~ /;/ ) {
+            push @urls, $d;
+          } else {
+            @urls = split /;/, $d;
+          }
+        }
+
+        case 'L1' {
+
+          # link to PDF
+          # one per tag or comma seperated list
+          if ( $d !~ /\;/ ) {
+            push @pdfs, $d;
+          } else {
+            @pdfs = split /\;/, $d;
+          }
+        }
+
+        case 'L2' {
+
+          # link to full-text
+          # probably our linkout field?
+          if ( $d !~ /\;/ ) {
+            push @full_texts, $d;
+          } else {
+            @full_texts = split /\;/, $d;
+          }
+        }
+
+        else {
+          print STDERR "Warning: field '$t' ignored, content='$d'!\n";
+        }
+      }
     }
 
-    return [@output];
+    $data->{authors}  = encode_utf8( join( ' and ', @authors ))  if (@authors);
+    $data->{editors}  = encode_utf8( join( ' and ', @editors ))  if (@editors);
+    $data->{keywords} = encode_utf8( join( ';',     @keywords )) if (@keywords);
+
+    # set journal, try to keep full name, otherwise short name
+    if ($journal_full_name) {
+      $data->{journal} = $journal_full_name;
+    } elsif ($journal_short_name) {
+      $data->{journal} = $journal_short_name;
+    }
+    $data->{journal} = encode_utf8( $data->{journal} );
+
+    # set page numbers
+    # if both, then join
+    # otherwise keep single entry
+    if ( $start_page && $end_page ) {
+      $data->{pages} = $start_page . '-' . $end_page;
+    } elsif ($start_page) {
+      $data->{pages} = $start_page;
+    } elsif ($end_page) {
+      $data->{pages} = $end_page;
+    }
+
+    # set address
+    if ($address) {    # if possible keep full address, otherwise only city
+      $data->{address} = encode_utf8($address);
+    } elsif ($city) {    # no address but city
+      $data->{address} = encode_utf8($city);
+    }
+
+    # issn OR isbn?
+    if ( _is_issn($sn) ) {
+      $data->{issn} = $sn;
+    } else {
+      $data->{isbn} = $sn;
+    }
+
+    # simply keep the first URL
+    $data->{url} = $urls[0] if (@urls);
+
+    # simply keep the first PDF link
+    $data->{_pdf_url} = $pdfs[0] if (@pdfs);
+
+    # simply keep the first full-text link
+    $data->{linkout} = $full_texts[0] if (@full_texts);
+
+    # TODO:
+    # L3 = related records
+    # L4 = images
+    print STDERR $data;
+    push @output, Paperpile::Library::Publication->new($data);
+  }
+
+  Paperpile::Utils->uniquify_pubs( [@output] );
+
+  return [@output];
 }
 
 # write ris data to file
 sub write {
-    my ($self) = @_;
+  my ($self) = @_;
 
-    # map of paperpile types to ris types
-    my %types = (
-        'ARTICLE'     => 'JOUR',
-        'BOOK'        => 'BOOK',
-        'INBOOK'      => 'CHAP',
-        'PROCEEDINGS' => 'CONF',
-        'PHDTHESIS'   => 'THES',
-        'TECHREPORT'  => 'RPRT',
-        'UNPUBLISHED' => 'UNPB'
-    );
+  # map of paperpile types to ris types
+  my %types = (
+    'ARTICLE'     => 'JOUR',
+    'BOOK'        => 'BOOK',
+    'INBOOK'      => 'CHAP',
+    'PROCEEDINGS' => 'CONF',
+    'PHDTHESIS'   => 'THES',
+    'TECHREPORT'  => 'RPRT',
+    'UNPUBLISHED' => 'UNPB'
+  );
 
-    open( OUT, ">" . $self->file )
-      || FileWriteError->throw(
-        error => "Could not write to file " . $self->file );
+  open( OUT, ">" . $self->file )
+    || FileWriteError->throw( error => "Could not write to file " . $self->file );
 
-    foreach my $pub ( @{ $self->data } ) {
-        my @output;    # collect output data
-                       # nested array (array of arrays)
-                       # each entry is a key/value pair
+  foreach my $pub ( @{ $self->data } ) {
+    my @output;    # collect output data
+                   # nested array (array of arrays)
+                   # each entry is a key/value pair
 
-        # pubtype
-        push @output, [ 'TY', $types{$pub->{pubtype}} ]
-          if ( $pub->{pubtype} && exists $types{$pub->{pubtype}} );
+    # pubtype
+    push @output, [ 'TY', $types{ $pub->{pubtype} } ]
+      if ( $pub->{pubtype} && exists $types{ $pub->{pubtype} } );
 
-        # title
-        push @output, [ 'T1', $pub->{title} ]
-          if ( $pub->{title} );
+    # title
+    push @output, [ 'T1', encode_utf8( $pub->{title} ) ]
+      if ( $pub->{title} );
 
-        # booktitle
-        push @output, [ 'BT', $pub->{booktitle} ]
-          if ( $pub->{booktitle} );
+    # booktitle
+    push @output, [ 'BT', encode_utf8( $pub->{booktitle} ) ]
+      if ( $pub->{booktitle} );
 
-        # series title
-        push @output, [ 'T3', $pub->{series} ]
-          if ( $pub->{series} );
+    # series title
+    push @output, [ 'T3', encode_utf8( $pub->{series} ) ]
+      if ( $pub->{series} );
 
-        # authors
-        if ( $pub->{authors} ) {
-            my @auth = split / and /, $pub->{authors};
-            foreach my $name (@auth) {
-                push @output, [ 'AU', $name ];
-            }
-        }
-
-        # editors
-        if ( $pub->{editors} ) {
-            my @edit = split / and /, $pub->{editors};
-            foreach my $name (@edit) {
-                push @output, [ 'ED', $name ];
-            }
-        }
-
-        # date, as YYYY/MM/DD
-        my $date = '';
-        $date .= $pub->{year}        if ( $pub->{year} );
-        $date .= '/' . $pub->{month} if ( $pub->{month} );
-        $date .= '/' . $pub->{day}   if ( $pub->{day} );
-        push @output, [ 'Y1', $date ] if ( $date ne '' );
-
-        # note
-        push @output, [ 'N1', $pub->{note} ] if ( $pub->{note} );
-
-        # abstract
-        push @output, [ 'AB', $pub->{abstract} ] if ( $pub->{abstract} );
-
-        # keywords
-        if ( $pub->{keywords} ) {
-            my @kw = split /;/, $pub->{keywords};
-            foreach my $keyw (@kw) {
-                push @output, [ 'KW', $keyw ];
-            }
-        }
-
-        # journal
-        # TODO: probably try to recognize short name
-        # e.g. if it contains a dot, it could be the short name etc
-        #
-        # however, e.g. science exports both fields (JF and JO) at once
-        # I don't know why
-        if ( $pub->{journal} ) {
-            push @output, [ 'JF', $pub->{journal} ];
-            push @output, [ 'JO', $pub->{journal} ];
-        }
-
-        # volume
-        push @output, [ 'VL', $pub->{volume} ] if ( $pub->{volume} );
-
-        #issue
-        push @output, [ 'IS', $pub->{issue} ] if ( $pub->{issue} );
-
-        # pages
-        if ( $pub->{pages} =~ /(.+)--*(.+)/ ) {    # start and end
-            push @output, [ 'SP', $1 ] if ( $pub->{pages} );
-            push @output, [ 'EP', $2 ] if ( $pub->{pages} );
-        }    # a single number must be the start page
-        else {
-            push @output, [ 'SP', $pub->{pages} ] if ( $pub->{pages} );
-        }
-
-        #address, TODO: don't know how to distinguish between address and city
-        push @output, [ 'AD', $pub->{address} ] if ( $pub->{address} );
-
-        # publisher
-        push @output, [ 'PB', $pub->{publisher} ] if ( $pub->{publisher} );
-
-        # issn/isbn
-        push @output, [ 'SN', $pub->{issn} ] if ( $pub->{issn} );
-        push @output, [ 'SN', $pub->{isbn} ] if ( $pub->{isbn} );
-
-        # url
-        push @output, [ 'UR', $pub->{url} ] if ( $pub->{url} );
-
-        # pdf-url
-        push @output, [ 'L1', $pub->{_pdf_url} ] if ( $pub->{_pdf_url} );
-
-        # pdf-url
-        push @output, [ 'L2', $pub->{linkout} ] if ( $pub->{linkout} );
-
-        # now we have all data and can output them
-        _print_ris( \*OUT, \@output );
+    # authors
+    if ( $pub->{authors} ) {
+      my @auth = split / and /, $pub->{authors};
+      foreach my $name (@auth) {
+        push @output, [ 'AU', encode_utf8($name) ];
+      }
     }
 
-    close OUT;
+    # editors
+    if ( $pub->{editors} ) {
+      my @edit = split / and /, $pub->{editors};
+      foreach my $name (@edit) {
+        push @output, [ 'ED', encode_utf8($name) ];
+      }
+    }
+
+    # date, as YYYY/MM/DD
+    my $date = '';
+    $date .= $pub->{year}        if ( $pub->{year} );
+    $date .= '/' . $pub->{month} if ( $pub->{month} );
+    $date .= '/' . $pub->{day}   if ( $pub->{day} );
+    push @output, [ 'Y1', encode_utf8($date) ] if ( $date ne '' );
+
+    # note
+    push @output, [ 'N1', encode_utf8( $pub->{note} ) ] if ( $pub->{note} );
+
+    # abstract
+    push @output, [ 'AB', encode_utf8( $pub->{abstract} ) ] if ( $pub->{abstract} );
+
+    # keywords
+    if ( $pub->{keywords} ) {
+      my @kw = split /;/, $pub->{keywords};
+      foreach my $keyw (@kw) {
+        push @output, [ 'KW', encode_utf8($keyw) ];
+      }
+    }
+
+    # journal
+    # TODO: probably try to recognize short name
+    # e.g. if it contains a dot, it could be the short name etc
+    #
+    # however, e.g. science exports both fields (JF and JO) at once
+    # I don't know why
+    if ( $pub->{journal} ) {
+      push @output, [ 'JF', encode_utf8( $pub->{journal} ) ];
+      push @output, [ 'JO', encode_utf8( $pub->{journal} ) ];
+    }
+
+    # volume
+    push @output, [ 'VL', encode_utf8( $pub->{volume} ) ] if ( $pub->{volume} );
+
+    #issue
+    push @output, [ 'IS', encode_utf8( $pub->{issue} ) ] if ( $pub->{issue} );
+
+    # pages
+    if ( $pub->{pages} =~ /(.+)--*(.+)/ ) {    # start and end
+      push @output, [ 'SP', encode_utf8($1) ] if ( $pub->{pages} );
+      push @output, [ 'EP', encode_utf8($2) ] if ( $pub->{pages} );
+    }    # a single number must be the start page
+    else {
+      push @output, [ 'SP', encode_utf8( $pub->{pages} ) ] if ( $pub->{pages} );
+    }
+
+    #address, TODO: don't know how to distinguish between address and city
+    push @output, [ 'AD', encode_utf8( $pub->{address} ) ] if ( $pub->{address} );
+
+    # publisher
+    push @output, [ 'PB', encode_utf8( $pub->{publisher} ) ] if ( $pub->{publisher} );
+
+    # issn/isbn
+    push @output, [ 'SN', encode_utf8( $pub->{issn} ) ] if ( $pub->{issn} );
+    push @output, [ 'SN', encode_utf8( $pub->{isbn} ) ] if ( $pub->{isbn} );
+
+    # url
+    push @output, [ 'UR', $pub->{url} ] if ( $pub->{url} );
+
+    # pdf-url
+    push @output, [ 'L1', $pub->{_pdf_url} ] if ( $pub->{_pdf_url} );
+
+    # pdf-url
+    push @output, [ 'L2', $pub->{linkout} ] if ( $pub->{linkout} );
+
+    # now we have all data and can output them
+    _print_ris( \*OUT, \@output );
+  }
+
+  close OUT;
 }
 
 # dates are "complicated", since we have different date tags in ris
@@ -526,6 +507,8 @@ sub _handle_dates {
 sub _print_ris {
     my $fh = shift;    # the filehandle
     my $a  = shift;    # the nested array
+
+print STDERR $a;
 
     foreach my $entry ( @{$a} ) {    # for each tag/value pair
         print $fh $entry->[0] . '  - ' . $entry->[1] . "\n";

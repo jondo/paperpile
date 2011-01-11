@@ -60,7 +60,7 @@ sub connect {
 
   if ( !-e $self->_db_file ) {
 
-    my $reader;
+    my $reader = '';
 
     if ( $self->format ) {
 
@@ -103,7 +103,7 @@ sub connect {
 
   my $model = $self->get_model();
 
-  $self->total_entries( $model->fulltext_count( $self->query, 0) );
+  $self->total_entries( $model->fulltext_count( $self->query, 0 ) );
   return $self->total_entries;
 
 }
