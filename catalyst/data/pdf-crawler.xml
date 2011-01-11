@@ -310,6 +310,7 @@
   <signature>
     <url>!pubmedcentral\.nih\.gov!</url>
     <url>!ncbi\.nlm\.nih\.gov\/pmc!</url>
+    <url>!ukpmc\.ac\.uk!</url>
   </signature>
 
   <rule>
@@ -324,9 +325,16 @@
     </pattern>
   </rule>
 
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+pdf=render)&quot;!</match>
+    </pattern>
+  </rule>
+  
   <test>
     <url>http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pubmed&amp;pubmedid=18577231</url>
     <url>http://dx.doi.org/doi:10.1186/1742-6405-6-4</url>
+    <url>http://ukpmc.ac.uk/abstract/MED/21139677</url>
   </test>
 </site>
 
