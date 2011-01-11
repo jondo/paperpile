@@ -834,6 +834,22 @@
   </test>
 </site>
 
+<site name="JournalsOnTheWeb">
+  <signature>
+    <url>!journals\.prous\.com/journals!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(http.*)(xml_summary_pr)(.*)!$1xml_article_pr$3&amp;p_ispdf=Y!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://journals.prous.com/journals/servlet/xmlxsl/pk_journals.xml_summary_pr?p_JournalId=3&amp;p_RefId=1395253&amp;p_IsPs=N</url>
+  </test>
+</site>
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
