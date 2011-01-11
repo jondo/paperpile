@@ -20,6 +20,7 @@ use Moose;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
 use Paperpile::Library::Author;
+use Data::Dumper;
 
 extends 'Paperpile::Formats';
 
@@ -83,6 +84,10 @@ sub read {
     @entries = @{ $result->{item} };
   }
 
+  if ( $result->{entry} and $#entries == -1 ) {
+    @entries = @{ $result->{entry} };
+  }
+
   # PLoS journals use some really weird XML style
   if ( $result->{author}->[0]->{name}->[0] ) {
     if ( $result->{author}->[0]->{name}->[0] eq 'PLoS' ) {
@@ -102,7 +107,9 @@ sub read {
   if ( !@entries ) {
 
     # let's see why the regular way did not work
-    my $channel_title = join( '', @{ $result->{channel}->[0]->{'title'} } );
+    my $channel_title = ( $result->{channel}->[0]->{'title'} )
+      ? join( '', @{ $result->{channel}->[0]->{'title'} } )
+      : '';
     my $channel_link =
       ( $result->{channel}->[0]->{'link'} )
       ? join( '', @{ $result->{channel}->[0]->{'link'} } )
@@ -220,12 +227,21 @@ sub read {
       return $self->_parse_AIP( \@entries, $channel_title );
     }
 
+    if ( $result->{generator} ) {
+      if ( $result->{generator}->[0]->{content} ) {
+	if ( $result->{generator}->[0]->{content} =~ m/Google\sReader/ ) {
+
+ 
+	}
+      }
+    }
+
     # if we are here then we have a regular RSS feed
     return $self->_parse_RegularFeed( \@entries, $channel_journal_name, $channel_title,
       $channel_description, $issn );
   }
-
 }
+
 
 sub _parse_RegularFeed {
 
@@ -247,7 +263,11 @@ sub _parse_RegularFeed {
     # parsing of the title; let's try first if there is a regular
     # title tag and if not if there is a dublin core title
     if ( $entry->{'title'} ) {
-      $title = join( '', @{ $entry->{'title'} } );
+      if ( $entry->{'title'}->[0]->{'content'} ) {
+        $title = $entry->{'title'}->[0]->{'content'};
+      } else {
+        $title = join( '', @{ $entry->{'title'} } );
+      }
     }
 
     if ( $entry->{'dc:title'} and !$title ) {
@@ -256,8 +276,6 @@ sub _parse_RegularFeed {
         $title = $1;
       }
     }
-
-    #print STDERR "$title\n";
 
     # although the element dc:creator can be used (and should be used) for
     # more than once if there are multiple authors, some publishers just
@@ -270,13 +288,14 @@ sub _parse_RegularFeed {
         $authors = 'Unknown';
       }
 
-# We just have one author line, and this is where the mess starts
-# It is amazing in how many stupid ways people can abuse
-# a defined schema and make it awkward to extract the information
-# Examples:
-# Essex, M. J., Klein, M. H., Slattery, M. J., Goldsmith, H. H., Kalin, N. H.
-# L. SCHLÜNZEN, N. JUUL, K. V. HANSEN, A. GJEDDE, G. E. COLD
-# Graham A. Lee, Robert Ritch, Steve Y.-W. Liang, Jeffrey M. Liebmann, Philip Dubois, Matthew Bastian-Jordan, Kate Lehmann, Prin Rojanapongpun
+      # We just have one author line, and this is where the mess starts
+      # It is amazing in how many stupid ways people can abuse
+      # a defined schema and make it awkward to extract the information
+      # Examples:
+      # Essex, M. J., Klein, M. H., Slattery, M. J., Goldsmith, H. H., Kalin, N. H.
+      # L. SCHLÜNZEN, N. JUUL, K. V. HANSEN, A. GJEDDE, G. E. COLD
+      # Graham A. Lee, Robert Ritch, Steve Y.-W. Liang, Jeffrey M. Liebmann, 
+      #  Philip Dubois, Matthew Bastian-Jordan, Kate Lehmann, Prin Rojanapongpun
 
       if ( $#authors_tmp == 0 and !$authors ) {
 
@@ -386,39 +405,43 @@ sub _parse_RegularFeed {
 
     # observed for Emerald journals and others
     if ( $entry->{'author'} ) {
-      $authors = join( '', @{ $entry->{'author'} } );
-      my $already_parsed_flag = 0;
+      if ( $entry->{'author'}->[0] =~ m/^HASH\(/ ) {
+        $authors = 'Unknown';
+      } else {
+        $authors = join( '', @{ $entry->{'author'} } );
+        my $already_parsed_flag = 0;
 
-      # authors are separated by semicolons
-      if ( $authors =~ m/;/ ) {
-        my @authors_objects = ();
-        my @tmp = split( /;/, $authors );
-        foreach my $entry (@tmp) {
+        # authors are separated by semicolons
+        if ( $authors =~ m/;/ ) {
+          my @authors_objects = ();
+          my @tmp = split( /;/, $authors );
+          foreach my $entry (@tmp) {
 
-          # if there are still commas we turn it around
-          if ( $entry =~ m/(.*),(.*)/ ) {
-            $entry = "$2 $1";
+            # if there are still commas we turn it around
+            if ( $entry =~ m/(.*),(.*)/ ) {
+              $entry = "$2 $1";
+            }
+
+            # if initials are at the end we turn it around
+            if ( $entry =~ m/(.*)\s([A-Z])([A-Z])?$/ ) {
+              $entry = ($3) ? "$2 $3 $1" : "$2 $1";
+            }
+            push @authors_objects,
+              Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
           }
-
-          # if initials are at the end we turn it around
-          if ( $entry =~ m/(.*)\s([A-Z])([A-Z])?$/ ) {
-            $entry = ($3) ? "$2 $3 $1" : "$2 $1";
-          }
-          push @authors_objects,
-            Paperpile::Library::Author->new()->parse_freestyle($entry)->bibtex();
+          $authors = join( ' and ', @authors_objects );
+          $already_parsed_flag = 1;
         }
-        $authors = join( ' and ', @authors_objects );
-        $already_parsed_flag = 1;
-      }
 
-      if ( $already_parsed_flag == 0 and $authors =~ m/,/ ) {
-        $already_parsed_flag = 1;
-      }
+        if ( $already_parsed_flag == 0 and $authors =~ m/,/ ) {
+          $already_parsed_flag = 1;
+        }
 
-      # seems that there is only a single author
-      if ( $already_parsed_flag == 0 and $authors =~ m/(.+)\s([A-Z])([A-Z])?$/ ) {
-        my $tmp = ($3) ? "$2 $3 $1" : "$2 $1";
-        $authors = Paperpile::Library::Author->new()->parse_freestyle($tmp)->bibtex();
+        # seems that there is only a single author
+        if ( $already_parsed_flag == 0 and $authors =~ m/(.+)\s([A-Z])([A-Z])?$/ ) {
+          my $tmp = ($3) ? "$2 $3 $1" : "$2 $1";
+          $authors = Paperpile::Library::Author->new()->parse_freestyle($tmp)->bibtex();
+        }
       }
 
       #$authors =~ s/,\s/ and /g;
@@ -534,8 +557,18 @@ sub _parse_RegularFeed {
       $description = '' if ( $description =~ m/^HASH\(/ );
     }
 
+    if ( $entry->{'summary'} ) {
+      if ( $entry->{'summary'}->[0]->{'content'} ) {
+        $description = $entry->{'summary'}->[0]->{'content'};
+      }
+    }
+
     if ( $entry->{'link'} ) {
       $link = join( '', @{ $entry->{'link'} } );
+    }
+
+    if ( $entry->{'feedburner:origLink'} ) {
+      $link = join( '', @{ $entry->{'feedburner:origLink'} } );
     }
 
     if ( $entry->{'dc:source'} ) {
@@ -1723,6 +1756,20 @@ sub _fill_publication_object {
 
   my ( $title, $authors, $description, $doi, $journal, $volume, $issue, $year, $link, $pages,
     $note ) = @_;
+
+  if ( $link ) {
+    if ( $link =~ m/dx\.doi\.org\/(\d\d\.\d{4}.*)/ ) {
+      $doi = $1;
+    }
+  }
+
+  if ( $authors ) {
+    $authors =~ s/<\/br>//g;
+  }
+
+  if ( $title ) {
+    $authors =~ s/<\/br>//g;
+  }
 
   my $pub = Paperpile::Library::Publication->new( pubtype => 'ARTICLE' );
 
