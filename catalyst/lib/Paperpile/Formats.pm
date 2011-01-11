@@ -74,7 +74,7 @@ sub guess_format {
       ENDNOTE    => qr/^\s*%0 /i,
       #ENDNOTEXML => qr/<XML>\s*<RECORDS>/i # Does not work at the moment
       RIS        => qr/^\s*TY\s+-\s+/i,
-      RSS        => qr/xml.*\/rss/i,
+      RSS        => qr/xml.*rss/i,
     );
 
     foreach my $line (@lines) {
