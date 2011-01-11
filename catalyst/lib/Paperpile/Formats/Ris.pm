@@ -285,9 +285,9 @@ sub read {
       }
     }
 
-    $data->{authors}  = encode_utf8( join( ' and ', @authors ))  if (@authors);
-    $data->{editors}  = encode_utf8( join( ' and ', @editors ))  if (@editors);
-    $data->{keywords} = encode_utf8( join( ';',     @keywords )) if (@keywords);
+    $data->{authors}  = encode_utf8( join( ' and ', @authors ) )  if (@authors);
+    $data->{editors}  = encode_utf8( join( ' and ', @editors ) )  if (@editors);
+    $data->{keywords} = encode_utf8( join( ';',     @keywords ) ) if (@keywords);
 
     # set journal, try to keep full name, otherwise short name
     if ($journal_full_name) {
