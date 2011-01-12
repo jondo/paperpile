@@ -126,7 +126,7 @@ sub read {
     }
 
     # SpringerLink
-    if ( $channel_link =~ m/springerlink/ ) {
+    if ( $channel_link =~ m/content\/\d+-\d+\/preprint\/\?export=rss/ ) {
       @entries = @{ $result->{channel}->[0]->{item} };
       return $self->_parse_SpringerLink( \@entries );
     }
@@ -671,6 +671,7 @@ sub _parse_SpringerLink {
       $issue, $year,    $link,        $pages, $note
     );
 
+
     $title = _easy_join( 'title', $entry );
     $link  = _easy_join( 'link',  $entry );
 
@@ -703,8 +704,8 @@ sub _parse_SpringerLink {
       # doi
       @tmp = $tree->findnodes('/html/body/ul/li');
       foreach my $line (@tmp) {
-        my $tmp = $line->as_text();
-        if ( $tmp =~ m/(DOI.*)(\d\d\.\d\d\d\d.*)/i ) {
+        my $tmpline = $line->as_text();
+        if ( $tmpline =~ m/(DOI.*)(\d\d\.\d\d\d\d.*)/i ) {
           $doi = $2;
         }
       }
@@ -712,25 +713,25 @@ sub _parse_SpringerLink {
       # more bibliographic data
       @tmp = $tree->findnodes('/html/body/ul/ul/li');
       foreach my $line (@tmp) {
-        my $tmp = $line->as_text();
-        if ( $tmp =~ m/Journal/ and $tmp !~ m/Volume/ ) {
-          ( $journal = $tmp ) =~ s/Journal\s//;
+        my $tmpline = $line->as_text();
+        if ( $tmpline =~ m/Journal/ and $tmpline !~ m/Volume/ ) {
+          ( $journal = $tmpline ) =~ s/Journal\s//;
         }
-        if ( $tmp =~ m/Volume\s(\d+)/ ) {
+        if ( $tmpline =~ m/Volume\s(\d+)/ ) {
           $volume = $1;
         }
-        if ( $tmp =~ m/Number\s(\d+)/ ) {
+        if ( $tmpline =~ m/Number\s(\d+)/ ) {
           $issue = $1;
         }
-        if ( $tmp =~ m/,\s(\d\d\d\d)$/ ) {
+        if ( $tmpline =~ m/,\s(\d\d\d\d)$/ ) {
           $year = $1;
         }
       }
     }
 
     if ( $entry->{'pubDate'} and !$year ) {
-      my $tmp = join( '', @{ $entry->{'pubDate'} } );
-      if ( $tmp =~ m/\d+\s[A-Z]{3}\s(\d\d\d\d)/i ) {
+      my $tmpline = join( '', @{ $entry->{'pubDate'} } );
+      if ( $tmpline =~ m/\d+\s[A-Z]{3}\s(\d\d\d\d)/i ) {
         $year = $1;
       }
     }
