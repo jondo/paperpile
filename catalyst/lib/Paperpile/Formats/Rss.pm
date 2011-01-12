@@ -1263,16 +1263,18 @@ sub _parse_LAPress {
     $link  = _easy_join( 'link',  $entry );
 
     if ( $entry->{'description'} ) {
-      my $temp = join( '', @{ $entry->{'description'} } );
-      my @tmp2 = split( /, | and /, $temp );
-      my @authors_formatted = ();
-      foreach my $author (@tmp2) {
-        push @authors_formatted,
-          Paperpile::Library::Author->new()->parse_freestyle($author)->bibtex();
+      #my $temp = join( '', @{ $entry->{'description'} } );
+      #my @tmp2 = split( /, | and /, $temp );
+      #my @authors_formatted = ();
+      #foreach my $author (@tmp2) {
+      #  push @authors_formatted,
+      #    Paperpile::Library::Author->new()->parse_freestyle($author)->bibtex();
+      #}
+      #$authors = join( " and ", @authors_formatted );
+      $authors = 'Unknown';
+      if ( $entry->{'description'}->[0] !~ m/^HASH\(/ ) {
+	$description = join( '', @{ $entry->{'description'} } );
       }
-      $authors = join( " and ", @authors_formatted );
-
-      $description = join( '', @{ $entry->{'description'} } );
     }
 
     if ( $entry->{'pubDate'} and !$year ) {
