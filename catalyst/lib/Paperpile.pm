@@ -35,6 +35,7 @@ use Catalyst qw/
 use Catalyst::Runtime '5.70';
 use Data::Dumper;
 use YAML qw(LoadFile DumpFile);
+use File::Spec;
 
 our $VERSION = '0.03';
 
@@ -69,10 +70,15 @@ __PACKAGE__->config( {
           my $c = shift;
           return $c->substitutions('PP_PAPER_DIR');
         },
+        PP_TMP_DIR => sub {
+          my $c = shift;
+          return $c->substitutions('PP_TMP_DIR');
+        },
       }
     },
   }
 );
+
 
 # We first load the config file ourselves to allow 'recursive'
 # substitutions in ConfigLoader, i.e. we can substitute fields
@@ -100,22 +106,30 @@ sub substitutions {
     $platform = 'osx';
   }
 
-
   # Set basic locations based on platform
   my $userhome;
   my $pp_user_dir;
   my $pp_paper_dir;
+  my $pp_tmp_dir;
 
-  if ($platform =~ /linux/){
-    $userhome    =  $ENV{HOME};
-    $pp_user_dir =  $ENV{HOME} . '/.paperpile';
+  if ( $platform =~ /linux/ ) {
+    $userhome     = $ENV{HOME};
+    $pp_user_dir  = $ENV{HOME} . '/.paperpile';
     $pp_paper_dir = $ENV{HOME} . '/.paperpile/papers';
+
+    my $tmp = $ENV{TMPDIR} || '/tmp';
+    $pp_tmp_dir   = File::Spec->catfile($tmp, "paperpile-".$ENV{USER});
+
   }
 
-  if ($platform eq 'osx'){
-    $userhome    = $ENV{HOME};
-    $pp_user_dir = $ENV{HOME} .'/Library/Application Support/Paperpile';
-    $pp_paper_dir = $ENV{HOME} .'/Documents/Paperpile';
+  if ( $platform eq 'osx' ) {
+    $userhome     = $ENV{HOME};
+    $pp_user_dir  = $ENV{HOME} . '/Library/Application Support/Paperpile';
+    $pp_paper_dir = $ENV{HOME} . '/Documents/Paperpile';
+
+    my $tmp = $ENV{TMPDIR} || '/tmp';
+    $pp_tmp_dir   = File::Spec->catfile($tmp, "paperpile-".$ENV{USER});
+
   }
 
   # If we have a development version (i.e. no build number) we use a
@@ -127,10 +141,11 @@ sub substitutions {
   }
 
   my %fields = (
-    'USERHOME'    => $userhome,
-    'PLATFORM'    => $platform,
-    'PP_USER_DIR' => $pp_user_dir,
-    'PP_PAPER_DIR' => $pp_paper_dir
+    'USERHOME'     => $userhome,
+    'PLATFORM'     => $platform,
+    'PP_USER_DIR'  => $pp_user_dir,
+    'PP_PAPER_DIR' => $pp_paper_dir,
+    'PP_TMP_DIR'   => $pp_tmp_dir,
   );
 
   return $fields{$field};

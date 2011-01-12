@@ -117,20 +117,21 @@ sub init_session : Local {
   print STDERR "$db_library_version vs $app_library_version\n";
 
   if ( ( $db_library_version != $app_library_version )
-       or ( $db_settings_version != $app_settings_version )
-     ) {
+    or ( $db_settings_version != $app_settings_version ) ) {
     DatabaseVersionError->throw("Database needs to be migrated to latest version");
   }
 
-  # Crate temporary directories if they do not exist already
+  # Check and prepare temporary directory
 
-  my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
+  my $tmp_dir = Paperpile::Utils->get_tmp_dir;
 
-  mkpath( File::Spec->catfile( $tmp_dir, 'rss' ) );
-  mkpath( File::Spec->catfile( $tmp_dir, 'import' ) );
-  mkpath( File::Spec->catfile( $tmp_dir, 'download' ) );
-  mkpath( File::Spec->catfile( $tmp_dir, 'queue' ) );
-  mkpath( File::Spec->catfile( $tmp_dir, 'filesync' ) );
+  if ( !( -w $tmp_dir ) ) {
+    FileWriteError->throw("Could not start application. Temporary file $tmp_dir not writable.");
+  }
+
+  foreach my $subdir ('rss','import','download','queue','filesync'){
+    mkpath( File::Spec->catfile( $tmp_dir, $subdir ) );
+  }
 
   if ( not -e $c->config->{'queue_db'} ) {
     copy( $c->path_to('db/queue.db')->stringify, $c->config->{'queue_db'} )
@@ -138,6 +139,7 @@ sub init_session : Local {
       FileWriteError->throw("Could not start application (Error initializing queue database,  $!)");
 
   } else {
+
     #clear queue for now at startup
     my $q = Paperpile::Queue->new();
     $q->clear_all;
@@ -145,7 +147,7 @@ sub init_session : Local {
 
   # Clear temporary PDF downloads and file imports
   unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );
-  unlink( glob( File::Spec->catfile( $tmp_dir, 'import', '*ppl' ) ) );
+  unlink( glob( File::Spec->catfile( $tmp_dir, 'import',   '*ppl' ) ) );
 
   # Clear file with cancel handles
   unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ) );
@@ -156,7 +158,7 @@ sub migrate_db : Local {
 
   my ( $self, $c ) = @_;
 
-  my $mg = Paperpile::Migrate->new('tmp_dir'=>$c->model('User')->get_setting('tmp_dir'),
+  my $mg = Paperpile::Migrate->new('tmp_dir'=>Paperpile::Utils->get_tmp_dir,
                                    'user_settings' => $c->config->{'user_settings'},
                                    'library_settings' => $c->config->{'library_settings'},
                                   );

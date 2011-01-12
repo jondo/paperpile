@@ -4,7 +4,9 @@ platform: "__PLATFORM__"
 
 paperpile_user_dir: "__PP_USER_DIR__"
 user_settings_db: "__PP_USER_DIR__/settings.db"
-queue_db: "__PP_USER_DIR__/tmp/queue.db"
+
+tmp_dir: "__PP_TMP_DIR__"
+queue_db: "__PP_TMP_DIR__/queue.db"
 
 Model::App:
   dsn: "dbi:SQLite:__path_to(db/app.db)__"
@@ -13,10 +15,10 @@ Model::User:
   dsn: "dbi:SQLite:__PP_USER_DIR__/settings.db"
 
 Model::Queue:
-  dsn: "dbi:SQLite:__PP_USER_DIR__/tmp/queue.db"
+  dsn: "dbi:SQLite:__PP_TMP_DIR__/queue.db"
 
 session:
-  storage: "__PP_USER_DIR__/tmp/session"
+  storage: "__PP_TMP_DIR__/session"
   expires: 100000000
 
 app_settings:
@@ -31,7 +33,6 @@ app_settings:
 
 user_settings:
   db_version: 2
-  tmp_dir: "__PP_USER_DIR__/tmp"
   library_db: "__PP_USER_DIR__/paperpile.ppl"
   user_home: "__USERHOME__"
   file_sync: ""
