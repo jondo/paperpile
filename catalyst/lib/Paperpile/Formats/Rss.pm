@@ -263,8 +263,9 @@ sub _parse_RegularFeed {
     # parsing of the title; let's try first if there is a regular
     # title tag and if not if there is a dublin core title
     if ( $entry->{'title'} ) {
-      if ( $entry->{'title'}->[0]->{'content'} ) {
-        $title = $entry->{'title'}->[0]->{'content'};
+      if ( $entry->{'title'}->[0] =~ m/^HASH\(/ ) {
+        $title = $entry->{'title'}->[0]->{'content'} if
+	  $entry->{'title'}->[0]->{'content'};
       } else {
         $title = join( '', @{ $entry->{'title'} } );
       }
