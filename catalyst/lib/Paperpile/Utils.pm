@@ -48,7 +48,7 @@ sub get_tmp_dir {
 
   my ( $self ) = @_;
 
-  return Paperpile->config->{user_settings}->{tmp_dir};
+  return Paperpile->config->{tmp_dir};
 
 }
 
