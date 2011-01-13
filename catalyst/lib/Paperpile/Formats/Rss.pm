@@ -265,15 +265,19 @@ sub _parse_RegularFeed {
     # title tag and if not if there is a dublin core title
     if ( $entry->{'title'} ) {
       if ( $entry->{'title'}->[0] =~ m/^HASH\(/ ) {
-        $title = $entry->{'title'}->[0]->{'content'} if
-	  $entry->{'title'}->[0]->{'content'};
+        $title = $entry->{'title'}->[0]->{'content'}
+          if $entry->{'title'}->[0]->{'content'};
       } else {
         $title = join( '', @{ $entry->{'title'} } );
       }
     }
 
     if ( $entry->{'dc:title'} and !$title ) {
-      $title = join( '', @{ $entry->{'dc:title'} } );
+      if ( $entry->{'dc:title'}->[0] =~ m/^HASH\(/ ) {
+        $title = $entry->{'dc:title'}->[0]->{'content'} if $entry->{'dc:title'}->[0]->{'content'};
+      } else {
+        $title = join( '', @{ $entry->{'dc:title'} } );
+      }
       if ( $title =~ m/(.*)(\s\[[A-Z]+\]$)/ ) {
         $title = $1;
       }
@@ -287,7 +291,15 @@ sub _parse_RegularFeed {
       my @authors_tmp = @{ $entry->{'dc:creator'} };
 
       if ( $authors_tmp[0] =~ m/^HASH\(/ ) {
-        $authors = 'Unknown';
+        if ( $authors_tmp[0]->{'content'} ) {
+          my @tmparray = ();
+          foreach my $creator (@authors_tmp) {
+            push @tmparray, $creator->{'content'};
+          }
+          @authors_tmp = @tmparray;
+        } else {
+          $authors = 'Unknown';
+        }
       }
 
       # We just have one author line, and this is where the mess starts
@@ -296,7 +308,7 @@ sub _parse_RegularFeed {
       # Examples:
       # Essex, M. J., Klein, M. H., Slattery, M. J., Goldsmith, H. H., Kalin, N. H.
       # L. SCHLÜNZEN, N. JUUL, K. V. HANSEN, A. GJEDDE, G. E. COLD
-      # Graham A. Lee, Robert Ritch, Steve Y.-W. Liang, Jeffrey M. Liebmann, 
+      # Graham A. Lee, Robert Ritch, Steve Y.-W. Liang, Jeffrey M. Liebmann,
       #  Philip Dubois, Matthew Bastian-Jordan, Kate Lehmann, Prin Rojanapongpun
 
       if ( $#authors_tmp == 0 and !$authors ) {
@@ -465,12 +477,16 @@ sub _parse_RegularFeed {
     # now we parse other bibliographic data
 
     if ( $entry->{'prism:publicationName'} ) {
-      $journal = join( '', @{ $entry->{'prism:publicationName'} } );
+      if ( $entry->{'prism:publicationName'}->[0] !~ m/^HASH\(/ ) {
+        $journal = join( '', @{ $entry->{'prism:publicationName'} } );
+      }
     }
 
     # volume
     if ( $entry->{'prism:volume'} ) {
-      $volume = join( '', @{ $entry->{'prism:volume'} } );
+      if ( $entry->{'prism:volume'}->[0] !~ m/^HASH\(/ ) {
+        $volume = join( '', @{ $entry->{'prism:volume'} } );
+      }
     }
 
     if ( $entry->{'volume'} and !$volume ) {
@@ -479,7 +495,9 @@ sub _parse_RegularFeed {
 
     # issue
     if ( $entry->{'prism:number'} ) {
-      $issue = join( '', @{ $entry->{'prism:number'} } );
+      if ( $entry->{'prism:number'}->[0] !~ m/^HASH\(/ ) {
+        $issue = join( '', @{ $entry->{'prism:number'} } );
+      }
     }
 
     if ( $entry->{'issue'} and !$issue ) {
@@ -488,14 +506,29 @@ sub _parse_RegularFeed {
 
     # page numbers
     if ( $entry->{'prism:startingPage'} and $entry->{'prism:endingPage'} ) {
-      $pages =
-          join( '', @{ $entry->{'prism:startingPage'} } ) . '-'
-        . join( '', @{ $entry->{'prism:endingPage'} } );
-      $pages = '' if ( $pages =~ m/HASH/ );
+      if (  $entry->{'prism:startingPage'}->[0] !~ m/^HASH\(/
+        and $entry->{'prism:endingPage'}->[0] !~ m/^HASH\(/ ) {
+        $pages =
+            join( '', @{ $entry->{'prism:startingPage'} } ) . '-'
+          . join( '', @{ $entry->{'prism:endingPage'} } );
+      }
+      if (  $entry->{'prism:startingPage'}->[0] =~ m/^HASH\(/
+        and $entry->{'prism:endingPage'}->[0] =~ m/^HASH\(/ ) {
+        $pages =
+            $entry->{'prism:startingPage'}->[0]->{'content'} . '-'
+          . $entry->{'prism:endingPage'}->[0]->{'content'}
+          if ($entry->{'prism:startingPage'}->[0]->{'content'}
+          and $entry->{'prism:endingPage'}->[0]->{'content'} );
+      }
     }
     if ( $entry->{'prism:startingPage'} and !$pages ) {
-      $pages = join( '', @{ $entry->{'prism:startingPage'} } );
-      $pages = '' if ( $pages =~ m/HASH/ );
+      if ( $entry->{'prism:startingPage'}->[0] !~ m/^HASH\(/ ) {
+        $pages = join( '', @{ $entry->{'prism:startingPage'} } );
+      }
+      if ( $entry->{'prism:startingPage'}->[0] =~ m/^HASH\(/ ) {
+        $pages = $entry->{'prism:startingPage'}->[0]->{'content'}
+          if $pages = $entry->{'prism:startingPage'}->[0]->{'content'};
+      }
     }
 
     if ( $entry->{'startPage'} and $entry->{'endPage'} and !$pages ) {
@@ -504,11 +537,23 @@ sub _parse_RegularFeed {
 
     # DOI is interesting. There can be multiple entries.
     if ( $entry->{'prism:doi'} ) {
-      $doi = join( '', @{ $entry->{'prism:doi'} } );
+      if ( $entry->{'prism:doi'}->[0] =~ m/^HASH\(/ ) {
+	$doi = $entry->{'prism:doi'}->[0]->{'content'} if $entry->{'prism:doi'}->[0]->{'content'};
+      } else {
+	$doi = join( '', @{ $entry->{'prism:doi'} } );
+      }
     }
 
     if ( $entry->{'dc:identifier'} ) {
-      my $tmp = join( '', @{ $entry->{'dc:identifier'} } );
+      my $tmp = '';
+      if ( $entry->{'dc:identifier'}->[0] =~ m/^HASH\(/ ) {
+        $tmp = $entry->{'dc:identifier'}->[0]->{'content'}
+          if $entry->{'dc:identifier'}->[0]->{'content'};
+        $tmp = $entry->{'dc:identifier'}->[0]->{'rdf:resource'}
+          if $entry->{'dc:identifier'}->[0]->{'rdf:resource'};
+      } else {
+        $tmp = join( '', @{ $entry->{'dc:identifier'} } );
+      }
       if ( $tmp =~ m/doi/ ) {
         $tmp =~ s/(.*doi:?\/?)(\d\d\.\d\d\d.*)/$2/;
         if ( !$doi ) {
@@ -518,17 +563,17 @@ sub _parse_RegularFeed {
       if ( $tmp =~ m/^\d\d\.\d\d\d/ and !$doi ) {
         $doi = $tmp;
       }
-      if ( $tmp =~ m/HASH/ ) {
-        if ( $entry->{'dc:identifier'}->[0]->{'rdf:resource'} ) {
-          $doi = $entry->{'dc:identifier'}->[0]->{'rdf:resource'};
-          $doi =~ s/doi://;
-        }
-      }
     }
 
     # year
     if ( $entry->{'dc:date'} ) {
-      my $tmp = join( '', @{ $entry->{'dc:date'} } );
+      my $tmp = '';
+      if ( $entry->{'dc:date'}->[0] =~ m/^HASH\(/ ) {
+	$tmp = $entry->{'dc:date'}->[0]->{'content'}
+          if $entry->{'dc:date'}->[0]->{'content'};
+      } else {
+	$tmp = join( '', @{ $entry->{'dc:date'} } );
+      }
       if ( $tmp =~ m/^(\d\d\d\d)-(\d\d)-\d\d/ ) {
         $year = $1;
       }
@@ -548,7 +593,13 @@ sub _parse_RegularFeed {
     }
 
     if ( $entry->{'prism:publicationDate'} and !$year ) {
-      my $tmp = join( '', @{ $entry->{'prism:publicationDate'} } );
+      my $tmp = '';
+      if ( $entry->{'prism:publicationDate'}->[0] =~ m/^HASH\(/ ) {
+	$tmp = $entry->{'prism:publicationDate'}->[0]->{'content'}
+          if $entry->{'prism:publicationDate'}->[0]->{'content'};
+      } else {
+	$tmp = join( '', @{ $entry->{'prism:publicationDate'} } );
+      }
       if ( $tmp =~ m/^(\d\d\d\d)-\d\d-\d\d$/i ) {
         $year = $1;
       }
@@ -647,6 +698,10 @@ sub _parse_RegularFeed {
       $authors =~ s/\s+/ /g;
     } else {
       $authors = '';
+    }
+
+    if ( $link ) {
+      $link =~ s/%2F/\//g;
     }
 
     push @output,
