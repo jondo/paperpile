@@ -415,7 +415,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var hasOnePdf = false;
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
-      if (file.suffix == 'pdf') {
+      if (file.suffix.match(/pdf/i)) {
         hasOnePdf = true;
       }
     }
@@ -459,7 +459,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
   hasReferenceFileExtension: function(file) {
     var ext = file.suffix;
-    if (file.suffix.match(/(bib|ris|xml|sqlite|db|ppl|mods|rss)/)) {
+    if (file.suffix.match(/(bib|ris|xml|sqlite|db|ppl|mods|rss)/i)) {
       return true;
     }
     return false;

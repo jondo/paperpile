@@ -817,7 +817,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     // Contingency plan for when a PDF file is accidentally
     // selected in the file import dialog.
-    if (parts.extension == 'pdf') {
+    if (parts.extension.match(/pdf/i)) {
       Paperpile.main.submitPdfExtractionJobs(filename);
       return;
     }
