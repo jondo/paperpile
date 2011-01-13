@@ -16,6 +16,10 @@
 
 Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
+  // Extends the network timeout for this FormPanel.
+  // Sometimes auto-update takes a long time...
+  timeout: 30,
+
   initComponent: function() {
 
     this.inputs = {};
@@ -120,7 +124,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       autoScroll: true,
       border: false,
       bodyBorder: false,
-      timeout: 5,
       bodyStyle: {
         background: '#ffffff',
         padding: '20px'
@@ -204,7 +207,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         var path;
 
         // Set path depending on wheter PDF was already imported or not
-        if (this.data.guid){
+        if (this.data.guid) {
           path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf_name);
         } else {
           path = this.data._pdf_tmp;
