@@ -136,6 +136,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       },
       this);
 
+    /*
     this.combos['font_size'] = new Ext.form.ComboBox({
       renderTo: 'font_size_combo',
       editable: false,
@@ -154,6 +155,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
         this.onSettingChange();
       },
       this);
+    */
 
     this.proxyCheckbox = new Ext.form.Checkbox({
       renderTo: 'proxy_checkbox'
