@@ -39,33 +39,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
 
-    this.actions['NEW'] = new Ext.Action({
-      text: 'Insert Manually',
-      iconCls: 'pp-icon-add',
-      handler: function() {
-        this.handleEdit(true);
-      },
-      scope: this,
-      itemId: 'new_button',
-      tooltip: 'Manually create a new reference for your library'
-    });
-    this.actions['FILE_IMPORT'] = new Ext.Action({
-      text: "Open Bibliography File",
-      iconCls: 'pp-icon-import-file',
-      tooltip: 'Import references from EndNote, BibTeX <br/> and other bibliography files.',
-      handler: function() {
-        Paperpile.main.fileImport();
-      }
-    });
-    this.actions['PDF_IMPORT'] = new Ext.Action({
-      text: "Import PDFs",
-      iconCls: 'pp-icon-import-pdf',
-      tooltip: 'Import references from one or more PDFs',
-      handler: function() {
-        Paperpile.main.pdfExtract();
-      }
-    });
-
     var store = this.getStore();
     store.baseParams['plugin_search_pdf'] = 0;
     store.baseParams['limit'] = this.limit;

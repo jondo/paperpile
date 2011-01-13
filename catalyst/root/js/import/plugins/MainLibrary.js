@@ -26,6 +26,33 @@ Ext.extend(Paperpile.PluginGridMainLibrary, Paperpile.PluginGridDB, {
 
     Paperpile.PluginGridMainLibrary.superclass.initComponent.call(this);
 
+    this.actions['NEW'] = new Ext.Action({
+      text: 'Insert Manually',
+      iconCls: 'pp-icon-add',
+      handler: function() {
+        this.handleEdit(true);
+      },
+      scope: this,
+      itemId: 'new_button',
+      tooltip: 'Manually create a new reference for your library'
+    });
+    this.actions['FILE_IMPORT'] = new Ext.Action({
+      text: "Open Bibliography File",
+      iconCls: 'pp-icon-import-file',
+      tooltip: 'Import references from EndNote, BibTeX <br/> and other bibliography files.',
+      handler: function() {
+        Paperpile.main.fileImport();
+      }
+    });
+
+    this.actions['PDF_IMPORT'] = new Ext.Action({
+      text: "Import PDFs",
+      iconCls: 'pp-icon-import-pdf',
+      tooltip: 'Import references from one or more PDFs',
+      handler: function() {
+        Paperpile.main.pdfExtract();
+      }
+    });
     this.actions['ADD_MENU'] = {
       text: 'Add to Library',
       itemId: 'ADD_MENU',
@@ -37,7 +64,12 @@ Ext.extend(Paperpile.PluginGridMainLibrary, Paperpile.PluginGridDB, {
           this.actions['PDF_IMPORT']]
       }
     };
+  },
 
+  loadKeyboardShortcuts: function() {
+    Paperpile.PluginGridMainLibrary.superclass.loadKeyboardShortcuts.call(this);
+
+    this.keys.bindAction('ctrl-n', this.actions['NEW']);
   },
 
   initToolbarMenuItemIds: function() {
