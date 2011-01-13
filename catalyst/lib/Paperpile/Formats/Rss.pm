@@ -126,7 +126,8 @@ sub read {
     }
 
     # SpringerLink
-    if ( $channel_link =~ m/content\/\d+-\d+\/preprint\/\?export=rss/ ) {
+    if ( $channel_link =~ m/content\/\d+-\d+\/preprint\/\?export=rss/ or
+       $channel_link =~ m/content\/\d+-\d+\/\?export=rss/ ) {
       @entries = @{ $result->{channel}->[0]->{item} };
       return $self->_parse_SpringerLink( \@entries );
     }
