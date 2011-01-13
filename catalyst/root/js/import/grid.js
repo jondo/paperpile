@@ -1047,20 +1047,31 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   getDetailsCopyLinks: function(field, label) {
+    if (field == 'url') {
+	label = '';
+    } else {
+	label = label + ' ';
+    }
     return[
     '          <tpl if="field == \'' + field + '\'">',
-    '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + ' link in browser" action="' + field + '-link"></div>',
-    '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + ' URL to clipboard" action="' + field + '-copy"></div>',
+    '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + 'link in browser" action="' + field + '-link"></div>',
+    '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + 'URL to clipboard" action="' + field + '-copy"></div>',
     '          </tpl>'];
   },
 
   getOverviewCopyLinks: function(field, label) {
+    var title = label;
+    if (field == 'url') {
+      label = '';
+    } else {
+      label = label + ' ';
+    }
     return[
     '<tpl if="' + field + '">',
     '<div class="link-hover">',
-    '  <dt>' + label + ': </dt>',
-    '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + ' link in browser" action="' + field + '-link"></div>',
-    '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + ' URL to clipboard" action="' + field + '-copy"></div>',
+    '  <dt>' + title + ': </dt>',
+    '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + 'link in browser" action="' + field + '-link"></div>',
+    '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + 'URL to clipboard" action="' + field + '-copy"></div>',
     '<dd class="pp-info-' + field + '">{' + field + '}</dd>',
     '</div>',
     '</tpl>'];
