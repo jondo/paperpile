@@ -2271,8 +2271,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var pdf = record.data.pdf_name;
       var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
       Paperpile.main.tabs.newPdfTab({
-        file: path,
-        title: pdf
+        file: path
       });
       Paperpile.main.inc_read_counter(sm.getSelected().data);
     }

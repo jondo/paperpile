@@ -47,9 +47,9 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         // restoring the scroll state.
         grid.getView().focusEl.focus();
 
-	// Also update the view of the gridpanel of the now-focused tab.
-	// See bug #739.
-	grid.getPluginPanel().updateView();
+        // Also update the view of the gridpanel of the now-focused tab.
+        // See bug #739.
+        grid.getPluginPanel().updateView();
 
         // This needs to come last.
         tab.restoreScrollState();
@@ -303,6 +303,13 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
   pdfViewerCounter: 0,
   newPdfTab: function(config) {
+
+    if (config.file.length > 25) {
+      config.title = Ext.util.Format.ellipsis(config.file, 25);
+    } else {
+      config.title = config.file;
+    }
+
     this.pdfViewerCounter++;
     var params = {
       id: 'pdf_viewer_' + this.pdfViewerCounter,
@@ -327,6 +334,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     //    var panel = Paperpile.main.tabs.add(new Paperpile.PDFPanel(params));
     var panel = Paperpile.main.tabs.add(new Paperpile.PDFviewer(params));
     panel.show();
+
   }
 }
 
