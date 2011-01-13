@@ -337,7 +337,7 @@ Paperpile.stage3 = function() {
       }, this, {single:true});
 
       Paperpile.startupProgress(1.0);
-      Paperpile.main.tabs.newDBtab('', 'MAIN');
+      Paperpile.main.tabs.newMainLibraryTab();
     }, this, {single:true});
     
     Paperpile.startupProgress(0.8);

@@ -99,6 +99,28 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     newView.show();
   },
 
+  newMainLibraryTab: function() {
+    var itemId = 'MAIN'; // Main library always has this itemID.
+    if (this.findAndActivateOpenTab(itemId)) {
+      return;
+    }
+
+    var gridParams = {
+      plugin_name: 'DB',
+      plugin_mode: 'FULLTEXT',
+      plugin_query: '',
+      plugin_base_query: ''
+    };
+
+    var newView = this.add(new Paperpile.PluginPanelMainLibrary({
+      title: 'All Papers',
+      iconCls: 'pp-icon-page',
+      itemId: itemId,
+      gridParams: gridParams
+    }));
+    newView.show();
+  },
+
   newTrashTab: function() {
     var trashItemId = 'trash';
     if (this.findAndActivateOpenTab(trashItemId)) {

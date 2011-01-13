@@ -66,18 +66,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
       }
     });
 
-    this.actions['ADD_MENU'] = {
-      text: 'Add to Library',
-      itemId: 'ADD_MENU',
-      iconCls: 'pp-icon-add',
-      menu: {
-        items: [
-          this.actions['NEW'],
-          this.actions['FILE_IMPORT'],
-          this.actions['PDF_IMPORT']]
-      }
-    };
-
     var store = this.getStore();
     store.baseParams['plugin_search_pdf'] = 0;
     store.baseParams['limit'] = this.limit;
@@ -338,9 +326,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     ids.insert(0, 'FILTER_FIELD');
     ids.insert(1, 'FILTER_BUTTON');
-
-    var index = ids.indexOf('TB_FILL');
-    ids.insert(index + 1, 'ADD_MENU');
 
     index = ids.indexOf('SELECT_ALL');
     ids.insert(index + 0, 'EDIT');

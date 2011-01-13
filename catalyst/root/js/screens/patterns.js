@@ -301,7 +301,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
                     // 'delete_grids' which is redundant but does not do
                     // any harm)
                     Paperpile.main.tabs.removeAll();
-                    Paperpile.main.tabs.newDBtab('', 'MAIN');
+                    Paperpile.main.tabs.newMainLibraryTab();
 
                     Paperpile.main.tabs.setActiveTab(0);
                     Paperpile.main.tabs.doLayout();
