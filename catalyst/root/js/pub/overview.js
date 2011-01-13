@@ -739,7 +739,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
         var undo_msg = '';
         if (isPDF) {
-          undo_msg = 'Deleted PDF file ' + record.get('pdf_name');
+          undo_msg = 'Deleted PDF file ' + Ext.util.Format.ellipsis(record.get('pdf_name'),25);
         } else {
           undo_msg = "Deleted one attached file";
         }
