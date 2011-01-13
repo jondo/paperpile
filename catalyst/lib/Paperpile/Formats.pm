@@ -74,22 +74,34 @@ sub guess_format {
       ENDNOTE    => qr/^\s*%0 /i,
       #ENDNOTEXML => qr/<XML>\s*<RECORDS>/i # Does not work at the moment
       RIS        => qr/^\s*TY\s+-\s+/i,
-      RSS        => qr/xml.*rss/i,
+      RSS        => qr/xml.*rss/is,
     );
 
-    foreach my $line (@lines) {
+    # In RSS feed xml tag and rss tag may be in different lines,
+    # so we have to screen several lines at once
+    foreach my $i ( 0 .. $#lines) {
+      my $inc_prev_lines = $lines[$i];
+      for my $j ( 1 .. 5) {
+	last if ( $i - $j ) < 0;
+	$inc_prev_lines = $lines[$i-$j].$inc_prev_lines;
+      }
       foreach my $format ( keys %patterns ) {
         my $pattern = $patterns{$format};
-        if ( $line =~ $pattern ) {
+	if ( $lines[$i] =~ $pattern ) {
           $format = lc($format);
           $format = ucfirst($format);
           my $module = "Paperpile::Formats::$format";
           return eval("use $module; $module->new(file=>'$file')");
         }
+	if ( $inc_prev_lines =~ $pattern ) {
+	  $format = lc($format);
+	  $format = ucfirst($format);
+	  my $module = "Paperpile::Formats::$format";
+	    return eval("use $module; $module->new(file=>'$file')");
+	}
       }
     }
   }
-
   # File is binary
   else {
 
