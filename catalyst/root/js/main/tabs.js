@@ -326,10 +326,10 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   pdfViewerCounter: 0,
   newPdfTab: function(config) {
 
-    if (config.file.length > 25) {
-      config.title = Ext.util.Format.ellipsis(config.file, 25);
+    if (config.filename.length > 25) {
+      config.title = Ext.util.Format.ellipsis(config.filename, 25);
     } else {
-      config.title = config.file;
+      config.title = config.filename;
     }
 
     this.pdfViewerCounter++;

@@ -402,16 +402,19 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
       }
 
-      var title = this.data.pdf_name;
-
       Paperpile.main.tabs.newPdfTab({
-        file: path
+        file: path,
+	filename: this.data.pdf_name
       });
       Paperpile.main.inc_read_counter(this.data);
       break;
 
     case 'open-pdf-external':
       Paperpile.main.openPdfInExternalViewer(this.data.pdf_name, this.data);
+      break;
+
+    case 'open-pdf-folder':
+      this.getGrid().openPDFFolder();
       break;
 
     case 'attach-pdf':
