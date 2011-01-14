@@ -366,7 +366,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.alwaysKeys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.alwaysKeys.bindCallback('ctrl-w', this.keyControlW);
     this.alwaysKeys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
-
+    this.alwaysKeys.bindCallback('ctrl-n', this.forwardToGrid,this);      
   },
 
   keyControlX: function() {
