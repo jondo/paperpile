@@ -141,6 +141,11 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
     }
   },
 
+  focus: function() {
+    // Override default Panel focus method to focus the grid's view focus holder.
+    this.getGrid().getView().focusEl.focus(10);
+  },
+
   createGrid: function() {
     return new Paperpile.PluginGrid();
   },

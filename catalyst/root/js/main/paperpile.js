@@ -326,6 +326,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   },
 
+  focusCurrentPanel: function() {
+    var tab = Paperpile.main.tabs.getActiveTab();
+    tab.focus();
+  },
+
   loadKeys: function() {
 
     // Borrowed from Window.js
@@ -1364,6 +1369,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       isNew = false;
     }
 
+    // This is almost direct copy-pasted from import/grid.js. Need to refactor out at some point.
     win = new Ext.Window({
       title: "Edit Reference",
       modal: true,
@@ -1386,7 +1392,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         scope: this
       })]
     });
-
+    win.on('close', function() {
+      Paperpile.main.focusCurrentPanel();
+    });
     win.show(this);
   },
 
