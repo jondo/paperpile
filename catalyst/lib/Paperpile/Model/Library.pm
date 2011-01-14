@@ -89,6 +89,7 @@ sub insert_pubs {
   # If we insert to the user library we need to create new labels that
   # may be given in the labels_tmp field.
   my $label_map;
+  my @pubs_with_labels;
   if ($user_library) {
     $label_map = $self->insert_labels( $pubs, $dbh );
   }
@@ -126,6 +127,7 @@ sub insert_pubs {
       }
       $pub->labels( join( ',', @guids ) );
       $pub->labels_tmp('');
+      push @pubs_with_labels, $pub;
     }
 
     # If imported with attachments from another database the
@@ -169,6 +171,8 @@ sub insert_pubs {
       $self->_flag_as_incomplete( $pub, $dbh );
     }
   }
+
+  $self->update_collections( \@pubs_with_labels, 'LABEL', $dbh);
 
   $dbh->commit;
 

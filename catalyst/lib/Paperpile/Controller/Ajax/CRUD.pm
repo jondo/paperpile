@@ -68,10 +68,6 @@ sub insert_entry : Local {
 
   $c->model('Library')->insert_pubs( \@pub_array, 1 );
 
-  if ($collection_delta) {
-    $c->model('Library')->update_collections( \@pub_array, 'LABEL');
-  }
-
   my $pubs = {};
   foreach my $pub (@pub_array) {
     $pub->_imported(1);
