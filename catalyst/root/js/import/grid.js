@@ -1949,7 +1949,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     win = new Ext.Window({
       title: isNew ? 'Add new reference' : 'Edit reference',
       modal: true,
-      floating: true,
+      shadow: false,
       layout: 'fit',
       width: 800,
       height: 600,
