@@ -77,8 +77,8 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
 
     var ids = this.toolbarMenuItemIds;
 
-    var index = ids.indexOf('TB_FILL');
-    ids.insert(index + 2, 'IMPORT_ALL');
+    var index = ids.indexOf('TB_BREAK');
+    ids.insert(index, 'IMPORT_ALL');
 
     ids.remove('NEW');
     ids.remove('DELETE');
