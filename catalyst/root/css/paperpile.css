@@ -721,10 +721,15 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
   margin:0px;
   width:16px;
   height:16px;
-  float:right;
   margin-right:3px;
   margin-left:3px;
+  float:right;
   cursor:pointer;
+  vertical-align:middle;
+}
+
+.pp-float-left {
+  float:left;
 }
 
 .pp-info-link {
@@ -739,6 +744,20 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 }
 .pp-info-copy:hover {
   background: transparent url('/images/icons/clipboard-hover.png') no-repeat;
+}
+
+.pp-pdf-folder {
+  background: transparent url('/images/icons/folder-subtle.png') no-repeat;
+}
+.pp-pdf-folder:hover {
+  background: transparent url('/images/icons/folder-subtle-hover.png') no-repeat;
+}
+
+.pp-pdf-external {
+  background: transparent url('/images/icons/page-external-subtle.png') no-repeat;
+}
+.pp-pdf-external:hover {
+  background: transparent url('/images/icons/page-external-subtle-hover.png') no-repeat;
 }
 
 .pp-action{
