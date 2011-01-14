@@ -1048,9 +1048,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   getDetailsCopyLinks: function(field, label) {
     if (field == 'url') {
-	label = '';
+      label = '';
     } else {
-	label = label + ' ';
+      label = label + ' ';
     }
     return[
     '          <tpl if="field == \'' + field + '\'">',
@@ -1949,7 +1949,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     win = new Ext.Window({
       title: isNew ? 'Add new reference' : 'Edit reference',
       modal: true,
-      floating: true,
+      shadow: false,
       layout: 'fit',
       width: 800,
       height: 600,
@@ -1971,7 +1971,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         scope: this
       })]
     });
-
+    win.on('close', function() {
+      Paperpile.main.focusCurrentPanel();
+    });
     win.show(this);
   },
 

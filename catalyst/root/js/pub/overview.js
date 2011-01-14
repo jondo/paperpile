@@ -475,7 +475,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'edit-ref':
-      this.getGrid().handleEdit();
+      this.getGrid().handleEdit.defer(20,this.getGrid());
       break;
 
     case 'delete-ref':
