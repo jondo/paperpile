@@ -909,6 +909,37 @@
   </test>
 </site>
 
+<site name="ADS">
+  <signature>
+    <url>!adsabs\.harvard\.edu!</url>
+    <url>!cdsads\.u-strasbg\.fr!</url>
+    <url>!ukads\.nottingham\.ac\.uk!</url>
+    <url>!ads\.(iucaa|bao|nao|on|astro|mao|inasan|ari|eso)\.!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*)(/full/|/abs/)(.*)!$1/cgi-bin/nph-iarticle_query?$3&amp;defaultprint=YES&amp;filetype=.pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>frame\s+src\s*=\s*&quot;([^&quot;]*/record/[^&quot;]*)&quot;</match>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*filetype=.pdf)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://adsabs.harvard.edu/full/1975LPSC....6.1539W</url>
+    <url>http://adsabs.harvard.edu/abs/1975LPSC....6.1539W</url>
+    <url>http://cdsads.u-strasbg.fr/abs/1983ApJ...269..423R</url>
+    <url>http://ukads.nottingham.ac.uk/abs/1999A%26A...349..389V</url>
+  </test>
+</site>
+
 
 <site name="Meta">
   <signature>
