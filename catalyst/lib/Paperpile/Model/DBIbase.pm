@@ -14,7 +14,44 @@ no warnings 'Class::C3::Adopt::NEXT';
 
 our $VERSION = '0.19';
 
-__PACKAGE__->mk_accessors( qw/_dbh _pid _tid/ );
+__PACKAGE__->mk_accessors( qw/_dbh _pid _tid _txdbh/ );
+
+
+
+sub begin_transaction {
+
+  my ( $self) = @_;
+
+  if (defined $self->_txdbh){
+    return $self->_txdbh;
+  } else {
+    my $dbh = $self->dbh;
+    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+    $self->_txdbh($dbh);
+    return $dbh;
+  }
+}
+
+
+sub commit_transaction {
+
+  my ( $self) = @_;
+
+  $self->_txdbh->commit;
+
+  $self->_txdbh(undef);
+
+}
+
+sub rollback_transaction {
+
+  my ( $self) = @_;
+
+  $self->_txdbh->rollback;
+
+  $self->_txdbh(undef);
+}
+
 
 sub set_settings {
   my ( $self, $settings, $dbh ) = @_;
@@ -25,7 +62,6 @@ sub set_settings {
     my $value = $settings->{$key};
 
     $self->set_setting($key, $value, $dbh);
-    #$dbh->do("REPLACE INTO Settings (key,value) VALUES ('$key','$value')");
   }
 }
 
@@ -116,7 +152,7 @@ sub new {
 }
 
 sub dbh {
-	return shift->stay_connected;
+  return shift->stay_connected;
 }
 
 
@@ -179,11 +215,7 @@ sub connect {
 
   # Turn on unicode support explicitely
   $dbh->{sqlite_unicode} = 1;
-#<<<<<<< HEAD
- #sqlite_unicode => 1,
 
-#=======
-#>>>>>>> osx
  return $dbh;
 }
 

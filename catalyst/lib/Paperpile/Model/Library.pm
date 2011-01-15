@@ -59,10 +59,7 @@ sub insert_pubs {
 
   ( my $self, my $pubs, my $user_library ) = @_;
 
-  my $dbh = $self->dbh;
-
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
-
+  my $dbh = $self->begin_transaction;
 
   # First make sure all objects have a guid
   foreach my $pub (@$pubs) {
@@ -174,7 +171,7 @@ sub insert_pubs {
 
   $self->update_collections( \@pubs_with_labels, 'LABEL', $dbh);
 
-  $dbh->commit;
+  $self->commit_transaction;
 
 }
 
@@ -184,9 +181,7 @@ sub delete_pubs {
 
   ( my $self, my $pubs ) = @_;
 
-  my $dbh = $self->dbh;
-
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my $dbh = $self->begin_transaction;
 
   # Delete attachments
   foreach my $pub (@$pubs) {
@@ -218,7 +213,7 @@ sub delete_pubs {
 
   }
 
-  $dbh->commit;
+  $self->commit_transaction;
 
 }
 
@@ -231,11 +226,9 @@ sub trash_pubs {
 
   ( my $self, my $pubs, my $mode ) = @_;
 
-  my $dbh = $self->dbh;
+  my $dbh = $self->begin_transaction;
 
   my $paper_root = $self->get_setting( 'paper_root', $dbh );
-
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
   # Flag trashed citation keys with trash_*. Mainly to avoid
   # that they are considered during disambiguation of keys
@@ -334,7 +327,7 @@ sub trash_pubs {
     }
   }
 
-  $dbh->commit;
+  $self->commit_transaction;
 
 }
 
@@ -346,9 +339,7 @@ sub update_pub {
 
   ( my $self, my $guid, my $new_data ) = @_;
 
-  my $dbh = $self->dbh;
-
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my $dbh = $self->begin_transaction;
 
   my $settings = $self->settings($dbh);
 
@@ -469,7 +460,8 @@ sub update_pub {
   }
 
   $self->_update_fulltext_table( $new_pub, 0, $dbh );
-  $dbh->commit;
+
+  $self->commit_transaction;
 
   return $new_pub;
 }
@@ -480,9 +472,9 @@ sub update_citekeys {
 
   my $data = $self->all('created');
 
-  my %seen = ();
+  my $dbh = $self->begin_transaction;
 
-  $self->dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my %seen = ();
 
   eval {
 
@@ -499,14 +491,15 @@ sub update_citekeys {
         $key .= chr( ord('a') + $seen{$key} - 2 );
       }
 
-      $key = $self->dbh->quote($key);
+      $key = $dbh->quote($key);
 
-      $self->dbh->do( "UPDATE Publications SET citekey=$key WHERE rowid=" . $pub->_rowid );
+      $dbh->do( "UPDATE Publications SET citekey=$key WHERE rowid=" . $pub->_rowid );
     }
 
-    my $_pattern = $self->dbh->quote($pattern);
-    $self->dbh->do("UPDATE Settings SET value=$_pattern WHERE key='key_pattern'");
-    $self->dbh->commit;
+    my $_pattern = $dbh->quote($pattern);
+    $dbh->do("UPDATE Settings SET value=$_pattern WHERE key='key_pattern'");
+
+    $self->commit_transaction;
 
   };
 
@@ -514,7 +507,9 @@ sub update_citekeys {
     die("Failed to update citation keys ($@)");
 
     # DBI driver seems to rollback do this automatically when the eval statement dies
-    $self->dbh->rollback;
+    #$self->dbh->rollback;
+    $self->rollback_transaction;
+
   }
 
 }
@@ -530,10 +525,7 @@ sub new_collection {
 
   my $external_dbh = $dbh ? 1 : 0;
 
-  if ( !$external_dbh ) {
-    $dbh = $self->dbh;
-    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
-  }
+  $dbh = $self->begin_transaction if !$external_dbh;
 
   if ( $parent =~ /ROOT/ ) {
     $parent = 'ROOT';
@@ -559,7 +551,7 @@ sub new_collection {
     "INSERT INTO Collections (guid, name, type, parent, sort_order, style, hidden) VALUES($guid, $name, $type, $parent, $sort_order, $style, $hidden)"
   );
 
-  $dbh->commit if !$external_dbh;
+  $self->commit_transaction if !$external_dbh;
 
 }
 
@@ -569,9 +561,7 @@ sub new_collection {
 sub delete_collection {
   ( my $self, my $guid, my $type ) = @_;
 
-  my $dbh = $self->dbh;
-
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my $dbh = $self->begin_transaction;
 
   my @list = $self->find_subcollections( $guid, $dbh );
 
@@ -614,7 +604,7 @@ sub delete_collection {
     $delete2->execute($guid);
   }
 
-  $dbh->commit;
+  $self->commit_transaction;
 
 }
 
@@ -626,10 +616,7 @@ sub update_collections {
 
   my $external_dbh = $dbh ? 1 : 0;
 
-  if ( !$external_dbh ) {
-    $dbh = $self->dbh;
-    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
-  }
+  $dbh = $self->begin_transaction if !$external_dbh;
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
@@ -664,7 +651,7 @@ sub update_collections {
     }
   }
 
-  $dbh->commit if ( !$external_dbh );
+  $self->commit_transaction if !$external_dbh;
 
 }
 
@@ -673,10 +660,7 @@ sub add_to_collection {
 
   my $external_dbh = $dbh ? 1 : 0;
 
-  if ( !$external_dbh ) {
-    $dbh = $self->dbh;
-    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
-  }
+  $dbh = $self->begin_transaction if !$external_dbh;
 
   # Figure out the type from the GUID.
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
@@ -692,7 +676,7 @@ sub add_to_collection {
   }
   $self->update_collections( $pubs, $type, $dbh );
 
-  $dbh->commit if ( !$external_dbh );
+  $self->commit_transaction if !$external_dbh;
 
 }
 
@@ -704,10 +688,7 @@ sub remove_from_collection {
 
   my $external_dbh = $dbh ? 1 : 0;
 
-  if ( !$external_dbh ) {
-    $dbh = $self->dbh;
-    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
-  }
+  $dbh = $self->begin_transaction if !$external_dbh;
 
   # Figure out the type from the GUID.
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
@@ -728,7 +709,7 @@ sub remove_from_collection {
 
   $self->update_collections( $pubs, $type, $dbh );
 
-  $dbh->commit if ( !$external_dbh );
+  $self->commit_transaction if !$external_dbh;
 
 }
 
@@ -736,11 +717,13 @@ sub remove_from_collection {
 sub rename_collection {
   my ( $self, $guid, $new_name ) = @_;
 
-  my $dbh = $self->dbh;
+  my $dbh = $self->begin_transaction;
 
   $new_name = $dbh->quote($new_name);
 
   $dbh->do("UPDATE Collections SET name=$new_name WHERE guid='$guid'");
+
+  $self->commit_transaction;
 
 }
 
@@ -764,9 +747,7 @@ sub get_collection_type {
 sub move_collection {
   my ( $self, $target_guid, $drop_guid, $position, $type ) = @_;
 
-  my $dbh = $self->dbh;
-
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my $dbh = $self->begin_transaction;
 
   my ( $new_parent, $sort_order );
   if ( $target_guid =~ m/ROOT/ ) {
@@ -837,7 +818,7 @@ sub move_collection {
     $self->_normalize_sort_order( $dbh, $new_parent, $type );
   }
 
-  $dbh->commit;
+  $self->commit_transaction;
 
 }
 
@@ -863,9 +844,7 @@ sub sort_labels {
 
   my ( $self, $field ) = @_;
 
-  my $dbh = $self->dbh;
-
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my $dbh = $self->begin_transaction;
 
   my @guids;
 
@@ -891,7 +870,7 @@ sub sort_labels {
     $i++;
   }
 
-  $dbh->commit;
+  $self->commit_transaction;
 
 }
 
@@ -903,18 +882,22 @@ sub set_default_collections {
 
   my ($self) = @_;
 
+  my $dbh = $self->begin_transaction;
+
   my $guid1 = Data::GUID->new->as_hex;
   $guid1 =~ s/^0x//;
 
   my $guid2 = Data::GUID->new->as_hex;
   $guid2 =~ s/^0x//;
 
-  $self->dbh->do(
+  $dbh->do(
     "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid1', 'Review','LABEL','ROOT',1,'22',0);"
   );
-  $self->dbh->do(
+  $dbh->do(
     "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid2', 'Incomplete','LABEL','ROOT',2,'0',0);"
   );
+
+  $self->commit_transaction;
 
 }
 
@@ -1431,14 +1414,9 @@ sub attach_file {
 
   my ( $self, $file, $is_pdf, $pub, $old_guid, $dbh ) = @_;
 
-  my $external_dbh;
-  if ($dbh) {
-    $external_dbh = 1;
-  } else {
-    $external_dbh = 0;
-    $dbh          = $self->dbh;
-    $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
-  }
+  my $external_dbh = $dbh ? 1 : 0;
+
+  $dbh = $self->begin_transaction if !$external_dbh;
 
   my $settings = $self->settings($dbh);
   my $source   = Paperpile::Utils->adjust_root($file);
@@ -1510,11 +1488,6 @@ sub attach_file {
     );
 
   } else {
-    if ( !$external_dbh ) {
-      $dbh->commit;
-      $dbh->do('BEGIN TRANSACTION');
-    }
-
     ( my $old_attachments ) =
       $dbh->selectrow_array("SELECT attachments FROM Publications WHERE guid='$pub_guid' ");
 
@@ -1531,9 +1504,7 @@ sub attach_file {
 
   }
 
-  if ( !$external_dbh ) {
-    $dbh->commit;
-  }
+  $self->commit_transaction if !$external_dbh;
 
   return $file_guid;
 
@@ -1548,7 +1519,9 @@ sub delete_attachment {
 
   my ( $self, $guid, $is_pdf, $pub, $with_undo, $dbh ) = @_;
 
-  $dbh = $self->dbh if !$dbh;
+  my $external_dbh = $dbh ? 1 : 0;
+
+  $dbh = $self->begin_transaction if !$external_dbh;
 
   my $paper_root = $self->get_setting('paper_root');
 
@@ -1608,6 +1581,8 @@ sub delete_attachment {
     }
   }
 
+  $self->commit_transaction;
+
   if ($with_undo) {
     my ( $volume, $dir, $file_name ) = splitpath($path);
     return catfile( $undo_dir, $file_name );
@@ -1619,9 +1594,8 @@ sub change_paper_root {
 
   my ( $self, $new_root ) = @_;
 
-  my $dbh = $self->dbh;
 
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my $dbh = $self->begin_transaction;
 
   eval {
 
@@ -1648,13 +1622,13 @@ sub change_paper_root {
   };
 
   if ($@) {
-    $dbh->rollback;
+    $self->rollback_transaction;
     my $msg = $@;
     $msg = $@->error if $@->isa('PaperpileError');
     FileError->throw("Could not move PDF directory to new location ($msg)");
   }
 
-  $dbh->commit();
+  $self->commit_transaction;
 
 }
 
@@ -1759,7 +1733,9 @@ sub index_pdf {
 
   my ( $self, $guid, $pdf_file, $dbh ) = @_;
 
-  $dbh = $self->dbh if !$dbh;
+  my $external_dbh = $dbh ? 1 : 0;
+
+  $dbh = $self->begin_transaction if !$external_dbh;
 
   my $bin = Paperpile::Utils->get_binary('extpdf');
 
@@ -1785,6 +1761,8 @@ sub index_pdf {
   $dbh->do(
     "UPDATE Fulltext SET text=$text WHERE rowid=(SELECT rowid FROM PUBLICATIONS WHERE guid='$guid')"
   );
+
+  $self->commit_transaction if !$external_dbh;
 
 }
 
@@ -1887,16 +1865,18 @@ sub dashboard_stats {
 
   my $self = shift;
 
-  ( my $num_items ) = $self->dbh->selectrow_array("SELECT count(*) FROM Publications WHERE trashed=0;");
+  my $dbh = $self->dbh;
+
+  ( my $num_items ) = $dbh->selectrow_array("SELECT count(*) FROM Publications WHERE trashed=0;");
 
   ( my $num_pdfs ) =
-    $self->dbh->selectrow_array("SELECT count(*) FROM Publications WHERE PDF !='' AND trashed=0;");
+    $dbh->selectrow_array("SELECT count(*) FROM Publications WHERE PDF !='' AND trashed=0;");
 
   ( my $num_attachments ) =
-    $self->dbh->selectrow_array("SELECT count(*) FROM Attachments,Publications WHERE Attachments.publication==Publications.guid AND is_pdf=0 AND trashed=0;");
+    $dbh->selectrow_array("SELECT count(*) FROM Attachments,Publications WHERE Attachments.publication==Publications.guid AND is_pdf=0 AND trashed=0;");
 
   ( my $last_imported ) =
-    $self->dbh->selectrow_array("SELECT created FROM Publications WHERE trashed=0 ORDER BY created DESC limit 1;");
+    $dbh->selectrow_array("SELECT created FROM Publications WHERE trashed=0 ORDER BY created DESC limit 1;");
 
   return {
     num_items       => $num_items,

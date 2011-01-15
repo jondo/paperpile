@@ -394,8 +394,7 @@ sub merge_into_me {
   my $other_pub = shift;
   my $library   = shift;
 
-  my $dbh = $library->dbh;
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my $dbh = $library->begin_transaction;
 
   my $guid       = $self->guid;
   my $other_guid = $other_pub->guid;
@@ -444,7 +443,7 @@ sub merge_into_me {
     }
   }
 
-  $dbh->commit;
+  $library->commit_transaction;
 }
 
 sub is_trivial_value {
