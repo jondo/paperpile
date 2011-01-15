@@ -874,6 +874,42 @@
   </test>
 </site>
 
+<site name="VariousPreprintArchives:HAL">
+  <signature>
+    <url>!hal\.archives-ouvertes\.fr!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*/docs/[^&quot;]*\.pdf)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://hal.archives-ouvertes.fr/hal-00411440/</url>
+  </test>
+</site>
+
+<site name="VariousPreprintArchives:Handle">
+  <signature>
+    <url>!hdl\.handle\.net!</url>
+    <url>!\.[a-z]{2,3}/handle!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*bitstream[^&quot;]*\.pdf[^&quot;]*)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://boa.unimib.it/handle/10281/7891</url>
+    <url>http://www.econstor.eu/handle/10419/39434</url>
+    <url>http://hdl.handle.net/1805/665</url>
+  </test>
+</site>
+
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
