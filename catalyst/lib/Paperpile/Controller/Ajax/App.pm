@@ -45,8 +45,22 @@ sub init_session : Local {
 
   my ( $self, $c ) = @_;
 
+  # Create temporary directory if not already exists
+
+  my $tmp_dir = Paperpile::Utils->get_tmp_dir;
+
+  mkpath( $tmp_dir );
+
+  if ( !( -w $tmp_dir ) ) {
+    FileWriteError->throw("Could not start application. Temporary file $tmp_dir not writable.");
+  }
+
+  foreach my $subdir ('rss','import','download','queue','filesync'){
+    mkpath( File::Spec->catfile( $tmp_dir, $subdir ) );
+  }
+
   # Clear session variables
-  unlink( File::Spec->catfile(Paperpile::Utils->get_tmp_dir, 'local_session' ) );
+  unlink( File::Spec->catfile($tmp_dir, 'local_session' ) );
 
   my $user_dir = $c->config->{'paperpile_user_dir'};
 
@@ -115,18 +129,6 @@ sub init_session : Local {
   if ( ( $db_library_version != $app_library_version )
     or ( $db_settings_version != $app_settings_version ) ) {
     DatabaseVersionError->throw("Database needs to be migrated to latest version");
-  }
-
-  # Check and prepare temporary directory
-
-  my $tmp_dir = Paperpile::Utils->get_tmp_dir;
-
-  if ( !( -w $tmp_dir ) ) {
-    FileWriteError->throw("Could not start application. Temporary file $tmp_dir not writable.");
-  }
-
-  foreach my $subdir ('rss','import','download','queue','filesync'){
-    mkpath( File::Spec->catfile( $tmp_dir, $subdir ) );
   }
 
   if ( not -e $c->config->{'queue_db'} ) {
