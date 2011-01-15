@@ -858,6 +858,22 @@
   </test>
 </site>
 
+<site name="ScientificResearchPublishing">
+  <signature>
+    <url>!scirp\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*PaperDownload\.aspx[^&quot;]*)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.scirp.org/journal/PaperInformation.aspx?paperID=3478#abstract</url>
+  </test>
+</site>
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
