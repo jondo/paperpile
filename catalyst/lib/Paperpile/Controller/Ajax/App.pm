@@ -46,9 +46,7 @@ sub init_session : Local {
   my ( $self, $c ) = @_;
 
   # Clear session variables
-  foreach my $key ( keys %{ Paperpile::Utils->session($c) } ) {
-    Paperpile::Utils->session($c, {$key => undef} ) if $key =~ /^(grid|viewer|tree|library_db|pdfextract)/;
-  }
+  unlink( File::Spec->catfile(Paperpile::Utils->get_tmp_dir, 'local_session' ) );
 
   my $user_dir = $c->config->{'paperpile_user_dir'};
 
@@ -113,8 +111,6 @@ sub init_session : Local {
   my $db_settings_version  = $c->model('User')->get_setting('db_version');
   my $app_library_version  = $c->config->{app_settings}->{library_db_version};
   my $app_settings_version = $c->config->{app_settings}->{settings_db_version};
-
-  print STDERR "$db_library_version vs $app_library_version\n";
 
   if ( ( $db_library_version != $app_library_version )
     or ( $db_settings_version != $app_settings_version ) ) {

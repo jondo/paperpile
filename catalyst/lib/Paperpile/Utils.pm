@@ -616,21 +616,53 @@ sub domain_from_url {
 
 }
 
+# Wrapper script around $c->session. On the desktop we use a custom
+# solution to store the session to avoid a strange race condition bug
+# in the session plugin.
+
+# USAGE: session($c) ... returns hashref of current session data
+#        session($c, {key=>value}) ... set key in session data
+
+# Important: The local version writes and restores the data everytime
+# the function is called. So if you store an object in the session
+# hash and change the object afterwards it will not be updated in the
+# session hash unless session is called again.
+
 sub session {
 
-  my ($self, $c, $data) = @_;
+  my ( $self, $c, $data ) = @_;
 
-  my $local = 0;
+  # Switch between default plugin and our local solution
+  my $local = 1;
 
-  if (!$local){
-    if (not defined $data){
+  if ($local) {
+
+    my $s = $self->retrieve("local_session");
+    $s = {} if !defined $s;
+
+    if ( not defined $data ) {
+      return $s;
+    } else {
+      foreach my $key ( keys %$data ) {
+        if ( not defined $data->{$key} ) {
+          delete( $s->{$key} );
+        } else {
+          $s->{$key} = $data->{$key};
+        }
+      }
+      $self->store( "local_session", $s );
+    }
+  }
+
+  if ( !$local ) {
+    if ( not defined $data ) {
       return $c->session;
     } else {
-      foreach my $key (keys %$data){
-        if (not defined $data->{$key}){
-          delete($c->session->{$key})
+      foreach my $key ( keys %$data ) {
+        if ( not defined $data->{$key} ) {
+          delete( $c->session->{$key} );
         } else {
-          $c->session->{$key}= $data->{$key};
+          $c->session->{$key} = $data->{$key};
         }
       }
     }

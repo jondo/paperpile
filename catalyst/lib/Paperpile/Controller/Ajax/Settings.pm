@@ -154,8 +154,10 @@ sub update_patterns : Local {
       # update library_db in session variable
       Paperpile::Utils->session($c, {library_db => $library_db});
 
+      ## Refactored tree, is not stored in session any more. So it should be reloaded without that...
       # Force reload of tree
-      Paperpile::Utils->session($c, {tree => undef});
+      #Paperpile::Utils->session($c, {tree => undef});
+
       $c->model('User')->set_setting( 'library_db', $library_db );
     } else {
       FileError->throw("Could not change database file to $library_db ($!)");

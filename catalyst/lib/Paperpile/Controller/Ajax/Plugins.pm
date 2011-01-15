@@ -95,8 +95,6 @@ sub resultsgrid : Local {
 
     $plugin->connect;
 
-    Paperpile::Utils->session($c, {"grid_$grid_id" => $plugin});
-
     if ( $plugin->total_entries == 0 ) {
       _resultsgrid_format( @_, [], 0 );
     }
@@ -143,6 +141,8 @@ sub resultsgrid : Local {
   } else {
     $c->model('Library')->exists_pub($entries);
   }
+
+  Paperpile::Utils->session($c, {"grid_$grid_id" => $plugin});
 
   if ($cancel_handle){
     Paperpile::Utils->clear_cancel($$);
@@ -256,7 +256,7 @@ sub export : Local {
   if ( defined $source_node ) {
 
     # Get the node with the id specified by $source_node
-    my $tree = Paperpile::Utils->session($c)->{"tree"};
+    my $tree = $c->model('Library')->get_setting('_tree');
     my $node = undef;
     $tree->traverse(
       sub {

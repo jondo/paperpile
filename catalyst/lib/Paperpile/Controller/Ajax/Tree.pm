@@ -33,16 +33,10 @@ sub get_node : Local {
 
   my $node = $c->request->params->{node};
 
-  my $tree;
+  my $tree = $c->model('Library')->get_setting('_tree');
 
-  if ( not defined Paperpile::Utils->session($c)->{"tree"} ) {
-    $tree = $c->model('Library')->get_setting('_tree');
-    if ( not $tree ) {
-      $tree = $c->forward('get_default_tree');
-    }
-    Paperpile::Utils->session($c, {"tree" => $tree});
-  } else {
-    $tree = Paperpile::Utils->session($c)->{"tree"};
+  if ( not $tree ) {
+    $tree = $c->forward('get_default_tree');
   }
 
   if ( $node eq 'ROOT' ) {
@@ -109,7 +103,7 @@ sub new_active : Local {
   my $node_id   = $c->request->params->{node_id};
   my $parent_id = $c->request->params->{parent_id};
 
-  my $tree = Paperpile::Utils->session($c)->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $sub_tree = $c->forward( 'get_subtree', [ $tree, $parent_id ] );
 
@@ -137,7 +131,7 @@ sub new_rss : Local {
   my $node_id   = $c->request->params->{node_id};
   my $parent_id = $c->request->params->{parent_id};
 
-  my $tree = Paperpile::Utils->session($c)->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $sub_tree = $c->forward( 'get_subtree', [ $tree, $parent_id ] );
 
@@ -187,7 +181,7 @@ sub delete_active : Local {
 
   my $node_id = $c->request->params->{node_id};
 
-  my $tree = Paperpile::Utils->session($c)->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $subtree = $c->forward( 'get_subtree', [ $tree, $node_id ] );
 
@@ -208,7 +202,7 @@ sub save_node_params : Local {
   my $request_params = $c->request->params;
   my $node_id        = delete $request_params->{node_id};
 
-  my $tree = Paperpile::Utils->session($c)->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node_id ] );
 
@@ -227,7 +221,7 @@ sub rename_node : Local {
   my $node_id  = $c->request->params->{node_id};
   my $new_text = $c->request->params->{new_text};
 
-  my $tree = Paperpile::Utils->session($c)->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $subtree = $c->forward( 'get_subtree', [ $tree, $node_id ] );
 
@@ -252,7 +246,7 @@ sub set_node_order : Local {
     @id_order = ($node_id_order);
   }
 
-  my $tree = Paperpile::Utils->session($c)->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $root = $c->forward( 'get_subtree', [ $tree, $target_node ] );
 
@@ -286,7 +280,7 @@ sub move_node : Local {
   # for moving nodes on the same level
   my $point = $c->request->params->{point};
 
-  my $tree = Paperpile::Utils->session($c)->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   # Get nodes from the ids
   my $drop_subtree   = $c->forward( 'get_subtree', [ $tree, $drop_node ] );

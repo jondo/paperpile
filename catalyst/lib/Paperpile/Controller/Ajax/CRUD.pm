@@ -421,7 +421,7 @@ sub new_collection : Local {
 
   # Reload tree representation of collections
 
-  my $tree = Paperpile::Utils->session($c)->{tree};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   if ($type eq 'LABEL'){
     $c->forward( '/ajax/tree/get_subtree', [ $tree, "LABEL_ROOT" ] );
@@ -993,6 +993,7 @@ sub _get_sync_collections {
 sub _get_plugin {
   my ( $self, $c ) = @_;
   my $grid_id = $c->request->params->{grid_id};
+
   return Paperpile::Utils->session($c)->{"grid_$grid_id"};
 }
 
@@ -1092,6 +1093,7 @@ sub _update_counts {
     my $plugin = Paperpile::Utils->session($c)->{$var};
     if ( $plugin->plugin_name eq 'DB' or $plugin->plugin_name eq 'Trash' ) {
       $plugin->update_count();
+      Paperpile::Utils->session($c, {$var => $plugin});
     }
   }
 }

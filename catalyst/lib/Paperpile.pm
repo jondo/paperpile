@@ -22,13 +22,11 @@ use warnings;
 
 use parent qw/Catalyst/;
 
+
 use Catalyst qw/
   -Debug
   ConfigLoader
   Static::Simple
-  Session
-  Session::State::Cookie
-  Session::Store::File
   Unicode
   /;
 
