@@ -149,8 +149,10 @@ sub init_session : Local {
   unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );
   unlink( glob( File::Spec->catfile( $tmp_dir, 'import',   '*ppl' ) ) );
 
-  # Clear file with cancel handles
+  # Clear file with cancel handles and any potential lock files that
+  # have been left after a crash
   unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ) );
+  unlink( File::Spec->catfile( $tmp_dir, '*lock' ) );
 
 }
 

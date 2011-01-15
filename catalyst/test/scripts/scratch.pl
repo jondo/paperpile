@@ -15,7 +15,14 @@ use LockFile::Simple;
 print STDERR "PID $$ trying to get lock\n";
 
 my $lockmgr = LockFile::Simple->make(
-  -ext       => 'lock',
+  -format => '%f.lck',
+  -max       => 30,
+  -delay     => 1,
+  -autoclean => 1,
+);
+
+my $lockmgr2 = LockFile::Simple->make(
+  -format => '%f.lck',
   -max       => 30,
   -delay     => 1,
   -autoclean => 1,
@@ -25,9 +32,9 @@ $lockmgr->lock("test") || die "can't lock /some/file\n";
 
 print STDERR "PID $$ obtained lock; doing work;\n";
 
-sleep(20);
+sleep(5);
 
-$lockmgr->unlock("test");
+print STDERR $lockmgr2->unlock("test"), "\n";
 
 print STDERR "PID $$ released lock\n";
 

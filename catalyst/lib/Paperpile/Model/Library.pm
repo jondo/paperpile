@@ -33,10 +33,11 @@ use Encode qw(encode decode);
 use File::Temp qw/tempfile tempdir /;
 use Data::GUID;
 
+use Paperpile::Utils;
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Model::App;
-use Paperpile::Utils;
+
 
 with 'Catalyst::Component::InstancePerContext';
 
