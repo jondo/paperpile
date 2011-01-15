@@ -45,7 +45,7 @@ has 'light_objects' => ( is => 'rw', isa => 'Int', default => 0 );
 
 sub build_per_context_instance {
   my ( $self, $c ) = @_;
-  my $file  = $c->session->{library_db};
+  my $file  = Paperpile::Utils->session($c)->{library_db};
   my $model = Paperpile::Model::Library->new();
   $model->set_dsn("dbi:SQLite:$file");
   return $model;

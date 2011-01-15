@@ -234,7 +234,7 @@ sub delete_entry : Local {
 
   if ( $mode eq 'TRASH' ) {
     $c->model('Library')->trash_pubs( $data, 'TRASH' );
-    $c->session->{"undo_trash"} = $data;
+    Paperpile::Utils->session($c, {undo_trash  => $data});
   }
 
   $self->_collect_update_data( $c, $data, [ '_imported', 'trashed' ] );
@@ -255,11 +255,11 @@ sub undo_trash : Local {
 
   my ( $self, $c ) = @_;
 
-  my $data = $c->session->{"undo_trash"};
+  my $data = Paperpile::Utils->session($c)->{undo_trash};
 
   $c->model('Library')->trash_pubs( $data, 'RESTORE' );
 
-  delete( $c->session->{undo_trash} );
+  Paperpile::Utils->session($c, {undo_trash  => undef});
 
   $self->_update_counts($c);
 
@@ -284,9 +284,9 @@ sub update_entry : Local {
 
   my $new_pub = $c->model('Library')->update_pub( $guid, $new_data );
 
-  foreach my $var ( keys %{ $c->session } ) {
+  foreach my $var ( keys %{ Paperpile::Utils->session($c) } ) {
     next if !( $var =~ /^grid_/ );
-    my $plugin = $c->session->{$var};
+    my $plugin = Paperpile::Utils->session($c)->{$var};
     if ( $plugin->plugin_name eq 'DB' or $plugin->plugin_name eq 'Trash' ) {
       if ( $plugin->_hash->{$guid} ) {
         delete( $plugin->_hash->{$guid} );
@@ -420,7 +420,8 @@ sub new_collection : Local {
   $c->model('Library')->new_collection( $guid, $name, $type, $parent, $style );
 
   # Reload tree representation of collections
-  my $tree = $c->session->{tree};
+
+  my $tree = Paperpile::Utils->session($c)->{tree};
 
   if ($type eq 'LABEL'){
     $c->forward( '/ajax/tree/get_subtree', [ $tree, "LABEL_ROOT" ] );
@@ -768,7 +769,7 @@ sub attach_file : Local {
   my $is_pdf = $c->request->params->{is_pdf};
 
   my $grid_id = $c->request->params->{grid_id};
-  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $plugin  = Paperpile::Utils->session($c)->{"grid_$grid_id"};
 
   my $pub = $plugin->find_guid($guid);
 
@@ -787,19 +788,23 @@ sub delete_file : Local {
   my $is_pdf    = $c->request->params->{is_pdf};
 
   my $grid_id = $c->request->params->{grid_id};
-  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $plugin  = Paperpile::Utils->session($c)->{"grid_$grid_id"};
 
   my $pub = $plugin->find_guid($pub_guid);
 
   my $undo_path = $c->model('Library')->delete_attachment( $file_guid, $is_pdf, $pub, 1 );
 
-  $c->session->{"undo_delete_attachment"} = {
-    file      => $undo_path,
-    is_pdf    => $is_pdf,
-    grid_id   => $grid_id,
-    pub_guid  => $pub_guid,
-    file_guid => $file_guid
-  };
+  Paperpile::Utils->session(
+    $c, {
+      undo_delete_attachment => {
+        file      => $undo_path,
+        is_pdf    => $is_pdf,
+        grid_id   => $grid_id,
+        pub_guid  => $pub_guid,
+        file_guid => $file_guid
+      }
+    }
+  );
 
   # Kind of a hack: delete the _search_job info before sending back our JSON update.
   if ($is_pdf) {
@@ -814,9 +819,9 @@ sub delete_file : Local {
 sub undo_delete : Local {
   my ( $self, $c ) = @_;
 
-  my $undo_data = $c->session->{"undo_delete_attachment"};
+  my $undo_data = Paperpile::Utils->session($c)->{"undo_delete_attachment"};
 
-  delete( $c->session->{undo_delete_attachment} );
+  Paperpile::Utils->session( $c, { undo_delete_attachment => undef } );
 
   my $file   = $undo_data->{file};
   my $is_pdf = $undo_data->{is_pdf};
@@ -825,7 +830,7 @@ sub undo_delete : Local {
   my $pub_guid  = $undo_data->{pub_guid};
   my $file_guid = $undo_data->{file_guid};
 
-  my $plugin = $c->session->{"grid_$grid_id"};
+  my $plugin = Paperpile::Session($c)->{"grid_$grid_id"};
 
   my $pub = $plugin->find_guid($pub_guid);
 
@@ -842,7 +847,7 @@ sub merge_duplicates : Local {
   my $ref_guid    = $c->request->param('ref_guid');
   my @other_guids = $c->request->param('other_guids');
 
-  my $plugin  = $c->session->{"grid_$grid_id"};
+  my $plugin  = Paperpile::Utils->session($c)->{"grid_$grid_id"};
   my $library = $c->model('Library');
 
   my $ref_pub = $plugin->find_guid($ref_guid);
@@ -988,7 +993,7 @@ sub _get_sync_collections {
 sub _get_plugin {
   my ( $self, $c ) = @_;
   my $grid_id = $c->request->params->{grid_id};
-  return $c->session->{"grid_$grid_id"};
+  return Paperpile::Utils->session($c)->{"grid_$grid_id"};
 }
 
 # Gets data for a selection in the frontend from the plugin object cache
@@ -1063,9 +1068,9 @@ sub _get_cached_data {
 
   my @list = ();
 
-  foreach my $var ( keys %{ $c->session } ) {
+  foreach my $var ( keys %{ Paperpile::Utils->session($c) } ) {
     next if !( $var =~ /^grid_/ );
-    my $plugin = $c->session->{$var};
+    my $plugin = Paperpile::Utils->session($c)->{$var};
     foreach my $pub ( values %{ $plugin->_hash } ) {
       push @list, $pub;
     }
@@ -1082,9 +1087,9 @@ sub _update_counts {
 
   my ( $self, $c ) = @_;
 
-  foreach my $var ( keys %{ $c->session } ) {
+  foreach my $var ( keys %{ Paperpile::Utils->session($c) } ) {
     next if !( $var =~ /^grid_/ );
-    my $plugin = $c->session->{$var};
+    my $plugin = Paperpile::Utils->session($c)->{$var};
     if ( $plugin->plugin_name eq 'DB' or $plugin->plugin_name eq 'Trash' ) {
       $plugin->update_count();
     }

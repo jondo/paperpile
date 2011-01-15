@@ -616,4 +616,25 @@ sub domain_from_url {
 
 }
 
+sub session {
+
+  my ($self, $c, $data) = @_;
+
+  my $local = 0;
+
+  if (!$local){
+    if (not defined $data){
+      return $c->session;
+    } else {
+      foreach my $key (keys %$data){
+        if (not defined $data->{$key}){
+          delete($c->session->{$key})
+        } else {
+          $c->session->{$key}= $data->{$key};
+        }
+      }
+    }
+  }
+}
+
 1;

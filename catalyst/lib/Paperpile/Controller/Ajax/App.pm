@@ -46,8 +46,8 @@ sub init_session : Local {
   my ( $self, $c ) = @_;
 
   # Clear session variables
-  foreach my $key ( keys %{ $c->session } ) {
-    delete( $c->session->{$key} ) if $key =~ /^(grid|viewer|tree|library_db|pdfextract)/;
+  foreach my $key ( keys %{ Paperpile::Utils->session($c) } ) {
+    Paperpile::Utils->session($c, {$key => undef} ) if $key =~ /^(grid|viewer|tree|library_db|pdfextract)/;
   }
 
   my $user_dir = $c->config->{'paperpile_user_dir'};
@@ -67,7 +67,7 @@ sub init_session : Local {
       or
       FileWriteError->throw("Could not start application (Error initializing settings database)");
 
-    $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
+    Paperpile::Utils->session($c, {library_db => $c->config->{'user_settings'}->{library_db}});
 
     # Don't overwrite an existing library database in the case the
     # user has just deleted the user settings database
@@ -90,7 +90,7 @@ sub init_session : Local {
     # User might have deleted or moved her library. In that case we initialize an empty one
     if ( !-e $library_db ) {
 
-      $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
+      Paperpile::Utils->session($c,{library_db => $c->config->{'user_settings'}->{library_db}});
 
       copy( $c->path_to('db/library.db')->stringify, $c->config->{'user_settings'}->{library_db} )
         or FileWriteError->throw(
@@ -103,7 +103,7 @@ sub init_session : Local {
         "Could not find your Paperpile library file $library_db. Start with an empty one.");
     }
 
-    $c->session->{library_db} = $library_db;
+    Paperpile::Utils->session($c,{library_db => $library_db});
 
   }
 

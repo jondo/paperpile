@@ -152,10 +152,10 @@ sub update_patterns : Local {
     if ($ok) {
 
       # update library_db in session variable
-      $c->session->{library_db} = $library_db;
+      Paperpile::Utils->session($c, {library_db => $library_db});
 
       # Force reload of tree
-      delete $c->session->{tree};
+      Paperpile::Utils->session($c, {tree => undef});
       $c->model('User')->set_setting( 'library_db', $library_db );
     } else {
       FileError->throw("Could not change database file to $library_db ($!)");
