@@ -1582,7 +1582,7 @@ sub delete_attachment {
     }
   }
 
-  $self->commit_transaction;
+  $self->commit_transaction if !$external_dbh;
 
   if ($with_undo) {
     my ( $volume, $dir, $file_name ) = splitpath($path);
