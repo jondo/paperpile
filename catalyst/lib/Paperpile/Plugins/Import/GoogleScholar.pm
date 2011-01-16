@@ -842,6 +842,13 @@ sub _find_best_hit {
         $best_hit   = $i;
       }
 
+      # another check if we got the matching hit
+      (my $tmpA = uc($tmp_orig_title)) =~ s/[^A-Z]//g;
+      (my $tmpB = uc($tmp_title)) =~ s/[^A-Z]//g;
+      if ( $tmpA eq $tmpB and length($tmpA) > 20 ) {
+	$best_hit   = $i;
+      }
+
       # if we fail, we try it a little less restrictive
       if ( $best_hit == -1 and $max_counts >= 10 ) {
         if ( $counts >= $max_counts ) {
