@@ -34,8 +34,7 @@ sub read {
   my ($self) = @_;
 
   my @output;
-  my @entries;    # array of ris text blocks
-  my @ris;        # array (references) of arrays (tags)
+  my @ris;    # array (references) of arrays (tags)
   my $tmp_note = '';
 
   # map of ris types to paperpile types
@@ -54,21 +53,21 @@ sub read {
 
   my $fh = new IO::File $self->file, "r";
 
-  my $line = '';    # get a whole tag
-  my @tmp;          # collect tags of current ref
+  my $line = '';      # get a whole tag
+  my @tmp  = ();      # collect tags of current ref
   my @data = <$fh>;
   for ( my $i = 0 ; $i <= $#data ; $i++ ) {
-    if ( $data[$i] =~ /ER  -\s*/ ) {
-      chomp $line;
-      push @tmp, $line;
-      push @ris, [@tmp];    # store previous ref
+    $data[$i] =~ s/\s+$//g;
+
+    if ( $data[$i] =~ /ER\s+\-\s*/ ) {
+      push @tmp, $line;    # keep last tag
+      push @ris, [@tmp];   # store previous ref
       @tmp  = ();
       $line = '';
-    } elsif ( $data[$i] =~ /^\S\S\s\s\- / ) {
+    } elsif ( $data[$i] =~ /^\S+\s+\-\s/ ) {
       if ( $line eq '' ) {
         $line = $data[$i];    # initialise/read tag
       } else {
-        chomp $line;
         push @tmp, $line;     # store previously read tag
         $line = $data[$i];    # init next round
       }
@@ -79,9 +78,10 @@ sub read {
 
   # don't forget last one
   if ( $line ne '' ) {
-    chomp $line;
     push @tmp, $line;
     push @ris, [@tmp];
+    @tmp  = ();
+    $line = '';
   }
 
   # now we have to parse each tag
@@ -98,10 +98,13 @@ sub read {
     my @full_texts = ();
     my ( $journal_full_name, $journal_short_name );
 
-    foreach my $tag ( @{$ref} ) {    # each tag of reference
-      $tag =~ /^(\S\S)\s\s\-\s(.+)/;
-      my $t = $1;                    # tag
-      my $d = $2;                    # data
+    foreach my $tag ( @{$ref} ) {
+
+      # tags have actually length 2
+      # however, we have seen longer ones, e.g. DOI in real life data
+      $tag =~ /^(\S+)\s+\-\s(.+)/;
+      my $t = $1;    # tag
+      my $d = $2;    # data
 
       switch ($t) {
         case 'TY' {
@@ -111,115 +114,115 @@ sub read {
             $data->{pubtype} = 'MISC';
           }
         }
-        case 'T1' {                  # primary title
+        case 'T1' {    # primary title
           $data->{title} = $d;
         }
-        case 'TI' {                  # TODO: some title, don't know what TI stands for
+        case 'TI' {    # TODO: some title, don't know what TI stands for
           if ( !exists $data->{title} ) {
             $data->{title} = $d;
           }
         }
-        case 'CT' {                  # TODO: chapter title?
+        case 'CT' {    # TODO: chapter title?
           if ( !exists $data->{title} ) {
             $data->{title} = $d;
           }
         }
-        case 'BT' {                  # book title
+        case 'BT' {    # book title
           $data->{booktitle} = $d;
         }
-        case 'T2' {                  # secondary title
+        case 'T2' {    # secondary title
           if ( !exists $data->{title} ) {
             $data->{title} = $d;
           } else {
             $data->{title} .= " - " . $d;
           }
         }
-        case 'T3' {                  # series title
+        case 'T3' {    # series title
           $data->{series} = $d;
         }
-        case 'A1' {                  # primary author
+        case 'A1' {    # primary author
           push @authors, $d;
         }
-        case 'AU' {                  # primary author
+        case 'AU' {    # primary author
           push @authors, $d;
         }
-        case 'A2' {                  # secondary author
+        case 'A2' {    # secondary author
           push @editors, $d;
         }
-        case 'ED' {                  # secondary author (editor)
+        case 'ED' {    # secondary author (editor)
           push @editors, $d;
         }
-        case 'A3' {                  # tertiary author, TODO: purpose?
+        case 'A3' {    # tertiary author, TODO: purpose?
           push @authors, $d;
         }
-        case 'Y1' {                  # primary date
+        case 'Y1' {    # primary date
           _handle_dates( $data, $d );
         }
-        case 'PY' {                  # primary date (year)
+        case 'PY' {    # primary date (year)
           _handle_dates( $data, $d );
         }
-        case 'Y2' {                  # secondary date, TODO: purpose?
+        case 'Y2' {    # secondary date, TODO: purpose?
           _handle_dates( $data, $d );
         }
-        case 'N1' {                  # notes can be different things...
+        case 'N1' {    # notes can be different things...
           if ( _is_doi($d) ) {
             $data->{doi} = $d;
           } elsif ( _is_abstract($d) ) {
             $data->{abstract} = $d;
           }
         }
-        case 'AB' {                  # abstract
+        case 'AB' {    # abstract
           $data->{abstract} = $d;
         }
-        case 'N2' {                  # often abstract
+        case 'N2' {    # often abstract
           if ( _is_abstract($d) ) {
             $data->{abstract} = $d;
           } else {
             print STDERR "Warning: could not parse field '$t', content='$d'!\n";
           }
         }
-        case 'KW' {                  # keywords
+        case 'KW' {    # keywords
           push @keywords, $d;
         }
 
         # we ignore the RP tag, its not needed
         # http://www.refman.com/support/risformat_tags_04.asp
 
-        case 'JF' {                  # journal full name
+        case 'JF' {    # journal full name
           $journal_full_name = $d;
         }
-        case 'JO' {                  # journal full name, alternative
+        case 'JO' {    # journal full name, alternative
           $journal_full_name = $d;
         }
-        case 'JA' {                  # journal short name
+        case 'JA' {    # journal short name
           $journal_short_name = $d;
         }
 
-        case 'VL' {                  # volume
+        case 'VL' {    # volume
           $data->{volume} = $d;
         }
-        case 'IS' {                  # issue
+        case 'IS' {    # issue
           $data->{issue} = $d;
         }
-        case 'CP' {                  # issue, alternative
+        case 'CP' {    # issue, alternative
           $data->{issue} = $d;
         }
-        case 'SP' {                  # start page number
+        case 'SP' {    # start page number
           $start_page = $d;
         }
-        case 'EP' {                  # end page number
+        case 'EP' {    # end page number
           $end_page = $d;
         }
-        case 'CY' {                  # city
+        case 'CY' {    # city
           $city = $d;
         }
-        case 'AD' {                  # address
+        case 'AD' {    # address
           $address = $d;
         }
-        case 'PB' {                  # publisher
+        case 'PB' {    # publisher
           $data->{publisher} = $d;
         }
-        case 'SN' {                  # issn OR isbn
+        case 'SN' {    # issn OR isbn
           $sn = $d;
         }
 
@@ -279,6 +282,16 @@ sub read {
           }
         }
 
+        # this are non-standard tags
+        # which we unfortunately have been seen in real live data
+        case 'DOI' {
+          if ( _is_doi($d) ) {
+            $data->{doi} = $d;
+          } else {
+            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
+          }
+        }
+
         else {
           print STDERR "Warning: field '$t' ignored, content='$d'!\n";
         }
@@ -335,7 +348,7 @@ sub read {
     # TODO:
     # L3 = related records
     # L4 = images
-    print STDERR $data;
+
     push @output, Paperpile::Library::Publication->new($data);
   }
 
