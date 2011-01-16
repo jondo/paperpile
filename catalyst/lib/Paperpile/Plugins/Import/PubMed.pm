@@ -697,11 +697,15 @@ sub _linkOut {
 	my $url2 =
 	  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=llinks&db=PubMed&id=$id";
 	my $response2 = $browser->get($url2);
-    Paperpile::Utils->check_browser_response($response2);
+	Paperpile::Utils->check_browser_response($response2);
 	my $result2 = XMLin( $response2->content, forceArray => ['IdUrlSet'] );
 	eval {
 	  my $linkout2 = $result2->{LinkSet}->{IdUrlList}->{IdUrlSet}->[0]->{ObjUrl}->[0]->{Url};
-	  $pub_hash{$id}->linkout( $linkout2 ) if ( defined $linkout2 );
+	  if ( defined $linkout2 ) {
+	    $pub_hash{$id}->linkout( $linkout2 ) if ( $linkout2 =~ m/ukpmc/ or
+						      $linkout2 =~ m/pubmedcentral/ or
+						      $linkout2 =~ m/gov\/pmc/ ) ;
+	  }
 	};
       }
     } else {
