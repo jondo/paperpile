@@ -948,6 +948,21 @@
   </test>
 </site>
 
+<site name="AdisOnline">
+  <signature>
+    <url>!adisonline\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>ArticleAsPDF&quot;\s+href\s*=\s*&quot;([^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://adisonline.com/druginvestigation/pages/articleviewer.aspx?year=2010&amp;issue=30010&amp;article=00006&amp;type=abstract</url>
+  </test>
+</site>
 
 <site name="Meta">
   <signature>
