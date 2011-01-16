@@ -971,6 +971,22 @@
   </test>
 </site>
 
+<site name="DovePress">
+  <signature>
+    <url>!dovepress\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*'(getfile[^']+)'</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.dovepress.com/computational-internal-sequence-repeats-analysis-of-accelerated-evolut-peer-reviewed-article-OAB</url>
+  </test>
+</site>
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
