@@ -311,6 +311,7 @@
     <url>!pubmedcentral\.nih\.gov!</url>
     <url>!ncbi\.nlm\.nih\.gov\/pmc!</url>
     <url>!ukpmc\.ac\.uk!</url>
+    <url>!pubmedcentralcanada\.ca!</url>
   </signature>
 
   <rule>
@@ -328,6 +329,12 @@
   <rule>
     <pattern>
       <match>!href\s*=\s*&quot;([^&quot;]+pdf=render)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+blobtype=pdf)&quot;!</match>
     </pattern>
   </rule>
   
