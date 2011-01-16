@@ -351,7 +351,14 @@
 
   <rule>
     <pattern>
-      <rewrite>!(abs|full|pdf)!pdf!</rewrite>
+      <rewrite>!(doi/abs|doi/full|doi/pdf)!doi/pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]*cgi/reprint/[^&quot;]+)&quot;.*\(PDF\)!</match>
+      <rewrite>!(.*)!$1.pdf!</rewrite>
     </pattern>
   </rule>
 
@@ -359,6 +366,7 @@
     <url>http://dx.doi.org/doi:10.1021/bi702132e</url>
     <url>http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511</url>
     <url>http://www.liebertonline.com/doi/abs/10.1089/cmb.2006.0137</url>
+    <url>http://www.molbiolcell.org/cgi/content/full/9/12/3273</url>
   </test>
 </site>
 
