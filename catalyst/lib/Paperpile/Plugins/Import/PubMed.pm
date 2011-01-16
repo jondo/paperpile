@@ -561,7 +561,22 @@ sub _read_xml {
 
     my $volume = $cit->{Article}->{Journal}->{JournalIssue}->{Volume};
     my $issue  = $cit->{Article}->{Journal}->{JournalIssue}->{Issue};
-    my $year   = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
+
+    my $year = '';
+    if ( exists $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year} ) {
+      $year = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Year};
+    } elsif ( exists $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{MedlineDate} ) {
+      my $meddate = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{MedlineDate};
+
+      # TODO: Can a medline date be any string?
+      # Should probably be parsed via a date parser module.
+      if ( $meddate =~ /(\d\d\d\d)/ ) {
+        $year = $1;
+      } else {
+        print STDERR "Warning: could not parse medline date '$meddate'";
+      }
+    }
+
     my $month  = $cit->{Article}->{Journal}->{JournalIssue}->{PubDate}->{Month};
     my $pages  = $cit->{Article}->{Pagination}->{MedlinePgn};
 
