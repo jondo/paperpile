@@ -832,8 +832,6 @@ sub _find_best_hit {
       my $counts = 0;
       foreach my $word (@words) {
         $counts++ if ( $tmp_title =~ m/\s$word\s/i );
-
-        #print "$counts || $word || $tmp_title\n";
       }
       print STDERR "counts: $counts max_counts: $max_counts\n";
 
@@ -847,6 +845,25 @@ sub _find_best_hit {
       (my $tmpB = uc($tmp_title)) =~ s/[^A-Z]//g;
       if ( $tmpA eq $tmpB and length($tmpA) > 20 ) {
 	$best_hit   = $i;
+      }
+
+      # we often have different spellings like organization and organisation
+      if ( length($tmpA) == length($tmpB) ) {
+	my @split_tmpA = split(//, $tmpA);
+	my @split_tmpB = split(//, $tmpB);
+	my $correct = 0;
+	foreach my $k ( 0 .. $#split_tmpA ) {
+	  if ( $split_tmpA[$k] eq $split_tmpB[$k] ) {
+	    $correct++;
+	    next;
+	  }
+	  if ( $split_tmpA[$k] =~ m/[SZ]/ and $split_tmpB[$k] =~ m/[SZ]/) {
+	    $correct++;
+	  }
+	}
+	if ( $correct == $#split_tmpA+1 ) {
+	  $best_hit   = $i;
+	}
       }
 
       # if we fail, we try it a little less restrictive
