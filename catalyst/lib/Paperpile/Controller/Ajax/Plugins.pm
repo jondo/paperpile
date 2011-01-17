@@ -67,7 +67,7 @@ sub resultsgrid : Local {
     Paperpile::Utils->register_cancel_handle($cancel_handle);
   }
 
-  if ( not defined $c->session->{"grid_$grid_id"} or $task eq 'NEW' ) {
+  if ( not defined Paperpile::Utils->session($c)->{"grid_$grid_id"} or $task eq 'NEW' ) {
 
     # Load required module dynamically
     my $plugin_module = "Paperpile::Plugins::Import::$plugin_name";
@@ -85,7 +85,7 @@ sub resultsgrid : Local {
     if ( ( ( $plugin_name eq 'DB' ) and ( not $c->request->params->{plugin_file} ) )
       or ( $plugin_name eq 'Duplicates' )
       or ( $plugin_name eq 'Trash' ) ) {
-      $params{file} = $c->session->{library_db};
+      $params{file} = Paperpile::Utils->session($c)->{library_db};
     }
 
     # create instance; can we do this more elegantly?
@@ -95,14 +95,12 @@ sub resultsgrid : Local {
 
     $plugin->connect;
 
-    $c->session->{"grid_$grid_id"} = $plugin;
-
     if ( $plugin->total_entries == 0 ) {
       _resultsgrid_format( @_, [], 0 );
     }
 
   } else {
-    $plugin = $c->session->{"grid_$grid_id"};
+    $plugin = Paperpile::Utils->session($c)->{"grid_$grid_id"};
     if ( $c->request->params->{plugin_update_total} ) {
       $plugin->update_total(1);
     }
@@ -143,6 +141,8 @@ sub resultsgrid : Local {
   } else {
     $c->model('Library')->exists_pub($entries);
   }
+
+  Paperpile::Utils->session($c, {"grid_$grid_id" => $plugin});
 
   if ($cancel_handle){
     Paperpile::Utils->clear_cancel($$);
@@ -194,10 +194,10 @@ sub delete_grids : Local {
   }
 
   foreach my $grid_id (@$grid_ids){
-    my $plugin = $c->session->{"grid_$grid_id"};
+    my $plugin = Paperpile::Utils->session($c)->{"grid_$grid_id"};
     if ($plugin) {
       $plugin->cleanup();
-      delete( $c->session->{"grid_$grid_id"} );
+      Paperpile::Utils->session($c, {"grid_$grid_id" => undef});
     }
   }
 
@@ -234,7 +234,7 @@ sub export : Local {
 
   # Get data from results grid
   if ( defined $grid_id ) {
-    my $grid = $c->session->{"grid_$grid_id"};
+    my $grid = Paperpile::Utils->session($c)->{"grid_$grid_id"};
 
     if ( $selection =~ m/all/i ) {
       $data = $grid->all;
@@ -256,7 +256,7 @@ sub export : Local {
   if ( defined $source_node ) {
 
     # Get the node with the id specified by $source_node
-    my $tree = $c->session->{"tree"};
+    my $tree = $c->model('Library')->get_setting('_tree');
     my $node = undef;
     $tree->traverse(
       sub {
@@ -280,7 +280,7 @@ sub export : Local {
     $params{name} = 'DB' if ( !defined $params{name} );
 
     if ( ( $params{name} eq 'DB' ) and ( not $params{file} ) ) {
-      $params{file} = $c->session->{library_db};
+      $params{file} = Paperpile::Utils->session($c)->{library_db};
     }
 
     my $plugin_module = "Paperpile::Plugins::Import::" . $params{name};
@@ -303,7 +303,7 @@ sub export : Local {
     my @all = $c->model('Library')->find_subcollections($guid);
     map {$_=$type."id:$_"} @all;
     $params{query} = join(" OR ", @all);
-    $params{file} = $c->session->{library_db};
+    $params{file} = Paperpile::Utils->session($c)->{library_db};
 
     my $plugin =  Paperpile::Plugins::Import::DB->new(%params);
     $plugin->connect;

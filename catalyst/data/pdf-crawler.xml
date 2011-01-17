@@ -311,6 +311,7 @@
     <url>!pubmedcentral\.nih\.gov!</url>
     <url>!ncbi\.nlm\.nih\.gov\/pmc!</url>
     <url>!ukpmc\.ac\.uk!</url>
+    <url>!pubmedcentralcanada\.ca!</url>
   </signature>
 
   <rule>
@@ -328,6 +329,12 @@
   <rule>
     <pattern>
       <match>!href\s*=\s*&quot;([^&quot;]+pdf=render)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+blobtype=pdf)&quot;!</match>
     </pattern>
   </rule>
   
@@ -351,7 +358,14 @@
 
   <rule>
     <pattern>
-      <rewrite>!(abs|full|pdf)!pdf!</rewrite>
+      <rewrite>!(doi/abs|doi/full|doi/pdf)!doi/pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]*cgi/reprint/[^&quot;]+)&quot;.*\(PDF\)!</match>
+      <rewrite>!(.*)!$1.pdf!</rewrite>
     </pattern>
   </rule>
 
@@ -359,6 +373,7 @@
     <url>http://dx.doi.org/doi:10.1021/bi702132e</url>
     <url>http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511</url>
     <url>http://www.liebertonline.com/doi/abs/10.1089/cmb.2006.0137</url>
+    <url>http://www.molbiolcell.org/cgi/content/full/9/12/3273</url>
   </test>
 </site>
 
@@ -855,6 +870,120 @@
   
   <test>
     <url>http://journals.prous.com/journals/servlet/xmlxsl/pk_journals.xml_summary_pr?p_JournalId=3&amp;p_RefId=1395253&amp;p_IsPs=N</url>
+  </test>
+</site>
+
+<site name="ScientificResearchPublishing">
+  <signature>
+    <url>!scirp\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*PaperDownload\.aspx[^&quot;]*)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.scirp.org/journal/PaperInformation.aspx?paperID=3478#abstract</url>
+  </test>
+</site>
+
+<site name="VariousPreprintArchives:HAL">
+  <signature>
+    <url>!hal\.archives-ouvertes\.fr!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*/docs/[^&quot;]*\.pdf)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://hal.archives-ouvertes.fr/hal-00411440/</url>
+  </test>
+</site>
+
+<site name="VariousPreprintArchives:Handle">
+  <signature>
+    <url>!hdl\.handle\.net!</url>
+    <url>!\.[a-z]{2,3}/handle!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*bitstream[^&quot;]*\.pdf[^&quot;]*)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://boa.unimib.it/handle/10281/7891</url>
+    <url>http://www.econstor.eu/handle/10419/39434</url>
+    <url>http://hdl.handle.net/1805/665</url>
+  </test>
+</site>
+
+<site name="ADS">
+  <signature>
+    <url>!adsabs\.harvard\.edu!</url>
+    <url>!cdsads\.u-strasbg\.fr!</url>
+    <url>!ukads\.nottingham\.ac\.uk!</url>
+    <url>!ads\.(iucaa|bao|nao|on|astro|mao|inasan|ari|eso)\.!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*)(/full/|/abs/)(.*)!$1/cgi-bin/nph-iarticle_query?$3&amp;defaultprint=YES&amp;filetype=.pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>frame\s+src\s*=\s*&quot;([^&quot;]*/record/[^&quot;]*)&quot;</match>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]*filetype=.pdf)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://adsabs.harvard.edu/full/1975LPSC....6.1539W</url>
+    <url>http://adsabs.harvard.edu/abs/1975LPSC....6.1539W</url>
+    <url>http://cdsads.u-strasbg.fr/abs/1983ApJ...269..423R</url>
+    <url>http://ukads.nottingham.ac.uk/abs/1999A%26A...349..389V</url>
+  </test>
+</site>
+
+<site name="AdisOnline">
+  <signature>
+    <url>!adisonline\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>ArticleAsPDF&quot;\s+href\s*=\s*&quot;([^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://adisonline.com/druginvestigation/pages/articleviewer.aspx?year=2010&amp;issue=30010&amp;article=00006&amp;type=abstract</url>
+  </test>
+</site>
+
+<site name="DovePress">
+  <signature>
+    <url>!dovepress\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*'(getfile[^']+)'</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.dovepress.com/computational-internal-sequence-repeats-analysis-of-accelerated-evolut-peer-reviewed-article-OAB</url>
   </test>
 </site>
 

@@ -45,10 +45,22 @@ sub init_session : Local {
 
   my ( $self, $c ) = @_;
 
-  # Clear session variables
-  foreach my $key ( keys %{ $c->session } ) {
-    delete( $c->session->{$key} ) if $key =~ /^(grid|viewer|tree|library_db|pdfextract)/;
+  # Create temporary directory if not already exists
+
+  my $tmp_dir = Paperpile::Utils->get_tmp_dir;
+
+  mkpath( $tmp_dir );
+
+  if ( !( -w $tmp_dir ) ) {
+    FileWriteError->throw("Could not start application. Temporary file $tmp_dir not writable.");
   }
+
+  foreach my $subdir ('rss','import','download','queue','filesync'){
+    mkpath( File::Spec->catfile( $tmp_dir, $subdir ) );
+  }
+
+  # Clear session variables
+  unlink( File::Spec->catfile($tmp_dir, 'local_session' ) );
 
   my $user_dir = $c->config->{'paperpile_user_dir'};
 
@@ -67,7 +79,7 @@ sub init_session : Local {
       or
       FileWriteError->throw("Could not start application (Error initializing settings database)");
 
-    $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
+    Paperpile::Utils->session($c, {library_db => $c->config->{'user_settings'}->{library_db}});
 
     # Don't overwrite an existing library database in the case the
     # user has just deleted the user settings database
@@ -90,7 +102,7 @@ sub init_session : Local {
     # User might have deleted or moved her library. In that case we initialize an empty one
     if ( !-e $library_db ) {
 
-      $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
+      Paperpile::Utils->session($c,{library_db => $c->config->{'user_settings'}->{library_db}});
 
       copy( $c->path_to('db/library.db')->stringify, $c->config->{'user_settings'}->{library_db} )
         or FileWriteError->throw(
@@ -103,7 +115,7 @@ sub init_session : Local {
         "Could not find your Paperpile library file $library_db. Start with an empty one.");
     }
 
-    $c->session->{library_db} = $library_db;
+    Paperpile::Utils->session($c,{library_db => $library_db});
 
   }
 
@@ -114,23 +126,9 @@ sub init_session : Local {
   my $app_library_version  = $c->config->{app_settings}->{library_db_version};
   my $app_settings_version = $c->config->{app_settings}->{settings_db_version};
 
-  print STDERR "$db_library_version vs $app_library_version\n";
-
   if ( ( $db_library_version != $app_library_version )
     or ( $db_settings_version != $app_settings_version ) ) {
     DatabaseVersionError->throw("Database needs to be migrated to latest version");
-  }
-
-  # Check and prepare temporary directory
-
-  my $tmp_dir = Paperpile::Utils->get_tmp_dir;
-
-  if ( !( -w $tmp_dir ) ) {
-    FileWriteError->throw("Could not start application. Temporary file $tmp_dir not writable.");
-  }
-
-  foreach my $subdir ('rss','import','download','queue','filesync'){
-    mkpath( File::Spec->catfile( $tmp_dir, $subdir ) );
   }
 
   if ( not -e $c->config->{'queue_db'} ) {
@@ -149,8 +147,10 @@ sub init_session : Local {
   unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );
   unlink( glob( File::Spec->catfile( $tmp_dir, 'import',   '*ppl' ) ) );
 
-  # Clear file with cancel handles
+  # Clear file with cancel handles and any potential lock files that
+  # have been left after a crash
   unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ) );
+  unlink( File::Spec->catfile( $tmp_dir, '*lock' ) );
 
 }
 

@@ -27,6 +27,7 @@ use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Exceptions;
 use Paperpile::Formats::Rss;
+use Paperpile::Formats::Ris;
 
 enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS EMAIL MODS ISI ENDNOTE ENDNOTEXML RIS WORD2007 MEDLINE RSS ZOTERO MENDELEY HTML XMP);
 
@@ -158,8 +159,13 @@ sub read {
 
   my $self = shift;
 
-  return $self->read_bibutils;
+  # use our own RIS module instead of Bibutils
+  if (  $self->format eq 'RIS' ) {
+    my $RISin  = Paperpile::Formats::Ris->new( file => $self->file );
+    return $RISin->read();
+  }
 
+  return $self->read_bibutils;
 }
 
 # Writes $self->data to $self->file; Defaults to using

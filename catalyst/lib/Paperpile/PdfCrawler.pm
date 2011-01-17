@@ -139,11 +139,14 @@ sub _identify_site {
 
   ( my $self, my $URL ) = @_;
 
+  Paperpile::Utils->update_job_info( $self->jobid, 'msg', "Identify publisher's site...", "PDF download canceled" );
+
   my $driver = $self->_driver;
 
   # first match all patterns against the URL
 
   my $original_url = $URL;
+
 
   for my $run ( 'original', 'redirected' ) {
 

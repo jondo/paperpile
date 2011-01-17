@@ -20,6 +20,7 @@ package Paperpile::Controller::Ajax::Tree;
 use strict;
 use warnings;
 use parent 'Catalyst::Controller';
+use Paperpile::Utils;
 use Paperpile::Library::Publication;
 use Paperpile::Plugins::Import::Feed;
 use Data::Dumper;
@@ -32,16 +33,10 @@ sub get_node : Local {
 
   my $node = $c->request->params->{node};
 
-  my $tree;
+  my $tree = $c->model('Library')->get_setting('_tree');
 
-  if ( not defined $c->session->{"tree"} ) {
-    $tree = $c->model('Library')->get_setting('_tree');
-    if ( not $tree ) {
-      $tree = $c->forward('get_default_tree');
-    }
-    $c->session->{"tree"} = $tree;
-  } else {
-    $tree = $c->session->{"tree"};
+  if ( not $tree ) {
+    $tree = $c->forward('get_default_tree');
   }
 
   if ( $node eq 'ROOT' ) {
@@ -108,7 +103,7 @@ sub new_active : Local {
   my $node_id   = $c->request->params->{node_id};
   my $parent_id = $c->request->params->{parent_id};
 
-  my $tree = $c->session->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $sub_tree = $c->forward( 'get_subtree', [ $tree, $parent_id ] );
 
@@ -136,7 +131,7 @@ sub new_rss : Local {
   my $node_id   = $c->request->params->{node_id};
   my $parent_id = $c->request->params->{parent_id};
 
-  my $tree = $c->session->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $sub_tree = $c->forward( 'get_subtree', [ $tree, $parent_id ] );
 
@@ -186,7 +181,7 @@ sub delete_active : Local {
 
   my $node_id = $c->request->params->{node_id};
 
-  my $tree = $c->session->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $subtree = $c->forward( 'get_subtree', [ $tree, $node_id ] );
 
@@ -202,21 +197,22 @@ sub delete_active : Local {
 }
 
 sub save_node_params : Local {
-    my ($self, $c) = @_;
+  my ( $self, $c ) = @_;
 
-    my $request_params = $c->request->params;
-    my $node_id = delete $request_params->{node_id};
+  my $request_params = $c->request->params;
+  my $node_id        = delete $request_params->{node_id};
 
-    my $tree = $c->session->{"tree"};
-    my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node_id ] );
+  my $tree = $c->model('Library')->get_setting('_tree');
 
-    my $node_params = $subtree->getNodeValue();
+  my $subtree = $c->forward( 'private/get_subtree', [ $tree, $node_id ] );
 
-    foreach my $key (keys %$request_params) {
-	$node_params->{$key} = $request_params->{$key};
-    }
+  my $node_params = $subtree->getNodeValue();
 
-    $c->model('Library')->set_setting( '_tree', $tree );
+  foreach my $key ( keys %$request_params ) {
+    $node_params->{$key} = $request_params->{$key};
+  }
+
+  $c->model('Library')->set_setting( '_tree', $tree );
 }
 
 sub rename_node : Local {
@@ -225,7 +221,7 @@ sub rename_node : Local {
   my $node_id  = $c->request->params->{node_id};
   my $new_text = $c->request->params->{new_text};
 
-  my $tree = $c->session->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   my $subtree = $c->forward( 'get_subtree', [ $tree, $node_id ] );
 
@@ -250,7 +246,8 @@ sub set_node_order : Local {
     @id_order = ($node_id_order);
   }
 
-  my $tree = $c->session->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
+
   my $root = $c->forward( 'get_subtree', [ $tree, $target_node ] );
 
   my @nodes;
@@ -283,7 +280,7 @@ sub move_node : Local {
   # for moving nodes on the same level
   my $point = $c->request->params->{point};
 
-  my $tree = $c->session->{"tree"};
+  my $tree = $c->model('Library')->get_setting('_tree');
 
   # Get nodes from the ids
   my $drop_subtree   = $c->forward( 'get_subtree', [ $tree, $drop_node ] );

@@ -128,7 +128,7 @@ sub read {
 
           # Normalize doi to just something like 10.1038/nature06340
           # without urls or anything else.
-          $content =~ s/^doi://;
+          $content =~ s/^doi:\s*//i;
           $content =~ s!^(http://)?dx.doi.org/!!;
         }
         if ( $field eq 'year' ) {
@@ -185,6 +185,7 @@ sub read {
       else {
         if ( $field =~ /arxiv/ ) {
           $data->{arxivid} = $entry->field($field);
+	  $data->{arxivid} =~ s/arxiv:?\s*//i;
           next;
         }
 

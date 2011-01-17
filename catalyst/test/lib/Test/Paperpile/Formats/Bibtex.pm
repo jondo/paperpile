@@ -40,7 +40,7 @@ sub startup : Tests(startup => 1) {
 
 # Add test functions here
 
-sub read : Tests(29) {
+sub read : Tests(51) {
 
   my ($self) = @_;
 
@@ -55,6 +55,20 @@ sub read : Tests(29) {
     "Publication types",
     "data/Formats/Bibtex/read/pubtypes.bib",
     "data/Formats/Bibtex/read/pubtypes.out",
+    $self->{settings}
+  );
+
+  $self->test_read(
+    "Author parsing",
+    "data/Formats/Bibtex/read/authors.bib",
+    "data/Formats/Bibtex/read/authors.out",
+    $self->{settings}
+  );
+
+  $self->test_read(
+    '@string entries',
+    "data/Formats/Bibtex/read/string.bib",
+    "data/Formats/Bibtex/read/string.out",
     $self->{settings}
   );
 

@@ -17,10 +17,6 @@ Model::User:
 Model::Queue:
   dsn: "dbi:SQLite:__PP_TMP_DIR__/queue.db"
 
-session:
-  storage: "__PP_TMP_DIR__/session"
-  expires: 100000000
-
 app_settings:
   platform: "__PLATFORM__"
   version_id: 5
