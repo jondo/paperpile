@@ -915,7 +915,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       this.labelStore.reload();
     }
 
+    // update the queue widget with the current data.
     this.queueWidget.onUpdate(data);
+
+    // If this update contains new or deleted jobs, trigger the queue update loop.
     if (data.job_delta) {
       this.queueUpdate();
     }

@@ -1998,9 +1998,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         buttons: Ext.Msg.OKCANCEL,
         fn: function(btn) {
           if (btn === 'ok') {
-            Ext.getCmp('queue-widget').onUpdate({
-              submitting: true
-            });
+	    Paperpile.main.queueWidget.setSubmitting();
             Paperpile.Ajax({
               url: '/ajax/crud/batch_update',
               params: {
@@ -2029,9 +2027,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   batchDownload: function() {
     var selection = this.getSelection();
     if (selection.length > 1) {
-      Ext.getCmp('queue-widget').onUpdate({
-        submitting: true
-      });
+      Paperpile.main.queueWidget.setSubmitting();
     }
     Paperpile.Ajax({
       url: '/ajax/crud/batch_download',
