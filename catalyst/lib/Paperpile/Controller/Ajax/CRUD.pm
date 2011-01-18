@@ -106,6 +106,7 @@ sub insert_entry : Local {
   # Probably not the most efficient way but works for now
   $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, \@pub_array );
 
+  $self->_save_plugin($c, $plugin);
   $self->_update_counts($c);
 
 }
@@ -147,6 +148,8 @@ sub complete_entry : Local {
     $results->{ $old_guid } = $pub_hash;
 
   }
+
+  $self->_save_plugin($c, $plugin);
 
   $c->stash->{data} = { pubs => $results };
 
@@ -245,6 +248,7 @@ sub delete_entry : Local {
   $plugin->total_entries( $plugin->total_entries - scalar(@$data) );
 
   $self->_update_counts($c);
+  $self->_save_plugin($c, $plugin);
 
   $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, $data );
   $c->stash->{data}->{undo_url} = '/ajax/crud/undo_trash';
@@ -293,6 +297,7 @@ sub update_entry : Local {
         $plugin->_hash->{ $new_pub->guid } = $new_pub;
       }
     }
+    Paperpile::Utils->session($c, {$var => $plugin});
   }
 
 
@@ -501,6 +506,9 @@ sub move_in_collection : Local {
   } else {
     $self->_collect_update_data( $c, $data, [$what] );
   }
+
+  $self->_save_plugin($c, $plugin);
+
   $c->stash->{data}->{collection_delta} = 1;
 
   $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, undef, $guid );
@@ -885,6 +893,8 @@ sub merge_duplicates : Local {
   $merged_pub = $library->update_pub( $merged_pub->guid, $merged_pub->as_hash );
   $plugin->replace_merged_items( $dup_id, $merged_pub );
 
+  $self->_save_plugin($c, $plugin);
+
   $self->_collect_update_data( $c, [$merged_pub] );
   $c->stash->{data}->{pub_delta} = 1;
 }
@@ -996,6 +1006,18 @@ sub _get_plugin {
 
   return Paperpile::Utils->session($c)->{"grid_$grid_id"};
 }
+
+# Our custom session handling does not transparently save changes to
+# session variables, so we have to save the plugin object manually
+# whenever we have changed it
+
+sub _save_plugin {
+  my ( $self, $c, $plugin ) = @_;
+  my $grid_id = $c->request->params->{grid_id};
+
+  return Paperpile::Utils->session($c, {"grid_$grid_id"=>$plugin});
+}
+
 
 # Gets data for a selection in the frontend from the plugin object cache
 sub _get_selection {

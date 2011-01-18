@@ -140,6 +140,14 @@ sub resultsgrid : Local {
     }
   } else {
     $c->model('Library')->exists_pub($entries);
+
+    # If guid has changed because entry is already in database update
+    # also the plugin cache
+    foreach my $pub (@$entries){
+      if ($pub->_old_guid){
+        $plugin->update_cache($pub);
+      }
+    }
   }
 
   Paperpile::Utils->session($c, {"grid_$grid_id" => $plugin});
