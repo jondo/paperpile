@@ -971,6 +971,66 @@
   </test>
 </site>
 
+<site name="BenthamDirect">
+  <!-- There is still a cookie problem with this site driver -->
+  <signature>
+    <url>!benthamdirect\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*/)([A-Z\d]+)(\.[A-Z]{3})$!http://www.benthamdirect.org/pages/gencorp.php?file=$2.pdf!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.benthamdirect.org/pages/content.php?CHAMC/2008/00000006/00000003/004AE.SGM</url>
+  </test>
+</site>
+
+<site name="CellPress">
+  <signature>
+    <url>!cell.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*cell\.com/)([^/]+)(/.*pii/)(.*)!http://download.cell.com/$2/pdf/PII$4.pdf!</rewrite>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+(?:CellDownload|GatewayURL)[^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+/pdf/[^&quot;]+.pdf)&quot;</match>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+(?:CellDownload|GatewayURL)[^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <rule>
+    <pattern>
+      <rewrite>!(.*)!$1?script=true!</rewrite>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+/pdf/[^&quot;]+.pdf)&quot;</match>
+    </pattern>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+(?:CellDownload|GatewayURL)[^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.cell.com/biophysj/retrieve/pii/S0006349592819586</url>
+    <url>http://www.cell.com/biophysj/cgi/content/abstract/73/6/3122</url>
+    <url>http://www.cell.com/neuron/abstract/S0896-6273(10)00993-1</url>
+  </test>
+</site>
+
+
 <site name="DovePress">
   <signature>
     <url>!dovepress\.com!</url>
