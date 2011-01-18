@@ -76,12 +76,14 @@ sub insert_entry : Local {
 
     # If guid has changed because pub was already in database we set
     # the old guid as key to the update hash. The guid field holds the
-    # new guid and will update the store in the frontend. We also
-    # update the backend cache of the plugin
+    # new guid and will update the store in the frontend.
     if ($pub->_old_guid){
       $old_guid = $pub->_old_guid;
-      $plugin->update_cache($pub);
     }
+
+    # We also update the backend cache of the plugin with potentially
+    # new guids and the new _imported flag
+    $plugin->update_cache($pub);
 
     my $pub_hash = $pub->as_hash;
 
@@ -734,8 +736,8 @@ sub batch_update : Local {
 
 sub batch_download : Local {
   my ( $self, $c ) = @_;
-  my $plugin = $self->_get_plugin($c);
 
+  my $plugin = $self->_get_plugin($c);
   my $data = $self->_get_selection($c);
 
   my $q = Paperpile::Queue->new();
