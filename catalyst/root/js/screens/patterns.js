@@ -57,29 +57,42 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
       });
 
+    // This is the main update task, called by all change events on all fields
+    // with a fairly long delay.
+    if (this.updateTask === undefined) {
+      this.updateTask = new Ext.util.DelayedTask(this.updateFields, this);
+    }
+
+    this.saveTooltip = new Ext.ToolTip({
+      target: Ext.get('patterns-save-button'),
+      minWidth: 50,
+      maxWidth: 300,
+      html: '',
+      anchor: 'bottom',
+      showDelay: 0,
+      hideDelay: 0
+    });
+
     Ext.each(this.getFields(),
     function(item) {
       var field = new Ext.form.TextField({
         value: Paperpile.main.globalSettings[item],
+        width: 300,
+        // Yes, we want to fire events on keyup and whatnot.
         enableKeyEvents: true,
+        // Remove validation triggers and events -- we don't use the built-in validation
+        // system, rather we manually call the markInvalid function from within the 
+        // updateFields method.
         validationEvent: false,
-        validateOnBlur: false,
-        width: 300
+        validateOnBlur: false
       });
 
-      field.on('change', function() {
-        this.updateSaveDisabled();
-      },
-      this);
-      field.on('valid', function() {
-        this.updateSaveDisabled();
-      },
-      this);
-      field.on('invalid', function() {
-        this.updateSaveDisabled();
-      },
-      this);
-
+      var f = function() {
+        this.updateTask.delay(500);
+      };
+      field.on('keydown', f, this);
+      field.on('keyup', f, this);
+      field.on('change', f, this);
       field.render(item + '_textfield', 0);
 
       new Ext.ToolTip({
@@ -94,6 +107,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
       this.textfields[item] = field;
 
+      // Add file chooser button and callbacks for PDF and library location fields.
       if (item == 'library_db' || item == 'paper_root') {
         field.addClass('pp-textfield-with-button');
         var b = new Ext.Button({
@@ -126,19 +140,10 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
         this);
       }
 
-      if (item == 'key_pattern' || item == 'pdf_pattern' || item == 'attachment_pattern') {
-        if (this.updateTask === undefined) {
-          this.updateTask = new Ext.util.DelayedTask(this.updateFields, this);
-        }
-        field.on('keydown', function() {
-          this.updateTask.delay(500);
-        },
-        this);
-      }
-
     },
     this);
 
+    // Call the update immediately to load examples into the fields.
     this.updateFields();
   },
 
@@ -147,11 +152,17 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
   },
 
   //
-  // Validates inputs and updates example fields
+  // Makes an AJAX call to the back-end to validate inputs and update example fields.
+  // Then calls the updateSaveDisabled method to set the state of the Save button.
   //
   updateFields: function() {
     var params = {};
 
+    // Disable the save button while the form is in indeterminate state (i.e. we haven't
+    // yet validated all fields)
+    this.disableSave();
+
+    // Load field values into AJAX call parameters.
     Ext.each(this.getFields(),
     function(key) {
       params[key] = this.textfields[key].getValue();
@@ -163,28 +174,57 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
       params: params,
       success: function(response) {
         var data = Ext.util.JSON.decode(response.responseText).data;
-
         for (var f in data) {
           if (data[f].error) {
             this.textfields[f].markInvalid(data[f].error);
+            // Instead of the built-in isInvalid() method, we use a custom
+            // hasError flag to store the error state of each field. Kind of a
+            // hack, but it's simple and independent of the built-in validation
+            // stuff
+            this.textfields[f].error = data[f].error;
             Ext.get(f + '_example').update('');
           } else {
             this.textfields[f].clearInvalid();
+            this.textfields[f].error = undefined;
             Ext.get(f + '_example').update(data[f].string);
           }
         }
-
+        this.updateSaveDisabled();
       },
       scope: this
     });
 
   },
 
-  updateSaveDisabled: function() {
-    var button = Ext.get('patterns-save-button');
+  disableSave: function(reason) {
+    var button = Ext.fly('patterns-save-button');
+    this.disabled = true;
+    button.un('click', this.submit, this);
+    button.replaceClass('pp-save-button', 'pp-save-button-disabled');
 
+    if (reason) {
+      this.saveTooltip.enable();
+      var html = "Cannot save: " + reason;
+      if (!this.saveTooltip.el) {
+        this.saveTooltip.html = html;
+      } else {
+        this.saveTooltip.body.update(html);
+      }
+    }
+  },
+
+  enableSave: function() {
+    var button = Ext.fly('patterns-save-button');
+    this.disabled = false;
+    button.replaceClass('pp-save-button-disabled', 'pp-save-button');
+    button.on('click', this.submit, this);
+    this.saveTooltip.disable();
+  },
+
+  updateSaveDisabled: function() {
     // Default to the disabled state.
-    var disabled = true;
+    var shouldBeDisabled = true;
+    var disableReason = 'No changes were made';
 
     // DIRTY: If any of the fields are dirty, enable the save button.
     Ext.each(this.getFields(), function(f) {
@@ -193,7 +233,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
         return;
       }
       if (field.isDirty()) {
-        disabled = false;
+        shouldBeDisabled = false;
       }
     },
     this);
@@ -204,20 +244,18 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
       if (!field) {
         return;
       }
-      if (!field.isValid()) {
-        disabled = true;
+      if (field.error) {
+        shouldBeDisabled = true;
+        disableReason = field.error;
       }
     },
     this);
 
-    button.un('click', this.submit, this);
-
     // Update the button according to the disabled flag.
-    if (disabled) {
-      button.replaceClass('pp-save-button', 'pp-save-button-disabled');
-    } else {
-      button.replaceClass('pp-save-button-disabled', 'pp-save-button');
-      button.on('click', this.submit, this);
+    if (shouldBeDisabled) {
+      this.disableSave(disableReason);
+    } else if (!shouldBeDisabled) {
+      this.enableSave();
     }
   },
 
@@ -254,7 +292,11 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
       url: '/ajax/settings/update_patterns',
       params: params,
       success: function(response, options) {
+        var data = Ext.util.JSON.decode(response.responseText);
 
+        // TODO: Here we should get the hashref of patterns settings
+        // from the backend as part of the response data and apply it
+        // to the front-end settings store.
         this.spot.hide();
         var error = Ext.util.JSON.decode(response.responseText).error;
         if (error) {
