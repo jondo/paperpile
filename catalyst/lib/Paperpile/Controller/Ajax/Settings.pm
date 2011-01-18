@@ -134,6 +134,9 @@ sub update_patterns : Local {
   if ($update_files) {
     $c->model('Library')->rename_files( $c->request->params->{pdf_pattern},
                                         $c->request->params->{attachment_pattern});
+
+    $c->model('Library')->set_setting( 'pdf_pattern',        $pdf_pattern );
+    $c->model('Library')->set_setting( 'attachment_pattern', $attachment_pattern);
   }
 
   if ($root_changed) {

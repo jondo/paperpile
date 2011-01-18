@@ -1596,11 +1596,30 @@ sub change_paper_root {
   my ( $self, $new_root ) = @_;
 
 
+  my $old_root = $self->get_setting( 'paper_root');
+
+  # When starting from scratch the old_root might not exist. In that
+  # case, we don't have to move anything and just try to create the
+  # new directory.
+  if (!-e $old_root){
+
+    eval {
+      mkpath($new_root);
+    };
+
+    if ($@ || (!(-w $new_root))) {
+      my $msg = $@ || "Unknown error";
+      FileError->throw("Cannot set $new_root as PDF folder ($msg).");
+    } else {
+      $self->set_setting( 'paper_root', $new_root);
+      return;
+    }
+  }
+
   my $dbh = $self->begin_transaction;
 
   eval {
 
-    my $old_root = $self->get_setting( 'paper_root', $dbh );
     my $find     = $dbh->prepare('SELECT guid,local_file from Attachments;');
     my $replace  = $dbh->prepare('UPDATE Attachments SET local_file=? WHERE guid=?;');
 
@@ -1723,8 +1742,6 @@ sub rename_files {
       "Could not apply changes (Error creating new copy of directory tree in $paper_root).");
   }
 
-  $self->set_setting( 'pdf_pattern',        $pdf_pattern,        $dbh );
-  $self->set_setting( 'attachment_pattern', $attachment_pattern, $dbh );
 
   $dbh->commit;
   rmtree("$paper_root\_backup");
