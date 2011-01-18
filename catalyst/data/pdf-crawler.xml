@@ -311,6 +311,7 @@
     <url>!pubmedcentral\.nih\.gov!</url>
     <url>!ncbi\.nlm\.nih\.gov\/pmc!</url>
     <url>!ukpmc\.ac\.uk!</url>
+    <url>!pubmedcentralcanada\.ca!</url>
   </signature>
 
   <rule>
@@ -328,6 +329,12 @@
   <rule>
     <pattern>
       <match>!href\s*=\s*&quot;([^&quot;]+pdf=render)&quot;!</match>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]+blobtype=pdf)&quot;!</match>
     </pattern>
   </rule>
   
@@ -351,7 +358,14 @@
 
   <rule>
     <pattern>
-      <rewrite>!(abs|full|pdf)!pdf!</rewrite>
+      <rewrite>!(doi/abs|doi/full|doi/pdf)!doi/pdf!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <match>!href\s*=\s*&quot;([^&quot;]*cgi/reprint/[^&quot;]+)&quot;.*\(PDF\)!</match>
+      <rewrite>!(.*)!$1.pdf!</rewrite>
     </pattern>
   </rule>
 
@@ -359,6 +373,7 @@
     <url>http://dx.doi.org/doi:10.1021/bi702132e</url>
     <url>http://arjournals.annualreviews.org/doi/full/10.1146/annurev.genet.40.110405.090511</url>
     <url>http://www.liebertonline.com/doi/abs/10.1089/cmb.2006.0137</url>
+    <url>http://www.molbiolcell.org/cgi/content/full/9/12/3273</url>
   </test>
 </site>
 
@@ -940,6 +955,37 @@
   </test>
 </site>
 
+<site name="AdisOnline">
+  <signature>
+    <url>!adisonline\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>ArticleAsPDF&quot;\s+href\s*=\s*&quot;([^&quot;]+)&quot;</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://adisonline.com/druginvestigation/pages/articleviewer.aspx?year=2010&amp;issue=30010&amp;article=00006&amp;type=abstract</url>
+  </test>
+</site>
+
+<site name="DovePress">
+  <signature>
+    <url>!dovepress\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*'(getfile[^']+)'</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.dovepress.com/computational-internal-sequence-repeats-analysis-of-accelerated-evolut-peer-reviewed-article-OAB</url>
+  </test>
+</site>
 
 <site name="Meta">
   <signature>

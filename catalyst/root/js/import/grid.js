@@ -2122,9 +2122,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var sel = this.getSingleSelectionRecord();
     if (sel) selected_guid = sel.data.guid;
 
+    // Track the rowIndex of the row that the mouse is currently hovering (if any).
+    var mouseOverRow = undefined;
+
     var updateSidePanel = false;
     for (var guid in pubs) {
-      var record = store.getAt(store.findExact('guid', guid));
+      var rowIndex = store.findExact('guid',guid);
+      var record = store.getAt(rowIndex);
       if (!record) {
         continue;
       }
@@ -2132,7 +2136,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var update = pubs[guid];
       record.editing = true; // Set the 'editing' flag.
       for (var field in update) {
-        record.set(field, update[field]);
+	if (update[field] != record.get(field)) {
+          record.set(field, update[field]);
+	}
       }
 
       // Unset the 'editing' flag. Using the flag directly avoids calling store.afterEdit() for every record.
@@ -2142,6 +2148,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         if (guid == selected_guid) updateSidePanel = true;
       }
 
+      // Store this rowIndex if the mouse is hovering here.
+      var r = this.getView().getRow(rowIndex);
+      if (Ext.fly(r).hasClass('x-grid3-row-over')) {
+	mouseOverRow = rowIndex;
+      }
       if (needsUpdating) {
         store.fireEvent('update', store, record, Ext.data.Record.EDIT);
       }
@@ -2150,6 +2161,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (data.updateSidePanel) updateSidePanel = true;
     if (updateSidePanel) {
       this.refreshView.defer(20, this);
+    }
+
+    if (mouseOverRow !== undefined) {
+      // Re-apply the hover effect to get rid of the flickering during updates.
+      var r = this.getView().getRow(mouseOverRow);
+      Ext.fly(r).addClass('x-grid3-row-over');
     }
   },
 
