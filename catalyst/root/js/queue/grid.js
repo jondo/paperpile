@@ -32,14 +32,13 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     // cancel is in progress
     this.flaggedForCancel = {};
 
-    var pager = new Ext.PagingToolbar({
+    this.pager = new Paperpile.Pager({
       pageSize: 100,
       store: this.getStore(),
       displayInfo: true,
-      displayMsg: 'Tasks {0} - {1} of {2}',
+      displayMsg: '<span style="color:black;">Tasks  {0} - {1} of {2}</span>',
       emptyMsg: "No tasks"
     });
-
 
     this.dataTemplate = new Ext.XTemplate(
       
@@ -102,7 +101,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     
     Ext.apply(this, {
       store: this.getStore(),
-      bbar: pager,
+      bbar: this.pager,
       multiSelect: true,
       selModel: new Ext.ux.BetterRowSelectionModel(),
       cm: new Ext.grid.ColumnModel({
