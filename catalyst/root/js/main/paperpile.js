@@ -937,11 +937,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       this.doCallbacks(data);
     }
 
-    // If the user is currently dragging, update the dragdrop targets.
-    if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible() && !Paperpile.main.dd.effectBlock) {
-      Paperpile.main.dd.hideDragPane();
-    }
-
     if (data.file_sync_delta) {
       if (data.file_sync_delta.length > 0 && this.bibtexModeIsEnabled()) {
         this.triggerFileSync(data.file_sync_delta);
