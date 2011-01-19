@@ -915,7 +915,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       this.labelStore.reload();
     }
 
+    // update the queue widget with the current data.
     this.queueWidget.onUpdate(data);
+
+    // If this update contains new or deleted jobs, trigger the queue update loop.
     if (data.job_delta) {
       this.queueUpdate();
     }
@@ -932,11 +935,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     // Even if the queue tab isn't showing, collect and dispatch callbacks.
     if (data.jobs) {
       this.doCallbacks(data);
-    }
-
-    // If the user is currently dragging, update the dragdrop targets.
-    if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible() && !Paperpile.main.dd.effectBlock) {
-      Paperpile.main.dd.hideDragPane();
     }
 
     if (data.file_sync_delta) {

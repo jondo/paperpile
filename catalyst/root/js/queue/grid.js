@@ -19,12 +19,140 @@ Paperpile.QueueList = function(config) {
   Paperpile.QueueList.superclass.constructor.call(this, {});
 
   this.on('rowcontextmenu', this.onContextClick, this);
-
   this.on('rowclick', this.onRowClick, this);
 
 };
 
 Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
+
+  initComponent: function() {
+
+    // Helper construct to show appropriate status messages when
+    // cancel is in progress
+    this.flaggedForCancel = {};
+
+    this.pager = new Paperpile.Pager({
+      pageSize: 100,
+      store: this.getStore(),
+      displayInfo: true,
+      displayMsg: '<span style="color:black;">Tasks  {0} - {1} of {2}</span>',
+      emptyMsg: "No tasks"
+    });
+
+    this.dataTemplate = new Ext.XTemplate(
+      
+      '<div>',
+      '    <tpl if="type==\'PDF_SEARCH\'||type==\'METADATA_UPDATE\'">',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{shortTitle}</b></div>',
+      '      <div class="pp-queue-list-citation">{shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></div></div>',
+      '    </tpl>',
+      '    <tpl if="type==\'PDF_IMPORT\'">',
+      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{_pdf_tmp}</b></div>',
+      '       <tpl if="status==\'DONE\'">',
+      '         <div class="pp-queue-list-citation"><b>{shortTitle}</b> {shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></div></div>',
+      '       </tpl>',
+      '    </tpl>',
+      '     <div id="queue-job-{id}" class="pp-queue-list-status-container">',
+      '        <span class="pp-queue-list-status pp-queue-list-status-{status}">{message}</span>',
+      '     </div>',
+      '     <div class="pp-queue-list-action">',
+      '       <tpl if="status==\'DONE\'">',
+      '         <tpl if="type==\'PDF_SEARCH\'||type==\'PDF_IMPORT\'"><a href="#" class="pp-textlink" action="pdf-view">View PDF</a></tpl>',
+      '       </tpl>',
+      '       <tpl if="status==\'ERROR\'">',
+      '         <tpl if="type==\'PDF_SEARCH\'">',
+      '           <tpl if="publisherLink">',
+      '               <a href="#" class="pp-textlink" action="pdf-download-open-url">Go to publisher site</a> | ',
+      '            </tpl>',
+      '            <a href="#" class="pp-textlink" action="pdf-download-error-report">Send Error Report</a> |',
+      '         </tpl>',
+      '         <tpl if="type==\'PDF_IMPORT\'">',
+      '            <a href="#" class="pp-textlink" action="pdf-match-insert-manually">Insert Data Manually</a> |',
+      '            <a href="#" class="pp-textlink" action="pdf-match-error-report">Send Error Report</a> ',
+      '         </tpl>',
+      '        <tpl if="type==\'PDF_SEARCH\'||type==\'METADATA_UPDATE\'"><a href="#" class="pp-textlink" action="retry-task"> Retry</a></tpl>',
+      '       </tpl>',
+      '       <tpl if="status==\'RUNNING\'||status==\'PENDING\'">',
+      '          <tpl if="!flaggedForCancel"><a href="#" class="pp-textlink" action="cancel-task">Cancel</a></tpl>',
+      '          <tpl if="flaggedForCancel"><span class="pp-inactive">Cancel</span></tpl>',
+      '       </tpl>',
+      '     </div> ',
+      '</div>'
+      
+    ).compile();
+    
+  
+    this.typeTemplate = new Ext.XTemplate(
+      '<div style="padding: 4px 0;">',
+      '  <tpl if="type==\'PDF_SEARCH\'">',
+      '    <span class="pp-queue-type-label-{type}">Download PDF</span>',
+      '  </tpl>',
+      '  <tpl if="type==\'PDF_IMPORT\'">',
+      '    <span class="pp-queue-type-label-{type}">Import PDF</span>',
+      '  </tpl>',
+      '  <tpl if="type==\'METADATA_UPDATE\'">',
+      '    <span class="pp-queue-type-label-{type}">Auto-complete</span>',
+      '  </tpl>',
+      '</div>').compile();
+
+    this.statusTemplate = new Ext.XTemplate(
+      '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>').compile();
+    
+    // Disable selections on the Queue grid.
+    this.selModel = new Ext.ux.BetterRowSelectionModel();
+    this.selModel.lock();
+
+    Ext.apply(this, {
+      store: this.getStore(),
+      bbar: this.pager,
+      trackMouseOver: false,
+      multiSelect: true,
+      selModel: this.selModel,
+      cm: new Ext.grid.ColumnModel({
+        defaults: {
+          menuDisabled: true,
+          sortable: false
+        },
+        columns: [{
+          header: "Task",
+          id: 'type',
+          dataIndex: 'type',
+          renderer: this.renderType.createDelegate(this),
+          sortable: false,
+          resizable: false
+        },
+        {
+          header: "Data",
+          id: 'title',
+          dataIndex: 'title',
+          renderer: this.renderData.createDelegate(this),
+          sortable: false,
+          resizable: false
+        },
+        {
+          header: "Icon",
+          id: 'status',
+          dataIndex: 'status',
+          renderer: this.renderStatus.createDelegate(this),
+          sortable: false,
+          resizable: false,
+          width: 70,
+        }]
+      }),
+      autoExpandColumn: 'title',
+      hideHeaders: true
+    });
+    Paperpile.QueueList.superclass.initComponent.call(this);
+
+    this.getStore().load();
+
+    this.on('afterrender', function() {
+      this.mon(this.getSelectionModel(), 'afterselectionchange', this.selChanged, this);
+      this.selChanged();
+    },
+    this);
+
+  },
 
   onRowClick: function(grid, rowIndex, e) {
     var el = e.getTarget();
@@ -126,131 +254,6 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
   renderType: function(value, meta, record) {
     var data = record.data;
     return this.typeTemplate.apply(data);
-  },
-
-  initComponent: function() {
-
-    // Helper construct to show appropriate status messages when
-    // cancel is in progress
-    this.flaggedForCancel = {};
-
-    var pager = new Ext.PagingToolbar({
-      pageSize: 100,
-      store: this.getStore(),
-      displayInfo: true,
-      displayMsg: 'Tasks {0} - {1} of {2}',
-      emptyMsg: "No tasks"
-    });
-
-
-    this.dataTemplate = new Ext.XTemplate(
-      
-      '<div>',
-      '    <tpl if="type==\'PDF_SEARCH\'||type==\'METADATA_UPDATE\'">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{shortTitle}</b></div>',
-      '      <div class="pp-queue-list-citation">{shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></div></div>',
-      '    </tpl>',
-      '    <tpl if="type==\'PDF_IMPORT\'">',
-      '      <div class="pp-queue-list-title pp-queue-list-title-{status}"><b>{_pdf_tmp}</b></div>',
-      '       <tpl if="status==\'DONE\'">',
-      '         <div class="pp-queue-list-citation"><b>{shortTitle}</b> {shortAuthors} <tpl if="year">({year}) </tpl> <i>{journal}</i></div></div>',
-      '       </tpl>',
-      '    </tpl>',
-      '     <div id="queue-job-{id}" class="pp-queue-list-status-container">',
-      '        <span class="pp-queue-list-status pp-queue-list-status-{status}">{message}</span>',
-      '     </div>',
-      '     <div class="pp-queue-list-action">',
-      '       <tpl if="status==\'DONE\'">',
-      '         <tpl if="type==\'PDF_SEARCH\'||type==\'PDF_IMPORT\'"><a href="#" class="pp-textlink" action="pdf-view">View PDF</a></tpl>',
-      '       </tpl>',
-      '       <tpl if="status==\'ERROR\'">',
-      '         <tpl if="type==\'PDF_SEARCH\'">',
-      '           <tpl if="publisherLink">',
-      '               <a href="#" class="pp-textlink" action="pdf-download-open-url">Go to publisher site</a> | ',
-      '            </tpl>',
-      '            <a href="#" class="pp-textlink" action="pdf-download-error-report">Send Error Report</a> |',
-      '         </tpl>',
-      '         <tpl if="type==\'PDF_IMPORT\'">',
-      '            <a href="#" class="pp-textlink" action="pdf-match-insert-manually">Insert Data Manually</a> |',
-      '            <a href="#" class="pp-textlink" action="pdf-match-error-report">Send Error Report</a> ',
-      '         </tpl>',
-      '        <tpl if="type==\'PDF_SEARCH\'||type==\'METADATA_UPDATE\'"><a href="#" class="pp-textlink" action="retry-task"> Retry</a></tpl>',
-      '       </tpl>',
-      '       <tpl if="status==\'RUNNING\'||status==\'PENDING\'">',
-      '          <tpl if="!flaggedForCancel"><a href="#" class="pp-textlink" action="cancel-task">Cancel</a></tpl>',
-      '          <tpl if="flaggedForCancel"><span class="pp-inactive">Cancel</span></tpl>',
-      '       </tpl>',
-      '     </div> ',
-      '</div>'
-      
-    ).compile();
-    
-  
-    this.typeTemplate = new Ext.XTemplate(
-      '<div style="padding: 4px 0;">',
-      '  <tpl if="type==\'PDF_SEARCH\'">',
-      '    <span class="pp-queue-type-label-{type}">Download PDF</span>',
-      '  </tpl>',
-      '  <tpl if="type==\'PDF_IMPORT\'">',
-      '    <span class="pp-queue-type-label-{type}">Import PDF</span>',
-      '  </tpl>',
-      '  <tpl if="type==\'METADATA_UPDATE\'">',
-      '    <span class="pp-queue-type-label-{type}">Auto-complete</span>',
-      '  </tpl>',
-      '</div>').compile();
-
-    this.statusTemplate = new Ext.XTemplate(
-      '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>').compile();
-    
-    Ext.apply(this, {
-      store: this.getStore(),
-      bbar: pager,
-      multiSelect: true,
-      selModel: new Ext.ux.BetterRowSelectionModel(),
-      cm: new Ext.grid.ColumnModel({
-        defaults: {
-          menuDisabled: true,
-          sortable: false
-        },
-        columns: [{
-          header: "Task",
-          id: 'type',
-          dataIndex: 'type',
-          renderer: this.renderType.createDelegate(this),
-          sortable: false,
-          resizable: false
-        },
-        {
-          header: "Data",
-          id: 'title',
-          dataIndex: 'title',
-          renderer: this.renderData.createDelegate(this),
-          sortable: false,
-          resizable: false
-        },
-        {
-          header: "Icon",
-          id: 'status',
-          dataIndex: 'status',
-          renderer: this.renderStatus.createDelegate(this),
-          sortable: false,
-          resizable: false,
-          width: 70,
-        }]
-      }),
-      autoExpandColumn: 'title',
-      hideHeaders: true
-    });
-    Paperpile.QueueList.superclass.initComponent.call(this);
-
-    this.getStore().load();
-
-    this.on('afterrender', function() {
-      this.mon(this.getSelectionModel(), 'afterselectionchange', this.selChanged, this);
-      this.selChanged();
-    },
-    this);
-
   },
 
   getSelectedRecords: function() {

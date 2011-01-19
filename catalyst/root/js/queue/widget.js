@@ -28,13 +28,13 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
       '    <span class="pp-queue-widget-item"> Paused ({num_pending} remaining) </span>',
       '     <span class="pp-queue-widget-item"><a href="#" class="pp-textlink pp-queue-widget-action" action="queue-resume">Resume</a></span>',
       '    </tpl>',
-      '    <tpl if="submitting">',
+      '    <tpl if="status==\'SUBMITTING\'">',
       '      <span class="pp-queue-widget-item"> Starting background tasks </span>',
       '    </tpl>',
-      '    <tpl if="clearing">',
+      '    <tpl if="status==\'CLEARING\'">',
       '      <span class="pp-queue-widget-item"> Clear background tasks </span>',
       '    </tpl>',
-      '    <tpl if="!submitting && !clearing && status != \'PAUSED\'">',
+      '    <tpl if="status != \'SUBMITTING\' && status !=\'CLEARING\' && status != \'PAUSED\'">',
       '      <tpl if="num_pending==1">',
       '        <span class="pp-queue-widget-item"> {num_pending} task remaining</span>',
       '      </tpl>',
@@ -58,57 +58,38 @@ Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
 
     Ext.apply(this, {
       tpl: t,
-      // Set defaults to avoid errors when initialized
-      data: {
-        num_pending: 0,
-        num_done: 0,
-        num_error: 0,
-        submitting: false,
-        clearing: false
-      }
     });
 
     Paperpile.QueueWidget.superclass.initComponent.call(this);
 
     this.on('render', function() {
-      this.hide();
       this.el.on('click', this.handleClick, this);
     },
     this);
   },
 
-  onUpdate: function(data) {
+  setSubmitting: function() {
+    this.onUpdate({queue:{status:'SUBMITTING'}});
+  },
 
+  onUpdate: function(data) {
+    // Take the queue element from the passed data.
     var queue = data.queue;
+
     if (!queue) {
-      queue = {
-        clearing: data.clearing,
-        submitting: data.submitting,
-        status: '',
-	  num_pending: 0,
-	  num_error: 0,
-	  num_done: 0
-      };
+      // The update data contains no queue info, so don't do anything more!
+      return;
     }
 
     // Special display states of the widget
-    if (queue.submitting) {
-      queue.clearing = false;
+    if (queue.status == 'SUBMITTING' || queue.status == 'CLEARING') {
+      // Calling the update() method causes the template (defined above, within
+      // the initComponent method) to be overwritten with data from the passed
+      // object.
       this.update(queue);
       this.show();
       return;
     }
-
-    if (queue.clearing) {
-      queue.submitting = false;
-      this.update(queue);
-      this.show();
-      return;
-    }
-
-    // Explicitely set these variables to make template happy
-    queue.submitting = false;
-    queue.clearing = false;
 
     // If only one job is in the queue and this is a pdf search, we
     // never show the widget.  In that case the user is most likely

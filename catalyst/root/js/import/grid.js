@@ -41,12 +41,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.pager = new Paperpile.Pager({
       pageSize: this.limit,
       store: this.getStore(),
-      grid: this,
-      // Provide a reference back to this grid!
       displayInfo: true,
       displayMsg: '<span style="color:black;">Displaying {0} - {1} of {2}</span>',
       emptyMsg: "No references to display"
     });
+    this.pager.on('pagebutton', function(pager) {
+      this.onPageButtonClick();
+    },this);
 
     var renderPub = function(value, p, record) {
       record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
@@ -1998,9 +1999,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         buttons: Ext.Msg.OKCANCEL,
         fn: function(btn) {
           if (btn === 'ok') {
-            Ext.getCmp('queue-widget').onUpdate({
-              submitting: true
-            });
+	    Paperpile.main.queueWidget.setSubmitting();
             Paperpile.Ajax({
               url: '/ajax/crud/batch_update',
               params: {
@@ -2029,9 +2028,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   batchDownload: function() {
     var selection = this.getSelection();
     if (selection.length > 1) {
-      Ext.getCmp('queue-widget').onUpdate({
-        submitting: true
-      });
+      Paperpile.main.queueWidget.setSubmitting();
     }
     Paperpile.Ajax({
       url: '/ajax/crud/batch_download',
@@ -2362,147 +2359,3 @@ Ext.extend(Paperpile.GridDropZone, Ext.dd.DropZone, {
 });
 
 Ext.reg('pp-plugin-grid', Paperpile.PluginGrid);
-/*
-// Saving this one for later -- we could try and do some nice animation features when the user does batch imports using this code.
-Ext.grid.AnimatedGridView = Ext.extend(Ext.grid.GridView, {
-  initComponent: function() {
-    Ext.grid.AnimatedGridView.superclass.initComponent.apply(this, arguments);
-  },
-  insertRows: function(dm, firstRow, lastRow, isUpdate) {
-    Ext.grid.AnimatedGridView.superclass.insertRows.apply(this, arguments);
-    var rowAdded = Ext.get(this.getRow(firstRow));
-    if (rowAdded) {
-      rowAdded.slideIn();
-    }
-  },
-  removeRow: function(rowIndex) {
-    var rowToRemove = Ext.get(this.getRow(rowIndex));
-    var gridView = this;
-
-    rowToRemove.slideOut('t', {
-      remove: true
-    });
-  }
-});
-*/
-
-Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
-  initComponent: function() {
-    Paperpile.Pager.superclass.initComponent.call(this);
-
-    var items = [this.first, this.inputItem, this.afterTextItem, this.last, this.refresh];
-    items = items.concat(this.findByType(Ext.Toolbar.Spacer));
-    items = items.concat(this.findByType(Ext.Toolbar.Separator));
-    for (var i = 0; i < items.length; i++) {
-      this.remove(items[i], true);
-    }
-
-    var pageText = this.findBy(function(item, container) {
-      if (item.text == this.beforePageText) {
-        return true;
-      } else {
-        return false;
-      }
-    },
-    this);
-    //('text',this.beforePageText);
-    this.remove(1, true);
-
-    this.on('render', this.myOnRender, this);
-
-  },
-  myOnRender: function() {
-    this.tip = new Ext.Tip({
-      minWidth: 10,
-      offsets: [0, -10],
-      pager: this,
-      renderTo: document.body,
-      style: {
-        'z-index': 100
-      },
-      updatePage: function(page, string) {
-        this.dragging = true;
-        this.body.update(string);
-        this.doAutoWidth();
-        var x = this.pager.getPositionForPage(page) - this.getBox().width / 2;
-        var y = this.pager.getBox().y - this.getBox().height;
-        this.setPagePosition(x, y);
-      }
-    });
-
-    this.progressBar = new Ext.ProgressBar({
-      text: '',
-      width: 50,
-      height: 10,
-      animate: {
-        duration: 1,
-        easing: 'easeOutStrong'
-      },
-      cls: 'pp-toolbar-progress'
-    });
-    this.mon(
-      this.progressBar, 'render', function(pb) {
-        this.mon(pb.getEl(), 'mousedown', this.handleProgressBarClick, this);
-        this.mon(pb.getEl(), 'mousemove', this.handleMouseMove, this);
-        this.mon(pb.getEl(), 'mouseover', this.handleMouseOver, this);
-        this.mon(pb.getEl(), 'mouseout', this.handleMouseOut, this);
-      },
-      this);
-    this.insert(2, this.progressBar);
-    this.insert(2, new Ext.Toolbar.Spacer({
-      width: 5
-    }));
-
-    this.grid.mon(this.next, 'click', this.grid.onPageButtonClick, this.grid);
-    this.grid.mon(this.prev, 'click', this.grid.onPageButtonClick, this.grid);
-
-  },
-  handleMouseOver: function(e) {
-    this.tip.show();
-  },
-  handleMouseOut: function(e) {
-    this.tip.hide();
-  },
-  handleMouseMove: function(e) {
-    var page = this.getPageForPosition(e.getXY());
-    if (page > 0) {
-      //var string = page+" ("+page*this.pageSize+" - "+(page+1)*this.pageSize+")";
-      var string = "Page " + page + " of " + Math.ceil(this.store.getTotalCount() / this.pageSize);
-      this.tip.updatePage(page, string);
-    } else {
-      this.tip.hide();
-    }
-  },
-  handleProgressBarClick: function(e) {
-    this.changePage(this.getPageForPosition(e.getXY()));
-    this.grid.onPageButtonClick();
-  },
-  getPositionForPage: function(page) {
-    var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);
-    var position = Math.floor(page * (this.progressBar.width / pages));
-    return this.progressBar.getBox().x + position;
-  },
-  getPageForPosition: function(xy) {
-    var position = xy[0] - this.progressBar.getBox().x;
-    var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);
-    var newpage = Math.ceil(position / (this.progressBar.width / pages));
-    return newpage;
-  },
-  updateInfo: function() {
-    Paperpile.Pager.superclass.updateInfo.call(this);
-    var count = this.store.getCount();
-    var pgData = this.getPageData();
-    var pageNum = this.readPage(pgData);
-    pageNum = pgData.activePage;
-    var high = pageNum / pgData.pages;
-    var low = (pageNum - 1) / pgData.pages;
-    this.progressBar.updateRange(low, high, '');
-    if (high == 1 && low == 0) {
-      this.progressBar.disable();
-      this.progressBar.getEl().applyStyles('cursor:normal');
-    } else {
-      this.progressBar.enable();
-      this.progressBar.getEl().applyStyles('cursor:pointer');
-    }
-  }
-});
