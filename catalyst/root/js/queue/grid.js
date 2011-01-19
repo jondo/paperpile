@@ -19,7 +19,6 @@ Paperpile.QueueList = function(config) {
   Paperpile.QueueList.superclass.constructor.call(this, {});
 
   this.on('rowcontextmenu', this.onContextClick, this);
-
   this.on('rowclick', this.onRowClick, this);
 
 };
@@ -99,11 +98,16 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     this.statusTemplate = new Ext.XTemplate(
       '<div class="pp-queue-list-icon pp-queue-list-icon-{status}"><tpl if="status==\'PENDING\'">Waiting</tpl>').compile();
     
+    // Disable selections on the Queue grid.
+    this.selModel = new Ext.ux.BetterRowSelectionModel();
+    this.selModel.lock();
+
     Ext.apply(this, {
       store: this.getStore(),
       bbar: this.pager,
+      trackMouseOver: false,
       multiSelect: true,
-      selModel: new Ext.ux.BetterRowSelectionModel(),
+      selModel: this.selModel,
       cm: new Ext.grid.ColumnModel({
         defaults: {
           menuDisabled: true,
