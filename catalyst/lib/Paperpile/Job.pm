@@ -397,6 +397,9 @@ sub _do_work {
 
     print STDERR "[queue] Start import of PDF ", $self->pub->pdf, "\n";
 
+    # Store the original PDF filename.
+    my $orig_pdf_file = $self->pub->pdf;
+
     $self->_lookup_pdf;
 
     if ( $self->pub->_imported ) {
@@ -443,6 +446,14 @@ sub _do_work {
       }
 
       $self->_insert;
+
+      # If the destination pub doesn't have a PDF, add this one to it. See issue #756.
+      if ($self->pub->_insert_skipped && !$self->pub->pdf) {
+	my $m = Paperpile::Utils->get_library_model;
+	$m->attach_file( $orig_pdf_file, 1, $self->pub );
+	$self->update_info( 'msg', "PDF attached to existing reference in library." );
+	return;
+      }
 
       $self->update_info( 'callback', { fn => 'updatePubGrid' } );
 
