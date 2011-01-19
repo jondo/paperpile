@@ -26,108 +26,6 @@ Paperpile.QueueList = function(config) {
 
 Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
 
-  onRowClick: function(grid, rowIndex, e) {
-    var el = e.getTarget();
-    var record = this.getStore().getAt(rowIndex);
-    var data = record.data;
-    switch (el.getAttribute('action')) {
-    case 'pdf-match-error-report':
-      data.reportString = Paperpile.utils.hashToString(data);
-      data.file = record.data['_pdf_tmp'];
-      Paperpile.main.reportPdfMatchError(data);
-      break;
-    case 'pdf-match-insert-manually':
-      Paperpile.main.addPDFManually(data.id, data.gridID);
-      break;
-    case 'pdf-download-error-report':
-      var string = Paperpile.utils.hashToString(data);
-      var job = Paperpile.utils.hashToString(data._search_job);
-      data.reportString = string + "\n\n" + job;
-      Paperpile.main.reportPdfDownloadError(data);
-      break;
-    case 'pdf-download-open-url':
-      Paperpile.utils.openURL(data.publisherLink);
-      break;
-    case 'pdf-view':
-      var path;
-      // Find the right field depending on the circumstances...
-      if (data._pdf_tmp) {
-        path = data._pdf_tmp;
-      } else {
-        if (data.pdf_name){
-          path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, data.pdf_name);
-        } else {
-          path = data.pdf;
-        }
-      }
-      Paperpile.utils.openFile(path);
-      break;
-    case 'cancel-task':
-      this.getQueuePanel().cancelJobs();
-      break;
-    case 'retry-task':
-      this.getQueuePanel().retryJobs();
-      break;
-    }
-  },
-
-  getQueuePanel: function() {
-    return this.findParentByType(Paperpile.QueuePanel);
-  },
-
-  renderData: function(value, meta, record) {
-
-    var data = record.data;
-
-    // Show that canceling is in progress
-    if (data.status === 'RUNNING' && this.flaggedForCancel[data.id]){
-      data.message = "Canceling Task...";
-      data.flaggedForCancel = true;
-    } else {
-      data.flaggedForCancel = false;
-    }
-
-    if (data.size && data.downloaded && data.status === 'RUNNING') {
-      data.message = 'Downloading (' + Math.round((data.downloaded / data.size) * 100) + '%)';
-    }
-
-    if (data.authors) {
-      data.shortAuthors = this.shortAuthors(data.authors_display);
-    } else {
-      data.shortAuthors = null;
-    }
-
-    if (data.title) {
-      data.shortTitle = Ext.util.Format.ellipsis(data.title, 65, true);
-    } else {
-      data.shortTitle = null;
-    }
-
-    data.publisherLink = null;
-
-    if (data.doi) {
-      data.publisherLink = 'http://dx.doi.org/' + data.doi;
-    } else {
-      if (data.linkout) {
-        data.publisherLink = data.linkout;
-      }
-    }
-
-    data.gridID = this.id;
-
-    return this.dataTemplate.apply(data);
-  },
-
-  renderStatus: function(value, meta, record) {
-    var data = record.data;
-    return this.statusTemplate.apply(data);
-  },
-
-  renderType: function(value, meta, record) {
-    var data = record.data;
-    return this.typeTemplate.apply(data);
-  },
-
   initComponent: function() {
 
     // Helper construct to show appropriate status messages when
@@ -251,6 +149,108 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
     },
     this);
 
+  },
+
+  onRowClick: function(grid, rowIndex, e) {
+    var el = e.getTarget();
+    var record = this.getStore().getAt(rowIndex);
+    var data = record.data;
+    switch (el.getAttribute('action')) {
+    case 'pdf-match-error-report':
+      data.reportString = Paperpile.utils.hashToString(data);
+      data.file = record.data['_pdf_tmp'];
+      Paperpile.main.reportPdfMatchError(data);
+      break;
+    case 'pdf-match-insert-manually':
+      Paperpile.main.addPDFManually(data.id, data.gridID);
+      break;
+    case 'pdf-download-error-report':
+      var string = Paperpile.utils.hashToString(data);
+      var job = Paperpile.utils.hashToString(data._search_job);
+      data.reportString = string + "\n\n" + job;
+      Paperpile.main.reportPdfDownloadError(data);
+      break;
+    case 'pdf-download-open-url':
+      Paperpile.utils.openURL(data.publisherLink);
+      break;
+    case 'pdf-view':
+      var path;
+      // Find the right field depending on the circumstances...
+      if (data._pdf_tmp) {
+        path = data._pdf_tmp;
+      } else {
+        if (data.pdf_name){
+          path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, data.pdf_name);
+        } else {
+          path = data.pdf;
+        }
+      }
+      Paperpile.utils.openFile(path);
+      break;
+    case 'cancel-task':
+      this.getQueuePanel().cancelJobs();
+      break;
+    case 'retry-task':
+      this.getQueuePanel().retryJobs();
+      break;
+    }
+  },
+
+  getQueuePanel: function() {
+    return this.findParentByType(Paperpile.QueuePanel);
+  },
+
+  renderData: function(value, meta, record) {
+
+    var data = record.data;
+
+    // Show that canceling is in progress
+    if (data.status === 'RUNNING' && this.flaggedForCancel[data.id]){
+      data.message = "Canceling Task...";
+      data.flaggedForCancel = true;
+    } else {
+      data.flaggedForCancel = false;
+    }
+
+    if (data.size && data.downloaded && data.status === 'RUNNING') {
+      data.message = 'Downloading (' + Math.round((data.downloaded / data.size) * 100) + '%)';
+    }
+
+    if (data.authors) {
+      data.shortAuthors = this.shortAuthors(data.authors_display);
+    } else {
+      data.shortAuthors = null;
+    }
+
+    if (data.title) {
+      data.shortTitle = Ext.util.Format.ellipsis(data.title, 65, true);
+    } else {
+      data.shortTitle = null;
+    }
+
+    data.publisherLink = null;
+
+    if (data.doi) {
+      data.publisherLink = 'http://dx.doi.org/' + data.doi;
+    } else {
+      if (data.linkout) {
+        data.publisherLink = data.linkout;
+      }
+    }
+
+    data.gridID = this.id;
+
+    return this.dataTemplate.apply(data);
+  },
+
+  renderStatus: function(value, meta, record) {
+    var data = record.data;
+    return this.statusTemplate.apply(data);
+  },
+
+  renderType: function(value, meta, record) {
+    var data = record.data;
+    return this.typeTemplate.apply(data);
   },
 
   getSelectedRecords: function() {
