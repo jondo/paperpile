@@ -366,14 +366,14 @@ sub _do_work {
       return;
     }
 
-    if ( !$self->pub->linkout && !$self->pub->doi ) {
+    if ( $self->pub->best_link eq '' ) {
 
       $self->_match;
 
       # This currently does not handle the case e.g when we match
       # successfully against PubMed but don't get a doi/linkout and a
       # downstream plugin would give us this information
-      if ( !$self->pub->linkout && !$self->pub->doi ) {
+      if ( $self->pub->best_link eq '' ) {
         NetMatchError->throw("Could not find the PDF");
       }
     }
@@ -649,10 +649,8 @@ sub _crawl {
 
   my $start_url = '';
 
-  if ( $self->pub->doi ) {
-    $start_url = 'http://dx.doi.org/' . $self->pub->doi;
-  } elsif ( $self->pub->linkout ) {
-    $start_url = $self->pub->linkout;
+  if ($self->pub->best_link ne '') {
+      $start_url = $self->pub->best_link;
   } else {
     die("No target url for PDF download");
   }
