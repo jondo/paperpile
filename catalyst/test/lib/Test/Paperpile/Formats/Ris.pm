@@ -2,6 +2,7 @@ package Test::Paperpile::Formats::Ris;
 
 use Test::More;
 use Data::Dumper;
+use utf8; # make perl utf-8 aware of this source file
 
 use base 'Test::Paperpile::Formats';
 
@@ -18,7 +19,7 @@ sub startup : Tests(startup => 1) {
 
 # Add test functions here
 
-sub read : Tests(8) {
+sub read : Tests(10) {
 
   my ($self) = @_;
 
@@ -27,6 +28,17 @@ sub read : Tests(8) {
     "data/Formats/Ris/read/misc.ris",
     "data/Formats/Ris/read/misc.out",
   );
+
+  # Test UTF-8 and latin-1 decoding. IMPORTANT: Make sure you don't
+  # change the encoding of the test files when you open them with a
+  # text editor.
+
+  my $pub = $self->class->new( file => "data/Formats/Ris/read/utf-8.ris")->read->[0];
+  is($pub->title, "These are UTF-8 characters: いろはにほへど", "Read UTF-8 encoded file.") ;
+
+  $pub = $self->class->new( file => "data/Formats/Ris/read/latin1.ris")->read->[0];
+  is($pub->title, "These are latin-1 characters: Ö Ê ø", "Read Latin-1 encoded file.") ;
+
 
 }
 

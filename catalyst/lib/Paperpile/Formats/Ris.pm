@@ -56,6 +56,13 @@ sub read {
   my $line = '';      # get a whole tag
   my @tmp  = ();      # collect tags of current ref
   my @data = <$fh>;
+
+  # Decode data. Not the most efficient way in terms of memory but
+  # passing the whole data at once increases the chances to guess the
+  # right encoding.
+  my $decoded_data = Paperpile::Utils->decode_data(join('',@data));
+  @data = split(/\n/,$decoded_data);
+
   for ( my $i = 0 ; $i <= $#data ; $i++ ) {
     $data[$i] =~ s/\s+$//g;
 

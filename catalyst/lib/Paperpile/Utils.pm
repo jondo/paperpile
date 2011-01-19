@@ -32,6 +32,7 @@ use Compress::Zlib;
 use MIME::Base64;
 use Digest::MD5;
 use URI::Split qw(uri_split uri_join);
+use Encode;
 
 use Data::Dumper;
 use Config;
@@ -668,5 +669,35 @@ sub session {
     }
   }
 }
+
+# Decode $data which was read from external files. If $encoding is
+# given use this encoding. Otherwise, we try to decode to UTF-8 and if
+# this fails we decode to ISO-LATIN-1. This is probably the best we
+# can do although it will fail on any other legacy ASCII extension
+# that ISO-LATIN-1.
+
+sub decode_data {
+
+  my ($self, $data, $encoding) = @_;
+
+  # We have an encoding, so use it
+  if ($encoding){
+    return decode($encoding, $data);
+  }
+
+  my $decoded_data;
+
+  # Try to decode in UTF-8. If it is encoded in UTF-8 that's
+  # perfect. If the input file is plain ASCII this does not change
+  # anything and is also good. If it contains non UTF-8 characters we
+  # interpret this as ISO-LATIN-1.
+  if (eval { $decoded_data = decode_utf8($data, Encode::FB_CROAK); 1 }) {
+    return $decoded_data;
+  } else {
+    return decode('iso-8859-1', $data);
+  }
+}
+
+
 
 1;

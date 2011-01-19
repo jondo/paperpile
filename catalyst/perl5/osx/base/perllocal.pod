@@ -1098,3 +1098,113 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Tue Jan 18 21:14:42 2011: C<Module> L<Test::Harness|Test::Harness>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 3.22>
+
+=item *
+
+C<EXE_FILES: bin/prove>
+
+=back
+
+=head2 Tue Jan 18 21:16:32 2011: C<Module> L<File::Slurp|File::Slurp>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 9999.13>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jan 18 21:16:35 2011: C<Module> L<XML::Generator|XML::Generator>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jan 18 21:16:54 2011: C<Module> L<Algorithm::Diff|Algorithm::Diff>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.1902>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jan 18 21:17:07 2011: C<Module> L<Class::Field|Class::Field>
+
+=over 4
+
+=item *
+
+C<installed into: /Users/wash/play/paperpile/build/../catalyst/perl5/osx/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.15>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
