@@ -675,7 +675,7 @@ sub _download {
 
   print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
-  #  $self->update_info( 'msg', "Downloading PDF..." );
+  $self->update_info( 'msg', "Starting PDF download..." );
 
   my $file =
     File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->guid . ".pdf" );
