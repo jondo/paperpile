@@ -97,12 +97,11 @@ sub insert_pubs {
     $pub->created($ts) if not $pub->created;
 
     if ( $pub->_imported ) {
+      $pub->_insert_skipped(1);
       print STDERR $pub->sha1, " already exists. Skipped.\n";
       next;
-    }
-
-    # If it is the user library we mark all as imported
-    elsif ($user_library) {
+    } elsif ($user_library) {
+      # If it is the user library we mark all as imported
       $pub->_imported(1);
     }
 

@@ -819,10 +819,11 @@ sub delete_file : Local {
   # Kind of a hack: delete the _search_job info before sending back our JSON update.
   if ($is_pdf) {
     delete $pub->{_search_job};
+    $pub->pdf('');
   }
 
   $self->_collect_update_data( $c, [$pub],
-    [ 'attachments', '_attachments_list', 'pdf', '_search_job' ] );
+    [ 'attachments', '_attachments_list', 'pdf', '_search_job'] );
 
 }
 

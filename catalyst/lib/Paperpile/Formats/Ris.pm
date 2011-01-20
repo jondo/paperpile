@@ -315,8 +315,10 @@ sub read {
     } elsif ($journal_short_name) {
       $data->{journal} = $journal_short_name;
     }
-    $data->{journal} =~ s/\s+$//g;
-    $data->{journal} = decode_utf8( $data->{journal} );
+    if (defined $data->{journal}) {
+      $data->{journal} =~ s/\s+$//g;
+      $data->{journal} = decode_utf8( $data->{journal} );
+    }
 
     # set page numbers
     # if both, then join

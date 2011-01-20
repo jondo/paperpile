@@ -164,6 +164,9 @@ has '_citation_display' => ( is => 'rw' );
 
 # If an entry is already in our database this field is true.
 has '_imported' => ( is => 'rw', isa => 'Bool' );
+# Used as a flag during Library import to store whether an import
+# was skipped because an identical reference already exists.
+has '_insert_skipped' => ( is => 'rw' );
 
 
 # Can be set to a job id of the task queue. It allows to update job

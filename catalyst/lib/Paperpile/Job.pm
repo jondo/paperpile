@@ -366,14 +366,14 @@ sub _do_work {
       return;
     }
 
-    if ( !$self->pub->linkout && !$self->pub->doi ) {
+    if ( $self->pub->best_link eq '' ) {
 
       $self->_match;
 
       # This currently does not handle the case e.g when we match
       # successfully against PubMed but don't get a doi/linkout and a
       # downstream plugin would give us this information
-      if ( !$self->pub->linkout && !$self->pub->doi ) {
+      if ( $self->pub->best_link eq '' ) {
         NetMatchError->throw("Could not find the PDF");
       }
     }
@@ -396,6 +396,9 @@ sub _do_work {
   if ( $self->type eq 'PDF_IMPORT' ) {
 
     print STDERR "[queue] Start import of PDF ", $self->pub->pdf, "\n";
+
+    # Store the original PDF filename.
+    my $orig_pdf_file = $self->pub->pdf;
 
     $self->_lookup_pdf;
 
@@ -443,6 +446,14 @@ sub _do_work {
       }
 
       $self->_insert;
+
+      # If the destination pub doesn't have a PDF, add this one to it. See issue #756.
+      if ($self->pub->_insert_skipped && !$self->pub->pdf) {
+	my $m = Paperpile::Utils->get_library_model;
+	$m->attach_file( $orig_pdf_file, 1, $self->pub );
+	$self->update_info( 'msg', "PDF attached to existing reference in library." );
+	return;
+      }
 
       $self->update_info( 'callback', { fn => 'updatePubGrid' } );
 
@@ -649,10 +660,8 @@ sub _crawl {
 
   my $start_url = '';
 
-  if ( $self->pub->doi ) {
-    $start_url = 'http://dx.doi.org/' . $self->pub->doi;
-  } elsif ( $self->pub->linkout ) {
-    $start_url = $self->pub->linkout;
+  if ($self->pub->best_link ne '') {
+      $start_url = $self->pub->best_link;
   } else {
     die("No target url for PDF download");
   }
@@ -675,7 +684,7 @@ sub _download {
 
   print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
-  #  $self->update_info( 'msg', "Downloading PDF..." );
+  $self->update_info( 'msg', "Starting PDF download..." );
 
   my $file =
     File::Spec->catfile( Paperpile::Utils->get_tmp_dir, "download", $self->pub->guid . ".pdf" );
