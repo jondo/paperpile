@@ -1015,6 +1015,23 @@ sub format_pattern {
 
 }
 
+# Basic validation of fields to make sure nothing breaks and fields
+# are set as intended. Should be called when Publication object is
+# created from dubious source (e.g. file import plugins). Right now it
+# is very basic but we should extend it.
+
+sub sanitize_fields {
+
+  my ( $self ) = @_;
+
+  # If there is no sha1 there is also no title. Set title to make sure
+  # sha1 gets set and doesn not cause troubles downstream.
+  if (!$self->sha1){
+    $self->title('No Title');
+    $self->calculate_sha1;
+  }
+}
+
 sub debug {
   my $self = shift;
   my $hash = $self->as_hash;
@@ -1027,6 +1044,9 @@ sub debug {
   }
   print STDERR "}\n";
 }
+
+
+
 
 no Moose;
 

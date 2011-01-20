@@ -566,6 +566,7 @@ sub uniquify_pubs {
   my %seen;
 
   foreach my $pub (@$pubs) {
+    $pub->sanitize_fields;
     $seen{$pub->sha1} = 0;
   }
 
