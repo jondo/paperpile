@@ -365,11 +365,34 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
           this);
       },
 
+      // Greg: this never gets called unless it is an unexpected
+      // error. There is no obvious difference in the behaviour of the
+      // onError function with respect of whether it is an known or
+      // unexpected error. So I have no idea why.
       failure: function(response, options) {
+
+        var json = Ext.util.JSON.decode(response.responseText);
+
         this.spot.hide();
+
+        if (json.error) {
+          if (json.error.type === 'PaperRootNotEmptyError') {
+            Paperpile.status.updateMsg({
+              msg: 'The PDF folder is not empty. To avoid conflicts with existing files please choose a new or empty folder.',
+              hideOnClick: true
+            });
+
+            this.textfields['paper_root'].markInvalid('Error');
+            this.textfields['paper_root'].error = 'Error';
+            this.updateSaveDisabled();
+            return;
+          }
+        }
+
         Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab());
         Paperpile.main.loadSettings();
       },
+
       scope: this
     });
 

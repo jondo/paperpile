@@ -1594,6 +1594,12 @@ sub change_paper_root {
 
   my ( $self, $new_root ) = @_;
 
+  # If new folder already exists make sure it is empty.
+  if (-e $new_root){
+    if (scalar glob("$new_root/*")){
+      PaperRootNotEmptyError->throw("PDF folder must be empty.");
+    }
+  }
 
   my $old_root = $self->get_setting( 'paper_root');
 
