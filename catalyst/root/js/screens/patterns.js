@@ -175,6 +175,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
       success: function(response) {
         var data = Ext.util.JSON.decode(response.responseText).data;
         for (var f in data) {
+	  var exampleString = '';
           if (data[f].error) {
             this.textfields[f].markInvalid(data[f].error);
             // Instead of the built-in isInvalid() method, we use a custom
@@ -182,12 +183,17 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             // hack, but it's simple and independent of the built-in validation
             // stuff
             this.textfields[f].error = data[f].error;
-            Ext.get(f + '_example').update('');
           } else {
             this.textfields[f].clearInvalid();
             this.textfields[f].error = undefined;
-            Ext.get(f + '_example').update(data[f].string);
+            exampleString = data[f].string;
           }
+
+	  var el = Ext.get(f+'_example');
+	  if (el) {
+	    el.update(exampleString);
+	  }
+	    
         }
         this.updateSaveDisabled();
       },
@@ -294,9 +300,6 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
       success: function(response, options) {
         var data = Ext.util.JSON.decode(response.responseText);
 
-        // TODO: Here we should get the hashref of patterns settings
-        // from the backend as part of the response data and apply it
-        // to the front-end settings store.
         this.spot.hide();
         var error = Ext.util.JSON.decode(response.responseText).error;
         if (error) {
@@ -363,34 +366,6 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             Paperpile.status.clearMsg();
           },
           this);
-      },
-
-      // Greg: this never gets called unless it is an unexpected
-      // error. There is no obvious difference in the behaviour of the
-      // onError function with respect of whether it is an known or
-      // unexpected error. So I have no idea why.
-      failure: function(response, options) {
-
-        var json = Ext.util.JSON.decode(response.responseText);
-
-        this.spot.hide();
-
-        if (json.error) {
-          if (json.error.type === 'PaperRootNotEmptyError') {
-            Paperpile.status.updateMsg({
-              msg: 'The PDF folder is not empty. To avoid conflicts with existing files please choose a new or empty folder.',
-              hideOnClick: true
-            });
-
-            this.textfields['paper_root'].markInvalid('Error');
-            this.textfields['paper_root'].error = 'Error';
-            this.updateSaveDisabled();
-            return;
-          }
-        }
-
-        Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab());
-        Paperpile.main.loadSettings();
       },
 
       scope: this

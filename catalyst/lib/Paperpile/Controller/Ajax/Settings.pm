@@ -98,6 +98,14 @@ sub pattern_example : Local {
   $data{pdf_pattern}->{string}        = $formatted_pdf;
   $data{attachment_pattern}->{string} = $formatted_attachment;
 
+  my $settings = $c->model('Library')->settings;
+  $data{paper_root}->{string} = '';
+  if ($paper_root ne $settings->{paper_root}) {
+    if (scalar glob("$paper_root/*")){
+	$data{paper_root}->{error} = "The PDF folder is not empty. To avoid conflicts with existing files please choose a new or empty folder for your PDFs";
+    }
+  }
+
   $c->stash->{data} = {%data};
 
 }

@@ -1597,7 +1597,7 @@ sub change_paper_root {
   # If new folder already exists make sure it is empty.
   if (-e $new_root){
     if (scalar glob("$new_root/*")){
-      PaperRootNotEmptyError->throw("PDF folder must be empty.");
+      PaperRootNotEmptyError->throw("New PDF folder must be empty.");
     }
   }
 
