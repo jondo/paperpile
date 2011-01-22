@@ -1,21 +1,17 @@
-package Paperpile::Model::DBIbase;
-
-## This is a  modified copy of Catalyst::DBI
+package Paperpile::Model::SQLite;
 
 use strict;
 use base 'Catalyst::Model';
-use NEXT;
+use Moose;
 use DBI;
 use Data::Dumper;
 use LockFile::Simple;
 use FreezeThaw qw/freeze thaw/;
 
-# For now we suppress the NEXT deprecated warning. Should think about porting DBI module...
-no warnings 'Class::C3::Adopt::NEXT';
-
-our $VERSION = '0.19';
-
-__PACKAGE__->mk_accessors(qw/_dbh _pid _tid _txdbh _lock/);
+has 'file'    => ( is => 'rw' );
+has '_dbh'   => ( is => 'rw' );
+has '_txdbh' => ( is => 'rw' );
+has '_lock' => ( is => 'rw' );
 
 sub begin_transaction {
 
@@ -37,7 +33,7 @@ sub begin_transaction {
     );
 
     $lock->lock( $self->get_lock_file )
-      || die( "Could not get lock on " . $self->{dsn} . ". Giving up." );
+      || die( "Could not get lock on " . $self->{file} . ". Giving up." );
 
     $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
@@ -53,9 +49,8 @@ sub get_lock_file {
 
   my ($self) = @_;
 
-  my $f = $self->{dsn};
+  my $f = $self->{file};
 
-  $f =~ s|dbi:SQLite:||;
   $f =~ s|/|_|g;
   $f =~ s|\.|_|g;
   $f =~ s|^_||;
@@ -166,64 +161,14 @@ sub _thaw_value {
   return $value;
 }
 
-sub new {
-  my $self = shift;
-  my ($c) = @_;
-  $self = $self->NEXT::new(@_);
-  $self->{namespace} ||= ref $self;
-  $self->{additional_base_classes} ||= ();
-
-  if ($c) {
-    $self->{log}   = $c->log;
-    $self->{debug} = $c->debug;
-  } else {
-    $self->{log}   = undef;
-    $self->{debug} = undef;
-  }
-  return $self;
-}
-
 sub dbh {
-  return shift->stay_connected;
-}
 
-# Can be set manually if not called from within catalyst where it is
-# automatically configured from the config file
-
-sub set_dsn {
-  my ( $self, $dsn ) = @_;
-  $self->{dsn} = $dsn;
-
-}
-
-sub get_dsn {
-  my ($self) = @_;
-  return $self->{dsn};
-}
-
-sub stay_connected {
   my $self = shift;
-  if ( $self->_dbh ) {
-    if ( defined $self->_tid && $self->_tid != threads->tid ) {
-      $self->_dbh( $self->connect );
-    } elsif ( $self->_pid != $$ ) {
-      $self->_dbh->{InactiveDestroy} = 1;
-      $self->_dbh( $self->connect );
-    } elsif ( !$self->connected ) {
-      $self->_dbh( $self->connect );
-    }
-  } else {
-    $self->_dbh( $self->connect );
-  }
-  return $self->_dbh;
-}
 
-sub connected {
-  my $self = shift;
-  if ( $self->_dbh ) {
-    return $self->_dbh->{Active} && $self->_dbh->ping;
+  if (!$self->_dbh){
+    return $self->connect;
   } else {
-    return 0;
+    return $self->_dbh;
   }
 }
 
@@ -231,32 +176,37 @@ sub connect {
   my $self = shift;
   my $dbh;
 
+  if (not defined $self->file){
+    die("Tried to connect to database of undefined name.");
+  }
+
   $self->{options} = { AutoCommit => 1, RaiseError => 1 };
 
-  eval { $dbh = DBI->connect( $self->{dsn}, $self->{user}, $self->{password}, $self->{options} ); };
+  my $dsn = "dbi:SQLite:".$self->{file};
 
-  #$dbh = DBI->connect( $self->{dsn}, $self->{user}, $self->{password}, $self->{options} );
+  eval { $dbh = DBI->connect( $dsn, $self->{user}, $self->{password}, $self->{options} ); };
+
   if ($@) {
-    $self->{log}->debug(qq{Couldn't connect to the database "$@"}) if $self->{debug};
+    die("Couldn't connect to the database ". $self->file. "(". $@ . ")");
   } else {
-    $self->{log}->debug( 'Connected to the database via dsn:' . $self->{dsn} ) if $self->{debug};
+    print STDERR "Connected to database file:" . $self->{file}, "\n" ;
   }
-  $self->_pid($$);
-  $self->_tid( threads->tid ) if $INC{'threads.pm'};
 
   # Turn on unicode support explicitely
   $dbh->{sqlite_unicode} = 1;
 
+  $self->_dbh($dbh);
+
   return $dbh;
 }
 
-sub disconnect {
-  my $self = shift;
-  if ( $self->connected ) {
-    $self->_dbh->rollback unless $self->_dbh->{AutoCommit};
-    $self->_dbh->disconnect;
-    $self->_dbh(undef);
-  }
-}
+#sub disconnect {
+#  my $self = shift;
+#  if ( $self->connected ) {
+#    $self->_dbh->rollback unless $self->_dbh->{AutoCommit};
+#    $self->_dbh->disconnect;
+#    $self->_dbh(undef);
+#  }
+#}
 
 1;

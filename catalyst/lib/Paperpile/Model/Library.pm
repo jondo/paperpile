@@ -17,7 +17,7 @@
 package Paperpile::Model::Library;
 
 use strict;
-use base 'Paperpile::Model::DBIbase';
+use base 'Paperpile::Model::SQLite';
 use Data::Dumper;
 use Tree::Simple;
 use XML::Simple;
@@ -45,9 +45,9 @@ has 'light_objects' => ( is => 'rw', isa => 'Int', default => 0 );
 
 sub build_per_context_instance {
   my ( $self, $c ) = @_;
-  my $file  = Paperpile::Utils->session($c)->{library_db};
-  my $model = Paperpile::Model::Library->new();
-  $model->set_dsn("dbi:SQLite:$file");
+  my $file = Paperpile::Utils->session($c)->{library_db};
+  my $model = Paperpile::Model::Library->new( { file => $file } );
+
   return $model;
 }
 
@@ -360,7 +360,7 @@ sub update_pub {
 
   # Create pub object with updated data
   my $new_pub = Paperpile::Library::Publication->new($data);
-  $new_pub->_db_connection( $self->get_dsn );
+  $new_pub->_db_connection( $self->file );
 
   # Also update sha1
   if ( $new_pub->sha1 ne $old_data->{sha1} ) {
@@ -1155,7 +1155,7 @@ sub fulltext_search {
 
     my $pub = Paperpile::Library::Publication->new($data);
 
-    $pub->_db_connection( $self->get_dsn );
+    $pub->_db_connection( $self->file );
 
     # Mark all imported here for efficiency reasons. If this is a
     # temporary db file we have to call _exists_pub somewhere on the
@@ -1197,7 +1197,7 @@ sub all {
 
   while ( my $row = $sth->fetchrow_hashref() ) {
     my $pub = Paperpile::Library::Publication->new( { _light => $self->light_objects } );
-    $pub->_db_connection( $self->get_dsn );
+    $pub->_db_connection( $self->file );
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {

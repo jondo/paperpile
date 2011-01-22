@@ -57,28 +57,25 @@ sub get_user_settings_model {
 
   my $self = shift;
 
-  my $dsn = Paperpile->config->{'Model::User'}->{dsn};
+  my $file = Paperpile->config->{'Model::User'}->{file};
 
-  my $model = Paperpile::Model::User->new();
-
-  $model->set_dsn($dsn);
+  my $model = Paperpile::Model::User->new( { file => $file } );
 
   return $model;
 
 }
+
 
 sub get_queue_model {
 
   my $self = shift;
 
-  my $dsn = Paperpile->config->{'Model::Queue'}->{dsn};
+  my $file = Paperpile->config->{'Model::Queue'}->{file};
 
-  my $model = Paperpile::Model::Queue->new();
-  $model->set_dsn($dsn);
+  my $model = Paperpile::Model::Queue->new( { file => $file } );
 
   return $model;
 }
-
 
 
 sub get_library_model {
@@ -88,8 +85,7 @@ sub get_library_model {
   my $settings = $self->get_user_settings_model->settings;
 
   my $db_file = $settings->{library_db};
-  my $model   = Paperpile::Model::Library->new();
-  $model->set_dsn( "dbi:SQLite:" . $db_file );
+  my $model = Paperpile::Model::Library->new( { file => $db_file } );
 
   return $model;
 

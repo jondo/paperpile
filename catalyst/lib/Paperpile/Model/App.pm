@@ -19,7 +19,7 @@ package Paperpile::Model::App;
 
 use strict;
 use Carp;
-use base 'Paperpile::Model::DBIbase';
+use base 'Paperpile::Model::SQLite';
 use Data::Dumper;
 use Moose;
 

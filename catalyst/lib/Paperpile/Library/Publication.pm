@@ -224,7 +224,7 @@ has '_auto_refresh' => ( is => 'rw', isa => 'Int', default => 0 );
 # author objects which is not always needed (e.g. for import).
 has '_light' => ( is => 'rw', isa => 'Int', default => 0 );
 
-# If object comes from a database we store the dsn of it. Currently
+# If object comes from a database we store the file. Currently
 # only used for function refresh_attachments
 has '_db_connection' => ( is => 'rw', default => '' );
 
@@ -533,8 +533,7 @@ sub refresh_attachments {
 
   if ($self->attachments && $self->_db_connection)  {
 
-    my $model = Paperpile::Model::Library->new();
-    $model->set_dsn( $self->_db_connection );
+    my $model = Paperpile::Model::Library->new( {file => $self->_db_connection} );
 
     $dbh = $model->dbh unless ( defined $dbh );
 

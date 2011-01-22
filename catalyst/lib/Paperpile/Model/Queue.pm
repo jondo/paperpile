@@ -17,6 +17,6 @@
 
 package Paperpile::Model::Queue;
 
-use base 'Paperpile::Model::DBIbase';
+use base 'Paperpile::Model::SQLite';
 
 return 1;

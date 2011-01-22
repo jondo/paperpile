@@ -43,10 +43,8 @@ sub BUILD {
 
 sub get_model {
 
-  my $self  = shift;
-  my $model = Paperpile::Model::Library->new();
-
-  $model->set_dsn( "dbi:SQLite:" . $self->_db_file );
+  my $self = shift;
+  my $model = Paperpile::Model::Library->new( { file => $self->_db_file } );
 
   $model->light_objects( $self->light_objects );
 
