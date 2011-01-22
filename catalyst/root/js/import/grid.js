@@ -2179,6 +2179,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     return this.getSelectionModel().getSelected();
   },
 
+  // Return a list of whatever's selected. Could be an empty list.
+  getSelectionRecords: function() {
+    return this.getSelectionModel().getSelections();
+  },
+
   getFirstAuthorFromSelection: function() {
     var authors = this.getSingleSelectionRecord().data.authors || '';
     var arr = authors.split(/\s+and\s+/);
