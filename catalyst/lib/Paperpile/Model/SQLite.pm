@@ -1,3 +1,19 @@
+# Copyright 2009, 2010 Paperpile
+#
+# This file is part of Paperpile
+#
+# Paperpile is free software: you can redistribute it and/or modify it
+# under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+
+# Paperpile is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Affero General Public License for more details.  You should have
+# received a copy of the GNU Affero General Public License along with
+# Paperpile.  If not, see http://www.gnu.org/licenses.
+
 package Paperpile::Model::SQLite;
 
 use strict;
@@ -13,9 +29,52 @@ has '_dbh'   => ( is => 'rw' );
 has '_txdbh' => ( is => 'rw' );
 has '_lock' => ( is => 'rw' );
 
+
+sub connect {
+
+  my ($self) = @_;
+
+  if ( not defined $self->file ) {
+    die("Tried to connect to database of undefined name.");
+  }
+
+  $self->{options} = { AutoCommit => 1, RaiseError => 1 };
+
+  my $dbh;
+  my $dsn = "dbi:SQLite:" . $self->{file};
+
+  eval { $dbh = DBI->connect( $dsn, $self->{user}, $self->{password}, $self->{options} ); };
+
+  if ($@) {
+    die( "Couldn't connect to " . $self->file . "(" . $@ . ")" );
+  } else {
+    $self->log( "Connected to: " . $self->{file} );
+  }
+
+  # Turn on unicode support explicitely
+  $dbh->{sqlite_unicode} = 1;
+
+  $self->_dbh($dbh);
+
+  return $dbh;
+}
+
+sub dbh {
+
+  my $self = shift;
+
+  if (!$self->_dbh){
+    return $self->connect;
+  } else {
+    return $self->_dbh;
+  }
+}
+
 sub begin_transaction {
 
   my ($self) = @_;
+
+  $self->log("Begin transaction on ". $self->file);
 
   if ( defined $self->_txdbh ) {
     return $self->_txdbh;
@@ -44,25 +103,11 @@ sub begin_transaction {
   }
 }
 
-# Returns unique lock for the current sqlite database
-sub get_lock_file {
-
-  my ($self) = @_;
-
-  my $f = $self->{file};
-
-  $f =~ s|/|_|g;
-  $f =~ s|\.|_|g;
-  $f =~ s|^_||;
-  $f =~ s|__|_|;
-
-  return $f;
-
-}
-
 sub commit_transaction {
 
   my ($self) = @_;
+
+  $self->log("Commit transaction on ".$self->file);
 
   $self->_txdbh->commit;
 
@@ -76,11 +121,31 @@ sub rollback_transaction {
 
   my ($self) = @_;
 
+  $self->log("Rollback transaction on ".$self->file);
+
   $self->_txdbh->rollback;
 
   $self->_lock->unlock( $self->get_lock_file );
   $self->_lock(undef);
   $self->_txdbh(undef);
+}
+
+
+# Returns unique lock for the current sqlite database
+sub get_lock_file {
+
+  my ($self) = @_;
+
+  my $f = $self->{file};
+
+  # Make a nice file-name out of the full path
+  $f =~ s|/|_|g;
+  $f =~ s|\.|_|g;
+  $f =~ s|^_||;
+  $f =~ s|__|_|;
+
+  return $f;
+
 }
 
 sub set_settings {
@@ -161,52 +226,12 @@ sub _thaw_value {
   return $value;
 }
 
-sub dbh {
+sub log {
 
-  my $self = shift;
+  my ($self, $msg) = @_;
 
-  if (!$self->_dbh){
-    return $self->connect;
-  } else {
-    return $self->_dbh;
-  }
+  print STDERR "[info] $msg (pid:$$)\n";
+
 }
-
-sub connect {
-  my $self = shift;
-  my $dbh;
-
-  if (not defined $self->file){
-    die("Tried to connect to database of undefined name.");
-  }
-
-  $self->{options} = { AutoCommit => 1, RaiseError => 1 };
-
-  my $dsn = "dbi:SQLite:".$self->{file};
-
-  eval { $dbh = DBI->connect( $dsn, $self->{user}, $self->{password}, $self->{options} ); };
-
-  if ($@) {
-    die("Couldn't connect to the database ". $self->file. "(". $@ . ")");
-  } else {
-    print STDERR "Connected to database file:" . $self->{file}, "\n" ;
-  }
-
-  # Turn on unicode support explicitely
-  $dbh->{sqlite_unicode} = 1;
-
-  $self->_dbh($dbh);
-
-  return $dbh;
-}
-
-#sub disconnect {
-#  my $self = shift;
-#  if ( $self->connected ) {
-#    $self->_dbh->rollback unless $self->_dbh->{AutoCommit};
-#    $self->_dbh->disconnect;
-#    $self->_dbh(undef);
-#  }
-#}
 
 1;
