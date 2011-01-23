@@ -381,7 +381,7 @@ sub best_link {
   } elsif ( $self->url ) {
     return $self->url;
   } elsif ( $self->pmid ) {
-    return 'http://www.ncbi.nlm.nih.gov/pubmed/' + $self->pmid;
+    return 'http://www.ncbi.nlm.nih.gov/pubmed/' . $self->pmid;
   }
   return '';
 }
