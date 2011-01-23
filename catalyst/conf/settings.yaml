@@ -9,13 +9,13 @@ tmp_dir: "__PP_TMP_DIR__"
 queue_db: "__PP_TMP_DIR__/queue.db"
 
 Model::App:
-  dsn: "dbi:SQLite:__path_to(db/app.db)__"
+  file: "__path_to(db/app.db)__"
 
 Model::User:
-  dsn: "dbi:SQLite:__PP_USER_DIR__/settings.db"
+  file: "__PP_USER_DIR__/settings.db"
 
 Model::Queue:
-  dsn: "dbi:SQLite:__PP_TMP_DIR__/queue.db"
+  file: "__PP_TMP_DIR__/queue.db"
 
 app_settings:
   platform: "__PLATFORM__"

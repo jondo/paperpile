@@ -305,9 +305,9 @@ sub read {
       }
     }
 
-    $data->{authors}  = decode_utf8( join( ' and ', @authors ) )  if (@authors);
-    $data->{editors}  = decode_utf8( join( ' and ', @editors ) )  if (@editors);
-    $data->{keywords} = decode_utf8( join( ';',     @keywords ) ) if (@keywords);
+    $data->{authors}  = join( ' and ', @authors )   if (@authors);
+    $data->{editors}  = join( ' and ', @editors )   if (@editors);
+    $data->{keywords} = join( ';',     @keywords )  if (@keywords);
 
     # set journal, try to keep full name, otherwise short name
     if ($journal_full_name) {
@@ -317,7 +317,7 @@ sub read {
     }
     if (defined $data->{journal}) {
       $data->{journal} =~ s/\s+$//g;
-      $data->{journal} = decode_utf8( $data->{journal} );
+      $data->{journal} = $data->{journal};
     }
 
     # set page numbers
@@ -333,9 +333,9 @@ sub read {
 
     # set address
     if ($address) {    # if possible keep full address, otherwise only city
-      $data->{address} = decode_utf8($address);
+      $data->{address} = $address;
     } elsif ($city) {    # no address but city
-      $data->{address} = decode_utf8($city);
+      $data->{address} = $city;
     }
 
     # issn OR isbn?
@@ -394,22 +394,22 @@ sub write {
       if ( $pub->{pubtype} && exists $types{ $pub->{pubtype} } );
 
     # title
-    push @output, [ 'T1', decode_utf8( $pub->{title} ) ]
+    push @output, [ 'T1', $pub->{title}  ]
       if ( $pub->{title} );
 
     # booktitle
-    push @output, [ 'BT', decode_utf8( $pub->{booktitle} ) ]
+    push @output, [ 'BT', $pub->{booktitle}  ]
       if ( $pub->{booktitle} );
 
     # series title
-    push @output, [ 'T3', decode_utf8( $pub->{series} ) ]
+    push @output, [ 'T3', $pub->{series}  ]
       if ( $pub->{series} );
 
     # authors
     if ( $pub->{authors} ) {
       my @auth = split / and /, $pub->{authors};
       foreach my $name (@auth) {
-        push @output, [ 'AU', decode_utf8($name) ];
+        push @output, [ 'AU', $name ];
       }
     }
 
@@ -417,7 +417,7 @@ sub write {
     if ( $pub->{editors} ) {
       my @edit = split / and /, $pub->{editors};
       foreach my $name (@edit) {
-        push @output, [ 'ED', decode_utf8($name) ];
+        push @output, [ 'ED', $name ];
       }
     }
 
@@ -426,19 +426,19 @@ sub write {
     $date .= $pub->{year}        if ( $pub->{year} );
     $date .= '/' . $pub->{month} if ( $pub->{month} );
     $date .= '/' . $pub->{day}   if ( $pub->{day} );
-    push @output, [ 'Y1', decode_utf8($date) ] if ( $date ne '' );
+    push @output, [ 'Y1', $date ] if ( $date ne '' );
 
     # note
-    push @output, [ 'N1', decode_utf8( $pub->{note} ) ] if ( $pub->{note} );
+    push @output, [ 'N1', $pub->{note} ] if ( $pub->{note} );
 
     # abstract
-    push @output, [ 'AB', decode_utf8( $pub->{abstract} ) ] if ( $pub->{abstract} );
+    push @output, [ 'AB', $pub->{abstract}  ] if ( $pub->{abstract} );
 
     # keywords
     if ( $pub->{keywords} ) {
       my @kw = split /;/, $pub->{keywords};
       foreach my $keyw (@kw) {
-        push @output, [ 'KW', decode_utf8($keyw) ];
+        push @output, [ 'KW', $keyw ];
       }
     }
 
@@ -449,34 +449,34 @@ sub write {
     # however, e.g. science exports both fields (JF and JO) at once
     # I don't know why
     if ( $pub->{journal} ) {
-      push @output, [ 'JF', decode_utf8( $pub->{journal} ) ];
-      push @output, [ 'JO', decode_utf8( $pub->{journal} ) ];
+      push @output, [ 'JF', $pub->{journal}  ];
+      push @output, [ 'JO', $pub->{journal}  ];
     }
 
     # volume
-    push @output, [ 'VL', decode_utf8( $pub->{volume} ) ] if ( $pub->{volume} );
+    push @output, [ 'VL', $pub->{volume} ] if ( $pub->{volume} );
 
     #issue
-    push @output, [ 'IS', decode_utf8( $pub->{issue} ) ] if ( $pub->{issue} );
+    push @output, [ 'IS', $pub->{issue}  ] if ( $pub->{issue} );
 
     # pages
     if ( $pub->{pages} =~ /(.+)--*(.+)/ ) {    # start and end
-      push @output, [ 'SP', decode_utf8($1) ] if ( $pub->{pages} );
-      push @output, [ 'EP', decode_utf8($2) ] if ( $pub->{pages} );
+      push @output, [ 'SP', $1 ] if ( $pub->{pages} );
+      push @output, [ 'EP', $2 ] if ( $pub->{pages} );
     }    # a single number must be the start page
     else {
-      push @output, [ 'SP', decode_utf8( $pub->{pages} ) ] if ( $pub->{pages} );
+      push @output, [ 'SP', $pub->{pages} ] if ( $pub->{pages} );
     }
 
     #address, TODO: don't know how to distinguish between address and city
-    push @output, [ 'AD', decode_utf8( $pub->{address} ) ] if ( $pub->{address} );
+    push @output, [ 'AD', $pub->{address}  ] if ( $pub->{address} );
 
     # publisher
-    push @output, [ 'PB', decode_utf8( $pub->{publisher} ) ] if ( $pub->{publisher} );
+    push @output, [ 'PB', $pub->{publisher}  ] if ( $pub->{publisher} );
 
     # issn/isbn
-    push @output, [ 'SN', decode_utf8( $pub->{issn} ) ] if ( $pub->{issn} );
-    push @output, [ 'SN', decode_utf8( $pub->{isbn} ) ] if ( $pub->{isbn} );
+    push @output, [ 'SN', $pub->{issn}  ] if ( $pub->{issn} );
+    push @output, [ 'SN', $pub->{isbn}  ] if ( $pub->{isbn} );
 
     # url
     push @output, [ 'UR', $pub->{url} ] if ( $pub->{url} );

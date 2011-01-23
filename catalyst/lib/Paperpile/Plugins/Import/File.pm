@@ -25,7 +25,6 @@ use Data::Dumper;
 use File::Copy;
 use File::Path;
 use File::Temp qw(tempfile);
-use Bibutils;
 
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;

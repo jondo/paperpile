@@ -17,7 +17,7 @@
 package Paperpile::Model::Library;
 
 use strict;
-use base 'Paperpile::Model::DBIbase';
+use base 'Paperpile::Model::SQLite';
 use Data::Dumper;
 use Tree::Simple;
 use XML::Simple;
@@ -45,9 +45,9 @@ has 'light_objects' => ( is => 'rw', isa => 'Int', default => 0 );
 
 sub build_per_context_instance {
   my ( $self, $c ) = @_;
-  my $file  = Paperpile::Utils->session($c)->{library_db};
-  my $model = Paperpile::Model::Library->new();
-  $model->set_dsn("dbi:SQLite:$file");
+  my $file = Paperpile::Utils->session($c)->{library_db};
+  my $model = Paperpile::Model::Library->new( { file => $file } );
+
   return $model;
 }
 
@@ -76,20 +76,20 @@ sub insert_pubs {
     foreach my $pub (@$pubs) {
       # For now we ignore pre-set keys and always generate our own keys on insert
       $pub->citekey(undef);
-      my $key = $self->generate_unique_key( $pub, \@existing, $dbh );
+      my $key = $self->generate_unique_key( $pub, \@existing);
       push @existing, $key;
     }
   }
 
   # Check already existing pubs to avoid sha1 clashes
-  $self->exists_pub( $pubs, $dbh );
+  $self->exists_pub( $pubs );
 
   # If we insert to the user library we need to create new labels that
   # may be given in the labels_tmp field.
   my $label_map;
   my @pubs_with_labels;
   if ($user_library) {
-    $label_map = $self->insert_labels( $pubs, $dbh );
+    $label_map = $self->insert_labels( $pubs );
   }
 
   foreach my $pub (@$pubs) {
@@ -135,7 +135,7 @@ sub insert_pubs {
     ## Insert main entry into Publications table
     my $tmp = $pub->as_hash();
 
-    ( my $fields, my $values ) = $self->_hash2sql( $tmp, $dbh );
+    ( my $fields, my $values ) = $self->_hash2sql( $tmp );
 
     $dbh->do("INSERT INTO publications ($fields) VALUES ($values)");
 
@@ -143,7 +143,7 @@ sub insert_pubs {
     my $pub_rowid = $dbh->func('last_insert_rowid');
     $pub->_rowid($pub_rowid);
 
-    $self->_update_fulltext_table( $pub, 1, $dbh );
+    $self->_update_fulltext_table( $pub, 1 );
 
     ## Attach PDFs either if it is downloaded already in the cache or
     ## it is given as absolute path in the _pdf_tmp field
@@ -154,22 +154,22 @@ sub insert_pubs {
     }
 
     if ( $pub->_pdf_tmp ) {
-      $self->attach_file( $pub->_pdf_tmp, 1, $pub, 0, $dbh );
+      $self->attach_file( $pub->_pdf_tmp, 1, $pub, 0 );
     }
 
     # Attach other attachments if given in _attachments_tmp field
     if ( @{ $pub->_attachments_tmp } > 0 ) {
       foreach my $file ( @{ $pub->_attachments_tmp } ) {
-        $self->attach_file( $file, 0, $pub, 0, $dbh );
+        $self->attach_file( $file, 0, $pub, 0  );
       }
     }
 
     if ( $pub->_incomplete ) {
-      $self->_flag_as_incomplete( $pub, $dbh );
+      $self->_flag_as_incomplete( $pub );
     }
   }
 
-  $self->update_collections( \@pubs_with_labels, 'LABEL', $dbh);
+  $self->update_collections( \@pubs_with_labels, 'LABEL' );
 
   $self->commit_transaction;
 
@@ -187,11 +187,11 @@ sub delete_pubs {
   foreach my $pub (@$pubs) {
 
     # PDF
-    $self->delete_attachment( $pub->pdf, 1, $pub, 0, $dbh ) if $pub->pdf;
+    $self->delete_attachment( $pub->pdf, 1, $pub, 0  ) if $pub->pdf;
 
     # Other files
     foreach my $guid ( split( ',', $pub->attachments || '' ) ) {
-      $self->delete_attachment( $guid, 0, $pub, 0, $dbh );
+      $self->delete_attachment( $guid, 0, $pub, 0 );
     }
   }
 
@@ -228,7 +228,7 @@ sub trash_pubs {
 
   my $dbh = $self->begin_transaction;
 
-  my $paper_root = $self->get_setting( 'paper_root', $dbh );
+  my $paper_root = $self->get_setting( 'paper_root');
 
   # Flag trashed citation keys with trash_*. Mainly to avoid
   # that they are considered during disambiguation of keys
@@ -245,7 +245,7 @@ sub trash_pubs {
       my $key = $pub->citekey;
       $key =~ s/^trash_//;
       $pub->citekey($key);
-      $key = $self->generate_unique_key( $pub, \@existing, $dbh );
+      $key = $self->generate_unique_key( $pub, \@existing );
       $pub->citekey($key);
       push @existing, $key;
     }
@@ -341,7 +341,7 @@ sub update_pub {
 
   my $dbh = $self->begin_transaction;
 
-  my $settings = $self->settings($dbh);
+  my $settings = $self->settings;
 
   my $old_data = $dbh->selectrow_hashref(
     "SELECT *, rowid as _rowid, 1 as _imported FROM Publications WHERE guid='$guid'");
@@ -360,7 +360,7 @@ sub update_pub {
 
   # Create pub object with updated data
   my $new_pub = Paperpile::Library::Publication->new($data);
-  $new_pub->_db_connection( $self->get_dsn );
+  $new_pub->_db_connection( $self->file );
 
   # Also update sha1
   if ( $new_pub->sha1 ne $old_data->{sha1} ) {
@@ -368,7 +368,7 @@ sub update_pub {
 
     # If sha1 has changed we check if the new sha1 already exists in
     # the database to avoid duplicates
-    $self->exists_pub( [$new_pub], $dbh );
+    $self->exists_pub( [$new_pub]);
     if ( $new_pub->_imported ) {
       DuplicateError->throw("Updates duplicate an existing reference in the database");
     } else {
@@ -377,7 +377,7 @@ sub update_pub {
   }
 
   # Check if the citekey has changed.
-  my $pattern = $self->get_setting( 'key_pattern', $dbh );
+  my $pattern = $self->get_setting( 'key_pattern');
   my $new_key = $new_pub->format_pattern($pattern);
 
   # Note: In case case a ref. Smith2000a is to be updated "$new_key"
@@ -388,14 +388,14 @@ sub update_pub {
     $new_pub->citekey($new_key);
 
     # If we have a new citekey, make sure it doesn't conflict with other
-    $self->generate_unique_key( $new_pub, [], $dbh );
+    $self->generate_unique_key( $new_pub, []);
     $diff->{citekey} = $new_pub->citekey;
   }
 
   # If flagged with label 'Incomplete' remove this label during update
   # when at least authors/editors and title are given.
   if ( ( $new_pub->authors || $new_pub->editors ) && $new_pub->title ) {
-    $self->_flag_as_complete( $new_pub, $dbh );
+    $self->_flag_as_complete( $new_pub );
   }
 
   # If we have attachments we need to check if their names have
@@ -459,7 +459,7 @@ sub update_pub {
     $dbh->do("UPDATE Publications SET $sql WHERE guid='$guid';");
   }
 
-  $self->_update_fulltext_table( $new_pub, 0, $dbh );
+  $self->_update_fulltext_table( $new_pub, 0 );
 
   $self->commit_transaction;
 
@@ -521,11 +521,11 @@ sub update_citekeys {
 
 sub new_collection {
 
-  my ( $self, $guid, $name, $type, $parent, $style, $dbh ) = @_;
+  my ( $self, $guid, $name, $type, $parent, $style) = @_;
 
-  my $external_dbh = $dbh ? 1 : 0;
+  my $in_prev_tx = $self->in_transaction;
 
-  $dbh = $self->begin_transaction if !$external_dbh;
+  my $dbh = $self->begin_transaction;
 
   if ( $parent =~ /ROOT/ ) {
     $parent = 'ROOT';
@@ -551,7 +551,7 @@ sub new_collection {
     "INSERT INTO Collections (guid, name, type, parent, sort_order, style, hidden) VALUES($guid, $name, $type, $parent, $sort_order, $style, $hidden)"
   );
 
-  $self->commit_transaction if !$external_dbh;
+  $self->commit_transaction if !$in_prev_tx;
 
 }
 
@@ -563,7 +563,7 @@ sub delete_collection {
 
   my $dbh = $self->begin_transaction;
 
-  my @list = $self->find_subcollections( $guid, $dbh );
+  my @list = $self->find_subcollections( $guid );
 
   #  Delete all assications in Collection_Publication table
   my $delete1 = $dbh->prepare("DELETE FROM Collection_Publication WHERE collection_guid=?");
@@ -612,11 +612,11 @@ sub delete_collection {
 # for all $pubs
 
 sub update_collections {
-  ( my $self, my $pubs, my $type, my $dbh ) = @_;
+  ( my $self, my $pubs, my $type) = @_;
 
-  my $external_dbh = $dbh ? 1 : 0;
+  my $in_prev_tx = $self->in_transaction;
 
-  $dbh = $self->begin_transaction if !$external_dbh;
+  my $dbh = $self->begin_transaction;
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
@@ -651,16 +651,16 @@ sub update_collections {
     }
   }
 
-  $self->commit_transaction if !$external_dbh;
+  $self->commit_transaction if !$in_prev_tx;
 
 }
 
 sub add_to_collection {
-  my ( $self, $pubs, $guid, $dbh ) = @_;
+  my ( $self, $pubs, $guid) = @_;
 
-  my $external_dbh = $dbh ? 1 : 0;
+  my $in_prev_tx = $self->in_transaction;
 
-  $dbh = $self->begin_transaction if !$external_dbh;
+  my $dbh = $self->begin_transaction;
 
   # Figure out the type from the GUID.
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
@@ -674,9 +674,9 @@ sub add_to_collection {
   foreach my $pub (@$pubs) {
     $pub->add_guid( $type, $guid );
   }
-  $self->update_collections( $pubs, $type, $dbh );
+  $self->update_collections( $pubs, $type );
 
-  $self->commit_transaction if !$external_dbh;
+  $self->commit_transaction if !$in_prev_tx;
 
 }
 
@@ -684,11 +684,10 @@ sub add_to_collection {
 # $collection_guid
 
 sub remove_from_collection {
-  my ( $self, $pubs, $guid, $dbh ) = @_;
+  my ( $self, $pubs, $guid) = @_;
 
-  my $external_dbh = $dbh ? 1 : 0;
-
-  $dbh = $self->begin_transaction if !$external_dbh;
+  my $in_prev_tx = $self->in_transaction;
+  my $dbh = $self->begin_transaction;
 
   # Figure out the type from the GUID.
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
@@ -707,9 +706,9 @@ sub remove_from_collection {
     $pub->$what($new_list);
   }
 
-  $self->update_collections( $pubs, $type, $dbh );
+  $self->update_collections( $pubs, $type );
 
-  $self->commit_transaction if !$external_dbh;
+  $self->commit_transaction if !$in_prev_tx;
 
 }
 
@@ -812,10 +811,10 @@ sub move_collection {
   my ($old_parent) = $dbh->selectrow_array(
     "SELECT parent FROM Collections WHERE guid='$drop_guid' AND TYPE='$type'");
   if ( defined $old_parent ) {
-    $self->_normalize_sort_order( $dbh, $old_parent, $type );
+    $self->_normalize_sort_order( $old_parent, $type );
   }
   if ( defined $new_parent && $new_parent ne $old_parent ) {
-    $self->_normalize_sort_order( $dbh, $new_parent, $type );
+    $self->_normalize_sort_order( $new_parent, $type );
   }
 
   $self->commit_transaction;
@@ -826,9 +825,9 @@ sub move_collection {
 # the hashref $data.
 sub update_collection_fields {
 
-  my ( $self, $guid, $data, $dbh ) = @_;
+  my ( $self, $guid, $data ) = @_;
 
-  $dbh = $self->dbh if ( !$dbh );
+  my $dbh = $self->dbh;
 
   my @updates;
 
@@ -1155,7 +1154,7 @@ sub fulltext_search {
 
     my $pub = Paperpile::Library::Publication->new($data);
 
-    $pub->_db_connection( $self->get_dsn );
+    $pub->_db_connection( $self->file );
 
     # Mark all imported here for efficiency reasons. If this is a
     # temporary db file we have to call _exists_pub somewhere on the
@@ -1197,7 +1196,7 @@ sub all {
 
   while ( my $row = $sth->fetchrow_hashref() ) {
     my $pub = Paperpile::Library::Publication->new( { _light => $self->light_objects } );
-    $pub->_db_connection( $self->get_dsn );
+    $pub->_db_connection( $self->file );
     foreach my $field ( keys %$row ) {
       my $value = $row->{$field};
       if ($value) {
@@ -1252,9 +1251,9 @@ sub all_as_hash {
 # _imported field accordingly.
 
 sub exists_pub {
-  ( my $self, my $pubs, my $dbh ) = @_;
+  ( my $self, my $pubs ) = @_;
 
-  $dbh = $self->dbh if ( !$dbh );
+  my $dbh = $self->dbh;
 
   my $sth = $dbh->prepare("SELECT rowid, * FROM publications WHERE sha1=?");
 
@@ -1323,7 +1322,9 @@ sub exists_pub {
 # label with the same name is already in the database)
 
 sub insert_labels {
-  ( my $self, my $pubs, my $dbh ) = @_;
+  ( my $self, my $pubs) = @_;
+
+  my $dbh = $self->dbh;
 
   my %map;
 
@@ -1355,7 +1356,7 @@ sub insert_labels {
     if ($guid) {
       $map{$label} = $guid;
     } else {
-      $self->new_collection( $map{$label}, $label, 'LABEL', 'ROOT', 0, $dbh );
+      $self->new_collection( $map{$label}, $label, 'LABEL', 'ROOT', 0);
 
       # Do something here to auto-hide tmp collections.
       ( my $count ) = $dbh->selectrow_array(
@@ -1370,11 +1371,12 @@ sub insert_labels {
 }
 
 # Small helper function that converts hash to sql syntax (including
-# quotes). Also passed the database handle to avoid calling $self->dbh
-# all the time which turned out to be a bottle neck
+# quotes).
 sub _hash2sql {
 
-  ( my $self, my $hash, my $dbh ) = @_;
+  ( my $self, my $hash) = @_;
+
+  my $dbh = $self->dbh;
 
   my @fields = ();
   my @values = ();
@@ -1406,19 +1408,16 @@ sub _hash2sql {
 # Attach $file to the publication $pub. If $is_pdf is set it is *the*
 # PDF otherwise it is treated as attachment. If $old_guid is set the
 # new file gets this guid (to avoid changing of the guid when using
-# the undo function). A $dbh can be given if a handler with a
-# transaction is already running (in that case also $old_guid must be
-# set [0 if it should not be used] )
+# the undo function).
 
 sub attach_file {
 
-  my ( $self, $file, $is_pdf, $pub, $old_guid, $dbh ) = @_;
+  my ( $self, $file, $is_pdf, $pub, $old_guid) = @_;
 
-  my $external_dbh = $dbh ? 1 : 0;
+  my $in_prev_tx = $self->in_transaction;
+  my $dbh = $self->begin_transaction;
 
-  $dbh = $self->begin_transaction if !$external_dbh;
-
-  my $settings = $self->settings($dbh);
+  my $settings = $self->settings;
   my $source   = Paperpile::Utils->adjust_root($file);
 
   my $pub_guid = $pub->guid;
@@ -1475,7 +1474,7 @@ sub attach_file {
   if ($is_pdf) {
     my $pdf_name = $absolute_dest;
     if ( $settings->{paper_root} ) {
-      $self->index_pdf( $pub_guid, $absolute_dest, $dbh );
+      $self->index_pdf( $pub_guid, $absolute_dest);
       $pdf_name = abs2rel( $absolute_dest, $settings->{paper_root} );
     }
     $pub->pdf($file_guid);
@@ -1500,11 +1499,11 @@ sub attach_file {
     $dbh->do("UPDATE Publications SET attachments='$new_attachments' WHERE guid='$pub_guid';");
 
     $pub->attachments($new_attachments);
-    $pub->refresh_attachments($dbh);
+    $pub->refresh_attachments;
 
   }
 
-  $self->commit_transaction if !$external_dbh;
+  $self->commit_transaction if !$in_prev_tx;
 
   return $file_guid;
 
@@ -1517,11 +1516,10 @@ sub attach_file {
 
 sub delete_attachment {
 
-  my ( $self, $guid, $is_pdf, $pub, $with_undo, $dbh ) = @_;
+  my ( $self, $guid, $is_pdf, $pub, $with_undo) = @_;
 
-  my $external_dbh = $dbh ? 1 : 0;
-
-  $dbh = $self->begin_transaction if !$external_dbh;
+  my $in_prev_tx = $self->in_transaction;
+  my $dbh = $self->begin_transaction;
 
   my $paper_root = $self->get_setting('paper_root');
 
@@ -1560,7 +1558,7 @@ sub delete_attachment {
     $dbh->do("UPDATE Publications SET attachments='$new' WHERE rowid=$rowid");
 
     $pub->attachments($new);
-    $pub->refresh_attachments($dbh);
+    $pub->refresh_attachments;
   }
 
   move( $path, $undo_dir ) if $with_undo;
@@ -1581,7 +1579,7 @@ sub delete_attachment {
     }
   }
 
-  $self->commit_transaction if !$external_dbh;
+  $self->commit_transaction if !$in_prev_tx;
 
   if ($with_undo) {
     my ( $volume, $dir, $file_name ) = splitpath($path);
@@ -1640,7 +1638,7 @@ sub change_paper_root {
     }
 
     if ( dirmove( $old_root, $new_root ) ) {
-      $self->set_setting( 'paper_root', $new_root, $dbh );
+      $self->set_setting( 'paper_root', $new_root);
     } else {
       FileError->throw("$!");
     }
@@ -1669,7 +1667,7 @@ sub rename_files {
 
   $dbh->begin_work;
 
-  my $paper_root = $self->get_setting( 'paper_root', $dbh );
+  my $paper_root = $self->get_setting( 'paper_root');
 
   # If paper_root is not created or does not exist for some other
   # reason, we can stop because there are no files for us to update
@@ -1754,11 +1752,10 @@ sub rename_files {
 
 sub index_pdf {
 
-  my ( $self, $guid, $pdf_file, $dbh ) = @_;
+  my ( $self, $guid, $pdf_file) = @_;
 
-  my $external_dbh = $dbh ? 1 : 0;
-
-  $dbh = $self->begin_transaction if !$external_dbh;
+  my $in_prev_tx = $self->in_transaction;
+  my $dbh = $self->begin_transaction;
 
   my $bin = Paperpile::Utils->get_binary('extpdf');
 
@@ -1785,15 +1782,15 @@ sub index_pdf {
     "UPDATE Fulltext SET text=$text WHERE rowid=(SELECT rowid FROM PUBLICATIONS WHERE guid='$guid')"
   );
 
-  $self->commit_transaction if !$external_dbh;
+  $self->commit_transaction if !$in_prev_tx;
 
 }
 
 sub histogram {
 
-  my ( $self, $field, $dbh ) = @_;
+  my ( $self, $field ) = @_;
 
-  $dbh = $self->dbh if ( !$dbh );
+  my $dbh = $self->dbh;
 
   my %hist = ();
 
@@ -1912,7 +1909,9 @@ sub dashboard_stats {
 
 sub _flag_as_incomplete {
 
-  ( my $self, my $pub, my $dbh ) = @_;
+  ( my $self, my $pub ) = @_;
+
+  my $dbh = $self->dbh;
 
   # Check if we have a label 'Incomplete'
   ( my $guid ) = $dbh->selectrow_array(
@@ -1923,18 +1922,20 @@ sub _flag_as_incomplete {
     $guid = Data::GUID->new;
     $guid = $guid->as_hex;
     $guid =~ s/^0x//;
-    $self->new_collection( $guid, 'Incomplete', 'LABEL', 'ROOT', 0, $dbh );
+    $self->new_collection( $guid, 'Incomplete', 'LABEL', 'ROOT', 0);
   }
 
   # Assign the label to the publication
   $pub->add_label($guid);
-  $self->update_collections( [$pub], 'LABEL', $dbh );
+  $self->update_collections( [$pub], 'LABEL');
 
 }
 
 sub _flag_as_complete {
 
-  ( my $self, my $pub, my $dbh ) = @_;
+  ( my $self, my $pub ) = @_;
+
+  my $dbh = $self->dbh;
 
   ( my $guid ) = $dbh->selectrow_array(
     "SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
@@ -1953,7 +1954,9 @@ sub _flag_as_complete {
 
 sub generate_unique_key {
 
-  my ( $self, $pub, $existing, $dbh ) = @_;
+  my ( $self, $pub, $existing) = @_;
+
+  my $dbh = $self->dbh;
 
   # If a citekey is already set we check if it is unique. If it is
   # unique we return it directly. This is used to ensure that trashed
@@ -1984,7 +1987,7 @@ sub generate_unique_key {
   
   # If not citekey is set we generate one and make sure it is not ambiguous
 
-  my $pattern = $self->get_setting( 'key_pattern', $dbh );
+  my $pattern = $self->get_setting( 'key_pattern');
   my $key = $pub->format_pattern($pattern);
 
   # First we search for similar keys already in the database. We use
@@ -2083,7 +2086,9 @@ sub generate_unique_key {
 
 sub _update_fulltext_table {
 
-  ( my $self, my $pub, my $new, my $dbh ) = @_;
+  ( my $self, my $pub, my $new ) = @_;
+
+  my $dbh = $self->dbh;
 
   if ( ( not $pub->_authors_display ) and ( $pub->authors ) ) {
     my @authors = split( /\band\b/, $pub->authors );
@@ -2113,7 +2118,7 @@ sub _update_fulltext_table {
   };
 
   if ($new) {
-    my ( $fields, $values ) = $self->_hash2sql( $hash, $dbh );
+    my ( $fields, $values ) = $self->_hash2sql( $hash );
     $fields .= ",text";
     $values .= ",''";
     $dbh->do("INSERT INTO fulltext ($fields) VALUES ($values)");
@@ -2158,9 +2163,9 @@ sub _remove_from_flatlist {
 
 sub find_subcollections {
 
-  my ( $self, $guid, $dbh ) = @_;
+  my ( $self, $guid ) = @_;
 
-  $dbh = $self->dbh if !$dbh;
+  my $dbh = $self->dbh;
 
   my @list = ($guid);
 
@@ -2194,7 +2199,7 @@ sub _find_subcollections {
 
 sub find_collection_parents {
 
-  my ( $self, $guid, $dbh ) = @_;
+  my ( $self, $guid ) = @_;
 
   # Ignore if guid is ROOT (or 'FOLDER_ROOT' which is the collection
   # root id in the frontend)
@@ -2202,7 +2207,7 @@ sub find_collection_parents {
     return ();
   }
 
-  $dbh = $self->dbh if !$dbh;
+  my $dbh = $self->dbh;
 
   my $sth = $dbh->prepare("SELECT * FROM Collections;");
   $sth->execute;
@@ -2229,7 +2234,9 @@ sub find_collection_parents {
 # 1).
 
 sub _normalize_sort_order {
-  my ( $self, $dbh, $parent, $type ) = @_;
+  my ( $self, $parent, $type ) = @_;
+
+  my $dbh = $self->dbh;
 
   my $select = $dbh->prepare(
     "SELECT guid FROM Collections WHERE parent='$parent' AND type='$type' ORDER BY sort_order");

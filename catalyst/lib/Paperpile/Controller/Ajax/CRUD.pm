@@ -430,6 +430,9 @@ sub new_collection : Local {
 
   my $tree = $c->model('Library')->get_setting('_tree');
 
+  print STDERR Dumper($tree);
+
+
   if ($type eq 'LABEL'){
     $c->forward( '/ajax/tree/get_subtree', [ $tree, "LABEL_ROOT" ] );
   } else {
@@ -649,7 +652,7 @@ sub list_collections : Local {
 
   my $dbh = $c->model('Library')->dbh;
 
-  my $hist = $c->model('Library')->histogram('labels', $dbh);
+  my $hist = $c->model('Library')->histogram('labels');
 
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE type='$type' order by sort_order");
 
@@ -979,7 +982,7 @@ sub _get_sync_collections {
   my %final_collections;
 
   foreach my $collection ( keys %collections ) {
-    my @parents = $model->find_collection_parents( $collection, $dbh );
+    my @parents = $model->find_collection_parents( $collection );
 
     foreach my $parent (@parents) {
       if ( $sync_files->{$parent}->{active} ) {

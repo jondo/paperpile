@@ -37,6 +37,7 @@ sub get_node : Local {
 
   if ( not $tree ) {
     $tree = $c->forward('get_default_tree');
+    $c->model('Library')->set_setting('_tree', $tree);
   }
 
   if ( $node eq 'ROOT' ) {

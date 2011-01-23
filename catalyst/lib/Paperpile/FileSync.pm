@@ -108,7 +108,7 @@ sub _get_library_data {
     $sth = $dbh->prepare("SELECT * FROM Publications WHERE trashed=0;");
   } else {
 
-    my @guids = $model->find_subcollections( $collection, $dbh );
+    my @guids = $model->find_subcollections( $collection );
 
     map { $_ = "collection_guid='$_'" } @guids;
     my $query = join( " OR ", @guids );
