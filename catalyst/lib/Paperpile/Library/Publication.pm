@@ -32,9 +32,6 @@ use File::Spec;
 use File::Path;
 use 5.010;
 
-# Bibutils functions are in a submodule
-extends('Paperpile::Library::Publication::Bibutils');
-
 # We currently support the following publication types
 our @types = qw(
   ARTICLE

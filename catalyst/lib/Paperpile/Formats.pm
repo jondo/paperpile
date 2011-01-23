@@ -20,7 +20,6 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use Data::Dumper;
 use File::Temp qw(tempfile);
-use Bibutils;
 use DBI;
 
 use Paperpile::Library::Publication;
@@ -29,7 +28,7 @@ use Paperpile::Exceptions;
 use Paperpile::Formats::Rss;
 use Paperpile::Formats::Ris;
 
-enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS EMAIL MODS ISI ENDNOTE ENDNOTEXML RIS WORD2007 MEDLINE RSS ZOTERO MENDELEY HTML XMP);
+enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS EMAIL RIS RSS ZOTERO MENDELEY HTML XMP);
 
 has 'data' => ( is => 'rw', isa => 'ArrayRef[Paperpile::Library::Publication]' );
 has format => ( is => 'rw', isa => 'Format' );
@@ -68,41 +67,37 @@ sub guess_format {
     # Very simplistic. Probably need to get more specific/sensitive
     # patterns for real life data sometime
     my %patterns = (
-      MODS       => qr/<\s*mods\s*/i,
-      MEDLINE    => qr/<PubmedArticle>/i,
-      BIBTEX     => qr/\@\w+\{/i,
-      ISI        => qr/^\s*AU /i,
-      ENDNOTE    => qr/^\s*%0 /i,
-      #ENDNOTEXML => qr/<XML>\s*<RECORDS>/i # Does not work at the moment
-      RIS        => qr/^\s*TY\s+-\s+/i,
-      RSS        => qr/xml.*rss/is,
+      BIBTEX => qr/\@\w+\{/i,
+      RIS    => qr/^\s*TY\s+-\s+/i,
+      RSS    => qr/xml.*rss/is,
     );
 
     # In RSS feed xml tag and rss tag may be in different lines,
     # so we have to screen several lines at once
-    foreach my $i ( 0 .. $#lines) {
+    foreach my $i ( 0 .. $#lines ) {
       my $inc_prev_lines = $lines[$i];
-      for my $j ( 1 .. 5) {
-	last if ( $i - $j ) < 0;
-	$inc_prev_lines = $lines[$i-$j].$inc_prev_lines;
+      for my $j ( 1 .. 5 ) {
+        last if ( $i - $j ) < 0;
+        $inc_prev_lines = $lines[ $i - $j ] . $inc_prev_lines;
       }
       foreach my $format ( keys %patterns ) {
         my $pattern = $patterns{$format};
-	if ( $lines[$i] =~ $pattern ) {
+        if ( $lines[$i] =~ $pattern ) {
           $format = lc($format);
           $format = ucfirst($format);
           my $module = "Paperpile::Formats::$format";
           return eval("use $module; $module->new(file=>'$file')");
         }
-	if ( $inc_prev_lines =~ $pattern ) {
-	  $format = lc($format);
-	  $format = ucfirst($format);
-	  my $module = "Paperpile::Formats::$format";
-	    return eval("use $module; $module->new(file=>'$file')");
-	}
+        if ( $inc_prev_lines =~ $pattern ) {
+          $format = lc($format);
+          $format = ucfirst($format);
+          my $module = "Paperpile::Formats::$format";
+          return eval("use $module; $module->new(file=>'$file')");
+        }
       }
     }
   }
+
   # File is binary
   else {
 
@@ -151,32 +146,24 @@ sub guess_format {
 
 }
 
-# Reads the data from $self->file; Defaults to using
-# Bibutils. Override this function to read other formats or
-# postprocess data read from bibutils
+# Reads the data from $self->file and returns list of publication
+# objects.
 
 sub read {
 
-  my $self = shift;
+  # Override in sub-class;
 
-  # use our own RIS module instead of Bibutils
-  if (  $self->format eq 'RIS' ) {
-    my $RISin  = Paperpile::Formats::Ris->new( file => $self->file );
-    return $RISin->read();
-  }
+  die("You need to override 'read' in your 'Formats' class");
 
-  return $self->read_bibutils;
 }
 
-# Writes $self->data to $self->file; Defaults to using
-# Bibutils. Override this function to write other formats or
-# preprocess data before writing.
+# Writes $self->data to $self->file;
 
 sub write {
 
-  my $self = shift;
+  # Override in sub-class;
 
-  return $self->write_bibutils;
+  die("You need to override 'write' in your 'Formats' class");
 
 }
 
@@ -185,8 +172,6 @@ sub write {
 sub read_string {
 
   my ( $self, $string ) = @_;
-
-  my $in_format = eval( 'Bibutils::' . $self->format . 'IN' );
 
   my ( $fh, $file_name ) = tempfile();
 
@@ -224,84 +209,5 @@ sub write_string {
 
 }
 
-sub read_bibutils {
-
-  my $self = shift;
-
-  my $bu = Bibutils->new(
-    in_file    => $self->file,
-    out_file   => '',
-    in_format  => eval( 'Bibutils::' . $self->format . 'IN' ),
-    out_format => Bibutils::BIBTEXOUT,
-  );
-
-  $bu->read;
-
-  if ( $bu->error ) {
-    FileFormatError->throw( error => "Could not read " . $self->file . ". Error during parsing." );
-  }
-
-  my $data = $bu->get_data;
-
-  my @output = ();
-
-  foreach my $entry (@$data) {
-    my $pub = Paperpile::Library::Publication->new;
-    $pub->_build_from_bibutils($entry);
-    push @output, $pub;
-  }
-
-  return [@output];
-
-}
-
-sub write_bibutils {
-
-  my ($self) = @_;
-
-  my %s = %{ $self->settings };
-
-  my @bibutils = ();
-
-  foreach my $pub ( @{ $self->data } ) {
-    push @bibutils, $pub->_format_bibutils;
-  }
-
-  my %formats = (
-    MODS     => Bibutils::MODSOUT,
-    BIBTEX   => Bibutils::BIBTEXOUT,
-    RIS      => Bibutils::RISOUT,
-    ENDNOTE  => Bibutils::ENDNOTEOUT,
-    ISI      => Bibutils::ISIOUT,
-    WORD2007 => Bibutils::WORD2007OUT,
-  );
-
-  my $bu = Bibutils->new(
-    in_file    => '',
-    out_file   => $self->file,
-    in_format  => Bibutils::BIBTEXIN,
-    out_format => $formats{ $self->format },
-  );
-
-  $bu->set_data( [@bibutils] );
-
-  $bu->write( {%s} );
-
-  my $error = $bu->error;
-
-  if ( $error != 0 ) {
-
-    #my $msg = "Data could not be exported. ";
-    #if ( $error == Bibutils::ERR_CANTOPEN ) {
-    #  $msg .= "Could not open file.";
-    #}
-    #if ( $error == Bibutils::ERR_MEMERR ) {
-    #  $msg .= "Not enough memory.";
-    #}
-
-    FileWriteError->throw( error => "Could not write " . $self->settings->{out_file} );
-
-  }
-}
 
 1;

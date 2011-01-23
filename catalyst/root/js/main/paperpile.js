@@ -321,7 +321,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     var fontSize = this.getSetting('font_size');
     if (fontSize) {
-	this.onFontSizeChange(fontSize);
+      this.onFontSizeChange(fontSize);
     }
 
   },
@@ -366,7 +366,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.alwaysKeys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.alwaysKeys.bindCallback('ctrl-w', this.keyControlW);
     this.alwaysKeys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
-    this.alwaysKeys.bindCallback('ctrl-n', this.forwardToGrid,this);      
+    this.alwaysKeys.bindCallback('ctrl-n', this.forwardToGrid, this);
   },
 
   keyControlX: function() {
@@ -625,7 +625,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         // back from the file dialog behaves strange. It seems to be
         // an array but when sent as Ajax parameter in
         // submitPdfExtractionJobs it is not transferred as array.
-        var newFiles =[];
+        var newFiles = [];
         for (var i = 0; i < filenames.length; i++) {
           newFiles.push(filenames[i]);
         }
@@ -854,13 +854,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var options = {
       title: 'Choose a bibliography file to import',
       types: ['*'],
-      typesDescription: 'Bibliography files (BibTeX, RIS, EndNote, and others)',
+      typesDescription: 'Bibliography files (BibTeX, RIS, and others)',
       nameFilters: ["All supported files (*)",
         "BibTeX (*.bib)",
         "RIS (*.ris)",
-        //"Endnote XML (*.xml)", //Backend does not work at the moment
-        "ISI (*.isi)",
-        "MODS (*.xml)",
         "RSS (*.xml)",
         "Zotero (*.sqlite)",
         "Mendeley (*.sqlite)"],
@@ -955,10 +952,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       var formatsMap = {
         'BibTeX (*.bib)': 'BIBTEX',
         'RIS (.ris)': 'RIS',
-        'EndNote (.txt)': 'ENDNOTE',
-        'MODS (.xml)': 'MODS',
-        'ISI Web of Science (.isi)': 'ISI',
-        'Word 2007 XML (.xml)': 'WORD2007'
       };
 
       var format = formatsMap[filter];
@@ -1001,12 +994,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       'title': 'Choose file and format for export',
       'dialogType': 'save',
       'selectionType': 'file',
-      'nameFilters': ["BibTeX (*.bib)",
-        'RIS (.ris)',
-        'EndNote (.txt)',
-        'MODS (.xml)',
-        'ISI Web of Science (.isi)',
-        'Word 2007 XML (.xml)']
+      'nameFilters': [
+        'BibTeX (*.bib)',
+        'RIS (*.ris)']
     });
   },
 
@@ -1360,7 +1350,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     // treat it differently from the case when it already has been
     // imported
     var isNew;
-    if (!data.guid){
+    if (!data.guid) {
       isNew = true;
       data._pdf_tmp = data.pdf;
     } else {

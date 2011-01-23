@@ -183,65 +183,6 @@ sub _split_full {
   return { first => $first, von => $von, last => $last, jr => $jr, collective => '' };
 }
 
-sub read_bibutils {
-
-  my ( $self, $string ) = @_;
-  my ( $first, $von, $last, $jr );
-
-  my @parts = split( /\|/, $string );
-
-  # No second name is given. For example due to wrong Bibtex: Schuster
-  # P. (no comma).  When we are sure that this is an error because it
-  # is obviously a name we parse it. Otherwise we convert it to a
-  # collective author.
-
-  if ( scalar @parts > 1 and $parts[0] eq '' ) {
-
-    #binmode STDERR, ":utf8";
-    #print STDERR "$string\n";
-    my $merged = join( ' ', @parts );
-    $merged =~ s/^\s+//;
-
-    #print STDERR "$merged\n";
-
-    # match Stadler P. F. and that like
-    if ( $merged =~ /^([A-Z]\w+) (([A-Z]\.?)( [A-Z]\.?)?)$/ ) {
-      $last  = $1;
-      $first = $2;
-    } else {
-      $self->collective($merged);
-      $last  = '';
-      $first = '';
-    }
-
-  }
-
-  # Bibutils does not handle collective authors very well, they are
-  # just forced into first/last name. TODO: think what to do about
-  # this
-
-  # author without first names do not exist to my knowledge. We
-  # interpret this as collective name,
-  elsif ( scalar @parts == 1 ) {
-    $self->collective( $parts[0] );
-    $last  = '';
-    $first = '';
-  } else {
-
-    $last = $parts[0];
-    $first = join( " ", @parts[ 1 .. $#parts ] );
-
-    # von and jr currently not handled explicitely Bibutils does not
-    # seem to handle suffix (at least for pubmed); so we leave them
-    # emtpy
-
-  }
-
-  $self->last($last);
-  $self->first($first);
-
-  return $self;
-}
 
 sub create_key {
   my $self = shift;
@@ -364,31 +305,6 @@ sub bibtex {
   $output .= $self->last . ", ";
   $output .= $self->jr . ", " if ( $self->jr );
   $output .= $self->first;
-
-  return $output;
-}
-
-sub bibutils {
-
-  my $self       = shift;
-  my @components = ();
-
-  if ( $self->collective ) {
-
-    # Currently we just set the whole cooperative name as last name
-    # and leave first names empty Todo: check if this can be handled
-    # better, e.g. by setting author:corp
-    return $self->collective;
-  }
-
-  my $output = '';
-
-  $output .= $self->von      if ( $self->von ) . " ";
-  $output .= $self->last;
-  $output .= " " . $self->jr if ( $self->jr );
-  $output .= '|';
-  my @firsts = split( /\s+/, $self->first );
-  $output .= join( '|', @firsts );
 
   return $output;
 }
