@@ -361,7 +361,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.sometimesKeys.bindCallback('ctrl-r', this.keyControlR, this);
 
-    this.alwaysKeys.bindCallback('ctrl-x', this.keyControlX, this);
+    this.alwaysKeys.bindCallback('ctrl-shift-x', this.keyControlShiftX, this);
     this.alwaysKeys.bindCallback('ctrl-y', this.keyControlY, this);
     this.alwaysKeys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.alwaysKeys.bindCallback('ctrl-w', this.keyControlW);
@@ -369,11 +369,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.alwaysKeys.bindCallback('ctrl-n', this.forwardToGrid,this);      
   },
 
-  keyControlX: function() {
-    var itemId = 'pp-dash';
-    for (var i = 0; i < 3; i++) {
-      this.tabs.newScreenTab('Dashboard', itemId);
-    }
+  keyControlShiftX: function() {
+    this.tabs.showDashboardTab();
   },
 
   grabFocus: function() {

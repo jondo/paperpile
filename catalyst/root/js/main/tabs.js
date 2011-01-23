@@ -236,6 +236,10 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     panel.show();
   },
 
+  showDashboardTab: function() {
+    this.newScreenTab('Dashboard', 'pp-dash');
+  },
+
   showQueueTab: function() {
     if (this.findAndActivateOpenTab('queue-tab')) {
       return;
