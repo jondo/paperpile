@@ -74,11 +74,13 @@ sub begin_transaction {
 
   my ($self) = @_;
 
-  $self->log("Begin transaction on ". $self->file);
-
+  # If already in transaction simply return db handle
   if ( defined $self->_txdbh ) {
     return $self->_txdbh;
   } else {
+
+    $self->log("Begin transaction on ". $self->file);
+
     my $dbh = $self->dbh;
 
     # Explicitly lock transaction with external lock file in
@@ -130,6 +132,14 @@ sub rollback_transaction {
   $self->_txdbh(undef);
 }
 
+sub in_transaction {
+
+  my ($self) = @_;
+
+  return defined($self->_txdbh);
+
+}
+
 
 # Returns unique lock for the current sqlite database
 sub get_lock_file {
@@ -149,24 +159,22 @@ sub get_lock_file {
 }
 
 sub set_settings {
-  my ( $self, $settings, $dbh ) = @_;
-
-  $dbh = $self->dbh if !$dbh;
+  my ( $self, $settings ) = @_;
 
   foreach my $key ( keys %$settings ) {
     my $value = $settings->{$key};
 
-    $self->set_setting( $key, $value, $dbh );
+    $self->set_setting( $key, $value);
   }
 }
 
 sub get_setting {
 
-  ( my $self, my $key, my $dbh ) = @_;
+  ( my $self, my $key ) = @_;
 
   my ( $package, $filename, $line ) = caller;
 
-  $dbh = $self->dbh if !$dbh;
+  my $dbh = $self->dbh;
 
   $key = $dbh->quote($key);
 
@@ -177,9 +185,9 @@ sub get_setting {
 }
 
 sub set_setting {
-  ( my $self, my $key, my $value, my $dbh ) = @_;
+  ( my $self, my $key, my $value ) = @_;
 
-  $dbh = $self->dbh if !$dbh;
+  my $dbh = $self->dbh;
 
   # Transparently store hashes, lists and objects by flattening them
   if ( ref($value) ) {
@@ -195,9 +203,9 @@ sub set_setting {
 
 sub settings {
 
-  ( my $self, my $dbh ) = @_;
+  ( my $self  ) = @_;
 
-  $dbh = $self->dbh if !$dbh;
+  my $dbh = $self->dbh;
 
   my $sth = $dbh->prepare("SELECT key,value FROM Settings;");
   my ( $key, $value );

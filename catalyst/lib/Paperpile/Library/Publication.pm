@@ -410,7 +410,7 @@ sub merge_into_me {
 
     while ( my $row = $sth->fetchrow_hashref() ) {
       my $other_pdf = $row->{local_file};
-      $library->attach_file( $other_pdf, 1, $self, 0, $dbh );
+      $library->attach_file( $other_pdf, 1, $self, 0 );
     }
   }
 
@@ -422,15 +422,15 @@ sub merge_into_me {
 
     while ( my $row = $sth->fetchrow_hashref() ) {
       my $other_pdf = $row->{local_file};
-      $library->attach_file( $other_pdf, 0, $self, 0, $dbh );
+      $library->attach_file( $other_pdf, 0, $self, 0 );
     }
   }
 
   foreach my $folder ( split( ',', $other_pub->folders ) ) {
-    $library->add_to_collection( [$self], $folder, $dbh );
+    $library->add_to_collection( [$self], $folder );
   }
   foreach my $label ( split( ',', $other_pub->labels ) ) {
-    $library->add_to_collection( [$self], $label, $dbh );
+    $library->add_to_collection( [$self], $label );
   }
 
   foreach my $key ( $self->meta->get_attribute_list ) {
@@ -537,7 +537,7 @@ sub refresh_attachments {
 
     $dbh = $model->dbh unless ( defined $dbh );
 
-    my $paper_root = $model->get_setting('paper_root', $dbh);
+    my $paper_root = $model->get_setting('paper_root');
     my $guid       = $self->guid;
     my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
 
