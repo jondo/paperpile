@@ -253,7 +253,7 @@ sub log {
 
   my ( $self, $msg ) = @_;
 
-  print STDERR "[info] $msg (pid:$$)\n";
+  print STDERR "[info] $msg (pid:$$)\n" unless $ENV{CATALYST_DEBUG} == 0;
 
 }
 
