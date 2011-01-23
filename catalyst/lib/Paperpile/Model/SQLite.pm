@@ -24,11 +24,13 @@ use Data::Dumper;
 use LockFile::Simple;
 use FreezeThaw qw/freeze thaw/;
 
-has 'file'    => ( is => 'rw' );
+has 'file'   => ( is => 'rw' );
 has '_dbh'   => ( is => 'rw' );
 has '_txdbh' => ( is => 'rw' );
-has '_lock' => ( is => 'rw' );
+has '_lock'  => ( is => 'rw' );
 
+
+# Creates a DBI database handler for the database file
 
 sub connect {
 
@@ -59,16 +61,24 @@ sub connect {
   return $dbh;
 }
 
+
+# Returns a database handler, if not already exists calls "connect" to
+# create one.
+
 sub dbh {
 
   my $self = shift;
 
-  if (!$self->_dbh){
+  if ( !$self->_dbh ) {
     return $self->connect;
   } else {
     return $self->_dbh;
   }
 }
+
+# Begins an exclusive transaction (including an external lockfile). If
+# a transaction is already in progress it just returns the current
+# database handle.
 
 sub begin_transaction {
 
@@ -79,7 +89,7 @@ sub begin_transaction {
     return $self->_txdbh;
   } else {
 
-    $self->log("Begin transaction on ". $self->file);
+    $self->log( "Begin transaction on " . $self->file );
 
     my $dbh = $self->dbh;
 
@@ -94,7 +104,7 @@ sub begin_transaction {
     );
 
     $lock->lock( $self->get_lock_file )
-      || die( "Could not get lock on " . $self->{file} . ". Giving up." );
+      || die( "Could not get lock on " . $self->{file} . ". Giving up. (pid:$$)" );
 
     $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
 
@@ -105,11 +115,13 @@ sub begin_transaction {
   }
 }
 
+# Commits changes of transaction and releases the lock file.
+
 sub commit_transaction {
 
   my ($self) = @_;
 
-  $self->log("Commit transaction on ".$self->file);
+  $self->log( "Commit transaction on " . $self->file );
 
   $self->_txdbh->commit;
 
@@ -119,11 +131,13 @@ sub commit_transaction {
 
 }
 
+# Rolls back transaction and releases the lock file.
+
 sub rollback_transaction {
 
   my ($self) = @_;
 
-  $self->log("Rollback transaction on ".$self->file);
+  $self->log( "Rollback transaction on " . $self->file );
 
   $self->_txdbh->rollback;
 
@@ -132,14 +146,15 @@ sub rollback_transaction {
   $self->_txdbh(undef);
 }
 
+# Checks if the object is currently in a transaction.
+
 sub in_transaction {
 
   my ($self) = @_;
 
-  return defined($self->_txdbh);
+  return defined( $self->_txdbh );
 
 }
-
 
 # Returns unique lock for the current sqlite database
 sub get_lock_file {
@@ -164,7 +179,7 @@ sub set_settings {
   foreach my $key ( keys %$settings ) {
     my $value = $settings->{$key};
 
-    $self->set_setting( $key, $value);
+    $self->set_setting( $key, $value );
   }
 }
 
@@ -203,7 +218,7 @@ sub set_setting {
 
 sub settings {
 
-  ( my $self  ) = @_;
+  ( my $self ) = @_;
 
   my $dbh = $self->dbh;
 
@@ -236,7 +251,7 @@ sub _thaw_value {
 
 sub log {
 
-  my ($self, $msg) = @_;
+  my ( $self, $msg ) = @_;
 
   print STDERR "[info] $msg (pid:$$)\n";
 
