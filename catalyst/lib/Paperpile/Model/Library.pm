@@ -492,7 +492,8 @@ sub update_citekeys {
 
   ( my $self, my $pattern ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
+  #my $dbh = $self->dbh;
 
   my $data = $self->all('created');
 
