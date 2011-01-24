@@ -816,15 +816,9 @@ sub _lookup_pdf {
 
   my $md5 = Paperpile::Utils->calculate_md5( $self->pub->pdf );
 
-  my $model = Paperpile::Utils->get_library_model;
+  my $pub = Paperpile::Utils->get_library_model->lookup_pdf($md5);
 
-  my $data = $model->dbh->selectrow_hashref(
-    "SELECT Publications.rowid as rowid, Publications.guid as guid, * FROM Publications, Attachments WHERE Publications.guid=Attachments.publication AND md5='$md5' AND is_pdf;"
-  );
-
-  if ($data) {
-    my $pub = Paperpile::Library::Publication->new($data);
-    $pub->_imported(1);
+  if ($pub) {
     $self->pub($pub);
   }
 

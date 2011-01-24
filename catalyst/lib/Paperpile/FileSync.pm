@@ -101,7 +101,7 @@ sub _get_library_data {
 
   my $model = Paperpile::Utils->get_library_model;
 
-  my $dbh = $model->dbh;
+  my ($dbh, $in_prev_tx) = $model->begin_or_continue_tx;
 
   my $sth;
   if ( $collection eq 'FOLDER_ROOT' ) {
@@ -127,6 +127,8 @@ sub _get_library_data {
     $data{ $row->{guid} } = $pub;
   }
 
+  $model->commit_or_continue_tx($in_prev_tx);
+
   return \%data;
 
 }
@@ -137,7 +139,7 @@ sub _get_library_diff {
 
   my $model = Paperpile::Utils->get_library_model;
 
-  my $dbh = $model->dbh;
+  my ($dbh, $in_prev_tx) = $model->begin_or_continue_tx;
 
 
   # Get new and updated references
@@ -166,6 +168,8 @@ sub _get_library_diff {
   foreach my $row (@{$dbh->selectall_arrayref("SELECT guid FROM Changelog WHERE counter>$library_version AND type='DELETE';")}){
     push @deleted, $row->[0];
   }
+
+  $model->commit_or_continue_tx($in_prev_tx);
 
   return {new=>\%new, updated=>\%updated, deleted=>\@deleted};
 

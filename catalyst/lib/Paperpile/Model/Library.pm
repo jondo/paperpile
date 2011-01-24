@@ -60,7 +60,7 @@ sub insert_pubs {
 
   ( my $self, my $pubs, my $user_library ) = @_;
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   # First make sure all objects have a guid
   foreach my $pub (@$pubs) {
@@ -171,7 +171,7 @@ sub insert_pubs {
 
   $self->update_collections( \@pubs_with_labels, 'LABEL' );
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -181,7 +181,7 @@ sub delete_pubs {
 
   ( my $self, my $pubs ) = @_;
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   # Delete attachments
   foreach my $pub (@$pubs) {
@@ -213,7 +213,7 @@ sub delete_pubs {
 
   }
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -226,7 +226,7 @@ sub trash_pubs {
 
   ( my $self, my $pubs, my $mode ) = @_;
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $paper_root = $self->get_setting( 'paper_root');
 
@@ -327,7 +327,7 @@ sub trash_pubs {
     }
   }
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -339,7 +339,7 @@ sub update_pub {
 
   ( my $self, my $guid, my $new_data ) = @_;
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $settings = $self->settings;
 
@@ -461,18 +461,40 @@ sub update_pub {
 
   $self->_update_fulltext_table( $new_pub, 0 );
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
   return $new_pub;
+}
+
+sub update_note {
+
+  ( my $self, my $guid, my $html ) = @_;
+
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
+
+  my $value = $dbh->quote($html);
+
+  $dbh->do("UPDATE Publications SET annote=$value WHERE guid='$guid'");
+
+  my $tree      = HTML::TreeBuilder->new->parse_content($html);
+  my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
+  my $text      = $formatter->format($tree);
+
+  $value = $dbh->quote($text);
+
+  $dbh->do("UPDATE Fulltext SET notes=$value WHERE guid='$guid'");
+
+  $self->commit_or_continue_tx($in_prev_tx);
+
 }
 
 sub update_citekeys {
 
   ( my $self, my $pattern ) = @_;
 
-  my $data = $self->all('created');
+  my $dbh = $self->dbh;
 
-  my $dbh = $self->begin_transaction;
+  my $data = $self->all('created');
 
   my %seen = ();
 
@@ -514,6 +536,54 @@ sub update_citekeys {
 
 }
 
+sub inc_read_counter {
+
+  my ( $self, $guid ) = @_;
+
+  my $touched = timestamp gmtime;
+
+  my ( $dbh, $in_prev_tx ) = $self->begin_or_continue_tx;
+
+  $dbh->do(
+    "UPDATE Publications SET times_read=times_read+1,last_read='$touched' WHERE guid='$guid'");
+
+  ( my $times_read ) =
+    $dbh->selectrow_array("SELECT times_read FROM Publications WHERE guid='$guid'");
+
+  $self->commit_or_continue_tx($in_prev_tx);
+
+  return ($times_read, $touched);
+
+}
+
+
+# Find publication with PDF of a given md5. Returns publication object
+# or undef if not found.
+
+sub lookup_pdf {
+
+  my ($self, $md5) = @_;
+
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
+
+  my $data = $dbh->selectrow_hashref(
+    "SELECT Publications.rowid as rowid, Publications.guid as guid, * FROM Publications, Attachments WHERE Publications.guid=Attachments.publication AND md5='$md5' AND is_pdf;"
+  );
+
+  $self->commit_or_continue_tx($in_prev_tx);
+
+  if ($data){
+    my $pub = Paperpile::Library::Publication->new($data);
+    $pub->_imported(1);
+    return $pub;
+  } else {
+    return undef;
+  }
+}
+
+
+
+
 # Creates a new collection with $guid and name $name. $type is either
 # 'LABEL' or 'FOLDER'. $parent is the guid of the parent collection
 # and $style is a number for the predefined style (only for labels at
@@ -523,9 +593,7 @@ sub new_collection {
 
   my ( $self, $guid, $name, $type, $parent, $style) = @_;
 
-  my $in_prev_tx = $self->in_transaction;
-
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   if ( $parent =~ /ROOT/ ) {
     $parent = 'ROOT';
@@ -551,7 +619,7 @@ sub new_collection {
     "INSERT INTO Collections (guid, name, type, parent, sort_order, style, hidden) VALUES($guid, $name, $type, $parent, $sort_order, $style, $hidden)"
   );
 
-  $self->commit_transaction if !$in_prev_tx;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -561,7 +629,7 @@ sub new_collection {
 sub delete_collection {
   ( my $self, my $guid, my $type ) = @_;
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my @list = $self->find_subcollections( $guid );
 
@@ -604,8 +672,7 @@ sub delete_collection {
     $delete2->execute($guid);
   }
 
-  $self->commit_transaction;
-
+  $self->commit_or_continue_tx($in_prev_tx);
 }
 
 # Update collection <-> publication mappings throughout the database
@@ -614,9 +681,7 @@ sub delete_collection {
 sub update_collections {
   ( my $self, my $pubs, my $type) = @_;
 
-  my $in_prev_tx = $self->in_transaction;
-
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
 
@@ -651,16 +716,14 @@ sub update_collections {
     }
   }
 
-  $self->commit_transaction if !$in_prev_tx;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
 sub add_to_collection {
   my ( $self, $pubs, $guid) = @_;
 
-  my $in_prev_tx = $self->in_transaction;
-
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   # Figure out the type from the GUID.
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
@@ -676,8 +739,7 @@ sub add_to_collection {
   }
   $self->update_collections( $pubs, $type );
 
-  $self->commit_transaction if !$in_prev_tx;
-
+  $self->commit_or_continue_tx($in_prev_tx);
 }
 
 # Deletes all publication objects in list $data from collection with
@@ -686,8 +748,7 @@ sub add_to_collection {
 sub remove_from_collection {
   my ( $self, $pubs, $guid) = @_;
 
-  my $in_prev_tx = $self->in_transaction;
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   # Figure out the type from the GUID.
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE guid=?");
@@ -708,7 +769,7 @@ sub remove_from_collection {
 
   $self->update_collections( $pubs, $type );
 
-  $self->commit_transaction if !$in_prev_tx;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -716,13 +777,13 @@ sub remove_from_collection {
 sub rename_collection {
   my ( $self, $guid, $new_name ) = @_;
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   $new_name = $dbh->quote($new_name);
 
   $dbh->do("UPDATE Collections SET name=$new_name WHERE guid='$guid'");
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -734,8 +795,12 @@ sub get_collection_type {
   return 'FOLDER' if ( $guid =~ m/(FOLDER)/ );
   return 'LABEL'  if ( $guid =~ m/(LABELS)/ );
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
+
   my ($type) = $dbh->selectrow_array("SELECT type FROM Collections WHERE guid='$guid'");
+
+  $self->commit_or_continue_tx($in_prev_tx);
+
   return $type;
 }
 
@@ -746,7 +811,7 @@ sub get_collection_type {
 sub move_collection {
   my ( $self, $target_guid, $drop_guid, $position, $type ) = @_;
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my ( $new_parent, $sort_order );
   if ( $target_guid =~ m/ROOT/ ) {
@@ -817,7 +882,7 @@ sub move_collection {
     $self->_normalize_sort_order( $new_parent, $type );
   }
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -827,7 +892,7 @@ sub update_collection_fields {
 
   my ( $self, $guid, $data ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my @updates;
 
@@ -837,13 +902,15 @@ sub update_collection_fields {
 
   $dbh->do("UPDATE Collections SET " . join(',',@updates) . " WHERE guid='$guid';");
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
 }
 
 sub sort_labels {
 
   my ( $self, $field ) = @_;
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my @guids;
 
@@ -869,7 +936,7 @@ sub sort_labels {
     $i++;
   }
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -881,7 +948,7 @@ sub set_default_collections {
 
   my ($self) = @_;
 
-  my $dbh = $self->begin_transaction;
+  my ( $dbh, $in_prev_tx ) = $self->begin_or_continue_tx;
 
   my $guid1 = Data::GUID->new->as_hex;
   $guid1 =~ s/^0x//;
@@ -896,7 +963,7 @@ sub set_default_collections {
     "INSERT INTO Collections (guid,name,type,parent,sort_order,style,hidden) VALUES ('$guid2', 'Incomplete','LABEL','ROOT',2,'0',0);"
   );
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -1024,6 +1091,8 @@ sub process_query_string {
 sub fulltext_count {
   ( my $self, my $query, my $trash ) = @_;
 
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
+
   my ( $where, $select );
   if ($query) {
     $select =
@@ -1035,7 +1104,9 @@ sub fulltext_count {
     $where  = "WHERE trashed=$trash ";
   }
 
-  my $count = $self->dbh->selectrow_array("$select $where");
+  my $count = $dbh->selectrow_array("$select $where");
+
+  $self->commit_or_continue_tx($in_prev_tx);
 
   return $count;
 }
@@ -1044,10 +1115,12 @@ sub fulltext_search {
 
   ( my $self, my $_query, my $offset, my $limit, my $order, my $trash, my $do_order ) = @_;
 
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
+
   if ($do_order) {
 
     # Custom rank function to distinguish hits in meta data and fulltext
-    $self->dbh->sqlite_create_function(
+    $dbh->sqlite_create_function(
       'rank', 1,
       sub {
         my $blob = $_[0];
@@ -1111,7 +1184,7 @@ sub fulltext_search {
       $rank = "";
     }
 
-    $sth = $self->dbh->prepare("$select $where $rank LIMIT $limit OFFSET $offset");
+    $sth = $dbh->prepare("$select $where $rank LIMIT $limit OFFSET $offset");
 
   } else {
     $select .= ' FROM Publications ';
@@ -1119,7 +1192,7 @@ sub fulltext_search {
     $order =~ s/notes/annote/;
     $where = "WHERE Publications.trashed=$trash";
 
-    $sth = $self->dbh->prepare("$select $where ORDER BY $order LIMIT $limit OFFSET $offset");
+    $sth = $dbh->prepare("$select $where ORDER BY $order LIMIT $limit OFFSET $offset");
   }
 
   $sth->execute;
@@ -1164,6 +1237,8 @@ sub fulltext_search {
     push @page, $pub;
   }
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
   return [@page];
 }
 
@@ -1177,6 +1252,8 @@ sub get_trashed_pubs {
 sub all {
 
   my ( $self, $order, $get_trashed_pubs ) = @_;
+
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $query = "SELECT rowid as _rowid, * FROM Publications ";
 
@@ -1207,6 +1284,8 @@ sub all {
     push @page, $pub;
   }
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
   return [@page];
 
 }
@@ -1218,6 +1297,8 @@ sub all {
 sub all_as_hash {
 
   my ( $self, $order ) = @_;
+
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $query = "SELECT rowid as _rowid, * FROM Publications ";
 
@@ -1243,6 +1324,8 @@ sub all_as_hash {
     push @data, $pub;
   }
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
   return [@data];
 
 }
@@ -1253,7 +1336,7 @@ sub all_as_hash {
 sub exists_pub {
   ( my $self, my $pubs ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $sth = $dbh->prepare("SELECT rowid, * FROM publications WHERE sha1=?");
 
@@ -1313,6 +1396,7 @@ sub exists_pub {
 
   }
 
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -1324,7 +1408,7 @@ sub exists_pub {
 sub insert_labels {
   ( my $self, my $pubs) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my %map;
 
@@ -1367,6 +1451,8 @@ sub insert_labels {
     }
   }
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
   return \%map;
 }
 
@@ -1375,8 +1461,6 @@ sub insert_labels {
 sub _hash2sql {
 
   ( my $self, my $hash) = @_;
-
-  my $dbh = $self->dbh;
 
   my @fields = ();
   my @values = ();
@@ -1396,7 +1480,7 @@ sub _hash2sql {
     if ( $value eq '' ) {
       push @values, "''";
     } else {
-      push @values, $dbh->quote($value);
+      push @values, $self->dbh->quote($value);
     }
   }
 
@@ -1414,8 +1498,7 @@ sub attach_file {
 
   my ( $self, $file, $is_pdf, $pub, $old_guid) = @_;
 
-  my $in_prev_tx = $self->in_transaction;
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $settings = $self->settings;
   my $source   = Paperpile::Utils->adjust_root($file);
@@ -1499,11 +1582,11 @@ sub attach_file {
     $dbh->do("UPDATE Publications SET attachments='$new_attachments' WHERE guid='$pub_guid';");
 
     $pub->attachments($new_attachments);
-    $pub->refresh_attachments;
+    $pub->refresh_attachments($self);
 
   }
 
-  $self->commit_transaction if !$in_prev_tx;
+  $self->commit_or_continue_tx($in_prev_tx);
 
   return $file_guid;
 
@@ -1518,8 +1601,7 @@ sub delete_attachment {
 
   my ( $self, $guid, $is_pdf, $pub, $with_undo) = @_;
 
-  my $in_prev_tx = $self->in_transaction;
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $paper_root = $self->get_setting('paper_root');
 
@@ -1558,7 +1640,7 @@ sub delete_attachment {
     $dbh->do("UPDATE Publications SET attachments='$new' WHERE rowid=$rowid");
 
     $pub->attachments($new);
-    $pub->refresh_attachments;
+    $pub->refresh_attachments($self);
   }
 
   move( $path, $undo_dir ) if $with_undo;
@@ -1579,7 +1661,7 @@ sub delete_attachment {
     }
   }
 
-  $self->commit_transaction if !$in_prev_tx;
+  $self->commit_or_continue_tx($in_prev_tx);
 
   if ($with_undo) {
     my ( $volume, $dir, $file_name ) = splitpath($path);
@@ -1754,8 +1836,7 @@ sub index_pdf {
 
   my ( $self, $guid, $pdf_file) = @_;
 
-  my $in_prev_tx = $self->in_transaction;
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $bin = Paperpile::Utils->get_binary('extpdf');
 
@@ -1782,7 +1863,7 @@ sub index_pdf {
     "UPDATE Fulltext SET text=$text WHERE rowid=(SELECT rowid FROM PUBLICATIONS WHERE guid='$guid')"
   );
 
-  $self->commit_transaction if !$in_prev_tx;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -1790,7 +1871,7 @@ sub histogram {
 
   my ( $self, $field ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my %hist = ();
 
@@ -1877,6 +1958,8 @@ sub histogram {
     }
   }
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
   return {%hist};
 
 }
@@ -1885,7 +1968,7 @@ sub dashboard_stats {
 
   my $self = shift;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   ( my $num_items ) = $dbh->selectrow_array("SELECT count(*) FROM Publications WHERE trashed=0;");
 
@@ -1897,6 +1980,8 @@ sub dashboard_stats {
 
   ( my $last_imported ) =
     $dbh->selectrow_array("SELECT created FROM Publications WHERE trashed=0 ORDER BY created DESC limit 1;");
+
+  $self->commit_or_continue_tx($in_prev_tx);
 
   return {
     num_items       => $num_items,
@@ -1911,7 +1996,7 @@ sub _flag_as_incomplete {
 
   ( my $self, my $pub ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   # Check if we have a label 'Incomplete'
   ( my $guid ) = $dbh->selectrow_array(
@@ -1929,13 +2014,15 @@ sub _flag_as_incomplete {
   $pub->add_label($guid);
   $self->update_collections( [$pub], 'LABEL');
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
 }
 
 sub _flag_as_complete {
 
   ( my $self, my $pub ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   ( my $guid ) = $dbh->selectrow_array(
     "SELECT guid FROM Collections WHERE parent='ROOT' AND type='LABEL' AND name='Incomplete'");
@@ -1945,6 +2032,8 @@ sub _flag_as_complete {
 
   $pub->remove_label($guid);
   $self->update_collections( [$pub], 'LABEL', $dbh );
+
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -1956,7 +2045,7 @@ sub generate_unique_key {
 
   my ( $self, $pub, $existing) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   # If a citekey is already set we check if it is unique. If it is
   # unique we return it directly. This is used to ensure that trashed
@@ -2077,6 +2166,8 @@ sub generate_unique_key {
 
   $pub->citekey($key);
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
   return $key;
 
 }
@@ -2088,7 +2179,7 @@ sub _update_fulltext_table {
 
   ( my $self, my $pub, my $new ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   if ( ( not $pub->_authors_display ) and ( $pub->authors ) ) {
     my @authors = split( /\band\b/, $pub->authors );
@@ -2132,6 +2223,8 @@ sub _update_fulltext_table {
     $dbh->do("UPDATE Fulltext SET $sql WHERE rowid=$rowid;");
   }
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
 }
 
 # Remove the item from the comma separated list
@@ -2165,7 +2258,7 @@ sub find_subcollections {
 
   my ( $self, $guid ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my @list = ($guid);
 
@@ -2177,6 +2270,8 @@ sub find_subcollections {
   }
 
   $self->_find_subcollections( $guid, \@all, \@list );
+
+  $self->commit_or_continue_tx($in_prev_tx);
 
   return @list;
 
@@ -2207,7 +2302,7 @@ sub find_collection_parents {
     return ();
   }
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $sth = $dbh->prepare("SELECT * FROM Collections;");
   $sth->execute;
@@ -2225,6 +2320,9 @@ sub find_collection_parents {
     $current_parent = $map{$current_parent};
   }
 
+
+  $self->commit_or_continue_tx($in_prev_tx);
+
   return @parents;
 
 }
@@ -2236,7 +2334,7 @@ sub find_collection_parents {
 sub _normalize_sort_order {
   my ( $self, $parent, $type ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $select = $dbh->prepare(
     "SELECT guid FROM Collections WHERE parent='$parent' AND type='$type' ORDER BY sort_order");
@@ -2253,6 +2351,9 @@ sub _normalize_sort_order {
     $update->execute( $counter, $guid );
     $counter++;
   }
+
+  $self->commit_or_continue_tx($in_prev_tx);
+
 }
 
 # Generates snippets for a database row $row that was found via a

@@ -2,56 +2,32 @@
 
 ## Add code to generate test data or ad-hoc tests here.
 
+BEGIN {$ENV{CATALYST_DEBUG}=0}
+
 use strict;
 use lib "../../lib";
 
 use Paperpile;
+use Paperpile::Model::Library;
 use Paperpile::Utils;
+
 use Data::Dumper;
 use YAML;
+use Time::HiRes qw( gettimeofday tv_interval);
 
-use LockFile::Simple;
 
-print STDERR "PID $$ trying to get lock\n";
+my $start = [gettimeofday];
 
-my $lockmgr = LockFile::Simple->make(
-  -format => '%f.lck',
-  -max       => 30,
-  -delay     => 1,
-  -autoclean => 1,
-);
+foreach my $i (0..10){
 
-my $lockmgr2 = LockFile::Simple->make(
-  -format => '%f.lck',
-  -max       => 30,
-  -delay     => 1,
-  -autoclean => 1,
-);
+  my $model = Paperpile::Utils->get_library_model;
+  my $count = $model->fulltext_count("RNA", 0);
+  my $data = $model->fulltext_search("RNA", 0, 25,"CREATED DESC", 0, 1);
 
-$lockmgr->lock("test") || die "can't lock /some/file\n";
+}
 
-print STDERR "PID $$ obtained lock; doing work;\n";
+my $elapsed = tv_interval ( $start );
 
-sleep(5);
+print STDERR "$elapsed\n";
 
-print STDERR $lockmgr2->unlock("test"), "\n";
 
-print STDERR "PID $$ released lock\n";
-
-### Format data in YAML
-
-#my $r = Paperpile::Formats::Bibtex->new(file=>"/home/wash/examples/diss.bib");
-
-#my $data = $r->read;
-
-#foreach my $pub (@$data){
-
-## Don't show helper fields starting with underscore and empty
-## fields
-#  foreach my $key (keys %$pub){
-#    if ($key=~/^_/ || $pub->{$key} eq ''){
-#      delete($pub->{$key});
-#    }
-#  }
-#  print Dump($pub);
-#}

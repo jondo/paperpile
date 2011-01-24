@@ -252,17 +252,11 @@ sub line_feed : Local {
 sub inc_read_counter : Local {
 
   my ( $self, $c ) = @_;
-  my $rowid      = $c->request->params->{rowid};
-  my $guid       = $c->request->params->{guid};
-  my $times_read = $c->request->params->{times_read};
+  my $guid = $c->request->params->{guid};
 
-  my $touched = timestamp gmtime;
-  $c->model('Library')
-    ->dbh->do(
-    "UPDATE Publications SET times_read=times_read+1,last_read='$touched' WHERE rowid=$rowid");
+  my ( $times_read, $touched ) = $c->model('Library')->inc_read_counter($guid);
 
-  $c->stash->{data} =
-    { pubs => { $guid => { last_read => $touched, times_read => $times_read + 1 } } };
+  $c->stash->{data} = { pubs => { $guid => { last_read => $touched, times_read => $times_read } } };
 
 }
 

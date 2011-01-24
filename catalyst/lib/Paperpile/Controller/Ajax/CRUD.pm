@@ -397,19 +397,7 @@ sub update_notes : Local {
   # "<br>"
   $html = '' if $html eq '<br>';
 
-  my $dbh = $c->model('Library')->dbh;
-
-  my $value = $dbh->quote($html);
-
-  $dbh->do("UPDATE Publications SET annote=$value WHERE guid='$guid'");
-
-  my $tree      = HTML::TreeBuilder->new->parse_content($html);
-  my $formatter = HTML::FormatText->new( leftmargin => 0, rightmargin => 72 );
-  my $text      = $formatter->format($tree);
-
-  $value = $dbh->quote($text);
-
-  $dbh->do("UPDATE Fulltext SET notes=$value WHERE guid='$guid'");
+  $c->model('Library')->update_note($guid, $html);
 
   $c->stash->{data} = { pubs => { $guid => { annote => $html } } };
 
@@ -650,9 +638,11 @@ sub list_collections : Local {
 
   my $type = $c->request->params->{type};
 
-  my $dbh = $c->model('Library')->dbh;
+  my $model = $c->model('Library');
 
-  my $hist = $c->model('Library')->histogram('labels');
+  my ($dbh, $in_prev_tx) = $model->begin_or_continue_tx;
+
+  my $hist = $model->histogram('labels');
 
   my $sth = $dbh->prepare("SELECT * FROM Collections WHERE type='$type' order by sort_order");
 
@@ -677,6 +667,8 @@ sub list_collections : Local {
       count      => $hist->{ $row->{guid} }->{count}
       };
   }
+
+  $model->commit_or_continue_tx($in_prev_tx);
 
   my %metaData = (
     root   => 'data',
@@ -844,7 +836,7 @@ sub undo_delete : Local {
   my $pub_guid  = $undo_data->{pub_guid};
   my $file_guid = $undo_data->{file_guid};
 
-  my $plugin = Paperpile::Session($c)->{"grid_$grid_id"};
+  my $plugin = Paperpile::Utils->session($c) ->{"grid_$grid_id"};
 
   my $pub = $plugin->find_guid($pub_guid);
 
@@ -1040,9 +1032,10 @@ sub _get_selection {
 
   if ( $selection eq 'ALL' ) {
     @data = @{ $plugin->all };
-    $c->model('Library')->exists_pub( \@data );
+    my $model = $c->model('Library');
+    $model->exists_pub( \@data );
     foreach my $pub (@data) {
-      $pub->refresh_attachments;
+      $pub->refresh_attachments($model);
     }
   } else {
     my @tmp;

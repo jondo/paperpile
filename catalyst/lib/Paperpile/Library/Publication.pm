@@ -390,11 +390,9 @@ sub best_link {
 # and applies them to $self. Also brings over $other_pub's PDF (if $self does not
 # have one defined) and attachments.
 sub merge_into_me {
-  my $self      = shift;
-  my $other_pub = shift;
-  my $library   = shift;
+  my ($self, $other_pub, $library) = @_;
 
-  my $dbh = $library->begin_transaction;
+  my ($dbh, $in_prev_tx) = $library->begin_or_continue_tx;
 
   my $guid       = $self->guid;
   my $other_guid = $other_pub->guid;
@@ -443,7 +441,8 @@ sub merge_into_me {
     }
   }
 
-  $library->commit_transaction;
+  $library->commit_or_continue_tx($in_prev_tx);
+
 }
 
 sub is_trivial_value {
@@ -524,15 +523,16 @@ sub refresh_job_fields {
 # keep it that way for now.
 
 sub refresh_attachments {
-  ( my $self, my $dbh ) = @_;
+  ( my $self, my $model ) = @_;
 
   $self->_attachments_list( [] );
 
-  if ($self->attachments && $self->_db_connection)  {
+  if ($self->attachments && ($self->_db_connection || $model))  {
 
-    my $model = Paperpile::Model::Library->new( {file => $self->_db_connection} );
-
-    $dbh = $model->dbh unless ( defined $dbh );
+    if (!$model){
+      $model = Paperpile::Model::Library->new( {file => $self->_db_connection} );
+    }
+    my ($dbh, $in_prev_tx) = $model->begin_or_continue_tx;
 
     my $paper_root = $model->get_setting('paper_root');
     my $guid       = $self->guid;
@@ -569,6 +569,8 @@ sub refresh_attachments {
     }
 
     $self->_attachments_list( \@output );
+
+    $model->commit_or_continue_tx($in_prev_tx);
 
   }
 }

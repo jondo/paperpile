@@ -156,6 +156,32 @@ sub in_transaction {
 
 }
 
+# Convenience function to avoid boilerplate. Either starts or
+# continues a transaction and returns database handle and flag
+# indicating if already in transaction
+
+sub begin_or_continue_tx {
+
+  my ($self) = @_;
+
+  my $in_prev_tx = $self->in_transaction;
+
+  return ( $self->begin_transaction, $in_prev_tx );
+
+}
+
+# Convenience function to avoid boilerplate. Either commits a
+# transaction or does nothing if already in previous transaction.
+
+sub commit_or_continue_tx {
+
+  my ($self, $in_prev_tx) = @_;
+
+  $self->commit_transaction unless $in_prev_tx;
+
+}
+
+
 # Returns unique lock for the current sqlite database
 sub get_lock_file {
 
@@ -176,24 +202,29 @@ sub get_lock_file {
 sub set_settings {
   my ( $self, $settings ) = @_;
 
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
+
   foreach my $key ( keys %$settings ) {
     my $value = $settings->{$key};
 
     $self->set_setting( $key, $value );
   }
+
+  $self->commit_or_continue_tx($in_prev_tx);
+
 }
 
 sub get_setting {
 
   ( my $self, my $key ) = @_;
 
-  my ( $package, $filename, $line ) = caller;
-
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   $key = $dbh->quote($key);
 
   ( my $value ) = $dbh->selectrow_array("SELECT value FROM Settings WHERE key=$key ");
+
+  $self->commit_or_continue_tx($in_prev_tx);
 
   return $self->_thaw_value($value);
 
@@ -202,7 +233,7 @@ sub get_setting {
 sub set_setting {
   ( my $self, my $key, my $value ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   # Transparently store hashes, lists and objects by flattening them
   if ( ref($value) ) {
@@ -213,6 +244,8 @@ sub set_setting {
   $key   = $dbh->quote($key);
   $dbh->do("REPLACE INTO Settings (key,value) VALUES ($key,$value)");
 
+  $self->commit_or_continue_tx($in_prev_tx);
+
   return $value;
 }
 
@@ -220,7 +253,7 @@ sub settings {
 
   ( my $self ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $sth = $dbh->prepare("SELECT key,value FROM Settings;");
   my ( $key, $value );
@@ -233,6 +266,8 @@ sub settings {
   while ( $sth->fetch ) {
     $output{$key} = $self->_thaw_value($value);
   }
+
+  $self->commit_or_continue_tx($in_prev_tx);
 
   return {%output};
 
@@ -253,7 +288,13 @@ sub log {
 
   my ( $self, $msg ) = @_;
 
-  print STDERR "[info] $msg (pid:$$)\n" unless $ENV{CATALYST_DEBUG} == 0;
+  my $debug = 1; 
+
+  if (defined $ENV{CATALYST_DEBUG}){
+    $debug = $ENV{CATALYST_DEBUG};
+  }
+
+  print STDERR "[info] $msg (pid:$$)\n" if $debug;
 
 }
 

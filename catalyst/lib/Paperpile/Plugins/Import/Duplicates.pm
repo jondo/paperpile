@@ -46,7 +46,7 @@ sub BUILD {
 
 sub get_model {
   my $self = shift;
-  my $model = Paperpile::Model::Library->new( { file => _db_file } );
+  my $model = Paperpile::Model::Library->new( { file => $self->_db_file } );
   return $model;
 }
 
@@ -138,7 +138,7 @@ sub connect {
       $pub->{'_dup_id'}    = $dupl_keys->{ $pub->{guid} };
 
       # Make sure attachments are handled correctly
-      $pub->_db_connection( "dbi:SQLite:" . $self->_db_file );
+      $pub->_db_connection( $self->_db_file );
       $pub->refresh_attachments;
     }
   }
@@ -155,7 +155,9 @@ sub page {
 
   my @page = ();
 
-  # Check if data still exists and remove items that have been trashed
+  # Check if data still exists and remove items that have been
+  # trashed; should be moved into a transaction to be thread safe like
+  # everything else;
   my @new_data = ();
   my $sth      = $dbh->prepare("SELECT guid FROM publications WHERE guid=? AND trashed=0;");
 
