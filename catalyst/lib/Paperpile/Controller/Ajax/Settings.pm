@@ -25,6 +25,7 @@ use Paperpile::Exceptions;
 use File::Temp;
 use File::Copy;
 use File::Path;
+use File::Spec;
 use Data::Dumper;
 use JSON;
 use 5.010;
@@ -100,9 +101,15 @@ sub pattern_example : Local {
 
   my $settings = $c->model('Library')->settings;
   $data{paper_root}->{string} = '';
+
   if ($paper_root ne $settings->{paper_root}) {
+
+    if (!File::Spec->file_name_is_absolute( $paper_root )){
+      $data{paper_root}->{error} = "Provide a full (absolute) path to the directory";
+    }
+
     if (scalar glob("$paper_root/*")){
-	$data{paper_root}->{error} = "The PDF folder is not empty. To avoid conflicts with existing files please choose a new or empty folder for your PDFs";
+      $data{paper_root}->{error} = "The PDF folder is not empty. To avoid conflicts with existing files please choose a new or empty folder for your PDFs";
     }
   }
 

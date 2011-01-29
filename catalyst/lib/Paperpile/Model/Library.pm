@@ -492,7 +492,7 @@ sub update_citekeys {
 
   ( my $self, my $pattern ) = @_;
 
-  my $dbh = $self->dbh;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   my $data = $self->all('created');
 
@@ -528,8 +528,6 @@ sub update_citekeys {
   if ($@) {
     die("Failed to update citation keys ($@)");
 
-    # DBI driver seems to rollback do this automatically when the eval statement dies
-    #$self->dbh->rollback;
     $self->rollback_transaction;
 
   }
@@ -1701,7 +1699,7 @@ sub change_paper_root {
     }
   }
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   eval {
 
@@ -1733,7 +1731,7 @@ sub change_paper_root {
     FileError->throw("Could not move PDF directory to new location ($msg)");
   }
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -1745,16 +1743,14 @@ sub rename_files {
 
   my ( $self, $pdf_pattern, $attachment_pattern ) = @_;
 
-  my $dbh = $self->dbh;
+  my ( $dbh, $in_prev_tx ) = $self->begin_or_continue_tx;
 
-  $dbh->begin_work;
-
-  my $paper_root = $self->get_setting( 'paper_root');
+  my $paper_root = $self->get_setting('paper_root');
 
   # If paper_root is not created or does not exist for some other
   # reason, we can stop because there are no files for us to update
   if ( !-e $paper_root ) {
-    $dbh->commit;
+    $self->commit_or_continue_tx($in_prev_tx);
     return;
   }
 
@@ -1805,20 +1801,20 @@ sub rename_files {
   };
 
   if ($@) {
-    $dbh->rollback;
+    $self->rollback_transaction;
     my $msg = $@;
     $msg = $@->error if $@->isa('PaperpileError');
     FileError->throw("Could not apply changes ($msg)");
   }
 
   if ( not move( $paper_root, "$paper_root\_backup" ) ) {
-    $dbh->rollback;
+    $self->rollback_transaction;
     FileError->throw(
       "Could not apply changes (Error creating backup copy $paper_root\_backup -- $!)");
   }
 
   if ( not move( $tmp_root, $paper_root ) ) {
-    $dbh->rollback;
+    $self->rollback_transaction;
     move( "$paper_root\_backup", $paper_root )
       or FileError->throw(
       'Could not apply changes and your library is broken now. This should never happen, contact support@paperpile.org if it has happened to you.'
@@ -1827,8 +1823,7 @@ sub rename_files {
       "Could not apply changes (Error creating new copy of directory tree in $paper_root).");
   }
 
-
-  $dbh->commit;
+  $self->commit_or_continue_tx($in_prev_tx);
   rmtree("$paper_root\_backup");
 }
 
