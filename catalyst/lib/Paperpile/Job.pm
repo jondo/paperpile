@@ -91,6 +91,11 @@ has '_rowid' => ( is => 'rw', default => undef );
 # result in a library import.
 has '_collection_guids' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] } );
 
+# Used to store LWP user agent object from PDFcrawler which should be
+# re-used in the PDF download function of this module (in case there
+# were some important cookies set).
+has '_browser' => ( is => 'rw', default => '' );
+
 sub BUILD {
   my ( $self, $params ) = @_;
 
@@ -672,6 +677,10 @@ sub _crawl {
 
   $self->pub->_pdf_url($pdf) if $pdf;
 
+  # Save LWP user agent with potentially important cookies to be
+  # re-used in _download
+  $self->_browser($crawler->browser);
+
 }
 
 ## Downloads the PDF
@@ -692,7 +701,7 @@ sub _download {
   # In case file already exists remove it
   unlink($file);
 
-  my $ua = Paperpile::Utils->get_browser();
+  my $ua = $self->_browser || Paperpile::Utils->get_browser();
 
   my $res = $ua->request(
     HTTP::Request->new( GET => $self->pub->_pdf_url ),
