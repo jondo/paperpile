@@ -345,6 +345,29 @@
   </test>
 </site>
 
+<site name="Pubmed">
+  <signature>
+    <url>!ncbi\.nlm\.nih\.gov\/pubmed!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*pubmed\?term=)(\d+)(\D*)!http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=ref&amp;cmd=prlinks&amp;db=PubMed&amp;id=$2!</rewrite>
+    </pattern>
+  </rule>
+
+  <rule>
+    <pattern>
+      <rewrite>!(.*/pubmed/)(\d+)(\D*)!http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=ref&amp;cmd=prlinks&amp;db=PubMed&amp;id=$2!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://www.ncbi.nlm.nih.gov/pubmed?term=15840812</url>
+    <url>http://www.ncbi.nlm.nih.gov/pubmed/15840812</url>
+  </test>
+</site>
+
 <site name="Atypon">
   <signature>
     <url>atypon</url>

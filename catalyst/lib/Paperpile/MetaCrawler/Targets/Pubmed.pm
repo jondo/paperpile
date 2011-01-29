@@ -30,6 +30,10 @@ sub convert {
     my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
     return $PubMedPlugin->_fetch_by_pmid($1);
   }
+  if ( $url =~ m/http:\/\/www\.ncbi\.nlm\.nih\.gov\/pubmed\?term=(\d+)\D*/ ) {
+    my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
+    return $PubMedPlugin->_fetch_by_pmid($1);
+  }
   if ( $url =~ m/http:\/\/www\.ncbi\.nlm\.nih\.gov\/sites\/entrez\/(\d+)(\D.*)?/ ) {
     my $PubMedPlugin = Paperpile::Plugins::Import::PubMed->new();
     return $PubMedPlugin->_fetch_by_pmid($1);
