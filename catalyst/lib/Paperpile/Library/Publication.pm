@@ -380,9 +380,15 @@ sub best_link {
     return $self->linkout;
   } elsif ( $self->url ) {
     return $self->url;
-  } elsif ( $self->pmid ) {
-    return 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=ref&cmd=prlinks&db=PubMed&id='. $self->pmid;
   }
+
+  # We can't consider Pubmed a valid link because we can't be sure if
+  # we get a linkout/doi from there.
+
+  # elsif ( $self->pmid ) { return
+  # 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=ref&cmd=prlinks&db=PubMed&id='. $self->pmid;
+  # }
+
   return '';
 }
 
@@ -577,11 +583,13 @@ sub refresh_attachments {
 
 # Lookup data via the match function of the search plugins given in
 # the array $plugin_list. If a match is found the name of the
-# sucessful plugin, otherwise undef is returned.
+# sucessful plugin, otherwise undef is returned. If $require_linkout
+# is set, we only consider a auto_complete successful if we got a
+# doi/linkout (for use during PDF download)
 
 sub auto_complete {
 
-  my ( $self, $plugin_list ) = @_;
+  my ( $self, $plugin_list, $require_linkout ) = @_;
 
   # First check if the user wants to search PubMed at all
   my $hasPubMed = 0;
@@ -659,6 +667,11 @@ sub auto_complete {
 
     # Found match -> stop now
     else {
+
+      if ($require_linkout && !$self->best_link){
+        next;
+      }
+
       $success_plugin = $plugin_name;
       $caught_error   = undef;
       last;
