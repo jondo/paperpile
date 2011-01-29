@@ -521,16 +521,14 @@ sub update_citekeys {
     my $_pattern = $dbh->quote($pattern);
     $dbh->do("UPDATE Settings SET value=$_pattern WHERE key='key_pattern'");
 
-    $self->commit_transaction;
-
   };
 
   if ($@) {
     die("Failed to update citation keys ($@)");
-
     $self->rollback_transaction;
-
   }
+
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
