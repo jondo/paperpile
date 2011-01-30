@@ -1648,7 +1648,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           this.completeEntryLock = false;
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
-          Paperpile.status.clearMsg();
         },
         scope: this
       });

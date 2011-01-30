@@ -21,10 +21,12 @@ use Moose::Util::TypeConstraints;
 use Digest::SHA1;
 use Data::GUID;
 use Data::Dumper;
+use File::Temp qw(tempfile);
 
 use Paperpile::Library::Author;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
+use Paperpile::Formats;
 use Encode qw(encode_utf8);
 use Text::Unidecode;
 use YAML qw(LoadFile);
@@ -1025,6 +1027,32 @@ sub format_pattern {
   return $pattern;
 
 }
+
+# Fill itself with data from a $string that is given in a supported
+# bibliography format
+
+sub build_from_string {
+
+  my ( $self, $string) = @_;
+
+  my ( $fh, $file_name ) = tempfile();
+
+  print $fh $string;
+  close($fh);
+
+  my $reader = Paperpile::Formats->guess_format( $file_name );
+
+  my $data = $reader->read->[0]->as_hash;
+
+  foreach my $key (keys %$data){
+    $self->$key($data->{$key});
+  }
+
+  unlink($file_name);
+
+}
+
+
 
 # Basic validation of fields to make sure nothing breaks and fields
 # are set as intended. Should be called when Publication object is

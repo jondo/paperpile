@@ -421,8 +421,7 @@ sub complete_details {
   # Google Bug: everything is twice escaped in bibtex
   $bibtex =~ s/\\\\/\\/g;
 
-  # import the information from the BibTeX string
-  $full_pub->import_string( $bibtex, 'BIBTEX' );
+  $full_pub->build_from_string( $bibtex);
 
   # bibtex import deactivates automatic refresh of fields
   # we force it now at this point
