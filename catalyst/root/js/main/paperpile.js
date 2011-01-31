@@ -948,7 +948,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
       var formatsMap = {
         'BibTeX (*.bib)': 'BIBTEX',
-        'RIS (.ris)': 'RIS',
+        'RIS (*.ris)': 'RIS',
       };
 
       var format = formatsMap[filter];
