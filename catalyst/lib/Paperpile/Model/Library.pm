@@ -1769,6 +1769,12 @@ sub rename_files {
     while ( $select->fetch ) {
 
       my $data = $dbh->selectrow_hashref("SELECT * FROM Publications WHERE guid='$pub_guid';");
+
+      if (!$data){
+        print STDERR "Warning: $file attached to Publication ($pub_guid) that does not exist any more.";
+        next;
+      }
+
       my $pub  = Paperpile::Library::Publication->new($data);
 
       my $relative_dest;
