@@ -310,6 +310,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'FONT_SIZE',
         handler: this.fontSize,
         scope: this
+      }),
+      'SETTINGS': new Ext.Action({
+        itemId: 'SETTINGS',
+	text: 'Settings',
+	iconCls: 'pp-icon-dashboard',
+	tooltip: 'Change your settings and view library stats',
+	handler: function() {
+	    Paperpile.main.tabs.showDashboardTab();
+	}
       })
 
     };
@@ -1298,7 +1307,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'DELETE',
       this.createSeparator('TB_DEL_SEP'),
       'LIVE_FOLDER',
-      'EXPORT_MENU']);
+      'EXPORT_MENU',
+      this.createSeparator('TB_SETTINGS_SEP'),
+      'SETTINGS']);
   },
 
   // Same as above, but for the context menu.
