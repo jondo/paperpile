@@ -71,22 +71,20 @@ Paperpile.QueuePanel = Ext.extend(Ext.Panel, {
     });
   },
 
-  cancelJobs: function(selection) {
-    if (!selection) {
-      selection = this.queueList.getSelectedIds();
-    }
-
-    for (var i=0; i< selection.length;i++){
-      this.getGrid().flaggedForCancel[selection[i]]=true;
-    }
+  cancelJobs: function(record) {
+    this.getGrid().flaggedForCancel[record.id] = true;
 
     Paperpile.Ajax({
       url: '/ajax/queue/cancel_jobs',
       params: {
-        ids: selection
+        ids: record.id
       },
       success: function(response, opts) {
-        this.getGrid().getStore().reload();
+        // We don't need to update the whole gridview, so fire the store's update
+	// event to cause just this row to get refreshed.
+	var store = this.getGrid().getStore();
+        store.fireEvent('update', record, Ext.data.Record.EDIT);
+
       },
       scope: this
     });

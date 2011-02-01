@@ -19,7 +19,7 @@ Paperpile.QueueList = function(config) {
   Paperpile.QueueList.superclass.constructor.call(this, {});
 
   this.on('rowcontextmenu', this.onContextClick, this);
-  this.on('rowclick', this.onRowClick, this);
+  this.on('rowmousedown', this.onRowClick, this);
 
 };
 
@@ -191,7 +191,7 @@ Ext.extend(Paperpile.QueueList, Ext.grid.GridPanel, {
       Paperpile.utils.openFile(path);
       break;
     case 'cancel-task':
-      this.getQueuePanel().cancelJobs();
+      this.getQueuePanel().cancelJobs(record);
       break;
     case 'retry-task':
       this.getQueuePanel().retryJobs();
