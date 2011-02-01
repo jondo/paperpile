@@ -31,7 +31,7 @@ Paperpile.TexSettings = Ext.extend(Ext.Panel, {
       iconCls: 'pp-icon-tools'
     });
 
-    Paperpile.PatternSettings.superclass.initComponent.call(this);
+    Paperpile.TexSettings.superclass.initComponent.call(this);
 
     this.isDirty = false;
 

@@ -436,7 +436,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   keyControlW: function() {
     var curTab = Paperpile.main.tabs.getActiveTab();
     if (curTab.closable) {
-      Paperpile.main.tabs.remove(curTab, true);
+      // Fire the tab's beforeclose event to trigger any 'warning' dialogs before closing.
+      if (curTab.fireEvent('beforeclose', curTab) !== false) {
+	Paperpile.main.tabs.remove(curTab, true);
+      }
     }
   },
 

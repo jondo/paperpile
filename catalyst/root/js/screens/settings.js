@@ -14,7 +14,7 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
+Paperpile.GeneralSettings = Ext.extend(Paperpile.SettingsPanel, {
 
   title: 'General settings',
 
@@ -38,12 +38,23 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
     Paperpile.PatternSettings.superclass.initComponent.call(this);
 
-    this.isDirty = false;
+  },
 
+  getShortTitle: function() {
+    return 'Settings';
+  },
+
+  isDirty: function() {
+    var isDirty = false;
+    Ext.each(this.fields, function(field) {
+      if (field.isDirty()) {
+        isDirty = true;
+      }
+    });
+    return isDirty;
   },
 
   onSettingChange: function() {
-    this.isDirty = true;
     this.setSaveDisabled(false);
   },
 
@@ -56,9 +67,11 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
 
     Ext.get('settings-cancel-button').on('click',
       function() {
-        Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
-      });
+        Paperpile.main.tabs.remove(this, true);
+      },
+      this);
 
+    this.fields = [];
     this.textfields = {};
     this.combos = {};
     this.checkboxes = {};
@@ -74,10 +87,13 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       field.render(item + '_textfield', 0);
 
       this.textfields[item] = field;
+      this.fields.push(field);
 
       field.on('keypress',
-        function() {
-          this.onSettingChange();
+        function(field, event) {
+          if (field.isDirty()) {
+            this.onSettingChange();
+          }
         },
         this);
 
@@ -96,6 +112,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       store: [10, 25, 50, 75, 100],
       value: Paperpile.main.globalSettings['pager_limit'],
     });
+    this.fields.push(this.combos['pager_limit']);
 
     this.combos['sort_field'] = new Ext.form.ComboBox({
       renderTo: 'sort_field_combo',
@@ -121,6 +138,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       valueField: 'id',
       value: Paperpile.main.globalSettings['sort_field'],
     });
+    this.fields.push(this.combos['sort_field']);
 
     this.combos['pager_limit'].on('select', this.onSettingChange, this);
     this.combos['sort_field'].on('select', this.onSettingChange, this);
@@ -129,6 +147,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       renderTo: 'check_updates_checkbox',
       checked: Paperpile.main.globalSettings['check_updates'] == '1' ? true : false,
     });
+    this.fields.push(this.checkboxes['check_updates']);
 
     this.checkboxes['check_updates'].on('check',
       function() {
@@ -160,6 +179,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
     this.proxyCheckbox = new Ext.form.Checkbox({
       renderTo: 'proxy_checkbox'
     });
+    this.fields.push(this.proxyCheckbox);
 
     this.proxyCheckbox.on('check',
       function(box, checked) {
@@ -242,6 +262,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       renderTo: 'plugin_order_panel',
       settingsPanel: this
     });
+    this.fields.push(this.pluginOrderPanel);
 
     new Ext.ToolTip({
       target: 'settings-proxy-address-tooltip',
@@ -348,9 +369,12 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
       pager_limit: this.combos['pager_limit'].getValue(),
       sort_field: this.combos['sort_field'].getValue(),
       check_updates: this.checkboxes['check_updates'].getValue() ? 1 : 0,
-      font_size: this.combos['font_size'].getValue(),
       search_seq: this.pluginOrderPanel.getValue()
     };
+
+    if (this.combos['font_size']) {
+      params['font_size'] = this.combos['font_size'].getValue();
+    }
 
     for (var field in params) {
       params[field] = Ext.encode(params[field]);
@@ -377,7 +401,7 @@ Paperpile.GeneralSettings = Ext.extend(Ext.Panel, {
             }
           }
         }
-        Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
+        Paperpile.main.tabs.remove(this, true);
 
         if (this.combos['font_size']) {
           var new_font_size = this.combos['font_size'].getValue();

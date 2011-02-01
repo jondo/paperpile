@@ -16,14 +16,14 @@ Paperpile.CatalystLog = Ext.extend(Ext.Panel, {
       autoScroll: true,
     });
 
-    Paperpile.PatternSettings.superclass.initComponent.call(this);
+    Paperpile.CatalystLog.superclass.initComponent.call(this);
 
     this.tpl = new Ext.XTemplate(this.markup);
 
   },
 
   afterRender: function() {
-    Paperpile.Statistics.superclass.afterRender.apply(this, arguments);
+    Paperpile.CatalystLog.superclass.afterRender.apply(this, arguments);
 
     this.on('activate',
       function() {

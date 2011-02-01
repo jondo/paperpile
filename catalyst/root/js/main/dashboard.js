@@ -42,7 +42,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
     //  }
     //}
 
-    Paperpile.PatternSettings.superclass.initComponent.call(this);
+    Paperpile.Dashboard.superclass.initComponent.call(this);
 
   },
 

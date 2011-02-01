@@ -14,23 +14,24 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
+Paperpile.PatternSettings = Ext.extend(Paperpile.SettingsPanel, {
 
   title: 'Location and Patterns Settings',
+  iconCls: 'pp-icon-dashboard',
 
   initComponent: function() {
     Ext.apply(this, {
       closable: true,
+      autoScroll: true,
       layout: 'fit',
       items: [{
+        xtype: 'panel',
+        height: '100%',
         autoLoad: {
           url: Paperpile.Url('/screens/patterns'),
           callback: this.setupFields,
           scope: this
-        },
-        bodyStyle: 'pp-settings',
-        iconCls: 'pp-icon-tools',
-        autoScroll: true
+        }
       }]
     });
 
@@ -47,6 +48,10 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
     this.textfields = {};
   },
 
+  getShortTitle: function() {
+    return 'Patterns';
+  },
+
   //
   // Creates textfields, buttons and installs event handlers
   //
@@ -54,8 +59,9 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
     Ext.get('patterns-cancel-button').on('click',
       function() {
-        Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
-      });
+        Paperpile.main.tabs.remove(this, true);
+      },
+      this);
 
     // This is the main update task, called by all change events on all fields
     // with a fairly long delay.
@@ -175,7 +181,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
       success: function(response) {
         var data = Ext.util.JSON.decode(response.responseText).data;
         for (var f in data) {
-	  var exampleString = '';
+          var exampleString = '';
           if (data[f].error) {
             this.textfields[f].markInvalid(data[f].error);
             // Instead of the built-in isInvalid() method, we use a custom
@@ -189,11 +195,11 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
             exampleString = data[f].string;
           }
 
-	  var el = Ext.get(f+'_example');
-	  if (el) {
-	    el.update(exampleString);
-	  }
-	    
+          var el = Ext.get(f + '_example');
+          if (el) {
+            el.update(exampleString);
+          }
+
         }
         this.updateSaveDisabled();
       },
@@ -204,7 +210,6 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
   disableSave: function(reason) {
     var button = Ext.fly('patterns-save-button');
-    this.disabled = true;
     button.un('click', this.submit, this);
     button.replaceClass('pp-save-button', 'pp-save-button-disabled');
 
@@ -221,10 +226,26 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
 
   enableSave: function() {
     var button = Ext.fly('patterns-save-button');
-    this.disabled = false;
     button.replaceClass('pp-save-button-disabled', 'pp-save-button');
     button.on('click', this.submit, this);
     this.saveTooltip.disable();
+  },
+
+  isDirty: function() {
+    var isDirty = false;
+
+    // If any of the fields are dirty, return true.
+    Ext.each(this.getFields(), function(f) {
+      var field = this.textfields[f];
+      if (!field) {
+        return;
+      }
+      if (field.isDirty()) {
+        isDirty = true;
+      }
+    },
+    this);
+    return isDirty;
   },
 
   updateSaveDisabled: function() {
@@ -307,7 +328,7 @@ Paperpile.PatternSettings = Ext.extend(Ext.Panel, {
           return;
         }
 
-        Paperpile.main.tabs.remove(Paperpile.main.tabs.getActiveTab(), true);
+        Paperpile.main.tabs.remove(this, true);
         var old_library_db = Paperpile.main.globalSettings.library_db;
         Paperpile.main.loadSettings(
           function() {
