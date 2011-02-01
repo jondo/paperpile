@@ -17,7 +17,7 @@ dirname=$PWD/$dirname
 fi
 
 # Check if we have kde-4 installed
-kde4config=`which kde4-config`
+kde4config=`which kde4-config 2>/dev/null`
 
 # If KDE 4 is installed check Qt version
 if [ "${kde4config}" != "" ]; then

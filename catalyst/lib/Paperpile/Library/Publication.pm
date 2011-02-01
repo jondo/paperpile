@@ -21,10 +21,12 @@ use Moose::Util::TypeConstraints;
 use Digest::SHA1;
 use Data::GUID;
 use Data::Dumper;
+use File::Temp qw(tempfile);
 
 use Paperpile::Library::Author;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
+use Paperpile::Formats;
 use Encode qw(encode_utf8);
 use Text::Unidecode;
 use YAML qw(LoadFile);
@@ -380,9 +382,15 @@ sub best_link {
     return $self->linkout;
   } elsif ( $self->url ) {
     return $self->url;
-  } elsif ( $self->pmid ) {
-    return 'http://www.ncbi.nlm.nih.gov/pubmed/' . $self->pmid;
   }
+
+  # We can't consider Pubmed a valid link because we can't be sure if
+  # we get a linkout/doi from there.
+
+  # elsif ( $self->pmid ) { return
+  # 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=ref&cmd=prlinks&db=PubMed&id='. $self->pmid;
+  # }
+
   return '';
 }
 
@@ -577,11 +585,13 @@ sub refresh_attachments {
 
 # Lookup data via the match function of the search plugins given in
 # the array $plugin_list. If a match is found the name of the
-# sucessful plugin, otherwise undef is returned.
+# sucessful plugin, otherwise undef is returned. If $require_linkout
+# is set, we only consider a auto_complete successful if we got a
+# doi/linkout (for use during PDF download)
 
 sub auto_complete {
 
-  my ( $self, $plugin_list ) = @_;
+  my ( $self, $plugin_list, $require_linkout ) = @_;
 
   # First check if the user wants to search PubMed at all
   my $hasPubMed = 0;
@@ -659,6 +669,11 @@ sub auto_complete {
 
     # Found match -> stop now
     else {
+
+      if ($require_linkout && !$self->best_link){
+        next;
+      }
+
       $success_plugin = $plugin_name;
       $caught_error   = undef;
       last;
@@ -1012,6 +1027,32 @@ sub format_pattern {
   return $pattern;
 
 }
+
+# Fill itself with data from a $string that is given in a supported
+# bibliography format
+
+sub build_from_string {
+
+  my ( $self, $string) = @_;
+
+  my ( $fh, $file_name ) = tempfile();
+
+  print $fh $string;
+  close($fh);
+
+  my $reader = Paperpile::Formats->guess_format( $file_name );
+
+  my $data = $reader->read->[0]->as_hash;
+
+  foreach my $key (keys %$data){
+    $self->$key($data->{$key});
+  }
+
+  unlink($file_name);
+
+}
+
+
 
 # Basic validation of fields to make sure nothing breaks and fields
 # are set as intended. Should be called when Publication object is

@@ -91,6 +91,11 @@ has '_rowid' => ( is => 'rw', default => undef );
 # result in a library import.
 has '_collection_guids' => ( is => 'rw', isa => 'ArrayRef', default => sub { [] } );
 
+# Used to store LWP user agent object from PDFcrawler which should be
+# re-used in the PDF download function of this module (in case there
+# were some important cookies set).
+has '_browser' => ( is => 'rw', default => '' );
+
 sub BUILD {
   my ( $self, $params ) = @_;
 
@@ -368,11 +373,9 @@ sub _do_work {
 
     if ( $self->pub->best_link eq '' ) {
 
-      $self->_match;
+      # Match against online resources and consider only successfull if we get a linkout/doi
+      $self->_match(1);
 
-      # This currently does not handle the case e.g when we match
-      # successfully against PubMed but don't get a doi/linkout and a
-      # downstream plugin would give us this information
       if ( $self->pub->best_link eq '' ) {
         NetMatchError->throw("Could not find the PDF");
       }
@@ -610,11 +613,13 @@ sub as_hash {
 ## $self->pub object and throw exceptions if something goes wrong.
 
 # Matches the publications against the different plugins given in the
-# 'search_seq' user variable.
+# 'search_seq' user variable. If $require_linkout we only consider a
+# match successfull if we got a doi/linkout (for use during PDF
+# download)
 
 sub _match {
 
-  my $self = shift;
+  my ($self, $require_linkout) = @_;
 
   UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
 
@@ -631,7 +636,7 @@ sub _match {
   print STDERR "[queue] Start matching against online resources.\n";
 
   eval {
-    $success_plugin = $self->pub->auto_complete([@plugin_list]);
+    $success_plugin = $self->pub->auto_complete([@plugin_list], $require_linkout);
   };
 
   if (Exception::Class->caught ) {
@@ -672,6 +677,10 @@ sub _crawl {
 
   $self->pub->_pdf_url($pdf) if $pdf;
 
+  # Save LWP user agent with potentially important cookies to be
+  # re-used in _download
+  $self->_browser($crawler->browser);
+
 }
 
 ## Downloads the PDF
@@ -680,7 +689,7 @@ sub _download {
 
   my $self = shift;
 
-  UserCancel->throw( error => $self->noun . ' canceled.' ) if ($self->is_canceled);
+  UserCancel->throw( error => $self->noun . ' canceled.' ) if ( $self->is_canceled );
 
   print STDERR "[queue] Start downloading ", $self->pub->_pdf_url, "\n";
 
@@ -692,7 +701,7 @@ sub _download {
   # In case file already exists remove it
   unlink($file);
 
-  my $ua = Paperpile::Utils->get_browser();
+  my $ua = $self->_browser || Paperpile::Utils->get_browser();
 
   my $res = $ua->request(
     HTTP::Request->new( GET => $self->pub->_pdf_url ),

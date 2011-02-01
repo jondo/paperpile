@@ -44,7 +44,7 @@ has 'driver_file' => (
 );
 
 has '_driver'  => ( is => 'rw', isa => 'HashRef' );
-has '_browser' => ( is => 'rw', isa => 'LWP::UserAgent' );
+has 'browser' => ( is => 'rw', isa => 'LWP::UserAgent' );
 has 'debug'    => ( is => 'rw', isa => 'Bool', default => 1 );
 has '_cache'   => ( is => 'rw', isa => 'HashRef', default => sub { {} } );
 
@@ -55,12 +55,12 @@ has 'jobid' => ( is => 'rw', default => undef );
 sub BUILD {
 
   my $self = shift;
-  $self->_browser( Paperpile::Utils->get_browser );
+  $self->browser( Paperpile::Utils->get_browser );
 
   # Bless the browser object as a customized Paperpile useragent
-  bless $self->_browser,"Paperpile::PdfUserAgent";
+  bless $self->browser,"Paperpile::PdfUserAgent";
   # Store a reference to ourselves within the customized browser object.
-  $self->_browser->crawler($self);
+  $self->browser->crawler($self);
 }
 
 
@@ -147,61 +147,68 @@ sub _identify_site {
   my $driver = $self->_driver;
 
   my $original_url = $URL;
-  my $body = '';
+  my $body         = '';
 
   # First, we search only the current URL for a match against the driver.
   # But this is usually fruitless, as the initial URL is normally a dx.doi.org.
   # Next, we request the page contents and use BOTH the new URL and the new
   # page contents as targets for pattern matching.
-  for my $target ( 'URL', 'page') {
+  for my $target ( 'URL', 'page' ) {
 
     if ( $target eq 'page' ) {
+
       # Request the page, and load the body and new URL. This only needs to happen once.
       my $response = $self->_get_location($URL);
-      $body     = $response->content;
-      $URL = $response->request->uri;
+      $body = $response->content;
+      $URL  = $response->request->uri;
     }
-    print STDERR "$target current url: $URL\n" if $self->debug;
 
     # Update the status returned back to the front-end.
     # Note that this only shows up during the actual regex matching -- during any
-    # page requests made using _get_location, the message will be set within that 
+    # page requests made using _get_location, the message will be set within that
     # method to something like  "Fetching from xyz..."
-    Paperpile::Utils->update_job_info( $self->jobid, 'msg', "Searching $target for PDF...", "PDF download canceled" );
+    Paperpile::Utils->update_job_info(
+      $self->jobid, 'msg',
+      "Searching $target for PDF...",
+      "PDF download canceled"
+    );
 
     foreach my $site ( @{ $driver->{site} } ) {
+
       # We load both the URL and body patterns, but keep them independent.
-      my @url_patterns = ();
+      my @url_patterns  = ();
       my @body_patterns = ();
-      push @body_patterns, @{$site->{signature}->{body}} if (defined $site->{signature}->{body});
-      push @url_patterns, @{$site->{signature}->{url}} if (defined $site->{signature}->{url});
+      push @body_patterns, @{ $site->{signature}->{body} }
+        if ( defined $site->{signature}->{body} );
+      push @url_patterns, @{ $site->{signature}->{url} } if ( defined $site->{signature}->{url} );
 
-      foreach my $pair ( ([\@url_patterns,$URL],[\@body_patterns,$body]) ) {
-	my @arr = @$pair;
-	my @patterns = @{$arr[0]};
-	my $target = $arr[1];
-	foreach my $pattern ( @patterns) {
-	  # At this point, $target is either the page URL or the body contents,
-	  # which is an empty string if the page body hasn't been loaded yet.
+      foreach my $pair ( ( [ \@url_patterns, $URL ], [ \@body_patterns, $body ] ) ) {
+        my @arr      = @$pair;
+        my @patterns = @{ $arr[0] };
+        my $target   = $arr[1];
+        foreach my $pattern (@patterns) {
 
-	  #print STDERR "$target pattern: $pattern\n";
-	  $pattern = $self->_resolve_pattern($pattern);
-	  
-	  #print STDERR "Matching $URL vs. $pattern. " if $self->debug;
-	  
-	  $pattern =~ s/!//g;
-	  
-	  my $match = 0;
-	  $match = 1 if ($target =~ m!($pattern)!);
-	  
-	  if ( $match ) {
-	    # save resolved URL for downstream use to avoid doing this again.
-	    $site->{final_url} = $URL;
-	    print STDERR "Match. Using driver " . $site->{name} . "\n" if $self->debug;
-	    return $site;
-	  } else {
-	    print STDERR "No match. \n" if $self->debug;
-	  }
+          # At this point, $target is either the page URL or the body contents,
+          # which is an empty string if the page body hasn't been loaded yet.
+
+          $pattern = $self->_resolve_pattern($pattern);
+
+          #print STDERR "Matching $URL vs. $pattern. " if $self->debug;
+
+          $pattern =~ s/!//g;
+
+          my $match = 0;
+          $match = 1 if ( $target =~ m!($pattern)! );
+
+          if ($match) {
+
+            # save resolved URL for downstream use to avoid doing this again.
+            $site->{final_url} = $URL;
+            print STDERR "Match. Using driver " . $site->{name} . "\n" if $self->debug;
+            return $site;
+          } else {
+            #print STDERR "No match. \n" if $self->debug;
+          }
         }
       }
     }
@@ -374,7 +381,6 @@ sub _short_domain {
   my $limit = 16;
   my $short_domain = ( length($full_domain) > $limit ) ?
 	substr($full_domain, 0,$limit) : $full_domain;
-  print STDERR "[domain] short:[$short_domain] full:[$full_domain]\n" if $self->debug;
   return $short_domain;
 }
 
@@ -389,16 +395,17 @@ sub _get_location {
   }
 
   my $domain = $self->_short_domain($URL);
-  my $msg = "Fetching from $domain...";
+  my $msg    = "Fetching from $domain...";
+
   # Custom message for DOI resolution.
-  $msg = "Resolving DOI..." if ($domain =~ /doi\.org/i);
+  $msg = "Resolving DOI..." if ( $domain =~ /doi\.org/i );
   Paperpile::Utils->update_job_info( $self->jobid, 'msg', $msg, "PDF download canceled" );
 
   # Keep a list of all URLs we're redirected through, for caching purposes.
   my %url_keys;
   $url_keys{$URL} = 1;
 
-  my $response = $self->_browser->request(
+  my $response = $self->browser->request(
     HTTP::Request->new( GET => $URL ),
     sub {
       my ( $data, $response, $protocol ) = @_;
@@ -407,11 +414,14 @@ sub _get_location {
       # Update the status message to reflect the current URL base,
       # so we show the progress through each of the redirects.
       my $cur_url = $response->base;
-      print STDERR "[cur_url] $cur_url \n" if $self->debug;
-      if ($cur_url ne $URL) {
-	$url_keys{$cur_url} = 1;
-	my $cur_domain = $self->_short_domain($cur_url);
-	Paperpile::Utils->update_job_info( $self->jobid, 'msg', "Fetching from $cur_domain...", "PDF download canceled" );
+      if ( $cur_url ne $URL ) {
+        $url_keys{$cur_url} = 1;
+        my $cur_domain = $self->_short_domain($cur_url);
+        Paperpile::Utils->update_job_info(
+          $self->jobid, 'msg',
+          "Fetching from $cur_domain...",
+          "PDF download canceled"
+        );
       }
 
       $response->content( $response->content . $data );
@@ -427,7 +437,7 @@ sub _get_location {
 
   # Cache the response, keyed by the request URL and any URLs we were
   # redirected through.
-  foreach my $key (keys %url_keys) {
+  foreach my $key ( keys %url_keys ) {
     $self->_cache->{$key} = $response;
   }
 
@@ -443,7 +453,7 @@ sub check_pdf {
 
   # get only the start of the file and stop after $max_content
   my $content  = '';
-  my $response = $self->_browser->get(
+  my $response = $self->browser->get(
     $url,
     ':content_cb' => sub {
       my ( $data, $response, $protocol ) = @_;
@@ -470,7 +480,7 @@ sub fetch_pdf {
 
   ( my $self, my $url, my $file ) = @_;
 
-  my $response = $self->_browser->get($url);
+  my $response = $self->browser->get($url);
   open( PDF, ">$file" );
   binmode(PDF);
   print PDF $response->content;

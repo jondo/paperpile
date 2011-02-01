@@ -383,8 +383,9 @@ sub update_pub {
   # Note: In case case a ref. Smith2000a is to be updated "$new_key"
   # will be Smith2000 and we will enter the block. The result might be
   # that Smith2000a is changed back to Smith2000 if the other
-  # Smith2000 is no longer in the database.
-  if ( $new_key ne $old_data->{citekey} ) {
+  # Smith2000 is no longer in the database. Also make sure that key is
+  # generated if citekey is empty
+  if ( ($new_key ne $old_data->{citekey}) || $diff->{citekey} eq '' ) {
     $new_pub->citekey($new_key);
 
     # If we have a new citekey, make sure it doesn't conflict with other
@@ -493,7 +494,6 @@ sub update_citekeys {
   ( my $self, my $pattern ) = @_;
 
   my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
-  #my $dbh = $self->dbh;
 
   my $data = $self->all('created');
 
@@ -522,18 +522,14 @@ sub update_citekeys {
     my $_pattern = $dbh->quote($pattern);
     $dbh->do("UPDATE Settings SET value=$_pattern WHERE key='key_pattern'");
 
-    $self->commit_transaction;
-
   };
 
   if ($@) {
     die("Failed to update citation keys ($@)");
-
-    # DBI driver seems to rollback do this automatically when the eval statement dies
-    #$self->dbh->rollback;
     $self->rollback_transaction;
-
   }
+
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -1702,7 +1698,7 @@ sub change_paper_root {
     }
   }
 
-  my $dbh = $self->begin_transaction;
+  my ($dbh, $in_prev_tx) = $self->begin_or_continue_tx;
 
   eval {
 
@@ -1734,7 +1730,7 @@ sub change_paper_root {
     FileError->throw("Could not move PDF directory to new location ($msg)");
   }
 
-  $self->commit_transaction;
+  $self->commit_or_continue_tx($in_prev_tx);
 
 }
 
@@ -1746,16 +1742,14 @@ sub rename_files {
 
   my ( $self, $pdf_pattern, $attachment_pattern ) = @_;
 
-  my $dbh = $self->dbh;
+  my ( $dbh, $in_prev_tx ) = $self->begin_or_continue_tx;
 
-  $dbh->begin_work;
-
-  my $paper_root = $self->get_setting( 'paper_root');
+  my $paper_root = $self->get_setting('paper_root');
 
   # If paper_root is not created or does not exist for some other
   # reason, we can stop because there are no files for us to update
   if ( !-e $paper_root ) {
-    $dbh->commit;
+    $self->commit_or_continue_tx($in_prev_tx);
     return;
   }
 
@@ -1776,6 +1770,12 @@ sub rename_files {
     while ( $select->fetch ) {
 
       my $data = $dbh->selectrow_hashref("SELECT * FROM Publications WHERE guid='$pub_guid';");
+
+      if (!$data){
+        print STDERR "Warning: $file attached to Publication ($pub_guid) that does not exist any more.";
+        next;
+      }
+
       my $pub  = Paperpile::Library::Publication->new($data);
 
       my $relative_dest;
@@ -1788,6 +1788,11 @@ sub rename_files {
       }
 
       my $absolute_dest = File::Spec->catfile( $tmp_root, $relative_dest );
+
+      if ($data->{trashed}){
+        $absolute_dest = File::Spec->catfile( $tmp_root, "Trash", $relative_dest );
+      }
+
       $absolute_dest = Paperpile::Utils->copy_file( $file, $absolute_dest );
 
       $relative_dest = File::Spec->abs2rel( $absolute_dest, $tmp_root );
@@ -1806,20 +1811,20 @@ sub rename_files {
   };
 
   if ($@) {
-    $dbh->rollback;
+    $self->rollback_transaction;
     my $msg = $@;
     $msg = $@->error if $@->isa('PaperpileError');
     FileError->throw("Could not apply changes ($msg)");
   }
 
   if ( not move( $paper_root, "$paper_root\_backup" ) ) {
-    $dbh->rollback;
+    $self->rollback_transaction;
     FileError->throw(
       "Could not apply changes (Error creating backup copy $paper_root\_backup -- $!)");
   }
 
   if ( not move( $tmp_root, $paper_root ) ) {
-    $dbh->rollback;
+    $self->rollback_transaction;
     move( "$paper_root\_backup", $paper_root )
       or FileError->throw(
       'Could not apply changes and your library is broken now. This should never happen, contact support@paperpile.org if it has happened to you.'
@@ -1828,8 +1833,7 @@ sub rename_files {
       "Could not apply changes (Error creating new copy of directory tree in $paper_root).");
   }
 
-
-  $dbh->commit;
+  $self->commit_or_continue_tx($in_prev_tx);
   rmtree("$paper_root\_backup");
 }
 

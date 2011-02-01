@@ -1,5 +1,13 @@
 #!/bin/sh
 
+# Minimum minor version of Qt 4.x
+minimumqt=7
+
+log (){
+  date=`date`;
+  echo "[${date}] $1";
+}
+
 dirname=`dirname $(readlink -f $0)`
 
 tmp="${dirname#?}"
@@ -8,12 +16,30 @@ if [ "${dirname%$tmp}" != "/" ]; then
 dirname=$PWD/$dirname
 fi
 
-LD_LIBRARY_PATH="$dirname/lib"
-export LD_LIBRARY_PATH
+# Check if we have kde-4 installed
+kde4config=`which kde4-config 2>/dev/null`
 
-export QTDIR=""
-export QT_PLUGIN_PATH=""
-export KDEDIRS=""
-export KDEDIR=""
+# If KDE 4 is installed check Qt version
+if [ "${kde4config}" != "" ]; then
+  version=`kde4-config -v |head -1 |cut -d"." -f2`
+else
+  version=0
+fi
 
+# If new enough use system Qt
+if [ ${version} -ge ${minimumqt} ]; then
+  log "Found KDE using Qt 4.${version}"
+
+# else use shipped libraries
+else
+  log "Library path $dirname/lib"
+  LD_LIBRARY_PATH="$dirname/lib"
+  export LD_LIBRARY_PATH
+  export QTDIR=""
+  export QT_PLUGIN_PATH=""
+  export KDEDIRS=""
+  export KDEDIR=""
+fi
+
+# Start the binary
 "$dirname/bin/paperpile" $*

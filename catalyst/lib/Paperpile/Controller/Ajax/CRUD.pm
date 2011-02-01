@@ -39,7 +39,6 @@ sub insert_entry : Local {
   my ( $self, $c ) = @_;
 
   my $grid_id   = $c->request->params->{grid_id};
-  my $plugin    = $self->_get_plugin($c);
   my ($plugin, $selection) = $self->_get_selection($c);
 
   my %output    = ();
