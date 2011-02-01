@@ -162,7 +162,6 @@ sub _identify_site {
       $body = $response->content;
       $URL  = $response->request->uri;
     }
-    print STDERR "$target current url: $URL\n" if $self->debug;
 
     # Update the status returned back to the front-end.
     # Note that this only shows up during the actual regex matching -- during any
@@ -192,7 +191,6 @@ sub _identify_site {
           # At this point, $target is either the page URL or the body contents,
           # which is an empty string if the page body hasn't been loaded yet.
 
-          #print STDERR "$target pattern: $pattern\n";
           $pattern = $self->_resolve_pattern($pattern);
 
           #print STDERR "Matching $URL vs. $pattern. " if $self->debug;
@@ -209,7 +207,7 @@ sub _identify_site {
             print STDERR "Match. Using driver " . $site->{name} . "\n" if $self->debug;
             return $site;
           } else {
-            print STDERR "No match. \n" if $self->debug;
+            #print STDERR "No match. \n" if $self->debug;
           }
         }
       }
@@ -383,7 +381,6 @@ sub _short_domain {
   my $limit = 16;
   my $short_domain = ( length($full_domain) > $limit ) ?
 	substr($full_domain, 0,$limit) : $full_domain;
-  print STDERR "[domain] short:[$short_domain] full:[$full_domain]\n" if $self->debug;
   return $short_domain;
 }
 
@@ -417,7 +414,6 @@ sub _get_location {
       # Update the status message to reflect the current URL base,
       # so we show the progress through each of the redirects.
       my $cur_url = $response->base;
-      print STDERR "[cur_url] $cur_url \n" if $self->debug;
       if ( $cur_url ne $URL ) {
         $url_keys{$cur_url} = 1;
         my $cur_domain = $self->_short_domain($cur_url);
