@@ -93,8 +93,16 @@ Paperpile.PatternSettings = Ext.extend(Paperpile.SettingsPanel, {
         validateOnBlur: false
       });
 
-      var f = function() {
-        this.updateTask.delay(500);
+      var f = function(field) {
+	// Check against the last value successfully validated, so we don't trigger
+	// an update event if this field wasn't actually changed.
+	// Using the field.isDirty() method doesn't work in this situation...
+        if (field.getValue() != field.lastValidatedValue) {
+          // We immediately disable the save button while the delayed validation
+          // task is waiting to be triggered.
+          this.disableSave();
+          this.updateTask.delay(500);
+        }
       };
       field.on('keydown', f, this);
       field.on('keyup', f, this);
@@ -191,6 +199,11 @@ Paperpile.PatternSettings = Ext.extend(Paperpile.SettingsPanel, {
             this.textfields[f].error = data[f].error;
           } else {
             this.textfields[f].clearInvalid();
+            // We store the last validated value so that we can avoid triggering a new
+            // validation when a simple 'blur' event... see above where this value
+            // is used...
+            this.textfields[f].lastValidatedValue = this.textfields[f].getValue();
+
             this.textfields[f].error = undefined;
             exampleString = data[f].string;
           }
