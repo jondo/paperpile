@@ -549,6 +549,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     case 'locate-ref':
       this.locateInLibrary();
       break;
+    case 'import-ref':
+      this.insertEntry();
+      break;
+    case 'lookup-details':
+      this.lookupDetails();
+      break;
     }
   },
 
@@ -1024,6 +1030,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<tpl if="annote">',
       '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
       '</tpl>',
+      '<tpl if="_needs_details_lookup == 1">',
+      '  <div class="pp-grid-status pp-grid-status-lookup" ext:qtip="Lookup details" action="lookup-details"></div>',
+      '</tpl>',
+      '<tpl if="!_imported">',
+      '  <div class="pp-grid-status pp-grid-status-import" ext:qtip="Import reference" action="import-ref"></div>',
+      '</tpl>',
       '</div>').compile();
     return this.iconTemplate;
   },
@@ -1183,8 +1195,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  </dd>',
       '</tpl>',
       '</dl>',
-      '<tpl if="_details_link">',
-      '<p class="pp-inactive">No data available. <a href="#" class="pp-textlink" action="lookup-details">Lookup details</a></p>',
+      '<tpl if="!_pubtype_name && !_imported">',
+      '  <p class="pp-inactive">No data available.</p>',
+      '</tpl>',
+      '<tpl if="_needs_details_lookup == 1">',
+      '  <ul><li>',
+      '  <a class="pp-textlink pp-action pp-action-lookup" action="lookup-details">Lookup details</a>',
+      '  </li></ul>',
       '</tpl>',
       '  <div style="clear:left;"></div>',
       '</div>'];
@@ -1589,25 +1606,30 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   // only minimal info is scraped from site to build list quickly
   // without harassing the site too much. Then the details are
   // fetched only when user clicks the entry.
-  completeEntry: function() {
-    if (this.completeEntryLock) return; // Call completeEntry only for one item at a time 
-    this.completeEntryLock = true;
+  lookupDetails: function() {
+    if (this.lookupDetailsLock) return; // Call completeEntry only for one item at a time 
+    this.lookupDetailsLock = true;
 
-    var selection = this.getSelection();
-
+    // We only look up details for a single record.
     var sel = this.getSingleSelectionRecord();
     if (!sel) return;
+
     var data = sel.data;
-    if (data._details_link) {
+      
+    if (!data._needs_details_lookup) {
+      Paperpile.log("Details lookup was called on a publication that apparently doesn't need it -- this is a problem!");
+    }
+
+    if (data._needs_details_lookup) {
       var guid = data.guid;
 
       Paperpile.status.updateMsg({
         busy: true,
-        msg: 'Lookup bibliographic data',
+        msg: 'Looking up bibliographic data',
         action1: 'Cancel',
         callback: function() {
-          Ext.Ajax.abort(this.completeEntryTransaction);
-          this.cancelCompleteEntry();
+          Ext.Ajax.abort(this.lookupDetailsTransaction);
+          this.cancelLookupDetails();
           Paperpile.status.clearMsg();
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
           this.isLocked = false;
@@ -1622,26 +1644,26 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
       // Abort after 20 sec
       this.timeoutAbort = (function() {
-        Ext.Ajax.abort(this.completeEntryTransaction);
-        this.cancelCompleteEntry();
+        Ext.Ajax.abort(this.lookupDetailsTransaction);
+        this.cancelLookupDetails();
         Paperpile.status.clearMsg();
         Paperpile.status.updateMsg({
           msg: 'Data lookup failed. There may be problems with your network or ' + this.plugin_name + '.',
           hideOnClick: true
         });
-        this.completeEntryLock = false;
+        this.lookupDetailsLock = false;
       }).defer(20000, this);
 
-      this.completeEntryTransaction = Paperpile.Ajax({
+      this.lookupDetailsTransaction = Paperpile.Ajax({
         url: '/ajax/crud/complete_entry',
         params: {
-          selection: selection,
+          selection: sel.id,
           grid_id: this.id,
           cancel_handle: this.id + '_lookup'
         },
         success: function(response, options) {
           var json = Ext.util.JSON.decode(response.responseText);
-          this.completeEntryLock = false;
+          this.lookupDetailsLock = false;
 
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
@@ -1656,7 +1678,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           this.getPluginPanel().updateDetails();
         },
         failure: function(response, options) {
-          this.completeEntryLock = false;
+          this.lookupDetailsLock = false;
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
         },
@@ -1665,12 +1687,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
   },
 
-  cancelCompleteEntry: function() {
+  cancelLookupDetails: function() {
 
     clearTimeout(this.timeoutWarn);
     clearTimeout(this.timeoutAbort);
 
-    Ext.Ajax.abort(this.completeEntryTransaction);
+    Ext.Ajax.abort(this.lookupDetailsTransaction);
     Paperpile.Ajax({
       url: '/ajax/misc/cancel_request',
       params: {

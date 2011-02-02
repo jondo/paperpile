@@ -62,7 +62,11 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     if (numSelected == 1) {
 
       var oldData = this.oldData || {};
-      var newData = sm.getSelected().data || {};
+      var sel = sm.getSelected();
+      var newData = {};
+      if (sel) {
+	 newData = sel.data || {};
+      }
 
       newData.isBibtexMode = Paperpile.utils.isBibtexMode();
 
@@ -381,7 +385,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'lookup-details':
-      this.getGrid().completeEntry();
+      this.getGrid().lookupDetails();
       break;
     case 'open-folder':
       var folder_id = el.getAttribute('folder_id');

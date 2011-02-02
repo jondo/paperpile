@@ -277,7 +277,7 @@ sub complete_details {
       $full_pub->_light(0);
       $full_pub->refresh_fields();
       $full_pub->refresh_authors();
-      $full_pub->_details_link('');
+      $full_pub->_needs_details_lookup(0);
 
       return $full_pub;
     }
@@ -361,7 +361,7 @@ sub complete_details {
               $full_pub->_light(0);
               $full_pub->refresh_fields();
               $full_pub->refresh_authors();
-              $full_pub->_details_link('');
+              $full_pub->_needs_details_lookup(0);
 
               return $full_pub;
             }
@@ -392,7 +392,7 @@ sub complete_details {
               $full_pub->_light(0);
               $full_pub->refresh_fields();
               $full_pub->refresh_authors();
-              $full_pub->_details_link('');
+              $full_pub->_needs_details_lookup(0);
 
               return $full_pub;
             }
@@ -454,7 +454,7 @@ sub complete_details {
   $full_pub->citekey('');
 
   # Unset to mark as completed
-  $full_pub->_details_link('');
+  $full_pub->_needs_details_lookup(0);
 
   # Update plugin _hash with new data
   $full_pub->guid( $pub->guid );
@@ -466,7 +466,15 @@ sub complete_details {
 sub needs_completing {
   ( my $self, my $pub ) = @_;
 
-  return 1 if ( $pub->{_details_link} );
+  return 1 if ( $pub->{_needs_details_lookup} );
+  return 0;
+}
+
+sub needs_match_before_import {
+  ( my $self, my $pub ) = @_;
+
+  # Since our complete_details method is called before importing anyway
+  # (see CRUD->_complete_pubs) we never need a full match before import.
   return 0;
 }
 
@@ -1025,6 +1033,7 @@ sub _parse_googlescholar_page {
     $pub->_authors_display( $data{authors}->[$i] );
     $pub->_citation_display( $data{citations}->[$i] );
     $pub->linkout( $data{urls}->[$i] );
+    $pub->_needs_details_lookup(1); # Initialize each pub to want a details lookup.
     $pub->_details_link( $data{bibtex}->[$i] );
     $pub->_all_versions( $data{versions}->[$i] );
     $pub->_www_publisher( $data{www_publisher}->[$i] );

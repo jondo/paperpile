@@ -180,8 +180,12 @@ has '_metadata_job' => ( is => 'rw', default => undef );
 
 # Job object, only exists if there is a current job tied to the publication
 
-# Some import plugins first only scrape partial information and store
-# a link (or some other hint) how to complete this information
+# Some import plugins first only scrape partial information and use this
+# flag as an indicator that they need a second stage to fetch more info.
+has '_needs_details_lookup' => ( is => 'rw', default => '' );
+
+# Stores a link that (for now) only GoogleScholar.pm uses as a source for looking
+# up details if the other methods (URL matching, etc.) fail.
 has '_details_link' => ( is => 'rw', default => '' );
 
 # Is some kind of _details_link for Google Scholar. It is the link

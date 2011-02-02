@@ -73,6 +73,7 @@ sub connect {
 
     foreach my $pub (@$data) {
       $pub->citekey('');
+      $pub->_needs_details_lookup(1); # Initialize each pub to want a details lookup.
     }
 
     Paperpile::Utils->uniquify_pubs($data);
@@ -91,6 +92,18 @@ sub connect {
   $self->total_entries( $model->fulltext_count( $self->query, 0 ) );
   return $self->total_entries;
 
+}
+
+sub page {
+  ( my $self, my $offset, my $limit ) = @_;
+
+  my $page = $self->SUPER::page($offset, $limit);
+
+  foreach my $pub (@$page) {
+    $pub->_needs_details_lookup(1);
+  }
+
+  return $page;
 }
 
 sub cleanup {
@@ -123,10 +136,55 @@ sub update_feed {
 
 }
 
+sub complete_details {
+
+  ( my $self, my $pub ) = @_;
+
+  my $URL_plugin = Paperpile::Plugins::Import::URL->new(jobid=>$self->jobid);
+
+  # Copied from GoogleScholar.pm, we try to use the linkout to match against the
+  # publisher's URL.
+  my $full_pub = undef;
+  eval { $full_pub = $URL_plugin->match($pub) };
+  if ($full_pub) {
+
+    if ( $full_pub->title() ) {
+      $full_pub->citekey('');
+
+      # Update plugin _hash with new data
+      $full_pub->guid( $pub->guid );
+      $self->_hash->{ $pub->guid } = $full_pub;
+
+      # refresh fields
+      $full_pub->_light(0);
+      $full_pub->refresh_fields();
+      $full_pub->refresh_authors();
+      $full_pub->_needs_details_lookup(0);
+
+      return $full_pub;
+    }
+  }
+   
+  # If that didn't work, just use the standard match approach.
+  my $plugin_list = [ split( /,/, Paperpile::Utils->get_library_model->get_setting('search_seq') ) ];
+  $pub->auto_complete($plugin_list);
+  $pub->_needs_details_lookup(0);
+  return $pub;
+}
+
+sub needs_completing {
+  ( my $self, my $pub ) = @_;
+
+  return 1 if ( $pub->{_needs_details_lookup} );
+  return 0;
+}
+
 sub needs_match_before_import {
   ( my $self, my $pub ) = @_;
 
-  return 1;
+  # Since our complete_details method is called before importing anyway
+  # (see CRUD->_complete_pubs) we never need a full match before import.
+  return 0;
 }
 
 sub _rss_dir {
