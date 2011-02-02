@@ -113,6 +113,9 @@ sub insert_entry : Local {
 
 }
 
+# Called by the front-end 'lookup details' button, to fetch more complete data
+# for a given reference from an online resource. Basically this is a wrapper
+# for the plugin's needs_completing($pub) and complete_details($pub) methods.
 sub complete_entry : Local {
 
   my ( $self, $c ) = @_;
@@ -1053,7 +1056,10 @@ sub _save_plugin {
 }
 
 # Complete details for plugins that don't provide full information
-
+# Plugins like GoogleScholar might want to fetch some more details
+# before importing by using their complete_details($pub) method,
+# and plugins like Feed.pm may or may not have already matched the 
+# reference (after a 'lookup details' click).
 sub _complete_pubs {
 
   my ( $self, $c, $plugin, $pubs ) = @_;

@@ -790,6 +790,10 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
     background: transparent url('/images/icons/delete.png') no-repeat;
 }
 
+.pp-action-lookup {
+    background: transparent url('/images/icons/reload.png') no-repeat;
+}
+
 .pp-action-trash {
     background: transparent url('/images/icons/trash.png') no-repeat;
 }
@@ -1254,6 +1258,49 @@ a.pp-queue-widget, a:visited.pp-queue-widget {
 .pp-grid-status-deleted {
     background: transparent url('/images/icons/trashed.png') no-repeat;
 }
+
+.pp-grid-status-lookup {
+    -webkit-transition-property: opacity;
+    -webkit-transition-timing-function: linear;
+    -webkit-transition-duration: 0.1s;
+    opacity: 0;
+    background: transparent url('/images/icons/reload_dim.png') no-repeat;
+    margin-left: 16px;
+}
+
+.pp-grid-status-lookup:hover {
+    background: transparent url('/images/icons/reload.png') no-repeat;
+    cursor: pointer;
+}
+
+.x-grid3-row-over .pp-grid-status-lookup {
+    -webkit-transition-property: opacity;
+    -webkit-transition-timing-function: ease-out;
+    -webkit-transition-duration: 0.2s;
+    opacity: 1;
+}
+
+.pp-grid-status-import {
+    -webkit-transition-property: opacity;
+    -webkit-transition-timing-function: linear;
+    -webkit-transition-duration: 0.1s;
+    opacity: 0;
+    background: transparent url('/images/icons/add_dim.png') no-repeat;
+    margin-left: 16px;
+}
+
+.pp-grid-status-import:hover {
+    background: transparent url('/images/icons/add.png') no-repeat;
+    cursor: pointer;
+}
+
+.x-grid3-row-over .pp-grid-status-import {
+    -webkit-transition-property: opacity;
+    -webkit-transition-timing-function: ease-out;
+    -webkit-transition-duration: 0.2s;
+    opacity: 1;
+}
+
 
 
 .pp-grid-data{
