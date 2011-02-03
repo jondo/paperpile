@@ -48,9 +48,10 @@ has yui_jar  => ( is => 'rw' );    #YUI compressor jar
 my %ignore = (
   all => [
     qr([~#]),                qr{/tmp/},
-    qr{/t/},                 qr{\.gitignore},
+    qr{catalyst/test/},      qr{\.gitignore},
     qr{base/CORE/},          qr{base/pods?/},
     qr{(base|cpan)/CPAN},    qr{(base|cpan)/Test},
+    qr{Devel/Cover},
     qr{base/unicore/.*txt$},
     qr{ext/examples},       qr{ext/src},
     qr{journals.list},

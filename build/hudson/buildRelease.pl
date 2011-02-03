@@ -43,7 +43,7 @@ my $workspace = `pwd`;
 chomp($workspace);
 
 # Set GIT_BRANCH in hudson job definition.
-my $git_branch = $ENV{GIT_BRANCH};
+my $git_branch = $ENV{GIT_BRANCH} || 'some_other_branch';
 
 my $b = Paperpile::Build->new( {
     cat_dir  => "$workspace/catalyst",
