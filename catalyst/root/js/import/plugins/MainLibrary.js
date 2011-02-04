@@ -27,7 +27,7 @@ Ext.extend(Paperpile.PluginGridMainLibrary, Paperpile.PluginGridDB, {
     Paperpile.PluginGridMainLibrary.superclass.initComponent.call(this);
 
     this.actions['NEW'] = new Ext.Action({
-      text: 'Insert Manually',
+      text: 'Create Manually',
       iconCls: 'pp-icon-add',
       handler: function() {
         this.handleEdit(true);
