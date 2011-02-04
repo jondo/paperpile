@@ -1833,7 +1833,7 @@ sub rename_files {
       'Could not apply changes and your library is broken now. This should never happen, contact support@paperpile.org if it has happened to you.'
       );
     FileError->throw(
-      "Could not apply changes (Error creating new copy of directory tree in $paper_root).");
+      "Could not apply changes (Error creating new copy of directory tree in $paper_root -- $!).");
   }
 
   $self->commit_or_continue_tx($in_prev_tx);
