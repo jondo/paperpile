@@ -1101,23 +1101,7 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   //
-  // Deletes RSS feed
-  //
-  deleteRss: function() {
-    var node = this.getSelectionModel().getSelectedNode();
-
-    Paperpile.Ajax({
-      url: '/ajax/tree/delete_rss',
-      params: {
-        node_id: node.id
-      }
-    });
-
-    node.remove();
-  },
-
-  //
-  // Deletes active folder
+  // Deletes RSS feed or active folder.
   //
   deleteActive: function() {
     var node = this.getSelectionModel().getSelectedNode();
@@ -1126,6 +1110,10 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
       url: '/ajax/tree/delete_active',
       params: {
         node_id: node.id
+      },
+      success: function(response) {
+	// Close the window of this RSS feed if it's open.
+        Paperpile.main.tabs.closeTabById.defer(100, Paperpile.main.tabs, [node.id]);
       }
     });
 
