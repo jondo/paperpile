@@ -1,5 +1,5 @@
 
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -30,6 +30,7 @@ use Exception::Class ( PaperpileError,
   },
   FileSyncConflictError => { isa => 'FileSyncError' },
   FileReadError         => { isa => 'FileError' },
+  PaperRootNotEmptyError         => { isa => 'FileError' },
   LibraryMissingError   => { isa => 'FileReadError' },
   DatabaseVersionError  => { isa => 'FileReadError' },
   FileWriteError        => { isa => 'FileError' },

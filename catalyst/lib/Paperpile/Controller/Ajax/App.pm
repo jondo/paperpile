@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -45,10 +45,31 @@ sub init_session : Local {
 
   my ( $self, $c ) = @_;
 
-  # Clear session variables
-  foreach my $key ( keys %{ $c->session } ) {
-    delete( $c->session->{$key} ) if $key =~ /^(grid|viewer|tree|library_db|pdfextract)/;
+  # Create temporary directory if not already exists
+
+  my $tmp_dir = Paperpile::Utils->get_tmp_dir;
+
+  mkpath( $tmp_dir );
+
+  if ( !( -w $tmp_dir ) ) {
+    FileWriteError->throw("Could not start application. Temporary file $tmp_dir not writable.");
   }
+
+  foreach my $subdir ('rss','import','download','queue','filesync'){
+    mkpath( File::Spec->catfile( $tmp_dir, $subdir ) );
+  }
+
+  # Clear temporary PDF downloads and file imports
+  unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );
+  unlink( glob( File::Spec->catfile( $tmp_dir, 'import',   '*ppl' ) ) );
+
+  # Clear file with cancel handles and any potential lock files that
+  # have been left after a crash
+  unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ) );
+  unlink( glob( File::Spec->catfile( $tmp_dir, '*lock' ) ) );
+
+  # Clear session variables
+  unlink( File::Spec->catfile($tmp_dir, 'local_session' ) );
 
   my $user_dir = $c->config->{'paperpile_user_dir'};
 
@@ -67,7 +88,7 @@ sub init_session : Local {
       or
       FileWriteError->throw("Could not start application (Error initializing settings database)");
 
-    $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
+    Paperpile::Utils->session($c, {library_db => $c->config->{'user_settings'}->{library_db}});
 
     # Don't overwrite an existing library database in the case the
     # user has just deleted the user settings database
@@ -90,7 +111,7 @@ sub init_session : Local {
     # User might have deleted or moved her library. In that case we initialize an empty one
     if ( !-e $library_db ) {
 
-      $c->session->{library_db} = $c->config->{'user_settings'}->{library_db};
+      Paperpile::Utils->session($c,{library_db => $c->config->{'user_settings'}->{library_db}});
 
       copy( $c->path_to('db/library.db')->stringify, $c->config->{'user_settings'}->{library_db} )
         or FileWriteError->throw(
@@ -103,7 +124,7 @@ sub init_session : Local {
         "Could not find your Paperpile library file $library_db. Start with an empty one.");
     }
 
-    $c->session->{library_db} = $library_db;
+    Paperpile::Utils->session($c,{library_db => $library_db});
 
   }
 
@@ -114,23 +135,10 @@ sub init_session : Local {
   my $app_library_version  = $c->config->{app_settings}->{library_db_version};
   my $app_settings_version = $c->config->{app_settings}->{settings_db_version};
 
-  print STDERR "$db_library_version vs $app_library_version\n";
-
   if ( ( $db_library_version != $app_library_version )
-       or ( $db_settings_version != $app_settings_version )
-     ) {
+    or ( $db_settings_version != $app_settings_version ) ) {
     DatabaseVersionError->throw("Database needs to be migrated to latest version");
   }
-
-  # Crate temporary directories if they do not exist already
-
-  my $tmp_dir = $c->model('User')->get_setting('tmp_dir');
-
-  mkpath( File::Spec->catfile( $tmp_dir, 'rss' ) );
-  mkpath( File::Spec->catfile( $tmp_dir, 'import' ) );
-  mkpath( File::Spec->catfile( $tmp_dir, 'download' ) );
-  mkpath( File::Spec->catfile( $tmp_dir, 'queue' ) );
-  mkpath( File::Spec->catfile( $tmp_dir, 'filesync' ) );
 
   if ( not -e $c->config->{'queue_db'} ) {
     copy( $c->path_to('db/queue.db')->stringify, $c->config->{'queue_db'} )
@@ -138,17 +146,12 @@ sub init_session : Local {
       FileWriteError->throw("Could not start application (Error initializing queue database,  $!)");
 
   } else {
+
     #clear queue for now at startup
     my $q = Paperpile::Queue->new();
     $q->clear_all;
   }
 
-  # Clear temporary PDF downloads and file imports
-  unlink( glob( File::Spec->catfile( $tmp_dir, 'download', '*pdf' ) ) );
-  unlink( glob( File::Spec->catfile( $tmp_dir, 'import', '*ppl' ) ) );
-
-  # Clear file with cancel handles
-  unlink( File::Spec->catfile( $tmp_dir, 'cancel_data' ) );
 
 }
 
@@ -156,7 +159,7 @@ sub migrate_db : Local {
 
   my ( $self, $c ) = @_;
 
-  my $mg = Paperpile::Migrate->new('tmp_dir'=>$c->model('User')->get_setting('tmp_dir'),
+  my $mg = Paperpile::Migrate->new('tmp_dir'=>Paperpile::Utils->get_tmp_dir,
                                    'user_settings' => $c->config->{'user_settings'},
                                    'library_settings' => $c->config->{'library_settings'},
                                   );

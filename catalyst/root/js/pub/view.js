@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -139,6 +139,11 @@ Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
       this.getGrid().getView().restoreScroll(this.gridState);
       this.gridState = null;
     }
+  },
+
+  focus: function() {
+    // Override default Panel focus method to focus the grid's view focus holder.
+    this.getGrid().getView().focusEl.focus(10);
   },
 
   createGrid: function() {

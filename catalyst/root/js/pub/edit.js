@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -15,6 +15,10 @@
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
 Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
+
+  // Extends the network timeout for this FormPanel.
+  // Sometimes auto-update takes a long time...
+  timeout: 30,
 
   initComponent: function() {
 
@@ -79,7 +83,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       });
     }
 
-    var config = {
+    Ext.apply(this, {
       // The form is a table that consists of several tbody
       // elements to group specific blocks; the first tbody is
       // the selection list for the publication type and is
@@ -120,37 +124,38 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       autoScroll: true,
       border: false,
       bodyBorder: false,
-      timeout: 5,
       bodyStyle: {
         background: '#ffffff',
         padding: '20px'
       },
-    };
+    });
 
     // It is essential here to use initialConfig to make sure that
     // timeout is set in form object
-    Ext.apply(this, Ext.apply(this.initialConfig, config));
+    //Ext.apply(this, Ext.apply(this.initialConfig, config));
 
     Paperpile.MetaPanel.superclass.initComponent.call(this);
 
     this.on('afterrender',
       function() {
-        global = this.data;
         this.initForm(this.data['pubtype']);
 
         if (this.autoComplete) {
           this.onLookup();
         }
 
+        var window = this.ownerCt;
+        window.on('show', function() {
+          Ext.getCmp('title-input').focus(false, 10);
+	}, this);
       },
       this);
-
   },
+
 
   // Creates type selection combo box, renders the form for the
   // initial publication type and sets up event listeners
   initForm: function(pubType) {
-
     var pubTypes = Paperpile.main.globalSettings.pub_types;
 
     var list = ['ARTICLE', 'BOOK', 'INCOLLECTION', 'INBOOK',
@@ -204,7 +209,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
         var path;
 
         // Set path depending on wheter PDF was already imported or not
-        if (this.data.guid){
+        if (this.data.guid) {
           path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, this.data.pdf_name);
         } else {
           path = this.data._pdf_tmp;
@@ -248,7 +253,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
   // Creates the table structure of the form and renders the input
   // forms to the table cells
   renderForm: function(pubType) {
-
     var tbodies = [];
 
     // Get table structure for main fields 
@@ -291,7 +295,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
   // This function actually creates the input objects and renders it
   // to the table cells
   createInputs: function(pubType) {
-
     var genericTips = Paperpile.main.globalSettings.pub_tooltips;
     var customTips = Paperpile.main.globalSettings.pub_types[pubType].tooltips;
 
@@ -440,7 +443,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   // Get table structure for the 'main' fields (i.e. everything except pubtype and identifiers)
   renderMainFields: function(pubType) {
-
     var pubFields = Paperpile.main.globalSettings.pub_types[pubType].fields;
     var fieldNames = Paperpile.main.globalSettings.pub_fields;
     var customNames = Paperpile.main.globalSettings.pub_types[pubType].labels;
@@ -522,7 +524,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   // Gets the table structure of the identifiers
   renderIdentifiers: function() {
-
     var fieldNames = Paperpile.main.globalSettings.pub_fields;
     var identifiers = Paperpile.main.globalSettings.pub_identifiers;
     var tooltips = Paperpile.main.globalSettings.pub_tooltips;
@@ -619,6 +620,18 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     });
   },
 
+  // Returns true if the passed field is the last one in the form.
+  isLastField: function(field) {
+      var lastFieldId = 'month-input';
+      if (this.activeIdentifiers.length > 0) {
+	lastFieldId = this.activeIdentifiers[this.activeIdentifiers.length-1] + '-input';
+      }
+      if (field.id == lastFieldId) {
+	  return true;
+      }
+      return false;
+  },
+
   onFocus: function(field) {
     var f = field.el.findParent('td.field', 3, true);
     f.addClass("active");
@@ -629,6 +642,10 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
     var f = field.el.findParent('td.field', 3, true);
     f.removeClass("active");
     f.prev().removeClass("active");
+    if (this.isLastField(field)) {
+	var typeField = Ext.getCmp('type-input');
+	typeField.focus(10);
+    }
   },
 
   onChange: function(field) {
@@ -663,8 +680,7 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
 
   },
 
-  // If either title and authors or an identifier (for now pmid, doi
-  // and arxivid) is given the lookup button is activated. 
+  // Activates the lookup button if a relevant identifier is present.
   updateLookupButton: function() {
 
     var button = Ext.getCmp('lookup_button');
@@ -691,27 +707,6 @@ Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
       this.activateLookupButton('Auto-complete Data');
       return;
     }
-    /*
-    if (identifiers.pmid) {
-      this.activateLookupButton('Look-up in PubMed');
-      return;
-    }
-
-    if (identifiers.arxivid) {
-      this.activateLookupButton('Look-up in ArXiv');
-      return;
-    }
-
-    if (identifiers.doi) {
-      this.activateLookupButton('Look-up DOI');
-      return;
-    }
-
-    if (authors && title) {
-      this.activateLookupButton('Look-up online');
-      return;
-    }
-*/
     button.setText('Auto-complete (not enough data)');
     button.disable();
 

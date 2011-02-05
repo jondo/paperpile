@@ -80,6 +80,13 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
   // Fills the DragDropPanels with the appropriate action boxes.
   createDropTargets: function(event) {
+    if (event['browserEvent']) {
+      event = event.browserEvent;
+    }    
+    // Save the URIs list for possible later use.
+    if (event['dataTransfer']) {
+      this.lastEventURIs = event.dataTransfer.getData("text/uri-list");
+    }
 
     if (!this.targetsList) {
       this.targetsList = [];
@@ -192,7 +199,12 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
       return;
     }
 
-    this.hideTask.delay(2000);
+    // This sets the general delay timeout for drag and drop behavior.
+    // No matter what, if we don't 'hear' a drag event in the window
+    // for N seconds, we'll consider the drag-drop action to be finished.
+    // (This is because in Mac the dragleave events don't get triggered
+    // properly.)
+    this.hideTask.delay(3000);
 
     // If we get here, the event is a 'normal' drag event.
     // Loop through the droptargets, checking for overlap.
@@ -371,14 +383,29 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     }
   },
 
-  getFilesFromEvent: function(event) {
-    var files = [];
+  // Accepts EITHER an event object, or just the 'uri-list' string from an old
+  // event object that was saved and stored. We need to be flexible on input
+  // because sometimes we want to access an old event object's files, but event
+  // objects can't be properly copied and cached.
+  getURLsFromEventOrString: function(event) {
+    var data = [];
 
     if (event['browserEvent']) {
       event = event.browserEvent;
+    }    
+    if (event['dataTransfer']) {
+      data = event.dataTransfer.getData("text/uri-list").split("\n");
+    } else {
+      data = event.split("\n");
     }
 
-    var fileURLs = event.dataTransfer.getData("text/uri-list").split("\n");
+    return data;
+  },
+
+  getFilesFromEvent: function(event) {
+    var files = [];
+
+    var fileURLs = this.getURLsFromEventOrString(event);
     if (fileURLs.length == 0) return files;
     for (var i = 0; i < fileURLs.length; i++) {
       var fileURL = fileURLs[i];
@@ -415,7 +442,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
     var hasOnePdf = false;
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
-      if (file.suffix == 'pdf') {
+      if (file.suffix.match(/pdf/i)) {
         hasOnePdf = true;
       }
     }
@@ -459,7 +486,7 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 
   hasReferenceFileExtension: function(file) {
     var ext = file.suffix;
-    if (file.suffix.match(/(bib|ris|xml|sqlite|db|ppl|mods|rss)/)) {
+    if (file.suffix.match(/(bib|ris|xml|sqlite|db|ppl|mods|rss)/i)) {
       return true;
     }
     return false;

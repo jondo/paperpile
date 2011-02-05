@@ -1,6 +1,6 @@
 #! catalyst/perl5/linux32/bin/perl -w
 
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #

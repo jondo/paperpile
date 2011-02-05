@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -47,9 +47,9 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
         // restoring the scroll state.
         grid.getView().focusEl.focus();
 
-	// Also update the view of the gridpanel of the now-focused tab.
-	// See bug #739.
-	grid.getPluginPanel().updateView();
+        // Also update the view of the gridpanel of the now-focused tab.
+        // See bug #739.
+        grid.getPluginPanel().updateView();
 
         // This needs to come last.
         tab.restoreScrollState();
@@ -91,6 +91,28 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     };
 
     var newView = this.add(new Paperpile.PluginPanelDB({
+      title: 'All Papers',
+      iconCls: 'pp-icon-page',
+      itemId: itemId,
+      gridParams: gridParams
+    }));
+    newView.show();
+  },
+
+  newMainLibraryTab: function() {
+    var itemId = 'MAIN'; // Main library always has this itemID.
+    if (this.findAndActivateOpenTab(itemId)) {
+      return;
+    }
+
+    var gridParams = {
+      plugin_name: 'DB',
+      plugin_mode: 'FULLTEXT',
+      plugin_query: '',
+      plugin_base_query: ''
+    };
+
+    var newView = this.add(new Paperpile.PluginPanelMainLibrary({
       title: 'All Papers',
       iconCls: 'pp-icon-page',
       itemId: itemId,
@@ -214,6 +236,10 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     panel.show();
   },
 
+  showDashboardTab: function() {
+    this.newScreenTab('Dashboard', 'pp-dash');
+  },
+
   showQueueTab: function() {
     if (this.findAndActivateOpenTab('queue-tab')) {
       return;
@@ -303,6 +329,13 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 
   pdfViewerCounter: 0,
   newPdfTab: function(config) {
+
+    if (config.filename.length > 25) {
+      config.title = Ext.util.Format.ellipsis(config.filename, 25);
+    } else {
+      config.title = config.filename;
+    }
+
     this.pdfViewerCounter++;
     var params = {
       id: 'pdf_viewer_' + this.pdfViewerCounter,
@@ -327,6 +360,7 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
     //    var panel = Paperpile.main.tabs.add(new Paperpile.PDFPanel(params));
     var panel = Paperpile.main.tabs.add(new Paperpile.PDFviewer(params));
     panel.show();
+
   }
 }
 

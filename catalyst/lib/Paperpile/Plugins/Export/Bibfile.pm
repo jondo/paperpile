@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -23,22 +23,6 @@ use Data::Dumper;
 use 5.010;
 
 extends 'Paperpile::Plugins::Export';
-
-## Supported settings (correspond to the Bibutils settings)
-
-#  out_format: MODS, BIBTEX, RIS, ENDNOTE, COPAC, ISI, MEDLINE, ENDNOTEXML, BIBLATEX
-#  charsetout
-#  latexout
-#  utf8out
-#  xmlout
-#  bibout_finalcomma
-#  bibout_singledash
-#  bibout_whitespace
-#  bibout_brackets
-#  bibout_uppercase
-#  bibout_strictkey
-#  modsout_dropkey
-#  wordout_dropkey
 
 sub write {
   my ( $self, $write_string ) = @_;

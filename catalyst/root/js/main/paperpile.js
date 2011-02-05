@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -321,9 +321,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     var fontSize = this.getSetting('font_size');
     if (fontSize) {
-	this.onFontSizeChange(fontSize);
+      this.onFontSizeChange(fontSize);
     }
 
+  },
+
+  focusCurrentPanel: function() {
+    var tab = Paperpile.main.tabs.getActiveTab();
+    tab.focus();
   },
 
   loadKeys: function() {
@@ -356,19 +361,16 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     this.sometimesKeys.bindCallback('ctrl-r', this.keyControlR, this);
 
-    this.alwaysKeys.bindCallback('ctrl-x', this.keyControlX, this);
+    this.alwaysKeys.bindCallback('ctrl-shift-x', this.keyControlShiftX, this);
     this.alwaysKeys.bindCallback('ctrl-y', this.keyControlY, this);
     this.alwaysKeys.bindCallback('ctrl-tab', this.keyControlTab, this);
     this.alwaysKeys.bindCallback('ctrl-w', this.keyControlW);
     this.alwaysKeys.bindCallback('shift-[?,191]', this.keys.showKeyHelp);
-
+    this.alwaysKeys.bindCallback('ctrl-n', this.forwardToGrid, this);
   },
 
-  keyControlX: function() {
-    var itemId = 'pp-dash';
-    for (var i = 0; i < 3; i++) {
-      this.tabs.newScreenTab('Dashboard', itemId);
-    }
+  keyControlShiftX: function() {
+    this.tabs.showDashboardTab();
   },
 
   grabFocus: function() {
@@ -434,7 +436,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   keyControlW: function() {
     var curTab = Paperpile.main.tabs.getActiveTab();
     if (curTab.closable) {
-      Paperpile.main.tabs.remove(curTab, true);
+      // Fire the tab's beforeclose event to trigger any 'warning' dialogs before closing.
+      if (curTab.fireEvent('beforeclose', curTab) !== false) {
+	Paperpile.main.tabs.remove(curTab, true);
+      }
     }
   },
 
@@ -620,7 +625,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         // back from the file dialog behaves strange. It seems to be
         // an array but when sent as Ajax parameter in
         // submitPdfExtractionJobs it is not transferred as array.
-        var newFiles =[];
+        var newFiles = [];
         for (var i = 0; i < filenames.length; i++) {
           newFiles.push(filenames[i]);
         }
@@ -817,7 +822,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
     // Contingency plan for when a PDF file is accidentally
     // selected in the file import dialog.
-    if (parts.extension == 'pdf') {
+    if (parts.extension.match(/pdf/i)) {
       Paperpile.main.submitPdfExtractionJobs(filename);
       return;
     }
@@ -849,13 +854,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var options = {
       title: 'Choose a bibliography file to import',
       types: ['*'],
-      typesDescription: 'Bibliography files (BibTeX, RIS, EndNote, and others)',
+      typesDescription: 'Bibliography files (BibTeX, RIS, and others)',
       nameFilters: ["All supported files (*)",
         "BibTeX (*.bib)",
         "RIS (*.ris)",
-        //"Endnote XML (*.xml)", //Backend does not work at the moment
-        "ISI (*.isi)",
-        "MODS (*.xml)",
         "RSS (*.xml)",
         "Zotero (*.sqlite)",
         "Mendeley (*.sqlite)"],
@@ -910,7 +912,10 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       this.labelStore.reload();
     }
 
+    // update the queue widget with the current data.
     this.queueWidget.onUpdate(data);
+
+    // If this update contains new or deleted jobs, trigger the queue update loop.
     if (data.job_delta) {
       this.queueUpdate();
     }
@@ -927,11 +932,6 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     // Even if the queue tab isn't showing, collect and dispatch callbacks.
     if (data.jobs) {
       this.doCallbacks(data);
-    }
-
-    // If the user is currently dragging, update the dragdrop targets.
-    if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible() && !Paperpile.main.dd.effectBlock) {
-      Paperpile.main.dd.hideDragPane();
     }
 
     if (data.file_sync_delta) {
@@ -951,11 +951,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
       var formatsMap = {
         'BibTeX (*.bib)': 'BIBTEX',
-        'RIS (.ris)': 'RIS',
-        'EndNote (.txt)': 'ENDNOTE',
-        'MODS (.xml)': 'MODS',
-        'ISI Web of Science (.isi)': 'ISI',
-        'Word 2007 XML (.xml)': 'WORD2007'
+        'RIS (*.ris)': 'RIS',
       };
 
       var format = formatsMap[filter];
@@ -998,12 +994,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       'title': 'Choose file and format for export',
       'dialogType': 'save',
       'selectionType': 'file',
-      'nameFilters': ["BibTeX (*.bib)",
-        'RIS (.ris)',
-        'EndNote (.txt)',
-        'MODS (.xml)',
-        'ISI Web of Science (.isi)',
-        'Word 2007 XML (.xml)']
+      'nameFilters': [
+        'BibTeX (*.bib)',
+        'RIS (*.ris)']
     });
   },
 
@@ -1357,13 +1350,14 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     // treat it differently from the case when it already has been
     // imported
     var isNew;
-    if (!data.guid){
+    if (!data.guid) {
       isNew = true;
       data._pdf_tmp = data.pdf;
     } else {
       isNew = false;
     }
 
+    // This is almost direct copy-pasted from import/grid.js. Need to refactor out at some point.
     win = new Ext.Window({
       title: "Edit Reference",
       modal: true,
@@ -1386,7 +1380,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         scope: this
       })]
     });
-
+    win.on('close', function() {
+      Paperpile.main.focusCurrentPanel();
+    });
     win.show(this);
   },
 

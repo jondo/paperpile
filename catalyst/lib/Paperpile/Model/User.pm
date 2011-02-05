@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -17,6 +17,6 @@
 
 package Paperpile::Model::User;
 
-use base 'Paperpile::Model::DBIbase';
+use base 'Paperpile::Model::SQLite';
 
 return 1;

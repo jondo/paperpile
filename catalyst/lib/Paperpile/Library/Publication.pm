@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -21,19 +21,18 @@ use Moose::Util::TypeConstraints;
 use Digest::SHA1;
 use Data::GUID;
 use Data::Dumper;
+use File::Temp qw(tempfile);
 
 use Paperpile::Library::Author;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
+use Paperpile::Formats;
 use Encode qw(encode_utf8);
 use Text::Unidecode;
 use YAML qw(LoadFile);
 use File::Spec;
 use File::Path;
 use 5.010;
-
-# Bibutils functions are in a submodule
-extends('Paperpile::Library::Publication::Bibutils');
 
 # We currently support the following publication types
 our @types = qw(
@@ -164,6 +163,9 @@ has '_citation_display' => ( is => 'rw' );
 
 # If an entry is already in our database this field is true.
 has '_imported' => ( is => 'rw', isa => 'Bool' );
+# Used as a flag during Library import to store whether an import
+# was skipped because an identical reference already exists.
+has '_insert_skipped' => ( is => 'rw' );
 
 
 # Can be set to a job id of the task queue. It allows to update job
@@ -178,8 +180,12 @@ has '_metadata_job' => ( is => 'rw', default => undef );
 
 # Job object, only exists if there is a current job tied to the publication
 
-# Some import plugins first only scrape partial information and store
-# a link (or some other hint) how to complete this information
+# Some import plugins first only scrape partial information and use this
+# flag as an indicator that they need a second stage to fetch more info.
+has '_needs_details_lookup' => ( is => 'rw', default => '' );
+
+# Stores a link that (for now) only GoogleScholar.pm uses as a source for looking
+# up details if the other methods (URL matching, etc.) fail.
 has '_details_link' => ( is => 'rw', default => '' );
 
 # Is some kind of _details_link for Google Scholar. It is the link
@@ -221,7 +227,7 @@ has '_auto_refresh' => ( is => 'rw', isa => 'Int', default => 0 );
 # author objects which is not always needed (e.g. for import).
 has '_light' => ( is => 'rw', isa => 'Int', default => 0 );
 
-# If object comes from a database we store the dsn of it. Currently
+# If object comes from a database we store the file. Currently
 # only used for function refresh_attachments
 has '_db_connection' => ( is => 'rw', default => '' );
 
@@ -380,9 +386,15 @@ sub best_link {
     return $self->linkout;
   } elsif ( $self->url ) {
     return $self->url;
-  } elsif ( $self->pmid ) {
-    return 'http://www.ncbi.nlm.nih.gov/pubmed/' + $self->pmid;
   }
+
+  # We can't consider Pubmed a valid link because we can't be sure if
+  # we get a linkout/doi from there.
+
+  # elsif ( $self->pmid ) { return
+  # 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=ref&cmd=prlinks&db=PubMed&id='. $self->pmid;
+  # }
+
   return '';
 }
 
@@ -390,12 +402,9 @@ sub best_link {
 # and applies them to $self. Also brings over $other_pub's PDF (if $self does not
 # have one defined) and attachments.
 sub merge_into_me {
-  my $self      = shift;
-  my $other_pub = shift;
-  my $library   = shift;
+  my ($self, $other_pub, $library) = @_;
 
-  my $dbh = $library->dbh;
-  $dbh->do('BEGIN EXCLUSIVE TRANSACTION');
+  my ($dbh, $in_prev_tx) = $library->begin_or_continue_tx;
 
   my $guid       = $self->guid;
   my $other_guid = $other_pub->guid;
@@ -408,7 +417,7 @@ sub merge_into_me {
 
     while ( my $row = $sth->fetchrow_hashref() ) {
       my $other_pdf = $row->{local_file};
-      $library->attach_file( $other_pdf, 1, $self, 0, $dbh );
+      $library->attach_file( $other_pdf, 1, $self, 0 );
     }
   }
 
@@ -420,15 +429,15 @@ sub merge_into_me {
 
     while ( my $row = $sth->fetchrow_hashref() ) {
       my $other_pdf = $row->{local_file};
-      $library->attach_file( $other_pdf, 0, $self, 0, $dbh );
+      $library->attach_file( $other_pdf, 0, $self, 0 );
     }
   }
 
   foreach my $folder ( split( ',', $other_pub->folders ) ) {
-    $library->add_to_collection( [$self], $folder, $dbh );
+    $library->add_to_collection( [$self], $folder );
   }
   foreach my $label ( split( ',', $other_pub->labels ) ) {
-    $library->add_to_collection( [$self], $label, $dbh );
+    $library->add_to_collection( [$self], $label );
   }
 
   foreach my $key ( $self->meta->get_attribute_list ) {
@@ -444,7 +453,8 @@ sub merge_into_me {
     }
   }
 
-  $dbh->commit;
+  $library->commit_or_continue_tx($in_prev_tx);
+
 }
 
 sub is_trivial_value {
@@ -525,18 +535,18 @@ sub refresh_job_fields {
 # keep it that way for now.
 
 sub refresh_attachments {
-  ( my $self, my $dbh ) = @_;
+  ( my $self, my $model ) = @_;
 
   $self->_attachments_list( [] );
 
-  if ($self->attachments && $self->_db_connection)  {
+  if ($self->attachments && ($self->_db_connection || $model))  {
 
-    my $model = Paperpile::Model::Library->new();
-    $model->set_dsn( $self->_db_connection );
+    if (!$model){
+      $model = Paperpile::Model::Library->new( {file => $self->_db_connection} );
+    }
+    my ($dbh, $in_prev_tx) = $model->begin_or_continue_tx;
 
-    $dbh = $model->dbh unless ( defined $dbh );
-
-    my $paper_root = $model->get_setting('paper_root', $dbh);
+    my $paper_root = $model->get_setting('paper_root');
     my $guid       = $self->guid;
     my $sth = $dbh->prepare("SELECT * FROM Attachments WHERE publication='$guid' AND is_pdf=0;");
 
@@ -572,16 +582,20 @@ sub refresh_attachments {
 
     $self->_attachments_list( \@output );
 
+    $model->commit_or_continue_tx($in_prev_tx);
+
   }
 }
 
 # Lookup data via the match function of the search plugins given in
 # the array $plugin_list. If a match is found the name of the
-# sucessful plugin, otherwise undef is returned.
+# sucessful plugin, otherwise undef is returned. If $require_linkout
+# is set, we only consider a auto_complete successful if we got a
+# doi/linkout (for use during PDF download)
 
 sub auto_complete {
 
-  my ( $self, $plugin_list ) = @_;
+  my ( $self, $plugin_list, $require_linkout ) = @_;
 
   # First check if the user wants to search PubMed at all
   my $hasPubMed = 0;
@@ -659,6 +673,11 @@ sub auto_complete {
 
     # Found match -> stop now
     else {
+
+      if ($require_linkout && !$self->best_link){
+        next;
+      }
+
       $success_plugin = $plugin_name;
       $caught_error   = undef;
       last;
@@ -1013,6 +1032,49 @@ sub format_pattern {
 
 }
 
+# Fill itself with data from a $string that is given in a supported
+# bibliography format
+
+sub build_from_string {
+
+  my ( $self, $string) = @_;
+
+  my ( $fh, $file_name ) = tempfile();
+
+  print $fh $string;
+  close($fh);
+
+  my $reader = Paperpile::Formats->guess_format( $file_name );
+
+  my $data = $reader->read->[0]->as_hash;
+
+  foreach my $key (keys %$data){
+    $self->$key($data->{$key});
+  }
+
+  unlink($file_name);
+
+}
+
+
+
+# Basic validation of fields to make sure nothing breaks and fields
+# are set as intended. Should be called when Publication object is
+# created from dubious source (e.g. file import plugins). Right now it
+# is very basic but we should extend it.
+
+sub sanitize_fields {
+
+  my ( $self ) = @_;
+
+  # If there is no sha1 there is also no title. Set title to make sure
+  # sha1 gets set and doesn not cause troubles downstream.
+  if (!$self->sha1){
+    $self->title('No Title');
+    $self->calculate_sha1;
+  }
+}
+
 sub debug {
   my $self = shift;
   my $hash = $self->as_hash;
@@ -1025,6 +1087,9 @@ sub debug {
   }
   print STDERR "}\n";
 }
+
+
+
 
 no Moose;
 

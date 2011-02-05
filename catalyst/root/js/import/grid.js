@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -41,12 +41,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     this.pager = new Paperpile.Pager({
       pageSize: this.limit,
       store: this.getStore(),
-      grid: this,
-      // Provide a reference back to this grid!
       displayInfo: true,
       displayMsg: '<span style="color:black;">Displaying {0} - {1} of {2}</span>',
       emptyMsg: "No references to display"
     });
+    this.pager.on('pagebutton', function(pager) {
+      this.onPageButtonClick();
+    },this);
 
     var renderPub = function(value, p, record) {
       record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
@@ -309,6 +310,15 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'FONT_SIZE',
         handler: this.fontSize,
         scope: this
+      }),
+      'SETTINGS': new Ext.Action({
+        itemId: 'SETTINGS',
+	text: 'Settings',
+	iconCls: 'pp-icon-dashboard',
+	tooltip: 'Change your settings and view library stats',
+	handler: function() {
+	    Paperpile.main.tabs.showDashboardTab();
+	}
       })
 
     };
@@ -538,6 +548,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       break;
     case 'locate-ref':
       this.locateInLibrary();
+      break;
+    case 'import-ref':
+      this.insertEntry();
+      break;
+    case 'lookup-details':
+      this.lookupDetails();
       break;
     }
   },
@@ -1014,6 +1030,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<tpl if="annote">',
       '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
       '</tpl>',
+/*
+ * Hover-buttons over the grid -- save it for the ext4 rewrite...
+ * 
+      '<tpl if="_needs_details_lookup == 1">',
+      '  <div class="pp-grid-status pp-grid-status-lookup" ext:qtip="Lookup details" action="lookup-details"></div>',
+      '</tpl>',
+      '<tpl if="!_imported">',
+      '  <div class="pp-grid-status pp-grid-status-import" ext:qtip="Import reference" action="import-ref"></div>',
+      '</tpl>',
+*/
       '</div>').compile();
     return this.iconTemplate;
   },
@@ -1047,20 +1073,31 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   getDetailsCopyLinks: function(field, label) {
+    if (field == 'url') {
+      label = '';
+    } else {
+      label = label + ' ';
+    }
     return[
     '          <tpl if="field == \'' + field + '\'">',
-    '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + ' link in browser" action="' + field + '-link"></div>',
-    '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + ' URL to clipboard" action="' + field + '-copy"></div>',
+    '            <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + 'link in browser" action="' + field + '-link"></div>',
+    '            <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + 'URL to clipboard" action="' + field + '-copy"></div>',
     '          </tpl>'];
   },
 
   getOverviewCopyLinks: function(field, label) {
+    var title = label;
+    if (field == 'url') {
+      label = '';
+    } else {
+      label = label + ' ';
+    }
     return[
     '<tpl if="' + field + '">',
     '<div class="link-hover">',
-    '  <dt>' + label + ': </dt>',
-    '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + ' link in browser" action="' + field + '-link"></div>',
-    '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + ' URL to clipboard" action="' + field + '-copy"></div>',
+    '  <dt>' + title + ': </dt>',
+    '  <div class="pp-info-button pp-info-link pp-second-link" ext:qtip="Open ' + label + 'link in browser" action="' + field + '-link"></div>',
+    '  <div class="pp-info-button pp-info-copy pp-second-link" ext:qtip="Copy ' + label + 'URL to clipboard" action="' + field + '-copy"></div>',
     '<dd class="pp-info-' + field + '">{' + field + '}</dd>',
     '</div>',
     '</tpl>'];
@@ -1162,8 +1199,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '  </dd>',
       '</tpl>',
       '</dl>',
-      '<tpl if="_details_link">',
-      '<p class="pp-inactive">No data available. <a href="#" class="pp-textlink" action="lookup-details">Lookup details</a></p>',
+      '<tpl if="!_pubtype_name && !_imported">',
+      '  <p class="pp-inactive">No data available.</p>',
+      '</tpl>',
+      '<tpl if="_needs_details_lookup == 1">',
+      '  <ul><li>',
+      '  <a class="pp-textlink pp-action pp-action-lookup" action="lookup-details">Lookup details</a>',
+      '  </li></ul>',
       '</tpl>',
       '  <div style="clear:left;"></div>',
       '</div>'];
@@ -1286,7 +1328,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       'DELETE',
       this.createSeparator('TB_DEL_SEP'),
       'LIVE_FOLDER',
-      'EXPORT_MENU']);
+      'EXPORT_MENU',
+      this.createSeparator('TB_SETTINGS_SEP'),
+      'SETTINGS']);
   },
 
   // Same as above, but for the context menu.
@@ -1566,25 +1610,30 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   // only minimal info is scraped from site to build list quickly
   // without harassing the site too much. Then the details are
   // fetched only when user clicks the entry.
-  completeEntry: function() {
-    if (this.completeEntryLock) return; // Call completeEntry only for one item at a time 
-    this.completeEntryLock = true;
+  lookupDetails: function() {
+    if (this.lookupDetailsLock) return; // Call completeEntry only for one item at a time 
+    this.lookupDetailsLock = true;
 
-    var selection = this.getSelection();
-
+    // We only look up details for a single record.
     var sel = this.getSingleSelectionRecord();
     if (!sel) return;
+
     var data = sel.data;
-    if (data._details_link) {
+      
+    if (!data._needs_details_lookup) {
+      Paperpile.log("Details lookup was called on a publication that apparently doesn't need it -- this is a problem!");
+    }
+
+    if (data._needs_details_lookup) {
       var guid = data.guid;
 
       Paperpile.status.updateMsg({
         busy: true,
-        msg: 'Lookup bibliographic data',
+        msg: 'Looking up bibliographic data',
         action1: 'Cancel',
         callback: function() {
-          Ext.Ajax.abort(this.completeEntryTransaction);
-          this.cancelCompleteEntry();
+          Ext.Ajax.abort(this.lookupDetailsTransaction);
+          this.cancelLookupDetails();
           Paperpile.status.clearMsg();
           this.getSelectionModel().un('beforerowselect', blockingFunction, this);
           this.isLocked = false;
@@ -1599,26 +1648,26 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
       // Abort after 20 sec
       this.timeoutAbort = (function() {
-        Ext.Ajax.abort(this.completeEntryTransaction);
-        this.cancelCompleteEntry();
+        Ext.Ajax.abort(this.lookupDetailsTransaction);
+        this.cancelLookupDetails();
         Paperpile.status.clearMsg();
         Paperpile.status.updateMsg({
           msg: 'Data lookup failed. There may be problems with your network or ' + this.plugin_name + '.',
           hideOnClick: true
         });
-        this.completeEntryLock = false;
+        this.lookupDetailsLock = false;
       }).defer(20000, this);
 
-      this.completeEntryTransaction = Paperpile.Ajax({
+      this.lookupDetailsTransaction = Paperpile.Ajax({
         url: '/ajax/crud/complete_entry',
         params: {
-          selection: selection,
+          selection: sel.id,
           grid_id: this.id,
           cancel_handle: this.id + '_lookup'
         },
         success: function(response, options) {
           var json = Ext.util.JSON.decode(response.responseText);
-          this.completeEntryLock = false;
+          this.lookupDetailsLock = false;
 
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
@@ -1633,22 +1682,21 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
           this.getPluginPanel().updateDetails();
         },
         failure: function(response, options) {
-          this.completeEntryLock = false;
+          this.lookupDetailsLock = false;
           clearTimeout(this.timeoutWarn);
           clearTimeout(this.timeoutAbort);
-          Paperpile.status.clearMsg();
         },
         scope: this
       });
     }
   },
 
-  cancelCompleteEntry: function() {
+  cancelLookupDetails: function() {
 
     clearTimeout(this.timeoutWarn);
     clearTimeout(this.timeoutAbort);
 
-    Ext.Ajax.abort(this.completeEntryTransaction);
+    Ext.Ajax.abort(this.lookupDetailsTransaction);
     Paperpile.Ajax({
       url: '/ajax/misc/cancel_request',
       params: {
@@ -1938,7 +1986,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     win = new Ext.Window({
       title: isNew ? 'Add new reference' : 'Edit reference',
       modal: true,
-      floating: true,
+      shadow: false,
       layout: 'fit',
       width: 800,
       height: 600,
@@ -1960,7 +2008,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         scope: this
       })]
     });
-
+    win.on('close', function() {
+      Paperpile.main.focusCurrentPanel();
+    });
     win.show(this);
   },
 
@@ -1985,9 +2035,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         buttons: Ext.Msg.OKCANCEL,
         fn: function(btn) {
           if (btn === 'ok') {
-            Ext.getCmp('queue-widget').onUpdate({
-              submitting: true
-            });
+	    Paperpile.main.queueWidget.setSubmitting();
             Paperpile.Ajax({
               url: '/ajax/crud/batch_update',
               params: {
@@ -2016,9 +2064,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   batchDownload: function() {
     var selection = this.getSelection();
     if (selection.length > 1) {
-      Ext.getCmp('queue-widget').onUpdate({
-        submitting: true
-      });
+      Paperpile.main.queueWidget.setSubmitting();
     }
     Paperpile.Ajax({
       url: '/ajax/crud/batch_download',
@@ -2109,9 +2155,13 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     var sel = this.getSingleSelectionRecord();
     if (sel) selected_guid = sel.data.guid;
 
+    // Track the rowIndex of the row that the mouse is currently hovering (if any).
+    var mouseOverRow = undefined;
+
     var updateSidePanel = false;
     for (var guid in pubs) {
-      var record = store.getAt(store.findExact('guid', guid));
+      var rowIndex = store.findExact('guid',guid);
+      var record = store.getAt(rowIndex);
       if (!record) {
         continue;
       }
@@ -2119,7 +2169,9 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var update = pubs[guid];
       record.editing = true; // Set the 'editing' flag.
       for (var field in update) {
-        record.set(field, update[field]);
+	if (update[field] != record.get(field)) {
+          record.set(field, update[field]);
+	}
       }
 
       // Unset the 'editing' flag. Using the flag directly avoids calling store.afterEdit() for every record.
@@ -2129,6 +2181,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         if (guid == selected_guid) updateSidePanel = true;
       }
 
+      // Store this rowIndex if the mouse is hovering here.
+      var r = this.getView().getRow(rowIndex);
+      if (Ext.fly(r).hasClass('x-grid3-row-over')) {
+	mouseOverRow = rowIndex;
+      }
       if (needsUpdating) {
         store.fireEvent('update', store, record, Ext.data.Record.EDIT);
       }
@@ -2137,6 +2194,12 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     if (data.updateSidePanel) updateSidePanel = true;
     if (updateSidePanel) {
       this.refreshView.defer(20, this);
+    }
+
+    if (mouseOverRow !== undefined) {
+      // Re-apply the hover effect to get rid of the flickering during updates.
+      var r = this.getView().getRow(mouseOverRow);
+      Ext.fly(r).addClass('x-grid3-row-over');
     }
   },
 
@@ -2150,6 +2213,11 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
 
   getSingleSelectionRecord: function() {
     return this.getSelectionModel().getSelected();
+  },
+
+  // Return a list of whatever's selected. Could be an empty list.
+  getSelectionRecords: function() {
+    return this.getSelectionModel().getSelections();
   },
 
   getFirstAuthorFromSelection: function() {
@@ -2261,7 +2329,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);
       Paperpile.main.tabs.newPdfTab({
         file: path,
-        title: pdf
+	filename: pdf
       });
       Paperpile.main.inc_read_counter(sm.getSelected().data);
     }
@@ -2332,147 +2400,3 @@ Ext.extend(Paperpile.GridDropZone, Ext.dd.DropZone, {
 });
 
 Ext.reg('pp-plugin-grid', Paperpile.PluginGrid);
-/*
-// Saving this one for later -- we could try and do some nice animation features when the user does batch imports using this code.
-Ext.grid.AnimatedGridView = Ext.extend(Ext.grid.GridView, {
-  initComponent: function() {
-    Ext.grid.AnimatedGridView.superclass.initComponent.apply(this, arguments);
-  },
-  insertRows: function(dm, firstRow, lastRow, isUpdate) {
-    Ext.grid.AnimatedGridView.superclass.insertRows.apply(this, arguments);
-    var rowAdded = Ext.get(this.getRow(firstRow));
-    if (rowAdded) {
-      rowAdded.slideIn();
-    }
-  },
-  removeRow: function(rowIndex) {
-    var rowToRemove = Ext.get(this.getRow(rowIndex));
-    var gridView = this;
-
-    rowToRemove.slideOut('t', {
-      remove: true
-    });
-  }
-});
-*/
-
-Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
-  initComponent: function() {
-    Paperpile.Pager.superclass.initComponent.call(this);
-
-    var items = [this.first, this.inputItem, this.afterTextItem, this.last, this.refresh];
-    items = items.concat(this.findByType(Ext.Toolbar.Spacer));
-    items = items.concat(this.findByType(Ext.Toolbar.Separator));
-    for (var i = 0; i < items.length; i++) {
-      this.remove(items[i], true);
-    }
-
-    var pageText = this.findBy(function(item, container) {
-      if (item.text == this.beforePageText) {
-        return true;
-      } else {
-        return false;
-      }
-    },
-    this);
-    //('text',this.beforePageText);
-    this.remove(1, true);
-
-    this.on('render', this.myOnRender, this);
-
-  },
-  myOnRender: function() {
-    this.tip = new Ext.Tip({
-      minWidth: 10,
-      offsets: [0, -10],
-      pager: this,
-      renderTo: document.body,
-      style: {
-        'z-index': 100
-      },
-      updatePage: function(page, string) {
-        this.dragging = true;
-        this.body.update(string);
-        this.doAutoWidth();
-        var x = this.pager.getPositionForPage(page) - this.getBox().width / 2;
-        var y = this.pager.getBox().y - this.getBox().height;
-        this.setPagePosition(x, y);
-      }
-    });
-
-    this.progressBar = new Ext.ProgressBar({
-      text: '',
-      width: 50,
-      height: 10,
-      animate: {
-        duration: 1,
-        easing: 'easeOutStrong'
-      },
-      cls: 'pp-toolbar-progress'
-    });
-    this.mon(
-      this.progressBar, 'render', function(pb) {
-        this.mon(pb.getEl(), 'mousedown', this.handleProgressBarClick, this);
-        this.mon(pb.getEl(), 'mousemove', this.handleMouseMove, this);
-        this.mon(pb.getEl(), 'mouseover', this.handleMouseOver, this);
-        this.mon(pb.getEl(), 'mouseout', this.handleMouseOut, this);
-      },
-      this);
-    this.insert(2, this.progressBar);
-    this.insert(2, new Ext.Toolbar.Spacer({
-      width: 5
-    }));
-
-    this.grid.mon(this.next, 'click', this.grid.onPageButtonClick, this.grid);
-    this.grid.mon(this.prev, 'click', this.grid.onPageButtonClick, this.grid);
-
-  },
-  handleMouseOver: function(e) {
-    this.tip.show();
-  },
-  handleMouseOut: function(e) {
-    this.tip.hide();
-  },
-  handleMouseMove: function(e) {
-    var page = this.getPageForPosition(e.getXY());
-    if (page > 0) {
-      //var string = page+" ("+page*this.pageSize+" - "+(page+1)*this.pageSize+")";
-      var string = "Page " + page + " of " + Math.ceil(this.store.getTotalCount() / this.pageSize);
-      this.tip.updatePage(page, string);
-    } else {
-      this.tip.hide();
-    }
-  },
-  handleProgressBarClick: function(e) {
-    this.changePage(this.getPageForPosition(e.getXY()));
-    this.grid.onPageButtonClick();
-  },
-  getPositionForPage: function(page) {
-    var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);
-    var position = Math.floor(page * (this.progressBar.width / pages));
-    return this.progressBar.getBox().x + position;
-  },
-  getPageForPosition: function(xy) {
-    var position = xy[0] - this.progressBar.getBox().x;
-    var pages = Math.ceil(this.store.getTotalCount() / this.pageSize);
-    var newpage = Math.ceil(position / (this.progressBar.width / pages));
-    return newpage;
-  },
-  updateInfo: function() {
-    Paperpile.Pager.superclass.updateInfo.call(this);
-    var count = this.store.getCount();
-    var pgData = this.getPageData();
-    var pageNum = this.readPage(pgData);
-    pageNum = pgData.activePage;
-    var high = pageNum / pgData.pages;
-    var low = (pageNum - 1) / pgData.pages;
-    this.progressBar.updateRange(low, high, '');
-    if (high == 1 && low == 0) {
-      this.progressBar.disable();
-      this.progressBar.getEl().applyStyles('cursor:normal');
-    } else {
-      this.progressBar.enable();
-      this.progressBar.getEl().applyStyles('cursor:pointer');
-    }
-  }
-});

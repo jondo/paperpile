@@ -1,5 +1,5 @@
 
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -32,6 +32,7 @@ use Compress::Zlib;
 use MIME::Base64;
 use Digest::MD5;
 use URI::Split qw(uri_split uri_join);
+use Encode;
 
 use Data::Dumper;
 use Config;
@@ -48,7 +49,7 @@ sub get_tmp_dir {
 
   my ( $self ) = @_;
 
-  return Paperpile->config->{user_settings}->{tmp_dir};
+  return Paperpile->config->{tmp_dir};
 
 }
 
@@ -56,28 +57,25 @@ sub get_user_settings_model {
 
   my $self = shift;
 
-  my $dsn = Paperpile->config->{'Model::User'}->{dsn};
+  my $file = Paperpile->config->{'Model::User'}->{file};
 
-  my $model = Paperpile::Model::User->new();
-
-  $model->set_dsn($dsn);
+  my $model = Paperpile::Model::User->new( { file => $file } );
 
   return $model;
 
 }
+
 
 sub get_queue_model {
 
   my $self = shift;
 
-  my $dsn = Paperpile->config->{'Model::Queue'}->{dsn};
+  my $file = Paperpile->config->{'Model::Queue'}->{file};
 
-  my $model = Paperpile::Model::Queue->new();
-  $model->set_dsn($dsn);
+  my $model = Paperpile::Model::Queue->new( { file => $file } );
 
   return $model;
 }
-
 
 
 sub get_library_model {
@@ -87,8 +85,7 @@ sub get_library_model {
   my $settings = $self->get_user_settings_model->settings;
 
   my $db_file = $settings->{library_db};
-  my $model   = Paperpile::Model::Library->new();
-  $model->set_dsn( "dbi:SQLite:" . $db_file );
+  my $model = Paperpile::Model::Library->new( { file => $db_file } );
 
   return $model;
 
@@ -565,6 +562,7 @@ sub uniquify_pubs {
   my %seen;
 
   foreach my $pub (@$pubs) {
+    $pub->sanitize_fields;
     $seen{$pub->sha1} = 0;
   }
 
@@ -615,5 +613,88 @@ sub domain_from_url {
   return $auth;
 
 }
+
+# Wrapper script around $c->session. On the desktop we use a custom
+# solution to store the session to avoid a strange race condition bug
+# in the session plugin.
+
+# USAGE: session($c) ... returns hashref of current session data
+#        session($c, {key=>value}) ... set key in session data
+
+# Important: The local version writes and restores the data everytime
+# the function is called. So if you store an object in the session
+# hash and change the object afterwards it will not be updated in the
+# session hash unless session is called again.
+
+sub session {
+
+  my ( $self, $c, $data ) = @_;
+
+  # Switch between default plugin and our local solution
+  my $local = 1;
+
+  if ($local) {
+
+    my $s = $self->retrieve("local_session");
+    $s = {} if !defined $s;
+
+    if ( not defined $data ) {
+      return $s;
+    } else {
+      foreach my $key ( keys %$data ) {
+        if ( not defined $data->{$key} ) {
+          delete( $s->{$key} );
+        } else {
+          $s->{$key} = $data->{$key};
+        }
+      }
+      $self->store( "local_session", $s );
+    }
+  }
+
+  if ( !$local ) {
+    if ( not defined $data ) {
+      return $c->session;
+    } else {
+      foreach my $key ( keys %$data ) {
+        if ( not defined $data->{$key} ) {
+          delete( $c->session->{$key} );
+        } else {
+          $c->session->{$key} = $data->{$key};
+        }
+      }
+    }
+  }
+}
+
+# Decode $data which was read from external files. If $encoding is
+# given use this encoding. Otherwise, we try to decode to UTF-8 and if
+# this fails we decode to ISO-LATIN-1. This is probably the best we
+# can do although it will fail on any other legacy ASCII extension
+# that ISO-LATIN-1.
+
+sub decode_data {
+
+  my ($self, $data, $encoding) = @_;
+
+  # We have an encoding, so use it
+  if ($encoding){
+    return decode($encoding, $data);
+  }
+
+  my $decoded_data;
+
+  # Try to decode in UTF-8. If it is encoded in UTF-8 that's
+  # perfect. If the input file is plain ASCII this does not change
+  # anything and is also good. If it contains non UTF-8 characters we
+  # interpret this as ISO-LATIN-1.
+  if (eval { $decoded_data = decode_utf8($data, Encode::FB_CROAK); 1 }) {
+    return $decoded_data;
+  } else {
+    return decode('iso-8859-1', $data);
+  }
+}
+
+
 
 1;

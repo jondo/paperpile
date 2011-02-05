@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -62,7 +62,11 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     if (numSelected == 1) {
 
       var oldData = this.oldData || {};
-      var newData = sm.getSelected().data || {};
+      var sel = sm.getSelected();
+      var newData = {};
+      if (sel) {
+	 newData = sel.data || {};
+      }
 
       newData.isBibtexMode = Paperpile.utils.isBibtexMode();
 
@@ -381,7 +385,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'lookup-details':
-      this.getGrid().completeEntry();
+      this.getGrid().lookupDetails();
       break;
     case 'open-folder':
       var folder_id = el.getAttribute('folder_id');
@@ -402,23 +406,19 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
         path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
       }
 
-      var title = this.data.pdf_name;
-
-      // Don't show guids of temporary file names 
-      Paperpile.log(title);
-      if (title.match(/tmp.download..{32}\.pdf/)){
-        title = Ext.util.Format.ellipsis(this.data.title,25);
-      }
-
       Paperpile.main.tabs.newPdfTab({
         file: path,
-        title: title
+	filename: this.data.pdf_name
       });
       Paperpile.main.inc_read_counter(this.data);
       break;
 
     case 'open-pdf-external':
       Paperpile.main.openPdfInExternalViewer(this.data.pdf_name, this.data);
+      break;
+
+    case 'open-pdf-folder':
+      this.getGrid().openPDFFolder();
       break;
 
     case 'attach-pdf':
@@ -482,7 +482,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'edit-ref':
-      this.getGrid().handleEdit();
+      this.getGrid().handleEdit.defer(20,this.getGrid());
       break;
 
     case 'delete-ref':
@@ -746,7 +746,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
         var undo_msg = '';
         if (isPDF) {
-          undo_msg = 'Deleted PDF file ' + record.get('pdf_name');
+          undo_msg = 'Deleted PDF file ' + Ext.util.Format.ellipsis(record.get('pdf_name'),25);
         } else {
           undo_msg = "Deleted one attached file";
         }

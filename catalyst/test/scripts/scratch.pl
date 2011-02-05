@@ -2,28 +2,32 @@
 
 ## Add code to generate test data or ad-hoc tests here.
 
+BEGIN {$ENV{CATALYST_DEBUG}=0}
+
 use strict;
 use lib "../../lib";
 
 use Paperpile;
-use Paperpile::Formats::Bibtex;
+use Paperpile::Model::Library;
+use Paperpile::Utils;
+
 use Data::Dumper;
 use YAML;
+use Time::HiRes qw( gettimeofday tv_interval);
 
-### Format data in YAML
 
-my $r = Paperpile::Formats::Bibtex->new(file=>"/home/wash/examples/diss.bib");
+my $start = [gettimeofday];
 
-my $data = $r->read;
+foreach my $i (0..10){
 
-foreach my $pub (@$data){
+  my $model = Paperpile::Utils->get_library_model;
+  my $count = $model->fulltext_count("RNA", 0);
+  my $data = $model->fulltext_search("RNA", 0, 25,"CREATED DESC", 0, 1);
 
-  ## Don't show helper fields starting with underscore and empty
-  ## fields
-  foreach my $key (keys %$pub){
-    if ($key=~/^_/ || $pub->{$key} eq ''){
-      delete($pub->{$key});
-    }
-  }
-  print Dump($pub);
 }
+
+my $elapsed = tv_interval ( $start );
+
+print STDERR "$elapsed\n";
+
+

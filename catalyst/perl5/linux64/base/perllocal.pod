@@ -1075,3 +1075,25 @@ C<EXE_FILES: cover gcov2perl cpancover>
 
 =back
 
+=head2 Fri Jan 14 19:15:13 2011: C<Module> L<LockFile::Simple|LockFile::Simple>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.207>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

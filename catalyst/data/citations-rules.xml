@@ -1,0 +1,167 @@
+<!-- 
+ Copyright 2009-2011 Paperpile
+
+ This file is part of Paperpile
+
+ Paperpile is free software: you can redistribute it and/or modify it
+ under the terms of the GNU Affero General Public License as published
+ by the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Paperpile is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Affero General Public License for more details.  You should have
+ received a copy of the GNU Affero General Public License along with
+ Paperpile.  If not, see http://www.gnu.org/licenses.  -->
+
+<!--
+    PATTERNS:
+
+    _ANY_ :: .*
+    _AN1_ :: (.*[^\d])
+
+    _AU_  :: Authors, actually (.*)
+    _AU1_ :: Authors, actually (.*)
+    _EE_  :: Editors, actually (.*)
+
+    _Y0_  :: Year of the form: 1999, (1999), 1999a, ...
+    _Y1_  :: Year of the form: 1999, 1999a, ...
+ 
+    %0    :: [\.,]+
+    %1    :: [\.\?,]+
+    %2    :: [\.\?,:]+
+    %3    :: [\.\?,:;]+
+    %4    :: [\.\?,:;\s]+
+    %5    :: [\.,:;]+
+    %I    :: [\.\?,:;\s]+[Ii]n:?\s
+    %P    :: [\.\?,:;\s]+(?:pages|pp\.?|pgs\.?|(?<!p)p\.)
+    %E    :: (?:[Ee]ditors?|[Ee]ds\.?|[Ee]dited\sby)
+    %V    :: [\.\?,:;\s]+(?:[Vv]olume|[Vv]ol\.|[Vv]olume\sof|[Vv]ol\.\sof)
+
+    _PU_  :: Publisher built from the list in citations-data.xml
+
+    _PA_  :: Pages
+
+    _VO_  :: Volume
+
+    _AD_  :: Address, follwing cases are handled:
+           A city name consisting of ONE word and a state or country abbreviation
+	      e.g.: Cambridge, USA or Cambridge, MA
+	   A city name consisting of TWO words and a state or country abbreviation
+	   Note: also cities starting with "St." are considered
+	      e.g.: San Diego, USA or New York, NJ or St. Louis, MO
+	   A city name consisting of ONE word
+	      e.g.: Amsterdam or Oxford
+	   A city name consisting of TWO words
+	      e.g.: New York or Los Angeles or St. Louis
+	   A city name consisting of ONE word and a state or country
+	      e.g.: Heidelberg, Germany
+	   A city name consisting of ONE word and a state or country (TWO words)
+	      e.g.: Cambridge, United Kingdom
+	   A city name consisting of TWO word and a state or country
+	      e.g.: Key West, Florida
+	   A city name consisting of TWO word and a state or country (TWO words)
+	      e.g.: New York, New York
+
+
+    _SR_  :: Series, built from the list in citations-data.xml
+
+    _SE_  :: Series, actually [^:,\.]+
+
+    _PR_  :: Proceedings title
+
+    _IP_  :: In Press, built from the list in citations-data.xml
+
+-->
+<rules>
+
+  <entry type="INPROCEEDINGS">
+    <rule>_ANY_ _Y0_ _ANY_  %0 _PR_                                               %4 _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_  %0 _PR_                                               %P _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_  %0 _PR_                         . _AD_                %P _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_  %0 _PR_                         , _AD_                %P _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_  %0 _PR_                         , _AD_                       </rule>
+    <rule>_ANY_ _Y0_ _ANY_  %0 _PR_ ,    _PU_               , _AD_                %P _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_  %0 _PR_                %V _VO_                        %P _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_  %I _EE_ ( %E ) %4 _PR_  . _PU_  , _AD_                %P _PA_</rule>
+    <rule>_ANY_ _Y0_        %I _EE_ ( %E ) %4 _PR_  . _PU_  , _AD_                %P _PA_</rule>
+    <rule>_ANY_             %I _EE_ , %E ,    _PR_         %V _VO_        %P _PA_ %4 _Y0_</rule>
+    <rule>_ANY_             %I _EE_ , %E ,    _PR_ %P _PA_  . _PU_                %4 _Y0_</rule>
+    <rule>_ANY_                _PR_                 , _PU_                %4 _Y0_ %P _PA_</rule>
+    <rule>_ANY_             %0 _PR_                                       %4 _Y0_        </rule>
+    <rule>_ANY_             %0 _PR_                                       %4 _Y0_ %P _PA_</rule>
+    <rule>_ANY_             %0 _PR_                         , _AD_        %4 _Y0_ %P _PA_</rule>
+    <rule>_ANY_             %0 _PR_  , _AD_         , _PU_                %4 _Y0_ %P _PA_</rule>
+    <rule>_ANY_             %0 _PR_ %P _PA_         . _PU_                %4 _Y0_        </rule>
+    <rule>_ANY_             %0 _PR_ %P _PA_                 , _AD_        %4 _Y0_        </rule>
+    <rule>_ANY_             %0 _PR_                                       %P _PA_ %4 _Y0_</rule>
+    <rule>_ANY_                _PR_                                       %4 _Y0_ %4 _PA_</rule>
+    <rule>_ANY_                _PR_                                       %4 _PA_ %4 _Y0_</rule>
+    <rule>_ANY_ _Y0_ _ANY_     _PR_  , _SR_           _VO_                        %4 _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_     _PR_  . _SR_ , _PU_  , _VO_                        %4 _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_  %0 _PR_                %V _VO_ of _SR_ . _AD_         %P _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_  %0 _PR_                %V _VO_ of _SR_ . _AD_                </rule>
+    <rule>_ANY_                _PR_  , _SR_        %V _VO_                %4 _PA_ %4 _Y0_</rule>
+    <rule>_ANY_             %0 _PR_  , _SR_        %V _VO_  , _PU_ , _AD_ %4 _Y0_ %P _PA_</rule>
+    <rule>_ANY_             %0 _PR_  , _SR_        %V _VO_                %4 _Y0_ %P _PA_</rule>
+    <rule>_ANY_                _PR_  ,             %V _VO_ of _SR_        %4 _Y0_ %4 _PA_</rule>
+    <rule>_ANY_             %0 _PR_  . _SR_        %V _VO_                %4 _Y0_        </rule>
+    <rule>_ANY_             %0 _PR_  , _AD_ , _SR_ %V _VO_                %4 _Y0_ %P _PA_</rule>
+    <rule>_ANY_                _PR_                %V _VO_ of _SR_        %P _PA_ %4 _Y0_</rule>
+    <rule>_ANY_             %0 _PR_ %4 _PU_                                       %4 _Y0_</rule>
+  </entry>
+
+  <entry type="INCOLLECTION">
+    <rule>_ANY_            %I        _EE_ ( %E ) %4 _BT_ %0 _PU_ , _AD_ %4 _Y0_  %P _PA_</rule>
+    <rule>_ANY_            %I        _EE_ ( %E ) %4 _BT_         , _AD_ %4 _Y0_  %P _PA_</rule>
+    <rule>_ANY_            %I        _EE_ ( %E ) %4 _BT_           _AD_ %4 _Y0_  %P _PA_</rule>
+    <rule>_ANY_ _Y0_       %I        _EE_ ( %E ) %4 _BT_ %0 _PU_ , _AD_          %P _PA_</rule>
+    <rule>_ANY_ _Y0_ _ANY_ %I        _EE_ ( %E ) %4 _BT_ %0 _PU_ , _AD_          %P _PA_</rule>
+    <rule>_ANY_            %I        _EE_ , %E   %4 _BT_  . _PU_        %4 _Y0_         </rule>
+    <rule>_ANY_            %I _BT_ , _EE_ , %E   %4 _Y0_ %4 _PU_                 %P _PA_</rule>
+    <rule>_ANY_            %I _BT_ , _EE_ , %E   %4 _Y0_ %4 _PU_ : _AD_          %P _PA_</rule>
+    <rule>_ANY_             , _BT_ , _SR_   %V _VO_       , _PU_ , _AD_ %4 _Y0_         </rule>
+    <rule>_ANY_ _Y0_       %0 _BT_          %V _VO_ of _SE_              . _PU_   , _AD_</rule>
+    <rule>_ANY_ _Y0_ _ANY_ %I _BT_             %4 _SR_           . _AD_ %4 _PU_  %P _PA_</rule>
+    <rule>_ANY_            %I        _EE_ , %E %4 _SR_ %V _VO_  %P _PA_ %4 _PU_  %4 _Y0_</rule>
+  </entry>
+
+  <entry type="BOOK">
+    <rule>_ANY_ _Y0_        , _AD_ %3 _PU_                 </rule>
+    <rule>_ANY_             . _AD_ %3 _PU_ %4 _Y0_         </rule>
+    <rule>_ANY_ _Y0_ _ANY_         %0 _PU_ %3 _AD_         </rule>
+    <rule>_ANY_ _Y0_ _ANY_            _PU_ %3 _AD_         </rule>
+    <rule>_ANY_                    %0 _PU_ %3 _AD_ %4 _Y0_ </rule>
+    <rule>_ANY_                    %0 _PU_         %4 _Y0_ </rule>
+    <rule>_ANY_                       _PU_         %4 _Y0_ </rule>
+    <rule>_ANY_                     ( _PU_         %4 _Y1_)</rule>
+    <rule>_ANY_                     ( _PU_ %3 _AD_ %4 _Y1_)</rule>
+    <rule>_ANY_                    %0 _PU_ %0 _AD_ %0 _Y0_ </rule>
+    <rule>_ANY_ _Y0_               %4 _PU_                 </rule>
+    <rule>_ANY_ _Y0_ _ANY_         %0 _PU_                 </rule>
+    <rule>_ANY_ _Y0_ _ANY_ %0 _AD_ %3 _PU_                 </rule>
+    <rule>_ANY_ _Y0_ _ANY_          ( _PU_ %3 _AD_ )       </rule>
+  </entry>
+
+  <entry type="ARTICLE">
+    <rule>_AN1_           _Y0_ %4 _VO_                        %4 _PA_        </rule>
+    <rule>_AN1_           _Y0_ %4 _VO_  ( _IS_ )              %4 _PA_        </rule>
+    <rule>_AN1_                %4 _VO_                        %4 _PA_ %4 _Y0_</rule>
+    <rule>_AN1_                %4 _VO_  ( _IS_ )              %4 _PA_ %4 _Y0_</rule>
+    <rule>_AN1_                   _VO_ %4 _IS_                %4 _PA_ %4 _Y0_</rule>
+    <rule>_AN1_                   _VO_  ( _IS_ ) _Y0_         %4 _PA_        </rule>
+    <rule>_AN1_                   _VO_           _Y0_ %4 _IS_ %4 _PA_        </rule>
+    <rule>_AN1_                   _VO_           _Y0_         %4 _PA_        </rule>
+    <rule>_AN1_                                  _Y0_         %4 _PA_        </rule>
+    <rule>_AN1_                   _VO_  ( _IS_ ) _Y0_                        </rule>
+    <rule>_AU1_  _Y0_ %4 _AN1_ %4 _VO_  ( _IS_ )              %4 _PA_        </rule>
+    <rule>_AU1_  _Y0_ %4 _AN1_ %4 _VO_                        %4 _PA_        </rule>
+    <rule>_AU1_  _Y0_ %4 _AN1_ %4 _VO_ %4 _IS_                %4 _PA_        </rule>
+    <rule>_ANY_  _Y0_                                            _IP_        </rule>
+    <rule>_AU1_  _Y0_    _ANY_                                   _IP_        </rule>
+    <rule>_AN1_                                                  _IP_        </rule>
+    <rule>_ANY_                %V _VO_ , no. _IS_ ,           %P _PA_ %4 _Y0_</rule>
+  </entry>
+
+</rules>

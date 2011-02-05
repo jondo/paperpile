@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -63,15 +63,10 @@ Paperpile.LabelWidget = Ext.extend(Object, {
     var labels;
     if (this.multipleSelection) {
       // Collect all the labels from all references selected.
-      var guids = this.grid.getSelectionAsList();
-      var grid_store = this.grid.getStore();
+      var records = this.grid.getSelectionRecords();
       var label_hash = {};
-      for (var i = 0; i < guids.length; i++) {
-        var guid = guids[i];
-        var record = grid_store.getById(guid);
-	if (!record) {
-	    continue;
-	}
+      for (var i=0; i < records.length; i++) {
+        var record = records[i];
         var record_labels = record.data.labels.split(/\s*,\s*/);
         for (var j = 0; j < record_labels.length; j++) {
           var label = record_labels[j];

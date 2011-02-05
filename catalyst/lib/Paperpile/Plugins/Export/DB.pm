@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -46,8 +46,7 @@ sub write {
 
   copy( $empty_db, $dbfile ) or FileWriteError->throw( error => "Could not write $dbfile." );
 
-  my $model = Paperpile::Model::Library->new();
-  $model->set_dsn( "dbi:SQLite:" . $dbfile );
+  my $model = Paperpile::Model::Library->new(file=>$dbfile);
 
   foreach my $pub ( @{ $self->data } ) {
     $pub->pdf(undef);

@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -38,45 +38,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
     view.handleHdOver = Ext.emptyFn;
 
     this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
-
-    this.actions['NEW'] = new Ext.Action({
-      text: 'Insert Manually',
-      iconCls: 'pp-icon-add',
-      handler: function() {
-        this.handleEdit(true);
-      },
-      scope: this,
-      itemId: 'new_button',
-      tooltip: 'Manually create a new reference for your library'
-    });
-    this.actions['FILE_IMPORT'] = new Ext.Action({
-      text: "Open Bibliography File",
-      iconCls: 'pp-icon-import-file',
-      tooltip: 'Import references from EndNote, BibTeX <br/> and other bibliography files.',
-      handler: function() {
-        Paperpile.main.fileImport();
-      }
-    });
-    this.actions['PDF_IMPORT'] = new Ext.Action({
-      text: "Import PDFs",
-      iconCls: 'pp-icon-import-pdf',
-      tooltip: 'Import references from one or more PDFs',
-      handler: function() {
-        Paperpile.main.pdfExtract();
-      }
-    });
-
-    this.actions['ADD_MENU'] = {
-      text: 'Add to Library',
-      itemId: 'ADD_MENU',
-      iconCls: 'pp-icon-add',
-      menu: {
-        items: [
-          this.actions['NEW'],
-          this.actions['FILE_IMPORT'],
-          this.actions['PDF_IMPORT']]
-      }
-    };
 
     var store = this.getStore();
     store.baseParams['plugin_search_pdf'] = 0;
@@ -338,9 +299,6 @@ Ext.extend(Paperpile.PluginGridDB, Paperpile.PluginGrid, {
 
     ids.insert(0, 'FILTER_FIELD');
     ids.insert(1, 'FILTER_BUTTON');
-
-    var index = ids.indexOf('TB_FILL');
-    ids.insert(index + 1, 'ADD_MENU');
 
     index = ids.indexOf('SELECT_ALL');
     ids.insert(index + 0, 'EDIT');

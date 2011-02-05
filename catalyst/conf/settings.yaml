@@ -4,25 +4,23 @@ platform: "__PLATFORM__"
 
 paperpile_user_dir: "__PP_USER_DIR__"
 user_settings_db: "__PP_USER_DIR__/settings.db"
-queue_db: "__PP_USER_DIR__/tmp/queue.db"
+
+tmp_dir: "__PP_TMP_DIR__"
+queue_db: "__PP_TMP_DIR__/queue.db"
 
 Model::App:
-  dsn: "dbi:SQLite:__path_to(db/app.db)__"
+  file: "__path_to(db/app.db)__"
 
 Model::User:
-  dsn: "dbi:SQLite:__PP_USER_DIR__/settings.db"
+  file: "__PP_USER_DIR__/settings.db"
 
 Model::Queue:
-  dsn: "dbi:SQLite:__PP_USER_DIR__/tmp/queue.db"
-
-session:
-  storage: "__PP_USER_DIR__/tmp/session"
-  expires: 100000000
+  file: "__PP_TMP_DIR__/queue.db"
 
 app_settings:
   platform: "__PLATFORM__"
-  version_id: 5
-  version_name: "0.5"
+  version_id: 6
+  version_name: "0.5.1"
   build_number: 0
   settings_db_version: 2
   library_db_version: 3
@@ -31,7 +29,6 @@ app_settings:
 
 user_settings:
   db_version: 2
-  tmp_dir: "__PP_USER_DIR__/tmp"
   library_db: "__PP_USER_DIR__/paperpile.ppl"
   user_home: "__USERHOME__"
   file_sync: ""
@@ -80,15 +77,14 @@ library_settings:
   _tree: ""
 
 release:
-  patch: 0
+  patch: 1
   restart: 1
-  msg: "Major update with many more features."
+  msg: "Several small improvements and many bug-fixes"
   log:
-    - "Streamlined user interface including native file open/save dialogs"
-    - "Advanced BibTeX support with improved import/export and citation functions"
-    - "Auto-export of folder or labels to BibTeX files"
-    - "Improved import functions. Import your references including tags and PDFs from various other programs"
-    - "Drag and drop support. Drag PDFs, attachments or library files directly into Paperpile"
-    - "Improved workflow to import PDFs"
-    - "Smart online lookup to auto-complete partial references"
-    - "Keyboard shortcuts for all major functions"
+    - "Fix 'database lock' errors encountered by some users."
+    - "Fix spurious 'selectrow_array failed no such table Publications' error"
+    - "Many more minor bug fixes"
+    - "Support for additional publisher sites for automatic PDF download."
+    - "Streamlined user interface for task queue"
+    - "Improved status/progress massages for PDF downloads"
+    - "Several user interface tweaks to improve discoverability of features"

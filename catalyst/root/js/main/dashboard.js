@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -42,7 +42,7 @@ Paperpile.Dashboard = Ext.extend(Ext.Panel, {
     //  }
     //}
 
-    Paperpile.PatternSettings.superclass.initComponent.call(this);
+    Paperpile.Dashboard.superclass.initComponent.call(this);
 
   },
 

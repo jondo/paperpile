@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -25,6 +25,7 @@ use Paperpile::Exceptions;
 use File::Temp;
 use File::Copy;
 use File::Path;
+use File::Spec;
 use Data::Dumper;
 use JSON;
 use 5.010;
@@ -98,6 +99,20 @@ sub pattern_example : Local {
   $data{pdf_pattern}->{string}        = $formatted_pdf;
   $data{attachment_pattern}->{string} = $formatted_attachment;
 
+  my $settings = $c->model('Library')->settings;
+  $data{paper_root}->{string} = '';
+
+  if ($paper_root ne $settings->{paper_root}) {
+
+    if (!File::Spec->file_name_is_absolute( $paper_root )){
+      $data{paper_root}->{error} = "Provide a full (absolute) path to the directory";
+    }
+
+    if (scalar glob("$paper_root/*")){
+      $data{paper_root}->{error} = "The PDF folder is not empty. To avoid conflicts with existing files please choose a new or empty folder for your PDFs";
+    }
+  }
+
   $c->stash->{data} = {%data};
 
 }
@@ -134,6 +149,9 @@ sub update_patterns : Local {
   if ($update_files) {
     $c->model('Library')->rename_files( $c->request->params->{pdf_pattern},
                                         $c->request->params->{attachment_pattern});
+
+    $c->model('Library')->set_setting( 'pdf_pattern',        $pdf_pattern );
+    $c->model('Library')->set_setting( 'attachment_pattern', $attachment_pattern);
   }
 
   if ($root_changed) {
@@ -152,10 +170,12 @@ sub update_patterns : Local {
     if ($ok) {
 
       # update library_db in session variable
-      $c->session->{library_db} = $library_db;
+      Paperpile::Utils->session($c, {library_db => $library_db});
 
+      ## Refactored tree, is not stored in session any more. So it should be reloaded without that...
       # Force reload of tree
-      delete $c->session->{tree};
+      #Paperpile::Utils->session($c, {tree => undef});
+
       $c->model('User')->set_setting( 'library_db', $library_db );
     } else {
       FileError->throw("Could not change database file to $library_db ($!)");

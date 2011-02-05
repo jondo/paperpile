@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -40,9 +40,12 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
     if (data.pdf != '') {
       var el = [
         '    <ul>',
-        '      <li id="open-pdf{id}">',
+        '      <li id="open-pdf{id}" class="link-hover">',
         '        <a href="#" class="pp-textlink pp-action pp-action-open-pdf" action="open-pdf">View PDF</a>',
-        '        &nbsp;&nbsp;<a href="#" class="pp-textlink pp-second-link" action="open-pdf-external">External viewer</a>',
+	'        <div style="display:inline-block;margin-left:2px;vertical-align:middle;">',
+	'          <div class="pp-info-button pp-float-left pp-pdf-external pp-second-link" ext:qtip="View PDF in external viewer" action="open-pdf-external"></div>',
+	'          <div class="pp-info-button pp-float-left pp-pdf-folder pp-second-link" ext:qtip="Open containing folder" action="open-pdf-folder"></div>',
+        '        </div>',
         '      </li>',
         '      <li id="delete-pdf-{id}">',
         '        <a href="#" class="pp-textlink pp-action pp-action-delete-pdf" action="delete-pdf">Delete PDF</a>',
@@ -165,6 +168,17 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
 
       Ext.DomHelper.overwrite(rootEl, el);
     }
+
+    // If the user is currently dragging, we need to update the targets list
+    // when the download widget updates. This way, if a PDF is added to the article in
+    // the meantime, the drag-drop targets list gets updated accordingly.
+    if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible()) {
+      // We call createDropTargets to trigger the drag-drop panel to recreate
+      // drop targets appropriate for the current state of the grid & overview panel.
+      // The lastEventURIs is the URI list string saved from the last grid drag event.
+      Paperpile.main.dd.createDropTargets(Paperpile.main.dd.lastEventURIs);
+    }
+
   },
 
   handleClick: function(e) {

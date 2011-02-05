@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -48,9 +48,10 @@ has yui_jar  => ( is => 'rw' );    #YUI compressor jar
 my %ignore = (
   all => [
     qr([~#]),                qr{/tmp/},
-    qr{/t/},                 qr{\.gitignore},
+    qr{catalyst/test/},      qr{\.gitignore},
     qr{base/CORE/},          qr{base/pods?/},
     qr{(base|cpan)/CPAN},    qr{(base|cpan)/Test},
+    qr{Devel/Cover},
     qr{base/unicore/.*txt$},
     qr{ext/examples},       qr{ext/src},
     qr{journals.list},
@@ -87,8 +88,8 @@ sub initdb {
 
   chdir $self->cat_dir;
 
-  if (Paperpile::Utils->get_platform eq 'osx'){
-    $ENV{PATH} = "bin/osx:".$ENV{PATH};
+  if ( Paperpile::Utils->get_platform eq 'osx' ) {
+    $ENV{PATH}              = "bin/osx:" . $ENV{PATH};
     $ENV{DYLD_LIBRARY_PATH} = "bin/osx";
   }
 
@@ -99,9 +100,7 @@ sub initdb {
     print @out;
   }
 
-  my $model = Paperpile::Model::Library->new();
-  $model->set_dsn( "dbi:SQLite:" . "db/library.db" );
-  $model->connect;
+  my $model = Paperpile::Model::Library->new( { file => "db/library" } );
 
   my $yaml   = "conf/fields.yaml";
   my $config = LoadFile($yaml);
@@ -109,7 +108,7 @@ sub initdb {
     $model->dbh->do("ALTER TABLE Publications ADD COLUMN $field TEXT");
   }
 
-  foreach my $field ('created','journal','year','authors','attachments','pdf','annote'){
+  foreach my $field ( 'created', 'journal', 'year', 'authors', 'attachments', 'pdf', 'annote' ) {
     $model->dbh->do("CREATE INDEX $field\_index ON Publications (trashed,$field);");
   }
 
@@ -118,8 +117,7 @@ sub initdb {
   $self->echo("Importing journal list into app.db...");
 
   open( JOURNALS, "<data/journals.list" );
-  $model = Paperpile::Model::App->new();
-  $model->set_dsn( "dbi:SQLite:" . "db/app.db" );
+  $model = Paperpile::Model::App->new( { file => "db/app.db" } );
 
   $model->dbh->begin_work();
 
@@ -127,7 +125,7 @@ sub initdb {
 
   my %seen = ();
 
-  my $counter=0;
+  my $counter = 0;
   foreach my $line (<JOURNALS>) {
 
     next if $line =~ /^$/;
@@ -146,13 +144,13 @@ sub initdb {
     next if $seen{$short};
     $seen{$short} = 1;
 
-    # We don't fill the main table for now because it is not in use but very big
-    #$model->dbh->do(
-    #  "INSERT OR IGNORE INTO Journals (short, long, issn, essn, source, url, reviewed) VALUES ($short, $long, $issn, $essn, $source, $url, $reviewed);"
-    #);
+# We don't fill the main table for now because it is not in use but very big
+#$model->dbh->do(
+#  "INSERT OR IGNORE INTO Journals (short, long, issn, essn, source, url, reviewed) VALUES ($short, $long, $issn, $essn, $source, $url, $reviewed);"
+#);
 
     #my $rowid = $model->dbh->func('last_insert_rowid');
-    print STDERR "." if ($counter % 100 == 0);
+    print STDERR "." if ( $counter % 100 == 0 );
     $model->dbh->do("INSERT INTO Journals_lookup (short,long) VALUES ($short,$long)");
 
     $counter++;

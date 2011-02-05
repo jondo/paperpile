@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -277,7 +277,7 @@ sub complete_details {
       $full_pub->_light(0);
       $full_pub->refresh_fields();
       $full_pub->refresh_authors();
-      $full_pub->_details_link('');
+      $full_pub->_needs_details_lookup(0);
 
       return $full_pub;
     }
@@ -361,7 +361,7 @@ sub complete_details {
               $full_pub->_light(0);
               $full_pub->refresh_fields();
               $full_pub->refresh_authors();
-              $full_pub->_details_link('');
+              $full_pub->_needs_details_lookup(0);
 
               return $full_pub;
             }
@@ -392,7 +392,7 @@ sub complete_details {
               $full_pub->_light(0);
               $full_pub->refresh_fields();
               $full_pub->refresh_authors();
-              $full_pub->_details_link('');
+              $full_pub->_needs_details_lookup(0);
 
               return $full_pub;
             }
@@ -421,8 +421,7 @@ sub complete_details {
   # Google Bug: everything is twice escaped in bibtex
   $bibtex =~ s/\\\\/\\/g;
 
-  # import the information from the BibTeX string
-  $full_pub->import_string( $bibtex, 'BIBTEX' );
+  $full_pub->build_from_string( $bibtex);
 
   # bibtex import deactivates automatic refresh of fields
   # we force it now at this point
@@ -455,7 +454,7 @@ sub complete_details {
   $full_pub->citekey('');
 
   # Unset to mark as completed
-  $full_pub->_details_link('');
+  $full_pub->_needs_details_lookup(0);
 
   # Update plugin _hash with new data
   $full_pub->guid( $pub->guid );
@@ -467,7 +466,15 @@ sub complete_details {
 sub needs_completing {
   ( my $self, my $pub ) = @_;
 
-  return 1 if ( $pub->{_details_link} );
+  return 1 if ( $pub->{_needs_details_lookup} );
+  return 0;
+}
+
+sub needs_match_before_import {
+  ( my $self, my $pub ) = @_;
+
+  # Since our complete_details method is called before importing anyway
+  # (see CRUD->_complete_pubs) we never need a full match before import.
   return 0;
 }
 
@@ -832,14 +839,38 @@ sub _find_best_hit {
       my $counts = 0;
       foreach my $word (@words) {
         $counts++ if ( $tmp_title =~ m/\s$word\s/i );
-
-        #print "$counts || $word || $tmp_title\n";
       }
       print STDERR "counts: $counts max_counts: $max_counts\n";
 
       if ( $counts > $max_counts ) {
         $max_counts = $counts;
         $best_hit   = $i;
+      }
+
+      # another check if we got the matching hit
+      (my $tmpA = uc($tmp_orig_title)) =~ s/[^A-Z]//g;
+      (my $tmpB = uc($tmp_title)) =~ s/[^A-Z]//g;
+      if ( $tmpA eq $tmpB and length($tmpA) > 20 ) {
+	$best_hit   = $i;
+      }
+
+      # we often have different spellings like organization and organisation
+      if ( length($tmpA) == length($tmpB) ) {
+	my @split_tmpA = split(//, $tmpA);
+	my @split_tmpB = split(//, $tmpB);
+	my $correct = 0;
+	foreach my $k ( 0 .. $#split_tmpA ) {
+	  if ( $split_tmpA[$k] eq $split_tmpB[$k] ) {
+	    $correct++;
+	    next;
+	  }
+	  if ( $split_tmpA[$k] =~ m/[SZ]/ and $split_tmpB[$k] =~ m/[SZ]/) {
+	    $correct++;
+	  }
+	}
+	if ( $correct == $#split_tmpA+1 ) {
+	  $best_hit   = $i;
+	}
       }
 
       # if we fail, we try it a little less restrictive
@@ -1002,6 +1033,7 @@ sub _parse_googlescholar_page {
     $pub->_authors_display( $data{authors}->[$i] );
     $pub->_citation_display( $data{citations}->[$i] );
     $pub->linkout( $data{urls}->[$i] );
+    $pub->_needs_details_lookup(1); # Initialize each pub to want a details lookup.
     $pub->_details_link( $data{bibtex}->[$i] );
     $pub->_all_versions( $data{versions}->[$i] );
     $pub->_www_publisher( $data{www_publisher}->[$i] );

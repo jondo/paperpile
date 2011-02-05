@@ -1,4 +1,4 @@
-/* Copyright 2009, 2010 Paperpile
+/* Copyright 2009-2011 Paperpile
 
    This file is part of Paperpile
 
@@ -24,8 +24,10 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Container, {
   settingsPanel: null,
   settingName: 'search_seq',
   tempSettingValue: null,
+  origValue: null,
 
   initComponent: function() {
+    this.origValue = Paperpile.main.getSetting(this.settingName);
     this.tempSettingValue = Paperpile.main.getSetting(this.settingName);
 
     var usedConfig = {
@@ -403,6 +405,12 @@ Paperpile.PluginOrderPanel = Ext.extend(Ext.Container, {
     if (this.tempSettingValue != Paperpile.main.getSetting(this.settingName)) {
       this.settingsPanel.setSaveDisabled(false);
     }
+  },
+
+  // Implement an isDirty function so we can play along with the other fields
+  // in the settings.js panel
+  isDirty: function() {
+    return (this.tempSettingValue != this.origValue);
   },
 
   getValue: function() {

@@ -23,7 +23,7 @@ sub test_read {
 
   my ( $self, $msg, $infile, $outfile, $settings ) = @_;
 
-  my @observed = @{ $self->class->new( file => "$infile", settings => $settings )->read };
+  my @observed = @{ $self->class->new( file => "$infile", settings => $settings || {} )->read };
   my @expected = YAML::LoadFile("$outfile");
 
   is( $#observed, $#expected, "$msg: read ".($#expected+1)." items" );
@@ -36,6 +36,8 @@ sub test_read {
 sub test_write {
 
   my ( $self, $msg, $file, $settings ) = @_;
+
+  $settings = {} if not defined $settings;
 
   my @data = YAML::LoadFile($file);
 
@@ -70,7 +72,7 @@ sub test_write {
 
     my $pub = Paperpile::Library::Publication->new(%pub_data);
 
-    my $observed = $self->class->new( data => [$pub], settings => $settings )->write_string;
+    my $observed = $self->class->new( data => [$pub], settings => $settings)->write_string;
 
     $expected =~ s/^\s+//;
     $expected =~ s/\s+$//;

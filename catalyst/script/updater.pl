@@ -1,6 +1,6 @@
 ## Run with the Paperpile perl binary!
 
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #

@@ -1,6 +1,6 @@
 #! catalyst/perl5/linux32/bin/paperperl -w
 
-# Copyright 2009, 2010 Paperpile
+# Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
 #
@@ -43,7 +43,7 @@ my $workspace = `pwd`;
 chomp($workspace);
 
 # Set GIT_BRANCH in hudson job definition.
-my $git_branch = $ENV{GIT_BRANCH};
+my $git_branch = $ENV{GIT_BRANCH} || 'some_other_branch';
 
 my $b = Paperpile::Build->new( {
     cat_dir  => "$workspace/catalyst",
