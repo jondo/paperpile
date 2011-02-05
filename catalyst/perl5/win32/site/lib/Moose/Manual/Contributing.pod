@@ -1,0 +1,435 @@
+=pod
+
+=head1 NAME
+
+Moose::Manual::Contributing - How to get involved in Moose
+
+=head1 GETTING INVOLVED
+
+Moose is an open project, and we are always willing to accept bug fixes,
+more tests, and documentation patches. Commit bits are given out freely, and
+the L</STANDARD WORKFLOW> is very simple. The general gist is: clone the Git
+repository, create a new topic branch, hack away, then find a committer to
+review your changes.
+
+Note that this document applies to both Moose and L<Class::MOP> development.
+
+=head1 NEW FEATURES
+
+Moose already has a fairly large feature set, and we are currently
+B<not> looking to add any major new features to it. If you have an
+idea for a new feature in Moose, you are encouraged to create a
+MooseX module first.
+
+At this stage, no new features will even be considered for addition
+into the core without first being vetted as a MooseX module, unless
+it is absolutely 100% impossible to implement the feature outside the
+core.
+
+If you think it is 100% impossible, please come discuss it with us on IRC or
+via e-mail. Your feature may need a small hook in the core, or a
+refactoring of some core modules, and we are definitely open to that.
+
+Moose was built from the ground up with the idea of being highly extensible,
+and quite often the feature requests we see can be implemented through small
+extensions. Try it, it's much easier than you might think.
+
+=head1 PEOPLE
+
+As Moose has matured, some structure has emerged in the process.
+
+=over
+
+=item Contributors - people creating a topic or branch
+
+You.
+
+If you have commit access, you can create a topic on the main Moose.git
+repository.  If you don't have a commit bit, give us your SSH key or create your
+own clone of the L<git://git.moose.perl.org/Moose.git> repository.
+
+The relevant repository URIs are:
+
+=over
+
+=item Read-Only
+
+L<git://git.moose.perl.org/Moose.git>
+
+=item Read+Write
+
+L<gitmo@git.moose.perl.org:Moose.git>
+
+=back
+
+=item Core Committers - people reviewing and merging a branch
+
+These people have worked with the Moose codebase for a while.
+
+They've been responsible for large features or branches and can help review
+your changes and apply them to the master branch using the basic
+L</APPROVAL WORKFLOW>.
+
+They are also fairly well versed in Git, in order to merge the branches with
+no mistakes (especially when the merge fails), and to provide advice to
+contributors.
+
+=item Cabal - people who can release moose
+
+These people are the ones who have co-maint on Moose itself and can create a
+release. They're listed under L<Moose/CABAL> in the Moose documentation. They
+merge from Master to Stable.
+
+=back
+
+=head1 BRANCH LAYOUT
+
+The repository is divided into several branches to make maintenance easier for
+everyone involved. The branches below are ordered by level of stability.
+
+=over
+
+=item stable/*
+
+The branch from which releases are cut. When making a new major release, the
+release manager makes a new C<stable/X.YY> branch at the current position of
+C<master>. The version used in the stable branch should not include the last
+two digits of the version number.
+
+For minor releases, patches will be committed to C<master>, and
+backported (cherry-picked) to the appropriate stable branch as needed. A
+stable branch is only updated by someone from the Cabal during a release.
+
+The branch from which releases are cut. When making a new release, the
+release manager merges from master to stable. The stable branch is only
+updated by someone from the Cabal during a release.
+
+=item Master (refs/heads/master)
+
+The branch for new development. This branch is merged into and branched from.
+
+=item Branches (refs/heads/*)
+
+Large community branches for big development "projects".
+
+=item Topics (refs/heads/topic/*)
+
+Small personal branches that have been published for review, but can get
+freely rebased. Targeted features that may span a handful of commits.
+
+Any change or bugfix should be created in a topic branch.
+
+=back
+
+=head1 STANDARD WORKFLOW
+
+    # update your copy of master
+    git checkout master
+    git pull --rebase
+
+    # create a new topic branch
+    git checkout -b topic/my-feature origin/master
+
+    # hack, commit, feel free to break fast forward
+    git commit --amend                       # allowed
+    git rebase --interactive                 # allowed
+    git push --force origin topic/my_feature # allowed
+
+Then ask for a review/approval (see L</APPROVAL WORKFLOW>), and merge
+to master. If it merges cleanly and nobody has any objections, then it
+can be pushed to master.
+
+If it doesn't merge as a fast forward, the author of the branch needs to run
+
+    git remote update
+    git rebase origin/master # or merge
+
+and bring the branch up to date, so that it can be merged as a fast forward
+into master.
+
+No actual merging (as in a human resolving conflicts) should be done when
+merging into master, only from master into other branches.
+
+=head2 Preparing a topic branch
+
+Before a merge, a topic branch can be cleaned up by the author.
+
+This can be done using interactive rebase to combine commits, etc, or even
+C<git merge --squash> to make the whole topic into a single commit.
+
+Structuring changes like this makes it easier to apply git revert at a later
+date, and encourages a clean and descriptive history that documents what the
+author was trying to do, without the various hangups that happened while they
+were trying to do it (commits like "oops forgot that file" are not only
+unnecessary noise, they also make running things like git bisect or git revert
+harder).
+
+However, by far the biggest benefit is that the number of commits that go into
+master is eventually reduced, and they are simple and coherent, making it much
+easier for people maintaining branches to stay up to date.
+
+All large changes should be documented in L<Moose::Manual::Delta>.
+
+=head1 APPROVAL WORKFLOW
+
+Moose is an open project but it is also an increasingly important one. Many
+modules depend on Moose being stable. Therefore, we have a basic set of
+criteria for reviewing and merging branches. What follows is a set of rough
+guidelines that ensures all new code is properly vetted before it is merged to
+the master branch.
+
+It should be noted that if you want your specific branch to be approved, it is
+B<your> responsibility to follow this process and advocate for your branch.
+The preferred way is to send a request to the mailing list for review/approval,
+this allows us to better keep track of the branches awaiting approval and those
+which have been approved.
+
+=over 4
+
+=item Small bug fixes, doc patches and additional passing tests.
+
+These items don't really require approval beyond one of the core contributors
+just doing a simple review.
+
+=item Larger bug fixes, doc additions and TODO or failing tests.
+
+Larger bug fixes should be reviewed by at least one cabal member and should be
+tested using the F<xt/author/test-my-dependents.t> test.
+
+New documentation is always welcome, but should also be reviewed by a cabal
+member for accuracy.
+
+TODO tests are basically feature requests, see our L</NEW FEATURES> section
+for more information on that. If your feature needs core support, create a
+topic/ branch using the L</STANDARD WORKFLOW> and start hacking away.
+
+Failing tests are basically bug reports. You should find a core contributor
+and/or cabal member to see if it is a real bug, then submit the bug and your
+test to the RT queue. Source control is not a bug reporting tool.
+
+=item New user-facing features.
+
+Anything that creates a new user-visible feature needs to be approved by
+B<more than one> cabal member.
+
+Make sure you have reviewed L</NEW FEATURES> to be sure that you are following
+the guidelines. Do not be surprised if a new feature is rejected for the core.
+
+=item New internals features.
+
+New features for Moose internals are less restrictive than user facing
+features, but still require approval by B<at least one> cabal member.
+
+Ideally you will have run the F<test-my-dependents.t> script to be sure you
+are not breaking any MooseX module or causing any other unforeseen havoc. If
+you do this (rather than make us do it), it will only help to hasten your
+branch's approval.
+
+=item Backwards incompatible changes.
+
+Anything that breaks backwards compatibility must be discussed by the
+cabal. Backwards incompatible changes should not be merged to master if there
+are strong objections from any cabal members.
+
+We have a policy for what we see as sane L</BACKWARDS COMPATIBILITY> for
+Moose. If your changes break back-compat, you must be ready to discuss and
+defend your change.
+
+=back
+
+=head1 RELEASE WORKFLOW
+
+    git checkout master
+
+    # minor releases
+    git checkout stable/X.YY
+
+    # edit for final version bumping, changelogging, etc
+    # prepare release (test suite etc)
+    perl-reversion -bump
+    make manifest
+    git commit
+    git branch stable/X.YY # only for non-trial major releases
+    shipit # does not ship the tarball, but does everything else
+    cpan-upload ~/shipit-dist/Moose-X.YZ.tar.gz
+
+Development releases are made without merging into the stable branch.
+
+    # non-trial releases
+    cpan-upload ~/shipit-dist/Moose-X.YYZZ.tar.gz
+
+    # trial releases
+    cd ~/shipit-dist
+    mv Moose-X.YYZZ.tar.gz Moose-X.YYZZ-TRIAL.tar.gz
+    cpan-upload Moose-X.YYZZ-TRIAL.tar.gz
+
+=head2 Release How-To
+
+Moose (and L<Class::MOP>) releases fall into two categories, each with their
+own level of release preparation. A minor release is one which does not
+include any API changes, deprecations, and so on. In that case, it is
+sufficient to simply test the release candidate against a few different
+different Perls. Testing should be done against at least two recent major
+version of Perl (5.8.8 and 5.10.1, for example). If you have more versions
+available, you are encouraged to test them all. However, we do not put a lot
+of effort into supporting older 5.8.x releases.
+
+For major releases which include an API change or deprecation, you should run
+the F<xt/author/test-my-dependents.t> test. This tests a long list of MooseX
+and other Moose-using modules from CPAN. In order to run this script, you must
+arrange to have the new version of Moose and/or Class::MOP in Perl's include
+path. You can use C<prove -b> and C<prove -I>, install the module, or fiddle
+with the C<PERL5LIB> environment variable, whatever makes you happy.
+
+This test downloads each module from CPAN, runs its tests, and logs failures
+and warnings to a set of files named F<test-mydeps-$$-*.log>. If there are
+failures or warnings, please work with the authors of the modules in question
+to fix them. If the module author simply isn't available or does not want to
+fix the bug, it is okay to make a release.
+
+Regardless of whether or not a new module is available, any breakages should
+be noted in the conflicts list in the distribution's F<Makefile.PL>.
+
+Both Class::MOP and Moose have a F<.shipit> file you can use to make sure the
+release goes smoothly. You are strongly encouraged to use this instead of
+doing the final release steps by hand.
+
+=head1 EMERGENCY BUG WORKFLOW (for immediate release)
+
+Anyone can create the necessary fix by branching off of the stable branch:
+
+    git remote update
+    git checkout -b topic/my-emergency-fix origin/stable
+    # hack
+    git commit
+
+Then a cabal member merges into C<master>, and backports the change into
+C<stable/X.YY>:
+
+    git checkout master
+    git merge topic/my-emergency-fix
+    git push
+    git checkout stable/X.YY
+    git cherry-pick -x master
+
+=head1 PROJECT WORKFLOW
+
+For longer lasting branches, we use a subversion style branch layout, where
+master is routinely merged into the branch. Rebasing is allowed as long as all
+the branch contributors are using C<git pull --rebase> properly.
+
+C<commit --amend>, C<rebase --interactive>, etc. are not allowed, and should
+only be done in topic branches. Committing to master is still done with the
+same review process as a topic branch, and the branch must merge as a fast
+forward.
+
+This is pretty much the way we're doing branches for large-ish things right
+now.
+
+Obviously there is no technical limitation on the number of branches. You can
+freely create topic branches off of project branches, or sub projects inside
+larger projects freely. Such branches should incorporate the name of the branch
+they were made off so that people don't accidentally assume they should be
+merged into master:
+
+    git checkout -b my-project--topic/foo my-project
+
+(unfortunately Git will not allow C<my-project/foo> as a branch name if
+C<my-project> is a valid ref).
+
+=head1 THE "PU" BRANCH
+
+To make things easier for longer lived branches (whether topics or projects),
+the 'pu' branch is basically what happens if you merge all of the branches and
+topics together with master.
+
+We can update this as necessary (e.g. on a weekly basis if there is merit),
+notifying the authors of the respective branches if their branches did not merge
+(and why).
+
+To update 'pu':
+
+    git checkout pu
+    git remote update
+    git reset --hard origin/master
+    git merge @all_the_branches
+
+If the merge is clean, 'pu' is updated with C<push --force>.
+
+If the merge is not clean, the offending branch is removed from
+C<@all_the_branches>, with a small note of the conflict, and we try again.
+
+The authors of the failed branches should be told to try to merge their branch
+into 'pu', to see how their branch interacts with other branches.
+
+'pu' is probably broken most of the time, but lets us know how the different
+branches interact.
+
+=head1 BRANCH ARCHIVAL
+
+Merged branches should be deleted.
+
+Failed branches may be kept, but consider moving to refs/attic/ (e.g.
+http://danns.co.uk/node/295) to keep git branch -l current.
+
+Branches that have not been worked on for a long time will be moved to
+refs/abandoned/ periodically, but feel free to move the branch back to
+refs/topic/ if you want to start working on it again.
+
+=head1 TESTS, TESTS, TESTS
+
+If you write I<any> code for Moose or Class::MOP, you B<must> add
+tests for that code. If you do not write tests then we cannot
+guarantee your change will not be removed or altered at a later date,
+as there is nothing to confirm this is desired behavior.
+
+If your code change/addition is deep within the bowels of
+Moose/Class::MOP and your test exercises this feature in a non-obvious
+way, please add some comments either near the code in question or in
+the test so that others know.
+
+We also greatly appreciate documentation to go with your changes, and
+an entry in the Changes file. Make sure to give yourself credit!
+
+=head1 BACKWARDS COMPATIBILITY
+
+Change is inevitable, and Moose is not immune to this. We do our best
+to maintain backwards compatibility, but we do not want the code base
+to become overburdened by this. This is not to say that we will be
+frivolous with our changes, quite the opposite, just that we are not
+afraid of change and will do our best to keep it as painless as
+possible for the end user.
+
+The rule is that if you do something that is not backwards compatible, you
+B<must> do I<at least> one deprecation cycle (more if it is larger change).
+For really larger or radical changes dev releases may be needed as well (the
+Cabal will decide on this on a case-per-case basis).
+
+Our policy with deprecation is that each deprecation should go through several
+stages. First, we simply add a deprecation notice the documentation in
+F<Changes> and L<Moose::Manual::Delta>. In a future release, we then make the
+deprecated feature warn loudly and often so that users will have time to fix
+their usages. Finally, the feature is removed in a later release.
+
+All backwards incompatible changes B<must> be documented in
+L<Moose::Manual::Delta>. Make sure to document any useful tips or workarounds
+for the change in that document.
+
+=head1 AUTHOR
+
+Stevan Little E<lt>stevan@iinteractive.comE<gt>
+
+Chris (perigrin) Prather
+
+Yuval (nothingmuch) Kogman
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2009-2010 by Infinity Interactive, Inc.
+
+L<http://www.iinteractive.com>
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

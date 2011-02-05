@@ -1,0 +1,239 @@
+
+=head1 NAME 
+
+Catalyst::Plugin::ConfigLoader::Manual - Guide to using the ConfigLoader plugin
+
+=head1 BASIC USAGE
+
+    package MyApp;
+    
+    use Catalyst qw( ConfigLoader ... );
+
+=head1 ENVIRONMENT VARIABLES
+
+=over 4
+
+=item * C<MYAPP_CONFIG> - specific config file to load for "MyApp"
+
+=item * C<CATALYST_CONFIG_LOCAL_SUFFIX> - global suffix for extra config files
+
+=item * C<MYAPP_CONFIG_LOCAL_SUFFIX> - suffix specifically for "MyApp"
+
+=back
+
+=head1 CONFIG FORMATS
+
+=head2 Config::General
+
+=head3 Extensions
+
+=over 4
+
+=item * cnf
+
+=item * conf
+
+=back
+
+=head3 Example Config
+
+    name = TestApp
+    <Component Controller::Foo>
+        foo bar
+    </Component>
+    <Model Baz>
+        qux xyzzy
+    </Model>
+
+=head2 INI
+
+=head3 Extensions
+
+=over 4
+
+=item * ini
+
+=back
+
+=head3 Example Config
+
+    name=TestApp
+    
+    [Controller::Foo]
+    foo=bar
+    
+    [Model::Baz]
+    qux=xyzzy
+
+=head2 JSON
+
+=head3 Extensions
+
+=over 4
+
+=item * jsn
+
+=item * json
+
+=back
+
+=head3 Example Config
+
+    {
+        "name": "TestApp",
+        "Controller::Foo": {
+            "foo": "bar"
+        },
+        "Model::Baz": {
+            "qux": "xyzzy"
+        }
+    }
+
+=head2 Perl
+
+=head3 Extensions
+
+=over 4
+
+=item * pl
+
+=item * perl
+
+=back
+
+=head3 Example Config
+
+    {
+        name => 'TestApp',
+        'Controller::Foo' => {
+            foo => 'bar'
+        },
+        'Model::Baz' => {
+            qux => 'xyzzy'
+        }
+    }
+
+=head2 XML
+
+=head3 Extensions
+
+=over 4
+
+=item * xml
+
+=back
+
+=head3 Example Config
+
+ <config>
+        <name>MyApp::CMS</name>
+        <paths>
+          <upload_dir>/var/www/docs/myapp-cms/uploads</upload_dir>
+        </paths>
+        <model name="DB">
+          <connect_info>dbi:mysql:cmsdb</connect_info>
+          <connect_info>user</connect_info>
+          <connect_info>password</connect_info>
+        </model>
+        <component name="View::TT">
+          <INCLUDE_PATH>__path_to(root,templates)__</INCLUDE_PATH>
+          <ENCODING>UTF-8</ENCODING>
+          <TRIM>1</TRIM>
+          <PRE_CHOMP>2</PRE_CHOMP>
+          <POST_CHOMP>2</POST_CHOMP>
+        </component>
+
+ </config>
+
+Note that the name attribute for the C<model> tag should be the relative
+namespace of the Catalyst model, not the absolute one.  That is for
+C<MyApp::Model::Something> the C<name> attribute should be C<Something>.
+
+=head2 YAML
+
+=head3 Extensions
+
+=over 4
+
+=item * yml
+
+=item * yaml
+
+=back
+
+=head3 Example Config
+
+    ---
+    name: TestApp
+    Controller::Foo:
+        foo: bar
+    Model::Baz:
+        qux: xyzzy
+
+=head1 COOKBOOK
+
+=head2 Configuring a Catalyst::Model::DBIC::Schema model from a YAML config
+
+    Model::MyModel:
+      schema_class: MyApp::MySchema
+      connect_info:
+        - dbi:SQLite:myapp.db
+        - ''
+        - ''
+        - AutoCommit: 1 
+
+=head2 Converting your existing config to Config::General format
+
+As of L<Catalyst::Devel> 1.07, a newly created application will use
+L<Config::General> for configuration. If you wish to convert your existing
+config, run the following one-liner (replacing MyApp with your app's name):
+
+    perl -Ilib -MMyApp -MConfig::General -e 'Config::General->new->save_file("myapp.conf", MyApp->config);'
+
+=head2 Using UTF-8 strings in a Config::General file
+
+If you have UTF-8 strings in your L<Config::General>-based config file, you
+should add the following config information to MyApp.pm:
+
+    __PACKAGE__->config( 'Plugin::ConfigLoader' => {
+        driver => {
+            'General' => { -UTF8 => 1 },
+        }
+    } );
+
+=head2 Using a local configuration file
+
+When ConfigLoader reads configurations, it starts by reading the configuration
+file for C<myapp> with one of the supported extensions as listed
+L<above|/Config Formats>.
+
+For example, A L<Config::General> config file is C<myapp.conf>.
+
+If a configuration file called C<myapp_local> exists with one of the supported
+file extensions, it will also be read, and values from that file will
+override values from the main config file.
+
+A L<Config::General> local configuration file would be called
+C<myapp_local.conf>.
+
+The C<local> suffix can be changed.  See
+L<Catalyst::Plugin::ConfigLoader/get_config_local_suffix> for the details of
+how.
+
+This is useful because it allows different people or environments to have
+different configuration files.  A project with three developers,
+I<Tom>, I<Dick>, and I<Harry> as well as a production environment can have
+a C<myapp_tom.conf>, a C<myapp_dick.conf>, a C<myapp_harry.conf>, and a
+C<myapp_production.conf>.
+
+Each developer, and the web server, would set the environment variable
+to load their proper configuration file.  All of the configurations can
+be stored properly in source control.
+
+If there is no C<myapp_local.ext> (where .ext is a supported extension), and
+the individual configuration files contain something required to start the
+application, such as the Model's data source definition, the applicaton won't
+start unless the environment variable is set properly.
+
+=cut
+

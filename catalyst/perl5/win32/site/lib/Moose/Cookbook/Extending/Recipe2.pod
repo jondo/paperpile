@@ -1,0 +1,94 @@
+
+=pod
+
+=begin testing-SETUP
+
+use Test::Requires {
+    'Test::Output' => '0',
+};
+
+=end testing-SETUP
+
+=head1 NAME
+
+Moose::Cookbook::Extending::Recipe2 - Providing a role for the base object class
+
+=head1 SYNOPSIS
+
+  package MooseX::Debugging;
+
+  use Moose::Exporter;
+
+  Moose::Exporter->setup_import_methods(
+      base_class_roles => ['MooseX::Debugging::Role::Object'],
+  );
+
+  package MooseX::Debugging::Role::Object;
+
+  use Moose::Role;
+
+  after 'BUILDALL' => sub {
+      my $self = shift;
+
+      warn "Made a new " . ( ref $self ) . " object\n";
+  };
+
+=head1 DESCRIPTION
+
+In this example, we provide a role for the base object class that adds
+some simple debugging output. Every time an object is created, it
+spits out a warning saying what type of object it was.
+
+Obviously, a real debugging role would do something more interesting,
+but this recipe is all about how we apply that role.
+
+In this case, with the combination of L<Moose::Exporter> and
+L<Moose::Util::MetaRole>, we ensure that when a module does C<S<use
+MooseX::Debugging>>, it automatically gets the debugging role applied
+to its base object class.
+
+There are a few pieces of code worth looking at more closely.
+
+  Moose::Exporter->setup_import_methods(
+      base_class_roles => ['MooseX::Debugging::Role::Object'],
+  );
+
+This creates an C<import> method in the C<MooseX::Debugging> package. Since we
+are not actually exporting anything, we do not pass C<setup_import_methods>
+any parameters related to exports, but we need to have an C<import> method to
+ensure that our C<init_meta> method is called. The C<init_meta> is created by
+C<setup_import_methods> for us, since we passed the C<base_class_roles>
+parameter. The generated C<init_meta> will in turn call
+L<Moose::Util::MetaRole::apply_base_class_roles|Moose::Util::MetaRole/apply_base_class_roles>.
+
+=head1 AUTHOR
+
+Dave Rolsky E<lt>autarch@urth.orgE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2009-2010 by Infinity Interactive, Inc.
+
+L<http://www.iinteractive.com>
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=begin testing
+
+{
+    package Debugged;
+
+    use Moose;
+    MooseX::Debugging->import;
+}
+
+stderr_is(
+    sub { Debugged->new },
+    "Made a new Debugged object\n",
+    'got expected output from debugging role'
+);
+
+=end testing
+
+=cut
