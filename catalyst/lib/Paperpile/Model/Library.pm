@@ -1756,7 +1756,7 @@ sub rename_files {
     return;
   }
 
-  my $tmp_root = File::Temp::tempdir( 'paperpile-XXXXXXX', DIR => '/tmp', CLEANUP => 0 );
+  my $tmp_root = "$paper_root\_tmp";
 
   eval {
 
@@ -1774,12 +1774,13 @@ sub rename_files {
 
       my $data = $dbh->selectrow_hashref("SELECT * FROM Publications WHERE guid='$pub_guid';");
 
-      if (!$data){
-        print STDERR "Warning: $file attached to Publication ($pub_guid) that does not exist any more.";
+      if ( !$data ) {
+        print STDERR
+          "Warning: $file attached to Publication ($pub_guid) that does not exist any more.";
         next;
       }
 
-      my $pub  = Paperpile::Library::Publication->new($data);
+      my $pub = Paperpile::Library::Publication->new($data);
 
       my $relative_dest;
 
@@ -1792,7 +1793,7 @@ sub rename_files {
 
       my $absolute_dest = File::Spec->catfile( $tmp_root, $relative_dest );
 
-      if ($data->{trashed}){
+      if ( $data->{trashed} ) {
         $absolute_dest = File::Spec->catfile( $tmp_root, "Trash", $relative_dest );
       }
 
