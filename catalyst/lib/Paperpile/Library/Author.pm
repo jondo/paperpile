@@ -139,8 +139,10 @@ sub _split_full {
 
   # First and jr part can be set immediately;
   # Last and von part must be separated before
-
-  my @words = split( /\s+/, $parts[0] );
+  my @words = ();
+  if ( scalar(@parts) > 0) {
+    @words = split( /\s+/, $parts[0] );
+  }
   my @vons  = ();
   my @lasts = ();
 
@@ -151,12 +153,12 @@ sub _split_full {
 
   # if only one word is given we consider this as the
   # last name irrespective of case
-  if ( @words == 1 ) {
+  if ( scalar(@words) == 1 ) {
     $last = $words[0];
     $von  = '';
 
     # otherwise we search for the last lowercase "von" word;
-  } else {
+  } elsif ( scalar(@words) > 1) {
 
     #print STDERR $self->full, "\n";
     my $last_lc = 0;
@@ -172,6 +174,9 @@ sub _split_full {
 
     # everything after is "last"
     $last = join( ' ', @words[ $last_lc + 1 .. $#words ] );
+  } else {
+    $von = '';
+    $last = '';  
   }
 
   # remove leading and trailing whitespace

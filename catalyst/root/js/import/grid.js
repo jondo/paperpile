@@ -1030,12 +1030,16 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       '<tpl if="annote">',
       '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
       '</tpl>',
+/*
+ * Hover-buttons over the grid -- save it for the ext4 rewrite...
+ * 
       '<tpl if="_needs_details_lookup == 1">',
       '  <div class="pp-grid-status pp-grid-status-lookup" ext:qtip="Lookup details" action="lookup-details"></div>',
       '</tpl>',
       '<tpl if="!_imported">',
       '  <div class="pp-grid-status pp-grid-status-import" ext:qtip="Import reference" action="import-ref"></div>',
       '</tpl>',
+*/
       '</div>').compile();
     return this.iconTemplate;
   },
