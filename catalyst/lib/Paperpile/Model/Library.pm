@@ -380,15 +380,12 @@ sub update_pub {
   my $pattern = $self->get_setting( 'key_pattern');
   my $new_key = $new_pub->format_pattern($pattern);
 
-  # Avoid an uninitialized value.
-  $diff->{citekey} = '' if (!defined $diff->{citekey});
-
   # Note: In case case a ref. Smith2000a is to be updated "$new_key"
   # will be Smith2000 and we will enter the block. The result might be
   # that Smith2000a is changed back to Smith2000 if the other
   # Smith2000 is no longer in the database. Also make sure that key is
   # generated if citekey is empty
-  if ( ($new_key ne $old_data->{citekey}) || $diff->{citekey} eq '' ) {
+  if ( ($new_key ne $old_data->{citekey}) || ((exists $diff->{citekey}) && ($diff->{citekey} eq '')) ) {
     $new_pub->citekey($new_key);
 
     # If we have a new citekey, make sure it doesn't conflict with other
