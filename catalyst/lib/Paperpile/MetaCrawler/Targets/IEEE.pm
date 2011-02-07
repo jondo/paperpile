@@ -19,6 +19,7 @@ package Paperpile::MetaCrawler::Targets::IEEE;
 use Moose;
 use Paperpile::Utils;
 use Paperpile::Formats::HTML;
+use Paperpile::Formats::Bibtex;
 
 extends 'Paperpile::MetaCrawler::Targets';
 
@@ -78,7 +79,7 @@ sub convert {
     my $response   = $browser->get($bibtexurl);
     my $bibcontent = $response->content();
     if ( $bibcontent !~ m/<html>/ ) {
-       my $f2 = Paperpile::Formats->new( format => 'BIBTEX' );
+       my $f2 = Paperpile::Formats::Bibtex->new();
        $pub = $f2->read_string($bibcontent);
     }
   }

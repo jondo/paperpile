@@ -21,6 +21,7 @@ use Moose;
 use HTML::TreeBuilder;
 use Paperpile::Utils;
 use Paperpile::Formats;
+use Paperpile::Formats::Ris;
 
 extends 'Paperpile::MetaCrawler::Targets';
 
@@ -41,7 +42,7 @@ sub convert {
   my $browser  = Paperpile::Utils->get_browser;
   my $response = $browser->get($export_link);
 
-  my $f = Paperpile::Formats->new( format => 'RIS' );
+  my $f = Paperpile::Formats::Ris->new();
   my $pub = $f->read_string( $response->content );
 
   # the information is not of high quality and we parse the rest from the HTML

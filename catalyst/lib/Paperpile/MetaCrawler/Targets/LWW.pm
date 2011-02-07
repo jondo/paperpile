@@ -19,6 +19,7 @@ package Paperpile::MetaCrawler::Targets::LWW;
 use Moose;
 use Paperpile::Utils;
 use Paperpile::Formats;
+use Paperpile::Formats::Ris;
 use Encode;
 use WWW::Mechanize;
 
@@ -50,7 +51,7 @@ sub convert {
 
   my $response = $mech->click($go_button);
 
-  my $f = Paperpile::Formats->new( format => 'RIS' );
+  my $f = Paperpile::Formats::Ris->new();
   my $pub = $f->read_string( $response->decoded_content() );
 
   return $pub->[0];

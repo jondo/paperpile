@@ -1,4 +1,3 @@
-
 # Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
@@ -21,6 +20,7 @@ use Moose;
 use HTML::TreeBuilder;
 use Paperpile::Utils;
 use Paperpile::Formats;
+use Paperpile::Formats::Bibtex;
 
 extends 'Paperpile::MetaCrawler::Targets';
 
@@ -193,7 +193,7 @@ sub _follow_links_to_bibtex {
   $response = $browser->get($bibtex_url);
   my $content_bibtex = $response->content;
 
-  my $f = Paperpile::Formats->new( format => 'BIBTEX' );
+  my $f = Paperpile::Formats::Bibtex->new();
   my $pub = $f->read_string($content_bibtex);
 
   return $pub->[0];

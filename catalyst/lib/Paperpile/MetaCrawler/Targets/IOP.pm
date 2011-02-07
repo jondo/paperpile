@@ -14,14 +14,13 @@
 # received a copy of the GNU Affero General Public License along with
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
-
-
 package Paperpile::MetaCrawler::Targets::IOP;
 use Moose;
 extends 'Paperpile::MetaCrawler::Targets';
 
 use Paperpile::Formats;
 use Paperpile::Formats::HTML;
+use Paperpile::Formats::Bibtex;
 
 sub convert {
 
@@ -43,7 +42,7 @@ sub convert {
     $content = $response->content();
 
     my $pub;
-    my $f = Paperpile::Formats->new( format => 'BIBTEX' );
+    my $f = Paperpile::Formats::Bibtex->new();
     $pub = $f->read_string($content);
     my $newpub = $pub->[0];
     foreach my $key ( keys %{ $fullpub->as_hash } ) {
