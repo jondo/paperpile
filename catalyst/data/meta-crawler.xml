@@ -770,6 +770,12 @@
     <url>!la-press\.com!</url>
   </signature>
 
+  <rule target="Ris">
+    <pattern>
+      <match>!.*(bibliography.php\S+)'.*!</match>
+    </pattern>
+  </rule>
+
   <rule target="LAPress">
   </rule>
   
