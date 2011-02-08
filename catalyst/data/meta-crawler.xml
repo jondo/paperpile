@@ -626,9 +626,9 @@
   </signature>
 
   <rule target="SpringerLink">
-    <pattern>
+    <!--<pattern>
       <rewrite>!(.*)(index|content)(/\w+)(.*)!http://www.springerlink.com/content$3!</rewrite>
-    </pattern>
+    </pattern> -->
   </rule>
   
   <test>
