@@ -233,6 +233,10 @@ sub read {
             $year  = $1 if ( !$year );
             $month = $2 if ( !$month );
           }
+	  if ( $content =~ m/(\d{4})\/(\d{1,2})\/(\d{1,2})/ ) {
+            $year  = $1 if ( !$year );
+            $month = $2 if ( !$month );
+          }
           if ( $content =~ m/(\d{1,2})\/(\d{1,2})\/(\d{4})/ ) {
             $year  = $3 if ( !$year );
             $month = $1 if ( !$month );
