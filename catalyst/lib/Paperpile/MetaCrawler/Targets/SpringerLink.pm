@@ -44,9 +44,11 @@ sub convert {
   $tree = $tree->delete;
 
   my $id;
-  if ( $url =~ m/(.*content\/)(\w+)(.*)/ ) {
+  if ( $url =~ m/(.*(?:content|index)\/)(\w+)(.*)/ ) {
     $id = $2;
   }
+
+  return undef if ( ! $id );
 
   my $new_url = "http://www.springerlink.com/content/$id/export-citation/";
 
