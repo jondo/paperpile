@@ -100,7 +100,12 @@ sub initdb {
     print @out;
   }
 
-  my $model = Paperpile::Model::Library->new( { file => "db/library" } );
+  my $model;
+  if ( Paperpile::Utils->get_platform eq 'osx' ) {
+    $model = Paperpile::Model::Library->new( { file => "db/library" } );
+  } else {
+    $model = Paperpile::Model::Library->new( { file => "db/library.db" } );
+  }
 
   my $yaml   = "conf/fields.yaml";
   my $config = LoadFile($yaml);
