@@ -58,9 +58,9 @@ void Runtime::openFolder( const QString & folder = QString()){
 #endif
 	 
 #ifdef Q_WS_WIN
-  QStringList args;
-  args << "/select," << QDir::toNativeSeparators(filePath);
-  QProcess::startDetached("explorer", args);
+  //QStringList args;
+  //args << "/select," << QDir::toNativeSeparators(filePath);
+  //QProcess::startDetached("explorer", args);
 #endif
 
 }
@@ -107,6 +107,14 @@ QString Runtime::getCatalystDir(){
 
   QString platform = getPlatform();
 
+  QString appDir = QCoreApplication::applicationDirPath();
+
+  if (appDir.contains(QRegExp("c.qruntime.build"))){
+    QDir path(appDir+"/../../../catalyst/");
+    qDebug() << path.canonicalPath();
+    return(path.canonicalPath());
+  }
+
   if (platform == "osx"){
     QDir path(QCoreApplication::applicationDirPath()+"/../Resources/catalyst/");
     return(path.canonicalPath());
@@ -124,6 +132,8 @@ QString Runtime::getCatalystDir(){
 QString Runtime::getInstallationDir(){
 
   QString platform = getPlatform();
+
+  
 
   if (platform == "osx"){
     QDir path(QCoreApplication::applicationDirPath()+"/../..");
@@ -144,6 +154,10 @@ QString Runtime::getPlatform(){
 
 #ifdef Q_OS_MAC
   return QString("osx");
+#endif
+
+#ifdef Q_WS_WIN
+  return QString("win32");
 #endif
 
 #if defined Q_OS_LINUX && defined __x86_64
