@@ -66,7 +66,7 @@ void ExtPdf::process() {
   
   if (command == "TEXT"){
     QTextStream out(stdout);
-    out << pdf.text();
+    pdf.dumpText();
   }
 
   if (command == "RENDER"){
@@ -78,6 +78,8 @@ void ExtPdf::process() {
 
     img.save(outFile);
   }
+
+  pdf.closeDocument();
 
   done();
 }
@@ -118,9 +120,29 @@ void ExtPdf::addNode(QDomDocument *doc, QDomElement* el, const QVariant & data, 
       if (item.value().type() == QVariant::List){
         addNode(doc, el, item.value(),item.key());
       } else {
-        QDomElement tag = doc->createElement(item.key());
-        el->appendChild(tag);
-        addNode(doc, &tag, item.value(),item.key());
+
+        // Special treatment of data from function wordList. Creates
+        // concise output with attributes
+        if (el->tagName() == "word"){
+          if (item.key() == "size" || item.key() == "bold" || 
+              item.key() == "italic" || item.key() == "rotation"){
+            el->setAttribute(item.key(), item.value().toInt());
+          }
+          
+          if (item.key() == "bbox"){
+            el->setAttribute(item.key(), item.value().toString());
+          }
+
+          if (item.key() == "word"){
+            QDomText t = doc->createTextNode(item.value().toString());
+            el->appendChild(t);
+          }
+          
+        } else {
+          QDomElement tag = doc->createElement(item.key());
+          el->appendChild(tag);
+          addNode(doc, &tag, item.value(),item.key());
+        }
       }
     }
   }

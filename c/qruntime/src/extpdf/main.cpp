@@ -7,8 +7,7 @@ int main(int argc, char *argv[]){
 
   QCoreApplication a(argc, argv);
 
-  fprintf(stderr, "Starting up...\n");
-
+  // Do weird things to run this command line program in Qt event loop
   ExtPdf ext(&a);
   QObject::connect(&ext, SIGNAL( done() ), &a, SLOT( quit() ), Qt::QueuedConnection);
   QTimer::singleShot(0, &ext, SLOT( process() ));

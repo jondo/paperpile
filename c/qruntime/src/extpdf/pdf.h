@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QFile>
 #include <poppler/qt4/poppler-qt4.h>
+#include <poppler/PDFDoc.h>
 
 class PDF : public QObject {
   Q_OBJECT
@@ -11,6 +12,7 @@ class PDF : public QObject {
  private:
   QString _file;
   Poppler::Document* document;
+  PDFDoc* poppler_doc;
 
  public:
   PDF(QObject *parent = 0);
@@ -18,6 +20,7 @@ class PDF : public QObject {
   void setFile(const QString & pdfFile);
   void openDocument();
   void closeDocument();
+  void dumpText();
   QVariantMap info();
   QString text();
   QImage render(int page, float scale);
