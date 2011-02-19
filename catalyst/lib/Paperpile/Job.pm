@@ -55,13 +55,13 @@ enum 'Status' => (
   'ERROR'               # job finished with an error or was canceled.
 );
 
-has 'type'   => ( is => 'rw', isa => 'Types' );
+has 'job_type'   => ( is => 'rw', isa => 'Types' );
 has 'status' => ( is => 'rw', isa => 'Status' );
 
 has 'id'    => ( is => 'rw' );    # Unique id identifying the job
 has 'error' => ( is => 'rw' );    # Error message if job failed
 
-has 'message' => ( is => 'rw' );  # Long-winded progress message.
+#has 'message' => ( is => 'rw' );  # Long-winded progress message.
 
 # Field to store different job type specific information
 has 'info' => ( is => 'rw', isa => 'HashRef' );
@@ -166,7 +166,7 @@ sub reset {
 sub noun {
   my $self = shift;
 
-  my $type = $self->type;
+  my $type = $self->job_type;
   return 'PDF download'    if ( $type eq 'PDF_SEARCH' );
   return 'PDF import'      if ( $type eq 'PDF_IMPORT' );
   return 'Auto-complete'   if ( $type eq 'METADATA_UPDATE' );
@@ -361,7 +361,7 @@ sub _do_work {
 
   $self->pub->_jobid($self->id);
 
-  if ( $self->type eq 'PDF_SEARCH' ) {
+  if ( $self->job_type eq 'PDF_SEARCH' ) {
 
     print STDERR "[queue] Searching PDF for ", $self->pub->_citation_display, "\n";
 
@@ -396,7 +396,7 @@ sub _do_work {
 
   }
 
-  if ( $self->type eq 'PDF_IMPORT' ) {
+  if ( $self->job_type eq 'PDF_IMPORT' ) {
 
     print STDERR "[queue] Start import of PDF ", $self->pub->pdf, "\n";
 
@@ -469,7 +469,7 @@ sub _do_work {
     }
   }
 
-  if ( $self->type eq 'METADATA_UPDATE' ) {
+  if ( $self->job_type eq 'METADATA_UPDATE' ) {
     my $pub = $self->pub;
 
     my $old_hash = $pub->as_hash;

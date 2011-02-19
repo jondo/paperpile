@@ -181,8 +181,6 @@ QVariantMap PDF::wordList(int pageNum){
 }
 
 
-
-
 QString PDF::getFile(){
 
   return _file;

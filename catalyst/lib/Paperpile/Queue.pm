@@ -153,7 +153,7 @@ sub submit {
     my $id     = $self->dbh->quote( $job->id );
     my $status = $self->dbh->quote( $job->status );
     my $hidden = $self->dbh->quote( $job->hidden );
-    my $type = $self->dbh->quote( $job->type);
+    my $type = $self->dbh->quote( $job->job_type);
     my $guid = $self->dbh->quote( $job->pub->guid );
 
     # We re-insert on the same position when a rowid is given (used in retry_jobs)
