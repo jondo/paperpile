@@ -34,6 +34,10 @@ BEGIN {
   # normal glob fails on spaces so use bsd_glob
   use File::Glob ':glob';
   foreach my $lib_dir (@INC) {
+
+    # On Windows convert backslashed to slashes
+    $lib_dir=~s!\\!/!g;
+
     foreach
       my $plugin_dir ( "$lib_dir/Paperpile/Plugins/Import", "$lib_dir/Paperpile/Plugins/Export" ) {
       if ( -e $plugin_dir ) {

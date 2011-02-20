@@ -109,8 +109,10 @@ QString Runtime::getCatalystDir(){
 
   QString appDir = QCoreApplication::applicationDirPath();
 
+  qDebug() << appDir;
+
   if (appDir.contains(QRegExp("c.qruntime.build"))){
-    QDir path(appDir+"/../../../catalyst/");
+    QDir path(appDir+"/../../../../catalyst/");
     qDebug() << path.canonicalPath();
     return(path.canonicalPath());
   }
@@ -262,9 +264,12 @@ void Runtime::catalystStart(){
   QStringList arguments;
 
   QString platform = getPlatform();
+  
+  QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+  env.remove("PERL5LIB");
 
   program = getCatalystDir() + "/" + "/perl5/" + platform + "/bin/paperperl";
-
+  
   if (platform == "osx"){
     arguments << getCatalystDir() + "/script/osx_server.pl" << "--port" << "3210" << "--fork";
   }
@@ -273,10 +278,16 @@ void Runtime::catalystStart(){
     arguments << getCatalystDir() + "/script/paperpile_server.pl" << "-fork";
   }
 
+  if (platform == "win32"){
+    arguments << getCatalystDir() + "/script/win32_server.pl" << "--port" << "3210" << "--fork";
+    QString oldPath = env.value("PATH");
+    env.insert("PATH", oldPath + ";" +getCatalystDir()+"\\perl5\\win32\\dll");
+    qDebug() << env.toStringList();
+  }
+
+
   catalystProcess = new QProcess;
 
-  QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-  env.remove("PERL5LIB");
   catalystProcess->setProcessEnvironment(env);
 
   catalystProcess->setReadChannel(QProcess::StandardError);

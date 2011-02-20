@@ -191,6 +191,8 @@ sub get_lock_file {
 
   # Make a nice file-name out of the full path
   $f =~ s|/|_|g;
+  $f =~ s|\\|_|g;
+  $f =~ s|:|_|g;
   $f =~ s|\.|_|g;
   $f =~ s|^_||;
   $f =~ s|__|_|;

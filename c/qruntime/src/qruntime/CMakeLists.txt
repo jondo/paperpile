@@ -33,6 +33,7 @@ endif(WIN32)
 
 QT4_WRAP_CPP( MOC_SRCS ${MOC_HEADERS} )
  
-add_executable( paperpile WIN32 ${SOURCES} ${MOC_SRCS} )
+#add_executable( paperpile WIN32 ${SOURCES} ${MOC_SRCS} )
+add_executable( paperpile ${SOURCES} ${MOC_SRCS} )
 
 target_link_libraries( paperpile ${QT_LIBRARIES} poppler-qt4 )

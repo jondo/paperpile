@@ -29,6 +29,8 @@ use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Utils;
 
+$XML::Simple::PREFERRED_PARSER = 'XML::Parser';
+
 extends 'Paperpile::Plugins::Import';
 
 # The database query which is passed to PubMed
@@ -134,6 +136,7 @@ sub connect {
   # needed.
   my $browser = Paperpile::Utils->get_browser;
 
+
   # We send our query to PubMed via a simple get
   my $query_string = _FormatQueryString( $self->query );
   my $response     = $browser->get( $esearch . $query_string );
@@ -148,6 +151,8 @@ sub connect {
   # The response is XML formatted and can be parsed with XML::Simple
   my $resultXML = $response->content;
   my $result    = XMLin($resultXML);
+
+  print STDERR Dumper($result);
 
   if ( ( not defined $result->{WebEnv} )
     or ( not defined $result->{QueryKey} )

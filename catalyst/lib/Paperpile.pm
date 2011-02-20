@@ -34,6 +34,7 @@ use Catalyst::Runtime '5.70';
 use Data::Dumper;
 use YAML qw(LoadFile DumpFile);
 use File::Spec;
+use File::HomeDir;
 
 our $VERSION = '0.03';
 
@@ -97,7 +98,7 @@ sub substitutions {
     }
   }
   if ( $^O =~ /cygwin/i or $^O =~ /MSWin/i ) {
-    $platform = 'windows32';
+    $platform = 'win32';
   }
 
   if ( $^O =~ /(darwin|osx)/i ) {
@@ -130,12 +131,22 @@ sub substitutions {
 
   }
 
+  if ( $platform eq 'win32' ) {
+
+    $userhome = File::HomeDir->my_home;
+    $pp_user_dir  = File::Spec->catfile(File::HomeDir->my_data,"Paperpile");
+    $pp_paper_dir = File::Spec->catfile(File::HomeDir->my_documents,"Paperpile");
+    $pp_tmp_dir   = File::Spec->catfile(File::HomeDir->my_data,"Temp","paperpile");
+
+  }
+
+
   # If we have a development version (i.e. no build number) we use a
   # different user dir to allow parallel usage of a stable Paperpile
   # installation and development
   if ( $_settings->{app_settings}->{build_number} == 0 ) {
-    $pp_user_dir  = $ENV{HOME} . '/.paperdev';
-    $pp_paper_dir = $ENV{HOME} . '/.paperdev/papers';
+    $pp_user_dir  = File::Spec->catfile($userhome,".paperdev");
+    $pp_paper_dir  =File::Spec->catfile($userhome,".paperdev","papers");
   }
 
   my %fields = (

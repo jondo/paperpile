@@ -105,6 +105,7 @@ sub get_browser {
   } else {
 
     my $model = $self->get_user_settings_model;
+
     $settings = $model->settings;
   }
 
