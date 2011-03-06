@@ -15,7 +15,7 @@
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
 package Paperpile::Formats::References;
-use Moose;
+use Mouse;
 use Encode;
 use utf8;
 use XML::Simple;

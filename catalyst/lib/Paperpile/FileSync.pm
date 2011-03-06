@@ -18,12 +18,12 @@
 
 package Paperpile::FileSync;
 
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 
 use Paperpile;
 use Paperpile::Exceptions;
 use Paperpile::Utils;
+use Paperpile::App;
 use Paperpile::Formats::Bibtex;
 
 use File::Path;
@@ -99,7 +99,7 @@ sub _get_library_data {
 
   my ( $self, $collection ) = @_;
 
-  my $model = Paperpile::Utils->get_library_model;
+  my $model = Paperpile::App->get_model("Library");
 
   my ($dbh, $in_prev_tx) = $model->begin_or_continue_tx;
 
@@ -137,7 +137,7 @@ sub _get_library_diff {
 
   my ( $self, $collection, $library_version ) = @_;
 
-  my $model = Paperpile::Utils->get_library_model;
+  my $model = Paperpile::App->get_model("Library");
 
   my ($dbh, $in_prev_tx) = $model->begin_or_continue_tx;
 
@@ -239,7 +239,7 @@ sub _write_file {
 
   my $file = $self->map->{$collection}->{file};
 
-  my $settings = Paperpile::Utils->get_library_model->get_setting('bibtex');
+  my $settings = Paperpile::App->get_model("Library")->get_setting('bibtex');
 
   my $f = Paperpile::Formats::Bibtex->new( file => $file, data => [ values %$data ], settings=>$settings );
 

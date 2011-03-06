@@ -19,7 +19,6 @@ package Paperpile::Controller::Ajax::Files;
 
 use strict;
 use warnings;
-use parent 'Catalyst::Controller';
 use Data::Dumper;
 use File::Spec;
 use File::Path;
@@ -27,26 +26,24 @@ use File::Basename;
 
 use 5.010;
 
-sub dialogue : Local {
+sub dialogue  {
   my ( $self, $c ) = @_;
 
   my $output;
 
-  if ( $c->request->params->{cmd} eq 'get' ) {
-    $output = $c->forward('get');
+  if ( $c->params->{cmd} eq 'get' ) {
+    $output = $self->get($c);
   }
 
-  if ( $c->request->params->{cmd} eq 'newdir' ) {
-    $output = $c->forward('newdir');
+  if ( $c->params->{cmd} eq 'newdir' ) {
+    $output = $self->newdir($c);
   }
 
   $c->stash->{tree} = $output;
 
-  $c->forward('Paperpile::View::JSON::Tree');
-
 }
 
-sub get : Local {
+sub get  {
   my ( $self, $c ) = @_;
 
   my @filetypes = qw/pdf ai txt bmp cgm dcm dds exr gif hdr ico jng jp2 jpeg jpg pbm pbmraw
@@ -60,9 +57,9 @@ sub get : Local {
     cert crt der gpg gpg p10 p12 p7c p7m p7s pem sig bin cue img iso mdf nrg
     jar java class sql moov mov qt/;
 
-  my $mode   = $c->request->params->{selectionMode};
-  my $path   = $c->request->params->{path};
-  my $filter = $c->request->params->{filter};
+  my $mode   = $c->params->{selectionMode};
+  my $path   = $c->params->{path};
+  my $filter = $c->params->{filter};
 
   $path = Paperpile::Utils->adjust_root($path);
 
@@ -96,7 +93,7 @@ sub get : Local {
     next if $item eq '..';
 
     # How can we recognize hidden files under windows?
-    if ( $c->request->params->{showHidden} eq 'false' ) {
+    if ( $c->params->{showHidden} eq 'false' ) {
       next if $item =~ /^\./;
     }
 
@@ -159,10 +156,10 @@ sub get : Local {
 
 }
 
-sub newdir : Local {
+sub newdir  {
   my ( $self, $c ) = @_;
 
-  my $dir = $c->request->params->{dir};
+  my $dir = $c->params->{dir};
 
   $dir = Paperpile::Utils->adjust_root($dir);
 
@@ -176,10 +173,10 @@ sub newdir : Local {
 
 }
 
-sub stats : Local {
+sub stats  {
   my ( $self, $c ) = @_;
 
-  my $location = $c->request->params->{location};
+  my $location = $c->params->{location};
   $location = Paperpile::Utils->adjust_root($location);
 
   my %stats = ();
@@ -191,8 +188,6 @@ sub stats : Local {
   $stats{executable} = ( -x $location ) ? \1 : \0;
 
   $c->stash->{stats} = {%stats};
-
-  $c->forward('Paperpile::View::JSON');
 
 }
 

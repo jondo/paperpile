@@ -17,11 +17,8 @@
 
 package Paperpile::Plugins::Import;
 
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Data::Dumper;
-use Data::Page;
-use POSIX qw(ceil floor);
 use Text::LevenshteinXS qw(distance);
 
 use Paperpile::Exceptions;

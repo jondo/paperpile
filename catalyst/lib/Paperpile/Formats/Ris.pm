@@ -15,11 +15,11 @@
 # not, see http://www.gnu.org/licenses.
 
 package Paperpile::Formats::Ris;
-use Moose;
+use Mouse;
 use Data::Dumper;
 use IO::File;
-use Switch;
 use Encode;
+use 5.010;
 
 extends 'Paperpile::Formats';
 
@@ -113,123 +113,123 @@ sub read {
       my $t = $1;    # tag
       my $d = $2;    # data
 
-      switch ($t) {
-        case 'TY' {
+      given ($t) {
+        when('TY') {
           if ( exists $types{$d} ) {
             $data->{pubtype} = $types{$d};
           } else {
             $data->{pubtype} = 'MISC';
           }
         }
-        case 'T1' {    # primary title
+        when('T1') {    # primary title
           $data->{title} = $d;
         }
-        case 'TI' {    # TODO: some title, don't know what TI stands for
+        when('TI') {    # TODO: some title, don't know what TI stands for
           if ( !exists $data->{title} ) {
             $data->{title} = $d;
           }
         }
-        case 'CT' {    # TODO: chapter title?
+        when('CT') {    # TODO: chapter title?
           if ( !exists $data->{title} ) {
             $data->{title} = $d;
           }
         }
-        case 'BT' {    # book title
+        when('BT') {    # book title
           $data->{booktitle} = $d;
         }
-        case 'T2' {    # secondary title
+        when('T2') {    # secondary title
           if ( !exists $data->{title} ) {
             $data->{title} = $d;
           } else {
             $data->{title} .= " - " . $d;
           }
         }
-        case 'T3' {    # series title
+        when ('T3') {    # series title
           $data->{series} = $d;
         }
-        case 'A1' {    # primary author
+        when ( 'A1') {    # primary author
           push @authors, $d;
         }
-        case 'AU' {    # primary author
+        when ( 'AU') {    # primary author
           push @authors, $d;
         }
-        case 'A2' {    # secondary author
+        when ( 'A2') {    # secondary author
           push @editors, $d;
         }
-        case 'ED' {    # secondary author (editor)
+        when ( 'ED') {    # secondary author (editor)
           push @editors, $d;
         }
-        case 'A3' {    # tertiary author, TODO: purpose?
+        when ( 'A3' ){    # tertiary author, TODO: purpose?
           push @authors, $d;
         }
-        case 'Y1' {    # primary date
+        when ( 'Y1' ){    # primary date
           _handle_dates( $data, $d );
         }
-        case 'PY' {    # primary date (year)
+        when ( 'PY' ){    # primary date (year)
           _handle_dates( $data, $d );
         }
-        case 'Y2' {    # secondary date, TODO: purpose?
+        when ( 'Y2' ){    # secondary date, TODO: purpose?
           _handle_dates( $data, $d );
         }
-        case 'N1' {    # notes can be different things...
+        when ( 'N1' ){    # notes can be different things...
           if ( _is_doi($d) ) {
             $data->{doi} = $d;
           } elsif ( _is_abstract($d) ) {
             $data->{abstract} = $d;
           }
         }
-        case 'AB' {    # abstract
+        when ( 'AB' ){    # abstract
           $data->{abstract} = $d;
         }
-        case 'N2' {    # often abstract
+        when ( 'N2' ){    # often abstract
           if ( _is_abstract($d) ) {
             $data->{abstract} = $d;
           } else {
             print STDERR "Warning: could not parse field '$t', content='$d'!\n";
           }
         }
-        case 'KW' {    # keywords
+        when ( 'KW' ){    # keywords
           push @keywords, $d;
         }
 
         # we ignore the RP tag, its not needed
         # http://www.refman.com/support/risformat_tags_04.asp
 
-        case 'JF' {    # journal full name
+        when ( 'JF' ){    # journal full name
           $journal_full_name = $d;
         }
-        case 'JO' {    # journal full name, alternative
+        when ( 'JO' ){    # journal full name, alternative
           $journal_full_name = $d;
         }
-        case 'JA' {    # journal short name
+        when ( 'JA' ){    # journal short name
           $journal_short_name = $d;
         }
 
-        case 'VL' {    # volume
+        when ( 'VL' ){    # volume
           $data->{volume} = $d;
         }
-        case 'IS' {    # issue
+        when ( 'IS' ){    # issue
           $data->{issue} = $d;
         }
-        case 'CP' {    # issue, alternative
+        when ( 'CP' ){    # issue, alternative
           $data->{issue} = $d;
         }
-        case 'SP' {    # start page number
+        when ( 'SP' ){    # start page number
           $start_page = $d;
         }
-        case 'EP' {    # end page number
+        when ( 'EP' ){    # end page number
           $end_page = $d;
         }
-        case 'CY' {    # city
+        when ( 'CY' ){    # city
           $city = $d;
         }
-        case 'AD' {    # address
+        when ( 'AD' ){    # address
           $address = $d;
         }
-        case 'PB' {    # publisher
+        when ( 'PB' ){    # publisher
           $data->{publisher} = $d;
         }
-        case 'SN' {    # issn OR isbn
+        when ( 'SN' ){    # issn OR isbn
           $sn = $d;
         }
 
@@ -238,28 +238,28 @@ sub read {
         # AV, U1-5 probably add them to notes?  or
         # should we try to parse them and figure out what they are?
 
-        case 'M1' {
+        when ( 'M1' ){
           if ( _is_doi($d) ) {
             $data->{doi} = $d;
           } else {
             print STDERR "Warning: could not parse field '$t', content='$d'!\n";
           }
         }
-        case 'M2' {
+        when ( 'M2' ){
           if ( _is_doi($d) ) {
             $data->{doi} = $d;
           } else {
             print STDERR "Warning: could not parse field '$t', content='$d'!\n";
           }
         }
-        case 'M3' {
+        when ( 'M3' ){
           if ( _is_doi($d) ) {
             $data->{doi} = $d;
           } else {
             print STDERR "Warning: could not parse field '$t', content='$d'!\n";
           }
         }
-        case 'UR' {    # URL, one per tag or comma seperated list
+        when ( 'UR' ){    # URL, one per tag or comma seperated list
           if ( $d !~ /;/ ) {
             push @urls, $d;
           } else {
@@ -267,7 +267,7 @@ sub read {
           }
         }
 
-        case 'L1' {
+        when ( 'L1') {
 
           # link to PDF
           # one per tag or comma seperated list
@@ -278,7 +278,7 @@ sub read {
           }
         }
 
-        case 'L2' {
+        when ( 'L2') {
 
           # link to full-text
           # probably our linkout field?
@@ -291,7 +291,7 @@ sub read {
 
         # this are non-standard tags
         # which we unfortunately have been seen in real live data
-        case 'DOI' {
+        when ( 'DOI') {
           if ( _is_doi($d) ) {
             $data->{doi} = $d;
           } else {
@@ -299,7 +299,7 @@ sub read {
           }
         }
 
-        else {
+        default {
           print STDERR "Warning: field '$t' ignored, content='$d'!\n";
         }
       }

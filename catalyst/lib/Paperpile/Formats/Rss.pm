@@ -16,7 +16,7 @@
 
 
 package Paperpile::Formats::Rss;
-use Moose;
+use Mouse;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
 use Paperpile::Library::Author;

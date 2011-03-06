@@ -16,20 +16,20 @@
 
 
 package Paperpile::Library::Publication;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Digest::SHA1;
 use Data::GUID;
 use Data::Dumper;
 use File::Temp qw(tempfile);
 
+use Paperpile::App;
 use Paperpile::Library::Author;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
 use Paperpile::Formats;
 use Encode qw(encode_utf8);
 use Text::Unidecode;
-use YAML qw(LoadFile);
+use YAML::XS qw(LoadFile);
 use File::Spec;
 use File::Path;
 use 5.010;
@@ -112,7 +112,7 @@ has 'folders' => ( is => 'rw', default => '' );
 
 ### Fields from the config file
 
-my $config = LoadFile( Paperpile::Utils->path_to('conf/fields.yaml') );
+my $config = LoadFile( Paperpile::App->path_to('conf/fields.yaml') );
 
 foreach my $field ( keys %{ $config->{pub_fields} } ) {
 
@@ -1089,11 +1089,6 @@ sub debug {
 }
 
 
-
-
-no Moose;
-
-__PACKAGE__->meta->make_immutable;
 
 1;
 

@@ -19,10 +19,8 @@ package Paperpile::Plugins::Export;
 
 use Paperpile::Library::Publication;
 
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Data::Dumper;
-use Carp;
 
 has 'data' => (
   is  => 'rw',

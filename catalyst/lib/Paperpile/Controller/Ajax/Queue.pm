@@ -19,18 +19,18 @@ package Paperpile::Controller::Ajax::Queue;
 
 use strict;
 use warnings;
-use parent 'Catalyst::Controller';
+use Paperpile::App;
 use Paperpile::Library::Publication;
 
 use Data::Dumper;
 
-sub grid : Local {
+sub grid  {
 
   my ( $self, $c ) = @_;
 
-  my $start  = $c->request->params->{start}  || 0;
-  my $limit  = $c->request->params->{limit}  || 0;
-  my $filter = $c->request->params->{filter} || 'all';
+  my $start  = $c->params->{start}  || 0;
+  my $limit  = $c->params->{limit}  || 0;
+  my $filter = $c->params->{filter} || 'all';
 
   my @data = ();
 
@@ -90,11 +90,11 @@ sub grid : Local {
 
 }
 
-sub update : Local {
+sub update  {
   my ( $self, $c ) = @_;
 
   # Not in use at the moment. We always return the queue.
-  #my $get_queue = $c->request->params->{get_queue};
+  #my $get_queue = $c->params->{get_queue};
 
   my $data = {};
 
@@ -124,7 +124,7 @@ sub update : Local {
     }
   } else {
 
-    my $ids = $c->request->params->{ids} || [];
+    my $ids = $c->params->{ids} || [];
 
     if ( ref($ids) ne 'ARRAY' ) {
       $ids = [$ids];
@@ -147,7 +147,7 @@ sub update : Local {
   $c->stash->{data} = $data;
 }
 
-sub cancel_all_jobs : Local {
+sub cancel_all_jobs  {
 
   my ( $self, $c ) = @_;
 
@@ -159,11 +159,11 @@ sub cancel_all_jobs : Local {
 
 ## Cancel one or more jobs
 
-sub cancel_jobs : Local {
+sub cancel_jobs  {
 
   my ( $self, $c ) = @_;
 
-  my $ids = $c->request->params->{ids};
+  my $ids = $c->params->{ids};
 
   if ( ref($ids) ne 'ARRAY' ) {
     $ids = [$ids];
@@ -185,12 +185,11 @@ sub cancel_jobs : Local {
   $data->{pubs}      = $pubs;
   $data->{job_delta} = 1;
   $c->stash->{data}  = $data;
-  $c->detach('Paperpile::View::JSON');
 }
 
 # Removes finished (successful OR failed) jobs from the queue.
 
-sub clear_jobs : Local {
+sub clear_jobs  {
 
   my ( $self, $c ) = @_;
   my $q     = Paperpile::Queue->new();
@@ -204,11 +203,11 @@ sub clear_jobs : Local {
   $c->stash->{data}->{job_delta} = 1;
 }
 
-sub remove_jobs : Local {
+sub remove_jobs  {
 
   my ( $self, $c ) = @_;
 
-  my $ids = $c->request->params->{ids};
+  my $ids = $c->params->{ids};
 
   if ( ref($ids) ne 'ARRAY' ) {
     $ids = [$ids];
@@ -238,18 +237,18 @@ sub remove_jobs : Local {
   $c->stash->{data}->{job_delta} = 1;
 }
 
-sub retry_jobs : Local {
+sub retry_jobs  {
 
   my ( $self, $c ) = @_;
 
-  my $ids = $c->request->params->{ids};
+  my $ids = $c->params->{ids};
 
   if ( ref($ids) ne 'ARRAY' ) {
     $ids = [$ids];
   }
 
   my $q   = Paperpile::Queue->new();
-  my $dbh = Paperpile::Utils->get_queue_model->dbh;
+  my $dbh = Paperpile::App->get_model("Queue")->dbh;
 
   my @pub_list = ();
   foreach my $id (@$ids) {
@@ -278,10 +277,9 @@ sub retry_jobs : Local {
   $data->{pubs} = $pubs;
   $data->{job_delta} = 1;
   $c->stash->{data} = $data;
-  $c->detach('Paperpile::View::JSON');
 }
 
-sub clear : Local {
+sub clear  {
 
   my ( $self, $c ) = @_;
 
@@ -294,7 +292,7 @@ sub clear : Local {
 
 ## Pauses the queue
 
-sub pause_resume : Local {
+sub pause_resume  {
   my ( $self, $c ) = @_;
 
   my $q = Paperpile::Queue->new();
@@ -307,7 +305,6 @@ sub pause_resume : Local {
 
   $c->stash->{data}->{queue}     = $q->as_hash;
   $c->stash->{data}->{job_delta} = 1;
-  $c->detach('Paperpile::View::JSON');
 }
 
 # Duplicated from controller/ajax/crud.pm . Should combine somewhere.

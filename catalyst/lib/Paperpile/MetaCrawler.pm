@@ -18,9 +18,7 @@
 
 
 package Paperpile::MetaCrawler;
-use Moose;
-use Moose::Util::TypeConstraints;
-use Carp;
+use Mouse;
 use LWP;
 use HTML::Entities;
 use HTML::LinkExtor;
@@ -30,12 +28,9 @@ use URI::URL;
 use URI::Split qw(uri_split uri_join);
 use Encode;
 use Data::Dumper;
-use Config::Any;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
 use Paperpile::MetaCrawler::Targets;
-
-use YAML;
 
 $Data::Dumper::Indent = 1;
 

@@ -17,10 +17,7 @@
 
 package Paperpile::Plugins::Import::Feed;
 
-use Carp;
-use Data::Page;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Data::Dumper;
 use File::Copy;
 use File::Path;
@@ -30,6 +27,7 @@ use URI::Escape;
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Utils;
+use Paperpile::App;
 use Paperpile::Formats;
 
 extends 'Paperpile::Plugins::Import::DB';
@@ -78,7 +76,7 @@ sub connect {
 
     Paperpile::Utils->uniquify_pubs($data);
 
-    my $empty_db = Paperpile::Utils->path_to('db/library.db')->stringify;
+    my $empty_db = Paperpile::App->path_to('db','library.db');
     copy( $empty_db, $self->_db_file ) or die "Could not initialize empty db ($!)";
 
     my $model = $self->get_model();
@@ -164,9 +162,9 @@ sub complete_details {
       return $full_pub;
     }
   }
-   
+
   # If that didn't work, just use the standard match approach.
-  my $plugin_list = [ split( /,/, Paperpile::Utils->get_library_model->get_setting('search_seq') ) ];
+  my $plugin_list = [ split( /,/, Paperpile::App->get_model("Library")->get_setting('search_seq') ) ];
   $pub->auto_complete($plugin_list);
   $pub->_needs_details_lookup(0);
   return $pub;

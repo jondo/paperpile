@@ -16,12 +16,13 @@
 
 
 package Paperpile::Formats::Bibtex;
-use Moose;
+use Mouse;
 use Data::Dumper;
-use YAML qw/LoadFile/;
+use YAML::XS qw/LoadFile/;
 use IO::File;
 use Text::Wrap;
 use Paperpile::Formats::TeXEncoding;
+use Paperpile::App;
 use BibTeX::Parser;
 use BibTeX::Parser::EncodingTable;
 use Encode;
@@ -85,7 +86,7 @@ sub read {
   }
   seek($fhtmp,0,0);
 
-  my $config = LoadFile( Paperpile::Utils->path_to('conf/fields.yaml') );
+  my $config = LoadFile( Paperpile::App->path_to('conf/fields.yaml') );
 
   my %built_in = ();
 

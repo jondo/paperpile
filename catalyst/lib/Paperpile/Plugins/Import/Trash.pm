@@ -17,11 +17,8 @@
 
 package Paperpile::Plugins::Import::Trash;
 
-use Carp;
-use Data::Page;
 use Data::Dumper;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Paperpile::Utils;
 use Paperpile::Model::Library;
 use Paperpile::Library::Publication;

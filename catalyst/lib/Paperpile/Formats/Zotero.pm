@@ -16,7 +16,7 @@
 
 
 package Paperpile::Formats::Zotero;
-use Moose;
+use Mouse;
 use DBI;
 use Paperpile::Utils;
 

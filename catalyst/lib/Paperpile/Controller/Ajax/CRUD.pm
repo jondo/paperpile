@@ -18,7 +18,6 @@ package Paperpile::Controller::Ajax::CRUD;
 
 use strict;
 use warnings;
-use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Paperpile::Job;
 use Paperpile::Queue;
@@ -35,10 +34,10 @@ use FreezeThaw;
 
 use 5.010;
 
-sub insert_entry : Local {
+sub insert_entry {
   my ( $self, $c ) = @_;
 
-  my $grid_id   = $c->request->params->{grid_id};
+  my $grid_id   = $c->params->{grid_id};
   my ($plugin, $selection) = $self->_get_selection($c);
 
   my %output    = ();
@@ -116,13 +115,13 @@ sub insert_entry : Local {
 # Called by the front-end 'lookup details' button, to fetch more complete data
 # for a given reference from an online resource. Basically this is a wrapper
 # for the plugin's needs_completing($pub) and complete_details($pub) methods.
-sub complete_entry : Local {
+sub complete_entry  {
 
   my ( $self, $c ) = @_;
 
   my ($plugin, $selection) = $self->_get_selection($c);
 
-  my $cancel_handle = $c->request->params->{cancel_handle};
+  my $cancel_handle = $c->params->{cancel_handle};
 
   Paperpile::Utils->register_cancel_handle($cancel_handle);
 
@@ -162,18 +161,18 @@ sub complete_entry : Local {
 
 }
 
-sub new_entry : Local {
+sub new_entry  {
 
   my ( $self, $c ) = @_;
 
   my %fields = ();
 
-  foreach my $key ( %{ $c->request->params } ) {
+  foreach my $key ( %{ $c->params } ) {
     next if (($key =~ /^_/) && ($key ne '_pdf_tmp'));
-    $fields{$key} = $c->request->params->{$key};
+    $fields{$key} = $c->params->{$key};
   }
 
-  my $match_job = $c->request->params->{match_job};
+  my $match_job = $c->params->{match_job};
 
   my $pub = Paperpile::Library::Publication->new( {%fields} );
 
@@ -210,7 +209,7 @@ sub new_entry : Local {
 
 }
 
-sub empty_trash : Local {
+sub empty_trash  {
   my ( $self, $c ) = @_;
 
   my $library = $c->model('Library');
@@ -221,9 +220,9 @@ sub empty_trash : Local {
   $c->stash->{num_deleted} = scalar @$data;
 }
 
-sub delete_entry : Local {
+sub delete_entry  {
   my ( $self, $c ) = @_;
-  my $mode   = $c->request->params->{mode};
+  my $mode   = $c->params->{mode};
 
   my ($plugin, $data) = $self->_get_selection($c);
 
@@ -259,7 +258,7 @@ sub delete_entry : Local {
 
 }
 
-sub undo_trash : Local {
+sub undo_trash  {
 
   my ( $self, $c ) = @_;
 
@@ -277,17 +276,17 @@ sub undo_trash : Local {
 
 }
 
-sub update_entry : Local {
+sub update_entry  {
   my ( $self, $c ) = @_;
 
-  my $guid = $c->request->params->{guid};
+  my $guid = $c->params->{guid};
 
-  my $match_job = $c->request->params->{match_job};
+  my $match_job = $c->params->{match_job};
 
   my $new_data = {};
-  foreach my $field ( keys %{ $c->request->params } ) {
+  foreach my $field ( keys %{ $c->params } ) {
     next if $field =~ /grid_id/;
-    $new_data->{$field} = $c->request->params->{$field};
+    $new_data->{$field} = $c->params->{$field};
   }
 
   my $new_pub = $c->model('Library')->update_pub( $guid, $new_data );
@@ -329,12 +328,12 @@ sub update_entry : Local {
 
 }
 
-sub lookup_entry : Local {
+sub lookup_entry  {
   my ( $self, $c ) = @_;
 
   my $old_data = {};
-  foreach my $field ( keys %{ $c->request->params } ) {
-    $old_data->{$field} = $c->request->params->{$field};
+  foreach my $field ( keys %{ $c->params } ) {
+    $old_data->{$field} = $c->params->{$field};
   }
 
   my $pub = Paperpile::Library::Publication->new($old_data);
@@ -389,11 +388,11 @@ sub _match_single {
 
 }
 
-sub update_notes : Local {
+sub update_notes  {
   my ( $self, $c ) = @_;
 
-  my $guid = $c->request->params->{guid};
-  my $html = $c->request->params->{html};
+  my $guid = $c->params->{guid};
+  my $html = $c->params->{html};
 
   # If input field in rich text editor is empty it still contains a
   # "<br>"
@@ -405,38 +404,33 @@ sub update_notes : Local {
 
 }
 
-sub new_collection : Local {
+sub new_collection  {
   my ( $self, $c ) = @_;
 
-  my $guid   = $c->request->params->{node_id};
-  my $parent = $c->request->params->{parent_id};
-  my $name   = $c->request->params->{text};
-  my $type   = $c->request->params->{type};
-  my $style  = $c->request->params->{style} || '0';
+  my $guid   = $c->params->{node_id};
+  my $parent = $c->params->{parent_id};
+  my $name   = $c->params->{text};
+  my $type   = $c->params->{type};
+  my $style  = $c->params->{style} || '0';
 
   $c->model('Library')->new_collection( $guid, $name, $type, $parent, $style );
 
-  # Reload tree representation of collections
-
-  my $tree = $c->model('Library')->get_setting('_tree');
-
-  print STDERR Dumper($tree);
-
-
-  if ($type eq 'LABEL'){
-    $c->forward( '/ajax/tree/get_subtree', [ $tree, "LABEL_ROOT" ] );
-  } else {
-    $c->forward( '/ajax/tree/get_subtree', [ $tree, "FOLDER_ROOT" ] );
-  }
+  # Reload tree representation of collections -- Don't think we need that any more
+  # my $tree = $c->model('Library')->get_setting('_tree');
+  #if ($type eq 'LABEL'){
+  #  $c->forward( '/ajax/tree/get_subtree', [ $tree, "LABEL_ROOT" ] );
+  #} else {
+  #  $c->forward( '/ajax/tree/get_subtree', [ $tree, "FOLDER_ROOT" ] );
+  #}
 
 }
 
-sub move_in_collection : Local {
+sub move_in_collection  {
   my ( $self, $c ) = @_;
 
-  my $grid_id = $c->request->params->{grid_id};
-  my $guid    = $c->request->params->{guid};
-  my $type    = $c->request->params->{type};
+  my $grid_id = $c->params->{grid_id};
+  my $guid    = $c->params->{guid};
+  my $type    = $c->params->{type};
   my ($plugin, $data) = $self->_get_selection($c);
 
   my $what = $type eq 'FOLDER' ? 'folders' : 'labels';
@@ -508,11 +502,11 @@ sub move_in_collection : Local {
   $c->stash->{data}->{file_sync_delta} = $self->_get_sync_collections( $c, undef, $guid );
 }
 
-sub remove_from_collection : Local {
+sub remove_from_collection  {
   my ( $self, $c ) = @_;
 
-  my $collection_guid = $c->request->params->{collection_guid};
-  my $type            = $c->request->params->{type};
+  my $collection_guid = $c->params->{collection_guid};
+  my $type            = $c->params->{type};
 
   my ($plugin, $data) = $self->_get_selection($c);
 
@@ -530,11 +524,11 @@ sub remove_from_collection : Local {
 
 }
 
-sub delete_collection : Local {
+sub delete_collection  {
   my ( $self, $c ) = @_;
 
-  my $guid = $c->request->params->{guid};
-  my $type = $c->request->params->{type};
+  my $guid = $c->params->{guid};
+  my $type = $c->params->{type};
 
   $c->model('Library')->delete_collection( $guid, $type );
 
@@ -557,11 +551,11 @@ sub delete_collection : Local {
   $c->stash->{data}->{collection_delta} = 1;
 }
 
-sub rename_collection : Local {
+sub rename_collection  {
   my ( $self, $c ) = @_;
 
-  my $guid     = $c->request->params->{guid};
-  my $new_name = $c->request->params->{new_name};
+  my $guid     = $c->params->{guid};
+  my $new_name = $c->params->{new_name};
 
   $c->model('Library')->rename_collection( $guid, $new_name );
 
@@ -572,20 +566,20 @@ sub rename_collection : Local {
   $c->stash->{data}->{collection_delta} = 1;
 }
 
-sub move_collection : Local {
+sub move_collection  {
   my ( $self, $c ) = @_;
 
   # The node that was moved
-  my $drop_guid = $c->request->params->{drop_node};
+  my $drop_guid = $c->params->{drop_node};
 
   # The node to which it was moved
-  my $target_guid = $c->request->params->{target_node};
+  my $target_guid = $c->params->{target_node};
 
-  my $type = $c->request->params->{type};
+  my $type = $c->params->{type};
 
   # Either 'append' for dropping into the node, or 'below' or 'above'
   # for moving nodes on the same level
-  my $position = $c->request->params->{point};
+  my $position = $c->params->{point};
 
   $c->model('Library')->move_collection( $target_guid, $drop_guid, $position, $type );
 
@@ -593,13 +587,13 @@ sub move_collection : Local {
 }
 
 # Sorts a set of sibling collection nodes by the given order of IDs.
-sub sort_collection : Local {
+sub sort_collection  {
   my ( $self, $c ) = @_;
 
   my $m = $c->model('Library');
 
   # The desired order of nodes, given as a list of GUIDs.
-  my $node_id_order = $c->request->params->{node_id_order};
+  my $node_id_order = $c->params->{node_id_order};
   my @id_order;
   if ( ref $node_id_order eq 'ARRAY' ) {
     @id_order = @{$node_id_order};
@@ -608,7 +602,7 @@ sub sort_collection : Local {
   }
 
   # The parent node under which all these nodes live, given as a GUID.
-  my $parent_id = $c->request->params->{parent_id};
+  my $parent_id = $c->params->{parent_id};
   my $type      = $m->get_collection_type($parent_id);
 
   # Go in order, putting each sub-node at the end of the parent node's child list.
@@ -617,16 +611,16 @@ sub sort_collection : Local {
   }
 }
 
-sub update_collection : Local {
+sub update_collection  {
   my ( $self, $c ) = @_;
 
-  my $guid = $c->request->params->{guid};
+  my $guid = $c->params->{guid};
 
   my $data = {};
 
   foreach my $field ('name','style','sort_order','hidden'){
-    if (defined $c->request->params->{$field}){
-      $data->{$field} = $c->request->params->{$field};
+    if (defined $c->params->{$field}){
+      $data->{$field} = $c->params->{$field};
     }
   }
 
@@ -635,11 +629,11 @@ sub update_collection : Local {
   $c->stash->{data}->{collection_update} = 1;
 }
 
-sub list_collections : Local {
+sub list_collections  {
 
   my ( $self, $c ) = @_;
 
-  my $type = $c->request->params->{type};
+  my $type = $c->params->{type};
 
   my $model = $c->model('Library');
 
@@ -683,7 +677,7 @@ sub list_collections : Local {
 }
 
 # Returns the list of labels sorted by name.
-sub sort_labels_by_name : Local {
+sub sort_labels_by_name  {
   my ( $self, $c ) = @_;
 
   $c->model('Library')->sort_labels('name');
@@ -692,7 +686,7 @@ sub sort_labels_by_name : Local {
 }
 
 # Returns the list of labels sorted by paper count.
-sub sort_labels_by_count : Local {
+sub sort_labels_by_count  {
   my ( $self, $c ) = @_;
 
   my $dbh = $c->model('Library')->dbh;
@@ -702,7 +696,7 @@ sub sort_labels_by_count : Local {
   $c->stash->{data}->{collection_delta} = 1;
 }
 
-sub batch_update : Local {
+sub batch_update  {
   my ( $self, $c ) = @_;
 
   my ($plugin, $data) = $self->_get_selection($c);
@@ -731,10 +725,9 @@ sub batch_update : Local {
   $self->_save_plugin($c, $plugin);
 
   $c->stash->{data}->{job_delta} = 1;
-  $c->detach('Paperpile::View::JSON');
 }
 
-sub batch_download : Local {
+sub batch_download  {
   my ( $self, $c ) = @_;
 
   my ($plugin, $data) = $self->_get_selection($c);
@@ -768,18 +761,16 @@ sub batch_download : Local {
 
   $c->stash->{data}->{job_delta} = 1;
 
-  $c->detach('Paperpile::View::JSON');
-
 }
 
-sub attach_file : Local {
+sub attach_file  {
   my ( $self, $c ) = @_;
 
-  my $guid   = $c->request->params->{guid};
-  my $file   = $c->request->params->{file};
-  my $is_pdf = $c->request->params->{is_pdf};
+  my $guid   = $c->params->{guid};
+  my $file   = $c->params->{file};
+  my $is_pdf = $c->params->{is_pdf};
 
-  my $grid_id = $c->request->params->{grid_id};
+  my $grid_id = $c->params->{grid_id};
   my $plugin  = Paperpile::Utils->session($c)->{"grid_$grid_id"};
 
   my $pub = $plugin->find_guid($guid);
@@ -791,14 +782,14 @@ sub attach_file : Local {
 
 }
 
-sub delete_file : Local {
+sub delete_file  {
   my ( $self, $c ) = @_;
 
-  my $file_guid = $c->request->params->{file_guid};
-  my $pub_guid  = $c->request->params->{pub_guid};
-  my $is_pdf    = $c->request->params->{is_pdf};
+  my $file_guid = $c->params->{file_guid};
+  my $pub_guid  = $c->params->{pub_guid};
+  my $is_pdf    = $c->params->{is_pdf};
 
-  my $grid_id = $c->request->params->{grid_id};
+  my $grid_id = $c->params->{grid_id};
   my $plugin  = Paperpile::Utils->session($c)->{"grid_$grid_id"};
 
   my $pub = $plugin->find_guid($pub_guid);
@@ -828,7 +819,7 @@ sub delete_file : Local {
 
 }
 
-sub undo_delete : Local {
+sub undo_delete  {
   my ( $self, $c ) = @_;
 
   my $undo_data = Paperpile::Utils->session($c)->{"undo_delete_attachment"};
@@ -852,10 +843,10 @@ sub undo_delete : Local {
 
 }
 
-sub merge_duplicates : Local {
+sub merge_duplicates  {
   my ( $self, $c ) = @_;
 
-  my $grid_id     = $c->request->params->{grid_id};
+  my $grid_id     = $c->params->{grid_id};
   my $ref_guid    = $c->request->param('ref_guid');
   my @other_guids = $c->request->param('other_guids');
 
@@ -903,13 +894,13 @@ sub merge_duplicates : Local {
   $c->stash->{data}->{pub_delta} = 1;
 }
 
-sub sync_files : Local {
+sub sync_files  {
 
   my ( $self, $c ) = @_;
 
   # Get non-redundant list of collections
   my %tmp;
-  foreach my $collection ( split( /,/, $c->request->params->{collections} ) ) {
+  foreach my $collection ( split( /,/, $c->params->{collections} ) ) {
     $tmp{$collection} = 1;
   }
   my @collections = keys %tmp;
@@ -1011,8 +1002,8 @@ sub _get_selection {
 
   my ( $self, $c, $light_objects ) = @_;
 
-  my $grid_id   = $c->request->params->{grid_id};
-  my $selection = $c->request->params->{selection};
+  my $grid_id   = $c->params->{grid_id};
+  my $selection = $c->params->{selection};
   my $plugin = Paperpile::Utils->session($c)->{"grid_$grid_id"};
 
   $plugin->light_objects( $light_objects ? 1 : 0 );
@@ -1050,7 +1041,7 @@ sub _get_selection {
 
 sub _save_plugin {
   my ( $self, $c, $plugin ) = @_;
-  my $grid_id = $c->request->params->{grid_id};
+  my $grid_id = $c->params->{grid_id};
 
   return Paperpile::Utils->session($c, {"grid_$grid_id"=>$plugin});
 }

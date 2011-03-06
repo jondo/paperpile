@@ -18,9 +18,7 @@
 
 
 package Paperpile::PdfCrawler;
-use Moose;
-use Moose::Util::TypeConstraints;
-use Carp;
+use Mouse;
 use LWP;
 use HTML::Entities;
 use HTML::LinkExtor;
@@ -29,12 +27,9 @@ use XML::Simple;
 use URI::URL;
 use Encode;
 use Data::Dumper;
-use Config::Any;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
 use Paperpile::PdfUserAgent;
-
-use YAML;
 
 $Data::Dumper::Indent = 1;
 

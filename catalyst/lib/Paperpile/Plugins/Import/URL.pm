@@ -17,11 +17,11 @@
 
 package Paperpile::Plugins::Import::URL;
 
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use 5.010;
 
 use Paperpile::Utils;
+use Paperpile::App;
 use Paperpile::MetaCrawler;
 use Data::Dumper;
 
@@ -44,7 +44,7 @@ sub match {
   my $crawler = Paperpile::MetaCrawler->new;
   $crawler->jobid($self->jobid);
   $crawler->debug(0);
-  $crawler->driver_file( Paperpile::Utils->path_to( 'data', 'meta-crawler.xml' )->stringify );
+  $crawler->driver_file( Paperpile::App->path_to( 'data', 'meta-crawler.xml' ) );
   $crawler->load_driver();
 
   print STDERR "URL Plugin called with ",$pub->best_link,"\n";

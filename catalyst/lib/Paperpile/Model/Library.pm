@@ -27,8 +27,7 @@ use File::Spec::Functions qw(catfile splitpath canonpath abs2rel);
 use File::Copy;
 use File::Copy::Recursive qw(dirmove);
 use File::stat;
-use Moose;
-use MooseX::Timestamp;
+use Mouse;
 use Encode qw(encode decode);
 use File::Temp qw/tempfile tempdir /;
 use Data::GUID;
@@ -39,17 +38,16 @@ use Paperpile::Library::Author;
 use Paperpile::Model::App;
 
 
-with 'Catalyst::Component::InstancePerContext';
 
 has 'light_objects' => ( is => 'rw', isa => 'Int', default => 0 );
 
-sub build_per_context_instance {
-  my ( $self, $c ) = @_;
-  my $file = Paperpile::Utils->session($c)->{library_db};
-  my $model = Paperpile::Model::Library->new( { file => $file } );
+#sub build_per_context_instance {
+#  my ( $self, $c ) = @_;
+#  my $file = Paperpile::Utils->session($c)->{library_db};
+#  my $model = Paperpile::Model::Library->new( { file => $file } );
 
-  return $model;
-}
+#  return $model;
+#}
 
 
 # Inserts a list $pubs of publication objects into the database. If
@@ -93,8 +91,7 @@ sub insert_pubs {
   }
 
   foreach my $pub (@$pubs) {
-    my $ts = timestamp gmtime;
-    $pub->created($ts) if not $pub->created;
+    $pub->created(Paperpile::Utils->gm_timestamp) if not $pub->created;
 
     if ( $pub->_imported ) {
       $pub->_insert_skipped(1);
@@ -263,7 +260,7 @@ sub trash_pubs {
 
     # The field 'created' is used to store time of import as well as time of
     # deletion, so we set it everytime we trash or restore something
-    my $now = $dbh->quote( timestamp gmtime );
+    my $now = $dbh->quote(Paperpile::Utils->gm_timestamp);
     my $key = $dbh->quote( $pub->citekey );
 
     $dbh->do(
@@ -537,7 +534,7 @@ sub inc_read_counter {
 
   my ( $self, $guid ) = @_;
 
-  my $touched = timestamp gmtime;
+  my $touched = Paperpile::Utils->gm_timestamp;
 
   my ( $dbh, $in_prev_tx ) = $self->begin_or_continue_tx;
 

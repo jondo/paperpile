@@ -19,7 +19,6 @@ package Paperpile::Controller::Ajax::Plugins;
 
 use strict;
 use warnings;
-use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Data::Dumper;
 use 5.010;
@@ -48,20 +47,20 @@ BEGIN {
   }
 }
 
-sub resultsgrid : Local {
+sub resultsgrid  {
 
   my ( $self, $c ) = @_;
 
-  my $grid_id   = $c->request->params->{grid_id};
-  my $task      = $c->request->params->{task} || '';
-  my $offset    = $c->request->params->{start};
-  my $limit     = $c->request->params->{limit};
-  my $selection = $c->request->params->{selection} || '';
+  my $grid_id   = $c->params->{grid_id};
+  my $task      = $c->params->{task} || '';
+  my $offset    = $c->params->{start};
+  my $limit     = $c->params->{limit};
+  my $selection = $c->params->{selection} || '';
 
-  my $plugin_name = $c->request->params->{plugin_name};
+  my $plugin_name = $c->params->{plugin_name};
   my $plugin;
 
-  my $cancel_handle = $c->request->params->{cancel_handle} || undef;
+  my $cancel_handle = $c->params->{cancel_handle} || undef;
 
   if ($cancel_handle){
     Paperpile::Utils->register_cancel_handle($cancel_handle);
@@ -74,15 +73,15 @@ sub resultsgrid : Local {
 
     # Directly pass plugin parameters starting with "plugin_" to plugin Module
     my %params = ();
-    foreach my $key ( keys %{ $c->request->params } ) {
+    foreach my $key ( keys %{ $c->params } ) {
       if ( $key =~ /^plugin_/ ) {
         my $newKey = $key;
         $newKey =~ s/^plugin_//;
-        $params{$newKey} = $c->request->params->{$key};
+        $params{$newKey} = $c->params->{$key};
       }
     }
 
-    if ( ( ( $plugin_name eq 'DB' ) and ( not $c->request->params->{plugin_file} ) )
+    if ( ( ( $plugin_name eq 'DB' ) and ( not $c->params->{plugin_file} ) )
       or ( $plugin_name eq 'Duplicates' )
       or ( $plugin_name eq 'Trash' ) ) {
       $params{file} = Paperpile::Utils->session($c)->{library_db};
@@ -101,7 +100,7 @@ sub resultsgrid : Local {
 
   } else {
     $plugin = Paperpile::Utils->session($c)->{"grid_$grid_id"};
-    if ( $c->request->params->{plugin_update_total} ) {
+    if ( $c->params->{plugin_update_total} ) {
       $plugin->update_total(1);
     }
   }
@@ -134,7 +133,7 @@ sub resultsgrid : Local {
   }
 
   # Skip test for existence for standard user database
-  if ( $plugin_name ~~ ['DB','Trash','Duplicates']  and not $c->request->params->{plugin_file} ) {
+  if ( $plugin_name ~~ ['DB','Trash','Duplicates']  and not $c->params->{plugin_file} ) {
     foreach my $pub (@$entries) {
       $pub->_imported(1);
     }
@@ -183,19 +182,15 @@ sub _resultsgrid_format {
     fields        => [@fields]
   );
 
-  $c->component('View::JSON')->encoding('utf8');
-
   $c->stash->{total_entries} = $total_entries;
   $c->stash->{data}          = [@data];
   $c->stash->{metaData}      = {%metaData};
 
-  $c->detach('Paperpile::View::JSON');
-
 }
 
-sub delete_grids : Local {
+sub delete_grids  {
   my ( $self, $c ) = @_;
-  my $grid_ids = $c->request->params->{grid_ids};
+  my $grid_ids = $c->params->{grid_ids};
 
   if (!(ref $grid_ids eq 'ARRAY')){
     $grid_ids = [$grid_ids];
@@ -209,26 +204,25 @@ sub delete_grids : Local {
     }
   }
 
-  $c->forward('Paperpile::View::JSON');
 }
 
-sub export : Local {
+sub export  {
 
   my ( $self, $c ) = @_;
 
-  my $grid_id     = $c->request->params->{grid_id}     || undef;
-  my $source_node = $c->request->params->{source_node} || undef;
-  my $collection_id = $c->request->params->{collection_id} || undef;
-  my $selection   = $c->request->params->{selection}   || undef;
-  my $get_string  = $c->request->params->{get_string}  || 0;
+  my $grid_id     = $c->params->{grid_id}     || undef;
+  my $source_node = $c->params->{source_node} || undef;
+  my $collection_id = $c->params->{collection_id} || undef;
+  my $selection   = $c->params->{selection}   || undef;
+  my $get_string  = $c->params->{get_string}  || 0;
 
   # Collect all export_ parameters for the export plugin
   my %export_params = ();
-  foreach my $key ( keys %{ $c->request->params } ) {
+  foreach my $key ( keys %{ $c->params } ) {
     if ( $key =~ /^export_/ ) {
       my $newKey = $key;
       $newKey =~ s/^export_//;
-      my $newValue = $c->request->params->{$key};
+      my $newValue = $c->params->{$key};
       $newValue = 1 if ( $newValue eq 'on' or $newValue eq 'true' );
       $newValue = 0 if ( $newValue eq 'false' );
       $export_params{$newKey} = $newValue;

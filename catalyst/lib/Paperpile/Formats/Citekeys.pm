@@ -1,6 +1,6 @@
 package Paperpile::Formats::Citekeys;
 
-use Moose;
+use Mouse;
 use Data::Dumper;
 use IO::File;
 

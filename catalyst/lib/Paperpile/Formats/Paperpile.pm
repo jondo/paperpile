@@ -16,7 +16,7 @@
 
 
 package Paperpile::Formats::Paperpile;
-use Moose;
+use Mouse;
 
 extends 'Paperpile::Formats';
 

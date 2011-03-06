@@ -17,8 +17,7 @@
 package Paperpile::Model::SQLite;
 
 use strict;
-use base 'Catalyst::Model';
-use Moose;
+use Mouse;
 use DBI;
 use Data::Dumper;
 use LockFile::Simple;
@@ -97,7 +96,7 @@ sub begin_transaction {
     # /tmp. Should avoid locking issues in NFS based file systems
 
     my $lock = LockFile::Simple->make(
-      -format => Paperpile->config->{tmp_dir} . "/%f.lock",
+      -format => Paperpile::App->config->{tmp_dir} . "/%f.lock",
       -delay     => 1,     # Wait 1 second between next try to get lock on file
       -max       => 30,    # Try at most 30 times, i.e. timeout is 30 seconds
       -autoclean => 1,     # Clean lockfile when process ends

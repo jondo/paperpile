@@ -17,10 +17,8 @@
 
 package Paperpile::Plugins::Import::PubMed;
 
-use Carp;
 use Data::Dumper;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use XML::Simple;
 use URI::Escape;
 use 5.010;

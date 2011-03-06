@@ -3,19 +3,11 @@ name: "Paperpile"
 platform: "__PLATFORM__"
 
 paperpile_user_dir: "__PP_USER_DIR__"
-user_settings_db: "__PP_USER_DIR__/settings.db"
 
 tmp_dir: "__PP_TMP_DIR__"
+
+user_db: "__PP_USER_DIR__/settings.db"
 queue_db: "__PP_TMP_DIR__/queue.db"
-
-Model::App:
-  file: "__path_to(db/app.db)__"
-
-Model::User:
-  file: "__PP_USER_DIR__/settings.db"
-
-Model::Queue:
-  file: "__PP_TMP_DIR__/queue.db"
 
 app_settings:
   platform: "__PLATFORM__"

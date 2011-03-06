@@ -19,7 +19,6 @@ package Paperpile::Controller::Ajax::Misc;
 
 use strict;
 use warnings;
-use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Paperpile::Utils;
 use Data::Dumper;
@@ -27,23 +26,37 @@ use File::Spec;
 use File::Path;
 use File::Copy;
 use Paperpile::Exceptions;
-use MooseX::Timestamp;
 use LWP;
 use HTTP::Request::Common;
 use FreezeThaw qw/freeze thaw/;
 use File::Temp qw(tempfile);
-use YAML qw(LoadFile);
+use YAML::XS qw(LoadFile);
 use URI::Escape;
 use Encode;
 use JSON;
 
 use 5.010;
 
-sub feed_list : Local {
+sub test {
+
   my ( $self, $c ) = @_;
-  my $query  = $c->request->params->{query};
-  my $offset = $c->request->params->{start};
-  my $limit  = $c->request->params->{limit};
+
+  #NetGetError->throw(
+  #  error => 'Network test failed ',
+  #  code  => 100
+  #);
+
+  die("Died unexpectedly");
+
+  $c->stash->{feeds} = [ 'feed1', 'feed2' ];
+
+}
+
+sub feed_list  {
+  my ( $self, $c ) = @_;
+  my $query  = $c->params->{query};
+  my $offset = $c->params->{start};
+  my $limit  = $c->params->{limit};
 
   $offset = 0 unless (defined $offset);
   $limit = 50 unless (defined $limit);
@@ -82,7 +95,6 @@ sub feed_list : Local {
   $c->stash->{total_entries} = scalar @feeds;
   $c->stash->{metaData}      = {%metaData};
 
-  $c->forward('Paperpile::View::JSON');
 }
 
 sub _escapeString {
@@ -107,11 +119,11 @@ sub _escapeString {
 
 
 
-sub journal_list : Local {
+sub journal_list  {
 
   my ( $self, $c ) = @_;
-  my $query     = $c->request->params->{query};
-  my $query_bak = $c->request->params->{query};
+  my $query     = $c->params->{query};
+  my $query_bak = $c->params->{query};
 
   my $model = $c->model('App');
 
@@ -172,14 +184,13 @@ sub journal_list : Local {
 
 }
 
-sub get_settings : Local {
+sub get_settings  {
 
   my ( $self, $c ) = @_;
 
   # app_settings are read from the config file, they are never changed
   # by the user and constant for a specific version of the application
   my @list1 = %{ $c->config->{app_settings} };
-  
   my @list2 = %{ $c->model('User')->settings };
   my @list3 = %{ $c->model('Library')->settings };
 
@@ -199,15 +210,15 @@ sub get_settings : Local {
 
 }
 
-sub test_network : Local {
+sub test_network  {
 
   my ( $self, $c ) = @_;
 
-  my $cancel_handle = $c->request->params->{cancel_handle};
+  my $cancel_handle = $c->params->{cancel_handle};
 
   Paperpile::Utils->register_cancel_handle($cancel_handle);
 
-  my $browser = Paperpile::Utils->get_browser( $c->request->params );
+  my $browser = Paperpile::Utils->get_browser( $c->params );
 
   my $response = $browser->get('http://pubmed.org');
 
@@ -222,12 +233,12 @@ sub test_network : Local {
 
 }
 
-sub cancel_request : Local {
+sub cancel_request  {
 
   my ( $self, $c ) = @_;
 
-  my $cancel_handle = $c->request->params->{cancel_handle};
-  my $kill          = $c->request->params->{kill};
+  my $cancel_handle = $c->params->{cancel_handle};
+  my $kill          = $c->params->{kill};
 
   $kill = 0 if not defined $kill;
 
@@ -235,13 +246,13 @@ sub cancel_request : Local {
 
 }
 
-sub clean_duplicates : Local {
+sub clean_duplicates  {
   my ( $self, $c ) = @_;
-  my $grid_id = $c->request->params->{grid_id};
+  my $grid_id = $c->params->{grid_id};
   my $plugin  = Paperpile::Utils->session($c)->{"grid_$grid_id"};
 }
 
-sub line_feed : Local {
+sub line_feed  {
   my ( $self, $c ) = @_;
   foreach my $i (1..100){
     print STDERR "============================ $i =============================\n";
@@ -249,10 +260,10 @@ sub line_feed : Local {
 }
 
 
-sub inc_read_counter : Local {
+sub inc_read_counter  {
 
   my ( $self, $c ) = @_;
-  my $guid = $c->request->params->{guid};
+  my $guid = $c->params->{guid};
 
   my ( $times_read, $touched ) = $c->model('Library')->inc_read_counter($guid);
 
@@ -260,7 +271,7 @@ sub inc_read_counter : Local {
 
 }
 
-sub report_crash : Local {
+sub report_crash  {
 
   my ( $self, $c ) = @_;
 
@@ -268,8 +279,8 @@ sub report_crash : Local {
 
   my $url = $c->config->{app_settings}->{paperserve_url}.'/api/v1/feedback/crashreport';
 
-  my $error        = $c->request->params->{info};
-  my $catalyst_log = $c->request->params->{catalyst_log};
+  my $error        = $c->params->{info};
+  my $catalyst_log = $c->params->{catalyst_log};
 
   my $browser = Paperpile::Utils->get_browser();
 
@@ -306,7 +317,7 @@ sub report_crash : Local {
 
 }
 
-sub report_pdf_download_error : Local {
+sub report_pdf_download_error  {
 
   my ( $self, $c ) = @_;
 
@@ -314,12 +325,12 @@ sub report_pdf_download_error : Local {
 
   my $url = $c->config->{app_settings}->{paperserve_url}.'/api/v1/feedback/crashreport';
 
-  my $report          = $c->request->params->{reportString};
+  my $report          = $c->params->{reportString};
 
   # UTF-8 caused some problems, so we send it as ASCII
   $report = encode("ascii", $report);
 
-  my $catalyst_log = $c->request->params->{catalyst_log};
+  my $catalyst_log = $c->params->{catalyst_log};
 
   my $subject = 'Automatic bug report: PDF download error on '.$self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
@@ -347,17 +358,17 @@ sub report_pdf_download_error : Local {
   unlink($filename);
 }
 
-sub report_pdf_match_error : Local {
+sub report_pdf_match_error  {
 
   my ( $self, $c ) = @_;
 
   my $url = $c->config->{app_settings}->{paperserve_url}.'/api/v1/feedback/crashreport';
 
-  my $report = $c->request->params->{reportString};
+  my $report = $c->params->{reportString};
 
   $report = encode("ascii", $report);
 
-  my $file = $c->request->params->{file};
+  my $file = $c->params->{file};
 
   my $subject = 'Automatic bug report: PDF match error on '.$self->_system_info_string($c);
   my $browser = Paperpile::Utils->get_browser();
@@ -396,13 +407,13 @@ sub _system_info_string {
 }
 
 
-sub set_file_sync : Local {
+sub set_file_sync  {
 
   my ( $self, $c ) = @_;
 
-  my $guid   = $c->request->params->{guid};
-  my $file   = $c->request->params->{file};
-  my $active = $c->request->params->{active};
+  my $guid   = $c->params->{guid};
+  my $file   = $c->params->{file};
+  my $active = $c->params->{active};
 
   my $model = $c->model('User');
 

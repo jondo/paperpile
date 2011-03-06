@@ -16,7 +16,7 @@
 
 
 package Paperpile::Formats::HTML;
-use Moose;
+use Mouse;
 use Paperpile::Utils;
 use HTML::TreeBuilder::XPath;
 use Paperpile::Library::Author;

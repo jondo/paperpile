@@ -21,6 +21,7 @@ use Moose;
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
 use Paperpile::Utils;
+use Paperpile::App;
 
 use Config;
 
@@ -475,7 +476,7 @@ sub push_qruntime {
 
   if ($platform eq 'osx'){
 
-    my $contents = Paperpile::Utils->path_to("")."/../c/qruntime/paperpile.app/Contents";
+    my $contents = Paperpile::App->path_to("")."/../c/qruntime/paperpile.app/Contents";
 
     mkdir "$dest_dir/Contents";
     mkdir "$dest_dir/Contents/Frameworks";
@@ -498,7 +499,7 @@ sub push_qruntime {
 
   if ($platform=~/linux(64|32)/) {
 
-    my $runtime = Paperpile::Utils->path_to("")."/../c/qruntime";
+    my $runtime = Paperpile::App->path_to("")."/../c/qruntime";
 
     mkdir "$dest_dir/lib";
     mkdir "$dest_dir/plugins";

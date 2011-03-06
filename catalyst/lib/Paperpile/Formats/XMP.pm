@@ -16,7 +16,7 @@
 
 
 package Paperpile::Formats::XMP;
-use Moose;
+use Mouse;
 use XML::Simple;
 use Data::Dumper;
 use Paperpile::Library::Publication;
