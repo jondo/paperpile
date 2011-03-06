@@ -30,9 +30,7 @@ use Paperpile::Formats;
 
 extends 'Paperpile::Plugins::Import::DB';
 
-enum Format => qw(PAPERPILE BIBTEX MODS ISI ENDNOTE ENDNOTEXML RIS MEDLINE);
-
-has format  => ( is => 'rw', isa => 'Format' );
+has format  => ( is => 'rw', isa => 'Str' );
 has 'file'  => ( is => 'rw', isa => 'Str' );
 has '_data' => ( is => 'rw', isa => 'ArrayRef' );
 

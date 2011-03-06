@@ -41,6 +41,7 @@ BEGIN {
           my $module = join( "::", split( /\//, $plugin_file ) );
           $module =~ s/\.pm$//;
           eval("use $module");
+          die($@) if ($@);
         }
       }
     }
@@ -89,6 +90,8 @@ sub resultsgrid  {
 
     # create instance; can we do this more elegantly?
     $plugin = eval( "$plugin_module->" . 'new(%params)' );
+
+    die($@) if ($@);
 
     $plugin->limit($limit);
 

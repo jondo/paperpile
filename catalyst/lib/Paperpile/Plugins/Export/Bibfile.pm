@@ -17,8 +17,7 @@
 
 package Paperpile::Plugins::Export::Bibfile;
 
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Data::Dumper;
 use 5.010;
 

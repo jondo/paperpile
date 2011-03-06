@@ -592,6 +592,8 @@ sub sort_collection  {
 
   my $m = $c->model('Library');
 
+  ## If still in use needs to be rewritten with $c->params->get_all('node_id_order')!!
+
   # The desired order of nodes, given as a list of GUIDs.
   my $node_id_order = $c->params->{node_id_order};
   my @id_order;
@@ -1003,14 +1005,14 @@ sub _get_selection {
   my ( $self, $c, $light_objects ) = @_;
 
   my $grid_id   = $c->params->{grid_id};
-  my $selection = $c->params->{selection};
-  my $plugin = Paperpile::Utils->session($c)->{"grid_$grid_id"};
+  my $plugin    = Paperpile::Utils->session($c)->{"grid_$grid_id"};
+  my @selection = $c->params->get_all('selection');
 
   $plugin->light_objects( $light_objects ? 1 : 0 );
 
   my @data = ();
 
-  if ( $selection eq 'ALL' ) {
+  if ( $selection[0] eq 'ALL' ) {
     @data = @{ $plugin->all };
     my $model = $c->model('Library');
     $model->exists_pub( \@data );
@@ -1018,13 +1020,7 @@ sub _get_selection {
       $pub->refresh_attachments($model);
     }
   } else {
-    my @tmp;
-    if ( ref($selection) eq 'ARRAY' ) {
-      @tmp = @$selection;
-    } else {
-      push @tmp, $selection;
-    }
-    for my $guid (@tmp) {
+    for my $guid (@selection) {
       my $pub = $plugin->find_guid($guid);
       if ( defined $pub ) {
         push @data, $pub;
@@ -1032,7 +1028,7 @@ sub _get_selection {
     }
   }
 
-  return ($plugin, [@data]);
+  return ( $plugin, [@data] );
 }
 
 # Our custom session handling does not transparently save changes to
