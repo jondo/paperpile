@@ -17,13 +17,13 @@
 
 package Paperpile::Plugins::Export::DB;
 
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Data::Dumper;
 use 5.010;
 
 use File::Copy;
 use Paperpile::Utils;
+use Paperpile::App;
 use Paperpile::Model::User;
 use Paperpile::Plugins::Import::DB;
 
@@ -42,7 +42,7 @@ sub write {
   my $dbfile = $self->settings->{out_file};
 
   # First initialize with empty database file
-  my $empty_db = Paperpile::Utils->path_to('db/library.db')->stringify;
+  my $empty_db = Paperpile::App->path_to('db','library.db');
 
   copy( $empty_db, $dbfile ) or FileWriteError->throw( error => "Could not write $dbfile." );
 

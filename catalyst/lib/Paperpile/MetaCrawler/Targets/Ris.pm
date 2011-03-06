@@ -1,4 +1,3 @@
-
 # Copyright 2009-2011 Paperpile
 #
 # This file is part of Paperpile
@@ -16,9 +15,10 @@
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
 
-
 package Paperpile::MetaCrawler::Targets::Ris;
 use Moose;
+use Paperpile::Formats::Ris;
+
 extends 'Paperpile::MetaCrawler::Targets';
 
 use Paperpile::Formats;
@@ -27,7 +27,7 @@ sub convert {
 
   my ($self, $content) = @_;
 
-  my $f = Paperpile::Formats->new(format=>'RIS');
+  my $f = Paperpile::Formats::Ris->new();
   my $pub = $f->read_string($content);
 
   return $pub->[0];

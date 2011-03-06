@@ -16,8 +16,7 @@
 
 
 package Paperpile::Formats;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Data::Dumper;
 use File::Temp qw(tempfile);
 use DBI;
@@ -28,10 +27,11 @@ use Paperpile::Exceptions;
 use Paperpile::Formats::Rss;
 use Paperpile::Formats::Ris;
 
-enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS EMAIL RIS RSS ZOTERO MENDELEY HTML XMP);
+#enum Format => qw(PAPERPILE BIBTEX CITEKEYS CITATIONS EMAIL RIS RSS ZOTERO MENDELEY HTML XMP);
 
 has 'data' => ( is => 'rw', isa => 'ArrayRef[Paperpile::Library::Publication]' );
-has format => ( is => 'rw', isa => 'Format' );
+#has format => ( is => 'rw', isa => 'Format' );
+has format => ( is => 'rw' );
 has 'file' => ( is => 'rw', isa => 'Str' );
 has 'settings' => (
   is      => 'rw',

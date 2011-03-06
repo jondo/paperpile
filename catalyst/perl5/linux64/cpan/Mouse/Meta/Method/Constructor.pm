@@ -1,83 +1,120 @@
 package Mouse::Meta::Method::Constructor;
-use strict;
-use warnings;
+use Mouse::Util qw(:meta); # enables strict and warnings
 
-sub generate_constructor_method_inline {
-    my ($class, $meta) = @_;
+use constant _MOUSE_DEBUG => $ENV{MOUSE_DEBUG} ? 1 : 0;
 
-    my $associated_metaclass_name = $meta->name;
-    my @attrs = $meta->get_all_attributes;
-    my $buildall = $class->_generate_BUILDALL($meta);
-    my $buildargs = $class->_generate_BUILDARGS($meta);
-    my $processattrs = $class->_generate_processattrs($meta, \@attrs);
-    my @compiled_constraints = map { $_ ? $_->{_compiled_type_constraint} : undef } map { $_->{type_constraint} } @attrs;
-
-    my $code = <<"...";
-    sub {
-        my \$class = shift;
-        return \$class->Mouse::Object::new(\@_)
-            if \$class ne '$associated_metaclass_name';
-        $buildargs;
-        my \$instance = bless {}, \$class;
-        $processattrs;
-        $buildall;
-        return \$instance;
-    }
-...
-
-    local $@;
-    # warn $code;
-    my $res = eval $code;
-    die $@ if $@;
-    $res;
+sub _inline_slot{
+    my(undef, $self_var, $attr_name) = @_;
+    return sprintf '%s->{q{%s}}', $self_var, $attr_name;
 }
 
-sub _generate_processattrs {
-    my ($class, $meta, $attrs) = @_;
+sub _generate_constructor {
+    my ($class, $metaclass, $args) = @_;
+
+    my $associated_metaclass_name = $metaclass->name;
+
+    my $buildall      = $class->_generate_BUILDALL($metaclass);
+    my $buildargs     = $class->_generate_BUILDARGS($metaclass);
+    my $initializer   = $metaclass->{_mouse_cache}{_initialize_object} ||=
+       $class->_generate_initialize_object($metaclass);
+    my $source = sprintf(<<'EOT', __FILE__, $metaclass->name, $buildargs, $buildall);
+#line 1 "%s"
+        package %s;
+        sub {
+            my $class = shift;
+            return $class->Mouse::Object::new(@_)
+                if $class ne __PACKAGE__;
+            # BUILDARGS
+            %s;
+            my $instance = bless {}, $class;
+            $metaclass->$initializer($instance, $args, 0);
+            # BUILDALL
+            %s;
+            return $instance;
+        }
+EOT
+    warn $source if _MOUSE_DEBUG;
+    my $body;
+    my $e = do{
+        local $@;
+        $body = eval $source;
+        $@;
+    };
+    die $e if $e;
+    return $body;
+}
+
+sub _generate_initialize_object {
+    my ($method_class, $metaclass) = @_;
+    my @attrs  = $metaclass->get_all_attributes;
+
+    my @checks = map { $_ && $_->_compiled_type_constraint }
+                 map { $_->type_constraint } @attrs;
+
     my @res;
 
-    for my $index (0 .. @$attrs - 1) {
-        my $attr = $attrs->[$index];
-        my $key  = $attr->name;
+    my $has_triggers;
+    my $strict = $metaclass->strict_constructor;
+
+    if($strict){
+        push @res, 'my $used = 0;';
+    }
+
+    for my $index (0 .. @attrs - 1) {
         my $code = '';
 
-        if (defined $attr->init_arg) {
-            my $from = $attr->init_arg;
+        my $attr = $attrs[$index];
+        my $key  = $attr->name;
 
-            $code .= "if (exists \$args->{'$from'}) {\n";
+        my $init_arg        = $attr->init_arg;
+        my $type_constraint = $attr->type_constraint;
+        my $is_weak_ref     = $attr->is_weak_ref;
+        my $need_coercion;
 
-            if ($attr->should_coerce && $attr->type_constraint) {
-                $code .= "my \$value = Mouse::Util::TypeConstraints->typecast_constraints('".$attr->associated_class->name."', \$attrs[$index]->{type_constraint}, \$args->{'$from'});\n";
+        my $instance_slot  = $method_class->_inline_slot('$instance', $key);
+        my $attr_var       = "\$attrs[$index]";
+        my $constraint_var;
+
+        if(defined $type_constraint){
+             $constraint_var = "$attr_var\->{type_constraint}";
+             $need_coercion  = ($attr->should_coerce && $type_constraint->has_coercion);
+        }
+
+        $code .= "# initialize $key\n";
+
+        my $post_process = '';
+        if(defined $type_constraint){
+            $post_process .= "\$checks[$index]->($instance_slot)\n";
+            $post_process .= "  or $attr_var->_throw_type_constraint_error($instance_slot, $constraint_var);\n";
+        }
+        if($is_weak_ref){
+            $post_process  = "Scalar::Util::weaken($instance_slot) "
+                             . "if ref $instance_slot;\n";
+        }
+
+        # build cde for an attribute
+        if (defined $init_arg) {
+            my $value = "\$args->{q{$init_arg}}";
+
+            $code .= "if (exists $value) {\n";
+
+            if($need_coercion){
+                $value = "$constraint_var->coerce($value)";
             }
-            else {
-                $code .= "my \$value = \$args->{'$from'};\n";
-            }
 
-            if ($attr->has_type_constraint) {
-                if ($attr->type_constraint->{_compiled_type_constraint}) {
-                    $code .= "unless (\$compiled_constraints[$index](\$value)) {";
-                } else {
-                    $code .= "unless (\$attrs[$index]->{type_constraint}->check(\$value)) {";
-                }
-                $code .= "
-                        \$attrs[$index]->verify_type_constraint_error(
-                            '$key', \$value, \$attrs[$index]->type_constraint
-                        )
-                    }
-                ";
-            }
-
-            $code .= "\$instance->{'$key'} = \$value;\n";
-
-            if ($attr->is_weak_ref) {
-                $code .= "Scalar::Util::weaken( \$instance->{'$key'} ) if ref( \$value );\n";
-            }
+            $code .= "$instance_slot = $value;\n";
+            $code .= $post_process;
 
             if ($attr->has_trigger) {
-                $code .= "\$attrs[$index]->{trigger}->( \$instance, \$value );\n";
+                $has_triggers++;
+                $code .= "push \@triggers, [$attr_var\->{trigger}, $instance_slot];\n";
             }
 
-            $code .= "\n} else {\n";
+            if ($strict){
+                $code .= '++$used;' . "\n";
+            }
+
+            $code .= "\n} else {\n"; # $value exists
         }
 
         if ($attr->has_default || $attr->has_builder) {
@@ -85,67 +122,77 @@ sub _generate_processattrs {
                 my $default = $attr->default;
                 my $builder = $attr->builder;
 
-                $code .= "my \$value = ";
-
-                if ($attr->should_coerce && $attr->type_constraint) {
-                    $code .= "Mouse::Util::TypeConstraints->typecast_constraints('".$attr->associated_class->name."', \$attrs[$index]->{type_constraint}, ";
+                my $value;
+                if (defined($builder)) {
+                    $value = "\$instance->$builder()";
                 }
-
-                    if ($attr->has_builder) {
-                        $code .= "\$instance->$builder";
-                    }
-                    elsif (ref($default) eq 'CODE') {
-                        $code .= "\$attrs[$index]->{default}->(\$instance)";
-                    }
-                    elsif (!defined($default)) {
-                        $code .= 'undef';
-                    }
-                    elsif ($default =~ /^\-?[0-9]+(?:\.[0-9]+)$/) {
-                        $code .= $default;
-                    }
-                    else {
-                        $code .= "'$default'";
-                    }
-
-                if ($attr->should_coerce) {
-                    $code .= ");\n";
+                elsif (ref($default) eq 'CODE') {
+                    $value = "$attr_var\->{default}->(\$instance)";
+                }
+                elsif (defined($default)) {
+                    $value = "$attr_var\->{default}";
                 }
                 else {
-                    $code .= ";\n";
+                    $value = 'undef';
                 }
 
-                if ($attr->has_type_constraint) {
-                    $code .= "{
-                        unless (\$attrs[$index]->{type_constraint}->check(\$value)) {
-                            \$attrs[$index]->verify_type_constraint_error('$key', \$value, \$attrs[$index]->type_constraint)
-                        }
-                    }";
+                if($need_coercion){
+                    $value = "$constraint_var->coerce($value)";
                 }
 
-                $code .= "\$instance->{'$key'} = \$value;\n";
-
-                if ($attr->is_weak_ref) {
-                    $code .= "Scalar::Util::weaken( \$instance->{'$key'} ) if ref( \$value );\n";
-                }
+                $code .= "$instance_slot = $value;\n";
+                $code .= $post_process;
             }
         }
         elsif ($attr->is_required) {
-            $code .= "Carp::confess('Attribute ($key) is required');";
+            $code .= "\$meta->throw_error('Attribute ($key) is required')";
+            $code .= "    unless \$is_cloning;\n";
         }
 
-        $code .= "}\n" if defined $attr->init_arg;
+        $code .= "}\n" if defined $init_arg;
 
         push @res, $code;
     }
 
-    return join "\n", @res;
+    if($strict){
+        push @res, q{if($used < keys %{$args})}
+            . q{{ $meta->_report_unknown_args(\@attrs, $args) }};
+    }
+
+    if($metaclass->is_anon_class){
+        push @res, q{$instance->{__METACLASS__} = $meta;};
+    }
+
+    if($has_triggers){
+        unshift @res, q{my @triggers;};
+        push    @res, q{$_->[0]->($instance, $_->[1]) for @triggers;};
+    }
+
+    my $source = sprintf <<'EOT', __FILE__, $metaclass->name, join "\n", @res;
+#line 1 "%s"
+    package %s;
+    sub {
+        my($meta, $instance, $args, $is_cloning) = @_;
+        %s;
+        return $instance;
+    }
+EOT
+    warn $source if _MOUSE_DEBUG;
+    my $body;
+    my $e = do {
+        local $@;
+        $body = eval $source;
+        $@;
+    };
+    die $e if $e;
+    return $body;
 }
 
 sub _generate_BUILDARGS {
-    my $self = shift;
-    my $meta = shift;
+    my(undef, $metaclass) = @_;
 
-    if ($meta->name->can('BUILDARGS') && $meta->name->can('BUILDARGS') != Mouse::Object->can('BUILDARGS')) {
+    my $class = $metaclass->name;
+    if ( $class->can('BUILDARGS') && $class->can('BUILDARGS') != \&Mouse::Object::BUILDARGS ) {
         return 'my $args = $class->BUILDARGS(@_)';
     }
 
@@ -163,20 +210,32 @@ sub _generate_BUILDARGS {
 }
 
 sub _generate_BUILDALL {
-    my ($class, $meta) = @_;
-    return '' unless $meta->name->can('BUILD');
+    my (undef, $metaclass) = @_;
 
-    my @code = ();
-    push @code, q{no strict 'refs';};
-    push @code, q{no warnings 'once';};
-    no strict 'refs';
-    no warnings 'once';
-    for my $klass ($meta->linearized_isa) {
-        if (*{ $klass . '::BUILD' }{CODE}) {
-            unshift  @code, qq{${klass}::BUILD(\$instance, \$args);};
+    return '' unless $metaclass->name->can('BUILD');
+
+    my @code;
+    for my $class ($metaclass->linearized_isa) {
+        if (Mouse::Util::get_code_ref($class, 'BUILD')) {
+            unshift  @code, qq{${class}::BUILD(\$instance, \$args);};
         }
     }
     return join "\n", @code;
 }
 
 1;
+__END__
+
+=head1 NAME
+
+Mouse::Meta::Method::Constructor - A Mouse method generator for constructors
+
+=head1 VERSION
+
+This document describes Mouse version 0.90
+
+=head1 SEE ALSO
+
+L<Moose::Meta::Method::Constructor>
+
+=cut

@@ -19,7 +19,6 @@ package Paperpile::Controller::Ajax::PdfExtract;
 
 use strict;
 use warnings;
-use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Paperpile::Queue;
 use Paperpile::Job;
@@ -27,12 +26,12 @@ use Data::Dumper;
 use File::Find;
 use File::Path;
 
-sub submit : Local {
+sub submit  {
 
   my ( $self, $c ) = @_;
 
-  my $paths            = $c->request->params->{paths};
-  my @collection_guids = $c->request->param('collection_guids');
+  my $paths            = $c->params->{paths};
+  my @collection_guids = $c->param('collection_guids');
 
 
   if (ref($paths) ne 'ARRAY'){
@@ -86,11 +85,11 @@ sub submit : Local {
   $c->stash->{data}->{job_delta} = 1;
 }
 
-sub count_files : Local {
+sub count_files  {
 
   my ( $self, $c ) = @_;
 
-  my $path = $c->request->params->{path};
+  my $path = $c->params->{path};
 
   ## Get all PDFs in all subdirectories
 

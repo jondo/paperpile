@@ -1,6 +1,6 @@
 package Paperpile::Formats::Email;
 
-use Moose;
+use Mouse;
 use Data::Dumper;
 use IO::File;
 use Text::Wrap;

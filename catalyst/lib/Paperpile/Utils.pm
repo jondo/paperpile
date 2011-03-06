@@ -17,7 +17,7 @@
 
 
 package Paperpile::Utils;
-use Moose;
+use Mouse;
 
 use LWP;
 use HTTP::Cookies;
@@ -28,69 +28,27 @@ use File::Spec;
 use File::Copy;
 
 use Storable qw(lock_store lock_retrieve);
-use Compress::Zlib;
-use MIME::Base64;
 use Digest::MD5;
 use URI::Split qw(uri_split uri_join);
 use Encode;
 
 use Data::Dumper;
+use Date::Format;
 use Config;
 
-## If we use Utils.pm from a script outside Paperpile it seems we have to also
-## "use Paperpile;" in the calling script. Otherwise we get strange errrors.
-use Paperpile;
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
 use Paperpile::Model::Queue;
 
+use Paperpile::App;
 
 sub get_tmp_dir {
 
   my ( $self ) = @_;
 
-  return Paperpile->config->{tmp_dir};
+  return Paperpile::App->config->{tmp_dir};
 
 }
-
-sub get_user_settings_model {
-
-  my $self = shift;
-
-  my $file = Paperpile->config->{'Model::User'}->{file};
-
-  my $model = Paperpile::Model::User->new( { file => $file } );
-
-  return $model;
-
-}
-
-
-sub get_queue_model {
-
-  my $self = shift;
-
-  my $file = Paperpile->config->{'Model::Queue'}->{file};
-
-  my $model = Paperpile::Model::Queue->new( { file => $file } );
-
-  return $model;
-}
-
-
-sub get_library_model {
-
-  my $self = shift;
-
-  my $settings = $self->get_user_settings_model->settings;
-
-  my $db_file = $settings->{library_db};
-  my $model = Paperpile::Model::Library->new( { file => $db_file } );
-
-  return $model;
-
-}
-
 
 sub get_browser {
 
@@ -104,8 +62,7 @@ sub get_browser {
     $settings = $test_proxy;
   } else {
 
-    my $model = $self->get_user_settings_model;
-
+    my $model = Paperpile::App->get_model("User");
     $settings = $model->settings;
   }
 
@@ -168,11 +125,11 @@ sub get_binary{
 
   if ($platform eq 'osx'){
     # Make sure that fontconfig configuration files are found on OSX
-    my $fc=File::Spec->catfile($self->path_to('bin'), 'osx','fonts','fonts.conf');
+    my $fc=File::Spec->catfile(Paperpile::App->path_to('bin'), 'osx','fonts','fonts.conf');
     $ENV{FONTCONFIG_FILE}=$fc;
   }
 
-  my $bin=File::Spec->catfile($self->path_to('bin'), $platform, $name);
+  my $bin=File::Spec->catfile(Paperpile::App->path_to('bin'), $platform, $name);
 
   $bin=~s/ /\\ /g;
 
@@ -199,26 +156,6 @@ sub get_platform{
 }
 
 
-sub get_config{
-
-  my $self=shift;
-
-  return Paperpile->config;
-
-}
-
-sub home {
-  return Paperpile->config->{home};
-}
-
-
-sub path_to {
-  (my $self, my @path ) = @_;
-
-  return Paperpile->path_to(@path);
-
-}
-
 ## We store root as explicit 'ROOT/' in database and frontend. Adjust
 ## it to system root.
 
@@ -230,38 +167,6 @@ sub adjust_root {
   $path =~ s/^ROOT/$root/;
 
   return $path;
-
-}
-
-sub encode_db {
-
-  (my $self, my $file) = @_;
-
-  open(FILE, "<$file") || die("Could not read $file ($!)");
-  binmode(FILE);
-
-  my $content='';
-  my $buff;
-
-  while (read(FILE, $buff, 8 * 2**10)) {
-    $content.=$buff;
-  }
-
-  my $compressed = Compress::Zlib::memGzip($content) ;
-  my $encoded = encode_base64($compressed);
-
-  return $encoded;
-
-}
-
-sub decode_db {
-
-  ( my $self, my $string ) = @_;
-
-  my $compressed=decode_base64($string);
-  my $uncompressed = Compress::Zlib::memGunzip($compressed);
-
-  return $uncompressed;
 
 }
 
@@ -631,40 +536,20 @@ sub session {
 
   my ( $self, $c, $data ) = @_;
 
-  # Switch between default plugin and our local solution
-  my $local = 1;
+  my $s = $self->retrieve("local_session");
+  $s = {} if !defined $s;
 
-  if ($local) {
-
-    my $s = $self->retrieve("local_session");
-    $s = {} if !defined $s;
-
-    if ( not defined $data ) {
-      return $s;
-    } else {
-      foreach my $key ( keys %$data ) {
-        if ( not defined $data->{$key} ) {
-          delete( $s->{$key} );
-        } else {
-          $s->{$key} = $data->{$key};
-        }
-      }
-      $self->store( "local_session", $s );
-    }
-  }
-
-  if ( !$local ) {
-    if ( not defined $data ) {
-      return $c->session;
-    } else {
-      foreach my $key ( keys %$data ) {
-        if ( not defined $data->{$key} ) {
-          delete( $c->session->{$key} );
-        } else {
-          $c->session->{$key} = $data->{$key};
-        }
+  if ( not defined $data ) {
+    return $s;
+  } else {
+    foreach my $key ( keys %$data ) {
+      if ( not defined $data->{$key} ) {
+        delete( $s->{$key} );
+      } else {
+        $s->{$key} = $data->{$key};
       }
     }
+    $self->store( "local_session", $s );
   }
 }
 
@@ -696,6 +581,13 @@ sub decode_data {
   }
 }
 
+
+sub gm_timestamp {
+
+  my @time = gmtime(time);
+  return strftime("%Y-%m-%d %X", @time);
+
+}
 
 
 1;

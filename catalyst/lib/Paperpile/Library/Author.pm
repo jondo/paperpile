@@ -16,8 +16,7 @@
 
 
 package Paperpile::Library::Author;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Text::Unidecode;
 use Data::Dumper;
 use vars qw(%common_given_names);
@@ -748,8 +747,5 @@ sub clear {
 
 }
 
-no Moose;
-
-__PACKAGE__->meta->make_immutable;
 
 1;

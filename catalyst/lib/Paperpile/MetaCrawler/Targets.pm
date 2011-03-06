@@ -18,7 +18,6 @@
 
 
 package Paperpile::MetaCrawler::Targets;
-use Moose;
 use Data::Dumper;
 
 ### Put generic functions here; avoid duplicate code in subclasses!!

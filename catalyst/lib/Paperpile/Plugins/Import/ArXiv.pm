@@ -17,10 +17,8 @@
 
 package Paperpile::Plugins::Import::ArXiv;
 
-use Carp;
 use Data::Dumper;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
 use URI::Escape;

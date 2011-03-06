@@ -21,6 +21,7 @@ use Moose;
 use Paperpile::Model::User;
 use Paperpile::Model::Library;
 use Paperpile::Utils;
+use Paperpile::App;
 
 use Config;
 
@@ -100,7 +101,12 @@ sub initdb {
     print @out;
   }
 
-  my $model = Paperpile::Model::Library->new( { file => "db/library" } );
+  my $model;
+  if ( Paperpile::Utils->get_platform eq 'osx' ) {
+    $model = Paperpile::Model::Library->new( { file => "db/library" } );
+  } else {
+    $model = Paperpile::Model::Library->new( { file => "db/library.db" } );
+  }
 
   my $yaml   = "conf/fields.yaml";
   my $config = LoadFile($yaml);
@@ -470,7 +476,7 @@ sub push_qruntime {
 
   if ($platform eq 'osx'){
 
-    my $contents = Paperpile::Utils->path_to("")."/../c/qruntime/paperpile.app/Contents";
+    my $contents = Paperpile::App->path_to("")."/../c/qruntime/paperpile.app/Contents";
 
     mkdir "$dest_dir/Contents";
     mkdir "$dest_dir/Contents/Frameworks";
@@ -493,7 +499,7 @@ sub push_qruntime {
 
   if ($platform=~/linux(64|32)/) {
 
-    my $runtime = Paperpile::Utils->path_to("")."/../c/qruntime";
+    my $runtime = Paperpile::App->path_to("")."/../c/qruntime";
 
     mkdir "$dest_dir/lib";
     mkdir "$dest_dir/plugins";

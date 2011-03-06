@@ -16,7 +16,7 @@
 
 
 package Paperpile::Formats::HTML;
-use Moose;
+use Mouse;
 use Paperpile::Utils;
 use HTML::TreeBuilder::XPath;
 use Paperpile::Library::Author;
@@ -230,6 +230,10 @@ sub read {
         case "CITATION_DATE" {
 
           if ( $content =~ m/(\d{4})-(\d{1,2})-(\d{1,2})/ ) {
+            $year  = $1 if ( !$year );
+            $month = $2 if ( !$month );
+          }
+	  if ( $content =~ m/(\d{4})\/(\d{1,2})\/(\d{1,2})/ ) {
             $year  = $1 if ( !$year );
             $month = $2 if ( !$month );
           }

@@ -17,10 +17,8 @@
 
 package Paperpile::Plugins::Import::PubMed;
 
-use Carp;
 use Data::Dumper;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use XML::Simple;
 use URI::Escape;
 use 5.010;
@@ -87,7 +85,14 @@ sub _FormatQueryString {
 
   # there are no special words so we just do a regular escaping
   if ( $special_words == 0 ) {
-    $formatted_query_string = _EscapeString($query);
+      # temporary fix for issue 1014
+      # Problem description: words like "a", "an", ...
+      # are not index in pubmed. If a string contains "a" it is not mapped to [All fields] 
+      # but only to [Author], for example. Even assigning [All fields] does not help.
+      # For now we just remove it, until we have a unified interface to process query strings.
+      $query =~ s/\s+a\s+/ /g;
+
+      $formatted_query_string = _EscapeString($query);
   } else {
     my @blocks = split( /(author:|title:|journal:)/, $query );
     shift(@blocks) if ( !$blocks[0] );
@@ -140,6 +145,8 @@ sub connect {
   # We send our query to PubMed via a simple get
   my $query_string = _FormatQueryString( $self->query );
   my $response     = $browser->get( $esearch . $query_string );
+
+  print STDERR "$esearch$query_string\n";
 
   if ( $response->is_error ) {
     NetGetError->throw(

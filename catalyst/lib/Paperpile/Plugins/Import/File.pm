@@ -17,10 +17,7 @@
 
 package Paperpile::Plugins::Import::File;
 
-use Carp;
-use Data::Page;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use Data::Dumper;
 use File::Copy;
 use File::Path;
@@ -33,9 +30,7 @@ use Paperpile::Formats;
 
 extends 'Paperpile::Plugins::Import::DB';
 
-enum Format => qw(PAPERPILE BIBTEX MODS ISI ENDNOTE ENDNOTEXML RIS MEDLINE);
-
-has format  => ( is => 'rw', isa => 'Format' );
+has format  => ( is => 'rw', isa => 'Str' );
 has 'file'  => ( is => 'rw', isa => 'Str' );
 has '_data' => ( is => 'rw', isa => 'ArrayRef' );
 
@@ -90,7 +85,7 @@ sub connect {
 
       Paperpile::Utils->uniquify_pubs($data);
 
-      my $empty_db = Paperpile::Utils->path_to('db/library.db')->stringify;
+      my $empty_db = Paperpile::App->path_to('db','library.db');
       copy( $empty_db, $self->_db_file ) or die "Could not initialize empty db ($!)";
 
       my $model = $self->get_model();

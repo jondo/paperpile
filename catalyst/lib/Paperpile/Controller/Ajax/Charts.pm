@@ -19,16 +19,15 @@ package Paperpile::Controller::Ajax::Charts;
 
 use strict;
 use warnings;
-use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Data::Dumper;
 use 5.010;
 
-sub clouds : Local {
+sub clouds  {
 
   my ( $self, $c ) = @_;
-  my $field = $c->request->params->{field};
-  my $sort_by = $c->request->params->{sorting};
+  my $field = $c->params->{field};
+  my $sort_by = $c->params->{sorting};
 
   $sort_by = 'alphabetical' unless (defined $sort_by);
 

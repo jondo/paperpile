@@ -19,7 +19,6 @@ package Paperpile::Controller::Ajax::App;
 
 use strict;
 use warnings;
-use parent 'Catalyst::Controller';
 use Paperpile::Library::Publication;
 use Paperpile::Utils;
 use Data::Dumper;
@@ -30,9 +29,8 @@ use Paperpile::Exceptions;
 use Paperpile::Queue;
 use Paperpile::Migrate;
 use 5.010;
-use POSIX;
 
-sub heartbeat : Local {
+sub heartbeat  {
 
   my ( $self, $c ) = @_;
 
@@ -41,7 +39,7 @@ sub heartbeat : Local {
 
 }
 
-sub init_session : Local {
+sub init_session  {
 
   my ( $self, $c ) = @_;
 
@@ -74,7 +72,7 @@ sub init_session : Local {
   my $user_dir = $c->config->{'paperpile_user_dir'};
 
   # No settings file exists in .paperpile in user's home directory
-  if ( !-e $c->config->{'user_settings_db'} ) {
+  if ( !-e $c->config->{'user_db'} ) {
 
     # create .paperpile if not exists
     if ( !-e $user_dir ) {
@@ -84,7 +82,10 @@ sub init_session : Local {
     }
 
     # initialize databases
-    copy( $c->path_to('db/user.db')->stringify, $c->config->{'user_settings_db'} )
+
+    print STDERR $c->path_to('db','user.db'), "==>", $c->config->{'user_db'}, "\n";
+
+    copy( $c->path_to('db','user.db'), $c->config->{'user_db'} )
       or
       FileWriteError->throw("Could not start application (Error initializing settings database)");
 
@@ -93,7 +94,7 @@ sub init_session : Local {
     # Don't overwrite an existing library database in the case the
     # user has just deleted the user settings database
     if ( !-e $c->config->{'user_settings'}->{library_db} ) {
-      copy( $c->path_to('db/library.db')->stringify, $c->config->{'user_settings'}->{library_db} )
+      copy( $c->path_to('db/library.db'), $c->config->{'user_settings'}->{library_db} )
         or FileWriteError->throw("Could not start application. Error initializing database.");
       $c->model('Library')->set_default_collections;
     }
@@ -113,7 +114,7 @@ sub init_session : Local {
 
       Paperpile::Utils->session($c,{library_db => $c->config->{'user_settings'}->{library_db}});
 
-      copy( $c->path_to('db/library.db')->stringify, $c->config->{'user_settings'}->{library_db} )
+      copy( $c->path_to('db/library.db'), $c->config->{'user_settings'}->{library_db} )
         or FileWriteError->throw(
         "Could not start application. Error initializing Paperpile database.");
 
@@ -141,7 +142,7 @@ sub init_session : Local {
   }
 
   if ( not -e $c->config->{'queue_db'} ) {
-    copy( $c->path_to('db/queue.db')->stringify, $c->config->{'queue_db'} )
+    copy( $c->path_to('db/queue.db'), $c->config->{'queue_db'} )
       or
       FileWriteError->throw("Could not start application (Error initializing queue database,  $!)");
 
@@ -155,7 +156,7 @@ sub init_session : Local {
 
 }
 
-sub migrate_db : Local {
+sub migrate_db  {
 
   my ( $self, $c ) = @_;
 

@@ -16,7 +16,7 @@
 
 
 package Paperpile::Formats::Mendeley;
-use Moose;
+use Mouse;
 use DBI;
 use Switch;
 

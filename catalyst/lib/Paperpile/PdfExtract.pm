@@ -1,6 +1,6 @@
 package Paperpile::PdfExtract;
 
-use Moose;
+use Mouse;
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Data::Dumper;

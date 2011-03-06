@@ -43,14 +43,12 @@ Paperpile.PluginGridFile = Ext.extend(Paperpile.PluginGridDB, {
   initComponent: function() {
 
     this.getStore().on('beforeload', function() {
-			   Paperpile.log("asdf");
       Paperpile.status.showBusy("Loading File");
     },
     this, {
       single: true
     });
     this.getStore().on('load', function() {
-			   Paperpile.log("Done loading");
       Paperpile.status.clearMsg();
     },
     this, {

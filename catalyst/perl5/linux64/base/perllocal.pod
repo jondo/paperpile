@@ -1097,3 +1097,399 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Fri Feb 25 17:33:58 2011: C<Module> L<Hash::MultiValue|Hash::MultiValue>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.08>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:33:59 2011: C<Module> L<Try::Tiny|Try::Tiny>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.09>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:34:00 2011: C<Module> L<Test::Requires|Test::Requires>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.06>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:34:27 2011: C<Module> L<Devel::StackTrace|Devel::StackTrace>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.27>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:34:30 2011: C<Module> L<HTTP::Body|HTTP::Body>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.11>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:34:30 2011: C<Module> L<Test::Simple|Test::Simple>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.98>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:34:43 2011: C<Module> L<Test::SharedFork|Test::SharedFork>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.16>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:34:55 2011: C<Module> L<Test::TCP|Test::TCP>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.11>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:35:04 2011: C<Module> L<Filesys::Notify::Simple|Filesys::Notify::Simple>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.07>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:35:06 2011: C<Module> L<File::ShareDir|File::ShareDir>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:35:07 2011: C<Module> L<Devel::StackTrace::AsHTML|Devel::StackTrace::AsHTML>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.11>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Fri Feb 25 17:35:20 2011: C<Module> L<Plack|Plack>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.9972>
+
+=item *
+
+C<EXE_FILES: scripts/plackup>
+
+=back
+
+=head2 Sat Feb 26 21:49:08 2011: C<Module> L<XSLoader|XSLoader>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.10>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat Feb 26 21:49:14 2011: C<Module> L<ExtUtils::ParseXS|ExtUtils::ParseXS>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/base>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.2206>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat Feb 26 21:49:33 2011: C<Module> L<Mouse|Mouse>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.90>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sun Feb 27 00:32:48 2011: C<Module> L<YAML::LibYAML|YAML::LibYAML>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.34>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat Mar  5 22:04:18 2011: C<Module> L<Capture::Tiny|Capture::Tiny>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.10>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat Mar  5 22:04:19 2011: C<Module> L<Template::Tiny|Template::Tiny>
+
+=over 4
+
+=item *
+
+C<installed into: /home/wash/play/paperpile/catalyst/perl5/linux64/cpan>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.11>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

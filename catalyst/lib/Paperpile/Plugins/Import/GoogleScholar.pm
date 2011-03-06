@@ -17,10 +17,8 @@
 
 package Paperpile::Plugins::Import::GoogleScholar;
 
-use Carp;
 use Data::Dumper;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 use XML::Simple;
 use HTML::TreeBuilder::XPath;
 use URI::Escape;
@@ -31,10 +29,10 @@ use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
 use Paperpile::Utils;
 
-use Paperpile::Plugins::Import::SpringerLink;
-use Paperpile::Plugins::Import::ACM;
-use Paperpile::Plugins::Import::PubMed;
-use Paperpile::Plugins::Import::OxfordJournals;
+#use Paperpile::Plugins::Import::SpringerLink;
+#use Paperpile::Plugins::Import::ACM;
+#use Paperpile::Plugins::Import::PubMed;
+#use Paperpile::Plugins::Import::OxfordJournals;
 use Paperpile::Plugins::Import::URL;
 
 extends 'Paperpile::Plugins::Import';

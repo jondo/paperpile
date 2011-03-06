@@ -18,9 +18,9 @@
 
 package Paperpile::Queue;
 
-use Moose;
-use Moose::Util::TypeConstraints;
+use Mouse;
 
+use Paperpile::App;
 use Paperpile::Utils;
 use Paperpile::Exceptions;
 use Paperpile::Job;
@@ -30,15 +30,15 @@ use FreezeThaw qw/freeze thaw/;
 use JSON;
 use 5.010;
 
-enum 'Status' => (
-  'WAITING',    # No jobs to run or all jobs done
-  'RUNNING',    # Queue is processing jobs
-  'PAUSED'      # Queue is paused
-);
+#enum 'Status' => (
+#  'WAITING',    # No jobs to run or all jobs done
+#  'RUNNING',    # Queue is processing jobs
+#  'PAUSED'      # Queue is paused
+#);
 
 has 'status' => (
   is      => 'rw',
-  isa     => 'Status',
+#  isa     => 'Status',
   default => 'WAITING',
 );
 
@@ -75,7 +75,7 @@ sub dbh {
   my $self = shift;
 
   if (not $self->_dbh){
-    $self->_dbh(Paperpile::Utils->get_queue_model->dbh);
+    $self->_dbh(Paperpile::App->get_model("Queue")->dbh);
   }
 
   return $self->_dbh;
@@ -485,9 +485,6 @@ sub as_hash {
 
   return {%hash};
 }
-
-no Moose;
-__PACKAGE__->meta->make_immutable;
 
 1;
 

@@ -20,6 +20,7 @@ use Moose;
 use Paperpile::Utils;
 use WWW::Mechanize;
 use HTML::TreeBuilder;
+use Paperpile::Formats::Bibtex;
 
 extends 'Paperpile::MetaCrawler::Targets';
 
@@ -43,9 +44,11 @@ sub convert {
   $tree = $tree->delete;
 
   my $id;
-  if ( $url =~ m/(.*content\/)(\w+)(.*)/ ) {
+  if ( $url =~ m/(.*(?:content|index)\/)(\w+)(.*)/ ) {
     $id = $2;
   }
+
+  return undef if ( ! $id );
 
   my $new_url = "http://www.springerlink.com/content/$id/export-citation/";
 
@@ -65,11 +68,11 @@ sub convert {
   my $response = $mech->click('ctl00$ContentPrimary$ctl00$ctl00$ExportCitationButton');
   my $bibtex   = $response->decoded_content();
 
-  # Create a new Publication object
-  my $pub = Paperpile::Library::Publication->new();
+  $bibtex =~ s/(.*)(@(?:article|book|booklet|conference|inbook|incollection|inproceedings|manual|mastersthesis|misc|phdthesis|proceedings|techreport|unpublished|comment|string)\s*\{.*)/$2/i;
 
   # import the information from the BibTeX string
-  $pub->import_string( $bibtex, 'BIBTEX' );
+  my $f = Paperpile::Formats::Bibtex->new();
+  my $pub = $f->read_string($bibtex)->[0];
 
   # here we correct the authors from the bibtex 
   my @authors_bib = split( /\s+and\s+/, $pub->authors );

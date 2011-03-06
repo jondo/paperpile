@@ -27,8 +27,7 @@ use File::Spec::Functions qw(catfile splitpath canonpath abs2rel);
 use File::Copy;
 use File::Copy::Recursive qw(dirmove);
 use File::stat;
-use Moose;
-use MooseX::Timestamp;
+use Mouse;
 use Encode qw(encode decode);
 use File::Temp qw/tempfile tempdir /;
 use Data::GUID;
@@ -39,17 +38,16 @@ use Paperpile::Library::Author;
 use Paperpile::Model::App;
 
 
-with 'Catalyst::Component::InstancePerContext';
 
 has 'light_objects' => ( is => 'rw', isa => 'Int', default => 0 );
 
-sub build_per_context_instance {
-  my ( $self, $c ) = @_;
-  my $file = Paperpile::Utils->session($c)->{library_db};
-  my $model = Paperpile::Model::Library->new( { file => $file } );
+#sub build_per_context_instance {
+#  my ( $self, $c ) = @_;
+#  my $file = Paperpile::Utils->session($c)->{library_db};
+#  my $model = Paperpile::Model::Library->new( { file => $file } );
 
-  return $model;
-}
+#  return $model;
+#}
 
 
 # Inserts a list $pubs of publication objects into the database. If
@@ -93,8 +91,7 @@ sub insert_pubs {
   }
 
   foreach my $pub (@$pubs) {
-    my $ts = timestamp gmtime;
-    $pub->created($ts) if not $pub->created;
+    $pub->created(Paperpile::Utils->gm_timestamp) if not $pub->created;
 
     if ( $pub->_imported ) {
       $pub->_insert_skipped(1);
@@ -263,7 +260,7 @@ sub trash_pubs {
 
     # The field 'created' is used to store time of import as well as time of
     # deletion, so we set it everytime we trash or restore something
-    my $now = $dbh->quote( timestamp gmtime );
+    my $now = $dbh->quote(Paperpile::Utils->gm_timestamp);
     my $key = $dbh->quote( $pub->citekey );
 
     $dbh->do(
@@ -380,15 +377,12 @@ sub update_pub {
   my $pattern = $self->get_setting( 'key_pattern');
   my $new_key = $new_pub->format_pattern($pattern);
 
-  # Avoid an uninitialized value.
-  $diff->{citekey} = '' if (!defined $diff->{citekey});
-
   # Note: In case case a ref. Smith2000a is to be updated "$new_key"
   # will be Smith2000 and we will enter the block. The result might be
   # that Smith2000a is changed back to Smith2000 if the other
   # Smith2000 is no longer in the database. Also make sure that key is
   # generated if citekey is empty
-  if ( ($new_key ne $old_data->{citekey}) || $diff->{citekey} eq '' ) {
+  if ( ($new_key ne $old_data->{citekey}) || ((exists $diff->{citekey}) && ($diff->{citekey} eq '')) ) {
     $new_pub->citekey($new_key);
 
     # If we have a new citekey, make sure it doesn't conflict with other
@@ -540,7 +534,7 @@ sub inc_read_counter {
 
   my ( $self, $guid ) = @_;
 
-  my $touched = timestamp gmtime;
+  my $touched = Paperpile::Utils->gm_timestamp;
 
   my ( $dbh, $in_prev_tx ) = $self->begin_or_continue_tx;
 
@@ -1756,7 +1750,7 @@ sub rename_files {
     return;
   }
 
-  my $tmp_root = File::Temp::tempdir( 'paperpile-XXXXXXX', DIR => '/tmp', CLEANUP => 0 );
+  my $tmp_root = "$paper_root\_tmp";
 
   eval {
 
@@ -1774,12 +1768,13 @@ sub rename_files {
 
       my $data = $dbh->selectrow_hashref("SELECT * FROM Publications WHERE guid='$pub_guid';");
 
-      if (!$data){
-        print STDERR "Warning: $file attached to Publication ($pub_guid) that does not exist any more.";
+      if ( !$data ) {
+        print STDERR
+          "Warning: $file attached to Publication ($pub_guid) that does not exist any more.";
         next;
       }
 
-      my $pub  = Paperpile::Library::Publication->new($data);
+      my $pub = Paperpile::Library::Publication->new($data);
 
       my $relative_dest;
 
@@ -1792,7 +1787,7 @@ sub rename_files {
 
       my $absolute_dest = File::Spec->catfile( $tmp_root, $relative_dest );
 
-      if ($data->{trashed}){
+      if ( $data->{trashed} ) {
         $absolute_dest = File::Spec->catfile( $tmp_root, "Trash", $relative_dest );
       }
 

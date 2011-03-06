@@ -1,137 +1,130 @@
 package Mouse::Role;
-use strict;
-use warnings;
-use base 'Exporter';
+use Mouse::Exporter; # enables strict and warnings
 
-use Carp 'confess', 'croak';
-use Scalar::Util 'blessed';
+our $VERSION = '0.90';
 
-use Mouse::Meta::Role;
+use Carp         ();
+use Scalar::Util ();
 
-our @EXPORT = qw(before after around super override inner augment has extends with requires excludes confess blessed);
+use Mouse ();
+
+Mouse::Exporter->setup_import_methods(
+    as_is => [qw(
+        extends with
+        has
+        before after around
+        override super
+        augment  inner
+
+        requires excludes
+    ),
+        \&Scalar::Util::blessed,
+        \&Carp::confess,
+    ],
+);
+
+
+sub extends  {
+    Carp::croak "Roles do not support 'extends'";
+}
+
+sub with {
+    Mouse::Util::apply_all_roles(scalar(caller), @_);
+    return;
+}
+
+sub has {
+    my $meta = Mouse::Meta::Role->initialize(scalar caller);
+    my $name = shift;
+
+    $meta->throw_error(q{Usage: has 'name' => ( key => value, ... )})
+        if @_ % 2; # odd number of arguments
+
+    for my $n(ref($name) ? @{$name} : $name){
+        $meta->add_attribute($n => @_);
+    }
+    return;
+}
 
 sub before {
-    my $meta = Mouse::Meta::Role->initialize(caller);
-
+    my $meta = Mouse::Meta::Role->initialize(scalar caller);
     my $code = pop;
-    for (@_) {
-        $meta->add_before_method_modifier($_ => $code);
+    for my $name($meta->_collect_methods(@_)) {
+        $meta->add_before_method_modifier($name => $code);
     }
+    return;
 }
 
 sub after {
-    my $meta = Mouse::Meta::Role->initialize(caller);
-
+    my $meta = Mouse::Meta::Role->initialize(scalar caller);
     my $code = pop;
-    for (@_) {
-        $meta->add_after_method_modifier($_ => $code);
+    for my $name($meta->_collect_methods(@_)) {
+        $meta->add_after_method_modifier($name => $code);
     }
+    return;
 }
 
 sub around {
-    my $meta = Mouse::Meta::Role->initialize(caller);
-
+    my $meta = Mouse::Meta::Role->initialize(scalar caller);
     my $code = pop;
-    for (@_) {
-        $meta->add_around_method_modifier($_ => $code);
+    for my $name($meta->_collect_methods(@_)) {
+        $meta->add_around_method_modifier($name => $code);
     }
+    return;
 }
 
 
 sub super {
-    return unless $Mouse::SUPER_BODY; 
+    return if !defined $Mouse::SUPER_BODY;
     $Mouse::SUPER_BODY->(@Mouse::SUPER_ARGS);
 }
 
 sub override {
-    my $classname = caller;
-    my $meta = Mouse::Meta::Role->initialize($classname);
-
-    my $name = shift;
-    my $code = shift;
-    my $fullname = "${classname}::${name}";
-
-    defined &$fullname
-        && confess "Cannot add an override of method '$fullname' " .
-                   "because there is a local version of '$fullname'";
-
-    $meta->add_override_method_modifier($name => sub {
-        local $Mouse::SUPER_PACKAGE = shift;
-        local $Mouse::SUPER_BODY = shift;
-        local @Mouse::SUPER_ARGS = @_;
-
-        $code->(@_);
-    });
+    # my($name, $code) = @_;
+    Mouse::Meta::Role->initialize(scalar caller)->add_override_method_modifier(@_);
+    return;
 }
 
 # We keep the same errors messages as Moose::Role emits, here.
 sub inner {
-    croak "Moose::Role cannot support 'inner'";
+    Carp::croak "Roles cannot support 'inner'";
 }
 
 sub augment {
-    croak "Moose::Role cannot support 'augment'";
-}
-
-sub has {
-    my $meta = Mouse::Meta::Role->initialize(caller);
-
-    my $name = shift;
-    my %opts = @_;
-
-    $meta->add_attribute($name => \%opts);
-}
-
-sub extends  { confess "Roles do not currently support 'extends'" }
-
-sub with     {
-    my $meta = Mouse::Meta::Role->initialize(caller);
-    my $role  = shift;
-    my $args  = shift || {};
-    confess "Mouse::Role only supports 'with' on individual roles at a time" if @_ || !ref $args;
-
-    Mouse::load_class($role);
-    $role->meta->apply($meta, %$args);
+    Carp::croak "Roles cannot support 'augment'";
 }
 
 sub requires {
-    my $meta = Mouse::Meta::Role->initialize(caller);
-    Carp::croak "Must specify at least one method" unless @_;
+    my $meta = Mouse::Meta::Role->initialize(scalar caller);
+    $meta->throw_error("Must specify at least one method") unless @_;
     $meta->add_required_methods(@_);
+    return;
 }
 
-sub excludes { confess "Mouse::Role does not currently support 'excludes'" }
-
-sub import {
-    my $class = shift;
-
-    strict->import;
-    warnings->import;
-
-    my $caller = caller;
-
-    # we should never export to main
-    if ($caller eq 'main') {
-        warn qq{$class does not export its sugar to the 'main' package.\n};
-        return;
-    }
-
-    my $meta = Mouse::Meta::Role->initialize(caller);
-
-    no strict 'refs';
-    no warnings 'redefine';
-    *{$caller.'::meta'} = sub { $meta };
-
-    Mouse::Role->export_to_level(1, @_);
+sub excludes {
+    Mouse::Util::not_supported();
 }
 
-sub unimport {
-    my $caller = caller;
+sub init_meta{
+    shift;
+    my %args = @_;
 
-    no strict 'refs';
-    for my $keyword (@EXPORT) {
-        delete ${ $caller . '::' }{$keyword};
-    }
+    my $class = $args{for_class}
+        or Carp::confess("Cannot call init_meta without specifying a for_class");
+
+    my $metaclass  = $args{metaclass}  || 'Mouse::Meta::Role';
+
+    my $meta = $metaclass->initialize($class);
+
+    $meta->add_method(meta => sub{
+        $metaclass->initialize(ref($_[0]) || $_[0]);
+    });
+
+    # make a role type for each Mouse role
+    Mouse::Util::TypeConstraints::role_type($class)
+        unless Mouse::Util::TypeConstraints::find_type_constraint($class);
+
+    return $meta;
 }
 
 1;
@@ -140,72 +133,114 @@ __END__
 
 =head1 NAME
 
-Mouse::Role - define a role in Mouse
+Mouse::Role - The Mouse Role
 
-=head1 KEYWORDS
+=head1 VERSION
 
-=head2 meta -> Mouse::Meta::Role
+This document describes Mouse version 0.90
 
-Returns this role's metaclass instance.
+=head1 SYNOPSIS
 
-=head2 before (method|methods) => Code
+    package Comparable;
+    use Mouse::Role; # the package is now a Mouse role
 
-Sets up a "before" method modifier. See L<Moose/before> or
-L<Class::Method::Modifiers/before>.
+    # Declare methods that are required by this role
+    requires qw(compare);
 
-=head2 after (method|methods) => Code
+    # Define methods this role provides
+    sub equals {
+        my($self, $other) = @_;
+        return $self->compare($other) == 0;
+    }
 
-Sets up an "after" method modifier. See L<Moose/after> or
-L<Class::Method::Modifiers/after>.
+    # and later
+    package MyObject;
+    use Mouse;
+    with qw(Comparable); # Now MyObject can equals()
 
-=head2 around (method|methods) => Code
+    sub compare {
+        # ...
+    }
 
-Sets up an "around" method modifier. See L<Moose/around> or
-L<Class::Method::Modifiers/around>.
+    my $foo = MyObject->new();
+    my $bar = MyObject->new();
+    $obj->equals($bar); # yes, it is comparable
 
-=over 4
+=head1 DESCRIPTION
 
-=item B<super>
+This module declares the caller class to be a Mouse role.
 
-Sets up the "super" keyword. See L<Moose/super>.
+The concept of roles is documented in L<Moose::Manual::Roles>.
+This document serves as API documentation.
 
-=item B<override ($name, &sub)>
+=head1 EXPORTED FUNCTIONS
 
-Sets up an "override" method modifier. See L<Moose/Role/override>.
+Mouse::Role supports all of the functions that Mouse exports, but
+differs slightly in how some items are handled (see L</CAVEATS> below
+for details).
 
-=item B<inner>
+Mouse::Role also offers two role-specific keywords:
 
-This is not supported and emits an error. See L<Moose/Role>.
+=head2 C<< requires(@method_names) >>
 
-=item B<augment ($name, &sub)>
+Roles can require that certain methods are implemented by any class which
+C<does> the role.
 
-This is not supported and emits an error. See L<Moose/Role>.
+Note that attribute accessors also count as methods for the purposes of
+satisfying the requirements of a role.
 
-=back
+=head2 C<< excludes(@role_names) >>
 
-=head2 has (name|names) => parameters
+This is exported but not implemented in Mouse.
 
-Sets up an attribute (or if passed an arrayref of names, multiple attributes) to
-this role. See L<Mouse/has>.
-
-=head2 confess error -> BOOM
-
-L<Carp/confess> for your convenience.
-
-=head2 blessed value -> ClassName | undef
-
-L<Scalar::Util/blessed> for your convenience.
-
-=head1 MISC
+=head1 IMPORT AND UNIMPORT
 
 =head2 import
 
-Importing Mouse::Role will give you sugar.
+Importing Mouse::Role will give you sugar. C<-traits> are also supported.
 
 =head2 unimport
 
-Please unimport Mouse (C<no Mouse::Role>) so that if someone calls one of the
+Please unimport (C<< no Mouse::Role >>) so that if someone calls one of the
 keywords (such as L</has>) it will break loudly instead breaking subtly.
+
+=head1 CAVEATS
+
+Role support has only a few caveats:
+
+=over
+
+=item *
+
+Roles cannot use the C<extends> keyword; it will throw an exception for now.
+The same is true of the C<augment> and C<inner> keywords (not sure those
+really make sense for roles). All other Mouse keywords will be I<deferred>
+so that they can be applied to the consuming class.
+
+=item *
+
+Role composition does its best to B<not> be order-sensitive when it comes to
+conflict resolution and requirements detection. However, it is order-sensitive
+when it comes to method modifiers. All before/around/after modifiers are
+included whenever a role is composed into a class, and then applied in the order
+in which the roles are used. This also means that there is no conflict for
+before/around/after modifiers.
+
+In most cases, this will be a non-issue; however, it is something to keep in
+mind when using method modifiers in a role. You should never assume any
+ordering.
+
+=back
+
+=head1 SEE ALSO
+
+L<Mouse>
+
+L<Moose::Role>
+
+L<Moose::Manual::Roles>
+
+L<Moose::Spec::Role>
 
 =cut
 

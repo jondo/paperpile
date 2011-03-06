@@ -606,7 +606,12 @@
 
   <rule target="Ris">
     <pattern>
+      <rewrite>!(.*)!$1?script=true!</rewrite>
+    </pattern>
+    <pattern>
       <match>!.*href=&quot;([^&quot;]+citationexport?[^quot;]+)&quot;.*</match>
+    </pattern>
+    <pattern>
       <rewrite>!([^&quot;]+)!$1&amp;format=cite-abs&amp;citation-type=RIS&amp;action=download!</rewrite>
     </pattern>
   </rule>
@@ -626,9 +631,9 @@
   </signature>
 
   <rule target="SpringerLink">
-    <pattern>
+    <!--<pattern>
       <rewrite>!(.*)(index|content)(/\w+)(.*)!http://www.springerlink.com/content$3!</rewrite>
-    </pattern>
+    </pattern> -->
   </rule>
   
   <test>
@@ -769,6 +774,12 @@
   <signature>
     <url>!la-press\.com!</url>
   </signature>
+
+  <rule target="Ris">
+    <pattern>
+      <match>!.*(bibliography.php\S+)'.*!</match>
+    </pattern>
+  </rule>
 
   <rule target="LAPress">
   </rule>
