@@ -15,6 +15,7 @@ use Template::Tiny;
 
 use File::Spec;
 use File::Find;
+use File::HomeDir;
 
 
 use Paperpile::App::Context;
@@ -181,7 +182,7 @@ sub _substitutions {
     }
   }
   if ( $^O =~ /cygwin/i or $^O =~ /MSWin/i ) {
-    $platform = 'windows32';
+    $platform = 'win32';
   }
 
   if ( $^O =~ /(darwin|osx)/i ) {
@@ -213,6 +214,16 @@ sub _substitutions {
     $pp_tmp_dir = File::Spec->catfile( $tmp, "paperpile-" . $ENV{USER} );
 
   }
+
+  if ( $platform eq 'win32' ) {
+
+    $userhome = File::HomeDir->my_home;
+    $pp_user_dir  = File::Spec->catfile(File::HomeDir->my_data,"Paperpile");
+    $pp_paper_dir = File::Spec->catfile(File::HomeDir->my_documents,"Paperpile");
+    $pp_tmp_dir   = File::Spec->catfile(File::HomeDir->my_data,"Temp","paperpile");
+
+  }
+
 
   # If we have a development version (i.e. no build number) we use a
   # different user dir to allow parallel usage of a stable Paperpile
@@ -271,6 +282,8 @@ sub _load_controllers {
   find(
     sub {
       my $name = $File::Find::name;
+
+      $name=~s!\\!/!g;
 
       if ( $name =~ m!/lib/(Paperpile/.*)\.pm! ) {
         my $class = $1;
