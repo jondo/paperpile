@@ -145,7 +145,10 @@ sub field {
 
     # get
     my ( $self, $field ) = @_;
-    return $self->{ lc($field) };
+    my $tmp = $self->{ lc($field) };
+    $tmp =~ s/^\s*//;
+    $tmp =~ s/\s*$//;
+    return $tmp;
   } else {
     my ( $self, $key, $value, $clean ) = @_;
     # different cleaning level for authors
