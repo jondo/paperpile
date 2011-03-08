@@ -28,7 +28,7 @@ Paperpile.startupFailure = function(response) {
   var error;
 
   if (response.responseText) {
-    error = Ext.util.JSON.decode(response.responseText).error;
+    error = Ext.JSON.decode(response.responseText).error;
     if (error) {
       error = error.msg;
     }
@@ -91,7 +91,7 @@ Paperpile.stage0 = function() {
 
       Paperpile.startupProgress(0.3);
 
-      var json = Ext.util.JSON.decode(response.responseText);
+      var json = Ext.JSON.decode(response.responseText);
 
       if (json.status == 'RUNNING') {
 
@@ -155,7 +155,9 @@ Paperpile.stage0 = function() {
           //Set up signals/slot connection for catalyst process
           QRuntime.catalystReady.connect(function() {
             QRuntime.log("Catalyst succesfully started.");
-            Paperpile.stage0();
+	    Ext.onReady(function() {
+		    Paperpile.stage0();
+		});
           });
 
           QRuntime.catalystExit.connect(
@@ -247,7 +249,7 @@ Paperpile.stage1 = function() {
   Paperpile.Ajax({
     url: '/ajax/app/init_session',
     success: function(response) {
-      var json = Ext.util.JSON.decode(response.responseText);
+      var json = Ext.JSON.decode(response.responseText);
 
       if (json.error) {
         if (json.error.type == 'DatabaseVersionError') {
@@ -310,10 +312,10 @@ Paperpile.stage2 = function() {
   Paperpile.main.loadSettings(function(){
     Paperpile.main.afterLoadSettings();
     Paperpile.startupProgress(0.6);
-    Paperpile.main.tree.on('load',function(){
+    //    Paperpile.main.tree.on('load',function(){
       Paperpile.stage3();
-    }, this, {single:true});
-    Paperpile.main.tree.loadTree();
+      //    }, this, {single:true});
+      //    Paperpile.main.tree.loadTree();
   });
 };
 
@@ -328,10 +330,10 @@ Paperpile.stage3 = function() {
 
   Paperpile.main.folderStore.on('load', function(){
     Paperpile.main.labelStore.on('load', function(){
-      var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
-      Ext.DomHelper.overwrite('version-tag', version);
-
       Paperpile.main.on('mainGridLoaded',function(){
+	var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
+        Ext.core.DomHelper.overwrite('version-tag', version);
+
         //Paperpile.startupProgress(1.0);
         Ext.get('splash').remove();
       }, this, {single:true});
@@ -341,10 +343,10 @@ Paperpile.stage3 = function() {
     }, this, {single:true});
     
     Paperpile.startupProgress(0.8);
-    Paperpile.main.labelStore.reload();
+    Paperpile.main.labelStore.load();
   }, this, {single:true});
 
-  Paperpile.main.folderStore.reload();     
+  Paperpile.main.folderStore.load();     
 
   Ext.get('dashboard-button').on('click', function() {
     Paperpile.main.tabs.newScreenTab('Dashboard', 'dashboard');
@@ -380,15 +382,18 @@ Paperpile.stage3 = function() {
 
   // Check 10 minutes after start for updates
 
-  (function() {
+  var f = function() {
     if (!Paperpile.status.el.isVisible()) {
       Paperpile.main.checkForUpdates(true);
     }
-  }).defer(600000);
+  };
+  Ext.defer(f, 60000, this);
 };
 
 
 Ext.onReady(function() {
+
+
 
   Paperpile.stage0();
 

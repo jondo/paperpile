@@ -47,7 +47,7 @@ Ext.ux.util.clone = function(o) {
 
 // Allow the autoScroll property to set the x- and y- scrollbars independently.
 // http://www.brunildo.org/test/Overflowxy2.html and http://www.w3.org/TR/css3-box/#overflow-x
-Ext.override(Ext.BoxComponent, {
+Ext.override(Ext.Component, {
 
   setAutoScroll: function(scroll) {
     if (this.rendered) {

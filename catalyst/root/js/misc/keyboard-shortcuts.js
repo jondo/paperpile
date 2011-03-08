@@ -1,4 +1,4 @@
-Ext.ux.KeyboardShortcuts = Ext.extend(Ext.util.Observable, {
+Ext.define('Ext.ux.KeyboardShortcuts', {
   keyMap: null,
   bindings: [],
   constructor: function(listenerEl, config) {

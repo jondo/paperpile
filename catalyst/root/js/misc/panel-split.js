@@ -18,8 +18,10 @@ Ext.ux.PanelSplit = Ext.extend(Ext.util.Observable, {
     // handle all the events.
     this.leftPanel.splitCallback = this.callback;
     this.leftPanel.splitCallbackScope = this.scope;
-    this.leftPanel.afterRender = this.leftPanel.afterRender.createSequence(this.afterRender);
-    this.leftPanel.onDestroy = this.leftPanel.onDestroy.createSequence(this.onDestroy);
+    Ext.Function.createSequence(this.leftPanel.afterRender,this.afterRender);
+    //this.leftPanel.afterRender = this.leftPanel.afterRender.createSequence(this.afterRender);
+    Ext.Function.createSequence(this.leftPanel.onDestroy, this.onDestroy);
+    //this.leftPanel.onDestroy = this.leftPanel.onDestroy.createSequence(this.onDestroy);
   },
 
   afterRender: function() {

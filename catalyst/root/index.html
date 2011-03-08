@@ -2,14 +2,10 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-<link rel="stylesheet" type="text/css" charset="utf-8" href="ext/resources/css/ext-all.css">
-<link rel="stylesheet" type="text/css" charset="utf-8" href="ext/resources/css/xtheme-gray.css">
-<link rel="stylesheet" type="text/css" charset="utf-8" href="ext.ux/filetree/css/all.css">
-
+<link rel="stylesheet" type="text/css" charset="utf-8" href="ext4/resources/css/ext-all.css">
 <link rel="stylesheet" type="text/css" charset="utf-8" href="css/paperpile.css">
 <link rel="stylesheet" type="text/css" charset="utf-8" href="css/normal-fonts.css">
 <link rel="stylesheet" type="text/css" charset="utf-8" href="css/pdf.css">
-
 
 <title>Paperpile</title>
 
@@ -32,43 +28,67 @@
     <div class="pp-smallprint" style="position:absolute; bottom:0;right:5;"> Version 0.5.1 beta. Copyright (c) 2010-2011 Paperpile</div>
   </div>
 
-<!--  <script type="text/javascript" charset="utf-8" src="/js/all.js"></script> -->
+<script type="text/javascript" charset="utf-8" src="ext4/bootstrap.js"></script>
 
-<script type="text/javascript" charset="utf-8" src="ext/adapter/ext/ext-base.js"></script>
-<script type="text/javascript" charset="utf-8" src="ext/ext-all-debug.js"></script>
-<script type="text/javascript" charset="utf-8" src="ext.ux/Spotlight.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/panel-split.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/main/overrides.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/main/paperpile.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/main/startup.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/main/tabs.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/main/StatusTipProxy.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/main/tree-context-triangle.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/EnableDisableCheckItem.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/drag-drop.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/button-plus.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/keyboard-shortcuts.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/label-panel.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/collection-store.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/menu-key-trigger.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/pager.js"></script>
+<!-- 
 <script type="text/javascript" charset="utf-8" src="js/main/tree.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/main/dashboard.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/toolbar.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/selectionmodel.js"></script>
+-->
+
+<script type="text/javascript" charset="utf-8" src="js/main/paperpile.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/status.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/main/startup.js"></script>
+
+<script type="text/javascript" charset="utf-8" src="js/queue/widget.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/drag-drop.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/collection-store.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/keyboard-shortcuts.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/utils.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/pub/view.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/panel-split.js"></script>
+
 <script type="text/javascript" charset="utf-8" src="js/import/grid.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/import/search-field.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/import/filter-field.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/import/sidepanel.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/import/plugin-import.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/base-query-info.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/import/online-search.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/utils.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/DB.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/MainLibrary.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/ACM.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/ArXiv.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/CiteSeerX.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/Duplicates.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/Feed.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/File.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/Folder.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/Label.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/GoogleBooks.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/GoogleScholar.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/JSTOR.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/PubMed.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/SpringerLink.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/plugins/Trash.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/toolbar.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/pager.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/button-plus.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/models/PublicationModel.js"></script>
+
+<!-- <script type="text/javascript" charset="utf-8" src="js/main/overrides.js"></script> -->
+<!--
+<script type="text/javascript" charset="utf-8" src="js/import/base-query-info.js"></script>
+<script type="text/javascript" charset="utf-8" src="ext.ux/Spotlight.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/main/StatusTipProxy.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/main/tree-context-triangle.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/EnableDisableCheckItem.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/label-panel.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/misc/menu-key-trigger.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/main/dashboard.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/import/selectionmodel.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/misc/forms.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/misc/file-chooser.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/misc/feed-chooser.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/misc/style-picker.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/misc/status.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/misc/browser.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/misc/settings-panel.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/screens/patterns.js"></script>
@@ -85,7 +105,6 @@
 <script type="text/javascript" charset="utf-8" src="js/pub/notes.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/pub/edit.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/pub/overview.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/pub/view.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/pub/bottom-panel.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/pdf/viewer.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/pdf/hoverbutton.js"></script>
@@ -94,26 +113,10 @@
 <script type="text/javascript" charset="utf-8" src="js/queue/view.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/queue/grid.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/queue/side-panel.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/queue/widget.js"></script>
 <script type="text/javascript" charset="utf-8" src="ext.ux/filetree/js/Ext.ux.FileTreeMenu.js"></script>
 <script type="text/javascript" charset="utf-8" src="ext.ux/filetree/js/Ext.ux.FileTreePanel.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/ACM.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/ArXiv.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/CiteSeerX.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/DB.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/MainLibrary.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/Duplicates.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/Feed.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/File.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/Folder.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/Label.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/GoogleBooks.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/GoogleScholar.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/JSTOR.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/PubMed.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/SpringerLink.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/import/plugins/Trash.js"></script>
 <script type="text/javascript" charset="utf-8" src="js/misc/ZeroClipboard.js"></script>
+-->
 
 <script type="text/javascript">
   var uservoiceOptions = {

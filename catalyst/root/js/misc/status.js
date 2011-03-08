@@ -14,7 +14,8 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.Status = Ext.extend(Ext.BoxComponent, {
+Ext.define('Paperpile.Status', {
+  extend: 'Ext.Component',
 
   // Each status update is assigned a 'message number', which allows
   // us to uniquely identify messages. If you want to clear a specific message
@@ -85,17 +86,18 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
 
   afterRender: function() {
     Paperpile.Status.superclass.afterRender.apply(this, arguments);
-    this.el.hide();
+    //this.el.hide();
     //this.el.anchorTo(document.body, 't-t',[0,3]);
+    /*
     this.msgEl = Ext.get('status-msg');
     this.action1el = Ext.get('status-action1');
     this.action2el = Ext.get('status-action2');
     this.busyEl = Ext.get('status-busy');
 
-    this.msgEl.setVisibilityMode(Ext.Element.DISPLAY);
-    this.action1el.setVisibilityMode(Ext.Element.DISPLAY);
-    this.action2el.setVisibilityMode(Ext.Element.DISPLAY);
-    this.busyEl.setVisibilityMode(Ext.Element.DISPLAY);
+    this.msgEl.setVisibilityMode(Ext.core.Element.DISPLAY);
+    this.action1el.setVisibilityMode(Ext.core.Element.DISPLAY);
+    this.action2el.setVisibilityMode(Ext.core.Element.DISPLAY);
+    this.busyEl.setVisibilityMode(Ext.core.Element.DISPLAY);
 
     this.action1el.on('click',
       function() {
@@ -108,11 +110,11 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
         this.callback.createDelegate(this.scope, ['ACTION2'])();
       },
       this);
-
+    */
   },
 
   updateMsg: function(pars) {
-
+	    /*
     this.messageNumber++;
 
     var anim = false;
@@ -188,6 +190,7 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
     this.el.alignTo(Ext.getCmp('main-toolbar').getEl(), 't-t', [0, 3]);
 
     return this.getMessageNumber();
+	    */
   },
 
   getMessageNumber: function() {
@@ -231,3 +234,8 @@ Paperpile.Status = Ext.extend(Ext.BoxComponent, {
   }
 
 });
+
+
+st = new Paperpile.Status();
+QRuntime.log(st);
+QRuntime.log("Heyo!");

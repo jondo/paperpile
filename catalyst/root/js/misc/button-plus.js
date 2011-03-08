@@ -1,19 +1,7 @@
-Ext.ux.ButtonPlus = function(config) {
-  config = config || {};
-  if (config.initialConfig) {
-    if (config.isAction) { // actions
-      this.baseAction = config;
-    }
-    config = config.initialConfig; // component cloning / action set up
-  } else if (config.tagName || config.dom || Ext.isString(config)) { // element object
-    config = {
-      applyTo: config,
-      id: config.id || config
-    };
-  }
-};
 
-Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
+
+Ext.define('Ext.ux.ButtonPlus', {
+	extend: 'Ext.Panel',
   defaultType: 'menuitem',
   layout: 'auto',
   frame: true,
@@ -137,13 +125,16 @@ Ext.ux.ButtonPlus = Ext.extend(Ext.Panel, {
 
 });
 
-Ext.reg('buttonplus', Ext.ux.ButtonPlus);
-
-Ext.ux.UnstyledButton = Ext.extend(Ext.Button, {
+Ext.define('Ext.ux.UnstyledButton', {
+	extend:'Ext.button.Button',
+	    alias:'widget.unstyledbutton',
   cls: 'x-btn-plain'
 });
-Ext.reg('unstyledbutton', Ext.ux.UnstyledButton);
-Ext.ux.SubtleButton = Ext.extend(Ext.Button, {
+
+
+Ext.define('Ext.ux.SubtleButton', {
+	extend: 'Ext.button.Button',
+	    alias: 'widget.subtlebutton',
   cls: 'x-btn-subtle',
     setTooltip : function(tooltip, /* private */ initial){
         if(this.rendered){
@@ -170,9 +161,8 @@ Ext.ux.SubtleButton = Ext.extend(Ext.Button, {
         }
     }  
 });
-Ext.reg('subtlebutton', Ext.ux.SubtleButton);
 
-Ext.ux.TextButton = Ext.extend(Ext.Button, {
+Ext.define('Ext.ux.TextButton', {
+	extend: 'Ext.button.Button',
   cls: 'x-btn-textlink'
 });
-Ext.reg('textbutton', Ext.ux.TextButton);

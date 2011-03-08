@@ -14,7 +14,8 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
+Ext.define('Paperpile.Tabs', {
+  extend: 'Ext.tab.TabPanel',
   initComponent: function() {
 
     Ext.apply(this, {
@@ -261,7 +262,8 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   },
 
   getMainLibraryTab: function() {
-    return this.getItem('MAIN');
+	    return this.getComponent('MAIN');
+	    //return this.getItem('MAIN');
   },
 
   isUniqueByItemId: function(plugin_name) {
@@ -286,7 +288,8 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
   },
 
   findAndActivateOpenTab: function(itemId) {
-    var openTab = this.getItem(itemId);
+	    var openTab = this.getComponent(itemId);
+	    //    var openTab = this.getItem(itemId);
 
     if (!openTab) {
       // Didn't find by itemId -- search by plugin_name instead.
@@ -365,5 +368,3 @@ Paperpile.Tabs = Ext.extend(Ext.TabPanel, {
 }
 
 );
-
-Ext.reg('tabs', Paperpile.Tabs);

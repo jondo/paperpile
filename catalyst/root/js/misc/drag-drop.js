@@ -1,4 +1,4 @@
-Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
+Ext.define('Paperpile.DragDropManager', {
   initListeners: function() {
     var el = Ext.getBody();
     // Register this object to listen for drag-drop events on the body and drag pane.
@@ -533,7 +533,8 @@ Paperpile.DragDropManager = Ext.extend(Ext.util.Observable, {
 });
 
 // This is the box that represents a given action.
-Paperpile.DragDropAction = Ext.extend(Ext.BoxComponent, {
+Ext.define('Paperpile.DragDropAction', {
+	extend: 'Ext.Component',
   handler: Ext.emptyFn,
   label: 'Action Label',
   height: 150,

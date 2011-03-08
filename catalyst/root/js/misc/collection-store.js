@@ -1,24 +1,34 @@
-Paperpile.CollectionStore = Ext.extend(Ext.data.Store, {
+Ext.define('Paperpile.net.CollectionProxy', {
+  extend: 'Ext.data.AjaxProxy',
+  alias: 'proxy.pp.collectionproxy',
+  buildUrl: function(request) {
+    if (request.action == 'read') {
+      return Paperpile.Url('/ajax/crud/list_collections');
+    } else {
+      return 'asdfasdfasdf';
+    }
+  }
+});
+
+Ext.regModel('CollectionModel', {
+  fields: ['guid', 'name', 'type', 'parent', 'sort_order', 'hidden', 'style', 'data'],
+  idProperty: 'guid',
+  proxy: {
+    type: 'pp.collectionproxy'
+  }
+});
+
+Ext.define('Paperpile.net.CollectionStore', {
+  extend: 'Ext.data.Store',
+  config: {
+    collectionType: 'LABEL'
+  },
   constructor: function(config) {
-    Ext.apply(this, config);
-    Ext.apply(this, {
-      proxy: new Ext.data.HttpProxy({
-        url: Paperpile.Url('/ajax/crud/list_collections'),
-        method: 'GET'
-      }),
-      baseParams: {
-        type: this.collectionType
-      },
-      reader: new Ext.data.JsonReader(),
-      pruneModifiedRecords: true
+    Ext.apply(config, {
+      model: 'CollectionModel'
     });
-    Paperpile.CollectionStore.superclass.constructor.call(this);
+    Paperpile.net.CollectionStore.superclass.constructor.call(this, config);
   },
-  initComponent: function() {
-
-    Paperpile.CollectionStore.superclass.initComponent.call(this);
-  },
-
   findByGUID: function(guid) {
     var labelIndex = this.findExact('guid', guid);
     if (labelIndex !== -1) {
@@ -26,21 +36,5 @@ Paperpile.CollectionStore = Ext.extend(Ext.data.Store, {
     } else {
       return null;
     }
-  },
-
-  updateCollection: function(record) {
-    var params = {};
-    Ext.apply(params, record.data);
-    Paperpile.Ajax({
-      url: '/ajax/crud/update_collection',
-      params: params,
-      success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
-        this.reload();
-      },
-      scope: this
-    });
-
   }
-
 });

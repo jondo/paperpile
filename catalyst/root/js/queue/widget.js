@@ -14,8 +14,8 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.QueueWidget = Ext.extend(Ext.BoxComponent, {
-
+Ext.define('Paperpile.QueueWidget', {
+	extend: 'Ext.Component',
   id: 'queue-widget',
   itemId: 'queue-widget',
 

@@ -23,31 +23,15 @@ Paperpile.PluginGrid = function(config) {
   this.on('rowcontextmenu', this.onContextClick, this);
 };
 
-Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
-
+Ext.define('Paperpile.PluginGrid', {
+	extend: 'Ext.Panel',
   plugin_query: '',
   region: 'center',
-  limit: 25,
-  allImported: false,
-  itemId: 'grid',
-  overviewPanel: null,
-  detailsPanel: null,
   labelStyles: {},
   isLocked: false,
   doAfterNextReload: [],
 
   initComponent: function() {
-
-    this.pager = new Paperpile.Pager({
-      pageSize: this.limit,
-      store: this.getStore(),
-      displayInfo: true,
-      displayMsg: '<span style="color:black;">Displaying {0} - {1} of {2}</span>',
-      emptyMsg: "No references to display"
-    });
-    this.pager.on('pagebutton', function(pager) {
-      this.onPageButtonClick();
-    },this);
 
     var renderPub = function(value, p, record) {
       record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
@@ -296,14 +280,14 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         itemId: 'FOCUS_SEARCH'
       }),
 
-      'TB_SPACE': new Ext.Toolbar.Spacer({
+      'TB_SPACE': new Ext.toolbar.Spacer({
         itemId: 'TB_SPACE',
         width: '10px'
       }),
-      'TB_BREAK': new Ext.Toolbar.Separator({
+      'TB_BREAK': new Ext.toolbar.Separator({
         itemId: 'TB_BREAK'
       }),
-      'TB_FILL': new Ext.Toolbar.Fill({
+      'TB_FILL': new Ext.toolbar.Fill({
         itemId: 'TB_FILL'
       }),
       'FONT_SIZE': new Ext.Action({
@@ -348,7 +332,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     });
 
-    this.actions['EXPORT_MENU'] = new Ext.Toolbar.SplitButton({
+    this.actions['EXPORT_MENU'] = new Ext.button.Split({
       text: 'Export to File',
       itemId: 'EXPORT_MENU',
       handler: this.handleExportView,
@@ -381,47 +365,45 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
       }
     });
 
+
+    this.view = new Ext.DataView({
+	    store: this.getStore(),
+	    tpl: this.getTemplate(),
+	    itemSelector: this.getSelector()
+	});
+    
+    this.pager = new Paperpile.Pager({
+	    dock:'bottom',
+      pageSize: this.limit,
+      store: this.getStore(),
+      displayInfo: true,
+      displayMsg: '<span style="color:black;">Displaying {0} - {1} of {2}</span>',
+      emptyMsg: "No references to display"
+    });
+    this.pager.on('pagebutton', function(pager) {
+      this.onPageButtonClick();
+    },this);
+
+    this.tbar = new Paperpile.Toolbar({
+	    itemId: 'toolbar',
+	    enableOverflow: true,
+	    menuBreakItemId: 'TB_BREAK'
+	});
+
+    var dockItems = [
+		     this.pager,
+		     this.tbar
+		     ];
+
     Ext.apply(this, {
       ddGroup: 'gridDD',
       enableDragDrop: true,
       appendOnly: true,
       itemId: 'grid',
       store: this.getStore(),
-      selModel: new Ext.ux.BetterRowSelectionModel(),
-      bbar: this.pager,
-      tbar: new Paperpile.Toolbar({
-        itemId: 'toolbar',
-        enableOverflow: true,
-        menuBreakItemId: 'TB_BREAK'
-      }),
-      enableHdMenu: false,
-      autoExpandColumn: 'publication',
-
-      columns: [{
-        header: "",
-        id: 'icons',
-        dataIndex: 'title',
-        renderer: renderIcons.createDelegate(this),
-        width: 50,
-        sortable: false,
-        resizable: false
-      },
-      {
-        header: "",
-        id: 'publication',
-        dataIndex: 'title',
-        renderer: renderPub.createDelegate(this),
-        resizable: false,
-        sortable: false,
-        scope: this
-      }]
+		items: [this.view],
+      dockedItems: dockItems
     });
-
-    if (this.plugins) {
-      this.plugins.push(new Paperpile.BaseQueryInfoPlugin());
-    } else {
-      this.plugins = [new Paperpile.BaseQueryInfoPlugin()];
-    }
 
     Paperpile.PluginGrid.superclass.initComponent.call(this);
 
@@ -862,6 +844,8 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
     }
     this._store = new Ext.data.Store({
       isLoaded: false,
+      model: 'PublicationModel',
+      reader: 'json'
       proxy: new Ext.data.HttpProxy({
         url: Paperpile.Url('/ajax/plugins/resultsgrid'),
         // We don't set timeout here but handle timeout separately in
@@ -878,7 +862,6 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
         plugin_order: Paperpile.main.globalSettings['sort_field'],
         limit: this.limit
       },
-      reader: new Ext.data.JsonReader()
     });
 
     // Add some callbacks to the store so we can maintain the selection between reloads.
@@ -1362,7 +1345,7 @@ Ext.extend(Paperpile.PluginGrid, Ext.grid.GridPanel, {
   },
 
   createSeparator: function(itemId) {
-    this.actions[itemId] = new Ext.Toolbar.Separator({
+    this.actions[itemId] = new Ext.toolbar.Separator({
       itemId: itemId
     });
     return itemId;
@@ -2398,5 +2381,3 @@ Ext.extend(Paperpile.GridDropZone, Ext.dd.DropZone, {
   },
   containerScroll: true
 });
-
-Ext.reg('pp-plugin-grid', Paperpile.PluginGrid);

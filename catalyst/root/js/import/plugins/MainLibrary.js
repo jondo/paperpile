@@ -14,14 +14,8 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.PluginGridMainLibrary = function(config) {
-  Ext.apply(this, config);
-
-  Paperpile.PluginGridMainLibrary.superclass.constructor.call(this, {});
-};
-
-Ext.extend(Paperpile.PluginGridMainLibrary, Paperpile.PluginGridDB, {
-
+Ext.define('Paperpile.PluginGridMainLibrary', {
+	extend: 'Paperpile.PluginGridDB',
   initComponent: function() {
 
     Paperpile.PluginGridMainLibrary.superclass.initComponent.call(this);
@@ -81,7 +75,8 @@ Ext.extend(Paperpile.PluginGridMainLibrary, Paperpile.PluginGridDB, {
   }
 });
 
-Paperpile.PluginPanelMainLibrary = Ext.extend(Paperpile.PluginPanelDB, {
+Ext.define('Paperpile.PluginPanelMainLibrary', {
+	extend: 'Paperpile.PluginPanelDB',
   createGrid: function(params) {
     return new Paperpile.PluginGridMainLibrary(params);
   },

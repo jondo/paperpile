@@ -14,7 +14,8 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.PluginPanel = Ext.extend(Ext.Panel, {
+Ext.define('Paperpile.PluginPanel', {
+	extend: 'Ext.Panel',
   closable: false,
   splitFraction: 2 / 3,
 

@@ -14,12 +14,8 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.Tree = function(config) {
-  Ext.apply(this, config);
-  Paperpile.Tree.superclass.constructor.call(this, {});
-};
-
-Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
+Ext.define('Paperpile.Tree', {
+  extend: 'Ext.tree.TreePanel',
   initComponent: function() {
     Ext.apply(this, {
       enableDD: true,
@@ -278,7 +274,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
   },
 
   initEvents: function() {
-    Paperpile.Tree.TreeDropZone = Ext.extend(Ext.tree.TreeDropZone, {
+	    Ext.define('Paperpile.Tree.TreeDropZone', {
+		    extend: 'Ext.tree.TreeDropZone',
       ddGroup: this.ddGroup,
       appendOnly: false,
       getDropPoint: function(e, n, dd) {
@@ -293,7 +290,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
     });
     this.dropZone = new Paperpile.Tree.TreeDropZone(this, {});
 
-    Paperpile.Tree.TreeDragZone = Ext.extend(Ext.tree.TreeDragZone, {
+    Ext.define('Paperpile.Tree.TreeDragZone', {
+	    extend: 'Ext.tree.TreeDragZone',
       containerScroll: true,
       ddGroup: this.ddGroup,
       proxy: new Paperpile.StatusTipProxy(),
@@ -1796,7 +1794,8 @@ Ext.extend(Paperpile.Tree, Ext.tree.TreePanel, {
 Paperpile.Tree.EXPORT_MENU_STRING = "Export...";
 Paperpile.Tree.AUTO_EXPORT_MENU_STRING = "BibTeX Sync...";
 
-Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
+Ext.define('Paperpile.Tree.ContextMenu', {
+	extend: 'Ext.menu.Menu',
   node: null,
   tree: null,
   constructor: function(config) {
@@ -1852,7 +1851,8 @@ Paperpile.Tree.ContextMenu = Ext.extend(Ext.menu.Menu, {
 
 });
 
-Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
+Ext.define('Paperpile.Tree.FolderMenu', {
+	extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
     Ext.apply(this, {
@@ -1935,7 +1935,8 @@ Paperpile.Tree.FolderMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
 
 });
 
-Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
+Ext.define('Paperpile.Tree.ActiveMenu', {
+	extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
     Ext.apply(this, {
@@ -1989,7 +1990,8 @@ Paperpile.Tree.ActiveMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   }
 });
 
-Paperpile.Tree.ImportMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
+Ext.define('Paperpile.Tree.ImportMenu', {
+	extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
 
@@ -2008,7 +2010,8 @@ Paperpile.Tree.ImportMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   }
 });
 
-Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
+Ext.define('Paperpile.Tree.LabelsMenu', {
+	extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
 
@@ -2133,7 +2136,8 @@ Paperpile.Tree.LabelsMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   }
 });
 
-Paperpile.Tree.TrashMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
+Ext.define('Paperpile.Tree.TrashMenu', {
+	extend: 'Paperpile.Tree.ContextMenu',
   initComponent: function() {
     var tree = this.tree;
 
@@ -2155,8 +2159,8 @@ Paperpile.Tree.TrashMenu = Ext.extend(Paperpile.Tree.ContextMenu, {
   }
 });
 
-Paperpile.TreeLoader = Ext.extend(Ext.tree.TreeLoader, {
-
+Ext.define('Paperpile.TreeLoader', {
+	extend: 'Ext.tree.TreeLoader',
   createNode: function(attr) {
     var node = Paperpile.TreeLoader.superclass.createNode.call(this, attr);
 

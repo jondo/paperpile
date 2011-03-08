@@ -62,7 +62,7 @@ Paperpile.Ajax = function(config) {
   // A method which will run *before* the success function defined
   // by the passed config.
   var success = function(response) {
-    var json = Ext.util.JSON.decode(response.responseText);
+    var json = Ext.JSON.decode(response.responseText);
     if (json.data) {
       Paperpile.main.onUpdate(json.data);
     }
@@ -81,12 +81,12 @@ Paperpile.Ajax = function(config) {
   if (!config.suppressDefaults) {
 
     if (config.success) {
-      config.success = config.success.createInterceptor(success);
+      config.success = Ext.Function.createInterceptor(config.success, success);
     } else {
       config.success = success;
     }
     if (config.failure) {
-      config.failure = config.failure.createInterceptor(failure);
+      config.failure = Ext.Function.createInterceptor(config.failure, failure);
     } else {
       config.failure = failure;
     }
@@ -111,7 +111,9 @@ Paperpile.Ajax = function(config) {
   return Ext.Ajax.request(config);
 };
 
-Paperpile.Viewport = Ext.extend(Ext.Viewport, {
+Ext.define('Paperpile.Viewport', {
+	extend: 'Ext.Viewport',
+	    //	    requires: ['Paperpile.Tabs', 'Paperpile.QueueWidget', 'Paperpile.net.CollectionStore'],
 
   globalSettings: {},
   splitFraction: 1 / 5,
@@ -126,6 +128,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       activeItem: 0
     });
 
+    /*
     this.tree = new Paperpile.Tree({
       xtype: 'pp-tree',
       rootVisible: false,
@@ -133,7 +136,9 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       itemId: 'treepanel',
       region: 'west',
     });
+    */
 
+    this.tree = new Ext.Panel();
     this.queueWidget = new Paperpile.QueueWidget();
 
     this.tree.flex = 1;
@@ -156,7 +161,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
           id: 'main-toolbar',
           cls: 'pp-main-toolbar',
           items: [
-            new Ext.BoxComponent({
+            new Ext.Component({
               autoEl: {
                 cls: 'pp-main-toolbar-label',
                 tag: 'div',
@@ -166,7 +171,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               xtype: 'tbfill'
             },
             this.queueWidget,
-            new Ext.BoxComponent({
+            new Ext.Component({
               autoEl: {
                 tag: 'a',
                 href: '#',
@@ -175,7 +180,8 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
               id: 'dashboard-button'
             })]
         }),
-        items: [this.tree,
+        items: [
+		this.tree,
           this.tabs]
       }]
     });
@@ -196,7 +202,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.dd = new Paperpile.DragDropManager();
     this.dd.initListeners();
 
-    this.labelStore = new Paperpile.CollectionStore({
+    this.labelStore = new Paperpile.net.CollectionStore({
       collectionType: 'LABEL',
       listeners: {
         load: {
@@ -207,7 +213,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       storeId: 'label_store'
     });
 
-    this.folderStore = new Paperpile.CollectionStore({
+    this.folderStore = new Paperpile.net.CollectionStore({
       collectionType: 'FOLDER',
       listeners: {
         load: {
@@ -282,10 +288,12 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       w2 = width - min1;
     }
 
+    if (this.tree) {
     this.tree.setWidth(w1);
-    this.tabs.setWidth(w2);
     this.tree.setPosition(0, 0);
+    this.tabs.setWidth(w2);
     this.tabs.setPosition(w1, 0);
+    }
   },
 
   onFontSizeChange: function(fontSize) {
@@ -438,7 +446,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     if (curTab.closable) {
       // Fire the tab's beforeclose event to trigger any 'warning' dialogs before closing.
       if (curTab.fireEvent('beforeclose', curTab) !== false) {
-	Paperpile.main.tabs.remove(curTab, true);
+        Paperpile.main.tabs.remove(curTab, true);
       }
     }
   },
@@ -487,7 +495,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     this.globalSettings[key] = value;
 
     var s = {};
-    s[key] = Ext.util.JSON.encode(value);
+    s[key] = Ext.JSON.encode(value);
 
     if (commitToBackend) {
       this.storeSettings(s);
@@ -511,10 +519,11 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     Paperpile.Ajax({
       url: '/ajax/misc/get_settings',
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
+        var json = Ext.JSON.decode(response.responseText);
         this.globalSettings = json.data;
         if (callback) {
-          callback.createDelegate(scope)();
+	    var f = Ext.Function.bind(callback, scope);
+	    f();
         }
       },
       scope: this
@@ -779,7 +788,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         path: path
       },
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
+        var json = Ext.JSON.decode(response.responseText);
 
         // Show error message and stop if no PDFs found
         if (json.count == 0) {
@@ -1051,7 +1060,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
         collections: this.fileSyncStatus.collections.join(',')
       },
       success: function(response) {
-        var data = Ext.util.JSON.decode(response.responseText).data;
+        var data = Ext.JSON.decode(response.responseText).data;
 
         // When an error occurs warnings are stored in the hash
         // data.warnings with the guid of the collection as key.
@@ -1093,9 +1102,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
 
   onFolderStoreLoad: function() {
     // Do the tree.
-    if (this.tree) {
-      this.tree.refreshFolders();
-    }
+	    //this.tree.refreshFolders();
 
     // Now tab panel and grids.
     if (this.tabs) {
@@ -1112,7 +1119,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
   onLabelStoreLoad: function() {
     // Do the tree.
     if (Paperpile.main.tree) {
-      Paperpile.main.tree.refreshLabels();
+	//Paperpile.main.tree.refreshLabels();
     }
 
     // Now tab panel and grids.
@@ -1219,7 +1226,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
       },
       success: function(response) {
         this.queuePollStatus = 'DONE';
-        var data = Ext.util.JSON.decode(response.responseText).data;
+        var data = Ext.JSON.decode(response.responseText).data;
 
         if (data.queue.status === 'WAITING' || (data.queue.status == 'PAUSED' && data.queue.running_jobs.length == 0)) {
           this.stopQueueUpdate();
@@ -1247,7 +1254,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     //Timed out errors come back empty otherwise fill in error
     //data from backend
     if (response.responseText) {
-      error = Ext.util.JSON.decode(response.responseText).error;
+      error = Ext.JSON.decode(response.responseText).error;
     } else {
       error = {
         type: "Unknown",
@@ -1449,7 +1456,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     Paperpile.Ajax({
       url: '/ajax/app/heartbeat',
       success: function(response) {
-        var json = Ext.util.JSON.decode(response.responseText);
+        var json = Ext.JSON.decode(response.responseText);
 
         for (var jobID in json.queue) {
           var callback = json.queue[jobID].callback;
@@ -1526,7 +1533,7 @@ Paperpile.Viewport = Ext.extend(Ext.Viewport, {
     var results;
 
     var readLineCallback = function(string) {
-      results = Ext.util.JSON.decode(string);
+      results = Ext.JSON.decode(string);
     };
 
     var exitCallback = function(string) {
