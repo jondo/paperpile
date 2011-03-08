@@ -14,7 +14,6 @@
 # received a copy of the GNU Affero General Public License along with
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
-
 package Paperpile::Plugins::Import::Duplicates;
 
 use Carp;
@@ -26,15 +25,16 @@ use Paperpile::Utils;
 use Paperpile::Model::Library;
 use Paperpile::Library::Publication;
 use Paperpile::Library::Author;
+use File::Temp qw(tempfile);
 
 extends 'Paperpile::Plugins::Import';
 
-has '_db_file'       => ( is => 'rw' );
-has 'file'           => ( is => 'rw' );
-has '_data'          => ( is => 'rw', isa => 'ArrayRef' );
+has '_db_file'              => ( is => 'rw' );
+has 'file'                  => ( is => 'rw' );
+has '_data'                 => ( is => 'rw', isa => 'ArrayRef' );
 has 'clear_duplicate_cache' => ( is => 'rw' );
-
-has 'index' => ( is => 'rw', isa => 'HashRef');
+has 'shash'                 => ( is => 'rw', isa => 'Str' );
+has 'index'                 => ( is => 'rw', isa => 'HashRef' );
 
 sub BUILD {
   my $self = shift;
@@ -50,24 +50,138 @@ sub get_model {
   return $model;
 }
 
-
 sub connect {
   my $self = shift;
 
   $self->_db_file( $self->file );
   $self->_data( [] );
 
-  my $dupl_keys={} ;
+  my $dupl_keys     = {};
   my $dupl_partners = {};
+
+  # parameters that control the number of
+  # putative duplicates to look at
+  my $hd_small          = 30;
+  my $hd_medium         = 20;
+  my $hd_large          = 12;
+  my $nearest_neighbors = 10;
+  my $shash             = $self->shash;
 
   $self->build_index;
 
-  my $N = @{ $self->index->{pubs} };
+  my $N               = @{ $self->index->{pubs} };
+  my %comparison_hash = ();
 
+  # I benchmarked it on my computer; and binary key
+  # calculations and sorting come with some overhead
+  # Below a library size of 500, we stick to the
+  # old approach and do all pairwise comparisons
+  if ( $N < 500 ) {
+    foreach my $i ( 0 .. $N - 2 ) {
+      $comparison_hash{$i} = [];
+      foreach my $j ( $i + 1 .. $N - 1 ) {
+        push @{ $comparison_hash{$i} }, $j;
+      }
+    }
+  } else {
+
+    # call shash and get binary keys
+    ( my $tmp_fh, my $tmpfile_in ) = tempfile( OPEN => 1 );
+    ( undef, my $tmpfile_out ) = tempfile( OPEN => 0 );
+    my @tmp_merged  = ();
+    my @tmp_lengths = ();
+
+    foreach my $i ( 0 .. $N - 1 ) {
+      $comparison_hash{$i} = [];
+      my $tmptitle = 'dummy';
+      if ( $self->index->{pubs}->[$i]->{title} ) {
+        $tmptitle = $self->index->{pubs}->[$i]->{title};
+      }
+      $tmptitle =~ s/\n//g;
+      push @tmp_lengths, length($tmptitle);
+      print $tmp_fh $tmptitle, "\n";
+    }
+    close($tmp_fh);
+
+    # call shash
+    system("$shash '$tmpfile_in' > '$tmpfile_out'");
+
+    # read in binary strings
+    open( FILE, $tmpfile_out );
+    my $c = 0;
+    while ( my $line = <FILE> ) {
+      chomp $line;
+      ( my $key = $line ) =~ s/(\S+)(.*)/$1/;
+      push @tmp_merged, [ $key, $c ];
+      $c++;
+    }
+    close(FILE);
+    unlink($tmpfile_in);
+    unlink($tmpfile_out);
+
+    if ( $c != $N ) {
+      NetFormatError->throw(
+        error   => 'Failed to calculate binary key for all instances',
+        content => ''
+      );
+    }
+
+    # sort binary keys alphabetically
+    @tmp_merged = sort { $$a[0] cmp $$b[0] } @tmp_merged;
+
+    # in each round:
+    # calculate hamming distance to nearest neigbhors and remeber those
+    # that are below the threshold
+    # shift string by one char
+    # sort binary keys again
+    for my $bincounter ( 2 .. 64 ) {
+      foreach my $j ( 0 .. $#tmp_merged - 1 ) {
+
+        # take a look at the nearest neighbors
+        my $max_to_look_at =
+          ( $j + $nearest_neighbors > $#tmp_merged ) ? $#tmp_merged - $j : $nearest_neighbors;
+
+        for my $k ( 1 .. $max_to_look_at ) {
+          my $idx = $j + $k;
+          my $distance = _hd( $tmp_merged[$j]->[0], $tmp_merged[$idx]->[0] );
+
+          my $local_threhold = $hd_small;
+          $local_threhold = $hd_medium
+            if ($tmp_lengths[ $tmp_merged[$j]->[1] ] >= 50
+            and $tmp_lengths[ $tmp_merged[$j]->[1] ] <= 150 );
+          $local_threhold = $hd_large if ( $tmp_lengths[ $tmp_merged[$j]->[1] ] > 150 );
+          if ( $distance <= $local_threhold ) {
+
+            # if they differ dramatically in length, we skip
+            my $length_comp =
+              $tmp_lengths[ $tmp_merged[$j]->[1] ] / $tmp_lengths[ $tmp_merged[$idx]->[1] ];
+            next if ( $length_comp < 0.5 or $length_comp > 2 );
+
+            push @{ $comparison_hash{ $tmp_merged[$j]->[1] } }, $tmp_merged[$idx]->[1];
+          }
+        }
+      }
+
+      # we do not need to shift and sort after the last one
+      last if ( $bincounter == 64 );
+
+      # shift by one
+      foreach my $j ( 0 .. $#tmp_merged ) {
+        $tmp_merged[$j]->[0] =~ s/(.)(.*)/$2$1/;
+      }
+
+      # sort again
+      @tmp_merged = sort { $$a[0] cmp $$b[0] } @tmp_merged;
+    }
+
+  }
+
+  # now do regular pairwise comparisons on the selected
+  # candidates
   foreach my $i ( 0 .. $N - 1 ) {
+    next if ( $#{ $comparison_hash{$i} } == -1 );
 
     my $guid_i = $self->index->{pubs}->[$i]->{guid};
-
     next if ( exists $dupl_keys->{$guid_i} );
 
     my @words_i  = keys %{ $self->index->{words}->{$guid_i} };
@@ -77,11 +191,10 @@ sub connect {
     # 1/3 of words may mismatch
     my $max_mismatch = int( $self->index->{lengths}->{$guid_i} * 0.33 );
 
-    foreach my $j ( 0 .. $N - 1 ) {
+    my %seen = ();
+    my @uniqu = grep { !$seen{$_}++ } @{ $comparison_hash{$i} };
 
-      # Only consider half of the matrix and ignore diagonal
-      next if $i >= $j;
-
+    foreach my $j (@uniqu) {
       my $guid_j = $self->index->{pubs}->[$j]->{guid};
 
       next if ( exists $dupl_keys->{$guid_j} );
@@ -118,7 +231,7 @@ sub connect {
   # define the color-scheme
   # currently implemented: alternate between 2 colors
   my %cluster2color;
-  foreach my $cluster ( sort { $a <=> $b } values %{ $dupl_keys } ) {
+  foreach my $cluster ( sort { $a <=> $b } values %{$dupl_keys} ) {
     if ( $cluster != $last_cluster ) {
       if ( $cur_color eq $c0 ) {
         $cur_color = $c1;
@@ -145,8 +258,6 @@ sub connect {
 
   return $self->total_entries;
 }
-
-
 
 sub page {
   ( my $self, my $offset, my $limit ) = @_;
@@ -184,7 +295,6 @@ sub page {
 
 }
 
-
 ## Generates data structure that holds all publications, the length of
 ## the titles and indices for the title words
 
@@ -214,10 +324,10 @@ sub build_index {
   }
 
   # List of all publications as flat hashes
-  $self->index->{pubs}    = \@all_pubs;
+  $self->index->{pubs} = \@all_pubs;
 
   # Hash for all pubs indexed by guid that holds hash with title words
-  $self->index->{words}   = \%index;
+  $self->index->{words} = \%index;
 
   # Hash for all pubs indexed by guid that holds length of title
   $self->index->{lengths} = \%lengths;
@@ -269,6 +379,7 @@ sub _compare_pubs {
     } elsif ( $self->_match_title( lc($title_i), lc( $self->index->{pubs}->[$j]->{title} ) ) ) {
       return 1;
     }
+
     #}
   }
 
@@ -280,33 +391,36 @@ sub _compare_pubs {
 
 sub replace_merged_items {
 
-  my ($self, $dup_id, $merged_pub) = @_;
+  my ( $self, $dup_id, $merged_pub ) = @_;
 
   my @new_data = ();
 
-  my $is_first=1;
+  my $is_first = 1;
 
-  foreach my $pub (@{$self->_data}){
+  foreach my $pub ( @{ $self->_data } ) {
 
-    if ($is_first and ($pub->_dup_id eq $dup_id)){
+    if ( $is_first and ( $pub->_dup_id eq $dup_id ) ) {
       $merged_pub->_dup_id(undef);
       push @new_data, $merged_pub;
-      $self->_hash->{$merged_pub->guid} = $merged_pub;
-      $is_first=0;
+      $self->_hash->{ $merged_pub->guid } = $merged_pub;
+      $is_first = 0;
     }
 
-    if  ($pub->_dup_id eq $dup_id){
-      delete($self->_hash->{$pub->guid});
+    if ( $pub->_dup_id eq $dup_id ) {
+      delete( $self->_hash->{ $pub->guid } );
     } else {
       push @new_data, $pub;
     }
   }
 
-  $self->_data(\@new_data);
+  $self->_data( \@new_data );
 
   $self->total_entries( scalar @{ $self->_data } );
 
 }
 
+sub _hd {
+  return ( $_[0] ^ $_[1] ) =~ tr/\001-\255//;
+}
 
 1;
