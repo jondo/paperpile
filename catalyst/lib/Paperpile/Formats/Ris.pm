@@ -60,8 +60,8 @@ sub read {
   # Decode data. Not the most efficient way in terms of memory but
   # passing the whole data at once increases the chances to guess the
   # right encoding.
-  my $decoded_data = Paperpile::Utils->decode_data(join('',@data));
-  @data = split(/\n/,$decoded_data);
+  my $decoded_data = Paperpile::Utils->decode_data( join( '', @data ) );
+  @data = split( /\n/, $decoded_data );
 
   for ( my $i = 0 ; $i <= $#data ; $i++ ) {
     $data[$i] =~ s/\s+$//g;
@@ -292,11 +292,11 @@ sub read {
         # this are non-standard tags
         # which we unfortunately have been seen in real live data
         case 'DOI' {
-          if ( _is_doi($d) ) {
-            $data->{doi} = $d;
-          } else {
-            print STDERR "Warning: could not parse field '$t', content='$d'!\n";
-          }
+          _set_doi( $data, $d, $t );
+        }
+
+        case 'DO' {
+          _set_doi( $data, $d, $t );
         }
 
         else {
@@ -305,9 +305,9 @@ sub read {
       }
     }
 
-    $data->{authors}  = join( ' and ', @authors )   if (@authors);
-    $data->{editors}  = join( ' and ', @editors )   if (@editors);
-    $data->{keywords} = join( ';',     @keywords )  if (@keywords);
+    $data->{authors}  = join( ' and ', @authors )  if (@authors);
+    $data->{editors}  = join( ' and ', @editors )  if (@editors);
+    $data->{keywords} = join( ';',     @keywords ) if (@keywords);
 
     # set journal, try to keep full name, otherwise short name
     if ($journal_full_name) {
@@ -315,7 +315,7 @@ sub read {
     } elsif ($journal_short_name) {
       $data->{journal} = $journal_short_name;
     }
-    if (defined $data->{journal}) {
+    if ( defined $data->{journal} ) {
       $data->{journal} =~ s/\s+$//g;
       $data->{journal} = $data->{journal};
     }
@@ -494,6 +494,19 @@ sub write {
   close OUT;
 }
 
+# helper to handle alternative Ris-DOI tags
+sub _set_doi {
+  my $data_ptr = shift;
+  my $doi      = shift;
+  my $field    = shift;
+
+  if ( _is_doi($doi) ) {
+    $data_ptr->{doi} = $doi;
+  } else {
+    print STDERR "Warning: could not parse field '$field', content='$doi'!\n";
+  }
+}
+
 # dates are "complicated", since we have different date tags in ris
 # e.g.
 # Y1  - 1990///6th Annual
@@ -530,8 +543,6 @@ sub _handle_dates {
 sub _print_ris {
     my $fh = shift;    # the filehandle
     my $a  = shift;    # the nested array
-
-print STDERR $a;
 
     foreach my $entry ( @{$a} ) {    # for each tag/value pair
         print $fh $entry->[0] . '  - ' . $entry->[1] . "\n";

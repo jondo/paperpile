@@ -19,3 +19,48 @@ test_expected: |
   SP  - 257
   EP  - 266
   ER  -
+---
+test_comment: 'Ris writing test for the AGU publisher'
+authors: 'Stillman, David E. and Grimm, Robert E.'
+title: 'Radar penetrates only the youngest geological units on Mars'
+journal: 'J. Geophys. Res.'
+day: 03
+month: 03
+year: 2011
+volume: 116
+issue: E3
+pages: E03001
+pubtype: ARTICLE
+issn: 0148-0227
+abstract: 'Signals from the Shallow Radar were intended to penetrate hundreds of meters or more into Mars...'
+keywords: 'Mars;SHARAD;adsorbed water;scattering;GPR;6225 Planetary Sciences: Solar System Objects: Mars;5464 Planetary Sciences: Solid Surface Planets: Remote sensing;5460 Planetary Sciences: Solid Surface Planets: Physical properties of materials;3914 Mineral Physics: Electrical properties;0669 Electromagnetics: Scattering and diffraction'
+url: http://dx.doi.org/10.1029/2010JE003661
+doi: 10.1029/2010JE003661
+publisher: AGU
+test_expected: |
+  TY  - JOUR
+  T1  - Radar penetrates only the youngest geological units on Mars
+  AU  - Stillman, David E.
+  AU  - Grimm, Robert E.
+  Y1  - 2011/03/03
+  AB  - Signals from the Shallow Radar were intended to penetrate hundreds of meters or more into Mars...
+  KW  - Mars
+  KW  - SHARAD
+  KW  - adsorbed water
+  KW  - scattering
+  KW  - GPR
+  KW  - 6225 Planetary Sciences: Solar System Objects: Mars
+  KW  - 5464 Planetary Sciences: Solid Surface Planets: Remote sensing
+  KW  - 5460 Planetary Sciences: Solid Surface Planets: Physical properties of materials
+  KW  - 3914 Mineral Physics: Electrical properties
+  KW  - 0669 Electromagnetics: Scattering and diffraction
+  JF  - J. Geophys. Res.
+  JO  - J. Geophys. Res.
+  VL  - 116
+  IS  - E3
+  SP  - E03001
+  PB  - AGU
+  SN  - 0148-0227
+  UR  - http://dx.doi.org/10.1029/2010JE003661
+  ER  - 
+
