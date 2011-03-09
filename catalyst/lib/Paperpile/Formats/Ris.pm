@@ -65,13 +65,12 @@ sub read {
 
   for ( my $i = 0 ; $i <= $#data ; $i++ ) {
     $data[$i] =~ s/\s+$//g;
-
     if ( $data[$i] =~ /ER\s+\-\s*/ ) {
       push @tmp, $line;    # keep last tag
       push @ris, [@tmp];   # store previous ref
       @tmp  = ();
       $line = '';
-    } elsif ( $data[$i] =~ /^\S+\s+\-\s/ ) {
+    } elsif ( $data[$i] =~ /^\S+\s+\-\s*/ ) {
       if ( $line eq '' ) {
         $line = $data[$i];    # initialise/read tag
       } else {
@@ -106,7 +105,6 @@ sub read {
     my ( $journal_full_name, $journal_short_name );
 
     foreach my $tag ( @{$ref} ) {
-
       # tags have actually length 2
       # however, we have seen longer ones, e.g. DOI in real life data
       $tag =~ /^(\S+)\s+\-\s(.+)/;
