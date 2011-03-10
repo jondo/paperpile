@@ -34,10 +34,6 @@ Ext.define('Paperpile.PluginGridDB', {
     this.limit = Paperpile.main.globalSettings['pager_limit'] || 25;
 
     var store = this.getStore();
-    store.baseParams['plugin_search_pdf'] = 0;
-    store.baseParams['limit'] = this.limit;
-
-    this.getBottomToolbar().pageSize = parseInt(this.limit);
 
     store.load({
       params: {
@@ -45,119 +41,10 @@ Ext.define('Paperpile.PluginGridDB', {
         limit: this.limit
       }
     });
-    this.on({
-      afterrender: {
-        scope: this,
-        fn: function() {
-          this.createSortHandles();
-        }
-      }
-    });
   },
 
   loadKeyboardShortcuts: function() {
     Paperpile.PluginGridDB.superclass.loadKeyboardShortcuts.call(this);
-  },
-
-  createSortHandles: function() {
-
-    var target = Ext.DomHelper.append(Ext.fly(this.getView().getHeaderCell(1)),
-    '<div id="pp-grid-sort-container_' + this.id + '" class="pp-grid-sort-container"></div>', true);
-
-    var created_class, journal_class, year_class, author_class;
-    created_class = journal_class = year_class = author_class = 'pp-grid-sort-inactive';
-
-    var field = Paperpile.main.globalSettings['sort_field'];
-
-    if (field === 'created DESC') created_class = 'pp-grid-sort-desc';
-    if (field === 'year DESC') year_class = 'pp-grid-sort-desc';
-    if (field === 'journal') journal_class = 'pp-grid-sort-asc';
-    if (field === 'author') author_class = 'pp-grid-sort-asc';
-
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + created_class + '"     action="created" status="desc" default="desc">Date added</div>');
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + journal_class + '" action="journal" status="inactive" default="asc">Journal</div>');
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + year_class + '" action="year" status="inactive" default="desc">Year</div>');
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item ' + author_class + '" action="author" status="inactive" default="asc">Author</div>');
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="pdf" status="inactive" default="desc">PDF</div>');
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="attachments" status="inactive" default="desc">Supp. material</div>');
-    Ext.DomHelper.append(target, '<div class="pp-grid-sort-item pp-grid-sort-inactive" action="notes" status="inactive" default="desc">Notes</div>');
-
-    this.mon(target, 'click', this.handleSortButtons, this);
-  },
-
-  handleFocusSearch: function() {
-    this.filterField.getEl().focus();
-  },
-
-  currentSortField: '',
-  handleSortButtons: function(e, el, o) {
-    var currentClass = el.getAttribute('class');
-    var field = el.getAttribute('action');
-    var status = el.getAttribute('status');
-    var def = el.getAttribute('default');
-
-    // We have not hit a sort field
-    if (!status) return;
-
-    if (field != this.currentSortField) {
-      status = "inactive";
-    }
-    this.currentSortField = field;
-
-    var classes = {
-      inactive: 'pp-grid-sort-item pp-grid-sort-inactive',
-      asc: 'pp-grid-sort-item pp-grid-sort-asc',
-      desc: 'pp-grid-sort-item pp-grid-sort-desc'
-    };
-
-    if (! (status == 'inactive' || status == 'asc' || status == 'desc')) return;
-
-    var El = Ext.get(el);
-
-    Ext.each(El.parent().query('div'),
-    function(item) {
-      var l = Ext.get(item);
-      l.removeClass('pp-grid-sort-item');
-      l.removeClass('pp-grid-sort-asc');
-      l.removeClass('pp-grid-sort-desc');
-      l.removeClass('pp-grid-sort-inactive');
-      if (item == el) return;
-      l.addClass(classes.inactive);
-    });
-
-    var store = this.getStore();
-    if (status == "inactive") {
-      if (def == 'desc') {
-        El.addClass(classes.desc);
-        store.baseParams['plugin_order'] = field + " DESC";
-        el.setAttribute('status', 'desc');
-      } else {
-        El.addClass(classes.asc);
-        store.baseParams['plugin_order'] = field + " ASC";
-        el.setAttribute('status', 'asc');
-      }
-    } else {
-      if (status == "desc") {
-        store.baseParams['plugin_order'] = field;
-        El.addClass(classes.asc);
-        el.setAttribute('status', 'asc');
-      } else {
-        El.addClass(classes.desc);
-        store.baseParams['plugin_order'] = field + " DESC";
-        el.setAttribute('status', 'desc');
-      }
-    }
-
-    if (this.filterField.getRawValue() == "") {
-      this.getStore().reload({
-        params: {
-          start: 0,
-          task: "NEW"
-        }
-      });
-    } else {
-      this.filterField.onTrigger2Click();
-    }
   },
 
   toggleFilter: function(item, checked) {
@@ -213,6 +100,7 @@ Ext.define('Paperpile.PluginGridDB', {
   },
 
   createToolbarMenu: function() {
+	    /*
     this.filterMenu = new Ext.menu.Menu({
       defaults: {
         checked: false,
@@ -222,10 +110,9 @@ Ext.define('Paperpile.PluginGridDB', {
       },
       items: [{
         text: 'All fields',
-        checked: true,
         itemId: 'all'
       },
-        '-', {
+        {
           text: 'Author',
           itemId: 'author'
         },
@@ -278,7 +165,7 @@ Ext.define('Paperpile.PluginGridDB', {
       }
     },
     this);
-
+    */
     Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
   },
 

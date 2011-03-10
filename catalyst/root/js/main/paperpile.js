@@ -112,84 +112,61 @@ Paperpile.Ajax = function(config) {
 };
 
 Ext.define('Paperpile.Viewport', {
-	extend: 'Ext.Viewport',
-	    //	    requires: ['Paperpile.Tabs', 'Paperpile.QueueWidget', 'Paperpile.net.CollectionStore'],
-
+  extend: 'Ext.container.Viewport',
   globalSettings: {},
   splitFraction: 1 / 5,
 
   initComponent: function() {
 
-    this.tabs = new Paperpile.Tabs({
-      border: false,
-      region: 'center',
-      xtype: 'tabs',
-      id: 'pp-tabs',
-      activeItem: 0
-    });
-
-    /*
-    this.tree = new Paperpile.Tree({
-      xtype: 'pp-tree',
-      rootVisible: false,
-      id: 'treepanel',
-      itemId: 'treepanel',
-      region: 'west',
-    });
-    */
-
-    this.tree = new Ext.Panel();
     this.queueWidget = new Paperpile.QueueWidget();
-
-    this.tree.flex = 1;
-    this.tabs.flex = 3;
 
     Ext.apply(this, {
       layout: 'border',
-      border: false,
       enableKeyEvents: true,
       keys: {},
-      plugins: [new Ext.ux.PanelSplit(this.tree, this.updateSplitFraction, this)],
-      items: [{
-        xtype: 'panel',
-        layout: 'hbox',
-        layoutConfig: {
-          align: 'stretch'
+      dockedItems: [{
+        xtype: 'toolbar',
+        height: 50,
+			style:{
+			'background-color':'green'
+		    },
+        dock: 'top',
+        items: [{
+          xtype: 'tbtext',
+          text: 'Paperpile vXYZ',
+          cls: 'pp-main-toolbar-label',
         },
+        {
+          xtype: 'tbfill'
+        },
+          {
+            xtype: 'button',
+            text: 'Dashboard'
+          }]
+      }],
+      items:
+		[{
+        region: 'west',
+        xtype: 'panel',
+        itemId: 'tree',
+        style: {
+          'background-color': 'green'
+        },
+        items: [{
+          xtype: 'label',
+          text: 'Hello!',
+        }]
+      },
+      {
         region: 'center',
-        tbar: new Ext.Toolbar({
-          id: 'main-toolbar',
-          cls: 'pp-main-toolbar',
-          items: [
-            new Ext.Component({
-              autoEl: {
-                cls: 'pp-main-toolbar-label',
-                tag: 'div',
-                id: 'version-tag'
-              }
-            }), {
-              xtype: 'tbfill'
-            },
-            this.queueWidget,
-            new Ext.Component({
-              autoEl: {
-                tag: 'a',
-                href: '#',
-                html: '<div class="pp-dashboard-button"></div>'
-              },
-              id: 'dashboard-button'
-            })]
-        }),
-        items: [
-		this.tree,
-          this.tabs]
-      }]
-    });
+        xtype: 'pp-tabs',
+        itemId: 'tabs'
+	      }]
+		});
 
     Paperpile.Viewport.superclass.initComponent.call(this);
 
-    this.on('afterlayout', this.resizeToSplitFraction, this);
-
+    //    this.on('afterlayout', this.resizeToSplitFraction, this);
     this.mon(Ext.getBody(), 'click', function(event, target, options) {
       if (target.href) {
         if (!target.href.match(/(app|paperpile|localhost)/i)) {
@@ -240,6 +217,10 @@ Ext.define('Paperpile.Viewport', {
 
   },
 
+  getTabs: function() {
+    return this.child('#tabs');
+  },
+
   updateSplitFraction: function(newFraction) {
     this.splitFraction = newFraction;
     Paperpile.main.setSetting('split_fraction_tree', this.splitFraction, true);
@@ -247,6 +228,7 @@ Ext.define('Paperpile.Viewport', {
   },
 
   resizeToSplitFraction: function() {
+    return;
     var fraction = this.splitFraction; // Fraction of left to right panel.
     if (Paperpile.main) {
       var set_fraction = Paperpile.main.getSetting('split_fraction_tree');
@@ -289,10 +271,12 @@ Ext.define('Paperpile.Viewport', {
     }
 
     if (this.tree) {
-    this.tree.setWidth(w1);
-    this.tree.setPosition(0, 0);
-    this.tabs.setWidth(w2);
-    this.tabs.setPosition(w1, 0);
+      this.tree.setWidth(w1);
+      this.tree.setPosition(0, 0);
+      if (this.getTabs()) {
+        this.getTabs().setWidth(w2);
+        this.getTabs().setPosition(w1, 0);
+      }
     }
   },
 
@@ -320,22 +304,22 @@ Ext.define('Paperpile.Viewport', {
 
   afterLoadSettings: function() {
 
-    this.resizeToSplitFraction();
-
+    //this.resizeToSplitFraction();
     var grid = this.getCurrentGrid();
     if (grid) {
-      grid.getPluginPanel().resizeToSplitFraction();
+      //grid.getPluginPanel().resizeToSplitFraction();
     }
 
+    /*
     var fontSize = this.getSetting('font_size');
     if (fontSize) {
       this.onFontSizeChange(fontSize);
     }
-
+    */
   },
 
   focusCurrentPanel: function() {
-    var tab = Paperpile.main.tabs.getActiveTab();
+    var tab = Paperpile.main.getTabs().getActiveTab();
     tab.focus();
   },
 
@@ -378,7 +362,7 @@ Ext.define('Paperpile.Viewport', {
   },
 
   keyControlShiftX: function() {
-    this.tabs.showDashboardTab();
+    this.getTabs().showDashboardTab();
   },
 
   grabFocus: function() {
@@ -396,7 +380,7 @@ Ext.define('Paperpile.Viewport', {
   },
 
   keyControlY: function() {
-    Paperpile.main.tabs.newScreenTab('CatalystLog', 'catalyst-log');
+    Paperpile.main.getTabs().newScreenTab('CatalystLog', 'catalyst-log');
   },
 
   keyControlR: function() {
@@ -412,25 +396,25 @@ Ext.define('Paperpile.Viewport', {
   },
 
   keyControlShiftK: function() {
-    var tab = Paperpile.main.tabs.getActiveTab();
+    var tab = Paperpile.main.getTabs().getActiveTab();
     var grid = tab.getGrid();
     grid.handleCopyBibtexKey();
   },
 
   keyControlShiftB: function() {
-    var tab = Paperpile.main.tabs.getActiveTab();
+    var tab = Paperpile.main.getTabs().getActiveTab();
     var grid = tab.getGrid();
     grid.handleCopyBibtexCitation();
   },
 
   keyControlA: function() {
-    var tab = Paperpile.main.tabs.getActiveTab();
+    var tab = Paperpile.main.getTabs().getActiveTab();
     var grid = tab.getGrid();
     grid.selectAll();
   },
 
   keyControlTab: function() {
-    var tabs = Paperpile.main.tabs;
+    var tabs = Paperpile.main.getTabs();
     var items = tabs.items;
     var currentTabIndex = items.indexOf(tabs.getActiveTab());
 
@@ -442,11 +426,11 @@ Ext.define('Paperpile.Viewport', {
   },
 
   keyControlW: function() {
-    var curTab = Paperpile.main.tabs.getActiveTab();
+    var curTab = Paperpile.main.getTabs().getActiveTab();
     if (curTab.closable) {
       // Fire the tab's beforeclose event to trigger any 'warning' dialogs before closing.
       if (curTab.fireEvent('beforeclose', curTab) !== false) {
-        Paperpile.main.tabs.remove(curTab, true);
+        Paperpile.main.getTabs().remove(curTab, true);
       }
     }
   },
@@ -522,8 +506,8 @@ Ext.define('Paperpile.Viewport', {
         var json = Ext.JSON.decode(response.responseText);
         this.globalSettings = json.data;
         if (callback) {
-	    var f = Ext.Function.bind(callback, scope);
-	    f();
+          var f = Ext.Function.bind(callback, scope);
+          f();
         }
       },
       scope: this
@@ -561,12 +545,11 @@ Ext.define('Paperpile.Viewport', {
     return this.tree;
   },
 
-  getTabs: function() {
-    return this.tabs;
-  },
-
   getCurrentGrid: function() {
-    var activeTab = Paperpile.main.tabs.getActiveTab();
+    if (!Paperpile.main.getTabs()) {
+      return;
+    }
+    var activeTab = Paperpile.main.getTabs().getActiveTab();
     if (activeTab instanceof Paperpile.PluginPanel) {
       return activeTab.getGrid();
     }
@@ -574,12 +557,12 @@ Ext.define('Paperpile.Viewport', {
   },
 
   getMainLibraryGrid: function() {
-    var mainTab = this.tabs.getMainLibraryTab();
+    var mainTab = this.getTabs().getMainLibraryTab();
     return mainTab.getGrid();
   },
 
   getCurrentlySelectedRow: function() {
-    var activeTab = Paperpile.main.tabs.getActiveTab();
+    var activeTab = Paperpile.main.getTabs().getActiveTab();
     if (activeTab instanceof Paperpile.PluginPanel) {
       var grid = activeTab.getGrid();
       if (grid.getSelectionCount() == 1) {
@@ -592,11 +575,11 @@ Ext.define('Paperpile.Viewport', {
   showReferenceInLibrary: function(record) {
     var grid;
     if (record.data.trashed) {
-      this.tabs.showTrashTab();
-      grid = this.tabs.getItem('trash').getGrid();
+      this.getTabs().showTrashTab();
+      grid = this.getTabs().getItem('trash').getGrid();
     } else {
       // Activate the library tab.
-      this.tabs.showMainLibraryTab();
+      this.getTabs().showMainLibraryTab();
 
       // Get the library grid and set the query.
       grid = this.getMainLibraryGrid();
@@ -836,7 +819,7 @@ Ext.define('Paperpile.Viewport', {
       return;
     }
 
-    Paperpile.main.tabs.newPluginTab('File', {
+    Paperpile.main.getTabs().newPluginTab('File', {
       plugin_file: filename,
       plugin_name: 'File',
       plugin_mode: 'FULLTEXT',
@@ -878,11 +861,11 @@ Ext.define('Paperpile.Viewport', {
   // Reloads DB grids upon insert/entries; it is possible to avoid
   // reload of a grid by passing the id via ignore
   getActiveView: function() {
-    return Paperpile.main.tabs.getActiveTab();
+    return Paperpile.main.getTabs().getActiveTab();
   },
 
   getActiveGrid: function() {
-    var panel = Paperpile.main.tabs.getActiveTab();
+    var panel = Paperpile.main.getTabs().getActiveTab();
     var grid = panel.items.get('center_panel').items.get('grid');
     return grid;
   },
@@ -929,8 +912,8 @@ Ext.define('Paperpile.Viewport', {
       this.queueUpdate();
     }
 
-    if (this.tabs) {
-      var tabs = this.tabs.items.items;
+    if (this.getTabs()) {
+      var tabs = this.getTabs().items.items;
       for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
         if (!tab['onUpdate']) continue;
@@ -1102,11 +1085,10 @@ Ext.define('Paperpile.Viewport', {
 
   onFolderStoreLoad: function() {
     // Do the tree.
-	    //this.tree.refreshFolders();
-
+    //this.tree.refreshFolders();
     // Now tab panel and grids.
-    if (this.tabs) {
-      var tabs = this.tabs.items.items;
+    if (this.getTabs()) {
+      var tabs = this.getTabs().items.items;
       for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
         if (tab instanceof Paperpile.PluginPanel) {
@@ -1119,12 +1101,12 @@ Ext.define('Paperpile.Viewport', {
   onLabelStoreLoad: function() {
     // Do the tree.
     if (Paperpile.main.tree) {
-	//Paperpile.main.tree.refreshLabels();
+      //Paperpile.main.tree.refreshLabels();
     }
 
     // Now tab panel and grids.
-    if (this.tabs) {
-      var tabs = this.tabs.items.items;
+    if (this.getTabs()) {
+      var tabs = this.getTabs().items.items;
       for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
         if (tab instanceof Paperpile.PluginPanel) {
@@ -1175,7 +1157,7 @@ Ext.define('Paperpile.Viewport', {
   // updates the main grid which is sufficient since new PDFs are not
   // tagged or in any folders.
   updatePubGrid: function() {
-    var tab = Paperpile.main.tabs.items.items[0];
+    var tab = Paperpile.main.getTabs().items.items[0];
     var store = tab.getGrid().getStore();
     var lastOptions = store.lastOptions;
     Ext.apply(lastOptions.params, {
@@ -1577,7 +1559,7 @@ Ext.define('Paperpile.Viewport', {
               callback: function(action) {
                 if (action === 'ACTION1') {
                   Paperpile.updateInfo = results;
-                  Paperpile.main.tabs.newScreenTab('Updates', 'updates');
+                  Paperpile.main.getTabs().newScreenTab('Updates', 'updates');
                 }
                 Paperpile.status.clearMsg();
               }

@@ -15,7 +15,8 @@
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
 Ext.define('Paperpile.PluginPanel', {
-	extend: 'Ext.Panel',
+  extend: 'Ext.Panel',
+  alias: 'widget.pp-pluginpanel',
   closable: false,
   splitFraction: 2 / 3,
 
@@ -29,17 +30,10 @@ Ext.define('Paperpile.PluginPanel', {
     this.overviewPanel = this.createOverview();
     this.eastPanel = this.createEastPanel();
 
-    this.centerPanel.flex = 1;
-    this.eastPanel.flex = 1;
-
     Ext.apply(this, {
       tabType: 'PLUGIN',
-      hideBorders: true,
-      layout: 'hbox',
-      plugins: [new Ext.ux.PanelSplit(this.centerPanel, this.updateSplitFraction, this)],
-      layoutConfig: {
-        align: 'stretch'
-      },
+      layout: 'border',
+		//      plugins: [new Ext.ux.PanelSplit(this.centerPanel, this.updateSplitFraction, this)],
       items: [
         this.centerPanel,
         this.eastPanel]
@@ -74,6 +68,7 @@ Ext.define('Paperpile.PluginPanel', {
   },
 
   resizeToSplitFraction: function() {
+	    return;
     // REFACTOR: right now this is largely duplicated here and in paperpile.js.
     var fraction = this.splitFraction; // Default panel if there's no setting yet.
     var set_fraction = Paperpile.main.getSetting('split_fraction_grid');
@@ -157,13 +152,14 @@ Ext.define('Paperpile.PluginPanel', {
 
   createCenterPanel: function() {
     var centerPanel = new Ext.Panel({
+	    region: 'center',
       itemId: 'center_panel',
       layout: 'border',
       items: [
         this.grid, {
           border: false,
           split: true,
-          xtype: 'datatabs',
+          xtype: 'pp-datatabs',
           itemId: 'data_tabs',
           activeItem: 0,
           height: 200,
@@ -182,43 +178,48 @@ Ext.define('Paperpile.PluginPanel', {
     }
 
     var eastPanel = new Ext.Panel({
+	    region: 'east',
       itemId: 'east_panel',
       activeItem: 0,
       layout: 'card',
       items: [eastPanelItems],
-      bbar: [{
-        text: 'Overview',
-        itemId: 'overview_tab_button',
-        enableToggle: true,
-        toggleHandler: this.onControlToggle,
-        toggleGroup: 'control_tab_buttons' + this.id,
-        scope: this,
-        allowDepress: false,
-        disabled: true,
-        pressed: false
-      },
-      {
-        text: 'Details',
-        itemId: 'details_tab_button',
-        enableToggle: true,
-        toggleHandler: this.onControlToggle,
-        toggleGroup: 'control_tab_buttons' + this.id,
-        scope: this,
-        allowDepress: false,
-        disabled: true,
-        pressed: false
-      },
-      {
-        text: 'About',
-        itemId: 'about_tab_button',
-        enableToggle: true,
-        toggleHandler: this.onControlToggle,
-        toggleGroup: 'control_tab_buttons' + this.id,
-        scope: this,
-        disabled: true,
-        allowDepress: false,
-        pressed: false,
-        hidden: true
+      dockedItems: [{
+        xype: 'toolbar',
+	itemId: 'east_toolbar',
+        items: [{
+          text: 'Overview',
+          itemId: 'overview_tab_button',
+          enableToggle: true,
+          toggleHandler: this.onControlToggle,
+          toggleGroup: 'control_tab_buttons' + this.id,
+          scope: this,
+          allowDepress: false,
+          disabled: true,
+          pressed: false
+        },
+        {
+          text: 'Details',
+          itemId: 'details_tab_button',
+          enableToggle: true,
+          toggleHandler: this.onControlToggle,
+          toggleGroup: 'control_tab_buttons' + this.id,
+          scope: this,
+          allowDepress: false,
+          disabled: true,
+          pressed: false
+        },
+        {
+          text: 'About',
+          itemId: 'about_tab_button',
+          enableToggle: true,
+          toggleHandler: this.onControlToggle,
+          toggleGroup: 'control_tab_buttons' + this.id,
+          scope: this,
+          disabled: true,
+          allowDepress: false,
+          pressed: false,
+          hidden: true
+        }]
       }]
     });
     this.eastPanel = eastPanel;
@@ -253,7 +254,7 @@ Ext.define('Paperpile.PluginPanel', {
 
     if (this.hasAboutPanel() && this.getEastPanel().items.get('about')) {
       this.getEastPanel().items.remove(panel);
-      this.getEastPanel().getBottomToolbar().items.get('about_tab_button').hide();
+      this.getEastPanel().getComponent('about_tab_button').hide();
       this.showOverview();
     }
   },
@@ -283,8 +284,20 @@ Ext.define('Paperpile.PluginPanel', {
   },
 
   depressButton: function(itemId) {
-    var button = this.items.get('east_panel').getBottomToolbar().items.get(itemId);
-    button.toggle(true);
+    var ebar = this.eastPanel.getDockedComponent('east_toolbar');
+    var cbar = this.centerPanel.child('#data_tabs').getDockedComponent('center_toolbar');
+    
+    var button;
+    
+    button = ebar.child("#"+itemId);
+    if (!button) {
+	button = cbar.child("#"+itemId);
+    }
+    if (!button) {
+	Paperpile.log("  button not found: "+itemId);
+	return;
+    }
+    //button.toggle(true);
     this.onControlToggle(button, true, true);
   },
 
@@ -295,7 +308,7 @@ Ext.define('Paperpile.PluginPanel', {
       return;
     }
 
-    var oldActiveItem = this.getEastPanel().getLayout().activeItem;
+    var oldActiveItem = this.eastPanel.getLayout().getActiveItem();
 
     if (button.itemId == 'overview_tab_button' && pressed) {
       newActiveItem = this.getOverviewPanel();
@@ -322,7 +335,7 @@ Ext.define('Paperpile.PluginPanel', {
   updateView: function() {
     var count = this.getGrid().getStore().getCount();
 
-    var about_button = this.getEastPanel().getBottomToolbar().get('about_tab_button');
+    var about_button = this.getEastPanel().getComponent('about_tab_button');
     if (this.hasAboutPanel() && !about_button.isVisible()) {
       about_button.show();
       about_button.enable();
@@ -376,19 +389,23 @@ Ext.define('Paperpile.PluginPanel', {
   },
 
   updateButtons: function() {
-    var tb_side = this.items.get('east_panel').getBottomToolbar();
-    var tb_bottom = this.items.get('center_panel').items.get('data_tabs').getBottomToolbar();
+    if (!this.rendered) {
+      return;
+    }
 
-    if (this.grid.store.getCount() > 0) {
-      tb_side.items.get('overview_tab_button').enable();
-      tb_side.items.get('details_tab_button').enable();
-      tb_bottom.items.get('summary_tab_button').enable();
-      tb_bottom.items.get('notes_tab_button').enable();
+    var ebar = this.eastPanel.getDockedComponent('east_toolbar');
+    var cbar = this.centerPanel.child('#data_tabs').getDockedComponent('center_toolbar');
+
+    if (this.grid.getStore().getCount() > 0) {
+      ebar.child('#overview_tab_button').enable();
+      ebar.child('#details_tab_button').enable();
+      cbar.child('#summary_tab_button').enable();
+      cbar.child('#notes_tab_button').enable();
     } else {
-      tb_side.items.get('overview_tab_button').disable();
-      tb_side.items.get('details_tab_button').disable();
-      tb_bottom.items.get('summary_tab_button').disable();
-      tb_bottom.items.get('notes_tab_button').disable();
+      ebar.child('#overview_tab_button').disable();
+      ebar.child('#details_tab_button').disable();
+      cbar.child('#summary_tab_button').disable();
+      cbar.child('#notes_tab_button').disable();
     }
   },
 

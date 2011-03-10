@@ -13,23 +13,10 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
   initComponent: function() {
     Paperpile.Pager.superclass.initComponent.call(this);
 
-    var items = [this.first, this.inputItem, this.afterTextItem, this.last, this.refresh];
-    items = items.concat(this.findByType(Ext.Toolbar.Spacer));
-    items = items.concat(this.findByType(Ext.Toolbar.Separator));
-    for (var i = 0; i < items.length; i++) {
-      this.remove(items[i], true);
+    var itemIds = ['first', 'last', 'inputItem', 'afterTextItem', 'refresh'];
+    for (var i=0; i < itemIds.length; i++) {
+	this.remove(this.getComponent(itemIds[i]));
     }
-
-    var pageText = this.findBy(function(item, container) {
-      if (item.text == this.beforePageText) {
-        return true;
-      } else {
-        return false;
-      }
-    },
-    this);
-    //('text',this.beforePageText);
-    this.remove(1, true);
 
     this.on('render', this.myOnRender, this);
 

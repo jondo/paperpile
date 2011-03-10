@@ -235,7 +235,3 @@ Ext.define('Paperpile.Status', {
 
 });
 
-
-st = new Paperpile.Status();
-QRuntime.log(st);
-QRuntime.log("Heyo!");

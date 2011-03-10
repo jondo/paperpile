@@ -14,8 +14,8 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.PubOverview = Ext.extend(Ext.Panel, {
-
+Ext.define('Paperpile.PubOverview', {
+  extend: 'Ext.Panel',
   itemId: 'overview',
 
   initComponent: function() {
@@ -45,7 +45,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   },
 
   getPluginPanel: function() {
-    return this.findParentByType(Paperpile.PluginPanel);
+    return this.ownerCt.ownerCt;
   },
 
   getGrid: function() {
@@ -65,7 +65,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       var sel = sm.getSelected();
       var newData = {};
       if (sel) {
-	 newData = sel.data || {};
+        newData = sel.data || {};
       }
 
       newData.isBibtexMode = Paperpile.utils.isBibtexMode();
@@ -306,7 +306,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
     data.numImported = this.getGrid().getSelection('IMPORTED').length;
     data.allImported = this.getGrid().allImported;
-    data.allSelected = this.getGrid().getSelectionModel().isAllSelected();
+    data.allSelected = this.getGrid().isAllSelected();
 
     var templateToUse = null;
     if (data.totalCount == 0) {
@@ -316,7 +316,9 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
     } else {
       templateToUse = this.getGrid().getSidebarTemplate().multipleSelection;
     }
-    templateToUse.overwrite(this.body, data, true);
+    if (this.rendered) {
+      templateToUse.overwrite(this.body, data, true);
+    }
 
     if (data.numSelected > 0) {
       if (this.labelWidget == undefined) {
@@ -408,7 +410,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
       Paperpile.main.tabs.newPdfTab({
         file: path,
-	filename: this.data.pdf_name
+        filename: this.data.pdf_name
       });
       Paperpile.main.inc_read_counter(this.data);
       break;
@@ -482,7 +484,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
       break;
 
     case 'edit-ref':
-      this.getGrid().handleEdit.defer(20,this.getGrid());
+      this.getGrid().handleEdit.defer(20, this.getGrid());
       break;
 
     case 'delete-ref':
@@ -746,7 +748,7 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
 
         var undo_msg = '';
         if (isPDF) {
-          undo_msg = 'Deleted PDF file ' + Ext.util.Format.ellipsis(record.get('pdf_name'),25);
+          undo_msg = 'Deleted PDF file ' + Ext.util.Format.ellipsis(record.get('pdf_name'), 25);
         } else {
           undo_msg = "Deleted one attached file";
         }
@@ -792,5 +794,3 @@ Paperpile.PubOverview = Ext.extend(Ext.Panel, {
   }
 
 });
-
-Ext.reg('puboverview', Paperpile.PubOverview);

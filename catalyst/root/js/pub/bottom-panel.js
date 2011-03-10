@@ -14,9 +14,9 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-
-Paperpile.DataTabs = Ext.extend(Ext.Panel, {
-
+Ext.define('Paperpile.DataTabs', {
+  extend: 'Ext.Panel',
+  alias: 'widget.pp-datatabs',
   initComponent: function() {
 
     Ext.apply(this, {
@@ -24,87 +24,75 @@ Paperpile.DataTabs = Ext.extend(Ext.Panel, {
       layout: 'card',
       margins: '2 2 2 2',
       items: [{
-        xtype: 'pubsummary',
+        xtype: 'pp-pubsummary',
         itemId: 'pubsummary',
         border: 0,
         height: 200
       },
       {
-        xtype: 'pubnotes',
+        xtype: 'pp-pubnotes',
         itemId: 'pubnotes',
         border: 0,
         height: 200
       }],
-      bbar: [{
-        text: 'Abstract',
-        itemId: 'summary_tab_button',
-        enableToggle: true,
-        toggleHandler: this.onItemToggle,
-        toggleGroup: 'tab_buttons' + this.id,
-        scope: this,
-        allowDepress: false,
-        pressed: true,
-        disabled: true
-      },
-      {
-        text: 'Notes',
-        itemId: 'notes_tab_button',
-        enableToggle: true,
-        toggleHandler: this.onItemToggle,
-        toggleGroup: 'tab_buttons' + this.id,
-        scope: this,
-        allowDepress: false,
-        pressed: false,
-        disabled: true
-      },
-      {
-        xtype: 'tbfill'
-      },
-      {
-        text: 'Save',
-        itemId: 'save_notes_button',
-        cls: 'x-btn-text-icon save',
-        listeners: {
-          click: {
-            fn: function() {
-              this.findByType(Paperpile.PubNotes)[0].onSave();
-            },
-            scope: this
-          }
+      dockedItems: [{
+        xtype: 'toolbar',
+        itemId: 'center_toolbar',
+        items: [{
+          text: 'Abstract',
+          itemId: 'summary_tab_button',
+          enableToggle: true,
+          toggleHandler: this.onItemToggle,
+          toggleGroup: 'tab_buttons' + this.id,
+          scope: this,
+          allowDepress: false,
+          pressed: true,
+          disabled: true
         },
+        {
+          text: 'Notes',
+          itemId: 'notes_tab_button',
+          enableToggle: true,
+          toggleHandler: this.onItemToggle,
+          toggleGroup: 'tab_buttons' + this.id,
+          scope: this,
+          allowDepress: false,
+          pressed: false,
+          disabled: true
+        },
+        {
+          xtype: 'tbfill'
+        },
+        {
+          text: 'Save',
+          itemId: 'save_notes_button',
+          cls: 'x-btn-text-icon save',
+          listeners: {
+            click: {
+              fn: function() {
+                this.findByType(Paperpile.PubNotes)[0].onSave();
+              },
+              scope: this
+            }
+          },
 
-        hidden: true
-      },
-      {
-        text: 'Cancel',
-        itemId: 'cancel_notes_button',
-        cls: 'x-btn-text-icon cancel',
-        listeners: {
-          click: {
-            fn: function() {
-              this.findByType(Paperpile.PubNotes)[0].onCancel();
-            },
-            scope: this
-          },
+          hidden: true
         },
-        hidden: true
-      },
-      {
-        itemId: 'collapse_button',
-        // Icon is kind of a hack but I don't see an easy way to get 
-        // the real collapse button in the bottom toolbar
-        icon: '/images/icons/collapse.png',
-        listeners: {
-          click: {
-            fn: function() {
-              this.toggleCollapse();
+        {
+          text: 'Cancel',
+          itemId: 'cancel_notes_button',
+          cls: 'x-btn-text-icon cancel',
+          listeners: {
+            click: {
+              fn: function() {
+                this.findByType(Paperpile.PubNotes)[0].onCancel();
+              },
+              scope: this
             },
-            scope: this
           },
-        },
-        height: 20
-      },
-      ]
+          hidden: true
+        }]
+      }]
     });
 
     Paperpile.DataTabs.superclass.initComponent.apply(this, arguments);
@@ -121,7 +109,7 @@ Paperpile.DataTabs = Ext.extend(Ext.Panel, {
       var el = Ext.get(this.id + '-xcollapsed');
       el.addClass('pp-collapsed');
       el.removeAllListeners();
-      this.mon(el,'click', this.expand, this);
+      this.mon(el, 'click', this.expand, this);
 
     },
     this);
@@ -146,5 +134,3 @@ Paperpile.DataTabs = Ext.extend(Ext.Panel, {
 }
 
 );
-
-Ext.reg('datatabs', Paperpile.DataTabs);

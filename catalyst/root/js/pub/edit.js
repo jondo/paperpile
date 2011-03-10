@@ -14,8 +14,9 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.MetaPanel = Ext.extend(Ext.form.FormPanel, {
-
+Ext.define('Paperpile.MetaPanel', {
+	extend: 'Ext.form.FormPanel',
+	    alias:'widget.pp-metapanel',
   // Extends the network timeout for this FormPanel.
   // Sometimes auto-update takes a long time...
   timeout: 30,

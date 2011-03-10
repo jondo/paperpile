@@ -19,9 +19,9 @@ Paperpile.isLogging = 1;
 Paperpile.pingAttempts = 0;
 Paperpile.isDebugMode = false;
 
-Paperpile.startupProgress =  function(progress){
+Paperpile.startupProgress = function(progress) {
   var width = 40;
-  Ext.get('splash-progress').setWidth(width*progress);
+  Ext.get('splash-progress').setWidth(width * progress);
 };
 
 Paperpile.startupFailure = function(response) {
@@ -64,14 +64,13 @@ Paperpile.startupFailure = function(response) {
 // Check if server is already running, if not start the catalyst
 // server. Once we have verified that the server is running we
 // continue with stage1.
-
 Paperpile.stage0 = function() {
 
   Paperpile.pingAttempts++;
 
   if (IS_QT) {
 
-    if (QRuntime.isDebugMode()){
+    if (QRuntime.isDebugMode()) {
       Paperpile.isDebugMode = true;
       Paperpile.log("Started in debug mode");
     }
@@ -155,9 +154,9 @@ Paperpile.stage0 = function() {
           //Set up signals/slot connection for catalyst process
           QRuntime.catalystReady.connect(function() {
             QRuntime.log("Catalyst succesfully started.");
-	    Ext.onReady(function() {
-		    Paperpile.stage0();
-		});
+            Ext.onReady(function() {
+              Paperpile.stage0();
+            });
           });
 
           QRuntime.catalystExit.connect(
@@ -192,8 +191,8 @@ Paperpile.stage0 = function() {
             if (Paperpile.isLogging) {
 
               // Show warnings for unitialized values in debug mode
-              if (Paperpile.isDebugMode){
-                if (string.match(/uninitialized value/i)){
+              if (Paperpile.isDebugMode) {
+                if (string.match(/uninitialized value/i)) {
                   string = string.replace(/uninitialized value/i, '<strong>uninitialized value</strong>');
                   Paperpile.status.updateMsg({
                     type: 'error',
@@ -202,7 +201,7 @@ Paperpile.stage0 = function() {
                   });
                 }
               }
-              
+
               Paperpile.serverLog = Paperpile.serverLog + string;
               var L = Paperpile.serverLog.length;
               if (L > 100000) {
@@ -301,56 +300,68 @@ Paperpile.stage1 = function() {
 // Stage 2 
 //
 // Load the main viewport class, settings and tree
-
 Paperpile.stage2 = function() {
 
   Ext.QuickTips.init();
-  Paperpile.main = new Paperpile.Viewport();
 
   Paperpile.startupProgress(0.5);
-
-  Paperpile.main.loadSettings(function(){
-    Paperpile.main.afterLoadSettings();
-    Paperpile.startupProgress(0.6);
-    //    Paperpile.main.tree.on('load',function(){
+  f = function(cmp) {
+    Paperpile.log("  rendered");
+    Paperpile.main = cmp;
+    Paperpile.main.loadSettings(function() {
+      Paperpile.log("  settings loaded");
+      Paperpile.main.afterLoadSettings();
+      Paperpile.startupProgress(0.6);
       Paperpile.stage3();
-      //    }, this, {single:true});
-      //    Paperpile.main.tree.loadTree();
-  });
-};
+    });
+  }
 
+  Paperpile.main = new Paperpile.Viewport({
+    listeners: {
+      afterrender: {
+        fn: f
+      }
+    }
+  });
+
+  /*
+  */
+};
 
 // Stage 3 
 //
 // Load folders, labels and the main grid 
-
 Paperpile.stage3 = function() {
 
   Paperpile.startupProgress(0.7);
 
-  Paperpile.main.folderStore.on('load', function(){
-    Paperpile.main.labelStore.on('load', function(){
-      Paperpile.main.on('mainGridLoaded',function(){
-	var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
-        Ext.core.DomHelper.overwrite('version-tag', version);
-
-        //Paperpile.startupProgress(1.0);
+  Paperpile.main.folderStore.on('load', function() {
+    Paperpile.main.labelStore.on('load', function() {
+      Paperpile.main.on('mainGridLoaded', function() {
+        var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
+        //Ext.core.DomHelper.overwrite('version-tag', version);
+        Paperpile.startupProgress(1.0);
         Ext.get('splash').remove();
-      }, this, {single:true});
+      },
+      this, {
+        single: true
+      });
 
-      Paperpile.startupProgress(1.0);
-      Paperpile.main.tabs.newMainLibraryTab();
-    }, this, {single:true});
-    
+      Paperpile.startupProgress(0.9);
+      Paperpile.main.getTabs().newMainLibraryTab();
+    },
+    this, {
+      single: true
+    });
+
     Paperpile.startupProgress(0.8);
     Paperpile.main.labelStore.load();
-  }, this, {single:true});
-
-  Paperpile.main.folderStore.load();     
-
-  Ext.get('dashboard-button').on('click', function() {
-    Paperpile.main.tabs.newScreenTab('Dashboard', 'dashboard');
+  },
+  this, {
+    single: true
   });
+
+  Paperpile.main.folderStore.load();
 
   // If offline the uservoice JS has not been loaded, so test for it
   if (window.UserVoice) {
@@ -381,7 +392,6 @@ Paperpile.stage3 = function() {
   */
 
   // Check 10 minutes after start for updates
-
   var f = function() {
     if (!Paperpile.status.el.isVisible()) {
       Paperpile.main.checkForUpdates(true);
@@ -390,10 +400,7 @@ Paperpile.stage3 = function() {
   Ext.defer(f, 60000, this);
 };
 
-
 Ext.onReady(function() {
-
-
 
   Paperpile.stage0();
 

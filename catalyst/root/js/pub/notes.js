@@ -14,7 +14,9 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Paperpile.PubNotes = Ext.extend(Ext.Panel, {
+Ext.define('Paperpile.PubNotes', {
+  extend: 'Ext.Panel',
+  alias: 'widget.pp-pubnotes',
   markup: [
     '<tpl if="annote">',
     '<div class="pp-action pp-action-edit-notes">',
@@ -40,16 +42,20 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
     });
     Paperpile.PubNotes.superclass.initComponent.call(this);
 
-    this.spot = new Ext.ux.Spotlight({
-      animate: false,
-    });
+  },
 
+  getPluginPanel: function() {
+    return this.ownerCt.ownerCt.ownerCt;
+  },
+
+  getGrid: function() {
+    return this.getPluginPanel().getGrid();
   },
 
   updateDetail: function(data) {
 
     if (!this.grid) {
-      this.grid = this.findParentByType(Paperpile.PluginPanel).items.get('center_panel').items.get('grid');
+      this.grid = this.getGrid();
     }
 
     sm = this.grid.getSelectionModel();
@@ -64,12 +70,16 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
       var tpl = new Ext.XTemplate(this.markup);
 
       this.data.id = this.id;
-      tpl.overwrite(this.body, this.data);
+      if (this.rendered) {
+        tpl.overwrite(this.body, this.data);
+      }
 
       this.installEvents();
     } else {
       var empty = new Ext.Template('');
-      empty.overwrite(this.body);
+      if (this.rendered) {
+        empty.overwrite(this.body);
+      }
     }
 
   },
@@ -110,9 +120,12 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
     dataTabs.doLayout();
     dataTabs.getLayout().setActiveItem('html_editor');
 
-    this.spot.show(this.ownerCt.id);
-
-    this.mon(this.editor,'initialize', function(){this.editor.focus(20);},this,{single:true});
+    this.mon(this.editor, 'initialize', function() {
+      this.editor.focus(20);
+    },
+    this, {
+      single: true
+    });
   },
 
   onSave: function() {
@@ -157,18 +170,18 @@ Paperpile.PubNotes = Ext.extend(Ext.Panel, {
     // id changes for some unknown reasons...
     this.data.id = dataTabs.items.get('pubnotes').id;
 
-    this.tpl.overwrite(this.body, this.data);
+    if (this.rendered) {
+      this.tpl.overwrite(this.body, this.data);
+    }
     this.installEvents();
-
-    this.spot.hide();
 
   },
 
   showEmpty: function(tpl) {
     var empty = new Ext.Template(tpl);
-    empty.overwrite(this.body);
+    if (this.rendered) {
+      empty.overwrite(this.body);
+    }
   }
 
 });
-
-Ext.reg('pubnotes', Paperpile.PubNotes);

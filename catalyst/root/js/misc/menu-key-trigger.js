@@ -1,7 +1,5 @@
 
-Ext.ns('Ext.ux.TDGi');
-
-Ext.ux.TDGi.MenuKeyTrigger = Ext.extend(Object, {
+Ext.define('Ext.ux.TDGi.MenuKeyTrigger', {
   /**
    * @constructor
    * @param c
