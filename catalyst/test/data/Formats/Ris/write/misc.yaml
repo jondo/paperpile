@@ -20,7 +20,7 @@ test_expected: |
   EP  - 266
   ER  -
 ---
-test_comment: 'Ris writing test for the publisher AGU'
+test_comment: 'Ris writing test for AGU'
 authors: 'Stillman, David E. and Grimm, Robert E.'
 title: 'Radar penetrates only the youngest geological units on Mars'
 journal: 'J. Geophys. Res.'
@@ -64,7 +64,7 @@ test_expected: |
   UR  - http://dx.doi.org/10.1029/2010JE003661
   ER  - 
 ---
-test_comment: 'Ris writing test for the publisher Pion'
+test_comment: 'Ris writing test for Pion'
 pubtype: ARTICLE
 authors: 'Spotorno, S and Faure, S'
 title: 'Change detection in complex scenes: Hemispheric contribution and the role of perceptual and semantic factors'
@@ -92,4 +92,37 @@ test_expected: |
   PB  - Pion Ltd
   UR  - http://www.perceptionweb.com/abstract.cgi?id=p6524
   ER  - 
+---
+test_comment: 'Ris writing test for Cell'
+authors: 'Hanahan, Douglas and Weinberg, Robert A.'
+title: 'Hallmarks of Cancer: The Next Generation'
+year: 2011
+month: 03
+day: 04
+journal: 'Cell'
+volume: 144
+issue: 5
+pages: 646-674
+publisher: 'Cell Press'
+pubtype: ARTICLE
+issn: 0092-8674
+url: http://linkinghub.elsevier.com/retrieve/pii/S0092867411001279
+doi: 10.1016/j.cell.2011.02.013
+test_expected: |
+  TY  - JOUR
+  T1  - Hallmarks of Cancer: The Next Generation
+  AU  - Hanahan, Douglas
+  AU  - Weinberg, Robert A.
+  Y1  - 2011/03/04
+  JF  - Cell
+  JO  - Cell
+  VL  - 144
+  IS  - 5
+  SP  - 646
+  EP  - 674
+  PB  - Cell Press
+  SN  - 0092-8674
+  UR  - http://linkinghub.elsevier.com/retrieve/pii/S0092867411001279
+  ER  - 
+
 

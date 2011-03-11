@@ -32,3 +32,18 @@ issue: 1
 abstract: 'Signals from the Shallow Radar were intended to penetrate hundreds of meters or more into Mars...'
 url: http://www.perceptionweb.com/abstract.cgi?id=p6524
 publisher: Pion Ltd
+---
+authors: 'Hanahan, Douglas and Weinberg, Robert A.'
+title: 'Hallmarks of Cancer: The Next Generation'
+year: 2011
+month: 03
+day: 04
+journal: 'Cell'
+volume: 144
+issue: 5
+pages: 646-674
+publisher: 'Cell Press'
+pubtype: ARTICLE
+issn: 0092-8674
+url: http://linkinghub.elsevier.com/retrieve/pii/S0092867411001279
+doi: 10.1016/j.cell.2011.02.013
