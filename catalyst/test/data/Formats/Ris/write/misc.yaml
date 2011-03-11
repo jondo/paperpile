@@ -124,5 +124,36 @@ test_expected: |
   SN  - 0092-8674
   UR  - http://linkinghub.elsevier.com/retrieve/pii/S0092867411001279
   ER  - 
+---
+test_comment: 'Ris writing test for Nature'
+authors: 'Toulmin, Camilla'
+title: 'Agriculture: A bowl half full'
+pubtype: ARTICLE
+journal: 'Nature'
+year: 2011
+month: 03
+day: 03
+volume: 471
+issue: 7336
+pages: 31-32
+publisher: 'Nature Publishing Group, a division of Macmillan Publishers Limited. All Rights Reserved.'
+issn: 0028-0836
+url: http://dx.doi.org/10.1038/471031a
+doi: 10.1038/471031a
+test_expected: |
+  TY  - JOUR
+  T1  - Agriculture: A bowl half full
+  AU  - Toulmin, Camilla
+  Y1  - 2011/03/03
+  JF  - Nature
+  JO  - Nature
+  VL  - 471
+  IS  - 7336
+  SP  - 31
+  EP  - 32
+  PB  - Nature Publishing Group, a division of Macmillan Publishers Limited. All Rights Reserved.
+  SN  - 0028-0836
+  UR  - http://dx.doi.org/10.1038/471031a
+  ER  - 
 
 
