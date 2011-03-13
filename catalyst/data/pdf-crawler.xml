@@ -1079,6 +1079,22 @@
   </test>
 </site>
 
+<site name="AmericanMathematicalSociety">
+  <signature>
+    <url>!ams\.org!</url>
+  </signature>
+
+  <rule>
+   <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+\.pdf)&quot;\s*&gt;[^&lt;]*PDF</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1090/S0002-9904-1939-07067-5</url>
+  </test>
+</site>
+
 
 <site name="Meta">
   <signature>
