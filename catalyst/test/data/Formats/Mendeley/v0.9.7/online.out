@@ -1,0 +1,69 @@
+---
+abstract: 'A quick introduction to Mendeley. Learn how Mendeley creates your personal digital library, how to organize and annotate documents, how to collaborate and share with colleagues, and how to generate citations and bibliographies.'
+howpublished: Generic
+journal: Mendeley Desktop
+keywords: Mendeley;how-to;user manual
+linkout: http://www.mendeley.com
+note: |
+  Mendeley field "sourceType": Documentation<br />
+  Mendeley field "city": London<br />
+  Mendeley field "onlyReference": false<br />
+pages: 1-14
+pubtype: MISC
+title: Getting Started with Mendeley
+year: 2010
+---
+authors: 'Kuppers, Daniel a. and Hwang, Harry C. and Jackson, Aimee L. and Linsley, Peter S. and Clurman, Bruce E. and Fero, Matthew L.'
+doi: 10.1371/journal.pone.0014758
+editors: 'Kudla, Grzegorz'
+issn: 1932-6203
+issue: 3
+journal: PLoS ONE
+linkout: http://dx.plos.org/10.1371/journal.pone.0014758
+month: 3
+note: |
+  Mendeley field "dateAccessed": 13/03/11<br />
+  Mendeley field "onlyReference": false<br />
+pages: e14758
+pubtype: ARTICLE
+title: Effect of Xpcl1 Activation and p27Kip1 Loss on Gene Expression in Murine Lymphoma
+volume: 6
+year: 2011
+---
+authors: 'Sahay, Seema and Gupte, Nikhil and Brahme, Radhika G. and Nirmalkar, Amit and Bembalkar, Shilpa and Bollinger, Robert C. and Mehendale, Sanjay'
+doi: 10.1371/journal.pone.0017448
+editors: 'Kaul, Rupert'
+issn: 1932-6203
+issue: 3
+journal: PLoS ONE
+labels: 'Favorites,Tag1,Tag2'
+linkout: http://dx.plos.org/10.1371/journal.pone.0017448
+month: 3
+note: |
+  Mendeley field "hideFromMendeleyWebIndex": false<br />
+  Mendeley field "dateAccessed": 13/03/11<br />
+  Mendeley field "onlyReference": false<br />
+  Mendeley field "note": <m:note>This is a <m:bold>sample</m:bold> note.<m:linebreak/></m:note><br />
+pages: e17448
+pubtype: ARTICLE
+title: 'Predictors of Retention among Men Attending STI Clinics in HIV Prevention Programs and Research: A Case Control Study in Pune, India'
+volume: 6
+year: 2011
+---
+abstract: 'Overweight and obesity are strongly associated with endometrial cancer. Several independent genome-wide association studies recently identified two common polymorphisms, FTO rs9939609 and MC4R rs17782313, that are linked to increased body weight and obesity. We examined the association of FTO rs9939609 and MC4R rs17782313 with endometrial cancer risk in a pooled analysis of nine case-control studies within the Epidemiology of Endometrial Cancer Consortium (E2C2). This analysis included 3601 non-Hispanic white women with histologically-confirmed endometrial carcinoma and 5275 frequency-matched controls. Unconditional logistic regression models were used to assess the relation of FTO rs9939609 and MC4R rs17782313 genotypes to the risk of endometrial cancer. Among control women, both the FTO rs9939609 A and MC4R rs17782313 C alleles were associated with a 16% increased risk of being overweight (p = 0.001 and p = 0.004, respectively). In case-control analyses, carriers of the FTO rs9939609 AA genotype were at increased risk of endometrial carcinoma compared to women with the TT genotype [odds ratio (OR)  = 1.17; 95% confidence interval (CI): 1.03-1.32, p = 0.01]. However, this association was no longer apparent after adjusting for body mass index (BMI), suggesting mediation of the gene-disease effect through body weight. The MC4R rs17782313 polymorphism was not related to endometrial cancer risk (per allele OR = 0.98; 95% CI: 0.91-1.06; p = 0.68). FTO rs9939609 is a susceptibility marker for white non-Hispanic women at higher risk of endometrial cancer. Although FTO rs9939609 alone might have limited clinical or public health significance for identifying women at high risk for endometrial cancer beyond that of excess body weight, further investigation of obesity-related genetic markers might help to identify the pathways that influence endometrial carcinogenesis.'
+authors: "Lurie, Galina and Gaudet, Mia M and Spurdle, Amanda B and Carney, Michael E and Wilkens, Lynne R and Yang, Hannah P and Weiss, Noel S and Webb, Penelope M and Thompson, Pamela J and Terada, Keith and Setiawan, Veronica Wendy and Rebbeck, Timothy R and Prescott, Jennifer and Orlow, Irene and O'Mara, Tracy and Olson, Sara H and Narod, Steven a and Matsuno, Rayna K and Lissowska, Jolanta and Liang, Xiaolin and Levine, Douglas a and Le Marchand, Loic and Kolonel, Laurence N and Henderson, Brian E and Garcia-Closas, Montserrat and Doherty, Jennifer Anne and De Vivo, Immaculata and Chen, Chu and Brinton, Louise a and Akbari, Mohammad R and Goodman, Marc T"
+doi: 10.1371/journal.pone.0016756
+issn: 1932-6203
+issue: 2
+journal: PloS one
+linkout: http://www.ncbi.nlm.nih.gov/pubmed/21347432
+month: 1
+note: |
+  Mendeley field "dateAccessed": 25/02/11<br />
+  Mendeley field "onlyReference": false<br />
+pages: e16756
+pmid: 21347432
+pubtype: ARTICLE
+title: The Obesity-Associated Polymorphisms FTO rs9939609 and MC4R rs17782313 and Endometrial Cancer Risk in Non-Hispanic White Women.
+volume: 6
+year: 2011

@@ -12,7 +12,7 @@ use File::Basename;
 my %suites = (
   basic => {
     name  => 'Basic backend unit and regression tests',
-    files => [ "t/basic.t", "t/formats/bibtex.t", "t/formats/ris.t", "t/formats/zotero.t" ]
+    files => [ "t/basic.t", "t/formats/bibtex.t", "t/formats/ris.t", "t/formats/zotero.t", "t/formats/mendeley.t" ]
   },
   cover => {
     name  => 'Coverage analysis (see coverage/coverage.html)',
