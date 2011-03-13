@@ -1047,6 +1047,23 @@
   </test>
 </site>
 
+<site name="OMICS">
+  <signature>
+    <url>!omicsonline\.com!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;([^&quot;]+\.pdf)*&quot;[^>]+>(?:PDF|Full\sText\s\(PDF\))</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.4172/jpb.1000138</url>
+  </test>
+</site>
+
+
 <site name="Meta">
   <signature>
     <body namedRegex="meta1"/>
