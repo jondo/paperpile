@@ -18,7 +18,7 @@ sub startup : Tests(startup => 1) {
 
 # Add test functions here
 
-sub read : Tests(55) {
+sub read : Tests(110) {
 
   my ($self) = @_;
 
@@ -28,6 +28,11 @@ sub read : Tests(55) {
     "data/Formats/Mendeley/v0.9.7/online.out"
   );
 
+  $self->test_read(
+    "Import from Mendeley database version 0.9.8.2",
+    "data/Formats/Mendeley/v0.9.8.2/online.sqlite",
+    "data/Formats/Mendeley/v0.9.8.2/online.out"
+  );
 
 }
 
