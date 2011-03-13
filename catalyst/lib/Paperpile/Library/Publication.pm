@@ -106,9 +106,13 @@ has 'labels' => ( is => 'rw', default => '' );
 # user's library.
 has 'labels_tmp' => ( is => 'rw', default => '' );
 
-
 # Comma separated list of folders
 has 'folders' => ( is => 'rw', default => '' );
+
+# Temporary field to handle folders which are not imported into the
+# user's library.
+has 'folders_tmp' => ( is => 'rw', default => '' );
+
 
 ### Fields from the config file
 

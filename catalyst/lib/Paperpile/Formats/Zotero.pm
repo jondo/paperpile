@@ -83,11 +83,11 @@ sub read {
     #34 document        35 encyclopediaArticle 36 dictionaryEntry
 
     my (
-      $title,    $authors,      $journal, $issue,  $volume,
-      $year,     $month,        $ISSN,    $pages,  $doi,
-      $abstract, $booktitle,    $url,     $pmid,   $arxivid,
-      $editors,  $publisher,    $edition, $series, $address,
-      $school,   $howpublished, $note,    $isbn,   $labels
+      $title,  $authors, $journal, $issue,        $volume,    $year,
+      $month,  $ISSN,    $pages,   $doi,          $abstract,  $booktitle,
+      $url,    $pmid,    $arxivid, $editors,      $publisher, $edition,
+      $series, $address, $school,  $howpublished, $note,      $isbn,
+      $labels, $folders
     );
 
     my @pdfs                 = ();
@@ -341,25 +341,24 @@ sub read {
       ( my $cratorDataID, my $firstName, my $lastName, my $shortName, my $fieldMode ) =
         $dbh->selectrow_array( $statement, undef, $creatorID );
 
-
       my $tmp_name = '';
 
       if ( defined $fieldMode ) {
-	if ( $fieldMode == 1 ) {
-	  $tmp_name = "{$lastName}" if ( defined $lastName and not defined $firstName);
-	} else {
-	  if ( defined $lastName and defined $firstName) {
-	    $tmp_name = "$lastName, $firstName";
-	  } elsif ( defined $lastName and not defined $firstName) {
-	    $tmp_name = $lastName;
-	  }
-	}
+        if ( $fieldMode == 1 ) {
+          $tmp_name = "{$lastName}" if ( defined $lastName and not defined $firstName );
+        } else {
+          if ( defined $lastName and defined $firstName ) {
+            $tmp_name = "$lastName, $firstName";
+          } elsif ( defined $lastName and not defined $firstName ) {
+            $tmp_name = $lastName;
+          }
+        }
       } else {
-	if ( defined $lastName and defined $firstName) {
-	  $tmp_name = "$lastName, $firstName";
-	} elsif ( defined $lastName and not defined $firstName) {
-	  $tmp_name = $lastName;
-	}
+        if ( defined $lastName and defined $firstName ) {
+          $tmp_name = "$lastName, $firstName";
+        } elsif ( defined $lastName and not defined $firstName ) {
+          $tmp_name = $lastName;
+        }
       }
 
       next if ( $tmp_name eq '' );
@@ -429,6 +428,30 @@ sub read {
     }
     $labels = join( ",", @labels_tmp );
 
+    # get collections/folders as comma separated list
+    my $sth8 = $dbh->prepare('SELECT collectionID FROM collectionItems WHERE itemID = ?;');
+    $sth8->execute($itemID);
+    my @folders_tmp = ();
+    while ( my @t = $sth8->fetchrow_array ) {
+      my $collectionID   = $t[0];
+      my $parent_flag    = 1;
+      my @tmp_coll_names = ();
+      while ( $parent_flag == 1 ) {
+        my $sth9 = $dbh->prepare(
+          'SELECT collectionName, parentCollectionID FROM collections WHERE collectionID = ?;');
+        $sth9->execute($collectionID);
+        ( my $collectionName, my $parentCollectionID ) = $sth9->fetchrow_array;
+        $parent_flag = 0 if ( not defined $parentCollectionID );
+        $parent_flag = 0 if ( not defined $collectionName );
+        $collectionName =~ s/\//_/g;
+        $collectionID = $parentCollectionID;
+        push @tmp_coll_names, $collectionName;
+      }
+
+      push @folders_tmp, join( "/", reverse @tmp_coll_names );
+    }
+    $folders = join( ",", @folders_tmp );
+
     # if it does not have a title, we are not interested
     next if ( !defined $title );
 
@@ -475,6 +498,9 @@ sub read {
       if ( $#notes_dummy > -1 and $note );
     $note = join( "<br />\n", @notes_dummy ) . "<br />\n" if ( $#notes_dummy > -1 and !$note );
 
+    # cleaning of some fields
+    $pages =~ s/&ndash;/-/g if ($pages);
+
     my $pub = Paperpile::Library::Publication->new( pubtype => $pubtype );
 
     $pub->journal($journal)           if $journal;
@@ -501,6 +527,7 @@ sub read {
     $pub->annote($note)               if $note;
     $pub->linkout($url)               if $url;
     $pub->labels_tmp($labels)         if $labels;
+    $pub->folders_tmp($folders)       if $folders;
 
     # add PDFs and other attachements
     foreach my $i ( 0 .. $#pdfs ) {
