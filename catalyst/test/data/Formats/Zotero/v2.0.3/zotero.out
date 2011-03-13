@@ -1,0 +1,129 @@
+---
+annote: '<p><strong>Welcome to Zotero!</strong></p><p>View the Quick Start Guide to learn how to begin collecting, managing, citing, and sharing your research sources.</p><p>Thanks for installing Zotero.</p><br />'
+howpublished: Webpage
+linkout: http://zotero.org/support/quick_start_guide
+pubtype: MISC
+title: Zotero Quick Start Guide
+---
+abstract: "Aberrant DNA methylation is one of the most frequent alterations in patients with Acute Lymphoblastic Leukemia (ALL). Using methylation bead arrays we analyzed the methylation status of 807 genes implicated in cancer in a group of ALL samples at diagnosis (n = 48). We found that 154 genes were methylated in more than 10% of ALL samples. Interestingly, the expression of 13 genes implicated in the TP53 pathway was downregulated by hypermethylation. Direct or indirect activation of TP53 pathway with 5-aza-2'-deoxycitidine, Curcumin or Nutlin-3 induced an increase in apoptosis of ALL cells. The results obtained with the initial group of 48 patients was validated retrospectively in a second cohort of 200 newly diagnosed ALL patients. Methylation of at least 1 of the 13 genes implicated in the TP53 pathway was observed in 78% of the patients, which significantly correlated with a higher relapse (p = 0.001) and mortality (p<0.001) rate being an independent prognostic factor for disease-free survival (DFS) (p = 0.006) and overall survival (OS) (p = 0.005) in the multivariate analysis. All these findings indicate that TP53 pathway is altered by epigenetic mechanisms in the majority of ALL patients and correlates with prognosis. Treatments with compounds that may reverse the epigenetic abnormalities or activate directly the p53 pathway represent a new therapeutic alternative for patients with ALL."
+authors: 'Vilas-Zornoza, Amaia and Agirre, Xabier and Martín-Palanco, Vanesa and Martín-Subero, José Ignacio and San José-Eneriz, Edurne and Garate, Leire and Alvarez, Sara and Miranda, Estíbaliz and Rodríguez-Otero, Paula and Rifón, José and Torres, Antonio and Calasanz, María José and Cigudosa, Juan Cruz and Román-Gómez, José and Prósper, Felipe'
+doi: 10.1371/journal.pone.0017012
+issn: 1932-6203
+issue: 2
+journal: PloS One
+linkout: http://www.ncbi.nlm.nih.gov/pubmed/21386967
+pages: e17012
+pmid: 21386967
+pubtype: ARTICLE
+title: Frequent and Simultaneous Epigenetic Inactivation of TP53 Pathway Genes in Acute Lymphoblastic Leukemia
+volume: 6
+year: 2011
+---
+abstract: |-
+  <AbstractText Label="BACKGROUND" NlmCategory="BACKGROUND">The liver stages of malaria parasites are inhibited by cytokines such as interferon-γ or Interleukin (IL)-6. Binding of these cytokines to their receptors at the surface of the infected hepatocytes leads to the production of nitric oxide (NO) and radical oxygen intermediates (ROI), which kill hepatic parasites. However, conflicting results were obtained with TNF-α possibly because of differences in the models used. We have reassessed the role of TNF-α in the different cellular systems used to study the Plasmodium pre-erythrocytic stages.</AbstractText>
+  <AbstractText Label="METHODS AND FINDINGS" NlmCategory="RESULTS">Human or mouse TNF-α were tested against human and rodent malaria parasites grown in vitro in human or rodent primary hepatocytes, or in hepatoma cell lines. Our data demonstrated that TNF-α treatment prevents the development of malaria pre-erythrocytic stages. This inhibitory effect however varies with the infecting parasite species and with the nature and origin of the cytokine and hepatocytes. Inhibition was only observed for all parasite species tested when hepatocytes were pre-incubated 24 or 48 hrs before infection and activity was directed only against early hepatic parasite. We further showed that TNF-α inhibition was mediated by a soluble factor present in the supernatant of TNF-α stimulated hepatocytes but it was not related to NO or ROI. Treatment TNF-α prevents the development of human and rodent malaria pre-erythrocytic stages through the activity of a mediator that remains to be identified.</AbstractText>
+  <AbstractText Label="CONCLUSIONS" NlmCategory="CONCLUSIONS">Treatment TNF-α prevents the development of human and rodent malaria pre-erythrocytic stages through the activity of a mediator that remains to be identified. However, the nature of the cytokine-host cell-parasite combination must be carefully considered for extrapolation to the human infection.</AbstractText>
+annote: '<p>Cild note for Inhibitory effect of TNF-alpha</p><br />'
+authors: 'Depinay, Nadya and Franetich, Jean Francois and Grüner, Anne Charlotte and Mauduit, Marjorie and Chavatte, Jean-Marc and Luty, Adrian J F and van Gemert, Geert-Jan and Sauerwein, Robert W and Siksik, Jean-Michel and Hannoun, Laurent and Mazier, Dominique and Snounou, Georges and Rénia, Laurent'
+doi: 10.1371/journal.pone.0017464
+issn: 1932-6203
+issue: 3
+journal: PloS One
+linkout: http://www.ncbi.nlm.nih.gov/pubmed/21394207
+pages: e17464
+pmid: 21394207
+pubtype: ARTICLE
+title: 'Inhibitory Effect of TNF-α on Malaria Pre-Erythrocytic Stage Development: Influence of Host Hepatocyte/Parasite Combinations'
+volume: 6
+year: 2011
+---
+abstract: "Mice lacking the p27Kip1 Cdk inhibitor (Cdkn1b) exhibit increased susceptibility to lymphomas from the Maloney murine leukemia virus (M-MuLV), and exhibit a high frequency of viral integrations at Xpcl1 (Kis2), a locus on the X-chromosome. Xpcl1 encodes miR-106a∼363, a cluster of microRNAs that are expressed in response to adjacent retroviral integrations. We report the first large-scale profile of microRNA expression in MuLV-induced lymphomas, in combination with microarray gene expression analysis. The source material was T-cell lymphomas induced by M-MuLV in p27Kip1 knockout mice and normal thymus. Surprisingly, the overall levels of miRNA expression were equivalent in lymphomas and normal thymus. Nonetheless, the expression of specific microRNAs was altered in tumors. The miR-106a∼363 miRNA were over-expressed in lymphomas, particularly those with viral integrations at the Xpcl1 locus. In contrast, p27Kip1 deletion itself was associated with a different pattern of microRNA expression. Gene expression was dramatically altered in lymphomas, yet paralleled data from T-cell lymphomas induced by other mechanisms. Genes with altered expression in association with the p27Kip1 null genotype were of similar functional classes to those associated with Xpcl1 integration, but with the opposite pattern of expression. Thus, the effect of p27Kip1 deletion may be to oppose an anti-oncogenic effect of Xpcl1 rather than enhancing its oncogenic functions. A subset of miR-106a∼363 target genes was consistently reduced in lymphomas with Xpcl1 integrations, particularly genes with cell cycle and immune functions. We identify four predicted target genes of miR-106a∼363 miRNA, including N-Myc (Mycn), and the TGF-beta receptor (Tgfbr2) using 3'UTR reporter assays. Still, bioinformatic miRNA target predictions were poor predictors of altered gene expression in lymphomas with Xpcl1 integration. Confirmation of miR-106a∼363 gene targeting relevant to the tumor phenotype requires in vivo validation, because only a subset of predicted targets are consistently reduced in tumors that overexpress miR-106a∼363."
+authors: 'Kuppers, Daniel A. and Hwang, Harry C. and Jackson, Aimee L. and Linsley, Peter S. and Clurman, Bruce E. and Fero, Matthew L.'
+doi: 10.1371/journal.pone.0014758
+issue: 3
+journal: PLoS ONE
+linkout: http://dx.doi.org/10.1371/journal.pone.0014758
+month: 03
+pages: e14758
+pubtype: ARTICLE
+title: Effect of Xpcl1 Activation and p27Kip1 Loss on Gene Expression in Murine Lymphoma
+volume: 6
+year: 2011
+---
+howpublished: Webpage
+linkout: http://www.plosone.org/article/info%3Adoi%2F10.1371%2Fjournal.pone.0017530
+pubtype: MISC
+title: 'PLoS ONE: Blood Banking in Living Droplets'
+---
+abstract: 'Blood banking has a broad public health impact influencing millions of lives daily. It could potentially benefit from emerging biopreservation technologies. However, although vitrification has shown advantages over traditional cryopreservation techniques, it has not been incorporated into transfusion medicine mainly due to throughput challenges. Here, we present a scalable method that can vitrify red blood cells in microdroplets. This approach enables the vitrification of large volumes of blood in a short amount of time, and makes it a viable and scalable biotechnology tool for blood cryopreservation.'
+authors: 'Keles, Hasan Onur and Matloff, Laura and Markel, Jordan and Demirci, Utkan and Suri, Siddharth and Watts, Duncan J. and Kim, Yun-Gon and Dong, Lingsheng and Lombardi, Michael and Haeggstrom, Edward'
+doi: 10.1371/journal.pone.0017530
+issue: 3
+journal: PLoS ONE
+labels_tmp: 'tag1,tag2'
+linkout: http://dx.doi.org/10.1371/journal.pone.0017530
+month: 03
+pages: e17530
+pubtype: ARTICLE
+title: Blood Banking in Living Droplets
+volume: 6
+year: 2011
+---
+abstract: 'A longstanding idea in the literature on human cooperation is that cooperation should be reinforced when conditional cooperators are more likely to interact. In the context of social networks, this idea implies that cooperation should fare better in highly clustered networks such as cliques than in networks with low clustering such as random networks. To test this hypothesis, we conducted a series of web-based experiments, in which 24 individuals played a local public goods game arranged on one of five network topologies that varied between disconnected cliques and a random regular graph. In contrast with previous theoretical work, we found that network topology had no significant effect on average contributions. This result implies either that individuals are not conditional cooperators, or else that cooperation does not benefit from positive reinforcement between connected neighbors. We then tested both of these possibilities in two subsequent series of experiments in which artificial seed players were introduced, making either full or zero contributions. First, we found that although players did generally behave like conditional cooperators, they were as likely to decrease their contributions in response to low contributing neighbors as they were to increase their contributions in response to high contributing neighbors. Second, we found that positive effects of cooperation were contagious only to direct neighbors in the network. In total we report on 113 human subjects experiments, highlighting the speed, flexibility, and cost-effectiveness of web-based experiments over those conducted in physical labs.'
+authors: 'Jensen, Roderick V. and Hsiao, Li-Li'
+doi: 10.1371/journal.pone.0016836
+issue: 3
+journal: PLoS ONE
+linkout: http://dx.doi.org/10.1371/journal.pone.0016836
+month: 03
+pages: e16836
+pubtype: ARTICLE
+title: 'Cooperation and Contagion in Web-Based, Networked Public Goods Experiments'
+volume: 6
+year: 2011
+---
+abstract: 'Technologies that rapidly isolate viable single cells from heterogeneous solutions have significantly contributed to the field of medical genomics. Challenges remain both to enable efficient extraction, isolation and patterning of single cells from heterogeneous solutions as well as to keep them alive during the process due to a limited degree of control over single cell manipulation. Here, we present a microdroplet based method to isolate and pattern single cells from heterogeneous cell suspensions (10% target cell mixture), preserve viability of the extracted cells (97.0±0.8%), and obtain genomic information from isolated cells compared to the non-patterned controls. The cell encapsulation process is both experimentally and theoretically analyzed. Using the isolated cells, we identified 11 stem cell markers among 1000 genes and compare to the controls. This automated platform enabling high-throughput cell manipulation for subsequent genomic analysis employs fewer handling steps compared to existing methods.'
+authors: 'Aragon-Calvo, M. A and Silk, J. and Szalay, A. S and Westmoquette, M. S and Smith, L. J and Gallagher III, J. S and Trancho, G. and Bastian, N.'
+doi: 10.1371/journal.pone.0017455
+issue: 3
+journal: PLoS ONE
+labels_tmp: tag1
+linkout: http://dx.doi.org/10.1371/journal.pone.0017455
+month: 03
+pages: e17455
+pubtype: ARTICLE
+title: Drop-on-Demand Single Cell Isolation and Total RNA Analysis
+volume: 6
+year: 2011
+---
+abstract: 'We show that the "cold" Hubble flow observed for galaxies around the Milky Way does not represent a problem in cosmology but is due to the particular geometry and dynamics of our local wall. The behavior of the perturbed Hubble flow around the Milky Way is the result of two main factors: at small scales (R < 1 Mpc) the inflow is dominated by the gravitational influence of the Milky Way. At large scales (R > 1 Mpc) the out flow reflects the expansion of our local wall which "cools down" the peculiar velocities. This is an intrinsic property of walls and is independent of cosmology. We find the dispersion of the local Hubble flow (1 < R < 3 Mpc) around simulated "Milky Way" haloes located at the centre of low-density cosmological walls to be {\sigma}_H ~ 30 km/s, in excellent agreement with observations. The expansion of our local wall is also reflected in the value of the measured local Hubble constant. For "Milky Way" haloes inside walls, we find super-Hubble flows with h_local \simeq 0.77 - 1.13. The radius of equilibrium (R_0) depends not only on the mass of the central halo and the Hubble expansion but also on the dynamics given by the local LSS geometry. The super-Hubble flow inside our local wall has the effect of reducing the radius at which the local expansion balances the gravitational influence of the Milky Way. By ignoring the dynamical effect of the local wall, the mass of the Milky Way estimated from R_0 can be underestimated by as much as ~ 30%.'
+arxivid: 1103.1901
+authors: 'Konstantopoulos, I. S and Wood RJ, Maynard-Smith MD and Wood RJ, Maynard-Smith MD, Robinson VL, Oyston PC, Titball RW, Roach PL, '
+journal: Preprint
+labels_tmp: 'Astrophysics - Cosmology and Extragalactic Astrophysics'
+linkout: http://arxiv.org/abs/1103.1901
+month: 03
+pubtype: ARTICLE
+title: Locally Cold Flows from Large-Scale Structure
+year: 2011
+---
+abstract: "[Abridged] We present Gemini-N GMOS-IFU observations of the central starburst clumps and inner wind of M82, together with WIYN DensePak IFU observations of the inner 2x0.9kpc of the disk. These cover the emission lines of H$\\alpha$, [NII], [SII], and [SIII]. We were able to accurately decompose the emission line profiles into multiple narrow components (FWHM~30-130kms) superimposed on a broad (FWHM 150-350kms) feature. This paper is the first of a series examining the optical structure of M82's disk and inner wind; here we focus on the ionized gaseous and stellar dynamics and present maps of the relevant emission line properties. Our observations show that ionized gas in the starburst core of M82 is dynamically complex. Localised line splitting of up to 100kms in the narrow component is associated with expanding shells of compressed, cool, photoionized gas. We have been able to associate some of this inner-wind gas with a distinct outflow channel characterised by its dynamics and gas density patterns, and we discuss the consequences of this discovery in terms of the developing wind outflow. The broad optical emission line component is observed to become increasingly important moving outward along the outflow channel, and in general with increasing height above/below the plane. Following our recent work on the origins of this component, we associate it with turbulent gas in wind-clump interface layers and hence sites of mass loading, meaning that the turbulent mixing of cooler gas into the outflowing hot gas must become increasingly important with height, and provides powerful direct evidence for the existence of mass-loading over a large, spatially extended area."
+arxivid: 0902.0064
+doi: 10.1088/0004-637X/696/1/192
+journal: Preprint
+labels_tmp: 'Astrophysics - Galaxy Astrophysics'
+linkout: http://arxiv.org/abs/0902.0064
+month: 01
+pubtype: ARTICLE
+title: 'The optical structure of the starburst galaxy M82 - I: Dynamics of the disk and inner-wind'
+year: 2009
+---
+doi: 10.1371/journal.pone.0000801
+issue: 8
+journal: PLoS ONE
+linkout: http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=1949145
+pages: e801
+pubtype: ARTICLE
+title: Kinetic analysis of Yersinia pestis DNA adenine methyltransferase activity using a hemimethylated molecular break light oligonucleotide
+volume: 2
+year: 2007
