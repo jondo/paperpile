@@ -18,7 +18,7 @@ sub startup : Tests(startup => 1) {
 
 # Add test functions here
 
-sub read : Tests(116) {
+sub read : Tests(227) {
 
   my ($self) = @_;
 
@@ -28,6 +28,11 @@ sub read : Tests(116) {
     "data/Formats/Zotero/v2.0.3/zotero.out"
   );
 
+  $self->test_read(
+    "Import from Zotero database version 2.0.9",
+    "data/Formats/Zotero/v2.0.9/zotero.sqlite",
+    "data/Formats/Zotero/v2.0.9/zotero.out"
+  );
 
 }
 
