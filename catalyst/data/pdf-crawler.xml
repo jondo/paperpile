@@ -1054,12 +1054,28 @@
 
   <rule>
     <pattern>
-      <match>href\s*=\s*&quot;([^&quot;]+\.pdf)*&quot;[^>]+>(?:PDF|Full\sText\s\(PDF\))</match>
+      <match>href\s*=\s*&quot;([^&quot;]+\.pdf)&quot;[^&gt;]+&gt;[^&lt;]*PDF</match>
     </pattern>
   </rule>
   
   <test>
     <url>http://dx.doi.org/10.4172/jpb.1000138</url>
+  </test>
+</site>
+
+<site name="OpticsInfoBase">
+  <signature>
+    <url>!opticsinfobase\.org!</url>
+  </signature>
+
+  <rule>
+    <pattern>
+      <match>href\s*=\s*&quot;(viewmedia\.cfm[^&quot;]+)&quot;[^&gt;]+&gt;[^&lt;]*PDF</match>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1364/OE.19.003258</url>
   </test>
 </site>
 
