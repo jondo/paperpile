@@ -1,0 +1,204 @@
+body {
+  cursor: default;
+}
+
+.nosel {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: ignore;
+}
+
+.pp-grid-item {
+  line-height: 13px;
+  vertical-align: top;
+  padding: 0 1px;
+  font: normal 11px/13px arial, tahoma, helvetica, sans-serif;
+  background-color: white;
+  border-color: #ededed;
+  border-style: solid;
+  border-width: 1px 0;
+  border-top-color: #fff;
+}
+
+.pp-grid-status {
+    width:16px;
+    height:16px;
+    margin: 3px;
+    float: left;
+}
+
+.pp-grid-list {
+  line-height: 1.5em;
+  width: 100%;
+}
+
+
+.pp-grid-list .pp-grid-icons {
+  float: left;
+  width: 50px;
+  min-height: 10px;
+  line-height: 1.5em;
+}
+
+.pp-grid-list-rightside {
+  float: left;
+  width: 600px;
+}
+
+.pp-grid-list.pub {
+}
+.pp-grid-list.folder {
+}
+
+.pp-grid-gallery {
+  float: left;
+  width: 160px;
+  height: 80px;
+  border: 2px solid #888;
+  background: #F8F8FF;
+  margin: .3em;
+  padding: .5em;
+  line-height: 1.5em;
+}
+
+.pp-grid-gallery .pp-grid-icons {
+  min-height: 10px;
+}
+
+.pp-grid-gallery .pp-grid-title {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pp-grid-gallery .pp-grid-authors {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pp-grid-gallery .pp-grid-journal {
+  font-style: italic;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pp-grid-gallery .pp-grid-year {
+  padding-top: .1em;
+  float: right;
+  font-weight: bold;
+  font-size: 14px;
+  color: #bbb;
+}
+
+.pp-grid-gallery.pub {
+
+}
+
+.pp-grid-gallery.folder {
+
+}
+
+.pp-grid-over {
+  border-color: #dddddd;
+  background-color: #efefef;
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #ffffff), color-stop(100%, #efefef));
+  background-image: -moz-linear-gradient(top, #ffffff, #efefef);
+  background-image: linear-gradient(top, #ffffff, #efefef);
+}
+
+.pp-grid-selected {
+  border-style: dotted;
+  border-color: #a3bae9;
+  background-color: #dfe8f6 !important;
+  background-image: none;
+}
+
+.pp-grid-title, .pp-grid-authors{
+    font-size:12px;
+    white-space: normal;
+}
+
+.pp-grid-title {
+    font-weight: bold;
+}
+
+.pp-grid-status-pdf {
+    background: transparent url('/images/icons/page_white_acrobat.png') no-repeat;
+}
+
+.pp-grid-status-attachments {
+    background: transparent url('/images/icons/attachment.png') no-repeat;
+}
+
+.pp-grid-status-folder {
+    background: transparent url('/images/icons/folder.png') no-repeat;
+}
+
+.pp-grid-status-notes {
+    background: transparent url('/images/icons/note.png') no-repeat;
+}
+
+.pp-grid-status-imported {
+    background: transparent url('/images/icons/page.png') no-repeat;
+}
+
+
+/*
+.pp-grid-data{
+    line-height: 1.5em;
+    float: left;
+    width: 100%;
+    max-width: 600px;
+}
+
+
+.pp-grid-citation{}
+
+.pp-grid-snippets{
+    color: #585858;
+    padding-left:10px;
+    padding-top:5px;
+}
+
+.pp-grid-snippets .highlight{
+    background-color: #FFF6A9;
+}
+
+.pp-grid-snippets .heading{
+    color: green;
+}
+
+.pp-grid-task{
+    background-color: #FFF6A9;
+}
+
+.pp-grid-dup-ok {
+    border-color:#ddd;
+    background-color:#ddffdd;
+    background-image:url(../images/default/grid/row-over.gif);
+}
+
+.pp-grid-highlight1{
+    border-color:#ddd;
+    background-color:#F5D9D9;
+    background-image:url(../images/default/grid/row-over.gif);
+}
+
+.pp-grid-highlight2{
+    border-color:#ddd;
+    background-color:#F2FFD9;
+    background-image:url(../images/default/grid/row-over.gif);
+}
+
+.pp-grid-error{
+    color: #D8000C;   
+    font-weight: bold;
+}
+
+.pp-grid-ok{
+    color: #088A08;
+    font-weight: bold;
+}
+*/

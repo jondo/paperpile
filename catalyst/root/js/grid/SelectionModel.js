@@ -477,7 +477,7 @@ Ext.define('Paperpile.grid.SelectionModel', {
     }
     for (var i = 0, len = s.length; i < len; i++) {
       var r = s[i];
-      if ((index = ds.indexOfId(r.id)) != -1) {
+      if ((index = ds.indexOf(r)) != -1) {
         this.selectRow(index, true);
         this.view.onItemSelect(r);
       }

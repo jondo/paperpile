@@ -114,17 +114,11 @@ Paperpile.Ajax = function(config) {
 Ext.define('Paperpile.Viewport', {
   extend: 'Ext.container.Viewport',
   globalSettings: {},
-  splitFraction: 1 / 5,
-
   initComponent: function() {
 
     this.queueWidget = new Paperpile.QueueWidget();
 
-    Ext.apply(this, {
-      layout: 'border',
-      enableKeyEvents: true,
-      keys: {},
-      dockedItems: [{
+    var tbarCfg = {
         xtype: 'toolbar',
         height: 50,
 			style:{
@@ -143,20 +137,15 @@ Ext.define('Paperpile.Viewport', {
             xtype: 'button',
             text: 'Dashboard'
           }]
-      }],
+    };
+
+    Ext.apply(this, {
+      layout: 'border',
+      enableKeyEvents: true,
+      keys: {},
+      dockedItems: [],
       items:
-		[{
-        region: 'west',
-        xtype: 'panel',
-        itemId: 'tree',
-        style: {
-          'background-color': 'green'
-        },
-        items: [{
-          xtype: 'label',
-          text: 'Hello!',
-        }]
-      },
+		[
       {
         region: 'center',
         xtype: 'pp-tabs',
@@ -176,8 +165,6 @@ Ext.define('Paperpile.Viewport', {
       }
     });
 
-    this.dd = new Paperpile.DragDropManager();
-    this.dd.initListeners();
 
     this.labelStore = new Paperpile.net.CollectionStore({
       collectionType: 'LABEL',
@@ -202,7 +189,7 @@ Ext.define('Paperpile.Viewport', {
     });
 
     this.runningJobs = [];
-    this.loadKeys();
+    //    this.loadKeys();
 
     this.fileSyncStatus = {
       busy: false,

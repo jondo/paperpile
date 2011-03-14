@@ -178,9 +178,7 @@ sub _resultsgrid_format {
 
   my %metaData = (
     totalProperty => 'total_entries',
-    root          => 'data',
-    id            => 'guid',
-    fields        => [@fields]
+    root          => 'data'
   );
 
   $c->component('View::JSON')->encoding('utf8');

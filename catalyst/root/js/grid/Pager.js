@@ -1,4 +1,5 @@
-Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
+Ext.define('Paperpile.grid.Pager', {
+	extend: 'Ext.PagingToolbar',
   constructor: function(config) {
     Ext.apply(this, config);
 
@@ -8,10 +9,10 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
       'pagebutton'
     );
 
-    Paperpile.Pager.superclass.constructor.call(this);
+    this.callParent(config);
 },
   initComponent: function() {
-    Paperpile.Pager.superclass.initComponent.call(this);
+    this.callParent();
 
     var itemIds = ['first', 'last', 'inputItem', 'afterTextItem', 'refresh'];
     for (var i=0; i < itemIds.length; i++) {
@@ -100,7 +101,7 @@ Paperpile.Pager = Ext.extend(Ext.PagingToolbar, {
     return newpage;
   },
   updateInfo: function() {
-    Paperpile.Pager.superclass.updateInfo.call(this);
+    this.callParent();
     var count = this.store.getCount();
     var pgData = this.getPageData();
     var pageNum = this.readPage(pgData);

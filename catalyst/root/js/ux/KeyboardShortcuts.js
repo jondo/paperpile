@@ -12,7 +12,7 @@ Ext.define('Ext.ux.KeyboardShortcuts', {
       this.disableOnBlur = true;
     }
 
-    this.keyMap = new Ext.KeyMap(this.el);
+    this.keyMap = new Ext.util.KeyMap(this.el);
 
     if (this.disableOnBlur) {
       this.el.on('blur', this.onBlur, this);
@@ -21,13 +21,13 @@ Ext.define('Ext.ux.KeyboardShortcuts', {
 
   },
   onBlur: function() {
-    if (this.keys !== undefined) {
-      this.keys.disable();
+    if (this.keyMap !== undefined) {
+      this.keyMap.disable();
     }
   },
   onFocus: function() {
-    if (this.keys !== undefined) {
-      this.keys.enable();
+    if (this.keyMap !== undefined) {
+      this.keyMap.enable();
     }
   },
   bindAction: function(string, action, stopEvent) {
@@ -42,6 +42,17 @@ Ext.define('Ext.ux.KeyboardShortcuts', {
       binding: obj,
       stopEvent: stopEvent
     });
+
+    var o = shortcut.binding;
+    if (!o.shift) {
+	delete o.shift;
+    }
+    if (!o.ctrl) {
+	delete o.ctrl;
+    }
+    if (!o.alt) {
+	delete o.alt;
+    }
 
     this.keyMap.addBinding(shortcut.binding);
     this.bindings.push(shortcut);
@@ -166,7 +177,8 @@ Ext.define('Ext.ux.KeyboardShortcuts', {
   }
 });
 
-Ext.ux.KeyboardShortcut = Ext.extend(Ext.util.Observable, {
+Ext.define('Ext.ux.KeyboardShortcut', {
+	extend: 'Ext.util.Observable',
   action: null,
   binding: null,
   disabled: false,
@@ -177,16 +189,17 @@ Ext.ux.KeyboardShortcut = Ext.extend(Ext.util.Observable, {
   scope: null,
   stopEvent: true,
   constructor: function(config) {
+    Ext.ux.KeyboardShortcut.superclass.constructor.call(this,config);
+
     Ext.apply(this, config);
-    Ext.ux.KeyboardShortcut.superclass.constructor.call(this, config);
 
     this.binding.handler = this.handleAction;
     this.binding.scope = this;
     this.binding.stopEvent = this.stopEvent;
 
     if (this.action) {
-      this.action.addComponent(this);
       this.action.setShortcutString(this.binding.shortcutString);
+      this.action.addComponent(this);
       this.itemId = 'shortcut-' + this.binding.shortcutString;
     }
   },
@@ -218,6 +231,10 @@ Ext.ux.KeyboardShortcut = Ext.extend(Ext.util.Observable, {
     this.handler = handler;
     this.scope = scope;
   },
+
+	    setShortcutString: function() {
+
+	}
 
 });
 

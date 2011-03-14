@@ -27,16 +27,15 @@ Ext.define('Paperpile.PluginPanel', {
     this.centerPanel = this.createCenterPanel();
 
     // East panel is composed of overview and details.
-    this.overviewPanel = this.createOverview();
-    this.eastPanel = this.createEastPanel();
+    //    this.overviewPanel = this.createOverview();
+    //this.eastPanel = this.createEastPanel();
 
     Ext.apply(this, {
       tabType: 'PLUGIN',
       layout: 'border',
 		//      plugins: [new Ext.ux.PanelSplit(this.centerPanel, this.updateSplitFraction, this)],
       items: [
-        this.centerPanel,
-        this.eastPanel]
+        this.centerPanel]
     });
 
     Paperpile.PluginPanel.superclass.initComponent.call(this);
@@ -46,11 +45,11 @@ Ext.define('Paperpile.PluginPanel', {
     },
     this);
 
-    this.mon(this.eastPanel, 'afterrender', this.afterEastRender, this);
+    //    this.mon(this.eastPanel, 'afterrender', this.afterEastRender, this);
 
     this.on('afterrender', function() {
       this.mon(this.el, 'click', function() {
-        Paperpile.main.grabFocus();
+	      //Paperpile.main.grabFocus();
       },
       this);
     },
@@ -111,9 +110,9 @@ Ext.define('Paperpile.PluginPanel', {
 
     //      this.suspendEvents(true);
     this.centerPanel.setWidth(w1);
-    this.eastPanel.setWidth(w2);
+    //    this.eastPanel.setWidth(w2);
     this.centerPanel.setPosition(0, 0);
-    this.eastPanel.setPosition(width - w2, 0);
+    //    this.eastPanel.setPosition(width - w2, 0);
     //      this.resumeEvents();
   },
 
@@ -335,13 +334,14 @@ Ext.define('Paperpile.PluginPanel', {
   updateView: function() {
     var count = this.getGrid().getStore().getCount();
 
+    /*
     var about_button = this.getEastPanel().getComponent('about_tab_button');
     if (this.hasAboutPanel() && !about_button.isVisible()) {
       about_button.show();
       about_button.enable();
       about_button.setText(this.getAboutPanel().tabLabel);
     }
-
+    */
     if (count == 0) {
       this.onEmpty();
       this.getGrid().onEmpty();
@@ -349,9 +349,9 @@ Ext.define('Paperpile.PluginPanel', {
 
     if (count > 0) {
       // Change the active tab to 'overview'
-      var activeTab = this.getEastPanel().getLayout().activeItem;
+	//      var activeTab = this.getEastPanel().getLayout().activeItem;
       if (activeTab == this.getAboutPanel()) {
-        this.getEastPanel().getLayout().setActiveItem(this.getOverviewPanel());
+	  //        this.getEastPanel().getLayout().setActiveItem(this.getOverviewPanel());
         this.depressButton('overview_tab_button');
       }
     }
@@ -381,7 +381,7 @@ Ext.define('Paperpile.PluginPanel', {
     // Grid.
     this.getGrid().updateButtons();
     // Overview.
-    this.getOverviewPanel().forceUpdate();
+    //    this.getOverviewPanel().forceUpdate();
     // Abstract.
     datatabs.items.get('pubsummary').updateDetail();
     // Notes.
@@ -392,7 +392,7 @@ Ext.define('Paperpile.PluginPanel', {
     if (!this.rendered) {
       return;
     }
-
+    return;
     var ebar = this.eastPanel.getDockedComponent('east_toolbar');
     var cbar = this.centerPanel.child('#data_tabs').getDockedComponent('center_toolbar');
 

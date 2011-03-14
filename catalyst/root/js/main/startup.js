@@ -335,33 +335,18 @@ Paperpile.stage3 = function() {
 
   Paperpile.startupProgress(0.7);
 
-  Paperpile.main.folderStore.on('load', function() {
-    Paperpile.main.labelStore.on('load', function() {
-      Paperpile.main.on('mainGridLoaded', function() {
-        var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
-        //Ext.core.DomHelper.overwrite('version-tag', version);
-        Paperpile.startupProgress(1.0);
-        Ext.get('splash').remove();
-      },
-      this, {
-        single: true
-      });
-
-      Paperpile.startupProgress(0.9);
-      Paperpile.main.getTabs().newMainLibraryTab();
-    },
-    this, {
-      single: true
-    });
-
-    Paperpile.startupProgress(0.8);
-    Paperpile.main.labelStore.load();
+  Paperpile.main.on('mainGridLoaded', function() {
+    var version = 'Paperpile ' + Paperpile.main.globalSettings.version_name + ' <i style="color:#87AFC7;">Beta</i>';
+    //Ext.core.DomHelper.overwrite('version-tag', version);
+    Paperpile.startupProgress(1.0);
+    Ext.get('splash').remove();
   },
   this, {
     single: true
   });
 
-  Paperpile.main.folderStore.load();
+  Paperpile.startupProgress(0.9);
+  Paperpile.main.getTabs().newMainLibraryTab();
 
   // If offline the uservoice JS has not been loaded, so test for it
   if (window.UserVoice) {

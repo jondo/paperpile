@@ -238,6 +238,30 @@ Ext.define('Paperpile.PluginGrid', {
         handler: this.handleCopyFormatted,
         scope: this
       }),
+      'UP_HOME': new Ext.Action({
+        itemId: 'UP_HOME',
+        text: 'Move the cursor to the top',
+        handler: this.handleHome,
+        scope: this
+      }),
+      'DOWN_END': new Ext.Action({
+        itemId: 'DOWN_END',
+        text: 'Move the cursor to the bottom',
+        handler: this.handleEnd,
+        scope: this
+      }),
+      'DOWN_PAGE': new Ext.Action({
+        itemId: 'DOWN_PAGE',
+        text: 'Move the cursor down one page',
+        handler: this.handlePageDown,
+        scope: this
+      }),
+      'UP_PAGE': new Ext.Action({
+        itemId: 'UP_PAGE',
+        text: 'Move the cursor up one page',
+        handler: this.handlePageUp,
+        scope: this
+      }),
       'DOWN_ONE': new Ext.Action({
         itemId: 'DOWN_ONE',
         text: 'Move the cursor to the next reference',
@@ -281,9 +305,23 @@ Ext.define('Paperpile.PluginGrid', {
       'TB_FILL': new Ext.toolbar.Fill({
         itemId: 'TB_FILL'
       }),
+      'TEST' : new Ext.Action({
+	      handler: function() {
+		  if (this.templateKey === 'gallery') {
+		      this.setTemplate('list');
+		      this.templateKey = 'list';
+		  } else {
+		      this.setTemplate('gallery');
+		      this.templateKey = 'gallery';
+		  }
+	      },
+	      scope: this
+	  }),
       'FONT_SIZE': new Ext.Action({
         itemId: 'FONT_SIZE',
-        handler: this.fontSize,
+        handler: function() {
+          this.fontSize();
+        },
         scope: this
       }),
       'SETTINGS': new Ext.Action({
@@ -356,13 +394,39 @@ Ext.define('Paperpile.PluginGrid', {
       }
     });
 
+    var me = this;
     this.view = new Ext.DataView({
+      autoheight: true,
       multiSelect: true,
+      trackOver: true,
+      overItemCls: 'pp-grid-over',
+      selectedItemCls: 'pp-grid-selected',
       store: this.getStore(),
-      tpl: this.getTemplate(),
-      itemSelector: this.getSelector()
+      tpl: Paperpile.grid.GridTemplates.list(),
+      itemSelector: 'div.pp-grid-item',
+      listeners: {
+        selectionchange: {
+          fn: function(me, selections) {
+            if (selections.length > 0) {
+              //Paperpile.log(selections[0].get('title'));
+            }
+          }
+        }
+      },
+      getSelectionModel: function() {
+        if (!this.selModel) {
+          var me = this;
+          this.selModel = new Paperpile.grid.SelectionModel();
+        }
+        return this.selModel;
+      },
+      focus: function() {
+        me.focus();
+      },
+      focusRow: function(rowIndex) {
+        me.focusRow(rowIndex);
+      }
     });
-
     this.pager = new Ext.PagingToolbar({
       dock: 'bottom',
       pageSize: this.limit,
@@ -382,35 +446,29 @@ Ext.define('Paperpile.PluginGrid', {
       enableOverflow: true,
       menuBreakItemId: 'TB_BREAK',
       items: [{
-		    xtype:'button',
-		    text: 'heyo!'
-	    }]
+        xtype: 'button',
+        text: 'heyo!'
+      }]
     });
 
     var dockItems = [this.tbar];
 
     Ext.apply(this, {
       itemId: 'grid',
-      layout: 'fit',
-		items: [this.view],
-		dockedItems: dockItems
+      autoScroll: true,
+      items: [this.view],
+      dockedItems: dockItems
     });
 
     Paperpile.PluginGrid.superclass.initComponent.call(this);
 
     this.createContextMenu();
 
-    this.on('afterrender', this.installEvents, this);
-
     this.on({
       // Delegate to class methods.
       beforerender: {
         scope: this,
         fn: this.myBeforeRender
-      },
-      afterrender: {
-        scope: this,
-        fn: this.myAfterRender
       },
       beforedestroy: {
         scope: this,
@@ -449,7 +507,7 @@ Ext.define('Paperpile.PluginGrid', {
     this.mon(this.getStore(), 'load', function() {
       if (this.getStore().getCount() > 0) {
         this.selectRowAndSetCursor(0);
-	//        this.afterSelectionChange(this.getSelectionModel());
+        //        this.afterSelectionChange(this.getSelectionModel());
       }
     },
     this, {
@@ -468,7 +526,7 @@ Ext.define('Paperpile.PluginGrid', {
   },
 
   getSelector: function() {
-    return '.pp-grid-item';
+    return 'div.pp-grid-item';
   },
 
   getSelectionModel: function() {
@@ -482,12 +540,41 @@ Ext.define('Paperpile.PluginGrid', {
 
   installEvents: function() {
     this.mon(this.el, 'click', this.handleClick, this);
-    //    this.loadKeyboardShortcuts();
+  },
+
+  // Overriding the default Component method.
+  getFocusEl: function() {
+    return this.focusEl;
+  },
+
+  focusRow: function(rowIdx) {
+    var node = this.view.getNode(rowIdx),
+    el = this.body,
+    adjustment = 0,
+    elRegion = el.getRegion(),
+    gridpanel = this.up('gridpanel'),
+    rowRegion,
+    record;
+
+    if (node) {
+      rowRegion = Ext.fly(node).getRegion();
+      // row is above
+      if (rowRegion.top < elRegion.top) {
+        adjustment = rowRegion.top - elRegion.top;
+        // row is below
+      } else if (rowRegion.bottom > elRegion.bottom) {
+        adjustment = rowRegion.bottom - elRegion.bottom;
+      }
+      if (adjustment) {
+        el.dom.scrollTop += adjustment;
+      }
+    }
   },
 
   loadKeyboardShortcuts: function() {
-	    
-	    this.keys = new Ext.ux.KeyboardShortcuts(this.getView().getEl());
+    this.keys = new Ext.ux.KeyboardShortcuts(this.getFocusEl());
+
+    this.keys.bindAction('ctrl-t', this.actions['TEST']);
 
     // Standard grid shortcuts.
     this.keys.bindAction('ctrl-q', this.actions['FONT_SIZE']);
@@ -501,8 +588,14 @@ Ext.define('Paperpile.PluginGrid', {
     this.keys.bindAction('ctrl-k', this.actions['COPY_BIBTEX_KEY']);
 
     // Gmail-style n/p, j/k movements.
+    this.keys.bindAction('home', this.actions['UP_HOME']);
+    this.keys.bindAction('end', this.actions['DOWN_END']);
+    this.keys.bindAction('page_down', this.actions['DOWN_PAGE']);
+    this.keys.bindAction('page_up', this.actions['UP_PAGE']);
+    this.keys.bindAction('down', this.actions['DOWN_ONE']);
     this.keys.bindAction('n', this.actions['DOWN_ONE']);
     this.keys.bindAction('shift-n', this.actions['DOWN_ONE']);
+    this.keys.bindAction('up', this.actions['UP_ONE']);
     this.keys.bindAction('p', this.actions['UP_ONE']);
     this.keys.bindAction('shift-p', this.actions['UP_ONE']);
     this.keys.bindAction('j', this.actions['DOWN_ONE']);
@@ -681,10 +774,6 @@ Ext.define('Paperpile.PluginGrid', {
 
   onStoreLoad: function() {
     // Used to indicate complete loading during startup
-    if (this.ownerCt.ownerCt.itemId === 'MAIN') {
-      Paperpile.main.fireEvent('mainGridLoaded');
-    }
-
     if (this.getPluginPanel()) {
       this.getPluginPanel().updateView();
     }
@@ -777,7 +866,18 @@ Ext.define('Paperpile.PluginGrid', {
     this.getPluginPanel().updateDetails();
   },
 
-  myAfterRender: function(ct) {
+  afterRender: function(ct) {
+    var me = this;
+    me.callParent(arguments);
+    me.focusEl = me.el.createChild({
+      tag: 'a',
+      cls: 'pp-grid-focus',
+      href: '#',
+      html: '&#160;'
+    });
+
+    this.installEvents();
+    this.loadKeyboardShortcuts();
     this.mon(this.pager, 'beforechange', function(pager, params) {
       var lastParams = this.pager.store.lastOptions.params;
       if (params.start != lastParams.start) {
@@ -790,13 +890,9 @@ Ext.define('Paperpile.PluginGrid', {
       }
     },
     this);
-
     // Note: the 'afterselectionchange' event is a custom selection model event.
-    this.mon(this.getSelectionModel(), 'afterselectionchange', this.afterSelectionChange, this);
-
+    //this.mon(this.getSelectionModel(), 'afterselectionchange', this.afterSelectionChange, this);
     this.createAuthorToolTip();
-
-    //    this.getPluginPanel().updateView();
   },
 
   createAuthorToolTip: function() {
@@ -836,29 +932,29 @@ Ext.define('Paperpile.PluginGrid', {
   },
 
   getStore: function() {
-    if (this._store != null) {
+    if (this._store) {
       return this._store;
     }
     this._store = new Ext.data.Store({
-      isLoaded: false,
-      model: 'PublicationModel',
-      reader: 'json',
+      autoLoad: true,
+      model: 'Publication',
       proxy: new Ext.data.HttpProxy({
+        model: 'Publication',
+        idProperty: 'guid',
         url: Paperpile.Url('/ajax/plugins/resultsgrid'),
         // We don't set timeout here but handle timeout separately in
         // specific plugins.
         timeout: 10000000,
         method: 'GET',
-      extraParams: {
-        grid_id: this.id,
-        plugin_file: this.plugin_file,
-        plugin_name: this.plugin_name,
-        plugin_query: this.plugin_query,
-        plugin_mode: this.plugin_mode,
-        plugin_order: Paperpile.main.globalSettings['sort_field'],
-        limit: this.limit
-      },
-
+        extraParams: {
+          grid_id: this.id,
+          plugin_file: this.plugin_file,
+          plugin_name: this.plugin_name,
+          plugin_query: this.plugin_query,
+          plugin_mode: this.plugin_mode,
+          plugin_order: Paperpile.main.globalSettings['sort_field'],
+          limit: this.limit
+        },
       }),
     });
 
@@ -884,9 +980,9 @@ Ext.define('Paperpile.PluginGrid', {
     });
   },
 
-	    selectRowAndSetCursor: function(index) {
-	    // Do nothing for now.
-	},
+  selectRowAndSetCursor: function(index) {
+    // Do nothing for now.
+  },
 
   cancelLoad: function() {
     if (!this.store) {
@@ -925,68 +1021,14 @@ Ext.define('Paperpile.PluginGrid', {
 
   gridTemplates: {},
 
-  getPubTemplate: function() {
-    if (this.pubTemplate == null) {
-      this.pubTemplate = new Ext.XTemplate(
-        '<tpl for=".">',
-        '  <div class="pp-grid-item {[this.isInactive(values.labels)]}" guid="{guid}">',
-        '    <div>',
-        '      <span class="pp-grid-title">{title}</span>{[this.labelStyle(values.labels, values.labels_tmp)]}',
-        '    </div>',
-        '    <tpl if="_authors_display">',
-        '      <p class="pp-grid-authors">{_authors_display}</p>',
-        '    </tpl>',
-        '    <tpl if="_citation_display">',
-        '      <p class="pp-grid-citation">{_citation_display}</p>',
-        '    </tpl>',
-        '    <tpl if="_snippets">',
-        '      <p class="pp-grid-snippets">{_snippets}</p>',
-        '    </tpl>',
-        '  </div>', 
-	'</tpl>',
-	{
-          labelStyle: function(labels_guid, labels_tmp) {
-            var returnMe = '';
-            if (labels_tmp) {
-              var labels = labels_tmp.split(/\s*,\s*/);
-              for (var i = 0; i < labels.length; i++) {
-                name = labels[i];
-                style = '0';
-                returnMe += '<div class="pp-label-grid-inline pp-label-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
-              }
-            } else {
-              var labels = labels_guid.split(/\s*,\s*/);
-              for (var i = 0; i < labels.length; i++) {
-                var guid = labels[i];
-                var style = Paperpile.main.labelStore.getAt(Paperpile.main.labelStore.findExact('guid', guid));
-                if (style != null) {
-                  name = style.get('display_name');
-                  style = style.get('style');
-                  returnMe += '<div class="pp-label-grid-inline pp-label-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
-                }
-              }
-            }
-            if (labels.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
-            return returnMe;
-          },
-          isInactive: function(label_string) {
-            var labels = label_string.split(/\s*,\s*/);
-            for (var i = 0; i < labels.length; i++) {
-              var guid = labels[i];
-              var label = Paperpile.main.labelStore.getAt(Paperpile.main.labelStore.findExact('guid', guid));
-              if (label != null) {
-                name = label.get('name');
-                if (name === 'Incomplete') {
-                  return ('pp-inactive');
-                }
-              }
-            }
-            return ('');
-          }
-        }).compile();
-    }
+  setTemplate: function(key) {
+	    var tpl = Paperpile.grid.GridTemplates[key].call(Paperpile.grid.GridTemplates);
+    this.view.tpl = tpl;
+    this.view.refresh();
+  },
 
-    return this.pubTemplate;
+  getPubTemplate: function() {
+    return Paperpile.grid.GridTemplates.list();
   },
 
   getImportedIconTemplate: function() {
@@ -1697,6 +1739,56 @@ Ext.define('Paperpile.PluginGrid', {
 
   updateDetail: function() {
     // Override with other plugin methods to do things necessary on detail update.
+  },
+
+  getVisibleRows: function() {
+    var visibleRows = [];
+    var gridBox = this.body.getBox();
+    var rowCount = this.getStore().getCount();
+    for (var i = 0; i < rowCount; i++) {
+      var row = this.view.getNode(i);
+      var xy = Ext.fly(row).getOffsetsTo(this.getEl());
+      if (xy[1] < 0) {
+        // If we're above the toolbar, we're too high and out of view.
+        continue;
+      }
+      if (xy[1] < gridBox.height) {
+        // If we're less than the grid's box height below the toolbar, we're probably OK.
+        visibleRows.push(i);
+      }
+    }
+    return visibleRows;
+  },
+
+  handleHome: function(keyCode, event) {
+    var cursor = this.getSelectionModel().getCursor();
+    if (cursor !== null) {
+      var distance = -cursor;
+      this.getSelectionModel().keyNavMove(distance, event);
+    } else {
+      this.getSelectionModel().selectFirstRow();
+    }
+  },
+
+  handleEnd: function(keyCode, event) {
+    var rowCount = this.getStore().getCount();
+    var cursor = this.getSelectionModel().getCursor();
+    if (cursor !== null) {
+      var distance = rowCount - cursor;
+      this.getSelectionModel().keyNavMove(distance, event);
+    } else {
+      this.getSelectionModel().selectLastRow();
+    }
+  },
+
+  handlePageDown: function(keyCode, event) {
+    var rows = this.getVisibleRows();
+    this.getSelectionModel().keyNavMove(rows.length, event);
+  },
+
+  handlePageUp: function(keyCode, event) {
+    var rows = this.getVisibleRows();
+    this.getSelectionModel().keyNavMove(-rows.length, event);
   },
 
   handleDownOne: function(keyCode, event) {
