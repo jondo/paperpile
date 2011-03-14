@@ -16,6 +16,7 @@
 
 Ext.define('Paperpile.PluginGrid', {
   extend: 'Ext.Panel',
+	    alias: 'widget.plugingrid',
   plugin_query: '',
   region: 'center',
   labelStyles: {},
@@ -23,51 +24,6 @@ Ext.define('Paperpile.PluginGrid', {
   doAfterNextReload: [],
 
   initComponent: function() {
-
-    var renderPub = function(value, p, record) {
-      record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
-      record.data._citekey = Ext.util.Format.ellipsis(record.data.citekey, 18);
-      record.data._createdPretty = Paperpile.utils.prettyDate(record.data.created);
-
-      if (record.data.doi) {
-        var wrapped = record.data.doi;
-
-        if (wrapped.length > 25) {
-          wrapped = wrapped.replace(/\//, '/<br/>');
-        }
-
-        record.data._doiWrapped = wrapped;
-      }
-
-      // Shrink very long author lists.
-      record.data._long_authorlist = 0;
-      var ad = record.data._authors_display || '';
-      var authors_array = ad.split(",");
-
-      var n = authors_array.length;
-      var author_length_threshold = 25;
-      var author_keep_beginning = 5;
-      var author_keep_end = 5;
-      if (authors_array.length > author_length_threshold) {
-        var authors_first_five = authors_array.slice(0, author_keep_beginning);
-        var authors_middle = authors_array.slice(author_keep_beginning, n - author_keep_end);
-        var hidden_n = authors_middle.length;
-        var authors_last_five = authors_array.slice(n - author_keep_end, n);
-        record.data._authors_display = [
-          authors_first_five.join(", "),
-          ' ... <a class="pp-authortip">',
-          '(' + hidden_n + ' more)',
-          '</a> ... ',
-          authors_last_five.join(", ")].join("");
-
-        var displayText = [
-          '<b>' + n + ' authors:</b> ',
-          authors_array.join(", ")].join("");
-        record.data._authortip = displayText;
-      }
-
-      return this.getPubTemplate().apply(record.data);
-    };
 
     var renderIcons = function(value, p, record) {
       record.data._notes_tip = Ext.util.Format.stripTags(record.data.annote);
@@ -135,7 +91,8 @@ Ext.define('Paperpile.PluginGrid', {
 
       'SELECT_ALL': new Ext.Action({
         text: 'Select all',
-        handler: function() {
+        handler: function(keyCode, event) {
+		  event.stopEvent();
           this.selectAll();
         },
         scope: this,
@@ -2274,6 +2231,7 @@ Ext.define('Paperpile.PluginGrid', {
   },
 
   selectAll: function() {
+	    this.getSelectionModel().selectAll();
     this._allSelected = true;
   },
 

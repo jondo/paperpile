@@ -674,8 +674,7 @@ sub list_collections : Local {
   $model->commit_or_continue_tx($in_prev_tx);
 
   my %metaData = (
-    root   => 'data',
-    fields => [ 'guid', 'name', 'display_name', 'type', 'parent', 'sort_order', 'hidden', 'style', 'count' ],
+    root   => 'data'
   );
 
   $c->stash->{data}     = [@data];

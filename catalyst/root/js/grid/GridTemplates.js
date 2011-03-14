@@ -3,42 +3,62 @@ Ext.define('Paperpile.grid.GridTemplates', {
 
     gallery: function() {
       if (this._gallery === undefined) {
+        var me = this;
         this._gallery = new Ext.XTemplate(
           '<tpl for=".">',
           '  <div class="nosel pp-grid-item pp-grid-gallery pub" guid="{guid}" id="{guid}">',
-          '    <div class="pp-grid-year">{[this.formatYear(values)]}</div>',
-            this.getIconSection(),
+          this.getIconSection(),
           '    <div class="pp-grid-title">{[this.formatTitle(values)]}</div>',
           '    <div class="pp-grid-authors">{[this.formatAuthors(values)]}</div>',
+          '    <div class="pp-grid-year">{[this.formatYear(values)]}</div>',
           '    <div class="pp-grid-journal">{[this.formatJournal(values)]}</div>',
           '  </div>',
           '</tpl>',
           '<div class="x-clear"></div>', {
             formatTitle: function(record) {
-              return record.title;
-	      },
+              // Also load up the label icons here.
+              var guids = record.labels.split(',');
+              var str = '';
+              var store = Ext.getStore('labels');
+              Ext.each(guids, function(guid) {
+                if (guid) {
+                  var record = store.getById(guid);
+                  str = str + me.markupLabel(record.get('name'), record.get('style'));
+                }
+              });
+              return record.title.string;
+            },
             formatAuthors: function(record) {
               return record._authors_display;
-	      },
-	    formatJournal: function(record) {
-		  return record.journal;
-	      },
-	    formatYear: function(record) {
-		  return record.year;
-	      }
+            },
+            formatJournal: function(record) {
+              return record.journal;
+            },
+            formatYear: function(record) {
+              return record.year;
+            }
           });
       }
       return this._gallery;
     },
 
+    markupLabel: function(name, style) {
+      return '<div class="pp-label-grid-inline pp-label-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
+    },
+
     list: function() {
+      var me = this;
       if (this._list === undefined) {
         this._list = new Ext.XTemplate(
-          '<tpl for=".">',
-          '  <div class="nosel pp-grid-item pp-grid-list pub {[this.isInactive(values.labels)]}" guid="{guid}" id="{guid}">',
-	            this.getIconSection(),
-	  '    <div class="pp-grid-list-rightside">',
-          '        <span class="pp-grid-title">{title}</span>{[this.labelStyle(values.labels, values.labels_tmp)]}',
+          '<tpl for=".">', {
+            formatNotes: function(record) {
+
+            }
+          },
+          '  <div class="nosel pp-grid-item pp-grid-list pub {[this.isInactive(values)]}" guid="{guid}" id="{guid}">',
+          this.getIconSection(),
+          '    <div class="pp-grid-list-rightside">',
+          '        <span class="pp-grid-title">{title}</span>{[this.formatLabels(values)]}',
           '      <tpl if="_authors_display">',
           '        <p class="pp-grid-authors">{_authors_display}</p>',
           '      </tpl>',
@@ -50,46 +70,32 @@ Ext.define('Paperpile.grid.GridTemplates', {
           '      </tpl>',
           '    </div>',
           '  <div class="x-clear"></div>',
-	  '  </div>',
-          '</tpl>',
-{
-            labelStyle: function(labels_guid, labels_tmp) {
-              var returnMe = '';
-              if (labels_tmp) {
-                var labels = labels_tmp.split(/\s*,\s*/);
-                for (var i = 0; i < labels.length; i++) {
-                  name = labels[i];
-                  style = '0';
-                  returnMe += '<div class="pp-label-grid-inline pp-label-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
+          '  </div>',
+          '</tpl>', {
+            formatLabels: function(record) {
+              // Also load up the label icons here.
+              var guids = record.labels.split(',');
+              var str = '';
+              var store = Ext.getStore('labels');
+              Ext.each(guids, function(guid) {
+                if (guid) {
+                  var record = store.getById(guid);
+                  str = str + me.markupLabel(record.get('name'), record.get('style'));
                 }
-              } else {
-                var labels = labels_guid.split(/\s*,\s*/);
-                for (var i = 0; i < labels.length; i++) {
-                  var guid = labels[i];
-                  var style = Paperpile.main.labelStore.getAt(Paperpile.main.labelStore.findExact('guid', guid));
-                  if (style != null) {
-                    name = style.get('display_name');
-                    style = style.get('style');
-                    returnMe += '<div class="pp-label-grid-inline pp-label-style-' + style + '">' + name + '&nbsp;</div>&nbsp;';
-                  }
-                }
-              }
-              if (labels.length > 0) returnMe = "&nbsp;&nbsp;&nbsp;" + returnMe;
-              return returnMe;
+              });
+              return str;
             },
-            isInactive: function(label_string) {
-              var labels = label_string.split(/\s*,\s*/);
-              for (var i = 0; i < labels.length; i++) {
-                var guid = labels[i];
-                var label = Paperpile.main.labelStore.getAt(Paperpile.main.labelStore.findExact('guid', guid));
-                if (label != null) {
-                  name = label.get('name');
-                  if (name === 'Incomplete') {
-                    return ('pp-inactive');
-                  }
+            isInactive: function(record) {
+              var guids = record.labels.split(',');
+              var inactive = false;
+              var store = Ext.getStore('labels');
+              Ext.each(guids, function(guid) {
+                var record = store.getById(guid);
+                if (record && record.name == 'Inactive') {
+                  inactive = true;
                 }
-              }
-              return ('');
+              });
+              return inactive;
             }
           }).compile();
       }
@@ -110,7 +116,7 @@ Ext.define('Paperpile.grid.GridTemplates', {
         '<tpl if="annote">',
         '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
         '</tpl>',
-	'  <div class="x-clear"></div>',
+        '  <div class="x-clear"></div>',
         /*
  * Hover-buttons over the grid -- save it for the ext4 rewrite...
  * 

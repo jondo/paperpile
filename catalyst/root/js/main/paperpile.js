@@ -119,24 +119,24 @@ Ext.define('Paperpile.Viewport', {
     this.queueWidget = new Paperpile.QueueWidget();
 
     var tbarCfg = {
-        xtype: 'toolbar',
-        height: 50,
-			style:{
-			'background-color':'green'
-		    },
-        dock: 'top',
-        items: [{
-          xtype: 'tbtext',
-          text: 'Paperpile vXYZ',
-          cls: 'pp-main-toolbar-label',
-        },
-        {
-          xtype: 'tbfill'
-        },
-          {
-            xtype: 'button',
-            text: 'Dashboard'
-          }]
+      xtype: 'toolbar',
+      height: 50,
+      style: {
+        'background-color': 'green'
+      },
+      dock: 'top',
+      items: [{
+        xtype: 'tbtext',
+        text: 'Paperpile vXYZ',
+        cls: 'pp-main-toolbar-label',
+      },
+      {
+        xtype: 'tbfill'
+      },
+      {
+        xtype: 'button',
+        text: 'Dashboard'
+      }]
     };
 
     Ext.apply(this, {
@@ -144,14 +144,12 @@ Ext.define('Paperpile.Viewport', {
       enableKeyEvents: true,
       keys: {},
       dockedItems: [],
-      items:
-		[
-      {
+      items: [{
         region: 'center',
         xtype: 'pp-tabs',
         itemId: 'tabs'
-	      }]
-		});
+      }]
+    });
 
     Paperpile.Viewport.superclass.initComponent.call(this);
 
@@ -165,32 +163,51 @@ Ext.define('Paperpile.Viewport', {
       }
     });
 
-
+    var me = this;
     this.labelStore = new Paperpile.net.CollectionStore({
       collectionType: 'LABEL',
       listeners: {
         load: {
-          fn: this.onLabelStoreLoad,
-          scope: this
+          fn: function(store, records, success) {
+            store.each(function(record) {
+		    Paperpile.log(record.get('name')+"  "+record.get('count'));
+            });
+            me.onLabelStoreLoad();
+          }
         }
       },
-      storeId: 'label_store'
+      storeId: 'labels'
     });
+    this.labelStore.load();
 
     this.folderStore = new Paperpile.net.CollectionStore({
       collectionType: 'FOLDER',
       listeners: {
         load: {
-          fn: this.onFolderStoreLoad,
-          scope: this
+          fn: function() {
+            me.onFolderStoreLoad();
+          }
         }
       },
-      storeId: 'folder_store'
+      storeId: 'folders'
     });
+    this.folderStore.load();
+
+    this.feedStore = new Paperpile.net.CollectionStore({
+      collectionType: 'FEED',
+      listeners: {
+        load: {
+          fn: function() {
+            //me.onFeedStoreLoad()
+          }
+        }
+      },
+      storeId: 'feeds'
+    });
+    this.feedStore.load();
 
     this.runningJobs = [];
     //    this.loadKeys();
-
     this.fileSyncStatus = {
       busy: false,
       collections: [],
