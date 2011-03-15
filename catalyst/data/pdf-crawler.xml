@@ -1095,6 +1095,22 @@
   </test>
 </site>
 
+<site name="JournalOfClinicalInvestigation">
+  <signature>
+    <url>!jci\.org!</url>
+  </signature>
+
+  <rule>
+   <pattern>
+      <rewrite>!(.*/view/\d+)!$1/files/pdf\?disposition=attachment!</rewrite>
+    </pattern>
+  </rule>
+  
+  <test>
+    <url>http://dx.doi.org/10.1172/JCI26022</url>
+  </test>
+</site>
+
 
 <site name="Meta">
   <signature>
