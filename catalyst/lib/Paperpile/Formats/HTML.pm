@@ -52,6 +52,11 @@ sub read {
   # We parse the HTML via XPath
   my $tree = HTML::TreeBuilder::XPath->new;
   $tree->utf8_mode(1);
+
+  # NPG uses some weird escaping for umlaute encoding in metatags
+  $content =~ s/\|\[/&/g;
+  $content =~ s/\]\|/;/g;
+
   $tree->parse_content($content);
 
   my @meta = $tree->findnodes('/html/head/meta');
