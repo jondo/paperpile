@@ -44,3 +44,20 @@ pubtype: ARTICLE
 title: Strategies for measuring evolutionary conservation of RNA secondary structures
 volume: 9
 year: 2008
+---
+abstract: "Genome sequencing of Helicobacter pylori has revealed the potential proteins and genetic diversity of this prevalent human pathogen, yet little is known about its transcriptional organization and noncoding RNA output. Massively parallel cDNA sequencing (RNA-seq) has been revolutionizing global transcriptomic analysis. Here, using a novel differential approach (dRNA-seq) selective for the 5' end of primary transcripts, we present a genome-wide map of H. pylori transcriptional start sites and operons. We discovered hundreds of transcriptional start sites within operons, and opposite to annotated genes, indicating that complexity of gene expression from the small H. pylori genome is increased by uncoupling of polycistrons and by genome-wide antisense transcription. We also discovered an unexpected number of approximately 60 small RNAs including the epsilon-subdivision counterpart of the regulatory 6S RNA and associated RNA products, and potential regulators of cis- and trans-encoded target messenger RNAs. Our approach establishes a paradigm for mapping and annotating the primary transcriptomes of many living species."
+affiliation: 'Max Planck Institute for Infection Biology, RNA Biology Group, D-10117 Berlin, Germany.'
+authors: 'Sharma, CM and Hoffmann, S and Darfeuille, F and Reignier, J and Findeiss, S and Sittka, A and Chabas, S and Reiche, K and Hackermüller, J and Reinhardt, R and Stadler, PF and Vogel, J'
+doi: 10.1038/nature08756
+issn: 1476-4687
+issue: 7286
+journal: Nature
+linkout: http://dx.doi.org/10.1038/nature08756
+month: Mar
+pages: 250-5
+pmid: 20164839
+pubtype: ARTICLE
+title: The primary transcriptome of the major human pathogen Helicobacter pylori
+volume: 464
+year: 2010
+
