@@ -61,3 +61,19 @@ title: The primary transcriptome of the major human pathogen Helicobacter pylori
 volume: 464
 year: 2010
 
+---
+abstract: 'We present an integrative machine learning method, incRNA, for whole-genome identification of noncoding RNAs (ncRNAs). It combines a large amount of expression data, RNA secondary-structure stability, and evolutionary conservation at the protein and nucleic-acid level. Using the incRNA model and data from the modENCODE consortium, we are able to separate known C. elegans ncRNAs from coding sequences and other genomic elements with a high level of accuracy (97% AUC on an independent validation set), and find more than 7000 novel ncRNA candidates, among which more than 1000 are located in the intergenic regions of C. elegans genome. Based on the validation set, we estimate that 91% of the approximately 7000 novel ncRNA candidates are true positives. We then analyze 15 novel ncRNA candidates by RT-PCR, detecting the expression for 14. In addition, we characterize the properties of all the novel ncRNA candidates and find that they have distinct expression patterns across developmental stages and tend to use novel RNA structural families. We also find that they are often targeted by specific transcription factors (∼59% of intergenic novel ncRNA candidates). Overall, our study identifies many new potential ncRNAs in C. elegans and provides a method that can be adapted to other organisms.'
+affiliation: 'Program in Computational Biology and Bioinformatics, Yale University, New Haven, Connecticut 06520, USA;'
+authors: 'Lu, ZJ and Yip, KY and Wang, G and Shou, C and Hillier, LW and Khurana, E and Agarwal, A and Auerbach, R and Rozowsky, J and Cheng, C and Kato, M and Miller, DM and Slack, F and Snyder, M and Waterston, RH and Reinke, V and Gerstein, MB'
+doi: 10.1101/gr.110189.110
+issn: 1549-5469
+issue: 2
+journal: Genome Res
+linkout: http://genome.cshlp.org/cgi/pmidlookup?view=long&pmid=21177971
+month: Feb
+pages: 276-85
+pmid: 21177971
+pubtype: ARTICLE
+title: 'Prediction and characterization of noncoding RNAs in C. elegans by integrating conservation, secondary structure, and high-throughput sequencing and array data'
+volume: 21
+year: 2011

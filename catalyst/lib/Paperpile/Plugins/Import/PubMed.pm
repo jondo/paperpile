@@ -455,6 +455,7 @@ sub match {
         # simple string comparison
         my $counts          = 0;
         my $to_compare_with = ' ' . $page->[$i]->title . ' ';
+	$to_compare_with =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
         foreach my $word (@title_words) {
           $counts++ if ( $to_compare_with =~ m/\s$word\s/i );
         }
