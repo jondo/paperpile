@@ -588,7 +588,7 @@ sub match {
       NetError->throw( error => 'Google Scholar blocks queries from this IP.' );
     }
 
-    # everythig is fine we can process this page
+    # everything is fine we can process this page
     if ( $error_level == 0 ) {
 
       # parse the page and then see if a publication matches
@@ -1040,6 +1040,7 @@ sub _parse_googlescholar_page {
     $pub->_related_articles( $data{related_articles}->[$i] );
     $pub->_google_BL_link( $data{BL}->[$i] );
     $pub->abstract( $data{description}->[$i] );
+    $pub->create_guid();
     $pub->refresh_fields;
     push @$page, $pub;
   }

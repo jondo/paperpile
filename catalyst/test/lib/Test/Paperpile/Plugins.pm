@@ -37,6 +37,7 @@ sub test_match {
       $pub->title( $entry->{$key} )   if ( $key eq 'title' );
       $pub->authors( $entry->{$key} ) if ( $key eq 'authors' );
     }
+    $pub->create_guid();
 
     my $matchedpub = $plugin->match($pub);
 

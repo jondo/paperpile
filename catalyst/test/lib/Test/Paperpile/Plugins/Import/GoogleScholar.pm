@@ -1,4 +1,4 @@
-package Test::Paperpile::Plugins::Import::PubMed;
+package Test::Paperpile::Plugins::Import::GoogleScholar;
 
 use Test::More;
 use Data::Dumper;
@@ -6,7 +6,7 @@ use Data::Dumper;
 use base 'Test::Paperpile::Plugins';
 
 # The class being tested
-sub class { 'Paperpile::Plugins::Import::PubMed' }
+sub class { 'Paperpile::Plugins::Import::GoogleScholar' }
 
 # Run once before all other tests
 sub startup : Tests(startup => 1) {
@@ -23,9 +23,9 @@ sub match : Tests(59) {
   my ($self) = @_;
 
    $self->test_match(
-     "Matching publications against Pubmed",
-     "data/Plugins/Import/PubMed/match/testcases.in",
-     "data/Plugins/Import/PubMed/match/testcases.out"
+     "Matching publications against GoogleScholar",
+     "data/Plugins/Import/GoogleScholar/match/testcases.in",
+     "data/Plugins/Import/GoogleScholar/match/testcases.out"
    );
 
 }
