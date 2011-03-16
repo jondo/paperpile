@@ -14,7 +14,6 @@
 # received a copy of the GNU Affero General Public License along with
 # Paperpile.  If not, see http://www.gnu.org/licenses.
 
-
 package Paperpile::Plugins::Import::PubMed;
 
 use Carp;
@@ -49,6 +48,34 @@ my $elink_related =
   "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=pubmed&db=pubmed&id=";
 my $espell = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/espell.fcgi?&db=PubMed&term=";
 my $epost  = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/epost.fcgi?db=pubmed&id=";
+
+# Pubmed stopwords are not searched and the query will
+# fail if we keep them
+# the list is taken from here: http://www.ncbi.nlm.nih.gov/
+# bookshelf/br.fcgi?book=helppubmed&part=pubmedhelp&
+# rendertype=table&id=pubmedhelp.T43
+
+my @pubmed_stopwords = (
+  "about",   "again",     "all",     "almost",  "also",          "although",
+  "always",  "among",     "and",     "another", "any",           "are",
+  "because", "been",      "before",  "being",   "between",       "both",
+  "but",     "can",       "could",   "did",     "does",          "done",
+  "due",     "during",    "each",    "either",  "enough",        "especially",
+  "etc",     "for",       "found",   "from",    "further",       "had",
+  "has",     "have",      "having",  "here",    "how",           "however",
+  "into",    "its",       "itself",  "just",    "made",          "mainly",
+  "make",    "may",       "might",   "most",    "mostly",        "must",
+  "nearly",  "neither",   "nor",     "not",     "obtained",      "often",
+  "our",     "overall",   "perhaps", "pmid",    "quite",         "rather",
+  "really",  "regarding", "seem",    "seen",    "several",       "should",
+  "show",    "showed",    "shown",   "shows",   "significantly", "since",
+  "some",    "such",      "than",    "that",    "the",           "their",
+  "theirs",  "them",      "then",    "there",   "therefore",     "these",
+  "they",    "this",      "those",   "through", "thus",          "upon",
+  "use",     "used",      "using",   "various", "very",          "was",
+  "were",    "what",      "when",    "which",   "while",         "with",
+  "within",  "without",   "would"
+);
 
 sub BUILD {
   my $self = shift;
@@ -85,14 +112,28 @@ sub _FormatQueryString {
 
   # there are no special words so we just do a regular escaping
   if ( $special_words == 0 ) {
-      # temporary fix for issue 1014
-      # Problem description: words like "a", "an", ...
-      # are not index in pubmed. If a string contains "a" it is not mapped to [All fields] 
-      # but only to [Author], for example. Even assigning [All fields] does not help.
-      # For now we just remove it, until we have a unified interface to process query strings.
-      $query =~ s/\s+a\s+/ /g;
 
-      $formatted_query_string = _EscapeString($query);
+    # we have to get rid of Pubmed stop words
+    my @words = ( );
+    foreach my $word ( split( /\s+/, $query ) ) {
+
+      # words with less than 3 characters are removed
+      next if ( length($word) < 3 );
+
+      my $flag = 0;
+      foreach my $stop_word ( @pubmed_stopwords ) {
+        if ( lc($word) eq $stop_word ) {
+          $flag = 1;
+          last;
+        }
+      }
+      next if ( $flag == 1 );
+
+      # Add Title-tag
+      push @words, $word;
+    }
+
+    $formatted_query_string = _EscapeString(join(" ", @words));
   } else {
     my @blocks = split( /(author:|title:|journal:)/, $query );
     shift(@blocks) if ( !$blocks[0] );
@@ -187,12 +228,11 @@ sub page {
 
   # We clear the cache on every page
   $self->clear_cache();
-  Paperpile::Utils->uniquify_pubs([@$page]);
+  Paperpile::Utils->uniquify_pubs( [@$page] );
 
   # we should always call this function to make the results available
   # afterwards via find_guid
   $self->_save_page_to_hash($page);
-
 
   return $page;
 }
@@ -242,47 +282,8 @@ sub match {
       # words with less than 3 characters are removed
       next if ( length($word) < 3 );
 
-      # Pubmed stopwords are not searched and the query will
-      # fail if we keep them
-      # the list is taken from here: http://www.ncbi.nlm.nih.gov/
-      # bookshelf/br.fcgi?book=helppubmed&part=pubmedhelp&
-      # rendertype=table&id=pubmedhelp.T43
-      # last line contains other words that might cause problems. They
-      # may be in the title for PDF parsing errors.
-
-      my @pubmed_stopwords = (
-        "about",         "again",      "all",      "almost",
-        "also",          "although",   "always",   "among",
-        "and",           "another",    "any",      "are",
-        "because",       "been",       "before",   "being",
-        "between",       "both",       "but",      "can",
-        "could",         "did",        "does",     "done",
-        "due",           "during",     "each",     "either",
-        "enough",        "especially", "etc",      "for",
-        "found",         "from",       "further",  "had",
-        "has",           "have",       "having",   "here",
-        "how",           "however",    "into",     "its",
-        "itself",        "just",       "made",     "mainly",
-        "make",          "may",        "might",    "most",
-        "mostly",        "must",       "nearly",   "neither",
-        "nor",           "not",        "obtained", "often",
-        "our",           "overall",    "perhaps",  "pmid",
-        "quite",         "rather",     "really",   "regarding",
-        "seem",          "seen",       "several",  "should",
-        "show",          "showed",     "shown",    "shows",
-        "significantly", "since",      "some",     "such",
-        "than",          "that",       "the",      "their",
-        "theirs",        "them",       "then",     "there",
-        "therefore",     "these",      "they",     "this",
-        "those",         "through",    "thus",     "upon",
-        "use",           "used",       "using",    "various",
-        "very",          "was",        "were",     "what",
-        "when",          "which",      "while",    "with",
-        "within",        "without",    "would",    "review",
-        "article"
-      );
       my $flag = 0;
-      foreach my $stop_word (@pubmed_stopwords) {
+      foreach my $stop_word ( ( @pubmed_stopwords, "review", "article" ) ) {
         if ( lc($word) eq $stop_word ) {
           $flag = 1;
           last;
@@ -299,7 +300,7 @@ sub match {
   # 3) Authors. We just use each author's last name
   # At the moment we use the first two authors at most.
   if ( $pub->authors ) {
-    my @tmp = ();
+    my @tmp        = ();
     my $max_number = 2;
     my $nr_authors = 0;
     foreach my $author ( @{ $pub->get_authors } ) {
@@ -350,7 +351,7 @@ sub match {
   }
 
   if ( $query_doi ne '' ) {
-    my $response  = $browser->get( $esearch . $query_doi );
+    my $response = $browser->get( $esearch . $query_doi );
     Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
@@ -377,7 +378,7 @@ sub match {
 
     #print STDERR "$esearch$query_title+$query_authors\n";
     # Pubmed is queried using title and authors
-    my $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+    my $response = $browser->get( $esearch . "$query_title+$query_authors" );
     Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
@@ -397,7 +398,7 @@ sub match {
       }
 
       # now query again
-      $response  = $browser->get( $esearch . "$query_title+$query_authors" );
+      $response = $browser->get( $esearch . "$query_title+$query_authors" );
       Paperpile::Utils->check_browser_response($response);
       $resultXML = $response->content;
       $result    = XMLin($resultXML);
@@ -432,7 +433,7 @@ sub match {
   # If we are here then Title+Auhtors failed, and we try to search
   # only with the title.
   if ( $query_title ne '' ) {
-    my $response  = $browser->get( $esearch . "$query_title" );
+    my $response = $browser->get( $esearch . "$query_title" );
     Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
@@ -455,7 +456,7 @@ sub match {
         # simple string comparison
         my $counts          = 0;
         my $to_compare_with = ' ' . $page->[$i]->title . ' ';
-	$to_compare_with =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
+        $to_compare_with =~ s/(\(|\)|-|\.|,|:|;|\{|\}|\?|!)/ /g;
         foreach my $word (@title_words) {
           $counts++ if ( $to_compare_with =~ m/\s$word\s/i );
         }
@@ -483,8 +484,8 @@ sub web_lookup {
 
   my $pmid = $1;
 
-  my $browser   = Paperpile::Utils->get_browser;
-  my $response  = $browser->get( $esearch . $pmid );
+  my $browser  = Paperpile::Utils->get_browser;
+  my $response = $browser->get( $esearch . $pmid );
   Paperpile::Utils->check_browser_response($response);
   my $resultXML = $response->content;
   my $result    = XMLin($resultXML);
@@ -521,7 +522,7 @@ sub _pubFetch {
   my $url      = "$efetch&query_key=$query_key&WebEnv=$web_env&retstart=$offset&retmax=$limit";
   my $response = $browser->get($url);
 
-  Paperpile::Utils->check_browser_response($response,'PubMed query failed');
+  Paperpile::Utils->check_browser_response( $response, 'PubMed query failed' );
 
   my $resultXML = $response->content;
 
@@ -544,7 +545,8 @@ sub _read_xml {
 
   # Eval to avoid exception when $result is not a hashref
   eval {
-    $result_ok = 1 if ( defined $result->{PubmedArticle} or defined $result->{PubmedBookArticle} );
+    $result_ok = 1
+      if ( defined $result->{PubmedArticle} or defined $result->{PubmedBookArticle} );
   };
 
   if ( $@ or !$result_ok ) {
@@ -809,7 +811,7 @@ sub _read_xml {
     $pub->booktitle($booktitle) if $booktitle;
     $pub->isbn($isbn)           if $isbn;
     $pub->address($address)     if $address;
-    $pub->linkout($linkout)         if $linkout;
+    $pub->linkout($linkout)     if $linkout;
 
     $pub->authors($authors) if $authors;
     $pub->editors($editors) if $editors;
@@ -876,12 +878,11 @@ sub _linkOut {
 
   my $response = $browser->get($url);
 
-  Paperpile::Utils->check_browser_response($response,"PubMed query failed");
+  Paperpile::Utils->check_browser_response( $response, "PubMed query failed" );
 
-  my $result = XMLin( $response->content, forceArray => ['IdUrlSet', 'ObjUrl'] );
+  my $result = XMLin( $response->content, forceArray => [ 'IdUrlSet', 'ObjUrl' ] );
 
   foreach my $entry ( @{ $result->{LinkSet}->{IdUrlList}->{IdUrlSet} } ) {
-
 
     my $id = $entry->{Id};
     next if ( $pub_hash{$id}->{pubtype} eq 'INBOOK' );
@@ -889,23 +890,25 @@ sub _linkOut {
     # got an error message
     if ( defined $entry->{Info} ) {
       $pub_hash{$id}->linkout('');
+
       #print STDERR Dumper($pub_hash{$id}),"\n";
       # There is still the chance that there is a linkout to PMC, we can query this
       # using cmd=llinks instead of cmd=prlinks. We only do this if there is no DOI.
       if ( $pub_hash{$id}->doi eq '' ) {
-	my $url2 =
-	  "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=llinks&db=PubMed&id=$id";
-	my $response2 = $browser->get($url2);
-	Paperpile::Utils->check_browser_response($response2);
-	my $result2 = XMLin( $response2->content, forceArray => ['IdUrlSet'] );
-	eval {
-	  my $linkout2 = $result2->{LinkSet}->{IdUrlList}->{IdUrlSet}->[0]->{ObjUrl}->[0]->{Url};
-	  if ( defined $linkout2 ) {
-	    $pub_hash{$id}->linkout( $linkout2 ) if ( $linkout2 =~ m/ukpmc/ or
-						      $linkout2 =~ m/pubmedcentral/ or
-						      $linkout2 =~ m/gov\/pmc/ ) ;
-	  }
-	};
+        my $url2 =
+          "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?retmode=xml&cmd=llinks&db=PubMed&id=$id";
+        my $response2 = $browser->get($url2);
+        Paperpile::Utils->check_browser_response($response2);
+        my $result2 = XMLin( $response2->content, forceArray => ['IdUrlSet'] );
+        eval {
+          my $linkout2 = $result2->{LinkSet}->{IdUrlList}->{IdUrlSet}->[0]->{ObjUrl}->[0]->{Url};
+          if ( defined $linkout2 ) {
+            $pub_hash{$id}->linkout($linkout2)
+              if ( $linkout2 =~ m/ukpmc/
+              or $linkout2 =~ m/pubmedcentral/
+              or $linkout2 =~ m/gov\/pmc/ );
+          }
+        };
       }
     } else {
 
@@ -930,7 +933,7 @@ sub _fetch_by_pmid {
     my $query = "$esearch$pmid";
     $query .= "[uid]" if ( $pmid !~ m/^PMC/ );
 
-    my $response  = $browser->get($query);
+    my $response = $browser->get($query);
     Paperpile::Utils->check_browser_response($response);
     my $resultXML = $response->content;
     my $result    = XMLin($resultXML);
@@ -948,3 +951,4 @@ sub _fetch_by_pmid {
 }
 
 1;
+
