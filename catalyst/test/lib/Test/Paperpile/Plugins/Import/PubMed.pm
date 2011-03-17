@@ -22,11 +22,23 @@ sub match : Tests(74) {
 
   my ($self) = @_;
 
-   $self->test_match(
+  $self->test_match(
      "Matching publications against Pubmed",
      "data/Plugins/Import/PubMed/match/testcases.in",
      "data/Plugins/Import/PubMed/match/testcases.out"
-   );
+  );
+
+}
+
+sub connect_page : Tests(14) {
+
+  my ($self) = @_;
+
+  $self->test_connect_page(
+     "Testing connect/page for Pubmed",
+     "data/Plugins/Import/PubMed/connect_page/testcases.in",
+     "data/Plugins/Import/PubMed/connect_page/testcases.out"
+  );
 
 }
 

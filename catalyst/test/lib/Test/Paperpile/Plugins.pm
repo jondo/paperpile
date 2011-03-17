@@ -53,4 +53,35 @@ sub test_match {
   }
 }
 
+sub test_connect_page {
+
+  my ( $self, $msg, $infile, $outfile ) = @_;
+
+  my $plugin = $self->class->new();
+
+  my @in = YAML::LoadFile("$infile");
+
+  my @observed = ();
+
+  foreach my $entry (@in) {
+    if ( defined $entry->{query} ) {
+      $plugin->query( $entry->{query} );
+      my $nr_hits = $plugin->connect();
+      my $pubs = $plugin->page( 0, 25 );
+      foreach my $pub ( @{$pubs} ) {
+        push @observed, $pub;
+      }
+    }
+  }
+
+  my @expected = YAML::LoadFile("$outfile");
+
+  is( $#observed, $#expected, "$msg: read " . ( $#observed + 1 ) . " items" );
+
+  foreach my $i ( 0 .. $#expected ) {
+    $self->test_fields( $observed[$i], $expected[$i], $msg );
+  }
+
+}
+
 1;
