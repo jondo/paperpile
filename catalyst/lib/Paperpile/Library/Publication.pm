@@ -111,7 +111,7 @@ has 'folders' => ( is => 'rw', default => '' );
 
 # Temporary field to handle folders which are not imported into the
 # user's library.
-has 'folders_tmp' => ( is => 'rw', default => '' );
+#has 'folders_tmp' => ( is => 'rw', default => '' );
 
 
 ### Fields from the config file
