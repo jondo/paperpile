@@ -1,4 +1,4 @@
-Ext.define('Paperpile.app.NavActions', {
+Ext.define('Paperpile.app.GridActions', {
   statics: {
     getActions: function() {
       return {
