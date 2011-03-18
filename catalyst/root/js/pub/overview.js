@@ -14,42 +14,55 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Ext.define('Paperpile.PubOverview', {
-  extend: 'Ext.Panel',
-  itemId: 'overview',
-
+Ext.define('Paperpile.pub.Overview', {
+  extend: 'Ext.panel.Panel',
+  alias: 'widget.puboverview',
+  cls: 'pp-pub-overview',
   initComponent: function() {
+
+    var items = [{
+      xtype: 'BasicInfo'
+    },
+    {
+      xtype: 'Collections'
+    },
+    {
+      xtype: 'OnlineResources'
+    },
+    {
+      xtype: 'Files'
+    }];
+
     Ext.apply(this, {
-      autoScroll: 'y',
-      bodyStyle: {
-        background: '#ffffff',
-        padding: '7px'
+      layout: {
+        type: 'auto',
+        padding: '5',
       },
+      items: items,
+      autoScroll: true,
     });
 
-    Paperpile.PubOverview.superclass.initComponent.call(this);
-
-    this.on('resize', this.myOnResize, this);
-
-    this.on('afterrender', this.installEvents, this);
+    this.callParent(arguments);
   },
 
-  myOnResize: function() {
-    this.forceUpdate();
+  createTemplate: function() {
+    return Paperpile.pub.OverviewTemplates.single();
   },
 
-  forceUpdate: function() {
-    this.onUpdate({
-      updateSidePanel: 1
+  setPublication: function(pub) {
+    this.pub = pub;
+    this.items.each(function(item, index) {
+      item.setPublication(pub);
     });
   },
 
-  getPluginPanel: function() {
-    return this.ownerCt.ownerCt;
-  },
-
-  getGrid: function() {
-    return this.getPluginPanel().getGrid();
+  setMulti: function(selections) {
+    delete this.pub;
+    this.tpl = Paperpile.pub.OverviewTemplates.multiple();
+    var data = {
+      selected: selections
+    };
+    this.update(data);
   },
 
   // Called when a non-user interaction causes an update of the overview panel.
@@ -248,30 +261,6 @@ Ext.define('Paperpile.PubOverview', {
     return data;
   },
 
-  updateEllipses: function(data) {
-    var ellipsable_fields = ['.pp-info-doi', '.pp-info-pmid', '.pp-info-url', '.pp-info-eprint', '.pp-info-arxivid'];
-    for (var i = 0; i < ellipsable_fields.length; i++) {
-      var field = ellipsable_fields[i];
-      var els = Ext.select("#" + this.id + " " + field);
-      if (els.getCount() == 0) {
-        continue;
-      }
-      var doiEl = els.first();
-
-      var maxWidth = doiEl.getWidth() - (50);
-      var textWidth = doiEl.getTextWidth();
-      var count = 0;
-      while (textWidth > maxWidth && count < 50) {
-        var text = doiEl.dom.innerHTML;
-        text = text.replace('...', '');
-        var shorterText = text.substring(0, text.length - 1);
-        doiEl.update(shorterText + '...');
-        textWidth = doiEl.getTextWidth();
-        count++;
-      }
-    }
-  },
-
   updateLabels: function(data) {
     if (this.labelWidget == null) {
       this.labelWidget = new Paperpile.LabelWidget({
@@ -296,244 +285,6 @@ Ext.define('Paperpile.PubOverview', {
       return;
     }
     this.searchDownloadWidget.renderData(data);
-  },
-
-  updateInfoMultiple: function(data) {
-
-    data.numSelected = this.getGrid().getSelectionCount();
-    data.isBibtexMode = Paperpile.utils.isBibtexMode();
-    data.totalCount = this.getGrid().getTotalCount();
-
-    data.numImported = this.getGrid().getSelection('IMPORTED').length;
-    data.allImported = this.getGrid().allImported;
-    data.allSelected = this.getGrid().isAllSelected();
-
-    var templateToUse = null;
-    if (data.totalCount == 0) {
-      templateToUse = this.getGrid().getSidebarTemplate().emptyGrid;
-    } else if (data.numSelected == 0) {
-      templateToUse = this.getGrid().getSidebarTemplate().noSelection;
-    } else {
-      templateToUse = this.getGrid().getSidebarTemplate().multipleSelection;
-    }
-    if (this.rendered) {
-      templateToUse.overwrite(this.body, data, true);
-    }
-
-    if (data.numSelected > 0) {
-      if (this.labelWidget == undefined) {
-        this.updateLabels(data);
-      }
-      this.labelWidget.renderMultiple();
-    }
-
-  },
-
-  // Event handling for the HTML. Is called with 'el' as the Ext.Element of the HTML 
-  // after the template was written in updateDetail
-  //    
-  installEvents: function() {
-    this.mon(this.el, 'click', this.handleClick, this);
-  },
-
-  handleClick: function(e) {
-    var el = e.getTarget();
-
-    switch (el.getAttribute('action')) {
-    case 'view-online':
-      this.getGrid().handleViewOnline();
-      break;
-    case 'email':
-      this.getGrid().handleEmail();
-      break;
-    case 'doi-link':
-      var url = "http://dx.doi.org/" + this.data.doi;
-      Paperpile.utils.openURL(url);
-      break;
-    case 'doi-copy':
-      Paperpile.utils.setClipboard("http://dx.doi.org/" + this.data.doi, 'DOI URL copied');
-      break;
-
-    case 'pmid-link':
-      var url = 'http://www.ncbi.nlm.nih.gov/pubmed/' + this.data.pmid;
-      Paperpile.utils.openURL(url);
-      break;
-    case 'pmid-copy':
-      Paperpile.utils.setClipboard('http://www.ncbi.nlm.nih.gov/pubmed/' + this.data.pmid, 'PubMed URL copied');
-      break;
-
-    case 'eprint-link':
-      var url = this.data.eprint;
-      Paperpile.utils.openURL(url);
-      break;
-    case 'eprint-copy':
-      Paperpile.utils.setClipboard(this.data.eprint, 'ePrint URL copied');
-      break;
-
-    case 'arxivid-link':
-      var url = 'http://arxiv.org/abs/' + this.data.arxivid;
-      Paperpile.utils.openURL(url);
-      break;
-    case 'arxivid-copy':
-      Paperpile.utils.setClipboard('http://arxiv.org/abs/' + this.data.arxivid, 'ArXiv URL copied');
-      break;
-
-    case 'url-link':
-      var url = this.data.url;
-      Paperpile.utils.openURL(url);
-      break;
-    case 'url-copy':
-      Paperpile.utils.setClipboard(this.data.url, 'URL copied');
-      break;
-
-    case 'lookup-details':
-      this.getGrid().lookupDetails();
-      break;
-    case 'open-folder':
-      var folder_id = el.getAttribute('folder_id');
-      var node = Paperpile.main.tree.getNodeById(folder_id);
-      Paperpile.main.tree.myOnClick(node);
-      break;
-
-    case 'delete-folder':
-      var sel = this.getGrid().getSelection();
-      var grid = this.getGrid();
-      var folder_id = el.getAttribute('folder_id');
-      Paperpile.main.removeFromFolder(sel, grid, folder_id);
-      break;
-
-    case 'open-pdf':
-      var path = this.data.pdf_name;
-      if (!Paperpile.utils.isAbsolute(path)) {
-        path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, path);
-      }
-
-      Paperpile.main.tabs.newPdfTab({
-        file: path,
-        filename: this.data.pdf_name
-      });
-      Paperpile.main.inc_read_counter(this.data);
-      break;
-
-    case 'open-pdf-external':
-      Paperpile.main.openPdfInExternalViewer(this.data.pdf_name, this.data);
-      break;
-
-    case 'open-pdf-folder':
-      this.getGrid().openPDFFolder();
-      break;
-
-    case 'attach-pdf':
-      // Choose local PDF file and attach to database entry
-      this.chooseFile(true);
-      break;
-    case 'search-pdf':
-      // Search and download PDF file; if entry is already in database 
-      // attach PDF directly to it
-      //this.searchPDF(el.getAttribute('plugin'));
-      this.getGrid().batchDownload();
-      break;
-    case 'cancel-download':
-      this.getGrid().cancelDownload();
-      break;
-    case 'retry-download':
-      this.getGrid().retryDownload();
-      break;
-    case 'clear-download':
-      this.getGrid().clearDownload();
-      break;
-    case 'report-download-error':
-      var record = this.getGrid().getSingleSelectionRecord();
-      var data = record.data;
-      var string = Paperpile.utils.hashToString(data);
-      var job = Paperpile.utils.hashToString(data._search_job);
-      data.reportString = string + "\n\n" + job;
-      Paperpile.main.reportPdfDownloadError(data);
-      break;
-    case 'import-pdf':
-      // If PDF has been downloaded for an entry that is not
-      // already imported, import entry and attach PDF
-      var grid = this.getGrid();
-      var pdf = this.data.pdf;
-      grid.insertEntry(
-        function(data) {
-          this.attachFile(1, pdf);
-        },
-        this);
-      break;
-
-    case 'delete-pdf':
-      // Delete attached PDF file from database entry
-      this.deleteFile(true);
-      break;
-
-    case 'attach-file':
-      // Attach an arbitrary number of files of any type to an entry in the database 
-      this.chooseFile(false);
-      break;
-
-    case 'open-attachment':
-      // Open attached files
-      var path = el.getAttribute('path');
-      Paperpile.utils.openFile(path);
-      break;
-
-    case 'delete-file':
-      // Delete attached files
-      this.deleteFile(false, el.getAttribute('guid'));
-      break;
-
-    case 'edit-ref':
-      this.getGrid().handleEdit.defer(20, this.getGrid());
-      break;
-
-    case 'delete-ref':
-      this.getGrid().handleDelete();
-      break;
-
-    case 'update-metadata':
-      this.getGrid().updateMetadata();
-      break;
-
-    case 'batch-download':
-      this.getGrid().batchDownload();
-      break;
-
-    case 'restore-ref':
-      this.getGrid().deleteEntry('RESTORE');
-      break;
-
-    case 'locate-ref':
-      this.getGrid().locateInLibrary();
-      break;
-
-    case 'import-ref':
-      this.getGrid().insertEntry();
-      break;
-    case 'copy-text':
-      this.getGrid().handleCopyFormatted();
-      break;
-    case 'copy-bibtex':
-      this.getGrid().handleCopyBibtexCitation();
-      break;
-    case 'copy-keys':
-      this.getGrid().handleCopyBibtexKey();
-      break;
-    }
-  },
-
-  renderLabels: function() {
-
-    if (this.searchDownloadWidget == null) {
-      /*       this.searchDownloadWidget = new Paperpile.SearchDownloadWidget({
-	 grid_id: this.grid_id,
-	 itemId:'search-download-widget-'+this.id
-       });
-*/
-    }
-    if (!Ext.get('search-download-widget-' + this.id)) return;
-    //this.searchDownloadWidget.renderData(this.data);
-    return;
   },
 
   hideLabelControls: function() {
@@ -789,7 +540,7 @@ Ext.define('Paperpile.PubOverview', {
     Ext.destroy(this.searchDownloadWidget);
     Ext.destroy(this.labelWidget);
 
-    Paperpile.PubOverview.superclass.onDestroy.call(this);
+    this.callParent(arguments);
 
   }
 

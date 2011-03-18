@@ -14,79 +14,37 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Ext.define('Paperpile.PubSummary', {
-  extend: 'Ext.Panel',
-  alias: 'widget.pp-pubsummary',
+Ext.define('Paperpile.pub.Abstract', {
+  extend: 'Ext.panel.Panel',
+  alias: 'widget.pubabstract',
+  cls: 'pp-pub-abstract',
   initComponent: function() {
-
-    // The template for the abstract
-    this.abstractMarkup = [
-      '<div class="pp-basic pp-abstract">{abstract}</div>', ];
-
-    this.abstractTemplate = new Ext.Template(this.abstractMarkup);
-
     Ext.apply(this, {
-      bodyStyle: {
-        background: '#ffffff',
-        padding: '7px'
-      },
-      autoScroll: true,
+      tpl: this.createTemplate(),
+      autoScroll: true
     });
 
-    Paperpile.PubSummary.superclass.initComponent.call(this);
-
+    this.callParent(arguments);
   },
 
-  getPluginPanel: function() {
-    return this.ownerCt.ownerCt.ownerCt;
+  createTemplate: function() {
+    return new Ext.XTemplate(
+      '<div class="pp-abstract">{abstract:this.getBody}</div>', {
+        getBody: function(value, all) {
+          return Ext.util.Format.stripScripts(value);
+        },
+      });
   },
 
-  getGrid: function() {
-    return this.getPluginPanel().getGrid();
-  },
+  setPublication: function(pub) {
+    this.pub = pub;
+    this.update(pub.data);
+	},
 
-  updateDetail: function() {
-
-    if (!this.grid) {
-      this.grid = this.getGrid();
-    }
-
-    sm = this.grid.getSelectionModel();
-    var numSelected = sm.getCount();
-    if (this.grid.allSelected) {
-      numSelected = this.grid.store.getTotalCount();
-    }
-
-    var isEmpty = false;
-    if (numSelected == 1) {
-      var record = sm.getSelected();
-      if (record) {
-        this.data = record.data;
-        this.data.id = this.id;
-        if (this.data.abstract === '') {
-          isEmpty = true;
-        } else {
-          if (this.rendered) {
-            this.abstractTemplate.overwrite(this.body, this.data);
-          }
-        }
-      }
-    } else {
-      isEmpty = true;
-    }
-
-    if (isEmpty && this.rendered) {
-      var empty = new Ext.Template('<p class="pp-basic pp-abstract pp-inactive">No abstract available.</p>');
-      empty.overwrite(this.body);
-    }
-  },
-
-  showEmpty: function(tpl) {
-    var empty = new Ext.Template(tpl);
-    var empty = new Ext.Template('<p clas="pp-basic pp-abstract pp-inactive"></p>');
-    if (this.rendered) {
-      empty.overwrite(this.body);
-    }
+  setMulti: function(pub) {
+    delete this.pub;
+    this.update({});
   }
+
 
 });

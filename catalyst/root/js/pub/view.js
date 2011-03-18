@@ -14,408 +14,96 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Ext.define('Paperpile.PluginPanel', {
+Ext.define('Paperpile.pub.View', {
   extend: 'Ext.Panel',
-  alias: 'widget.pp-pluginpanel',
-  closable: false,
-  splitFraction: 2 / 3,
-
+  alias: 'widget.pubview',
   initComponent: function() {
-
-    // Center panel is composed of grid, abstract and notes.
-    this.grid = this.createGrid(this.gridParams);
-    this.centerPanel = this.createCenterPanel();
-
-    // East panel is composed of overview and details.
-    //    this.overviewPanel = this.createOverview();
-    //this.eastPanel = this.createEastPanel();
-
     Ext.apply(this, {
-      tabType: 'PLUGIN',
       layout: 'border',
-		//      plugins: [new Ext.ux.PanelSplit(this.centerPanel, this.updateSplitFraction, this)],
-      items: [
-        this.centerPanel]
+      items: [this.createCenter(), this.createEast()]
+    });
+    this.callParent(arguments);
+  },
+
+  createCenter: function() {
+    var params = this.gridParams || {};
+    var me = this;
+    Ext.apply(params, {
+      region: 'center',
+      flex: 2,
+      listeners: {
+        scope: this,
+        afterselectionchange: Ext.Function.createBuffered(me.onSelect, 50, me)
+      }
+    });
+    this.grid = Ext.create(this.getGridType(), params);
+
+    this.abstract = Ext.createByAlias('widget.pubabstract', {});
+    this.south = Ext.create('Ext.panel.Panel', {
+      region: 'south',
+      flex: 1,
+      layout: 'fit',
+      split: true,
+      border: false,
+      items: [this.abstract]
     });
 
-    Paperpile.PluginPanel.superclass.initComponent.call(this);
-
-    this.on('afterlayout', function() {
-      this.resizeToSplitFraction();
-    },
-    this);
-
-    //    this.mon(this.eastPanel, 'afterrender', this.afterEastRender, this);
-
-    this.on('afterrender', function() {
-      this.mon(this.el, 'click', function() {
-	      //Paperpile.main.grabFocus();
-      },
-      this);
-    },
-    this);
-  },
-
-  updateSplitFraction: function(newFraction) {
-    // REFACTOR: right now this is largely duplicated here and in paperpile.js.
-    this.splitFraction = newFraction;
-
-    // Store the new fraction setting.
-    Paperpile.main.setSetting('split_fraction_grid', this.splitFraction, true);
-    // Update the panel sizes.
-    this.resizeToSplitFraction();
-  },
-
-  resizeToSplitFraction: function() {
-	    return;
-    // REFACTOR: right now this is largely duplicated here and in paperpile.js.
-    var fraction = this.splitFraction; // Default panel if there's no setting yet.
-    var set_fraction = Paperpile.main.getSetting('split_fraction_grid');
-    if (set_fraction) {
-      fraction = set_fraction;
-    }
-
-    var width = this.getWidth();
-    var w1 = width * (fraction); // grid width
-    var w2 = width * (1 - fraction); // sidepanel width
-    // Minimum grid width.
-    var min1 = 400;
-    // Minimum sidepanel width.
-    var min2 = 250;
-    // Maximum grid width.
-    var max1 = 9999;
-    // Maximum sidepanel width.
-    var max2 = 600;
-
-    // Respect max sizes
-    if (w1 > max1) {
-      w1 = max1;
-      w2 = width - max1;
-    }
-    if (w2 > max2) {
-      w2 = max2;
-      w1 = width - max2;
-    }
-
-    // Respect minimum sizes.
-    if (w2 < min2) {
-      w2 = min2;
-      w1 = width - min2;
-    }
-    // Top priority -- keep grid above min size!
-    if (w1 < min1) {
-      w1 = min1;
-      w2 = width - min1;
-    }
-
-    //      this.suspendEvents(true);
-    this.centerPanel.setWidth(w1);
-    //    this.eastPanel.setWidth(w2);
-    this.centerPanel.setPosition(0, 0);
-    //    this.eastPanel.setPosition(width - w2, 0);
-    //      this.resumeEvents();
-  },
-
-  afterEastRender: function() {
-    if (this.hasAboutPanel()) {
-      this.getEastPanel().getLayout().setActiveItem(this.getAboutPanel());
-      this.depressButton('about_tab_button');
-    } else {
-      this.depressButton('overview_tab_button');
-    }
-  },
-
-  saveScrollState: function() {
-    this.gridState = this.getGrid().getView().getScrollState();
-  },
-
-  restoreScrollState: function() {
-    if (this.gridState != null) {
-      this.getGrid().getView().restoreScroll(this.gridState);
-      this.gridState = null;
-    }
-  },
-
-  focus: function() {
-    // Override default Panel focus method to focus the grid's view focus holder.
-    this.getGrid().getView().focusEl.focus(10);
-  },
-
-  createGrid: function() {
-    return new Paperpile.PluginGrid();
-  },
-
-  createOverview: function() {
-    return new Paperpile.PubOverview();
-  },
-
-  createCenterPanel: function() {
-    var centerPanel = new Ext.Panel({
-	    region: 'center',
-      itemId: 'center_panel',
+    this.center = Ext.create('Ext.panel.Panel', {
       layout: 'border',
-      items: [
-        this.grid, {
-          border: false,
-          split: true,
-          xtype: 'pp-datatabs',
-          itemId: 'data_tabs',
-          activeItem: 0,
-          height: 200,
-          region: 'south',
-          collapsible: false,
-          animCollapse: false
-        }]
+      region: 'center',
+      flex: 2,
+      split: true,
+      border: false,
+      items: [this.grid, this.south]
     });
-    return centerPanel;
-  },
-
-  createEastPanel: function() {
-    var eastPanelItems = [this.getOverviewPanel()];
-    if (this.hasAboutPanel()) {
-      eastPanelItems.push(this.getAboutPanel());
-    }
-
-    var eastPanel = new Ext.Panel({
-	    region: 'east',
-      itemId: 'east_panel',
-      activeItem: 0,
-      layout: 'card',
-      items: [eastPanelItems],
-      dockedItems: [{
-        xype: 'toolbar',
-	itemId: 'east_toolbar',
-        items: [{
-          text: 'Overview',
-          itemId: 'overview_tab_button',
-          enableToggle: true,
-          toggleHandler: this.onControlToggle,
-          toggleGroup: 'control_tab_buttons' + this.id,
-          scope: this,
-          allowDepress: false,
-          disabled: true,
-          pressed: false
-        },
-        {
-          text: 'Details',
-          itemId: 'details_tab_button',
-          enableToggle: true,
-          toggleHandler: this.onControlToggle,
-          toggleGroup: 'control_tab_buttons' + this.id,
-          scope: this,
-          allowDepress: false,
-          disabled: true,
-          pressed: false
-        },
-        {
-          text: 'About',
-          itemId: 'about_tab_button',
-          enableToggle: true,
-          toggleHandler: this.onControlToggle,
-          toggleGroup: 'control_tab_buttons' + this.id,
-          scope: this,
-          disabled: true,
-          allowDepress: false,
-          pressed: false,
-          hidden: true
-        }]
-      }]
-    });
-    this.eastPanel = eastPanel;
-    return this.eastPanel;
-  },
-
-  getEastPanel: function() {
-    return this.eastPanel;
+    return this.center;
   },
 
   getGrid: function() {
     return this.grid;
   },
 
-  getOverviewPanel: function() {
-    return this.overviewPanel;
+  createEast: function() {
+    this.overview = Ext.createByAlias('widget.puboverview', {});
+
+    this.east = Ext.create('Ext.panel.Panel', {
+      region: 'east',
+      layout: 'fit',
+      flex: 1,
+      split: true,
+      border: false,
+      items: [this.overview]
+    });
+    return this.east;
   },
 
-  getAboutPanel: function() {
-    if (!this.aboutPanel) {
-      this.aboutPanel = this.createAboutPanel();
-    }
-    return this.aboutPanel;
+  createSouth: function() {
+    return this.south;
   },
 
-  createAboutPanel: function() {
-    return new Paperpile.PluginAboutPanel();
+  getGridType: function() {
+    return "Paperpile.pub.Grid";
   },
 
-  removeAboutPanel: function() {
-    var panel = this.getAboutPanel();
-
-    if (this.hasAboutPanel() && this.getEastPanel().items.get('about')) {
-      this.getEastPanel().items.remove(panel);
-      this.getEastPanel().getComponent('about_tab_button').hide();
-      this.showOverview();
-    }
+  handleHideSouth: function() {
+    Paperpile.log("YO");
   },
 
-  hasAboutPanel: function() {
-    return (this.getAboutPanel() !== undefined);
-  },
-
-  onEmpty: function() {},
-
-  onUpdate: function(data) {
-    if (data.pubs) {
-      this.getGrid().onUpdate(data);
-    }
-
-    if (data.pub_delta) {
-
-      if (data.pub_delta_ignore) {
-        if (data.pub_delta_ignore == this.getGrid().id) {
-          return;
-        }
-      }
-
-      this.getGrid().getView().holdPosition = true;
-      this.getGrid().backgroundReload();
-    }
-  },
-
-  depressButton: function(itemId) {
-    var ebar = this.eastPanel.getDockedComponent('east_toolbar');
-    var cbar = this.centerPanel.child('#data_tabs').getDockedComponent('center_toolbar');
-    
-    var button;
-    
-    button = ebar.child("#"+itemId);
-    if (!button) {
-	button = cbar.child("#"+itemId);
-    }
-    if (!button) {
-	Paperpile.log("  button not found: "+itemId);
-	return;
-    }
-    //button.toggle(true);
-    this.onControlToggle(button, true, true);
-  },
-
-  onControlToggle: function(button, pressed) {
-    var newActiveItem;
-
-    if (!pressed) {
-      return;
-    }
-
-    var oldActiveItem = this.eastPanel.getLayout().getActiveItem();
-
-    if (button.itemId == 'overview_tab_button' && pressed) {
-      newActiveItem = this.getOverviewPanel();
-      newActiveItem.singleSelectionDisplay = 'overview';
-    } else if (button.itemId == 'details_tab_button' && pressed) {
-      newActiveItem = this.getOverviewPanel();
-      newActiveItem.singleSelectionDisplay = 'details';
-    } else if (button.itemId == 'about_tab_button' && pressed) {
-      newActiveItem = this.getAboutPanel();
-      newActiveItem.singleSelectionDisplay = 'details';
+  onSelect: function(sm, selections) {
+    var panels = [this.abstract, this.overview];
+    if (selections.length == 1) {
+      var pub = selections[0];
+      Ext.each(panels, function(panel) {
+        panel.setPublication(pub);
+      });
+    } else if (selections.length == 0) {
+      Ext.each(panels, function(panel) {
+        panel.onEmpty();
+      });
     } else {
-      Paperpile.log("Didn't recognize button " + button.itemId);
+      Ext.each(panels, function(panel) {
+        panel.setMulti(selections);
+      });
     }
-
-    newActiveItem.forceUpdate();
-
-    if (oldActiveItem.itemId == 'about') {
-      newActiveItem.forceUpdate.defer(50, newActiveItem);
-    }
-
-    this.getEastPanel().getLayout().setActiveItem(newActiveItem);
-  },
-
-  updateView: function() {
-    var count = this.getGrid().getStore().getCount();
-
-    /*
-    var about_button = this.getEastPanel().getComponent('about_tab_button');
-    if (this.hasAboutPanel() && !about_button.isVisible()) {
-      about_button.show();
-      about_button.enable();
-      about_button.setText(this.getAboutPanel().tabLabel);
-    }
-    */
-    if (count == 0) {
-      this.onEmpty();
-      this.getGrid().onEmpty();
-    }
-
-    if (count > 0) {
-      // Change the active tab to 'overview'
-	//      var activeTab = this.getEastPanel().getLayout().activeItem;
-      if (activeTab == this.getAboutPanel()) {
-	  //        this.getEastPanel().getLayout().setActiveItem(this.getOverviewPanel());
-        this.depressButton('overview_tab_button');
-      }
-    }
-    this.updateDetails();
-    this.updateButtons();
-    this.getGrid().updateButtons();
-  },
-
-  updateDetails: function(updateImmediately) {
-    if (this.updateDetailsTask === undefined) {
-      this.updateDetailsTask = new Ext.util.DelayedTask(function() {
-        this.updateDetailsWork();
-      },
-      this);
-    }
-
-    if (updateImmediately) {
-      this.updateDetailsTask.cancel();
-      this.updateDetailsWork();
-    } else {
-      this.updateDetailsTask.delay(80);
-    }
-  },
-
-  updateDetailsWork: function() {
-    var datatabs = this.items.get('center_panel').items.get('data_tabs');
-    // Grid.
-    this.getGrid().updateButtons();
-    // Overview.
-    //    this.getOverviewPanel().forceUpdate();
-    // Abstract.
-    datatabs.items.get('pubsummary').updateDetail();
-    // Notes.
-    datatabs.items.get('pubnotes').updateDetail();
-  },
-
-  updateButtons: function() {
-    if (!this.rendered) {
-      return;
-    }
-    return;
-    var ebar = this.eastPanel.getDockedComponent('east_toolbar');
-    var cbar = this.centerPanel.child('#data_tabs').getDockedComponent('center_toolbar');
-
-    if (this.grid.getStore().getCount() > 0) {
-      ebar.child('#overview_tab_button').enable();
-      ebar.child('#details_tab_button').enable();
-      cbar.child('#summary_tab_button').enable();
-      cbar.child('#notes_tab_button').enable();
-    } else {
-      ebar.child('#overview_tab_button').disable();
-      ebar.child('#details_tab_button').disable();
-      cbar.child('#summary_tab_button').disable();
-      cbar.child('#notes_tab_button').disable();
-    }
-  },
-
-  onDestroy: function() {
-    if (this.updateDetailsTask) {
-      this.updateDetailsTask.cancel();
-      Ext.destroy(this.updateDetailsTask);
-    }
-    Ext.destroy(this.overviewPanel);
-
-    Paperpile.PluginPanel.superclass.onDestroy.call(this);
   }
 });
