@@ -7,8 +7,10 @@ Ext.define('Paperpile.app.PubActions', {
         }),
         'VIEW_PDF': new Ext.Action({
           handler: function(grid_id, guid) {
+		    // Get the Grid by ID.
             var grid = Ext.getCmp(grid_id);
-            var pub = grid.getSingleSelection();
+	    // Get the currently-selected pub.
+            var pub = grid.getPub(guid);
             if (pub.get('pdf')) {
               var pdf = pub.get('pdf_name');
               var path = Paperpile.utils.catPath(Paperpile.main.globalSettings.paper_root, pdf);

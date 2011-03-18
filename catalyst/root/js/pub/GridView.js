@@ -195,63 +195,6 @@ Ext.define('Paperpile.pub.Grid', {
         handler: this.handleCopyFormatted,
         scope: this
       }),
-      'UP_HOME': new Ext.Action({
-        itemId: 'UP_HOME',
-        text: 'Move the cursor to the top',
-        handler: this.handleHome,
-        scope: this
-      }),
-      'DOWN_END': new Ext.Action({
-        itemId: 'DOWN_END',
-        text: 'Move the cursor to the bottom',
-        handler: this.handleEnd,
-        scope: this
-      }),
-      'DOWN_PAGE': new Ext.Action({
-        itemId: 'DOWN_PAGE',
-        text: 'Move the cursor down one page',
-        handler: this.handlePageDown,
-        scope: this
-      }),
-      'UP_PAGE': new Ext.Action({
-        itemId: 'UP_PAGE',
-        text: 'Move the cursor up one page',
-        handler: this.handlePageUp,
-        scope: this
-      }),
-      'DOWN_ONE': new Ext.Action({
-        itemId: 'DOWN_ONE',
-        text: 'Move the cursor to the next reference',
-        handler: this.handleDownOne,
-        scope: this
-      }),
-      'UP_ONE': new Ext.Action({
-        itemId: 'UP_ONE',
-        text: 'Move the cursor to the previous reference',
-        handler: this.handleUpOne,
-        scope: this
-      }),
-      'MOVE_FIRST': new Ext.Action({
-        itemId: 'MOVE_FIRST',
-        text: 'Move the cursor to the first reference',
-        handler: this.handleMoveFirst,
-        scope: this
-      }),
-      'MOVE_LAST': new Ext.Action({
-        itemId: 'MOVE_LAST',
-        text: 'Move the cursor to the last reference',
-        handler: this.handleMoveLast,
-        scope: this
-      }),
-      'FOCUS_SEARCH': new Ext.Action({
-        text: 'Search',
-        handler: function() {
-          this.handleFocusSearch();
-        },
-        scope: this,
-        itemId: 'FOCUS_SEARCH'
-      }),
-
       'TB_SPACE': new Ext.toolbar.Spacer({
         itemId: 'TB_SPACE',
         width: '10px'
@@ -548,20 +491,21 @@ Ext.define('Paperpile.pub.Grid', {
     this.keys.bindAction('ctrl-k', this.actions['COPY_BIBTEX_KEY']);
 
     // Gmail-style n/p, j/k movements.
-    this.keys.bindAction('home', this.actions['UP_HOME']);
-    this.keys.bindAction('end', this.actions['DOWN_END']);
-    this.keys.bindAction('page_down', this.actions['DOWN_PAGE']);
-    this.keys.bindAction('page_up', this.actions['UP_PAGE']);
-    this.keys.bindAction('down', this.actions['DOWN_ONE']);
-    this.keys.bindAction('n', this.actions['DOWN_ONE']);
-    this.keys.bindAction('shift-n', this.actions['DOWN_ONE']);
-    this.keys.bindAction('up', this.actions['UP_ONE']);
-    this.keys.bindAction('p', this.actions['UP_ONE']);
-    this.keys.bindAction('shift-p', this.actions['UP_ONE']);
-    this.keys.bindAction('j', this.actions['DOWN_ONE']);
-    this.keys.bindAction('shift-j', this.actions['DOWN_ONE']);
-    this.keys.bindAction('k', this.actions['UP_ONE']);
-    this.keys.bindAction('shift-k', this.actions['UP_ONE']);
+    a = Paperpile.app.Actions;
+    this.keys.bindAction('home', a.get('UP_HOME'));
+    this.keys.bindAction('end', a.get('DOWN_END'));
+    this.keys.bindAction('page_down', a.get('DOWN_PAGE'));
+    this.keys.bindAction('page_up', a.get('UP_PAGE'));
+    this.keys.bindAction('down', a.get('DOWN_ONE'));
+    this.keys.bindAction('n', a.get('DOWN_ONE'));
+    this.keys.bindAction('shift-n', a.get('DOWN_ONE'));
+    this.keys.bindAction('up', a.get('UP_ONE'));
+    this.keys.bindAction('p', a.get('UP_ONE'));
+    this.keys.bindAction('shift-p', a.get('UP_ONE'));
+    this.keys.bindAction('j', a.get('DOWN_ONE'));
+    this.keys.bindAction('shift-j', a.get('DOWN_ONE'));
+    this.keys.bindAction('k', a.get('UP_ONE'));
+    this.keys.bindAction('shift-k', a.get('UP_ONE'));
 
     this.keys.bindAction('[End,35]', this.actions['MOVE_LAST']);
     this.keys.bindAction('[Home,36]', this.actions['MOVE_FIRST']);
@@ -1351,68 +1295,6 @@ Ext.define('Paperpile.pub.Grid', {
     return visibleRows;
   },
 
-  handleHome: function(keyCode, event) {
-    var cursor = this.getSelectionModel().getCursor();
-    if (cursor !== null) {
-      var distance = -cursor;
-      this.getSelectionModel().keyNavMove(distance, event);
-    } else {
-      this.getSelectionModel().selectFirstRow();
-    }
-  },
-
-  handleEnd: function(keyCode, event) {
-    var rowCount = this.getStore().getCount();
-    var cursor = this.getSelectionModel().getCursor();
-    if (cursor !== null) {
-      var distance = rowCount - cursor;
-      this.getSelectionModel().keyNavMove(distance, event);
-    } else {
-      this.getSelectionModel().selectLastRow();
-    }
-  },
-
-  handlePageDown: function(keyCode, event) {
-    var rows = this.getVisibleRows();
-    this.getSelectionModel().keyNavMove(rows.length, event);
-  },
-
-  handlePageUp: function(keyCode, event) {
-    var rows = this.getVisibleRows();
-    this.getSelectionModel().keyNavMove(-rows.length, event);
-  },
-
-  handleDownOne: function(keyCode, event) {
-    var sm = this.getSelectionModel();
-    var t = this.pager;
-    var activePage = Math.ceil((t.cursor + t.pageSize) / t.pageSize);
-    if (sm.getCount() == 1 && this.getStore().indexOf(this.getSingleSelection()) == this.pager.pageSize - 1 && !this.pager.next.disabled) {
-      this.pager.moveNext();
-      this.doAfterNextReload.push(function() {
-        this.selectRowAndSetCursor(0);
-      });
-    } else {
-      this.getSelectionModel().keyNavMove(1, event);
-    }
-  },
-  handleUpOne: function(keyCode, event) {
-    var sm = this.getSelectionModel();
-    if (sm.getCount() == 1 && this.getStore().indexOf(this.getSingleSelection()) == 0 && !this.pager.prev.disabled) {
-      this.pager.movePrevious();
-      this.doAfterNextReload.push(function() {
-        this.selectRowAndSetCursor(this.pager.pageSize - 1);
-      });
-    } else {
-      this.getSelectionModel().keyNavMove(-1, event);
-    }
-  },
-  handleMoveFirst: function(keyCode, event) {
-    this.selectRowAndSetCursor(0);
-  },
-  handleMoveLast: function(keyCode, event) {
-    this.selectRowAndSetCursor(this.getStore().getCount() - 1);
-  },
-
   // If trash is set entries are moved to trash, otherwise they are
   // deleted completely
   // mode: TRASH ... move to trash
@@ -1880,6 +1762,10 @@ Ext.define('Paperpile.pub.Grid', {
 
   setSearchQuery: function() {
     // To be implemented by subclasses.
+  },
+
+  getPub: function(guid) {
+    return this.getStore().getById(guid);
   },
 
   getSingleSelection: function() {
