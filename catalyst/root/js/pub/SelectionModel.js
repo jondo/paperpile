@@ -129,6 +129,10 @@ Ext.define('Paperpile.grid.SelectionModel', {
     return !! this.getCursor();
   },
 
+	    getSelection: function() {
+	    return this.getSelections();
+	},
+
   getSelections: function() {
     if (this.selections.getCount() > 0) {
       return this.selections.getRange();

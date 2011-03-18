@@ -817,16 +817,6 @@ Ext.define('Paperpile.pub.Grid', {
     this.createToolbarMenu();
   },
 
-  afterSelectionChange: function(sm) {
-    //    this.getPluginPanel().updateDetails();
-  },
-
-  refreshView: function() {
-    if (!this.isVisible()) {
-      //      return;
-    }
-  },
-
   afterRender: function(ct) {
     var me = this;
     me.callParent(arguments);
@@ -875,21 +865,6 @@ Ext.define('Paperpile.pub.Grid', {
         }
       }
     });
-  },
-
-  getDragDropText: function() {
-    var num = this.getSelectionModel().getCount();
-
-    if (num == 1) {
-      var key = this.getSingleSelection().get('citekey');
-      if (key) {
-        return "[" + key + "]";
-      } else {
-        return " 1 selected reference";
-      }
-    } else {
-      return num + " selected references";
-    }
   },
 
   getStore: function() {
@@ -992,50 +967,6 @@ Ext.define('Paperpile.pub.Grid', {
     return Paperpile.grid.GridTemplates.list();
   },
 
-  getImportedIconTemplate: function() {
-    var tpl = [
-      '  <tpl if="trashed==0">',
-      '    <div class="pp-grid-status pp-grid-status-imported" ext:qtip="[<b>{_citekey}</b>]<br>added {_createdPretty}"></div>',
-      '  </tpl>',
-      '  <tpl if="trashed==1">',
-      '    <div class="pp-grid-status pp-grid-status-deleted" ext:qtip="[<b>{_citekey}</b>]<br>deleted {_createdPretty}"></div>',
-      '  </tpl>'];
-    return tpl.join('');
-  },
-
-  getIconTemplate: function() {
-    if (this.iconTemplate != null) {
-      return this.iconTemplate;
-    }
-    this.iconTemplate = new Ext.XTemplate(
-      '<div class="pp-grid-info">',
-      '<tpl if="_imported">',
-      this.getImportedIconTemplate(),
-      '</tpl>',
-      '<tpl if="pdf">',
-      '  <div class="pp-grid-status pp-grid-status-pdf" ext:qtip="<b>{pdf_name}</b><br/>{_last_readPretty}"></div>',
-      '</tpl>',
-      '<tpl if="attachments">',
-      '  <div class="pp-grid-status pp-grid-status-attachments" ext:qtip="{_attachments_count} attached file(s)"></div>',
-      '</tpl>',
-      '<tpl if="annote">',
-      '  <div class="pp-grid-status pp-grid-status-notes" ext:qtip="{_notes_tip}"></div>',
-      '</tpl>',
-      /*
- * Hover-buttons over the grid -- save it for the ext4 rewrite...
- * 
-      '<tpl if="_needs_details_lookup == 1">',
-      '  <div class="pp-grid-status pp-grid-status-lookup" ext:qtip="Lookup details" action="lookup-details"></div>',
-      '</tpl>',
-      '<tpl if="!_imported">',
-      '  <div class="pp-grid-status pp-grid-status-import" ext:qtip="Import reference" action="import-ref"></div>',
-      '</tpl>',
-*/
-      '</div>').compile();
-    return this.iconTemplate;
-  },
-
-
   toolbarMenuItemIds: [],
 
   // This method returns a list of itemIDs in the order we want them
@@ -1098,7 +1029,6 @@ Ext.define('Paperpile.pub.Grid', {
 
   getTopToolbar: function() {
     return this.tbar;
-    //return this.getDockedItems.child('toolbar');
   },
 
   createToolbarMenu: function() {
@@ -1164,45 +1094,6 @@ Ext.define('Paperpile.pub.Grid', {
     }
 
     return;
-  },
-
-  updateMoreFrom: function() {
-    this.actions['MORE_FROM_FIRST_AUTHOR'].setText(this.getFirstAuthorFromSelection());
-
-    if (this.getLastAuthorFromSelection() != '') {
-      this.actions['MORE_FROM_LAST_AUTHOR'].setText(this.getLastAuthorFromSelection());
-      this.actions['MORE_FROM_LAST_AUTHOR'].show();
-    } else {
-      //this.actions['MORE_FROM_LAST_AUTHOR'].setText("Last author");
-      //this.actions['MORE_FROM_LAST_AUTHOR'].disable();
-      this.actions['MORE_FROM_LAST_AUTHOR'].hide();
-    }
-
-    var a = this.actions['MORE_FROM_JOURNAL'];
-    if (this.getJournalFromSelection() != '') {
-      a.show();
-      a.setText(this.getJournalFromSelection());
-    } else {
-      a.hide();
-    }
-    a.each(function(item) {
-      item.style = {
-        'font-style': 'italic'
-      };
-      if (item.rendered) {
-        item.textEl.setStyle('font-style', 'italic');
-      }
-    },
-    this);
-
-    a = this.actions['MORE_FROM_YEAR'];
-    if (this.getYearFromSelection() != '') {
-      a.show();
-      a.setText(this.getYearFromSelection());
-    } else {
-      a.hide();
-    }
-
   },
 
   // Private. Don't override.
@@ -1992,7 +1883,7 @@ Ext.define('Paperpile.pub.Grid', {
   },
 
   getSingleSelection: function() {
-    var selections = this.getSelectionModel().getSelection();
+    var selections = this.getSelectionModel().getSelections();
     if (selections.length > 0) {
       return selections[0];
     } else {

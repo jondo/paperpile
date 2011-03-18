@@ -34,19 +34,29 @@ Ext.define('Paperpile.pub.panel.Files', {
   },
 
   createTemplate: function() {
-    var tpl = [this.getPdfSection(),
-    this.getAttachmentsSection()].join('\n');
+    var tpl = [
+      '<tpl if="this.hasAttachments(values) || this.hasPdf(values) || this.isImported(values)">',
+      '  <div class="pp-box pp-box-side-panel pp-box-style1">',
+      this.getPdfSection(),
+      this.getAttachmentsSection(),
+      '  </div>',
+      '</tpl>'].join("\n");
+
     return new Ext.XTemplate(tpl,
       this.getFunctions());
   },
 
   getFunctions: function() {
     return {
-      hasAttachments: function(list) {
-        return list && list.length > 0;
+      hasAttachments: function(values) {
+        return values._attachments_list && values._attachments_list.length > 0;
       },
       hasPdf: function(values) {
-        return values.pdf && values.pdf != '';
+        if (values.pdf && values.pdf != '') {
+          return true;
+        } else {
+          return false;
+        }
       },
       isNotImported: function(values) {
         return !values._imported;
@@ -55,7 +65,11 @@ Ext.define('Paperpile.pub.panel.Files', {
         return values._imported;
       },
       hasSearchJob: function(values) {
-        return values._search_job && values._search_job != '';
+        if (values._search_job && values._search_job != '') {
+          return true;
+        } else {
+          return false;
+        }
       },
       hasCanceledSearch: function(values) {
         return values._search_job && values._search_job.error.match(/download canceled/);
@@ -74,7 +88,7 @@ Ext.define('Paperpile.pub.panel.Files', {
 
   getAttachmentsSection: function(data) {
     var el = [
-      '    <tpl if="_imported || attachments">',
+      '    <tpl if="this.isImported(values) || this.hasAttachments(values)">',
       '      <h2>Supplementary Material</h2>',
       '    </tpl>',
       '      <tpl if="this.hasAttachments(_attachments_list)">',
@@ -96,16 +110,17 @@ Ext.define('Paperpile.pub.panel.Files', {
 
   getPdfSection: function() {
     var el = [
-      '<tpl if="this.hasPdf(values)">',
+      '<tpl if="this.hasPdf(values) === true">',
+      '  <h2>PDF</h2>',
       '  <ul>',
-      '    <li id="open-pdf{id}" class="link-hover">',
-      '      <a href="#" class="pp-textlink pp-action pp-action-open-pdf" action="open-pdf">View PDF</a>',
+      '    <li class="link-hover">',
+      '      <a href="#" class="pp-textlink pp-action pp-action-open-pdf" action="VIEW_PDF" args="{grid_id},{guid}">View PDF</a>',
       '      <div style="display:inline-block;margin-left:2px;vertical-align:middle;">',
       '        <div class="pp-info-button pp-float-left pp-pdf-external pp-second-link" ext:qtip="View PDF in external viewer" action="open-pdf-external"></div>',
       '        <div class="pp-info-button pp-float-left pp-pdf-folder pp-second-link" ext:qtip="Open containing folder" action="open-pdf-folder"></div>',
       '      </div>',
       '    </li>',
-      '    <li id="delete-pdf-{id}">',
+      '    <li>',
       '      <a href="#" class="pp-textlink pp-action pp-action-delete-pdf" action="delete-pdf">Delete PDF</a>',
       '    </li>',
       '  </ul>',
@@ -118,7 +133,7 @@ Ext.define('Paperpile.pub.panel.Files', {
       '    </ul>',
       '  </tpl>',
       '</tpl>',
-      '<tpl if="this.hasSearchJob(values)">',
+      '<tpl if="this.hasPdf(values) === false && this.hasSearchJob(values) === true">',
       '  <tpl if="this.hasSearchError(values)">',
       '    <div class="pp-box-error">',
       '      <p>{search_job_error}</p>',
@@ -151,7 +166,7 @@ Ext.define('Paperpile.pub.panel.Files', {
       '    </div>',
       '  </tpl>',
       '</tpl>',
-      '<tpl if="this.hasSearchJob(values) == false">',
+      '<tpl if="this.hasPdf(values) === false && this.hasSearchJob(values) === false">',
       '  <ul>',
       '    <li id="search-pdf-{id}">',
       '      <a href="#" class="pp-textlink pp-action pp-action-search-pdf" action="search-pdf">Search & Download PDF</a>',

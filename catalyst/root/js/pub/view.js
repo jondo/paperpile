@@ -20,7 +20,14 @@ Ext.define('Paperpile.pub.View', {
   initComponent: function() {
     Ext.apply(this, {
       layout: 'border',
-      items: [this.createCenter(), this.createEast()]
+      items: [this.createCenter(), this.createEast()],
+      listeners: {
+        mousedown: {
+          element: 'body',
+          fn: this.onMouseDown,
+          scope: this
+        }
+      }
     });
     this.callParent(arguments);
   },
@@ -91,8 +98,16 @@ Ext.define('Paperpile.pub.View', {
 
   onSelect: function(sm, selections) {
     var panels = [this.abstract, this.overview];
+    var grid_id = this.grid.id;
+    Ext.each(panels, function(panel) {
+      panel.grid_id = grid_id;
+    });
+
     if (selections.length == 1) {
       var pub = selections[0];
+      pub.data.grid_id = grid_id;
+      //      pub.set('grid_id', grid_id);
+
       Ext.each(panels, function(panel) {
         panel.setPublication(pub);
       });
@@ -104,6 +119,19 @@ Ext.define('Paperpile.pub.View', {
       Ext.each(panels, function(panel) {
         panel.setMulti(selections);
       });
+    }
+  },
+
+  onMouseDown: function(event, target, o) {
+    var el = Ext.fly(target);
+    if (el.hasCls('pp-action')) {
+      var id = el.getAttribute('action');
+      var args = el.getAttribute('args');
+      var array = undefined;
+      if (args && args !== '') {
+        array = args.split(',');
+      }
+      Paperpile.app.Actions.execute(id, array);
     }
   }
 });

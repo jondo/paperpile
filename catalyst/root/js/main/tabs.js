@@ -298,6 +298,7 @@ Ext.define('Paperpile.Tabs', {
   pdfViewerCounter: 0,
   newPdfTab: function(config) {
 
+	    Paperpile.log(config);
     if (config.filename.length > 25) {
       config.title = Ext.util.Format.ellipsis(config.filename, 25);
     } else {

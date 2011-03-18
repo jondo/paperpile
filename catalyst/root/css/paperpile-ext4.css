@@ -197,6 +197,74 @@ body {
 .pp-label-style-24,  .pp-label-tree-style-24  a span { border-color:#BDBDBD; border-style:solid; background-color: rgb(222, 229, 242); color: rgb(90, 105, 134) !important; } 
 
 
+
+.pp-label-control *{
+    font-size:9px;
+    height: 18px;
+}
+
+.pp-label-control .x-form-trigger {
+    height: 17px;
+}
+
+.pp-label-add-link{
+    float:left;
+}
+
+.pp-label-box {
+    border-style:solid;
+    border-width: 1px;
+    font-size: 9px;
+    font-weight:bold;
+    margin: 0px 0.8em 0px 1px;
+    overflow:visible;
+    display:block;
+    float:left;
+    margin: 0px 6px 6px 0px;
+}
+
+.pp-label-name {
+    overflow:hidden;
+    display:inline;
+    padding: 0 2px;
+    border-width: 0px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
+    cursor: default;
+}
+
+.pp-label-cloud {
+    display:inline-block;
+    padding: 2px;
+    border-width: 1px 0px;
+    margin: 0px 6px 6px 0px;
+    vertical-align:middle;
+    border-width:1px;
+    padding: 0px 4px;
+    -moz-border-radius: 3px;
+    /*-webkit-border-radius:3px;*/
+    text-decoration:none;
+}
+
+.pp-label-remove{
+    border-width:0px 0px 0px 1px;
+    display:inline;
+    padding: 0px 2px 0px 2px;
+    margin: 0px;
+    cursor: default;
+}
+
+div:hover.pp-label-remove{
+    border-width:1px;
+    display:inline;
+    padding: 0px 2px 0px 2px;
+    margin: 0px;
+    margin-right: -1px;
+    outline: black solid 1px;
+    cursor: pointer;
+    color:white;
+}
+
+
 /*
 .pp-grid-data{
     line-height: 1.5em;

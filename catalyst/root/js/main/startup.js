@@ -357,6 +357,8 @@ Paperpile.stage2 = function() {
     });
   }
 
+  Paperpile.app.Actions.loadActions();
+
   Paperpile.main = new Paperpile.Viewport({
     listeners: {
       afterrender: {
