@@ -45,13 +45,13 @@ Ext.define('Ext.ux.KeyboardShortcuts', {
 
     var o = shortcut.binding;
     if (!o.shift) {
-	delete o.shift;
+      delete o.shift;
     }
     if (!o.ctrl) {
-	delete o.ctrl;
+      delete o.ctrl;
     }
     if (!o.alt) {
-	delete o.alt;
+      delete o.alt;
     }
 
     this.keyMap.addBinding(shortcut.binding);
@@ -178,7 +178,7 @@ Ext.define('Ext.ux.KeyboardShortcuts', {
 });
 
 Ext.define('Ext.ux.KeyboardShortcut', {
-	extend: 'Ext.util.Observable',
+  extend: 'Ext.util.Observable',
   action: null,
   binding: null,
   disabled: false,
@@ -189,7 +189,7 @@ Ext.define('Ext.ux.KeyboardShortcut', {
   scope: null,
   stopEvent: true,
   constructor: function(config) {
-    Ext.ux.KeyboardShortcut.superclass.constructor.call(this,config);
+    Ext.ux.KeyboardShortcut.superclass.constructor.call(this, config);
 
     Ext.apply(this, config);
 
@@ -232,67 +232,66 @@ Ext.define('Ext.ux.KeyboardShortcut', {
     this.scope = scope;
   },
 
-	    setShortcutString: function() {
-
-	}
+  setShortcutString: function(string) {}
 
 });
 
 Ext.override(Ext.Action, {
   setShortcutString: function(string) {
-    this.initialConfig.shortcutString = string;
-    this.callEach('setShortcutString', [string]);
+    var me = this;
+    me.initialConfig.shortcutString = string;
+    me.callEach('setShortcutString', [string]);
   }
 });
 
 Ext.override(Ext.menu.Item, {
-  onRender: function(container, position) {
-    if (!this.itemTpl) {
-      this.itemTpl = Ext.menu.Item.prototype.itemTpl = new Ext.XTemplate(
-        '<a id="{id}" class="{cls}" hidefocus="true" unselectable="on" href="{href}"',
-        '<div class="x-menu-item-shortcut">{shortcutString}</div>',
-        '<tpl if="hrefTarget">',
-        ' target="{hrefTarget}"',
-        '</tpl>',
-        '<img src="{icon}" class="x-menu-item-icon {iconCls}"/>',
-        '<span class="x-menu-item-text">{text}</span>',
-        // extraspace is a fake spacer which goes where the
-        // shortcutstring *would* go if we didn't have to put it
-        // up front and use absolute positioning.
-        // See paperpile.css
-        '<div class="x-menu-item-extraspace"></div>',
-        '</a>');
-    }
-    var a = this.getTemplateArgs();
-    this.el = position ? this.itemTpl.insertBefore(position, a, true) : this.itemTpl.append(container, a, true);
-    this.iconEl = this.el.child('img.x-menu-item-icon');
-    this.textEl = this.el.child('.x-menu-item-text');
-    this.shortcutEl = this.el.child('.x-menu-item-shortcut');
-    this.extraEl = this.el.child('.x-menu-item-extraspace');
-    if (!this.href) {
-      this.mon(this.el, 'click', Ext.emptyFn, null, {
-        preventDefault: true
-      });
-    }
-    Ext.menu.Item.superclass.onRender.call(this, container, position);
+  renderTpl: [
+    '<tpl if="plain">',
+    '{text}',
+    '</tpl>',
+    '<tpl if="!plain">',
+    '<a class="' + Ext.baseCSSPrefix + 'menu-item-link" href="{href}" <tpl if="hrefTarget">target="{hrefTarget}"</tpl> hidefocus="true" unselectable="on">',
+    '<img src="{icon}" class="' + Ext.baseCSSPrefix + 'menu-item-icon {iconCls}" />',
+    '<span class="' + Ext.baseCSSPrefix + 'menu-item-text" <tpl if="menu">style="margin-right: 17px;"</tpl> >{text}</span>',
+    '<div class="' + Ext.baseCSSPrefix + 'menu-item-shortcut">{shortcutString}</div>',
+    '<tpl if="menu">',
+    '<img src="' + Ext.BLANK_IMAGE_URL + '" class="' + Ext.baseCSSPrefix + 'menu-item-arrow" />',
+    '</tpl>',
+    '</a>',
+    '</tpl>'],
+  onRender: function(ct, pos) {
+    var me = this,
+    prefix = '.' + Ext.baseCSSPrefix;
+
+    Ext.applyIf(me.renderData, {
+      href: me.href || '#',
+      hrefTarget: me.hrefTarget,
+      icon: me.icon || Ext.BLANK_IMAGE_URL,
+      iconCls: me.iconCls,
+      menu: Ext.isDefined(me.menu),
+      plain: me.plain,
+      text: me.text,
+      shortcutString: me.shortcutString
+    });
+
+    Ext.applyIf(me.renderSelectors, {
+      itemEl: prefix + 'menu-item-link',
+      iconEl: prefix + 'menu-item-icon',
+      textEl: prefix + 'menu-item-text',
+      arrowEl: prefix + 'menu-item-arrow',
+      shortcutEl: prefix + 'menu-item-shortcut'
+    });
+
+    Ext.menu.Item.superclass.onRender.call(me, ct, pos);
   },
-  getTemplateArgs: function() {
-    return {
-      id: this.id,
-      cls: this.itemCls + (this.menu ? ' x-menu-item-arrow' : '') + (this.cls ? ' ' + this.cls : ''),
-      href: this.href || '#',
-      hrefTarget: this.hrefTarget,
-      icon: this.icon || Ext.BLANK_IMAGE_URL,
-      iconCls: this.iconCls || '',
-      text: this.itemText || this.text || '&#160;',
-      shortcutString: this.shortcutString || ''
-    };
-  },
+
   setShortcutString: function(string) {
-    this.shortcutString = string;
+    var me = this;
     if (this.rendered) {
-      this.shortcutEl.update(this.shortcutString);
-      this.parentMenu.layout.doAutoSize();
+      if (this.shortcutEl) {
+        this.shortcutEl.update(string);
+      }
     }
+    me.shortcutString = string;
   }
 });

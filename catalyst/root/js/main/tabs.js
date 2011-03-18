@@ -16,45 +16,12 @@
 
 Ext.define('Paperpile.Tabs', {
   extend: 'Ext.tab.TabPanel',
-	    alias: 'widget.pp-tabs',
+  alias: 'widget.pp-tabs',
   initComponent: function() {
-
     Ext.apply(this, {
-      //margins: '2 2 2 2',
-	    //      layoutOnCardChange: true,
-	    //      layoutOnTabChange: true,
-	    //      monitorResize: false,
-	    //      enableTabScroll: true
     });
 
-    Paperpile.Tabs.superclass.initComponent.call(this);
-
-    this.on('beforetabchange', function(tabs, newTab, oldTab) {
-      if (oldTab instanceof Paperpile.PluginPanel) {
-        oldTab.saveScrollState();
-      }
-    },
-    this);
-
-    this.on('tabchange', function(tabs, tab) {
-      // Force the grid view to re-layout on tab change. Fixes a weird bug
-      // where grids re-loaded in the background lose their DOM.
-      if (tab instanceof Paperpile.PluginPanel) {
-        var grid = tab.getGrid();
-
-        // This can't have a delay on it -- we need to focus completely before
-        // restoring the scroll state.
-        grid.getView().focus();
-
-        // Also update the view of the gridpanel of the now-focused tab.
-        // See bug #739.
-        tab.updateView();
-
-        // This needs to come last.
-        tab.restoreScrollState();
-      }
-    },
-    this);
+    this.callParent(arguments);
   },
 
   closeTabById: function(guid) {
@@ -111,12 +78,13 @@ Ext.define('Paperpile.Tabs', {
       plugin_base_query: ''
     };
 
-    var newView = this.add(new Paperpile.PluginPanelMainLibrary({
-      title: 'All Papers',
-      itemId: itemId,
-      gridParams: gridParams
-    }));
-    //    newView.show();
+    var item = this.add({
+            xtype: 'ViewMainLibrary',
+            title: 'Library',
+            closable: true,
+	    gridParams: gridParams
+        });
+    this.setActiveTab(item);
   },
 
   newTrashTab: function() {

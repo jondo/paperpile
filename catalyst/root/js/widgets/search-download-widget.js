@@ -166,19 +166,8 @@ Paperpile.SearchDownloadWidget = Ext.extend(Object, {
           '</ul>']);
       }
 
-      Ext.DomHelper.overwrite(rootEl, el);
+      Ext.core.DomHelper.overwrite(rootEl, el);
     }
-
-    // If the user is currently dragging, we need to update the targets list
-    // when the download widget updates. This way, if a PDF is added to the article in
-    // the meantime, the drag-drop targets list gets updated accordingly.
-    if (Paperpile.main.dd.dragPane && Paperpile.main.dd.dragPane.isVisible()) {
-      // We call createDropTargets to trigger the drag-drop panel to recreate
-      // drop targets appropriate for the current state of the grid & overview panel.
-      // The lastEventURIs is the URI list string saved from the last grid drag event.
-      Paperpile.main.dd.createDropTargets(Paperpile.main.dd.lastEventURIs);
-    }
-
   },
 
   handleClick: function(e) {

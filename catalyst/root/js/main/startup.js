@@ -14,6 +14,47 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
+IS_QT = !(window['QRuntime'] == undefined);
+IS_CHROME = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+
+Ext.BLANK_IMAGE_URL = 'ext/resources/images/default/s.gif';
+
+Ext.ns('Paperpile');
+
+Paperpile.Url = function(url) {
+  if (url.match("127.0.0.1")) {
+    return url;
+  }
+  return (IS_QT) ? 'http://127.0.0.1:3210' + url : url;
+};
+
+Paperpile.log = function() {
+  if (IS_QT) {
+    QRuntime.log(obj2str(arguments[0]));
+  } else if (IS_CHROME) {
+    console.log(arguments[0]);
+  } else if (window.console) {
+    console.log(arguments);
+  }
+};
+
+function obj2str(o) {
+  if (typeof o !== 'object') {
+    return o;
+  }
+  var out = '{';
+  for (var p in o) {
+    if (!o.hasOwnProperty(p)) {
+      continue;
+    }
+    out += '\n ';
+    out += p + ': ' + o[p];
+  }
+  out += '\n}';
+  return out;
+}
+
+
 Paperpile.serverLog = '';
 Paperpile.isLogging = 1;
 Paperpile.pingAttempts = 0;
@@ -347,6 +388,8 @@ Paperpile.stage3 = function() {
 
   Paperpile.startupProgress(0.9);
   Paperpile.main.getTabs().newMainLibraryTab();
+
+  Ext.get('splash').remove();
 
   // If offline the uservoice JS has not been loaded, so test for it
   if (window.UserVoice) {

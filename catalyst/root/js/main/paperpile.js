@@ -14,144 +14,20 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-IS_QT = !(window['QRuntime'] == undefined);
-IS_CHROME = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
-
-Ext.BLANK_IMAGE_URL = 'ext/resources/images/default/s.gif';
-
-Ext.ns('Paperpile');
-
-Paperpile.Url = function(url) {
-  if (url.match("127.0.0.1")) {
-    return url;
-  }
-  return (IS_QT) ? 'http://127.0.0.1:3210' + url : url;
-};
-
-Paperpile.log = function() {
-  if (IS_QT) {
-    QRuntime.log(obj2str(arguments[0]));
-  } else if (IS_CHROME) {
-    console.log(arguments[0]);
-  } else if (window.console) {
-    console.log(arguments);
-  }
-};
-
-function obj2str(o) {
-  if (typeof o !== 'object') {
-    return o;
-  }
-  var out = '{';
-  for (var p in o) {
-    if (!o.hasOwnProperty(p)) {
-      continue;
-    }
-    out += '\n ';
-    out += p + ': ' + o[p];
-  }
-  out += '\n}';
-  return out;
-}
-
-// This is a wrapper around the Ext.Ajax.request function call.
-// If we need to add any global behavior to Ajax calls, put it
-// here.
-Paperpile.Ajax = function(config) {
-
-  // A method which will run *before* the success function defined
-  // by the passed config.
-  var success = function(response) {
-    var json = Ext.JSON.decode(response.responseText);
-    if (json.data) {
-      Paperpile.main.onUpdate(json.data);
-    }
-    if (json.callback) {
-      Paperpile.main.onCallback(json.callback);
-    }
-  };
-
-  var failure = function() {
-    Paperpile.log("Ajax call failed.");
-  };
-  if (Paperpile.main != undefined) {
-    failure = Paperpile.main.onError;
-  }
-
-  if (!config.suppressDefaults) {
-
-    if (config.success) {
-      config.success = Ext.Function.createInterceptor(config.success, success);
-    } else {
-      config.success = success;
-    }
-    if (config.failure) {
-      config.failure = Ext.Function.createInterceptor(config.failure, failure);
-    } else {
-      config.failure = failure;
-    }
-  }
-
-  config.url = Paperpile.Url(config.url);
-
-  config.xdomain = true;
-
-  if (!config.method) {
-    config.method = 'GET';
-  }
-
-  if (!config.scope) {
-    config.scope = Paperpile.main;
-  }
-
-  if (config.debug) {
-    Paperpile.log(config);
-  }
-
-  return Ext.Ajax.request(config);
-};
-
 Ext.define('Paperpile.Viewport', {
   extend: 'Ext.container.Viewport',
-  globalSettings: {},
   initComponent: function() {
 
-    this.queueWidget = new Paperpile.QueueWidget();
-
-    var tbarCfg = {
-      xtype: 'toolbar',
-      height: 50,
-      style: {
-        'background-color': 'green'
-      },
-      dock: 'top',
-      items: [{
-        xtype: 'tbtext',
-        text: 'Paperpile vXYZ',
-        cls: 'pp-main-toolbar-label',
-      },
-      {
-        xtype: 'tbfill'
-      },
-      {
-        xtype: 'button',
-        text: 'Dashboard'
-      }]
-    };
+    this.createStores();
 
     Ext.apply(this, {
       layout: 'border',
       enableKeyEvents: true,
       keys: {},
-      dockedItems: [],
-      items: [{
-        region: 'center',
-        xtype: 'pp-tabs',
-        itemId: 'tabs'
-      }]
+      items: [this.createTree(), this.createTabs()]
     });
 
-    Paperpile.Viewport.superclass.initComponent.call(this);
+    this.callParent(arguments);
 
     //    this.on('afterlayout', this.resizeToSplitFraction, this);
     this.mon(Ext.getBody(), 'click', function(event, target, options) {
@@ -163,6 +39,35 @@ Ext.define('Paperpile.Viewport', {
       }
     });
 
+    this.runningJobs = [];
+    //    this.loadKeys();
+    this.fileSyncStatus = {
+      busy: false,
+      collections: [],
+      task: new Ext.util.DelayedTask(this.fireFileSync, this)
+    };
+  },
+
+  createTree: function() {
+    this.tree = Ext.create('Ext.panel.Panel', {
+      region: 'west',
+      split: true,
+      flex: 1
+    });
+    return this.tree;
+  },
+
+  createTabs: function() {
+    this.tabs = Ext.createByAlias('widget.pp-tabs', {
+      region: 'center',
+      split: true,
+      border: false,
+      flex: 5
+    });
+    return this.tabs;
+  },
+
+  createStores: function() {
     var me = this;
     this.labelStore = new Paperpile.net.CollectionStore({
       collectionType: 'LABEL',
@@ -170,7 +75,7 @@ Ext.define('Paperpile.Viewport', {
         load: {
           fn: function(store, records, success) {
             store.each(function(record) {
-		    Paperpile.log(record.get('name')+"  "+record.get('count'));
+              Paperpile.log(record.get('name') + "  " + record.get('count'));
             });
             me.onLabelStoreLoad();
           }
@@ -178,7 +83,6 @@ Ext.define('Paperpile.Viewport', {
       },
       storeId: 'labels'
     });
-    this.labelStore.load();
 
     this.folderStore = new Paperpile.net.CollectionStore({
       collectionType: 'FOLDER',
@@ -191,7 +95,6 @@ Ext.define('Paperpile.Viewport', {
       },
       storeId: 'folders'
     });
-    this.folderStore.load();
 
     this.feedStore = new Paperpile.net.CollectionStore({
       collectionType: 'FEED',
@@ -204,25 +107,24 @@ Ext.define('Paperpile.Viewport', {
       },
       storeId: 'feeds'
     });
-    this.feedStore.load();
 
-    this.runningJobs = [];
-    //    this.loadKeys();
-    this.fileSyncStatus = {
-      busy: false,
-      collections: [],
-      task: new Ext.util.DelayedTask(this.fireFileSync, this)
-    };
-
-    // Used in startup sequence
-    this.addEvents({
-      'mainGridLoaded': true
+    var me = this;
+    this.folderStore.load({
+	    scope: me,
+      callback: function() {
+        this.labelStore.load({
+		scope: me,
+          callback: function() {
+            this.feedStore.load();
+          }
+        });
+      }
     });
 
   },
 
   getTabs: function() {
-    return this.child('#tabs');
+    return this.tabs;
   },
 
   updateSplitFraction: function(newFraction) {
@@ -308,18 +210,6 @@ Ext.define('Paperpile.Viewport', {
 
   afterLoadSettings: function() {
 
-    //this.resizeToSplitFraction();
-    var grid = this.getCurrentGrid();
-    if (grid) {
-      //grid.getPluginPanel().resizeToSplitFraction();
-    }
-
-    /*
-    var fontSize = this.getSetting('font_size');
-    if (fontSize) {
-      this.onFontSizeChange(fontSize);
-    }
-    */
   },
 
   focusCurrentPanel: function() {
@@ -554,8 +444,8 @@ Ext.define('Paperpile.Viewport', {
       return;
     }
     var activeTab = Paperpile.main.getTabs().getActiveTab();
-    if (activeTab instanceof Paperpile.PluginPanel) {
-      return activeTab.getGrid();
+    if (activeTab instanceof Paperpile.pub.View) {
+      return activeTab.grid;
     }
     return null;
   },
@@ -567,7 +457,7 @@ Ext.define('Paperpile.Viewport', {
 
   getCurrentlySelectedRow: function() {
     var activeTab = Paperpile.main.getTabs().getActiveTab();
-    if (activeTab instanceof Paperpile.PluginPanel) {
+    if (activeTab instanceof Paperpile.pub.View) {
       var grid = activeTab.getGrid();
       if (grid.getSelectionCount() == 1) {
         return grid.getSingleSelectionRecord();
@@ -909,8 +799,7 @@ Ext.define('Paperpile.Viewport', {
     }
 
     // update the queue widget with the current data.
-    this.queueWidget.onUpdate(data);
-
+    //this.queueWidget.onUpdate(data);
     // If this update contains new or deleted jobs, trigger the queue update loop.
     if (data.job_delta) {
       this.queueUpdate();
@@ -1095,7 +984,7 @@ Ext.define('Paperpile.Viewport', {
       var tabs = this.getTabs().items.items;
       for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
-        if (tab instanceof Paperpile.PluginPanel) {
+        if (tab instanceof Paperpile.pub.View) {
           tab.getGrid().refreshCollections();
         }
       }
@@ -1113,7 +1002,7 @@ Ext.define('Paperpile.Viewport', {
       var tabs = this.getTabs().items.items;
       for (var i = 0; i < tabs.length; i++) {
         var tab = tabs[i];
-        if (tab instanceof Paperpile.PluginPanel) {
+        if (tab instanceof Paperpile.pub.View) {
           tab.getGrid().refreshCollections();
         }
       }

@@ -1,5 +1,4 @@
 
-
 Ext.define('Ext.ux.ButtonPlus', {
 	extend: 'Ext.Panel',
   defaultType: 'menuitem',

@@ -14,11 +14,11 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Ext.define('Paperpile.PluginGridMainLibrary', {
-	extend: 'Paperpile.PluginGridDB',
+Ext.define('Paperpile.pub.GridMainLibrary', {
+	extend: 'Paperpile.pub.GridDB',
   initComponent: function() {
 
-    Paperpile.PluginGridMainLibrary.superclass.initComponent.call(this);
+	    this.callParent(arguments);
 
     this.actions['NEW'] = new Ext.Action({
       text: 'Create Manually',
@@ -61,13 +61,13 @@ Ext.define('Paperpile.PluginGridMainLibrary', {
   },
 
   loadKeyboardShortcuts: function() {
-    Paperpile.PluginGridMainLibrary.superclass.loadKeyboardShortcuts.call(this);
+	    this.callParent(arguments);
 
     this.keys.bindAction('ctrl-n', this.actions['NEW']);
   },
 
   initToolbarMenuItemIds: function() {
-    Paperpile.PluginGridMainLibrary.superclass.initToolbarMenuItemIds.call(this);
+	    this.callParent(arguments);
     var ids = this.toolbarMenuItemIds;
 
     var index = ids.indexOf('TB_FILL');
@@ -75,13 +75,10 @@ Ext.define('Paperpile.PluginGridMainLibrary', {
   }
 });
 
-Ext.define('Paperpile.PluginPanelMainLibrary', {
-	extend: 'Paperpile.PluginPanelDB',
-  createGrid: function(params) {
-    return new Paperpile.PluginGridMainLibrary(params);
-  },
-
-  createAboutPanel: function() {
-    return undefined;
+Ext.define('Paperpile.pub.ViewMainLibrary', {
+	alias: 'widget.ViewMainLibrary',
+	extend: 'Paperpile.pub.ViewDB',
+  getGridType: function() {
+	    return "Paperpile.pub.GridMainLibrary";
   }
 });

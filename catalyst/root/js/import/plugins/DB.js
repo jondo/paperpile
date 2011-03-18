@@ -14,8 +14,9 @@
    received a copy of the GNU Affero General Public License along with
    Paperpile.  If not, see http://www.gnu.org/licenses. */
 
-Ext.define('Paperpile.PluginGridDB', {
-	extend: 'Paperpile.PluginGrid',
+Ext.define('Paperpile.pub.GridDB', {
+	extend: 'Paperpile.pub.Grid',
+	    alias: 'widget.pubGridDB',
   plugin_base_query: '',
   plugin_iconCls: 'pp-icon-folder',
   plugin_name: 'DB',
@@ -23,8 +24,7 @@ Ext.define('Paperpile.PluginGridDB', {
   plugins: [],
 
   initComponent: function() {
-
-    Paperpile.PluginGridDB.superclass.initComponent.call(this);
+	    this.callParent(arguments);
 
     // Replace the 'handleHdOver' with an empty function to remove the 
     // build-in header highlighting.
@@ -44,7 +44,7 @@ Ext.define('Paperpile.PluginGridDB', {
   },
 
   loadKeyboardShortcuts: function() {
-    Paperpile.PluginGridDB.superclass.loadKeyboardShortcuts.call(this);
+	    this.callParent(arguments);
   },
 
   toggleFilter: function(item, checked) {
@@ -96,7 +96,7 @@ Ext.define('Paperpile.PluginGridDB', {
   },
 
   createContextMenu: function() {
-    Paperpile.PluginGridDB.superclass.createContextMenu.call(this);
+	    this.callParent(arguments);
   },
 
   createToolbarMenu: function() {
@@ -166,16 +166,16 @@ Ext.define('Paperpile.PluginGridDB', {
     },
     this);
     */
-    Paperpile.PluginGridDB.superclass.createToolbarMenu.call(this);
+	    this.callParent(arguments);
   },
 
   refreshCollections: function() {
-    Paperpile.PluginGridDB.superclass.refreshCollections.call(this);
+	    this.callParent(arguments);
 
   },
 
   initToolbarMenuItemIds: function() {
-    Paperpile.PluginGridDB.superclass.initToolbarMenuItemIds.call(this);
+	    this.callParent(arguments);
     var ids = this.toolbarMenuItemIds;
 
     ids.insert(0, 'FILTER_FIELD');
@@ -197,7 +197,7 @@ Ext.define('Paperpile.PluginGridDB', {
   },
 
   updateButtons: function() {
-    Paperpile.PluginGridDB.superclass.updateButtons.call(this);
+	    this.callParent(arguments);
 
     var tbar = this.getTopToolbar();
 
@@ -216,7 +216,7 @@ Ext.define('Paperpile.PluginGridDB', {
   },
 
   onUpdate: function(data) {
-    Paperpile.PluginGridDB.superclass.onUpdate.call(this, data);
+	    this.callParent(arguments);
 
     // If the update has to do with collections and we are 
     // a collection tab, refresh the whole view.
@@ -259,10 +259,10 @@ Ext.define('Paperpile.PluginGridDB', {
 });
 
 
-Ext.define('Paperpile.PluginPanelDB', {
-	extend: 'Paperpile.PluginPanel',
+Ext.define('Paperpile.pub.ViewDB', {
+	extend: 'Paperpile.pub.View',
   createGrid: function(params) {
-    return new Paperpile.PluginGridDB(params);
+    return new Paperpile.pub.GridDB(params);
   },
 
   createAboutPanel: function() {

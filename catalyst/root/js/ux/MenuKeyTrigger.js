@@ -163,16 +163,31 @@ Ext.preg('ux.MenuKeyTrigger', Ext.ux.TDGi.MenuKeyTrigger);
 
 // Ugly override to Ext.menu.Item to auto-underline hotkey when setText is called.
 Ext.override(Ext.menu.Item, {
-  setText: function(text) {
-    this.text = text || '&#160;';
-    if (this.rendered) {
-      if (this.triggerKey) {
-        if (this.text.match(new RegExp(this.triggerKey, 'i'))) {
-          this.text = this.text.replace(new RegExp('(' + this.triggerKey + ')', 'i'), '<u>$1</u>');
+    setText: function(text) {
+        var me = this,
+            el = me.textEl || me.el,
+            newWidth;
+        
+        if (text && el) {
+	    if (this.triggerKey) {
+          if (text.match(new RegExp(this.triggerKey, 'i'))) {
+            text = text.replace(new RegExp('(' + this.triggerKey + ')', 'i'), '<u>$1</u>');
+          }
+	    }
+
+            el.update(text);
+                
+            if (me.textEl) {
+                // Resize the menu to fit the text
+                newWidth = me.textEl.getWidth() + me.iconEl.getWidth() + 25 + (me.arrowEl ? me.arrowEl.getWidth() : 0);
+                if (newWidth > me.itemEl.getWidth()) {
+                    me.parentMenu.setWidth(newWidth);
+                }
+            }
+        } else if (el) {
+            el.update('');
         }
-      }
-      this.textEl.update(this.text);
-      this.parentMenu.layout.doAutoSize();
+        
+        me.text = text;
     }
-  }
 });

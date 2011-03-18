@@ -4,8 +4,7 @@ var sqlFields = [
   'guid', 'sha1', 'pdf', 'pdf_name', 'attachments', 'trashed', 'created', 'last_read', 'times_read', 'annote', 'labels', 'labels_tmp', 'folders'];
 
 var displayFields = [
-		     '_authors_display', '_citation_display', '_snippets'
-		     ];
+  '_authors_display', '_citation_display', '_snippets', '_pubtype_name', 'howpublished', '_imported', '_createdPretty'];
 
 var allFields = [].concat(libraryFields, sqlFields, displayFields);
 Ext.regModel('Publication', {
